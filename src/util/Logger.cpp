@@ -1,22 +1,52 @@
-#include "Log4cppInit.h"
+#include "Logger.h"
 #include <log4cpp/SimpleConfigurator.hh>
+#include <log4cpp/BasicLayout.hh>
+#include <log4cpp/FileAppender.hh>
 
+bool log4cpp::Logger::isInitialized = false;
+
+/*!
+ * retrieves log4cpp::Category instance for given category name
+ * \param name Category name to retrieve
+ * \return log4cppCategory logger category
+ */
 log4cpp::Category & log4cpp::Logger::getCategory(const std::string & name)				
 {
 	if (!isInitialized)
 	{
 		Init("log4cpp.init");
 	}
-	return Category::getInstance(name);
+	return log4cpp::Category::getInstance(name);
 }
 
+/*!
+ * Инициализирует log4cpp::Logger по данному файлу конфигурации.
+ * Инициализация происходит только если log4cpp не был проинициализирован до этого.
+ * Если файл конфигурации не найден, или произошла какая-нибудь ошибка при
+ * инициализации, то log4cpp инициализируется параметрами по умолчанию
+ * (файл smsc.log в текущей директории, уровень DEBUG)
+ * \param configFileName имя файла конфигурации log4cpp
+ */
 void log4cpp::Logger::Init(const std::string &configFileName)
 {
-	SimpleConfigurator::configure(configFileName);
 	if (!isInitialized)
 	{
+		try {
+			log4cpp::SimpleConfigurator::configure(configFileName);
+		} catch (...) {
+			log4cpp::Appender* appender = new log4cpp::FileAppender("FileAppender", "smsc.log");
+			appender->setLayout(new log4cpp::BasicLayout());
+			log4cpp::Category & cat = log4cpp::Category::getRoot();
+			cat.setAppender(appender);
+			cat.setPriority(log4cpp::Priority::DEBUG);
+		}
 		isInitialized = true;
 	}
 }
 
-bool log4cpp::Logger::isInitialized = false;
+/*!
+ * Деинициализирует log4cpp. После этого его можно снова инициализировать.
+ */
+void log4cpp::Logger::Shutdown()
+{
+}
