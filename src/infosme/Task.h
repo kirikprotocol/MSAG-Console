@@ -45,6 +45,18 @@ namespace smsc { namespace infosme
     
     static const char* TASK_TABLE_NAME_PREFIX = "INFOSME_TABLE_";
 
+    static const uint8_t MESSAGE_NEW_STATE          = 0;
+    static const uint8_t MESSAGE_ENROUTE_STATE      = 10;
+    static const uint8_t MESSAGE_DELIVERED_STATE    = 20;
+    static const uint8_t MESSAGE_FAILED_STATE       = 30;
+
+    typedef enum {
+        NEW         = MESSAGE_NEW_STATE,
+        ENROUTE     = MESSAGE_ENROUTE_STATE,
+        DELIVERED   = MESSAGE_DELIVERED_STATE,
+        FAILED      = MESSAGE_FAILED_STATE
+    } MessageState;
+
     struct Message
     {
 
@@ -151,8 +163,9 @@ namespace smsc { namespace infosme
         bool        bInProcess, bTableCreated;
         
         void createTable();
+        char* prepareSqlCall(const char* sql);
         Statement* getStatement(Connection* connection, const char* id, const char* sql);
-        
+
         virtual void init(ConfigView* config, std::string taskId, std::string tablePrefix);
 
         virtual ~Task() {

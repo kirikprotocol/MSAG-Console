@@ -106,6 +106,15 @@ bool Task::isInProcess()
     return bInProcess;
 }
 
+char* Task::prepareSqlCall(const char* sql)
+{
+    if (!sql || sql[0] == '\0') return 0;
+    std::string tableName = info.tablePrefix+info.id;
+    char* sqlCall = new char[strlen(sql)+tableName.length()+1];
+    sprintf(sqlCall, sql, tableName.c_str());
+    return sqlCall;
+}
+
 Statement* Task::getStatement(Connection* connection, const char* id, const char* sql)
 {
     if (!connection || !id) return 0;
@@ -124,16 +133,24 @@ Statement* Task::getStatement(Connection* connection, const char* id, const char
 
 const char* USER_QUERY_STATEMENT_ID = "USER_QUERY_STATEMENT_ID";
 const char* NEW_MESSAGE_STATEMENT_ID = "NEW_MESSAGE_STATEMENT_ID";
+const char* SELECT_MESSAGES_STATEMENT_ID = "SELECT_MESSAGES_STATEMENT_ID";
 
 const char* NEW_MESSAGE_STATEMENT_SQL = (const char*)
-"INSERT INTO %s (ABONENT, MESSAGE) "
-"VALUES (:ABONENT, :MESSAGE)";
+"INSERT INTO %s (ID, STATE, ABONENT, SEND_DATE, MESSAGE, MESSAGE_ID) "
+"VALUES (INFOSME_MESSAGES_SEQ.NEXTVAL, :STATE, :ABONENT, :SEND_DATE, :MESSAGE, NULL)";
+
+const char* SELECT_MESSAGES_STATEMENT_SQL = (const char*)
+"SELECT ID, ABONENT, MESSAGE FROM %s WHERE "
+"STATE=:STATE AND SEND_DATE<=:SEND_DATE ORDER BY SEND_DATE ASC";
 
 const char* NEW_TABLE_STATEMENT_SQL = (const char*)
 "CREATE TABLE %s ("
-"VARCHAR2(30)   ABONENT,"
-"VARCHAR2       MESSAGE,"
-"NUMBER(2)      STATE"
+"ID             NUMBER          NOT NULL,"
+"STATE          NUMBER(3)       NOT NULL,"
+"ABONENT        VARCHAR2(30)    NOT NULL,"
+"SEND_DATE      DATE            NOT NULL,"
+"MESSAGE        VARCHAR2        NULL,    "
+"MESSAGE_ID     VARCHAR2(65)    NULL     "
 ")";
 void Task::createTable()
 {
@@ -148,9 +165,9 @@ void Task::createTable()
             connection = dsInt->getConnection();
             if (!connection)
                 throw Exception("Failed to obtain connection to internal data source.");
-            char createTableSql[2048];
-            sprintf(createTableSql, NEW_TABLE_STATEMENT_SQL, (info.tablePrefix+info.id).c_str());
-            statement = connection->createStatement(createTableSql);
+            
+            std::auto_ptr<char> createTableSql(prepareSqlCall(NEW_TABLE_STATEMENT_SQL));
+            statement = connection->createStatement(createTableSql.get());
             if (!statement) 
                 throw Exception("Failed to create statement.");
             statement->execute();
@@ -208,10 +225,9 @@ void Task::beginProcess()
         if (!userQuery)
             throw Exception("Failed to create user query statement on own data source.");
         
-        char newMessageSql[2048];
-        sprintf(newMessageSql, NEW_MESSAGE_STATEMENT_SQL, (info.tablePrefix+info.id).c_str());
+        std::auto_ptr<char> newMessageSql(prepareSqlCall(NEW_MESSAGE_STATEMENT_SQL));
         Statement* newMessage = getStatement(intConnection, NEW_MESSAGE_STATEMENT_ID, 
-                                             newMessageSql);
+                                             newMessageSql.get());
         if (!newMessage)
             throw Exception("Failed to create statement for message generation.");
             
@@ -240,14 +256,18 @@ void Task::beginProcess()
             
             std::string message = "";
             formatter->format(message, getAdapter, context);
+            if (message.length() > 0)
+            {
+                newMessage->setUint8(1, MESSAGE_NEW_STATE);
+                newMessage->setString(2, abonentAddress);
+                newMessage->setDateTime(3, time(NULL));
+                newMessage->setString(4, message.c_str());
+                newMessage->executeUpdate();
 
-            newMessage->setString(1, abonentAddress);
-            newMessage->setString(2, message.c_str());
-            newMessage->execute();
-
-            if (info.dsUncommited <= 0 || ++uncommitted >= info.dsUncommited) {
-                intConnection->commit();
-                uncommitted = 0;
+                if (info.dsUncommited <= 0 || ++uncommitted >= info.dsUncommited) {
+                    intConnection->commit();
+                    uncommitted = 0;
+                }
             }
             inProcessEvent.Wait(10);
         }
