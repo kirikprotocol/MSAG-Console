@@ -872,6 +872,7 @@ public:
           unsigned uu = pduX->message.numberOfDests;
           for ( ; u < uu; ++u ) {
             ((SubmitMultiSm*)_cmd->dta)->dests[u].dest_flag = pduX->message.dests[u].flag;
+            __trace2__(":SUBMIT_MULTI_COMMAND: dest_flag = %d",pduX->message.dests[u].flag);
             if ( pduX->message.dests[u].flag == 1 ) // SME address
             {
               ((SubmitMultiSm*)_cmd->dta)->dests[u].value = pduX->message.dests[u].get_value();

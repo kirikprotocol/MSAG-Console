@@ -216,7 +216,8 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
     }
     else
     {
-      __warning__(":DPL: invalid distflag %x",multi->dests[i].dest_flag);
+      __warning2__(":DPL: invalid distflag %x",multi->dests[i].dest_flag);
+      abort();
     }
   }
   task->submited_count = 0;
