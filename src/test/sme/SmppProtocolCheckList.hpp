@@ -69,15 +69,44 @@ void unbindTc()
 		"В unbind респонсе значение поля command_status равно ESME_ROK");
 }
 
+void enquireLinkTc()
+{
+	__reg_tc__("enquireLink",
+		"Отправка enquire_link реквеста");
+	__reg_tc__("enquireLink.sync",
+		"Отправка синхронного enquire_link реквеста");
+	__reg_tc__("enquireLink.async",
+		"Отправка асинхронного enquire_link реквеста");
+	__reg_tc__("enquireLink.receiver",
+		"Отправка enquire_link реквеста с sme зарегистрированной как receiver");
+	__reg_tc__("enquireLink.transmitter",
+		"Отправка enquire_link реквеста с sme зарегистрированной как transmitter");
+	__reg_tc__("enquireLink.transceiver",
+		"Отправка enquire_link реквеста с sme зарегистрированной как transceiver");
+	//enquireLink.resp
+	__reg_tc__("enquireLink.resp",
+		"На enquire_link реквест SC отправляет enquire_link_resp респонс");
+	__reg_tc__("enquireLink.resp.checkDuplicates",
+		"На каждый реквест приходит единственный респонс");
+	__reg_tc__("enquireLink.resp.checkTime",
+		"Правильное время получения респонса");
+	__reg_tc__("enquireLink.resp.checkCommandStatus",
+		"В enquire_link респонсе значение поля command_status равно ESME_ROK");
+}
+
 void submitSmTc()
 {
 	__reg_tc__("submitSm", "Тест кейсы для submit_sm");
 	__reg_tc__("submitSm.sync",
-		"Отправка синхронного submit_sm pdu");
+		"Отправка синхронного submit_sm реквеста");
 	__reg_tc__("submitSm.async",
-		"Отправка асинхронного submit_sm pdu");
+		"Отправка асинхронного submit_sm реквеста");
 	__reg_tc__("submitSm.receiver",
-		"При отправке submit_sm с sme зарегистрированой как receiver SmppSession бросает exception");
+		"Отправка submit_sm реквеста с sme зарегистрированной как receiver (SmppSession бросает exception)");
+	__reg_tc__("submitSm.transmitter",
+		"Отправка submit_sm реквеста с sme зарегистрированной как transmitter");
+	__reg_tc__("submitSm.transceiver",
+		"Отправка submit_sm реквеста с sme зарегистрированной как transceiver");
 	//submitSm.correct
 	__reg_tc__("submitSm.correct",
 		"Отправка submit_sm pdu с правильными значениями полей");
@@ -186,7 +215,11 @@ void replaceSmTc()
 	__reg_tc__("replaceSm.async",
 		"Отправка асинхронного replace_sm pdu");
 	__reg_tc__("replaceSm.receiver",
-		"При отправке replace_sm с sme зарегистрированой как receiver SmppSession бросает exception");
+		"Отправка replace_sm реквеста с sme зарегистрированной как receiver (SmppSession бросает exception)");
+	__reg_tc__("replaceSm.transmitter",
+		"Отправка replace_sm реквеста с sme зарегистрированной как transmitter");
+	__reg_tc__("replaceSm.transceiver",
+		"Отправка replace_sm реквеста с sme зарегистрированной как transceiver");
 	//replaceSm.correct
 	__reg_tc__("replaceSm.correct",
 		"Отправка replace_sm pdu с правильными значениями полей");
@@ -302,6 +335,8 @@ void deliverySmTc()
 		"Подтверждение доставки на ошибку не доставляется в случае успешной доставки оригинального сообщения");
 	__reg_tc__("deliverySm.reports.deliveryReceipt.expiredDeliveryReceipt",
 		"Подтверждение доставки на ошибку при истечении срока валидности доставляется в момент времени validity period");
+	__reg_tc__("deliverySm.reports.deliveryReceipt.transmitter",
+		"При доставке сообщения sme зарегистрированной как transmitter, подтверждение доставки будет отправлено SC в момент времени validity_period");
 	__reg_tc__("deliverySm.reports.deliveryReceipt.recvTimeChecks",
 		"Подтверждения доставки приходят в момент окончании доставки оригинальной pdu");
 	__reg_tc__("deliverySm.reports.deliveryReceipt.checkStatus",
@@ -315,6 +350,8 @@ void deliverySmTc()
 		"Проверка правомерности получения промежуточных нотификаций (в зависимости от настроек профиля и поля pdu registered_delivery, единственный раз после первой зарешедуленой попытки доставки)");
 	__reg_tc__("deliverySm.reports.intermediateNotification.noRescheduling",
 		"Промежуточная нотификация не доставляется в случае, если sms не была зарешедулена");
+	__reg_tc__("deliverySm.reports.intermediateNotification.transmitter",
+		"При доставке сообщения sme зарегистрированной как transmitter, промежуточная нотификация будет отправлена SC в момент времени schedule_delivery_time");
 	__reg_tc__("deliverySm.reports.intermediateNotification.recvTimeChecks",
 		"Время доставки промежуточной нотификации соответсвует времени первой зарешедуленой попытки доставки оригинальной pdu");
 	__reg_tc__("deliverySm.reports.intermediateNotification.checkStatus",
@@ -376,7 +413,11 @@ void querySmTc()
 	__reg_tc__("querySm.async",
 		"Отправка асинхронного query_sm pdu");
 	__reg_tc__("querySm.receiver",
-		"При отправке query_sm с sme зарегистрированой как receiver SmppSession бросает exception");
+		"Отправка query_sm реквеста с sme зарегистрированной как receiver (SmppSession бросает exception)");
+	__reg_tc__("querySm.transmitter",
+		"Отправка query_sm реквеста с sme зарегистрированной как transmitter");
+	__reg_tc__("querySm.transceiver",
+		"Отправка query_sm реквеста с sme зарегистрированной как transceiver");
 	//querySm.correct
 	__reg_tc__("querySm.correct",
 		"Запрос статуса существующего sms");
@@ -409,6 +450,8 @@ void querySmTc()
 		"Правильное время получения респонса");
 	__reg_tc__("querySm.resp.checkHeader",
 		"Правильные значения полей хедера респонса (command_length, command_id, sequence_number)");
+	__reg_tc__("querySm.resp.checkFields",
+		"Правильные значения полей message_id, final_date, message_state, error_code");
 	__reg_tc__("querySm.resp.checkCmdStatusOk",
 		"При отсутствии кода ошибки в поле command_status реквест query_sm действительно не содержит ошибок (сообщение существует, адрес отправителя совпадает и т.п.)");
 	__reg_tc__("querySm.resp.checkCmdStatusInvalidSourceAddr",
@@ -419,6 +462,56 @@ void querySmTc()
 		"Если код ошибки ESME_RINVMSGID в поле command_status, то действительно message_id задан неправильно");
 	__reg_tc__("querySm.resp.checkCmdStatusOther",
 		"Прочие коды ошибок соответствуют спецификации");
+}
+
+void cancelSmTc()
+{
+	__reg_tc__("cancelSm", "Тест кейсы для cancel_sm");
+	__reg_tc__("cancelSm.sync",
+		"Отправка синхронного cancel_sm pdu");
+	__reg_tc__("cancelSm.async",
+		"Отправка асинхронного cancel_sm pdu");
+	__reg_tc__("cancelSm.receiver",
+		"Отправка cancel_sm реквеста с sme зарегистрированной как receiver (SmppSession бросает exception)");
+	__reg_tc__("cancelSm.transmitter",
+		"Отправка cancel_sm реквеста с sme зарегистрированной как transmitter");
+	__reg_tc__("cancelSm.transceiver",
+		"Отправка cancel_sm реквеста с sme зарегистрированной как transceiver");
+	//cancelSm.correct
+	__reg_tc__("cancelSm.correct",
+		"Отправка cancel_sm реквеста с правильными значениями полей");
+	__reg_tc__("cancelSm.correct.messageIdWithoutDestAddr",
+		"Задан message_id существующего сообщения в ENROUTE состоянии, source_addr совпадает, dest_addr и service_type нулевые");
+	__reg_tc__("cancelSm.correct.messageIdWithDestAddr",
+		"Задан message_id существующего сообщения в ENROUTE состоянии, source_addr и dest_addr совпадают, service_type нулевой");
+	__reg_tc__("cancelSm.correct.destAddrWithoutServiceType",
+		"Заданы правильные source_addr и dest_addr и нулевые message_id и service_type");
+	__reg_tc__("cancelSm.correct.destAddrWithServiceType",
+		"Заданы правильные source_addr, dest_addr и service_type и нулевой message_id");
+	__reg_tc__("cancelSm.correct.noSms",
+		"Заданы source_addr, dest_addr и service_type и нулевой message_id, но нет сообщений в БД удовлетворяющих условиям запроса");
+	//cancelSm.incorrect
+	__reg_tc__("cancelSm.incorrect",
+		"Отправка cancel_sm реквеста с неправильными значениями полей");
+	__reg_tc__("cancelSm.incorrect.messageId",
+		"Несуществующий message_id и нулевые dest_addr и service_type");
+	__reg_tc__("cancelSm.incorrect.sourceAddr",
+		"Задан message_id существующего сообщения в ENROUTE состоянии, dest_addr и service_type нулевые, но source_addr не совпадает");
+	__reg_tc__("cancelSm.incorrect.destAddr",
+		"Задан message_id существующего сообщения в ENROUTE состоянии, совпадающий source_addr, нулевой service_type и несовпадающий dest_addr");
+	__reg_tc__("cancelSm.incorrect.emptyFields",
+		"Задан правильный source_addr и  пустые message_id, dest_addr и service_type");
+	__reg_tc__("cancelSm.incorrect.serviceTypeWithoutDestAddr",
+		"Заданы правильные source_addr и service_type, но dest_addr нулевой");
+	__reg_tc__("cancelSm.incorrect.messageIdWithServiceType",
+		"Заданы одновременно message_id и service_type для существующего сообщения в ENROUTE состоянии");
+	__reg_tc__("cancelSm.incorrect.allFields",
+		"Заданы все поля message_id, source_addr, dest_addr и service_type для существующего сообщения в ENROUTE состоянии");
+	__reg_tc__("cancelSm.incorrect.cancelFinal",
+		"Задан message_id существующего сообщения в финальном состоянии, source_addr совпадает, dest_addr и service_type нулевые");
+	//cancelSm.resp
+	__reg_tc__("cancelSm.resp.checkCmdStatusInvalidBindStatus",
+		"Если код ошибки ESME_RINVBNDSTS в поле command_status, то действительно sme зарегистрированна как receiver");
 }
 
 void sendInvalidPduTc()
@@ -545,9 +638,12 @@ void allProtocolTc()
 {
 	bindTc();
 	unbindTc();
+	enquireLinkTc();
 	submitSmTc();
 	replaceSmTc();
 	deliverySmTc();
+	querySmTc();
+	cancelSmTc();
 
 
 	sendInvalidPduTc();
