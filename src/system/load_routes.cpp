@@ -82,7 +82,13 @@ void loadRoutes(RouteManager* rm,RouteConfig& rc)
               __trace2__("dest mask: %s",dest_mask_it->c_str());
               __trace2__("src mask: %s",src_mask_it->c_str());
               print(rinfo);
-              rm->addRoute(rinfo);
+              try{
+                rm->addRoute(rinfo);
+              }
+              catch(exception& e)
+              {
+                __trace2__("[skiped]");
+              }
             }
           }
         }
