@@ -179,6 +179,7 @@ public class Index extends IndexProperties
       if (config.getBool("MCISme.Reasons.NoReply.inform"))       mcismeReasons += "N";
       if (config.getBool("MCISme.Reasons.Unconditional.inform")) mcismeReasons += "U";
       mscProperties.setProperty("MSC.mcisme.reasons", mcismeReasons);
+      mscProperties.setProperty("MSC.mcisme.strategy", ""+config.getInt("MCISme.Reasons.strategy"));
       savePropertiesFile(location, MCI_PROF_MSC_FILE, mscProperties, MCI_PROF_MSC_COMMENT);
 
       Properties mtfProperties = new Properties();

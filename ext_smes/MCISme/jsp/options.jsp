@@ -1,7 +1,8 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.admin.Constants, ru.novosoft.smsc.mcisme.beans.Options,
                  ru.novosoft.smsc.jsp.SMSCJspException, ru.novosoft.smsc.jsp.SMSCErrors,
-                 ru.novosoft.smsc.util.StringEncoderDecoder, java.util.*"%>
+                 ru.novosoft.smsc.util.StringEncoderDecoder, java.util.*,
+                 ru.novosoft.smsc.mcisme.beans.MCISmeBean"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.mcisme.beans.Options" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -133,8 +134,27 @@
   <td><input class=txt name=TSM value="<%=StringEncoderDecoder.encode(bean.getTSM())%>"></td>
 </tr>
 </table>
-<div class=page_subtitle>Release responce codes</div>
-<table class=properties_list cellspacing=0  width="100%" <%rowN=0;%>>
+<div class=page_subtitle>Release responce settings and codes</div>
+<table class=properties_list cellspacing=0 width="100%" <%rowN=0;%>>
+<col width="40%">
+<col width="60%">
+<tr class=row<%=rowN++&1%>>
+  <th><label for=skipCaller>Skip calls from unknown abonents</label></th>
+  <td><input class=check type=checkbox name=skipUnknownCaller id=skipCaller value=true <%=bean.isSkipUnknownCaller() ? "checked" : ""%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Release calls strategy</th>
+  <td>
+  <select name=releaseSettings>
+    <option value="<%= MCISmeBean.RELEASE_REDIRECT_STRATEGY%>" <%=
+    (bean.getReleaseStrategyInt() == MCISmeBean.RELEASE_REDIRECT_STRATEGY) ? "selected":""%>>REDIRECT CALLS ON MSC (MTS default)</option>
+    <option value="<%= MCISmeBean.RELEASE_PREFIXED_STRATEGY%>" <%=
+    (bean.getReleaseStrategyInt() == MCISmeBean.RELEASE_PREFIXED_STRATEGY) ? "selected":""%>>USE PREFIXED B-NUMBERS (UralTelecom)</option>
+  </select>
+  </td>
+</tr>
+</table>
+<table class=properties_list cellspacing=0  width="100%">
 <col width="39%">
 <col width="1%">
 <col width="60%">
@@ -164,7 +184,12 @@
   <td><input class=check type=checkbox name=informAbsent value=true <%=bean.isInformAbsent() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Default</th>
+  <th>Detach</th>
+  <td><input class=txt name=causeDetach value="<%=StringEncoderDecoder.encode(bean.getCauseDetach())%>"  validation="release_cause" onkeyup="resetValidation(this)"></td>
+  <td><input class=check type=checkbox name=informDetach value=true <%=bean.isInformDetach() ? "checked" : ""%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Other</th>
   <td><input class=txt name=causeOther value="<%=StringEncoderDecoder.encode(bean.getCauseOther())%>"  validation="release_cause" onkeyup="resetValidation(this)"></td>
   <td><input class=check type=checkbox name=informOther value=true <%=bean.isInformOther() ? "checked" : ""%>></td>
 </tr>

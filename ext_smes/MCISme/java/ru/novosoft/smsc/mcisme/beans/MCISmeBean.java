@@ -45,6 +45,9 @@ public class MCISmeBean extends PageBean
 
   public final static String MCI_PROF_LOCATION_PARAM = "MCISme.MCIProfLocation";
 
+  public final static int RELEASE_PREFIXED_STRATEGY = 0x01; // UralTelecom
+  public final static int RELEASE_REDIRECT_STRATEGY = 0x02; // MTS default
+
   private String mbMenu = null;
 
   private String smeId         = "MCISme";

@@ -47,16 +47,20 @@ public class Options extends MCISmeBean
   private int SPN = 0;
   private String TSM = "";
 
+  private boolean skipUnknownCaller = false;
+  private int releaseStrategy    = RELEASE_REDIRECT_STRATEGY; // MTS default
   private int causeBusy          = 0;
   private int causeNoReply       = 0;
   private int causeUnconditional = 0;
   private int causeAbsent        = 0;
+  private int causeDetach        = 0;
   private int causeOther         = 0;
 
   private boolean informBusy          = false;
   private boolean informNoReply       = false;
   private boolean informUnconditional = false;
   private boolean informAbsent        = false;
+  private boolean informDetach        = false;
   private boolean informOther         = false;
 
   private String  dataSourceType = "";
@@ -137,6 +141,22 @@ public class Options extends MCISmeBean
         SPN = getConfig().getInt("MCISme.Circuits.spn");
         TSM = getConfig().getString("MCISme.Circuits.tsm");
 
+        try { releaseStrategy = getConfig().getInt("MCISme.Reasons.strategy"); } catch (Throwable th) {
+          logger.warn("Parameter 'MCISme.Reasons.strategy' wasn't specified, using default (redirect)");
+          releaseStrategy = RELEASE_REDIRECT_STRATEGY;
+        }
+        try { skipUnknownCaller = getConfig().getBool("MCISme.Reasons.skipUnknownCaller"); } catch (Throwable th) {
+          logger.warn("Parameter 'MCISme.Reasons.skipUnknownCaller' wasn't specified, using default (false)");
+          skipUnknownCaller = false;
+        }
+        try { causeDetach = getConfig().getInt("MCISme.Reasons.Detach.cause"); } catch (Throwable th) {
+          logger.warn("Parameter 'MCISme.Reasons.Detach.cause' wasn't specified, using default (20)");
+          causeDetach = 20;
+        }
+        try { informDetach = getConfig().getBool("MCISme.Reasons.Detach.inform"); } catch (Throwable th) {
+          logger.warn("Parameter 'MCISme.Reasons.Detach.inform' wasn't specified, using default (false)");
+          informDetach = false;
+        }
         causeBusy  = getConfig().getInt ("MCISme.Reasons.Busy.cause");
         informBusy = getConfig().getBool("MCISme.Reasons.Busy.inform");
         causeNoReply  = getConfig().getInt ("MCISme.Reasons.NoReply.cause");
@@ -220,6 +240,8 @@ public class Options extends MCISmeBean
     getConfig().setInt   ("MCISme.Circuits.spn", SPN);
     getConfig().setString("MCISme.Circuits.tsm", TSM);
 
+    getConfig().setInt   ("MCISme.Reasons.strategy", releaseStrategy);
+    getConfig().setBool  ("MCISme.Reasons.skipUnknownCaller", skipUnknownCaller);
     getConfig().setInt   ("MCISme.Reasons.Busy.cause", causeBusy);
     getConfig().setBool  ("MCISme.Reasons.Busy.inform", informBusy);
     getConfig().setInt   ("MCISme.Reasons.NoReply.cause", causeNoReply);
@@ -228,6 +250,8 @@ public class Options extends MCISmeBean
     getConfig().setBool  ("MCISme.Reasons.Unconditional.inform", informUnconditional);
     getConfig().setInt   ("MCISme.Reasons.Absent.cause", causeAbsent);
     getConfig().setBool  ("MCISme.Reasons.Absent.inform", informAbsent);
+    getConfig().setInt   ("MCISme.Reasons.Detach.cause", causeDetach);
+    getConfig().setBool  ("MCISme.Reasons.Detach.inform", informDetach);
     getConfig().setInt   ("MCISme.Reasons.Other.cause", causeOther);
     getConfig().setBool  ("MCISme.Reasons.Other.inform", informOther);
 
@@ -617,6 +641,29 @@ public class Options extends MCISmeBean
     }
   }
 
+  public int getReleaseStrategyInt() {
+    return releaseStrategy;
+  }
+  public String getReleaseStrategy() {
+    return String.valueOf(releaseStrategy);
+  }
+  public void setReleaseStrategyInt(int releaseStrategy) {
+    this.releaseStrategy = releaseStrategy;
+  }
+  public void setReleaseStrategy(String releaseStrategy) {
+    try { this.releaseStrategy = Integer.decode(releaseStrategy).intValue(); }
+    catch (NumberFormatException e) {
+      logger.debug("Invalid int MCISme.Reasons.strategy parameter value: \"" + releaseStrategy + '"', e);
+    }
+  }
+
+  public boolean isSkipUnknownCaller() {
+    return skipUnknownCaller;
+  }
+  public void setSkipUnknownCaller(boolean skipUnknownCaller) {
+    this.skipUnknownCaller = skipUnknownCaller;
+  }
+
   public int getCauseBusyInt() {
     return causeBusy;
   }
@@ -699,6 +746,27 @@ public class Options extends MCISmeBean
   }
   public void setInformAbsent(boolean informAbsent) {
     this.informAbsent = informAbsent;
+  }
+
+  public int getCauseDetachInt() {
+    return causeDetach;
+  }
+  public void setCauseDetachInt(int causeDetach) {
+    this.causeDetach = causeDetach;
+  }
+  public String getCauseDetach() {
+    return String.valueOf(causeDetach);
+  }
+  public void setCauseDetach(String causeDetach) {
+    try { this.causeDetach = Integer.decode(causeDetach).intValue(); } catch (NumberFormatException e) {
+      logger.debug("Invalid int MCISme.Reasons.Detach.cause parameter value: \"" + causeDetach + '"', e);
+    }
+  }
+  public boolean isInformDetach() {
+    return informDetach;
+  }
+  public void setInformDetach(boolean informDetach) {
+    this.informDetach = informDetach;
   }
 
   public int getCauseOtherInt() {

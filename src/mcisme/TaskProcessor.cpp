@@ -142,14 +142,14 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     
     ReleaseSettings releaseSettings;
     try { releaseSettings.detachCause   = releaseSettingsCfg->getInt ("Detach.cause"); } catch (...) {
-        smsc_log_warn(logger, "Parameter <MCISme.Reasons.Detach.cause> missed.");
-        releaseSettings.detachCause = 0;
+        smsc_log_warn(logger, "Parameter <MCISme.Reasons.Detach.cause> missed. Using default (20)");
+        releaseSettings.detachCause = 20;
     }
     try { releaseSettings.detachInform  = releaseSettingsCfg->getBool("Detach.inform") ? 1:0; } catch (...) {
-        smsc_log_warn(logger, "Parameter <MCISme.Reasons.Detach.inform> missed.");
+        smsc_log_warn(logger, "Parameter <MCISme.Reasons.Detach.inform> missed. Using default (0)");
         releaseSettings.detachInform = 0;
     }
-    try { releaseSettings.skipUnknownCaller  = releaseSettingsCfg->getBool("skipUnknownCaller"); } catch (...) {
+    try { releaseSettings.skipUnknownCaller = releaseSettingsCfg->getBool("skipUnknownCaller"); } catch (...) {
         smsc_log_warn(logger, "Parameter <MCISme.Reasons.Detach.inform> missed. Skip is switched off.");
         releaseSettings.skipUnknownCaller = false;
     }
