@@ -73,6 +73,8 @@
   </section-->
 
   <section name="core">
+    <param name="default_locale" type="string">ru_ru</param>
+    <param name="locales" type="string">en_en, ru_ru</param>
     <param name="protocol_id" type="int">34</param>
     <param name="receipt_delivered" type="string">Message for $$string import=dest$$ delivered at $$date import=date$$</param>
     <param name="receipt_failed" type="string">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't delivered, reason: $$string import=error$$</param>
