@@ -19,19 +19,21 @@ using smsc::router::RouteInfo;
 class Smsc
 {
 public:
-  Smsc():ssockman(&tp,&smeman){};
+  Smsc():ssockman(&tp,&smeman),stopFlag(false){};
   ~Smsc();
   void init();
   void run();
+  void stop(){stopFlag=true;}
   void mainLoop();
-  TaskContainer tasks;  
-	bool Smsc::routeSms(SMS* sms, int& dest_idx,SmeProxy*& proxy);
+  TaskContainer tasks;
+  bool Smsc::routeSms(SMS* sms, int& dest_idx,SmeProxy*& proxy);
 protected:
   smsc::core::threads::ThreadPool tp;
   smsc::util::config::Manager* cfgman;
   smsc::system::smppio::SmppSocketsManager ssockman;
   smsc::smeman::SmeManager smeman;
-	smsc::router::RouteManager router;
+  smsc::router::RouteManager router;
+  bool stopFlag;
 };
 
 };//system
