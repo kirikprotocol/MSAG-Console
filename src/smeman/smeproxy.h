@@ -21,6 +21,7 @@ enum SmeProxyState
 
 typedef int SmeProxyPriority;
 const int SmeProxyPriorityMin = 0;
+const int SmeProxyPriorityDefault = 16000;
 const int SmeProxyPriorityMax = 32000;
 typedef smsc::core::synchronization::Event ProxyMonitor;
 
