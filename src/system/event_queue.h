@@ -8,10 +8,11 @@
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "smeman/smsccmd.h"
+#include "system/state_checker.hpp"
 //#include <stdexcept>
 #include <inttypes.h>
-#include <stdint.h>
-
+//#include <stdint.h>
+#include <string.h>
 
 namespace smsc {
 namespace system {
@@ -20,40 +21,13 @@ using namespace smsc::smeman;
 using namespace smsc::core::synchronization;
 
 typedef uint64_t MsgIdType;
-typedef uint64_t StateType;
-typedef SmscCommand CommandType;
+//typedef uint64_t StateType;
 //typedef uint64_t CommandType;
 
 const int MAX_COMMAND_PROCESSED = 200;
 const int LOCK_LIFE_LENGTH = 8;
 
 using std::runtime_error;
-
-namespace StateTypeValue
-{
-  const int UNKNOWN_STATE = 0;
-};
-
-class StateChecker
-{
-public:
-  static bool commandIsValid(StateType state,CommandType cmd)
-  {
-    return true;
-  }
-  static bool commandHasTimeout(CommandType cmd)
-  {
-    return true;
-  }
-  static bool stateIsFinal(StateType state)
-  {
-    return false;
-  }
-  static bool stateIsSuperFinal(StateType state)
-  {
-    return false;
-  }
-};
 
 struct Tuple
 {
@@ -83,8 +57,16 @@ class EventQueue
     Locker* next_unlocked;
     CmdRecord* cmds;
     Locker() : locked(false), next_unlocked(0), cmds(0) {}
-    ~Locker() { while ( cmds ) { CmdRecord* n = cmds->next; delete cmds; cmds = n;} }
-    
+    ~Locker()
+    {
+      while ( cmds )
+      {
+        CmdRecord* n = cmds->next;
+        delete cmds;
+        cmds = n;
+      }
+    }
+
     void push_back(CmdRecord* cmd)
     {
       CmdRecord** iter = &cmds;
@@ -92,7 +74,7 @@ class EventQueue
       *iter = cmd;
       cmd->next = 0;
     }
-    
+
     // выберает следующую допустимую команду
     // возвращает true если команда найдена - false в обраном случае
     // удаляет все команды для которых возможен таймаут и он истек
@@ -100,29 +82,31 @@ class EventQueue
     {
       CmdRecord** cmd = &cmds;
       unsigned long t = time(0);
-    loop:
-      if ( StateChecker::commandHasTimeout((*cmd)->command) )
+      while(*cmd)
       {
-        if ( t > ((*cmd)->timeout) )
+        if ( StateChecker::commandHasTimeout((*cmd)->command) )
         {
+          if ( t > ((*cmd)->timeout) )
+          {
+            // remove command
+            CmdRecord* tmp = *cmd;
+            *cmd = (*cmd)->next;
+            delete tmp;
+            continue;
+          }
+        }
+        __trace2__("getnextcommand(%lld): %d,%d",msgId,state,(*cmd)->command->get_commandId());
+        if ( StateChecker::commandIsValid(state,(*cmd)->command) )
+        {
+          c = (*cmd)->command;
           // remove command
           CmdRecord* tmp = *cmd;
           *cmd = (*cmd)->next;
           delete tmp;
-          goto loop;
+          return true;
         }
+        cmd = &(*cmd)->next;
       }
-      if ( StateChecker::commandIsValid(state,(*cmd)->command) )
-      {
-        c = (*cmd)->command;
-        // remove command
-        CmdRecord* tmp = *cmd;
-        *cmd = (*cmd)->next;
-        delete tmp;
-        return true;
-      }
-      cmd = &(*cmd)->next;
-      if ( *cmd  ) goto loop;
       return false;
     }
   };
@@ -131,16 +115,24 @@ class EventQueue
   {
     static const int TABLE_SIZE = MAX_COMMAND_PROCESSED*LOCK_LIFE_LENGTH;
     Locker* table[TABLE_SIZE];
+    int count;
   public:
+    HashTable()
+    {
+      memset(table,0,sizeof(Locker*)*TABLE_SIZE);
+      count=0;
+    }
     void put(MsgIdType key,Locker* value)
     {
       int idx = key%(TABLE_SIZE);
-      if ( table[idx] ) 
+      if ( table[idx] )
       {
         value->next_hash = table[idx];
       }
       else value->next_hash = 0;
       table[idx] = value;
+      count++;
+      __trace2__("put locker(%lld) hash count:%d",key,count);
     }
     Locker* get(MsgIdType key)
     {
@@ -154,19 +146,24 @@ class EventQueue
     void remove(MsgIdType key)
     {
       int idx = key%(TABLE_SIZE);
-      for ( Locker** l = table+idx; *l!=0; l = &(*l)->next_hash)
+      for ( Locker** l = table+idx; *l!=0; l = &((*l)->next_hash))
       {
         if ( (*l)->msgId == key )
         {
           *l = (*l)->next_hash;
+          count--;
+          __trace2__("delete locker(%lld) hash count:%d",key,count);
+          return;
         }
       }
+      __trace2__("deleting non-existent locker:%lld",key);
     }
+    int getCount(){return count;}
   } hash;
-  
+
   Event event;
   Mutex mutex;
-  
+
   Locker* first_unlocked;
   Locker* last_unlocked;
 
@@ -178,70 +175,85 @@ public:
   void enqueue(MsgIdType msgId, const CommandType& command)
   {
   __synchronized__
+    __trace2__("enqueue:%lld",msgId);
     Locker* locker = hash.get(msgId);
     if ( !locker )
     {
       locker = new Locker;
       hash.put(msgId,locker);
       if ( last_unlocked )
+      {
         last_unlocked->next_unlocked = locker;
-      else first_unlocked = last_unlocked = locker;
+        last_unlocked=locker;
+      }else
+      {
+        first_unlocked = last_unlocked = locker;
+      }
+      locker->state = StateTypeValue::UNKNOWN_STATE;
     }
-    locker->state = StateTypeValue::UNKNOWN_STATE;
     locker->msgId = msgId;
     locker->push_back(new CmdRecord(command));
     if ( !locker->locked )
       event.Signal();
   }
-  
-  
+
+
   // просматривет список активных записей
   // записи в одном из финальных состояний при отсутствии команд удаляуются
   // для записей имеющих команды выберает доступную для текущего состояния команду
   // если нет записей с доступными командами ожидает нотификации
-  void selectAndDequeue(Tuple& result)
+  bool selectAndDequeue(Tuple& result,volatile bool* quitting)
   {
-  wait_event:
-    event.Wait();
+    for(;;)
     {
-    __synchronized__
-      Locker* locker = 0;
-      Locker* prev = 0;
-      unsigned long t = time(0);
-      for (Locker* iter = first_unlocked; 
-           iter != 0; prev = iter, iter = iter->next_unlocked )
       {
-        bool success = iter->getNextCommand(result.command);
-        if ( success || !iter->cmds )
+      __synchronized__
+        Locker* locker = 0;
+        Locker* prev = 0;
+        //unsigned long t = time(0);
+        for (Locker* iter = first_unlocked;
+             iter != 0; prev = iter, iter = iter->next_unlocked )
         {
-          if ( iter == last_unlocked ) last_unlocked = prev;
-          if ( prev ) prev->next_unlocked = iter->next_unlocked;
-          else first_unlocked = iter->next_unlocked;
-          if ( success ) 
+          __trace2__("iterate unlocked lockers:%lld",iter->msgId);
+          cycle:
+          bool success = iter->getNextCommand(result.command);
+          if ( success || !iter->cmds )
           {
-            result.msgId = iter->msgId;
-            result.state = iter->state;
-            iter->locked = true;
-            return;
-          }
-          else //( !iter->cmds ) 
-          {
-            if ( StateChecker::stateIsFinal(iter->state) )
+            if ( iter == last_unlocked ) last_unlocked = prev;
+            if ( prev ) prev->next_unlocked = iter->next_unlocked;
+            else first_unlocked = iter->next_unlocked;
+            if ( success )
             {
-              hash.remove(iter->msgId);
-              delete locker;
+              result.msgId = iter->msgId;
+              result.state = iter->state;
+              iter->locked = true;
+              iter->next_unlocked = 0;
+              return true;
+            }
+            else //( !iter->cmds )
+            {
+              if ( StateChecker::stateIsFinal(iter->state) )
+              {
+                hash.remove(iter->msgId);
+                locker=iter;
+                iter=iter->next_unlocked;
+                delete locker;
+                if(!iter)break;
+                goto cycle;
+              }
             }
           }
-        }
-        else // есть только ожидающие команды
-        {
-          // none
+          else // есть только ожидающие команды
+          {
+            // none
+          }
         }
       }
-      goto wait_event;
+      event.Wait();
+      if(!hash.getCount() && *quitting)return false;
     }
   }
-  
+
   // изменяет состояние, снимает лок и добавляет в список активных
   // после чего нотифицирует исполнителей
   void changeState(MsgIdType msgId,StateType state)
@@ -253,7 +265,11 @@ public:
     locker->state = state;
     locker->locked = false;
     if ( last_unlocked )
+    {
       last_unlocked->next_unlocked = locker;
+      last_unlocked = locker;
+      locker->next_unlocked=0;
+    }
     else first_unlocked = last_unlocked = locker;
     event.Signal();
   }
@@ -267,4 +283,3 @@ public:
 
 
 #endif
-

@@ -45,6 +45,12 @@ int main(int argc,char* argv[])
           int len=sms.getMessageBody().getData(buf);
           buf[len]=0;
           trace2("%d:%s\n",len,buf);
+          PduDeliverySmResp resp;
+          resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+          resp.set_messageId("0");
+          trace2("DELIVER: seq=%d",pdu->get_sequenceNumber());
+          resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+          sme.sendSmpp(&resp.get_header());
         }else
         {
           trace("Ooops.\n");

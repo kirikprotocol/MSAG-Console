@@ -6,9 +6,9 @@
 #define __Cpp_Header__smsccmd_h__
 
 /*
-Для реализации кода команнды, так же,  
+Для реализации кода команнды, так же,
 можно использовать и полиморфизм для класса _SmscCommand
-и реализовать несколько фектори : для создания команд из Smpp/Map PDU 
+и реализовать несколько фектори : для создания команд из Smpp/Map PDU
 и создание PDU из команд
 */
 
@@ -36,7 +36,10 @@ enum CommandId
   DELIVERY,
   DELIVERY_RESP,
   SUBMIT,
-  SUBMIT_RESP
+  SUBMIT_RESP,
+  FORWARD,
+  QUERY,
+  ALERT,
 };
 
 struct SmsResp
@@ -58,6 +61,8 @@ public:
   ~SmsResp() { if ( messageId ) delete messageId; }
 };
 
+class SmeProxy;
+
 struct _SmscCommand
 {
   mutable int ref_count;
@@ -65,6 +70,7 @@ struct _SmscCommand
   uint32_t dialogId;
   void* dta;
   Mutex mutex;
+  SmeProxy *proxy;
   _SmscCommand() : ref_count(0), dta(0){};
   ~_SmscCommand()
   {
@@ -120,7 +126,7 @@ class SmscCommand
     ++(cmd->ref_count);
     return cmd;
   }
-  
+
   /*void copy(const _SmscCommand* _cmd)
   {
     __trace__(__PRETTY_FUNCTION__);
@@ -130,19 +136,22 @@ class SmscCommand
 
 
   void dispose() // for debuging ;(
-    { 
+    {
       //__trace__(__PRETTY_FUNCTION__);
-      if (cmd) unref(cmd); 
+      if (cmd) unref(cmd);
     }
 
 public:
-  
+
   struct Status
   {
     static const int ERROR = 8;
     static const int OK = 0;
   };
-  
+
+  SmeProxy* getProxy(){return cmd->proxy;}
+  void setProxy(SmeProxy* newproxy){cmd->proxy=newproxy;}
+
   // specialized constructors (meta constructors)
   static SmscCommand makeSumbmitSm(const SMS& sms,uint32_t dialogId)
   {
@@ -156,7 +165,7 @@ public:
     _cmd.dialogId = dialogId;
     return cmd;
   }
-  
+
   static SmscCommand makeDeliverySm(const SMS& sms,uint32_t dialogId)
   {
     SmscCommand cmd;
@@ -169,7 +178,7 @@ public:
     _cmd.dialogId = dialogId;
     return cmd;
   }
-  
+
   static SmscCommand makeSubmitSmResp(const char* messageId, uint32_t dialogId, uint32_t status)
   {
     SmscCommand cmd;
@@ -196,7 +205,7 @@ public:
     _cmd.dialogId = dialogId;
     return cmd;
   }
-  ~SmscCommand() { 
+  ~SmscCommand() {
      //__trace__(__PRETTY_FUNCTION__);
      dispose();
   }
@@ -260,8 +269,9 @@ public:
     // unreachable
     //_pdu.release();
     end_construct:
-     cmd = _cmd.release();
-     return;
+    _cmd->dialogId=pdu->get_sequenceNumber();
+    cmd = _cmd.release();
+    return;
   }
 
   SmppHeader* makePdu()
@@ -276,7 +286,7 @@ public:
         xsm->header.set_sequenceNumber(c.get_dialogId());
         fillSmppPduFromSms(xsm.get(),c.get_sms());
         return reinterpret_cast<SmppHeader*>(xsm.release());
-      } 
+      }
     case DELIVERY:
       {
         auto_ptr<PduXSm> xsm(new PduXSm);
@@ -284,7 +294,7 @@ public:
         xsm->header.set_sequenceNumber(c.get_dialogId());
         fillSmppPduFromSms(xsm.get(),c.get_sms());
         return reinterpret_cast<SmppHeader*>(xsm.release());
-      } 
+      }
     case SUBMIT_RESP:
       {
         auto_ptr<PduXSmResp> xsm(new PduXSmResp);
@@ -293,7 +303,7 @@ public:
         xsm->header.set_commandStatus(c.get_resp()->get_status());
         xsm->set_messageId(c.get_resp()->get_messageId());
         return reinterpret_cast<SmppHeader*>(xsm.release());
-      } 
+      }
     case DELIVERY_RESP:
       {
         auto_ptr<PduXSmResp> xsm(new PduXSmResp);
@@ -302,11 +312,11 @@ public:
         xsm->header.set_commandStatus(c.get_resp()->get_status());
         xsm->set_messageId(c.get_resp()->get_messageId());
         return reinterpret_cast<SmppHeader*>(xsm.release());
-      } 
+      }
     default:
       __unreachable__("unknown commandid");
     }
-		return 0; // for compiler 
+    return 0; // for compiler
   }
 
   SmscCommand(const SmscCommand& _cmd)
@@ -340,4 +350,3 @@ public:
 }; //smsc
 
 #endif
-

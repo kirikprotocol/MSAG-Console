@@ -4,6 +4,8 @@
 #include <memory>
 #include "admin/util/SignalHandler.h"
 #include "util/debug.h"
+#include "store/StoreManager.h"
+#include "system/state_machine.hpp"
 
 namespace smsc{
 namespace system{
@@ -108,6 +110,12 @@ void Smsc::init()
       router.addRoute(rinfo);
     }
   }
+
+  smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance());
+  store=smsc::store::StoreManager::getMessageStore();
+
+  tp.startTask(new StateMachine(eventqueue,store,this));
+
   smsc::admin::util::SignalHandler::registerShutdownHandler(new SmscSignalHandler(this));
 }
 
@@ -116,6 +124,14 @@ void Smsc::run()
   // некоторые действия до основного цикла
   mainLoop();
   // и после него
+  shutdown();
+}
+
+void Smsc::shutdown()
+{
+  __trace__("shutting down");
+  tp.shutdown();
+  smsc::store::StoreManager::shutdown();
 }
 
 };//system

@@ -21,6 +21,7 @@ public:
 
 
 int cnt=0;
+bool quit=false;
 
 class Monitor:public Thread{
 public:
@@ -32,6 +33,7 @@ public:
       sleep(1);
       printf("%d\n",cnt-last);
       last=cnt;
+      if(quit)break;
     }
     return 0;
   }
@@ -82,6 +84,8 @@ public:
     for(;;)
     {
       smsc::smpp::SmppHeader *pdu=sme.receiveSmpp(8000);
+      if(quit)break;
+      __trace2__("SUBMIT resp: seq=%d",pdu->get_sequenceNumber());
       disposePdu(pdu);
       counter.dec();
     }
@@ -155,8 +159,11 @@ int main(int argc,char* argv[])
     m.Start();
     r.Start();
     w.Start();
-    r.WaitFor();
     w.WaitFor();
+    quit=true;
+    r.Kill(16);
+    r.WaitFor();
+    m.WaitFor();
   }catch(std::exception& e)
   {
     fprintf(stderr,"EX:%s\n",e.what());

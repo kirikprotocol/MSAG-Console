@@ -98,6 +98,17 @@ bool BaseSme::sendSms(smsc::sms::SMS* sms)
   return true;
 }
 
+bool BaseSme::sendSmpp(SmppHeader* pdu)
+{
+  int sz=calcSmppPacketLength(pdu);
+  wrbuf.setSize(sz);
+  SmppStream s;
+  assignStreamWith(&s,wrbuf.buffer,sz,false);
+  if(!fillSmppPdu(&s,pdu))return false;
+  if(!sendBuffer(wrbuf.buffer,sz))throw Exception("Failed to send smpp packet");
+  return true;
+}
+
 
 bool BaseSme::sendBuffer(const char* buffer,int size)
 {

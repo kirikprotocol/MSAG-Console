@@ -31,6 +31,7 @@ bool Smsc::routeSms(SMS* sms, int& dest_idx,SmeProxy*& proxy)
   return ok;
 }
 
+#if 0
 void Smsc::mainLoop()
 {
   int src_proxy_index;
@@ -127,6 +128,52 @@ void Smsc::mainLoop()
     {
       __warning__("unknown exception catched");
     }
+  }
+}
+#endif
+
+void Smsc::mainLoop()
+{
+  SmeProxy* src_proxy;
+  int src_proxy_index;
+
+  for(;;)
+  {
+
+    do
+    {
+      // !!!TODO: taskcontainer expiration checks
+      src_proxy = smeman.selectSmeProxy(WAIT_DATA_TIMEOUT,&src_proxy_index);
+      if ( stopFlag ) return;
+    }
+    while(!src_proxy);
+
+    SmscCommand cmd = src_proxy->getCommand();
+    cmd.setProxy(src_proxy);
+    SMSId id=0;
+    switch(cmd->get_commandId())
+    {
+      case __CMD__(SUBMIT):
+      {
+        __trace2__("main loop submit: seq:%d",cmd->get_dialogId());
+        id=store->getNextId();
+        break;
+      }
+      case __CMD__(DELIVERY_RESP):
+      {
+        Task task;
+        uint32_t dialogId = cmd->get_dialogId();
+        __trace2__("delivery response received. id=%d",dialogId);
+
+        if (!tasks.findAndRemoveTask(src_proxy->getUniqueId(),dialogId,&task))
+        {
+          __warning__("task not found for delivery response");
+          continue; //jump to begin of for
+        }
+        id=task.messageId;
+      }
+    }
+    eventqueue.enqueue(id,cmd);
   }
 }
 

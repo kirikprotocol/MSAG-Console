@@ -62,9 +62,9 @@ public:
   virtual bool next()
   {
     do{
-			if (started&&ptr!=end) ++ptr;
-			started = true;
-		}while ( ptr!=end && ptr->deleted );
+      if (started&&ptr!=end) ++ptr;
+      started = true;
+    }while ( ptr!=end && ptr->deleted );
     return ptr != end;
   }
 
@@ -166,14 +166,14 @@ __synchronized__
 
 void SmeManager::unregisterSmeProxy(const SmeSystemId& systemId)
 {
-  
+
   SmeIndex index;
   {
     __synchronized__
     index = internalLookup(systemId);
     if ( index == INVALID_SME_INDEX ) throw SmeError();
   }
-  
+
   {
     MutexGuard guard(records[index].mutex);
     if ( records[index].proxy )

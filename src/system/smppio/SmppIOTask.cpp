@@ -1,3 +1,5 @@
+#define DISABLE_TRACING
+
 #include "system/smppio/SmppIOTask.hpp"
 #include "system/smppio/SmppProxy.hpp"
 #include "util/debug.h"
@@ -78,7 +80,7 @@ int SmppInputThread::Execute()
   Multiplexer::SockArray ready;
   Multiplexer::SockArray error;
   int i;
-  for(;!isStopping;)
+  while(!isStopping)
   {
     {
       MutexGuard g(mon);
@@ -87,9 +89,10 @@ int SmppInputThread::Execute()
         trace("in:wait for sockets");
         //mon.wait();
         mon.wait();
-        if(isStopping)return 0;
+        if(isStopping)break;
         trace("in:got new socket");
       }
+      if(isStopping)break;
       for(i=0;i<sockets.Count();i++)
       {
         SmppSocket *ss=sockets[i];
@@ -243,7 +246,8 @@ int SmppInputThread::Execute()
             }break;
             default:
             {
-              ss->getProxy()->putIncomingCommand(pdu);
+              SmscCommand cmd(pdu);
+              ss->getProxy()->putIncomingCommand(cmd);
             }break;
           }
           disposePdu(pdu);
@@ -251,7 +255,11 @@ int SmppInputThread::Execute()
       }
     }
   }
-  trace("exiting smpp input thread loop?????");
+  trace("exiting smpp input thread loop");
+  for(i=sockets.Count()-1;i>=0;i--)
+  {
+    killSocket(i);
+  }
   return 0;
 }
 
@@ -306,16 +314,17 @@ int SmppOutputThread::Execute()
   Multiplexer::SockArray ready;
   Multiplexer::SockArray error;
   int i;
-  for(;!isStopping;)
+  while(!isStopping)
   {
     mon.Lock();
     while(sockets.Count()==0)
     {
       trace("out:wait for sockets");
       mon.wait();
-      if(isStopping)return 0;
+      if(isStopping)break;
       trace("out:got new socket");
     }
+    if(isStopping)break;
     int cnt=0;
     mul.clear();
     trace("check data for output");
@@ -335,6 +344,7 @@ int SmppOutputThread::Execute()
       if(!ss->hasData() && ss->getProxy() && ss->getProxy()->hasOutput())
       {
         SmppHeader *pdu=ss->getProxy()->getOutgoingCommand().makePdu();
+        trace2("SEND: seq number:%d",pdu->get_sequenceNumber());
         int size=calcSmppPacketLength(pdu);
         char* buf=ss->getBuffer(size);
         SmppStream st;
@@ -421,7 +431,11 @@ int SmppOutputThread::Execute()
         }
       }
     } // if ready
-  } // main loop
+  } // main loop return
+  for(i=sockets.Count()-1;i>=0;i--)
+  {
+    killSocket(i);
+  }
   return 0;
 } // Execute
 

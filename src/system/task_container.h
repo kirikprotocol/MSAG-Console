@@ -5,6 +5,8 @@
 #if !defined __Cxx_Header__task_container_h__
 #define __Cxx_Header__task_container_h__
 
+#include "sms/sms.h"
+
 namespace smsc{
 namespace system{
 
@@ -15,6 +17,7 @@ struct Task
   uint32_t proxy_id;
   uint32_t sequenceNumber;
   unsigned long timeout;
+  smsc::sms::SMSId messageId;
   Task* next;
   Task* timeout_prev;
   Task* timeout_next;
@@ -39,7 +42,7 @@ class TaskContainer
   Task *first_task;
   Task *timeout_link_begin;
   Task *timeout_link_end;
-public:  
+public:
   TaskContainer():
     //first_task(pool),
     timeout_link_begin(0),
@@ -50,11 +53,11 @@ public:
       pool[i].next = pool+i+1;
     }
     pool[TASK_CONTAINER_MAX_PROCESSED-1].next = 0;
-		first_task = pool;
+    first_task = pool;
     memset(hash,0,sizeof(hash));
   }
   ~TaskContainer() {}
-  
+
   bool createTask(const Task& t)
   {
     checkTimeout();
@@ -74,9 +77,9 @@ public:
     task->next = hash[hashcode];
     hash[hashcode] = task;
     task->timeout = time(NULL)+8;
-		return true;
+    return true;
   }
-  
+
   void checkTimeout()
   {
     unsigned long _time = time(NULL);
@@ -85,7 +88,7 @@ public:
       __findAndRemove(timeout_link_begin);
     }
   }
-  
+
   bool findAndRemoveTask(uint32_t proxy_idx,uint32_t sequenceNumber,Task *res)
   {
     __require__(res);
@@ -93,7 +96,7 @@ public:
     int hashcode = calcHashCode(proxy_idx,sequenceNumber);
     Task* _res = hash[hashcode];
     Task* prev = 0;
-    while ( res )
+    while ( _res )
     {
       if ( _res->proxy_id == proxy_idx && _res->sequenceNumber == sequenceNumber )
       {
@@ -102,7 +105,7 @@ public:
         return true;
       }
       prev = _res;
-      res = prev->next;
+      _res = prev->next;
     }
     return false;
   }
@@ -131,14 +134,14 @@ public:
     {
       prev->next = task->next;
     }
-    else 
+    else
     {
       __require__(addr);
       *addr = task->next;
     }
-    
+
     // remove from time link
-    
+
     if ( task->timeout_prev )
     {
       task->timeout_prev->timeout_next = task->timeout_next;
@@ -147,7 +150,7 @@ public:
     {
       timeout_link_begin = task->timeout_next;
     }
-    
+
     if ( task->timeout_next )
     {
       task->timeout_next->timeout_prev = task->timeout_prev;
@@ -159,7 +162,7 @@ public:
 
     // add into free_list
 
-    task->next = first_task; 
+    task->next = first_task;
     first_task = task;
   }
 };

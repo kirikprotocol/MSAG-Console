@@ -53,6 +53,7 @@ public:
   int getNextSeq(){return smppCount++;}
 
   bool sendSms(smsc::sme::SMS* sms);
+  bool sendSmpp(SmppHeader* pdu);
   virtual bool processPdu(SmppHeader* pdu){return false;}
   virtual bool processSms(smsc::sms::SMS* sms)=0;
 

@@ -21,5 +21,6 @@ int main(int argc,char* argv[])
   }
   fprintf(stderr,"quiting smsc\n");
   delete app;
+  fprintf(stderr,"app deleted\n");
   return 0;
 }
