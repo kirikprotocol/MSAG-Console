@@ -300,6 +300,7 @@ public class SmsOperativeSource extends SmsSource
         if (is != null) parseBody(is, row);
         set.addRow(row);
       }
+      if (rs.next()) set.setHasMore(true);
     } catch (Exception exc) {
       exc.printStackTrace();
       throw new SQLException("Operation with operative storage failed. Details: "+exc.getMessage());

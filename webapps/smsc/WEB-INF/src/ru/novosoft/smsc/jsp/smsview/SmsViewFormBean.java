@@ -42,6 +42,7 @@ public class SmsViewFormBean extends IndexBean
   private String oldSort = null;
 
   private Vector checkedRows = new Vector();
+  private boolean exactRowsCount = false;
 
   protected int init(List errors)
   {
@@ -145,7 +146,8 @@ public class SmsViewFormBean extends IndexBean
     totalSize = 0;
     totalRowsCount = 0;
     checkedRows.removeAllElements();
-    try {
+    try
+    {
       if (query.getStorageType() == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE &&
           hostsManager.getServiceInfo(Constants.ARCHIVE_DAEMON_SVC_ID).getStatus()
           != ServiceInfo.STATUS_RUNNING)
@@ -153,8 +155,10 @@ public class SmsViewFormBean extends IndexBean
         clearQuery();
         throw new AdminException("Archive Daemon is not running. ");
       }
-      totalRowsCount = view.getSmsCount(query);
+
       rows = view.getSmsSet(query);
+      if (exactRowsCount) totalRowsCount = view.getSmsCount(query);
+      else totalRowsCount = rows.getRowsCount();
       startPosition = 0;
       totalSize = (rows == null) ? 0:rows.getRowsCount();
       processResortAndNavigate(true);
@@ -171,6 +175,7 @@ public class SmsViewFormBean extends IndexBean
     startPosition = 0;
     totalSize = 0;
     totalRowsCount = 0;
+    exactRowsCount = false;
     checkedRows.removeAllElements();
     query = new SmsQuery();
     processResortAndNavigate(true);
@@ -223,9 +228,11 @@ public class SmsViewFormBean extends IndexBean
     return processDeleteSet(set);
   }
 
-  public SmsRow getRow(int index)
-  {
+  public SmsRow getRow(int index) {
     return rows == null ? null : rows.getRow(index);
+  }
+  public boolean isHasMore() {
+    return rows == null ? false : rows.isHasMore();
   }
 
   public void refreshQuery()
@@ -412,6 +419,13 @@ public class SmsViewFormBean extends IndexBean
 
   public SmsRow getRow() {
     return row;
+  }
+
+  public boolean isExactRowsCount() {
+    return exactRowsCount;
+  }
+  public void setExactRowsCount(boolean exactRowsCount) {
+    this.exactRowsCount = exactRowsCount;
   }
 
 }

@@ -9,8 +9,6 @@ package ru.novosoft.smsc.admin.smsview;
  * @version 1.0
  */
 
-import javax.sql.*;
-
 import java.util.Vector;
 
 import ru.novosoft.smsc.admin.smsc_service.Smsc;

@@ -1,7 +1,6 @@
 package ru.novosoft.smsc.admin.smsview.archive;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.smsview.archive.*;
 import ru.novosoft.smsc.admin.smsview.SmsSource;
 import ru.novosoft.smsc.admin.smsview.SmsSet;
 import ru.novosoft.smsc.admin.smsview.SmsQuery;
@@ -33,7 +32,7 @@ public class SmsArchiveSource extends SmsSource
     InputStream input = null;
     OutputStream output = null;
 
-    SmsSet set = new SmsSet();
+    SmsSet set = new SmsSet(); set.setHasMore(false);
     int rowsMaximum = query.getRowsMaximum();
     if (rowsMaximum == 0) return set;
 
@@ -65,6 +64,7 @@ public class SmsArchiveSource extends SmsSource
             if (--toReceive <= 0) {
               toReceive = rowsMaximum-set.getRowsCount();
               if (toReceive <= 0) {
+                set.setHasMore(true);
                 communicator.send(new EmptyMessage());
               } else {
                 toReceive = (toReceive < MAX_SMS_FETCH_SIZE) ? toReceive:MAX_SMS_FETCH_SIZE;

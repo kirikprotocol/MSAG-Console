@@ -18,6 +18,7 @@ public class SmsSet
   public static int MAX_SMS_FETCH_COUNT = 10000;
 
   private Vector rows = new Vector();
+  private boolean hasMore = false;
 
   public int getRowsCount() {
     return rows.size();
@@ -32,7 +33,7 @@ public class SmsSet
     rows.addElement(row);
   }
   public void clean() {
-    rows.removeAllElements();
+    rows.removeAllElements(); hasMore = false;
   }
   public SmsRow getRow(int index) {
     return ((SmsRow)rows.elementAt(index));
@@ -42,5 +43,11 @@ public class SmsSet
     pattern.setId(Long.parseLong(id));
     int index = rows.indexOf(pattern);
     return (index >= 0) ? getRow(index) : null;
+  }
+  public boolean isHasMore() {
+    return (rows.size() > 0) ? hasMore:false;
+  }
+  public void setHasMore(boolean hasMore) {
+    this.hasMore = hasMore;
   }
 }
