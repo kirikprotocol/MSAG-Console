@@ -71,9 +71,9 @@ switch(beanResult = bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.ge
 </tr>
 <tr class=row0>
 	<th class=label>From Date:</th>
-	<td nowrap><input type=text id=fromDate name=fromDate class=calendarField value="<%=bean.getFromDate()%>" maxlength=19 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button></td>
+	<td nowrap><input type=text id=fromDate name=fromDate class=calendarField value="<%=bean.getFromDate()%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button></td>
 	<th class=label>Till Date:</th>
-	<td nowrap><input type=text id="tillDate" name="tillDate" class=calendarField value="<%=bean.getTillDate()%>" maxlength=19><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
+	<td nowrap><input type=text id="tillDate" name="tillDate" class=calendarField value="<%=bean.getTillDate()%>" maxlength=20><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
 </tr>
 </table>
 <%}%>
