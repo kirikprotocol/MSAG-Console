@@ -76,6 +76,7 @@ namespace smsc { namespace mcisme
 
         std::string     abonent;
         Array<Message>  messages; // Messages for abonent, 0 - current
+        bool            bUpdated;
 
         void insertNewEvent(Connection* connection, 
                             const MissedCallEvent& event, bool setCurrent=false);
@@ -86,14 +87,20 @@ namespace smsc { namespace mcisme
         static void init(DataSource* _ds);
         static uint64_t getNextId(Connection* connection=0);
 
-        Task(std::string abonent) : abonent(abonent) {};
+        Task(std::string abonent) : abonent(abonent), bUpdated(false) {};
         virtual ~Task() {};
 
+        inline bool wasUpdated() { // check wether current message was updated while whaiting responce
+            return bUpdated;
+        };
+        
         void load(); // loadup messages on startup
         void roll(); // roll to next message (if available)
 
         void addEvent(const MissedCallEvent& event);
-        void formatMessage(Message& message);
+        bool getMessage(Message& message);
+        
+        void rollCurrent(const char* smsc_id);
     };
 
     /* TODO: Implement it ???

@@ -18,20 +18,20 @@ const char* GET_CURRENT_MSG_ID = "GET_CURRENT_MSG_ID";
 const char* SET_CURRENT_MSG_ID = "SET_CURRENT_MSG_ID";
 
 /* ----------------------- Access to message ids generation (MCI_MSG_SEQ) -------------------- */
-const char* GET_NEXT_SEQID_SQL  = "SELECT MCI_MSG_SEQ.NEXTVAL FROM DUAL";
+const char* GET_NEXT_SEQID_SQL  = "SELECT MCISME_MSG_SEQ.NEXTVAL FROM DUAL";
 
 /* ----------------------- Access to current messages set (MCI_MSG_SET) ---------------------- */
-const char* SELECT_MSG_TXT_SQL  = "SELECT MSG FROM MCI_MSG_SET SET WHERE ID=:ID";
-const char* CREATE_NEW_MSG_SQL  = "INSERT INTO MCI_MSG_SET (ID, ST, ABONENT, MSG, SMSC_ID) "
-                                  "VALUES (:ID, :ST, :ABONENT, :MSG, NULL)";
-const char* UPDATE_MSG_TXT_SQL  = "UPDATE MCI_MSG_SET SET MSG=:MSG WHERE ID=:ID";
-const char* LOADUP_MESSAGES_SQL = "SELECT MSG FROM MCI_MSG_SET SET WHERE ID>=:ID AND ST=:ST"; // ???
+const char* SELECT_MSG_TXT_SQL  = "SELECT MESSAGE FROM MCISME_MSG_SET WHERE ID=:ID";
+const char* CREATE_NEW_MSG_SQL  = "INSERT INTO MCISME_MSG_SET (ID, STATE, ABONENT, MESSAGE, SMSC_ID) "
+                                  "VALUES (:ID, :STATE, :ABONENT, :MESSAGE, NULL)";
+const char* UPDATE_MSG_TXT_SQL  = "UPDATE MCISME_MSG_SET SET MESSAGE=:MESSAGE WHERE ID=:ID";
+const char* LOADUP_MESSAGES_SQL = "SELECT MESSAGE FROM MCISME_MSG_SET WHERE ID>=:ID AND STATE=:STATE"; // ???
 
 /* ----------------------- Access to current message ids (MCI_CUR_MSG) ----------------------- */
-const char* INS_CURRENT_MSG_SQL = "INSERT INTO MCI_CUR_MSG (ABONENT, ID) VALUES (:ABONENT, :ID)";
-const char* DEL_CURRENT_MSG_SQL = "DELETE FROM MCI_CUR_MSG WHERE ABONENT=:ABONENT";
-const char* GET_CURRENT_MSG_SQL = "SELECT ID FROM MCI_CUR_MSG WHERE ABONENT=:ABONENT"; // check is null
-const char* SET_CURRENT_MSG_SQL = "UPDATE MCI_CUR_MSG SET ID=:ID WHERE ABONENT=:ABONENT";
+const char* INS_CURRENT_MSG_SQL = "INSERT INTO MCISME_CUR_MSG (ABONENT, ID) VALUES (:ABONENT, :ID)";
+const char* DEL_CURRENT_MSG_SQL = "DELETE FROM MCISME_CUR_MSG WHERE ABONENT=:ABONENT";
+const char* GET_CURRENT_MSG_SQL = "SELECT ID FROM MCISME_CUR_MSG WHERE ABONENT=:ABONENT"; // check is null
+const char* SET_CURRENT_MSG_SQL = "UPDATE MCISME_CUR_MSG SET ID=:ID WHERE ABONENT=:ABONENT";
 
 const char* ROLLBACK_TRANSACT_ERROR_MESSAGE = "Failed to roolback transaction on system data source.";
 const char* OBTAIN_CONNECTION_ERROR_MESSAGE = "Failed to obtain connection to system data source.";
@@ -87,15 +87,6 @@ uint64_t Task::getNextId(Connection* connection/*=0*/)
 
 /* ----------------------- Main logic implementation ----------------------- */
 
-void Task::load()
-{
-    // TODO: loadup messages on startup
-}
-void Task::roll()
-{
-    // TODO: roll to next message (if available)
-}
-
 void Task::insertNewEvent(Connection* connection, const MissedCallEvent& event, bool setCurrent/*=false*/)
 {
     __require__(connection);
@@ -109,7 +100,7 @@ void Task::insertNewEvent(Connection* connection, const MissedCallEvent& event, 
     message.addEvent(event, true);
     
     createMessage->setUint64(1, message.id);
-    createMessage->setUint8 (2, MESSAGE_NEW_STATE); // ? MESSAGE_WAIT_STATE
+    createMessage->setUint8 (2, (setCurrent) ? MESSAGE_WAIT_STATE:MESSAGE_NEW_STATE); // ???
     createMessage->setString(3, abonent.c_str());
     createMessage->setString(4, message.message.c_str());
     createMessage->executeUpdate();
@@ -188,13 +179,16 @@ void Task::addEvent(const MissedCallEvent& event)
         {
             Message message = messages[index];
             if (message.addEvent(event, false))
-            {   // Active messages ok => update text & set replace if current
+            {   // Active message ok => update text & set replace if current
                 updateMessageText(connection, message);
-                if (index == 0) message.replace = true; // ??? if restarted ???
+                if (index == 0) { 
+                    bUpdated = true;
+                    message.replace = true; // ??? if restarted ???
+                }
                 messages[index] = message;
             }
             else
-            {   // Active messages is full => add new message, do not set it current
+            {   // Active message is full => add new message, do not set it current
                 insertNewEvent(connection, event, false);
             }
         } 
@@ -213,8 +207,33 @@ void Task::addEvent(const MissedCallEvent& event)
         throw;
     }
 }
-void Task::formatMessage(Message& message)
+bool Task::getMessage(Message& message)
 {
+    bool notEmpty = messages.Count() > 0;
+    if (notEmpty) { 
+        message = messages[0];
+        bUpdated = false;
+    }
+    return notEmpty;
 }
+
+void Task::rollCurrent(const char* smsc_id)
+{
+    if (messages.Count() <= 0) return;
+
+    Message message;
+    messages.Shift(message);
+    // ÆÎÏÀ !!!
+}
+
+void Task::load()
+{
+    // TODO: loadup messages on startup
+}
+void Task::roll()
+{
+    // TODO: roll to next message (if available)
+}
+
 
 }}

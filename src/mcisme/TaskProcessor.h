@@ -86,20 +86,6 @@ namespace smsc { namespace mcisme
         MessageSender() {};
     };
 
-    struct TaskMsgId
-    {
-        std::string taskId;
-        uint64_t    msgId;
-
-        TaskMsgId(std::string taskId="", uint64_t msgId=0) : taskId(taskId), msgId(msgId) {};
-        TaskMsgId(const TaskMsgId& tmi) : taskId(tmi.taskId), msgId(tmi.msgId) {};
-
-        TaskMsgId& operator=(const TaskMsgId& tmi) {
-            taskId = tmi.taskId; msgId = tmi.msgId;
-            return *this;
-        }
-    };
-
     class ThreadManager : public ThreadPool
     {
     protected:
@@ -212,8 +198,8 @@ namespace smsc { namespace mcisme
         Hash<Task *>    tasks; // Hash for tasks by abonent
 
         int                responceWaitTime, receiptWaitTime;
-        Mutex              taskIdsBySeqNumLock, responceWaitQueueLock, receiptWaitQueueLock;
-        IntHash<TaskMsgId> taskIdsBySeqNum;
+        Mutex              messagesBySeqNumLock, responceWaitQueueLock, receiptWaitQueueLock;
+        IntHash<Message>   messagesBySeqNum;
         Mutex              receiptsLock;
         Hash<ReceiptData>  receipts;
         
@@ -240,7 +226,13 @@ namespace smsc { namespace mcisme
         
         void initDataSource(ConfigView* config);
 
-        Task* getTask(const char* abonent, bool& newone);
+        Task* getTask(const char* abonent);
+        Task* createTask(const char* abonent, bool& newone);
+
+        void checkAddReceipt(const char* smsc_id, ReceiptData& receipt);
+        void checkDelReceipt(const char* smsc_id, ReceiptData& receipt);
+        bool deleteReceipt  (const char* smsc_id);
+        bool attachReceipt  (const char* smsc_id, bool delivered, bool retry);
 
         friend class EventRunner;
         virtual void processResponce(int seqNum, bool accepted, bool retry,

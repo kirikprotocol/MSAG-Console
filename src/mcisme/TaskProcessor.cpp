@@ -159,8 +159,8 @@ void TaskProcessor::Start()
             return;
         }
         {
-            MutexGuard snGuard(taskIdsBySeqNumLock);
-            taskIdsBySeqNum.Empty();
+            MutexGuard snGuard(messagesBySeqNumLock);
+            messagesBySeqNum.Empty();
         }
         //resetWaitingTasks();
         openOutQueue();
@@ -225,7 +225,7 @@ void TaskProcessor::Run()
     }
 }
 
-Task* TaskProcessor::getTask(const char* abonent, bool& newone)
+Task* TaskProcessor::createTask(const char* abonent, bool& newone)
 {
     // TODO: implement via TaskGuard ???
     newone = false;
@@ -237,6 +237,13 @@ Task* TaskProcessor::getTask(const char* abonent, bool& newone)
     newone = true;
     return task;
 }
+Task* TaskProcessor::getTask(const char* abonent)
+{
+    // TODO: implement via TaskGuard ???
+    MutexGuard guard(tasksLock);
+    Task** taskPtr = tasks.GetPtr(abonent);
+    return ((taskPtr) ? *taskPtr:0);
+}
 void TaskProcessor::processEvent(const MissedCallEvent& event)
 {
     const char* abonent = event.to.c_str();
@@ -245,18 +252,53 @@ void TaskProcessor::processEvent(const MissedCallEvent& event)
     Message message;
     {
         bool newone = false;
-        Task* task = getTask(abonent, newone);
+        Task* task = createTask(abonent, newone);
         
         MutexGuard taskLock(*task); // Lock while operating on task
         task->addEvent(event);
         if (!newone) return;        // Do not send message
-        task->formatMessage(message);
+        if (!task->getMessage(message)) return;
     }
     putToOutQueue(message);
 }
 void TaskProcessor::processMessage(const Message& message)
 {
-    // TODO: process out message (send it)
+    smsc_log_debug(logger, "Sending message #%lld to '%s': %s", 
+                   message.id, message.abonent.c_str(), message.message.c_str());
+
+    MutexGuard msGuard(messageSenderLock);
+    if (!messageSender) {
+        smsc_log_error(logger, "No Message sender defined !!!");
+        return;
+    }
+
+    int seqNum = messageSender->getSequenceNumber();
+    {
+        {
+            MutexGuard snGuard(messagesBySeqNumLock);
+            if (messagesBySeqNum.Exist(seqNum))
+            {
+                smsc_log_warn(logger, "Sequence id=%d was already used !", seqNum);
+                messagesBySeqNum.Delete(seqNum);
+            }
+            messagesBySeqNum.Insert(seqNum, message);
+        }
+        MutexGuard respGuard(responceWaitQueueLock);
+        responceWaitQueue.Push(ResponceTimer(time(NULL)+responceWaitTime, seqNum));
+        // Add responce waiting. If timeout will be reached => need resend message (Check thread ???)
+    }
+
+    if (!messageSender->send(seqNum, message))
+    {
+        smsc_log_error(logger, "Failed to send message #%lld to '%s'", 
+                       message.id, message.abonent.c_str());
+
+        MutexGuard snGuard(messagesBySeqNumLock);
+        if (messagesBySeqNum.Exist(seqNum)) messagesBySeqNum.Delete(seqNum);
+        return;
+    }
+    smsc_log_debug(logger, "Sent message #%lld to '%s'",
+                   message.id, message.abonent.c_str());
 }
 
 /* ------------------------ Input (notification) queue access ------------------------ */ 
@@ -340,10 +382,139 @@ bool TaskProcessor::getFromOutQueue(Message& message)
 void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool immediate,
                                     std::string smscId)
 {
+    smsc_log_debug(logger, "Responce: seqNum=%d, accepted=%d, retry=%d, immediate=%d",
+                   seqNum, accepted, retry, immediate);
+
+    Message message;
+    {   
+        Message* messagePtr = 0;
+        MutexGuard snGuard(messagesBySeqNumLock);
+        if (!(messagePtr = messagesBySeqNum.GetPtr(seqNum))) {
+            smsc_log_warn(logger, "processResponce(): Sequence number=%d is unknown !", seqNum);
+            return;
+        }
+        message = *messagePtr;
+        messagesBySeqNum.Delete(seqNum);
+    }
+    
+    Task* task = getTask(message.abonent.c_str());
+    if (!task) {
+        smsc_log_warn(logger, "Unable to locate task '%s' for sequence number=%d", 
+                      message.abonent.c_str(), seqNum);
+        return;
+    }
+    
+    bool  isMessageToSend = false;
+    Message messageToSend;
+    {
+        MutexGuard taskLock(*task); // Lock task while operating on it
+    
+        if (!accepted)
+        {
+            if (retry) { 
+                if (!immediate) {
+                    // TODO: retry with shifted startDelivery time
+                    smsc_log_debug("Need retry !");
+                }
+                messageToSend = message; isMessageToSend = true;
+            }
+            else {
+                // TODO: error current message => delete, shift to next & try send
+                smsc_log_debug("Need error !");
+            }
+        }
+        else
+        {
+            const char* smsc_id = smscId.c_str();
+
+            ReceiptData receipt;
+            checkAddReceipt(smsc_id, receipt);
+            if (!receipt.receipted) // wasn't receipted before 
+            {
+                if (task->wasUpdated()) { // more events come while waiting responce
+                    if (task->getMessage(messageToSend)) isMessageToSend = true; 
+                    else smsc_log_warn(logger, "STRANGE: Updated task has no messages to send.");
+                }
+                else {
+                    // TODO: update current message set ST=WAIT_RECEIPT, SMSC_ID=smsc_id;
+                    // roll to next message      
+                }
+            }
+
+            checkDelReceipt(smsc_id, receipt);
+            if (receipt.receipted) // receipt already come
+            {
+                smsc_log_debug(logger, "Receipt come when responce is in process");
+
+                // TODO: process receipt too
+            }
+        }
+    }
+
+    if (isMessageToSend) putToOutQueue(messageToSend);
 }
 
 void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool retry)
 {
+    const char* smsc_id = smscId.c_str();
+    
+    if (attachReceipt(smsc_id, delivered, retry)) return;
+    
+    // TODO: send notification(s) to caller(s)
+
+    if (deleteReceipt(smsc_id)) ; // ???
+}
+
+/* ---------------------- Technical: receipts & responces ordering --------------------- */ 
+
+void TaskProcessor::checkDelReceipt(const char* smsc_id, ReceiptData& receipt)
+{
+    MutexGuard guard(receiptsLock);
+    ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
+    if (receiptPtr) {  
+        receipt = *receiptPtr;
+        receipts.Delete(smsc_id);
+    }
+    else receipt.receipted = false;
+}
+void TaskProcessor::checkAddReceipt(const char* smsc_id, ReceiptData& receipt)
+{
+    MutexGuard guard(receiptsLock);
+    receipt.receipted = false;
+    ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
+    if (receiptPtr) receipt = *receiptPtr;
+    else {
+        receipts.Insert(smsc_id, receipt);
+        MutexGuard recptGuard(receiptWaitQueueLock);
+        receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, smsc_id));
+    }
+}
+bool TaskProcessor::deleteReceipt(const char* smsc_id)
+{
+    MutexGuard guard(receiptsLock);
+    ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
+    if (receiptPtr) {  
+        receipts.Delete(smsc_id);
+        return true;
+    }
+    return false;
+}
+bool TaskProcessor::attachReceipt(const char* smsc_id, bool delivered, bool retry)
+{
+    MutexGuard guard(receiptsLock);
+    ReceiptData* receiptPtr = receipts.GetPtr(smsc_id);
+    if (receiptPtr) {  // attach receipt data;
+        receiptPtr->receipted = true;
+        receiptPtr->delivered = delivered;
+        receiptPtr->retry     = retry;
+        return true;
+    }
+    else {
+        receipts.Insert(smsc_id, ReceiptData(true, delivered, retry));
+        MutexGuard recptGuard(receiptWaitQueueLock);
+        receiptWaitQueue.Push(ReceiptTimer(time(NULL)+receiptWaitTime, smsc_id));
+    }
+    return false;
 }
 
 }}
