@@ -236,9 +236,11 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
     return localeMessages.getString( locale, key );
   }
 
+/*
 	public LocaleMessages getLocaleMessages()
 	{
 		return localeMessages;
 	}
+*/
 }
 

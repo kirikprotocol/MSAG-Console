@@ -39,7 +39,7 @@ public interface SMSCAppContext extends AppContext
 
 	public String getLocaleString(Locale locale, String key );
 
-  public LocaleMessages getLocaleMessages();
+//  public LocaleMessages getLocaleMessages();
 
 	SmeManager getSmeManager();
 

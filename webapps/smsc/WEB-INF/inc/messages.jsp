@@ -9,11 +9,7 @@ if (errorMessages.size() > 0)
 		String code = exc.getMessage();
 		String msg = null;
 		String param = exc.getParam();
-		if (messages != null)
-		{
-			try { msg = messages.getString(code);}
-			catch (Throwable t) {}
-		}
+		msg = appContext.getLocaleString(appContext.getUserPreferences().getLocale(), code);
 		if(code.startsWith("error."))
 		{
 			%><div class=err><%=(msg == null) ? code : msg%><%=(param == null) ? "" : ": " + param%></div><%
