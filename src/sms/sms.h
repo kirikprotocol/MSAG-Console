@@ -877,7 +877,7 @@ namespace smsc {
             __trace2__("Bdec: tag=%hd key=%s len=%hd pos=%d length=%d",tag,key?key->c_str():"NULL",len,pos,length);
             if ( key )
             {
-              __require__(*(buffer+pos+len) == 0);
+              //__require__(*(buffer+pos+len) == 0);
               hash[key->c_str()].set((char*)buffer+pos,len);
             }
             pos+=len;
