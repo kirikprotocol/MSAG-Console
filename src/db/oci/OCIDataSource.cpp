@@ -241,7 +241,7 @@ Routine* OCIConnection::createRoutine(const char* call, bool func)
 OCIDataDescriptor::OCIDataDescriptor(ub2 _type, sb4 _size)
     : type(_type), size(_size), ind(OCI_IND_NOTNULL)
 {
-    __trace2__("Type is %d, Size is %d", type, _size);
+    __trace2__("Type is %d, Size is %d", _type, _size);
 
     switch (type)
     {
