@@ -26,23 +26,4 @@ public class SqlJobInfo extends JobInfo
 		config.setBool(prefixName + ".query", query);
 	}
 
-	public String getAddress() throws Config.ParamNotFoundException, Config.WrongParamTypeException
-	{
-		return config.getString(prefixName + ".address");
-	}
-
-	public void setAddress(String address)
-	{
-		config.setString(prefixName + ".address", address);
-	}
-
-	public String getAlias() throws Config.ParamNotFoundException, Config.WrongParamTypeException
-	{
-		return config.getString(prefixName + ".alias");
-	}
-
-	public void setAlias(String alias)
-	{
-		config.setString(prefixName + ".alias", alias);
-	}
 }

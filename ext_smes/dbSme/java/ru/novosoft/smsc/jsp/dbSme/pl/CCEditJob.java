@@ -95,8 +95,8 @@ public class CCEditJob extends CC
 			job.setSql(sql);
 			job.setInput(input);
 			job.setOutput(output);
-			((SqlJobInfo) job).setAddress(address);
-			((SqlJobInfo) job).setAlias(alias);
+			job.setAddress(address);
+			job.setAlias(alias);
 			if (type.equals(SqlJobInfo.JOB_TYPE_Sql))
 			{
 				((SqlJobInfo) job).setQuery(query);
@@ -204,8 +204,8 @@ public class CCEditJob extends CC
 					sql = job.getSql();
 					input = job.getInput();
 					output = job.getOutput();
-					address = ((SqlJobInfo) job).getAddress();
-					alias = ((SqlJobInfo) job).getAlias();
+					address = job.getAddress();
+					alias = job.getAlias();
 					if (type.equals(SqlJobInfo.JOB_TYPE_Sql))
 					{
 						query = ((SqlJobInfo) job).isQuery();
