@@ -62,7 +62,7 @@ public class SmeBean extends PageBean
 
 	public void setServiceId(String serviceId)
 	{
-		this.serviceId = serviceId;
+		this.serviceId = serviceId.trim();
 	}
 
 	public String getPriority()
@@ -89,7 +89,7 @@ public class SmeBean extends PageBean
 
 	public void setSystemType(String systemType)
 	{
-		this.systemType = systemType;
+		this.systemType = systemType.trim();
 	}
 
 	public int getTypeOfNumberInt()
@@ -143,7 +143,7 @@ public class SmeBean extends PageBean
 
 	public void setInterfaceVersion(String interfaceVersion)
 	{
-		this.interfaceVersion = interfaceVersion;
+		this.interfaceVersion = interfaceVersion.trim();
 	}
 
 	public String getRangeOfAddress()
@@ -153,7 +153,7 @@ public class SmeBean extends PageBean
 
 	public void setRangeOfAddress(String rangeOfAddress)
 	{
-		this.rangeOfAddress = rangeOfAddress;
+		this.rangeOfAddress = rangeOfAddress.trim();
 	}
 
 	public String getPassword()
@@ -163,7 +163,7 @@ public class SmeBean extends PageBean
 
 	public void setPassword(String password)
 	{
-		this.password = password;
+		this.password = password.trim();
 	}
 
 	public String getTimeout()
@@ -210,7 +210,7 @@ public class SmeBean extends PageBean
 
 	public void setReceiptSchemeName(String receiptSchemeName)
 	{
-		this.receiptSchemeName = receiptSchemeName;
+		this.receiptSchemeName = receiptSchemeName.trim();
 	}
 
 	public boolean isDisabled()

@@ -52,7 +52,7 @@ public class CommandCall extends ServiceCommand
 			else if (param instanceof List)
 			{
 				paramElem.setAttribute("type", Type.Types[Type.StringListType].getName());
-				paramElem.appendChild(document.createTextNode(StringEncoderDecoder.encode(encodeStringList((List)param))));
+				paramElem.appendChild(document.createTextNode(StringEncoderDecoder.encode(encodeStringList((List) param))));
 			}
 		}
 	}
@@ -63,7 +63,7 @@ public class CommandCall extends ServiceCommand
 		for (Iterator i = list.iterator(); i.hasNext();)
 		{
 			String s = (String) i.next();
-         result += encodeComma(s) + (i.hasNext() ? "," : "");
+			result += encodeComma(s) + (i.hasNext() ? "," : "");
 		}
 		return result;
 	}

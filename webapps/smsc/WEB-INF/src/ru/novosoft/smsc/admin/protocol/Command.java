@@ -53,12 +53,10 @@ public class Command
 	public String getText()
 	{
 		//logger.debug("start getText");
-    String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
-    if( encoding == null ) encoding = "ISO-8859-1";
+		String encoding = null; // C++ code doesn't know about other codings // System.getProperty("file.encoding");
+		if (encoding == null) encoding = "ISO-8859-1";
 		Element doc = document.getDocumentElement();
-		return "<?xml version=\"1.0\" encoding=\""+encoding+"\"?>\n"
-				  + "<!DOCTYPE command SYSTEM \"file:///command.dtd\">\n\n"
-				  + getText(doc, "");
+		return "<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>\n" + "<!DOCTYPE command SYSTEM \"file:///command.dtd\">\n\n" + getText(doc, "");
 	}
 
 	protected String getText(Element doc, String prefix)
@@ -82,21 +80,22 @@ public class Command
 			}
 		}
 		result += ">";
-		if (value == null || value.equals(""))
-			result += '\n';
-		else
+		if (value != null)
 			result += value;
 
+		String childsResult = "";
 		NodeList list = doc.getChildNodes();
 		for (int i = 0; i < list.getLength(); i++)
 		{
 			Node node = list.item(i);
 			if (node.getNodeType() == Node.ELEMENT_NODE)
-				result += getText((Element) node, newPrefix);
+				childsResult += getText((Element) node, newPrefix);
 		}
 
+		if (childsResult != null && childsResult.length() > 0)
+			result += '\n' + childsResult;
 
-		result += (value == null || value.equals("") ? prefix : "") + "</" + name + ">\n";
+		result += "</" + name + ">\n";
 		return result;
 	}
 }

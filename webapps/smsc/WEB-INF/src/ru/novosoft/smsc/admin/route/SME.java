@@ -86,9 +86,9 @@ public class SME
 		this.typeOfNumber = typeOfNumber;
 		this.numberingPlan = numberingPlan;
 		this.interfaceVersion = interfaceVersion;
-		this.systemType = systemType;
-		this.password = password;
-		this.addrRange = addrRange;
+		this.systemType = systemType.trim();
+		this.password = password.trim();
+		this.addrRange = addrRange.trim();
 		this.smeN = smeN;
 		this.wantAlias = wantAlias;
 		this.timeout = timeout;
@@ -98,6 +98,8 @@ public class SME
 		this.mode = mode;
 		if (this.receiptSchemeName == null)
 			this.receiptSchemeName = "default";
+		else
+			this.receiptSchemeName = this.receiptSchemeName.trim();
 	}
 
 	public SME(Element smeElement) throws NullPointerException
