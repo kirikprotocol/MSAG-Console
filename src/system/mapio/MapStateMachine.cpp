@@ -1569,11 +1569,11 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     dialog->sms = _sms;
     dialog->state = MAPST_WaitSmsMODelimiter2;
     dialog->ussdSequence = NextSequence();
-    _sms->setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_USSR);
+    dialog->sms->setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_USSR);
     {
       ostringstream  ost;
       ost << dialog->ussdSequence;
-      //sms->setStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,message_reference.str());
+      //dialog->sms->setStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,message_reference.str());
     }
     //SendSubmitCommand (dialog.get());
   }MAP_CATCH(__dialogid_map,0);
