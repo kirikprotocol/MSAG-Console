@@ -1052,7 +1052,7 @@ USHORT_T Et96MapOpenConf (
             //dialog->state = MAPST_BROKEN;
             throw MAPDIALOG_FATAL_ERROR(
               FormatText("MAP::%s version alredy 1 and unsupported!",__FUNCTION__),
-              refuseReason_p?(MAP_ERRORS_BASE+*refuseReason_p):MAP_FALURE));
+              refuseReason_p?(MAP_ERRORS_BASE+*refuseReason_p):MAP_FALURE);
           }
         }else{
           //dialog->state = MAPST_BROKEN;
