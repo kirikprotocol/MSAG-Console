@@ -480,14 +480,14 @@ void StoreManager::doReplaceSms(StorageConnection* connection,
 
             getBodyStmt->setSMSId(id);
             getBodyStmt->getBody(body);
-            connection->commit(); // Need to reset BLOB (SELECT FOR UPDATE)
+            //connection->commit(); // Need to reset BLOB (SELECT FOR UPDATE)
 
             DestroyBodyStatement* destroyBodyStmt
                 = connection->getDestroyBodyStatement();
 
             destroyBodyStmt->setSMSId(id);
             destroyBodyStmt->destroyBody();
-            connection->commit();
+            //connection->commit();
         }
     }
     catch (StorageException& exc)
