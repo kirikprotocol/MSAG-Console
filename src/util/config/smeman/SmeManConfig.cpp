@@ -123,6 +123,23 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
             } else if (strcmp(name.get(), "receiptSchemeName") == 0)
             {
               record->recdata.smppSme.receiptSchemeName = value.release();
+            } else if (strcmp(name.get(), "disabled") == 0)
+            {
+              record->recdata.smppSme.disabled = !strcmp(value.get(),"true");
+            } else if (strcmp(name.get(), "mode") == 0)
+            {
+							if (strcmp(value.get(),"tx") == 0)
+							{
+								record->recdata.smppSme.mode = MODE_TX;
+							} else if (strcmp(value.get(),"rx") == 0)
+							{
+								record->recdata.smppSme.mode = MODE_RX;
+							} else if (strcmp(value.get(),"trx") == 0)
+							{
+								record->recdata.smppSme.mode = MODE_TRX;
+							} else {
+								logger.warn("unknown mode value \"%s\"", value.get());
+							}
             } else {
               logger.warn("unknown param name \"%s\"", name.get());
             }
