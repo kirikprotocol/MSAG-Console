@@ -876,7 +876,7 @@ bool Task::enrouteMessage(uint64_t msgId, Connection* connection)
             connectionInternal = true;
         }
         if (!connection) 
-            throw Exception("deleteMessage(): Failed to obtain connection");
+            throw Exception("enrouteMessage(): Failed to obtain connection");
         
         std::auto_ptr<char> enrouteMessageId(prepareSqlCall(DO_ENROUTE_MESSAGE_STATEMENT_ID));
         std::auto_ptr<char> enrouteMessageSql(prepareSqlCall(DO_ENROUTE_MESSAGE_STATEMENT_SQL));

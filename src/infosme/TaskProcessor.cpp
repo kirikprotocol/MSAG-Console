@@ -431,17 +431,14 @@ void TaskProcessor::processMessage(Task* task, Connection* connection, uint64_t 
         if (retry && (immediate || (info.retryOnFail && info.retryTime > 0)))
         {
             time_t nextTime = time(NULL)+((immediate) ? 0:info.retryTime);
-            if (info.endDate <= 0 || (info.endDate > 0 && info.endDate >= nextTime))
-            {
-                if (!task->retryMessage(msgId, nextTime, connection)) {
-                    smsc_log_warn(logger, "Message #%lld not found for retry.", msgId);
-                    statistics->incFailed(info.id);
-                } else {
-                    needDelete = false;
-                    if (!immediate) statistics->incRetried(info.id);
-                }
+            
+            if (!task->retryMessage(msgId, nextTime, connection)) {
+                smsc_log_warn(logger, "Message #%lld not found for retry.", msgId);
+                statistics->incFailed(info.id);
+            } else {
+                needDelete = false;
+                if (!immediate) statistics->incRetried(info.id);
             }
-            else statistics->incFailed(info.id);
         }
         else statistics->incFailed(info.id);
         if (needDelete) task->deleteMessage(msgId, connection);
@@ -494,17 +491,13 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
         if (retry && (immediate || (info.retryOnFail && info.retryTime > 0)))
         {
             time_t nextTime = time(NULL)+((immediate) ? 0:info.retryTime);
-            if (info.endDate <= 0 || (info.endDate > 0 && info.endDate >= nextTime))
-            {
-                if (!task->retryMessage(tmIds.msgId, nextTime)) {
-                    smsc_log_warn(logger, "Message #%lld not found for retry.", tmIds.msgId);
-                    statistics->incFailed(tmIds.taskId);
-                } else {
-                    needDelete = false;
-                    if (!immediate) statistics->incRetried(tmIds.taskId);
-                }
+            if (!task->retryMessage(tmIds.msgId, nextTime)) {
+                smsc_log_warn(logger, "Message #%lld not found for retry.", tmIds.msgId);
+                statistics->incFailed(tmIds.taskId);
+            } else {
+                needDelete = false;
+                if (!immediate) statistics->incRetried(tmIds.taskId);
             }
-            else statistics->incFailed(tmIds.taskId);
         }
         else statistics->incFailed(tmIds.taskId);
         if (needDelete) task->deleteMessage(tmIds.msgId);
