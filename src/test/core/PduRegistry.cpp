@@ -51,19 +51,35 @@ bool PduRegistry::removePdu(const PduData& pduData)
 	idMap.erase(pduData.smsId);
 	seqNumMap.erase(pduData.pdu->get_sequenceNumber());
 	msgRefMap.erase(pduData.msgRef);
-	WaitTimeMap::iterator it = waitTimeMap.find(pduData.waitTime);
-	for (; it != waitTimeMap.end() && it->first == pduData.waitTime; it++)
+	pair<WaitTimeMap::iterator, WaitTimeMap::iterator> p =
+		waitTimeMap.equal_range(pduData.waitTime);
+	for (; p.first != p.second; p.first++)
 	{
-		if (it->second->pdu->get_sequenceNumber() ==
+		PduData* data = p.first->second;
+		if (data->pdu->get_sequenceNumber() == 
 			pduData.pdu->get_sequenceNumber() &&
-			it->second->msgRef == pduData.msgRef)
+			data->msgRef == pduData.msgRef)
 		{
-			waitTimeMap.erase(it);
+			waitTimeMap.erase(p.first);
 			break;
 		}
 	}
 	delete pduData.pdu;
 	return true;
+}
+
+vector<PduData*> PduRegistry::getOverduePdu(time_t waitTime)
+{
+	vector<PduData*> res;
+	WaitTimeMap::iterator it = waitTimeMap.lower_bound(waitTime);
+	for (; it != waitTimeMap.end(); it--)
+	{
+		if (it->second->waitTime <= waitTime)
+		{
+			res.push_back(it->second);
+		}
+	}
+	return res;
 }
 
 PduData* PduRegistry::getFirstPendingSubmitSmPdu(time_t waitTime)
