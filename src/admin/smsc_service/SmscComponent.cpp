@@ -386,21 +386,75 @@ namespace smsc {
 					catch (smsc::util::Exception &e)
 					{
 						logger.error("Exception on starting SMSC: \"%s\"", e.what());
-						throw AdminException("Exception on starting SMSC: \"%s\"", e.what());
+						throw AdminException("Exception on stopping SMSC: \"%s\"", e.what());
 					}
 					catch (std::exception &e)
 					{
-						logger.error("Exception on starting SMSC: \"%s\"", e.what());
+						logger.error("Exception on stopping SMSC: \"%s\"", e.what());
 						throw AdminException("Exception on starting SMSC: \"%s\"", e.what());
 					}
 					catch (...)
 					{
-						logger.error("Unknown exception on starting SMSC");
+						logger.error("Unknown exception on stopping SMSC");
 						throw AdminException("Unknown exception on starting SMSC");
 					}
 				}
 				else
 					throw	AdminException("SMSC Application started already");
+			}
+
+			void SmscComponent::abort()
+			{
+				smsc::core::synchronization::MutexGuard guard(mutex);
+				if (smsc_app_runner.get() != 0)
+				{
+					try
+					{
+						smsc_app_runner->abort();
+						smsc_app_runner->WaitFor();
+						smsc_app_runner.reset(0);
+					}
+					catch (smsc::util::Exception &e)
+					{
+						logger.error("Exception on starting SMSC: \"%s\"", e.what());
+						throw AdminException("Exception on aborting SMSC: \"%s\"", e.what());
+					}
+					catch (std::exception &e)
+					{
+						logger.error("Exception on aborting SMSC: \"%s\"", e.what());
+					}
+					catch (...)
+					{
+						logger.error("Unknown exception on aborting SMSC");
+					}
+				}
+			}
+
+			void SmscComponent::dump()
+			{
+				smsc::core::synchronization::MutexGuard guard(mutex);
+				if (smsc_app_runner.get() != 0)
+				{
+					try
+					{
+						smsc_app_runner->dump();
+						smsc_app_runner->WaitFor();
+						smsc_app_runner.reset(0);
+					}
+					catch (smsc::util::Exception &e)
+					{
+						logger.error("Exception on starting SMSC: \"%s\"", e.what());
+						throw AdminException("Exception on dumping SMSC: \"%s\"", e.what());
+					}
+					catch (std::exception &e)
+					{
+						logger.error("Exception on dumping SMSC: \"%s\"", e.what());
+					}
+					catch (...)
+					{
+						logger.error("Unknown exception on dumping SMSC");
+					}
+				}
 			}
 
 			void SmscComponent::applyRoutes()

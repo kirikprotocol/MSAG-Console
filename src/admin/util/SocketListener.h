@@ -99,6 +99,14 @@ public:
     logger.debug("ServiceSocketListener: dead");
 	}
 
+	void abort()
+	{
+		isShutdownSignaled = true;
+    sock.Abort();
+    logger.debug("ServiceSocketListener: server socket closed");
+    logger.debug("ServiceSocketListener: dead");
+	}
+
 protected:
 	Socket sock;
 	bool isShutdownSignaled;

@@ -13,6 +13,8 @@
 #include <util/signal.hpp>
 #include <util/xml/init.h>
 #include <resourcemanager/ResourceManager.hpp>
+#include <system/smscsignalhandlers.h>
+#include <core/threads/Thread.hpp>
 
 bool file_exist(const char * const filename)
 {
@@ -56,34 +58,55 @@ throw (smsc::admin::AdminException)
   throw smsc::admin::AdminException(message);
 }
 
-void alarmHandler(int signo)
+class SmscRunner : public smsc::core::threads::Thread
 {
-  abort();
-}
+public:
+	SmscRunner(smsc::system::Smsc* smsc)
+		: _app(smsc)
+	{}
+	virtual ~SmscRunner()
+	{
+		_app = 0;
+	}
 
-// added by igork
+	virtual int Execute()
+	{
+		try{
+			if (_app != 0)
+				_app->run();
+			else
+				fprintf(stderr,"smsc runner not initialized");
+		}catch(std::exception& e)
+		{
+			fprintf(stderr,"top level exception: %s\n",e.what());
+			return (-1);
+		}
+		catch(...)
+		{
+			fprintf(stderr,"FATAL EXCEPTION!\n");
+			return (-0);
+		}
+		_app->shutdown();
+		_app=0;
+		fprintf(stderr,"SMSC finished\n");
+		return 0;
+	}
+
+protected:
+	smsc::system::Smsc* _app;
+};
+
+
 void atExitHandler(void)
 {
-    //sigsend(P_PID, getppid(), SIGCHLD);
     smsc::util::xml::TerminateXerces();
 }
 
-
 int main(int argc,char* argv[])
 {
-  {
-    //added by igork
-    atexit(atExitHandler);
+	atexit(atExitHandler);
+	smsc::system::clearThreadSignalMask();
 
-    sigset_t set;
-    sigemptyset(&set);
-    for(int i=1;i<=37;i++)if(i!=SIGQUIT)sigaddset(&set,i);
-    if(thr_sigsetmask(SIG_SETMASK,&set,NULL)!=0)
-    {
-      __warning__("failed to set thread signal mask!");
-    };
-  }
-  smsc::util::setSignalHandler(SIGALRM, alarmHandler);
   try{
     smsc::system::SmscConfigs cfgs;
     smsc::util::config::Manager::init(get_filename("config.xml"));
@@ -132,22 +155,10 @@ int main(int argc,char* argv[])
 
       smsc::system::Smsc *app=new smsc::system::Smsc;
 
-      app->init(cfgs);
-
-      {
-        sigset_t set;
-        sigemptyset(&set);
-        sigaddset(&set,SIGINT);
-//#ifndef SPARC
-//        sigaddset(&set,SIGQUIT);
-//#endif
-        if(thr_sigsetmask(SIG_UNBLOCK,&set,NULL)!=0)
-        {
-          __warning__("failed to set thread signal mask!");
-        };
-      }
-
-      app->run();
+			smsc::system::registerSmscSignalHandlers(app);
+			SmscRunner runner(app);
+			runner.Start();
+			runner.WaitFor();
 
       fprintf(stderr,"quiting smsc\n");
       delete app;
@@ -166,22 +177,7 @@ int main(int argc,char* argv[])
       listener.init(admin_host, servicePort);
       listener.Start();
 
-      SmscShutdownHandler shutdown_handler(listener);
-      SmscShutdownHandler::registerShutdownHandler(&shutdown_handler);
-
-      {
-        sigset_t set;
-        sigemptyset(&set);
-        sigaddset(&set,SIGINT);
-//#ifndef SPARC
-//        sigaddset(&set,SIGQUIT);
-//#endif
-        if(thr_sigsetmask(SIG_UNBLOCK,&set,NULL)!=0)
-        {
-          __warning__("failed to set thread signal mask!");
-        };
-      }
-
+      smsc::system::registerSmscSignalHandlers(&smsc_component, &listener);
 
       fprintf(stderr,"smsc started\n");
       //running

@@ -19,13 +19,13 @@ public:
 	
 	static void stop() throw ();
 
-	static void WaitFor() throw (AdminException)
+	static int WaitFor() throw (AdminException)
 	{
 		if (listener == 0)
 		{
 			throw AdminException("Service Socket Listener is not started");
 		}
-		listener->WaitFor();
+		return listener->WaitFor();
 	}
 
 protected:

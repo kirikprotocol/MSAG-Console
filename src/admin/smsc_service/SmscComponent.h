@@ -43,8 +43,9 @@ public:
     throw (AdminException);
 
   void runSmsc() throw (AdminException);
-
-  void stopSmsc() throw (AdminException);
+	void stopSmsc() throw (AdminException);
+	void abort();
+	void dump();
 
 protected:
   int updateProfile(const Arguments &args);
@@ -105,14 +106,12 @@ private:
       {
         fprintf(stderr,"top level exception: %s\n",e.what());
         runner_logger.error("SMSC execution exception: \"%s\", SMSC stopped.", e.what());
-        sigsend(P_PID, getpid(), smsc::admin::util::SignalHandler::SHUTDOWN_SIGNAL);
         return (-1);
       }
       catch(...)
       {
         fprintf(stderr,"FATAL EXCEPTION!\n");
         runner_logger.error("SMSC execution unknown exception.");
-        sigsend(P_PID, getpid(), smsc::admin::util::SignalHandler::SHUTDOWN_SIGNAL);
         return (-0);
       }
       _app->shutdown();
@@ -124,6 +123,16 @@ private:
     {
       _app->stop();
     }
+
+		void abort()
+		{
+			_app->abortSmsc();
+		}
+
+		void dump()
+		{
+			_app->dumpSmsc();
+		}
 
   protected:
     std::auto_ptr<Smsc> _app;
