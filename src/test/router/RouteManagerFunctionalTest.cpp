@@ -33,8 +33,8 @@ public:
 	void printRoutes();
 
 private:
-	TestRouteData* prepareForNewRoute(const Address& origAddr,
-		const Address& destAddr);
+	TestRouteData prepareForNewRoute(const Address& origAddr,
+		const Address& destAddr, bool createProxy);
 	void executeTestCases(const Address& origAddr, const Address& destAddr);
 	void printRoute(const TestRouteData* routeData);
 };
@@ -57,9 +57,7 @@ RouteManagerFunctionalTest::~RouteManagerFunctionalTest()
 
 void RouteManagerFunctionalTest::printRoute(const TestRouteData* routeData)
 {
-	ostringstream os;
-	os << *routeData << endl;
-	log.debug("%s", os.str().c_str());
+	log.debugStream() << *routeData;
 }
 
 void RouteManagerFunctionalTest::printRoutes()
@@ -72,16 +70,18 @@ void RouteManagerFunctionalTest::printRoutes()
 	delete it;
 }
 
-TestRouteData* RouteManagerFunctionalTest::prepareForNewRoute(
-	const Address& origAddr, const Address& destAddr)
+TestRouteData RouteManagerFunctionalTest::prepareForNewRoute(
+	const Address& origAddr, const Address& destAddr, bool createProxy)
 {
-	TestRouteData* routeData = new TestRouteData(origAddr, destAddr);
 	//Для каждого маршрута - отдельная sme (для идентификации)
 	sme.push_back(new SmeInfo());
 	stack.back()->push_back(tcSme.addCorrectSme(sme.back(), RAND_TC));
-	stack.back()->push_back(tcSme.registerCorrectSmeProxy(sme.back()->systemId,
-		&routeData->proxyId));
-	return routeData;
+	SmeProxy* proxy = NULL;
+	if (createProxy)
+	{
+		stack.back()->push_back(tcSme.registerCorrectSmeProxy(sme.back()->systemId, &proxy));
+	}
+	return TestRouteData(origAddr, destAddr, proxy);
 }
 
 void RouteManagerFunctionalTest::executeTestCases(
@@ -92,54 +92,77 @@ void RouteManagerFunctionalTest::executeTestCases(
 	//Создание нового стека для origAddr, destAddr
 	stack.push_back(new TCResultStack());
 
-	//Добавление корректного маршрута, 3/8
-	//Добавление корректного маршрута с неправильными (непроверяемыми) значениями, 1/8
-	//Добавление некорректного маршрута, 1/8
-	//Поиск маршрута, 3/8
-	TestRouteData* routeData = NULL;
-	for (TCSelector s(RAND_SET_TC, 8); s.check(); s++)
+	//Добавление корректного рабочего маршрута, 1/7
+	//Добавление корректного нерабочего маршрута, 2/7
+	//Добавление корректного маршрута с неправильными (непроверяемыми) значениями, 1/7
+	//Добавление некорректного маршрута, 1/7
+	//Поиск маршрута, 2/7
+	RouteInfo* existentRoute = NULL;
+	for (TCSelector s(RAND_SET_TC, 7); s.check(); s++)
 	{
 		switch (s.value())
 		{
 			case 1:
+				{
+					TestRouteData routeData = prepareForNewRoute(
+						origAddr, destAddr, true);
+					stack.back()->push_back(tcRoute.addCorrectRouteMatch(
+						sme.back()->systemId, &routeData, RAND_TC));
+					routeReg.putRoute(routeData);
+					if (!existentRoute)
+					{
+						existentRoute = new RouteInfo(*routeData.route);
+					}
+				}
+				break;
 			case 2:
+				{
+					TestRouteData routeData = prepareForNewRoute(
+						origAddr, destAddr, false);
+					stack.back()->push_back(tcRoute.addCorrectRouteMatch(
+						sme.back()->systemId, &routeData, RAND_TC));
+					routeReg.putRoute(routeData);
+					if (!existentRoute)
+					{
+						existentRoute = new RouteInfo(*routeData.route);
+					}
+				}
+				break;
 			case 3:
 				{
-					if (routeData)
+					TestRouteData routeData = prepareForNewRoute(
+						origAddr, destAddr, true);
+					stack.back()->push_back(tcRoute.addCorrectRouteNotMatch(
+						sme.back()->systemId, &routeData, RAND_TC));
+					routeReg.putRoute(routeData);
+					if (!existentRoute)
 					{
-						delete routeData;
+						existentRoute = new RouteInfo(*routeData.route);
 					}
-					routeData = prepareForNewRoute(origAddr, destAddr);
-					TCResult* res = tcRoute.addCorrectRoute(
-						sme.back()->systemId, routeData, RAND_TC);
-					routeReg.putRoute(*routeData);
-printRoute(routeData);
-					stack.back()->push_back(res);
 				}
 				break;
 			case 4:
 				{
-					if (routeData)
+					TestRouteData routeData = prepareForNewRoute(
+						origAddr, destAddr, true);
+					stack.back()->push_back(tcRoute.addCorrectRouteNotMatch2(
+						sme.back()->systemId, &routeData, RAND_TC));
+					routeReg.putRoute(routeData);
+					if (!existentRoute)
 					{
-						delete routeData;
+						existentRoute = new RouteInfo(*routeData.route);
 					}
-					routeData = prepareForNewRoute(origAddr, destAddr);
-					TCResult* res = tcRoute.addCorrectRoute2(
-						sme.back()->systemId, routeData, RAND_TC);
-					routeReg.putRoute(*routeData);
-printRoute(routeData);
-					stack.back()->push_back(res);
 				}
 				break;
 			case 5:
-				if (routeData)
+				if (existentRoute)
 				{
 					TCResult* res = tcRoute.addIncorrectRoute(
-						sme.back()->systemId, *routeData->route, RAND_TC);
+						sme.back()->systemId, *existentRoute, RAND_TC);
 					stack.back()->push_back(res);
 				}
 				break;
-			default: //case 6..8
+			default: //case 6..7
 				{
 					TCResult* res = tcRoute.lookupRoute(routeReg, origAddr, destAddr);
 					stack.back()->push_back(res);
@@ -168,13 +191,12 @@ void RouteManagerFunctionalTest::executeTest(
 			executeTestCases(origAddr, destAddr);
 		}
 	}
-/*
+	
 	//Поиск маршрута для каждой пары адресов
 	for (int i = 0; i < numAddr; i++)
 	{
 		for (int j = 0; j < numAddr; j++)
 		{
-log.debug("lookupRoute(): i = %d, j = %d", i, j);
 			Address& origAddr = *addr[i];
 			Address& destAddr = *addr[j];
 			TCResult* res = tcRoute.lookupRoute(routeReg, origAddr, destAddr);
@@ -185,6 +207,7 @@ log.debug("lookupRoute(): i = %d, j = %d", i, j);
 	//Итерирование по списку маршрутов
 	filter->addResult(tcRoute.iterateRoutes(routeReg));
 
+	/*
 	//Удаление зарегистрированных sme
 	for (int i = 0; i < sme.size(); i++)
 	{
@@ -206,13 +229,13 @@ log.debug("lookupRoute(): i = %d, j = %d", i, j);
 
 	//Итерирование по списку маршрутов
 	filter->addResult(tcRoute.iterateRoutes(routeReg));
+	*/
 
 	//обработка результатов
 	for (int i = 0; i < stack.size(); i++)
 	{
 		filter->addResultStack(*stack[i]);
 	}
-*/	
 }
 
 void saveCheckList(TCResultFilter* filter)
@@ -221,8 +244,10 @@ void saveCheckList(TCResultFilter* filter)
 	CheckList& cl = CheckList::getCheckList(CheckList::UNIT_TEST);
 	cl.startNewGroup("Route Manager", "smsc::router");
 	//имплементированные тест кейсы
-	cl.writeResult("Добавление корректного маршрута",
-		filter->getResults(TC_ADD_CORRECT_ROUTE));
+	cl.writeResult("Добавление корректного рабочего маршрута",
+		filter->getResults(TC_ADD_CORRECT_ROUTE_MATCH));
+	cl.writeResult("Добавление корректного нерабочего маршрута",
+		filter->getResults(TC_ADD_CORRECT_ROUTE_NOT_MATCH));
 	cl.writeResult("Добавление некорректного маршрута",
 		filter->getResults(TC_ADD_INCORRECT_ROUTE));
 	cl.writeResult("Поиск маршрута",
