@@ -3094,7 +3094,7 @@ void StateMachine::submitReceipt(SMS& sms)
     int dest_proxy_index;
     SmeProxy *dest_proxy;
     smsc::router::RouteInfo ri;
-    if(smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,NULL))
+    if(smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,&ri))
     {
       sms.setRouteId(ri.routeId.c_str());
       int prio=sms.getPriority()+ri.priority;
