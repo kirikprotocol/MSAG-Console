@@ -332,7 +332,7 @@ Connection::Connection(const char* instance,
                        const char* user, const char* password) 
     : isConnected(false), isDead(false), next(0L),
         dbInstance(instance), dbUserName(user), dbUserPassword(password), 
-            StoreStmt(0L), RemoveStmt(0L), RetriveStmt(0L), ReplaceStmt(0L), 
+            StoreStmt(0L), RemoveStmt(0L), RetriveStmt(0L), IsRejectStmt(0L),
                 envhp(0L), errhp(0L), svchp(0L), srvhp(0L), sesshp(0L), 
                     log(Logger::getCategory("smsc.store.Connection"))
 {
@@ -386,16 +386,12 @@ void Connection::connect()
             StoreStmt = new StoreStatement(this);
             RemoveStmt = new RemoveStatement(this);
             RetriveStmt = new RetriveStatement(this);
-            ReplaceStmt = new ReplaceStatement(this);
             IsRejectStmt = new IsRejectedStatement(this);
         } 
         catch (StorageException& exc) 
         {
             if (IsRejectStmt) {
                 delete IsRejectStmt; IsRejectStmt = 0L;
-            }
-            if (ReplaceStmt) {
-                delete ReplaceStmt; ReplaceStmt = 0L;
             }
             if (RetriveStmt) {
                 delete RetriveStmt; RetriveStmt = 0L;
@@ -431,9 +427,6 @@ void Connection::disconnect()
     {
         if (IsRejectStmt) {
             delete IsRejectStmt; IsRejectStmt = 0L;
-        }
-        if (ReplaceStmt) {
-            delete ReplaceStmt; ReplaceStmt = 0L;
         }
         if (RetriveStmt) {
             delete RetriveStmt; RetriveStmt = 0L;
@@ -567,6 +560,24 @@ void Connection::replace(SMSId id, const SMS &sms)
     
     connect();
     
+    ReplaceStatement* ReplaceStmt;
+    if (sms.getWaitTime() == 0 && sms.getValidTime() == 0) 
+    {
+        ReplaceStmt = new ReplaceStatement(this);
+    }
+    else if (sms.getWaitTime() == 0)
+    {
+        ReplaceStmt = new ReplaceVTStatement(this);
+    }
+    else if (sms.getValidTime() == 0)
+    {
+        ReplaceStmt = new ReplaceWTStatement(this);
+    }
+    else
+    {
+        ReplaceStmt = new ReplaceVWTStatement(this);
+    }
+    
     ReplaceStmt->setSMS(sms);
     ReplaceStmt->setSMSId(id);
     try 
@@ -575,17 +586,20 @@ void Connection::replace(SMSId id, const SMS &sms)
     }
     catch (StorageException& exc) 
     {
+        delete ReplaceStmt;
         checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
         throw exc;
     }
 
     if (!ReplaceStmt->wasReplaced())
     {
+        delete ReplaceStmt;
         checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
         NoSuchMessageException exc(id);
         //log.debug(exc.what());
         throw exc;
     }
+    delete ReplaceStmt;
     checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
 }
 

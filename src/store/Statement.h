@@ -107,6 +107,11 @@ namespace smsc { namespace store
         StoreStatement(Connection* connection)
             throw(StorageException);
         virtual ~StoreStatement() {};
+        
+        void setSMS(const SMS &sms) {
+            MessageStatement::setSMS(sms);
+            uState = (uint8_t)ENROUTE;
+        };
     };
     
     class IsRejectedStatement : public MessageStatement
@@ -138,15 +143,56 @@ namespace smsc { namespace store
     class ReplaceStatement : public MessageStatement
     {
     static const char* sql;
+    protected:
+
+        ReplaceStatement(Connection* connection, const char* sql)
+            throw(StorageException) 
+                : MessageStatement(connection, sql) {};
+
     public:
         
         ReplaceStatement(Connection* connection)
             throw(StorageException);
         virtual ~ReplaceStatement() {};
 
+        void setSMS(const SMS &sms) {
+            MessageStatement::setSMS(sms);
+            uState = (uint8_t)ENROUTE;
+        };
+
         inline bool wasReplaced() {
             return (getRowsAffectedCount() ? true:false); 
         };
+    };
+    
+    class ReplaceVTStatement : public ReplaceStatement
+    {
+    static const char* sql;
+    public:
+        
+        ReplaceVTStatement(Connection* connection)
+            throw(StorageException);
+        virtual ~ReplaceVTStatement() {};
+    };
+    
+    class ReplaceWTStatement : public ReplaceStatement
+    {
+    static const char* sql;
+    public:
+        
+        ReplaceWTStatement(Connection* connection)
+            throw(StorageException);
+        virtual ~ReplaceWTStatement() {};
+    };
+    
+    class ReplaceVWTStatement : public ReplaceStatement
+    {
+    static const char* sql;
+    public:
+        
+        ReplaceVWTStatement(Connection* connection)
+            throw(StorageException);
+        virtual ~ReplaceVWTStatement() {};
     };
     
     class RemoveStatement : public IdStatement

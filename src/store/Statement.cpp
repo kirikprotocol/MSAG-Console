@@ -343,67 +343,142 @@ RetriveStatement::RetriveStatement(Connection* connection)
 
 /* --------------------------- ReplaceStatement ----------------------- */        
 const char* ReplaceStatement::sql = (const char*)
-"UPDATE SMS_MSG SET ST=:ST, MR=:MR, RM=:RM,\
- OA_LEN=:OA_LEN, OA_TON=:OA_TON, OA_NPI=:OA_NPI, OA_VAL=:OA_VAL,\
- DA_LEN=:DA_LEN, DA_TON=:DA_TON, DA_NPI=:DA_NPI, DA_VAL=:DA_VAL,\
- VALID_TIME=:VALID_TIME, WAIT_TIME=:WAIT_TIME,\
- SUBMIT_TIME=:SUBMIT_TIME, DELIVERY_TIME=:DELIVERY_TIME,\
- SRR=:SRR, RD=:RD, PRI=:PRI, PID=:PID, FCS=:FCS,\
- DCS=:DCS, UDHI=:UDHI, UDL=:UDL, UD=:UD WHERE ID=:ID";
+"UPDATE SMS_MSG SET MR=:MR\
+ DCS=:DCS, UDHI=:UDHI, UDL=:UDL, UD=:UD WHERE ID=:ID AND ST=:ST AND\
+ OA_LEN=:OA_LEN AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
 
 ReplaceStatement::ReplaceStatement(Connection* connection)
     throw(StorageException)
         : MessageStatement(connection, ReplaceStatement::sql) 
 {
-    bind(1 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
-    bind(2 , SQLT_UIN, (dvoid *) &(sms.messageReference), 
+    bind(1 , SQLT_UIN, (dvoid *) &(sms.messageReference), 
          (sb4) sizeof(sms.messageReference));
-    bind(3 , SQLT_UIN, (dvoid *) &(sms.messageIdentifier), 
-         (sb4) sizeof(sms.messageIdentifier));
-    bind(4 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.lenght), 
-         (sb4) sizeof(sms.originatingAddress.lenght));
-    bind(5 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.type), 
-         (sb4) sizeof(sms.originatingAddress.type));
-    bind(6 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.plan), 
-         (sb4) sizeof(sms.originatingAddress.plan));
-    bind(7 , SQLT_STR, (dvoid *) (sms.originatingAddress.value), 
-         (sb4) sizeof(sms.originatingAddress.value));
-    bind(8 , SQLT_UIN, (dvoid *) &(sms.destinationAddress.lenght), 
-         (sb4) sizeof(sms.destinationAddress.lenght));
-    bind(9 , SQLT_UIN, (dvoid *) &(sms.destinationAddress.type), 
-         (sb4) sizeof(sms.destinationAddress.type));
-    bind(10, SQLT_UIN, (dvoid *) &(sms.destinationAddress.plan), 
-         (sb4) sizeof(sms.destinationAddress.plan));
-    bind(11, SQLT_STR, (dvoid *) (sms.destinationAddress.value), 
-         (sb4) sizeof(sms.destinationAddress.value));
-    bind(12, SQLT_ODT, (dvoid *) &(validTime),
-         (sb4) sizeof(validTime));
-    bind(13, SQLT_ODT, (dvoid *) &(waitTime), 
-         (sb4) sizeof(waitTime));
-    bind(14, SQLT_ODT, (dvoid *) &(submitTime), 
-         (sb4) sizeof(submitTime));
-    bind(15, SQLT_ODT, (dvoid *) &(deliveryTime), 
-         (sb4) sizeof(deliveryTime));
-    bind(16, SQLT_AFC, (dvoid *) &(bStatusReport), 
-         (sb4) sizeof(bStatusReport));
-    bind(17, SQLT_AFC, (dvoid *) &(bRejectDuplicates), 
-         (sb4) sizeof(bRejectDuplicates));
-    bind(18, SQLT_UIN, (dvoid *) &(sms.priority), 
-         (sb4) sizeof(sms.priority));
-    bind(19, SQLT_UIN, (dvoid *) &(sms.protocolIdentifier), 
-         (sb4) sizeof(sms.protocolIdentifier));
-    bind(20, SQLT_UIN, (dvoid *) &(sms.failureCause), 
-         (sb4) sizeof(sms.failureCause));
-    bind(21, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme), 
+    bind(2 , SQLT_UIN, (dvoid *) &(sms.messageBody.scheme), 
          (sb4) sizeof(sms.messageBody.scheme));
-    bind(22, SQLT_AFC, (dvoid *) &(bHeaderIndicator), 
+    bind(3 , SQLT_AFC, (dvoid *) &(bHeaderIndicator), 
          (sb4) sizeof(bHeaderIndicator));
-    bind(23, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght), 
+    bind(4 , SQLT_UIN, (dvoid *) &(sms.messageBody.lenght), 
          (sb4) sizeof(sms.messageBody.lenght));
-    bind(24, SQLT_BIN, (dvoid *) (sms.messageBody.data), 
+    bind(5 , SQLT_BIN, (dvoid *) (sms.messageBody.data), 
          (sb4) sizeof(sms.messageBody.data));
-    bind(25, SQLT_BIN, (dvoid *) &(smsId), 
+    bind(6 , SQLT_BIN, (dvoid *) &(smsId), 
          (sb4) sizeof(smsId));
+    bind(7 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
+    bind(8 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.lenght), 
+         (sb4) sizeof(sms.originatingAddress.lenght));
+    bind(9 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.type), 
+         (sb4) sizeof(sms.originatingAddress.type));
+    bind(10, SQLT_UIN, (dvoid *) &(sms.originatingAddress.plan), 
+         (sb4) sizeof(sms.originatingAddress.plan));
+    bind(11, SQLT_STR, (dvoid *) (sms.originatingAddress.value), 
+         (sb4) sizeof(sms.originatingAddress.value));
+}
+
+const char* ReplaceVTStatement::sql = (const char*)
+"UPDATE SMS_MSG SET MR=:MR\
+ VALID_TIME=:VALID_TIME\
+ DCS=:DCS, UDHI=:UDHI, UDL=:UDL, UD=:UD WHERE ID=:ID AND ST=:ST AND\
+ OA_LEN=:OA_LEN AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
+
+ReplaceVTStatement::ReplaceVTStatement(Connection* connection)
+    throw(StorageException)
+        : ReplaceStatement(connection, ReplaceVTStatement::sql) 
+{
+    bind(1 , SQLT_UIN, (dvoid *) &(sms.messageReference), 
+         (sb4) sizeof(sms.messageReference));
+    bind(2, SQLT_ODT, (dvoid *) &(validTime),
+         (sb4) sizeof(validTime));
+    bind(3 , SQLT_UIN, (dvoid *) &(sms.messageBody.scheme), 
+         (sb4) sizeof(sms.messageBody.scheme));
+    bind(4 , SQLT_AFC, (dvoid *) &(bHeaderIndicator), 
+         (sb4) sizeof(bHeaderIndicator));
+    bind(5 , SQLT_UIN, (dvoid *) &(sms.messageBody.lenght), 
+         (sb4) sizeof(sms.messageBody.lenght));
+    bind(6 , SQLT_BIN, (dvoid *) (sms.messageBody.data), 
+         (sb4) sizeof(sms.messageBody.data));
+    bind(7 , SQLT_BIN, (dvoid *) &(smsId), 
+         (sb4) sizeof(smsId));
+    bind(8 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
+    bind(9 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.lenght), 
+         (sb4) sizeof(sms.originatingAddress.lenght));
+    bind(10, SQLT_UIN, (dvoid *) &(sms.originatingAddress.type), 
+         (sb4) sizeof(sms.originatingAddress.type));
+    bind(11, SQLT_UIN, (dvoid *) &(sms.originatingAddress.plan), 
+         (sb4) sizeof(sms.originatingAddress.plan));
+    bind(12, SQLT_STR, (dvoid *) (sms.originatingAddress.value), 
+         (sb4) sizeof(sms.originatingAddress.value));
+}
+
+const char* ReplaceWTStatement::sql = (const char*)
+"UPDATE SMS_MSG SET MR=:MR\
+ WAIT_TIME=:WAIT_TIME\
+ DCS=:DCS, UDHI=:UDHI, UDL=:UDL, UD=:UD WHERE ID=:ID AND ST=:ST AND\
+ OA_LEN=:OA_LEN AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
+
+ReplaceWTStatement::ReplaceWTStatement(Connection* connection)
+    throw(StorageException)
+        : ReplaceStatement(connection, ReplaceWTStatement::sql) 
+{
+    bind(1 , SQLT_UIN, (dvoid *) &(sms.messageReference), 
+         (sb4) sizeof(sms.messageReference));
+    bind(2, SQLT_ODT, (dvoid *) &(waitTime),
+         (sb4) sizeof(waitTime));
+    bind(3 , SQLT_UIN, (dvoid *) &(sms.messageBody.scheme), 
+         (sb4) sizeof(sms.messageBody.scheme));
+    bind(4 , SQLT_AFC, (dvoid *) &(bHeaderIndicator), 
+         (sb4) sizeof(bHeaderIndicator));
+    bind(5 , SQLT_UIN, (dvoid *) &(sms.messageBody.lenght), 
+         (sb4) sizeof(sms.messageBody.lenght));
+    bind(6 , SQLT_BIN, (dvoid *) (sms.messageBody.data), 
+         (sb4) sizeof(sms.messageBody.data));
+    bind(7 , SQLT_BIN, (dvoid *) &(smsId), 
+         (sb4) sizeof(smsId));
+    bind(8 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
+    bind(9 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.lenght), 
+         (sb4) sizeof(sms.originatingAddress.lenght));
+    bind(10, SQLT_UIN, (dvoid *) &(sms.originatingAddress.type), 
+         (sb4) sizeof(sms.originatingAddress.type));
+    bind(11, SQLT_UIN, (dvoid *) &(sms.originatingAddress.plan), 
+         (sb4) sizeof(sms.originatingAddress.plan));
+    bind(12, SQLT_STR, (dvoid *) (sms.originatingAddress.value), 
+         (sb4) sizeof(sms.originatingAddress.value));
+}
+
+const char* ReplaceVWTStatement::sql = (const char*)
+"UPDATE SMS_MSG SET MR=:MR\
+ VALID_TIME=:VALID_TIME, WAIT_TIME=:WAIT_TIME\
+ DCS=:DCS, UDHI=:UDHI, UDL=:UDL, UD=:UD WHERE ID=:ID AND ST=:ST AND\
+ OA_LEN=:OA_LEN AND OA_TON=:OA_TON AND OA_NPI=:OA_NPI AND OA_VAL=:OA_VAL";
+
+ReplaceVWTStatement::ReplaceVWTStatement(Connection* connection)
+    throw(StorageException)
+        : ReplaceStatement(connection, ReplaceVWTStatement::sql) 
+{
+    bind(1 , SQLT_UIN, (dvoid *) &(sms.messageReference), 
+         (sb4) sizeof(sms.messageReference));
+    bind(2, SQLT_ODT, (dvoid *) &(validTime),
+         (sb4) sizeof(validTime));
+    bind(3, SQLT_ODT, (dvoid *) &(waitTime),
+         (sb4) sizeof(waitTime));
+    bind(4 , SQLT_UIN, (dvoid *) &(sms.messageBody.scheme), 
+         (sb4) sizeof(sms.messageBody.scheme));
+    bind(5 , SQLT_AFC, (dvoid *) &(bHeaderIndicator), 
+         (sb4) sizeof(bHeaderIndicator));
+    bind(6 , SQLT_UIN, (dvoid *) &(sms.messageBody.lenght), 
+         (sb4) sizeof(sms.messageBody.lenght));
+    bind(7 , SQLT_BIN, (dvoid *) (sms.messageBody.data), 
+         (sb4) sizeof(sms.messageBody.data));
+    bind(8 , SQLT_BIN, (dvoid *) &(smsId), 
+         (sb4) sizeof(smsId));
+    bind(9 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
+    bind(10, SQLT_UIN, (dvoid *) &(sms.originatingAddress.lenght), 
+         (sb4) sizeof(sms.originatingAddress.lenght));
+    bind(11, SQLT_UIN, (dvoid *) &(sms.originatingAddress.type), 
+         (sb4) sizeof(sms.originatingAddress.type));
+    bind(12, SQLT_UIN, (dvoid *) &(sms.originatingAddress.plan), 
+         (sb4) sizeof(sms.originatingAddress.plan));
+    bind(13, SQLT_STR, (dvoid *) (sms.originatingAddress.value), 
+         (sb4) sizeof(sms.originatingAddress.value));
 }
 
 /* --------------------------- RemoveStatement ----------------------- */
