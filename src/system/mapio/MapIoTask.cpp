@@ -244,7 +244,11 @@ void MapIoTask::dispatcher()
         (ET96MAP_APP_CNTX_T*)ctx, // AC version
         (message.msg_p[destAddrPos]>0)?(ET96MAP_SS7_ADDR_T*)(message.msg_p+destAddrPos):0, // dest ss7 addr
         (message.msg_p[orgAddrPos]>0)?(ET96MAP_SS7_ADDR_T*)(message.msg_p+orgAddrPos):0, // org ss7 addr
+#ifdef MAP_R12	
+        (message.msg_p[destRefPos]>0)?(ET96MAP_IMSI_OR_MSISDN_T*)(message.msg_p+destRefPos):0, // dest ref
+#else
         (message.msg_p[destRefPos]>0)?(ET96MAP_IMSI_T*)(message.msg_p+destRefPos):0, // dest ref
+#endif
         (message.msg_p[orgRefPos]>0)?(ET96MAP_ADDRESS_T*)(message.msg_p+orgRefPos):0, // dest ref
         (specificInfo.specificInfoLen>0)?&specificInfo:0
       );
@@ -280,6 +284,7 @@ void MapIoTask::init(unsigned timeout)
   __global_bind_counter = 0;
   __pingPongWaitCounter = 0;
   err = EINSS7CpMsgInitNoSig(MAXENTRIES);
+//  err = MsgInit(MAXENTRIES);
   if ( err != MSG_OK ) {
     __map_warn2__("MAP: Error at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error");
   }
@@ -351,6 +356,7 @@ int MapIoTask::Execute(){
 string MapDialogContainer::SC_ADRESS_VALUE = "79029869999";
 string MapDialogContainer::USSD_ADRESS_VALUE = "79029869998";
 ET96MAP_LOCAL_SSN_T MapDialogContainer::ussdSSN = 6;
+MapProxy* MapDialogContainer::proxy = 0;
 
 void MapDialogContainer::abort()
 {
@@ -387,12 +393,12 @@ int MapTracker::Execute(){
 
 void MapDialogContainer::registerSelf(SmeManager* smeman)
 {
-  proxy.init();
+  proxy->init();
   __map_trace2__("register MAP_PROXY");
 //#if defined USE_MAP // !!!! temporary !!!!!
-//  smeman->registerSmeProxy("MAP_PROXY",&proxy);
+//  smeman->registerSmeProxy("MAP_PROXY",proxy);
 //#else
-  smeman->registerInternallSmeProxy("MAP_PROXY",&proxy);
+  smeman->registerInternallSmeProxy("MAP_PROXY",proxy);
 //#endif
   __map_trace2__("register MAP_PROXY OK");
 }

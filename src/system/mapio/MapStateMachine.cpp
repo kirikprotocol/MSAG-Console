@@ -38,13 +38,13 @@ struct XMOMAPLocker {
   unsigned parts;
   unsigned ref;
 };
-typedef map<string,XMOMAPLocker> XMOMAP;
+typedef std::map<string,XMOMAPLocker> XMOMAP;
 
 static Mutex x_map_lock;
 typedef multimap<string,unsigned> X_MAP;
 static X_MAP x_map;
 static Mutex ussd_map_lock;
-typedef map<long long,unsigned> USSD_MAP;
+typedef std::map<long long,unsigned> USSD_MAP;
 static USSD_MAP ussd_map;
 static XMOMAP x_momap;
 
@@ -2369,7 +2369,11 @@ USHORT_T Et96MapOpenInd (
   ET96MAP_APP_CNTX_T *appContext_sp,
   ET96MAP_SS7_ADDR_T *ss7DestAddr_sp,
   ET96MAP_SS7_ADDR_T *ss7OrigAddr_sp,
+#ifdef MAP_R12
+  ET96MAP_IMSI_OR_MSISDN_T *destRef_sp,
+#else
   ET96MAP_IMSI_T *destRef_sp,
+#endif
   ET96MAP_ADDRESS_T *origRef_sp,
   ET96MAP_USERDATA_T *specificInfo_sp)
 {

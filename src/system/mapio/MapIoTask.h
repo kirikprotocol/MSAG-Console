@@ -49,15 +49,15 @@ using smsc::core::synchronization::Event;
 #define EINSS7_THREADSAFE 1
 
 extern "C" {
-#include "inc/portss7.h"
-#include "inc/ss7tmc.h"
-#include "inc/ss7log.h"
-#include "inc/ss7msg.h"
-#include "inc/et96map_api_defines.h"
-#include "inc/et96map_api_types.h"
-#include "inc/et96map_dialogue.h"
-#include "inc/et96map_sms.h"
-#include "inc/et96map_ussd.h"
+#include <portss7.h>
+#include <ss7tmc.h>
+#include <ss7log.h>
+#include <ss7msg.h>
+#include <et96map_api_defines.h>
+#include <et96map_api_types.h>
+#include <et96map_dialogue.h>
+#include <et96map_sms.h>
+#include <et96map_ussd.h>
 }
 
 #define SSN 8
@@ -376,6 +376,9 @@ public:
   static void SetUSSDAdress(const string& scAddr) { USSD_ADRESS_VALUE = scAddr; }
   static ET96MAP_LOCAL_SSN_T GetUSSDSSN() { return ussdSSN; }
   static void SetUSSDSSN(int ssn) { ussdSSN = (ET96MAP_LOCAL_SSN_T)ssn; }
+  static void setProxy( MapProxy* _proxy ) { proxy = _proxy; }
+  MapProxy* getProxy() { return proxy; }
+  
   static void dropInstance()
   {
     MutexGuard g(sync_object);
@@ -392,9 +395,6 @@ public:
     return lock_map.Count();
   }
 
-  MapProxy* getProxy() {
-    return proxy;
-  }
 
   MapDialog* getDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn){
     MutexGuard g(sync);
@@ -596,11 +596,11 @@ public:
     MapDialogContainer::SetSCAdress(scAddr);
     MapDialogContainer::SetUSSDAdress(ussdCenterAddr);
     MapDialogContainer::SetUSSDSSN(ussdSSN);
-    MapDialogContainer::proxy = &proxy;
+    MapDialogContainer::setProxy( &proxy );
   }
   ~MapIoTask() {
     deinit();
-    MapDialogContainer::proxy = 0;
+    MapDialogContainer::setProxy( 0 );
   }
 private:
   Event* startevent;
