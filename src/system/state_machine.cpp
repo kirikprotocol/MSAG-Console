@@ -415,7 +415,8 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
     if(!strncasecmp(buf+i,"#hide#",6))
     {
       __trace__("DIRECT: hide");
-      sms.setIntProperty(Tag::SMSC_HIDE,1);
+      if(p.hideModifiable)
+        sms.setIntProperty(Tag::SMSC_HIDE,1);
       Directive d(i,6);
       offsets.Push(d);
       i+=6;
@@ -423,7 +424,8 @@ void StateMachine::processDirectives(SMS& sms,Profile& p)
     if(!strncasecmp(buf+i,"#unhide#",8))
     {
       __trace__("DIRECT: unhide");
-      sms.setIntProperty(Tag::SMSC_HIDE,0);
+      if(p.hideModifiable)
+        sms.setIntProperty(Tag::SMSC_HIDE,0);
       Directive d(i,8);
       offsets.Push(d);
       i+=8;
@@ -2267,9 +2269,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ||
      sms.getDeliveryReport()==REPORT_NOACK ||
      sms.getDeliveryReport()==ProfileReportOptions::ReportFinal)return;
-  bool regdel=(sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==1 ||
-              (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x3)==2 ||
-              (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x10)==0x10 ||
+  bool regdel=(sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x10)==0x10 ||
               sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST);
 
   if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) && !regdel &&

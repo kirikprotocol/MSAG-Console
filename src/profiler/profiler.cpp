@@ -28,6 +28,8 @@ using namespace smsc::util;
 
 using namespace smsc::resourcemanager;
 
+class AccessDeniedException{};
+
 struct HashKey{
   Address addr;
   uint8_t defLength;
@@ -225,7 +227,7 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   using smsc::util::config::Manager;
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
-  const char *sql="UPDATE SMS_PROFILE SET reportinfo=:1, codeset=:2, locale=:3, hidden=:4 where mask=:5";
+  const char *sql="UPDATE SMS_PROFILE SET reportinfo=:1, codeset=:2, locale=:3, hidden=:4, hidden_mod=:5 where mask=:6";
   ConnectionGuard connection(ds);
   if(!connection.get())throw Exception("Profiler: Failed to get connection");
   auto_ptr<Statement> statement(connection->createStatement(sql));
@@ -237,7 +239,8 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   __trace2__("profiler: update %s=%d,%d,%s",addrbuf,profile.reportoptions,profile.codepage,profile.locale.c_str());
   statement->setString(3,profile.locale.c_str());
   statement->setInt8(4,profile.hide);
-  statement->setString(5,addrbuf);
+  statement->setString(5,profile.hideModifiable?"Y":"N");
+  statement->setString(6,addrbuf);
   statement->executeUpdate();
   connection->commit();
 }
@@ -248,8 +251,8 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   using smsc::util::config::Manager;
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
-  const char* sql = "INSERT INTO SMS_PROFILE (mask, reportinfo, codeset, locale,hidden)"
-                      " VALUES (:1, :2, :3, :4, :5)";
+  const char* sql = "INSERT INTO SMS_PROFILE (mask, reportinfo, codeset, locale,hidden,hidden_mod)"
+                      " VALUES (:1, :2, :3, :4, :5,:6)";
 
   ConnectionGuard connection(ds);
 
@@ -263,6 +266,7 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   statement->setInt8(3, profile.codepage);
   statement->setString(4,profile.locale.c_str());
   statement->setInt8(5, profile.hide);
+  statement->setString(6, profile.hideModifiable?"Y":"N");
   statement->executeUpdate();
   connection->commit();
 }
@@ -271,6 +275,7 @@ static const int _update_report=1;
 static const int _update_charset=2;
 static const int _update_locale=3;
 static const int _update_hide=4;
+
 
 void Profiler::internal_update(int flag,const Address& addr,int value,const char* svalue)
 {
@@ -291,11 +296,24 @@ void Profiler::internal_update(int flag,const Address& addr,int value,const char
   }
   if(flag==_update_hide)
   {
+    if(!profile.hideModifiable)throw AccessDeniedException();
     profile.hide=value;
   }
   update(addr,profile);
 }
 
+enum{
+  msgReportNone,
+  msgReportFull,
+  msgDefault,
+  msgUCS2,
+  msgLocaleChanged,
+  msgLocaleUnknown,
+  msgHide,
+  msgUnhide,
+  msgReportFinal,
+  msgAccessDenied,
+};
 
 int Profiler::Execute()
 {
@@ -364,74 +382,79 @@ int Profiler::Execute()
     i=0;
     while(!isalpha(body[i]) && i<len)i++;
     msg=-1;
-    if(!strncmp(body+i,"REPORT",6))
-    {
-      i+=7;
-      while(i<len && !isalpha(body[i]))i++;
-      if(i<len)
+    try{
+      if(!strncmp(body+i,"REPORT",6))
       {
-        if(!strncmp(body+i,"NONE",4))
+        i+=7;
+        while(i<len && !isalpha(body[i]))i++;
+        if(i<len)
         {
-          msg=0;
-          internal_update(_update_report,addr,ProfileReportOptions::ReportNone);
+          if(!strncmp(body+i,"NONE",4))
+          {
+            msg=msgReportNone;
+            internal_update(_update_report,addr,ProfileReportOptions::ReportNone);
+          }
+          else
+          if(!strncmp(body+i,"FULL",4))
+          {
+            msg=msgReportFull;
+            internal_update(_update_report,addr,ProfileReportOptions::ReportFull);
+          }else
+          if(!strncmp(body+i,"FINAL",5))
+          {
+            msg=msgReportFinal;
+            internal_update(_update_report,addr,ProfileReportOptions::ReportFinal);
+          }
         }
-        else
-        if(!strncmp(body+i,"FULL",4))
-        {
-          msg=1;
-          internal_update(_update_report,addr,ProfileReportOptions::ReportFull);
-        }else
-        if(!strncmp(body+i,"FINAL",5))
-        {
-          msg=8;
-          internal_update(_update_report,addr,ProfileReportOptions::ReportFinal);
-        }
-      }
-    }else
-    if(!strncmp(body+i,"LOCALE",6))
-    {
-      i+=6;
-      while(body[i] && isspace(body[i]))i++;
-      int j=i;
-      while(body[i] && !isspace(body[i]))i++;
-      if(i==j)
-      {
-        msg=-1;
       }else
+      if(!strncmp(body+i,"LOCALE",6))
       {
-        string loc;
-        loc.assign(body+j,i-j);
-        for(int i=0;i<loc.length();i++)loc.at(i)=tolower(loc.at(i));
-        __trace2__("Profiler: new locale %s",loc.c_str());
-        if(ResourceManager::getInstance()->isValidLocale(loc))
+        i+=6;
+        while(body[i] && isspace(body[i]))i++;
+        int j=i;
+        while(body[i] && !isspace(body[i]))i++;
+        if(i==j)
         {
-          internal_update(_update_locale,addr,0,loc.c_str());
-          msg=4;
+          msg=-1;
         }else
         {
-          msg=5;
+          string loc;
+          loc.assign(body+j,i-j);
+          for(int i=0;i<loc.length();i++)loc.at(i)=tolower(loc.at(i));
+          __trace2__("Profiler: new locale %s",loc.c_str());
+          if(ResourceManager::getInstance()->isValidLocale(loc))
+          {
+            internal_update(_update_locale,addr,0,loc.c_str());
+            msg=msgLocaleChanged;
+          }else
+          {
+            msg=msgLocaleUnknown;
+          }
         }
+      }else
+      if(!strncmp(body+i,"DEFAULT",7))
+      {
+        msg=msgDefault;
+        internal_update(_update_charset,addr,ProfileCharsetOptions::Default);
+      }else
+      if(!strncmp(body+i,"UCS2",4))
+      {
+        msg=msgUCS2;
+        internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2);
+      }else
+      if(!strncmp(body+i,"HIDE",4))
+      {
+        msg=msgHide;
+        internal_update(_update_hide,addr,1);
+      }else
+      if(!strncmp(body+i,"UNHIDE",6))
+      {
+        msg=msgUnhide;
+        internal_update(_update_hide,addr,0);
       }
-    }else
-    if(!strncmp(body+i,"DEFAULT",7))
+    }catch(AccessDeniedException& e)
     {
-      msg=2;
-      internal_update(_update_charset,addr,ProfileCharsetOptions::Default);
-    }else
-    if(!strncmp(body+i,"UCS2",4))
-    {
-      msg=3;
-      internal_update(_update_charset,addr,ProfileCharsetOptions::Ucs2);
-    }else
-    if(!strncmp(body+i,"HIDE",4))
-    {
-      msg=6;
-      internal_update(_update_hide,addr,1);
-    }else
-    if(!strncmp(body+i,"UNHIDE",6))
-    {
-      msg=7;
-      internal_update(_update_hide,addr,0);
+      msg=msgAccessDenied;
     }
 
     resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
@@ -439,45 +462,49 @@ int Profiler::Execute()
 
     putIncomingCommand(resp);
     SMS ans;
-    string msgstr="xxx";
+    string msgstr;
     Profile p=lookup(addr);
     switch(msg)
     {
-      case 0:
+      case msgReportNone:
       {
         msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgReportNone");
       }break;
-      case 1:
+      case msgReportFull:
       {
         msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgReportFull");
       }break;
-      case 2:
+      case msgReportFinal:
+      {
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgReportFinal");
+      }break;
+      case msgDefault:
       {
         msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgDefault");
       }break;
-      case 3:
+      case msgUCS2:
       {
         msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgUCS2");
       }break;
-      case 4:
+      case msgLocaleChanged:
       {
         msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgLocaleChanged");
       }break;
-      case 5:
+      case msgLocaleUnknown:
       {
         msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgLocaleUnknown");
       }break;
-      case 6:
+      case msgHide:
       {
         msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgHide");
       }break;
-      case 7:
+      case msgUnhide:
       {
         msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgUnhide");
       }break;
-      case 8:
+      case msgAccessDenied:
       {
-        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgReportFinal");
+        msgstr=ResourceManager::getInstance()->getString(p.locale,"profiler.msgModificationDenied");
       }break;
       default:
       {
@@ -540,7 +567,7 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
   using smsc::util::config::ConfigView;
   using smsc::util::config::ConfigException;
 
-  const char* sql = "SELECT MASK, REPORTINFO, CODESET ,LOCALE, HIDDEN FROM SMS_PROFILE";
+  const char* sql = "SELECT MASK, REPORTINFO, CODESET ,LOCALE, HIDDEN, HIDDEN_MOD FROM SMS_PROFILE";
 
 
   ConnectionGuard connection(ds);
@@ -560,6 +587,8 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
     p.codepage=rs->getInt8(3);
     p.locale=rs->getString(4);
     p.hide=rs->getInt8(5);
+    const char *hm=rs->getString(6);
+    p.hideModifiable=hm?toupper(*hm)=='Y':false;
     profiles->add(addr,p);
   }
 }

@@ -400,9 +400,10 @@ void Smsc::init(const SmscConfigs& cfg)
     while((*str=toupper(*str)))str++;
     str=dc;
     while((*str=toupper(*str)))str++;
-    smsc::profiler::Profile defProfile={0,0,"",0};
+    smsc::profiler::Profile defProfile={0,0,"",0,false};
 
     defProfile.hide=cfg.cfgman->getBool("profiler.defaultHide");
+    defProfile.hideModifiable=cfg.cfgman->getBool("profiler.defaultHideModifiable");
 
     if(!strcmp(dc,"DEFAULT"))
       defProfile.codepage=profiler::ProfileCharsetOptions::Default;
