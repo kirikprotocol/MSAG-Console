@@ -16,14 +16,20 @@
 //#include <memory>
 #include <vector>
 #include <sstream>
+#include <iostream>
 
-using std::vector;
-using std::ostringstream;
+#define __print__(val) cout << #val << " = " << (val) << endl
+#define __smscHost__ "smsc"
+#define __smscPort__ 15975
+
 using smsc::sme::SmeConfig;
+using smsc::util::config::Manager;
 using smsc::test::sms::SmsUtil;
+using smsc::test::sms::operator<<;
 using smsc::test::smeman::SmeManagerTestCases;
 using smsc::test::alias::AliasManagerTestCases;
 using smsc::test::router::RouteManagerTestCases;
+using namespace std;
 using namespace smsc::sms;
 using namespace smsc::smeman;
 using namespace smsc::router;
@@ -32,6 +38,8 @@ using namespace smsc::core::threads; //ThreadPool, ThreadedTask
 using namespace smsc::system;
 using namespace smsc::test::sme;
 using namespace smsc::test::util;
+
+TCResultFilter* filter = new TCResultFilter();
 
 /**
  * Тестовая sme.
@@ -46,9 +54,11 @@ public:
 	TestSme(int smeNum, const SmeConfig& config, const SmeSystemId& systemId,
 		const Address& addr, const SmeRegistry* smeReg,
 		const AliasRegistry* aliasReg, const RouteRegistry* routeReg);
-	virtual ~TestSme();
+	virtual ~TestSme() {}
 	virtual void executeCycle();
 	virtual void onStopped();
+	void executeInitialTestCases();
+	void executeFinalTestCases();
 
 private:
 	void process(TCResult* res);
@@ -123,17 +133,7 @@ TestSme::TestSme(int _smeNum, const SmeConfig& config, const SmeSystemId& system
 	const Address& smeAddr, const SmeRegistry* smeReg,
 	const AliasRegistry* aliasReg, const RouteRegistry* routeReg)
 	: TestTask("TestSme", _smeNum), smeNum(_smeNum), nextCheckTime(0),
-	tc(config, systemId, smeAddr, smeReg, aliasReg, routeReg, this)
-{
-	process(tc.bindNonRegisteredSme(RAND_TC));
-	process(tc.bindRegisteredSme(RAND_TC));
-	process(tc.getTransmitter().submitSmAssert(RAND_TC));
-}
-TestSme::~TestSme()
-{
-	process(tc.unbindBounded());
-	process(tc.unbindNonBounded());
-}
+	tc(config, systemId, smeAddr, smeReg, aliasReg, routeReg, this) { }
 
 void TestSme::executeCycle()
 {
@@ -163,7 +163,21 @@ void TestSme::executeCycle()
 
 inline void TestSme::onStopped()
 {
+	executeFinalTestCases();
 	SmppFunctionalTest::onStopped(smeNum);
+}
+
+void TestSme::executeInitialTestCases()
+{
+	process(tc.bindNonRegisteredSme(RAND_TC));
+	process(tc.bindRegisteredSme(RAND_TC));
+	process(tc.getTransmitter().submitSmAssert(RAND_TC));
+}
+
+void TestSme::executeFinalTestCases()
+{
+	process(tc.unbindBounded());
+	process(tc.unbindNonBounded());
 }
 
 inline void TestSme::process(TCResult* res)
@@ -205,12 +219,13 @@ bool SmppFunctionalTest::isStopped()
 	return stopped;
 }
 
-void SmppFunctionalTest::process(int taskNum, const TCResult* res)
+void SmppFunctionalTest::process(int smeNum, const TCResult* res)
 {
 	if (res)
 	{
 		//обновить статистику
-		taskStat[taskNum].ops++;
+		filter->addResult(res);
+		taskStat[smeNum].ops++;
 	    tcStat[res->getId()]++;
 	    delete res;
 	}
@@ -241,31 +256,33 @@ smsc::alias::AliasManager* aliasMan = new smsc::alias::AliasManager();
 	AliasManagerTestCases* tcAlias = new AliasManagerTestCases(aliasMan, aliasReg);
 	RouteManagerTestCases* tcRoute = new RouteManagerTestCases(&router, routeReg);
 
-	vector<Address> addr;
-	vector<SmeInfo> smeInfo;
+	vector<Address*> addr;
+	vector<SmeInfo*> smeInfo;
 	addr.reserve(numAddr);
 	smeInfo.reserve(numAddr);
 	//регистрация sme
 	bool emptySystemIdSme = false;
 	for (int i = 0; i < numAddr; i++)
 	{
-		SmsUtil::setupRandomCorrectAddress(&addr[i]);
+		addr.push_back(new Address());
+		smeInfo.push_back(new SmeInfo());
+		SmsUtil::setupRandomCorrectAddress(addr[i]);
 		if (!emptySystemIdSme)
 		{
 			emptySystemIdSme = true;
-			process(tcSme->addCorrectSmeWithEmptySystemId(&smeInfo[i]));
+			process(tcSme->addCorrectSmeWithEmptySystemId(smeInfo[i]));
 		}
 		else
 		{
-			process(tcSme->addCorrectSme(&smeInfo[i], RAND_TC));
+			process(tcSme->addCorrectSme(smeInfo[i], RAND_TC));
 		}
 		if (i < numSme)
 		{
-			smeReg->registerSme(addr[i]);
+			smeReg->registerSme(*addr[i], smeInfo[i]->systemId);
 		}
 		else
 		{
-			smeReg->registerAddressWithNoSme(addr[i]);
+			smeReg->registerAddressWithNoSme(*addr[i]);
 		}
 	}
 	//регистрация алиасов
@@ -273,11 +290,11 @@ smsc::alias::AliasManager* aliasMan = new smsc::alias::AliasManager();
 	{
 		for (int j = 0; j < numAddr; j++)
 		{
-			AliasInfo alias;
-			alias.alias = addr[i];
-			alias.addr = addr[j];
 			for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
 			{
+				AliasInfo alias;
+				alias.alias = *addr[i];
+				alias.addr = *addr[j];
 				switch (s.value())
 				{
 					case 1:
@@ -290,9 +307,6 @@ smsc::alias::AliasManager* aliasMan = new smsc::alias::AliasManager();
 					case 4:
 						process(tcAlias->addCorrectAliasNotMatchAlias(&alias, RAND_TC));
 						break;
-					case 5:
-						process(tcAlias->addCorrectAliasException(&alias, RAND_TC));
-						break;
 				}
 			}
 		}
@@ -302,25 +316,23 @@ smsc::alias::AliasManager* aliasMan = new smsc::alias::AliasManager();
 	{
 		for (int j = 0; j < numAddr; j++)
 		{
-			Address& origAddr = addr[i];
-			Address& destAddr = addr[j];
-			TestRouteData route(origAddr, destAddr);
 			for (TCSelector s(RAND_SET_TC, 4); s.check(); s++)
 			{
+				TestRouteData route(*addr[i], *addr[j]);
 				switch (s.value())
 				{
 					case 1:
 					case 2:
 						process(tcRoute->addCorrectRouteMatch(
-							smeInfo[i].systemId, &route, RAND_TC));
+							smeInfo[i]->systemId, &route, RAND_TC));
 						break;
 					case 3:
 						process(tcRoute->addCorrectRouteNotMatch(
-							smeInfo[i].systemId, &route, RAND_TC));
+							smeInfo[i]->systemId, &route, RAND_TC));
 						break;
 					case 4:
 						process(tcRoute->addCorrectRouteNotMatch2(
-							smeInfo[i].systemId, &route, RAND_TC));
+							smeInfo[i]->systemId, &route, RAND_TC));
 						break;
 				}
 			}
@@ -331,38 +343,45 @@ smsc::alias::AliasManager* aliasMan = new smsc::alias::AliasManager();
 	for (int i = 0; i < numSme; i++)
 	{
 		SmeConfig config;
-		config.host = "localhost";
-		config.port = 45678;
-		//config.sid;
+		config.host = __smscHost__;
+		config.port = __smscPort__;
+		auto_ptr<char> tmp = rand_char(15); //15 по спецификации
+		config.sid = tmp.get();
 		config.timeOut = 10;
 		//config.password;
 		//config.systemType;
 		//config.origAddr;
-		sme.push_back(new TestSme(i, config, smeInfo[i].systemId, addr[i],
+		sme.push_back(new TestSme(i, config, smeInfo[i]->systemId, *addr[i],
 			smeReg, aliasReg, routeReg)); //throws Exception
+	}
+	for (int i = 0; i < numAddr; i++)
+	{
+		delete addr[i];
+		delete smeInfo[i];
 	}
 	return sme;
 }
 
 void TestSmsc::process(TCResult* res)
 {
-	delete res;
+	if (res)
+	{
+		filter->addResult(res);
+		delete res;
+	}
 }
 
 //TestSmsc
 vector<TestSme*> TestSmsc::init(int numAddr, int numSme)
 {
-	tp.preCreateThreads(5);
-	smsc::util::config::Manager::init("config.xml");
-	cfgman=&cfgman->getInstance();
+	//конфигурация
+	Manager::init("config.xml");
+	Manager& cfgMan = Manager::getInstance();
+	router.assign(&smeman);
+	vector<TestSme*> sme = config(numAddr, numSme);
 
-	tp.startTask(
-	  new smppio::SmppAcceptor(
-		cfgman->getString("smpp.host"),
-		cfgman->getInt("smpp.port"),
-		&ssockman
-	  )
-	);
+	//инициализация
+	tp.preCreateThreads(15);
 	
 	smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance());
 	store=smsc::store::StoreManager::getMessageStore();
@@ -374,12 +393,11 @@ vector<TestSme*> TestSmsc::init(int numAddr, int numSme)
 	tp.startTask(new StateMachine(eventqueue,store,this));
 
 	//smsc::admin::util::SignalHandler::registerShutdownHandler(new SmscSignalHandler(this));
-
-	tp.startTask(new Scheduler(eventqueue,store));
-
 	//tp.startTask(new SpeedMonitor(eventqueue));
 	
-	return config(numAddr, numSme);
+	smscHost = cfgMan.getString("smpp.host");
+	smscPort = cfgMan.getInt("smpp.port");
+	return sme;
 }
 
 //SmscStarter
@@ -404,7 +422,7 @@ int SmscStarter::Execute()
 	cout << "Ok" << endl;
 }
 
-void saveCheckList(TCResultFilter* filter)
+void saveCheckList()
 {
     cout << "Сохранение checklist" << endl;
     CheckList& cl = CheckList::getCheckList(CheckList::UNIT_TEST);
@@ -435,21 +453,23 @@ void saveCheckList(TCResultFilter* filter)
         filter->getResults(TC_PROCESS_DELIVERY_RECEIPT));
     cl.writeResult("Промежуточные нотификации (intermediate notifications) работают правильно",
         filter->getResults(TC_PROCESS_INTERMEDIATE_NOTIFICATION));
+    cl.writeResult("Отсутствие внутренних ошибок в smpp receiver",
+        filter->getResults(TC_HANDLE_ERROR));
 }
 
 void executeFunctionalTest(int numAddr, int numSme)
 {
-	TCResultFilter* filter = new TCResultFilter();
+	SmppFunctionalTest::resize(numSme);
 	//запуск SMSC
 	TestSmsc *app = new TestSmsc();
 	vector<TestSme*> sme = app->init(numAddr, numSme);
 	ThreadPool pool;
 	pool.startTask(new SmscStarter(app));
 	//запуск sme
-	SmppFunctionalTest::resize(sme.size());
 	TestSmeTaskManager tm;
 	for (int i = 0; i < sme.size(); i++)
 	{
+		sme[i]->executeInitialTestCases();
 		tm.addTask(sme[i]);
 	}
 	tm.startTimer();
@@ -476,8 +496,10 @@ void executeFunctionalTest(int numAddr, int numSme)
 		else if (cmd == "quit")
 		{
 			tm.stopTasks();
+			saveCheckList();
+			app->stop();
+			pool.shutdown();
 			cout << "Total time = " << tm.getExecutionTime() << endl;
-			saveCheckList(filter);
 			return;
 		}
 		else
@@ -499,6 +521,10 @@ int main(int argc, char* argv[])
 	try
 	{
 		executeFunctionalTest(numAddr, numSme);
+	}
+	catch (exception& e)
+	{
+		cout << "Failed to execute test: " << e.what() << endl;
 	}
 	catch (...)
 	{
