@@ -61,6 +61,7 @@ static const int EXPIRED=1026; //Message expired
 static const int DELIVERYTIMEDOUT=1027; //Delivery attempt timed out
 static const int SMENOTCONNECTED=1028; //Sme is not connected
 static const int BLOCKEDMSC=1029; //Msc is blocked
+static const int DELETED=1030; //Message deleted
 
 static const int MAP_PROVIDER_ERR_BASE=1135;
 static const int MAP_DUPLICATED_INVOKE_ID=1136;
