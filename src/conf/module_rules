@@ -32,12 +32,35 @@ LIBRARY := lib$(subst .,-,$(PACKAGE))
 target:
 	@cd $(SMSC_SRCDIR); make -s $(PACKAGE).rbuild
 
-include $(SMSC_SRCDIR)/conf/modules_switcher
+#include $(SMSC_SRCDIR)/conf/modules_switcher
+ifeq (,$(wildcard modules-list))
+
+MODULES :=
+
+else
+
+MODULES := $(shell cat modules-list | awk '{print $$1}' | grep -v "\#")
+__.empty.__:
+	@echo >> /dev/null
+
+$(MODULES) $(foreach x,$(MODULES),$(x).%): __.empty.__
+override _modules = $(subst ., ,$@)
+override _module = $(firstword $(_modules))
+override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@), build )
+	@if [ -d $(_module) ]; then \
+	    cd $(_module); make $(_subtarget); \
+	else \
+	    echo "'$(_module)' is not module"; exit 1;\
+	fi
+
+endif
+
+
 
 __build_message__:
 	@echo build in module $(PACKAGE)
 
-build only: __build_message__ $(SMSC_BUILDDIR)/lib/$(LIBRARY).a $(BINARIES)
+build only: __build_message__ $(MODULES) $(SMSC_BUILDDIR)/lib/$(LIBRARY).a $(BINARIES)
 
 $(SMSC_BUILDDIR)/lib/$(LIBRARY).a : $(SMSC_BUILDDIR)/obj/$(LIBRARY) $(foreach x,$(OBJECTS),$(SMSC_BUILDDIR)/obj/$(LIBRARY)/$(x))
 	@echo "assemble module $(LIBRARY).a"
@@ -45,17 +68,18 @@ $(SMSC_BUILDDIR)/lib/$(LIBRARY).a : $(SMSC_BUILDDIR)/obj/$(LIBRARY) $(foreach x,
 	@$(AR) -r $@ $(foreach x,$(OBJECTS),$(SMSC_BUILDDIR)/obj/$(LIBRARY)/$(x))
 	@$(RANLIB) $@
 
+rclean: clean
+	@if [ -n "$(MODULES)" ] ; then \
+		XXXX="$(MODULES)";\
+		set -e; for i in $$XXXX; do make -s $$i.rclean ; done ;\
+	fi
+
 rbuild: only
 	@if [ -n "$(MODULES)" ] ; then \
 		XXXX="$(MODULES)";\
 		set -e; for i in $$XXXX; do make $$i.rbuild ; done ;\
 	fi
 
-rclean: clean
-	@if [ -n "$(MODULES)" ] ; then \
-		XXXX="$(MODULES)";\
-		set -e; for i in $$XXXX; do make -s $$i.rclean ; done ;\
-	fi
 
 clean:
 	@echo "clean in $(PACKAGE)"
@@ -90,9 +114,15 @@ deps:
 	    set -e; for i in $$XXXX ; do  cd $$XWD/$$i ; make -s deps; done ; \
 	fi
 
+__emptylib__:
+
 -include $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.deps
 -include $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.binaries-rules
 
 $(SMSC_BUILDDIR)/obj/$(LIBRARY)/%.o:$(SMSC_SRCDIR)/$(PACKAGEDIR)/%.cpp
 	@echo "compiling $<"
 	@$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+#$(SMSC_BUILDDIR)/obj/*/%.o: $(SMSC_SRCDIR)/*/%.cpp
+#	@echo resolving dependencies $@
+#	@cd $(SMSC_SRCDIR)/`perl -e '($$_)=$$ARGV[0]=~m!/lib(.*)/[^/]*$$!;tr!-!/!;print $$_' $@`;make -s $@

@@ -58,7 +58,7 @@ while(<IN>)
     next if $lib eq $l;
     next if $ldeps{"$builddir/lib/lib$l.a"};
     $ldeps{"$builddir/lib/lib$l.a"}=1;
-    print OUT "$builddir/lib/lib$l.a : ".calclibdeps("$srcdir/$lpath")."\n";
+    print OUT "$builddir/lib/lib$l.a : __emptylib__\n";#.calclibdeps($l,"$srcdir/$lpath")."\n";
     print OUT "\t\@cd $srcdir/$lpath;make \$@\n\n";
   }
 }
@@ -66,7 +66,7 @@ close OUT;
 close IN;
 
 sub calclibdeps{
-  my $lib=shift;
+  my ($l,$lib)=@_;
   opendir(D,$lib);
   my @s;
   for(readdir(D))
@@ -84,6 +84,11 @@ sub calclibdeps{
     my($bin,$file)=split(" ");
     @s=grep !/$file\.cp?p?$/,@s;
   }
-  s/\.cp?p?$/.o/ for @s;
-  return join(' ',map{"$lib/$_"}@s);
+  #s/\.cp?p?$/.o/ for @s;
+  for(@s)
+  {
+    m!^(.*)\.cp?p?!;
+    $_="$builddir/obj/lib$l/$1.o";
+  }
+  return join(' ',@s);
 }
