@@ -28,7 +28,7 @@ public class AliasViewCommand extends SmscCommand
     private String showAlias(Alias alias)
     {
         return "Alias '"+alias.getAlias().getMask()+"'"+
-               " = Address '"+alias.getAddress()+"'"+
+               " = Address '"+alias.getAddress().getMask()+"'"+
                " ("+((alias.isHide()) ? "hiden":"public")+")";
     }
     public String process(String cmd)
