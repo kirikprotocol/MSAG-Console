@@ -1,5 +1,6 @@
 #include "Util.hpp"
 #include "core/synchronization/Mutex.hpp"
+#include "util/debug.h"
 #include <cstdlib>
 #include <ctime>
 
@@ -63,22 +64,36 @@ void rand_uint8_t(int length, uint8_t* buf)
 	}
 }
 
-auto_ptr<char> rand_char(int length)
+auto_ptr<char> rand_char(int length, int type)
 {
-	char* res = new char[length + 1];
-	for (int i = 0; i < length; i++)
-	{
-		res[i] = randChars[rand0(randChars.size() - 1)];
-	}
-	res[length] = 0;
-	return auto_ptr<char>(res);
+	char* buf = new char[length + 1];
+	rand_char(length, buf, type);
+	return auto_ptr<char>(buf);
 }
 
-void rand_char(int length, char* buf)
+void rand_char(int length, char* buf, int type)
 {
+	int pos1, pos2;
+	switch (type)
+	{
+		case RAND_ALPHA:
+			pos1 = 10;
+			pos2 = randChars.size() - 1;
+			break;
+		case RAND_ALPHA_NUM:
+			pos1 = 0;
+			pos2 = randChars.size() - 1;
+			break;
+		case RAND_NUM:
+			pos1 = 0;
+			pos2 = 9;
+			break;
+		default:
+			__unreachable__("Invalid type");
+	}
 	for (int i = 0; i < length; i++)
 	{
-		buf[i] = randChars[rand0(randChars.size() - 1)];
+		buf[i] = randChars[rand2(pos1, pos2)];
 	}
 	buf[length] = 0;
 }

@@ -11,6 +11,7 @@ namespace util {
 
 using std::vector;
 
+//флаги выполнени€ тест кейсов
 /**
  * ‘лаг задающий выполнение всех тестовых процедур в рамках тест кейса.
  */
@@ -28,6 +29,12 @@ const int RAND_TC = -1;
  */
 const int RAND_SET_TC = -2;
 
+//флаги управл€ющие генерацией случайных строк
+
+const int RAND_ALPHA_NUM = 0;
+const int RAND_ALPHA = 1;
+const int RAND_NUM = 2;
+
 void init_rand();
 
 int rand2(int minValue, int maxValue);
@@ -39,8 +46,8 @@ int rand1(int maxValue);
 std::auto_ptr<uint8_t> rand_uint8_t(int length);
 void rand_uint8_t(int length, uint8_t* buf);
 
-std::auto_ptr<char> rand_char(int length);
-void rand_char(int length, char* buf);
+std::auto_ptr<char> rand_char(int length, int type = RAND_ALPHA_NUM);
+void rand_char(int length, char* buf, int type = RAND_ALPHA_NUM);
 
 template <class T>
 struct Deletor
