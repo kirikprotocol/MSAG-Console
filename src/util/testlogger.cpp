@@ -29,14 +29,14 @@ public:
   }
 };
 
-void sigintdisp(int)
+extern "C" void sigintdisp(int)
 {
   stopped=true;
 }
 
 int main(int argc,char* argv[])
 {
-  signal(SIGINT,sigintdisp);
+  signal(SIGINT, sigintdisp);
   smsc::logger::Logger::Init();
   const int N=2;
   TestThread* tt[N];

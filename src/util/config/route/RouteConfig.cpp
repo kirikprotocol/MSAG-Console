@@ -1,11 +1,12 @@
 #include "RouteConfig.h"
 
 #include <fstream>
-#include <xercesc/dom/DOM_NamedNodeMap.hpp>
-#include <logger/Logger.h>
-#include <util/cstrings.h>
-#include <util/debug.h>
-#include <sms/sms_const.h>
+#include <xercesc/dom/DOM.hpp>
+#include "util/xml/utilFunctions.h"
+#include "logger/Logger.h"
+#include "util/cstrings.h"
+#include "util/debug.h"
+#include "sms/sms_const.h"
 
 namespace smsc {
 namespace util {
@@ -13,6 +14,8 @@ namespace config {
 namespace route {
 
 using smsc::util::encode;
+using namespace xercesc;
+using namespace smsc::util::xml;
 
 RouteConfig::RouteIterator::RouteIterator(RoutePVector const &records_vector)
 {
@@ -73,63 +76,55 @@ RouteConfig::status RouteConfig::putSubject(Subject *subj)
   return success;
 }
 */
-Subject *RouteConfig::createSubjectDef(const DOM_Element &elem)
+Subject *RouteConfig::createSubjectDef(const DOMElement &elem)
 {
-  std::auto_ptr<char> id(elem.getAttribute("id").transcode());
-  DOM_NodeList maskElems = elem.getElementsByTagName("mask");
+  DOMNodeList *maskElems = elem.getElementsByTagName(XmlStr("mask"));
   MaskVector masks;
-  for (unsigned i=0; i<maskElems.getLength(); i++)
+  for (unsigned i=0; i<maskElems->getLength(); i++)
   {
-    DOM_Node node = maskElems.item(i);
-    DOM_Element &mask = (DOM_Element &) node;
-    masks.push_back(Mask(mask.getAttribute("value").transcode()));
+    DOMElement *mask = (DOMElement *) maskElems->item(i);
+    masks.push_back(Mask(XmlStr(mask->getAttribute(XmlStr("value")))));
   }
 
-  return new Subject(std::string(id.get()), masks);
+  return new Subject(XmlStr(elem.getAttribute(XmlStr("id"))).c_str(), masks);
 }
 
-void RouteConfig::createRouteSource(const DOM_Element &srcElem, const SubjectPHash &subjects, Route * r)
+void RouteConfig::createRouteSource(const DOMElement &srcElem, const SubjectPHash &subjects, Route * r)
 throw (SubjectNotFoundException)
 {
-  if (srcElem.getElementsByTagName("subject").getLength() > 0)
+  if (srcElem.getElementsByTagName(XmlStr("subject"))->getLength() > 0)
   {
-    DOM_Node subjNode = srcElem.getElementsByTagName("subject").item(0);
-    DOM_Element &subjElem = (DOM_Element &) subjNode;
-    std::auto_ptr<char> subId(subjElem.getAttribute("id").transcode());
-    if (!subjects.Exists(subId.get()))
+    DOMElement *subjElem = (DOMElement *) srcElem.getElementsByTagName(XmlStr("subject"))->item(0);
+    XmlStr subId(subjElem->getAttribute(XmlStr("id")));
+    if (!subjects.Exists(subId))
       throw SubjectNotFoundException();
-    r->sources[subId.get()] = *subjects[subId.get()];
+    r->sources[subId] = *subjects[subId];
   }
   else
   {
-    DOM_Node maskNode = srcElem.getElementsByTagName("mask").item(0);
-    DOM_Element &maskElem = (DOM_Element &) maskNode;
-    std::auto_ptr<char> mask(maskElem.getAttribute("value").transcode());
-    r->sources[mask.get()] = Source(Mask(mask.get()));
+    DOMElement *maskElem = (DOMElement *) srcElem.getElementsByTagName(XmlStr("mask"))->item(0);
+    XmlStr mask(maskElem->getAttribute(XmlStr("value")));
+    r->sources[mask] = Source(Mask(mask));
   }
 }
 
-void RouteConfig::createRouteDestination(const DOM_Element &dstElem, const SubjectPHash &subjects, Route * r)
+void RouteConfig::createRouteDestination(const DOMElement &dstElem, const SubjectPHash &subjects, Route * r)
 throw (SubjectNotFoundException)
 {
-  std::auto_ptr<char> smeId(dstElem.getAttribute("sme").transcode());
-  if (dstElem.getElementsByTagName("subject").getLength() > 0)
+  XmlStr smeId(dstElem.getAttribute(XmlStr("sme")));
+  if (dstElem.getElementsByTagName(XmlStr("subject"))->getLength() > 0)
   {
-    DOM_Node subjNode = dstElem.getElementsByTagName("subject").item(0);
-    DOM_Element &subjElem = (DOM_Element &) subjNode;
-    std::auto_ptr<char> subId(subjElem.getAttribute("id").transcode());
-    if (!subjects.Exists(subId.get()))
+    DOMElement *subjElem = (DOMElement *) dstElem.getElementsByTagName(XmlStr("subject"))->item(0);
+    XmlStr subId(subjElem->getAttribute(XmlStr("id")));
+    if (!subjects.Exists(subId))
       throw SubjectNotFoundException();
-    r->destinations[subId.get()] = Destination(*subjects[subId.get()],
-                                               std::string(smeId.get()));
+    r->destinations[subId] = Destination(*subjects[subId], smeId.c_str());
   }
   else
   {
-    DOM_Node maskNode = dstElem.getElementsByTagName("mask").item(0);
-    DOM_Element &maskElem = (DOM_Element &) maskNode;
-    std::auto_ptr<char> mask(maskElem.getAttribute("value").transcode());
-    r->destinations[mask.get()] = Destination(Mask(mask.get()),
-                                              std::string(smeId.get()));
+    DOMElement *maskElem = (DOMElement *) dstElem.getElementsByTagName(XmlStr("mask"))->item(0);
+    XmlStr mask(maskElem->getAttribute(XmlStr("value")));
+    r->destinations[mask] = Destination(Mask(mask), smeId.c_str());
   }
 }
 
@@ -159,54 +154,52 @@ const char * const deliveryModeToStr(const uint8_t deliveryMode)
   }
 }
 
-Route * RouteConfig::createRoute(const DOM_Element &elem, const SubjectPHash &subjects)
+Route * RouteConfig::createRoute(const DOMElement &elem, const SubjectPHash &subjects)
 throw (SubjectNotFoundException)
 {
-  std::auto_ptr<char> id(elem.getAttribute("id").transcode());
-  std::auto_ptr<char> billing(elem.getAttribute("billing").transcode());
-  std::auto_ptr<char> archiving(elem.getAttribute("archiving").transcode());
-  std::auto_ptr<char> enabling(elem.getAttribute("enabling").transcode());
-  std::auto_ptr<char> suppressDeliveryReports(elem.getAttribute("suppressDeliveryReports").transcode());
-  std::auto_ptr<char> active(elem.getAttribute("active").transcode());
-  std::auto_ptr<char> hide(elem.getAttribute("hide").transcode());
-  std::auto_ptr<char> forceRP(elem.getAttribute("forceReplyPath").transcode());
-  std::auto_ptr<char> priorityStr(elem.getAttribute("priority").transcode());
-  std::auto_ptr<char> serviceIdStr(elem.getAttribute("serviceId").transcode());
-  unsigned int priority = atoi(priorityStr.get());
-  unsigned int serviceId = atoi(serviceIdStr.get());
-  std::auto_ptr<char> srcSmeSystemId(elem.getAttribute("srcSmeId").transcode());
-  std::auto_ptr<char> deliveryModeStr(elem.getAttribute("deliveryMode").transcode());
-  std::auto_ptr<char> forwardToStr(elem.getAttribute("forwardTo").transcode());
+  XmlStr id(elem.getAttribute(XmlStr("id")));
+  XmlStr billing(elem.getAttribute(XmlStr("billing")));
+  XmlStr archiving(elem.getAttribute(XmlStr("archiving")));
+  XmlStr enabling(elem.getAttribute(XmlStr("enabling")));
+  XmlStr suppressDeliveryReports(elem.getAttribute(XmlStr("suppressDeliveryReports")));
+  XmlStr active(elem.getAttribute(XmlStr("active")));
+  XmlStr hide(elem.getAttribute(XmlStr("hide")));
+  XmlStr forceRP(elem.getAttribute(XmlStr("forceReplyPath")));
+  //XmlStr priorityStr(elem.getAttribute(XmlStr("priority")));
+  //XmlStr serviceIdStr(elem.getAttribute(XmlStr("serviceId")));
+  unsigned int priority = atoi(XmlStr(elem.getAttribute(XmlStr("priority"))));
+  unsigned int serviceId = atoi(XmlStr(elem.getAttribute(XmlStr("serviceId"))));
+  XmlStr srcSmeSystemId(elem.getAttribute(XmlStr("srcSmeId")));
+  XmlStr deliveryModeStr(elem.getAttribute(XmlStr("deliveryMode")));
+  XmlStr forwardToStr(elem.getAttribute(XmlStr("forwardTo")));
 
-  std::auto_ptr<Route> r(new Route(std::string(id.get()),
+  std::auto_ptr<Route> r(new Route(std::string(id), 
                                    priority,
-                                   strcmp("true", billing.get()) == 0,
-                                   strcmp("true", archiving.get()) == 0,
-                                   strcmp("true", enabling.get()) == 0,
-                                   strcmp("true", suppressDeliveryReports.get()) == 0,
-                                   strcmp("true", active.get()) == 0,
-                                   strcmp("false", hide.get()) != 0,
-                                   strcmp("true", forceRP.get()) == 0,
+                                   strcmp("true", billing) == 0,
+                                   strcmp("true", archiving) == 0,
+                                   strcmp("true", enabling) == 0,
+                                   strcmp("true", suppressDeliveryReports) == 0,
+                                   strcmp("true", active) == 0,
+                                   strcmp("false", hide) != 0,
+                                   strcmp("true", forceRP) == 0,
                                    serviceId,
-                   std::string(srcSmeSystemId.get()),
-                   strToDeliveryMode(deliveryModeStr.get()),
-                   std::string(forwardToStr.get()))
+                                   std::string(srcSmeSystemId),
+                                   strToDeliveryMode(deliveryModeStr),
+                                   std::string(forwardToStr))
                          );
 
-  DOM_NodeList srcs = elem.getElementsByTagName("source");
-  for (unsigned i=0; i<srcs.getLength(); i++)
+  DOMNodeList *srcs = elem.getElementsByTagName(XmlStr("source"));
+  for (unsigned i=0; i<srcs->getLength(); i++)
   {
-    DOM_Node node = srcs.item(i);
-    DOM_Element &srcElem = (DOM_Element &)node;
-    createRouteSource(srcElem, subjects, r.get());
+    DOMElement *srcElem = (DOMElement *)srcs->item(i);
+    createRouteSource(*srcElem, subjects, r.get());
   }
 
-  DOM_NodeList dsts = elem.getElementsByTagName("destination");
-  for (unsigned i=0; i<dsts.getLength(); i++)
+  DOMNodeList *dsts = elem.getElementsByTagName(XmlStr("destination"));
+  for (unsigned i=0; i<dsts->getLength(); i++)
   {
-    DOM_Node node = dsts.item(i);
-    DOM_Element &dstElem = (DOM_Element &)node;
-    createRouteDestination(dstElem, subjects, r.get());
+    DOMElement *dstElem = (DOMElement *)dsts->item(i);
+    createRouteDestination(*dstElem, subjects, r.get());
   }
 
   return r.release();
@@ -217,15 +210,14 @@ RouteConfig::status RouteConfig::load(const char * const filename)
   config_filename.reset(cStringCopy(filename));
   try
   {
-    DOM_Document document = reader.read(filename);
-    DOM_Element elem = document.getDocumentElement();
-    DOM_NodeList subj_defs = elem.getElementsByTagName("subject_def");
+    DOMDocument *document = reader.read(filename);
+    DOMElement *elem = document->getDocumentElement();
+    DOMNodeList *subj_defs = elem->getElementsByTagName(XmlStr("subject_def"));
     // Subjects
-    for (unsigned i=0; i<subj_defs.getLength(); i++)
+    for (unsigned i=0; i<subj_defs->getLength(); i++)
     {
-      DOM_Node node(subj_defs.item(i));
-      DOM_Element &elem2 = (DOM_Element &)node;
-      Subject *s = createSubjectDef(elem2);
+      DOMElement *elem2 = (DOMElement *)subj_defs->item(i);
+      Subject *s = createSubjectDef(*elem2);
       if (subjects.Exists(s->getId()))
       {
         smsc_log_warn(logger, "Duplicate of subject \"%s\" definition. Second subject definition skipped", s->getId());
@@ -237,14 +229,13 @@ RouteConfig::status RouteConfig::load(const char * const filename)
     }
 
     // routes
-    DOM_NodeList route_list = elem.getElementsByTagName("route");
-    for (unsigned i=0; i<route_list.getLength(); i++)
+    DOMNodeList *route_list = elem->getElementsByTagName(XmlStr("route"));
+    for (unsigned i=0; i<route_list->getLength(); i++)
     {
-      DOM_Node node(route_list.item(i));
-      DOM_Element &elem2 = (DOM_Element &) node;
+      DOMElement *elem2 = (DOMElement *) route_list->item(i);
       try
       {
-        std::auto_ptr<Route> route(createRoute(elem2, subjects));
+        std::auto_ptr<Route> route(createRoute(*elem2, subjects));
         if (route->isActive())
           routes.push_back(route.release());
       }

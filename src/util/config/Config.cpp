@@ -1,6 +1,6 @@
 #include "Config.h"
 
-#include <xercesc/dom/DOM_NodeList.hpp>
+#include <xercesc/dom/DOM.hpp>
 #include <memory>
 #include <iostream>
 
@@ -12,22 +12,22 @@ namespace smsc {
 namespace util {
 namespace config {
 
-using std::auto_ptr;
-using smsc::util::xml::getNodeText;
+using namespace xercesc;
+using namespace std;
+using namespace smsc::util::xml;
 using smsc::core::buffers::TmpBuf;
 
-void Config::parse(const DOM_Element &element)
+void Config::parse(const DOMElement &element)
   throw (ConfigException)
 {
   try {
     processNode(element,"");
   }
-  catch (DOM_DOMException &e)
+  catch (DOMException &e)
   {
     std::string s("Exception on processing config tree, nested: ");
-    char *msg = e.msg.transcode();
-    s += msg;
-    delete[] msg;
+    std::auto_ptr<char> msg(XMLString::transcode(e.msg));
+    s += msg.get();
     throw ConfigException(s.c_str());
   }
   catch (...)
@@ -36,52 +36,48 @@ void Config::parse(const DOM_Element &element)
   }
 }
 
-void Config::processNode(const DOM_Element &element,
+void Config::processNode(const DOMElement &element,
                          const char * const prefix)
-  throw (DOM_DOMException)
+  throw (DOMException)
 {
-  if (!element.isNull())
+  DOMNodeList *list = element.getChildNodes();
+  for (unsigned i=0; i<list->getLength(); i++)
   {
-    DOM_NodeList list = element.getChildNodes();
-    for (unsigned i=0; i<list.getLength(); i++)
+    DOMNode *n = list->item(i);
+    if (n->getNodeType() == DOMNode::ELEMENT_NODE)
     {
-      DOM_Node n = list.item(i);
-      if (n.getNodeType() == DOM_Node::ELEMENT_NODE)
+      DOMElement *e = (DOMElement*)(n);
+      XmlStr name(e->getAttribute(XmlStr("name")));
+      auto_ptr<char> fullName(new char[strlen(prefix) +1 +strlen(name) +1]);
+      if (prefix[0] != 0)
       {
-        DOM_Element &e = *(DOM_Element*)(&n);
-        auto_ptr<const char> name(e.getAttribute("name").transcode());
-        auto_ptr<char> fullName(new char[strlen(prefix) +1 +strlen(name.get()) +1]);
-        if (prefix[0] != 0)
-        {
-          strcpy(fullName.get(), prefix);
-          strcat(fullName.get(), ".");
-          strcat(fullName.get(), name.get());
-        } else {
-          strcpy(fullName.get(), name.get());
-        }
-        auto_ptr<const char> nodeName(e.getNodeName().transcode());
-        if (strcmp(nodeName.get(), "section") == 0)
-        {
-          processNode(e, fullName.get());
-        }
-        else if (strcmp(nodeName.get(), "param") == 0)
-        {
-          auto_ptr<const char> type(e.getAttribute("type").transcode());
-          processParamNode(e, fullName.get(), type.get());
-        }
-        else
-        {
-          smsc_log_warn(Logger::getInstance("smsc.util.config.Config"), "Unknown node \"%s\" in section \"%s\"", nodeName.get(), prefix);
-        }
+        strcpy(fullName.get(), prefix);
+        strcat(fullName.get(), ".");
+        strcat(fullName.get(), name);
+      } else {
+        strcpy(fullName.get(), name);
+      }
+      XmlStr nodeName(e->getNodeName());
+      if (strcmp(nodeName, "section") == 0)
+      {
+        processNode(*e, fullName.get());
+      }
+      else if (strcmp(nodeName, "param") == 0)
+      {
+        processParamNode(*e, fullName.get(), XmlStr(e->getAttribute(XmlStr("type"))));
+      }
+      else
+      {
+        smsc_log_warn(Logger::getInstance("smsc.util.config.Config"), "Unknown node \"%s\" in section \"%s\"", nodeName.c_str(), prefix);
       }
     }
   }
 }
 
-void Config::processParamNode(const DOM_Element &element,
+void Config::processParamNode(const DOMElement &element,
                               const char * const name,
                               const char * const type)
-  throw (DOM_DOMException)
+  throw (DOMException)
 {
   //getting value
   std::auto_ptr<char> value(getNodeText(element));

@@ -6,8 +6,7 @@
 #include <string>
 #include <set>
 #include <vector>
-#include <xercesc/dom/DOM_Element.hpp>
-#include <xercesc/dom/DOM_DOMException.hpp>
+#include <xercesc/dom/DOM.hpp>
 #include <core/buffers/Hash.hpp>
 #include <logger/Logger.h>
 #include <util/cstrings.h>
@@ -17,6 +16,7 @@ namespace smsc {
 namespace util {
 namespace config {
 
+XERCES_CPP_NAMESPACE_USE
 using smsc::core::buffers::Hash;
 using smsc::core::buffers::HashInvalidKeyException;
 using smsc::logger::Logger;
@@ -33,7 +33,7 @@ public:
     Config()
     {}
 
-    Config(const DOM_Element &element) throw (ConfigException)
+    Config(const DOMElement &element) throw (ConfigException)
     {
         parse(element);
     }
@@ -248,9 +248,9 @@ public:
     };
 
     ConfigTree * createTree() const;
-    void parse(const DOM_Element &element) throw (ConfigException);
-    void processNode(const DOM_Element &element, const char * const prefix) throw (DOM_DOMException);
-    void processParamNode(const DOM_Element &element, const char * const name, const char * const type) throw (DOM_DOMException);
+    void parse(const DOMElement &element) throw (ConfigException);
+    void processNode(const DOMElement &element, const char * const prefix) throw (DOMException);
+    void processParamNode(const DOMElement &element, const char * const name, const char * const type) throw (DOMException);
 };
 
 }

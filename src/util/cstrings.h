@@ -3,7 +3,6 @@
 
 #include <string>
 #include <errno.h>
-#include <xercesc/dom/DOMString.hpp>
 
 namespace smsc {
 namespace util {

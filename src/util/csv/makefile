@@ -6,7 +6,7 @@
 
 PACKAGE := util.csv
 
-CXXFLAGS := $(CXXFLAGS) -I/usr/local/include/xercesc
+#CXXFLAGS := $(CXXFLAGS)
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)
 endif

@@ -5,13 +5,13 @@
 #include "aliasconf.h"
 
 #include <fstream>
-#include <xercesc/dom/DOM_NamedNodeMap.hpp>
-#include <logger/Logger.h>
-#include <util/cstrings.h>
-#include <util/debug.h>
+#include <xercesc/dom/DOM.hpp>
 #include <memory>
+#include "logger/Logger.h"
+#include "util/cstrings.h"
 #include "util/debug.h"
-#include <sms/sms.h>
+#include "util/xml/utilFunctions.h"
+#include "sms/sms.h"
 
 namespace smsc {
 namespace util {
@@ -19,7 +19,9 @@ namespace config {
 namespace alias{
 
 using namespace std;
+using namespace xercesc;
 using namespace smsc::sms;
+using namespace smsc::util::xml;
 
 AliasConfig::RecordIterator::RecordIterator(SRVector const &records_vector)
 {
@@ -73,22 +75,22 @@ AliasConfig::status AliasConfig::load(const char * const filename)
   config_filename.reset(cStringCopy(filename));
   try
   {
-    DOM_Document document = reader.read(filename);
-    DOM_Element elem = document.getDocumentElement();
-    DOM_NodeList list = elem.getElementsByTagName("record");
-    for (unsigned i=0; i<list.getLength(); i++)
+    DOMDocument *document = reader.read(filename);
+    DOMElement *elem = document->getDocumentElement();
+    DOMNodeList *list = elem->getElementsByTagName(XmlStr("record"));
+    for (unsigned i=0; i<list->getLength(); i++)
     {
-      DOM_Node node = list.item(i);
-      DOM_NamedNodeMap attrs = node.getAttributes();
+      DOMNode *node = list->item(i);
+      DOMNamedNodeMap *attrs = node->getAttributes();
       auto_ptr<AliasRecord> record(new AliasRecord());
       record->aliasValue = 0;
       record->addrValue = 0;
       //record->addr = attrs.getNamedItem("addr").getNodeValue().transcode();
       {
-        std::auto_ptr<char> dta(attrs.getNamedItem("addr").getNodeValue().transcode());
+        XmlStr dta(attrs->getNamedItem(XmlStr("addr"))->getNodeValue());
         try
         {
-          smsc::sms::Address a(dta.get());
+          smsc::sms::Address a(dta);
           record->addrValue = new char[smsc::sms::MAX_ADDRESS_VALUE_LENGTH+1];
           a.getValue(record->addrValue);
           record->addrNpi = a.getNumberingPlan();
@@ -96,36 +98,33 @@ AliasConfig::status AliasConfig::load(const char * const filename)
         }
         catch (runtime_error &e)
         {
-          smsc_log_error(logger, "exception on reading address \"%s\", nested: %s", dta.get(), e.what());
+          smsc_log_error(logger, "exception on reading address \"%s\", nested: %s", dta.c_str(), e.what());
           continue;
         }
         //continue;
       }
       //record->alias = attrs.getNameItem("alias").getNodeValue().transcode();
       {
-        std::auto_ptr<char> dta(attrs.getNamedItem("alias").getNodeValue().transcode());
+        XmlStr dta(attrs->getNamedItem(XmlStr("alias"))->getNodeValue());
         try
         {
-          smsc::sms::Address a(dta.get());
+          smsc::sms::Address a(dta);
           record->aliasValue = new char[smsc::sms::MAX_ADDRESS_VALUE_LENGTH+1];
           a.getValue(record->aliasValue);
           record->aliasNpi = a.getNumberingPlan();
           record->aliasTni = a.getTypeOfNumber();
-          DOM_Node hide_attr_node = attrs.getNamedItem("hide");
-          if (!hide_attr_node.isNull())
-          {
-            std::auto_ptr<char> hideValue(hide_attr_node.getNodeValue().transcode());
-            record->hide = !strcmp(hideValue.get(),"true");
-          }
+          DOMNode *hide_attr_node = attrs->getNamedItem(XmlStr("hide"));
+          if (hide_attr_node)
+            record->hide = !strcmp(XmlStr(hide_attr_node->getNodeValue()),"true");
         }
         catch (runtime_error &e)
         {
-          smsc_log_error(logger, "exception on reading alias \"%s\", nested: %s", dta.get(), e.what());
+          smsc_log_error(logger, "exception on reading alias \"%s\", nested: %s", dta.c_str(), e.what());
           continue;
         }
         //continue;
       }
-      DOM_NodeList childs = node.getChildNodes();
+      DOMNodeList *childs = node->getChildNodes();
       records.push_back(record.release());
     }
   } catch (ParseException &e) {

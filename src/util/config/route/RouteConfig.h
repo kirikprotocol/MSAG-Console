@@ -1,8 +1,9 @@
 #ifndef SMSC_UTIL_CONFIG_ROUTE_ROUTECONFIG
 #define SMSC_UTIL_CONFIG_ROUTE_ROUTECONFIG
 
-#include <util/config/route/RouteStructures.h>
-#include <util/xml/DOMTreeReader.h>
+#include <xercesc/dom/DOM.hpp>
+#include "util/config/route/RouteStructures.h"
+#include "util/xml/DOMTreeReader.h"
 
 namespace smsc {
 namespace util {
@@ -11,6 +12,7 @@ namespace route {
 
 using smsc::util::xml::DOMTreeReader;
 using smsc::util::xml::ParseException;
+using namespace xercesc;
 
 class SubjectNotFoundException {};
 
@@ -51,18 +53,10 @@ protected:
   SubjectPHash subjects;
   std::auto_ptr<char> config_filename;
 
-  static Subject * createSubjectDef(const DOM_Element &elem);
-  static void createRouteSource(const DOM_Element &srcElem,
-                                const SubjectPHash &subjects,
-                                Route * r)
-                    throw (SubjectNotFoundException);
-  static void createRouteDestination(const DOM_Element &dstElem,
-                                     const SubjectPHash &subjects,
-                                     Route * r)
-                    throw (SubjectNotFoundException);
-  static Route * createRoute(const DOM_Element &elem,
-                             const SubjectPHash &subjects)
-                    throw (SubjectNotFoundException);
+  static Subject * createSubjectDef(const DOMElement &elem);
+  static void createRouteSource(const DOMElement &srcElem, const SubjectPHash &subjects, Route * r) throw (SubjectNotFoundException);
+  static void createRouteDestination(const DOMElement &dstElem, const SubjectPHash &subjects, Route * r) throw (SubjectNotFoundException);
+  static Route * createRoute(const DOMElement &elem, const SubjectPHash &subjects) throw (SubjectNotFoundException);
 private:
 };
 

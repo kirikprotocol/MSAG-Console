@@ -3,23 +3,24 @@
 
 #include <iostream>
 
-#include <xercesc/dom/DOM_Document.hpp>
-#include <xercesc/dom/DOM_Element.hpp>
-#include <xercesc/dom/DOM_DOMException.hpp>
+#include <xercesc/dom/DOM.hpp>
 
-#include <store/StoreConfig.h>
-#include <core/buffers/Hash.hpp>
-#include <util/cstrings.h>
-#include <util/config/ConfigException.h>
-#include <util/config/Config.h>
+#include "store/StoreConfig.h"
+#include "core/buffers/Hash.hpp"
+#include "util/cstrings.h"
+#include "util/config/ConfigException.h"
+#include "util/config/Config.h"
+#include "util/xml/DOMTreeReader.h"
 
 namespace smsc   {
 namespace util   {
 namespace config {
 
+XERCES_CPP_NAMESPACE_USE
 using smsc::store::StoreConfig;
 using smsc::core::buffers::Hash;
 using smsc::util::cStringCopy;
+using namespace smsc::util::xml;
 
 /**
 * Класс, отвечающий за чтение и запись конфигурации системы.
@@ -204,11 +205,11 @@ protected:
 
 private:
 	static std::auto_ptr<char> config_filename;
+  DOMTreeReader reader;
 	void writeHeader(std::ostream &out);
 	void writeFooter(std::ostream &out);
 
-	DOMParser * createParser();
-	DOM_Document parse(DOMParser *parser, const char * const filename) throw (ConfigException);
+	DOMDocument * parse(const char * const filename) throw (ConfigException);
 };
 
 }

@@ -1,23 +1,22 @@
 #include "Manager.h"
-#include <xercesc/parsers/DOMParser.hpp>
-#include <xercesc/dom/DOM_DOMException.hpp>
-#include <xercesc/dom/DOM_NamedNodeMap.hpp>
-#include <logger/Logger.h>
-#include <util/config/XmlUtils.h>
-#include <util/xml/DOMErrorLogger.h>
-#include <util/xml/DtdResolver.h>
-#include <util/xml/init.h>
+
+#include <xercesc/dom/DOM.hpp>
 #include <fstream>
 #include <sys/stat.h>
+
+#include "logger/Logger.h"
+#include "util/config/XmlUtils.h"
+#include "util/xml/init.h"
+#include "util/xml/utilFunctions.h"
+#include "util/debug.h"
 
 namespace smsc   {
 namespace util   {
 namespace config {
 
-using std::auto_ptr;
+using namespace std;
+using namespace xercesc;
 using namespace smsc::util::xml;
-
-using std::cerr;
 
 std::auto_ptr<char> Manager::config_filename;
 std::auto_ptr<Manager> Manager::manager;
@@ -27,26 +26,26 @@ Manager::Manager()
 {
   initXerces();
   findConfigFile();
-  DOMParser *parser = createParser();
-
-  DOM_Document document = parse(parser, config_filename.get());
-  if (!document.isNull())
+  try 
   {
     __trace__("reading config...");
-    DOM_Element elem = document.getDocumentElement();
-    __trace__("config readed");
-    config.parse(elem);
-    __trace2__("parsed %u ints, %u booleans, %u strings\n",
-               config.intParams.GetCount(),
-               config.boolParams.GetCount(),
-               config.strParams.GetCount());
-  } else {
-    throw ConfigException("Parse result is null");
-  }
+    DOMDocument *document = reader.read(config_filename.get());
+    if (document)
+    {
+      DOMElement *elem = document->getDocumentElement();
+      __trace__("config readed");
+      config.parse(*elem);
+      __trace2__("parsed %u ints, %u booleans, %u strings\n",
+                 config.intParams.GetCount(),
+                 config.boolParams.GetCount(),
+                 config.strParams.GetCount());
+    } else {
+      throw ConfigException("Parse result is null");
+    }
 
-  delete parser->getErrorHandler();
-  delete parser->getEntityResolver();
-  delete parser;
+  } catch (ParseException &e) {
+    throw ConfigException(e.what());
+  }
 }
 
 /**
@@ -55,7 +54,7 @@ Manager::Manager()
  * discovers errors during the course of parsing the XML document.
  *
  * @return created parser
- */
+ *//*
 DOMParser * Manager::createParser() {
   //logger.debug("Entering createParser()");
   DOMParser *parser = new DOMParser;
@@ -73,11 +72,13 @@ DOMParser * Manager::createParser() {
 
   return parser;
 }
+*/
 
 /*!
  * Parse the XML file, catching any XML exceptions that might propogate
  * out of it.
  */
+/*
 DOM_Document Manager::parse(DOMParser *parser, const char * const filename)
   throw (ConfigException)
 {
@@ -93,7 +94,7 @@ DOM_Document Manager::parse(DOMParser *parser, const char * const filename)
   }
   catch (const XMLException& e)
   {
-    char * message = DOMString(e.getMessage()).transcode();
+    std::auto_ptr<char> message = XMLString::transcode(e.getMessage());
     XMLExcepts::Codes code = e.getCode();
     const char *srcFile = e.getSrcFile();
     unsigned int line = e.getSrcLine();
@@ -119,14 +120,13 @@ DOM_Document Manager::parse(DOMParser *parser, const char * const filename)
 }
 
 
-std::ostream & operator << (std::ostream & out, const DOMString & string)
+std::ostream & operator << (std::ostream & out, const XMLCh * const string)
 {
-  char *p = string.transcode();
-  out << p;
-  delete[] p;
+  std::auto_ptr<char> p(XMLString::transcode(string));
+  out << p.get();
   return out;
 }
-
+*/
 /**
  * Записывает конфигурацию системы.
  */

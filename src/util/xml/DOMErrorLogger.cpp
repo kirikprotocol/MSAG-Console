@@ -1,55 +1,43 @@
 #include "DOMErrorLogger.h"
-#include <xercesc/sax/SAXParseException.hpp>
-#include <xercesc/dom/DOMString.hpp>
+#include <logger/Logger.h>
 
 namespace smsc   {
 namespace util   {
 namespace xml {
 
-void DOMErrorLogger::warning(const SAXParseException& toCatch)
+DOMErrorLogger::DOMErrorLogger()
+  :loggerCategoryName(cStringCopy("smsc.util.xml.DOMErrorLogger"))
 {
-	const char *filename = DOMString(toCatch.getSystemId()).transcode();
-	const char *message = DOMString(toCatch.getMessage()).transcode();
-	smsc_log_warn(smsc::logger::Logger::getInstance(loggerCategoryName), "Warning at file \"%s\", line %d, column %d\n  Message: %s",
-	            filename,
-	            toCatch.getLineNumber(),
-	            toCatch.getColumnNumber(),
-	            message);
-	delete[] filename;
-	delete[] message;
 }
 
-void DOMErrorLogger::error(const SAXParseException& toCatch)
+DOMErrorLogger::DOMErrorLogger(const char * const categoryName)
+  :loggerCategoryName(cStringCopy(categoryName))
 {
-	fSawErrors = true;
-	char *filename = DOMString(toCatch.getSystemId()).transcode();
-	char *message = DOMString(toCatch.getMessage()).transcode();
-	smsc_log_error(smsc::logger::Logger::getInstance(loggerCategoryName), "Error at file \"%s\", line %d, column %d\n  Message: %s",
-	             filename,
-	             toCatch.getLineNumber(),
-	             toCatch.getColumnNumber(),
-	             message);
-	delete[] filename;
-	delete[] message;
 }
 
-void DOMErrorLogger::fatalError(const SAXParseException& toCatch)
+bool DOMErrorLogger::handleError(const DOMError &domError)
 {
-	fSawErrors = true;
-	char *filename = DOMString(toCatch.getSystemId()).transcode();
-	char *message = DOMString(toCatch.getMessage()).transcode();
-	smsc_log_fatal(smsc::logger::Logger::getInstance(loggerCategoryName), "Fatal error at file \"%s\", line %d, column %d\n  Message: %s",
-	             filename,
-	             toCatch.getLineNumber(),
-	             toCatch.getColumnNumber(),
-	             message);
-	delete[] filename;
-	delete[] message;
-}
-
-void DOMErrorLogger::resetErrors()
-{
-	fSawErrors = false;
+  const char * s1;
+  if (domError.getSeverity() == DOMError::DOM_SEVERITY_WARNING)
+    s1 = "Warning";
+  else if (domError.getSeverity() == DOMError::DOM_SEVERITY_ERROR)
+    s1 = "Error";
+  else if (domError.getSeverity() == DOMError::DOM_SEVERITY_FATAL_ERROR)
+    s1 = "Fatal";
+  else
+    s1 = "Unknown Fatal";
+    
+  char *uri = XMLString::transcode(domError.getLocation()->getURI());
+  char *message = XMLString::transcode(domError.getMessage());
+  
+  smsc_log_error(smsc::logger::Logger::getInstance(loggerCategoryName.get()), "%s at file \"%s\" [l:%d, c:%d]\n  Message: %s",
+                   s1, uri, 
+                   domError.getLocation()->getLineNumber(), domError.getLocation()->getColumnNumber(),
+                   message);
+  
+  XMLString::release(&uri);
+  XMLString::release(&message);
+  return false;
 }
 
 }

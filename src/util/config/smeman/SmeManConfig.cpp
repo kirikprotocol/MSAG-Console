@@ -2,13 +2,17 @@
 
 #include <fstream>
 #include <sstream>
-#include <xercesc/dom/DOM_NamedNodeMap.hpp>
-#include <logger/Logger.h>
+#include <xercesc/dom/DOM.hpp>
+#include "logger/Logger.h"
+#include "util/xml/utilFunctions.h"
 
 namespace smsc {
 namespace util {
 namespace config {
 namespace smeman {
+
+using namespace xercesc;
+using namespace smsc::util::xml;
 
 SmeManConfig::RecordIterator::RecordIterator(SRVector const &records_vector)
 {
@@ -66,89 +70,70 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
   try
   {
     configFileName.reset(cStringCopy(filename));
-    DOM_Document document = reader.read(filename);
-    DOM_Element elem = document.getDocumentElement();
-    DOM_NodeList list = elem.getElementsByTagName("smerecord");
-    for (unsigned i=0; i<list.getLength(); i++)
+    DOMDocument *document = reader.read(filename);
+    DOMElement *elem = document->getDocumentElement();
+    DOMNodeList *list = elem->getElementsByTagName(XmlStr("smerecord"));
+    for (unsigned i=0; i<list->getLength(); i++)
     {
-      DOM_Node node = list.item(i);
-      DOM_NamedNodeMap attrs = node.getAttributes();
-      std::auto_ptr<char> type(attrs.getNamedItem("type").getNodeValue().transcode());
+      DOMNode *node = list->item(i);
+      DOMNamedNodeMap *attrs = node->getAttributes();
+      XmlStr type(attrs->getNamedItem(XmlStr("type"))->getNodeValue());
       SmeRecord * record = new SmeRecord();
-      record->smeUid = attrs.getNamedItem("uid").getNodeValue().transcode();
-      if (strcmp(type.get(), "smpp") == 0)
+      record->smeUid = XmlStr(attrs->getNamedItem(XmlStr("uid"))->getNodeValue()).c_release();
+      if (strcmp(type, "smpp") == 0)
       {
         record->rectype = SMPP_SME;
-        DOM_NodeList childs = node.getChildNodes();
-        for (unsigned j=0; j<childs.getLength(); j++)
+        DOMNodeList *childs = node->getChildNodes();
+        for (unsigned j=0; j<childs->getLength(); j++)
         {
-          DOM_Node child = childs.item(j);
-          if (child.getNodeType() == DOM_Node::ELEMENT_NODE)
+          DOMNode *child = childs->item(j);
+          if (child->getNodeType() == DOMNode::ELEMENT_NODE)
           {
-            DOM_NamedNodeMap childAttrs = child.getAttributes();
-            std::auto_ptr<char> name(childAttrs.getNamedItem("name").getNodeValue().transcode());
-            std::auto_ptr<char> value(childAttrs.getNamedItem("value").getNodeValue().transcode());
-            if (strcmp(name.get(), "typeOfNumber") == 0)
-            {
-              record->recdata.smppSme.typeOfNumber = strtoll(value.get(), (char**)0, 0);
-            } else if (strcmp(name.get(), "priority") == 0)
-            {
-              record->priority = strtoll(value.get(), (char**)0, 0);
-            } else if (strcmp(name.get(), "numberingPlan") == 0)
-            {
-              record->recdata.smppSme.numberingPlan = strtoll(value.get(), (char**)0, 0);
-            } else if (strcmp(name.get(), "interfaceVersion") == 0)
-            {
-              record->recdata.smppSme.interfaceVersion = strtoll(value.get(), (char**)0, 0);
-            } else if (strcmp(name.get(), "systemType") == 0)
-            {
-              record->recdata.smppSme.systemType = value.release();
-            } else if (strcmp(name.get(), "password") == 0)
-            {
-              record->recdata.smppSme.password = value.release();
-            } else if (strcmp(name.get(), "addrRange") == 0)
-            {
-              record->recdata.smppSme.addrRange = value.release();
-            } else if (strcmp(name.get(), "smeN") == 0)
-            {
-              record->recdata.smppSme.smeN = strtoll(value.get(), (char**)0, 0);
-            } else if (strcmp(name.get(), "timeout") == 0)
-            {
-              record->recdata.smppSme.timeout = strtoll(value.get(), (char**)0, 0);
-            } else if (strcmp(name.get(), "proclimit") == 0)
-            {
-              record->recdata.smppSme.proclimit = strtoll(value.get(), (char**)0, 0);
-            } else if (strcmp(name.get(), "schedlimit") == 0)
-            {
-              record->recdata.smppSme.schedlimit = strtoll(value.get(), (char**)0, 0);
-            } else if (strcmp(name.get(),"forceDC") == 0)
-            {
-              record->recdata.smppSme.forceDC=!strcmp(value.get(),"true");
-            } else if (strcmp(name.get(),"wantAlias") == 0)
-            {
-              record->recdata.smppSme.wantAlias=!strcmp(value.get(),"yes");
-            } else if (strcmp(name.get(), "receiptSchemeName") == 0)
-            {
-              record->recdata.smppSme.receiptSchemeName = value.release();
-            } else if (strcmp(name.get(), "disabled") == 0)
-            {
-              record->recdata.smppSme.disabled = !strcmp(value.get(),"true");
-            } else if (strcmp(name.get(), "mode") == 0)
-            {
-              if (strcmp(value.get(),"tx") == 0)
-              {
+            DOMNamedNodeMap *childAttrs = child->getAttributes();
+            XmlStr name(childAttrs->getNamedItem(XmlStr("name"))->getNodeValue());
+            XmlStr value(childAttrs->getNamedItem(XmlStr("value"))->getNodeValue());
+            if (strcmp(name, "typeOfNumber") == 0) {
+              record->recdata.smppSme.typeOfNumber = strtoll(value.c_str(), (char**)0, 0);
+            } else if (strcmp(name.c_str(), "priority") == 0) {
+              record->priority = strtoll(value.c_str(), (char**)0, 0);
+            } else if (strcmp(name.c_str(), "numberingPlan") == 0) {
+              record->recdata.smppSme.numberingPlan = strtoll(value.c_str(), (char**)0, 0);
+            } else if (strcmp(name.c_str(), "interfaceVersion") == 0) {
+              record->recdata.smppSme.interfaceVersion = strtoll(value.c_str(), (char**)0, 0);
+            } else if (strcmp(name.c_str(), "systemType") == 0) {
+              record->recdata.smppSme.systemType = value.c_release();
+            } else if (strcmp(name.c_str(), "password") == 0) {
+              record->recdata.smppSme.password = value.c_release();
+            } else if (strcmp(name.c_str(), "addrRange") == 0) {
+              record->recdata.smppSme.addrRange = value.c_release();
+            } else if (strcmp(name.c_str(), "smeN") == 0) {
+              record->recdata.smppSme.smeN = strtoll(value.c_str(), (char**)0, 0);
+            } else if (strcmp(name.c_str(), "timeout") == 0) {
+              record->recdata.smppSme.timeout = strtoll(value.c_str(), (char**)0, 0);
+            } else if (strcmp(name.c_str(), "proclimit") == 0) {
+              record->recdata.smppSme.proclimit = strtoll(value.c_str(), (char**)0, 0);
+            } else if (strcmp(name.c_str(), "schedlimit") == 0) {
+              record->recdata.smppSme.schedlimit = strtoll(value.c_str(), (char**)0, 0);
+            } else if (strcmp(name.c_str(),"forceDC") == 0) {
+              record->recdata.smppSme.forceDC=!strcmp(value.c_str(),"true");
+            } else if (strcmp(name.c_str(),"wantAlias") == 0) {
+              record->recdata.smppSme.wantAlias=!strcmp(value.c_str(),"yes");
+            } else if (strcmp(name.c_str(), "receiptSchemeName") == 0) {
+              record->recdata.smppSme.receiptSchemeName = value.c_release();
+            } else if (strcmp(name.c_str(), "disabled") == 0) {
+              record->recdata.smppSme.disabled = !strcmp(value.c_str(),"true");
+            } else if (strcmp(name.c_str(), "mode") == 0) {
+              if (strcmp(value.c_str(),"tx") == 0) {
                 record->recdata.smppSme.mode = MODE_TX;
-              } else if (strcmp(value.get(),"rx") == 0)
-              {
+              } else if (strcmp(value.c_str(),"rx") == 0) {
                 record->recdata.smppSme.mode = MODE_RX;
-              } else if (strcmp(value.get(),"trx") == 0)
-              {
+              } else if (strcmp(value.c_str(),"trx") == 0) {
                 record->recdata.smppSme.mode = MODE_TRX;
               } else {
-                smsc_log_warn(logger, "unknown mode value \"%s\"", value.get());
+                smsc_log_warn(logger, "unknown mode value \"%s\"", value.c_str());
               }
             } else {
-              smsc_log_warn(logger, "unknown param name \"%s\"", name.get());
+              smsc_log_warn(logger, "unknown param name \"%s\"", name.c_str());
             }
           }
         }
@@ -162,7 +147,7 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
         if (record->recdata.smppSme.receiptSchemeName == 0)
           record->recdata.smppSme.receiptSchemeName = cStringCopy("default");
       }
-      else if (strcmp(type.get(), "ss7"))
+      else if (strcmp(type.c_str(), "ss7"))
       {
         record->rectype = SS7_SME;
         smsc_log_warn(logger, "record type SS7_SME is not yet implemented. (UID = \"%s\"", record->smeUid);
@@ -186,7 +171,7 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
       }
       else
       {
-        smsc_log_warn(logger, "Unknown record type \"%s\", record skipped", type.get());
+        smsc_log_warn(logger, "Unknown record type \"%s\", record skipped", type.c_str());
         delete record;
         record = 0;
         continue;
@@ -194,10 +179,15 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
       if (record != 0)
       {
         records.push_back(record);
+        smsc_log_debug(logger, "readed SME: \"%s\"", record->smeUid);
       }
     }
   } catch (...) {
     return fail;
+  }
+
+  for (SRVector::iterator i = records.begin(); i != records.end(); i++) {
+    smsc_log_debug(logger, "resulted SME: \"%s\"", (*i)->smeUid);
   }
   return success;
 }

@@ -1,24 +1,26 @@
 #ifndef SMSC_UTIL_XML_DOM_TREE_READER
 #define SMSC_UTIL_XML_DOM_TREE_READER
 
-#include <xercesc/dom/DOM_Document.hpp>
-#include <xercesc/parsers/DOMParser.hpp>
+#include <xercesc/dom/DOM.hpp>
 
 #include <util/Exception.hpp>
 #include <logger/Logger.h>
+#include <core/synchronization/Mutex.hpp>
 
 namespace smsc {
 namespace util {
 namespace xml {
 
+XERCES_CPP_NAMESPACE_USE
 using smsc::logger::Logger;
 using smsc::util::Exception;
+using namespace smsc::core::synchronization;
 
-  class ParseException : public Exception
-  {
-  public:
-    ParseException(const char * const msg) : Exception(msg) {}
-  };
+class ParseException : public Exception
+{
+public:
+  ParseException(const char * const msg) : Exception(msg) {}
+};
 
 class DOMTreeReader {
 public:
@@ -26,12 +28,14 @@ public:
   DOMTreeReader();
   ~DOMTreeReader();
 
-  DOM_Document read(const char * const filename) throw (ParseException);
-  DOM_Document read(const InputSource & source) throw (ParseException);
+  DOMDocument* read(const char * const filename) throw (ParseException);
+  DOMDocument* read(const DOMInputSource & source) throw (ParseException);
 
 protected:
-  DOMParser *createParser();
+  static DOMBuilder * createParser();
 private:
+  std::auto_ptr<DOMBuilder> parser;
+  Mutex mutex;
 };
 
 }
