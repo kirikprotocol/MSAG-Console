@@ -365,12 +365,22 @@ void DataProvider::process(Command& command)
 
     struct timeval utime, curtime;
     if( log.isInfoEnabled() ) gettimeofday( &utime, 0 );
-    job->process(command, *ds);
-    if( log.isInfoEnabled() ) {
-      long usecs;
-      gettimeofday( &curtime, 0 );
-      usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
-      log.info( "job %s processed in s=%ld us=%ld", job->getName(), curtime.tv_sec-utime.tv_sec, usecs );
+    try {
+	job->process(command, *ds);
+	if( log.isInfoEnabled() ) {
+	    long usecs;
+	    gettimeofday( &curtime, 0 );
+	    usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
+	    log.info( "job %s processed in s=%ld us=%ld", job->getName(), curtime.tv_sec-utime.tv_sec, usecs );
+	}
+    } catch (CommandProcessException& exc) {
+      if( log.isInfoEnabled() ) {
+        long usecs;
+        gettimeofday( &curtime, 0 );
+        usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
+        log.info( "job %s unsuccsess in s=%ld us=%ld", job->getName(), curtime.tv_sec-utime.tv_sec, usecs );
+      }
+      throw;
     }
 }
 
