@@ -227,7 +227,8 @@ public class Route
                 + "\" archiving=\"" + isArchiving() + "\" enabling=\"" + isEnabling() + "\" priority=\"" + getPriority()
                 + "\" serviceId=\"" + getServiceId() + "\" suppressDeliveryReports=\"" + isSuppressDeliveryReports()
                 + "\" active=\"" + isActive() + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
-                + "\" deliveryMode=\"" + getDeliveryMode() + "\" forwardTo=\"" + getForwardTo()
+                + "\" deliveryMode=\"" + StringEncoderDecoder.encode(getDeliveryMode())
+                + ("MAP_PROXY".equals(getSrcSmeId()) ? "\" forwardTo=\"" + StringEncoderDecoder.encode(getForwardTo()) : "")
                 + "\">");
 		getSources().store(out);
 		getDestinations().store(out);

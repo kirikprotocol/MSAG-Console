@@ -26,7 +26,9 @@ function encodeHEX( str ) {
 }
 function srcSmeIdChanged()
 {
-  opForm.all.forwardTo_row.disabled = opForm.all.srcSmeId.options[opForm.all.srcSmeId.selectedIndex] == null || opForm.all.srcSmeId.options[opForm.all.srcSmeId.selectedIndex].value != 'MAP_PROXY';
+  var rowDisabled = opForm.all.srcSmeId.options[opForm.all.srcSmeId.selectedIndex] == null || opForm.all.srcSmeId.options[opForm.all.srcSmeId.selectedIndex].value != 'MAP_PROXY';
+  opForm.all.forwardTo_row.disabled = rowDisabled;
+  opForm.all.forwardTo.disabled = rowDisabled;
 }
 </script>
 <table cellspacing=0 cellpadding=0 _border=1>

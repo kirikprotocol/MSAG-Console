@@ -34,7 +34,8 @@ function validationError(elem, txt)
 {
 	elem.errorMessage = txt;
 
-	elem.focus();
+	if (!elem.disabled)
+	  elem.focus();
 
 	elem.runtimeStyle.color = "#FF0000";
 	if(elem.tagName == "SELECT")
@@ -201,12 +202,15 @@ function validateForm(frm)
 	for (var i=ts.length-1; i>=0; i--)
 	{
 		var elem = frm.elements(i);
-		var validationClass = elem.validation;
-		if(validationClass != null)
+		if (!elem.disabled)
 		{
-			var r = validateField(elem);
-			validateShowErrors(elem);
-			result = result && r;
+      var validationClass = elem.validation;
+      if(validationClass != null)
+      {
+        var r = validateField(elem);
+        validateShowErrors(elem);
+        result = result && r;
+      }
 		}
 	}
 	return result;
