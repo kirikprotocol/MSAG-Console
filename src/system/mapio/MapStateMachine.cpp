@@ -1499,9 +1499,9 @@ static void DoUSSDNotifyCloseInfo(MapDialog* dialog)
   dialog->isUSSD = true;
   __map_trace2__("%s: dialogid 0x%x",__func__,dialog->dialogid_map);
   ET96MAP_USSD_STRING_T ussdString = {0,};
-  unsigned text_len;
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;
-  const unsigned char* text = "Closing...";
+  const unsigned char* text = (const unsigned char*)"Closing...";
+  unsigned text_len = strlen( text );
   unsigned bytes = 0;
   unsigned elen = 0;
   bytes = ConvertText27bit(text,text_len,ussdString.ussdStr,&elen);
