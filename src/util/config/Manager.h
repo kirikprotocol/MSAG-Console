@@ -2,29 +2,71 @@
 #define CONFIGURATIONMANAGER_H_INCLUDED_C3A81BD4
 
 #include <xercesc/dom/DOM_Document.hpp>
+#include <log4cpp/Category.hh>
 
-#include "DB.h"
-#include "MAP.h"
-#include "Logger.h"
+#include "Db.h"
+#include "Map.h"
+#include "Log.h"
+#include "ConfigException.h"
 
 namespace smsc   {
 namespace util   {
 namespace config {
 
+/**
+ * Класс, отвечающий за чтение и запись конфигурации системы.
+ * Чтение производится в конструкторе, запись - методом save()
+ *
+ * @author igork
+ * @see Db
+ * @see Map
+ * @see Log
+ * @see save()
+ */
 class Manager
 {
 public:
-	Manager(const char * const config_filename);
+	/**
+	 * Читает конфигурацию.
+	 *
+	 * @param config_filename
+	 *               Имя файла, в котором хранится конфигурация.
+	 */
+	Manager(const char * const config_filename) throw(ConfigException &);
+	/**
+	 * Запись конфигурации
+	 */
 	void save();
-	DB &get_db() const;
-	Logger &get_logger() const;
-	MAP &get_map() const;
+	/**
+	 * Возвращает конфигурацию базы данных.
+	 *
+	 * @return Конфигурация базы данных
+	 */
+	Db &getDb() const {return *db;};
+	/**
+	 * Возвращает конфигурацию логгера
+	 *
+	 * @return logger configuration
+	 */
+	Log &getLog() const {return *log;};
+	/**
+	 * Возвращает настройки протокола MAP
+	 *
+	 * @return MAP protocol configuration
+	 */
+	Map &getMap() const {return *map;};
 
 private:
-	DOM_Document *document;
-	DB *db;
-	MAP *map;
-	Logger *logger;
+	const char * config_filename;
+	DOM_Document document;
+	Db *db;
+	Map *map;
+	Log *log;
+	log4cpp::Category &cat;
+
+	DOMParser * createParser();
+	void parse(DOMParser *parser, const char * const filename) throw (ConfigException &);
+	void processTree(const DOM_Element &element);
 };
 
 }
