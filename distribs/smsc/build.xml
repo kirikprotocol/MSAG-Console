@@ -55,7 +55,7 @@ Targets:
   <target name="makeweb">
     <untar compression="gzip" src="${SMSC_DIR}/config/tomcat/tomcat.tar.gz" dest="${DISTR_DIR}" overwrite="yes"/>
     <chmod perm="775">
-      <fileset dir="${DISTR_DIR}" includes="bin/*.sh"/>
+      <fileset dir="${DISTR_DIR}" includes="tomcat/bin/*.sh"/>
     </chmod>
     <ant dir="${WEBSRC_DIR}" target="build"/>
     <copy todir="${DISTR_DIR}/webapps">

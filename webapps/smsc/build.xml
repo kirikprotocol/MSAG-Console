@@ -97,7 +97,7 @@
   </target>
 
   <target name="copy_docs">
-    <copy todir="${exploded}">
+    <copy todir="${exploded}" preservelastmodified="yes">
       <fileset dir="${basedir}/../../docs/html">
         <include name="SMSC Administration Guide.htm"/>
         <include name="SMSC Administration Guide_files/*"/>
@@ -120,7 +120,7 @@
     </jar>
   </target>
 
-  <target name="update" depends="build,do_update,copy_docs" description="copy files to distributive except of config files">
+  <target name="update" depends="build,copy_docs,do_update" description="copy files to distributive except of config files">
   </target>
 
   <target name="install" depends="update" description="copy files to distributive">
