@@ -1,0 +1,6 @@
+# $Id$
+# this file contains binaries definitions
+
+# binary name        source name	libraries
+util/xml/test	test -lutil-xml -lxerces-c -llogger $(__LIBRARIES) -liconv
+util/xml/test2	test2 -lrt -llogger

@@ -1,6 +1,4 @@
 #include <util/config/Manager.h>
-#include <xercesc/parsers/DOMParser.hpp>
-#include <xercesc/util/PlatformUtils.hpp>
 #include <logger/Logger.h>
 
 #include <iostream>
