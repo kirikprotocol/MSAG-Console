@@ -1034,6 +1034,7 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms)
                     toFinalStatement->bindSms(id, sms);
                     connection->check(toFinalStatement->execute());
                     connection->commit();   
+                    pool->freeConnection(connection);
                 }
                 catch (StorageException& exc)
                 {
@@ -1042,8 +1043,13 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms)
                     }
                     throw exc;
                 }
-                
-                pool->freeConnection(connection);
+                catch (...) 
+                {
+                    try { connection->rollback(); } catch (...) {
+                        log.error("Failed to rollback");
+                    }
+                    throw StorageException("Unknown exception thrown");
+                }
             }
             break;
         }
@@ -1063,6 +1069,8 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms)
             throw StorageException("Unknown exception thrown");
         }
     }
+    log.debug( "Finalized msg#%lld", id );
+
 }
 
 void RemoteStore::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
