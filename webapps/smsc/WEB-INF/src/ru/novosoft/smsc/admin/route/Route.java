@@ -309,6 +309,7 @@ public class Route
             + "\" deliveryMode=\"" + StringEncoderDecoder.encode(getDeliveryMode())
             + "\" hide=\"" + isHide()
             + "\" replayPath=\"" + getReplayPathValue(getReplayPath())
+            + "\" forceDelivery=\"" + isForceDelivery()
             + ("MAP_PROXY".equals(getSrcSmeId()) ? "\" forwardTo=\"" + StringEncoderDecoder.encode(getForwardTo()) : "")
             + "\" aclId=\"" + getAclId()
             + "\" allowBlocked=\"" + isAllowBlocked()
