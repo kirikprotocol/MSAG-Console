@@ -78,17 +78,22 @@ void rand_text2(int& length, char* buf, uint8_t dataCoding, bool udhi,
 		rand_text(length, buf, dataCoding, hostByteOrder);
 		return;
 	}
-	int headerLen = rand0(length - 1);
-	__require__(headerLen >= 0);
-	auto_ptr<uint8_t> header = rand_uint8_t(headerLen);
-	int msgLen = length - headerLen - 1;
+	__require__(length >= 3);
+	//udh (ie - infrmational element)
+	int udhLen = rand2(2, min(length - 1, 255));
+	int ieLen = udhLen - 2;
+	auto_ptr<uint8_t> ie = rand_uint8_t(ieLen);
+	*buf = (unsigned char) udhLen;
+	*(buf + 1) = 0x12; //Variable Picture
+	*(buf + 2) = (unsigned char) ieLen;
+	memcpy(buf + 3, ie.get(), ieLen);
+	//text or binary data
+	int msgLen = length - udhLen - 1;
 	auto_ptr<char> msg = rand_text(msgLen, dataCoding, hostByteOrder);
 	__require__(msgLen >= 0);
-	__require__(headerLen + msgLen + 1 <= length);
-	length = headerLen + msgLen + 1;
-	*buf = (unsigned char) headerLen;
-	memcpy(buf + 1, header.get(), headerLen);
-	memcpy(buf + headerLen + 1, msg.get(), msgLen);
+	__require__(udhLen + msgLen + 1 <= length);
+	length = udhLen + msgLen + 1;
+	memcpy(buf + udhLen + 1, msg.get(), msgLen);
 }
 
 auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen,
@@ -210,6 +215,52 @@ const pair<string, uint8_t> convert(const string& text, int profileCodePage)
 	//return ...;
 }
 
+void convert(bool udhi, uint8_t dc1, const char* str1, int len1,
+	uint8_t& dc2, char* str2, int& len2, int profileCodePage, bool hostByteOrder)
+{
+	__require__(str1 && str2 && len2);
+	if (dc1 == UCS2 && profileCodePage == ProfileCharsetOptions::Default)
+	{
+		//udh проходит без изменений
+		int udhLen = udhi ? 1 + (unsigned char) *str1 : 0;
+		__require__(len2 > udhLen);
+		memcpy(str2, str1, udhLen);
+		//остальное транслитерируется
+		char mbBuf[len1 - udhLen + 1];
+		int mbLen;
+		if (hostByteOrder || ntohs(0x1234) == 0x1234)
+		{
+			int ucs2Len = len1 - udhLen;
+			const short* usc2Buf = (const short*) (str1 + udhLen);
+			mbLen = ConvertUCS2ToMultibyte(usc2Buf, ucs2Len,
+				mbBuf, sizeof(mbBuf), CONV_ENCODING_CP1251);
+		}
+		else
+		{
+			int ucs2Len = (len1 - udhLen) / 2;
+			short ucs2Buf[ucs2Len];
+			const short* _str1 = (const short*) (str1 + udhLen);
+			for (int i = 0; i < ucs2Len; i++)
+			{
+				ucs2Buf[i] = ntohs(*(_str1 + i));
+			}
+			mbLen = ConvertUCS2ToMultibyte(ucs2Buf, sizeof(ucs2Buf),
+				mbBuf, sizeof(mbBuf), CONV_ENCODING_CP1251);
+		}
+		//char transBuf[(int) ((len1 - udhLen) * 1.5) + 1]; //щ -> sch
+		int transLen = Transliterate(mbBuf, mbLen,
+			CONV_ENCODING_CP1251, str2 + udhLen, sizeof(len2 - udhLen));
+		__require__(len2 > udhLen + transLen);
+		len2 = udhLen + transLen;
+	}
+	else
+	{
+		__require__(len2 >= len1);
+		memcpy(str2, str1, len1);
+		len2 = len1;
+	}
+}
+
 vector<int> compare(bool udhi1, uint8_t dc1, const char* str1, int len1,
 	bool udhi2, uint8_t dc2, const char* str2, int len2, bool hostByteOrder)
 {
@@ -220,37 +271,15 @@ vector<int> compare(bool udhi1, uint8_t dc1, const char* str1, int len1,
 		res.push_back(1);
 		return res;
 	}
-	//допустимая кодировка dc1
-	switch (dc1)
-	{
-		case DEFAULT:
-		case UCS2:
-		case BINARY:
-			break;
-		default:
-			res.push_back(2);
-			return res;
-	}
-	//допустимая кодировка dc2
-	switch (dc2)
-	{
-		case DEFAULT:
-		case UCS2:
-		case BINARY:
-			break;
-		default:
-			res.push_back(3);
-			return res;
-	}
 	//нет текста
 	if (!len1 && len2)
 	{
-		res.push_back(4);
+		res.push_back(2);
 		return res;
 	}
 	if (len1 && !len2)
 	{
-		res.push_back(5);
+		res.push_back(3);
 		return res;
 	}
 	if (!len1 && !len2)
@@ -259,20 +288,9 @@ vector<int> compare(bool udhi1, uint8_t dc1, const char* str1, int len1,
 	}
 	//проверки
 	__require__(str1 && str2);
-	if (dc1 == dc2)
-	{
-		if (len1 != len2)
-		{
-			res.push_back(6);
-		}
-		else if (memcmp(str1, str2, len1))
-		{
-			res.push_back(7);
-		}
-	}
 	//DEFAULT -> UCS2 не бывает
 	//UCS2 -> DEFAULT (в транслит)
-	else if (dc1 == UCS2 && dc2 == DEFAULT)
+	if (dc1 == UCS2 && dc2 == DEFAULT)
 	{
 		char mbBuf[len1 + 1];
 		int mbLen;
@@ -282,11 +300,11 @@ vector<int> compare(bool udhi1, uint8_t dc1, const char* str1, int len1,
 		{
 			if (udhLen > len2)
 			{
-				res.push_back(8);
+				res.push_back(4);
 			}
 			else if (memcmp(str1, str2, udhLen))
 			{
-				res.push_back(9);
+				res.push_back(5);
 			}
 		}
 		//остальное транслитерируется
@@ -314,17 +332,28 @@ vector<int> compare(bool udhi1, uint8_t dc1, const char* str1, int len1,
 			CONV_ENCODING_CP1251, transBuf, sizeof(transBuf));
 		if (transLen + udhLen != len2)
 		{
-			res.push_back(10);
+			res.push_back(6);
 		}
 		else if (memcmp(transBuf, str2 + udhLen, transLen))
 		{
-			res.push_back(11);
+			res.push_back(7);
 			//__trace2__("transBuf: %s\nstr2: %s", transBuf, str2);
 		}
 	}
 	else
 	{
-		res.push_back(12);
+		if (dc1 != dc2)
+		{
+			res.push_back(8);
+		}
+		else if (len1 != len2)
+		{
+			res.push_back(9);
+		}
+		else if (memcmp(str1, str2, len1))
+		{
+			res.push_back(10);
+		}
 	}
 	return res;
 }

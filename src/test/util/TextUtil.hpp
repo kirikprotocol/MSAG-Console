@@ -35,6 +35,8 @@ auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen,
 const string decode(const char* text, int len, uint8_t dataCoding,
 	bool hostByteOrder);
 const pair<string, uint8_t> convert(const string& text, int profileCodePage);
+void convert(bool udhi, uint8_t dc1, const char* str1, int len1,
+	uint8_t& dc2, char* str2, int& len2, int profileCodePage, bool hostByteOrder);
 
 vector<int> compare(bool udhi1, uint8_t dc1, const char* str1, int len1,
 	bool udhi2, uint8_t dc2, const char* str2, int len2, bool hostByteOrder);
