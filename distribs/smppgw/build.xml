@@ -1,62 +1,115 @@
-<project name="SMPP gateway" default="install">
+<project name="SMPP gateway" default="help">
+  <property file="build.properties"/>
+  <fail unless="BUILD_DIR" message="BUILD_DIR property not specified. Please configure build.properties file"/>
+  <fail unless="SMSC_DIR" message="SMSC_DIR property not specified. Please configure build.properties file"/>
+  <property environment="env"/>
+  <property name="SRC_DIR" value="${SMSC_DIR}/src"/>
+  <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
+  <property name="TEMPL_DIR" value="${SMSC_DIR}/conf/templates"/>
+  <property name="WEBSRC_DIR" value="${SMSC_DIR}/webapps"/>
+  <property name="WEBINF_DIR" value="${DISTR_DIR}/webapps/smsc/WEB-INF"/>
+  <property name="SERVICE2HOME_PATH" value="../.."/>
+  <property name="DAEMON2HOME_PATH" value=".."/>
 
-  <target name="set_properties">
-    <property file="build.properties"/>
-    <fail unless="BUILD_DIR" message="BUILD_DIR property not specified. Please configure build.properties file"/>
-    <fail unless="CVS_DIR" message="BUILD_DIR property not specified. Please configure build.properties file"/>
-    <property environment="env"/>
-    <property name="sibinco.cvs" location="${CVS_DIR}"/>
-    <property name="sibinco.src" location="${sibinco.cvs}/src"/>
-    <property name="sibinco.build" location="${BUILD_DIR}"/>
-    <property name="sibinco.exploded" location="${sibinco.build}/exploded"/>
-    <property name="sibinco.dist" location="${sibinco.build}/dist"/>
-    <property name="gw.exploded" location="${sibinco.exploded}/smppgw.host"/>
-    <property name="gw.dist" location="${sibinco.dist}/smppgw.host"/>
-
-    <property name="ex.daemon" location="${gw.exploded}/daemon"/>
-    <property name="ex.services" location="${gw.exploded}/services"/>
-    <property name="ex.conf" location="${gw.exploded}/conf"/>
-    <property name="ex.lib" location="${gw.exploded}/lib"/>
-    <property name="ex.logs" location="${gw.exploded}/logs"/>
-    <property name="ex.tomcat" location="${gw.exploded}/tomcat"/>
-    <property name="ex.webapp" location="${ex.tomcat}/webapps/smppgw"/>
-
-    <property name="daemon.bin" location="${ex.daemon}/bin"/>
-    <property name="daemon.conf" location="${ex.daemon}/conf"/>
-    <property name="daemon.lib" location="${ex.daemon}/lib"/>
-    <property name="daemon.logs" location="${ex.daemon}/logs"/>
-    <property name="daemon.services" location="${ex.daemon}/services"/>
-
-    <property name="gw.install" location="${daemon.services}/smppgw"/>
-    <property name="gw.bin" location="${gw.install}/bin"/>
-    <property name="gw.conf" location="${gw.install}/conf"/>
-    <property name="gw.lib" location="${gw.install}/lib"/>
-    <property name="gw.logs" location="${gw.install}/logs"/>
+  <target name="help">
+    <echo>
+SMPP Gateway build script
+Targets:
+    </echo>
   </target>
 
-  <target name="create_dirs" depends="set_properties">
-    <mkdir dir="${gw.exploded}"/>
-    <mkdir dir="${sibinco.dist}"/>
-
-    <mkdir dir="${ex.daemon}"/>
-    <mkdir dir="${ex.conf}"/>
-    <mkdir dir="${ex.lib}"/>
-    <mkdir dir="${ex.logs}"/>
-
-    <mkdir dir="${daemon.bin}"/>
-    <mkdir dir="${daemon.conf}"/>
-    <mkdir dir="${daemon.services}"/>
-    <symlink link="${ex.daemon}" resource="${ex.lib}"/>
-    <symlink link="${ex.daemon}" resource="${ex.logs}"/>
-    <symlink link="${gw.exploded}" resource="${daemon.services}"/>
-
-    <mkdir dir="${gw.install}"/>
-    <mkdir dir="${gw.bin}"/>
-    <mkdir dir="${gw.conf}"/>
-    <symlink link="${gw.install}" resource="${ex.lib}"/>
-    <symlink link="${gw.install}" resource="${ex.logs}"/>
+  <target name="makegw">
+    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="smppgw"/>
+    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="admin"/>
   </target>
 
+  <target name="makeweb">
+    <ant antfile="${WEBSRC_DIR}/build.xml" dir="${SRC_DIR}" target="build"/>
+  </target>
+
+  <target name="distr_properties">
+    <property name="DISTR_DIR" value="${BUILD_DIR}/distr"/>
+  </target>
+
+  <target name="clean_distr_tree" depends="distr_properties">
+    <delete dir="${DISTR_DIR}"/>
+  </target>
+
+  <target name="create_distr_tree_update" depends="clean_distr_tree" >
+    <mkdir dir="${DISTR_DIR}"/>
+    <mkdir dir="${DISTR_DIR}/conf"/>
+    <mkdir dir="${DISTR_DIR}/lib"/>
+    <mkdir dir="${DISTR_DIR}/services"/>
+    <mkdir dir="${DISTR_DIR}/services/smppgw"/>
+    <mkdir dir="${DISTR_DIR}/services/smppgw/bin"/>
+    <mkdir dir="${DISTR_DIR}/daemon"/>
+    <mkdir dir="${DISTR_DIR}/daemon/bin"/>
+    <mkdir dir="${DISTR_DIR}/webapps"/>
+  </target>
+
+  <target name="create_distr_tree" depends="create_distr_tree" >
+    <mkdir dir="${DISTR_DIR}/tomcat"/>
+    <mkdir dir="${DISTR_DIR}/temp"/>
+    <mkdir dir="${DISTR_DIR}/logs"/>
+    <mkdir dir="${DISTR_DIR}/work"/>
+    <mkdir dir="${DISTR_DIR}/services/smppgw/conf"/>
+
+    <symlink resource="${SERVICE2HOME_PATH}/lib" link="${DISTR_DIR}/services/smppgw"/>
+    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/smppgw"/>
+    <symlink resource="${SERVICE2HOME_PATH}/conf/command.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/conf/configuration.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/conf/response.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/conf/AliasRecords.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/conf/SmeRecords.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/conf/command_gw.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/conf/locale_resources.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/conf/routes.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+
+    <symlink resource="${DAEMON2HOME_PATH}/lib" link="${DISTR_DIR}/daemon"/>
+    <symlink resource="${DAEMON2HOME_PATH}/logs" link="${DISTR_DIR}/daemon"/>
+    <symlink resource="${DAEMON2HOME_PATH}/conf/command.dtd" link="${DISTR_DIR}/daemon/conf"/>
+    <symlink resource="${DAEMON2HOME_PATH}/conf/configuration.dtd" link="${DISTR_DIR}/daemon/conf"/>
+    <symlink resource="${DAEMON2HOME_PATH}/conf/response.dtd" link="${DISTR_DIR}/daemon/conf"/>
+  </target>
+
+  <target name="update" depends="create_distr_tree_update, makegw, makeweb">
+    <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
+    <copy file="${BUILD_BIN}/db/exceptions/libdb_exc.so" todir="${DISTR_DIR}/lib"/>
+    <copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/>
+    <copy file="${BUILD_BIN}/smppgw/smppgw" todir="${DISTR_DIR}/services/smppgw/bin"/>
+    <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
+    <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
+      <fileset dir="${SRC_DIR}/conf" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd"/>
+    </copy>
+    <ant antfile="${WEBSRC_DIR}/build.xml" dir="${SRC_DIR}" target="update"/>
+  </target>
+
+  <target name="configure">
+    <copy todir="${DISTR_DIR}/conf">
+      <fileset dir="${TEMPL_DIR}">
+        <include name="tomcat5/*"/>
+      </fileset>
+      <filterset filtersfile="smppgw.properties"/>
+    </copy>
+    <copy todir="${WEBINF_DIR}/classes" file="${TEMPL_DIR}/log4j.properties">
+      <filterset filtersfile="smppgw.properties"/>
+    </copy>
+    <copy tofile="${DISTR_DIR}/daemon/logger.properties" file="${TEMPL_DIR}/logger/daemon.logger">
+      <filterset filtersfile="smppgw.properties"/>
+    </copy>
+    <copy tofile="${DISTR_DIR}/services/smppgw/logger.properties" file="${TEMPL_DIR}/logger/smppgw.logger">
+      <filterset filtersfile="smppgw.properties"/>
+    </copy>
+  </target>
+
+  <target name="create_distr" depends="create_distr_tree, update">
+    <untar compression="gzip" src="${SMSC_DIR}/config/tomcat/tomcat5.tar.gz" dest="${DISTR_DIR}/tomcat"/>
+  </target>
+
+  <target name="distr" depends="create_distr, configure">
+  </target>
+
+  <!--
   <target name="copy_files" depends="create_dirs">
     <property name="sibinco.cvs.conf" location="${sibinco.cvs}/config"/>
 
@@ -99,8 +152,6 @@
     <ant dir="${sibinco.cvs}/webapps" target="build"/>
   </target>
 
-  <target name="makeall" depends="makeclean, makedeps, makesmppgw, makeweb">
-  </target>
 
   <target name="build" depends="makeall">
     <symlink link="${daemon.bin}/daemon" resource="${sibinco.build}/bin/admin/daemon/smsc_ssdaemon"/>
@@ -129,4 +180,5 @@
   <target name="clean_build" depends="set_properties">
     <delete dir="${BUILD_DIR}" includeemptydirs="yes"/>
   </target>
+  -->
 </project>

@@ -1,3 +1,5 @@
-BUILD_DIR=~/build
-CVS_DIR=~/smsc
+BUILD_DIR=/home/serge/build
+SMSC_DIR=/home/serge/smsc
 MAKE_ARGS="DEBUG=YES TRACE=YES DISABLE_SMPP_CHECKS=YES"
+CATALINA_HOME=/opt/tomcat5
+CATALINA_BASE=/home/serge/build/distr

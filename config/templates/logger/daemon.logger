@@ -1,0 +1,5 @@
+root=@logger.default.category@, default
+
+appender.default.file.name=@logs.dir@/daemon.log
+appender.default.file.maxsize=5Mb
+appender.default.file.maxindex=4
