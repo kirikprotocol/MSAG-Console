@@ -563,17 +563,17 @@ void DateTimeFormatter::format(std::string& output,
         }
         else if (strcmp(def, ioTomorrowString) == 0)
         {
-            date = time(NULL) + 3600*24;
+            date = time(NULL);
             localtime_r(&date, &tmdt);
-            tmdt.tm_hour = tmdt.tm_min = tmdt.tm_sec = 0;
+            tmdt.tm_hour = tmdt.tm_min = tmdt.tm_sec = 0; tmdt.tm_mday++;
             date = mktime(&tmdt);
             //date -= (tmdt.tm_isdst==1) ? 3600:0;
         }
         else if (strcmp(def, ioYesterdayString) == 0)
         {
-            date = time(NULL) - 3600*24;
+            date = time(NULL);
             localtime_r(&date, &tmdt);
-            tmdt.tm_hour = tmdt.tm_min = tmdt.tm_sec = 0;
+            tmdt.tm_hour = tmdt.tm_min = tmdt.tm_sec = 0; tmdt.tm_mday--;
             date = mktime(&tmdt);
             //date -= (tmdt.tm_isdst==1) ? 3600:0;
         }

@@ -22,10 +22,8 @@ namespace smsc { namespace util { namespace templates
     
     using smsc::util::Exception;
 
-    class ParsingException : public Exception
+    struct ParsingException : public Exception
     {
-    public:
-        
         ParsingException(const char* fmt,...)
             : Exception() 
         {
@@ -35,6 +33,16 @@ namespace smsc { namespace util { namespace templates
             : Exception("Exception occurred during input parsing !") {};
         
         virtual ~ParsingException() throw() {};
+    };
+    struct ParsingWarning : public ParsingException
+    {
+        ParsingWarning(const char* fmt,...)
+            : ParsingException("") 
+        {
+            SMSC_UTIL_EX_FILL(fmt);
+        };
+        
+        virtual ~ParsingWarning() throw() {};
     };
     
     class Parser;

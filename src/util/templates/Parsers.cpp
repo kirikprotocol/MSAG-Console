@@ -60,8 +60,7 @@ void InputParser::parse(std::string& input,
     }
 
     if (input.length() > 0)
-        throw ParsingException("Unexpected paramenters left in input : '%s'",
-                               input.c_str());
+        throw ParsingWarning("Unexpected paramenters left in input : '%s'", input.c_str());
 }
 
 void Int8Parser::parse(std::string& input,
