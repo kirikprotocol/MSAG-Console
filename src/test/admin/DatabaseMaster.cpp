@@ -1,7 +1,8 @@
+#include "test/sms/SmsUtil.hpp"
+#include "test/smpp/SmppUtil.hpp"
 #include "test/util/TextUtil.hpp"
 #include "util/config/Manager.h"
 #include "store/StoreManager.h"
-#include "smpp/smpp.h"
 #include "util/config/ConfigView.h"
 #include "db/DataSourceLoader.h"
 #include "profiler/profiler.hpp"
@@ -14,6 +15,8 @@ using namespace smsc::util::config;
 using namespace smsc::store;
 using namespace smsc::profiler;
 using namespace smsc::db;
+using namespace smsc::test::sms;
+using namespace smsc::test::smpp;
 using namespace smsc::test::util;
 using namespace std;
 
@@ -26,7 +29,7 @@ using namespace std;
  * src_sme_id = ?0 (13 записей)
  * dst_sme_id = ?8 (6 записей)
  * route_id = ?8 (3 записи)
- * submit_time = [09.09.2001 1:40:00, 09.09.2001 1:50:00] (2 записи)
+ * submit_time = [09.09.2001 7:40:00, 09.09.2001 7:50:00] (2 записи)
  * id = 000000000000001? (1 запись)
  */
 struct DatabaseMaster
@@ -148,37 +151,80 @@ void DatabaseMaster::genSms()
 		sms.setDestinationSmeId(str(i % 16).c_str());
 		sms.setRouteId(str(i % 32).c_str());
 		sms.setArchivationRequested(true);
-		sms.setIntProperty(Tag::SMPP_ESM_CLASS, 0x0);
 		ostringstream os;
 		uint8_t dataCoding;
-		switch (i % 5)
+		uint8_t esmClass;
+		switch (i % 9)
 		{
 			case 0: //default (latin1)
 				dataCoding = DataCoding::DEFAULT;
+				esmClass = 0x0;
 				os << str(i) << " (default):" << latinChars << digitChars << symbolChars;
 				break;
-			case 1: //ucs2
+			case 1: //default & udhi (latin1)
+				dataCoding = DataCoding::DEFAULT;
+				esmClass = ESM_CLASS_UDHI_INDICATOR;
+				os << str(i) << " (default&udhi):" << latinChars << digitChars << symbolChars;
+				break;
+			case 2: //ucs2
 				dataCoding = DataCoding::UCS2;
+				esmClass = 0x0;
 				os << str(i) << " (ucs2):" << rusChars << digitChars;
 				break;
-			case 2: //ucs2 (другие символы)
+			case 3: //ucs2 & udhi
 				dataCoding = DataCoding::UCS2;
+				esmClass = ESM_CLASS_UDHI_INDICATOR;
+				os << str(i) << " (ucs2&udhi):" << rusChars << digitChars;
+				break;
+			case 4: //ucs2 (другие символы)
+				dataCoding = DataCoding::UCS2;
+				esmClass = 0x0;
 				os << str(i) << " (ucs2):" << latinChars << symbolChars;
 				break;
-			case 3: //smsc7bit
+			case 5: //ucs2 & udhi (другие символы)
+				dataCoding = DataCoding::UCS2;
+				esmClass = ESM_CLASS_UDHI_INDICATOR;
+				os << str(i) << " (ucs2&udhi):" << latinChars << symbolChars;
+				break;
+			case 6: //smsc7bit
 				dataCoding = DataCoding::SMSC7BIT;
+				esmClass = 0x0;
 				os << str(i) << " (smsc7bit):" << latinChars << digitChars << symbolChars;
 				break;
-			case 4: //binary
+			case 7: //smsc7bit & udhi
+				dataCoding = DataCoding::SMSC7BIT;
+				esmClass = ESM_CLASS_UDHI_INDICATOR;
+				os << str(i) << " (smsc7bit&udhi):" << latinChars << digitChars << symbolChars;
+				break;
+			case 8: //binary
 				dataCoding = DataCoding::BINARY;
+				esmClass = rand0(1) ? 0x0 : ESM_CLASS_UDHI_INDICATOR;
 				os << str(i) << " (binary):" << latinChars << digitChars;
 				break;
 		}
+		sms.setIntProperty(Tag::SMPP_ESM_CLASS, esmClass);
+		sms.setIntProperty(Tag::SMPP_DATA_CODING, dataCoding);
 		int msgLen;
 		auto_ptr<char> msg = encode(os.str(), dataCoding, msgLen, true);
-		sms.setIntProperty(Tag::SMPP_DATA_CODING, dataCoding);
-		sms.setIntProperty(Tag::SMPP_SM_LENGTH, msgLen);
-		sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, msg.get(), msgLen);
+		if (esmClass & ESM_CLASS_UDHI_INDICATOR &&
+			dataCoding != DataCoding::BINARY)
+		{
+			int udhiLen = rand0(5);
+			auto_ptr<uint8_t> udhi = rand_uint8_t(udhiLen);
+			int bufLen = msgLen + udhiLen + 1;
+			__require__(bufLen <= MAX_SM_LENGTH);
+			char buf[bufLen];
+			*buf = (unsigned char) udhiLen;
+			memcpy(buf + 1, udhi.get(), udhiLen);
+			memcpy(buf + udhiLen + 1, msg.get(), msgLen);
+			sms.setIntProperty(Tag::SMPP_SM_LENGTH, bufLen);
+			sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, buf, bufLen);
+		}
+		else
+		{
+			sms.setIntProperty(Tag::SMPP_SM_LENGTH, msgLen);
+			sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, msg.get(), msgLen);
+		}
 		//sms.setBinProperty(Tag::SMSC_RAW_SHORTMESSAGE, msg.get(), msgLen);
 		//sms_msg
 		SMSId smsId = msgStore->getNextId();
