@@ -238,6 +238,8 @@ void Smsc::init(const SmscConfigs& cfg)
         si.proclimit=rec->recdata.smppSme.proclimit;
         si.schedlimit=rec->recdata.smppSme.schedlimit;
         si.receiptSchemeName= rec->recdata.smppSme.receiptSchemeName;
+        si.providerId=rec->recdata.smppSme.providerId;
+
         if(si.rangeOfAddress.length() && !re.Compile(si.rangeOfAddress.c_str(),OP_OPTIMIZE|OP_STRICT))
         {
           smsc_log_error(log, "Failed to compile rangeOfAddress for sme %s",si.systemId.c_str());
