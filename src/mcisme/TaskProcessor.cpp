@@ -97,7 +97,7 @@ void TaskProcessor::initDataSource(ConfigView* config)
 TaskProcessor::TaskProcessor(ConfigView* config)
     : Thread(), MissedCallListener(), MCISmeAdmin(), 
         logger(Logger::getInstance("smsc.mcisme.TaskProcessor")), 
-        protocolId(0), svcType(0), address(0), mciModule(0), messageSender(0), 
+        protocolId(0), svcType(0), address(0), messageSender(0), 
         ds(0), dsStatConnection(0), maxInQueueSize(10000), maxOutQueueSize(10000),
         bStarted(false), bInQueueOpen(false), bOutQueueOpen(false)
 {
@@ -130,7 +130,6 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     */
     Task::init(ds); // + statistics
 
-    mciModule = new MCIModule(this);
     smsc_log_info(logger, "Load success.");
 }
 TaskProcessor::~TaskProcessor()
@@ -138,7 +137,6 @@ TaskProcessor::~TaskProcessor()
     eventManager.Stop();
     this->Stop();
     
-    if (mciModule) delete mciModule;
     // if (statistics) delete statistics;
     if (dsStatConnection) ds->freeConnection(dsStatConnection);
     if (ds) delete ds;
@@ -162,7 +160,7 @@ void TaskProcessor::Start()
         
         Thread::Start();
         responcesTracker.Start();
-        if (mciModule) mciModule->Start();
+        mciModule.Attach(this);
         
         bStarted = true;
         smsc_log_info(logger, "Started.");
@@ -174,7 +172,8 @@ void TaskProcessor::Stop()
     if (bStarted)
     {
         smsc_log_info(logger, "Stopping ...");
-        if (mciModule) mciModule->Stop();
+        
+        mciModule.Detach();
         responcesTracker.Stop();
         
         closeInQueue();
@@ -423,6 +422,31 @@ void TaskProcessor::processMessage(const Message& message)
 
 /* ------------------------ Main processing ------------------------ */ 
 
+void TaskProcessor::processNotificationResponce(Message& message, 
+                                                bool accepted, bool retry, bool immediate, std::string smscId)
+{
+    smsc_log_debug(logger, "Got notification responce: smscId=%s, accepted=%d, retry=%d, immediate=%d",
+                   smscId.c_str(), accepted, retry, immediate);
+
+    ReceiptData receipt; // check waiting receipt existance
+    if (responcesTracker.popReceiptData(smscId.c_str(), receipt))
+        smsc_log_warn(logger, "Got receipt for notification message with smscId=%s", smscId.c_str());
+    
+    if (!accepted) 
+    {
+        if (retry) {
+            smsc_log_debug(logger, "Retrying to send notification message to abonent: %s", message.abonent.c_str());
+            if (!immediate) message.attempts++;
+            putToOutQueue(message);
+        }
+        else { // permanent error
+            smsc_log_error(logger, "Failed to send notification message to abonent: %s", message.abonent.c_str());
+        }
+    }
+    else { // accepted
+        smsc_log_debug(logger, "Succeeded to send notification message to abonent: %s", message.abonent.c_str());
+    }
+}
 void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool immediate,
                                     bool replace, bool replace_failed, std::string smscId)
 {
@@ -440,15 +464,18 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
     SmscIdAccessor smscIdAccessor(this, smsc_id); // lock smsc_id if exists
     if (smsc_id) smsc_log_debug(logger, "Responce lock smscId=%s", smsc_id);
     
+    if (message.notification) {
+        processNotificationResponce(message, accepted, retry, immediate, smscId);
+        return;
+    }
+    
     ReceiptData receipt; // check waiting receipt existance
     bool bWasReceipted = responcesTracker.popReceiptData(smsc_id, receipt);
-
+    
     bool  needKillTask = false;
     bool  isMessageToSend = false;
     Message messageToSend;
     {
-        // TODO: Events can be added while task in not locked by followed code !!!
-
         TaskAccessor taskAccessor(this);
         Task* task = taskAccessor.getTask(message.abonent.c_str());
         if (!task) { // Task MUST be in map for valid responce !!!
@@ -608,14 +635,21 @@ void TaskProcessor::processReceipt(Task* task, bool delivered, bool retry,
     
     for (int i=0; i<callers.Count(); i++)
     {
-        smsc_log_debug(logger, "Event(s) %s to %s from %s",
+        smsc_log_debug(logger, "Event(s) %s to %s from %s", 
                        (delivered ? "delivered":(retry ? "expired":"failed")),
                        abonent.c_str(), callers[i].c_str());
 
-        // TODO: send notification(s) to caller(s)
+        if (delivered) // TODO: send notification to caller
+        { 
+            // TODO: check notification option in subscription table
+            Message message;
+            message.abonent = callers[i]; 
+            message.message = "Abonent "+abonent+" is online";
+            message.replace=false; message.notification = true;
+            putToOutQueue(message);
+        }
+        
     }
-
-    // do not kill task here !!!
 }
 
 /* ---------------------- Technical: receipts & responces waiting & ordering --------------------- */ 

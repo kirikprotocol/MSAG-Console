@@ -305,7 +305,7 @@ public:
             sm.get_message().set_validityPeriod(timeBuffer);
             cTime2SmppTime(time(NULL)+60*message.attempts, timeBuffer); // TODO: reschedule table for message.attempts
             sm.get_message().set_scheduleDeliveryTime(timeBuffer);
-            sm.get_message().set_registredDelivery(1);
+            sm.get_message().set_registredDelivery((message.notification) ? 0:1);
             sm.get_message().set_replaceIfPresentFlag(0);
             sm.get_message().set_dataCoding(DataCoding::LATIN1);
             sm.get_message().set_smDefaultMsgId(0); // ???

@@ -37,21 +37,21 @@ namespace smsc { namespace mcisme
         uint32_t    attempts;
         std::string abonent, message, smsc_id;
         int         eventCount;
-        bool        replace;
+        bool        replace, notification;
         
         Message(uint64_t id=0, std::string abonent="",
-                std::string _message="", std::string smsc_id="", bool replace=false) 
-            : id(id), attempts(0), abonent(abonent), message(_message),
-              smsc_id(smsc_id), eventCount(Message::countEvents(_message)), replace(replace) {};
+                std::string _message="", std::string smsc_id="", bool replace=false, bool notification=false) 
+            : id(id), attempts(0), abonent(abonent), message(_message), smsc_id(smsc_id),
+              eventCount(Message::countEvents(_message)), replace(replace), notification(notification) {};
         Message(const Message& msg) 
-            : id(msg.id), attempts(msg.attempts), abonent(msg.abonent), message(msg.message),
-              smsc_id(msg.smsc_id), eventCount(msg.eventCount), replace(msg.replace) {};
+            : id(msg.id), attempts(msg.attempts), abonent(msg.abonent), message(msg.message), smsc_id(msg.smsc_id),
+              eventCount(msg.eventCount), replace(msg.replace), notification(msg.notification) {};
         
         Message& operator=(const Message& msg) {
             id = msg.id; attempts = msg.attempts;
             abonent = msg.abonent; message = msg.message;
-            smsc_id = msg.smsc_id; replace = msg.replace;
-            eventCount = msg.eventCount;
+            smsc_id = msg.smsc_id; eventCount = msg.eventCount;
+            replace = msg.replace; notification = msg.notification;
             return (*this);
         };
 

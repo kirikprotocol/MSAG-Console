@@ -257,7 +257,7 @@ namespace smsc { namespace mcisme
 
         ThreadManager       eventManager;
         ResponcesTracker    responcesTracker;
-        MCIModule*          mciModule;
+        MCIModule           mciModule;
 
         Mutex               messageSenderLock;
         MessageSender*      messageSender;
@@ -300,8 +300,10 @@ namespace smsc { namespace mcisme
                                      bool replace, bool replace_failed, std::string smscId="");
         virtual void processReceipt (std::string smscId, bool delivered, bool retry);
 
-        void processReceipt(Task* task, bool delivered, bool retry, 
-                            const char* smsc_id, uint64_t msg_id=0);
+        void processReceipt(Task* task, bool delivered, bool retry, const char* smsc_id, uint64_t msg_id=0);
+        
+        void processNotificationResponce(Message& message,
+                                         bool accepted, bool retry, bool immediate, std::string smscId="");
     
     public:
 

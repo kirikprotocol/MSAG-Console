@@ -34,85 +34,98 @@ namespace smsc { namespace mcisme
     {
     private:
         
-        Logger*             logger;
-        MissedCallListener* listener;
+        Logger*                 logger;
+        MissedCallListener*     listener;
     
-        Mutex   startLock;
-        Event   exitedEvent;
-        bool    bStarted, bNeedExit;
+    #ifndef MCI_MODULE_TEST        
+        MissedCallProcessor*    module;
+    #endif
         
-        inline MissedCallProcessor* instantiateModule() {
-        #ifndef MCI_MODULE_TEST
-            MissedCallProcessor *mcp = MissedCallProcessor::instance();
-            if (!mcp) smsc_log_error(logger, "Failed to instantiate MCI Module processor.");
-            return mcp;
-        #else
-            return 0;
-        #endif 
+        Event   exitedEvent;
+        Mutex   attachLock, exitLock;
+        bool    bAttached, bNeedExit;
+        
+        inline void setNeedExit() {
+            MutexGuard guard(exitLock);
+            bNeedExit = true;
         }
-    
+        inline bool isNeedExit() {
+            MutexGuard guard(exitLock);
+            return bNeedExit;
+        }
+
     public:
 
-        MCIModule(MissedCallListener* _listener) 
-            : logger(Logger::getInstance("smsc.mcisme.MCIModule")),
-                listener(_listener), bStarted(false), bNeedExit(false) {};
-        virtual ~MCIModule() { Stop(); };
-        
-
-        inline bool isStarted()
+        MCIModule() : Thread(), logger(Logger::getInstance("smsc.mcisme.MCIModule")), 
+            listener(0), bAttached(false), bNeedExit(false)
         {
-            MutexGuard guard(startLock);
-            return bStarted;
-        }
-        void Start()
-        {
-            MutexGuard guard(startLock);
+            smsc_log_info(logger, "Starting MCI Module...");
             
-            if (!bStarted) {
-                smsc_log_info(logger, "Starting ...");
-                bNeedExit = false; 
-        #ifndef MCI_MODULE_TEST
-                MissedCallProcessor *mcp = instantiateModule();
-                if (mcp && listener) {
-                    mcp->addMissedCallListener(listener);
-                }
+        #ifndef MCI_MODULE_TEST    
+            module = MissedCallProcessor::instance();
+            if (!module) throw Exception("Failed to instantiate MCI Module processor.");
         #endif
-                Thread::Start(); bStarted = true;
-                smsc_log_info(logger, "Started.");
-            }
+            Thread::Start();
 
-        }
-        void Stop()
-        {
-            MutexGuard  guard(startLock);
-
-            if (bStarted) {
-                smsc_log_info(logger, "Stopping ...");
-                bNeedExit = true; 
+            smsc_log_info(logger, "MCI Module started.");
+        };
+        virtual ~MCIModule()
+        { 
+            smsc_log_info(logger, "Stopping MCI Module...");
+            
+            Detach(); setNeedExit();
         #ifndef MCI_MODULE_TEST
-                MissedCallProcessor *mcp = instantiateModule();
-                if (mcp) { 
-                    mcp->stop(); mcp->removeMissedCallListener();
-                }
+            if (module) module->stop();
         #endif
-                exitedEvent.Wait(); bStarted = false;
-                smsc_log_info(logger, "Stoped.");
-            }
-        }
+            exitedEvent.Wait();
+            
+            smsc_log_info(logger, "MCI Module stopped.");
+        };
         
+        void Attach(MissedCallListener* _listener)
+        {
+            MutexGuard guard(attachLock);
+            
+            if (!bAttached && _listener)
+            {
+        #ifndef MCI_MODULE_TEST                
+                if (module) {
+                    module->removeMissedCallListener();
+                    module->addMissedCallListener(listener);
+                }
+        #endif
+                listener = _listener; bAttached = true;
+            }
+        }
+        void Detach()
+        {
+            MutexGuard guard(attachLock);
+
+            if (bAttached && listener)
+            {
+        #ifndef MCI_MODULE_TEST                
+                module->removeMissedCallListener();
+        #endif
+                listener = 0; bAttached = false;
+            }
+        }
+
         #ifdef MCI_MODULE_TEST
         void test()
         {
             MissedCallEvent event; char abonent[128];
             Event sleepEvent;
-            for (int i=0; i<10 && !bNeedExit; i++)
+            for (int i=0; i<10 && !isNeedExit(); i++)
             {
-                for (int j=0; j<10 && !bNeedExit; j++)
+                for (int j=0; j<10 && !isNeedExit(); j++)
                 {
                     event.time = time(NULL)+i;
                     sprintf(abonent, "+790290%05d", i);       event.to   = abonent;
                     sprintf(abonent, "+790290%05d", 10000-j); event.from = abonent;
-                    listener->missed(event);
+                    {
+                        MutexGuard guard(attachLock);
+                        if (bAttached && listener) listener->missed(event);
+                    }
                     sleepEvent.Wait(500);
                 }
             }
@@ -121,14 +134,12 @@ namespace smsc { namespace mcisme
         
         virtual int Execute()
         {
-            while (!bNeedExit)
+            while (!isNeedExit())
             {
                 try
                 {   
-        #ifndef MCI_MODULE_TEST                    
-                    MissedCallProcessor *mcp = instantiateModule();
-                    if (!mcp) break;
-                    mcp->run();
+        #ifndef MCI_MODULE_TEST
+                    if (module) module->run();
         #else                    
                     test();
         #endif
