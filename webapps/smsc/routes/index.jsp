@@ -132,11 +132,15 @@ o.put("Strict Filter", "6");
 o.put("Show Sources list", "7");
 o.put("Show Dest list", "8");
 %>
+<table>
+<tr>
 <td><input:select name="filterSelect" default="1"
     attributes="<%= as %>" options="<%= o %>"  />
-    &nbsp; Query: &nbsp;<input:text name="query"  />
- </td> <td>  &nbsp;&nbsp;<%button(out, "but_filter.gif", "filterSelect", "Filter", "Filter", "return clickFilterSelect()");%>
- </td> 
+    &nbsp; Query: &nbsp;<input:text name="query"  /> </td>
+<td>  &nbsp;&nbsp;<%button(out, "but_filter.gif", "filterSelect", "Filter", "Filter", "return clickFilterSelect()");%>
+  </td>
+  </tr>
+ </table>
 <table class=list cellspacing=0 cellpadding=0 id=ROUTE_LIST_TABLE>
 <col width="1%">
 <col width="60%" align=left>
