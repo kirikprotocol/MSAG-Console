@@ -639,6 +639,8 @@ struct PduWithOnlyHeader //: public SmppHeader//MemoryManagerUnit
 typedef PduWithOnlyHeader PduUnbind;
 typedef PduWithOnlyHeader PduUnbindResp;
 typedef PduWithOnlyHeader PduGenericNack;
+typedef PduWithOnlyHeader PduEnquireLink;
+typedef PduWithOnlyHeader PduEnquireLinkResp;
 
 struct PduPartSm //: public MemoryManagerUnit
 {
@@ -774,6 +776,7 @@ typedef PduXSm  PduMultiSm;
 
 typedef PduXSmResp  PduSubmitSmResp;
 typedef PduXSmResp  PduDeliverySmResp;
+typedef PduXSmResp  PduDataSmResp;
 
 struct UnsuccessDeliveries //: public MemoryManagerUnit
 {
@@ -875,6 +878,269 @@ struct PduBindTRXResp //: public SmppHeader//MemoryManagerUnit
   }
 };
 
+struct PduDataPartSm //: public MemoryManagerUnit
+{
+  __cstr_property__(serviceType)
+  __ref_property__(PduAddress,source)
+  __ref_property__(PduAddress,dest)
+  __int_property__(uint8_t,esmClass)
+  __int_property__(uint8_t,registredDelivery)
+  __int_property__(uint8_t,dataCoding)
+
+  PduDataPartSm() :
+    esmClass(0),
+    registredDelivery(0),
+    dataCoding(0) {}
+  
+	inline uint32_t size()
+  {
+    return (uint32_t)(0 /*+ 1 // sizeof(smLength)*/
+                      _s_cstr_property__(serviceType)
+                      _s_ref_property__(PduAddress,source)
+                      _s_ref_property__(PduAddress,dest)
+                      _s_int_property__(uint8_t,esmClass)
+                      _s_int_property__(uint8_t,registredDelivery)
+                      _s_int_property__(uint8_t,dataCoding));
+  }
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("PduPartSm{");
+    ++align;
+    dump_cstr(serviceType)
+    dump_text("source = "); source.dump(log,align+1);
+    dump_text("dest = "); dest.dump(log,align+1);
+    //_s_ptr_property__(PduDestAddress,dests)
+    dump_uint(esmClass);
+    dump_uint(registredDelivery);
+    dump_uint(dataCoding);
+    --align;
+    dump_text("} //PduPartSm");
+  }
+};
+
+struct PduDataSm
+{
+  __ref_property__(SmppHeader,header)
+	__ref_property__(PduDataPartSm,data)
+  __ref_property__(SmppOptional,optional)
+  inline uint32_t size()
+  {
+    return (uint32_t)(0
+                      _s_ref_property__(SmppHeader,header)
+											_s_ref_property__(PduDataPartSm,data)
+											_s_ref_property__(SmppOptional,optional));
+  }
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("PduDataSm{");
+    header.dump(log,align+1);
+    ++align;
+		data.dump(log,align);
+		optional.dump(log,align);
+    --align;
+    dump_text("} //PduDataSm");
+  }
+};
+
+struct PduQuerySm
+{
+  __ref_property__(SmppHeader,header)
+  __cstr_property__(messageId)
+  __ref_property__(PduAddress,source)
+  inline uint32_t size()
+  {
+    return (uint32_t)(0
+                      _s_ref_property__(SmppHeader,header)
+											_s_cstr_property__(messageId)
+											_s_ref_property__(PduAddress,source));
+  }
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("PduQuerySm{");
+    header.dump(log,align+1);
+    ++align;
+		dump_cstr(messageId);
+		dump_text("source = "); source.dump(log,align);
+    --align;
+    dump_text("} //PduQuerySm");
+  }
+};
+
+struct PduQuerySmResp
+{
+  __ref_property__(SmppHeader,header)
+  __cstr_property__(messageId)
+	__cstr_property__(final_date)
+	__int_property__(uint8_t,message_state)
+	__int_property__(uint8_t,error_code)
+  inline uint32_t size()
+  {
+    return (uint32_t)(0
+                      _s_ref_property__(SmppHeader,header)
+											_s_cstr_property__(messageId)
+											_s_cstr_property__(final_date)
+											_s_int_property__(uint8_t,message_state)
+											_s_int_property__(uint8_t,error_code));
+  }
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("PduQuerySmResp{");
+    header.dump(log,align+1);
+    ++align;
+		dump_cstr(messageId);
+		dump_cstr(final_date);
+		dump_uint(message_state);
+		dump_uint(error_code);
+    --align;
+    dump_text("} //PduQuerySmResp");
+  }
+};
+
+struct PduCancelSm
+{
+  __ref_property__(SmppHeader,header)
+  __cstr_property__(serviceType)
+  __cstr_property__(messageId)
+	__ref_property__(PduAddress,source)
+  __ref_property__(PduAddress,dest)
+
+  inline uint32_t size()
+  {
+    return (uint32_t)(0
+                      _s_ref_property__(SmppHeader,header)
+											_s_cstr_property__(serviceType)
+											_s_cstr_property__(messageId)
+											_s_ref_property__(PduAddress,source)
+											_s_ref_property__(PduAddress,dest));
+  }
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("PduCancelSm{");
+    header.dump(log,align+1);
+    ++align;
+    --align;
+    dump_text("} //PduCancelSm");
+  }
+};
+
+struct PduCancelSmResp
+{
+  __ref_property__(SmppHeader,header)
+  inline uint32_t size()
+  {
+    return (uint32_t)(0
+                      _s_ref_property__(SmppHeader,header) );
+  }
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("PduCancelSmResp{");
+    header.dump(log,align+1);
+    ++align;
+    --align;
+    dump_text("} //PduCancelSmResp");
+  }
+};
+
+struct PduReplaceSm
+{
+  __ref_property__(SmppHeader,header)
+  __cstr_property__(serviceType)
+  __ref_property__(PduAddress,source)
+  __ref_property__(PduAddress,dest)
+  __cstr_property__(scheduleDeliveryTime)
+  __cstr_property__(validityPeriod)
+  __int_property__(uint8_t,registredDelivery)
+  __int_property__(uint8_t,smDefaultMsgId)
+  OStr shortMessage;
+  inline void set_shortMessage(const char* __value,int __len) 
+  { 
+    //__require__(__value!=NULL); 
+    if ( !__value ) shortMessage.dispose(); 
+    else shortMessage.copy(__value,__len);
+  } 
+  inline const char* get_shortMessage() { return shortMessage.cstr(); } 
+  inline int size_shortMessage(){ return shortMessage.size(); }
+  inline uint8_t get_smLength(){ return (uint8_t)shortMessage.size(); }
+  PduReplaceSm() :
+    registredDelivery(0),
+    smDefaultMsgId(0){}
+  
+	inline uint32_t size()
+  {
+		return (uint32_t)(0 + 1 // sizeof(smLength)
+										_s_ref_property__(SmppHeader,header)
+										_s_cstr_property__(serviceType)
+										_s_ref_property__(PduAddress,source)
+										_s_ref_property__(PduAddress,dest)
+										_s_cstr_property__(scheduleDeliveryTime)
+										_s_cstr_property__(validityPeriod)
+										_s_int_property__(uint8_t,registredDelivery)
+										_s_int_property__(uint8_t,smDefaultMsgId)
+										_s_ostr_property__(shortMessage)); 
+	}
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("PduReplaceSm{");
+    header.dump(log,align+1);
+    ++align;
+    dump_cstr(serviceType)
+    dump_text("source = "); source.dump(log,align+1);
+    dump_text("dest = "); dest.dump(log,align+1);
+    dump_cstr(scheduleDeliveryTime);
+    dump_cstr(validityPeriod);
+    dump_uint(registredDelivery);
+    dump_uint(smDefaultMsgId);
+    dump_ostr(shortMessage); 
+    --align;
+    dump_text("} //PduReplaceSm");
+  }
+};
+
+struct PduReplaceSmResp
+{
+  __ref_property__(SmppHeader,header)
+  inline uint32_t size()
+  {
+    return (uint32_t)(0
+                      _s_ref_property__(SmppHeader,header));
+  }
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("PduReplaceSmResp{");
+    header.dump(log,align+1);
+    ++align;
+    --align;
+    dump_text("} //PduReplaceSmResp");
+  }
+};
+
+struct PduAlertNotification
+{
+  __ref_property__(SmppHeader,header)
+  __ref_property__(PduAddress,source)
+  __ref_property__(PduAddress,esme)
+	__ref_property__(SmppOptional,optional)
+  inline uint32_t size()
+  {
+    return (uint32_t)(0
+            _s_ref_property__(SmppHeader,header)
+						_s_ref_property__(PduAddress,source)
+						_s_ref_property__(PduAddress,esme)
+						_s_ref_property__(SmppOptional,optional));
+  }
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("PduAlertNotification{");
+    header.dump(log,align+1);
+    ++align;
+		source.dump(log,align);
+		esme.dump(log,align);
+		optional.dump(log,align);
+    --align;
+    dump_text("} //PduAlertNotification");
+  }
+};
+
 inline bool smppPduHasSms(SmppHeader* pdu)
 {
   switch(pdu->commandId)
@@ -882,7 +1148,7 @@ inline bool smppPduHasSms(SmppHeader* pdu)
   case SmppCommandSet::SUBMIT_SM:
   case SmppCommandSet::DELIVERY_SM:
   case SmppCommandSet::SUBMIT_MULTI:
-  case SmppCommandSet::DATA_SM:
+  //case SmppCommandSet::DATA_SM:
     return true;
   }
   return false;
@@ -898,9 +1164,7 @@ inline bool smppPduHasSms(SmppHeader* pdu)
 inline uint32_t calcSmppPacketLength(SmppHeader* _pdu)
 {
   using namespace SmppCommandSet;
-
-  //uint32_t length = 4*4; // header
-  //uint32_t pdusSize;
+  
   switch ( _pdu->commandId )
   {
   case GENERIC_NACK:  return reinterpret_cast<PduGenericNack*>(_pdu)->size();
@@ -908,28 +1172,28 @@ inline uint32_t calcSmppPacketLength(SmppHeader* _pdu)
   case BIND_RECIEVER_RESP: return reinterpret_cast<PduBindTRXResp*>(_pdu)->size();
   case BIND_TRANSMITTER: return reinterpret_cast<PduBindTRX*>(_pdu)->size();
   case BIND_TRANSMITTER_RESP: return reinterpret_cast<PduBindTRXResp*>(_pdu)->size();
-  //case QUERY_SM: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-  //case QUERY_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
+  case QUERY_SM: return reinterpret_cast<PduQuerySm*>(_pdu)->size();
+  case QUERY_SM_RESP: return reinterpret_cast<PduQuerySmResp*>(_pdu)->size();
   case SUBMIT_SM: return reinterpret_cast<PduXSm*>(_pdu)->size(false);
   case SUBMIT_SM_RESP: return reinterpret_cast<PduSubmitSmResp*>(_pdu)->size();
   case DELIVERY_SM: return reinterpret_cast<PduXSm*>(_pdu)->size(false);
   case DELIVERY_SM_RESP: return reinterpret_cast<PduDeliverySmResp*>(_pdu)->size();
   case UNBIND: return reinterpret_cast<PduUnbind*>(_pdu)->size();
   case UNBIND_RESP: return reinterpret_cast<PduUnbindResp*>(_pdu)->size();
-  //case REPLACE_SM: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-  //case REPLACE_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-  //case CANCEL_SM: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-  //case CANCEL_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
+  case REPLACE_SM: return reinterpret_cast<PduReplaceSm*>(_pdu)->size();
+  case REPLACE_SM_RESP: return reinterpret_cast<PduReplaceSmResp*>(_pdu)->size();
+  case CANCEL_SM: return reinterpret_cast<PduCancelSm*>(_pdu)->size();
+  case CANCEL_SM_RESP: return reinterpret_cast<PduCancelSmResp*>(_pdu)->size();
   case BIND_TRANCIEVER: return reinterpret_cast<PduBindTRX*>(_pdu)->size();
   case BIND_TRANCIEVER_RESP: return reinterpret_cast<PduBindTRXResp*>(_pdu)->size();
   case OUTBIND: return reinterpret_cast<PduOutBind*>(_pdu)->size();
-  //case ENQUIRE_LINK: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-  //case ENQUIRE_LINK_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
+  case ENQUIRE_LINK: return reinterpret_cast<PduEnquireLink*>(_pdu)->size();
+  case ENQUIRE_LINK_RESP: return reinterpret_cast<PduEnquireLinkResp*>(_pdu)->size();
   case SUBMIT_MULTI: return reinterpret_cast<PduXSm*>(_pdu)->size(true);
   case SUBMIT_MULTI_RESP: return reinterpret_cast<PduMultiSmResp*>(_pdu)->size();
-  //case ALERT_NOTIFICATION: return reinterpret_cast<Pdu*>(_pdu)->size();
-  //case DATA_SM: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-  //case DATA_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
+  case ALERT_NOTIFICATION: return reinterpret_cast<PduAlertNotification*>(_pdu)->size();
+  case DATA_SM: return reinterpret_cast<PduDataSm*>(_pdu)->size();
+  case DATA_SM_RESP: return reinterpret_cast<PduDataSmResp*>(_pdu)->size();
   default:
     __unreachable__("this code is not reachable");
   }
@@ -948,28 +1212,28 @@ inline bool dump_pdu(SmppHeader* _pdu,FILE* log = stderr)
   case BIND_RECIEVER_RESP: reinterpret_cast<PduBindTRXResp*>(_pdu)->dump(log); break;
   case BIND_TRANSMITTER: reinterpret_cast<PduBindTRX*>(_pdu)->dump(log); break;
   case BIND_TRANSMITTER_RESP: reinterpret_cast<PduBindTRXResp*>(_pdu)->dump(log); break;
-  //case QUERY_SM: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-  //case QUERY_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
+  case QUERY_SM: reinterpret_cast<PduQuerySm*>(_pdu)->dump(log); break;
+  case QUERY_SM_RESP: reinterpret_cast<PduQuerySmResp*>(_pdu)->dump(log); break;
   case SUBMIT_SM: reinterpret_cast<PduSubmitSm*>(_pdu)->dump(log);  break;
   case SUBMIT_SM_RESP: reinterpret_cast<PduSubmitSmResp*>(_pdu)->dump(log);  break;
   case DELIVERY_SM: reinterpret_cast<PduDeliverySm*>(_pdu)->dump(log); break;
   case DELIVERY_SM_RESP: reinterpret_cast<PduDeliverySmResp*>(_pdu)->dump(log); break;
   case UNBIND: reinterpret_cast<PduUnbind*>(_pdu)->dump(log); break;
   case UNBIND_RESP: reinterpret_cast<PduUnbindResp*>(_pdu)->dump(log); break;
-  //case REPLACE_SM: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-  //case REPLACE_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-  //case CANCEL_SM: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-  //case CANCEL_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
+  case REPLACE_SM: reinterpret_cast<PduReplaceSm*>(_pdu)->dump(log); break;
+  case REPLACE_SM_RESP: reinterpret_cast<PduReplaceSmResp*>(_pdu)->dump(log);break;
+  case CANCEL_SM: reinterpret_cast<PduCancelSm*>(_pdu)->dump(log);break;
+  case CANCEL_SM_RESP: reinterpret_cast<PduCancelSmResp*>(_pdu)->dump(log);break;
   case BIND_TRANCIEVER: reinterpret_cast<PduBindTRX*>(_pdu)->dump(log); break;
   case BIND_TRANCIEVER_RESP: reinterpret_cast<PduBindTRXResp*>(_pdu)->dump(log); break;
   case OUTBIND: reinterpret_cast<PduOutBind*>(_pdu)->dump(log); break;
-  //case ENQUIRE_LINK: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-  //case ENQUIRE_LINK_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
+  case ENQUIRE_LINK: reinterpret_cast<PduEnquireLink*>(_pdu)->dump(log); break;
+  case ENQUIRE_LINK_RESP: reinterpret_cast<PduEnquireLinkResp*>(_pdu)->dump(log); break;
   case SUBMIT_MULTI: reinterpret_cast<PduMultiSm*>(_pdu)->dump(log); break;
   case SUBMIT_MULTI_RESP: reinterpret_cast<PduMultiSmResp*>(_pdu)->dump(log); break;
-  //case ALERT_NOTIFICATION: return reinterpret_cast<Pdu*>(_pdu)->size();
-  //case DATA_SM: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
-  //case DATA_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
+  case ALERT_NOTIFICATION: reinterpret_cast<PduAlertNotification*>(_pdu)->dump(log); break;
+  case DATA_SM: reinterpret_cast<PduDataSm*>(_pdu)->dump(log); break;
+  case DATA_SM_RESP: reinterpret_cast<PduDataSmResp*>(_pdu)->dump(log); break;
   default:
     __unreachable__("this code is not reachable");
   }
@@ -992,8 +1256,10 @@ static inline void disposePdu(SmppHeader* _pdu)
     delete(reinterpret_cast<PduBindTRX*>(_pdu)); break;
   case BIND_TRANSMITTER_RESP: 
     delete(reinterpret_cast<PduBindTRXResp*>(_pdu)); break;
-  //case QUERY_SM: reinterpret_cast<*>(_pdu)
-  //case QUERY_SM_RESP: reinterpret_cast<*>(_pdu)
+  case QUERY_SM: 
+    delete(reinterpret_cast<PduQuerySm*>(_pdu)); break;
+  case QUERY_SM_RESP: 
+    delete(reinterpret_cast<PduQuerySmResp*>(_pdu));break;
   case SUBMIT_SM: 
     delete(reinterpret_cast<PduSubmitSm*>(_pdu));  break;
   case SUBMIT_SM_RESP: 
@@ -1006,25 +1272,34 @@ static inline void disposePdu(SmppHeader* _pdu)
     delete(reinterpret_cast<PduUnbind*>(_pdu)); break;
   case UNBIND_RESP: 
     delete(reinterpret_cast<PduUnbindResp*>(_pdu)); break;
-  //case REPLACE_SM: reinterpret_cast<*>(_pdu)
-  //case REPLACE_SM_RESP: reinterpret_cast<*>(_pdu)
-  //case CANCEL_SM: reinterpret_cast<*>(_pdu)
-  //case CANCEL_SM_RESP: reinterpret_cast<*>(_pdu)
+  case REPLACE_SM: 
+    delete(reinterpret_cast<PduReplaceSm*>(_pdu)); break;
+  case REPLACE_SM_RESP: 
+    delete(reinterpret_cast<PduReplaceSmResp*>(_pdu)); break;
+  case CANCEL_SM: 
+    delete(reinterpret_cast<PduCancelSm*>(_pdu)); break;
+  case CANCEL_SM_RESP: 
+    delete(reinterpret_cast<PduCancelSmResp*>(_pdu));break;
   case BIND_TRANCIEVER: 
     delete(reinterpret_cast<PduBindTRX*>(_pdu)); break;
   case BIND_TRANCIEVER_RESP: 
     delete(reinterpret_cast<PduBindTRXResp*>(_pdu)); break;
   case OUTBIND: 
     delete(reinterpret_cast<PduOutBind*>(_pdu)); break;
-  //case ENQUIRE_LINK: reinterpret_cast<*>(_pdu)
-  //case ENQUIRE_LINK_RESP: reinterpret_cast<*>(_pdu)
+  case ENQUIRE_LINK: 
+    delete(reinterpret_cast<PduEnquireLink*>(_pdu)); break;
+  case ENQUIRE_LINK_RESP: 
+    delete(reinterpret_cast<PduEnquireLinkResp*>(_pdu)); break;
   case SUBMIT_MULTI: 
     delete(reinterpret_cast<PduMultiSm*>(_pdu)); break;
   case SUBMIT_MULTI_RESP: 
     delete(reinterpret_cast<PduMultiSmResp*>(_pdu)); break;
-  //case ALERT_NOTIFICATION: reinterpret_cast<*>(_pdu)
-  //case DATA_SM: reinterpret_cast<*>(_pdu)
-  //case DATA_SM_RESP: reinterpret_cast<*>(_pdu)
+  case ALERT_NOTIFICATION: 
+    delete(reinterpret_cast<PduAlertNotification*>(_pdu)); break;
+  case DATA_SM: 
+    delete(reinterpret_cast<PduDataSm*>(_pdu)); break;
+  case DATA_SM_RESP: 
+    delete(reinterpret_cast<PduDataSmResp*>(_pdu)); break;
   default:
     __unreachable__("this code is not reachable");
   }
