@@ -48,6 +48,8 @@ public:
 		//processUpdateProfile
 		__reg_tc__("processUpdateProfile",
 			"Сообщения от менеджера профилей");
+		__reg_tc__("processUpdateProfile.checkFields",
+			"Поля pdu source_addr, data_coding, service_type, protocol_id соответствуют настройкам менеджера профилей");
 		__reg_tc__("processUpdateProfile.reportOptions",
 			"Подтверждения об изменении настроек получения уведомлений о доставке");
 		__reg_tc__("processUpdateProfile.codePage",
