@@ -303,7 +303,7 @@ void process(TCResult* res)
 	}
 }
 
-vector<TestSme*> genConfig(int numAddr, int numSme,
+vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 	const string& smscHost, int smscPort)
 {
 	__require__(numSme <= numAddr);
@@ -329,9 +329,9 @@ vector<TestSme*> genConfig(int numAddr, int numSme,
 		__trace2__("genConfig(): addr = %s, systemId = %s", os.str().c_str(), smeInfo[i]->systemId.c_str());
 	}
 	//регистрация алиасов
-	for (int i = 0; i < numAddr; i++)
+	for (int i = 0; i < numAlias; i++)
 	{
-		for (int j = 0; j < numAddr; j++)
+		for (int j = 0; j < numAlias; j++)
 		{
 			for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
 			{
@@ -506,7 +506,7 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 		if (help)
 		{
 			help = false;
-			cout << "gen config <numAddr> <numSme> - generate config files" << endl;
+			cout << "gen config <numAddr> <numAlias> <numSme> - generate config files" << endl;
 			cout << "test <start|pause|resume> - pause/resume test execution" << endl;
 			cout << "stat - print statistics" << endl;
 			cout << "dump pdu - dump pdu registry" << endl;
@@ -518,9 +518,10 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 		cin >> cmd;
 		if (cmd == "gen")
 		{
-			int numAddr, numSme;
+			int numAddr, numAlias, numSme;
 			cin >> cmd;
 			cin >> numAddr;
+			cin >> numAlias;
 			cin >> numSme;
 			if (cmd == "config")
 			{
@@ -528,9 +529,13 @@ void executeFunctionalTest(const string& smscHost, int smscPort)
 				{
 					cout << "Must be: numAddr >= numSme" << endl;
 				}
+				else if (numAddr < numAlias)
+				{
+					cout << "Must be: numAddr >= numAlias" << endl;
+				}
 				else
 				{
-					sme = genConfig(numAddr, numSme, smscHost, smscPort);
+					sme = genConfig(numAddr, numAlias, numSme, smscHost, smscPort);
 					cout << "Config generated" << endl;
 				}
 			}
