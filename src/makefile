@@ -40,6 +40,10 @@ LDFLAGS := $(LDFLAGS) -lcore-threads -lutil-leaktracing -lcore-threads
 DEBUG := YES
 endif
 
+ifeq ($(NOMAPPROXY),YES)
+CXXFLAGS := $(CXXFLAGS) -DNOMAPPROXY
+endif
+
 ifdef WARNINGS
 CFLAGS := $(CFLAGS) -Wall
 CXXFLAGS := $(CXXFLAGS) -Wall
