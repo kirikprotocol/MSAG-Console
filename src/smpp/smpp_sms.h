@@ -142,7 +142,7 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms,bool forceDC=false)
       message.set_shortMessage(short_msg,msg_length);
       //message.set_smLength((uint8_t)msg_length);
       //message.set_dataCoding((uint8_t)sms_body.getCodingScheme());
-      if(forceDC && sms->hasIntProperty(Tag::SMSC_FORCE_DC))
+      if(forceDC && sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
       {
         message.set_dataCoding((uint8_t)sms->getIntProperty(Tag::SMSC_ORIGINAL_DC));
       }else
