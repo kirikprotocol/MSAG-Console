@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+	<section name="StartupLoader">
+		<section name="DataSourceDrivers">
+			<section name="OCIDataSourceDriver">
+				<param name="type" type="string">OCI</param>
+				<param name="loadup" type="string">../db/oci/libdb_oci.so</param>
+			</section>
+		</section>
+	</section>
+
+	<section name="DBSme">
+
+		<section name="ThreadPool">
+			<param name="max" type="int">15</param>
+			<param name="init" type="int">5</param>
+		</section>
+
+		<section name="SMSC">
+			<param name="host" type="string">smsc</param>
+			<param name="port" type="int">15971</param>
+			<param name="sid" type="string"></param>
+			<param name="timeout" type="int">10</param>
+			<param name="password" type="string"></param>
+		</section>
+
+		<section name="DataProviders">
+
+			<section name="TestDataProvider">
+				<param name="address" type="string">.2.3.9664jgch</param>
+
+				<section name="DataSource">
+					<param name="type" type="string">oci</param>
+					<param name="connections" type="int">3</param>
+					<param name="dbInstance" type="string">dbshock_orcl</param>
+					<param name="dbUserName" type="string">smsc</param>
+					<param name="dbUserPassword" type="string">smsc</param>
+				</section>
+
+				<section name="Jobs">
+
+					<!-- tc1: ???????? ?? input ?????????? ? ????? ? output ????? export-import -->
+					<!-- tc2: ?????? ???? ?1, ???????? ?? ????????? now ? input,
+					???? ? ???? ????????? ????????? ???????? -->
+					<section name="DateFormat1">
+						<param name="name" type="string">DateFormat1</param>
+						<param name="type" type="string">sql-job</param>
+						<param name="query" type="bool">true</param>
+						<param name="sql" type="string">
+select * from dual
+						</param>
+						<param name="input" type="string">
+$$ date pattern = "d/M/yy h:m:s t" export = "dt" default = "now" $$
+						</param>
+						<param name="output" type="string">
+Date: $$ date pattern = "w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y yy yyy yyyy yyyyy h hh hhh m mm mmm t tt" import = "dt" $$
+						</param>
+					</section>
+
+					<!-- tc2: ?????? ???? ?2, ???????? ?? ????????? today ? input,
+					???? ? ???? ????????? ???????? ????????? -->
+					<section name="DateFormat2">
+						<param name="name" type="string">DateFormat2</param>
+						<param name="type" type="string">sql-job</param>
+						<param name="query" type="bool">true</param>
+						<param name="sql" type="string">
+select * from dual
+						</param>
+						<param name="input" type="string">
+$$  date  pattern  =  "dd.MM.yyyy hh-mm-ss t"  export  =  "dt"  default  =  "today"  $$
+						</param>
+						<param name="output" type="string">
+Date: $$  date  pattern  =  "w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y yy yyy yyyy yyyyy h hh hhh m mm mmm t tt"  import  =  "dt"  $$
+						</param>
+					</section>
+
+					<!-- tc2: ?????? ???? ?3, ???????? ?? ????????? yesterday ? input,
+					???? ? ???? ????????? ????????? ??????????? -->
+					<section name="DateFormat3">
+						<param name="name" type="string">DateFormat3</param>
+						<param name="type" type="string">sql-job</param>
+						<param name="query" type="bool">true</param>
+						<param name="sql" type="string">
+select * from dual
+						</param>
+						<param name="input" type="string">
+$$	date	pattern	=	"d-MMM-yy H m s t"	export	=	"dt"	default	=	"yesterday"	$$
+						</param>
+						<param name="output" type="string">
+Date: $$	date	pattern	=	"w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y(yy((yyy)yyyy))yyyyy h hh hhh m mm mmm t tt"	import	=	"dt"	$$
+						</param>
+					</section>
+
+					<!-- tc2: ?????? ???? ?4, ???????? ?? ????????? tomorrow ? input,
+					???? ? ???? ????????? ???????? ???????????? -->
+					<section name="DateFormat4">
+						<param name="name" type="string">DateFormat4</param>
+						<param name="type" type="string">sql-job</param>
+						<param name="query" type="bool">true</param>
+						<param name="sql" type="string">
+select * from dual
+						</param>
+						<param name="input" type="string">
+$$		date		pattern		=		"dd MMMM yyyy HH.mm.ss t"		export		=		"dt"		default		=		"tomorrow"		$$
+						</param>
+						<param name="output" type="string">
+Date: $$		date		pattern		=		"w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y(yy((yyy)yyyy))yyyyy h hh hhh m mm mmm t tt"		import		=		"dt"		$$
+						</param>
+					</section>
+
+					<!-- tc2: ??????? ???????? ? ????????? ????? ?? ??????????
+					?? ????????? ? input, ?????????????? ????????? ????? ?
+					escape ??????? ? output -->
+					<section name="OtherFormat">
+						<param name="name" type="string">OtherFormat</param>
+						<param name="type" type="string">sql-job</param>
+						<param name="query" type="bool">true</param>
+						<param name="sql" type="string">
+select * from dual
+						</param>
+						<param name="input" type="string">
+$$int16 export = "numInt16" default=16$$
+$$int32 export = "numInt32" default=32$$
+$$float export = "numFloat" default=16.16$$
+$$double export = "numDouble" default=32.32$$
+$$string export = "str" default="xxx"$$
+						</param>
+						<param name="output" type="string">
+from-address: '$$string import="from-address"$$'.
+string: "$$string import="str" default="zzz"$$";
+string_right: $$string import="str" length=30 align="right" default="zzz"$$
+string_center: $$string import="str" length=30 align="center" default="zzz"$$
+string_left: $$string import="str" length=30 align="left" default="zzz"$$
+int16: (--\$$$int16 import="numInt16" default="160"$$--),
+int32: (++\$$$int32 import="numInt32" default="320"$$++),
+float: (**\$$$float import="numFloat" default="160.16"$$**),
+double: (::\$$$double import="numDouble" default="320.32"$$::);
+rows-affected: $$int32 arg=1$$
+						</param>
+					</section>
+
+					<!-- tc2: insert job ?? ?????????? ?? ????????? ? input,
+					???????? row affected ? output -->
+					<section name="InsertJob">
+						<param name="name" type="string">InsertJob</param>
+						<param name="type" type="string">sql-job</param>
+						<param name="query" type="bool">false</param>
+						<param name="sql" type="string">
+insert into db_sme_test (int16, int32, flt, dbl, dt, str)
+values (:1, :2, :3, :4, :5, :6 || ' from ' || :7)
+						</param>
+						<param name="input" type="string">
+$$string arg=7 import="from-address"$$
+$$string arg=6 export="str" default="xxx"$$
+$$date arg=5 pattern="dd-MM-yyyy HH:mm:ss" export="dt" default="now"$$
+$$int16 arg=1 export="numInt16" default=16$$
+$$int32 arg=2 export="numInt32" default=32$$
+$$float arg=3 export="numFloat" default=16.16$$
+$$double arg=4 export="numDouble" default=32.32$$
+						</param>
+						<param name="output" type="string">
+InsertJob:
+from-address: $$string import="from-address"$$
+string: $$string import="str"$$
+date: $$date pattern="dd-MM-yyyy HH:mm:ss" import="dt"$$
+int16: $$int16 import="numInt16"$$
+int32: $$int32 import="numInt32"$$
+float: $$float import="numFloat"$$
+double: $$double import="numDouble"$$
+rows-affected: $$int32 arg=1$$
+						</param>
+					</section>
+
+					<!-- tc2: update job ?? ?????????? ?? ????????? ? input,
+					???????? row affected ? output -->
+					<section name="UpdateJob">
+						<param name="name" type="string">UpdateJob</param>
+						<param name="type" type="string">sql-job</param>
+						<param name="query" type="bool">false</param>
+						<param name="sql" type="string">
+update db_sme_test set int16 = :1, int32 = :2, flt = :3, dbl = :4,
+dt = :5, str = :6 || ' from ' || :7
+						</param>
+						<param name="input" type="string">
+$$string arg=7 import="from-address"$$
+$$string arg=6 export="str" default="xxx"$$
+$$date arg=5 pattern="dd-MM-yyyy HH:mm:ss" export="dt" default="now"$$
+$$int16 arg=1 export="numInt16" default=16$$
+$$int32 arg=2 export="numInt32" default=32$$
+$$float arg=3 export="numFloat" default=16.16$$
+$$double arg=4 export="numDouble" default=32.32$$
+						</param>
+						<param name="output" type="string">
+UpdateJob:
+from-address: $$string import="from-address"$$
+string: $$string import="str"$$
+date: $$date pattern="dd-MM-yyyy HH:mm:ss" import="dt"$$
+int16: $$int16 import="numInt16"$$
+int32: $$int32 import="numInt32"$$
+float: $$float import="numFloat"$$
+double: $$double import="numDouble"$$
+rows-affected: $$int32 arg=1$$
+						</param>
+					</section>
+
+					<!-- tc2: delete job ? empty input,
+					???????? row affected ? output -->
+					<section name="DeleteJob">
+						<param name="name" type="string">DeleteJob</param>
+						<param name="type" type="string">sql-job</param>
+						<param name="query" type="bool">false</param>
+						<param name="sql" type="string">
+delete from db_sme_test
+						</param>
+						<param name="input" type="string">
+empty
+						</param>
+						<param name="output" type="string">
+DeleteJob:
+rows-affected: $$int32 arg=1$$
+						</param>
+					</section>
+
+					<!-- tc: select job ?? ?????????? ?? ????????? ? output,
+					???????? ?????????? ? output ????? ????? arg -->
+					<section name="SelectJob">
+						<param name="name" type="string">SelectJob</param>
+						<param name="type" type="string">sql-job</param>
+						<param name="query" type="bool">true</param>
+						<param name="sql" type="string">
+select int16, int32, flt, dbl, dt, str from db_sme_test where str like :1
+						</param>
+						<param name="input" type="string">
+$$string arg=1 export="str" default="%"$$
+						</param>
+						<param name="output" type="string">
+SelectJob:
+$$int16 arg=1 default=160$$
+$$int32 arg=2 default=320$$
+$$float arg=3 default=160.16$$
+$$double arg=4 default=320.32$$
+$$date arg=5 pattern="dd-MM-yyyy HH:mm:ss" default="now"$$
+$$string arg=6 default="Empty"$$
+						</param>
+					</section>
+
+					<!-- tc: select job ??? ???????? ?? ????????? ? output,
+					???????? ?????????? ? output ????? ????? arg -->
+					<section name="SelectJobNoDefault">
+						<param name="name" type="string">SelectJob</param>
+						<param name="type" type="string">sql-job</param>
+						<param name="query" type="bool">true</param>
+						<param name="sql" type="string">
+select int16, int32, flt, dbl, dt, str from db_sme_test where str like :1
+						</param>
+						<param name="input" type="string">
+$$string arg=1 export="str" default="%"$$
+						</param>
+						<param name="output" type="string">
+SelectJobNoDefault:
+$$int16 arg=1$$
+$$int32 arg=2$$
+$$float arg=3$$
+$$double arg=4$$
+$$date arg=5 pattern="dd-MM-yyyy HH:mm:ss"$$
+$$string arg=6$$
+						</param>
+					</section>
+				</section>
+			</section>
+		</section>
+	</section>
+</config>
