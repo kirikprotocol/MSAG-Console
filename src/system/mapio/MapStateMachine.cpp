@@ -3025,7 +3025,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     string subsystem;
     auto_ptr<SMS> _sms ( new SMS() );
     SMS& sms = *_sms.get();
-
+    sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, ussdDataCodingScheme );
     UCHAR_T udhPresent, msgClassMean, msgClass;
     unsigned dataCoding = (unsigned)convertCBSDatacoding2SMSC(ussdDataCodingScheme, &udhPresent, &msgClassMean, &msgClass);
     if( dataCoding == smsc::smpp::DataCoding::SMSC7BIT )
@@ -3117,8 +3117,10 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
     SMS& sms = *_sms.get();
     SMS* old_sms = dialog->sms.get();
     Address originator = old_sms->getOriginatingAddress();
+
     UCHAR_T udhPresent, msgClassMean, msgClass;
     if( ussdDataCodingScheme_p && ussdString_sp ) {
+      sms.setIntProperty(Tag::SMSC_ORIGINAL_DC, *ussdDataCodingScheme );
       unsigned dataCoding = (unsigned)convertCBSDatacoding2SMSC(*ussdDataCodingScheme_p, &udhPresent, &msgClassMean, &msgClass);
       if( dataCoding == smsc::smpp::DataCoding::SMSC7BIT )
       {
