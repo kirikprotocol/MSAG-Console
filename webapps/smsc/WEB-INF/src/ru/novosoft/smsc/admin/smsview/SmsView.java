@@ -61,18 +61,25 @@ public class SmsView
     return set;
   }
 
-  /*public int delSmsSet(SmsQuery query)
+  public int delSmsSet(SmsSet set, int storage)
   {
+    if (storage == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) return 0;
+
     Connection connection = null;
     int deleted = 0;
-    try
-    {
+    try {
       connection = ds.getConnection();
       if (connection == null) return 0;
-      String sql = prepareDeleteString(query);
+      String sql = "DELETE FROM SMS_ARC WHERE ID=?";
       PreparedStatement stmt = connection.prepareStatement(sql);
-      bindInput(stmt, query);
-      deleted = stmt.executeUpdate();
+      for (int i=0; i<set.getRowsCount(); i++) {
+        SmsRow row = set.getRow(i);
+        if (row != null) {
+          stmt.setBytes(1, row.getId());
+          deleted += stmt.executeUpdate();
+          connection.commit();
+        }
+      }
       connection.close();
     }
     catch (Exception exc)
@@ -80,10 +87,10 @@ public class SmsView
       try { if (connection != null) connection.close(); }
       catch (Exception cexc) { cexc.printStackTrace(); }
       System.out.println("Operation with DB failed !");
-      exc.printStackTrace(); deleted = 0;
+      exc.printStackTrace();
     }
     return deleted;
-  }*/
+  }
 
   private boolean needLikeExpression(String str)
   {

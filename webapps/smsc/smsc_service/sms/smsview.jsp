@@ -30,7 +30,11 @@ if (request.getMethod().equals("POST"))
   if (formBean.getAppContext() == null) {
     formBean.setAppContext(request.getAttribute("appContext"));
   }
-  formBean.processQuery();
+  if (request.getParameter("delete") != null) {
+    formBean.processDeleteAll();
+  } else {
+    formBean.processQuery();
+  }
 }
 %>
 <body>
@@ -224,6 +228,7 @@ for (int cnt=firstIndex; cnt<=lastIndex; cnt++) {
 } %>
 </table>
 <%@include file="smsindex.jsp"%>
+<input type="submit" name="delete" value="Delete All selected rows">
 <% } %>
 </center>
 </form>
