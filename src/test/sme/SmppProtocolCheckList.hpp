@@ -402,8 +402,6 @@ void deliverySmTc()
 		"Проверка правильности маршрута (определение sme по адресу отправителя и адресу SC)");
 	__reg_tc__("deliverySm.reports.checkFields",
 		"Общая проверка правильности полей");
-	__reg_tc__("deliverySm.reports.multipleMessages",
-		"Длинный текст сообщения о доставки разбивается на несколько sms");
 	//deliverySm.reports.deliveryReceipt
 	__reg_tc__("deliverySm.reports.deliveryReceipt",
 		"Подтверждения доставки");
@@ -542,6 +540,16 @@ void querySmTc()
 		"Правильные значения полей хедера респонса (command_length, command_id, sequence_number)");
 	__reg_tc__("querySm.resp.checkFields",
 		"Правильные значения полей message_id, final_date, message_state, error_code");
+	__reg_tc__("querySm.resp.checkFields.enroute",
+		"Сообщение находящееся в состоянии ENROUTE");
+	__reg_tc__("querySm.resp.checkFields.delivered",
+		"Сообщение находящееся в состоянии DELIVERED");
+	__reg_tc__("querySm.resp.checkFields.expired",
+		"Сообщение находящееся в состоянии EXPIRED");
+	__reg_tc__("querySm.resp.checkFields.undeliverable",
+		"Сообщение находящееся в состоянии UNDELIVERABLE");
+	__reg_tc__("querySm.resp.checkFields.deleted",
+		"Сообщение находящееся в состоянии DELETED");
 	__reg_tc__("querySm.resp.checkCmdStatusOk",
 		"При отсутствии кода ошибки в поле command_status реквест query_sm действительно не содержит ошибок (сообщение существует, адрес отправителя совпадает и т.п.)");
 	__reg_tc__("querySm.resp.checkCmdStatusInvalidSourceAddr",
@@ -550,6 +558,8 @@ void querySmTc()
 		"Если код ошибки ESME_RINVBNDSTS в поле command_status, то действительно sme зарегистрированна как receiver");
 	__reg_tc__("querySm.resp.checkCmdStatusInvalidMsgId",
 		"Если код ошибки ESME_RINVMSGID в поле command_status, то действительно message_id задан неправильно");
+	__reg_tc__("querySm.resp.checkCmdStatusQueryFail",
+		"Если код ошибки ESME_RQUERYFAIL в поле command_status, то действительно обраюотка query_sm не может быть выполнена корректно");
 	__reg_tc__("querySm.resp.checkCmdStatusOther",
 		"Прочие коды ошибок соответствуют спецификации");
 }
