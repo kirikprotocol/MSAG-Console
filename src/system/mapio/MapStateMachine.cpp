@@ -232,6 +232,7 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn){
     __map_warn2__( "%s: dialog(0x%x) is null",__FUNCTION__,dialogid);
     return;
   }
+  __require__(dialog->ssn==ssn);
   if ( !dialog.isnull() ){
     {
       //MutexGuard(dialog->mutex);
@@ -867,6 +868,7 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code
       __map_trace2__("TryDestroyDialog: has no dialog 0x%x",dialogid);
       return;
     }
+    __require__(dialog->ssn==ssn);
     __map_trace2__("TryDestroyDialog: dialogid 0x%x state %d",dialog->dialogid_map,dialog->state);
     if ( send_error )
     {
@@ -1171,6 +1173,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                   FormatText("MAP::putCommand: Opss, here is no dialog with id x%x seq: %s",dialogid_smsc,s_seq.c_str()));
 
               }
+              __require__(dialog->ssn == dialog_ssn);
               __map_trace2__("%s: dialogid 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
               if ( !dialog->isUSSD )
                 throw MAPDIALOG_FATAL_ERROR(
@@ -1231,6 +1234,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           dialog.assign(dialog2->AddRef());
           dialogid_map = dialog->dialogid_map;
           dialogid_map = MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,dialog->ssn,SSN);
+          __require__(dialog->ssn == dialog_ssn);
           dialog->id_opened = false;
           dialog->dialogid_smsc = dialogid_smsc;
           dialog->dropChain = false;
@@ -1272,6 +1276,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           FormatText("MAP::putCommand: Opss, here is no dialog with id 0x%x/0x%x",dialogid_smsc,dialogid_map));
       //dialog->state = MAPST_START;
       dialogid_smsc = 0;
+      __require__(dialog->ssn == dialog_ssn);
       __map_trace2__("%s: dialogid 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
       //dialogid_map = dialogid_smsc;
       if ( dialog->state == MAPST_WaitSubmitCmdConf ){
@@ -1389,6 +1394,7 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
         }
         else
         {
+          __require__(dialog->ssn == dialog_ssn);
           __map_trace2__("%s: dialogid 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
           dialogid_smsc = dialog->dialogid_smsc;
           switch( dialog->state ){
@@ -1444,6 +1450,7 @@ USHORT_T Et96MapOpenConf (
     if ( dialog.isnull() ) {throw
       MAPDIALOG_HEREISNO_ID(
         FormatText("MAP::dialog 0x%x is not present",dialogid_map));}
+    __require__(dialog->ssn == localSsn);
     __map_trace2__("%s: dialogid 0x%x (state %d) DELIVERY_SM %s",__FUNCTION__,dialog->dialogid_map,dialog->state,RouteToString(dialog.get()).c_str());
     switch( dialog->state ){
     case MAPST_WaitDelRepConf:
@@ -1547,6 +1554,7 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
       throw MAPDIALOG_ERROR(
         FormatText("MAP::%s dialog 0x%x is not present",__FUNCTION__,_di));
     }
+    __require__(dialog->ssn == localSsn);
     dialogid_smsc = dialog->dialogid_smsc;
     __map_trace2__("%s: DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
 
@@ -1673,6 +1681,7 @@ USHORT_T Et96MapCloseInd(
       throw MAPDIALOG_HEREISNO_ID(
         FormatText("MAP::dialog 0x%x is not present",_di));
     }
+    __require__(dialog->ssn==localSsn);
     MAPSTATS_Update(MAPSTATS_GSMDIALOG_CLOSEOUT);
     dialogid_smsc = dialog->dialogid_smsc;
     __map_trace2__("%s: dialogid 0x%x (state %d) DELIVERY_SM %s",__FUNCTION__,dialog->dialogid_map,dialog->state,RouteToString(dialog.get()).c_str());
@@ -1745,6 +1754,7 @@ USHORT_T Et96MapUAbortInd (
     if ( dialog.isnull() )
       throw runtime_error(
         FormatText("MAP::%s MAP.did:{0x%x} is not present",__FUNCTION__,dialogueId));
+    __require__(dialog->ssn == localSsn);
     dialogid_smsc = dialog->dialogid_smsc;
     dialog->id_opened = false;
     __map_trace2__("%s: dialogid 0x%x userReason 0x%x",__FUNCTION__,dialogid_map,userReason_p?*userReason_p:-1);
@@ -1771,6 +1781,7 @@ USHORT_T Et96MapPAbortInd(
       //  FormatText("MAP::%s MAP.did:{0x%x} is not present",__FUNCTION__,dialogueId));
       __map_trace2__("MAP::%s MAP.did:{0x%x} is not present",__FUNCTION__,dialogueId);
     }else{
+      __require__(dialog->ssn==localSsn);
       dialogid_smsc = dialog->dialogid_smsc;
       dialog->id_opened = false;
       throw MAPDIALOG_TEMP_ERROR("PABORT",MAP_ERRORS_BASE+provReason);
@@ -1793,6 +1804,7 @@ USHORT_T Et96MapOpenInd (
   try{
     __map_trace2__("%s: dialog 0x%x",__FUNCTION__,dialogueId);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialog(dialogueId,localSsn/*,0*/));
+    __require__(dialog->ssn==localSsn);
     dialog->hasIndAddress = false;
     if ( specificInfo_sp!=0 && specificInfo_sp->specificInfoLen >= 3 )
     {
@@ -1852,6 +1864,7 @@ static USHORT_T Et96MapVxForwardSmMOInd_Impl (
       throw MAPDIALOG_ERROR(
         FormatText("MAP::%s dialog 0x%x is not present",__FUNCTION__,dialogueId));
     }
+    __require__(dialog->ssn==localSsn);
     __map_trace2__("%s: dialogid 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
     switch( dialog->state ){
     case MAPST_WaitSms:
@@ -1879,6 +1892,7 @@ static USHORT_T Et96MapVxForwardSmMOInd_Impl (
       if ( !dialog.isnull() ) {
         dialog->state = MAPST_ABORTED;
       }
+      __require__(dialog->ssn==localSsn);
       Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
       Et96MapDelimiterReq(localSsn,dialogueId,0,0);
     }
@@ -1923,12 +1937,14 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
   unsigned dialogid_smsc = 0;
   MAP_TRY{
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map,localSsn));
+    __require__(dialog->ssn==localSsn);
     if ( dialog.isnull() ) {
       unsigned _di = dialogid_map;
       dialogid_map = 0;
       throw MAPDIALOG_ERROR(
         FormatText("MAP::%s dialog 0x%x is not present",__FUNCTION__,_di));
     }
+    __require__(dialog->ssn==localSsn);
     dialogid_smsc = dialog->dialogid_smsc;
     __map_trace2__("%s: dialogid 0x%x  (state %d) DELIVERY_SM %s",__FUNCTION__,dialog->dialogid_map,dialog->state, RouteToString(dialog.get()).c_str());
     //DoMTConfErrorProcessor(errorForwardSMmt_sp,provErrCode_p);
@@ -2032,6 +2048,7 @@ USHORT_T Et96MapDelimiterInd(
       throw MAPDIALOG_ERROR(
         FormatText("MAP::%s dialog 0x%x is not present",__FUNCTION__,dialogueId));
     }
+    __require__(dialog->ssn==localSsn);
     __map_trace2__("%s: dialogid 0x%x (state %d) %s",__FUNCTION__,dialog->dialogid_map,dialog->state,RouteToString(dialog.get()).c_str());
     switch( dialog->state ){
     case MAPST_WaitSms:
@@ -2090,7 +2107,7 @@ USHORT_T Et96MapDelimiterInd(
       if ( !dialog.isnull() ) {
         dialog->state = MAPST_ABORTED;
       }
-
+      __require__(dialog->ssn==localSsn);
       Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
       Et96MapDelimiterReq(localSsn,dialogueId,0,0);
     }
@@ -2254,6 +2271,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
     if ( dialog.isnull() )
       throw runtime_error(
         FormatText("MAP::%s MAP.did:{0x%x} is not present",__FUNCTION__,dialogueId));
+    __require__(dialog->ssn==localSsn);
     dialog->isUSSD = true;
     __dialogid_map = dialogueId;
     string subsystem;
@@ -2343,6 +2361,7 @@ USHORT_T Et96MapVxAlertSCInd_Impl(
       throw MAPDIALOG_ERROR(
         FormatText("MAP::%s dialog 0x%x is not present",__FUNCTION__,_di));
     }
+    __require__(dialog->ssn==localSsn);
     dialog->hlrVersion = version;
     dialogid_smsc = dialog->dialogid_smsc;
     __map_trace2__("%s: dialogid 0x%x (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
@@ -2408,6 +2427,7 @@ USHORT_T Et96MapV2InformSCInd (
       dialogid_map = 0;
       throw MAPDIALOG_HEREISNO_ID(
         FormatText("MAP::dialog 0x%x is not present",_di));}
+    __require__(dialog->ssn==localSsn);
     dialogid_smsc = dialog->dialogid_smsc;
     __map_trace2__("%s: dialogid 0x%x (state %d) DELIVERY_SM %s",__FUNCTION__,dialog->dialogid_map,dialog->state,RouteToString(dialog.get()).c_str());
     switch( dialog->state ){
