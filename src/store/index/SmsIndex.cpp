@@ -453,8 +453,8 @@ int SmsIndex::QuerySms(const char* dir,const ParamArray& params,ResultArray& res
         }
       }break;
       case Param::tSmeId:{
-        IntLttChunkFile::ChunkHandle* h1;
-        IntLttChunkFile::ChunkHandle* h2;
+        IntLttChunkFile::ChunkHandle* h1=0;
+        IntLttChunkFile::ChunkHandle* h2=0;
         {
           SmeIdDiskHash h;
           h.Open((path+"srcsmeid" ".idx").c_str());

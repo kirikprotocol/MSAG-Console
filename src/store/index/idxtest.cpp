@@ -44,9 +44,9 @@ int main(int argc,char* argv[])
           s.setRouteId("route2");
         }
         char buf[64];
-        sprintf(buf,".0.1.%d",i+1);
+        sprintf(buf,".0.1.%d",1+(i+1)%10);
         s.setOriginatingAddress(buf);
-        sprintf(buf,".0.1.%d",i+100001);
+        sprintf(buf,".0.1.%d",1+(i+6)%10);
         s.setDestinationAddress(buf);
         s.lastTime=time(NULL);
         idx.IndexateSms(".",100+i,100000+i,s);
@@ -55,12 +55,12 @@ int main(int argc,char* argv[])
     {
       ParamArray p;
       Param p1;
-      //p1.type=Param::tDstAddress;
-      //p1.sValue=".1.1.79029025800";
+      p1.type=Param::tAbnAddress;
+      p1.sValue=".0.1.5";
       p.Push(p1);
-      p1.type=Param::tSmeId;
-      p1.sValue="qqq";
-      p.Push(p1);
+      //p1.type=Param::tSmeId;
+      //p1.sValue="qqq";
+      //p.Push(p1);
       ResultArray res;
       int c=idx.QuerySms(".",p,res);
       printf("%d\n",c);
