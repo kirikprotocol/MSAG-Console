@@ -88,13 +88,13 @@ class MapDialog{
   ET96MAP_SM_RP_OA_T smRpOa;
   unsigned version;
 public:
-  MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn) : 
+  MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,ET96MAP_LOCAL_SSN_T lssn,unsigned version=2) : 
     ref_count(1),
     state(MAPST_START), 
     dialogid(dialogid),
     smscDialogId(0),
     ssn(lssn),
-    version(2)
+    version(version)
     {}
   virtual ~MapDialog(){
     __trace2__("MAP::Dialog::~MapDialog 0x%x(0x%x)",dialogid,smscDialogId);

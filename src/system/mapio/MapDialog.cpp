@@ -446,26 +446,26 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
       }
       encoding = user_data_coding&0x0c;
       if ( (user_data_coding & 0xc0) == 0x40 )
-        sms.setIntProperty(Tag::MS_VALIDITY,0x03);
+        sms.setIntProperty(Tag::SMPP_MS_VALIDITY,0x03);
     }
     else if ( (user_data_coding & 0xf0) == 0xc0 ) // 1100xxxx
     {
       encoding = MAP_OCTET7BIT_ENCODING;
-      sms.setIntProperty(Tag::MS_VALIDITY,0x3);
+      sms.setIntProperty(Tag::SMPP_MS_VALIDITY,0x3);
       sms.setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
                          (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
     }
     else if ( (user_data_coding & 0xf0) == 0xd0 ) // 1101xxxx
     {
       encoding = MAP_OCTET7BIT_ENCODING;
-      sms.setIntProperty(Tag::MS_VALIDITY,0x0);
+      sms.setIntProperty(Tag::SMPP_MS_VALIDITY,0x0);
       sms.setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
                          (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
     }
     else if ( (user_data_coding & 0xf0) == 0xe0 ) // 1110xxxx
     {
       encoding = MAP_UCS2_ENCODING;
-      sms.setIntProperty(Tag::MS_VALIDITY,0x0);
+      sms.setIntProperty(Tag::SMPP_MS_VALIDITY,0x0);
       sms.setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
                          (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
     }
@@ -1224,26 +1224,26 @@ USHORT_T MapDialog::Et96MapV1ForwardSmMOInd (
       }
       encoding = user_data_coding&0x0c;
       if ( (user_data_coding & 0xc0) == 0x40 )
-        sms.setIntProperty(Tag::MS_VALIDITY,0x03);
+        sms.setIntProperty(Tag::SMPP_MS_VALIDITY,0x03);
     }
     else if ( (user_data_coding & 0xf0) == 0xc0 ) // 1100xxxx
     {
       encoding = MAP_OCTET7BIT_ENCODING;
-      sms.setIntProperty(Tag::MS_VALIDITY,0x3);
+      sms.setIntProperty(Tag::SMPP_MS_VALIDITY,0x3);
       sms.setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
                          (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
     }
     else if ( (user_data_coding & 0xf0) == 0xd0 ) // 1101xxxx
     {
       encoding = MAP_OCTET7BIT_ENCODING;
-      sms.setIntProperty(Tag::MS_VALIDITY,0x0);
+      sms.setIntProperty(Tag::SMPP_MS_VALIDITY,0x0);
       sms.setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
                          (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
     }
     else if ( (user_data_coding & 0xf0) == 0xe0 ) // 1110xxxx
     {
       encoding = MAP_UCS2_ENCODING;
-      sms.setIntProperty(Tag::MS_VALIDITY,0x0);
+      sms.setIntProperty(Tag::SMPP_MS_VALIDITY,0x0);
       sms.setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
                          (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
     }
