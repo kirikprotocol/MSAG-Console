@@ -8,6 +8,7 @@ import ru.sibinco.lib.backend.daemon.ServiceInfo;
 import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.lib.backend.util.conpool.NSConnectionPool;
 import ru.sibinco.smppgw.backend.resources.ResourceManager;
+import ru.sibinco.smppgw.backend.routing.BillingManager;
 import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
 import ru.sibinco.smppgw.backend.sme.*;
 import ru.sibinco.smppgw.backend.users.UserManager;
@@ -43,7 +44,8 @@ public class SmppGWAppContext
   private final Daemon gwDaemon;
   private final Gateway gateway;
   private final Statuses statuses;
-  private DataSource connectionPool;
+  private final DataSource connectionPool;
+  private final BillingManager billingManager;
 
   private SmppGWAppContext(final String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException,
                                                                 Config.ParamNotFoundException, SibincoException
@@ -61,10 +63,11 @@ public class SmppGWAppContext
       smscsManager = new SmscsManager(gwConfig);
       gwRoutingManager = new GwRoutingManager(new File(config.getString("gw_config_folder")), gwSmeManager, providerManager);
       gwRoutingManager.init();
+      billingManager = new BillingManager(new File(config.getString("gw_config_folder"), "billing-rules.xml"));
       resourceManager = new ResourceManager(new File(config.getString("gw_config_folder")));
       gwDaemon = new Daemon(config.getString("gw daemon.host"), (int) config.getInt("gw daemon.port"), gwSmeManager, config.getString("gw daemon.folder"));
       final ServiceInfo gwServiceInfo = (ServiceInfo) gwDaemon.getServices().get(config.getString("gw name"));
-      gateway = new Gateway(gwServiceInfo);
+      gateway = new Gateway(gwServiceInfo, (int) gwConfig.getInt("admin.port"));
       statuses = new Statuses();
       perfServer = new PerfServer(config);
       perfServer.start();
@@ -153,7 +156,13 @@ public class SmppGWAppContext
     return statuses;
   }
 
-  public DataSource getDataSource() {
+  public BillingManager getBillingManager()
+  {
+    return billingManager;
+  }
+
+  public DataSource getDataSource()
+  {
     return connectionPool;
   }
 }

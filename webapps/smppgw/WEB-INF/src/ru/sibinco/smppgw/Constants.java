@@ -25,6 +25,7 @@ public class Constants
       public static final Constants COULDNT_APPLY_USERS = new Constants("error.status.couldnt_apply_users");
       public static final Constants COULDNT_APPLY_SMSCS = new Constants("error.status.couldnt_apply_smscs");
       public static final Constants COULDNT_APPLY_PROVIDERS = new Constants("error.status.couldnt_apply_providers");
+      public static final Constants COULDNT_APPLY_BILLING = new Constants("error.status.couldnt_apply_billing");
     }
 
 

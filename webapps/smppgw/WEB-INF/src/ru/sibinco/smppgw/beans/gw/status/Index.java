@@ -106,7 +106,20 @@ public class Index extends SmppgwBean
           applySmscs();
         if ("users".equals(s))
           applyUsers();
+        if ("billing".equals(s))
+          applyBilling();
       }
+  }
+
+  private void applyBilling() throws SmppgwJspException
+  {
+    try {
+      appContext.getBillingManager().save();
+      appContext.getStatuses().setBillingChanged(false);
+    } catch (Throwable e) {
+      logger.debug("Couldn't apply Route billing rules", e);
+      throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_BILLING, e);
+    }
   }
 
   private void applySmscs() throws SmppgwJspException
@@ -229,6 +242,11 @@ public class Index extends SmppgwBean
   public boolean isRoutesChanged()
   {
     return appContext.getStatuses().isRoutesChanged();
+  }
+
+  public boolean isBillingChanged()
+  {
+    return appContext.getStatuses().isBillingChanged();
   }
 
   public boolean isProvidersChanged()

@@ -11,6 +11,7 @@ public class Statuses
   private boolean usersChanged = false;
   private boolean smscsChanged = false;
   private boolean providersChanged = false;
+  private boolean billingChanged = false;
 
   public boolean isConfigChanged()
   {
@@ -37,7 +38,7 @@ public class Statuses
     return usersChanged;
   }
 
-  public void setUsersChanged(boolean usersChanged)
+  public void setUsersChanged(final boolean usersChanged)
   {
     this.usersChanged = usersChanged;
   }
@@ -47,7 +48,7 @@ public class Statuses
     return smscsChanged;
   }
 
-  public void setSmscsChanged(boolean smscsChanged)
+  public void setSmscsChanged(final boolean smscsChanged)
   {
     this.smscsChanged = smscsChanged;
   }
@@ -57,8 +58,18 @@ public class Statuses
     return providersChanged;
   }
 
-  public void setProvidersChanged(boolean providersChanged)
+  public void setProvidersChanged(final boolean providersChanged)
   {
     this.providersChanged = providersChanged;
+  }
+
+  public boolean isBillingChanged()
+  {
+    return billingChanged;
+  }
+
+  public void setBillingChanged(final boolean billingChanged)
+  {
+    this.billingChanged = billingChanged;
   }
 }

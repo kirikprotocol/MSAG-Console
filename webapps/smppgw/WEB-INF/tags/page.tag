@@ -216,6 +216,7 @@
         <sm-mm:section menuId="MENU0_Routing_menu" submenuId="MENU0_Routing_submenu" name="Routing">
           <sm-mm:item url="routing/subjects" name="Subjects"       title=""/>
           <sm-mm:item url="routing/routes"   name="Routes"         title=""/>
+          <sm-mm:item url="routing/billing"  name="Billing"        title=""/>
           <sm-mm:item url="routing/tracer"   name="Routes tracing" title=""/>
         </sm-mm:section>
 

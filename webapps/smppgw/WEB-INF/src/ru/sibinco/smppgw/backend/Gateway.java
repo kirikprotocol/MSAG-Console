@@ -15,9 +15,9 @@ public class Gateway extends Proxy
 {
   private final String id;
 
-  public Gateway(final ServiceInfo gwServiceInfo)
+  public Gateway(final ServiceInfo gwServiceInfo, final int port)
   {
-    super(gwServiceInfo.getHost(), gwServiceInfo.getPort());
+    super(gwServiceInfo.getHost(), port);
     id = gwServiceInfo.getId();
   }
 
@@ -47,7 +47,7 @@ public class Gateway extends Proxy
       throw new SibincoException("Couldn't delete sme, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
   }
 
-  public void addSme(GwSme gwSme) throws SibincoException
+  public void addSme(final GwSme gwSme) throws SibincoException
   {
     final Response response = super.runCommand(new AddSme(gwSme));
     if (Response.StatusOk != response.getStatus())
