@@ -49,27 +49,33 @@
 				<%
 			}
 		}
-		// show SMEs that is not Services
-		for (Iterator i = serviceManager.getSmeIds().iterator(); i.hasNext(); )
+		if (isHostColumnNeeded)
 		{
-			String smeId = (String) i.next();
-			String params = "serviceId=" + URLEncoder.encode(smeId);
-			boolean isRunning = true;
-			%>
-			<TR class="list">
-			<%if (isHostColumnNeeded) {%>
-				<TD class="list" colspan="2"><%=StringEncoderDecoder.encode(smeId)%></TD>
-			<%} else {%>
-				<TD class="list"><%=StringEncoderDecoder.encode(smeId)%></TD>
-			<%}%>
-			<TD class="list"><%=(isRunning ? "running" : "stopped")%></TD>
-			<%if (isRunning) {%>
-				<TD class="list" colspan="3">&nbsp;</TD>
-			<%} else {%>
-				<TD class="list" colspan="3"><A href="<%=urlPrefix + servicesPrefix%>/remove_service.jsp?<%=params%>">remove</a></TD>
-			<%}%>
-			</TR>
-			<%
+			// show SMEs that is not Services
+			for (Iterator i = serviceManager.getSmeIds().iterator(); i.hasNext(); )
+			{
+				String smeId = (String) i.next();
+				if (!serviceManager.isService(smeId))
+				{
+					String params = "serviceId=" + URLEncoder.encode(smeId);
+					boolean isRunning = true;
+					%>
+					<TR class="list">
+					<%if (isHostColumnNeeded) {%>
+						<TD class="list" colspan="2"><%=StringEncoderDecoder.encode(smeId)%></TD>
+					<%} else {%>
+						<TD class="list"><%=StringEncoderDecoder.encode(smeId)%></TD>
+					<%}%>
+					<TD class="list"><%=(isRunning ? "running" : "stopped")%></TD>
+					<%if (isRunning) {%>
+						<TD class="list" colspan="3">&nbsp;</TD>
+					<%} else {%>
+						<TD class="list" colspan="3"><A href="<%=urlPrefix + servicesPrefix%>/remove_service.jsp?<%=params%>">remove</a></TD>
+					<%}%>
+					</TR>
+					<%
+				}
+			}
 		}
 		%>
 	</TABLE>

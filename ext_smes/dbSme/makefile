@@ -28,6 +28,7 @@ compile:
 	@cp -f $(SMSC_BUILDDIR)/jars/dbSme.jar  $(SME_BUILDDIR)/lib/dbSme.jar
 	@cp -f $(DB_OCI_LIB) $(SME_BUILDDIR)/lib/libdb_oci.so
 	@cp -f ../../config/dbsme/config.xml $(SME_BUILDDIR)/conf/config.xml
+	@cp -f ../../config/configuration.dtd $(SME_BUILDDIR)/conf/configuration.dtd
 	@cp -f jsp/*.* $(SME_BUILDDIR)/jsp
 	@cp -f config.xml $(SME_BUILDDIR)
 

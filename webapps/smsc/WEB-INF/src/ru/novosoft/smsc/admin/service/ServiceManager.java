@@ -251,14 +251,11 @@ public class ServiceManager
 			Service s = getService(serviceId);
 			Daemon d = getDaemon(s.getInfo().getHost());
 			s.getInfo().setPid(d.startService(serviceId));
-			if (s.getInfo().isRunning())
-			{
-				s.refreshComponents();
-			}
+			refreshService(serviceId);
 		}
 		catch (AdminException e)
 		{
-			refreshService(serviceId);
+			//refreshService(serviceId);
 			throw e;
 		}
 	}
@@ -460,16 +457,7 @@ public class ServiceManager
 			  throws AdminException
 	{
 		services.put(s.getInfo().getId(), s);
-		if (s.getInfo().isRunning())
-		{
-			try
-			{
-				s.refreshComponents();
-			}
-			catch (AdminException e)
-			{
-			}
-		}
+		//refreshService(s.getInfo().getId());
 	}
 
 	protected Daemon getDaemon(String hostName)

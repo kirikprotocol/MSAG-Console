@@ -143,6 +143,10 @@ public class AddAdmServiceWizard
 			File newLogFolder = new File(serviceFolder, "log");
 			newLogFolder.mkdir();
 			moveJars(new File(serviceFolder, "lib"), webinfLibFolder);
+
+			File deploy_config = new File(serviceFolder, "config.xml");
+			if (deploy_config.exists() && deploy_config.isFile())
+				deploy_config.delete();
 		}
 		catch (AdminException e)
 		{

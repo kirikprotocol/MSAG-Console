@@ -5,7 +5,7 @@ sms		"SMS declaration"
 store		"Store implementation"
 db
 #storetest	"Service program to test store module"
-#admin		"Administration subsystem"
+admin		"Administration subsystem"
 smeman
 router
 system

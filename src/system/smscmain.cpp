@@ -7,7 +7,7 @@
 #include "util/config/alias/aliasconf.h"
 #include "util/config/route/RouteConfig.h"
 #include <admin/service/ComponentManager.h>
-#include <admin/service/AdminSocketManager.h>
+#include <admin/service/ServiceSocketListener.h>
 #include <admin/smsc_service/SmscComponent.h>
 #include <admin/smsc_service/SmscShutdownHandler.h>
 
@@ -101,16 +101,18 @@ int main(int argc,char* argv[])
       SmscComponent smsc_component(cfgs);
       ComponentManager::registerComponent(&smsc_component);
 
-      SmscShutdownHandler shutdown_handler(smsc_component);
-      SmscShutdownHandler::registerShutdownHandler(&shutdown_handler);
-
       // start
       smsc_component.runSmsc();
-      AdminSocketManager::start(admin_host, servicePort);
-      fprintf(stderr,"smsc started\n");
+      smsc::admin::service::ServiceSocketListener listener;
+      listener.init(admin_host, servicePort);
+      listener.Start();
+      
+      SmscShutdownHandler shutdown_handler(listener);
+      SmscShutdownHandler::registerShutdownHandler(&shutdown_handler);
 
+      fprintf(stderr,"smsc started\n");
       //running
-      AdminSocketManager::WaitFor();
+      listener.WaitFor();
 
       fprintf(stderr,"smsc stopped, finishing\n");
       // stopped
