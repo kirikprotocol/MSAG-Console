@@ -56,6 +56,8 @@
       <param name="password" type="string">smppgw1</param>
       <param name="responseTimeout" type="int">20</param>
       <param name="uniqueMsgIdPrefix" type="int">1</param>
+      <param name="altHost" type="string">localhost</param>
+      <param name="altPort" type="int">60011</param>
     </section>
   </section>
 
