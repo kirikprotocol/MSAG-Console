@@ -18,3 +18,7 @@ resourcemanager
 distrlist
 mscman
 stat
+logger
+emailsme
+proxysme
+license
