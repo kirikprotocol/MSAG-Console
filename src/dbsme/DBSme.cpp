@@ -94,7 +94,8 @@ public:
                 if (requestsProcessingCount) requestsProcessingCount--;
                 failuresNoticedCount++;
             }
-            command.setOutData("Error processing SMS !");
+            //command.setOutData("Error processing SMS !");
+            command.setOutData(exc.what());
         }
 
         sms.setDestinationAddress(command.getFromAddress());
@@ -125,8 +126,8 @@ public:
             out += strLen; outLen -= strLen;
         }
 
-        printf((dlResp && dlResp->get_header().get_commandStatus()==0) ?
-               "Responce sent !\n" : "Responce wasn't send !\n");
+        /*printf((dlResp && dlResp->get_header().get_commandStatus()==0) ?
+               "Responce sent !\n" : "Responce wasn't send !\n");*/
         {
             MutexGuard guard(countersLock);
             if (requestsProcessingCount) requestsProcessingCount--;
