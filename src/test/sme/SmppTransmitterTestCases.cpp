@@ -35,7 +35,7 @@ void SmppTransmitterTestCases::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 {
 	__require__(pdu);
 	SmppUtil::setupRandomCorrectSubmitSmPdu(pdu, useShortMessage,
-		mask & ~OPT_USSD_SERVICE_OP);
+		fixture->smeInfo.forceDC, mask & ~OPT_USSD_SERVICE_OP);
 	 //Default message Type (i.e. normal message)
 	pdu->get_message().set_esmClass(
 		pdu->get_message().get_esmClass() & 0xc3);
@@ -486,6 +486,17 @@ SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduSubmitSm* pdu)
 	const Profile& profile = fixture->profileReg->getProfile(addr, t);
 	bool valid = t + timeCheckAccuracy <= time(NULL);
 	bool udhi = pdu->get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
+	uint8_t dc;
+	if (fixture->smeInfo.forceDC)
+	{
+		bool res = SmppUtil::extractDataCoding(
+			pdu->get_message().get_dataCoding(), dc);
+		__require__(res);
+	}
+	else
+	{
+		dc = pdu->get_message().get_dataCoding();
+	}
 	char* msg = NULL;
 	int len = 0;
 	uint8_t dataCoding;
@@ -494,8 +505,7 @@ SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduSubmitSm* pdu)
 	{
 		len = (int) (pdu->get_message().size_shortMessage() * 1.5);
 		msg = new char[len];
-		convert(udhi, pdu->get_message().get_dataCoding(),
-			pdu->get_message().get_shortMessage(),
+		convert(udhi, dc, pdu->get_message().get_shortMessage(),
 			pdu->get_message().size_shortMessage(),
 			dataCoding, msg, len, profile.codepage, false);
 	}
@@ -504,8 +514,7 @@ SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduSubmitSm* pdu)
 	{
 		len = (int) (pdu->get_optional().size_messagePayload() * 1.5);
 		msg = new char[len];
-		convert(udhi, pdu->get_message().get_dataCoding(),
-			pdu->get_optional().get_messagePayload(),
+		convert(udhi, dc, pdu->get_optional().get_messagePayload(),
 			pdu->get_optional().size_messagePayload(),
 			dataCoding, msg, len, profile.codepage, false);
 	}
@@ -513,8 +522,7 @@ SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduSubmitSm* pdu)
 	{
 		len = 1;
 		msg = new char[len];
-		convert(false, pdu->get_message().get_dataCoding(), "", 0,
-			dataCoding, msg, len, profile.codepage, false);
+		convert(false, dc, "", 0, dataCoding, msg, len, profile.codepage, false);
 	}
 	return new SmsMsg(udhi, msg, len, dataCoding, valid);
 }
@@ -637,9 +645,13 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 	PduData* existentPduData, bool sync, PduData::IntProps* intProps,
 	PduData::StrProps* strProps, PduData::ObjProps* objProps, PduType pduType)
 {
+	__decl_tc__;
+	if (fixture->smeInfo.forceDC)
+	{
+		__tc__("submitSm.forceDc"); __tc_ok__;
+	}
 	if (fixture->smeType == SME_RECEIVER)
 	{
-		__decl_tc__;
 		try
 		{
 			__tc__("submitSm.receiver");
@@ -660,87 +672,76 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 		}
 		throw Exception("Missing invalid bind exception");
 	}
-	__decl_tc12__;
-	try
+	switch (fixture->smeType)
 	{
-		switch (fixture->smeType)
+		case SME_TRANSMITTER:
+			__tc__("submitSm.transmitter"); __tc_ok__;
+			break;
+		case SME_TRANSCEIVER:
+			__tc__("submitSm.transceiver"); __tc_ok__;
+			break;
+		default:
+			__unreachable__("Invalid sme type");
+	}
+	if (fixture->pduReg)
+	{
+		if (sync)
 		{
-			case SME_TRANSMITTER:
-				__tc1__("submitSm.transmitter");
-				break;
-			case SME_TRANSCEIVER:
-				__tc1__("submitSm.transceiver");
-				break;
-			default:
-				__unreachable__("Invalid sme type");
-		}
-		if (fixture->pduReg)
-		{
-			if (sync)
+			__tc__("submitSm.sync"); __tc_ok__;
+			PduData* pduData;
 			{
-				__tc2__("submitSm.sync");
-				PduData* pduData;
-				{
-					MutexGuard mguard(fixture->pduReg->getMutex());
-					pdu->get_header().set_sequenceNumber(0); //не известен
-					pduData = prepareSubmitSm(pdu, existentPduData, time(NULL),
-						intProps, strProps, objProps, pduType); //all times, msgRef
-				}
-				//__dumpPdu__("submitSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
-				PduSubmitSmResp* respPdu =
-					fixture->session->getSyncTransmitter()->submit(*pdu);
-				{
-					MutexGuard mguard(fixture->pduReg->getMutex());
-					__dumpPdu__("submitSmSyncAfter", fixture->smeInfo.systemId,
-						reinterpret_cast<SmppHeader*>(pdu));
-					processSubmitSmSync(pduData, respPdu, time(NULL));
-				}
-			}
-			else
-			{
-				__tc2__("submitSm.async");
 				MutexGuard mguard(fixture->pduReg->getMutex());
-				//__dumpPdu__("submitSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
-				time_t submitTime = time(NULL);
-				PduSubmitSmResp* respPdu =
-					fixture->session->getAsyncTransmitter()->submit(*pdu);
-				__require__(!respPdu);
-				time_t responseTime = time(NULL);
-				__dumpPdu__("submitSmAsyncAfter", fixture->smeInfo.systemId,
-					reinterpret_cast<SmppHeader*>(pdu));
-				PduData* pduData = prepareSubmitSm(pdu, existentPduData,
-					submitTime, intProps, strProps, objProps, pduType); //all times, msgRef, sequenceNumber
-				processSubmitSmAsync(pduData);
+				pdu->get_header().set_sequenceNumber(0); //не известен
+				pduData = prepareSubmitSm(pdu, existentPduData, time(NULL),
+					intProps, strProps, objProps, pduType); //all times, msgRef
 			}
-			//pdu life time определяется PduRegistry
-			//disposePdu(pdu);
+			//__dumpPdu__("submitSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			PduSubmitSmResp* respPdu =
+				fixture->session->getSyncTransmitter()->submit(*pdu);
+			{
+				MutexGuard mguard(fixture->pduReg->getMutex());
+				__dumpPdu__("submitSmSyncAfter", fixture->smeInfo.systemId,
+					reinterpret_cast<SmppHeader*>(pdu));
+				processSubmitSmSync(pduData, respPdu, time(NULL));
+			}
 		}
 		else
 		{
-			if (sync)
-			{
-				__tc2__("submitSm.sync");
-				PduSubmitSmResp* respPdu =
-					fixture->session->getSyncTransmitter()->submit(*pdu);
-				if (respPdu)
-				{
-					delete respPdu; //disposePdu
-				}
-			}
-			else
-			{
-				__tc2__("submitSm.async");
+			__tc__("submitSm.async"); __tc_ok__;
+			MutexGuard mguard(fixture->pduReg->getMutex());
+			//__dumpPdu__("submitSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			time_t submitTime = time(NULL);
+			PduSubmitSmResp* respPdu =
 				fixture->session->getAsyncTransmitter()->submit(*pdu);
-			}
-			delete pdu; //disposePdu
+			__require__(!respPdu);
+			time_t responseTime = time(NULL);
+			__dumpPdu__("submitSmAsyncAfter", fixture->smeInfo.systemId,
+				reinterpret_cast<SmppHeader*>(pdu));
+			PduData* pduData = prepareSubmitSm(pdu, existentPduData,
+				submitTime, intProps, strProps, objProps, pduType); //all times, msgRef, sequenceNumber
+			processSubmitSmAsync(pduData);
 		}
-		__tc12_ok_cond__;
+		//pdu life time определяется PduRegistry
+		//disposePdu(pdu);
 	}
-	catch (...)
+	else
 	{
-		__tc12_fail__(100);
-		//error();
-		throw;
+		if (sync)
+		{
+			__tc__("submitSm.sync"); __tc_ok__;
+			PduSubmitSmResp* respPdu =
+				fixture->session->getSyncTransmitter()->submit(*pdu);
+			if (respPdu)
+			{
+				delete respPdu; //disposePdu
+			}
+		}
+		else
+		{
+			__tc__("submitSm.async"); __tc_ok__;
+			fixture->session->getAsyncTransmitter()->submit(*pdu);
+		}
+		delete pdu; //disposePdu
 	}
 }
 
@@ -897,6 +898,21 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 		pduData->intProps["ussdServiceOp"] = resPdu->get_optional().get_ussdServiceOp();
 	}
 	pduData->strProps["smsId"] = nvl(pdu->get_messageId());
+	//дополнительные фишки для map proxy
+	if (replacePduData)
+	{
+		const RouteInfo* routeInfo = fixture->routeChecker->getRouteInfoForNormalSms(
+			resPdu->get_message().get_source(), resPdu->get_message().get_dest());
+		if (routeInfo)
+		{
+			SmsMsg* msg = getSmsMsg(resPdu);
+			__trace2__("sms msg registered: this = %p, udhi = %s, len = %d, dc = %d, orig dc = %d, valid = %s",
+				msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, (int) resPdu->get_message().get_dataCoding(), msg->valid ? "true" : "false");
+			msg->ref();
+			bool mapDest = routeInfo->smeSystemId == "MAP_PROXY";
+			pduData->objProps[mapDest ? "map.msg" : "sms.msg"] = msg;
+		}
+	}
 	//проверить наличие ошибок (будет ли респонс с кодом ошибки)
 	pduData->checkRes = fixture->pduChecker->checkReplaceSm(pduData,
 		replacePduData, replacePduFlag);
@@ -959,9 +975,9 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 	PduData* replacePduData, bool sync, PduData::IntProps* intProps,
 	PduData::StrProps* strProps, PduData::ObjProps* objProps)
 {
+	__decl_tc__;
 	if (fixture->smeType == SME_RECEIVER)
 	{
-		__decl_tc__;
 		try
 		{
 			__tc__("replaceSm.receiver");
@@ -982,84 +998,73 @@ void SmppTransmitterTestCases::sendReplaceSmPdu(PduReplaceSm* pdu,
 		}
 		throw Exception("Missing invalid bind exception");
 	}
-	__decl_tc12__;
-	try
+	switch (fixture->smeType)
 	{
-		switch (fixture->smeType)
+		case SME_TRANSMITTER:
+			__tc__("replaceSm.transmitter"); __tc_ok__;
+			break;
+		case SME_TRANSCEIVER:
+			__tc__("replaceSm.transceiver"); __tc_ok__;
+			break;
+		default:
+			__unreachable__("Invalid pdu type");
+	}
+	if (fixture->pduReg)
+	{
+		if (sync)
 		{
-			case SME_TRANSMITTER:
-				__tc1__("replaceSm.transmitter");
-				break;
-			case SME_TRANSCEIVER:
-				__tc1__("replaceSm.transceiver");
-				break;
-			default:
-				__unreachable__("Invalid pdu type");
-		}
-		if (fixture->pduReg)
-		{
-			if (sync)
+			__tc__("replaceSm.sync"); __tc_ok__;
+			PduData* pduData;
 			{
-				__tc2__("replaceSm.sync");
-				PduData* pduData;
-				{
-					MutexGuard mguard(fixture->pduReg->getMutex());
-					pdu->get_header().set_sequenceNumber(0); //не известен
-					pduData = prepareReplaceSm(pdu, replacePduData, time(NULL),
-						intProps, strProps, objProps);
-				}
-				//__dumpPdu__("replaceSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
-				PduReplaceSmResp* respPdu =
-					fixture->session->getSyncTransmitter()->replace(*pdu);
-				__dumpPdu__("replaceSmSyncAfter", fixture->smeInfo.systemId,
-					reinterpret_cast<SmppHeader*>(pdu));
-				{
-					MutexGuard mguard(fixture->pduReg->getMutex());
-					processReplaceSmSync(pduData, pdu, respPdu, time(NULL));
-				}
-			}
-			else
-			{
-				__tc2__("replaceSm.async");
 				MutexGuard mguard(fixture->pduReg->getMutex());
-				//__dumpPdu__("replaceSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
-				time_t submitTime = time(NULL);
-				PduReplaceSmResp* respPdu =
-					fixture->session->getAsyncTransmitter()->replace(*pdu);
-				__dumpPdu__("replaceSmAsyncAfter", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
-				PduData* pduData = prepareReplaceSm(pdu, replacePduData,
-					submitTime, intProps, strProps, objProps);
-				processReplaceSmAsync(pduData, pdu);
+				pdu->get_header().set_sequenceNumber(0); //не известен
+				pduData = prepareReplaceSm(pdu, replacePduData, time(NULL),
+					intProps, strProps, objProps);
 			}
-			//pdu life time определяется PduRegistry
-			//disposePdu(pdu);
+			//__dumpPdu__("replaceSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			PduReplaceSmResp* respPdu =
+				fixture->session->getSyncTransmitter()->replace(*pdu);
+			__dumpPdu__("replaceSmSyncAfter", fixture->smeInfo.systemId,
+				reinterpret_cast<SmppHeader*>(pdu));
+			{
+				MutexGuard mguard(fixture->pduReg->getMutex());
+				processReplaceSmSync(pduData, pdu, respPdu, time(NULL));
+			}
 		}
 		else
 		{
-			if (sync)
-			{
-				__tc2__("replaceSm.sync");
-				PduReplaceSmResp* respPdu =
-					fixture->session->getSyncTransmitter()->replace(*pdu);
-				if (respPdu)
-				{
-					delete respPdu; //disposePdu
-				}
-			}
-			else
-			{
-				__tc2__("replaceSm.async");
+			__tc__("replaceSm.async"); __tc_ok__;
+			MutexGuard mguard(fixture->pduReg->getMutex());
+			//__dumpPdu__("replaceSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			time_t submitTime = time(NULL);
+			PduReplaceSmResp* respPdu =
 				fixture->session->getAsyncTransmitter()->replace(*pdu);
-			}
-			delete pdu; //disposePdu
+			__dumpPdu__("replaceSmAsyncAfter", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			PduData* pduData = prepareReplaceSm(pdu, replacePduData,
+				submitTime, intProps, strProps, objProps);
+			processReplaceSmAsync(pduData, pdu);
 		}
-		__tc12_ok__;
+		//pdu life time определяется PduRegistry
+		//disposePdu(pdu);
 	}
-	catch (...)
+	else
 	{
-		__tc12_fail__(100);
-		//error();
-		throw;
+		if (sync)
+		{
+			__tc__("replaceSm.sync"); __tc_ok__;
+			PduReplaceSmResp* respPdu =
+				fixture->session->getSyncTransmitter()->replace(*pdu);
+			if (respPdu)
+			{
+				delete respPdu; //disposePdu
+			}
+		}
+		else
+		{
+			__tc__("replaceSm.async"); __tc_ok__;
+			fixture->session->getAsyncTransmitter()->replace(*pdu);
+		}
+		delete pdu; //disposePdu
 	}
 }
 
@@ -1124,9 +1129,9 @@ void SmppTransmitterTestCases::sendQuerySmPdu(PduQuerySm* pdu,
 	PduData* origPduData, bool sync, PduData::IntProps* intProps,
 	PduData::StrProps* strProps, PduData::ObjProps* objProps)
 {
+	__decl_tc__;
 	if (fixture->smeType == SME_RECEIVER)
 	{
-		__decl_tc__;
 		try
 		{
 			__tc__("querySm.receiver");
@@ -1147,85 +1152,74 @@ void SmppTransmitterTestCases::sendQuerySmPdu(PduQuerySm* pdu,
 		}
 		throw Exception("Missing invalid bind exception");
 	}
-	__decl_tc12__;
-	try
+	switch (fixture->smeType)
 	{
-		switch (fixture->smeType)
+		case SME_TRANSMITTER:
+			__tc__("querySm.transmitter"); __tc_ok__;
+			break;
+		case SME_TRANSCEIVER:
+			__tc__("querySm.transceiver"); __tc_ok__;
+			break;
+		default:
+			__unreachable__("Invalid sme type");
+	}
+	if (fixture->pduReg)
+	{
+		if (sync)
 		{
-			case SME_TRANSMITTER:
-				__tc1__("querySm.transmitter");
-				break;
-			case SME_TRANSCEIVER:
-				__tc1__("querySm.transceiver");
-				break;
-			default:
-				__unreachable__("Invalid sme type");
-		}
-		if (fixture->pduReg)
-		{
-			if (sync)
+			__tc__("querySm.sync"); __tc_ok__;
+			PduData* pduData;
 			{
-				__tc2__("querySm.sync");
-				PduData* pduData;
-				{
-					MutexGuard mguard(fixture->pduReg->getMutex());
-					pdu->get_header().set_sequenceNumber(0); //не известен
-					pduData = prepareQuerySm(pdu, origPduData, time(NULL),
-						intProps, strProps, objProps);
-				}
-				//__dumpPdu__("querySmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
-				PduQuerySmResp* respPdu =
-					fixture->session->getSyncTransmitter()->query(*pdu);
-				__dumpPdu__("querySmSyncAfter", fixture->smeInfo.systemId,
-					reinterpret_cast<SmppHeader*>(pdu));
-				{
-					MutexGuard mguard(fixture->pduReg->getMutex());
-					processQuerySmSync(pduData, respPdu, time(NULL));
-				}
-			}
-			else
-			{
-				__tc2__("querySm.async");
 				MutexGuard mguard(fixture->pduReg->getMutex());
-				//__dumpPdu__("querySmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
-				time_t queryTime = time(NULL);
-				PduQuerySmResp* respPdu =
-					fixture->session->getAsyncTransmitter()->query(*pdu);
-				__dumpPdu__("querySmAsyncAfter", fixture->smeInfo.systemId,
-					reinterpret_cast<SmppHeader*>(pdu));
-				PduData* pduData = prepareQuerySm(pdu, origPduData,
-					queryTime, intProps, strProps, objProps);
-				processQuerySmAsync(pduData);
+				pdu->get_header().set_sequenceNumber(0); //не известен
+				pduData = prepareQuerySm(pdu, origPduData, time(NULL),
+					intProps, strProps, objProps);
 			}
-			//pdu life time определяется PduRegistry
-			//disposePdu(pdu);
+			//__dumpPdu__("querySmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			PduQuerySmResp* respPdu =
+				fixture->session->getSyncTransmitter()->query(*pdu);
+			__dumpPdu__("querySmSyncAfter", fixture->smeInfo.systemId,
+				reinterpret_cast<SmppHeader*>(pdu));
+			{
+				MutexGuard mguard(fixture->pduReg->getMutex());
+				processQuerySmSync(pduData, respPdu, time(NULL));
+			}
 		}
 		else
 		{
-			if (sync)
-			{
-				__tc2__("querySm.sync");
-				PduQuerySmResp* respPdu =
-					fixture->session->getSyncTransmitter()->query(*pdu);
-				if (respPdu)
-				{
-					delete respPdu; //disposePdu
-				}
-			}
-			else
-			{
-				__tc2__("querySm.async");
+			__tc__("querySm.async"); __tc_ok__;
+			MutexGuard mguard(fixture->pduReg->getMutex());
+			//__dumpPdu__("querySmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			time_t queryTime = time(NULL);
+			PduQuerySmResp* respPdu =
 				fixture->session->getAsyncTransmitter()->query(*pdu);
-			}
-			delete pdu; //disposePdu
+			__dumpPdu__("querySmAsyncAfter", fixture->smeInfo.systemId,
+				reinterpret_cast<SmppHeader*>(pdu));
+			PduData* pduData = prepareQuerySm(pdu, origPduData,
+				queryTime, intProps, strProps, objProps);
+			processQuerySmAsync(pduData);
 		}
-		__tc12_ok__;
+		//pdu life time определяется PduRegistry
+		//disposePdu(pdu);
 	}
-	catch (...)
+	else
 	{
-		__tc12_fail__(100);
-		//error();
-		throw;
+		if (sync)
+		{
+			__tc__("querySm.sync"); __tc_ok__;
+			PduQuerySmResp* respPdu =
+				fixture->session->getSyncTransmitter()->query(*pdu);
+			if (respPdu)
+			{
+				delete respPdu; //disposePdu
+			}
+		}
+		else
+		{
+			__tc__("querySm.async"); __tc_ok__;
+			fixture->session->getAsyncTransmitter()->query(*pdu);
+		}
+		delete pdu; //disposePdu
 	}
 }
 
@@ -1352,9 +1346,9 @@ void SmppTransmitterTestCases::sendCancelSmPdu(PduCancelSm* pdu,
 	PduData* cancelPduData, bool sync, PduData::IntProps* intProps,
 	PduData::StrProps* strProps, PduData::ObjProps* objProps)
 {
+	__decl_tc__;
 	if (fixture->smeType == SME_RECEIVER)
 	{
-		__decl_tc__;
 		try
 		{
 			__tc__("cancelSm.receiver");
@@ -1375,85 +1369,74 @@ void SmppTransmitterTestCases::sendCancelSmPdu(PduCancelSm* pdu,
 		}
 		throw Exception("Missing invalid bind exception");
 	}
-	__decl_tc12__;
-	try
+	switch (fixture->smeType)
 	{
-		switch (fixture->smeType)
+		case SME_TRANSMITTER:
+			__tc__("cancelSm.transmitter"); __tc_ok__;
+			break;
+		case SME_TRANSCEIVER:
+			__tc__("cancelSm.transceiver"); __tc_ok__;
+			break;
+		default:
+			__unreachable__("Invalid sme type");
+	}
+	if (fixture->pduReg)
+	{
+		if (sync)
 		{
-			case SME_TRANSMITTER:
-				__tc1__("cancelSm.transmitter");
-				break;
-			case SME_TRANSCEIVER:
-				__tc1__("cancelSm.transceiver");
-				break;
-			default:
-				__unreachable__("Invalid sme type");
-		}
-		if (fixture->pduReg)
-		{
-			if (sync)
+			__tc__("cancelSm.sync"); __tc_ok__;
+			PduData* pduData;
 			{
-				__tc2__("cancelSm.sync");
-				PduData* pduData;
-				{
-					MutexGuard mguard(fixture->pduReg->getMutex());
-					pdu->get_header().set_commandId(CANCEL_SM); //еще не выставлен
-					pdu->get_header().set_sequenceNumber(0); //не известен
-					pduData = prepareCancelSm(pdu, cancelPduData, time(NULL),
-						intProps, strProps, objProps);
-				}
-				//__dumpPdu__("cancelSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
-				PduCancelSmResp* respPdu =
-					fixture->session->getSyncTransmitter()->cancel(*pdu);
-				__dumpPdu__("cancelSmSyncAfter", fixture->smeInfo.systemId,
-					reinterpret_cast<SmppHeader*>(pdu));
-				{
-					MutexGuard mguard(fixture->pduReg->getMutex());
-					processCancelSmSync(pduData, respPdu, time(NULL));
-				}
-			}
-			else
-			{
-				__tc2__("cancelSm.async");
 				MutexGuard mguard(fixture->pduReg->getMutex());
-				//__dumpPdu__("cancelSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
-				time_t submitTime = time(NULL);
-				PduCancelSmResp* respPdu =
-					fixture->session->getAsyncTransmitter()->cancel(*pdu);
-				__dumpPdu__("cancelSmAsyncAfter", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
-				PduData* pduData = prepareCancelSm(pdu, cancelPduData,
-					submitTime, intProps, strProps, objProps);
-				processCancelSmAsync(pduData);
+				pdu->get_header().set_commandId(CANCEL_SM); //еще не выставлен
+				pdu->get_header().set_sequenceNumber(0); //не известен
+				pduData = prepareCancelSm(pdu, cancelPduData, time(NULL),
+					intProps, strProps, objProps);
 			}
-			//pdu life time определяется PduRegistry
-			//disposePdu(pdu);
+			//__dumpPdu__("cancelSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			PduCancelSmResp* respPdu =
+				fixture->session->getSyncTransmitter()->cancel(*pdu);
+			__dumpPdu__("cancelSmSyncAfter", fixture->smeInfo.systemId,
+				reinterpret_cast<SmppHeader*>(pdu));
+			{
+				MutexGuard mguard(fixture->pduReg->getMutex());
+				processCancelSmSync(pduData, respPdu, time(NULL));
+			}
 		}
 		else
 		{
-			if (sync)
-			{
-				__tc2__("cancelSm.sync");
-				PduCancelSmResp* respPdu =
-					fixture->session->getSyncTransmitter()->cancel(*pdu);
-				if (respPdu)
-				{
-					delete respPdu; //disposePdu
-				}
-			}
-			else
-			{
-				__tc2__("cancelSm.async");
+			__tc__("cancelSm.async"); __tc_ok__;
+			MutexGuard mguard(fixture->pduReg->getMutex());
+			//__dumpPdu__("cancelSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			time_t submitTime = time(NULL);
+			PduCancelSmResp* respPdu =
 				fixture->session->getAsyncTransmitter()->cancel(*pdu);
-			}
-			delete pdu; //disposePdu
+			__dumpPdu__("cancelSmAsyncAfter", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			PduData* pduData = prepareCancelSm(pdu, cancelPduData,
+				submitTime, intProps, strProps, objProps);
+			processCancelSmAsync(pduData);
 		}
-		__tc12_ok__;
+		//pdu life time определяется PduRegistry
+		//disposePdu(pdu);
 	}
-	catch (...)
+	else
 	{
-		__tc12_fail__(100);
-		//error();
-		throw;
+		if (sync)
+		{
+			__tc__("cancelSm.sync"); __tc_ok__;
+			PduCancelSmResp* respPdu =
+				fixture->session->getSyncTransmitter()->cancel(*pdu);
+			if (respPdu)
+			{
+				delete respPdu; //disposePdu
+			}
+		}
+		else
+		{
+			__tc__("cancelSm.async"); __tc_ok__;
+			fixture->session->getAsyncTransmitter()->cancel(*pdu);
+		}
+		delete pdu; //disposePdu
 	}
 }
 
