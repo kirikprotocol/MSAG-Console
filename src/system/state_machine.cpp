@@ -1113,8 +1113,8 @@ StateType StateMachine::submit(Tuple& t)
   std::string aclAddr;
 
   {
-    bool fromMap=!strcmp(src_proxy->getSystemId(),"MAP_PROXY");
-    bool toMap=!strcmp(dest_proxy->getSystemId(),"MAP_PROXY");
+    bool fromMap=src_proxy && !strcmp(src_proxy->getSystemId(),"MAP_PROXY");
+    bool toMap=dest_proxy && !strcmp(dest_proxy->getSystemId(),"MAP_PROXY");
     if((fromMap || toMap) && !(fromMap && toMap))
     {
       char buf[MAX_ADDRESS_VALUE_LENGTH];
