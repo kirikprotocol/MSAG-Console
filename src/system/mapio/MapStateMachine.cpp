@@ -627,7 +627,7 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0;
   ET96MAP_ERROR_PROCESS_UNSTRUCTURED_SS_REQUEST_T error;
   error.errorCode = 34; /*Sytem failure */
-  ET96MAP_USSD_STRING_T ussdString = {0,}
+  ET96MAP_USSD_STRING_T ussdString = {0,};
   if ( dialog->version == 2 ) 
   {
     Et96MapV2ProcessUnstructuredSSRequestResp(
@@ -645,7 +645,7 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
   __trace2__("MAP::%s MAP.did:{0x%x}",__FUNCTION__,dialog->dialogid_map);
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0;
   //ET96MAP_ERROR_PROCESS_UNSTRUCTURED_SS_REQ_T error = 0;
-  ET96MAP_USSD_STRING_T ussdString = {0,}
+  ET96MAP_USSD_STRING_T ussdString = {0,};
   if ( dialog->version == 2 ) 
   {
     Et96MapV2ProcessUnstructuredSSRequestResp(
