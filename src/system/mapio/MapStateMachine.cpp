@@ -583,7 +583,7 @@ void ResponseMO(MapDialog* dialog,unsigned status)
   case Status::INVSRCADR:
   case Status::INVDSTADR:
   case Status::NOROUTE:
-    err.errorCode = 5;
+    err.errorCode = dialog->version == 3 ? 21: 5;
     break;
   case Status::INVSCHED:
     err.errorCode = 32;
