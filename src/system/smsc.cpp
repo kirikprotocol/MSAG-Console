@@ -757,14 +757,18 @@ void Smsc::run()
 #endif
 
 #ifdef SNMP
+    __trace__("Smsc::changing SNMP state to OPER");
   if(snmpAgent) snmpAgent->statusChange(SnmpAgent::OPER);
+    __trace__("Smsc::SNMP state to OPER changed");
 #endif
 
   // некоторые действия до основного цикла
   mainLoop();
 
 #ifdef SNMP
+    __trace__("Smsc::changing SNMP state to SHUT");
   if(snmpAgent) snmpAgent->statusChange(SnmpAgent::SHUT);
+    __trace__("Smsc::SNMP state to SHUT changed");
 #endif
 
   // и после него
