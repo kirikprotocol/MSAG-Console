@@ -26,7 +26,8 @@ typedef enum
 	PDU_REQUIRED_FLAG = 0x0, //pdu ожидается, но еще не получена
 	PDU_MISSING_ON_TIME_FLAG = 0x1, //тоже самое, что PDU_REQUIRED_FLAG, только исключается из проверок на ошибки
 	PDU_RECEIVED_FLAG = 0x2, //pdu получена вовремя
-	PDU_NOT_EXPECTED_FLAG = 0x3 //данной pdu быть не должно
+	PDU_NOT_EXPECTED_FLAG = 0x3, //данной pdu быть не должно
+	PDU_EXPIRED_FLAG = 0x4 //pdu прокисла
 } PduFlag;
 
 typedef enum
@@ -121,6 +122,7 @@ public:
 	void setMissingOnTime();
 	void setReceived();
 	void setNotExpected();
+	void setExpired();
 	virtual MonitorType getType() const = NULL;
 	virtual string str() const;
 
