@@ -219,4 +219,9 @@ public class Functions
     Arrays.sort(result);
     return result;
   }
+
+  public static String getLocaleEncoding()
+  {
+    return System.getProperty("file.encoding", "WINDOWS-1251");
+  }
 }

@@ -19,6 +19,7 @@ import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.util.Iterator;
+import java.util.Locale;
 
 
 public class RouteSubjectManagerImpl implements RouteSubjectManager
@@ -66,20 +67,6 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
     return config.exists();
   }
 
-  /*private void copyFile(File source, File destination)
-      throws IOException
-  {
-    if (destination.exists()) destination.delete();
-    destination.createNewFile();
-
-    FileInputStream  is = new FileInputStream(source);
-    FileOutputStream os = new FileOutputStream(destination);
-    while (is.available() > 0) {
-      int b = is.read(); if (b == -1) break; os.write(b);
-    }
-    os.flush(); os.close(); is.close();
-  }*/
-
   synchronized public void loadFromFile(String fileName) throws AdminException
   {
     try {
@@ -112,8 +99,8 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
     try {
       final File file = new File(WebAppFolders.getSmscConfFolder(), filename);
       final File newFile = Functions.createNewFilenameForSave(file);
-      PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile)/*, "ANSI1251"*/)); //todo: select correct codepage
-      Functions.storeConfigHeader(out, "routes", "routes.dtd"/*, "ANSI1251"*/);
+      PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
+      Functions.storeConfigHeader(out, "routes", "routes.dtd", Functions.getLocaleEncoding());
       subjects.store(out);
       routes.store(out);
       Functions.storeConfigFooter(out, "routes");
