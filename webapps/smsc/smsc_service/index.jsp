@@ -26,10 +26,19 @@ switch(bean.process(appContext, errorMessages, request))
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_SMSC";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-SMSC is <%=serviceStatus(Constants.SMSC_SME_ID, bean.getStatus())%>
+SMSC is <%=serviceStatus(Constants.SMSC_SME_ID, bean.getStatus(), "SMSC_STATUS_ELEM_ID")%>
 <div class=secButtons>
-<input class=btn type=submit name=mbStart value="Start" title="Start SMSC" <%=bean.getStatus() != ServiceInfo.STATUS_STOPPED ? "disabled" : ""%>>
-<input class=btn type=submit name=mbStop value="Stop" title="Stop  SMSC" <%=bean.getStatus() != ServiceInfo.STATUS_RUNNING ? "disabled" : ""%>>
+<input class=btn type=submit id=mbStart name=mbStart value="Start" title="Start SMSC" <%=bean.getStatus() != ServiceInfo.STATUS_STOPPED ? "disabled" : ""%>>
+<input class=btn type=submit id=mbStop name=mbStop value="Stop" title="Stop  SMSC" <%=bean.getStatus() != ServiceInfo.STATUS_RUNNING ? "disabled" : ""%>>
+<script>
+function refreshStartStopButtonsStatus()
+{
+	document.all.mbStart.disabled = (document.all.SMSC_STATUS_ELEM_ID.innerText != "stopped");
+	document.all.mbStop.disabled = (document.all.SMSC_STATUS_ELEM_ID.innerText != "running");
+	window.setTimeout(refreshStartStopButtonsStatus, 500);
+}
+refreshStartStopButtonsStatus();
+</script>
 </div>
 <%-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMSC Config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <br><h1>SMSC Configuration</h1>

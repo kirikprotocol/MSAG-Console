@@ -100,13 +100,14 @@ for(Iterator i = bean.getServices().iterator(); i.hasNext(); row++)
 {
 ServiceInfo service = (ServiceInfo) i.next();
 String serviceId = service.getId();
+String encodedServiceId = StringEncoderDecoder.encode(serviceId);
 String serviceControl = (row == 0) ? "start" : "stop";
 %>
 <tr class=row<%=row&1%>>
-	<td class=check><input class=check type=checkbox name=serviceIds value="<%=StringEncoderDecoder.encode(serviceId)%>" <%=checkedServices.contains(serviceId) ? "checked" : ""%>></td>
-	<td><a  href="#" title="Edit service parameters" onClick="return editService('<%=StringEncoderDecoder.encode(serviceId)%>');">edit</a></td>
-	<td class=name><a href="#" title="View service info" onClick="return viewService('<%=StringEncoderDecoder.encode(serviceId)%>');"><%=StringEncoderDecoder.encode(serviceId)%></a></td>
-	<td><%=serviceStatus(serviceId, service.getStatus())%></td>
+	<td class=check><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=checkedServices.contains(serviceId) ? "checked" : ""%>></td>
+	<td><a  href="#" title="Edit service parameters" onClick="return editService('<%=encodedServiceId%>');">edit</a></td>
+	<td class=name><a href="#" title="View service info" onClick="return viewService('<%=encodedServiceId%>');"><%=encodedServiceId%></a></td>
+	<td><%=serviceStatus(serviceId, service.getStatus(), "STATUS_ELEM_FOR_SERVICE_"+encodedServiceId)%></td>
 </tr>
 <%}}%>
 </tbody>

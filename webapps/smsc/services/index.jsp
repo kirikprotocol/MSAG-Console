@@ -109,7 +109,7 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 	{
 		%><td class=name>&nbsp;</td><%
 	}%>
-	<td><%=serviceStatus(serviceId, bean.getServiceStatus(serviceId))%></td>
+	<td><%=serviceStatus(serviceId, bean.getServiceStatus(serviceId), "STATUS_ELEM_FOR_SERVICE_"+encodedServiceId)%></td>
 </tr>
 <%}}%>
 </tbody>
