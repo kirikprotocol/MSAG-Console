@@ -298,10 +298,10 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
-  if(sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::DEFAULT &&
-     sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::UCS2 &&
-     sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::BINARY &&
-     sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::SMSC7BIT)
+  if(sms->getIntProperty(Tag::SMPP_DATA_CODING)!=DataCoding::DEFAULT &&
+     sms->getIntProperty(Tag::SMPP_DATA_CODING)!=DataCoding::UCS2 &&
+     sms->getIntProperty(Tag::SMPP_DATA_CODING)!=DataCoding::BINARY &&
+     sms->getIntProperty(Tag::SMPP_DATA_CODING)!=DataCoding::SMSC7BIT)
   {
     sms->lastResult=Status::INVDCS;
     smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
@@ -317,7 +317,7 @@ StateType StateMachine::submit(Tuple& t)
     }catch(...)
     {
     }
-    __warning__("SUBMIT_SM: invalid datacoding");
+    __warning2__("SUBMIT_SM: invalid datacoding %d",sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING));
     return ERROR_STATE;
   }
 
