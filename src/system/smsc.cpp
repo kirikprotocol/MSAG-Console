@@ -584,8 +584,17 @@ void Smsc::init(const SmscConfigs& cfg)
 
   {
     StatusSme *ss=new StatusSme(this,"StatusSme");
-    tp.startTask(ss);
-    smeman.registerInternallSmeProxy("StatusSme",ss);
+
+    bool ok=false;
+    try{
+      smeman.registerInternallSmeProxy("StatusSme",ss);
+      ok=true;
+    }catch(...)
+    {
+      __warning__("status sme not exists.");
+    }
+
+    if(ok)tp.startTask(ss);
   }
 
   log.info( "SMSC init complete" );

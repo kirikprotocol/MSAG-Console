@@ -135,7 +135,7 @@ public:
   void mainLoop();
   void shutdown();
   TaskContainer tasks;
-  bool Smsc::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy,smsc::router::RouteInfo* ri);
+  bool Smsc::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy,smsc::router::RouteInfo* ri,SmeIndex idx=-1);
 
   bool AliasToAddress(const Address& alias,Address& addr)
   {
@@ -149,6 +149,11 @@ public:
   void cancelSms(SMSId id,const Address& oa,const Address& da)
   {
     eventqueue.enqueue(id,SmscCommand::makeCancel(id,oa,da));
+  }
+
+  int getSchedulesSmsCount()
+  {
+    return scheduler->getSmsCount();
   }
 
   void notifyScheduler()

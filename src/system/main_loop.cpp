@@ -21,10 +21,17 @@ using std::auto_ptr;
 #define __CMD__(x) smsc::smeman::x
 
 bool Smsc::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy,
-  smsc::router::RouteInfo* ri)
+  smsc::router::RouteInfo* ri,SmeIndex idx)
 {
   proxy = 0;
-  bool ok = getRouterInstance()->lookup(org,dst,proxy,&dest_idx,ri);
+  bool ok ;
+  if(idx==-1)
+  {
+    ok=getRouterInstance()->lookup(org,dst,proxy,&dest_idx,ri);
+  }else
+  {
+    ok=getRouterInstance()->lookup(idx,org,dst,proxy,&dest_idx,ri);
+  }
   return ok;
 }
 

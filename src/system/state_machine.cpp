@@ -864,7 +864,7 @@ StateType StateMachine::submit(Tuple& t)
 
   bool has_route = smsc->routeSms(sms->getOriginatingAddress(),
                           dst,
-                          dest_proxy_index,dest_proxy,&ri);
+                          dest_proxy_index,dest_proxy,&ri,src_proxy->getSmeIndex());
 
   sms->setRouteId(ri.routeId.c_str());
   if(ri.suppressDeliveryReports)sms->setIntProperty(Tag::SMSC_SUPPRESS_REPORTS,1);
@@ -1509,7 +1509,15 @@ StateType StateMachine::forward(Tuple& t)
   int dest_proxy_index;
 
   smsc::router::RouteInfo ri;
-  bool has_route = smsc->routeSms(sms.getOriginatingAddress(),sms.getDealiasedDestinationAddress(),dest_proxy_index,dest_proxy,&ri);
+  bool has_route = smsc->routeSms
+                    (
+                      sms.getOriginatingAddress(),
+                      sms.getDealiasedDestinationAddress(),
+                      dest_proxy_index,
+                      dest_proxy,
+                      &ri,
+                      smsc->getSmeIndex(sms.getSourceSmeId())
+                    );
   if ( !has_route )
   {
     char from[32],to[32];
