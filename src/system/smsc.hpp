@@ -14,6 +14,7 @@
 #include "util/config/alias/aliasconf.h"
 #include "util/config/route/RouteConfig.h"
 #include "system/scheduler.hpp"
+#include "profiler/profiler.hpp"
 
 
 namespace smsc{
@@ -60,6 +61,11 @@ public:
     scheduler->notify();
   }
 
+  smsc::profiler::Profiler* getProfiler()
+  {
+    return profiler;
+  }
+
 protected:
   smsc::core::threads::ThreadPool tp;
   smsc::system::smppio::SmppSocketsManager ssockman;
@@ -69,6 +75,7 @@ protected:
   smsc::store::MessageStore *store;
   smsc::alias::AliasManager aliaser;
   Scheduler *scheduler;
+  smsc::profiler::Profiler *profiler;
   bool stopFlag;
   std::string smscHost;
   int smscPort;

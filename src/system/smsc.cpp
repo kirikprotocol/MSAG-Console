@@ -7,7 +7,6 @@
 #include "system/state_machine.hpp"
 #include "core/synchronization/Event.hpp"
 #include "util/Exception.hpp"
-#include "profiler/profiler.hpp"
 #include "system/rescheduler.hpp"
 #include "util/config/route/RouteConfig.h"
 
@@ -206,7 +205,8 @@ void Smsc::init(const SmscConfigs& cfg)
   smsc::profiler::Profile defProfile;
   defProfile.codepage=0;
   defProfile.reportoptions=0;
-  tp.startTask(new smsc::profiler::Profiler(defProfile));
+  profiler=new smsc::profiler::Profiler(defProfile);
+  tp.startTask(profiler);
 
   smscHost=cfg.cfgman->getString("smpp.host");
   smscPort=cfg.cfgman->getInt("smpp.port");
