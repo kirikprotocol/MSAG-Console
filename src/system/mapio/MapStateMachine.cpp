@@ -1624,6 +1624,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 return;
               } else {
                 if( cmd->get_sms()->hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE) ) {
+                  SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
                   throw MAPDIALOG_FATAL_ERROR( FormatText("MAP::putCommand: Here is no USSD dialog for MR %d smsc_dlg 0x%x seq: %s",cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE), dialogid_smsc,s_seq.c_str()), Status::USSDDLGNFOUND);
                 }
                 __map_trace2__("%s: trying to create USSD network intiated session dialogid_smsc 0x%x",__func__,dialogid_smsc);
