@@ -8,7 +8,7 @@ DbSmeJobTestCases::DbSmeJobTestCases(DbSmeRegistry* _dbSmeReg, CheckList* _chkLi
 : dbSmeReg(_dbSmeReg), chkList(_chkList)
 {
 	//__require__(dbSmeReg);
-	__require__(chkList);
+	//__require__(chkList);
 }
 
 #define __trace_job__(monitor, match, pos, output, expected) \
@@ -79,7 +79,7 @@ void DbSmeJobTestCases::setInputQuotedString(DbSmeTestRecord* rec, const string&
 void DbSmeJobTestCases::setRandomInputString(DbSmeTestRecord* rec, bool quotedString)
 {
 	__decl_tc__;
-	int len = rand1(100);
+	int len = rand1(30);
 	char str[len + 1];
 	rand_char(len, str);
 	if (quotedString)

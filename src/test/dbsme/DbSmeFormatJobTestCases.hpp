@@ -19,10 +19,12 @@ public:
 
 class DbSmeOtherFormatJobTestCases : public DbSmeJobTestCases
 {
+	DbSmeTestRecord* newDefInput();
 public:
 	DbSmeOtherFormatJobTestCases(DbSmeRegistry* dbSmeReg, CheckList* chkList)
 		: DbSmeJobTestCases(dbSmeReg, chkList) {}
-	DbSmeTestRecord* createJobInput(bool params);
+	DbSmeTestRecord* createValuesJobInput();
+	DbSmeTestRecord* createDefaultsJobInput();
 	virtual const string processJobFirstOutput(const string& text, DbSmeTestRecord* rec);
 };
 
