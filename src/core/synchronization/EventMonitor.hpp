@@ -34,8 +34,14 @@ public:
   int wait(int timeout)
   {
     timestruc_t tv;
-    tv.tv_sec=time(NULL)+timeout/1000;
-    tv.tv_nsec=(timeout%1000)*1000000L;
+    clock_gettime(CLOCK_REALTIME,&tv);
+    tv.tv_sec+=timeout/1000;
+    tv.tv_nsec+=(timeout%1000)*1000000L;
+    if(tv.tv_nsec>1000000000L)
+    {
+      tv.tv_sec++;
+      tv.tv_nsec-=1000000000L;
+    }
     return cond_timedwait(&event,&mutex,&tv);
   }
   void notify()
