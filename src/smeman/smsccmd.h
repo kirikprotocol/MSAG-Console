@@ -53,6 +53,7 @@ enum CommandId
   REPLACE_RESP,  //13
   CANCEL,        //14
   CANCEL_RESP,   //15
+  HLRALERT,      //16
 };
 
 
@@ -265,6 +266,10 @@ struct _SmscCommand
       delete ( (CancelSm*)dta);
       break;
 
+    case HLRALERT:
+      delete ( (Address*)dta);
+      break;
+
     case UNKNOWN:
     case FORWARD:
     case ALERT:
@@ -290,6 +295,8 @@ struct _SmscCommand
   int get_priority(){return priority;};
   void set_priority(int newprio){priority=newprio;}
   const char* get_sourceId(){return sourceId.c_str();}
+  const Address& get_address() { return *(Address*)dta; }
+  void set_address(const Address& addr) { *(Address*)dta = addr; }
 };
 
 class SmscCommand
@@ -421,6 +428,19 @@ public:
     _cmd.ref_count = 1;
     _cmd.cmdid = ALERT;
     _cmd.dta = 0;
+    _cmd.dialogId = 0;
+    return cmd;
+  }
+
+  static SmscCommand makeHLRAlert(const Address& addr)
+  {
+    SmscCommand cmd;
+    cmd.cmd = new _SmscCommand;
+    _SmscCommand& _cmd = *cmd.cmd;
+    _cmd.ref_count = 1;
+    _cmd.cmdid = HLRALERT;
+    _cmd.dta = new Address;
+    _cmd.set_adderss(addr);
     _cmd.dialogId = 0;
     return cmd;
   }
