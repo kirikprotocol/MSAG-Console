@@ -247,7 +247,7 @@ struct _SmscCommand
   SmeProxy *proxy;
   int priority;
   SmeSystemId sourceId;
-  _SmscCommand() : ref_count(0), dta(0), priority(SmscCommandDefaultPriority){};
+  _SmscCommand() : ref_count(0), dta(0), proxy(0),priority(SmscCommandDefaultPriority){};
   ~_SmscCommand()
   {
     switch ( cmdid )

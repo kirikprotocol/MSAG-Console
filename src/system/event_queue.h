@@ -240,7 +240,6 @@ public:
   void enqueue(MsgIdType msgId, const CommandType& command)
   {
   __synchronized__
-    fprintf(stderr,"enqueue: src_proxy=%p",command.getProxy());
     __trace2__("enqueue:cmd=%d, msgId=%lld",command->get_commandId(),msgId);
     Locker* locker = hash.get(msgId);
     //!__trace2__("enq: first=%p, last=%p, lock=%p",

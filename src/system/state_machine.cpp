@@ -245,7 +245,6 @@ StateType StateMachine::submit(Tuple& t)
 
   src_proxy=t.command.getProxy();
 
-  fprintf(stderr,"Submit: src_proxy=%p\n",src_proxy);
   __require__(src_proxy!=NULL);
 
   __trace2__("StateMachine::submit:%lld",t.msgId);
@@ -1119,7 +1118,15 @@ StateType StateMachine::cancel(Tuple& t)
     store->retriveSms(t.msgId,sms);
     if(!(sms.getOriginatingAddress()==addr))
     {
-      throw 0;
+      throw Exception("CANCEL: source address doesn't match");
+    }
+    if(t.command->get_cancelSm().destAddr.get())
+    {
+      addr=Address(t.command->get_cancelSm().destAddr.get());
+      if(!(sms.getDestinationAddress()==addr))
+      {
+        throw Exception("CANCEL: destination address doesn't match");
+      }
     }
   }catch(...)
   {

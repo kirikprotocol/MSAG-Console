@@ -287,7 +287,6 @@ void Smsc::mainLoop()
       }
     }
     __require__(cmd.getProxy()==src_proxy);
-    fprintf(stderr,"main_loop: src_proxy=%p",src_proxy);
     eventqueue.enqueue(id,cmd);
   }
 }
