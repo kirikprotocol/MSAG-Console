@@ -1265,6 +1265,7 @@ StateType StateMachine::submit(Tuple& t)
 
   if(ri.smeSystemId=="MAP_PROXY" && sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
+    sms->setIntProperty(Tag::SMSC_TRANSLIT,1);
     if(profile.codepage&smsc::profiler::ProfileCharsetOptions::UssdIn7Bit)
     {
       sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,smsc::profiler::ProfileCharsetOptions::Default);
