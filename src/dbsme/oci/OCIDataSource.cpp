@@ -1,8 +1,10 @@
 
 #include "OCIDataSource.h"
 
-namespace smsc { namespace dbsme
+namespace smsc { namespace db { namespace oci 
 {
+
+using namespace smsc::db;
 
 /* ------------------------ Connection implementation ---------------------- */
 
@@ -774,5 +776,5 @@ Connection* OCIDriver::newConnection()
     return new OCIConnection(dbInstance, dbUserName, dbUserPassword);
 }
 
-}}
+}}}
 

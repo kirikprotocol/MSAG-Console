@@ -1,5 +1,5 @@
-#ifndef SMSC_DBSME_OCIDATASOURCE
-#define SMSC_DBSME_OCIDATASOURCE
+#ifndef SMSC_DB_OCI_DATASOURCE
+#define SMSC_DB_OCI_DATASOURCE
 
 /**
  * 
@@ -13,10 +13,12 @@
 
 #include <util/debug.h>
 
-#include <dbsme/DataSource.h>
+#include <db/DataSource.h>
 
-namespace smsc { namespace dbsme
+namespace smsc { namespace db { namespace oci 
 {
+    using namespace smsc::db;
+
     struct OCIDataDescriptor 
     {
         ub2         type;
@@ -252,6 +254,6 @@ namespace smsc { namespace dbsme
 
     };
 
-}}
+}}}
 
 #endif
