@@ -392,7 +392,7 @@ sub process{
       $outfields->{DD_TYPE}='';
     }
 
-    $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT});
+    $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
     outrow($out,$outfields);
     if($infields->{RECORD_TYPE}==1) # diverted sms
     {

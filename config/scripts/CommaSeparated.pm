@@ -10,7 +10,7 @@ my @OUT_FIELDS;
 {value=>''},                                                                               #4
 {field=>'PAYER_IMSI',maxwidth=>15},                                                        #5
 {field=>'PAYER_ADDR',maxwidth=>15},                                                        #5
-{field=>'OTHER_ADDR',maxwidth=>15},                                                        #7
+{field=>'OTHER_ADDR',maxwidth=>15,convert=>sub{$_[0]=~/\+?(.*)$/;return $1;}},             #7
 {value=>''},                                                                               #8
 {value=>''},                                                                               #9
 {value=>''},                                                                               #10
