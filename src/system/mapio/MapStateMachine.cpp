@@ -683,7 +683,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
             long long sequence;
             if ( sscanf(s_seq.c_str(),"%llx",&sequence) != 1 )
               throw MAPDIALOG_FATAL_ERROR(
-                FormatText("MAP::PutCommand: invaid USSD code 0x%llx",s_seq));
+                FormatText("MAP::PutCommand: invaid USSD code 0x%llx",s_seq.c_str()));
             {
               MutexGuard ussd_map_guard( ussd_map_lock );
               USSD_MAP::iterator it = ussd_map.find(sequence);
@@ -696,11 +696,11 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
               dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_smsc));
               if ( dialog.isnull() )
                 throw MAPDIALOG_FATAL_ERROR(
-                  FormatText("MAP::putCommand: Opss, here is no dialog with id x%x seq: %s",dialogid_smsc,s_seq));
+                  FormatText("MAP::putCommand: Opss, here is no dialog with id x%x seq: %s",dialogid_smsc,s_seq.c_str()));
               __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
               if ( !dialog->isUSSD )
                 throw MAPDIALOG_FATAL_ERROR(
-                  FormatText("MAP::putCommand: Opss, NO ussd dialog with id x%x, seq: %s",dialogid_smsc,s_seq));
+                  FormatText("MAP::putCommand: Opss, NO ussd dialog with id x%x, seq: %s",dialogid_smsc,s_seq.c_str()));
               if ( dialog->state != MAPST_USSDWaitResponce )
                 throw MAPDIALOG_BAD_STATE(
                   FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
