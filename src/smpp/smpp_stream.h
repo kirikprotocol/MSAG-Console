@@ -27,12 +27,12 @@ struct SmppStream
   SmppHeader header;
   unsigned int dataLength;
   unsigned int dataOffset;
-#if defined SMPP_USE_BUFFER
+//#if defined SMPP_USE_BUFFER
   unsigned int bufferSize;
   unsigned char* buffer;
-#else
-  int chanel;
-#endif
+//#else
+//  int chanel;
+//#endif
   bool readable;
 };
 
@@ -46,18 +46,18 @@ public:
 inline  void __check_smpp_stream_invariant__ (SmppStream* stream)
 {
 //#if defined SMPP_USE_BUFFER
-//  __require__ ( stream->buffer != NULL ); 
+  __require__ ( stream->buffer != NULL ); 
 //  __require__ ( stream->dataLength >= 0 ); 
 //  __require__ ( stream->dataOffset >= 0 ); 
-//  __require__ ( stream->bufferSize >= 0 ); 
-//  __require__ ( stream->bufferSize >= stream->dataLength ); 
+  __require__ ( stream->bufferSize >= 0 ); 
+  __require__ ( stream->bufferSize >= stream->dataLength ); 
 //  __require__ ( stream->dataOffset <= stream->dataLength );
 //#else
   //__require__ ( stream->chanel != 0 ); 
   __require__ ( stream->dataLength >= 0 ); 
   __require__ ( stream->dataOffset >= 0 ); 
   __require__ ( stream->dataOffset <= stream->dataLength );
-  __require__ ( stream->chanel > 0 );
+//  __require__ ( stream->chanel > 0 );
 //#endif /*SMPP_USE_BUFFER*/
 }
 
@@ -88,15 +88,18 @@ inline T& __fetch_x__ (SmppStream* stream, T& data)
 //#error "undefined rules of fetchX"
   __check_smpp_stream_invariant__ ( stream );
   __check_smpp_stream_is_readable__(stream);
-  __require__ ( stream->dataOffset+sizeof(T) <= stream->dataLength );
-  //data = *((T*)stream->buffer);
-  int wasread = read(stream->chanel,&data,sizeof(T));
-	//__watch__(wasread);
-	//__watch__((int)stream->dataOffset);
-	//__watch__((int)stream->dataLength);
-	__require__ (wasread==sizeof(T));
+  __throw_if_fail__ ( stream->dataOffset+sizeof(T) <= stream->dataLength, 
+											BadStreamException );
+  data = *((T*)stream->buffer);
+  stream->dataOffset+=sizeof(T);
+//  int wasread = read(stream->chanel,&data,sizeof(T));
+        //__watch__(wasread);
+        //__watch__((int)stream->dataOffset);
+        //__watch__((int)stream->dataLength);
+//        __require__ (wasread==sizeof(T));
+//	__check_smpp_stream_invariant__ ( stream );
   //__throw_if_fail__(wasread==sizeof(T),BadStreamException);
-  stream->dataOffset+=wasread;
+  //stream->dataOffset+=wasread;
   return data;
 //#endif
 }
@@ -114,11 +117,13 @@ inline void __fill_x__ (SmppStream* stream, T& data)
 //#error "undefined rules of fetchX"
   __check_smpp_stream_invariant__ ( stream );
   __check_smpp_stream_is_writable__(stream);
-  __require__ ( stream->dataOffset+sizeof(T) <= stream->dataLength );
-  //data = *((T*)stream->buffer);
-  int writen = write(stream->chanel,&data,sizeof(T));
-  __throw_if_fail__(writen==sizeof(T),BadStreamException);
-  stream->dataOffset+=sizeof(T);
+  __throw_if_fail__ ( stream->dataOffset+sizeof(T) <= stream->dataLength ,
+											BadStreamException);
+  *((T*)stream->buffer) = data;
+  stream->dataOffset+sizeof(T);
+//  int writen = write(stream->chanel,&data,sizeof(T));
+//  __throw_if_fail__(writen==sizeof(T),BadStreamException);
+  //stream->dataOffset+=sizeof(T);
 //#endif
 }
 
@@ -140,36 +145,36 @@ inline void fillX(SmppStream* s,const int32_t& d){ int32_t x = (int32_t)htonl((u
 inline void dropPdu(SmppStream* stream)
 {
   __check_smpp_stream_invariant__ ( stream );
-#if defined SMPP_USE_BUFFER 
+//#if defined SMPP_USE_BUFFER 
   stream->dataOffset=stream->dataLength;
-#else
-  static char data[1024];
-  while ( stream->dataOffset != stream->dataLength )
-  {
-    int wasread = read(stream->chanel,data,
-                       std::min( sizeof(data), stream->dataLength-stream->dataOffset) );
-    __throw_if_fail__(wasread>0,BadStreamException);
-    stream->dataOffset+=wasread;
-  }
+//#else
+//  static char data[1024];
+//  while ( stream->dataOffset != stream->dataLength )
+//  {
+    //int wasread = read(stream->chanel,data,
+//                       std::min( sizeof(data), stream->dataLength-stream->dataOffset) );
+//    __throw_if_fail__(wasread>0,BadStreamException);
+//    stream->dataOffset+=wasread;
+  //}
 //#error "undefined rules dropPdu"
-#endif
+//#endif
 }
 
 //#if defined SMPP_USE_BUFFER
-//inline void assignStreamWith(SmppStream* stream,void* buffer,int bufferSize,bool readable)
+inline void assignStreamWith(SmppStream* stream,void* buffer,int bufferSize,bool readable)
 //#else
-inline void assignStreamWith(SmppStream* stream,int chanel, bool readable)
+//inline void assignStreamWith(SmppStream* stream,int chanel, bool readable)
 //#endif
 {
   __require__ ( stream != NULL );
 //#if defined SMPP_USE_BUFFER
-//  __require__ ( bufferSize >= 16 );
-//  __require__ ( buffer != NULL );
-//  stream->buffer = buffer;
-//  stream->bufferSize = bufferSize;
+  __require__ ( bufferSize >= 16 );
+  __require__ ( buffer != NULL );
+  stream->buffer = (unsigned char*)buffer;
+  stream->bufferSize = bufferSize;
 //#else
-  __require__( chanel > 0 );
-  stream->chanel = chanel;
+//  __require__( chanel > 0 );
+//  stream->chanel = chanel;
 //#endif  
   stream->dataOffset = 0;
   if ( readable )
@@ -266,7 +271,7 @@ inline void fetchCOctetStr(SmppStream* stream,COStr& costr,int cOctMax)
   {
     length = 1;
     //costr.text = (char*)smartMalloc(maxLength);
-		costr.text = new char[maxLength];
+                costr.text = new char[maxLength];
     costr.text[0] = oct;
     for ( ;length < maxLength; ++length)
     {
@@ -316,7 +321,7 @@ inline void fetchOctetStr(SmppStream* stream,OStr& ostr,uint32_t octets)
     //__require__( ostr.text == NULL );
     ostr.dispose();
     //ostr.text = (char*)smartMalloc(octets);
-		ostr.text = new char[octets];
+                ostr.text = new char[octets];
     for ( ;length < octets; ++length)
     {
       fetchX(stream,ostr.text[length]);
