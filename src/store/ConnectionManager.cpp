@@ -468,7 +468,7 @@ SMSId Connection::getMessagesCount()
     SMSId   maxId;
     GetMaxIdStatement*  GetMaxIdStmt = new GetMaxIdStatement(this);
     checkErr(GetMaxIdStmt->execute(OCI_DEFAULT));
-    GetMaxIdStmt->getMaxSMSId(maxId);
+    GetMaxIdStmt->getSMSId(maxId);
     delete GetMaxIdStmt;
     return maxId;
 }

@@ -49,12 +49,28 @@ namespace smsc { namespace store
     
     using namespace smsc::sms;
 
-    class MessageStatement : public Statement
+    class IdStatement : public Statement
+    {
+    protected:
+
+        SMSId   smsId;
+        
+        IdStatement(Connection* connection, const char* sql) 
+            throw(StorageException)
+                : Statement(connection, sql) {};
+    public:
+        
+        virtual ~IdStatement() {};
+
+        void setSMSId(const SMSId smsId);
+        void getSMSId(SMSId &smsId);
+    };
+
+    class MessageStatement : public IdStatement
     {
     protected:
 
         SMS     sms;
-        SMSId   smsId;
         
         OCIDate waitTime;
         OCIDate validTime;
@@ -71,14 +87,11 @@ namespace smsc { namespace store
         
         MessageStatement(Connection* connection, const char* sql) 
             throw(StorageException)
-                : Statement(connection, sql) {};
+                : IdStatement(connection, sql) {};
     public:
         
         virtual ~MessageStatement() {};
 
-        void setSMSId(const SMSId smsId);
-        void getSMSId(SMSId &smsId);
-        
         void setSMS(const SMS &sms);
         void getSMS(SMS &sms);
     };
@@ -141,15 +154,11 @@ namespace smsc { namespace store
         bool wasReplaced();
     };
     
-    class RemoveStatement : public Statement
+    class RemoveStatement : public IdStatement
     {
     private:
         
         static const char* sql;
-    
-    protected:
-
-        SMSId       smsId;
     
     public:
         
@@ -157,27 +166,20 @@ namespace smsc { namespace store
             throw(StorageException);
         virtual ~RemoveStatement() {};
 
-        void setSMSId(SMSId id);        
         bool wasRemoved();
     };
     
-    class GetMaxIdStatement : public Statement
+    class GetMaxIdStatement : public IdStatement
     {
     private:
         
         static const char* sql;
     
-    protected:
-
-        SMSId   max;
-
     public:
         
         GetMaxIdStatement(Connection* connection)
             throw(StorageException);
         virtual ~GetMaxIdStatement() {};
-
-        void getMaxSMSId(SMSId& id);
     };
 
 }}

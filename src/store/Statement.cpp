@@ -119,16 +119,18 @@ void MessageStatement::convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date)
     *sms_date = mktime(&dt);
 }
 
-/* --------------------------- MessageStatetment --------------------- */
+/* ----------------------------- IdStatetment ------------------------- */  
 
-void MessageStatement::setSMSId(const SMSId _smsId)
+void IdStatement::setSMSId(const SMSId _smsId)
 {
     smsId = UINT64_SWAP_LE_BE_CONSTANT(_smsId);
 }
-void MessageStatement::getSMSId(SMSId &_smsId)
+void IdStatement::getSMSId(SMSId &_smsId)
 {
     _smsId = UINT64_SWAP_LE_BE_CONSTANT(smsId);
 }
+
+/* --------------------------- MessageStatetment --------------------- */
 
 void MessageStatement::setSMS(const SMS &_sms)
 {
@@ -383,7 +385,6 @@ ReplaceStatement::ReplaceStatement(Connection* connection)
          (sb4) sizeof(sms.messageBody.lenght));
     bind(24, SQLT_BIN, (dvoid *) (sms.messageBody.data), 
          (sb4) sizeof(sms.messageBody.data));
-    
     bind(25, SQLT_BIN, (dvoid *) &(smsId), 
          (sb4) sizeof(smsId));
 }
@@ -405,13 +406,9 @@ const char* RemoveStatement::sql = (const char*)
 
 RemoveStatement::RemoveStatement(Connection* connection)
     throw(StorageException)
-        : Statement(connection, RemoveStatement::sql)
+        : IdStatement(connection, RemoveStatement::sql)
 {
     bind(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
-}
-void RemoveStatement::setSMSId(SMSId id) 
-{
-    smsId = UINT64_SWAP_LE_BE_CONSTANT(id);
 }
 
 bool RemoveStatement::wasRemoved() 
@@ -431,16 +428,10 @@ const char* GetMaxIdStatement::sql = (const char*)
 
 GetMaxIdStatement::GetMaxIdStatement(Connection* connection)
     throw(StorageException)
-        : Statement(connection, GetMaxIdStatement::sql)
+        : IdStatement(connection, GetMaxIdStatement::sql)
 {
-    define(1, SQLT_BIN, (dvoid *) &(max), (sb4) sizeof(max));
+    define(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId));
 }
-
-void GetMaxIdStatement::getMaxSMSId(SMSId& id) 
-{
-    id = UINT64_SWAP_LE_BE_CONSTANT(max);
-}
-
 
 }}
 
