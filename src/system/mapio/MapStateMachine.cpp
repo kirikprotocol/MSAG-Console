@@ -252,23 +252,23 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
     __map_trace2__("%s:DELIVERY_SM %s",__FUNCTION__,RouteToString(dialog).c_str());
     mkMapAddress( &dialog->m_msAddr, dialog->sms->getDestinationAddress().value, dialog->sms->getDestinationAddress().length );
     mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
-    mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
+    mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, SSN );
     mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
+    if( dialog->sms->hasStrProperty( Tag::SMSC_FORWARD_MO_TO ) ) {
+      ForwardMO( dialog );
+      return;
+    } 
   }else{
     AbonentStatus& as = dialog->QueryAbonentCommand->get_abonentStatus();
     __map_trace2__("%s:Abonent Status cmd (%d.%d.%s)",__FUNCTION__,(unsigned)as.addr.type,(unsigned)as.addr.plan,as.addr.value);
     mkMapAddress( &dialog->m_msAddr, as.addr.value, as.addr.length );
     mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
-    mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
+    mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, SSN );
     mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
   }
-  if( dialog->sms->hasStrProperty( Tag::SMSC_FORWARD_MO_TO ) ) {
-    ForwardMO( dialog );
-  } else {
-    __map_trace__("StartDialogProcessing: Query HLR AC version");
-    dialog->state = MAPST_WaitHlrVersion;
-    QueryHlrVersion(dialog);
-  }
+  __map_trace__("StartDialogProcessing: Query HLR AC version");
+  dialog->state = MAPST_WaitHlrVersion;
+  QueryHlrVersion(dialog);
 }
 
 static void NotifyHLR(MapDialog* dialog);
@@ -1387,8 +1387,12 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     } else {
       dialog->state = MAPST_WaitUSSDNotifyOpenConf;
     }
+    ET96MAP_ADDRESS_T origAddr;
+    ET96MAP_SS7_ADDR_T ussdScAddr;
+    mkSS7GTAddress( &ussdScAddr, &dialog->m_scAddr, USSD_SSN );
+    mkMapAddress( &origAddr, dialog->sms->getOriginatingAddress().value, dialog->sms->getOriginatingAddress().length );
 
-    result = Et96MapOpenReq( dialog->ssn, dialog->dialogid_map, &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, &dialog->m_scAddr, &specificInfo );
+    result = Et96MapOpenReq( dialog->ssn, dialog->dialogid_map, &appContext, &dialog->mshlrAddr, &ussdScAddr, 0, &origAddr, &specificInfo );
     if ( result != ET96MAP_E_OK )
       throw runtime_error(
         FormatText("MAP::%s Et96MapOpenReq return error 0x%x",__FUNCTION__,result));
