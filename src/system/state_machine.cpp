@@ -1160,7 +1160,14 @@ StateType StateMachine::submit(Tuple& t)
   bool noPartitionSms=false; // do not call partitionSms if true!
 
 
-  smsc::util::extractPortsFromUdh(*sms);
+  if(!extractPortsFromUdh(*sms))
+  {
+    smsc_log_warn(smsLog,"extractPortsFromUdh failed. sms from %s to %s",
+                          sms->getOriginatingAddress().toString().c_str(),
+                          sms->getDestinationAddress().toString().c_str());
+    submitResp(t,sms,Status::INVOPTPARAMVAL);
+    return ERROR_STATE;
+  }
   convertSarToUdh(*sms);
 
 

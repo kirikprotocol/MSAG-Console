@@ -65,9 +65,9 @@ inline bool findConcatInfo(const SMS& sms,uint16_t& mr,uint8_t& idx,uint8_t& num
 }
 
 
-inline void extractPortsFromUdh(SMS& sms)
+inline bool extractPortsFromUdh(SMS& sms)
 {
-  if(!(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40))return;
+  if(!(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40))return true;
   unsigned char* body;
   unsigned int len;
   if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
@@ -82,6 +82,7 @@ inline void extractPortsFromUdh(SMS& sms)
                       sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
   unsigned char* ptr=body+1;
   unsigned char* end=body+body[0]+1;
+  if(body[0]<2)return false;
   bool needRemove=false;
   bool haveChanges=false;
   int udhLen=body[0];
@@ -119,6 +120,10 @@ inline void extractPortsFromUdh(SMS& sms)
 
       */
       unsigned char* src=ptr+ptr[1]+2;
+      if(src>end)
+      {
+        return false;
+      }
       memmove(ptr,src,body+len-src);
       end-=src-ptr;
       len-=src-ptr;
@@ -128,7 +133,8 @@ inline void extractPortsFromUdh(SMS& sms)
     }
     ptr+=ptr[1]+2;
   }
-  if(!haveChanges)return;
+  if(ptr!=end)return false;
+  if(!haveChanges)return true;
   if(udhLen>0)
   {
     body[0]=udhLen;
@@ -147,6 +153,7 @@ inline void extractPortsFromUdh(SMS& sms)
     sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)body,len);
     sms.setIntProperty(Tag::SMPP_SM_LENGTH,len);
   }
+  return true;
 }
 
 inline bool convertSarToUdh(SMS& sms)
