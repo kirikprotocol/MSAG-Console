@@ -776,11 +776,11 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	{
 		//ok
 	}
-	else if (sme->wantAlias && srcAlias != dbSmeAlias)
+	else if (fixture->smeInfo.wantAlias && srcAlias != dbSmeAlias)
 	{
 		__tc_fail__(2);
 	}
-	else if (!sme->wantAlias && srcAlias != dbSmeAddr)
+	else if (!fixture->smeInfo.wantAlias && srcAlias != dbSmeAddr)
 	{
 		__tc_fail__(3);
 	}

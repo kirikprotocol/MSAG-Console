@@ -37,7 +37,7 @@ class TestSme : public ThreadedTask, public SmppPduEventListener
 	const int smscPort;
 	const Address smeAddr;
 	const SmeInfo smeInfo;
-	SmppSession* sess;
+	vector<SmppSession*> sess;
 	Event event;
 	int count;
 
@@ -46,6 +46,7 @@ class TestSme : public ThreadedTask, public SmppPduEventListener
 public:
 	TestSme(const string& smscHost, int smscPort, const Address& smeAddr,
 		const SmeInfo& smeInfo);
+	~TestSme();
 	int getCount() { return count; }
 	void bind();
 	void unbind();
@@ -61,29 +62,44 @@ public:
 
 TestSme::TestSme(const string& _smscHost, int _smscPort, const Address& _smeAddr,
 	const SmeInfo& _smeInfo) : smscHost(_smscHost), smscPort(_smscPort),
-	smeAddr(_smeAddr), smeInfo(_smeInfo), sess(NULL), count(0) {}
+	smeAddr(_smeAddr), smeInfo(_smeInfo), count(0) {}
+
+TestSme::~TestSme()
+{
+	for (int i = 0; i < sess.size(); i++)
+	{
+		delete sess[i];
+	}
+}
 
 SmppTransmitter* TestSme::getTransmitter(bool sync)
 {
-	return (sync ? sess->getSyncTransmitter() : sess->getAsyncTransmitter());
+	return (sync ? sess.back()->getSyncTransmitter() : sess.back()->getAsyncTransmitter());
 }
 
 void TestSme::bind()
 {
+	__trace2__("bind(): sme = %p", this);
 	SmeConfig conf;
 	conf.host = smscHost;
 	conf.port = smscPort;
 	conf.sid = smeInfo.systemId;
 	conf.timeOut = smeInfo.timeout;
 	conf.password = smeInfo.password;
-	sess = new SmppSession(conf, this);
-	sess->connect();
+	sess.push_back(new SmppSession(conf, this));
+	sess.back()->connect();
+	//почистить лишние сессии
+	while (sess.size() > 3)
+	{
+		delete sess.front();
+		sess.erase(sess.begin());
+	}
 }
 
 void TestSme::unbind()
 {
-	sess->close();
-	delete sess; sess = NULL;
+	__trace2__("unbind(): sme = %p", this);
+	sess.back()->close();
 }
 
 void TestSme::submitSm()
@@ -108,7 +124,8 @@ void TestSme::permanentAppError(PduDeliverySm& pdu)
 	respPdu.get_header().set_sequenceNumber(pdu.get_header().get_sequenceNumber());
 	respPdu.get_header().set_commandStatus(ESME_RX_P_APPN);
 	getTransmitter(rand0(1))->sendDeliverySmResp(respPdu);
-	delete sess; sess = NULL;
+	__trace2__("permanentAppError(): sme = %p, pdu = %u",
+		this, respPdu.get_header().get_sequenceNumber());
 }
 
 void TestSme::genericNack(PduDeliverySm& pdu)
@@ -117,7 +134,8 @@ void TestSme::genericNack(PduDeliverySm& pdu)
 	respPdu.get_header().set_sequenceNumber(pdu.get_header().get_sequenceNumber());
 	respPdu.get_header().set_commandStatus(rand1(INT_MAX));
 	getTransmitter(rand0(1))->sendGenericNack(respPdu);
-	delete sess; sess = NULL;
+	__trace2__("genericNack(): sme = %p, pdu = %u",
+		this, respPdu.get_header().get_sequenceNumber());
 }
 
 void TestSme::handleDeliverSm(PduDeliverySm& pdu)
