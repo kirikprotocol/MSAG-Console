@@ -76,7 +76,7 @@ static inline void makeAliasFromValueByAddres(
   const AliasRecord& p,const AValue& val,Address &addr)
 {
   char buf[21];
-  __require__(p.addr.defLength < val.length );
+  __require__(p.addr.defLength <= val.length );
   __require__(p.alias.defLength+val.length-p.addr.defLength < 21);
   memset(buf,0,21);
   int ln = 0;
@@ -93,7 +93,7 @@ static inline void makeAddressFromValueByAlias(
   const AliasRecord& p,const AValue& val,Address &addr)
 {
   char buf[21];
-  __require__(p.alias.defLength < val.length );
+  __require__(p.alias.defLength <= val.length );
   __require__(p.addr.defLength+val.length-p.alias.defLength < 21);
   memset(buf,0,21);
   int ln = 0;
@@ -174,7 +174,7 @@ __synchronized__
   AliasRecord* record = *recordX;
   record->ok_next = 0;
   AliasRecord* ok_adr = record;
-	ok_adr->ok_next = 0;
+  ok_adr->ok_next = 0;
   for (AliasRecord** r = recordX-1; r != ali_table-1; --r )
   {
     if ( compare_patval((*r)->addr,val) == 0 )
@@ -185,7 +185,8 @@ __synchronized__
   }
   for (AliasRecord** r = recordX+1; r != ali_table+table_ptr; ++r )
   {
-    if ( compare_patval((*r)->addr,val) == 0 )
+    __require__(r < (ali_table+table_ptr));
+		if ( compare_patval((*r)->addr,val) == 0 )
     {
       (*r)->ok_next = ok_adr;
       ok_adr = *r;
@@ -240,7 +241,7 @@ __synchronized__
   AliasRecord* record = *recordX;
   record->ok_next = 0;
   AliasRecord* ok_ali = record;
-	ok_ali->ok_next = 0;
+  ok_ali->ok_next = 0;
   for (AliasRecord** r = recordX-1; r != ali_table-1; --r )
   {
     if ( compare_patval((*r)->alias,val) == 0 )

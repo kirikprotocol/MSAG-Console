@@ -67,6 +67,12 @@ static inline int compare_pataddr( const RoutePattern& pattern,
   result = compare_dest(2); ifn0goto;
   result = compare_dest(3); ifn0goto;
   result = compare_dest(4); ifn0goto;
+	result = pattern.src_hasStar?0:
+			((int)pattern.src_length)-((int)addr.src_length);
+	ifn0goto;
+	result = pattern.dest_hasStar?0:
+			((int)pattern.dest_length)-((int)addr.dest_length);
+	ifn0goto;
 result_:
   __trace2__("=== %d",result);
         return (int32_t)result;
@@ -101,6 +107,12 @@ static inline int compare_patpat( const RoutePattern& pat1,
   result = compare_dest(2); ifn0goto;
   result = compare_dest(3); ifn0goto;
   result = compare_dest(4); ifn0goto;
+	result = (pat1.src_hasStar||pat2.src_hasStar)?0:
+			((int)pat1.src_length)-((int)pat2.src_length);
+	ifn0goto;
+	result = (pat1.src_hasStar||pat2.src_hasStar)?0:
+			((int)pat1.dest_length)-((int)pat2.dest_length);
+	ifn0goto;
 result_:
   //__trace2__("=== %d",result);
   return result;
@@ -157,8 +169,11 @@ __synchronized__
   memset(addrVal,0,sizeof(addrVal));
   undefVal = 20;
   length = routeInfo.source.getValue(addrVal);
-  __require__( length < 21 );
+	record->pattern.src_length = length;
+  //__require__( length < 21 );
+	if ( length < 21 ) throw runtime_error("assertoin 'source addr length < 21' failed");
   memset(addrPattern,0,sizeof(addrPattern));
+	record->pattern.src_hasStar = false;
   for ( int i=0; i<length; ++i )
   {
     switch(addrVal[i])
@@ -166,6 +181,7 @@ __synchronized__
     case '?': // any part
       break;
     case '*': // only end of value
+			record->pattern.src_hasStar = true;
       goto end_src_pattern_loop;
     default:
       --undefVal;
@@ -182,9 +198,13 @@ __synchronized__
   record->src_pattern_undef = undefVal;
 
   undefVal = 20;
-  length = routeInfo.dest.getValue(addrVal);
-  __require__( length < 21 );
+  memset(addrVal,0,21);
+	length = routeInfo.dest.getValue(addrVal);
+	record->pattern.dest_length = length;
+  //__require__( length < 21 );
+	if ( length < 21 ) throw runtime_error("assertoin 'dest addr length < 21' failed");
   memset(addrPattern,0,sizeof(addrPattern));
+	record->pattern.dest_hasStar = false;
   for ( int i=0; i<20; ++i )
   {
     switch(addrVal[i])
@@ -192,10 +212,11 @@ __synchronized__
     case '?': // any part
       break;
     case '*': // only end of value
+			record->pattern.dest_hasStar = true;
       goto end_dest_pattern_loop;
     default:
+			addrPattern[i] = 0xff;
       --undefVal;
-      addrPattern[i] = 0xff;
     }
   }
   end_dest_pattern_loop:
@@ -223,16 +244,20 @@ __synchronized__
 
 static inline void makeAddress( RouteAddress* addr, const Address* source, const Address* dest)
 {
-        uint8_t length;
-        memset(addr,0,sizeof(RouteAddress));
+  uint8_t length;
+  memset(addr,0,sizeof(RouteAddress));
   addr->src_typeOfNumber = source->getTypeOfNumber();
   addr->dest_typeOfNumber = dest->getTypeOfNumber();
-        addr->src_numberingPlan = source->getNumberingPlan();
+  addr->src_numberingPlan = source->getNumberingPlan();
   addr->dest_numberingPlan = dest->getNumberingPlan();
-        length = source->getValue((char*)addr->src_address);
-        __require__( length < 21 );
-        length = dest->getValue((char*)addr->dest_address);
-        __require__( length < 21 );
+  length = source->getValue((char*)addr->src_address);
+  //__require__( length < 21 );
+	if ( length < 21 ) throw runtime_error("assertoin 'source addr length < 21' failed");
+	addr->src_length = length;
+  length = dest->getValue((char*)addr->dest_address);
+  __require__( length < 21 );
+	if ( length < 21 ) throw runtime_error("assertoin 'dest addr length < 21' failed");
+	addr->dest_length = length;
 }
 
 
