@@ -2412,11 +2412,10 @@ StateType StateMachine::forward(Tuple& t)
       int olddc=sms.getIntProperty(Tag::SMSC_DSTCODEPAGE);
       int newdc=(df<<DF_DCSHIFT)&0xFF;
       sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,newdc);
-      if(olddc!=newdc && sms.hasBinProperty(Tag::SMSC_CONCATINFO))
+      if(olddc!=newdc && sms.hasBinProperty(Tag::SMSC_CONCATINFO) && !sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
       {
         doRepartition=true;
         sms.getMessageBody().dropProperty(Tag::SMSC_CONCATINFO);
-        smsc_log_debug(smsLog,"FWD: sms repartition %lld",t.msgId);
       }
     }catch(...)
     {
@@ -2499,8 +2498,9 @@ StateType StateMachine::forward(Tuple& t)
   // create task
 
 
-  if(doRepartition && ri.smeSystemId=="MAP_PROXY" && !sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+  if(doRepartition && ri.smeSystemId=="MAP_PROXY")
   {
+    smsc_log_debug(smsLog,"FWD: sms repartition %lld",t.msgId);
     int pres=partitionSms(&sms,sms.getIntProperty(Tag::SMSC_DSTCODEPAGE));
     if(pres!=psSingle && pres!=psMultiple)
     {
