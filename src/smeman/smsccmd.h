@@ -440,7 +440,7 @@ public:
     _cmd.ref_count = 1;
     _cmd.cmdid = HLRALERT;
     _cmd.dta = new Address;
-    _cmd.set_adderss(addr);
+    _cmd.set_address(addr);
     _cmd.dialogId = 0;
     return cmd;
   }
