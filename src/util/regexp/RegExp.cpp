@@ -123,11 +123,15 @@ prechar RegExp::lc;
 prechar RegExp::uc;
 prechar RegExp::chartypes;
 #else
-rechar RegExp::lc[256];
-rechar RegExp::uc[256];
-rechar RegExp::chartypes[256];
+int RegExp::ilc[256/sizeof(int)];
+int RegExp::iuc[256/sizeof(int)];
+int RegExp::ichartypes[256/sizeof(int)];
+rechar* RegExp::lc=(rechar*)RegExp::ilc;
+rechar* RegExp::uc=(rechar*)RegExp::iuc;
+rechar* RegExp::chartypes=(rechar*)RegExp::ichartypes;
 #endif
-rechar RegExp::charbits[256];
+int RegExp::icharbits[256/sizeof(int)];
+rechar* RegExp::charbits=(rechar*)RegExp::icharbits;
 #endif
 #endif
 

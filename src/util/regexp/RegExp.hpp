@@ -291,10 +291,15 @@ private:
     LOCALEDEF rechar charbits[256];
   #endif
 #else
-  LOCALEDEF rechar lc[256];
-  LOCALEDEF rechar uc[256];
-  LOCALEDEF rechar chartypes[256];
-  LOCALEDEF rechar charbits[256];
+  LOCALEDEF int ilc[256/sizeof(int)];
+  LOCALEDEF int iuc[256/sizeof(int)];
+  LOCALEDEF int ichartypes[256/sizeof(int)];
+  LOCALEDEF int icharbits[256/sizeof(int)];
+
+  LOCALEDEF rechar *lc;
+  LOCALEDEF rechar *uc;
+  LOCALEDEF rechar *chartypes;
+  LOCALEDEF rechar *charbits;
 #endif
 #endif
 
