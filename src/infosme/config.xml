@@ -21,7 +21,7 @@
 
     <section name="DataProvider">
 
-      <section name="INTERNAL_DS">
+      <!--section name="INTERNAL_DS">
         <param name="connections" type="int">10</param>
         <param name="dbInstance" type="string">smsc</param>
         <param name="dbUserName" type="string">smsc_makar</param>
@@ -46,7 +46,7 @@
         <param name="dbUserPassword" type="string">smsc_makar</param>
         <param name="type" type="string">OCI</param>
         <param name="watchdog" type="bool">true</param>
-      </section>
+      </section-->
     </section>
 
     <section name="EventsThreadPool">
@@ -58,7 +58,7 @@
       <param name="host" type="string">smsc</param>
       <param name="password" type="string">4</param>
       <param name="port" type="int">9229</param>
-      <param name="sid" type="string">4</param>
+      <param name="sid" type="string">InfoSme</param>
       <param name="timeout" type="int">10</param>
     </section>
 
@@ -108,18 +108,18 @@
 		<param name="monthes" type="string">Jun,Jul,Nov</param>
 	    </section-->
 
-      <section name="Schedule 6 (interval)">
+      <!--section name="Schedule 6 (interval)">
         <param name="endDateTime" type="string"></param>
         <param name="execute" type="string">interval</param>
         <param name="intervalTime" type="string">2:00:00</param>
         <param name="startDateTime" type="string">03.09.2003 00:00:00</param>
         <param name="tasks" type="string">Task1</param>
-      </section>
+      </section-->
     </section>
 
     <section name="Tasks">
 
-      <section name="Task1">
+      <!--section name="Task1">
         <param name="activePeriodEnd" type="string">22:00:00</param>
         <param name="activePeriodStart" type="string">09:00:00</param>
         <param name="dsId" type="string">WORKING_DS1</param>
@@ -142,7 +142,7 @@
         <param name="uncommitedInProcess" type="int">50</param>
         <param name="validityDate" type="string"></param>
         <param name="validityPeriod" type="string">00:01:00</param>
-      </section>
+      </section-->
 
 	    <!--section name="Task2">
 		<param name="name" type="string">Task 2</param>
@@ -217,7 +217,7 @@
     <section name="DataSourceDrivers">
 
       <section name="OCI">
-        <param name="loadup" type="string">../db/oci/libdb_oci.so</param>
+        <param name="loadup" type="string">libdb_oci.so</param>
         <param name="type" type="string">OCI</param>
       </section>
     </section>
