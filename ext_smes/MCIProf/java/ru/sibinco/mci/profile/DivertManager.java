@@ -204,9 +204,9 @@ public class DivertManager
   // set divert for abonent=msisdn for reason=ss to address
   private void set(String msisdn, String ss, String address) throws IOException
   {
-    // HGSSI:MSISDN=msisdn,SS=ss,FNUM=address,TIME=10;
+    // HGSSI:MSISDN=msisdn,SS=ss,FNUM=address;
     String command = COMMAND_SET + MSISDN_STR + checkAndConvertAddress(msisdn) +
-                     ",SS=" + ss + ",FNUM=" + address + ",TIME=10;";
+                     ",SS=" + ss + ",FNUM=" + address + ";";
     logger.info("Sending command: "+command);
     writeTelnetLine(command);
     logger.info("Command sent");
