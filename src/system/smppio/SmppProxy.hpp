@@ -120,7 +120,7 @@ public:
           throw ProxyQueueLimitException();
         }
         trace2("put command:total %d commands",outqueue.Count());
-        outqueue.Push(cmd,cmd->get_priority());
+        outqueue.Push(errresp,errresp->get_priority());
       }
       smppSocket->notifyOutThread();
       return;
