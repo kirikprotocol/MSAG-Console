@@ -740,7 +740,7 @@ void TaskProcessor::processResponce(int seqNum, bool accepted, bool retry, bool 
                                   message.id, smsc_id ? smsc_id:"-", message.abonent.c_str(),
                                   (int)cancel, (int)cancel_failed);
                     // TODO: bWasReceipted = false; ??? return; ??? do not kill task !!!
-                    needKillTask = false;
+                    bWasReceipted = false; needKillTask = false;
                 }
                 else if (retry) // resend current message
                 {
@@ -899,7 +899,7 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool exp
                 }
                 if (!responcesTracker.putReceiptData(smsc_id, ReceiptData(delivered, expired)))
                     smsc_log_warn(logger, "Failed to add receipt data (on receipt 2). smscId=%s already used", smsc_id);
-                smsc_log_debug(logger, "Receipt has processed (smscId=%s) & mark responce to quit", smsc_id);
+                else smsc_log_debug(logger, "Receipt has processed (smscId=%s) & mark responce to quit", smsc_id);
             }
             else
             {
@@ -909,7 +909,7 @@ void TaskProcessor::processReceipt (std::string smscId, bool delivered, bool exp
         }
         else // message by smsc_id not found => wait SMSC responce with smsc_id
         {
-            smsc_log_debug(logger, "Receipt processing (smscId=%s) put off till responce come", smsc_id);
+            smsc_log_debug(logger, "Receipt: processing (smscId=%s) put off till responce come", smsc_id);
             if (!responcesTracker.putReceiptData(smsc_id, ReceiptData(delivered, expired)))
                 smsc_log_warn(logger, "Failed to add receipt data (on receipt 1). smscId=%s already used", smsc_id);
         }
@@ -1048,9 +1048,11 @@ int ResponcesTracker::Execute()
                 receiptWaitQueue.Pop(rcptTimer);
                 const char* smsc_id = (rcptTimer.smscId.length() > 0) ? rcptTimer.smscId.c_str():0;
                 ReceiptData* receipt = (smsc_id) ? receipts.GetPtr(smsc_id):0;
-                smsc_log_debug(logger, "Responce for receipted smscId=%s is timed out. Deleting",
-                               smsc_id ? smsc_id:"-");
-                if (receipt) receipts.Delete(smsc_id);
+                if (receipt) {
+                    smsc_log_debug(logger, "Responce for receipted smscId=%s is timed out. Deleting",
+                                   smsc_id ? smsc_id:"-");
+                    receipts.Delete(smsc_id);
+                }
                 else responcesMonitor.wait(TRACKER_SERVICE_SLEEP/100);
             }
         }
