@@ -43,6 +43,7 @@ public:
   virtual ~MapProxy(){}
   virtual void close(){}
   void notifyOutThread(){}
+  void checkLogging();
   virtual void putCommand(const SmscCommand& cmd)
   {
 //#if defined USE_MAP

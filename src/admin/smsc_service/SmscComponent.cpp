@@ -938,6 +938,9 @@ void SmscComponent::logSetCategories(const Arguments & args)
 	{
 		setLogCat(*i);
 	}
+	if( smsc_app_runner->getApp()->getMapProxy() != 0 ) {
+	  smsc_app_runner->getApp()->getMapProxy()->checkLogging();
+	}
 }
 
 Variant SmscComponent::applyLocaleResource()

@@ -234,11 +234,6 @@ void MapIoTask::init(unsigned timeout)
   __map_trace2__("MAP:: continue self initialization");
 //  err = MsgConn(USER01_ID,USER01_ID);
 //  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn on self, code 0x%hx",err); throw runtime_error("MsgInit error"); }
-  if( smsc::util::_map_cat->isDebugEnabled() ) {
-    MsgTraceOn( MY_USER_ID );
-    MsgTraceOn( ETSIMAP_ID );
-    MsgTraceOn( TCAP_ID );
-  }
   __map_trace__("Bind");
   USHORT_T bind_res = Et96MapBindReq(MY_USER_ID, SSN);
   if(bind_res!=ET96MAP_E_OK){
@@ -530,4 +525,28 @@ void MAPSTATS_DumpDialog(MapDialog* dlg)
     (long)(time(0)-(dlg->maked_at_mks/1000000)),
     dlg->sms.get()?dlg->sms->getOriginatingAddress().value:"???",
     dlg->sms.get()?dlg->sms->getDestinationAddress().value:"???");
+}
+
+void MapProxy::checkLogging() {
+  if( smsc::util::Logger::getCategory("map.trace.user1").isDebugEnabled() ) {
+    __map_trace__("Enable trace for system USER01");
+    MsgTraceOn( USER01_ID );
+  } else {
+    __map_trace__("Disable trace for system USER01");
+    MsgTraceOff( USER01_ID );
+  }
+  if( smsc::util::Logger::getCategory("map.trace.etsimap").isDebugEnabled() ) {
+    __map_trace__("Enable trace for system ETSIMAP_ID");
+    MsgTraceOn( ETSIMAP_ID );
+  } else {
+    __map_trace__("Disable trace for system ETSIMAP_ID");
+    MsgTraceOff( ETSIMAP_ID );
+  }
+  if( smsc::util::Logger::getCategory("map.trace.tcap").isDebugEnabled() ) {
+    __map_trace__("Enable trace for system TCAP_ID");
+    MsgTraceOn( TCAP_ID );
+  } else {
+    __map_trace__("Disable trace for system TCAP_ID");
+    MsgTraceOff( TCAP_ID );
+  }
 }
