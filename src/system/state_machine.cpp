@@ -447,8 +447,11 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     {
       if(!sms.hasIntProperty(Tag::SMSC_FORCE_DC))
       {
-        sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,3);
+        sms.setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,1);
       }
+      Directive d(i,7);
+      offsets.Push(d);
+      i+=7;
     }else
     if(def.MatchEx(buf,buf+i,buf+len,m,n))
     {
