@@ -818,6 +818,7 @@ public:
       debug1(Scheduler::log,"Sc: deleting empty multichain");
       sc->deleteMultiChain(mc);
       tmap.erase(i);
+      return 0;
     }
 
     void RemoveChain(Chain* c)
