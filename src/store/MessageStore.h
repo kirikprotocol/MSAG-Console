@@ -11,19 +11,16 @@ namespace smsc { namespace store
     struct MessageStore 
     {
         virtual SMSId store(const SMS &sms)  
-            throw(TooLargeQueueException, StorageException) = 0;
+            throw(StorageException) = 0;
         
         virtual void retrive(SMSId id, SMS &sms)
-            throw(TooLargeQueueException, StorageException,
-                  NoSuchMessageException) = 0;
+            throw(StorageException, NoSuchMessageException) = 0;
         
         virtual void remove(SMSId id) 
-            throw(TooLargeQueueException, StorageException, 
-                  NoSuchMessageException) = 0;
+            throw(StorageException, NoSuchMessageException) = 0;
         
         virtual void replace(SMSId id, const SMS &sms) 
-            throw(TooLargeQueueException, StorageException, 
-                  NoSuchMessageException) = 0; 
+            throw(StorageException, NoSuchMessageException) = 0; 
     
     protected:
         

@@ -95,16 +95,13 @@ namespace smsc { namespace store
         }
 
         virtual SMSId store(const SMS &sms)  
-            throw(TooLargeQueueException, StorageException);
+            throw(StorageException);
         virtual void retrive(SMSId id, SMS &sms)
-            throw(TooLargeQueueException, StorageException,
-                  NoSuchMessageException);
+            throw(StorageException, NoSuchMessageException);
         virtual void remove(SMSId id) 
-            throw(TooLargeQueueException, StorageException, 
-                  NoSuchMessageException);
+            throw(StorageException, NoSuchMessageException);
         virtual void replace(SMSId id, const SMS &sms) 
-            throw(TooLargeQueueException, StorageException, 
-                  NoSuchMessageException); 
+            throw(StorageException, NoSuchMessageException); 
     };
 
 }}

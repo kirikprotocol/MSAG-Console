@@ -10,6 +10,8 @@ using std::exception;
 
 namespace smsc { namespace store
 {
+    const int SMSC_STORE_QUEUE_TOO_LARGE = -10001;
+
     using smsc::sms::SMSId;
 
     const int MAX_MESSAGE_LENGTH = 2048;
@@ -36,40 +38,47 @@ namespace smsc { namespace store
         
     };
     
-    class TooLargeQueueException : public StoreException
-    {
-    public:
-
-        TooLargeQueueException() 
-            : StoreException("Too many pending requests a waiting "
-                             "for store connections !") {};
-        
-        virtual ~TooLargeQueueException() throw() {};
-    };
-
     class StorageException : public StoreException
     {
     protected:
         
         int   code;
+        int   status;
         
-        StorageException(int _code=-1) 
+        StorageException(int _code=-1, int _status=0) 
             : StoreException(), code(_code) {};
 
     public:
         
-        StorageException(const char* _cause, int _code=-1) 
-            : StoreException(), code(_code) 
+        StorageException(const char* _cause, int _code=-1, int _status=0) 
+            : StoreException(), code(_code), status(_status) 
         {
-            sprintf(cause, "Code - %d, Failure cause - %s", _code, _cause);
+            sprintf(cause, "Code - %d, Status - %d, Failure cause - %s", 
+                    _code, _status, _cause); 
         };
         virtual ~StorageException() throw() {};
         
         inline int getErrorCode() {
             return code;
         };
+        inline int getErrorStatus() {
+            return status;
+        };
     };
     
+    
+
+    class TooLargeQueueException : public StorageException
+    {
+    public:
+        
+        TooLargeQueueException() 
+            : StorageException("Too many pending requests are waiting "
+                               "for store connections !",
+                               SMSC_STORE_QUEUE_TOO_LARGE) {};
+        virtual ~TooLargeQueueException() throw() {};
+    };
+
     class ConnectionFailedException : public StoreException
     {
     public:

@@ -90,7 +90,7 @@ void StoreManager::shutdown()
 }
 
 SMSId StoreManager::store(const SMS &sms) 
-    throw(TooLargeQueueException, StorageException)
+    throw(StorageException)
 {
     __require__(pool && generator);
     
@@ -112,6 +112,10 @@ SMSId StoreManager::store(const SMS &sms)
             if (connection) pool->freeConnection(connection);
             continue;
         }
+        catch (TooLargeQueueException& exc)
+        {
+            throw;
+        }
         catch (StorageException& exc) 
         {
             if (connection) pool->freeConnection(connection);
@@ -127,7 +131,7 @@ SMSId StoreManager::store(const SMS &sms)
 }
 
 void StoreManager::retrive(SMSId id, SMS &sms) 
-    throw(TooLargeQueueException, StorageException, NoSuchMessageException)
+    throw(StorageException, NoSuchMessageException)
 {
     __require__(pool);
     
@@ -146,6 +150,10 @@ void StoreManager::retrive(SMSId id, SMS &sms)
         {
             if (connection) pool->freeConnection(connection);
             continue;
+        }
+        catch (TooLargeQueueException& exc)
+        {
+            throw;
         }
         catch (NoSuchMessageException& exc) 
         {
@@ -166,7 +174,7 @@ void StoreManager::retrive(SMSId id, SMS &sms)
 }
 
 void StoreManager::remove(SMSId id) 
-    throw(TooLargeQueueException, StorageException, NoSuchMessageException)
+    throw(StorageException, NoSuchMessageException)
 {
     __require__(pool);
     
@@ -185,6 +193,10 @@ void StoreManager::remove(SMSId id)
         {
             if (connection) pool->freeConnection(connection);
             continue;
+        }
+        catch (TooLargeQueueException& exc)
+        {
+            throw;
         }
         catch (NoSuchMessageException& exc) 
         {
@@ -205,7 +217,7 @@ void StoreManager::remove(SMSId id)
 }
 
 void StoreManager::replace(SMSId id, const SMS &sms)
-    throw(TooLargeQueueException, StorageException, NoSuchMessageException)
+    throw(StorageException, NoSuchMessageException)
 {
     __require__(pool);
     
@@ -224,6 +236,10 @@ void StoreManager::replace(SMSId id, const SMS &sms)
         {
             if (connection) pool->freeConnection(connection);
             continue;
+        }
+        catch (TooLargeQueueException& exc)
+        {
+            throw;
         }
         catch (NoSuchMessageException& exc) 
         {

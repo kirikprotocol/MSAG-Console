@@ -173,12 +173,15 @@ Connection* ConnectionPool::getConnection()
     
     if (head || (!idle.Count() && count>=size))
     {
-        if (queueLen++ >= maxQueueSize)
+        if (queueLen >= maxQueueSize)
         {
-            throw TooLargeQueueException();
+            TooLargeQueueException exc;
+            log.error(exc.what());
+            throw exc;
         }
         if (tail) tail->next = &queue;
         tail = &queue; queue.next = 0L;
+        queueLen++;
         cond_init(&queue.condition,0,0);
         if (!head) head = tail;
         monitor.wait(&queue.condition);
@@ -519,7 +522,7 @@ void Connection::checkErr(sword status)
     throw(StorageException)
 {
     text        errbuf[1024];
-    ub4         buflen, errcode;
+    ub4         buflen, errcode = status;
     
     switch (status)
     {
@@ -557,7 +560,6 @@ void Connection::checkErr(sword status)
         {
             strcpy((char *)errbuf, "NO_ERROR_DESCRIPTION");
         }
-        status = errcode;
         break;  
 
     default:
@@ -567,7 +569,7 @@ void Connection::checkErr(sword status)
     
     isDead = true;
 
-    StorageException exc((const char *)errbuf, (int)status);
+    StorageException exc((const char *)errbuf, (int)errcode, (int)status);
     log.error("Storage Exception : %s\n", exc.what());
     throw exc;
 }
