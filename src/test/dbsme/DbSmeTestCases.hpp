@@ -79,10 +79,10 @@ protected:
 	DbSmeUpdateJobTestCases updateTc;
 	DbSmeDeleteJobTestCases deleteTc;
 	DbSmeSelectJobTestCases selectTc;
-	DbSmeSelectNoDefaultJobTestCases selectNoDefaultTc;
 
 	virtual Category& getLog();
 	const string getFromAddress();
+	const string getToAddress();
 	void sendDbSmePdu(DbSmeTestRecord* rec, const DateFormatter* df,
 		bool sync, uint8_t dataCoding);
 };

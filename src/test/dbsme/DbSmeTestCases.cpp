@@ -27,8 +27,7 @@ DbSmeTestCases::DbSmeTestCases(const SmeConfig& config, SmppFixture* fixture,
 	insertTc(dbSmeReg, fixture->chkList),
 	updateTc(dbSmeReg, fixture->chkList),
 	deleteTc(dbSmeReg, fixture->chkList),
-	selectTc(dbSmeReg, fixture->chkList),
-	selectNoDefaultTc(dbSmeReg, fixture->chkList)
+	selectTc(dbSmeReg, fixture->chkList)
 {
 	fixture->ackHandler = this;
 	//__require__(dbSmeReg);
@@ -46,6 +45,14 @@ const string DbSmeTestCases::getFromAddress()
 		fixture->aliasReg->findAliasByAddress(fixture->smeAddr);
 	AddressValue addrVal;
 	smeAlias.getValue(addrVal);
+	return addrVal;
+}
+
+const string DbSmeTestCases::getToAddress()
+{
+	__cfg_addr__(dbSmeAlias);
+	AddressValue addrVal;
+	dbSmeAlias.getValue(addrVal);
 	return addrVal;
 }
 
@@ -69,9 +76,9 @@ void DbSmeTestCases::sendDbSmePdu(DbSmeTestRecord* rec,
 			default:
 				__unreachable__("Invalid data coding");
 		}
-		//установить from-address
-		static const string fromAddr = getFromAddress();
-		rec->setFromAddr(fromAddr);
+		//установить from-address и to-address
+		rec->setFromAddr(getFromAddress());
+		rec->setToAddr(getToAddress());
 		ostringstream s;
 		__require__(rec->checkJob());
 		s << rec->getJob();
@@ -177,7 +184,7 @@ void DbSmeTestCases::submitCorrectSelectDbSmeCmd(bool sync,
 	uint8_t dataCoding, int num)
 {
 	__decl_tc__;
-	TCSelector s(num, 2);
+	TCSelector s(num, 3);
 	for (; s.check(); s++)
 	{
 		try
@@ -185,11 +192,14 @@ void DbSmeTestCases::submitCorrectSelectDbSmeCmd(bool sync,
 			DbSmeTestRecord* rec;
 			switch (s.value())
 			{
-				case 1: //SelectJob
-					rec = selectTc.createJobInput();
+				case 1: //SelectJob с нулями
+					rec = selectTc.createSelectNullsJobInput();
 					break;
-				case 2: //SelectNoDefaultJob
-					rec = selectNoDefaultTc.createJobInput();
+				case 2: //SelectJob со значениями
+					rec = selectTc.createSelectValuesJobInput();
+					break;
+				case 3: //SelectJob без дефолтных output значений
+					rec = selectTc.createSelectNoDefaultsJobInput();
 					break;
 				default:
 					__unreachable__("Invalid num");
@@ -207,7 +217,7 @@ void DbSmeTestCases::submitCorrectSelectDbSmeCmd(bool sync,
 void DbSmeTestCases::submitCorrectInsertDbSmeCmd(bool sync, uint8_t dataCoding, int num)
 {
 	__decl_tc__;
-	TCSelector s(num, 4);
+	TCSelector s(num, 6);
 	for (; s.check(); s++)
 	{
 		try
@@ -216,17 +226,23 @@ void DbSmeTestCases::submitCorrectInsertDbSmeCmd(bool sync, uint8_t dataCoding, 
 			DbSmeTestRecord* rec;
 			switch (s.value())
 			{
-				case 1: //InsertJob с параметрами
-					rec = insertTc.createJobInput(true);
+				case 1: //InsertJob с int параметрами
+					rec = insertTc.createIntsJobInput();
 					break;
-				case 2: //InsertJob без параметров
-					rec = insertTc.createJobInput(false);
+				case 2: //InsertJob с uint параметрами
+					rec = insertTc.createUintsJobInput();
 					break;
-				case 3: //InsertJob с дублирующимся ключом
-					rec = insertTc.createDuplicateKeyJobInput();
+				case 3: //InsertJob без параметров
+					rec = insertTc.createDefaultsJobInput();
 					break;
 				case 4: //InsertJob с нулями
 					rec = insertTc.createZerosJobInput();
+					break;
+				case 5: //InsertJob с нулами
+					rec = insertTc.createNullsJobInput();
+					break;
+				case 6: //InsertJob с дублирующимся ключом
+					rec = insertTc.createDuplicateKeyJobInput();
 					break;
 				default:
 					__unreachable__("Invalid num");
@@ -245,7 +261,7 @@ void DbSmeTestCases::submitCorrectUpdateDbSmeCmd(bool sync, uint8_t dataCoding, 
 {
 	__require__(dbSmeReg);
 	__decl_tc__;
-	TCSelector s(num, 3);
+	TCSelector s(num, 2);
 	for (; s.check(); s++)
 	{
 		try
@@ -255,12 +271,9 @@ void DbSmeTestCases::submitCorrectUpdateDbSmeCmd(bool sync, uint8_t dataCoding, 
 			switch (s.value())
 			{
 				case 1: //UpdateJob с параметрами
-					rec = updateTc.createJobInput(true);
+					rec = updateTc.createUpdateRecordJobInput();
 					break;
-				case 2: //UpdateJob без параметров
-					rec = updateTc.createJobInput(false);
-					break;
-				case 3: //UpdateJob с дублирующимся ключом
+				case 2: //UpdateJob с дублирующимся ключом
 					rec = updateTc.createDuplicateKeyJobInput();
 					break;
 				default:
@@ -282,7 +295,7 @@ void DbSmeTestCases::submitCorrectDeleteDbSmeCmd(bool sync, uint8_t dataCoding)
 	__decl_tc__;
 	try
 	{
-		DbSmeTestRecord* rec = deleteTc.createJobInput();
+		DbSmeTestRecord* rec = deleteTc.createDeleteAllJobInput();
 		sendDbSmePdu(rec, NULL, sync, dataCoding);
 	}
 	catch(...)
@@ -342,13 +355,9 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	{
 		deleteTc.processJobOutput(text, rec, monitor);
 	}
-	else if (rec->getJob() == "SelectJob")
+	else if (rec->getJob().find("SelectJob") != string::npos)
 	{
 		selectTc.processJobOutput(text, rec, monitor);
-	}
-	else if (rec->getJob() == "SelectNoDefaultJob")
-	{
-		selectNoDefaultTc.processJobOutput(text, rec, monitor);
 	}
 	else
 	{
