@@ -74,10 +74,12 @@ private:
 public:
 	TCSelector(int val, int maxVal, int base = 0);
 	~TCSelector();
-	int value() const;
 	bool check() const;
 	TCSelector& operator++ (int);
 	int getChoice() const;
+	int value() const;
+	int value1(int num1) const;
+	int value2(int num1) const;
 };
 
 //TCResult inline member functions definitions
@@ -122,11 +124,6 @@ inline TCSelector::~TCSelector()
 	}
 }
 
-inline int TCSelector::value() const
-{
-	return val[pos];
-}
-
 inline bool TCSelector::check() const
 {
 	return (pos < size);
@@ -141,6 +138,21 @@ inline TCSelector& TCSelector::operator++ (int)
 inline int TCSelector::getChoice() const
 {
 	return choice;
+}
+
+inline int TCSelector::value() const
+{
+	return val[pos];
+}
+
+inline int TCSelector::value1(int num1) const
+{
+	return 1 + (val[pos] - 1) % num1;
+}
+
+inline int TCSelector::value2(int num1) const
+{
+	return 1 + (val[pos] - 1) / num1;
 }
 
 }
