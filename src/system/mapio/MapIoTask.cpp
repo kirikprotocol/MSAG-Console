@@ -116,38 +116,6 @@ void MapIoTask::dispatcher()
   }
 }
 
-USHORT_T  Et96MapOpenConf (
-  ET96MAP_LOCAL_SSN_T ssn,
-  ET96MAP_DIALOGUE_ID_T dialogId,
-  ET96MAP_OPEN_RESULT_T openResult,
-  ET96MAP_REFUSE_REASON_T *refuseReason_p,
-  ET96MAP_SS7_ADDR_T *respondingAddr_sp,
-  ET96MAP_APP_CNTX_T *appContext_sp,
-  ET96MAP_USERDATA_T *specificInfo_sp,
-  ET96MAP_PROV_ERR_T *provErrCode_p)
-{
-  __trace2__("MAP::Et96MapOpenConf did 0x%x",dialogId);
-  try{
-    DialogRefGuard mdci(MapDialogContainer::getInstance()->getDialog(dialogId));
-    if ( !mdci.isnull() ){
-      mdci->Et96MapOpenConf(ssn,
-                            dialogId,
-                            openResult,
-                            refuseReason_p,
-                            respondingAddr_sp,
-                            appContext_sp,
-                            specificInfo_sp,
-                            provErrCode_p);
-     if ( openResult != ET96MAP_RESULT_OK )
-      MapDialogContainer::getInstance()->dropDialog(dialogId);
-    }
-  }catch(...){
-    __trace2__("MAP::Et96MapCloseInd: catch exception when processing did 0x%x",dialogId);
-    MapDialogContainer::getInstance()->dropDialog(dialogId);
-  }
-  return ET96MAP_E_OK;
-}
-
 void MapIoTask::init(unsigned timeout)
 {
   USHORT_T err;
