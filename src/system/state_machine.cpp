@@ -1005,6 +1005,14 @@ StateType StateMachine::submit(Tuple& t)
     sms->setDeliveryReport(profile.reportoptions);
   }
 
+  if(sms->getDeliveryReport()==0 &&
+     (sms->getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x03)==0 &&
+     (sms->getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x10)==0 &&
+     sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
+  {
+    sms->setDeliveryReport(ProfileReportOptions::ReportFinal);
+  }
+
   sms->setIntProperty(Tag::SMSC_HIDE,profile.hide);
 
   Profile srcprof=profile;
@@ -1015,9 +1023,9 @@ StateType StateMachine::submit(Tuple& t)
 
   int divertFlags=(profile.divertActive        ?DF_UNCOND:0)|
                   (profile.divertActiveAbsent  ?DF_ABSENT:0)|
-                  (profile.divertActiveBlocked ?DF_BLOCK:0) |
-                  (profile.divertActiveBarred   ?DF_BARRED:0) |
-                  (profile.divertActiveCapacity?DF_CAPAC:0);
+                  (profile.divertActiveBlocked ?DF_BLOCK :0)|
+                  (profile.divertActiveBarred  ?DF_BARRED:0)|
+                  (profile.divertActiveCapacity?DF_CAPAC :0);
   if(divertFlags && profile.divert.length()!=0 && !sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
     smsc_log_debug(smsLog, "divert for %s found",dst.toString().c_str());
