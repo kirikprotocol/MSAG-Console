@@ -168,9 +168,17 @@ int Profiler::update(const Address& address,const Profile& profile)
 int Profiler::updatemask(const Address& address,const Profile& profile)
 {
   MutexGuard g(mtx);
+  HashKey k(address);
+  bool exists=profiles->Exists(k);
   profiles->add(address,profile);
   try{
-    dbUpdate(address,profile);
+    if(exists)
+    {
+      dbUpdate(address,profile);
+    }else
+    {
+      dbInsert(address,profile);
+    }
   }catch(...)
   {
     log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.system.Profiler");
