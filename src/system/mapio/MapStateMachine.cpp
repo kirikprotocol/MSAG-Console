@@ -1218,7 +1218,7 @@ USHORT_T Et96MapOpenInd (
       {
         __trace2__("MAP::%s parse specific",__FUNCTION__);
         unsigned x = specificInfo_sp->specificData[1];
-        if ( (((unsigned)specificInfo_sp->specificData[x] >> 4)&0x0f == 0xf ) )
+        if ( (((unsigned)specificInfo_sp->specificData[x+1] >> 4)&0x0f == 0xf ) )
           x = (x-1)*2-1;
         else 
           x = (x-1)*2;
