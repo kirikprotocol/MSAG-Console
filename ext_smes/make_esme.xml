@@ -33,7 +33,7 @@
   </target>
 
   <target name="compile" depends="init" description="compile the sources">
-    <javac srcdir="${java_src}" destdir="${java_out}" debug="yes">
+    <javac srcdir="${java_src}" destdir="${java_out}" debug="yes" verbose="yes" >
       <classpath refid="esme_classpath"/>
     </javac>
   </target>
