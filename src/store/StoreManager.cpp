@@ -759,7 +759,7 @@ void RemoteStore::replaceSms(SMSId id, const Address& oa,
 #endif
 }
 
-void doReplaceSms(StorageConnection* connection, SMSId id, SMS& sms)
+void RemoteStore::doReplaceSms(StorageConnection* connection, SMSId id, SMS& sms)
     throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
