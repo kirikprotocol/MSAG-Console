@@ -324,15 +324,10 @@ int main(int argc, char* argv[])
 			RouteManager routeMan;
 			routeMan.assign(&smeMan);
 			RouteRegistry routeReg;
-			{
-				RouteManagerFunctionalTest test(&smeMan, &routeMan, &routeReg);
-				test.executeTest(filter, numAddr);
-				test.printRoutes();
-				__trace__("before destruction");
-			}
-			__trace__("end iteration");
+			RouteManagerFunctionalTest test(&smeMan, &routeMan, &routeReg);
+			test.executeTest(filter, numAddr);
+			test.printRoutes();
 		}
-		__trace__("Exit cycle");
 		saveCheckList(filter);
 		delete filter;
 	}
