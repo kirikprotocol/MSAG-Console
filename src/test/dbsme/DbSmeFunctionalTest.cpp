@@ -402,7 +402,10 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 	SmeManagerTestCases::setupRandomCorrectSmeInfo(&dbSmeInfo);
 	dbSmeInfo.systemId = dbSmeSystemId;
 	dbSmeInfo.password = dbSmePassword;
-	smeReg->registerSme(dbSmeAddr, dbSmeInfo, false, true);
+	vector<const Address*> addrList;
+	addrList.push_back(&dbSmeAddr);
+	addrList.push_back(&dbSmeInvalidAddr);
+	smeReg->registerSme(addrList, dbSmeInfo, false, true);
 	smeReg->bindSme(dbSmeInfo.systemId);
 	//алиас для db sme
 	AliasInfo dbSmeAliasInfo;

@@ -765,27 +765,27 @@ ostream& operator<< (ostream& os, SmppHeader*& p)
 		//прочее
 		case SUBMIT_MULTI_RESP:
 			os << "PduMultiSmResp {" << endl;
-			os << *p;
+			os << *p << endl;
 			os << "}";
 			break;
 		case ALERT_NOTIFICATION:
 			os << "PduAlertNotification {" << endl;
-			os << *p;
+			os << *p << endl;
 			os << "}";
 			break;
 		case UNBIND:
 			os << "PduUnbind {" << endl;
-			os << *p;
+			os << *p << endl;
 			os << "}";
 			break;
 		case UNBIND_RESP:
 			os << "PduUnbindResp {" << endl;
-			os << *p;
+			os << *p << endl;
 			os << "}";
 			break;
 		case OUTBIND:
 			os << "PduOutbind {" << endl;
-			os << *p;
+			os << *p << endl;
 			os << "}";
 			break;
 		default:
