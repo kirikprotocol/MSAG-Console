@@ -28,7 +28,7 @@ public class ServiceStatus extends HostsBean
 
 		daemon = daemonManager.getDaemon(hostName);
 		if (daemon == null)
-			return error(SMSCErrors.error.service.hosts.daemonNotFound, hostName);
+			return error(SMSCErrors.error.hosts.daemonNotFound, hostName);
 
 		try
 		{

@@ -26,7 +26,7 @@ switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("
 		return;
 	default:
 		STATUS.append("Error");
-		errorMessages.add(new SMSCJspException(SMSCErrors.error.service.unknownAction));
+		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
 }
 
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
@@ -54,7 +54,7 @@ function viewService(serviceId)
 }
 </script>
 <h1>host <span class=C00F><%=bean.getHostName()%>:<%=bean.getPort()%></span> view</h1>
-<span class="errorMessages"><%@ include file="/WEB-INF/inc/messages.jsp"%></span>
+<span class=CF00><%@ include file="/WEB-INF/inc/messages.jsp"%></span>
 <table class=frm1 cellspacing=0 width="100%">
 <col width="15%" align=right>
 <col width="85%">
@@ -102,7 +102,26 @@ String serviceControl = (row == 0) ? "start" : "stop";
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=serviceIds value="<%=StringEncoderDecoder.encode(serviceId)%>" <%=checkedServices.contains(serviceId) ? "checked" : ""%>></td>
 	<td class=name><a href="#" title="View service info" onClick="return viewService('<%=StringEncoderDecoder.encode(serviceId)%>');"><%=StringEncoderDecoder.encode(serviceId)%></a></td>
-	<td><span datasrc=#tdcStatuses DATAFORMATAS=html datafld="<%=StringEncoderDecoder.encode(serviceId)%>">unknown</span></td>
+	<td><%
+		switch (service.getStatus())
+		{
+			case ServiceInfo.STATUS_RUNNING:
+				%><span class=C080 datasrc=#tdcStatuses DATAFORMATAS=html datafld="<%=StringEncoderDecoder.encode(serviceId)%>">running</span><%
+				break;
+			case ServiceInfo.STATUS_STOPPING:
+				%><span class=C008 datasrc=#tdcStatuses DATAFORMATAS=html datafld="<%=StringEncoderDecoder.encode(serviceId)%>">stopping</span><%
+				break;
+			case ServiceInfo.STATUS_STOPPED:
+				%><span class=C800 datasrc=#tdcStatuses DATAFORMATAS=html datafld="<%=StringEncoderDecoder.encode(serviceId)%>">stopped</span><%
+				break;
+			case ServiceInfo.STATUS_STARTING:
+				%><span class=C0F0 datasrc=#tdcStatuses DATAFORMATAS=html datafld="<%=StringEncoderDecoder.encode(serviceId)%>">starting</span><%
+				break;
+			default:
+				%><span class=C000 datasrc=#tdcStatuses DATAFORMATAS=html datafld="<%=StringEncoderDecoder.encode(serviceId)%>">unknown</span><%
+				break;
+		}
+	%></td>
 </tr>
 <%}}%>
 </tbody>

@@ -48,6 +48,9 @@ public class DaemonManager
 		return (Daemon) daemons.get(host);
 	}
 
+	/**
+	 * @return hostnames
+	 */
 	public Set getHosts()
 	{
 		return daemons.keySet();

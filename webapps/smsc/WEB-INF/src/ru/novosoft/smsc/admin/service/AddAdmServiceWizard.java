@@ -131,7 +131,7 @@ public class AddAdmServiceWizard
 			if (serviceFolder.exists())
 				throw new AdminException("Service already exists in filesystem");
 			if (jspsFolder.exists())
-				throw new AdminException("Jps pages for new service already exists");
+				throw new AdminException("Jps pages for new services already exists");
 
 			unZipArchive(serviceFolder,
 							 new BufferedInputStream(new FileInputStream(incomingZip)));
@@ -151,14 +151,14 @@ public class AddAdmServiceWizard
 		catch (AdminException e)
 		{
 			rollbackDeploy(daemonsFolder, webappFolder, webinfLibFolder);
-			logger.error("Couldnt deploy new service", e);
+			logger.error("Couldnt deploy new services", e);
 			throw e;
 		}
 		catch (IOException e)
 		{
 			rollbackDeploy(daemonsFolder, webappFolder, webinfLibFolder);
-			logger.error("Couldnt deploy new service", e);
-			throw new AdminException("Couldnt deploy new service, nested: " + e.getMessage());
+			logger.error("Couldnt deploy new services", e);
+			throw new AdminException("Couldnt deploy new services, nested: " + e.getMessage());
 		}
 	}
 
@@ -185,7 +185,7 @@ public class AddAdmServiceWizard
 
 			while (entry != null && !(serviceFound && confFound && jspFound && configFound))
 			{
-				if (!serviceFound && entry.getName().equals("bin/service"))
+				if (!serviceFound && entry.getName().equals("bin/services"))
 					serviceFound = true;
 				if (!confFound && (entry.getName().startsWith("conf/") || (entry.getName().equals("conf") && entry.isDirectory())))
 					confFound = true;
@@ -200,8 +200,8 @@ public class AddAdmServiceWizard
 		}
 		catch (IOException e)
 		{
-			logger.error("Couldn't check incoming service archive integrity", e);
-			throw new AdminException("Couldn't check incoming service archive integrity, nested: " + e.getMessage());
+			logger.error("Couldn't check incoming services archive integrity", e);
+			throw new AdminException("Couldn't check incoming services archive integrity, nested: " + e.getMessage());
 		}
 	}
 
@@ -252,8 +252,8 @@ public class AddAdmServiceWizard
 		}
 		catch (IOException e)
 		{
-			logger.error("Couldn't save incoming service archive to temporary file", e);
-			throw new AdminException("Couldn't save incoming service archive to temporary file, nested: " + e.getMessage());
+			logger.error("Couldn't save incoming services archive to temporary file", e);
+			throw new AdminException("Couldn't save incoming services archive to temporary file, nested: " + e.getMessage());
 		}
 		return tmpFile;
 	}
@@ -282,33 +282,33 @@ public class AddAdmServiceWizard
 		}
 		catch (FactoryConfigurationError error)
 		{
-			logger.error("Couldn't parse incoming service configuration", error);
-			throw new AdminException("Couldn't parse incoming service configuration" + error.getMessage());
+			logger.error("Couldn't parse incoming services configuration", error);
+			throw new AdminException("Couldn't parse incoming services configuration" + error.getMessage());
 		}
 		catch (ParserConfigurationException e)
 		{
-			logger.error("Couldn't parse incoming service configuration", e);
-			throw new AdminException("Couldn't parse incoming service configuration" + e.getMessage());
+			logger.error("Couldn't parse incoming services configuration", e);
+			throw new AdminException("Couldn't parse incoming services configuration" + e.getMessage());
 		}
 		catch (SAXException e)
 		{
-			logger.error("Couldn't parse incoming service configuration", e);
-			throw new AdminException("Couldn't parse incoming service configuration, nested: " + e.getMessage());
+			logger.error("Couldn't parse incoming services configuration", e);
+			throw new AdminException("Couldn't parse incoming services configuration, nested: " + e.getMessage());
 		}
 		catch (NullPointerException e)
 		{
-			logger.error("Couldn't get incoming service id", e);
-			throw new AdminException("Couldn't get incoming service id, nested: " + e.getMessage());
+			logger.error("Couldn't get incoming services id", e);
+			throw new AdminException("Couldn't get incoming services id, nested: " + e.getMessage());
 		}
 		catch (Config.ParamNotFoundException e)
 		{
-			logger.error("Couldn't get incoming service id", e);
-			throw new AdminException("Couldn't get incoming service id, nested: " + e.getMessage());
+			logger.error("Couldn't get incoming services id", e);
+			throw new AdminException("Couldn't get incoming services id, nested: " + e.getMessage());
 		}
 		catch (Config.WrongParamTypeException e)
 		{
-			logger.error("Couldn't get incoming service id", e);
-			throw new AdminException("Couldn't get incoming service id, nested: " + e.getMessage());
+			logger.error("Couldn't get incoming services id", e);
+			throw new AdminException("Couldn't get incoming services id, nested: " + e.getMessage());
 		}
 	}
 

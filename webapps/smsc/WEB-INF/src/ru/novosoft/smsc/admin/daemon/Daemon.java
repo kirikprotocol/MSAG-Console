@@ -40,14 +40,14 @@ public class Daemon extends Proxy
 	}
 
 	/**
-	 * @return Process ID (PID) of new service
+	 * @return Process ID (PID) of new services
 	 */
 	public synchronized long startService(String serviceId)
 			  throws AdminException
 	{
 		Response r = runCommand(new CommandStartService(serviceId));
 		if (r.getStatus() != Response.StatusOk)
-			throw new AdminException("Couldn't start service \"" + serviceId + "\", nested:" + r.getDataAsString());
+			throw new AdminException("Couldn't start services \"" + serviceId + "\", nested:" + r.getDataAsString());
 
 		String pidStr = r.getDataAsString().trim();
 		try
@@ -56,19 +56,19 @@ public class Daemon extends Proxy
 		}
 		catch (NumberFormatException e)
 		{
-			throw new AdminException("PID of new service misformatted (" + pidStr + "), nested:" + e.getMessage());
+			throw new AdminException("PID of new services misformatted (" + pidStr + "), nested:" + e.getMessage());
 		}
 	}
 
 	public synchronized void addService(ServiceInfo serviceInfo)
 			  throws AdminException
 	{
-		logger.debug("Add service \"" + serviceInfo.getId() + "\" (" + serviceInfo.getHost() + ':'
+		logger.debug("Add services \"" + serviceInfo.getId() + "\" (" + serviceInfo.getHost() + ':'
 						 + serviceInfo.getPort() + ")");
 
 		Response r = runCommand(new CommandAddService(serviceInfo));
 		if (r.getStatus() != Response.StatusOk)
-			throw new AdminException("Couldn't add service \"" + serviceInfo.getId() + '/' + serviceInfo.getId()
+			throw new AdminException("Couldn't add services \"" + serviceInfo.getId() + '/' + serviceInfo.getId()
 											 + "\" [" + serviceInfo.getArgs() + "], nested:" + r.getDataAsString());
 	}
 
@@ -77,7 +77,7 @@ public class Daemon extends Proxy
 	{
 		Response r = runCommand(new CommandRemoveService(serviceId));
 		if (r.getStatus() != Response.StatusOk)
-			throw new AdminException("Couldn't remove service \"" + serviceId + "\", nested:" + r.getDataAsString());
+			throw new AdminException("Couldn't remove services \"" + serviceId + "\", nested:" + r.getDataAsString());
 	}
 
 	public synchronized void shutdownService(String serviceId)
@@ -85,7 +85,7 @@ public class Daemon extends Proxy
 	{
 		Response r = runCommand(new CommandShutdownService(serviceId));
 		if (r.getStatus() != Response.StatusOk)
-			throw new AdminException("Couldn't shutdown service \"" + serviceId + "\", nested:" + r.getDataAsString());
+			throw new AdminException("Couldn't shutdown services \"" + serviceId + "\", nested:" + r.getDataAsString());
 	}
 
 	public synchronized void killService(String serviceId)
@@ -93,12 +93,12 @@ public class Daemon extends Proxy
 	{
 		Response r = runCommand(new CommandKillService(serviceId));
 		if (r.getStatus() != Response.StatusOk)
-			throw new AdminException("Couldn't kill service \"" + serviceId + "\", nested:" + r.getDataAsString());
+			throw new AdminException("Couldn't kill services \"" + serviceId + "\", nested:" + r.getDataAsString());
 	}
 
 	/**
 	 * Queries demon for services list
-	 * @return Map: service name -> ServiceInfo
+	 * @return Map: services name -> ServiceInfo
 	 */
 	public synchronized Map listServices()
 			  throws AdminException
@@ -124,6 +124,6 @@ public class Daemon extends Proxy
 	{
 		Response r = runCommand(new CommandSetServiceStartupParameters(serviceId, /*serviceName, */port, args));
 		if (r.getStatus() != Response.StatusOk)
-			throw new AdminException("Couldn't set service startup parameters \"" + serviceId + "\", nested:" + r.getDataAsString());
+			throw new AdminException("Couldn't set services startup parameters \"" + serviceId + "\", nested:" + r.getDataAsString());
 	}
 }

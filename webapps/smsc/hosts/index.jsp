@@ -20,7 +20,7 @@ switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("
 		// do nothing there, show errors below
 		break;
 	default:
-		errorMessages.add(new SMSCJspException(SMSCErrors.error.service.unknownAction));
+		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 STATUS.append("hosts:").append(bean.getHostNames().size());
@@ -40,6 +40,7 @@ function viewHost(hostName)
 }
 </script>
 <h1>Hosts list</h1>
+<span class=CF00><%@ include file="/WEB-INF/inc/messages.jsp"%></span>
 <table class=rep0 cellspacing=1 width="100%">
 <col width="1%">
 <col width="79%" align=left>
@@ -56,12 +57,13 @@ function viewHost(hostName)
 <tbody>
 <%{
 int row=0; 
+List hostIds = Arrays.asList(bean.getHostIds());
 for(Iterator i = bean.getHostNames().iterator(); i.hasNext();row++)
 {
 String hostName = (String) i.next();
 %>
 <tr class=row<%=row&1%>>
-	<td class=check><input class=check type=checkbox name=hostIds></td>
+	<td class=check><input class=check type=checkbox name=hostIds value="<%=hostName%>" <%=hostIds.contains(hostName) ? "checked" : ""%>></td>
 	<td class=name><a href="#" title="View host info" onClick='return viewHost("<%=hostName%>")'><%=hostName%></a></td>
 	<td class=num><%=bean.getHostPort(hostName)%></td>
 	<td><span class=C00F><%=bean.getServicesTotal(hostName)%></span> / <span class=C080><%=bean.getServicesRunning(hostName)%></span></td>

@@ -6,6 +6,7 @@
 package ru.novosoft.smsc.jsp;
 
 import org.apache.log4j.Category;
+import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.service.ServiceManager;
 
 import java.util.ArrayList;
@@ -23,6 +24,7 @@ public abstract class PageBean
 	protected List errors = null;
 	protected SMSCAppContext appContext = null;
 	protected ServiceManager serviceManager = null;
+	protected DaemonManager daemonManager = null;
 
 
 	public SMSCAppContext getAppContext()
@@ -51,8 +53,12 @@ public abstract class PageBean
 		serviceManager = appContext.getServiceManager();
 		if (serviceManager == null)
 			return error(SMSCErrors.error.serviceManagerNotInitialized);
-		else
-			return RESULT_OK;
+
+		daemonManager = appContext.getDaemonManager();
+		if (daemonManager == null)
+			return error(SMSCErrors.error.daemonManagerNotInitialized);
+
+		return RESULT_OK;
 	}
 
 	protected int error(String errorCode)

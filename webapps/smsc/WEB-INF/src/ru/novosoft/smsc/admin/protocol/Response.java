@@ -33,7 +33,7 @@ public class Response
 	{
 		doc = null;
 		status = 0;
-		logger = Category.getInstance("smsc.admin.service.protocol.Response");
+		logger = Category.getInstance("smsc.admin.services.protocol.Response");
 		try
 		{
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();

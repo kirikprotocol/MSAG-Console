@@ -7,8 +7,10 @@ package ru.novosoft.smsc.jsp.smsc.hosts;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 
 public class Index extends HostsBean
@@ -18,8 +20,9 @@ public class Index extends HostsBean
 
 	protected String mbAdd = null;
 	protected String mbView = null;
+	protected String mbDelete = null;
 	protected String hostName = null;
-
+	protected String[] hostIds = new String[0];
 
 	public int process(SMSCAppContext appContext, List errors)
 	{
@@ -31,8 +34,40 @@ public class Index extends HostsBean
 			return RESULT_ADD;
 		else if (mbView != null)
 			return RESULT_VIEW;
+		else if (mbDelete != null)
+			return deleteHost();
 		else
 			return RESULT_OK;
+	}
+
+	protected int deleteHost()
+	{
+		if (hostIds == null || hostIds.length == 0)
+			return error(SMSCErrors.error.hosts.hostsNotSpecified);
+
+		List notRemovedIds = new LinkedList();
+
+		for (int i = 0; i < hostIds.length; i++)
+		{
+			String id = hostIds[i];
+
+			try
+			{
+				serviceManager.removeDaemon(id);
+			}
+			catch (AdminException e)
+			{
+				notRemovedIds.add(id);
+				error(SMSCErrors.error.hosts.couldntRemoveHost, hostName);
+			}
+		}
+
+		hostIds = (String[]) notRemovedIds.toArray(new String[0]);
+
+		if (errors.size() == 0)
+			return RESULT_OK;
+		else
+			return RESULT_ERROR;
 	}
 
 	public Collection getHostNames()
@@ -99,5 +134,25 @@ public class Index extends HostsBean
 	public void setHostName(String hostName)
 	{
 		this.hostName = hostName;
+	}
+
+	public String getMbDelete()
+	{
+		return mbDelete;
+	}
+
+	public void setMbDelete(String mbDelete)
+	{
+		this.mbDelete = mbDelete;
+	}
+
+	public String[] getHostIds()
+	{
+		return hostIds;
+	}
+
+	public void setHostIds(String[] hostIds)
+	{
+		this.hostIds = hostIds;
 	}
 }

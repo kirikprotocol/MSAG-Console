@@ -19,22 +19,29 @@ public class SMSCErrors
 		public static final String serviceManagerNotInitialized = B + "serviceManagerNotInitialized";
 		public static final String daemonManagerNotInitialized = B + "daemonManagerNotInitialized";
 
-		public static class service
+		public static class services
 		{
-			private static final String B = SMSCErrors.error.B + "service.";
-			public static final String failed = B + "failed";
+			private static final String B = SMSCErrors.error.B + "services.";
+			public static final String couldntStartInternalService = B + "couldntStartInternalService";
+			/*public static final String failed = B + "failed";
 			public static final String unknown = B + "unknown";
-			public static final String system = B + "system";
+			public static final String system = B + "system";*/
 			public static final String unknownAction = B + "unknownAction";
+		}
 
-			public static class hosts
-			{
-				private static final String B = SMSCErrors.error.service.B + "hosts.";
-				public static final String daemonNotFound = B + "daemonNotFound";
-				public static final String serviceNotFound = B + "serviceNotFound";
-				public static final String couldntStartService = B + "couldntStartService";
-				public static final String couldntStopService = B + "couldntStopService";
-			}
+		public static class hosts
+		{
+			private static final String B = services.B + "hosts.";
+			public static final String daemonNotFound = B + "daemonNotFound";
+			public static final String serviceNotFound = B + "serviceNotFound";
+			public static final String couldntStartService = B + "couldntStartService";
+			public static final String couldntStopService = B + "couldntStopService";
+			public static final String hostNotSpecified = B + "hostNotSpecified";
+			public static final String hostsNotSpecified = B + "hostsNotSpecified";
+			public static final String hostAlreadyExist = B + "hostAlreadyExist";
+			public static final String portNotSpecifiedOrIncorrect = B + "portNotSpecifiedOrIncorrect";
+			public static final String couldntAddHost = B + "couldntAddHost";
+			public static final String couldntRemoveHost = B + "couldntRemoveHost";
 		}
 	}
 
@@ -44,7 +51,7 @@ public class SMSCErrors
 
 		public static class service
 		{
-			private static final String B = SMSCErrors.warning.B + "service.";
+			private static final String B = SMSCErrors.warning.B + "services.";
 
 			public static class hosts
 			{

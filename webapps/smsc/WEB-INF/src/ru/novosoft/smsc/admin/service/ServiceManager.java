@@ -196,7 +196,7 @@ public class ServiceManager
 			putService(new Service(serviceInfo));
 			smsc.getSmes().add(serviceInfo.getSme());
 			smsc.saveSmesConfig();
-			logger.debug("service added");
+			logger.debug("services added");
 		}
 	}
 
@@ -240,7 +240,7 @@ public class ServiceManager
 		smsc.saveSmesConfig();
 		if (!recursiveDeleteFolder(getServiceFolder(host, serviceId))
 				  || !recursiveDeleteFolder(getServiceJspsFolder(webappFolder, serviceId)))
-			throw new AdminException("Service removed, but service files not deleted");
+			throw new AdminException("Service removed, but services files not deleted");
 	}
 
 	public synchronized void startService(String serviceId)
@@ -335,7 +335,7 @@ public class ServiceManager
 */
 
 	/**
-	 * Gets service IDs from specified host
+	 * Gets services IDs from specified host
 	 * @param host Host to lookup for services
 	 * @return Service IDs (<code>String</code>s), that registered on specified host
 	 */
@@ -441,7 +441,7 @@ public class ServiceManager
 	{
 		Service s = (Service) services.get(serviceId);
 		if (s == null)
-			throw new AdminException("Unknown service \"" + serviceId + '"');
+			throw new AdminException("Unknown services \"" + serviceId + '"');
 		return s;
 	}
 

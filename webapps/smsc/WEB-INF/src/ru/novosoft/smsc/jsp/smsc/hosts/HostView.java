@@ -11,10 +11,7 @@ import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
+import java.util.*;
 
 public class HostView extends HostsBean
 {
@@ -45,7 +42,7 @@ public class HostView extends HostsBean
 
 		daemon = daemonManager.getDaemon(hostName);
 		if (daemon == null)
-			return error(SMSCErrors.error.service.hosts.daemonNotFound, hostName);
+			return error(SMSCErrors.error.hosts.daemonNotFound, hostName);
 
 		try
 		{
@@ -115,11 +112,13 @@ public class HostView extends HostsBean
 		if (serviceIds.length == 0)
 			return error(SMSCErrors.warning.service.hosts.noServicesSelected);
 
+		List notStartedIds = new LinkedList();
+
 		for (int i = 0; i < serviceIds.length; i++)
 		{
 			ServiceInfo s = (ServiceInfo) services.get(serviceIds[i]);
 			if (s == null)
-				result = error(SMSCErrors.error.service.hosts.serviceNotFound, serviceIds[i]);
+				result = error(SMSCErrors.error.hosts.serviceNotFound, serviceIds[i]);
 			else if (s.getStatus() == ServiceInfo.STATUS_STOPPED)
 			{
 				long pid = -1;
@@ -129,17 +128,20 @@ public class HostView extends HostsBean
 				}
 				catch (AdminException e)
 				{
-					result = error(SMSCErrors.error.service.hosts.couldntStartService, serviceIds[i], e);
-					logger.error("Couldn't start service \"" + serviceIds[i] + '"', e);
+					notStartedIds.add(serviceIds[i]);
+					result = error(SMSCErrors.error.hosts.couldntStartService, serviceIds[i], e);
+					logger.error("Couldn't start services \"" + serviceIds[i] + '"', e);
 					continue;
 				}
 				if (pid <= 0)
 				{
-					result = error(SMSCErrors.error.service.hosts.couldntStartService, serviceIds[i]);
-					logger.error("Couldn't start service \"" + serviceIds[i] + '"');
+					notStartedIds.add(serviceIds[i]);
+					result = error(SMSCErrors.error.hosts.couldntStartService, serviceIds[i]);
+					logger.error("Couldn't start services \"" + serviceIds[i] + '"');
 				}
 			}
 		}
+		serviceIds = (String[]) notStartedIds.toArray(new String[0]);
 		return result;
 	}
 
@@ -150,11 +152,13 @@ public class HostView extends HostsBean
 		if (serviceIds.length == 0)
 			return error(SMSCErrors.warning.service.hosts.noServicesSelected);
 
+		List notStoppedIds = new LinkedList();
+
 		for (int i = 0; i < serviceIds.length; i++)
 		{
 			ServiceInfo s = (ServiceInfo) services.get(serviceIds[i]);
 			if (s == null)
-				result = error(SMSCErrors.error.service.hosts.serviceNotFound, serviceIds[i]);
+				result = error(SMSCErrors.error.hosts.serviceNotFound, serviceIds[i]);
 			else if (s.getStatus() == ServiceInfo.STATUS_RUNNING)
 			{
 				try
@@ -163,11 +167,13 @@ public class HostView extends HostsBean
 				}
 				catch (AdminException e)
 				{
-					result = error(SMSCErrors.error.service.hosts.couldntStopService, serviceIds[i]);
-					logger.error("Couldn't stop service \"" + serviceIds[i] + '"', e);
+					notStoppedIds.add(serviceIds[i]);
+					result = error(SMSCErrors.error.hosts.couldntStopService, serviceIds[i]);
+					logger.error("Couldn't stop services \"" + serviceIds[i] + '"', e);
 				}
 			}
 		}
+		serviceIds = (String[]) notStoppedIds.toArray(new String[0]);
 		return result;
 	}
 

@@ -3,14 +3,14 @@
 /******************************************************************************/
 body
 {
-	font-family:sans-serif, Tahoma, Verdana;
-	font-size:10pt;
+	font-family:Arial, Verdana, sans-serif;
+/*	font-size:1em;*/
 	margin:10px;
 }
 body *
 {
-	font-family:sans-serif, Tahoma, Verdana;
-	font-size:12px;
+	font-family:Arial, Verdana, sans-serif;
+/*	font-size:1em;*/
 }
 img
 {
@@ -20,16 +20,17 @@ img
 .btn64,	A.btn64,	A.btn64:visited,	A.btn64:hover,
 .btnW,	A.btnW, 	A.btnW:visited,	A.btnW:hover
 {
+	font-family:Tahoma, Arial, Verdana, sans-serif;
 	background-color: #D6D3CE;
 	color:#000000;
-	font-family:Tahoma, Arial, Verdana, sans-serif;
-	font-size: 12px;
-	height:18px;
+	font-size: 0.9em;
+	height:1.4em;
 	border: solid 1px #000000;
 	padding:0px 4px 0px 4px;
 	text-decoration: none;
+	white-space: nowrap;
 }
-.btn64 { width:64px; }
+.btn64 { width:4em; }
 .btnW { width:100%; }
 
 A.btn:hover, A.btn64:hover, A.btnW:hover
@@ -39,25 +40,25 @@ A.btn:hover, A.btn64:hover, A.btnW:hover
 
 input.radio
 {
-	width:12px;
-	height:12px;
+	width:1.2em;
+	height:1.2em;
 	padding:0px;
 	margin:0px;
 }
 input.check
 {
-	width:18px;
-	height:18px;
+	width:1.2em;
+	height:1.2em;
 	padding:0px;
 	margin:0px;
 }
 .txt, .txtW
 {
 	font-family:Tahoma, sans-serif, Arial;
-	font-weight:12px;
+	font-weight:0.9em;
 	font-weight: normal;
 	font-style: normal;
-	height:20px;
+	height:1.5em;
 	padding:0px;
 	padding:1px 2px 1px 2px;
 	margin:0px;
@@ -69,10 +70,9 @@ input.check
 H1, .H1, .H1R,
 H1 span, .H1 span, .H1R span
 {
-	font-family:"Courier New", Courier, monospace;
-	font-size:18px;
+	font-size:1.4em;
 	font-weight: bold;
-	color: #000033;
+	color: #333333;
 	border-bottom:solid 1px #848284;
 	text-transform: uppercase;
 }
@@ -95,14 +95,16 @@ a:hover
 table.wnd td.ico
 {
 	border: 1px solid #848284;
+	width:1.2em;
+	height:1.2em;
 }
 table.wnd td.title
 {
 	border: 1px solid #848284;
 	background-color: #B0C4DE;
 	color: #000000;
-	height:16px;
-	font-size:12px;
+	height:1.2em;
+	font-size:0.9em;
 	font-weight:bold;
 	padding-left:5px;
 }
@@ -110,8 +112,8 @@ table.wnd .tmenu
 {
 	border: 1px solid #848284;
 	background-color: #FDF5E6;
-	height:16px;
-	font-size:14px;
+	height:1.2em;
+	font-size:1.0em;
 	word-break:keep-all;
 	white-space: nowrap;
 }
@@ -119,26 +121,28 @@ table.wnd .tmenu A,
 table.wnd .tmenu A:visited,
 table.wnd .tmenu A:hover
 {
-	font-size:14px;
+	height:1.2em;
+	width:4em;
+	font-size:1.0em;
 	font-weight:normal;
 	text-decoration: none;
 	color: #A0522D;
 	text-align:center;
 	padding:0 8px 0 8px;
-	width:48px;
 }
 table.wnd .tmenu A.tmenu_sel,
 table.wnd .tmenu A.tmenu_sel:visited,
 table.wnd .tmenu A.tmenu_sel:hover
 {
+	height:1.2em;
+	width:4em;
+	font-size:1.0em;
 	background-color: #D6D3CE;
-	font-size:14px;
 	font-weight:normal;
 	text-decoration: none;
 	color: #A0522D;
 	text-align:center;
 	padding:0 8px 0 8px;
-	width:48px;
 }
 table.wnd .tmenu A.tmenu_sel:hover,
 table.wnd .tmenu A:hover
@@ -262,7 +266,7 @@ td a.btnA:visited,
 a.btnA:hover,
 {
 	font-family:Tahoma, Arial, Verdana, sans-serif;
-	font-size: 12px;
+	font-size: 0.9em;
 	font-weight:bold;
 	padding:0px 4px 0px 4px;
 	text-decoration: none;
@@ -342,19 +346,13 @@ td a.btnA:hover
 /******************************************************************************/
 div.but0
 {
-	padding:2px 0px 10px 0px;
+	padding:8px;
 	white-space: nowrap;
 	text-align:left;
-	border-top:solid 1px #848284;
-	margin-top:4px;
+	background-color:#EFEBE7;
+	border:solid 1px #D6D3CE;
 }
 div.but0 input
 {
 	margin-right:10px;
-}
-
-
-.errorMessages
-{
-	color:red;
 }

@@ -13,18 +13,4 @@ import java.util.List;
 
 abstract public class HostsBean extends PageBean
 {
-	DaemonManager daemonManager = null;
-
-	protected int init(List errors)
-	{
-		int result = super.init(errors);
-		if (result != RESULT_OK)
-			return result;
-
-		daemonManager = appContext.getDaemonManager();
-		if (daemonManager == null)
-			return error(SMSCErrors.error.daemonManagerNotInitialized);
-		else
-			return RESULT_OK;
-	}
 }

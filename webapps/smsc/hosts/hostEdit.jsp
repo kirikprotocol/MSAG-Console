@@ -2,12 +2,10 @@
 <%@page import="ru.novosoft.smsc.jsp.smsc.hosts.HostEdit"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.hosts.HostEdit"/>
 <jsp:setProperty name="bean" property="*"/>
-<%bean.setAppContext((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"));%>
 <%
-switch(bean.process())
+switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
 	case HostEdit.RESULT_ERROR:
-		STATUS.append("Error:<span class=statusError>"+bean.getErrorMessage()+"</span>");
 		break;
 	case HostEdit.RESULT_DONE:
 		response.sendRedirect("hostView.jsp?hostName="+bean.getHostName());
@@ -15,7 +13,6 @@ switch(bean.process())
 	case HostEdit.RESULT_OK:
 		break;
 	default:
-		STATUS.append("Error:<span class=statusError>unknown status</span>");
 }
 
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
@@ -24,6 +21,7 @@ MENU0_SELECTION = "MENU0_HOSTS";
 <%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
 <input type=hidden ID=jbutton value="jbutton">
 <h1>Edit host</h1>
+<span class=CF00><%@ include file="/WEB-INF/inc/messages.jsp"%></span>
 <table class=frm0 cellspacing=0 width="100%">
 <col width="15%" align=right>
 <col width="85%">

@@ -43,7 +43,7 @@ public class ServiceInfo
 		args = serviceElement.getAttribute("args");
 		if (/*name.equals("") ||*/ id.equals(""))
 		{
-			throw new AdminException("service name or service system id not specified in response");
+			throw new AdminException("services name or services system id not specified in response");
 		}
 		sme = smes.get(id);
 		if (sme == null)

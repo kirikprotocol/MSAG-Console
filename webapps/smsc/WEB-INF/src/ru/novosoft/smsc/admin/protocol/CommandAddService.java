@@ -16,10 +16,10 @@ public class CommandAddService extends Command
 	{
 		super("add_service");
 
-		logger.debug("Add service \"" + serviceInfo.getId() + "\" (" + serviceInfo.getHost() + ':'
+		logger.debug("Add services \"" + serviceInfo.getId() + "\" (" + serviceInfo.getHost() + ':'
 						 + serviceInfo.getPort() + ")");
 
-		Element serviceElem = document.createElement("service");
+		Element serviceElem = document.createElement("services");
 		//serviceElem.setAttribute("name", StringEncoderDecoder.encode(serviceInfo.getName()));
 		serviceElem.setAttribute("id", StringEncoderDecoder.encode(serviceInfo.getId()));
 		serviceElem.setAttribute("port", StringEncoderDecoder.encode(String.valueOf(serviceInfo.getPort())));

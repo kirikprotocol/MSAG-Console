@@ -7,5 +7,5 @@
 
 <!ELEMENT param (#PCDATA)>
 <!ATTLIST param 
-    name (typeOfNumber|numberingPlan|interfaceVersion|systemType|password|addrRange|smeN) #REQUIRED 
+    name (typeOfNumber|numberingPlan|interfaceVersion|systemType|password|addrRange|smeN|wantAlias|timeout) #REQUIRED 
     value CDATA #REQUIRED>

@@ -7,9 +7,5 @@ page import="ru.novosoft.smsc.jsp.*"
 		messages.put(SMSCErrors.error.failed, "System failed");
 		messages.put(SMSCErrors.error.unknown, "Unknown system error");
 		messages.put(SMSCErrors.error.system, "System error");
-
-		messages.put(SMSCErrors.error.service.failed, "Service failed");
-		messages.put(SMSCErrors.error.service.unknown, "Unknown service error");
-		messages.put(SMSCErrors.error.service.system, "System service error");
 	}
 %>

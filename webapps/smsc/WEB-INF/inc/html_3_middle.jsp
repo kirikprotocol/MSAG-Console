@@ -1,1 +1,1 @@
-<br></div></td><td class=pan21><img></td><td class=pan22><div class=p>
+<%--<br></div></td><td colspan=2 class=pan21><img></td>--%><td colspan=3 class=pan22><div class=p>
