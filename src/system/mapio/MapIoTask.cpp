@@ -149,10 +149,16 @@ void MapIoTask::init()
   MsgTraceOn( USER01_ID );
   MsgTraceOn( ETSIMAP_ID );
   MsgTraceOn( TCAP_ID );
-  __trace__("MAP: Unbind");
-  Et96MapUnbindReq(SSN);  
   __trace__("MAP: Bind");
-  throw_if(Et96MapBindReq(USER01_ID, SSN)!=ET96MAP_E_OK);
+  USHORT_T bind_res = Et96MapBindReq(USER01_ID, SSN);
+  if(bind_res!=ET96MAP_E_OK){
+    __trace2__("bind error 0x%hx",bind_res);
+    //if (bind_res == ){
+      __trace__("MAP: Unbind");
+      Et96MapUnbindReq(SSN);  
+      throw_if(!Et96MapBindReq(USER01_ID, SSN)!=ET96MAP_E_OK);
+    //}else throw runtime_error("can't bind");
+  }
   __trace__("MAP: Ok");
 }
 
