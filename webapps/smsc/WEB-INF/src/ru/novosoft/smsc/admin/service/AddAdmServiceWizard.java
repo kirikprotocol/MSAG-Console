@@ -156,8 +156,8 @@ public class AddAdmServiceWizard
 		}
 	}
 
-	       	public SME createSme()
-				throws AdminException
+	public SME createSme()
+			  throws AdminException
 	{
 		checkStage2();
 		checkStage3();

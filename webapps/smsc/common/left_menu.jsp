@@ -20,12 +20,19 @@
 	<li><a href="<%=urlPrefix+servicesPrefix%>/index.jsp">Services</a></li>
 	<ul compact>
 		<%
-		Set services = serviceManager.getServiceIds();
-		for (Iterator i = services.iterator(); i.hasNext(); )
+		List smes = serviceManager.getSmeIds();
+		for (Iterator i = smes.iterator(); i.hasNext(); )
 		{
-			String _serviceId = (String) i.next();
-			String encodedServiceId = URLEncoder.encode(_serviceId);
-			%><li><a href="<%=urlPrefix%>/esme_<%=URLEncoder.encode(_serviceId)%>"><%=StringEncoderDecoder.encode(_serviceId)%></a></li><%
+			String smeId = (String) i.next();
+			String encodedSmeId = URLEncoder.encode(smeId);
+			if (serviceManager.isService(smeId))
+			{
+				%><li><a href="<%=urlPrefix%>/esme_<%=URLEncoder.encode(smeId)%>"><%=StringEncoderDecoder.encode(smeId)%></a></li><%
+			}
+			else
+			{
+				%><li><%=StringEncoderDecoder.encode(smeId)%></li><%
+			}
 		} %>
 	</ul>
 </ul>

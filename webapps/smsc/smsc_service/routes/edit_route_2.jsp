@@ -15,20 +15,20 @@ String showSources(Route route)
   return result;
 }
 
-String showDestinations(Route route, Set smes)
+String showDestinations(Route route, Collection smes)
 {
   String result = "<table border=\"0\" cellspacing=\"0\">";
   for (Iterator i = route.getDestinations().iterator(); i.hasNext();)
   {
     Destination d = (Destination) i.next();
     result += "<tr><td>" + (d.isSubject() ? "<font size=\"-2\">subj</font> " : "<font size=\"-2\">mask</font> ") + d.getName()
-           +  "</td><td>" + show_set_combo(d.getName(), smes)+"</td></tr>";
+           +  "</td><td>" + show_set_combo(d.getName(), smes, d.getDefaultSmeId())+"</td></tr>";
   }
   result += "</table>";
   return result;
 }
 %><%
-Set serviceIDs = serviceManager.getServiceIds();
+Collection serviceIDs = serviceManager.getSmeIds();
 if (serviceIDs.isEmpty())
   throw new NullPointerException("SME list is empty");
 
@@ -78,7 +78,7 @@ route.setArchiving(isArchiving != null && isArchiving.equals("true"));
     <tbody>
   		<tr class="list">
   			<td class="list" width="50%"><%=showSources(route)%></td>
-  			<td class="list" width="50%"><%=showDestinations(route, serviceManager.getServiceIds())%></td>
+  			<td class="list" width="50%"><%=showDestinations(route, serviceManager.getSmeIds())%></td>
   		</tr>
   	</tbody>
   </table>

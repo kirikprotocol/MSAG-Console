@@ -84,9 +84,11 @@ int main(int argc, char **argv)
 		daemonInit();
 	
 		Manager::init(argv[1]);
-		Manager &manager = Manager::getInstance();
 
-		chdir(manager.getString(CONFIG_HOME_PARAMETER));
+		chdir(Manager::getInstance().getString(CONFIG_HOME_PARAMETER));
+    Manager::deinit();
+		Manager::init(argv[1]);
+		Manager &manager = Manager::getInstance();
 		FILE * redirected_stderr = freopen(manager.getString(CONFIG_STDERR_PARAMETER), "w", stderr);
 		if (redirected_stderr == 0)
 			throw ConfigException("Couldn't redirect stderr");

@@ -1,7 +1,7 @@
 <%@ include file="/common/header.jsp"%>
 <%@ include file="/smsc_service/menu.jsp" %>
 <%!
-String showSources(Route route)
+/*String showSources(Route route)
 {
   String result = "";
   for (Iterator i = route.getSources().iterator(); i.hasNext();)
@@ -13,7 +13,7 @@ String showSources(Route route)
   return result;
 }
 
-String showDestinations(Route route, Set smes)
+String showDestinations(Route route, Collections smes)
 {
   String result = "";
   for (Iterator i = route.getDestinations().iterator(); i.hasNext();)
@@ -29,9 +29,9 @@ String showDestinations(Route route, Set smes)
   }
 
   return result;
-}
+}*/
 %><%
-Set serviceIDs = serviceManager.getServiceIds();
+Collection serviceIDs = serviceManager.getSmeIds();
 if (serviceIDs.isEmpty())
   throw new NullPointerException("SME list is empty");
 

@@ -2,7 +2,7 @@
 <%@ page errorPage="/common/error.jsp"%>
 <%@ include file="/common/header_begin.jsp"%>
 <%
-AddAdmServiceWizard wizard = (AddAdmServiceWizard) session.getValue("AddAdmServiceWizard");
+AddAdmServiceWizard wizard = (AddAdmServiceWizard) session.getAttribute("AddAdmServiceWizard");
 if (wizard == null)
 {
 	%><meta http-equiv="Refresh" content="0;url=<%=urlPrefix+servicesPrefix%>/add_adm_service.jsp"/></head></html><%
@@ -23,7 +23,7 @@ if (wizard == null)
 		&& rangeOfAddress.length() > 0)
 	{
 		wizard.setStage3(systemType, typeOfNumber, numberingPlan, interfaceVersion, rangeOfAddress);
-		%><meta http-equiv="Refresh" content="0;url=<%=urlPrefix+servicesPrefix%>/add_adm_service_5.jsp"/></head></html><%
+		%><meta http-equiv="Refresh" content="0;url=<%=urlPrefix+servicesPrefix%>/add_adm_service_5.jsp"/></head><body>Please, be patient...</body></html><%
 	} else {
 		%>
 		<%@ include file="/common/header_end.jsp"%>

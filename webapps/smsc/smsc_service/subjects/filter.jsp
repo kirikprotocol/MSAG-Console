@@ -33,7 +33,7 @@ int pagesize = pagesizeI == null ? 20 : pagesizeI.intValue();
 			<tr class="list">
 				<th class="list" nowrap width="10%">Default SME's</th>
 				<td class="list">
-          <% for (Iterator i=serviceManager.getServiceIds().iterator(); i.hasNext(); ) { 
+          <% for (Iterator i=serviceManager.getSmeIds().iterator(); i.hasNext(); ) { 
             String sme_name = (String) i.next();
             %><input type="checkbox" name="smes" <%=smes.contains(sme_name) ? "checked" : ""%> value="<%=StringEncoderDecoder.encode(sme_name)%>"><%=StringEncoderDecoder.encode(sme_name)%><br>
           <%}%>

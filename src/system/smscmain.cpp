@@ -44,6 +44,12 @@ int main(int argc,char* argv[])
     smsc::system::SmscConfigs cfgs;
     smsc::util::config::Manager::init(get_filename("config.xml"));
     cfgs.cfgman=&cfgs.cfgman->getInstance();
+    try {
+      Logger::Init(cfgs.cfgman->getString("logger.initFile"));
+    } catch (smsc::util::config::ConfigException &e)
+    {
+      fprintf(stderr, "WARNING: parameter \"logger.initFile\" not found in config - logger initialized by default\n");
+    }
     smsc::util::config::smeman::SmeManConfig smemancfg;
     smemancfg.load(get_filename("sme.xml"));
     cfgs.smemanconfig=&smemancfg;

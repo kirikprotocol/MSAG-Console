@@ -251,6 +251,7 @@ void DaemonCommandDispatcher::putServiceToConfig(const char * const serviceId,
 	tmpName += ".args";
 	configManager->setString(tmpName.c_str(), serviceArgs);
 	configManager->save();
+  logger.debug("new config saved");
 }
 
 Response * DaemonCommandDispatcher::remove_service(const CommandRemoveService * const command)

@@ -122,11 +122,16 @@ std::ostream & operator << (std::ostream & out, const DOMString & string)
  */
 void Manager::save()
 {
-	std::ostream *out = new std::ofstream(config_filename.get());
+	std::ofstream *out = new std::ofstream(config_filename.get());
 	writeHeader(*out);
 	config.save(*out);
 	writeFooter(*out);
 	out->flush();
+  if (out->fail()) 
+  {
+    cerr << "Couldn't save config to \"" << config_filename.get() << "\"\n";
+  }
+  out->close();
 	delete out;
 }
 

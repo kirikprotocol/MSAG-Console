@@ -38,12 +38,12 @@ try {
 		dataFile = null;
 	}
 }
-if (!serviceManager.getServiceIds().contains(wizard.getSystemId()))
+if (!serviceManager.getSmeIds().contains(wizard.getSystemId()))
 {
 	session.setAttribute("AddAdmServiceWizard", wizard);
 	%><meta http-equiv="Refresh" content="0;url=<%=urlPrefix+servicesPrefix%>/add_adm_service_3.jsp"></head></html><%
 } else {
-	%><meta http-equiv="Refresh" content="0;url=<%=urlPrefix+servicesPrefix%>/add_adm_service.jsp?error=<%=StringEncoderDecoder.encode("Service with ID \"" + wizard.getSystemId() + "\" already presented in system")%><%
+	%><meta http-equiv="Refresh" content="0;url=<%=urlPrefix+servicesPrefix%>/add_adm_service.jsp?error=<%=StringEncoderDecoder.encode("SME with ID \"" + wizard.getSystemId() + "\" already presented in system")%><%
 		if (request.getParameter("host") != null)
 		{
 			%>&host=<%=request.getParameter("host")%><%

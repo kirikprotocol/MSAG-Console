@@ -12,7 +12,7 @@
     </tr>
     <tr class="list">
       <th class="list" width="1%" nowrap>Default&nbsp;SME</th>
-      <td class="list" width="99%"><%=show_set_combo("sme", serviceManager.getServiceIds())%></td>
+      <td class="list" width="99%"><%=show_set_combo("sme", serviceManager.getSmeIds(), null)%></td>
     </tr>
     <tr class="list">
       <th class="list" width="1%" nowrap>Masks</th>

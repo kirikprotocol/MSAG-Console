@@ -10,6 +10,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.daemon.Daemon;
 import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.route.SME;
+import ru.novosoft.smsc.admin.route.SMEList;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.config.Config;
@@ -159,7 +160,7 @@ public class ServiceManager
 			  throws AdminException
 	{
 		AddAdmServiceWizard wizard = new AddAdmServiceWizard(in);
-		if (getServiceIds().contains(wizard.getSystemId()))
+		if (services.keySet().contains(wizard.getSystemId()))
 			throw new AdminException("Service \"" + wizard.getSystemId() + "\" already exists");
 		else
 			return wizard;
@@ -173,7 +174,7 @@ public class ServiceManager
 	public synchronized void addAdmService(AddAdmServiceWizard wizard)
 			  throws AdminException
 	{
-		if (getServiceIds().contains(wizard.getSystemId()))
+		if (services.keySet().contains(wizard.getSystemId()))
 			throw new AdminException("Service \"" + wizard.getSystemId() + "\" already exists");
 		else
 		{
@@ -191,6 +192,16 @@ public class ServiceManager
 			smsc.getSmes().add(serviceInfo.getSme());
 			logger.debug("service added");
 		}
+	}
+
+	public synchronized void addNonAdmService(AddNonAdmServiceWizard wizard)
+			  throws AdminException
+	{
+		wizard.check();
+		SME sme = wizard.createSme();
+		if (smsc.getSmes().getNames().contains(sme.getId()))
+			throw new AdminException("SME \"" + sme.getId() + "\" already exists");
+		smsc.getSmes().add(sme);
 	}
 
 	protected boolean recursiveDeleteFolder(File folder)
@@ -303,10 +314,12 @@ public class ServiceManager
 		return s.call(c, m, t, arguments);
 	}
 
+/*
 	public synchronized Set getServiceIds()
 	{
 		return services.keySet();
 	}
+*/
 
 	/**
 	 * Gets service IDs from specified host
@@ -466,4 +479,20 @@ public class ServiceManager
 		return new File(webappFolder, "esme_" + serviceId);
 	}
 
+	public synchronized List getSmeIds()
+	{
+		SMEList smes = smsc.getSmes();
+		List smeIds = new Vector();
+		for (Iterator i = smes.iterator(); i.hasNext(); )
+		{
+			SME sme = (SME) i.next();
+			smeIds.add(sme.getId());
+		}
+		return smeIds;
+	}
+
+	public synchronized boolean isService(String smeId)
+	{
+		return services.keySet().contains(smeId);
+	}
 }

@@ -19,8 +19,8 @@ if (!isCreate)
     <tr class="list">
       <th class="list" width="1%">Default&nbsp;SME</th>
       <td class="list" width="99%"><select name="sme" style="width: 100%"><%
-        Set smes = serviceManager.getServiceIds();
-        for (Iterator i = smes.iterator(); i.hasNext(); )
+        List smeIds = serviceManager.getSmeIds();
+        for (Iterator i = smeIds.iterator(); i.hasNext(); )
         {
           String smeName = (String) i.next();
           %><option value="<%=StringEncoderDecoder.encode(smeName)%>"<%=!isCreate && s.getDefaultSme().getId().equals(smeName) ? " selected" : ""%>><%=StringEncoderDecoder.encode(smeName)%></option><%

@@ -21,6 +21,7 @@
 <%! final static String aliasesPrefix = "/smsc_service/aliases";%>
 <%! final static String profilesPrefix = "/smsc_service/profiles";%>
 <%! final static String hostsPrefix = "/common/hosts";%>
+<%! final static String smesPrefix = "/common/smes";%>
 <%! final static String servicesPrefix = "/common/services";%>
 <%
 HttpSession ses = request.getSession();
