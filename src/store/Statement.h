@@ -11,9 +11,6 @@ namespace smsc { namespace store
 {
     using namespace smsc::sms;
     
-    const int MAX_FULL_ADDRESS_VALUE_LENGTH = 30;
-    typedef char FullAddressValue[MAX_FULL_ADDRESS_VALUE_LENGTH];
-
     static void convertAddressToString(const Address& address, char* string)
     {
         address.toString(string, MAX_FULL_ADDRESS_VALUE_LENGTH);
