@@ -28,6 +28,7 @@ import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.smsc_service.CancelMessageData;
 import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.admin.*;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 public class SmsView
 {
@@ -406,7 +407,7 @@ public class SmsView
       while (rs.next() && rowsMaximum > fetchedCount++) {
         SmsRow row = new SmsRow();
         InputStream is = fetchRowFeilds(rs, row);
-        if (is != null) row.setText(convertBody(is));
+        if (is != null) convertBody(is, row);
         set.addRow(row);
       }
     } catch (Exception exc) {
@@ -422,7 +423,7 @@ public class SmsView
     }
   }
 
-  private String convertBody(InputStream source)
+  private void convertBody(InputStream source, SmsRow row)
   {
     String message = "";
     int textEncoding = DATA_CODING_DEFAULT;
@@ -471,12 +472,15 @@ public class SmsView
 
       if (text != null)
         message = decodeMessage(text, textLen, textEncoding);
+
     } catch (IOException exc) {
       System.out.println("SMS Body conversion failed !");
       exc.printStackTrace();
     }
     //System.out.println("SMS body converted.");
-    return message;
+
+    row.setTextEncoded(textEncoding == DATA_CODING_UCS2);
+    row.setText(message);
   }
 
   private String decodeMessage(byte text[], int len, int encoding)
@@ -500,7 +504,7 @@ public class SmsView
       message = "<< Unsupported encoding (" + encoding + ") ! >>";
     }
     //System.out.println("Msg: "+message);
-    return message;
+    return (encoding != DATA_CODING_UCS2) ? StringEncoderDecoder.encode(message):message;
   }
 
   private static String getHexString(byte val[])
@@ -568,7 +572,7 @@ public class SmsView
       }
       stream.close();
 
-      String messagePerefix = "";
+      String messagePrefix = "";
       if (text != null && text.length>0 && (esmClass & 0x40) == 0x40)
       {
         int headerLen = text[0];
@@ -578,10 +582,15 @@ public class SmsView
           byte msgText[] = new byte[textLen = textLen-headerLen-1];
           System.arraycopy(text,  headerLen+1, msgText, 0, textLen);
           text = msgText;
-          messagePerefix += "<< UDH "+headerLen+" bytes >> ";
+          messagePrefix += "<< UDH "+headerLen+" bytes >> ";
         }
       }
-      row.setText(messagePerefix + decodeMessage(text, textLen, textEncoding));
+
+      if (textEncoding == DATA_CODING_UCS2)
+        messagePrefix = StringEncoderDecoder.encode(messagePrefix);
+
+      row.setTextEncoded(textEncoding == DATA_CODING_UCS2);
+      row.setText(messagePrefix + decodeMessage(text, textLen, textEncoding));
     }
     catch (IOException exc) {
       System.out.println("SMS Body parsing failed !");

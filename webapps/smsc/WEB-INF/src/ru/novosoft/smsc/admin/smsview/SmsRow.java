@@ -53,6 +53,7 @@ public class SmsRow
 
   private int     status  = 0;
   private String  text = "Message text ";
+  private boolean textEncoded = false;
 
   private boolean marked = false;
 
@@ -279,5 +280,12 @@ public class SmsRow
 
   public Mask getOriginatingAddressMask() {
     return originatingAddressMask;
+  }
+
+  public boolean isTextEncoded() {
+    return textEncoded;
+  }
+  public void setTextEncoded(boolean textEncoded) {
+    this.textEncoded = textEncoded;
   }
 };
