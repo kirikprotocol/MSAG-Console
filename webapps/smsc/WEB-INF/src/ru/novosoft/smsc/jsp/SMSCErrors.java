@@ -91,6 +91,8 @@ public class SMSCErrors
 			public static final String subjNotSpecified = B + "subjNotSpecified";
 			public static final String masksNotDefined = B + "masksNotDefined";
 			public static final String incorrectMask = B + "incorrectMask";
+			public static final String subjNotFound = B + "subjNotFound";
+			public static final String defaultSmeNotFound = B + "defaultSmeNotFound";
 		}
 
 		public static class routes

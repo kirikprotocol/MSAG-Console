@@ -5,8 +5,7 @@
  */
 package ru.novosoft.smsc.jsp.smsc.subjects;
 
-import ru.novosoft.smsc.admin.route.MaskList;
-import ru.novosoft.smsc.admin.route.Subject;
+import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
@@ -66,7 +65,13 @@ public class SubjectsEdit extends SmscBean
 				return error(SMSCErrors.error.subjects.masksNotDefined);
 			}
 			Subject s = routeSubjectManager.getSubjects().get(name);
-			s.setDefaultSme(smeManager.getSmes().get(defSme));
+			if (s == null)
+				return error(SMSCErrors.error.subjects.subjNotFound, name);
+
+			final SME defaultSme = smeManager.getSmes().get(defSme);
+			if (defaultSme == null)
+				return error(SMSCErrors.error.subjects.defaultSmeNotFound, defSme);
+			s.setDefaultSme(defaultSme);
 			s.setMasks(new MaskList(masks));
 			appContext.getStatuses().setSubjectsChanged(true);
 			return RESULT_DONE;
