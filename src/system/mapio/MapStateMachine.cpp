@@ -1374,9 +1374,9 @@ static string GetUUSDSubsystem(
 {
   const char* p = text;
   const char* pEnd = text+length;
-  for ( ; p < pEnd; ++p ) if ( *p != "#" && *p != '*' ) break;
+  for ( ; p < pEnd; ++p ) if ( (*p != "#") && (*p != '*') ) break;
   const char* sBegin = p;
-  for ( ; p < pEnd; ++p ) if ( *p == "#" || *p == '*' ) break;
+  for ( ; p < pEnd; ++p ) if ( (*p == "#") || (*p == '*') ) break;
   const char* sEnd = p;
   return string(sBegin,sEnd);
 }
