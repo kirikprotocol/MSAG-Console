@@ -37,7 +37,8 @@ public:
 		DOMElement *elem = data->getDocumentElement();
 		component	= XmlStr(elem->getAttribute(XmlStr("component"))).c_release();
 		DOMNodeList *params = elem->getElementsByTagName(XmlStr("param"));
-		for (unsigned i=0; i<params->getLength(); i++)
+    unsigned paramsLength = params->getLength();
+		for (unsigned i=0; i<paramsLength; i++)
 		{
 			DOMNode *paramNode = params->item(i);
 			DOMElement * paramElem = (DOMElement *) paramNode;

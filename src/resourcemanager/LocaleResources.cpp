@@ -37,7 +37,8 @@ void LocaleResources::processParams(const DOMElement &elem, LocaleResources::_st
   {
     XmlStr _name("name");
     DOMNodeList * sectionList = elem.getChildNodes();
-    for (int i = 0; i < sectionList->getLength(); i++)
+    unsigned sectionListLength = sectionList->getLength();
+    for (int i = 0; i < sectionListLength; i++)
     {
       DOMNode * node = sectionList->item(i);
       if (node->getNodeType() == DOMNode::ELEMENT_NODE)
@@ -88,14 +89,16 @@ LocaleResources::LocaleResources(const std::string & filename) throw ()
     DOMElement *doc = reader.read(filename.c_str())->getDocumentElement();
     
     DOMNodeList *settingsList = doc->getElementsByTagName(XmlStr("settings"));
-    for (unsigned i = 0; i < settingsList->getLength(); i++)
+    unsigned settingsListLength = settingsList->getLength();
+    for (unsigned i = 0; i < settingsListLength; i++)
     {
       DOMNode *node = settingsList->item(i);
       processParams(*(DOMElement*)(node), settings, "");
     }
 
     DOMNodeList *recourcesList = doc->getElementsByTagName(XmlStr("resources"));
-    for (unsigned i = 0; i < recourcesList->getLength(); i++)
+    unsigned resourcesListLength = recourcesList->getLength();
+    for (unsigned i = 0; i < resourcesListLength; i++)
     {
       DOMNode *node = recourcesList->item(i);
       processParams(*(DOMElement*)(node), resources, "");

@@ -20,7 +20,8 @@ char * getNodeText(const DOMNode &node)
   std::string s;
   
   DOMNodeList *childs = node.getChildNodes();
-  for (unsigned i=0; i<childs->getLength(); i++)
+  unsigned childsLength = childs->getLength();
+  for (unsigned i=0; i<childsLength; i++)
   {
     DOMNode * child = childs->item(i);
     if (child->getNodeType() == DOMNode::TEXT_NODE)
@@ -41,13 +42,17 @@ char * getNodeAttribute(const DOMNode &node, const char * const attrName)
     return 0;
 }
 
+const char * encName = 0;
 const char * const getLocalEncoding()
 {
-  const char * encName = 0;
-  const char * const lc_all = getenv("LC_ALL");
-  if (lc_all)
-    encName = strrchr(lc_all, '.');
-  return encName ? encName+1 : "WINDOWS-1251";
+  if (encName == 0)
+  {
+    const char * const lc_all = getenv("LC_ALL");
+    if (lc_all)
+      encName = strrchr(lc_all, '.');
+    encName = encName ? cStringCopy(encName+1) : "WINDOWS-1251";
+  }
+  return encName;
 }
 
 XmlStr::XmlStr(const XMLCh * const str)

@@ -55,7 +55,8 @@ ostream & operator << (ostream & out, const DOMElement & elem)
   }
   out << '>' << endl;
   DOMNodeList *list = elem.getChildNodes();
-  for (XMLSize_t i = 0; i<list->getLength(); i++)
+  unsigned listLength = list->getLength();
+  for (XMLSize_t i = 0; i<listLength; i++)
   {
     DOMNode *item = list->item(i);
     if (item->getNodeType() == DOMNode::ELEMENT_NODE)

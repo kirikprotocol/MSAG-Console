@@ -75,7 +75,8 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
     DOMDocument *document = reader.read(filename);
     DOMElement *elem = document->getDocumentElement();
     DOMNodeList *list = elem->getElementsByTagName(XmlStr("smerecord"));
-    for (unsigned i=0; i<list->getLength(); i++)
+    unsigned listLength = list->getLength();
+    for (unsigned i=0; i<listLength; i++)
     {
       DOMNode *node = list->item(i);
       DOMNamedNodeMap *attrs = node->getAttributes();
@@ -86,7 +87,8 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
       {
         record->rectype = SMPP_SME;
         DOMNodeList *childs = node->getChildNodes();
-        for (unsigned j=0; j<childs->getLength(); j++)
+        unsigned childsLength = childs->getLength();
+        for (unsigned j=0; j<childsLength; j++)
         {
           DOMNode *child = childs->item(j);
           if (child->getNodeType() == DOMNode::ELEMENT_NODE)

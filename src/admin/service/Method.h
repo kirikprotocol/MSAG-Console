@@ -43,7 +43,8 @@ public:
 		returnType = cstr2Type(XmlStr(methodElem->getAttribute(XmlStr("returnType"))));
 		id = 0;
 		DOMNodeList *childs = methodElem->getElementsByTagName(XmlStr("param"));
-		for (unsigned i=0; i<childs->getLength(); i++)
+    unsigned childsLength = childs->getLength();
+		for (unsigned i=0; i<childsLength; i++)
 		{
 			DOMNode *paramNode = childs->item(i);
 			DOMElement *elem = (DOMElement*) paramNode;

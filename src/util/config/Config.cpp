@@ -41,7 +41,8 @@ void Config::processNode(const DOMElement &element,
   throw (DOMException)
 {
   DOMNodeList *list = element.getChildNodes();
-  for (unsigned i=0; i<list->getLength(); i++)
+  unsigned listLength = list->getLength();
+  for (unsigned i=0; i<listLength; i++)
   {
     DOMNode *n = list->item(i);
     if (n->getNodeType() == DOMNode::ELEMENT_NODE)
