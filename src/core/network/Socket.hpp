@@ -45,7 +45,7 @@ public:
     connected=0;
     inBuffer=0;
     bufPos=0;
-    sock=-1;
+    sock=(SOCKET)-1;
   }
   Socket(SOCKET s,const sockaddr_in& saddrin )
   {
@@ -86,7 +86,7 @@ public:
   int Puts(const char* str);
   int InitServer(const char *host,int port,int timeout,int lng=1);
   int StartServer();
-  Socket* Accept();
+  Socket* Accept(int to=-1);
   Socket* Clone()
   {
     return new Socket(sock,sockAddr);

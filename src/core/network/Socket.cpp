@@ -241,9 +241,9 @@ int Socket::StartServer()
   return 0;
 }
 
-Socket* Socket::Accept()
+Socket* Socket::Accept(int to)
 {
-  if(canRead()<=0)return NULL;
+  if(canRead(to)<=0)return NULL;
   sockaddr_in addrin;
   int sz=sizeof(addrin);
 #ifdef _WIN32
