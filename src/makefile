@@ -13,13 +13,12 @@ export CXX
 ifeq ($(CXX),CC)
 XERCES_LIB:=-lxerces-c-CC
 SHARED_OPT:=-G
-SSL_LIB:=-L/usr/local/ssl/lib -lssl-CC -lcrypto-CC
 else
 XERCES_LIB:=-lxerces-c
 SHARED_OPT:=-shared
-SSL_LIB:=-L/usr/local/ssl/lib -lssl -lcrypto
 endif
 
+SSL_LIB:=-lssl -lcrypto
 
 
 export XERCES_LIB
@@ -79,7 +78,7 @@ endif
 CFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT
 CXXFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT
 ifeq ($(CXX),CC)
-CXXFLAGS:= $(CXXFLAGS) -features=extensions  -D_POSIX_PTHREAD_SEMANTICS
+COMPFLAGS:=-features=extensions  -D_POSIX_PTHREAD_SEMANTICS
 endif
 LDFLAGS := -L$(SMSC_BUILDDIR)/lib
 
@@ -105,11 +104,9 @@ endif
 
 ifdef WARNINGS
 ifeq ($(CXX),CC)
-CFLAGS := $(CFLAGS) +w +w2
-CXXFLAGS := $(CXXFLAGS) +w +w2
+COMPFLAGS := $(COMPFLAGS) +w +w2
 else
-CFLAGS := $(CFLAGS) -Wall
-CXXFLAGS := $(CXXFLAGS) -Wall
+COMPFLAGS := $(COMPFLAGS) -Wall
 endif
 endif
 
@@ -154,6 +151,7 @@ CFLAGS := $(CFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/rdbms/public -I
 export CXXFLAGS
 export CFLAGS
 export LDFLAGS
+export COMPFLAGS
 
 MODULES := $(shell cat modules-list | awk '/^[^\#]./{print $$1}' )
 SMSC_BUILDDIR_LIST = $(foreach x,lib bin obj etc doc,$(SMSC_BUILDDIR)/$(x))
@@ -180,6 +178,7 @@ docs:
 	@perl -e 'while(<>){s!\$$\(DOCSDIR\)!$(SMSC_BUILDDIR)/doc/html!;print;}' <Doxyfile.tmpl >Doxyfile
 	@doxygen Doxyfile
 	@rm Doxyfile
+
 
 __build_message__:
 	@echo "build in SMSC"
