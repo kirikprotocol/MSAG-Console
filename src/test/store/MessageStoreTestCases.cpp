@@ -652,6 +652,31 @@ TCResult* MessageStoreTestCases::replaceIncorrectSms(const SMSId id,
 	return res;
 }
 
+TCResult* MessageStoreTestCases::replaceFinalSms(const SMSId id, const SMS& sms)
+{
+	TCResult* res = new TCResult(TC_REPLACE_FINAL_SMS);
+	try
+	{
+		Body body;
+		SmsUtil::setupRandomCorrectBody(&body);
+		uint8_t deliveryReport = rand0(255);
+		time_t validTime = time(NULL) + 100;
+		time_t waitTime = time(NULL) + 50;
+		msgStore->replaceSms(id, sms.getOriginatingAddress(), body,
+			deliveryReport, validTime, waitTime);
+		res->addFailure(101);
+	}
+	catch(NoSuchMessageException&)
+	{
+		//ok
+	}
+	catch(...)
+	{
+		res->addFailure(100);
+	}
+	return res;
+}
+
 TCResult* MessageStoreTestCases::loadExistentSms(const SMSId id, const SMS& sms)
 {
 	TCResult* res = new TCResult(TC_LOAD_EXISTENT_SMS);

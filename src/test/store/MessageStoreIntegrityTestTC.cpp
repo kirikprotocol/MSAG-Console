@@ -140,10 +140,11 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 		stack[i]->push_back(res);
 	}
 	
-	//ѕеревод sms в финальном состо€нии в любое другое состо€ние, 1/4
-	//—охранение sms с замещением существующего sms финальном состо€нии, 1/4
-	//„тение существующего sms, 2/4
-	for (TCSelector s(RAND_SET_TC, 4); s.check(); s++)
+	//ѕеревод sms в финальном состо€нии в любое другое состо€ние, 1/5
+	//—охранение sms с замещением существующего sms финальном состо€нии, 1/5
+	//ќбновление sms в финальном состо€нии, 1/5
+	//„тение существующего sms, 2/5
+	for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
 	{
 		switch (s.value())
 		{
@@ -165,7 +166,15 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					stack[i]->push_back(res);
 				}
 				break;
-			default: //3..4
+			case 3:
+				for (int i = 0; i < id.size(); i++)
+				{
+					TCResult* res = tc.replaceFinalSms(*id[i], *sms[i]);
+					debug(res);
+					stack[i]->push_back(res);
+				}
+				break;
+			default: //4..5
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.loadExistentSms(*id[i], *sms[i]);
@@ -203,6 +212,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.replaceIncorrectSms(*id[i], *sms[i], RAND_TC);
+					//TCResult* res = tc.replaceFinalSms(*id[i], *sms[i]);
 					debug(res);
 					stack[i]->push_back(res);
 				}
@@ -276,6 +286,8 @@ void saveCheckList(TCResultFilter* filter)
 		filter->getResults(TC_REPLACE_CORRECT_SMS));
 	cl.writeResult("Ќекорректное обновление существующего или обновление несуществующего sms",
 		filter->getResults(TC_REPLACE_INCORRECT_SMS));
+	cl.writeResult("ќбновление несуществующего sms или sms в финальном состо€нии",
+		filter->getResults(TC_REPLACE_FINAL_SMS));
 	cl.writeResult("„тение существующего sms",
 		filter->getResults(TC_LOAD_EXISTENT_SMS));
 	cl.writeResult("„тение несуществующего sms",

@@ -33,6 +33,7 @@ const char* const TC_CHANGE_EXISTENT_SMS_STATE_ENROUTE_TO_FINAL =
 const char* const TC_CHANGE_FINAL_SMS_STATE_TO_ANY = "changeFinalSmsStateToAny";
 const char* const TC_REPLACE_CORRECT_SMS = "replaceCorrectSms";
 const char* const TC_REPLACE_INCORRECT_SMS = "replaceIncorrectSms";
+const char* const TC_REPLACE_FINAL_SMS = "replaceFinalSms";
 const char* const TC_LOAD_EXISTENT_SMS = "loadExistentSms";
 const char* const TC_LOAD_NON_EXISTENT_SMS = "loadNonExistentSms";
 const char* const TC_DELETE_EXISTENT_SMS = "deleteExistentSms";
@@ -143,6 +144,11 @@ public:
 	 * Ќекорректное обновление существующего или обновление несуществующего sms.
 	 */
 	TCResult* replaceIncorrectSms(const SMSId id, const SMS& sms, int num);
+
+	/**
+	 * ќбновление несуществующего sms или sms в финальном состо€нии.
+	 */
+	TCResult* replaceFinalSms(const SMSId id, const SMS& sms);
 
 	/**
 	 * „тение существующего sms.
