@@ -495,7 +495,7 @@ void Archiver::count()
 }
 
 const char* Archiver::storageSelectSql = (const char*)
-"SELECT ID, ST, MR, OA, DA, DDA,\
+"SELECT ID, ST, MR, OA, DA, DDA, SVC_TYPE,\
  SRC_MSC, SRC_IMSI, SRC_SME_N, DST_MSC, DST_IMSI, DST_SME_N,\
  VALID_TIME, SUBMIT_TIME,\
  ATTEMPTS, LAST_RESULT, LAST_TRY_TIME,\
@@ -518,6 +518,8 @@ void Archiver::prepareStorageSelectStmt() throw(StorageException)
     storageSelectStmt->define(i++, SQLT_STR, (dvoid *) (oa), (sb4) sizeof(oa));
     storageSelectStmt->define(i++, SQLT_STR, (dvoid *) (da), (sb4) sizeof(da));
     storageSelectStmt->define(i++, SQLT_STR, (dvoid *) (dda), (sb4) sizeof(dda));
+    storageSelectStmt->define(i++, SQLT_STR, (dvoid *) (svcType), 
+                              (sb4) sizeof(svcType), &indSvc);
     
     storageSelectStmt->define(i++, SQLT_STR, 
                               (dvoid *) (sms.originatingDescriptor.msc),
@@ -580,11 +582,11 @@ void Archiver::prepareStorageDeleteStmt() throw(StorageException)
 }
 
 const char* Archiver::archiveInsertSql = (const char*)
-"INSERT INTO SMS_ARC (ID, ST, MR, OA, DA, DDA,\
+"INSERT INTO SMS_ARC (ID, ST, MR, OA, DA, DDA, SVC_TYPE,\
  SRC_MSC, SRC_IMSI, SRC_SME_N, DST_MSC, DST_IMSI, DST_SME_N,\
  VALID_TIME, SUBMIT_TIME, ATTEMPTS, LAST_RESULT,\
  LAST_TRY_TIME, DR, BR, BODY, BODY_LEN)\
- VALUES (:ID, :ST, :MR, :OA, :DA, :DDA,\
+ VALUES (:ID, :ST, :MR, :OA, :DA, :DDA, :SVC_TYPE,\
  :SRC_MSC, :SRC_IMSI, :SRC_SME_N, :DST_MSC, :DST_IMSI, :DST_SME_N,\
  :VALID_TIME, :SUBMIT_TIME, :ATTEMPTS, :LAST_RESULT,\
  :LAST_TRY_TIME, :DR, :BR, :BODY, :BODY_LEN)";
@@ -605,6 +607,8 @@ void Archiver::prepareArchiveInsertStmt() throw(StorageException)
     archiveInsertStmt->bind(i++, SQLT_STR, (dvoid *) (oa), (sb4) sizeof(oa));
     archiveInsertStmt->bind(i++, SQLT_STR, (dvoid *) (da), (sb4) sizeof(da));
     archiveInsertStmt->bind(i++, SQLT_STR, (dvoid *) (dda), (sb4) sizeof(dda));
+    archiveInsertStmt->bind(i++, SQLT_STR, (dvoid *) (svcType),
+                            (sb4) sizeof(svcType), &indSvc);
 
     archiveInsertStmt->bind(i++, SQLT_STR, 
                             (dvoid *) (sms.originatingDescriptor.msc),

@@ -104,6 +104,7 @@ namespace smsc { namespace store
         
         int         bodyBufferLen;
         uint8_t     bodyBuffer[MAX_BODY_LENGTH];
+        char        svcType[10];
         
         OCIDate     validTime;
         OCIDate     submitTime;
@@ -115,7 +116,7 @@ namespace smsc { namespace store
 
         sb2         indSrcMsc, indSrcImsi, indSrcSme;
         sb2         indDstMsc, indDstImsi, indDstSme;
-        sb2         indBody, indLastTime;
+        sb2         indBody, indLastTime, indSvc;
 
         FullAddressValue    oa, da, dda;
         
