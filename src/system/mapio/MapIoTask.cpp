@@ -102,7 +102,7 @@ USHORT_T Et96MapUAbortInd(ET96MAP_LOCAL_SSN_T lssn,
   try{
     MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogid);
     if ( mdci ){
-      mdci->Et96MapUAbortInd(ssn,
+      mdci->Et96MapUAbortInd(lssn,
                             dialogid,
                             reason,
                             diag,
@@ -146,7 +146,7 @@ USHORT_T Et96MapPAbortInd(ET96MAP_LOCAL_SSN_T lssn,
   try{
     MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogid);
     if ( mdci ){
-      mdci->Et96MapPAbortInd(ssn,
+      mdci->Et96MapPAbortInd(lssn,
                             dialogid,
                             reason,
                             source,
