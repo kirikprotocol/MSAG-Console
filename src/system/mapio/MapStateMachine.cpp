@@ -494,19 +494,21 @@ static void SendRInfo(MapDialog* dialog)
   require ( dialog->ssn == SSN );
   unsigned dialog_id = dialog->dialogid_map;
   bool hiPrior = false;
+  SMS *sms = dialog->sms.get();
 
   if ( !dialog->isQueryAbonentStatus ) {
-    if( dialog->sms.get() != 0 
-/*      &&
-       (dialog->sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 ||
-        dialog->sms->getNextTime() > dialog->sms->getSubmitTime() + ((dialog->sms->getValidTime() - dialog->sms->getSubmitTime())/2)
-       )*/
+    if( sms != 0 && 
+        (
+            sms->getIntProperty(Tag::SMPP_PRIORITY) > 0 ||
+            !dialog->hasMwdStatus ||
+            sms->getAttemptsCount()%4 == 0
+        )
       )
     {
       hiPrior = true;
     }
   }
-  __map_trace2__("MAP::%s dialogid:0x%x ssn:%d hiprior:%s",__FUNCTION__,dialog_id,dialog->ssn,hiPrior?"true":"false");
+  __map_trace2__("MAP::%s dialogid:0x%x ssn:%d hiprior:%s ac:%d",__FUNCTION__,dialog_id,dialog->ssn,hiPrior?"true":"false", sms?sms->getAttemptsCount():-1);
   USHORT_T result = Et96MapOpenReq(
     SSN, dialog_id,
     &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
@@ -3146,8 +3148,10 @@ USHORT_T Et96MapV1AlertSCInd(
 
 void RememberMwdStatus(MapDialog* dialog,ET96MAP_ADDRESS_T* alert,ET96MAP_MWD_STATUS_T* status)
 {
-  if ( status != 0 )
+  if ( status != 0 && !status->scAddrNotIncl )
   {
+    // remember status if current sc addr not included in HLR
+    // else it will force to notify HLR if absent subscriber happens
     dialog->mwdStatus = *status;
     dialog->hasMwdStatus = true;
   }
