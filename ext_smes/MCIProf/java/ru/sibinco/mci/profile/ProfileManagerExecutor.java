@@ -27,14 +27,12 @@ public class ProfileManagerExecutor extends ProfileManagerState implements Execu
 
   public void init(Properties properties) throws ScenarioInitializationException
   {
-    try
-    {
+    try {
       super.init(properties);
-      pageFormat = new MessageFormat(Transliterator.translit(profileBundle.getString(Constants.PAGE_INFO)));
-      valueYes = Transliterator.translit(profileBundle.getString(Constants.VALUE_YES));
-      valueNo  = Transliterator.translit(profileBundle.getString(Constants.VALUE_NO));
-    }
-    catch (Exception e) {
+      pageFormat = new MessageFormat(profileBundle.getString(Constants.PAGE_INFO));
+      valueYes = profileBundle.getString(Constants.VALUE_YES);
+      valueNo  = profileBundle.getString(Constants.VALUE_NO);
+    } catch (Exception e) {
       final String err = "Executor init error";
       logger.error(err, e);
       throw new ScenarioInitializationException(err, e);
@@ -44,12 +42,11 @@ public class ProfileManagerExecutor extends ProfileManagerState implements Execu
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
     ProfileInfo info = getProfileInfo(state);
-    Object[] args = new Object[] {info.inform ? valueYes:valueNo,
-                                  Transliterator.translit(info.informFormat.getName()),
-                                  info.notify ? valueYes:valueNo,
-                                  Transliterator.translit(info.notifyFormat.getName())};
+    Object[] args = new Object[] {info.inform ? valueYes:valueNo, info.informFormat.getName(),
+                                  info.notify ? valueYes:valueNo, info.notifyFormat.getName()};
     Message resp = new Message();
-    resp.setMessageString(pageFormat.format(args));
+    final String msg = pageFormat.format(args);
+    resp.setMessageString(Transliterator.translit(msg));
     return new ExecutorResponse(new Message[]{resp}, false);
   }
 }

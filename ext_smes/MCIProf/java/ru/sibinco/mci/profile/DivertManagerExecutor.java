@@ -30,10 +30,10 @@ public class DivertManagerExecutor extends DivertManagerState implements Executo
   {
     try {
       super.init(properties);
-      pageFormat = new MessageFormat(Transliterator.translit(divertBundle.getString(Constants.PAGE_INFO)));
-      valueOff = Transliterator.translit(divertBundle.getString(Constants.VALUE_OFF));
-      valueService = Transliterator.translit(divertBundle.getString(Constants.VALUE_SERVICE));
-      valueVoicemail = Transliterator.translit(divertBundle.getString(Constants.VALUE_VOICEMAIL));
+      pageFormat = new MessageFormat(divertBundle.getString(Constants.PAGE_INFO));
+      valueOff = divertBundle.getString(Constants.VALUE_OFF);
+      valueService = divertBundle.getString(Constants.VALUE_SERVICE);
+      valueVoicemail = divertBundle.getString(Constants.VALUE_VOICEMAIL);
     } catch (Exception e) {
       final String err = "Executor init error";
       logger.error(err, e);
@@ -46,7 +46,7 @@ public class DivertManagerExecutor extends DivertManagerState implements Executo
     if (option == null || option.equalsIgnoreCase(Constants.OFF)) return valueOff;
     else if (option.equalsIgnoreCase(Constants.SERVICE)) return valueService;
     else if (option.equalsIgnoreCase(Constants.VOICEMAIL)) return valueVoicemail;
-    return Transliterator.translit(option);
+    return option;
   }
 
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
@@ -64,12 +64,14 @@ public class DivertManagerExecutor extends DivertManagerState implements Executo
 
     Message resp = new Message();
     if (exc != null) {
-      resp.setMessageString(errorFormat.format(new Object[] {getErrorMessage(exc)}));
+      final String msg = errorFormat.format(new Object[] {getErrorMessage(exc)});
+      resp.setMessageString(Transliterator.translit(msg));
       return new ExecutorResponse(new Message[]{resp}, true);
     }
     Object[] args = new Object[] {getValue(info.getBusy()), getValue(info.getAbsent()),
                                   getValue(info.getNotavail()), getValue(info.getUncond())};
-    resp.setMessageString(pageFormat.format(args));
+    final String msg = pageFormat.format(args);
+    resp.setMessageString(Transliterator.translit(msg));
     return new ExecutorResponse(new Message[]{resp}, false);
   }
 }

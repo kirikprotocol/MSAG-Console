@@ -3,7 +3,6 @@ package ru.sibinco.mci.profile;
 import ru.sibinco.smpp.appgw.scenario.resources.ScenarioResourceBundle;
 import ru.sibinco.smpp.appgw.scenario.ScenarioInitializationException;
 import ru.sibinco.smpp.appgw.scenario.ScenarioState;
-import ru.sibinco.smpp.appgw.util.Transliterator;
 
 import java.util.Properties;
 import java.text.MessageFormat;
@@ -34,11 +33,11 @@ public class DivertManagerState
     try {
       systemBundle = (ScenarioResourceBundle) properties.get(Constants.BUNDLE_SYSTEM);
       divertBundle = (ScenarioResourceBundle) properties.get(Constants.BUNDLE_DIVERT);
-      errorFormat = new MessageFormat(Transliterator.translit(systemBundle.getString(Constants.PAGE_ERR)));
-      errorCommunication = Transliterator.translit(divertBundle.getString(Constants.ERROR_COMMUNICATION));
-      errorNotAccepted   = Transliterator.translit(divertBundle.getString(Constants.ERROR_NOT_ACCEPTED));
-      errorConnect       = Transliterator.translit(divertBundle.getString(Constants.ERROR_CONNECT));
-      errorUnknown       = Transliterator.translit(divertBundle.getString(Constants.ERROR_UNKNOWN));
+      errorFormat = new MessageFormat(systemBundle.getString(Constants.PAGE_ERR));
+      errorCommunication = divertBundle.getString(Constants.ERROR_COMMUNICATION);
+      errorNotAccepted   = divertBundle.getString(Constants.ERROR_NOT_ACCEPTED);
+      errorConnect       = divertBundle.getString(Constants.ERROR_CONNECT);
+      errorUnknown       = divertBundle.getString(Constants.ERROR_UNKNOWN);
     } catch (Exception e) {
       throw new ScenarioInitializationException("Init failed", e);
     }

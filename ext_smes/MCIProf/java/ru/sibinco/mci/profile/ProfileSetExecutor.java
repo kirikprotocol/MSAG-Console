@@ -28,14 +28,12 @@ public class ProfileSetExecutor extends ProfileManagerState implements Executor
 
   public void init(Properties properties) throws ScenarioInitializationException
   {
-    try
-    {
+    try {
       super.init(properties);
-      pageFormat = new MessageFormat(Transliterator.translit(profileBundle.getString(Constants.PAGE_SET)));
-      valueInform = Transliterator.translit(profileBundle.getString(Constants.VALUE_INFORM));
-      valueNotify = Transliterator.translit(profileBundle.getString(Constants.VALUE_NOTIFY));
-    }
-    catch (Exception e) {
+      pageFormat = new MessageFormat(profileBundle.getString(Constants.PAGE_SET));
+      valueInform = profileBundle.getString(Constants.VALUE_INFORM);
+      valueNotify = profileBundle.getString(Constants.VALUE_NOTIFY);
+    } catch (Exception e) {
       final String err = "Executor init error";
       logger.error(err, e);
       throw new ScenarioInitializationException(err, e);
@@ -62,9 +60,9 @@ public class ProfileSetExecutor extends ProfileManagerState implements Executor
     state.removeAttribute(Constants.ATTR_FORMATS);
     state.setAttribute(Constants.ATTR_FORMATS, formats);
 
-    Object args[] = new Object[] {inform ? valueInform:valueNotify, Transliterator.translit(formatAlts)};
-    String pageResp = pageFormat.format(args);
-    Message resp = new Message(); resp.setMessageString(pageResp);
+    Object args[] = new Object[] {inform ? valueInform:valueNotify, formatAlts};
+    final String msg = pageFormat.format(args);
+    Message resp = new Message(); resp.setMessageString(Transliterator.translit(msg));
     return new ExecutorResponse(new Message[]{resp}, false);
   }
 

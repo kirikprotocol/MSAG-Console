@@ -26,9 +26,9 @@ public class MainExecutor implements Executor
 
   public void init(Properties properties) throws ScenarioInitializationException
   {
-    systemBundle = (ScenarioResourceBundle) properties.get(Constants.BUNDLE_SYSTEM);
     try {
-      pageFormat =  new MessageFormat(Transliterator.translit(systemBundle.getString(Constants.PAGE_MAIN)));
+      systemBundle = (ScenarioResourceBundle) properties.get(Constants.BUNDLE_SYSTEM);
+      pageFormat =  new MessageFormat(systemBundle.getString(Constants.PAGE_MAIN));
     } catch (Exception e) {
       final String err = "Executor init error";
       logger.error(err, e);
@@ -39,7 +39,8 @@ public class MainExecutor implements Executor
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
     Message resp = new Message();
-    resp.setMessageString(pageFormat.format(new Object[] {}));
+    final String msg = pageFormat.format(new Object[] {});
+    resp.setMessageString(Transliterator.translit(msg));
     state.setAttribute(Constants.ATTR_MAIN, Constants.ATTR_MAIN);
     return new ExecutorResponse(new Message[]{resp}, false);
   }

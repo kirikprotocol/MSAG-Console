@@ -26,9 +26,9 @@ public class ExitExecutor implements Executor
 
   public void init(Properties properties) throws ScenarioInitializationException
   {
-    systemBundle = (ScenarioResourceBundle) properties.get(Constants.BUNDLE_SYSTEM);
     try {
-      pageFormat =  new MessageFormat(Transliterator.translit(systemBundle.getString(Constants.PAGE_EXIT)));
+      systemBundle = (ScenarioResourceBundle) properties.get(Constants.BUNDLE_SYSTEM);
+      pageFormat   =  new MessageFormat(systemBundle.getString(Constants.PAGE_EXIT));
     } catch (Exception e) {
       final String err = "Executor init error";
       logger.error(err, e);
@@ -39,7 +39,8 @@ public class ExitExecutor implements Executor
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
     Message resp = new Message();
-    resp.setMessageString(pageFormat.format(new Object[] {}));
+    final String msg = pageFormat.format(new Object[] {});
+    resp.setMessageString(Transliterator.translit(msg));
     return new ExecutorResponse(new Message[]{resp}, true);
   }
 
