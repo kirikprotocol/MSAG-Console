@@ -81,6 +81,22 @@ void ConfigUtil::setupSystemSme()
 	abonentInfoMapAliasInfo.alias = abonentInfoAliasMobile;
 	abonentInfoMapAliasInfo.hide = true; //rand0(2);
 	aliasReg->putAlias(abonentInfoMapAliasInfo);
+	//distr list sme
+	__cfg_addr__(distrListAddr);
+	__cfg_addr__(distrListAlias);
+	__cfg_str__(distrListSystemId);
+	SmeInfo distrListSme;
+	distrListSme.wantAlias = rand0(1);
+	SmeManagerTestCases::setupRandomCorrectSmeInfo(&distrListSme);
+	distrListSme.systemId = distrListSystemId;
+	smeReg->registerSme(distrListAddr, distrListSme, false, true);
+	smeReg->bindSme(distrListSme.systemId, SME_TRANSCEIVER);
+	//алиас для distr list sme
+	AliasInfo distrListAliasInfo;
+	distrListAliasInfo.addr = distrListAddr;
+	distrListAliasInfo.alias = distrListAlias;
+	distrListAliasInfo.hide = true; //rand0(2);
+	aliasReg->putAlias(distrListAliasInfo);
 	//регистрация map proxy делается тестовой sme
 }
 

@@ -67,6 +67,12 @@ TestConfig::TestConfig()
 	strMap["emailSmeServiceType"] = "EmaiL";
 	intMap["emailSmeProtocolId"] = 13;
 	strMap["emailSmePassword"] = "emailSmePasswd";
+	//distr list sme
+	addrMap["distrListAddr"] = "+77777777777777777"; //17 символов
+	addrMap["distrListAlias"] = "777777777777777770";
+	strMap["distrListSystemId"] = "DSTRLST";
+	strMap["distrListServiceType"] = "DstL";
+	intMap["distrListProtocolId"] = 15;
 	//респонсы db sme
 	strMap["dbSmeRespProviderNoFound"] = "Адрес получателя не зарегистрирован";
 	strMap["dbSmeRespJobNotFound"] = "Job not found";
