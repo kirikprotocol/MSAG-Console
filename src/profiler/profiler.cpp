@@ -260,7 +260,7 @@ int Profiler::Execute()
 {
   SmscCommand cmd,resp;
   SMS *sms;
-  Array<SMS*> smsarr;
+  //Array<SMS*> smsarr;
   int len;
   char body[MAX_SHORT_MESSAGE_LENGTH+1];
 //  char buf[MAX_SHORT_MESSAGE_LENGTH+1];
@@ -416,13 +416,16 @@ int Profiler::Execute()
     SmscCommand answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
     putIncomingCommand(answer);
     */
-    splitSms(&ans,msgstr,strlen(msgstr),CONV_ENCODING_CP1251,pr.codepage,smsarr);
+    /*splitSms(&ans,msgstr,strlen(msgstr),CONV_ENCODING_CP1251,pr.codepage,smsarr);
     for(int i=0;i<smsarr.Count();i++)
     {
       SmscCommand answer=SmscCommand::makeSumbmitSm(*smsarr[i],getNextSequenceNumber());
       putIncomingCommand(answer);
       delete smsarr[i];
-    }
+    }*/
+    trimSms(&ans,msgstr,strlen(msgstr),CONV_ENCODING_CP1251,pr.codepage);
+    SmscCommand answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
+    putIncomingCommand(answer);
   }
   return 0;
 }
