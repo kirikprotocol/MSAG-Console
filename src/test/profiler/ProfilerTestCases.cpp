@@ -1,4 +1,5 @@
 #include "ProfilerTestCases.hpp"
+#include "test/sms/SmsUtil.hpp"
 #include "util/debug.h"
 
 namespace smsc {
@@ -6,7 +7,9 @@ namespace test {
 namespace profiler {
 
 using smsc::util::Logger;
+using smsc::test::sms::SmsUtil;
 using namespace smsc::sms; //constants
+using namespace smsc::profiler; //constants
 using namespace smsc::test::util;
 
 ProfilerTestCases::ProfilerTestCases(Profiler* _profiler,
@@ -221,6 +224,95 @@ void ProfilerTestCases::lookup(const Address& addr)
 	catch(...)
 	{
 		__tc_fail__(100);
+	}
+}
+
+void ProfilerTestCases::putCommand(Address& addr, int num)
+{
+	TCSelector s(num, 9);
+	__decl_tc__;
+	for (; s.check(); s++)
+	{
+		try
+		{
+			SMS sms;
+			SmsUtil::setupRandomCorrectSms(&sms);
+			sms.setOriginatingAddress(addr);
+			string text;
+			int codepage = -1;
+			int reportoptions = -1;
+			switch (s.value())
+			{
+				case 1: //report none
+					__tc__("putCommand.reportNoneMixedCase");
+					text = "RePoRT NoNe";
+					reportoptions = ProfileReportOptions::ReportNone;
+					break;
+				case 2: //report none
+					__tc__("putCommand.reportNoneSpaces");
+					text = "  rEpOrt  nOnE  ";
+					reportoptions = ProfileReportOptions::ReportNone;
+					break;
+				case 3: //report full
+					__tc__("putCommand.reportFullMixedCase");
+					text = "RePoRT FuLL";
+					reportoptions = ProfileReportOptions::ReportFull;
+					break;
+				case 4: //report full
+					__tc__("putCommand.reportFullSpaces");
+					text = "  rEpOrt  fUll  ";
+					reportoptions = ProfileReportOptions::ReportFull;
+					break;
+				case 5: //ucs2 codepage
+					__tc__("putCommand.ucs2CodepageMixedCase");
+					text = "uCS2";
+					codepage = ProfileCharsetOptions::Ucs2;
+					break;
+				case 6: //usc2 codepage
+					__tc__("putCommand.ucs2CodepageSpaces");
+					text = "  Ucs2  ";
+					codepage = ProfileCharsetOptions::Ucs2;
+					break;
+				case 7: //default codepage
+					__tc__("putCommand.defaultCodepageMixedCase");
+					text = "DeFauLT";
+					codepage = ProfileCharsetOptions::Default;
+					break;
+				case 8: //default codepage
+					__tc__("putCommand.defaultCodepageSpaces");
+					text = "  dEfAUlt  ";
+					codepage = ProfileCharsetOptions::Default;
+					break;
+				case 9: //неправильный текст
+					__tc__("putCommand.incorrectText");
+					break;
+				default:
+					__unreachable__("Invalid num");
+			}
+			sms.getMessageBody().setIntProperty(Tag::SMPP_SM_LENGTH, text.length());
+			sms.getMessageBody().setStrProperty(Tag::SMPP_SHORT_MESSAGE, text);
+			SmscCommand cmd = SmscCommand::makeSumbmitSm(sms, rand0(INT_MAX));
+			if (profileReg)
+			{
+				Profile profile = profileReg->getProfile(addr);
+				if (reportoptions >= 0)
+				{
+					profile.reportoptions = reportoptions;
+				}
+				if (codepage >= 0)
+				{
+					profile.codepage = codepage;
+				}
+				profileReg->putProfile(addr, profile);
+			}
+			profiler->putCommand(cmd);
+			__tc_ok__;
+		}
+		catch(...)
+		{
+			__tc_fail__(100);
+			error();
+		}
 	}
 }
 

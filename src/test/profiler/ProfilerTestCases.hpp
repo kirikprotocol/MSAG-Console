@@ -53,6 +53,11 @@ public:
 	 */
 	void lookup(const Address& addr);
 
+	/**
+	 * Работа с профилем через submit_sm pdu.
+	 */
+	void putCommand(Address& addr, int num);
+
 	static void setupRandomCorrectProfile(Profile& profile);
 
 protected:

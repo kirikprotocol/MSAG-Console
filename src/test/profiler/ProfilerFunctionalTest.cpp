@@ -22,7 +22,8 @@ class ProfilerFunctionalTest
 	ProfileRegistry* profileReg;
 	CheckList* chkList;
 	ProfilerTestCases* tc;
-	vector<Address*> addr;
+	vector<Address> addr1;
+	vector<Address> addr2;
 
 public:
 	ProfilerFunctionalTest(CheckList* chkList);
@@ -44,7 +45,6 @@ ProfilerFunctionalTest::ProfilerFunctionalTest(CheckList* _chkList)
 
 ProfilerFunctionalTest::~ProfilerFunctionalTest()
 {
-	for_each(addr.begin(), addr.end(), Deletor<Address>());
 	delete profiler;
 	delete profileReg;
 	delete tc;
@@ -55,6 +55,7 @@ void ProfilerFunctionalTest::executeTestCases(const Address& address)
 	//Создание нового профиля удовлетворяющего условиям поиска, 1/5
 	//Создание нового профиля неудовлетворяющего условиям поиска, 1/5
 	//Обновление уже существующего профиля, 1/5
+	//Поиск профиля для заданного адреса, 2/5
 	Address addr;
 	bool created = false;
 	for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
@@ -92,6 +93,7 @@ void ProfilerFunctionalTest::reinit()
 		delete profiler;
 	}
 	profiler = new Profiler(defProfile);
+	profiler->loadFromDB();
 	if (tc)
 	{
 		delete tc;
@@ -102,31 +104,38 @@ void ProfilerFunctionalTest::reinit()
 void ProfilerFunctionalTest::executeTest(int numAddr)
 {
 	//Подготовка списка адресов
+	addr1.resize(numAddr);
+	addr2.resize(numAddr);
 	for (int i = 0; i < numAddr; i++)
 	{
-		addr.push_back(new Address());
-		SmsUtil::setupRandomCorrectAddress(addr.back());
+		SmsUtil::setupRandomCorrectAddress(&addr1[i]);
+		SmsUtil::setupRandomCorrectAddress(&addr2[i]);
 	}
 	//На каждый адрес регистрация случайного количества профилей
 	for (int i = 0; i < numAddr; i++)
 	{
-		executeTestCases(*addr[i]);
+		executeTestCases(addr1[i]);
+		tc->putCommand(addr2[i], RAND_TC);
+		tc->lookup(addr2[i]);
 	}
 	reinit();
 	//На каждый адрес регистрация случайного количества профилей
 	for (int i = 0; i < numAddr; i++)
 	{
-		executeTestCases(*addr[i]);
+		executeTestCases(addr1[i]);
+		tc->putCommand(addr2[i], RAND_TC);
+		tc->lookup(addr2[i]);
 	}
 	reinit();
 	//Поиск профилей
 	for (int i = 0; i < numAddr; i++)
 	{
-		tc->lookup(*addr[i]);
+		tc->lookup(addr1[i]);
+		tc->lookup(addr2[i]);
 	}
 	//очистка памяти
-	for_each(addr.begin(), addr.end(), Deletor<Address>());
-	addr.clear();
+	addr1.clear();
+	addr2.clear();
 }
 
 /**
@@ -152,6 +161,7 @@ int main(int argc, char* argv[])
 			ProfilerFunctionalTest test(&chkList);
 			test.executeTest(numAddr);
 		}
+		__trace__("Before save checklist");
 		chkList.save();
 	}
 	catch (...)
