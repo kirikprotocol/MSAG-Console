@@ -27,7 +27,7 @@ RouteChecker::RouteChecker(const string& id, const Address& addr,
 	__require__(routeReg);
 }
 
-vector<int> RouteChecker::checkRouteForNormalSms(PduSubmitSm& pdu1,
+vector<int> RouteChecker::checkRouteForNormalSms(PduDeliverySm& pdu1,
 	PduDeliverySm& pdu2) const
 {
 	vector<int> res;
@@ -74,13 +74,14 @@ vector<int> RouteChecker::checkRouteForNormalSms(PduSubmitSm& pdu1,
 	return res;
 }
 
-vector<int> RouteChecker::checkRouteForNotification(PduSubmitSm& pdu1,
+vector<int> RouteChecker::checkRouteForAcknowledgementSms(PduDeliverySm& pdu1,
 	PduDeliverySm& pdu2) const
 {
 	vector<int> res;
-	Address origAddr1, origAddr2, destAddr2;
+	Address origAddr1, destAlias1, origAlias2, destAddr2;
 	SmppUtil::convert(pdu1.get_message().get_source(), &origAddr1);
-	SmppUtil::convert(pdu2.get_message().get_source(), &origAddr2);
+	SmppUtil::convert(pdu1.get_message().get_dest(), &destAlias1);
+	SmppUtil::convert(pdu2.get_message().get_source(), &origAlias2);
 	SmppUtil::convert(pdu2.get_message().get_dest(), &destAddr2);
 	//правильность destAddr для pdu2
 	bool destOk = true;
@@ -91,7 +92,7 @@ vector<int> RouteChecker::checkRouteForNotification(PduSubmitSm& pdu1,
 	}
 	//правильность origAddr для pdu2
 	bool origOk = true;
-	if (origAddr2 != smscAddr)
+	if (origAlias2 != destAlias1)
 	{
 		res.push_back(2);
 		origOk = false;
@@ -99,7 +100,10 @@ vector<int> RouteChecker::checkRouteForNotification(PduSubmitSm& pdu1,
 	//правильность маршрута
 	if (destOk && origOk)
 	{
-		const RouteHolder* routeHolder = routeReg->lookup(smscAddr, destAddr2);
+		const Address origAddr2 =
+			aliasReg->findAddressByAlias(origAlias2);
+		const RouteHolder* routeHolder =
+			routeReg->lookup(origAddr2, destAddr2);
 		if (!routeHolder)
 		{
 			res.push_back(3);
@@ -159,6 +163,7 @@ const RouteInfo* RouteChecker::getRouteInfoForNotification(PduAddress& dest) con
 	Address destAddr;
 	SmppUtil::convert(dest, &destAddr);
 	//параметры маршрута
+	__cfg_addr__(smscAddr);
 	const RouteHolder* routeHolder = routeReg->lookup(smscAddr, destAddr);
 	if (!routeHolder)
 	{
