@@ -82,7 +82,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   __trace2__("MAP::DIALOG::ForwardReaq: MSA tonpi.va(8):0x%x, ton(3):0x%x, npi(4):0x%x, len(8):%d",
              msa->tonpi,msa->st.ton,msa->st.npi,msa->len);
   //__trace2__("MAP::DIALOG::ForwardReaq: user_data_len = user_data_len");
-  unsigned msa_len = msa->length;
+  unsigned msa_len = msa->len;
   if ( msa_len%2 ) mas_len+1;
   msa_len = msa_len/2+2;
   unsigned char* user_data_len = (unsigned char*)(ud->signalInfo+2+ssfh->tp_vp?7:1+msa->len+2);
