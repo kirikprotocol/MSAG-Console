@@ -2,6 +2,8 @@
 #include "sms/sms.h"
 #include "smeman/smsccmd.h"
 #include <memory>
+#include <list>
+
 using namespace std;
 using namespace smsc::sms;
 using namespace smsc::smeman;
@@ -17,6 +19,8 @@ struct MicroString{
 };
 
 extern unsigned char lll_7bit_2_8bit[128];
+
+//list<unsigned> DialogMapContainer::dialogId_pool;
 
 inline char GetChar(const unsigned char*& ptr,unsigned& shift){
   __trace2__("MAP: 7bit: shift %d *ptr 0x%x",shift,*ptr);
@@ -115,6 +119,39 @@ void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
   }
 }
 
+void mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, ET96MAP_ADDRESS_T *saddr, ET96MAP_LOCAL_SSN_T ssn) {
+  int i;
+  addr->ss7AddrLen = 5+(saddr->addressLength+1)/2;
+  addr->ss7Addr[0] = 0x12; // SSN & GT
+  addr->ss7Addr[1] = ssn;
+  addr->ss7Addr[2] = 0;
+  addr->ss7Addr[3] = (saddr->typeOfAddress<<4)|(saddr->addressLength%2==0?0x02:0x01); // NP & GT coding
+  addr->ss7Addr[4] = 0x04 | (saddr->addressLength%2==0?0x80:0x00); //
+  memcpy( addr->ss7Addr+5, saddr->address, (saddr->addressLength+1)/2 );
+  if( saddr->addressLength%2!=0 ) {
+    addr->ss7Addr[5+(saddr->addressLength+1)/2-1] &= 0x0f;
+  }
+}
+void mkMapAddress( ET96MAP_ADDRESS_T *addr, char *saddr, unsigned len) {
+  int i;
+  int sz = (len+1)/2;
+  addr->addressLength = len;
+  addr->typeOfAddress = 0x91; // InterNational, ISDN
+  for( i = 0; i < len; i++ ) {
+    int bi = i/2;
+    int even = i%2;
+    if( i%2 == 1 ) { 
+      //even 
+      addr->address[bi] |= ((saddr[i]-'0')<<4); // fill high octet
+    } else {
+      addr->address[bi] = (saddr[i]-'0')&0x0F; // fill low octet
+    }
+  }
+  if( len%2 != 0 ) {
+    addr->address[sz-1] |= 0xF0;
+  } 
+}
+
 void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
   sa->setTypeOfNumber((ma->addr[0]>>4)&0x7);
   sa->setNumberingPlan(ma->addr[0]&0xf);
@@ -205,6 +242,88 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   return ET96MAP_E_OK;
 }
 
+bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
+                         ET96MAP_DIALOGUE_ID_T,
+                         ET96MAP_USERDATA_T *,
+                         UCHAR_T priorityOrder)
+{
+  __trace2__("MAP::Et96MapCloseInd state: 0x%x",state);
+  if ( state == MAPST_READY_FOR_SENDSMS ){
+    __trace2__("MAP::Et96MapCloseInd state: REDY_FOR_SEND_SMS");
+    ET96MAP_APP_CNTX_T appContext;
+  	appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
+  	appContext.version = ET96MAP_VERSION_2;
+    ET96MAP_SM_RP_DA_T smRpOa;
+	  smRpOa.typeOfAddress = ET96MAP_ADDRTYPE_SCADDR;
+	  smRpOa.addrLen = (m_scaddr.addressLength+1)/2+1;
+	  smRpOa.addr[0] = m_scaddr.typeOfAddress;
+	  memcpy( smRpOa.addr+1, m_scaddr.address, (m_scaddr.addressLength+1)/2 );
+
+    ET96MAP_SM_RP_UI_T *ui;// = mkDeliverPDU( oaddress, message ); 
+
+    USHORT_T result;
+    __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq");
+	  result = Et96MapV2ForwardSmMTReq( SSN, dialogId, 1, &smRpDa, &smRpOa, ui, FALSE);
+	  if( result != ET96MAP_E_OK ) {
+      __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq error 0x%x",result);
+	  }
+    __trace2__("MAP::Et96MapCloseInd:Et96MapV2ForwardSmMTReq OK");
+  	result = Et96MapDelimiterReq( SSN, dialogueId, 0, 0 );
+    __trace2__("MAP::send response to SMSC");
+    {
+      SmscCommand cmd = SmscCommand::makeDeliverySmResp(0,smcDialogId,0);
+      proxy->putIncomingCommand(cmd);
+    }
+    __trace2__("MAP::send response to SMSC OK");
+    //return true;// :) optimization
+    return false;
+  }
+  else if (state == MAPST_READY_FOR_CLOSE)
+  {
+    __trace2__("MAP::Et96MapCloseInd ready for close");
+    return true;
+  }
+  else
+  {
+    __trace2__("MAP::Et96MapCloseInd Opss, strange close, did 0x%x,smscDid 0x%x, state 0x%x",
+               dialogid,
+               smscDialogId,
+               state);
+    //throw "";
+    return true; // drop dialog
+  }
+}
+
+USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
+				       ET96MAP_DIALOGUE_ID_T dialogueId,
+				       ET96MAP_INVOKE_ID_T invokeId,
+				       ET96MAP_IMSI_T *imsi_sp,
+				       ET96MAP_ADDRESS_T *mscNumber_sp,
+				       ET96MAP_LMSI_T *lmsi_sp,
+				       ET96MAP_ERROR_ROUTING_INFO_FOR_SM_T *errorSendRoutingInfoForSm_sp,
+				       ET96MAP_PROV_ERR_T *provErrCode_p )
+{
+  __trace2__( "Et96MapV2SendRInfoForSmConf received ssn=%d, dialog=%d, invokeId=%d\n", localSsn, dialogueId, invokeId );
+  state = MAPST_RINFOIND;
+  
+  mkSS7GTAddress( &dstMscAddr,  mscNumber_sp, 8 );
+	smRpDa.typeOfAddress = ET96MAP_ADDRTYPE_IMSI;
+	smRpDa.addrLen = imsi_sp->imsiLen;
+	memcpy( smRpDa.addr, imsi_sp->imsi, imsi_sp->imsiLen );
+
+  if ( provErrCode_p != 0 ){
+    // error hadling
+    __trace2__("MAP::Et96MapV2SendRInfoForSmConf provErrCode_p 0x%x",provErrCode_p);
+    throw "";
+  }
+  
+  state = MAPST_READY_FOR_SENDSMS;
+
+  return ET96MAP_E_OK;
+}				       
+
+
+
 bool MapDialog::ProcessCmd(const SmscCommand& cmd){
 #if defined USE_MAP  
   __trace2__("MAP::MapDialog::ProcessCmd");
@@ -212,14 +331,45 @@ bool MapDialog::ProcessCmd(const SmscCommand& cmd){
     __trace2__("MAP::MapDialog::ProcessCmd: 0x%x",cmd->get_commandId());
     switch ( cmd->get_commandId() ){
     case SUBMIT_RESP: {
-        USHORT_T result = Et96MapV2ForwardSmMOResp(ssn,dialogid,invokeId,0);
-        if ( result != ET96MAP_E_OK ) {
-          __trace2__("MAP::MapDialog::ProcessCmd: Et96MapV2ForwardSmMOResp return error 0x%hx",result);
-        }else{
-          __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapV2ForwardSmMOResp OK");
-        }
-        return true;
+      USHORT_T result = Et96MapV2ForwardSmMOResp(ssn,dialogid,invokeId,0);
+      if ( result != ET96MAP_E_OK ) {
+        __trace2__("MAP::MapDialog::ProcessCmd: Et96MapV2ForwardSmMOResp return error 0x%hx",result);
+      }else{
+        __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapV2ForwardSmMOResp OK");
       }
+      return true;
+      }
+    case DELIVER_SM: {
+      USHORT_T result;
+      sms = auto_ptr<SMS>(cmd->get_sms_and_forget(););
+
+	    mkMapAddress( &m_msaddr, sms->getDestinationAddress().value, sms->getDestinationAddress().length );
+	    mkMapAddress( &m_scaddr, "79029869999", 11 );
+	    mkSS7GTAddress( &scAddr, &m_scAddr, 8 );
+    	mkSS7GTAddress( &mshlrAddr, &m_msaddr, 6 );
+      
+      appContext.acType = ET96MAP_SHORT_MSG_GATEWAY_CONTEXT;
+      appContext.version = ET96MAP_VERSION_2;
+      
+      result = Et96MapOpenReq(ssn, dialogid, &appContext, &mshlrAddr, &scAddr, 0, 0, 0 );
+      if ( result != ET96MAP_E_OK ) {
+        __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapOpenReq error 0x%x",result);
+        throw 0;
+      }
+      __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapOpenReq OK");
+     	result = Et96MapV2SendRInfoForSmReq(ssn, dialogid, 1, &m_msaddr, ET96MAP_DO_NOT_ATTEMPT_DELIVERY, &m_scaddr );
+      if ( result != ET96MAP_E_OK ) {
+        __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapV2SendRInfoForSmReq error 0x%x",result);
+        throw 0;
+      }
+      __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapV2SendRInfoForSmReq OK");
+    	result = Et96MapDelimiterReq(ssn, dialogid, 0, 0 );
+      if ( result != ET96MAP_E_OK ) {
+        __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapDelimiterReq error 0x%x",result);
+        throw 0;
+      }
+      __trace2__("MAP::MapDialog::ProcessCmdg: Et96MapDelimiterReq OK");
+    }
     default:
       __trace2__("MAP::MapDialog::ProcessCmdg: here is no command %d",cmd->get_commandId());
       return true;
@@ -252,37 +402,50 @@ unsigned char  lll_7bit_2_8bit[128] = {
 0x78,0x79,0x7a,0xe4,0xf6,0xf1,0xfc,0xe0}; // 120
 
 
-extern void CloseDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);
-extern void CloseAndRemoveDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);
+extern void CloseDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);
+extern void CloseAndRemoveDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);
+extern void AbortAndRemoveDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);
 
 void MapProxy::putCommand(const SmscCommand& cmd)
 {
 #if defined USE_MAP  
   MutexGuard g(mutex);
   uint32_t did = cmd->get_dialogId();
+  MapDialog* dialog = 0;
   __trace2__("MAPPROXY::putCommand");
   try
   {
-    if ( did > 0x0ffff ) {
-      __trace2__("MAP::QueueProcessing: external request, now unhendled");
-    }else{
-      __trace2__("MAP::QueueProcessing: response");
-      ET96MAP_DIALOGUE_ID_T dialogid = (ET96MAP_DIALOGUE_ID_T)did;
-      MapDialog* dialog = MapDialogContainer::getInstance()->getDialog(dialogid);
-      __trace2__("MAP:: process to dialog with ptr %x",dialog);
-      if ( dialog == 0 ){
-        __trace2__("MAP::QueueProcessing: Opss, hereis no dialog with id x%x",dialogid);
-        CloseDialog(SSN,dialogid);
-      }else{
-        __trace2__("MAP::QueueProcessing: processing dialog x%x",dialogid);
-        bool close_dlg = dialog->ProcessCmd(cmd);
-        if ( close_dlg ) CloseAndRemoveDialog(SSN,dialogid);
+    ET96MAP_DIALOGUE_ID_T dialogid = (ET96MAP_DIALOGUE_ID_T)did;
+    if ( did > 0xffff ) {
+      __trace2__("MAP::QueueProcessing: SMSC request");
+      dialog = MapDialogContainer::getInstance()->createSMSCDialog(did,SSN);
+      if ( dialog == 0 ) {
+        __trace2__("MAP::QueryProcessing: can't create SMSC->MS dialog");
       }
+      did = dialog->getDialogId();
+      __trace2__("MAP::QueueProcessing: dialog translation SC:%x -> MAP:%x",
+                 dialog->getSMSDialogId(),
+                 dialog->getDialogId());
+    }else{
+      __trace2__("MAP::QueueProcessing: MAP request");
+      dialog = MapDialogContainer::getInstance()->getDialog(did);
+    }
+    __trace2__("MAP:: process to dialog with ptr %x",dialog);
+    if ( dialog == 0 ){
+      __trace2__("MAP::QueueProcessing: Opss, here is no dialog with id x%x",dialogid);
+      CloseDialog(SSN,dialogid);
+    }else{
+      __trace2__("MAP::QueueProcessing: processing dialog x%x",dialogid);
+      bool close_dlg = dialog->ProcessCmd(cmd);
+      if ( did <= 0xffff && close_dlg ) CloseAndRemoveDialog(SSN,dialogid);
     }
   }
   catch(...)
   {
-    CloseAndRemoveDialog(SSN,did);
+    if ( did <= 0xffff )
+      CloseAndRemoveDialog(SSN,did);
+    //else 
+    //  AbortAndRemoveDialog(SSN,did);
     throw;
   }
   //notifyOutThread();

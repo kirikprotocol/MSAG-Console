@@ -113,6 +113,7 @@ public:
   uint32_t getNextSequenceNumber()
   {
     MutexGuard g(mutex);
+    if (seq <  0x10000) seq = 0x10000; 
     return seq++;
   }
 
