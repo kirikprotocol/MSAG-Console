@@ -19,7 +19,9 @@
       <param name="uncommited" type="int">50</param>
       <section name="Cleaner">
         <param name="enabled" type="bool">true</param>
-        <param name="interval" type="int">30</param>
+	<param name="interval" type="int">60</param> <!-- in seconds -->
+	<param name="awake" type="int">10</param>    <!-- in seconds -->
+	<param name="age" type="int">10</param>      <!-- in days -->
       </section>
 
     </section>
