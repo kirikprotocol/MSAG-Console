@@ -377,9 +377,18 @@ namespace DataCoding{
   inline const char* get_##field() { return field.cstr(); } \
   inline int size_##field() { return field.size(); }
 
+template<class T> unsigned CalcSize(T* arr,unsigned count)
+{
+  unsigned sz = 0;
+  for ( unsigned u = 0; u < count; ++u ) {
+    sz+=arr[u].size();
+  }
+  return sz;
+}
+
 #define _s_int_property__(type,field) + (uint32_t)sizeof(type)
 #define _s_ref_property__(type,field) + (uint32_t)field.size()
-#define _s_ptr_property__(type,field,count) + (uint32_t)( field ? field->size()*count : 0 )
+#define _s_ptr_property__(type,field,count) + (uint32_t)( field ? CalcSize(field,count) : 0 )
 #define _s_intarr_property__(type,field,size) + (uint32_t)(sizeof(type)*size)
 #define _s_cstr_property__(field) + (uint32_t)(field.size()+1)
 #define _s_ostr_property__(field) + (uint32_t)(field.size())
@@ -462,7 +471,16 @@ struct PduDestAddress : public PduAddress
 {
   __int_property__(uint8_t,flag)
   PduDestAddress() : flag(0){};
-  inline uint32_t size() { return PduAddress::size() + 1; }
+  inline uint32_t size() { 
+    switch ( flag ) {
+    case 0x01:
+      return PduAddress::size() + 1;
+    case 0x02:      
+      return PduAddress::size() + 1 - 2;
+    default:
+      throw runtime_error("invalid PduDestAddress flag");
+    }
+  }
   inline void dump(__LOG__ log,int align)
   {
     dump_text("PduDestAddress{");
@@ -767,7 +785,7 @@ struct PduPartSm //: public MemoryManagerUnit
     return (uint32_t)(0 + 1 // sizeof(smLength)
                       _s_cstr_property__(serviceType)
                       _s_ref_property__(PduAddress,source)
-                      _s_ref_property__(PduAddress,dest)
+                      + ( !multi ? 0 _s_ref_property__(PduAddress,dest) : 0 )
                       + ( multi ? 0 _s_int_property__(uint8_t,numberOfDests) : 0 )
                       + ( multi ? 0 _s_ptr_property__(PduDestAddress,dests,numberOfDests) : 0 )
                       _s_int_property__(uint8_t,esmClass)
