@@ -86,6 +86,7 @@ public:
       freeDialogueId(dialogid);
     }
   }
+  void setSmscDialogId(unsigned did) {smscDialogId=did;}
   virtual USHORT_T  Et96MapV2SendRInfoForSmConf ( 
     ET96MAP_LOCAL_SSN_T localSsn,
 		ET96MAP_DIALOGUE_ID_T dialogueId,
@@ -174,8 +175,8 @@ public:
     MutexGuard g(sync);
     ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     MapDialog* dlg = new MapDialog(map_dialog,lssn);
-    dlg->smscDialogId = smsc_did;
-    hash.Insert(map_did,dlg);
+    dlg->setSmscDialogId (smsc_did);
+    hash.Insert(map_dialog,dlg);
     __trace2__("MAP:: new dialog 0x%x for dialogid 0x%x",dlg,dialogueid);
     dialogId_pool.pop_front();
     return dlg;
