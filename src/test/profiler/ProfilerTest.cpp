@@ -1,4 +1,5 @@
 #include "ProfilerTestCases.hpp"
+#include "test/core/ProfileUtil.hpp"
 #include "util/config/Manager.h"
 #include "test/sms/SmsUtil.hpp"
 #include "ProfilerCheckList.hpp"
@@ -6,7 +7,9 @@
 
 using smsc::profiler::Profile;
 using smsc::test::sms::SmsUtil;
+using smsc::test::core::ProfileUtil;
 using smsc::core::threads::ThreadPool;
+using smsc::util::config::Manager;
 using namespace smsc::test::profiler;
 using namespace smsc::test::util;
 using namespace std;
@@ -14,7 +17,7 @@ using namespace std;
 void executeTest(ProfilerCheckList* chkList)
 {
 	Profile defProfile;
-	ProfilerTestCases::setupRandomCorrectProfile(defProfile);
+	ProfileUtil::setupRandomCorrectProfile(defProfile);
 
 	ThreadPool threadPool;
 	Profiler* profiler = new Profiler(defProfile);
@@ -26,8 +29,8 @@ void executeTest(ProfilerCheckList* chkList)
 
 	Address addr;
 	SmsUtil::setupRandomCorrectAddress(&addr);
-	tc.createProfileNotMatch(addr, 4);
-	tc.updateProfile(addr);
+	tc.putCommand(addr, 8);
+	sleep(5);
 	tc.lookup(addr);
 	//tc.putCommand(addr, RAND_TC);
 	//tc.createProfileMatch(addr, RAND_TC);
@@ -37,13 +40,12 @@ void executeTest(ProfilerCheckList* chkList)
 
 int main(int argc, char* argv[])
 {
-	smsc::util::config::Manager::init("config.xml");
 	try
 	{
-		//Manager::init("config.xml");
+		Manager::init("config.xml");
 		ProfilerCheckList chkList;
 		executeTest(&chkList);
-		//chkList.saveHtml();
+		chkList.saveHtml();
 	}
 	catch (const char*)
 	{
