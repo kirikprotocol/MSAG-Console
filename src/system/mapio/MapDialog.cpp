@@ -139,7 +139,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   sms.setIntProperty(Tag::SMPP_DATA_CODING,user_data_coding);
   sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,protocol_id);
   sms.setMessageReference(ssfh->mr);
-  ConvAddrMap2Smc((MAP_SMS_ADDRESS*)srcAddr->addr,&src_addr);
+  ConvAddrMSISDN2Smc(srcAddr->addr,&src_addr);
   sms.setOriginatingAddress(src_addr);
   ConvAddrMap2Smc(msa,&dest_addr);
   sms.setDestinationAddress(dest_addr);
