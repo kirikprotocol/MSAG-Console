@@ -92,14 +92,14 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   __trace2__("MAP::DIALOG::ForwardReaq: protocol_id = 0x%x",protocol_id);
   __trace2__("MAP::DIALOG::ForwardReaq: user_data_len = %d",user_data_len);
   __trace2__("MAP::DIALOG::ForwardReaq: user_data_encoding = 0x%x",user_data_coding);
-  sms.setBinProperty(Tag::SMPP_SM_MESSAGE,user_data,user_data_len);
-  sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_dta_len);
+  sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,user_data,user_data_len);
+  sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
   sms.setIntProperty(Tag::SMPP_DATA_CODING,user_data_coding);
   sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,protocol_id);
   sms.setMessageReference(ssfh->mr);
-  ConvAddrMap2Smc((MAP_SMS_ADDRESS*)srcAddr->addr,src_addr);
+  ConvAddrMap2Smc((MAP_SMS_ADDRESS*)srcAddr->addr,&src_addr);
   sms.setOriginatingAddress(src_addr);
-  ConvAddrMap2Smc(msa,dest_addr);
+  ConvAddrMap2Smc(msa,&dest_addr);
   sms.setDestinationAddress(dest_addr);
   MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
   SmscCommand cmd = SmscCommand::makeSumbmitSm(sms,((uint32_t)dialogId)&0xffff);
