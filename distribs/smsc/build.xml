@@ -144,7 +144,7 @@ Targets:
     <ant antfile="${WEBSRC_DIR}/build.xml" dir="${WEBSRC_DIR}" target="update"/>
   </target>
 
-  <target name="configure" depends="create_distr_tree" >
+  <target name="configure">
     <!-- webapps configuration -->
     <copy todir="${DISTR_DIR}/conf" flatten="yes" >
       <fileset dir="${TEMPL_DIR}">
@@ -163,7 +163,7 @@ Targets:
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <copy todir="${DISTR_DIR}/webapps/smsc/WEB-INF">
-      <fileset dir="${TEMPL_DIR}/smsc" includes="web.xml users.xml"/> 
+      <fileset dir="${TEMPL_DIR}/smsc" includes="web.xml users.xml"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <copy tofile="${DISTR_DIR}/conf/webconfig.xml" file="${TEMPL_DIR}/smsc/webapp.xml">
