@@ -4,9 +4,11 @@
 #include "core/threads/ThreadedTask.hpp"
 #include "core/threads/ThreadPool.hpp"
 #include "test/smpp/SmppUtil.hpp"
+#include "test/util/Util.hpp"
 #include "readline/readline.h"
 #include "readline/history.h"
 #include <map>
+#include <vector>
 #include <iostream>
 
 using smsc::sms::Address;
@@ -16,34 +18,62 @@ using namespace smsc::core::threads;
 using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::smpp::SmppStatusSet;
 using namespace smsc::test::smpp;
+using namespace smsc::test::util;
 
-const char* host = "localhost";
+int numSme = 1;
+const char* host = "smsc";
 int port = 15971;
 FILE* resFile = stderr;
+
+PduAddress convert(const string& addr)
+{
+	PduAddress res;
+	Address tmp(addr.c_str());
+	res.set_typeOfNumber(tmp.type);
+	res.set_numberingPlan(tmp.plan);
+	res.set_value(tmp.value);
+	return res;
+}
 
 class TestSme : public SmppPduEventListener, public ThreadedTask
 {
 	PduAddress addr;
 	const string systemId;
+	const string passwd;
+	vector<PduAddress> destAddr;
 	SmppSession* session;
+	vector<SmppHeader*> pdu;
+	int pos;
 
-	void bind(const string& systemId, const string& passwd);
+	void preparePdu(int num);
+	void bind();
 	void submit();
 
 public:
-	TestSme(const string& _addr, const string& _systemId, const string& passwd)
-		: systemId(_systemId)
+	TestSme(const string& _addr, const string& _systemId, const string& _passwd,
+		const vector<string>& _destAddr)
+	: addr(convert(_addr)), systemId(_systemId), passwd(_passwd),
+		session(NULL), pos(0)
 	{
-		Address tmp(_addr.c_str());
-		addr.set_typeOfNumber(tmp.type);
-        addr.set_numberingPlan(tmp.plan);
-		addr.set_value(tmp.value);
-		bind(systemId, passwd);
+		__require__(_destAddr.size());
+		destAddr.reserve(_destAddr.size());
+		for (int i = 0; i < _destAddr.size(); i++)
+		{
+			destAddr.push_back(convert(_destAddr[i]));
+		}
+		preparePdu(100);
 	}
 	~TestSme()
 	{
-		session->close();
-		delete session;
+		if (session)
+		{
+			session->close();
+			delete session;
+		}
+		for (int i = 0; i < pdu.size(); i++)
+		{
+			disposePdu(pdu[i]);
+		}
 	}
 	virtual void handleEvent(SmppHeader* pdu);
 	virtual void handleError(int errorCode);
@@ -51,7 +81,36 @@ public:
 	virtual const char* taskName() { return systemId.c_str(); }
 };
 
-void TestSme::bind(const string& systemId, const string& passwd)
+void TestSme::preparePdu(int num)
+{
+	for (int i = 0; i < num; i++)
+	{
+		PduSubmitSm* p = new PduSubmitSm();
+		/*
+		p->get_message().set_serviceType("aaa");
+		p->get_message().set_source(addr);
+		p->get_message().set_dest(addr);
+		p->get_message().set_esmClass(0);
+		p->get_message().set_priorityFlag(0);
+		p->get_message().set_scheduleDeliveryTime("");
+		p->get_message().set_validityPeriod("");
+		p->get_message().set_registredDelivery(0);
+		p->get_message().set_replaceIfPresentFlag(0);
+		p->get_message().set_dataCoding(0);
+		p->get_message().set_shortMessage("Test message");
+		*/
+		SmppUtil::setupRandomCorrectSubmitSmPdu(p, true, false,
+			OPT_ALL & ~OPT_USSD_SERVICE_OP & ~OPT_RCPT_MSG_ID);
+		p->get_message().set_source(addr);
+		p->get_message().set_dest(destAddr[i % destAddr.size()]);
+		p->get_message().set_scheduleDeliveryTime("");
+		p->get_message().set_validityPeriod("");
+		p->get_message().set_registredDelivery(rand0(3) ? 0 : 1);
+		pdu.push_back(reinterpret_cast<SmppHeader*>(p));
+	}
+}
+
+void TestSme::bind()
 {
 	SmeConfig config;
 	config.host = host;
@@ -59,6 +118,8 @@ void TestSme::bind(const string& systemId, const string& passwd)
 	config.sid = systemId;
 	config.timeOut = 8;
 	config.password = passwd;
+	__trace2__("bind(): host = %s, port = %d, systemId = %s, passwd = %s",
+		config.host.c_str(), config.port, config.sid.c_str(), config.password.c_str());
 	try
 	{
 		session = new SmppSession(config, this);
@@ -68,6 +129,12 @@ void TestSme::bind(const string& systemId, const string& passwd)
 	catch (exception& e)
 	{
 		cout << "exception: " << e.what() << endl;
+		exit(-1);
+	}
+	catch (...)
+	{
+		cout << "unknown exception" << endl;
+		exit(-1);
 	}
 }
 
@@ -75,29 +142,10 @@ void TestSme::submit()
 {
 	try
 	{
-		PduSubmitSm pdu;
-		/*
-		pdu.get_message().set_serviceType("aaa");
-		pdu.get_message().set_source(addr);
-		pdu.get_message().set_dest(addr);
-		pdu.get_message().set_esmClass(0);
-		pdu.get_message().set_priorityFlag(0);
-		pdu.get_message().set_scheduleDeliveryTime("");
-		pdu.get_message().set_validityPeriod("");
-		pdu.get_message().set_registredDelivery(0);
-		pdu.get_message().set_replaceIfPresentFlag(0);
-		pdu.get_message().set_dataCoding(0);
-		pdu.get_message().set_shortMessage("Test message");
-		*/
-		SmppUtil::setupRandomCorrectSubmitSmPdu(&pdu, true, false,
-			OPT_ALL & ~OPT_USSD_SERVICE_OP);
-		pdu.get_message().set_source(addr);
-		pdu.get_message().set_dest(addr);
-		pdu.get_message().set_scheduleDeliveryTime("");
-		pdu.get_message().set_validityPeriod("");
+		int i = pos++ % pdu.size();
 		timeb t1, t2;
 		ftime(&t1);
-		PduSubmitSmResp* respPdu = session->getSyncTransmitter()->submit(pdu);
+		SmppHeader* respPdu = session->getSyncTransmitter()->sendPdu(pdu[i]);
 		ftime(&t2);
 		double t = (t2.time - t1.time) + (t2.millitm - t1.millitm) / 1000.0;
 		fprintf(resFile, "%.3f\n", t);
@@ -105,11 +153,18 @@ void TestSme::submit()
 	catch (exception& e)
 	{
 		cout << "exception: " << e.what() << endl;
+		exit(-1);
+	}
+	catch (...)
+	{
+		cout << "unknown exception" << endl;
+		exit(-1);
 	}
 }
 
 int TestSme::Execute()
 {
+	bind();
 	while (!isStopping)
 	{
 		submit();
@@ -151,11 +206,14 @@ void executeTest()
 	ThreadPool threadPool;
 	char addr[30];
 	char smeId[10];
-	for (int i = 0; i < 1; i++)
+	//sme0 эмулирует map_proxy (все отправл€ют на sme0)
+	vector<string> destAddr;
+	destAddr.push_back("0");
+	for (int i = 0; i < numSme; i++)
 	{
-		sprintf(addr, "+%d", i);
+		sprintf(addr, "%d", i);
 		sprintf(smeId, "sme%d", i);
-		threadPool.startTask(new TestSme(addr, smeId, "pass"));
+		threadPool.startTask(new TestSme(addr, smeId, "pass", destAddr));
 	}
     using_history();
 	while (true)
@@ -175,15 +233,20 @@ void executeTest()
 
 int main(int argc, char* argv[])
 {
-	if (argc != 1 && argc != 3)
+	if (argc != 1 && argc != 2 && argc != 4)
 	{
-		cout << "Usage: SimpleSmppTest [host] [port]" << endl;
+		cout << "Usage: RespDelayTest [numSme=1] [host=smsc] [port=15971]" << endl;
 		exit(-1);
 	}
-	if (argc == 3)
+	if (argc == 2)
 	{
-		host = argv[1];
-		port = atoi(argv[2]);
+		numSme = atoi(argv[1]);
+	}
+	if (argc == 4)
+	{
+		numSme = atoi(argv[1]);
+		host = argv[2];
+		port = atoi(argv[3]);
 	}
 	executeTest();
 }
