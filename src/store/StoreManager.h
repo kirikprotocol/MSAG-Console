@@ -278,7 +278,12 @@ namespace smsc { namespace store
          */
         virtual void changeSmsStateToDeleted(SMSId id)
                 throw(StorageException, NoSuchMessageException);
-        
+        /**
+         * Реализация метода MessageStore
+         * @see MessageStore
+         */
+        virtual void createFinalizedSms(SMSId id, SMS& sms)
+                throw(StorageException, DuplicateMessageException);
         /**
          * Реализация метода MessageStore
          * @see MessageStore

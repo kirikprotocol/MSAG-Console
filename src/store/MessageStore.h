@@ -262,7 +262,7 @@ namespace smsc { namespace store
          * »змен€ет состо€ние SMS в DELETED в хранилище сообщений.
          * »спользуетс€ в случае запроса пользовател€ на удаление сообщени€.
          *
-         * @param id     идентификационный номер сообщени€ в хранилище
+         * @param id         идентификационный номер сообщени€ в хранилище
          * @exception StorageException
          *                   возникает при ошибке хранилища физической природы,
          *                   т.н когда хранилище недоступно.
@@ -273,6 +273,24 @@ namespace smsc { namespace store
          */
         virtual void changeSmsStateToDeleted(SMSId id)
                 throw(StorageException, NoSuchMessageException) = 0;
+
+        /**
+         * —оздаЄт новое сообщение в хранилище и финализирует его.
+         * »спользуетс€ дл€ режима датаграм и пр.
+         *
+         * ¬нимание: состо€ние сообщени€ должно быть не ENROUTE !!!
+         *
+         * @param id         идентификационный номер сообщени€
+         * @param sms        сообщение
+         * @exception StorageException
+         *                   возникает при ошибке хранилища физической природы,
+         *                   т.н когда хранилище недоступно.
+         * @exception DuplicateMessageException
+         *                   возникает если сообщение с таким номером уже создано.
+         * @see SMS
+         */
+        virtual void createFinalizedSms(SMSId id, SMS& sms)
+                throw(StorageException, DuplicateMessageException) = 0;
 
         /**
          * »змен€ет значение счЄтчика доставленных частей конкатенированного

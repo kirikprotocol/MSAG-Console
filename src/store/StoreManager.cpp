@@ -1085,6 +1085,25 @@ void RemoteStore::doFinalizeSms(SMSId id, SMS& sms)
     log.debug( "Finalized msg#%lld", id );
 
 }
+void RemoteStore::createFinalizedSms(SMSId id, SMS& sms)
+    throw(StorageException, DuplicateMessageException)
+{
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+    
+    __require__(sms.state != ENROUTE);
+
+    sms.lastTime = time(NULL);
+    sms.nextTime = 0;
+    doFinalizeSms(id, sms);
+
+#else
+    
+    MutexGuard guard(fakeMutex);
+
+    if (fakeStore.Exist(id))
+        throw DuplicateMessageException(id);
+#endif
+}
 
 void RemoteStore::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
     throw(StorageException, NoSuchMessageException)
