@@ -24,7 +24,7 @@ MENU0_SELECTION = "MENU0_SERVICES";
 <input type=hidden name="serviceId" value="<%=StringEncoderDecoder.encode(bean.getServiceId())%>">
 
 <div class=secInfo>Service parameters:</div>
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=1 width="100%">
 <%@include file="serviceSmeBody.jsp"%>
 </table>
 

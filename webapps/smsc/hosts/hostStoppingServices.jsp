@@ -39,7 +39,7 @@ function viewService(serviceId)
 }
 </script>
  
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=1 width="100%">
 <col width="60%" align=left>
 <col width="20%" align=left>
 <col width="20%" align=center>

@@ -37,7 +37,7 @@
 <%@ include file="/WEB-INF/inc/calendar.jsp"%>
 
 <div class=secQuestion>Query statistics</div>
-<table class=secRep width="100%">
+<table class=list width="100%">
 <tr class=row0>
 	<th class=label>From Date:</th>
 	<td nowrap><input type=text id="fromDate" name="fromDate" class=calendarField value="<%=bean.getFromDate()%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button></td>
@@ -55,7 +55,7 @@ if (stat != null) {
     CountersSet total = stat.getTotal();
     Collection dates = stat.getDateStat();
 %>
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=1 width="100%">
 <tr>
     <td colspan=4><div class=secView>General statistics</div></td>
 </tr>

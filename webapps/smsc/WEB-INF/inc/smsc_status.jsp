@@ -1,8 +1,14 @@
 <%@ page import="ru.novosoft.smsc.admin.service.ServiceInfo,
 					  ru.novosoft.smsc.util.StringEncoderDecoder,
-					  ru.novosoft.smsc.admin.Constants"%><%!
-String smscStatus(byte status, String elem_id)
+					  ru.novosoft.smsc.admin.Constants,
+					  ru.novosoft.smsc.admin.AdminException"%><%!
+String smscStatus(String elem_id)
 {
+	byte status = ServiceInfo.STATUS_UNKNOWN;
+	try {
+		status = appContext.getHostsManager().getServiceInfo(Constants.SMSC_SME_ID).getStatus();
+	} catch (AdminException e)
+	{}
 	switch (status)
 	{
 		case ServiceInfo.STATUS_RUNNING:

@@ -4,11 +4,12 @@ private String BROWSER_TITLE = null;
 private StringBuffer STATUS = new StringBuffer("");
 private String FORM_METHOD = "POST";
 private String FORM_URI = "";
-private String MENU0_SELECTION = "MENU0_HOME";
+private String MENU0_SELECTION = "MENU0_NONE";
 private String FORM_ENCTYPE = "application/x-www-form-urlencoded";
 private String CPATH = "/smsc";
 private java.security.Principal loginedUserPrincipal = null;
 private ru.novosoft.smsc.jsp.SMSCAppContext appContext = null;
+private boolean is_SMSC_status_needed = false;
 %><%@
 page pageEncoding="windows-1251"%><%@
 page errorPage="/error.jsp"%><%@
@@ -25,4 +26,6 @@ appContext = (ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appConte
 page import="java.util.*, 
              java.net.URLEncoder,
 			 ru.novosoft.smsc.util.StringEncoderDecoder"
-%><%@ include file="/WEB-INF/inc/messages_header.jsp"%>
+%><%@ 
+include file="/WEB-INF/inc/messages_header.jsp"%><%@ 
+include file="/WEB-INF/inc/page_menu.jsp"%>

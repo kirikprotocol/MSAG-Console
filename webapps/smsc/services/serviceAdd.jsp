@@ -35,7 +35,7 @@ MENU0_SELECTION = "MENU0_SERVICES";
 %><input type=hidden name=hostName value="<%=hostName%>"><%
 }%>
 <div class=secQuestion>Select service type:</div>
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=1 width="100%">
 <tbody>
 <tr class=row0>
 	<td class=name><input type=radio name=serviceType id=internal value=internal>&nbsp;<label for=internal>Internal</label></td>

@@ -1,7 +1,7 @@
 <form action="j_security_check" method=post><%
 if(request.getParameter("loginError")!=null) { 
 	%><span class=CF00>Login error</span><%
-}%><table class=secRep>
+}%><table class=list>
 <col align=right width=1%>
 <col align=left width=99%>
 <tr class=row0>

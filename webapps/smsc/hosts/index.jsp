@@ -28,8 +28,14 @@ switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_HOSTS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-
-<%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbAdd",  "Add host",  "Add new host");
+page_menu_button(out, "mbDelete", "Delete host(s)", "Delete selected host(s)");
+page_menu_space(out);
+page_menu_end(out);
+%>
+<div class=content>
 <input type=hidden name=hostName>
 
 <script>
@@ -42,11 +48,11 @@ function viewHost(hostName)
 }
 </script>
 <span class=CF00></span>
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=0 cellpadding=0>
 <col width="1%">
-<col width="79%" align=left>
+<col width="79%">
 <col width="1%">
-<col width="10%" align=center>
+<col width="10%">
 <thead>
 <tr>
 	<th class=ico><img src="<%=CPATH%>/img/ico16_checked_sa.gif" class=ico16 alt=""></th>
@@ -73,9 +79,13 @@ String hostName = (String) i.next();
 <%}}%>
 </tbody>
 </table>
-<div class=secButtons>
-<input class=btn type=submit name=mbAdd value="Add host" title="Add new host">
-<input class=btn type=submit name=mbDelete value="Delete host(s)" title="Delete selected hosts">
 </div>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbAdd",  "Add host",  "Add new host");
+page_menu_button(out, "mbDelete", "Delete host(s)", "Delete selected host(s)");
+page_menu_space(out);
+page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

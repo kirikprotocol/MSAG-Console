@@ -20,12 +20,21 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_ROUTES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<table class=secRep cellspacing=0 cellspadding=1 width="100%">
-<col width="15%" align=right>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbApply",  "Apply",  "Apply filter");
+page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%>
+<div class=content>
+<table class=properties_list cellspacing=0 cellspadding=0>
+<col width="1%">
 <col width="85%">
 <%int rowN = 0;%>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~ sources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=3 class=secInner><div class=secList>Sources</div></td></tr>
+<tr><td colspan=3 class=secInner><div class=page_subtitle>Sources</div></td></tr>
 <%
 rowN = 0;
 for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
@@ -43,16 +52,16 @@ for (int i=0; i<bean.getSrcMasks().length; i++)
 %>
 <tr class=row<%=(rowN++)&1%>>
 	<th class=label>&nbsp;</th>
-	<td><input class=txtW name=srcMasks value="<%=bean.getSrcMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><input class=txt name=srcMasks value="<%=bean.getSrcMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
 	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to sources filter"></th>
-	<td><input class=txtW name=srcMasks validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><input class=txt name=srcMasks validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~ destinations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=3 class=secInner><div class=secList>Destinations</div></td></tr>
+<tr><td colspan=3 class=secInner><div class=page_subtitle>Destinations</div></td></tr>
 <%
 rowN = 0;
 for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
@@ -70,16 +79,16 @@ for (int i=0; i<bean.getDstMasks().length; i++)
 %>
 <tr class=row<%=(rowN++)&1%>>
 	<th class=label>&nbsp;</th>
-	<td><input class=txtW name=dstMasks value="<%=bean.getDstMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><input class=txt name=dstMasks value="<%=bean.getDstMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
 	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to destinations filter"></th>
-	<td><input class=txtW name=dstMasks validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><input class=txt name=dstMasks validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMEs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=3 class=secInner><div class=secList>SMEs</div></td></tr>
+<tr><td colspan=3 class=secInner><div class=page_subtitle>SMEs</div></td></tr>
 <%
 rowN = 0;
 for (Iterator i = bean.getAllSmes().iterator(); i.hasNext();)
@@ -109,10 +118,14 @@ String encName = StringEncoderDecoder.encode(name);
 	<td nowrap><input type="checkbox" name=showDst <%=bean.isShowDst() ? "checked" : ""%>>Show destinations list</td>
 </tr>
 </table>
-<div class=secButtons>
-<input class=btn type=submit name=mbApply value="Apply" title="Apply filter">
-<input class=btn type=submit name=mbClear value="Clear" title="Clear filter" onClick="clickClear()">
-<input class=btn type=submit name=mbCancel value="Cancel" onClick="clickCancel()">
 </div>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbApply",  "Apply",  "Apply filter");
+page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

@@ -18,11 +18,18 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_ALIASES";
-%><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%@ include file="aliasBody.jsp"%>
-<div class=secButtons>
-<input class=btn type=submit name=mbSave value="Add alias" title="Add new alias">
-<input class=btn type=submit name=mbCancel value="Cancel" onClick="clickCancel()">
-</div>
-<%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
-<%@ include file="/WEB-INF/inc/code_footer.jsp"%>
+%><%@ include file="/WEB-INF/inc/html_3_header.jsp"%><%
+page_menu_begin(out);
+page_menu_button(out, "mbSave",  "Add alias",  "Add new alias");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%><%@ include file="aliasBody.jsp"%><%
+page_menu_begin(out);
+page_menu_button(out, "mbSave",  "Add alias",  "Add new alias");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%><%@ 
+include file="/WEB-INF/inc/html_3_footer.jsp"%><%@ 
+include file="/WEB-INF/inc/code_footer.jsp"%>

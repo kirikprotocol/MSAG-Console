@@ -20,25 +20,35 @@ switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_HOSTS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-
-<span class=CF00></span>
-<div class=secInfo>Host infromation</div>
-<table class=secRep cellspacing=1 width="100%">
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbSave",  "Add host",  "Add new host");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%>
+<div class=content>
+<div class=page_subtitle>Host infromation</div>
+<table class=properties_list cellspacing=0 cellpadding=0>
 <col width="15%" align=right>
 <col width="85%">
 <tbody>
 <tr class=row0>
 	<th class=label>host name:</th>
-	<td><input class=txtW name=hostName value="<%=bean.getHostName()%>"></td>
+	<td><input class=txt name=hostName value="<%=bean.getHostName()%>"></td>
 </tr>
 <tr class=rowLast>
 	<th class=label>host port:</th>
 	<td><input class=txt name=port size=10 value="<%=bean.getPort()%>" validation="port" onkeyup="resetValidation(this)"></td>
 </tr>
-</table><div class=secButtons>
-<input type="submit" name="mbSave"   value="Save"   class="btn" title="Save information">
-<input type="submit" name="mbCancel" value="Cancel" class="btn" title="Return to host view" onClick="clickCancel()">
+</table>
 </div>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbSave",  "Add host",  "Add new host");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

@@ -56,7 +56,7 @@ function edit(dlName)
 }
 </script>
 
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=1 width="100%">
 <col width="1%">
 <col width="99%" align=left>
 <thead>

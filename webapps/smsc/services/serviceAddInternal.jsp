@@ -23,7 +23,7 @@ MENU0_SELECTION = "MENU0_SERVICES";
 <%int rowN = 0;%>
 
 <div class=secInfo>Select service type:</div>
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=1 width="100%">
 <col width="15%" align=right>
 <col width="85%">
 <tr class=row<%=(rowN++)&1%>>

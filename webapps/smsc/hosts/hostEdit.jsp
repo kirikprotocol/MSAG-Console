@@ -19,11 +19,15 @@ switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_HOSTS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-
- 
-<span class=CF00></span>
-<table class=secRep cellspacing=0 cellspadding=1 width="100%">
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbSave",  "Save",  "Apply changes");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%>
+<div class=content>
+<table class=list cellspacing=0 cellspadding=1 width="100%">
 <col width="15%" align=right>
 <col width="85%">
 <tr class=row0>
@@ -34,9 +38,14 @@ MENU0_SELECTION = "MENU0_HOSTS";
 	<th>host port:</th>
 	<td><input class=txt name=port value="<%=bean.getPort()%>" validation="port" onkeyup="resetValidation(this)"></td>
 </tr>
-</table><div class=secButtons>
-<input type="submit" name="mbSave"   value="Save"   class="btn" title="Save information">
-<input type="submit" name="mbCancel" value="Cancel" class="btn" title="Return to host view" onClick="clickCancel()">
+</table>
 </div>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbSave",  "Save",  "Apply changes");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

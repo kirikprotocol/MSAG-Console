@@ -35,9 +35,14 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_ROUTES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
- 
-
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbAdd",  "Add route",  "Add new route");
+page_menu_button(out, "mbDelete", "Delete route(s)", "Delete selected route(s)");
+page_menu_space(out);
+page_menu_end(out);
+%>
+<div class=content>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=editRouteId>
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
@@ -61,7 +66,7 @@ function setSort(sorting)
 	return false;
 }
 </script>
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=0 cellpadding=0>
 <col width="1%">
 <col width="60%" align=left>
 <col width="20%" align=center>
@@ -111,9 +116,12 @@ String encRouteId = StringEncoderDecoder.encode(routeId);
 </tbody>
 </table>
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>
-<div class=secButtons>
-<input class=btn type=submit name=mbAdd value="Add route" title="Add new route">
-<input class=btn type=submit name=mbDelete value="Delete route(s)" title="Delete selected route(s)">
-</div>
+</div><%
+page_menu_begin(out);
+page_menu_button(out, "mbAdd",  "Add route",  "Add new route");
+page_menu_button(out, "mbDelete", "Delete route(s)", "Delete selected route(s)");
+page_menu_space(out);
+page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

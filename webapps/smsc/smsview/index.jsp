@@ -33,10 +33,12 @@ switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal
 }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%@ include file="/WEB-INF/inc/calendar.jsp"%><%
+<%@ include file="/WEB-INF/inc/calendar.jsp"%>
+<div class=content>
+<%
 {%>
 <div class=secQuestion>Search parameters</div>
-<table class=secRep width="100%">
+<table class=list width="100%">
 <tr class=row0>
 	<th class=label>Storage:</th>
 	<td nowrap><input class=radio type="radio" name="storageType" id=storageTypeArchive value="<%=
@@ -122,7 +124,7 @@ function setSort(sorting)
 %>
 <div class=secView>Search results: <%= bean.getTotalRowsCount()%> rows matched by query</div>
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=1 width="100%">
 <thead>
 <tr class=row0>
   <th>&nbsp;</th>
@@ -201,5 +203,6 @@ if (lastIndex >= bean.getTotalSizeInt() || bean.getPageSizeInt() < 0)
 <input class=btn type="submit" name="mbDelete" value="Delete All fetched rows">
 </div>
 <% } %>
+</div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

@@ -8,7 +8,7 @@
 </HEAD>
 <BODY>
 <form name=opForm method=post onSubmit="return validateForm(this)">
-<table class=secRep border=0 width=100%>
+<table class=list border=0 width=100%>
 <col width=1%>
 <col width=99%>
 	<tr class=row0>

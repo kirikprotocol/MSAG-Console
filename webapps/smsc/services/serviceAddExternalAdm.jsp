@@ -60,7 +60,7 @@ switch (bean.getStage())
 	{%>
 	<input type="hidden" name="jsp" value="/services/serviceAddExternalAdm.jsp">
 	<div class=secInfo>Select service distribute:</div>
-	<table class=secRep cellspacing=1 width="100%">
+	<table class=list cellspacing=1 width="100%">
 	<col width="15%" align=right>
 	<col width="85%">
 	<tr class=rowLast>
@@ -73,7 +73,7 @@ switch (bean.getStage())
 	case 2:
 	{%>
 	<h3>hosting parameters:</h3>
-	<table class=secRep cellspacing=0 cellspadding=1 width="100%">
+	<table class=list cellspacing=0 cellspadding=1 width="100%">
 	<col width="15%" align=right>
 	<col width="85%">
 	<tr class=row0>
@@ -103,7 +103,7 @@ switch (bean.getStage())
 	case 3:
 	{
 		int rowN = 0;%>
-		<table class=secRep cellspacing=0 cellspadding=1 width="100%">
+		<table class=list cellspacing=0 cellspadding=1 width="100%">
 		<tr class=row<%=(rowN++)&1%>>
 			<th>System Id</th>
 			<td><input type="text" name="serviceId" readonly value="<%=StringEncoderDecoder.encode(bean.getServiceId())%>"></td>

@@ -57,7 +57,7 @@ function setSort(sorting)
 	return false;
 }
 </script>
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=1 width="100%">
 <col width="40%" align=left>
 <col width="20%" align=left>
 <col width="20%" align=left>

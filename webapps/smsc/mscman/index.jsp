@@ -33,7 +33,7 @@
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=1 width="100%">
 <tr>
     <td colspan=4><div class=secView>Commutators status</div></td>
 </tr>
@@ -73,7 +73,7 @@
 
 
 <div class=secQuestion>Register new Mobile Switching Center</div>
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=1 width="100%">
 <tr class=row0>
      <td width="55%">
         <input type="hidden" name="mscKey" value="none">

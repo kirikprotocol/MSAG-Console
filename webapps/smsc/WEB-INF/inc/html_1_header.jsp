@@ -4,6 +4,12 @@
 <%--link rel="STYLESHEET" type="text/css" href="<%=CPATH%>/style.jsp"--%>
 <link rel="STYLESHEET" type="text/css" href="<%=CPATH%>/colors.css">
 <link rel="STYLESHEET" type="text/css" href="<%=CPATH%>/common.css">
+<link rel="STYLESHEET" type="text/css" href="<%=CPATH%>/list.css">
+<link rel="STYLESHEET" type="text/css" href="<%=CPATH%>/properties_list.css">
+<link rel="STYLESHEET" type="text/css" href="<%=CPATH%>/main_menu.css">
+<link rel="STYLESHEET" type="text/css" href="<%=CPATH%>/page_menu.css">
+<link rel="STYLESHEET" type="text/css" href="<%=CPATH%>/collapsing_tree.css">
+<link rel="STYLESHEET" type="text/css" href="<%=CPATH%>/navbar.css">
 <script src="<%=CPATH%>/scripts.js" type="text/javascript"></script>
 <script>
 function openPerfMon()
@@ -42,7 +48,7 @@ function openPerfMon()
 			out.print(" onMouseOver='" + submenuId + ".runtimeStyle.visibility=\"visible\";'");
 			out.print(" onMouseOut='" + submenuId + ".runtimeStyle.visibility=\"hidden\";'>");
 			out.print("<a ID=" + menuId + ">" + name + "</a>");
-			out.print("<table cellspacing=0 cellpadding=0 id=" + submenuId + " style=\"position:absolute; top: 20px; left:0px; border: 1px solid #4E6E82; background-color: #3A5867; visibility: hidden;\"");
+			out.print("<table class=submenu cellspacing=0 cellpadding=0 id=" + submenuId);
 			out.print(" onMouseOver='" + submenuId + ".runtimeStyle.visibility=\"visible\";'");
 			out.print(" onMouseOut='" + submenuId + ".runtimeStyle.visibility=\"hidden\";'>");
 		}
@@ -60,7 +66,7 @@ function openPerfMon()
 		}
 		void main_menu_submenu_i_fu(JspWriter out, String url, String id, String name, String target, String onclick) throws java.io.IOException
 		{
-			out.print("<tr><td><a ID=" + id + " href=\"" +CPATH + url + "\"" + (target != null && target.length() > 0 ? " target=\"" + target + '"' : "") + (onclick != null && onclick.length() > 0 ? " onclick=\"" + onclick + '"' : "") + ">" + name + "</a></td></tr>");
+			out.print("<tr><td ID=" + id + " nowrap><a href=\"" +CPATH + url + "\"" + (target != null && target.length() > 0 ? " target=\"" + target + '"' : "") + (onclick != null && onclick.length() > 0 ? " onclick=\"" + onclick + '"' : "") + ">" + name + "</a></td></tr>");
 		}
 		void main_menu_end_item(JspWriter out) throws java.io.IOException
 		{
@@ -71,11 +77,10 @@ function openPerfMon()
 		<table id=MAIN_MENU_TABLE cellspacing=0 cellpadding=0 class=main_menu>
 		<tr>
 			<td width=26></td>
-			<!--span style="color: #F2E275; font: 11px Verdana;">Home Resources Monitoring Routing</span-->
 			<%	
 			main_menu_begin_item(out, "MENU0_SMSC_menu", "MENU0_SMSC_submenu", "SMSC");
 			main_menu_submenu_item(out, "/smsc_service",               "MENU0_SMSC",             "Configuration");
-			main_menu_submenu_item(out, "",                            "MENU0_HOME",             "Status");
+			main_menu_submenu_i_fu(out, "/smsc_service/status.jsp",    "MENU0_SMSC_Status",      "Status");
 			main_menu_submenu_i_fu(out, "/smsc_service/logging.jsp",   "MENU0_SMSC_LOGGING",     "Logging");
 			main_menu_submenu_item(out, "/users",                      "MENU0_USERS",            "Users");
 			main_menu_submenu_item(out, "/locale_resources",           "MENU0_LOCALE_RESOURCES", "Resources");
@@ -116,32 +121,17 @@ function openPerfMon()
 				<td width=80 background="<%=CPATH%>/img/smsc_16.jpg"></td>
 			</tr> 
 		</table>
-		<script> document.all.<%=MENU0_SELECTION%>.className = 'tmenu_sel'; </script>
-<%--table align=center height="100%" width="100%" cellspacing=0 cellpadding=0>
-<tr><td width="100%" class=title>SMS Service Center (Preliminary Beta Version)</td></tr>
-<tr><td class=tmenu><%
-+	%><a ID=MENU0_HOME             href="<%=CPATH%>">Home</a><%
-+	%><a ID=MENU0_SMSC             href="<%=CPATH%>/smsc_service/index.jsp">SMSC</a><%
-+	%><a ID=MENU0_SMSC_LOGGING     href="<%=CPATH%>/smsc_service/logging.jsp">Logging</a><%
-+	%><a ID=MENU0_LOCALE_RESOURCES href="<%=CPATH%>/locale_resources/index.jsp">Resources</a><%
-+	%><a ID=MENU0_DL               href="<%=CPATH%>/dl/index.jsp">Distribution lists</a><%
-+	%><a ID=MENU0_PERFMON          href="<%=CPATH%>/perfmon/index.jsp" target="SMSC Perfomance monitor" onclick="return openPerfMon();">Monitor</a><%
-+	%><a ID=MENU0_SMSVIEW          href="<%=CPATH%>/smsview/index.jsp">SMS view</a><%
-+	%><a ID=MENU0_SMSSTAT          href="<%=CPATH%>/smsstat/index.jsp">Statistics</a><%
-+	%><a ID=MENU0_MSCMAN           href="<%=CPATH%>/mscman/index.jsp">MSCs</a><%
-+	%><a ID=MENU0_USERS            href="<%=CPATH%>/users/index.jsp">Users</a><br><%
-+	%><a ID=MENU0_ROUTES           href="<%=CPATH%>/routes/index.jsp">Routes</a><%
-+	%><a ID=MENU0_SUBJECTS         href="<%=CPATH%>/subjects/index.jsp">Subjects</a><%
-+	%><a ID=MENU0_ALIASES          href="<%=CPATH%>/aliases/index.jsp">Aliases</a><%
-+	%><a ID=MENU0_PROFILES         href="<%=CPATH%>/profiles/index.jsp">Profiles</a><%
-	%><%
-+	%><a ID=MENU0_HOSTS            href="<%=CPATH%>/hosts/index.jsp">Hosts</a><%
-+	%><a ID=MENU0_SERVICES         href="<%=CPATH%>/services/index.jsp">Services</a><%
-+	%>&nbsp;&nbsp;&nbsp;<a ID=MENU0_LOGOUT href="<%=CPATH%>/logout.jsp">Logout</a><%
-	%><script> document.all.<%=MENU0_SELECTION%>.className = 'tmenu_sel'; </script><%
-	%></td>
-</tr>
-<!--Status Line -->
+		<%-- SMSC Status --%>
+		<table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
+		<tr>
+			<th background="<%=CPATH%>/img/smsc_17.jpg" nowrap><%=TITLE%></th>
+			<td >&nbsp;<%if (is_SMSC_status_needed){%><%@ include file="/WEB-INF/inc/smsc_status.jsp"%>SMSC&nbsp;is&nbsp;<%=smscStatus("SMSC_STATUS_ELEM_ID")%><%}%></td>
+			<td width=12px background="<%=CPATH%>/img/smsc_19.jpg"></td>
+		</tr>
+		</table>
+		<span id="MENU0_NONE"></span>
+		<script> document.all.<%=MENU0_SELECTION%>.className = 'submenu_sel'; </script>
+<%--Status Line -->
 <tr><td class=status><%=STATUS%>&nbsp;</td></tr>
 <!-- Status Line END -->
 <tr><td width="100%" class=contentTitle><%=TITLE%>&nbsp;</td></tr>

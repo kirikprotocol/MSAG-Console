@@ -20,48 +20,57 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_ALIASES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<table class=secRep cellspacing=0 cellspadding=1 width="100%">
-<col width="15%" align=right>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbApply",  "Apply",  "Apply filter");
+page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%>
+<div class=content>
+<table class=properties_list cellspacing=0 cellspadding=0>
+<col width="15%">
 <col width="85%">
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Aliases ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=2 class=secInner><div class=secList>Aliases</div></td></tr>
+<tr><td colspan=2 class=secInner><div class=page_subtitle>Aliases</div></td></tr>
 <%
 int rowN = 0;
 for (int i=0; i<bean.getAliases().length; i++)
 {
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label></th>
+	<th></th>
 	<td><input class=txtW name=aliases value="<%=bean.getAliases()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new alias to filter"></th>
+	<th><input class=btn type=submit name=mbAdd value="Add" title="Add new alias to filter"></th>
 	<td><input class=txtW name=aliases validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Addresses ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=2 class=secInner><div class=secList>Addresses</div></td></tr>
+<tr><td colspan=2 class=secInner><div class=page_subtitle>Addresses</div></td></tr>
 <%
 rowN = 0;
 for (int i=0; i<bean.getAddresses().length; i++)
 {
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>address:</th>
+	<th>address:</th>
 	<td><input class=txtW name=addresses value="<%=bean.getAddresses()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new address to filter"></th>
+	<th><input class=btn type=submit name=mbAdd value="Add" title="Add new address to filter"></th>
 	<td><input class=txtW name=addresses validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=2 class=secInner><div class=secView>Options</div></td></tr>
+<tr><td colspan=2 class=secInner><div class=page_subtitle>Options</div></td></tr>
 <%rowN = 0;%>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>hide option:</th>
+	<th>hide option:</th>
 	<td><div class=select><select class=txt name=hide>
 			<option value="<%=AliasFilter.HIDE_NOFILTER%>" <%=AliasFilter.HIDE_NOFILTER == bean.getHide() ? "selected" : ""%>>all</option>
 			<option value="<%=AliasFilter.HIDE_SHOW_HIDE%>" <%=AliasFilter.HIDE_SHOW_HIDE == bean.getHide() ? "selected" : ""%>>show hided only</option>
@@ -69,10 +78,14 @@ for (int i=0; i<bean.getAddresses().length; i++)
 		</select></div></td>
 </tr>
 </table>
-<div class=secButtons>
-<input class=btn type=submit name=mbApply value="Apply" title="Apply filter">
-<input class=btn type=submit name=mbClear value="Clear" title="Clear filter" onClick="clickClear()">
-<input class=btn type=submit name=mbCancel value="Cancel" onClick="clickCancel()">
 </div>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbApply",  "Apply",  "Apply filter");
+page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

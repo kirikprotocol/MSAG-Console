@@ -32,11 +32,14 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_SUBJECTS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-
-<%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-
- 
-
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbAdd",  "Add subject",  "Add new subject");
+page_menu_button(out, "mbDelete", "Delete subject(s)", "Delete selected subject(s)");
+page_menu_space(out);
+page_menu_end(out);
+%>
+<div class=content>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=editName>
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
@@ -67,7 +70,7 @@ function navigate(direction)
 	return false;
 }
 </script>
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=1 width="100%">
 <col width="1%">
 <col width="60%" align=left>
 <col width="20%" align=left>
@@ -110,9 +113,13 @@ String encDefSme = StringEncoderDecoder.encode(defSme);
 </tbody>
 </table>
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>
-<div class=secButtons>
-<input class=btn type=submit name=mbAdd value="Add subject" title="Add new subject">
-<input class=btn type=submit name=mbDelete value="Delete subject(s)" title="Delete selected subject(s)">
 </div>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbAdd",  "Add subject",  "Add new subject");
+page_menu_button(out, "mbDelete", "Delete subject(s)", "Delete selected subject(s)");
+page_menu_space(out);
+page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

@@ -24,7 +24,7 @@
     }
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<table class=secRep cellspacing=0 cellspadding=1 width="100%">
+<table class=list cellspacing=0 cellspadding=1 width="100%">
 <col width="15%" align=right>
 <col width="85%">
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Names ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>

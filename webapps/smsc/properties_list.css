@@ -1,0 +1,25 @@
+/************************************ properties list table ****************************************/
+table.properties_list th
+{
+/*	background-color: #F8F6EE;*/
+}
+table.properties_list th a,
+table.properties_list th a:visited,
+table.properties_list th a:hover
+{
+	width:100%;
+	text-decoration: none;
+	background-repeat: no-repeat;
+	padding-left:20px;
+	color: #161E49;
+	height: 16px; /*!!! for ico16_up/down */
+}
+table.properties_list th a.up
+{
+	background-image: url(img/ico16_up.gif);
+}
+table.properties_list th a.down
+{
+	background-image: url(img/ico16_down.gif);
+}
+

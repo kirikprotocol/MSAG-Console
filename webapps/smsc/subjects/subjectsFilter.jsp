@@ -21,11 +21,20 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 MENU0_SELECTION = "MENU0_SUBJECTS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%int rowN = 0;%>
-<table class=secRep cellspacing=0 cellspadding=1 width="100%">
-<col width="15%" align=right>
-<col width="85%">
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbApply",  "Apply",  "Apply filter");
+page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%>
+<div class=content>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Default SMEs ~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=2 class=secInner><div class=secList>Default SMEs</div></td></tr>
+<div class=page_subtitle>Default SMEs</div>
+<table class=properties_list cellspacing=0 cellspadding=0>
+<col width=1%>
+<col width=99%>
 <%
 rowN = 0;
 for (Iterator i = bean.getAllSmes().iterator(); i.hasNext();)
@@ -34,12 +43,16 @@ String name = (String) i.next();
 String encName = StringEncoderDecoder.encode(name);
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>&nbsp;</th>
-	<td wrap><input class=check id="subj_sme_<%=encName%>" type=checkbox name=checkedSmes value="<%=encName%>" <%=bean.isSmeChecked(name) ? "checked" : ""%>>&nbsp;<label for="subj_sme_<%=encName%>"><%=encName%></label></td>
+	<td><input class=check id="subj_sme_<%=encName%>" type=checkbox name=checkedSmes value="<%=encName%>" <%=bean.isSmeChecked(name) ? "checked" : ""%>></td>
+	<td nowrap><label for="subj_sme_<%=encName%>"><%=encName%></label></td>
 </tr>
 <%}%>
+</table>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Subjects ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=2 class=secInner><div class=secList>Subjects</div></td></tr>
+<div class=page_subtitle>Subjects</div>
+<table class=properties_list cellspacing=0 cellspadding=0>
+<col width=1%>
+<col width=99%>
 <%
 rowN = 0;
 for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
@@ -48,31 +61,38 @@ String name = (String) i.next();
 String encName = StringEncoderDecoder.encode(name);
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>&nbsp;</th>
-	<td nowrap><input class=check id="subj_chk_<%=encName%>" type=checkbox name=checkedSubjects value="<%=encName%>" <%=bean.isSubjChecked(name) ? "checked" : ""%>>&nbsp;<label for="subj_chk_<%=encName%>"><%=encName%></label></td>
+	<td><input class=check id="subj_chk_<%=encName%>" type=checkbox name=checkedSubjects value="<%=encName%>" <%=bean.isSubjChecked(name) ? "checked" : ""%>></td>
+	<td nowrap><label for="subj_chk_<%=encName%>"><%=encName%></label></td>
 </tr>
 <%}%>
+</table>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Masks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=2 class=secInner><div class=secList>Masks</div></td></tr>
+<div class=page_subtitle>Masks</div>
+<table class=properties_list cellspacing=0 cellspadding=0>
+<col width=1%>
+<col width=99%>
 <%
 rowN = 0;
 for (int i=0; i<bean.getMasks().length; i++)
 {
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>&nbsp;</th>
-	<td><input class=txtW name=masks value="<%=bean.getMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
+	<td colspan=2><input class=txt name=masks value="<%=bean.getMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=rowLast>
-	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to subject"></th>
-	<td><input class=txtW name=masks validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><input class=txt name=masks validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to subject"></td>
 </tr>
 </table>
-<div class=secButtons>
-<input class=btn type=submit name=mbApply value="Apply" title="Apply filter">
-<input class=btn type=submit name=mbClear value="Clear" title="Clear filter" onClick="clickClear()">
-<input class=btn type=submit name=mbCancel value="Cancel" onClick="clickCancel()">
 </div>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbApply",  "Apply",  "Apply filter");
+page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

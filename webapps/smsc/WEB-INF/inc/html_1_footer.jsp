@@ -11,13 +11,13 @@
 	</tr>
 	</table>
 </td></tr>
-<tr height="100%" style="position:relative"><td>
+<tr height="100%"><td style="position:relative;">
 	<!-- background -->
-	<table cellspacing=0 cellpadding=0 height=100% style="position: relative; top:0; left:0; z-index: -1;">
+	<table cellspacing=0 cellpadding=0 height=100% style="position: absolute; top:0; left:0; z-index: -1;">
 	<tr>
-		<td width=12px background="<%=CPATH%>/img/smsc_24.jpg"></td>
-		<td>&nbsp;</td>
-		<td width=12px background="<%=CPATH%>/img/smsc_26.jpg"></td>
+		<td height=1px width=12px background="<%=CPATH%>/img/smsc_24.jpg"></td>
+		<td height=1px><img height=0px width="1px"></td>
+		<td height=1px width=12px background="<%=CPATH%>/img/smsc_26.jpg"></td>
 	</tr>
 	</table>
 </td></tr>

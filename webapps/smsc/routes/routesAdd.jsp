@@ -19,11 +19,21 @@ switch(bean.process(appContext, errorMessages, request.getParameterMap(), logine
 
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_ROUTES";
-%><%@ include file="/WEB-INF/inc/html_3_header.jsp"
-%><%@ include file="routeBody.jsp"%>
-<div class=secButtons>
-<input class=btn type=submit name=mbSave value="Add route" title="Add new route">
-<input class=btn type=submit name=mbCancel value="Cancel" onClick="clickCancel()">
-</div>
+%><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbSave",  "Add route",  "Add new route");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%>
+<%@ include file="routeBody.jsp"%>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbSave",  "Add route",  "Add new route");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

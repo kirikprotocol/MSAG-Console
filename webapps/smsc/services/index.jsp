@@ -63,7 +63,7 @@ function editService(serviceId)
 }
 </script>
 
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=1 width="100%">
 <col width="1%" align=center>
 <col width="1%">
 <col align=left>

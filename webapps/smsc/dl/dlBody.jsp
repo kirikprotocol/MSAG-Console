@@ -1,5 +1,5 @@
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Common values ~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<table class=secRep cellspacing=0 cellspadding=1 width="100%">
+<table class=list cellspacing=0 cellspadding=1 width="100%">
 <thead>
 <col width="15%" align=right>
 <col width="85%">
@@ -20,7 +20,7 @@
 </table>
 
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Submitters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<table class=secRep cellspacing=0 cellpadding=1 width="100%">
+<table class=list cellspacing=0 cellpadding=1 width="100%">
 <thead>
 <col width="15%" align=right>
 <col width="85%">
@@ -57,7 +57,7 @@ function setSort(sorting)
 	return false;
 }
 </script>
-<table class=secRep cellspacing=0 cellpadding=1 width="100%">
+<table class=list cellspacing=0 cellpadding=1 width="100%">
 <col width="15%" align=right>
 <col width="85%">
 <thead>
@@ -78,7 +78,7 @@ for (int i = 0; i<bean.getMembers().length; i++)
 %>
 </table>
 <%@ include file="/WEB-INF/inc/navbar_nofilter.jsp"%>
-<table class=secRep cellspacing=0 cellpadding=1 width="100%">
+<table class=list cellspacing=0 cellpadding=1 width="100%">
 <thead>
 <col width="15%" align=right>
 <col width="85%">

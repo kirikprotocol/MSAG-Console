@@ -41,7 +41,7 @@ switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal
     int rowN=0;
   %>
 <div class=secView>SMS #<%= row.getId()%></div>
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=1 width="100%">
 <tbody>
   <tr class=row<%=rowN++&1%>0>
     <th width="1%" nowrap valign=top class=label>Originating Address</th>
@@ -124,7 +124,7 @@ switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal
 </table>
 
 <div class=secView>SMS Body</div>
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=1 width="100%">
 <tbody>
   <%
     Hashtable ht = row.getBodyParameters();

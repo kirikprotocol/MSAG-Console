@@ -1,6 +1,5 @@
 <%@
  include file="/WEB-INF/inc/code_header.jsp"%><%@
- include file="/WEB-INF/inc/smsc_status.jsp"%><%@
  page import="ru.novosoft.smsc.jsp.smsc.smsc_service.Index,
                  ru.novosoft.smsc.admin.service.ServiceInfo,
 				 ru.novosoft.smsc.admin.Constants,
@@ -9,6 +8,7 @@
 					  java.util.Iterator"
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.smsc_service.Index"
 /><jsp:setProperty name="bean" property="*"/><%
+is_SMSC_status_needed = true;
 FORM_METHOD = "POST";
 TITLE = "SMSC";
 MENU0_SELECTION = "MENU0_SMSC";
@@ -27,14 +27,8 @@ switch(bean.process(appContext, errorMessages, request, loginedUserPrincipal))
 		STATUS.append("<span class=CF00>Error</span>");
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
 }
-%><%@ include file="/WEB-INF/inc/html_3_header.jsp"%><%@ include file="/WEB-INF/inc/page_menu.jsp"%>
-<table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
-<tr>
-	<th width=166px background="<%=CPATH%>/img/smsc_17.jpg">SMSC</th>
-	<td >SMSC&nbsp;is&nbsp;<%=smscStatus(bean.getStatus(), "SMSC_STATUS_ELEM_ID")%></td>
-	<td width=12px background="<%=CPATH%>/img/smsc_19.jpg"></td>
-</tr>
-</table><%
+%><%@ 
+include file="/WEB-INF/inc/html_3_header.jsp"%><%
 page_menu_begin(out);
 page_menu_button(out, "mbSave",  "Save",  "Save config");
 page_menu_button(out, "mbReset", "Reset", "Reset", "clickCancel()");
@@ -61,12 +55,12 @@ function showhide(sectionId)
 	var valueElem = opForm.all(sectionId + "_value");
 	if (valueElem.style.display != "none")
 	{
-		headerElem.className = "secTitleClosed";
+		headerElem.className = "collapsing_tree_closed";
 		valueElem.style.display="none";
 	}
 	else
 	{
-		headerElem.className = "secTitleOpened";
+		headerElem.className = "collapsing_tree_opened";
 		valueElem.style.display = "";
 	}
 }
@@ -75,7 +69,7 @@ function showhide(sectionId)
 	int row = 0;
 	void startSection(JspWriter out, String sectionId, String sectionName, boolean opened) throws IOException
 	{
-		out.print("<div class=" + (opened ? "secTitleOpened" : "secTitleClosed") + "  id=\"" + sectionId + "_header\" onclick=\"showhide('" + sectionId + "')\">");
+		out.print("<div class=" + (opened ? "collapsing_tree_opened" : "collapsing_tree_closed") + "  id=\"" + sectionId + "_header\" onclick=\"showhide('" + sectionId + "')\">");
 		out.print(sectionName);
 		out.print("</div>");
 
@@ -96,13 +90,13 @@ function showhide(sectionId)
 	void startParams(JspWriter out) throws IOException
 	{
 		row = 0;
-		out.print("<table cellspacing=1 width='100%'>");
+		out.print("<table cellspacing=0 cellpadding=0>");
 		out.print("<col width=150px>");
 	}
 	void param(JspWriter out, String label, String id, String value) throws IOException
 	{
 		out.print("<tr class=row" + ((row++) & 1) + ">");
-      out.print("<th class=label nowrap>" + label + ":</th>");
+      out.print("<th nowrap>" + label + ":</th>");
 		out.print("<td><input class=txt name=\"" + id + "\" value=\"" + StringEncoderDecoder.encode(value) + "\"></td>");
 		out.print("</tr>");
 	}
@@ -113,7 +107,7 @@ function showhide(sectionId)
 	void param(JspWriter out, String label, String id, boolean value) throws IOException
 	{
 		out.print("<tr class=row" + ((row++) & 1) + ">");
-		out.print("<th class=label nowrap>" + label + ":</th>");
+		out.print("<th nowrap>" + label + ":</th>");
 		out.print("<td><input class=check type=checkbox name=\"" + id + "\" value=true " + (value ? "checked" : "") + "></td>");
 		out.print("</tr>");
 	}

@@ -29,11 +29,23 @@ switch(bean.process(multi, appContext, errorMessages, loginedUserPrincipal))
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbUpload",  "Upload",  "Upload selected resource file");
+page_menu_button(out, "mbCancel", "Cancel", "Return to locales list without uploading resources");
+page_menu_space(out);
+page_menu_end(out);
+%>
+<div class=content>
 <input type="hidden" name="jsp" value="/locale_resources/localeResourcesAdd.jsp">
-Resource file: <input type="file" name="resourceFile" accept="text/xml" class="txtW">
-<div class=secButtons>
-<input class=btn type=submit name=mbUpload value="Upload" title="Upload selected resource file">
-<input class=btn type=submit name=mbCancel value="Cancel" title="Return to locales list without uploading resources">
+Resource file: <input class=txt type="file" name="resourceFile" accept="text/xml" class="txt">
 </div>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbUpload",  "Upload",  "Upload selected resource file");
+page_menu_button(out, "mbCancel", "Cancel", "Return to locales list without uploading resources");
+page_menu_space(out);
+page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

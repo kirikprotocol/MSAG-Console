@@ -75,7 +75,7 @@ name="bean" property="*"
 		final String paramTableID = "paramTable_" + sectionFN;
 		//params
 
-		out.print("<table id=\"" + paramTableID + "\" class=secRep width=100% cellspacing=1>");
+		out.print("<table id=\"" + paramTableID + "\" class=list width=100% cellspacing=1>");
 		out.print("<col width='180px'/>");
 		out.print("<col/>");
 		out.print("<col width='16px'/>");
@@ -258,7 +258,7 @@ function addSectionField(sectionFN)
 {
 	var newSectionInput = "newSectionInput_" + sectionFN;
 	return ""
-		+ "<table class=secRep width=100% cellspacing=1><col/><col width='16px'/>"
+		+ "<table class=list width=100% cellspacing=1><col/><col width='16px'/>"
 		+ "<tr><td>"
 		+ createInput(newSectionInput)
 		+ "</td><td>"
@@ -273,7 +273,7 @@ function addParamField(sectionFN)
 	var paramTableID = "paramTable_" + sectionFN;
 
 	return ""
-		+ "<table id=\"" + paramTableID + "\" class=secRep width=100% cellspacing=1>"
+		+ "<table id=\"" + paramTableID + "\" class=list width=100% cellspacing=1>"
 		+ "<col width='180px'/>"
 		+ "<col/>"
 		+ "<col width='16px'/>"

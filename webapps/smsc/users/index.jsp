@@ -35,6 +35,13 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_USERS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbAdd",  "Add user",  "Add new user");
+page_menu_button(out, "mbDelete", "Delete user(s)", "Delete selected user(s)");
+page_menu_space(out);
+page_menu_end(out);
+%><div class=content>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=editUserLogin>
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
@@ -58,11 +65,12 @@ function setSort(sorting)
 	return false;
 }
 </script>
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=0 width="100%">
 <col width="1%">
-<col width="60%" align=left>
-<col width="20%" align=left>
-<col width="20%" align=center>
+<col width="25%" align=left>
+<col width="25%" align=left>
+<col width="25%" align=left>
+<col width="25%" align=left>
 <thead>
 <tr>
 	<th class=ico><img src="<%=CPATH%>/img/ico16_checked_sa.gif" class=ico16 alt=""></th>
@@ -85,8 +93,8 @@ String encLastName = StringEncoderDecoder.encode((String) item.getValue("lastNam
 String encDept = StringEncoderDecoder.encode((String) item.getValue("dept"));
 %>
 <tr class=row<%=row&1%>>
-	<td class=check><input class=check type=checkbox name=checkedUserLogins value="<%=encLogin%>" <%=bean.isLoginChecked(login) ? "checked" : ""%>></td>
-	<td class=name><a href="#" title="Edit route" onClick='return edit("<%=encLogin%>")'><%=encLogin%></a></td>
+	<td><input class=check type=checkbox name=checkedUserLogins value="<%=encLogin%>" <%=bean.isLoginChecked(login) ? "checked" : ""%>></td>
+	<td><a href="#" title="Edit user" onClick='return edit("<%=encLogin%>")'><%=encLogin%></a></td>
 	<td><%=encFirstName%>&nbsp;</td>
 	<td><%=encLastName%>&nbsp;</td>
 	<td><%=encDept%>&nbsp;</td>
@@ -95,9 +103,13 @@ String encDept = StringEncoderDecoder.encode((String) item.getValue("dept"));
 </tbody>
 </table>
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>
-<div class=secButtons>
-<input class=btn type=submit name=mbAdd value="Add user" title="Add new user">
-<input class=btn type=submit name=mbDelete value="Delete user(s)" title="Delete selected user(s)">
 </div>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbAdd",  "Add user",  "Add new user");
+page_menu_button(out, "mbDelete", "Delete user(s)", "Delete selected user(s)");
+page_menu_space(out);
+page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

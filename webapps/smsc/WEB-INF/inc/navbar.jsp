@@ -1,5 +1,5 @@
 <%@ include file="/WEB-INF/inc/navbar_header.jsp"%>
-<td class=navb><a href="#" onclick="return clickFilter()">filter</a></td>
+<td class=filter onclick="return clickFilter()">filter</td>
 </tr>
 </table>
 <%}%>

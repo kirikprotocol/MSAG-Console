@@ -1,22 +1,23 @@
-<table class=secRep cellspacing=0 cellspadding=1 width="100%">
-<col width="15%" align=right>
+<div class=content>
+<div class=page_subtitle>User info</div>
+<table class=properties_list cellspacing=0 cellspadding=0>
+<col width="15%">
 <col width="85%">
-<tr><td colspan=2 class=secInner><div class=secView>User info</div></td></tr>
 <%int rowN = 0;%>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>login:</th>
-	<td><input class=txtW name=login value="<%=bean.getLogin()%>" <%=bean.isNew() ? "" : "readonly"%>></td>
+	<th>login:</th>
+	<td><input class=txt name=login value="<%=bean.getLogin()%>" <%=bean.isNew() ? "" : "readonly"%>></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>password:</th>
-	<td><input class=txtW type=password name=password value=""></td>
+	<th>password:</th>
+	<td><input class=txt type=password name=password value=""></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>confirm password:</th>
-	<td><input class=txtW type=password name=confirmPassword value=""></td>
+	<th>confirm password:</th>
+	<td><input class=txt type=password name=confirmPassword value=""></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>roles:</th>
+	<th>roles:</th>
 	<td><input class=check type=checkbox name=roles id=role01 value="apply"             <%=bean.isUserInRole("apply")            ? "checked" : ""%>>&nbsp;<label for=role01>Apply config changes</label><br>
 		<input class=check type=checkbox name=roles id=role02 value="smsc_service"      <%=bean.isUserInRole("smsc_service")     ? "checked" : ""%>>&nbsp;<label for=role02>SMSC configuration</label><br>
 		<input class=check type=checkbox name=roles id=role03 value="locale_resources"  <%=bean.isUserInRole("locale_resources") ? "checked" : ""%>>&nbsp;<label for=role03>Locale resources uploading and viewing</label><br>
@@ -35,31 +36,32 @@
 	</td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>first:</th>
-	<td><input class=txtW name=firstName value="<%=bean.getFirstName()%>" validation="nonEmpty" onkeyup="resetValidation(this)"></td>
+	<th>first:</th>
+	<td><input class=txt name=firstName value="<%=bean.getFirstName()%>" validation="nonEmpty" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>last name:</th>
-	<td><input class=txtW name=lastName value="<%=bean.getLastName()%>" validation="nonEmpty" onkeyup="resetValidation(this)"></td>
+	<th>last name:</th>
+	<td><input class=txt name=lastName value="<%=bean.getLastName()%>" validation="nonEmpty" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>dept:</th>
-	<td><input class=txtW name=dept value="<%=bean.getDept()%>" validation="nonEmpty" onkeyup="resetValidation(this)"></td>
+	<th>dept:</th>
+	<td><input class=txt name=dept value="<%=bean.getDept()%>" validation="nonEmpty" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>work phone:</th>
-	<td><input class=txtW name=workPhone value="<%=bean.getWorkPhone()%>" validation="nonEmpty" onkeyup="resetValidation(this)"></td>
+	<th>work phone:</th>
+	<td><input class=txt name=workPhone value="<%=bean.getWorkPhone()%>" validation="nonEmpty" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>home phone:</th>
-	<td><input class=txtW name=homePhone value="<%=bean.getHomePhone()%>" validation="nonEmpty" onkeyup="resetValidation(this)"></td>
+	<th>home phone:</th>
+	<td><input class=txt name=homePhone value="<%=bean.getHomePhone()%>" validation="nonEmpty" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>cellular phone:</th>
-	<td><input class=txtW name=cellPhone value="<%=bean.getCellPhone()%>" validation="nonEmpty" onkeyup="resetValidation(this)"></td>
+	<th>cellular phone:</th>
+	<td><input class=txt name=cellPhone value="<%=bean.getCellPhone()%>" validation="nonEmpty" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th class=label>email:</th>
-	<td><input class=txtW name=email value="<%=bean.getEmail()%>" validation="email" onkeyup="resetValidation(this)"></td>
+	<th>email:</th>
+	<td><input class=txt name=email value="<%=bean.getEmail()%>" validation="email" onkeyup="resetValidation(this)"></td>
 </tr>
 </table>
+</div>

@@ -41,6 +41,8 @@ public class Index extends IndexBean
 			return result;
 
 		pageSize = preferences.getUsersPageSize();
+		//!!! ????...
+		pageSize = 2;
 		if (sort != null)
 			preferences.getUsersSortOrder().set(0, sort);
 		else

@@ -35,10 +35,17 @@ switch (bean.process(appContext, errorMessages, loginedUserPrincipal))
 TITLE = "Host \""+bean.getHostName()+":"+bean.getPort()+"\" view";
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_HOSTS";
-
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-
-<%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbAddService",  "Add service",  "Add new service");
+page_menu_button(out, "mbDelete", "Delete service(s)", "Delete selected service(s)");
+page_menu_space(out);
+page_menu_button(out, "mbStartService",  "Start service(s)",  "Start selected service(s)");
+page_menu_button(out, "mbStopService", "Stop service(s)", "Stop selected service(s)");
+page_menu_end(out);
+%>
+<div class=content>
 <input type=hidden name=hostName value="<%=bean.getHostName()%>">
 <input type=hidden name=serviceId>
 
@@ -60,7 +67,7 @@ function editService(serviceId)
 </script>
 
 <div class=secInfo>Host information</div>
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=1 width="100%">
 <col width="15%" align=right>
 <col width="85%">
 <tbody>
@@ -78,7 +85,7 @@ function editService(serviceId)
 <input class=btn type=submit name=mbCancel value="Cancel" title="Return to hosts list">
 </div--%>
 <div class=secList>Host Services</div>
-<table class=secRep cellspacing=1 width="100%">
+<table class=list cellspacing=1 width="100%">
 <col width="1%">
 <col width="1%">
 <col width="70%" align=left>
@@ -111,12 +118,15 @@ String serviceControl = (row == 0) ? "start" : "stop";
 <%}}%>
 </tbody>
 </table>
-<div class=secButtons>
-<input class=btn type=submit name=mbAddService value="Add service" title="Add service">
-<input class=btn type=submit name=mbDelete value="Delete service(s)" title="Delete selected services">
-&nbsp;&nbsp;&nbsp;&nbsp;
-<input class=btn type=submit name=mbStartService value="Start service(s)" title="Start selected services">
-<input class=btn type=submit name=mbStopService value="Stop service(s)" title="Stop selected services">
 </div>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbAddService",  "Add service",  "Add new service");
+page_menu_button(out, "mbDelete", "Delete service(s)", "Delete selected service(s)");
+page_menu_space(out);
+page_menu_button(out, "mbStartService",  "Start service(s)",  "Start selected service(s)");
+page_menu_button(out, "mbStopService", "Stop service(s)", "Stop selected service(s)");
+page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

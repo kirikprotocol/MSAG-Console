@@ -20,18 +20,18 @@ function clickFilter()
 	return false;
 }
 </script>
-<table class=secNav cellspacing=1 cellpadding=0 width="100%">
+<table class=navbar cellspacing=1 cellpadding=0>
 <tr>
-<td class=navb><a href="#" onclick="return <%=jscript%>(0)">first</a></td>
+<td class=first onclick="return <%=jscript%>(0)" title="First page">&nbsp;</td>
 <%if(pageCurrent > 0){%>
-<td class=navb><a href="#" onclick="return <%=jscript%>(<%=pageCurrent-1%>)"><img src="<%=CPATH%>/img/ico12_shift_ld.gif" class=ico12 alt="Previous page"></a></td>
+<td class=prev onclick="return <%=jscript%>(<%=pageCurrent-1%>)" title="Previous page">&nbsp;</td>
 <%}
 for(int pageNum=pageFirst;pageNum<=pageLast;pageNum++)
 {%>
-<td class=<%=pageNum==pageCurrent ? "navs":"navb"%>><a href="#" onclick="return <%=jscript%>(<%=pageNum%>)"><%=pageNum+1%></a></td>
+<td class=<%=pageNum==pageCurrent ? "current":"page"%> onclick="return <%=jscript%>(<%=pageNum%>)" title="Page <%=pageNum+1%>"><%=pageNum+1%></td>
 <%}%>
 <%if(pageCurrent+1 < pageTotal){%>
-<td class=navb><a href="#" onclick="return <%=jscript%>(<%=pageCurrent+1%>)"><img src="<%=CPATH%>/img/ico12_shift_rd.gif" class=ico12 alt="Next page"></a></td>
+<td class=next title="Next page" onclick="return <%=jscript%>(<%=pageCurrent+1%>)">&nbsp;</td>
 <%}%>
-<td class=navb><a href="#" onclick="return <%=jscript%>(<%=pageTotal > 0 ? pageTotal-1 : 0%>)">last</a></td>
-<td class=navi>total:<%=itemsTotal%> items</td>
+<td class=last onclick="return <%=jscript%>(<%=pageTotal > 0 ? pageTotal-1 : 0%>)" title="Last page">&nbsp;</td>
+<td class=total>total:<%=itemsTotal%> items</td>
