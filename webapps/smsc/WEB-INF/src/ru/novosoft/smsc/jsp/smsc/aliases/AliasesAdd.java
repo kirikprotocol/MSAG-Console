@@ -74,20 +74,9 @@ public class AliasesAdd extends SmscBean
 		if (countQuestions(address) != countQuestions(alias))
 			return error(SMSCErrors.error.aliases.QuestionCountsNotMathes);
 
-		AliasSet aliases = smsc.getAliases();
-      if (isHide())
-		{
-         for (Iterator i = aliases.iterator(); i.hasNext();)
-			{
-				Alias alias = (Alias) i.next();
-				if (alias.isHide() && alias.getAddress().getMask().equals(address))
-					return error(SMSCErrors.error.aliases.alreadyExistsAddress, address);
-			}
-		}
-
 		try
 		{
-			if (aliases.add(new Alias(new Mask(address), new Mask(alias), hide)))
+			if (smsc.getAliases().add(new Alias(new Mask(address), new Mask(alias), hide)))
 			{
 				appContext.getStatuses().setAliasesChanged(true);
 				return RESULT_DONE;

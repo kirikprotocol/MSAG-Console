@@ -35,10 +35,7 @@ public class AliasSet
 			Element aliasElem = (Element) aliasNodes.item(i);
 			try
 			{
-				add(new Alias(new Mask(aliasElem.getAttribute("addr")),
-								  new Mask(aliasElem.getAttribute("alias")),
-								  aliasElem.getAttribute("hide").equalsIgnoreCase("true"))
-				);
+				add(new Alias(new Mask(aliasElem.getAttribute("addr")), new Mask(aliasElem.getAttribute("alias")), aliasElem.getAttribute("hide").equalsIgnoreCase("true")));
 			}
 			catch (AdminException e)
 			{
@@ -52,22 +49,24 @@ public class AliasSet
 		for (Iterator i = iterator(); i.hasNext();)
 		{
 			Alias a = (Alias) i.next();
-			out.println("  <record addr=\"" + StringEncoderDecoder.encode(a.getAddress().getMask())
-							+ "\" alias=\"" + StringEncoderDecoder.encode(a.getAlias().getMask())
-							+ "\" hide=\"" + (a.isHide() ? "true" : "false")
-							+ "\"/>");
+			out.println("  <record addr=\"" + StringEncoderDecoder.encode(a.getAddress().getMask()) + "\" alias=\"" + StringEncoderDecoder.encode(a.getAlias().getMask()) + "\" hide=\"" + (a.isHide() ? "true" : "false") + "\"/>");
 		}
 		return out;
 	}
 
 	public boolean add(Alias new_alias)
 	{
-		for (Iterator i = aliases.iterator(); i.hasNext();)
-		{
-			Alias alias = (Alias) i.next();
-         if (alias.getAddress().equals(new_alias.getAddress()) && (alias.isHide() == new_alias.isHide()))
-				return false;
-		}
+		if (aliases.contains(new_alias))
+			return false;
+
+		if (new_alias.isHide())
+			for (Iterator i = aliases.iterator(); i.hasNext();)
+			{
+				Alias alias = (Alias) i.next();
+				if (alias.isHide() && alias.getAddress().equals(new_alias.getAddress()))
+					return false;
+			}
+
 		dataSource.add(new_alias);
 		return aliases.add(new_alias);
 	}

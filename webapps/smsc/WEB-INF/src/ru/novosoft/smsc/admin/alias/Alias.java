@@ -58,7 +58,7 @@ public class Alias
 		}
 		else
 		{
-			return super.equals(obj);
+			return false;
 		}
 	}
 }
