@@ -24,21 +24,26 @@ public:
 	 */
 	void submitSm(bool sync);
 
+	/**
+	 * Отправка data_sm pdu smscsme.
+	 */
+	void dataSm(bool sync);
+
 protected:
 	virtual Category& getLog();
 	
 	AckText* getExpectedResponse(DeliveryReceiptMonitor* monitor,
-		PduSubmitSm* origPdu, const string& text, time_t recvTime);
+		const string& text, time_t recvTime);
 	
 	AckText* getExpectedResponse(IntermediateNotificationMonitor* monitor,
-		PduSubmitSm* origPdu, const string& text, time_t recvTime);
+		const string& text, time_t recvTime);
 
 	virtual void processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
-		PduDeliverySm& pdu, time_t recvTime);
+		SmppHeader* header, time_t recvTime);
 
 	virtual void processIntermediateNotification(
 		IntermediateNotificationMonitor* monitor,
-		PduDeliverySm& pdu, time_t recvTime);
+		SmppHeader* header, time_t recvTime);
 };
 
 }

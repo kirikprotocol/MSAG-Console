@@ -1,4 +1,5 @@
 #include "SmppUtil.hpp"
+#include "test/core/PduUtil.hpp"
 #include "test/util/Util.hpp"
 #include "test/util/TextUtil.hpp"
 #include "test/conf/TestConfig.hpp"
@@ -20,6 +21,7 @@ using smsc::test::conf::TestConfig;
 using smsc::test::util::operator<<;
 using namespace std;
 using namespace smsc::sms; //constants
+using namespace smsc::test::core;
 using namespace smsc::test::util;
 using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::smpp::DataCoding;
@@ -56,21 +58,29 @@ void dumpPdu(const char* tc, const string& id, SmppHeader* pdu)
 			//реквесты
 			case SUBMIT_SM:
 				{
-					PduSubmitSm* p = reinterpret_cast<PduSubmitSm*>(pdu);
-					ss << ", serviceType = " << nvl(p->get_message().get_serviceType());
-					__require__(p->get_optional().has_userMessageReference());
-					ss << ", msgRef = " << (int) p->get_optional().get_userMessageReference();
-					ss << ", waitTime = " << SmppUtil::getWaitTime(p->get_message().get_scheduleDeliveryTime(), time(NULL));
-					ss << ", validTime = " << SmppUtil::getValidTime(p->get_message().get_validityPeriod(), time(NULL));
+					SmsPduWrapper p(pdu, time(NULL));
+					ss << ", serviceType = " << nvl(p.getServiceType());
+					ss << ", msgRef = " << (int) p.getMsgRef();
+					ss << ", waitTime = " << p.getWaitTime();
+					ss << ", validTime = " << p.getValidTime();
 					pdu2file("submit_sm", id, pdu);
+				}
+				break;
+			case DATA_SM:
+				{
+					SmsPduWrapper p(pdu, time(NULL));
+					ss << ", serviceType = " << nvl(p.getServiceType());
+					ss << ", msgRef = " << (int) p.getMsgRef();
+					ss << ", waitTime = " << p.getWaitTime();
+					ss << ", validTime = " << p.getValidTime();
+					pdu2file("data_sm", id, pdu);
 				}
 				break;
 			case DELIVERY_SM:
 				{
-					PduDeliverySm* p = reinterpret_cast<PduDeliverySm*>(pdu);
-					ss << ", serviceType = " << nvl(p->get_message().get_serviceType());
-					__require__(p->get_optional().has_userMessageReference());
-					ss << ", msgRef = " << (int) p->get_optional().get_userMessageReference();
+					SmsPduWrapper p(pdu, time(NULL));
+					ss << ", serviceType = " << nvl(p.getServiceType());
+					ss << ", msgRef = " << (int) p.getMsgRef();
 					pdu2file("deliver_sm", id, pdu);
 				}
 				break;
@@ -87,9 +97,6 @@ void dumpPdu(const char* tc, const string& id, SmppHeader* pdu)
 				break;
 			case CANCEL_SM:
 				pdu2file("cancel_sm", id, pdu);
-				break;
-			case DATA_SM:
-				pdu2file("data_sm", id, pdu);
 				break;
 		}
 		time_t lt = time(NULL);
@@ -393,7 +400,7 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 {
 	__require__(pdu);
 	__cfg_int__(maxWaitTime);
-	__cfg_int__(maxDeliveryPeriod);
+	__cfg_int__(maxValidPeriod);
 	//пол€ сохран€ютс€ случайным образом
 	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
 	uint64_t randMask = *((uint64_t*) tmp.get());
@@ -410,7 +417,7 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	__set_int__(uint8_t, protocolId, rand0(255));
 	__set_int__(uint8_t, priorityFlag, rand0(255));
 	time_t waitTime = time(NULL) + rand0(maxWaitTime);
-	time_t validTime = waitTime + rand0(maxDeliveryPeriod);
+	time_t validTime = rand2(waitTime, time(NULL) + maxValidPeriod);
 	__set_cstr2__(scheduleDeliveryTime, time2string(waitTime, t, time(NULL), __numTime__));
 	__set_cstr2__(validityPeriod, time2string(validTime, t, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
@@ -433,7 +440,7 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 		__set_int__(uint8_t, dataCoding, dataCoding);
 	}
 	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
-	bool udhi = pdu->get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
+	bool udhi = p.get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
 	if (useShortMessage)
 	{
 		mask &= ~OPT_MSG_PAYLOAD; //исключить message_payload
@@ -441,14 +448,59 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	}
 	else if (udhi && !(mask & OPT_MSG_PAYLOAD))
 	{
-		pdu->get_message().set_esmClass(
-			pdu->get_message().get_esmClass() & ~ESM_CLASS_UDHI_INDICATOR);
+		p.set_esmClass(p.get_esmClass() & ~ESM_CLASS_UDHI_INDICATOR);
 		udhi = false;
 	}
 	mask &= ~OPT_USER_MSG_REF; //исключить userMessageReference
 	setupRandomCorrectOptionalParams(pdu->get_optional(), dataCoding, udhi, mask, check);
-	__require__(!udhi || pdu->get_message().size_shortMessage() ||
-		pdu->get_optional().has_messagePayload());
+	__require__(!udhi || p.size_shortMessage() || pdu->get_optional().has_messagePayload());
+}
+
+void SmppUtil::setupRandomCorrectDataSmPdu(PduDataSm* pdu, bool forceDc,
+	uint64_t mask, bool check)
+{
+	__require__(pdu);
+	__cfg_int__(maxDeliveryPeriod);
+	//пол€ сохран€ютс€ случайным образом
+	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
+	uint64_t randMask = *((uint64_t*) tmp.get());
+	randMask |= OPT_MSG_PAYLOAD; //оставить payload как есть
+	mask &= randMask;
+	
+	PduDataPartSm& p = pdu->get_data();
+	SmppTime t;
+	//set & check fields
+	__set_cstr__(serviceType, MAX_ESERVICE_TYPE_LENGTH);
+	__set_addr__(source);
+	__set_addr__(dest);
+	__set_int__(uint8_t, esmClass, rand0(255));
+	__set_int__(uint8_t, registredDelivery, rand0(255));
+	uint8_t dataCoding;
+	if (forceDc)
+	{
+		bool simMsg;
+		do
+		{
+			__set_int__(uint8_t, dataCoding, rand0(255));
+			__trace2__("setupRandomCorrectDataSmPdu(): forceDc = true, dataCoding = %d",
+				(int) p.get_dataCoding());
+		}
+		while (!extractDataCoding(p.get_dataCoding(), dataCoding, simMsg));
+	}
+	else
+	{
+		dataCoding = getDataCoding(RAND_TC);
+		__set_int__(uint8_t, dataCoding, dataCoding);
+	}
+	bool udhi = p.get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
+	if (udhi && !(mask & OPT_MSG_PAYLOAD))
+	{
+		p.set_esmClass(p.get_esmClass() & ~ESM_CLASS_UDHI_INDICATOR);
+		udhi = false;
+	}
+	mask &= ~OPT_USER_MSG_REF; //исключить userMessageReference
+	setupRandomCorrectOptionalParams(pdu->get_optional(), dataCoding, udhi, mask, check);
+	__require__(!udhi || pdu->get_optional().has_messagePayload());
 }
 
 void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
@@ -580,6 +632,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
 	uint8_t dataCoding, bool udhi, uint64_t _mask, bool check)
 {
+	__cfg_int__(maxValidPeriod);
 	Mask<uint64_t> mask(_mask);
 	int pos = 0;
 	//__trace2__("SmppUtil::setupRandomCorrectOptionalParams(): mask = %s", mask.str());
@@ -600,7 +653,7 @@ void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
 	__set_optional_int__(uint8_t, sourceBearerType, rand0(255));
 	__skip__; //__set_optional_int__(uint16_t, destTelematicsId, rand0(65535));
 	__skip__; //__set_optional_int__(uint8_t, sourceTelematicsId, rand0(255));
-	__set_optional_int__(uint32_t, qosTimeToLive, rand0(INT_MAX));
+	__set_optional_int__(uint32_t, qosTimeToLive, rand0(maxValidPeriod));
 	__set_optional_int__(uint8_t, payloadType, rand0(255));
 	__skip__; //__set_optional_cstr__(additionalStatusInfoText, rand1(255));
 	__set_optional_cstr__(receiptedMessageId, rand1(MAX_MSG_ID_LENGTH));

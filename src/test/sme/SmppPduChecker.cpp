@@ -100,14 +100,10 @@ SmppPduChecker::MapMsgError SmppPduChecker::checkMapMsg(SmsMsg* msg)
 
 set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 {
-	__require__(pduData && pduData->pdu->get_commandId() == SUBMIT_SM);
-	PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-	time_t waitTime = SmppUtil::getWaitTime(
-		pdu->get_message().get_scheduleDeliveryTime(), pduData->sendTime);
-	time_t validTime = SmppUtil::getValidTime(
-		pdu->get_message().get_validityPeriod(), pduData->sendTime);
+	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
+	__require__(pdu.isSubmitSm());
 	Address srcAddr;
-	SmppUtil::convert(pdu->get_message().get_source(), &srcAddr);
+	SmppUtil::convert(pdu.getSource(), &srcAddr);
 	set<uint32_t> res;
 	//тип sme
 	if (!checkTransmitter())
@@ -115,31 +111,31 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 		res.insert(ESME_RINVBNDSTS);
 		return res;
 	}
-	if (pdu->get_message().size_shortMessage() &&
-		pdu->get_optional().has_messagePayload())
+	if (pdu.get_message().size_shortMessage() &&
+		pdu.get_optional().has_messagePayload())
 	{
 		res.insert(ESME_RSUBMITFAIL);
 	}
 	//неправильная длина полей
 	__check_len__(ESME_RINVSERTYP,
-		pdu->get_message().get_serviceType(), MAX_SERVICE_TYPE_LENGTH);
+		pdu.get_message().get_serviceType(), MAX_SERVICE_TYPE_LENGTH);
 	__check_len__(ESME_RINVSRCADR,
-		pdu->get_message().get_source().get_value(), MAX_ADDRESS_LENGTH);
+		pdu.get_message().get_source().get_value(), MAX_ADDRESS_LENGTH);
 	__check_len__(ESME_RINVDSTADR,
-		pdu->get_message().get_dest().get_value(), MAX_ADDRESS_LENGTH);
+		pdu.get_message().get_dest().get_value(), MAX_ADDRESS_LENGTH);
 	__check_len__(ESME_RINVEXPIRY,
-		pdu->get_message().get_validityPeriod(), MAX_SMPP_TIME_LENGTH);
+		pdu.get_message().get_validityPeriod(), MAX_SMPP_TIME_LENGTH);
 	__check_len__(ESME_RINVSCHED,
-		pdu->get_message().get_scheduleDeliveryTime(), MAX_SMPP_TIME_LENGTH);
+		pdu.get_message().get_scheduleDeliveryTime(), MAX_SMPP_TIME_LENGTH);
 	//sim
 	if (pduData->intProps.count("simMsg"))
 	{
-		if (pdu->get_message().size_shortMessage() > MAX_MAP_SM_LENGTH)
+		if (pdu.get_message().size_shortMessage() > MAX_MAP_SM_LENGTH)
 		{
 			res.insert(ESME_RINVMSGLEN);
 		}
-		else if (pdu->get_optional().has_messagePayload() &&
-			pdu->get_optional().size_messagePayload() > MAX_MAP_SM_LENGTH)
+		else if (pdu.get_optional().has_messagePayload() &&
+			pdu.get_optional().size_messagePayload() > MAX_MAP_SM_LENGTH)
 		{
 			res.insert(ESME_RINVMSGLEN);
 		}
@@ -160,18 +156,19 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	}
 	//без проверки на bind статус
 	SmeType destType = fixture->routeChecker->isDestReachable(
-		pdu->get_message().get_source(), pdu->get_message().get_dest());
+		pdu.getSource(), pdu.getDest());
 	if (destType == SME_NO_ROUTE)
 	{
 		res.insert(Status::NOROUTE);
 	}
 	__cfg_int__(maxValidPeriod);
-	if (!validTime || validTime < pduData->sendTime ||
-		validTime > pduData->sendTime + maxValidPeriod)
+	if (!pdu.getValidTime() || pdu.getValidTime() < pduData->sendTime ||
+		pdu.getValidTime() > pduData->sendTime + maxValidPeriod)
 	{
 		res.insert(ESME_RINVEXPIRY);
 	}
-	if (!waitTime || (validTime && waitTime > validTime))
+	if (!pdu.getWaitTime() ||
+		(pdu.getValidTime() && pdu.getWaitTime() > pdu.getValidTime()))
 	{
 		res.insert(ESME_RINVSCHED);
 	}
@@ -192,15 +189,87 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 				res.insert(ESME_RINVDCS);
 		}
 	}
-	if (strlen(nvl(pdu->get_message().get_serviceType())) > MAX_SERVICE_TYPE_LENGTH)
+	if (fixture->smeInfo.rangeOfAddress.length() && fixture->smeAddr != srcAddr)
 	{
-		res.insert(ESME_RINVSERTYP);
+		res.insert(ESME_RINVSRCADR);
+	}
+	if (string("-----") == nvl(pdu.getServiceType()))
+	{
+		res.insert(ESME_RSYSERR); //transaction rollback с помощью триггера
+	}
+	return res;
+}
+
+set<uint32_t> SmppPduChecker::checkDataSm(PduData* pduData)
+{
+	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
+	__require__(pdu.isDataSm());
+	Address srcAddr;
+	SmppUtil::convert(pdu.getSource(), &srcAddr);
+	set<uint32_t> res;
+	//тип sme
+	if (!checkTransmitter())
+	{
+		res.insert(ESME_RINVBNDSTS);
+		return res;
+	}
+	//неправильная длина полей
+	__check_len__(ESME_RINVSERTYP,
+		pdu.get_data().get_serviceType(), MAX_SERVICE_TYPE_LENGTH);
+	__check_len__(ESME_RINVSRCADR,
+		pdu.get_data().get_source().get_value(), MAX_ADDRESS_LENGTH);
+	__check_len__(ESME_RINVDSTADR,
+		pdu.get_data().get_dest().get_value(), MAX_ADDRESS_LENGTH);
+	//sim
+	if (pduData->intProps.count("simMsg") &&
+        pdu.get_optional().has_messagePayload() &&
+		pdu.get_optional().size_messagePayload() > MAX_MAP_SM_LENGTH)
+	{
+		res.insert(ESME_RINVMSGLEN);
+	}
+	//map
+	if (pduData->objProps.count("map.msg"))
+	{
+		SmsMsg* msg = dynamic_cast<SmsMsg*>(pduData->objProps["map.msg"]);
+		switch (checkMapMsg(msg))
+		{
+			case UDHI_SINGLE_SEGMENT_ERR:
+				res.insert(ESME_RSUBMITFAIL); //верно и для data_sm
+				break;
+			case MAX_SEGMENTS_ERR:
+				res.insert(ESME_RINVMSGLEN);
+				break;
+		}
+	}
+	//без проверки на bind статус
+	SmeType destType = fixture->routeChecker->isDestReachable(
+		pdu.getSource(), pdu.getDest());
+	if (destType == SME_NO_ROUTE)
+	{
+		res.insert(Status::NOROUTE);
+	}
+	if (!pduData->intProps.count("dataCoding"))
+	{
+		res.insert(ESME_RINVDCS);
+	}
+	else
+	{
+		switch (pduData->intProps["dataCoding"])
+		{
+			case DEFAULT:
+			case SMSC7BIT:
+			case UCS2:
+			case BINARY:
+				break;
+			default:
+				res.insert(ESME_RINVDCS);
+		}
 	}
 	if (fixture->smeInfo.rangeOfAddress.length() && fixture->smeAddr != srcAddr)
 	{
 		res.insert(ESME_RINVSRCADR);
 	}
-	if (string("-----") == nvl(pdu->get_message().get_serviceType()))
+	if (string("-----") == nvl(pdu.getServiceType()))
 	{
 		res.insert(ESME_RSYSERR); //transaction rollback с помощью триггера
 	}
@@ -210,14 +279,10 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 	PduData* replacePduData, PduFlag replacePduFlag)
 {
-	__require__(pduData && pduData->pdu->get_commandId() == SUBMIT_SM);
-	PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-	time_t waitTime = SmppUtil::getWaitTime(
-		pdu->get_message().get_scheduleDeliveryTime(), pduData->sendTime);
-	time_t validTime = SmppUtil::getValidTime(
-		pdu->get_message().get_validityPeriod(), pduData->sendTime);
+	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
+	__require__(pdu.isSubmitSm());
 	Address srcAddr;
-	SmppUtil::convert(pdu->get_message().get_source(), &srcAddr);
+	SmppUtil::convert(pdu.getSource(), &srcAddr);
 	__require__(pduData->strProps.count("smsId"));
 	const string& smsId = pduData->strProps["smsId"];
 	set<uint32_t> res;
@@ -229,8 +294,8 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 	}
 	/*
 	//если в замещаемом сообщении message_payload
-	if (pdu->get_message().size_shortMessage() &&
-		pdu->get_optional().has_messagePayload())
+	if (pdu.get_message().size_shortMessage() &&
+		pdu.get_optional().has_messagePayload())
 	{
 		res.insert(ESME_RREPLACEFAIL);
 	}
@@ -239,20 +304,20 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 	__check_len__(ESME_RINVMSGID,
 		smsId.c_str(), MAX_MSG_ID_LENGTH);
 	__check_len__(ESME_RINVSRCADR,
-		pdu->get_message().get_source().get_value(), MAX_ADDRESS_LENGTH);
+		pdu.get_message().get_source().get_value(), MAX_ADDRESS_LENGTH);
 	__check_len__(ESME_RINVEXPIRY,
-		pdu->get_message().get_validityPeriod(), MAX_SMPP_TIME_LENGTH);
+		pdu.get_message().get_validityPeriod(), MAX_SMPP_TIME_LENGTH);
 	__check_len__(ESME_RINVSCHED,
-		pdu->get_message().get_scheduleDeliveryTime(), MAX_SMPP_TIME_LENGTH);
+		pdu.get_message().get_scheduleDeliveryTime(), MAX_SMPP_TIME_LENGTH);
 	//sim
 	if (pduData->intProps.count("simMsg"))
 	{
-		if (pdu->get_message().size_shortMessage() > MAX_MAP_SM_LENGTH)
+		if (pdu.get_message().size_shortMessage() > MAX_MAP_SM_LENGTH)
 		{
 			res.insert(ESME_RINVMSGLEN);
 		}
-		else if (pdu->get_optional().has_messagePayload() &&
-			pdu->get_optional().size_messagePayload() > MAX_MAP_SM_LENGTH)
+		else if (pdu.get_optional().has_messagePayload() &&
+			pdu.get_optional().size_messagePayload() > MAX_MAP_SM_LENGTH)
 		{
 			res.insert(ESME_RINVMSGLEN);
 		}
@@ -273,12 +338,13 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 	}
 	//проверки
 	__cfg_int__(maxValidPeriod);
-	if (!validTime || validTime < pduData->sendTime ||
-		validTime > pduData->sendTime + maxValidPeriod)
+	if (!pdu.getValidTime() || pdu.getValidTime() < pduData->sendTime ||
+		pdu.getValidTime() > pduData->sendTime + maxValidPeriod)
 	{
 		res.insert(ESME_RINVEXPIRY);
 	}
-	if (!waitTime || (validTime && waitTime > validTime))
+	if (!pdu.getWaitTime() ||
+		(pdu.getValidTime() && pdu.getWaitTime() > pdu.getValidTime()))
 	{
 		res.insert(ESME_RINVSCHED);
 	}
@@ -310,9 +376,8 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 		{
 			res.insert(ESME_RINVMSGID);
 		}
-		__require__(replacePduData->pdu->get_commandId() == SUBMIT_SM);
-		PduSubmitSm* replacePdu = reinterpret_cast<PduSubmitSm*>(replacePduData->pdu);
-		if (pdu->get_message().get_source() != replacePdu->get_message().get_source())
+		SmsPduWrapper replacePdu(replacePduData->pdu, replacePduData->sendTime);
+		if (pdu.getSource() != replacePdu.getSource())
 		{
 			res.insert(ESME_RREPLACEFAIL);
 		}
@@ -367,16 +432,13 @@ set<uint32_t> SmppPduChecker::checkQuerySm(PduData* pduData, PduData* origPduDat
 		{
 			res.insert(ESME_RQUERYFAIL);
 		}
-		__require__(origPduData->pdu->get_commandId() == SUBMIT_SM);
-		PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(origPduData->pdu);
-		if (pdu->get_source() != origPdu->get_message().get_source())
+		SmsPduWrapper origPdu(origPduData->pdu, origPduData->sendTime);
+		if (pdu->get_source() != origPdu.getSource())
 		{
 			res.insert(ESME_RQUERYFAIL);
 		}
 		//sms в финальном состоянии может быть удалена архиватором
-		__require__(origPdu->get_optional().has_userMessageReference());
-		DeliveryMonitor* monitor = fixture->pduReg->getDeliveryMonitor(
-			origPdu->get_optional().get_userMessageReference());
+		DeliveryMonitor* monitor = fixture->pduReg->getDeliveryMonitor(origPdu.getMsgRef());
 		if (!monitor || monitor->getFlag() != PDU_REQUIRED_FLAG)
 		{
 			res.insert(ESME_RQUERYFAIL);
@@ -444,14 +506,13 @@ set<uint32_t> SmppPduChecker::checkCancelSm(PduData* pduData,
 			{
 				res.insert(ESME_RCANCELFAIL); //ESME_RINVMSGID
 			}
-			__require__(cancelPduData->pdu->get_commandId() == SUBMIT_SM);
-			PduSubmitSm* cancelPdu = reinterpret_cast<PduSubmitSm*>(cancelPduData->pdu);
-			if (pdu->get_source() != cancelPdu->get_message().get_source())
+			SmsPduWrapper cancelPdu(cancelPduData->pdu, cancelPduData->sendTime);
+			if (pdu->get_source() != cancelPdu.getSource())
 			{
 				res.insert(ESME_RCANCELFAIL); //ESME_RINVSRCADR
 			}
 			if (pdu->get_dest() != nullAddr &&
-				pdu->get_dest() != cancelPdu->get_message().get_dest())
+				pdu->get_dest() != cancelPdu.getDest())
 			{
 				res.insert(ESME_RCANCELFAIL); //ESME_RINVDSTADR
 			}
@@ -468,20 +529,19 @@ set<uint32_t> SmppPduChecker::checkCancelSm(PduData* pduData,
 		}
 		else
 		{
-			__require__(cancelPduData->pdu->get_commandId() == SUBMIT_SM);
-			PduSubmitSm* cancelPdu = reinterpret_cast<PduSubmitSm*>(cancelPduData->pdu);
+			SmsPduWrapper cancelPdu(cancelPduData->pdu, cancelPduData->sendTime);
 			if (pdu->get_source() == nullAddr ||
-				pdu->get_source() != cancelPdu->get_message().get_source())
+				pdu->get_source() != cancelPdu.getSource())
 			{
 				res.insert(ESME_RCANCELFAIL); //ESME_RINVSRCADR
 			}
 			if (pdu->get_dest() == nullAddr ||
-				pdu->get_dest() != cancelPdu->get_message().get_dest())
+				pdu->get_dest() != cancelPdu.getDest())
 			{
 				res.insert(ESME_RCANCELFAIL); //ESME_RINVDSTADR
 			}
 			if (pdu->get_serviceType() &&
-				string(pdu->get_serviceType()) != nvl(cancelPdu->get_message().get_serviceType()))
+				string(pdu->get_serviceType()) != nvl(cancelPdu.getServiceType()))
 			{
 				res.insert(ESME_RCANCELFAIL); //ESME_RINVSERTYP
 			}
@@ -598,6 +658,111 @@ void SmppPduChecker::processSubmitSmResp(ResponseMonitor* monitor,
 			break;
 		default:
 			__tc__("submitSm.resp.checkCmdStatusOther");
+			__tc_fail__(respPdu.get_header().get_commandStatus());
+	}
+	__tc_ok_cond__;
+}
+
+void SmppPduChecker::processDataSmResp(ResponseMonitor* monitor,
+	PduDataSmResp& respPdu, time_t respTime)
+{
+	__require__(monitor);
+	__decl_tc__;
+	__cfg_int__(timeCheckAccuracy);
+	//проверка флагов получения pdu
+	time_t respDelay = respTime - monitor->getCheckTime();
+	__tc__("dataSm.resp.checkDuplicates");
+	switch (monitor->getFlag())
+	{
+		case PDU_REQUIRED_FLAG:
+		case PDU_MISSING_ON_TIME_FLAG:
+			__tc_ok__;
+			__tc__("dataSm.resp.checkTime");
+			__check__(1, respDelay >= 0);
+			__check__(2, respDelay <= timeCheckAccuracy);
+			monitor->setNotExpected();
+			break;
+		case PDU_NOT_EXPECTED_FLAG: //респонс уже получен ранее
+			__tc_fail__(1);
+			break;
+		//case PDU_COND_REQUIRED_FLAG:
+		default: //респонс всегда должен быть
+			__unreachable__("Invalid response flag");
+	}
+	__tc_ok_cond__;
+	//проверки хедера
+	__tc__("dataSm.resp.checkHeader");
+	__check__(1, respPdu.get_header().get_commandLength() > 16);
+	//__check__(2, respPdu.get_header().get_commandLength() <= 81);
+	__check__(3, respPdu.get_header().get_commandId() == DATA_SM_RESP);
+	__check__(4, respPdu.get_header().get_sequenceNumber() ==
+		monitor->pduData->pdu->get_sequenceNumber());
+	__tc_ok_cond__;
+	//проверки опциональных полей
+	__tc__("dataSm.resp.checkOptional");
+	SmppOptional opt;
+	__tc_fail2__(SmppUtil::compareOptional(respPdu.get_optional(), opt), 0);
+	__tc_ok_cond__;
+	//проверка ошибок
+	if (respPdu.get_header().get_commandStatus() == ESME_ROK)
+	{
+		//обновить smsId у delivery receipt монитора
+		monitor->pduData->strProps["smsId"] = respPdu.get_messageId();
+	}
+	//set<uint32_t> checkRes = checkDataSm(monitor->pduData);
+	const set<uint32_t>& checkRes = monitor->pduData->checkRes;
+	if (checkRes.size())
+	{
+		__require__(!monitor->pduData->replacedByPdu);
+		__require__(!monitor->pduData->replacePdu);
+	}
+	switch (respPdu.get_header().get_commandStatus())
+	{
+		case ESME_ROK:
+			{
+				__tc__("dataSm.resp.checkCmdStatusOk");
+				vector<int> chkRes(checkRes.begin(), checkRes.end());
+				__tc_fail2__(chkRes, 0);
+			}
+			break;
+		case ESME_RINVDSTADR:
+			__tc__("dataSm.resp.checkCmdStatusInvalidDestAddr");
+			__check__(1, checkRes.count(ESME_RINVDSTADR));
+			break;
+		case ESME_RINVDCS:
+			__tc__("dataSm.resp.checkCmdStatusInvalidDataCoding");
+			__check__(1, checkRes.count(ESME_RINVDCS));
+			break;
+		case ESME_RINVSERTYP:
+			__tc__("dataSm.resp.checkCmdStatusInvalidServiceType");
+			__check__(1, checkRes.count(ESME_RINVSERTYP));
+			break;
+		case ESME_RINVSRCADR:
+			__tc__("dataSm.resp.checkCmdStatusInvalidSourceAddr");
+			__check__(1, checkRes.count(ESME_RINVSRCADR));
+			break;
+		case ESME_RSYSERR:
+			__tc__("dataSm.resp.checkCmdStatusSystemError");
+			__check__(1, checkRes.count(ESME_RSYSERR));
+			break;
+		case ESME_RINVBNDSTS:
+			__tc__("dataSm.resp.checkCmdStatusInvalidBindStatus");
+			__check__(1, checkRes.count(ESME_RINVBNDSTS));
+			break;
+		case ESME_RINVMSGLEN:
+			__tc__("dataSm.resp.checkCmdStatusInvalidMsgLen");
+			__check__(1, checkRes.count(ESME_RINVMSGLEN));
+			break;
+		case ESME_RSUBMITFAIL:
+			__tc__("dataSm.resp.checkCmdStatusSubmitFailed");
+			__check__(1, checkRes.count(ESME_RSUBMITFAIL));
+			break;
+		case Status::NOROUTE:
+			__tc__("dataSm.resp.checkCmdStatusNoRoute");
+			__check__(1, checkRes.count(Status::NOROUTE));
+			break;
+		default:
+			__tc__("dataSm.resp.checkCmdStatusOther");
 			__tc_fail__(respPdu.get_header().get_commandStatus());
 	}
 	__tc_ok_cond__;

@@ -40,6 +40,16 @@ public:
 	void submitSmIncorrect(bool sync, int num);
 
 	/**
+	 * Отправка корректной data_sm pdu другим sme.
+	 */
+	void dataSmCorrect(bool sync, int num);
+
+	/**
+	 * Отправка некорректной data_sm pdu другим sme.
+	 */
+	void dataSmIncorrect(bool sync, int num);
+
+	/**
 	 * Заполнение и отправка submit_sm pdu с недопустимыми значениями полей.
 	 */
 	void submitSmAssert(int num);
@@ -92,21 +102,41 @@ public:
 	/**
 	 * Отправка синхронного или асинхронного deliver_sm_resp со статусом ok.
 	 */
-	pair<uint32_t, time_t> sendDeliverySmRespOk(PduDeliverySm& pdu,
+	pair<uint32_t, time_t> sendDeliverySmRespOk(SmppHeader* header,
 		bool sync, bool sendDelay);
 
 	/**
 	 * Отправка синхронного или асинхронного deliver_sm_resp с кодом ошибки
 	 * и последующей повторной доставкой.
 	 */
-	pair<uint32_t, time_t> sendDeliverySmRespRetry(PduDeliverySm& pdu,
+	pair<uint32_t, time_t> sendDeliverySmRespRetry(SmppHeader* header,
 		bool sync, int num);
 
 	/**
 	 * Отправка синхронного или асинхронного deliver_sm_resp с кодом ошибки
 	 * и последующем прекращением доставки.
 	 */
-	pair<uint32_t, time_t> sendDeliverySmRespError(PduDeliverySm& pdu,
+	pair<uint32_t, time_t> sendDeliverySmRespError(SmppHeader* header,
+		bool sync, bool sendDelay, int num);
+
+	/**
+	 * Отправка синхронного или асинхронного data_sm_resp со статусом ok.
+	 */
+	pair<uint32_t, time_t> sendDataSmRespOk(SmppHeader* header,
+		bool sync, bool sendDelay);
+
+	/**
+	 * Отправка синхронного или асинхронного data_sm_resp с кодом ошибки
+	 * и последующей повторной доставкой.
+	 */
+	pair<uint32_t, time_t> sendDataSmRespRetry(SmppHeader* header,
+		bool sync, int num);
+
+	/**
+	 * Отправка синхронного или асинхронного data_sm_resp с кодом ошибки
+	 * и последующем прекращением доставки.
+	 */
+	pair<uint32_t, time_t> sendDataSmRespError(SmppHeader* header,
 		bool sync, bool sendDelay, int num);
 
 	void sendInvalidPdu(bool sync, int num);

@@ -30,36 +30,44 @@ public:
 	virtual ~SmppReceiverTestCases() {}
 
 	/**
-	 * Обработка submit_sm_resp pdu для асинхронного submit_sm реквеста.
+	 * Обработка submit_sm_resp pdu.
 	 */
-	virtual void processSubmitSmResp(PduSubmitSmResp &pdu);
+	virtual void processSubmitSmResp(PduSubmitSmResp& pdu);
 
 	/**
-	 * Обработка replace_sm_resp pdu для асинхронного replace_sm реквеста.
+	 * Обработка data_sm_resp pdu.
 	 */
-	virtual void processReplaceSmResp(PduReplaceSmResp &pdu);
+	virtual void processDataSmResp(PduDataSmResp& pdu);
 
 	/**
-	 * Обработка асинхронного deliver_sm pdu.
+	 * Обработка replace_sm_resp pdu.
 	 */
-	virtual void processDeliverySm(PduDeliverySm &pdu);
-	
+	virtual void processReplaceSmResp(PduReplaceSmResp& pdu);
+
+	/**
+	 * Обработка deliver_sm pdu.
+	 */
+	virtual void processDeliverySm(PduDeliverySm& pdu);
+
+	/**
+	 * Обработка data_sm pdu.
+	 */
+	virtual void processDataSm(PduDataSm& pdu);
+
 	/**
 	 * Обработка асинхронного query_sm pdu.
 	 */
-	virtual void processQuerySmResp(PduQuerySmResp &pdu);
+	virtual void processQuerySmResp(PduQuerySmResp& pdu);
 	
 	/**
 	 * Обработка асинхронного cancel_sm pdu.
 	 */
-	virtual void processCancelSmResp(PduCancelSmResp &pdu);
+	virtual void processCancelSmResp(PduCancelSmResp& pdu);
 	
 	//not implemented
-	virtual void processGenericNack(PduGenericNack &pdu);
-	virtual void processDataSm(PduDataSm &pdu);
-	virtual void processMultiResp(PduMultiSmResp &pdu);
-	virtual void processDataSmResp(PduDataSmResp &pdu);
-	virtual void processAlertNotification(PduAlertNotification &pdu);
+	virtual void processGenericNack(PduGenericNack& pdu);
+	virtual void processMultiResp(PduMultiSmResp& pdu);
+	virtual void processAlertNotification(PduAlertNotification& pdu);
 
 	/**
 	 * Отсутствие внутренних ошибок в smpp receiver.

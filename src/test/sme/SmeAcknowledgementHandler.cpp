@@ -36,15 +36,18 @@ void SmeAcknowledgementHandler::addSmeAlias(const Address& alias)
 	smeAlias.push_back(new Address(alias));
 }
 
-vector<int> SmeAcknowledgementHandler::checkRoute(PduSubmitSm& pdu1,
-	PduDeliverySm& pdu2) const
+vector<int> SmeAcknowledgementHandler::checkRoute(SmppHeader* header1,
+	SmppHeader* header2) const
 {
+	__require__(header1 && header2);
 	vector<int> res;
+	SmsPduWrapper pdu1(header1, 0);
+	SmsPduWrapper pdu2(header2, 0);
 	Address origAddr1, destAlias1, origAlias2, destAddr2;
-	SmppUtil::convert(pdu1.get_message().get_source(), &origAddr1);
-	SmppUtil::convert(pdu1.get_message().get_dest(), &destAlias1);
-	SmppUtil::convert(pdu2.get_message().get_source(), &origAlias2);
-	SmppUtil::convert(pdu2.get_message().get_dest(), &destAddr2);
+	SmppUtil::convert(pdu1.getSource(), &origAddr1);
+	SmppUtil::convert(pdu1.getDest(), &destAlias1);
+	SmppUtil::convert(pdu2.getSource(), &origAlias2);
+	SmppUtil::convert(pdu2.getDest(), &destAddr2);
 	//правильность destAddr для pdu2
 	if (destAddr2 != origAddr1)
 	{
@@ -85,42 +88,38 @@ vector<int> SmeAcknowledgementHandler::checkRoute(PduSubmitSm& pdu1,
 	return res;
 }
 
-#define __compare__(errCode, field, value) \
-	if (value != field) { __tc_fail__(errCode); }
+#define __check__(errCode, cond) \
+	if (!(cond)) { __tc_fail__(errCode); }
 
-void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
+void SmeAcknowledgementHandler::processPdu(SmppHeader* header, time_t recvTime)
 {
 	__trace__("processSmeAcknowledgement()");
 	__decl_tc__;
 	try
 	{
-		__tc__("deliverySm.smeAck");
-		//обязательные для sme acknowledgement опциональные поля
-		if (!pdu.get_optional().has_userMessageReference())
-		{
-			__tc_fail__(1);
-			throw TCException();
-		}
+		SmsPduWrapper pdu(header, 0);
+		__tc__("sms.smeAck.checkDeliverSm");
+		__check__(1, pdu.isDeliverSm());
+		__tc_ok_cond__;
 		Address destAddr;
-		SmppUtil::convert(pdu.get_message().get_dest(), &destAddr);
+		SmppUtil::convert(pdu.getDest(), &destAddr);
 		//перкрыть pduReg класса
 		PduRegistry* pduReg = fixture->smeReg->getPduRegistry(destAddr);
 		__require__(pduReg);
 		//получить оригинальную pdu
 		MutexGuard mguard(pduReg->getMutex());
-		SmeAckMonitor* monitor = pduReg->getSmeAckMonitor(
-			pdu.get_optional().get_userMessageReference());
+		SmeAckMonitor* monitor = pduReg->getSmeAckMonitor(pdu.getMsgRef());
 		//для user_message_reference из полученной pdu
 		//нет соответствующего оригинального pdu
 		if (!monitor)
 		{
 			__tc_fail__(2);
 			__trace2__("getSmeAckMonitor(): pduReg = %p, userMessageReference = %d, monitor = NULL",
-				pduReg, pdu.get_optional().get_userMessageReference());
+				pduReg, (int) pdu.getMsgRef());
 			throw TCException();
 		}
 		__tc_ok_cond__;
-		__tc__("deliverySm.smeAck.checkAllowed");
+		__tc__("sms.smeAck.checkAllowed");
 		switch (monitor->getFlag())
 		{
 			case PDU_REQUIRED_FLAG:
@@ -136,22 +135,20 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		}
 		__tc_ok_cond__;
 		//проверка pdu
-		__require__(monitor->pduData->pdu->get_commandId() == SUBMIT_SM);
-		PduSubmitSm* origPdu =
-			reinterpret_cast<PduSubmitSm*>(monitor->pduData->pdu);
+		SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
 		//правильность маршрута
-		__tc__("deliverySm.smeAck.checkRoute");
-		__tc_fail2__(checkRoute(*origPdu, pdu), 0);
+		__tc__("sms.smeAck.checkRoute");
+		__tc_fail2__(checkRoute(monitor->pduData->pdu, header), 0);
 		__tc_ok_cond__;
 		//проверить содержимое полученной pdu
-		__tc__("deliverySm.smeAck.checkFields");
+		__tc__("sms.smeAck.checkFields");
 		//поля header проверяются в processDeliverySm()
 		//поля message проверяются в ackHandler->processSmeAcknowledgement()
 		//правильность адресов проверяется в checkRoute()
-		__compare__(1, nvl(pdu.get_message().get_serviceType()), smeServiceType);
-		__compare__(2, pdu.get_message().get_esmClass(), ESM_CLASS_NORMAL_MESSAGE);
+		__check__(1, smeServiceType == nvl(pdu.getServiceType()));
+		__check__(2, pdu.getEsmClass() == ESM_CLASS_NORMAL_MESSAGE);
 		Address srcAlias;
-		SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
+		SmppUtil::convert(pdu.getSource(), &srcAlias);
 		bool addrOk = false;
 		if (fixture->smeInfo.wantAlias)
 		{
@@ -179,12 +176,15 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		{
 			__tc_fail__(3);
 		}
-		__compare__(4, pdu.get_message().get_protocolId(), smeProtocolId);
-		__compare__(5, pdu.get_message().get_priorityFlag(), 0);
-		__compare__(6, pdu.get_message().get_registredDelivery(), 0);
+		if (pdu.isDeliverSm())
+		{
+			__check__(4, pdu.get_message().get_protocolId() == smeProtocolId);
+			__check__(5, pdu.get_message().get_priorityFlag() == 0);
+		}
+		__check__(6, pdu.getRegistredDelivery() == 0);
 		__tc_ok_cond__;
 		//для sme acknoledgement не проверяю повторную доставку
-		__tc__("deliverySm.smeAck.recvTimeChecks");
+		__tc__("sms.smeAck.recvTimeChecks");
 		__cfg_int__(timeCheckAccuracy);
 		if (recvTime < monitor->getCheckTime())
 		{
@@ -196,12 +196,12 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		}
 		__tc_ok_cond__;
 		pduReg->removeMonitor(monitor);
-		processSmeAcknowledgement(monitor, pdu, recvTime);
+		processSmeAcknowledgement(monitor, header, recvTime);
 		pduReg->registerMonitor(monitor); //тест кейсы на финализированные pdu
 		//отправить респонс, только ESME_ROK разрешено
 		//отправка должна быть без задержек
 		pair<uint32_t, time_t> deliveryResp =
-			fixture->respSender->sendDeliverySmResp(pdu);
+			fixture->respSender->sendSmsResp(header);
 		__require__(deliveryResp.first == ESME_ROK);
 		__require__(abs(deliveryResp.second - time(NULL)) <= 1);
 	}
@@ -209,7 +209,7 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 	{
 		//отправить респонс, только ESME_ROK разрешено
 		pair<uint32_t, time_t> deliveryResp =
-			fixture->respSender->sendDeliverySmResp(pdu);
+			fixture->respSender->sendSmsResp(header);
 		__require__(deliveryResp.first == ESME_ROK);
 	}
 	catch(...)

@@ -11,8 +11,7 @@ namespace sme {
 
 using std::vector;
 using log4cpp::Category;
-using smsc::smpp::PduSubmitSm;
-using smsc::smpp::PduDeliverySm;
+using smsc::smpp::SmppHeader;
 using smsc::smeman::SmeInfo;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
@@ -34,13 +33,13 @@ public:
 	void addSmeAddr(const Address& addr);
 	void addSmeAlias(const Address& alias);
 
-	virtual void processPdu(PduDeliverySm& pdu, time_t recvTime);
+	virtual void processPdu(SmppHeader* header, time_t recvTime);
 
 	/**
 	 * Обработка sme acknowledgement.
 	 */
 	virtual void processSmeAcknowledgement(SmeAckMonitor* monitor,
-		PduDeliverySm& pdu, time_t recvTime) = NULL;
+		SmppHeader* header, time_t recvTime) = NULL;
 
 protected:
 	SmppFixture* fixture;
@@ -51,7 +50,7 @@ protected:
 	uint8_t smeProtocolId;
 
 	virtual Category& getLog() = NULL;
-	vector<int> checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const;
+	vector<int> checkRoute(SmppHeader* header1, SmppHeader* header2) const;
 };
 
 }

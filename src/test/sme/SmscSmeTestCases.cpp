@@ -53,21 +53,40 @@ void SmscSmeTestCases::submitSm(bool sync)
 	}
 }
 
+void SmscSmeTestCases::dataSm(bool sync)
+{
+	__decl_tc__;
+	__tc__("dataPduToSmscSme");
+	try
+	{
+		PduDataSm* pdu = new PduDataSm();
+		__cfg_addr__(smscAlias);
+		fixture->transmitter->setupRandomCorrectDataSmPdu(pdu, smscAlias, rand0(5));
+		fixture->transmitter->sendDataSmPdu(pdu, NULL, sync, NULL, NULL, NULL, PDU_NULL_ERR);
+		__tc_ok__;
+	}
+	catch(...)
+	{
+		__tc_fail__(100);
+		error();
+	}
+}
+
 AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
-	PduSubmitSm* origPdu, const string& text, time_t recvTime)
+	const string& text, time_t recvTime)
 {
 	__require__(monitor);
-	__require__(origPdu);
 	__cfg_int__(timeCheckAccuracy);
+	SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
 	//профиль
 	Address srcAddr;
-	SmppUtil::convert(origPdu->get_message().get_source(), &srcAddr);
+	SmppUtil::convert(origPdu.getSource(), &srcAddr);
 	time_t t;
 	const Profile& profile = fixture->profileReg->getProfile(srcAddr, t);
 	bool valid = t + timeCheckAccuracy <= time(NULL);
 	//destAlias
 	Address destAlias;
-	SmppUtil::convert(origPdu->get_message().get_dest(), &destAlias);
+	SmppUtil::convert(origPdu.getDest(), &destAlias);
 	switch (monitor->state)
 	{
 		case SMPP_DELIVERED_STATE:
@@ -125,21 +144,20 @@ AckText* SmscSmeTestCases::getExpectedResponse(DeliveryReceiptMonitor* monitor,
 }
 
 AckText* SmscSmeTestCases::getExpectedResponse(
-	IntermediateNotificationMonitor* monitor,
-	PduSubmitSm* origPdu, const string& text, time_t recvTime)
+	IntermediateNotificationMonitor* monitor, const string& text, time_t recvTime)
 {
 	__require__(monitor);
-	__require__(origPdu);
 	__cfg_int__(timeCheckAccuracy);
+	SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
 	//профиль
 	Address srcAddr;
-	SmppUtil::convert(origPdu->get_message().get_source(), &srcAddr);
+	SmppUtil::convert(origPdu.getSource(), &srcAddr);
 	time_t t;
 	const Profile& profile = fixture->profileReg->getProfile(srcAddr, t);
 	bool valid = t + timeCheckAccuracy <= time(NULL);
 	//destAlias
 	Address destAlias;
-	SmppUtil::convert(origPdu->get_message().get_dest(), &destAlias);
+	SmppUtil::convert(origPdu.getDest(), &destAlias);
 	time_t sendTime = monitor->pduData->sendTime;
 	for (PduData* replacePduData = monitor->pduData->replacePdu; replacePduData; )
 	{
@@ -186,7 +204,7 @@ AckText* SmscSmeTestCases::getExpectedResponse(
 	if (value != field) { __tc_fail__(errCode); }
 
 void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
-	PduDeliverySm& pdu, time_t recvTime)
+	SmppHeader* header, time_t recvTime)
 {
 	__decl_tc__;
 	//для ext sme не может быть PDU_COND_REQUIRED_FLAG
@@ -195,17 +213,15 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 		monitor->setNotExpected();
 		return;
 	}
-	//оригинальная pdu
-	__require__(monitor->pduData->pdu->get_commandId() == SUBMIT_SM);
-	PduSubmitSm* origPdu =
-		reinterpret_cast<PduSubmitSm*>(monitor->pduData->pdu);
-	__require__(origPdu);
+	SmsPduWrapper pdu(header, 0);
+	SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
+	__require__(pdu.isDeliverSm());
 	//декодировать
 	const string text = decode(pdu.get_message().get_shortMessage(),
-		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding(), false);
+		pdu.get_message().size_shortMessage(), pdu.getDataCoding(), false);
 	if (!monitor->pduData->objProps.count("smscSmeTc.receiptOutput"))
 	{
-		AckText* ack = getExpectedResponse(monitor, origPdu, text, recvTime);
+		AckText* ack = getExpectedResponse(monitor, text, recvTime);
 		ack->ref();
 		monitor->pduData->objProps["smscSmeTc.receiptOutput"] = ack;
 	}
@@ -217,9 +233,9 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 		monitor->setNotExpected();
 		return;
 	}
-	__tc__("deliverySm.reports.deliveryReceipt.checkStatus");
+	__tc__("sms.reports.deliveryReceipt.checkStatus");
 	SmppOptional opt;
-	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
+	opt.set_userMessageReference(pdu.getMsgRef());
 	//если submit_sm_resp уже получен
 	if (monitor->pduData->strProps.count("smsId"))
 	{
@@ -275,8 +291,8 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	__trace2__("expected optional part:\n%s", str(opt).c_str());
 	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 10);
 	__tc_ok_cond__;
-	__tc__("deliverySm.reports.deliveryReceipt.checkText");
-	__compare__(1, pdu.get_message().get_dataCoding(), ack->dataCoding);
+	__tc__("sms.reports.deliveryReceipt.checkText");
+	__compare__(1, pdu.getDataCoding(), ack->dataCoding);
 	if (text != ack->text)
 	{
 		__trace2__("delivery receipt text mismatch: received:\n%s\nexpected:\n%s",
@@ -288,7 +304,7 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 }
 
 void SmscSmeTestCases::processIntermediateNotification(
-	IntermediateNotificationMonitor* monitor, PduDeliverySm& pdu, time_t recvTime)
+	IntermediateNotificationMonitor* monitor, SmppHeader* header, time_t recvTime)
 {
 	__decl_tc__;
 	//для ext sme не может быть PDU_COND_REQUIRED_FLAG
@@ -297,17 +313,15 @@ void SmscSmeTestCases::processIntermediateNotification(
 		monitor->setNotExpected();
 		return;
 	}
-	//оригинальная pdu
-	__require__(monitor->pduData->pdu->get_commandId() == SUBMIT_SM);
-	PduSubmitSm* origPdu =
-		reinterpret_cast<PduSubmitSm*>(monitor->pduData->pdu);
-	__require__(origPdu);
+	SmsPduWrapper pdu(header, 0);
+	SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
+	__require__(pdu.isDeliverSm());
 	//декодировать
 	const string text = decode(pdu.get_message().get_shortMessage(),
-		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding(), false);
+		pdu.get_message().size_shortMessage(), pdu.getDataCoding(), false);
 	if (!monitor->pduData->objProps.count("smscSmeTc.notificationOutput"))
 	{
-		AckText* ack = getExpectedResponse(monitor, origPdu, text, recvTime);
+		AckText* ack = getExpectedResponse(monitor, text, recvTime);
 		ack->ref();
 		monitor->pduData->objProps["smscSmeTc.notificationOutput"] = ack;
 	}
@@ -320,9 +334,9 @@ void SmscSmeTestCases::processIntermediateNotification(
 		return;
 	}
 	//проверить содержимое полученной pdu
-	__tc__("deliverySm.reports.intermediateNotification.checkStatus");
+	__tc__("sms.reports.intermediateNotification.checkStatus");
 	SmppOptional opt;
-	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
+	opt.set_userMessageReference(pdu.getMsgRef());
 	//если submit_sm_resp уже получен
 	if (monitor->pduData->strProps.count("smsId"))
 	{
@@ -361,8 +375,8 @@ void SmscSmeTestCases::processIntermediateNotification(
 	__trace2__("expected optional part:\n%s", str(opt).c_str());
 	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 10);
 	__tc_ok_cond__;
-	__tc__("deliverySm.reports.intermediateNotification.checkText");
-	__compare__(1, pdu.get_message().get_dataCoding(), ack->dataCoding);
+	__tc__("sms.reports.intermediateNotification.checkText");
+	__compare__(1, pdu.getDataCoding(), ack->dataCoding);
 	if (text != ack->text)
 	{
 		__trace2__("intermediate notification text mismatch: received:\n%s\nexpected:\n%s",

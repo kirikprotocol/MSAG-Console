@@ -12,8 +12,7 @@ namespace sme {
 
 using std::vector;
 using log4cpp::Category;
-using smsc::smpp::PduSubmitSm;
-using smsc::smpp::PduDeliverySm;
+using smsc::smpp::SmppHeader;
 using smsc::smeman::SmeInfo;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
@@ -32,12 +31,12 @@ public:
 	
 	virtual ~NormalSmsHandler() {}
 
-	virtual void processPdu(PduDeliverySm& pdu, time_t recvTime)
+	virtual void processPdu(SmppHeader* header, time_t recvTime)
 	{
-		__unreachable__("use processPdu(PduDeliverySm&, const Address, time_t)");
+		__unreachable__("Use processPdu(SmppHeader*, const Address, time_t)");
 	}
 
-	virtual void processPdu(PduDeliverySm& pdu, const Address origAddr,
+	virtual void processPdu(SmppHeader* header, const Address origAddr,
 		time_t recvTime);
 
 protected:
@@ -45,20 +44,17 @@ protected:
 	CheckList* chkList;
 
 	virtual Category& getLog();
-	vector<int> checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const;
+	vector<int> checkRoute(SmppHeader* header1, SmppHeader* header2) const;
 
-	bool checkEqualDataCoding(PduSubmitSm& origPdu, SmsMsg* msg);
+	void checkNotMapMsgText(DeliveryMonitor* monitor, SmppHeader* header);
 
-	void compareMsgText(DeliveryMonitor* monitor, PduSubmitSm& origPdu,
-		PduDeliverySm& pdu, time_t recvTime);
-
-	PduFlag compareSegmentedMapMsgText(DeliveryMonitor* monitor,
-		PduSubmitSm& origPdu, PduDeliverySm& pdu, RespPduFlag respFlag,
+	PduFlag checkSegmentedMapMsgText(DeliveryMonitor* monitor,
+		SmppHeader* header, RespPduFlag respFlag, uint8_t dataCoding,
 		SmsMsg* msg, int concatRefNum, int concatMaxNum, int concatSeqNum);
-	PduFlag compareSimpleMapMsgText(DeliveryMonitor* monitor,
-		PduSubmitSm& origPdu, PduDeliverySm& pdu, RespPduFlag respFlag, SmsMsg* msg);
-	PduFlag compareMapMsgText(DeliveryMonitor* monitor, PduSubmitSm& origPdu,
-		PduDeliverySm& pdu, RespPduFlag respFlag);
+	PduFlag checkSimpleMapMsgText(DeliveryMonitor* monitor, SmppHeader* header,
+		RespPduFlag respFlag, uint8_t dataCoding, SmsMsg* msg);
+	PduFlag checkMapMsgText(DeliveryMonitor* monitor, SmppHeader* header,
+		RespPduFlag respFlag);
 
 	void registerIntermediateNotificationMonitor(const DeliveryMonitor* monitor,
 		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime,

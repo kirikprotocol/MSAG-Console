@@ -25,7 +25,7 @@ Category& SmppReceiverTestCases::getLog()
 	return log;
 }
 
-void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
+void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp& pdu)
 {
 	__dumpPdu__("processSubmitSmRespBefore", fixture->smeInfo.systemId,
 		reinterpret_cast<SmppHeader*>(&pdu));
@@ -65,7 +65,47 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 	}
 }
 
-void SmppReceiverTestCases::processReplaceSmResp(PduReplaceSmResp &pdu)
+void SmppReceiverTestCases::processDataSmResp(PduDataSmResp& pdu)
+{
+	__dumpPdu__("processDataSmRespBefore", fixture->smeInfo.systemId,
+		reinterpret_cast<SmppHeader*>(&pdu));
+	time_t respTime = time(NULL);
+	if (!fixture->pduReg)
+	{
+		return;
+	}
+	__decl_tc__;
+	__tc__("dataSm.resp.async");
+	try
+	{
+		//получить оригинальную pdu
+		MutexGuard mguard(fixture->pduReg->getMutex());
+		ResponseMonitor* monitor = fixture->pduReg->getResponseMonitor(
+			pdu.get_header().get_sequenceNumber());
+		//для sequence number из респонса нет соответствующего pdu
+		if (!monitor)
+		{
+			__tc_fail__(1);
+		}
+		else
+		{
+			//проверить и обновить response и delivery receipt мониторы
+			//по данным из респонса
+			fixture->pduReg->removeMonitor(monitor);
+			fixture->pduChecker->processDataSmResp(monitor, pdu, respTime);
+			//fixture->pduReg->registerMonitor(monitor);
+			//__dumpPdu__("processDataSmRespAfter", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
+		}
+		__tc_ok_cond__;
+	}
+	catch(...)
+	{
+		__tc_fail__(100);
+		error();
+	}
+}
+
+void SmppReceiverTestCases::processReplaceSmResp(PduReplaceSmResp& pdu)
 {
 	__dumpPdu__("processReplaceSmRespBefore", fixture->smeInfo.systemId,
 		reinterpret_cast<SmppHeader*>(&pdu));
@@ -107,13 +147,13 @@ void SmppReceiverTestCases::processReplaceSmResp(PduReplaceSmResp &pdu)
 #define __checkForNull__(failureCode, field) \
 	if (field) { __tc_fail__(failureCode); }
 
-void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
+void SmppReceiverTestCases::processDeliverySm(PduDeliverySm& pdu)
 {
-	__dumpPdu__("processDeliverySmBefore", fixture->smeInfo.systemId,
-		reinterpret_cast<SmppHeader*>(&pdu));
+	SmppHeader* header = reinterpret_cast<SmppHeader*>(&pdu);
+	__dumpPdu__("processDeliverySmBefore", fixture->smeInfo.systemId, header);
 	__require__(fixture->session);
 	__decl_tc__;
-	__tc__("deliverySm.checkFields");
+	__tc__("sms.deliverySm.checkFields");
 	time_t recvTime = time(NULL);
 	//общая проверка полей
 	//header
@@ -140,23 +180,69 @@ void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 		PduHandlerMap::iterator it = fixture->pduHandler.find(origAddr);
 		if (it == fixture->pduHandler.end())
 		{
-			defaultHandler.processPdu(pdu, origAddr, recvTime);
+			defaultHandler.processPdu(header, origAddr, recvTime);
 		}
 		else
 		{
 			PduHandler* handler = it->second;
 			__require__(handler);
-			handler->processPdu(pdu, recvTime);
+			handler->processPdu(header, recvTime);
 		}
 	}
 	else //отправить респонс
 	{
-		fixture->respSender->sendDeliverySmResp(pdu);
+		fixture->respSender->sendSmsResp(header);
 	}
-	//__dumpPdu__("processDeliverySmAfter", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
+	//__dumpPdu__("processDeliverySmAfter", fixture->smeInfo.systemId, header);
 }
 
-void SmppReceiverTestCases::processQuerySmResp(PduQuerySmResp &pdu)
+void SmppReceiverTestCases::processDataSm(PduDataSm& pdu)
+{
+	SmppHeader* header = reinterpret_cast<SmppHeader*>(&pdu);
+	__dumpPdu__("processDataSmBefore", fixture->smeInfo.systemId, header);
+	__require__(fixture->session);
+	__decl_tc__;
+	__tc__("sms.dataSm.checkFields");
+	time_t recvTime = time(NULL);
+	//общая проверка полей
+	//header
+	//pdu.get_header().get_commandLength()
+	if (pdu.get_header().get_commandId() != DATA_SM)
+	{
+		__tc_fail__(1);
+	}
+	__checkForNull__(2, pdu.get_header().get_commandStatus());
+	//pdu.get_header().get_sequenceNumber()
+	//message
+	__checkForNull__(3, pdu.get_optional().has_qosTimeToLive());
+	__tc_ok_cond__;
+	//обработать data_sm pdu
+	if (fixture->pduReg)
+	{
+		Address origAlias;
+		SmppUtil::convert(pdu.get_data().get_source(), &origAlias);
+		const Address origAddr = fixture->aliasReg->findAddressByAlias(origAlias);
+		//проверить тип sme
+		PduHandlerMap::iterator it = fixture->pduHandler.find(origAddr);
+		if (it == fixture->pduHandler.end())
+		{
+			defaultHandler.processPdu(header, origAddr, recvTime);
+		}
+		else
+		{
+			PduHandler* handler = it->second;
+			__require__(handler);
+			handler->processPdu(header, recvTime);
+		}
+	}
+	else //отправить респонс
+	{
+		fixture->respSender->sendSmsResp(header);
+	}
+	//__dumpPdu__("processDataSmAfter", fixture->smeInfo.systemId, header);
+}
+
+void SmppReceiverTestCases::processQuerySmResp(PduQuerySmResp& pdu)
 {
 	__dumpPdu__("processQuerySmRespBefore", fixture->smeInfo.systemId,
 		reinterpret_cast<SmppHeader*>(&pdu));
@@ -193,7 +279,7 @@ void SmppReceiverTestCases::processQuerySmResp(PduQuerySmResp &pdu)
 	}
 }
 
-void SmppReceiverTestCases::processCancelSmResp(PduCancelSmResp &pdu)
+void SmppReceiverTestCases::processCancelSmResp(PduCancelSmResp& pdu)
 {
 	__dumpPdu__("processCancelSmRespBefore", fixture->smeInfo.systemId,
 		reinterpret_cast<SmppHeader*>(&pdu));
@@ -231,7 +317,7 @@ void SmppReceiverTestCases::processCancelSmResp(PduCancelSmResp &pdu)
 	}
 }
 
-void SmppReceiverTestCases::processGenericNack(PduGenericNack &pdu)
+void SmppReceiverTestCases::processGenericNack(PduGenericNack& pdu)
 {
 	__dumpPdu__("processGenericNackBefore", fixture->smeInfo.systemId,
 		reinterpret_cast<SmppHeader*>(&pdu));
@@ -272,15 +358,7 @@ void SmppReceiverTestCases::processGenericNack(PduGenericNack &pdu)
 	*/
 }
 
-void SmppReceiverTestCases::processDataSm(PduDataSm &pdu)
-{
-	//__dumpPdu__("processDataSm", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
-	__decl_tc__;
-	__tc__("notImplemented.processDataSm");
-	__tc_fail__(100);
-}
-
-void SmppReceiverTestCases::processMultiResp(PduMultiSmResp &pdu)
+void SmppReceiverTestCases::processMultiResp(PduMultiSmResp& pdu)
 {
 	//__dumpPdu__("processMultiResp", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
 	__decl_tc__;
@@ -288,15 +366,7 @@ void SmppReceiverTestCases::processMultiResp(PduMultiSmResp &pdu)
 	__tc_fail__(100);
 }
 
-void SmppReceiverTestCases::processDataSmResp(PduDataSmResp &pdu)
-{
-	//__dumpPdu__("processDataSmResp", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
-	__decl_tc__;
-	__tc__("notImplemented.processDataSmResp");
-	__tc_fail__(100);
-}
-
-void SmppReceiverTestCases::processAlertNotification(PduAlertNotification &pdu)
+void SmppReceiverTestCases::processAlertNotification(PduAlertNotification& pdu)
 {
 	//__dumpPdu__("processAlertNotification", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(&pdu));
 	__decl_tc__;

@@ -143,6 +143,8 @@ public:
 	static void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 		bool useShortMessage, bool forceDc, uint64_t mask = OPT_ALL,
 		bool check = true);
+	static void setupRandomCorrectDataSmPdu(PduDataSm* pdu, bool forceDc,
+		uint64_t mask = OPT_ALL, bool check = true);
 	static void setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 		uint8_t dataCoding, bool udhi, uint64_t mask = OPT_ALL, bool check = true);
 	static void setupRandomCorrectOptionalParams(SmppOptional& opt,

@@ -72,8 +72,7 @@ uint8_t SmppTransmitterTestCases::getRegisteredDelivery(PduData* pduData)
 }
 
 pair<SmppTransmitterTestCases::LockType, time_t>
-SmppTransmitterTestCases::checkActionLocked(
-	DeliveryMonitor* monitor, time_t checkTime)
+SmppTransmitterTestCases::checkActionLocked(DeliveryMonitor* monitor, time_t checkTime)
 {
 	__require__(monitor);
 	__cfg_int__(timeCheckAccuracy);
@@ -182,12 +181,11 @@ SmppTransmitterTestCases::CancelResult SmppTransmitterTestCases::cancelPduMonito
 	PduData* pduData, time_t cancelTime, bool forceRemoveMonitors, SmppState state)
 {
 	__decl_tc__;
-	__require__(pduData && pduData->pdu->get_commandId() == SUBMIT_SM);
-	PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-	__require__(pdu->get_optional().has_userMessageReference());
-	uint16_t msgRef = pdu->get_optional().get_userMessageReference();
+	__require__(pduData);
+	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
 	//delivery monitor
-	DeliveryMonitor* deliveryMonitor = fixture->pduReg->getDeliveryMonitor(msgRef);
+	DeliveryMonitor* deliveryMonitor =
+		fixture->pduReg->getDeliveryMonitor(pdu.getMsgRef());
 	__require__(deliveryMonitor);
 	//проверка локов
 	bool condRequired = false;
@@ -198,12 +196,12 @@ SmppTransmitterTestCases::CancelResult SmppTransmitterTestCases::cancelPduMonito
 			break;
 		case CHANGE_LOCKED: //канселить уже нельзя
 			__tc__("lockedSm.segmentedMap"); __tc_ok__;
-			return CancelResult(msgRef, lockInfo.second, CancelResult::CANCEL_FAILED);
+			return CancelResult(pdu.getMsgRef(), lockInfo.second, CancelResult::CANCEL_FAILED);
 		case ALL_LOCKED:
 			if (!lockInfo.second) //команда протухнет прежде, чем освободится лок
 			{
 				__tc__("lockedSm.deliveringState"); __tc_ok__;
-				return CancelResult(msgRef, 0, CancelResult::CANCEL_FAILED);
+				return CancelResult(pdu.getMsgRef(), 0, CancelResult::CANCEL_FAILED);
 			}
 			break;
 		case ALL_COND_LOCKED:
@@ -218,7 +216,7 @@ SmppTransmitterTestCases::CancelResult SmppTransmitterTestCases::cancelPduMonito
 	cancelMonitor(deliveryMonitor, cancelTime, condRequired, forceRemoveMonitors);
 	//delivery receipt monitor
 	DeliveryReceiptMonitor* rcptMonitor =
-		fixture->pduReg->getDeliveryReceiptMonitor(msgRef);
+		fixture->pduReg->getDeliveryReceiptMonitor(pdu.getMsgRef());
 	if (rcptMonitor)
 	{
 		//если есть delivery receipt monitor, то pdu уже финализировалась
@@ -230,24 +228,25 @@ SmppTransmitterTestCases::CancelResult SmppTransmitterTestCases::cancelPduMonito
 	}
 	//intermediate notification monitor
 	IntermediateNotificationMonitor* notifMonitor =
-		fixture->pduReg->getIntermediateNotificationMonitor(msgRef);
+		fixture->pduReg->getIntermediateNotificationMonitor(pdu.getMsgRef());
 	if (notifMonitor)
 	{
 		notifMonitor->state = state;
 		cancelMonitor(notifMonitor, cancelTime, condRequired, forceRemoveMonitors);
 	}
-	return CancelResult(msgRef, lockInfo.second, condRequired ?
+	return CancelResult(pdu.getMsgRef(), lockInfo.second, condRequired ?
 		CancelResult::CANCEL_COND : CancelResult::CANCEL_OK);
 }
 
-void SmppTransmitterTestCases::registerTransmitterReportMonitors(uint16_t msgRef,
-	time_t waitTime, time_t validTime, PduData* pduData)
+void SmppTransmitterTestCases::registerTransmitterReportMonitors(PduData* pduData)
 {
+	__require__(pduData);
 	__decl_tc__;
 	if (fixture->smeType == SME_TRANSMITTER)
 	{
 		return;
 	}
+	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
 	uint8_t regDelivery = getRegisteredDelivery(pduData);
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
 		regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
@@ -265,7 +264,8 @@ void SmppTransmitterTestCases::registerTransmitterReportMonitors(uint16_t msgRef
 			__tc__("deliverySm.reports.intermediateNotification.transmitter");
 			__tc_ok__;
 			IntermediateNotificationMonitor* notifMonitor =
-				new IntermediateNotificationMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
+				new IntermediateNotificationMonitor(pdu.getMsgRef(),
+					pdu.getWaitTime(), pduData, PDU_REQUIRED_FLAG);
 			notifMonitor->state = SMPP_ENROUTE_STATE;
 			notifMonitor->deliveryStatus = DELIVERY_STATUS_DEST_TRANSMITTER;
 			fixture->pduReg->registerMonitor(notifMonitor);
@@ -273,7 +273,8 @@ void SmppTransmitterTestCases::registerTransmitterReportMonitors(uint16_t msgRef
 			__tc__("deliverySm.reports.deliveryReceipt.transmitter");
 			__tc_ok__;
 			DeliveryReceiptMonitor* rcptMonitor =
-				new DeliveryReceiptMonitor(msgRef, validTime, pduData, PDU_REQUIRED_FLAG);
+				new DeliveryReceiptMonitor(pdu.getMsgRef(), pdu.getValidTime(),
+					pduData, PDU_REQUIRED_FLAG);
 			rcptMonitor->state = SMPP_EXPIRED_STATE;
 			rcptMonitor->deliveryStatus = DELIVERY_STATUS_DEST_TRANSMITTER;
 			fixture->pduReg->registerMonitor(rcptMonitor);
@@ -281,14 +282,15 @@ void SmppTransmitterTestCases::registerTransmitterReportMonitors(uint16_t msgRef
 	}
 }
 
-void SmppTransmitterTestCases::registerNotBoundReportMonitors(uint16_t msgRef,
-	time_t waitTime, time_t validTime, PduData* pduData)
+void SmppTransmitterTestCases::registerNotBoundReportMonitors(PduData* pduData)
 {
+	__require__(pduData);
 	__decl_tc__;
 	if (fixture->smeType == SME_TRANSMITTER)
 	{
 		return;
 	}
+	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
 	uint8_t regDelivery = getRegisteredDelivery(pduData);
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
 		regDelivery == FAILURE_SMSC_DELIVERY_RECEIPT)
@@ -306,7 +308,8 @@ void SmppTransmitterTestCases::registerNotBoundReportMonitors(uint16_t msgRef,
 			__tc__("deliverySm.reports.intermediateNotification.notBound");
 			__tc_ok__;
 			IntermediateNotificationMonitor* notifMonitor =
-				new IntermediateNotificationMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
+				new IntermediateNotificationMonitor(pdu.getMsgRef(),
+					pdu.getWaitTime(), pduData, PDU_REQUIRED_FLAG);
 			notifMonitor->state = SMPP_ENROUTE_STATE;
 			notifMonitor->deliveryStatus = DELIVERY_STATUS_DEST_NOT_BOUND;
 			fixture->pduReg->registerMonitor(notifMonitor);
@@ -314,7 +317,8 @@ void SmppTransmitterTestCases::registerNotBoundReportMonitors(uint16_t msgRef,
 			__tc__("deliverySm.reports.deliveryReceipt.notBound");
 			__tc_ok__;
 			DeliveryReceiptMonitor* rcptMonitor =
-				new DeliveryReceiptMonitor(msgRef, validTime, pduData, PDU_REQUIRED_FLAG);
+				new DeliveryReceiptMonitor(pdu.getMsgRef(), pdu.getValidTime(),
+					pduData, PDU_REQUIRED_FLAG);
 			rcptMonitor->state = SMPP_EXPIRED_STATE;
 			rcptMonitor->deliveryStatus = DELIVERY_STATUS_DEST_NOT_BOUND;
 			fixture->pduReg->registerMonitor(rcptMonitor);
@@ -322,15 +326,15 @@ void SmppTransmitterTestCases::registerNotBoundReportMonitors(uint16_t msgRef,
 	}
 }
 
-void SmppTransmitterTestCases::registerNormalSmeMonitors(PduSubmitSm* pdu,
-	PduData* existentPduData, uint16_t msgRef, time_t waitTime, time_t validTime,
-	PduData* pduData)
+void SmppTransmitterTestCases::registerNormalSmeMonitors(PduData* pduData,
+	PduData* existentPduData)
 {
+	__require__(pduData);
+	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
 	bool deliveryFlag = false;
 	bool transmitterReportsFlag = false;
 	bool notBoundReportsFlag = false;
-	SmeType destType = fixture->routeChecker->isDestReachable(
-		pdu->get_message().get_source(), pdu->get_message().get_dest());
+	SmeType destType = fixture->routeChecker->isDestReachable(pdu.getSource(), pdu.getDest());
 	switch (destType)
 	{
 		case SME_NO_ROUTE:
@@ -353,28 +357,25 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduSubmitSm* pdu,
 	if (deliveryFlag)
 	{
 		Address srcAddr, destAddr;
-		SmppUtil::convert(pdu->get_message().get_source(), &srcAddr);
-		SmppUtil::convert(pdu->get_message().get_dest(), &destAddr);
+		SmppUtil::convert(pdu.getSource(), &srcAddr);
+		SmppUtil::convert(pdu.getDest(), &destAddr);
 		DeliveryMonitor* deliveryMonitor = new DeliveryMonitor(srcAddr, destAddr,
-			nvl(pdu->get_message().get_serviceType()), msgRef, waitTime, validTime,
-			pduData, PDU_REQUIRED_FLAG);
-		if (existentPduData && existentPduData->pdu->get_commandId() == SUBMIT_SM)
+			nvl(pdu.getServiceType()), pdu.getMsgRef(), pdu.getWaitTime(),
+			pdu.getValidTime(), pduData, PDU_REQUIRED_FLAG);
+		if (existentPduData)
 		{
 			//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 			//destination address and service_type. Сообщение должно быть в 
 			//ENROTE state.
 			//data_sm с теми же source address, destination address и
-			//service_type замещаться не должны!!!
-			PduSubmitSm* existentPdu =
-				reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
-			if (!strcmp(nvl(pdu->get_message().get_serviceType()),
-					nvl(existentPdu->get_message().get_serviceType())) &&
-				pdu->get_message().get_source() ==
-					existentPdu->get_message().get_source() &&
-				pdu->get_message().get_dest() ==
-					existentPdu->get_message().get_dest())
+			//service_type замещать не должны!!!
+			SmsPduWrapper existentPdu(existentPduData->pdu, existentPduData->sendTime);
+			if (!strcmp(nvl(pdu.getServiceType()), nvl(existentPdu.getServiceType())) &&
+				pdu.getSource() == existentPdu.getSource() &&
+				pdu.getDest() == existentPdu.getDest())
 			{
-				if (pdu->get_message().get_replaceIfPresentFlag() == 1)
+				if (pdu.isSubmitSm() &&
+					pdu.get_message().get_replaceIfPresentFlag() == 1)
 				{
 					existentPduData->ref();
 					deliveryMonitor->pduData->replacePdu = existentPduData;
@@ -397,29 +398,30 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduSubmitSm* pdu,
 	//репорты
 	if (transmitterReportsFlag)
 	{
-		registerTransmitterReportMonitors(msgRef, waitTime, validTime, pduData);
+		registerTransmitterReportMonitors(pduData);
 	}
 	if (notBoundReportsFlag)
 	{
-		registerNotBoundReportMonitors(msgRef, waitTime, validTime, pduData);
+		registerNotBoundReportMonitors(pduData);
 	}
 }
 
-void SmppTransmitterTestCases::registerExtSmeMonitors(PduSubmitSm* pdu,
-	uint16_t msgRef, time_t waitTime, time_t validTime, PduData* pduData)
+void SmppTransmitterTestCases::registerExtSmeMonitors(PduData* pduData)
 {
+	__require__(pduData);
 	__decl_tc__;
 	if (fixture->smeType == SME_TRANSMITTER)
 	{
 		return;
 	}
+	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
 	//предполагаю, что ext sme всегда запущено и на него есть маршрут
 	//ext sme всегда отправляет sme ack и, по ситуации, final delivery receipt
 	__require__(fixture->routeChecker->isDestReachable(
-		pdu->get_message().get_source(), pdu->get_message().get_dest()) == SME_TRANSCEIVER);
+		pdu.getSource(), pdu.getDest()) == SME_TRANSCEIVER);
 	//sme ack monitor
 	SmeAckMonitor* smeAckMonitor =
-		new SmeAckMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
+		new SmeAckMonitor(pdu.getMsgRef(), pdu.getWaitTime(), pduData, PDU_REQUIRED_FLAG);
 	fixture->pduReg->registerMonitor(smeAckMonitor);
 	//delivery receipt monitor
 	uint8_t regDelivery = getRegisteredDelivery(pduData);
@@ -432,8 +434,8 @@ void SmppTransmitterTestCases::registerExtSmeMonitors(PduSubmitSm* pdu,
 		}
 		else
 		{
-			DeliveryReceiptMonitor* rcptMonitor =
-				new DeliveryReceiptMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
+			DeliveryReceiptMonitor* rcptMonitor = new DeliveryReceiptMonitor(
+				pdu.getMsgRef(), pdu.getWaitTime(), pduData, PDU_REQUIRED_FLAG);
 			rcptMonitor->state = SMPP_DELIVERED_STATE;
 			rcptMonitor->deliveryStatus = ESME_ROK;
 			fixture->pduReg->registerMonitor(rcptMonitor);
@@ -441,19 +443,20 @@ void SmppTransmitterTestCases::registerExtSmeMonitors(PduSubmitSm* pdu,
 	}
 }
 
-void SmppTransmitterTestCases::registerNullSmeMonitors(PduSubmitSm* pdu,
-	uint16_t msgRef, time_t waitTime, time_t validTime, uint32_t deliveryStatus,
-	PduData* pduData)
+void SmppTransmitterTestCases::registerNullSmeMonitors(PduData* pduData,
+	uint32_t deliveryStatus)
 {
+	__require__(pduData);
 	__decl_tc__;
 	if (fixture->smeType == SME_TRANSMITTER)
 	{
 		return;
 	}
+	SmsPduWrapper pdu(pduData->pdu, pduData->sendTime);
 	//предполагаю, что null sme всегда запущено и на него есть маршрут
 	//null sme не отправляет sme ack, а на deliver_sm сразу отправляет респонс
 	__require__(fixture->routeChecker->isDestReachable(
-		pdu->get_message().get_source(), pdu->get_message().get_dest()) == SME_TRANSCEIVER);
+		pdu.getSource(), pdu.getDest()) == SME_TRANSCEIVER);
 	//delivery receipt monitor
 	uint8_t regDelivery = getRegisteredDelivery(pduData);
 	if (regDelivery == FINAL_SMSC_DELIVERY_RECEIPT ||
@@ -466,8 +469,8 @@ void SmppTransmitterTestCases::registerNullSmeMonitors(PduSubmitSm* pdu,
 		}
 		else
 		{
-			DeliveryReceiptMonitor* rcptMonitor = 
-				new DeliveryReceiptMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
+			DeliveryReceiptMonitor* rcptMonitor =  new DeliveryReceiptMonitor(
+				pdu.getMsgRef(), pdu.getWaitTime(), pduData, PDU_REQUIRED_FLAG);
 			rcptMonitor->state = deliveryStatus == ESME_ROK ?
 				SMPP_DELIVERED_STATE : SMPP_UNDELIVERABLE_STATE;
 			rcptMonitor->deliveryStatus = deliveryStatus;
@@ -476,35 +479,45 @@ void SmppTransmitterTestCases::registerNullSmeMonitors(PduSubmitSm* pdu,
 	}
 }
 
-SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduSubmitSm* pdu, uint8_t dc)
+SmsMsg* SmppTransmitterTestCases::getSmsMsg(SmppHeader* header, uint8_t dc)
 {
+	__require__(header);
 	__cfg_int__(timeCheckAccuracy);
+	SmsPduWrapper pdu(header, 0);
 	Address addr;
-	SmppUtil::convert(pdu->get_message().get_dest(), &addr);
+	SmppUtil::convert(pdu.getDest(), &addr);
 	addr = fixture->aliasReg->findAddressByAlias(addr);
 	time_t t;
 	const Profile& profile = fixture->profileReg->getProfile(addr, t);
 	bool valid = t + timeCheckAccuracy <= time(NULL);
-	bool udhi = pdu->get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
+	bool udhi = pdu.getEsmClass() & ESM_CLASS_UDHI_INDICATOR;
 	char* msg = NULL;
 	int len = 0;
 	uint8_t dataCoding;
-	if (pdu->get_message().size_shortMessage() &&
-		!pdu->get_optional().has_messagePayload())
+	if (pdu.isSubmitSm() && pdu.get_message().size_shortMessage() &&
+		!pdu.get_optional().has_messagePayload())
 	{
-		len = (int) (pdu->get_message().size_shortMessage() * 1.5);
+		len = (int) (pdu.get_message().size_shortMessage() * 1.5);
 		msg = new char[len];
-		convert(udhi, dc, pdu->get_message().get_shortMessage(),
-			pdu->get_message().size_shortMessage(),
+		convert(udhi, dc, pdu.get_message().get_shortMessage(),
+			pdu.get_message().size_shortMessage(),
 			dataCoding, msg, len, profile.codepage, false);
 	}
-	else if (pdu->get_optional().has_messagePayload() &&
-		!pdu->get_message().size_shortMessage())
+	else if (pdu.isSubmitSm() && pdu.get_optional().has_messagePayload() &&
+		!pdu.get_message().size_shortMessage())
 	{
-		len = (int) (pdu->get_optional().size_messagePayload() * 1.5);
+		len = (int) (pdu.get_optional().size_messagePayload() * 1.5);
 		msg = new char[len];
-		convert(udhi, dc, pdu->get_optional().get_messagePayload(),
-			pdu->get_optional().size_messagePayload(),
+		convert(udhi, dc, pdu.get_optional().get_messagePayload(),
+			pdu.get_optional().size_messagePayload(),
+			dataCoding, msg, len, profile.codepage, false);
+	}
+	else if (pdu.isDataSm() && pdu.get_optional().has_messagePayload())
+	{
+		len = (int) (pdu.get_optional().size_messagePayload() * 1.5);
+		msg = new char[len];
+		convert(udhi, dc, pdu.get_optional().get_messagePayload(),
+			pdu.get_optional().size_messagePayload(),
 			dataCoding, msg, len, profile.codepage, false);
 	}
 	else
@@ -517,32 +530,24 @@ SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduSubmitSm* pdu, uint8_t dc)
 }
 
 //предварительная регистрация pdu, требуется внешняя синхронизация
-PduData* SmppTransmitterTestCases::prepareSubmitSm(PduSubmitSm* pdu,
-	PduData* existentPduData, time_t submitTime, PduData::IntProps* intProps,
+PduData* SmppTransmitterTestCases::prepareSms(SmppHeader* header,
+	PduData* existentPduData, time_t sendTime, PduData::IntProps* intProps,
 	PduData::StrProps* strProps, PduData::ObjProps* objProps, PduType pduType)
 {
-	__require__(pdu);
+	__require__(header);
 	__require__(fixture->pduReg);
-	//waitTime, validTime, msgRef
-	time_t waitTime = max(submitTime, SmppUtil::getWaitTime(
-			pdu->get_message().get_scheduleDeliveryTime(), submitTime));
-	time_t validTime = SmppUtil::getValidTime(
-		pdu->get_message().get_validityPeriod(), submitTime);
-	__require__(pdu->get_optional().has_userMessageReference());
-	uint16_t msgRef = pdu->get_optional().get_userMessageReference();
+	SmsPduWrapper pdu(header, sendTime);
 	//report options
 	time_t t; //профиль нужно брать именно тот, что в profileReg, игнорируя profileUpdateTime
 	Profile profile = fixture->profileReg->getProfile(fixture->smeAddr, t);
-	__require__(t <= submitTime); //с точностью до секунды
+	__require__(t <= sendTime); //с точностью до секунды
 	//pdu data
-	pdu->get_header().set_commandId(SUBMIT_SM); //проставляется в момент отправки submit_sm
-	PduData* pduData = new PduData(reinterpret_cast<SmppHeader*>(pdu),
-		submitTime, intProps, strProps, objProps);
-	pduData->intProps["registredDelivery"] = pdu->get_message().get_registredDelivery();
+	PduData* pduData = new PduData(header, sendTime, intProps, strProps, objProps);
+	pduData->intProps["registredDelivery"] = pdu.getRegistredDelivery();
 	pduData->intProps["reportOptions"] = profile.reportoptions;
-	if (pdu->get_optional().has_ussdServiceOp())
+	if (pdu.get_optional().has_ussdServiceOp())
 	{
-		pduData->intProps["ussdServiceOp"] = pdu->get_optional().get_ussdServiceOp();
+		pduData->intProps["ussdServiceOp"] = pdu.get_optional().get_ussdServiceOp();
 	}
 	//dataCoding
 	if (fixture->smeInfo.forceDC)
@@ -550,7 +555,7 @@ PduData* SmppTransmitterTestCases::prepareSubmitSm(PduSubmitSm* pdu,
 		pduData->intProps["forceDC"] = 1;
 		uint8_t dc;
 		bool simMsg;
-		if (SmppUtil::extractDataCoding(pdu->get_message().get_dataCoding(), dc, simMsg))
+		if (SmppUtil::extractDataCoding(pdu.getDataCoding(), dc, simMsg))
 		{
 			pduData->intProps["dataCoding"] = dc;
 			if (simMsg)
@@ -561,16 +566,16 @@ PduData* SmppTransmitterTestCases::prepareSubmitSm(PduSubmitSm* pdu,
 	}
 	else
 	{
-		pduData->intProps["dataCoding"] = pdu->get_message().get_dataCoding();
+		pduData->intProps["dataCoding"] = pdu.getDataCoding();
 	}
 	//дополнительные фишки для map proxy
 	const RouteInfo* routeInfo = fixture->routeChecker->getRouteInfoForNormalSms(
-		pdu->get_message().get_source(), pdu->get_message().get_dest());
+		pdu.getSource(), pdu.getDest());
 	if (routeInfo && pduData->intProps.count("dataCoding"))
 	{
-		SmsMsg* msg = getSmsMsg(pdu, pduData->intProps["dataCoding"]);
+		SmsMsg* msg = getSmsMsg(header, pduData->intProps["dataCoding"]);
 		__trace2__("sms msg registered: this = %p, udhi = %s, len = %d, dc = %d, orig dc = %d, valid = %s",
-			msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, (int) pdu->get_message().get_dataCoding(), msg->valid ? "true" : "false");
+			msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, (int) pdu.getDataCoding(), msg->valid ? "true" : "false");
 		msg->ref();
 		bool mapDest = routeInfo->smeSystemId == "MAP_PROXY";
 		pduData->objProps[mapDest ? "map.msg" : "sms.msg"] = msg;
@@ -588,20 +593,19 @@ PduData* SmppTransmitterTestCases::prepareSubmitSm(PduSubmitSm* pdu,
 		case PDU_NORMAL:
 			//регистрация DeliveryMonitor и для sme, на которые есть маршрут,
 			//но нет самих sme DeliveryReceiptMonitor и IntermediateNotificationMonitor
-			registerNormalSmeMonitors(pdu, existentPduData, msgRef, waitTime,
-				validTime, pduData);
+			registerNormalSmeMonitors(pduData, existentPduData);
 			break;
 		case PDU_EXT_SME:
 			//регистрация SmeAckMonitor и DeliveryReceiptMonitor
-			registerExtSmeMonitors(pdu, msgRef, waitTime, validTime, pduData);
+			registerExtSmeMonitors(pduData);
 			break;
 		case PDU_NULL_OK:
 			//регистрация только DeliveryReceiptMonitor
-			registerNullSmeMonitors(pdu, msgRef, waitTime, validTime, ESME_ROK, pduData);
+			registerNullSmeMonitors(pduData, ESME_ROK);
 			break;
 		case PDU_NULL_ERR:
 			//регистрация только DeliveryReceiptMonitor
-			registerNullSmeMonitors(pdu, msgRef, waitTime, validTime, ESME_RX_P_APPN, pduData);
+			registerNullSmeMonitors(pduData, ESME_RX_P_APPN);
 			break;
 		default:
 			__unreachable__("Invalid pdu type");
@@ -693,6 +697,7 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 	}
 	if (fixture->pduReg)
 	{
+		pdu->get_header().set_commandId(SUBMIT_SM); //проставляется в момент отправки submit_sm
 		if (sync)
 		{
 			__tc__("submitSm.sync"); __tc_ok__;
@@ -700,8 +705,8 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 			{
 				MutexGuard mguard(fixture->pduReg->getMutex());
 				pdu->get_header().set_sequenceNumber(0); //не известен
-				pduData = prepareSubmitSm(pdu, existentPduData, time(NULL),
-					intProps, strProps, objProps, pduType); //all times, msgRef
+				pduData = prepareSms(reinterpret_cast<SmppHeader*>(pdu),
+					existentPduData, time(NULL), intProps, strProps, objProps, pduType); //all times, msgRef
 			}
 			//__dumpPdu__("submitSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			PduSubmitSmResp* respPdu =
@@ -725,8 +730,8 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 			time_t responseTime = time(NULL);
 			__dumpPdu__("submitSmAsyncAfter", fixture->smeInfo.systemId,
 				reinterpret_cast<SmppHeader*>(pdu));
-			PduData* pduData = prepareSubmitSm(pdu, existentPduData,
-				submitTime, intProps, strProps, objProps, pduType); //all times, msgRef, sequenceNumber
+			PduData* pduData = prepareSms(reinterpret_cast<SmppHeader*>(pdu),
+				existentPduData, submitTime, intProps, strProps, objProps, pduType); //all times, msgRef, sequenceNumber
 			processSubmitSmAsync(pduData);
 		}
 		//pdu life time определяется PduRegistry
@@ -753,14 +758,181 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 	}
 }
 
+void SmppTransmitterTestCases::setupRandomCorrectDataSmPdu(PduDataSm* pdu,
+	const Address& destAlias, uint64_t mask)
+{
+	__require__(pdu);
+	SmppUtil::setupRandomCorrectDataSmPdu(pdu, fixture->smeInfo.forceDC,
+		mask & ~OPT_USSD_SERVICE_OP);
+	 //Default message Type (i.e. normal message)
+	pdu->get_data().set_esmClass(
+		pdu->get_data().get_esmClass() & 0xc3);
+	//source
+	PduAddress srcAddr;
+	SmppUtil::convert(fixture->smeAddr, &srcAddr);
+	pdu->get_data().set_source(srcAddr);
+	PduAddress addr;
+	SmppUtil::convert(destAlias, &addr);
+	pdu->get_data().set_dest(addr);
+	//msgRef
+	if (fixture->pduReg)
+	{
+		pdu->get_optional().set_userMessageReference(fixture->pduReg->nextMsgRef());
+	}
+}
+
+//обновить smsId для deliver receipt монитора в PduRegistry и проверить pdu
+//требуется внешняя синхронизация
+void SmppTransmitterTestCases::processDataSmSync(PduData* pduData,
+	PduDataSmResp* respPdu, time_t respTime)
+{
+	__require__(pduData);
+	__dumpPdu__("processDataSmRespSync", fixture->smeInfo.systemId,
+		reinterpret_cast<SmppHeader*>(respPdu));
+	__decl_tc__;
+	__tc__("dataSm.resp.sync");
+	if (!respPdu)
+	{
+		__tc_fail__(1);
+	}
+	else
+	{
+		//создать, но не регистрировать респонс монитор
+		ResponseMonitor monitor(pduData->pdu->get_sequenceNumber(),
+			pduData->sendTime, pduData, PDU_REQUIRED_FLAG);
+		fixture->pduChecker->processDataSmResp(&monitor, *respPdu, respTime);
+		delete respPdu; //disposePdu
+	}
+	__tc_ok_cond__;
+	pduData->unref();
+}
+
+//зарегистрировать респонс монитор, требуется внешняя синхронизация
+void SmppTransmitterTestCases::processDataSmAsync(PduData* pduData)
+{
+	__require__(fixture->pduReg);
+	__require__(pduData);
+	//создать и зарегистрировать респонс монитор
+	ResponseMonitor* monitor =
+		new ResponseMonitor(pduData->pdu->get_sequenceNumber(),
+			pduData->sendTime, pduData, PDU_REQUIRED_FLAG);
+	fixture->pduReg->registerMonitor(monitor);
+	pduData->unref();
+}
+
+//отправить и зарегистрировать pdu
+void SmppTransmitterTestCases::sendDataSmPdu(PduDataSm* pdu,
+	PduData* existentPduData, bool sync, PduData::IntProps* intProps,
+	PduData::StrProps* strProps, PduData::ObjProps* objProps, PduType pduType)
+{
+	__decl_tc__;
+	if (fixture->smeInfo.forceDC)
+	{
+		__tc__("dataSm.forceDc"); __tc_ok__;
+	}
+	if (fixture->smeType == SME_RECEIVER)
+	{
+		try
+		{
+			__tc__("dataSm.receiver");
+			if (sync)
+			{
+				fixture->session->getSyncTransmitter()->data(*pdu);
+			}
+			else
+			{
+				fixture->session->getAsyncTransmitter()->data(*pdu);
+			}
+			__tc_fail__(1);
+		}
+		catch (SmppInvalidBindState&)
+		{
+			__tc_ok__;
+			return;
+		}
+		throw Exception("Missing invalid bind exception");
+	}
+	switch (fixture->smeType)
+	{
+		case SME_TRANSMITTER:
+			__tc__("dataSm.transmitter"); __tc_ok__;
+			break;
+		case SME_TRANSCEIVER:
+			__tc__("dataSm.transceiver"); __tc_ok__;
+			break;
+		default:
+			__unreachable__("Invalid sme type");
+	}
+	if (fixture->pduReg)
+	{
+		pdu->get_header().set_commandId(DATA_SM); //проставляется в момент отправки data_sm
+		if (sync)
+		{
+			__tc__("dataSm.sync"); __tc_ok__;
+			PduData* pduData;
+			{
+				MutexGuard mguard(fixture->pduReg->getMutex());
+				pdu->get_header().set_sequenceNumber(0); //не известен
+				pduData = prepareSms(reinterpret_cast<SmppHeader*>(pdu),
+					existentPduData, time(NULL), intProps, strProps, objProps, pduType); //all times, msgRef
+			}
+			//__dumpPdu__("dataSmSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			PduDataSmResp* respPdu =
+				fixture->session->getSyncTransmitter()->data(*pdu);
+			{
+				MutexGuard mguard(fixture->pduReg->getMutex());
+				__dumpPdu__("dataSmSyncAfter", fixture->smeInfo.systemId,
+					reinterpret_cast<SmppHeader*>(pdu));
+				processDataSmSync(pduData, respPdu, time(NULL));
+			}
+		}
+		else
+		{
+			__tc__("dataSm.async"); __tc_ok__;
+			MutexGuard mguard(fixture->pduReg->getMutex());
+			//__dumpPdu__("dataSmAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			time_t dataTime = time(NULL);
+			PduDataSmResp* respPdu =
+				fixture->session->getAsyncTransmitter()->data(*pdu);
+			__require__(!respPdu);
+			time_t responseTime = time(NULL);
+			__dumpPdu__("dataSmAsyncAfter", fixture->smeInfo.systemId,
+				reinterpret_cast<SmppHeader*>(pdu));
+			PduData* pduData = prepareSms(reinterpret_cast<SmppHeader*>(pdu),
+				existentPduData, dataTime, intProps, strProps, objProps, pduType); //all times, msgRef, sequenceNumber
+			processDataSmAsync(pduData);
+		}
+		//pdu life time определяется PduRegistry
+		//disposePdu(pdu);
+	}
+	else
+	{
+		if (sync)
+		{
+			__tc__("dataSm.sync"); __tc_ok__;
+			PduDataSmResp* respPdu =
+				fixture->session->getSyncTransmitter()->data(*pdu);
+			if (respPdu)
+			{
+				delete respPdu; //disposePdu
+			}
+		}
+		else
+		{
+			__tc__("dataSm.async"); __tc_ok__;
+			fixture->session->getAsyncTransmitter()->data(*pdu);
+		}
+		delete pdu; //disposePdu
+	}
+}
+
 void SmppTransmitterTestCases::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	PduData* replacePduData)
 {
-	__require__(replacePduData && replacePduData->pdu->get_commandId() == SUBMIT_SM);
-	PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(replacePduData->pdu);
+	SmsPduWrapper replacePdu(replacePduData->pdu, replacePduData->sendTime);
 	__require__(replacePduData->intProps.count("dataCoding"));
 	uint8_t dataCoding = replacePduData->intProps["dataCoding"];
-	bool udhi = origPdu->get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
+	bool udhi = replacePdu.getEsmClass() & ESM_CLASS_UDHI_INDICATOR;
 	SmppUtil::setupRandomCorrectReplaceSmPdu(pdu, dataCoding, udhi);
 	//source
 	PduAddress srcAddr;
@@ -771,20 +943,16 @@ void SmppTransmitterTestCases::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	pdu->set_messageId(replacePduData->strProps["smsId"].c_str());
 }
 
-void SmppTransmitterTestCases::registerReplaceMonitors(PduSubmitSm* resPdu,
-	PduData* replacePduData, PduData* pduData)
+void SmppTransmitterTestCases::registerReplaceMonitors(PduData* pduData,
+	PduData* replacePduData)
 {
-	uint16_t msgRef = resPdu->get_optional().get_userMessageReference();
-	time_t waitTime = max(pduData->sendTime, SmppUtil::getWaitTime(
-			resPdu->get_message().get_scheduleDeliveryTime(), pduData->sendTime));
-	time_t validTime = SmppUtil::getValidTime(
-		resPdu->get_message().get_validityPeriod(), pduData->sendTime);
+	SmsPduWrapper resPdu(pduData->pdu, pduData->sendTime);
 	//мониторы
 	bool deliveryFlag = false;
 	bool transmitterReportsFlag = false;
 	bool notBoundReportsFlag = false;
 	SmeType destType = fixture->routeChecker->isDestReachable(
-		resPdu->get_message().get_source(), resPdu->get_message().get_dest());
+		resPdu.getSource(), resPdu.getDest());
 	switch (destType)
 	{
 		case SME_TRANSMITTER: //замещение sms, для которой еще не было попытки доставки
@@ -809,12 +977,11 @@ void SmppTransmitterTestCases::registerReplaceMonitors(PduSubmitSm* resPdu,
 	if (deliveryFlag)
 	{
 		Address srcAddr, destAddr;
-		SmppUtil::convert(resPdu->get_message().get_source(), &srcAddr);
-		SmppUtil::convert(resPdu->get_message().get_dest(), &destAddr);
-		__require__(resPdu->get_optional().has_userMessageReference());
+		SmppUtil::convert(resPdu.getSource(), &srcAddr);
+		SmppUtil::convert(resPdu.getDest(), &destAddr);
 		DeliveryMonitor* deliveryMonitor = new DeliveryMonitor(srcAddr, destAddr,
-			nvl(resPdu->get_message().get_serviceType()), msgRef, waitTime,
-			validTime, pduData, PDU_REQUIRED_FLAG);
+			nvl(resPdu.getServiceType()), resPdu.getMsgRef(), resPdu.getWaitTime(),
+			resPdu.getValidTime(), pduData, PDU_REQUIRED_FLAG);
 		replacePduData->ref();
 		pduData->replacePdu = replacePduData;
 		replacePduData->replacedByPdu = pduData;
@@ -825,99 +992,102 @@ void SmppTransmitterTestCases::registerReplaceMonitors(PduSubmitSm* resPdu,
 	//репорты
 	if (transmitterReportsFlag)
 	{
-		registerTransmitterReportMonitors(msgRef, waitTime, validTime, pduData);
+		registerTransmitterReportMonitors(pduData);
 	}
 	if (notBoundReportsFlag)
 	{
-		registerNotBoundReportMonitors(msgRef, waitTime, validTime, pduData);
+		registerNotBoundReportMonitors(pduData);
 	}
 	//убрать лишний refCount
 	replacePduData->unref();
 }
 
-//предварительная регистрация pdu, требуется внешняя синхронизация
-PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
-	PduData* replacePduData, time_t submitTime, PduData::IntProps* intProps,
-	PduData::StrProps* strProps, PduData::ObjProps* objProps)
+SmppHeader* SmppTransmitterTestCases::prepareResultSubmitSm(
+	PduReplaceSm* pdu, PduData* replacePduData, time_t sendTime)
 {
-	//создание pdu, которая получиться после замещения
-	PduFlag replacePduFlag = PDU_NOT_EXPECTED_FLAG;
-	PduSubmitSm* resPdu;
+	__require__(pdu);
+	PduSubmitSm* resPdu = new PduSubmitSm();
+	resPdu->get_header().set_commandId(SUBMIT_SM);
+	resPdu->get_header().set_sequenceNumber(pdu->get_header().get_sequenceNumber());
 	if (replacePduData)
 	{
-		__require__(replacePduData->pdu->get_commandId() == SUBMIT_SM);
-		PduSubmitSm* replacePdu =
-			reinterpret_cast<PduSubmitSm*>(replacePduData->pdu);
-		resPdu = reinterpret_cast<PduSubmitSm*>(
-			SmppUtil::copyPdu(replacePduData->pdu));
-		__require__(resPdu);
+		SmsPduWrapper replacePdu(replacePduData->pdu, replacePduData->sendTime);
+		resPdu->get_message().set_serviceType(nvl(replacePdu.getServiceType()));
+		resPdu->get_message().set_dest(replacePdu.getDest());
+		resPdu->get_message().set_esmClass(replacePdu.getEsmClass());
+		if (replacePdu.isSubmitSm())
+		{
+			resPdu->get_message().set_protocolId(replacePdu.get_message().get_protocolId());
+			resPdu->get_message().set_priorityFlag(replacePdu.get_message().get_priorityFlag());
+		}
+		SmppTime t;
+		resPdu->get_message().set_scheduleDeliveryTime(
+			pdu->get_scheduleDeliveryTime() ? pdu->get_scheduleDeliveryTime() :
+			SmppUtil::time2string(replacePdu.getWaitTime(), t, sendTime, __absoluteTime__));
+		resPdu->get_message().set_validityPeriod(
+			pdu->get_validityPeriod() ? pdu->get_validityPeriod() :
+			SmppUtil::time2string(replacePdu.getValidTime(), t, sendTime, __absoluteTime__));
+		resPdu->get_message().set_dataCoding(replacePdu.getDataCoding());
+		//optional
+		int sz = replacePdu.get_optional().size();
+		char buf[sz];
+		SmppStream s1;
+		assignStreamWith(&s1, buf, sz, false);
+		fillSmppOptional(&s1, &replacePdu.get_optional());
+		SmppStream s2;
+		assignStreamWith(&s2, buf, sz, true);
+		fetchSmppOptional(&s2, &resPdu->get_optional());
 		//обнулить messagePayload
 		resPdu->get_optional().field_present &= ~SmppOptionalFields::messagePayload;
 		resPdu->get_optional().messagePayload.dispose();
-		//scheduleDeliveryTime
-		if (pdu->get_scheduleDeliveryTime())
-		{
-			resPdu->get_message().set_scheduleDeliveryTime(
-				pdu->get_scheduleDeliveryTime());
-		}
-		else
-		{
-			SmppTime t;
-			time_t waitTime = SmppUtil::getWaitTime(
-				replacePdu->get_message().get_scheduleDeliveryTime(), replacePduData->sendTime);
-			resPdu->get_message().set_scheduleDeliveryTime(
-				SmppUtil::time2string(waitTime, t, submitTime, __absoluteTime__));
-		}
-		//validityPeriod
-		if (pdu->get_validityPeriod())
-		{
-			resPdu->get_message().set_validityPeriod(pdu->get_validityPeriod());
-		}
-		else
-		{
-			SmppTime t;
-			time_t validTime = SmppUtil::getValidTime(
-				replacePdu->get_message().get_validityPeriod(), replacePduData->sendTime);
-			resPdu->get_message().set_validityPeriod(
-				SmppUtil::time2string(validTime, t, submitTime, __absoluteTime__));
-		}
-		DeliveryMonitor* monitor = fixture->pduReg->getDeliveryMonitor(
-			replacePdu->get_optional().get_userMessageReference());
-		if (monitor)
-		{
-			replacePduFlag = monitor->getFlag();
-		}
 	}
 	else
 	{
-		resPdu = new PduSubmitSm();
-		resPdu->get_header().set_commandId(SUBMIT_SM);
-		resPdu->get_optional().set_userMessageReference(0);
 		resPdu->get_message().set_scheduleDeliveryTime(
 			pdu->get_scheduleDeliveryTime() ? pdu->get_scheduleDeliveryTime() : "");
 		resPdu->get_message().set_validityPeriod(
 			pdu->get_validityPeriod() ? pdu->get_validityPeriod() : "");
+		resPdu->get_optional().set_userMessageReference(0);
 	}
 	resPdu->get_message().set_source(pdu->get_source());
 	resPdu->get_message().set_registredDelivery(pdu->get_registredDelivery());
 	resPdu->get_message().set_smDefaultMsgId(pdu->get_smDefaultMsgId());
 	resPdu->get_message().set_shortMessage(pdu->get_shortMessage(), pdu->size_shortMessage());
-	__dumpPdu__("prepareReplaceSm", fixture->smeInfo.systemId,
-		reinterpret_cast<SmppHeader*>(resPdu));
+	resPdu->get_message().set_replaceIfPresentFlag(0);
+	return reinterpret_cast<SmppHeader*>(resPdu);
+}
+
+//предварительная регистрация pdu, требуется внешняя синхронизация
+PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
+	PduData* replacePduData, time_t sendTime, PduData::IntProps* intProps,
+	PduData::StrProps* strProps, PduData::ObjProps* objProps)
+{
+	//создание pdu, которая получиться после замещения
+	SmppHeader* resHeader = prepareResultSubmitSm(pdu, replacePduData, sendTime);
+	SmsPduWrapper resPdu(resHeader, sendTime);
+	PduFlag replacePduFlag = PDU_NOT_EXPECTED_FLAG;
+	if (replacePduData)
+	{
+		SmsPduWrapper replacePdu(replacePduData->pdu, replacePduData->sendTime);
+		DeliveryMonitor* monitor = fixture->pduReg->getDeliveryMonitor(replacePdu.getMsgRef());
+		if (monitor)
+		{
+			replacePduFlag = monitor->getFlag();
+		}
+	}
+	__dumpPdu__("prepareReplaceSm", fixture->smeInfo.systemId, resHeader);
 	//report options
 	Address srcAddr;
 	SmppUtil::convert(pdu->get_source(), &srcAddr);
 	time_t t; //профиль нужно брать именно тот, что в profileReg, игнорируя profileUpdateTime
 	Profile profile = fixture->profileReg->getProfile(srcAddr, t);
-	__require__(t <= submitTime); //с точностью до секунды
-	resPdu->get_header().set_commandId(SUBMIT_SM);
-	PduData* pduData = new PduData(reinterpret_cast<SmppHeader*>(resPdu),
-		submitTime, intProps, strProps, objProps);
+	__require__(t <= sendTime); //с точностью до секунды
+	PduData* pduData = new PduData(resHeader, sendTime, intProps, strProps, objProps);
 	pduData->intProps["registredDelivery"] = pdu->get_registredDelivery();
 	pduData->intProps["reportOptions"] = profile.reportoptions;
-	if (resPdu->get_optional().has_ussdServiceOp())
+	if (resPdu.get_optional().has_ussdServiceOp())
 	{
-		pduData->intProps["ussdServiceOp"] = resPdu->get_optional().get_ussdServiceOp();
+		pduData->intProps["ussdServiceOp"] = resPdu.get_optional().get_ussdServiceOp();
 	}
 	pduData->strProps["smsId"] = nvl(pdu->get_messageId());
 	if (fixture->smeInfo.forceDC)
@@ -933,12 +1103,12 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 		pduData->intProps["dataCoding"] = replacePduData->intProps["dataCoding"];
 		//дополнительные фишки для map proxy
 		const RouteInfo* routeInfo = fixture->routeChecker->getRouteInfoForNormalSms(
-			resPdu->get_message().get_source(), resPdu->get_message().get_dest());
+			resPdu.getSource(), resPdu.getDest());
 		if (routeInfo)
 		{
-			SmsMsg* msg = getSmsMsg(resPdu, pduData->intProps["dataCoding"]);
+			SmsMsg* msg = getSmsMsg(resHeader, pduData->intProps["dataCoding"]);
 			__trace2__("sms msg registered: this = %p, udhi = %s, len = %d, dc = %d, orig dc = %d, valid = %s",
-				msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, (int) resPdu->get_message().get_dataCoding(), msg->valid ? "true" : "false");
+				msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, (int) resPdu.getDataCoding(), msg->valid ? "true" : "false");
 			msg->ref();
 			bool mapDest = routeInfo->smeSystemId == "MAP_PROXY";
 			pduData->objProps[mapDest ? "map.msg" : "sms.msg"] = msg;
@@ -952,7 +1122,7 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 	{
 		return pduData;
 	}
-	registerReplaceMonitors(resPdu, replacePduData, pduData);
+	registerReplaceMonitors(pduData, replacePduData);
 	//респонс монитор и прочие мониторы регистрировать не надо
 	return pduData;
 }
@@ -1113,11 +1283,8 @@ PduData* SmppTransmitterTestCases::prepareQuerySm(PduQuerySm* pdu,
 	pduData->checkRes = fixture->pduChecker->checkQuerySm(pduData, origPduData);
 	if (origPduData)
 	{
-		__require__(origPduData->pdu->get_commandId() == SUBMIT_SM);
-		PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(origPduData->pdu);
-		__require__(origPdu->get_optional().has_userMessageReference());
-		uint16_t msgRef = origPdu->get_optional().get_userMessageReference();
-		pduData->intProps["msgRef"] = msgRef;
+		SmsPduWrapper origPdu(origPduData->pdu, origPduData->sendTime);
+		pduData->intProps["msgRef"] = origPdu.getMsgRef();
 	}
 	pduData->ref();
 	return pduData;
@@ -1313,11 +1480,9 @@ PduData* SmppTransmitterTestCases::prepareCancelSm(PduCancelSm* pdu,
 	PduFlag cancelPduFlag = PDU_NOT_EXPECTED_FLAG;
 	if (cancelPduData)
 	{
-		__require__(cancelPduData->pdu->get_commandId() == SUBMIT_SM);
-		PduSubmitSm* cancelPdu = reinterpret_cast<PduSubmitSm*>(cancelPduData->pdu);
-		__require__(cancelPdu->get_optional().has_userMessageReference());
+		SmsPduWrapper cancelPdu(cancelPduData->pdu, cancelPduData->sendTime);
 		DeliveryMonitor* monitor = fixture->pduReg->getDeliveryMonitor(
-			cancelPdu->get_optional().get_userMessageReference());
+			cancelPdu.getMsgRef());
 		if (monitor)
 		{
 			cancelPduFlag = monitor->getFlag();
@@ -1482,10 +1647,13 @@ void SmppTransmitterTestCases::sendDeliverySmResp(PduDeliverySmResp& pdu,
 	//pdu.set_messageId("0");
 	if (delay)
 	{
+		__unreachable__("Not implemented");
+		/*
 		__require__(fixture->pduSender);
-		DeliverySmRespTask* task = new DeliverySmRespTask(this, pdu, sync);
+		SmsRespTask* task = new SmsRespTask(this, pdu, sync);
 		fixture->pduSender->schedulePdu(task, delay);
 		return;
+		*/
 	}
 	try
 	{
@@ -1503,6 +1671,49 @@ void SmppTransmitterTestCases::sendDeliverySmResp(PduDeliverySmResp& pdu,
 			//__dumpPdu__("sendDeliverySmRespAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
 			fixture->session->getAsyncTransmitter()->sendDeliverySmResp(pdu);
 			__dumpPdu__("sendDeliverySmRespAsyncAfter", fixture->smeInfo.systemId,
+				reinterpret_cast<SmppHeader*>(&pdu));
+		}
+		__tc_ok__;
+	}
+	catch (...)
+	{
+		__tc_fail__(100);
+		//error();
+		throw;
+	}
+}
+
+void SmppTransmitterTestCases::sendDataSmResp(PduDataSmResp& pdu,
+	bool sync, int delay)
+{
+	__decl_tc__;
+	//pdu.set_messageId("0");
+	if (delay)
+	{
+		__unreachable__("Not implemented");
+		/*
+		__require__(fixture->pduSender);
+		SmsRespTask* task = new SmsRespTask(this, pdu, sync);
+		fixture->pduSender->schedulePdu(task, delay);
+		return;
+		*/
+	}
+	try
+	{
+		if (sync)
+		{
+			__tc__("dataSm.resp.sync");
+			//__dumpPdu__("sendDataSmRespSyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			fixture->session->getSyncTransmitter()->sendDataSmResp(pdu);
+			__dumpPdu__("sendDataSmRespSyncAfter", fixture->smeInfo.systemId,
+				reinterpret_cast<SmppHeader*>(&pdu));
+		}
+		else
+		{
+			__tc__("dataSm.resp.async");
+			//__dumpPdu__("sendDataSmRespAsyncBefore", fixture->smeInfo.systemId, reinterpret_cast<SmppHeader*>(pdu));
+			fixture->session->getAsyncTransmitter()->sendDataSmResp(pdu);
+			__dumpPdu__("sendDataSmRespAsyncAfter", fixture->smeInfo.systemId,
 				reinterpret_cast<SmppHeader*>(&pdu));
 		}
 		__tc_ok__;

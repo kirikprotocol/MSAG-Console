@@ -29,14 +29,17 @@ DeliveryReportHandler::DeliveryReportHandler(SmppFixture* _fixture,
 	smeAlias(_smeAlias), smeServiceType(_smeServiceType),
 	smeProtocolId(_smeProtocolId) {}
 
-vector<int> DeliveryReportHandler::checkRoute(PduSubmitSm& pdu1,
-	PduDeliverySm& pdu2) const
+vector<int> DeliveryReportHandler::checkRoute(SmppHeader* header1,
+	SmppHeader* header2) const
 {
+	__require__(header1 && header2);
 	vector<int> res;
+	SmsPduWrapper pdu1(header1, 0);
+	SmsPduWrapper pdu2(header2, 0);
 	Address origAddr1, origAlias2, destAddr2;
-	SmppUtil::convert(pdu1.get_message().get_source(), &origAddr1);
-	SmppUtil::convert(pdu2.get_message().get_source(), &origAlias2);
-	SmppUtil::convert(pdu2.get_message().get_dest(), &destAddr2);
+	SmppUtil::convert(pdu1.getSource(), &origAddr1);
+	SmppUtil::convert(pdu2.getSource(), &origAlias2);
+	SmppUtil::convert(pdu2.getDest(), &destAddr2);
 	//правильность destAddr для pdu2
 	if (destAddr2 != origAddr1)
 	{
@@ -67,39 +70,38 @@ vector<int> DeliveryReportHandler::checkRoute(PduSubmitSm& pdu1,
 #define __compare__(errCode, field, value) \
 	if (value != field) { __tc_fail__(errCode); }
 
-void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
+void DeliveryReportHandler::processPdu(SmppHeader* header, time_t recvTime)
 {
 	__trace__("processDeliveryReport()");
 	__decl_tc__;
+	static const char UNKNOWN = ' ';
 	static const char DELIVERY_RECEIPT = '*';
 	static const char INTERMEDIATE_NOTIFICATION = '$';
 	try
 	{
-		__tc__("deliverySm.reports");
-		//обязательные для delivery receipt и intermediate notification
-		//опциональные поля
-		if (!pdu.get_optional().has_userMessageReference())
-		{
-			__tc_fail__(1);
-			throw TCException();
-		}
+		SmsPduWrapper pdu(header, 0);
+		__tc__("sms.reports.checkDeliverSm");
+		__compare__(1, pdu.isDeliverSm(), true);
+		__tc_ok_cond__;
 		//перекрыть pduReg класса
 		Address destAddr;
-		SmppUtil::convert(pdu.get_message().get_dest(), &destAddr);
+		SmppUtil::convert(pdu.getDest(), &destAddr);
 		PduRegistry* pduReg = fixture->smeReg->getPduRegistry(destAddr);
 		__require__(pduReg);
 		//тип pdu (delivery receipt '*' или intermediate notification '$')
-		char pduType;
-		switch (pdu.get_message().get_dataCoding())
+		char pduType = UNKNOWN;
+		switch (pdu.getDataCoding())
 		{
 			case DEFAULT:
 			case SMSC7BIT:
-				__require__(pdu.get_message().size_shortMessage() > 0);
-				 pduType = *pdu.get_message().get_shortMessage();
+				if (pdu.isDeliverSm() && pdu.get_message().size_shortMessage() > 0)
+				{
+					pduType = *pdu.get_message().get_shortMessage();
+				}
 				break;
 			case UCS2:
+				if (pdu.isDeliverSm() && pdu.get_message().size_shortMessage() > 1);
 				{
-					__require__(pdu.get_message().size_shortMessage() > 1);
 					short tmp;
 					memcpy(&tmp, pdu.get_message().get_shortMessage(), 2);
 					pduType = ntohs(tmp);
@@ -114,12 +116,10 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		switch (pduType)
 		{
 			case DELIVERY_RECEIPT:
-				monitor = pduReg->getDeliveryReceiptMonitor(
-					pdu.get_optional().get_userMessageReference());
+				monitor = pduReg->getDeliveryReceiptMonitor(pdu.getMsgRef());
 				break;
 			case INTERMEDIATE_NOTIFICATION:
-				monitor = pduReg->getIntermediateNotificationMonitor(
-					pdu.get_optional().get_userMessageReference());
+				monitor = pduReg->getIntermediateNotificationMonitor(pdu.getMsgRef());
 				break;
 			default:
 				monitor = NULL;
@@ -130,18 +130,18 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		{
 			__tc_fail__(2);
 			__trace2__("getDeliveryReportMonitor(): pduReg = %p, userMessageReference = %d, pduType = %c, monitor = NULL",
-				pduReg, pdu.get_optional().get_userMessageReference(), pduType);
+				pduReg, pdu.getMsgRef(), pduType);
 			throw TCException();
 		}
 		__tc_ok_cond__;
 		if (pduType == DELIVERY_RECEIPT)
 		{
-			__tc__("deliverySm.reports.deliveryReceipt.checkAllowed");
+			__tc__("sms.reports.deliveryReceipt.checkAllowed");
 		}
 		else
 		{
 			__require__(pduType == INTERMEDIATE_NOTIFICATION);
-			__tc__("deliverySm.reports.intermediateNotification.checkAllowed");
+			__tc__("sms.reports.intermediateNotification.checkAllowed");
 		}
 		switch (monitor->getFlag())
 		{
@@ -157,22 +157,19 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 				__unreachable__("Unknown flag");
 		}
 		__tc_ok_cond__;
-		__require__(monitor->pduData->pdu->get_commandId() == SUBMIT_SM);
-		PduSubmitSm* origPdu =
-			reinterpret_cast<PduSubmitSm*>(monitor->pduData->pdu);
-		__require__(origPdu);
+		SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
 		//Сравнить правильность маршрута
-		__tc__("deliverySm.reports.checkRoute");
-		__tc_fail2__(checkRoute(*origPdu, pdu), 0);
+		__tc__("sms.reports.checkRoute");
+		__tc_fail2__(checkRoute(monitor->pduData->pdu, header), 0);
 		__tc_ok_cond__;
 		//проверить содержимое полученной pdu
-		__tc__("deliverySm.reports.checkFields");
+		__tc__("sms.reports.checkFields");
 		//поля header проверяются в processDeliverySm()
 		//поля message проверяются в processDeliveryReport()
 		//правильность адресов проверяется в checkRoute()
-		__compare__(1, nvl(pdu.get_message().get_serviceType()), smeServiceType);
+		__compare__(1, nvl(pdu.getServiceType()), smeServiceType);
 		Address srcAlias;
-		SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
+		SmppUtil::convert(pdu.getSource(), &srcAlias);
 		if (fixture->smeInfo.wantAlias && srcAlias != smeAlias)
 		{
 			__tc_fail__(2);
@@ -181,9 +178,9 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		{
 			__tc_fail__(3);
 		}
-		//__compare__(4, pdu.get_message().get_dest(), origPdu->get_message().get_source());
+		//__compare__(4, pdu.getDest(), origPdu.getSource());
 		bool statusReport;
-		switch (origPdu->get_message().get_registredDelivery() & SMSC_DELIVERY_RECEIPT_BITS)
+		switch (origPdu.getRegistredDelivery() & SMSC_DELIVERY_RECEIPT_BITS)
 		{
 			case NO_SMSC_DELIVERY_RECEIPT:
 			case SMSC_DELIVERY_RECEIPT_RESERVED:
@@ -203,38 +200,38 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		{
 			if (pduType == DELIVERY_RECEIPT)
 			{
-				__compare__(4, pdu.get_message().get_esmClass(),
-					ESM_CLASS_DELIVERY_RECEIPT);
+				__compare__(4, pdu.getEsmClass(), ESM_CLASS_DELIVERY_RECEIPT);
 			}
 			else
 			{
 				__require__(pduType == INTERMEDIATE_NOTIFICATION);
-				__compare__(5, pdu.get_message().get_esmClass(),
-					ESM_CLASS_INTERMEDIATE_NOTIFICATION);
+				__compare__(5, pdu.getEsmClass(), ESM_CLASS_INTERMEDIATE_NOTIFICATION);
 			}
 		}
 		else if (monitor->pduData->intProps["reportOptions"] == ProfileReportOptions::ReportFull)
 		{
-			__compare__(6, pdu.get_message().get_esmClass(),
-				ESM_CLASS_NORMAL_MESSAGE);
+			__compare__(6, pdu.getEsmClass(), ESM_CLASS_NORMAL_MESSAGE);
 		}
 		else
 		{
 			__tc_fail__(7);
 		}
-		__compare__(8, pdu.get_message().get_protocolId(), smeProtocolId);
-		__compare__(9, pdu.get_message().get_priorityFlag(), 0);
-		__compare__(10, pdu.get_message().get_registredDelivery(), 0);
+		if (pdu.isDeliverSm())
+		{
+			__compare__(8, pdu.get_message().get_protocolId(), smeProtocolId);
+			__compare__(9, pdu.get_message().get_priorityFlag(), 0);
+		}
+		__compare__(10, pdu.getRegistredDelivery(), 0);
 		__tc_ok_cond__;
 		//для delivery report не проверяю повторную доставку
 		if (pduType == DELIVERY_RECEIPT)
 		{
-			__tc__("deliverySm.reports.deliveryReceipt.recvTimeChecks");
+			__tc__("sms.reports.deliveryReceipt.recvTimeChecks");
 		}
 		else
 		{
 			__require__(pduType == INTERMEDIATE_NOTIFICATION);
-			__tc__("deliverySm.reports.intermediateNotification.recvTimeChecks");
+			__tc__("sms.reports.intermediateNotification.recvTimeChecks");
 		}
 		__cfg_int__(timeCheckAccuracy);
 		if (recvTime < monitor->getCheckTime())
@@ -253,26 +250,26 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		if (pduType == DELIVERY_RECEIPT)
 		{
 			processDeliveryReceipt(dynamic_cast<DeliveryReceiptMonitor*>(monitor),
-				pdu, recvTime);
+				header, recvTime);
 		}
 		else
 		{
 			__require__(pduType == INTERMEDIATE_NOTIFICATION);
 			processIntermediateNotification(
 				dynamic_cast<IntermediateNotificationMonitor*>(monitor),
-				pdu, recvTime);
+				header, recvTime);
 		}
 		pduReg->registerMonitor(monitor); //тест кейсы на финализированные pdu
 		//отправить респонс, только ESME_ROK разрешено
 		pair<uint32_t, time_t> deliveryResp =
-			fixture->respSender->sendDeliverySmResp(pdu);
+			fixture->respSender->sendSmsResp(header);
 		__require__(deliveryResp.first == ESME_ROK);
 	}
 	catch (TCException&)
 	{
 		//отправить респонс, только ESME_ROK разрешено
 		pair<uint32_t, time_t> deliveryResp =
-			fixture->respSender->sendDeliverySmResp(pdu);
+			fixture->respSender->sendSmsResp(header);
 		__require__(deliveryResp.first == ESME_ROK);
 	}
 	catch (...)

@@ -290,9 +290,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 					{
 						__tc__("submitSm.correct.validTimeExceeded");
 						SmppTime t;
-						SmppUtil::time2string(
-							time(NULL) + maxValidPeriod + timeCheckAccuracy, t,
-							time(NULL), __numTime__);
+						SmppUtil::time2string(INT_MAX, t, time(NULL), __numTime__);
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
@@ -336,17 +334,17 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 					if (!pdu->get_message().size_shortMessage())
 					{
 						__tc__("submitSm.correct.messagePayloadLengthMarginal");
-						pdu->get_message().set_esmClass(0);
+						int len = MAX_PAYLOAD_LENGTH;
+						bool udhi = pdu->get_message().get_esmClass() &
+							ESM_CLASS_UDHI_INDICATOR;
+						uint8_t dc = pdu->get_message().get_dataCoding();
 						if (fixture->smeInfo.forceDC)
 						{
-							pdu->get_message().set_dataCoding(0); //DEFAULT
+							bool simMsg;
+							bool res = SmppUtil::extractDataCoding(dc, dc, simMsg);
+							__require__(res);
 						}
-						else
-						{
-							pdu->get_message().set_dataCoding(DEFAULT);
-						}
-						int len = MAX_PAYLOAD_LENGTH;
-						auto_ptr<char> tmp = rand_text2(len, DEFAULT, false, false);
+						auto_ptr<char> tmp = rand_text2(len, dc, udhi, false);
 						pdu->get_optional().set_messagePayload(tmp.get(), len);
 					}
 					break;
@@ -408,18 +406,15 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 						existentPduData = getNonReplaceEnrotePdu(true);
 						if (existentPduData)
 						{
-							__require__(existentPduData->pdu &&
-								existentPduData->pdu->get_commandId() == SUBMIT_SM);
 							__tc__("submitSm.correct.checkMap");
-							PduSubmitSm* existentPdu =
-								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
+							SmsPduWrapper existentPdu(existentPduData->pdu, 0);
 							__require__(pdu->get_message().get_source() ==
-								existentPdu->get_message().get_source());
+								existentPdu.getSource());
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
-								existentPdu->get_message().get_dest());
+								existentPdu.getDest());
 							pdu->get_optional().set_userMessageReference(
-								existentPdu->get_optional().get_userMessageReference());
+								existentPdu.getMsgRef());
 						}
 					}
 					break;
@@ -434,18 +429,14 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 						existentPduData = getNonReplaceEnrotePdu(true);
 						if (existentPduData)
 						{
-							__require__(existentPduData->pdu &&
-								existentPduData->pdu->get_commandId() == SUBMIT_SM);
 							__tc__("submitSm.correct.notReplace");
-							PduSubmitSm* existentPdu =
-								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
+							SmsPduWrapper existentPdu(existentPduData->pdu, 0);
 							pdu->get_message().set_serviceType(
-								nvl(existentPdu->get_message().get_serviceType()));
+								nvl(existentPdu.getServiceType()));
 							__require__(pdu->get_message().get_source() ==
-								existentPdu->get_message().get_source());
+								existentPdu.getSource());
 							//pdu->get_message().set_source(...);
-							pdu->get_message().set_dest(
-								existentPdu->get_message().get_dest());
+							pdu->get_message().set_dest(existentPdu.getDest());
 							pdu->get_message().set_replaceIfPresentFlag(0);
 							intProps["hasSmppDuplicates"] = 1;
 							existentPduData->intProps["hasSmppDuplicates"] = 1;
@@ -463,19 +454,15 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 						existentPduData = getNonReplaceEnrotePdu(true);
 						if (existentPduData)
 						{
-							__require__(existentPduData->pdu &&
-								existentPduData->pdu->get_commandId() == SUBMIT_SM);
 							__tc__("submitSm.correct.serviceTypeNotMatch");
-							PduSubmitSm* existentPdu =
-								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
+							SmsPduWrapper existentPdu(existentPduData->pdu, 0);
 							__require__(strcmp(nvl(pdu->get_message().get_serviceType()),
-								nvl(existentPdu->get_message().get_serviceType())));
+								nvl(existentPdu.getServiceType())));
 							//pdu->get_message().set_serviceType(...);
 							__require__(pdu->get_message().get_source() ==
-								existentPdu->get_message().get_source());
+								existentPdu.getSource());
 							//pdu->get_message().set_source(...);
-							pdu->get_message().set_dest(
-								existentPdu->get_message().get_dest());
+							pdu->get_message().set_dest(existentPdu.getDest());
 							pdu->get_message().set_replaceIfPresentFlag(1);
 						}
 					}
@@ -491,21 +478,17 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 						existentPduData = getNonReplaceEnrotePdu(true);
 						if (existentPduData)
 						{
-							__require__(existentPduData->pdu &&
-								existentPduData->pdu->get_commandId() == SUBMIT_SM);
-							PduSubmitSm* existentPdu =
-								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
-							if (pdu->get_message().get_dest() !=
-								existentPdu->get_message().get_dest())
+							SmsPduWrapper existentPdu(existentPduData->pdu, 0);
+							if (pdu->get_message().get_dest() != existentPdu.getDest())
 							{
 								__tc__("submitSm.correct.destAddrNotMatch");
 								pdu->get_message().set_serviceType(
-									nvl(existentPdu->get_message().get_serviceType()));
+									nvl(existentPdu.getServiceType()));
 								__require__(pdu->get_message().get_source() ==
-									existentPdu->get_message().get_source());
+									existentPdu.getSource());
 								//pdu->get_message().set_source(...);
 								__require__(pdu->get_message().get_dest() !=
-									existentPdu->get_message().get_dest());
+									existentPdu.getDest());
 								//pdu->get_message().set_dest(...);
 								pdu->get_message().set_replaceIfPresentFlag(1);
 							}
@@ -522,18 +505,15 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 						existentPduData = getNonReplaceEnrotePdu(true);
 						if (existentPduData)
 						{
-							__require__(existentPduData->pdu &&
-								existentPduData->pdu->get_commandId() == SUBMIT_SM);
 							__tc__("submitSm.correct.replaceEnrote");
-							PduSubmitSm* replacePdu =
-								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
+							SmsPduWrapper replacePdu(existentPduData->pdu, 0);
 							pdu->get_message().set_serviceType(
-								nvl(replacePdu->get_message().get_serviceType()));
+								nvl(replacePdu.getServiceType()));
 							__require__(pdu->get_message().get_source() ==
-								replacePdu->get_message().get_source());
+								replacePdu.getSource());
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
-								replacePdu->get_message().get_dest());
+								replacePdu.getDest());
 							pdu->get_message().set_replaceIfPresentFlag(1);
 						}
 					}
@@ -549,18 +529,14 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 						existentPduData = getReplaceEnrotePdu(true);
 						if (existentPduData)
 						{
-							__require__(existentPduData->pdu &&
-								existentPduData->pdu->get_commandId() == SUBMIT_SM);
 							__tc__("submitSm.correct.replaceReplacedEnrote");
-							PduSubmitSm* replacePdu =
-								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
+							SmsPduWrapper replacePdu(existentPduData->pdu, 0);
 							pdu->get_message().set_serviceType(
-								nvl(replacePdu->get_message().get_serviceType()));
+								nvl(replacePdu.getServiceType()));
 							__require__(pdu->get_message().get_source() ==
-								replacePdu->get_message().get_source());
+								replacePdu.getSource());
 							//pdu->get_message().set_source(...);
-							pdu->get_message().set_dest(
-								replacePdu->get_message().get_dest());
+							pdu->get_message().set_dest(replacePdu.getDest());
 							pdu->get_message().set_replaceIfPresentFlag(1);
 						}
 					}
@@ -576,18 +552,14 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 						PduData* finalPduData = getFinalPdu(true);
 						if (finalPduData)
 						{
-							__require__(finalPduData->pdu &&
-								finalPduData->pdu->get_commandId() == SUBMIT_SM);
 							__tc__("submitSm.correct.replaceFinal");
-							PduSubmitSm* finalPdu =
-								reinterpret_cast<PduSubmitSm*>(finalPduData->pdu);
+							SmsPduWrapper finalPdu(finalPduData->pdu, 0);
 							pdu->get_message().set_serviceType(
-								nvl(finalPdu->get_message().get_serviceType()));
+								nvl(finalPdu.getServiceType()));
 							__require__(pdu->get_message().get_source() ==
-								finalPdu->get_message().get_source());
+								finalPdu.getSource());
 							//pdu->get_message().set_source(...);
-							pdu->get_message().set_dest(
-								finalPdu->get_message().get_dest());
+							pdu->get_message().set_dest(finalPdu.getDest());
 							pdu->get_message().set_replaceIfPresentFlag(1);
 							intProps["hasSmppDuplicates"] = 1;
 							finalPduData->intProps["hasSmppDuplicates"] = 1;
@@ -605,18 +577,14 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 						existentPduData = getNonReplaceRescheduledEnrotePdu(true);
 						if (existentPduData)
 						{
-							__require__(existentPduData->pdu &&
-								existentPduData->pdu->get_commandId() == SUBMIT_SM);
 							__tc__("submitSm.correct.replaceRepeatedDeliveryEnrote");
-							PduSubmitSm* replacePdu =
-								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
+							SmsPduWrapper replacePdu(existentPduData->pdu, 0);
 							pdu->get_message().set_serviceType(
-								nvl(replacePdu->get_message().get_serviceType()));
+								nvl(replacePdu.getServiceType()));
 							__require__(pdu->get_message().get_source() ==
-								replacePdu->get_message().get_source());
+								replacePdu.getSource());
 							//pdu->get_message().set_source(...);
-							pdu->get_message().set_dest(
-								replacePdu->get_message().get_dest());
+							pdu->get_message().set_dest(replacePdu.getDest());
 							pdu->get_message().set_replaceIfPresentFlag(1);
 						}
 					}
@@ -884,6 +852,240 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 	}
 }
 
+void SmppProtocolTestCases::dataSmCorrect(bool sync, int num)
+{
+	TCSelector s(num, 8);
+	__decl_tc__;
+	__cfg_int__(maxValidPeriod);
+	__cfg_int__(timeCheckAccuracy);
+	__tc__("dataSm.correct");
+	for (; s.check(); s++)
+	{
+		__trace2__("dataSmCorrect(%d)", s.value());
+		try
+		{
+			PduDataSm* pdu = new PduDataSm();
+			const Address* destAlias = fixture->smeReg->getRandomAddress();
+			__require__(destAlias);
+			fixture->transmitter->setupRandomCorrectDataSmPdu(
+				pdu, *destAlias, rand0(1));
+			PduData* existentPduData = NULL;
+			PduData::IntProps intProps;
+			switch (s.value())
+			{
+				case 1: //ничего особенного
+					//__tc__("dataSm.correct");
+					break;
+				case 2: //пустой serviceType
+					__tc__("dataSm.correct.serviceTypeMarginal");
+					//pdu->get_data().set_serviceType(NULL);
+					pdu->get_data().set_serviceType("");
+					intProps["hasSmppDuplicates"] = 1;
+					break;
+				case 3: //serviceType максимальной длины
+					{
+						__tc__("dataSm.correct.serviceTypeMarginal");
+						EService serviceType;
+						rand_char(MAX_SERVICE_TYPE_LENGTH, serviceType);
+						pdu->get_data().set_serviceType(serviceType);
+					}
+					break;
+				case 4: //срок валидности больше максимального
+					__tc__("dataSm.correct.validTimeExceeded");
+					pdu->get_optional().set_qosTimeToLive(INT_MAX);
+					break;
+				case 5: //пустой messagePayload
+					__tc__("dataSm.correct.messagePayloadLengthMarginal");
+					pdu->get_optional().set_messagePayload(NULL, 0);
+					//pdu->get_optional().set_messagePayload("", 0);
+					pdu->get_data().set_esmClass(
+						pdu->get_data().get_esmClass() & ~ESM_CLASS_UDHI_INDICATOR);
+					break;
+				case 6: //messagePayload максимальной длины (заодно будет отсекаться на map proxy)
+					{
+						__tc__("dataSm.correct.messagePayloadLengthMarginal");
+						int len = MAX_SMPP_SM_LENGTH;
+						bool udhi = pdu->get_data().get_esmClass() &
+							ESM_CLASS_UDHI_INDICATOR;
+						uint8_t dc = pdu->get_data().get_dataCoding();
+						if (fixture->smeInfo.forceDC)
+						{
+							bool simMsg;
+							bool res = SmppUtil::extractDataCoding(dc, dc, simMsg);
+							__require__(res);
+						}
+						auto_ptr<char> tmp = rand_text2(len, dc, udhi, false);
+						pdu->get_optional().set_messagePayload(tmp.get(), len);
+					}
+					break;
+				case 7: //ussd запрос
+					if (pdu->get_optional().has_messagePayload() &&
+						pdu->get_optional().size_messagePayload() < MAX_MAP_SM_LENGTH)
+					{
+						__tc__("dataSm.correct.ussdRequest");
+						pdu->get_optional().set_ussdServiceOp(rand0(255));
+					}
+					break;
+				case 8: //отправка дублированного сообщения без замещения уже существующего
+					//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
+					//destination address and service_type. Сообщение должно быть в 
+					//ENROTE state. Но для data_sm нет replace_if_present
+					if (fixture->pduReg)
+					{
+						MutexGuard mguard(fixture->pduReg->getMutex());
+						existentPduData = getNonReplaceEnrotePdu(true);
+						if (existentPduData)
+						{
+							__tc__("dataSm.correct.notReplace");
+							SmsPduWrapper existentPdu(existentPduData->pdu, 0);
+							pdu->get_data().set_serviceType(
+								nvl(existentPdu.getServiceType()));
+							__require__(pdu->get_data().get_source() ==
+								existentPdu.getSource());
+							//pdu->get_data().set_source(...);
+							pdu->get_data().set_dest(existentPdu.getDest());
+							intProps["hasSmppDuplicates"] = 1;
+							existentPduData->intProps["hasSmppDuplicates"] = 1;
+						}
+					}
+					break;
+				default:
+					__unreachable__("Invalid num");
+			}
+			//отправить и зарегистрировать pdu
+			fixture->transmitter->sendDataSmPdu(pdu, existentPduData, sync, &intProps);
+			__tc_ok__;
+		}
+		catch(...)
+		{
+			__tc_fail__(s.value());
+			error();
+		}
+	}
+}
+
+void SmppProtocolTestCases::dataSmIncorrect(bool sync, int num)
+{
+	TCSelector s(num, 4 /*8*/);
+	__decl_tc__;
+	__tc__("dataSm.incorrect");
+	for (; s.check(); s++)
+	{
+		__trace2__("dataSmIncorrect(%d)", s.value());
+		try
+		{
+			PduDataSm* pdu = new PduDataSm();
+			const Address* destAlias = fixture->smeReg->getRandomAddress();
+			__require__(destAlias);
+			fixture->transmitter->setupRandomCorrectDataSmPdu(pdu, *destAlias, rand0(5));
+			switch (s.value())
+			{
+				case 1: //неправильный адрес отправителя
+					{
+						__tc__("dataSm.incorrect.sourceAddr");
+						Address addr; PduAddress smppAddr;
+						SmsUtil::setupRandomCorrectAddress(&addr);
+						SmppUtil::convert(addr, &smppAddr);
+						pdu->get_data().set_source(smppAddr);
+					}
+					break;
+				case 2: //неправильный адрес получателя
+					{
+						__tc__("dataSm.incorrect.destAddr");
+						Address addr; PduAddress smppAddr;
+						SmsUtil::setupRandomCorrectAddress(&addr);
+						SmppUtil::convert(addr, &smppAddr);
+						pdu->get_data().set_dest(smppAddr);
+					}
+					break;
+				case 3: //недопустимый dataCoding
+					__tc__("dataSm.incorrect.dataCoding");
+					if (fixture->smeInfo.forceDC)
+					{
+						uint8_t dcs, dc;
+						bool simMsg;
+						do
+						{
+							dcs = rand0(255);
+						}
+						while (SmppUtil::extractDataCoding(dcs, dc, simMsg));
+						pdu->get_data().set_dataCoding(dcs);
+					}
+					else
+					{
+						while (true)
+						{
+							uint8_t dc = rand1(255);
+							switch (dc)
+							{
+								case DEFAULT:
+								case BINARY:
+								case UCS2:
+								case SMSC7BIT:
+									continue;
+							}
+							pdu->get_data().set_dataCoding(dc);
+							break;
+						}
+					}
+					break;
+				case 4:
+					__tc__("dataSm.incorrect.transactionRollback");
+					pdu->get_data().set_serviceType("-----");
+					break;
+				/*
+				case 5: //некорректная длина udh
+					__tc__("dataSm.incorrect.udhiLength");
+					pdu->get_data().set_esmClass(
+						pdu->get_data().get_esmClass() | ESM_CLASS_UDHI_INDICATOR);
+					{
+						int len = rand1(5);
+						char buf[len];
+						*buf = (unsigned char) (len + rand1(10));
+						pdu->get_optional().set_messagePayload(buf, len);
+					}
+					break;
+				case 6: //длина service_type больше допустимой
+					{
+						__tc__("dataSm.incorrect.serviceTypeLength");
+						auto_ptr<char> tmp = rand_char(MAX_SERVICE_TYPE_LENGTH + 1);
+						pdu->get_data().set_serviceType(tmp.get());
+					}
+					break;
+				case 7: //длина source_addr больше допустимой
+					{
+						__tc__("dataSm.incorrect.sourceAddrLength");
+						auto_ptr<char> tmp = rand_char(MAX_ADDRESS_LENGTH + 1);
+						PduAddress addr;
+						addr.set_value(tmp.get());
+						pdu->get_data().set_source(addr);
+					}
+					break;
+				case 8: //длина dest_addr больше допустимой
+					{
+						__tc__("dataSm.incorrect.destAddrLength");
+						auto_ptr<char> tmp = rand_char(MAX_ADDRESS_LENGTH + 1);
+						PduAddress addr;
+						addr.set_value(tmp.get());
+						pdu->get_data().set_dest(addr);
+					}
+					break;
+				*/
+				default:
+					__unreachable__("Invalid num");
+			}
+			//отправить и зарегистрировать pdu
+			fixture->transmitter->sendDataSmPdu(pdu, NULL, sync);
+			__tc_ok__;
+		}
+		catch(...)
+		{
+			__tc_fail__(s.value());
+			error();
+		}
+	}
+}
+
 void SmppProtocolTestCases::replaceSmIncorrect(PduReplaceSm* pdu, bool sync)
 {
 	__require__(pdu);
@@ -934,14 +1136,9 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 			}
 			fixture->transmitter->setupRandomCorrectReplaceSmPdu(pdu, replacePduData);
 			//replaced pdu params
-			__require__(replacePduData && replacePduData->pdu->get_commandId() == SUBMIT_SM);
-			PduSubmitSm* replacePdu = reinterpret_cast<PduSubmitSm*>(replacePduData->pdu);
-			time_t waitTime = SmppUtil::getWaitTime(
-				replacePdu->get_message().get_scheduleDeliveryTime(), replacePduData->sendTime);
-			time_t validTime = SmppUtil::getValidTime(
-				replacePdu->get_message().get_validityPeriod(), replacePduData->sendTime);
-			bool udhi = replacePdu->get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
-			uint8_t dc = replacePdu->get_message().get_dataCoding();
+			SmsPduWrapper replacePdu(replacePduData->pdu, 0);
+			bool udhi = replacePdu.getEsmClass() & ESM_CLASS_UDHI_INDICATOR;
+			uint8_t dc = replacePdu.getDataCoding();
 			if (fixture->smeInfo.forceDC)
 			{
 				bool simMsg;
@@ -968,9 +1165,7 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 					{
 						__tc__("replaceSm.correct.validTimeExceeded");
 						SmppTime t;
-						SmppUtil::time2string(
-							time(NULL) + maxValidPeriod + timeCheckAccuracy, t,
-							time(NULL), __numTime__);
+						SmppUtil::time2string(INT_MAX, t, time(NULL), __numTime__);
 						pdu->set_validityPeriod(t);
 					}
 					break;
@@ -979,7 +1174,7 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 						__tc__("replaceSm.correct.waitTimeNull");
 						SmppTime t;
 						SmppUtil::time2string(
-							max(waitTime, time(NULL)) + timeCheckAccuracy,
+							max(replacePdu.getWaitTime(), time(NULL)) + timeCheckAccuracy,
 							t, time(NULL), __numTime__);
 						pdu->set_scheduleDeliveryTime("");
 						pdu->set_validityPeriod(t);
@@ -989,8 +1184,8 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 					{
 						__tc__("replaceSm.correct.validTimeNull");
 						SmppTime t;
-						SmppUtil::time2string(validTime - timeCheckAccuracy, t,
-							time(NULL), __absoluteTime__);
+						SmppUtil::time2string(replacePdu.getValidTime() - timeCheckAccuracy,
+							t, time(NULL), __absoluteTime__);
 						pdu->set_scheduleDeliveryTime(t);
 						pdu->set_validityPeriod("");
 					}
@@ -1086,13 +1281,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 				return;
 			}
 			fixture->transmitter->setupRandomCorrectReplaceSmPdu(pdu, replacePduData);
-			//replaced pdu params
-			__require__(replacePduData && replacePduData->pdu->get_commandId() == SUBMIT_SM);
-			PduSubmitSm* replacePdu = reinterpret_cast<PduSubmitSm*>(replacePduData->pdu);
-			time_t waitTime = SmppUtil::getWaitTime(
-				replacePdu->get_message().get_scheduleDeliveryTime(), replacePduData->sendTime);
-			time_t validTime = SmppUtil::getValidTime(
-				replacePdu->get_message().get_validityPeriod(), replacePduData->sendTime);
+			SmsPduWrapper replacePdu(replacePduData->pdu, 0);
 			switch (s.value())
 			{
 				case 1: //неправильный message_id
@@ -1180,7 +1369,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 					{
 						__tc__("replaceSm.incorrect.waitTimeInvalid2");
 						SmppTime t;
-						time_t newWaitTime = validTime + timeCheckAccuracy;
+						time_t newWaitTime = replacePdu.getValidTime() + timeCheckAccuracy;
 						SmppUtil::time2string(newWaitTime, t, time(NULL), __numTime__);
 						pdu->set_scheduleDeliveryTime(t);
 						pdu->set_validityPeriod("");
@@ -1190,7 +1379,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 					{
 						__tc__("replaceSm.incorrect.waitTimeInvalid3");
 						SmppTime t;
-						time_t newValidTime = waitTime - timeCheckAccuracy;
+						time_t newValidTime = replacePdu.getWaitTime() - timeCheckAccuracy;
 						SmppUtil::time2string(
 							newValidTime, t, time(NULL), __absoluteTime__);
 						pdu->set_scheduleDeliveryTime("");
@@ -1552,9 +1741,8 @@ void SmppProtocolTestCases::cancelSmSingleCorrect(bool sync, int num)
 			__trace2__("cancelPduData = %p", cancelPduData);
 			//canceld pdu params
 			__require__(cancelPduData->strProps.count("smsId"));
-			__require__(cancelPduData->pdu->get_commandId() == SUBMIT_SM);
-			PduSubmitSm* cancelPdu = reinterpret_cast<PduSubmitSm*>(cancelPduData->pdu);
-			__require__(cancelPdu->get_message().get_source() == srcAddr);
+			SmsPduWrapper cancelPdu(cancelPduData->pdu, 0);
+			__require__(cancelPdu.getSource() == srcAddr);
 			switch (s.value())
 			{
 				case 1: //по message_id и source_addr с нулевыми service_type, dest_addr
@@ -1568,7 +1756,7 @@ void SmppProtocolTestCases::cancelSmSingleCorrect(bool sync, int num)
 					__tc__("cancelSm.correct.messageIdWithDestAddr");
 					pdu->set_messageId(cancelPduData->strProps["smsId"].c_str());
 					//pdu->set_source();
-					pdu->set_dest(cancelPdu->get_message().get_dest());
+					pdu->set_dest(cancelPdu.getDest());
 					//pdu->set_serviceType();
 					break;
 				default:
@@ -1694,8 +1882,7 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 			}
 			//canceld pdu params
 			__require__(cancelPduData->strProps.count("smsId"));
-			__require__(cancelPduData->pdu->get_commandId() == SUBMIT_SM);
-			PduSubmitSm* cancelPdu = reinterpret_cast<PduSubmitSm*>(cancelPduData->pdu);
+			SmsPduWrapper cancelPdu(cancelPduData->pdu, 0);
 			switch (s.value())
 			{
 				case 1: //неправильный message_id
@@ -1795,8 +1982,7 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 						pdu->set_messageId(cancelPduData->strProps["smsId"].c_str());
 						//pdu->set_source();
 						//pdu->set_dest();
-						pdu->set_serviceType(
-							nvl(cancelPdu->get_message().get_serviceType()));
+						pdu->set_serviceType(nvl(cancelPdu.getServiceType()));
 					}
 					break;
 				case 12: //заданы правильные message_id, dest_addr и service_type
@@ -1804,9 +1990,8 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 						__tc__("cancelSm.incorrect.allFields");
 						pdu->set_messageId(cancelPduData->strProps["smsId"].c_str());
 						//pdu->set_source();
-						pdu->set_dest(cancelPdu->get_message().get_dest());
-						pdu->set_serviceType(
-							nvl(cancelPdu->get_message().get_serviceType()));
+						pdu->set_dest(cancelPdu.getDest());
+						pdu->set_serviceType(nvl(cancelPdu.getServiceType()));
 					}
 					break;
 				case 13: //сообщение в финальном состоянии
@@ -1816,7 +2001,6 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 						if (cancelPduData)
 						{
 							__tc__("cancelSm.incorrect.cancelFinal");
-							__require__(cancelPduData->strProps.count("smsId"));
 							pdu->set_messageId(cancelPduData->strProps["smsId"].c_str());
 							//pdu->set_source();
 							//pdu->set_dest();
@@ -1841,7 +2025,7 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 						__tc__("cancelSm.incorrect.noSms");
 						//pdu->set_messageId();
 						//pdu->set_source();
-						pdu->set_dest(cancelPdu->get_message().get_dest());
+						pdu->set_dest(cancelPdu.getDest());
 						auto_ptr<char> tmp = rand_char(MAX_ESERVICE_TYPE_LENGTH);
 						pdu->set_serviceType(tmp.get());
 					}
@@ -2012,23 +2196,24 @@ int SmppProtocolTestCases::getRandomRespDelay()
 }
 
 pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespOk(
-	PduDeliverySm& pdu, bool sync, bool sendDelay)
+	SmppHeader* header, bool sync, bool sendDelay)
 {
+	__require__(header);
 	__decl_tc__;
 	int delay = 0;
 	time_t sendTime = time(NULL);
 	if (sendDelay)
 	{
-		__tc__("deliverySm.resp.delay"); __tc_ok__;
+		__tc__("smsResp.deliverySm.delay"); __tc_ok__;
 		delay = getRandomRespDelay();
 		sendTime += delay / 1000;
 	}
 	__trace2__("sendDeliverySmRespOk(): delay = %d", delay);
 	try
 	{
-		__tc__("deliverySm.resp.sendOk");
+		__tc__("smsResp.deliverySm.sendOk");
 		PduDeliverySmResp respPdu;
-		respPdu.get_header().set_sequenceNumber(pdu.get_header().get_sequenceNumber());
+		respPdu.get_header().set_sequenceNumber(header->get_sequenceNumber());
 		respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
 		fixture->transmitter->sendDeliverySmResp(respPdu, sync, delay);
 		__tc_ok__;
@@ -2044,7 +2229,7 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespOk(
 }
 
 pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
-	PduDeliverySm& pdu, bool sync, int num)
+	SmppHeader* header, bool sync, int num)
 {
 	__trace2__("sendDeliverySmRespRetry(): sme timeout = %d", fixture->smeInfo.timeout);
 	TCSelector s(num, 2);
@@ -2054,25 +2239,25 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 	{
 		uint32_t commandStatus = ESME_ROK;
 		PduDeliverySmResp respPdu;
-		respPdu.get_header().set_sequenceNumber(pdu.get_header().get_sequenceNumber());
+		respPdu.get_header().set_sequenceNumber(header->get_sequenceNumber());
 		respPdu.get_header().set_commandStatus(ESME_ROK);
 		switch (s.value())
 		{
 			case 1: //временная ошибка на стороне sme, запрос на повторную доставку
-				__tc__("deliverySm.resp.sendRetry.tempAppError");
+				__tc__("smsResp.deliverySm.sendRetry.tempAppError");
 				commandStatus = ESME_RX_T_APPN;
 				respPdu.get_header().set_commandStatus(commandStatus);
 				fixture->transmitter->sendDeliverySmResp(respPdu, sync);
 				break;
 			case 2: //переполнение очереди стороне sme
-				__tc__("deliverySm.resp.sendRetry.msgQueueFull");
+				__tc__("smsResp.deliverySm.sendRetry.msgQueueFull");
 				commandStatus = ESME_RMSGQFUL;
 				respPdu.get_header().set_commandStatus(commandStatus);
 				fixture->transmitter->sendDeliverySmResp(respPdu, sync);
 				break;
 			/*
 			case 3: //отправить респонс с неправильным sequence_number
-				__tc__("deliverySm.resp.sendRetry.invalidSequenceNumber");
+				__tc__("smsResp.deliverySm.sendRetry.invalidSequenceNumber");
 				commandStatus = DELIVERY_STATUS_NO_RESPONSE;
 				sendTime += fixture->smeInfo.timeout;
 				respPdu.get_header().set_sequenceNumber(INT_MAX);
@@ -2080,13 +2265,13 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 				fixture->transmitter->sendDeliverySmResp(respPdu, sync);
 				break;
 			case 4: //не отправлять респонс
-				__tc__("deliverySm.resp.sendRetry.notSend");
+				__tc__("smsResp.deliverySm.sendRetry.notSend");
 				commandStatus = DELIVERY_STATUS_NO_RESPONSE;
 				sendTime += fixture->smeInfo.timeout;
 				break;
 			case 5: //отправить респонс после sme timeout
 				{
-					__tc__("deliverySm.resp.sendRetry.sendAfterSmeTimeout");
+					__tc__("smsResp.deliverySm.sendRetry.sendAfterSmeTimeout");
 					commandStatus = DELIVERY_STATUS_NO_RESPONSE;
 					sendTime += fixture->smeInfo.timeout;
 					respPdu.get_header().set_commandStatus(ESME_ROK);
@@ -2112,14 +2297,14 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespRetry(
 }
 
 pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespError(
-	PduDeliverySm& pdu, bool sync, bool sendDelay, int num)
+	SmppHeader* header, bool sync, bool sendDelay, int num)
 {
 	__decl_tc__;
 	int delay = 0;
 	time_t sendTime = time(NULL);
 	if (sendDelay)
 	{
-		__tc__("deliverySm.resp.delay"); __tc_ok__;
+		__tc__("smsResp.deliverySm.delay"); __tc_ok__;
 		delay = getRandomRespDelay();
 		sendTime += delay / 1000;
 	}
@@ -2128,26 +2313,26 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespError(
 	try
 	{
 		PduDeliverySmResp respPdu;
-		respPdu.get_header().set_sequenceNumber(pdu.get_header().get_sequenceNumber());
+		respPdu.get_header().set_sequenceNumber(header->get_sequenceNumber());
 		switch (s.value())
 		{
 			case 1: //отправить респонс с кодом ошибки 0x1-0x10f
-				__tc__("deliverySm.resp.sendError.standardError");
+				__tc__("smsResp.deliverySm.sendError.standardError");
 				respPdu.get_header().set_commandStatus(rand1(0x10f));
 				break;
 			case 2: //отправить респонс с кодом ошибки:
 				//0x110-0x3ff - Reserved for SMPP extension
 				//0x400-0x4ff - Reserved for SMSC vendor specific
-				__tc__("deliverySm.resp.sendError.reservedError");
+				__tc__("smsResp.deliverySm.sendError.reservedError");
 				respPdu.get_header().set_commandStatus(rand2(0x110, 0x4ff));
 				break;
 			case 3: //отправить респонс с кодом ошибки >0x500 - Reserved
-				__tc__("deliverySm.resp.sendError.outRangeError");
+				__tc__("smsResp.deliverySm.sendError.outRangeError");
 				respPdu.get_header().set_commandStatus(rand2(0x500, INT_MAX));
 				break;
 			/*
 			case 4: //неустранимая ошибка на стороне sme, отказ от всех последующих сообщений
-				__tc__("deliverySm.resp.sendError.permanentAppError");
+				__tc__("smsResp.deliverySm.sendError.permanentAppError");
 				respPdu.get_header().set_commandStatus(ESME_RX_P_APPN);
 				break;
 			*/
@@ -2157,9 +2342,179 @@ pair<uint32_t, time_t> SmppProtocolTestCases::sendDeliverySmRespError(
 		//рекурсивный вызов, чтобы предотвратить закрытие smpp сессии
 		if (respPdu.get_header().get_commandStatus() == ESME_RX_P_APPN)
 		{
-			return sendDeliverySmRespError(pdu, sync, sendDelay, num);
+			return sendDeliverySmRespError(header, sync, sendDelay, num);
 		}
 		fixture->transmitter->sendDeliverySmResp(respPdu, sync, delay);
+		__tc_ok__;
+		return make_pair(respPdu.get_header().get_commandStatus(), sendTime);
+	}
+	catch(...)
+	{
+		__tc_fail__(s.value());
+		error();
+	}
+	return make_pair(DELIVERY_STATUS_NO_RESPONSE,
+		time(NULL) + fixture->smeInfo.timeout);
+}
+
+pair<uint32_t, time_t> SmppProtocolTestCases::sendDataSmRespOk(
+	SmppHeader* header, bool sync, bool sendDelay)
+{
+	__decl_tc__;
+	int delay = 0;
+	time_t sendTime = time(NULL);
+	if (sendDelay)
+	{
+		__tc__("smsResp.dataSm.delay"); __tc_ok__;
+		delay = getRandomRespDelay();
+		sendTime += delay / 1000;
+	}
+	__trace2__("sendDataSmRespOk(): delay = %d", delay);
+	try
+	{
+		__tc__("smsResp.dataSm.sendOk");
+		PduDataSmResp respPdu;
+		respPdu.get_header().set_sequenceNumber(header->get_sequenceNumber());
+		respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
+		auto_ptr<char> msgId = rand_char(rand0(MAX_MSG_ID_LENGTH));
+		respPdu.set_messageId(msgId.get());
+		SmppUtil::setupRandomCorrectOptionalParams(respPdu.get_optional(), BINARY, false);
+		fixture->transmitter->sendDataSmResp(respPdu, sync, delay);
+		__tc_ok__;
+		return make_pair(ESME_ROK, sendTime);
+	}
+	catch(...)
+	{
+		__tc_fail__(100);
+		error();
+	}
+	return make_pair(DELIVERY_STATUS_NO_RESPONSE,
+		time(NULL) + fixture->smeInfo.timeout);
+}
+
+pair<uint32_t, time_t> SmppProtocolTestCases::sendDataSmRespRetry(
+	SmppHeader* header, bool sync, int num)
+{
+	__trace2__("sendDataSmRespRetry(): sme timeout = %d", fixture->smeInfo.timeout);
+	TCSelector s(num, 2);
+	__decl_tc__;
+	time_t sendTime = time(NULL);
+	try
+	{
+		uint32_t commandStatus = ESME_ROK;
+		PduDataSmResp respPdu;
+		respPdu.get_header().set_sequenceNumber(header->get_sequenceNumber());
+		respPdu.get_header().set_commandStatus(ESME_ROK);
+		auto_ptr<char> msgId = rand_char(rand0(MAX_MSG_ID_LENGTH));
+		respPdu.set_messageId(msgId.get());
+		SmppUtil::setupRandomCorrectOptionalParams(respPdu.get_optional(), BINARY, false);
+		switch (s.value())
+		{
+			case 1: //временная ошибка на стороне sme, запрос на повторную доставку
+				__tc__("smsResp.dataSm.sendRetry.tempAppError");
+				commandStatus = ESME_RX_T_APPN;
+				respPdu.get_header().set_commandStatus(commandStatus);
+				fixture->transmitter->sendDataSmResp(respPdu, sync);
+				break;
+			case 2: //переполнение очереди стороне sme
+				__tc__("smsResp.dataSm.sendRetry.msgQueueFull");
+				commandStatus = ESME_RMSGQFUL;
+				respPdu.get_header().set_commandStatus(commandStatus);
+				fixture->transmitter->sendDataSmResp(respPdu, sync);
+				break;
+			/*
+			case 3: //отправить респонс с неправильным sequence_number
+				__tc__("smsResp.dataSm.sendRetry.invalidSequenceNumber");
+				commandStatus = DELIVERY_STATUS_NO_RESPONSE;
+				sendTime += fixture->smeInfo.timeout;
+				respPdu.get_header().set_sequenceNumber(INT_MAX);
+				respPdu.get_header().set_commandStatus(ESME_ROK);
+				fixture->transmitter->sendDataSmResp(respPdu, sync);
+				break;
+			case 4: //не отправлять респонс
+				__tc__("smsResp.dataSm.sendRetry.notSend");
+				commandStatus = DELIVERY_STATUS_NO_RESPONSE;
+				sendTime += fixture->smeInfo.timeout;
+				break;
+			case 5: //отправить респонс после sme timeout
+				{
+					__tc__("smsResp.dataSm.sendRetry.sendAfterSmeTimeout");
+					commandStatus = DELIVERY_STATUS_NO_RESPONSE;
+					sendTime += fixture->smeInfo.timeout;
+					respPdu.get_header().set_commandStatus(ESME_ROK);
+					int timeout = 1000 * (fixture->smeInfo.timeout + 1);
+					__trace2__("sendAfterSmeTimeout(): timeout = %d", timeout);
+					fixture->transmitter->sendDataSmResp(respPdu, sync, timeout);
+				}
+				break;
+			*/
+			default:
+				__unreachable__("Invalid num");
+		}
+		__tc_ok__;
+		return make_pair(commandStatus, sendTime);
+	}
+	catch(...)
+	{
+		__tc_fail__(s.value());
+		error();
+	}
+	return make_pair(DELIVERY_STATUS_NO_RESPONSE,
+		time(NULL) + fixture->smeInfo.timeout);
+}
+
+pair<uint32_t, time_t> SmppProtocolTestCases::sendDataSmRespError(
+	SmppHeader* header, bool sync, bool sendDelay, int num)
+{
+	__decl_tc__;
+	int delay = 0;
+	time_t sendTime = time(NULL);
+	if (sendDelay)
+	{
+		__tc__("smsResp.dataSm.delay"); __tc_ok__;
+		delay = getRandomRespDelay();
+		sendTime += delay / 1000;
+	}
+	__trace2__("sendDataSmRespError(): delay = %d", delay);
+	TCSelector s(num, 3);
+	try
+	{
+		PduDataSmResp respPdu;
+		respPdu.get_header().set_sequenceNumber(header->get_sequenceNumber());
+		auto_ptr<char> msgId = rand_char(rand0(MAX_MSG_ID_LENGTH));
+		respPdu.set_messageId(msgId.get());
+		SmppUtil::setupRandomCorrectOptionalParams(respPdu.get_optional(), BINARY, false);
+		switch (s.value())
+		{
+			case 1: //отправить респонс с кодом ошибки 0x1-0x10f
+				__tc__("smsResp.dataSm.sendError.standardError");
+				respPdu.get_header().set_commandStatus(rand1(0x10f));
+				break;
+			case 2: //отправить респонс с кодом ошибки:
+				//0x110-0x3ff - Reserved for SMPP extension
+				//0x400-0x4ff - Reserved for SMSC vendor specific
+				__tc__("smsResp.dataSm.sendError.reservedError");
+				respPdu.get_header().set_commandStatus(rand2(0x110, 0x4ff));
+				break;
+			case 3: //отправить респонс с кодом ошибки >0x500 - Reserved
+				__tc__("smsResp.dataSm.sendError.outRangeError");
+				respPdu.get_header().set_commandStatus(rand2(0x500, INT_MAX));
+				break;
+			/*
+			case 4: //неустранимая ошибка на стороне sme, отказ от всех последующих сообщений
+				__tc__("smsResp.dataSm.sendError.permanentAppError");
+				respPdu.get_header().set_commandStatus(ESME_RX_P_APPN);
+				break;
+			*/
+			default:
+				__unreachable__("Invalid num");
+		}
+		//рекурсивный вызов, чтобы предотвратить закрытие smpp сессии
+		if (respPdu.get_header().get_commandStatus() == ESME_RX_P_APPN)
+		{
+			return sendDataSmRespError(header, sync, sendDelay, num);
+		}
+		fixture->transmitter->sendDataSmResp(respPdu, sync, delay);
 		__tc_ok__;
 		return make_pair(respPdu.get_header().get_commandStatus(), sendTime);
 	}

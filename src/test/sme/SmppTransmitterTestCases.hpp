@@ -32,13 +32,17 @@ public:
 
 	void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu, const Address& destAlias,
 		bool useShortMessage, uint64_t mask = OPT_ALL);
-
 	void sendSubmitSmPdu(PduSubmitSm* pdu, PduData* existentPduData, bool sync,
 		PduData::IntProps* intProps = NULL, PduData::StrProps* strProps = NULL,
 		PduData::ObjProps* objProps = NULL, PduType pduType = PDU_NORMAL);
 
-	void setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu, PduData* replacePduData);
+	void setupRandomCorrectDataSmPdu(PduDataSm* pdu, const Address& destAlias,
+		uint64_t mask = OPT_ALL);
+	void sendDataSmPdu(PduDataSm* pdu, PduData* existentPduData, bool sync,
+		PduData::IntProps* intProps = NULL, PduData::StrProps* strProps = NULL,
+		PduData::ObjProps* objProps = NULL, PduType pduType = PDU_NORMAL);
 
+	void setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu, PduData* replacePduData);
 	void sendReplaceSmPdu(PduReplaceSm* pdu, PduData* replacePduData, bool sync,
 		PduData::IntProps* intProps = NULL, PduData::StrProps* strProps = NULL,
 		PduData::ObjProps* objProps = NULL);
@@ -53,14 +57,14 @@ public:
 
 	void sendDeliverySmResp(PduDeliverySmResp& pdu, bool sync, int delay = 0);
 
+	void sendDataSmResp(PduDataSmResp& pdu, bool sync, int delay = 0);
+
 	void sendInvalidPdu(SmppHeader* pdu, bool sync);
 
 	/*
 	virtual SmppHeader* sendPdu(SmppHeader& pdu)=0;
 	virtual void sendGenericNack(PduGenericNack& pdu)=0;
-	virtual void sendDataSmResp(PduDataSmResp& pdu)=0;
 	virtual PduMultiSmResp* submitm(PduMultiSm& pdu)=0;
-	virtual PduDataSmResp* data(PduDataSm& pdu)=0;
 	*/
 	static uint8_t getRegisteredDelivery(PduData* pduData);
 	
@@ -96,29 +100,28 @@ protected:
 		bool condRequired, bool forceRemoveMonitor);
 	CancelResult cancelPduMonitors(PduData* pduData, time_t cancelTime,
 		bool forceRemoveMonitors, SmppState state);
-	void registerTransmitterReportMonitors(uint16_t msgRef, time_t waitTime,
-		time_t validTime, PduData* pduData);
-	void registerNotBoundReportMonitors(uint16_t msgRef, time_t waitTime,
-		time_t validTime, PduData* pduData);
+	void registerTransmitterReportMonitors(PduData* pduData);
+	void registerNotBoundReportMonitors(PduData* pduData);
 	//submitSm
-	void registerNormalSmeMonitors(PduSubmitSm* pdu, PduData* existentPduData,
-		uint16_t msgRef, time_t waitTime, time_t validTime, PduData* pduData);
-	void registerExtSmeMonitors(PduSubmitSm* pdu, uint16_t msgRef, time_t waitTime,
-		time_t validTime, PduData* pduData);
-	void registerNullSmeMonitors(PduSubmitSm* pdu, uint16_t msgRef, time_t waitTime,
-		time_t validTime, uint32_t deliveryStatus, PduData* pduData);
-	SmsMsg* getSmsMsg(PduSubmitSm* pdu, uint8_t dc);
-	PduData* prepareSubmitSm(PduSubmitSm* pdu, PduData* existentPduData,
-		time_t submitTime, PduData::IntProps* intProps,
+	void registerNormalSmeMonitors(PduData* pduData, PduData* existentPduData);
+	void registerExtSmeMonitors(PduData* pduData);
+	void registerNullSmeMonitors(PduData* pduData, uint32_t deliveryStatus);
+	SmsMsg* getSmsMsg(SmppHeader* header, uint8_t dc);
+	PduData* prepareSms(SmppHeader* header, PduData* existentPduData,
+		time_t sendTime, PduData::IntProps* intProps,
 		PduData::StrProps* strProps, PduData::ObjProps* objProps, PduType pduType);
 	void processSubmitSmSync(PduData* pduData, PduSubmitSmResp* respPdu,
 		time_t respTime);
 	void processSubmitSmAsync(PduData* pduData);
+	//dataSm
+	void processDataSmSync(PduData* pduData, PduDataSmResp* respPdu, time_t respTime);
+	void processDataSmAsync(PduData* pduData);
 	//replaceSm
-	void registerReplaceMonitors(PduSubmitSm* resPdu, PduData* replacePduData,
-		PduData* pduData);
+	void registerReplaceMonitors(PduData* pduData, PduData* replacePduData);
+	SmppHeader* prepareResultSubmitSm(PduReplaceSm* pdu,
+		PduData* replacePduData, time_t sendTime);
 	PduData* prepareReplaceSm(PduReplaceSm* pdu, PduData* replacePduData,
-		time_t submitTime, PduData::IntProps* intProps, PduData::StrProps* strProps,
+		time_t sendTime, PduData::IntProps* intProps, PduData::StrProps* strProps,
 		PduData::ObjProps* objProps);
 	void processReplaceSmSync(PduData* pduData, PduReplaceSm* pdu,
 		PduReplaceSmResp* respPdu, time_t respTime);
@@ -144,13 +147,13 @@ protected:
 	void processGenericNackAsync(PduData* pduData);
 };
 
-class DeliverySmRespTask : public PduTask
+class SmsRespTask : public PduTask
 {
 	SmppTransmitterTestCases* transmitter;
     PduDeliverySmResp pdu;
 	bool sync;
 public:
-	DeliverySmRespTask(SmppTransmitterTestCases* _transmitter,
+	SmsRespTask(SmppTransmitterTestCases* _transmitter,
 		PduDeliverySmResp& _pdu, bool _sync)
 	: transmitter(_transmitter), pdu(_pdu), sync(_sync) {}
 	virtual void sendPdu() { transmitter->sendDeliverySmResp(pdu, sync); }

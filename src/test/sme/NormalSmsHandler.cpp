@@ -30,14 +30,18 @@ Category& NormalSmsHandler::getLog()
 	return log;
 }
 
-vector<int> NormalSmsHandler::checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const
+vector<int> NormalSmsHandler::checkRoute(SmppHeader* header1,
+	SmppHeader* header2) const
 {
+	__require__(header1 && header2);
+	SmsPduWrapper pdu1(header1, 0);
+	SmsPduWrapper pdu2(header2, 0);
 	vector<int> res;
 	Address origAddr1, destAlias1, origAlias2, destAddr2;
-	SmppUtil::convert(pdu1.get_message().get_source(), &origAddr1);
-	SmppUtil::convert(pdu1.get_message().get_dest(), &destAlias1);
-	SmppUtil::convert(pdu2.get_message().get_source(), &origAlias2);
-	SmppUtil::convert(pdu2.get_message().get_dest(), &destAddr2);
+	SmppUtil::convert(pdu1.getSource(), &origAddr1);
+	SmppUtil::convert(pdu1.getDest(), &destAlias1);
+	SmppUtil::convert(pdu2.getSource(), &origAlias2);
+	SmppUtil::convert(pdu2.getDest(), &destAddr2);
 	//правильность destAddr
 	const RouteHolder* routeHolder = NULL;
 	const Address destAddr = fixture->aliasReg->findAddressByAlias(destAlias1);
@@ -77,141 +81,155 @@ vector<int> NormalSmsHandler::checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2)
 	return res;
 }
 
-bool NormalSmsHandler::checkEqualDataCoding(PduSubmitSm& origPdu, SmsMsg* msg)
-{
-	__require__(msg && msg->msg);
-	int origLen = 0;
-	const char* origMsg = "";
-	if (origPdu.get_optional().has_messagePayload() &&
-		origPdu.get_optional().size_messagePayload())
-	{
-		origLen = origPdu.get_optional().size_messagePayload();
-		origMsg = origPdu.get_optional().get_messagePayload();
-	}
-	else if (origPdu.get_message().size_shortMessage())
-	{
-		origLen = origPdu.get_message().size_shortMessage();
-		origMsg = origPdu.get_message().get_shortMessage();
-	}
-	return (origLen == msg->len && !memcmp(origMsg, msg->msg, origLen));
-}
+#define __check__(errCode, cond) \
+	if (!(cond)) { __tc_fail__(errCode); }
 
-void NormalSmsHandler::compareMsgText(DeliveryMonitor* monitor,
-	PduSubmitSm& origPdu, PduDeliverySm& pdu, time_t recvTime)
+//проверка: тип pdu, data coding, text
+void NormalSmsHandler::checkNotMapMsgText(DeliveryMonitor* monitor,
+	SmppHeader* header)
 {
 	__decl_tc__;
+	__require__(monitor && header);
 	__require__(monitor->pduData->objProps.count("sms.msg"));
+	__require__(monitor->pduData->intProps.count("dataCoding"));
 	SmsMsg* msg = dynamic_cast<SmsMsg*>(monitor->pduData->objProps["sms.msg"]);
 	if (!msg->valid)
 	{
 		return;
 	}
+	SmsPduWrapper pdu(header, 0);
+	SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
+	//тип pdu
+	if (pdu.isDeliverSm())
+	{
+		__tc__("sms.normalSms.notMap.checkDeliverSm");
+		__check__(1, origPdu.isSubmitSm());
+		__tc_ok_cond__;
+	}
+	else if (pdu.isDataSm())
+	{
+		__tc__("sms.normalSms.notMap.checkDataSm");
+		__check__(1, origPdu.isDataSm());
+		__tc_ok_cond__;
+	}
 	//data coding только для больная sme -> нормальную и нормальная -> нормальную
 	if (!fixture->smeInfo.forceDC)
 	{
-		__tc__("deliverySm.normalSms.notMap.checkDataCoding");
-		if (pdu.get_message().get_dataCoding() != msg->dataCoding)
-		{
-			__tc_fail__(1);
-		}
+		__tc__("sms.normalSms.notMap.checkDataCoding");
+		__check__(1, pdu.getDataCoding() == msg->dataCoding);
 		__tc_ok_cond__;
 	}
-	if (checkEqualDataCoding(origPdu, msg))
+	if (monitor->pduData->intProps["dataCoding"] == msg->dataCoding)
 	{
-		__tc__("deliverySm.normalSms.notMap.checkEqualDataCoding");
+		__tc__("sms.normalSms.notMap.checkEqualDataCoding");
 	}
 	else
 	{
-		__tc__("deliverySm.normalSms.notMap.checkDiffDataCoding");
+		__tc__("sms.normalSms.notMap.checkDiffDataCoding");
 	}
-	if (pdu.get_message().size_shortMessage() &&
-		pdu.get_optional().has_messagePayload())
+	if (pdu.isDeliverSm())
 	{
-		__tc_fail__(1);
+		if (pdu.get_message().size_shortMessage() &&
+			pdu.get_optional().has_messagePayload())
+		{
+			__tc_fail__(1);
+		}
+		else if (pdu.get_message().size_shortMessage())
+		{
+			if (pdu.get_message().size_shortMessage() != msg->len)
+			{
+				__tc_fail__(2);
+			}
+			else if (memcmp(pdu.get_message().get_shortMessage(), msg->msg, msg->len))
+			{
+				__tc_fail__(3);
+			}
+		}
+		else if (pdu.get_optional().has_messagePayload())
+		{
+			if (pdu.get_optional().size_messagePayload() != msg->len)
+			{
+				__tc_fail__(4);
+			}
+			else if (memcmp(pdu.get_optional().get_messagePayload(), msg->msg, msg->len))
+			{
+				__tc_fail__(5);
+			}
+		}
+		else if (msg->len)
+		{
+			__tc_fail__(6);
+		}
 	}
-	else if (pdu.get_message().size_shortMessage())
+	else if (pdu.isDataSm())
 	{
-		if (pdu.get_message().size_shortMessage() != msg->len)
+		if (pdu.get_optional().has_messagePayload())
 		{
-			__tc_fail__(2);
+			if (pdu.get_optional().size_messagePayload() != msg->len)
+			{
+				__tc_fail__(11);
+			}
+			else if (memcmp(pdu.get_optional().get_messagePayload(), msg->msg, msg->len))
+			{
+				__tc_fail__(12);
+			}
 		}
-		else if (memcmp(pdu.get_message().get_shortMessage(), msg->msg, msg->len))
+		else if (msg->len)
 		{
-			__tc_fail__(3);
+			__tc_fail__(13);
 		}
-	}
-	else if (pdu.get_optional().has_messagePayload())
-	{
-		if (pdu.get_optional().size_messagePayload() != msg->len)
-		{
-			__tc_fail__(4);
-		}
-		else if (memcmp(pdu.get_optional().get_messagePayload(), msg->msg, msg->len))
-		{
-			__tc_fail__(5);
-		}
-	}
-	else if (msg->len)
-	{
-		__tc_fail__(6);
 	}
 	__tc_ok_cond__;
 	//игнорирую опциональный language_indicator
 }
 
-PduFlag NormalSmsHandler::compareSegmentedMapMsgText(DeliveryMonitor* monitor,
-	PduSubmitSm& origPdu, PduDeliverySm& pdu, RespPduFlag respFlag,
+//проверка: тип pdu, text
+PduFlag NormalSmsHandler::checkSegmentedMapMsgText(DeliveryMonitor* monitor,
+	SmppHeader* header, RespPduFlag respFlag, uint8_t dataCoding,
 	SmsMsg* msg, int concatRefNum, int concatMaxNum, int concatSeqNum)
 {
 	__decl_tc__;
-	__require__(pdu.get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR);
-	__require__(pdu.get_message().size_shortMessage() >= 6);
-	__trace2__("segmented messge received: refNum = %d, maxNum = %d, seqNum = %d",
+	SmsPduWrapper pdu(header, 0);
+	__require__(pdu.getEsmClass() & ESM_CLASS_UDHI_INDICATOR);
+	__require__(pdu.isDeliverSm() && pdu.get_message().size_shortMessage() >= 6);
+	__trace2__("segmented message received: refNum = %d, maxNum = %d, seqNum = %d",
 		concatRefNum, concatMaxNum, concatSeqNum);
+
+	__tc__("sms.normalSms.map.longSms.checkDeliverSm");
+	__check__(1, pdu.isDeliverSm());
+	__tc_ok_cond__;
 
 	int udhLen = 1 + *(unsigned char*) pdu.get_message().get_shortMessage();
 	const char* sm = pdu.get_message().get_shortMessage() + udhLen;
 	int smLen = pdu.get_message().size_shortMessage() - udhLen;
 
-	if (checkEqualDataCoding(origPdu, msg))
+	if (dataCoding == msg->dataCoding)
 	{
-		__tc__("deliverySm.normalSms.map.checkLongSmsEqualDataCoding");
+		__tc__("sms.normalSms.map.longSms.checkEqualDataCoding");
 	}
 	else
 	{
-		__tc__("deliverySm.normalSms.map.checkLongSmsDiffDataCoding");
+		__tc__("sms.normalSms.map.longSms.checkDiffDataCoding");
 	}
-	if (pdu.get_optional().has_messagePayload())
-	{
-		__tc_fail__(1);
-	}
+	__check__(1, !pdu.get_optional().has_messagePayload());
 	//numSegments
 	if (!monitor->pduData->intProps.count("map.maxNum"))
 	{
 		monitor->pduData->intProps["map.maxNum"] = concatMaxNum;
 	}
-	else if (monitor->pduData->intProps["map.maxNum"] != concatMaxNum)
-	{
-		__tc_fail__(2);
-	}
+	__check__(2, monitor->pduData->intProps["map.maxNum"] == concatMaxNum);
 	//refNum
 	if (!monitor->pduData->intProps.count("map.refNum"))
 	{
 		monitor->pduData->intProps["map.refNum"] = concatRefNum;
 	}
-	else if (monitor->pduData->intProps["map.refNum"] != concatRefNum)
-	{
-		__tc_fail__(3);
-	}
+	__check__(3, monitor->pduData->intProps["map.refNum"] == concatRefNum);
 	//seqNum
 	if (!monitor->pduData->intProps.count("map.seqNum"))
 	{
 		monitor->pduData->intProps["map.seqNum"] = 1;
 	}
-	if (monitor->pduData->intProps["map.seqNum"] != concatSeqNum)
-	{
-		__tc_fail__(4);
-	}
+	__check__(4, monitor->pduData->intProps["map.seqNum"] == concatSeqNum);
 	//length
 	int sz = msg->len - msg->offset;
 	if (msg->dataCoding == DEFAULT || msg->dataCoding == SMSC7BIT)
@@ -345,60 +363,98 @@ PduFlag NormalSmsHandler::compareSegmentedMapMsgText(DeliveryMonitor* monitor,
 	return (msg->offset < msg->len ? PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG);
 }
 
-PduFlag NormalSmsHandler::compareSimpleMapMsgText(DeliveryMonitor* monitor,
-	PduSubmitSm& origPdu, PduDeliverySm& pdu, RespPduFlag respFlag,
-	SmsMsg* msg)
+//проверка: тип pdu, text
+PduFlag NormalSmsHandler::checkSimpleMapMsgText(DeliveryMonitor* monitor,
+	SmppHeader* header, RespPduFlag respFlag, uint8_t dataCoding, SmsMsg* msg)
 {
 	__decl_tc__;
-	if (checkEqualDataCoding(origPdu, msg))
+	SmsPduWrapper pdu(header, 0);
+	SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
+	//тип pdu
+	if (pdu.isDeliverSm())
 	{
-		__tc__("deliverySm.normalSms.map.checkShortSmsEqualDataCoding");
+		__tc__("sms.normalSms.map.shortSms.checkDeliverSm");
+		__check__(1, origPdu.isSubmitSm());
+		__tc_ok_cond__;
+	}
+	else if (pdu.isDataSm())
+	{
+		__tc__("sms.normalSms.map.shortSms.checkDataSm");
+		__check__(1, origPdu.isDataSm());
+		__tc_ok_cond__;
+	}
+	if (dataCoding == msg->dataCoding)
+	{
+		__tc__("sms.normalSms.map.shortSms.checkEqualDataCoding");
 	}
 	else
 	{
-		__tc__("deliverySm.normalSms.map.checkShortSmsDiffDataCoding");
+		__tc__("sms.normalSms.map.shortSms.checkDiffDataCoding");
 	}
 	//проверка на длину сообщения <= MAX_MAP_SM_LENGTH делается в SmppPduChecker
-	if (pdu.get_message().size_shortMessage() &&
-		pdu.get_optional().has_messagePayload())
+	if (pdu.isDeliverSm())
 	{
-		__tc_fail__(1);
+		if (pdu.get_message().size_shortMessage() &&
+			pdu.get_optional().has_messagePayload())
+		{
+			__tc_fail__(1);
+		}
+		else if (pdu.get_message().size_shortMessage())
+		{
+			if (pdu.get_message().size_shortMessage() != msg->len)
+			{
+				__tc_fail__(2);
+			}
+			else if (memcmp(pdu.get_message().get_shortMessage(), msg->msg, msg->len))
+			{
+				__tc_fail__(3);
+			}
+		}
+		else if (pdu.get_optional().has_messagePayload())
+		{
+			if (pdu.get_optional().size_messagePayload() != msg->len)
+			{
+				__tc_fail__(4);
+			}
+			else if (memcmp(pdu.get_optional().get_messagePayload(), msg->msg, msg->len))
+			{
+				__tc_fail__(5);
+			}
+		}
+		else if (msg->len)
+		{
+			__tc_fail__(6);
+		}
 	}
-	else if (pdu.get_message().size_shortMessage())
+	else if (pdu.isDataSm())
 	{
-		if (pdu.get_message().size_shortMessage() != msg->len)
+		if (pdu.get_optional().has_messagePayload())
 		{
-			__tc_fail__(2);
+			if (pdu.get_optional().size_messagePayload() != msg->len)
+			{
+				__tc_fail__(11);
+			}
+			else if (memcmp(pdu.get_optional().get_messagePayload(), msg->msg, msg->len))
+			{
+				__tc_fail__(12);
+			}
 		}
-		else if (memcmp(pdu.get_message().get_shortMessage(), msg->msg, msg->len))
+		else if (msg->len)
 		{
-			__tc_fail__(3);
+			__tc_fail__(13);
 		}
-	}
-	else if (pdu.get_optional().has_messagePayload())
-	{
-		if (pdu.get_optional().size_messagePayload() != msg->len)
-		{
-			__tc_fail__(4);
-		}
-		else if (memcmp(pdu.get_optional().get_messagePayload(), msg->msg, msg->len))
-		{
-			__tc_fail__(5);
-		}
-	}
-	else if (msg->len)
-	{
-		__tc_fail__(6);
 	}
 	__tc_ok_cond__;
+	//игнорирую опциональный language_indicator
 	return PDU_NOT_EXPECTED_FLAG;
 }
 
-PduFlag NormalSmsHandler::compareMapMsgText(DeliveryMonitor* monitor,
-	PduSubmitSm& origPdu, PduDeliverySm& pdu, RespPduFlag respFlag)
+PduFlag NormalSmsHandler::checkMapMsgText(DeliveryMonitor* monitor,
+	SmppHeader* header, RespPduFlag respFlag)
 {
-	__require__(monitor);
+	__require__(monitor && header);
 	__require__(monitor->pduData->objProps.count("map.msg"));
+	__require__(monitor->pduData->intProps.count("dataCoding"));
 	__decl_tc__;
 	SmsMsg* msg = dynamic_cast<SmsMsg*>(monitor->pduData->objProps["map.msg"]);
 	if (!msg->valid)
@@ -406,19 +462,18 @@ PduFlag NormalSmsHandler::compareMapMsgText(DeliveryMonitor* monitor,
 		return PDU_COND_REQUIRED_FLAG;
 	}
 	//data coding только для больная sme -> нормальную и нормальная -> нормальную
+	SmsPduWrapper pdu(header, 0);
 	if (!fixture->smeInfo.forceDC)
 	{
-		__tc__("deliverySm.normalSms.map.checkDataCoding");
-		if (pdu.get_message().get_dataCoding() != msg->dataCoding)
-		{
-			__tc_fail__(1);
-		}
+		__tc__("sms.normalSms.map.checkDataCoding");
+		__check__(1, pdu.getDataCoding() == msg->dataCoding);
 		__tc_ok_cond__;
 	}
 	int concatRefNum = 0, concatMaxNum = 0, concatSeqNum = 0;
-	bool udhi = pdu.get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
+	bool udhi = pdu.getEsmClass() & ESM_CLASS_UDHI_INDICATOR;
+	uint8_t dataCoding = monitor->pduData->intProps["dataCoding"];
 	bool segmentedMsg = false;
-	if (udhi && pdu.get_message().size_shortMessage())
+	if (udhi && pdu.isDeliverSm() && pdu.get_message().size_shortMessage())
 	{
 		unsigned char* sm = (unsigned char*) pdu.get_message().get_shortMessage();
 		int udhLen = 1 + *sm;
@@ -441,12 +496,12 @@ PduFlag NormalSmsHandler::compareMapMsgText(DeliveryMonitor* monitor,
 	}
 	if (segmentedMsg)
 	{
-		return compareSegmentedMapMsgText(monitor, origPdu, pdu, respFlag,
+		return checkSegmentedMapMsgText(monitor, header, respFlag, dataCoding,
 			msg, concatRefNum, concatMaxNum, concatSeqNum);
 	}
 	else
 	{
-		return compareSimpleMapMsgText(monitor, origPdu, pdu, respFlag, msg);
+		return checkSimpleMapMsgText(monitor, header, respFlag, dataCoding, msg);
 	}
 }
 
@@ -490,7 +545,7 @@ void NormalSmsHandler::registerIntermediateNotificationMonitor(
 	}
 	if (monitor->pduData->intProps.count("ussdServiceOp"))
 	{
-		__tc__("deliverySm.reports.intermediateNotification.ussdServiceOp");
+		__tc__("reports.intermediateNotification.ussdServiceOp");
 		__tc_ok__;
 		return;
 	}
@@ -573,7 +628,7 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 		case FAILURE_SMSC_DELIVERY_RECEIPT:
 			if (deliveryStatus == ESME_ROK)
 			{
-				__tc__("deliverySm.reports.deliveryReceipt.failureDeliveryReceipt");
+				__tc__("reports.deliveryReceipt.failureDeliveryReceipt");
 				__tc_ok__;
 				return;
 			}
@@ -583,7 +638,7 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 	}
 	if (monitor->pduData->intProps.count("ussdServiceOp"))
 	{
-		__tc__("deliverySm.reports.deliveryReceipt.ussdServiceOp");
+		__tc__("reports.deliveryReceipt.ussdServiceOp");
 		__tc_ok__;
 		return;
 	}
@@ -602,13 +657,13 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 			state = SMPP_UNDELIVERABLE_STATE;
 			break;
 		case RESP_PDU_RESCHED:
-			__tc__("deliverySm.reports.deliveryReceipt.expiredDeliveryReceipt");
+			__tc__("reports.deliveryReceipt.expiredDeliveryReceipt");
 			__tc_ok__;
 			startTime = monitor->getValidTime();
 			state = SMPP_EXPIRED_STATE;
 			break;
 		case RESP_PDU_MISSING:
-			__tc__("deliverySm.reports.deliveryReceipt.expiredDeliveryReceipt");
+			__tc__("reports.deliveryReceipt.expiredDeliveryReceipt");
 			__tc_ok__;
 			startTime = max(recvTime + (time_t) (fixture->smeInfo.timeout - 1),
 				monitor->getValidTime());
@@ -635,82 +690,77 @@ void NormalSmsHandler::registerDeliveryReportMonitors(const DeliveryMonitor* mon
 }
 
 #define __compare__(failureCode, field) \
-	if (pdu.field != origPdu->field) { \
+	if (pdu.field != origPdu.field) { \
 		ostringstream s1, s2; \
 		s1 << (pdu.field); \
-		s2 << (origPdu->field); \
+		s2 << (origPdu.field); \
 		__trace2__("%s: %s != %s", #field, s1.str().c_str(), s2.str().c_str()); \
 		__tc_fail__(failureCode); \
 	}
 
 #define __compareCStr__(failureCode, field) \
-	if ((pdu.field && !origPdu->field) || \
-		(!pdu.field && origPdu->field) || \
-		(pdu.field && origPdu->field && strcmp(pdu.field, origPdu->field))) { \
-		__trace2__("%s: %s != %s", #field, pdu.field, origPdu->field); \
+	if (strcmp(nvl(pdu.field), nvl(origPdu.field))) { \
+		__trace2__("%s: %s != %s", #field, nvl(pdu.field), nvl(origPdu.field)); \
 		__tc_fail__(failureCode); \
 	}
 
-void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
+void NormalSmsHandler::processPdu(SmppHeader* header, const Address origAddr,
 	time_t recvTime)
 {
+	__require__(header);
 	__trace__("processNormalSms()");
 	__decl_tc__;
+	SmsPduWrapper pdu(header, recvTime);
 	try
 	{
-		__tc__("deliverySm.normalSms");
-		//в полученной pdu нет user_message_reference
-		if (!pdu.get_optional().has_userMessageReference())
-		{
-			__tc_fail__(1);
-			throw TCException();
-		}
+		__tc__("sms.normalSms");
 		//перкрыть pduReg класса
 		PduRegistry* pduReg = fixture->smeReg->getPduRegistry(origAddr);
 		__require__(pduReg);
 		//получить оригинальную pdu
 		MutexGuard mguard(pduReg->getMutex());
-		DeliveryMonitor* monitor = pduReg->getDeliveryMonitor(
-			pdu.get_optional().get_userMessageReference());
+		DeliveryMonitor* monitor = pduReg->getDeliveryMonitor(pdu.getMsgRef());
 		//для user_message_reference из полученной pdu
 		//нет соответствующего оригинального pdu
 		if (!monitor)
 		{
 			__tc_fail__(2);
 			__trace2__("getDeliveryMonitor(): pduReg = %p, userMessageReference = %d, monitor = NULL",
-				pduReg, pdu.get_optional().get_userMessageReference());
+				pduReg, pdu.getMsgRef());
 			throw TCException();
 		}
 		__tc_ok_cond__;
-		__require__(monitor->pduData->pdu->get_commandId() == SUBMIT_SM);
-		PduSubmitSm* origPdu =
-			reinterpret_cast<PduSubmitSm*>(monitor->pduData->pdu);
+		SmsPduWrapper pdu(header, 0);
+		SmsPduWrapper origPdu(monitor->pduData->pdu, 0);
 		//проверить правильность маршрута
-		__tc__("deliverySm.normalSms.checkRoute");
-		__tc_fail2__(checkRoute(*origPdu, pdu), 0);
+		__tc__("sms.normalSms.checkRoute");
+		__tc_fail2__(checkRoute(monitor->pduData->pdu, header), 0);
 		__tc_ok_cond__;
 		//сравнить поля полученной и оригинальной pdu
-		__tc__("deliverySm.normalSms.checkMandatoryFields");
+		__tc__("sms.normalSms.checkMandatoryFields");
 		//поля хедера проверяются в processDeliverySm()
 		//message
-		__compareCStr__(1, get_message().get_serviceType());
+		__compareCStr__(1, getServiceType());
 		//правильность адресов проверяется в fixture->routeChecker->checkRouteForNormalSms()
 		//__compareAddr__(get_message().get_source());
 		//__compareAddr__(get_message().get_dest());
-		__compare__(2, get_message().get_esmClass() & 0xfc); //без 2-ух младших битов
-		if ((pdu.get_message().get_esmClass() & ESM_CLASS_MESSAGE_TYPE_BITS) !=
+		__compare__(2, getEsmClass() & 0xfc); //без 2-ух младших битов
+		if ((pdu.getEsmClass() & ESM_CLASS_MESSAGE_TYPE_BITS) !=
 			ESM_CLASS_NORMAL_MESSAGE)
 		{
 			__tc_fail__(3);
 		}
-		__compare__(4, get_message().get_protocolId());
-		//в действительности, priority задается маршрутом и
-		//влияет на порядок доставки сообщений
-		__compare__(5, get_message().get_priorityFlag());
+		if (origPdu.isSubmitSm() && pdu.isDeliverSm())
+		{
+			__compare__(4, get_message().get_protocolId());
+			//в действительности, priority задается маршрутом и
+			//влияет на порядок доставки сообщений
+			__compare__(5, get_message().get_priorityFlag());
+		}
 		__compare__(6, get_message().get_registredDelivery());
 		__tc_ok_cond__;
 		//optional
-		__tc__("deliverySm.normalSms.checkOptionalFields");
+		__tc__("sms.normalSms.checkOptionalFields");
 		//отключить message_payload, который проверяется в compareMsgText()
 		uint64_t excludeMask = OPT_MSG_PAYLOAD + OPT_RCPT_MSG_ID;
 		if (monitor->pduData->intProps.count("forceDC"))
@@ -719,25 +769,24 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 				OPT_MS_MSG_WAIT_FACILITIES + OPT_MS_VALIDITY;
 		}
 		__tc_fail2__(SmppUtil::compareOptional(pdu.get_optional(),
-			origPdu->get_optional(), excludeMask), 0);
+			origPdu.get_optional(), excludeMask), 0);
 		__tc_ok_cond__;
 		//проверка механизма повторной доставки
-		__tc__("deliverySm.normalSms.scheduleChecks");
+		__tc__("sms.normalSms.scheduleChecks");
 		__tc_fail2__(monitor->checkSchedule(recvTime), 0);
 		__tc_ok_cond__;
 		//отправить респонс
-		pair<uint32_t, time_t> deliveryResp =
-			fixture->respSender->sendDeliverySmResp(pdu);
+		pair<uint32_t, time_t> deliveryResp = fixture->respSender->sendSmsResp(header);
 		RespPduFlag respFlag = isAccepted(deliveryResp.first);
 		//сравнить текст
 		PduFlag textFlag = PDU_NOT_EXPECTED_FLAG; //получены все сегменты
 		if (fixture->smeInfo.systemId == "MAP_PROXY")
 		{
-			textFlag = compareMapMsgText(monitor, *origPdu, pdu, respFlag);
+			textFlag = checkMapMsgText(monitor, header, respFlag);
 		}
 		else if (fixture->profileReg)
 		{
-			compareMsgText(monitor, *origPdu, pdu, recvTime);
+			checkNotMapMsgText(monitor, header);
 		}
 		//обновить статус delivery монитора
 		pduReg->removeMonitor(monitor);
@@ -761,7 +810,7 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 			default:
 				__unreachable__("Invalid text flag");
 		}
-		__tc__("deliverySm.normalSms.checkAllowed");
+		__tc__("sms.normalSms.checkAllowed");
 		__tc_fail2__(monitor->update(recvTime, respFlag), 0);
 		switch (respFlag)
 		{
@@ -797,7 +846,7 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 		//для ussd единственная попытка доставки
 		if (monitor->pduData->intProps.count("ussdServiceOp"))
 		{
-			__tc__("deliverySm.normalSms.ussdServiceOp");
+			__tc__("sms.normalSms.ussdServiceOp");
 			__tc_ok__;
 			monitor->setNotExpected();
 		}
@@ -815,7 +864,7 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 	catch (TCException&)
 	{
 		//отправить респонс
-		fixture->respSender->sendDeliverySmResp(pdu);
+		fixture->respSender->sendSmsResp(header);
 	}
 	catch (...)
 	{

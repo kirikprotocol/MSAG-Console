@@ -162,7 +162,7 @@ public:
 	PduHandler* getAbonentInfoAckHandler() { return &abonentInfoTc; }
 
 private:
-	virtual pair<uint32_t, time_t> sendDeliverySmResp(PduDeliverySm& pdu);
+	virtual pair<uint32_t, time_t> sendSmsResp(SmppHeader* header);
 };
 
 class TestSmeErr : public TestSme
@@ -232,12 +232,15 @@ int TestSmeFunc::Execute()
 	seq.insert(seq.end(), 1, 8);
 	seq.insert(seq.end(), 1, 9);
 	seq.insert(seq.end(), 7, 10);
+	seq.insert(seq.end(), 20, 11);
+	seq.insert(seq.end(), 10, 12);
 	seq.push_back(51);
 	seq.push_back(52);
 	seq.push_back(53);
 	seq.push_back(61);
 	seq.push_back(62);
 	seq.push_back(71);
+	seq.push_back(72);
 	//seq.push_back(100);
 #ifdef ASSERT
 	seq.push_back(101);
@@ -311,6 +314,12 @@ void TestSmeFunc::executeCycle()
 		case 10:
 			protocolTc.cancelSmIncorrect(rand0(1), RAND_TC);
 			break;
+		case 11:
+			protocolTc.dataSmCorrect(rand0(1), RAND_TC);
+			break;
+		case 12:
+			protocolTc.dataSmIncorrect(rand0(1), RAND_TC);
+			break;
 		//profilerTc
 		case 51: //обновление настроек кодировки
 			profilerTc.updateCodePageCorrect(rand0(1), getDataCoding(RAND_TC), RAND_TC);
@@ -332,6 +341,9 @@ void TestSmeFunc::executeCycle()
 		case 71: //отправка pdu smsc sme
 			smscSmeTc.submitSm(rand0(1));
 			break;
+		case 72: //отправка pdu smsc sme
+			smscSmeTc.dataSm(rand0(1));
+			break;
 		case 100:
 			protocolTc.sendInvalidPdu(rand0(1), RAND_TC);
 			break;
@@ -351,27 +363,49 @@ void TestSmeFunc::executeCycle()
 	}
 }
 
-pair<uint32_t, time_t> TestSmeFunc::sendDeliverySmResp(PduDeliverySm& pdu)
+pair<uint32_t, time_t> TestSmeFunc::sendSmsResp(SmppHeader* header)
 {
-	//на delivery receipt и сообщение от профайлера ответить ok
+	SmsPduWrapper pdu(header, 0);
+	//на delivery receipt и сообщения от системных sme
+	//(profiler, smsc sme, abonent info) ответить ok
 	Address addr;
-	SmppUtil::convert(pdu.get_message().get_source(), &addr);
+	SmppUtil::convert(pdu.getSource(), &addr);
 	if (fixture->pduHandler.count(addr))
 	{
-		return protocolTc.sendDeliverySmRespOk(pdu, rand0(1), false);
+		switch (rand1(2))
+		{
+			case 1:
+				return protocolTc.sendDeliverySmRespOk(header, rand0(1), false);
+			case 2:
+				return protocolTc.sendDataSmRespOk(header, rand0(1), false);
+		}
 	}
 	//на остальное ответить как придется
 #ifdef LOAD_TEST
-	return protocolTc.sendDeliverySmRespOk(pdu, rand0(1), false);
-#else
-	switch (rand1(3))
+	switch (rand1(2))
 	{
 		case 1:
-			return protocolTc.sendDeliverySmRespError(pdu, rand0(1), false, RAND_TC);
+			return protocolTc.sendDeliverySmRespOk(header, rand0(1), false);
 		case 2:
-			return protocolTc.sendDeliverySmRespRetry(pdu, rand0(1), RAND_TC);
-		default:
-			return protocolTc.sendDeliverySmRespOk(pdu, rand0(1), false);
+			return protocolTc.sendDataSmRespOk(header, rand0(1), false);
+	}
+#else
+	switch (rand1(6))
+	{
+		//errors
+		case 1:
+			return protocolTc.sendDeliverySmRespError(header, rand0(1), false, RAND_TC);
+		case 2:
+			return protocolTc.sendDeliverySmRespRetry(header, rand0(1), RAND_TC);
+		case 3:
+			return protocolTc.sendDataSmRespError(header, rand0(1), false, RAND_TC);
+		case 4:
+			return protocolTc.sendDataSmRespRetry(header, rand0(1), RAND_TC);
+		//ok
+		case 5:
+			return protocolTc.sendDeliverySmRespOk(header, rand0(1), false);
+		case 6:
+			return protocolTc.sendDataSmRespOk(header, rand0(1), false);
 	}
 #endif //LOAD_TEST
 }

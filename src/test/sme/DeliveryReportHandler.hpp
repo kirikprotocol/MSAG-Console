@@ -32,14 +32,14 @@ public:
 	
 	virtual ~DeliveryReportHandler() {}
 	
-	virtual void processPdu(PduDeliverySm& pdu, time_t recvTime);
+	virtual void processPdu(SmppHeader* header, time_t recvTime);
 
 	virtual void processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
-		PduDeliverySm& pdu, time_t recvTime) = NULL;
+		SmppHeader* header, time_t recvTime) = NULL;
 
 	virtual void processIntermediateNotification(
 		IntermediateNotificationMonitor* monitor,
-		PduDeliverySm& pdu, time_t recvTime) = NULL;
+		SmppHeader* header, time_t recvTime) = NULL;
 
 protected:
 	SmppFixture* fixture;
@@ -50,7 +50,7 @@ protected:
 	const uint8_t smeProtocolId;
 
 	virtual Category& getLog() = NULL;
-	vector<int> checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const;
+	vector<int> checkRoute(SmppHeader* header1, SmppHeader* header2) const;
 };
 
 }

@@ -24,7 +24,7 @@ using std::string;
 using smsc::sme::SmppSession;
 using smsc::smeman::SmeInfo;
 using smsc::sms::Address;
-using smsc::smpp::PduDeliverySm;
+using smsc::smpp::SmppHeader;
 using smsc::profiler::Profile;
 using smsc::test::core::AliasRegistry;
 using smsc::test::core::SmeAckMonitor;
@@ -41,12 +41,12 @@ using smsc::test::util::CheckList;
 
 struct SmppResponseSender
 {
-	virtual pair<uint32_t, time_t> sendDeliverySmResp(PduDeliverySm& pdu) = NULL;
+	virtual pair<uint32_t, time_t> sendSmsResp(SmppHeader* pdu) = NULL;
 };
 
 struct PduHandler
 {
-	virtual void processPdu(PduDeliverySm &pdu, time_t recvTime) = NULL;
+	virtual void processPdu(SmppHeader* pdu, time_t recvTime) = NULL;
 	RespPduFlag isAccepted(uint32_t status);
 };
 
