@@ -234,11 +234,11 @@ void MapIoTask::init(unsigned timeout)
   __global_bind_counter = 0;
   __pingPongWaitCounter = 0;
   err = EINSS7CpMsgInitNoSig(MAXENTRIES);
-  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error"); }
+  if ( err != MSG_OK ) { __map_warn2__("MAP: Error at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error"); }
   err = MsgOpen(MY_USER_ID);
-  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgOpen, code 0x%hx",err); throw runtime_error("MsgOpen error"); }
+  if ( err != MSG_OK ) { __map_warn2__("MAP: Error at MsgOpen, code 0x%hx",err); throw runtime_error("MsgOpen error"); }
   err = MsgConn(MY_USER_ID,ETSIMAP_ID);
-  if ( err != MSG_OK ) { __trace2__("MAP: Error at MsgConn, code 0x%hx",err); throw runtime_error("MsgConn error"); }
+  if ( err != MSG_OK ) { __map_warn2__("MAP: Error at MsgConn, code 0x%hx",err); throw runtime_error("MsgConn error"); }
   __map_trace2__("MAP:: pause self and wait map initialization");
   sleep(timeout);
   __map_trace2__("MAP:: continue self initialization");
