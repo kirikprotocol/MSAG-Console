@@ -467,7 +467,8 @@ public CommandParser(ParserSharedInputState state) {
 		
 		Token  qname = null;
 		Token  name = null;
-		Token  smeId = null;
+		Token  qsys = null;
+		Token  isys = null;
 		
 		{
 		switch ( LA(1)) {
@@ -495,11 +496,28 @@ public CommandParser(ParserSharedInputState state) {
 				    cmd.setSubject(out);
 				
 		{
-		smeId = LT(1);
-		match(ID);
+		switch ( LA(1)) {
+		case STRING:
+		{
+			qsys = LT(1);
+			match(STRING);
+			break;
+		}
+		case ID:
+		{
+			isys = LT(1);
+			match(ID);
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		
-				    cmd.setDefaultSmeId(smeId.getText());
+				    String smeid = (qsys == null) ? qsys.getText():isys.getText();
+				    cmd.setDefaultSmeId(smeid);
 				
 		addsubj_masks(cmd);
 		
@@ -857,7 +875,8 @@ public CommandParser(ParserSharedInputState state) {
 		
 		Token  qname = null;
 		Token  name = null;
-		Token  smeId = null;
+		Token  qsys = null;
+		Token  isys = null;
 		
 		switch ( LA(1)) {
 		case STRING:
@@ -921,12 +940,31 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			{
 			match(OPT_DEFSME);
-			smeId = LT(1);
-			match(ID);
+			{
+			switch ( LA(1)) {
+			case STRING:
+			{
+				qsys = LT(1);
+				match(STRING);
+				break;
+			}
+			case ID:
+			{
+				isys = LT(1);
+				match(ID);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
 			}
 			
-					    cmd.setDefaultSmeId(smeId.getText());
+					    String smeid = (qsys == null) ? qsys.getText():isys.getText();
+					    cmd.setDefaultSmeId(smeid);
 					
+			}
 			
 					    cmd.process(ctx);
 					
@@ -1210,6 +1248,8 @@ public CommandParser(ParserSharedInputState state) {
 		RouteGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
 		
+		Token  qname = null;
+		Token  name = null;
 		Token  val = null;
 		
 		
@@ -1219,14 +1259,47 @@ public CommandParser(ParserSharedInputState state) {
 		switch ( LA(1)) {
 		case OPT_SUBJ:
 		{
+			{
 			match(OPT_SUBJ);
-			def.setType(RouteSrcDef.TYPE_SUBJECT);
+			{
+			switch ( LA(1)) {
+			case STRING:
+			{
+				qname = LT(1);
+				match(STRING);
+				break;
+			}
+			case ID:
+			{
+				name = LT(1);
+				match(ID);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			
+					    String out = (qname == null) ? name.getText():qname.getText();
+					    def.setType(RouteSrcDef.TYPE_SUBJECT);
+					    def.setSrc(out);
+					
+			}
 			break;
 		}
 		case OPT_MASK:
 		{
+			{
 			match(OPT_MASK);
-			def.setType(RouteSrcDef.TYPE_MASK);
+			val = LT(1);
+			match(ADDRESS);
+			
+					    def.setType(RouteSrcDef.TYPE_MASK); 
+					    def.setSrc(val.getText());
+					
+			}
 			break;
 		}
 		default:
@@ -1235,10 +1308,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		}
-		val = LT(1);
-		match(ADDRESS);
 		
-				    def.setSrc(val.getText());
 				    cmd.addSrcDef(def);
 				
 	}
@@ -1247,8 +1317,11 @@ public CommandParser(ParserSharedInputState state) {
 		RouteGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
 		
+		Token  qname = null;
+		Token  name = null;
 		Token  val = null;
-		Token  sysid = null;
+		Token  qsys = null;
+		Token  isys = null;
 		
 		
 				    RouteDstDef def = new RouteDstDef();
@@ -1257,14 +1330,47 @@ public CommandParser(ParserSharedInputState state) {
 		switch ( LA(1)) {
 		case OPT_SUBJ:
 		{
+			{
 			match(OPT_SUBJ);
-			def.setType(RouteDstDef.TYPE_SUBJECT);
+			{
+			switch ( LA(1)) {
+			case STRING:
+			{
+				qname = LT(1);
+				match(STRING);
+				break;
+			}
+			case ID:
+			{
+				name = LT(1);
+				match(ID);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			
+					    String out = (qname == null) ? name.getText():qname.getText();
+					    def.setType(RouteDstDef.TYPE_SUBJECT);
+					    def.setDst(out);
+					
+			}
 			break;
 		}
 		case OPT_MASK:
 		{
+			{
 			match(OPT_MASK);
-			def.setType(RouteDstDef.TYPE_MASK);
+			val = LT(1);
+			match(ADDRESS);
+			
+					    def.setType(RouteDstDef.TYPE_MASK); 
+					    def.setDst(val.getText());
+					
+			}
 			break;
 		}
 		default:
@@ -1273,13 +1379,29 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		}
 		}
-		val = LT(1);
-		match(ADDRESS);
-		sysid = LT(1);
-		match(ID);
+		{
+		switch ( LA(1)) {
+		case STRING:
+		{
+			qsys = LT(1);
+			match(STRING);
+			break;
+		}
+		case ID:
+		{
+			isys = LT(1);
+			match(ID);
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
 		
-				    def.setDst(val.getText());
-				    def.setSmeId(sysid.getText());
+				    String sysid = (qsys == null) ? qsys.getText():isys.getText();
+				    def.setSmeId(sysid);
 				    cmd.addDstDef(def);
 				
 	}
@@ -1291,17 +1413,17 @@ public CommandParser(ParserSharedInputState state) {
 		
 		match(OPT_SRC);
 		{
-		int _cnt13=0;
-		_loop13:
+		int _cnt20=0;
+		_loop20:
 		do {
 			if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 				srcdef(cmd);
 			}
 			else {
-				if ( _cnt13>=1 ) { break _loop13; } else {throw new NoViableAltException(LT(1), getFilename());}
+				if ( _cnt20>=1 ) { break _loop20; } else {throw new NoViableAltException(LT(1), getFilename());}
 			}
 			
-			_cnt13++;
+			_cnt20++;
 		} while (true);
 		}
 	}
@@ -1313,17 +1435,17 @@ public CommandParser(ParserSharedInputState state) {
 		
 		match(OPT_DST);
 		{
-		int _cnt16=0;
-		_loop16:
+		int _cnt23=0;
+		_loop23:
 		do {
 			if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 				dstdef(cmd);
 			}
 			else {
-				if ( _cnt16>=1 ) { break _loop16; } else {throw new NoViableAltException(LT(1), getFilename());}
+				if ( _cnt23>=1 ) { break _loop23; } else {throw new NoViableAltException(LT(1), getFilename());}
 			}
 			
-			_cnt16++;
+			_cnt23++;
 		} while (true);
 		}
 	}
@@ -1512,14 +1634,14 @@ public CommandParser(ParserSharedInputState state) {
 		{
 		addsubj_mask(cmd);
 		{
-		_loop60:
+		_loop67:
 		do {
 			if ((LA(1)==COMMA)) {
 				match(COMMA);
 				addsubj_mask(cmd);
 			}
 			else {
-				break _loop60;
+				break _loop67;
 			}
 			
 		} while (true);

@@ -127,11 +127,17 @@ srcdef[RouteGenCommand cmd] // Special command required !!!
 	:	{
 		    RouteSrcDef def = new RouteSrcDef();
 		}
-		( OPT_SUBJ { def.setType(RouteSrcDef.TYPE_SUBJECT); } 
-		| OPT_MASK { def.setType(RouteSrcDef.TYPE_MASK); }) 
-		val:ADDRESS
-		{
+		( (OPT_SUBJ (qname:STRING | name:ID) { 
+		    String out = (qname == null) ? name.getText():qname.getText();
+		    def.setType(RouteSrcDef.TYPE_SUBJECT);
+		    def.setSrc(out);
+		  }) 
+		| (OPT_MASK val:ADDRESS { 
+		    def.setType(RouteSrcDef.TYPE_MASK); 
 		    def.setSrc(val.getText());
+		  })
+		)
+		{
 		    cmd.addSrcDef(def);
 		}
 	;
@@ -139,13 +145,20 @@ dstdef[RouteGenCommand cmd] // Special command required !!!
 	:	{
 		    RouteDstDef def = new RouteDstDef();
 		}
-		( OPT_SUBJ { def.setType(RouteDstDef.TYPE_SUBJECT); } 
-		| OPT_MASK { def.setType(RouteDstDef.TYPE_MASK); }) 
-		val:ADDRESS
-		sysid:ID
-		{
+		( (OPT_SUBJ (qname:STRING | name:ID) { 
+		    String out = (qname == null) ? name.getText():qname.getText();
+		    def.setType(RouteDstDef.TYPE_SUBJECT);
+		    def.setDst(out);
+		  }) 
+		| (OPT_MASK val:ADDRESS { 
+		    def.setType(RouteDstDef.TYPE_MASK); 
 		    def.setDst(val.getText());
-		    def.setSmeId(sysid.getText());
+		  })
+		)
+		(qsys:STRING | isys:ID)
+		{
+		    String sysid = (qsys == null) ? qsys.getText():isys.getText();
+		    def.setSmeId(sysid);
 		    cmd.addDstDef(def);
 		}
 	;
@@ -317,9 +330,10 @@ addsubject[CommandContext ctx, SubjectAddCommand cmd]
 		    System.out.println("Add subject="+out);
 		    cmd.setSubject(out);
 		}
-		(smeId:ID)
+		(qsys:STRING | isys:ID)
 		{
-		    cmd.setDefaultSmeId(smeId.getText());
+		    String smeid = (qsys == null) ? qsys.getText():isys.getText();
+		    cmd.setDefaultSmeId(smeid);
 		}
 		addsubj_masks[cmd]
 		{
@@ -337,9 +351,10 @@ altsubject[CommandContext ctx, SubjectAlterCommand cmd]
 		} | ACT_DELETE {
 		    cmd.setActionDelete();
 		}) addsubj_masks[cmd]) | 
-		(OPT_DEFSME smeId:ID) {
-		    cmd.setDefaultSmeId(smeId.getText());
-		}
+		(OPT_DEFSME (qsys:STRING | isys:ID) {
+		    String smeid = (qsys == null) ? qsys.getText():isys.getText();
+		    cmd.setDefaultSmeId(smeid);
+		})
 		{
 		    cmd.process(ctx);
 		}

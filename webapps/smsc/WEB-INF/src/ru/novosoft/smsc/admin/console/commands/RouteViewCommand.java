@@ -38,7 +38,7 @@ public class RouteViewCommand implements Command
             Source src = (Source)srcs.next();
             out += "<"+src.getName()+" DefSME:"+src.getDefaultSmeId();
             Iterator masks = src.getMasks().iterator();
-            out += " Masks: ";
+            out += " Mask(s): ";
             while (masks.hasNext()) {
                 out += ((Mask)masks.next()).getMask();
                 if (masks.hasNext()) out += ", ";
@@ -53,7 +53,7 @@ public class RouteViewCommand implements Command
             out += "<"+dst.getName()+" SME: "+dst.getSme().getId()+
                     " DefSME:"+dst.getDefaultSmeId();
             Iterator masks = dst.getMasks().iterator();
-            out += " Masks: ";
+            out += " Mask(s): ";
             while (masks.hasNext()) {
                 out += ((Mask)masks.next()).getMask();
                 if (masks.hasNext()) out += ", ";

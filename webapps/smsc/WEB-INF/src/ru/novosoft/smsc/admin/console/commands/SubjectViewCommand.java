@@ -19,9 +19,9 @@ public class SubjectViewCommand extends SubjectGenCommand
     private String showSubject(Subject subj)
     {
         String out = "Subject '"+subj.getName()+"'"+
-               " DefSME:"+subj.getDefaultSme().getId();
+               " DefSME: "+subj.getDefaultSme().getId();
         Iterator i = subj.getMasks().iterator();
-        if (i.hasNext()) out += " Masks: ";
+        if (i.hasNext()) out += " Mask(s): ";
         while (i.hasNext()) {
             out += ((Mask)i.next()).getMask();
             if (i.hasNext()) out += ", ";

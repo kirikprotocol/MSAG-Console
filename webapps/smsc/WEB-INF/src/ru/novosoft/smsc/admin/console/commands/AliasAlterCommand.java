@@ -41,9 +41,9 @@ public class AliasAlterCommand implements Command
         Alias smscAlias = ctx.getSmsc().getAliases().get(alias);
         if (smscAlias != null) {
             try {
-                ctx.getSmsc().getAliases().remove(alias);
                 Alias newAlias = new Alias(new Mask(address), new Mask(alias),
                         (hideSet) ? hide:smscAlias.isHide());
+                ctx.getSmsc().getAliases().remove(alias);
                 ctx.getSmsc().getAliases().add(newAlias);
                 ctx.setMessage(out+" altered");
                 ctx.setStatus(CommandContext.CMD_OK);
