@@ -6,6 +6,7 @@
 int main(void) 
 {
     using namespace smsc::store;
+	using namespace smsc::sms;
     
     MessageStore* store;
     SMS           sms;
@@ -30,19 +31,34 @@ int main(void)
 	sms.setFailureCause(0);
 	sms.setMessageBody(strlen(body), 1, false, (uint8_t *)body);
     
-    try {
+    const int NUM_OF_TEST_MESSAGES = 1000;
+
+	try {
         store = StoreManager::getInstance();
         printf("Connect Ok !\n");
         
-		/*time_t begTime = time(0L);
-        for (int i=0; i<10000; i++)
+		/*time_t begTime, endTime;
+        printf("\nStoring %d messages, please wait ... \n", NUM_OF_TEST_MESSAGES);
+		begTime = time(0L);
+        for (int i=0; i<NUM_OF_TEST_MESSAGES; i++)
 		{
 			SMSId id = store->store(sms);
         }
-		time_t endTime = time(0L);
-        printf("Time spent: %d !\n", endTime - begTime);*/
+		endTime = time(0L) - begTime;
+        printf("Time spent for storing: %d (sec)\nPerformance: %d (msg per sec)\n",
+			    endTime, NUM_OF_TEST_MESSAGES/endTime);
 		
-		SMSId id = store->store(sms);
+		begTime = time(0L);
+		printf("\nRetriving %d messages, please wait ... \n", NUM_OF_TEST_MESSAGES);
+		for (int i=1; i<NUM_OF_TEST_MESSAGES+1; i++)
+		{
+			sms = store->retrive((SMSId)i);
+        }
+		endTime = time(0L) - begTime;
+        printf("Time spent for retriving: %d (sec)\nPerformance: %d (msg per sec)\n", 
+			   endTime, NUM_OF_TEST_MESSAGES/endTime);*/
+
+        SMSId id = store->store(sms);
 		printf("Message stored, id = %d !\n", id);
 
 		memset((void *)&sms, 0, sizeof(sms));
