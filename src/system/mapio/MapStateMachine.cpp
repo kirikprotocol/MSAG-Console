@@ -342,7 +342,7 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn){
           ContinueImsiReq(dialog->associate,"","",dialog->routeErr);
           dialog->state = MAPST_END;
         }
-        else if ( NeedNotifyHLR(dialog.get()) && !dialog->isUSSD )
+        else if ( NeedNotifyHLR(dialog.get()) )
         {
           try{
             dialog->Clean();
@@ -1271,14 +1271,55 @@ static void SendSegmentedSms(MapDialog* dialog)
       FormatText("SendSegmentedSms: Et96MapDelimiterReq error 0x%x",result),MAP_FALURE);
 }
 
+static ET96MAP_USSD_DATA_CODING_SCHEME_T fillUSSDString(unsigned encoding, const unsigned char* text, unsigned text_len, ET96MAP_USSD_STRING_T* ussdString) {
+  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;
+  unsigned bytes = 0;
+  if( encoding == MAP_UCS2_ENCODING ) {
+    bytes = text_len;
+    memcpy( ussdString->ussdStr, text, text_len );
+    ussdEncoding = 0x48;
+  } else if( encoding == MAP_OCTET7BIT_ENCODING || encoding == MAP_LATIN1_ENCODING || encoding == MAP_SMSC7BIT_ENCODING ) {
+    if (encoding == MAP_SMSC7BIT_ENCODING ) {
+      bytes = ConvertSMSC7bit27bit(text,text_len,ussdString->ussdStr,0);
+    } else {
+      unsigned elen = 0;
+      bytes = ConvertText27bit(text,text_len,ussdString->ussdStr,&elen);
+    }
+    // if buffer have trailing 7 unfilled bits place <cr> there
+    if( bytes*8-text_len*7 == 7 ) ussdString->ussdStr[bytes-1] |= (0x0D<<1);
+    ussdEncoding = 0x01;
+  } else { //8 bit
+    bytes = text_len;
+    memcpy( ussdString->ussdStr, text, text_len );
+    ussdEncoding = 0x44;
+  }
+  ussdString->ussdStrLen = bytes;
+  return ussdEncoding;
+}
+
 static void DoUSSRUserResponceError(const SmscCommand* cmd , MapDialog* dialog)
 {
   __map_trace2__("%s: dialogid 0x%x",__func__,dialog->dialogid_map);
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0;
   ET96MAP_ERROR_PROCESS_UNSTRUCTURED_SS_REQUEST_T error;
+  memset(&error, 0, sizeof(error));
   error.errorCode = 34; /*Sytem failure */
+  error.u.systemFailureNetworkResource_s.networkResourcePresent = 0;
   ET96MAP_USSD_STRING_T ussdString = {0,};
-  //memset(&ussdString,0,sizeof(ussdString));
+  const unsigned char text[256];
+  if( cmd ) {
+    if( cmd->get_commandId() == SUBMIT_RESP ) {
+      sprintf( text, "Rejected %d", cmd->get_resp()->get_status() );
+    } else {
+      sprintf( text, "Invalid command" );
+      __map_warn2__("%s: dialogid 0x%x invalid command_id: %d",__func__,dialog->dialogid_map,cmd->get_commandId());
+    }
+  } else {
+    sprintf( text, "Error %d", dialog->routeErr );
+  }
+  unsigned text_len = strlen(text);
+  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 
+    fillUSSDString(encoding,text,text_len, &ussdString);
   UCHAR_T result;
   if ( dialog->version == 2 )
   {
@@ -1301,7 +1342,7 @@ static void DoUSSRUserResponceError(const SmscCommand* cmd , MapDialog* dialog)
   }
   dialog->dropChain = true;
   dialog->state = MAPST_END;
-  if( cmd != 0 ) SendOkToSmsc(dialog);
+  if( cmd != 0 && cmd->get_commandId() != SUBMIT_RESP) SendOkToSmsc(dialog);
   DropMapDialog(dialog);
 }
 
@@ -1314,7 +1355,6 @@ static long long NextSequence()
 static void DoUSSRUserResponce( MapDialog* dialog)
 {
   __map_trace2__("%s: dialogid 0x%x",__func__,dialog->dialogid_map);
-  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;
   unsigned encoding = dialog->sms->getIntProperty(Tag::SMPP_DATA_CODING);
   ET96MAP_USSD_STRING_T ussdString = {0,};
   unsigned text_len;
@@ -1328,47 +1368,8 @@ static void DoUSSRUserResponce( MapDialog* dialog)
   if ( text_len > 160 )
     throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
 
-  unsigned bytes = 0;
-  if( encoding == MAP_UCS2_ENCODING ) {
-    bytes = text_len;
-    memcpy( ussdString.ussdStr, text, text_len );
-    ussdEncoding = 0x48;
-  } else if( encoding == MAP_OCTET7BIT_ENCODING || encoding == MAP_LATIN1_ENCODING || encoding == MAP_SMSC7BIT_ENCODING ) {
-    if (encoding == MAP_SMSC7BIT_ENCODING ) {
-      bytes = ConvertSMSC7bit27bit(text,text_len,ussdString.ussdStr,0);
-    } else {
-      unsigned elen = 0;
-      bytes = ConvertText27bit(text,text_len,ussdString.ussdStr,&elen);
-    }
-    // if buffer have trailing 7 unfilled bits place <cr> there
-    if( bytes*8-text_len*7 == 7 ) ussdString.ussdStr[bytes-1] |= (0x0D<<1);
-    ussdEncoding = 0x01;
-  } else { //8 bit
-    bytes = text_len;
-    memcpy( ussdString.ussdStr, text, text_len );
-    ussdEncoding = 0x44;
-  }
-/*  if( smsc::logger::_map_cat->isDebugEnabled() ) {
-    char *buf = new char[text_len*4+1];
-    int k = 0;
-    for ( int i=0; i<bytes; i++){
-      k+=sprintf(buf+k,"%02x ",(unsigned)text[i]);
-    }
-    buf[k]=0;
-    __map_trace2__("USSD orig string enc=0x%02X dump: %s",encoding,buf);
-    delete buf;
-
-    buf = new char[bytes*4+1];
-    k = 0;
-    for ( int i=0; i<bytes; i++){
-      k+=sprintf(buf+k,"%02x ",(unsigned)ussdString.ussdStr[i]);
-    }
-    buf[k]=0;
-    __map_trace2__("USSD string ussdenc=0x%02X dump: %s",ussdEncoding,buf);
-    delete buf;
-  }*/
-
-  ussdString.ussdStrLen = bytes;
+  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 
+    fillUSSDString( encoding, text, text_len, &ussdString );
   UCHAR_T result;
   if ( dialog->version == 2 )
   {
@@ -1421,7 +1422,6 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   }
   ET96MAP_USSD_STRING_T ussdString = {0,};
   unsigned text_len;
-  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;
   unsigned encoding = dialog->sms->getIntProperty(Tag::SMPP_DATA_CODING);
 
   const unsigned char* text = (const unsigned char*)dialog->sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
@@ -1432,38 +1432,9 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   if ( text_len > 160 )
     throw runtime_error(FormatText("%s: dlg=0x%x very long msg text %d",__func__,dialog->dialogid_map,text_len));
 
-  unsigned bytes = 0;
-  if( encoding == MAP_UCS2_ENCODING ) {
-    bytes = text_len;
-    memcpy( ussdString.ussdStr, text, text_len );
-    ussdEncoding = 0x48;
-  } else if( encoding == MAP_OCTET7BIT_ENCODING || encoding == MAP_LATIN1_ENCODING || encoding == MAP_SMSC7BIT_ENCODING ) {
-    if (encoding == MAP_SMSC7BIT_ENCODING ) {
-      bytes = ConvertSMSC7bit27bit(text,text_len,ussdString.ussdStr,0);
-    } else {
-      unsigned elen = 0;
-      bytes = ConvertText27bit(text,text_len,ussdString.ussdStr,&elen);
-    }
-    // if buffer have trailing 7 unfilled bits place <cr> there
-    if( bytes*8-text_len*7 == 7 ) ussdString.ussdStr[bytes-1] |= (0x0D<<1);
-    ussdEncoding = 0x01;
-  } else { //8 bit
-    bytes = text_len;
-    memcpy( ussdString.ussdStr, text, text_len );
-    ussdEncoding = 0x44;
-  }
-  if( smsc::logger::_map_cat->isDebugEnabled() ) {
-    char *text = new char[bytes*4+1];
-    int k = 0;
-    for ( int i=0; i<bytes; i++){
-      k+=sprintf(text+k,"%02x ",(unsigned)ussdString.ussdStr[i]);
-    }
-    text[k]=0;
-    __map_trace2__("USSD string enc=0x%02X ussdenc=0x%02X bytes=%d dump: %s",encoding,ussdEncoding,bytes,text);
-    delete text;
-  }
-
-  ussdString.ussdStrLen = bytes;
+  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 
+    fillUSSDString(encoding,text,text_len, &ussdString);
+  
   int serviceOp = dialog->sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP);
   if( serviceOp == USSD_USSR_REQ ) {
     dialog->state = MAPST_WaitUSSDReqConf;
@@ -1476,13 +1447,13 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     ET96MAP_APP_CNTX_T appContext;
     appContext.acType = ET96MAP_NETWORK_UNSTRUCTURED_SS_CONTEXT;
     SetVersion(appContext, dialog->version);
-    ET96MAP_USERDATA_T specificInfo;
+/*    ET96MAP_USERDATA_T specificInfo;
     specificInfo.specificInfoLen=3+(dialog->m_msAddr.addressLength+1)/2;
     specificInfo.specificData[0] = 0x82;
     specificInfo.specificData[1] = 1+(dialog->m_msAddr.addressLength+1)/2;
     specificInfo.specificData[2] = dialog->m_msAddr.typeOfAddress;
     memcpy( specificInfo.specificData+3, dialog->m_msAddr.address, (dialog->m_msAddr.addressLength+1)/2 );
-
+*/
     if( serviceOp == USSD_USSR_REQ ) {
       dialog->state = MAPST_WaitUSSDReqOpenConf;
     } else {
@@ -1492,7 +1463,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     ET96MAP_ADDRESS_T origAddr;
     mkMapAddress( &origAddr, dialog->sms->getOriginatingAddress().value, dialog->sms->getOriginatingAddress().length );
 
-    result = Et96MapOpenReq( dialog->ssn, dialog->dialogid_map, &appContext, &dialog->mshlrAddr, GetUSSDAddr(), 0, &origAddr, &specificInfo );
+    result = Et96MapOpenReq( dialog->ssn, dialog->dialogid_map, &appContext, &dialog->mshlrAddr, GetUSSDAddr(), 0, &origAddr, 0/*&specificInfo*/ );
     if ( result != ET96MAP_E_OK )
       throw runtime_error(
         FormatText("%s: Et96MapOpenReq return error 0x%x",__func__,result));
@@ -2162,6 +2133,8 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
     switch( dialog->state ){
     case MAPST_WaitRInfoConf:
       if ( dialog->routeErr ) {
+        dialog->s_imsi = "";
+        dialog->s_msc = "";
         dialog->state = MAPST_WaitRInfoClose;
         break;
       }
@@ -2821,13 +2794,28 @@ USHORT_T Et96MapDelimiterInd(
       dialog->state = MAPST_WaitSubmitUSSDRequestConf;
       SendSubmitCommand(dialog.get());
       break;
+    case MAPST_WaitUSSDReqClose:
+      CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+      {
+        MutexGuard ussd_map_guard( ussd_map_lock );
+        __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
+        ussd_map.erase(dialog->ussdSequence);
+      }
+      DropMapDialog(dialog.get());
+      break;
     case MAPST_WaitUSSDNotifyClose:
       dialog->state = MAPST_WaitSubmitUSSDNotifyConf;
       SendSubmitCommand(dialog.get());
       CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+      {
+        MutexGuard ussd_map_guard( ussd_map_lock );
+        __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
+        ussd_map.erase(dialog->ussdSequence);
+      }
       DropMapDialog(dialog.get());
       break;
     case MAPST_MapNoticed:
+      reason = ET96MAP_NO_REASON;
       result = Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0);
       if ( result != ET96MAP_E_OK )
         throw runtime_error(
@@ -3439,26 +3427,18 @@ USHORT_T Et96MapV2InformSCInd (
 
 static bool NeedNotifyHLR(MapDialog* dialog)
 {
-  return
-    !dialog->isUSSD &&
-    !dialog->hlrWasNotified && dialog->hlrVersion != 0 &&
-    (
-     (!dialog->wasDelivered &&
-      ( 
-//      ((unsigned)dialog->subscriberAbsent != (unsigned)dialog->mwdStatus.mnrf)||
-//        ((unsigned)dialog->memoryExceeded != (unsigned)dialog->mwdStatus.mcef )
-	dialog->subscriberAbsent || dialog->memoryExceeded
-      )
-     )
-    ||
-     (dialog->wasDelivered && dialog->hasMwdStatus 
-//       &&
-//       ( 
-//          ((unsigned)dialog->subscriberAbsent != (unsigned)dialog->mwdStatus.mnrf)||
-//          ((unsigned)dialog->memoryExceeded != (unsigned)dialog->mwdStatus.mcef )
-//       )
-     )
-    );
+  if( dialog->isUSSD || dialog->hlrWasNotified || dialog->hlrVersion == 0 ) return false;
+  if( dialog->wasDelivered ) {
+    if( dialog->hasMwdStatus ) return true;
+  } else {
+    if( dialog->hasMwdStatus ) {
+      if( !(unsigned)dialog->mwdStatus.mnrf && (unsigned)dialog->subscriberAbsent ) return true;
+      if( !(unsigned)dialog->mwdStatus.mcef && (unsigned)dialog->memoryExceeded ) return true;
+    } else {
+      if( dialog->subscriberAbsent || dialog->memoryExceeded ) return true;
+    }
+  }
+  return false;
 }
 static void NotifyHLR(MapDialog* dialog)
 {
@@ -3486,17 +3466,18 @@ static void NotifyHLR(MapDialog* dialog)
     __map_trace2__("%s: MEMORY_CAPACITY_OVERRUN (flag:%d)",__func__,dialog->mwdStatus.mcef);
   }
   else {
-    __map_trace2__("%s: no way! isUSSD=%s hlrWasNotified=%s hlrVersion=%d wasDelivered=%s routeErr=%x subscriberAbsent=%s mwdStatus.mnrf=%x memoryExceeded=%s mwdStatus.mcef=%x",__func__,
-  	dialog->isUSSD?"Y":"N",
-  	dialog->hlrWasNotified?"Y":"N", 
-  	dialog->hlrVersion,
+    __map_trace2__("%s: no way! isUSSD=%s hlrWasNotified=%s hlrVersion=%d wasDelivered=%s routeErr=%x hasMwd=%s subscriberAbsent=%s mwdStatus.mnrf=%x memoryExceeded=%s mwdStatus.mcef=%x",__func__,
+        dialog->isUSSD?"Y":"N",
+  	    dialog->hlrWasNotified?"Y":"N", 
+  	    dialog->hlrVersion,
         dialog->wasDelivered?"Y":"N",
         dialog->routeErr,
+        dialog->hasMwdStatus?"Y":"N",
         dialog->subscriberAbsent?"Y":"N",
         dialog->mwdStatus.mnrf,
         dialog->memoryExceeded?"Y":"N",
         dialog->mwdStatus.mcef
-        );
+    );
 
     //return; // Opps, strange way
     throw MAPDIALOG_ERROR(0,"no way");
