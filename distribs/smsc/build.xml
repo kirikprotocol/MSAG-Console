@@ -307,7 +307,11 @@ Targets:
 
   <target name="sibinfosme_update">
     <antcall target="infosme_update"/>
-    <rename src="${DISTR_DIR}/services/InfoSme" dest="${DISTR_DIR}/services/SibinfoSme"/>
-    <rename src="${DISTR_DIR}/webapps/smsc/esme_InfoSme" dest="${DISTR_DIR}/webapps/smsc/esme_SibinfoSme"/>
+    <move todir="${DISTR_DIR}/services/SibinfoSme">
+      <fileset dir="${DISTR_DIR}/services/InfoSme"/>
+    </move>
+    <move todir="${DISTR_DIR}/webapps/smsc/esme_SibinfoSme">
+      <fileset dir="${DISTR_DIR}/webapps/smsc/esme_InfoSme"/> 
+    </move>
   </target>
 </project>
