@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 if [ -f logs/smppgw.err ]; then
   mv logs/smppgw.err logs/smppgw.err.old
 fi

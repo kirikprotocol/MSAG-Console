@@ -1,3 +1,4 @@
+#!/bin/bash
 export JAVA_HOME=@JAVA_HOME@
 export JAVA_OPTS="@JAVA_OPTS@"
 export CATALINA_HOME=tomcat

@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 if [ -f logs/archiver.err ]; then
   mv logs/archiver.err logs/archiver.err.old
 fi

@@ -1,3 +1,4 @@
+#!/bin/bash
 if [ ! -e "daemon.pid" ] ; then
   echo "Daemon is not started"
   exit 1

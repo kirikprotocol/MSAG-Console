@@ -1,3 +1,4 @@
+#!/bin/bash
 if [ -e "daemon.pid" ] ; then
   echo "Daemon already started"
   exit 1
@@ -8,5 +9,5 @@ export LANGUAGE=@LC_ALL@
 export NLS_LANG=@NLS_LANG@
 export LD_LIBRARY_PATH=./lib:$LD_LIBRARY_PATH:$ORACLE_HOME/lib
 cd @daemon.dir@
-nohup bin/daemon.sh ../daemon.pid &
+bin/daemon.sh ../daemon.pid &
 echo $! > ../daemon.pid

@@ -1,3 +1,4 @@
+#!/bin/bash
 if [ ! -e "tomcat.pid" ] ; then
   echo "Tomcat is not started"
   exit 1

@@ -1,4 +1,4 @@
-#! /bin/bash
+#!/bin/bash
 if [ -f logs/dbsme.err ]; then
   mv logs/dbsme.err logs/dbsme.err.old
 fi
