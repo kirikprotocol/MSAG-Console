@@ -292,4 +292,22 @@ Targets:
   <target name="mciprof_distr" >
     <ant dir="${SMSC_DIR}/ext_smes" target="mciprof_distr"/>
   </target>
+
+  <target name="infosme_build">
+    <ant dir="${SRC_DIR}" target="mod">
+      <property name="MOD" value="infosme"/>
+    </ant>
+  </target>
+  <target name="infosme_update" depends="infosme_build" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="infosme_update"/>
+  </target>
+  <target name="infosme_distr" depends="infosme_build" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="infosme_distr"/>
+  </target>
+
+  <target name="sibinfosme_update">
+    <antcall target="infosme_update"/>
+    <rename src="${DISTR_DIR}/services/InfoSme" dest="${DISTR_DIR}/services/SibinfoSme"/>
+    <rename src="${DISTR_DIR}/webapps/smsc/esme_InfoSme" dest="${DISTR_DIR}/webapps/smsc/esme_SibinfoSme"/>
+  </target>
 </project>

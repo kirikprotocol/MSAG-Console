@@ -1,0 +1,33 @@
+<project name="InfoSme build" default="help" basedir=".">
+  <property name="esme_name" value="InfoSme"/>
+  <property name="esme_bin_path" value="infosme"/>
+  <property name="esme_bin_name" value="InfoSme"/>
+
+  <target name="help">
+    <echo message="Do not build from this file directly"/>
+  </target>
+
+  <target name="init">
+    <ant antfile="../make_esme.xml" target="init"/>
+  </target>
+
+  <target name="compile" depends="init" description="compile the sources">
+    <ant antfile="../make_esme.xml" target="compile"/>
+  </target>
+
+  <target name="build" depends="clean,compile" description="generate the distribution">
+    <ant antfile="../make_esme.xml" target="build"/>
+  </target>
+
+  <target name="distr" depends="build" description="installs the webapp">
+    <ant antfile="../make_esme.xml" target="distr"/>
+  </target>
+
+  <target name="update" depends="build" description="update existing installation">
+    <ant antfile="../make_esme.xml" target="update"/>
+  </target>
+
+  <target name="clean" description="clean up">
+    <ant antfile="../make_esme.xml" target="clean"/>
+  </target>
+</project>

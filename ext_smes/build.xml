@@ -26,4 +26,10 @@ Modules:
   <target name="mcisme_update">
     <ant dir="MCISme" antfile="build.xml" target="update"/>
   </target>
+  <target name="infosme_distr">
+    <ant dir="InfoSme" antfile="build.xml" target="distr"/>
+  </target>
+  <target name="infosme_update">
+    <ant dir="InfoSme" antfile="build.xml" target="update"/>
+  </target>
 </project>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+  <section name="InfoSme">
+    <param name="Address" type="string">@infosme.orig.address@</param>
+    <param name="ProtocolId" type="int">0</param>
+    <param name="SvcType" type="string">Info</param>
+    <param name="receiptWaitTime" type="string">00:30:00</param>
+    <param name="responceWaitTime" type="string">00:10:00</param>
+    <param name="tasksSwitchTimeout" type="int">1000</param><!--msec-->
+    <param name="tasksTablesPrefix" type="string">INFOSME_T_</param>
+    <param name="maxMessagesPerSecond" type="int">20</param>
+    <param name="unrespondedMessagesMax" type="int">100</param>
+    <param name="unrespondedMessagesSleep" type="int">5</param><!--sec-->
+
+    <section name="Admin">
+      <param name="host" type="string">@listen.host@</param>
+      <param name="port" type="int">@infosme.admin.port@</param>
+    </section>
+
+    <section name="DataProvider">
+    </section>
+
+    <section name="EventsThreadPool">
+      <param name="init" type="int">5</param>
+      <param name="max" type="int">15</param>
+    </section>
+
+    <section name="SMSC">
+      <param name="host" type="string">@connect.host@</param>
+      <param name="password" type="string"></param>
+      <param name="port" type="int">@smsc.smpp.port@</param>
+      <param name="sid" type="string">InfoSme</param>
+      <param name="timeout" type="int">10</param>
+    </section>
+
+    <section name="Schedules">
+    </section>
+
+    <section name="Tasks">
+    </section>
+
+    <section name="TasksThreadPool">
+      <param name="init" type="int">5</param>
+      <param name="max" type="int">15</param>
+    </section>
+
+    <section name="systemDataSource">
+      <param name="connections" type="int">10</param>
+      <param name="dbInstance" type="string">@db.instance@</param>
+      <param name="dbUserName" type="string">@db.user@</param>
+      <param name="dbUserPassword" type="string">@db.password@</param>
+      <param name="type" type="string">OCI</param>
+      <param name="watchdog" type="bool">false</param>
+      <section name="jdbc">
+        <param name="driver" type="string">@jdbc.driver@</param>
+        <param name="source" type="string">@jdbc.source@</param>
+      </section>
+    </section>
+  </section>
+
+  <section name="StartupLoader">
+    <section name="DataSourceDrivers">
+      <section name="OCI">
+        <param name="loadup" type="string">libdb_oci.so</param>
+        <param name="type" type="string">OCI</param>
+      </section>
+    </section>
+  </section>
+</config>

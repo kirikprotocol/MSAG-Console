@@ -1,46 +1,38 @@
-#! /bin/bash
-export LC_ALL=ru_RU.ANSI1251            
-export NLS_LANG=RUSSIAN_CIS.CL8MSWIN1251
-
-if [ -d lib ]; then 
-  rm -rf lib
-fi
-
-if [ -d logs ]; then 
-  rm -rf logs
-fi
-
-if [ -d log ]; then 
-  rm -rf log
-fi
-
-if [ ! -L lib ]; then
-  ln -s ../../../../../../lib lib
-fi
-
-if [ ! -L logs ]; then
-  ln -s ../../../../../../logs logs
-fi
-
-if [ ! -L log4cpp.properties ]; then
-  ln -s log4cpp.infosme log4cpp.properties
-fi
-
-chmod +x bin/InfoSme
-
-echo $$ >pid
+#!/bin/bash
 if [ -f logs/infosme.err ]; then
   mv logs/infosme.err logs/infosme.err.old
 fi
+if [ -d lib ] ; then 
+  rm -rf lib
+fi
+
+if [ -d logs ] ; then 
+  rm -rf logs
+fi
+
+if [ -d log ] ; then 
+  rm -rf log
+fi
+
+if [ ! -L lib ] ; then
+  ln -s ../../lib lib
+fi
+
+if [ ! -L logs ] ; then
+  ln -s ../../logs logs
+fi
+
+chmod +x bin/InfoSme
 while true;
 do
-./bin/InfoSme 1>/dev/null 2>>logs/infosme.err&
+bin/InfoSme 1>/dev/null 2>>logs/infosme.err&
 PID=$!
 export PID
 trap "kill -s SIGTERM $PID;wait $PID; exit" SIGTERM
 wait $PID
 if [ -f core ]; then
   DATE=`perl -e '($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);printf("%04d%02d%02d%02d%02d%02d",$year+1900,$mon+1,$mday,$hour,$min,$sec)'`
+
   mkdir "$DATE"
   mv core "$DATE"
   mv logs/infosme.err "$DATE"
@@ -48,6 +40,6 @@ if [ -f core ]; then
     mv logs/infosme.err.old "$DATE"
   fi
   mv logs/infosme.log* "$DATE"
-  cp -p ./bin/InfoSme "$DATE"
+  cp -p bin/infosme "$DATE"
 fi
 done
