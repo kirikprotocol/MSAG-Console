@@ -2,7 +2,9 @@ package ru.novosoft.smsc.dbsme;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.service.*;
+import ru.novosoft.smsc.admin.service.Service;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
+import ru.novosoft.smsc.admin.service.Type;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 import java.util.*;
@@ -15,27 +17,16 @@ import java.util.*;
  */
 public class SmeTransport extends Service
 {
-  private Component smeComponent = null;
-  private Method method_restart = null;
-  private Method method_addJob = null;
-  private Method method_removeJob = null;
-  private Method method_changeJob = null;
-  private Method method_setProviderEnabled = null;
+  private static final String SME_COMPONENT_ID = "DBSme";
+  private static final String method_restart_ID = "restart";
+  private static final String method_addJob_ID = "addJob";
+  private static final String method_removeJob_ID = "removeJob";
+  private static final String method_changeJob_ID = "changeJob";
+  private static final String method_setProviderEnabled_ID = "setProviderEnabled";
 
   public SmeTransport(ServiceInfo info)
   {
     super(info);
-  }
-
-  protected void checkComponents()
-  {
-    super.checkComponents();
-    smeComponent = (Component) getInfo().getComponents().get("DBSme");
-    method_restart = (Method) smeComponent.getMethods().get("restart");
-    method_addJob = (Method) smeComponent.getMethods().get("addJob");
-    method_removeJob = (Method) smeComponent.getMethods().get("removeJob");
-    method_changeJob = (Method) smeComponent.getMethods().get("changeJob");
-    method_setProviderEnabled = (Method) smeComponent.getMethods().get("setProviderEnabled");
   }
 
   public synchronized void updateInfo(SMSCAppContext appContext) throws AdminException
@@ -45,43 +36,38 @@ public class SmeTransport extends Service
 
   public synchronized void restart() throws AdminException
   {
-    refreshComponents();
-    call(smeComponent, method_restart, Type.Types[Type.StringType], new HashMap());
+    call(SME_COMPONENT_ID, method_restart_ID, Type.Types[Type.StringType], new HashMap());
   }
 
   public synchronized void addJob(String jobId, String providerId) throws AdminException
   {
-    refreshComponents();
     Map params = new HashMap();
     params.put("jobId", jobId);
     params.put("providerId", providerId);
-    call(smeComponent, method_addJob, Type.Types[Type.StringType], params);
+    call(SME_COMPONENT_ID, method_addJob_ID, Type.Types[Type.StringType], params);
   }
 
   public synchronized void removeJob(String jobId, String providerId) throws AdminException
   {
-    refreshComponents();
     Map params = new HashMap();
     params.put("jobId", jobId);
     params.put("providerId", providerId);
-    call(smeComponent, method_removeJob, Type.Types[Type.StringType], params);
+    call(SME_COMPONENT_ID, method_removeJob_ID, Type.Types[Type.StringType], params);
   }
 
   public synchronized void changeJob(String jobId, String providerId) throws AdminException
   {
-    refreshComponents();
     Map params = new HashMap();
     params.put("jobId", jobId);
     params.put("providerId", providerId);
-    call(smeComponent, method_changeJob, Type.Types[Type.StringType], params);
+    call(SME_COMPONENT_ID, method_changeJob_ID, Type.Types[Type.StringType], params);
   }
 
   public synchronized void setProviderEnabled(String providerId, boolean enabled) throws AdminException
   {
-    refreshComponents();
     Map params = new HashMap();
     params.put("providerId", providerId);
     params.put("enabled", new Boolean(enabled));
-    call(smeComponent, method_setProviderEnabled, Type.Types[Type.StringType], params);
+    call(SME_COMPONENT_ID, method_setProviderEnabled_ID, Type.Types[Type.StringType], params);
   }
 }

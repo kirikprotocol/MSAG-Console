@@ -46,7 +46,7 @@ public class InfoSmeBean extends PageBean
       smeRunning = infoSme.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING;
       config = infoSmeContext.getConfig();
     } catch (Throwable e) {
-      logger.debug("Couldn't get InfoSME config", e);
+      logger.error("Couldn't get InfoSME config", e);
       return error("Could not get InfoSME config", e);
     }
 
