@@ -88,11 +88,11 @@ public class SmsViewFormBean extends IndexBean
 						if (sortField.equalsIgnoreCase("name"))
 							result = r1.getIdString().compareTo(r2.getIdString());
 						if (sortField.equalsIgnoreCase("date"))
-							result = r1.getDate().compareTo(r2.getDate());
+							result = r1.getSubmitTime().compareTo(r2.getSubmitTime());
 						if (sortField.equalsIgnoreCase("from"))
-							result = r1.getFrom().compareTo(r2.getFrom());
+							result = r1.getOriginatingAddress().compareTo(r2.getOriginatingAddress());
 						if (sortField.equalsIgnoreCase("to"))
-							result = r1.getTo().compareTo(r2.getTo());
+							result = r1.getDestinationAddress().compareTo(r2.getDestinationAddress());
 						if (sortField.equalsIgnoreCase("status"))
 							result = r1.getStatus().compareTo(r2.getStatus());
 
