@@ -303,15 +303,17 @@ public:
 
         switch (pdu->get_commandId())
         {
+        
+        // TODO: Add replace responce processing
+        // case REPLACE_SM_RESP:   processReplaceSmResp(*(PduReplaceSmResp*)pdu);
+        // virtual PduReplaceSmResp* replace(PduReplaceSm& pdu)=0;
+
         case SmppCommandSet::DELIVERY_SM:
             processReceipt(pdu);
             break;
         case SmppCommandSet::SUBMIT_SM_RESP:
             processResponce(pdu);
             break;
-        
-        // TODO: Add replace responce processing
-
         case SmppCommandSet::ENQUIRE_LINK: case SmppCommandSet::ENQUIRE_LINK_RESP:
             break;
         default:

@@ -34,83 +34,100 @@ namespace smsc { namespace mcisme
     struct Message
     {
         uint64_t    id;
-        bool        replace, notify;
+        uint32_t    attempts;
         std::string abonent, message, smsc_id;
         int         eventCount;
-
-        static int countEvents(const std::string& message);
-
+        bool        replace;
+        
         Message(uint64_t id=0, std::string abonent="",
-                std::string message="", std::string smsc_id="", bool replace=false) 
-            : id(id), abonent(abonent), message(message), smsc_id(smsc_id), replace(replace),
-              eventCount(countEvents(message)) {};
+                std::string _message="", std::string smsc_id="", bool replace=false) 
+            : id(id), attempts(0), abonent(abonent), message(_message),
+              smsc_id(smsc_id), eventCount(Message::countEvents(_message)), replace(replace) {};
         Message(const Message& msg) 
-            : id(msg.id), abonent(msg.abonent), message(msg.message), smsc_id(msg.smsc_id),
-              replace(msg.replace), eventCount(msg.eventCount) {};
+            : id(msg.id), attempts(msg.attempts), abonent(msg.abonent), message(msg.message),
+              smsc_id(msg.smsc_id), eventCount(msg.eventCount), replace(msg.replace) {};
         
         Message& operator=(const Message& msg) {
-            id = msg.id; eventCount = msg.eventCount;
+            id = msg.id; attempts = msg.attempts;
             abonent = msg.abonent; message = msg.message;
             smsc_id = msg.smsc_id; replace = msg.replace;
+            eventCount = msg.eventCount;
             return (*this);
         };
 
+        static int countEvents(const std::string& message);
+
         bool addEvent(const MissedCallEvent& event, bool force=false);
+        bool isFull();
     };
     
-    static const uint8_t MESSAGE_NEW_STATE  = 0;  // Новое или перешедуленное сообщение
-    static const uint8_t MESSAGE_WAIT_RESP  = 10; // Ожидает submit|replace responce 
+    static const uint8_t MESSAGE_WAIT_RESP  = 10; // Ожидает submit|replace responce или готова к доставке
     static const uint8_t MESSAGE_WAIT_RCPT  = 20; // Ожидает delivery reciept
 
     typedef enum {
-        NEW_STATE   = MESSAGE_NEW_STATE,
         WAIT_RESP   = MESSAGE_WAIT_RESP,
         WAIT_RCPT   = MESSAGE_WAIT_RCPT
     } MessageState;
     
-    class Task : public Mutex
+    struct TaskEvent : public MissedCallEvent
+    {
+        uint64_t    id, msg_id;
+
+        TaskEvent(const TaskEvent& evt) 
+            : id(evt.id), msg_id(evt.msg_id) { from=evt.from; to=evt.to; time=evt.time;};
+        TaskEvent(const MissedCallEvent& evt, uint64_t _id, uint64_t _msg_id=0) 
+            : id(_id), msg_id(_msg_id) { from=evt.from; to=evt.to; time=evt.time; };
+        TaskEvent(std::string _from="", std::string _to="", time_t _time=0, uint64_t _id=0, uint64_t _msg_id=0)
+            : id(_id), msg_id(_msg_id) { from = _from; to = _to; time = _time; };
+    };
+
+    class Task
     {
     private:
         
-        static Logger*      logger;
         static DataSource*  ds;
+        static Logger*      logger;
         static uint64_t     currentId, sequenceId;
 
-        std::string     abonent;
-        Array<Message>  messages; // Messages for abonent, 0 - current
-        bool            bUpdated;
+        std::string         abonent, cur_smsc_id;
+        uint64_t            currentMessageId;
+        Array<TaskEvent>    events;
 
-        void insertNewEvent(Connection* connection, 
-                            const MissedCallEvent& event, bool setCurrent=false);
-        void updateMessageText(Connection* connection, const Message& message);
+        // used from loadup() & loadupAll()
+        void loadup(uint64_t currId, Connection* connection=0);
 
     public:
 
-        static void init(DataSource* _ds);
-        static uint64_t getNextId(Connection* connection=0);
+        static void         init(DataSource* _ds);
+        static uint64_t     getNextId(Connection* connection=0);
+        
+        static bool getMessage(const char* smsc_id, Message& message);
+        static Hash<Task *> loadupAll();
 
-        Task(std::string abonent) : abonent(abonent), bUpdated(false) {};
+        Task(std::string abonent) : abonent(abonent), cur_smsc_id(""), currentMessageId(0) {};
         virtual ~Task() {};
-
-        inline bool wasUpdated() { // check wether current message was updated while whaiting responce
-            return bUpdated;
-        };
         
-        void loadMessages(Connection* connection=0); // loadup task messages
+        void loadup();
 
+        inline int eventsCount() { return events.Count(); };
+        
+        // Adds new event to chain & inserts inassigned event to DB
         void addEvent(const MissedCallEvent& event);
-        
-        bool getMessage(Message& message);
-        bool nextMessage(const char* smsc_id, Message& message);
-        //void skipFirstNEvents();
-        void deleteAllMessages();
+
+        void deleteMessages();
+
+        // Formats message from events chain to message capacity, 
+        // assigns selected events to current message
+        bool formatMessage(Message& message);
+
+        void waitResponce(const char* smsc_id);
+
+        // Makes current message WAIT_RCPT
+        void waitReceipt(const char* smsc_id);
+        // Makes current message WAIT_RCPT & shifts task events by eventCount
+        void waitReceipt(int eventCount, const char* smsc_id);
     };
 
-    /* TODO: Implement it ???
-    class AbonentTask : public Task {};
-    class CallerTask : public Task {};
-    */
-        
 }}
 
 #endif // SMSC_MCI_SME_TASKS

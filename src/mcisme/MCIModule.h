@@ -39,9 +39,12 @@ namespace smsc { namespace mcisme
         bool    bStarted, bNeedExit;
         
         inline MissedCallProcessor* instantiateModule() {
+            /*
             MissedCallProcessor *mcp = MissedCallProcessor::instance();
             if (!mcp) smsc_log_error(logger, "Failed to instantiate MCI Module processor.");
             return mcp;
+            */
+            return 0;
         }
     
     public:
@@ -64,10 +67,12 @@ namespace smsc { namespace mcisme
             if (!bStarted) {
                 smsc_log_info(logger, "Starting ...");
                 bNeedExit = false; 
+                /*
                 MissedCallProcessor *mcp = instantiateModule();
                 if (mcp && listener) {
                     mcp->addMissedCallListener(listener);
                 }
+                */
                 Thread::Start(); bStarted = true;
                 smsc_log_info(logger, "Started.");
             }
@@ -80,12 +85,20 @@ namespace smsc { namespace mcisme
             if (bStarted) {
                 smsc_log_info(logger, "Stopping ...");
                 bNeedExit = true; 
-                MissedCallProcessor *mcp = instantiateModule();
+                /*MissedCallProcessor *mcp = instantiateModule();
                 if (mcp) { 
                     mcp->stop(); mcp->removeMissedCallListener();
-                }
+                }*/
                 exitedEvent.Wait(); bStarted = false;
                 smsc_log_info(logger, "Stoped.");
+            }
+        }
+        void test()
+        {
+            MissedCallEvent event; event.from = "3"; event.to = "2";
+            for (int i=0; i<10000 && !bNeedExit; i++) {
+                event.time = time(NULL)+i;
+                listener->missed(event);
             }
         }
         virtual int Execute()
@@ -93,10 +106,12 @@ namespace smsc { namespace mcisme
             while (!bNeedExit)
             {
                 try
-                {
+                {   /*
                     MissedCallProcessor *mcp = instantiateModule();
                     if (!mcp) break;
                     mcp->run();
+                    */
+                    test();
                 } 
                 catch (std::exception& exc) {
                     smsc_log_error(logger, "MCI Module failure. Reason: %s", exc.what());
