@@ -145,7 +145,7 @@
 <tr class=row<%=rowN++&1%>>
   <th>Release calls strategy</th>
   <td>
-  <select name=releaseSettings>
+  <select name=releaseStrategy>
     <option value="<%= MCISmeBean.RELEASE_REDIRECT_STRATEGY%>" <%=
     (bean.getReleaseStrategyInt() == MCISmeBean.RELEASE_REDIRECT_STRATEGY) ? "selected":""%>>REDIRECT CALLS ON MSC</option>
     <option value="<%= MCISmeBean.RELEASE_PREFIXED_STRATEGY%>" <%=
