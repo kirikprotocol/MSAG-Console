@@ -5,7 +5,6 @@ import org.w3c.dom.NodeList;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.sme.Sme;
 import ru.sibinco.lib.backend.sme.SmeManager;
-import ru.sibinco.lib.backend.service.Component;
 
 import java.io.File;
 import java.util.Map;
