@@ -471,11 +471,11 @@ struct PduDestAddress : public PduAddress
 {
   __int_property__(uint8_t,flag)
   PduDestAddress() : flag(0){};
-  inline uint32_t size() { 
+  inline uint32_t size() {
     switch ( flag ) {
     case 0x01:
       return PduAddress::size() + 1;
-    case 0x02:      
+    case 0x02:
       return PduAddress::size() + 1 - 2;
     default:
       throw runtime_error("invalid PduDestAddress flag");

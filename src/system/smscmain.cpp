@@ -60,39 +60,39 @@ throw (smsc::admin::AdminException)
 class SmscRunner : public smsc::core::threads::Thread
 {
 public:
-	SmscRunner(smsc::system::Smsc* smsc)
-		: _app(smsc)
-	{}
-	virtual ~SmscRunner()
-	{
-		_app = 0;
-	}
+  SmscRunner(smsc::system::Smsc* smsc)
+    : _app(smsc)
+  {}
+  virtual ~SmscRunner()
+  {
+    _app = 0;
+  }
 
-	virtual int Execute()
-	{
-		try{
-			if (_app != 0)
-				_app->run();
-			else
-				fprintf(stderr,"smsc runner not initialized");
-		}catch(std::exception& e)
-		{
-			fprintf(stderr,"top level exception: %s\n",e.what());
-			return (-1);
-		}
-		catch(...)
-		{
-			fprintf(stderr,"FATAL EXCEPTION!\n");
-			return (-0);
-		}
-		_app->shutdown();
-		_app=0;
-		fprintf(stderr,"SMSC finished\n");
-		return 0;
-	}
+  virtual int Execute()
+  {
+    try{
+      if (_app != 0)
+        _app->run();
+      else
+        fprintf(stderr,"smsc runner not initialized");
+    }catch(std::exception& e)
+    {
+      fprintf(stderr,"top level exception: %s\n",e.what());
+      return (-1);
+    }
+    catch(...)
+    {
+      fprintf(stderr,"FATAL EXCEPTION!\n");
+      return (-0);
+    }
+    _app->shutdown();
+    _app=0;
+    fprintf(stderr,"SMSC finished\n");
+    return 0;
+  }
 
 protected:
-	smsc::system::Smsc* _app;
+  smsc::system::Smsc* _app;
 };
 
 
@@ -103,8 +103,8 @@ void atExitHandler(void)
 
 int main(int argc,char* argv[])
 {
-	atexit(atExitHandler);
-	smsc::system::clearThreadSignalMask();
+  atexit(atExitHandler);
+  smsc::system::clearThreadSignalMask();
 
   try{
     smsc::system::SmscConfigs cfgs;
@@ -160,10 +160,10 @@ int main(int argc,char* argv[])
 
       smsc::system::Smsc *app=new smsc::system::Smsc;
 
-			smsc::system::registerSmscSignalHandlers(app);
-			SmscRunner runner(app);
-			runner.Start();
-			runner.WaitFor();
+      smsc::system::registerSmscSignalHandlers(app);
+      SmscRunner runner(app);
+      runner.Start();
+      runner.WaitFor();
 
       fprintf(stderr,"quiting smsc\n");
       delete app;
