@@ -550,7 +550,7 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
   MAP_TRY{
     __trace2__("MAP::%s ",__FUNCTION__);
     char text[32];
-    SS7ToText(&dialog->mshlrAddr,text);
+    SS7ToText(ss7Address_sp,text);
     string s_(text);
     __trace2__("MAP::%s: [exists %s]?",__FUNCTION__,s_.c_str());
     map<string,unsigned>::iterator it = x_map.find(s_);
