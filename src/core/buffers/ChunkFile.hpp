@@ -81,9 +81,9 @@ protected:
       f.WriteNetInt64(lastRootOffset);
       f.WriteNetInt32(hdrcrc32);
     }
-    uint32_t Size()
+    static uint32_t Size()
     {
-      return sizeof(*this);
+      return 4*4+sizeof(File::offset_type);
     }
   };
 
@@ -103,9 +103,9 @@ protected:
       f.WriteNetInt32(count);
       f.WriteNetInt64(nextPage);
     }
-    uint32_t Size()
+    static uint32_t Size()
     {
-      return sizeof(*this);
+      return 4+4+sizeof(File::offset_type);
     }
   };
 
@@ -157,9 +157,9 @@ protected:
       f.WriteNetInt32(padding);
       f.WriteNetInt64(nextPage);
     }
-    uint32_t Size()
+    static uint32_t Size()
     {
-      return sizeof(*this);
+      return 4*4+sizeof(File::offset_type);
     }
   };
 
@@ -417,7 +417,7 @@ public:
       r.nextPage=0;
       f.Seek(fileSize);
       r.Write(f);
-      fileSize+=sizeof(r);
+      fileSize+=r.Size();
 
       ChunkStartItem it;
       /*

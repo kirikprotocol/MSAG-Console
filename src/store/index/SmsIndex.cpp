@@ -75,13 +75,16 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
     CacheItem *ci=new CacheItem;
     ci->ds=ds;
     ci->lastUsage=time(NULL);
+    ci->usedInLastTransaction=true;
     cache.Insert(dir,ci);
   }else
   {
     if(cache.Exists(dir))
     {
-      ds=cache.Get(dir)->ds;
-      cache.Get(dir)->lastUsage=time(NULL);
+      CacheItem* ci=cache.Get(dir);
+      ds=ci->ds;
+      ci->lastUsage=time(NULL);
+      ci->usedInLastTransaction=true;
     }else
     {
       ds.CreateNew();
@@ -106,6 +109,7 @@ void SmsIndex::IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms)
       CacheItem *ci=new CacheItem;
       ci->ds=ds;
       ci->lastUsage=time(NULL);
+      ci->usedInLastTransaction=true;
       cache.Insert(dir,ci);
     }
   }

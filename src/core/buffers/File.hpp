@@ -150,6 +150,10 @@ public:
       fileSize=0;
     }
 
+    if(sz<0 || sz>500*1024*1024)abort();
+
+    if(sz==0)sz=1024;
+
     inMemoryFile=true;
     buffer=new char[sz];
     bufferSize=sz;
@@ -164,8 +168,19 @@ public:
   void MemoryFlush()
   {
     if(!inMemoryFile || !f)throw FileException(FileException::errFileNotOpened,filename.c_str());
+    std::string tmp=filename+".tmp";
+    FILE *g=fopen(tmp.c_str(),"wb+");
+    if(fwrite(buffer,bufferSize,1,g)!=1)
+    {
+      fclose(g);
+      remove(tmp.c_str());
+      throw FileException(FileException::errWriteFailed,filename.c_str());
+    }
+    remove(filename.c_str());
+    fclose(f);
+    rename(tmp.c_str(),filename.c_str());
+    f=g;
     fseek(f,0,SEEK_SET);
-    if(fwrite(buffer,bufferSize,1,f)!=1)throw FileException(FileException::errWriteFailed,filename.c_str());
   }
 
   void ROpen(const char* fn)
@@ -225,7 +240,10 @@ public:
     if(inMemoryFile)
     {
       if(bufferPosition+sz>fileSize)
+      {
+        abort();
         throw FileException(FileException::errEndOfFile,filename.c_str());
+      }
       memcpy(buf,buffer+bufferPosition,sz);
       bufferPosition+=sz;
       return sz;
@@ -356,7 +374,7 @@ public:
 
   offset_type Size()
   {
-    if(inMemoryFile)return bufferSize;
+    if(inMemoryFile)return fileSize;
     Check();
     fpos_t p;
     fgetpos(f,&p);
@@ -478,6 +496,7 @@ protected:
   void ResizeBuffer(int newsz)
   {
     newsz+=newsz/4;
+    if(newsz>500*1024*1024 || newsz<=0)abort();
     char* newbuf=new char[newsz];
     memcpy(newbuf,buffer,bufferSize);
     delete [] buffer;

@@ -3,6 +3,7 @@
 
 #include <string>
 #include <list>
+#include <set>
 #include "util/int.h"
 #include "core/buffers/DiskHash.hpp"
 #include "core/buffers/ChunkFile.hpp"
@@ -78,9 +79,11 @@ typedef RefPtr<IntLttChunkFile::ChunkHandle> AutoChunkHandle;
 
 class SmsIndex{
 public:
-  SmsIndex(const char* location)
+  SmsIndex(const char* location,int maxmemuse=1*1024*1024*1024)
   {
     loc=location;
+    maxCacheMemUsage=maxmemuse;
+    cacheLifeTime=1;//in hours
   }
   void Init(ConfigView*);
   void IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms);
@@ -89,6 +92,17 @@ public:
   {
     //
   }
+
+  struct MemUseStat{
+    char* key;
+    time_t lastUsage;
+    int mem;
+    bool operator<(const MemUseStat& st)const
+    {
+      return lastUsage<st.lastUsage;
+    }
+  };
+
   void EndTransaction()
   {
     cache.First();
@@ -96,14 +110,40 @@ public:
     CacheItem*  v;
     std::list<std::string> toKill;
     time_t now=time(NULL);
+    cache.First();
+    uint64_t memUse=0;
+    std::set<MemUseStat> memStat;
     while(cache.Next(k,v))
     {
-      v->ds.Flush();
-      if(now-v->lastUsage>8*60*60)
+      if(v->usedInLastTransaction)v->ds.Flush();
+      v->usedInLastTransaction=false;
+      if(now-v->lastUsage>cacheLifeTime*60*60)
       {
         toKill.push_back(k);
+      }else
+      {
+        MemUseStat mus;
+        mus.mem=(int)v->ds.Size();
+        memUse+=mus.mem;
+        mus.key=k;
+        mus.lastUsage=v->lastUsage;
+        memStat.insert(mus);
       }
     }
+
+    if(memUse>maxCacheMemUsage)
+    {
+      for(std::set<MemUseStat>::iterator sit=memStat.begin();sit!=memStat.end();sit++)
+      {
+        toKill.push_back(sit->key);
+        memUse-=sit->mem;
+        if(memUse<maxCacheMemUsage)
+        {
+          break;
+        }
+      }
+    }
+
 
     for(std::list<std::string>::iterator i=toKill.begin();i!=toKill.end();i++)
     {
@@ -115,6 +155,7 @@ public:
   {
     char* k;
     CacheItem*  v;
+    cache.First();
     while(cache.Next(k,v))
     {
       v->ds.Discard();
@@ -226,10 +267,13 @@ protected:
 
   struct CacheItem{
     time_t lastUsage;
+    bool   usedInLastTransaction;
     DataSet ds;
   };
 
   Hash<CacheItem*> cache;
+  int maxCacheMemUsage;
+  int cacheLifeTime;
   //std::string cacheDir;
   //Hash<AutoChunkHandle> srcIdCache,dstIdCache,routeIdCache;
   //Hash<uint64_t> srcAddrCache,dstAddrCache;
