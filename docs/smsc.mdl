@@ -15,7 +15,7 @@
 	(object Attribute
 	    tool       	"Data Modeler"
 	    name       	"DatabaseCounter"
-	    value      	"1")
+	    value      	"2")
 	(object Attribute
 	    tool       	"Data Modeler"
 	    name       	"DomainPackageCounter"
@@ -23,7 +23,7 @@
 	(object Attribute
 	    tool       	"Data Modeler"
 	    name       	"SchemaCounter"
-	    value      	"0")
+	    value      	"3")
 	(object Attribute
 	    tool       	"Data Modeler"
 	    name       	"DomainCounter"
@@ -31,11 +31,11 @@
 	(object Attribute
 	    tool       	"Data Modeler"
 	    name       	"TableCounter"
-	    value      	0)
+	    value      	4)
 	(object Attribute
 	    tool       	"Data Modeler"
 	    name       	"ColumnCounter"
-	    value      	"0")
+	    value      	"34")
 	(object Attribute
 	    tool       	"Data Modeler"
 	    name       	"TriggerCounter"
@@ -47,15 +47,15 @@
 	(object Attribute
 	    tool       	"Data Modeler"
 	    name       	"ConstraintCounter"
-	    value      	0)
+	    value      	10)
 	(object Attribute
 	    tool       	"Data Modeler"
 	    name       	"PrimaryKeyCounter"
-	    value      	0)
+	    value      	4)
 	(object Attribute
 	    tool       	"Data Modeler"
 	    name       	"ForeignKeyCounter"
-	    value      	0)
+	    value      	3)
 	(object Attribute
 	    tool       	"Data Modeler"
 	    name       	"StoredProcedurePackageCounter"
@@ -2041,7 +2041,7 @@
 						    location   	(155, 656)
 						    anchor_loc 	1
 						    nlines     	2
-						    max_width  	777
+						    max_width  	781
 						    justify    	0
 						    label      	"Administrator")
 						icon       	"Actor"
@@ -2286,7 +2286,7 @@
 				    location   	(155, 1431)
 				    anchor_loc 	1
 				    nlines     	2
-				    max_width  	659
+				    max_width  	662
 				    justify    	0
 				    label      	"Administrator")
 				icon       	"Actor"
@@ -2606,7 +2606,7 @@
 				    location   	(155, 563)
 				    anchor_loc 	1
 				    nlines     	2
-				    max_width  	664
+				    max_width  	667
 				    justify    	0
 				    label      	"SME")
 				icon       	"Actor"
@@ -3361,7 +3361,7 @@
 					    location   	(1271, 811)
 					    anchor_loc 	1
 					    nlines     	2
-					    max_width  	863
+					    max_width  	866
 					    justify    	0
 					    label      	"Admin")
 					icon       	"Actor"
@@ -3728,7 +3728,7 @@
 					    location   	(1240, 780)
 					    anchor_loc 	1
 					    nlines     	2
-					    max_width  	847
+					    max_width  	850
 					    justify    	0
 					    label      	"Admin")
 					icon       	"Actor"
@@ -4223,7 +4223,7 @@
 					    location   	(1116, 997)
 					    anchor_loc 	1
 					    nlines     	2
-					    max_width  	855
+					    max_width  	858
 					    justify    	0
 					    label      	"Admin")
 					icon       	"Actor"
@@ -4269,7 +4269,7 @@
 				    location   	(279, 470)
 				    anchor_loc 	1
 				    nlines     	2
-				    max_width  	842
+				    max_width  	844
 				    justify    	0
 				    label      	"User")
 				icon       	"Actor"
@@ -4368,7 +4368,7 @@
 				    location   	(1116, 687)
 				    anchor_loc 	1
 				    nlines     	2
-				    max_width  	840
+				    max_width  	842
 				    justify    	0
 				    label      	"Admin")
 				icon       	"Actor"
@@ -8239,7 +8239,7 @@
 							icon_y_offset 	0
 							annotation 	1
 							Focus_Of_Control 	(object Focus_Of_Control "" @305
-							    location   	(834, 310)
+							    location   	(837, 310)
 							    line_color 	3342489
 							    InterObjView 	@304
 							    height     	151
@@ -9121,7 +9121,7 @@
 						    location   	(372, 501)
 						    anchor_loc 	1
 						    nlines     	2
-						    max_width  	641
+						    max_width  	645
 						    justify    	0
 						    label      	"OS")
 						icon       	"Actor"
@@ -13288,7 +13288,7 @@
 					icon_y_offset 	0
 					annotation 	1
 					Focus_Of_Control 	(object Focus_Of_Control "" @541
-					    location   	(118, 331)
+					    location   	(124, 331)
 					    line_color 	3342489
 					    InterObjView 	@540
 					    height     	438
@@ -14657,7 +14657,7 @@
 					    location   	(278, 440)
 					    anchor_loc 	1
 					    nlines     	2
-					    max_width  	1441
+					    max_width  	1445
 					    justify    	0
 					    label      	"readPacket")
 					icon       	"control"
@@ -14687,7 +14687,7 @@
 					    location   	(278, 781)
 					    anchor_loc 	1
 					    nlines     	2
-					    max_width  	1445
+					    max_width  	1448
 					    justify    	0
 					    label      	"WritePacket")
 					icon       	"control"
@@ -14717,7 +14717,7 @@
 					    location   	(278, 1122)
 					    anchor_loc 	1
 					    nlines     	2
-					    max_width  	1467
+					    max_width  	1471
 					    justify    	0
 					    label      	"listenConnection")
 					icon       	"control"
@@ -18089,24 +18089,6 @@
 					line_color 	3342489
 					fill_color 	13434879
 					quidu      	"3C4C4E4302C8"
-					compartment 	(object Compartment
-					    Parent_View 	@702
-					    location   	(1141, 206)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    anchor     	2
-					    nlines     	5
-					    max_width  	0
-					    justify    	0)
 					width      	230
 					height     	154
 					annotation 	8
@@ -26223,7 +26205,7 @@
 						    location   	(2046, 2330)
 						    anchor_loc 	1
 						    nlines     	2
-						    max_width  	860
+						    max_width  	863
 						    justify    	0
 						    label      	"User")
 						icon       	"Actor"
@@ -26267,7 +26249,7 @@
 							supplier   	@963
 							line_style 	0)))
 					    (object AssociationViewNew "$UNNAMED$206" @967
-						location   	(2046, 2444)
+						location   	(2046, 2441)
 						font       	(object Font
 						    size       	10
 						    face       	"Arial"
@@ -26284,7 +26266,7 @@
 						roleview_list 	(list RoleViews
 						    (object RoleView "$UNNAMED$207" @968
 							Parent_View 	@967
-							location   	(-66, 700)
+							location   	(-66, 697)
 							stereotype 	TRUE
 							line_color 	3342489
 							quidu      	"3C6B6283039B"
@@ -26293,7 +26275,7 @@
 							line_style 	0)
 						    (object RoleView "$UNNAMED$208" @969
 							Parent_View 	@967
-							location   	(-66, 700)
+							location   	(-66, 697)
 							stereotype 	TRUE
 							line_color 	3342489
 							quidu      	"3C6B628303A5"
@@ -33582,7 +33564,7 @@
 					icon_y_offset 	0
 					annotation 	1
 					Focus_Of_Control 	(object Focus_Of_Control "" @1271
-					    location   	(594, 378)
+					    location   	(589, 378)
 					    line_color 	3342489
 					    InterObjView 	@1270
 					    height     	366
@@ -35442,24 +35424,6 @@
 					line_color 	3342489
 					fill_color 	13434879
 					quidu      	"3CEA04D301F5"
-					compartment 	(object Compartment
-					    Parent_View 	@1344
-					    location   	(414, 764)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    anchor     	2
-					    nlines     	2
-					    max_width  	38
-					    justify    	0)
 					height     	154
 					autoResize 	TRUE)
 				    (object AssociationViewNew "$UNNAMED$301" @1345
@@ -35530,7 +35494,37 @@
 						client     	@1348
 						supplier   	@1343
 						line_style 	0)))
-				    (object ClassView "Class" "Logical View::Design Model::Profiles::ProfileManager" @1351
+				    (object ClassView "Class" "Logical View::Design Model::Profiles::ProfileStore" @1351
+					ShowCompartmentStereotypes 	TRUE
+					location   	(765, 1096)
+					font       	(object Font
+					    size       	9
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@1351
+					    location   	(764, 1204)
+					    anchor_loc 	1
+					    nlines     	2
+					    max_width  	881
+					    justify    	0
+					    label      	"ProfileStore")
+					icon       	"Interface"
+					icon_style 	"Icon"
+					line_color 	3342489
+					fill_color 	13434879
+					quidu      	"3CEA09250097"
+					width      	58
+					height     	58
+					annotation 	8
+					autoResize 	TRUE)
+				    (object ClassView "Class" "Logical View::Design Model::Profiles::ProfileManager" @1352
 					ShowCompartmentStereotypes 	TRUE
 					location   	(760, 564)
 					font       	(object Font
@@ -35544,7 +35538,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@1351
+					    Parent_View 	@1352
 					    location   	(759, 725)
 					    anchor_loc 	1
 					    nlines     	2
@@ -35557,7 +35551,7 @@
 					fill_color 	13434879
 					quidu      	"3CEA08950072"
 					annotation 	8)
-				    (object AssociationViewNew "$UNNAMED$307" @1352
+				    (object AssociationViewNew "$UNNAMED$307" @1353
 					location   	(594, 564)
 					font       	(object Font
 					    size       	9
@@ -35573,8 +35567,8 @@
 					line_color 	3342489
 					quidu      	"3CEA08D4016D"
 					roleview_list 	(list RoleViews
-					    (object RoleView "$UNNAMED$308" @1353
-						Parent_View 	@1352
+					    (object RoleView "$UNNAMED$308" @1354
+						Parent_View 	@1353
 						location   	(-150, 378)
 						font       	(object Font
 						    size       	9
@@ -35589,11 +35583,11 @@
 						stereotype 	TRUE
 						line_color 	3342489
 						quidu      	"3CEA08D4037F"
-						client     	@1352
+						client     	@1353
 						supplier   	@1344
 						line_style 	0
-						label      	(object SegLabel @1354
-						    Parent_View 	@1353
+						label      	(object SegLabel @1355
+						    Parent_View 	@1354
 						    location   	(543, 620)
 						    font       	(object Font
 							size       	9
@@ -35614,63 +35608,15 @@
 						    pctDist    	0.664286
 						    height     	55
 						    orientation 	0))
-					    (object RoleView "$UNNAMED$309" @1355
-						Parent_View 	@1352
+					    (object RoleView "$UNNAMED$309" @1356
+						Parent_View 	@1353
 						location   	(-150, 378)
 						stereotype 	TRUE
 						line_color 	3342489
 						quidu      	"3CEA08D40389"
-						client     	@1352
-						supplier   	@1351
+						client     	@1353
+						supplier   	@1352
 						line_style 	0)))
-				    (object ClassView "Class" "Logical View::Design Model::Profiles::ProfileStore" @1356
-					ShowCompartmentStereotypes 	TRUE
-					location   	(765, 1096)
-					font       	(object Font
-					    size       	9
-					    face       	"Arial"
-					    charSet    	204
-					    bold       	FALSE
-					    italics    	FALSE
-					    underline  	FALSE
-					    strike     	FALSE
-					    color      	0
-					    default_color 	TRUE)
-					label      	(object ItemLabel
-					    Parent_View 	@1356
-					    location   	(764, 1204)
-					    anchor_loc 	1
-					    nlines     	2
-					    max_width  	881
-					    justify    	0
-					    label      	"ProfileStore")
-					icon       	"Interface"
-					icon_style 	"Icon"
-					line_color 	3342489
-					fill_color 	13434879
-					quidu      	"3CEA09250097"
-					compartment 	(object Compartment
-					    Parent_View 	@1356
-					    location   	(211, 1243)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    anchor     	2
-					    nlines     	4
-					    max_width  	1103
-					    justify    	0)
-					width      	58
-					height     	58
-					annotation 	8
-					autoResize 	TRUE)
 				    (object AssociationViewNew "$UNNAMED$310" @1357
 					location   	(759, 908)
 					font       	(object Font
@@ -35694,7 +35640,7 @@
 						line_color 	3342489
 						quidu      	"3CEA0CD7039A"
 						client     	@1357
-						supplier   	@1356
+						supplier   	@1351
 						line_style 	0)
 					    (object RoleView "$UNNAMED$312" @1359
 						Parent_View 	@1357
@@ -35703,7 +35649,7 @@
 						line_color 	3342489
 						quidu      	"3CEA0CD703A4"
 						client     	@1357
-						supplier   	@1351
+						supplier   	@1352
 						line_style 	0)))
 				    (object ClassView "Class" "Logical View::Design Model::Profiles::DBProfileStore" @1360
 					ShowCompartmentStereotypes 	TRUE
@@ -35739,7 +35685,7 @@
 					line_color 	3342489
 					quidu      	"3CEA104603E4"
 					client     	@1360
-					supplier   	@1356
+					supplier   	@1351
 					line_style 	0)
 				    (object ClassView "Class" "Logical View::Design Model::SME Management::SmeProxy" @1362
 					ShowCompartmentStereotypes 	TRUE
@@ -35771,43 +35717,7 @@
 					height     	58
 					annotation 	8
 					autoResize 	TRUE)
-				    (object ClassView "Class" "Logical View::Design Model::Profiles::ProfileSme" @1363
-					ShowCompartmentStereotypes 	TRUE
-					location   	(1262, 124)
-					font       	(object Font
-					    size       	9
-					    face       	"Arial"
-					    charSet    	204
-					    bold       	FALSE
-					    italics    	FALSE
-					    underline  	FALSE
-					    strike     	FALSE
-					    color      	0
-					    default_color 	TRUE)
-					label      	(object ItemLabel
-					    Parent_View 	@1363
-					    location   	(1261, 285)
-					    anchor_loc 	1
-					    nlines     	2
-					    max_width  	1031
-					    justify    	0
-					    label      	"ProfileSme")
-					icon       	"control"
-					icon_style 	"Icon"
-					line_color 	3342489
-					fill_color 	13434879
-					quidu      	"3CEA115501A9"
-					width      	158
-					annotation 	8
-					autoResize 	TRUE)
-				    (object RealizeView "" @1364
-					stereotype 	TRUE
-					line_color 	3342489
-					quidu      	"3CEA116F02DD"
-					client     	@1363
-					supplier   	@1362
-					line_style 	0)
-				    (object ClassView "Class" "Logical View::Design Model::Profiles::ProfileTable" @1365
+				    (object ClassView "Class" "Logical View::Design Model::Profiles::ProfileTable" @1363
 					ShowCompartmentStereotypes 	TRUE
 					IncludeOperation 	TRUE
 					ShowOperationSignature 	TRUE
@@ -35823,7 +35733,7 @@
 					    color      	0
 					    default_color 	TRUE)
 					label      	(object ItemLabel
-					    Parent_View 	@1365
+					    Parent_View 	@1363
 					    location   	(1266, 677)
 					    anchor_loc 	1
 					    nlines     	1
@@ -35835,33 +35745,51 @@
 					line_color 	3342489
 					fill_color 	13434879
 					quidu      	"3CE9FC770338"
-					compartment 	(object Compartment
-					    Parent_View 	@1365
-					    location   	(776, 716)
-					    font       	(object Font
-						size       	9
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    anchor     	2
-					    nlines     	4
-					    max_width  	978
-					    justify    	0)
 					width      	58
 					height     	58
+					autoResize 	TRUE)
+				    (object RealizeView "" @1364
+					stereotype 	TRUE
+					line_color 	3342489
+					quidu      	"3CEA08B201C8"
+					client     	@1352
+					supplier   	@1363
+					line_style 	0)
+				    (object ClassView "Class" "Logical View::Design Model::Profiles::ProfileSme" @1365
+					ShowCompartmentStereotypes 	TRUE
+					location   	(1262, 124)
+					font       	(object Font
+					    size       	9
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@1365
+					    location   	(1261, 285)
+					    anchor_loc 	1
+					    nlines     	2
+					    max_width  	1031
+					    justify    	0
+					    label      	"ProfileSme")
+					icon       	"control"
+					icon_style 	"Icon"
+					line_color 	3342489
+					fill_color 	13434879
+					quidu      	"3CEA115501A9"
+					width      	158
+					annotation 	8
 					autoResize 	TRUE)
 				    (object RealizeView "" @1366
 					stereotype 	TRUE
 					line_color 	3342489
-					quidu      	"3CEA08B201C8"
-					client     	@1351
-					supplier   	@1365
+					quidu      	"3CEA116F02DD"
+					client     	@1365
+					supplier   	@1362
 					line_style 	0)
 				    (object AssociationViewNew "$UNNAMED$313" @1367
 					location   	(1261, 424)
@@ -35896,7 +35824,7 @@
 						line_color 	3342489
 						quidu      	"3CEA11C302C0"
 						client     	@1367
-						supplier   	@1365
+						supplier   	@1363
 						line_style 	0
 						label      	(object SegLabel @1369
 						    Parent_View 	@1368
@@ -35927,7 +35855,7 @@
 						line_color 	3342489
 						quidu      	"3CEA11C302CA"
 						client     	@1367
-						supplier   	@1363
+						supplier   	@1365
 						line_style 	0)))
 				    (object NoteView @1371
 					location   	(1395, 1085)
@@ -48449,23 +48377,156 @@
 						autoResize 	TRUE))))))
 			logical_presentations 	(list unit_reference_list)))
 		logical_presentations 	(list unit_reference_list))
-	    (object Class_Category "Schemas"
-		attributes 	(list Attribute_Set
-		    (object Attribute
-			tool       	"Data Modeler"
-			name       	"dmItem"
-			value      	TRUE)
-		    (object Attribute
-			tool       	"Data Modeler"
-			name       	"IsRootSchema"
-			value      	TRUE)
-		    (object Attribute
-			tool       	"Data Modeler"
-			name       	"dmSchema"
-			value      	"Data Modeler"))
-		quid       	"3CEA109701BA"
+	    (object Class_Category "Scalar Types"
+		quid       	"3CFC61CA01CC"
+		documentation 	"Container for Scalar Types"
 		exportControl 	"Public"
-		logical_models 	(list unit_reference_list)
+		logical_models 	(list unit_reference_list
+		    (object Class "CHAR"
+			quid       	"3CFC61CA021C"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "NCHAR"
+			quid       	"3CFC61CA0226"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "VARCHAR"
+			quid       	"3CFC61CA023A"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "VARCHAR2"
+			quid       	"3CFC61CA0244"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "NVARCHAR2"
+			quid       	"3CFC61CA024E"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "DATE"
+			quid       	"3CFC61CA0258"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "LONG"
+			quid       	"3CFC61CA0262"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "LONG RAW"
+			quid       	"3CFC61CA026C"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "ROWID"
+			quid       	"3CFC61CA0280"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "MLSLABEL"
+			quid       	"3CFC61CA028A"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "CLOB"
+			quid       	"3CFC61CA0294"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "NCLOB"
+			quid       	"3CFC61CA029E"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "BLOB"
+			quid       	"3CFC61CA02A8"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "BFILE"
+			quid       	"3CFC61CA02B2"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "RAW"
+			quid       	"3CFC61CA02C6"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "FLOAT"
+			quid       	"3CFC61CA02D0"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "NUMBER"
+			quid       	"3CFC61CA02DA"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "INTEGER"
+			quid       	"3CFC61CA02E4"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "CHARACTER"
+			quid       	"3CFC61CA02EE"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "CHAR VARYING"
+			quid       	"3CFC61CA0302"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "CHARACTER VARYING"
+			quid       	"3CFC61CA030C"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "DEC"
+			quid       	"3CFC61CA0316"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "DECIMAL"
+			quid       	"3CFC61CA0320"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "DOUBLE PRECISION"
+			quid       	"3CFC61CA032A"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "INT"
+			quid       	"3CFC61CA033E"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "NCHAR VARYING"
+			quid       	"3CFC61CA0348"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "NUMERIC"
+			quid       	"3CFC61CA0352"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "REAL"
+			quid       	"3CFC61CA0366"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8")
+		    (object Class "SMALLINT"
+			quid       	"3CFC61CA0370"
+			module     	"Component View::Oracle8 Scalars (subprog spec)"
+			quidu      	"3CFC61CA01EA"
+			language   	"Oracle8"))
 		logical_presentations 	(list unit_reference_list))
 	    (object Class_Category "Global Data Types"
 		attributes 	(list Attribute_Set
@@ -48481,9 +48542,1915 @@
 			tool       	"Data Modeler"
 			name       	"dmDomainPackage"
 			value      	"Data Modeler"))
-		quid       	"3CEA10D30198"
+		quid       	"3CFC61E302A4"
 		exportControl 	"Public"
 		logical_models 	(list unit_reference_list)
+		logical_presentations 	(list unit_reference_list))
+	    (object Class_Category "Schemas"
+		attributes 	(list Attribute_Set
+		    (object Attribute
+			tool       	"Data Modeler"
+			name       	"dmItem"
+			value      	TRUE)
+		    (object Attribute
+			tool       	"Data Modeler"
+			name       	"IsRootSchema"
+			value      	TRUE)
+		    (object Attribute
+			tool       	"Data Modeler"
+			name       	"dmSchema"
+			value      	"Data Modeler"))
+		quid       	"3CFC61E302AE"
+		stereotype 	"Schema"
+		exportControl 	"Public"
+		logical_models 	(list unit_reference_list
+		    (object Class_Category "SMSC"
+			attributes 	(list Attribute_Set
+			    (object Attribute
+				tool       	"Data Modeler"
+				name       	"dmItem"
+				value      	TRUE)
+			    (object Attribute
+				tool       	"Data Modeler"
+				name       	"IsSchema"
+				value      	TRUE)
+			    (object Attribute
+				tool       	"Data Modeler"
+				name       	"dmSchema"
+				value      	"Data Modeler")
+			    (object Attribute
+				tool       	"Data Modeler"
+				name       	"DMName"
+				value      	"SMSC")
+			    (object Attribute
+				tool       	"Data Modeler"
+				name       	"DatabaseID"
+				value      	"3CFC61FD017F"))
+			quid       	"3CFC61E302B8"
+			stereotype 	"Schema"
+			exportControl 	"Public"
+			logical_models 	(list unit_reference_list
+			    (object Class "SMS_MSG"
+				attributes 	(list Attribute_Set
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"dmItem"
+					value      	TRUE)
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"IsTable"
+					value      	TRUE)
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"DMName"
+					value      	"SMS_MSG")
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"TableSpace"
+					value      	""))
+				quid       	"3CFC62220291"
+				stereotype 	"Table"
+				operations 	(list Operations
+				    (object Operation "PK_SMS_MSG1"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsConstraint"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ConstraintType"
+						value      	"Primary Key")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"PK_SMS_MSG1")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DeferalMode"
+						value      	"Not Deferable")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsCluster"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"FillFactor"
+						value      	0)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"KeyList"
+						value      	"3CFCEDDE019E"))
+					quid       	"3CFC6A9200E8"
+					stereotype 	"PK"
+					concurrency 	"Sequential"
+					opExportControl 	"Public"
+					uid        	0))
+				class_attributes 	(list class_attribute_list
+				    (object ClassAttribute "ID"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"ID")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	1)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	8)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDDE019E"
+					type       	"RAW(8)"
+					exportControl 	"Primary")
+				    (object ClassAttribute "STATE"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"STATE")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	2)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	3)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Scale"
+						value      	0)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDDE02DE"
+					type       	"NUMBER(3, 0)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "SIBMIT_TIME"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"SIBMIT_TIME")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	3)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDDE03CF"
+					type       	"DATE"
+					quidu      	"3CFC61CA0258"
+					exportControl 	"Neither")
+				    (object ClassAttribute "VALID_TIME"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"VALID_TIME")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	4)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDDF00CD"
+					type       	"DATE"
+					quidu      	"3CFC61CA0258"
+					exportControl 	"Neither")
+				    (object ClassAttribute "ATTEMPTS"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"ATTEMPTS")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	5)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	3)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Scale"
+						value      	0)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDDF019F"
+					type       	"NUMBER(3, 0)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "LAST_RESULT"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"LAST_RESULT")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	6)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	3)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Scale"
+						value      	0)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDDF0290"
+					type       	"NUMBER(3, 0)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "LAST_TRY_TIME"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"LAST_TRY_TIME")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	7)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDDF036C"
+					type       	"DATE"
+					quidu      	"3CFC61CA0258"
+					exportControl 	"Neither")
+				    (object ClassAttribute "NEXT_TRY_TIME"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"NEXT_TRY_TIME")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	8)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE00074"
+					type       	"DATE"
+					quidu      	"3CFC61CA0258"
+					exportControl 	"Neither")
+				    (object ClassAttribute "OA_TON"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"OA_TON")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	9)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	3)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Scale"
+						value      	0)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE0015B"
+					type       	"NUMBER(3, 0)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "OA_NPI"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"OA_NPI")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	10)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	3)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Scale"
+						value      	0)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE00241"
+					type       	"NUMBER(3, 0)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "OA_VAL"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"OA_VAL")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	11)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	21)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE00331"
+					type       	"VARCHAR2(21)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "DA_TON"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"DA_TON")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	12)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	3)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Scale"
+						value      	0)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE10044"
+					type       	"NUMBER(3, 0)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "DA_NPI"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"DA_NPI")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	13)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	3)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Scale"
+						value      	0)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE10120"
+					type       	"NUMBER(3, 0)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "DA_VAL"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"DA_VAL")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	14)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	21)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE1027F"
+					type       	"VARCHAR2(21)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "MR"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"MR")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	15)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	5)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Scale"
+						value      	0)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE10365"
+					type       	"NUMBER(5, 0)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "SVC_TYPE"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"SVC_TYPE")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	16)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	6)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE20059"
+					type       	"VARCHAR2(6)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "ARC"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"ARC")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	17)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	1)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE20136"
+					type       	"CHAR(1)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "DR"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"DR")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	18)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	3)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Scale"
+						value      	0)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE20212"
+					type       	"NUMBER(3, 0)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "BR"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"BR")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	19)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	3)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Scale"
+						value      	0)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE20302"
+					type       	"NUMBER(3, 0)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "SRC_MSC"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"SRC_MSC")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	20)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	21)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE203DF"
+					type       	"VARCHAR2(21)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "SRC_IMSI"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"SRC_IMSI")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	21)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	21)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE300D3"
+					type       	"VARCHAR2(21)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "SRC_SME_N"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"SRC_SME_N")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	22)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	22)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE301AF"
+					type       	"VARCHAR2(22)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "DST_MSC"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"DST_MSC")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	23)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	21)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE302AA"
+					type       	"VARCHAR2(21)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "DST_IMSI"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"DST_IMSI")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	24)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	21)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE30390"
+					type       	"VARCHAR2(21)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "DST_SME_N"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"DST_SME_N")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	25)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	22)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE40098"
+					type       	"VARCHAR2(22)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "BODY"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"BODY")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	26)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	2000)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE4017F"
+					type       	"RAW(2000)"
+					exportControl 	"Neither")
+				    (object ClassAttribute "ATCH"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"ATCH")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	27)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	1)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCEDE40283"
+					type       	"CHAR(1)"
+					exportControl 	"Neither"))
+				module     	"Component View::DB"
+				quidu      	"3CFC61FD017F"
+				language   	"Data Modeler")
+			    (object Class "SMS_MSG_ATCH"
+				attributes 	(list Attribute_Set
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"dmItem"
+					value      	TRUE)
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"IsTable"
+					value      	TRUE)
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"DMName"
+					value      	"SMS_MSG_ATCH")
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"TableSpace"
+					value      	""))
+				quid       	"3CFC638F0047"
+				stereotype 	"Table"
+				operations 	(list Operations
+				    (object Operation "PK_SMS_MSG_ATCH3"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsConstraint"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ConstraintType"
+						value      	"Primary Key")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"PK_SMS_MSG_ATCH3")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DeferalMode"
+						value      	"Not Deferable")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsCluster"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"FillFactor"
+						value      	0)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"KeyList"
+						value      	"3CFCA56C02FF"))
+					quid       	"3CFCA5360134"
+					stereotype 	"PK"
+					concurrency 	"Sequential"
+					opExportControl 	"Public"
+					uid        	0)
+				    (object Operation "FK_SMS_MSG_ATCH2"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsConstraint"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ConstraintType"
+						value      	"Foreign Key")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"FK_SMS_MSG_ATCH2")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DeferalMode"
+						value      	"Not Deferable")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"KeyList"
+						value      	"3CFCA56C02FF"))
+					quid       	"3CFCA53601F3"
+					stereotype 	"FK"
+					concurrency 	"Sequential"
+					opExportControl 	"Public"
+					uid        	0))
+				class_attributes 	(list class_attribute_list
+				    (object ClassAttribute "ID"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"ID")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	1)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Length"
+						value      	8)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCA56C02FF"
+					type       	"RAW(8)"
+					exportControl 	"Both")
+				    (object ClassAttribute "BODY"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"BODY")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"Ordinal"
+						value      	2)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"NullsAllowed"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"IsIdentity"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ForBitData"
+						value      	FALSE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ColumnType"
+						value      	"Native")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DefaultValueType"
+						value      	"No Default Value"))
+					quid       	"3CFCA56C03A9"
+					type       	"BLOB"
+					quidu      	"3CFC61CA02A8"
+					exportControl 	"Neither"))
+				module     	"Component View::DB"
+				quidu      	"3CFC61FD017F"
+				language   	"Data Modeler")
+			    (object Association "attach"
+				attributes 	(list Attribute_Set
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"dmItem"
+					value      	TRUE)
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"IsRelationship"
+					value      	TRUE)
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"DMName"
+					value      	"attach")
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"RIMethod"
+					value      	"DRI")
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"ParentUpdateRule"
+					value      	"Restrict")
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"ParentDeleteRule"
+					value      	"Restrict")
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"ChildMultiplicity"
+					value      	FALSE)
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"ParentUpdateRuleName"
+					value      	"")
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"ParentDeleteRuleName"
+					value      	"")
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"ChildInsertRestrict"
+					value      	FALSE)
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"ChildInsertRestrictName"
+					value      	"")
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"ChildMultiplicityName"
+					value      	""))
+				quid       	"3CFCA5350151"
+				stereotype 	"Identifying"
+				roles      	(list role_list
+				    (object Role "$UNNAMED$466"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ConstraintName"
+						value      	"3CFCA53601F3"))
+					quid       	"3CFCA535036E"
+					supplier   	"Logical View::Schemas::SMSC::SMS_MSG_ATCH"
+					quidu      	"3CFC638F0047"
+					client_cardinality 	(value cardinality "0..1")
+					Containment 	"By Value"
+					is_navigable 	TRUE)
+				    (object Role "$UNNAMED$467"
+					attributes 	(list Attribute_Set
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"dmItem"
+						value      	TRUE)
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"DMName"
+						value      	"")
+					    (object Attribute
+						tool       	"Data Modeler"
+						name       	"ConstraintName"
+						value      	"3CFC6A9200E8"))
+					quid       	"3CFCA5350396"
+					supplier   	"Logical View::Schemas::SMSC::SMS_MSG"
+					quidu      	"3CFC62220291"
+					client_cardinality 	(value cardinality "1")
+					Containment 	"By Reference"
+					is_navigable 	TRUE
+					is_aggregate 	TRUE))))
+			logical_presentations 	(list unit_reference_list
+			    (object ClassDiagram "Main"
+				attributes 	(list Attribute_Set
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"dmItem"
+					value      	"True"))
+				quid       	"3CFC621E030D"
+				title      	"Main"
+				zoom       	100
+				max_height 	28350
+				max_width  	21600
+				origin_x   	0
+				origin_y   	0
+				items      	(list diagram_item_list
+				    (object ClassView "Class" "Logical View::Schemas::SMSC::SMS_MSG" @1491
+					ShowCompartmentStereotypes 	TRUE
+					IncludeAttribute 	TRUE
+					IncludeOperation 	TRUE
+					ShowOperationSignature 	TRUE
+					location   	(372, 775)
+					font       	(object Font
+					    size       	9
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@1491
+					    location   	(39, 105)
+					    fill_color 	13434879
+					    nlines     	1
+					    max_width  	666
+					    justify    	0
+					    label      	"SMS_MSG")
+					icon       	"Table"
+					icon_style 	"Decoration"
+					line_color 	3342489
+					fill_color 	13434879
+					quidu      	"3CFC62220291"
+					compartment 	(object Compartment
+					    Parent_View 	@1491
+					    location   	(39, 163)
+					    font       	(object Font
+						size       	9
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	FALSE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    icon_style 	"Icon"
+					    fill_color 	13434879
+					    anchor     	2
+					    nlines     	29
+					    max_width  	591)
+					width      	684
+					height     	1538
+					annotation 	8
+					autoResize 	TRUE)
+				    (object ClassView "Class" "Logical View::Schemas::SMSC::SMS_MSG_ATCH" @1492
+					ShowCompartmentStereotypes 	TRUE
+					IncludeAttribute 	TRUE
+					IncludeOperation 	TRUE
+					ShowOperationSignature 	TRUE
+					location   	(1393, 775)
+					font       	(object Font
+					    size       	9
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@1492
+					    location   	(1046, 669)
+					    fill_color 	13434879
+					    nlines     	1
+					    max_width  	694
+					    justify    	0
+					    label      	"SMS_MSG_ATCH")
+					icon       	"Table"
+					icon_style 	"Decoration"
+					line_color 	3342489
+					fill_color 	13434879
+					quidu      	"3CFC638F0047"
+					compartment 	(object Compartment
+					    Parent_View 	@1492
+					    location   	(1046, 727)
+					    font       	(object Font
+						size       	9
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	FALSE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    icon_style 	"Icon"
+					    fill_color 	13434879
+					    anchor     	2
+					    nlines     	5
+					    max_width  	628)
+					width      	712
+					height     	410
+					annotation 	8
+					autoResize 	TRUE)
+				    (object AssociationViewNew "attach" @1493
+					location   	(875, 775)
+					font       	(object Font
+					    size       	9
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object SegLabel @1494
+					    Parent_View 	@1493
+					    location   	(875, 716)
+					    font       	(object Font
+						size       	9
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	TRUE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    anchor     	1
+					    anchor_loc 	1
+					    nlines     	1
+					    max_width  	450
+					    justify    	0
+					    label      	"attach"
+					    pctDist    	0.500000
+					    height     	60
+					    orientation 	0)
+					stereotype 	FALSE
+					line_color 	3342489
+					quidu      	"3CFCA5350151"
+					roleview_list 	(list RoleViews
+					    (object RoleView "$UNNAMED$466" @1495
+						Parent_View 	@1493
+						location   	(503, 341)
+						font       	(object Font
+						    size       	9
+						    face       	"Arial"
+						    charSet    	204
+						    bold       	FALSE
+						    italics    	FALSE
+						    underline  	FALSE
+						    strike     	FALSE
+						    color      	0
+						    default_color 	TRUE)
+						stereotype 	TRUE
+						line_color 	3342489
+						quidu      	"3CFCA535036E"
+						client     	@1493
+						supplier   	@1492
+						line_style 	0
+						label      	(object SegLabel @1496
+						    Parent_View 	@1495
+						    location   	(988, 829)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    anchor     	2
+						    anchor_loc 	1
+						    nlines     	1
+						    max_width  	15
+						    justify    	0
+						    label      	"0..1"
+						    pctDist    	0.730337
+						    height     	54
+						    orientation 	1))
+					    (object RoleView "$UNNAMED$467" @1497
+						Parent_View 	@1493
+						location   	(503, 341)
+						font       	(object Font
+						    size       	9
+						    face       	"Arial"
+						    charSet    	204
+						    bold       	FALSE
+						    italics    	FALSE
+						    underline  	FALSE
+						    strike     	FALSE
+						    color      	0
+						    default_color 	TRUE)
+						stereotype 	TRUE
+						line_color 	3342489
+						quidu      	"3CFCA5350396"
+						client     	@1493
+						supplier   	@1491
+						line_style 	0
+						label      	(object SegLabel @1498
+						    Parent_View 	@1497
+						    location   	(731, 829)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    anchor     	2
+						    anchor_loc 	1
+						    nlines     	1
+						    max_width  	15
+						    justify    	0
+						    label      	"1"
+						    pctDist    	0.900000
+						    height     	54
+						    orientation 	0))))))
+			    (object ClassDiagram "NewDiagram"
+				attributes 	(list Attribute_Set
+				    (object Attribute
+					tool       	"Data Modeler"
+					name       	"dmItem"
+					value      	"True"))
+				quid       	"3CFCAE0A026A"
+				title      	"NewDiagram"
+				zoom       	100
+				max_height 	28350
+				max_width  	21600
+				origin_x   	0
+				origin_y   	0
+				items      	(list diagram_item_list
+				    (object NoteView @1499
+					location   	(372, 930)
+					font       	(object Font
+					    size       	9
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@1499
+					    location   	(21, 42)
+					    fill_color 	13434879
+					    nlines     	37
+					    max_width  	666
+					    label      	
+|Идентификатор
+|      ID
+|Общая информация
+|      STATE        
+|      SUBMIT_TIME
+|      VALID_TIME   
+|Планирование
+|      ATTEMPTS
+|      LAST_RESULT 
+|      NEXT_TRY_TIME
+|      LAST_TRY_TIME
+|Адреса, дублирование, замещение
+|      OA_TON, OA_NPI, OA_VAL
+|      DA_VAL, DA_NPI, DA_TON
+|      SVC_TYPE
+|      MR           
+|Отчеты
+|      DR
+|Архивация
+|      ARC
+|Биллинг
+|      BR
+|      SRC_MSC,SRC_IMSI,SRC_SME_N
+|      DST_MSC,DST_IMSI,DST_SME_N
+|Тело
+|      BODY
+|
+|Устаревшие поля
+|      WAIT_TIME
+|      PRI
+|      PID
+|      DCS
+|      UDHI
+|      UDL
+|      UD
+|      RCPT_ID
+|      ESM_CLASS
+					    )
+					line_color 	3342489
+					fill_color 	13434879
+					width      	726
+					height     	1788)
+				    (object NoteView @1500
+					location   	(1023, 899)
+					font       	(object Font
+					    size       	9
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@1500
+					    location   	(779, 36)
+					    fill_color 	13434879
+					    nlines     	36
+					    max_width  	453
+					    label      	
+|protocol_id
+|schedule_delivery_time
+|registered_delivery
+|replace_if_present_flag
+|data_coding
+|esm_class
+|sm_length
+|short_message
+|
+|user_message_reference
+|ussd_service_op
+|dest_addr_subunit
+|source_addr_subunit
+|payload_type
+|receipted_message_id
+|ms_msg_wait_facilities
+|user_response_code
+|sar_msg_ref_num
+|language_indicator
+|sar_total_segments
+|sar_segment_seqnum
+|number_of_messages
+|message_payload
+					    )
+					line_color 	3342489
+					fill_color 	13434879
+					width      	513
+					height     	1738)
+				    (object NoteView @1501
+					location   	(1581, 744)
+					font       	(object Font
+					    size       	9
+					    face       	"Arial"
+					    charSet    	204
+					    bold       	FALSE
+					    italics    	FALSE
+					    underline  	FALSE
+					    strike     	FALSE
+					    color      	0
+					    default_color 	TRUE)
+					label      	(object ItemLabel
+					    Parent_View 	@1501
+					    location   	(1293, 22)
+					    fill_color 	13434879
+					    nlines     	30
+					    max_width  	540
+					    label      	
+|TP-Command-Type
+|TP-Recipient-Address
+|TP-Protocol-Identifier
+|TP-Status-Report-Request
+|TP-Reply-Path
+|TP-Data-Coding-Scheme
+|TP-User-Data-Header-Indicator
+|TP-User-Data-Length, TP-Command-Data-Length
+|TP-User-Data
+|TP-Command-Data
+|TP-Message-Number
+					    )
+					line_color 	3342489
+					fill_color 	13434879
+					width      	600
+					height     	1456))))))
 		logical_presentations 	(list unit_reference_list)))
 	logical_presentations 	(list unit_reference_list
 	    (object ClassDiagram "Welcome"
@@ -48504,9 +50471,9 @@
 		max_height 	28350
 		max_width  	21600
 		origin_x   	0
-		origin_y   	0
+		origin_y   	338
 		items      	(list diagram_item_list
-		    (object NoteView @1491
+		    (object NoteView @1502
 			location   	(334, 1550)
 			font       	(object Font
 			    size       	9
@@ -48519,7 +50486,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@1491
+			    Parent_View 	@1502
 			    location   	(96, 1469)
 			    fill_color 	13434879
 			    nlines     	3
@@ -48530,7 +50497,7 @@
 			width      	500
 			height     	175
 			quidu      	"3CBAEF1001CB")
-		    (object NoteView @1492
+		    (object NoteView @1503
 			location   	(856, 109)
 			font       	(object Font
 			    size       	9
@@ -48543,7 +50510,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@1492
+			    Parent_View 	@1503
 			    location   	(615, 46)
 			    fill_color 	13434879
 			    nlines     	2
@@ -48554,7 +50521,7 @@
 			width      	506
 			height     	138
 			quidu      	"35C6339B029F")
-		    (object Label @1493
+		    (object Label @1504
 			location   	(94, 63)
 			font       	(object Font
 			    size       	9
@@ -48569,13 +50536,13 @@
 			nlines     	2
 			max_width  	425
 			label      	"Модель вариантов использования")
-		    (object AttachView "" @1494
+		    (object AttachView "" @1505
 			stereotype 	TRUE
 			line_color 	3342489
-			client     	@1493
-			supplier   	@1492
+			client     	@1504
+			supplier   	@1503
 			line_style 	0)
-		    (object NoteView @1495
+		    (object NoteView @1506
 			location   	(859, 275)
 			font       	(object Font
 			    size       	9
@@ -48588,7 +50555,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@1495
+			    Parent_View 	@1506
 			    location   	(624, 209)
 			    fill_color 	13434879
 			    nlines     	2
@@ -48599,7 +50566,7 @@
 			width      	494
 			height     	144
 			quidu      	"35DB3C2A02B2")
-		    (object Label @1496
+		    (object Label @1507
 			location   	(91, 222)
 			font       	(object Font
 			    size       	9
@@ -48614,13 +50581,13 @@
 			nlines     	2
 			max_width  	306
 			label      	"модель процессов")
-		    (object AttachView "" @1497
+		    (object AttachView "" @1508
 			stereotype 	TRUE
 			line_color 	3342489
-			client     	@1496
-			supplier   	@1495
+			client     	@1507
+			supplier   	@1506
 			line_style 	0)
-		    (object NoteView @1498
+		    (object NoteView @1509
 			location   	(865, 454)
 			font       	(object Font
 			    size       	9
@@ -48633,7 +50600,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@1498
+			    Parent_View 	@1509
 			    location   	(630, 395)
 			    fill_color 	13434879
 			    nlines     	2
@@ -48644,7 +50611,7 @@
 			width      	494
 			height     	131
 			quidu      	"34DBB4830146")
-		    (object Label @1499
+		    (object Label @1510
 			location   	(81, 406)
 			font       	(object Font
 			    size       	9
@@ -48659,11 +50626,11 @@
 			nlines     	2
 			max_width  	338
 			label      	"модель развертывания")
-		    (object AttachView "" @1500
+		    (object AttachView "" @1511
 			stereotype 	TRUE
 			line_color 	3342489
-			client     	@1499
-			supplier   	@1498
+			client     	@1510
+			supplier   	@1509
 			line_style 	0)))))
     root_subsystem 	(object SubSystem "Component View"
 	quid       	"34DBB4830143"
@@ -48675,6 +50642,35 @@
 |
 	
 	physical_models 	(list unit_reference_list
+	    (object module "Oracle8 Scalars" "SubType" "Specification"
+		quid       	"3CFC61CA01EA"
+		stereotype 	"Subprogram Specification"
+		language   	"Oracle8")
+	    (object module "DB" "NotAModuleType" "NotAModulePart"
+		attributes 	(list Attribute_Set
+		    (object Attribute
+			tool       	"Data Modeler"
+			name       	"dmItem"
+			value      	TRUE)
+		    (object Attribute
+			tool       	"Data Modeler"
+			name       	"IsDatabase"
+			value      	TRUE)
+		    (object Attribute
+			tool       	"Data Modeler"
+			name       	"DMName"
+			value      	"DB")
+		    (object Attribute
+			tool       	"Data Modeler"
+			name       	"Location"
+			value      	"")
+		    (object Attribute
+			tool       	"Data Modeler"
+			name       	"TargetDatabase"
+			value      	"Oracle 8"))
+		quid       	"3CFC61FD017F"
+		stereotype 	"Database"
+		language   	"Data Modeler")
 	    (object SubSystem "route"
 		quid       	"3C73B616027D"
 		physical_models 	(list unit_reference_list
@@ -49721,7 +51717,7 @@
 		origin_x   	0
 		origin_y   	0
 		items      	(list diagram_item_list
-		    (object ProcessorView "SMSC Server" @1501
+		    (object ProcessorView "SMSC Server" @1512
 			location   	(992, 304)
 			font       	(object Font
 			    size       	9
@@ -49734,7 +51730,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@1501
+			    Parent_View 	@1512
 			    location   	(691, 98)
 			    nlines     	2
 			    max_width  	531
@@ -49746,7 +51742,7 @@
 			width      	606
 			height     	482
 			annotation 	0)
-		    (object DeviceView "SS7 interface" @1502
+		    (object DeviceView "SS7 interface" @1513
 			location   	(1584, 304)
 			font       	(object Font
 			    size       	9
@@ -49759,7 +51755,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@1502
+			    Parent_View 	@1513
 			    location   	(1461, 239)
 			    nlines     	2
 			    max_width  	175
@@ -49771,14 +51767,14 @@
 			width      	250
 			height     	200
 			annotation 	0)
-		    (object ConnectionView "" @1503
+		    (object ConnectionView "" @1514
 			stereotype 	TRUE
 			line_color 	4210816
 			quidu      	"34DBBD4B008C"
-			client     	@1501
-			supplier   	@1502
+			client     	@1512
+			supplier   	@1513
 			line_style 	0)
-		    (object ProcessorView "SME Server" @1504
+		    (object ProcessorView "SME Server" @1515
 			location   	(416, 1344)
 			font       	(object Font
 			    size       	9
@@ -49791,7 +51787,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@1504
+			    Parent_View 	@1515
 			    location   	(227, 1229)
 			    nlines     	2
 			    max_width  	306
@@ -49803,7 +51799,7 @@
 			width      	381
 			height     	300
 			annotation 	2)
-		    (object NoteView @1505
+		    (object NoteView @1516
 			location   	(194, 637)
 			font       	(object Font
 			    size       	9
@@ -49816,7 +51812,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@1505
+			    Parent_View 	@1516
 			    location   	(56, 577)
 			    nlines     	2
 			    max_width  	240
@@ -49825,7 +51821,7 @@
 			fill_color 	16777215
 			width      	300
 			height     	132)
-		    (object NoteView @1506
+		    (object NoteView @1517
 			location   	(1584, 80)
 			font       	(object Font
 			    size       	9
@@ -49838,7 +51834,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@1506
+			    Parent_View 	@1517
 			    location   	(1406, 21)
 			    nlines     	2
 			    max_width  	321
@@ -49847,7 +51843,7 @@
 			fill_color 	16777215
 			width      	381
 			height     	131)
-		    (object ProcessorView "MSC" @1507
+		    (object ProcessorView "MSC" @1518
 			location   	(1584, 1344)
 			font       	(object Font
 			    size       	9
@@ -49860,7 +51856,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@1507
+			    Parent_View 	@1518
 			    location   	(1395, 1226)
 			    nlines     	2
 			    max_width  	306
@@ -49872,7 +51868,7 @@
 			width      	381
 			height     	306
 			annotation 	0)
-		    (object DeviceView "SS7 interface" @1508
+		    (object DeviceView "SS7 interface" @1519
 			location   	(1584, 944)
 			font       	(object Font
 			    size       	9
@@ -49885,7 +51881,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@1508
+			    Parent_View 	@1519
 			    location   	(1473, 889)
 			    nlines     	2
 			    max_width  	150
@@ -49897,21 +51893,21 @@
 			width      	225
 			height     	180
 			annotation 	0)
-		    (object ConnectionView "" @1509
+		    (object ConnectionView "" @1520
 			stereotype 	TRUE
 			line_color 	4210816
 			quidu      	"3C3C7A8B0040"
-			client     	@1507
-			supplier   	@1508
+			client     	@1518
+			supplier   	@1519
 			line_style 	0)
-		    (object ConnectionView "" @1510
+		    (object ConnectionView "" @1521
 			stereotype 	TRUE
 			line_color 	4210816
 			quidu      	"3C3C7A920339"
-			client     	@1502
-			supplier   	@1508
+			client     	@1513
+			supplier   	@1519
 			line_style 	0)
-		    (object NoteView @1511
+		    (object NoteView @1522
 			location   	(1788, 637)
 			font       	(object Font
 			    size       	9
@@ -49924,7 +51920,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@1511
+			    Parent_View 	@1522
 			    location   	(1650, 577)
 			    nlines     	2
 			    max_width  	240
@@ -49933,13 +51929,13 @@
 			fill_color 	16777215
 			width      	300
 			height     	132)
-		    (object AttachView "" @1512
+		    (object AttachView "" @1523
 			stereotype 	TRUE
 			line_color 	4210816
-			client     	@1511
-			supplier   	@1510
+			client     	@1522
+			supplier   	@1521
 			line_style 	0)
-		    (object NoteView @1513
+		    (object NoteView @1524
 			location   	(960, 304)
 			font       	(object Font
 			    size       	9
@@ -49952,7 +51948,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@1513
+			    Parent_View 	@1524
 			    location   	(822, 244)
 			    nlines     	2
 			    max_width  	240
@@ -49964,13 +51960,13 @@
 			fill_color 	16777215
 			width      	300
 			height     	132)
-		    (object AttachView "" @1514
+		    (object AttachView "" @1525
 			stereotype 	TRUE
 			line_color 	3342489
-			client     	@1506
-			supplier   	@1502
+			client     	@1517
+			supplier   	@1513
 			line_style 	0)
-		    (object DeviceView "TCP/IP interface" @1515
+		    (object DeviceView "TCP/IP interface" @1526
 			location   	(416, 944)
 			font       	(object Font
 			    size       	9
@@ -49983,7 +51979,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@1515
+			    Parent_View 	@1526
 			    location   	(305, 889)
 			    nlines     	2
 			    max_width  	150
@@ -49995,7 +51991,7 @@
 			width      	225
 			height     	180
 			annotation 	0)
-		    (object DeviceView "TCP/IP interface" @1516
+		    (object DeviceView "TCP/IP interface" @1527
 			location   	(416, 304)
 			font       	(object Font
 			    size       	9
@@ -50008,7 +52004,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@1516
+			    Parent_View 	@1527
 			    location   	(305, 249)
 			    nlines     	2
 			    max_width  	150
@@ -50020,34 +52016,34 @@
 			width      	225
 			height     	180
 			annotation 	0)
-		    (object ConnectionView "" @1517
+		    (object ConnectionView "" @1528
 			stereotype 	TRUE
 			line_color 	4210816
 			quidu      	"3C3C7719038B"
-			client     	@1515
-			supplier   	@1516
+			client     	@1526
+			supplier   	@1527
 			line_style 	0)
-		    (object ConnectionView "" @1518
+		    (object ConnectionView "" @1529
 			stereotype 	TRUE
 			line_color 	4210816
 			quidu      	"3C3C770701B8"
-			client     	@1504
-			supplier   	@1515
+			client     	@1515
+			supplier   	@1526
 			line_style 	0)
-		    (object AttachView "" @1519
+		    (object AttachView "" @1530
 			stereotype 	TRUE
 			line_color 	4210816
-			client     	@1505
-			supplier   	@1517
+			client     	@1516
+			supplier   	@1528
 			line_style 	0)
-		    (object ConnectionView "" @1520
+		    (object ConnectionView "" @1531
 			stereotype 	TRUE
 			line_color 	4210816
 			quidu      	"3C3C76530015"
-			client     	@1516
-			supplier   	@1501
+			client     	@1527
+			supplier   	@1512
 			line_style 	0)
-		    (object NoteView @1521
+		    (object NoteView @1532
 			location   	(991, 712)
 			font       	(object Font
 			    size       	9
@@ -50060,7 +52056,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@1521
+			    Parent_View 	@1532
 			    location   	(753, 624)
 			    nlines     	3
 			    max_width  	440
@@ -50069,11 +52065,11 @@
 			fill_color 	16777215
 			width      	500
 			height     	188)
-		    (object AttachView "" @1522
+		    (object AttachView "" @1533
 			stereotype 	TRUE
 			line_color 	3342489
-			client     	@1521
-			supplier   	@1501
+			client     	@1532
+			supplier   	@1512
 			line_style 	0)))))
     properties 	(object Properties
 	attributes 	(list Attribute_Set
