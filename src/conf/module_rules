@@ -32,35 +32,35 @@ LIBRARY := lib$(subst .,-,$(PACKAGE))
 target:
 	@cd $(SMSC_SRCDIR); make -s $(PACKAGE).rbuild
 
-#include $(SMSC_SRCDIR)/conf/modules_switcher
-ifeq (,$(wildcard modules-list))
+include $(SMSC_SRCDIR)/conf/modules_switcher
+#ifeq (,$(wildcard modules-list))
 
-MODULES :=
+#MODULES :=
 
-else
+#else
 
-MODULES := $(shell cat modules-list | awk '{print $$1}' | grep -v "\#")
-__.empty.__:
-	@echo >> /dev/null
+#MODULES := $(shell cat modules-list | awk '{print $$1}' | grep -v "\#")
+#__.empty.__:
+#	@echo >> /dev/null
 
-$(MODULES) $(foreach x,$(MODULES),$(x).%): __.empty.__
-override _modules = $(subst ., ,$@)
-override _module = $(firstword $(_modules))
-override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@), build )
-	@if [ -d $(_module) ]; then \
-	    cd $(_module); make $(_subtarget); \
-	else \
-	    echo "'$(_module)' is not module"; exit 1;\
-	fi
+#$(MODULES) $(foreach x,$(MODULES),$(x).%): __.empty.__
+#override _modules = $(subst ., ,$@)
+#override _module = $(firstword $(_modules))
+#override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@), build )
+#	@if [ -d $(_module) ]; then \
+#	    cd $(_module); make $(_subtarget); \
+#	else \
+#	    echo "'$(_module)' is not module"; exit 1;\
+#	fi
 
-endif
+#endif
 
 
 
 __build_message__:
 	@echo build in module $(PACKAGE)
 
-build only: __build_message__ $(MODULES) $(SMSC_BUILDDIR)/lib/$(LIBRARY).a $(BINARIES)
+build only: __build_message__ $(SMSC_BUILDDIR)/lib/$(LIBRARY).a $(BINARIES)
 
 $(SMSC_BUILDDIR)/lib/$(LIBRARY).a : $(SMSC_BUILDDIR)/obj/$(LIBRARY) $(foreach x,$(OBJECTS),$(SMSC_BUILDDIR)/obj/$(LIBRARY)/$(x))
 	@echo "assemble module $(LIBRARY).a"
