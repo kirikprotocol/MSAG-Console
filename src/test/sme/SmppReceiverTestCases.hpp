@@ -3,15 +3,9 @@
 
 #include "sme/SmppBase.hpp"
 #include "smpp/smpp.h"
+#include "SmppFixture.hpp"
 #include "test/util/BaseTestCases.hpp"
-#include "test/core/SmeRegistry.hpp"
-#include "test/core/PduRegistry.hpp"
-#include "test/core/AliasRegistry.hpp"
-#include "test/core/RouteRegistry.hpp"
-#include "test/core/ProfileRegistry.hpp"
-#include "test/core/RouteChecker.hpp"
-#include "SmppPduChecker.hpp"
-#include "SmppResponseSender.hpp"
+#include "util/debug.h"
 
 namespace smsc {
 namespace test {
@@ -19,11 +13,10 @@ namespace sme {
 
 using log4cpp::Category;
 using smsc::sme::SmppBaseReceiver;
-using smsc::sme::SmppSession;
+using smsc::test::util::BaseTestCases;
+using smsc::test::core::RespPduFlag;
 using smsc::test::util::CheckList;
 using namespace smsc::smpp; //pdu
-using namespace smsc::test::util; //BaseTestCases
-using namespace smsc::test::core; //SmeRegistry, PduRegistry, ...
 
 /**
  * Тест кейсы для обработки результатов асинхронных pdu.
@@ -31,16 +24,11 @@ using namespace smsc::test::core; //SmeRegistry, PduRegistry, ...
 class SmppReceiverTestCases : BaseTestCases, public SmppBaseReceiver
 {
 public:
-	SmppReceiverTestCases(const SmeSystemId& systemId, const Address& smeAddr,
-		SmppResponseSender* respSender, const SmeRegistry* smeReg,
-		const AliasRegistry* aliasReg, const RouteRegistry* routeReg,
-		const ProfileRegistry* profileReg, RouteChecker* routeChecker,
-		SmppPduChecker* pduChecker, CheckList* chkList);
+	SmppReceiverTestCases(SmppFixture* _fixture)
+		: fixture(_fixture), chkList(fixture->chkList) {}
 
 	virtual ~SmppReceiverTestCases() {}
 
-	void setSession(SmppSession* sess) { session = sess; }
-	
 	/**
 	 * Обработка submit_sm_resp pdu для асинхронного submit_sm реквеста.
 	 */
@@ -75,7 +63,7 @@ public:
 	 * Промежуточные нотификации (intermediate notifications) работают правильно.
 	 */
 	void processIntermediateNotification(PduDeliverySm &pdu, time_t recvTime);
-	
+
 	//not implemented
 	virtual void processGenericNack(PduGenericNack &pdu);
 	virtual void processDataSm(PduDataSm &pdu);
@@ -91,25 +79,12 @@ public:
 	virtual void handleError(int errorCode);
 
 protected:
-	virtual Category& getLog();
-
-private:
-	SmppSession* session;
-	const SmeSystemId systemId;
-	const Address smeAddr;
-	SmppResponseSender* respSender;
-	const SmeRegistry* smeReg;
-	PduRegistry* pduReg;
-	const AliasRegistry* aliasReg;
-	const RouteRegistry* routeReg;
-	const ProfileRegistry* profileReg;
-	RouteChecker* routeChecker;
-	SmppPduChecker* pduChecker;
+	SmppFixture* fixture;
 	CheckList* chkList;
 
+	virtual Category& getLog();
 	RespPduFlag isAccepted(uint32_t status);
 	void compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu);
-	void processProfilerAcknowledgement(PduData* pduData, PduDeliverySm &pdu);
 };
 
 }

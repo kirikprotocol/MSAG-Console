@@ -1,6 +1,6 @@
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
-#include "test/sme/SmppTestCases.hpp"
+#include "test/sme/SmppProfilerTestCases.hpp"
 #include "test/util/TestTaskManager.hpp"
 #include "util/debug.h"
 #include <vector>

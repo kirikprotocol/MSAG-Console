@@ -1,5 +1,5 @@
-#ifndef TEST_SME_SMPP_CHECK_LIST
-#define TEST_SME_SMPP_CHECK_LIST
+#ifndef TEST_SME_SMPP_PROTOCOL_CHECK_LIST
+#define TEST_SME_SMPP_PROTOCOL_CHECK_LIST
 
 #include "test/util/CheckList.hpp"
 
@@ -12,7 +12,7 @@ using smsc::test::util::CheckList;
 #define __reg_tc__(id, desc) \
 	registerTc(id, desc)
 	
-class SmppCheckList : public CheckList
+class SmppProtocolCheckList : public CheckList
 {
 
 void bindCorrectSmeTc()
@@ -134,38 +134,6 @@ void replaceSmTc()
 		"Отправка синхронного replace_sm pdu");
 	__reg_tc__("replaceSm.async",
 		"Отправка асинхронного replace_sm pdu");
-}
-
-void updateProfileTc()
-{
-	__reg_tc__("updateProfile",
-		"Отправка сообщений менеджеру профилей");
-	__reg_tc__("updateProfile.cmdTextDefault",
-		"Текст команды в дефолтной кодировке SC");
-	__reg_tc__("updateProfile.cmdTextUcs2",
-		"Текст команды в кодировке UCS2");
-	__reg_tc__("updateProfile.reportOptions",
-		"Изменение опций уведомления о доставке");
-	__reg_tc__("updateProfile.reportOptions.reportNoneMixedCase",
-		"Отказаться от уведомления о доставке (текст команды в смешанном регистре)");
-	__reg_tc__("updateProfile.reportOptions.reportNoneSpaces",
-		"Отказаться от уведомления о доставке (текст команды с лишними пробелами)");
-	__reg_tc__("updateProfile.reportOptions.reportFullMixedCase",
-		"Установить прием уведомлений о доставке (текст команды в смешанном регистре)");
-	__reg_tc__("updateProfile.reportOptions.reportFullSpaces",
-		"Установить прием уведомлений о доставке (текст команды с лишними пробелами)");
-	__reg_tc__("updateProfile.dataCoding",
-		"Изменение режима приема сообщений");
-	__reg_tc__("updateProfile.dataCoding.ucs2CodepageMixedCase",
-		"Установить режим приема сообщений на русском языке (кодировка ucs2, текст команды в смешанном регистре)");
-	__reg_tc__("updateProfile.dataCoding.ucs2CodepageSpaces",
-		"Установить режим приема сообщений на русском языке (кодировка ucs2, текст команды с лишними пробелами)");
-	__reg_tc__("updateProfile.dataCoding.defaultCodepageMixedCase",
-		"Отказаться от режима приема сообщений на русском языке (текст команды в смешанном регистре)");
-	__reg_tc__("updateProfile.dataCoding.defaultCodepageSpaces",
-		"Отказаться от режима приема сообщений на русском языке (текст команды с лишними пробелами)");
-	__reg_tc__("updateProfile.incorrectCmdText",
-		"Неправильный текст команды");
 }
 
 void processRespTc()
@@ -333,18 +301,6 @@ void processIntermediateNotificationTc()
 		"Правильное время доставки");
 }
 
-void processUpdateProfileTc()
-{
-	__reg_tc__("processUpdateProfile",
-		"Получение сообщений от менеджера профилей");
-	__reg_tc__("processUpdateProfile.reportOptions",
-		"Подтверждения об изменении настроек получения уведомлений о доставке");
-	__reg_tc__("processUpdateProfile.codePage",
-		"Подтверждения об изменении настроек режима приема сообщений на русском языке");
-	__reg_tc__("processUpdateProfile.incorrectCmdText",
-		"Уведомление о неправильном тексте команды");
-}
-
 void checkMissingPduTc()
 {
 	__reg_tc__("checkMissingPdu",
@@ -390,30 +346,39 @@ void notImplementedTc()
 	__reg_tc__("processAlertNotification", "Получение alert_notification pdu");
 }
 
+void allProtocolTc()
+{
+	//transmitter
+	bindCorrectSmeTc();
+	bindIncorrectSmeTc();
+	unbindTc();
+	submitSmTc();
+	replaceSmTc();
+	sendDeliverySmRespTc();
+	//receiver
+	processRespTc();
+	processDeliverySmTc();
+	processNormalSmsTc();
+	processDeliveryReceiptTc();
+	processSmeAckTc();
+	processIntermediateNotificationTc();
+	//other
+	checkMissingPduTc();
+	notImplementedTc();
+}
+
 public:
-	SmppCheckList()
-		: CheckList("Результаты функционального тестирования BaseSme и протокола SMPP", "smpp.chk")
+	SmppProtocolCheckList()
+		: CheckList("Результаты функционального тестирования протокола SMPP", "smpp.chk")
 	{
-		//transmitter
-		bindCorrectSmeTc();
-		bindIncorrectSmeTc();
-		unbindTc();
-		submitSmTc();
-		replaceSmTc();
-		sendDeliverySmRespTc();
-		//receiver
-		processRespTc();
-		processDeliverySmTc();
-		processNormalSmsTc();
-		processDeliveryReceiptTc();
-		processSmeAckTc();
-		processIntermediateNotificationTc();
-		//profiler
-		updateProfileTc();
-		processUpdateProfileTc();
-		//other
-		checkMissingPduTc();
-		notImplementedTc();
+		allProtocolTc();
+	}
+
+protected:
+	SmppProtocolCheckList(const char* name, const char* fileName)
+		: CheckList(name, fileName)
+	{
+		allProtocolTc();
 	}
 };
 
@@ -421,5 +386,5 @@ public:
 }
 }
 
-#endif /* TEST_SME_SMPP_CHECK_LIST */
+#endif /* TEST_SME_SMPP_PROTOCOL_CHECK_LIST */
 

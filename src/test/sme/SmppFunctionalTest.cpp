@@ -8,12 +8,12 @@
 #include "system/state_machine.hpp"
 #include "admin/util/SignalHandler.h"
 #include "store/StoreManager.h"
-#include "test/sme/SmppTestCases.hpp"
+#include "test/sme/SmppProfilerTestCases.hpp"
 #include "test/smeman/SmeManagerTestCases.hpp"
 #include "test/alias/AliasManagerTestCases.hpp"
 #include "test/router/RouteManagerTestCases.hpp"
 #include "test/util/TestTaskManager.hpp"
-#include "SmppCheckList.hpp"
+#include "SmppProfilerCheckList.hpp"
 #include "util/debug.h"
 //#include <memory>
 #include <vector>

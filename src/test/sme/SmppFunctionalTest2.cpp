@@ -1,6 +1,6 @@
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
-#include "test/sme/SmppTestCases.hpp"
+#include "test/sme/SmppProfilerTestCases.hpp"
 #include "test/smeman/SmeManagerTestCases.hpp"
 #include "test/alias/AliasManagerTestCases.hpp"
 #include "test/router/RouteManagerTestCases.hpp"
@@ -10,7 +10,7 @@
 #include "test/config/AliasConfigGen.hpp"
 #include "test/config/RouteConfigGen.hpp"
 #include "test/util/TestTaskManager.hpp"
-#include "SmppCheckList.hpp"
+#include "SmppProfilerCheckList.hpp"
 #include "test/config/ConfigGenCheckList.hpp"
 #include "util/debug.h"
 #include <vector>
@@ -23,6 +23,8 @@
 #endif
 
 using smsc::sme::SmeConfig;
+using smsc::smeman::SmeInfo;
+using smsc::alias::AliasInfo;
 using smsc::test::sms::SmsUtil;
 using smsc::test::sms::operator<<;
 using smsc::test::smeman::SmeManagerTestCases;
@@ -30,6 +32,7 @@ using smsc::test::alias::AliasManagerTestCases;
 using smsc::test::router::RouteManagerTestCases;
 using smsc::test::profiler::ProfilerTestCases;
 using smsc::test::core::ProfileUtil;
+using smsc::test::core::RouteHolder;
 using namespace std;
 using namespace smsc::sms;
 using namespace smsc::core::synchronization;
@@ -52,16 +55,13 @@ CheckList* configChkList;
 class TestSme : public TestTask, SmppResponseSender
 {
 	int smeNum;
-	SmppTestCases tc;
+	SmppProfilerTestCases tc;
 	time_t nextCheckTime;
 	bool boundOk;
 	Event evt;
 
 public:
-	TestSme(int smeNum, const SmeConfig& config, const SmeSystemId& systemId,
-		const Address& addr, const SmeRegistry* smeReg,
-		const AliasRegistry* aliasReg, const RouteRegistry* routeReg,
-		CheckList* smppChkList);
+	TestSme(int smeNum, const SmeConfig& config, SmppFixture* fixture);
 	virtual ~TestSme() {}
 	virtual void executeCycle();
 	virtual void onStopped();
@@ -115,19 +115,19 @@ public:
 };
 
 //TestSme
-TestSme::TestSme(int _smeNum, const SmeConfig& config, const SmeSystemId& systemId,
-	const Address& smeAddr, const SmeRegistry* smeReg,
-	const AliasRegistry* aliasReg, const RouteRegistry* routeReg, CheckList* smppChkList)
-	: TestTask("TestSme", _smeNum), smeNum(_smeNum), nextCheckTime(0),
-	tc(config, systemId, smeAddr, this, smeReg, aliasReg, routeReg, profileReg, smppChkList),
-	boundOk(false) {}
+TestSme::TestSme(int num, const SmeConfig& config, SmppFixture* fixture)
+	: TestTask("TestSme", num), smeNum(num), nextCheckTime(0),
+	tc(config, fixture), boundOk(false)
+{
+	fixture->respSender = this;
+}
 
 void TestSme::executeCycle()
 {
 	//Проверка неполученых подтверждений доставки, нотификаций и sms от других sme
 	if (time(NULL) > nextCheckTime)
 	{
-		tc.checkMissingPdu();
+		tc.getBase().checkMissingPdu();
 		nextCheckTime = time(NULL) + 10;
 	}
 	//проверить тест остановлен/замедлен
@@ -148,7 +148,7 @@ void TestSme::executeCycle()
 	//Bind sme с неправильными параметрами
 	if (!boundOk)
 	{
-		boundOk = tc.bindCorrectSme(RAND_TC);
+		boundOk = tc.getBase().bindCorrectSme(RAND_TC);
 		if (!boundOk)
 		{
 			cout << "Bound failed" << endl;
@@ -156,7 +156,7 @@ void TestSme::executeCycle()
 		}
 		for (int i = 0; i < 3; i++)
 		{
-			tc.bindIncorrectSme(RAND_TC); //обязательно после bindCorrectSme
+			tc.getBase().bindIncorrectSme(RAND_TC); //обязательно после bindCorrectSme
 		}
 		evt.Wait(5000);
 	}
@@ -183,14 +183,14 @@ void TestSme::executeCycle()
 		switch (s.value())
 		{
 			case 1:
-				tc.getTransmitter().submitSmCorrect(rand0(1), RAND_TC);
+				tc.submitSmCorrect(rand0(1), RAND_TC);
 				break;
 			case 2:
-				tc.getTransmitter().submitSmIncorrect(rand0(1), RAND_TC);
+				tc.submitSmIncorrect(rand0(1), RAND_TC);
 				break;
 	#ifdef ASSERT
 			case 3:
-				tc.getTransmitter().submitSmAssert(RAND_TC);
+				tc.submitSmAssert(RAND_TC);
 				break;
 	#endif //ASSERT
 		}
@@ -201,8 +201,8 @@ void TestSme::executeCycle()
 
 void TestSme::onStopped()
 {
-	tc.unbind(); //Unbind для sme соединенной с smsc
-	tc.unbind(); //Unbind для sme несоединенной с smsc
+	tc.getBase().unbind(); //Unbind для sme соединенной с smsc
+	tc.getBase().unbind(); //Unbind для sme несоединенной с smsc
 	SmppFunctionalTest::onStopped(smeNum);
 	cout << "TestSme::onStopped(): sme = " << smeNum << endl;
 }
@@ -215,11 +215,11 @@ uint32_t TestSme::sendDeliverySmResp(PduDeliverySm& pdu)
 	switch (rand1(3))
 	{
 		case 1:
-			return tc.getTransmitter().sendDeliverySmRespError(pdu, rand0(1), RAND_TC);
+			return tc.sendDeliverySmRespError(pdu, rand0(1), RAND_TC);
 		case 2:
-			return tc.getTransmitter().sendDeliverySmRespRetry(pdu, rand0(1), RAND_TC);
+			return tc.sendDeliverySmRespRetry(pdu, rand0(1), RAND_TC);
 		default:
-			return tc.getTransmitter().sendDeliverySmRespOk(pdu, rand0(1));
+			return tc.sendDeliverySmRespOk(pdu, rand0(1));
 	}
 #endif //SIMPLE_TEST
 }
@@ -392,8 +392,9 @@ vector<TestSme*> genConfig(int numAddr, int numAlias, int numSme,
 		//config.password;
 		//config.systemType;
 		//config.origAddr;
-		sme.push_back(new TestSme(i, config, smeInfo[i]->systemId, *addr[i],
-			smeReg, aliasReg, routeReg, smppChkList)); //throws Exception
+		SmppFixture* fixture = new SmppFixture(smeInfo[i]->systemId, *addr[i],
+			NULL, NULL, smeReg, aliasReg, routeReg, profileReg, smppChkList);
+		sme.push_back(new TestSme(i, config, fixture)); //throws Exception
 		smeReg->bindSme(smeInfo[i]->systemId);
 	}
 	//печать таблицы маршрутов
@@ -591,11 +592,8 @@ int main(int argc, char* argv[])
 	routeReg = new RouteRegistry();
 	ProfileUtil::setupRandomCorrectProfile(defProfile);
 	profileReg = new ProfileRegistry(defProfile);
-	__trace__("before new SmppCheckList()");
-	smppChkList = new SmppCheckList();
-	__trace__("before new ConfigGenCheckList()");
+	smppChkList = new SmppProfilerCheckList();
 	configChkList = new ConfigGenCheckList();
-	__trace__("after checklists");
 	try
 	{
 		executeFunctionalTest(smscHost, smscPort);

@@ -1,7 +1,7 @@
-#include "SmppTestCases.hpp"
+#include "SmppBaseTestCases.hpp"
 #include "test/TestConfig.hpp"
 #include "test/smpp/SmppUtil.hpp"
-#include "util/debug.h"
+#include "test/util/Util.hpp"
 
 namespace smsc {
 namespace test {
@@ -9,77 +9,18 @@ namespace sme {
 
 using smsc::util::Logger;
 using smsc::core::synchronization::MutexGuard;
-using namespace smsc::test; //config constants
+using smsc::test::TestConfig;
+using namespace smsc::test::core; //flags
+using namespace smsc::test::util;
 using namespace smsc::smpp::SmppCommandSet;
 
-SmppTestCases::SmppTestCases(const SmeConfig& _config, const SmeSystemId& _systemId,
-	const Address& _smeAddr, SmppResponseSender* respSender,
-	const SmeRegistry* _smeReg, const AliasRegistry* _aliasReg,
-	const RouteRegistry* _routeReg, ProfileRegistry* _profileReg,
-	CheckList* _chkList)
-	: config(_config), session(NULL), systemId(_systemId), smeAddr(_smeAddr),
-	smeReg(_smeReg), aliasReg(_aliasReg), routeReg(_routeReg),
-	profileReg(_profileReg), chkList(_chkList), routeChecker(NULL), pduChecker(NULL)
+Category& SmppBaseTestCases::getLog()
 {
-	__require__(respSender);
-	__require__(smeReg);
-	//__require__(aliasReg);
-	//__require__(routeReg);
-	//__require__(profileReg);
-	//__require__(chkList);
-	pduReg = smeReg->getPduRegistry(smeAddr); //может быть NULL
-	if (pduReg && aliasReg && routeReg)
-	{
-		routeChecker = new RouteChecker(systemId, smeAddr, smeReg, aliasReg, routeReg);
-		pduChecker = new SmppPduChecker(pduReg, routeChecker, chkList);
-	}
-	receiver = new SmppReceiverTestCases(systemId, smeAddr, respSender, smeReg,
-		aliasReg, routeReg, profileReg, routeChecker, pduChecker, chkList);
-	session = new SmppSession(config, receiver);
-	receiver->setSession(session);
-	transmitter = new SmppTransmitterTestCases(session, systemId, smeAddr,
-		smeReg, profileReg, routeChecker, pduChecker, chkList);
-}
-
-SmppTestCases::~SmppTestCases()
-{
-	if (session)
-	{
-		if (routeChecker) { delete routeChecker; }
-		if (pduChecker) { delete pduChecker; }
-		delete receiver;
-		delete transmitter;
-		try
-		{
-			session->close();
-		}
-		catch(...)
-		{
-			//nothing
-		}
-		delete session;
-	}
-}
-
-SmppReceiverTestCases& SmppTestCases::getReceiver()
-{
-	__require__(receiver);
-	return *receiver;
-}
-
-SmppTransmitterTestCases& SmppTestCases::getTransmitter()
-{
-	__require__(transmitter);
-	return *transmitter;
-}
-
-Category& SmppTestCases::getLog()
-{
-	static Category& log = Logger::getCategory("SmppTestCases");
+	static Category& log = Logger::getCategory("SmppBaseTestCases");
 	return log;
 }
 
-bool SmppTestCases::bindCorrectSme(int num)
+bool SmppBaseTestCases::bindCorrectSme(int num)
 {
 	TCSelector s(num, 3);
 	__decl_tc__;
@@ -103,7 +44,7 @@ bool SmppTestCases::bindCorrectSme(int num)
 				default:
 					__unreachable__("Invalid num");
 			}
-			session->connect();
+			fixture->session->connect();
 			__tc_ok_cond__;
 			return true;
 		}
@@ -116,7 +57,7 @@ bool SmppTestCases::bindCorrectSme(int num)
 	}
 }
 
-void SmppTestCases::bindIncorrectSme(int num)
+void SmppBaseTestCases::bindIncorrectSme(int num)
 {
 	//повторный bind убран из тест кейсов, т.к. приводит к пересозданию коннекта
 	//без ошибок
@@ -131,19 +72,17 @@ void SmppTestCases::bindIncorrectSme(int num)
 				case 1: //sme не зарегистрирована в SC
 					{
 						__tc__("bindIncorrectSme.smeNotRegistered");
-						SmppSession* sess = NULL;
 						try
 						{
 							SmeConfig conf(config);
 							auto_ptr<char> tmp = rand_char(15); //15 по спецификации
 							conf.sid = tmp.get();
-							SmppSession* sess = new SmppSession(conf, receiver);
-							sess->connect();
-							delete sess;
+							FakeReceiver receiver;
+							SmppSession sess(conf, &receiver);
+							sess.connect();
 						}
 						catch(...)
 						{
-							if (sess) { delete sess; }
 							throw;
 						}
 					}
@@ -151,19 +90,17 @@ void SmppTestCases::bindIncorrectSme(int num)
 				case 2: //bind на недоступный SC (неизвестный хост)
 					{
 						__tc__("bindIncorrectSme.unknownHost");
-						SmppSession* sess = NULL;
 						try
 						{
 							SmeConfig conf(config);
 							auto_ptr<char> tmp = rand_char(15);
 							conf.host = tmp.get();
-							SmppSession* sess = new SmppSession(conf, receiver);
-							sess->connect();
-							delete sess;
+							FakeReceiver receiver;
+							SmppSession sess(conf, &receiver);
+							sess.connect();
 						}
 						catch(...)
 						{
-							if (sess) { delete sess; }
 							throw;
 						}
 					}
@@ -171,19 +108,17 @@ void SmppTestCases::bindIncorrectSme(int num)
 				case 3: //bind на недоступный SC (неправильный порт)
 					{
 						__tc__("bindIncorrectSme.invalidPort");
-						SmppSession* sess = NULL;
 						try
 						{
 							SmeConfig conf(config);
 							auto_ptr<char> tmp = rand_char(15);
 							conf.port += rand1(65535 - conf.port);
-							SmppSession* sess = new SmppSession(conf, receiver);
-							sess->connect();
-							delete sess;
+							FakeReceiver receiver;
+							SmppSession sess(conf, &receiver);
+							sess.connect();
 						}
 						catch(...)
 						{
-							if (sess) { delete sess; }
 							throw;
 						}
 					}
@@ -201,15 +136,12 @@ void SmppTestCases::bindIncorrectSme(int num)
 }
 
 #define __checkPdu__(tc) \
-	{  time_t lt = time(NULL); tm t; char buf[30]; \
-	__trace2__("%s(): checking pdu systemId = %s, sequenceNumber = %u, submitTime = %ld, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s", \
-	tc, systemId.c_str(), pduData->pdu->get_sequenceNumber(), pduData->submitTime, pduData->waitTime, pduData->validTime, asctime_r(localtime_r(&lt, &t), buf)); }
+	__trace2__("%s(): checking pdu with msgRef = %u, submitTime = %ld, waitTime = %ld, validTime = %ld", \
+	tc, (uint32_t) pduData->msgRef, pduData->submitTime, pduData->waitTime, pduData->validTime)
 
 #define __missingPdu__(tc, pduName) \
-	{  time_t lt = time(NULL); tm t; char buf[30]; \
-	__trace2__("%s(): missing %s for systemId = %s, sequenceNumber = %u, submitTime = %ld, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s", \
-	tc, pduName, systemId.c_str(), pduData->pdu->get_sequenceNumber(), pduData->submitTime, pduData->waitTime, pduData->validTime, asctime_r(localtime_r(&lt, &t), buf)); }
-
+	__trace2__("%s(): missing %s for msgRef = %u, submitTime = %ld, waitTime = %ld, validTime = %ld", \
+	tc, pduName, (uint32_t) pduData->msgRef, pduData->submitTime, pduData->waitTime, pduData->validTime)
 	/*
 	static const char* fmt = "%Y-%m-%d %H:%M:%S"; \
 	tm t;
@@ -222,17 +154,17 @@ void SmppTestCases::bindIncorrectSme(int num)
 	*/
 
 #define __removedPdu__(tc) \
-	__trace2__("%s(): removed pdu systemId = %s, sequenceNumber = %u", \
-	tc, systemId.c_str(), pduData->pdu->get_sequenceNumber())
+	__trace2__("%s(): removed pdu data with msgRef = %u", \
+	tc, (uint32_t) pduData->msgRef)
 	
 #define __checkSummary__(tc) \
 	__trace2__("%s(): found = %d, deleted = %d", tc, found, deleted);
 
-void SmppTestCases::checkSubmitTime(time_t checkTime)
+void SmppBaseTestCases::checkSubmitTime(time_t checkTime)
 {
 	__decl_tc__;
 	//проверить неполученные респонсы 
-	PduRegistry::PduDataIterator* it = pduReg->getPduBySubmitTime(0, checkTime);
+	PduRegistry::PduDataIterator* it = fixture->pduReg->getPduBySubmitTime(0, checkTime);
 	int found = 0;
 	int deleted = 0;
 	while (PduData* pduData = it->next())
@@ -252,7 +184,7 @@ void SmppTestCases::checkSubmitTime(time_t checkTime)
 		{
 			 __removedPdu__("checkSubmitTime");
 			deleted++;
-			pduReg->removePdu(pduData);
+			fixture->pduReg->removePdu(pduData);
 		}
 		*/
 	}
@@ -260,12 +192,12 @@ void SmppTestCases::checkSubmitTime(time_t checkTime)
 	__checkSummary__("checkSubmitTime");
 }
 
-void SmppTestCases::checkWaitTime(time_t checkTime)
+void SmppBaseTestCases::checkWaitTime(time_t checkTime)
 {
 	__decl_tc__;
 	//проверить неполученные доставки и подтверждения доставки 
 	//на момент waitTime
-	PduRegistry::PduDataIterator* it = pduReg->getPduByWaitTime(0, checkTime);
+	PduRegistry::PduDataIterator* it = fixture->pduReg->getPduByWaitTime(0, checkTime);
 	int found = 0;
 	int deleted = 0;
 	while (PduData* pduData = it->next())
@@ -274,8 +206,8 @@ void SmppTestCases::checkWaitTime(time_t checkTime)
 		found++;
 		__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
 		PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-		if (!routeChecker->isDestReachable(pdu->get_message().get_source(),
-			pdu->get_message().get_dest(), true))
+		if (!fixture->routeChecker->isDestReachable(
+			pdu->get_message().get_source(), pdu->get_message().get_dest(), true))
 		{
 			continue;
 		}
@@ -308,7 +240,7 @@ void SmppTestCases::checkWaitTime(time_t checkTime)
 		{
 			__removedPdu__("checkWaitTime");
 			deleted++;
-			pduReg->removePdu(pduData);
+			fixture->pduReg->removePdu(pduData);
 		}
 		*/
 	}
@@ -316,12 +248,12 @@ void SmppTestCases::checkWaitTime(time_t checkTime)
 	__checkSummary__("checkWaitTime");
 }
 
-void SmppTestCases::checkValidTime(time_t checkTime)
+void SmppBaseTestCases::checkValidTime(time_t checkTime)
 {
 	__decl_tc__;
 	//проверить неполученные доставки и подтверждения доставки
 	//по окончании validTime
-	PduRegistry::PduDataIterator* it = pduReg->getPduByValidTime(0, checkTime);
+	PduRegistry::PduDataIterator* it = fixture->pduReg->getPduByValidTime(0, checkTime);
 	int found = 0;
 	int deleted = 0;
 	while (PduData* pduData = it->next())
@@ -330,8 +262,8 @@ void SmppTestCases::checkValidTime(time_t checkTime)
 		found++;
 		__require__(pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
 		PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-		if (!routeChecker->isDestReachable(pdu->get_message().get_source(),
-			pdu->get_message().get_dest(), true))
+		if (!fixture->routeChecker->isDestReachable(
+			pdu->get_message().get_source(), pdu->get_message().get_dest(), true))
 		{
 			pduData->deliveryFlag = PDU_NOT_EXPECTED_FLAG;
 		}
@@ -364,34 +296,34 @@ void SmppTestCases::checkValidTime(time_t checkTime)
 		{
 			__removedPdu__("checkValidTime");
 			deleted++;
-			pduReg->removePdu(pduData);
+			fixture->pduReg->removePdu(pduData);
 		}
 	}
 	delete it;
 	__checkSummary__("checkValidTime");
 }
 
-void SmppTestCases::checkMissingPdu()
+void SmppBaseTestCases::checkMissingPdu()
 {
-	if (pduReg)
+	if (fixture->pduReg)
 	{
-		MutexGuard mguard(pduReg->getMutex());
+		MutexGuard mguard(fixture->pduReg->getMutex());
 		__cfg_int__(timeCheckAccuracy);
 		time_t checkTime = time(NULL) - timeCheckAccuracy;
 		checkSubmitTime(checkTime);
 		checkWaitTime(checkTime);
 		checkValidTime(checkTime);
-		__trace2__("checkMissingPdu(): pduReg size = %d", pduReg->size());
+		__trace2__("checkMissingPdu(): pduReg size = %d", fixture->pduReg->size());
 	}
 }
 
-void SmppTestCases::unbind()
+void SmppBaseTestCases::unbind()
 {
 	__decl_tc__;
 	__tc__("unbind");
 	try
 	{
-		session->close();
+		fixture->session->close();
 		__tc_ok__;
 	}
 	catch(...)
