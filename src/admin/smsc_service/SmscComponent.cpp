@@ -266,11 +266,13 @@ throw (AdminException)
       case smeDisconnectMethod:
         smeDisconnect(args);
         return Variant(true);
+        
       case logGetCategoriesMethod:
         return logGetCategories();
       case logSetCategoriesMethod:
         logSetCategories(args);
         return Variant(true);
+        
       case loadRoutesMethod:
         return loadRoutes();
       case traceRouteMethod:
@@ -933,6 +935,7 @@ Variant SmscComponent::profileLookupEx(const Arguments &args) throw (AdminExcept
       result.appendValueToStringList(profile.divertModifiable ? "true" : "false");
       result.appendValueToStringList((profile.codepage & 0x80) != 0 ? "true" : "false");
       result.appendValueToStringList(profile.udhconcat ? "true" : "false");
+      result.appendValueToStringList(profile.translit ? "true" : "false");
 
       result.appendValueToStringList(getProfileMatchTypeStr(matchType));
       result.appendValueToStringList(matchAddress.c_str());
@@ -985,6 +988,7 @@ throw (AdminException)
       result.appendValueToStringList(profile.divertModifiable ? "true" : "false");
       result.appendValueToStringList((profile.codepage & 0x80) != 0 ? "true" : "false");
       result.appendValueToStringList(profile.udhconcat ? "true" : "false");
+      result.appendValueToStringList(profile.translit ? "true" : "false");
       return result;
     }
     else
@@ -1009,7 +1013,8 @@ throw (AdminException)
   const char* divertActive      = *i++;
   const char* divertModifiable  = *i++;
   const char* ussd7bit          = *i++;
-  const char* udhConcat         = *i;
+  const char* udhConcat         = *i++;
+  const char* translit          = *i;
 
   if (!codepageStr || !reportStr || !localeStr || !hideStr || !hideModifiableStr
     || !divert || !divertActive || !divertModifiable || !ussd7bit)
@@ -1071,7 +1076,8 @@ throw (AdminException)
   if (strcmp("true", ussd7bit) == 0)
     profile.codepage |= 0x80;
 
-  profile.udhconcat = (strcmp("true", udhConcat) == 0) ? 1:0;
+  profile.udhconcat = (strcmp("true", udhConcat) == 0) ? true : false;
+  profile.translit = (strcmp("true", translit) == 0) ? true : false;
 }
 
 bool isMask(const Address & address)
