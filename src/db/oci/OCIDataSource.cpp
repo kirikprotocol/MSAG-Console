@@ -1,5 +1,6 @@
 #define DISABLE_ANY_CHECKS
 #include "OCIDataSource.h"
+#include <memory>
 
 using namespace smsc::db;
 
@@ -294,6 +295,11 @@ OCIQuery::OCIQuery(OCIConnection* connection, const char* query)
                          OCI_HTYPE_STMT, 0, (dvoid **)0));
     check(OCIStmtPrepare(stmt, errhp, (text *)sqlquery, (ub4) querylen,
                          (ub4) OCI_NTV_SYNTAX, (ub4) OCI_DEFAULT));
+
+    ub4 prefetch=256;
+    check(OCIAttrSet( (dvoid *) stmt, (ub4) OCI_HTYPE_STMT,
+      (dvoid *) &prefetch, (ub4) sizeof(ub4),
+      (ub4) OCI_ATTR_PREFETCH_ROWS, errhp));
 }
 OCIQuery::~OCIQuery()
 {
@@ -892,7 +898,7 @@ double OCIResultSet::getDouble(int pos)
 
     boolean     ok = FALSE;
     double      result = 0;
-    
+
     OCINumber*  number = (OCINumber*)getField(pos);
     owner->check(OCINumberToReal(owner->errhp, (CONST OCINumber *)number,
                                  (uword) sizeof(double),
@@ -903,7 +909,7 @@ long double OCIResultSet::getLongDouble(int pos)
     throw(SQLException, InvalidArgumentException)
 {
     if (isNull(pos)) return 0;
-    
+
     boolean     ok = FALSE;
     long double result = 0;
 
@@ -1095,20 +1101,29 @@ char* convertStrToUpperCase(const char* str)
 OCIDataDescriptor* OCIRoutine::findDescriptor(const char* key)
     throw(InvalidArgumentException)
 {
-    char* up = convertStrToUpperCase(key);
-
-    OCIDataDescriptor* descriptor = 0;
-    if (!descriptors.Exists(up) ||
-        !(descriptor = descriptors.Get(up)))
+    //char* up = convertStrToUpperCase(key);
+    char buf[64];
+    std::auto_ptr<char> stor;
+    char *ptr=buf;
+    int l=strlen(key);
+    if(l>=sizeof(buf)-1)
     {
-        if (up) delete up;
-        __trace2__("Descriptor for '%s/%s' key not found !", key, up);
+      stor=std::auto_ptr<char>(new char[l+1]);
+      ptr=stor.get();
+    }
+    for(int i=0;i<=l;i++)ptr[i]=toupper(key[i]);
+
+    OCIDataDescriptor** pdescriptor=descriptors.GetPtr(ptr);
+
+    if (!pdescriptor || !*pdescriptor)
+    {
+        __trace2__("Descriptor for '%s/%s' key not found !", key, ptr);
         throw InvalidArgumentException();
     }
 
-    if (up) delete up;
-    return descriptor;
+    return *pdescriptor;
 }
+
 dvoid* OCIRoutine::getField(const char* key)
     throw (InvalidArgumentException)
 {
@@ -1442,7 +1457,7 @@ time_t OCIRoutine::getDateTime(const char* key)
     throw(SQLException, InvalidArgumentException)
 {
     if (isNull(key)) return 0;
-    
+
     time_t sys_date;
     OCIDate* oci_date = (OCIDate *)getField(key);
     convertOCIDateToDate(oci_date, &sys_date);
