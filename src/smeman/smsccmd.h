@@ -64,7 +64,7 @@ struct _SmscCommand
   CommandId cmdid;
   uint32_t dialogId;
   void* dta;
-	Mutex mutex;
+  Mutex mutex;
   _SmscCommand() : ref_count(0), dta(0){};
   ~_SmscCommand()
   {
@@ -97,7 +97,7 @@ class SmscCommand
   {
     //__trace__(__PRETTY_FUNCTION__);
     __require__ ( cmd != 0 );
-		MutexGuard guard(cmd->mutex);
+    MutexGuard guard(cmd->mutex);
     __require__ ( cmd->ref_count > 0 );
     if ( --(cmd->ref_count) == 0 )
     {
@@ -109,8 +109,9 @@ class SmscCommand
   _SmscCommand* ref(_SmscCommand* cmd)
   {
     //__trace__(__PRETTY_FUNCTION__);
-    __require__ ( cmd != 0 );
-		MutexGuard guard(cmd->mutex);
+    //__require__ ( cmd != 0 );
+		if ( !cmd ) return 0;
+    MutexGuard guard(cmd->mutex);
     __require__ ( cmd->ref_count >= 0 );
     ++(cmd->ref_count);
     return cmd;
