@@ -188,8 +188,8 @@ throw (SubjectNotFoundException)
   XmlStr forceRP(elem.getAttribute(XmlStr("replyPath")));
   //XmlStr priorityStr(elem.getAttribute(XmlStr("priority")));
   //XmlStr serviceIdStr(elem.getAttribute(XmlStr("serviceId")));
-  unsigned int priority = atoi(XmlStr(elem.getAttribute(XmlStr("priority"))));
-  unsigned int serviceId = atoi(XmlStr(elem.getAttribute(XmlStr("serviceId"))));
+  const unsigned int priority = atoi(XmlStr(elem.getAttribute(XmlStr("priority"))));
+  const unsigned int serviceId = atoi(XmlStr(elem.getAttribute(XmlStr("serviceId"))));
   XmlStr srcSmeSystemId(elem.getAttribute(XmlStr("srcSmeId")));
   XmlStr deliveryModeStr(elem.getAttribute(XmlStr("deliveryMode")));
   XmlStr forwardToStr(elem.getAttribute(XmlStr("forwardTo")));
@@ -197,6 +197,7 @@ throw (SubjectNotFoundException)
   const AclIdent aclId(atol(XmlStr(elem.getAttribute(XmlStr("aclId")))));
   XmlStr forceDelivery(elem.getAttribute(XmlStr("forceDelivery")));
   XmlStr allowBlocked(elem.getAttribute(XmlStr("allowBlocked")));
+  const signed long providerId = atol(XmlStr(elem.getAttribute(XmlStr("providerId"))));
   
 
   std::auto_ptr<Route> r(new Route(std::string(id),
@@ -215,7 +216,8 @@ throw (SubjectNotFoundException)
                                    std::string(trafRulesStr),
                                    aclId,
                                    strcmp("true", forceDelivery) == 0,
-                                   strcmp("true", allowBlocked) == 0)
+                                   strcmp("true", allowBlocked) == 0,
+                                   providerId)
                          );
 
   DOMNodeList *srcs = elem.getElementsByTagName(XmlStr("source"));

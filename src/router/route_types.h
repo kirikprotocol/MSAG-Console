@@ -166,6 +166,7 @@ struct RouteInfo
   std::string dstSubj;
   TrafficRules trafRules;
   bool allowBlocked;
+  signed long providerId;
 };
 
 } // namespace router
