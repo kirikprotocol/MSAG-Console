@@ -124,7 +124,7 @@ int SmppInputThread::Execute()
         s->setData(SOCKET_SLOT_INPUTMULTI,(void*)1);
       }
     }
-    trace("in: canRead\n");
+    //trace("in: canRead\n");
     if(mul.canRead(ready,error,1000)>0)
     {
       MutexGuard g(mon);
