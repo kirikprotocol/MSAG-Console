@@ -18,7 +18,6 @@ public TraceRoute(final String applyTarget) throws SibincoException
   {
     super("traceRoute", "file:///command_gw.dtd");
     this.applyTarget = applyTarget;
-    createStringParam("subj", this.applyTarget);
   }
 
   public String getApplyTarget()
