@@ -71,7 +71,7 @@ public:
   virtual SmeProxy* getSmeProxy() const
   {
     if ( ptr == end ) throw runtime_error("out of data");
-		return (*ptr).proxy;
+    return (*ptr).proxy;
   }
   virtual SmeInfo  getSmeInfo() const
   {
