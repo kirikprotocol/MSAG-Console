@@ -154,13 +154,13 @@ if (lastIndex >= bean.getTotalSize() || bean.getPageSize() < 0)
         <%= (row.getNextTryTime()!= null) ? StringEncoderDecoder.encode(dateFormatter.format(row.getNextTryTime())):"&nbsp;"%>
       </td>
       <td nowrap>
-        <%= StringEncoderDecoder.encode(row.getOriginatingAddress())%><br>
+        <%= StringEncoderDecoder.encode(row.getOriginatingAddressMask().getMask())%><br>
         <%= StringEncoderDecoder.encode(row.getSrcSmeId())%>
       </td>
       <td nowrap>
-        <%= StringEncoderDecoder.encode(row.getDestinationAddress())%>
-        <%String dea = row.getDealiasedDestinationAddress();
-          if( dea != null && dea.trim().length() > 0 && !dea.equals(row.getDestinationAddress())) {
+        <%= StringEncoderDecoder.encode(row.getDestinationAddressMask().getMask())%>
+        <%String dea = row.getDealiasedDestinationAddressMask().getMask();
+          if( dea != null && dea.trim().length() > 0 && !dea.equals(row.getDestinationAddressMask().getMask())) {
         %>
           (<%=dea%>)
         <%
@@ -173,10 +173,10 @@ if (lastIndex >= bean.getTotalSize() || bean.getPageSize() < 0)
         <%= StringEncoderDecoder.encode(row.getRouteId())%>
       </td>
       <td nowrap>
-        <%= StringEncoderDecoder.encode(row.getStatus())%><br>
+        <%= StringEncoderDecoder.encode(row.getStatus())%> (<%=row.getLastResult()%>) <br>
         <%
             String errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode."+row.getLastResult());
-            if (errMessage == null) errMessage = "UNKNOWN"; %>
+            if (errMessage == null) errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode.unknown"); %>
         <%= StringEncoderDecoder.encode(errMessage)%>
       </td>
   </tr>
