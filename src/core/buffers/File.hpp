@@ -18,6 +18,7 @@
 #include <string.h>
 #include <errno.h>
 #include "util/int.h"
+#include "util/debug.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 
@@ -178,7 +179,7 @@ public:
     if(!inMemoryFile || !f)throw FileException(FileException::errFileNotOpened,filename.c_str());
     std::string tmp=filename+".tmp";
     FILE *g=fopen(tmp.c_str(),"wb+");
-    if(fwrite(buffer,bufferSize,1,g)!=1)
+    if(fwrite(buffer,fileSize,1,g)!=1)
     {
       fclose(g);
       remove(tmp.c_str());
@@ -205,6 +206,7 @@ public:
     if(!inMemoryFile || !f)throw FileException(FileException::errFileNotOpened,filename.c_str());
     inMemoryFile=false;
     int sz=(int)Size();
+    __trace2__("File: discard %s, oldsz=%d, newsz=%d",filename.c_str(),fileSize,sz);
     if(bufferSize<sz)
     {
       delete [] buffer;
