@@ -1,0 +1,5 @@
+# $Id$
+# this file contains binaries definitions
+
+# binary name source name libraries         
+dbsme/DBSme   DBSme       -L$(ORACLE_HOME)/lib -ldbsme-oci $(SMSC_BUILDDIR)/obj/libdbsme-oci/OCIDataSource.o -ldbsme -lutil-config -lutil-xml -lutil -llog4cpp -lcore-threads -lthread -lxerces-c1_5_2 -lxerces-c $(__OBJECTS) $(__LIBRARIES) -lrt
