@@ -30,21 +30,26 @@ struct PerformanceCounter{
   uint64_t total;
 };
 
-#define SME_PERF_CNT_ACCEPTED       0
-#define SME_PERF_CNT_REJECTED       1
-#define SME_PERF_CNT_DELIVERED      2
-#define SME_PERF_CNT_DLVERROR       3
-#define SME_PERF_CNT_TRANSOK        4
-#define SME_PERF_CNT_TRANSFAILED    5
-#define SME_PERF_CNT_COUNT          6
 
-const int performanceCounters=SME_PERF_CNT_COUNT;
+namespace Counters{
+  enum PerfCntEnum{
+    cntAccepted,
+    cntRejected,
+    cntDelivered,
+    cntDeliverErr,
+    cntTransOk,
+    cntTransFail
+  };
+}
+
+const int performanceCounters=6;
 
 struct PerformanceData{
   uint32_t size;
   uint32_t eventQueueSize;
   time_t uptime;
   time_t now;
+  uint32_t padding;
   uint32_t countersNumber;
   PerformanceCounter counters[performanceCounters];
 };

@@ -6,7 +6,6 @@
 #include "util/config/route/RouteConfig.h"
 #include "system/smppio/SmppSocketsManager.hpp"
 #include "smeman/smeman.h"
-#include "system/task_container.h"
 #include "router/route_manager.h"
 #include "smppgw/event_queue.h"
 #include "util/config/smeman/SmeManConfig.h"
@@ -131,7 +130,7 @@ public:
   void stop(){stopFlag=true;}
   void mainLoop();
   void shutdown();
-  smsc::system::TaskContainer tasks;
+
   bool Smsc::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy,smsc::router::RouteInfo* ri,SmeIndex idx=-1);
 
   bool AliasToAddress(const Address& alias,Address& addr)
@@ -177,34 +176,25 @@ public:
 
   SmeAdministrator* getSmeAdmin(){return &smeman;}
 
+
+  void updatePerformance(int counter)
+  {
+    MutexGuard g(perfMutex);
+    using namespace smsc::smppgw::performance::Counters;
+    switch(counter)
+    {
+      case cntAccepted:    acceptedCounter++;break;
+      case cntRejected:    rejectedCounter++;break;
+      case cntDelivered:   deliveredCounter++;break;
+      case cntDeliverErr:  deliverErrCounter++;break;
+      case cntTransOk:     transOkCounter++;break;
+      case cntTransFail:   transFailCounter++;break;
+    }
+  }
+
   void updateCounter(int counter, const char* srcSmeId, const char* routeId,int errorCode=0)
   {
     statMan->updateCounter(counter, srcSmeId,  routeId,errorCode);
-    MutexGuard g(perfMutex);
-    using namespace smsc::smppgw::stat::Counters;
-    switch(counter)
-    {
-      case cntAccepted:acceptedCounter++;break;
-
-      case cntRejected:
-      case cntDeniedByBilling:rejectedCounter++;break;
-
-      case cntDelivered:deliveredCounter++;break;
-
-      case cntTemp:
-      case cntPerm:deliverErrCounter++;break;
-
-      case cntSmsTrOk:
-      case cntSmsTrBilled:
-      case cntUssdTrFromScOk:
-      case cntUssdTrFromScBilled:
-      case cntUssdTrFromSmeOk:
-      case cntUssdTrFromSmeBilled:transOkCounter++;break;
-
-      case cntSmsTrFailed:
-      case cntUssdTrFromScFailed:
-      case cntUssdTrFromSmeFailed:transFailCounter++;break;
-    }
   }
 
   void SaveStats()
@@ -245,7 +235,7 @@ public:
     cnt[1]=rejectedCounter;
     cnt[2]=deliveredCounter;
     cnt[3]=deliverErrCounter;
-    cnt[4]=transOkCounter=0;
+    cnt[4]=transOkCounter;
     cnt[5]=transFailCounter;
   }
 
