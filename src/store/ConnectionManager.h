@@ -4,8 +4,11 @@
 #include <oci.h>
 #include <orl.h>
 
+#include <core/synchronization/Mutex.hpp>
 #include <sms/sms.h>
 #include "StoreExceptions.h"
+
+using namespace smsc::core::synchronization;
 
 namespace smsc { namespace store 
 {
@@ -27,14 +30,14 @@ namespace smsc { namespace store
         inline const char* getDbName() { return dbName; };
     };
     
-	struct Connection;
+    struct Connection;
     class ConnectionPool
 	{
     protected:
 
 	    StoreConfig*	config;
 	    Connection*		conn;
-	    bool        	lock; // Replace with mutex
+	    Mutex*        	mutex;
         
 	public:
 	

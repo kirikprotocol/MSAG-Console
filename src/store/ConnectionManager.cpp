@@ -29,14 +29,10 @@ StoreConfig::~StoreConfig()
 
 /* ----------------------------- ConnectionPool ------------------------ */
 ConnectionPool::ConnectionPool(StoreConfig* _config) throw(StoreException)
-	: config(_config), conn(0L), lock(false)
+	: config(_config), conn(0L), mutex(0L)
 {
+	mutex = new Mutex();
 
-	(void) OCIInitialize((ub4) OCI_DEFAULT, (dvoid *)0,                         
-						 (dvoid * (*)(dvoid *, size_t)) 0,                      
-						 (dvoid * (*)(dvoid *, dvoid *, size_t))0,              
-						 (void (*)(dvoid *, dvoid *)) 0 );                      
-    //create mutex here
     if (!conn) 
     {
         if (!config) {
@@ -48,13 +44,16 @@ ConnectionPool::ConnectionPool(StoreConfig* _config) throw(StoreException)
 
 ConnectionPool::~ConnectionPool()
 {
-	if (config) delete config; 
+	mutex->Lock();
+	if (config) {
+		delete config; config = 0L; 
+	}
 	
-    if (conn)
-    {
+    if (conn) {
         delete conn; conn = 0L;
 	}
-	// destory mutex here
+    mutex->Unlock();
+	delete mutex;
 }
 
 void ConnectionPool::checkErr(sword status, Connection* conn) throw(StoreException)
@@ -102,8 +101,7 @@ void ConnectionPool::checkErr(sword status, Connection* conn) throw(StoreExcepti
 
 Connection* ConnectionPool::getConnection()
 {
-    while (lock); // replace it by mutex logic (own mutex here)
-    lock = true;
+    mutex->Lock();
     return conn;
 }
 
@@ -112,7 +110,7 @@ void ConnectionPool::freeConnection(Connection* connection)
     // replace it by mutex logic (free mutex here)
     if (conn == connection) 
 	{
-        lock = false;
+        mutex->Unlock();
     }
 }
 /* ----------------------------- ConnectionPool ------------------------ */
@@ -147,9 +145,25 @@ Connection::Connection(ConnectionPool* pool, int _id = 0) throw(StoreException)
 	
 	if (userName && userPwd && dbName)
 	{
-        // open connection to DB and begin user session 
+		// open connection to DB and begin user session 
+		/*(void) OCIInitialize((ub4) OCI_DEFAULT, (dvoid *)0,                         
+							 (dvoid * (*)(dvoid *, size_t)) 0,                      
+							 (dvoid * (*)(dvoid *, dvoid *, size_t))0,              
+							 (void (*)(dvoid *, dvoid *)) 0 );
+        
 		(void) OCIEnvInit((OCIEnv **) &envhp, OCI_DEFAULT, 
-						  (size_t) 0, (dvoid **) 0);
+						  (size_t) 0, (dvoid **) 0);*/
+
+		(void) OCIEnvCreate(&envhp, OCI_ENV_NO_MUTEX, (dvoid *)0,
+							0, 0, 0, (size_t) 0, (dvoid **)0);
+		/*dvoid* allocatedMem;
+		(void) OCIEnvCreate((OCIEnv **) &envhp, (ub4) OCI_ENV_NO_MUTEX,
+							(CONST dvoid *) 0, 
+							(CONST dvoid * (*)(dvoid *, size_t)) 0,
+							(CONST dvoid * (*)(dvoid *, dvoid *, size_t)) 0,
+							(CONST void (*)(dvoid *, dvoid *)) 0, 
+							(size_t) 0, (dvoid **) &allocatedMem);*/
+
 		(void) OCIHandleAlloc((dvoid *)envhp, (dvoid **)&errhp, 
 								OCI_HTYPE_ERROR, (size_t) 0, (dvoid **) 0);
         checkErr(OCIHandleAlloc((dvoid *)envhp, (dvoid **)&srvhp,
