@@ -702,14 +702,21 @@ public:
           __require__(offs+4<length);
           uint32_t len = 4;
           uint16_t tag = tag_hash.getTag(key);
-          *(uint16_t*)(buffer+offs) = htons(tag);
-          *(uint32_t*)(buffer+offs+2) = htonl(4);
+					{
+						uint16_t temp16 = htons(tag);
+						memcpy(buffer+offs,&temp16,2);
+						uint32_t temp32 = htonl(4);
+						memcpy(buffer+offs+2,&temp32,4);
+					}
           offs+=4+2;
                                         __trace2__("Ienc: tag=%hd key=%s len=%hd pos=%d length=%d val=%d",tag,key?key:"NULL",len,offs,length,*value);
           __require__(offs+len<=(unsigned)length);
           //memcpy(buffer+pos,value->c_str(),len);
-                                        *(uint32_t*)(buffer+offs) = htonl(*value); 
-                                        offs+=4;
+					{
+						uint32_t temp32 = htonl(*value);
+						memcpy(buffer+offs,&temp32,4);
+					}
+          offs+=4;
         }
         return offs;
       }
