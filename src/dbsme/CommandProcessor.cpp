@@ -234,12 +234,13 @@ void DataProvider::process(Command& command)
         while (input && isalnum(input[curPos]))
             str += input[curPos++];
         
-        if (!(name = str.c_str()) || name[0] == '\0')
+        name = str.c_str();
+        if (!name || name[0] == '\0')
             name = SMSC_DBSME_DEFAULT_JOB_NAME;
-        else
-            command.setInData(&input[curPos]);
-
         command.setJobName(name);
+
+        str = &input[curPos];
+        command.setInData(str.c_str());
     }
     
     char* upname = strToUpperCase(name);
