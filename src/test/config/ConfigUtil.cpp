@@ -56,21 +56,31 @@ void ConfigUtil::setupSystemSme()
 	profilerAliasInfo.hide = true; //rand0(2);
 	aliasReg->putAlias(profilerAliasInfo);
 	//abonent info
-	__cfg_addr__(abonentInfoAddr);
-	__cfg_addr__(abonentInfoAlias);
+	__cfg_addr__(abonentInfoAddrSmpp);
+	__cfg_addr__(abonentInfoAddrMap);
+	__cfg_addr__(abonentInfoAliasSmpp);
+	__cfg_addr__(abonentInfoAliasMap);
 	__cfg_str__(abonentInfoSystemId);
 	SmeInfo abonentInfoSme;
 	abonentInfoSme.wantAlias = false;
 	SmeManagerTestCases::setupRandomCorrectSmeInfo(&abonentInfoSme);
 	abonentInfoSme.systemId = abonentInfoSystemId;
-	smeReg->registerSme(abonentInfoAddr, abonentInfoSme, false, true);
+	vector<const Address*> addrList;
+	addrList.push_back(&abonentInfoAddrSmpp);
+	addrList.push_back(&abonentInfoAddrMap);
+	smeReg->registerSme(addrList, abonentInfoSme, false, true);
 	smeReg->bindSme(abonentInfoSme.systemId, SME_TRANSCEIVER);
 	//алиас для abonent info
-	AliasInfo abonentInfoAliasInfo;
-	abonentInfoAliasInfo.addr = abonentInfoAddr;
-	abonentInfoAliasInfo.alias = abonentInfoAlias;
-	abonentInfoAliasInfo.hide = true; //rand0(2);
-	aliasReg->putAlias(abonentInfoAliasInfo);
+	AliasInfo abonentInfoSmppAliasInfo;
+	abonentInfoSmppAliasInfo.addr = abonentInfoAddrSmpp;
+	abonentInfoSmppAliasInfo.alias = abonentInfoAliasSmpp;
+	abonentInfoSmppAliasInfo.hide = true; //rand0(2);
+	aliasReg->putAlias(abonentInfoSmppAliasInfo);
+	AliasInfo abonentInfoMapAliasInfo;
+	abonentInfoMapAliasInfo.addr = abonentInfoAddrMap;
+	abonentInfoMapAliasInfo.alias = abonentInfoAliasMap;
+	abonentInfoMapAliasInfo.hide = true; //rand0(2);
+	aliasReg->putAlias(abonentInfoMapAliasInfo);
 	//регистрация map proxy
 	__cfg_str__(mapProxySystemId);
 	SmeInfo mapProxySme;
@@ -91,21 +101,25 @@ void ConfigUtil::setupSystemSmeRoutes()
 	__cfg_str__(smscSystemId);
 	addr.push_back(&smscAddr);
 	addr.push_back(&smscAlias);
-	smeId.push_back(&smscSystemId);
-	smeId.push_back(&smscSystemId);
+	smeId.insert(smeId.end(), 2, &smscSystemId);
 	//profiler
 	__cfg_addr__(profilerAddr);
 	__cfg_addr__(profilerAlias);
 	__cfg_str__(profilerSystemId);
 	addr.push_back(&profilerAddr);
 	addr.push_back(&profilerAlias);
-	smeId.push_back(&profilerSystemId);
-	smeId.push_back(&profilerSystemId);
+	smeId.insert(smeId.end(), 2, &profilerSystemId);
 	//abonent info
-	__cfg_addr__(abonentInfoAddr);
+	__cfg_addr__(abonentInfoAddrSmpp);
+	__cfg_addr__(abonentInfoAddrMap);
+	__cfg_addr__(abonentInfoAliasSmpp);
+	__cfg_addr__(abonentInfoAliasMap);
 	__cfg_str__(abonentInfoSystemId);
-	addr.push_back(&abonentInfoAddr);
-	smeId.push_back(&abonentInfoSystemId);
+	addr.push_back(&abonentInfoAddrSmpp);
+	addr.push_back(&abonentInfoAddrMap);
+	addr.push_back(&abonentInfoAliasSmpp);
+	addr.push_back(&abonentInfoAliasMap);
+	smeId.insert(smeId.end(), 4, &abonentInfoSystemId);
 	//map proxy
 	__cfg_str__(mapProxySystemId);
 	//create routes

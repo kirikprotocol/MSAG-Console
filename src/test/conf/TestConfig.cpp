@@ -46,20 +46,22 @@ TestConfig::TestConfig()
 	//map proxy
 	strMap["mapProxySystemId"] = "MAP_PROXY";
 	//abonent info
-	addrMap["abonentInfoAddr"] = "+44444444444444"; //14 символов
-	addrMap["abonentInfoAlias"] = ".9.9.abonentInfoAlias123";
+	addrMap["abonentInfoAddrSmpp"] = "+44444444444444"; //14 символов
+	addrMap["abonentInfoAliasSmpp"] = ".9.9.abonInfoAliasSmpp123";
+	addrMap["abonentInfoAddrMap"] = "+555555555555555"; //15 символов
+	addrMap["abonentInfoAliasMap"] = ".11.11.abonInfoAliasSmpp123";
 	strMap["abonentInfoSystemId"] = "abonentinfo";
 	strMap["abonentInfoServiceType"] = "AboN";
-	intMap["abonentInfoProtocolId"] = 9;
+	intMap["abonentInfoProtocolId"] = 10;
 	strMap["abonentInfoPassword"] = "abonentInfoPasswd";
 	//email sme
 	strMap["smtpHost"] = "dvl.novosoft.ru";
 	strMap["mailbox"] = "bryz";
-	addrMap["emailSmeAddr"] = "+555555555555555"; //15 символов
-	addrMap["emailSmeAlias"] = ".11.11.emailSmeAlias123";
+	addrMap["emailSmeAddr"] = "+6666666666666666"; //16 символов
+	addrMap["emailSmeAlias"] = ".13.13.emailSmeAlias123";
 	strMap["emailSmeSystemId"] = "email";
 	strMap["emailSmeServiceType"] = "EmaiL";
-	intMap["emailSmeProtocolId"] = 11;
+	intMap["emailSmeProtocolId"] = 13;
 	strMap["emailSmePassword"] = "emailSmePasswd";
 	//респонсы профайлера
 	strMap["profilerRespReportNone"] = 
