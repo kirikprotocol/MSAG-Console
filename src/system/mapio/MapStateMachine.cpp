@@ -468,7 +468,7 @@ static void SendSubmitCommand(MapDialog* dialog)
   if ( dialog->isUSSD ) {
     Address src_addr;
     ConvAddrMap2Smc((const MAP_SMS_ADDRESS*)&dialog->m_msAddr,&src_addr);
-    sms.setOriginatingAddress(src_addr);
+    dialog->sms->setOriginatingAddress(src_addr);
     __trace2__("MAP::%s:USSD request %s",__FUNCTION__,RouteToString(dialog).c_str());
   }
   MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
