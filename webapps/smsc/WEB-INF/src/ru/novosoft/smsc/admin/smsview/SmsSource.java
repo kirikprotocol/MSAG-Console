@@ -137,7 +137,7 @@ public abstract class SmsSource
 
   private static void convertMessage( StringBuffer sb, byte text[], int start, int len, boolean udh, int encoding ) throws UnsupportedEncodingException {
     if( udh ) {
-      int headerLen = ((int)text[0])&0xff;  // convert negative byte to int
+      int headerLen = ((int)text[start])&0xff;  // convert negative byte to int
       if( headerLen > len-1 ) {
         sb.append(StringEncoderDecoder.encode("<< UDH len greater then message len "+headerLen+"/"+(len-1)+">>"));
       } else {
@@ -145,10 +145,14 @@ public abstract class SmsSource
         int textLen = len-headerLen-1;
         if( textLen > 0 ) {
           byte msgText[] = new byte[textLen];
-          System.arraycopy(text,  headerLen+1, msgText, 0, textLen);
+          System.arraycopy(text,  start+headerLen+1, msgText, 0, textLen);
           sb.append( decodeMessage(msgText, textLen, encoding) );
         }
       }
+    } else {
+      byte msgText[] = new byte[textLen];
+      System.arraycopy(text,  start, msgText, 0, len);
+      sb.append( decodeMessage(msgText, len, encoding) );
     }
   }
 
