@@ -39,6 +39,8 @@ public:
 
 	int size() const;
 
+	void saveConfig(const char* configFileName);
+	
 private:
 	typedef map<const RouteId, const RouteHolder*> RouteMap;
 	typedef map<const Address, const RouteHolder*, ltAddress> AddressMap2;

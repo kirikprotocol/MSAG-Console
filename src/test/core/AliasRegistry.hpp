@@ -33,7 +33,7 @@ public:
 
 	const AliasHolder* findAddressByAlias(const Address& alias) const;
 
-	void saveConfig(FILE* cfg);
+	void saveConfig(const char* configFileName);
 
 private:
 	typedef map<const Address, AliasHolder*, ltAddress> AddressMap;

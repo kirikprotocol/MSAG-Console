@@ -44,6 +44,7 @@ void RouteRegistry::clear()
 		//addrMap2.clear();
 	}
 	addrMap.clear();
+	routeMap.clear();
 }
 
 const RouteHolder* RouteRegistry::getRoute(RouteId routeId) const
@@ -135,6 +136,11 @@ const RouteHolder* RouteRegistry::lookup(const Address& origAddr,
 int RouteRegistry::size() const
 {
 	return routeMap.size();
+}
+
+void RouteRegistry::saveConfig(const char* configFileName)
+{
+	abort();
 }
 
 }
