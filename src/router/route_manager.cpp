@@ -79,8 +79,8 @@ int sort_compare_pat_pat(RouteRecord* pat1, RouteRecord* pat2)
   result = (int32_t)pat1->info.source.plan - (int32_t)pat2->info.source.plan; ifn0goto;
   result = (int32_t)pat1->info.source.lenght - (int32_t)pat2->info.source.lenght; ifn0goto;
   result = 
-    strncmp((char*)pat1->info.dest.value,
-            (char*)pat2->info.dest.value,
+    strncmp((char*)pat1->info.source.value,
+            (char*)pat2->info.source.value,
             min(pat1->src_def,pat2->src_def));
   ifn0goto;
   result = (int32_t)pat1->src_def - (int32_t)pat2->src_def; ifn0goto;
