@@ -184,7 +184,7 @@ namespace util{
     }
   }
   inline void throwIfFail(bool expr,const char* expr_text,
-                          const char* file, const char* func, int line) throw(const char*)
+                          const char* file, const char* func, int line) 
   {
     if (!expr)
     {
@@ -224,7 +224,7 @@ namespace util{
       abort(); /* dump core */
   }
   inline void throwIfReached(const char* expr_text,
-                          const char* file, const char* func, int line) throw(const char*)
+                          const char* file, const char* func, int line)
   {
       char throw_message[512];
       snprintf(throw_message,512,"\n*%.100s*<%.100s(%.100s):%d>\n\t%.100s\n\n",
