@@ -86,15 +86,20 @@ public class DivertManager
     }
   }
 
-  private final static int ESC_IAC = 255;
-  private final static int ESC_SB  = 250;
-  private final static int ESC_SE  = 240;
-  private final static int ESC_ESC = 27;
-  private final static int ESC_CR  = 13;
-  private final static int ESC_LF  = 10;
-  private final static int ESC_BS  = 8;
-  private final static int ESC_NUL = 0;
+  private final static int ESC_IAC  = 255;
+  private final static int ESC_DONT = 254;
+  private final static int ESC_ECHO = 1;
+  private final static int ESC_SB   = 250;
+  private final static int ESC_SE   = 240;
+  private final static int ESC_ESC  = 27;
+  private final static int ESC_CR   = 13;
+  private final static int ESC_LF   = 10;
+  private final static int ESC_BS   = 8;
+  private final static int ESC_NUL  = 0;
 
+  private void sendDontEcho() throws IOException {
+    os.write(ESC_IAC); os.write(ESC_DONT); os.write(ESC_ECHO); os.flush();
+  }
   private String readTelnetString(int stopChar) throws IOException
   {
     int b = -1;
@@ -175,7 +180,7 @@ public class DivertManager
   private final static String[] USER_CODE     = {"USER", "CODE"};
   private final static String[] USER_PASSWORD = {"PASSWORD"};
   private final static String[] USER_DOMAIN   = {"DOMAIN"};
-  
+
   private boolean checkQuery(String[] sequence, String qwery)
   {
     for (int i=0; i<sequence.length; i++) {
@@ -224,6 +229,7 @@ public class DivertManager
 
         // login using params MSC.nvtIODevice, MSC.USERCODE, MSC.PASSWORD
         logger.info("Connected Ok. Autentificating...");
+        sendDontEcho();
         autentificate();
         logger.info("Autentificated user="+mscUserCode);
       } catch (IOException exc) {
