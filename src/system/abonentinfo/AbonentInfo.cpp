@@ -50,7 +50,12 @@ int AbonentInfoSme::Execute()
 
     getSmsText(sms,body,sizeof(body));
     Address a(body);
-    p=smsc->getProfiler()->lookup(a);
+    Address d;
+    if(!smsc->AliasToAddress(a,d))
+    {
+      d=a;
+    }
+    p=smsc->getProfiler()->lookup(d);
     char answ[MAX_SHORT_MESSAGE_LENGTH];
     sprintf(answ,"%s:%d,%d",body,1,p.codepage);
 
