@@ -172,9 +172,13 @@ Targets:
   </target>
 
   <target name="create_distr" depends="create_distr_tree, update">
-    <copy todir="${DISTR_DIR}/lib" file="${XERCES_LIB}" flatten="yes" failonerror="no"/>
-    <symlink resource="libxerces-c.so.25.0" link="${DISTR_DIR}/lib/libxerces-c.so.25" overwrite="yes" />
-    <symlink resource="libxerces-c.so.25.0" link="${DISTR_DIR}/lib/libxerces-c.so" overwrite="yes" />
+    <copy todir="${DISTR_DIR}/lib" flatten="yes" failonerror="yes">
+      <fileset includesfile="extra_libs.list"/>
+    </copy>
+    <copy todir="${DISTR_DIR}/lib" file="extra_lib_links.list" flatten="yes"/>
+    <symlink action="recreate">
+      <fileset dir="${DISTR_DIR}/lib" file="extra_lib_links.list"/> 
+    </symlink>
   </target>
 
   <target name="distr" depends="create_distr, configure">
