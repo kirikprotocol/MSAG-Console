@@ -44,9 +44,15 @@ public class AliasAlterCommand implements Command
                 Alias newAlias = new Alias(new Mask(address), new Mask(alias),
                         (hideSet) ? hide:smscAlias.isHide());
                 ctx.getSmsc().getAliases().remove(alias);
-                ctx.getSmsc().getAliases().add(newAlias);
-                ctx.setMessage(out+" altered");
-                ctx.setStatus(CommandContext.CMD_OK);
+                boolean ok = ctx.getSmsc().getAliases().add(newAlias);
+                if (ok) {
+                    ctx.setMessage(out+" altered");
+                    ctx.setStatus(CommandContext.CMD_OK);
+                } else {
+                    ctx.getSmsc().getAliases().add(smscAlias);
+                    ctx.setMessage(out+" already exists or has equivalent");
+                    ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 ctx.setMessage("Couldn't alter "+out+". Cause: "+e.getMessage());
