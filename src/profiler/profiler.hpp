@@ -65,6 +65,10 @@ struct Profile{
 
   std::string divert;
   bool divertActive;
+  bool divertActiveAbsent;
+  bool divertActiveBlocked;
+  bool divertActiveBared;
+  bool divertActiveCapacity;
   bool divertModifiable;
 
   Profile()
@@ -78,19 +82,15 @@ struct Profile{
     divert="";
     divertActive=false;
     divertModifiable=false;
+    divertActiveAbsent=false;
+    divertActiveBlocked=false;
+    divertActiveBared=false;
+    divertActiveCapacity=false;
   }
 
   Profile(const Profile& src)
   {
-    codepage=src.codepage;
-    reportoptions=src.reportoptions;
-    locale=src.locale;
-    hide=src.hide;
-    hideModifiable=src.hideModifiable;
-
-    divert=src.divert;
-    divertActive=src.divertActive;
-    divertModifiable=src.divertModifiable;
+    *this=src;
   }
 
   Profile& operator=(const Profile& src)
@@ -102,8 +102,12 @@ struct Profile{
     hideModifiable=src.hideModifiable;
 
     divert=src.divert;
-    divertActive=src.divertActive;
     divertModifiable=src.divertModifiable;
+    divertActive=src.divertActive;
+    divertActiveAbsent=src.divertActiveAbsent;
+    divertActiveBlocked=src.divertActiveBlocked;
+    divertActiveBared=src.divertActiveBared;
+    divertActiveCapacity=src.divertActiveCapacity;
     return *this;
   }
 
@@ -116,19 +120,17 @@ struct Profile{
            hideModifiable==src.hideModifiable &&
            divert==src.divert &&
            divertActive==src.divertActive &&
-           divertModifiable==src.divertModifiable;
+           divertModifiable==src.divertModifiable &&
+           divertActiveAbsent==src.divertActiveAbsent &&
+           divertActiveBlocked==src.divertActiveBlocked &&
+           divertActiveBared==src.divertActiveBared &&
+           divertActiveCapacity==src.divertActiveCapacity
+           ;
   }
 
   void assign(const Profile& src)
   {
-    codepage=src.codepage;
-    reportoptions=src.reportoptions;
-    locale=src.locale;
-    hide=src.hide;
-    hideModifiable=src.hideModifiable;
-    divert=src.divert;
-    divertActive=src.divertActive;
-    divertModifiable=src.divertModifiable;
+    *this=src;
   }
 };
 

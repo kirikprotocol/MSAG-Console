@@ -64,17 +64,18 @@ struct HashKey{
 };
 
 
-
+uint32_t rnd[]={0x14bcdd6e,0xf553733f,0x9998729e,0xb95fd4c0,0x0b520739,0x3547ae78,0xa2bcb36d,0x8ad3cec8,0x25002a6a,0x66d05d7d,0x2be546db,0x4fa60819,0x77aec701,0x138246bb,0x7298216c,0x512eb6a7,0xcd037352,0x287cac72,0x3b2b9f86,0x065bd3c9,0x4d8d781a,0x9287f0db,0x73e7208c,0xb9d8c960,0x15d974a8,0xde362c45,0xd127a9fd,0x222910f1,0xda98f9f8,0xd809db34,0x7379819b,0x0bcec9c9,0x8cbc2fd6,0x30877084,0x80bcd783,0xee61641a,0xf29b6ffb,0x1263fd88,0xc8455c53,0x96b73d1e,0x4b0eec2f,0xcf9cd228,0x63f8e744,0xbefd3d35,0xf18f4869,0x769a1703,0x516d1153,0xb1de7706,0xf35a3eed,0x764f758f,0x1b0edb55,0xeb9ece9c,0xbc903a6f,0x4059ae38,0x74394823,0xbb3b908b,0xac53ff31,0xe51f4480,0xd45cffb1,0xdb8e160e,0xbee74224,0xb6f41221,0x1f1aef33,0x1b6b6825,0x26d35006,0xe633f12b,0x3f66e83c,0xf8bfd8b6,0xed01a786,0x26655823,0xc8a840dd,0x42b3a7af,0x99dd9b5e,0x4a5bf926,0x97d970c3,0xb6c9a224,0xc575f67a,0xe4516107,0x6fa4b95e,0xa500c06f,0xc69a9313,0xea0e9c70,0x9d89bdfa,0x90efc852,0x490105cf,0x4f03d201,0x98f723e1,0xc6e9eb12,0xf55f30e6,0xa76ce770,0x9d72397c,0x081a67a0,0x068df13b,0xca6f1bac,0x53b18e74,0x2aab28ae,0xf6a5b682,0x6c3dacf6,0x69ba98ce,0xacdc64d7,0x1126215d,0xc431730b,0x360a510f,0x612b40be,0x220fac7a,0x29f08539,0x5badd65b,0x0d6e6c29,0x060443b9,0xb28bd789,0x60630c94,0x03f7c528,0x5868e646,0xd79cd7d7,0x55bf3879,0xc7b2f42f,0x09844cbe,0x116910f9,0x7545a7c9,0xae450f39,0x02a17d4a,0x7902cad8,0xc28d4862,0x7e3138e9,0xc72d7ac2,0x6760ab96,0xa560515f,0x0bf13ea7,0x10d7d3ce,0x168853ab,0x93dbdb3b,0xdc1d3dc1,0x73af5204,0x41aa0004,0xa78d84ef,0xc8833c8e,0xfa4a9206,0xc13f2c26,0x44970d11,0x954fd088,0xcadfa4a9,0x332b2e4d,0xb7ccfdf7,0x9d27b973,0xbf66ac0c,0x93ded88a,0xd6d441d6,0x654a8677,0x10bc84bf,0xdd6f1be5,0x9e47c6e0,0x48b22f44,0xeabe5ae0,0xadc4a17c,0xd4cf2367,0x0f36bb2f,0x126d503c,0xe2aa75a5,0xa84c2efb,0x93a3de55,0x890b1e6e,0x38f99b0c,0x51eea689,0x5ee595b9,0x2440aeff,0xf0b6b5d3,0xad56cd7f,0x4b1fce64,0x3531c288,0x662da1b2,0xe6bb08e7,0x25d10086,0x23ab8cce,0xbc171918,0x0a05828c,0x47f4d195,0x0f3a57e7,0x71b7544b,0xb5edcb15,0x3f1bb26f,0x724e2056,0x04f9a788,0xa720762a,0x68968076,0xbe59392e,0x98962020,0x6a5fbb90,0x918d26b5,0xfeefe82e,0x8d302e9d,0xf09a184a,0x95243bfc,0x74e708e6,0x267339df,0x3616edbb,0x0499a202,0x3b7ca9d3,0x2537463b,0xde8a20c3,0xbd642b84,0xe869ae82,0x6d9d979f,0xd43ebbe3,0x8e573266,0x260c71ad,0xa0314cae,0xed308e56,0xd7c241d2,0x5b875d5c,0xc40bffe0,0x852dcb3b,0x288aac5a,0x43de9608,0xdceb68a7,0x24f6a9ab,0xe2543615,0x941690b6,0x8e5dfb88,0x165f07e0,0xd69cacc0,0x9d58b61b,0xbfd78941,0x126c0351,0xe6d88ae0,0xe50e07ba,0x34dadfe7,0xd677a3d5,0xa49c97e0,0xcb08b604,0x35126501,0xcc4b71c1,0xf3b48632,0x2694cc79,0x2873c4b3,0xa2441b07,0xa546996c,0xe7a6c5c9,0x345e7cd2,0xf272155a,0x1ff53c6e,0xb7f132ef,0xe2be8d0c,0xdbb9344a,0xf4fba87d,0x960f5858,0xb9281305,0xa9ec5566,0x8a508463,0x7f99d2fd,0xe3fce678,0x6cf3f85a,0xb4c48193,0x054b2d87,0xca833b56,0xa0e8e213,0x5a24fe45};
 
 class HashFunc{
 public:
-static int CalcHash(const HashKey& key)
+static uint32_t CalcHash(const HashKey& key)
 {
-  int retval=key.addr.type^key.addr.plan;
+  uint32_t retval=key.addr.type^key.addr.plan;
   int i;
   for(i=0;i<key.defLength;i++)
   {
-    retval=(retval<<1)^key.addr.value[i];
+    //retval=(retval<<1)^rnd[(unsigned char)key.addr.value[i]]^rnd[retval&0xff];
+    retval=retval*10+(key.addr.value[i]-'0');
   }
   return retval;
 }
@@ -154,11 +155,10 @@ public:
     }
     return *p;
   }
-  Profile& add(const Address& address,const Profile& profile)
+  void add(const Address& address,const Profile& profile)
   {
     HashKey k(address);
     Insert(k,profile);
-    return Get(k);
   }
 };
 
@@ -167,7 +167,7 @@ Profiler::Profiler(const Profile& pr,SmeRegistrar* psmeman,const char* sysId)
 {
   state=VALID;
   managerMonitor=NULL;
-  profiles=new ProfilesTable(pr,400000);
+  profiles=new ProfilesTable(pr,1000000);
   systemId=sysId;
   smeman=psmeman;
   seq=1;
@@ -225,7 +225,8 @@ int Profiler::update(const Address& address,const Profile& profile)
     return pusUpdated;
   }else
   {
-    dbInsert(address,profiles->add(address,profile));
+    profiles->add(address,profile);
+    dbInsert(address,profile);
     debug2(log,"insert %s",address.toString().c_str());
     return pusInserted;
   }
@@ -300,16 +301,26 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   if(!connection.get())throw Exception("Profiler: Failed to get connection");
   auto_ptr<Statement> statement(connection->createStatement(sql));
   if(!statement.get())throw Exception("Profiler: Failed to create statement");
-  statement->setInt8(1,profile.reportoptions);
-  statement->setUint8(2,profile.codepage);
+  char buf[32];
+  sprintf(buf,"%d",profile.reportoptions);
+  statement->setString(1,buf);
+  sprintf(buf,"%d",profile.codepage);
+  statement->setString(2,buf);
   char addrbuf[30];
   addr.toString(addrbuf,sizeof(addrbuf));
   __trace2__("Profiler: dbUpdate %s=%d,%d,%s,%d,%c,%s,%c,%c",addrbuf,profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.hide,profile.hideModifiable?'Y':'N',profile.divert.c_str(),profile.divertActive?'Y':'N',profile.divertModifiable?'Y':'N');
   statement->setString(3,profile.locale.c_str());
-  statement->setInt8(4,profile.hide);
+  statement->setString(4,profile.hide?"Y":"N");
   statement->setString(5,profile.hideModifiable?"Y":"N");
   statement->setString(6,profile.divert.c_str());
-  statement->setString(7,profile.divertActive?"Y":"N");
+  char div[16];
+  div[0]=profile.divertActive?'Y':'N';
+  div[1]=profile.divertActiveAbsent?'Y':'N';
+  div[2]=profile.divertActiveBlocked?'Y':'N';
+  div[3]=profile.divertActiveBared?'Y':'N';
+  div[4]=profile.divertActiveCapacity?'Y':'N';
+  div[5]=0;
+  statement->setString(7, div);
   statement->setString(8,profile.divertModifiable?"Y":"N");
   statement->setString(9,addrbuf);
   statement->executeUpdate();
@@ -333,13 +344,23 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   addr.toString(addrbuf,sizeof(addrbuf));
   __trace2__("Profiler: dbInsert %s=%d,%d,%s,%d,%c,%s,%c,%c",addrbuf,profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.hide,profile.hideModifiable?'Y':'N',profile.divert.c_str(),profile.divertActive?'Y':'N',profile.divertModifiable?'Y':'N');
   statement->setString(1, addrbuf);
-  statement->setInt8(2, profile.reportoptions);
-  statement->setUint8(3, profile.codepage);
+  char buf[32];
+  sprintf(buf,"%d",profile.reportoptions);
+  statement->setString(2, buf);
+  sprintf(buf,"%d",profile.codepage);
+  statement->setString(3, buf);
   statement->setString(4,profile.locale.c_str());
-  statement->setInt8(5, profile.hide);
+  statement->setString(5, profile.hide?"Y":"N");
   statement->setString(6, profile.hideModifiable?"Y":"N");
   statement->setString(7,profile.divert.c_str());
-  statement->setString(8, profile.divertActive?"Y":"N");
+  char div[16];
+  div[0]=profile.divertActive?'Y':'N';
+  div[1]=profile.divertActiveAbsent?'Y':'N';
+  div[2]=profile.divertActiveBlocked?'Y':'N';
+  div[3]=profile.divertActiveBared?'Y':'N';
+  div[4]=profile.divertActiveCapacity?'Y':'N';
+  div[5]=0;
+  statement->setString(8, div);
   statement->setString(9, profile.divertModifiable?"Y":"N");
   statement->executeUpdate();
   connection->commit();
@@ -352,6 +373,15 @@ static const int _update_hide=4;
 static const int _update_divert_act=5;
 static const int _update_divert=6;
 static const int _update_charset_ussd=7;
+static const int _update_divert_cond=8;
+
+static const int update_div_cond_Absent=1;
+static const int update_div_cond_Blocked=2;
+static const int update_div_cond_Bared=3;
+static const int update_div_cond_Capacity=4;
+
+static const int update_div_cond_OnBit=0x8000;
+
 
 
 void Profiler::internal_update(int flag,const Address& addr,int value,const char* svalue)
@@ -385,6 +415,19 @@ void Profiler::internal_update(int flag,const Address& addr,int value,const char
   {
     if(!profile.divertModifiable)throw AccessDeniedException();
     profile.divert=svalue;
+  }
+  if(flag==_update_divert_cond)
+  {
+    if(!profile.divertModifiable)throw AccessDeniedException();
+    int div=value&(~update_div_cond_OnBit);
+    bool on=(value&update_div_cond_OnBit)==update_div_cond_OnBit;
+    switch(div)
+    {
+      case update_div_cond_Absent:profile.divertActiveAbsent=on;break;
+      case update_div_cond_Blocked:profile.divertActiveBlocked=on;break;
+      case update_div_cond_Bared:profile.divertActiveBared=on;break;
+      case update_div_cond_Capacity:profile.divertActiveCapacity=on;break;
+    }
   }
   if(flag==_update_charset_ussd)
   {
@@ -649,15 +692,56 @@ int Profiler::Execute()
               internal_update(_update_divert,addr,0,div.c_str());
             }
           }else
-          if(!strncmp(body+j,"ON",2))
           {
-            msg=msgDivertOn;
-            internal_update(_update_divert_act,addr,true,0);
-          }else
-          if(!strncmp(body+j,"OFF",3))
-          {
-            msg=msgDivertOff;
-            internal_update(_update_divert_act,addr,false,0);
+            //(abs|absent)|(blk|blocked)|(bar|bared)|(cap|capacity)
+            string arg=body+j,val;
+            string::size_type pos=arg.find(' ');
+            if(pos!=string::npos)
+            {
+              string::size_type pos0=pos;
+              while(pos<arg.length() && arg[pos]==' ')pos++;
+              val=arg.substr(pos);
+              arg.erase(pos0);
+            }
+            if(val.length()==0)
+            {
+              if(arg=="ON")
+              {
+                msg=msgDivertOn;
+                internal_update(_update_divert_act,addr,true,0);
+              }else
+              if(arg=="OFF")
+              {
+                msg=msgDivertOff;
+                internal_update(_update_divert_act,addr,false,0);
+              }
+            }else
+            {
+              int onbit=val=="ON"?update_div_cond_OnBit:0;
+              if(onbit || val=="OFF")
+              {
+                if(arg=="ABS" || arg=="ABSENT")
+                {
+                  msg=onbit?msgDivertOn:msgDivertOff;
+                  internal_update(_update_divert_cond,addr,update_div_cond_Absent|onbit,0);
+                }else
+                if(arg=="BLK" || arg=="BLOCKED")
+                {
+                  msg=onbit?msgDivertOn:msgDivertOff;
+                  internal_update(_update_divert_cond,addr,update_div_cond_Blocked|onbit,0);
+                }else
+                if(arg=="BAR" || arg=="BARED")
+                {
+                  msg=onbit?msgDivertOn:msgDivertOff;
+                  internal_update(_update_divert_cond,addr,update_div_cond_Bared|onbit,0);
+                }else
+                if(arg=="CAP" || arg=="CAPACITY")
+                {
+                  msg=onbit?msgDivertOn:msgDivertOff;
+                  internal_update(_update_divert_cond,addr,update_div_cond_Capacity|onbit,0);
+                }
+              }
+            }
           }
         }
 
@@ -814,6 +898,20 @@ int Profiler::Execute()
   return 0;
 }
 
+static int RsAsInt(smsc::db::ResultSet* rs,int idx)
+{
+  const char *r=rs->getString(idx);
+  if(!r)return 0;
+  return atoi(r);
+}
+
+static bool RsAsBool(smsc::db::ResultSet* rs,int idx)
+{
+  const char *r=rs->getString(idx);
+  if(!r)return false;
+  return toupper(*r)=='Y';
+}
+
 void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
 {
   ds=datasrc;
@@ -823,6 +921,7 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
   using smsc::util::config::ConfigException;
 
   const char* sql = "SELECT MASK, REPORTINFO, CODESET ,LOCALE, HIDDEN, HIDDEN_MOD, DIVERT,DIVERT_ACT,DIVERT_MOD FROM SMS_PROFILE";
+  //const char* sql = "SELECT MASK FROM SMS_PROFILE";
 
 
   ConnectionGuard connection(ds);
@@ -833,28 +932,66 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
   auto_ptr<ResultSet> rs(statement->executeQuery());
   if(!rs.get())throw Exception("Profiler: Failed to make a query to DB");
   const char* dta;
-  Profile p;
+
+  hrtime_t st=gethrtime();
+
   while(rs->fetchNext())
   {
+
+    Profile p;
+
     dta = rs->getString(1);
+    if(!dta)
+    {
+      smsc_log_error(log,"EMPTY MASK IN PROFILE!");
+      continue;
+    }
     Address addr(dta);
-    p.reportoptions=rs->getInt8(2);
-    p.codepage=rs->getUint8(3);
+
+    p.reportoptions=RsAsInt(rs.get(),2);
+    p.codepage=RsAsInt(rs.get(),3);
     const char * l=rs->getString(4);
     p.locale=l?l:"";
-    p.hide=rs->getInt8(5);
-    const char *hm=rs->getString(6);
-    p.hideModifiable=hm?toupper(*hm)=='Y':false;
+    p.hide=RsAsBool(rs.get(),5);
+    p.hideModifiable=RsAsBool(rs.get(),6);
     const char *d=rs->getString(7);
-    debug2(log,"divert.getString=%s",d?d:"NULL");
     p.divert=d?d:"";
-    hm=rs->getString(8);
-    p.divertActive=hm?toupper(*hm)=='Y':false;
-    hm=rs->getString(9);
-    p.divertModifiable=hm?toupper(*hm)=='Y':false;
-    debug2(log,"init:%s=%s",addr.toString().c_str(),DumpProfile(p).c_str());
+    const char* dopt=rs->getString(8);
+    if(dopt)
+    {
+      int len=strlen(dopt);
+      if(len>0)p.divertActive        =toupper(dopt[0])=='Y';
+
+      if(len>1)p.divertActiveAbsent  =toupper(dopt[1])=='Y';
+      if(len>2)p.divertActiveBlocked =toupper(dopt[2])=='Y';
+      if(len>3)p.divertActiveBared   =toupper(dopt[3])=='Y';
+      if(len>4)p.divertActiveCapacity=toupper(dopt[4])=='Y';
+    }
+
+    p.divertModifiable=RsAsBool(rs.get(),9);
+
+
+    //debug2(log,"init:%s=%s",addr.toString().c_str(),DumpProfile(p).c_str());
+
     profiles->add(addr,p);
   }
+
+
+  /*
+  for(int i=0;i<500000;i++)
+  {
+    char buf[32];
+    sprintf(buf,".1.1.913%07d",i);
+    Address addr(buf);
+    Profile p;
+    profiles->add(addr,p);
+  }
+  */
+  st=gethrtime()-st;
+  smsc_log_info(log,"load time=%lld",st/1000000l);
+  int mc,bu,bn;
+  profiles->GetStats(mc,bu,bn);
+  smsc_log_info(log,"hash stats max=%d,bucks used=%d,count=%d,bucks num=%d\n",mc,bu,profiles->Count(),bn);
 }
 
 }//profiler
