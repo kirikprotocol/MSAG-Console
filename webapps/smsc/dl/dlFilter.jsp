@@ -1,4 +1,5 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
+<%@ include file="/WEB-INF/inc/buttons.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.dl.*"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.jsp.dl.dlFilter"/>
 <jsp:setProperty name="bean" property="*"/>
@@ -25,24 +26,23 @@
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <div class=content>
+<div class=page_subtitle>Names</div>
 <table class=list cellspacing=0>
-<col width="15%" align=right>
+<col width="15%">
 <col width="85%">
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Names ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=2 class=secInner><div class=page_subtitle>Names</div></td></tr>
 <%
 int rowN = 0;
 for (int i=0; i<bean.getNames().length; i++)
 {
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<td>&nbsp;</td>
-	<td><input class=txt name=names value="<%=bean.getNames()[i]%>"></td>
+	<td colspan=2><input class=txt name=names value="<%=bean.getNames()[i]%>"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
-	<td><input class=btn type=submit name=mbAdd value="Add" title="Add new distribution list name to filter.\nUses java regexp format"></td>
 	<td><input class=txt name=names></td>
+	<td><%addButton(out, "mbAdd", "Add", "Add new distribution list name to filter.\nUses java regexp format");%></td>
 </tr>
 </table>
 </div>

@@ -127,9 +127,14 @@ public class AliasesFilter extends SmscBean
 		this.addresses = addresses;
 	}
 
-	public byte getHide()
+	public byte getHideByte()
 	{
 		return hide;
+	}
+
+	public String getHide()
+	{
+		return String.valueOf(hide);
 	}
 
 	public void setHide(String hide)

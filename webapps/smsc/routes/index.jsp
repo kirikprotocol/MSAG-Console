@@ -104,13 +104,13 @@ boolean isSuppressDeliveryReports = ((Boolean)item.getValue("suppressDeliveryRep
 String encRouteId = StringEncoderDecoder.encode(routeId);
 %>
 <tr class=row<%=row&1%>>
-	<td class=check><input class=check type=checkbox name=checkedRouteIds value="<%=encRouteId%>" <%=bean.isRouteChecked(routeId) ? "checked" : ""%>></td>
-	<td class=name><a href="#" title="Edit route" onClick='return edit("<%=encRouteId%>")'><%=encRouteId%></a></td>
-	<td class=check><input class=check type=checkbox disabled <%=isActive                  ? "checked" : ""%>></td>
-	<td class=check><input class=check type=checkbox disabled <%=isEnabling                ? "checked" : ""%>></td>
-	<td class=check><input class=check type=checkbox disabled <%=isBilling                 ? "checked" : ""%>></td>
-	<td class=check><input class=check type=checkbox disabled <%=isArchiving               ? "checked" : ""%>></td>
-	<td class=check><input class=check type=checkbox disabled <%=isSuppressDeliveryReports ? "checked" : ""%>></td>
+	<td><input class=check type=checkbox name=checkedRouteIds value="<%=encRouteId%>" <%=bean.isRouteChecked(routeId) ? "checked" : ""%>></td>
+	<td><a href="#" title="Edit route" onClick='return edit("<%=encRouteId%>")'><%=encRouteId%></a></td>
+	<td><%if (isActive                 ){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+	<td><%if (isEnabling               ){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+	<td><%if (isBilling                ){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+	<td><%if (isArchiving              ){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+	<td><%if (isSuppressDeliveryReports){%><img src="<%=CPATH%>/img/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 </tr>
 <%}}%>
 </tbody>

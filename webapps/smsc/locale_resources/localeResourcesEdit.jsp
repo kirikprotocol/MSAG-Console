@@ -55,7 +55,7 @@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
 	{
 		final String sectionFullName = section.getFullName();
 		startSection(out, sectionFullName, section.getName(), section.getParent() == null,
-						 "<img src=\"" + CPATH + "/img/ico16_cross.gif\" onclick=\"removeSection('" + sectionFullName + "')\" title='Remove this section'>");
+						 "<img src=\"" + CPATH + "/img/but_del.gif\" onclick=\"removeSection('" + sectionFullName + "')\" title='Remove this section'>");
 		startParams(out, "paramTable_" + sectionFullName);
 		for (Iterator i = section.getParamNames().iterator(); i.hasNext();) {
 			String paramName = (String) i.next();
@@ -64,7 +64,7 @@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
 					sectionFullName + '.' + paramName,
 					section.getParam(paramName),
 					"paramRow_" + sectionFullName + Section.NAME_DELIMETER + paramName,
-					"<img src=\"" + CPATH + "/img/ico16_cross.gif\" onclick=\"removeParam('" + sectionFullName + "', '" + paramName +"')\" title='Remove this parameter'>");
+					"<img src=\"" + CPATH + "/img/but_del.gif\" onclick=\"removeParam('" + sectionFullName + "', '" + paramName +"')\" title='Remove this parameter'>");
 		}
 		printAddParam(out, section);
 		finishParams(out);
@@ -79,6 +79,10 @@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
 function createImgButton(imgUrl, onclickT, tooltipText)
 {
 	return "<img src=\""+imgUrl+"\" onclick=\"" + onclickT + "\" title=\"" + tooltipText + "\">";
+}
+function createImgButton2(imgUrl, onclickT, tooltipText, styleText)
+{
+	return "<img src=\""+imgUrl+"\" onclick=\"" + onclickT + "\" title=\"" + tooltipText + "\" style=\"" + styleText + "\">";
 }
 function addParam(sectionName)
 {
@@ -102,7 +106,7 @@ function addParam(sectionName)
 	newCell.appendChild(inputElement);
 
 	imgElement = document.createElement("img");
-	imgElement.src = "<%=CPATH%>/img/ico16_cross.gif";
+	imgElement.src = "<%=CPATH%>/img/but_del.gif";
 	imgElement.setAttribute('sectionName', sectionName);
 	imgElement.setAttribute('paramName', paramNameElem.value);
 	imgElement.attachEvent("onclick", removeParam_Event);
@@ -139,7 +143,7 @@ function sectionHeader(sectionName, fullName)
 		+ sectionName
 		+ "</td>"
 		+ "<td>"
-		+ createImgButton("<%=CPATH%>/img/ico16_cross.gif", "removeSection('" + fullName + "')", "Remove this section")
+		+ createImgButton("<%=CPATH%>/img/but_del.gif", "removeSection('" + fullName + "')", "Remove this section")
 		+ "</td>"
 		+ "</tr></table></div>";
 }
@@ -153,7 +157,7 @@ function addSectionField(sectionFN)
 	return ""
 		+ "<div>"
 		+ createInput(newSectionInput, "txt")
-		+ createImgButton("<%=CPATH%>/img/but_add.gif", "addSection('" + sectionFN + "')", "Add new section")
+		+ createImgButton2("<%=CPATH%>/img/but_add.gif", "addSection('" + sectionFN + "')", "Add new section",  "position:relative;top:4px")
 		+ "</div>";
 }
 function addParamField(sectionFN)

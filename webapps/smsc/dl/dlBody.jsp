@@ -1,3 +1,4 @@
+<%@ include file="/WEB-INF/inc/buttons.jsp"%>
 <div class=content>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Common values ~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <div class=page_subtitle>Distribution list</div>
@@ -24,22 +25,21 @@
 <div class=page_subtitle>Submitters</div>
 <table class=list cellspacing=0 cellpadding=1 width="100%">
 <thead>
-<col width="15%" align=right>
+<col width="15%">
 <col width="85%">
 </thead>
 <%
 for (int i = 0; i<bean.getSubmitters().length; i++)
 {
 	%><tr class=row0>
-		<td>&nbsp;</td>
-		<td><input class=txt name=submitters value="<%=StringEncoderDecoder.encode(bean.getSubmitters()[i])%>" validation="address" onkeyup="resetValidation(this)"></td>
+		<td colspan=2><input class=txt name=submitters value="<%=StringEncoderDecoder.encode(bean.getSubmitters()[i])%>" validation="address" onkeyup="resetValidation(this)"></td>
 	</tr>
 	<%
 }
 %>
 <tr class=row0>
-	<td><input class=btn type=submit name=mbAdd value="Add" title="Add new submitter"></td>
 	<td><input class=txt name=submitters validation="address" onkeyup="resetValidation(this)"></td>
+	<td><%addButton(out, "mbAdd", "Add", "Add new submitter");%></td>
 </tr>
 </table>
 
@@ -60,7 +60,7 @@ function setSort(sorting)
 </script>
 <div class=page_subtitle>Members</div>
 <table class=list cellspacing=0 cellpadding=1 width="100%">
-<col width="15%" align=right>
+<col width="15%">
 <col width="85%">
 <thead>
 <tr>
@@ -71,8 +71,7 @@ function setSort(sorting)
 for (int i = 0; i<bean.getMembers().length; i++)
 {
 	%><tr class=row0>
-		<td>&nbsp;</td>
-		<td><input class=txt name=members value="<%=StringEncoderDecoder.encode(bean.getMembers()[i])%>" validation="address" onkeyup="resetValidation(this)"></td>
+		<td colspan=2><input class=txt name=members value="<%=StringEncoderDecoder.encode(bean.getMembers()[i])%>" validation="address" onkeyup="resetValidation(this)"></td>
 	</tr>
 	<%
 }
@@ -85,8 +84,8 @@ for (int i = 0; i<bean.getMembers().length; i++)
 <col width="85%">
 </thead>
 <tr class=row0>
-	<td><input class=btn type=submit name=mbAdd value="Add" title="Add new member"></td>
 	<td><input class=txt name=members validation="address" onkeyup="resetValidation(this)"></td>
+	<td><%addButton(out, "mbAdd", "Add", "Add new member");%></td>
 </tr>
 </table>
 </div>

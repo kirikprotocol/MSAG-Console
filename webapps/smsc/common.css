@@ -15,6 +15,7 @@ body*
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 	font-size: x-small;
 }
+
 table
 {
 	border: 0px;
@@ -23,6 +24,13 @@ table
 img
 {
 	border:none;
+}
+img.button
+{
+	behavior : url(click_submit.htc);
+	cursor: hand;
+/*	position: relative;
+	top: 3px;*/
 }
 input, textarea, select
 {

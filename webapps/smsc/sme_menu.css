@@ -1,10 +1,38 @@
 table.sme_menu
 {
-	background-color: white;
-	color: black;
+	background-color: #A9B3B0;
+	height: 30px;
+	padding: 0;
+	white-space: nowrap;
 }
 
-table.sme_menu td a
+table.sme_menu td
 {
-	padding: 0px 5px 0px 5px;
+	padding-left: 4px;
+	padding-right: 4px;
 }
+
+table.sme_menu a,
+table.sme_menu a:hover,
+table.sme_menu a:visited
+{
+	border: 0px;
+	cursor: hand;
+	color: #006986;
+	text-decoration : none;
+	behavior : url(click_submit.htc);
+	white-space : nowrap;
+}
+
+table.sme_menu a.disabled,
+table.sme_menu a.disabled:hover,
+table.sme_menu a.disabled:visited
+{
+	border: 0px;
+	cursor: hand;
+	color: #768C8E;
+	text-decoration : none;
+	behavior : url(click_submit.htc);
+	white-space : nowrap;
+}
+

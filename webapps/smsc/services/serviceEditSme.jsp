@@ -19,18 +19,28 @@ switch(bean.process(appContext, errorMessages, loginedUserPrincipal))
 MENU0_SELECTION = "MENU0_SERVICES";
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-<%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbSave",  "Save",  "Save new service parameters");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%>
+<div class=content>
 <%int rowN = 0;%>
 <input type=hidden name="serviceId" value="<%=StringEncoderDecoder.encode(bean.getServiceId())%>">
 
-<div class=secInfo>Service parameters:</div>
-<table class=list cellspacing=1 width="100%">
+<div class=page_subtitle>Service parameters:</div>
+<table class=properties_list cellspacing=0>
 <%@include file="serviceSmeBody.jsp"%>
 </table>
-
-<div class=secButtons>
-<input class=btn type=submit name=mbSave value="Save" title="Save new service parameters">
-<input class=btn type=submit name=mbCancel value="Cancel" onClick="clickCancel()">
 </div>
+<%
+page_menu_begin(out);
+page_menu_button(out, "mbSave",  "Save",  "Save new service parameters");
+page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_space(out);
+page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

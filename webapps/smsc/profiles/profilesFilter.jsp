@@ -1,4 +1,5 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
+<%@ include file="/WEB-INF/inc/buttons.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.profiles.ProfilesFilter,
                  ru.novosoft.smsc.admin.profiler.Profile"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.profiles.ProfilesFilter"/>
@@ -31,9 +32,10 @@ page_menu_end(out);
 <div class=content>
 <table class=properties_list cellspacing=0 cellspadding=0>
 <col width="15%">
+<col width="15%">
 <col width="85%">
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Masks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=2><div class=page_subtitle>Masks</div></td></tr>
+<tr><td colspan=3><div class=page_subtitle>Masks</div></td></tr>
 <%
 int row = 0;
 for (int i=0; i<bean.getMasks().length; i++)
@@ -41,19 +43,20 @@ for (int i=0; i<bean.getMasks().length; i++)
 %>
 <tr class=row<%=(row++)&1%>>
 	<th>&nbsp;</th>
-	<td><input class=txt name=masks value="<%=bean.getMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
+	<td colspan=2><input class=txt name=masks value="<%=bean.getMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(row++)&1%>>
-	<th><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to filter"></th>
+	<th>&nbsp;</th>
 	<td><input class=txt name=masks validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><%addButton(out, "mbAdd", "Add", "Add new mask to filter");%></td>
 </tr>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=2 class=secInner><div class=page_subtitle>Options</div></td></tr>
+<tr><td colspan=3 class=secInner><div class=page_subtitle>Options</div></td></tr>
 <%row = 0;%>
 <tr class=row<%=(row++)&1%>>
 	<th>codepage:</th>
-	<td><div class=select><select class=txt name=codepage>
+	<td colspan=2><div class=select><select class=txt name=codepage>
 			<option value="-1" <%=-1 == bean.getCodepageByte() ? "selected" : ""%>>all</option>
 			<option value="<%=Profile.CODEPAGE_Default%>" <%=Profile.CODEPAGE_Default == bean.getCodepageByte() ? "selected" : ""%>>Default</option>
 			<option value="<%=Profile.CODEPAGE_UCS2   %>" <%=Profile.CODEPAGE_UCS2    == bean.getCodepageByte() ? "selected" : ""%>>UCS2</option>
@@ -61,13 +64,13 @@ for (int i=0; i<bean.getMasks().length; i++)
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th>report&nbsp;mode:</th>
-	<td><div class=select><select class=txt name=reportinfo>
+	<td colspan=2><div class=select><select class=txt name=reportinfo>
 			<option value="-1" <%=-1 == bean.getReportinfoByte() ? "selected" : ""%>>all</option>
 			<option value="<%=Profile.REPORT_OPTION_None%>" <%=Profile.REPORT_OPTION_None == bean.getReportinfoByte() ? "selected" : ""%>>none</option>
 			<option value="<%=Profile.REPORT_OPTION_Full%>" <%=Profile.REPORT_OPTION_Full == bean.getReportinfoByte() ? "selected" : ""%>>full</option>
 		</select></div></td>
 </tr>
-<tr><td colspan=2><div class=page_subtitle>Locales</div></td></tr>
+<tr><td colspan=3><div class=page_subtitle>Locales</div></td></tr>
 <%for (Iterator i = bean.getRegisteredLocales().iterator(); i.hasNext();)
 {
 	String registeredLocale = (String) i.next();
@@ -75,7 +78,7 @@ for (int i=0; i<bean.getMasks().length; i++)
 	%>
 	<tr class=row<%=(row++)&1%>>
 		<th>&nbsp;</th>
-		<td><input class=check id="reg_loc_<%=encRegisteredLocale%>" type=checkbox name=checkedLocales value="<%=encRegisteredLocale%>" <%=bean.isLocaleChecked(registeredLocale) ? "checked" : ""%>>&nbsp;<label for="reg_loc_<%=encRegisteredLocale%>"><%=encRegisteredLocale%></label></td>
+		<td colspan=2><input class=check id="reg_loc_<%=encRegisteredLocale%>" type=checkbox name=checkedLocales value="<%=encRegisteredLocale%>" <%=bean.isLocaleChecked(registeredLocale) ? "checked" : ""%>>&nbsp;<label for="reg_loc_<%=encRegisteredLocale%>"><%=encRegisteredLocale%></label></td>
 	</tr><%
 }%>
 </table>

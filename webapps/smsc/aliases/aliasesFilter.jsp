@@ -1,4 +1,5 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
+<%@ include file="/WEB-INF/inc/buttons.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.aliases.AliasesFilter,
 					  ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasFilter"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.aliases.AliasesFilter"/>
@@ -29,52 +30,57 @@ page_menu_space(out);
 page_menu_end(out);
 %>
 <div class=content>
-<table class=properties_list cellspacing=0 cellspadding=0>
-<col width="15%">
-<col width="85%">
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Aliases ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=2 class=secInner><div class=page_subtitle>Aliases</div></td></tr>
+<div class=page_subtitle>Aliases</div>
+<table class=properties_list cellspacing=0 cellspadding=0>
+<col width=1px>
+<col align=left>
 <%
 int rowN = 0;
 for (int i=0; i<bean.getAliases().length; i++)
 {
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th></th>
 	<td><input class=txt name=aliases value="<%=bean.getAliases()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
+	<td>&nbsp;</td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
-	<th><input class=btn type=submit name=mbAdd value="Add" title="Add new alias to filter"></th>
 	<td><input class=txt name=aliases validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><%addButton(out, "mbAdd", "Add", "Add new alias to filter");%></td>
 </tr>
-
+</table>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Addresses ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=2 class=secInner><div class=page_subtitle>Addresses</div></td></tr>
+<div class=page_subtitle>Addresses</div>
+<table class=properties_list cellspacing=0 cellspadding=0>
+<col width=1px>
+<col align=left>
 <%
 rowN = 0;
 for (int i=0; i<bean.getAddresses().length; i++)
 {
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th>address:</th>
 	<td><input class=txt name=addresses value="<%=bean.getAddresses()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
+	<td></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
-	<th><input class=btn type=submit name=mbAdd value="Add" title="Add new address to filter"></th>
 	<td><input class=txt name=addresses validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><%addButton(out, "mbAdd", "Add", "Add new address to filter");%></td>
 </tr>
-
+</table>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=2 class=secInner><div class=page_subtitle>Options</div></td></tr>
+<div class=page_subtitle>Options</div>
+<table class=properties_list cellspacing=0 cellspadding=0>
+<col width=1px>
 <%rowN = 0;%>
 <tr class=row<%=(rowN++)&1%>>
-	<th>hide option:</th>
+	<th>hide&nbsp;option:</th>
 	<td><div class=select><select class=txt name=hide>
-			<option value="<%=AliasFilter.HIDE_NOFILTER%>" <%=AliasFilter.HIDE_NOFILTER == bean.getHide() ? "selected" : ""%>>all</option>
-			<option value="<%=AliasFilter.HIDE_SHOW_HIDE%>" <%=AliasFilter.HIDE_SHOW_HIDE == bean.getHide() ? "selected" : ""%>>show hided only</option>
-			<option value="<%=AliasFilter.HIDE_SHOW_NOHIDE%>" <%=AliasFilter.HIDE_SHOW_NOHIDE == bean.getHide() ? "selected" : ""%>>show not hided only</option>
+			<option value="<%=AliasFilter.HIDE_NOFILTER%>" <%=AliasFilter.HIDE_NOFILTER == bean.getHideByte() ? "selected" : ""%>>all</option>
+			<option value="<%=AliasFilter.HIDE_SHOW_HIDE%>" <%=AliasFilter.HIDE_SHOW_HIDE == bean.getHideByte() ? "selected" : ""%>>show hided only</option>
+			<option value="<%=AliasFilter.HIDE_SHOW_NOHIDE%>" <%=AliasFilter.HIDE_SHOW_NOHIDE == bean.getHideByte() ? "selected" : ""%>>show not hided only</option>
 		</select></div></td>
 </tr>
 </table>

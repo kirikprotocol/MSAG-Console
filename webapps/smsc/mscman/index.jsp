@@ -1,4 +1,5 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
+<%@ include file="/WEB-INF/inc/buttons.jsp"%>
 <%@ page import="java.util.*,
                  ru.novosoft.smsc.jsp.SMSCAppContext,
                  ru.novosoft.smsc.util.StringEncoderDecoder"%>
@@ -35,18 +36,22 @@
 <div class=content>
 <div class=page_subtitle>Commutators status</div>
 <table class=list cellspacing=0>
+<col width=20%>
+<col width=25%>
+<col width=10%>
+<col width=45%>
 <%  List mscList = bean.getMscs();
     if (mscList == null || mscList.size() <= 0) {%>
 <tr class=row0>
-    <td colspan=4><div align=left>No Mobile Switching Centers defined</div><td>
+    <td colspan=4>No Mobile Switching Centers defined<td>
 </tr>
 <%  } else {
         int posIdx = 0;%>
 <tr class=row<%= (posIdx++)%2%>>
-    <th width="20%"><div align=right>Commutator</div></th>
-    <th width="25%"><div align=right>Status</div></th>
-    <th width="10%"><div align=right>Failures</div></th>
-    <th width="45%"><div align=right>Actions</div></th>
+    <th>Commutator</th>
+    <th>Status</th>
+    <th>Failures</th>
+    <th>Actions</th>
 </tr><%
         for (int i=0; i<mscList.size(); i++)
         {
@@ -54,15 +59,16 @@
             if (obj != null && obj instanceof MscInfo) {
                 MscInfo info = (MscInfo)obj; %>
 <tr class=row<%= (posIdx++)%2%>>
-    <td><div align=right><%= StringEncoderDecoder.encode(info.getMscNum())%></div></td>
-    <td><div align=right><%= StringEncoderDecoder.encode(info.getLockString())%></div></td>
-    <td><div align=right><%= info.getfCount()%></div></td>
-    <td>
-    <div align=right>
-        <input class=btn type="submit" name="mbBlock" value="Lock" onclick="this.form.mscKey.value='<%= info.getMscNum()%>'" <%= (info.ismLock()) ? "disabled":""%>>
-        <input class=btn type="submit" name="mbClear" value="UnLock" onclick="this.form.mscKey.value='<%= info.getMscNum()%>'" <%= (info.isaLock() || info.ismLock()) ? "":"disabled"%>>
-        <input class=btn type="submit" name="mbUnregister" value="UnRegister" onclick="this.form.mscKey.value='<%= info.getMscNum()%>'">
-    </div>
+    <td><%= StringEncoderDecoder.encode(info.getMscNum())%></td>
+    <td align=center><%= StringEncoderDecoder.encode(info.getLockString())%></td>
+    <td align=center><%= info.getfCount()%></td>
+    <td align=right>
+		<%button(out, !info.ismLock() ? "but_lock.gif" : "but_lock_dis.gif",
+					"mbBlock",      "Lock",       "Lock this MSC",       "opForm.mscKey.value='" + info.getMscNum() + "'");%>
+		<%button(out, info.isaLock() || info.ismLock() ? "but_unlock.gif" : "but_unlock_dis.gif",
+					"mbClear",      "UnLock",     "UnLock this MSC",     "opForm.mscKey.value='" + info.getMscNum() + "'");%>
+		<%button(out, "but_unregister.gif", 
+					"mbUnregister", "UnRegister", "Unregister this MSC", "opForm.mscKey.value='" + info.getMscNum() + "'");%>
     </td>
 </tr><%     }
         }
@@ -73,11 +79,12 @@
 <div class=page_subtitle>Register new Mobile Switching Center</div>
 <table class=list cellspacing=1 width="100%">
 <tr class=row0>
-     <td width="55%">
+     <td width="1%">
         <input type="hidden" name="mscKey" value="none">
         <input class=txt type="text" name="mscNum" value="<%=bean.getMscNum()%>" size=21 maxlength=21>
     </td>
-<td width="45%"><input class=btn type="submit" name="mbRegister" value="Register"></td>
+<td width="1%"><%button(out, "but_register.gif", "mbRegister", "Register", "Register new MSC");%></td>
+<td width="98%">&nbsp;</td>
 </tr>
 </table>
 </div>

@@ -1,3 +1,4 @@
+<%@ include file="/WEB-INF/inc/buttons.jsp"%>
 <div class=content>
 <div class=page_subtitle>Subject information</div>
 <%int rowN = 0;%>
@@ -38,7 +39,7 @@ for (int i=0; i<bean.getMasks().length; i++)
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
 	<td><input class=txt name=masks validation="mask" onkeyup="resetValidation(this)"></td>
-	<td><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to subject"></td>
+	<td><%addButton(out, "mbAdd", "Add", "Add new mask to subject");%></td>
 </tr>
 </table>
 <%}%>

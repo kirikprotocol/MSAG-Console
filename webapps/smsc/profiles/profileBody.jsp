@@ -1,20 +1,21 @@
-<table class=list cellspacing=0 cellspadding=1 width="100%">
-<col width="15%" align=right>
+<div class=content>
+<div class=page_subtitle>Profile information</div>
+<table class=properties_list cellspacing=0 cellspadding=0>
+<col width="15%">
 <col width="85%">
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=2 class=secInner><div class=secView>Profile information</div></td></tr>
 <tr class=row0>
 	<th>mask:</th>
 	<td><input class=txt name="mask" value="<%=bean.getMask() == null || bean.getMask().trim().length() == 0 ? ".0.0.0" : bean.getMask()%>" <%=isEdit ? "readonly" : ""%> validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
-<tr class=row0>
+<tr class=row1>
 	<th>codepage:</th>
 	<td><div class=select><select class=txt name=codepage>
 			<option value="<%=Profile.CODEPAGE_Default%>" <%=bean.getByteCodepage() == Profile.CODEPAGE_Default ? "SELECTED" : ""%>>Default</option>
 			<option value="<%=Profile.CODEPAGE_UCS2   %>" <%=bean.getByteCodepage() == Profile.CODEPAGE_UCS2    ? "SELECTED" : ""%>>UCS2</option>
 		</select></div></td>
 </tr>
-<tr class=row1>
+<tr class=row0>
 	<th>report mode:</th>
 	<td><div class=select><select class=txt name="report">
 			<option value="<%=Profile.REPORT_OPTION_None %>" <%=bean.getByteReport() == Profile.REPORT_OPTION_None  ? "SELECTED" : ""%>>none</option>
@@ -35,12 +36,13 @@
 		}%>
 		</select></div></td>
 </tr>
-<tr class=row1>
+<tr class=row0>
 	<th>alias:</th>
 	<td>
-    <input type=radio type="radio" name="aliasHide" value="true"  <%= (bean.isAliasHide()) ? "checked":""%>>Hide
-    <input type=radio type="radio" name="aliasHide" value="false" <%= (bean.isAliasHide()) ? "":"checked"%>>Unhide
-    <input type=checkbox type="checkbox" name="aliasModifiable" valuue="true" <%= (bean.isAliasModifiable()) ? "checked":""%>>Modifiable
+    <input class=check type=radio type="radio" name="aliasHide" value="true"  <%= (bean.isAliasHide()) ? "checked":""%>>Hide
+    <input class=check type=radio type="radio" name="aliasHide" value="false" <%= (bean.isAliasHide()) ? "":"checked"%>>Unhide
+    <input class=check type=checkbox type="checkbox" name="aliasModifiable" valuue="true" <%= (bean.isAliasModifiable()) ? "checked":""%>>Modifiable
   </td>
 </tr>
 </table>
+</div>

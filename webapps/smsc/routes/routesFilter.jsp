@@ -1,4 +1,5 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
+<%@ include file="/WEB-INF/inc/buttons.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.routes.RoutesFilter,
 					  ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.routes.RoutesFilter"/>
@@ -32,9 +33,11 @@ page_menu_end(out);
 <table class=properties_list cellspacing=0 cellspadding=0>
 <col width="1%">
 <col width="85%">
+</table>
 <%int rowN = 0;%>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~ sources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=3 class=secInner><div class=page_subtitle>Sources</div></td></tr>
+<div class=page_subtitle>Sources</div>
+<table class=properties_list cellspacing=0 cellspadding=0>
 <%
 rowN = 0;
 for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
@@ -43,25 +46,24 @@ String name = (String) i.next();
 String encName = StringEncoderDecoder.encode(name);
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th>&nbsp;</th>
-	<td nowrap><input class=check id="src_chk_<%=encName%>" type=checkbox name=srcChks value="<%=encName%>" <%=bean.isSrcChecked(name) ? "checked" : ""%>>&nbsp;<label for="src_chk_<%=encName%>"><%=encName%></label></td>
+	<td nowrap colspan=2><input class=check id="src_chk_<%=encName%>" type=checkbox name=srcChks value="<%=encName%>" <%=bean.isSrcChecked(name) ? "checked" : ""%>>&nbsp;<label for="src_chk_<%=encName%>"><%=encName%></label></td>
 </tr>
 <%}
 for (int i=0; i<bean.getSrcMasks().length; i++)
 {
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th>&nbsp;</th>
-	<td><input class=txt name=srcMasks value="<%=bean.getSrcMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
+	<td colspan=2><input class=txtW name=srcMasks value="<%=bean.getSrcMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
-	<th><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to sources filter"></th>
-	<td><input class=txt name=srcMasks validation="mask" onkeyup="resetValidation(this)"></td>
+	<td width=100%><input class=txtW name=srcMasks validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><%addButton(out, "mbAdd", "Add", "Add new mask to sources filter");%></td>
 </tr>
-
+</table>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~ destinations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=3 class=secInner><div class=page_subtitle>Destinations</div></td></tr>
+<div class=page_subtitle>Destinations</div>
+<table class=properties_list cellspacing=0 cellspadding=0>
 <%
 rowN = 0;
 for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
@@ -70,25 +72,24 @@ String name = (String) i.next();
 String encName = StringEncoderDecoder.encode(name);
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th>&nbsp;</th>
-	<td nowrap><input class=check id="dst_chk_<%=encName%>" type=checkbox name=dstChks value="<%=encName%>" <%=bean.isDstChecked(name) ? "checked" : ""%>>&nbsp;<label for="dst_chk_<%=encName%>"><%=encName%></label></td>
+	<td nowrap colspan=2><input class=check id="dst_chk_<%=encName%>" type=checkbox name=dstChks value="<%=encName%>" <%=bean.isDstChecked(name) ? "checked" : ""%>>&nbsp;<label for="dst_chk_<%=encName%>"><%=encName%></label></td>
 </tr>
 <%}
 for (int i=0; i<bean.getDstMasks().length; i++)
 {
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th>&nbsp;</th>
-	<td><input class=txt name=dstMasks value="<%=bean.getDstMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
+	<td colspan=2><input class=txtW name=dstMasks value="<%=bean.getDstMasks()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
-	<th><input class=btn type=submit name=mbAdd value="Add" title="Add new mask to destinations filter"></th>
-	<td><input class=txt name=dstMasks validation="mask" onkeyup="resetValidation(this)"></td>
+	<td width=100%><input class=txtW name=dstMasks validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><%addButton(out, "mbAdd", "Add", "Add new mask to destinations filter");%></td>
 </tr>
-
+</table>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMEs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=3 class=secInner><div class=page_subtitle>SMEs</div></td></tr>
+<div class=page_subtitle>SMEs</div>
+<table class=properties_list cellspacing=0 cellspadding=0>
 <%
 rowN = 0;
 for (Iterator i = bean.getAllSmes().iterator(); i.hasNext();)
@@ -97,25 +98,22 @@ String name = (String) i.next();
 String encName = StringEncoderDecoder.encode(name);
 %>
 <tr class=row<%=(rowN++)&1%>>
-	<th>&nbsp;</th>
 	<td nowrap><input class=check id="sme_<%=encName%>" type=checkbox name=smeChks value="<%=encName%>" <%=bean.isSmeChecked(name) ? "checked" : ""%>>&nbsp;<label for="sme_<%=encName%>"><%=encName%></label></td>
 </tr>
 <%}%>
-
+</table>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=3 class=secInner><div class=secView>Options</div></td></tr>
+<div class=page_subtitle>Options</div>
+<table class=properties_list cellspacing=0 cellspadding=0>
 <%rowN = 0;%>
 <tr class=row<%=(rowN++)&1%>>
-	<th>&nbsp;</th>
-	<td nowrap><input type="checkbox" name=strict <%=bean.isStrict() ? "checked" : ""%>>Strict Filter</td>
+	<td nowrap><input class=check type="checkbox" name=strict <%=bean.isStrict() ? "checked" : ""%>>Strict Filter</td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th>&nbsp;</th>
-	<td nowrap><input type="checkbox" name=showSrc <%=bean.isShowSrc() ? "checked" : ""%>>Show sources list</td>
+	<td nowrap><input class=check type="checkbox" name=showSrc <%=bean.isShowSrc() ? "checked" : ""%>>Show sources list</td>
 </tr>
 <tr class=rowLast>
-	<th>&nbsp;</th>
-	<td nowrap><input type="checkbox" name=showDst <%=bean.isShowDst() ? "checked" : ""%>>Show destinations list</td>
+	<td nowrap><input class=check type="checkbox" name=showDst <%=bean.isShowDst() ? "checked" : ""%>>Show destinations list</td>
 </tr>
 </table>
 </div>

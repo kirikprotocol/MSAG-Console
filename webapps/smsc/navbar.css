@@ -31,18 +31,20 @@ table.navbar td.filter
 }
 
 table.navbar td.page,
-table.navbar td.current
+table.navbar td.current,
+table.navbar td.filter
 {
 	cursor: hand;
 }
 table.navbar td.current
 {
-	background-color: Lime;
+	background-color: #3A5867;
+	color: #F2E275;
 }
 
 table.navbar td.total
 {
-	color: green;
+	color: #1A8999;
 	text-align: right;
 }
 
