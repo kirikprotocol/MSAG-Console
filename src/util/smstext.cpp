@@ -172,15 +172,15 @@ int partitionSms(SMS* sms,int dstdc)
 {
   unsigned int len;
   const char* msg=sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
-  bool udhi=sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40;
-  int  udhilen=udhi?(1+*((unsigned char*)msg)):0;
-  if(udhilen>140)return psErrorUdhi;
   int dc=sms->getIntProperty(Tag::SMPP_DATA_CODING);
   if(len==0 && sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
   {
     msg=sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
   }
   __trace2__("partitionSms: len=%d, dc=%d, dstdc=%d",len,dc,dstdc);
+  bool udhi=sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40;
+  int  udhilen=udhi?(1+*((unsigned char*)msg)):0;
+  if(udhilen>140)return psErrorUdhi;
   auto_ptr<char> buf8;
   auto_ptr<char> bufTr;
   if(dc==DataCoding::UCS2 && dstdc!=DataCoding::UCS2)
