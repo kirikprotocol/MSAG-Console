@@ -75,7 +75,7 @@ public class User implements Principal
     this.cellPhone = userElem.getAttribute("cellPhone");
     this.email = userElem.getAttribute("email");
     try {
-      this.providerId = Long.decode(userElem.getAttribute("long providerId")).longValue();
+      this.providerId = Long.decode(userElem.getAttribute("providerId")).longValue();
     } catch (NumberFormatException e) {
       this.providerId = -1;
     }
