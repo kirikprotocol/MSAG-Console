@@ -146,29 +146,20 @@ int main(int argc,char* argv[])
         if(message[i]<32)message[i]=0;
       }
       int len=strlen((char*)message);
-      //char buf7[256];
-      //int len7=ConvertTextTo7Bit((char*)message,len,buf7,sizeof(buf7),CONV_ENCODING_ANSI);
 
-      //s.setMessageBody(len,1,false,message);
-      //s.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,message,len);
-      //s.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len);
-      //s.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
-      Array<SMS*> smsarr;
-      splitSms(&s,message,len,CONV_ENCODING_KOI8R,DataCoding::DEFAULT,smsarr);
-      for(int x=0;x<smsarr.Count();x++)
+      s.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,message,len);
+      s.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,0);
+      s.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+      fillSmppPduFromSms(&sm,&s);
+      PduSubmitSmResp *resp=tr->submit(sm);
+      if(resp && resp->get_header().get_commandStatus()==0)
       {
-        fillSmppPduFromSms(&sm,smsarr[x]);
-        PduSubmitSmResp *resp=tr->submit(sm);
-  //      atr->submit(sm);
-        if(resp && resp->get_header().get_commandStatus()==0)
-        {
-          printf("Accepted:%d bytes\n",len);fflush(stdout);
-        }else
-        {
-          printf("Wasn't accepted\n");fflush(stdout);
-        }
-        if(resp)disposePdu((SmppHeader*)resp);
+        printf("Accepted:%d bytes\n",len);fflush(stdout);
+      }else
+      {
+        printf("Wasn't accepted\n");fflush(stdout);
       }
+      if(resp)disposePdu((SmppHeader*)resp);
     }
   }
   catch(SmppConnectException& e)

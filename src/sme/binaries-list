@@ -5,3 +5,8 @@ sme/t t -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt
 sme/flooder flooder -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
 #sme/t2 t2 -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
 sme/pingpong pingpong -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
+sme/replacetest replacetest  -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
+sme/querytest querytest  -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
+sme/canceltest canceltest  -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
+sme/payload payload  -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
+sme/datasmtest datasmtest -lcore-network -lutil -lsms -lutil -lsocket -lcore-threads -lthread -lrt -lutil-recoder-recode_dll

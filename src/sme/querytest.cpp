@@ -18,23 +18,8 @@ public:
     if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
     {
       char buf[256];
-      if(!getPduText((PduXSm*)pdu,buf,sizeof(buf)))
-      {
-        int sz=((PduXSm*)pdu)->optional.size_messagePayload();
-        char *data=new char[sz+1];
-        memcpy
-        (
-          data,
-          ((PduXSm*)pdu)->optional.get_messagePayload(),
-          sz
-        );
-        data[sz]=0;
-        printf("\nReceived payload:%s\n",data);
-        delete [] data;
-      }else
-      {
-        printf("\nReceived:%s\n",buf);
-      }
+      getPduText((PduXSm*)pdu,buf,sizeof(buf));
+      printf("\nReceived:%s\n",buf);
       PduDeliverySmResp resp;
       resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
       resp.set_messageId("");
@@ -163,6 +148,50 @@ int main(int argc,char* argv[])
         if(resp && resp->get_header().get_commandStatus()==0)
         {
           printf("Accepted:%d bytes\n",len);fflush(stdout);
+          PduQuerySm q;
+          q.set_messageId(resp->get_messageId());
+          q.get_source().set_typeOfNumber(addr.type);
+          q.get_source().set_numberingPlan(addr.plan);
+          q.get_source().set_value(addr.value);
+          PduQuerySmResp *qresp=tr->query(q);
+          if(qresp)
+          {
+              printf("Query result:%d,%d,%d,%s\n",
+                qresp->get_header().get_commandStatus(),
+                qresp->get_messageState(),
+                qresp->get_errorCode(),
+                qresp->get_finalDate()
+              );
+            disposePdu((SmppHeader*)qresp);
+          }
+          else
+          {
+            printf("Query timedout\n");
+          }
+          printf("Press any key\n");
+          fgets(message,sizeof(message),stdin);
+          {
+            PduQuerySm q;
+            q.set_messageId(resp->get_messageId());
+            q.get_source().set_typeOfNumber(addr.type);
+            q.get_source().set_numberingPlan(addr.plan);
+            q.get_source().set_value(addr.value);
+            PduQuerySmResp *qresp=tr->query(q);
+            if(qresp)
+            {
+              printf("Query result:%d,%d,%d,%s\n",
+                qresp->get_header().get_commandStatus(),
+                qresp->get_messageState(),
+                qresp->get_errorCode(),
+                qresp->get_finalDate()
+              );
+              disposePdu((SmppHeader*)qresp);
+            }
+            else
+            {
+              printf("Query timedout\n");
+            }
+          }
         }else
         {
           printf("Wasn't accepted\n");fflush(stdout);

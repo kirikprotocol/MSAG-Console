@@ -18,23 +18,8 @@ public:
     if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
     {
       char buf[256];
-      if(!getPduText((PduXSm*)pdu,buf,sizeof(buf)))
-      {
-        int sz=((PduXSm*)pdu)->optional.size_messagePayload();
-        char *data=new char[sz+1];
-        memcpy
-        (
-          data,
-          ((PduXSm*)pdu)->optional.get_messagePayload(),
-          sz
-        );
-        data[sz]=0;
-        printf("\nReceived payload:%s\n",data);
-        delete [] data;
-      }else
-      {
-        printf("\nReceived:%s\n",buf);
-      }
+      getPduText((PduXSm*)pdu,buf,sizeof(buf));
+      printf("\nReceived:%s\n",buf);
       PduDeliverySmResp resp;
       resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
       resp.set_messageId("");
@@ -157,17 +142,43 @@ int main(int argc,char* argv[])
       splitSms(&s,message,len,CONV_ENCODING_KOI8R,DataCoding::DEFAULT,smsarr);
       for(int x=0;x<smsarr.Count();x++)
       {
-        fillSmppPduFromSms(&sm,smsarr[x]);
-        PduSubmitSmResp *resp=tr->submit(sm);
+        for(int i=0;i<1000;i++)
+        {
+          fillSmppPduFromSms(&sm,smsarr[x]);
+          PduSubmitSmResp *resp=tr->submit(sm);
+          if(resp)disposePdu((SmppHeader*)resp);
+        }
   //      atr->submit(sm);
-        if(resp && resp->get_header().get_commandStatus()==0)
+        //if(resp && resp->get_header().get_commandStatus()==0)
         {
           printf("Accepted:%d bytes\n",len);fflush(stdout);
-        }else
+          PduCancelSm q;
+          //q.set_messageId(resp->get_messageId());
+          q.set_serviceType("XXX");
+
+          q.get_source().set_typeOfNumber(addr.type);
+          q.get_source().set_numberingPlan(addr.plan);
+          q.get_source().set_value(addr.value);
+
+          q.get_dest().set_typeOfNumber(s.getDestinationAddress().type);
+          q.get_dest().set_numberingPlan(s.getDestinationAddress().plan);
+          q.get_dest().set_value(s.getDestinationAddress().value);
+          //printf("Cancelling:%s\n",resp->get_messageId());
+          PduCancelSmResp *cresp=tr->cancel(q);
+          if(cresp)
+          {
+            printf("Cancel result:%d\n",cresp->get_header().get_commandStatus());
+            disposePdu((SmppHeader*)cresp);
+          }
+          else
+          {
+            printf("Cancel timedout\n");
+          }
+        }
+        /*else
         {
           printf("Wasn't accepted\n");fflush(stdout);
-        }
-        if(resp)disposePdu((SmppHeader*)resp);
+        }*/
       }
     }
   }

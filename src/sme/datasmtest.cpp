@@ -15,31 +15,24 @@ class MyListener:public SmppPduEventListener{
 public:
   void handleEvent(SmppHeader *pdu)
   {
-    if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
+    if(pdu->get_commandId()==SmppCommandSet::DATA_SM)
     {
-      char buf[256];
-      if(!getPduText((PduXSm*)pdu,buf,sizeof(buf)))
-      {
-        int sz=((PduXSm*)pdu)->optional.size_messagePayload();
-        char *data=new char[sz+1];
-        memcpy
-        (
-          data,
-          ((PduXSm*)pdu)->optional.get_messagePayload(),
-          sz
-        );
-        data[sz]=0;
-        printf("\nReceived payload:%s\n",data);
-        delete [] data;
-      }else
-      {
-        printf("\nReceived:%s\n",buf);
-      }
-      PduDeliverySmResp resp;
-      resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+      int sz=((PduDataSm*)pdu)->optional.size_messagePayload();
+      char *data=new char[sz+1];
+      memcpy
+      (
+        data,
+        ((PduDataSm*)pdu)->optional.get_messagePayload(),
+        sz
+      );
+      data[sz]=0;
+      printf("\nReceived payload:%s\n",data);
+      delete [] data;
+      PduDataSmResp resp;
+      resp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
       resp.set_messageId("");
       resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-      trans->sendDeliverySmResp(resp);
+      trans->sendDataSmResp(resp);
     }else
     if(pdu->get_commandId()==SmppCommandSet::SUBMIT_SM_RESP)
     {
@@ -88,7 +81,7 @@ int main(int argc,char* argv[])
   SmppSession ss(cfg,&lst);
   try{
     ss.connect();
-    PduSubmitSm sm;
+    PduDataSm sm;
     SMS s;
 //    const char *dst="2";
 //47.44.rymhrwDMy4
@@ -110,10 +103,10 @@ int main(int argc,char* argv[])
     //SmppTransmitter *atr=ss.getAsyncTransmitter();
     lst.setTrans(tr);
     s.setEServiceType("XXX");
-    sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+    sm.get_header().set_commandId(SmppCommandSet::DATA_SM);
     while(!stopped)
     {
-      char message[512];
+      char message[4096];
       printf("Enter destination:");fflush(stdout);
       fgets((char*)message,sizeof(message),stdin);
       int i=0;
@@ -140,35 +133,28 @@ int main(int argc,char* argv[])
         continue;
       }
       printf("Enter message:");fflush(stdout);
-      fgets((char*)message,sizeof(message),stdin);
-      for(int i=0;message[i];i++)
+      //fgets((char*)message,sizeof(message),stdin);
+      for(int i=0;i<sizeof(message);i++)message[i]='!';
+      message[sizeof(message)-1]=0;
+      /*for(int i=0;message[i];i++)
       {
         if(message[i]<32)message[i]=0;
-      }
+      }*/
       int len=strlen((char*)message);
-      //char buf7[256];
-      //int len7=ConvertTextTo7Bit((char*)message,len,buf7,sizeof(buf7),CONV_ENCODING_ANSI);
 
-      //s.setMessageBody(len,1,false,message);
-      //s.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,message,len);
-      //s.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len);
-      //s.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
-      Array<SMS*> smsarr;
-      splitSms(&s,message,len,CONV_ENCODING_KOI8R,DataCoding::DEFAULT,smsarr);
-      for(int x=0;x<smsarr.Count();x++)
+      s.setBinProperty(smsc::sms::Tag::SMPP_MESSAGE_PAYLOAD,message,len);
+      s.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,0);
+      s.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
+      fillDataSmFromSms(&sm,&s);
+      PduDataSmResp *resp=tr->data(sm);
+      if(resp && resp->get_header().get_commandStatus()==0)
       {
-        fillSmppPduFromSms(&sm,smsarr[x]);
-        PduSubmitSmResp *resp=tr->submit(sm);
-  //      atr->submit(sm);
-        if(resp && resp->get_header().get_commandStatus()==0)
-        {
-          printf("Accepted:%d bytes\n",len);fflush(stdout);
-        }else
-        {
-          printf("Wasn't accepted\n");fflush(stdout);
-        }
-        if(resp)disposePdu((SmppHeader*)resp);
+        printf("Accepted:%d bytes\n",len);fflush(stdout);
+      }else
+      {
+        printf("Wasn't accepted\n");fflush(stdout);
       }
+      if(resp)disposePdu((SmppHeader*)resp);
     }
   }
   catch(SmppConnectException& e)
