@@ -1354,7 +1354,7 @@ static void DoUSSRUserResponce( MapDialog* dialog)
   if ( dialog->version == 2 )
   {
     result = Et96MapV2ProcessUnstructuredSSRequestResp(
-      dialog->ssn,dialog->dialogid_map,++(dialog->invokeId),
+      dialog->ssn,dialog->dialogid_map,0,
       &ussdEncoding,
       &ussdString,
       0);
@@ -3054,7 +3054,7 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       __map_warn2__("DCS 0x%02X received in Et96MapV2ProcessUnstructuredSSRequestInd", ussdDataCodingScheme );
       throw runtime_error("Datacoding other then GSM7bit is not supported in Et96MapV2ProcessUnstructuredSSRequestInd");
     }
-    __map_trace2__("%s: dialogid 0x%x request encoding 0x%x length %d subsystem %s",__func__,dialogueId,ussdDataCodingScheme,ussdString_s.ussdStrLen,subsystem.c_str());
+    __map_trace2__("%s: dialogid 0x%x invokeid=%d request encoding 0x%x length %d subsystem %s",__func__,dialogueId,invokeId,ussdDataCodingScheme,ussdString_s.ussdStrLen,subsystem.c_str());
     subsystem.insert(0, ".5.0.ussd:");
     Address dest_addr = Address(subsystem.c_str());
 //    dest_addr.type = 0;
