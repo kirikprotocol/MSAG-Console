@@ -1,5 +1,6 @@
 package ru.novosoft.smsc.jsp.smsc.routes;
 
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.util.SortedList;
 
@@ -39,6 +40,7 @@ public class RouteBody extends SmscBean
   protected boolean forceReplayPath = false;
   protected String notes = "";
   protected boolean forceDelivery = false;
+  protected long aclId = -1;
 
   public boolean isSrcChecked(String srcName)
   {
@@ -68,6 +70,16 @@ public class RouteBody extends SmscBean
   public boolean isMaskSmeSelected(String dstMask, String smeId)
   {
     return smeId.equals(selectedMaskSmes.get(dstMask));
+  }
+
+  public List getAclNames()
+  {
+    try {
+      return appContext.getAclManager().getAclNames();
+    } catch (AdminException e) {
+      logger.error("Could not get list of ACL names", e);
+      return new LinkedList();
+    }
   }
 
   /**
@@ -310,5 +322,15 @@ public class RouteBody extends SmscBean
   public void setForceDelivery(boolean forceDelivery)
   {
     this.forceDelivery = forceDelivery;
+  }
+
+  public long getAclId()
+  {
+    return aclId;
+  }
+
+  public void setAclId(long aclId)
+  {
+    this.aclId = aclId;
   }
 }

@@ -37,9 +37,11 @@ public class Route
   private boolean forceReplayPath = false;
   private String notes = "";
   private boolean forceDelivery = false;
+  private long aclId;
 
-  public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, boolean isSuppressDeliveryReports, boolean active, int serviceId, SourceList sources, DestinationList destinations, String srcSmeId, String deliveryMode, String forwardTo, boolean hide, boolean forceReplayPath, String notes, boolean forceDelivery)
+  public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, boolean isSuppressDeliveryReports, boolean active, int serviceId, SourceList sources, DestinationList destinations, String srcSmeId, String deliveryMode, String forwardTo, boolean hide, boolean forceReplayPath, String notes, boolean forceDelivery, long aclId)
   {
+    this.aclId = aclId;
     if (routeName == null)
       throw new NullPointerException("Route name is null");
     if (routeName.length() > Constants.ROUTE_ID_MAXLENGTH)
@@ -92,6 +94,7 @@ public class Route
     forceReplayPath = false;
     notes = "";
     forceDelivery = false;
+    aclId = -1;
   }
 
   public Route(Element routeElem, SubjectList subjects, SmeManager smeManager) throws AdminException
@@ -119,6 +122,7 @@ public class Route
     for (int i = 0; i < notesList.getLength(); i++)
       notes += Utils.getNodeText(notesList.item(i));
     forceDelivery = Boolean.valueOf(routeElem.getAttribute("forceDelivery")).booleanValue();
+    aclId = Long.decode(routeElem.getAttribute("aclId")).longValue();
   }
 
   public String getName()
@@ -247,6 +251,7 @@ public class Route
                 + "\" hide=\"" + (isHide() ? "true" : "false")
                 + "\" forceReplayPath=\"" + (isForceReplayPath() ? "true" : "false")
                 + ("MAP_PROXY".equals(getSrcSmeId()) ? "\" forwardTo=\"" + StringEncoderDecoder.encode(getForwardTo()) : "")
+                + "\" aclId=\"" + getAclId()
                 + "\">");
     if (notes != null)
       out.println("    <notes>" + notes + "</notes>");
@@ -364,5 +369,15 @@ public class Route
   public void setForceDelivery(boolean forceDelivery)
   {
     this.forceDelivery = forceDelivery;
+  }
+
+  public long getAclId()
+  {
+    return aclId;
+  }
+
+  public void setAclId(long aclId)
+  {
+    this.aclId = aclId;
   }
 }

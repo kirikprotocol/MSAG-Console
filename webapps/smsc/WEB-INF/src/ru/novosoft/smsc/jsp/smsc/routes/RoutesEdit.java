@@ -73,6 +73,7 @@ public class RoutesEdit extends RouteBody
           selectedMaskSmes.put(mask, r.getDestinations().get(mask).getSme().getId());
         }
       }
+      aclId = r.getAclId();
     }
 
     if (deliveryMode == null) deliveryMode = "default";
@@ -175,7 +176,7 @@ public class RoutesEdit extends RouteBody
         return error(SMSCErrors.error.routes.destinationsIsEmpty);
 
       routeSubjectManager.getRoutes().remove(oldRouteId);
-      routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, forceReplayPath, notes, forceDelivery));
+      routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId, deliveryMode, forwardTo, hide, forceReplayPath, notes, forceDelivery, aclId));
       if (oldRouteId.equals(routeId))
         journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY);
       else

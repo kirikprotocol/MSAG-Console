@@ -1,5 +1,6 @@
 <%@ page import="ru.novosoft.smsc.util.*,
-                 java.util.*"%>
+                 java.util.*,
+                 ru.novosoft.smsc.admin.acl.AclInfo"%>
 <div class=content>
 <%int rowN = 0;%>
 <script>
@@ -62,6 +63,20 @@ function srcSmeIdChanged()
     <tr class=row<%=(rowN++)&1%> id=forwardTo_row>
       <th>forward to</th>
       <td><input id=forwardTo class=txt name=forwardTo value="<%=StringEncoderDecoder.encode(bean.getForwardTo())%>" validation="address" onkeyup="resetValidation(this)"><script>srcSmeIdChanged();</script></td>
+    </tr>
+    <tr class=row<%=(rowN++)&1%>>
+      <th>Access&nbsp;Control&nbsp;List</th>
+      <td>
+        <div class=select><select class=txt name="aclId">
+          <option value="-1">&nbsp;</option>
+          <%
+            for (Iterator acls = bean.getAclNames().iterator(); acls.hasNext();) {
+              AclInfo aclInfo = (AclInfo) acls.next();
+              %><option value="<%=aclInfo.getId()%>" <%=aclInfo.getId() == bean.getAclId() ? "selected" : ""%>><%=aclInfo.getName()%></option><%
+            }
+          %>
+        </select></div>
+      </td>
     </tr>
 		</table>
 	</td>
