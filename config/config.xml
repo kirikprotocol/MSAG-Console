@@ -77,6 +77,10 @@
       <param name="port" type="int">9003</param>
     </section>
 
+    <section name="reshedule table">
+      <param name="30s,1m,5m" type="string">8</param>
+      <param name="30s,1m,5m,15m,30m,1h,6h,12h,1d" type="string">255,20,1027,88,100,69</param>
+    </section>
     <param name="eventQueueLimit" type="int">1000</param>
 
   </section>
