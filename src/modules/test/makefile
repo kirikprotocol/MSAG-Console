@@ -2,6 +2,9 @@ include ../../makefile.inc
 
 all: $(OUTDIR)/hello
 
+deploy: all
+	cp $(OUTDIR)/hello $(DEPLOY)/test/
+
 OBJ=\
   $(OBJDIR)/hello.o
 
