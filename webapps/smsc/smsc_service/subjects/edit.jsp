@@ -14,7 +14,7 @@ if (!isCreate)
   <table class="list" cellspacing="0">
     <tr class="list">
       <th class="list" width="1%">Name</th>
-      <td class="list" width="99%"><input type="Text" name="name" style="width: 100%" value="<%=isCreate ? "" : StringEncoderDecoder.encode(s.getName())%>" <%=isCreate ? "" : "readonly"%>></td>
+      <td class="list" width="99%"><input type="Text" name="name" id="subject_name" style="width: 100%" value="<%=isCreate ? "" : StringEncoderDecoder.encode(s.getName())%>" <%=isCreate ? "" : "readonly"%>></td>
     </tr>
     <tr class="list">
       <th class="list" width="1%">Default&nbsp;SME</th>
@@ -40,6 +40,6 @@ if (!isCreate)
       %></textarea></td>
     </tr>
   </table>
-  <input type="Submit" onclick="return checkMasks(masks.value)">
+  <input type="Submit" onclick="return checkMasks(masks.value) && checkName(subject_name.value)">
 </form>
 <%@ include file="/common/footer.jsp"%>

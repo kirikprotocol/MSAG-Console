@@ -1,8 +1,9 @@
 <ul compact>
 	<li><a href="<%=urlPrefix+smscPrefix%>/index.jsp">SMSC</a></li>
 	<ul compact>
-		<li><a href="<%=urlPrefix+smscPrefix%>/routes/index.jsp">Routes</a></li>
-		<li><a href="<%=urlPrefix+smscPrefix%>/aliases.jsp">Aliases</a></li>
+		<li><a href="<%=urlPrefix+routesPrefix%>/index.jsp">Routes</a></li>
+		<li><a href="<%=urlPrefix+subjectsPrefix%>/index.jsp">Subjects</a></li>
+		<li><a href="<%=urlPrefix+aliasesPrefix%>/index.jsp">Aliases</a></li>
 	</ul>
 	<li><a href="<%=urlPrefix+hostsPrefix%>/index.jsp">Hosts</a></li>
 	<ul compact>

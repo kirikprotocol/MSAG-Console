@@ -29,7 +29,7 @@ available_dst.removeAll(selected_dst.getNames());
   	<thead>
   		<tr class="list">
   			<th class="list" width="50%">Route Name</th>
-  			<td class="list" width="50%"><input name="name" style="WIDTH: 100%" value = "<%=StringEncoderDecoder.encode(old_name)%>"></td>
+  			<td class="list" width="50%"><input name="name" id="route_name" style="WIDTH: 100%" value = "<%=StringEncoderDecoder.encode(old_name)%>"></td>
   		</tr>
   		<tr class="list">
   			<th class="list" width="50%">Is Permissible</th>
@@ -62,6 +62,6 @@ available_dst.removeAll(selected_dst.getNames());
   		</tr>
   	</tbody>
   </table>
-  <input type="Submit" onclick="return checkMasks(source_masks.value) && checkMasks(destination_masks.value)">
+  <input type="Submit" onclick="return checkMasks(source_masks.value) && checkMasks(destination_masks.value) && checkName(route_name.value)">
 </form>
 <%@ include file="/common/footer.jsp"%>
