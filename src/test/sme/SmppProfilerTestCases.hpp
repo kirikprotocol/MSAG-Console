@@ -1,8 +1,7 @@
 #ifndef TEST_SME_SMPP_PROFILER_TEST_CASES
 #define TEST_SME_SMPP_PROFILER_TEST_CASES
 
-#include "test/util/BaseTestCases.hpp"
-#include "SmppFixture.hpp"
+#include "SmeAcknowledgementHandler.hpp"
 #include "SmppTransmitterTestCases.hpp"
 #include <string>
 
@@ -21,12 +20,11 @@ using namespace smsc::smpp; //pdu
 /**
  * Тест кейсы для profiler через smpp протокол.
  */
-class SmppProfilerTestCases : public BaseTestCases,
-	public SmeAcknowledgementHandler
+class SmppProfilerTestCases : public SmeAcknowledgementHandler
 {
 public:
-	SmppProfilerTestCases(SmppFixture* _fixture)
-	: fixture(_fixture), chkList(fixture->chkList) {}
+	SmppProfilerTestCases(SmppFixture* fixture)
+	: SmeAcknowledgementHandler(fixture) {}
 
 	virtual ~SmppProfilerTestCases() {}
 
@@ -52,9 +50,6 @@ public:
 		PduDeliverySm& pdu, time_t recvTime);
 
 protected:
-	SmppFixture* fixture;
-	CheckList* chkList;
-
 	virtual Category& getLog();
 	void sendUpdateProfilePdu(const string& text, PduData::IntProps* intProps,
 		PduData::StrProps* strProps, PduData::ObjProps* objProps, bool sync,
