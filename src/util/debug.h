@@ -31,12 +31,18 @@ inline void trace2(const char* fmt,...)
 #endif
   va_list lst;
   va_start(lst,fmt);
-  if(fileno(stderr)==2)*stderr=*fopen("smpp.log","wt");
+  if(fileno(stderr)==2)
+  {
+    char fn[256];
+    sprintf(fn,"smpp.%u-%08x.log",time(NULL),GetCurrentProcessId());
+    *stderr=*fopen(fn,"wt");
+  }
   char buf[4096];
   int n=sprintf(buf,"*trace*[%d %d]:",GetCurrentThreadId(),time(NULL));
   n=vsprintf(buf+n,fmt,lst);
   sprintf(buf+n,"\n");
   vfprintf(stderr,"%s",buf)
+  fflosh(stderr);
   va_end(lst);
 #endif
 }
@@ -50,11 +56,17 @@ inline void warning2(const char* fmt,...)
   va_list lst;
   va_start(lst,fmt);
   char buf[4096];
-  if(fileno(stderr)==2)*stderr=*fopen("smpp.log","wt");
+  if(fileno(stderr)==2)
+  {
+    char fn[256];
+    sprintf(fn,"smpp.%u-%08x.log",time(NULL),GetCurrentProcessId());
+    *stderr=*fopen(fn,"wt");
+  }
   int n=sprintf(buf,"*WARNING*[%d %d]:",GetCurrentThreadId(),time(NULL));
   n=vsprintf(buf+n,fmt,lst);
   sprintf(buf+n,"\n");
   vfprintf(stderr,"%s",buf)
+  fflosh(stderr);
   va_end(lst);
 #endif
 }
