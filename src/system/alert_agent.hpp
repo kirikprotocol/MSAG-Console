@@ -17,57 +17,19 @@ using smsc::core::buffers::Array;
 using smsc::core::synchronization::Event;
 using namespace smsc::smeman;
 
+class Smsc;
+
 class AlertAgent:public smsc::core::threads::ThreadedTask{
 public:
-  AlertAgent(EventQueue& eq,MessageStore* st):
-    eventQueue(eq),store(st){}
+  AlertAgent(Smsc* s,MessageStore* st):
+    psmsc(s),store(st){}
 
   const char *taskName()
   {
     return "AlertAgent";
   }
 
-  int Execute()
-  {
-    mon.Lock();
-    Array<SMSId> ids;
-    while(!isStopping)
-    {
-      if(queue.Count()==0)mon.wait();
-      if(queue.Count()==0)continue;
-      SmscCommand cmd;
-      queue.Pop(cmd);
-      mon.Unlock();
-      ////
-      // processing here
-
-      try{
-        smsc::store::IdIterator *it=store->getReadyForDelivery(cmd->get_address());
-        SMSId id;
-        while(it->getNextId(id))
-        {
-          ids.Push(id);
-        }
-        delete it;
-        __trace2__("AlertAgent: found %d messages",ids.Count());
-        for(int i=0;i<ids.Count();i++)
-        {
-          SmscCommand cmd=SmscCommand::makeForward(true);
-          eventQueue.enqueue(ids[i],cmd);
-        }
-        ids.Clean();
-      }catch(...)
-      {
-        __trace__("AlertAgent: database exception");
-      }
-
-      // end of processing
-      ////
-      mon.Lock();
-    }
-    mon.Unlock();
-    return 0;
-  }
+  int Execute();
 
   void putCommand(SmscCommand& cmd)
   {
@@ -77,7 +39,7 @@ public:
   }
 
 protected:
-  EventQueue &eventQueue;
+  Smsc* psmsc;
   MessageStore* store;
   EventMonitor mon;
   Array<SmscCommand> queue;
