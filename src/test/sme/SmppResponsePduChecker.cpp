@@ -16,9 +16,11 @@ SmppResponsePduChecker::SmppResponsePduChecker(PduRegistry* _pduReg,
 vector<int> SmppResponsePduChecker::checkSubmitSmResp(
 	PduData* pduData, PduSubmitSmResp& respPdu)
 {
-	__require__(pduData && pduData->pdu);
+	__require__(pduData && pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
 	vector<int> res;
-	if (respPdu.get_header().get_commandLength() != 81)
+	//respPdu
+	if (respPdu.get_header().get_commandLength() < 17 ||
+		respPdu.get_header().get_commandLength() > 81)
 	{
 		res.push_back(1);
 	}
@@ -31,10 +33,12 @@ vector<int> SmppResponsePduChecker::checkSubmitSmResp(
 	{
 		res.push_back(3);
 	}
-	if (pduData->pdu->get_commandId() != SUBMIT_SM)
+	//time
+	if (pduData->submitTime < __checkTime__)
 	{
 		res.push_back(4);
 	}
+	//commandStatus
 	PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
 	time_t validTime =
 		SmppUtil::string2time(pdu->get_message().get_validityPeriod());
@@ -74,6 +78,7 @@ vector<int> SmppResponsePduChecker::checkSubmitSmResp(
 				}
 				replaceData = nextReplaceData;
 			}
+			pduData->replacePdu = NULL;
 			break;
 		case ESME_RINVDSTADR: //Invalid Dest Addr
 			if (!routeChecker->checkExistsUnreachableRoute(
@@ -99,8 +104,12 @@ vector<int> SmppResponsePduChecker::checkSubmitSmResp(
 	}
 	if (respPdu.get_header().get_commandStatus() != ESME_ROK)
 	{
-		pduReg->removePdu(pduData);
+		pduData->deliveryFlag = true;
+		pduData->deliveryReceiptFlag = true;
+		pduData->intermediateNotificationFlag = true;
+
 	}
+	pduData->responseFlag = true;
 	return res;
 }
 
