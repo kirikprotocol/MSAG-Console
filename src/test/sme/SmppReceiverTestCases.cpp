@@ -100,7 +100,7 @@ void SmppReceiverTestCases::processReplaceSmResp(PduReplaceSmResp &pdu)
 }
 
 #define __checkForNull__(failureCode, field) \
-	if (pdu.field) { __tc_fail__(failureCode); }
+	if (field) { __tc_fail__(failureCode); }
 
 void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 {
@@ -116,16 +116,13 @@ void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 	{
 		__tc_fail__(1);
 	}
-	if (pdu.get_header().get_commandStatus())
-	{
-		__tc_fail__(2);
-	}
+	__checkForNull__(2, pdu.get_header().get_commandStatus());
 	//pdu.get_header().get_sequenceNumber()
 	//message
-	__checkForNull__(3, get_message().get_scheduleDeliveryTime());
-	__checkForNull__(4, get_message().get_validityPeriod());
-	__checkForNull__(5, get_message().get_replaceIfPresentFlag());
-	__checkForNull__(6, get_message().get_smDefaultMsgId());
+	__checkForNull__(3, pdu.get_message().get_scheduleDeliveryTime());
+	__checkForNull__(4, pdu.get_message().get_validityPeriod());
+	__checkForNull__(5, pdu.get_message().get_replaceIfPresentFlag());
+	__checkForNull__(6, pdu.get_message().get_smDefaultMsgId());
 	__tc_ok_cond__;
 	//обработать deliver_sm pdu
 	if (fixture->pduReg)
@@ -153,173 +150,39 @@ void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 	//__dumpPdu__("processDeliverySmAfter", fixture->smeInfo.systemId, &pdu);
 }
 
-/*
-void SmppReceiverTestCases::processIntermediateNotification(
-	PduDeliverySm &pdu, time_t recvTime)
+void SmppReceiverTestCases::processGenericNack(PduGenericNack &pdu)
 {
-	__trace__("processIntermediateNotification()");
+	__dumpPdu__("processGenericNackBefore", fixture->smeInfo.systemId, &pdu);
+	time_t respTime = time(NULL);
+	if (!fixture->pduReg)
+	{
+		return;
+	}
 	__decl_tc__;
+	__tc__("processGenericNack.async");
 	try
 	{
-		__tc__("processDeliverySm.intermediateNotification");
-		//найти pduReg
-		Address destAddr;
-		SmppUtil::convert(pdu.get_message().get_dest(), &destAddr);
-		PduRegistry* pduReg = fixture->smeReg->getPduRegistry(destAddr);
-		if (!pduReg)
+		//получить оригинальную pdu
+		MutexGuard mguard(fixture->pduReg->getMutex());
+		GenericNackMonitor* monitor = fixture->pduReg->getGenericNackMonitor(
+			pdu.get_header().get_sequenceNumber());
+		//для sequence number из респонса нет соответствующего pdu
+		if (!monitor)
 		{
-			__trace2__("processIntermediateNotification(): pduReg not found for addr = %s", str(destAddr).c_str());
 			__tc_fail__(1);
-		}
-		//обязательные для delivery receipt опциональные поля
-		else if (!pdu.get_optional().has_userMessageReference())
-		{
-			__tc_fail__(2);
-		}
-		else if (!pdu.get_optional().has_messageState())
-		{
-			__tc_fail__(3);
-		}
-		else if (!pdu.get_optional().has_receiptedMessageId())
-		{
-			__tc_fail__(4);
 		}
 		else
 		{
-			//получить оригинальную pdu
-			MutexGuard mguard(pduReg->getMutex());
-			IntermediateNotificationMonitor* monitor =
-				pduReg->getIntermediateNotification(pdu.get_optional().get_userMessageReference());
-			IntermediateNotificationPduData* pduData = NULL;
-			__trace2__("iterate pdu for pduReg = %p, msgRef = %d",
-				pduReg, (int) pdu.get_optional().get_userMessageReference());
-			for (int i = 0; i < tmp.size(); i++)
-			{
-				if (!tmp[i]->isIntermediateNotification())
-				{
-					continue;
-				}
-				__require__(!pduData);
-				pduData = tmp[i];
-				//break;
-			}
-			//для user_message_reference из полученной pdu
-			//нет соответствующего оригинального pdu
-			if (!pduData)
-			{
-				__tc_fail__(5);
-			}
-			else
-			{
-				if (!monitor->pduData->valid)
-				{
-					__tc_fail__(6);
-				}
-				__tc_ok__;
-				__require__(pduData->submitPduData->pdu->get_commandId() == SUBMIT_SM);
-				PduSubmitSm* origPdu =
-					reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-				//Сравнить правильность маршрута
-				__tc__("processDeliverySm.intermediateNotification.checkRoute");
-				__tc_fail2__(fixture->routeChecker->checkRouteForAcknowledgementSms(*origPdu, pdu), 0);
-				__tc_ok_cond__;
-				//проверить содержимое полученной pdu
-				__tc__("processDeliverySm.intermediateNotification.checkFields");
-				//поля хедера проверяются в processDeliverySm()
-				//message
-				//__compareCStr__(get_message().get_serviceType());
-				//правильность адресов частично проверяется в fixture->routeChecker->checkRouteForAcknowledgementSms()
-				__cfg_addr__(smscAlias);
-				Address srcAlias;
-				SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
-				if (srcAlias != smscAlias)
-				{
-					__tc_fail__(1);
-				}
-				//__compareAddr__(get_message().get_dest());
-				if (pdu.get_message().get_esmClass() !=
-					ESM_CLASS_INTERMEDIATE_NOTIFICATION)
-				{
-					__tc_fail__(2);
-				}
-				__compare__(3, get_message().get_protocolId());
-				//__compare__(get_message().get_priorityFlag());
-				//__compare__(get_message().get_registredDelivery());
-				__compare__(4, get_message().get_dataCoding());
-				//__compare__(get_message().get_smLength());
-				//__compareOStr__(get_message().get_shortMessage(),
-				//optional
-				//__tc_fail2__(SmppUtil::compareOptional(
-				//	pdu.get_optional(), origPdu->get_optional()), 10);
-				//intermediate notification получено, но не запрашивался
-				//(origPdu->get_message().get_registredDelivery() &
-				//	INTERMEDIATE_NOTIFICATION_REQUESTED)
-				if (pduData->smsId != pdu.get_optional().get_receiptedMessageId())
-				{
-					__tc_fail__(5);
-				}
-				__tc_ok_cond__;
-				*/
-				/*
-				__tc__("processDeliverySm.intermediateNotification.checkProfile");
-				if (pduData->reportOptions == ProfileReportOptions::ReportNone)
-				{
-					__tc_fail__(1);
-				}
-				__tc_ok_cond__;
-				//__tc__("processDeliverySm.intermediateNotification.checkStatus");
-				*/
-				/*
-				//время доставки попадает в ожидаемый интервал
-				__tc__("processDeliverySm.intermediateNotification.checkTime");
-				if (recvTime < pduData->submitTime)
-				{
-					__tc_fail__(1);
-				}
-				__cfg_int__(timeCheckAccuracy);
-				if (recvTime > pduData->validTime + timeCheckAccuracy)
-				{
-					__tc_fail__(2);
-				}
-				__tc_ok_cond__;
-				//отправить респонс
-				uint32_t deliveryStatus = fixture->respSender->sendDeliverySmResp(pdu);
-				RespPduFlag respFlag = isAccepted(deliveryStatus);
-				//разрешена ли доставка pdu
-				__tc__("processDeliverySm.intermediateNotification.checkAllowed");
-				switch (pduData->flag)
-				{
-					case PDU_REQUIRED_FLAG:
-					case PDU_MISSING_ON_TIME_FLAG:
-						pduData->flag = PDU_RECEIVED_FLAG;
-						break;
-					case PDU_RECEIVED_FLAG:
-						//повторная доставка или какая-либо другая нотификация
-						break;
-					case PDU_NOT_EXPECTED_FLAG:
-						__tc_fail__(1);
-						break;
-					default:
-						__unreachable__("Unknown flag");
-				}
-				__tc_ok_cond__;
-			}
+			fixture->pduChecker->processGenericNack(monitor, pdu, respTime);
+			//__dumpPdu__("processGenericNackAfter", fixture->smeInfo.systemId, &pdu);
 		}
+		__tc_ok_cond__;
 	}
 	catch(...)
 	{
-		error();
 		__tc_fail__(100);
+		error();
 	}
-}
-*/
-
-void SmppReceiverTestCases::processGenericNack(PduGenericNack &pdu)
-{
-	__dumpPdu__("processGenericNack", fixture->smeInfo.systemId, &pdu);
-	__decl_tc__;
-	__tc__("processGenericNack");
-	__tc_fail__(100);
 }
 
 void SmppReceiverTestCases::processDataSm(PduDataSm &pdu)
