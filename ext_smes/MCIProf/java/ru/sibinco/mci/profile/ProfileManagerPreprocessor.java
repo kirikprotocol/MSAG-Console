@@ -1,9 +1,6 @@
 package ru.sibinco.mci.profile;
 
-import ru.sibinco.smpp.appgw.scenario.ScenarioStateProcessor;
-import ru.sibinco.smpp.appgw.scenario.ScenarioInitializationException;
-import ru.sibinco.smpp.appgw.scenario.ScenarioState;
-import ru.sibinco.smpp.appgw.scenario.ProcessingException;
+import ru.sibinco.smpp.appgw.scenario.*;
 import org.apache.log4j.Category;
 
 import java.util.Properties;
@@ -38,7 +35,12 @@ public class ProfileManagerPreprocessor extends ProfileManagerState implements S
       msg = msg.trim();
       if (!msg.equals(Constants.OPTION_EXIT))
       {
-        ProfileInfo info = getProfileInfo(state);
+        ProfileInfo info = null;
+        try {
+          info = getProfileInfo(state);
+        } catch (Exception e) {
+          throw new ProcessingException(e, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+        }
         if (formats == null) // set inform or notify flag
         {
           if      (msg.equals("1")) info.inform = !info.inform;
@@ -65,7 +67,11 @@ public class ProfileManagerPreprocessor extends ProfileManagerState implements S
             throw new ProcessingException("Profile option is invalid '"+msg+"'", exc, -3);
           }
         }
-        setProfileInfo(state, info);
+        try {
+          setProfileInfo(state, info);
+        } catch (Exception e) {
+          throw new ProcessingException(e, ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+        }
       }
     }
     state.removeAttribute(Constants.ATTR_FORMATS);
