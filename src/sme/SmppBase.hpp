@@ -111,7 +111,7 @@ public:
         pdu=NULL;
       }else
       {
-        listener->handleError(smppErrorNetwork);
+        if(!stopped)listener->handleError(smppErrorNetwork);
         break;
       }
     }
@@ -183,7 +183,7 @@ public:
       }
       delete pb.buf;
     }
-    __trace2__("Exiting smppwriter\n");
+    __trace2__("Exiting smppwriter");
     mon.Unlock();
     return 0;
   }

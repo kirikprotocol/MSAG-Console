@@ -229,7 +229,8 @@ void Smsc::init(const SmscConfigs& cfg)
       try{
         m->initFormatters(
           cfg.cfgman->getString("core.receipt_delivered"),
-          cfg.cfgman->getString("core.receipt_failed"));
+          cfg.cfgman->getString("core.receipt_failed"),
+          cfg.cfgman->getString("core.receipt_notify"));
       }catch(exception& e)
       {
         log.warn("INIT: Delivery receipts init failed:%s",e.what());

@@ -33,16 +33,19 @@ public:
 
   int Execute();
 
-  void initFormatters(const char* deliver,const char* failed)
+  void initFormatters(const char* deliver,const char* failed,const char* notify)
   {
     ofDelivered=new OutputFormatter(deliver);
     ofFailed=new OutputFormatter(failed);
+    ofNotify=new OutputFormatter(notify);
   }
 
   void formatDeliver(const char* addr,time_t date,std::string& out);
   void formatFailed(const char* addr,const char* err,time_t date,std::string& out);
+  void formatNotify(const char* addr,const char* reason,time_t date,std::string& out);
 
   void sendFailureReport(SMS& sms,MsgIdType msgId,int state,const char* reason);
+  void sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason);
 
   time_t rescheduleSms(SMS& sms);
 
@@ -57,6 +60,7 @@ protected:
   smsc::system::Smsc *smsc;
 
   OutputFormatter *ofDelivered;
+  OutputFormatter *ofNotify;
   OutputFormatter *ofFailed;
 
   StateType submit(Tuple& t);
