@@ -291,8 +291,8 @@ int SmppInputThread::Execute()
                 err=true;
               }
 
-              if(bindpdu->get_addressRange()->get_value() &&
-                 strlen(bindpdu->get_addressRange()->get_value())>41)
+              if(bindpdu->get_addressRange().get_value() &&
+                 strlen(bindpdu->get_addressRange().get_value())>41)
               {
                 resppdu.get_header().
                   set_commandStatus(SmppStatusSet::ESME_RINVPARLEN);
