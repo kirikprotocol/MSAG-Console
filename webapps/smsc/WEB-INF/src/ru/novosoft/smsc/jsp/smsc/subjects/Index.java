@@ -5,19 +5,14 @@
  */
 package ru.novosoft.smsc.jsp.smsc.subjects;
 
-import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
-import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
-import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.NullResultSet;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.SubjectQuery;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class Index extends IndexBean
 {
@@ -67,7 +62,7 @@ public class Index extends IndexBean
 			result = deleteSubject();
 
 		logger.debug("Subjects.Index - process with sorting [" + (String) preferences.getSubjectsSortOrder().get(0) + "]");
-		subjects = smsc.getSubjects().query(new SubjectQuery(pageSize, preferences.getSubjectsFilter(), preferences.getSubjectsSortOrder(), startPosition));
+		subjects = routeSubjectManager.getSubjects().query(new SubjectQuery(pageSize, preferences.getSubjectsFilter(), preferences.getSubjectsSortOrder(), startPosition));
 		totalSize = subjects.getTotalSize();
 
 		checkedSubjectsSet.addAll(Arrays.asList(checkedSubjects));
@@ -81,9 +76,9 @@ public class Index extends IndexBean
 		for (int i = 0; i < checkedSubjects.length; i++)
 		{
 			String subject = checkedSubjects[i];
-			if (!smsc.getRoutes().isSubjectUsed(subject))
+			if (!routeSubjectManager.getRoutes().isSubjectUsed(subject))
 			{
-				smsc.getSubjects().remove(subject);
+				routeSubjectManager.getSubjects().remove(subject);
 				appContext.getStatuses().setSubjectsChanged(true);
 			}
 			else

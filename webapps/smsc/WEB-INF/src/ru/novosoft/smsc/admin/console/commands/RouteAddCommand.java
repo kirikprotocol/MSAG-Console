@@ -40,7 +40,7 @@ public class RouteAddCommand extends RouteGenCommand
         String out = "Route '"+route+"'";
         try
         {
-            RouteList list =  ctx.getSmsc().getRoutes();
+            RouteList list =  ctx.getRouteSubjectManager().getRoutes();
             Route smscRoute = list.get(route);
             if (smscRoute != null) {
                 ctx.setMessage(out+" already exists");
@@ -56,7 +56,7 @@ public class RouteAddCommand extends RouteGenCommand
                     if (def.getType() == RouteSrcDef.TYPE_MASK) {
                         srcList.add(new Source(new Mask(def.getSrc())));
                     } else if (def.getType() == RouteSrcDef.TYPE_SUBJECT) {
-                        Subject subj = ctx.getSmsc().getSubjects().get(def.getSrc());
+                        Subject subj = ctx.getRouteSubjectManager().getSubjects().get(def.getSrc());
                         if (subj == null) {
                             ctx.setMessage("Subject '"+def.getSrc()+"' in src definition not found. Couldn't add "+out);
                             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
@@ -76,7 +76,7 @@ public class RouteAddCommand extends RouteGenCommand
                 Object obj = dsts.get(i);
                 if (obj != null && obj instanceof RouteDstDef) {
                     RouteDstDef def = (RouteDstDef)obj;
-                    SME sme = ctx.getSmsc().getSmes().get(def.getSmeId());
+                    SME sme = ctx.getSmeManager().getSmes().get(def.getSmeId());
                     if (sme == null) {
                         ctx.setMessage("SME '"+def.getSmeId()+"' in dst definition not found. Couldn't add "+out);
                         ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
@@ -85,7 +85,7 @@ public class RouteAddCommand extends RouteGenCommand
                     if (def.getType() == RouteDstDef.TYPE_MASK) {
                         dstList.add(new Destination(new Mask(def.getDst()), sme));
                     } else if (def.getType() == RouteDstDef.TYPE_SUBJECT) {
-                        Subject subj = ctx.getSmsc().getSubjects().get(def.getDst());
+                        Subject subj = ctx.getRouteSubjectManager().getSubjects().get(def.getDst());
                         if (subj == null) {
                             ctx.setMessage("Subject '"+def.getDst()+"' in dst definition not found. Couldn't add "+out);
                             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
@@ -100,7 +100,8 @@ public class RouteAddCommand extends RouteGenCommand
                 }
             }
 
-            smscRoute = new Route(route, priority, allow, bill, arc,
+			  //todo MUST add suppressDeliveryReports property to route
+            smscRoute = new Route(route, priority, allow, bill, arc, false,
                                   serviceid, srcList, dstList);
             if (priority < 0 || priority > 32000)
                 throw new Exception("Priority value should be between 0 and 32000");

@@ -28,8 +28,8 @@ public interface SmeManager
 
 	void removeAllIfSme(Collection serviceIds) throws AdminException;
 
-	boolean isUsed(String smeId) throws AdminException;
-
 	List getSmeNames();
 	SMEList getSmes();
+
+	void save() throws AdminException;
 }

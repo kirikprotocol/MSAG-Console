@@ -14,6 +14,7 @@ public class WebAppFolders
 	protected static File webinfLibFolder = null;
 	protected static File workFolder = null;
 	protected static File daemonsFolder = null;
+	private static File smscConfFolder;
 
 	public static void init(String webappFolder)
 	{
@@ -22,6 +23,7 @@ public class WebAppFolders
 		WebAppFolders.webinfLibFolder = new File(webinfFolder, "lib");
 		WebAppFolders.workFolder = new File(webinfFolder, "work");
 		WebAppFolders.daemonsFolder = new File(webinfFolder, "daemons");
+		WebAppFolders.smscConfFolder = new File(webinfFolder, "smsc/conf");
 	}
 
 	public static File getServiceFolder(String host, String serviceId)
@@ -58,5 +60,10 @@ public class WebAppFolders
 	public static File getDaemonsFolder()
 	{
 		return daemonsFolder;
+	}
+
+	public static File getSmscConfFolder()
+	{
+		return smscConfFolder;
 	}
 }

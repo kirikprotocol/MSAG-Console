@@ -7,7 +7,7 @@ package ru.novosoft.smsc.jsp;
 
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.service.HostsManager;
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.smsc_service.*;
 import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.util.jsp.AppContext;
@@ -36,4 +36,8 @@ public interface SMSCAppContext extends AppContext
 	public void destroy();
 
 	public ResourceBundle getLocaleMessages(Locale locale);
+
+	SmeManager getSmeManager();
+
+	RouteSubjectManager getRouteSubjectManager();
 }

@@ -19,7 +19,7 @@ public class SubjectListCommand implements Command
     {
         try
         {
-            Iterator i = ctx.getSmsc().getSubjects().iterator();
+            Iterator i = ctx.getRouteSubjectManager().getSubjects().iterator();
             if (!i.hasNext()) {
                 ctx.setMessage("No subjects defined");
                 ctx.setStatus(CommandContext.CMD_OK);

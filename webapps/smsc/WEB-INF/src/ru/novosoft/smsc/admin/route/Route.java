@@ -25,8 +25,9 @@ public class Route
 	private boolean archiving = true;
 	private boolean billing = false;
 	private int serviceId = 0;
+	private boolean suppressDeliveryReports = false;
 
-	public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, int serviceId, SourceList sources, DestinationList destinations)
+	public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, boolean isSuppressDeliveryReports, int serviceId, SourceList sources, DestinationList destinations)
 	{
 		if (routeName == null)
 			throw new NullPointerException("Route name is null");
@@ -45,6 +46,7 @@ public class Route
 		this.archiving = isArchiving;
 		this.billing = isBilling;
 		this.serviceId = serviceId;
+		this.suppressDeliveryReports = isSuppressDeliveryReports;
 	}
 
 	public Route(String routeName)
@@ -62,6 +64,7 @@ public class Route
 		archiving = false;
 		billing = false;
 		serviceId = 0;
+		this.suppressDeliveryReports = false;
 	}
 
 	public Route(Element routeElem, SubjectList subjects, SMEList smes)
@@ -79,6 +82,7 @@ public class Route
 		archiving = routeElem.getAttribute("archiving").equalsIgnoreCase("true");
 		billing = routeElem.getAttribute("billing").equalsIgnoreCase("true");
 		serviceId = Integer.decode(routeElem.getAttribute("serviceId")).intValue();
+		suppressDeliveryReports = Boolean.valueOf(routeElem.getAttribute("suppressDeliveryReports")).booleanValue();
 	}
 
 	public String getName()
@@ -204,8 +208,14 @@ public class Route
 
 	public PrintWriter store(PrintWriter out)
 	{
-		out.println("  <route id=\"" + StringEncoderDecoder.encode(getName()) + "\" billing=\"" + isBilling()
-						+ "\" archiving=\"" + isArchiving() + "\" enabling=\"" + isEnabling() + "\" priority=\"" + getPriority() + "\" serviceId=\"" + getServiceId() + "\">");
+		out.println("  <route id=\"" + StringEncoderDecoder.encode(getName())
+						+ "\" billing=\"" + isBilling()
+						+ "\" archiving=\"" + isArchiving()
+						+ "\" enabling=\"" + isEnabling()
+						+ "\" priority=\"" + getPriority()
+						+ "\" serviceId=\"" + getServiceId()
+						+ "\" suppressDeliveryReports=\"" + isSuppressDeliveryReports()
+						+ "\">");
 		getSources().store(out);
 		getDestinations().store(out);
 		out.println("  </route>");
@@ -230,5 +240,15 @@ public class Route
 	public void setServiceId(int serviceId)
 	{
 		this.serviceId = serviceId;
+	}
+
+	public boolean isSuppressDeliveryReports()
+	{
+		return suppressDeliveryReports;
+	}
+
+	public void setSuppressDeliveryReports(boolean suppressDeliveryReports)
+	{
+		this.suppressDeliveryReports = suppressDeliveryReports;
 	}
 }

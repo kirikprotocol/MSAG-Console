@@ -62,7 +62,7 @@ public class RouteAlterCommand extends RouteGenCommand
         String out = "Route '"+route+"'";
         try
         {
-            RouteList list =  ctx.getSmsc().getRoutes();
+            RouteList list =  ctx.getRouteSubjectManager().getRoutes();
 
             Route oldRoute = list.get(route);
             if (oldRoute == null) {
@@ -73,7 +73,8 @@ public class RouteAlterCommand extends RouteGenCommand
 
             Route newRoute = new Route(route,
                     oldRoute.getPriority(), oldRoute.isEnabling(), oldRoute.isBilling(),
-                    oldRoute.isArchiving(), oldRoute.getServiceId(),
+                    oldRoute.isArchiving(), oldRoute.isSuppressDeliveryReports(),
+						  oldRoute.getServiceId(),
                     oldRoute.getSources(), oldRoute.getDestinations());
 
             if (target == TARGET_SRC)
@@ -86,7 +87,7 @@ public class RouteAlterCommand extends RouteGenCommand
                         if (def.getType() == RouteSrcDef.TYPE_MASK) {
                             src = new Source(new Mask(def.getSrc()));
                         } else if (def.getType() == RouteSrcDef.TYPE_SUBJECT) {
-                            Subject subj = ctx.getSmsc().getSubjects().get(def.getSrc());
+                            Subject subj = ctx.getRouteSubjectManager().getSubjects().get(def.getSrc());
                             if (subj == null) {
                                 ctx.setMessage("Subject '"+def.getSrc()+"' in src definition not found. Couldn't alter "+out);
                                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
@@ -136,7 +137,7 @@ public class RouteAlterCommand extends RouteGenCommand
                         if (action == ACTION_ADD)
                         {
                             Destination dst = null;
-                            SME sme = ctx.getSmsc().getSmes().get(def.getSmeId());
+                            SME sme = ctx.getSmeManager().getSmes().get(def.getSmeId());
                             if (sme == null) {
                                 ctx.setMessage("SME '"+def.getSmeId()+"' in dst definition not found. Couldn't alter "+out);
                                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
@@ -145,7 +146,7 @@ public class RouteAlterCommand extends RouteGenCommand
                             if (def.getType() == RouteDstDef.TYPE_MASK) {
                                 dst = new Destination(new Mask(def.getDst()), sme);
                             } else if (def.getType() == RouteDstDef.TYPE_SUBJECT) {
-                                Subject subj = ctx.getSmsc().getSubjects().get(def.getDst());
+                                Subject subj = ctx.getRouteSubjectManager().getSubjects().get(def.getDst());
                                 if (subj == null) {
                                     ctx.setMessage("Subject '"+def.getDst()+"' in dst definition not found. Couldn't alter "+out);
                                     ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
@@ -165,7 +166,7 @@ public class RouteAlterCommand extends RouteGenCommand
                             if (def.getType() == RouteDstDef.TYPE_MASK) {
                                 dstName = (new Mask(def.getDst())).getMask();
                             } else if (def.getType() == RouteDstDef.TYPE_SUBJECT) {
-                                Subject subj = ctx.getSmsc().getSubjects().get(def.getDst());
+                                Subject subj = ctx.getRouteSubjectManager().getSubjects().get(def.getDst());
                                 if (subj == null) {
                                     ctx.setMessage("Subject '"+def.getDst()+"' in dst definition not found. Couldn't alter "+out);
                                     ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);

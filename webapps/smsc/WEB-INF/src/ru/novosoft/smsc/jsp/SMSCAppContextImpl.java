@@ -3,9 +3,10 @@ package ru.novosoft.smsc.jsp;
 import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.service.*;
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.smsc_service.*;
 import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.admin.console.Console;
+import ru.novosoft.smsc.admin.route.RouteSubjectManagerImpl;
 import ru.novosoft.smsc.perfmon.PerfServer;
 import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.config.Config;
@@ -25,6 +26,8 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	private HostsManager hostsManager = null;
 	private UserManager userManager = null;
 	private PerfServer perfServer = null;
+	private SmeManager smeManager = null;
+	private RouteSubjectManager routeSubjectManager = null;
 
 	private Smsc smsc = null;
 	private NSConnectionPool connectionPool = null;
@@ -49,10 +52,12 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			loadLocaleMessages();
 			createConnectionPool(config);
 
-			smsc = new Smsc(configManager, connectionPool);
-			DaemonManager daemonManager = new DaemonManager(smsc.getSmes(), config);
+			smeManager = new SmeManagerImpl();
+			routeSubjectManager = new RouteSubjectManagerImpl(smeManager.getSmes());
+			smsc = new Smsc(configManager, connectionPool, smeManager, routeSubjectManager);
+			DaemonManager daemonManager = new DaemonManager(smeManager.getSmes(), config);
 			ServiceManager serviceManager = new ServiceManagerImpl();
-			hostsManager = new HostsManager(daemonManager, serviceManager, smsc);
+			hostsManager = new HostsManager(daemonManager, serviceManager, smeManager, routeSubjectManager);
 
 			File usersConfig = new File(new File(config.getString("system.webapp folder"), "WEB-INF"), config.getString("system.users"));
 			startConsole();
@@ -117,6 +122,16 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	public Smsc getSmsc()
 	{
 		return smsc;
+	}
+
+	public SmeManager getSmeManager()
+	{
+		return smeManager;
+	}
+
+	public RouteSubjectManager getRouteSubjectManager()
+	{
+		return routeSubjectManager;
 	}
 
 	public DataSource getConnectionPool()

@@ -12,7 +12,6 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import java.util.List;
-import java.util.Set;
 
 public class SubjectsEdit extends SmscBean
 {
@@ -34,7 +33,7 @@ public class SubjectsEdit extends SmscBean
 
 		if (defSme == null || masks == null)
 		{
-			Subject s = smsc.getSubjects().get(name);
+			Subject s = routeSubjectManager.getSubjects().get(name);
 			defSme = s.getDefaultSme().getId();
 			masks = (String[]) s.getMasks().getNames().toArray(new String[0]);
 		}
@@ -66,8 +65,8 @@ public class SubjectsEdit extends SmscBean
 			{
 				return error(SMSCErrors.error.subjects.masksNotDefined);
 			}
-			Subject s = smsc.getSubjects().get(name);
-			s.setDefaultSme(smsc.getSmes().get(defSme));
+			Subject s = routeSubjectManager.getSubjects().get(name);
+			s.setDefaultSme(smeManager.getSmes().get(defSme));
 			s.setMasks(new MaskList(masks));
 			appContext.getStatuses().setSubjectsChanged(true);
 			return RESULT_DONE;
@@ -78,9 +77,9 @@ public class SubjectsEdit extends SmscBean
 		}
 	}
 
-	public Set getPossibleSmes()
+	public List getPossibleSmes()
 	{
-		return smsc.getSmes().getNames();
+		return smeManager.getSmeNames();
 	}
 
 	/*************************** properties *********************************/

@@ -41,7 +41,7 @@ public class ServiceEditSme extends PageBean
 			SME sme = null;
 			try
 			{
-				sme = appContext.getSmsc().getSmes().get(serviceId);
+				sme = appContext.getSmeManager().getSmes().get(serviceId);
 			}
 			catch (AdminException e)
 			{
@@ -103,8 +103,8 @@ public class ServiceEditSme extends PageBean
 									wantAlias, timeout);
 			if (hostsManager.isService(serviceId))
 				hostsManager.getServiceInfo(serviceId).setSme(sme);
-			appContext.getSmsc().getSmes().remove(serviceId);
-			appContext.getSmsc().getSmes().add(sme);
+			appContext.getSmeManager().getSmes().remove(serviceId);
+			appContext.getSmeManager().getSmes().add(sme);
 			appContext.getStatuses().setServicesChanged(true);
 		}
 		catch (Throwable t)

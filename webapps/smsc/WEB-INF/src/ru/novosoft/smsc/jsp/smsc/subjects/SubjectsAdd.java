@@ -11,7 +11,6 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import java.util.List;
-import java.util.Set;
 
 public class SubjectsAdd extends SmscBean
 {
@@ -58,7 +57,7 @@ public class SubjectsAdd extends SmscBean
 
 	protected int save()
 	{
-		if (smsc.getSubjects().contains(name))
+		if (routeSubjectManager.getSubjects().contains(name))
 			return error(SMSCErrors.error.subjects.alreadyExists, name);
 		else
 		{
@@ -68,7 +67,7 @@ public class SubjectsAdd extends SmscBean
 			}
 			try
 			{
-				smsc.getSubjects().add(new Subject(name, masks, smsc.getSmes().get(defSme)));
+				routeSubjectManager.getSubjects().add(new Subject(name, masks, smeManager.getSmes().get(defSme)));
 				appContext.getStatuses().setSubjectsChanged(true);
 				return RESULT_DONE;
 			}
@@ -79,9 +78,9 @@ public class SubjectsAdd extends SmscBean
 		}
 	}
 
-	public Set getPossibleSmes()
+	public List getPossibleSmes()
 	{
-		return smsc.getSmes().getNames();
+		return smeManager.getSmeNames();
 	}
 
 	/*************************** properties *********************************/

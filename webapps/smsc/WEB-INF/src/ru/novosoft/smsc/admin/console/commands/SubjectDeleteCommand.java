@@ -17,9 +17,9 @@ public class SubjectDeleteCommand extends SubjectGenCommand
     {
         String out = "Subject '"+subject+"'";
         try {
-            if (ctx.getSmsc().getRoutes().isSubjectUsed(subject))
+            if (ctx.getRouteSubjectManager().getRoutes().isSubjectUsed(subject))
                 throw new Exception("subject is used in existing dst or src definition(s)");
-            Subject smscSubject = ctx.getSmsc().getSubjects().remove(subject);
+            Subject smscSubject = ctx.getRouteSubjectManager().getSubjects().remove(subject);
             if (smscSubject == null) {
                 ctx.setMessage(out+" not found");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);

@@ -7,6 +7,7 @@ import ru.novosoft.smsc.admin.daemon.Daemon;
 import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.smsc_service.SmeManager;
+import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
 
 import java.io.File;
 import java.util.*;
@@ -23,13 +24,15 @@ public class HostsManager
 	private DaemonManager daemonManager = null;
 	private ServiceManager serviceManager = null;
 	private SmeManager smeManager = null;
+	private RouteSubjectManager routeSubjectManager;
 	private long serviceRefreshTimeStamp = 0;
 
-	public HostsManager(DaemonManager daemonManager, ServiceManager serviceManager, SmeManager smeManager)
+	public HostsManager(DaemonManager daemonManager, ServiceManager serviceManager, SmeManager smeManager, RouteSubjectManager routeSubjectManager)
 	{
 		this.daemonManager = daemonManager;
 		this.serviceManager = serviceManager;
 		this.smeManager = smeManager;
+		this.routeSubjectManager = routeSubjectManager;
 	}
 
 
@@ -74,7 +77,7 @@ public class HostsManager
 		for (Iterator i = serviceIds.iterator(); i.hasNext();)
 		{
 			String serviceId = (String) i.next();
-			if (smeManager.isUsed(serviceId))
+			if (routeSubjectManager.isSmeUsed(serviceId))
 				throw new AdminException("SME \"" + serviceId + "\" is used");
 		}
 		serviceManager.removeAll(serviceIds);
@@ -102,8 +105,8 @@ public class HostsManager
 
 	public Service removeService(String serviceId) throws AdminException
 	{
-		if (smeManager.isUsed(serviceId))
-			throw new AdminException("Service \"" + serviceId + "\" is used");
+		if (routeSubjectManager.isSmeUsed(serviceId))
+			throw new AdminException("Service \"" + serviceId + "\" is used by routes");
 		Daemon daemon = daemonManager.getServiceDaemon(serviceId);
 		if (daemon == null)
 			throw new AdminException("Service \"" + serviceId + "\" host not found");
@@ -115,8 +118,7 @@ public class HostsManager
 		return service;
 	}
 
-	public long startService(String serviceId)
-			throws AdminException
+	public long startService(String serviceId) throws AdminException
 	{
 		try
 		{
@@ -133,8 +135,7 @@ public class HostsManager
 		}
 	}
 
-	public void killService(String serviceId)
-			throws AdminException
+	public void killService(String serviceId) throws AdminException
 	{
 		ServiceInfo info = serviceManager.getInfo(serviceId);
 		Daemon d = daemonManager.get(info.getHost());
@@ -143,28 +144,24 @@ public class HostsManager
 		info.setPid(0);
 	}
 
-	public void shutdownService(String serviceId)
-			throws AdminException
+	public void shutdownService(String serviceId) throws AdminException
 	{
 		daemonManager.get(serviceManager.getInfo(serviceId).getHost()).shutdownService(serviceId);
 	}
 
-	public int getCountRunningServices(String hostName)
-			throws AdminException
+	public int getCountRunningServices(String hostName) throws AdminException
 	{
 		refreshServices();
 		return daemonManager.get(hostName).getCountRunningServices();
 	}
 
-	public int getCountServices(String hostName)
-			throws AdminException
+	public int getCountServices(String hostName) throws AdminException
 	{
 		refreshServices();
 		return daemonManager.get(hostName).getCountServices();
 	}
 
-	private void refreshServices()
-			throws AdminException
+	private void refreshServices() throws AdminException
 	{
 		final long currentTime = System.currentTimeMillis();
 		if (currentTime - Constants.ServicesRefreshTimeoutMillis > serviceRefreshTimeStamp)
@@ -176,8 +173,7 @@ public class HostsManager
 		}
 	}
 
-	public void deployAdministrableService(File incomingZip, ServiceInfo serviceInfo)
-			throws AdminException
+	public void deployAdministrableService(File incomingZip, ServiceInfo serviceInfo) throws AdminException
 	{
 		final String id = serviceInfo.getId();
 		if (serviceManager.contains(id))
@@ -202,6 +198,8 @@ public class HostsManager
 
 
 
+
+
 	/* ***************************************** smes **************************************************/
 
 	public List getSmeIds()
@@ -209,12 +207,9 @@ public class HostsManager
 		return smeManager.getSmeNames();
 	}
 
-	public SME addSme(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType,
-							String password, String addrRange, int smeN, boolean wantAlias, int timeout)
-			throws AdminException
+	public SME addSme(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType, String password, String addrRange, int smeN, boolean wantAlias, int timeout) throws AdminException
 	{
-		return smeManager.add(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password,
-									 addrRange, smeN, wantAlias, timeout);
+		return smeManager.add(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, timeout);
 	}
 
 	SME getSme(String id) throws AdminException
@@ -222,25 +217,21 @@ public class HostsManager
 		return smeManager.get(id);
 	}
 
-	public void removeSme(String smeId)
-			throws AdminException
+	public void removeSme(String smeId) throws AdminException
 	{
 		if (serviceManager.contains(smeId))
 			throw new AdminException("Couldn't remove sme \"" + smeId + "\" becouse it is service");
+
+		if (isSmeUsed(smeId))
+			throw new AdminException("Couldn't remove sme \"" + smeId + "\" becouse it is used by routes");
 
 		smeManager.remove(smeId);
 	}
 
 
-	//? public
-	public boolean containsSme(String id)
-	{
-		return smeManager.contains(id);
-	}
-
 	boolean isSmeUsed(String smeId) throws AdminException
 	{
-		return smeManager.isUsed(smeId);
+		return routeSubjectManager.isSmeUsed(smeId);
 	}
 
 	public int getHostPort(String hostName) throws AdminException

@@ -37,14 +37,14 @@ public class SubjectAlterCommand extends SubjectGenCommand
     {
         String out = "Subject '"+subject+"'";
         try {
-            Subject smscSubject = ctx.getSmsc().getSubjects().get(subject);
+            Subject smscSubject = ctx.getRouteSubjectManager().getSubjects().get(subject);
             if (smscSubject == null) {
                 ctx.setMessage(out+" not found");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                 return;
             }
             if (defaultSmeId != null) {
-                SME sme = ctx.getSmsc().getSmes().get(defaultSmeId);
+                SME sme = ctx.getSmeManager().getSmes().get(defaultSmeId);
                 if (sme != null) {
                     smscSubject.setDefaultSme(sme);
                     ctx.setMessage(out+" altered. Default sme changed");

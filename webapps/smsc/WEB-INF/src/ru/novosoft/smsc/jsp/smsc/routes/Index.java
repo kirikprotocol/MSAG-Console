@@ -68,7 +68,7 @@ public class Index extends IndexBean
 		}
 
 		logger.debug("Routes.Index - process with sorting [" + (String) preferences.getRoutesSortOrder().get(0) + "]");
-		routes = smsc.getRoutes().query(new RouteQuery(pageSize, preferences.getRoutesFilter(), preferences.getRoutesSortOrder(), startPosition));
+		routes = routeSubjectManager.getRoutes().query(new RouteQuery(pageSize, preferences.getRoutesFilter(), preferences.getRoutesSortOrder(), startPosition));
 		totalSize = routes.getTotalSize();
 
 		checkedRouteIdsSet.addAll(Arrays.asList(checkedRouteIds));
@@ -81,7 +81,7 @@ public class Index extends IndexBean
 		for (int i = 0; i < checkedRouteIds.length; i++)
 		{
 			String alias = checkedRouteIds[i];
-			smsc.getRoutes().remove(alias);
+			routeSubjectManager.getRoutes().remove(alias);
 			appContext.getStatuses().setRoutesChanged(true);
 		}
 		checkedRouteIds = new String[0];

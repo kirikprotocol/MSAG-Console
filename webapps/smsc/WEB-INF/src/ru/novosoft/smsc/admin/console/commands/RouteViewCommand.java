@@ -72,7 +72,7 @@ public class RouteViewCommand implements Command
         String out = "Route '"+route+"'";
         try
         {
-            Route smscRoute = ctx.getSmsc().getRoutes().get(route);
+            Route smscRoute = ctx.getRouteSubjectManager().getRoutes().get(route);
             if (smscRoute == null) {
                 ctx.setMessage(out+" not found");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);

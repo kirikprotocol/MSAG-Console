@@ -5,7 +5,7 @@
  */
 package ru.novosoft.smsc.jsp.smsc;
 
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.smsc_service.*;
 import ru.novosoft.smsc.jsp.PageBean;
 
 import java.util.List;
@@ -13,6 +13,8 @@ import java.util.List;
 public class SmscBean extends PageBean
 {
 	protected Smsc smsc = null;
+	protected RouteSubjectManager routeSubjectManager = null;
+	protected SmeManager smeManager = null;
 
 	protected int init(List errors)
 	{
@@ -21,6 +23,8 @@ public class SmscBean extends PageBean
 			return result;
 
 		smsc = appContext.getSmsc();
+		routeSubjectManager = appContext.getRouteSubjectManager();
+		smeManager = appContext.getSmeManager();
 		return RESULT_OK;
 	}
 }

@@ -24,7 +24,7 @@ public class RouteDeleteCommand implements Command
     {
         String out = "Route '"+route+"'";
         try {
-            Route oldRoute = ctx.getSmsc().getRoutes().remove(route);
+            Route oldRoute = ctx.getRouteSubjectManager().getRoutes().remove(route);
             if (oldRoute == null) {
                 ctx.setMessage(out+" not found");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);

@@ -7,7 +7,6 @@ package ru.novosoft.smsc.jsp.smsc.subjects;
 
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
-import ru.novosoft.smsc.jsp.util.tables.impl.AliasFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.SubjectFilter;
 
 import java.util.*;
@@ -40,8 +39,8 @@ public class SubjectsFilter extends SmscBean
 			checkedSmesSet = new HashSet(filter.getSmeIds());
 			masks = (String[]) filter.getMaskStrings().toArray(new String[0]);
 
-			checkedSmes = (String[])checkedSmesSet.toArray(new String[0]);
-			checkedSubjects = (String[])checkedSubjectsSet.toArray(new String[0]);
+			checkedSmes = (String[]) checkedSmesSet.toArray(new String[0]);
+			checkedSubjects = (String[]) checkedSubjectsSet.toArray(new String[0]);
 		}
 		if (checkedSubjects == null)
 			checkedSubjects = new String[0];
@@ -90,12 +89,12 @@ public class SubjectsFilter extends SmscBean
 
 	public Collection getAllSubjects()
 	{
-		return smsc.getSubjects().getNames();
+		return routeSubjectManager.getSubjects().getNames();
 	}
 
 	public Collection getAllSmes()
 	{
-		return smsc.getSmes().getNames();
+		return smeManager.getSmeNames();
 	}
 
 

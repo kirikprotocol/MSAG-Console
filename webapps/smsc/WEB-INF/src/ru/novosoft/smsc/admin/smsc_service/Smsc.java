@@ -19,7 +19,7 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.ProfileDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.ProfileQuery;
 import ru.novosoft.smsc.util.Functions;
-import ru.novosoft.smsc.util.SortedList;
+import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.config.*;
 import ru.novosoft.smsc.util.xml.Utils;
 import ru.novosoft.util.conpool.NSConnectionPool;
@@ -30,7 +30,7 @@ import java.io.*;
 import java.util.*;
 
 
-public class Smsc extends Service implements SmeManager
+public class Smsc extends Service
 {
 	private Component smsc_component = null;
 	private Method apply_routes_method = null;
@@ -41,17 +41,15 @@ public class Smsc extends Service implements SmeManager
 	private Method process_cancel_messages_method = null;
 	private Method apply_smsc_config_method = null;
 	private Method apply_services_method = null;
-	private ConfigManager configManager = null;
+	private SmeManager smeManager = null;
+	private RouteSubjectManager routeSubjectManager;
 
-	private SMEList smes = null;
-	private RouteList routes = null;
-	private SubjectList subjects = null;
 	private AliasSet aliases = null;
 	private ProfileDataSource profileDataSource = null;
 
 	private Category logger = Category.getInstance(this.getClass());
 
-	public Smsc(ConfigManager configManager, NSConnectionPool connectionPool)
+	public Smsc(ConfigManager configManager, NSConnectionPool connectionPool, SmeManager smeManager, RouteSubjectManager routeSubjectManager)
 			throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		super(new ServiceInfo(Constants.SMSC_SME_ID,
@@ -59,7 +57,8 @@ public class Smsc extends Service implements SmeManager
 									 configManager.getConfig().getInt("smsc.port"),
 									 "", null, ServiceInfo.STATUS_STOPPED));
 
-		this.configManager = configManager;
+		this.smeManager = smeManager;
+		this.routeSubjectManager = routeSubjectManager;
 
 		try
 		{
@@ -75,13 +74,8 @@ public class Smsc extends Service implements SmeManager
 
 		try
 		{
-			final File smscConfFolder = getSmscConfFolder();
-			Document smesDoc = Utils.parse(new FileReader(new File(smscConfFolder, "sme.xml")));
-			Document routesDoc = Utils.parse(new FileReader(new File(smscConfFolder, "routes.xml")));
+			final File smscConfFolder = WebAppFolders.getSmscConfFolder();
 			Document aliasesDoc = Utils.parse(new FileReader(new File(smscConfFolder, "aliases.xml")));
-			smes = new SMEList(smesDoc.getDocumentElement());
-			subjects = new SubjectList(routesDoc.getDocumentElement(), smes);
-			routes = new RouteList(routesDoc.getDocumentElement(), subjects, smes);
 			aliases = new AliasSet(aliasesDoc.getDocumentElement());
 			profileDataSource = new ProfileDataSource(connectionPool);
 		}
@@ -112,49 +106,6 @@ public class Smsc extends Service implements SmeManager
 		}
 	}
 
-	public synchronized RouteList getRoutes()
-	{
-		return routes;
-	}
-
-	public synchronized List getSmeNames()
-	{
-		return new SortedList(smes.getNames());
-	}
-
-	public synchronized SMEList getSmes()
-	{
-		return smes;
-	}
-
-	public synchronized SubjectList getSubjects()
-	{
-		return subjects;
-	}
-
-	private File getSmscConfFolder()
-			throws Config.ParamNotFoundException, Config.WrongParamTypeException
-	{
-		return new File(configManager.getConfig().getString("system.webapp folder"), "WEB-INF/smsc/conf");
-	}
-
-	protected PrintWriter storeSmes(PrintWriter out)
-	{
-		Functions.storeConfigHeader(out, "records", "SmeRecords.dtd");
-		smes.store(out);
-		Functions.storeConfigFooter(out, "records");
-		return out;
-	}
-
-	protected PrintWriter storeRoutesSubjects(PrintWriter out)
-	{
-		Functions.storeConfigHeader(out, "routes", "routes.dtd");
-		subjects.store(out);
-		routes.store(out);
-		Functions.storeConfigFooter(out, "routes");
-		return out;
-	}
-
 	protected PrintWriter storeAliases(PrintWriter out)
 	{
 		Functions.storeConfigHeader(out, "aliases", "AliasRecords.dtd");
@@ -167,8 +118,8 @@ public class Smsc extends Service implements SmeManager
 			throws AdminException
 	{
 		checkComponents();
-		saveSmesConfig();
-		saveRoutesConfig();
+		smeManager.save();
+		routeSubjectManager.save();
 		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
 			call(smsc_component, apply_routes_method, Type.Types[Type.StringType], new HashMap());
 	}
@@ -177,8 +128,8 @@ public class Smsc extends Service implements SmeManager
 			throws AdminException
 	{
 		checkComponents();
-		saveSmesConfig();
-		saveRoutesConfig();
+		smeManager.save();
+		routeSubjectManager.save();
 		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
 			call(smsc_component, apply_services_method, Type.Types[Type.StringType], new HashMap());
 	}
@@ -189,7 +140,7 @@ public class Smsc extends Service implements SmeManager
 		checkComponents();
 		try
 		{
-			final File smscConfFolder = getSmscConfFolder();
+			final File smscConfFolder = WebAppFolders.getSmscConfFolder();
 
 			final File aliasConfigFile = new File(smscConfFolder, "aliases.xml");
 			try
@@ -204,14 +155,6 @@ public class Smsc extends Service implements SmeManager
 
 			if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
 				call(smsc_component, apply_aliases_method, Type.Types[Type.StringType], new HashMap());
-		}
-		catch (Config.ParamNotFoundException e)
-		{
-			throw new AdminException("Couldn't apply_routes new settings: Administration application misconfigured: " + e.getMessage());
-		}
-		catch (Config.WrongParamTypeException e)
-		{
-			throw new AdminException("Couldn't apply_routes new settings: Administration application misconfigured: " + e.getMessage());
 		}
 		catch (FileNotFoundException e)
 		{
@@ -256,50 +199,6 @@ public class Smsc extends Service implements SmeManager
 	public synchronized void applyProfiles()
 	{
 		// nothing to do
-	}
-
-	public synchronized void saveSmesConfig()
-			throws AdminException
-	{
-		try
-		{
-			final File smscConfFolder = getSmscConfFolder();
-			storeSmes(new PrintWriter(new FileOutputStream(new File(smscConfFolder, "sme.xml")), true)).close();
-		}
-		catch (Config.ParamNotFoundException e)
-		{
-			throw new AdminException("Couldn't save new smes settings: Administration application misconfigured: " + e.getMessage());
-		}
-		catch (Config.WrongParamTypeException e)
-		{
-			throw new AdminException("Couldn't save new smes settings: Administration application misconfigured: " + e.getMessage());
-		}
-		catch (FileNotFoundException e)
-		{
-			throw new AdminException("Couldn't save new smes settings: Couldn't write to destination config file: " + e.getMessage());
-		}
-	}
-
-	public synchronized void saveRoutesConfig()
-			throws AdminException
-	{
-		try
-		{
-			final File smscConfFolder = getSmscConfFolder();
-			storeRoutesSubjects(new PrintWriter(new FileOutputStream(new File(smscConfFolder, "routes.xml")), true)).close();
-		}
-		catch (Config.ParamNotFoundException e)
-		{
-			throw new AdminException("Couldn't save new routes settings: Administration application misconfigured: " + e.getMessage());
-		}
-		catch (Config.WrongParamTypeException e)
-		{
-			throw new AdminException("Couldn't save new routes settings: Administration application misconfigured: " + e.getMessage());
-		}
-		catch (FileNotFoundException e)
-		{
-			throw new AdminException("Couldn't save new routes settings: Couldn't write to destination config file: " + e.getMessage());
-		}
 	}
 
 	public synchronized void processCancelMessages(Collection messageIds)
@@ -360,7 +259,7 @@ public class Smsc extends Service implements SmeManager
 	{
 		try
 		{
-			File confFile = new File(getSmscConfFolder(), "config.xml");
+			File confFile = new File(WebAppFolders.getSmscConfFolder(), "config.xml");
 			Document confDoc = Utils.parse(new FileReader(confFile));
 			return new Config(confDoc);
 		}
@@ -376,7 +275,7 @@ public class Smsc extends Service implements SmeManager
 		try
 		{
 			SaveableConfigTree tree = new SaveableConfigTree(config);
-			File tmpFile = File.createTempFile("smsc_config_", ".xml.tmp", getSmscConfFolder());
+			File tmpFile = File.createTempFile("smsc_config_", ".xml.tmp", WebAppFolders.getSmscConfFolder());
 			PrintWriter out = new PrintWriter(new FileWriter(tmpFile));
 			Functions.storeConfigHeader(out, "config", "configuration.dtd");
 			tree.write(out, "  ");
@@ -384,7 +283,7 @@ public class Smsc extends Service implements SmeManager
 			out.flush();
 			out.close();
 
-			tmpFile.renameTo(new File(getSmscConfFolder(), "config.xml"));
+			tmpFile.renameTo(new File(WebAppFolders.getSmscConfFolder(), "config.xml"));
 		}
 		catch (Throwable t)
 		{
@@ -398,60 +297,5 @@ public class Smsc extends Service implements SmeManager
 	{
 		checkComponents();
 		call(smsc_component, apply_smsc_config_method, Type.Types[Type.StringType], new HashMap());
-	}
-
-
-	/* *********************************** SmeManager *********************************/
-	public boolean isUsed(String smeId)
-	{
-		for (Iterator i = routes.iterator(); i.hasNext();)
-		{
-			Route route = (Route) i.next();
-			if (route.getDestinations().isSmeUsed(smeId))
-				return true;
-		}
-		return false;
-	}
-
-	public void removeAllIfSme(Collection serviceIds) throws AdminException
-	{
-		for (Iterator i = serviceIds.iterator(); i.hasNext();)
-		{
-			String serviceId = (String) i.next();
-			if (contains(serviceId))
-			{
-				remove(serviceId);
-			}
-		}
-	}
-
-	public SME remove(String id) throws AdminException
-	{
-		if (isUsed(id))
-			throw new AdminException("Couldn't remove sme \"" + id + "\" becouse it is used by routes");
-
-		return smes.remove(id);
-	}
-
-	public boolean contains(String id)
-	{
-		return smes.contains(id);
-	}
-
-	public SME get(String id) throws AdminException
-	{
-		return smes.get(id);
-	}
-
-	public SME add(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType,
-						String password, String addrRange, int smeN, boolean wantAlias, int timeout)
-			throws AdminException
-	{
-		return add(new SME(id, priority, type, typeOfNumber, numberingPlan, interfaceVersion, systemType, password, addrRange, smeN, wantAlias, timeout));
-	}
-
-	public SME add(SME newSme) throws AdminException
-	{
-		return smes.add(newSme);
 	}
 }

@@ -13,28 +13,10 @@ import ru.novosoft.smsc.util.*;
 
 import java.util.*;
 
-public class RoutesEdit extends SmscBean
+public class RoutesEdit extends RouteBody
 {
-	protected String mbSave = null;
-	protected String mbCancel = null;
 
-	protected String routeId = null;
-	protected int priority = 0;
 	protected String oldRouteId = null;
-	protected boolean permissible = false;
-	protected boolean billing = false;
-	protected boolean archiving = false;
-	protected int serviceId = 0;
-	protected String[] checkedSources = null;
-	protected String[] srcMasks = null;
-	protected String[] checkedDestinations = null;
-	protected String[] dstMasks = null;
-	protected String dst_mask_sme_ = null;
-
-	protected Set checkedSourcesSet = null;
-	protected Set checkedDestinationsSet = null;
-	protected Map selectedSmes = new HashMap();
-	protected Map selectedMaskSmes = new HashMap();
 
 
 	protected int init(List errors)
@@ -43,7 +25,7 @@ public class RoutesEdit extends SmscBean
 		if (result != RESULT_OK)
 			return result;
 
-		for (Iterator i = smsc.getSubjects().iterator(); i.hasNext();)
+		for (Iterator i = routeSubjectManager.getSubjects().iterator(); i.hasNext();)
 		{
 			Subject subj = (Subject) i.next();
 			selectedSmes.put(subj.getName(), subj.getDefaultSme().getId());
@@ -55,7 +37,7 @@ public class RoutesEdit extends SmscBean
 		if (oldRouteId == null)
 		{
 			oldRouteId = routeId;
-			Route r = smsc.getRoutes().get(routeId);
+			Route r = routeSubjectManager.getRoutes().get(routeId);
 			if (r == null)
 				result = error(SMSCErrors.error.routes.nameNotSpecified);
 			else
@@ -65,11 +47,12 @@ public class RoutesEdit extends SmscBean
 				billing = r.isBilling();
 				archiving = r.isArchiving();
 				serviceId = r.getServiceId();
+				suppressDeliveryReports = r.isSuppressDeliveryReports();
 				checkedSources = (String[]) r.getSources().getSubjectNames().toArray(new String[0]);
 				srcMasks = (String[]) r.getSources().getMaskNames().toArray(new String[0]);
 				checkedDestinations = (String[]) r.getDestinations().getSubjectNames().toArray(new String[0]);
 				dstMasks = (String[]) r.getDestinations().getMaskNames().toArray(new String[0]);
-				dst_mask_sme_ = smsc.getSmes().size() > 0 ? (String) smsc.getSmes().getNames().iterator().next() : "";
+				dst_mask_sme_ = smeManager.getSmes().size() > 0 ? (String) smeManager.getSmeNames().iterator().next() : "";
 
 				for (int i = 0; i < checkedDestinations.length; i++)
 				{
@@ -162,7 +145,7 @@ public class RoutesEdit extends SmscBean
 			for (int i = 0; i < checkedSources.length; i++)
 			{
 				String source = checkedSources[i];
-				sources.add(new Source(smsc.getSubjects().get(source)));
+				sources.add(new Source(routeSubjectManager.getSubjects().get(source)));
 			}
 			for (int i = 0; i < srcMasks.length; i++)
 			{
@@ -174,8 +157,8 @@ public class RoutesEdit extends SmscBean
 			for (int i = 0; i < checkedDestinations.length; i++)
 			{
 				String destination = checkedDestinations[i];
-				Subject subj = smsc.getSubjects().get(destination);
-				SME sme = smsc.getSmes().get((String) selectedSmes.get(destination));
+				Subject subj = routeSubjectManager.getSubjects().get(destination);
+				SME sme = smeManager.getSmes().get((String) selectedSmes.get(destination));
 				destinations.add(new Destination(subj, sme));
 			}
 			for (int i = 0; i < dstMasks.length; i++)
@@ -184,7 +167,7 @@ public class RoutesEdit extends SmscBean
 				String smeId = (String) selectedMaskSmes.get(mask);
 				if (smeId == null)
 					smeId = dst_mask_sme_;
-				SME sme = smsc.getSmes().get(smeId);
+				SME sme = smeManager.getSmes().get(smeId);
 				destinations.add(new Destination(new Mask(mask), sme));
 			}
 
@@ -193,8 +176,8 @@ public class RoutesEdit extends SmscBean
 			if (destinations.isEmpty())
 				return error(SMSCErrors.error.routes.destinationsIsEmpty);
 
-			smsc.getRoutes().remove(oldRouteId);
-			smsc.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, serviceId, sources, destinations));
+			routeSubjectManager.getRoutes().remove(oldRouteId);
+			routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, serviceId, sources, destinations));
 			appContext.getStatuses().setRoutesChanged(true);
 			return RESULT_DONE;
 		}
@@ -202,148 +185,6 @@ public class RoutesEdit extends SmscBean
 		{
 			return error(SMSCErrors.error.routes.cantAdd, routeId, e);
 		}
-	}
-
-	public boolean isSrcChecked(String srcName)
-	{
-		return checkedSourcesSet.contains(srcName);
-	}
-
-	public boolean isDstChecked(String dstName)
-	{
-		return checkedDestinationsSet.contains(dstName);
-	}
-
-	public Collection getAllSubjects()
-	{
-		return smsc.getSubjects().getNames();
-	}
-
-	public Collection getAllSmes()
-	{
-		return smsc.getSmes().getNames();
-	}
-
-	public boolean isSmeSelected(String dstName, String smeId)
-	{
-		return smeId.equals(selectedSmes.get(dstName));
-	}
-
-	public boolean isMaskSmeSelected(String dstMask, String smeId)
-	{
-		return smeId.equals(selectedMaskSmes.get(dstMask));
-	}
-
-	/*************************** properties *********************************/
-
-	public String getMbSave()
-	{
-		return mbSave;
-	}
-
-	public void setMbSave(String mbSave)
-	{
-		this.mbSave = mbSave;
-	}
-
-	public String getMbCancel()
-	{
-		return mbCancel;
-	}
-
-	public void setMbCancel(String mbCancel)
-	{
-		this.mbCancel = mbCancel;
-	}
-
-	public String getRouteId()
-	{
-		return routeId;
-	}
-
-	public void setRouteId(String routeId)
-	{
-		this.routeId = routeId;
-	}
-
-	public boolean isPermissible()
-	{
-		return permissible;
-	}
-
-	public void setPermissible(boolean permissible)
-	{
-		this.permissible = permissible;
-	}
-
-	public boolean isBilling()
-	{
-		return billing;
-	}
-
-	public void setBilling(boolean billing)
-	{
-		this.billing = billing;
-	}
-
-	public boolean isArchiving()
-	{
-		return archiving;
-	}
-
-	public void setArchiving(boolean archiving)
-	{
-		this.archiving = archiving;
-	}
-
-	public String[] getCheckedSources()
-	{
-		return checkedSources;
-	}
-
-	public void setCheckedSources(String[] checkedSources)
-	{
-		this.checkedSources = checkedSources;
-	}
-
-	public String[] getSrcMasks()
-	{
-		return srcMasks;
-	}
-
-	public void setSrcMasks(String[] srcMasks)
-	{
-		this.srcMasks = srcMasks;
-	}
-
-	public String[] getCheckedDestinations()
-	{
-		return checkedDestinations;
-	}
-
-	public void setCheckedDestinations(String[] checkedDestinations)
-	{
-		this.checkedDestinations = checkedDestinations;
-	}
-
-	public String[] getDstMasks()
-	{
-		return dstMasks;
-	}
-
-	public void setDstMasks(String[] dstMasks)
-	{
-		this.dstMasks = dstMasks;
-	}
-
-	public String getDst_mask_sme_()
-	{
-		return dst_mask_sme_;
-	}
-
-	public void setDst_mask_sme_(String dst_mask_sme_)
-	{
-		this.dst_mask_sme_ = dst_mask_sme_;
 	}
 
 	public String getOldRouteId()
@@ -356,23 +197,4 @@ public class RoutesEdit extends SmscBean
 		this.oldRouteId = oldRouteId;
 	}
 
-	public int getPriority()
-	{
-		return priority;
-	}
-
-	public void setPriority(int priority)
-	{
-		this.priority = priority;
-	}
-
-	public int getServiceId()
-	{
-		return serviceId;
-	}
-
-	public void setServiceId(int serviceId)
-	{
-		this.serviceId = serviceId;
-	}
 }

@@ -112,12 +112,12 @@ public class RoutesFilter extends SmscBean
 
 	public Collection getAllSubjects()
 	{
-		return smsc.getSubjects().getNames();
+		return routeSubjectManager.getSubjects().getNames();
 	}
 
 	public Collection getAllSmes()
 	{
-		return smsc.getSmes().getNames();
+		return smeManager.getSmeNames();
 	}
 
 

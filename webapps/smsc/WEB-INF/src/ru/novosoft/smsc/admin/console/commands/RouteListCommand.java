@@ -19,7 +19,7 @@ public class RouteListCommand implements Command
     {
         try
         {
-            Iterator i = ctx.getSmsc().getRoutes().iterator();
+            Iterator i = ctx.getRouteSubjectManager().getRoutes().iterator();
             if (!i.hasNext()) {
                 ctx.setMessage("No routes defined");
                 ctx.setStatus(CommandContext.CMD_OK);
