@@ -9,22 +9,21 @@
 #define	_CommandAddSme_H
 
 #include "Abstract_CommandSmeInfo.h"
-#include "SmppGwCommand.h"
-
 #include "CommandIds.h"
 
 namespace smsc {
 namespace smppgw {
 namespace admin {
 
-class CommandAddSme : public Abstract_CommandSmeInfo
+class CommandAddSme : public Abstract_CommandSmeInfo 
 {
 public:
-	CommandAddSme(const xercesc::DOMDocument * const document)
+  CommandAddSme(const xercesc::DOMDocument * const document)
     : Abstract_CommandSmeInfo((Command::Id)CommandIds::addSme, document)
   {
   }
-    virtual Response * CreateResponse(smsc::smppgw::Smsc * SmscApp);
+  virtual Response * CreateResponse(smsc::smppgw::Smsc * SmscApp);
+
 };
 
 }

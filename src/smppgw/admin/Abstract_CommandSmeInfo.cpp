@@ -16,7 +16,6 @@ namespace smppgw {
 namespace admin {
 
 using namespace smsc::util::xml;
-using namespace smsc::smppgw::admin;
 //
 // Constructor
 ///

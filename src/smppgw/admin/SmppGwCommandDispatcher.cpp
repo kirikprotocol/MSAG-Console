@@ -10,7 +10,7 @@
 #include "core/threads/Thread.hpp"
 #include "smppgw/smsc.hpp"
 #include "core/synchronization/Mutex.hpp"
-    
+
 namespace smsc {
 namespace smppgw {
 namespace admin {
@@ -141,7 +141,6 @@ void SmppGwCommandDispatcher::dumpGw()
   }
 }
 
-
 SmppGwCommandDispatcher::SmppGwCommandDispatcher(Socket * admSocket)
   : CommandDispatcherTempl<SmppGwCommandReader, ResponseWriter>(admSocket, "gw.aCD")
 {
@@ -153,15 +152,13 @@ SmppGwCommandDispatcher::~SmppGwCommandDispatcher()
 
 Response * SmppGwCommandDispatcher::handle(const Command * const command) throw (AdminException)
 {
-  SmppGwCommand * smppgwcommand;
-  Command * _command = const_cast <Command *> (command);
-
   try
   {
-    smppgwcommand = static_cast <SmppGwCommand *> (_command);
-    DoActions(smppgwcommand->GetActions());
-    return smppgwcommand->CreateResponse(runner->getApp());
+    SmppGwCommand * smppgwcommand;
+    smppgwcommand = (SmppGwCommand *)command;
 
+    smppgwcommand->CreateResponse(runner->getApp());
+    DoActions(smppgwcommand->GetActions());
   } catch (AdminException &e) {
     return new Response(Response::Error, e.what());
   } catch (const char * const e) {
@@ -171,24 +168,25 @@ Response * SmppGwCommandDispatcher::handle(const Command * const command) throw 
   }
 }
 
+void SmppGwCommandDispatcher::shutdown()
+{
+  stopGw();
+}
+
 void SmppGwCommandDispatcher::DoActions(Actions::CommandActions actions)
 {
-    if (actions.restart) {
-      stopGw();
-      startGw();
-    }
-
     if (actions.reloadconfig) {
       configs->routesconfig->reload();
       configs->smemanconfig->reload();
       runner->getApp()->reloadRoutes(*configs);
     }
+
+    if (actions.restart) {
+      stopGw();
+      startGw();
+    }
 }
 
-void SmppGwCommandDispatcher::shutdown()
-{
-  stopGw();
-}
 }
 }
 }

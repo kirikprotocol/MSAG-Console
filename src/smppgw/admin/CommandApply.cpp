@@ -69,8 +69,12 @@ Actions::CommandActions CommandApply::GetActions()
       result.restart = true;
     case CommandApply::routes:
       result.reloadconfig = true;
+      result.restart = true;
     case CommandApply::smscs:
       result.restart = true;
+    case CommandApply::providers:
+      result.restart = true;
+
   }
   return result;
 }

@@ -23,10 +23,9 @@ CommandUpdateSmeInfo::CommandUpdateSmeInfo(const xercesc::DOMDocument * const do
 
 Response * CommandUpdateSmeInfo::CreateResponse(smsc::smppgw::Smsc * SmscApp)
 {
-  SmscApp->getSmeAdmin()->updateSmeInfo(getSmeInfo().systemId, getSmeInfo());
+  SmscApp->getSmeAdmin()->updateSmeInfo(getSmeInfo().systemId, getSmeInfo());  
   return new Response(Response::Ok, "none");
 }
-
 
 }
 }

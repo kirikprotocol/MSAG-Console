@@ -9,9 +9,8 @@
 #define	_Abstract_CommandSmeInfo_H
 
 #include <xercesc/dom/DOM.hpp>
-#include "admin/protocol/Command.h"
-#include "smeman/smeinfo.h"
 #include "SmppGwCommand.h"
+#include "smeman/smeinfo.h"
 
 using namespace xercesc;
 
