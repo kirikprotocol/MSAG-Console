@@ -20,4 +20,10 @@ Modules:
   <target name="mciprof_update">
     <ant dir="MCIProf" antfile="build.xml" target="update"/>
   </target>
+  <target name="mcisme_distr">
+    <ant dir="MCISme" antfile="build.xml" target="distr"/>
+  </target>
+  <target name="mcisme_update">
+    <ant dir="MCISme" antfile="build.xml" target="update"/>
+  </target>
 </project>

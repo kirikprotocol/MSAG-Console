@@ -262,16 +262,27 @@ Targets:
   </target>
 
   <!-- external sme -->
-  <target name="dbSme_build">
+  <target name="dbsme_build">
     <ant dir="${SRC_DIR}" target="mod">
       <property name="MOD" value="dbsme"/>
     </ant>
   </target>
-  <target name="dbSme_update" depends="dbSme_build" >
-    <ant dir="${SMSC_DIR}/ext_smes" target="dbSme_update"/>
+  <target name="dbsme_update" depends="dbsme_build" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="dbsme_update"/>
   </target>
-  <target name="dbSme_distr" depends="dbSme_build" >
-    <ant dir="${SMSC_DIR}/ext_smes" target="dbSme_distr"/>
+  <target name="dbsme_distr" depends="dbsme_build" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="dbsme_distr"/>
   </target>
 
+  <target name="mcisme_build">
+    <ant dir="${SRC_DIR}" target="mod">
+      <property name="MOD" value="mcisme"/>
+    </ant>
+  </target>
+  <target name="mcisme_update" depends="mcisme_build" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="mcisme_update"/>
+  </target>
+  <target name="mcisme_distr" depends="mcisme_build" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="mcisme_distr"/>
+  </target>
 </project>
