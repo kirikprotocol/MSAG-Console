@@ -9,6 +9,8 @@ namespace smsc { namespace store
 using smsc::core::threads::Thread;
 using namespace smsc::core::synchronization;
 
+const int SMS_ID_PRELOAD_COUNT = 1000;
+
 /* --------------------- Cleaner implementation -------------------- */ 
 
 Cleaner::Cleaner(Manager& config)
@@ -16,7 +18,8 @@ Cleaner::Cleaner(Manager& config)
         : Thread(), log(Logger::getCategory("smsc.store.Cleaner")),
             storageDBInstance(0L), storageDBUserName(0L), storageDBUserPassword(0L),
                 bStarted(false), bNeedExit(false), cleanerConnection(0),
-                    cleanerMinTimeStmt(0), cleanerDeleteStmt(0)
+                    cleanerMinTimeStmt(0), cleanerDeleteStmt(0), cleanerNextIdStmt(0),
+                        currentId(0), sequenceId(0)
 {
     storageDBInstance = 
         loadDBInstance(config, "MessageStore.Storage.dbInstance");
@@ -130,64 +133,55 @@ void Cleaner::connect()
     {
         cleanerConnection->connect(); // should destroy all assigned statements
         
+        prepareCleanerNextIdStmt();
         prepareCleanerMinTimeStmt();
         prepareCleanerDeleteStmt();
     }
 }
 
-const char* Cleaner::billingMaxIdSql = (const char*)
-"SELECT NVL(MAX(MSG_ID), 0) FROM SMS_BILL";
-const char* Cleaner::storageMaxIdSql = (const char*)
-"SELECT NVL(MAX(ID), 0) FROM SMS_MSG";
-const char* Cleaner::archiveMaxIdSql = (const char*)
-"SELECT NVL(MAX(ID), 0) FROM SMS_ARC";
-SMSId Cleaner::getMaxUsedId(Connection* connection, const char* sql)
+SMSId Cleaner::getNextId()
     throw(StorageException)
 {
-    SMSId maxId;
+    MutexGuard  guard(idLock);
     
-    GetIdStatement maxIdStmt(connection, sql);
-    maxIdStmt.check(maxIdStmt.execute());
-    maxIdStmt.getSMSId(maxId);
+    if (!currentId || !sequenceId || currentId-sequenceId >= SMS_ID_PRELOAD_COUNT)
+    {
+        MutexGuard  guard(cleanupLock); // TODO: change lock here
+        
+        connect();
+        cleanerNextIdStmt->check(cleanerNextIdStmt->execute());
+        cleanerNextIdStmt->getSMSId(sequenceId);
+        currentId = sequenceId;
+    }
     
-    return maxId;
+    return ++currentId;
 }
 
-#define DEF_MAX_STORAGE_ID(a, b) (((a) > (b)) ? (a):(b))
-
-SMSId Cleaner::getLastUsedId()
+static const char* storageNextIdSql = (const char*)
+"SELECT NVL(SMS_MSG_SEQ.NEXTVAL, 0) FROM DUAL";
+void Cleaner::prepareCleanerNextIdStmt() 
     throw(StorageException)
 {
-    MutexGuard  guard(cleanupLock);
-    
-    connect();
-    
-    SMSId billingId = getMaxUsedId(cleanerConnection, Cleaner::billingMaxIdSql);
-    SMSId storageId = getMaxUsedId(cleanerConnection, Cleaner::storageMaxIdSql);
-    SMSId archiveId = getMaxUsedId(cleanerConnection, Cleaner::archiveMaxIdSql);
-
-    return DEF_MAX_STORAGE_ID(billingId, DEF_MAX_STORAGE_ID(storageId, archiveId));
+    cleanerNextIdStmt = new GetIdStatement(cleanerConnection, storageNextIdSql, true);
 }
 
-const char* Cleaner::cleanerMinTimeSql = (const char*)
+static const char* cleanerMinTimeSql = (const char*)
 "SELECT MIN(LAST_TRY_TIME) FROM SMS_ARC";
 void Cleaner::prepareCleanerMinTimeStmt() 
     throw(StorageException)
 {
-    cleanerMinTimeStmt = new Statement(cleanerConnection,
-                                       Cleaner::cleanerMinTimeSql, true);
+    cleanerMinTimeStmt = new Statement(cleanerConnection, cleanerMinTimeSql, true);
 
     cleanerMinTimeStmt->define(1, SQLT_ODT, (dvoid *) &(dbTime), 
                                (sb4) sizeof(dbTime), &indDbTime);
 }
 
-const char* Cleaner::cleanerDeleteSql = (const char*)
+static const char* cleanerDeleteSql = (const char*)
 "DELETE FROM SMS_ARC WHERE LAST_TRY_TIME<:LT";
 void Cleaner::prepareCleanerDeleteStmt() 
     throw(StorageException)
 {
-    cleanerDeleteStmt = new Statement(cleanerConnection, 
-                                      Cleaner::cleanerDeleteSql, true);
+    cleanerDeleteStmt = new Statement(cleanerConnection, cleanerDeleteSql, true);
 }
 
 const unsigned SMSC_CLEANUP_AGE_INTERVAL_LIMIT   = 365; // days

@@ -12,12 +12,14 @@
 
   <section name="MessageStore">
     <param name="maxTriesCount" type="int">2</param>
+    <param name="billingDir" type="string">/export/home/user/install/...</param>
+    <param name="billingInterval" type="int">300</param> <!-- in seconds -->
 
     <section name="Cleaner">
-  <param name="enabled" type="bool">true</param>
-  <param name="interval" type="int">60</param> <!-- in seconds -->
-  <param name="awake" type="int">10</param>    <!-- in seconds -->
-  <param name="age" type="int">10</param>      <!-- in days -->
+      <param name="enabled" type="bool">true</param>
+      <param name="interval" type="int">60</param> <!-- in seconds -->
+      <param name="awake" type="int">10</param>    <!-- in seconds -->
+      <param name="age" type="int">10</param>      <!-- in days -->
     </section>
 
     <section name="Cache">

@@ -29,11 +29,10 @@ namespace smsc { namespace store
     using namespace smsc::sms;
     
     /**
-     * Подсистема очистки архива в контексте SMS центра.
+     * Подсистема работы с архивными таблицами в контексте SMS центра.
      * Работает во взаимодействии с подсистемой хранения сообщений.
-     * Проводит переодическую очистку архивированных сообщений в хранилище, 
      * 
-     * Процесс очистки архива реализован
+     * Процесс работы с архивными таблицами реализован
      * в виде отдельного потока управления в системе SMS центра.
      * Необходимые параметры задаются при кофигурировании системы.
      * 
@@ -49,7 +48,7 @@ namespace smsc { namespace store
 
         Event       awake, exited;
         bool        bStarted, bNeedExit;
-        Mutex       startLock, cleanupLock;
+        Mutex       idLock, startLock, cleanupLock;
 
         time_t      ageInterval, awakeInterval, cleanupInterval;
 
@@ -57,16 +56,15 @@ namespace smsc { namespace store
         char* storageDBUserName;
         char* storageDBUserPassword;
         
-        static const char*  storageMaxIdSql;
-        static const char*  archiveMaxIdSql;
-        static const char*  billingMaxIdSql;
-        
-        Connection* cleanerConnection;
-        Statement*  cleanerMinTimeStmt;
-        Statement*  cleanerDeleteStmt;
+        Connection*      cleanerConnection;
+        Statement*       cleanerMinTimeStmt;
+        Statement*       cleanerDeleteStmt;
+        GetIdStatement*  cleanerNextIdStmt;
 
         OCIDate     dbTime;
         sb2         indDbTime;
+
+        SMSId       currentId, sequenceId;
 
         char* loadDBInstance(Manager& config, const char* cat)
             throw(ConfigException);
@@ -79,21 +77,17 @@ namespace smsc { namespace store
         void loadCleanupAgeInterval(Manager& config);
         void loadCleanupAwakeInterval(Manager& config);
 
-        static const char* cleanerMinTimeSql;
-        static const char* cleanerDeleteSql;
+        void prepareCleanerNextIdStmt() throw(StorageException);
         void prepareCleanerMinTimeStmt() throw(StorageException);
         void prepareCleanerDeleteStmt() throw(StorageException);
 
         void cleanup() throw(StorageException);
         void connect() throw(StorageException);
 
-        SMSId getMaxUsedId(Connection* connection, const char* sql)
-            throw(StorageException);
-    
     public:
 
         /**
-         * Конструктор, создаёт (но не запускает) систему очистки хранилища
+         * Конструктор, создаёт (но не запускает) систему работы с архивными таблицами
          * Извлекает набор конфигурационных параметров и создаёт 
          * соединение с хранилищем.
          * 
@@ -107,7 +101,7 @@ namespace smsc { namespace store
         Cleaner(Manager& config) 
             throw(ConfigException); 
         /**
-         * Деструктор, останавливает и уничтожает систему очистки хранилища.
+         * Деструктор, останавливает и уничтожает систему работы с архивными таблицами.
          * Ожидает завершения текущего минимального кванта работы.
          * Также, уничтожает соединения с хранилищем данных.
          * 
@@ -116,16 +110,14 @@ namespace smsc { namespace store
         virtual ~Cleaner();
 
         /**
-         * Возвращает последний (максимальный) использованный индекс
-         * для сообщений в хранилище.
-         * Используется при старте системы хранения.
+         * Возвращает следующий индекс для создания сообщений в хранилище.
          * 
-         * @return последний (максимальный) использованный индекс
+         * @return следующий индекс
          * @exception StorageException
          *                   возникает в случае непредвиденных ошибок
          *                   при работе с хранилищами.
          */
-        SMSId getLastUsedId()
+        SMSId getNextId()
             throw(StorageException); 
         
         /**
@@ -138,7 +130,7 @@ namespace smsc { namespace store
         virtual int Execute();
         
         /**
-         * Запускает процесс очистки хранилища.
+         * Запускает процесс работы с архивными таблицами.
          * Если уже запущен, то ничего не поисходит.
          * 
          * @exception StorageException
@@ -146,26 +138,28 @@ namespace smsc { namespace store
          *                   при работе с хранилищами.
          */
         void Start();
+        
         /**
-         * Останавливает процесс очистки.
+         * Останавливает процесс работы с архивными таблицами.
          * Если ещё не запущен, то ничего не поисходит.
          * Ожидает завершения текущего минимального кванта работы.
          */
         void Stop();
+        
         /**
-         * @return Возвращает признак, запущена ли подсистема очистки
-         * в настоящее время.
+         * @return признак, запущена ли система в настоящее время.
          */
         inline bool isStarted() {
             return bStarted;
         }
+        
         /**
-         * @return Возвращает признак, работает ли реально процесс очистки
-         * в настоящее время.
+         * @return признак, происходит ли реальная работа в настоящее время.
          */
         inline bool isInProgress() {
             return awake.isSignaled();
         }
+
     };
 
 }};

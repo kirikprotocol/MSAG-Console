@@ -51,7 +51,7 @@ namespace smsc { namespace store
 
     using smsc::system::SchedTimer;
 
-    class RemoteStore : public MessageStore
+    class RemoteStore : public MessageStore, public Thread
     {
     private:
 
@@ -61,6 +61,27 @@ namespace smsc { namespace store
     #endif
 
         static log4cpp::Category    &log;
+
+        Event       awake, exited;
+        bool        bStarted, bNeedExit;
+        
+        Mutex       startLock, billingFileLock;
+        FILE*       billingFile;
+        std::string billingLocation;
+        uint32_t    billingInterval;    
+        char        billingFileName[256];
+        
+        void createBillingRecord(SMSId id, SMS& sms)
+            throw(StorageException);
+        void createArchiveRecord(SMSId id, SMS& sms)
+            throw(StorageException);
+        
+        void initBilling(Manager& config)
+            throw(ConfigException, StorageException);
+        void openBillingFile()
+            throw(StorageException);
+        void writeToBillingFile(std::string out)
+            throw(StorageException);
 
     protected:
 
@@ -160,18 +181,21 @@ namespace smsc { namespace store
             uint32_t failureCause, time_t nextTryTime, uint32_t attempts)
                 throw(StorageException, NoSuchMessageException);
         void doFinalizeSms(SMSId id, SMS& sms, bool needDelete=true)
-            throw(StorageException);
+            throw(StorageException, NoSuchMessageException);
         
         void doChangeSmsConcatSequenceNumber(StorageConnection* connection,
                                              SMSId id, int8_t inc) 
                 throw(StorageException, NoSuchMessageException); 
-
     public:
 
         RemoteStore(Manager& config, SchedTimer* sched)
             throw(ConfigException, StorageException);
         virtual ~RemoteStore();
 
+        virtual int Execute();
+        void Start();
+        void Stop();
+        
         void setPoolSize(unsigned size) {
             __require__(pool);
             pool->setSize(size);
@@ -205,9 +229,9 @@ namespace smsc { namespace store
          * Реализация метода MessageStore для внешней генерация ключа.
          *
          * @see MessageStore
-         * @see IdGenerator
          */
-        virtual SMSId getNextId();
+        virtual SMSId getNextId()
+            throw(StorageException);
 
         /**
          * Реализация метода MessageStore
@@ -328,41 +352,6 @@ namespace smsc { namespace store
     };
 
     /**
-     * Сервисный класс используемый для генерации следующего
-     * идентификационного номера для сообщения.
-     * Используется внутренне.
-     *
-     * @author Victor V. Makarov
-     * @version 1.0
-     */
-    class IDGenerator
-    {
-    private:
-        SMSId   id;
-        Mutex mutex;
-    public:
-        /**
-         * Конструктор, создаёт сервисный класс
-         *
-         * @param _id    последний использованный номер
-         *               для идентификации сообщений
-         */
-        IDGenerator(SMSId _id) : id(_id) {};
-        /**
-         * Пустой деструктор
-         */
-        ~IDGenerator() {};
-        /**
-         *
-         * @return возвращает следующий идентификационный номера сообщения.
-         */
-        inline SMSId getNextId() {
-            MutexGuard guard(mutex);
-            return ++id;
-        };
-    };
-
-    /**
      * Класс реализует подсистему хранения сообщений в контексте SMS центра.
      * А именно, реализует интерфейс MessageStore доступный в единственном
      * экземпляре.Выступает в роли фабрики и синглетона одновременно.
@@ -384,7 +373,6 @@ namespace smsc { namespace store
 
         static Mutex mutex;
 
-        static IDGenerator              *generator;
         static Cleaner                  *cleaner;
         static RemoteStore              *instance;
 
@@ -431,14 +419,15 @@ namespace smsc { namespace store
          * @see StoreManager::startup()
          * @see MessageStore
          */
-        static MessageStore* getMessageStore() {
+        inline static MessageStore* getMessageStore() {
             return ((MessageStore *)instance);
         }
 
-        static SMSId getNextId()
+        inline static SMSId getNextId()
+            throw(StorageException)
         {
-            __require__(generator);
-            return generator->getNextId();
+            __require__(cleaner);
+            return cleaner->getNextId();
         };
 
         /**
