@@ -54,6 +54,15 @@
     <param name="receipt_delivered" type="string">Message for $$string import=dest$$ delivered at $$date import=date$$</param>
     <param name="receipt_failed" type="string">Message for $$string import=dest$$ wasn't delivered, reason $$string import=error$$</param>
     <param name="service_center_address" type="string">123</param>
+    <param name="systemId" type="string">smscsme</param>
+    <param name="service_type" type="string">SMSC</param>
+    <param name="protocol_id" type="int">34</param>
+  </section>
+
+  <section name="abonentinfo">
+    <param name="systemId" type="string">abonentinfo</param>
+    <param name="service_type" type="string">abnfo</param>
+    <param name="protocol_id" type="int">34</param>
   </section>
 
   <section name="profiler">
