@@ -231,6 +231,7 @@ int SmppInputThread::Execute()
                 wroff+=wr;
                 trace2("sending:%d/%d\n",wroff,size);
               }
+              ss->assignProxy(proxy);
               if(err)
               {
                 for(int i=0;i<sockets.Count();i++)
@@ -244,7 +245,6 @@ int SmppInputThread::Execute()
                 }
               }else
               {
-                ss->assignProxy(proxy);
                 ((SmppSocket*)(ss->getSocket()->
                   getData(SOCKET_SLOT_OUTPUTSMPPSOCKET)))->
                   assignProxy(proxy);
