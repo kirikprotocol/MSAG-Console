@@ -12,6 +12,6 @@ import ru.novosoft.smsc.admin.AdminException;
 public class PrincipalNotExistsException extends AdminException
 {
     public PrincipalNotExistsException(String address) {
-        super("Principal for address '"+address+"' is not registered");
+        super("Principal for address '"+address+"' is not defined");
     }
 }

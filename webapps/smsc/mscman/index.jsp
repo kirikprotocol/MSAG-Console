@@ -10,7 +10,7 @@
 %>
 <jsp:setProperty name="mscManagerFormBean" property="*"/>
 <%
-    TITLE="Commutators lock status";
+    TITLE="Mobile Switching Centers lock status";
     MENU0_SELECTION = "MENU0_MSCMAN";
 
     int beanResult = mscManagerFormBean.RESULT_OK;
@@ -40,7 +40,7 @@
 <%  List mscList = bean.getMscs();
     if (mscList == null || mscList.size() <= 0) {%>
 <tr class=row0>
-    <td colspan=4><div align=left>No commutators defined</div><td>
+    <td colspan=4><div align=left>No Mobile Switching Centers defined</div><td>
 </tr>
 <%  } else {
         int posIdx = 0;%>
@@ -72,7 +72,7 @@
 </table>
 
 
-<div class=secQuestion>Register new commutator</div>
+<div class=secQuestion>Register new Mobile Switching Center</div>
 <table class=secRep cellspacing=1 width="100%">
 <tr class=row0>
      <td width="55%">
@@ -80,7 +80,7 @@
         <input class=txtW type="text" name="mscNum" value="<%=bean.getMscNum()%>" size=21 maxlength=21>
     </td>
 <td width="45%"><div class=secButtons>
-        <input class=btn type="submit" name="mbRegister" value="Ok">
+        <input class=btn type="submit" name="mbRegister" value="Register">
     </div></td>
 </tr>
 </table>
