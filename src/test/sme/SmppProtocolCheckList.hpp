@@ -235,13 +235,13 @@ void replaceSmTc()
 	__reg_tc__("replaceSm.resp.checkHeader",
 		"Правильные значения полей хедера респонса (command_length, command_id, sequence_number)");
 	__reg_tc__("replaceSm.resp.checkCmdStatusOk",
-		"При отсутствии кода ошибки в поле command_status, выполняются все условия для нормальной доставки сообщения (поля реквеста заданы корректно, существует маршрут и т.п.)");
+		"При отсутствии кода ошибки в поле command_status реквест replace_sm действительно не содержит ошибок (сообщение существует и находится в ENROUTE состоянии, адрес отправителя совпадает и т.п.)");
 	__reg_tc__("replaceSm.resp.checkCmdStatusInvalidWaitTime",
 		"Если код ошибки ESME_RINVSCHED в поле command_status, то время schedule_delivery_time действительно задано неправильно");
 	__reg_tc__("replaceSm.resp.checkCmdStatusInvalidValidTime",
 		"Если код ошибки ESME_RINVEXPIRY в поле command_status, то время validity_period действительно задано неправильно");
 	__reg_tc__("replaceSm.resp.checkCmdStatusInvalidSourceAddr",
-		"Если код ошибки ESME_RINVSRCADR в поле command_status, то адрес отправителя действительно не соответствует address range для данной sme в конфигурации sme.xml SC");
+		"Если код ошибки ESME_RINVSRCADR в поле command_status, то source_addr действительно не соответствует адресу отправителя сообщения в БД");
 	__reg_tc__("replaceSm.resp.checkCmdStatusSystemError",
 		"Если код ошибки ESME_RSYSERR в поле command_status, то на стороне SC действительно возникла неустранимая ошибка (transaction rollback при сохранении сообщения)");
 	__reg_tc__("replaceSm.resp.checkCmdStatusInvalidBindStatus",
@@ -360,6 +360,59 @@ void deliverySmTc()
 		"Респонс с кодом ошибки вне диапазона определенного спецификацией SMPP (>0x500)");
 	__reg_tc__("deliverySm.resp.sendError.permanentAppError",
 		"Респонс с кодом ошибки ESME_RX_P_APPN (неустранимая ошибка на стороне sme, отказ от всех последующих сообщений)");
+}
+
+void querySmTc()
+{
+	__reg_tc__("querySm", "Тест кейсы для query_sm");
+	__reg_tc__("querySm.sync",
+		"Отправка синхронного query_sm pdu");
+	__reg_tc__("querySm.async",
+		"Отправка асинхронного query_sm pdu");
+	__reg_tc__("querySm.receiver",
+		"При отправке query_sm с sme зарегистрированой как receiver SmppSession бросает exception");
+	//querySm.correct
+	__reg_tc__("querySm.correct",
+		"Запрос статуса существующего sms");
+	__reg_tc__("querySm.correct.enroute",
+		"Сообщение находящееся в состоянии ENROUTE");
+	__reg_tc__("querySm.correct.delivered",
+		"Сообщение находящееся в состоянии DELIVERED");
+	__reg_tc__("querySm.correct.expired",
+		"Сообщение находящееся в состоянии EXPIRED");
+	__reg_tc__("querySm.correct.undeliverable",
+		"Сообщение находящееся в состоянии UNDELIVERABLE");
+	__reg_tc__("querySm.correct.deleted",
+		"Сообщение находящееся в состоянии DELETED");
+	//querySm.incorrect
+	__reg_tc__("querySm.incorrect",
+		"Запрос статуса несуществующего sms");
+	__reg_tc__("querySm.incorrect.messageId",
+		"Неправильный message_id");
+	__reg_tc__("querySm.incorrect.sourceAddr",
+		"Значение message_id правильное, но source_addr не совпадает");
+	//querySm.resp
+	__reg_tc__("querySm.resp", "Получение query_sm_resp pdu");
+	__reg_tc__("querySm.resp.sync",
+		"Получение query_sm_resp pdu при синхронных query_sm запросах");
+	__reg_tc__("querySm.resp.async",
+		"Получение query_sm_resp pdu при асинхронных query_sm запросах");
+	__reg_tc__("querySm.resp.checkDuplicates",
+		"На каждый реквест приходит единственный респонс");
+	__reg_tc__("querySm.resp.checkTime",
+		"Правильное время получения респонса");
+	__reg_tc__("querySm.resp.checkHeader",
+		"Правильные значения полей хедера респонса (command_length, command_id, sequence_number)");
+	__reg_tc__("querySm.resp.checkCmdStatusOk",
+		"При отсутствии кода ошибки в поле command_status реквест query_sm действительно не содержит ошибок (сообщение существует, адрес отправителя совпадает и т.п.)");
+	__reg_tc__("querySm.resp.checkCmdStatusInvalidSourceAddr",
+		"Если код ошибки ESME_RINVSRCADR в поле command_status, то source_addr не совпадает с адресом отправителя сообщения в БД");
+	__reg_tc__("querySm.resp.checkCmdStatusInvalidBindStatus",
+		"Если код ошибки ESME_RINVBNDSTS в поле command_status, то действительно sme зарегистрированна как receiver");
+	__reg_tc__("querySm.resp.checkCmdStatusInvalidMsgId",
+		"Если код ошибки ESME_RINVMSGID в поле command_status, то действительно message_id задан неправильно");
+	__reg_tc__("querySm.resp.checkCmdStatusOther",
+		"Прочие коды ошибок соответствуют спецификации");
 }
 
 void sendInvalidPduTc()

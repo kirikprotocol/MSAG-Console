@@ -43,7 +43,9 @@ public:
 		PduData::IntProps* intProps = NULL, PduData::StrProps* strProps = NULL,
 		PduData::ObjProps* objProps = NULL);
 
-	void sendQuerySmPdu(PduQuerySm* pdu, bool sync);
+	void sendQuerySmPdu(PduQuerySm* pdu, PduData* origPduData, bool sync,
+		PduData::IntProps* intProps = NULL, PduData::StrProps* strProps = NULL,
+		PduData::ObjProps* objProps = NULL);
 
 	void sendCancelSmPdu(PduCancelSm* pdu, bool sync);
 
@@ -70,6 +72,7 @@ protected:
 	CheckList* chkList;
 
 	virtual Category& getLog();
+	//submitSm
 	void updateReplacePduMonitors(PduData* pduData, time_t submitTime);
 	void registerNormalSmeMonitors(PduSubmitSm* pdu, PduData* existentPduData,
 		uint16_t msgRef, time_t waitTime, time_t validTime, PduData* pduData);
@@ -83,6 +86,7 @@ protected:
 	void processSubmitSmSync(PduData* pduData, PduSubmitSmResp* respPdu,
 		time_t respTime);
 	void processSubmitSmAsync(PduData* pduData);
+	//replaceSm
 	void registerReplaceMonitors(PduSubmitSm* resPdu, PduData* replacePduData,
 		PduData* pduData);
 	PduData* registerReplaceSm(PduReplaceSm* pdu, PduData* replacePduData,
@@ -91,6 +95,14 @@ protected:
 	void processReplaceSmSync(PduData* pduData, PduReplaceSm* pdu,
 		PduReplaceSmResp* respPdu, time_t respTime);
 	void processReplaceSmAsync(PduData* pduData, PduReplaceSm* pdu);
+	//querySm
+	PduData* registerQuerySm(PduQuerySm* pdu, PduData* origPduData,
+		time_t queryTime, PduData::IntProps* intProps,
+		PduData::StrProps* strProps, PduData::ObjProps* objProps);
+	void processQuerySmSync(PduData* pduData, PduQuerySmResp* respPdu,
+		time_t respTime);
+	void processQuerySmAsync(PduData* pduData);
+	//generickNack	
 	void processGenericNackSync(time_t submitTime, time_t respTime);
 	void processGenericNackAsync(PduData* pduData);
 };

@@ -110,6 +110,7 @@ protected:
 	PduData* getReplaceEnrotePdu(bool deliveryReports);
 	PduData* getNonReplaceRescheduledEnrotePdu(bool deliveryReports);
 	PduData* getFinalPdu(bool deliveryReports);
+	PduData* getPduByState(State state);
 	int getRandomRespDelay();
 };
 

@@ -79,7 +79,7 @@ void SmppProtocolTestCases::submitSmAssert(int num)
 				default:
 					__unreachable__("Invalid num");
 			}
-			__dumpSubmitSmPdu__("SmppProtocolTestCases::submitSmAssert", fixture->smeInfo.systemId, &pdu);
+			__dumpPdu__("SmppProtocolTestCases::submitSmAssert", fixture->smeInfo.systemId, &pdu);
 			__tc_fail__(s.value());
 		}
 		catch (...)
@@ -186,6 +186,31 @@ PduData* SmppProtocolTestCases::getFinalPdu(bool deliveryReports)
 			DeliveryMonitor* monitor = dynamic_cast<DeliveryMonitor*>(m);
 			__require__(monitor);
 			if (monitor->state == DELIVERED) //беру заведомо хорошие sms
+			{
+				pduData = monitor->pduData;
+				break;
+			}
+		}
+	}
+	delete it;
+	return pduData;
+}
+
+PduData* SmppProtocolTestCases::getPduByState(State state)
+{
+	__require__(fixture->pduReg);
+	__cfg_int__(timeCheckAccuracy);
+	PduRegistry::PduMonitorIterator* it = fixture->pduReg->getMonitors(
+		0, time(NULL) - timeCheckAccuracy);
+	PduData* pduData = NULL;
+	PduFlag flag = state == ENROUTE ? PDU_REQUIRED_FLAG : PDU_NOT_EXPECTED_FLAG;
+	while (PduMonitor* m = it->next())
+	{
+		if (m->getType() == DELIVERY_MONITOR && m->getFlag() == flag)
+		{
+			DeliveryMonitor* monitor = dynamic_cast<DeliveryMonitor*>(m);
+			__require__(monitor);
+			if (monitor->state == state)
 			{
 				pduData = monitor->pduData;
 				break;
@@ -949,10 +974,152 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 
 void SmppProtocolTestCases::querySmCorrect(bool sync, int num)
 {
+	__require__(fixture->pduReg);
+	__decl_tc__;
+	TCSelector s(num, 5);
+	__tc__("querySm.correct");
+	for (; s.check(); s++)
+	{
+		try
+		{
+			PduQuerySm* pdu = new PduQuerySm();
+			//выбрать случайный messageId из sms ожидающих доставки
+			PduData* pduData = NULL;
+			{
+				MutexGuard mguard(fixture->pduReg->getMutex());
+				switch (s.value())
+				{
+					case 1:
+						__tc__("querySm.correct.enroute");
+						pduData = getPduByState(ENROUTE);
+						break;
+					case 2:
+						__tc__("querySm.correct.delivered");
+						pduData = getPduByState(DELIVERED);
+						break;
+					case 3:
+						__tc__("querySm.correct.expired");
+						pduData = getPduByState(EXPIRED);
+						break;
+					case 4:
+						__tc__("querySm.correct.undeliverable");
+						pduData = getPduByState(UNDELIVERABLE);
+						break;
+					case 5:
+						__tc__("querySm.correct.deleted");
+						pduData = getPduByState(DELETED);
+						break;
+					default:
+						__unreachable__("Invalid num state");
+				}
+			}
+			PduAddress srcAddr;
+			SmppUtil::convert(fixture->smeAddr, &srcAddr);
+			pdu->set_source(srcAddr);
+			if (pduData)
+			{
+				__require__(pduData->strProps.count("smsId"));
+				pdu->set_messageId(pduData->strProps["smsId"].c_str());
+			}
+			else
+			{
+				__tc__("querySm.incorrect.messageId");
+				auto_ptr<char> msgId = rand_char(MAX_MSG_ID_LENGTH);
+				pdu->set_messageId(msgId.get());
+			}
+			//отправить и зарегистрировать pdu
+			fixture->transmitter->sendQuerySmPdu(pdu, pduData, sync);
+			__tc_ok__;
+		}
+		catch(...)
+		{
+			__tc_fail__(s.value());
+			error();
+		}
+	}
 }
 
 void SmppProtocolTestCases::querySmIncorrect(bool sync, int num)
 {
+	__require__(fixture->pduReg);
+	__decl_tc__;
+	int numState = 5; int numOther = 3;
+	TCSelector s(num, numState * numOther);
+	__tc__("querySm.incorrect");
+	for (; s.check(); s++)
+	{
+		try
+		{
+			PduQuerySm* pdu = new PduQuerySm();
+			//выбрать случайный messageId из sms ожидающих доставки
+			PduData* pduData = NULL;
+			{
+				MutexGuard mguard(fixture->pduReg->getMutex());
+				switch (s.value1(numState))
+				{
+					case 1:
+						pduData = getPduByState(ENROUTE);
+						break;
+					case 2:
+						pduData = getPduByState(DELIVERED);
+						break;
+					case 3:
+						pduData = getPduByState(EXPIRED);
+						break;
+					case 4:
+						pduData = getPduByState(UNDELIVERABLE);
+						break;
+					case 5:
+						pduData = getPduByState(DELETED);
+						break;
+					default:
+						__unreachable__("Invalid num state");
+				}
+			}
+			PduAddress srcAddr;
+			SmppUtil::convert(fixture->smeAddr, &srcAddr);
+			pdu->set_source(srcAddr);
+			switch (s.value2(numState))
+			{
+				case 1: //неправильный messageId
+					__tc__("querySm.incorrect.messageId");
+					pdu->set_messageId("-1");
+					break;
+				case 2: //неправильный messageId
+					__tc__("querySm.incorrect.messageId");
+					pdu->set_messageId("36893488147419103232"); // 2**65
+					break;
+				case 3: //не совпадает srcAddr
+					if (pduData)
+					{
+						__tc__("querySm.incorrect.sourceAddr");
+						__require__(pduData->strProps.count("smsId"));
+						pdu->set_messageId(pduData->strProps["smsId"].c_str());
+						Address addr; PduAddress smppAddr;
+						SmsUtil::setupRandomCorrectAddress(&addr);
+						SmppUtil::convert(addr, &smppAddr);
+						pdu->set_source(smppAddr);
+					}
+					else
+					{
+						__tc__("querySm.incorrect.messageId");
+						auto_ptr<char> msgId = rand_char(MAX_MSG_ID_LENGTH);
+						pdu->set_messageId(msgId.get());
+					}
+					break;
+				default:
+					__unreachable__("Invalid num other");
+			}
+			//отправить и зарегистрировать pdu
+			fixture->transmitter->sendQuerySmPdu(pdu, pduData, sync);
+			__tc_ok__;
+		}
+		catch(...)
+		{
+			__tc_fail__(s.value());
+			error();
+		}
+	}
 }
 
 void SmppProtocolTestCases::sendInvalidPdu(bool sync, int num)

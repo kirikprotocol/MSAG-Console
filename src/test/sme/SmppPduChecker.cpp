@@ -144,6 +144,37 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 	return res;
 }
 
+set<uint32_t> SmppPduChecker::checkQuerySm(PduData* pduData, PduData* origPduData)
+{
+	__require__(pduData && pduData->pdu->get_commandId() == QUERY_SM);
+	PduQuerySm* pdu = reinterpret_cast<PduQuerySm*>(pduData->pdu);
+	set<uint32_t> res;
+	//проверки
+	if (!checkTransmitter())
+	{
+		res.insert(ESME_RINVBNDSTS);
+	}
+	if (!origPduData)
+	{
+		res.insert(ESME_RINVMSGID);
+	}
+	else
+	{
+		__require__(origPduData->strProps.count("smsId"));
+		if (origPduData->strProps["smsId"] != nvl(pdu->get_messageId()))
+		{
+			res.insert(ESME_RINVMSGID);
+		}
+		__require__(origPduData->pdu->get_commandId() == SUBMIT_SM);
+		PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(origPduData->pdu);
+		if (pdu->get_source() != origPdu->get_message().get_source())
+		{
+			res.insert(ESME_RINVSRCADR);
+		}
+	}
+	return res;
+}
+
 #define __check__(errCode, cond) \
 	if (!(cond)) { \
 		__tc_fail__(errCode); \
@@ -156,7 +187,7 @@ void SmppPduChecker::processSubmitSmResp(ResponseMonitor* monitor,
 	__decl_tc__;
 	__cfg_int__(timeCheckAccuracy);
 	//проверка флагов получения pdu
-	time_t respDelay = respTime - monitor->pduData->sendTime;
+	time_t respDelay = respTime - monitor->getCheckTime();
 	__tc__("submitSm.resp.checkDuplicates");
 	switch (monitor->getFlag())
 	{
@@ -252,7 +283,7 @@ void SmppPduChecker::processReplaceSmResp(ResponseMonitor* monitor,
 	__decl_tc__;
 	__cfg_int__(timeCheckAccuracy);
 	//проверка флагов получения pdu
-	time_t respDelay = respTime - monitor->pduData->sendTime;
+	time_t respDelay = respTime - monitor->getCheckTime();
 	__tc__("replaceSm.resp.checkDuplicates");
 	switch (monitor->getFlag())
 	{
@@ -326,6 +357,71 @@ void SmppPduChecker::processReplaceSmResp(ResponseMonitor* monitor,
 			break;
 		default:
 			__tc__("replaceSm.resp.checkCmdStatusOther");
+			__tc_fail__(respPdu.get_header().get_commandStatus());
+	}
+	__tc_ok_cond__;
+}
+
+void SmppPduChecker::processQuerySmResp(ResponseMonitor* monitor,
+	PduQuerySmResp& respPdu, time_t respTime)
+{
+	__require__(monitor);
+	__decl_tc__;
+	__cfg_int__(timeCheckAccuracy);
+	//проверка флагов получения pdu
+	time_t respDelay = respTime - monitor->getCheckTime();
+	__tc__("querySm.resp.checkDuplicates");
+	switch (monitor->getFlag())
+	{
+		case PDU_REQUIRED_FLAG:
+		case PDU_MISSING_ON_TIME_FLAG:
+			__tc_ok__;
+			__tc__("querySm.resp.checkTime");
+			__check__(1, respDelay >= 0);
+			__check__(2, respDelay <= timeCheckAccuracy);
+			monitor->setNotExpected();
+			break;
+		case PDU_NOT_EXPECTED_FLAG: //респонс уже получен ранее
+			__tc_fail__(1);
+			break;
+		//case PDU_COND_REQUIRED_FLAG:
+		default: //респонс всегда должен быть
+			__unreachable__("Invalid response flag");
+	}
+	__tc_ok_cond__;
+	//проверки полей
+	__tc__("querySm.resp.checkHeader");
+	__check__(1, respPdu.get_header().get_commandLength() >= 20 &&
+		respPdu.get_header().get_commandLength() <= 100);
+	__check__(2, respPdu.get_header().get_commandId() == QUERY_SM_RESP);
+	__check__(3, respPdu.get_header().get_sequenceNumber() ==
+		monitor->pduData->pdu->get_sequenceNumber());
+	__tc_ok_cond__;
+	//set<uint32_t> checkRes = checkQuerySm(...);
+	const set<uint32_t>& checkRes = monitor->pduData->checkRes;
+	switch (respPdu.get_header().get_commandStatus())
+	{
+		case ESME_ROK:
+			{
+				__tc__("querySm.resp.checkCmdStatusOk");
+				vector<int> chkRes(checkRes.begin(), checkRes.end());
+				__tc_fail2__(chkRes, 0);
+			}
+			break;
+		case ESME_RINVSRCADR:
+			__tc__("querySm.resp.checkCmdStatusInvalidSourceAddr");
+			__check__(1, checkRes.count(ESME_RINVSRCADR));
+			break;
+		case ESME_RINVBNDSTS:
+			__tc__("querySm.resp.checkCmdStatusInvalidBindStatus");
+			__check__(1, checkRes.count(ESME_RINVBNDSTS));
+			break;
+		case ESME_RINVMSGID:
+			__tc__("querySm.resp.checkCmdStatusInvalidMsgId");
+			__check__(1, checkRes.count(ESME_RINVMSGID));
+			break;
+		default:
+			__tc__("querySm.resp.checkCmdStatusOther");
 			__tc_fail__(respPdu.get_header().get_commandStatus());
 	}
 	__tc_ok_cond__;

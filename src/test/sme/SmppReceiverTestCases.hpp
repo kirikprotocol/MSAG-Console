@@ -44,12 +44,16 @@ public:
 	 */
 	virtual void processDeliverySm(PduDeliverySm &pdu);
 	
+	/**
+	 * Обработка асинхронного query_sm pdu.
+	 */
+	virtual void processQuerySmResp(PduQuerySmResp &pdu);
+	
 	//not implemented
 	virtual void processGenericNack(PduGenericNack &pdu);
 	virtual void processDataSm(PduDataSm &pdu);
 	virtual void processMultiResp(PduMultiSmResp &pdu);
 	virtual void processDataSmResp(PduDataSmResp &pdu);
-	virtual void processQuerySmResp(PduQuerySmResp &pdu);
 	virtual void processCancelSmResp(PduCancelSmResp &pdu);
 	virtual void processAlertNotification(PduAlertNotification &pdu);
 
