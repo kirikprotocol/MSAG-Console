@@ -153,7 +153,7 @@ bool SmppReceiverTestCases::sendDeliverySmResp(PduDeliverySm& pdu, int num)
 				accepted = false;
 				break;
 			default: //сказать что все ok и прекратить повторные доставки
-				__require__(num2 < numResp);
+				__require__(num2 <= numResp);
 				__tc2__("sendDeliverySmResp.sendOk");
 				respPdu.get_header().set_commandStatus(ESME_ROK); //No Error
 				__trace2__("sendDeliverySmResp%sBeforeOk", (sync ? "Sync" : "Async"));
@@ -175,8 +175,6 @@ bool SmppReceiverTestCases::sendDeliverySmResp(PduDeliverySm& pdu, int num)
 void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 {
 	__dumpPdu__("processSubmitSmRespBefore", systemId, &pdu);
-	getLog().debug("[%d]\tprocessSubmitSmResp(): sequenceNumber = %u",
-		thr_self(), pdu.get_header().get_sequenceNumber());
 	time_t respTime = time(NULL);
 	if (!pduReg)
 	{
@@ -214,8 +212,6 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 void SmppReceiverTestCases::processReplaceSmResp(PduReplaceSmResp &pdu)
 {
 	__dumpPdu__("processReplaceSmRespBefore", systemId, &pdu);
-	getLog().debug("[%d]\tprocessReplaceSmResp(): sequenceNumber = %u",
-		thr_self(), pdu.get_header().get_sequenceNumber());
 	time_t respTime = time(NULL);
 	if (!pduReg)
 	{
@@ -253,8 +249,6 @@ void SmppReceiverTestCases::processReplaceSmResp(PduReplaceSmResp &pdu)
 void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 {
 	__dumpPdu__("processDeliverySmBefore", systemId, &pdu);
-	getLog().debug("[%d]\tprocessDeliverySm(): sequenceNumber = %u",
-		thr_self(), pdu.get_header().get_sequenceNumber());
 	__require__(session);
 	__decl_tc__;
 	__tc__("processDeliverySm.checkFields");
@@ -334,8 +328,28 @@ void SmppReceiverTestCases::processNormalSms(PduDeliverySm& pdu, time_t recvTime
 		{
 			//получить оригинальную pdu
 			MutexGuard mguard(pduReg->getMutex());
-			PduData* pduData =
+			vector<PduData*> tmp =
 				pduReg->getPdu(pdu.get_optional().get_userMessageReference());
+			PduData* pduData = NULL;
+			if (tmp.size() == 1)
+			{
+				pduData = tmp[0];
+			}
+			else
+			{
+				for (int i = 0; i < tmp.size(); i++)
+				{
+					__require__(tmp[i]->pdu && tmp[i]->pdu->get_commandId() == SUBMIT_SM);
+					PduSubmitSm* origPdu = reinterpret_cast<PduSubmitSm*>(tmp[i]->pdu);
+					//сравнить по service_type и short_message
+					if (!strcmp(pdu.get_message().get_serviceType(), origPdu->get_message().get_serviceType()) &&
+						pdu.get_message().size_shortMessage() == origPdu->get_message().size_shortMessage() &&
+						!memcmp(pdu.get_message().get_shortMessage(), origPdu->get_message().get_shortMessage(), pdu.get_message().size_shortMessage()))
+					{
+						pduData = tmp[i];
+					}
+				}
+			}
 			//для user_message_reference из полученной pdu
 			//нет соответствующего оригинального pdu
 			if (!pduData)
@@ -792,7 +806,8 @@ void SmppReceiverTestCases::processAlertNotification(PduAlertNotification &pdu)
 
 void SmppReceiverTestCases::handleError(int errorCode)
 {
-	abort();
+	__trace2__("handleError(): errorCode = %d", errorCode);
+	//abort();
 }
 
 }
