@@ -117,7 +117,7 @@ void Body::decode(uint8_t* buffer,int length)
         memcpy(&len,buffer+offset,4);
         offset+=4;
         len=ntohl(len);
-        __require__(buffer[offset+len]==0);
+        __require__(buffer[offset+len-1]==0);
         __require__(offset+len<=length);
         prop.properties[tag].setStr((const char*)buffer+offset);
         offset+=len;
