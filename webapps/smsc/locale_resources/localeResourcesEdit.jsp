@@ -41,11 +41,11 @@ name="bean" property="*"
 	}
 	void createInput(JspWriter out, String id) throws IOException
 	{
-		out.print("<input class=txtW name=\"" +id + "\" id=\"" + id + "\">");
+		out.print("<input class=txt name=\"" +id + "\" id=\"" + id + "\">");
 	}
 	void createInput(JspWriter out, String id, String value) throws IOException
 	{
-		out.print("<input class=txtW name=\"" + id + "\" id=\"" + id + "\" value=\"" + value + "\">");
+		out.print("<input class=txt name=\"" + id + "\" id=\"" + id + "\" value=\"" + value + "\">");
 	}
 	String CPATH = "";
 	void printAddSectionField(JspWriter out, String sectionFN) throws IOException
@@ -177,7 +177,7 @@ function addParam(sectionName)
 	inputElement = document.createElement("input");
 	inputElement.name = sectionName + "<%=Section.NAME_DELIMETER%>" + paramNameElem.value;
 	inputElement.value = paramValueElem.value;
-	inputElement.className = "txtW";
+	inputElement.className = "txt";
 	newCell = newRow.insertCell();
 	newCell.appendChild(inputElement);
 
@@ -252,7 +252,7 @@ function sectionHeader(sectionName, fullName)
 }
 function createInput(id_)
 {
-	return "<input class=txtW name=\"" +id_ + "\" id=\"" + id_ + "\">";
+	return "<input class=txt name=\"" +id_ + "\" id=\"" + id_ + "\">";
 }
 function addSectionField(sectionFN)
 {

@@ -13,23 +13,23 @@
 <col width=99%>
 	<tr class=row0>
 		<th class=label>f1 match ^as.?d$</th>
-		<td><input class=txtW onkeyup="return resetValidation(this)" type=text name=testfld1 validation="mask"></td>
+		<td><input class=txt onkeyup="return resetValidation(this)" type=text name=testfld1 validation="mask"></td>
 	</tr>
 	<tr class=row1>
 		<th class=label>100 &lt;= f2 &lt;= 1000</th>
-		<td><input title="100 &lt;= f2 &lt;= 1000" class=txtW onkeyup="resetValidation(this)" type=text name=testfld2 validation="port"></td>
+		<td><input title="100 &lt;= f2 &lt;= 1000" class=txt onkeyup="resetValidation(this)" type=text name=testfld2 validation="port"></td>
 	</tr>
 	<tr class=row0>
 		<th class=label>f3 &lt;= 100</th>
-		<td><input htitle="f3 &lt;= 100" class=txtW onkeyup="resetValidation(this)" type=text name=testfld3 validation="priority"></td>
+		<td><input htitle="f3 &lt;= 100" class=txt onkeyup="resetValidation(this)" type=text name=testfld3 validation="priority"></td>
 	</tr>
 	<tr class=row1>
 		<th class=label>100 &lt;= f2 &lt;= 1000</th>
-		<td><input class=txtW onkeyup="resetValidation(this)" type=text name=testfld4></td>
+		<td><input class=txt onkeyup="resetValidation(this)" type=text name=testfld4></td>
 	</tr>
 	<tr class=row0>
 		<th class=label>f3 &lt;= 100</th>
-		<td><div class=select><select class=txtW onchange="resetValidation(this)" name=testfld5 validation="select">
+		<td><div class=select><select class=txt onchange="resetValidation(this)" name=testfld5 validation="select">
 		<option value=0>-----
 		<option value=1>1
 		<option value=2>2</option>

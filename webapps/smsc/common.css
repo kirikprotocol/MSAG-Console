@@ -4,7 +4,7 @@
 body
 {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 12px;
+	font-size: x-small;
 	margin: 0px 0px 0px 0px;
 	background-color: #F3F0E3;
 	color: #161E49;
@@ -13,7 +13,7 @@ body
 body*
 {
 	font-family: Verdana, Arial, Helvetica, sans-serif;
-	font-size: 12px;
+	font-size: x-small;
 }
 table
 {
@@ -28,6 +28,7 @@ input, textarea, select
 {
 	border: 1px solid #C8BE9E;
 	color: #161E49;
+	font-size: 100%;
 }
 textarea
 {
@@ -46,11 +47,7 @@ th
 	white-space: nowrap;
 }
 
-input.txt
-{
-	width: 265px;
-}
-select
+input.txt, select
 {
 	width: 265px;
 }

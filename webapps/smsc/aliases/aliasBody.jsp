@@ -5,11 +5,11 @@
 <col width="85%">
 <tr class=row0>
 	<td class=label>alias:</td>
-	<td><input class=txtW name=alias value="<%=bean.getAlias()%>" validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><input class=txt name=alias value="<%=bean.getAlias()%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row1>
 	<td class=label>address:</td>
-	<td><input class=txtW name=address value="<%=bean.getAddress()%>" validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><input class=txt name=address value="<%=bean.getAddress()%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row0>
 	<td class=label>&nbsp;</td>

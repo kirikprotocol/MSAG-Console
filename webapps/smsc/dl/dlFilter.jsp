@@ -36,12 +36,12 @@ for (int i=0; i<bean.getNames().length; i++)
 %>
 <tr class=row<%=(rowN++)&1%>>
 	<th class=label></th>
-	<td><input class=txtW name=names value="<%=bean.getNames()[i]%>"></td>
+	<td><input class=txt name=names value="<%=bean.getNames()[i]%>"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
 	<th class=label><input class=btn type=submit name=mbAdd value="Add" title="Add new distribution list name to filter.\nUses java regexp format"></th>
-	<td><input class=txtW name=names></td>
+	<td><input class=txt name=names></td>
 </tr>
 </table>
 <div class=secButtons>

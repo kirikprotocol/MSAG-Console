@@ -41,12 +41,12 @@ for (int i=0; i<bean.getAliases().length; i++)
 %>
 <tr class=row<%=(rowN++)&1%>>
 	<th></th>
-	<td><input class=txtW name=aliases value="<%=bean.getAliases()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><input class=txt name=aliases value="<%=bean.getAliases()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
 	<th><input class=btn type=submit name=mbAdd value="Add" title="Add new alias to filter"></th>
-	<td><input class=txtW name=aliases validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><input class=txt name=aliases validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Addresses ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
@@ -58,12 +58,12 @@ for (int i=0; i<bean.getAddresses().length; i++)
 %>
 <tr class=row<%=(rowN++)&1%>>
 	<th>address:</th>
-	<td><input class=txtW name=addresses value="<%=bean.getAddresses()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><input class=txt name=addresses value="<%=bean.getAddresses()[i]%>" validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
 	<th><input class=btn type=submit name=mbAdd value="Add" title="Add new address to filter"></th>
-	<td><input class=txtW name=addresses validation="mask" onkeyup="resetValidation(this)"></td>
+	<td><input class=txt name=addresses validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>

@@ -32,7 +32,7 @@ page_menu_end(out);
 <col width="85%">
 <tr class=row0>
 	<th>host name:</th>
-	<td><input class=txtW name=hostName value="<%=bean.getHostName()%>" readonly></td>
+	<td><input class=txt name=hostName value="<%=bean.getHostName()%>" readonly></td>
 </tr>
 <tr class=rowLast>
 	<th>host port:</th>
