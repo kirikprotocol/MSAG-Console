@@ -239,10 +239,12 @@ public class SmsOperativeSource extends SmsSource
         lbstmt = rs.getStatement().getConnection().prepareStatement(SELECT_LARGE_BODY);
         lbstmt.setLong(1, row.getId());
         lbrs = lbstmt.executeQuery();
-        lbrs.next();
-        Blob blob = lbrs.getBlob(1);
-        body = blob.getBytes(1, bodyLen); // 1 or 0 ???
-        is = new ByteArrayInputStream(body, 0, bodyLen);
+        if (lbrs != null && lbrs.next()) {
+          Blob blob = lbrs.getBlob(1);
+          body = blob.getBytes(1, bodyLen); // 1 or 0 ???
+          is = new ByteArrayInputStream(body, 0, bodyLen);
+        }
+        else row.setText("<< No message (Access to BLOB failed) >>");
       } catch (Exception exc) {
         exc.printStackTrace();
         throw new SQLException("Retrive Blob from operative storage failed. Details: "+exc.getMessage());
