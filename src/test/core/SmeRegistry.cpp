@@ -27,7 +27,6 @@ bool SmeRegistry::registerSme(const Address& smeAddr, const SmeInfo& sme,
 		return false;
 	}
 	SmeData* smeData = new SmeData(smeAddr, sme, pduReg ? new PduRegistry() : NULL);
-	smeData->externalSme = externalSme;
 	addrMap[smeAddr] = smeData;
 	smeIdMap[sme.systemId] = smeData;
 	if (!externalSme)
@@ -35,7 +34,7 @@ bool SmeRegistry::registerSme(const Address& smeAddr, const SmeInfo& sme,
 		addrList.push_back(new Address(smeAddr));
 	}
 	__trace2__("SmeRegistry::registerSme(): smeAddr = %s, smeId = %s, pduReg = %p, externalSme = %s",
-		str(smeAddr).c_str(), sme.systemId.c_str(), smeData->pduReg, smeData->externalSme ? "true" : "false");
+		str(smeAddr).c_str(), sme.systemId.c_str(), smeData->pduReg, externalSme ? "true" : "false");
 	return true;
 }
 
@@ -119,12 +118,6 @@ const SmeInfo* SmeRegistry::getSme(const Address& smeAddr) const
 {
 	AddressMap::const_iterator it = addrMap.find(smeAddr);
 	return (it == addrMap.end() || !it->second ? NULL : &it->second->sme);
-}
-
-bool SmeRegistry::isExternalSme(const Address& smeAddr) const
-{
-	AddressMap::const_iterator it = addrMap.find(smeAddr);
-	return (it == addrMap.end() || !it->second ? false : it->second->externalSme);
 }
 
 PduRegistry* SmeRegistry::getPduRegistry(const Address& smeAddr) const

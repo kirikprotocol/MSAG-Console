@@ -32,11 +32,9 @@ class SmeRegistry
 		const Address smeAddr;
 		const SmeInfo sme;
 		PduRegistry* pduReg;
-		bool externalSme;
 		bool bound;
 		SmeData(const Address& _smeAddr, const SmeInfo& _sme, PduRegistry* _pduReg)
-		: smeAddr(_smeAddr), sme(_sme), pduReg(_pduReg), externalSme(false),
-			bound(false) {}
+		: smeAddr(_smeAddr), sme(_sme), pduReg(_pduReg), bound(false) {}
 		~SmeData()
 		{
 			if (pduReg)
@@ -86,8 +84,6 @@ public:
 	const SmeInfo* getSme(const SmeSystemId& smeId) const;
 	const SmeInfo* getSme(const Address& smeAddr) const;
 
-	bool isExternalSme(const Address& smeAddr) const;
-	
 	PduRegistry* getPduRegistry(const Address& smeAddr) const;
 
 	const Address* getRandomAddress() const;
