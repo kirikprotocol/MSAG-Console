@@ -124,9 +124,9 @@ int main(int argc,char* argv[])
         sigset_t set;
         sigemptyset(&set);
         sigaddset(&set,SIGINT);
-#ifndef SPARC
+//#ifndef SPARC
         sigaddset(&set,SIGQUIT);
-#endif
+//#endif
         if(thr_sigsetmask(SIG_UNBLOCK,&set,NULL)!=0)
         {
           __warning__("failed to set thread signal mask!");
@@ -159,9 +159,9 @@ int main(int argc,char* argv[])
         sigset_t set;
         sigemptyset(&set);
         sigaddset(&set,SIGINT);
-#ifndef SPARC
+//#ifndef SPARC
         sigaddset(&set,SIGQUIT);
-#endif
+//#endif
         if(thr_sigsetmask(SIG_UNBLOCK,&set,NULL)!=0)
         {
           __warning__("failed to set thread signal mask!");
