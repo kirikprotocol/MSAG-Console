@@ -104,6 +104,7 @@ void loadRoutes(RouteManager* rm,const RouteConfig& rc,bool traceit)
               rinfo.trafRules=TrafficRules(route->getTrafRules());
               rinfo.forceDelivery=route->isForceDelivery();
               rinfo.aclId=route->getAclId();
+              rinfo.allowBlocked=route->isAllowBlocked();
 //              __trace2__("dest mask: %s",dest_mask_it->c_str());
 //              __trace2__("src mask: %s",src_mask_it->c_str());
 //              print(rinfo);

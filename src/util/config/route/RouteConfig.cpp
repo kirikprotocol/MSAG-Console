@@ -196,6 +196,8 @@ throw (SubjectNotFoundException)
   XmlStr trafRulesStr(elem.getAttribute(XmlStr("trafficRules")));
   const AclIdent aclId(atol(XmlStr(elem.getAttribute(XmlStr("aclId")))));
   XmlStr forceDelivery(elem.getAttribute(XmlStr("forceDelivery")));
+  XmlStr allowBlocked(elem.getAttribute(XmlStr("allowBlocked")));
+  
 
   std::auto_ptr<Route> r(new Route(std::string(id),
                                    priority,
@@ -212,7 +214,8 @@ throw (SubjectNotFoundException)
                                    std::string(forwardToStr),
                                    std::string(trafRulesStr),
                                    aclId,
-                                   strcmp("true", forceDelivery) == 0)
+                                   strcmp("true", forceDelivery) == 0,
+                                   strcmp("true", allowBlocked) == 0)
                          );
 
   DOMNodeList *srcs = elem.getElementsByTagName(XmlStr("source"));
@@ -327,7 +330,8 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
       << "\" forwardTo=\""     << r->getForwardTo()
       << "\" aclId=\""         << r->getAclId()
       << "\" forceDelivery=\"" << (r->isForceDelivery() ? "true" : "false")
-      << "\" replyPath=\""    << replyPathToStr(r->getReplyPath())
+      << "\" replyPath=\""     << replyPathToStr(r->getReplyPath())
+      << "\" allowBlocked=\""  << (r->isAllowBlocked() ? "true" : "false")
       << "\">" << std::endl;
 
       Source src;

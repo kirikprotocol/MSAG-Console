@@ -165,6 +165,7 @@ struct RouteInfo
   std::string srcSubj; // for duplucate route debugging purposes only
   std::string dstSubj;
   TrafficRules trafRules;
+  bool allowBlocked;
 };
 
 } // namespace router
