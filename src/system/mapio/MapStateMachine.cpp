@@ -2358,7 +2358,7 @@ USHORT_T Et96MapPAbortInd(
       __require__(dialog->ssn==localSsn);
       dialogid_smsc = dialog->dialogid_smsc;
       dialog->id_opened = false;
-      throw MAPDIALOG_TEMP_ERROR("PABORT",Status::MAP_PROVIDER_ERR_BASE+provReason);
+      throw MAPDIALOG_TEMP_ERROR("PABORT",Status::MAP_PROVIDER_REASON_BASE+provReason);
     }
   }MAP_CATCH(dialogid_map,dialogid_smsc,localSsn);
   return ET96MAP_E_OK;

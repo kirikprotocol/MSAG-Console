@@ -66,6 +66,15 @@ static const int USSDDLGNFOUND=1031; // USSD dialog not found for response (PSSR
 static const int USSDMSGTOOLONG=1032; // USSD msg can't be concatenated or truncated
 static const int INCOMPLETECONCATMSG=1033; //not all parts of concatenated message received
 
+static const int MAP_PROVIDER_REASON_BASE=1120;
+static const int MAP_ABNORMAL_DIALOGUE = 1120;
+static const int MAP_PROVIDER_MALFUNCTION = 1121;
+static const int MAP_TRANSACTION_RELEASED = 1122;
+static const int MAP_RESOURCE_LIM_T = 1123;
+static const int MAP_MAINTENANCE_ACTIVITY = 1124;
+static const int MAP_VERSION_INCOMPATIBILITY = 1125;
+static const int MAP_DIALOGUE_TIMEOUT = 1126;
+
 static const int RESCHEDULEDNOW=1134; // not error, message was rescheduled for immediate delivery
 
 static const int MAP_PROVIDER_ERR_BASE=1135;
@@ -99,6 +108,8 @@ static const int SMDELIFERYFAILURE=1184; //SM Delivery Failure
 static const int SYSFAILURE=1186; //System Failure
 static const int DATAMISSING=1187; //Data Missing
 static const int UNEXPDATA=1188; //Unexpected Data value
+
+
 
 }//Status
 }//system
