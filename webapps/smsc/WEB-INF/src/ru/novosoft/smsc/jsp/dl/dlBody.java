@@ -165,9 +165,9 @@ public class dlBody extends IndexBean
 		this.owner = owner;
 	}
 
-	public int getMaxElements()
+	public String getMaxElements()
 	{
-		return maxElements;
+		return Integer.toString(maxElements);
 	}
 
 	public void setMaxElements(String maxElements)

@@ -53,17 +53,18 @@ public class SubjectsFilter extends SmscBean
 
 		checkedSubjects = trimStrings(checkedSubjects);
 		checkedSmes = trimStrings(checkedSmes);
+		checkedSubjectsSet = new HashSet(Arrays.asList(checkedSubjects));
+		checkedSmesSet = new HashSet(Arrays.asList(checkedSmes));
+
 		try
 		{
-			masks = MaskList.normalizeMaskList(trimStrings(masks));
+			masks = trimStrings(masks);
+			masks = MaskList.normalizeMaskList(masks);
 		}
 		catch (AdminException e)
 		{
 			return error(SMSCErrors.error.subjects.incorrectMask, e);
 		}
-
-		checkedSubjectsSet = new HashSet(Arrays.asList(checkedSubjects));
-		checkedSmesSet = new HashSet(Arrays.asList(checkedSmes));
 
 		return RESULT_OK;
 	}
@@ -72,8 +73,18 @@ public class SubjectsFilter extends SmscBean
 	{
 		if (mbCancel != null)
 			return RESULT_DONE;
-
 		int result = super.process(appContext, errors, loginedPrincipal);
+		if (mbClear != null)
+		{
+			filter = preferences.getSubjectsFilter();
+			checkedSubjects = checkedSmes = masks = new String[0];
+
+			checkedSubjectsSet.clear();
+			checkedSmesSet.clear();
+			errors.clear();
+			return RESULT_OK;
+		}
+
 		if (result != RESULT_OK)
 			return result;
 
@@ -90,14 +101,6 @@ public class SubjectsFilter extends SmscBean
 			filter.setNames(checkedSubjects);
 			filter.setSmes(checkedSmes);
 			return RESULT_DONE;
-		}
-		else if (mbClear != null)
-		{
-			checkedSubjects = checkedSmes = masks = new String[0];
-
-			checkedSubjectsSet.clear();
-			checkedSmesSet.clear();
-			return RESULT_OK;
 		}
 
 		return RESULT_OK;

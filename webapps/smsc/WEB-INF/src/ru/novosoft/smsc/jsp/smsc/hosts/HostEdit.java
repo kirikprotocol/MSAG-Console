@@ -26,9 +26,9 @@ public class HostEdit extends SmscBean
 		this.hostName = hostName;
 	}
 
-	public int getPort()
+	public String getPort()
 	{
-		return port;
+		return Integer.toString(port);
 	}
 
 	public void setPort(String port)

@@ -147,9 +147,9 @@ public class ProfilesFilter extends SmscBean
 		this.masks = masks;
 	}
 
-	public byte getCodepage()
+	public String getCodepage()
 	{
-		return codepage;
+		return Byte.toString(codepage);
 	}
 
 	public void setCodepage(String codepage)
@@ -164,9 +164,9 @@ public class ProfilesFilter extends SmscBean
 		}
 	}
 
-	public byte getReportinfo()
+	public String getReportinfo()
 	{
-		return reportinfo;
+		return Byte.toString(reportinfo);
 	}
 
 	public void setReportinfo(String reportinfo)

@@ -60,9 +60,9 @@ public class SmeBean extends PageBean
 		this.serviceId = serviceId;
 	}
 
-	public int getPriority()
+	public String getPriority()
 	{
-		return priority;
+		return Integer.toString(priority);
 	}
 
 	public void setPriority(String priority)
@@ -87,9 +87,9 @@ public class SmeBean extends PageBean
 		this.systemType = systemType;
 	}
 
-	public int getTypeOfNumber()
+	public String getTypeOfNumber()
 	{
-		return typeOfNumber;
+		return Integer.toString(typeOfNumber);
 	}
 
 	public void setTypeOfNumber(String typeOfNumber)
@@ -104,9 +104,9 @@ public class SmeBean extends PageBean
 		}
 	}
 
-	public int getNumberingPlan()
+	public String getNumberingPlan()
 	{
-		return numberingPlan;
+		return Integer.toString(numberingPlan);
 	}
 
 	public void setNumberingPlan(String numberingPlan)
@@ -151,9 +151,9 @@ public class SmeBean extends PageBean
 		this.password = password;
 	}
 
-	public int getTimeout()
+	public String getTimeout()
 	{
-		return timeout;
+		return Integer.toString(timeout);
 	}
 
 	public void setTimeout(String timeout)

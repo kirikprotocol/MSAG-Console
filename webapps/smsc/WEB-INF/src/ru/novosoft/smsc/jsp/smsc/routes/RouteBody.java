@@ -173,9 +173,9 @@ public class RouteBody extends SmscBean
 		this.dst_mask_sme_ = dst_mask_sme_;
 	}
 
-	public int getPriority()
+	public String getPriority()
 	{
-		return priority;
+		return Integer.toString(priority);
 	}
 
 	public void setPriority(String priority)
@@ -190,9 +190,9 @@ public class RouteBody extends SmscBean
 		}
 	}
 
-	public int getServiceId()
+	public String getServiceId()
 	{
-		return serviceId;
+		return Integer.toString(serviceId);
 	}
 
 	public void setServiceId(String serviceId)

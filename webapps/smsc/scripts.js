@@ -187,6 +187,13 @@ function clickCancel()
 	return false;
 }
 
+function clickClear()
+{
+	document.all.jbutton.name = "mbClear";
+	opForm.submit();
+	return false;
+}
+
 function selectFirstTextInput()
 {
 	var inputs = document.all.tags("INPUT");
