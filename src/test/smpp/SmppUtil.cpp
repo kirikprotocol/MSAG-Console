@@ -715,15 +715,17 @@ ostream& operator<< (ostream& os, SmppHeader*& p)
 		case REPLACE_SM:
 			os << *reinterpret_cast<PduReplaceSm*>(p);
 			break;
-		case DATA_SM:
-			os << *reinterpret_cast<PduDataSm*>(p);
-			break;
 		case QUERY_SM:
 			os << *reinterpret_cast<PduQuerySm*>(p);
 			break;
 		case CANCEL_SM:
+			os << *reinterpret_cast<PduCancelSm*>(p);
+			break;
+		case DATA_SM:
+			os << *reinterpret_cast<PduDataSm*>(p);
+			break;
 		case ENQUIRE_LINK:
-			os << *p;
+			os << *reinterpret_cast<PduEnquireLink*>(p);
 			break;
 		//респонсы
 		case SUBMIT_SM_RESP:
@@ -733,12 +735,22 @@ ostream& operator<< (ostream& os, SmppHeader*& p)
 		case REPLACE_SM_RESP:
 			os << *reinterpret_cast<PduReplaceSmResp*>(p);
 			break;
-		case DATA_SM_RESP:
 		case QUERY_SM_RESP:
+			os << *reinterpret_cast<PduQuerySmResp*>(p);
+			break;
 		case CANCEL_SM_RESP:
+			os << *reinterpret_cast<PduCancelSmResp*>(p);
+			break;
+		case DATA_SM_RESP:
+			os << *reinterpret_cast<PduDataSmResp*>(p);
+			break;
 		case ENQUIRE_LINK_RESP:
-		case SUBMIT_MULTI_RESP:
+			os << *reinterpret_cast<PduEnquireLinkResp*>(p);
+			break;
 		case GENERIC_NACK:
+			os << *reinterpret_cast<PduGenericNack*>(p);
+			break;
+		case SUBMIT_MULTI_RESP:
 		case ALERT_NOTIFICATION:
 			os << *p;
 			break;
@@ -784,22 +796,34 @@ ostream& operator<< (ostream& os, PduReplaceSm& p)
 	return os;
 }
 
-ostream& operator<< (ostream& os, PduDataSm& p)
-{
-	os << "PduDataSm {" << endl;
-	os << p.get_header() << endl;
-	os << p.get_data() << endl;
-	os << p.get_optional() << endl;
-	os << "}";
-	return os;
-}
-
 ostream& operator<< (ostream& os, PduQuerySm& p)
 {
 	os << "PduQuerySm {" << endl;
 	os << p.get_header() << endl;
 	__str_prop__(messageId);
 	__prop__(source);
+	os << "}";
+	return os;
+}
+
+ostream& operator<< (ostream& os, PduCancelSm& p)
+{
+	os << "PduCancelSm {" << endl;
+	os << p.get_header() << endl;
+	__str_prop__(serviceType);
+	__str_prop__(messageId);
+	__prop__(source);
+	__prop__(dest);
+	os << "}";
+	return os;
+}
+
+ostream& operator<< (ostream& os, PduDataSm& p)
+{
+	os << "PduDataSm {" << endl;
+	os << p.get_header() << endl;
+	os << p.get_data() << endl;
+	os << p.get_optional() << endl;
 	os << "}";
 	return os;
 }
@@ -813,10 +837,57 @@ ostream& operator<< (ostream& os, PduXSmResp& p)
 	return os;
 }
 
-ostream& operator<< (ostream& os, PduReplaceSmResp& p)
+ostream& operator<< (ostream& os, PduQuerySmResp& p)
 {
-	os << "PduReplaceSmResp {" << endl;
+	os << "PduQuerySmResp {" << endl;
 	os << p.get_header() << endl;
+	__str_prop__(messageId);
+	__str_prop__(finalDate);
+	__prop__(messageState);
+	__prop__(errorCode);
+	os << "}";
+	return os;
+}
+
+ostream& operator<< (ostream& os, PduWithOnlyHeader& p)
+{
+	switch (p.get_header().get_commandId())
+	{
+		case UNBIND:
+			os << "PduUnbind {" << endl;
+			break;
+		case UNBIND_RESP:
+			os << "PduUnbindResp {" << endl;
+			break;
+		case GENERIC_NACK:
+			os << "PduGenericNack {" << endl;
+			break;
+		case ENQUIRE_LINK:
+			os << "PduEnquireLink {" << endl;
+			break;
+		case ENQUIRE_LINK_RESP:
+			os << "PduEnquireLinkResp {" << endl;
+			break;
+		case REPLACE_SM_RESP:
+			os << "PduReplaceSmResp {" << endl;
+			break;
+		case CANCEL_SM_RESP:
+			os << "PduCancelSmResp {" << endl;
+			break;
+		default :
+			__unreachable__("Invalid commandId");
+	}
+	os << p.get_header() << endl;
+	os << "}";
+	return os;
+}
+
+ostream& operator<< (ostream& os, PduDataSmResp& p)
+{
+	os << "PduDataSmResp {" << endl;
+	os << p.get_header() << endl;
+	__str_prop__(messageId);
+	os << p.get_optional() << endl;
 	os << "}";
 	return os;
 }

@@ -159,10 +159,14 @@ bool operator!=(PduAddress& a1, PduAddress& a2);
 __log_pdu__(SmppHeader*)
 __log_pdu__(PduXSm)
 __log_pdu__(PduReplaceSm)
-__log_pdu__(PduDataSm)
 __log_pdu__(PduQuerySm)
+__log_pdu__(PduCancelSm)
+__log_pdu__(PduDataSm)
+
 __log_pdu__(PduXSmResp)
-__log_pdu__(PduReplaceSmResp)
+__log_pdu__(PduWithOnlyHeader)
+__log_pdu__(PduQuerySmResp)
+__log_pdu__(PduDataSmResp)
 
 __log_pdu__(SmppHeader)
 __log_pdu__(PduAddress)
