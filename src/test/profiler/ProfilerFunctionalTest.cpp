@@ -217,7 +217,7 @@ int main(int argc, char* argv[])
 		}
 		__trace__("Before save checklist");
 		chkList.save();
-		//chkList.saveHtml();
+		chkList.saveHtml();
 	}
 	catch (...)
 	{
