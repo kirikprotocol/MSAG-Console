@@ -446,7 +446,7 @@ void Task::beginGeneration(Statistics* statistics)
         
         {
             MutexGuard guard(inGenerationLock);
-            if (!isInGeneration() && info.trackIntegrity) bGenerationSuccess = false;
+            if (bInGeneration && info.trackIntegrity) bGenerationSuccess = false;
             else bGenerationSuccess = true;
         }
 
