@@ -177,10 +177,10 @@ void DbSmeTestCases::submitCorrectFormatDbSmeCmd(bool sync, uint8_t dataCoding, 
 		switch (s.value())
 		{
 			case 1: //DateFormatJob с параметром
-				rec = dateFormatTc.createJobInput(rand1(4), true, &df);
+				rec = dateFormatTc.createJobInput(rand1(5), true, &df);
 				break;
 			case 2: //DateFormatJob без параметров
-				rec = dateFormatTc.createJobInput(rand1(4), false, &df);
+				rec = dateFormatTc.createJobInput(rand1(5), false, &df);
 				break;
 			case 3: //OtherFormatJob с параметрами
 				rec = otherFormatTc.createValuesJobInput();
@@ -329,31 +329,31 @@ void DbSmeTestCases::submitIncorrectDateFormatDbSmeCmd(bool sync,
 				break;
 			case 7: //неправильный час (формат даты "d/M/yy h:m:s t")
 				__tc__("submitDbSmeCmd.incorrect.dateFormat.invalidHour"); __tc_ok__;
-				input = "DateFormatJob1 1/1/2002 0:0:0 AM";
+				input = "DateFormatJob1 1/1/02 0:0:0 AM";
 				break;
 			case 8: //неправильный час (формат даты "d/M/yy h:m:s t")
 				__tc__("submitDbSmeCmd.incorrect.dateFormat.invalidHour"); __tc_ok__;
-				input = "DateFormatJob1 1/1/2002 13:0:0 AM";
+				input = "DateFormatJob1 1/1/02 13:0:0 AM";
 				break;
 			case 9: //неправильный час (формат даты "d/M/yy h:m:s t")
 				__tc__("submitDbSmeCmd.incorrect.dateFormat.invalidHour"); __tc_ok__;
-				input = "DateFormatJob1 1/1/2002 0:0:0 PM";
+				input = "DateFormatJob1 1/1/02 0:0:0 PM";
 				break;
 			case 10: //неправильный час (формат даты "d/M/yy h:m:s t")
 				__tc__("submitDbSmeCmd.incorrect.dateFormat.invalidHour"); __tc_ok__;
-				input = "DateFormatJob1 1/1/2002 13:0:0 PM";
+				input = "DateFormatJob1 1/1/02 13:0:0 PM";
 				break;
 			case 11: //неправильная минута (формат даты "d/M/yy h:m:s t")
 				__tc__("submitDbSmeCmd.incorrect.dateFormat.invalidMinute"); __tc_ok__;
-				input = "DateFormatJob1 1/1/2002 1:60:0 AM";
+				input = "DateFormatJob1 1/1/02 1:60:0 AM";
 				break;
 			case 12: //неправильная секунда (формат даты "d/M/yy h:m:s t")
 				__tc__("submitDbSmeCmd.incorrect.dateFormat.invalidSecond"); __tc_ok__;
-				input = "DateFormatJob1 1/1/2002 1:0:60 AM";
+				input = "DateFormatJob1 1/1/02 1:0:60 AM";
 				break;
 			case 13: //неправильный am/pm (формат даты "d/M/yy h:m:s t")
 				__tc__("submitDbSmeCmd.incorrect.dateFormat.invalidIndicator"); __tc_ok__;
-				input = "DateFormatJob1 1/1/2002 1:0:0 A";
+				input = "DateFormatJob1 1/1/02 1:0:0 A";
 				break;
 			//DateFormatJob2
 			case 14: //неправильный год (формат даты "dd.MM.yyyy hh-mm-ss t")
@@ -623,6 +623,33 @@ void DbSmeTestCases::submitIncorrectParamsDbSmeCmd(bool sync,
 	}
 }
 
+bool DbSmeTestCases::checkPdu(PduDeliverySm &pdu)
+{
+	__decl_tc__;
+	__tc__("processDbSmeRes.dataCoding");
+	if (pdu.get_message().get_dataCoding() != DATA_CODING_SMSC_DEFAULT)
+	{
+		__tc_fail__(1);
+		return false;
+	}
+	__tc_ok_cond__;
+	__tc__("processDbSmeRes.serviceType");
+	__cfg_str__(dbSmeServiceType);
+	if (dbSmeServiceType != pdu.get_message().get_serviceType())
+	{
+		__tc_fail__(1);
+	}
+	__tc_ok_cond__;
+	__tc__("processDbSmeRes.protocolId");
+	__cfg_int__(dbSmeProtocolId);
+	if (pdu.get_message().get_protocolId() != dbSmeProtocolId)
+	{
+		__tc_fail__(1);
+	}
+	__tc_ok_cond__;
+	return true;
+}
+
 void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	PduDeliverySm &pdu)
 {
@@ -635,14 +662,10 @@ void DbSmeTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 		return;
 	}
 	__require__(monitor);
-	__decl_tc__;
-	__tc__("processDbSmeRes.dataCoding");
-	if (pdu.get_message().get_dataCoding() != DATA_CODING_SMSC_DEFAULT)
+	if (!checkPdu(pdu))
 	{
-		__tc_fail__(1);
 		return;
 	}
-	__tc_ok_cond__;
 	const string text = decode(pdu.get_message().get_shortMessage(),
 		pdu.get_message().size_shortMessage(), pdu.get_message().get_dataCoding());
 	MutexGuard mguard(dbSmeReg->getMutex());
