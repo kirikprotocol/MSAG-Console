@@ -2,7 +2,7 @@
 #define __Core_Buffers_MemoryManager_hpp__
 
 
-#include "Array.hpp"
+#include "core/buffers/Array.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "util/debug.h"
 
