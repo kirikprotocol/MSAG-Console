@@ -233,7 +233,8 @@ namespace smsc { namespace db
         
         static DataSource* getDataSource(const char* key)
         {
-            DataSourceFactory* dsf = (registry) ? registry->Get(key):0;
+            DataSourceFactory* dsf = (registry) ? 
+                ((registry->Exists(key)) ? registry->Get(key):0):0;
             return ((dsf) ? dsf->createDataSource():0);
         };
     };
