@@ -25,7 +25,7 @@
 		</section>
 
 		<param name="SvcType" type="string">dBsmE</param>
-		<param name="ProtocolId" type="int">23</param>
+		<param name="ProtocolId" type="int">7</param>
 
 		<section name="ThreadPool">
 			<param name="max" type="int">15</param>
@@ -37,7 +37,7 @@
 			<param name="port" type="int">15971</param>
 			<param name="sid" type="string">dbSme</param>
 			<param name="timeout" type="int">10</param>
-			<param name="password" type="string"></param>
+			<param name="password" type="string">dbSmePwd</param>
 		</section>
 
 		<section name="DataProviders">
