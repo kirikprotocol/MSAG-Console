@@ -80,7 +80,7 @@ class MapDialog;
 extern void MAPSTATS_Restart();
 extern void MAPSTATS_Update(MAPSTATS);
 extern void MAPSTATS_DumpDialogLC(MapDialog*);
-extern void MAPSTATS_DumpDialog(MapDialog*);
+extern void MAPSTATS_DumpDialog(MapDialog*,time_t,bool);
 extern bool isMapBound();
 
 enum MapState{
@@ -342,13 +342,24 @@ class MapDialogContainer{
   int    processLimit;
 
   void Dump() {
+    static smsc::logger::Logger* dlogger = smsc::logger::Logger::getInstance("map.stat.dlgdump");
     if ( time(0) < last_dump_time+60 ) return;
     last_dump_time = time(0);
     unsigned key;
     MapDialog* dlg;
     hash_.First();
+    time_t now = time(NULL);
     while(hash_.Next(key,dlg)) {
-      MAPSTATS_DumpDialog(dlg);
+      if((now-dlg->lockedAt)>processTimeout+1) {
+        MAPSTATS_DumpDialog(dlg, now, true);
+        for (;!dlg->chain.empty();dlg->chain.pop_front())
+        {
+          //drop chain elements
+        }
+        _dropDialog(dlg->dialogid_map, dlg->ssn);
+      } else {
+        MAPSTATS_DumpDialog(dlg, now, false);
+      }
     }
   }
 public:

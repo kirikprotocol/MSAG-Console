@@ -538,18 +538,30 @@ void MAPSTATS_Update(MAPSTATS stats)
   MAPSTATS_Update_(stats);
 }
 
-void MAPSTATS_DumpDialog(MapDialog* dlg)
+void MAPSTATS_DumpDialog(MapDialog* dlg, time_t now, bool expired)
 {
   static smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("map.stat.dlgdump");
-  smsc_log_info(logger, "dlg/map/smsc 0x%x/0x%x/0x%x(%s) state: %d, %ld/%ld sec, {%s->%s}",
-               dlg,
-               dlg->dialogid_map,
-               dlg->dialogid_smsc,
-               dlg->isUSSD?"USSD":"SMS",
-               (int)dlg->state,
-               (long)(time(0)-(dlg->maked_at_mks/1000000)),
-               dlg->sms.get()?dlg->sms->getOriginatingAddress().value:"???",
-               dlg->sms.get()?dlg->sms->getDestinationAddress().value:"???");
+  if( expired ) {
+    smsc_log_warn(logger, "Expired dlg/map/smsc 0x%x/0x%x/0x%x(%s) state: %d, %ld/%ld sec, {%s->%s}",
+                 dlg,
+                 dlg->dialogid_map,
+                 dlg->dialogid_smsc,
+                 dlg->isUSSD?"USSD":"SMS",
+                 (int)dlg->state,
+                 (long)(now-(dlg->maked_at_mks/1000000)),
+                 dlg->sms.get()?dlg->sms->getOriginatingAddress().value:"???",
+                 dlg->sms.get()?dlg->sms->getDestinationAddress().value:"???");
+  } else {
+    smsc_log_info(logger, "dlg/map/smsc 0x%x/0x%x/0x%x(%s) state: %d, %ld/%ld sec, {%s->%s}",
+                 dlg,
+                 dlg->dialogid_map,
+                 dlg->dialogid_smsc,
+                 dlg->isUSSD?"USSD":"SMS",
+                 (int)dlg->state,
+                 (long)(now-(dlg->maked_at_mks/1000000)),
+                 dlg->sms.get()?dlg->sms->getOriginatingAddress().value:"???",
+                 dlg->sms.get()?dlg->sms->getDestinationAddress().value:"???");
+  }
 }
 
 void MapProxy::checkLogging() {
