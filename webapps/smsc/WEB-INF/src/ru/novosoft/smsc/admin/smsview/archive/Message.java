@@ -47,7 +47,7 @@ public abstract class Message
   public static Date convertDateFromString(String dateString) throws IOException {
     Date date = null;
     try {
-      date = dateFormat.parse(dateString);
+      if (dateString != null && dateString.length() > 0) date = dateFormat.parse(dateString);
     } catch (ParseException e) {
       throw new IOException("Invalid date/time format");
     }

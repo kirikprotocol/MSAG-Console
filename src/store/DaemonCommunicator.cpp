@@ -137,9 +137,13 @@ static time_t convertProtocolStrToDate(const char* str)
 }
 static int8_t convertProtocolDateToStr(char* str, time_t date)
 {
-    tm tmdt; gmtime_r(&date, &tmdt); int bytes = 0;
-    sprintf(str, PROTOCOL_DATETIME_PATTERN, tmdt.tm_mday, tmdt.tm_mon+1, tmdt.tm_year+1900,
-            tmdt.tm_hour, tmdt.tm_min, tmdt.tm_sec, &bytes);
+    int bytes = 0;
+    if (date > 0) {
+        tm tmdt; gmtime_r(&date, &tmdt); 
+        sprintf(str, PROTOCOL_DATETIME_PATTERN, tmdt.tm_mday, tmdt.tm_mon+1, tmdt.tm_year+1900,
+                tmdt.tm_hour, tmdt.tm_min, tmdt.tm_sec, &bytes);
+    } 
+    else str[0]='/0';
     return (int8_t)bytes;
 }
 
