@@ -913,6 +913,8 @@ StateType StateMachine::submit(Tuple& t)
   if( !isForwardTo )
   {
 
+    sms->getMessageBody().dropProperty(Tag::SMSC_MO_PDU);
+
     ////
     //
     //  Merging
@@ -949,6 +951,7 @@ StateType StateMachine::submit(Tuple& t)
         sms->setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),tmp.length());
         sms->getMessageBody().dropProperty(Tag::SMPP_SHORT_MESSAGE);
         sms->getMessageBody().dropProperty(Tag::SMSC_RAW_SHORTMESSAGE);
+        sms->setIntProperty(Tag::SMPP_SM_LENGTH,0);
 
         ConcatInfo *ci=(ConcatInfo *)new char[1+2*num];
         ci->num=1;
