@@ -54,7 +54,7 @@ find . -type f -name "*.css" | cpio -pud $DISTR_DIR/webapps
 find . -type f -name "*.gif" | cpio -pud $DISTR_DIR/webapps
 find . -type f -name "*.jpg" | cpio -pud $DISTR_DIR/webapps
 find . -type f -name "*.htc" | cpio -pud $DISTR_DIR/webapps
-find . -type f -name "*.html" | cpio -pud $DISTR_DIR/webapps
-cp $SMSC_SRCDIR/../docs/html/*.htm $DISTR_DIR/webapps/smsc
+cp $SMSC_SRCDIR/../docs/SMSC\ Administration\ Guide.doc $DISTR_DIR/webapps/smsc
+cp $SMSC_SRCDIR/../docs/html/SMSC\ Administration\ Guide.htm $DISTR_DIR/webapps/smsc
 mkdir $DISTR_DIR/webapps/smsc/SMSC\ Administration\ Guide_files
 cp $SMSC_SRCDIR/../docs/html/SMSC\ Administration\ Guide_files/* $DISTR_DIR/webapps/smsc/SMSC\ Administration\ Guide_files
