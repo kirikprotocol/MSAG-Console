@@ -8,8 +8,8 @@ package ru.novosoft.smsc.admin.protocol;
 
 public class CommandKillService extends ServiceCommand
 {
-  public CommandKillService(String serviceName)
-  {
-    super("kill_service", serviceName);
-  }
+	public CommandKillService(String serviceName)
+	{
+		super("kill_service", serviceName);
+	}
 }

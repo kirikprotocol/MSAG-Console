@@ -14,58 +14,58 @@ import java.io.PrintWriter;
 
 public class Destination extends Source
 {
-  private SME sme = null;
+	private SME sme = null;
 
-  public Destination(Subject subj)
-          throws AdminException
-  {
-    this(subj, subj.getDefaultSme());
-  }
+	public Destination(Subject subj)
+			  throws AdminException
+	{
+		this(subj, subj.getDefaultSme());
+	}
 
-  public Destination(Subject subj, SME sme)
-          throws AdminException
-  {
-    super(subj);
+	public Destination(Subject subj, SME sme)
+			  throws AdminException
+	{
+		super(subj);
 
-    if ((this.sme = sme) == null)
-      throw new AdminException("SME is null");
-  }
+		if ((this.sme = sme) == null)
+			throw new AdminException("SME is null");
+	}
 
-  public Destination(Mask mask, SME sme)
-          throws AdminException
-  {
-    super(mask);
-    if ((this.sme = sme) == null)
-      throw new AdminException("SME is null");
-  }
+	public Destination(Mask mask, SME sme)
+			  throws AdminException
+	{
+		super(mask);
+		if ((this.sme = sme) == null)
+			throw new AdminException("SME is null");
+	}
 
-  public Destination(Element dstElem, SubjectList subjects, SMEList smes)
-          throws AdminException
-  {
-    super(dstElem, subjects);
-    sme = smes.get(dstElem.getAttribute("sme"));
-    if ((this.sme = sme) == null)
-      throw new AdminException("Unknown SME \"" + dstElem.getAttribute("sme") + '"');
-  }
+	public Destination(Element dstElem, SubjectList subjects, SMEList smes)
+			  throws AdminException
+	{
+		super(dstElem, subjects);
+		sme = smes.get(dstElem.getAttribute("sme"));
+		if ((this.sme = sme) == null)
+			throw new AdminException("Unknown SME \"" + dstElem.getAttribute("sme") + '"');
+	}
 
-  public SME getSme()
-  {
-    return sme;
-  }
+	public SME getSme()
+	{
+		return sme;
+	}
 
-  public void setSme(SME sme)
-  {
-    this.sme = sme;
-  }
+	public void setSme(SME sme)
+	{
+		this.sme = sme;
+	}
 
-  public PrintWriter store(PrintWriter out)
-  {
-    out.println("    <destination sme=\"" + StringEncoderDecoder.encode(getSme().getId()) + "\">");
-    if (isSubject())
-      out.println("      <subject id=\"" + StringEncoderDecoder.encode(subj.getName()) + "\"/>");
-    else
-      out.println("      <mask value=\"" + StringEncoderDecoder.encode(mask.getMask()) + "\"/>");
-    out.println("    </destination>");
-    return out;
-  }
+	public PrintWriter store(PrintWriter out)
+	{
+		out.println("    <destination sme=\"" + StringEncoderDecoder.encode(getSme().getId()) + "\">");
+		if (isSubject())
+			out.println("      <subject id=\"" + StringEncoderDecoder.encode(subj.getName()) + "\"/>");
+		else
+			out.println("      <mask value=\"" + StringEncoderDecoder.encode(mask.getMask()) + "\"/>");
+		out.println("    </destination>");
+		return out;
+	}
 }

@@ -16,18 +16,18 @@ import java.io.IOException;
 
 public class ResponseEntityResolver implements EntityResolver
 {
-  Category logger = Category.getInstance(ResponseEntityResolver.class);
+	Category logger = Category.getInstance(ResponseEntityResolver.class);
 
-  public InputSource resolveEntity(String publicId,
-                                   String systemId)
-          throws SAXException, IOException
-  {
-    logger.debug("resolving entity \"" + systemId + "\"for response");
-    if (systemId.endsWith("response.dtd"))
-    {
-      return new InputSource(new FileInputStream("/export/home/igork/cvs/smsc/config/response.dtd"));
-    }
-    else
-      return null;
-  }
+	public InputSource resolveEntity(String publicId,
+												String systemId)
+			  throws SAXException, IOException
+	{
+		logger.debug("resolving entity \"" + systemId + "\"for response");
+		if (systemId.endsWith("response.dtd"))
+		{
+			return new InputSource(new FileInputStream("/export/home/igork/cvs/smsc/config/response.dtd"));
+		}
+		else
+			return null;
+	}
 }

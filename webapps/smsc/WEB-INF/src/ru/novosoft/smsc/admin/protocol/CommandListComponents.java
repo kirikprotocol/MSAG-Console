@@ -8,8 +8,8 @@ package ru.novosoft.smsc.admin.protocol;
 
 public class CommandListComponents extends ServiceCommand
 {
-  public CommandListComponents(String serviceId)
-  {
-    super("list_components", serviceId);
-  }
+	public CommandListComponents(String serviceId)
+	{
+		super("list_components", serviceId);
+	}
 }

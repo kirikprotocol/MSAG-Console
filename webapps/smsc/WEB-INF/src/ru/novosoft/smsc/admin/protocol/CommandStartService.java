@@ -8,8 +8,8 @@ package ru.novosoft.smsc.admin.protocol;
 
 public class CommandStartService extends ServiceCommand
 {
-  public CommandStartService(String serviceName)
-  {
-    super("start_service", serviceName);
-  }
+	public CommandStartService(String serviceName)
+	{
+		super("start_service", serviceName);
+	}
 }

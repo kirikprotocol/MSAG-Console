@@ -21,86 +21,92 @@ import java.util.Set;
 
 public class SubjectList
 {
-  private Map subjects = new HashMap();
-  private SubjectDataSource dataSource = new SubjectDataSource();
+	private Map subjects = new HashMap();
+	private SubjectDataSource dataSource = new SubjectDataSource();
 
-  public SubjectList(Element listElement, SMEList smes)
-          throws AdminException
-  {
-    NodeList subjList = listElement.getElementsByTagName("subject_def");
-    for (int i = 0; i < subjList.getLength(); i++)
-    {
-      Element subjElem = (Element) subjList.item(i);
-      String name = subjElem.getAttribute("id");
-      String masks = "";
-      NodeList masksList = subjElem.getElementsByTagName("mask");
-      for (int j = 0; j < masksList.getLength(); j++)
-      {
-        Element maskElem = (Element) masksList.item(j);
-        masks += maskElem.getAttribute("value") + "\n";
-      }
-      SME defSme = smes.get(subjElem.getAttribute("defSme"));
-      if (defSme == null)
-        throw new AdminException("Unknown SME \"" + subjElem.getAttribute("defSme") + '"');
-      add(new Subject(name, masks, defSme));
-    }
-  }
+	public SubjectList(Element listElement, SMEList smes)
+			  throws AdminException
+	{
+		NodeList subjList = listElement.getElementsByTagName("subject_def");
+		for (int i = 0; i < subjList.getLength(); i++)
+		{
+			Element subjElem = (Element) subjList.item(i);
+			String name = subjElem.getAttribute("id");
+			String masks = "";
+			NodeList masksList = subjElem.getElementsByTagName("mask");
+			for (int j = 0; j < masksList.getLength(); j++)
+			{
+				Element maskElem = (Element) masksList.item(j);
+				masks += maskElem.getAttribute("value") + "\n";
+			}
+			SME defSme = smes.get(subjElem.getAttribute("defSme"));
+			if (defSme == null)
+				throw new AdminException("Unknown SME \"" + subjElem.getAttribute("defSme") + '"');
+			add(new Subject(name, masks, defSme));
+		}
+	}
 
-  public void add(Subject s)
-  {
-    if (s == null)
-      throw new NullPointerException("Source is null");
-    if (subjects.containsKey(s.getName()))
-      throw new IllegalArgumentException("Source already contained");
+	public void add(Subject s)
+	{
+		if (s == null)
+			throw new NullPointerException("Source is null");
+		if (subjects.containsKey(s.getName()))
+			throw new IllegalArgumentException("Source already contained");
 
-    dataSource.add(s);
-    subjects.put(s.getName(), s);
-  }
+		dataSource.add(s);
+		subjects.put(s.getName(), s);
+	}
 
-  public Subject remove(String subjectName)
-  {
-    Subject removed = (Subject) subjects.remove(subjectName);
-    if (removed != null)
-      dataSource.remove(removed);
-    return removed;
-  }
+	public Subject remove(String subjectName)
+	{
+		Subject removed = (Subject) subjects.remove(subjectName);
+		if (removed != null)
+			dataSource.remove(removed);
+		return removed;
+	}
 
-  public int size()
-  {
-    return subjects.size();
-  }
+	public int size()
+	{
+		return subjects.size();
+	}
 
-  public Subject get(String subjectName)
-  {
-    return (Subject) subjects.get(subjectName);
-  }
+	public Subject get(String subjectName)
+	{
+		return (Subject) subjects.get(subjectName);
+	}
 
-  public Iterator iterator()
-  {
-    return subjects.values().iterator();
-  }
+	public Iterator iterator()
+	{
+		return subjects.values().iterator();
+	}
 
-  public boolean isEmpty()
-  {
-    return subjects.isEmpty();
-  }
+	public boolean isEmpty()
+	{
+		return subjects.isEmpty();
+	}
 
-  public Set getNames()
-  {
-    return subjects.keySet();
-  }
+	public Set getNames()
+	{
+		return subjects.keySet();
+	}
 
-  public PrintWriter store(PrintWriter out)
-  {
-    for (Iterator i = iterator(); i.hasNext();)
-    {
-      ((Subject) i.next()).store(out);
-    }
-    return out;
-  }
+	public PrintWriter store(PrintWriter out)
+	{
+		for (Iterator i = iterator(); i.hasNext();)
+		{
+			((Subject) i.next()).store(out);
+		}
+		return out;
+	}
 
-  public QueryResultSet query(SubjectQuery query)
-  {
-    return dataSource.query(query);
-  }
+	public QueryResultSet query(SubjectQuery query)
+	{
+		dataSource.clear();
+		for (Iterator i = subjects.values().iterator(); i.hasNext();)
+		{
+			Subject subject = (Subject) i.next();
+			dataSource.add(subject);
+		}
+		return dataSource.query(query);
+	}
 }

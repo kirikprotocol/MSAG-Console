@@ -13,8 +13,8 @@ package ru.novosoft.smsc.admin.protocol;
 public class CommandListServices extends Command
 {
 
-  public CommandListServices()
-  {
-    super("list_services");
-  }
+	public CommandListServices()
+	{
+		super("list_services");
+	}
 }

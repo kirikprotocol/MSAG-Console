@@ -8,8 +8,8 @@ package ru.novosoft.smsc.admin.protocol;
 
 public class CommandShutdownService extends ServiceCommand
 {
-  public CommandShutdownService(String serviceName)
-  {
-    super("shutdown_service", serviceName);
-  }
+	public CommandShutdownService(String serviceName)
+	{
+		super("shutdown_service", serviceName);
+	}
 }

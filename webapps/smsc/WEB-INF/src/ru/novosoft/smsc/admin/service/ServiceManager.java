@@ -71,6 +71,12 @@ public class ServiceManager
 		smsc = smscenter;
 	}
 
+	public static File getServiceFolder(String serviceId)
+			  throws AdminException
+	{
+		return new File(new File(daemonsFolder, serviceManager.getServiceInfo(serviceId).getHost()), serviceId);
+	}
+
 
 	private Map services = new HashMap();
 	private DaemonManager daemonManager = null;
@@ -174,8 +180,10 @@ public class ServiceManager
 	public synchronized void addAdmService(AddAdmServiceWizard wizard)
 			  throws AdminException
 	{
-		if (services.keySet().contains(wizard.getSystemId()))
+		if (services.containsKey(wizard.getSystemId()))
 			throw new AdminException("Service \"" + wizard.getSystemId() + "\" already exists");
+		else if (smsc.getSmes().contains(wizard.getSystemId()))
+			throw new AdminException("SME \"" + wizard.getSystemId() + "\" already exists");
 		else
 		{
 			wizard.deploy(daemonsFolder, webappFolder, webinfLibFolder);
@@ -184,12 +192,10 @@ public class ServiceManager
 																	wizard.getStartupArgs(), wizard.createSme());
 
 			Daemon d = getDaemon(serviceInfo.getHost());
-			if (services.containsKey(serviceInfo.getId()))
-				throw new AdminException("Service \"" + serviceInfo.getId() + "\" already present");
-
 			d.addService(serviceInfo);
 			putService(new Service(serviceInfo));
 			smsc.getSmes().add(serviceInfo.getSme());
+			smsc.saveSmesConfig();
 			logger.debug("service added");
 		}
 	}
@@ -202,6 +208,7 @@ public class ServiceManager
 		if (smsc.getSmes().getNames().contains(sme.getId()))
 			throw new AdminException("SME \"" + sme.getId() + "\" already exists");
 		smsc.getSmes().add(sme);
+		smsc.saveSmesConfig();
 	}
 
 	protected boolean recursiveDeleteFolder(File folder)
@@ -230,6 +237,7 @@ public class ServiceManager
 		d.removeService(serviceId);
 		services.remove(serviceId);
 		smsc.getSmes().remove(serviceId);
+		smsc.saveSmesConfig();
 		if (!recursiveDeleteFolder(getServiceFolder(host, serviceId))
 				  || !recursiveDeleteFolder(getServiceJspsFolder(webappFolder, serviceId)))
 			throw new AdminException("Service removed, but service files not deleted");
@@ -474,7 +482,7 @@ public class ServiceManager
 		services.put(d.getHost(), d);
 	}
 
-	static File getServiceJspsFolder(File webappFolder, String serviceId)
+	public static File getServiceJspsFolder(File webappFolder, String serviceId)
 	{
 		return new File(webappFolder, "esme_" + serviceId);
 	}
@@ -483,7 +491,7 @@ public class ServiceManager
 	{
 		SMEList smes = smsc.getSmes();
 		List smeIds = new Vector();
-		for (Iterator i = smes.iterator(); i.hasNext(); )
+		for (Iterator i = smes.iterator(); i.hasNext();)
 		{
 			SME sme = (SME) i.next();
 			smeIds.add(sme.getId());

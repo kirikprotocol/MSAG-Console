@@ -10,10 +10,10 @@ import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 public class ServiceCommand extends Command
 {
-  public ServiceCommand(String commandName, String serviceId)
-  {
-    super(commandName);
+	public ServiceCommand(String commandName, String serviceId)
+	{
+		super(commandName);
 
-    document.getDocumentElement().setAttribute("service", StringEncoderDecoder.encode(serviceId));
-  }
+		document.getDocumentElement().setAttribute("service", StringEncoderDecoder.encode(serviceId));
+	}
 }

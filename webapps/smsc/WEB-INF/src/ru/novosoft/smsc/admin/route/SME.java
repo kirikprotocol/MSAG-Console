@@ -24,7 +24,7 @@ public class SME
 	private String addrRange = null;
 	private int smeN = 0;
 
-   /**
+	/**
 	 * Constructor
 	 * @param <b>id</b> уникальный идентификатор SME
 	 * @param <b>type</b> тип SME. может быть SME.SMPP или SME.SS7

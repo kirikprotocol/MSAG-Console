@@ -8,8 +8,8 @@ package ru.novosoft.smsc.admin.protocol;
 
 public class CommandRemoveService extends ServiceCommand
 {
-  public CommandRemoveService(String serviceName)
-  {
-    super("remove_service", serviceName);
-  }
+	public CommandRemoveService(String serviceName)
+	{
+		super("remove_service", serviceName);
+	}
 }

@@ -15,41 +15,41 @@ import java.util.Set;
 
 public class DaemonManager
 {
-  private Map daemons = new HashMap();
-  private Smsc smsc = null;
+	private Map daemons = new HashMap();
+	private Smsc smsc = null;
 
-  public DaemonManager(Smsc smsc)
-  {
-    this.smsc = smsc;
-  }
+	public DaemonManager(Smsc smsc)
+	{
+		this.smsc = smsc;
+	}
 
-  public Daemon addDaemon(String host, int port)
-          throws AdminException
-  {
-    if (daemons.containsKey(host))
-      throw new AdminException("Daemon already connected on host \"" + host + "\"");
+	public Daemon addDaemon(String host, int port)
+			  throws AdminException
+	{
+		if (daemons.containsKey(host))
+			throw new AdminException("Daemon already connected on host \"" + host + "\"");
 
-    Daemon d = new Daemon(host, port, smsc);
-    daemons.put(host, d);
-    return d;
-  }
+		Daemon d = new Daemon(host, port, smsc);
+		daemons.put(host, d);
+		return d;
+	}
 
-  public void removeDaemon(String host)
-          throws AdminException
-  {
-    if (!daemons.containsKey(host))
-      throw new AdminException("Daemon on host \"" + host + "\" not known");
+	public void removeDaemon(String host)
+			  throws AdminException
+	{
+		if (!daemons.containsKey(host))
+			throw new AdminException("Daemon on host \"" + host + "\" not known");
 
-    daemons.remove(host);
-  }
+		daemons.remove(host);
+	}
 
-  public Daemon getDaemon(String host)
-  {
-    return (Daemon) daemons.get(host);
-  }
+	public Daemon getDaemon(String host)
+	{
+		return (Daemon) daemons.get(host);
+	}
 
-  public Set getHosts()
-  {
-    return daemons.keySet();
-  }
+	public Set getHosts()
+	{
+		return daemons.keySet();
+	}
 }
