@@ -306,6 +306,7 @@ CREATE TABLE MSC_LOCK
 
 -- ********************* ACL tables ******************************** --
 
+DROP TABLE SMS_ACLINFO;
 CREATE TABLE SMS_ACLINFO 
 (
   ID           INTEGER NOT NULL
@@ -317,6 +318,7 @@ CREATE TABLE SMS_ACLINFO
 ) TABLESPACE SMSC_DATA;
 
 
+DROP TABLE SMS_ACL;
 CREATE TABLE SMS_ACL 
 (
   ID           INTEGER NOT NULL,
