@@ -1364,7 +1364,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   __map_trace2__("%s: dialogid 0x%x",__func__,dialog->dialogid_map);
   if( !dialog->id_opened ) {
     bool dlg_found = false;
-    istringstream(string(dialog->cmd->get_sms()->getDestinationAddress().value))>>dialog->ussdSequence;
+    istringstream(string(dialog->sms->getDestinationAddress().value))>>dialog->ussdSequence;
     {
       MutexGuard ussd_map_guard( ussd_map_lock );
       USSD_MAP::iterator it = ussd_map.find(dialog->ussdSequence);
@@ -1376,24 +1376,20 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
       }
     }
     if(dlg_found) {
-      __map_trace2__("%s: dialogid 0x%x, ussd dialog already exists for %s",__func__,dialog->dialogid_map,dialog->ussdSequence.c_str());
-      SendErrToSmsc(dialog->cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_TEMP,Status::SUBSCRBUSYMT));
+      __map_trace2__("%s: dialogid 0x%x, ussd dialog already exists for %s",__func__,dialog->dialogid_map,dialog->abonent);
+      SendErrToSmsc(dialog->dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_TEMP,Status::SUBSCRBUSYMT));
       dialog->state = MAPST_END;
       DropMapDialog(dialog);
       return;
     }
   }
-  __map_trace2__("USSD request %s",RouteToString(dialog).c_str());
-  
-  
-  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;
-  unsigned encoding = dialog->sms->getIntProperty(Tag::SMPP_DATA_CODING);
   ET96MAP_USSD_STRING_T ussdString = {0,};
   unsigned text_len;
+  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;
+  unsigned encoding = dialog->sms->getIntProperty(Tag::SMPP_DATA_CODING);
 
-  __map_trace2__("%s: datacoding 0x%x",__func__,encoding);
+  __map_trace2__("USSD request %s datacoding 0x%x",RouteToString(dialog).c_str(),encoding);
 
-  unsigned text_len;
   const unsigned char* text = (const unsigned char*)dialog->sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
   if(text_len==0 && dialog->sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
   {
