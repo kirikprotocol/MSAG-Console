@@ -58,10 +58,19 @@ page_menu_end(out);
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <%
 Statistics stat = bean.getStatistics();
+int disNo = 1;
 if (stat != null) {
     CountersSet total = stat.getTotal();
     Collection dates = stat.getDateStat();
 %>
+<script language="JavaScript">
+  function showErr(obj) {
+    if( obj.style.display != 'none' )
+      obj.style.display='none';
+    else obj.style.display='block';
+    return false;
+  }
+</script>
 <table class=list cellspacing=0>
 <tr>
     <td colspan=7><div class=page_subtitle>General statistics</div></td>
@@ -133,14 +142,28 @@ while (i.hasNext()) {
             SmeIdCountersSet sme = (SmeIdCountersSet)i.next();
         %>
         <tr class=row1>
-            <td width="22%" align=right><%= StringEncoderDecoder.encode(sme.smeid)%></td>
+            <td width="22%" align=right><a href="#" onClick="showErrTable(document.all.disNo<%=disNo%>)"><%= StringEncoderDecoder.encode(sme.smeid)%></a></td>
             <td width="13%" align=right><%= sme.accepted%></td>
             <td width="13%" align=right><%= sme.rejected%></td>
             <td width="13%" align=right><%= sme.delivered%></td>
             <td width="13%" align=right><%= sme.failed%></td>
             <td width="13%" align=right><%= sme.rescheduled%></td>
             <td width="13%" align=right><%= sme.temporal%></td>
-        </tr><%
+        </tr>
+        <tr class=row0 id="disNo<%=disNo++%>">
+            <td colspan=7>
+                <table class=list cellspacing=0>
+                  <td width="22%"><div align=right>Error</div></td>
+                  <td width="13%"><div align=right>Count</div></td>
+                  <td width="13%"><div align=right>&nbsp;</div></td>
+                  <td width="13%"><div align=right>&nbsp;</div></td>
+                  <td width="13%"><div align=right>&nbsp;</div></td>
+                  <td width="13%"><div align=right>&nbsp;</div></td>
+                  <td width="13%"><div align=right>&nbsp;</div></td>
+                </table>
+            </td>
+        </tr>
+ <%
           // TODO: add errors display here !!!
         }
     }
