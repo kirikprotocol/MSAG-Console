@@ -1563,11 +1563,15 @@ int main(int argc,char* argv[])
         lastMr=mr;
         s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,mr);
         MutexGuard g(mrMtx);
-        waitResp=true;
-        mrStore.insert(make_pair(MrKey(Address(sourceAddress.c_str()).toString().c_str(),mr),&waitResp));
         if(vcmode)
         {
+          vc[vcidx].waitResp=true;
           vc[vcidx].waitStart=time(NULL);
+          mrStore.insert(make_pair(MrKey(Address(sourceAddress.c_str()).toString().c_str(),mr),&vc[vcidx].waitResp));
+        }else
+        {
+          waitResp=true;
+          mrStore.insert(make_pair(MrKey(Address(sourceAddress.c_str()).toString().c_str(),mr),&waitResp));
         }
       }
 
