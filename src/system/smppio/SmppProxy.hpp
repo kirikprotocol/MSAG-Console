@@ -111,7 +111,18 @@ public:
           errresp=SmscCommand::makeGenericNack(cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS);
       }
       //cmd->get_dialogId(),SmppStatusSet::ESME_RINVBNDSTS
-      putCommand(errresp);
+      //putCommand(errresp);
+      {
+        MutexGuard g(mutexout);
+        if(!opened)return;
+        if(outqueue.Count()==SMPP_PROXY_QUEUE_LIMIT)
+        {
+          throw ProxyQueueLimitException();
+        }
+        trace2("put command:total %d commands",outqueue.Count());
+        outqueue.Push(cmd,cmd->get_priority());
+      }
+      smppSocket->notifyOutThread();
       return;
     }
     {

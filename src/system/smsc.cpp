@@ -91,7 +91,7 @@ public:
       lasttime=now;
       if(isStopping)break;
       uint64_t perf[3];
-      queue.getPerfData(perf[0],perf[1],perf[2]);
+      //queue.getPerfData(perf[0],perf[1],perf[2]);
       //for
     }
     return 0;

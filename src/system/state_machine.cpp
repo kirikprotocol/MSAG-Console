@@ -581,16 +581,9 @@ StateType StateMachine::submit(Tuple& t)
       dest_proxy->putCommand(delivery);
     }catch(InvalidProxyCommandException& e)
     {
-      sendFailureReport(*sms,t.msgId,UNDELIVERABLE_STATE,"undeliverable");
+      sendNotifyReport(*sms,t.msgId,"facility not supported");
       __trace__("SUBMIT: Attempt to putCommand for sme in invalid bind state");
-      try{
-        Descriptor d;
-        store->changeSmsStateToUndeliverable(t.msgId,d,0);
-      }catch(...)
-      {
-        __trace__("SUBMIT: Failed to change state to undeliverable");
-      }
-      return UNDELIVERABLE_STATE;
+      return ENROUTE_STATE;
     }
   }catch(...)
   {

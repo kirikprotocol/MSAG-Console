@@ -33,6 +33,14 @@ using smsc::router::RouteInfo;
 
 //class smsc::store::MessageStore;
 
+namespace StatEvents{
+  const int etSubmitOk     =1;
+  const int etSubmitErr    =2;
+  const int etDeliveredOk  =3;
+  const int etUndeliverable=4;
+  const int etRescheduled  =5;
+};
+
 struct SmscConfigs{
   smsc::util::config::Manager* cfgman;
   smsc::util::config::smeman::SmeManConfig* smemanconfig;
@@ -87,6 +95,52 @@ public:
     smeman.unregisterSmeProxy(sysid);
   }
 
+  void registerStatisticalEvent(int eventType,const SMS* sms)
+  {
+    using namespace StatEvents;
+    switch(eventType)
+    {
+      /*
+        submit/stored
+        submit/error
+        delivered - ok
+        delivered - failed (undeliverable, expired)
+        rescheduled
+      */
+      case etSubmitOk:
+      {
+      }break;
+      case etSubmitErr:
+      {
+        MutexGuard g(perfMutex);
+        errorCounter++;
+      }break;
+      case etDeliveredOk:
+      {
+        MutexGuard g(perfMutex);
+        successCounter++;
+      }break;
+      case etUndeliverable:
+      {
+        MutexGuard g(perfMutex);
+        errorCounter++;
+      }break;
+      case etRescheduled:
+      {
+        MutexGuard g(perfMutex);
+        rescheduleCounter++;
+      }break;
+    }
+  }
+
+  void getPerfData(uint64_t& succ,uint64_t& err,uint64_t& resch)
+  {
+    MutexGuard g(perfMutex);
+    succ=successCounter;
+    err=errorCounter;
+    resch=rescheduleCounter;
+  }
+
 protected:
   smsc::core::threads::ThreadPool tp;
   smsc::system::smppio::SmppSocketsManager ssockman;
@@ -104,6 +158,13 @@ protected:
   CancelAgent *cancelAgent;
   performance::PerformanceDataDispatcher perfDataDisp;
   smsc::db::DataSource *dataSource;
+
+
+  Mutex perfMutex;
+  uint64_t successCounter;
+  uint64_t errorCounter;
+  uint64_t rescheduleCounter;
+
 };
 
 };//system
