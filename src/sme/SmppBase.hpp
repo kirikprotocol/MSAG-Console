@@ -13,6 +13,8 @@
 #include "util/debug.h"
 #include <time.h>
 #include <string>
+#include <string.h>
+#include <errno.h>
 
 namespace smsc{
 namespace sme{
@@ -115,7 +117,11 @@ protected:
     while(buf.offset<4)
     {
       int rd=socket->Read(buf.buffer+buf.offset,4-buf.offset);
-      if(rd<=0)throw Exception("SMPP transport network error (receiving header)");
+      if(rd<=0)
+      {
+        __trace2__("SmppReader: Socket error %s",strerror(errno));
+        throw Exception("SMPP transport network error (receiving header)");
+      }
       buf.offset+=rd;
     }
     int sz=ntohl(*((int*)buf.buffer));
