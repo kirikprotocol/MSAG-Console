@@ -117,7 +117,7 @@ int trimSms(SMS* sms,const char *text,int length,ConvEncodingEnum encoding,int d
 
 void transLiterateSms(SMS* sms)
 {
-  char udhiData[256];
+  char udhiData[257];
   int udhiDataLen=0;
   bool udhi=sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40;
 
@@ -139,20 +139,20 @@ void transLiterateSms(SMS* sms)
   {
     unsigned char* data=(unsigned char*)msg;
     udhiDataLen=*data;
-    memcpy(udhiData,data,udhiDataLen);
+    memcpy(udhiData,data,udhiDataLen+1);
     msg=(short*)(data+udhiDataLen+1);
     len-=udhiDataLen;
   }
 
   buf=auto_ptr<char>(new char[len*2]);
   len=ConvertUCS2ToMultibyte(msg,len,buf.get(),len*2,CONV_ENCODING_CP1251);
-  buf8=auto_ptr<char>(new char[udhiDataLen+len*3+1]);
-  int newlen=Transliterate(buf.get(),len,CONV_ENCODING_CP1251,buf8.get()+udhiDataLen,len*3);
+  buf8=auto_ptr<char>(new char[udhiDataLen+1+len*3+1]);
+  int newlen=Transliterate(buf.get(),len,CONV_ENCODING_CP1251,buf8.get()+udhiDataLen+1,len*3);
   sms->setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
   __trace2__("SUBMIT: converting ucs2->text(%d->%d)",len,newlen);
   if(udhi)
   {
-    memcpy(buf8.get(),udhiData,udhiDataLen);
+    memcpy(buf8.get(),udhiData,udhiDataLen+1);
     newlen+=udhiDataLen;
   }
   if(pl)
