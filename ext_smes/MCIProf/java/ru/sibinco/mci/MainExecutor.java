@@ -46,8 +46,10 @@ public class MainExecutor implements Executor
     int strategy = strategyInt.intValue();
     String msg = null;
     if (strategy == Constants.RELEASE_REDIRECT_STRATEGY) msg = pageFormat.format(new Object[] {});
-    else if (strategy == Constants.RELEASE_PREFIXED_STRATEGY) msg = pageFormatAlt.format(new Object[] {});
-    else throw new ExecutingException("Strategy '"+strategy+"' is invalid", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+    else if (strategy == Constants.RELEASE_PREFIXED_STRATEGY ||
+             strategy == Constants.RELEASE_MIXED_STRATEGY) msg = pageFormatAlt.format(new Object[] {});
+    else
+      throw new ExecutingException("Strategy '"+strategy+"' is invalid", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
     resp.setMessageString(Transliterator.translit(msg));
     state.setAttribute(Constants.ATTR_MAIN, Constants.ATTR_MAIN);
     return new ExecutorResponse(new Message[]{resp}, false);

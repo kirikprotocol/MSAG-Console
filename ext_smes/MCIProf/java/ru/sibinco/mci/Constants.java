@@ -18,12 +18,14 @@ public class Constants
   public final static String VALUE_PREFIX   = "value_";
   public final static String ERROR_PREFIX   = "error_";
 
-  public final static int RELEASE_PREFIXED_STRATEGY = 0x01;
-  public final static int RELEASE_REDIRECT_STRATEGY = 0x02; // MTS default strategy
   public final static String PAGE_PREFIXED_STRATEGY = "pagePrefixedStrategy";
   public final static String PAGE_REDIRECT_STRATEGY = "pageRedirectStrategy";
+  public final static int RELEASE_PREFIXED_STRATEGY = 0x01;
+  public final static int RELEASE_REDIRECT_STRATEGY = 0x02; // MTS default strategy
+  public final static int RELEASE_MIXED_STRATEGY    = 0x03;
 
-  public final static String PARAM_SHORTCUT = "shortcut";
+  public final static String PARAM_SHORTCUT  = "shortcut";
+  public final static String PARAM_ON_ABSENT = "onAbsent";
 
   public final static String PAGE_MAIN = PAGE_PREFIX + "main";
   public final static String PAGE_EXIT = PAGE_PREFIX + "exit";
@@ -81,6 +83,7 @@ public class Constants
   public final static String ATTR_FORMATS  = "FORMATS";
   public final static String ATTR_OPTIONS  = "OPTIONS";
   public final static String ATTR_STRATEGY = "STRATEGY";
+  public final static String ATTR_JUMP     = "JUMP";
 
   public final static String OPTION_EXIT  = "0";
 

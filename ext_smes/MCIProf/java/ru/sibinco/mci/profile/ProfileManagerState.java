@@ -67,4 +67,9 @@ public class ProfileManagerState
     profileManager.setProfileInfo(state.getAbonent(), info);
     state.setAttribute(Constants.ATTR_PROFILE, info);
   }
+  protected int getStrategy(ScenarioState state)
+  {
+    Integer strategyInt = (Integer)state.getAttribute(Constants.ATTR_STRATEGY);
+    return ((strategyInt == null) ? -1 : strategyInt.intValue());
+  }
 }

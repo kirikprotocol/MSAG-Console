@@ -32,6 +32,7 @@ public class ProfileShortcutExecutor extends ProfileManagerState implements Exec
   protected String valueUncond  = null;
   protected String valueChanged = null;
 
+  private String        detailsInfo = null;
   private MessageFormat pageShortcutErr = null;
   private MessageFormat pageShortcutInfo = null;
   private MessageFormat pageShortcutAltInfo = null;
@@ -40,6 +41,9 @@ public class ProfileShortcutExecutor extends ProfileManagerState implements Exec
   {
     try {
       super.init(properties);
+
+      String detailsInfoName = properties.getProperty("info");
+      detailsInfo  = (detailsInfoName == null) ? null : profileBundle.getString(detailsInfoName);
       shortcut = Integer.parseInt(properties.getProperty(Constants.PARAM_SHORTCUT));
 
       valueYes = profileBundle.getString(Constants.VALUE_YES);
@@ -50,6 +54,7 @@ public class ProfileShortcutExecutor extends ProfileManagerState implements Exec
       valueNoreply = systemBundle.getString(Constants.VALUE_NOREPLY);
       valueUncond  = systemBundle.getString(Constants.VALUE_UNCOND);
       valueChanged = systemBundle.getString(Constants.VALUE_CHANGED);
+
       pageShortcutErr  = new MessageFormat(profileBundle.getString(Constants.PAGE_ERR_SHORTCUT));
       pageShortcutInfo = new MessageFormat(profileBundle.getString(Constants.PAGE_INFO_SHORTCUT));
       pageShortcutAltInfo = new MessageFormat(profileBundle.getString(Constants.PAGE_INFO_ALT_SHORTCUT));
@@ -159,6 +164,13 @@ public class ProfileShortcutExecutor extends ProfileManagerState implements Exec
     if (cause == ProfileInfo.MASK_ABSENT  && activeReasons.indexOf('A') < 0) errorReason = valueAbsent;
     if (cause == ProfileInfo.MASK_UNCOND  && activeReasons.indexOf('U') < 0) errorReason = valueUncond;
     if (errorReason != null) return pageShortcutErr.format(new Object[] {errorReason});
+
+    int strategy = getStrategy(state); // must be set by EntryExecutor
+    if (strategy == Constants.RELEASE_MIXED_STRATEGY && cause == ProfileInfo.MASK_ABSENT) {
+      if (detailsInfo != null) return detailsInfo;
+      logger.warn("Mixed strategy configuration invalid !");
+      return errorFormat.format(new Object[] {errorUnknown});
+    }
 
     ProfileInfo info = null;
     try {

@@ -36,7 +36,7 @@ public class ShortcutHelpExecutor extends EntryExecutor
       MessageFormat pageFormat = new MessageFormat(helpBundle.getString(Constants.PAGE_MAN_SHORTCUTS));
       if (strategy == Constants.RELEASE_REDIRECT_STRATEGY)
         pageManual = pageFormat.format(new Object[] {helpBundle.getString(Constants.PAGE_MAN_REDIRECT)});
-      else if (strategy == Constants.RELEASE_PREFIXED_STRATEGY)
+      else if (strategy == Constants.RELEASE_MIXED_STRATEGY || strategy == Constants.RELEASE_PREFIXED_STRATEGY)
         pageManual = pageFormat.format(new Object[] {helpBundle.getString(Constants.PAGE_MAN_PREFIXED)});
       else
         throw new ScenarioInitializationException("Strategy '"+strategy+"' is invalid");

@@ -49,6 +49,9 @@ public class ProfileManagerAltExecutor extends ProfileManagerState implements Ex
     }
   }
 
+  private String getMaskValue(int mask, int option) {
+    return (checkEventMask(mask, option) ? valueYes:valueNo);
+  }
   public ExecutorResponse execute(ScenarioState state) throws ExecutingException
   {
     ProfileInfo info = null;
@@ -68,23 +71,42 @@ public class ProfileManagerAltExecutor extends ProfileManagerState implements Ex
       return new ExecutorResponse(new Message[]{resp}, true);
     }
 
+    String jumpTo = (String)state.getAttribute(Constants.ATTR_JUMP);
+    if (jumpTo != null) {
+      state.removeAttribute(Constants.ATTR_JUMP);
+      return new ExecutorResponse(new Jump(jumpTo, state.getMessageString()));
+    }
+
+    int strategy  = getStrategy(state);
+    if (strategy < 0)
+      throw new ExecutingException("Strategy is undefined", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
+
     String activeReasons = (String)state.getAttribute(Constants.ATTR_REASONS);
     if (activeReasons == null)
       throw new ExecutingException("Failed to locate '"+Constants.ATTR_REASONS+"' attribute",
                                    ErrorCode.PAGE_EXECUTOR_EXCEPTION);
     activeReasons = activeReasons.toUpperCase();
     String body = ""; int counter = 0;
+    int eventMask = info.getEventMask();
 
-    if (activeReasons.indexOf('B') != -1) body += (Integer.toString(++counter)+">"+valueBusy+": "+
-              (checkEventMask(info.getEventMask(), ProfileInfo.MASK_BUSY) ? valueYes:valueNo)+"\r\n");
-    if (activeReasons.indexOf('D') != -1) body += (Integer.toString(++counter)+">"+valueDetach+": "+
-              (checkEventMask(info.getEventMask(), ProfileInfo.MASK_DETACH) ? valueYes:valueNo)+"\r\n");
-    if (activeReasons.indexOf('N') != -1) body += (Integer.toString(++counter)+">"+valueNoreply+": "+
-              (checkEventMask(info.getEventMask(), ProfileInfo.MASK_NOREPLY) ? valueYes:valueNo)+"\r\n");
-    if (activeReasons.indexOf('A') != -1) body += (Integer.toString(++counter)+">"+valueAbsent+": "+
-              (checkEventMask(info.getEventMask(), ProfileInfo.MASK_ABSENT) ? valueYes:valueNo)+"\r\n");
-    if (activeReasons.indexOf('U') != -1) body += (Integer.toString(++counter)+">"+valueUncond+": "+
-              (checkEventMask(info.getEventMask(), ProfileInfo.MASK_UNCOND) ? valueYes:valueNo));
+    if (activeReasons.indexOf('B') != -1)
+      body += (Integer.toString(++counter)+">"+valueBusy+": "+
+               getMaskValue(eventMask, ProfileInfo.MASK_BUSY)    +"\r\n");
+    if (activeReasons.indexOf('D') != -1)
+      body += (Integer.toString(++counter)+">"+valueDetach+": "+
+               getMaskValue(eventMask, ProfileInfo.MASK_DETACH)  +"\r\n");
+    if (activeReasons.indexOf('N') != -1)
+      body += (Integer.toString(++counter)+">"+valueNoreply+": "+
+               getMaskValue(eventMask, ProfileInfo.MASK_NOREPLY) +"\r\n");
+    if (activeReasons.indexOf('A') != -1) {
+      body += (Integer.toString(++counter)+">"+valueAbsent);
+      if (strategy == Constants.RELEASE_PREFIXED_STRATEGY) {
+        body += (": "+getMaskValue(eventMask, ProfileInfo.MASK_ABSENT)+"\r\n");
+      } else body += "\r\n";
+    }
+    if (activeReasons.indexOf('U') != -1)
+      body += (Integer.toString(++counter)+">"+valueUncond+": "+
+               getMaskValue(eventMask, ProfileInfo.MASK_UNCOND));
 
     String prefix = "";
     if (counter == 0) { prefix = errorDenied; body=""; }

@@ -17,9 +17,12 @@ public class ProfileManagerAltPreprocessor extends ProfileManagerState implement
 {
   private static Category logger = Category.getInstance(ProfileManagerPreprocessor.class);
 
+  private String jumpOnAbsent = null;
+
   public void init(Properties properties) throws ScenarioInitializationException
   {
     super.init(properties);
+    jumpOnAbsent = (String)properties.get(Constants.PARAM_ON_ABSENT);
   }
 
   public void process(ScenarioState state) throws ProcessingException
@@ -39,6 +42,8 @@ public class ProfileManagerAltPreprocessor extends ProfileManagerState implement
           throw new ProcessingException("Profile option "+msg+" is invalid", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
         }
         logger.debug("Alt pre-processor option: "+switchReason);
+
+        int strategy = getStrategy(state);
         String activeReasons = (String)state.getAttribute(Constants.ATTR_REASONS);
         if (activeReasons == null)
           throw new ProcessingException("Failed to locate '"+Constants.ATTR_REASONS+"' attribute",
@@ -56,8 +61,12 @@ public class ProfileManagerAltPreprocessor extends ProfileManagerState implement
             info.eventMask = switchEventMask(oldEventMask, ProfileInfo.MASK_DETACH);
           else if ((activeReasons.indexOf('N') != -1) && (switchReason == ++counter))
             info.eventMask = switchEventMask(oldEventMask, ProfileInfo.MASK_NOREPLY);
-          else if ((activeReasons.indexOf('A') != -1) && (switchReason == ++counter))
-            info.eventMask = switchEventMask(oldEventMask, ProfileInfo.MASK_ABSENT);
+          else if ((activeReasons.indexOf('A') != -1) && (switchReason == ++counter)) {
+            if (strategy == Constants.RELEASE_MIXED_STRATEGY)
+              state.setAttribute(Constants.ATTR_JUMP, jumpOnAbsent);
+            else
+              info.eventMask = switchEventMask(oldEventMask, ProfileInfo.MASK_ABSENT);
+          }
           else if ((activeReasons.indexOf('U') != -1) && (switchReason == ++counter))
             info.eventMask = switchEventMask(oldEventMask, ProfileInfo.MASK_UNCOND);
           logger.debug("Alt pre-processor new mask: "+info.eventMask);

@@ -11,7 +11,7 @@
         <initParam name="pageRedirectStrategy" value="redirect_entry"/>
       </pageExecutor>
     </page>
-    
+
     <page id="redirect_entry" question="0">
       <!-- Show MAIN dialog & set MAIN attribute -->
       <pageExecutor class="ru.sibinco.mci.MainExecutor">
@@ -73,10 +73,11 @@
     <page id="profile_mgr_alt" question="0">
       <!-- if (!MAIN attr && !"0") change profile event mask & remove MAIN attribute -->
       <pagePreProcessor class="ru.sibinco.mci.profile.ProfileManagerAltPreprocessor">
+        <initParam name="onAbsent" value="manual_page_absent"/>
         <bundle name="system"/>
         <bundle name="profile"/>
       </pagePreProcessor>
-      <!-- Query & show profile event maks info for resons -->
+      <!-- Query & show profile event mask info for reasons -->
       <pageExecutor class="ru.sibinco.mci.profile.ProfileManagerAltExecutor">
         <bundle name="system"/>
         <bundle name="profile"/>
@@ -86,6 +87,16 @@
       <command name="3" target="profile_mgr_alt"/>
       <command name="4" target="profile_mgr_alt"/>
       <command name="(**)" target="prefixed_entry"/>
+    </page>
+    <page id="manual_page_absent" question="0">
+      <pageExecutor class="ru.sibinco.mci.DetailsExecutor">
+        <initParam name="page" value="page_absent_change"/>
+        <initParam name="info" value="page_absent_info"/>
+        <initParam name="bundle" value="profile"/>
+        <bundle name="profile"/>
+      </pageExecutor>
+      <command name="0" target="MAIN_PAGE"/>
+      <command name="(**)" target="EXIT_PAGE"/>
     </page>
 
     <page id="profile_mgr" question="0">
@@ -263,6 +274,7 @@
       <pageExecutor class="ru.sibinco.mci.profile.ProfileShortcutExecutor">
         <bundle name="system"/><bundle name="profile"/>
         <initParam name="shortcut" value="23"/>
+        <initParam name="info" value="page_absent_info"/>
       </pageExecutor>
     </page>
 
