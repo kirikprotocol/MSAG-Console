@@ -82,7 +82,7 @@ USHORT_T  Et96MapOpenInd(
 	__trace2__("MAP::Et96MapOpenInd ssn 0x%x, dalogid 0x%x",lssn,dialogId);
 	try{
     MapDialog* mdci = 
-		  MapDialogContainer::getInstance()->createDialog(dialogId);
+		  MapDialogContainer::getInstance()->createDialog(dialogId,SSN);
   	//mdci->localSsn = SSN;
     ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
     USHORT_T result = Et96MapOpenResp(SSN,dialogId,ET96MAP_RESULT_OK,&reason,0,0,0);
@@ -232,8 +232,8 @@ void MapIoTask::dispatcher()
             if ( close_dlg ) CloseAndRemoveDialog(SSN,dialogid);
           }
         }
-      }catch(...){
       }
+    }catch(...){
     }
 
 
