@@ -80,32 +80,59 @@ void SQLJob::process(Command& command, DataSource& ds)
 void SQLJob::process(Command& command, Statement& stmt) 
     throw(CommandProcessException)
 {
-    __trace__("SQL Job: Process command called !!!\n");
+    __trace__("SQL Job: Process command called ...");
     try
     {
+        command.setOutData("");
+
         if (!parser || !formatter)
             throw CommandProcessException("IO Parser or Formatter"
                                           " wasn't defined !");
-
-        SQLSetAdapter setAdapter(&stmt);
-            
         std::string input = 
             (command.getInData()) ? command.getInData():"";
+
+        SQLSetAdapter setAdapter(&stmt);
         parser->parse(input, (SetAdapter&)setAdapter);
 
-        ResultSet* rs = (isQuery) ? stmt.executeQuery() : 0;
-        rs->fetchNext();
-        
-        SQLGetAdapter getAdapter(rs);
-
         std::string output = "";
-        formatter->format(output, (GetAdapter&)getAdapter);
+        if (isQuery)
+        {
+            ResultSet* rs = 0;
+            try 
+            {
+                if (rs = stmt.executeQuery())
+                {
+                    SQLGetAdapter getAdapter(rs);
+                    while (rs->fetchNext())
+                    {
+                        formatter->format(output, (GetAdapter&)getAdapter);
+                    }
+                    delete rs;
+                }
+                else
+                    throw CommandProcessException("Result set of query "
+                                                  "execution is undefined !");
+            }
+            catch (Exception& exc)
+            {
+                if (rs) delete rs;
+                throw;
+            }
+        }
+        else
+        {
+            uint32_t result = (uint32_t)stmt.executeUpdate();
+            SQLGetRowsAdapter getAdapter(result);
+            formatter->format(output, (GetAdapter&)getAdapter);
+        }
+        
         command.setOutData(output.c_str()); 
     }
     catch(Exception& exc)
     {
         throw CommandProcessException(exc);
     }
+    __trace__("SQL Job: Process command complited.");
 }
 
 }}

@@ -34,6 +34,8 @@ namespace smsc { namespace dbsme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
+    static const char* SMSC_DBSME_DEFAULT_JOB_NAME = "default";
+    
     class Job
     {
     protected:

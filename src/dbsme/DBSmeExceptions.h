@@ -3,7 +3,7 @@
 
 #include <util/Exception.hpp>
 
-namespace smsc { namespace db
+namespace smsc { namespace dbsme
 {
     using smsc::util::Exception;
 

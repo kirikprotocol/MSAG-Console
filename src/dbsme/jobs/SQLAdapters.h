@@ -37,7 +37,7 @@ namespace smsc { namespace dbsme { namespace io
 {
     using namespace smsc::db;
 
-    class SQLSetAdapter
+    class SQLSetAdapter : public SetAdapter
     {
     protected:
         
@@ -45,7 +45,8 @@ namespace smsc { namespace dbsme { namespace io
 
     public:
         
-        SQLSetAdapter(Statement* statement) : base(statement) {};
+        SQLSetAdapter(Statement* statement) 
+            : SetAdapter(), base(statement) {};
         virtual ~SQLSetAdapter() {};
         
         virtual void setString(int pos, const char* str, bool null=false)
@@ -106,7 +107,7 @@ namespace smsc { namespace dbsme { namespace io
 
     };
     
-    class SQLGetAdapter
+    class SQLGetAdapter : public GetAdapter
     {
     protected:
         
@@ -114,7 +115,8 @@ namespace smsc { namespace dbsme { namespace io
 
     public:
         
-        SQLGetAdapter(ResultSet* resultset) : base(resultset) {};
+        SQLGetAdapter(ResultSet* resultset) 
+            : GetAdapter(), base(resultset) {};
         virtual ~SQLGetAdapter() {};
         
         virtual bool isNull(int pos)
@@ -176,6 +178,83 @@ namespace smsc { namespace dbsme { namespace io
             throw(AdapterException)
         {
             GET_THROW_CAUGHT_EXCEPTION(base->getDateTime(pos));
+        };
+    
+    };
+    
+    class SQLGetRowsAdapter : public GetAdapter
+    {
+    protected:
+        
+        uint32_t    rows;
+        char        buff[32];
+
+    public:
+        
+        SQLGetRowsAdapter(uint32_t result) 
+            : GetAdapter(), rows(result) {};
+        virtual ~SQLGetRowsAdapter() {};
+        
+        virtual bool isNull(int pos)
+            throw(AdapterException)
+        {
+            return false;
+        };
+        virtual const char* getString(int pos)
+            throw(AdapterException)
+        {
+            sprintf(buff, "%lu", rows);
+            return ((const char *)buff);
+        };
+        virtual int8_t getInt8(int pos)
+            throw(AdapterException)
+        {
+            return (int8_t)rows;
+        };
+        virtual int16_t getInt16(int pos)
+            throw(AdapterException)
+        {
+            return (int16_t)rows;
+        };
+        virtual int32_t getInt32(int pos)
+            throw(AdapterException)
+        {
+            return (int32_t)rows;
+        };
+        virtual uint8_t getUint8(int pos)
+            throw(AdapterException)
+        {
+            return (uint8_t)rows;
+        };
+        virtual uint16_t getUint16(int pos)
+            throw(AdapterException)
+        {
+            return (uint16_t)rows;
+        };
+        virtual uint32_t getUint32(int pos)
+            throw(AdapterException)
+        {
+            return (uint32_t)rows;
+        };
+        virtual float getFloat(int pos)
+            throw(AdapterException)
+        {
+            return (float)rows;
+        };
+        virtual double getDouble(int pos)
+            throw(AdapterException)
+        {
+            return (double)rows;
+        };
+        virtual long double getLongDouble(int pos)
+            throw(AdapterException)
+        {
+            return (long double)rows;
+        };
+        virtual time_t getDateTime(int pos)
+            throw(AdapterException)
+        {
+            return time(NULL);
         };
     
     };

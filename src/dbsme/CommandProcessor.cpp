@@ -124,35 +124,40 @@ DataProvider::DataProvider(ConfigView* config)
         ConfigView* jobConfig = 
             jobsConfig->getSubConfig(section, true);
         const char* name = 0;
+        const char* type = 0;
         try
         {
             log.info("Loading Job for '%s' section.", section);
             
-            name = jobConfig->getString("id");
-            Job* job = JobFactory::getJob(name);
+            name = jobConfig->getString("name");
+            type = jobConfig->getString("type");
+            if (!name || !type)
+                throw ConfigException("Job name or type missed !");
+            
+            Job* job = JobFactory::getJob(type);
             if (job)
             {
                 job->init(jobConfig);
                 jobs.Insert(name, job);
             }
             else
-            {
                 throw ConfigException("Job '%s' wasn't registered !", name);
-            }
             
-            log.info("Loaded Job for '%s' section. Job name is: '%s'",
-                     section, name);
+            log.info("Loaded Job for '%s' section. Job name: '%s' type: '%s'",
+                     section, name, type);
         }
         catch (ConfigException& exc)
         {
             log.error(exc.what());
             if (set) delete set;
             if (name) delete name;
+            if (type) delete type;
             delete jobsConfig;
             delete jobConfig;
             throw;
         }
         if (name) delete name;
+        if (type) delete type;
         delete jobConfig;
     }
     if (set) delete set;
@@ -167,9 +172,9 @@ DataProvider::~DataProvider()
     jobs.First();
     while (jobs.Next(key, job))
     {
-        //printf("Deleting job '%s' ...\n", key);
+        //__trace2__("Deleting job '%s' ...\n", key);
         if (job) delete job;
-        //printf("Job deleted !\n");
+        //__trace__("Job deleted !\n");
     }
 
     if (ds) delete ds;
@@ -179,7 +184,7 @@ void DataProvider::process(Command& command)
     throw(ServiceNotFoundException, CommandProcessException)
 {
     const char* name = (command.getJobName()) ? 
-                        command.getJobName():"default";
+                        command.getJobName() : SMSC_DBSME_DEFAULT_JOB_NAME;
     if (!jobs.Exists(name))
         throw ServiceNotFoundException(name);
 

@@ -20,15 +20,13 @@ int main(void)
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
     
-    const char* DEFAULT_JOB_IDENTITY = "default";
-    const char* SAMPLE_JOB_IDENTITY = "sample1";
-    const char* SQL_JOB_IDENTITY = "sql-job";
-    
-    SampleJobFactory _sampleJobFactory;
-    SQLJobFactory _sqlJobFactory;
-    JobFactory::registerFactory(&_sampleJobFactory, SAMPLE_JOB_IDENTITY);
-    JobFactory::registerFactory(&_sampleJobFactory, DEFAULT_JOB_IDENTITY);
-    JobFactory::registerFactory(&_sqlJobFactory, SQL_JOB_IDENTITY);
+    SampleJobFactory    _sampleJobFactory;
+    SQLJobFactory       _sqlJobFactory;
+
+    JobFactory::registerFactory(&_sampleJobFactory,
+                                SMSC_DBSME_SAMPLE_JOB_IDENTITY);
+    JobFactory::registerFactory(&_sqlJobFactory,
+                                SMSC_DBSME_SQL_JOB_IDENTITY);
 
     ConfigView  *dsConfig, *cpConfig;
     try 
@@ -46,16 +44,16 @@ int main(void)
         const char* toAddressStr = "1111111";
         Address toAddress(strlen(toAddressStr), 0, 0, toAddressStr);
         command.setToAddress(toAddress);
-        //command.setJobName(SAMPLE_JOB_IDENTITY);
-        command.setJobName(SQL_JOB_IDENTITY);
+        //command.setJobName("test-sql-job");
+        command.setJobName(0);
         /*command.setInData("-55 \t \t 666 \n -1573175230 129 3533 4364643 "
                           "first \"second value\""
                           " 243684.875874387835"
                           " +5753.14e-10"
                           " -45454.5e+7");*/
         command.setInData("\"Testing string value\" 1 "
-                          "25 January, 2003 15:34:48");
-
+                          "25 January, 2003 05:34 PM");
+        
         printf("\nInput  : '%s'\n",
                (command.getInData() ? command.getInData():""));
         

@@ -22,6 +22,8 @@ namespace smsc { namespace dbsme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
     
+    static const char* SMSC_DBSME_SQL_JOB_IDENTITY = "sql-job";
+
     class SQLJob : public Job
     {
     protected:
