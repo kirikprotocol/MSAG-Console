@@ -89,7 +89,7 @@
   <context-param>
     <description>Application config file</description>
     <param-name>AppConfigFile</param-name>
-    <param-value>C:\temp\webapps\smppgw\WEB-INF\config.xml</param-value>
+    <param-value>conf/webconfig.xml</param-value>
   </context-param>
 
   <jsp-config>

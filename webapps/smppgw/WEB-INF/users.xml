@@ -2,16 +2,9 @@
 <!DOCTYPE users SYSTEM "file://users.dtd">
 
 <users>
-  <user login="a" password="qwe" firstName="a first name: тест" lastName="a last name" dept="a dept">
+  <user login="admin" password="password" firstName="default" lastName="default" dept="default">
     <role name="gw"/>
     <role name="routing"/>
     <role name="services"/>
   </user>
-  <user login="b" password="zxc"/>
-  <user login="c" password="zxc"/>
-  <user login="d" password="zxc"/>
-  <user login="e" password="zxc"/>
-  <user login="f" password="zxc"/>
-  <user login="g" password="zxc"/>
-  <user login="h" password="zxc"/>
 </users>
