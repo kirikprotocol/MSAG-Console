@@ -9,6 +9,7 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "smeman/smsccmd.h"
 #include "smeman/smereg.h"
+#include "core/buffers/IntHash.hpp"
 #include <string>
 
 //#if defined USE_MAP
