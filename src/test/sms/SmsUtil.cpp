@@ -61,11 +61,23 @@ bool SmsUtil::compareDescriptors(const Descriptor& d1, const Descriptor& d2)
 		res.push_back(errCode); \
 	}
 
+#define __compare_str__(getter, errCode, bufSize) \
+	if (!mask[pos++]) { \
+		char buf1[bufSize + 1]; \
+		char buf2[bufSize + 1]; \
+		sms1.getter(buf1); \
+		sms2.getter(buf2); \
+		if (strcmp(buf1, buf2)) { \
+			__trace2__("##getter: %s != %s", buf1, buf2); \
+			res.push_back(errCode); \
+		} \
+	}
+
 #define __compare_int__(getter, errCode, accuracy) \
 	if (!mask[pos++] && abs(_sms1->getter() - _sms2->getter()) > accuracy) { \
 		ostringstream s1, s2; \
-		s1 << _sms1->getter(); \
-		s2 << _sms2->getter(); \
+		s1 << (int) _sms1->getter(); \
+		s2 << (int) _sms2->getter(); \
 		__trace2__("%s: %s != %s", #getter, s1.str().c_str(), s2.str().c_str()); \
 		res.push_back(errCode); \
 	}
@@ -147,24 +159,16 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, uint64_t 
 	__compare__(getDestinationAddress, 9);
 	__compare__(getDealiasedDestinationAddress, 10);
 	__compare__(getMessageReference, 11);
-	if (!mask[pos++])
-	{
-		EService serviceType1, serviceType2;
-		sms1.getEServiceType(serviceType1);
-		sms2.getEServiceType(serviceType2);
-		if (strcmp(serviceType1, serviceType2))
-		{
-			__trace2__("getEServiceType: %s != %s", serviceType1, serviceType2);
-			res.push_back(12);
-		}
-	}
+	__compare_str__(getEServiceType, 12, MAX_ESERVICE_TYPE_LENGTH);
 	__compare__(isArchivationRequested, 13);
 	__compare__(getDeliveryReport, 14);
 	__compare__(getBillingRecord, 15);
 	__compare__(getOriginatingDescriptor, 16);
 	__compare__(getDestinationDescriptor, 17);
+	__compare__(getServiceId, 18);
+	__compare_str__(getRouteId, 19, MAX_ROUTE_ID_TYPE_LENGTH);
+	__compare__(getPriority, 20);
 	//body
-	pos = 20;
 	__compare_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, 21);
 	__compare_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, 22);
 	__compare_int_body_tag__(SMPP_ESM_CLASS, 23);
@@ -364,6 +368,9 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 	__set_int__(uint8_t, BillingRecord, rand0(3));
 	__set_desc__(OriginatingDescriptor);
 	//setupRandomCorrectDescriptor(sms->getDestinationDescriptor(), check);
+	__set_int__(uint32_t, ServiceId, rand0(INT_MAX));
+	__set_str2__(RouteId, MAX_ROUTE_ID_TYPE_LENGTH);
+	__set_int__(int32_t, Priority, rand0(INT_MAX));
 
 	//поля сохраняются в body случайным образом
 	//даже обязательные для sms поля могут не сохраняться в БД
@@ -471,6 +478,9 @@ void SmsUtil::clearSms(SMS* sms)
 	sms->setBillingRecord(false);
 	sms->setOriginatingDescriptor(1, "*", 0, "*", 0);
 	//sms->setDestinationDescriptor(...);
+	sms->setServiceId(0);
+	sms->setRouteId("");
+	sms->setPriority(0);
 	sms->getMessageBody() = Body();
 	//bool attach;
 }
@@ -644,6 +654,9 @@ ostream& operator<< (ostream& os, SMS& sms)
 	__print_int__(BillingRecord);
 	__print__(OriginatingDescriptor);
 	__print__(DestinationDescriptor);
+	__print_int__(ServiceId);
+	__print_str__(RouteId, MAX_ROUTE_ID_TYPE_LENGTH);
+	__print_int__(Priority);
 	//body
 	__print_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME);
 	__print_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG);

@@ -97,7 +97,7 @@ const char* str(SMSId id)
 
 void MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 {
-	TCSelector s(num, 15);
+	TCSelector s(num, 17);
 	__decl_tc__;
 	for (; s.check(); s++)
 	{
@@ -200,6 +200,17 @@ void MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 					{
 						__tc__("storeCorrectSms.rcptMsgIdMaxLength");
 						__set_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID, MAX_MSG_ID_LENGTH);
+					}
+					break;
+				case 16: //пустой routeId 
+					__tc__("storeCorrectSms.routeIdMarginal");
+					sms.setRouteId("");
+					break;
+				case 17: //routeId максимальной длины
+					{
+						__tc__("storeCorrectSms.routeIdMarginal");
+						auto_ptr<char> routeId = rand_char(MAX_ROUTE_ID_LENGTH);
+						sms.setEServiceType(routeId.get());
 					}
 					break;
 				default:
@@ -477,7 +488,7 @@ void MessageStoreTestCases::storeIncorrectSms(int num)
 
 void MessageStoreTestCases::storeAssertSms(int num)
 {
-	TCSelector s(num, 11);
+	TCSelector s(num, 12);
 	__decl_tc__;
 	for (; s.check(); s++)
 	{
@@ -553,6 +564,12 @@ void MessageStoreTestCases::storeAssertSms(int num)
 					{
 						__tc__("storeAssertSms.serviceTypeGreaterMaxLength");
 						__set_str__(EServiceType, MAX_SERVICE_TYPE_LENGTH + 1);
+					}
+					break;
+				case 12: //routeId больше максимальной длины
+					{
+						__tc__("storeAssertSms.routeIdGreaterMaxLength");
+						__set_str__(EServiceType, MAX_ROUTE_ID_LENGTH + 1);
 					}
 					break;
 				/*
@@ -759,7 +776,8 @@ void MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 					sms->setNextTime(0);
 					//hack, все сеттеры запрещены
 					sms->state = EXPIRED;
-					//sms->lastTime = time(NULL);
+					sms->lastTime = time(NULL);
+					sms->lastResult = 132;
 					break;
 				case 9: //DELETED
 					__tc__("changeExistentSmsStateEnrouteToFinal.stateDeleted");
@@ -768,7 +786,8 @@ void MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 					sms->setNextTime(0);
 					//hack, все сеттеры запрещены
 					sms->state = DELETED;
-					//sms->lastTime = time(NULL);
+					sms->lastTime = time(NULL);
+					sms->lastResult = 136;
 					break;
 				default:
 					__unreachable__("Invalid num");

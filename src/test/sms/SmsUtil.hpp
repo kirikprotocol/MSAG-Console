@@ -24,6 +24,7 @@ const int MAX_SM_LENGTH = 254;
 const int MAX_PAYLOAD_LENGTH = 65535;
 const int MAX_SERVICE_TYPE_LENGTH = 5;
 const int MAX_MSG_ID_LENGTH = 64;
+const int MAX_ROUTE_ID_LENGTH = 20;
 
 const uint64_t BODY_ALL = 0xffffffffffffffff;
 const uint64_t BODY_MSG_PAYLOAD = 0x100000;
