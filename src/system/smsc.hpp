@@ -204,6 +204,8 @@ public:
 
   SmeAdministrator* getSmeAdmin(){return &smeman;}
 
+  void RejectSms(const SmscCommand&);
+
   void registerStatisticalEvent(int eventType,const SMS* sms)
   {
     using namespace StatEvents;
