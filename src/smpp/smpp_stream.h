@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <exception>
+#include <stdexcept>
 #ifdef _WIN32
 #include <winsock2.h>
 #else
@@ -125,7 +126,7 @@ inline void __fill_x__ (SmppStream* stream, T& data)
   __check_smpp_stream_invariant__ ( stream );
   __check_smpp_stream_is_writable__(stream);
   //if (stream->dataOffset+sizeof(T) > stream->dataLength)
-  //{ 
+  //{
     //__watch__(stream->dataOffset);
     //__watch__(stream->dataLength);
     //__watch__(sizeof(T));
@@ -326,7 +327,10 @@ inline void fillX(SmppStream* s,OStr& str){ fillOctetStr(s,str); }
 inline void fetchOctetStr(SmppStream* stream,OStr& ostr,uint32_t octets)
 {
   __check_smpp_stream_invariant__ ( stream );
-  __require__ ( octets >= 0 && octets <= (stream->dataLength-stream->dataOffset) );
+  if(!(octets >= 0 && octets <= (stream->dataLength-stream->dataOffset)))
+  {
+    throw std::runtime_error("Broken octet str");
+  };
   if ( octets )
   {
 //#if defined SMPP_SHARE_BUFFER_MEMORY
