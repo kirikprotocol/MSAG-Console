@@ -1,3 +1,5 @@
+$Id$
+
 #if defined USE_MAP
 
 #include <stdlib.h>
@@ -814,7 +816,7 @@ static void SendSubmitCommand(MapDialog* dialog)
   }
   
   try{
-    MscManager::getMscStatus()->report(dialog->s_msc,true);
+    MscManager::getMscStatus().report(dialog->s_msc,true);
   }
   catch(exception& e)
   {
@@ -911,7 +913,7 @@ static bool SendSms(MapDialog* dialog){
   __trace2__("MAP::%s: MAP.did: 0x%x",__FUNCTION__,dialog->dialogid_map);
   CheckLockedByMO(dialog);
 
-  if ( !MscManager::getMscStatus()->check(dialog->s_msc) )
+  if ( !MscManager::getMscStatus().check(dialog->s_msc) )
     throw MAPDIALOG_TEMP_ERROR("MSC BLOCKED",BLOCKEDMSC);
 
   bool mms = dialog->chain.size() != 0;
@@ -1906,7 +1908,7 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
     }*/
     
     if ( provErrCode_p && *provErrCode_p == ET96MAP_NO_RESPONSE_FROM_PEER ) {
-      MscManager::getMscStatus()->report(dialog->s_msc,false);
+      MscManager::getMscStatus().report(dialog->s_msc,false);
       throw MAPDIALOG_TEMP_ERROR("MSC",/*BLOCKEDMSC*/0);
     }
 
