@@ -66,8 +66,13 @@ CFLAGS := $(CFLAGS) -DASSERT_THROW_IF_FAIL
 CXXFLAGS := $(CFLAGS) -DASSERT_THROW_IF_FAIL
 endif
 
-CXXFLAGS := $(CXXFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public
-CFLAGS := $(CFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public
+ifeq ($(HOSTTYPE),sparc)
+CXXFLAGS := $(CXXFLAGS) -DSPARC
+CFLAGS := $(CFLAGS) -DSPARC
+endif
+
+CXXFLAGS := $(CXXFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/rdbms/public -I$(ORACLE_HOME)/network/public
+CFLAGS := $(CFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/rdbms/public -I$(ORACLE_HOME)/network/public
 
 export CXXFLAGS
 export CFLAGS
