@@ -557,14 +557,15 @@ namespace smsc {
                 if (length <= 0) 
                     throw AdminException("profile options misformatted");
 
-                char profileStr[length+1];
-                strcpy(profileStr, profileString);
-
-                char* codepageStr       = strtok(profileStr, &PROFILE_PARAMS_DELIMITER);
-                char* reportStr         = strtok(NULL, &PROFILE_PARAMS_DELIMITER);
-                char* localeStr         = strtok(NULL, &PROFILE_PARAMS_DELIMITER);
-                char* hideStr           = strtok(NULL, &PROFILE_PARAMS_DELIMITER);
-                char* hideModifiableStr = strtok(NULL, &PROFILE_PARAMS_DELIMITER);
+                char profileStr[length+1]; strcpy(profileStr, profileString);
+                char delimeterStr[2]; char* currToken = 0;
+                delimeterStr[0] = PROFILE_PARAMS_DELIMITER; delimeterStr[1] = 0;
+                
+                char* codepageStr       = strtok_r(profileStr, delimeterStr, &currToken); 
+                char* reportStr         = strtok_r(NULL, delimeterStr, &currToken);
+                char* localeStr         = strtok_r(NULL, delimeterStr, &currToken);
+                char* hideStr           = strtok_r(NULL, delimeterStr, &currToken);
+                char* hideModifiableStr = strtok_r(NULL, delimeterStr, &currToken);
                 
                 if (!codepageStr || !reportStr || !localeStr || 
                     !hideStr || !hideModifiableStr) 
