@@ -22,16 +22,40 @@ namespace smsc { namespace mscman
     const char* MSCMAN_INSTANCE_EXIST = "MscManager already instantiated";
     const char* MSCMAN_NOT_STARTED    = "MscManager wasn't started";
 
+    typedef enum { INSERT, UPDATE, DELETE } MscInfoOp;
+    struct MscInfoChange : public MscInfo
+    {
+        MscInfoOp   op;
+
+        MscInfoChange(MscInfoOp _op, const MscInfo& info)
+            : MscInfo(info), op(_op) {};
+        MscInfoChange(MscInfoOp _op, string msc, bool mLock=false, 
+                      bool aLock=false, int fc=0)
+            : MscInfo(msc, mLock, aLock, fc), op(_op) {};
+        MscInfoChange(const MscInfoChange& info)
+            : MscInfo(info), op(info.op) {};
+            
+        MscInfoChange& operator=(const MscInfoChange& info) {
+            op = info.op;
+            MscInfo::operator=(info);
+            return (*this);
+        };
+        
+    };
+
     class MscManagerImpl : public MscManager, public Thread
     {
     protected:
 
         bool                bStarted, bNeedExit;
         Mutex               hashLock;
-        Event               updateEvent, exitedEvent;
-        int                 sleepInterval;
+        Event               flushEvent, exitedEvent;
         
-        Hash<MscInfo *>     mscs;
+        Hash<MscInfo*>          mscs;
+        Array<MscInfoChange>    changes;
+        Mutex                   changesLock;
+        
+        void addChange(const MscInfoChange& change, bool signal=true);
 
     public:
 
@@ -124,7 +148,7 @@ void MscManagerImpl::Stop()
     if (bStarted)
     {
         bNeedExit = true;
-        updateEvent.Signal();
+        flushEvent.Signal();
         exitedEvent.Wait();
     }
 }
@@ -132,7 +156,7 @@ int MscManagerImpl::Execute()
 {
     do 
     {
-        updateEvent.Wait(sleepInterval); // ??? sleepInterval
+        flushEvent.Wait(); // ??? sleepInterval
         // TODO: Implement DbUpdate process here !!!
     } 
     while (!bNeedExit);
@@ -142,29 +166,37 @@ int MscManagerImpl::Execute()
     return 0;
 }
 
+void MscManagerImpl::addChange(const MscInfoChange& change, bool signal)
+{
+    MutexGuard  guard(changesLock);
+    changes.Push(change);
+    if (signal) flushEvent.Signal();
+}
+
 /* ------------------------ MscStatus implementation ------------------------ */
+
 void MscManagerImpl::report(const char* msc, bool status) 
 {
-    // TODO: implement it !!!
-
     MutexGuard  guard(hashLock);
-
+    
+    bool needInsert = false;
     MscInfo* info = mscs.Get(msc);
-    if (!info) {
+    if (!info || !mscs.Exists(msc))
+    {
         info = new MscInfo(msc);
         mscs.Insert(msc, info);
+        needInsert = true;
     }
     
     if (automaticRegistration == false) info->manualLock = true;
     else if (status) info->automaticLock = false;
     else info->automaticLock = (++(info->failureCount) >= failureLimit);
-    
-    updateEvent.Signal();
+
+    MscInfoChange change((needInsert) ? INSERT:UPDATE, *info);
+    addChange(change);
 }
 bool MscManagerImpl::check(const char* msc) 
 { 
-    // TODO: implement it !!!
-
     MutexGuard  guard(hashLock);
 
     if (!mscs.Exists(msc)) return true;
@@ -173,40 +205,68 @@ bool MscManagerImpl::check(const char* msc)
 }   
 
 /* ------------------------ MscAdmin implementation ------------------------ */
+
 void MscManagerImpl::registrate(const char* msc) 
 {
-    // TODO: implement it !!!
-
     MutexGuard  guard(hashLock);
 
-    if (!mscs.Exists(msc)) {
+    if (!mscs.Exists(msc)) 
+    {
         MscInfo* info = new MscInfo(msc, false, !automaticRegistration, 0);
         mscs.Insert(msc, info);
-        updateEvent.Signal();
+        MscInfoChange change(INSERT, *info);
+        addChange(change);
     }
 }
 void MscManagerImpl::unregister(const char* msc)
 {
-    // TODO: implement it !!!
+    MutexGuard  guard(hashLock);
 
-    if (mscs.Exists(msc)) {
-
+    if (mscs.Exists(msc)) 
+    {
+        MscInfo* info = mscs.Get(msc);
+        mscs.Delete(msc);
+        MscInfoChange change(DELETE, *info);
+        if (info) delete info;
+        addChange(change);
     }
 }
 void MscManagerImpl::block(const char* msc)
 {
-    // TODO: implement it !!!
+    MutexGuard  guard(hashLock);
+
+    if (mscs.Exists(msc)) 
+    {
+        MscInfo* info = mscs.Get(msc);
+        if (!info->manualLock)
+        {
+            info->manualLock = true;
+            MscInfoChange change(UPDATE, *info);
+            addChange(change);
+        }
+    }
 }
 void MscManagerImpl::clear(const char* msc) 
 {
-    // TODO: implement it !!!
+    MutexGuard  guard(hashLock);
+
+    if (mscs.Exists(msc)) 
+    {
+        MscInfo* info = mscs.Get(msc);
+        if (info->manualLock || info->automaticLock)
+        {
+            info->manualLock = false;
+            info->automaticLock = false;
+            MscInfoChange change(UPDATE, *info);
+            addChange(change);
+        }
+    }
 }
 Array<MscInfo> MscManagerImpl::list() 
 {
     MutexGuard  guard(hashLock);
 
     Array<MscInfo> list; 
-    
     char* key; MscInfo* info = 0;
     while (mscs.Next(key, info)) 
         if (info) list.Push(*info);
