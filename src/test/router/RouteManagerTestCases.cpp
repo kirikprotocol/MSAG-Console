@@ -296,7 +296,7 @@ TCResult* RouteManagerTestCases::addIncorrectRoute(const SmeSystemId& smeSystemI
 
 void RouteManagerTestCases::printLookupResult(const Address& origAddr,
 	const Address& destAddr, const vector<const SmeProxy*>& proxyList,
-	const SmeProxy* proxy)
+	bool found, const SmeProxy* proxy)
 {
 	ostringstream os;
 	os << "lookupRoute(): ids = {";
@@ -311,6 +311,10 @@ void RouteManagerTestCases::printLookupResult(const Address& origAddr,
 	if (proxy)
 	{
 		os << "}, res = " << proxy->getUniqueId();
+	}
+	else if (found)
+	{
+		os << "}, res = <NULL>";
 	}
 	else
 	{
@@ -331,27 +335,35 @@ TCResult* RouteManagerTestCases::lookupRoute(const RouteRegistry& routeReg,
 		SmeProxy* proxy = NULL;
 		bool found = routeMan->lookup(origAddr, destAddr, proxy);
 		const vector<const SmeProxy*> proxyList = routeReg.lookup(origAddr, destAddr);
-		printLookupResult(origAddr, destAddr, proxyList, proxy);
-		if (found && proxy)
+		printLookupResult(origAddr, destAddr, proxyList, found, proxy);
+		if (found)
 		{
-			uint32_t id = proxy->getUniqueId();
-			found = false;
-			for (int i = 0; i < proxyList.size(); i++)
+			if (proxy)
 			{
-				if (proxyList[i]->getUniqueId() == id)
+				uint32_t id = proxy->getUniqueId();
+				found = false;
+				for (int i = 0; i < proxyList.size(); i++)
 				{
-					found = true;
-					break;
+					if (proxyList[i]->getUniqueId() == id)
+					{
+						found = true;
+						break;
+					}
+				}
+				if (!found)
+				{
+					res->addFailure(101);
 				}
 			}
-			if (!found)
+			//маршрут есть, но proxy нет
+			else if (!proxyList.size())
 			{
-				res->addFailure(101);
+				res->addFailure(102);
 			}
 		}
 		else if (proxyList.size())
 		{
-			res->addFailure(102);
+			res->addFailure(103);
 		}
 	}
 	catch(...)
