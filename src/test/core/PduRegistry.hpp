@@ -46,6 +46,7 @@ class PduRegistry
 
 	Mutex mutex;
 	uint16_t msgRef;
+	PduData* lastRemovedPduData;
 
 	SmsIdMap idMap;
 	SeqNumMap seqNumMap;
@@ -67,7 +68,7 @@ public:
 		}
 	};
 
-	PduRegistry() : msgRef(0) {}
+	PduRegistry() : msgRef(0), lastRemovedPduData(NULL) {}
 	~PduRegistry();
 
 	Mutex& getMutex()
@@ -111,6 +112,8 @@ public:
 	PduData* getPdu(const SMSId smsId);
 
 	void removePdu(PduData* pduData);
+
+	PduData* getLastRemovedPdu();
 
 	PduDataIterator* getPduBySubmitTime(time_t t1, time_t t2);
 	

@@ -62,6 +62,12 @@ void PduRegistry::updatePdu(PduData* pduData)
 void PduRegistry::clear()
 {
 	__trace2__("PduRegistry::clear(): pduReg = 0x%x", this);
+	if (lastRemovedPduData)
+	{
+		disposePdu(lastRemovedPduData->pdu);
+		delete lastRemovedPduData;
+		lastRemovedPduData = NULL;
+	}
 	for (MsgRefMap::iterator it = msgRefMap.begin(); it != msgRefMap.end(); it++)
 	{
 		PduData* pduData = it->second;
@@ -138,8 +144,17 @@ void PduRegistry::removePdu(PduData* pduData)
 		int res = validTimeMap.erase(TimeKey(pduData->validTime, pduData->msgRef));
 		__require__(res);
 	}
-	disposePdu(pduData->pdu);
-	delete pduData;
+	if (lastRemovedPduData)
+	{
+		disposePdu(lastRemovedPduData->pdu);
+		delete lastRemovedPduData;
+	}
+	lastRemovedPduData = pduData;
+}
+
+PduData* PduRegistry::getLastRemovedPdu()
+{
+	return lastRemovedPduData;
 }
 
 PduRegistry::PduDataIterator* PduRegistry::getPduBySubmitTime(time_t t1, time_t t2)
