@@ -176,7 +176,7 @@ struct Address
   {
     return type<addr.type ||
            (type==addr.type && plan<addr.plan) ||
-           (type==addr.type && plan==addr.plan && memcmp(value,addr.value,length<addr.length?length:addr.length)<0);
+           (type==addr.type && plan==addr.plan && strcmp(value,addr.value)<0);
   }
 
 
