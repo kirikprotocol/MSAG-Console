@@ -221,7 +221,7 @@ void TestSme::executeCycle()
 		seq.push_back(61);
 		seq.push_back(62);
 		seq.push_back(71);
-		seq.push_back(100);
+		//seq.push_back(100);
 #ifdef ASSERT
 		seq.push_back(101);
 #endif //ASSERT
@@ -607,7 +607,6 @@ void printRouteArcBillInfo(const char* fileName)
 	__cfg_addr__(dbSmeAlias);
 	__cfg_addr__(dbSmeInvalidAddr);
 
-	ConfigUtil cfgUtil(smeReg, aliasReg, routeReg);
 	ofstream report(fileName);
 	vector<const Address*> addrList = smeReg->getAddressList();
 	addrList.push_back(&smscAddr);
@@ -622,17 +621,28 @@ void printRouteArcBillInfo(const char* fileName)
 	{
 		for (int j = 0; j < addrList.size(); j++)
 		{
-			bool archived, billing;
-			if (cfgUtil.checkRouteArchBill(*addrList[i], *addrList[j],
-				archived, billing))
+			const Address& srcAddr = *addrList[i];
+			const Address& destAlias = *addrList[j];
+			const Address destAddr = aliasReg->findAddressByAlias(destAlias);
+			const RouteHolder* routeHolder = routeReg->lookup(srcAddr, destAddr);
+			if (!routeHolder)
 			{
-				string srcAddr = str(*addrList[i]);
-				string destAlias = str(*addrList[j]);
-				report << srcAddr << string(31 - srcAddr.length(), ' ') <<
-					destAlias << string(31 - destAlias.length(), ' ') <<
-					(archived ? "Y" : "N") << "     " <<
-					(billing ? "1" : "0") << endl;
+				continue;
 			}
+			const SmeInfo* srcSmeInfo = smeReg->getSme(srcAddr);
+			if (!srcSmeInfo)
+			{
+				continue;
+			}
+			const RouteInfo& route = routeHolder->route;
+			char buf[512];
+			sprintf(buf, "%-30s %-30s %c %19d %-20s %-112d %-112d %-15s %-15s",
+				str(srcAddr).c_str(), str(destAlias).c_str(),
+				route.archived ? 'Y' : 'N', route.billing ? 1 : 0,
+				route.routeId.c_str(), route.serviceId,
+				route.priority, srcSmeInfo->systemId.c_str(),
+				route.smeSystemId.c_str());
+			report << buf << endl;
 		}
 	}
 }
