@@ -7,121 +7,129 @@ namespace test {
 namespace core {
 
 using namespace std;
+using smsc::sms::AddressValue;
 using namespace smsc::test::util;
 using smsc::test::sms::SmsUtil;
 
-RouteRegistry::RouteIterator::RouteIterator(RouteMap::iterator b, 
-	RouteMap::iterator e) : it(b), end(e) {}
-
-bool RouteRegistry::RouteIterator::hasNext() const
-{
-	return (it != end);
-}
-
-const TestRouteData* RouteRegistry::RouteIterator::operator*() const
-{
-	return it->second;
-}
-
-const TestRouteData* RouteRegistry::RouteIterator::operator->() const
-{
-	return it->second;
-}
-
-RouteRegistry::RouteIterator& RouteRegistry::RouteIterator::operator++()
-{
-	it++;
-	return *this;
-}
-
-RouteRegistry::RouteIterator RouteRegistry::RouteIterator::operator++(int)
-{
-	it++;
-	return *this;
-}
-
 RouteRegistry::~RouteRegistry()
 {
-	for (RouteMap::iterator it = routeMap.begin(); it != routeMap.end(); it++)
-	{
-		delete it->second;
-	}
+	clear();
 }
 
-void RouteRegistry::putRoute(const TestRouteData& data)
+bool RouteRegistry::putRoute(const RouteInfo& route, SmeProxy* proxy)
 {
-	if (data.route)
+	//дублированные маршруты не сохран€ютс€
+	AddressMap::const_iterator it = addrMap.find(route.dest);
+	if (it != addrMap.end())
 	{
-		TestRouteData* routeData = new TestRouteData(data);
-		addrMap[data.origAddr].push_back(routeData);
-		routeMap[data.route->routeId] = routeData;
+		if (it->second.find(route.source) != it->second.end())
+		{
+			return false;
+		}
 	}
+	RouteHolder* routeHolder = new RouteHolder(route, proxy);
+	addrMap[routeHolder->route.dest][routeHolder->route.source] = routeHolder;
+	routeMap[routeHolder->route.routeId] = routeHolder;
 }
 
-const RouteInfo* RouteRegistry::getRoute(RouteId routeId) const
+void RouteRegistry::clear()
+{
+	for (AddressMap::iterator it = addrMap.begin(); it != addrMap.end(); it++)
+	{
+		AddressMap2 addrMap2 = it->second;
+		for (AddressMap2::iterator it2 = addrMap2.begin(); it2 != addrMap2.end(); it2++)
+		{
+			delete it2->second;
+		}
+		//addrMap2.clear();
+	}
+	addrMap.clear();
+}
+
+const RouteHolder* RouteRegistry::getRoute(RouteId routeId) const
 {
 	RouteMap::const_iterator it = routeMap.find(routeId);
-	if (it != routeMap.end())
+	return (it != routeMap.end() ? it->second : NULL);
+}
+
+const RouteRegistry::AddressMap2* RouteRegistry::lookup1(
+	const Address& destAddr) const
+{
+	Address addr(destAddr);
+	AddressValue addrVal;
+	int addrLen = addr.getValue(addrVal);
+	for (int len = 0; len <= addrLen; len++)
 	{
-		return it->second->route;
+		if (len)
+		{
+			addrVal[addrLen - len] = '?';
+			addr.setValue(addrLen, addrVal);
+		}
+		AddressMap::const_iterator it = addrMap.find(addr);
+		if (it != addrMap.end())
+		{
+			return &it->second;
+		}
+		/*
+		if (addrLen - len < MAX_ADDRESS_VALUE_LENGTH)
+		{
+			addrVal[addrLen - len] = '*';
+			addr.setValue(addrLen - len + 1, addrVal);
+			AddressMap::iterator it = addrMap.find(addr);
+			if (it != addrMap.end())
+			{
+				return &it->second;
+			}
+		}
+		*/
 	}
 	return NULL;
 }
 
-const RouteRegistry::RouteList RouteRegistry::lookup(const Address& origAddr,
-	const Address& destAddr) const
+const RouteHolder* RouteRegistry::lookup2(const AddressMap2* addrMap2,
+	const Address& origAddr) const
 {
-	RouteList res;
-	AddressMap::const_iterator it = addrMap.find(origAddr);
-	if (it == addrMap.end())
+	__require__(addrMap2);
+	Address addr(origAddr);
+	AddressValue addrVal;
+	int addrLen = addr.getValue(addrVal);
+	for (int len = 0; len <= addrLen; len++)
 	{
-		return res;
+		if (len)
+		{
+			addrVal[addrLen - len] = '?';
+			addr.setValue(addrLen, addrVal);
+		}
+		AddressMap2::const_iterator it = addrMap2->find(addr);
+		if (it != addrMap2->end())
+		{
+			return it->second;
+		}
+		/*
+		if (addrLen - len < MAX_ADDRESS_VALUE_LENGTH)
+		{
+			addrVal[addrLen - len] = '*';
+			addr.setValue(addrLen - len + 1, addrVal);
+			AddressMap2::const_iterator it = addrMap2.find(addr);
+			if (it != addrMap2.end())
+			{
+				return it->second;
+			}
+		}
+		*/
 	}
-	const RouteList& routes = it->second;
-	//приоритеты маршрутов: destAddr, origAddr
-	for (int i = 0; i < routes.size(); i++)
-	{
-		//общие проверки
-		if (!routes[i]->match ||
-			!SmsUtil::compareAddresses(destAddr, routes[i]->destAddr))
-		{
-			continue;
-		}
-		if (!res.size())
-		{
-			res.push_back(routes[i]);
-			continue;
-		}
-		//destAddr
-		if (res.back()->destAddrMatch < routes[i]->destAddrMatch)
-		{
-			res.clear();
-			res.push_back(routes[i]);
-			continue;
-		}
-		if (res.back()->destAddrMatch > routes[i]->destAddrMatch)
-		{
-			continue;
-		}
-		//origAddr
-		if (res.back()->origAddrMatch < routes[i]->origAddrMatch)
-		{
-			res.clear();
-			res.push_back(routes[i]);
-			continue;
-		}
-		if (res.back()->origAddrMatch == routes[i]->origAddrMatch)
-		{
-			res.push_back(routes[i]);
-			continue;
-		}
-	}
-	return res;
+	return NULL;
 }
 
-RouteRegistry::RouteIterator* RouteRegistry::iterator()
+const RouteHolder* RouteRegistry::lookup(const Address& origAddr,
+	const Address& destAddr) const
 {
-	return new RouteIterator(routeMap.begin(), routeMap.end());
+	const AddressMap2* addrMap2 = lookup1(destAddr);
+	if (addrMap2)
+	{
+		return lookup2(addrMap2, origAddr);
+	}
+	return NULL;
 }
 
 int RouteRegistry::size() const

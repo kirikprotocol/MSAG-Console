@@ -22,39 +22,33 @@ using smsc::test::sms::ltAddress;
 class RouteRegistry
 {
 public:
-	typedef vector<const TestRouteData*> RouteList;
-	typedef map<const RouteId, const TestRouteData*> RouteMap;
-	class RouteIterator
-	{
-		RouteMap::iterator it, end;
-	public:
-		RouteIterator(RouteMap::iterator b, RouteMap::iterator e);
-		bool hasNext() const;
-		const TestRouteData* operator*() const;
-		const TestRouteData* operator->() const;
-		RouteIterator& operator++();
-		RouteIterator operator++(int);
-	};
-
 	RouteRegistry(){}
 
 	virtual ~RouteRegistry();
 
-	void putRoute(const TestRouteData& data);
+	bool putRoute(const RouteInfo& route, SmeProxy* proxy);
 	
-	const RouteInfo* getRoute(RouteId routeId) const;
+	void clear();
+	
+	//RouteIterator* iterator();
+	
+	const RouteHolder* getRoute(RouteId routeId) const;
 
-	const RouteList lookup(const Address& origAddr,
+	const RouteHolder* lookup(const Address& origAddr,
 		const Address& destAddr) const;
-
-	RouteIterator* iterator();
 
 	int size() const;
 
 private:
-	typedef map<const Address, RouteList, ltAddress> AddressMap;
-	AddressMap addrMap;
+	typedef map<const RouteId, const RouteHolder*> RouteMap;
+	typedef map<const Address, const RouteHolder*, ltAddress> AddressMap2;
+	typedef map<const Address, AddressMap2, ltAddress> AddressMap;
 	RouteMap routeMap;
+	AddressMap addrMap; //поиск маршрута сначала по destAddr, затем по origAddr
+
+	const AddressMap2* RouteRegistry::lookup1(const Address& destAddr) const;
+	const RouteHolder* RouteRegistry::lookup2(const AddressMap2* addrMap2,
+		const Address& origAddr) const;
 };
 
 }
