@@ -1,4 +1,5 @@
 #include "PduUtil.hpp"
+#include "test/util/Util.hpp"
 #include "util/debug.h"
 #include <sstream>
 
@@ -7,6 +8,7 @@ namespace test {
 namespace core {
 
 using smsc::test::conf::TestConfig;
+using smsc::test::util::operator<<;
 using namespace std;
 
 void ReschedulePduMonitor::eval(time_t time, int& attempt, time_t& diff,
@@ -357,7 +359,6 @@ string PduMonitor::str() const
 		default:
 			__unreachable__("Invalid pdu flag");
 	}
-	s << ", valid = " << (pduData->valid ? "true" : "false");
 	s << ", checkTime = " << checkTime << ", validTime = " << validTime;
 	s << ", pduData = {" << pduData->str() << "}";
 	return s.str();
@@ -451,8 +452,8 @@ void DeliveryReceiptMonitor::reschedule(time_t _startTime)
 string DeliveryReceiptMonitor::str() const
 {
 	ostringstream s;
-	s << ReschedulePduMonitor::str() << ", regDelivery = " << (int) regDelivery <<
-		", deliveryFlag = " << (int) deliveryFlag << ", deliveryStatus = " <<
+	s << ReschedulePduMonitor::str() << ", regDelivery = " << regDelivery <<
+		", deliveryFlag = " << deliveryFlag << ", deliveryStatus = " <<
 		deliveryStatus;
 	return s.str();
 }
