@@ -164,7 +164,7 @@ class MapDialogContainer{
   XHash<ET96MAP_DIALOGUE_ID_T,MapDialog*,hash_func_ET96MAP_DID> hash;
   XHash<const string,unsigned,StringHashFunc> lock_map;
   list<unsigned> dialogId_pool;
-  void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
+  friend void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
   //ET96MAP_DIALOGUE_ID_T allocateDialogueId();
 public:
   static MapDialogContainer* getInstance(){

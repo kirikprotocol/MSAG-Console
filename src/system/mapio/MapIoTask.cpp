@@ -47,32 +47,6 @@ void MapIoTask::deinit()
   MsgExit();
 }
 
-USHORT_T  Et96MapCloseInd(ET96MAP_LOCAL_SSN_T ssn,
-                         ET96MAP_DIALOGUE_ID_T dialogId,
-                         ET96MAP_USERDATA_T *ud,
-                         UCHAR_T priorityOrder)
-{
-  __trace2__("MAP::Et96MapCloseInd did 0x%x",dialogId);
-  try{
-    DialogRefGuard mdci(MapDialogContainer::getInstance()->getDialog(dialogId));
-    if ( !mdci.isnull() ){
-      try{
-        if ( mdci->Et96MapCloseInd(ssn,
-                            dialogId,
-                            ud,
-                            priorityOrder) )
-          MapDialogContainer::getInstance()->dropDialog(mdci->getDialogId());
-      }catch(...){
-        MapDialogContainer::getInstance()->dropDialog(mdci->getDialogId()); 
-      }
-    }
-  }catch(...){
-    __trace2__("MAP::Et96MapCloseInd: catch exception when processing did 0x%x",dialogId);
-    MapDialogContainer::getInstance()->dropDialog(dialogId);
-  }
-  return ET96MAP_E_OK;
-}
-
 void MapIoTask::dispatcher()
 {
   MSG_T message;
