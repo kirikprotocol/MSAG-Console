@@ -10,7 +10,8 @@ using namespace std;
 #define SMSC_FORWARD_RESPONSE 0x001
 
 static unsigned __global_bind_counter = 0;
-
+static bool MAP_dispatching = false;
+static bool MAP_isAlive = false;
 #define CORRECT_BIND_COUNTER 2
 
 struct SMSC_FORWARD_RESPONSE_T {
@@ -366,8 +367,11 @@ void MapIoTask::dispatcher()
   message.receiver = MY_USER_ID;
   unsigned timecounter = 0;
   for(;;){
+    MAP_isAlive = true;
     if ( isStopping ) return;
+    MAP_dispatching = true;
     result = EINSS7CpMsgRecv_r(&message,1000);
+    MAP_dispatching = false;
     if ( ++timecounter == 60 ) {
       __trace2__("MAP: EINSS7CpMsgRecv_r TICK-TACK");
       if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
@@ -531,5 +535,23 @@ void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId)
   MapDialogContainer::getInstance()->dialogId_pool.push_back(dialogueId);
 }
 
+
+void MapTracker::Execute(){
+  Event e;
+#ifdef USE_MAP
+  for(;;){
+    unsigned long t = time();
+    while(time()<(t+15)&&!isStopping)e.Wait(1000*(time()-(t+15)));
+    if ( isStopping ) return;
+    if ( MAP_dispathing && !MAP_isAlive ) {
+      __trace2__("\n\n\n!!!!!!!!!!!!!!!!!!!!!!!!!!!\n"
+                 "MAP is DEAD"
+                 "\n\n\n\n");
+    }else MAP_isAlive = false;
+  }
+#else
+  e.Wait();
+#endif
+}
 
 
