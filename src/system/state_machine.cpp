@@ -355,7 +355,7 @@ StateType StateMachine::submit(Tuple& t)
   try{
   Task task(dest_proxy->getUniqueId(),dialogId2);
   task.messageId=t.msgId;
-  if ( !smsc->tasks.createTask(task) )
+  if ( !smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
   {
     try{
       //time_t now=time(NULL);
@@ -493,7 +493,7 @@ StateType StateMachine::forward(Tuple& t)
     //Task task((uint32_t)dest_proxy_index,dialogId2);
     Task task(dest_proxy->getUniqueId(),dialogId2);
     task.messageId=t.msgId;
-    if ( !smsc->tasks.createTask(task) )
+    if ( !smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
     {
       __warning__("FORWARD: can't create task");
       return ENROUTE_STATE;
