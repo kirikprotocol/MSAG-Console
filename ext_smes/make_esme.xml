@@ -67,6 +67,7 @@
 
   <target name="update" description="update existing installation">
     <copy todir="${DISTR_DIR}/services/${esme_name}/bin" file="${BUILD_BIN}/${esme_bin}" flatten="yes" preservelastmodified="yes"/>
+    <chmod file="${DISTR_DIR}/services/${esme_name}/bin/${esme_bin}" perm="775"/>  
     <copy todir="${DISTR_DIR}/conf/sql" preservelastmodified="yes">
       <fileset dir="${TEMPL_DIR}/sql" includes="${esme_name}.sql updates/${esme_name}*.sql"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>

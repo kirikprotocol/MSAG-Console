@@ -17,6 +17,8 @@
   <fail unless="TEMPLATE_PROPS_FOUND" message="Template properties file not found"/>
 
   <property environment="env"/>
+  <tstamp/>
+  <property name="version" value="${DSTAMP}_${TSTAMP}"/>
   <property name="DISTR_DIR" value="${BUILD_DIR}/distr"/>
   <property name="SRC_DIR" value="${SMSC_DIR}/src"/>
   <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
@@ -250,6 +252,13 @@ Targets:
   </target>
 
   <target name="distr" depends="create_distr, extra_libs, installweb, configure">
+  </target>
+
+  <target name="tar_update">
+    <exec executable="tar" dir="${DISTR_DIR}" >
+      <arg line="-cf ../smsc_${version}.tar ."/>
+    </exec>
+    <gzip src="${DISTR_DIR}/../smsc_${version}.tar"/>
   </target>
 
   <!-- external sme -->
