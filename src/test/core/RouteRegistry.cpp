@@ -1,6 +1,7 @@
 #include "RouteRegistry.hpp"
 #include "test/util/Util.hpp"
 #include "test/sms/SmsUtil.hpp"
+#include <sstream>
 
 namespace smsc {
 namespace test {
@@ -10,6 +11,7 @@ using namespace std;
 using smsc::sms::AddressValue;
 using namespace smsc::test::util;
 using smsc::test::sms::SmsUtil;
+using smsc::test::sms::operator<<;
 
 RouteRegistry::~RouteRegistry()
 {
@@ -53,44 +55,9 @@ const RouteHolder* RouteRegistry::getRoute(RouteId routeId) const
 	return (it != routeMap.end() ? it->second : NULL);
 }
 
-const RouteRegistry::AddressMap2* RouteRegistry::lookup1(
-	const Address& destAddr) const
-{
-	Address addr(destAddr);
-	AddressValue addrVal;
-	int addrLen = addr.getValue(addrVal);
-	for (int len = 0; len <= addrLen; len++)
-	{
-		if (len)
-		{
-			addrVal[addrLen - len] = '?';
-			addr.setValue(addrLen, addrVal);
-		}
-		AddressMap::const_iterator it = addrMap.find(addr);
-		if (it != addrMap.end())
-		{
-			return &it->second;
-		}
-		/*
-		if (addrLen - len < MAX_ADDRESS_VALUE_LENGTH)
-		{
-			addrVal[addrLen - len] = '*';
-			addr.setValue(addrLen - len + 1, addrVal);
-			AddressMap::iterator it = addrMap.find(addr);
-			if (it != addrMap.end())
-			{
-				return &it->second;
-			}
-		}
-		*/
-	}
-	return NULL;
-}
-
-const RouteHolder* RouteRegistry::lookup2(const AddressMap2* addrMap2,
+const RouteHolder* RouteRegistry::lookup2(const AddressMap2& addrMap2,
 	const Address& origAddr) const
 {
-	__require__(addrMap2);
 	Address addr(origAddr);
 	AddressValue addrVal;
 	int addrLen = addr.getValue(addrVal);
@@ -101,8 +68,12 @@ const RouteHolder* RouteRegistry::lookup2(const AddressMap2* addrMap2,
 			addrVal[addrLen - len] = '?';
 			addr.setValue(addrLen, addrVal);
 		}
-		AddressMap2::const_iterator it = addrMap2->find(addr);
-		if (it != addrMap2->end())
+		AddressMap2::const_iterator it = addrMap2.find(addr);
+		ostringstream os;
+		os << addr;
+		__trace2__("RouteRegistry::lookup2(): origAddr = %s, res = %d",
+			os.str().c_str(), (it == addrMap2.end() ? 0 : 1));
+		if (it != addrMap2.end())
 		{
 			return it->second;
 		}
@@ -125,10 +96,41 @@ const RouteHolder* RouteRegistry::lookup2(const AddressMap2* addrMap2,
 const RouteHolder* RouteRegistry::lookup(const Address& origAddr,
 	const Address& destAddr) const
 {
-	const AddressMap2* addrMap2 = lookup1(destAddr);
-	if (addrMap2)
+	Address addr(destAddr);
+	AddressValue addrVal;
+	int addrLen = addr.getValue(addrVal);
+	for (int len = 0; len <= addrLen; len++)
 	{
-		return lookup2(addrMap2, origAddr);
+		if (len)
+		{
+			addrVal[addrLen - len] = '?';
+			addr.setValue(addrLen, addrVal);
+		}
+		AddressMap::const_iterator it = addrMap.find(addr);
+		ostringstream os;
+		os << addr;
+		__trace2__("RouteRegistry::lookup1(): destAddr = %s, res = %d",
+			os.str().c_str(), (it == addrMap.end() ? 0 : it->second.size()));
+		if (it != addrMap.end())
+		{
+			const RouteHolder* routeHolder = lookup2(it->second, origAddr);
+			if (routeHolder)
+			{
+				return routeHolder;
+			}
+		}
+		/*
+		if (addrLen - len < MAX_ADDRESS_VALUE_LENGTH)
+		{
+			addrVal[addrLen - len] = '*';
+			addr.setValue(addrLen - len + 1, addrVal);
+			AddressMap::iterator it = addrMap.find(addr);
+			if (it != addrMap.end())
+			{
+				return &it->second;
+			}
+		}
+		*/
 	}
 	return NULL;
 }

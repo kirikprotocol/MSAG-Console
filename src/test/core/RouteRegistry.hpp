@@ -48,8 +48,7 @@ private:
 	RouteMap routeMap;
 	AddressMap addrMap; //поиск маршрута сначала по destAddr, затем по origAddr
 
-	const AddressMap2* RouteRegistry::lookup1(const Address& destAddr) const;
-	const RouteHolder* RouteRegistry::lookup2(const AddressMap2* addrMap2,
+	const RouteHolder* RouteRegistry::lookup2(const AddressMap2& addrMap2,
 		const Address& origAddr) const;
 };
 
