@@ -194,6 +194,8 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 );
 static void DropMapDialog_(unsigned dialogid){
   if ( dialogid == 0 ) return;
   DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid));
+  __trace2__(":MAP:%s chain size %d , dropChain %d",__FUNCTION__,dialog->chain.size(),dialog->dropChain);
+  
   if ( !dialog.isnull() ){
     {
       MutexGuard(dialog->mutex);
@@ -236,6 +238,8 @@ static void DropMapDialog_(unsigned dialogid){
         }catch(...){
         }
       }
+      MapDialogContainer::getInstance()->dropDialog(dialog->dialogid_map);
+      __trace2__("MAP::%s: 0x%x - closed and droped - ",__FUNCTION__,dialogid);
     }else{
       SmscCommand cmd = dialog->chain.front();
       dialog->chain.pop_front();
@@ -309,6 +313,7 @@ static void CheckLockedByMO(MapDialog* dialog)
       x_momap.erase(it);
     }
     else{
+      dialog->dropChain = true;
       __trace2__("MAP:UDHI:%s locked, reschedule NOW!",__FUNCTION__);
       throw MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,0),
                             "MAP:: Locked by MO: reschedule NOW!");
@@ -708,13 +713,18 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error = false,unsigned 
       }
     }
     __trace2__("MAP::%s: dialod state %d",__FUNCTION__,dialog->state);
-    switch(dialog->state){
-    case MAPST_ABORTED: 
+    if ( send_error ){
       __trace2__("MAP::ABORT: dialog 0x%x",dialog->dialogid_map);
       AbortMapDialog(dialog->dialogid_map,dialog->ssn);
-      break;
-    default:
-      CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+    }else{
+      switch(dialog->state){
+      case MAPST_ABORTED: 
+        __trace2__("MAP::ABORT: dialog 0x%x",dialog->dialogid_map);
+        AbortMapDialog(dialog->dialogid_map,dialog->ssn);
+        break;
+      default:
+        CloseMapDialog(dialog->dialogid_map,dialog->ssn);
+      }
     }
   }
   DropMapDialog_(dialogid);
