@@ -53,7 +53,7 @@ public class AliasAlterCommand implements Command
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             }
         } else {
-            ctx.setMessage(out+" not exists");
+            ctx.setMessage(out+" not found");
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }
     }
