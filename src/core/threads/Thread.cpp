@@ -1,7 +1,9 @@
-#include "Thread.hpp"
 #ifdef _WIN32
 #include <process.h>
+#include <windows.h>
 #endif
+
+#include "Thread.hpp"
 
 namespace smsc{
 namespace core{
@@ -9,12 +11,15 @@ namespace threads{
 
 
 #ifdef _WIN32
-static void ThreadRunner(void* obj)
+void Thread::ThreadRunner(void* obj)
 {
+  DuplicateHandle(
+    GetCurrentProcess(),GetCurrentThread(),GetCurrentProcess(),
+    &((Thread*)obj)->thread,DUPLICATE_SAME_ACCESS,FALSE,DUPLICATE_SAME_ACCESS);
   ((Thread*)obj)->setRetCode(((Thread*)obj)->Execute());
 }
 #else
-static void* ThreadRunner(void* obj)
+void* Thread::ThreadRunner(void* obj)
 {
   ((Thread*)obj)->setRetCode(((Thread*)obj)->Execute());
   return (void*)((Thread*)obj)->getRetCode();
@@ -28,9 +33,10 @@ Thread::Thread():thread(0)
 void Thread::Start()
 {
 #ifdef _WIN32
-  thread=(HANDLE)_beginthread(ThreadRunner,0,(void*)this);
+  if ( _beginthread(&Thread::ThreadRunner,0,(void*)this) != -1 )
+    while ( !thread ) Sleep(10);
 #else
-  if(pthread_create(&thread,NULL,ThreadRunner,this)!=0)
+  if(pthread_create(&thread,NULL,&Thread::ThreadRunner,this)!=0)
   {
     thread=0;
   };
@@ -40,9 +46,9 @@ void Thread::Start()
 void Thread::Start(int stacksize)
 {
 #ifdef _WIN32
-  thread=(HANDLE)_beginthread(ThreadRunner,stacksize,(void*)this);
+  thread=(HANDLE)_beginthread(&Thread::ThreadRunner,stacksize,(void*)this);
 #else
-  if(pthread_create(&thread,NULL,ThreadRunner,this)!=0)
+  if(pthread_create(&thread,NULL,&Thread::ThreadRunner,this)!=0)
   {
     thread=0;
   };
@@ -53,10 +59,11 @@ Thread::~Thread()
 {
   WaitFor();
 #ifdef _WIN32
-  _endthread();
+  //_endthread();
 #else
   //thr_destroy(thread);
 #endif
+  if ( thread ) CloseHandle(thread);
 }
 
 int Thread::WaitFor()

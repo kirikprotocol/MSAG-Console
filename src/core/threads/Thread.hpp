@@ -38,6 +38,13 @@ protected:
 #else
   pthread_t thread;
 #endif
+
+#ifdef _WIN32
+static void ThreadRunner(void* obj);
+#else
+static void* ThreadRunner(void* obj);
+#endif
+
 };//Thread
 
 }//threads
