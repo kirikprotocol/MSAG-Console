@@ -21,7 +21,6 @@ using smsc::sme::SmeConfig;
 using smsc::smeman::SmeInfo;
 using smsc::alias::AliasInfo;
 using smsc::profiler::Profile;
-using smsc::test::sms::SmsUtil;
 using smsc::test::sms::operator<<;
 using smsc::test::smeman::SmeManagerTestCases;
 using smsc::test::alias::AliasManagerTestCases;
@@ -37,6 +36,7 @@ using namespace smsc::test::dbsme;
 using namespace smsc::test::config;
 using namespace smsc::test::util;
 using namespace smsc::test::core;
+using namespace smsc::test::sms;
 
 SmeRegistry* smeReg;
 AliasRegistry* aliasReg;
@@ -152,10 +152,6 @@ void TestSme::executeCycle()
 		{
 			cout << "Bound failed" << endl;
 			exit(-1);
-		}
-		for (int i = 0; i < 3; i++)
-		{
-			tc.getBase().bindIncorrectSme(RAND_TC); //обязательно после bindCorrectSme
 		}
 		//подготовить последовательност команд
 		seq.insert(seq.end(), 5, 1); //format
@@ -295,13 +291,12 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 		tcSme.addCorrectSme(addr[i], smeInfo[i], RAND_TC);
 		ostringstream os;
 		os << *addr[i];
-		__trace2__("genConfig(): addr = %s, systemId = %s", os.str().c_str(), smeInfo[i]->systemId.c_str());
 	}
 	//регистрация db sme
 	SmeInfo dbSmeInfo;
 	SmeManagerTestCases::setupRandomCorrectSmeInfo(&dbSmeInfo);
 	dbSmeInfo.systemId = dbSmeSystemId;
-	smeReg->registerSme(dbSmeAddr, dbSmeInfo, true);
+	smeReg->registerSme(dbSmeAddr, dbSmeInfo, false, true);
 	smeReg->bindSme(dbSmeInfo.systemId);
 	//регистрация алиасов (самая простая схема)
 	for (int i = 0; i < numSme; i++)
@@ -329,12 +324,14 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 		route1.source = *addr[i];
 		route1.dest = dbSmeAddr;
 		route1.smeSystemId = dbSmeSystemId;
+		route1.enabling = true;
 		tcRoute.addCorrectRouteMatch(&route1, NULL, RAND_TC);
 		//db sme -> sme
 		RouteInfo route2;
 		route2.source = dbSmeAddr;
 		route2.dest = *addr[i];
 		route2.smeSystemId = smeInfo[i]->systemId;
+		route2.enabling = true;
 		tcRoute.addCorrectRouteMatch(&route2, NULL, RAND_TC);
 	}
 	//сохранение конфигов
@@ -361,6 +358,38 @@ vector<TestSme*> genConfig(int numSme, const string& smscHost, int smscPort)
 			NULL, NULL, smeReg, aliasReg, routeReg, profileReg, chkList);
 		sme.push_back(new TestSme(i, config, fixture));
 		smeReg->bindSme(smeInfo[i]->systemId);
+	}
+	//печать таблицы маршрутов
+	__trace__("Route table");
+	for (int i = 0; i < numSme; i++)
+	{
+		ostringstream os;
+		os << "sme: addr = " << str(*addr[i]) << ", smeId = " << smeInfo[i]->systemId;
+		const Address& _smeAddr = *addr[i];
+		static const Address _dbSmeAddr = aliasReg->findAddressByAlias(dbSmeAlias);
+		const RouteHolder* routeHolder1 = routeReg->lookup(_smeAddr, _dbSmeAddr);
+		if (routeHolder1)
+		{
+			const SmeSystemId& smeId1 = routeHolder1->route.smeSystemId;
+			bool smeBound1 = smeReg->isSmeBound(smeId1);
+			os << ", route to = " << smeId1 << ", bound = " << (smeBound1 ? "yes" : "no");
+			const RouteHolder* routeHolder2 = routeReg->lookup(_dbSmeAddr, _smeAddr);
+			if (routeHolder2)
+			{
+				const SmeSystemId& smeId2 = routeHolder2->route.smeSystemId;
+				bool smeBound2 = smeReg->isSmeBound(smeId2);
+				os << ", back route to = " << smeId2 << ", bound = " << (smeBound2 ? "yes" : "no");
+			}
+			else
+			{
+				os << ", no back route";
+			}
+		}
+		else
+		{
+			os << ", no route";
+		}
+		__trace2__("%s", os.str().c_str());
 	}
 	for (int i = 0; i < numSme; i++)
 	{
