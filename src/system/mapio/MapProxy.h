@@ -16,11 +16,11 @@ extern void MAPIO_PutCommand(const smsc::smeman::SmscCommand& cmd );
 //#endif
 
 namespace smsc{
-namespace util{
+namespace logger{
 extern smsc::logger::Logger* _mapproxy_cat;
 };
 };
-#define __mapproxy_trace2__(format,args...) __debug2__(smsc::logger::_mapproxy_cat,format,##args)
+#define __mapproxy_trace2__(format,args...) __log2__(smsc::logger::_mapproxy_cat,smsc::logger::Logger::LEVEL_DEBUG,format,##args)
 #define __mapproxy_trace__(text) __debug__(smsc::logger::_mapproxy_cat,text)
 
 

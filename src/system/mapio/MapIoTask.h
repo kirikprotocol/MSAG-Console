@@ -9,7 +9,7 @@ $Id$
 #include <malloc.h>
 #include <memory.h>
 #include <time.h>
-#include "../../util/debug.h"
+#include "util/debug.h"
 #include "../../util/smstext.h"
 #include "../../sms/sms.h"
 #include "../../smeman/smsccmd.h"
@@ -17,18 +17,20 @@ $Id$
 using namespace std;
 using namespace smsc::sms;
 using namespace smsc::smeman;
+
 namespace smsc{
 namespace logger{
 extern smsc::logger::Logger* _map_cat;
 extern smsc::logger::Logger* _mapdlg_cat;
 };
 };
+
 using namespace smsc::util;
-#define __map_trace2__(format,args...) __debug2__(smsc::logger::_map_cat,format,##args)
+#define __map_trace2__(format,args...) __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, format,##args)
 #define __map_trace__(text) __debug__(smsc::logger::_map_cat,text)
-#define __map_warn2__(format,args...) __warn2__(smsc::logger::_map_cat,format,##args)
+#define __map_warn2__(format,args...) __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN,format,##args)
 #define __map_warn__(text) __warn__(smsc::logger::_map_cat,text)
-#define __mapdlg_trace2__(format,args...) __debug2__(smsc::logger::_mapdlg_cat,format,##args)
+#define __mapdlg_trace2__(format,args...) __log2__(smsc::logger::_mapdlg_cat,smsc::logger::Logger::LEVEL_DEBUG,format,##args)
 #define __mapdlg_trace__(text) __debug__(smsc::logger::_mapdlg_cat,text)
 
 #include "../../core/buffers/XHash.hpp"
