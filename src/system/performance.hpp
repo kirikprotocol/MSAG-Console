@@ -50,18 +50,39 @@ struct PerformanceData{
   uint32_t inScheduler;
 };
 
+#define SME_PERF_CNT_ACCEPTED       0
+#define SME_PERF_CNT_REJECTED       1
+#define SME_PERF_CNT_DELIVERED      2
+#define SME_PERF_CNT_RESCHEDULED    3
+#define SME_PERF_CNT_TEMP_ERROR     4
+#define SME_PERF_CNT_PERM_ERROR     5
+#define SME_PERF_CNT_COUNT          6
+
 struct SmePerformanceCounter
 {
-    uint16_t   accepted, rejected;
-    uint16_t   delivered, rescheduled;
-    uint16_t   tempError, permError;
+    uint16_t                counters[SME_PERF_CNT_COUNT];
+    TimeSlotCounter<int>*   slots   [SME_PERF_CNT_COUNT];
 
-    SmePerformanceCounter() { clear(); };
-    
+    SmePerformanceCounter() { 
+        memset(counters, 0, sizeof(counters));
+        memset(slots, 0, sizeof(slots));
+    };
+    virtual ~SmePerformanceCounter() {
+        for (int i=0; i<SME_PERF_CNT_COUNT; i++) 
+            if (slots[i]) delete slots[i];
+    };
     inline void clear() {
-        accepted  = 0; rejected = 0;
-        delivered = 0; rescheduled = 0;
-        tempError = 0; permError = 0;
+        memset(counters, 0, sizeof(counters));
+    };
+};
+struct SmeErrorCounter
+{
+    uint16_t                errors;
+    TimeSlotCounter<int>*   slot;
+
+    SmeErrorCounter() : errors(0), slot(0) {};
+    virtual ~SmeErrorCounter() {
+        if (slot) delete slot;
     };
 };
 
@@ -70,47 +91,51 @@ class SmePerformanceMonitor
 private:
 
     Mutex                           countersLock;
-    IntHash<uint16_t>               errCounters;
-    Hash   <SmePerformanceCounter>  smeCounters;
-
-    IntHash<TimeSlotCounter<int>*>   errorCounters;
-    Hash   <TimeSlotCounter<int>*>   acceptedCounters,  rejectedCounters;
-    Hash   <TimeSlotCounter<int>*>   deliveredCounters, rescheduledCounters;
-    Hash   <TimeSlotCounter<int>*>   tempErrorCounters, permErrorCounters;
     
+    Hash   <SmePerformanceCounter*>  smeCounters;
+    IntHash<SmeErrorCounter*>        errCounters;
+
     inline TimeSlotCounter<int>* newSlotCounter() {
         return new TimeSlotCounter<int>(3600, 1000);
     }
 
     void incError(int errcode)
     {
-        uint16_t* errCounter = errCounters.GetPtr(errcode);
-        if (errCounter) (*errCounter)++;
-        else errCounters.Insert(errcode, 1);
-
-        TimeSlotCounter<int>* errHourCounter = 0;
-        if (errorCounters.Exist(errcode)) errHourCounter = errorCounters.Get(errcode);
+        SmeErrorCounter*  counter = 0;
+        SmeErrorCounter** errCounter = errCounters.GetPtr(errcode);
+        if (!errCounter) counter = new SmeErrorCounter();
+        else if (*errCounter) counter = *errCounter;
         else {
-            errHourCounter = newSlotCounter();
-            errorCounters.Insert(errcode, errHourCounter);
+            counter = new SmeErrorCounter();
+            errCounter = 0; errCounters.Delete(errcode);
         }
-        if (errHourCounter) errHourCounter->Inc();
+        
+        counter->errors++;
+        if (!counter->slot) counter->slot = newSlotCounter();
+        counter->slot->Inc();
+        
+        if (!errCounter) errCounters.Insert(errcode, counter);
     };
 
-    void clean(Hash<TimeSlotCounter<int>*>& hash)
+    void incCounter(const char* sme, int index)
     {
-        char* key = 0; TimeSlotCounter<int>* counter = 0; hash.First();
-        while (hash.Next(key, counter))
-            if (counter) delete counter;
-        hash.Empty();
-    }
-    void clean(IntHash<TimeSlotCounter<int>*>& hash)
-    {
-        IntHash<TimeSlotCounter<int>*>::Iterator it = hash.First();
-        int key = 0; TimeSlotCounter<int>* counter = 0;
-        while (it.Next(key, counter))
-            if (counter) delete counter;
-        hash.Empty();
+        if (!sme || !sme[0] || index<0 || index>=SME_PERF_CNT_COUNT) return;
+
+        SmePerformanceCounter*  counter = 0;
+        SmePerformanceCounter** smeCounter = smeCounters.GetPtr(sme);
+
+        if (!smeCounter) counter = new SmePerformanceCounter();
+        else if (*smeCounter) counter = *smeCounter;
+        else {
+            counter = new SmePerformanceCounter();
+            smeCounter = 0; smeCounters.Delete(sme);
+        }
+
+        counter->counters[index]++;
+        if (!counter->slots[index]) counter->slots[index] = newSlotCounter();
+        counter->slots[index]->Inc();
+
+        if (!smeCounter) smeCounters.Insert(sme, counter);
     }
 
 public:
@@ -119,129 +144,46 @@ public:
     {
         MutexGuard guard(countersLock);
 
-        clean(errorCounters);
-        clean(acceptedCounters);  clean(rejectedCounters);
-        clean(deliveredCounters); clean(rescheduledCounters);
-        clean(tempErrorCounters); clean(permErrorCounters);
+        char* key = 0; SmePerformanceCounter* smeCounter = 0;
+        smeCounters.First();
+        while (smeCounters.Next(key, smeCounter))
+            if (smeCounter) delete smeCounter;
+        smeCounters.Empty();
+
+        IntHash<SmeErrorCounter*>::Iterator it = errCounters.First();
+        int code = 0; SmeErrorCounter* errCounter = 0;
+        while (it.Next(code, errCounter))
+            if (errCounter) delete errCounter;
+        errCounters.Empty();
     }
 
     void incAccepted(const char* sme)
     {
-        if (!sme || !sme[0]) return;
-        
         MutexGuard guard(countersLock);
-        
-        SmePerformanceCounter* counter = smeCounters.GetPtr(sme);
-        if (counter) counter->accepted++;
-        else {
-            SmePerformanceCounter cnt; cnt.accepted = 1;
-            smeCounters.Insert(sme, cnt);
-        }
-        
-        TimeSlotCounter<int>* hourCounter = 0;
-        if (acceptedCounters.Exists(sme)) hourCounter = acceptedCounters.Get(sme);
-        else {
-            hourCounter = newSlotCounter();
-            acceptedCounters.Insert(sme, hourCounter);
-        }
-        if (hourCounter) hourCounter->Inc();
+        incCounter(sme, SME_PERF_CNT_ACCEPTED);
     };
     void incRejected(const char* sme, int errcode)
     {
-        if (!sme || !sme[0]) return;
-        
         MutexGuard guard(countersLock);
-
-        SmePerformanceCounter* counter = smeCounters.GetPtr(sme);
-        if (counter) counter->rejected++;
-        else {
-            SmePerformanceCounter cnt; cnt.rejected = 1;
-            smeCounters.Insert(sme, cnt);
-        }
-        
-        TimeSlotCounter<int>* rejHourCounter = 0;
-        if (rejectedCounters.Exists(sme)) rejHourCounter = rejectedCounters.Get(sme);
-        else {
-            rejHourCounter = newSlotCounter();
-            rejectedCounters.Insert(sme, rejHourCounter);
-        }
-        if (rejHourCounter) rejHourCounter->Inc();
-        
+        incCounter(sme, SME_PERF_CNT_REJECTED);
         incError(errcode);
     };
     void incDelivered(const char* sme)
     {
-        if (!sme || !sme[0]) return;
-
         MutexGuard guard(countersLock);
-
-        SmePerformanceCounter* counter = smeCounters.GetPtr(sme);
-        if (counter) counter->delivered++;
-        else {
-            SmePerformanceCounter cnt; cnt.delivered = 1;
-            smeCounters.Insert(sme, cnt);
-        }
-
-        TimeSlotCounter<int>* delHourCounter = 0;
-        if (deliveredCounters.Exists(sme)) delHourCounter = deliveredCounters.Get(sme);
-        else {
-            delHourCounter = newSlotCounter();
-            deliveredCounters.Insert(sme, delHourCounter);
-        }
-        if (delHourCounter) delHourCounter->Inc();
-        
+        incCounter(sme, SME_PERF_CNT_DELIVERED);
         incError(smsc::system::Status::OK);
     };
     void incRescheduled(const char* sme)
     {
-        if (!sme || !sme[0]) return;
-        
         MutexGuard guard(countersLock);
-
-        SmePerformanceCounter* counter = smeCounters.GetPtr(sme);
-        if (counter) counter->rescheduled++;
-        else {
-            SmePerformanceCounter cnt; cnt.rescheduled = 1;
-            smeCounters.Insert(sme, cnt);
-        }
-
-        TimeSlotCounter<int>* resHourCounter = 0;
-        if (rescheduledCounters.Exists(sme)) resHourCounter = rescheduledCounters.Get(sme);
-        else {
-            resHourCounter = newSlotCounter();
-            rescheduledCounters.Insert(sme, resHourCounter);
-        }
-        if (resHourCounter) resHourCounter->Inc();
+        incCounter(sme, SME_PERF_CNT_RESCHEDULED);
     };
     void incFailed(const char* sme, int errcode)
     {
-        if (!sme || !sme[0]) return;
-        
         bool permanent = smsc::system::Status::isErrorPermanent(errcode);
         MutexGuard guard(countersLock);
-        
-        SmePerformanceCounter* counter = smeCounters.GetPtr(sme);
-        if (counter) {
-            if (permanent) counter->permError++; 
-            else counter->tempError++;
-        }
-        else {
-            SmePerformanceCounter cnt;
-            if (permanent) cnt.permError = 1;
-            else cnt.tempError = 1;
-            smeCounters.Insert(sme, cnt);
-        }
-        
-        TimeSlotCounter<int>* errHourCounter = 0;
-        if (permanent && permErrorCounters.Exists(sme)) errHourCounter = permErrorCounters.Get(sme);
-        else if (!permanent && tempErrorCounters.Exists(sme)) errHourCounter = tempErrorCounters.Get(sme);
-        else {
-            errHourCounter = newSlotCounter();
-            if (permanent) permErrorCounters.Insert(sme, errHourCounter);
-            else tempErrorCounters.Insert(sme, errHourCounter);
-        }
-        if (errHourCounter) errHourCounter->Inc();
-
+        incCounter(sme, permanent ? SME_PERF_CNT_PERM_ERROR:SME_PERF_CNT_TEMP_ERROR);
         incError(errcode);
     };
 
@@ -249,94 +191,49 @@ public:
     {
         MutexGuard guard(countersLock);
 
-        smePerfDataSize = sizeof(uint32_t)+sizeof(uint16_t)*2;
-        char* sme = 0; SmePerformanceCounter* smeCounter = 0;
-        smeCounters.First();
-        while (smeCounters.Next(sme, smeCounter))
-            if (sme && sme[0] && smeCounter)
-                smePerfDataSize += strlen(sme)+sizeof(uint16_t)*13;
-          
-        smePerfDataSize += (sizeof(uint32_t)+sizeof(uint16_t)*2)*errCounters.Count();
+        smePerfDataSize = sizeof(uint32_t)+sizeof(uint16_t)*2+ 
+            (sizeof(char)*(smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1)+
+             sizeof(uint16_t)*2*SME_PERF_CNT_COUNT)*smeCounters.GetCount()+
+            (sizeof(uint32_t)+sizeof(uint16_t)*2)*errCounters.Count();
 
         uint8_t* data = new uint8_t[smePerfDataSize];
-        uint8_t* packet = data;
+        uint8_t* packet = data; memset(packet, 0, smePerfDataSize);
 
         // uint32_t     Total packet size
-        uint32_t i32val = htonl(smePerfDataSize-sizeof(uint32_t));
-        memcpy(packet, &i32val, sizeof(i32val)); packet += sizeof(i32val);
-        
+        *((uint32_t*)packet) = htonl(smePerfDataSize-sizeof(uint32_t)); packet += sizeof(uint32_t);
         // uint16_t     Sme(s) count
-        uint16_t i16val = htons((uint16_t)smeCounters.GetCount());
-        memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
+        *((uint16_t*)packet) = htons((uint16_t)smeCounters.GetCount()); packet += sizeof(uint16_t);
         
         smeCounters.First();
+        char* sme = 0; SmePerformanceCounter* smeCounter = 0;
         while (smeCounters.Next(sme, smeCounter))
         {
-            if (!sme || !sme[0] || !smeCounter) continue;
-            // uint16_t     sme name size
-            int smeIdLen = strlen(sme); i16val = htons((uint16_t)smeIdLen);
-            memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
-            // uint8_t[]    sme name
-            memcpy(packet, sme, smeIdLen); packet += smeIdLen;
-            TimeSlotCounter<int>* cnt = 0;
-            // uint16_t(2)  accepted counter + avg (hour)
-            i16val = htons(smeCounter->accepted);
-            memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
-            cnt = acceptedCounters.Exists(sme) ? acceptedCounters.Get(sme):0;
-            i16val = (cnt) ? htons((uint16_t)cnt->Avg()):0;
-            memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
-            // uint16_t(2)  rejected counter + avg (hour)
-            i16val = htons(smeCounter->rejected);
-            memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
-            cnt = rejectedCounters.Exists(sme) ? rejectedCounters.Get(sme):0;
-            i16val = (cnt) ? htons((uint16_t)cnt->Avg()):0;
-            memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
-            // uint16_t(2)  delivered counter + avg (hour)
-            i16val = htons(smeCounter->delivered);
-            memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
-            cnt = deliveredCounters.Exists(sme) ? deliveredCounters.Get(sme):0;
-            i16val = (cnt) ? htons((uint16_t)cnt->Avg()):0;
-            memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
-            // uint16_t(2)  rescheduled counter + avg (hour)
-            i16val = htons(smeCounter->rescheduled);
-            memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
-            cnt = rescheduledCounters.Exists(sme) ? rescheduledCounters.Get(sme):0;
-            i16val = (cnt) ? htons((uint16_t)cnt->Avg()):0;
-            memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
-            // uint16_t(2)  tempError counter + avg (hour)
-            i16val = htons(smeCounter->tempError);
-            memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
-            cnt = tempErrorCounters.Exists(sme) ? tempErrorCounters.Get(sme):0;
-            i16val = (cnt) ? htons((uint16_t)cnt->Avg()):0;
-            memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
-            // uint16_t(2)  permError counter + avg (hour)
-            i16val = htons(smeCounter->permError);
-            memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
-            cnt = permErrorCounters.Exists(sme) ? permErrorCounters.Get(sme):0;
-            i16val = (cnt) ? htons((uint16_t)cnt->Avg()):0;
-            memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
-            smeCounter->clear();
+            for (int i=0; i<SME_PERF_CNT_COUNT; i++)
+            {
+                // char[MAX_SMESYSID_TYPE_LENGTH+1], null terminated smeId
+                if (sme) strncpy((char *)packet, sme, smsc::sms::MAX_SMESYSID_TYPE_LENGTH);
+                packet += smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1;
+                // uint16_t(2)  xxx counter + avg (hour)
+                *((uint16_t*)packet) = (smeCounter) ? htons(smeCounter->counters[i]):0; packet += sizeof(uint16_t);
+                TimeSlotCounter<int>* cnt = (smeCounter && smeCounter->slots[i]) ? smeCounter->slots[i]:0;
+                *((uint16_t*)packet) = (cnt) ? htons((uint16_t)cnt->Avg()):0; packet += sizeof(uint16_t);
+            }
+            if (smeCounter) smeCounter->clear();
         }   
 
-        // uint16_t     Error(s) count
-        i16val = htons((uint16_t)errCounters.Count());
-        memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
+        *((uint16_t*)packet) = htons((uint16_t)errCounters.Count()); packet += sizeof(uint16_t);
 
-        IntHash<uint16_t>::Iterator it = errCounters.First();
-        int errcode = 0; uint16_t* counter = 0;
-        while (it.Next(errcode, counter))
+        IntHash<SmeErrorCounter*>::Iterator it = errCounters.First();
+        int errcode = 0; SmeErrorCounter* errCounter = 0;
+        while (it.Next(errcode, errCounter))
         {
-            if (!counter) continue;
             // uint32_t     error code
-            i32val = htonl((uint32_t)errcode);
-            memcpy(packet, &i32val, sizeof(i32val)); packet += sizeof(i32val);
-            //uint16_t(2)  error counter + avg (hour)
-            i16val = htons(*counter);
-            memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
-            TimeSlotCounter<int>* cnt = errorCounters.Exist(errcode) ? errorCounters.Get(errcode):0;
-            i16val = (cnt) ? htons((uint16_t)cnt->Avg()):0;
-            memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
-            *counter = 0;
+            *((uint32_t*)packet) = htonl((uint32_t)errcode); packet += sizeof(uint32_t);
+            // uint16_t(2)  error counter + avg (hour)
+            *((uint16_t*)packet) = (errCounter) ? htons(errCounter->errors):0; packet += sizeof(uint16_t);
+            TimeSlotCounter<int>* cnt = (errCounter && errCounter->slot) ? errCounter->slot:0;
+            *((uint16_t*)packet) = (cnt) ? htons((uint16_t)cnt->Avg()):0; packet += sizeof(uint16_t);
+            if (errCounter) errCounter->errors = 0;
         }
         
         return data;
