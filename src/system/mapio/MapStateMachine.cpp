@@ -1794,8 +1794,8 @@ static USHORT_T Et96MapVxForwardSmMTConf_Impl (
           dialog->memoryExceeded = true;
           throw MAPDIALOG_TEMP_ERROR("MAP::memory exceeded",MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
         }
-        else if ( errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_PROTOCOL_ERROR
-               || errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_MO_SERVICE_CENTER_CONGESTION )
+        else if ( errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_SM_DELIVERY_FAILURE_REASON_MT_T::ET96MAP_PROTOCOL_ERROR
+          || errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason == ET96MAP_SM_DELIVERY_FAILURE_REASON_MT_T::ET96MAP_MO_SERVICE_CENTER_CONGESTION )
         {
           throw MAPDIALOG_TEMP_ERROR(FormatText("MAP::Delivery failure reason 0x%x",errorForwardSMmt_sp->u.smDeliveryFailureReason_s.reason),MAP_ERRORS_BASE+errorForwardSMmt_sp->errorCode);
         }
