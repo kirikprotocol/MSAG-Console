@@ -35,6 +35,7 @@ void Logger::Init(const std::string &configFileName)
 	if (!isInitialized)
 	{
 		try {
+			log4cpp::Category::getRoot().removeAllAppenders();
 			log4cpp::SimpleConfigurator::configure(configFileName);
 		} catch (...) {
 			log4cpp::Appender* appender = new log4cpp::FileAppender("FileAppender", "smsc.log");
