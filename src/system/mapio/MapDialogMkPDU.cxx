@@ -214,7 +214,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
   }
   if(!isrcpt)
   {
-    if ( encoding == MAP_OCTET7BIT_ENCODING  || encoding == MAP_LATIN1_ENCODING ){
+    /*if ( encoding == MAP_OCTET7BIT_ENCODING  || encoding == MAP_LATIN1_ENCODING ){
       unsigned text_len;
       const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
       unsigned elen;
@@ -222,7 +222,8 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
       bytes = ConvertText27bit(text,text_len,pdu_ptr+1,&elen);
       *pdu_ptr++ = elen;
       pdu_ptr += bytes;
-    }else if ( encoding == MAP_SMSC7BIT_ENCODING  ){ // 7bit
+    }else*/
+    if ( encoding == MAP_SMSC7BIT_ENCODING || encoding == MAP_OCTET7BIT_ENCODING  || encoding == MAP_LATIN1_ENCODING ){ // 7bit
         unsigned text_len;
         const unsigned char* text = (const unsigned char*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
         if ( header->uu.s.udhi ){
@@ -234,18 +235,29 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
           unsigned symbols = text_len-udh_len-1;
           __trace2__("MAP::mkDeliverPDU: text symbols 0x%x",symbols);
           __trace2__("MAP::mkDeliverPDU: text bit offset 0x%x",x-(udh_len+1)*8);
-          unsigned _7bit_text_len = ConvertSMSC7bit27bit(
-            text+1+udh_len,
-            symbols,
-            pdu_ptr+udh_len+1+1,
-            x-(udh_len+1)*8);
+          unsigned _7bit_text_len;
+          if (encoding == MAP_SMSC7BIT_ENCODING ) 
+           _7bit_text_len = ConvertSMSC7bit27bit(
+              text+1+udh_len,
+              symbols,
+              pdu_ptr+udh_len+1+1,
+              x-(udh_len+1)*8);
+          else
+            _7bit_text_len = ConvertText27bit(//text,text_len,pdu_ptr+1,&elen);
+              text+1+udh_len,
+              symbols,
+              pdu_ptr+udh_len+1+1,
+              x-(udh_len+1)*8);
           *pdu_ptr++ = x/7+symbols;
           __trace2__("MAP::mkDeliverPDU: data length(symbols) 0x%x",x/7+symbols);
           pdu_ptr+= udh_len+_7bit_text_len+1;
           __trace2__("MAP::mkDeliverPDU: data length(octets) 0x%x",udh_len+_7bit_text_len);
         }else{
           *pdu_ptr++ = text_len;
-          pdu_ptr += ConvertSMSC7bit27bit(text,text_len,pdu_ptr);
+          if (encoding == MAP_SMSC7BIT_ENCODING ) 
+            pdu_ptr += ConvertSMSC7bit27bit(text,text_len,pdu_ptr);
+          else
+            pdu_ptr += ConvertText27bit(text,text_len,pdu_ptr);
         }
     }else{ // UCS2 || 8BIT
       unsigned text_len;
