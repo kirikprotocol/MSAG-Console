@@ -81,7 +81,7 @@ public:
             __trace2__("CANCELAGENT: sending command for %lld",ids[i]);
             eventQueue.enqueue(ids[i],SmscCommand::makeCancel(ids[i],oa,da));
           }
-          ids.Clean();
+          ids.Empty();
         }
 
       }catch(...)
