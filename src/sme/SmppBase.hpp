@@ -526,6 +526,10 @@ protected:
             lockMutex.Unlock();
             listener->handleEvent(pdu);
           }
+        }else
+        {
+          disposePdu(pdu);
+          lockMutex.Unlock();
         }
       }break;
       case SUBMIT_SM_RESP:
@@ -552,6 +556,7 @@ protected:
           }
         }else
         {
+          lockMutex.Unlock();
           disposePdu(pdu);
         }
       }break;
