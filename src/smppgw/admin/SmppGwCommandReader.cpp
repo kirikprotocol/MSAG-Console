@@ -11,6 +11,7 @@
 #include "CommandUpdateSmeInfo.h"
 #include "CommandAddSme.h"
 #include "CommandDeleteSme.h"
+#include "CommandTraceRoute.h"
 
 namespace smsc {
 namespace smppgw {
@@ -35,6 +36,8 @@ int SmppGwCommandReader::getCommandIdByName(const char * const command_name)
     return (Command::Id)CommandIds::addSme;
   if (strcmp("deleteSme", command_name) == 0)
     return (Command::Id)CommandIds::deleteSme;
+  if (strcmp("traceRoute", command_name) == 0)
+    return (Command::Id)CommandIds::traceRoute;
   
   return (Command::Id)CommandIds::unknown;
 }
@@ -47,6 +50,7 @@ Command * SmppGwCommandReader::createCommand(int id, const DOMDocument *data)
     case CommandIds::updateSmeInfo: return new CommandUpdateSmeInfo(data);
     case CommandIds::addSme: return new CommandAddSme(data);
     case CommandIds::deleteSme: return new CommandDeleteSme(data);
+    case CommandIds::traceRoute: return new CommandTraceRoute(data);
     default: 
       smsc_log_warn(logger, "Unknown command id \"%i\"", id);
       throw AdminException("Unknown command");

@@ -20,6 +20,7 @@
 #include "CommandUpdateSmeInfo.h"
 #include "CommandAddSme.h"
 #include "CommandDeleteSme.h"
+#include "CommandTraceRoute.h"
 
 namespace smsc {
 namespace smppgw {
@@ -52,7 +53,8 @@ protected:
   Response * applyRoutes();
   Response * applyProviders();
   Response * applySmscs();
-  
+  Response * traceRoute(CommandTraceRoute*);
+
   Response * updateSmeInfo(CommandUpdateSmeInfo*);
   Response * addSme(CommandAddSme*);
   Response * deleteSme(CommandDeleteSme*);

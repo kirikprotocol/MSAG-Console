@@ -165,6 +165,8 @@ Response * SmppGwCommandDispatcher::handle(const Command * const command) throw 
       return addSme((CommandAddSme*)command);
     case CommandIds::deleteSme:
       return deleteSme((CommandDeleteSme*)command);
+    case CommandIds::traceRoute:
+      return traceRoute((CommandTraceRoute*)command);
     default:
       return new Response(Response::Error, "Unknown command");
     }
@@ -211,6 +213,24 @@ Response * SmppGwCommandDispatcher::deleteSme(CommandDeleteSme* command)
     return new Response(Response::Error, "Unknown exception");
   }
 }
+
+Response * SmppGwCommandDispatcher::traceRoute(CommandTraceRoute* command)
+{
+  smsc::admin::service::Variant data;
+
+  try
+  {
+    data = command->GetTraceResult(runner->getApp());
+    return new Response(Response::Ok, data);
+  } catch (AdminException &e) {
+    return new Response(Response::Error, e.what());
+  } catch (const char * const e) {
+    return new Response(Response::Error, e);
+  } catch (...) {
+    return new Response(Response::Error, "Unknown exception");
+  }
+}
+
 
 Response * SmppGwCommandDispatcher::updateSmeInfo(CommandUpdateSmeInfo* command)
 {
