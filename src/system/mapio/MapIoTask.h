@@ -242,7 +242,7 @@ public:
     return dlg;
   }
   
-  MapDialog* createDialogImsiReq(ET96MAP_LOCAL_SSN_T lssn,unsigned version=2,MapDialog* associate){
+  MapDialog* createDialogImsiReq(ET96MAP_LOCAL_SSN_T lssn,MapDialog* associate){
     MutexGuard g(sync);
     ET96MAP_DIALOGUE_ID_T map_dialog = (ET96MAP_DIALOGUE_ID_T)dialogId_pool.front();
     MapDialog* dlg = new MapDialog(map_dialog,lssn,version);
