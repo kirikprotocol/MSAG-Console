@@ -430,7 +430,7 @@ int main(void)
         ConfigView ssConfig(manager, "WSme.SMSC");
         WSmeConfig cfg(&ssConfig);
         
-        messageLifePeriod = cpConfig.getInt("AdManager.History.lifePeriod", 
+        messageLifePeriod = cpConfig.getInt("AdManager.History.messageLife", 
                                             "Message life period wasn't defined !");
         
         while (!bWSmeIsStopped)

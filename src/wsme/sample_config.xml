@@ -43,9 +43,9 @@
 	
 	<section name="AdManager">
 	    <section name="History">
-		<param name="keepPeriod" type="int">36000</param>
-		<param name="lifePeriod" type="int">3600</param>
-		<param name="cleanPeriod" type="int">3600</param>
+		<param name="age" type="int">1</param> <!-- in days -->
+		<param name="cleanup" type="int">3600</param> <!-- in seconds -->
+		<param name="messageLife" type="int">3600</param> <!-- in seconds -->
 	    </section>
 	    <section name="Repository">
 	    </section>

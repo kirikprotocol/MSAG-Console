@@ -414,10 +414,10 @@ AdHistory::AdHistory(DataSource& _ds, ConfigView* config, AdIdManager& idman)
             ds(_ds), idManager(idman), bStarted(false)
 
 {
-    keepPeriod = config->getInt("keepPeriod");
-    lifePeriod = config->getInt("lifePeriod");
-    cleanPeriod = config->getInt("cleanPeriod");
-    
+    historyAge    = config->getInt("age")*3600*24; // in days
+    cleanupPeriod = config->getInt("cleanup");     // in seconds
+    messageLife   = config->getInt("messageLife"); // in seconds
+
     Start();
 }
 AdHistory::~AdHistory()
@@ -451,7 +451,7 @@ int AdHistory::Execute()
 {
     while (!exit.isSignaled())
     {
-        job.Wait(cleanPeriod);
+        job.Wait(cleanupPeriod*1000);
         if (exit.isSignaled()) break;
 
         try 
@@ -486,7 +486,7 @@ void AdHistory::cleanup()
         if (!connection->isAvailable()) connection->connect();
 
         statement = connection->createStatement(SQL_DELETE_HISTORY_INFO);
-        statement->setDateTime(1, time(NULL)-keepPeriod);
+        statement->setDateTime(1, time(NULL)-historyAge);
         statement->executeUpdate();
         connection->commit();
         
@@ -562,7 +562,7 @@ bool AdHistory::getId(const std::string msisdn, int& id)
             uint8_t  st = rs->getUint8(2);
             time_t interval = time(NULL) - rs->getDateTime(3);
             
-            if (st == 0 && (interval <= lifePeriod)) {
+            if (st == 0 && (interval <= messageLife)) {
                 __trace2__("Life period is not expired, interval=%d !", 
                            interval);
                 result = false;

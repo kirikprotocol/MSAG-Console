@@ -149,7 +149,7 @@ namespace smsc { namespace wsme
         
         AdIdManager&        idManager;
 
-        int     keepPeriod, lifePeriod, cleanPeriod;
+        time_t  historyAge, messageLife, cleanupPeriod;
 
         Event   job, exit, exited;
         Mutex   startLock;
