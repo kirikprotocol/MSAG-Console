@@ -268,16 +268,16 @@ protected:
 
 class SmppTransmitter{
 public:
-  virtual SmppHeader* sendPdu(SmppHeader* pdu)=0;
-  virtual void sendGenericNack(PduGenericNack& pdu)=0;
-  virtual void sendDeliverySmResp(PduDeliverySmResp& pdu)=0;
-  virtual void sendDataSmResp(PduDataSmResp& pdu)=0;
-  virtual PduSubmitSmResp* submit(PduSubmitSm& pdu)=0;
-  virtual PduMultiSmResp* submitm(PduMultiSm& pdu)=0;
-  virtual PduDataSmResp* data(PduDataSm& pdu)=0;
-  virtual PduQuerySmResp* query(PduQuerySm& pdu)=0;
-  virtual PduCancelSmResp* cancel(PduCancelSm& pdu)=0;
-  virtual PduReplaceSmResp* replace(PduReplaceSm& pdu)=0;
+  virtual SmppHeader* sendPdu(SmppHeader* pdu)throw(SmppInvalidBindState)=0;
+  virtual void sendGenericNack(PduGenericNack& pdu)throw(SmppInvalidBindState)=0;
+  virtual void sendDeliverySmResp(PduDeliverySmResp& pdu)throw(SmppInvalidBindState)=0;
+  virtual void sendDataSmResp(PduDataSmResp& pdu)throw(SmppInvalidBindState)=0;
+  virtual PduSubmitSmResp* submit(PduSubmitSm& pdu)throw(SmppInvalidBindState)=0;
+  virtual PduMultiSmResp* submitm(PduMultiSm& pdu)throw(SmppInvalidBindState)=0;
+  virtual PduDataSmResp* data(PduDataSm& pdu)throw(SmppInvalidBindState)=0;
+  virtual PduQuerySmResp* query(PduQuerySm& pdu)throw(SmppInvalidBindState)=0;
+  virtual PduCancelSmResp* cancel(PduCancelSm& pdu)throw(SmppInvalidBindState)=0;
+  virtual PduReplaceSmResp* replace(PduReplaceSm& pdu)throw(SmppInvalidBindState)=0;
 };
 
 class SmppBaseReceiver: public SmppPduEventListener{
