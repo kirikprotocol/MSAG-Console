@@ -289,7 +289,9 @@ void DistrListProcess::SendSubmitResp(ListTask* task) // удаляет из списка и мап
   }
   LISTTYPE::iterator it = find(task_sheduler.begin(),task_sheduler.end(),task);
   if ( it != task_sheduler.end() ) { task_sheduler.erase(it);  }
-  putIncomingCommand(cmd);
+  //putIncomingCommand(cmd);
+  SmeProxy* srcproxy =  cmd.getProxy();
+  srcproxy->putCommand(cmd);
 }
 
 void DistrListProcess::CheckTimeouts()
