@@ -13,6 +13,8 @@
 #include <typeinfo>
 #include "gwsme.hpp"
 #include "smppgw/billing/bill.hpp"
+#include "smppgw/billing/rules/BillingRules.hpp"
+#include "util/findConfigFile.h"
 
 namespace smsc{
 namespace system{
@@ -193,13 +195,6 @@ void Smsc::init(const SmscConfigs& cfg)
   //smsc::util::config::Manager::init("config.xml");
   //cfgman=&cfgman->getInstance();
 
-#ifdef SNMP
-  {
-    snmpAgent = new SnmpAgent(this);
-    tp2.startTask(snmpAgent);
-    snmpAgent->statusChange(SnmpAgent::INIT);
-  }
-#endif
 
   /*
     register SME's
@@ -475,6 +470,10 @@ void Smsc::init(const SmscConfigs& cfg)
     }
   }
 
+  {
+    billing::rules::BillingRulesManager::Init(findConfigFile("billing-rules.xml"));
+  }
+
   /*
   try{
     scheduler->setRescheduleLimit(cfg.cfgman->getInt("core.reschedule_limit"));
@@ -530,20 +529,10 @@ void Smsc::run()
   }
   // start on thread pool 2 to shutdown it after state machines
 
-#ifdef SNMP
-    __trace__("Smsc::changing SNMP state to OPER");
-  if(snmpAgent) snmpAgent->statusChange(SnmpAgent::OPER);
-    __trace__("Smsc::SNMP state to OPER changed");
-#endif
 
   // некоторые действия до основного цикла
   mainLoop();
 
-#ifdef SNMP
-    __trace__("Smsc::changing SNMP state to SHUT");
-  if(snmpAgent) snmpAgent->statusChange(SnmpAgent::SHUT);
-    __trace__("Smsc::SNMP state to SHUT changed");
-#endif
 
   // и после него
   //shutdown();
