@@ -32,9 +32,9 @@ set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 {
 	__require__(pduData && pduData->pdu && pduData->pdu->get_commandId() == SUBMIT_SM);
 	PduSubmitSm* pdu = reinterpret_cast<PduSubmitSm*>(pduData->pdu);
-	time_t waitTime = SmppUtil::string2time(
+	time_t waitTime = SmppUtil::getWaitTime(
 		pdu->get_message().get_scheduleDeliveryTime(), pduData->submitTime);
-	time_t validTime = SmppUtil::string2time(
+	time_t validTime = SmppUtil::getValidTime(
 		pdu->get_message().get_validityPeriod(), pduData->submitTime);
 	__require__(pduData->validTime == validTime);
 	//__require__(pduData->waitTime == waitTime);
@@ -220,7 +220,7 @@ void SmppPduChecker::processResp(PduData* pduData,
 		case ESME_ROK: //No Error
 			__tc__("processResp.checkCmdStatusOk");
 			{
-				vector<int> chkRes; //(pduRes.begin(), pduRes.end());
+				vector<int> chkRes(pduRes.begin(), pduRes.end());
 				__tc_fail2__(chkRes, 10);
 			}
 			//если данная pdu замещает предыдущую pdu
