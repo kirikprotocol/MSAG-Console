@@ -1054,6 +1054,7 @@ StateType StateMachine::submit(Tuple& t)
     if(!(profile.codepage&DataCoding::UCS2) && (ddc&DataCoding::UCS2))
     {
       ddc=profile.codepage;
+      __trace2__("divert - downgrade dstdc to %d",ddc);
     }
     divertFlags|=(ddc)<<DF_DCSHIFT;
 
@@ -2410,7 +2411,7 @@ StateType StateMachine::forward(Tuple& t)
       int df=sms.getIntProperty(Tag::SMSC_DIVERTFLAGS);
       sms.setIntProperty(Tag::SMSC_UDH_CONCAT,df&DF_UDHCONCAT);
       int olddc=sms.getIntProperty(Tag::SMSC_DSTCODEPAGE);
-      int newdc=(df<<DF_DCSHIFT)&0xFF;
+      int newdc=(df>>DF_DCSHIFT)&0xFF;
       sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,newdc);
       if(olddc!=newdc && sms.hasBinProperty(Tag::SMSC_CONCATINFO) && !sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
       {
@@ -2973,7 +2974,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       smsc_log_debug(smsLog,"deliver to divert address");
       int df=sms.getIntProperty(Tag::SMSC_DIVERTFLAGS);
       sms.setIntProperty(Tag::SMSC_UDH_CONCAT,df&DF_UDHCONCAT);
-      int dc=(df<<DF_DCSHIFT)&0xFF;
+      int dc=(df>>DF_DCSHIFT)&0xFF;
       sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,dc);
       sms.setIntProperty(Tag::SMSC_DIVERTFLAGS,df|DF_UNCOND);
 
