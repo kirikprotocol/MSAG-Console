@@ -49,6 +49,7 @@
     <jar jarfile="${java_lib}/${esme_name}.jar">
       <fileset dir="${java_out}"/>
     </jar>
+    <mkdir dir="${exploded}/jsp"/>
     <copy todir="${exploded}/jsp" preservelastmodified="yes">
       <fileset dir="${basedir}/jsp" includes="**/*.jsp **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc"/>
     </copy>
