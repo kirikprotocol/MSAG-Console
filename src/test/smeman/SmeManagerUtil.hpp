@@ -21,16 +21,19 @@ class CorrectSmeProxy : public SmeProxy
 {
 	SmeProxyPriority priority;
 	bool input;
-	void* monitor; 
+	void* monitor;
 public:
 	CorrectSmeProxy()
 		: priority(rand2(SmeProxyPriorityMin, SmeProxyPriorityMax)),
 		input(rand0(1)), monitor(0) {}
 	virtual void close() {}
-	virtual void putCommand(const SmscCommand& command) {}
+	virtual void putCommand(const SmscCommand& command)
+	{
+		input = true;
+	}
 	virtual SmscCommand getCommand()
 	{
-		input = rand0(1);
+		input = false;
 		return SmscCommand();
 	}
 	virtual SmeProxyState getState() const { return VALID; }
