@@ -64,14 +64,14 @@ vector<int> ReschedulePduMonitor::checkSchedule(time_t recvTime) const
 	__cfg_int__(timeCheckAccuracy);
 	if (recvTime < startTime)
 	{
-		__trace2__("check schedule: %s, recvTime = %ld is less startTime",
-			str().c_str(), recvTime);
+		__trace2__("check schedule: recvTime = %ld is less startTime, monitor = %s",
+			recvTime, str().c_str());
 		res.push_back(1);
 	}
 	else if (recvTime > validTime + timeCheckAccuracy)
 	{
-		__trace2__("check schedule: %s, recvTime = %ld is greater validTime",
-			str().c_str(), recvTime);
+		__trace2__("check schedule: recvTime = %ld is greater validTime, monitor = %s",
+			recvTime, str().c_str());
 		res.push_back(2);
 	}
 	//else if (lastTime && (lastTime < startTime || lastTime > validTime))
@@ -86,8 +86,8 @@ vector<int> ReschedulePduMonitor::checkSchedule(time_t recvTime) const
 			__require__(lastTime >= startTime && lastTime <= validTime + timeCheckAccuracy);
 			eval(lastTime, lastAttempt, lastDiff, lastNextTime, lastCalcTime);
 		}
-		__trace2__("check schedule: %s, recvTime = %ld, attempt = %d, calcTime = %ld, diff = %ld, lastAttempt = %d, lastCalcTime = %ld, lastDiff = %ld",
-			str().c_str(), recvTime, attempt, calcTime, diff, lastAttempt, lastCalcTime, lastDiff);
+		__trace2__("check schedule: recvTime = %ld, attempt = %d, calcTime = %ld, diff = %ld, lastAttempt = %d, lastCalcTime = %ld, lastDiff = %ld, monitor = %s",
+			recvTime, attempt, calcTime, diff, lastAttempt, lastCalcTime, lastDiff, str().c_str());
 		if (attempt - lastAttempt != 1)
 		{
 			res.push_back(3);
@@ -157,8 +157,8 @@ vector<int> ReschedulePduMonitor::update(time_t recvTime, RespPduFlag respFlag)
 		default:
 			__unreachable__("Unknown flag");
 	}
-	__trace2__("update monitor: %s, recvTime = %ld, respFlag = %d, flag: %d -> %d, attempt = %d, calcTime = %ld, diff = %ld",
-		str().c_str(), recvTime, respFlag, prevFlag, flag, attempt, calcTime, diff);
+	__trace2__("update monitor: recvTime = %ld, respFlag = %d, flag: %d -> %d, attempt = %d, calcTime = %ld, diff = %ld, monitor = %s",
+		recvTime, respFlag, prevFlag, flag, attempt, calcTime, diff, str().c_str());
 	return res;
 }
 
@@ -243,7 +243,7 @@ void PduData::unref()
 string PduData::str() const
 {
 	ostringstream s;
-	s << "pduData = " << (void*) this;
+	s << "this = " << (void*) this;
 	s << ", pdu = " << (void*) pdu;
 	s << ", msgRef = " << msgRef;
 	s << ", smsId = " << smsId;
@@ -357,9 +357,9 @@ string PduMonitor::str() const
 		default:
 			__unreachable__("Invalid pdu flag");
 	}
-	s << ", pduData = " << (void*) pduData;
 	s << ", valid = " << (pduData->valid ? "true" : "false");
 	s << ", checkTime = " << checkTime << ", validTime = " << validTime;
+	s << ", pduData = {" << pduData->str() << "}";
 	return s.str();
 }
 
