@@ -20,10 +20,7 @@ const int MAX_UNRESPONDED_LOW=2000;
 int stopped=0;
 
 int rcnt=0;
-
-int sent_unresp=0;
-
-EventMonitor em;
+int scnt=0;
 
 class MyListener:public SmppPduEventListener{
 public:
@@ -37,15 +34,12 @@ public:
       resp.set_messageId("");
       resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
       trans->sendDeliverySmResp(resp);
+      scnt++;
     }else
     if(pdu->get_commandId()==SmppCommandSet::SUBMIT_SM_RESP)
     {
       //printf("\nReceived async submit sm resp:%d\n",pdu->get_commandStatus());
       rcnt++;
-      em.Lock();
-      sent_unresp--;
-      if(sent_unresp<MAX_UNRESPONDED_LOW)em.notify();
-      em.Unlock();
     }
     disposePdu(pdu);
   }
@@ -65,9 +59,9 @@ protected:
 
 int main(int argc,char* argv[])
 {
-  if(argc!=6)
+  if(argc!=6 && argc!=7 && argc!=8)
   {
-    printf("usage: %s systemid host[:port] sourceaddr addrlistfile message\n",argv[0]);
+    printf("usage: %s systemid host[:port] sourceaddr addrlistfile message [num=1 [delay=10]]\n",argv[0]);
     return -1;
   }
   SmeConfig cfg;
@@ -85,7 +79,7 @@ int main(int argc,char* argv[])
   cfg.port=port;
   cfg.sid=argv[1];
   cfg.timeOut=10;
-  cfg.password="";
+  cfg.password=cfg.sid;
   MyListener lst;
   Array<string> addrs;
   FILE *f=fopen(argv[4],"rt");
@@ -102,6 +96,17 @@ int main(int argc,char* argv[])
   }
 
   string msg=argv[5];
+
+  int n=1;
+  if(argc==7)
+  {
+    n=atoi(argv[6]);
+  }
+  int delay=10;
+  if(argc==8)
+  {
+    delay=atoi(argv[7]);
+  }
 
   SmppSession ss(cfg,&lst);
   try{
@@ -151,17 +156,14 @@ int main(int argc,char* argv[])
         }*/
         cnt++;
       }
-      usleep(1000);
+      usleep(delay*1000);
       if((cnt%500)==0 || time(NULL)-lasttime>5)
       {
-        printf("%d/%d\r",rcnt,cnt);
+        printf("%d/%d/%d                       \r",rcnt,scnt,cnt);
         fflush(stdout);
         lasttime=time(NULL);
       }
-      em.Lock();
-      sent_unresp+=addrs.Count();
-      if(sent_unresp>MAX_UNRESPONDED_HIGH)em.wait();
-      em.Unlock();
+
     }
   }
   catch(std::exception& e)

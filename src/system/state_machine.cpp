@@ -524,7 +524,7 @@ StateType StateMachine::submit(Tuple& t)
     {
       __trace__("SUBMIT_SM: failed to change state to enroute");
     }
-    sendNotifyReport(*sms,t.msgId,"destination unavialable");
+    sendNotifyReport(*sms,t.msgId,"destination unavailable");
     return ENROUTE_STATE;
   }
   __trace2__("DELIVER: seq:%d",dialogId2);
@@ -663,6 +663,17 @@ StateType StateMachine::forward(Tuple& t)
   {
     return sms.getState();
   }
+  if(sms.hasIntProperty(Tag::SMSC_USSD_OP))
+  {
+    Descriptor d;
+    try{
+      store->changeSmsStateToUndeliverable(t.msgId,d,0);
+    }catch(...)
+    {
+      __trace__("FORWARD: Failed to change state of USSD request to undeliverable");
+    }
+    return UNDELIVERABLE_STATE;
+  }
   smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
 
   SmeProxy *dest_proxy=0;
@@ -673,7 +684,7 @@ StateType StateMachine::forward(Tuple& t)
   {
     __warning__("FORWARD: No route");
     try{
-      sendNotifyReport(sms,t.msgId,"destination unavialable");
+      sendNotifyReport(sms,t.msgId,"destination unavailable");
     }catch(...)
     {
       __trace__("FORWARD: failed to send intermediate notification");
@@ -694,7 +705,7 @@ StateType StateMachine::forward(Tuple& t)
   {
     __trace__("FORWARD: no proxy");
     try{
-      sendNotifyReport(sms,t.msgId,"destination unavialable");
+      sendNotifyReport(sms,t.msgId,"destination unavailable");
     }catch(...)
     {
       __trace__("FORWARD: failed to send intermediate notification");
@@ -724,7 +735,7 @@ StateType StateMachine::forward(Tuple& t)
     {
       __warning__("FORWARD: can't create task");
       try{
-        sendNotifyReport(sms,t.msgId,"destination unavialable");
+        sendNotifyReport(sms,t.msgId,"destination unavailable");
       }catch(...)
       {
         __trace__("FORWARD: failed to send intermediate notification");
@@ -855,7 +866,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
         sendFailureReport(sms,t.msgId,UNDELIVERABLE_STATE,"permanent error");
         smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
-        return ERROR_STATE;
+        return UNDELIVERABLE_STATE;
       }
     }
   }
@@ -876,47 +887,49 @@ StateType StateMachine::deliveryResp(Tuple& t)
   smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms);
   try{
     //smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
-    if(//p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
-       sms.getDeliveryReport() ||
-       (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==1  ||
-       sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
+    if(!sms.hasIntProperty(Tag::SMSC_USSD_OP))
     {
-      SMS rpt;
-      rpt.setOriginatingAddress(scAddress);
-      char msc[]="123";
-      char imsi[]="123";
-      rpt.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
-      rpt.setValidTime(0);
-      rpt.setDeliveryReport(0);
-      rpt.setArchivationRequested(false);
-      rpt.setIntProperty(Tag::SMPP_ESM_CLASS,
-        sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST) ||
-        (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==1?4:0);
-      rpt.setDestinationAddress(sms.getOriginatingAddress());
-      rpt.setMessageReference(sms.getMessageReference());
-      rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
-        sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
-      rpt.setIntProperty(Tag::SMPP_MSG_STATE,DELIVERED_STATE);
-      char addr[64];
-      sms.getDestinationAddress().getText(addr,sizeof(addr));
-      rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
-      rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
-      char msgid[60];
-      sprintf(msgid,"%lld",t.msgId);
-      rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
-      Array<SMS*> arr;
-      string out;
-      sms.getDestinationAddress().getText(addr,sizeof(addr));
-      formatDeliver(addr,time(NULL),out);
-      rpt.getDestinationAddress().getText(addr,sizeof(addr));
-      __trace2__("RECEIPT: sending receipt to %s:%s",addr,out.c_str());
-      smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
-      splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
-      for(int i=0;i<arr.Count();i++)
+      if(//p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
+         sms.getDeliveryReport() ||
+         (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==1  ||
+         sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
       {
-        smsc->submitSms(arr[i]);
-      };
-
+        SMS rpt;
+        rpt.setOriginatingAddress(scAddress);
+        char msc[]="123";
+        char imsi[]="123";
+        rpt.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+        rpt.setValidTime(0);
+        rpt.setDeliveryReport(0);
+        rpt.setArchivationRequested(false);
+        rpt.setIntProperty(Tag::SMPP_ESM_CLASS,
+          sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST) ||
+          (sms.getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&3)==1?4:0);
+        rpt.setDestinationAddress(sms.getOriginatingAddress());
+        rpt.setMessageReference(sms.getMessageReference());
+        rpt.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
+          sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+        rpt.setIntProperty(Tag::SMPP_MSG_STATE,DELIVERED_STATE);
+        char addr[64];
+        sms.getDestinationAddress().getText(addr,sizeof(addr));
+        rpt.setStrProperty(Tag::SMSC_RECIPIENTADDRESS,addr);
+        rpt.setIntProperty(Tag::SMSC_DISCHARGE_TIME,time(NULL));
+        char msgid[60];
+        sprintf(msgid,"%lld",t.msgId);
+        rpt.setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,msgid);
+        Array<SMS*> arr;
+        string out;
+        sms.getDestinationAddress().getText(addr,sizeof(addr));
+        formatDeliver(addr,time(NULL),out);
+        rpt.getDestinationAddress().getText(addr,sizeof(addr));
+        __trace2__("RECEIPT: sending receipt to %s:%s",addr,out.c_str());
+        smsc::profiler::Profile profile=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
+        splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
+        for(int i=0;i<arr.Count();i++)
+        {
+          smsc->submitSms(arr[i]);
+        };
+      }
     }
   }catch(std::exception& e)
   {
@@ -1184,7 +1197,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
         sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST)
       )
     )return;
-
+  if(sms.hasIntProperty(Tag::SMSC_USSD_OP))return;
   SMS rpt;
   rpt.setOriginatingAddress(scAddress);
   char msc[]="123";
@@ -1234,6 +1247,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
     )return;
   __trace2__("sendNotifyReport: attemptsCount=%d",sms.getAttemptsCount());
   if(sms.getAttemptsCount()!=0)return;
+  if(sms.hasIntProperty(Tag::SMSC_USSD_OP))return;
   SMS rpt;
   rpt.setOriginatingAddress(scAddress);
   char msc[]="123";
