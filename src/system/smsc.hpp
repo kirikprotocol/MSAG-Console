@@ -488,7 +488,7 @@ protected:
   string ussdCenterAddr;
   int    ussdSSN;
   int    busyMTDelay;
-  int    lockedByMoDelay;
+  int    lockedByMODelay;
   int    MOLockTimeout;
   time_t startTime;
 

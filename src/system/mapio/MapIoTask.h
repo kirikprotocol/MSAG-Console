@@ -395,8 +395,6 @@ public:
   static int  getLockedByMoDelay(){return lockedByMoDelay;}
   static void setMOLockTimeout(int val){MOLockTimeout=val;}
   static int  getMOLockTimeout(){return MOLockTimeout;}
-  static void SetUSSDAdress(const string& scAddr) { USSD_ADRESS_VALUE = scAddr; }
-  static ET96MAP_LOCAL_SSN_T GetUSSDSSN() { return ussdSSN; }
 
   static void dropInstance()
   {
@@ -675,7 +673,7 @@ public:
     MapDialogContainer::SetUSSDSSN(ussdSSN);
     MapDialogContainer::setProxy( &proxy );
     MapDialogContainer::setBusyMTDelay(busyMTDelay);
-    MapDialogContainer::setLockedByMoDelay(lockedByMoDelay);
+    MapDialogContainer::setLockedByMoDelay(lockedByMODelay);
     MapDialogContainer::setMOLockTimeout(MOLockTimeout);
   }
   ~MapIoTask() {

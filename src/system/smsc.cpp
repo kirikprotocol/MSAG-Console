@@ -665,7 +665,7 @@ void Smsc::init(const SmscConfigs& cfg)
     busyMTDelay = 20;
   }
   try{
-    lockedByMoDelay=cfg.cfgman->getInt("map.lockedByMODelay");;
+    lockedByMODelay=cfg.cfgman->getInt("map.lockedByMODelay");;
   } catch (...) {
     __warning__("map.lockedByMODelay not found, using default(20)");
     lockedByMODelay = 20;
@@ -779,7 +779,7 @@ void Smsc::run()
     accstarted.Wait();
     __trace__("SMPPIO started");
     Event mapiostarted;
-    MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,busyMTDelay,lockedByMoDelay,MOLockTimeout);
+    MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,busyMTDelay,lockedByMODelay,MOLockTimeout);
     tp.startTask(mapio);
     mapiostarted.Wait();
     __trace__("MAPIO started");
