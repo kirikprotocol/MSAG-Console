@@ -73,6 +73,16 @@ public class ProfilesFilter extends SmscBean
 			return RESULT_DONE;
 
 		int result = super.process(appContext, errors, loginedPrincipal);
+		if (mbClear != null)
+		{
+			masks = new String[0];
+			maskList.clear();
+			codepage = reportinfo = -1;
+			checkedLocales = new String[0];
+			checkedLocalesSet = new HashSet();
+			errors.clear();
+			return RESULT_OK;
+		}
 		if (result != RESULT_OK)
 			return result;
 
@@ -83,15 +93,6 @@ public class ProfilesFilter extends SmscBean
 			filter.setReportinfo(reportinfo);
 			filter.setLocales(checkedLocalesSet);
 			return RESULT_DONE;
-		}
-		else if (mbClear != null)
-		{
-			masks = new String[0];
-			maskList.clear();
-			codepage = reportinfo = -1;
-			checkedLocales = new String[0];
-			checkedLocalesSet.clear();
-			return RESULT_OK;
 		}
 
 		return RESULT_OK;
@@ -147,6 +148,11 @@ public class ProfilesFilter extends SmscBean
 		this.masks = masks;
 	}
 
+	public byte getCodepageByte()
+	{
+		return codepage;
+	}
+
 	public String getCodepage()
 	{
 		return Byte.toString(codepage);
@@ -162,6 +168,11 @@ public class ProfilesFilter extends SmscBean
 		{
 			this.codepage = -2;
 		}
+	}
+
+	public byte getReportinfoByte()
+	{
+		return reportinfo;
 	}
 
 	public String getReportinfo()

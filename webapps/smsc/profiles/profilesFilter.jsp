@@ -45,17 +45,17 @@ for (int i=0; i<bean.getMasks().length; i++)
 <tr class=row<%=(row++)&1%>>
 	<th class=label>codepage:</th>
 	<td><div class=select><select class=txt name=codepage>
-			<option value="-1" <%=-1 == bean.getCodepage() ? "selected" : ""%>>all</option>
-			<option value="<%=Profile.CODEPAGE_Default%>" <%=Profile.CODEPAGE_Default == bean.getCodepage() ? "selected" : ""%>>Default</option>
-			<option value="<%=Profile.CODEPAGE_UCS2   %>" <%=Profile.CODEPAGE_UCS2    == bean.getCodepage() ? "selected" : ""%>>UCS2</option>
+			<option value="-1" <%=-1 == bean.getCodepageByte() ? "selected" : ""%>>all</option>
+			<option value="<%=Profile.CODEPAGE_Default%>" <%=Profile.CODEPAGE_Default == bean.getCodepageByte() ? "selected" : ""%>>Default</option>
+			<option value="<%=Profile.CODEPAGE_UCS2   %>" <%=Profile.CODEPAGE_UCS2    == bean.getCodepageByte() ? "selected" : ""%>>UCS2</option>
 		</select></div></td>
 </tr>
 <tr class=row<%=(row++)&1%>>
 	<th class=label>report&nbsp;mode:</th>
 	<td><div class=select><select class=txt name=reportinfo>
-			<option value="-1" <%=-1 == bean.getReportinfo() ? "selected" : ""%>>all</option>
-			<option value="<%=Profile.REPORT_OPTION_None%>" <%=Profile.REPORT_OPTION_None == bean.getReportinfo() ? "selected" : ""%>>none</option>
-			<option value="<%=Profile.REPORT_OPTION_Full%>" <%=Profile.REPORT_OPTION_Full == bean.getReportinfo() ? "selected" : ""%>>full</option>
+			<option value="-1" <%=-1 == bean.getReportinfoByte() ? "selected" : ""%>>all</option>
+			<option value="<%=Profile.REPORT_OPTION_None%>" <%=Profile.REPORT_OPTION_None == bean.getReportinfoByte() ? "selected" : ""%>>none</option>
+			<option value="<%=Profile.REPORT_OPTION_Full%>" <%=Profile.REPORT_OPTION_Full == bean.getReportinfoByte() ? "selected" : ""%>>full</option>
 		</select></div></td>
 </tr>
 <tr><td colspan=2 class=secInner><div class=secList>Locales</div></td></tr>

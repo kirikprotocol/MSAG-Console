@@ -5,12 +5,12 @@
  */
 package ru.novosoft.smsc.jsp.smsc.routes;
 
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter;
-import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.route.MaskList;
 
 import java.util.*;
 
@@ -94,10 +94,20 @@ public class RoutesFilter extends SmscBean
 			return RESULT_DONE;
 
 		int result = super.process(appContext, errors, loginedPrincipal);
-		if (result != RESULT_OK)
-			return result;
 
-		if (mbApply != null)
+		if (mbClear != null)
+		{
+			filter = preferences.getRoutesFilter();
+
+			srcChks = srcMasks = dstChks = dstMasks = smeChks = new String[0];
+			strict = showSrc = showDst = false;
+			srcChksSet = dstChksSet = smeChksSet = new HashSet();
+			mbApply = mbClear = mbCancel = null;
+			this.errors.clear();
+
+			return RESULT_OK;
+		}
+		else if (result == RESULT_OK && mbApply != null)
 		{
 			try
 			{
@@ -123,19 +133,8 @@ public class RoutesFilter extends SmscBean
 			preferences.setRouteShowDst(showDst);
 			return RESULT_DONE;
 		}
-		else if (mbClear != null)
-		{
-			srcChks = srcMasks = dstChks = dstMasks = smeChks = new String[0];
 
-			strict = showSrc = showDst = false;
-
-			srcChksSet.clear();
-			dstChksSet.clear();
-			smeChksSet.clear();
-			return RESULT_OK;
-		}
-
-		return RESULT_OK;
+		return result;
 	}
 
 
