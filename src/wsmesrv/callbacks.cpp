@@ -1,4 +1,7 @@
-#include "ss7osdpn.h"
+#include "portss7.h"
+#include "ss7tmc.h"
+#include "ss7log.h"
+#include "ss7msg.h"
 #include "i97tcapapi.h"
 
 extern "C"{
