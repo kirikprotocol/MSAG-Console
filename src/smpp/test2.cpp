@@ -11,7 +11,7 @@ using namespace smsc::sme;
 using namespace smsc::util;
 
 const char* smscHost = "smsc";
-const int smscPort = 15971;
+const int smscPort = 25971;
 
 void dumpPdu(const char* tc, const string& id, SmppHeader* pdu)
 {
