@@ -93,7 +93,7 @@ namespace smsc { namespace mcisme
         #ifndef MCI_MODULE_TEST                
                 if (module) {
                     module->removeMissedCallListener();
-                    module->addMissedCallListener(listener);
+                    module->addMissedCallListener(_listener);
                     smsc_log_info(logger, "MCI Module listener attached.");
                 }
         #endif
