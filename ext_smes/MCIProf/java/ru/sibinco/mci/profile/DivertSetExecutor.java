@@ -26,7 +26,11 @@ public class DivertSetExecutor extends DivertManagerState implements Executor
   {
     try {
       super.init(properties);
-      pageFormat = new MessageFormat(Transliterator.translit(divertBundle.getString(Constants.PAGE_SET)));
+      String s1 = divertBundle.getString(Constants.PAGE_SET);
+      String sss = Transliterator.translit(divertBundle.getString(Constants.PAGE_SET));
+      logger.debug("s1= \""+s1+"\"  sss=\""+sss+"\"");
+
+      pageFormat = new MessageFormat(sss);
       valueService = Transliterator.translit(divertBundle.getString(Constants.VALUE_SERVICE));
     } catch (Exception e) {
       final String err = "Executor init error";
@@ -46,8 +50,11 @@ public class DivertSetExecutor extends DivertManagerState implements Executor
       return new ExecutorResponse(new Message[]{resp}, true);
     }
     String reason = (String)state.getAttribute(Constants.ATTR_REASON);
-    final String menuOpt = (checkReason(reason)) ? ("3>"+valueService):"";
-    resp.setMessageString(pageFormat.format(new Object[] {menuOpt}));
+    String menuOpt = (checkReason(reason)) ? ("3>"+valueService):"";
+    Object args[] = new Object [] {menuOpt};
+    String resss = pageFormat.format(args);
+    logger.debug("resss="+resss);
+    resp.setMessageString(resss);
     logger.debug("RS="+reason+",menu opt="+menuOpt+", msg="+resp.getMessageString());
     return new ExecutorResponse(new Message[]{resp}, false);
   }
