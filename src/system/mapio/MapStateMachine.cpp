@@ -1109,7 +1109,7 @@ static string RouteToString(MapDialog* dialog)
 }catch(MAPDIALOG_HEREISNO_ID& x){\
   __map_warn2__("%s: here is no dialogid 0x%x/0x%x <exception>:%s",__func__,__dialogid_map,__dialogid_smsc,x.what());\
 }catch(MAPDIALOG_ERROR& err){\
-  __map_trace2__("%s: error dialogid 0x%x/0x%x <exception>:%s",__func__,__dialogid_map,__dialogid_smsc,err.what());\
+  __map_warn2__("%s: error dialogid 0x%x/0x%x <exception>:%s",__func__,__dialogid_map,__dialogid_smsc,err.what());\
   TryDestroyDialog(__dialogid_map,true,err.code,__ssn);\
 }catch(exception& e){\
   __map_trace2__("%s: exception dialogid 0x%x/0x%x <exception>:%s",__func__,__dialogid_map,__dialogid_smsc, e.what());\
@@ -1510,10 +1510,10 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               {
                 unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffff;
                 if ( dialog->ussdMrRef != mr ) {
-                  SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
+                  SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGREFMISM));
                   throw MAPDIALOG_FATAL_ERROR(
-                    FormatText("putCommand: Opss, bad message_reference 0x%x must be 0x%x",
-                      mr,dialog->ussdMrRef));
+                    FormatText("putCommand: Opss, dialogid 0x%x bad message_reference 0x%x must be 0x%x",
+                      dialog->dialogid_map,mr,dialog->ussdMrRef));
                 }
               }
               if (dialog->state == MAPST_WaitSubmitCmdConf || dialog->state == MAPST_WaitSubmitUSSDRequestConf) {
@@ -1522,7 +1522,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 dialog->chain.insert(dialog->chain.begin(), cmd);
                 return;
               } else if ( !(dialog->state == MAPST_ReadyNextUSSDCmd || dialog->state == MAPST_USSDWaitResponce )) {
-                throw MAPDIALOG_BAD_STATE(FormatText("putCommand:  ussd resp bad state %d, MAP.did 0x%x, SMSC.did 0x%x",dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
+                throw MAPDIALOG_BAD_STATE(FormatText("putCommand:  ussd resp bad state %d, dialogid 0x%x, SMSC.did 0x%x",dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
               }
               dialog->dialogid_smsc = dialogid_smsc;
               dialog->isQueryAbonentStatus = false;
@@ -1534,10 +1534,10 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 {
                   unsigned mr = cmd->get_sms()->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)&0x0ffff;
                   if ( dialog->ussdMrRef != mr ) {
-                    SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGNFOUND));
+                    SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_FATAL,Status::USSDDLGREFMISM));
                     throw MAPDIALOG_FATAL_ERROR(
-                      FormatText("putCommand: Opss, bad message_reference 0x%x must be 0x%x",
-                        mr,dialog->ussdMrRef));
+                      FormatText("putCommand: Opss, dialogid 0x%x bad message_reference 0x%x must be 0x%x",
+                        dialog->dialogid_map,mr,dialog->ussdMrRef));
                   }
                 }
                 dialog->id_opened = true;
