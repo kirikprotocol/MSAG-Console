@@ -15,6 +15,7 @@ export SMSC_BUILDDIR
 endif
 
 SME_BUILDDIR:=$(SMSC_BUILDDIR)/ext_smes/InfoSmeTmp
+DB_OCI_LIB:=$(SMSC_BUILDDIR)/bin/db/oci/libdb_oci.so
 
 
 default: compile pack
@@ -31,9 +32,11 @@ compile:
 	@mkdir -p $(SME_BUILDDIR)/jsp
 	@mkdir -p $(SME_BUILDDIR)/jsp/inc
 	@mkdir -p $(SME_BUILDDIR)/lib
-	@cp -f service $(SME_BUILDDIR)/bin
+#	@cp -f service $(SME_BUILDDIR)/bin
+	@cp -f  $(SMSC_BUILDDIR)/bin/infosme/InfoSme $(SME_BUILDDIR)/bin/service
 	@cp -f log4cpp.properties $(SME_BUILDDIR)/log4cpp.infosme
 	@cp -f $(SMSC_BUILDDIR)/jars/infosme.jar  $(SME_BUILDDIR)/lib/infosme.jar
+	@cp -f $(DB_OCI_LIB) $(SME_BUILDDIR)/lib/libdb_oci.so
 	@cp -f ../../src/infosme/config.xml $(SME_BUILDDIR)/conf/config.xml
 	@cp -f ../../config/configuration.dtd $(SME_BUILDDIR)/conf/configuration.dtd
 	@cp -f ../../config/command.dtd $(SME_BUILDDIR)/conf/command.dtd
