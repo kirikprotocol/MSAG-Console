@@ -35,17 +35,27 @@ TestConfig::TestConfig()
 	intMap["dbSmeProtocolId"] = 23;
 	//map proxy
 	strMap["mapProxySystemId"] = "MAP_PROXY";
-	//ресурсы
-	strMap["cmdRespReportNone"] = 
-		"Now you will receive only requested delivery reports";
-	strMap["cmdRespReportFull"] =
-		"Now you will receive auxiliary delivery reports";
-	strMap["cmdRespDataCodingDefault"] =
-		"Now you are a default language user";
-	strMap["cmdRespDataCodingUcs2"] =
-		"Now you will be able to receive ucs2-encoded messages";
-	strMap["cmdRespInvalidCmdText"] =
-		"Invalid command";
+	//респонсы профайлера
+	strMap["profilerRespReportNone"] = 
+		"Уведомления доставки отключены (Delivery reports disabled)";
+	strMap["profilerRespReportFull"] =
+		"Уведомления доставки включены (Delivery reports enabled)";
+	strMap["profilerRespDataCodingDefault"] =
+		"Установлена 7-bit кодировка сообщений (7-bit encoding set)";
+	strMap["profilerRespDataCodingUcs2"] =
+		"Установлена ucs2 кодировка сообщений (ucs2 encoding set)";
+	strMap["profilerRespInvalidCmdText"] =
+		"Неправильная команда (Invalid command)";
+	//респонсы db sme
+	strMap["dbSmeRespProviderNoFound"] = "Адрес не найден (DataProvider not found)";
+	strMap["dbSmeRespJobNotFound"] = "Задача не найдена (Job not found)";
+	strMap["dbSmeRespDsFailure"] = "Ошибка выполнения запроса (Problem with DataSource)";
+	strMap["dbSmeRespDsConnLost"] = "Ошибка соединения (Connection to DataSource lost)";
+	strMap["dbSmeRespDsStmtFailed"] = "Ошибка SQL (Failed to create SQL statement)";
+	strMap["dbSmeRespQueryNull"] = "Нулевой результат запроса (Query result is NULL)";
+	strMap["dbSmeRespInputParse"] = "Ошибка во входных параметрах (Input parsing error)";
+	strMap["dbSmeRespOutputFormat"] = "Ошибка форматирования результата (Output formatting error)";
+	strMap["dbSmeRespInvalidConfig"] = "Ошибка конфигурации (Configuration is invalid)";
 }
 
 int TestConfig::getIntParam(const char* name)
