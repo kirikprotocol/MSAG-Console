@@ -86,7 +86,7 @@ struct _SmscCommand
 
 class SmscCommand
 {
-	_SmscCommand* cmd;
+  _SmscCommand* cmd;
   void unref(_SmscCommand*& cmd)
   {
     __require__ ( cmd != 0 );
@@ -113,13 +113,13 @@ class SmscCommand
 
 public:
   
-	struct Status
-	{
-		static const int ERROR = 8;
-		static const int OK = 0;
-	};
-	
-	// specialized constructors (meta constructors)
+  struct Status
+  {
+    static const int ERROR = 8;
+    static const int OK = 0;
+  };
+  
+  // specialized constructors (meta constructors)
   static SmscCommand makeSumbmitSm(const SMS& sms,uint32_t dialogId)
   {
     SmscCommand cmd;
@@ -286,7 +286,7 @@ public:
   {
     // copy(_cmd.cmd);
     if ( cmd ) unref(cmd);
-    cmd = ref((_SmscCommand*)(&_cmd.cmd));
+    cmd = ref(_cmd.cmd);
     return _cmd;
   }
 
