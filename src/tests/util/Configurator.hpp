@@ -9,12 +9,12 @@
 #include <sstream>
 #include <list>
 // XML
-#include <xercesc/dom/DOM_Document.hpp>
+/*#include <xercesc/dom/DOM_Document.hpp>
 #include <xercesc/dom/DOM_Element.hpp>
 #include <xercesc/dom/DOM_DOMException.hpp>
 #include <xercesc/parsers/DOMParser.hpp>
 #include <xercesc/util/PlatformUtils.hpp>
-
+*/
 //smsc includes
 #include <util/xml/DOMErrorLogger.h>
 #include <util/xml/DtdResolver.h>

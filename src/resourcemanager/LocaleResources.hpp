@@ -3,12 +3,13 @@
 
 #include <string>
 #include <map>
-#include <xercesc/dom/DOM_Element.hpp>
+#include <xercesc/dom/DOM.hpp>
 #include "util/templates/Formatters.h"
 
 namespace smsc{
 namespace resourcemanager{
 
+using namespace xercesc;
 using namespace smsc::util::templates;
 
 class LocaleResources{
@@ -36,7 +37,7 @@ private:
   _stringmap resources;
   std::map<std::string,OutputFormatter*> formatters;
 
-  void processParams(const DOM_Element &elem, _stringmap & settings, const std::string &prefix) throw ();
+  void processParams(const DOMElement &elem, _stringmap & settings, const std::string &prefix) throw ();
 };
 
 }//resourcemanager

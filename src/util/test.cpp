@@ -272,7 +272,7 @@ int main(int argc, char** argv)
 
   {
     SMS s;
-    char *msg="#template=emailsmenotify#{from}=\"vtiunov@scs-900.ru\" {to}=\"79139163330@scs-900.ru\" {subj}=\"Re: SMS-сообщение\" {body}=\"Здравствуйте 79139163330,.Wednesday, June25, 2003, 3:11:15 PM, от Вас получено:.7s9r> Абонентом МТС в Новосибирске.7s9r>Вам отправлено сообщение:.7s9r>--.7s9r> Kak dela?.С уважением,Тиунов Вадим.Группа эксплуатации дополнительныхуслуг.ЗАО Сибирские Сотовые Системы - 900.телефон: +7(3832)141038.e-mail: vtiunov@scs-900.ru\"";
+    const char * const msg="#template=emailsmenotify#{from}=\"vtiunov@scs-900.ru\" {to}=\"79139163330@scs-900.ru\" {subj}=\"Re: SMS-сообщение\" {body}=\"Здравствуйте 79139163330,.Wednesday, June25, 2003, 3:11:15 PM, от Вас получено:.7s9r> Абонентом МТС в Новосибирске.7s9r>Вам отправлено сообщение:.7s9r>--.7s9r> Kak dela?.С уважением,Тиунов Вадим.Группа эксплуатации дополнительныхуслуг.ЗАО Сибирские Сотовые Системы - 900.телефон: +7(3832)141038.e-mail: vtiunov@scs-900.ru\"";
     short uni[2048];
     int len=ConvertMultibyteToUCS2(msg,strlen(msg),uni,sizeof(uni),CONV_ENCODING_CP1251);
     printf("len=%d\n",len);

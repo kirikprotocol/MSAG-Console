@@ -4,7 +4,7 @@
 #
 #
 
-CXXFLAGS := $(CXXFLAGS) -I. -I/usr/local/include/xercesc -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public
+CXXFLAGS := $(CXXFLAGS) -I. -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public
 PACKAGE := store
 
 __LIBRARIES :=  $(ORACLE_LIB)/libclntsh.so

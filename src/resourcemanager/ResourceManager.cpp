@@ -32,7 +32,7 @@ const ResourceManager* ResourceManager::getInstance() throw()
 
 void ResourceManager::init(const char * const localesString, const char * const defaultLocaleStr) throw()
 {
-  std::string defaultLocale(defaultLocaleStr);
+  std::string _defaultLocale(defaultLocaleStr);
   std::list<std::string> locales;
   const char * str = localesString;
   for (const char * ptr = strchr(str, ','); ptr != 0; ptr = strchr(str, ','))
@@ -65,7 +65,7 @@ void ResourceManager::init(const char * const localesString, const char * const 
     locales.push_back(tmp.get());
   }
 
-  init(locales, defaultLocale);
+  init(locales, _defaultLocale);
 }
 
 typedef std::list<std::string> _stringlist;

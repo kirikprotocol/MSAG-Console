@@ -1,10 +1,10 @@
 #include <dirent.h>
 
-#include <xercesc/dom/DOM_Node.hpp>
+/*#include <xercesc/dom/DOM_Node.hpp>
 #include <xercesc/dom/DOM_Text.hpp>
 #include <xercesc/dom/DOM_NodeList.hpp>
 #include <xercesc/dom/DOM_NamedNodeMap.hpp>
-
+*/
 #include "Configurator.hpp"
 
 namespace smsc {
