@@ -65,7 +65,7 @@ switch(beanResult = bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.ge
 	<th class=label>SMS Id:</th>
 	<td><input class=txtW type="text" name="smsId"  value="<%=bean.getSmsId()%>" size=16 maxlength=16></td>
 	<th class=label>Route Id:</th>
-	<td><input class=txtW type="text" name="routeId"  value="<%=bean.getRouteId()%>" size=20 maxlength=20></td>
+	<td><input class=txtW type="text" name="routeId"  value="<%=bean.getRouteId()%>" size=32 maxlength=32></td>
 </tr>
 <tr class=row0>
 	<th class=label>From Date:</th>

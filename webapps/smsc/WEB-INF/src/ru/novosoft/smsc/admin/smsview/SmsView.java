@@ -26,7 +26,7 @@ import ru.novosoft.smsc.admin.smsc_service.Smsc;
 
 public class SmsView
 {
-  private static int   MAX_SMS_BODY_LENGTH    = 1550;
+  private static int   MAX_SMS_BODY_LENGTH    = 1500;
   private static short SMPP_SHORT_MESSAGE_TAG = 7;
   private static short SMPP_DATA_CODING_TAG   = 3;
   private static short SMPP_ESM_CLASS_TAG     = 2;
