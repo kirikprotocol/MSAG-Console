@@ -1077,16 +1077,16 @@ static const unsigned DIALOGID_BEFORE_CREATING = 0x10000;
 
 static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code,unsigned ssn)
 {
+  __map_trace2__("TryDestroyDialog: dialog 0x%x , reason error",dialogid);
+  DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid,ssn));
+  if ( dialog.isnull() ) {
+    __map_trace2__("TryDestroyDialog: has no dialog 0x%x",dialogid);
+    return;
+  }
+  __require__(dialog->ssn==ssn);
+  __map_trace2__("TryDestroyDialog: dialogid 0x%x state %d",dialog->dialogid_map,dialog->state);
+  try
   {
-    __map_trace2__("TryDestroyDialog: dialog 0x%x , reason error",dialogid);
-    DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid,ssn));
-    if ( dialog.isnull() ) {
-      __map_trace2__("TryDestroyDialog: has no dialog 0x%x",dialogid);
-      return;
-    }
-    __require__(dialog->ssn==ssn);
-    __map_trace2__("TryDestroyDialog: dialogid 0x%x state %d",dialog->dialogid_map,dialog->state);
-    try{
     if ( send_error)
     {
       dialog->dropChain = true;
@@ -1123,7 +1123,6 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error,unsigned err_code
         CloseMapDialog(dialog->dialogid_map,dialog->ssn);
       }
     }
-  }
   }catch(std::exception &e){
     __map_warn__("TryDestroyDialog: catched exception: %s", e.what());
   }catch(...){
