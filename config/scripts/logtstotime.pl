@@ -1,6 +1,5 @@
 #! /usr/bin/perl
 
-
 my $in,$out;
 if(@ARGV==2)
 {
