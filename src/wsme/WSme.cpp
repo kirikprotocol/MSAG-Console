@@ -15,6 +15,7 @@
 
 #include <db/DataSourceLoader.h>
 
+#include <system/smscsignalhandlers.h>
 #include <sme/SmppBase.hpp>
 #include <sms/sms.h>
 #include <util/xml/init.h>
@@ -32,6 +33,7 @@ using namespace smsc::util;
 using namespace smsc::util::config;
 using namespace smsc::core::threads;
 using namespace smsc::core::buffers;
+using namespace smsc::system;
 
 using namespace smsc::admin;
 using namespace smsc::admin::service;
@@ -468,9 +470,9 @@ int main(void)
 
             sigset_t set;
             sigemptyset(&set);
-            sigaddset(&set,SIGINT);
-            sigset(SIGINT , appSignalHandler);
-
+            sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
+            sigset(smsc::system::SHUTDOWN_SIGNAL, appSignalHandler);
+            
             logger.info("Connecting to SMSC ... ");
             try
             {
