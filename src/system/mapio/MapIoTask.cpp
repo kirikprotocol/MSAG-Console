@@ -171,15 +171,9 @@ void MapIoTask::deinit()
 
 void MapIoTask::dispatcher()
 {
-  //int going;
   MSG_T message;
   USHORT_T result;
-	
-	//going = 0;
   message.receiver = MY_USER_ID;
-
-  MSG_T last_my_msg;
-  bool my_msg_was_send = true;
 
   for(;;){
     result = MsgRecv(&message);
@@ -187,33 +181,13 @@ void MapIoTask::dispatcher()
       __trace2__("MAP: error at MsgRecv with code x%hx",result);
       return;
     }
-    //if (EINSS7CpMsgRecv_r(&message,MSG_INFTIM)!=MSG_OK) return;
+    
     if ( isStopping ) return;
     
     __trace2__("MAP: MsgRecv receive msg with "
                "recver 0x%hx,sender 0x%hx,prim 0x%hx",message.receiver,message.sender,message.primitive);
     
-    /*if ( message.sender == message.receiver &&
-         message.sender == USER01_ID )
-    {
-      try{
-        if ( message.primitive == SMSC_FORWARD_RESPONSE ){
-          SMSC_FORWARD_RESPONSE_T* response = (SMSC_FORWARD_RESPONSE_T*)message.msg_p;
-          if ( response == 0 ) {
-            __trace2__("MAP::MessageProcessing Opss, forward response has zero data");
-            throw 0;
-          }
-          if ( ForwardResponse(response->dialogId) )
-        }
-      }catch(...){
-      }
-      delete message.msg_p;
-      message.size = 0;
-    }
-    else*/
-      
     Et96MapHandleIndication(&message);
-
 
     try{
       MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
@@ -235,13 +209,6 @@ void MapIoTask::dispatcher()
       }
     }catch(...){
     }
-
-
-    //result = Et96MapHandleIndication(&message);
-    //if ( result != ET96MAP_E_OK ) {
-    //  __trace2__("MAP: error at Et96MapHandleIndication with code x%hx",result);
-      //return;
-    //}
   }
 }
 

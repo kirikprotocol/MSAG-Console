@@ -277,7 +277,7 @@ void Smsc::run()
     {
       throw Exception("Failed to start smpp acceptor");
     }
-
+    MapDialogContainer::getInstance()->registerSelf(&smeman);
   }
 
   scheduler=new Scheduler(eventqueue,store);

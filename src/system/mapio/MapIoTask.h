@@ -7,6 +7,7 @@ $Id$
 #include <memory.h>
 #include "sms/sms.h"
 #include "smeman/smsccmd.h"
+#include "smeman/smeman.h"
 using namespace std;
 using namespace smsc::sms;
 using namespace smsc::smeman;
@@ -102,25 +103,33 @@ public:
     if ( !container ) container = new MapDialogContainer();
     return container;
   }
+  
   MapProxy* getProxy() {
     return &proxy;
   }
+  
   MapDialog* getDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
     MapDialog* dlg = 0;
     if ( hash.Get(dialogueid,dlg) ) return dlg;
     else return 0;
   }
+  
   MapDialog* createDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn){
     MapDialog* dlg = new MapDialog(dialogueid,lssn);
     hash.Insert(dialogueid,dlg);
     return dlg;
   }
+  
   void dropDialog(ET96MAP_DIALOGUE_ID_T dialogueid){
     MapDialog* item = 0;
     if ( hash.Get(dialogueid,item) ){
       hash.Delete(dialogueid);
       delete item;
     }
+  }
+  
+  void registerSelf(SmeManager* smeman){
+    smeman->registerSmeProxy("MAP_PROXY",&proxy);
   }
 };
 

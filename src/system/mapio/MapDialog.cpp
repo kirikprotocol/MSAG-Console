@@ -20,6 +20,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   SmscCommand cmd = SmscCommand::makeSumbmitSm(sms,((uint32_t)dialogId)&0xffff);
   proxy->putIncomingCommand(cmd);
   state = MAPST_WAIT_SUBMIT_RESPONSE;
+  __trace2__("MapDialog::Et96MapV2ForwardSmMOInd OK");
   return ET96MAP_E_OK;
 }
 
