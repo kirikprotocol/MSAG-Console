@@ -50,8 +50,13 @@ void setIntParam(int & param, const char * const prefix, const char * const para
 {
 	try {
 		char fullParamName[128];
-		snprintf(fullParamName, sizeof(fullParamName), "%s.%s", prefix, paramName);
-		param = config.getInt(fullParamName);
+		if (prefix == NULL)
+			param = config.getInt(paramName);
+		else
+		{
+			snprintf(fullParamName, sizeof(fullParamName), "%s.%s", prefix, paramName);
+			param = config.getInt(fullParamName);
+		}
 	} catch (smsc::core::buffers::HashInvalidKeyException & e) {
 		throw Exception("Parameter \"%s\" for %s sme not found", paramName, prefix);
 	}
@@ -66,7 +71,6 @@ void ProxySmeConfig::fillSme(ProxySmeConfig::sme& smeItem, const char * const pr
 	setStrParam(smeItem.origAddr,    prefix, "origAddr", config);
 	setStrParam(smeItem.systemType,  prefix, "systemType", config);
 	setIntParam(smeItem.timeOut,     prefix, "timeOut", config);
-	setIntParam(smeItem.queueLength, prefix, "queueLength", config);
 }
 
 ProxySmeConfig::ProxySmeConfig(const char * const config_filename) //throw(smsc::util::Exception)
@@ -80,6 +84,7 @@ ProxySmeConfig::ProxySmeConfig(const char * const config_filename) //throw(smsc:
 			Config config(reader.read(filename.get()).getDocumentElement());
 			fillSme(left,  "left",  config);
 			fillSme(right, "right", config);
+			setIntParam(queueLength, NULL, "queueLength", config);
 		} catch (DOMTreeReader::ParseException &e) {
 			throw Exception("couldn't read or parse config file, nested: %s", e.what());
 		} catch (Exception &e) {

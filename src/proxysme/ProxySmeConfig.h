@@ -19,13 +19,14 @@ public:
 		std::string origAddr;
 		std::string systemType;
 		int timeOut;
-		int queueLength;
 	};
 	ProxySmeConfig(const char * const config_filename); //throw(smsc::util::Exception)
 	const sme & getLeft()  {return left;}
 	const sme & getRigth() {return right;}
+	int getQueueLength() {return queueLength;}
 private:
 	sme left, right;
+	int queueLength;
 	void fillSme(ProxySmeConfig::sme& smeItem, const char * const prefix, const Config config); //throw(smsc::util::Exception)
 };
 
