@@ -25,9 +25,8 @@
 #include "ConnectionManager.h"
 #include "Archiver.h"
 
-#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-#define SMSC_FAKE_MEMORY_MESSAGE_STORE
-#endif
+#undef SMSC_FAKE_MEMORY_MESSAGE_STORE
+//#define SMSC_FAKE_MEMORY_MESSAGE_STORE
 
 #ifdef SMSC_FAKE_MEMORY_MESSAGE_STORE
 #include <core/buffers/IntHash.hpp>
