@@ -288,7 +288,7 @@ static void SendErrToSmsc(unsigned dialogid,unsigned code)
   if ( dialogid == 0 ) return;
   __trace2__("MAP:%s:Send error 0x%x to SMSC",__FUNCTION__,code);
   SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialogid,code);
-  if ( GET_STATUS_CODE(code) == SUBSCRBUSYMT ){
+  if ( GET_STATUS_CODE(code) == Status::SUBSCRBUSYMT ){
     __trace2__("MAP:%s: Set Busy delay %d",__FUNCTION__,GetBusyDelay());
     cmd->get_resp()->set_delay(GetBusyDelay());
   }
