@@ -11,6 +11,7 @@ using namespace smsc::core::buffers;
 
 class ThreadedTask{
 public:
+  virtual ~ThreadedTask(){}
   virtual int Execute()=0;
   virtual const char* taskName()=0;
   virtual void getMemoryInfo(int& rawheapsize,int& blocksheapquantum);
@@ -55,7 +56,7 @@ public:
     ptr=(T*)getMem(size);
   }
 
-  void freeMem(void* ptr)
+  void freeMem(void*& ptr)
   {
     heap->freeMem(ptr);
   }
