@@ -206,15 +206,17 @@ namespace smsc { namespace dbsme
         
     public:
         
-        ProviderGuard(DataProvider* provider=0) : provider(provider) {
+        ProviderGuard(DataProvider* provider=0) : provider(provider), counter(0) {
             if (!provider) return;
             MutexGuard guard(provider->usersCountLock);
-            counter = provider->getUserCounter(); (*counter)++;
+            counter = provider->getUserCounter(); 
+            if (counter) (*counter)++;
         }
-        ProviderGuard(const ProviderGuard& pg) : provider(pg.provider) {
+        ProviderGuard(const ProviderGuard& pg) : provider(pg.provider), counter(0) {
             if (!provider) return;
             MutexGuard guard(provider->usersCountLock);
-            counter = provider->getUserCounter(); (*counter)++;
+            counter = provider->getUserCounter();
+            if (counter) (*counter)++;
         }
         virtual ~ProviderGuard() {
             if (!provider || !counter) return;
