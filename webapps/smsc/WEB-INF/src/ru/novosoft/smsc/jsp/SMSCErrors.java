@@ -126,6 +126,11 @@ public class SMSCErrors
 			public static final String invalidIntParameter = B + "invalidIntParameter";
 			public static final String invalidBoolParameter = B + "invalidBoolParameter";
 		}
+        public static class commutators
+        {
+            private static final String B = error.B + "smsc.";
+            public static final String smscServerError = B + "smscServerError";
+        }
 	}
 
 	public static class warning
