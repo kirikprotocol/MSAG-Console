@@ -149,7 +149,7 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu)
 }
 
 void NormalSmsHandler::registerIntermediateNotificationMonitor(
-	DeliveryMonitor* monitor, PduRegistry* pduReg, uint32_t deliveryStatus,
+	const DeliveryMonitor* monitor, PduRegistry* pduReg, uint32_t deliveryStatus,
 	time_t recvTime, time_t respTime)
 {
 	__require__(monitor && pduReg);
@@ -218,7 +218,7 @@ void NormalSmsHandler::registerIntermediateNotificationMonitor(
 	pduReg->registerMonitor(m);
 }
 
-void NormalSmsHandler::registerDeliveryReceiptMonitor(DeliveryMonitor* monitor,
+void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* monitor,
 	PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime, time_t respTime)
 {
 	__require__(monitor && pduReg);
@@ -293,7 +293,7 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(DeliveryMonitor* monitor,
 	}
 }
 
-void NormalSmsHandler::registerDeliveryReportMonitors(DeliveryMonitor* monitor,
+void NormalSmsHandler::registerDeliveryReportMonitors(const DeliveryMonitor* monitor,
 	PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime, time_t respTime)
 {
 	//intermediate notification monitor: первая попытка доставки с rescheduling
@@ -357,7 +357,7 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 		//никак это не отслеживаю
 		if (!monitor->pduData->valid)
 		{
-			__tc_fail__(3);
+			__tc_fail__(-1);
 			//throw TCException();
 		}
 		__tc_ok_cond__;

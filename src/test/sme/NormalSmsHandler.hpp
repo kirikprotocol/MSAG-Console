@@ -47,13 +47,13 @@ protected:
 	vector<int> checkRoute(PduSubmitSm& pdu1, PduDeliverySm& pdu2) const;
 	void compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu);
 
-	void registerIntermediateNotificationMonitor(DeliveryMonitor* monitor,
+	void registerIntermediateNotificationMonitor(const DeliveryMonitor* monitor,
 		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime,
 		time_t respTime);
-	void registerDeliveryReceiptMonitor(DeliveryMonitor* monitor,
+	void registerDeliveryReceiptMonitor(const DeliveryMonitor* monitor,
 		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime,
 		time_t respTime);
-	void registerDeliveryReportMonitors(DeliveryMonitor* monitor,
+	void registerDeliveryReportMonitors(const DeliveryMonitor* monitor,
 		PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime,
 		time_t respTime);
 };
