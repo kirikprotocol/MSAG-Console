@@ -82,8 +82,8 @@ public:
             requestBody.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
         bool isRequestUSSD = 
             requestBody.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) ? 
-                (requestBody.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)==USSD_PSSR)
-                    :false;
+                (requestBody.getIntProperty(Tag::SMPP_USSD_SERVICE_OP)
+                  == USSD_PSSR_IND) : false;
 
         Command command;
         command.setFromAddress(request.getOriginatingAddress());
@@ -156,7 +156,7 @@ public:
         body.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
                             userMessageReference);
         if (isRequestUSSD) 
-            body.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, USSD_USSN);
+            body.setIntProperty(Tag::SMPP_USSD_SERVICE_OP, USSD_PSSR_RESP);
         
         char* out = (char *)command.getOutData();
         int outLen = (out) ? strlen(out) : 0;
@@ -437,7 +437,7 @@ int main(void)
                 printf("Connect failed. Cause: %s\n", (msg) ? msg:"unknown");
                 bDBSmeIsConnected = false;
                 if (exc.getReason() == 
-                    SmppConnectException::Reason::invalidSystemId) throw;
+                    SmppConnectException::Reason::bindFailed) throw;
                 sleep(cfg.timeOut);
                 continue;
             }
