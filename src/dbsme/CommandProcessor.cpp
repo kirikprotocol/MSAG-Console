@@ -92,9 +92,10 @@ void CommandProcessor::process(Command& command)
     if (!providers.Exists(command.getToAddress().value))
     {
         const char* message = messages.get(PROVIDER_NOT_FOUND);
-        throw CommandProcessException("%s. (Requesting: '%s')", 
-                                      message ? message : PROVIDER_NOT_FOUND,
-                                      (const char*)command.getToAddress().value);
+        log.error("%s Requesting: '%s'", 
+                  message ? message : PROVIDER_NOT_FOUND,
+                  (const char*)command.getToAddress().value);
+        throw CommandProcessException(message ? message : PROVIDER_NOT_FOUND);
     }
 
     providers.Get(command.getToAddress().value)->process(command);
@@ -223,8 +224,9 @@ void DataProvider::process(Command& command)
     if (!jobs.Exists(name)) 
     {
         const char* message = messages.get(JOB_NOT_FOUND);
-        throw CommandProcessException("%s. (Requesting: '%s')",
-                                      message ? message:JOB_NOT_FOUND, name);
+        log.error("%s Requesting: '%s'",
+                  message ? message:JOB_NOT_FOUND, name);
+        throw CommandProcessException(message ? message:JOB_NOT_FOUND);
     }
     
     jobs.Get(name)->process(command, *ds);
