@@ -49,16 +49,25 @@ int main(void)
     sms.setProtocolIdentifier(1);
     sms.setStatusReportRequested(true);
     sms.setRejectDuplicates(true);
+    sms.setArchivationRequested(true);
     sms.setFailureCause(5);
     sms.setMessageBody(strlen(body), 1, true, (uint8_t *)body);
     
-    const int NUM_OF_TEST_MESSAGES = 1000;
+    const int NUM_OF_TEST_MESSAGES = 10000;
 
     try 
     {
         store = StoreManager::getMessageStore();
 
-        time_t begTime, endTime;
+        sms.setRejectDuplicates(true);
+
+        SMSId id = store->store(sms);
+        printf("Message was stored !\n");
+
+        id = store->store(sms);
+        printf("Message was stored !\n");
+        
+        /*time_t begTime, endTime;
         printf("\nStoring %d messages, please wait ... \n", 
                 NUM_OF_TEST_MESSAGES);
         begTime = time(0L);
@@ -80,7 +89,10 @@ int main(void)
         }
         endTime = time(0L) - begTime;
         printf("Time spent for retriving: %d (sec)\nPerformance: %d (msg per sec)\n", 
-               endTime, NUM_OF_TEST_MESSAGES/endTime);
+               endTime, NUM_OF_TEST_MESSAGES/endTime);*/
+
+        /*store->remove(1);
+        printf("Message removed !\n");*/
 
         /*SMSId id = store->store(sms);
         printf("Message stored, id = %d !\n", id);
@@ -91,7 +103,7 @@ int main(void)
         printf("Message retrived ! Body: %s\n", (char *)sms.messageBody.data);
         
         store->remove(id);
-        printf("Message removed !\n", id);*/
+        printf("Message removed !\n");*/
     } 
     catch (StoreException& exc) {
         printf("Exception : %s\n", exc.what());
