@@ -1,3 +1,4 @@
+#include "util/config/Manager.h"
 #include "MessageStoreTestCases.hpp"
 #include "test/util/CheckList.hpp"
 #include "test/util/Util.hpp"
@@ -8,6 +9,7 @@ using namespace std;
 using namespace smsc::sms;
 using namespace smsc::test::store;
 using namespace smsc::test::util;
+using namespace smsc::util::config;
 
 TCResultFilter* newFilter()
 {
@@ -73,7 +75,8 @@ TCResultFilter* newFilter()
  */
 int main(int argc, char* argv[])
 {
-	MessageStoreTestCases tc; //throws StoreException
+    Manager::init("config.xml");
+	MessageStoreTestCases tc; //throws exception
     TCResultFilter* filter = newFilter();
 
 	//создаю SM для дальнейшей проверки на создание дублированного SM

@@ -1,7 +1,8 @@
+#include "util/config/Manager.h"
+#include "util/debug.h"
 #include "MessageStoreTestCases.hpp"
 #include "store/StoreManager.h"
 #include "store/StoreExceptions.h"
-#include "util/debug.h"
 #include <cstdlib>
 #include <ctime>
 #include <string>
@@ -15,14 +16,20 @@ using namespace smsc::test::util;
 using namespace smsc::store;
 using namespace smsc::sms;
 using namespace smsc::util;
+using namespace smsc::util::config;
 
 MessageStoreTestCases::MessageStoreTestCases()
-	throw (smsc::store::StoreException)
 {
 	srand(time(NULL));
-	msgStore = StoreManager::getInstance();
+	Manager& config = Manager::getInstance();
+	StoreManager::startup(config.getStoreConfig());
+	msgStore = StoreManager::getMessageStore();
 }
 
+MessageStoreTestCases::~MessageStoreTestCases()
+{
+	StoreManager::shutdown();
+}
 void MessageStoreTestCases::setupRandomCorrectSM(SMS& sms)
 {
 	sms.setState(ENROUTE); //DELIVERED, EXPIRED, UNDELIVERABLE, DELETED

@@ -65,7 +65,12 @@ public:
 	 * 
 	 * @exception std::exception если инициализация не прошла.
 	 */
-	MessageStoreTestCases() throw (smsc::store::StoreException);
+	MessageStoreTestCases();
+
+	/**
+	 * Деинициализирует подсистему Message Store.
+	 */
+	~MessageStoreTestCases();
 
 	/**
 	 * Сохранение правильного SM.
