@@ -202,7 +202,7 @@ public class ServiceManager
 			d.addService(serviceInfo);
 			putService(new Service(serviceInfo));
 			smsc.getSmes().add(serviceInfo.getSme());
-			smsc.saveSmesConfig();
+			//smsc.saveSmesConfig();
 			logger.debug("services added");
 		}
 	}
@@ -225,7 +225,7 @@ public class ServiceManager
 		if (smsc.getSmes().getNames().contains(sme.getId()))
 			throw new AdminException("SME \"" + sme.getId() + "\" already exists");
 		smsc.getSmes().add(sme);
-		smsc.saveSmesConfig();
+		//smsc.saveSmesConfig();
 	}
 
 	protected boolean recursiveDeleteFolder(File folder)
