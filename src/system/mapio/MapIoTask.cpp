@@ -47,7 +47,7 @@ USHORT_T Et96MapUAbortInd(ET96MAP_LOCAL_SSN_T lssn,
 {
   __trace2__("MAP::Et96MapUAbortInd");
   const char* szDiag = "<Diag-Unknown>";
-  const char* szReason "<Reason-Unknown>";
+  const char* szReason = "<Reason-Unknown>";
   if ( *reason == ET96MAP_RESOURCE_UNAVAIL )
   {
     szReasn = "ET96MAP_RESOURCE_UNAVAIL";
@@ -124,7 +124,7 @@ USHORT_T Et96MapPAbortInd(ET96MAP_LOCAL_SSN_T lssn,
                           UCHAR_T priorityOrder)
 {
   __trace2__("MAP::Et96MapPAbortInd")
-  const char* szReason "<Reason-Unknown>";
+  const char* szReason = "<Reason-Unknown>";
   switch( *reason ){
   case ET96MAP_RESOURCE_UNAVAIL:
     szReasn = "ET96MAP_RESOURCE_UNAVAIL";

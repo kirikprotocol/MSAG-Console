@@ -467,7 +467,7 @@ bool  MapDialog::Et96MapCloseInd(ET96MAP_LOCAL_SSN_T,
     try{
       __trace2__("MAP::Et96MapCloseInd state: REDY_FOR_SEND_SMS");
 
-      MapDialogContainer::getInstance()->reAssingDialog(dialogid);
+      MapDialogContainer::getInstance()->reAssignDialog(dialogid);
 
       ET96MAP_APP_CNTX_T appContext;
     	appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
