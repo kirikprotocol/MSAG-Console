@@ -949,14 +949,16 @@ void TextDumpStorage::writeRecord(SMSId id, SMS& sms)
     CSVFileEncoder::addUint32  (out, sms.lastResult);
     CSVFileEncoder::addString  (out, sms.routeId);
 
-    std::string oa = sms.originatingAddress.toString();
-    CSVFileEncoder::addString  (out, oa.c_str());
+    char addressBuffer[256];
+    
+    sms.originatingAddress.getText(addressBuffer, sizeof(addressBuffer));
+    CSVFileEncoder::addString  (out, addressBuffer);
     CSVFileEncoder::addString  (out, sms.srcSmeId);
-    std::string da = sms.destinationAddress.toString();
-    CSVFileEncoder::addString  (out, da.c_str());
+    sms.destinationAddress.getText(addressBuffer, sizeof(addressBuffer));
+    CSVFileEncoder::addString  (out, addressBuffer);
     CSVFileEncoder::addString  (out, sms.dstSmeId);
-    std::string dda = sms.dealiasedDestinationAddress.toString();
-    CSVFileEncoder::addString  (out, dda.c_str());
+    sms.dealiasedDestinationAddress.getText(addressBuffer, sizeof(addressBuffer));
+    CSVFileEncoder::addString  (out, addressBuffer);
 
     std::string message = "";
     parseMessageBody(sms.getMessageBody(), message);
