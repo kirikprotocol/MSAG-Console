@@ -15,6 +15,15 @@ public class PerfServer extends Thread {
     ServerSocket     ssock;
     ArrayList        runners;
 
+    public String getSmscHost() {
+        return smscHost;
+    }
+
+    public int getPerfPort() {
+        return perfPort;
+    }
+
+
     public PerfServer( Config config ) throws IOException, Config.ParamNotFoundException, Config.WrongParamTypeException
     {
         appletPort = config.getInt("perfmon.appletport");

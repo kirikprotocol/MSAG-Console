@@ -2,27 +2,39 @@ package ru.novosoft.smsc.perfmon;
 
 import java.net.Socket;
 import java.net.SocketException;
-import java.io.ObjectOutputStream;
-import java.io.IOException;
-import java.io.DataOutputStream;
-import java.util.Random;
+import java.io.*;
+import java.util.*;
 
 public class PerfServerRunner extends Thread {
     private org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(this.getClass());
 
     Socket sock;
+    Socket smscSock;
     PerfServer server;
 
-    public PerfServerRunner( Socket sock, PerfServer server ) {
+    public PerfServerRunner( Socket sock, PerfServer server )
+    throws IOException
+    {
         this.sock = sock;
         this.server = server;
+        logger.debug("Connecting to performance data socket "+server.getSmscHost()+":"+server.getPerfPort());
+        smscSock = new Socket( server.getSmscHost(), server.getPerfPort());
+        logger.debug("Connected to performance data socket "+server.getSmscHost()+":"+server.getPerfPort());
     }
 
     public void run() {
         DataOutputStream os = null;
+        InputStream is = null;
         try {
             os = new DataOutputStream( sock.getOutputStream() );
-            snapGenerator(os);
+            is = smscSock.getInputStream();
+//            snapGenerator(os);
+          PerfSnap snap = new PerfSnap();
+          while(true) {
+              readSnap( is, snap );
+              snap.write( os );
+              os.flush();
+          }
         } catch (SocketException e) {
             logger.debug("Client "+sock.getInetAddress().getHostAddress()+" disconnected");
         } catch (IOException e) {
@@ -30,13 +42,56 @@ public class PerfServerRunner extends Thread {
         } catch (Exception e) {
             logger.error("Unexpected error occured for "+sock.getInetAddress().getHostAddress(), e);
         } finally {
+            if( is != null ) try { is.close();} catch (Exception ee){};
             if( os != null ) try { os.close();} catch (Exception ee){};
             if( sock != null ) try { sock.close();} catch (Exception ee){};
+            if( smscSock != null ) try { smscSock.close();} catch (Exception ee){};
         }
         server.removeRunner(this);
         synchronized( shutSemaphore ) {
             shutSemaphore.notifyAll();
         }
+    }
+
+    protected int readNetworkInt( InputStream in )
+    throws IOException
+    {
+        int ch1 = in.read();
+        int ch2 = in.read();
+        int ch3 = in.read();
+        int ch4 = in.read();
+        if ((ch1 | ch2 | ch3 | ch4) < 0)
+             throw new EOFException();
+        return ((ch4 << 24) + (ch3 << 16) + (ch2 << 8) + ch1);
+    }
+
+    protected long readNetworkLong( InputStream in )
+    throws IOException
+    {
+        int i1 = readNetworkInt(in);
+        int i2 = readNetworkInt(in);
+
+        return ((long)(i2) << 32) + (i1 & 0xFFFFFFFFL);
+    }
+
+    protected void readSnap( InputStream is, PerfSnap snap )
+    throws IOException
+    {
+        snap.last[PerfSnap.IDX_SUCCESS] = (long)readNetworkInt(is);
+        snap.avg[PerfSnap.IDX_SUCCESS] = (long)readNetworkInt(is);
+        snap.total[PerfSnap.IDX_SUCCESS] = readNetworkLong(is);
+
+        snap.last[PerfSnap.IDX_ERROR] = (long)readNetworkInt(is);
+        snap.avg[PerfSnap.IDX_ERROR] = (long)readNetworkInt(is);
+        snap.total[PerfSnap.IDX_ERROR] = readNetworkLong(is);
+
+        snap.last[PerfSnap.IDX_RETRY] = (long)readNetworkInt(is);
+        snap.avg[PerfSnap.IDX_RETRY] = (long)readNetworkInt(is);
+        snap.total[PerfSnap.IDX_RETRY] = readNetworkLong(is);
+
+        snap.uptime = readNetworkInt(is);
+        snap.sctime = readNetworkInt(is);
+        logger.debug("Got performance data: "+snap.uptime+"/"+(new Date(((long)snap.sctime)*1000)).toString());
     }
 
     void fillDebugSnap( PerfSnap snap ) {
