@@ -84,13 +84,13 @@ static const int bindCmdIdsSize = sizeof(bindCmdIds) / sizeof(*bindCmdIds);
 void SmppProtocolErrorScenario::checkBindResp(PduBindTRXResp* pdu)
 {
 	__decl_tc__;
-	__tc__("bindCorrectSme.checkCommandStatus");
+	__tc__("bind.resp.checkCommandStatus");
 	if (pdu->get_header().get_commandStatus() != ESME_ROK)
 	{
 		__tc_fail__(1);
 	}
 	__tc_ok_cond__;
-	__tc__("bindCorrectSme.checkInterfaceVersion");
+	__tc__("bind.resp.checkInterfaceVersion");
 	if (pdu->get_scInterfaceVersion() != 0x34)
 	{
 		__tc_fail__(1);
@@ -101,7 +101,7 @@ void SmppProtocolErrorScenario::checkBindResp(PduBindTRXResp* pdu)
 void SmppProtocolErrorScenario::checkUnbindResp(PduUnbindResp* pdu)
 {
 	__decl_tc__;
-	__tc__("unbind.checkCommandStatus");
+	__tc__("unbind.resp.checkCommandStatus");
 	if (pdu->get_header().get_commandStatus() != ESME_ROK)
 	{
 		__tc_fail__(1);

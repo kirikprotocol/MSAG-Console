@@ -34,7 +34,7 @@ void SmppReceiverTestCases::processSubmitSmResp(PduSubmitSmResp &pdu)
 		return;
 	}
 	__decl_tc__;
-	__tc__("processSubmitSmResp.async");
+	__tc__("submitSm.resp.async");
 	try
 	{
 		//получить оригинальную pdu
@@ -109,7 +109,7 @@ void SmppReceiverTestCases::processDeliverySm(PduDeliverySm &pdu)
 	__dumpPdu__("processDeliverySmBefore", fixture->smeInfo.systemId, &pdu);
 	__require__(fixture->session);
 	__decl_tc__;
-	__tc__("processDeliverySm.checkFields");
+	__tc__("deliverySm.checkFields");
 	time_t recvTime = time(NULL);
 	//общая проверка полей
 	//header

@@ -239,7 +239,10 @@ void TestSme::executeCycle()
 			protocolTc.submitSmIncorrect(rand0(1), RAND_TC);
 			break;
 		case 3:
-			protocolTc.replaceSm(rand0(1), RAND_TC);
+			protocolTc.replaceSmCorrect(rand0(1), RAND_TC);
+			break;
+		case 4:
+			protocolTc.replaceSmIncorrect(rand0(1), RAND_TC);
 			break;
 		//profiler
 		case 51: //обновление настроек кодировки

@@ -30,15 +30,15 @@ bool SmppBaseTestCases::bindCorrectSme()
 		switch(fixture->smeType)
 		{
 			case SME_TRANSCEIVER:
-				__tc__("bindCorrectSme.bindTransceiver");
+				__tc__("bind.correct.transceiver");
 				bindType = BindType::Transceiver;
 				break;
 			case SME_RECEIVER:
-				__tc__("bindCorrectSme.bindReceiver");
+				__tc__("bind.correct.receiver");
 				bindType = BindType::Receiver;
 				break;
 			case SME_TRANSMITTER:
-				__tc__("bindCorrectSme.bindTransmitter");
+				__tc__("bind.correct.transmitter");
 				bindType = BindType::Transmitter;
 				break;
 			default:
@@ -80,49 +80,49 @@ void SmppBaseTestCases::bindIncorrectSme(int num)
 			switch(s.value())
 			{
 				case 1: //sme не зарегистрирована в SC
-					__tc__("bindIncorrectSme.systemIdNotRegistered");
+					__tc__("bind.incorrect.systemIdNotRegistered");
 					reason = SmppConnectException::Reason::networkConnect;
 					rand_char(15, tmp); //15 по спецификации
 					conf.sid = tmp;
 					break;
 				case 2: //неправильный пароль
-					__tc__("bindIncorrectSme.invalidPassword");
+					__tc__("bind.incorrect.invalidPassword");
 					reason = SmppConnectException::Reason::networkConnect;
 					rand_char(8, tmp); //8 по спецификации
 					conf.password = tmp;
 					break;
 				case 3: //bind на недоступный SC (неизвестный хост)
-					__tc__("bindIncorrectSme.unknownHost");
+					__tc__("bind.incorrect.unknownHost");
 					reason = SmppConnectException::Reason::networkResolve;
 					rand_char(15, tmp);
 					conf.host = tmp;
 					break;
 				case 4: //bind на недоступный SC (неправильный порт)
-					__tc__("bindIncorrectSme.invalidPort");
+					__tc__("bind.incorrect.invalidPort");
 					reason = SmppConnectException::Reason::networkConnect;
 					conf.port += rand1(65535 - conf.port);
 					break;
 				/*
 				case 5: //неправильна€ длина пол€ systemId
-					__tc__("bindIncorrectSme.invalidSystemIdLength");
+					__tc__("bind.incorrect.invalidSystemIdLength");
 					reason = SmppConnectException::Reason::networkConnect;
 					rand_char(16, tmp); //15 по спецификации
 					conf.sid = tmp;
 					break;
 				case 6: //неправильна€ длина пол€ password
-					__tc__("bindIncorrectSme.invalidPasswordLength");
+					__tc__("bind.incorrect.invalidPasswordLength");
 					reason = SmppConnectException::Reason::networkConnect;
 					rand_char(9, tmp);  //8 по спецификации
 					conf.password = tmp;
 					break;
 				case 7: //неправильна€ длина пол€ systemType
-					__tc__("bindIncorrectSme.invalidSystemTypeLength");
+					__tc__("bind.incorrect.invalidSystemTypeLength");
 					reason = SmppConnectException::Reason::networkConnect;
 					rand_char(13, tmp);  //12 по спецификации
 					conf.systemType = tmp;
 					break;
 				case 8: //неправильна€ длина пол€ addressRange
-					__tc__("bindIncorrectSme.invalidAddressRangeLength");
+					__tc__("bind.incorrect.invalidAddressRangeLength");
 					reason = SmppConnectException::Reason::networkConnect;
 					rand_char(41, tmp);  //40 по спецификации
 					conf.addressRange = tmp;

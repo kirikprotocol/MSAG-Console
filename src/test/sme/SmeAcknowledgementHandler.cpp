@@ -94,7 +94,7 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 	__decl_tc__;
 	try
 	{
-		__tc__("processDeliverySm.smeAck");
+		__tc__("deliverySm.smeAck");
 		//обязательные для sme acknowledgement опциональные поля
 		if (!pdu.get_optional().has_userMessageReference())
 		{
@@ -120,7 +120,7 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 			throw TCException();
 		}
 		__tc_ok_cond__;
-		__tc__("processDeliverySm.smeAck.checkAllowed");
+		__tc__("deliverySm.smeAck.checkAllowed");
 		switch (monitor->getFlag())
 		{
 			case PDU_REQUIRED_FLAG:
@@ -140,11 +140,11 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		PduSubmitSm* origPdu =
 			reinterpret_cast<PduSubmitSm*>(monitor->pduData->pdu);
 		//правильность маршрута
-		__tc__("processDeliverySm.smeAck.checkRoute");
+		__tc__("deliverySm.smeAck.checkRoute");
 		__tc_fail2__(checkRoute(*origPdu, pdu), 0);
 		__tc_ok_cond__;
 		//проверить содержимое полученной pdu
-		__tc__("processDeliverySm.smeAck.checkFields");
+		__tc__("deliverySm.smeAck.checkFields");
 		//поля header проверяются в processDeliverySm()
 		//поля message проверяются в ackHandler->processSmeAcknowledgement()
 		//правильность адресов проверяется в checkRoute()
@@ -187,7 +187,7 @@ void SmeAcknowledgementHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		processSmeAcknowledgement(monitor, pdu, recvTime);
 		pduReg->registerMonitor(monitor); //тест кейсы на финализированные pdu
 		//для sme acknoledgement не проверяю повторную доставку
-		__tc__("processDeliverySm.smeAck.recvTimeChecks");
+		__tc__("deliverySm.smeAck.recvTimeChecks");
 		__cfg_int__(timeCheckAccuracy);
 		if (recvTime < monitor->getCheckTime())
 		{

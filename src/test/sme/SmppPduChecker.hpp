@@ -25,7 +25,8 @@ public:
 
 	~SmppPduChecker() {}
 	
-	set<int> checkSubmitSm(PduData* pduData);
+	set<uint32_t> checkSubmitSm(PduData* pduData);
+	set<uint32_t> checkReplaceSm(PduData* pduData, PduData* replacePduData);
 	void processSubmitSmResp(ResponseMonitor* monitor, PduSubmitSmResp& respPdu,
 		time_t respTime);
 	void processReplaceSmResp(ResponseMonitor* monitor, PduReplaceSmResp& respPdu,
@@ -37,8 +38,7 @@ private:
 	SmppFixture* fixture;
 	CheckList* chkList;
 
-	template <class Resp>
-	void processResp(ResponseMonitor* monitor, Resp& respPdu, time_t respTime);
+	bool checkTransmitter();
 };
 
 }

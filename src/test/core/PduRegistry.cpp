@@ -26,9 +26,10 @@ void PduRegistry::registerMonitor(uint32_t seqNum, PduMonitor* monitor)
 void PduRegistry::registerMonitor(uint16_t msgRef, PduMonitor* monitor)
 {
 	__require__(monitor);
-	MsgRefKey key = MsgRefKey(msgRef, monitor->getType(), monitor->getId());
-	MsgRefMap::const_iterator it = msgRefMap.find(key);
-	__require__(it == msgRefMap.end());
+	//можно зарегистрировать единственный монитор для msgRef
+	__require__(msgRefMap.lower_bound(MsgRefKey(msgRef, monitor->getType(), 0)) ==
+		msgRefMap.upper_bound(MsgRefKey(msgRef, monitor->getType(), UINT_MAX)));
+	MsgRefKey key(msgRef, monitor->getType(), monitor->getId());
 	msgRefMap[key] = monitor;
 }
 
@@ -111,7 +112,8 @@ PduMonitor* PduRegistry::getMonitor(uint16_t msgRef, MonitorType type) const
 	PduMonitor* monitor = NULL;
 	for (; it != end; it++)
 	{
-		__require__(!monitor); //едиственный монитор для msgRef
+		//монитор для msgRef с flag != PDU_NOT_EXPECTED_FLAG будет последним
+		__require__(!monitor || monitor->getFlag() == PDU_NOT_EXPECTED_FLAG);
 		monitor = it->second;
 		__require__(monitor);
 	}

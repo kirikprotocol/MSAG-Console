@@ -206,7 +206,7 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 		monitor->setCondRequired();
 		return;
 	}
-	__tc__("processDeliverySm.deliveryReport.deliveryReceipt.checkStatus");
+	__tc__("deliverySm.reports.deliveryReceipt.checkStatus");
 	SmppOptional opt;
 	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
 	//если submit_sm_resp уже получен
@@ -263,7 +263,7 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	__trace2__("expected optional part:\n%s", str(opt).c_str());
 	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 10);
 	__tc_ok_cond__;
-	__tc__("processDeliverySm.deliveryReport.deliveryReceipt.checkText");
+	__tc__("deliverySm.reports.deliveryReceipt.checkText");
 	__compare__(1, pdu.get_message().get_dataCoding(), ack->dataCoding);
 	if (text.length() > getMaxChars(ack->dataCoding))
 	{
@@ -287,7 +287,7 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 		}
 		else
 		{
-			__tc__("processDeliverySm.deliveryReport.multipleMessages");
+			__tc__("deliverySm.reports.multipleMessages");
 			if (text.length() != getMaxChars(ack->dataCoding) &&
 				ack->text.length() % getMaxChars(ack->dataCoding) != 0)
 			{
@@ -330,7 +330,7 @@ void SmscSmeTestCases::processIntermediateNotification(
 		return;
 	}
 	//проверить содержимое полученной pdu
-	__tc__("processDeliverySm.deliveryReport.intermediateNotification.checkStatus");
+	__tc__("deliverySm.reports.intermediateNotification.checkStatus");
 	SmppOptional opt;
 	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
 	//если submit_sm_resp уже получен
@@ -370,7 +370,7 @@ void SmscSmeTestCases::processIntermediateNotification(
 	__trace2__("expected optional part:\n%s", str(opt).c_str());
 	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 10);
 	__tc_ok_cond__;
-	__tc__("processDeliverySm.deliveryReport.intermediateNotification.checkText");
+	__tc__("deliverySm.reports.intermediateNotification.checkText");
 	__compare__(1, pdu.get_message().get_dataCoding(), ack->dataCoding);
 	if (text.length() > getMaxChars(ack->dataCoding))
 	{
@@ -394,7 +394,7 @@ void SmscSmeTestCases::processIntermediateNotification(
 		}
 		else
 		{
-			__tc__("processDeliverySm.deliveryReport.multipleMessages");
+			__tc__("deliverySm.reports.multipleMessages");
 			if (text.length() != getMaxChars(ack->dataCoding) &&
 				ack->text.length() % getMaxChars(ack->dataCoding) != 0)
 			{

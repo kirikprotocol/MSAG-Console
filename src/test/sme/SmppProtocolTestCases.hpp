@@ -40,9 +40,14 @@ public:
 	void submitSmAssert(int num);
 
 	/**
-	 * Замещение ранее отправленной submit_sm pdu.
+	 * Корректное замещение ранее отправленной submit_sm pdu.
 	 */
-	void replaceSm(bool sync, int num);
+	void replaceSmCorrect(bool sync, int num);
+
+	/**
+	 * Некорректное замещение ранее отправленной submit_sm pdu.
+	 */
+	void replaceSmIncorrect(bool sync, int num);
 
 	/**
 	 * Заполнение и отправка replace_sm pdu с недопустимыми значениями полей.
@@ -101,10 +106,10 @@ protected:
 	CheckList* chkList;
 
 	virtual Category& getLog();
-	PduData* getNonReplaceEnrotePdu();
-	PduData* getReplaceEnrotePdu();
-	PduData* getNonReplaceRescheduledEnrotePdu();
-	PduData* getFinalPdu();
+	PduData* getNonReplaceEnrotePdu(bool deliveryReports);
+	PduData* getReplaceEnrotePdu(bool deliveryReports);
+	PduData* getNonReplaceRescheduledEnrotePdu(bool deliveryReports);
+	PduData* getFinalPdu(bool deliveryReports);
 	int getRandomRespDelay();
 };
 

@@ -39,7 +39,9 @@ public:
 
 	void setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu, PduData* replacePduData);
 
-	void sendReplaceSmPdu(PduReplaceSm* pdu, PduData* replacePduData, bool sync);
+	void sendReplaceSmPdu(PduReplaceSm* pdu, PduData* replacePduData, bool sync,
+		PduData::IntProps* intProps = NULL, PduData::StrProps* strProps = NULL,
+		PduData::ObjProps* objProps = NULL);
 
 	void sendQuerySmPdu(PduQuerySm* pdu, bool sync);
 
@@ -70,8 +72,7 @@ protected:
 	virtual Category& getLog();
 	void updateReplacePduMonitors(PduData* pduData, time_t submitTime);
 	void registerNormalSmeMonitors(PduSubmitSm* pdu, PduData* existentPduData,
-		const Profile& profile, uint16_t msgRef, time_t waitTime, time_t validTime,
-		PduData* pduData);
+		uint16_t msgRef, time_t waitTime, time_t validTime, PduData* pduData);
 	void registerExtSmeMonitors(PduSubmitSm* pdu, uint16_t msgRef, time_t waitTime,
 		time_t validTime, PduData* pduData);
 	void registerNullSmeMonitors(PduSubmitSm* pdu, uint16_t msgRef, time_t waitTime,
@@ -82,8 +83,11 @@ protected:
 	void processSubmitSmSync(PduData* pduData, PduSubmitSmResp* respPdu,
 		time_t respTime);
 	void processSubmitSmAsync(PduData* pduData);
+	void registerReplaceMonitors(PduSubmitSm* resPdu, PduData* replacePduData,
+		PduData* pduData);
 	PduData* registerReplaceSm(PduReplaceSm* pdu, PduData* replacePduData,
-		time_t submitTime);
+		time_t submitTime, PduData::IntProps* intProps, PduData::StrProps* strProps,
+		PduData::ObjProps* objProps);
 	void processReplaceSmSync(PduData* pduData, PduReplaceSmResp* respPdu,
 		time_t respTime);
 	void processReplaceSmAsync(PduData* pduData);

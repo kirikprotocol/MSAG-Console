@@ -112,7 +112,7 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu,
 	switch(codePage)
 	{
 		case ProfileCharsetOptions::Default:
-			__tc__("processDeliverySm.normalSms.checkDataCoding");
+			__tc__("deliverySm.normalSms.checkDataCoding");
 			if (dc != DEFAULT)
 			{
 				__tc_fail__(1);
@@ -122,11 +122,11 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu,
 			{
 				if (origDc == DEFAULT)
 				{
-					__tc__("processDeliverySm.normalSms.checkTextEqualDataCoding");
+					__tc__("deliverySm.normalSms.checkTextEqualDataCoding");
 				}
 				else
 				{
-					__tc__("processDeliverySm.normalSms.checkTextDiffDataCoding");
+					__tc__("deliverySm.normalSms.checkTextDiffDataCoding");
 				}
 				__tc_fail2__(compare(origDc, origSm, origSmLen, dc, sm, smLen), 0);
 				__tc_fail2__(compare(origDc, origMp, origMpLen, dc, mp, mpLen), 10);
@@ -136,11 +136,11 @@ void NormalSmsHandler::compareMsgText(PduSubmitSm& origPdu, PduDeliverySm& pdu,
 		case ProfileCharsetOptions::Ucs2:
 			if (dc == origDc)
 			{
-				__tc__("processDeliverySm.normalSms.checkTextEqualDataCoding");
+				__tc__("deliverySm.normalSms.checkTextEqualDataCoding");
 			}
 			else
 			{
-				__tc__("processDeliverySm.normalSms.checkTextDiffDataCoding");
+				__tc__("deliverySm.normalSms.checkTextDiffDataCoding");
 			}
 			__tc_fail2__(compare(origDc, origSm, origSmLen, dc, sm, smLen), 0);
 			__tc_fail2__(compare(origDc, origMp, origMpLen, dc, mp, mpLen), 10);
@@ -242,7 +242,7 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 		case FAILURE_SMSC_DELIVERY_RECEIPT:
 			if (deliveryStatus == ESME_ROK)
 			{
-				__tc__("processDeliverySm.deliveryReport.deliveryReceipt.failureDeliveryReceipt");
+				__tc__("deliverySm.reports.deliveryReceipt.failureDeliveryReceipt");
 				__tc_ok__;
 				return;
 			}
@@ -265,13 +265,13 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 			state = UNDELIVERABLE;
 			break;
 		case RESP_PDU_RESCHED:
-			__tc__("processDeliverySm.deliveryReport.deliveryReceipt.expiredDeliveryReceipt");
+			__tc__("deliverySm.reports.deliveryReceipt.expiredDeliveryReceipt");
 			__tc_ok__;
 			startTime = monitor->getValidTime();
 			state = EXPIRED;
 			break;
 		case RESP_PDU_MISSING:
-			__tc__("processDeliverySm.deliveryReport.deliveryReceipt.expiredDeliveryReceipt");
+			__tc__("deliverySm.reports.deliveryReceipt.expiredDeliveryReceipt");
 			__tc_ok__;
 			startTime = max(recvTime + (time_t) (fixture->smeInfo.timeout - 1),
 				monitor->getValidTime());
@@ -324,7 +324,7 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 	__decl_tc__;
 	try
 	{
-		__tc__("processDeliverySm.normalSms");
+		__tc__("deliverySm.normalSms");
 		//в полученной pdu нет user_message_reference
 		if (!pdu.get_optional().has_userMessageReference())
 		{
@@ -352,11 +352,11 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 		PduSubmitSm* origPdu =
 			reinterpret_cast<PduSubmitSm*>(monitor->pduData->pdu);
 		//проверить правильность маршрута
-		__tc__("processDeliverySm.normalSms.checkRoute");
+		__tc__("deliverySm.normalSms.checkRoute");
 		__tc_fail2__(checkRoute(*origPdu, pdu), 0);
 		__tc_ok_cond__;
 		//сравнить поля полученной и оригинальной pdu
-		__tc__("processDeliverySm.normalSms.checkMandatoryFields");
+		__tc__("deliverySm.normalSms.checkMandatoryFields");
 		//поля хедера проверяются в processDeliverySm()
 		//message
 		__compareCStr__(1, get_message().get_serviceType());
@@ -381,13 +381,13 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 			compareMsgText(*origPdu, pdu, recvTime);
 		}
 		//optional
-		__tc__("processDeliverySm.normalSms.checkOptionalFields");
+		__tc__("deliverySm.normalSms.checkOptionalFields");
 		//отключить message_payload, который проверяется в compareMsgText()
 		__tc_fail2__(SmppUtil::compareOptional(
 			pdu.get_optional(), origPdu->get_optional(), OPT_MSG_PAYLOAD), 0);
 		__tc_ok_cond__;
 		//проверка механизма повторной доставки
-		__tc__("processDeliverySm.normalSms.scheduleChecks");
+		__tc__("deliverySm.normalSms.scheduleChecks");
 		__tc_fail2__(monitor->checkSchedule(recvTime), 0);
 		__tc_ok_cond__;
 		//отправить респонс
@@ -395,7 +395,7 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 			fixture->respSender->sendDeliverySmResp(pdu);
 		RespPduFlag respFlag = isAccepted(deliveryResp.first);
 		//обновить статус delivery монитора
-		__tc__("processDeliverySm.normalSms.checkAllowed");
+		__tc__("deliverySm.normalSms.checkAllowed");
 		pduReg->removeMonitor(monitor);
 		__tc_fail2__(monitor->update(recvTime, respFlag), 0);
 		switch (respFlag)

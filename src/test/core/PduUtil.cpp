@@ -99,6 +99,9 @@ string PduData::str() const
 	s << ", replacePdu = " << (void*) replacePdu;
 	s << ", replacedByPdu = " << (void*) replacedByPdu;
 	s << ", count = " << count;
+	s << ", checkRes = {" << hex;
+	copy(checkRes.begin(), checkRes.end(), ostream_iterator<uint32_t>(s, ","));
+	s << "}";
 	return s.str();
 }
 

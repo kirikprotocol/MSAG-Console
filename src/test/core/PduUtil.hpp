@@ -10,6 +10,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <set>
 
 namespace smsc {
 namespace test {
@@ -23,6 +24,7 @@ using smsc::core::synchronization::MutexGuard;
 using std::string;
 using std::map;
 using std::vector;
+using std::set;
 using smsc::profiler::ProfileReportOptions::ReportNone;
 
 typedef enum
@@ -95,13 +97,14 @@ public:
 
 	SmppHeader* const pdu;
 	const time_t sendTime;
+	set<uint32_t> checkRes;
 	IntProps intProps;
 	StrProps strProps;
 	ObjProps objProps;
 	PduData* replacePdu; //pdu, которая должна быть заменена текущей pdu
 	PduData* replacedByPdu; //pdu, которая замещает текущую pdu
 	
-	PduData(SmppHeader* pdu, time_t sendTime,  IntProps* intProps = NULL,
+	PduData(SmppHeader* pdu, time_t sendTime, IntProps* intProps = NULL,
 		StrProps* strProps = NULL, ObjProps* objProps = NULL);
 	~PduData();
 

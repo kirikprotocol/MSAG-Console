@@ -74,7 +74,7 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 	static const char INTERMEDIATE_NOTIFICATION = '$';
 	try
 	{
-		__tc__("processDeliverySm.deliveryReport");
+		__tc__("deliverySm.reports");
 		//обязательные для delivery receipt и intermediate notification
 		//опциональные поля
 		if (!pdu.get_optional().has_userMessageReference())
@@ -118,12 +118,12 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		__tc_ok_cond__;
 		if (pduType == DELIVERY_RECEIPT)
 		{
-			__tc__("processDeliverySm.deliveryReport.deliveryReceipt.checkAllowed");
+			__tc__("deliverySm.reports.deliveryReceipt.checkAllowed");
 		}
 		else
 		{
 			__require__(pduType == INTERMEDIATE_NOTIFICATION);
-			__tc__("processDeliverySm.deliveryReport.intermediateNotification.checkAllowed");
+			__tc__("deliverySm.reports.intermediateNotification.checkAllowed");
 		}
 		switch (monitor->getFlag())
 		{
@@ -144,11 +144,11 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 			reinterpret_cast<PduSubmitSm*>(monitor->pduData->pdu);
 		__require__(origPdu);
 		//Сравнить правильность маршрута
-		__tc__("processDeliverySm.deliveryReport.checkRoute");
+		__tc__("deliverySm.reports.checkRoute");
 		__tc_fail2__(checkRoute(*origPdu, pdu), 0);
 		__tc_ok_cond__;
 		//проверить содержимое полученной pdu
-		__tc__("processDeliverySm.deliveryReport.checkFields");
+		__tc__("deliverySm.reports.checkFields");
 		//поля header проверяются в processDeliverySm()
 		//поля message проверяются в processDeliveryReport()
 		//правильность адресов проверяется в checkRoute()
@@ -211,12 +211,12 @@ void DeliveryReportHandler::processPdu(PduDeliverySm& pdu, time_t recvTime)
 		//для delivery report не проверяю повторную доставку
 		if (pduType == DELIVERY_RECEIPT)
 		{
-			__tc__("processDeliverySm.deliveryReport.deliveryReceipt.recvTimeChecks");
+			__tc__("deliverySm.reports.deliveryReceipt.recvTimeChecks");
 		}
 		else
 		{
 			__require__(pduType == INTERMEDIATE_NOTIFICATION);
-			__tc__("processDeliverySm.deliveryReport.intermediateNotification.recvTimeChecks");
+			__tc__("deliverySm.reports.intermediateNotification.recvTimeChecks");
 		}
 		__cfg_int__(timeCheckAccuracy);
 		if (recvTime < monitor->getCheckTime())

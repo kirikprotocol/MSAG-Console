@@ -15,56 +15,57 @@ using smsc::test::util::CheckList;
 class SmppProtocolCheckList : public CheckList
 {
 
-void bindCorrectSmeTc()
+void bindTc()
 {
-	__reg_tc__("bindCorrectSme",
+	__reg_tc__("bind",
 		"Установление IP соединения с SC и регистрация");
-	__reg_tc__("bindCorrectSme.bindReceiver",
+	//bind.correct
+	__reg_tc__("bind.correct",
+		"Установление IP соединения с SC и регистрация с правильными параметрами");
+	__reg_tc__("bind.correct.receiver",
 		"Регистрация ресивера с помощью bind_receiver pdu");
-	__reg_tc__("bindCorrectSme.bindTransmitter",
+	__reg_tc__("bind.correct.transmitter",
 		"Регистрация трансмиттера с помощью bind_transmitter pdu");
-	__reg_tc__("bindCorrectSme.bindTransceiver",
+	__reg_tc__("bind.correct.transceiver",
 		"Регистрация трансивера с помощью bind_transceiver pdu");
-	__reg_tc__("bindCorrectSme.checkCommandStatus",
-		"В bind респонсе значение поля command_status равно ESME_ROK");
-	__reg_tc__("bindCorrectSme.checkInterfaceVersion",
-		"В bind респонсе значение поля sc_interface_version равно 0x34");
-}
-
-void bindIncorrectSmeTc()
-{
-	__reg_tc__("bindIncorrectSme",
+	//bind.incorrect
+	__reg_tc__("bind.incorrect",
 		"Установление IP соединения с SC и регистрация с неправильными параметрами");
-	__reg_tc__("bindIncorrectSme.systemIdNotRegistered",
+	__reg_tc__("bind.incorrect.systemIdNotRegistered",
 		"Значение system_id не прописано в конфигурации SC");
-	__reg_tc__("bindIncorrectSme.invalidPassword",
+	__reg_tc__("bind.incorrect.invalidPassword",
 		"Неправильный пароль");
-	__reg_tc__("bindIncorrectSme.unknownHost",
+	__reg_tc__("bind.incorrect.unknownHost",
 		"Установка соединения с недоступным SC (неизвестный хост) завершается корректно");
-	__reg_tc__("bindIncorrectSme.invalidPort",
+	__reg_tc__("bind.incorrect.invalidPort",
 		"Установка соединения с недоступным SC (неправильный порт) завершается корректно");
-	__reg_tc__("bindIncorrectSme.invalidSystemIdLength",
+	__reg_tc__("bind.incorrect.invalidSystemIdLength",
 		"Длина поля system_id в bind pdu больше максимально допустимой");
-	__reg_tc__("bindIncorrectSme.invalidPasswordLength",
+	__reg_tc__("bind.incorrect.invalidPasswordLength",
 		"Длина поля password в bind pdu больше максимально допустимой");
-	__reg_tc__("bindIncorrectSme.invalidSystemTypeLength",
+	__reg_tc__("bind.incorrect.invalidSystemTypeLength",
 		"Длина поля system_type в bind pdu больше максимально допустимой");
-	__reg_tc__("bindIncorrectSme.invalidAddressRangeLength",
+	__reg_tc__("bind.incorrect.invalidAddressRangeLength",
 		"Длина поля address_range в bind pdu больше максимально допустимой");
+	//bind.resp
+	__reg_tc__("bind.resp.checkCommandStatus",
+		"В bind респонсе значение поля command_status равно ESME_ROK");
+	__reg_tc__("bind.resp.checkInterfaceVersion",
+		"В bind респонсе значение поля sc_interface_version равно 0x34");
 }
 
 void unbindTc()
 {
 	__reg_tc__("unbind", "Завершение соединения с SC");
-	__reg_tc__("unbind.checkCommandStatus",
+	__reg_tc__("unbind.resp.checkCommandStatus",
 		"В unbind респонсе значение поля command_status равно ESME_ROK");
-	__reg_tc__("unbind.checkSocketClose",
+	__reg_tc__("unbind.resp.checkSocketClose",
 		"После отправки unbind респонса SC закрывает соединение");
 }
 
 void submitSmTc()
 {
-	__reg_tc__("submitSm", "Отправка submit_sm pdu");
+	__reg_tc__("submitSm", "Тест кейсы для submit_sm");
 	__reg_tc__("submitSm.sync", "Отправка синхронного submit_sm pdu");
 	__reg_tc__("submitSm.async", "Отправка асинхронного submit_sm pdu");
 	//submitSm.correct
@@ -87,7 +88,11 @@ void submitSmTc()
 	__reg_tc__("submitSm.correct.notReplace",
 		"Дублированное сообщение (совпадают source_addr, dest_addr и service_type) без замещения существующего, находящегося в очереди доставки");
 	__reg_tc__("submitSm.correct.serviceTypeNotMatch",
-		"Совпадают source_addr и dest_addr, отличается service_type для сообщения находящегося в очереди доставки");
+		"Если совпадают source_addr и dest_addr, но отличается service_type для сообщения находящегося в очереди доставки, то создается новое сообщение");
+	__reg_tc__("submitSm.correct.sourceAddrNotMatch",
+		"Если совпадают dest_addr и service_type, но отличается source_addr для сообщения находящегося в очереди доставки, то создается новое сообщение");
+	__reg_tc__("submitSm.correct.destAddrNotMatch",
+		"Если совпадают source_addr и service_type, но отличается dest_addr для сообщения находящегося в очереди доставки, то создается новое сообщение");
 	__reg_tc__("submitSm.correct.replaceEnrote",
 		"Дублированное сообщение (совпадают source_addr, dest_addr и service_type) с замещением существующего, находящегося в очереди доставки");
 	__reg_tc__("submitSm.correct.replaceReplacedEnrote",
@@ -128,34 +133,229 @@ void submitSmTc()
 		"Недопустимое значение длины поля адреса получателя");
 	__reg_tc__("submitSm.assert.msgLengthInvalid",
 		"Недопустимое значение длины текста сообщения short_message");
+	//submitSm.resp
+	__reg_tc__("submitSm.resp",
+		"Получение submit_sm_resp pdu");
+	__reg_tc__("submitSm.resp.sync",
+		"Получение submit_sm_resp pdu при синхронных submit_sm запросах");
+	__reg_tc__("submitSm.resp.async",
+		"Получение submit_sm_resp pdu при асинхронных submit_sm запросах");
+	__reg_tc__("submitSm.resp.checkDuplicates",
+		"На каждый реквест приходит единственный респонс");
+	__reg_tc__("submitSm.resp.checkTime",
+		"Правильное время получения респонса");
+	__reg_tc__("submitSm.resp.checkHeader",
+		"Правильные значения полей хедера респонса (command_length, command_id, sequence_number)");
+	__reg_tc__("submitSm.resp.checkCmdStatusOk",
+		"При отсутствии кода ошибки в поле command_status, выполняются все условия для нормальной доставки сообщения (поля реквеста заданы корректно, существует маршрут и т.п.)");
+	__reg_tc__("submitSm.resp.checkCmdStatusInvalidDestAddr",
+		"Если код ошибки ESME_RINVDSTADR в поле command_status, то маршрута действительно не существует");
+	__reg_tc__("submitSm.resp.checkCmdStatusInvalidWaitTime",
+		"Если код ошибки ESME_RINVSCHED в поле command_status, то время schedule_delivery_time действительно задано неправильно");
+	__reg_tc__("submitSm.resp.checkCmdStatusInvalidValidTime",
+		"Если код ошибки ESME_RINVEXPIRY в поле command_status, то время validity_period действительно задано неправильно");
+	__reg_tc__("submitSm.resp.checkCmdStatusInvalidDataCoding",
+		"Если код ошибки ESME_RINVDCS в поле command_status, то кодировка сообщения действительно задана неправильно");
+	__reg_tc__("submitSm.resp.checkCmdStatusInvalidServiceType",
+		"Если код ошибки ESME_RINVSERTYP в поле command_status, то длина поля service_type действительно задана неправильно");
+	__reg_tc__("submitSm.resp.checkCmdStatusInvalidSourceAddr",
+		"Если код ошибки ESME_RINVSRCADR в поле command_status, то адрес отправителя действительно не соответствует address range для данной sme в конфигурации sme.xml SC");
+	__reg_tc__("submitSm.resp.checkCmdStatusSystemError",
+		"Если код ошибки ESME_RSYSERR в поле command_status, то на стороне SC действительно возникла неустранимая ошибка (transaction rollback при сохранении сообщения)");
+	__reg_tc__("submitSm.resp.checkCmdStatusInvalidBindStatus",
+		"Если код ошибки ESME_RINVBNDSTS в поле command_status, то действительно sme зарегистрированна как receiver");
+	__reg_tc__("submitSm.resp.checkCmdStatusOther",
+		"Прочие коды ошибок соответствуют спецификации");
 }
 
 void replaceSmTc()
 {
-	__reg_tc__("replaceSm",
-		"Отправка replace_sm pdu с правильными значениями полей");
-	__reg_tc__("replaceSm.waitTimePast",
-		"Время schedule_delivery_time в прошлом (доставка уже должна была начаться)");
-	__reg_tc__("replaceSm.validTimePast",
-		"Время validity_period в прошлом (сообщение никогда не будет доставлено)");
-	__reg_tc__("replaceSm.validTimeExceeded",
-		"Время validity_period больше максимально срока валидности установленного для SC");
-	__reg_tc__("replaceSm.waitTimeInvalid",
-		"Значение schedule_delivery_time превышает validity_period");
-	__reg_tc__("replaceSm.smLengthMarginal",
-		"Предельные значения длины тела сообщения short_message");
-	__reg_tc__("replaceSm.msgIdNotExist",
-		"Поле message_id задает несуществующее сообщение");
-	__reg_tc__("replaceSm.replaceReplacedEnrote",
-		"Замещение уже ранее замещенного сообщения и находящегося в очереди доставки");
-	__reg_tc__("replaceSm.replaceFinal",
-		"Замещение уже доставленного сообщения");
-	__reg_tc__("replaceSm.replaceRepeatedDeliveryEnrote",
-	   "Замещение сообщения находящегося в очереди повторной доставки");
+	__reg_tc__("replaceSm", "Тест кейсы для replace_sm");
 	__reg_tc__("replaceSm.sync",
 		"Отправка синхронного replace_sm pdu");
 	__reg_tc__("replaceSm.async",
 		"Отправка асинхронного replace_sm pdu");
+	//replaceSm.correct
+	__reg_tc__("replaceSm.correct",
+		"Отправка replace_sm pdu с правильными значениями полей");
+	__reg_tc__("replaceSm.correct.waitTimePast",
+		"Время schedule_delivery_time в прошлом (доставка уже должна была начаться)");
+	__reg_tc__("replaceSm.correct.validTimeExceeded",
+		"Время validity_period больше максимально срока валидности установленного для SC");
+	__reg_tc__("replaceSm.correct.waitTimeNull",
+		"Время начала доставки равно NULL (остается без изменений)");
+	__reg_tc__("replaceSm.correct.validTimeNull",
+		"Время validity_period равно NULL (сохраняется validity_period из замещаемой sms)");
+	__reg_tc__("replaceSm.correct.smLengthMarginal",
+		"Предельные значения длины тела сообщения short_message");
+	__reg_tc__("replaceSm.correct.replaceReplacedEnrote",
+		"Замещение уже ранее замещенного сообщения и находящегося в очереди доставки");
+	__reg_tc__("replaceSm.correct.replaceRepeatedDeliveryEnrote",
+	   "Замещение сообщения находящегося в очереди повторной доставки");
+	//replaceSm.incorrect
+	__reg_tc__("replaceSm.incorrect",
+		"Отправка replace_sm pdu с неправильными значениями полей");
+	__reg_tc__("replaceSm.incorrect.messageId",
+		"Поле message_id задано неправильно (несуществующая sms)");
+	__reg_tc__("replaceSm.incorrect.sourceAddr",
+		"Если message_id задан правильно, но отличается source_addr, то существующее sms не замещается");
+	__reg_tc__("replaceSm.incorrect.validTimeFormat",
+		"Неправильный формат validity_period");
+	__reg_tc__("replaceSm.incorrect.waitTimeFormat",
+		"Неправильный формат schedule_delivery_time");
+	__reg_tc__("replaceSm.incorrect.validTimePast",
+		"Время validity_period в прошлом (сообщение никогда не будет доставлено)");
+	__reg_tc__("replaceSm.incorrect.waitTimeInvalid1",
+		"Значение schedule_delivery_time больше validity_period");
+	__reg_tc__("replaceSm.incorrect.waitTimeInvalid2",
+		"Значение validity_period = NULL (сохранить оригинальное значение), а schedule_delivery_time больше validity_period замещаемого сообщения");
+	__reg_tc__("replaceSm.incorrect.waitTimeInvalid3",
+		"Значение schedule_delivery_time = NULL (сохранить оригинальное значение), а validity_period меньше schedule_delivery_time замещаемого сообщения");
+	__reg_tc__("replaceSm.incorrect.replaceFinal",
+		"Замещение сообщения находящегося в финальном состоянии (код ошибки ESME_RREPLACEFAIL)");
+	__reg_tc__("replaceSm.incorrect.transactionRollback",
+		"Специальные sms эмулирующие transaction rollback на стороне сервера БД");
+	//replaceSm.resp
+	__reg_tc__("replaceSm.resp",
+		"Получение replace_sm_resp pdu");
+	__reg_tc__("replaceSm.resp.sync",
+		"Получение replace_sm_resp pdu при синхронных replace_sm запросах");
+	__reg_tc__("replaceSm.resp.async",
+		"Получение replace_sm_resp pdu при асинхронных replace_sm запросах");
+	__reg_tc__("replaceSm.resp.checkDuplicates",
+		"На каждый реквест приходит единственный респонс");
+	__reg_tc__("replaceSm.resp.checkTime",
+		"Правильное время получения респонса");
+	__reg_tc__("replaceSm.resp.checkHeader",
+		"Правильные значения полей хедера респонса (command_length, command_id, sequence_number)");
+	__reg_tc__("replaceSm.resp.checkTime",
+		"Правильное время получения респонса");
+	__reg_tc__("replaceSm.resp.checkDuplicates",
+		"На каждый реквест приходит единственный респонс");
+	__reg_tc__("replaceSm.resp.checkCmdStatusOk",
+		"При отсутствии кода ошибки в поле command_status, выполняются все условия для нормальной доставки сообщения (поля реквеста заданы корректно, существует маршрут и т.п.)");
+	__reg_tc__("replaceSm.resp.checkCmdStatusInvalidWaitTime",
+		"Если код ошибки ESME_RINVSCHED в поле command_status, то время schedule_delivery_time действительно задано неправильно");
+	__reg_tc__("replaceSm.resp.checkCmdStatusInvalidValidTime",
+		"Если код ошибки ESME_RINVEXPIRY в поле command_status, то время validity_period действительно задано неправильно");
+	__reg_tc__("replaceSm.resp.checkCmdStatusInvalidSourceAddr",
+		"Если код ошибки ESME_RINVSRCADR в поле command_status, то адрес отправителя действительно не соответствует address range для данной sme в конфигурации sme.xml SC");
+	__reg_tc__("replaceSm.resp.checkCmdStatusSystemError",
+		"Если код ошибки ESME_RSYSERR в поле command_status, то на стороне SC действительно возникла неустранимая ошибка (transaction rollback при сохранении сообщения)");
+	__reg_tc__("replaceSm.resp.checkCmdStatusInvalidBindStatus",
+		"Если код ошибки ESME_RINVBNDSTS в поле command_status, то действительно sme зарегистрированна как receiver");
+	__reg_tc__("replaceSm.resp.checkCmdStatusInvalidMsgId",
+		"Если код ошибки ESME_RINVMSGID в поле command_status, то действительно message_id задан неправильно");
+	__reg_tc__("replaceSm.resp.checkCmdStatusOther",
+		"Прочие коды ошибок соответствуют спецификации");
+}
+
+void deliverySmTc()
+{
+	__reg_tc__("deliverySm", "Тест кейсы для deliver_sm");
+	__reg_tc__("deliverySm.checkFields",
+		"Общие проверки полей хедера и некоторых других полей");
+	//deliverySm.normalSms
+	__reg_tc__("deliverySm.normalSms",
+		"Обычная sms не являющаяся нотификацией");
+	__reg_tc__("deliverySm.normalSms.checkAllowed",
+		"Проверка правомерности получения sms");
+	__reg_tc__("deliverySm.normalSms.checkRoute",
+		"Проверка правильности маршрута (определение sme по адресу отправителя и алиасу получателя)");
+	__reg_tc__("deliverySm.normalSms.checkMandatoryFields",
+		"Сравнение обязательных полей отправленной (submit_sm, data_sm, replace_sm) и полученной (deliver_sm) pdu");
+	__reg_tc__("deliverySm.normalSms.checkDataCoding",
+		"Кодировка текста sms соответствует настройкам профиля получателя");
+	__reg_tc__("deliverySm.normalSms.checkTextEqualDataCoding",
+		"Для одинаковых кодировок в профилях отправителя и получателя текст sms совпадает");
+	__reg_tc__("deliverySm.normalSms.checkTextDiffDataCoding",
+		"Для различных кодировок в профилях отправителя и получателя текст sms правильно преобразуется из одной кодировки в другую");
+	__reg_tc__("deliverySm.normalSms.checkOptionalFields",
+		"Сравнение опциональных полей отправленной (submit_sm, data_sm, replace_sm) и полученной (deliver_sm) pdu");
+	__reg_tc__("deliverySm.normalSms.scheduleChecks",
+		"Корректная работа механизма повторной доставки (правильное время, нет пропусков между повторными доставками, отсутствие дублей)");
+	//deliverySm.reports
+	__reg_tc__("deliverySm.reports",
+		"Отчеты о доставке (подтверждения доставки и промежуточные нотификации)");
+	__reg_tc__("deliverySm.reports.checkRoute",
+		"Проверка правильности маршрута (определение sme по адресу отправителя и адресу SC)");
+	__reg_tc__("deliverySm.reports.checkFields",
+		"Общая проверка правильности полей");
+	__reg_tc__("deliverySm.reports.multipleMessages",
+		"Длинный текст сообщения о доставки разбивается на несколько sms");
+	//deliverySm.reports.deliveryReceipt
+	__reg_tc__("deliverySm.reports.deliveryReceipt",
+		"Подтверждения доставки");
+	__reg_tc__("deliverySm.reports.deliveryReceipt.checkAllowed",
+		"Проверка правомерности получения подтверждений доставки (в зависимости от настроек профиля и поля pdu registered_delivery, единственный раз по окончании доставки оригинальной pdu)");
+	__reg_tc__("deliverySm.reports.deliveryReceipt.failureDeliveryReceipt",
+		"Подтверждение доставки на ошибку не доставляется в случае успешной доставки оригинального сообщения");
+	__reg_tc__("deliverySm.reports.deliveryReceipt.expiredDeliveryReceipt",
+		"Подтверждение доставки на ошибку при истечении срока валидности доставляется в момент времени validity period");
+	__reg_tc__("deliverySm.reports.deliveryReceipt.recvTimeChecks",
+		"Подтверждения доставки приходят в момент окончании доставки оригинальной pdu");
+	__reg_tc__("deliverySm.reports.deliveryReceipt.checkStatus",
+		"Информации о статусе доставленной pdu (состояние, код ошибки) является корректной");
+	__reg_tc__("deliverySm.reports.deliveryReceipt.checkText",
+		"Текст сообщения соответствует настройкам SC");
+	//deliverySm.reports.intermediateNotification
+	__reg_tc__("deliverySm.reports.intermediateNotification",
+		"Промежуточные нотификации");
+	__reg_tc__("deliverySm.reports.intermediateNotification.checkAllowed",
+		"Проверка правомерности получения промежуточных нотификаций (в зависимости от настроек профиля и поля pdu registered_delivery, единственный раз после первой зарешедуленой попытки доставки)");
+	__reg_tc__("deliverySm.reports.intermediateNotification.noRescheduling",
+		"Промежуточная нотификация не доставляется в случае, если sms не была зарешедулена");
+	__reg_tc__("deliverySm.reports.intermediateNotification.recvTimeChecks",
+		"Время доставки промежуточной нотификации соответсвует времени первой зарешедуленой попытки доставки оригинальной pdu");
+	__reg_tc__("deliverySm.reports.intermediateNotification.checkStatus",
+		"Информации о статусе pdu (состояние, код ошибки) является корректной");
+	__reg_tc__("deliverySm.reports.intermediateNotification.checkText",
+		"Текст сообщения соответствует настройкам SC");
+	//deliverySm.smeAck
+	__reg_tc__("deliverySm.smeAck",
+		"Ответное сообщение от внутренних sme SC (менеджер профилей, db sme и т.п.)");
+	__reg_tc__("deliverySm.smeAck.checkAllowed",
+		"Проверка правомерности получения сообщения");
+	__reg_tc__("deliverySm.smeAck.checkRoute",
+		"Проверка правильности маршрута (определение sme по адресу отправителя и адресу внутренней sme SC)");
+	__reg_tc__("deliverySm.smeAck.checkFields",
+		"Общая проверка правильности полей");
+	__reg_tc__("deliverySm.smeAck.recvTimeChecks",
+		"Правильное время получения сообщений");
+	//deliverySm.resp
+	__reg_tc__("deliverySm.resp", "Отправка deliver_sm_resp pdu");
+	__reg_tc__("deliverySm.resp.sync",
+		"Отправка синхронного deliver_sm_resp pdu");
+	__reg_tc__("deliverySm.resp.async",
+		"Отправка асинхронного deliver_sm_resp pdu");
+	__reg_tc__("deliverySm.resp.delay",
+		"Отправка deliver_sm_resp pdu с задержкой меньшей sme timeout");
+	__reg_tc__("deliverySm.resp.sendOk",
+		"Отправить респонс подтверждающий получение правильного deliver_sm");
+	//deliverySm.resp.sendRetry
+	__reg_tc__("deliverySm.resp.sendRetry",
+		"Отправить респонс для форсирования повторной доставки deliver_sm");
+	__reg_tc__("deliverySm.resp.sendRetry.notSend",
+		"Не отпралять респонс, имитация неполучения deliver_sm");
+	__reg_tc__("deliverySm.resp.sendRetry.tempAppError",
+		"Отправить статус ESME_RX_T_APPN (временная ошибка на стороне sme, запрос на повторную доставку)");
+	__reg_tc__("deliverySm.resp.sendRetry.msgQueueFull",
+		"Отправить статус ESME_RMSGQFUL (переполнение очереди стороне sme)");
+	__reg_tc__("deliverySm.resp.sendRetry.invalidSequenceNumber",
+		"Отправить респонс с неправильным sequence_number");
+	__reg_tc__("deliverySm.resp.sendRetry.sendAfterSmeTimeout",
+		"Отправить респонс после sme timeout");
+	//deliverySm.resp.sendError
+	__reg_tc__("deliverySm.resp.sendError",
+		"Отправить респонс для прекращения повторной доставки deliver_sm");
+	__reg_tc__("deliverySm.resp.sendError.standardError",
+		"Респонс со стандартным кодом ошибки (диапазон 0x1-0x10f)");
+	__reg_tc__("deliverySm.resp.sendError.reservedError",
+		"Респонс с зарезирвированным кодом ошибки (диапазоны 0x110-0x3ff и 0x400-0x4ff)");
+	__reg_tc__("deliverySm.resp.sendError.outRangeError",
+		"Респонс с кодом ошибки вне диапазона определенного спецификацией SMPP (>0x500)");
+	__reg_tc__("deliverySm.resp.sendError.permanentAppError",
+		"Респонс с кодом ошибки ESME_RX_P_APPN (неустранимая ошибка на стороне sme, отказ от всех последующих сообщений)");
 }
 
 void sendInvalidPduTc()
@@ -172,57 +372,6 @@ void sendInvalidPduTc()
 		"Респонс неправильной длины");
 	__reg_tc__("sendInvalidPdu.invalidCommandId",
 		"Неправильный command_id");
-}
-
-void processRespTc()
-{
-	//processSubmitSmResp
-	__reg_tc__("processSubmitSmResp",
-		"Получение submit_sm_resp pdu");
-	__reg_tc__("processSubmitSmResp.checkHeader",
-		"Правильные значения полей хедера респонса (command_length, command_id, sequence_number)");
-	__reg_tc__("processSubmitSmResp.sync",
-		"Получение submit_sm_resp pdu при синхронных submit_sm запросах");
-	__reg_tc__("processSubmitSmResp.async",
-		"Получение submit_sm_resp pdu при асинхронных submit_sm запросах");
-	//processReplaceSmResp
-	__reg_tc__("processReplaceSmResp",
-		"Получение replace_sm_resp pdu");
-	__reg_tc__("processReplaceSmResp.checkHeader",
-		"Правильные значения полей хедера респонса (command_length, command_id, sequence_number)");
-	__reg_tc__("processReplaceSmResp.sync",
-		"Получение replace_sm_resp pdu при синхронных replace_sm запросах");
-	__reg_tc__("processReplaceSmResp.async",
-		"Получение replace_sm_resp pdu при асинхронных replace_sm запросах");
-	//processResp
-	__reg_tc__("processResp",
-		"Общие проверки для submit_sm_resp, replace_sm_resp и data_sm_resp");
-	__reg_tc__("processResp.checkHeader",
-		"Правильные значения полей хедера респонса (sequence_number)");
-	__reg_tc__("processResp.checkTime",
-		"Правильное время получения респонса");
-	__reg_tc__("processResp.checkDuplicates",
-		"На каждый реквест приходит единственный респонс");
-	__reg_tc__("processResp.checkCmdStatusOk",
-		"При отсутствии кода ошибки в поле command_status, выполняются все условия для нормальной доставки сообщения (поля реквеста заданы корректно, существует маршрут и т.п.)");
-	__reg_tc__("processResp.checkCmdStatusInvalidDestAddr",
-		"Если код ошибки ESME_RINVDSTADR в поле command_status, то маршрута действительно не существует");
-	__reg_tc__("processResp.checkCmdStatusInvalidWaitTime",
-		"Если код ошибки ESME_RINVSCHED в поле command_status, то время schedule_delivery_time действительно задано неправильно");
-	__reg_tc__("processResp.checkCmdStatusInvalidValidTime",
-		"Если код ошибки ESME_RINVEXPIRY в поле command_status, то время validity_period действительно задано неправильно");
-	__reg_tc__("processResp.checkCmdStatusInvalidDataCoding",
-		"Если код ошибки ESME_RINVDCS в поле command_status, то кодировка сообщения действительно задана неправильно");
-	__reg_tc__("processResp.checkCmdStatusInvalidServiceType",
-		"Если код ошибки ESME_RINVSERTYP в поле command_status, то длина поля service_type действительно задана неправильно");
-	__reg_tc__("processResp.checkCmdStatusInvalidSourceAddr",
-		"Если код ошибки ESME_RINVSRCADR в поле command_status, то адрес отправителя действительно не соответствует address range для данной sme в конфигурации sme.xml SC");
-	__reg_tc__("processResp.checkCmdStatusSystemError",
-		"Если код ошибки ESME_RSYSERR в поле command_status, то на стороне SC действительно возникла неустранимая ошибка (transaction rollback при сохранении сообщения)");
-	__reg_tc__("processResp.checkCmdStatusInvalidBindStatus",
-		"Если код ошибки INVALID_BIND_STATUS в поле command_status, то действительно sme зарегистрированная как receiver отправляет реквесты (submit_sm, replace_sm, cancel_sm и т.п.)");
-	__reg_tc__("processResp.checkCmdStatusOther",
-		"Прочие коды ошибок соответствуют спецификации");
 }
 
 void processGenericNackTc()
@@ -242,146 +391,6 @@ void processGenericNackTc()
 		"Если код ошибки ESME_RINVCMDID в поле command_status, то тип pdu действительно задан некорректно");
 	__reg_tc__("processGenericNack.checkStatusOther",
 		"Прочие коды ошибок соответствуют спецификации");
-}
-
-void sendDeliverySmRespTc()
-{
-	__reg_tc__("sendDeliverySmResp", "Отправка deliver_sm_resp pdu");
-	__reg_tc__("sendDeliverySmResp.sync",
-		"Отправка синхронного deliver_sm_resp pdu");
-	__reg_tc__("sendDeliverySmResp.async",
-		"Отправка асинхронного deliver_sm_resp pdu");
-	__reg_tc__("sendDeliverySmResp.delay",
-		"Отправка deliver_sm_resp pdu с задержкой меньшей sme timeout");
-	__reg_tc__("sendDeliverySmResp.sendOk",
-		"Отправить респонс подтверждающий получение правильного deliver_sm");
-	//sendDeliverySmResp.sendRetry
-	__reg_tc__("sendDeliverySmResp.sendRetry",
-		"Отправить респонс для форсирования повторной доставки deliver_sm");
-	__reg_tc__("sendDeliverySmResp.sendRetry.notSend",
-		"Не отпралять респонс, имитация неполучения deliver_sm");
-	__reg_tc__("sendDeliverySmResp.sendRetry.tempAppError",
-		"Отправить статус ESME_RX_T_APPN (временная ошибка на стороне sme, запрос на повторную доставку)");
-	__reg_tc__("sendDeliverySmResp.sendRetry.msgQueueFull",
-		"Отправить статус ESME_RMSGQFUL (переполнение очереди стороне sme)");
-	__reg_tc__("sendDeliverySmResp.sendRetry.invalidSequenceNumber",
-		"Отправить респонс с неправильным sequence_number");
-	__reg_tc__("sendDeliverySmResp.sendRetry.sendAfterSmeTimeout",
-		"Отправить респонс после sme timeout");
-	//sendDeliverySmResp.sendError
-	__reg_tc__("sendDeliverySmResp.sendError",
-		"Отправить респонс для прекращения повторной доставки deliver_sm");
-	__reg_tc__("sendDeliverySmResp.sendError.standardError",
-		"Респонс со стандартным кодом ошибки (диапазон 0x1-0x10f)");
-	__reg_tc__("sendDeliverySmResp.sendError.reservedError",
-		"Респонс с зарезирвированным кодом ошибки (диапазоны 0x110-0x3ff и 0x400-0x4ff)");
-	__reg_tc__("sendDeliverySmResp.sendError.outRangeError",
-		"Респонс с кодом ошибки вне диапазона определенного спецификацией SMPP (>0x500)");
-	__reg_tc__("sendDeliverySmResp.sendError.permanentAppError",
-		"Респонс с кодом ошибки ESME_RX_P_APPN (неустранимая ошибка на стороне sme, отказ от всех последующих сообщений)");
-}
-
-void processDeliverySmTc()
-{
-	__reg_tc__("processDeliverySm", "Получение deliver_sm pdu");
-	__reg_tc__("processDeliverySm.checkFields",
-		"Общие проверки полей хедера и некоторых других полей");
-}
-
-void processNormalSmsTc()
-{
-	__reg_tc__("processDeliverySm.normalSms",
-		"Обычная sms не являющаяся нотификацией");
-	__reg_tc__("processDeliverySm.normalSms.checkAllowed",
-		"Проверка правомерности получения sms");
-	__reg_tc__("processDeliverySm.normalSms.checkRoute",
-		"Проверка правильности маршрута (определение sme по адресу отправителя и алиасу получателя)");
-	__reg_tc__("processDeliverySm.normalSms.checkMandatoryFields",
-		"Сравнение обязательных полей отправленной (submit_sm, data_sm, replace_sm) и полученной (deliver_sm) pdu");
-	__reg_tc__("processDeliverySm.normalSms.checkDataCoding",
-		"Кодировка текста sms соответствует настройкам профиля получателя");
-	__reg_tc__("processDeliverySm.normalSms.checkTextEqualDataCoding",
-		"Для одинаковых кодировок в профилях отправителя и получателя текст sms совпадает");
-	__reg_tc__("processDeliverySm.normalSms.checkTextDiffDataCoding",
-		"Для различных кодировок в профилях отправителя и получателя текст sms правильно преобразуется из одной кодировки в другую");
-	__reg_tc__("processDeliverySm.normalSms.checkOptionalFields",
-		"Сравнение опциональных полей отправленной (submit_sm, data_sm, replace_sm) и полученной (deliver_sm) pdu");
-	__reg_tc__("processDeliverySm.normalSms.scheduleChecks",
-		"Корректная работа механизма повторной доставки (правильное время, нет пропусков между повторными доставками, отсутствие дублей)");
-}
-
-void processDeliveryReportTc()
-{
-	__reg_tc__("processDeliverySm.deliveryReport",
-		"Отчеты о доставке (подтверждения доставки и промежуточные нотификации)");
-	__reg_tc__("processDeliverySm.deliveryReport.checkRoute",
-		"Проверка правильности маршрута (определение sme по адресу отправителя и адресу SC)");
-	__reg_tc__("processDeliverySm.deliveryReport.checkFields",
-		"Общая проверка правильности полей");
-	__reg_tc__("processDeliverySm.deliveryReport.multipleMessages",
-		"Длинный текст сообщения о доставки разбивается на несколько sms");
-	//deliveryReceipt
-	__reg_tc__("processDeliverySm.deliveryReport.deliveryReceipt",
-		"Подтверждения доставки");
-	__reg_tc__("processDeliverySm.deliveryReport.deliveryReceipt.checkAllowed",
-		"Проверка правомерности получения подтверждений доставки (в зависимости от настроек профиля и поля pdu registered_delivery, единственный раз по окончании доставки оригинальной pdu)");
-	__reg_tc__("processDeliverySm.deliveryReport.deliveryReceipt.failureDeliveryReceipt",
-		"Подтверждение доставки на ошибку не доставляется в случае успешной доставки оригинального сообщения");
-	__reg_tc__("processDeliverySm.deliveryReport.deliveryReceipt.expiredDeliveryReceipt",
-		"Подтверждение доставки на ошибку при истечении срока валидности доставляется в момент времени validity period");
-	__reg_tc__("processDeliverySm.deliveryReport.deliveryReceipt.recvTimeChecks",
-		"Подтверждения доставки приходят в момент окончании доставки оригинальной pdu");
-	__reg_tc__("processDeliverySm.deliveryReport.deliveryReceipt.checkStatus",
-		"Информации о статусе доставленной pdu (состояние, код ошибки) является корректной");
-	__reg_tc__("processDeliverySm.deliveryReport.deliveryReceipt.checkText",
-		"Текст сообщения соответствует настройкам SC");
-	//intermediateNotification
-	__reg_tc__("processDeliverySm.deliveryReport.intermediateNotification",
-		"Промежуточные нотификации");
-	__reg_tc__("processDeliverySm.deliveryReport.intermediateNotification.checkAllowed",
-		"Проверка правомерности получения промежуточных нотификаций (в зависимости от настроек профиля и поля pdu registered_delivery, единственный раз после первой зарешедуленой попытки доставки)");
-	__reg_tc__("processDeliverySm.deliveryReport.intermediateNotification.noRescheduling",
-		"Промежуточная нотификация не доставляется в случае, если sms не была зарешедулена");
-	__reg_tc__("processDeliverySm.deliveryReport.intermediateNotification.recvTimeChecks",
-		"Время доставки промежуточной нотификации соответсвует времени первой зарешедуленой попытки доставки оригинальной pdu");
-	__reg_tc__("processDeliverySm.deliveryReport.intermediateNotification.checkStatus",
-		"Информации о статусе pdu (состояние, код ошибки) является корректной");
-	__reg_tc__("processDeliverySm.deliveryReport.intermediateNotification.checkText",
-		"Текст сообщения соответствует настройкам SC");
-}
-
-void processSmeAckTc()
-{
-	__reg_tc__("processDeliverySm.smeAck",
-		"Ответное сообщение от внутренних sme SC (менеджер профилей, db sme и т.п.)");
-	__reg_tc__("processDeliverySm.smeAck.checkAllowed",
-		"Проверка правомерности получения сообщения");
-	__reg_tc__("processDeliverySm.smeAck.checkRoute",
-		"Проверка правильности маршрута (определение sme по адресу отправителя и адресу внутренней sme SC)");
-	__reg_tc__("processDeliverySm.smeAck.checkFields",
-		"Общая проверка правильности полей");
-	__reg_tc__("processDeliverySm.smeAck.recvTimeChecks",
-		"Правильное время получения сообщений");
-}
-
-void processIntermediateNotificationTc()
-{
-	__reg_tc__("processDeliverySm.intermediateNotification",
-		"Промежуточные нотификации");
-	__reg_tc__("processDeliverySm.intermediateNotification.checkAllowed",
-		"Проверка правомерности получения подтверждения промежуточной нотификации");
-	__reg_tc__("processDeliverySm.intermediateNotification.checkRoute",
-		"Проверка правильности маршрута (определение sme по адресу отправителя и адресу SC)");
-	__reg_tc__("processDeliverySm.intermediateNotification.checkFields",
-		"Общая проверка правильности полей");
-	/*
-	__reg_tc__("processDeliverySm.intermediateNotification.checkProfile",
-		"Проверка соответствия настройкам профиля");
-	__reg_tc__("processDeliverySm.intermediateNotification.checkStatus",
-		"Информации о состоянии отправленной pdu является корректной");
-	*/
-	__reg_tc__("processDeliverySm.intermediateNotification.checkTime",
-		"Правильное время доставки");
 }
 
 void checkMissingPduTc()
@@ -471,20 +480,15 @@ void notImplementedTc()
 
 void allProtocolTc()
 {
-	//transmitter
-	bindCorrectSmeTc();
-	bindIncorrectSmeTc();
+	bindTc();
 	unbindTc();
 	submitSmTc();
 	replaceSmTc();
-	sendDeliverySmRespTc();
+	deliverySmTc();
+
+
 	sendInvalidPduTc();
 	//receiver
-	processRespTc();
-	processDeliverySmTc();
-	processNormalSmsTc();
-	processDeliveryReportTc();
-	processSmeAckTc();
 	processGenericNackTc();
 	//processIntermediateNotificationTc();
 	//other
