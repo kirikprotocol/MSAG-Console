@@ -7,14 +7,15 @@
 #include "test/util/CheckList.hpp"
 #include "util/debug.h"
 #include <fstream>
-#include <memory>
+#include <string>
+#include <vector>
 
 namespace smsc {
 namespace test {
 namespace config {
 
-using std::auto_ptr;
 using std::ostream;
+using std::string;
 using std::vector;
 using smsc::router::RouteInfo;
 using smsc::test::core::RouteRegistry;
@@ -40,7 +41,7 @@ public:
 	
 private:
 	bool checkSubject(const Address& addr);
-	auto_ptr<char> genFakeAddress();
+	const string genFakeAddress();
 	bool printFakeMask(ostream& os);
 	void printSubject(ostream& os, const RouteInfo& route, char type);
 	void printRouteStart(ostream& os, const RouteInfo& route);

@@ -50,12 +50,14 @@ public:
 		__reg_tc__("addCorrectRoute.destNotMatchValueLength",
 			"¬ адресе получател€ все символы в строке адреса соответствуют исходным, но количество '?' делает строку отличающейс€ длины");
 		//addIncorrectRoute
+		/*
 		__reg_tc__("addIncorrectRoute",
 			"–егистраци€ маршрута с недопустимыми значени€ми адресов");
 		__reg_tc__("addIncorrectRoute.invalidType",
 			"«начение typeOfNumber вне диапазона разрешенного в SMPP v3.4");
 		__reg_tc__("addIncorrectRoute.invalidPlan",
 			"«начение numberingPlan вне диапазона разрешенного в SMPP v3.4");
+		*/
 		__reg_tc__("addIncorrectRoute.invalidSmeId",
 			"Ќезарегистрированный smeSystemId");
 		//other

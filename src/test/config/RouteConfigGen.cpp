@@ -18,20 +18,18 @@ bool RouteConfigGen::checkSubject(const Address& addr)
 	return (addr.getLenght() % 2);
 }
 
-auto_ptr<char> RouteConfigGen::genFakeAddress()
+const string RouteConfigGen::genFakeAddress()
 {
-	auto_ptr<char> tmp = rand_char(MAX_ADDRESS_LENGTH);
-	char* addr = new char[30];
-	sprintf(addr, ".%d.%d.%s", rand0(255), rand0(255), tmp.get());
-	return auto_ptr<char>(addr);
+	Address addr;
+	SmsUtil::setupRandomCorrectAddress(&addr, MAX_ADDRESS_LENGTH, MAX_ADDRESS_LENGTH);
+	return SmsUtil::configString(addr);
 }
 
 bool RouteConfigGen::printFakeMask(ostream& os)
 {
 	if (!rand0(3))
 	{
-		auto_ptr<char> tmp = genFakeAddress();
-		os << "\t<mask value=\"" << tmp.get() << "\"/>" << endl;
+		os << "\t<mask value=\"" << genFakeAddress() << "\"/>" << endl;
 		return true;
 	}
 	return false;
@@ -148,8 +146,7 @@ bool RouteConfigGen::printFakeSource(ostream& os, const RouteInfo& route)
 	if (rand0(1))
 	{
 		os << "\t<source>" << endl;
-		auto_ptr<char> tmp = genFakeAddress();
-		os << "\t\t<mask value=\"" << tmp.get() << "\"/>" << endl;
+		os << "\t\t<mask value=\"" << genFakeAddress() << "\"/>" << endl;
 		os << "\t</source>" << endl;
 		return true;
 	}
@@ -187,8 +184,7 @@ bool RouteConfigGen::printFakeDest(ostream& os, const RouteInfo& route)
 	if (rand0(1))
 	{
 		os << "\t<destination sme=\"" << route.smeSystemId << "\">" << endl;
-		auto_ptr<char> tmp = genFakeAddress();
-		os << "\t\t<mask value=\"" << tmp.get() << "\"/>" << endl;
+		os << "\t\t<mask value=\"" << genFakeAddress() << "\"/>" << endl;
 		os << "\t</destination>" << endl;
 		return true;
 	}

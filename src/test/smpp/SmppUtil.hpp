@@ -135,7 +135,6 @@ public:
 	static vector<int> compareOptional(SmppOptional& opt1, SmppOptional& opt2,
 		uint64_t excludeMask = 0x0);
 
-	static void setupRandomCorrectAddress(PduAddress* addr, bool check = true);
 	static void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 		uint64_t mask = OPT_ALL, bool check = true);
 	static void setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,

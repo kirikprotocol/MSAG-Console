@@ -213,9 +213,9 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, uint64_t 
 		__require__(p->is##field() == tmp##field); \
 	}
 
-#define __set_str__(field, length) \
+#define __set_str__(field, length, type) \
 	int len##field = length; \
-	auto_ptr<char> str##field = rand_char(len##field); \
+	auto_ptr<char> str##field = rand_char(len##field, type); \
 	p->set##field(len##field, str##field.get()); \
 	if (check) { \
 		char tmp##field[len##field + 10]; \
@@ -223,9 +223,9 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, uint64_t 
 		__require__(!strcmp(tmp##field, str##field.get())); \
 	}
 
-#define __set_str2__(field, length) \
+#define __set_str2__(field, length, type) \
 	int len##field = length; \
-	auto_ptr<char> str##field = rand_char(len##field); \
+	auto_ptr<char> str##field = rand_char(len##field, type); \
 	p->set##field(str##field.get()); \
 	if (check) { \
 		char tmp##field[len##field + 10]; \
@@ -249,15 +249,50 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, uint64_t 
 		__require__(p->get##field() == tmp##field); \
 	}
 
-void SmsUtil::setupRandomCorrectAddress(Address* addr, int minLen, int maxLen, bool check)
+void SmsUtil::setupRandomCorrectAddressTon(Address* addr, bool check)
+{
+	__require__(addr);
+	static uint8_t ton[] = {0, 1, 2, 3, 4, 5, 6};
+	static int tonSize = sizeof(ton) / sizeof(*ton);
+	Address* p = addr;
+	uint8_t oldTon = addr->getTypeOfNumber();
+	while (oldTon == addr->getTypeOfNumber())
+	{
+		__set_int__(uint8_t, TypeOfNumber, ton[rand0(tonSize - 1)]);
+	}
+}
+
+void SmsUtil::setupRandomCorrectAddressNpi(Address* addr, bool check)
+{
+	__require__(addr);
+	static uint8_t npi[] = {0, 1, 3, 4, 6, 8, 9, 10, 14, 18};
+	static int npiSize = sizeof(npi) / sizeof(*npi);
+	Address* p = addr;
+	uint8_t oldNpi = addr->getNumberingPlan();
+	while (oldNpi == addr->getNumberingPlan())
+	{
+		__set_int__(uint8_t, NumberingPlan, npi[rand0(npiSize - 1)]);
+	}
+}
+
+void SmsUtil::setupRandomCorrectAddressValue(Address* addr, int minLen,
+	int maxLen, bool check)
 {
 	__require__(addr);
 	__require__(minLen > 0 && maxLen <= MAX_ADDRESS_VALUE_LENGTH);
 	Address* p = addr;
-	//set & check fields
-	__set_int__(uint8_t, TypeOfNumber, rand0(255));
-	__set_int__(uint8_t, NumberingPlan, rand0(255));
-	__set_str__(Value, rand2(minLen, maxLen));
+	__set_str__(Value, rand2(minLen, maxLen), RAND_NUM);
+}
+
+void SmsUtil::setupRandomCorrectAddress(Address* addr, int minLen,
+	int maxLen, bool check)
+{
+	__require__(addr);
+	addr->setTypeOfNumber(255); //для корректной работы setupRandomCorrectAddressTon()
+	addr->setNumberingPlan(255); //для корректной работы setupRandomCorrectAddressNpi()
+	setupRandomCorrectAddressTon(addr, check);
+	setupRandomCorrectAddressNpi(addr, check);
+	setupRandomCorrectAddressValue(addr, minLen, maxLen, check);
 }
 	
 void SmsUtil::setupRandomCorrectAddress(Address* addr, bool check)
@@ -270,8 +305,8 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc, bool check)
 	__require__(desc);
 	Descriptor* p = desc;
 	//set & check fields
-	__set_str__(Msc, rand1(MAX_ADDRESS_VALUE_LENGTH));
-	__set_str__(Imsi, rand1(MAX_ADDRESS_VALUE_LENGTH));
+	__set_str__(Msc, rand1(MAX_ADDRESS_VALUE_LENGTH), RAND_NUM);
+	__set_str__(Imsi, rand1(MAX_ADDRESS_VALUE_LENGTH), RAND_NUM);
 	__set_int__(uint32_t, SmeNumber, rand0(INT_MAX));
 }
 
@@ -356,7 +391,7 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 	__set_addr__(DestinationAddress);
 	__set_addr__(DealiasedDestinationAddress);
 	__set_int__(uint16_t, MessageReference, rand0(65535));
-	__set_str2__(EServiceType, MAX_ESERVICE_TYPE_LENGTH);
+	__set_str2__(EServiceType, MAX_ESERVICE_TYPE_LENGTH, RAND_LAT_NUM);
 	__set_bool__(ArchivationRequested, rand0(3));
 	//SMPP v3.4, пункт 5.2.17
 	//xxxxxx00 - No SMSC Delivery Receipt requested (default)
@@ -369,10 +404,10 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 	__set_desc__(OriginatingDescriptor);
 	//setupRandomCorrectDescriptor(sms->getDestinationDescriptor(), check);
 	__set_int__(uint32_t, ServiceId, rand0(INT_MAX));
-	__set_str2__(RouteId, MAX_ROUTE_ID_TYPE_LENGTH);
+	__set_str2__(RouteId, MAX_ROUTE_ID_TYPE_LENGTH, RAND_LAT_NUM);
 	__set_int__(int32_t, Priority, rand0(INT_MAX));
-	__set_str2__(SourceSmeId, MAX_SMESYSID_TYPE_LENGTH);
-	__set_str2__(DestinationSmeId, MAX_SMESYSID_TYPE_LENGTH);
+	__set_str2__(SourceSmeId, MAX_SMESYSID_TYPE_LENGTH, RAND_LAT_NUM);
+	__set_str2__(DestinationSmeId, MAX_SMESYSID_TYPE_LENGTH, RAND_LAT_NUM);
 	//поля сохраняются в body случайным образом
 	//даже обязательные для sms поля могут не сохраняться в БД
 	auto_ptr<uint8_t> tmp = rand_uint8_t(8);

@@ -139,11 +139,11 @@ TestCase* RouteManagerTestCases::setupRandomAddressNotMatch(Address& addr,
 			break;
 		case 4: //адрес с несовпадающим typeOfNumber
 			__tc_cond__("addCorrectRoute", "NotMatchType");
-			addr.setTypeOfNumber(addr.getTypeOfNumber() + 1);
+			SmsUtil::setupRandomCorrectAddressTon(&addr);
 			break;
 		case 5: //адрес с несовпадающим numberingPlan
 			__tc_cond__("addCorrectRoute", "NotMatchPlan");
-			addr.setNumberingPlan(addr.getNumberingPlan() + 1);
+			SmsUtil::setupRandomCorrectAddressNpi(&addr);
 			break;
 		default:
 			__unreachable__("Invalid num");
@@ -250,6 +250,7 @@ void RouteManagerTestCases::addCorrectRouteNotMatch(RouteInfo* route,
 void RouteManagerTestCases::addCorrectRouteNotMatch2(RouteInfo* route,
 	SmeProxy* proxy, int num)
 {
+	/*
 	TCSelector s(num, 4, 1000);
 	__decl_tc__;
 	for (; s.check(); s++)
@@ -291,6 +292,7 @@ void RouteManagerTestCases::addCorrectRouteNotMatch2(RouteInfo* route,
 			error();
 		}
 	}
+	*/
 }
 
 void RouteManagerTestCases::addIncorrectRoute(

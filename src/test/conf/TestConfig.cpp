@@ -25,19 +25,19 @@ TestConfig::TestConfig()
 		intMap["timeCheckAccuracy"];
 	//smsc sme
 	addrMap["smscAddr"] = "+11111111111"; //11 символов
-	addrMap["smscAlias"] = ".3.3.smscSmeAlias123";
+	addrMap["smscAlias"] = "111111111110";
 	strMap["smscSystemId"] = "smscsme";
 	strMap["smscServiceType"] = "SmSc";
 	intMap["smscProtocolId"] = 3;
 	//profiler
 	addrMap["profilerAddr"] = "+222222222222"; //12 символов
-	addrMap["profilerAlias"] = ".5.5.profilerAlias123";
+	addrMap["profilerAlias"] = "2222222222220";
 	strMap["profilerSystemId"] = "profiler";
 	strMap["profilerServiceType"] = "pRof";
 	intMap["profilerProtocolId"] = 5;
 	//db sme
 	addrMap["dbSmeAddr"] = "+3333333333333"; //13 символов
-	addrMap["dbSmeAlias"] = ".7.7.dbSmeAlias123";
+	addrMap["dbSmeAlias"] = "33333333333330";
 	addrMap["dbSmeInvalidAddr"] = ".7.7.dbSmeInvalidAddr123";
 	strMap["dbSmeSystemId"] = "dbSme";
 	strMap["dbSmeServiceType"] = "dBsmE";
@@ -47,9 +47,9 @@ TestConfig::TestConfig()
 	strMap["mapProxySystemId"] = "MAP_PROXY";
 	//abonent info
 	addrMap["abonentInfoAddrSmpp"] = "+44444444444444"; //14 символов
-	addrMap["abonentInfoAliasSmpp"] = ".9.9.abonInfoAliasSmpp123";
+	addrMap["abonentInfoAliasSmpp"] = "444444444444440";
 	addrMap["abonentInfoAddrMap"] = "+555555555555555"; //15 символов
-	addrMap["abonentInfoAliasMap"] = ".11.11.abonInfoAliasSmpp123";
+	addrMap["abonentInfoAliasMap"] = "5555555555555550";
 	strMap["abonentInfoSystemId"] = "abonentinfo";
 	strMap["abonentInfoServiceType"] = "AboN";
 	intMap["abonentInfoProtocolId"] = 10;
@@ -58,7 +58,7 @@ TestConfig::TestConfig()
 	strMap["smtpHost"] = "dvl.novosoft.ru";
 	strMap["mailbox"] = "bryz";
 	addrMap["emailSmeAddr"] = "+6666666666666666"; //16 символов
-	addrMap["emailSmeAlias"] = ".13.13.emailSmeAlias123";
+	addrMap["emailSmeAlias"] = "66666666666666660";
 	strMap["emailSmeSystemId"] = "email";
 	strMap["emailSmeServiceType"] = "EmaiL";
 	intMap["emailSmeProtocolId"] = 13;

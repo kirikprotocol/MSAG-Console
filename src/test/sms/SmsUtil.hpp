@@ -42,9 +42,13 @@ public:
 	static vector<int> compareMessages(const SMS& sms1, const SMS& sms2,
 		uint64_t excludeMask = 0x0);
 
+	static void setupRandomCorrectAddressTon(Address* addr, bool check = true);
+	static void setupRandomCorrectAddressNpi(Address* addr, bool check = true);
+	static void setupRandomCorrectAddressValue(Address* addr, int minLen,
+		int maxLen, bool check = true);
 	static void setupRandomCorrectAddress(Address* addr, bool check = true);
-	
-	static void setupRandomCorrectAddress(Address* addr, int minLen, int maxLen, bool check = true);
+	static void setupRandomCorrectAddress(Address* addr, int minLen, int maxLen,
+		bool check = true);
 	
 	static void setupRandomCorrectDescriptor(Descriptor* desc, bool check = true);
 	

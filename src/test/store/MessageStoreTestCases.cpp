@@ -985,19 +985,16 @@ void MessageStoreTestCases::replaceIncorrectSms(const SMSId id,
 			{
 				case 1: //отличие только в TypeOfNumber
 					__tc__("replaceIncorrectSms.diffType");
-					addr.setTypeOfNumber(addr.getTypeOfNumber() + 1);
+					SmsUtil::setupRandomCorrectAddressTon(&addr);
 					break;
 				case 2: //отличие только в NumberingPlan
 					__tc__("replaceIncorrectSms.diffPlan");
-					addr.setNumberingPlan(addr.getNumberingPlan() + 1);
+					SmsUtil::setupRandomCorrectAddressNpi(&addr)
 					break;
 				case 3: //отличие только в Value
-					{
-						__tc__("replaceIncorrectSms.diffValue");
-						int len = rand2(10, MAX_ADDRESS_VALUE_LENGTH);
-						auto_ptr<char> val = rand_char(len);
-						addr.setValue(len, val.get());
-					}
+					__tc__("replaceIncorrectSms.diffValue");
+					SmsUtil::setupRandomCorrectAddressValue(&addr,
+						MAX_ADDRESS_VALUE_LENGTH / 2, MAX_ADDRESS_VALUE_LENGTH);
 					break;
 				default:
 					__unreachable__("Invalid num");

@@ -255,7 +255,7 @@ void AliasManagerTestCases::addCorrectAliasNotMatchAddress(
 					__tc__("addCorrectAlias.addrNotMatch.diffType");
 					int len = rand0(minLen);
 					setupRandomAliasMatchWithQuestionMarks(alias, len);
-					alias->addr.setTypeOfNumber(alias->addr.getTypeOfNumber() + 1);
+					SmsUtil::setupRandomCorrectAddressTon(&alias->addr);
 				}
 				break;
 			case 2: //в адресе отличается numberingPlan
@@ -263,7 +263,7 @@ void AliasManagerTestCases::addCorrectAliasNotMatchAddress(
 					__tc__("addCorrectAlias.addrNotMatch.diffPlan");
 					int len = rand0(minLen);
 					setupRandomAliasMatchWithQuestionMarks(alias, len);
-					alias->addr.setNumberingPlan(alias->addr.getNumberingPlan() + 1);
+					SmsUtil::setupRandomCorrectAddressNpi(&alias->addr);
 				}
 				break;
 			case 3: //в адресе отличается addressValue
@@ -352,20 +352,14 @@ void AliasManagerTestCases::addCorrectAliasNotMatchAlias(
 		switch(s.value())
 		{
 			case 1: //в алиасе отличается typeOfNumber
-				{
-					__tc__("addCorrectAlias.aliasNotMatch.diffType");
-					int len = rand0(minLen);
-					setupRandomAliasMatchWithQuestionMarks(alias, len);
-					alias->alias.setTypeOfNumber(alias->alias.getTypeOfNumber() + 1);
-				}
+				__tc__("addCorrectAlias.aliasNotMatch.diffType");
+				setupRandomAliasMatchWithQuestionMarks(alias, rand0(minLen));
+				SmsUtil::setupRandomCorrectAddressTon(&alias->alias);
 				break;
 			case 2: //в алиасе отличается numberingPlan
-				{
-					__tc__("addCorrectAlias.aliasNotMatch.diffPlan");
-					int len = rand0(minLen);
-					setupRandomAliasMatchWithQuestionMarks(alias, len);
-					alias->alias.setNumberingPlan(alias->alias.getNumberingPlan() + 1);
-				}
+				__tc__("addCorrectAlias.aliasNotMatch.diffPlan");
+				setupRandomAliasMatchWithQuestionMarks(alias, rand0(minLen));
+				SmsUtil::setupRandomCorrectAddressNpi(&alias->alias);
 				break;
 			case 3: //в алиасе отличается addressValue
 				if (minLen > 2)

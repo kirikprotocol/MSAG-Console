@@ -348,19 +348,11 @@ vector<int> SmppUtil::compareOptional(SmppOptional& p1, SmppOptional& p2,
 	
 #define __set_addr__(field) \
 	__trace_set__("set_addr"); \
-	PduAddress tmp_##field; \
-	setupRandomCorrectAddress(&tmp_##field); \
-	p.set_##field(tmp_##field); \
-	if (check) { __require__(p.get_##field() == tmp_##field); }
-
-void SmppUtil::setupRandomCorrectAddress(PduAddress* addr, bool check)
-{
-	__require__(addr);
-	PduAddress& p = *addr;
-	__set_int__(uint8_t, typeOfNumber, rand0(255));
-	__set_int__(uint8_t, numberingPlan, rand0(255));
-	__set_cstr__(value, rand1(MAX_ADDRESS_VALUE_LENGTH));
-}
+	Address tmp_##field; \
+	SmsUtil::setupRandomCorrectAddress(&tmp_##field); \
+	PduAddress addr_##field; \
+	p.set_##field(*convert(tmp_##field, &addr_##field)); \
+	if (check) { __require__(p.get_##field() == addr_##field); }
 
 void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	uint64_t mask, bool check)

@@ -134,11 +134,11 @@ void ProfilerTestCases::createProfileNotMatch(Address& addr, int num)
       {
         case 1: //отличается typeOfNumber
           __tc__("createProfileNotMatch.diffType");
-          addr.setTypeOfNumber(addr.getTypeOfNumber() + 1);
+		  SmsUtil::setupRandomCorrectAddressTon(&addr);
           break;
         case 2: //отличается numberingPlan
           __tc__("createProfileNotMatch.diffPlan");
-          addr.setNumberingPlan(addr.getNumberingPlan() + 1);
+		  SmsUtil::setupRandomCorrectAddressNpi(&addr);
           break;
         case 3: //отличается addressValue
           if (addrLen > 1 && next_permutation(addrVal, addrVal + addrLen))
@@ -315,7 +315,7 @@ void ProfilerTestCases::putCommand(const Address& addr, uint8_t dataCoding, int 
 			  __unreachable__("Invalid dataCoding");
 		  }
 		  int msgLen;
-		  auto_ptr<char> msg = encode(text, dataCoding, msgLen);
+		  auto_ptr<char> msg = encode(text, dataCoding, msgLen, true);
 		  sms.setIntProperty(Tag::SMPP_SM_LENGTH, msgLen);
 		  sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, msg.get(), msgLen);
 		  sms.setIntProperty(Tag::SMPP_DATA_CODING, dataCoding);
@@ -430,7 +430,7 @@ void ProfilerTestCases::onSubmit(SmscCommand& cmd)
   }
   uint8_t dataCoding = getDataCoding(profile.codepage);
   int msgLen;
-  auto_ptr<char> msg = encode(text, dataCoding, msgLen);
+  auto_ptr<char> msg = encode(text, dataCoding, msgLen, true);
   sms.setIntProperty(Tag::SMPP_DATA_CODING, dataCoding);
   sms.setIntProperty(Tag::SMPP_SM_LENGTH, msgLen);
   sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE, msg.get(), msgLen);
