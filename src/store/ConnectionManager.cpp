@@ -332,9 +332,10 @@ Connection::Connection(const char* instance,
                        const char* user, const char* password) 
     : isConnected(false), isDead(false), next(0L),
         dbInstance(instance), dbUserName(user), dbUserPassword(password), 
-            StoreStmt(0L), RemoveStmt(0L), RetriveStmt(0L), IsRejectStmt(0L),
-                envhp(0L), errhp(0L), svchp(0L), srvhp(0L), sesshp(0L), 
-                    log(Logger::getCategory("smsc.store.Connection"))
+            StoreStmt(0L), RemoveStmt(0L), RetriveStmt(0L), 
+                IsRejectStmt(0L), IsTimedStmt(0L), 
+                    envhp(0L), errhp(0L), svchp(0L), srvhp(0L), sesshp(0L), 
+                        log(Logger::getCategory("smsc.store.Connection"))
 {
     __require__(dbInstance && dbUserName && dbUserPassword);
 }
@@ -387,9 +388,13 @@ void Connection::connect()
             RemoveStmt = new RemoveStatement(this);
             RetriveStmt = new RetriveStatement(this);
             IsRejectStmt = new IsRejectedStatement(this);
+            IsTimedStmt = new IsTimeCorrectStatement(this);
         } 
         catch (StorageException& exc) 
         {
+            if (IsTimedStmt) {
+                delete IsTimedStmt; IsTimedStmt = 0L;
+            }
             if (IsRejectStmt) {
                 delete IsRejectStmt; IsRejectStmt = 0L;
             }
@@ -425,6 +430,9 @@ void Connection::disconnect()
     
     if (isConnected)
     {
+        if (IsTimedStmt) {
+            delete IsTimedStmt; IsTimedStmt = 0L;
+        }
         if (IsRejectStmt) {
             delete IsRejectStmt; IsRejectStmt = 0L;
         }
@@ -470,16 +478,22 @@ void Connection::store(const SMS &sms, SMSId id)
 
     connect();
     
-    IsRejectStmt->setSMS(sms);
     try
     {
-        checkErr(IsRejectStmt->execute(OCI_DEFAULT));
+        IsTimedStmt->setSMS(sms);
+        checkErr(IsTimedStmt->execute(OCI_DEFAULT));
+        if (sms.isStatusReportRequested()) 
+        {
+            IsRejectStmt->setSMS(sms);
+            checkErr(IsRejectStmt->execute(OCI_DEFAULT));
+        }
     }
     catch (StorageException& exc) 
     {
         throw exc;
     }
-    if (IsRejectStmt->isRejected())
+    
+    if (IsTimedStmt->isTimeIncorrect() || IsRejectStmt->isRejected())
     {
         DuplicateMessageException   exc;
         //log.debug(exc.what());

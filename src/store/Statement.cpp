@@ -254,13 +254,51 @@ StoreStatement::StoreStatement(Connection* connection)
     
 const char* IsRejectedStatement::sql = (const char*)
 "SELECT NVL(COUNT(*), 0) FROM SMS_MSG\
- WHERE ST=:1 AND OA_LEN=:2 AND OA_TON=:3 AND OA_NPI=:4 AND OA_VAL=:5\
- AND ((MR=:6 AND DA_LEN=:7 AND DA_TON=:8 AND DA_NPI=:9 AND DA_VAL=:10)\
- OR SUBMIT_TIME=:11)";
+ WHERE ST=:1 AND MR=:2\
+ AND OA_LEN=:3 AND OA_TON=:4 AND OA_NPI=:5 AND OA_VAL=:6\
+ AND DA_LEN=:7 AND DA_TON=:8 AND DA_NPI=:9 AND DA_VAL=:10";
     
 IsRejectedStatement::IsRejectedStatement(Connection* connection)
     throw(StorageException)
         : MessageStatement(connection, IsRejectedStatement::sql)
+{
+    bind(1 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
+    bind(2 , SQLT_UIN, (dvoid *) &(sms.messageReference),
+         (sb4) sizeof(sms.messageReference));
+    bind(3 , SQLT_UIN, (dvoid *)&(sms.originatingAddress.lenght),
+         (sb4) sizeof(sms.originatingAddress.lenght));
+    bind(4 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.type),
+         (sb4) sizeof(sms.originatingAddress.type));
+    bind(5 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.plan),
+         (sb4) sizeof(sms.originatingAddress.plan));
+    bind(6 , SQLT_STR, (dvoid *) (sms.originatingAddress.value),
+         (sb4) sizeof(sms.originatingAddress.value));
+    bind(7 , SQLT_UIN, (dvoid *)&(sms.destinationAddress.lenght),
+         (sb4) sizeof(sms.destinationAddress.lenght));
+    bind(8 , SQLT_UIN, (dvoid *) &(sms.destinationAddress.type),
+         (sb4) sizeof(sms.destinationAddress.type));
+    bind(9 , SQLT_UIN, (dvoid *) &(sms.destinationAddress.plan),
+         (sb4) sizeof(sms.destinationAddress.plan));
+    bind(10, SQLT_STR, (dvoid *) (sms.destinationAddress.value),
+         (sb4) sizeof(sms.destinationAddress.value));
+    
+    define(1 , SQLT_UIN, (dvoid *) &(count), (sb4) sizeof(count));
+}
+
+bool IsRejectedStatement::isRejected()
+{
+    return ((count) ? true:false);
+}
+
+/* ------------------------ IsTimeCorrectStatement -------------------- */
+const char* IsTimeCorrectStatement::sql = (const char*)
+"SELECT NVL(COUNT(*), 0) FROM SMS_MSG\
+ WHERE ST=:1 AND OA_LEN=:2 AND OA_TON=:3 AND OA_NPI=:4 AND OA_VAL=:5\
+ AND SUBMIT_TIME=:6)";
+
+IsTimeCorrectStatement::IsTimeCorrectStatement(Connection* connection)
+    throw(StorageException)
+        : MessageStatement(connection, IsTimeCorrectStatement::sql)
 {
     bind(1 , SQLT_UIN, (dvoid *) &(uState), (sb4) sizeof(uState));
     bind(2 , SQLT_UIN, (dvoid *)&(sms.originatingAddress.lenght),
@@ -271,23 +309,13 @@ IsRejectedStatement::IsRejectedStatement(Connection* connection)
          (sb4) sizeof(sms.originatingAddress.plan));
     bind(5 , SQLT_STR, (dvoid *) (sms.originatingAddress.value),
          (sb4) sizeof(sms.originatingAddress.value));
-    bind(6 , SQLT_UIN, (dvoid *) &(sms.messageReference),
-         (sb4) sizeof(sms.messageReference));
-    bind(7 , SQLT_UIN, (dvoid *)&(sms.destinationAddress.lenght),
-         (sb4) sizeof(sms.destinationAddress.lenght));
-    bind(8 , SQLT_UIN, (dvoid *) &(sms.destinationAddress.type),
-         (sb4) sizeof(sms.destinationAddress.type));
-    bind(9 , SQLT_UIN, (dvoid *) &(sms.destinationAddress.plan),
-         (sb4) sizeof(sms.destinationAddress.plan));
-    bind(10, SQLT_STR, (dvoid *) (sms.destinationAddress.value),
-         (sb4) sizeof(sms.destinationAddress.value));
-    bind(11, SQLT_ODT, (dvoid *) &(submitTime),
+    bind(6, SQLT_ODT, (dvoid *) &(submitTime),
          (sb4) sizeof(submitTime));
     
     define(1 , SQLT_UIN, (dvoid *) &(count), (sb4) sizeof(count));
 }
 
-bool IsRejectedStatement::isRejected()
+bool IsTimeCorrectStatement::isTimeIncorrect()
 {
     return ((count) ? true:false);
 }

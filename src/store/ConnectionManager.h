@@ -52,6 +52,7 @@ namespace smsc { namespace store
         RemoveStatement*        RemoveStmt;
         RetriveStatement*       RetriveStmt;
         IsRejectedStatement*    IsRejectStmt;
+        IsTimeCorrectStatement* IsTimedStmt;
 
         Mutex           mutex;
         

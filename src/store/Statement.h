@@ -142,8 +142,34 @@ namespace smsc { namespace store
         IsRejectedStatement(Connection* connection)
             throw(StorageException);
         virtual ~IsRejectedStatement() {};
+        
+        void setSMS(const SMS &sms) {
+            MessageStatement::setSMS(sms);
+            uState = (uint8_t)ENROUTE;
+        };
 
         bool isRejected();
+    };
+    
+    class IsTimeCorrectStatement : public MessageStatement
+    {
+    static const char* sql;
+    protected:
+
+        ub4 count;
+    
+    public:
+        
+        IsTimeCorrectStatement(Connection* connection)
+            throw(StorageException);
+        virtual ~IsTimeCorrectStatement() {};
+        
+        void setSMS(const SMS &sms) {
+            MessageStatement::setSMS(sms);
+            uState = (uint8_t)ENROUTE;
+        };
+
+        bool isTimeIncorrect();
     };
     
     class RetriveStatement : public MessageStatement
