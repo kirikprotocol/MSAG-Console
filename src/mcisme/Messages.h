@@ -71,7 +71,6 @@ namespace smsc { namespace mcisme
     extern const char* MSG_TEMPLATE_PARAM_COUNT;   // количество звонков от абонента, if (single) => 1 (i)
     extern const char* MSG_TEMPLATE_PARAM_DATE;    // дата звонка/дата последнего звонка (i)
     
-    // TODO: Reimplement !!!
     class MessageFormatter
     {
     private:
