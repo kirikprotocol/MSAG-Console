@@ -717,6 +717,8 @@ void reportsTc()
 		"ѕодтверждение доставки при истечении срока валидности доставл€етс€ в момент времени validity_period, даже если последн€€ попытка доставки прошла раньше validity_period");
 	__reg_tc__("sms.reports.deliveryReceipt.ussdServiceOp",
 		"≈сли установлено опциональное поле ussd_service_op, то SC не отправл€ет подтверждени€ доставки");
+	__reg_tc__("sms.reports.deliveryReceipt.suppressDeliveryReports",
+		"≈сли на маршруте установлен флаг suppressDeliveryReports, то SC не отправл€ет подтверждени€ доставки");
 	__reg_tc__("sms.reports.deliveryReceipt.checkAllowed",
 		"ѕроверка правомерности получени€ подтверждений доставки (в зависимости от настроек профил€ и пол€ pdu registered_delivery, единственный раз по окончании доставки оригинальной pdu)");
 	__reg_tc__("sms.reports.deliveryReceipt.recvTimeChecks",
@@ -734,6 +736,8 @@ void reportsTc()
 		"SC отправл€ет промежуточную нотификацию в момент времени schedule_delivery_time, если нет соединени€ с sme-получателем");
 	__reg_tc__("sms.reports.intermediateNotification.ussdServiceOp",
 		"≈сли установлено опциональное поле ussd_service_op, то SC не отправл€ет промежуточную нотификацию");
+	__reg_tc__("sms.reports.intermediateNotification.suppressDeliveryReports",
+		"≈сли на маршруте установлен флаг suppressDeliveryReports, то SC не отправл€ет промежуточную нотификацию");
 	__reg_tc__("sms.reports.intermediateNotification.checkAllowed",
 		"ѕроверка правомерности получени€ промежуточных нотификаций (в зависимости от настроек профил€ и пол€ pdu registered_delivery, единственный раз после первой зарешедуленой попытки доставки)");
 	__reg_tc__("sms.reports.intermediateNotification.noRescheduling",
