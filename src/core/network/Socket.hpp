@@ -21,6 +21,8 @@ namespace smsc{
 namespace core{
 namespace network{
 
+#define SOCKET_MAX_KEY 4
+
 class Socket{
 private:
   sockaddr_in sockAddr;
@@ -32,6 +34,7 @@ private:
   int bufPos;
   SOCKET sock;
   int timeOut;
+  void *data[SOCKET_MAX_KEY];
 public:
 
   Socket()
@@ -50,14 +53,14 @@ public:
     sockAddr=saddrin;
   }
 
-  ~Socket()
+  virtual ~Socket()
   {
     Close();
   }
 
   SOCKET getSocket(){return sock;}
 
-  int Init(char *host,int port,int timeout);
+  int Init(const char *host,int port,int timeout);
   int Connect();
   void Close();
   int canRead();
@@ -69,9 +72,24 @@ public:
   void Done();
   int Printf(char* fmt,...);
   int Puts(const char* str);
-  int InitServer(char *host,int port,int timeout);
+  int InitServer(const char *host,int port,int timeout);
   int StartServer();
   Socket* Accept();
+  Socket* Clone()
+  {
+    return new Socket(sock,sockAddr);
+  }
+  void setNonBlocking(int mode);
+  void setData(unsigned int key,void* newdata)
+  {
+    if(key>=SOCKET_MAX_KEY)return;
+    data[key]=newdata;
+  }
+  void* getData(unsigned int key)
+  {
+    if(key>=SOCKET_MAX_KEY)return NULL;
+    return data[key];
+  }
 };//Socket
 
 };//network

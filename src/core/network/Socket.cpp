@@ -4,6 +4,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include <sys/ioctl.h>
+#include <sys/filio.h>
+
+
 #ifdef _WIN32
 #pragma comment(lib,"ws2_32.lib")
 #endif
@@ -13,7 +17,7 @@ namespace core{
 namespace network{
 
 
-int Socket::Init(char *host,int port,int timeout)
+int Socket::Init(const char *host,int port,int timeout)
 {
   hostent* lpHostEnt;
   unsigned long ulINAddr;
@@ -162,11 +166,28 @@ int Socket::Gets(char *buf, int len)
 
 int Socket::Printf(char* fmt,...)
 {
-  char buf[4096];
+  char buf_init[4096];
+  char *buf=buf_init;
+  int bufsize=sizeof(buf_init);
   va_list args;
   va_start (args, fmt);
-  vsprintf (buf,fmt, args);
+  int res;
+  do{
+#ifndef _WIN32
+    res=vsnprintf (buf,bufsize,fmt, args);
+#else
+    res=_vsnprintf (buf,bufsize,fmt, args);
+#endif
+
+    if(res<0)
+    {
+      bufsize-=res;
+      bufsize+=16;
+      buf=new char[bufsize];
+    }
+  }while(res<0);
   int ret=Write(buf,strlen(buf));
+  if(buf!=buf_init)delete [] buf;
   va_end (args);
   return ret;
 }
@@ -176,7 +197,7 @@ int Socket::Puts(const char* str)
   return Write((char*)str,strlen(str));
 }
 
-int Socket::InitServer(char *host,int port,int timeout)
+int Socket::InitServer(const char *host,int port,int timeout)
 {
   if(Init(host,port,timeout)==-1)return -1;
   sock=socket(AF_INET,SOCK_STREAM,0);
@@ -204,6 +225,11 @@ Socket* Socket::Accept()
 #endif
   if(s==-1)return NULL;
   return new Socket(s,addrin);
+}
+
+void Socket::setNonBlocking(int mode)
+{
+  ioctl(sock, FIONBIO, &mode);
 }
 
 #ifdef _WIN32
