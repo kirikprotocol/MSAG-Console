@@ -457,6 +457,8 @@ public class ServiceManager
 	{
 		Service s = getService(serviceId);
 		Daemon d = daemonManager.getDaemon(s.getInfo().getHost());
+		if (d == null)
+			throw new AdminException("Daemon \"" + s.getInfo().getHost() + "\" not found");
 		Map infos = d.listServices();
 		for (Iterator j = infos.values().iterator(); j.hasNext();)
 		{
