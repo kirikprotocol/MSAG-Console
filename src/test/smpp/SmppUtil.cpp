@@ -355,7 +355,7 @@ vector<int> SmppUtil::compareOptional(SmppOptional& p1, SmppOptional& p2,
 	if (check) { __require__(p.get_##field() == addr_##field); }
 
 void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
-	uint64_t mask, bool check)
+	bool useShortMessage, uint64_t mask, bool check)
 {
 	__require__(pdu);
 	__cfg_int__(maxWaitTime);
@@ -378,7 +378,11 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	uint8_t dataCoding = getDataCoding(RAND_TC);
 	__set_int__(uint8_t, dataCoding, dataCoding);
 	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
-	__set_bin__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH), dataCoding);
+	if (useShortMessage)
+	{
+		mask &= ~OPT_MSG_PAYLOAD; //исключить message_payload
+		__set_bin__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH), dataCoding);
+	}
 	mask &= ~OPT_USER_MSG_REF; //исключить userMessageReference
 	setupRandomCorrectOptionalParams(pdu->get_optional(), dataCoding, mask, check);
 }
@@ -555,10 +559,11 @@ void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
 	__skip__; //__set_optional_int__(uint8_t, msAvailableStatus, rand0(255));
 	//int errCode = rand0(INT_MAX);
 	__skip__; //__set_optional_intarr__(networkErrorCode, (uint8_t*) &errCode, 3);
-	__set_optional_bin__(messagePayload, rand0(65535), dataCoding);
+	__set_optional_bin__(messagePayload, rand1(65535), dataCoding);
 	__skip__; //__set_optional_int__(uint8_t, deliveryFailureReason, rand0(255));
 	__set_optional_int__(uint8_t, moreMessagesToSend, rand0(255));
-	__set_optional_int__(uint8_t, messageState, rand0(255));
+	//отключить messageState, поскольку отправляется только в репортах
+	__skip__; //__set_optional_int__(uint8_t, messageState, rand0(255));
 	__skip__; //__set_optional_ostr__(callbackNum, rand2(4, 19));
 	__skip__; //__set_optional_int__(uint8_t, callbackNumPresInd, rand0(255));
 	__skip__; //__set_optional_ostr__(callbackNumAtag, rand0(65));

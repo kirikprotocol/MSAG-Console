@@ -98,7 +98,8 @@ typedef char MessageId[MAX_MSG_ID_LENGTH + 1];
 const uint64_t OPT_ALL = 0xffffffffffffffff;
 const uint64_t OPT_RCPT_MSG_ID = 0x1 << 11;
 const uint64_t OPT_USER_MSG_REF = 0x1 << 16;
-const uint64_t OPT_MSG_PAYLOAD = 0x1 << 31;
+const uint64_t OPT_MSG_PAYLOAD = ((uint64_t) 0x1) << 31;
+const uint64_t OPT_USSD_SERVICE_OP = ((uint64_t) 0x1) << 43;
 
 class SmppUtil
 {
@@ -136,7 +137,7 @@ public:
 		uint64_t excludeMask = 0x0);
 
 	static void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
-		uint64_t mask = OPT_ALL, bool check = true);
+		bool useShortMessage, uint64_t mask = OPT_ALL, bool check = true);
 	static void setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 		uint8_t dataCoding, uint64_t mask = OPT_ALL, bool check = true);
 	static void setupRandomCorrectOptionalParams(SmppOptional& opt,
