@@ -192,6 +192,19 @@ int SmppInputThread::Execute()
         if(retcode==1)
         {
           SmppHeader *pdu=ss->decode();
+          if(!pdu)
+          {
+            for(int i=0;i<sockets.Count();i++)
+            {
+              if(sockets[i]==ss)
+              {
+                outTask->removeSocket(ss->getSocket());
+                killSocket(i);
+                break;
+              }
+            }
+            continue;
+          }
           switch(pdu->get_commandId())
           {
             case SmppCommandSet::BIND_RECIEVER:

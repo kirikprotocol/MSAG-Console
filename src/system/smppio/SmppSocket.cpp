@@ -86,6 +86,17 @@ smsc::smpp::SmppHeader* SmppSocket::decode()
   trace2("decode: %p, %d\n",buffer,bufferOffset);
   smsc::smpp::assignStreamWith(&s,buffer,bufferOffset,true);
   smsc::smpp::SmppHeader* pdu=smsc::smpp::fetchSmppPdu(&s);
+  if(!pdu)
+  {
+    trace2("failed to decode buffer: %p",buffer);
+#ifndef DISABLE_TRACING
+    for(int i=0;i<bufferOffset;i++)
+    {
+      fprintf(stderr,"%02X ",(int)buffer[i]);
+    }
+    fprintf(stderr,"\n");
+#endif
+  }
   bufferOffset=0;
   return pdu;
 }
