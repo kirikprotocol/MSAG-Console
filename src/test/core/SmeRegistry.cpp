@@ -9,6 +9,7 @@ namespace core {
 
 using namespace std;
 using smsc::test::sms::operator<<;
+using smsc::test::sms::SmsUtil;
 using namespace smsc::test::util;
 
 SmeRegistry::~SmeRegistry()
@@ -16,48 +17,79 @@ SmeRegistry::~SmeRegistry()
 	clear();
 }
 
-void SmeRegistry::registerSme(const Address& smeAddr, SmeInfo* sme)
+void SmeRegistry::registerSme(const Address& smeAddr, const SmeInfo& sme)
 {
-	if (sme)
-	{
-		SmeData smeData(new PduRegistry(), new SmeInfo(*sme));
-		addrMap.insert(AddressMap::value_type(smeAddr, smeData));
-		smeIdSet.insert(sme->systemId);
-	}
-	else
-	{
-		SmeData smeData(new PduRegistry(), (sme ? new SmeInfo(*sme) : NULL));
-		addrMap.insert(AddressMap::value_type(smeAddr, SmeData(NULL, NULL)));
-	}
+	SmeData* smeData = new SmeData(smeAddr, sme);
+	addrMap[smeAddr] = smeData;
+	smeIdMap[sme.systemId] = smeData;
 	addrList.push_back(new Address(smeAddr));
+}
+
+void SmeRegistry::deleteSme(const SmeSystemId& smeId)
+{
+	SmeIdMap::iterator it = smeIdMap.find(smeId);
+	if (it == smeIdMap.end())
+	{
+		return;
+	}
+	SmeData* smeData = it->second;
+	smeIdMap.erase(it);
+	bool res = addrMap.erase(smeData->smeAddr);
+	__require__(res);
+	for (AddressList::iterator it2 = addrList.begin(); it2 != addrList.end(); it2++)
+	{
+		if (SmsUtil::compareAddresses(**it2, smeData->smeAddr))
+		{
+			delete smeData;
+			delete *it2;
+			addrList.erase(it2);
+			return;
+		}
+	}
+	__unreachable__("Address not found");
+}
+
+void SmeRegistry::bindSme(const SmeSystemId& smeId)
+{
+	SmeIdMap::iterator it = smeIdMap.find(smeId);
+	__require__(it != smeIdMap.end());
+	it->second->bound = true;
 }
 
 void SmeRegistry::clear()
 {
+	__require__(addrMap.size() == smeIdMap.size());
+	__require__(addrMap.size() == addrList.size());
 	for (AddressMap::iterator it = addrMap.begin(); it != addrMap.end(); it++)
 	{
-		if (it->second.sme)
-		{
-			delete it->second.sme;
-		}
-		if (it->second.pduReg)
-		{
-			delete it->second.pduReg;
-		}
+		delete it->second;
 	}
 	for (int i = 0; i < addrList.size(); i++)
 	{
 		delete addrList[i];
 	}
 	addrMap.clear();
-	smeIdSet.clear();
+	smeIdMap.clear();
 	addrList.clear();
+}
+
+int SmeRegistry::size()
+{
+	__require__(addrMap.size() == smeIdMap.size());
+	__require__(addrMap.size() == addrList.size());
+	return smeIdMap.size();
+}
+
+const SmeInfo* SmeRegistry::getSme(const SmeSystemId& smeId) const
+{
+	SmeIdMap::const_iterator it = smeIdMap.find(smeId);
+	return (it == smeIdMap.end() ? NULL : &it->second->sme);
 }
 
 PduRegistry* SmeRegistry::getPduRegistry(const Address& smeAddr) const
 {
 	AddressMap::const_iterator it = addrMap.find(smeAddr);
-	return (it == addrMap.end() ? NULL : it->second.pduReg);
+	return (it == addrMap.end() ? NULL : &it->second->pduReg);
 }
 
 const Address* SmeRegistry::getRandomAddress() const
@@ -65,63 +97,27 @@ const Address* SmeRegistry::getRandomAddress() const
 	return addrList[rand0(addrList.size() - 1)];
 }
 
-bool SmeRegistry::isSmeAvailable(const SmeSystemId& smeId) const
+SmeRegistry::SmeIterator* SmeRegistry::iterator() const
 {
-	SmeSystemIdSet::const_iterator it = smeIdSet.find(smeId);
-	return (it != smeIdSet.end());
+	return new SmeIterator(smeIdMap.begin(), smeIdMap.end());
 }
 
-void SmeRegistry::saveConfig(const char* configFileName)
+bool SmeRegistry::isSmeBound(const SmeSystemId& smeId) const
 {
-	__require__(configFileName);
-	ofstream os(configFileName);
-	os << "<?xml version=\"1.0\" encoding=\"iso-8859-1\"?>" << endl;
-	os << "<!DOCTYPE records SYSTEM \"SmeRecords.dtd\">" << endl;
-	os << "<records>" << endl;
-	int i = 0;
-	for (AddressMap::const_iterator it = addrMap.begin(); it != addrMap.end(); it++)
-	{
-		SmeInfo* sme = it->second.sme;
-		if (sme)
-		{
-			//sme->hostname;
-			//sme->disabled;
-			os << "<smerecord type=\"smpp\" uid=\"" << i++ << "\">" << endl;
-			os << "\t<param name=\"typeOfNumber\" value=\"" <<
-				sme->typeOfNumber << "\"/>" << endl;
-			os << "\t<param name=\"numberingPlan\" value=\"" <<
-				sme->numberingPlan << "\"/>" << endl;
-			os << "\t<param name=\"interfaceVersion\" value=\"" <<
-				sme->interfaceVersion << "\"/>" << endl;
-			os << "\t<param name=\"systemType\" value=\"" <<
-				sme->systemType << "\"/>" << endl;
-			os << "\t<param name=\"systemId\" value=\"" <<
-				sme->systemId << "\"/>" << endl;
-			os << "\t<param name=\"password\" value=\"" <<
-				sme->password << "\"/>" << endl;
-			os << "\t<param name=\"addrRange\" value=\"" <<
-				sme->rangeOfAddress << "\"/>" << endl;
-			os << "\t<param name=\"smeN\" value=\"" <<
-				sme->SME_N << "\"/>" << endl;
-			os << "</smerecord>" << endl;
-		}
-	}
-	os << "</records>" << endl;
+	SmeIdMap::const_iterator it = smeIdMap.find(smeId);
+	return (it != smeIdMap.end() && it->second->bound);
 }
 
-void SmeRegistry::dump(FILE* log)
+void SmeRegistry::dump(FILE* log) const
 {
 	for (AddressMap::const_iterator it = addrMap.begin(); it != addrMap.end(); it++)
 	{
-		const SmeData& smeData = it->second;
-		if (smeData.sme)
-		{
-			ostringstream os;
-			os << it->first;
-			fprintf(TRACE_LOG_STREAM, "Sme = (systemId = %s, address = %s)\n",
-				smeData.sme->systemId.c_str(), os.str().c_str());
-			smeData.pduReg->dump(TRACE_LOG_STREAM);
-		}
+		const SmeData* smeData = it->second;
+		ostringstream os;
+		os << smeData->smeAddr;
+		fprintf(TRACE_LOG_STREAM, "Sme = (systemId = %s, address = %s)\n",
+			smeData->sme.systemId.c_str(), os.str().c_str());
+		smeData->pduReg.dump(TRACE_LOG_STREAM);
 	}
 }
 

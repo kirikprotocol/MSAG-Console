@@ -27,42 +27,62 @@ using smsc::test::sms::ltAddress;
  */
 class SmeRegistry
 {
-public:
-	typedef vector<const Address*> AddressList;
-
-private:
 	struct SmeData
 	{
-		PduRegistry* pduReg;
-		SmeInfo* sme;
-		SmeData(PduRegistry* reg, SmeInfo* smeInfo)
-			: pduReg(reg), sme(smeInfo) {}
-		SmeData(const SmeData& data)
-			: pduReg(data.pduReg), sme(data.sme) {}
+		const Address smeAddr;
+		const SmeInfo sme;
+		PduRegistry pduReg;
+		bool bound;
+		SmeData(const Address& addr, const SmeInfo& smeInfo)
+			: smeAddr(addr), sme(smeInfo), bound(false) {}
 	};
-	typedef map<const Address, SmeData, ltAddress> AddressMap;
-	typedef set<SmeSystemId> SmeSystemIdSet;
+	typedef map<const Address, SmeData*, ltAddress> AddressMap;
+	typedef map<const SmeSystemId, SmeData*> SmeIdMap;
+
+public:
+	typedef vector<const Address*> AddressList;
+	struct SmeIterator
+	{
+		SmeIdMap::const_iterator it1;
+		SmeIdMap::const_iterator it2;
+		SmeIterator(SmeIdMap::const_iterator i1, SmeIdMap::const_iterator i2)
+			: it1(i1), it2(i2) {}
+		const SmeInfo* next()
+		{
+			return (it1 != it2 ? &(it1++)->second->sme : NULL);
+		}
+	};
+
+private:
 	AddressMap addrMap;
+	SmeIdMap smeIdMap;
 	AddressList addrList;
-	SmeSystemIdSet smeIdSet;
 
 public:
 	SmeRegistry() {}
 	~SmeRegistry();
 
-	void registerSme(const Address& smeAddr, SmeInfo* sme);
+	void registerSme(const Address& smeAddr, const SmeInfo& sme);
+
+	void deleteSme(const SmeSystemId& smeId);
+
+	void bindSme(const SmeSystemId& smeId);
 
 	void clear();
+
+	int size();
+
+	const SmeInfo* getSme(const SmeSystemId& smeId) const;
 	
 	PduRegistry* getPduRegistry(const Address& smeAddr) const;
 
 	const Address* getRandomAddress() const;
 
-	bool isSmeAvailable(const SmeSystemId& smeId) const;
+	SmeIterator* iterator() const;
 
-	void saveConfig(const char* configFileName);
-	
-	void dump(FILE* log);
+	bool isSmeBound(const SmeSystemId& smeId) const;
+
+	void dump(FILE* log) const;
 };
 
 }
