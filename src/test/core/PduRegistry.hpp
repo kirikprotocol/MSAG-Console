@@ -28,7 +28,7 @@ using smsc::core::synchronization::MutexGuard;
  */
 class PduRegistry
 {
-	typedef map<const string, PduData*> SmsIdMap;
+	//typedef map<const string, PduData*> SmsIdMap;
 	typedef map<const uint32_t, PduData*> SeqNumMap;
 
 	struct MsgRefKey
@@ -59,7 +59,7 @@ class PduRegistry
 	uint16_t msgRef;
 	PduData* lastRemovedPduData;
 
-	SmsIdMap idMap;
+	//SmsIdMap idMap;
 	SeqNumMap seqNumMap;
 	MsgRefMap msgRefMap;
 	TimeMap submitTimeMap;
@@ -122,7 +122,7 @@ public:
 	 * <li>SME Manual/User Acknowledgement.
 	 * </ul>
 	 */
-	PduData* getPdu(const string& smsId) const;
+	//PduData* getPdu(const string& smsId) const;
 
 	void removePdu(PduData* pduData);
 

@@ -40,10 +40,12 @@ void PduRegistry::registerPdu(PduData* pduData)
 {
 	__require__(pduData && pduData->pdu);
 	__trace2__("PduRegistry::registerPdu(): %s", toString(pduData));
+	/*
 	if (pduData->smsId.length())
 	{
 		idMap[pduData->smsId] = pduData;
 	}
+	*/
 	if (pduData->pdu->get_sequenceNumber())
 	{
 		seqNumMap[pduData->pdu->get_sequenceNumber()] = pduData;
@@ -72,10 +74,12 @@ void PduRegistry::updatePdu(PduData* pduData)
 	__trace2__("PduRegistry::updatePdu(): %s", toString(pduData));
 	//smsId и sequenceNumber становятся известны позже из submit_sm_resp
 	//для того же самого smsId могут меняются pduData при replace_sm и при откате replace_sm
+	/*
 	if (pduData->smsId.length())
 	{
 		idMap[pduData->smsId] = pduData;
 	}
+	*/
 	if (pduData->pdu->get_sequenceNumber())
 	{
 		seqNumMap[pduData->pdu->get_sequenceNumber()] = pduData;
@@ -97,7 +101,7 @@ void PduRegistry::clear()
 		disposePdu(pduData->pdu);
 		delete pduData;
 	}
-	idMap.clear();
+	//idMap.clear();
 	seqNumMap.clear();
 	msgRefMap.clear();
 	submitTimeMap.clear();
@@ -123,21 +127,25 @@ PduData* PduRegistry::getPdu(uint32_t seqNumber) const
 	return (it == seqNumMap.end() ? NULL : it->second);
 }
 
+/*
 PduData* PduRegistry::getPdu(const string& smsId) const
 {
 	SmsIdMap::const_iterator it = idMap.find(smsId);
 	return (it != idMap.end() ? NULL : it->second);
 }
+*/
 
 void PduRegistry::removePdu(PduData* pduData)
 {
 	__require__(pduData && pduData->pdu);
 	__trace2__("PduRegistry::removePdu(): %s", toString(pduData));
+	/*
 	if (pduData->smsId.length())
 	{
 		int res = idMap.erase(pduData->smsId);
 		__require__(res || pduData->replacedByPdu || pduData->submitStatus);
 	}
+	*/
 	if (pduData->msgRef)
 	{
 		int res = msgRefMap.erase(MsgRefKey(pduData->msgRef, pduData->id));
