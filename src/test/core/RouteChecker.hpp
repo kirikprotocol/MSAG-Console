@@ -31,9 +31,11 @@ public:
 		const SmeRegistry* smeReg, const AliasRegistry* aliasReg,
 		const RouteRegistry* routeReg);
 
-	vector<int> checkRouteForNormalSms(PduDeliverySm& pdu1, PduDeliverySm& pdu2) const;
+	vector<int> checkRouteForNormalSms(PduDeliverySm& pdu1,
+		PduDeliverySm& pdu2) const;
 
-	vector<int> checkRouteForNotification(PduDeliverySm& pdu1, PduDeliverySm& pdu2) const;
+	vector<int> checkRouteForAcknowledgementSms(PduDeliverySm& pdu1,
+		PduDeliverySm& pdu2) const;
 
 	bool isDestReachable(PduAddress& src, PduAddress& destAddr, bool checkSme) const;
 
