@@ -1,0 +1,1 @@
+core/test/threadstest threadstest -lcore-threads -lcore-buffers -lthread
