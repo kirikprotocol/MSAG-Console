@@ -13,7 +13,7 @@
     </c:if>
     <sm-ep:properties title="Login">
       <sm-ep:txt title="login" name="j_username" validation="nonEmpty"/>
-      <sm-ep:txt title="password" name="j_password" validation="nonEmpty"/>
+      <sm-ep:txt title="password" name="j_password" validation="nonEmpty" type="password"/>
     </sm-ep:properties>
   </jsp:body>
 </sm:page>
