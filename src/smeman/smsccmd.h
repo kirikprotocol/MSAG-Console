@@ -318,9 +318,14 @@ class SmscCommand
   {
     //__trace__(__PRETTY_FUNCTION__);
     __require__ ( cmd != 0 );
-    MutexGuard guard(cmd->mutex);
-    __require__ ( cmd->ref_count > 0 );
-    if ( --(cmd->ref_count) == 0 )
+    int count;
+    {
+      MutexGuard guard(cmd->mutex);
+      __require__ ( cmd->ref_count > 0 );
+      cmd->ref_count--;
+      count=cmd->ref_count;
+    }
+    if ( count == 0 )
     {
       delete cmd;
       cmd = 0;

@@ -50,10 +50,17 @@ public:
     refCounter_ = 1;
     manager_ = manager;
   }
-  void Release() {
-    MutexGuard g(sync_);
-    if ( --refCounter_ == 0 )
+  void Release()
+  {
+    unsigned counter;
+    {
+      MutexGuard g(sync_);
+      counter = --refCounter_;
+    }
+    if ( counter == 0 )
+    {
       delete this;
+    }
   }
   Reffer* AddRef(){
     MutexGuard g(sync_);

@@ -1,10 +1,23 @@
-#include "sms.h"	
-#define SMS_IMPLEMENTATION
-#define SMS_IMPLEMENTATION_STATIC
-#include "sms.h"	
+#include "sms_tags.h"
+
 namespace smsc{
 namespace sms{
-	SMS_BODY_TAGS_SET;
-}
-}
+namespace Tag{
 
+int tagTypes[SMS_LAST_TAG+1];
+
+static struct TagTypesInitializer{
+TagTypesInitializer()
+{
+#undef __SMSC_SMS_SMS_TAGS_H__
+#undef SMSDEFTAG
+#define SMSDEFTAG(type,idx,name) tagTypes[idx]=type;
+#define _TAGS_INTERNAL_
+#include "sms_tags.h"
+SMS_BODY_TAGS_SET
+}
+}dummy;
+
+};
+};
+};
