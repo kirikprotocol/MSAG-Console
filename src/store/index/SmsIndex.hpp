@@ -2,7 +2,7 @@
 #define __SMSC_STORE_INDEX_SMSINDEX_HPP__
 
 #include <string>
-#include <inttypes.h>
+#include "util/int.h"
 
 #include <sms/sms.h>
 #include "core/buffers/Array.hpp"
@@ -46,10 +46,14 @@ typedef Array<QueryResult> ResultArray;
 
 class SmsIndex{
 public:
-  void IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms){};
-  int QuerySms(const char* dir,const ParamArray& params,ResultArray& res) {
-      return 0;
-  };
+  SmsIndex(const char* location)
+  {
+    loc=location;
+  }
+  void IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms);
+  int QuerySms(const char* dir,const ParamArray& params,ResultArray& res);
+protected:
+  std::string loc;
 };
 
 }//namespace index
