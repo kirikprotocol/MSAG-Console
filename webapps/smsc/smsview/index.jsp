@@ -146,12 +146,12 @@ if (lastIndex >= bean.getTotalSize() || bean.getPageSize() < 0)
         <!--%= row.getAttempts()%-->
       </td>
       <td nowrap>
-        <%= StringEncoderDecoder.encode(dateFormatter.format(row.getSubmitTime()))%><br>
-        <%= StringEncoderDecoder.encode(dateFormatter.format(row.getValidTime()))%>
+        <%= (row.getSubmitTime()!= null) ? StringEncoderDecoder.encode(dateFormatter.format(row.getSubmitTime())):"&nbsp;"%><br>
+        <%= (row.getValidTime()!= null) ? StringEncoderDecoder.encode(dateFormatter.format(row.getValidTime())):"&nbsp;"%>
       </td>
       <td nowrap>
-        <%= StringEncoderDecoder.encode(dateFormatter.format(row.getLastTryTime()))%><br>
-        <%= StringEncoderDecoder.encode(dateFormatter.format(row.getNextTryTime()))%>
+        <%= (row.getLastTryTime()!= null) ? StringEncoderDecoder.encode(dateFormatter.format(row.getLastTryTime())):"&nbsp;"%><br>
+        <%= (row.getNextTryTime()!= null) ? StringEncoderDecoder.encode(dateFormatter.format(row.getNextTryTime())):"&nbsp;"%>
       </td>
       <td nowrap>
         <%= StringEncoderDecoder.encode(row.getOriginatingAddress())%><br>
@@ -174,7 +174,10 @@ if (lastIndex >= bean.getTotalSize() || bean.getPageSize() < 0)
       </td>
       <td nowrap>
         <%= StringEncoderDecoder.encode(row.getStatus())%><br>
-        <%= StringEncoderDecoder.encode(appContext.getLocaleMessages(request.getLocale()).getString("smsc.errcode."+row.getLastResult()))%>
+        <%
+            String errMessage = appContext.getLocaleString(request.getLocale(), "smsc.errcode."+row.getLastResult());
+            if (errMessage == null) errMessage = "UNKNOWN"; %>
+        <%= StringEncoderDecoder.encode(errMessage)%>
       </td>
   </tr>
   <tr class=row<%=rowN&1%>1>
