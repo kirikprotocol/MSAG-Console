@@ -586,6 +586,10 @@ public:
   {
     close();
   }
+  void setConfig(const SmeConfig& config)
+  {
+    cfg=config;
+  }
   void connect(int bindtype=BindType::Transceiver)throw(SmppConnectException)
   {
     __trace2__("SmppSession: CONNECT %p",this);
