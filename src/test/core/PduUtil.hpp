@@ -105,6 +105,9 @@ struct PduData
 	int intermediateNotificationFlag; //флаг получени€ всех нотификаций
 	PduData* replacePdu; //pdu, котора€ должна быть заменена текущей pdu
 	PduData* replacedByPdu; //pdu, котора€ замещает текущую pdu
+	//существуют другие pdu с такими же source_addr, //dest_addr, service_type,
+	//созданные с replace_if_present_flag = 0
+	bool hasSmppDuplicates;
 
 	PduData(uint16_t _msgRef, time_t _submitTime, time_t _waitTime,
 		time_t _validTime, SmppHeader* _pdu, const string _smsId = "")
@@ -114,7 +117,7 @@ struct PduData
 		deliveryFlag(PDU_REQUIRED_FLAG, waitTime, validTime),
 		deliveryReceiptFlag(PDU_REQUIRED_FLAG, waitTime, validTime),
 		intermediateNotificationFlag(PDU_REQUIRED_FLAG),
-		replacePdu(NULL), replacedByPdu(NULL)
+		replacePdu(NULL), replacedByPdu(NULL), hasSmppDuplicates(false)
 	{
 		MutexGuard mguard(mutex);
 		id = counter++;
