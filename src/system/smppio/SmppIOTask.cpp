@@ -492,6 +492,7 @@ int SmppInputThread::Execute()
             case SmppCommandSet::DATA_SM:
             case SmppCommandSet::DATA_SM_RESP:
             case SmppCommandSet::CANCEL_SM:
+            case SmppCommandSet::SUBMIT_MULTI:
             {
               if(ss->getProxy())
               {

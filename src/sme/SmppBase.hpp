@@ -701,6 +701,7 @@ protected:
           case DATA_SM_RESP:
           case GENERIC_NACK:
           case SUBMIT_SM_RESP:
+          case SUBMIT_MULTI_RESP:
           case UNBIND_RESP:
           case CANCEL_SM_RESP:
           case QUERY_SM_RESP:
@@ -717,6 +718,7 @@ protected:
           case DATA_SM_RESP:
           case GENERIC_NACK:
           case SUBMIT_SM_RESP:
+          case SUBMIT_MULTI_RESP:
           case UNBIND_RESP:
           case CANCEL_SM_RESP:
           case QUERY_SM_RESP:
@@ -762,6 +764,7 @@ protected:
           case DATA_SM:
           case DATA_SM_RESP:
           case SUBMIT_SM:
+          case SUBMIT_MULTI:
           case GENERIC_NACK:
           case CANCEL_SM:
           case REPLACE_SM:
@@ -778,6 +781,7 @@ protected:
           case DATA_SM:
           case DATA_SM_RESP:
           case SUBMIT_SM:
+          case SUBMIT_MULTI:
           case GENERIC_NACK:
           case CANCEL_SM:
           case REPLACE_SM:
@@ -849,11 +853,11 @@ protected:
         disposePdu(pdu);
       }break;
       case SUBMIT_SM_RESP:
+      case SUBMIT_MULTI_RESP:
       case DATA_SM_RESP:
       case QUERY_SM_RESP:
       case CANCEL_SM_RESP:
       case REPLACE_SM_RESP:
-      case SUBMIT_MULTI_RESP:
       case BIND_TRANCIEVER_RESP:
       case BIND_TRANSMITTER_RESP:
       case BIND_RECIEVER_RESP:
