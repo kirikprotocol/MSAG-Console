@@ -11,11 +11,11 @@ public class CountersSet
 {
   // TODO: possible use 'long' instead of 'int'
 
-  public int accepted = 0;
-  public int rejected = 0;
-  public int delivered = 0;
-  public int tempError = 0;
-  public int permError = 0;
+  protected int accepted = 0;
+  protected int rejected = 0;
+  protected int delivered = 0;
+  protected int tempError = 0;
+  protected int permError = 0;
 
   public CountersSet() {}
   public CountersSet(int accepted, int rejected, int delivered,

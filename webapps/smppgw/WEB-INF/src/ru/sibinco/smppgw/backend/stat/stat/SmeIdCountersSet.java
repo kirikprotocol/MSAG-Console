@@ -9,7 +9,7 @@ package ru.sibinco.smppgw.backend.stat.stat;
  */
 public class SmeIdCountersSet extends ExtendedCountersSet implements Comparable
 {
-  public String smeid;
+  protected String smeid;
   // TODO: add transactional counters
 
   public SmeIdCountersSet(String smeid) {

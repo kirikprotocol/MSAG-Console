@@ -9,8 +9,8 @@ package ru.sibinco.smppgw.backend.stat.stat;
  */
 public class ErrorCounterSet
 {
-  public int errcode;
-  public int counter;
+  protected int errcode;
+  protected int counter;
 
   ErrorCounterSet(int err, int count) {
     errcode = err; counter = count;
