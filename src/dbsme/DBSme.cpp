@@ -48,8 +48,15 @@ int main(void)
         command.setToAddress(toAddress);
         //command.setJobName(SAMPLE_JOB_IDENTITY);
         command.setJobName(SQL_JOB_IDENTITY);
+        command.setInData("Sample input !!!");
 
+        printf("\nInput  : '%s'\n",
+               (command.getInData() ? command.getInData():""));
+        
         processor.process(command);
+
+        printf("\nOutput : '%s'\n", 
+               (command.getOutData() ? command.getOutData():""));
     } 
     catch (Exception& exc) 
     {
