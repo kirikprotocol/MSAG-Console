@@ -523,6 +523,7 @@ using smsc::misscall::ABSENT;
 using smsc::misscall::BUSY; 
 using smsc::misscall::NOREPLY; 
 using smsc::misscall::UNCOND; 
+using smsc::misscall::DETACH; 
 using smsc::misscall::strategy;
 using namespace smsc::misscall::util;
 using smsc::sms::MAX_FULL_ADDRESS_VALUE_LENGTH;
