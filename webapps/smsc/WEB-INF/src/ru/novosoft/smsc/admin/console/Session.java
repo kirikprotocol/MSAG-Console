@@ -69,6 +69,67 @@ public abstract class Session extends Thread
             throws Exception;
     protected abstract void display(PrintWriter writer, CommandContext ctx);
 
+    private final static int ESC_IAC = 255;
+    private final static int ESC_SB = 250;
+    private final static int ESC_SE = 240;
+    private final static int ESC_CR = 13;
+    private final static int ESC_LF = 10;
+    private final static int ESC_NUL = 0;
+
+    protected String readTelnetLine(BufferedReader reader, PrintWriter writer, boolean echo)
+        throws IOException
+    {
+        int b = -1;
+        StringBuffer sb = new StringBuffer();
+        boolean escape = false;
+        boolean parameter = false;
+        boolean typeofop = false;
+        while( (b=reader.read()) != -1 ) {
+            if( typeofop ) {
+                //System.out.println("Got TGT="+b);
+                escape = false;
+                typeofop = false;
+                continue;
+            }
+            if( parameter ) {
+                if( b == ESC_SE ) {
+                    //System.out.println("Got SE");
+                    escape = false;
+                    parameter = false;
+                }
+                continue;
+            }
+            if( escape ) {
+                if( b == ESC_SB ) {
+                    //System.out.println("Got SB");
+                    parameter = true;
+                } else {
+                    //System.out.println("Got CMD="+b);
+                    typeofop = true;
+                }
+                continue;
+            }
+            if( b == ESC_IAC ) {
+                //System.out.println("Got IAC");
+                escape = true;
+                continue;
+            }
+
+            b = (b == ESC_NUL) ? ESC_LF:b;
+            //System.out.println("Got CHR="+(char)b+" code "+b);
+
+            if( echo ) {
+                writer.write(b); writer.flush();
+            }
+
+            if( b == ESC_LF ) break;
+            if( b == ESC_CR ) continue;
+            byte bytes[] = {(byte)b};
+            sb.append( new String(bytes,System.getProperty("file.encoding")));
+        }
+        return sb.toString();
+    }
+
     private void process()
         throws Exception
     {
@@ -78,13 +139,13 @@ public abstract class Session extends Thread
         if (!authorize(reader, writer)) return;
 
         greeting(writer);
-        while (!isStopping)
+        while (!isStopping && !writer.checkError())
         {
             prompt(writer);
-            String input = reader.readLine();
+            String input = readTelnetLine(reader, writer, true);
             if (input == null || input.length() == 0) continue;
             if (input.equalsIgnoreCase(COMMAND_QUIT)) {
-                farewell(writer); sleep(100); break;
+                farewell(writer); sleep(1000); break;
             }
             CommandContext ctx = new CommandContext(owner.getSmsc());
             try

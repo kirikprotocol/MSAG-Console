@@ -14,6 +14,7 @@ import ru.novosoft.smsc.admin.console.CommandContext;
 import java.net.Socket;
 import java.io.PrintWriter;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.Iterator;
 
 public class ScriptSession extends Session
@@ -35,6 +36,13 @@ public class ScriptSession extends Session
         writer.println('\r');
         writer.flush();
     }
+
+    protected String readTelnetLine(BufferedReader reader, PrintWriter writer, boolean echo)
+        throws IOException
+    {
+        return super.readTelnetLine(reader, writer, false);
+    }
+
     protected boolean authorize(BufferedReader reader, PrintWriter writer)
             throws Exception
     {
@@ -42,10 +50,10 @@ public class ScriptSession extends Session
         while (!isStopping)
         {
             showMessage(writer, CommandContext.CMD_OK, CONSOLE_CONNECT);
-            String login = reader.readLine();
+            String login = readTelnetLine(reader, writer, false);
             if (login == null || login.length() == 0) continue;
             showMessage(writer, CommandContext.CMD_OK, CONSOLE_LOGINOK);
-            String password = reader.readLine();
+            String password = readTelnetLine(reader, writer, false);
             if (password == null) continue;
 
             if (authorizeUser(login, password)) {

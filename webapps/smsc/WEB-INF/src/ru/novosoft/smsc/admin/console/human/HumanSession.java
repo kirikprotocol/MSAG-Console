@@ -14,6 +14,7 @@ import ru.novosoft.smsc.admin.console.CommandContext;
 import java.net.Socket;
 import java.io.PrintWriter;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.util.Iterator;
 
 public class HumanSession extends Session
@@ -25,12 +26,22 @@ public class HumanSession extends Session
     private final static String CONSOLE_FAREWELL  = "Exited from SMSC Remote Console.";
     private final static String CONSOLE_PROMPT    = "> ";
 
+    private final static char[] WILL_ECHO = {0xff, 0xfb, 0x01};
+    private final static char[] WONT_ECHO = {0xff, 0xfc, 0x01};
+    private final static char[] DO_ECHO   = {0xff, 0xfd, 0x01};
+    private final static char[] DONT_ECHO = {0xff, 0xfe, 0x01};
+
+    private final static char[] DO_TERMINAL_TYPE = {0xff, 0xfd, 0x18};
+    private final static char[] DO_SUPRESS_GA = {0xff, 0xfd, 0x03};
+    private final static char[] DONT_LINEMODE = {0xff, 0xfe, 0x22};
+    private final static char[] DO_LINEMODE = {0xff, 0xfd, 0x22};
+
     protected void greeting(PrintWriter writer) {
-        writer.println(CONSOLE_GREATING+'\r');
+        writer.println("\r\n\r\n"+CONSOLE_GREATING+'\r');
         writer.flush();
     }
     protected void farewell(PrintWriter writer) {
-        writer.println(CONSOLE_FAREWELL+'\r');
+        writer.println("\r\n"+CONSOLE_FAREWELL+'\r');
         writer.flush();
     }
     protected void prompt(PrintWriter writer) {
@@ -42,21 +53,36 @@ public class HumanSession extends Session
         throws Exception
     {
         int tries = 0;
-        while (!isStopping)
+
+        writer.print(DO_LINEMODE); writer.flush();
+        writer.print(DONT_LINEMODE); writer.flush();
+        writer.print(DO_TERMINAL_TYPE); writer.flush();
+        writer.print(WILL_ECHO); writer.flush();
+        writer.print(DO_SUPRESS_GA); writer.flush();
+        writer.print(DO_ECHO); writer.flush();
+
+        while (!isStopping && !writer.checkError())
         {
             writer.print(CONSOLE_LOGIN); writer.flush();
-            String login = reader.readLine();
-            if (login == null || login.length() == 0) continue;
+            String login = readTelnetLine(reader, writer, true);
+            login = login.trim();
+            if (login.length() == 0) continue;
+
             writer.print(CONSOLE_PASSWORD); writer.flush();
-            String password = reader.readLine();
+            String password = readTelnetLine(reader, writer, false);
             if (password == null) continue;
+            password = password.trim();
+
             if (authorizeUser(login, password)) return true;
 
-            writer.println("\r\n"+CONSOLE_AUTH_FAIL+"\r\n"); writer.flush();
             if (++tries >= CONSOLE_AUTH_FAIL_TRIES) {
+                writer.println("\r\n"+CONSOLE_AUTH_FAIL+"\r\n"); writer.flush();
                 sleep(100);
                 break;
-            } else sleep(tries*CONSOLE_AUTH_FAIL_SLEEP);
+            } else {
+                sleep(tries*CONSOLE_AUTH_FAIL_SLEEP);
+                writer.println("\r\n"+CONSOLE_AUTH_FAIL+"\r\n"); writer.flush();
+            }
         }
         return false;
     }
