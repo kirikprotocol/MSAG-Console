@@ -334,11 +334,11 @@ int main(int argc, char* argv[])
 		StoreManager::startup(Manager::getInstance());
 		StoreManager::stopArchiver();
 		TCResultFilter* filter = new TCResultFilter();
-		for (int i = 0; i < 50; i++)
+		for (int i = 0; i < 1000; i++)
 		{
 			executeIntegrityTest(filter, 1);
 		}
-		for (int i = 0; i < 50; i++)
+		for (int i = 0; i < 200; i++)
 		{
 			executeIntegrityTest(filter, 5);
 		}
