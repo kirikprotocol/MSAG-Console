@@ -33,6 +33,8 @@ public class RouteBody extends SmscBean
 	protected Set checkedDestinationsSet = null;
 	protected Map selectedSmes = new HashMap();
 	protected Map selectedMaskSmes = new HashMap();
+  protected String deliveryMode = null;
+  protected String forwardTo = null;
 
 	public boolean isSrcChecked(String srcName)
 	{
@@ -248,5 +250,25 @@ public class RouteBody extends SmscBean
       logger.error("Could not get default SME for subject \"" + subjId + "\"", e);
       return "";
     }
+  }
+
+  public String getDeliveryMode()
+  {
+    return deliveryMode;
+  }
+
+  public void setDeliveryMode(String deliveryMode)
+  {
+    this.deliveryMode = deliveryMode;
+  }
+
+  public String getForwardTo()
+  {
+    return forwardTo;
+  }
+
+  public void setForwardTo(String forwardTo)
+  {
+    this.forwardTo = forwardTo;
   }
 }

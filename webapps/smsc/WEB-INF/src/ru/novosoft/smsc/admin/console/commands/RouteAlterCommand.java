@@ -84,12 +84,13 @@ public class RouteAlterCommand extends RouteGenCommand
             }
 
 			  //todo init srcSmeId properly
+        //todo init forwardTo & deliveryMode properly
 			  srcSmeId = "";
             Route newRoute = new Route(route,
                     oldRoute.getPriority(), oldRoute.isEnabling(), oldRoute.isBilling(),
                     oldRoute.isArchiving(), oldRoute.isSuppressDeliveryReports(),
 						        oldRoute.isActive() , oldRoute.getServiceId(),
-                    oldRoute.getSources(), oldRoute.getDestinations(), srcSmeId);
+                    oldRoute.getSources(), oldRoute.getDestinations(), srcSmeId, "default", "");
 
             if (target == TARGET_SRC)
             {

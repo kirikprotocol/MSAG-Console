@@ -112,8 +112,9 @@ public class RouteAddCommand extends RouteGenCommand
 			  //todo init srcSmeId properly
 			  srcSmeId = "";
 
+          //todo init forwardTo & deliveryMode properly
             smscRoute = new Route(route, priority, allow, bill, arc, !receipt,
-                                  active, serviceid, srcList, dstList, srcSmeId);
+                                  active, serviceid, srcList, dstList, srcSmeId, "default", "");
 
             if (priority < 0 || priority > 32000)
                 throw new Exception("Priority value should be between 0 and 32000");

@@ -29,8 +29,10 @@ public class Route
 	private boolean suppressDeliveryReports = false;
 	private boolean active;
 	private String srcSmeId;
+  private String deliveryMode = null;
+  private String forwardTo = null;
 
-	public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, boolean isSuppressDeliveryReports, boolean active, int serviceId, SourceList sources, DestinationList destinations, String srcSmeId)
+	public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, boolean isSuppressDeliveryReports, boolean active, int serviceId, SourceList sources, DestinationList destinations, String srcSmeId, String deliveryMode, String forwardTo)
 	{
 		if (routeName == null)
 			throw new NullPointerException("Route name is null");
@@ -52,6 +54,8 @@ public class Route
 		this.suppressDeliveryReports = isSuppressDeliveryReports;
 		this.active = active;
 		this.srcSmeId = srcSmeId;
+    this.deliveryMode = deliveryMode;
+    this.forwardTo = forwardTo;
 	}
 
 	public Route(String routeName)
@@ -72,6 +76,8 @@ public class Route
 		suppressDeliveryReports = false;
 		active = false;
 		srcSmeId = "";
+    deliveryMode = "default";
+    forwardTo = "";
 	}
 
 	public Route(Element routeElem, SubjectList subjects, SmeManager smeManager) throws AdminException
@@ -91,6 +97,8 @@ public class Route
 		suppressDeliveryReports = Boolean.valueOf(routeElem.getAttribute("suppressDeliveryReports")).booleanValue();
 		active = Boolean.valueOf(routeElem.getAttribute("active")).booleanValue();
 		srcSmeId = routeElem.getAttribute("srcSmeId");
+    deliveryMode = routeElem.getAttribute("deliveryMode");
+    forwardTo = routeElem.getAttribute("forwardTo");
 	}
 
 	public String getName()
@@ -215,7 +223,12 @@ public class Route
 
 	public PrintWriter store(PrintWriter out)
 	{
-		out.println("  <route id=\"" + StringEncoderDecoder.encode(getName()) + "\" billing=\"" + isBilling() + "\" archiving=\"" + isArchiving() + "\" enabling=\"" + isEnabling() + "\" priority=\"" + getPriority() + "\" serviceId=\"" + getServiceId() + "\" suppressDeliveryReports=\"" + isSuppressDeliveryReports() + "\" active=\"" + isActive() + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId()) + "\">");
+		out.println("  <route id=\"" + StringEncoderDecoder.encode(getName()) + "\" billing=\"" + isBilling()
+                + "\" archiving=\"" + isArchiving() + "\" enabling=\"" + isEnabling() + "\" priority=\"" + getPriority()
+                + "\" serviceId=\"" + getServiceId() + "\" suppressDeliveryReports=\"" + isSuppressDeliveryReports()
+                + "\" active=\"" + isActive() + "\" srcSmeId=\"" + StringEncoderDecoder.encode(getSrcSmeId())
+                + "\" deliveryMode=\"" + getDeliveryMode() + "\" forwardTo=\"" + getForwardTo()
+                + "\">");
 		getSources().store(out);
 		getDestinations().store(out);
 		out.println("  </route>");
@@ -271,4 +284,24 @@ public class Route
 	{
 		this.srcSmeId = srcSmeId;
 	}
+
+  public String getDeliveryMode()
+  {
+    return deliveryMode;
+  }
+
+  public void setDeliveryMode(String deliveryMode)
+  {
+    this.deliveryMode = deliveryMode;
+  }
+
+  public String getForwardTo()
+  {
+    return forwardTo;
+  }
+
+  public void setForwardTo(String forwardTo)
+  {
+    this.forwardTo = forwardTo;
+  }
 }
