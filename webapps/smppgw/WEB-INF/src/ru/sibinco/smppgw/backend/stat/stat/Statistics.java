@@ -18,6 +18,8 @@ public class Statistics
   private ArrayList bySmeId    = new ArrayList(100); // contains SmeIdCountersSet
   private ArrayList byRouteId  = new ArrayList(100); // contains RouteIdCountersSet
 
+  private boolean full = false;
+
   public CountersSet getTotal() {
     return total;
   }
@@ -57,5 +59,12 @@ public class Statistics
   public Collection getRouteIdStat() {
     Collections.sort(byRouteId);
     return byRouteId;
+  }
+
+  public boolean isFull() {
+    return full;
+  }
+  public void setFull(boolean full) {
+    this.full = full;
   }
 }

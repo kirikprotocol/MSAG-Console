@@ -42,7 +42,7 @@
     <c:if test="${!(empty statistics)}">
       <table class=properties_list cellspacing=0 cellspadding=0>
         <c:set var="disNo" value="${1}"/>
-        <c:if test="${bean.administrator}">
+        <c:if test="${statistics.full}">
           <c:set var="total" value="${statistics.total}"/>
           <c:set var="byDates" value="${statistics.dateStat}"/>
           <tr class=row0>
@@ -234,7 +234,7 @@
           <c:set var="disNo" value="${disNo+1}"/>
         </c:forEach>
 
-        <c:if test="${bean.administrator}">
+        <c:if test="${statistics.full}">
           <c:set var="errorsStat" value="${statistics.errorStat}"/>
           <tr>
               <td colspan=8> <div class=page_subtitle>SMS delivery state</div></td>

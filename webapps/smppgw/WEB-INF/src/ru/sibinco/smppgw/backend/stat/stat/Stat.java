@@ -58,28 +58,29 @@ public class Stat
       DateCountersSet dcs = new DateCountersSet(new Date());
       SmeIdCountersSet sics = new SmeIdCountersSet(i,i,i,i,i,i,i,i,i,i,i,i,i,"SME"+(5-i));
       RouteIdCountersSet rics = new RouteIdCountersSet(i,i,i,i,i,"Route"+(10-i));
-      for (int j=0; j<10; j++)
+      for (int j=0; j<3; j++)
       {
         HourCountersSet hcs = new HourCountersSet(j,j,j,j,j,j);
         ErrorCounterSet ecs = new ErrorCounterSet(j,j);
         dcs.addHourStat(hcs);
         sics.addError(ecs);
         rics.addError(ecs);
+        stat.addErrorStat(ecs);
       }
       stat.addDateStat(dcs);
       stat.addSmeIdStat(sics);
       stat.addRouteIdStat(rics);
     }
     return stat;
-  }*/
+  }
+  */
 
   public Statistics getStatistics(StatQuery query) throws Exception
   {
     //return getFakeStatistics();
-
     if (ds == null) throw new Exception("DataSource is not initialized");
     Connection connection = null;
-    stat = new Statistics();
+    stat = new Statistics(); stat.setFull(false);
     try
     {
       connection = ds.getConnection();
@@ -87,6 +88,7 @@ public class Stat
       if (query.getProviderId() == StatQuery.ALL_PROVIDERS) {
         processSmsQuery(connection, query);
         processStateQuery(connection, query);
+        stat.setFull(true);
       }
       processSmeQuery(connection, query);
       processRouteQuery(connection, query);
@@ -128,7 +130,7 @@ public class Stat
       if (provider) str += " AND ";
     }
     if (provider) {
-      str += " provider=? ";
+      str += " providerid=? ";
     }
     return str;
   }

@@ -13,9 +13,10 @@ import ru.sibinco.lib.backend.util.Functions;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.*;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
+import java.util.*;
+import java.security.Principal;
 
 /**
  * Created by IntelliJ IDEA.
@@ -36,23 +37,30 @@ public class Index extends SmppgwBean
   private Statistics statistics = null;
 
   private boolean administrator = false;
+  private long userProviderId = StatQuery.ALL_PROVIDERS;
 
   private String providerName = null;
   private String[] providerIds = null;
   private String[] providerNames = null;
 
-  private void init(HttpServletRequest request)
+  private void init() throws SmppgwJspException
   {
     SmppGWAppContext context = getAppContext();
-    //TODO: init Stat (DataSource)
-    //stat.setDataSource(context.getDataSource());
-    //TODO: obtain user role & user provider id
-    //request.getUserPrincipal() ...
-    //User user = (User)context.getUserManager().getUsers().get("aaa");
-    //user.getRoles()
-    // TODO: init administrator flag
-    administrator = true;
-    if (administrator) {
+    stat.setDataSource(context.getDataSource());
+    Principal userPrincipal = super.getLoginedPrincipal();
+    if (userPrincipal == null)
+      throw new SmppgwJspException(
+          Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
+    User user = (User)context.getUserManager().getUsers().get(userPrincipal.getName());
+    if (user == null)
+      throw new SmppgwJspException(
+          Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '"+userPrincipal.getName()+"'");
+
+    userProviderId = user.getProviderId();
+    System.out.println("User: "+userPrincipal.getName()+", Proviedr id: "+userProviderId);
+    administrator = (userProviderId == StatQuery.ALL_PROVIDERS);
+    if (administrator)
+    {
       Map providers = context.getProviderManager().getProviders();
       ArrayList ids = new ArrayList(100);
       ArrayList names = new ArrayList(100);
@@ -65,13 +73,12 @@ public class Index extends SmppgwBean
         }
       }
       ids.add(0, Long.toString(StatQuery.ALL_PROVIDERS));
-      names.add(0, ALL_PROVIDERS);
-      // TODO: sort names ?
+      names.add(0, ALL_PROVIDERS); // TODO: sort names ?
       providerIds = (String[])(ids.toArray(new String[0]));
       providerNames = (String[])(names.toArray(new String[0]));
     } else {
-      query.setProviderId(0); // TODO: set user provider id
-      providerName = "Some provider"; // TODO: set user provider name
+      query.setProviderId(userProviderId);
+      providerName = user.getName();
     }
   }
 
@@ -79,10 +86,13 @@ public class Index extends SmppgwBean
       throws SmppgwJspException
   {
     super.process(request, response);
-    this.init(request);
+    this.init();
 
     if (mbQuery != null) {
       try {
+        if (userProviderId != StatQuery.ALL_PROVIDERS && userProviderId != query.getProviderId())
+          throw new Exception("Permission denied for user '"+providerName+
+                              "' to access other providers's statistics");
         statistics = stat.getStatistics(query);
       } catch (Exception exc) {
         statistics = null; mbQuery = null;
