@@ -40,22 +40,30 @@ void correctInputTc()
 	__reg_tc__("submitDbSmeCmd.correct.input.noParams",
 		"Команда без параметров");
 	__reg_tc__("submitDbSmeCmd.correct.input.int",
-		"Один из параметров является числом типа int16 или int32");
+		"Один из параметров является числом типа int8, int16, int32 или int64");
+	__reg_tc__("submitDbSmeCmd.correct.input.uint",
+		"Один из параметров является числом типа uint8, uint16, uint32 или uint64");
 	__reg_tc__("submitDbSmeCmd.correct.input.float",
-		"Один из параметров является числом типа float или double");
+		"Один из параметров является числом типа float, double или long double");
 	__reg_tc__("submitDbSmeCmd.correct.input.string",
 		"Один из параметров является строкой (GSM 03.38) из одного слова (без пробелов)");
 	__reg_tc__("submitDbSmeCmd.correct.input.quotedString",
 		"Один из параметров является строкой (GSM 03.38) в двойных ковычках (включая пробелы)");
 	__reg_tc__("submitDbSmeCmd.correct.input.date",
 		"Один из параметров является датой или временем");
+	__reg_tc__("submitDbSmeCmd.correct.input.jobName",
+		"Один из параметров является именем задачи job-name");
+	__reg_tc__("submitDbSmeCmd.correct.input.toAddress",
+		"Один из параметров является адресом получателя to-address");
+	__reg_tc__("submitDbSmeCmd.correct.input.fromAddress",
+		"Один из параметров является адресом отправителя from-address");
 	//defaultInput
 	__reg_tc__("submitDbSmeCmd.correct.defaultInput",
 		"Отправка команд с отсутствующими значениями для параметров допускающих значения по умолчанию");
 	__reg_tc__("submitDbSmeCmd.correct.defaultInput.int",
-		"Значения по умолчанию для целочисленных параметров типа int16 или int32");
+		"Значения по умолчанию для целочисленных параметров типа int8, int16, int32 или int64");
 	__reg_tc__("submitDbSmeCmd.correct.defaultInput.float",
-		"Значения по умолчанию для параметров типа float или double");
+		"Значения по умолчанию для параметров типа float, double или long double");
 	__reg_tc__("submitDbSmeCmd.correct.defaultInput.string",
 		"Значения по умолчанию для строковых (GSM 03.38) параметров");
 	__reg_tc__("submitDbSmeCmd.correct.defaultInput.date",
@@ -95,9 +103,9 @@ void processDbSmeRes()
 	__reg_tc__("processDbSmeRes.input",
 		"Значения параметров правильно зачитываются из input");
 	__reg_tc__("processDbSmeRes.input.int",
-		"Параметры типа int16 или int32");
+		"Параметры типа int8, int16, int32 и int64");
 	__reg_tc__("processDbSmeRes.input.float",
-		"Параметры типа float или double правильно зачитываются из input с учетом формата");
+		"Параметры типа float, double и long double правильно зачитываются из input с учетом формата");
 	__reg_tc__("processDbSmeRes.input.string",
 		"Строковые параметры");
 	__reg_tc__("processDbSmeRes.input.date",
@@ -108,9 +116,9 @@ void processDbSmeRes()
 	__reg_tc__("processDbSmeRes.defaultInput",
 		"Для отсутствующих input параметров берутся значения по умолчанию");
 	__reg_tc__("processDbSmeRes.defaultInput.int",
-		"Константа по умолчанию для целочисленных параметров типа int16 или int32");
+		"Константа по умолчанию для целочисленных параметров типа int8, int16, int32 и int64");
 	__reg_tc__("processDbSmeRes.defaultInput.float",
-		"Константа по умолчанию для параметров типа float или double");
+		"Константа по умолчанию для параметров типа float, double и long double");
 	__reg_tc__("processDbSmeRes.defaultInput.string",
 		"Константа по умолчанию для строковых (GSM 03.38) параметров");
 	__reg_tc__("processDbSmeRes.defaultInput.now",
@@ -130,6 +138,10 @@ void processDbSmeRes()
 		"В случае большого размера ответного сообщения db sme правильно ограничивает количество sms");
 	__reg_tc__("processDbSmeRes.output.dateFormat",
 		"Дата правильно преобразуется из одного input формата в другой output формат");
+	__reg_tc__("processDbSmeRes.output.jobName",
+		"Значение параметра имени задачи job-name вычисляется правильно");
+	__reg_tc__("processDbSmeRes.output.toAddress",
+		"Значение параметра адреса получателя to-address вычисляется правильно");
 	__reg_tc__("processDbSmeRes.output.fromAddress",
 		"Значение параметра адреса отправителя from-address вычисляется правильно");
 	__reg_tc__("processDbSmeRes.output.string",
@@ -146,9 +158,9 @@ void processDbSmeRes()
 	__reg_tc__("processDbSmeRes.select.defaultOutput",
 		"При отсутствии записей удовлетворяющих условиям запроса или нулевых (NULL) значениях полей для output параметров берутся значения по умолчанию");
 	__reg_tc__("processDbSmeRes.select.defaultOutput.int",
-		"Константа по умолчанию для целочисленных параметров типа int16 или int32");
+		"Константа по умолчанию для целочисленных параметров типа int8, int16, int32 и int64");
 	__reg_tc__("processDbSmeRes.select.defaultOutput.float",
-		"Константа по умолчанию для параметров типа float или double");
+		"Константа по умолчанию для параметров типа float, double и long double");
 	__reg_tc__("processDbSmeRes.select.defaultOutput.string",
 		"Константа по умолчанию для строковых (GSM 03.38) параметров");
 	__reg_tc__("processDbSmeRes.select.defaultOutput.now",
@@ -197,6 +209,8 @@ void processDbSmeRes()
 		"Для неправильных команд db sme отправляет соответствующие сообщения об ошибках");
 	__reg_tc__("processDbSmeRes.errors.invalidJob",
 		"Неправильное имя задачи");
+	__reg_tc__("processDbSmeRes.errors.missingParameter",
+		"Не задан обязательный параметр");
 	__reg_tc__("processDbSmeRes.errors.invalidInput",
 		"Неправильно заданные параметры");
 	__reg_tc__("processDbSmeRes.errors.invalidConfig",
