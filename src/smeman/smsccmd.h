@@ -111,10 +111,10 @@ class SmscCommand
     //__trace__(__PRETTY_FUNCTION__);
     //__require__ ( cmd != 0 );
     if ( !cmd )
-		{
-			__warning__("cmd is zero");
-			return 0;
-		}
+    {
+      __warning__("cmd is zero");
+      return 0;
+    }
     MutexGuard guard(cmd->mutex);
     __require__ ( cmd->ref_count >= 0 );
     ++(cmd->ref_count);
@@ -149,6 +149,7 @@ public:
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
     _SmscCommand& _cmd = *cmd.cmd;
+		_cmd.ref_count = 1;
     _cmd.cmdid = SUBMIT;
     _cmd.dta = new SMS;
     *_cmd.get_sms() = sms;
@@ -161,6 +162,7 @@ public:
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
     _SmscCommand& _cmd = *cmd.cmd;
+		_cmd.ref_count = 1;
     _cmd.cmdid = DELIVERY;
     _cmd.dta = new SMS;
     *_cmd.get_sms() = sms;
@@ -173,6 +175,7 @@ public:
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
     _SmscCommand& _cmd = *cmd.cmd;
+		_cmd.ref_count = 1;
     _cmd.cmdid = SUBMIT_RESP;
     _cmd.dta = new SmsResp;
     _cmd.get_resp()->set_messageId(messageId);
@@ -185,6 +188,7 @@ public:
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
     _SmscCommand& _cmd = *cmd.cmd;
+		_cmd.ref_count = 1;
     _cmd.cmdid = DELIVERY_RESP;
     _cmd.dta = new SmsResp;
     _cmd.get_resp()->set_messageId(messageId);
@@ -326,7 +330,8 @@ public:
 
   _SmscCommand* operator->()
   {
-    return cmd;
+    __require__(cmd);
+		return cmd;
   }
 };
 
