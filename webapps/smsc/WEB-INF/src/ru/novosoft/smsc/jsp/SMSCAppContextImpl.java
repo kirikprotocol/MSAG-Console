@@ -230,7 +230,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
   public void destroy()
   {
     if (console != null) console.close();
-    perfServer.shutdown();
+    if (perfServer != null) perfServer.shutdown();
   }
 
   public String getLocaleString(Locale locale, String key)
