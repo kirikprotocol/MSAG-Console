@@ -206,7 +206,7 @@ static void SendRescheduleToSmsc(unsigned dialogid)
 static void SendAbonentStatusToSmsc(MapDialog* dialog,int status/*=AbonentStatus::UNKNOWN*/)
 {
   __trace2__("MAP::%s: Send abonent status(%d) to SMSC ",__FUNCTION__,status);
-  SmscCommand cmd = SmscCommand::makeQueryAbonentStatusResp(dialog->QueryAbonentCommand->get_abonentStatus,status);
+  SmscCommand cmd = SmscCommand::makeQueryAbonentStatusResp(dialog->QueryAbonentCommand->get_abonentStatus(),status);
   MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
   __trace2__("MAP::%s: Send abonent status to SMSC OK",__FUNCTION__);
 }
