@@ -1,7 +1,7 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.dl.*"%>
 <jsp:useBean id="dl_dlAdd_bean" class="ru.novosoft.smsc.jsp.dl.dlAdd" scope="session"/>
-<jsp:setProperty name="bean" property="*"/>
+<jsp:setProperty name="dl_dlAdd_bean" property="*"/>
 <%
 ru.novosoft.smsc.jsp.dl.dlAdd bean = dl_dlAdd_bean;
 TITLE = "Create distribution list";

@@ -1,6 +1,8 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%><%@ 
 page import="ru.novosoft.smsc.jsp.smsc.services.ServiceAddExternalAdm,
-             ru.novosoft.util.jsp.MultipartServletRequest"%><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.ServiceAddExternalAdm" scope="session"/><jsp:setProperty name="bean" property="*"/><%
+             ru.novosoft.util.jsp.MultipartServletRequest"%><jsp:useBean id="services_serviceAddExternalAdm" class="ru.novosoft.smsc.jsp.smsc.services.ServiceAddExternalAdm" scope="session"/><jsp:setProperty name="services_serviceAddExternalAdm" property="*"/><%
+
+ru.novosoft.smsc.jsp.smsc.services.ServiceAddExternalAdm bean = services_serviceAddExternalAdm;
 
 MultipartServletRequest multi = (MultipartServletRequest)request.getAttribute("multipart.request");
 if (multi != null)

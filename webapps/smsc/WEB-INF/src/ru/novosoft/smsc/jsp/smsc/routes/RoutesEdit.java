@@ -139,6 +139,9 @@ public class RoutesEdit extends RouteBody
 		if (priority < 0 || priority > MAX_PRIORITY)
 			return error(SMSCErrors.error.routes.invalidPriority, String.valueOf(priority));
 
+		if (!routeId.equals(oldRouteId) && routeSubjectManager.getRoutes().contains(routeId))
+			return error(SMSCErrors.error.routes.alreadyExists, routeId);
+
 		try
 		{
 			SourceList sources = new SourceList();
