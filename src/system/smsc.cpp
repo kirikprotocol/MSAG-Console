@@ -6,10 +6,10 @@
 #include "store/StoreManager.h"
 #include "system/state_machine.hpp"
 #include "core/synchronization/Event.hpp"
-#include "system/scheduler.hpp"
 #include "util/Exception.hpp"
 #include "profiler/profiler.hpp"
 #include "system/rescheduler.hpp"
+#include "util/config/route/RouteConfig.h"
 
 namespace smsc{
 namespace system{
@@ -81,6 +81,8 @@ public:
 protected:
   EventQueue& queue;
 };
+
+extern void loadRoutes(RouteManager* rm,smsc::util::config::route::RouteConfig& rc);
 
 void Smsc::init(const SmscConfigs& cfg)
 {
@@ -154,6 +156,7 @@ void Smsc::init(const SmscConfigs& cfg)
   }
   // initialize router (all->all)
   router.assign(&smeman);
+  /*
   auto_ptr<SmeIterator> it(smeman.iterator());
   while (it->next())
   {
@@ -177,7 +180,8 @@ void Smsc::init(const SmscConfigs& cfg)
       router.addRoute(rinfo);
     }
   }
-
+  */
+  loadRoutes(&router,*cfg.routesconfig);
   smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance());
   store=smsc::store::StoreManager::getMessageStore();
 
@@ -195,7 +199,10 @@ void Smsc::init(const SmscConfigs& cfg)
 
   tp.startTask(new SpeedMonitor(eventqueue));
 
-  tp.startTask(new smsc::profiler::Profiler());
+  smsc::profiler::Profile defProfile;
+  defProfile.codepage=0;
+  defProfile.reportoptions=0;
+  tp.startTask(new smsc::profiler::Profiler(defProfile));
 
   smscHost=cfg.cfgman->getString("smpp.host");
   smscPort=cfg.cfgman->getInt("smpp.port");
@@ -221,7 +228,8 @@ void Smsc::run()
     }
   }
 
-  tp.startTask(new Scheduler(eventqueue,store));
+  scheduler=new Scheduler(eventqueue,store);
+  tp.startTask(scheduler);
 
 
   // некоторые действия до основного цикла

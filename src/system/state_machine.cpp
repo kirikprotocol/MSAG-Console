@@ -51,6 +51,10 @@ StateType StateMachine::submit(Tuple& t)
   // route sms
   //SmeProxy* dest_proxy = 0;
   Address dst;
+  __trace2__("AliasToAddress: %d.%d.%.20s",
+    sms->getDestinationAddress().type,
+    sms->getDestinationAddress().plan,
+    sms->getDestinationAddress().value);
   if(smsc->AliasToAddress(sms->getDestinationAddress(),dst))
   {
     __trace2__("ALIAS:%20s->%20s",sms->getDestinationAddress().value,dst.value);
@@ -58,6 +62,7 @@ StateType StateMachine::submit(Tuple& t)
   }
   else
   {
+    __warning__("SUBMIT: NOALIAS");
     SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::NOALIAS);
     try{
       src_proxy->putCommand(resp);
@@ -110,6 +115,7 @@ StateType StateMachine::submit(Tuple& t)
 
   if(sms->getWaitTime()>time(NULL))
   {
+    smsc->notifyScheduler();
     return ENROUTE_STATE;
   }
 
@@ -265,6 +271,7 @@ StateType StateMachine::alert(Tuple& t)
     SMS sms;
     store->retriveSms((SMSId)t.msgId,sms);
     store->changeSmsStateToEnroute(t.msgId,d,0,RescheduleCalculator::calcNextTryTime(now,sms.getAttemptsCount()));
+    smsc->notifyScheduler();
   }catch(...)
   {
   };

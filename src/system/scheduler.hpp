@@ -5,6 +5,7 @@
 #include "system/event_queue.h"
 #include "core/threads/ThreadedTask.hpp"
 #include "core/buffers/Array.hpp"
+#include "core/synchronization/Event.hpp"
 
 namespace smsc{
 namespace system{
@@ -12,6 +13,7 @@ namespace system{
 using smsc::store::MessageStore;
 using namespace smsc::smeman;
 using smsc::core::buffers::Array;
+using smsc::core::synchronization::Event;
 
 class Scheduler:public smsc::core::threads::ThreadedTask{
 public:
@@ -54,15 +56,20 @@ public:
       __trace__("scheduler finished, sleeping");
       sleep(1);
       r=store->getNextRetryTime();
-      if(r>t)sleep(r-t);
+      if(r>t)event.Wait((r-t)*1000);
     }
     return 0;
   }
   const char* taskName(){return "scheduler";}
+
+  void notify()
+  {
+    event.Signal();
+  }
 protected:
   EventQueue &queue;
   MessageStore* store;
-
+  Event event;
 };
 
 };//system

@@ -12,6 +12,9 @@
 #include "util/config/smeman/SmeManConfig.h"
 #include "alias/aliasman.h"
 #include "util/config/alias/aliasconf.h"
+#include "util/config/route/RouteConfig.h"
+#include "system/scheduler.hpp"
+
 
 namespace smsc{
 namespace system{
@@ -27,6 +30,7 @@ struct SmscConfigs{
   smsc::util::config::Manager* cfgman;
   smsc::util::config::smeman::SmeManConfig* smemanconfig;
   smsc::util::config::alias::AliasConfig* aliasconfig;
+  smsc::util::config::route::RouteConfig* routesconfig;
 };
 
 class Smsc
@@ -51,6 +55,11 @@ public:
     return aliaser.AddressToAlias(addr,alias);
   }
 
+  void notifyScheduler()
+  {
+    scheduler->notify();
+  }
+
 protected:
   smsc::core::threads::ThreadPool tp;
   smsc::system::smppio::SmppSocketsManager ssockman;
@@ -59,6 +68,7 @@ protected:
   EventQueue eventqueue;
   smsc::store::MessageStore *store;
   smsc::alias::AliasManager aliaser;
+  Scheduler *scheduler;
   bool stopFlag;
   std::string smscHost;
   int smscPort;
