@@ -87,15 +87,17 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
     if (info.replaceIfPresent && (!svc_type || svc_type[0] == '\0'))
         throw ConfigException("Service type task empty or wasn't specified.");
     info.svcType = svc_type;
-    dsOwnTimeout = 0;
-    try { dsOwnTimeout = config->getInt("dsOwnTimeout"); } catch(...) {}
-    if (dsOwnTimeout < 0) dsOwnTimeout = 0;
-    dsIntTimeout = 0;
-    try { dsIntTimeout = config->getInt("dsIntTimeout"); } catch(...) {}
-    if (dsIntTimeout < 0) dsIntTimeout = 0;
-    dsUncommited = 1;
-    try { dsUncommited = config->getInt("uncommited"); } catch(...) {}
-    if (dsUncommited < 0) dsUncommited = 1;
+    info.dsOwnTimeout = 0;
+    try { info.dsOwnTimeout = config->getInt("dsOwnTimeout"); } catch(...) {}
+    if (info.dsOwnTimeout < 0) info.dsOwnTimeout = 0;
+    info.dsIntTimeout = 0;
+    try { info.dsIntTimeout = config->getInt("dsIntTimeout"); } catch(...) {}
+    if (info.dsIntTimeout < 0) info.dsIntTimeout = 0;
+    info.dsUncommited = 1;
+    try { info.dsUncommited = config->getInt("uncommited"); } catch(...) {}
+    if (info.dsUncommited < 0) info.dsUncommited = 1;
+
+    //TODO: Call createTable();
 }
 
 bool Task::isInProcess()
@@ -130,36 +132,53 @@ const char* NEW_MESSAGE_STATEMENT_SQL = (const char*)
 const char* NEW_TABLE_STATEMENT_SQL = (const char*)
 "CREATE TABLE %s ("
 "VARCHAR2(30)   ABONENT,"
-"VARCHAR2       MESSAGE"
+"VARCHAR2       MESSAGE,"
+"NUMBER(2)      STATE"
 ")";
-void Task::createTable(Connection* connection)
+void Task::createTable()
 {
     MutexGuard guard(createTableLock);
     
-    // TODO: пытаться создавать только один раз при старте !!!
-    if (!bTableCreated && connection)
+    if (!bTableCreated)
     {
+        Connection* connection = 0;
         Statement* statement = 0;
         try
         {
+            connection = dsInt->getConnection();
+            if (!connection)
+                throw Exception("Failed to obtain connection to internal data source.");
             char createTableSql[2048];
             sprintf(createTableSql, NEW_TABLE_STATEMENT_SQL, (info.tablePrefix+info.id).c_str());
             statement = connection->createStatement(createTableSql);
             if (!statement) 
                 throw Exception("Failed to create statement.");
             statement->execute();
+
+            // TODO: create indecies on user table here !!!
+
             connection->commit();
             bTableCreated = true;
         } 
-        catch (Exception& exc) {
+        catch (Exception& exc)
+        {
+            try { if (connection) connection->rollback(); }
+            catch (...) {
+                logger.error("Failed to roolback transaction on internal data source.");
+            }
             logger.error("Task '%s'. Failed to create internal table. "
                          "Details: %s", info.id.c_str(), exc.what());
         }
         catch (...) {
+            try { if (connection) connection->rollback(); }
+            catch (...) {
+                logger.error("Failed to roolback transaction on internal data source.");
+            }
             logger.error("Task '%s'. Failed to create internal table.",
                          info.id.c_str());
         }
         if (statement) delete statement;
+        if (connection) dsInt->freeConnection(connection);
     }
 }
 void Task::beginProcess()
@@ -184,7 +203,6 @@ void Task::beginProcess()
         if (!ownConnection)
             throw Exception("Failed to obtain connection to own data source.");
         
-        createTable(intConnection);
         Statement* userQuery = getStatement(ownConnection, USER_QUERY_STATEMENT_ID, 
                                             info.querySql.c_str());
         if (!userQuery)
@@ -197,7 +215,7 @@ void Task::beginProcess()
         if (!newMessage)
             throw Exception("Failed to create statement for message generation.");
             
-        wdOwnTimerId = dsOwn->startTimer(ownConnection, dsOwnTimeout);
+        wdOwnTimerId = dsOwn->startTimer(ownConnection, info.dsOwnTimeout);
         std::auto_ptr<ResultSet> rsGuard(userQuery->executeQuery());
         ResultSet* rs = rsGuard.get();
         dsOwn->stopTimer(wdOwnTimerId);
@@ -208,7 +226,7 @@ void Task::beginProcess()
         int uncommitted = 0;
         while (bInProcess)
         {
-            wdOwnTimerId = dsOwn->startTimer(ownConnection, dsOwnTimeout);
+            wdOwnTimerId = dsOwn->startTimer(ownConnection, info.dsOwnTimeout);
             bool fetched = rs->fetchNext();
             dsOwn->stopTimer(wdOwnTimerId);
             if (!fetched) break;
@@ -227,7 +245,7 @@ void Task::beginProcess()
             newMessage->setString(2, message.c_str());
             newMessage->execute();
 
-            if (++uncommitted >= dsUncommited) {
+            if (info.dsUncommited <= 0 || ++uncommitted >= info.dsUncommited) {
                 intConnection->commit();
                 uncommitted = 0;
             }

@@ -150,8 +150,8 @@ namespace smsc { namespace infosme
         Mutex       createTableLock;
         bool        bInProcess, bTableCreated;
         
+        void createTable();
         Statement* getStatement(Connection* connection, const char* id, const char* sql);
-        void createTable(Connection* connection);
         
         virtual void init(ConfigView* config, std::string taskId, std::string tablePrefix);
 
