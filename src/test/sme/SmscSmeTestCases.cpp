@@ -191,7 +191,7 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 	__require__(origPdu);
 	//декодировать
 	const string text = decode(pdu.get_message().get_shortMessage(),
-		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());
+		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding(), false);
 	if (!monitor->pduData->objProps.count("smscSmeTc.receiptOutput"))
 	{
 		AckText* ack = getExpectedResponse(monitor, origPdu, text, recvTime);
@@ -314,7 +314,7 @@ void SmscSmeTestCases::processIntermediateNotification(
 	__require__(origPdu);
 	//декодировать
 	const string text = decode(pdu.get_message().get_shortMessage(),
-		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());
+		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding(), false);
 	if (!monitor->pduData->objProps.count("smscSmeTc.notificationOutput"))
 	{
 		AckText* ack = getExpectedResponse(monitor, origPdu, text, recvTime);

@@ -329,7 +329,7 @@ vector<int> SmppUtil::compareOptional(SmppOptional& p1, SmppOptional& p2,
 	__trace_set__("set_bin"); \
 	int len_##field = length; \
 	uint8_t dc_##field = dataCoding; \
-	auto_ptr<char> str_##field = rand_text(len_##field, dc_##field); \
+	auto_ptr<char> str_##field = rand_text(len_##field, dc_##field, false); \
 	p.set_##field(str_##field.get(), len_##field); \
 	if (check) { __require__(p.size_##field() == len_##field && \
 		!memcmp(p.get_##field(), str_##field.get(), len_##field)); }
@@ -380,7 +380,7 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
 	__set_bin__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH), dataCoding);
 	mask &= ~OPT_USER_MSG_REF; //исключить userMessageReference
-	setupRandomCorrectOptionalParams(pdu->get_optional(), mask, check);
+	setupRandomCorrectOptionalParams(pdu->get_optional(), dataCoding, mask, check);
 }
 
 void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
@@ -445,7 +445,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 		__trace_set_optional__("set_optional_bin", field); \
 		int len_##field = length; \
 		uint8_t dc_##field = dataCoding; \
-		auto_ptr<char> str_##field = rand_text(len_##field, dc_##field); \
+		auto_ptr<char> str_##field = rand_text(len_##field, dc_##field, false); \
 		opt.set_##field(str_##field.get(), len_##field); \
 		if (check) { \
 			OStr tmp_##field; \
@@ -656,7 +656,7 @@ bool operator==(PduAddress& a1, PduAddress& a2)
 {
 	return (a1.get_typeOfNumber() == a2.get_typeOfNumber() &&
 		a1.get_numberingPlan() == a2.get_numberingPlan() &&
-		strcmp(a1.get_value(), a2.get_value()) == 0);
+		strcmp(nvl(a1.get_value()), nvl(a2.get_value())) == 0);
 }
 
 bool operator!=(PduAddress& a1, PduAddress& a2)

@@ -21,32 +21,40 @@ string& mixedCase(string& str)
 	return str;
 }
 
-auto_ptr<char> rand_text(int& length, uint8_t dataCoding)
+auto_ptr<char> rand_text(int& length, uint8_t dataCoding, bool hostByteOrder)
 {
 	char* buf = new char[length + 1];
-	rand_text(length, buf, dataCoding);
+	rand_text(length, buf, dataCoding, hostByteOrder);
 	return auto_ptr<char>(buf);
 }
 
-void rand_text(int& length, char* buf, uint8_t dataCoding)
+void rand_text(int& length, char* buf, uint8_t dataCoding, bool hostByteOrder)
 {
 	switch (dataCoding)
 	{
 		case DEFAULT:
-			for (int i = 0; i < length; i++)
-			{
-				buf[i] = rand0(127);
-			}
+			rand_char(length, buf, RAND_LAT_NUM + RAND_SYM);
 			break;
 		case UCS2:
 			{
-				char tmp[length / 2];
-				rand_uint8_t(length / 2, (uint8_t*) tmp);
-				int len = ConvertMultibyteToUCS2(tmp, sizeof(tmp),
-					(short*) buf, length, CONV_ENCODING_CP1251);
-				__require__(length/2 - len/2  == 0);
-				length = len;
+				int len = length / 2;
+				char msg[len + 1];
+				rand_char(len, msg, RAND_LAT_NUM + RAND_RUS + RAND_SYM);
+				short* _buf = (short*) buf;
+				length = ConvertMultibyteToUCS2(msg, len,
+					_buf, length, CONV_ENCODING_CP1251);
+				if (!hostByteOrder)
+				{
+					//установить сетевой порядок
+					for (int i = 0; i < length / 2; i++)
+					{
+						*(_buf + i) = htons(*(_buf + i));
+					}
+				}
 			}
+			break;
+		case BINARY:
+			rand_uint8_t(length, (uint8_t*) buf);
 			break;
 		default:
 			__unreachable__("Invalid dataCoding");
@@ -172,7 +180,7 @@ const pair<string, uint8_t> convert(const string& text, int profileCodePage)
 }
 
 vector<int> compare(uint8_t dc1, const char* str1, int len1,
-	uint8_t dc2, const char* str2, int len2)
+	uint8_t dc2, const char* str2, int len2, bool hostByteOrder)
 {
 	vector<int> res;
 	//допустимая кодировка dc1
@@ -180,6 +188,7 @@ vector<int> compare(uint8_t dc1, const char* str1, int len1,
 	{
 		case DEFAULT:
 		case UCS2:
+		case BINARY:
 			break;
 		default:
 			res.push_back(1);
@@ -190,6 +199,7 @@ vector<int> compare(uint8_t dc1, const char* str1, int len1,
 	{
 		case DEFAULT:
 		case UCS2:
+		case BINARY:
 			break;
 		default:
 			res.push_back(2);
@@ -206,55 +216,73 @@ vector<int> compare(uint8_t dc1, const char* str1, int len1,
 			res.push_back(4);
 		}
 	}
-	//DEFAULT -> UCS2
-	else if (dc1 == DEFAULT && dc2 == UCS2)
-	{
-		char ucs2Buf[2 * len1 + 1];
-		//int ucs2Len = Convert7BitToUCS2(str1, len1, (short*) ucs2Buf, sizeof(ucs2Buf));
-		int ucs2Len = ConvertMultibyteToUCS2(str1, len1, (short*) ucs2Buf,
-			sizeof(ucs2Buf), CONV_ENCODING_CP1251);
-		if (ucs2Len != len2)
-		{
-			res.push_back(5);
-		}
-		else if (memcmp(ucs2Buf, str2, len2))
-		{
-			res.push_back(6);
-		}
-	}
+	//DEFAULT -> UCS2 не бывает
 	//UCS2 -> DEFAULT (в транслит)
 	else if (dc1 == UCS2 && dc2 == DEFAULT)
 	{
 		char defBuf[len1 + 1];
+		int defLen;
+		if (hostByteOrder)
+		{
+			defLen = ConvertUCS2ToMultibyte((const short*) str1, len1,
+				defBuf, sizeof(defBuf), CONV_ENCODING_CP1251);
+		}
+		else
+		{
+			short buf[len1 / 2];
+			const short* _str1 = (const short*) str1;
+			for (int i = 0; i < len1 / 2; i++)
+			{
+				*(buf + i) = ntohs(*(_str1 + i));
+			}
+			defLen = ConvertUCS2ToMultibyte(buf, len1,
+				defBuf, sizeof(defBuf), CONV_ENCODING_CP1251);
+		}
 		char transBuf[len1 + 1];
-		int defLen = ConvertUCS2ToMultibyte((const short*) str1, len1,
-			defBuf, sizeof(defBuf), CONV_ENCODING_CP1251);
 		int transLen = Transliterate(defBuf, defLen,
 			CONV_ENCODING_CP1251, transBuf, sizeof(transBuf));
 		if (transLen != len2)
 		{
-			res.push_back(7);
+			res.push_back(5);
 		}
 		else if (memcmp(transBuf, str2, len2))
 		{
-			res.push_back(8);
+			res.push_back(6);
 			//__trace2__("transBuf: %s\nstr2: %s", transBuf, str2);
 		}
 	}
 	else
 	{
-		__unreachable__("Invalid data codings");
+		res.push_back(7);
 	}
 	return res;
 }
 
 uint8_t getDataCoding(int num)
 {
-	const uint8_t dataCodings[] = {DEFAULT, UCS2};
+	static const uint8_t dataCodings[] = {DEFAULT, UCS2 /*, BINARY*/};
+	static const int dataCodingsLen = sizeof(dataCodings) / sizeof(*dataCodings);
 	switch (num)
 	{
 		case RAND_TC:
-			return dataCodings[rand0(1)];
+			return dataCodings[rand0(dataCodingsLen - 1)];
+		case ProfileCharsetOptions::Default:
+			return DEFAULT;
+		case ProfileCharsetOptions::Ucs2:
+			return UCS2;
+		default:
+			__unreachable__("Invalid num");
+	}
+}
+
+uint8_t getTextDataCoding(int num)
+{
+	static const uint8_t dataCodings[] = {DEFAULT, UCS2};
+	static const int dataCodingsLen = sizeof(dataCodings) / sizeof(*dataCodings);
+	switch (num)
+	{
+		case RAND_TC:
+			return dataCodings[rand0(dataCodingsLen - 1)];
 		case ProfileCharsetOptions::Default:
 			return DEFAULT;
 		case ProfileCharsetOptions::Ucs2:

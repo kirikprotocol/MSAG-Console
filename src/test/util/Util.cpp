@@ -98,15 +98,31 @@ void rand_char(int length, char* buf, int type)
 	}
 	else
 	{
-		string str;
-		str.reserve(sz);
-		if (type & RAND_LAT) { str += latinChars; }
-		if (type & RAND_RUS) { str += rusChars; }
-		if (type & RAND_NUM) { str += digitChars; }
-		if (type & RAND_SYM) { str += symbolChars; }
+		vector<int> charTypes;
+		if (type & RAND_LAT) { charTypes.push_back(RAND_LAT); }
+		if (type & RAND_RUS) { charTypes.push_back(RAND_RUS); }
+		if (type & RAND_NUM) { charTypes.push_back(RAND_NUM); }
+		if (type & RAND_SYM) { charTypes.push_back(RAND_SYM); }
+		__require__(charTypes.size());
 		for (int i = 0; i < length; i++)
 		{
-			buf[i] = str[rand0(str.length() - 1)];
+			switch (charTypes[rand0(charTypes.size() - 1)])
+			{
+				case RAND_LAT:
+					buf[i] = latinChars[rand0(latinCharsLen - 1)];
+					break;
+				case RAND_RUS:
+					buf[i] = rusChars[rand0(rusCharsLen - 1)];
+					break;
+				case RAND_NUM:
+					buf[i] = digitChars[rand0(digitCharsLen - 1)];
+					break;
+				case RAND_SYM:
+					buf[i] = symbolChars[rand0(symbolCharsLen - 1)];
+					break;
+				default:
+					__unreachable__("Invalid char type");
+			}
 		}
 	}
 	buf[length] = 0;

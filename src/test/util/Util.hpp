@@ -43,6 +43,11 @@ static const char* latinChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstu
 static const char* rusChars = "ÀÁÂÃÄÅ¨ÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞßàáâãäå¸æçèéêëìíîïğñòóôõö÷øùúûüışÿ";
 static const char* symbolChars = "~ !@#$%^&*()-_=+\\|{[}];:'\",<.>/?";
 
+const int digitCharsLen = strlen(digitChars);
+const int latinCharsLen = strlen(latinChars);
+const int rusCharsLen = strlen(rusChars);
+const int symbolCharsLen = strlen(symbolChars);
+
 inline const char* nvl(const char* str) { return (str ? str : ""); }
 
 void init_rand();
