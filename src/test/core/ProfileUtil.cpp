@@ -26,6 +26,17 @@ vector<int> ProfileUtil::compareProfiles(const Profile& p1, const Profile& p2)
 	return res;
 }
 
+bool operator==(const Profile& p1, const Profile& p2)
+{
+	return (p1.codepage == p2.codepage && p1.reportoptions == p2.reportoptions &&
+		p1.locale == p2.locale);
+}
+
+bool operator!=(const Profile& p1, const Profile& p2)
+{
+	return !operator==(p1, p2);
+}
+
 ostream& operator<< (ostream& os, const Profile& p)
 {
 	os << "codepage = " << p.codepage << ", reportoptions = " << p.reportoptions;

@@ -22,6 +22,9 @@ public:
 	static vector<int> compareProfiles(const Profile& p1, const Profile& p2);
 };
 
+bool operator==(const Profile& p1, const Profile& p2);
+bool operator!=(const Profile& p1, const Profile& p2);
+
 ostream& operator<< (ostream& os, const Profile& p);
 const string str(const Profile& p);
 
