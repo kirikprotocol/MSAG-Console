@@ -175,22 +175,31 @@ int StateMachine::Execute()
   {
     eq.selectAndDequeue(t,&isStopping);
     if(isStopping)break;
-    switch(t.command->cmdid)
+    try{
+      switch(t.command->cmdid)
+      {
+        case SUBMIT:st=submit(t);break;
+        case DELIVERY_RESP:st=deliveryResp(t);break;
+        case FORWARD:st=forward(t);break;
+        case ALERT:st=alert(t);break;
+        case REPLACE:st=replace(t);break;
+        case QUERY:st=query(t);break;
+        case CANCEL:st=cancel(t);break;
+        default:
+          __warning2__("UNKNOWN COMMAND:%d",t.command->cmdid);
+          st=ERROR_STATE;
+          break;
+      }
+      __trace2__("change state for %lld to %d",t.msgId,st);
+      eq.changeState(t.msgId,st);
+    }catch(exception& e)
     {
-      case SUBMIT:st=submit(t);break;
-      case DELIVERY_RESP:st=deliveryResp(t);break;
-      case FORWARD:st=forward(t);break;
-      case ALERT:st=alert(t);break;
-      case REPLACE:st=replace(t);break;
-      case QUERY:st=query(t);break;
-      case CANCEL:st=cancel(t);break;
-      default:
-        __warning2__("UNKNOWN COMMAND:%d",t.command->cmdid);
-        st=ERROR_STATE;
-        break;
+      __warning2__("StateMachine::exception %s",e.what());
     }
-    __trace2__("change state for %lld to %d",t.msgId,st);
-    eq.changeState(t.msgId,st);
+    catch(...)
+    {
+      __warning2__("StateMachine::unknown exception");
+    }
   }
   __trace__("exit state machine");
   return 0;
@@ -1323,6 +1332,23 @@ StateType StateMachine::replace(Tuple& t)
     }
     return UNKNOWN_STATE;
   }
+  if(sms.hasBinProperty(Tag::SMSC_CONCATINFO) && sms.getConcatSeqNum()>0)
+  {
+    try{
+      t.command.getProxy()->putCommand
+      (
+        SmscCommand::makeReplaceSmResp
+        (
+          t.command->get_dialogId(),
+          Status::REPLACEFAIL
+        )
+      );
+    }catch(...)
+    {
+    }
+    return UNKNOWN_STATE;
+  }
+
   if(t.command->get_replaceSm().validityPeriod==-1)
   {
     sms.lastResult=Status::INVEXPIRY;
@@ -1466,6 +1492,12 @@ StateType StateMachine::cancel(Tuple& t)
   try{
     Address addr(t.command->get_cancelSm().sourceAddr.get());
     store->retriveSms(t.msgId,sms);
+
+    if(sms.hasBinProperty(Tag::SMSC_CONCATINFO) && sms.getConcatSeqNum()>0)
+    {
+      throw Exception("CANCEL: attempt to cancel concatenated message already in delivery");
+    }
+
     if(!(sms.getOriginatingAddress()==addr))
     {
       throw Exception("CANCEL: source address doesn't match");
