@@ -211,7 +211,7 @@ static void PrintTrace()
   for(int i=0;i<TRACESIZE;i++)
   {
     if(!trace[i])break;
-    fprintf(stderr,"{0x%08X}\n",(int)trace[i]);
+    fprintf(stderr,"l *0x%08X\n",(int)trace[i]);
   }
 }
 
@@ -241,13 +241,13 @@ int LeakHunter::RegisterDealloc(void* ptr)
   //throw "DELETE UNALLOCATED BLOCK";
 }
 
-void deletelh()
+static void deletelh()
 {
   lh->~LeakHunter();
   free(lh);
 }
 
-void initlh()
+static void initlh()
 {
   using namespace std;
   if(!lh)
@@ -267,10 +267,60 @@ void initlh()
 }//util
 }//smsc;
 
+#define PRE_ALLOC 32
+#define POST_ALLOC 32
+#define CHECK_SIZE (PRE_ALLOC+POST_ALLOC+sizeof(size_t))
+#define PRE_FILL_PATTERN 0xaa
+#define FILL_PATTERN 0xcc
+#define POST_FILL_PATTERN 0xbb
+
+static void* xmalloc(size_t size)
+{
+  void *rv=malloc(size+CHECK_SIZE);
+  unsigned char *mem=(unsigned char*)rv;
+  int i;
+  for(i=0;i<PRE_ALLOC;i++)mem[i]=PRE_FILL_PATTERN;
+  mem+=PRE_ALLOC;
+  *((size_t*)mem)=size;
+  mem+=sizeof(size_t);
+  for(i=0;i<size;i++)mem[i]=FILL_PATTERN;
+  mem+=size;
+  for(i=0;i<POST_ALLOC;i++)mem[i]=POST_FILL_PATTERN;
+}
+
+static void xfree(void* ptr)
+{
+  unsigned char* mem=(unsigned char*)ptr;
+  size_t size=((size_t*)mem)[-1];
+  mem-=sizeof(size_t);
+  mem-=PRE_FILL_PATTERN;
+  int i;
+  for(i=0;i<PRE_ALLOC;i++)
+  {
+    if(mem[i]!=PRE_FILL_PATTERN)
+    {
+      fprintf(stderr,"ERROR: Memory underrun for block %p size %d at\n",ptr,size);
+      smsc::util::leaktracing::PrintTrace();
+      abort();
+    }
+  }
+  mem+=sizeof(size_t);
+  mem+=size;
+  for(i=0;i<POST_ALLOC;i++)
+  {
+    if(mem[i]!=POST_FILL_PATTERN)
+    {
+      fprintf(stderr,"ERROR: Memory overrun for block %p at\n",ptr);
+      smsc::util::leaktracing::PrintTrace();
+      abort();
+    }
+  }
+}
+
 void* operator new(unsigned int size)
 {
   smsc::util::leaktracing::initlh();
-  void* mem=malloc(size);
+  void* mem=xmalloc(size);
   //printf("ALLOC:%x(%d)\n",mem,size);
   if(!mem)
   {
@@ -289,7 +339,7 @@ void* operator new(unsigned int size)
 void* operator new[](unsigned int size)
 {
   smsc::util::leaktracing::initlh();
-  void* mem=malloc(size);
+  void* mem=xmalloc(size);
   if(!mem)
   {
     fprintf(stderr,"OUT OF MEMORY!\n");
@@ -316,7 +366,7 @@ void operator delete(void* mem)
     }
     if(smsc::util::leaktracing::lh->RegisterDealloc(mem))
     {
-      free(mem);
+      xfree(mem);
     }
   }
 }
@@ -334,7 +384,7 @@ void operator delete[](void* mem)
     }
     if(smsc::util::leaktracing::lh->RegisterDealloc(mem))
     {
-      free(mem);
+      xfree(mem);
     }
   }else
   {
