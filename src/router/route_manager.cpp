@@ -450,7 +450,7 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
       if ( right > 0 ) for(;right>=left;)
       {
         int ptr = (right+left) >> 1;
-        int cmp = addRouteIntoSrcTreeRecurse(node->child[ptr-1],rec);
+        int cmp = addRouteIntoSrcTreeRecurse(node->child[ptr-1],rec,trace_);
         if ( cmp == 0 ) return 0;
         //if ( right > left )
         //{
