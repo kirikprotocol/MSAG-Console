@@ -847,8 +847,9 @@ static void SendSubmitCommand(MapDialog* dialog)
   }
 
   MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
+  unsigned ssn_var = (dialog->ssn == USSD_SSN) ? 0x10000 : 0;
   SmscCommand cmd = SmscCommand::makeSumbmitSm(
-    *dialog->sms.get(),((uint32_t)dialog->dialogid_map)&0xffff);
+    *dialog->sms.get(),((unsigned(dialog->dialogid_map)&0xffff)|ssn_var);
   proxy->putIncomingCommand(cmd);
 }
 
@@ -1259,8 +1260,8 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
       }
     }else{ // MAP dialog
       dialogid_map = dialogid_smsc&0xffff;
-      if ( dialogid_smsc >> 24 ) dialogid_smsc = SSN;
-      else dialog_ssn = USSD_SSN; 
+      if ( ((dialogid_smsc >> 16)&0x3) == 1 ) dialogid_smsc = USSD_SSN;
+      else dialog_ssn = SSN; 
       dialogid_smsc = 0;
       if ( dialog2 ) throw runtime_error("MAP::putCommand can't chain MAPINPUT");
       dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_map,dialog_ssn));
