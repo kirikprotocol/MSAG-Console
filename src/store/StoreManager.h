@@ -161,6 +161,7 @@ namespace smsc { namespace store
          *                   возникает при ошибке хранилища физической природы,
          *                   т.н когда хранилище недоступно.
          * @see StoreManager::getMessageStore()
+         * @see smsc::util::config::Manager
          */
         static void startup(Manager& config)
             throw(ConfigException, ConnectionFailedException);

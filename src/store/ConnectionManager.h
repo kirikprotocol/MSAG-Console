@@ -1,6 +1,19 @@
 #ifndef CONNECTION_MANAGER_DECLARATIONS
 #define CONNECTION_MANAGER_DECLARATIONS
 
+/**
+ * Файл содержит описание средств используемых для организации
+ * взаимойствия с базами данных: 
+ * Connection, ConnectionPool, Statement 
+ *
+ * Реализация основана на базе средств СУБД Oracle и 
+ * с использованием средств разработки Oracle Call Interface. 
+ * 
+ * @author Victor V. Makarov
+ * @version 1.0
+ * @see Statement
+ */
+
 #include <unistd.h>
 #include <oci.h>
 #include <orl.h>
@@ -25,6 +38,25 @@ namespace smsc { namespace store
     using namespace smsc::sms;
     
     class ConnectionPool;
+    
+    /**
+     * Класс реализует понятие соединения с базой данных.
+     * Содержит сервисную информацию, необходимую для установления
+     * логического соединения с СУБД Oracle, создания и выполнения
+     * набора SQL операторов в контексте одной транзакции.
+     * Транзакционность поддерживается методами commit() и rollback().
+     * 
+     * Используется для создания и выполнения SQL операторов
+     * на указанной базе данных.
+     * 
+     * Реализация основана на базе средств СУБД Oracle и
+     * с использованием средств разработки Oracle Call Interface.
+     * 
+     * @author Victor V. Makarov
+     * @version 1.0
+     * @see Statement
+     * @see ConnectionPool
+     */
     class Connection
     {
         friend class Statement;
@@ -52,8 +84,6 @@ namespace smsc { namespace store
         inline Connection* getNextConnection(void) {
             return next;
         };
-    
-    protected:
         
         OCIEnv*         envhp;  // OCI envirounment handle
         OCISvcCtx*      svchp;  // OCI service handle
@@ -82,68 +112,244 @@ namespace smsc { namespace store
         ToExpiredStatement*         toExpiredStmt;
         ToDeletedStatement*         toDeletedStmt;
         
-    public:
-
-        Connection(const char* instance, 
-                   const char* user, const char* password);
-        virtual ~Connection();
-
-        void check(sword status) 
-            throw(StorageException);
-    
-        void connect()
-            throw(ConnectionFailedException);
-        void disconnect();
-        
-        void commit()
-            throw(StorageException);
-        void rollback()
-            throw(StorageException);
-
         inline void assign(Statement* statement) {
             statements.Push(statement);
         };
+    
+    public:
+
+        /**
+         * Конструктор, инициализирует, но не создаёт логического
+         * соединения с базой данных. Для получения реального соединения
+         * необходимо использовать метод connect().
+         * 
+         * @param instance алиас для базы данных
+         * @param user     имя пользователя
+         * @param password пароль пользователя
+         * @see Connection::connect()
+         */
+        Connection(const char* instance, 
+                   const char* user, const char* password);
         
+        /**
+         * Деструктор, уничтожает логическое соединение с
+         * базой данных, если таковое было открыто.
+         * Также уничтожает все SQL операторы ассоциированные
+         * с данным соединением.
+         * 
+         * @see Connection::disconnect()
+         */
+        virtual ~Connection();
+
+        /**
+         * В случае отсутствия реального соединения с базой данных
+         * делается попытка его создания.
+         * Кроме того, метод создаёт набор предопределённых
+         * (сохранённых) SQL операторов.
+         * 
+         * @exception ConnectionFailedException
+         *                   возникает в случае неуспеха попытки
+         *                   получения соединения
+         */
+        void connect()
+            throw(ConnectionFailedException);
+        
+        /**
+         * В случае наличия реального соединения уничтожает его.
+         * Также уничтожает все SQL операторы ассоциированные
+         * с данным соединением.  
+         */
+        void disconnect();
+        
+        /**
+         * Сервисный метод, используется для проверки корректности
+         * результата выполнения последней операции и генерации
+         * соответствующей исключительной ситуации
+         * 
+         * @param status статус выполнения последней операции
+         * @exception StorageException
+         *                   исклучительная ситуация возникающая по ошибке
+         *                   любого рода, идентифицированного параметром status
+         */
+        void check(sword status) 
+            throw(StorageException);
+        
+        /**
+         * Реализует commit для текущей открытой транзакции
+         * на соединении.
+         * 
+         * @exception StorageException
+         *                   возникает в случае ошибки при commit'е
+         *                   на соединении
+         */
+        void commit()
+            throw(StorageException);
+        
+        /**
+         * Реализует rollback для текущей открытой транзакции
+         * на соединении.
+         * 
+         * @exception StorageException
+         *                   возникает в случае ошибки при rollback'е
+         *                   на соединении
+         */
+        void rollback()
+            throw(StorageException);
+
+        /**
+         * Возвращает признак, есть ли реальное соединение с
+         * базой данных. Можно ли использовать соединение без
+         * реконнекта
+         * 
+         * @return признак, можно ли использовать соединение без
+         *         реконнекта
+         */
         inline bool isAvailable() {
             return (isConnected && !isDead);
         };
 
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
         NeedOverwriteSvcStatement* getNeedOverwriteSvcStatement() 
             throw(ConnectionFailedException);
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
         NeedOverwriteStatement* getNeedOverwriteStatement() 
             throw(ConnectionFailedException);
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
         NeedRejectStatement*    getNeedRejectStatement() 
             throw(ConnectionFailedException); 
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
         OverwriteStatement*     getOverwriteStatement() 
             throw(ConnectionFailedException);
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
         StoreStatement*         getStoreStatement() 
             throw(ConnectionFailedException); 
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
         DestroyStatement*       getDestroyStatement() 
             throw(ConnectionFailedException);
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
         RetriveStatement*       getRetriveStatement() 
             throw(ConnectionFailedException); 
         
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
         ReplaceStatement*       getReplaceStatement() 
             throw(ConnectionFailedException); 
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
         ReplaceVTStatement*     getReplaceVTStatement() 
             throw(ConnectionFailedException); 
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
         ReplaceWTStatement*     getReplaceWTStatement() 
             throw(ConnectionFailedException); 
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
         ReplaceVWTStatement*    getReplaceVWTStatement() 
             throw(ConnectionFailedException); 
         
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
         ToEnrouteStatement*         getToEnrouteStatement()
             throw(ConnectionFailedException); 
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
         ToDeliveredStatement*       getToDeliveredStatement()
             throw(ConnectionFailedException); 
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
         ToUndeliverableStatement*   getToUndeliverableStatement()
             throw(ConnectionFailedException); 
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
         ToExpiredStatement*         getToExpiredStatement()
             throw(ConnectionFailedException); 
+        /**
+         * @return подготовленный (хранимый) SQL оператор
+         * @exception ConnectionFailedException
+         *                   возникает в случае потери реального соединения с
+         *                   базой данных
+         */
         ToDeletedStatement*         getToDeletedStatement()
             throw(ConnectionFailedException); 
     };
     
+    /**
+     * Структура, используется внутренне в реализации
+     * класса ConnectionPool для организации "справедливого"
+     * распределения соединений по запрашивающим потокам.
+     * 
+     * @author Victor V. Makarov
+     * @version 1.0
+     * @see Connection
+     * @see ConnectionPool
+     */
     struct ConnectionQueue
     {
         cond_t              condition;
@@ -151,6 +357,14 @@ namespace smsc { namespace store
         ConnectionQueue*    next;
     };
 
+    /**
+     * Класс реализует контроль набора соединений с базой данных.
+     * Обеспечивает выдачу и возврат соединений.
+     * 
+     * @author Victor V. Makarov
+     * @version 1.0
+     * @see Connection
+     */
     class ConnectionPool
     {
     private:
@@ -167,11 +381,11 @@ namespace smsc { namespace store
         unsigned        queueLen;
 
         Array<Connection *> connections;
-        unsigned    size;
-        unsigned    count;
+        unsigned        size;
+        unsigned        count;
         
-        Connection  *idleHead, *idleTail;
-        unsigned     idleCount;
+        Connection      *idleHead, *idleTail;
+        unsigned        idleCount;
         
         void push(Connection* connection);
         Connection* pop(void);
@@ -188,31 +402,92 @@ namespace smsc { namespace store
 
     public:
     
+        /**
+         * Конструктор, создаёт контроллер для набора соединений.
+         * Извлекает набор конфигурационных параметров и инициализирует
+         * несколько соединений с базой данных (по параметру).
+         * 
+         * @param config интерфес для получения конфигурационных параметров
+         * @exception ConfigException
+         *                   возникает в случае некорректности и/или
+         *                   неполноты набора конфигурационных параметров.
+         * @see Connection
+         * @see smsc::util::config::Manager
+         */
         ConnectionPool(Manager& config) 
             throw(ConfigException);
+        
+        /**
+         * Деструктор, уничтожает контроллер соединений
+         * и сами соединения с базой данных
+         */
         virtual ~ConnectionPool(); 
         
+        /**
+         * Меняет размер пула соединений с хранилищем.
+         * В один момент времени одно соединение может использоваться
+         * только одним потоком управления.
+         * 
+         * @param size   новый размер пула соединений
+         */
         void setSize(unsigned _size);
-
+        
+        /**
+         * @return текущий размер пула соединений
+         */
         inline unsigned getSize() {
             return size;
         }
+        /**
+         * @return текущее количество соединений в пуле
+         */
         inline unsigned getConnectionsCount() {
             return count;
         }
+        /**
+         * @return текущее количество занятых соединений
+         */
         inline unsigned getBusyConnectionsCount() {
             return (count-idleCount);
         }
+        /**
+         * @return текущее количество простаивающих соединений
+         */
         inline unsigned getIdleConnectionsCount() {
             return idleCount;
         }
+        /**
+         * @return текущее количество запросов ожидающих обработку
+         * @see ConnectionPool
+         */
         inline unsigned getPendingQueueLength() {
             return queueLen;
         }
         
+        /**
+         * @return признак, есть ли свободные соединения
+         */
         bool hasFreeConnections();
         
+        /**
+         * Возвращает свободное соединение для использования.
+         * Соединения выдаются в порядке очерёдности запросов.
+         * Блокируется до наличия свободного соединения.
+         * После использования соединение должно быть возвращено
+         * в пул посредством метода ConnectionPool::freeConnection()
+         * 
+         * @return свободное соединение для использования
+         * @see ConnectionPool::freeConnection()
+         */
         Connection* getConnection();
+        
+        /**
+         * Возвращает соединение в пул, полученное посредством 
+         * ConnectionPool::getConnection()
+         * 
+         * @param connection
+         * @see ConnectionPool::getConnection()
+         */
         void freeConnection(Connection* connection);
     };
 

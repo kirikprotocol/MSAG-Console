@@ -162,6 +162,7 @@ namespace smsc { namespace store
          *                   возникает в случае некорректности и/или
          *                   неполноты набора конфигурационных параметров.
          * @see Connection
+         * @see smsc::util::config::Manager
          */
         Archiver(Manager& config)
             throw(ConfigException);
