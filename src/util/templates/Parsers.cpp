@@ -353,7 +353,12 @@ void StringParser::parse(std::string& input,
                 while (str[curPos] && !isspace(str[curPos])) 
                     line += str[curPos++];
             }
-            input.erase(0, curPos);
+            
+            /*if (!line.length())
+                throw ParsingException("Parameter of type string missed."
+                                       "Processing string: '%s'", 
+                                       input.c_str());*/
+             input.erase(0, curPos);
         }
         else 
         {
@@ -362,17 +367,13 @@ void StringParser::parse(std::string& input,
         }
     }
     
-    if (!line.length())
-        throw ParsingException("Parameter of type string missed."
-                               "Processing string: '%s'", input.c_str());
-    
     const char* exp = entity.getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
     if (exp) ctx.exportStr(exp, line.c_str());
     
     const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
     if (arg) adapter.setString(arg, line.c_str());
     
-    __trace2__("Arg-Pos: %s, Value: %s, Less: <%s>", 
+    __trace2__("Arg-Pos: %s, Value: '%s', Less: <%s>", 
                (arg) ? arg:"-", line.c_str(), input.c_str());
 }
 void FloatParser::parse(std::string& input,
