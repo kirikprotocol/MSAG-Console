@@ -999,6 +999,18 @@ StateType StateMachine::submit(Tuple& t)
   }
 
   if( !isForwardTo ) {
+    //// 
+    // 
+    // Override delivery mode if specified in config and default mode in sms
+    //
+    if( ri.deliveryMode != smsc::sms::SMSC_DEFAULT_MSG_MODE ) {
+      int esmcls = sms->getIntProperty( Tag::SMPP_ESM_CLASS );
+      if( esmcls&0x3 == smsc::sms::SMSC_DEFAULT_MSG_MODE ) {
+        // allow override
+        sms->setIntProperty( Tag::SMPP_ESM_CLASS, esmcls|(ri.deliveryMode&0x03) );
+      }
+    }
+
     ////
     //
     //  Directives
