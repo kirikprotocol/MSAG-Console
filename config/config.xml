@@ -73,12 +73,9 @@
   </section-->
 
   <section name="core">
-    <param name="default_locale" type="string">ru_ru</param>
+    <param name="default_locale" type="string">en_en</param>
     <param name="locales" type="string">en_en, ru_ru</param>
     <param name="protocol_id" type="int">34</param>
-    <param name="receipt_delivered" type="string">Message for $$string import=dest$$ delivered at $$date import=date$$</param>
-    <param name="receipt_failed" type="string">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't delivered, reason: $$string import=error$$</param>
-    <param name="receipt_notify" type="string">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't immediately delivered, reason: $$string import=reason$$</param>
     <param name="reschedule_table" type="string">30s,1m,5m,15m,30m,1h,6h,12h,1d</param>
     <param name="service_center_address" type="string">123</param>
     <param name="service_type" type="string">SMSC</param>
@@ -103,11 +100,6 @@
   <section name="profiler">
     <param name="defaultDataCoding" type="string">DEFAULT</param>
     <param name="defaultReport" type="string">NONE</param>
-    <param name="msgDataCodingDefault" type="string">Now you are a default language user</param>
-    <param name="msgDataCodingUCS2" type="string">Now you will be able to receive ucs2-encoded messages</param>
-    <param name="msgError" type="string">Unrecognized profile management command</param>
-    <param name="msgReportFull" type="string">Now you will receive auxiliary delivery reports</param>
-    <param name="msgReportNone" type="string">Now you will receive only requested delivery reports</param>
     <param name="protocol_id" type="int">34</param>
     <param name="service_type" type="string">prflr</param>
     <param name="systemId" type="string">profiler</param>
@@ -124,7 +116,7 @@
   <section name="sms">
     <param name="max_valid_time" type="int">1209600</param>
   </section>
-  
+
   <section name="MscManager">
     <param name="automaticRegistration" type="bool">true</param>
     <param name="failureLimit" type="int">1000</param>
