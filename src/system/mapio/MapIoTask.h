@@ -79,7 +79,7 @@ class MapDialog{
  	ET96MAP_SM_RP_DA_T smRpDa;
 public:
   MapDialog(ET96MAP_DIALOGUE_ID_T dialogid,
-    ET96MAP_LOCAL_SSN_T lssn) : state(MAPST_START), dialogid(dialogid),ssn(lssn), smscDialogId 
+    ET96MAP_LOCAL_SSN_T lssn) : state(MAPST_START), dialogid(dialogid),ssn(lssn), smscDialogId(0) 
     {}
   virtual ~MapDialog(){
     if ( smscDialogId != 0 ){
@@ -140,8 +140,8 @@ public:
   static MapDialogContainer* getInstance(){
     MutexGuard g(sync_object);
     if ( !container ) container = new MapDialogContainer();
-    for (unsign n=1;n<8*200+1;++n){
-      dialogId_pool.push_back(n);
+    for (unsigned n=1;n<8*200+1;++n){
+      container->dialogId_pool.push_back(n);
     }
     __trace2__("MAP::access to container 0x%x",container);
     return container;
