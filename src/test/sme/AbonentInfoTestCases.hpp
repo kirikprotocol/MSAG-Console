@@ -31,8 +31,8 @@ public:
 protected:
 	virtual Category& getLog();
 	
-	void sendAbonentInfoPdu(const string& input, bool correctAddr,
-		bool sync, uint8_t dataCoding);
+	AckText* getExpectedResponse(const string& input, time_t submitTime);
+	void sendAbonentInfoPdu(const string& input, bool sync, uint8_t dataCoding);
 	AckText* getExpectedResponse(SmeAckMonitor* monitor,
 		const string& text, time_t recvTime);
 	void processSmeAcknowledgement(SmeAckMonitor* monitor,

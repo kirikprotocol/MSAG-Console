@@ -35,8 +35,35 @@ Category& AbonentInfoTestCases::getLog()
 	return log;
 }
 
+AckText* AbonentInfoTestCases::getExpectedResponse(const string& input,
+	time_t submitTime)
+{
+	__decl_tc__;
+	__cfg_int__(timeCheckAccuracy);
+	try
+	{
+		Address alias(input.c_str());
+		const Address addr = fixture->aliasReg->findAddressByAlias(alias);
+		//status
+		bool bound = fixture->smeReg->isSmeBound(addr);
+		//profile
+		time_t t;
+		const Profile& profile = fixture->profileReg->getProfile(addr, t);
+		bool valid = t + timeCheckAccuracy <= submitTime;
+		ostringstream s;
+		__tc__("processAbonentInfo.checkText");
+		__tc_fail__(-1); //статус абонента всегда 1
+		s << input << ":1," << profile.codepage;
+		return new AckText(s.str(), DATA_CODING_SMSC_DEFAULT, valid);
+	}
+	catch (...)
+	{
+		return NULL;
+	}
+}
+
 void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
-	bool correctAddr, bool sync, uint8_t dataCoding)
+	bool sync, uint8_t dataCoding)
 {
 	__decl_tc__;
 	try
@@ -68,10 +95,17 @@ void AbonentInfoTestCases::sendAbonentInfoPdu(const string& input,
 		//отправить pdu
 		PduData::StrProps strProps;
 		strProps["abonentInfoInput"] = input;
+		PduData::ObjProps objProps;
+		AckText* ack = getExpectedResponse(input, time(NULL));
+		if (ack)
+		{
+			ack->ref();
+			objProps["abonentInfoOutput"] = ack;
+		}
 		//при неправильно заданном адресе abonent info не пришлет ответ
-		PduType pduType = correctAddr ? PDU_EXT_SME : PDU_NULL_OK;
+		PduType pduType = ack ? PDU_EXT_SME : PDU_NULL_OK;
 		fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync,
-			NULL, &strProps, NULL, pduType);
+			NULL, &strProps, &objProps, pduType);
 		__tc_ok__;
 	}
 	catch(...)
@@ -119,7 +153,7 @@ void AbonentInfoTestCases::queryAbonentInfoCorrect(bool sync,
 			default:
 				__unreachable__("Invalid numAddrFormat");
 		}
-		sendAbonentInfoPdu(input, true, sync, dataCoding);
+		sendAbonentInfoPdu(input, sync, dataCoding);
 	}
 }
 
@@ -152,10 +186,11 @@ void AbonentInfoTestCases::queryAbonentInfoIncorrect(bool sync,
 			default:
 				__unreachable__("Invalid num");
 		}
-		sendAbonentInfoPdu(input, false, sync, dataCoding);
+		sendAbonentInfoPdu(input, sync, dataCoding);
 	}
 }
 
+//не используется из-за особой логики работы abonent info
 AckText* AbonentInfoTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	const string& text, time_t recvTime)
 {
@@ -171,7 +206,7 @@ AckText* AbonentInfoTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	const Profile& profile = fixture->profileReg->getProfile(addr, t);
 	bool valid = t + timeCheckAccuracy <= recvTime;
 	ostringstream s;
-	s << input << "," << (bound ? 1 : 0) << "," << profile.codepage;
+	s << input << ":" << (bound ? 1 : 0) << "," << profile.codepage;
 	return new AckText(s.str(), DATA_CODING_SMSC_DEFAULT, valid);
 }
 
@@ -187,6 +222,7 @@ void AbonentInfoTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 		pdu.get_message().get_smLength(), pdu.get_message().get_dataCoding());
 	if (!monitor->pduData->objProps.count("abonentInfoOutput"))
 	{
+		__unreachable__("specific to abonent info internals");
 		AckText* ack = getExpectedResponse(monitor, text, recvTime);
 		ack->ref();
 		monitor->pduData->objProps["abonentInfoOutput"] = ack;
