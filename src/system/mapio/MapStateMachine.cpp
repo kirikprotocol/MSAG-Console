@@ -1133,7 +1133,7 @@ static void DoUSSRUserResponce(const SmscCommand& cmd , MapDialog* dialog)
     }
     // if buffer have trailing 7 unfilled bits place <cr> there
     if( bytes*8-text_len*7 == 7 ) ussdString.ussdStr[bytes-1] |= (0x0D<<1);
-    if( smsc::util::_map_cat.isDebugEnabled() ) {
+    if( smsc::util::_map_cat->isDebugEnabled() ) {
       char *text = new char[bytes*4+1];
       int k = 0;
       for ( int i=0; i<bytes; i++){
