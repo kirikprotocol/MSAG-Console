@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.util.config;
+
 /*
  * Created by igork
  * Date: 07.10.2002
  * Time: 22:30:04
  */
-package ru.novosoft.smsc.util.config;
 
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 
@@ -33,9 +34,11 @@ public class SaveableConfigTree
     int dotpos = name.indexOf('.');
     if (dotpos < 0) {
       params.put(name, value);
-    } else if (dotpos == 0) {
+    }
+    else if (dotpos == 0) {
       putParameter(name.substring(1), value);
-    } else {
+    }
+    else {
       SaveableConfigTree sec = (SaveableConfigTree) sections.get(name.substring(0, dotpos));
       if (sec == null) {
         sec = new SaveableConfigTree();
@@ -71,13 +74,17 @@ public class SaveableConfigTree
       out.print((prefix + "<param name=\"" + StringEncoderDecoder.encode(paramName) + "\" type=\""));
       if (paramValue instanceof String) {
         out.println(("string\">" + StringEncoderDecoder.encode((String) paramValue) + "</param>"));
-      } else if (paramValue instanceof Integer) {
+      }
+      else if (paramValue instanceof Integer) {
         out.println(("int\">" + StringEncoderDecoder.encode(String.valueOf(((Integer) paramValue).longValue())) + "</param>"));
-      } else if (paramValue instanceof Long) {
+      }
+      else if (paramValue instanceof Long) {
         out.println(("int\">" + StringEncoderDecoder.encode(String.valueOf(((Long) paramValue).longValue())) + "</param>"));
-      } else if (paramValue instanceof Boolean) {
+      }
+      else if (paramValue instanceof Boolean) {
         out.println(("bool\">" + StringEncoderDecoder.encode(String.valueOf(((Boolean) paramValue).booleanValue())) + "</param>"));
-      } else {
+      }
+      else {
         throw new Config.WrongParamTypeException("unknown type of parameter " + paramName);
       }
     }

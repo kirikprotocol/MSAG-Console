@@ -2,12 +2,15 @@ package ru.novosoft.smsc.perfmon;
 
 import ru.novosoft.smsc.util.SnapBufferReader;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.Socket;
 import java.net.SocketException;
-import java.io.*;
-import java.util.*;
+import java.util.Random;
 
-public class PerfServerRunner extends Thread {
+public class PerfServerRunner extends Thread
+{
   private org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(this.getClass());
 
   Socket sock;
@@ -16,7 +19,8 @@ public class PerfServerRunner extends Thread {
   SnapBufferReader inbuf = new SnapBufferReader();
 
   public PerfServerRunner(Socket sock, PerfServer server)
-          throws IOException {
+          throws IOException
+  {
     this.sock = sock;
     this.server = server;
     logger.debug("Connecting to performance data socket " + server.getSmscHost() + ":" + server.getPerfPort());
@@ -25,7 +29,8 @@ public class PerfServerRunner extends Thread {
     logger.debug("Connected to performance data socket " + server.getSmscHost() + ":" + server.getPerfPort());
   }
 
-  public void run() {
+  public void run()
+  {
     DataOutputStream os = null;
     InputStream is = null;
     try {
@@ -77,16 +82,18 @@ public class PerfServerRunner extends Thread {
   }
 
   protected void readSnap(InputStream istream, PerfSnap snap)
-          throws IOException {
+          throws IOException
+  {
     int len = inbuf.readNetworkInt(istream);
-    inbuf.fill(istream, len-4);
+    inbuf.fill(istream, len - 4);
     snap.init(inbuf);
   }
 
   Object shutSemaphore = new Object();
   boolean isStopping = false;
 
-  public void shutdown() {
+  public void shutdown()
+  {
     synchronized (shutSemaphore) {
       isStopping = true;
       try {
@@ -96,7 +103,8 @@ public class PerfServerRunner extends Thread {
     }
   }
 
-  void fillDebugSnap(PerfSnap snap) {
+  void fillDebugSnap(PerfSnap snap)
+  {
     snap.last[1] = 120;
     snap.last[2] = 5;
     snap.last[3] = 12;
@@ -109,8 +117,10 @@ public class PerfServerRunner extends Thread {
     snap.avg[2] = snap.total[2] / snap.uptime;
     snap.avg[3] = snap.total[3] / snap.uptime;
   }
+
   protected void snapGenerator(DataOutputStream os)
-          throws IOException {
+          throws IOException
+  {
     int scale = 160;
     PerfSnap snap = new PerfSnap();
     logger.debug("Prepare snap for first time");

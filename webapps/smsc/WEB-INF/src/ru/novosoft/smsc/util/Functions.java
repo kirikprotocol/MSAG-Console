@@ -39,7 +39,7 @@ public class Functions
   }
 
   public static void unZipFileFromArchive(File folderUnpackTo, String name, ZipInputStream zin)
-      throws IOException
+          throws IOException
   {
     File file = new File(folderUnpackTo, name);
     file.getParentFile().mkdirs();
@@ -49,7 +49,7 @@ public class Functions
   }
 
   public static void unZipArchive(File folderUnpackTo, InputStream in)
-      throws IOException
+          throws IOException
   {
     ZipInputStream zin = new ZipInputStream(in);
     for (ZipEntry e = zin.getNextEntry(); e != null; e = zin.getNextEntry()) {
@@ -61,7 +61,7 @@ public class Functions
   }
 
   public static File saveFileToTemp(InputStream in, File file)
-      throws IOException
+          throws IOException
   {
     File tmpFile = Functions.createNewFilenameForSave(file);
     OutputStream out = new BufferedOutputStream(new FileOutputStream(tmpFile));

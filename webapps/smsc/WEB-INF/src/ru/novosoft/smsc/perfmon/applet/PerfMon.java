@@ -1,21 +1,22 @@
 package ru.novosoft.smsc.perfmon.applet;
 
+import ru.novosoft.smsc.perfmon.PerfSnap;
+import ru.novosoft.smsc.util.applet.AdvancedLabel;
+import ru.novosoft.smsc.util.applet.LabelGroup;
+
+import java.applet.Applet;
 import java.awt.*;
 import java.awt.event.*;
-import java.applet.*;
-import java.util.*;
-import java.text.*;
-import java.net.Socket;
-import java.io.ObjectInputStream;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
-import ru.novosoft.smsc.perfmon.PerfSnap;
-import ru.novosoft.smsc.util.applet.LabelGroup;
-import ru.novosoft.smsc.util.applet.AdvancedLabel;
 
-
-public class PerfMon extends Applet implements Runnable, MouseListener, ActionListener, ItemListener {
+public class PerfMon extends Applet implements Runnable, MouseListener, ActionListener, ItemListener
+{
 //  PerformanceInfoPanel info_p;
 //  StatInfoPanel stat_p;
   public static final int VIEWMODE_IO = 0;
@@ -37,8 +38,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
   CheckboxMenuItem menuTempErr;
   CheckboxMenuItem menuDeliverErr;
   CheckboxMenuItem menuDeliver;
-  Menu     menuIncrease;
-  Menu     menuDecrease;
+  Menu menuIncrease;
+  Menu menuDecrease;
   MenuItem menuIncrScale;
   MenuItem menuIncrBlock;
   MenuItem menuIncrPix;
@@ -66,7 +67,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
   public static boolean viewDeliverErrEnabled = true;
   public static boolean viewTempErrEnabled = true;
 
-  public void init() {
+  public void init()
+  {
     System.out.println("Initing...");
     locale = new Locale(getParameter("locale.language").toLowerCase(), getParameter("locale.country").toLowerCase());
     localeText = ResourceBundle.getBundle("ru.novosoft.smsc.perfmon.applet.text", locale);
@@ -75,24 +77,24 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
 
     try {
       pixPerSecond = Integer.valueOf(getParameter("pixPerSecond")).intValue();
-    } catch(Exception ex) {
+    } catch (Exception ex) {
     }
     try {
       scale = Integer.valueOf(getParameter("scale")).intValue();
-    } catch(Exception ex) {
+    } catch (Exception ex) {
     }
     try {
       block = Integer.valueOf(getParameter("block")).intValue();
-    } catch(Exception ex) {
+    } catch (Exception ex) {
     }
     try {
       vLightGrid = Integer.valueOf(getParameter("vLightGrid")).intValue();
-    } catch(Exception ex) {
+    } catch (Exception ex) {
     }
 
     try {
       vMinuteGrid = Integer.valueOf(getParameter("vMinuteGrid")).intValue();
-    } catch(Exception ex) {
+    } catch (Exception ex) {
     }
 
     setFont(new Font("dialog", Font.BOLD, 12));
@@ -107,7 +109,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     validate();
   }
 
-  protected void gotFirstSnap(PerfSnap snap) {
+  protected void gotFirstSnap(PerfSnap snap)
+  {
     remove(connectingLabel);
 
     GridBagConstraints gbc = new GridBagConstraints();
@@ -161,18 +164,19 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     popupMenu.add(menuDecrease);
     popupMenu.add(menuSwitch);
     popupMenu.add(new MenuItem("-"));
-    if( viewMode == VIEWMODE_IO ) {
-      popupMenu.add(menuInput );
-      popupMenu.add(menuOutput );
-    } else {
-      popupMenu.add(menuSubmit );
-      popupMenu.add(menuSubmitErr );
-      popupMenu.add(menuRetry );
-      popupMenu.add(menuDeliver );
-      popupMenu.add(menuDeliverErr );
-      popupMenu.add(menuTempErr );
+    if (viewMode == VIEWMODE_IO) {
+      popupMenu.add(menuInput);
+      popupMenu.add(menuOutput);
     }
-    add( popupMenu );
+    else {
+      popupMenu.add(menuSubmit);
+      popupMenu.add(menuSubmitErr);
+      popupMenu.add(menuRetry);
+      popupMenu.add(menuDeliver);
+      popupMenu.add(menuDeliverErr);
+      popupMenu.add(menuTempErr);
+    }
+    add(popupMenu);
     perfbar = new PerformanceBar(snap);
     perfbar.setFont(new Font("dialog", Font.PLAIN, 10));
     perfbar.addMouseListener(this);
@@ -249,12 +253,13 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
 
   boolean isStopping = false;
 
-  public void run() {
+  public void run()
+  {
     Socket sock = null;
     DataInputStream is = null;
     isStopping = false;
     try {
-      while(!isStopping) {
+      while (!isStopping) {
         try {
           sock = new Socket(getParameter("host"), Integer.valueOf(getParameter("port")).intValue());
           is = new DataInputStream(sock.getInputStream());
@@ -262,7 +267,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
           snap.read(is);
           snap.calc();
           gotFirstSnap(snap);
-          while(!isStopping) {
+          while (!isStopping) {
             snap.read(is);
             snap.calc();
 //              System.out.println("Got snap: ls="+snap.last[PerfSnap.IDX_DELIVER]+" le="+snap.last[PerfSnap.IDX_DELIVERERR]+" upt="+snap.uptime+" tm="+(new Date(snap.sctime*1000)).toString());
@@ -284,23 +289,23 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
             Thread.currentThread().sleep(10000);
           } catch (InterruptedException e1) {
           }
-          ex.printStackTrace( System.out );
-          System.out.println( "I/O error: "+ex.getMessage()+". Reconnecting..." );
+          ex.printStackTrace(System.out);
+          System.out.println("I/O error: " + ex.getMessage() + ". Reconnecting...");
         }
       }
-    } catch(Exception e) {
+    } catch (Exception e) {
       e.printStackTrace();
     } finally {
-      if(is != null)
+      if (is != null)
         try {
           is.close();
-        } catch(Exception ee) {
+        } catch (Exception ee) {
         }
       ;
-      if(sock != null)
+      if (sock != null)
         try {
           sock.close();
-        } catch(Exception ee) {
+        } catch (Exception ee) {
         }
       ;
     }
@@ -310,23 +315,26 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
   Image offscreen;
   Object semaphore = new Object();
 
-  public void invalidate() {
+  public void invalidate()
+  {
 //      synchronized (semaphore) {
     offscreen = null;
 //      }
     super.invalidate();
   }
 
-  public void update(Graphics gg) {
+  public void update(Graphics gg)
+  {
     paint(gg);
   }
 
-  public void paint(Graphics gg) {
+  public void paint(Graphics gg)
+  {
     Dimension sz = getSize();
     Image screen = null;
-    synchronized(semaphore) {
+    synchronized (semaphore) {
       screen = offscreen;
-      if(offscreen == null) {
+      if (offscreen == null) {
         offscreen = createImage(sz.width, sz.height);
         screen = offscreen;
       }
@@ -339,107 +347,131 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     g.dispose();
   }
 
-  public void mouseClicked(MouseEvent e) {
-    if( (e.getModifiers()&InputEvent.BUTTON3_MASK) != 0 ) {
-      System.out.println("Modifiers: "+e.getModifiers());
-      popupMenu.show( this, e.getX()+e.getComponent().getBounds().x, e.getY()+e.getComponent().getBounds().y );
+  public void mouseClicked(MouseEvent e)
+  {
+    if ((e.getModifiers() & InputEvent.BUTTON3_MASK) != 0) {
+      System.out.println("Modifiers: " + e.getModifiers());
+      popupMenu.show(this, e.getX() + e.getComponent().getBounds().x, e.getY() + e.getComponent().getBounds().y);
     }
   }
 
-  public void mousePressed(MouseEvent e) {
+  public void mousePressed(MouseEvent e)
+  {
   }
 
-  public void mouseReleased(MouseEvent e) {
+  public void mouseReleased(MouseEvent e)
+  {
   }
 
-  public void mouseEntered(MouseEvent e) {
+  public void mouseEntered(MouseEvent e)
+  {
   }
 
-  public void mouseExited(MouseEvent e) {
+  public void mouseExited(MouseEvent e)
+  {
   }
 
-  public void actionPerformed(ActionEvent e) {
-    if( e.getSource() == this.menuSwitch ) {
-      if( viewMode == VIEWMODE_IO ) {
+  public void actionPerformed(ActionEvent e)
+  {
+    if (e.getSource() == this.menuSwitch) {
+      if (viewMode == VIEWMODE_IO) {
         viewMode = VIEWMODE_SEPARATE;
         popupMenu.remove(menuInput);
         popupMenu.remove(menuOutput);
-        popupMenu.add(menuSubmit );
-        popupMenu.add(menuSubmitErr );
-        popupMenu.add(menuRetry );
-        popupMenu.add(menuDeliver );
-        popupMenu.add(menuDeliverErr );
-        popupMenu.add(menuTempErr );
-      } else {
+        popupMenu.add(menuSubmit);
+        popupMenu.add(menuSubmitErr);
+        popupMenu.add(menuRetry);
+        popupMenu.add(menuDeliver);
+        popupMenu.add(menuDeliverErr);
+        popupMenu.add(menuTempErr);
+      }
+      else {
         viewMode = VIEWMODE_IO;
-        popupMenu.remove(menuSubmit );
-        popupMenu.remove(menuSubmitErr );
-        popupMenu.remove(menuRetry );
-        popupMenu.remove(menuDeliver );
-        popupMenu.remove(menuDeliverErr );
-        popupMenu.remove(menuTempErr );
+        popupMenu.remove(menuSubmit);
+        popupMenu.remove(menuSubmitErr);
+        popupMenu.remove(menuRetry);
+        popupMenu.remove(menuDeliver);
+        popupMenu.remove(menuDeliverErr);
+        popupMenu.remove(menuTempErr);
         popupMenu.add(menuInput);
         popupMenu.add(menuOutput);
       }
-    } else if( e.getSource() == menuIncrScale ) {
-      scale+=10;
+    }
+    else if (e.getSource() == menuIncrScale) {
+      scale += 10;
       perfbar.invalidate();
       perfGraph.invalidate();
-    } else if( e.getSource() == menuIncrBlock ) {
+    }
+    else if (e.getSource() == menuIncrBlock) {
       block++;
       perfbar.invalidate();
       perfGraph.invalidate();
-    } else if( e.getSource() == menuIncrPix ) {
+    }
+    else if (e.getSource() == menuIncrPix) {
       pixPerSecond++;
       perfbar.invalidate();
       perfGraph.invalidate();
-    } else if( e.getSource() == menuDecrScale ) {
-      if( scale >= 20 ) scale-=10;
+    }
+    else if (e.getSource() == menuDecrScale) {
+      if (scale >= 20) scale -= 10;
       perfbar.invalidate();
       perfGraph.invalidate();
-    } else if( e.getSource() == menuDecrBlock ) {
-      if( block > 4 ) block--;
+    }
+    else if (e.getSource() == menuDecrBlock) {
+      if (block > 4) block--;
       perfbar.invalidate();
       perfGraph.invalidate();
-    } else if( e.getSource() == menuDecrPix ) {
-      if( pixPerSecond > 2) pixPerSecond--;
+    }
+    else if (e.getSource() == menuDecrPix) {
+      if (pixPerSecond > 2) pixPerSecond--;
       perfbar.invalidate();
       perfGraph.invalidate();
     }
   }
 
-  public void itemStateChanged(ItemEvent e) {
-    if(e.getSource() == menuInput) {
+  public void itemStateChanged(ItemEvent e)
+  {
+    if (e.getSource() == menuInput) {
       viewInputEnabled = menuInput.getState();
-    } else if(e.getSource() == menuOutput) {
+    }
+    else if (e.getSource() == menuOutput) {
       viewOutputEnabled = menuOutput.getState();
-    } else if(e.getSource() == menuSubmit) {
+    }
+    else if (e.getSource() == menuSubmit) {
       viewSubmitEnabled = menuSubmit.getState();
-    } else if(e.getSource() == menuSubmitErr) {
+    }
+    else if (e.getSource() == menuSubmitErr) {
       viewSubmitErrEnabled = menuSubmitErr.getState();
-    } else if(e.getSource() == menuRetry) {
+    }
+    else if (e.getSource() == menuRetry) {
       viewRetryEnabled = menuRetry.getState();
-    } else if(e.getSource() == menuDeliver) {
+    }
+    else if (e.getSource() == menuDeliver) {
       viewDeliverEnabled = menuDeliver.getState();
-    } else if(e.getSource() == menuDeliverErr) {
+    }
+    else if (e.getSource() == menuDeliverErr) {
       viewDeliverErrEnabled = menuDeliverErr.getState();
-    } else if(e.getSource() == menuTempErr) {
+    }
+    else if (e.getSource() == menuTempErr) {
       viewTempErrEnabled = menuTempErr.getState();
     }
   }
 
-  public void start() {
+  public void start()
+  {
     System.out.println("Starting...");
     Thread thr = new Thread(this);
     thr.start();
   }
 
-  public void stop() {
+  public void stop()
+  {
     System.out.println("Stoping...");
     isStopping = true;
   }
 
-  public void destroy() {
+  public void destroy()
+  {
     System.out.println("Destroying...");
     isStopping = true;
   }

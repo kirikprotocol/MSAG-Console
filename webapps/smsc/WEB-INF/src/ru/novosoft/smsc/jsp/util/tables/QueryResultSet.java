@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.util.tables;
+
 /*
  * Author: igork
  * Date: 07.06.2002
  * Time: 17:41:06
  */
-package ru.novosoft.smsc.jsp.util.tables;
 
 import java.util.Iterator;
 import java.util.Vector;
@@ -11,19 +12,19 @@ import java.util.Vector;
 
 public interface QueryResultSet
 {
-	int size();
+  int size();
 
-	int getTotalSize();
+  int getTotalSize();
 
-	DataItem get(int index);
+  DataItem get(int index);
 
-	Iterator iterator();
+  Iterator iterator();
 
-	String[] getColumns();
+  String[] getColumns();
 
-	Vector getSortOrder();
+  Vector getSortOrder();
 
-	boolean isLast();
+  boolean isLast();
 
-	void additionalSort(String columnName);
+  void additionalSort(String columnName);
 }

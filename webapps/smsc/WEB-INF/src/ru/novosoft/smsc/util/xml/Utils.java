@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.util.xml;
+
 /*
  * Created by igork
  * Date: Mar 20, 2002
  * Time: 5:07:12 PM
  */
-package ru.novosoft.smsc.util.xml;
 
 import org.w3c.dom.*;
 import org.xml.sax.InputSource;
@@ -13,17 +14,20 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.*;
+import java.io.IOException;
+import java.io.Reader;
 
 
 public class Utils
 {
   private static DocumentBuilderFactory documentBuilderFactory = null;
   private static DtdsEntityResolver dtdsEntityResolver = null;
+
   private static DocumentBuilderFactory getDocumentBuilderFactory()
   {
     return documentBuilderFactory == null ? DocumentBuilderFactory.newInstance() : documentBuilderFactory;
   }
+
   public static DtdsEntityResolver getDtdsEntityResolver()
   {
     return dtdsEntityResolver == null ? new DtdsEntityResolver() : dtdsEntityResolver;
@@ -33,8 +37,7 @@ public class Utils
   {
     String result = "";
     NodeList list = node.getChildNodes();
-    for (int i = 0; i < list.getLength(); i++)
-    {
+    for (int i = 0; i < list.getLength(); i++) {
       if (list.item(i).getNodeType() == Node.TEXT_NODE)
         result += list.item(i).getNodeValue();
     }

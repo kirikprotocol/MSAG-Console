@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.util.config;
+
 /*
 * Created by igork
 * Date: Mar 12, 2002
 * Time: 2:56:46 PM
 */
-package ru.novosoft.smsc.util.config;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -221,9 +222,11 @@ public class Config implements Cloneable
     String value = Utils.getNodeText(elem);
     if (type.equalsIgnoreCase("int")) {
       params.put(fullName, new Integer(value));
-    } else if (type.equalsIgnoreCase("bool")) {
+    }
+    else if (type.equalsIgnoreCase("bool")) {
       params.put(fullName, new Boolean(value));
-    } else {
+    }
+    else {
       params.put(fullName, value);
     }
   }
@@ -364,7 +367,7 @@ public class Config implements Cloneable
     Object o1 = config1.params.get(fullParamName);
     Object o2 = config2.params.get(fullParamName);
     return (o1 == null && o2 == null)
-           || (o1 != null && o2 != null && o1.equals(o2));
+            || (o1 != null && o2 != null && o1.equals(o2));
   }
 
   public synchronized boolean isParamEquals(Config anotherConfig, String fullParamName)
@@ -372,14 +375,14 @@ public class Config implements Cloneable
     Object o1 = this.params.get(fullParamName);
     Object o2 = anotherConfig.params.get(fullParamName);
     return (o1 == null && o2 == null)
-           || (o1 != null && o2 != null && o1.equals(o2));
+            || (o1 != null && o2 != null && o1.equals(o2));
   }
 
   public synchronized boolean isParamEquals(String fullParamName, Object paramValue)
   {
     Object o1 = this.params.get(fullParamName);
     return (o1 == null && paramValue == null)
-           || (o1 != null && paramValue != null && o1.equals(paramValue));
+            || (o1 != null && paramValue != null && o1.equals(paramValue));
   }
 
   public synchronized boolean isStringParamEquals(String fullParamName, String paramValue)
@@ -388,8 +391,9 @@ public class Config implements Cloneable
     if (o1 == null || o1 instanceof String) {
       String s1 = (String) o1;
       return ((s1 == null || s1.length() == 0) && (paramValue == null || paramValue.length() == 0))
-             || (s1 != null && s1.length() > 0 && paramValue != null && paramValue.length() > 0 && s1.equals(paramValue));
-    } else
+              || (s1 != null && s1.length() > 0 && paramValue != null && paramValue.length() > 0 && s1.equals(paramValue));
+    }
+    else
       return false;
   }
 
@@ -400,7 +404,8 @@ public class Config implements Cloneable
       final Boolean b1 = (Boolean) o1;
       final boolean v1 = b1 == null ? false : b1.booleanValue();
       return v1 == paramValue;
-    } else
+    }
+    else
       return false;
   }
 
@@ -411,7 +416,8 @@ public class Config implements Cloneable
       final Integer i1 = (Integer) o1;
       final int v1 = i1 == null ? 0 : i1.intValue();
       return v1 == paramValue;
-    } else
+    }
+    else
       return false;
   }
 

@@ -9,16 +9,21 @@ import java.io.UnsupportedEncodingException;
  * Date: 08.08.2003
  * Time: 18:13:57
  */
-public class GSM7CharSet {
+public class GSM7CharSet
+{
   private static final Category Logger = Category.getInstance(GSM7CharSet.class);
+
   /**
    * Convert string compatible with ISO8859-1 charset to GSM default alphabet.
    * Each GSM symbol placed in one octet, high bit is set to 0
+   *
    * @param msg string to convert
    * @return array of bytes containing text in GSM coding
    * @throws java.io.UnsupportedEncodingException
+   *
    */
-  public static byte[] encode(String msg) throws UnsupportedEncodingException {
+  public static byte[] encode(String msg) throws UnsupportedEncodingException
+  {
     byte b[] = msg.getBytes("ISO8859_1");
     byte b7[] = new byte[b.length * 2];
     int k = 0;
@@ -62,9 +67,9 @@ public class GSM7CharSet {
           break;
         default:
           try {
-            b7[k++] = _8bit_2_7bit[((int)b[i])&0xff];
-          } catch (ArrayIndexOutOfBoundsException ex ) {
-            Logger.warn("GSM7CharSet: index out of bounds: b.len="+b.length+" i="+i+" b7.len="+b7.length+" k="+k);
+            b7[k++] = _8bit_2_7bit[((int) b[i]) & 0xff];
+          } catch (ArrayIndexOutOfBoundsException ex) {
+            Logger.warn("GSM7CharSet: index out of bounds: b.len=" + b.length + " i=" + i + " b7.len=" + b7.length + " k=" + k);
           }
       }
     }
@@ -76,11 +81,14 @@ public class GSM7CharSet {
   /**
    * Convert byte array that contains GSM default alphabet symbols in each octet
    * to string using ISO8859-1 charset.
+   *
    * @param in byte array with GSM symbols
    * @return string containung unicode text
    * @throws java.io.UnsupportedEncodingException
+   *
    */
-  public static String decode(byte in[]) throws UnsupportedEncodingException {
+  public static String decode(byte in[]) throws UnsupportedEncodingException
+  {
     int k = 0;
     byte out[] = new byte[in.length];
     for (int i = 0; i < in.length; ++i) {
@@ -118,7 +126,8 @@ public class GSM7CharSet {
             out[k++] = '\\';
             break;
         }
-      } else {
+      }
+      else {
         out[k++] = _7bit_2_8bit[in[i] & 0x7f];
       }
     }

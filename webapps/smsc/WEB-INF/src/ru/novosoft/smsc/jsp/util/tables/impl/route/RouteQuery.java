@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.util.tables.impl.route;
+
 /*
  * Author: igork
  * Date: 13.06.2002
  * Time: 16:26:45
  */
-package ru.novosoft.smsc.jsp.util.tables.impl.route;
 
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractQueryImpl;
 

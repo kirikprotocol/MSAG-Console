@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.util.xml;
+
 /*
  * Created by igork
  * Date: Mar 12, 2002
  * Time: 11:05:23 PM
  */
-package ru.novosoft.smsc.util.xml;
 
 import org.apache.log4j.Category;
 import org.xml.sax.EntityResolver;
@@ -12,7 +13,6 @@ import org.xml.sax.SAXException;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ResourceBundle;
 
 
 public class DtdsEntityResolver implements EntityResolver
@@ -35,11 +35,10 @@ public class DtdsEntityResolver implements EntityResolver
           throws SAXException, IOException
   {
     logger.debug("resolving entity \"" + systemId + "\"");
-    if (systemId.endsWith(".dtd"))
-    {
+    if (systemId.endsWith(".dtd")) {
       String filename = "dtds/" + getDtdName(systemId);
       logger.debug("filename: " + filename);
-		InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(filename);
+      InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(filename);
       if (in != null)
         return new InputSource(in);
       else

@@ -1,12 +1,12 @@
 package ru.novosoft.smsc.perfmon.applet;
 
-import java.awt.*;
-import java.util.*;
-
 import ru.novosoft.smsc.perfmon.PerfSnap;
 
+import java.awt.*;
 
-public class PerfInfoTable extends Canvas {
+
+public class PerfInfoTable extends Canvas
+{
 
   static final int pad = 1;
   static final int grid = 1;
@@ -35,52 +35,58 @@ public class PerfInfoTable extends Canvas {
   String heads[];
   String rows[];
 
-  public PerfInfoTable(PerfSnap snap) {
+  public PerfInfoTable(PerfSnap snap)
+  {
     this.snap = new PerfSnap(snap);
     prefSize = new Dimension(100, 0);
 
     heads = new String[numHeads];
-    for(int i = 0; i < numHeads; i++) {
+    for (int i = 0; i < numHeads; i++) {
       heads[i] = PerfMon.localeText.getString("ptabh." + i);
     }
 
     rows = new String[numRows];
-    for(int i = 0; i < numRows; i++) {
+    for (int i = 0; i < numRows; i++) {
       rows[i] = PerfMon.localeText.getString("ptabr." + i);
     }
 
     invalidate();
   }
 
-  public synchronized void setSnap(PerfSnap snap) {
+  public synchronized void setSnap(PerfSnap snap)
+  {
     this.snap = new PerfSnap(snap);
     this.repaint();
   }
 
-  public void invalidate() {
+  public void invalidate()
+  {
     Font font = getFont();
-    if(font != null) {
+    if (font != null) {
       FontMetrics fm = getFontMetrics(font);
       Dimension sz = getSize();
-      prefSize.height = (fm.getHeight() + pad)*(rows.length + 1) + grid*rows.length;
-      columnWidth = (sz.width - 2*pad)/(numHeads + 1);
+      prefSize.height = (fm.getHeight() + pad) * (rows.length + 1) + grid * rows.length;
+      columnWidth = (sz.width - 2 * pad) / (numHeads + 1);
       setSize(sz.width, prefSize.height);
     }
     offscreen = null;
     super.invalidate();
   }
 
-  public Dimension getPrefferedSize() {
+  public Dimension getPrefferedSize()
+  {
     return prefSize;
   }
 
-  public Dimension getMinimumSize() {
+  public Dimension getMinimumSize()
+  {
     return prefSize;
   }
 
-  public synchronized void paint(Graphics gg) {
+  public synchronized void paint(Graphics gg)
+  {
     Dimension sz = getSize();
-    if(offscreen == null) {
+    if (offscreen == null) {
       offscreen = createImage(sz.width, sz.height);
     }
     Graphics g = offscreen.getGraphics();
@@ -96,7 +102,7 @@ public class PerfInfoTable extends Canvas {
       int y = fm.getHeight() + pad + grid;
       int height = sz.height - y - pad;
       int x = columnWidth + grid + pad;
-      for(int i = 0; i < headsColor.length; i++) {
+      for (int i = 0; i < headsColor.length; i++) {
         g.setColor(headsColor[i]);
         g.fillRect(x, y, columnWidth, height);
         x += columnWidth;
@@ -107,7 +113,7 @@ public class PerfInfoTable extends Canvas {
       // draw column headings
       g.setColor(textColor);
       int x = columnWidth;
-      for(int i = 0; i < numHeads; i++) {
+      for (int i = 0; i < numHeads; i++) {
         g.drawChars(heads[i].toCharArray(), 0, heads[i].length(),
                 x + (columnWidth - fm.charsWidth(heads[i].toCharArray(), 0, heads[i].length())) - pad,
                 fm.getAscent() + pad);
@@ -119,11 +125,11 @@ public class PerfInfoTable extends Canvas {
       // draw row headings
       g.setColor(textColor);
       int y = fm.getHeight() + pad + grid + fm.getAscent();
-      for(int i = 0; i < numRows; i++) {
+      for (int i = 0; i < numRows; i++) {
         g.drawChars(rows[i].toCharArray(), 0, rows[i].length(),
                 columnWidth - fm.charsWidth(rows[i].toCharArray(), 0, rows[i].length()) - pad,
                 y);
-        y += fm.getHeight() + 2*pad + grid;
+        y += fm.getHeight() + 2 * pad + grid;
       }
     }
 
@@ -136,7 +142,7 @@ public class PerfInfoTable extends Canvas {
 
     {
       // draw grids
-      int y = fm.getHeight() + 2*pad + grid;
+      int y = fm.getHeight() + 2 * pad + grid;
 
 /*            if( grid > 1 ) {
               g.setColor(lightShadowColor);
@@ -149,11 +155,11 @@ public class PerfInfoTable extends Canvas {
             }
 */
       g.setColor(shadowColor);
-      for(int i = 0; i < numRows; i++) {
-        g.drawLine(pad, (i + 1)*y, sz.width - pad, (i + 1)*y);
+      for (int i = 0; i < numRows; i++) {
+        g.drawLine(pad, (i + 1) * y, sz.width - pad, (i + 1) * y);
       }
-      for(int i = 0; i < numHeads; i++) {
-        g.drawLine((i + 1)*columnWidth, pad, (i + 1)*columnWidth, sz.height - pad);
+      for (int i = 0; i < numHeads; i++) {
+        g.drawLine((i + 1) * columnWidth, pad, (i + 1) * columnWidth, sz.height - pad);
       }
     }
 
@@ -161,19 +167,21 @@ public class PerfInfoTable extends Canvas {
     g.dispose();
   }
 
-  void drawCounters(Graphics g, long counters[], Dimension sz, FontMetrics fm, int col) {
+  void drawCounters(Graphics g, long counters[], Dimension sz, FontMetrics fm, int col)
+  {
     g.setColor(textColor);
-    int y = fm.getHeight() + 2*pad + grid;
+    int y = fm.getHeight() + 2 * pad + grid;
     int x = columnWidth;
-    for(int i = 0; i < counters.length; i++) {
+    for (int i = 0; i < counters.length; i++) {
       char counter[] = String.valueOf(counters[i]).toCharArray();
       g.drawChars(counter, 0, counter.length,
-              (i + 2)*x - fm.charsWidth(counter, 0, counter.length) - pad,
-              (col)*y + fm.getAscent() + pad);
+              (i + 2) * x - fm.charsWidth(counter, 0, counter.length) - pad,
+              (col) * y + fm.getAscent() + pad);
     }
   }
 
-  public void update(Graphics gg) {
+  public void update(Graphics gg)
+  {
     paint(gg);
   }
 

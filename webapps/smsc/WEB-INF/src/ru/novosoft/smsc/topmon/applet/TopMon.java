@@ -4,20 +4,21 @@ import ru.novosoft.smsc.topmon.TopSnap;
 import ru.novosoft.smsc.util.applet.LabelGroup;
 
 import java.applet.Applet;
-import java.awt.event.*;
 import java.awt.*;
-import java.util.ResourceBundle;
-import java.util.Locale;
-import java.net.Socket;
+import java.awt.event.*;
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.net.Socket;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 /**
  * Created by: Serge Lugovoy
  * Date: 14.05.2004
  * Time: 14:41:40
  */
-public class TopMon extends Applet implements Runnable, MouseListener, ActionListener, ItemListener {
+public class TopMon extends Applet implements Runnable, MouseListener, ActionListener, ItemListener
+{
   public static ResourceBundle localeText;
   public static ResourceBundle messagesText;
   public static Locale locale;
@@ -32,9 +33,10 @@ public class TopMon extends Applet implements Runnable, MouseListener, ActionLis
   private int graphHiGrid = 25;
   private int graphHead = 50;
 
-  public void init() {
+  public void init()
+  {
     System.out.println("Initing...");
-    locale = new Locale(getParameter("locale.language").toLowerCase(),getParameter("locale.country").toLowerCase());
+    locale = new Locale(getParameter("locale.language").toLowerCase(), getParameter("locale.country").toLowerCase());
     localeText = ResourceBundle.getBundle("ru.novosoft.smsc.topmon.applet.text", locale);
     messagesText = ResourceBundle.getBundle("locales.messages", locale);
     maxSpeed = Integer.valueOf(getParameter("max.speed")).intValue();
@@ -55,7 +57,8 @@ public class TopMon extends Applet implements Runnable, MouseListener, ActionLis
     validate();
   }
 
-  protected void gotFirstSnap(TopSnap snap) {
+  protected void gotFirstSnap(TopSnap snap)
+  {
     remove(connectingLabel);
     GridBagConstraints gbc = new GridBagConstraints();
     gbc.fill = GridBagConstraints.BOTH;
@@ -91,14 +94,15 @@ public class TopMon extends Applet implements Runnable, MouseListener, ActionLis
 
   boolean isStopping = false;
 
-  public void run() {
+  public void run()
+  {
     Socket sock = null;
     DataInputStream is = null;
     isStopping = false;
     try {
 /*      TopSnap snap = new TopSnap();
       gotFirstSnap(snap); */
-      while(!isStopping) {
+      while (!isStopping) {
 /*        synchronized(this){
           try {
             wait(1000);
@@ -111,7 +115,7 @@ public class TopMon extends Applet implements Runnable, MouseListener, ActionLis
           TopSnap snap = new TopSnap();
           snap.read(is);
           gotFirstSnap(snap);
-          while(!isStopping) {
+          while (!isStopping) {
             snap.read(is);
             smeTopGraph.setSnap(snap);
 //              System.out.println("Got snap: ls="+snap.last[PerfSnap.IDX_DELIVER]+" le="+snap.last[PerfSnap.IDX_DELIVERERR]+" upt="+snap.uptime+" tm="+(new Date(snap.sctime*1000)).toString());
@@ -127,23 +131,23 @@ public class TopMon extends Applet implements Runnable, MouseListener, ActionLis
             Thread.currentThread().sleep(10000);
           } catch (InterruptedException e1) {
           }
-          ex.printStackTrace( System.out );
-          System.out.println( "I/O error: "+ex.getMessage()+". Reconnecting..." );
+          ex.printStackTrace(System.out);
+          System.out.println("I/O error: " + ex.getMessage() + ". Reconnecting...");
         }
       }
-    } catch(Exception e) {
+    } catch (Exception e) {
       e.printStackTrace();
     } finally {
-      if(is != null)
+      if (is != null)
         try {
           is.close();
-        } catch(Exception ee) {
+        } catch (Exception ee) {
         }
       ;
-      if(sock != null)
+      if (sock != null)
         try {
           sock.close();
-        } catch(Exception ee) {
+        } catch (Exception ee) {
         }
       ;
     }
@@ -153,23 +157,26 @@ public class TopMon extends Applet implements Runnable, MouseListener, ActionLis
   Image offscreen;
   Object semaphore = new Object();
 
-  public void invalidate() {
+  public void invalidate()
+  {
 //      synchronized (semaphore) {
     offscreen = null;
 //      }
     super.invalidate();
   }
 
-  public void update(Graphics gg) {
+  public void update(Graphics gg)
+  {
     paint(gg);
   }
 
-  public void paint(Graphics gg) {
+  public void paint(Graphics gg)
+  {
     Dimension sz = getSize();
     Image screen = null;
-    synchronized(semaphore) {
+    synchronized (semaphore) {
       screen = offscreen;
-      if(offscreen == null) {
+      if (offscreen == null) {
         offscreen = createImage(sz.width, sz.height);
         screen = offscreen;
       }
@@ -182,39 +189,49 @@ public class TopMon extends Applet implements Runnable, MouseListener, ActionLis
     g.dispose();
   }
 
-  public void mouseClicked(MouseEvent e) {
+  public void mouseClicked(MouseEvent e)
+  {
   }
 
-  public void mousePressed(MouseEvent e) {
+  public void mousePressed(MouseEvent e)
+  {
   }
 
-  public void mouseReleased(MouseEvent e) {
+  public void mouseReleased(MouseEvent e)
+  {
   }
 
-  public void mouseEntered(MouseEvent e) {
+  public void mouseEntered(MouseEvent e)
+  {
   }
 
-  public void mouseExited(MouseEvent e) {
+  public void mouseExited(MouseEvent e)
+  {
   }
 
-  public void actionPerformed(ActionEvent e) {
+  public void actionPerformed(ActionEvent e)
+  {
   }
 
-  public void itemStateChanged(ItemEvent e) {
+  public void itemStateChanged(ItemEvent e)
+  {
   }
 
-  public void start() {
+  public void start()
+  {
     System.out.println("Starting...");
     Thread thr = new Thread(this);
     thr.start();
   }
 
-  public void stop() {
+  public void stop()
+  {
     System.out.println("Stoping...");
     isStopping = true;
   }
 
-  public void destroy() {
+  public void destroy()
+  {
     System.out.println("Destroying...");
     isStopping = true;
   }

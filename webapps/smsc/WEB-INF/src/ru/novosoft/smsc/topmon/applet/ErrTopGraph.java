@@ -9,7 +9,8 @@ import java.awt.*;
  * Date: 14.05.2004
  * Time: 15:28:05
  */
-public class ErrTopGraph extends Canvas {
+public class ErrTopGraph extends Canvas
+{
   static final int pad = 2;
   private static final Color colorBackground = Color.black;
 
@@ -17,25 +18,28 @@ public class ErrTopGraph extends Canvas {
   int bottomSpace = pad;
   int topSpace = pad;
 
-  TopSnap   snap;
+  TopSnap snap;
 
-  public ErrTopGraph(TopSnap snap) {
+  public ErrTopGraph(TopSnap snap)
+  {
     super();
     this.snap = snap;
   }
 
-  public void setSnap(TopSnap snap) {
+  public void setSnap(TopSnap snap)
+  {
     this.snap = snap;
     repaint();
   }
 
-  public void invalidate() {
+  public void invalidate()
+  {
     Font font = getFont();
-    if(font != null) {
+    if (font != null) {
       FontMetrics fm = getFontMetrics(font);
       Dimension sz = getSize();
-      if(sz.width > 0 && sz.height > 0) {
-        bottomSpace = 2*pad + fm.getDescent() + fm.getHeight();
+      if (sz.width > 0 && sz.height > 0) {
+        bottomSpace = 2 * pad + fm.getDescent() + fm.getHeight();
         topSpace = pad + fm.getAscent();
       }
     }
@@ -43,10 +47,11 @@ public class ErrTopGraph extends Canvas {
     super.invalidate();
   }
 
-  public void paint(Graphics gg) {
+  public void paint(Graphics gg)
+  {
     Dimension size = getSize();
-    if(!(size.width > 0 && size.height > 0)) return;
-    if(offscreen == null) {
+    if (!(size.width > 0 && size.height > 0)) return;
+    if (offscreen == null) {
       offscreen = createImage(size.width, size.height);
     }
     Graphics g = offscreen.getGraphics();
@@ -60,17 +65,22 @@ public class ErrTopGraph extends Canvas {
     g.dispose();
   }
 
-  public void update(Graphics gg) {
+  public void update(Graphics gg)
+  {
     paint(gg);
   }
 
   Dimension prefsz = new Dimension(80, 200);
-  public Dimension getPreferredSize() {
+
+  public Dimension getPreferredSize()
+  {
     return prefsz;
   }
 
   Dimension minsz = new Dimension(0, 0);
-  public Dimension getMinimumSize() {
+
+  public Dimension getMinimumSize()
+  {
     return minsz;
   }
 }

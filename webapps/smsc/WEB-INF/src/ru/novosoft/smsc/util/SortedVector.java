@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.util;
+
 /*
  * Author: igork
  * Date: 10.06.2002
  * Time: 15:10:13
  */
-package ru.novosoft.smsc.util;
 
 import java.util.*;
 
@@ -57,8 +58,7 @@ public class SortedVector extends Vector
 
   public synchronized boolean addAll(Collection c)
   {
-    for (Iterator i = c.iterator(); i.hasNext();)
-    {
+    for (Iterator i = c.iterator(); i.hasNext();) {
       this.add(i.next());
     }
     return !c.isEmpty();

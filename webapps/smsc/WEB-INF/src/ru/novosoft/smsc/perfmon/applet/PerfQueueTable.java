@@ -9,7 +9,8 @@ import java.awt.*;
  * Date: 14.01.2004
  * Time: 17:41:19
  */
-public class PerfQueueTable extends Canvas {
+public class PerfQueueTable extends Canvas
+{
   static final int vpad = 1;
   static final int hpad = 5;
   static final int numCols = 3;
@@ -22,46 +23,53 @@ public class PerfQueueTable extends Canvas {
   Image offscreen;
   String heads[];
 
-  public PerfQueueTable(PerfSnap snap) {
+  public PerfQueueTable(PerfSnap snap)
+  {
     this.snap = new PerfSnap(snap);
     prefSize = new Dimension(100, 0);
     heads = new String[numCols];
-    for(int i = 0; i < numCols; i++) {
+    for (int i = 0; i < numCols; i++) {
       heads[i] = PerfMon.localeText.getString("pqueh." + i);
     }
     invalidate();
   }
 
-  public synchronized void setSnap(PerfSnap snap) {
+  public synchronized void setSnap(PerfSnap snap)
+  {
     this.snap = new PerfSnap(snap);
     this.repaint();
   }
 
-  public void invalidate() {
+  public void invalidate()
+  {
     Font font = getFont();
-    if(font != null) {
+    if (font != null) {
       FontMetrics fm = getFontMetrics(font);
       Dimension sz = getSize();
-      prefSize.height = (fm.getHeight() + 2*vpad);
-      columnWidth = (sz.width - (numCols+1)*hpad)/(numCols);
+      prefSize.height = (fm.getHeight() + 2 * vpad);
+      columnWidth = (sz.width - (numCols + 1) * hpad) / (numCols);
       setSize(sz.width, prefSize.height);
     }
     offscreen = null;
     super.invalidate();
   }
 
-  public Dimension getPrefferedSize() {
+  public Dimension getPrefferedSize()
+  {
     return prefSize;
   }
 
-  public Dimension getMinimumSize() {
+  public Dimension getMinimumSize()
+  {
     return prefSize;
   }
 
   StringBuffer sbs = new StringBuffer(256);
-  public synchronized void paint(Graphics gg) {
+
+  public synchronized void paint(Graphics gg)
+  {
     Dimension sz = getSize();
-    if(offscreen == null) {
+    if (offscreen == null) {
       offscreen = createImage(sz.width, sz.height);
     }
     Graphics g = offscreen.getGraphics();
@@ -95,7 +103,8 @@ public class PerfQueueTable extends Canvas {
     g.dispose();
   }
 
-  public void update(Graphics gg) {
+  public void update(Graphics gg)
+  {
     paint(gg);
   }
 }
