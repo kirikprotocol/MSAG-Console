@@ -6,7 +6,8 @@
 <jsp:useBean id="smsViewBean" scope="session" class="ru.novosoft.smsc.jsp.smsview.SmsViewFormBean" />
 <%
 	SmsViewFormBean bean = smsViewBean;
-	//bean.refreshQuery();
+  if( request.getParameter("mbQuery") != null)
+	    bean.refreshQuery();
 %>
 <jsp:setProperty name="smsViewBean" property="*"/>
 <%
