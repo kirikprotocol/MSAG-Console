@@ -44,9 +44,12 @@
 							</tr>
 							<tr>
 								<td>
+<%@ include file="list_selector.jsp"%>								
+<!--
                   <% for (int i=1; i<=5; i++) { %>
 									<input type="checkbox" checked value="Subject <%=i%>" name="dst_subj">Subject <%=i%><br>
                   <%}%>
+-->
 								</td>
 							</tr>
 							<tr>

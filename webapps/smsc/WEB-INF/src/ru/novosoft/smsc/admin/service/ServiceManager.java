@@ -366,6 +366,11 @@ public class ServiceManager
     return services.keySet();
   }
 
+  /**
+   * Gets service IDs from specified host
+   * @param host Host to lookup for services
+   * @return Service IDs (<code>String</code>s), that registered on specified host
+   */
   public synchronized Set getServiceIds(String host)
           throws AdminException
   {

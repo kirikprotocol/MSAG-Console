@@ -1,5 +1,5 @@
-	<%@ include file="/sketches/header.jsp" %>
-  <%@ include file="menu.jsp"%>
+<%@ include file="/sketches/header.jsp" %>
+<%@ include file="menu.jsp"%>
   <h4>Routes</h4>
   <a href="route_filter.jsp">Filter</a> &nbsp;&nbsp;&nbsp; <a href="index_with_adresses.jsp">Show adresses</a>
 	<table class="list" cellspacing="0">
@@ -32,4 +32,4 @@
 			</tr>
 		</tbody>
 	</table>
-	<%@ include file="/sketches/footer.jsp" %>
+<%@ include file="/sketches/footer.jsp" %>

@@ -5,7 +5,7 @@
     <section name="TDS v0/2">
       <param name="args" type="string">aaa bbb ccc</param>
       <param name="name" type="string">Test</param>
-      <param name="port" type="int">6672</param>
+      <param name="port" type="int">6670</param>
     </section>
   </section>
   <section name="admin">
