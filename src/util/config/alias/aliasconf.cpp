@@ -41,7 +41,7 @@ AliasConfig::status AliasConfig::RecordIterator::fetchNext(AliasRecord *&record)
 }
 
 AliasConfig::AliasConfig()
-  : logger(smsc::util::Logger::getCategory("smsc.igork_tests.aliasconf.AliasConfig"))
+  : logger(smsc::util::Logger::getCategory("smsc.util.config.alias.AliasConfig"))
 {
 }
 
