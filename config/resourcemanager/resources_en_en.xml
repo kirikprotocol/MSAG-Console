@@ -23,6 +23,10 @@
       <param name="msgUnhide">Not Hidden</param>
       <param name="msgModificationDenied">This command is prohibited for your profile</param>
       <param name="msgError">Unrecognized profile management command</param>
+      <param name="msgDivertOn">Divert activated</param>
+      <param name="msgDivertOff">Divert deactivated</param>
+      <param name="msgDivertChanged">Divert address changed</param>
+      <param name="msgInvalidParam">Invalid parameter value</param>
     </section>
     <section name="abonentinfo">
       <param name="mobileFormat">Abonent $$string import=abonent$$ is $$string import=status$$. msc $$string import=msc$$</param>

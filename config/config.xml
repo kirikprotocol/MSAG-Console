@@ -112,6 +112,9 @@
       <param name="UCS2" type="int">4</param>
       <param name="HIDE" type="int">5</param>
       <param name="UNHIDE" type="int">6</param>
+      <param name="DIVERT ON" type="int">30</param>
+      <param name="DIVERT OFF" type="int">31</param>
+      <param name="DIVERT TO" type="int">40</param>
     </section>
   </section>
 
