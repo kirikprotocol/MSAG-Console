@@ -1478,7 +1478,7 @@ StateType StateMachine::query(Tuple& t)
       t.command->get_dialogId(),
       Status::OK,
       t.msgId,
-      sms.getLastTime(),
+      state==1?0:sms.getLastTime(),
       state,
       0
     )
