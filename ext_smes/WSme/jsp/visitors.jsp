@@ -9,6 +9,7 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.wsme.beans.WSmeVisitorsFormBean" />
 <jsp:setProperty name="bean" property="*"/>
 <%
+  ServiceIDForShowStatus = Constants.WSME_SME_ID;
   TITLE="Welcome SME Visitors";
   MENU0_SELECTION = "MENU0_SERVICES";
   //MENU1_SELECTION = "WSME_INDEX";
@@ -45,9 +46,10 @@
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/start_stop.jsp"%>
-<br><%@ include file="inc/menu.jsp"%><br>
-<div class=secView>Visitors</div>
-<table class=secRep cellspacing=1 width="100%">
+<%@ include file="inc/menu.jsp"%>
+<div class=content>
+<div class=page_subtitle>Visitors</div>
+<table class=list cellspacing=1 width="100%">
 <thead>
 <tr class=row0>
   <th><a href="#" <%=bean.getSort().endsWith("mask")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Mask" onclick='return setSort("mask")'>Mask</a></th>
@@ -77,26 +79,28 @@
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=pageSize value=<%=bean.getPageSize()%>>
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>
-
 <%if (bean.isWSmeStarted()) {%>
-<br>
-<div class=secQuestion>Manage visitors</div>
-<table class=secRep cellspacing=0 cellspadding=1 width="100%">
+<div class=page_subtitle>Manage visitors</div>
+<table class=properties_list cellspacing=0 cellspadding=1 width="100%">
 <thead>
 <col width="15%" align=right>
 <col width="85%">
 </thead>
 <tr class=row0>
-	<th class=label>Mask:</th>
-	<td><input class=txtW type="text" name=newVisitor  value="<%= bean.getNewVisitor()%>" validation="mask" onkeyup="resetValidation(this)" size=25 maxlength=25></td>
+	<th>Mask:</th>
+	<td><input class=txt type="text" name=newVisitor  value="<%= bean.getNewVisitor()%>" validation="mask" onkeyup="resetValidation(this)" size=25 maxlength=25></td>
 </tr>
 </table>
-
-<div class=secButtons>
-<input class=btn type=submit name=btnAdd value="Add new visitor" title="Add new visitor mask">
-<input class=btn type=button name=btnDel value="Delete selected" title="Delete selected" onClick="return noValidationSubmit(this)">
-</div>
 <%}%>
-
+</div>
+<%
+page_menu_begin(out);
+if (bean.isWSmeStarted()) {
+	page_menu_button(out, "btnAdd",  "Add new visitor",  "Add new visitor mask");
+	page_menu_button(out, "btnDel",  "Delete selected",  "Delete selected visitors",  "return noValidationSubmit(this);");
+}
+page_menu_space(out);
+page_menu_end(out);
+%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

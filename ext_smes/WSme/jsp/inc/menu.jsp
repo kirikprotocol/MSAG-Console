@@ -17,7 +17,7 @@ function setSort(sorting)
 	return false;
 }
 </script>
-
+<div class=content>
 <table>
 	<tr>
 	<th>&nbsp;<a href="#" onclick='return clickMenu(<%= WSmeFormBean.RESULT_DONE%>)' <%=
@@ -30,3 +30,4 @@ function setSort(sorting)
       ((bean.getMenuId() == WSmeFormBean.RESULT_ADS) ? "disabled":"")%>>Messages</a>&nbsp;</th>
 	</tr>
 </table>
+</div>
