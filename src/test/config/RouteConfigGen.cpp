@@ -15,6 +15,14 @@ ltAddress RouteConfigGen::ltAddr = ltAddress();
 
 bool RouteConfigGen::ltSource(const RouteInfo* r1, const RouteInfo* r2)
 {
+	if (!r1)
+	{
+		return false;
+	}
+	if (!r2)
+	{
+		return true;
+	}
 	if (ltAddr.operator()(r1->source, r2->source))
 	{
 		return true;
@@ -41,6 +49,14 @@ bool RouteConfigGen::ltSource(const RouteInfo* r1, const RouteInfo* r2)
 
 bool RouteConfigGen::ltDest(const RouteInfo* r1, const RouteInfo* r2)
 {
+	if (!r1)
+	{
+		return false;
+	}
+	if (!r2)
+	{
+		return true;
+	}
 	if (ltAddr.operator()(r1->dest, r2->dest))
 	{
 		return true;
@@ -102,10 +118,10 @@ void RouteConfigGen::printRouteStart(ofstream& os, vector<const RouteInfo*>& rou
 	os << "<route id=\"" << prefix << "_" << idx <<
 		"\" billing=\"" << (routes[idx]->billing ? "true" : "false") <<
 		"\" archiving=\"" << (routes[idx]->archived ? "true" : "false") <<
-		/* "\" enabling=\"" << true"> */ endl;
+		"\" enabling=\"" << (routes[idx]->enabling ? "true" : "false") << "\">" << endl;
 	/*
-		RoutePriority priority;
-		bool paid;
+		RoutePriority priority - пока не используется
+		bool paid - вообще не используется, синоним billing
 	*/
 }
 
