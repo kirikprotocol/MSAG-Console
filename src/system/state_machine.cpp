@@ -197,15 +197,15 @@ StateMachine::StateMachine(EventQueue& q,
   __throw_if_fail__(dreAck.LastError()==regexp::errNone,RegExpCompilationException);
   dreNoAck.Compile(AltConcat("noack",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);
   __throw_if_fail__(dreNoAck.LastError()==regexp::errNone,RegExpCompilationException);
-  dreHide.Compile(AltConcat("hide",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);;
+  dreHide.Compile(AltConcat("hide",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);
   __throw_if_fail__(dreHide.LastError()==regexp::errNone,RegExpCompilationException);
-  dreUnhide.Compile(AltConcat("unhide",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);;
+  dreUnhide.Compile(AltConcat("unhide",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);
   __throw_if_fail__(dreUnhide.LastError()==regexp::errNone,RegExpCompilationException);
-  dreFlash.Compile(AltConcat("flash",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);;
+  dreFlash.Compile(AltConcat("flash",directiveAliases).c_str(),OP_IGNORECASE|OP_OPTIMIZE);
   __throw_if_fail__(dreFlash.LastError()==regexp::errNone,RegExpCompilationException);
-  dreDef.Compile(AltConcat("def",directiveAliases,"\\s+(\\d+)").c_str(),OP_IGNORECASE|OP_OPTIMIZE);;
+  dreDef.Compile(AltConcat("def",directiveAliases,"\\s+((?:\\d+|(?=\\.))(\\.\\d+)?)").c_str(),OP_IGNORECASE|OP_OPTIMIZE);
   __throw_if_fail__(dreDef.LastError()==regexp::errNone,RegExpCompilationException);
-  dreTemplate.Compile(AltConcat("template",directiveAliases,"=(.*?)").c_str(),OP_IGNORECASE|OP_OPTIMIZE);;;
+  dreTemplate.Compile(AltConcat("template",directiveAliases,"=(.*?)").c_str(),OP_IGNORECASE|OP_OPTIMIZE);
   __throw_if_fail__(dreTemplate.LastError()==regexp::errNone,RegExpCompilationException);
   dreTemplateParam.Compile("/\\s*\\{(\\w+)\\}=(\".*?\"|[^{\\s]+)/s");
   __throw_if_fail__(dreTemplateParam.LastError()==regexp::errNone,RegExpCompilationException);
@@ -547,9 +547,13 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     if(dreDef.MatchEx(buf,buf+i,buf+len,m,n=10))
     {
       int t=atoi(buf+m[1].start);
+      int mnts=0;
+      if(m[2].start!=-1)mnts=atoi(buf+m[2].start+1);
       if(t>999)t=999;
+      t*=60;
+      t+=mnts;
       __trace2__("DIRECT: %*s, t=%d",m[0].end-m[0].start,buf+m[0].start,t);
-      sms.setNextTime(time(NULL)+t*60*60);
+      sms.setNextTime(time(NULL)+t*60);
       offsets.Push(Directive(m[0].start,m[0].end));
       i=m[0].end;
     }else
