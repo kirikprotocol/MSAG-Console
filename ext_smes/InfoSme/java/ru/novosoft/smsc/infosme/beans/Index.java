@@ -97,16 +97,7 @@ public class Index extends IndexProperties
       logger.debug("Apply ...");
       final Config oldConfig = getInfoSmeContext().loadCurrentConfig();
       if (isApply("all")) {
-        getConfig().save();
-        getInfoSmeContext().setChangedOptions(false);
-        getInfoSmeContext().setChangedDrivers(false);
-        getInfoSmeContext().setChangedProviders(false);
-        getInfoSmeContext().setChangedSchedules(false);
-        getInfoSmeContext().setChangedTasks(false);
-        getInfoSmeContext().reloadDataSource(oldConfig, getConfig());
-        if (getInfoSmeContext().getDataSource() == null)
-          warning("Invalid JDBC parameters");
-        return message("Changes saved, you need to restart InfoSme to apply changes");
+        return applyGlobalParams(oldConfig);
       } else if (isApply("tasks")) {
         if (getInfoSmeContext().isChangedDrivers() || getInfoSmeContext().isChangedOptions() || getInfoSmeContext().isChangedProviders())
           return error("You cannot apply tasks without applying global options");
@@ -125,6 +116,50 @@ public class Index extends IndexProperties
       return error("Could not save InfoSME config", e);
     }
     return RESULT_DONE;
+  }
+
+  private static final Set notGlobalSectionNames = new HashSet();
+  static {
+    notGlobalSectionNames.add("InfoSme.Schedules");
+    notGlobalSectionNames.add("InfoSme.Tasks");
+  }
+
+  private int applyGlobalParams(final Config oldConfig) throws Config.WrongParamTypeException, IOException, NullPointerException, CloneNotSupportedException
+  {
+    Config backup = (Config) oldConfig.clone();
+    final Config config = getConfig();
+
+    //InfoSme - root
+    backup.removeParamsFromSection("InfoSme");
+    backup.copySectionParamsFromConfig(config, "InfoSme");
+
+    //StartupLoader
+    backup.removeSection("StartupLoader");
+    backup.copySectionFromConfig(config, "StartupLoader");
+
+    //others
+    for (Iterator i = backup.getSectionChildSectionNames("InfoSme").iterator(); i.hasNext();) {
+      String sectionName = (String) i.next();
+      if (!notGlobalSectionNames.contains(sectionName)) {
+        backup.removeSection(sectionName);
+      }
+    }
+
+    for (Iterator i = config.getSectionChildSectionNames("InfoSme").iterator(); i.hasNext();) {
+      String sectionName = (String) i.next();
+      if (!notGlobalSectionNames.contains(sectionName)) {
+        backup.copySectionFromConfig(config, sectionName);
+      }
+    }
+
+    backup.save();
+    getInfoSmeContext().setChangedOptions(false);
+    getInfoSmeContext().setChangedDrivers(false);
+    getInfoSmeContext().setChangedProviders(false);
+    getInfoSmeContext().reloadDataSource(oldConfig, config);
+    if (getInfoSmeContext().getDataSource() == null)
+      warning("Invalid JDBC parameters");
+    return message("Changes saved, you need to restart InfoSme to apply changes");
   }
 
   private int applyScheds(Config oldConfig, Config newConfig)

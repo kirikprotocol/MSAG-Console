@@ -115,22 +115,18 @@ public class InfoSmeContext
   public void reloadDataSource(Config oldConfig, Config newConfig)
   {
     try {
-      dataSource = null;
-      final String newSource = newConfig.getString("InfoSme.systemDataSource.jdbc.source");
-      final String newDriver = newConfig.getString("InfoSme.systemDataSource.jdbc.driver");
-      final String newUser = newConfig.getString("InfoSme.systemDataSource.dbUserName");
-      final String newPassword = newConfig.getString("InfoSme.systemDataSource.dbUserPassword");
       if (oldConfig == null
-              || !newSource.equals(oldConfig.getString("InfoSme.systemDataSource.jdbc.source"))
-              || !newDriver.equals(oldConfig.getString("InfoSme.systemDataSource.jdbc.driver"))
-              || !newUser.equals(oldConfig.getString("InfoSme.systemDataSource.dbUserName"))
-              || !newPassword.equals(oldConfig.getString("InfoSme.systemDataSource.dbUserPassword"))
+              || !Config.isParamEquals(oldConfig, newConfig, "InfoSme.systemDataSource.jdbc.source")
+              || !Config.isParamEquals(oldConfig, newConfig, "InfoSme.systemDataSource.jdbc.driver")
+              || !Config.isParamEquals(oldConfig, newConfig, "InfoSme.systemDataSource.dbUserName")
+              || !Config.isParamEquals(oldConfig, newConfig, "InfoSme.systemDataSource.dbUserPassword")
       ) {
+        dataSource = null;
         Properties properties = new Properties();
-        properties.setProperty("jdbc.source", newSource);
-        properties.setProperty("jdbc.driver", newDriver);
-        properties.setProperty("jdbc.user", newUser);
-        properties.setProperty("jdbc.pass", newPassword);
+        properties.setProperty("jdbc.source", newConfig.getString("InfoSme.systemDataSource.jdbc.source"));
+        properties.setProperty("jdbc.driver", newConfig.getString("InfoSme.systemDataSource.jdbc.driver"));
+        properties.setProperty("jdbc.user", newConfig.getString("InfoSme.systemDataSource.dbUserName"));
+        properties.setProperty("jdbc.pass", newConfig.getString("InfoSme.systemDataSource.dbUserPassword"));
         dataSource = new NSConnectionPool(properties);
       }
     } catch (Throwable e) {

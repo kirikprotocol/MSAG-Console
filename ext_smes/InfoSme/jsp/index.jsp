@@ -34,24 +34,6 @@ refreshTaskStatuses();
 </script>
 <div class=content>
 <script>
-function clickAll(isChecked)
-{
-  opForm.all.tasksRow.disabled = isChecked;
-  opForm.all.tasksCheck.disabled = isChecked;
-  opForm.all.schedsRow.disabled = isChecked;
-  opForm.all.schedsCheck.disabled = isChecked;
-  opForm.all.tasksCheck.checked = isChecked;
-  opForm.all.schedsCheck.checked = isChecked;
-
-  checkApplyResetButtons();
-}
-function clickTasks(isChecked)
-{
-  opForm.all.schedsRow.disabled = isChecked;
-  opForm.all.schedsCheck.disabled = isChecked;
-  opForm.all.schedsCheck.checked = isChecked;
-  checkApplyResetButtons();
-}
 function checkApplyResetButtons()
 {
   opForm.all.mbApply.disabled = !(opForm.all.allCheck.checked || opForm.all.tasksCheck.checked || opForm.all.schedsCheck.checked);
@@ -74,17 +56,17 @@ function checkApplyResetButtons()
 <col width="79%">
 <col width="20%">
 <tr class=row0>
-  <td><input class=check type=checkbox name=apply value=all id=allCheck onClick="clickAll(this.checked);" <%=bean.isChangedAll() ? "" : "disabled"%>></td>
+  <td><input class=check type=checkbox name=apply value=all id=allCheck onClick="checkApplyResetButtons();" <%=bean.isChangedAll() ? "" : "disabled"%>></td>
   <th><label for=allCheck>All</label></th>
   <td><%=status(bean.isChangedAll())%></td>
 </tr>
 <tr class=row1 id=tasksRow>
-  <td><input class=check type=checkbox name=apply value=tasks id=tasksCheck onClick="clickTasks(this.checked);" <%=bean.isChangedTasks() ? "" : "disabled"%>></td>
+  <td><input class=check type=checkbox name=apply value=tasks id=tasksCheck onClick="checkApplyResetButtons();" <%=bean.isChangedTasks() && !bean.isChangedAll() ? "" : "disabled"%>></td>
   <th><label for=tasksCheck>Tasks</label></th>
   <td><%=status(bean.isChangedTasks())%></td>
 </tr>
 <tr class=row0 id=schedsRow>
-  <td><input class=check type=checkbox name=apply value=scheds id=schedsCheck onCLick="checkApplyResetButtons();" <%=bean.isChangedShedules() ? "" : "disabled"%>></td>
+  <td><input class=check type=checkbox name=apply value=scheds id=schedsCheck onCLick="checkApplyResetButtons();" <%=bean.isChangedShedules() && !bean.isChangedAll() && !bean.isChangedTasks() ? "" : "disabled"%>></td>
   <th><label for=schedsCheck>Schedules</label></th>
   <td><%=status(bean.isChangedShedules())%></td>
 </tr>

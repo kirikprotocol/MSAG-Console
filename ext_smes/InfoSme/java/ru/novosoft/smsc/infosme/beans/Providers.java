@@ -79,7 +79,7 @@ public class Providers extends InfoSmeBean
         public int compare(Object o1, Object o2)
         {
           if (o1 instanceof String && o2 instanceof String)
-            return -((String) o1).compareTo((String) o2);
+            return -((String) o1).compareToIgnoreCase((String) o2);
           return 0;
         }
       });
