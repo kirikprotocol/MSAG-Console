@@ -905,6 +905,17 @@ const char * const getProfileMatchTypeStr(int matchType)
   }
 }
 
+const char * const getProfileHideOptionString(int ho)
+{
+  switch(ho)
+  {
+    case HideOption::hoDisabled:   return "false";
+    case HideOption::hoEnabled:    return "true";
+    case HideOption::hoSubstitute: return "substitute";
+    default:                       return "unknown";
+  }
+}
+
 Variant SmscComponent::profileLookupEx(const Arguments &args) throw (AdminException)
 {
   try
@@ -921,7 +932,7 @@ Variant SmscComponent::profileLookupEx(const Arguments &args) throw (AdminExcept
       result.appendValueToStringList(getProfileCodepageStr(profile.codepage));
       result.appendValueToStringList(getProfileReportoptionsStr(profile.reportoptions));
       result.appendValueToStringList(profile.locale.c_str());
-      result.appendValueToStringList(profile.hide ? "true":"false");
+      result.appendValueToStringList(getProfileHideOptionString(profile.hide));
       result.appendValueToStringList(profile.hideModifiable ? "true":"false");
       result.appendValueToStringList(profile.divert.c_str());
       char divertActive[6];
@@ -974,7 +985,7 @@ throw (AdminException)
       result.appendValueToStringList(getProfileCodepageStr(profile.codepage));
       result.appendValueToStringList(getProfileReportoptionsStr(profile.reportoptions));
       result.appendValueToStringList(profile.locale.c_str());
-      result.appendValueToStringList(profile.hide ? "true" : "false");
+      result.appendValueToStringList(getProfileHideOptionString(profile.hide));
       result.appendValueToStringList(profile.hideModifiable ? "true" : "false");
       result.appendValueToStringList(profile.divert.c_str());
       char divertActive[6];
@@ -1060,11 +1071,11 @@ throw (AdminException)
   profile.locale = localeStr;
 
   if (strcmp("false", hideStr) == 0)
-    profile.hide = 0;
+    profile.hide = smsc::profiler::HideOption::hoDisabled;
   else if(strcmp("true", hideStr) == 0)
-    profile.hide = 1;
+    profile.hide = smsc::profiler::HideOption::hoEnabled;
   else if(strcmp("substitute", hideStr) == 0)
-    profile.hide = 2;
+    profile.hide = smsc::profiler::HideOption::hoSubstitute;
 
   profile.hideModifiable = (strcmp("true", hideModifiableStr) == 0) ? true:false;
 
@@ -1113,7 +1124,7 @@ int SmscComponent::profileUpdate(const Arguments & args)
 #ifdef SMSC_DEBUG
       char addr_str[smsc::sms::MAX_ADDRESS_VALUE_LENGTH+9];
       address.toString(addr_str, sizeof(addr_str)/sizeof(addr_str[0]));
-      smsc_log_debug(logger, "Update Profile:\n  %s: Address: \"%s\", codepage:%u, report options:%u, locale:%s", addressString, addr_str, profile.codepage, profile.reportoptions, profile.locale.c_str());
+      smsc_log_debug(logger, "Update Profile:  %s: Address: \"%s\", codepage:%u, report options:%u, locale:%s, hide:%u, hideModif:%u", addressString, addr_str, profile.codepage, profile.reportoptions, profile.locale.c_str(), profile.hide, profile.hideModifiable);
 #endif
       if (isMask(address))
         return profiler->updatemask(address, profile);
