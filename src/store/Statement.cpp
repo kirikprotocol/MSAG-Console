@@ -314,7 +314,8 @@ const char* OverwriteStatement::sql = (const char*)
  VALID_TIME=:VALID_TIME, SUBMIT_TIME=:SUBMIT_TIME,\
  NEXT_TRY_TIME=:NEXT_TRY_TIME, SVC_TYPE=:SVC,\
  DR=:DR, BR=:BR, ARC=:ARC, BODY=:BODY, BODY_LEN=:BODY_LEN,\
- ROUTE_ID=:ROUTE_ID, SVC_ID=:SVC_ID, PRTY=:PRTY\
+ ROUTE_ID=:ROUTE_ID, SVC_ID=:SVC_ID, PRTY=:PRTY,\
+ SRC_SME_ID=:SRC_SME_ID, DST_SME_ID=:DST_SME_ID, TXT_LENGTH=:TXT_LENGTH\
  WHERE ID=:OLD_ID";
 OverwriteStatement::OverwriteStatement(Connection* connection, bool assign)
     throw(StorageException)
@@ -394,6 +395,17 @@ void OverwriteStatement::bindSms(SMS& sms)
          (sb4) sizeof(sms.serviceId));
     bind(i++, SQLT_INT, (dvoid *)&(sms.priority),
          (sb4) sizeof(sms.priority));
+    
+    indSrcSmeId = strlen(sms.srcSmeId) ? OCI_IND_NOTNULL:OCI_IND_NULL;
+    bind(i++, SQLT_STR, (dvoid *) (sms.srcSmeId),
+         (sb4) sizeof(sms.srcSmeId), &indSrcSmeId);
+    indDstSmeId = strlen(sms.dstSmeId) ? OCI_IND_NOTNULL:OCI_IND_NULL;
+    bind(i++, SQLT_STR, (dvoid *) (sms.dstSmeId),
+         (sb4) sizeof(sms.dstSmeId), &indDstSmeId);
+    
+    bodyTextLen = sms.messageBody.getShortMessageLength();
+    bind(i++, SQLT_UIN, (dvoid *)&(bodyTextLen),
+         (sb4) sizeof(bodyTextLen));
 }
 
 /* --------------------------- StoreStatement ----------------------- */
@@ -402,12 +414,12 @@ const char* StoreStatement::sql = (const char*)
  SRC_MSC, SRC_IMSI, SRC_SME_N,\
  VALID_TIME, SUBMIT_TIME, ATTEMPTS, LAST_RESULT,\
  LAST_TRY_TIME, NEXT_TRY_TIME, SVC_TYPE, DR, BR, ARC, BODY, BODY_LEN,\
- ROUTE_ID, SVC_ID, PRTY)\
+ ROUTE_ID, SVC_ID, PRTY, SRC_SME_ID, DST_SME_ID, TXT_LENGTH)\
  VALUES (:ID, :ST, :MR, :OA, :DA, :DDA,\
  :SRC_MSC, :SRC_IMSI, :SRC_SME_N,\
  :VALID_TIME, :SUBMIT_TIME, 0, 0, NULL, :NEXT_TRY_TIME,\
  :SVC, :DR, :BR, :ARC, :BODY, :BODY_LEN,\
- :ROUTE_ID, :SVC_ID, :PRTY)";
+ :ROUTE_ID, :SVC_ID, :PRTY, :SRC_SME_ID, :DST_SME_ID, :TXT_LENGTH)";
 StoreStatement::StoreStatement(Connection* connection, bool assign)
     throw(StorageException)
         : IdStatement(connection, StoreStatement::sql, assign)
@@ -491,6 +503,17 @@ void StoreStatement::bindSms(SMS& sms)
          (sb4) sizeof(sms.serviceId));
     bind(i++, SQLT_INT, (dvoid *)&(sms.priority),
          (sb4) sizeof(sms.priority));
+
+    indSrcSmeId = strlen(sms.srcSmeId) ? OCI_IND_NOTNULL:OCI_IND_NULL;
+    bind(i++, SQLT_STR, (dvoid *) (sms.srcSmeId),
+         (sb4) sizeof(sms.srcSmeId), &indSrcSmeId);
+    indDstSmeId = strlen(sms.dstSmeId) ? OCI_IND_NOTNULL:OCI_IND_NULL;
+    bind(i++, SQLT_STR, (dvoid *) (sms.dstSmeId),
+         (sb4) sizeof(sms.dstSmeId), &indDstSmeId);
+    
+    bodyTextLen = sms.messageBody.getShortMessageLength();
+    bind(i++, SQLT_UIN, (dvoid *)&(bodyTextLen),
+         (sb4) sizeof(bodyTextLen));
 }
 
 /* --------------------------- RetrieveStatement ----------------------- */
@@ -499,7 +522,8 @@ const char* RetrieveStatement::sql = (const char*)
  SRC_MSC, SRC_IMSI, SRC_SME_N, DST_MSC, DST_IMSI, DST_SME_N,\
  VALID_TIME, SUBMIT_TIME,\
  ATTEMPTS, LAST_RESULT, LAST_TRY_TIME, NEXT_TRY_TIME,\
- SVC_TYPE, DR, BR, ARC, BODY, BODY_LEN, ROUTE_ID, SVC_ID, PRTY\
+ SVC_TYPE, DR, BR, ARC, BODY, BODY_LEN,\
+ ROUTE_ID, SVC_ID, PRTY, SRC_SME_ID, DST_SME_ID,\
  FROM SMS_MSG WHERE ID=:ID";
 RetrieveStatement::RetrieveStatement(Connection* connection, bool assign)
     throw(StorageException)
@@ -580,6 +604,11 @@ void RetrieveStatement::defineSms(SMS& sms)
            (sb4) sizeof(sms.serviceId));
     define(i++, SQLT_INT, (dvoid *)&(sms.priority),
            (sb4) sizeof(sms.priority));
+    
+    define(i++, SQLT_STR, (dvoid *) (sms.srcSmeId),
+           (sb4) sizeof(sms.srcSmeId), &indSrcSmeId);
+    define(i++, SQLT_STR, (dvoid *) (sms.dstSmeId),
+           (sb4) sizeof(sms.dstSmeId), &indDstSmeId);
 }
 
 bool RetrieveStatement::getSms(SMS& sms)
@@ -628,6 +657,10 @@ bool RetrieveStatement::getSms(SMS& sms)
         sms.eServiceType[0] = '\0';
     if (indRouteId != OCI_IND_NOTNULL)
         sms.routeId[0] = '\0';
+    if (indSrcSmeId != OCI_IND_NOTNULL)
+        sms.srcSmeId[0] = '\0';
+    if (indDstSmeId != OCI_IND_NOTNULL)
+        sms.dstSmeId[0] = '\0';
 
     if (indLastTime != OCI_IND_NOTNULL) sms.lastTime = 0;
     else convertOCIDateToDate(&lastTime, &(sms.lastTime));
@@ -725,7 +758,8 @@ bool RetrieveBodyStatement::getBody(Body& body)
 
 /* --------------------------- ReplaceStatement ----------------------- */        
 const char* ReplaceStatement::sql = (const char*)
-"UPDATE SMS_MSG SET DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN\
+"UPDATE SMS_MSG SET\
+ DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN, TXT_LENGTH=:TXT_LENGTH\
  WHERE ID=:ID AND ST=:ENROUTE AND OA=:OA";
 
 ReplaceStatement::ReplaceStatement(Connection* connection, bool assign)
@@ -771,13 +805,17 @@ void ReplaceStatement::bindBody(Body& body)
     bodyBuffer = body.getBuffer();
     indBody = (bodyBuffer && bodyBufferLen <= MAX_BODY_LENGTH) 
                 ? OCI_IND_NOTNULL : OCI_IND_NULL;
-    
+    bodyTextLen = body.getShortMessageLength();
+
     bind((CONST text *)"BODY", (sb4) 4*sizeof(char),
          SQLT_BIN, (dvoid *) bodyBuffer,
          (sb4) bodyBufferLen, &indBody);
     bind((CONST text *)"BODY_LEN", (sb4) 8*sizeof(char),
          SQLT_UIN, (dvoid *)&(bodyBufferLen),
          (sb4) sizeof(bodyBufferLen));
+    bind((CONST text *)"TXT_LENGTH", (sb4) 10*sizeof(char),
+         SQLT_UIN, (dvoid *)&(bodyTextLen),
+         (sb4) sizeof(bodyTextLen));
 }
 void ReplaceStatement::bindDeliveryReport(dvoid* dr, sb4 size)
     throw(StorageException)
@@ -800,7 +838,8 @@ void ReplaceStatement::bindWaitTime(time_t waitTime)
 }
 
 const char* ReplaceVTStatement::sql = (const char*)
-"UPDATE SMS_MSG SET DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN,\
+"UPDATE SMS_MSG SET\
+ DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN, TXT_LENGTH=:TXT_LENGTH,\
  VALID_TIME=:VT\
  WHERE ID=:ID AND ST=:ENROUTE AND OA=:OA";
 ReplaceVTStatement::ReplaceVTStatement(Connection* connection, bool assign)
@@ -808,7 +847,8 @@ ReplaceVTStatement::ReplaceVTStatement(Connection* connection, bool assign)
         : ReplaceStatement(connection, ReplaceVTStatement::sql, assign) {}
 
 const char* ReplaceWTStatement::sql = (const char*)
-"UPDATE SMS_MSG SET DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN,\
+"UPDATE SMS_MSG SET\
+ DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN, TXT_LENGTH=:TXT_LENGTH,\
  NEXT_TRY_TIME=:WT\
  WHERE ID=:ID AND ST=:ENROUTE AND OA=:OA";
 ReplaceWTStatement::ReplaceWTStatement(Connection* connection, bool assign)
@@ -816,7 +856,8 @@ ReplaceWTStatement::ReplaceWTStatement(Connection* connection, bool assign)
         : ReplaceStatement(connection, ReplaceWTStatement::sql, assign) {}
 
 const char* ReplaceVWTStatement::sql = (const char*)
-"UPDATE SMS_MSG SET DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN,\
+"UPDATE SMS_MSG\
+ SET DR=:DR, BODY=:BODY, BODY_LEN=:BODY_LEN, TXT_LENGTH=:TXT_LENGTH,\
  VALID_TIME=:VT, NEXT_TRY_TIME=:WT\
  WHERE ID=:ID AND ST=:ENROUTE AND OA=:OA";
 ReplaceVWTStatement::ReplaceVWTStatement(Connection* connection, bool assign)

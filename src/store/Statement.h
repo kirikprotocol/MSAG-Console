@@ -117,11 +117,13 @@ namespace smsc { namespace store
         OCIDate     submitTime;
         
         int         bodyBufferLen;
+        unsigned    bodyTextLen;
         uint8_t*    bodyBuffer;
         
         char        bNeedArchivate;
         
-        sb2         indBody, indNextTime, indSvcType, indRouteId;
+        sb2         indBody, indNextTime, indSvcType;
+        sb2         indRouteId, indSrcSmeId, indDstSmeId;
 
         FullAddressValue    oa, da, dda;
 
@@ -217,11 +219,13 @@ namespace smsc { namespace store
         OCIDate     submitTime;
         
         int         bodyBufferLen;
+        unsigned    bodyTextLen;
         uint8_t*    bodyBuffer;
         
         char        bNeedArchivate;
         
-        sb2         indBody, indNextTime, indSvcType, indRouteId;
+        sb2         indBody, indNextTime, indSvcType;
+        sb2         indRouteId, indSrcSmeId, indDstSmeId;
     
     public:
 
@@ -260,7 +264,8 @@ namespace smsc { namespace store
         
         sb2         indSrcMsc, indSrcImsi, indSrcSme;
         sb2         indDstMsc, indDstImsi, indDstSme;
-        sb2         indSvc, indBody, indLastTime, indNextTime, indRouteId;
+        sb2         indSvc, indBody, indLastTime, indNextTime;
+        sb2         indRouteId, indSrcSmeId, indDstSmeId;
 
         FullAddressValue    oa, da, dda;
     
@@ -336,6 +341,7 @@ namespace smsc { namespace store
         OCIDate     wTime;
         
         int         bodyBufferLen;
+        unsigned    bodyTextLen;
         uint8_t*    bodyBuffer;
 
         sb2         indBody;

@@ -497,9 +497,9 @@ void Archiver::count()
 const char* Archiver::storageSelectSql = (const char*)
 "SELECT ID, ST, MR, OA, DA, DDA, SVC_TYPE,\
  SRC_MSC, SRC_IMSI, SRC_SME_N, DST_MSC, DST_IMSI, DST_SME_N,\
- VALID_TIME, SUBMIT_TIME,\
- ATTEMPTS, LAST_RESULT, LAST_TRY_TIME,\
- DR, BR, ARC, BODY, BODY_LEN, ROUTE_ID, SVC_ID, PRTY\
+ VALID_TIME, SUBMIT_TIME, ATTEMPTS, LAST_RESULT, LAST_TRY_TIME,\
+ DR, BR, ARC, BODY, BODY_LEN, ROUTE_ID, SVC_ID, PRTY,\
+ SRC_SME_ID, DST_SME_ID, TXT_LENGTH\
  FROM SMS_MSG WHERE NOT ST=:ENROUTE ORDER BY LAST_TRY_TIME ASC";
 void Archiver::prepareStorageSelectStmt() throw(StorageException)
 {
@@ -571,6 +571,12 @@ void Archiver::prepareStorageSelectStmt() throw(StorageException)
                               (sb4) sizeof(sms.serviceId));
     storageSelectStmt->define(i++, SQLT_INT, (dvoid *)&(sms.priority),
                               (sb4) sizeof(sms.priority));
+    storageSelectStmt->define(i++, SQLT_STR, (dvoid *) (sms.srcSmeId),
+                              (sb4) sizeof(sms.srcSmeId), &indSrcSmeId);
+    storageSelectStmt->define(i++, SQLT_STR, (dvoid *) (sms.dstSmeId),
+                              (sb4) sizeof(sms.dstSmeId), &indDstSmeId);
+    storageSelectStmt->define(i++, SQLT_UIN, (dvoid *)&(bodyTextLen), 
+                              (sb4) sizeof(bodyTextLen));
     
     storageSelectStmt->bind(1 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
                             (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
@@ -591,12 +597,13 @@ const char* Archiver::archiveInsertSql = (const char*)
 "INSERT INTO SMS_ARC (ID, ST, MR, OA, DA, DDA, SVC_TYPE,\
  SRC_MSC, SRC_IMSI, SRC_SME_N, DST_MSC, DST_IMSI, DST_SME_N,\
  VALID_TIME, SUBMIT_TIME, ATTEMPTS, LAST_RESULT,\
- LAST_TRY_TIME, DR, BR, BODY, BODY_LEN, ROUTE_ID, SVC_ID, PRTY)\
+ LAST_TRY_TIME, DR, BR, BODY, BODY_LEN, ROUTE_ID, SVC_ID, PRTY,\
+ SRC_SME_ID, DST_SME_ID, TXT_LENGTH)\
  VALUES (:ID, :ST, :MR, :OA, :DA, :DDA, :SVC_TYPE,\
  :SRC_MSC, :SRC_IMSI, :SRC_SME_N, :DST_MSC, :DST_IMSI, :DST_SME_N,\
  :VALID_TIME, :SUBMIT_TIME, :ATTEMPTS, :LAST_RESULT,\
  :LAST_TRY_TIME, :DR, :BR, :BODY, :BODY_LEN,\
- :ROUTE_ID, :SVC_ID, :PRTY)";
+ :ROUTE_ID, :SVC_ID, :PRTY, :SRC_SME_ID, :DST_SME_ID, :TXT_LENGTH)";
 void Archiver::prepareArchiveInsertStmt() throw(StorageException)
 {
     archiveInsertStmt = new Statement(storageConnection, 
@@ -669,6 +676,13 @@ void Archiver::prepareArchiveInsertStmt() throw(StorageException)
                             (sb4) sizeof(sms.serviceId));
     archiveInsertStmt->bind(i++, SQLT_INT, (dvoid *)&(sms.priority),
                             (sb4) sizeof(sms.priority));
+
+    archiveInsertStmt->bind(i++, SQLT_STR, (dvoid *) (sms.srcSmeId),
+                            (sb4) sizeof(sms.srcSmeId), &indSrcSmeId);
+    archiveInsertStmt->bind(i++, SQLT_STR, (dvoid *) (sms.dstSmeId),
+                            (sb4) sizeof(sms.dstSmeId), &indDstSmeId);
+    archiveInsertStmt->bind(i++, SQLT_UIN, (dvoid *)&(bodyTextLen),
+                            (sb4) sizeof(bodyTextLen));
 }
 
 /*CREATE OR REPLACE PROCEDURE CREATE_BILLING_RECORD 
@@ -747,9 +761,8 @@ void Archiver::prepareBillingInsertStmt() throw(StorageException)
     billingInsertStmt->bind(i++, SQLT_INT, (dvoid *)&(sms.serviceId),
                             (sb4) sizeof(sms.serviceId));
     
-    // Replace it by real text length !!!
-    billingInsertStmt->bind(i++, SQLT_UIN, (dvoid *)&(bodyBufferLen),
-                            (sb4) sizeof(bodyBufferLen));
+    billingInsertStmt->bind(i++, SQLT_UIN, (dvoid *)&(bodyTextLen),
+                            (sb4) sizeof(bodyTextLen));
 
 }
 

@@ -102,9 +102,10 @@ namespace smsc { namespace store
         SMSId       id;
         SMS         sms;
         
+        char        svcType[10];
+        unsigned    bodyTextLen;
         int         bodyBufferLen;
         uint8_t     bodyBuffer[MAX_BODY_LENGTH];
-        char        svcType[10];
         
         OCIDate     validTime;
         OCIDate     submitTime;
@@ -116,7 +117,8 @@ namespace smsc { namespace store
 
         sb2         indSrcMsc, indSrcImsi, indSrcSme;
         sb2         indDstMsc, indDstImsi, indDstSme;
-        sb2         indBody, indLastTime, indSvc, indRouteId;
+        sb2         indBody, indLastTime, indSvc;
+        sb2         indRouteId, indSrcSmeId, indDstSmeId;
 
         FullAddressValue    oa, da, dda;
         
