@@ -208,6 +208,31 @@ int main(int argc, char** argv)
     //printf("f=%s\n",str.c_str());
   }
 
+  {
+    SMS s;
+    char *msg="#template=emailsmenotify#{from}=\"vtiunov@scs-900.ru\" {to}=\"79139163330@scs-900.ru\" {subj}=\"Re: SMS-сообщение\" {body}=\"Здравствуйте 79139163330,.Wednesday, June25, 2003, 3:11:15 PM, от Вас получено:.7s9r> Абонентом МТС в Новосибирске.7s9r>Вам отправлено сообщение:.7s9r>--.7s9r> Kak dela?.С уважением,Тиунов Вадим.Группа эксплуатации дополнительныхуслуг.ЗАО Сибирские Сотовые Системы - 900.телефон: +7(3832)141038.e-mail: vtiunov@scs-900.ru\"";
+    short uni[2048];
+    int len=ConvertMultibyteToUCS2(msg,strlen(msg),uni,sizeof(uni),CONV_ENCODING_CP1251);
+    printf("len=%d\n",len);
+    s.setIntProperty(Tag::SMPP_DATA_CODING,8);
+    s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
+    s.setIntProperty(Tag::SMSC_DSTCODEPAGE,8);
+    s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)uni,len);
+    smsc::profiler::Profile p;
+    p.codepage=8;
+    p.locale="ru_ru";
+    try{
+      StateMachine::processDirectives(s,p,p);
+    }catch(...)
+    {
+      printf("processDirectives FAILED!!!\n");
+      return -1;
+    }
+    char buf[2048];
+    getSmsText(&s,buf,sizeof(buf));
+    printf("After directives:%s\n",buf);
+  }
+
 
   for(int t=0;t<sizeof(tst)/sizeof(Test);t++)
   {
@@ -260,20 +285,22 @@ int main(int argc, char** argv)
   }
   {
     SMS s;
-    s.setIntProperty(Tag::SMPP_DATA_CODING,0);
-    s.setIntProperty(Tag::SMPP_ESM_CLASS,0);
+    s.setIntProperty(Tag::SMPP_DATA_CODING,8);
+    s.setIntProperty(Tag::SMPP_ESM_CLASS,3);
     s.setIntProperty(Tag::SMSC_DSTCODEPAGE,0);
 
     s.setIntProperty(Tag::SMPP_SOURCE_PORT,12345);
     s.setIntProperty(Tag::SMPP_DESTINATION_PORT,11123);
 
     char msg[256];
-    for(int i=0;i<250;i++)
+    for(int i=0;i<250/2;i++)
     {
-      msg[i]='x';
+      msg[i*2]=0;
+      msg[i*2+1]=32;
     }
     msg[250]=0;
-    s.setBinProperty(Tag::SMSC_RAW_PAYLOAD,msg,strlen(msg));
+    msg[251]=0;
+    s.setBinProperty(Tag::SMSC_RAW_PAYLOAD,msg,250);
     int res=partitionSms(&s,0);
     if(res==psSingle)
     {

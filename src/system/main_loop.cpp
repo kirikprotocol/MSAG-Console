@@ -307,6 +307,7 @@ void Smsc::mainLoop()
         distlstsme->putCommand(cmd);
         continue;
       }
+      default:;
     }
     __require__(cmd.getProxy()==src_proxy);
     eventqueue.enqueue(id,cmd);

@@ -61,10 +61,10 @@ struct Profile{
 
 class ProfilesTable;
 
-static int pusUpdated=1;
-static int pusInserted=2;
-static int pusUnchanged=3;
-static int pusError=4;
+static const int pusUpdated=1;
+static const int pusInserted=2;
+static const int pusUnchanged=3;
+static const int pusError=4;
 
 class ProfilerInterface{
 public:

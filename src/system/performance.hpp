@@ -56,7 +56,7 @@ public:
 class PerformanceDataDispatcher:public PerformanceListener{
 public:
   PerformanceDataDispatcher(){}
-  ~PerformanceDataDispatcher()
+  virtual ~PerformanceDataDispatcher()
   {
     for(int i=0;i<sockets.Count();i++)
     {

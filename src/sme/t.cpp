@@ -86,7 +86,7 @@ int main(int argc,char* argv[])
   cfg.port=port;
   cfg.sid=argv[1];
   cfg.timeOut=10;
-  cfg.password=cfg.sid;
+  cfg.password=argc>4?argv[4]:cfg.sid;
   MyListener lst;
   SmppSession ss(cfg,&lst);
   try{

@@ -7,20 +7,20 @@
 #include <sms/sms.h>
 #include "StoreExceptions.h"
 
-namespace smsc { namespace store 
+namespace smsc { namespace store
 {
     using namespace smsc::sms;
-    
-    static void convertAddressToString(const Address& address, char* string)
+
+    static inline void convertAddressToString(const Address& address, char* string)
     {
         address.toString(string, MAX_FULL_ADDRESS_VALUE_LENGTH);
     };
-    static void convertStringToAddress(const char* string, Address& address)
+    static inline void convertStringToAddress(const char* string, Address& address)
     {
         Address converted(string);
         address = converted;
     };
-    
+
     class Connection;
     class Statement
     {
@@ -32,28 +32,28 @@ namespace smsc { namespace store
         OCISvcCtx   *svchp;
         OCIError    *errhp;
         OCIStmt     *stmt;
-        
+
     public:
-        
+
         static void convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date);
         static void convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date);
-        
-        Statement(Connection* connection, const char* sql, 
-                  bool assign=false) 
+
+        Statement(Connection* connection, const char* sql,
+                  bool assign=false)
             throw(StorageException);
         virtual ~Statement();
 
-        void check(sword status) 
+        void check(sword status)
             throw(StorageException);
-    
-        void bind(ub4 pos, ub2 type, 
-                  dvoid* placeholder, sb4 size, dvoid* indp = 0) 
+
+        void bind(ub4 pos, ub2 type,
+                  dvoid* placeholder, sb4 size, dvoid* indp = 0)
             throw(StorageException);
         void bind(CONST text* name, sb4 name_len, ub2 type,
                   dvoid* placeholder, sb4 size, dvoid* indp = 0)
             throw(StorageException);
-        
-        void define(ub4 pos, ub2 type, 
+
+        void define(ub4 pos, ub2 type,
                     dvoid* placeholder, sb4 size, dvoid* indp = 0)
             throw(StorageException);
 
@@ -63,7 +63,7 @@ namespace smsc { namespace store
 
         ub4 getRowsAffectedCount();
     };
-    
+
     using namespace smsc::sms;
 
     class IdStatement : public Statement
@@ -72,12 +72,12 @@ namespace smsc { namespace store
 
         OCINumber   smsId;
 
-        IdStatement(Connection* connection, const char* sql, 
-                    bool assign=false) 
+        IdStatement(Connection* connection, const char* sql,
+                    bool assign=false)
             throw(StorageException)
                 : Statement(connection, sql, assign) {};
     public:
-        
+
         virtual ~IdStatement() {};
 
         void setSMSId(const SMSId smsId)
@@ -85,22 +85,22 @@ namespace smsc { namespace store
         void getSMSId(SMSId &smsId)
             throw(StorageException);
     };
-    
+
     class GetIdStatement : public IdStatement
     {
     public:
 
-        GetIdStatement(Connection* connection, const char* sql, 
+        GetIdStatement(Connection* connection, const char* sql,
                        bool assign=false)
             throw(StorageException);
         virtual ~GetIdStatement() {};
     };
-    
+
     class SetIdStatement : public IdStatement
     {
     public:
 
-        SetIdStatement(Connection* connection, const char* sql, 
+        SetIdStatement(Connection* connection, const char* sql,
                        bool assign=false)
             throw(StorageException);
         virtual ~SetIdStatement() {};
@@ -110,24 +110,24 @@ namespace smsc { namespace store
     {
     static const char* sql;
     protected:
-        
+
         OCIDate     nextTime;
         OCIDate     validTime;
         OCIDate     submitTime;
-        
+
         int         bodyBufferLen;
         unsigned    bodyTextLen;
         uint8_t*    bodyBuffer;
-        
+
         char        bNeedArchivate;
-        
+
         sb2         indBody, indNextTime, indSvcType, indMsgRef;
         sb2         indRouteId, indSrcSmeId, indDstSmeId;
 
         FullAddressValue    oa, da, dda;
 
     public:
-        
+
         StoreStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~StoreStatement() {};
@@ -137,18 +137,18 @@ namespace smsc { namespace store
         void bindSms(SMS& sms)
             throw(StorageException);
     };
-    
+
     class NeedRejectStatement : public Statement
     {
     static const char* sql;
     protected:
 
         ub4 count;
-        
+
         FullAddressValue    oa, da;
-    
+
     public:
-        
+
         NeedRejectStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~NeedRejectStatement() {};
@@ -159,15 +159,15 @@ namespace smsc { namespace store
             throw(StorageException);
         void bindDestinationAddress(Address& da)
             throw(StorageException);
-        
+
         bool needReject();
     };
-    
+
     class NeedOverwriteStatement : public IdStatement
     {
     static const char* sql;
     protected:
-        
+
         FullAddressValue    oa, da;
 
         NeedOverwriteStatement(Connection* connection, const char* sql,
@@ -175,7 +175,7 @@ namespace smsc { namespace store
             throw(StorageException);
 
     public:
-        
+
         NeedOverwriteStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~NeedOverwriteStatement() {};
@@ -184,16 +184,16 @@ namespace smsc { namespace store
             throw(StorageException);
         void bindDestinationAddress(Address& da)
             throw(StorageException);
-        
+
         void getId(SMSId& id)
             throw(StorageException);
     };
-    
+
     class NeedOverwriteSvcStatement : public NeedOverwriteStatement
     {
     static const char* sql;
     public:
-        
+
         NeedOverwriteSvcStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~NeedOverwriteSvcStatement() {};
@@ -201,40 +201,40 @@ namespace smsc { namespace store
         void bindEServiceType(dvoid* type, sb4 size)
             throw(StorageException);
     };
-    
+
     class OverwriteStatement : public IdStatement
     {
     static const char* sql;
     protected:
-        
+
         OCINumber   newId;
 
         OCIDate     nextTime;
         OCIDate     validTime;
         OCIDate     submitTime;
-        
+
         int         bodyBufferLen;
         unsigned    bodyTextLen;
         uint8_t*    bodyBuffer;
-        
+
         char        bNeedArchivate;
-        
+
         sb2         indBody, indNextTime, indSvcType, indMsgRef;
         sb2         indRouteId, indSrcSmeId, indDstSmeId;
-    
+
     public:
 
         OverwriteStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~OverwriteStatement() {};
-        
+
         void bindOldId(SMSId id)
             throw(StorageException);
         void bindNewId(SMSId id)
             throw(StorageException);
         void bindSms(SMS& sms)
             throw(StorageException);
-        
+
         inline bool wasOverwrited() {
             return (getRowsAffectedCount() ? true:false);
         };
@@ -249,28 +249,28 @@ namespace smsc { namespace store
         OCIDate submitTime;
         OCIDate lastTime;
         OCIDate nextTime;
-        
+
         uint8_t uState;
-        
+
         int         bodyBufferLen;
         uint8_t     bodyBuffer[MAX_BODY_LENGTH];
-        
+
         char        bNeedArchivate;
-        
+
         sb2         indSrcMsc, indSrcImsi, indSrcSme;
         sb2         indDstMsc, indDstImsi, indDstSme;
         sb2         indSvc, indBody, indLastTime, indNextTime;
         sb2         indRouteId, indSrcSmeId, indDstSmeId, indMsgRef;
 
         FullAddressValue    oa, da, dda;
-    
+
         RetrieveStatement(Connection* connection, const char* sql,
-                         bool assign=true) 
-            throw(StorageException) 
+                         bool assign=true)
+            throw(StorageException)
                 : IdStatement(connection, sql, assign) {};
-    
+
     public:
-        
+
         RetrieveStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~RetrieveStatement() {};
@@ -281,24 +281,24 @@ namespace smsc { namespace store
             throw(StorageException);
         bool getSms(SMS& sms);
     };
-    
+
     class DestroyStatement : public IdStatement
     {
     static const char* sql;
     public:
-        
+
         DestroyStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~DestroyStatement() {};
 
         void bindId(SMSId id)
             throw(StorageException);
-        
+
         inline bool wasDestroyed() {
             return (getRowsAffectedCount() ? true:false);
         };
     };
-    
+
     class RetrieveBodyStatement : public IdStatement
     {
     static const char* sql;
@@ -307,9 +307,9 @@ namespace smsc { namespace store
         int                 bodyBufferLen;
         uint8_t             bodyBuffer[MAX_BODY_LENGTH];
         sb2                 indBody;
-        
+
         FullAddressValue    oa;
-        
+
     public:
 
         RetrieveBodyStatement(Connection* connection, bool assign=true)
@@ -320,7 +320,7 @@ namespace smsc { namespace store
             throw(StorageException);
         void bindOriginatingAddress(const Address& oa)
             throw(StorageException);
-        
+
         int getBodyLength(void)
             throw(StorageException);
         bool getBody(Body& body)
@@ -331,10 +331,10 @@ namespace smsc { namespace store
     {
     static const char* sql;
     protected:
-        
+
         OCIDate     vTime;
         OCIDate     wTime;
-        
+
         int         bodyBufferLen;
         unsigned    bodyTextLen;
         uint8_t*    bodyBuffer;
@@ -346,11 +346,11 @@ namespace smsc { namespace store
         ReplaceStatement(Connection* connection, const char* sql,
                          bool assign=true) throw(StorageException);
     public:
-        
+
         ReplaceStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~ReplaceStatement() {};
-        
+
         void bindId(SMSId id)
             throw(StorageException);
         void bindOriginatingAddress(const Address& oa)
@@ -363,66 +363,66 @@ namespace smsc { namespace store
             throw(StorageException);
         void bindWaitTime(time_t waitTime)
             throw(StorageException);
-        
+
         inline bool wasReplaced() {
-            return (getRowsAffectedCount() ? true:false); 
+            return (getRowsAffectedCount() ? true:false);
         };
     };
-    
+
     class ReplaceVTStatement : public ReplaceStatement
     {
     static const char* sql;
     public:
-        
+
         ReplaceVTStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~ReplaceVTStatement() {};
     };
-    
+
     class ReplaceWTStatement : public ReplaceStatement
     {
     static const char* sql;
     public:
-        
+
         ReplaceWTStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~ReplaceWTStatement() {};
     };
-    
+
     class ReplaceVWTStatement : public ReplaceStatement
     {
     static const char* sql;
     public:
-        
+
         ReplaceVWTStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~ReplaceVWTStatement() {};
     };
-    
+
     class ReplaceAllStatement : public ReplaceStatement
     {
     static const char* sql;
     protected:
-        
+
         sb2         indMsgRef;
 
     public:
-        
+
         ReplaceAllStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~ReplaceAllStatement() {};
-    
+
         void bindSms(SMS& sms)
             throw(StorageException);
     };
-    
+
     class ToEnrouteStatement : public IdStatement
     {
     static const char* sql;
     protected:
-        
+
         OCIDate nextTime, currTime;
-        
+
         sb2     indDstMsc, indDstImsi;
         uint8_t attemptsIncrement;
 
@@ -447,7 +447,7 @@ namespace smsc { namespace store
             return (getRowsAffectedCount() ? true:false);
         };
     };
-    
+
     class ToFinalStatement : public IdStatement
     {
     static const char* sql;
@@ -455,23 +455,23 @@ namespace smsc { namespace store
 
         OCIDate submitTime, validTime, lastTime, nextTime;
         sb2     indLastTime, indNextTime;
-        sb2     indSvcType, indDstMsc, indDstImsi; 
+        sb2     indSvcType, indDstMsc, indDstImsi;
         sb2     indRouteId, indSrcSmeId, indDstSmeId, indBody;
-        
+
         FullAddressValue    oa, da, dda;
 
         int         bodyTextLen, bodyBufferLen;
         uint8_t*    bodyBuffer;
 
     public:
-        
+
         ToFinalStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~ToFinalStatement() {};
 
         void bindSms(SMSId id, SMS& sms)
             throw(StorageException);
-        
+
         inline bool wasFinalized() {
             return (getRowsAffectedCount() ? true:false);
         };
@@ -499,23 +499,23 @@ namespace smsc { namespace store
             return (getRowsAffectedCount() ? true:false);
         };
     };
-    
+
     class ConcatDataStatement : public Statement
     {
     static const char* sql;
     protected:
-        
+
         FullAddressValue    dstAddr;
         int8_t              msgRef;
-        
+
     public:
 
         ConcatDataStatement(Connection* connection, bool assign=false)
             throw(StorageException);
         ~ConcatDataStatement() {};
-        
+
         void setDestination(const Address& dda);
-        
+
         uint8_t getMessageReference() {
             return msgRef;
         }
@@ -526,51 +526,51 @@ namespace smsc { namespace store
     static const char* sql_raw;
     static const char* sql_immediate;
     private:
-        
+
         OCIDate     rTime, nextTime;
         sb2         indNextTime;
         uint32_t    lastResult;
 
     public:
 
-        ReadyByNextTimeStatement(Connection* connection, 
+        ReadyByNextTimeStatement(Connection* connection,
                                  bool immediate=false, bool assign=false)
             throw(StorageException);
         virtual ~ReadyByNextTimeStatement() {};
-        
+
         void bindRetryTime(time_t retryTime)
             throw(StorageException);
         time_t getNextTime()
             throw(StorageException);
     };
-    
+
     class CancelIdsStatement : public IdStatement
     {
     static const char* sql1;
     static const char* sql2;
     private:
-        
+
         FullAddressValue    oa, da;
 
     public:
 
         CancelIdsStatement(Connection* connection,
-                           const Address& _oa, const Address& _da, 
+                           const Address& _oa, const Address& _da,
                            const char* svc = 0, bool assign=false)
             throw(StorageException);
         virtual ~CancelIdsStatement() {};
     };
-    
+
     class DeliveryIdsStatement : public IdStatement
     {
     static const char* sql;
     private:
-        
+
         FullAddressValue    da;
 
     public:
 
-        DeliveryIdsStatement(Connection* connection, 
+        DeliveryIdsStatement(Connection* connection,
                            const Address& _da, bool assign=false)
             throw(StorageException);
         virtual ~DeliveryIdsStatement() {};
@@ -580,7 +580,7 @@ namespace smsc { namespace store
     {
     static const char* sql;
     private:
-        
+
         OCIDate minNextTime;
         sb2     indNextTime;
 
@@ -589,7 +589,7 @@ namespace smsc { namespace store
         MinNextTimeStatement(Connection* connection, bool assign=false)
             throw(StorageException);
         virtual ~MinNextTimeStatement() {};
-        
+
         time_t getMinNextTime()
             throw(StorageException);
     };
@@ -601,8 +601,8 @@ namespace smsc { namespace store
         OCILobLocator*  locator;
         sb2             indBody;
 
-        BodyStatement(Connection* connection, const char* sql, 
-                      bool assign=false) 
+        BodyStatement(Connection* connection, const char* sql,
+                      bool assign=false)
             throw(StorageException);
     public:
 
@@ -613,8 +613,8 @@ namespace smsc { namespace store
     {
     static const char* sql;
     public:
-        
-        SetBodyStatement(Connection* connection, bool assign=true) 
+
+        SetBodyStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~SetBodyStatement() {};
 
@@ -626,24 +626,24 @@ namespace smsc { namespace store
     {
     static const char* sql;
     public:
-        
-        GetBodyStatement(Connection* connection, bool assign=true) 
+
+        GetBodyStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~GetBodyStatement() {};
-        
+
         bool getBody(Body& body)
             throw(StorageException);
     };
-    
+
     class DestroyBodyStatement : public BodyStatement
     {
     static const char* sql;
     public:
-        
-        DestroyBodyStatement(Connection* connection, bool assign=true) 
+
+        DestroyBodyStatement(Connection* connection, bool assign=true)
             throw(StorageException);
         virtual ~DestroyBodyStatement() {};
-        
+
         bool destroyBody()
             throw(StorageException);
     };

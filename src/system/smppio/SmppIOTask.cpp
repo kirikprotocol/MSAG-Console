@@ -756,10 +756,10 @@ int SmppOutputThread::Execute()
         cnt++;
       }
     }
-    trace2("found %d sockets wanting to send data",cnt);
+    //trace2("found %d sockets wanting to send data",cnt);
     if(!cnt)
     {
-      trace("out: wait for data");
+      //trace("out: wait for data");
       //mon.Unlock();
       mon.wait(2000);
       mon.Unlock();

@@ -51,7 +51,7 @@ struct DistrList {
   char dl_name[21];
 };
 
-static bool HSNS_isEqual()
+static inline bool HSNS_isEqual()
 {
   static bool isEqual = (htons(0x1234) == 0x1234);
   return isEqual;

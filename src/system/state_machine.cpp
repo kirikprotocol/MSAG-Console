@@ -1519,27 +1519,29 @@ StateType StateMachine::forward(Tuple& t)
     }
     Address dst=sms.getDealiasedDestinationAddress();
     sms.setDestinationAddress(dst);
-    if(!sms.hasBinProperty(Tag::SMSC_CONCATINFO)  && sms.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3)
+    if(!sms.hasBinProperty(Tag::SMSC_CONCATINFO))
     {
-
-      if(sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)==smsc::profiler::ProfileCharsetOptions::Default &&
-         sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
+      if(sms.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3)
       {
-        transLiterateSms(&sms);
-        if(sms.hasIntProperty(Tag::SMSC_ORIGINAL_DC))
+        if(sms.getIntProperty(Tag::SMSC_DSTCODEPAGE)==smsc::profiler::ProfileCharsetOptions::Default &&
+           sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
         {
-          int dc=sms.getIntProperty(Tag::SMSC_ORIGINAL_DC);
-          int olddc=dc;
-          if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
+          transLiterateSms(&sms);
+          if(sms.hasIntProperty(Tag::SMSC_ORIGINAL_DC))
           {
-            dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
+            int dc=sms.getIntProperty(Tag::SMSC_ORIGINAL_DC);
+            int olddc=dc;
+            if((dc&0xc0)==0 || (dc&0xf0)==0xf0) //groups 00xx and 1111
+            {
+              dc&=0xf3; //11110011 - clear 2-3 bits (set alphabet to default).
 
-          }else if((dc&0xf0)==0xe0)
-          {
-            dc=0xd0 | (dc&0x0f);
+            }else if((dc&0xf0)==0xe0)
+            {
+              dc=0xd0 | (dc&0x0f);
+            }
+            sms.setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
+            __trace2__("FORWARD: transliterate olddc(%x)->dc(%x)",olddc,dc);
           }
-          sms.setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
-          __trace2__("FORWARD: transliterate olddc(%x)->dc(%x)",olddc,dc);
         }
       }
     }else
