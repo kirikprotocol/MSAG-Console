@@ -46,7 +46,7 @@ int main(int argc,char* argv[])
         char buf[64];
         sprintf(buf,".0.1.%d",1+(i+1)%10);
         s.setOriginatingAddress(buf);
-        sprintf(buf,".0.1.%d",1+(i+6)%10);
+        sprintf(buf,".0.1.100%d",1+(i+6)%10);
         s.setDestinationAddress(buf);
         s.lastTime=time(NULL);
         idx.IndexateSms(".",100+i,100000+i,s);
