@@ -21,11 +21,11 @@ void PduDataObject::ref()
 {
 	//без mutex
 	count++;
-	//__trace2__("PduDataObject::ref(): this = %p, count = %d", this, count);
+	__trace2__("PduDataObject::ref(): this = %p, count = %d", this, count);
 }
 void PduDataObject::unref()
 {
-	//__trace2__("PduDataObject::unref(): this = %p, count = %d", this, count);
+	__trace2__("PduDataObject::unref(): this = %p, count = %d", this, count);
 	__require__(count > 0);
 	//без mutex
 	count--;
