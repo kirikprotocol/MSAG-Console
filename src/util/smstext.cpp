@@ -177,7 +177,6 @@ int partitionSms(SMS* sms,int dstdc)
   {
     msg=sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
   }
-  if(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)return psErrorUdhi;
   __trace2__("partitionSms: len=%d, dc=%d, dstdc=%d",len,dc,dstdc);
   auto_ptr<char> buf8;
   auto_ptr<char> bufTr;
@@ -197,6 +196,7 @@ int partitionSms(SMS* sms,int dstdc)
     maxfulllen=160;
   }
   if(len<maxfulllen)return psSingle;
+  if(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)return psErrorUdhi;
   int parts=len/maxlen+(len%maxlen?1:0);
   if(parts>256)return psErrorLength;
   __trace2__("partitionSms: newlen=%d, parts=%d, maxlen=%d",len,parts,maxlen);
