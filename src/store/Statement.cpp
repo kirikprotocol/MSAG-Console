@@ -106,12 +106,12 @@ ub4 Statement::getRowsAffectedCount()
 
 void Statement::convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date)
 {
-    tm* dt = localtime(sms_date);
+    tm dt; localtime_r(sms_date, &dt);
 
-    OCIDateSetDate(oci_date, (sb2)(1900+dt->tm_year), 
-                   (ub1)(1+dt->tm_mon), (ub1)(dt->tm_mday));
-    OCIDateSetTime(oci_date, (ub1)(dt->tm_hour), 
-                   (ub1)(dt->tm_min), (ub1)(dt->tm_sec));
+    OCIDateSetDate(oci_date, (sb2)(1900+dt.tm_year), 
+                   (ub1)(1+dt.tm_mon), (ub1)(dt.tm_mday));
+    OCIDateSetTime(oci_date, (ub1)(dt.tm_hour), 
+                   (ub1)(dt.tm_min), (ub1)(dt.tm_sec));
 }
 void Statement::convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date)
 {
