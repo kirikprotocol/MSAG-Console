@@ -262,6 +262,7 @@ void MapIoTask::init(unsigned timeout)
     __map_trace2__("SSN Bind error 0x%hx",bind_res);
     throw runtime_error("bind error");
   }
+  sleep(1);
   bind_res = Et96MapBindReq(MY_USER_ID, USSD_SSN);
   if (bind_res!=ET96MAP_E_OK) {
     __map_trace2__("USSD Bind error 0x%hx",bind_res);
