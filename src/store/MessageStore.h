@@ -22,6 +22,7 @@ namespace smsc { namespace store
     {
     protected: Iterator() {};
     public:
+        virtual ~Iterator() {};
 
         virtual bool next()
             throw(StorageException) = 0;
@@ -31,6 +32,8 @@ namespace smsc { namespace store
     {
     protected: IdIterator() : Iterator() {};
     public:
+
+        virtual ~IdIterator() {};
 
         virtual SMSId  getId()
             throw(StorageException) = 0;
@@ -49,6 +52,7 @@ namespace smsc { namespace store
     protected: TimeIdIterator() : IdIterator() {};
     public:
 
+        virtual ~TimeIdIterator() {};
         virtual time_t getTime()
             throw(StorageException) = 0;
     };
