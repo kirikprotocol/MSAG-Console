@@ -3,6 +3,7 @@
 
 #include "smpp/smpp_structures.h"
 #include "test/sms/SmsUtil.hpp"
+#include "core/synchronization/Mutex.hpp"
 #include <ctime>
 #include <string>
 #include <vector>
@@ -12,6 +13,8 @@ namespace test {
 namespace core {
 
 using smsc::smpp::SmppHeader;
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
 using std::string;
 using std::vector;
 
@@ -43,7 +46,7 @@ class PduReceiptFlag
 	time_t endTime; //окончание доставки pdu
 	time_t lastTime;
 
-	time_t eval(time_t time, int& attempt, time_t& diff);
+	time_t eval(time_t time, int& attempt, time_t& diff) const;
 
 public:
 	PduReceiptFlag(int flg, time_t start, time_t end) :
@@ -59,15 +62,22 @@ public:
 	bool operator== (int _flag) { return (flag == _flag); }
 	bool operator!= (int _flag) { return (flag != _flag); }
 
+	time_t getNextTime(time_t t) const;
+
 	/**
-	 * Обновляет текущий статус и проверяет:
+	 * Проверки:
 	 * <ul>
 	 * <li>время получения укладывается в допустимый интервал
 	 * <li>нет пропусков при повторных доставках
 	 * <li>дублированные или неразрешенные pdu
 	 * </ul>
 	 */
-	vector<int> update(time_t recvTime, bool accepted, time_t& nextTime);
+	vector<int> checkSchedule(time_t recvTime) const;
+
+	/**
+	 * Обновляет текущий статус
+	 */
+	vector<int> update(time_t recvTime, bool accepted);
 
 	bool isPduMissing(time_t checkTime);
 
@@ -79,12 +89,16 @@ public:
  */
 struct PduData
 {
+	static Mutex mutex;
+	static uint32_t counter;
+	uint32_t id; //внутренний уникальный номер pdu
 	string smsId;
 	const uint16_t msgRef;
 	const time_t submitTime;
 	const time_t waitTime;
 	const time_t validTime;
 	SmppHeader* pdu;
+	uint32_t deliveryStatus;
 	int responseFlag; //флаг получения респонса
 	PduReceiptFlag deliveryFlag; //флаг получения сообщения получателем
 	PduReceiptFlag deliveryReceiptFlag; //флаг получения подтверждения доставки
@@ -96,20 +110,15 @@ struct PduData
 		time_t _validTime, SmppHeader* _pdu, const string _smsId = "")
 		: smsId(_smsId), msgRef(_msgRef), submitTime(_submitTime),
 		waitTime(_waitTime), validTime(_validTime), pdu(_pdu),
-		responseFlag(PDU_REQUIRED_FLAG),
+		deliveryStatus(0), responseFlag(PDU_REQUIRED_FLAG),
 		deliveryFlag(PDU_REQUIRED_FLAG, waitTime, validTime),
 		deliveryReceiptFlag(PDU_REQUIRED_FLAG, waitTime, validTime),
 		intermediateNotificationFlag(PDU_REQUIRED_FLAG),
-		replacePdu(NULL), replacedByPdu(NULL) {}
-
-	PduData(const PduData& data)
-		: smsId(data.smsId), msgRef(data.msgRef), submitTime(data.submitTime),
-		waitTime(data.waitTime), validTime(data.validTime),
-		pdu(data.pdu), responseFlag(data.responseFlag),
-		deliveryFlag(data.deliveryFlag),
-		deliveryReceiptFlag(data.deliveryReceiptFlag),
-		intermediateNotificationFlag(data.intermediateNotificationFlag),
-		replacePdu(data.replacePdu), replacedByPdu(data.replacedByPdu) {}
+		replacePdu(NULL), replacedByPdu(NULL)
+	{
+		MutexGuard mguard(mutex);
+		id = counter++;
+	}
 
 	~PduData()
 	{
