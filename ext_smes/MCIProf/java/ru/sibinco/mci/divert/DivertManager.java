@@ -241,7 +241,7 @@ public class DivertManager extends Thread
         try {
           if (os != null) { writeTelnetLine("EXIT;");  logger.info("Exit sent to MSC"); }
           while (is != null && is.available() > 0 && (is.read() != -1)); // skip responce
-        } catch (IOException e) { logger.error("MSC is exit error", e); }
+        } catch (IOException e) { logger.error("MSC exit error", e); }
       }
       try { if (is != null) is.close(); } catch (IOException e) { logger.error("MSC is close error", e); }
       try { if (os != null) os.close(); } catch (IOException e) { logger.error("MSC os close error", e); }
