@@ -23,13 +23,25 @@ using namespace smsc::core::synchronization;
 
 class GatewaySme:public SmeProxy,public ThreadedTask{
 public:
-  GatewaySme(SmeConfig cfg,smsc::smeman::SmeRegistrar* sr):lst(*this),sess(cfg,&lst),sesscfg(cfg),smereg(sr)
+  GatewaySme(const SmeConfig& cfg,smsc::smeman::SmeRegistrar* sr,const std::string& bh,int bp):lst(*this),sess(cfg,&lst),sesscfg(cfg),smereg(sr)
   {
     managerMonitor=NULL;
     connected=false;
     log=smsc::logger::Logger::getInstance("gwsme");
     seq=0;
     prefix=255;
+    cfgIdx=0;
+    hosts[0]=cfg.host;
+    ports[0]=cfg.port;
+    if(bh.length()>0)
+    {
+      hosts[1]=bh;
+      ports[1]=bp;
+    }else
+    {
+      hosts[1]=cfg.host;
+      ports[1]=cfg.port;
+    }
   }
 
   ~GatewaySme()
@@ -196,6 +208,9 @@ protected:
   PduListener lst;
   SmppSession sess;
   SmeConfig sesscfg;
+  std::string hosts[2];
+  int ports[2];
+  int cfgIdx;
   smsc::smeman::SmeRegistrar* smereg;
   bool connected;
   smsc::logger::Logger* log;

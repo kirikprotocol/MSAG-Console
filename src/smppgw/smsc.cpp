@@ -453,7 +453,7 @@ void Smsc::init(const SmscConfigs& cfg)
       gwcfg.sid=(val=std::auto_ptr<char>(cv->getString((*it+".systemId").c_str()))).get();;
       gwcfg.password=(val=std::auto_ptr<char>(cv->getString((*it+".password").c_str()))).get();;
       gwcfg.smppTimeOut=cv->getInt((*it+".responseTimeout").c_str());
-      GatewaySme *gwsme=new GatewaySme(gwcfg,&smeman);
+      GatewaySme *gwsme=new GatewaySme(gwcfg,&smeman,cv->getString((*it+".altHost").c_str()),cv->getInt((*it+".altPort").c_str()));
       gwsme->setId(*it,smeman.lookup(*it));
       uint8_t uid=cv->getInt((*it+".uniqueMsgIdPrefix").c_str());
       if(gwSmeMap[uid])

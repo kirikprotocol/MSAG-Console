@@ -9,11 +9,31 @@ int GatewaySme::Execute()
   while(!isStopping)
   {
     try{
+      if(cfgIdx>1)cfgIdx=0;
+      sesscfg.host=hosts[cfgIdx];
+      sesscfg.port=ports[cfgIdx];
+      info2(log,"Connecting to %s:%d, systemId=%s",sesscfg.host.c_str(),sesscfg.port,sesscfg.sid.c_str());
+      sess.setConfig(sesscfg);
       sess.connect();
     }catch(smsc::sme::SmppConnectException& e)
     {
+      SmscCommand cmd;
+      {
+        MutexGuard gIn(mutexout);
+        MutexGuard gOut(mutexin);
+        while(outqueue.Count()>0)
+        {
+          outqueue.Pop(cmd);
+          if(cmd->get_commandId()==SUBMIT)
+          {
+            inqueue.Push(SmscCommand::makeSubmitSmResp("0",cmd->get_dialogId(),smsc::system::Status::SYSERR));
+          }
+        }
+      }
+
       warn2(log,"failed to connect to smsc at %s:%d, reason - %s",sesscfg.host.c_str(),sesscfg.port,e.what());
       smsc::util::millisleep(2000);
+      cfgIdx++;
       continue;
     }
     debug1(log,"connected to smsc");
@@ -24,7 +44,7 @@ int GatewaySme::Execute()
       SmscCommand cmd;
       {
         MutexGuard g(mutexout);
-        while(!isStopping && outqueue.Count()==0)mutexout.wait(1000);
+        while(!isStopping && isConnected() && outqueue.Count()==0)mutexout.wait(1000);
         if(isStopping || !isConnected())break;
         outqueue.Pop(cmd);
       }
@@ -52,6 +72,8 @@ int GatewaySme::Execute()
       }
       disposePdu(pdu);
     }
+    sess.close();
+    cfgIdx++;
   }
   return 0;
 }
