@@ -154,12 +154,12 @@ bool TaskProcessor::remTask(std::string taskId)
         MutexGuard guard(tasksLock);
         const char* task_id = taskId.c_str();
         if (!task_id || task_id[0] == '\0' || !tasks.Exists(task_id)) return false;
-        Task* task = tasks.Get(task_id);
-        if (!task) return false;
+        task = tasks.Get(task_id);
         tasks.Delete(task_id);
+        if (!task) return false;
+        awake.Signal();
     }
-    task->finalize();
-    awake.Signal();
+    if (task) task->finalize();
     return true;
 }
 bool TaskProcessor::delTask(std::string taskId)
@@ -169,12 +169,12 @@ bool TaskProcessor::delTask(std::string taskId)
         MutexGuard guard(tasksLock);
         const char* task_id = taskId.c_str();
         if (!task_id || task_id[0] == '\0' || !tasks.Exists(task_id)) return false;
-        Task* task = tasks.Get(task_id);
-        if (!task) return false;
+        task = tasks.Get(task_id);
         tasks.Delete(task_id);
+        if (!task) return false;
         awake.Signal();
     }
-    return task->destroy();
+    return (task) ? task->destroy():false;
 }
 bool TaskProcessor::hasTask(std::string taskId)
 {
