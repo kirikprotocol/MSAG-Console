@@ -59,6 +59,10 @@
 <col width="99%">
 <% int rowN = 0;%>
 <tr class=row<%=rowN++&1%>>
+  <th>address</th>
+  <td><input class=txt name=address value="<%=StringEncoderDecoder.encode(bean.getAddress())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
   <th>Service type</th>
   <td><input class=txt name=svcType value="<%=StringEncoderDecoder.encode(bean.getSvcType())%>"></td>
 </tr>
@@ -67,22 +71,52 @@
   <td><input class=txt name=protocolId value="<%=StringEncoderDecoder.encode(bean.getProtocolId())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Internal data provider</th>
-  <td><select name=dataProviderDsInternal><%
-    for (Iterator i = bean.getAllDataProviders().iterator(); i.hasNext();) {
-      String providerName = (String) i.next();
-      String providerNameEnc = StringEncoderDecoder.encode(providerName);
-      %><option value="<%=providerNameEnc%>" <%=providerName.equals(bean.getDataProviderDsInternal()) ? "selected" : ""%>><%=providerNameEnc%></option><%
-    }
-  %></select></td>
+  <th>Unresponded messages max</th>
+  <td><input class=txt name=unrespondedMessagesMax value="<%=StringEncoderDecoder.encode(bean.getUnrespondedMessagesMax())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Thread pool max</th>
-  <td><input class=txt name=threadPoolMax value="<%=StringEncoderDecoder.encode(bean.getThreadPoolMax())%>"></td>
+  <th>Unresponded messages sleep</th>
+  <td><input class=txt name=unrespondedMessagesSleep value="<%=StringEncoderDecoder.encode(bean.getUnrespondedMessagesSleep())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Thread pool init</th>
-  <td><input class=txt name=threadPoolInit value="<%=StringEncoderDecoder.encode(bean.getThreadPoolInit())%>"></td>
+  <th>Response wait time</th>
+  <td><input class=txt name=responceWaitTime value="<%=StringEncoderDecoder.encode(bean.getResponceWaitTime())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Receipt wait time</th>
+  <td><input class=txt name=receiptWaitTime value="<%=StringEncoderDecoder.encode(bean.getReceiptWaitTime())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Tasks task tables prefix</th>
+  <td><input class=txt name=tasksTaskTablesPrefix value="<%=StringEncoderDecoder.encode(bean.getTasksTaskTablesPrefix())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Tasks switch timeout</th>
+  <td><input class=txt name=tasksSwitchTimeout value="<%=StringEncoderDecoder.encode(bean.getTasksSwitchTimeout())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Tasks thread pool max</th>
+  <td><input class=txt name=tasksThreadPoolMax value="<%=StringEncoderDecoder.encode(bean.getTasksThreadPoolMax())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Tasks thread pool init</th>
+  <td><input class=txt name=tasksThreadPoolInit value="<%=StringEncoderDecoder.encode(bean.getTasksThreadPoolInit())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Events thread pool max</th>
+  <td><input class=txt name=eventsThreadPoolMax value="<%=StringEncoderDecoder.encode(bean.getEventsThreadPoolMax())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Events thread pool init</th>
+  <td><input class=txt name=eventsThreadPoolInit value="<%=StringEncoderDecoder.encode(bean.getEventsThreadPoolInit())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Admin host</th>
+  <td><input class=txt name=adminHost value="<%=StringEncoderDecoder.encode(bean.getAdminHost())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>Admin port</th>
+  <td><input class=txt name=adminPort value="<%=StringEncoderDecoder.encode(bean.getAdminPort())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>SMSC host</th>
@@ -104,13 +138,41 @@
   <th>SMSC connection password</th>
   <td><input class=txt name=smscPassword value="<%=StringEncoderDecoder.encode(bean.getSmscPassword())%>"></td>
 </tr>
+</table>
+<div class=page_subtitle>System data source</div>
+<table class=properties_list <%rowN=0;%>>
+<col width="10%">
 <tr class=row<%=rowN++&1%>>
-  <th>Tasks switch timeout</th>
-  <td><input class=txt name=tasksSwitchTimeout value="<%=StringEncoderDecoder.encode(bean.getTasksSwitchTimeout())%>"></td>
+  <th>Data source type</th>
+  <td><input class=txt name=systemDataSourceType value="<%=StringEncoderDecoder.encode(bean.getSystemDataSourceType())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Tasks task tables prefix</th>
-  <td><input class=txt name=tasksTaskTablesPrefix value="<%=StringEncoderDecoder.encode(bean.getTasksTaskTablesPrefix())%>"></td>
+  <th>Connections</th>
+  <td><input class=txt name=systemDataSourceConnections value="<%=StringEncoderDecoder.encode(bean.getSystemDataSourceConnections())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>DB instance</th>
+  <td><input class=txt name=systemDataSourceDbInstance value="<%=StringEncoderDecoder.encode(bean.getSystemDataSourceDbInstance())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>DB user name</th>
+  <td><input class=txt name=systemDataSourceDbUserName value="<%=StringEncoderDecoder.encode(bean.getSystemDataSourceDbUserName())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>DB user password</th>
+  <td><input class=txt name=systemDataSourceDbUserPassword value="<%=StringEncoderDecoder.encode(bean.getSystemDataSourceDbUserPassword())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th><label for=watchdog>Watchdog</label></th>
+  <td><input class=check type=checkbox name=systemDataSourceWatchdog id=watchdog value=true <%=bean.isSystemDataSourceWatchdog() ? "checked" : ""%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>JDBC driver</th>
+  <td><input class=txt name=systemDataSourceJdbcDriver value="<%=StringEncoderDecoder.encode(bean.getSystemDataSourceJdbcDriver())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>JDBC source</th>
+  <td><input class=txt name=systemDataSourceJdbcSource value="<%=StringEncoderDecoder.encode(bean.getSystemDataSourceJdbcSource())%>"></td>
 </tr>
 </table>
 </div><%

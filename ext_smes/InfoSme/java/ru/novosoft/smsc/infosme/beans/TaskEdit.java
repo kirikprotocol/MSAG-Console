@@ -41,7 +41,11 @@ public class TaskEdit extends InfoSmeBean
   private String template = null;
   private int dsOwnTimeout = 0;
   private int dsIntTimeout = 0;
-  private int uncommited = 0;
+  private int messagesCacheSize = 0;
+  private int messagesCacheSleep = 0;
+  private boolean transactionMode = false;
+  private int uncommitedInGeneration = 0;
+  private int uncommitedInProcess = 0;
 
   protected int init(List errors)
   {
@@ -74,7 +78,11 @@ public class TaskEdit extends InfoSmeBean
           template = getConfig().getString(prefix + ".template");
           dsOwnTimeout = getConfig().getInt(prefix + ".dsOwnTimeout");
           dsIntTimeout = getConfig().getInt(prefix + ".dsIntTimeout");
-          uncommited = getConfig().getInt(prefix + ".uncommited");
+          messagesCacheSize = getConfig().getInt(prefix + ".messagesCacheSize");
+          messagesCacheSleep = getConfig().getInt(prefix + ".messagesCacheSleep");
+          transactionMode = getConfig().getBool(prefix + ".transactionMode");
+          uncommitedInGeneration = getConfig().getInt(prefix + ".uncommitedInGeneration");
+          uncommitedInProcess = getConfig().getInt(prefix + ".uncommitedInProcess");
         } catch (Exception e) {
           logger.error(e);
           return error(e.getMessage());
@@ -141,7 +149,12 @@ public class TaskEdit extends InfoSmeBean
     getConfig().setString(prefix + ".template", template);
     getConfig().setInt(prefix + ".dsOwnTimeout", dsOwnTimeout);
     getConfig().setInt(prefix + ".dsIntTimeout", dsIntTimeout);
-    getConfig().setInt(prefix + ".uncommited", uncommited);
+    getConfig().setInt(prefix + ".messagesCacheSize", messagesCacheSize);
+    getConfig().setInt(prefix + ".messagesCacheSleep", messagesCacheSleep);
+    getConfig().setBool(prefix + ".transactionMode", transactionMode);
+    getConfig().setInt(prefix + ".uncommitedInGeneration", uncommitedInGeneration);
+    getConfig().setInt(prefix + ".uncommitedInProcess", uncommitedInProcess);
+
     return RESULT_DONE;
   }
 
@@ -395,16 +408,6 @@ public class TaskEdit extends InfoSmeBean
     this.dsIntTimeout = dsIntTimeout;
   }
 
-  public int getUncommitedInt()
-  {
-    return uncommited;
-  }
-
-  public void setUncommitedInt(int uncommited)
-  {
-    this.uncommited = uncommited;
-  }
-
   public String getDsOwnTimeout()
   {
     return String.valueOf(dsOwnTimeout);
@@ -418,7 +421,6 @@ public class TaskEdit extends InfoSmeBean
       logger.error("Couldn't set dsOwnTimeout to value \"" + dsOwnTimeout + "\"", e);
       this.dsOwnTimeout = 0;
     }
-    ;
   }
 
   public String getDsIntTimeout()
@@ -431,24 +433,118 @@ public class TaskEdit extends InfoSmeBean
     try {
       this.dsIntTimeout = Integer.decode(dsIntTimeout).intValue();
     } catch (Throwable e) {
-      logger.error("Couldn't set priority to value \"" + dsIntTimeout + "\"", e);
+      logger.error("Couldn't set dsIntTimeout to value \"" + dsIntTimeout + "\"", e);
       this.dsIntTimeout = 0;
     }
-    ;
   }
 
-  public String getUncommited()
+  public int getMessagesCacheSizeInt()
   {
-    return String.valueOf(uncommited);
+    return messagesCacheSize;
   }
 
-  public void setUncommited(String uncommited)
+  public void setMessagesCacheSizeInt(int messagesCacheSize)
+  {
+    this.messagesCacheSize = messagesCacheSize;
+  }
+
+  public int getMessagesCacheSleepInt()
+  {
+    return messagesCacheSleep;
+  }
+
+  public void setMessagesCacheSleepInt(int messagesCacheSleep)
+  {
+    this.messagesCacheSleep = messagesCacheSleep;
+  }
+
+  public boolean isTransactionMode()
+  {
+    return transactionMode;
+  }
+
+  public void setTransactionMode(boolean transactionMode)
+  {
+    this.transactionMode = transactionMode;
+  }
+
+  public int getUncommitedInGenerationInt()
+  {
+    return uncommitedInGeneration;
+  }
+
+  public void setUncommitedInGenerationInt(int uncommitedInGeneration)
+  {
+    this.uncommitedInGeneration = uncommitedInGeneration;
+  }
+
+  public int getUncommitedInProcessInt()
+  {
+    return uncommitedInProcess;
+  }
+
+  public void setUncommitedInProcessInt(int uncommitedInProcess)
+  {
+    this.uncommitedInProcess = uncommitedInProcess;
+  }
+
+  public String getMessagesCacheSize()
+  {
+    return String.valueOf(messagesCacheSize);
+  }
+
+  public void setMessagesCacheSize(String messagesCacheSize)
   {
     try {
-      this.uncommited = Integer.decode(uncommited).intValue();
+      this.messagesCacheSize = Integer.decode(messagesCacheSize).intValue();
     } catch (Throwable e) {
-      logger.error("Couldn't set priority to value \"" + uncommited + "\"", e);
-      this.uncommited = 0;
+      logger.error("Couldn't set messagesCacheSize to value \"" + messagesCacheSize + "\"", e);
+      this.dsIntTimeout = 0;
+    }
+  }
+
+  public String getMessagesCacheSleep()
+  {
+    return String.valueOf(messagesCacheSleep);
+  }
+
+  public void setMessagesCacheSleep(String messagesCacheSleep)
+  {
+    try {
+      this.messagesCacheSleep = Integer.decode(messagesCacheSleep).intValue();
+    } catch (Throwable e) {
+      logger.error("Couldn't set messagesCacheSleep to value \"" + messagesCacheSleep + "\"", e);
+      this.dsIntTimeout = 0;
+    }
+  }
+
+  public String getUncommitedInGeneration()
+  {
+    return String.valueOf(uncommitedInGeneration);
+  }
+
+  public void setUncommitedInGeneration(String uncommitedInGeneration)
+  {
+    try {
+      this.uncommitedInGeneration = Integer.decode(uncommitedInGeneration).intValue();
+    } catch (Throwable e) {
+      logger.error("Couldn't set uncommitedInGeneration to value \"" + uncommitedInGeneration + "\"", e);
+      this.dsIntTimeout = 0;
+    }
+  }
+
+  public String getUncommitedInProcess()
+  {
+    return String.valueOf(uncommitedInProcess);
+  }
+
+  public void setUncommitedInProcess(String uncommitedInProcess)
+  {
+    try {
+      this.uncommitedInProcess = Integer.decode(uncommitedInProcess).intValue();
+    } catch (Throwable e) {
+      logger.error("Couldn't set uncommitedInGeneration to value \"" + uncommitedInGeneration + "\"", e);
+      this.dsIntTimeout = 0;
     }
   }
 }

@@ -136,8 +136,24 @@
   <td><input class=txt name=dsIntTimeout value="<%=StringEncoderDecoder.encode(bean.getDsIntTimeout())%>">secs</td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>uncommited</th>
-  <td><input class=txt name=uncommited value="<%=StringEncoderDecoder.encode(bean.getUncommited())%>"></td>
+  <th>messages cache size </th>
+  <td><input class=txt name=messagesCacheSize value="<%=StringEncoderDecoder.encode(bean.getMessagesCacheSize())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>messages cache sleep</th>
+  <td><input class=txt name=messagesCacheSleep value="<%=StringEncoderDecoder.encode(bean.getMessagesCacheSleep())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th><label for=replaceMessage>transaction mode</label></th>
+  <td><input class=check type=checkbox id=transactionMode name=transactionMode value=true <%=bean.isTransactionMode() ? "checked" : ""%>></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>uncommited in generation</th>
+  <td><input class=txt name=uncommitedInGeneration value="<%=StringEncoderDecoder.encode(bean.getUncommitedInGeneration())%>"></td>
+</tr>
+<tr class=row<%=rowN++&1%>>
+  <th>uncommited in process</th>
+  <td><input class=txt name=uncommitedInProcess value="<%=StringEncoderDecoder.encode(bean.getUncommitedInProcess())%>"></td>
 </tr>
 </table>
 </div><%
