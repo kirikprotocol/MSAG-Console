@@ -337,11 +337,7 @@ Hash<Task *> Task::loadupAll()
             if (abonent && !tasks.Exists(abonent)) {
                 Task* task = new Task(abonent);
                 uint64_t nextId = rs->getUint64(2);
-                if (!task->loadup(nextId, connection)) {
-		            smsc_log_warn(logger, "Task: missed message for id=%lld for abonent %s",
-                                  nextId, abonent);
-                    continue;
-		        }
+                if (!task->loadup(nextId, connection)) continue;
                 MessageState state = task->getCurrentState();
                 int eventsCount = task->getEventsCount();
                 int newEventsCount = task->getNewEventsCount();
@@ -398,6 +394,8 @@ bool Task::loadup(uint64_t currId, Connection* connection/*=0*/) // private
         if (!curRs) 
             throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "current task message loadup");
         if (!curRs->fetchNext()) {
+            smsc_log_error(logger, "Task: current message for id=%lld is null for abonent %s",
+                           currentMessageId, abonent.c_str());
             //throw Exception("Current task message is null for abonent %s", abonent.c_str());
             return false;
         }
