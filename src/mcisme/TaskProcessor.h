@@ -293,7 +293,7 @@ namespace smsc { namespace mcisme
         friend class ResponcesTracker;
         void openInQueue();
         void closeInQueue();
-        bool putToInQueue(const MissedCallEvent& event);
+        bool putToInQueue(const MissedCallEvent& event, bool skip=true);
         bool getFromInQueue(MissedCallEvent& event);
         
         void openOutQueue();

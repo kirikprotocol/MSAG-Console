@@ -1188,13 +1188,20 @@ void TaskProcessor::closeInQueue() {
     bInQueueOpen = false;
     inQueueMonitor.notifyAll();
 }
-bool TaskProcessor::putToInQueue(const MissedCallEvent& event)
+bool TaskProcessor::putToInQueue(const MissedCallEvent& event, 
+                                 bool skip/*=true. Skip event when queue is full*/)
 {
     MutexGuard guard(inQueueMonitor);
-    while (bInQueueOpen && (inQueue.Count() >= maxInQueueSize)) {
+    while (!skip && bInQueueOpen && (inQueue.Count() >= maxInQueueSize)) {
         inQueueMonitor.wait();
     }
     if (!bInQueueOpen) return false;
+    if (skip && inQueue.Count() >= maxInQueueSize) {
+        smsc_log_warn(logger, "Input event queue is full (contains %d events, max %d). "
+                      "Event for abonent '%s' was skipped.", 
+                      inQueue.Count(), maxInQueueSize, event.to.c_str());
+        return false;
+    }
     inQueue.Push(event);
     inQueueMonitor.notifyAll();
     return true;
