@@ -54,7 +54,8 @@ bool SmppBaseTestCases::bindCorrectSme(int num)
 		catch (SmppConnectException& e)
 		{
 			__tc_fail__(100);
-			__trace2__("Bind failed: %s" , e.getTextReason());
+			__trace2__("Bind failed: %s for systemId = %s, password = %s",
+				e.getTextReason(), fixture->smeInfo.systemId.c_str(), fixture->smeInfo.password.c_str());
 			return false;
 		}
 		catch(...)
@@ -70,94 +71,79 @@ void SmppBaseTestCases::bindIncorrectSme(int num)
 {
 	//повторный bind убран из тест кейсов, т.к. приводит к пересозданию коннекта
 	//без ошибок
-	TCSelector s(num, 4);
+	TCSelector s(num, 7);
 	__decl_tc__;
 	for (; s.check(); s++)
 	{
+		int reason;
 		try
 		{
+			char tmp[64];
+			SmeConfig conf(config);
 			switch(s.value())
 			{
 				case 1: //sme не зарегистрирована в SC
-					{
-						__tc__("bindIncorrectSme.systemIdNotRegistered");
-						try
-						{
-							SmeConfig conf(config);
-							auto_ptr<char> tmp = rand_char(15); //15 по спецификации
-							conf.sid = tmp.get();
-							FakeReceiver receiver;
-							SmppSession sess(conf, &receiver);
-							sess.connect();
-						}
-						catch(...)
-						{
-							throw;
-						}
-					}
+					__tc__("bindIncorrectSme.systemIdNotRegistered");
+					reason = SmppConnectException::Reason::networkConnect;
+					rand_char(15, tmp); //15 по спецификации
+					conf.sid = tmp;
 					break;
 				case 2: //неправильный пароль
-					{
-						__tc__("bindIncorrectSme.invalidPassword");
-						try
-						{
-							SmeConfig conf(config);
-							auto_ptr<char> tmp = rand_char(8); //8 по спецификации
-							conf.password = tmp.get();
-							FakeReceiver receiver;
-							SmppSession sess(conf, &receiver);
-							sess.connect();
-						}
-						catch(...)
-						{
-							throw;
-						}
-					}
+					__tc__("bindIncorrectSme.invalidPassword");
+					reason = SmppConnectException::Reason::networkConnect;
+					rand_char(8, tmp); //8 по спецификации
+					conf.password = tmp;
 					break;
 				case 3: //bind на недоступный SC (неизвестный хост)
-					{
-						__tc__("bindIncorrectSme.unknownHost");
-						try
-						{
-							SmeConfig conf(config);
-							auto_ptr<char> tmp = rand_char(15);
-							conf.host = tmp.get();
-							FakeReceiver receiver;
-							SmppSession sess(conf, &receiver);
-							sess.connect();
-						}
-						catch(...)
-						{
-							throw;
-						}
-					}
+					__tc__("bindIncorrectSme.unknownHost");
+					reason = SmppConnectException::Reason::networkResolve;
+					rand_char(15, tmp);
+					conf.host = tmp;
 					break;
 				case 4: //bind на недоступный SC (неправильный порт)
-					{
-						__tc__("bindIncorrectSme.invalidPort");
-						try
-						{
-							SmeConfig conf(config);
-							auto_ptr<char> tmp = rand_char(15);
-							conf.port += rand1(65535 - conf.port);
-							FakeReceiver receiver;
-							SmppSession sess(conf, &receiver);
-							sess.connect();
-						}
-						catch(...)
-						{
-							throw;
-						}
-					}
+					__tc__("bindIncorrectSme.invalidPort");
+					reason = SmppConnectException::Reason::networkConnect;
+					conf.port += rand1(65535 - conf.port);
+					break;
+				case 5: //неправильная длина поля systemId
+					__tc__("bindIncorrectSme.invalidSystemIdLength");
+					reason = SmppConnectException::Reason::networkConnect;
+					rand_char(16, tmp); //15 по спецификации
+					conf.sid = tmp;
+					break;
+				case 6: //неправильная длина поля password
+					__tc__("bindIncorrectSme.invalidPasswordLength");
+					reason = SmppConnectException::Reason::networkConnect;
+					rand_char(9, tmp);  //8 по спецификации
+					conf.password = tmp;
+					break;
+				case 7: //неправильная длина поля systemType
+					__tc__("bindIncorrectSme.invalidSystemTypeLength");
+					reason = SmppConnectException::Reason::networkConnect;
+					rand_char(13, tmp);  //12 по спецификации
+					conf.systemType = tmp;
 					break;
 				default:
 					__unreachable__("Invalid num");
 			}
-			__tc_fail__(s.value());
+			FakeReceiver receiver;
+			SmppSession sess(conf, &receiver);
+			sess.connect();
+			__tc_fail__(1);
+		}
+		catch(SmppConnectException& e)
+		{
+			if (e.getReason() != reason)
+			{
+				__tc_fail__(2);
+				__trace2__("reason = %d, expected = %d", e.getReason(), reason);
+			}
+			__tc_ok_cond__;
 		}
 		catch(...)
 		{
-			__tc_ok__;
+			__tc_fail__(100);
+			error();
 		}
 	}
 }
