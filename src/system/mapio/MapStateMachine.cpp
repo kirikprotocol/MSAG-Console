@@ -16,6 +16,7 @@ using namespace smsc::system;
 
 static const bool SMS_SEGMENTATION = true;
 static inline unsigned GetMOLockTimeout() {return 45;}
+static inline unsigned GetBusyDelay() { return 5; }
 
 struct XMOMAPLocker {
   string imsi;
@@ -285,10 +286,14 @@ static void SendAbonentStatusToSmsc(MapDialog* dialog,int status/*=AbonentStatus
 static void SendErrToSmsc(unsigned dialogid,unsigned code)
 {
   if ( dialogid == 0 ) return;
-  __trace2__("Send error 0x%x to SMSC",code);
+  __trace2__("MAP:%s:Send error 0x%x to SMSC",__FUNCTION__,code);
   SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialogid,code);
+  if ( GET_STATUS_CODE(code) == SUBSCRBUSYMT ){
+    __trace2__("MAP:%s: Set Busy delay %d",__FUNCTION__,GetBusyDelay());
+    cmd->get_resp()->set_delay(GetBusyDelay());
+  }
   MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
-  __trace2__("Send error to SMSC OK");
+  __trace2__("MAP:%s: Send error to SMSC OK",__FUNCTION__);
 }
 
 static void SendOkToSmsc(/*unsigned dialogid*/MapDialog* dialog)
