@@ -23,10 +23,12 @@ public:
 			"—оздание нового профил€ дл€ фиксированного адреса");
 		__reg_tc__("createProfileMatch.noSubstSymbols",
 			"ћаска в точности соответствует адресу (без знаков подстановки)");
+		/*
 		__reg_tc__("createProfileMatch.withQuestionMarks",
 			"ћаска соответствует адресу с одним или несколькими '?' в конце");
 		__reg_tc__("createProfileMatch.entirelyQuestionMarks",
 			"ћаска целиком из '?', длина соответствует исходному адресу");
+		*/
 		//createProfileNotMatch
 		__reg_tc__("createProfileNotMatch",
 			"—оздание нового профил€ с отличи€ми дл€ фиксированного адреса");
@@ -36,8 +38,10 @@ public:
 			"¬ маске отличаетс€ numberingPlan");
 		__reg_tc__("createProfileNotMatch.diffValue",
 			"¬ строке адреса маски отличаетс€ один символ, но длина строки соответствует");
+		/*
 		__reg_tc__("createProfileNotMatch.diffValueLength",
 			"¬ строке адреса маски все символы соответствуют исходным, но количество '?' делает строку отличающейс€ длины");
+		*/
 		//other
 		__reg_tc__("updateProfile", "ќбновление уже существующего профил€");
 		__reg_tc__("lookup", "ѕоиск профил€ дл€ заданного адреса");
