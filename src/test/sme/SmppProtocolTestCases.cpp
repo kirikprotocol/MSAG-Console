@@ -334,10 +334,6 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 				case 10: //messagePayload максимальной длины (заодно будет отсекаться на map proxy)
 					if (!pdu->get_message().size_shortMessage())
 					{
-						__tc__("submitSm.correct.messagePayloadLengthMarginal");
-						int len = MAX_PAYLOAD_LENGTH;
-						bool udhi = pdu->get_message().get_esmClass() &
-							ESM_CLASS_UDHI_INDICATOR;
 						uint8_t dc = pdu->get_message().get_dataCoding();
 						if (fixture->smeInfo.forceDC)
 						{
@@ -345,8 +341,15 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 							bool res = SmppUtil::extractDataCoding(dc, dc, simMsg);
 							__require__(res);
 						}
-						auto_ptr<char> tmp = rand_text2(len, dc, udhi, false);
-						pdu->get_optional().set_messagePayload(tmp.get(), len);
+						if (dc != UCS2) //иначе после транслитерации может пройти нарезка на MAP_PROXY: 37268 / 153 = 214 сегментов
+						{
+							__tc__("submitSm.correct.messagePayloadLengthMarginal");
+							int len = MAX_PAYLOAD_LENGTH;
+							bool udhi = pdu->get_message().get_esmClass() &
+								ESM_CLASS_UDHI_INDICATOR;
+							auto_ptr<char> tmp = rand_text2(len, dc, udhi, false);
+							pdu->get_optional().set_messagePayload(tmp.get(), len);
+						}
 					}
 					break;
 				case 11: //ussd запрос
@@ -907,10 +910,6 @@ void SmppProtocolTestCases::dataSmCorrect(bool sync, int num)
 					break;
 				case 6: //messagePayload максимальной длины (заодно будет отсекаться на map proxy)
 					{
-						__tc__("dataSm.correct.messagePayloadLengthMarginal");
-						int len = MAX_SMPP_SM_LENGTH;
-						bool udhi = pdu->get_data().get_esmClass() &
-							ESM_CLASS_UDHI_INDICATOR;
 						uint8_t dc = pdu->get_data().get_dataCoding();
 						if (fixture->smeInfo.forceDC)
 						{
@@ -918,8 +917,15 @@ void SmppProtocolTestCases::dataSmCorrect(bool sync, int num)
 							bool res = SmppUtil::extractDataCoding(dc, dc, simMsg);
 							__require__(res);
 						}
-						auto_ptr<char> tmp = rand_text2(len, dc, udhi, false);
-						pdu->get_optional().set_messagePayload(tmp.get(), len);
+						if (dc != UCS2) //иначе после транслитерации может пройти нарезка на MAP_PROXY: 37268 / 153 = 214 сегментов
+						{
+							__tc__("dataSm.correct.messagePayloadLengthMarginal");
+							int len = MAX_SMPP_SM_LENGTH;
+							bool udhi = pdu->get_data().get_esmClass() &
+								ESM_CLASS_UDHI_INDICATOR;
+							auto_ptr<char> tmp = rand_text2(len, dc, udhi, false);
+							pdu->get_optional().set_messagePayload(tmp.get(), len);
+						}
 					}
 					break;
 				case 7: //ussd запрос
@@ -1179,22 +1185,23 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 					}
 					break;
 				case 4: //время доставки без изменений
+					if (replacePdu.getWaitTime() > time(NULL))
 					{
 						__tc__("replaceSm.correct.waitTimeNull");
 						SmppTime t;
-						SmppUtil::time2string(
-							max(replacePdu.getWaitTime(), time(NULL)) + timeCheckAccuracy,
+						SmppUtil::time2string(replacePdu.getWaitTime() + timeCheckAccuracy,
 							t, time(NULL), __numTime__);
 						pdu->set_scheduleDeliveryTime("");
 						pdu->set_validityPeriod(t);
 					}
 					break;
 				case 5: //срок валидности без изменений
+					if (replacePdu.getValidTime() > time(NULL) + timeCheckAccuracy)
 					{
 						__tc__("replaceSm.correct.validTimeNull");
 						SmppTime t;
 						SmppUtil::time2string(replacePdu.getValidTime() - timeCheckAccuracy,
-							t, time(NULL), __absoluteTime__);
+							t, time(NULL), __numTime__);
 						pdu->set_scheduleDeliveryTime(t);
 						pdu->set_validityPeriod("");
 					}
