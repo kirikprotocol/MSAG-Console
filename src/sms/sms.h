@@ -160,7 +160,7 @@ struct Address
     return (*this);
   };
 
-  inline int operator ==(const Address& addr)
+  inline int operator ==(const Address& addr)const
   {
     return (length == addr.length &&
             plan == addr.plan && type == addr.type &&
