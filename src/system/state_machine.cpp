@@ -233,6 +233,7 @@ void StateMachine::formatDeliver(const FormatData& fd,std::string& out)
   ReceiptGetAdapter ga;
   ContextEnvironment ce;
   ce.exportStr("dest",fd.addr);
+  ce.exportStr("ddest",fd.ddest);
   ce.exportDat("date",fd.date);
   ce.exportStr("msgId",fd.msgId);
   ce.exportInt("lastResult",fd.lastResult);
@@ -267,6 +268,7 @@ void StateMachine::formatFailed(const FormatData& fd,std::string& out)
   ReceiptGetAdapter ga;
   ContextEnvironment ce;
   ce.exportStr("dest",fd.addr);
+  ce.exportStr("ddest",fd.ddest);
   char buf[32];
   sprintf(buf,"%d",fd.lastResult);
   string reason=ResourceManager::getInstance()->getString(fd.locale,((string)"reason.")+buf);
@@ -315,6 +317,7 @@ void StateMachine::formatNotify(const FormatData& fd,std::string& out)
   ReceiptGetAdapter ga;
   ContextEnvironment ce;
   ce.exportStr("dest",fd.addr);
+  ce.exportStr("ddest",fd.ddest);
   char buf[32];
   sprintf(buf,"%d",fd.lastResult);
   string reason=ResourceManager::getInstance()->getString(fd.locale,((string)"reason.")+buf);
@@ -855,7 +858,7 @@ StateType StateMachine::submit(Tuple& t)
 
   if(sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP)) {
     // force forward mode
-    sms->setIntProperty(Tag::SMPP_ESM_CLASS, (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0xFC)|0x01);
+    sms->setIntProperty(Tag::SMPP_ESM_CLASS, (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0xFC)|0x02);
   }
 
   if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD) &&
@@ -1939,9 +1942,11 @@ StateType StateMachine::submit(Tuple& t)
         if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x1 ||
            ((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2 && sms->lastResult!=Status::OK))
         {
+          char buf[64];
+          sprintf(buf,"%lld",sms->lastResult==Status::OK?msgId:0);
           SmscCommand resp = SmscCommand::makeSubmitSmResp
                                (
-                                 /*messageId*/"0",
+                                 buf,
                                  sms->dialogId,
                                  sms->lastResult,
                                  sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
@@ -3470,7 +3475,10 @@ StateType StateMachine::deliveryResp(Tuple& t)
       sms.getDestinationAddress().getText(addr,sizeof(addr));
       const Descriptor& d=sms.getDestinationDescriptor();
       __trace2__("RECEIPT: msc=%s, imsi=%s",d.msc,d.imsi);
+      char ddest[64];
+      sms.getDealiasedDestinationAddress().getText(ddest,sizeof(ddest));
       FormatData fd;
+      fd.ddest=ddest;
       fd.addr=addr;
       fd.date=time(NULL);
       fd.msgId=msgid;
@@ -4017,6 +4025,9 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   string out;
   sms.getDestinationAddress().getText(addr,sizeof(addr));
   FormatData fd;
+  char ddest[64];
+  sms.getDealiasedDestinationAddress().getText(ddest,sizeof(ddest));
+  fd.ddest=ddest;
   const Descriptor& d=sms.getDestinationDescriptor();
   fd.msc=d.msc;
   fd.addr=addr;
@@ -4088,6 +4099,9 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   string out;
   sms.getDestinationAddress().getText(addr,sizeof(addr));
   FormatData fd;
+  char ddest[64];
+  sms.getDealiasedDestinationAddress().getText(ddest,sizeof(ddest));
+  fd.ddest=ddest;
   const Descriptor& d=sms.getDestinationDescriptor();
   fd.msc=d.msc;
   fd.date=sms.getSubmitTime();
