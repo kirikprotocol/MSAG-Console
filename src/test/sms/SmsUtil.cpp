@@ -154,6 +154,7 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, uint64_t 
 		sms2.getEServiceType(serviceType2);
 		if (strcmp(serviceType1, serviceType2))
 		{
+			__trace2__("getEServiceType: %s != %s", serviceType1, serviceType2);
 			res.push_back(12);
 		}
 	}
