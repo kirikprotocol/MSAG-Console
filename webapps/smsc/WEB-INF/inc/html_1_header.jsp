@@ -11,7 +11,7 @@
 <tr><td class=tmenu><%
 	%><a ID=MENU0_HOME href="<%=CPATH%>">Home</a><%
 	%><%--a ID=MENU0_STATUS href="<%=CPATH%>/status/index.jsp">Status</a--%><%
-	%><a ID=MENU0_SMS href="<%=CPATH%>/smsc_service/sms/smsview.jsp">SMEs</a><%
+	%><a ID=MENU0_SMSVIEW href="<%=CPATH%>/smsview/index.jsp">SMS view</a><%
 	%><a ID=MENU0_ROUTES href="<%=CPATH%>/routes/index.jsp">Routes</a><%
 	%><a ID=MENU0_SUBJECTS href="<%=CPATH%>/subjects/index.jsp">Subjects</a><%
 	%><a ID=MENU0_ALIASES href="<%=CPATH%>/aliases/index.jsp">Aliases</a><%

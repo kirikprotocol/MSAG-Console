@@ -7,6 +7,7 @@ String FORM_URI = (String)request.getAttribute("requestURI");
 if (FORM_URI == null)
 	FORM_URI = request.getRequestURI();
 String MENU0_SELECTION = "MENU0_HOME";
+String FORM_ENCTYPE = "application/x-www-form-urlencoded";
 final String CPATH = request.getContextPath() + "/smsc";
 {
 %><%@ page import="java.util.*, 

@@ -2,11 +2,6 @@
 page import="ru.novosoft.smsc.jsp.smsc.services.ServiceAddExternalAdm,
              ru.novosoft.util.jsp.MultipartServletRequest"%><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.ServiceAddExternalAdm" scope="session"/><jsp:setProperty name="bean" property="*"/><%
 
-if (bean.getStage() < 2)
-{
-FORM_URI = CPATH+"/upload";
-FORM_METHOD = "POST\" enctype=\"multipart/form-data";
-}
 MultipartServletRequest multi = (MultipartServletRequest)request.getAttribute("multipart.request");
 if (multi != null)
 	request = (HttpServletRequest)multi;
@@ -31,6 +26,16 @@ if (bean.getStage() == 1 && multi != null)
 {
 	bean.receiveFile((MultipartServletRequest)request.getAttribute("multipart.request"));
 }
+if (bean.getStage() == 1)
+{
+	FORM_URI = CPATH+"/upload";
+	FORM_METHOD = "POST";
+	FORM_ENCTYPE = "multipart/form-data";
+} else
+{
+	FORM_URI = CPATH+"/services/serviceAddExternalAdm.jsp";
+}
+
 TITLE = "Services List / Add service: step " + (bean.getStage() == 0 ? 2 : bean.getStage()+1);
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_SERVICES";
@@ -85,7 +90,7 @@ switch (bean.getStage())
 		</tr>
 		<tr class=rowLast>
 			<th>Startup&nbsp;Arguments:</th>
-			<td><textarea class=txtW rows="5" name="startupArgs" wrap="off"><%=bean.getStartupArgs() != null ? StringEncoderDecoder.encode(bean.getStartupArgs()) : ""%></textarea></td>
+			<td><textarea rows="5" name="startupArgs" wrap="off"><%=bean.getStartupArgs() != null ? StringEncoderDecoder.encode(bean.getStartupArgs()) : ""%></textarea></td>
 		</tr>
 		</table>
 	<%}
