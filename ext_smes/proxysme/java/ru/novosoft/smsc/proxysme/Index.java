@@ -1,11 +1,11 @@
 package ru.novosoft.smsc.proxysme;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.service.*;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.util.Functions;
 
 import java.security.Principal;
 import java.util.HashMap;
@@ -49,14 +49,23 @@ public class Index extends PageBean {
 	private String mbStart = null;
 	private String mbStop = null;
 
-	public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal)
+  private String proxySmeId = "";
+
+	public int process(SMSCAppContext appContext, List errors, Principal loginedPrincipal, String servletPath)
 	{
 		int result = super.process(appContext, errors, loginedPrincipal);
 		if (result != RESULT_OK)
 			return result;
 
-		try {
-			config = ProxySmeContext.getInstance(appContext).getConfig();
+    try {
+      proxySmeId = Functions.getServiceId(servletPath);
+    } catch (AdminException e) {
+      logger.error("Internal error", e);
+      return error("Internal error", e);
+    }
+
+    try {
+			config = ProxySmeContext.getInstance(appContext, proxySmeId).getConfig();
 		} catch (Throwable e) {
 			logger.debug("Couldn't get config", e);
 			return error("Couldn't get config", e);
@@ -85,7 +94,7 @@ public class Index extends PageBean {
 	private int start()
 	{
 		try {
-			appContext.getHostsManager().startService(Constants.PROXY_SME_ID);
+			appContext.getHostsManager().startService(proxySmeId);
 			return RESULT_DONE;
 		} catch (AdminException e) {
 			logger.debug("Couldn't start service", e);
@@ -96,7 +105,7 @@ public class Index extends PageBean {
 	private int stop()
 	{
 		try {
-			appContext.getHostsManager().shutdownService(Constants.PROXY_SME_ID);
+			appContext.getHostsManager().shutdownService(proxySmeId);
 			return RESULT_DONE;
 		} catch (AdminException e) {
 			logger.debug("Couldn't stop service", e);
@@ -132,7 +141,7 @@ public class Index extends PageBean {
 	private int clear(SMSCAppContext appContext)
 	{
 		try {
-			config = ProxySmeContext.getInstance(appContext).loadConfig();
+			config = ProxySmeContext.getInstance(appContext, proxySmeId).loadConfig();
 			int result = initializeFromConfig();
 			return result == RESULT_OK ? RESULT_DONE : result;
 		} catch (Throwable e) {
@@ -153,7 +162,7 @@ public class Index extends PageBean {
 
 		if (isSmeRunning()) {
 			try {
-				Service service = appContext.getHostsManager().getService(Constants.PROXY_SME_ID);
+				Service service = appContext.getHostsManager().getService(proxySmeId);
 				service.refreshComponents();
 				Component component = (Component) service.getInfo().getComponents().get("ProxySme");
 				service.call(component, (Method) component.getMethods().get("applay"), Type.Types[Type.StringType], new HashMap());
@@ -221,13 +230,13 @@ public class Index extends PageBean {
 
 	public String getSmeId()
 	{
-		return Constants.PROXY_SME_ID;
+		return proxySmeId;
 	}
 
 	public boolean isSmeRunning()
 	{
 		try {
-			return appContext.getHostsManager().getServiceInfo(Constants.PROXY_SME_ID).getStatus() == ServiceInfo.STATUS_RUNNING;
+			return appContext.getHostsManager().getServiceInfo(proxySmeId).getStatus() == ServiceInfo.STATUS_RUNNING;
 		} catch (AdminException e) {
 			logger.debug("Couldn't get proxysme status", e);
 			return false;

@@ -12,7 +12,7 @@
 	//FORM_METHOD = "GET";
 
 	int beanResult = bean.RESULT_OK;
-	switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal))
+	switch(beanResult = bean.process(appContext, errorMessages, loginedUserPrincipal, request.getServletPath()))
 	{
 /*		case Index.RESULT_DONE:
 			response.sendRedirect("index.jsp");
