@@ -61,7 +61,7 @@ extern "C" {
 }
 
 #define SSN 8
-#define USSD_SSN MapDialogContainer::GetUSSDSSN();
+#define USSD_SSN (MapDialogContainer::GetUSSDSSN())
 #define HLR_SSN 6
 #define MAX_MT_LOCK_TIME 600
 

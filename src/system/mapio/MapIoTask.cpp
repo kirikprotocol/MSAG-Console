@@ -240,8 +240,8 @@ void MapIoTask::dispatcher()
         memcpy(specificInfo.specificData, message.msg_p+specificInfoLenPos+2, specificInfo.specificInfoLen );
       }
       map_result = Et96MapOpenInd( 
-        (ET96MAP_LOCAL_SSN_T)message.msp_p[1], // SSN
-        ((ET96MAP_DIALOGUE_ID_T)message.msp_p[2])|(((ET96MAP_DIALOGUE_ID_T)message.msp_p[3])<<8), // Dialogue ID
+        (ET96MAP_LOCAL_SSN_T)message.msg_p[1], // SSN
+        ((ET96MAP_DIALOGUE_ID_T)message.msg_p[2])|(((ET96MAP_DIALOGUE_ID_T)message.msg_p[3])<<8), // Dialogue ID
         (ET96MAP_APP_CNTX_T*)(message.msg_p+4), // AC version
         (message.msg_p[destAddrPos]>0)?(ET96MAP_SS7_ADDR_T*)(message.msg_p+destAddrPos):0, // dest ss7 addr
         (message.msg_p[orgAddrPos]>0)?(ET96MAP_SS7_ADDR_T*)(message.msg_p+orgAddrPos):0, // org ss7 addr
