@@ -16,14 +16,16 @@ ConnectionPool* StoreManager::pool = 0L;
 IDGenerator* StoreManager::generator = 0L;
 StoreManager* StoreManager::instance = 0L;
 
-void StoreManager::startup(StoreConfig* config)
+MessageStore* StoreManager::startup(const char* db, const char* user,
+                                    const char* password, 
+                                    unsigned size, unsigned init)
     throw(ConnectionFailedException)
 {
     MutexGuard guard(mutex);
 
     if (!instance)
     {
-        pool = new ConnectionPool(config);
+        pool = new ConnectionPool(db, user, password, size, init);
         Connection* connection = pool->getConnection();
         try
         {
@@ -37,6 +39,7 @@ void StoreManager::startup(StoreConfig* config)
         pool->freeConnection(connection);
         instance = new StoreManager();
     }
+    return ((MessageStore *)instance);
 }
         
 void StoreManager::shutdown() 

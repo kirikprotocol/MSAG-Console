@@ -4,7 +4,7 @@
 #include <oci.h>
 #include <orl.h>
 
-#include <core/synchronization/Mutex.hpp>
+#include <core/synchronization/EventMonitor.hpp>
 #include <core/buffers/Array.hpp>
 #include <sms/sms.h>
 
@@ -19,35 +19,63 @@ namespace smsc { namespace store
     struct Connection;
     class ConnectionPool
     {
-    protected:
+    private:
 
-        int     maxConnectionsCount;
-        int     curConnectionsCount;
-        Mutex   connectionsLock;
-        Mutex   idleLock;
-
-        StoreConfig*    config;
+        unsigned    size;
+        unsigned    count;
         
-        Array<Connection*>  idle;
-        Array<Connection*>  busy;
-        Array<Connection*>  dead;
+        const char* dbInstance;
+        const char* dbUserName;
+        const char* dbUserPassword;
+
+        EventMonitor    monitor;
+
+        Array<Connection *> idle;
+        Array<Connection *> busy;
+        Array<Connection *> dead;
 
     public:
     
-        ConnectionPool(StoreConfig* _config) 
+        ConnectionPool(const char* db, const char* user, 
+                       const char* password, unsigned size, unsigned init) 
             throw(ConnectionFailedException);
+        
         virtual ~ConnectionPool(); 
         
-        inline StoreConfig* getConfig() {
-            return config;
+        inline const char* getDBInstance() {
+            return dbInstance;
         };
+        inline const char* getDBUserName() {
+            return dbUserName;
+        };
+        inline const char* getDBUserPassword() {
+            return dbUserPassword;
+        };
+        
+        void setSize(unsigned _size);
 
-        void checkErr(sword status, Connection* conn) 
-            throw(StorageException);
-
+        inline unsigned getSize() {
+            return size;
+        }
+        
+        inline unsigned getConnectionsCount() {
+            return count;
+        }
+        inline unsigned getBusyConnectionsCount() {
+            return busy.Count();
+        }
+        inline unsigned getIdleConnectionsCount() {
+            return idle.Count();
+        }
+        inline unsigned getDeadConnectionsCount() {
+            return dead.Count();
+        }
+        
+        bool hasFreeConnections();
         Connection* getConnection() 
             throw(ConnectionFailedException);
         void freeConnection(Connection* connection);
+        void killConnection(Connection* connection);
     };
     
     using namespace smsc::sms;
@@ -137,8 +165,6 @@ namespace smsc { namespace store
 
         void retrive(SMSId id, SMS &sms) 
             throw(StorageException, NoSuchMessageException);
-
-        friend class ConnectionPool; // ???
     };
     
 }}

@@ -53,15 +53,43 @@ namespace smsc { namespace store
 
     public:    
         
-        static void startup(StoreConfig* config) 
+        static MessageStore* startup(const char* db, const char* user, 
+                                     const char* password, 
+                                     unsigned size, unsigned init)
             throw(ConnectionFailedException);
         
         static void shutdown(); 
         
-        static MessageStore* getMessageStore() {
-            return ((MessageStore *)instance);
-        };
+        static void setPoolSize(unsigned size) {
+            __require__(pool);
+            pool->setSize(size);
+        }
+        static unsigned getPoolSize() {
+            __require__(pool);
+            return pool->getSize();
+        }
         
+        static unsigned getConnectionsCount() {
+            __require__(pool);
+            return pool->getConnectionsCount();
+        }
+        static bool hasFreeConnections() {
+            __require__(pool);
+            return pool->hasFreeConnections();
+        }
+        static unsigned getBusyConnectionsCount() {
+            __require__(pool);
+            return pool->getBusyConnectionsCount();
+        }
+        static unsigned getIdleConnectionsCount() {
+            __require__(pool);
+            return pool->getIdleConnectionsCount();
+        }
+        static unsigned getDeadConnectionsCount() {
+            __require__(pool);
+            return pool->getDeadConnectionsCount();
+        }
+
         virtual SMSId store(const SMS &sms)  
             throw(StorageException);
         virtual void retrive(SMSId id, SMS &sms)

@@ -14,19 +14,17 @@ namespace smsc { namespace store
 using namespace smsc::sms;
 
 /* ----------------------------- ConnectionPool ------------------------ */
-ConnectionPool::ConnectionPool(StoreConfig* _config) 
+ConnectionPool::ConnectionPool(const char* db, 
+                               const char* user, 
+                               const char* password, 
+                               unsigned size, unsigned init)
     throw(ConnectionFailedException)
-        : config(_config)
+        : dbInstance(db), dbUserName(user), dbUserPassword(password),
+            size(size), count(init)
 {
-    __require__(config);
-    
-    maxConnectionsCount = config->getMaxConnectionsCount();
-    curConnectionsCount = config->getInitConnectionsCount();
-    
-    __require__(curConnectionsCount > 0);
-    __require__(curConnectionsCount <= maxConnectionsCount);
+    __require__(size >= init && dbInstance && dbUserName && dbUserPassword);
 
-    for (int i=0; i<curConnectionsCount; i++)
+    for (int i=0; i<count; i++)
     {
         Connection* connection = new Connection(this);
         (void) idle.Push(connection);
@@ -35,7 +33,7 @@ ConnectionPool::ConnectionPool(StoreConfig* _config)
 
 ConnectionPool::~ConnectionPool()
 {
-    MutexGuard  guard(connectionsLock);
+    MutexGuard  guard(monitor);
 
     for (int i=0; i<idle.Count(); i++)
     {
@@ -55,58 +53,86 @@ ConnectionPool::~ConnectionPool()
         (void) dead.Pop(connection);
         if (connection) delete connection;
     }
+    
+    // ???
+    delete dbInstance;
+    delete dbUserName;
+    delete dbUserPassword;
 }
 
-void ConnectionPool::checkErr(sword status, Connection* connection) 
-    throw(StorageException)
+bool ConnectionPool::hasFreeConnections()
 {
-    OCIError*   errhp;
-    text        errbuf[512];
-    ub4         buflen, errcode;
+    return (count<size || idle.Count());
+}
+
+Connection* ConnectionPool::getConnection()
+    throw(ConnectionFailedException)
+{
+    MutexGuard  guard(monitor);
+
+    while (!hasFreeConnections()) monitor.wait();
     
-    __require__(connection);
-    
-    switch (status)
+    Connection* connection=0L;
+    if (idle.Count())
     {
-    case OCI_SUCCESS:
-        return;
-
-    case OCI_SUCCESS_WITH_INFO:
-        //throw StoreException(status, "OCI_SUCCESS_WITH_INFO");
-        return;
-    
-    case OCI_NO_DATA:
-        strcpy((char *)errbuf, "OCI_NODATA");
-        break;
-        
-    case OCI_NEED_DATA:
-        strcpy((char *)errbuf, "OCI_NEED_DATA");
-        break;
-        
-    case OCI_STILL_EXECUTING:
-        strcpy((char *)errbuf, "OCI_STILL_EXECUTE");
-        break;
-    
-    case OCI_INVALID_HANDLE:
-        strcpy((char *)errbuf, "OCI_INVALID_HANDLE");
-        break;
-                
-    case OCI_ERROR:
-        if (errhp = connection->errhp)
-        {
-            (void) OCIErrorGet (errhp, (ub4) 1, (text *) NULL,
-                                (sb4 *)&errcode, errbuf,
-                                (ub4) sizeof(errbuf), OCI_HTYPE_ERROR);
-            status = errcode;
-        }
-        break;  
-
-    default:
-        strcpy((char *)errbuf, "OCI_UNKNOWN_ERROR");
-        break;
+        (void) idle.Pop(connection);
+        (void) busy.Push(connection);
+    } 
+    else if (count < size)
+    {
+        connection = new Connection(this);
+        (void) busy.Push(connection);
+        count++;
     }
     
-    connectionsLock.Lock();
+    __require__(connection);
+    return connection;
+}
+
+void ConnectionPool::freeConnection(Connection* connection)
+{
+    __require__(connection);
+    MutexGuard  guard(monitor);
+    
+    Connection* tmp=0L;
+    for (int i=0; i<busy.Count(); i++)
+    {
+        tmp = busy[i];
+        if (tmp == connection) 
+        {
+            busy.Delete(i);
+            if (count < size)
+            {
+                (void) idle.Push(connection);
+                monitor.notify();
+            }
+            else 
+            {
+                delete connection;
+                count--;
+            }
+            return;
+        }
+    }
+    for (int i=0; i<dead.Count(); i++)
+    {
+        tmp = dead[i];
+        if (tmp == connection) 
+        {
+            dead.Delete(i);
+            delete connection;
+            count--;
+            monitor.notify();
+            return;
+        }
+    }
+}
+
+void ConnectionPool::killConnection(Connection* connection)
+{
+    __require__(connection);
+    MutexGuard  guard(monitor);
+
     Connection* tmp=0L;
     for (int i=0; i<busy.Count(); i++)
     {
@@ -115,95 +141,31 @@ void ConnectionPool::checkErr(sword status, Connection* connection)
         { 
             busy.Delete(i); 
             (void) dead.Push(connection);
-            curConnectionsCount--;
             break;
         }
     }
-    connectionsLock.Unlock();
-
-    throw StorageException((const char *)errbuf, (int)status);
 }
 
-Connection* ConnectionPool::getConnection()
-    throw(ConnectionFailedException)
+void ConnectionPool::setSize(unsigned new_size) 
 {
-    idleLock.Lock();
-    connectionsLock.Lock();
+    if (!new_size || new_size == size) return;
+    MutexGuard  guard(monitor);
     
-    Connection* connection=0L;
-    
-    if (!idle.Count())
+    if (new_size < size)
     {
-        __require__(curConnectionsCount < maxConnectionsCount);
-
-        try 
+        Connection* connection = 0L;
+        for (int i=new_size-1; i<idle.Count(); i++)
         {
-            connection = new Connection(this);
-        }
-        catch (ConnectionFailedException& exc) 
-        {
-            idleLock.Unlock();
-            connectionsLock.Unlock();
-            throw;
-        }
-        (void) busy.Push(connection);
-        if (++curConnectionsCount < maxConnectionsCount)
-        {
-            idleLock.Unlock();
-        }
-    } 
-    else 
-    {
-        (void) idle.Pop(connection);
-        (void) busy.Push(connection);
-        if (idle.Count() || curConnectionsCount < maxConnectionsCount)
-        {
-            idleLock.Unlock();
+            (void) idle.Pop(connection);
+            if (connection) delete connection;
+            count--;
         }
     }
 
-    connectionsLock.Unlock();
-    return connection;
+    size = new_size;
+    monitor.notify();
 }
 
-// from busy --> idle
-void ConnectionPool::freeConnection(Connection* connection)
-{
-    connectionsLock.Lock();
-    
-    __require__(connection);
-
-    Connection* tmp=0L;
-    if (dead.Count())
-    {
-        for (int i=0; i<dead.Count(); i++)
-        {
-            tmp = dead[i];
-            if (tmp == connection) 
-            {
-                dead.Delete(i);
-                delete connection;
-                break;
-            }
-        }
-    }
-    else 
-    {
-        for (int i=0; i<busy.Count(); i++)
-        {
-            tmp = busy[i];
-            if (tmp == connection) 
-            {
-                busy.Delete(i);
-                (void) idle.Push(connection);
-                if (idle.Count() == 1) idleLock.Unlock();
-                break;
-            }
-        }
-    }
-    
-    connectionsLock.Unlock();
-}
 /* ----------------------------- ConnectionPool ------------------------ */
 
 /* ------------------------------- Connection -------------------------- */
@@ -226,13 +188,11 @@ Connection::Connection(ConnectionPool* pool)
     throw(ConnectionFailedException) 
         : owner(pool), envhp(0L), errhp(0L), svchp(0L), srvhp(0L), sesshp(0L)
 {
-    StoreConfig* config = owner->getConfig();
+    __require__(owner);
 
-    __require__(config);
-
-    const char* dbName = config->getDBInstance();
-    const char* userName = config->getDBUserName();
-    const char* userPwd = config->getDBUserPassword();
+    const char* dbName = owner->getDBInstance();
+    const char* userName = owner->getDBUserName();
+    const char* userPwd = owner->getDBUserPassword();
     
     __require__(userName && userPwd && dbName);
 
@@ -741,9 +701,51 @@ void Connection::checkConnErr(sword status)
 void Connection::checkErr(sword status) 
     throw(StorageException)
 {
-    __require__(owner);
+    OCIError*   errhp;
+    text        errbuf[512];
+    ub4         buflen, errcode;
     
-    owner->checkErr(status, this);
+    switch (status)
+    {
+    case OCI_SUCCESS:
+        return;
+
+    case OCI_SUCCESS_WITH_INFO:
+        //throw StoreException(status, "OCI_SUCCESS_WITH_INFO");
+        return;
+    
+    case OCI_NO_DATA:
+        strcpy((char *)errbuf, "OCI_NODATA");
+        break;
+        
+    case OCI_NEED_DATA:
+        strcpy((char *)errbuf, "OCI_NEED_DATA");
+        break;
+        
+    case OCI_STILL_EXECUTING:
+        strcpy((char *)errbuf, "OCI_STILL_EXECUTE");
+        break;
+    
+    case OCI_INVALID_HANDLE:
+        strcpy((char *)errbuf, "OCI_INVALID_HANDLE");
+        break;
+                
+    case OCI_ERROR:
+        (void) OCIErrorGet (errhp, (ub4) 1, (text *) NULL,
+                            (sb4 *)&errcode, errbuf,
+                            (ub4) sizeof(errbuf), OCI_HTYPE_ERROR);
+        status = errcode;
+        break;  
+
+    default:
+        strcpy((char *)errbuf, "OCI_UNKNOWN_ERROR");
+        break;
+    }
+    
+    __require__(owner);
+    owner->killConnection(this);
+
+    throw StorageException((const char *)errbuf, (int)status);
 }
 
 /* ------------------------------- Connection -------------------------- */
