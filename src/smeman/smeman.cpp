@@ -177,7 +177,8 @@ SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const
 //__synchronized__ не нужно поскольку вызывается из синхронизированных методов
   for ( Records::const_iterator p = records.begin(); p != records.end(); ++p )
   {
-    if ( p->info.systemId.compare(systemId) == 0 ) return p->idx;
+    if ( p->deleted ) continue;
+		if ( p->info.systemId.compare(systemId) == 0 ) return p->idx;
   }
   return INVALID_SME_INDEX;
 }
