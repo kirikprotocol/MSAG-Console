@@ -474,6 +474,8 @@ namespace smsc {
 						default:
 							result += "unknown";
 						}
+						result += PROFILE_PARAMS_DELIMITER;
+						result += profile.locale;
 						return result;
 					}
 					else
@@ -489,33 +491,37 @@ namespace smsc {
 			throw (AdminException)
 			{
 				const char * const delimiter = strchr(profileString, PROFILE_PARAMS_DELIMITER);
+				if (delimiter == 0)
+					throw	AdminException("profile options misformatted");
+				
+				const char * const second_delimeter = strchr(delimiter+1, PROFILE_PARAMS_DELIMITER);
+				if (second_delimeter == 0)
+					throw	AdminException("profile options misformatted");
+				
 				const size_t length = strlen(profileString);
-				if (delimiter)
+				if (memcmp("default", profileString, delimiter - profileString) == 0)
 				{
-					if (memcmp("default", profileString, delimiter - profileString) == 0)
-					{
-						profile.codepage = smsc::profiler::ProfileCharsetOptions::Default;
-					}
-					else if (memcmp("UCS2", profileString, delimiter - profileString) == 0)
-					{
-						profile.codepage = smsc::profiler::ProfileCharsetOptions::Ucs2;
-					}
-					else
-						throw	AdminException("Unknown codepage");
-
-					if (strcmp("full", delimiter+1) == 0)
-					{
-						profile.reportoptions = smsc::profiler::ProfileReportOptions::ReportFull;
-					}
-					else if (strcmp("none", delimiter+1) == 0)
-					{
-						profile.reportoptions = smsc::profiler::ProfileReportOptions::ReportNone;
-					}
-					else
-						throw	AdminException("Unknown codepage");
+					profile.codepage = smsc::profiler::ProfileCharsetOptions::Default;
+				}
+				else if (memcmp("UCS2", profileString, delimiter - profileString) == 0)
+				{
+					profile.codepage = smsc::profiler::ProfileCharsetOptions::Ucs2;
 				}
 				else
-					throw	AdminException("profile options misformatted");
+					throw	AdminException("Unknown charset");
+
+				if (memcmp("full", delimiter+1, second_delimeter - (delimiter+1)) == 0)
+				{
+					profile.reportoptions = smsc::profiler::ProfileReportOptions::ReportFull;
+				}
+				else if (memcmp("none", delimiter+1, second_delimeter - (delimiter+1)) == 0)
+				{
+					profile.reportoptions = smsc::profiler::ProfileReportOptions::ReportNone;
+				}
+				else
+					throw	AdminException("Unknown report options");
+
+				profile.locale = second_delimeter+1;
 			}
 
 			int SmscComponent::updateProfile(const Arguments & args) 
@@ -535,7 +541,7 @@ namespace smsc {
 #ifdef SMSC_DEBUG
 						char addr_str[smsc::sms::MAX_ADDRESS_VALUE_LENGTH+9];
 						address.toString(addr_str, sizeof(addr_str)/sizeof(addr_str[0]));
-						logger.debug("Update Profile:\n  %s: Address: \"%s\", codepage:%u, report options:%u, ", addressString, addr_str, profile.codepage, profile.reportoptions);
+						logger.debug("Update Profile:\n  %s: Address: \"%s\", codepage:%u, report options:%u, locale:%s", addressString, addr_str, profile.codepage, profile.reportoptions, profile.locale.c_str());
 #endif
 						return profiler->update(address, profile);
 					}
