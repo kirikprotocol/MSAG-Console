@@ -12,7 +12,7 @@ class MessageStoreCheckList : public CheckList
 {
 public:
 	MessageStoreCheckList()
-		: CheckList("Результаты функционального тестирования Message Store")
+		: CheckList("Результаты функционального тестирования Message Store", "msg_store.chk")
 	{
 		//storeCorrectSms
 		__reg_tc__("storeCorrectSms",
