@@ -4,6 +4,19 @@ table.list th
 	background-color: #F8F6EE;
 	border-bottom: 1px solid #161E49;
 	text-align: center;
+	padding: 2px 0px 2px 0px;
+}
+table.list td
+{
+	padding: 2px 0px 2px 0px;
+}
+table.list tr.row0
+{
+	background-color: #F2EEDA;
+}
+table.list tr.row1
+{
+	
 }
 table.list th a,
 table.list th a:visited,

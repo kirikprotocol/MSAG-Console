@@ -32,7 +32,7 @@ table.main_menu a:hover
 table.main_menu table.submenu,
 {
 	position:absolute; 
-	top: 22px;
+	top: 25px;
 	left:0px;
 	border: 1px solid #4E6E82;
 	background-color: #3A5867;
@@ -40,10 +40,17 @@ table.main_menu table.submenu,
 }
 table.main_menu table.submenu td
 {
-	padding-left: 5px;
-	padding-right: 5px;
+	padding : 2px 7px 2px 7px;
 }
 table.main_menu table.submenu td.submenu_sel
 {
 	background-color: #4E6E82;
+}
+table.main_menu table.submenu td.submenu_sel a
+{
+	color: black;
+}
+table.main_menu table.submenu td a:hover
+{
+	color: white;
 }
