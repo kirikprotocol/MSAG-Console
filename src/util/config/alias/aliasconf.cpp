@@ -8,6 +8,7 @@
 #include <xercesc/dom/DOM_NamedNodeMap.hpp>
 #include <util/Logger.h>
 #include <memory>
+#include "util/debug.h"
 
 namespace smsc {
 namespace util {
@@ -114,6 +115,7 @@ AliasConfig::status AliasConfig::load(const char * const filename)
       //record->alias = attrs.getNameItem("alias").getNodeValue().transcode();
       {
 				record->hide=!strcmp(attrs.getNamedItem("hide").getNodeValue().transcode(),"true");
+				__trace2__("record->hide: %s",record->hide?"true":"false");
         char* dta = attrs.getNamedItem("alias").getNodeValue().transcode();
         record->aliasValue = new char[21]; memset(record->aliasValue,0,21);
         int scaned = sscanf(dta,".%d.%d.%20s",
@@ -148,6 +150,8 @@ AliasConfig::status AliasConfig::load(const char * const filename)
       }
       DOM_NodeList childs = node.getChildNodes();
       logger.info("record added");
+			__trace2__("npi:%d,tni:%d,value:%20s", 
+								 record->aliasNpi,record->aliasTni,record->aliasValue);
       records.push_back(record.release());
     }
   } catch (DOMTreeReader::ParseException &e) {
