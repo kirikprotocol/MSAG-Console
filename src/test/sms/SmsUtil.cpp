@@ -188,11 +188,13 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, uint64_t 
 	__compare_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS, 119);
 	__compare_int_body_tag__(SMPP_NUMBER_OF_MESSAGES, 120);
 	__compare_bin_body_tag__(SMPP_MESSAGE_PAYLOAD, 121);
-	__compare_int_body_tag__(SMPP_MS_VALIDITY, 122);
-	__compare_int_body_tag__(SMPP_MSG_STATE, 123);
-	__compare_int_body_tag__(SMSC_DISCHARGE_TIME, 124);
-	__compare_str_body_tag__(SMSC_RECIPIENTADDRESS, 125);
-	__compare_int_body_tag__(SMSC_STATUS_REPORT_REQUEST, 126);
+	__compare_int_body_tag__(SMPP_DATA_SM, 122);
+	__compare_int_body_tag__(SMPP_MS_VALIDITY, 123);
+	__compare_int_body_tag__(SMPP_MSG_STATE, 124);
+	__compare_int_body_tag__(SMSC_DISCHARGE_TIME, 125);
+	__compare_str_body_tag__(SMSC_RECIPIENTADDRESS, 126);
+	__compare_int_body_tag__(SMSC_STATUS_REPORT_REQUEST, 127);
+	__compare_int_body_tag__(SMSC_USSD_OP, 128);
 	//bool attach;
 	return res;
 }
@@ -379,10 +381,10 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 	int pos = 0;
 	__trace2__("mask = %s", mask.str());
 
-	typedef map<const string, uint32_t> IntMap;
+	typedef map<int, uint32_t> IntMap;
 	typedef pair<int, char*> CheckData;
-	typedef map<const string, const CheckData> StrMap;
-	typedef map<const string, const CheckData> BinMap;
+	typedef map<int, const CheckData> StrMap;
+	typedef map<int, const CheckData> BinMap;
 	IntMap intMap;
 	StrMap strMap;
 	BinMap binMap;
@@ -410,11 +412,13 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 	__set_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS, rand0(255));
 	__set_int_body_tag__(SMPP_NUMBER_OF_MESSAGES, rand0(255));
 	__set_bin_body_tag__(SMPP_MESSAGE_PAYLOAD, rand1(MAX_PAYLOAD_LENGTH));
+	__set_int_body_tag__(SMPP_DATA_SM, rand0(255));
 	__set_int_body_tag__(SMPP_MS_VALIDITY, rand0(255));
 	__set_int_body_tag__(SMPP_MSG_STATE, rand0(255));
 	__set_int_body_tag__(SMSC_DISCHARGE_TIME, rand0(INT_MAX));
 	__set_str_body_tag__(SMSC_RECIPIENTADDRESS, rand1(30));
 	__set_int_body_tag__(SMSC_STATUS_REPORT_REQUEST, rand0(255));
+	__set_int_body_tag__(SMSC_USSD_OP, rand0(255));
 	//check fileds
 	if (check)
 	{
@@ -439,11 +443,13 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 		__check_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS);
 		__check_int_body_tag__(SMPP_NUMBER_OF_MESSAGES);
 		__check_bin_body_tag__(SMPP_MESSAGE_PAYLOAD);
+		__check_int_body_tag__(SMPP_DATA_SM);
 		__check_int_body_tag__(SMPP_MS_VALIDITY);
 		__check_int_body_tag__(SMPP_MSG_STATE);
 		__check_int_body_tag__(SMSC_DISCHARGE_TIME);
 		__check_str_body_tag__(SMSC_RECIPIENTADDRESS);
 		__check_int_body_tag__(SMSC_STATUS_REPORT_REQUEST);
+        __check_int_body_tag__(SMSC_USSD_OP);
 	}
 	//bool attach;
 	for (BinMap::iterator it = binMap.begin(); it != binMap.end(); it++)
@@ -680,11 +686,13 @@ ostream& operator<< (ostream& os, SMS& sms)
 	__print_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS);
 	__print_int_body_tag__(SMPP_NUMBER_OF_MESSAGES);
 	__print_bin_body_tag__(SMPP_MESSAGE_PAYLOAD);
+    __print_int_body_tag__(SMPP_DATA_SM);
 	__print_int_body_tag__(SMPP_MS_VALIDITY);
 	__print_int_body_tag__(SMPP_MSG_STATE);
 	__print_int_body_tag__(SMSC_DISCHARGE_TIME);
 	__print_str_body_tag__(SMSC_RECIPIENTADDRESS);
 	__print_int_body_tag__(SMSC_STATUS_REPORT_REQUEST);
+    __print_int_body_tag__(SMSC_USSD_OP);
 
 	//bool attach;
 }
