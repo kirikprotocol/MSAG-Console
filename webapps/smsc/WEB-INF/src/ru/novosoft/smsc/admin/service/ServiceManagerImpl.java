@@ -125,9 +125,9 @@ public class ServiceManagerImpl implements ServiceManager
       File jspsFolder = WebAppFolders.getServiceJspsFolder(serviceId);
 
       if (serviceFolder.exists())
-        throw new AdminException("Service already exists in filesystem");
+        throw new AdminException("Service already exists in filesystem: "+serviceFolder.getCanonicalPath());
       if (jspsFolder.exists())
-        throw new AdminException("Jps pages for new services already exists");
+        throw new AdminException("Jps pages for new services already exists: "+jspsFolder.getCanonicalPath());
 
       Functions.unZipArchive(serviceFolder,
               new BufferedInputStream(new FileInputStream(incomingZip)));
