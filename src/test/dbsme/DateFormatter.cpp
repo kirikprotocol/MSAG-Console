@@ -125,7 +125,14 @@ const string DateFormatter::format(time_t t) const
 				res << str;
 				break;
 			default:
-				return "";
+				if (!isalnum(*it))
+				{
+					res << *it;
+				}
+				else
+				{
+					return "";
+				}
 		}
 	}
 	return res.str();
