@@ -173,7 +173,7 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   statement->setInt8(1,profile.reportoptions);
   statement->setInt8(2,profile.codepage);
   char addrbuf[30];
-  sprintf(addrbuf,"%d.%d.%s",addr.type,addr.plan,addr.value);
+  sprintf(addrbuf,".%d.%d.%s",addr.type,addr.plan,addr.value);
   __trace2__("profiler: update %s",addrbuf);
   statement->setString(3,addrbuf);
   statement->executeUpdate();
@@ -194,7 +194,7 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   if(!connection.get())throw Exception("Profiler: Failed to get connection");
   auto_ptr<Statement> statement(connection->createStatement(sql));
   char addrbuf[30];
-  sprintf(addrbuf,"%d.%d.%s",addr.type,addr.plan,addr.value);
+  sprintf(addrbuf,".%d.%d.%s",addr.type,addr.plan,addr.value);
   __trace2__("profiler: insert %s",addrbuf);
   statement->setString(1, addrbuf);
   statement->setInt8(2, profile.reportoptions);
