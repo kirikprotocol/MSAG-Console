@@ -1,0 +1,10 @@
+#!/bin/sh
+#############################################################################
+
+# Default stack directory
+STACKDIR="/opt/EINss7166/bin"
+
+if [ -x ${STACKDIR}/stack.sh ]; then
+    ${STACKDIR}/stack.sh start >> ${STACKDIR}/stack.log 2>&1 &
+fi
+exit 0

@@ -1,0 +1,27 @@
+this directory contains ss7 usefull tools
+
+- ss7run is used to start links in initialized stack
+
+- ss7trace is used to on/off tracing
+
+- mstack.sh is used to start/stop ss7 stack manually
+            require ss7run installed
+
+- stack.sh is used to start/restart ss7 stack and watching
+           require ss7run installed
+
+- rc.stack is used to start stack.sh by init
+
+INSTALLATION (login as root)
+
+1. copy ss7run(compiled), ss7trace(compiled), mstack.sh, stack.sh to ss7 home
+directory. e.g. /opt/EINss7166/bin
+2. edit stack.sh, mstack.sh to correct path variables
+3. copy rc.stack to /etc
+4. edit rc.stack to correct path variables
+5. insert into /etc/inittab the following line:
+   st:234:once:/etc/rc.stack > /dev/console 2>&1 # Autostart SS7 stack
+
+RUNNING (login as root)
+
+1. nohup /opt/EINss7166/bin/stack.sh start >> /opt/EINss7166/bin/stack.log 2>&1 &
