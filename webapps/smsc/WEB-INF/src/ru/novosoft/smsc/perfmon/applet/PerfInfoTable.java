@@ -2,168 +2,178 @@ package ru.novosoft.smsc.perfmon.applet;
 
 import java.awt.*;
 import java.util.*;
+
 import ru.novosoft.smsc.perfmon.PerfSnap;
 
 
 public class PerfInfoTable extends Canvas {
-  PerfSnap snap;
-  Dimension prefSize;
-  Image offscreen;
 
-  int pad  = 1;
-  int grid = 2;
+    static final int pad = 1;
+    static final int grid = 1;
+    static final int numHeads = 5;
+    static final int numRows = 3;
+    static final int colorShift = 16;
 
-  String heads[];
-  String rows[];
+    static final Color bgColor = SystemColor.control;
+    static final Color shadowColor = SystemColor.controlShadow;
+    static final Color lightShadowColor = SystemColor.controlLtHighlight;
+    static final Color textColor = SystemColor.textText;
+    static final Color headsColor[] = {
+        new Color(bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue() + colorShift),
+        new Color(bgColor.getRed()+colorShift, bgColor.getGreen()+colorShift, bgColor.getBlue()),
+        new Color(bgColor.getRed(), bgColor.getGreen()+colorShift, bgColor.getBlue()+colorShift),
+        new Color(bgColor.getRed(), bgColor.getGreen()+colorShift, bgColor.getBlue()),
+        new Color(bgColor.getRed()+colorShift, bgColor.getGreen(), bgColor.getBlue())
+    };
 
-  public PerfInfoTable( PerfSnap snap ) {
-    this.snap = snap;
-    prefSize = new Dimension( 100, 0 );
+    PerfSnap snap;
+    Dimension prefSize;
+    Image offscreen;
+    int columnWidth;
 
-    heads = new String[3];
-    heads[0] = PerfMon.localeText.getString( "ptabh.last" );
-    heads[1] =  PerfMon.localeText.getString( "ptabh.avg" );
-    heads[2] =  PerfMon.localeText.getString( "ptabh.total" );
+    String heads[];
+    String rows[];
 
-    rows = new String[5];
-    rows[0] = PerfMon.localeText.getString( "ptabr.total" );
-    rows[1] = PerfMon.localeText.getString( "ptabr.succ" );
-    rows[2] = PerfMon.localeText.getString( "ptabr.err" );
-    rows[3] = PerfMon.localeText.getString( "ptabr.resch" );
-    rows[4] = PerfMon.localeText.getString( "ptabr.recv" );
+    public PerfInfoTable(PerfSnap snap) {
+        this.snap = snap;
+        prefSize = new Dimension(100, 0);
 
+        heads = new String[numHeads];
+        for ( int i = 0; i < numHeads; i++ ) {
+            heads[i] = PerfMon.localeText.getString("ptabh."+i);
+        }
 
-    invalidate();
-  }
+        rows = new String[numRows];
+        for ( int i = 0; i < numRows; i++ ) {
+            rows[i] = PerfMon.localeText.getString("ptabr."+i);
+        }
 
-  public synchronized void setSnap( PerfSnap snap ) {
-    this.snap = new PerfSnap( snap );
-    this.repaint();
-  }
-
-  public void invalidate() {
-    Font font = getFont();
-    if( font != null ) {
-      FontMetrics fm = getFontMetrics(font);
-      prefSize.height = (fm.getHeight()+pad)*(rows.length+1)+grid*rows.length;
-      Dimension sz = getSize();
-      setSize( sz.width, prefSize.height );
-    }
-    offscreen = null;
-    super.invalidate();
-  }
-
-  public Dimension getPrefferedSize() {
-    return prefSize;
-  }
-
-  public Dimension getMinimumSize() {
-    return prefSize;
-  }
-
-
-  Color bgColor = SystemColor.control;
-  Color shadowColor = SystemColor.controlShadow;
-  Color lightShadowColor = SystemColor.controlLtHighlight;
-  Color textColor = SystemColor.textText;
-  Color rowsColor[] = {
-                        new Color( bgColor.getRed()+16, bgColor.getGreen()+16, bgColor.getBlue()+16 ),
-                        new Color( bgColor.getRed(), bgColor.getGreen()+32, bgColor.getBlue() ),
-                        new Color( bgColor.getRed()+32, bgColor.getGreen(), bgColor.getBlue() ),
-                        new Color( bgColor.getRed()+32, bgColor.getGreen()+32, bgColor.getBlue()),
-                        new Color( bgColor.getRed(), bgColor.getGreen(), bgColor.getBlue()+32 )
-                      };
-
-
-  public synchronized void paint(Graphics gg) {
-    Dimension sz = getSize();
-    if( offscreen == null ) {
-      offscreen = createImage( sz.width, sz.height );
-    }
-    Graphics g = offscreen.getGraphics();
-    g.setColor( bgColor );
-    g.fillRect( 0, 0, sz.width, sz.height );
-
-    
-
-    Font font = getFont();
-    FontMetrics fm = getFontMetrics(font);
-
-    {
-      int y = fm.getHeight()+pad+grid;
-      for( int i = 0; i< rowsColor.length; i++) {
-        g.setColor( rowsColor[i]);
-        g.fillRect( 0, (i+1)*y, sz.width, fm.getHeight() );
-      }
+        invalidate();
     }
 
-    {
-      // draw column headings
-      g.setColor( textColor );
-      int x = sz.width/4;
-      for( int i = 1; i <= 3; i++ ) {
-        g.drawChars( heads[i-1].toCharArray(), 0, heads[i-1].length(), 
-                     i*x-pad+(x-fm.charsWidth(heads[i-1].toCharArray(), 0, heads[i-1].length())),
-                     fm.getAscent()+pad );
-      }
-    }
-    {
-      // draw row headings
-      g.setColor( textColor );
-      int y = fm.getHeight()+pad+grid;
-      int x = sz.width/4;
-      for( int i = 1; i <= rows.length; i++ ) {
-        g.drawChars( rows[i-1].toCharArray(), 0, rows[i-1].length(), 
-                     x-fm.charsWidth(rows[i-1].toCharArray(), 0, rows[i-1].length())-pad, 
-                     i*y+fm.getAscent()+pad );
-      }
-    }
-    {
-      // draw counters
-      drawCounters( g, snap.last, sz, fm, 1 );   
-      drawCounters( g, snap.avg, sz, fm, 2 );   
-      drawCounters( g, snap.total, sz, fm, 3 );   
-    }
-    {
-      // draw grids
-      int y = fm.getHeight()+pad+grid;
-      int x = sz.width/4;
-
-      g.setColor( lightShadowColor );
-      for( int i = 1; i<=rows.length; i++ ) {
-        g.drawLine( 0, i*y, sz.width, i*y );
-      }
-      for( int i = 1; i<=3; i++ ) {
-        g.drawLine( i*x+3, 0, i*x+3, sz.height );
-      }
-
-      g.setColor( shadowColor );
-      for( int i = 1; i<=rows.length; i++ ) {
-        g.drawLine( 0, i*y-1, sz.width, i*y-1 );
-      }
-      for( int i = 1; i<=3; i++ ) {
-        g.drawLine( i*x+2, 0, i*x+2, sz.height );
-      }
+    public synchronized void setSnap(PerfSnap snap) {
+        this.snap = new PerfSnap(snap);
+        this.repaint();
     }
 
-    gg.drawImage(offscreen, 0, 0, null);
-    g.dispose();
-  }
-
-  void drawCounters( Graphics g, long counters[], Dimension sz, FontMetrics fm, int col ) {
-    g.setColor( textColor );
-    int y = fm.getHeight()+pad+grid;
-    int x = sz.width/4;
-    for( int i = 0; i < rows.length; i++ ) {
-      String counter = String.valueOf( counters[i] );
-      g.drawChars( counter.toCharArray(), 0, counter.length(), 
-                   col*x+(x-fm.charsWidth(counter.toCharArray(), 0, counter.length())-pad), 
-                   (i+1)*y+fm.getAscent()+pad );
+    public void invalidate() {
+        Font font = getFont();
+        if (font != null) {
+            FontMetrics fm = getFontMetrics(font);
+            Dimension sz = getSize();
+            prefSize.height = (fm.getHeight() + pad) * (rows.length + 1) + grid * rows.length;
+            columnWidth = (sz.width-2*pad)/(numHeads+1);
+            setSize(sz.width, prefSize.height);
+        }
+        offscreen = null;
+        super.invalidate();
     }
-  }
 
-  public void update( Graphics gg ) {
-    paint(gg);
-  }
+    public Dimension getPrefferedSize() {
+        return prefSize;
+    }
+
+    public Dimension getMinimumSize() {
+        return prefSize;
+    }
+
+    public synchronized void paint(Graphics gg) {
+        Dimension sz = getSize();
+        if (offscreen == null) {
+            offscreen = createImage(sz.width, sz.height);
+        }
+        Graphics g = offscreen.getGraphics();
+        g.setColor(bgColor);
+        g.fillRect(0, 0, sz.width, sz.height);
+
+
+        Font font = getFont();
+        FontMetrics fm = getFontMetrics(font);
+
+        // change background for rows
+        {
+            int y = fm.getHeight() + pad + grid;
+            int height = sz.height-y-pad;
+            int x = columnWidth+grid+pad;
+            for (int i = 0; i < headsColor.length; i++) {
+                g.setColor(headsColor[i]);
+                g.fillRect(x, y, columnWidth, height);
+                x+=columnWidth;
+            }
+        }
+
+        {
+            // draw column headings
+            g.setColor(textColor);
+            int x = columnWidth;
+            for (int i = 0; i < numHeads; i++) {
+                g.drawChars(heads[i].toCharArray(), 0, heads[i].length(),
+                        x + (columnWidth - fm.charsWidth(heads[i].toCharArray(), 0, heads[i].length()))-pad,
+                        fm.getAscent() + pad);
+                x += columnWidth;
+            }
+        }
+
+        {
+            // draw row headings
+            g.setColor(textColor);
+            int y = fm.getHeight() + pad + grid + fm.getAscent();
+            for (int i = 0; i < numRows; i++) {
+                g.drawChars(rows[i].toCharArray(), 0, rows[i].length(),
+                        columnWidth - fm.charsWidth(rows[i].toCharArray(), 0, rows[i].length())-pad,
+                        y);
+                y += fm.getHeight() + 2*pad + grid;
+            }
+        }
+
+        {
+            // draw counters
+            drawCounters(g, snap.last, sz, fm, 1);
+            drawCounters(g, snap.avg, sz, fm, 2);
+            drawCounters(g, snap.total, sz, fm, 3);
+        }
+
+        {
+            // draw grids
+            int y = fm.getHeight() + 2*pad + grid;
+
+/*            if( grid > 1 ) {
+              g.setColor(lightShadowColor);
+              for (int i = 1; i <= rows.length; i++) {
+                  g.drawLine(0, i * y, sz.width, i * y);
+              }
+              for (int i = 1; i <= 3; i++) {
+                  g.drawLine(i * x + 3, 0, i * x + 3, sz.height);
+              }
+            }
+*/
+            g.setColor(shadowColor);
+            for (int i = 0; i < numRows; i++) {
+                g.drawLine(pad, (i+1) * y, sz.width-pad, (i+1) * y);
+            }
+            for (int i = 0; i < numHeads; i++) {
+                g.drawLine((i+1) * columnWidth, pad, (i+1) * columnWidth, sz.height-pad);
+            }
+        }
+
+        gg.drawImage(offscreen, 0, 0, null);
+        g.dispose();
+    }
+
+    void drawCounters(Graphics g, long counters[], Dimension sz, FontMetrics fm, int col) {
+        g.setColor(textColor);
+        int y = fm.getHeight() + 2*pad + grid;
+        int x = columnWidth;
+        for (int i = 0; i < counters.length; i++) {
+            char counter[] = String.valueOf(counters[i]).toCharArray();
+            g.drawChars(counter, 0, counter.length,
+                    (i+2) * x - fm.charsWidth(counter, 0, counter.length)-pad,
+                    (col) * y + fm.getAscent() + pad);
+        }
+    }
+
+    public void update(Graphics gg) {
+        paint(gg);
+    }
 
 }
