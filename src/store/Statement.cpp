@@ -7,6 +7,7 @@
 namespace smsc { namespace store 
 {
 
+#ifndef SPARC
 #define UINT64_SWAP_LE_BE_CONSTANT(val)      ((uint64_t) (\
     (((uint64_t) (val) &                              \
         (uint64_t) (0x00000000000000FFU)) << 56) |    \
@@ -24,6 +25,9 @@ namespace smsc { namespace store
         (uint64_t) (0x00FF000000000000U)) >> 40) |    \
     (((uint64_t) (val) &                              \
         (uint64_t) (0xFF00000000000000U)) >> 56)))
+#else
+#define UINT64_SWAP_LE_BE_CONSTANT(val)      ((uint64_t) (val))
+#endif
 
 /* ----------------------------- Statetment -------------------------- */
 
