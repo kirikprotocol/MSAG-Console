@@ -57,6 +57,7 @@ void SQLJob::process(Command& command, DataSource& ds)
             if (stmt)
             {
                 process(command, *stmt);
+                if (!isQuery) connection->commit();
                 delete stmt;
             }
             else
@@ -67,6 +68,7 @@ void SQLJob::process(Command& command, DataSource& ds)
         }
         catch(SQLException& exc)
         {
+            if (!isQuery) connection->rollback();
             ds.freeConnection(connection);
             throw CommandProcessException();
         }
@@ -82,6 +84,12 @@ void SQLJob::process(Command& command, Statement& stmt)
     throw(CommandProcessException)
 {
     __trace__("SQL Job: Process command called ...");
+    
+    ContextEnvironment ctx;
+    ctx.exportStr(SMSC_DBSME_SQL_JOB_FROM_ADDR, command.getFromAddress().value);
+    ctx.exportStr(SMSC_DBSME_SQL_JOB_TO_ADDR, command.getToAddress().value);
+    ctx.exportStr(SMSC_DBSME_SQL_JOB_NAME, command.getJobName());
+
     try
     {
         command.setOutData("");
@@ -93,7 +101,7 @@ void SQLJob::process(Command& command, Statement& stmt)
             (command.getInData()) ? command.getInData():"";
 
         SQLSetAdapter setAdapter(&stmt);
-        parser->parse(input, (SetAdapter&)setAdapter);
+        parser->parse(input, setAdapter, ctx);
 
         std::string output = "";
         if (isQuery)
@@ -106,7 +114,7 @@ void SQLJob::process(Command& command, Statement& stmt)
                     SQLGetAdapter getAdapter(rs);
                     while (rs->fetchNext())
                     {
-                        formatter->format(output, (GetAdapter&)getAdapter);
+                        formatter->format(output, getAdapter, ctx);
                     }
                     delete rs;
                 }
@@ -124,7 +132,7 @@ void SQLJob::process(Command& command, Statement& stmt)
         {
             uint32_t result = (uint32_t)stmt.executeUpdate();
             SQLGetRowsAdapter getAdapter(result);
-            formatter->format(output, (GetAdapter&)getAdapter);
+            formatter->format(output, getAdapter, ctx);
         }
         
         command.setOutData(output.c_str()); 
@@ -133,7 +141,7 @@ void SQLJob::process(Command& command, Statement& stmt)
     {
         throw CommandProcessException(exc);
     }
-    __trace__("SQL Job: Process command complited.");
+    __trace__("SQL Job: Process command completed.");
 }
 
 }}

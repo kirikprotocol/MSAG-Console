@@ -63,10 +63,9 @@ namespace smsc { namespace util { namespace templates
     {
     protected:
 
-        Formatter(EntityType type) 
+        Formatter(EntityType type)
         {
-            FormatterRegistry::registerFormatter(
-                ioEntityTypeStrings[type], this);
+            FormatterRegistry::registerFormatter(ioEntityTypeStrings[type], this);
         };
 
     public:
@@ -74,9 +73,8 @@ namespace smsc { namespace util { namespace templates
         virtual ~Formatter() {};
         
         virtual void format(std::string& output, 
-                            FormatEntity& entity,
-                            GetAdapter& adapter)
-            throw(FormattingException, AdapterException) = 0;
+            FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
+                throw(FormattingException, AdapterException) = 0;
     };
 
     class Int8Formatter : public Formatter 
@@ -86,8 +84,8 @@ namespace smsc { namespace util { namespace templates
         Int8Formatter() : Formatter(INT8) {};
         virtual ~Int8Formatter() {};
         
-        virtual void format(
-            std::string& output, FormatEntity& entity, GetAdapter& adapter)
+        virtual void format(std::string& output,
+            FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
                 throw(FormattingException, AdapterException);
     };
     
@@ -98,8 +96,8 @@ namespace smsc { namespace util { namespace templates
         Int16Formatter() : Formatter(INT16) {};
         virtual ~Int16Formatter() {};
         
-        virtual void format(
-            std::string& output, FormatEntity& entity, GetAdapter& adapter)
+        virtual void format(std::string& output,
+            FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
                 throw(FormattingException, AdapterException);
     };
 
@@ -110,8 +108,8 @@ namespace smsc { namespace util { namespace templates
         Int32Formatter() : Formatter(INT32) {};
         virtual ~Int32Formatter() {};
         
-        virtual void format(
-            std::string& output, FormatEntity& entity, GetAdapter& adapter)
+        virtual void format(std::string& output,
+            FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
                 throw(FormattingException, AdapterException);
     };
     
@@ -122,8 +120,8 @@ namespace smsc { namespace util { namespace templates
         Int64Formatter() : Formatter(INT64) {};
         virtual ~Int64Formatter() {};
         
-        virtual void format(
-            std::string& output, FormatEntity& entity, GetAdapter& adapter)
+        virtual void format(std::string& output,
+            FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
                 throw(FormattingException, AdapterException);
     };
     
@@ -134,8 +132,8 @@ namespace smsc { namespace util { namespace templates
         Uint8Formatter() : Formatter(UINT8) {};
         virtual ~Uint8Formatter() {};
         
-        virtual void format(
-            std::string& output, FormatEntity& entity, GetAdapter& adapter)
+        virtual void format(std::string& output,
+            FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
                 throw(FormattingException, AdapterException);
     };
     
@@ -146,8 +144,8 @@ namespace smsc { namespace util { namespace templates
         Uint16Formatter() : Formatter(UINT16) {};
         virtual ~Uint16Formatter() {};
         
-        virtual void format(
-            std::string& output, FormatEntity& entity, GetAdapter& adapter)
+        virtual void format(std::string& output,
+            FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
                 throw(FormattingException, AdapterException);
     };
 
@@ -158,8 +156,8 @@ namespace smsc { namespace util { namespace templates
         Uint32Formatter() : Formatter(UINT32) {};
         virtual ~Uint32Formatter() {};
         
-        virtual void format(
-            std::string& output, FormatEntity& entity, GetAdapter& adapter)
+        virtual void format(std::string& output,
+            FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
                 throw(FormattingException, AdapterException);
     };
     
@@ -170,8 +168,8 @@ namespace smsc { namespace util { namespace templates
         Uint64Formatter() : Formatter(UINT64) {};
         virtual ~Uint64Formatter() {};
         
-        virtual void format(
-            std::string& output, FormatEntity& entity, GetAdapter& adapter)
+        virtual void format(std::string& output,
+            FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
                 throw(FormattingException, AdapterException);
     };
     
@@ -182,8 +180,8 @@ namespace smsc { namespace util { namespace templates
         StringFormatter() : Formatter(STRING) {};
         virtual ~StringFormatter() {};
         
-        virtual void format(
-            std::string& output, FormatEntity& entity, GetAdapter& adapter)
+        virtual void format(std::string& output,
+            FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
                 throw(FormattingException, AdapterException);
     };
     
@@ -194,8 +192,8 @@ namespace smsc { namespace util { namespace templates
         TextFormatter() : Formatter(TEXT) {};
         virtual ~TextFormatter() {};
         
-        virtual void format(
-            std::string& output, FormatEntity& entity, GetAdapter& adapter)
+        virtual void format(std::string& output,
+            FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
                 throw(FormattingException, AdapterException);
     };
 
@@ -206,8 +204,8 @@ namespace smsc { namespace util { namespace templates
         FloatFormatter() : Formatter(FLOAT) {};
         virtual ~FloatFormatter() {};
         
-        virtual void format(
-            std::string& output, FormatEntity& entity, GetAdapter& adapter)
+        virtual void format(std::string& output,
+            FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
                 throw(FormattingException, AdapterException);
     };
 
@@ -218,8 +216,8 @@ namespace smsc { namespace util { namespace templates
         DoubleFormatter() : Formatter(DOUBLE) {};
         virtual ~DoubleFormatter() {};
         
-        virtual void format(
-            std::string& output, FormatEntity& entity, GetAdapter& adapter)
+        virtual void format(std::string& output,
+            FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
                 throw(FormattingException, AdapterException);
     };
     
@@ -230,8 +228,8 @@ namespace smsc { namespace util { namespace templates
         LongDoubleFormatter() : Formatter(LDOUBLE) {};
         virtual ~LongDoubleFormatter() {};
         
-        virtual void format(
-            std::string& output, FormatEntity& entity, GetAdapter& adapter)
+        virtual void format(std::string& output,
+            FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
                 throw(FormattingException, AdapterException);
     };
 
@@ -242,8 +240,8 @@ namespace smsc { namespace util { namespace templates
         DateTimeFormatter() : Formatter(DATE) {};
         virtual ~DateTimeFormatter() {};
         
-        virtual void format(
-            std::string& output, FormatEntity& entity, GetAdapter& adapter)
+        virtual void format(std::string& output,
+            FormatEntity& entity, GetAdapter& adapter, ContextEnvironment& ctx)
                 throw(FormattingException, AdapterException);
     };
     
@@ -255,7 +253,8 @@ namespace smsc { namespace util { namespace templates
             throw(FormatRenderingException);
         virtual ~OutputFormatter() {};
 
-        void format(std::string& output, GetAdapter& adapter)
+        void format(std::string& output,
+                    GetAdapter& adapter, ContextEnvironment& ctx)
             throw(FormattingException, AdapterException);
     };
 

@@ -41,6 +41,8 @@ namespace smsc { namespace util { namespace templates
     static const char* SMSC_DBSME_IO_FORMAT_PRECISION_OPTION = "precision";
     static const char* SMSC_DBSME_IO_FORMAT_EXPONENT_OPTION  = "exponent";
     static const char* SMSC_DBSME_IO_FORMAT_DIGITS_OPTION    = "digits";
+    static const char* SMSC_DBSME_IO_FORMAT_EXPORT_OPTION    = "export";
+    static const char* SMSC_DBSME_IO_FORMAT_IMPORT_OPTION    = "import";
     
     static const char  SMSC_DBSME_IO_FORMAT_ENTITY_DELIMETER = '$';
     static const char  SMSC_DBSME_IO_FORMAT_STRING_DELIMETER = '\"';
@@ -72,6 +74,35 @@ namespace smsc { namespace util { namespace templates
         "AM", "PM"
     };
     
+    class ContextEnvironment
+    {
+    protected:
+
+        Hash<std::string>   strs;
+        Hash<int64_t>       ints;
+        Hash<float>         flts;
+        Hash<double>        dbls;
+        Hash<long double>   ldls;
+
+    public:
+
+        ContextEnvironment() {};
+        virtual ~ContextEnvironment() {};
+
+        bool exportStr(const char* key, const char* val);
+        bool importStr(const char* key, char* &val);
+        bool exportInt(const char* key, int64_t val);
+        bool importInt(const char* key, int64_t &val);
+        bool exportFlt(const char* key, float val);
+        bool importFlt(const char* key, float &val);
+        bool exportDbl(const char* key, double val);
+        bool importDbl(const char* key, double &val);
+        bool exportLdl(const char* key, long double val);
+        bool importLdl(const char* key, long double &val);
+
+        void reset();
+    };
+
     const int ioEntityTypesNumber = 14;
     static const char* ioEntityTypeStrings[ioEntityTypesNumber]  = 
     { 

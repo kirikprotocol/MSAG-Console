@@ -65,16 +65,15 @@ namespace smsc { namespace util { namespace templates
         
         Parser(EntityType type) 
         {
-            ParserRegistry::registerParser(
-                ioEntityTypeStrings[type], this);
+            ParserRegistry::registerParser(ioEntityTypeStrings[type], this);
         };
 
     public:
 
         virtual ~Parser() {};
         
-        virtual void parse(
-            std::string& input, FormatEntity& entity, SetAdapter& adapter)
+        virtual void parse(std::string& input,
+            FormatEntity& entity, SetAdapter& adapter, ContextEnvironment& ctx)
                 throw(ParsingException, AdapterException) = 0;
     };
     
@@ -85,8 +84,8 @@ namespace smsc { namespace util { namespace templates
         Int8Parser() : Parser(INT8) {};
         virtual ~Int8Parser() {};
         
-        virtual void parse(
-            std::string& input, FormatEntity& entity, SetAdapter& adapter)
+        virtual void parse(std::string& input,
+            FormatEntity& entity, SetAdapter& adapter, ContextEnvironment& ctx)
                 throw(ParsingException, AdapterException);
     };
     
@@ -97,8 +96,8 @@ namespace smsc { namespace util { namespace templates
         Int16Parser() : Parser(INT16) {};
         virtual ~Int16Parser() {};
         
-        virtual void parse(
-            std::string& input, FormatEntity& entity, SetAdapter& adapter)
+        virtual void parse(std::string& input,
+            FormatEntity& entity, SetAdapter& adapter, ContextEnvironment& ctx)
                 throw(ParsingException, AdapterException);
     };
 
@@ -109,8 +108,8 @@ namespace smsc { namespace util { namespace templates
         Int32Parser() : Parser(INT32) {};
         virtual ~Int32Parser() {};
         
-        virtual void parse(
-            std::string& input, FormatEntity& entity, SetAdapter& adapter)
+        virtual void parse(std::string& input,
+            FormatEntity& entity, SetAdapter& adapter, ContextEnvironment& ctx)
                 throw(ParsingException, AdapterException);
     };
     
@@ -121,8 +120,8 @@ namespace smsc { namespace util { namespace templates
         Int64Parser() : Parser(INT64) {};
         virtual ~Int64Parser() {};
         
-        virtual void parse(
-            std::string& input, FormatEntity& entity, SetAdapter& adapter)
+        virtual void parse(std::string& input,
+            FormatEntity& entity, SetAdapter& adapter, ContextEnvironment& ctx)
                 throw(ParsingException, AdapterException);
     };
     
@@ -133,8 +132,8 @@ namespace smsc { namespace util { namespace templates
         Uint8Parser() : Parser(UINT8) {};
         virtual ~Uint8Parser() {};
         
-        virtual void parse(
-            std::string& input, FormatEntity& entity, SetAdapter& adapter)
+        virtual void parse(std::string& input,
+            FormatEntity& entity, SetAdapter& adapter, ContextEnvironment& ctx)
                 throw(ParsingException, AdapterException);
     };
     
@@ -145,8 +144,8 @@ namespace smsc { namespace util { namespace templates
         Uint16Parser() : Parser(UINT16) {};
         virtual ~Uint16Parser() {};
         
-        virtual void parse(
-            std::string& input, FormatEntity& entity, SetAdapter& adapter)
+        virtual void parse(std::string& input,
+            FormatEntity& entity, SetAdapter& adapter, ContextEnvironment& ctx)
                 throw(ParsingException, AdapterException);
     };
 
@@ -157,8 +156,8 @@ namespace smsc { namespace util { namespace templates
         Uint32Parser() : Parser(UINT32) {};
         virtual ~Uint32Parser() {};
         
-        virtual void parse(
-            std::string& input, FormatEntity& entity, SetAdapter& adapter)
+        virtual void parse(std::string& input,
+            FormatEntity& entity, SetAdapter& adapter, ContextEnvironment& ctx)
                 throw(ParsingException, AdapterException);
     };
     
@@ -169,8 +168,8 @@ namespace smsc { namespace util { namespace templates
         Uint64Parser() : Parser(UINT64) {};
         virtual ~Uint64Parser() {};
         
-        virtual void parse(
-            std::string& input, FormatEntity& entity, SetAdapter& adapter)
+        virtual void parse(std::string& input,
+            FormatEntity& entity, SetAdapter& adapter, ContextEnvironment& ctx)
                 throw(ParsingException, AdapterException);
     };
     
@@ -181,8 +180,8 @@ namespace smsc { namespace util { namespace templates
         StringParser() : Parser(STRING) {};
         virtual ~StringParser() {};
         
-        virtual void parse(
-            std::string& input, FormatEntity& entity, SetAdapter& adapter)
+        virtual void parse(std::string& input,
+            FormatEntity& entity, SetAdapter& adapter, ContextEnvironment& ctx)
                 throw(ParsingException, AdapterException);
     };
     
@@ -193,8 +192,8 @@ namespace smsc { namespace util { namespace templates
         FloatParser() : Parser(FLOAT) {};
         virtual ~FloatParser() {};
         
-        virtual void parse(
-            std::string& input, FormatEntity& entity, SetAdapter& adapter)
+        virtual void parse(std::string& input,
+            FormatEntity& entity, SetAdapter& adapter, ContextEnvironment& ctx)
                 throw(ParsingException, AdapterException);
     };
 
@@ -205,8 +204,8 @@ namespace smsc { namespace util { namespace templates
         DoubleParser() : Parser(DOUBLE) {};
         virtual ~DoubleParser() {};
         
-        virtual void parse(
-            std::string& input, FormatEntity& entity, SetAdapter& adapter)
+        virtual void parse(std::string& input,
+            FormatEntity& entity, SetAdapter& adapter, ContextEnvironment& ctx)
                 throw(ParsingException, AdapterException);
     };
     
@@ -217,8 +216,8 @@ namespace smsc { namespace util { namespace templates
         LongDoubleParser() : Parser(LDOUBLE) {};
         virtual ~LongDoubleParser() {};
         
-        virtual void parse(
-            std::string& input, FormatEntity& entity, SetAdapter& adapter)
+        virtual void parse(std::string& input,
+            FormatEntity& entity, SetAdapter& adapter, ContextEnvironment& ctx)
                 throw(ParsingException, AdapterException);
     };
 
@@ -229,8 +228,8 @@ namespace smsc { namespace util { namespace templates
         DateTimeParser() : Parser(DATE) {};
         virtual ~DateTimeParser() {};
         
-        virtual void parse(
-            std::string& input, FormatEntity& entity, SetAdapter& adapter)
+        virtual void parse(std::string& input,
+            FormatEntity& entity, SetAdapter& adapter, ContextEnvironment& ctx)
                 throw(ParsingException, AdapterException);
     };
 
@@ -242,8 +241,9 @@ namespace smsc { namespace util { namespace templates
             throw(FormatRenderingException);
         virtual ~InputParser() {};
 
-        void parse(std::string input, SetAdapter& adapter)
-            throw(ParsingException, AdapterException);
+        virtual void parse(std::string& input,
+            SetAdapter& adapter, ContextEnvironment& ctx)
+                throw(ParsingException, AdapterException);
     };
 
 }}}

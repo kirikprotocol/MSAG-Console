@@ -126,23 +126,27 @@ FormatEntity::FormatEntity(std::string line, bool io, bool type)
         
         const char* arg = getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
         const char* def = getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
+        const char* imp = getOption(SMSC_DBSME_IO_FORMAT_IMPORT_OPTION);
+        const char* exp = getOption(SMSC_DBSME_IO_FORMAT_EXPORT_OPTION);
         
         if (io) // formatter
         {
-            if (!arg && !def)
+            if (!arg && !def && !imp)
                 throw FormatRenderingException(
-                    "Neither '%s' nor '%s' option defined ! "
-                    "Parsing format string: <%s>", 
+                    "Neither '%s' nor '%s' nor '%s' option defined ! "
+                    "Parsing output format string: <%s>", 
                     SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION,
-                    SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION, raw);
+                    SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION,
+                    SMSC_DBSME_IO_FORMAT_IMPORT_OPTION, raw);
         }
         else    // parser
         {
-            if (!arg) 
+            if (!arg && !exp) 
                 throw FormatRenderingException(
-                    "'%s' option wasn't defined ! "
-                    "Parsing format string: <%s>", 
-                    SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION, raw);
+                    "Neither '%s' nor '%s' option wasn't defined ! "
+                    "Parsing input format string: <%s>", 
+                    SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION,
+                    SMSC_DBSME_IO_FORMAT_EXPORT_OPTION, raw);
         }
     }
     else 
@@ -249,6 +253,82 @@ void FormatEntityRenderer::clearEntities()
 FormatEntityRenderer::~FormatEntityRenderer()
 {
     clearEntities();
+}
+
+
+bool ContextEnvironment::exportStr(const char* key, const char* val)
+{
+    if (!key || !val) return false;
+    if (strs.Exists(key)) strs.Delete(key);
+    strs.Insert(key, std::string(val));
+    return true;
+}
+bool ContextEnvironment::importStr(const char* key, char* &val)
+{
+    if (!key || !strs.Exists(key)) return false;
+    val = (char *)(strs.Get(key).c_str());
+    return true;
+}
+bool ContextEnvironment::exportInt(const char* key, int64_t val)
+{
+    if (!key) return false;
+    if (ints.Exists(key)) ints.Delete(key);
+    ints.Insert(key, val);
+    return true;
+}
+bool ContextEnvironment::importInt(const char* key, int64_t &val)
+{
+    if (!key || !ints.Exists(key)) return false;
+    val = ints.Get(key);
+    return true;
+}
+bool ContextEnvironment::exportFlt(const char* key, float val)
+{
+    if (!key) return false;
+    if (flts.Exists(key)) flts.Delete(key);
+    flts.Insert(key, val);
+    return true;
+}
+bool ContextEnvironment::importFlt(const char* key, float &val)
+{
+    if (!key || !flts.Exists(key)) return false;
+    val = flts.Get(key);
+    return true;
+}
+bool ContextEnvironment::exportDbl(const char* key, double val)
+{
+    if (!key) return false;
+    if (dbls.Exists(key)) dbls.Delete(key);
+    dbls.Insert(key, val);
+    return true;
+}
+bool ContextEnvironment::importDbl(const char* key, double &val)
+{
+    if (!key || !dbls.Exists(key)) return false;
+    val = dbls.Get(key);
+    return true;
+}
+bool ContextEnvironment::exportLdl(const char* key, long double val)
+{
+    if (!key) return false;
+    if (ldls.Exists(key)) ldls.Delete(key);
+    ldls.Insert(key, val);
+    return true;
+}
+bool ContextEnvironment::importLdl(const char* key, long double &val)
+{
+    if (!key || !ldls.Exists(key)) return false;
+    val = ldls.Get(key);
+    return true;
+}
+
+void ContextEnvironment::reset()
+{
+    strs.Empty();
+    ints.Empty(); 
+    flts.Empty();
+    dbls.Empty();
+    ldls.Empty();
 }
 
 }}}
