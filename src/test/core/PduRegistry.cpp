@@ -54,15 +54,15 @@ void PduRegistry::registerPdu(PduData* pduData)
 	}
 	if (pduData->submitTime)
 	{
-		submitTimeMap[TimeKey(pduData->submitTime, pduData->msgRef)] = pduData;
+		submitTimeMap[TimeKey(pduData->submitTime, pduData->id)] = pduData;
 	}
 	if (pduData->waitTime)
 	{
-		waitTimeMap[TimeKey(pduData->waitTime, pduData->msgRef)] = pduData;
+		waitTimeMap[TimeKey(pduData->waitTime, pduData->id)] = pduData;
 	}
 	if (pduData->validTime)
 	{
-		validTimeMap[TimeKey(pduData->validTime, pduData->msgRef)] = pduData;
+		validTimeMap[TimeKey(pduData->validTime, pduData->id)] = pduData;
 	}
 }
 
@@ -70,6 +70,8 @@ void PduRegistry::updatePdu(PduData* pduData)
 {
 	__require__(pduData && pduData->pdu);
 	__trace2__("PduRegistry::updatePdu(): %s", toString(pduData));
+	//smsId и sequenceNumber становятся известны позже из submit_sm_resp
+	//для того же самого smsId могут меняются pduData при replace_sm и при откате replace_sm
 	if (pduData->smsId.length())
 	{
 		idMap[pduData->smsId] = pduData;
@@ -77,6 +79,11 @@ void PduRegistry::updatePdu(PduData* pduData)
 	if (pduData->pdu->get_sequenceNumber())
 	{
 		seqNumMap[pduData->pdu->get_sequenceNumber()] = pduData;
+	}
+	//для того же самого msgRef могут меняются pduData при replace_sm и при откате replace_sm
+	if (pduData->msgRef)
+	{
+		msgRefMap[pduData->msgRef] = pduData;
 	}
 }
 
@@ -151,17 +158,17 @@ void PduRegistry::removePdu(PduData* pduData)
 	}
 	if (pduData->submitTime)
 	{
-		int res = submitTimeMap.erase(TimeKey(pduData->submitTime, pduData->msgRef));
+		int res = submitTimeMap.erase(TimeKey(pduData->submitTime, pduData->id));
 		__require__(res);
 	}
 	if (pduData->waitTime)
 	{
-		int res = waitTimeMap.erase(TimeKey(pduData->waitTime, pduData->msgRef));
+		int res = waitTimeMap.erase(TimeKey(pduData->waitTime, pduData->id));
 		__require__(res);
 	}
 	if (pduData->validTime)
 	{
-		int res = validTimeMap.erase(TimeKey(pduData->validTime, pduData->msgRef));
+		int res = validTimeMap.erase(TimeKey(pduData->validTime, pduData->id));
 		__require__(res);
 	}
 	if (lastRemovedPduData)
