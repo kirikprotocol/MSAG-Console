@@ -93,6 +93,7 @@ public class PerfServerRunner extends Thread {
     }
 
     public void fill( InputStream is, int len ) throws IOException {
+      logger.debug("filling buffer with: "+len+" was used: "+offset);
       offset = 0;
       size = 0;
       int cnt = 0;
