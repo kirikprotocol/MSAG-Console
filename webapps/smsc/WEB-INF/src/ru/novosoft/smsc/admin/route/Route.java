@@ -26,9 +26,11 @@ public class Route
 	private boolean billing = false;
 	private int serviceId = 0;
 	private boolean suppressDeliveryReports = false;
+	private boolean active;
 
-	public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, boolean isSuppressDeliveryReports, int serviceId, SourceList sources, DestinationList destinations)
+	public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, boolean isSuppressDeliveryReports, boolean active, int serviceId, SourceList sources, DestinationList destinations)
 	{
+		this.active = active;
 		if (routeName == null)
 			throw new NullPointerException("Route name is null");
 		if (routeName.length() > Constants.ROUTE_ID_MAXLENGTH)
@@ -47,6 +49,7 @@ public class Route
 		this.billing = isBilling;
 		this.serviceId = serviceId;
 		this.suppressDeliveryReports = isSuppressDeliveryReports;
+		this.active = active;
 	}
 
 	public Route(String routeName)
@@ -64,16 +67,16 @@ public class Route
 		archiving = false;
 		billing = false;
 		serviceId = 0;
-		this.suppressDeliveryReports = false;
+		suppressDeliveryReports = false;
+		active = false;
 	}
 
-	public Route(Element routeElem, SubjectList subjects, SMEList smes)
-			  throws AdminException
+	public Route(Element routeElem, SubjectList subjects, SMEList smes) throws AdminException
 	{
 		name = routeElem.getAttribute("id");
 		if (name.length() > Constants.ROUTE_ID_MAXLENGTH)
 		{
-			throw new AdminException("Route name is too long: "+name.length()+" chars \"" + name+ '"');
+			throw new AdminException("Route name is too long: " + name.length() + " chars \"" + name + '"');
 		}
 		src = new SourceList(routeElem, subjects);
 		dst = new DestinationList(routeElem, subjects, smes);
@@ -83,6 +86,7 @@ public class Route
 		billing = routeElem.getAttribute("billing").equalsIgnoreCase("true");
 		serviceId = Integer.decode(routeElem.getAttribute("serviceId")).intValue();
 		suppressDeliveryReports = Boolean.valueOf(routeElem.getAttribute("suppressDeliveryReports")).booleanValue();
+		active = Boolean.valueOf(routeElem.getAttribute("active")).booleanValue();
 	}
 
 	public String getName()
@@ -154,8 +158,7 @@ public class Route
 		src.addAll(source_selected);
 	}
 
-	public void updateDestinations(Set destinationsStrings, String masksString, SubjectList allSubjects, SME defaultSme)
-			  throws AdminException
+	public void updateDestinations(Set destinationsStrings, String masksString, SubjectList allSubjects, SME defaultSme) throws AdminException
 	{
 		DestinationList list = new DestinationList();
 		for (Iterator i = destinationsStrings.iterator(); i.hasNext();)
@@ -208,14 +211,7 @@ public class Route
 
 	public PrintWriter store(PrintWriter out)
 	{
-		out.println("  <route id=\"" + StringEncoderDecoder.encode(getName())
-						+ "\" billing=\"" + isBilling()
-						+ "\" archiving=\"" + isArchiving()
-						+ "\" enabling=\"" + isEnabling()
-						+ "\" priority=\"" + getPriority()
-						+ "\" serviceId=\"" + getServiceId()
-						+ "\" suppressDeliveryReports=\"" + isSuppressDeliveryReports()
-						+ "\">");
+		out.println("  <route id=\"" + StringEncoderDecoder.encode(getName()) + "\" billing=\"" + isBilling() + "\" archiving=\"" + isArchiving() + "\" enabling=\"" + isEnabling() + "\" priority=\"" + getPriority() + "\" serviceId=\"" + getServiceId() + "\" suppressDeliveryReports=\"" + isSuppressDeliveryReports() + "\" active=\"" + isActive() + "\">");
 		getSources().store(out);
 		getDestinations().store(out);
 		out.println("  </route>");
@@ -250,5 +246,15 @@ public class Route
 	public void setSuppressDeliveryReports(boolean suppressDeliveryReports)
 	{
 		this.suppressDeliveryReports = suppressDeliveryReports;
+	}
+
+	public boolean isActive()
+	{
+		return active;
+	}
+
+	public void setActive(boolean active)
+	{
+		this.active = active;
 	}
 }

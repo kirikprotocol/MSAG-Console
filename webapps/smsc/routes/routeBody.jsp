@@ -30,6 +30,10 @@
 	<th class=label>&nbsp;</th>
 	<td colspan=2><input id=suppressDeliveryReports class=check type=checkbox name=suppressDeliveryReports <%=bean.isSuppressDeliveryReports() ? "checked" : ""%>>&nbsp;<label for=suppressDeliveryReports>suppress delivery reports</label></td>
 </tr>
+<tr class=row<%=(rowN++)&1%>>
+	<th class=label>&nbsp;</th>
+	<td colspan=2><input id=active class=check type=checkbox name=active <%=bean.isActive() ? "checked" : ""%>>&nbsp;<label for=active>active</label></td>
+</tr>
 
 <tr class=row<%=(rowN++)&1%>>
 	<th class=label>service ID:</th>

@@ -140,6 +140,7 @@ throw (SubjectNotFoundException)
   std::auto_ptr<char> archiving(elem.getAttribute("archiving").transcode());
   std::auto_ptr<char> enabling(elem.getAttribute("enabling").transcode());
   std::auto_ptr<char> suppressDeliveryReports(elem.getAttribute("suppressDeliveryReports").transcode());
+  std::auto_ptr<char> active(elem.getAttribute("active").transcode());
   std::auto_ptr<char> priorityStr(elem.getAttribute("priority").transcode());
   std::auto_ptr<char> serviceIdStr(elem.getAttribute("serviceId").transcode());
   unsigned int priority = atoi(priorityStr.get());
@@ -150,6 +151,7 @@ throw (SubjectNotFoundException)
                                    strcmp("true", archiving.get()) == 0,
                                    strcmp("true", enabling.get()) == 0,
                                    strcmp("true", suppressDeliveryReports.get()) == 0,
+																	 strcmp("true", active.get()) == 0,
                                    serviceId)
                          );
 
@@ -204,7 +206,9 @@ RouteConfig::status RouteConfig::load(const char * const filename)
       DOM_Element &elem = (DOM_Element &) node;
       try
       {
-        routes.push_back(createRoute(elem, subjects));
+				std::auto_ptr<Route> route(createRoute(elem, subjects));
+				if (route->isActive())
+					routes.push_back(route.release());
       }
       catch (SubjectNotFoundException &ex)
       {

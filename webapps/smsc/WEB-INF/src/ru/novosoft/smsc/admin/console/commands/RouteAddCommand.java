@@ -104,8 +104,9 @@ public class RouteAddCommand extends RouteGenCommand
                 }
             }
 
+			   //todo add support for route "active" flag
             smscRoute = new Route(route, priority, allow, bill, arc, !receipt,
-                                  serviceid, srcList, dstList);
+                                  true, serviceid, srcList, dstList);
 
             if (priority < 0 || priority > 32000)
                 throw new Exception("Priority value should be between 0 and 32000");

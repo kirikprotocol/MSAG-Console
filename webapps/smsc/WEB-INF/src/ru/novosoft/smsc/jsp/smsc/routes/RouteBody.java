@@ -19,6 +19,7 @@ public class RouteBody extends SmscBean
 	protected boolean billing = false;
 	protected boolean archiving = false;
 	protected boolean suppressDeliveryReports = false;
+	protected boolean active = false;
 	protected int serviceId = 0;
 	protected String[] checkedSources = null;
 	protected String[] srcMasks = null;
@@ -200,5 +201,15 @@ public class RouteBody extends SmscBean
 	public void setSuppressDeliveryReports(boolean suppressDeliveryReports)
 	{
 		this.suppressDeliveryReports = suppressDeliveryReports;
+	}
+
+	public boolean isActive()
+	{
+		return active;
+	}
+
+	public void setActive(boolean active)
+	{
+		this.active = active;
 	}
 }

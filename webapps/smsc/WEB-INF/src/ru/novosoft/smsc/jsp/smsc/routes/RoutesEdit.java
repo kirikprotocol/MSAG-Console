@@ -8,8 +8,7 @@ package ru.novosoft.smsc.jsp.smsc.routes;
 import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
-import ru.novosoft.smsc.jsp.smsc.SmscBean;
-import ru.novosoft.smsc.util.*;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import java.util.*;
 
@@ -48,6 +47,7 @@ public class RoutesEdit extends RouteBody
 				archiving = r.isArchiving();
 				serviceId = r.getServiceId();
 				suppressDeliveryReports = r.isSuppressDeliveryReports();
+				active = r.isActive();
 				checkedSources = (String[]) r.getSources().getSubjectNames().toArray(new String[0]);
 				srcMasks = (String[]) r.getSources().getMaskNames().toArray(new String[0]);
 				checkedDestinations = (String[]) r.getDestinations().getSubjectNames().toArray(new String[0]);
@@ -180,7 +180,7 @@ public class RoutesEdit extends RouteBody
 				return error(SMSCErrors.error.routes.destinationsIsEmpty);
 
 			routeSubjectManager.getRoutes().remove(oldRouteId);
-			routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, serviceId, sources, destinations));
+			routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations));
 			appContext.getStatuses().setRoutesChanged(true);
 			return RESULT_DONE;
 		}

@@ -110,6 +110,7 @@ private:
   bool archiving;
   bool enabling;
   bool suppressDeliveryReports;
+	bool active;
   int serviceId;
 
 
@@ -123,9 +124,9 @@ public:
     : id(r.id), priority(r.priority), sources(r.sources), destinations(r.destinations),
       billing(r.billing), archiving(r.archiving), enabling(r.enabling),suppressDeliveryReports(r.suppressDeliveryReports), serviceId(r.serviceId)
   {}
-  Route(const std::string & rid, const int prior, bool isBilling, bool isArchiving, bool isEnabling, bool isSuppressDR,int _serviceId)
+  Route(const std::string & rid, const int prior, bool isBilling, bool isArchiving, bool isEnabling, bool isSuppressDR, bool isActive, int _serviceId)
     : id(rid), priority(prior), sources(), destinations(),
-      billing(isBilling), archiving(isArchiving), enabling(isEnabling), suppressDeliveryReports(isSuppressDR),serviceId(_serviceId)
+      billing(isBilling), archiving(isArchiving), enabling(isEnabling), suppressDeliveryReports(isSuppressDR), active(isActive), serviceId(_serviceId)
   {}
 
   ~Route()
@@ -140,6 +141,7 @@ public:
   const bool isArchiving() const {return archiving;}
   const bool isEnabling() const {return enabling;}
   const bool isSuppressDeliveryReports(){return suppressDeliveryReports;}
+	const bool isActive(){return active;}
   const char * const getId() const {return id.c_str();}
   int getPriority() {return priority;}
   const std::string & getIdString() const {return id;}

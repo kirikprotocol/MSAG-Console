@@ -76,9 +76,11 @@ public class RouteAlterCommand extends RouteGenCommand
                 return;
             }
 
+			   //todo add support for route "active" flag
             Route newRoute = new Route(route,
                     oldRoute.getPriority(), oldRoute.isEnabling(), oldRoute.isBilling(),
                     oldRoute.isArchiving(), oldRoute.isSuppressDeliveryReports(),
+						  true,
 					oldRoute.getServiceId(),
                     oldRoute.getSources(), oldRoute.getDestinations());
 

@@ -11,13 +11,14 @@ import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
 
 public class RouteDataItem extends AbstractDataItem
 {
-  protected RouteDataItem(Route r)
-  {
-    values.put("Route ID", r.getName());
-    values.put("sources", r.getSources());
-    values.put("destinations", r.getDestinations());
-    values.put("isEnabling" , new Boolean(r.isEnabling()));
-    values.put("isBilling"  , new Boolean(r.isBilling()));
-    values.put("isArchiving", new Boolean(r.isArchiving()));
-  }
+	protected RouteDataItem(Route r)
+	{
+		values.put("Route ID", r.getName());
+		values.put("sources", r.getSources());
+		values.put("destinations", r.getDestinations());
+		values.put("isEnabling", new Boolean(r.isEnabling()));
+		values.put("isBilling", new Boolean(r.isBilling()));
+		values.put("isArchiving", new Boolean(r.isArchiving()));
+		values.put("active", new Boolean(r.isActive()));
+	}
 }

@@ -8,7 +8,6 @@ package ru.novosoft.smsc.jsp.smsc.routes;
 import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
-import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import java.util.*;
 
@@ -140,7 +139,7 @@ public class RoutesAdd extends RouteBody
 			if (destinations.isEmpty())
 				return error(SMSCErrors.error.routes.destinationsIsEmpty);
 
-			routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, serviceId, sources, destinations));
+			routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations));
 			appContext.getStatuses().setRoutesChanged(true);
 			return RESULT_DONE;
 		}
