@@ -333,7 +333,7 @@ struct Directive{
 };
 
 
-void StateMachine::processDirectives(SMS& sms,Profile& p)
+void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
 {
   const char *body="";
   unsigned int len=0;
@@ -897,6 +897,7 @@ StateType StateMachine::submit(Tuple& t)
 
 
   sms->setIntProperty(Tag::SMSC_HIDE,profile.hide);
+  Profile srcprof=profile;
   profile=smsc->getProfiler()->lookup(dst);
   sms->setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
   int pres=psSingle;
@@ -908,7 +909,7 @@ StateType StateMachine::submit(Tuple& t)
   //
 
   try{
-    processDirectives(*sms,profile);
+    processDirectives(*sms,profile,srcprof);
   }catch(...)
   {
     __trace__("Failed to process directives due to exception");
