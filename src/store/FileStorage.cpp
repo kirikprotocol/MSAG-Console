@@ -961,7 +961,13 @@ void TextDumpStorage::writeRecord(SMSId id, SMS& sms)
     CSVFileEncoder::addString  (out, addressBuffer);
 
     std::string message = "";
-    parseMessageBody(sms.getMessageBody(), message);
+    try {
+      parseMessageBody(sms.getMessageBody(), message);
+    } catch( std::exception& ex ) {
+      smsc_log_warn(log, "Can't get message text: %s", ex.what() );
+      message = "Can't get text: ";
+      message += ex.what();
+    }
     CSVFileEncoder::addString  (out, message.c_str(), true);
     
     write(out.c_str(), out.length());
