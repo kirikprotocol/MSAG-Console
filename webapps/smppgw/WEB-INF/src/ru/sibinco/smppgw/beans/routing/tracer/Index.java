@@ -1,15 +1,12 @@
 package ru.sibinco.smppgw.beans.routing.tracer;
 
-import ru.sibinco.lib.backend.route.Mask;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.bean.TabledBean;
 import ru.sibinco.smppgw.beans.SmppgwJspException;
 import ru.sibinco.smppgw.beans.TabledBeanImpl;
 import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
 import ru.sibinco.smppgw.backend.sme.GwSmeManager;
-import ru.sibinco.smppgw.backend.Smppgw;
 import ru.sibinco.smppgw.backend.Gateway;
-import ru.sibinco.smppgw.backend.protocol.alias.Alias;
 import ru.sibinco.smppgw.Constants;
 
 import javax.servlet.http.HttpServletRequest;
@@ -42,7 +39,7 @@ public class Index extends TabledBeanImpl implements TabledBean
 
     protected GwRoutingManager gwRoutingManager = null;
     protected GwSmeManager gwSmeManager = null;
-    protected Smppgw smppgw = null;
+   // protected Smppgw smppgw = null;
     protected Gateway gateway = null;
 
   public void process(final HttpServletRequest request, final HttpServletResponse response) throws SmppgwJspException
@@ -50,7 +47,7 @@ public class Index extends TabledBeanImpl implements TabledBean
       super.process(request,response);
       gwRoutingManager = appContext.getGwRoutingManager();
       gwSmeManager = appContext.getGwSmeManager();
-      smppgw=appContext.getSmppgw();
+    //  smppgw=appContext.getSmppgw();
       gateway=appContext.getGateway();
       if (null != mbCheck)
          loadAndCheck();
@@ -121,7 +118,7 @@ public class Index extends TabledBeanImpl implements TabledBean
     private void traceRoute() throws SmppgwJspException
     {
       try {
-        final Mask srcAddressMask = new Mask(srcAddress);
+      /*  final Mask srcAddressMask = new Mask(srcAddress);
         final Mask dstAddressMask = new Mask(dstAddress);
         if (appContext.getSmppgw().getAliases().isContainsAlias(srcAddressMask)) {
           final Alias a = appContext.getSmppgw().getAliases().getAliasByAddress(srcAddressMask);
@@ -132,7 +129,7 @@ public class Index extends TabledBeanImpl implements TabledBean
         if (appContext.getSmppgw().getAliases().isContainsAlias(dstAddressMask))
          throw new SibincoException(Constants.errors.routing.tracer.srcAddressIsAlias
                     +dstAddress + " -> " + appContext.getSmppgw().getAliases().getAddressByAlias(dstAddressMask).getAddress().getMask());
-
+       */
        traceResults = appContext.getGateway().traceRoute(dstAddress, srcAddress, srcSysId);
         if (null == traceResults || 1 >= traceResults.size())
           throw new SibincoException("Transport error, invalid responce.");
