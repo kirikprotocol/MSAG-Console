@@ -125,7 +125,7 @@ protected:
 
   void changeSmsStateToEnroute(SMS& sms,SMSId id,const Descriptor& d,uint32_t failureCause,time_t nextTryTime,bool skipAttempt=false);
 
-  void submitReceipt(SMS& sms);
+  void submitReceipt(SMS& sms,int type);
 
   void submitResp(Tuple&,SMS*,int);
 

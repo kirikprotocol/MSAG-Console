@@ -3124,7 +3124,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
       //smsc->submitSms(prpt);
 
-      submitReceipt(rpt);
+      submitReceipt(rpt,0x4);
 
       if(umrLast && umrIndex!=-1)
       {
@@ -3132,7 +3132,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
         while(umrIndex<umrList.size())
         {
           rpt.setMessageReference(umrList[umrIndex]);
-          submitReceipt(rpt);
+          submitReceipt(rpt,0x4);
           umrIndex++;
         }
       }
@@ -3648,7 +3648,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
   }
   //fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
   //smsc->submitSms(prpt);
-  submitReceipt(rpt);
+  submitReceipt(rpt,0x4);
   /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
   for(int i=0;i<arr.Count();i++)
   {
@@ -3720,7 +3720,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   }
   //fillSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,140);
   //smsc->submitSms(prpt);
-  submitReceipt(rpt);
+  submitReceipt(rpt,0x20);
   /*splitSms(&rpt,out.c_str(),out.length(),CONV_ENCODING_CP1251,profile.codepage,arr);
   for(int i=0;i<arr.Count();i++)
   {
@@ -3763,7 +3763,7 @@ void StateMachine::changeSmsStateToEnroute(SMS& sms,SMSId id,const Descriptor& d
 }
 
 
-void StateMachine::submitReceipt(SMS& sms)
+void StateMachine::submitReceipt(SMS& sms,int type)
 {
   SMSId msgId=store->getNextId();
   time_t now=time(NULL);
@@ -3801,6 +3801,14 @@ void StateMachine::submitReceipt(SMS& sms)
 
       Profile profile=smsc->getProfiler()->lookup(dst);
       sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,profile.codepage);
+
+      if(ri.smeSystemId!="MAP_PROXY")
+      {
+        sms.setIntProperty(Tag::SMPP_ESM_CLASS,
+          (
+            sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0xC3 //11000011
+          )|type);
+      }
 
       int pres=psSingle;
       if(ri.smeSystemId=="MAP_PROXY")
