@@ -133,14 +133,7 @@ public:
 	 * Обновление существующего SM некорректными данными.
 	 * Диагностика ошибки должна выводиться в лог.
 	 */
-	TCResult* replaceIncorrectSM(SMSId id,
-		const SMS& sms, int num);
-
-	/**
-	 * Обновление существующего SM некорректными данными.
-	 * Диагностика ошибки должна выводиться в лог.
-	 */
-	TCResult* replaceIncorrectSM2(SMSId id, const SMS& sms, int num);
+	TCResult* replaceIncorrectSM(SMSId id, const SMS& sms, int num);
 
 	/**
 	 * Обновление несуществующего SM.

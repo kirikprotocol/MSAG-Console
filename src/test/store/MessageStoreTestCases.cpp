@@ -243,7 +243,10 @@ TCResult* MessageStoreTestCases::storeRejectDuplicateSM(const SMS& existentSMS)
 	{
 		SMS sms;
 		setupRandomCorrectSM(&sms);
-		//GSM 03.40 пункт 9.2.3.25
+		//—огласно GSM 03.40 пункт 9.2.3.25 должны совпадать: TP-MR, TP-DA, OA.
+		//—огласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
+		//destination address and service_type (константа согласно 5.2.11).
+		//MessageReference также константа, поскольку отсутствует в SMPP v3.4.
 		sms.setRejectDuplicates(true);
 		sms.setMessageReference(existentSMS.getMessageReference());
 		sms.setOriginatingAddress(existentSMS.getOriginatingAddress());
@@ -264,7 +267,7 @@ TCResult* MessageStoreTestCases::storeRejectDuplicateSM(const SMS& existentSMS)
 
 TCResult* MessageStoreTestCases::storeIncorrectSM(int num)
 {
-	TCSelector s(num, 6);
+	TCSelector s(num, 4);
 	TCResult* res = new TCResult(TC_STORE_INCORRECT_SM, s.getChoice());
 	SMS sms;
 	for (; s.check(); s++)
@@ -286,13 +289,9 @@ TCResult* MessageStoreTestCases::storeIncorrectSM(int num)
 				case 4: //некорректный статус
 					sms.setState(DELETED);
 					break;
-				case 5: //срок валидности уже закончилс€
-					sms.setValidTime(time(NULL) - 1);
-					break;
-				case 6: //waitTime > validTime
-					sms.setWaitTime(time(NULL) + 200);
-					sms.setValidTime(time(NULL) + 100);
-					break;
+				//ѕроер€етс€ вызывающей стороной:
+				//срок валидности уже закончилс€
+				//waitTime > validTime
 				default:
 					throw s;
 			}
@@ -369,28 +368,24 @@ TCResult* MessageStoreTestCases::setCorrectSMStatus(SMSId id, SMS* sms, int num)
 	{
 		try
 		{
-			time_t curTime;
-			time(&curTime);
+			time_t curTime = time(NULL);
+			sms->setDeliveryTime(curTime);
 			switch(s.value())
 			{
 				case 1:
 					sms->setState(DELIVERED);
-					sms->setDeliveryTime(curTime - 100);
 					sms->setFailureCause(1);
 					break;
 				case 2:
 					sms->setState(EXPIRED);
-					sms->setDeliveryTime(curTime + 100);
 					sms->setFailureCause(2);
 					break;
 				case 3:
 					sms->setState(UNDELIVERABLE);
-					sms->setDeliveryTime(curTime - 100);
 					sms->setFailureCause(3);
 					break;
 				case 4:
 					sms->setState(DELETED);
-					sms->setDeliveryTime(curTime + 100);
 					sms->setFailureCause(4);
 					break;
 				default:
@@ -558,46 +553,11 @@ TCResult* MessageStoreTestCases::replaceCorrectSM(SMSId id, SMS* sms, int num)
 
 TCResult* MessageStoreTestCases::replaceIncorrectSM(SMSId id, const SMS& sms, int num)
 {
-	TCSelector s(num, 2);
-	TCResult* res = new TCResult(TC_REPLACE_INCORRECT_SM, s.getChoice());
-	for (; s.check(); s++)
-	{
-		try
-		{
-			SMS _sms(sms);
-			switch(s.value())
-			{
-				case 1: //срок валидности уже закончилс€
-					_sms.setValidTime(time(NULL) - 1);
-					break;
-				case 2: //waitTime > validTime
-					_sms.setWaitTime(time(NULL) + 200);
-					_sms.setValidTime(time(NULL) + 100);
-					break;
-				default:
-					throw s;
-			}
-			msgStore->replace(id, _sms);
-		}
-		catch (NoSuchMessageException&)
-		{
-			res->addFailure(s.value());
-		}
-		catch(StorageException&)
-		{
-			//ok
-		}
-		catch(...)
-		{
-			res->addFailure(s.value());
-		}
-	}
-	return res;
-}
-	
-TCResult* MessageStoreTestCases::replaceIncorrectSM2(SMSId id, const SMS& sms, int num)
-{
-	TCSelector s(num, 3, 1000);
+	//—ледующие проверки делает вызывающа€ сторона:
+	//срок валидности уже закончилс€
+	//waitTime > validTime
+
+	TCSelector s(num, 3);
 	TCResult* res = new TCResult(TC_REPLACE_INCORRECT_SM, s.getChoice());
 	//originatingAddress
 	const Address& origAddr = sms.getOriginatingAddress();

@@ -92,9 +92,8 @@ void executeBenchmarkTest(const int size)
 	for (int i = 0; i < size; i++)
 	{
 		delete tc.replaceIncorrectSM(id[i], sms[i], RAND_TC);
-		delete tc.replaceIncorrectSM2(id[i], sms[i], RAND_TC);
 	}
-	printResult("replaceIncorrectSM", 2 * size, getTime());
+	printResult("replaceIncorrectSM", size, getTime());
 
 	//чтение SM
 	for (int i = 0; i < size; i++)

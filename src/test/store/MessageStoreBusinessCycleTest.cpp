@@ -155,10 +155,7 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 			case 7:
 				process(tc.replaceIncorrectSM(id, sms, RAND_TC));
 				break;
-			case 8:
-				process(tc.replaceIncorrectSM2(id, sms, RAND_TC));
-				break;
-			default: //9..15
+			default: //8..15
 				process(tc.loadExistentSM(id, sms));
 		}
 	}

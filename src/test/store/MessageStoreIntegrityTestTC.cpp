@@ -102,14 +102,7 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					stack[i].push_back(res);
 				}
 				break;
-			case 8:
-				for (int i = 0; i < listSize; i++)
-				{
-					TCResult* res = tc.replaceIncorrectSM2(id[i], sms[i], RAND_TC);
-					stack[i].push_back(res);
-				}
-				break;
-			default: //case = 9..15
+		default: //case = 8..15
 				for (int i = 0; i < listSize; i++)
 				{
 					TCResult* res = tc.loadExistentSM(id[i], sms[i]);
