@@ -27,7 +27,9 @@ typedef smsc::core::buffers::Array<SmscCommand> MapIOQueue;
 
 class MapProxy:public SmeProxy{
 public:
-  MapProxy() : seq(0) {}
+  MapProxy() : seq(0) {
+   time_logger = smsc::util::Logger::getCategory("map.otime")
+  }
   virtual ~MapProxy(){}
   virtual void close(){}
   void notifyOutThread(){}
@@ -158,7 +160,7 @@ protected:
   int seq;
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
-  log4cpp::Category& time_logger = smsc::util::Logger::getCategory("map.otime");
+  log4cpp::Category& time_logger;
 };
 
 };//mappio
