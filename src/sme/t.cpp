@@ -65,6 +65,10 @@ public:
       printf("To:%s\n",buf);
       printf("DCS:%d\n",s.getIntProperty(Tag::SMPP_DATA_CODING));
       printf("UMR:%d\n",s.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
+      if(s.hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
+      {
+        printf("MsgState:%d\n",s.getIntProperty(Tag::SMPP_MSG_STATE));
+      }
       if(getPduText((PduXSm*)pdu,buf,sizeof(buf))==-1)
       {
         int sz=((PduXSm*)pdu)->optional.size_messagePayload();
