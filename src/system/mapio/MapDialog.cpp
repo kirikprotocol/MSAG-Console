@@ -56,9 +56,46 @@ void ConvAddrMap2Smc(const MAP_SMS_ADDRESS* ma,Address* sa){
       }else break;
     }
     sa->setValue(ma->len,sa_val);
+    {
+      char b[256] = {0,};
+      int k = 0;
+      for ( int i=0; i<ma->len; ++i){
+        k+=sprintf(b+k,"%02x ",*((unsigned char*)sa_val+i));          
+      }
+      __trace2__("MAP::ConvAddrMap2Smc::adr value %s",b);
+    }
   }else{
     char c = 0;
     sa->setValue(0,&c);
+  }
+}
+
+void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
+  sa->setTypeOfNumber(1);
+  sa->setNumberingPlan(1);
+  /*if ( ma->addrLen != 0 ){
+    char sa_val[21] = {0,};
+    for ( int i=0; i<ma->addrLen*2;){
+      sa_val[i]=ma->addr[i>>1]&0x0f+0x30;
+      ++i;
+      if ( i < ma->len ){
+        sa_val[i] = (ma->addr[i>>1]>>4)+0x30;
+        ++i;
+      }else break;
+    }
+    sa->setValue(ma->addrLen*2,sa_val);
+  }else{
+    char c = 0;
+    sa->setValue(0,&c);
+  }*/
+  sa->setValue(0,&c);
+  {
+    char b[256] = {0,};
+    int k = 0;
+    for ( int i=0; i<ma->addrLen; ++i){
+      k+=sprintf(b+k,"%02x ",*((unsigned char*)ma->addr+i));          
+    }
+    __trace2__("MAP::ConvAddrMSISDN2Smc::adr value %s",b);
   }
 }
 
