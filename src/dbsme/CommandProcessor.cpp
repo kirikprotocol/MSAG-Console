@@ -38,7 +38,8 @@ void CommandProcessor::init(ConfigView* config)
             log.info("Loading DataProvider for section '%s'.", section);
             DataProvider* provider = new DataProvider(providerConfig);
             address = providerConfig->getString("address");
-            providers.Insert(address, provider);
+            Address addr(address);
+            providers.Insert(addr.value, provider);
             log.info("Loaded DataProvider for section '%s'."
                      " Bind address is: %s", section, address);
         }
