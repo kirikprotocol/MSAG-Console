@@ -1297,10 +1297,9 @@ static ET96MAP_USSD_DATA_CODING_SCHEME_T fillUSSDString(unsigned encoding, const
   return ussdEncoding;
 }
 
-static void DoUSSRUserResponceError(SmscCommand& cmd , MapDialog* dialog)
+static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
 {
   __map_trace2__("%s: dialogid 0x%x",__func__,dialog->dialogid_map);
-  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0;
   ET96MAP_ERROR_PROCESS_UNSTRUCTURED_SS_REQUEST_T error;
   memset(&error, 0, sizeof(error));
   error.errorCode = 34; /*Sytem failure */
