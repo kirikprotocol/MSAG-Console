@@ -102,7 +102,7 @@ deps:
 	    done; \
 	fi
 	@rm -f $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.binaries-rules
-	@perl $(SMSC_SRCDIR)/conf/gendeps.pl $(SMSC_SRCDIR)/$(PACKAGEDIR)
+	@GCCFLAGS='$(CXXFLAGS)';export GCCFLAGS;perl $(SMSC_SRCDIR)/conf/gendeps.pl $(SMSC_SRCDIR)/$(PACKAGEDIR)
 #	@cat binaries-list 2>>/dev/null | awk '/^[^\#-][a-zA-Z0-9]/{print "$(SMSC_BUILDDIR)/bin/"$$1" : $(SMSC_BUILDDIR)/obj/$(LIBRARY)/"$$2".o\n"\
 #	    "\tmkdir -p `dirname $$@`\n"\
 #	    "\techo linking $$@\n"\
