@@ -12,6 +12,7 @@ uint64_t    Task::currentId  = 0;
 uint64_t    Task::sequenceId = 0;
 bool        Task::bInformAll   = false;
 bool        Task::bNotifyAll   = false;
+time_t      Task::validityTime = 0;
 int         Task::maxCallersCount  = -1; // Disable distinct callers count check
 int         Task::maxMessagesCount = -1; // Disable messages count for abonent check
 
@@ -65,18 +66,27 @@ const char* LOADUP_TASK_ST_SQL  =
    "AND (MCISME_EVT_SET.MSG_ID=MCISME_CUR_MSG.ID OR MCISME_EVT_SET.MSG_ID IS NULL) "
 "ORDER  BY MCISME_EVT_SET.ID";
 
+const char* DROP_OLD_EVT_CUR_SQL = 
+"DELETE FROM MCISME_CUR_MSG WHERE ID IN (SELECT MSG_ID FROM MCISME_EVT_SET WHERE DT<=:DT)";
+const char* DROP_OLD_EVT_MSG_SQL = 
+"DELETE FROM MCISME_MSG_SET WHERE ID IN (SELECT MSG_ID FROM MCISME_EVT_SET WHERE DT<=:DT)";
+const char* DROP_OLD_EVT_ALL_SQL = 
+"DELETE FROM MCISME_EVT_SET WHERE DT<=:DT";
+
 /* ----------------------- Access to current events set (MCI_EVT_SET) ------------------------ */
 
 const char* GET_EVT_CALLER_ID   = "GET_EVT_CALLER_ID";
 const char* CREATE_NEW_EVT_ID   = "CREATE_NEW_EVT_ID";
 const char* UPDATE_MSG_EVT_ID   = "UPDATE_MSG_EVT_ID";
 const char* DELETE_ALL_EVT_ID   = "DELETE_ALL_EVT_ID";
+const char* DELETE_ANY_EVT_ID   = "DELETE_ANY_EVT_ID";
 const char* COUNT_CALLERS_ID    = "COUNT_CALLERS_ID";
 
 const char* GET_EVT_CALLER_SQL  = "SELECT DISTINCT CALLER FROM MCISME_EVT_SET WHERE MSG_ID=:MSG_ID";
 const char* CREATE_NEW_EVT_SQL  = "INSERT INTO MCISME_EVT_SET (ID, ABONENT, DT, CALLER, MSG_ID) "
                                   "VALUES (:ID, :ABONENT, :DT, :CALLER, NULL)"; // MSG_ID is not assigned
 const char* UPDATE_MSG_EVT_SQL  = "UPDATE MCISME_EVT_SET SET MSG_ID=:MSG_ID WHERE ID=:ID"; // assigns MSG_ID
+const char* DELETE_ANY_EVT_SQL  = "DELETE FROM MCISME_EVT_SET WHERE ID=:ID";
 const char* DELETE_ALL_EVT_SQL  = "DELETE FROM MCISME_EVT_SET WHERE MSG_ID=:MSG_ID";
 
 const char* COUNT_ALL_CALLERS_SQL = "SELECT ABONENT, COUNT(DISTINCT CALLER) FROM MCISME_EVT_SET GROUP BY ABONENT";
@@ -101,12 +111,13 @@ const char* OBTAIN_RESULTSET_ERROR_MESSAGE  = "Failed to obtain result set for %
 
 /* ----------------------- Static part ----------------------- */
 
-void Task::init(DataSource* _ds, Statistics* _statistics, int _rowsPerMessage,
-                int _maxCallersCount/*=-1*/, int _maxMessagesCount/*=-1*/)
+void Task::init(DataSource* _ds, Statistics* _statistics, time_t _validityTime,
+                int _rowsPerMessage, int _maxCallersCount/*=-1*/, int _maxMessagesCount/*=-1*/)
 {
     Task::logger = Logger::getInstance("smsc.mcisme.Task");
     Task::ds = _ds; Task::statistics = _statistics;
     Task::currentId  = 0; Task::sequenceId = 0;
+    Task::validityTime = _validityTime;
     Task::maxCallersCount  = _maxCallersCount;
     Task::maxMessagesCount = _maxMessagesCount;
     Message::maxRowsPerMessage = _rowsPerMessage;
@@ -230,6 +241,40 @@ Hash<Task *> Task::loadupAll()
         connection = ds->getConnection();
         if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
         
+        smsc_log_debug(logger, "Task: expired events cleanup...");
+        try // cleanup old messages & events
+        { 
+            time_t expirationTime = time(NULL) - Task::validityTime; 
+            int32_t deletedItems = 0;
+            std::auto_ptr<Statement> delOldEvtCurStmtGuard(connection->createStatement(DROP_OLD_EVT_CUR_SQL));
+            Statement* delOldEvtCurStmt = delOldEvtCurStmtGuard.get();
+            if (!delOldEvtCurStmt)
+                throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "expired events cleanup 1");
+            delOldEvtCurStmt->setDateTime(1, expirationTime);
+            deletedItems = delOldEvtCurStmt->executeUpdate();
+            smsc_log_debug(logger, "Task: %d current messages expired", deletedItems);
+            std::auto_ptr<Statement> delOldEvtMsgStmtGuard(connection->createStatement(DROP_OLD_EVT_MSG_SQL));
+            Statement* delOldEvtMsgStmt = delOldEvtMsgStmtGuard.get();
+            if (!delOldEvtMsgStmt)
+                throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "expired events cleanup 2");
+            delOldEvtMsgStmt->setDateTime(1, expirationTime);
+            deletedItems = delOldEvtMsgStmt->executeUpdate();
+            smsc_log_debug(logger, "Task: %d total messages expired", deletedItems);
+            std::auto_ptr<Statement> delOldEvtAllStmtGuard(connection->createStatement(DROP_OLD_EVT_ALL_SQL));
+            Statement* delOldEvtAllStmt = delOldEvtAllStmtGuard.get();
+            if (!delOldEvtAllStmt)
+                throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "expired events cleanup 3");
+            delOldEvtAllStmt->setDateTime(1, expirationTime);
+            deletedItems = delOldEvtAllStmt->executeUpdate();
+            smsc_log_debug(logger, "Task: %d events expired", deletedItems);
+            connection->commit();
+        } 
+        catch (Exception& exc) {
+            try { connection->rollback(); } catch (...) { smsc_log_error(logger, "failed to rollback"); }
+            throw;
+        }
+        smsc_log_debug(logger, "Task: expired events cleanup done");
+
         std::auto_ptr<Statement> allMsgsStmtGuard(connection->createStatement(LOADUP_ALL_CUR_SQL));
         Statement* allMsgsStmt = allMsgsStmtGuard.get();
         if (!allMsgsStmt)
@@ -657,6 +702,25 @@ bool Task::formatMessage(Message& message)
         connection = ds->getConnection();
         if (!connection)
             throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
+
+        // scan events for old entries & delete it
+        Statement* delAnyEvtStmt = connection->getStatement(DELETE_ANY_EVT_ID, DELETE_ANY_EVT_SQL);
+        if (!delAnyEvtStmt) 
+            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "drop exired event");
+        time_t expirationTime = time(NULL) - Task::validityTime; 
+        int expiredCount = 0;
+        for (int i=0; i<events.Count(); i++) {
+            TaskEvent event = events[i];
+            if (event.time > expirationTime) continue;
+            delAnyEvtStmt->setUint64(1, event.id);
+            delAnyEvtStmt->executeUpdate();
+            smsc_log_debug(logger, "Task: event #%lld expired for abonent %s",
+                           event.id, abonent.c_str());
+            if (event.msg_id <= 0 && newEventsCount > 0) newEventsCount--;
+            events.Delete(i); i--; expiredCount++;
+        }
+        if (expiredCount > 0) connection->commit();
+        oldNewEventsCount = newEventsCount;
         
         // create new current message if needed
         if (currentMessageId <= 0) doNewCurrent(connection); 

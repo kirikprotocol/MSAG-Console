@@ -69,6 +69,7 @@ namespace smsc { namespace mcisme
         static Statistics*  statistics;
         static Logger*      logger;
         static uint64_t     currentId, sequenceId; // id generation sequence control
+        static time_t       validityTime;
         static int          maxCallersCount;       // maximum distinct callers
         static int          maxMessagesCount;      // maximum messages for abonent
         
@@ -90,8 +91,8 @@ namespace smsc { namespace mcisme
 
         static bool         bInformAll, bNotifyAll;
 
-        static void         init(DataSource* _ds, Statistics* _statistics, int rowsPerMessage, 
-                                 int maxCallersCount = -1, int maxMessagesCount = -1);
+        static void         init(DataSource* _ds, Statistics* _statistics, time_t validityTime,
+                                 int rowsPerMessage, int maxCallersCount = -1, int maxMessagesCount = -1);
         static uint64_t     getNextId(Connection* connection=0);
         
         static bool         getMessage(const char* smsc_id, Message& message, 

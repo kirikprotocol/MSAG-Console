@@ -263,7 +263,8 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     if (statistics) statistics->Start();
     
     AbonentProfiler::init(ds, defaultReasonsMask, bDefaultInform, bDefaultNotify);
-    Task::init(ds, statistics, rowsPerMessage, maxCallersCount, maxMessagesCount);
+    Task::init(ds, statistics, daysValid*24*3600,
+               rowsPerMessage, maxCallersCount, maxMessagesCount);
     
     smsc_log_info(logger, "Load success.");
 }
