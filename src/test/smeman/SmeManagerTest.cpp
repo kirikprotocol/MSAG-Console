@@ -10,7 +10,8 @@ int main(int argc, char* argv[])
 	try
 	{
 		//Manager::init("config.xml");
-		SmeManagerTestCases tc;
+		SmeManager smeMan;
+		SmeManagerTestCases tc(&smeMan);
 		SmeInfo sme, sme2;
 		vector<SmeInfo*> v;
 /*
