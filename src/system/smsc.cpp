@@ -443,19 +443,17 @@ void Smsc::init(const SmscConfigs& cfg)
   {
     using namespace smsc::db;
     using smsc::util::config::ConfigView;
-    ConfigView *dsConfig;
     const char* OCI_DS_FACTORY_IDENTITY = "OCI";
 
 
-    dsConfig = new smsc::util::config::ConfigView(*cfg.cfgman, "StartupLoader");
-    DataSourceLoader::loadup(dsConfig);
+    std::auto_ptr<ConfigView> dsConfig(new smsc::util::config::ConfigView(*cfg.cfgman, "StartupLoader"));
+    DataSourceLoader::loadup(dsConfig.get());
 
     dataSource = DataSourceFactory::getDataSource(OCI_DS_FACTORY_IDENTITY);
     if (!dataSource) throw Exception("Failed to get DataSource");
-    ConfigView* config =
-        new ConfigView(*cfg.cfgman,"DataSource");
+    std::auto_ptr<ConfigView> config(new ConfigView(*cfg.cfgman,"DataSource"));
 
-    dataSource->init(config);
+    dataSource->init(config.get());
     smsc_log_info(log, "Datasource configured" );
   }
   statMan=new smsc::stat::StatisticsManager(*dataSource);

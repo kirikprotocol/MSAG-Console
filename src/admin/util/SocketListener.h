@@ -31,6 +31,11 @@ public:
 		: logger(Logger::getInstance(loggerCatname))
 	{
 	}
+  
+  virtual ~SocketListener()
+  {
+    abort();
+  }
 
 	void init(const char * const hostName, unsigned portToListen)
 		throw (AdminException)

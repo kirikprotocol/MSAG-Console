@@ -45,6 +45,7 @@ Manager::Manager()
   }
 
   delete parser->getErrorHandler();
+  delete parser->getEntityResolver();
   delete parser;
 }
 

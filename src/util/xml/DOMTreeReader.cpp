@@ -60,7 +60,10 @@ DOM_Document DOMTreeReader::read(const InputSource & source)
       smsc_log_error(Logger::getInstance("smsc.util.xml.DOMTreeReader"), "An %d errors occured during parsing received command", errorCount);
       throw ParseException("An errors occured during parsing");
     }
-    return parser->getDocument();
+    DOM_Document result = parser->getDocument();
+    delete parser->getEntityResolver();
+    delete parser->getErrorHandler();
+    return result;
   }
   catch (const XMLException& e)
   {

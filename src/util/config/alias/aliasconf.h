@@ -28,6 +28,21 @@ struct AliasRecord
   int aliasTni;
   int aliasNpi;
   bool hide;
+  
+  AliasRecord()
+  {
+    addrValue = aliasValue = NULL;
+    addrTni = addrNpi = aliasTni = aliasNpi = 0;
+    hide = false;
+  }
+  
+  ~AliasRecord()
+  {
+    if (addrValue != NULL)
+      delete addrValue;
+    if (aliasValue != NULL)
+      delete aliasValue;
+  }
 };
 
 class AliasConfig
