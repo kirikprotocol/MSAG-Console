@@ -15,8 +15,7 @@ public class ProfileAddCommand extends ProfileGenCommand
 {
   private String mask;
 
-  public void setMask(String mask)
-  {
+  public void setMask(String mask) {
     this.mask = mask;
   }
 
@@ -28,14 +27,10 @@ public class ProfileAddCommand extends ProfileGenCommand
       if (!ctx.getSmsc().isLocaleRegistered(locale))
         throw new Exception("Locale '" + locale + "' is not registered");
 
-      //todo initialize properly
-      boolean aliasHide = false;
-      boolean aliasModifiable = false;
-      String divert = "";
-      boolean divertActive = false;
-      boolean divertModifiable = false;
-      Profile profile = new Profile(profileMask, codepage, report, locale, aliasHide, aliasModifiable, divert, divertActive, divertModifiable);
-      switch (ctx.getSmsc().profileUpdate(profileMask, profile)) {
+      Profile profile = new Profile(profileMask, codepage, report, locale, aliasHide, aliasModifiable,
+                                    divert, divertActive, divertModifiable);
+      switch (ctx.getSmsc().profileUpdate(profileMask, profile))
+      {
         case 1:	//pusUpdated
           ctx.setMessage(out + " was updated");
           ctx.setStatus(CommandContext.CMD_OK);
@@ -59,8 +54,7 @@ public class ProfileAddCommand extends ProfileGenCommand
     }
   }
 
-  public String getId()
-  {
+  public String getId() {
     return "PROFILE_ADD";
   }
 

@@ -14,52 +14,62 @@ options {
 	defaultErrorHandler=false;
 }
 tokens {
-  ACT_ADD       = "add"		;
-  ACT_ALTER     = "alter"       ;
-  ACT_DELETE	= "delete"	;
-  ACT_LIST	= "list"	;
-  ACT_VIEW	= "view"	;
-  ACT_APPLY	= "apply"	;
-  ACT_SHOW	= "show"	;
+  ACT_ADD       = "add"		 ;
+  ACT_ALTER     = "alter"        ;
+  ACT_DELETE	= "delete"	 ;
+  ACT_LIST	= "list"	 ;
+  ACT_VIEW	= "view"	 ;
+  ACT_APPLY	= "apply"	 ;
+  ACT_SHOW	= "show"	 ;
 
-  TGT_ALIAS	= "alias"	;
-  TGT_ROUTE	= "route"	;
-  TGT_PROFILE	= "profile"	;
-  TGT_SUBJECT	= "subject"	;
-  TGT_PRINCIPAL	= "principal"	;
-  TGT_DL	= "dl"		;
-  TGT_DLSUB	= "dlsubmitter"	;
-  TGT_DLMEM	= "dlmember"	;
+  TGT_ALIAS	= "alias"	 ;
+  TGT_ROUTE	= "route"	 ;
+  TGT_PROFILE	= "profile"	 ;
+  TGT_SUBJECT	= "subject"	 ;
+  TGT_PRINCIPAL	= "principal"	 ;
+  TGT_DL	= "dl"		 ;
+  TGT_DLSUB	= "dlsubmitter"	 ;
+  TGT_DLMEM	= "dlmember"	 ;
 
-  OPT_HIDE	= "hide"	;
-  OPT_NOHIDE	= "nohide"	;
-  OPT_BILL	= "bill"	;
-  OPT_NOBILL	= "nobill"	;
-  OPT_ARCH	= "arc"		;
-  OPT_NOARCH	= "noarc"	;
-  OPT_ALLOW     = "allow"	;
-  OPT_DENY      = "deny"        ;
-  OPT_RCPT	= "receipt"	;
-  OPT_NORCPT	= "noreceipt"	;
-  OPT_SRC	= "src"         ;
-  OPT_DST    	= "dst"         ;
-  OPT_MASK      = "mask"        ;
-  OPT_SUBJ      = "subj"        ;
-  OPT_SVCID	= "serviceid"	;
-  OPT_PRI	= "priority"	;
-  OPT_DEFSME 	= "defaultsme"	;
-  OPT_REPORT	= "report"	;
-  VAL_FULL	= "full"	;
-  VAL_NONE	= "none"	;
-  OPT_ENCODE	= "encoding"	;
-  VAL_DEF	= "default"	;
-  VAL_UCS2	= "ucs2"	;
-  OPT_NLIST	= "numlist"	;
-  OPT_NELEM	= "numelem"	;
-  OPT_OWNER	= "owner"	;
-  OPT_LOCALE	= "locale"	;
-  OPT_ACTIVE	= "active"	;
-  OPT_INACTIVE	= "inactive"	;
+  OPT_HIDE	= "hide"	 ;
+  OPT_NOHIDE	= "nohide"	 ;
+  OPT_BILL	= "bill"	 ;
+  OPT_NOBILL	= "nobill"	 ;
+  OPT_ARCH	= "arc"		 ;
+  OPT_NOARCH	= "noarc"	 ;
+  OPT_ALLOW     = "allow"	 ;
+  OPT_DENY      = "deny"         ;
+  OPT_RCPT	= "receipt"	 ;
+  OPT_NORCPT	= "noreceipt"	 ;
+  OPT_SRC	= "src"          ;
+  OPT_DST    	= "dst"          ;
+  OPT_MASK      = "mask"         ;
+  OPT_SUBJ      = "subj"         ;
+  OPT_SVCID	= "serviceid"	 ;
+  OPT_PRI	= "priority"	 ;
+  OPT_DEFSME 	= "defaultsme"	 ;
+  OPT_REPORT	= "report"	 ;
+  OPT_ENCODE	= "encoding"	 ;
+  OPT_NLIST	= "numlist"	 ;
+  OPT_NELEM	= "numelem"	 ;
+  OPT_OWNER	= "owner"	 ;
+  OPT_LOCALE	= "locale"	 ;
+  OPT_ACTIVE	= "active"	 ;
+  OPT_INACTIVE	= "inactive"	 ;
+  OPT_MODIF     = "modifiable"   ;
+  OPT_NOTMODIF  = "notmodifiable";
+  OPT_DIVERT    = "divert"	 ;
+  OPT_DM    	= "dm"	 	 ;
+  OPT_FWD    	= "fwd"		 ;
+  OPT_SRCSME    = "srcsme"	 ;
+
+  VAL_FULL	= "full"	 ;
+  VAL_NONE	= "none"	 ;
+  VAL_UCS2	= "ucs2"	 ;
+  VAL_DEF	= "default"	 ;
+  VAL_STORE	= "store"	 ;
+  VAL_FORWARD	= "forward"	 ;
+  VAL_DATAGRAM  = "datagram"	 ;  
 }
 
 WS    	: 	( STR_WS
@@ -138,6 +148,7 @@ ESC	:	'\\'
 	;
 
 protected
-DIGIT	:	'0'..'9'
+DIGIT
+	:	'0'..'9'
 	;
 

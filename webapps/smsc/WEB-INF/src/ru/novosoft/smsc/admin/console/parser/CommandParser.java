@@ -418,6 +418,8 @@ public CommandParser(ParserSharedInputState state) {
 		
 		Token  num = null;
 		Token  pri = null;
+		Token  sme = null;
+		Token  fwd = null;
 		
 		cmd = new RouteAddCommand();
 		
@@ -451,6 +453,98 @@ public CommandParser(ParserSharedInputState state) {
 					throw new NumberFormatException("Expecting integer value for <priority>");
 				    }
 				
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_DM:
+		{
+			match(OPT_DM);
+			{
+			switch ( LA(1)) {
+			case VAL_DEF:
+			{
+				match(VAL_DEF);
+				cmd.setDeliveryMode("deafult");
+				break;
+			}
+			case VAL_STORE:
+			{
+				match(VAL_STORE);
+				cmd.setDeliveryMode("store");
+				break;
+			}
+			case VAL_FORWARD:
+			{
+				match(VAL_FORWARD);
+				cmd.setDeliveryMode("forward");
+				break;
+			}
+			case VAL_DATAGRAM:
+			{
+				match(VAL_DATAGRAM);
+				cmd.setDeliveryMode("datagram");
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			break;
+		}
+		case OPT_SRC:
+		case OPT_FWD:
+		case OPT_SRCSME:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_SRCSME:
+		{
+			match(OPT_SRCSME);
+			sme = LT(1);
+			match(STR);
+			cmd.setSrcSmeId(sme.getText());
+			break;
+		}
+		case OPT_SRC:
+		case OPT_FWD:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_FWD:
+		{
+			match(OPT_FWD);
+			fwd = LT(1);
+			match(STR);
+			cmd.setForwardTo(fwd.getText());
+			break;
+		}
+		case OPT_SRC:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		route_src(cmd);
 		route_dst(cmd, true);
@@ -542,6 +636,7 @@ public CommandParser(ParserSharedInputState state) {
 		ProfileAddCommand cmd;
 		
 		Token  mask = null;
+		Token  divert = null;
 		
 		cmd = new ProfileAddCommand();
 		
@@ -604,6 +699,150 @@ public CommandParser(ParserSharedInputState state) {
 			{
 				match(VAL_UCS2);
 				cmd.setUcs2Encoding();
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			break;
+		}
+		case EOF:
+		case TGT_ALIAS:
+		case OPT_DIVERT:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case TGT_ALIAS:
+		{
+			match(TGT_ALIAS);
+			{
+			switch ( LA(1)) {
+			case OPT_HIDE:
+			{
+				match(OPT_HIDE);
+				cmd.setAliasHide(true);
+				break;
+			}
+			case OPT_NOHIDE:
+			{
+				match(OPT_NOHIDE);
+				cmd.setAliasHide(false);
+				break;
+			}
+			case EOF:
+			case OPT_DIVERT:
+			case OPT_MODIFIABLE:
+			case OPT_NOTMODIFIABLE:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_MODIFIABLE:
+			{
+				match(OPT_MODIFIABLE);
+				cmd.setAliasModifiable(true);
+				break;
+			}
+			case OPT_NOTMODIFIABLE:
+			{
+				match(OPT_NOTMODIFIABLE);
+				cmd.setAliasModifiable(false);
+				break;
+			}
+			case EOF:
+			case OPT_DIVERT:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			break;
+		}
+		case EOF:
+		case OPT_DIVERT:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_DIVERT:
+		{
+			match(OPT_DIVERT);
+			{
+			divert = LT(1);
+			match(STR);
+			cmd.setDivert(divert.getText());
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_ACTIVE:
+			{
+				match(OPT_ACTIVE);
+				cmd.setDivertActive(true);
+				break;
+			}
+			case OPT_INACTIVE:
+			{
+				match(OPT_INACTIVE);
+				cmd.setDivertActive(false);
+				break;
+			}
+			case EOF:
+			case OPT_MODIFIABLE:
+			case OPT_NOTMODIFIABLE:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_MODIFIABLE:
+			{
+				match(OPT_MODIFIABLE);
+				cmd.setDivertModifiable(true);
+				break;
+			}
+			case OPT_NOTMODIFIABLE:
+			{
+				match(OPT_NOTMODIFIABLE);
+				cmd.setDivertModifiable(false);
+				break;
+			}
+			case EOF:
+			{
 				break;
 			}
 			default:
@@ -985,6 +1224,8 @@ public CommandParser(ParserSharedInputState state) {
 		
 		Token  num = null;
 		Token  pri = null;
+		Token  sme = null;
+		Token  fwd = null;
 		
 		cmd = new RouteAlterCommand();
 		boolean addAction = true;
@@ -1016,6 +1257,9 @@ public CommandParser(ParserSharedInputState state) {
 		case ACT_ADD:
 		case ACT_DELETE:
 		case OPT_PRI:
+		case OPT_DM:
+		case OPT_FWD:
+		case OPT_SRCSME:
 		{
 			break;
 		}
@@ -1039,6 +1283,107 @@ public CommandParser(ParserSharedInputState state) {
 						throw new NumberFormatException("Expecting integer value for <priority>");
 					    }
 					
+			break;
+		}
+		case EOF:
+		case ACT_ADD:
+		case ACT_DELETE:
+		case OPT_DM:
+		case OPT_FWD:
+		case OPT_SRCSME:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_DM:
+		{
+			match(OPT_DM);
+			{
+			switch ( LA(1)) {
+			case VAL_DEF:
+			{
+				match(VAL_DEF);
+				cmd.setDeliveryMode("deafult");
+				break;
+			}
+			case VAL_STORE:
+			{
+				match(VAL_STORE);
+				cmd.setDeliveryMode("store");
+				break;
+			}
+			case VAL_FORWARD:
+			{
+				match(VAL_FORWARD);
+				cmd.setDeliveryMode("forward");
+				break;
+			}
+			case VAL_DATAGRAM:
+			{
+				match(VAL_DATAGRAM);
+				cmd.setDeliveryMode("datagram");
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			break;
+		}
+		case EOF:
+		case ACT_ADD:
+		case ACT_DELETE:
+		case OPT_FWD:
+		case OPT_SRCSME:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_SRCSME:
+		{
+			match(OPT_SRCSME);
+			sme = LT(1);
+			match(STR);
+			cmd.setSrcSmeId(sme.getText());
+			break;
+		}
+		case EOF:
+		case ACT_ADD:
+		case ACT_DELETE:
+		case OPT_FWD:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_FWD:
+		{
+			match(OPT_FWD);
+			fwd = LT(1);
+			match(STR);
+			cmd.setForwardTo(fwd.getText());
 			break;
 		}
 		case EOF:
@@ -1250,6 +1595,7 @@ public CommandParser(ParserSharedInputState state) {
 		ProfileAlterCommand cmd;
 		
 		Token  addr = null;
+		Token  divert = null;
 		
 		cmd = new ProfileAlterCommand();
 		
@@ -1294,8 +1640,10 @@ public CommandParser(ParserSharedInputState state) {
 			break;
 		}
 		case EOF:
+		case TGT_ALIAS:
 		case OPT_ENCODE:
 		case OPT_LOCALE:
+		case OPT_DIVERT:
 		{
 			break;
 		}
@@ -1316,7 +1664,9 @@ public CommandParser(ParserSharedInputState state) {
 			break;
 		}
 		case EOF:
+		case TGT_ALIAS:
 		case OPT_ENCODE:
+		case OPT_DIVERT:
 		{
 			break;
 		}
@@ -1343,6 +1693,168 @@ public CommandParser(ParserSharedInputState state) {
 			{
 				match(VAL_UCS2);
 				cmd.setUcs2Encoding();
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			break;
+		}
+		case EOF:
+		case TGT_ALIAS:
+		case OPT_DIVERT:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case TGT_ALIAS:
+		{
+			match(TGT_ALIAS);
+			{
+			switch ( LA(1)) {
+			case OPT_HIDE:
+			{
+				match(OPT_HIDE);
+				cmd.setAliasHide(true);
+				break;
+			}
+			case OPT_NOHIDE:
+			{
+				match(OPT_NOHIDE);
+				cmd.setAliasHide(false);
+				break;
+			}
+			case EOF:
+			case OPT_DIVERT:
+			case OPT_MODIFIABLE:
+			case OPT_NOTMODIFIABLE:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_MODIFIABLE:
+			{
+				match(OPT_MODIFIABLE);
+				cmd.setAliasModifiable(true);
+				break;
+			}
+			case OPT_NOTMODIFIABLE:
+			{
+				match(OPT_NOTMODIFIABLE);
+				cmd.setAliasModifiable(false);
+				break;
+			}
+			case EOF:
+			case OPT_DIVERT:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			break;
+		}
+		case EOF:
+		case OPT_DIVERT:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_DIVERT:
+		{
+			match(OPT_DIVERT);
+			{
+			switch ( LA(1)) {
+			case STR:
+			{
+				divert = LT(1);
+				match(STR);
+				cmd.setDivert(divert.getText());
+				break;
+			}
+			case EOF:
+			case OPT_ACTIVE:
+			case OPT_INACTIVE:
+			case OPT_MODIFIABLE:
+			case OPT_NOTMODIFIABLE:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_ACTIVE:
+			{
+				match(OPT_ACTIVE);
+				cmd.setDivertActive(true);
+				break;
+			}
+			case OPT_INACTIVE:
+			{
+				match(OPT_INACTIVE);
+				cmd.setDivertActive(false);
+				break;
+			}
+			case EOF:
+			case OPT_MODIFIABLE:
+			case OPT_NOTMODIFIABLE:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_MODIFIABLE:
+			{
+				match(OPT_MODIFIABLE);
+				cmd.setDivertModifiable(true);
+				break;
+			}
+			case OPT_NOTMODIFIABLE:
+			{
+				match(OPT_NOTMODIFIABLE);
+				cmd.setDivertModifiable(false);
+				break;
+			}
+			case EOF:
+			{
 				break;
 			}
 			default:
@@ -1965,6 +2477,9 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_NORCPT:
 			case OPT_SVCID:
 			case OPT_PRI:
+			case OPT_DM:
+			case OPT_FWD:
+			case OPT_SRCSME:
 			{
 				break;
 			}
@@ -1999,6 +2514,9 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_NORCPT:
 			case OPT_SVCID:
 			case OPT_PRI:
+			case OPT_DM:
+			case OPT_FWD:
+			case OPT_SRCSME:
 			{
 				break;
 			}
@@ -2031,6 +2549,9 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_NORCPT:
 			case OPT_SVCID:
 			case OPT_PRI:
+			case OPT_DM:
+			case OPT_FWD:
+			case OPT_SRCSME:
 			{
 				break;
 			}
@@ -2061,6 +2582,9 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_NORCPT:
 			case OPT_SVCID:
 			case OPT_PRI:
+			case OPT_DM:
+			case OPT_FWD:
+			case OPT_SRCSME:
 			{
 				break;
 			}
@@ -2089,6 +2613,9 @@ public CommandParser(ParserSharedInputState state) {
 			case ACT_DELETE:
 			case OPT_SVCID:
 			case OPT_PRI:
+			case OPT_DM:
+			case OPT_FWD:
+			case OPT_SRCSME:
 			{
 				break;
 			}
@@ -2128,14 +2655,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop76:
+			_loop84:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop76;
+					break _loop84;
 				}
 				
 			} while (true);
@@ -2211,17 +2738,26 @@ public CommandParser(ParserSharedInputState state) {
 		"\"priority\"",
 		"\"defaultsme\"",
 		"\"report\"",
-		"\"full\"",
-		"\"none\"",
 		"\"encoding\"",
-		"\"default\"",
-		"\"ucs2\"",
 		"\"numlist\"",
 		"\"numelem\"",
 		"\"owner\"",
 		"\"locale\"",
 		"\"active\"",
 		"\"inactive\"",
+		"\"modifiable\"",
+		"\"notmodifiable\"",
+		"\"divert\"",
+		"\"dm\"",
+		"\"fwd\"",
+		"\"srcsme\"",
+		"\"full\"",
+		"\"none\"",
+		"\"ucs2\"",
+		"\"default\"",
+		"\"store\"",
+		"\"forward\"",
+		"\"datagram\"",
 		"WS",
 		"more input",
 		"quoted string",
@@ -2229,7 +2765,9 @@ public CommandParser(ParserSharedInputState state) {
 		"STR_CHR",
 		"comma character ','",
 		"ESC",
-		"DIGIT"
+		"DIGIT",
+		"OPT_MODIFIABLE",
+		"OPT_NOTMODIFIABLE"
 	};
 	
 	

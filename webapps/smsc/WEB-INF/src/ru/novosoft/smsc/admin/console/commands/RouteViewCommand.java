@@ -35,10 +35,13 @@ public class RouteViewCommand implements Command
         ctx.setMessage("Route info");
         ctx.setStatus(CommandContext.CMD_LIST);
 
-        ctx.addResult("name : "+smscRoute.getName());
-        ctx.addResult("prio : "+smscRoute.getPriority());
-        ctx.addResult("svcid: "+smscRoute.getServiceId());
-        ctx.addResult("flags: "+
+        ctx.addResult("name  : "+smscRoute.getName());
+        ctx.addResult("prio  : "+smscRoute.getPriority());
+        ctx.addResult("svcid : "+smscRoute.getServiceId());
+        ctx.addResult("srcsme: "+smscRoute.getSrcSmeId());
+        ctx.addResult("dm    : "+smscRoute.getDeliveryMode());
+        ctx.addResult("fwd   : "+smscRoute.getForwardTo());
+        ctx.addResult("flags : "+
             (smscRoute.isActive() ? "active, ":"inactive, ")+
             (smscRoute.isBilling()   ? "billing, ":"no billing, ")+
             (smscRoute.isArchiving() ? "archiving, ": "no archiving, ")+

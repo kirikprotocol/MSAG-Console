@@ -8,15 +8,10 @@
 package ru.novosoft.smsc.admin.console.commands;
 
 
-import ru.novosoft.smsc.admin.console.commands.exceptions.CommandProcessException;
-import ru.novosoft.smsc.admin.console.commands.exceptions.CommandParseException;
 import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.route.Mask;
-
-import java.util.Hashtable;
 
 public class AliasAlterCommand implements Command
 {

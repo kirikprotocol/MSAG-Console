@@ -14,20 +14,36 @@ import java.util.ArrayList;
 
 public abstract class RouteGenCommand implements Command
 {
-    protected String route = null;
+  protected String route = null;
 
-    protected ArrayList srcs = new ArrayList();
-    protected ArrayList dsts = new ArrayList();
+  protected ArrayList srcs = new ArrayList();
+  protected ArrayList dsts = new ArrayList();
 
-    public void setRoute(String route) {
-        this.route = route;
-    }
-    public void addSrcDef(RouteSrcDef def) {
-        srcs.add(def);
-    }
-    public void addDstDef(RouteDstDef def) {
-        dsts.add(def);
-    }
+  protected String srcSmeId     = "";
+  protected String deliveryMode = "default";
+  protected String forwardTo    = "";
 
+  protected boolean isSrcSmeId     = false;
+  protected boolean isDeliveryMode = false;
+  protected boolean isForwardTo    = false;
+
+  public void setRoute(String route) {
+    this.route = route;
+  }
+  public void addSrcDef(RouteSrcDef def) {
+    srcs.add(def);
+  }
+  public void addDstDef(RouteDstDef def) {
+    dsts.add(def);
+  }
+  public void setSrcSmeId(String srcSmeId) {
+    this.srcSmeId = srcSmeId; isSrcSmeId = true;
+  }
+  public void setDeliveryMode(String deliveryMode) {
+    this.deliveryMode = deliveryMode; isDeliveryMode = true;
+  }
+  public void setForwardTo(String forwardTo) {
+    this.forwardTo = forwardTo; isForwardTo = true;
+  }
 }
 

@@ -22,10 +22,14 @@ public class ProfileAlterCommand extends ProfileGenCommand
 
     public void process(CommandContext ctx)
     {
-        if (!isCodepage && !isReport && !isLocale) {
-            ctx.setMessage("expecting 'encoding', 'report' or 'locale' option. "+
+        if (!isCodepage && !isReport && !isLocale && !isAliasHide && !isAliasModifiable &&
+            !isDivert && !isDivertActive && !isDivertModifiable)
+        {
+            ctx.setMessage("expecting 'encoding', 'report', 'locale', 'alias' or 'divert' option. "+
                            "Syntax: alter profile <profile_address> "+
-                           "[report (full|none)] [locale <locale_name>] [encoding (ucs2|default)]");
+                           "[report (full|none)] [locale <locale_name>] [encoding (ucs2|default)] "+
+                           "[alias [hide|nohide] [modifiable|notmodifiable]] "+
+                           "[divert [<divert>] [active|inactive] [modifiable|notmodifiable]] ");
             ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
             return;
         }
@@ -36,22 +40,22 @@ public class ProfileAlterCommand extends ProfileGenCommand
             if (profile == null) {
                 ctx.setMessage(out+" not found");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-            } else {
-                /*String beforeCp = profile.getCodepageString();
-                String beforeRp = profile.getReportOptionsString();*/
-                if (isCodepage) {
-                    profile.setCodepage(codepage);
-                    //System.out.println("profileAlterCmd: Cp set "+codepage);
-                }
-                if (isReport)   {
-                    profile.setReportOptions(report);
-                    //System.out.println("profileAlterCmd: Rp set "+report);
-                }
+            }
+            else
+            {
+                if (isCodepage) profile.setCodepage(codepage);
+                if (isReport)   profile.setReportOptions(report);
+                if (isAliasHide)        profile.setAliasHide(aliasHide);
+                if (isAliasModifiable)  profile.setAliasModifiable(aliasModifiable);
+                if (isDivert)           profile.setDivert(divert);
+                if (isDivertActive)     profile.setDivertActive(divertActive);
+                if (isDivertModifiable) profile.setDivertModifiable(divertModifiable);
                 if (isLocale) {
-                    if (!ctx.getSmsc().isLocaleRegistered(locale))
-                        throw new Exception("Locale '"+locale+"' is not registered");
-                    profile.setLocale(locale);
+                   if (!ctx.getSmsc().isLocaleRegistered(locale))
+                      throw new Exception("Locale '"+locale+"' is not registered");
+                  profile.setLocale(locale);
                 }
+
                 switch (ctx.getSmsc().profileUpdate(profileMask, profile))
                 {
                     case 1:	//pusUpdated
@@ -71,10 +75,6 @@ public class ProfileAlterCommand extends ProfileGenCommand
                         ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                         break;
                 }
-                /*String afterCp = profile.getCodepageString();
-                String afterRp = profile.getReportOptionsString();
-                System.out.println("profileAlterCmd Cp: "+beforeCp+" -> "+afterCp+" req: "+codepage);
-                System.out.println("profileAlterCmd Rp: "+beforeRp+" -> "+afterRp+" req: "+report);*/
             }
         } catch (Exception e) {
             ctx.setMessage("Couldn't alter "+out+". Cause: "+e.getMessage());

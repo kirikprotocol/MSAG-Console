@@ -12,27 +12,54 @@ import ru.novosoft.smsc.admin.profiler.Profile;
 
 public abstract class ProfileGenCommand implements Command
 {
-    protected byte report = Profile.REPORT_OPTION_None;
-    protected byte codepage = Profile.CODEPAGE_Default;
-    protected boolean isReport = false;
-    protected boolean isCodepage = false;
+  protected byte    report = Profile.REPORT_OPTION_None;
+  protected byte    codepage = Profile.CODEPAGE_Default;
+  protected boolean aliasHide = false;
+  protected boolean aliasModifiable = false;
+  protected String  divert = "";
+  protected boolean divertActive = false;
+  protected boolean divertModifiable = false;
 
-    protected String locale;
-    protected boolean isLocale = false;
+  protected boolean isReport = false;
+  protected boolean isCodepage = false;
+  protected boolean isAliasHide = false;
+  protected boolean isAliasModifiable = false;
+  protected boolean isDivert = false;
+  protected boolean isDivertActive = false;
+  protected boolean isDivertModifiable = false;
 
-    public void setNoneReport() {
-        this.report = Profile.REPORT_OPTION_None; isReport = true;
-    }
-    public void setFullReport() {
-        this.report = Profile.REPORT_OPTION_Full; isReport = true;
-    }
-    public void setLocale(String locale) {
-        this.locale = locale; isLocale = true;
-    }
-    public void setGsm7Encoding() {
-        this.codepage = Profile.CODEPAGE_Default; isCodepage = true;
-    }
-    public void setUcs2Encoding() {
-        this.codepage = Profile.CODEPAGE_UCS2; isCodepage = true;
-    }
+  protected String locale;
+  protected boolean isLocale = false;
+
+  public void setNoneReport() {
+    this.report = Profile.REPORT_OPTION_None; isReport = true;
+  }
+  public void setFullReport() {
+    this.report = Profile.REPORT_OPTION_Full; isReport = true;
+  }
+  public void setLocale(String locale) {
+    this.locale = locale; isLocale = true;
+  }
+  public void setGsm7Encoding() {
+    this.codepage = Profile.CODEPAGE_Default; isCodepage = true;
+  }
+  public void setUcs2Encoding() {
+    this.codepage = Profile.CODEPAGE_UCS2; isCodepage = true;
+  }
+
+  public void setAliasHide(boolean aliasHide) {
+    this.aliasHide = aliasHide; isAliasHide = true;
+  }
+  public void setAliasModifiable(boolean aliasModifiable) {
+    this.aliasModifiable = aliasModifiable; isAliasModifiable = true;
+  }
+  public void setDivert(String divert) {
+    this.divert = divert; isDivert = true;
+  }
+  public void setDivertActive(boolean divertActive) {
+    this.divertActive = divertActive; isDivertActive = true;
+  }
+  public void setDivertModifiable(boolean divertModifiable) {
+    this.divertModifiable = divertModifiable; isDivertModifiable = true;
+  }
 }

@@ -11,7 +11,6 @@ import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.Principal;
-import ru.novosoft.smsc.admin.dl.exceptions.PrincipalAlreadyExistsException;
 import ru.novosoft.smsc.admin.dl.exceptions.PrincipalNotExistsException;
 
 public class PrincipalAlterCommand implements Command
