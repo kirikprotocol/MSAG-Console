@@ -14,6 +14,12 @@
 #include "util/Logger.h"
 #include "system/smscsme.hpp"
 
+//#define ENABLE_MAP_SYM
+
+#ifdef ENABLE_MAP_SYM
+#include "system/mapsym.hpp"
+#endif
+
 namespace smsc{
 namespace system{
 
@@ -63,6 +69,8 @@ public:
       //select(0,0,0,0,&tv);
       ev.Wait(1000);
       cnt=queue.getCounter();
+      int eqhash,equnl;
+      queue.getStats(eqhash,equnl);
       clock_gettime(CLOCK_REALTIME,&now);
       ut=((now.tv_sec*1000.0+now.tv_nsec/1000000.0)-
          (start.tv_sec*1000.0+start.tv_nsec/1000000.0))/1000.0;
@@ -70,7 +78,7 @@ public:
          (lasttime.tv_sec*1000.0+lasttime.tv_nsec/1000000.0))/1000;
       rate=(cnt-last)/tm;
       avg=cnt/ut;
-      printf("UT:%.3lf AVG:%.3lf LAST:%.3lf (%llu)         \r",ut,avg,rate,cnt);
+      printf("UT:%.3lf AVG:%.3lf LAST:%.3lf (%llu)[%d,%d]         \r",ut,avg,rate,cnt,eqhash,equnl);
       fflush(stdout);
       last=cnt;
       lasttime=now;
@@ -340,6 +348,16 @@ void Smsc::run()
   scheduler=new Scheduler(eventqueue,store);
   tp.startTask(scheduler);
 
+#ifdef ENABLE_MAP_SYM
+  MapSymProxy *msprx=new MapSymProxy();
+
+  smeman.registerSmeProxy("MAPSYM",msprx);
+
+  MapSymInputTask *msin=new MapSymInputTask(msprx);
+  MapSymOutputTask *msout=new MapSymOutputTask(msprx);
+  tp.startTask(msin);
+  tp.startTask(msout);
+#endif
 
   // некоторые действия до основного цикла
   mainLoop();

@@ -207,6 +207,19 @@ public:
     return counter;
   }
 
+  void getStats(int& hcnt,int& ucnt)
+  {
+    __synchronized__
+    hcnt=hash.getCount();
+    ucnt=0;
+    Locker *l=first_unlocked;
+    while(l)
+    {
+      ucnt++;
+      l=l->next_unlocked;
+    }
+  }
+
   // добавляет в запись команду (создает новую запись приее отсутствии)
   // если для записи допустима выборка команд , то нотифицирует исполнителей
   void enqueue(MsgIdType msgId, const CommandType& command)

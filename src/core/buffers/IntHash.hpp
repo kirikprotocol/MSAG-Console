@@ -26,6 +26,10 @@ public:
 
     emptycount=0;
   }
+  explicit IntHash(int n)
+  {
+    SetSize(n);
+  }
 
   ~IntHash()
   {

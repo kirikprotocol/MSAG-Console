@@ -316,6 +316,7 @@ public:
 
       if(pdu->commandId==SmppCommandSet::DELIVERY_SM_RESP)
       {
+        int status=((SmsResp*)_cmd->dta)->get_status()&0xffff;
         switch(xsm->header.get_commandStatus())
         {
           case SmppStatusSet::ESME_ROK: break;
@@ -323,13 +324,13 @@ public:
           case SmppStatusSet::ESME_RMSGQFUL:
           {
             ((SmsResp*)_cmd->dta)->set_status(
-              MAKE_COMMAND_STATUS(CMD_ERR_TEMP,((SmsResp*)_cmd->dta)->get_status())
+              MAKE_COMMAND_STATUS(CMD_ERR_TEMP,status)
               );
           }break;
           default:
           {
             ((SmsResp*)_cmd->dta)->set_status(
-              MAKE_COMMAND_STATUS(CMD_ERR_PERM,((SmsResp*)_cmd->dta)->get_status())
+              MAKE_COMMAND_STATUS(CMD_ERR_PERM,status)
               );
           }
         }

@@ -8,9 +8,9 @@
  * Подсистема работает во взаимодействии с подсистемой архивации и
  * создания биллинговых записей.
  *
- * Подсистема реализована на базе средств СУБД Oracle и 
+ * Подсистема реализована на базе средств СУБД Oracle и
  * с использованием средств разработки Oracle Call Interface.
- * 
+ *
  * @author Victor V. Makarov
  * @version 1.0
  * @see MessageStore
@@ -40,19 +40,19 @@ namespace smsc { namespace store
     using smsc::util::Logger;
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigException;
-    
+
     /**
-     * Сервисный класс используемый для генерации следующего 
+     * Сервисный класс используемый для генерации следующего
      * идентификационного номера для сообщения.
      * Используется внутренне.
-     * 
+     *
      * @author Victor V. Makarov
      * @version 1.0
      */
-    class IDGenerator 
+    class IDGenerator
     {
     private:
-        
+
         SMSId   id;
         Mutex mutex;
 
@@ -60,22 +60,22 @@ namespace smsc { namespace store
 
         /**
          * Конструктор, создаёт сервисный класс
-         * 
+         *
          * @param _id    последний использованный номер
          *               для идентификации сообщений
          */
         IDGenerator(SMSId _id) : id(_id) {};
-        
+
         /**
          * Пустой деструктор
          */
         ~IDGenerator() {};
-        
+
         /**
-         * 
+         *
          * @return возвращает следующий идентификационный номера сообщения.
          */
-        inline SMSId getNextId() 
+        inline SMSId getNextId()
         {
             MutexGuard guard(mutex);
             return ++id;
@@ -84,12 +84,12 @@ namespace smsc { namespace store
 
     /**
      * Класс реализует подсистему хранения сообщений в контексте SMS центра.
-     * А именно, реализует интерфейс MessageStore доступный в единственном 
+     * А именно, реализует интерфейс MessageStore доступный в единственном
      * экземпляре.Выступает в роли фабрики и синглетона одновременно.
      *
      * Также содержит набор статических методов как для мониторинга
      * работы подсистемы, так и для изменения некоторых параметров.
-     * 
+     *
      * Кроме того, подсистема контролирует подсистему архивации и
      * создания биллинговых записей.
      *
@@ -101,7 +101,7 @@ namespace smsc { namespace store
     class StoreManager : public MessageStore
     {
     private:
-        
+
         static Mutex mutex;
 
         static IDGenerator              *generator;
@@ -109,76 +109,76 @@ namespace smsc { namespace store
         static StoreManager             *instance;
         static StorageConnectionPool    *pool;
         static log4cpp::Category        &log;
-        
+
         static unsigned             maxTriesCount;
         static void loadMaxTriesCount(Manager& config);
 
     #ifdef SMSC_FAKE_MEMORY_MESSAGE_STORE
-        static IntHash<SMS>     fakeStore;
+        static IntHash<SMS*>     fakeStore;
         static Mutex            fakeMutex;
     #endif
 
         class ReadyIdIterator : public IdIterator
         {
         private:
-            
+
             Connection*                 connection;
             ReadyByNextTimeStatement*   readyStmt;
-        
+
         public:
-            
+
             ReadyIdIterator(time_t retryTime)
                 throw(StorageException);
             virtual ~ReadyIdIterator();
 
-            virtual bool getNextId(SMSId &id) 
+            virtual bool getNextId(SMSId &id)
                 throw(StorageException);
         };
 
     protected:
-        
+
         StoreManager() : MessageStore() {};
         virtual ~StoreManager() {};
-        
+
         void doCreateSms(StorageConnection* connection,
             SMS& sms, SMSId id, const CreateMode flag)
                 throw(StorageException, DuplicateMessageException);
-        void doRetrieveSms(StorageConnection* connection, 
+        void doRetrieveSms(StorageConnection* connection,
             SMSId id, SMS& sms)
                 throw(StorageException, NoSuchMessageException);
-        void doReplaceSms(StorageConnection* connection, 
-            SMSId id, const Address& oa, 
+        void doReplaceSms(StorageConnection* connection,
+            SMSId id, const Address& oa,
             const uint8_t* newMsg, uint8_t newMsgLen,
             uint8_t deliveryReport, time_t validTime = 0, time_t waitTime = 0)
                 throw(StorageException, NoSuchMessageException);
-        void doDestroySms(StorageConnection* connection, SMSId id) 
+        void doDestroySms(StorageConnection* connection, SMSId id)
                 throw(StorageException, NoSuchMessageException);
-        
+
         void doChangeSmsStateToEnroute(StorageConnection* connection,
             SMSId id, const Descriptor& dst,
             uint32_t failureCause, time_t nextTryTime)
                 throw(StorageException, NoSuchMessageException);
-        void doChangeSmsStateToDelivered(StorageConnection* connection, 
+        void doChangeSmsStateToDelivered(StorageConnection* connection,
             SMSId id, const Descriptor& dst)
                 throw(StorageException, NoSuchMessageException);
-        void doChangeSmsStateToUndeliverable(StorageConnection* connection, 
+        void doChangeSmsStateToUndeliverable(StorageConnection* connection,
             SMSId id, const Descriptor& dst, uint32_t failureCause)
                 throw(StorageException, NoSuchMessageException);
-        void doChangeSmsStateToExpired(StorageConnection* connection, 
+        void doChangeSmsStateToExpired(StorageConnection* connection,
             SMSId id)
                 throw(StorageException, NoSuchMessageException);
         void doChangeSmsStateToDeleted(StorageConnection* connection,
-            SMSId id) 
+            SMSId id)
                 throw(StorageException, NoSuchMessageException);
-    
-    public:    
-        
+
+    public:
+
         /**
          * Метод создаёт и инициализирует подсистему хранения сообщений.
          * Должен быть вызван один раз, перед непосредственным использованием
          * подсистемы. Для получения интерфейса подсистемы следует
          * воспользоваться методом getMessageStore()
-         * 
+         *
          * @param config интерфес для получения конфигурационных параметров
          * @exception ConfigException
          *                   возникает в случае некорректности и/или
@@ -198,11 +198,11 @@ namespace smsc { namespace store
          * Ожидает завершения текущего кванта работы, если запросы к
          * подсистеме ещё находятся в процессе обработки.
          */
-        static void shutdown(); 
+        static void shutdown();
 
         /**
          * Должен вызываться только после успешного вызова метода startup()
-         * 
+         *
          * @return возвращает интерфейс для непосредственной работы
          *         с подсистемой хранения сообщений
          * @see StoreManager::startup()
@@ -211,12 +211,12 @@ namespace smsc { namespace store
         static MessageStore* getMessageStore() {
             return ((MessageStore *)instance);
         }
-        
+
         /**
          * Меняет размер пула соединений с хранилищем.
          * В один момент времени одно соединение может использоваться
          * только одним потоком управления.
-         * 
+         *
          * @param size   новый размер пула соединений
          * @see ConnectionPool
          */
@@ -232,7 +232,7 @@ namespace smsc { namespace store
             __require__(pool);
             return pool->getSize();
         }
-        
+
         /**
          * @return текущее количество соединений
          * @see ConnectionPool
@@ -273,17 +273,17 @@ namespace smsc { namespace store
             __require__(pool);
             return pool->getPendingQueueLength();
         }
-        
+
         /**
          * Позволяет принудительно активизировать подсистему архивации и
          * создания биллинговых записей.
-         * 
+         *
          * @exception StorageException
          *                   возникает при ошибке хранилища физической природы,
          *                   т.н когда хранилище недоступно.
          * @see Archiver
          */
-        static void startArchiver() 
+        static void startArchiver()
             throw (StorageException)
         {
             __require__(archiver);
@@ -322,10 +322,10 @@ namespace smsc { namespace store
         /**
          * Реализация метода MessageStore для внешней генерация ключа.
          *
-         * @see MessageStore 
+         * @see MessageStore
          * @see IdGenerator
          */
-        virtual SMSId getNextId() 
+        virtual SMSId getNextId()
         {
             __require__(generator);
             return generator->getNextId();
@@ -333,82 +333,81 @@ namespace smsc { namespace store
 
         /**
          * Реализация метода MessageStore
-         * @see MessageStore 
+         * @see MessageStore
          */
         virtual void createSms(SMS& sms, SMSId id,
                                const CreateMode flag = CREATE_NEW)
                 throw(StorageException, DuplicateMessageException);
         /**
          * Реализация метода MessageStore
-         * @see MessageStore 
+         * @see MessageStore
          */
         virtual void retriveSms(SMSId id, SMS &sms)
                 throw(StorageException, NoSuchMessageException);
         /**
          * Реализация метода MessageStore
-         * @see MessageStore 
+         * @see MessageStore
          */
         virtual void replaceSms(SMSId id, const Address& oa,
             const uint8_t* newMsg, uint8_t newMsgLen,
             uint8_t deliveryReport, time_t validTime = 0, time_t waitTime = 0)
-                throw(StorageException, NoSuchMessageException); 
-        /**
-         * Реализация метода MessageStore
-         * @see MessageStore 
-         */
-        virtual void destroySms(SMSId id) 
                 throw(StorageException, NoSuchMessageException);
-        
         /**
          * Реализация метода MessageStore
-         * @see MessageStore 
+         * @see MessageStore
+         */
+        virtual void destroySms(SMSId id)
+                throw(StorageException, NoSuchMessageException);
+
+        /**
+         * Реализация метода MessageStore
+         * @see MessageStore
          */
         virtual void changeSmsStateToEnroute(SMSId id,
-            const Descriptor& dst, uint32_t failureCause, time_t nextTryTime) 
-                throw(StorageException, NoSuchMessageException); 
+            const Descriptor& dst, uint32_t failureCause, time_t nextTryTime)
+                throw(StorageException, NoSuchMessageException);
         /**
          * Реализация метода MessageStore
-         * @see MessageStore 
+         * @see MessageStore
          */
-        virtual void changeSmsStateToDelivered(SMSId id, 
-            const Descriptor& dst) 
-                throw(StorageException, NoSuchMessageException); 
+        virtual void changeSmsStateToDelivered(SMSId id,
+            const Descriptor& dst)
+                throw(StorageException, NoSuchMessageException);
         /**
          * Реализация метода MessageStore
-         * @see MessageStore 
+         * @see MessageStore
          */
         virtual void changeSmsStateToUndeliverable(SMSId id,
-            const Descriptor& dst, uint32_t failureCause) 
-                throw(StorageException, NoSuchMessageException); 
+            const Descriptor& dst, uint32_t failureCause)
+                throw(StorageException, NoSuchMessageException);
         /**
          * Реализация метода MessageStore
-         * @see MessageStore 
+         * @see MessageStore
          */
-        virtual void changeSmsStateToExpired(SMSId id) 
-                throw(StorageException, NoSuchMessageException); 
+        virtual void changeSmsStateToExpired(SMSId id)
+                throw(StorageException, NoSuchMessageException);
         /**
          * Реализация метода MessageStore
-         * @see MessageStore 
+         * @see MessageStore
          */
-        virtual void changeSmsStateToDeleted(SMSId id) 
-                throw(StorageException, NoSuchMessageException); 
-       
+        virtual void changeSmsStateToDeleted(SMSId id)
+                throw(StorageException, NoSuchMessageException);
+
         /**
          * Реализация метода MessageStore
-         * @see MessageStore 
+         * @see MessageStore
          */
-        virtual IdIterator* getReadyForRetry(time_t retryTime) 
+        virtual IdIterator* getReadyForRetry(time_t retryTime)
                 throw(StorageException);
-        
+
         /**
          * Реализация метода MessageStore
-         * @see MessageStore 
+         * @see MessageStore
          */
-        virtual time_t getNextRetryTime() 
+        virtual time_t getNextRetryTime()
                 throw(StorageException);
     };
 
 }}
 
 #endif
-

@@ -85,7 +85,7 @@ public:
   }
 };
 
-const int LH_HASHSIZE=1024;
+const int LH_HASHSIZE=4*1024;
 const int LH_DEFAULTBUCKETSIZE=16;
 
 class LeakHunter{

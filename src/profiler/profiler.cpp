@@ -278,7 +278,7 @@ int Profiler::Execute()
     cmd=getOutgoingCommand();
     if(cmd->cmdid!=smsc::smeman::DELIVERY)
     {
-      __warning__("Profiler: incorrect command submitted");
+      __warning2__("Profiler: incorrect command submitted - %d",cmd->cmdid);
       continue;
     }
     sms = cmd->get_sms();

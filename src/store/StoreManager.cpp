@@ -7,7 +7,7 @@
 #include <util/debug.h>
 #include "StoreManager.h"
 
-namespace smsc { namespace store 
+namespace smsc { namespace store
 {
 
 /* ----------------------------- StoreManager -------------------------- */
@@ -27,19 +27,19 @@ unsigned StoreManager::maxTriesCount = SMSC_MAX_TRIES_TO_PROCESS_OPERATION;
 log4cpp::Category& StoreManager::log = Logger::getCategory("smsc.store.StoreManager");
 
 #ifdef SMSC_FAKE_MEMORY_MESSAGE_STORE
-IntHash<SMS> StoreManager::fakeStore;
+IntHash<SMS*> StoreManager::fakeStore(100000);
 Mutex StoreManager::fakeMutex;
 #endif
 
 void StoreManager::loadMaxTriesCount(Manager& config)
 {
-    try 
+    try
     {
         maxTriesCount = (unsigned)config.getInt("MessageStore.maxTriesCount");
-        if (!maxTriesCount || 
+        if (!maxTriesCount ||
             maxTriesCount > SMSC_MAX_TRIES_TO_PROCESS_OPERATION_LIMIT)
         {
-            maxTriesCount = SMSC_MAX_TRIES_TO_PROCESS_OPERATION; 
+            maxTriesCount = SMSC_MAX_TRIES_TO_PROCESS_OPERATION;
             log.warn("Max tries count to process operation on MessageStore "
                      "is incorrect (should be between 1 and %u) ! "
                      "Config parameter: <MessageStore.maxTriesCount> "
@@ -47,8 +47,8 @@ void StoreManager::loadMaxTriesCount(Manager& config)
                      SMSC_MAX_TRIES_TO_PROCESS_OPERATION_LIMIT,
                      SMSC_MAX_TRIES_TO_PROCESS_OPERATION);
         }
-    } 
-    catch (ConfigException& exc) 
+    }
+    catch (ConfigException& exc)
     {
         maxTriesCount = SMSC_MAX_TRIES_TO_PROCESS_OPERATION;
         log.warn("Max tries count to process operation on MessageStore "
@@ -63,12 +63,12 @@ void StoreManager::startup(Manager& config)
     throw(ConfigException, ConnectionFailedException)
 {
     MutexGuard guard(mutex);
-    
+
     if (!instance)
     {
         log.info("Storage Manager is starting ... ");
         loadMaxTriesCount(config);
-        try 
+        try
         {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
             pool = new StorageConnectionPool(config);
@@ -98,12 +98,12 @@ void StoreManager::startup(Manager& config)
         log.info("Storage Manager was started up.");
     }
 }
-        
-void StoreManager::shutdown() 
+
+void StoreManager::shutdown()
 {
     MutexGuard guard(mutex);
 
-#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE    
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
     if (pool && instance && generator && archiver)
     {
         log.info("Storage Manager is shutting down ...");
@@ -112,7 +112,7 @@ void StoreManager::shutdown()
         delete archiver; archiver = 0L;
         delete generator; generator = 0L;
         log.info("Storage Manager was shutdowned.");
-    }   
+    }
 #else
     if (generator) delete generator; generator = 0;
     if (instance) delete instance; instance = 0;
@@ -124,12 +124,12 @@ void StoreManager::doCreateSms(StorageConnection* connection,
         throw(StorageException, DuplicateMessageException)
 {
     __require__(connection);
-    
+
     Descriptor  dsc;
     sms.state = ENROUTE;
     sms.destinationDescriptor = dsc;
     sms.lastTime = 0; sms.lastResult = 0; sms.attempts = 0;
-    
+
     if (flag == SMPP_OVERWRITE_IF_PRESENT)
     {
         NeedOverwriteStatement* needOverwriteStmt;
@@ -138,7 +138,7 @@ void StoreManager::doCreateSms(StorageConnection* connection,
         {
             needOverwriteStmt = connection->getNeedOverwriteStatement();
         }
-        else 
+        else
         {
             needOverwriteStmt = connection->getNeedOverwriteSvcStatement();
             ((NeedOverwriteSvcStatement *)needOverwriteStmt)->
@@ -150,7 +150,7 @@ void StoreManager::doCreateSms(StorageConnection* connection,
         needOverwriteStmt->bindDestinationAddress(sms.destinationAddress);
         needOverwriteStmt->bindDealiasedDestinationAddress(
             sms.dealiasedDestinationAddress);
-        
+
         sword result = needOverwriteStmt->execute();
         if (result != OCI_NO_DATA)
         {
@@ -158,75 +158,75 @@ void StoreManager::doCreateSms(StorageConnection* connection,
 
             connection->check(result);
             needOverwriteStmt->getId(retId);
-            
-            OverwriteStatement* overwriteStmt 
+
+            OverwriteStatement* overwriteStmt
                 = connection->getOverwriteStatement();
             DestroyBodyStatement* destroyBodyStmt
                 = connection->getDestroyBodyStatement();
-            
+
             try
             {
                 destroyBodyStmt->setSMSId(retId);
                 destroyBodyStmt->destroyBody();
-                
+
                 overwriteStmt->bindOldId(retId);
                 overwriteStmt->bindNewId(id);
                 overwriteStmt->bindSms(sms);
-                
+
                 connection->check(overwriteStmt->execute());
-                
+
                 int bodyLen = sms.getMessageBody().getBufferLength();
                 if (bodyLen > MAX_BODY_LENGTH)
                 {
-                    SetBodyStatement* setBodyStmt 
+                    SetBodyStatement* setBodyStmt
                         = connection->getSetBodyStatement();
 
                     setBodyStmt->setSMSId(id);
                     setBodyStmt->setBody(sms.getMessageBody());
                 }
-                
+
                 connection->commit();
-            } 
-            catch (StorageException& exc) 
+            }
+            catch (StorageException& exc)
             {
                 connection->rollback();
                 throw exc;
             }
-            return; 
+            return;
         }
     }
     else if (flag == ETSI_REJECT_IF_PRESENT)
     {
-        NeedRejectStatement* needRejectStmt 
+        NeedRejectStatement* needRejectStmt
             = connection->getNeedRejectStatement();
-        
+
         needRejectStmt->bindOriginatingAddress(sms.originatingAddress);
         needRejectStmt->bindDestinationAddress(sms.destinationAddress);
         needRejectStmt->bindDealiasedDestinationAddress(
             sms.dealiasedDestinationAddress);
         needRejectStmt->bindMr((dvoid *)&(sms.messageReference),
                                (sb4) sizeof(sms.messageReference));
-        
+
         connection->check(needRejectStmt->execute());
         if (needRejectStmt->needReject())
         {
             throw DuplicateMessageException();
         }
     }
-    
-    StoreStatement* storeStmt 
+
+    StoreStatement* storeStmt
         = connection->getStoreStatement();
 
     storeStmt->bindId(id);
     storeStmt->bindSms(sms);
-    try 
+    try
     {
         connection->check(storeStmt->execute(OCI_DEFAULT));
-        
+
         int bodyLen = sms.getMessageBody().getBufferLength();
         if (bodyLen > MAX_BODY_LENGTH)
         {
-            SetBodyStatement* setBodyStmt 
+            SetBodyStatement* setBodyStmt
                 = connection->getSetBodyStatement();
 
             setBodyStmt->setSMSId(id);
@@ -234,8 +234,8 @@ void StoreManager::doCreateSms(StorageConnection* connection,
         }
 
         connection->commit();
-    } 
-    catch (StorageException& exc) 
+    }
+    catch (StorageException& exc)
     {
         connection->rollback();
         throw exc;
@@ -245,29 +245,29 @@ void StoreManager::createSms(SMS& sms, SMSId id, const CreateMode flag)
     throw(StorageException, DuplicateMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-       
+
     __require__(pool && generator);
-    
+
     StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
-        try 
+        try
         {
             connection = (StorageConnection *)pool->getConnection();
             doCreateSms(connection, sms, id, flag);
             pool->freeConnection(connection);
             break;
         }
-        catch (DuplicateMessageException& exc) 
+        catch (DuplicateMessageException& exc)
         {
             if (connection) pool->freeConnection(connection);
             throw;
         }
-        catch (StorageException& exc) 
+        catch (StorageException& exc)
         {
             if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount) 
+            if (iteration++ >= maxTriesCount)
             {
                 log.warn("Max tries count to store message "
                          "#%d exceeded !\n", id);
@@ -277,35 +277,36 @@ void StoreManager::createSms(SMS& sms, SMSId id, const CreateMode flag)
     }
 
 #else
-    
+
     Descriptor  dsc;
     sms.state = ENROUTE;
     sms.destinationDescriptor = dsc;
     sms.lastTime = 0; sms.lastResult = 0; sms.attempts = 0;
 
     MutexGuard guard(fakeMutex);
-    
+
     if (flag == SMPP_OVERWRITE_IF_PRESENT && fakeStore.Exist(id))
     {
+        delete fakeStore.Get(id);
         fakeStore.Delete(id);
     }
     else if (flag == ETSI_REJECT_IF_PRESENT && fakeStore.Exist(id))
     {
         throw DuplicateMessageException();
     }
-    
-    fakeStore.Insert(id, sms);
+
+    fakeStore.Insert(id, new SMS(sms));
 
 #endif
 }
 
-void StoreManager::doRetrieveSms(StorageConnection* connection, 
+void StoreManager::doRetrieveSms(StorageConnection* connection,
     SMSId id, SMS &sms)
         throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
 
-    RetrieveStatement* retriveStmt 
+    RetrieveStatement* retriveStmt
         = connection->getRetrieveStatement();
 
     retriveStmt->bindId(id);
@@ -315,14 +316,14 @@ void StoreManager::doRetrieveSms(StorageConnection* connection,
     {
         throw NoSuchMessageException(id);
     }
-    else 
+    else
     {
         retriveStmt->check(status);
         if (!retriveStmt->getSms(sms)) // Need to load up attachment
         {
             GetBodyStatement* getBodyStmt
                 = connection->getGetBodyStatement();
-            
+
             getBodyStmt->setSMSId(id);
             getBodyStmt->getBody(sms.getMessageBody());
 
@@ -334,29 +335,29 @@ void StoreManager::retriveSms(SMSId id, SMS &sms)
     throw(StorageException, NoSuchMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-    
+
     __require__(pool);
-    
+
     StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
-        try 
+        try
         {
             connection = (StorageConnection *)pool->getConnection();
             doRetrieveSms(connection, id, sms);
             pool->freeConnection(connection);
             break;
         }
-        catch (NoSuchMessageException& exc) 
+        catch (NoSuchMessageException& exc)
         {
             if (connection) pool->freeConnection(connection);
             throw;
         }
-        catch (StorageException& exc) 
+        catch (StorageException& exc)
         {
             if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount) 
+            if (iteration++ >= maxTriesCount)
             {
                 log.warn("Max tries count to retrive message "
                          "#%d exceeded !\n", id);
@@ -366,18 +367,18 @@ void StoreManager::retriveSms(SMSId id, SMS &sms)
     }
 
 #else
-    
+
     MutexGuard guard(fakeMutex);
 
     if (!fakeStore.Exist(id))
         throw NoSuchMessageException(id);
-    
-    sms = fakeStore.Get(id);
+
+    sms = *fakeStore.Get(id);
 
 #endif
 }
 
-void StoreManager::doDestroySms(StorageConnection* connection, SMSId id) 
+void StoreManager::doDestroySms(StorageConnection* connection, SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
@@ -386,8 +387,8 @@ void StoreManager::doDestroySms(StorageConnection* connection, SMSId id)
         = connection->getDestroyStatement();
     DestroyBodyStatement* destroyBodyStmt
         = connection->getDestroyBodyStatement();
-    
-    try 
+
+    try
     {
         destroyStmt->bindId(id);
         connection->check(destroyStmt->execute());
@@ -395,41 +396,41 @@ void StoreManager::doDestroySms(StorageConnection* connection, SMSId id)
         destroyBodyStmt->setSMSId(id);
         destroyBodyStmt->destroyBody();
     }
-    catch (StorageException& exc) 
+    catch (StorageException& exc)
     {
         connection->rollback();
         throw;
     }
-    
+
     connection->commit();
 }
-void StoreManager::destroySms(SMSId id) 
+void StoreManager::destroySms(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-    
+
     __require__(pool);
-    
+
     StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
-        try 
+        try
         {
             connection = (StorageConnection *)pool->getConnection();
             doDestroySms(connection, id);
             pool->freeConnection(connection);
             break;
         }
-        catch (NoSuchMessageException& exc) 
+        catch (NoSuchMessageException& exc)
         {
             if (connection) pool->freeConnection(connection);
             throw;
         }
-        catch (StorageException& exc) 
+        catch (StorageException& exc)
         {
             if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount) 
+            if (iteration++ >= maxTriesCount)
             {
                 log.warn("Max tries count to remove message "
                          "#%d exceeded !\n", id);
@@ -439,19 +440,20 @@ void StoreManager::destroySms(SMSId id)
     }
 
 #else
-    
+
     MutexGuard guard(fakeMutex);
-    
+
     if (!fakeStore.Exist(id))
         throw NoSuchMessageException(id);
 
+    delete fakeStore.Get(id);
     fakeStore.Delete(id);
 
 #endif
 }
 
-void StoreManager::doReplaceSms(StorageConnection* connection, 
-    SMSId id, const Address& oa, 
+void StoreManager::doReplaceSms(StorageConnection* connection,
+    SMSId id, const Address& oa,
     const uint8_t* newMsg, uint8_t newMsgLen,
     uint8_t deliveryReport, time_t validTime, time_t waitTime)
         throw(StorageException, NoSuchMessageException)
@@ -459,47 +461,47 @@ void StoreManager::doReplaceSms(StorageConnection* connection,
     __require__(connection);
 
     Body    body;
-    RetrieveBodyStatement* retrieveBodyStmt 
+    RetrieveBodyStatement* retrieveBodyStmt
         = connection->getRetrieveBodyStatement();
     try
     {
         retrieveBodyStmt->bindId(id);
         retrieveBodyStmt->bindOriginatingAddress(oa);
-        
+
         sword status = retrieveBodyStmt->execute();
         if (status == OCI_NO_DATA) throw NoSuchMessageException(id);
         else connection->check(status);
-        
+
         if (!retrieveBodyStmt->getBody(body) ||
-             retrieveBodyStmt->getBodyLength() > MAX_BODY_LENGTH) 
+             retrieveBodyStmt->getBodyLength() > MAX_BODY_LENGTH)
         {
             GetBodyStatement* getBodyStmt
                 = connection->getGetBodyStatement();
-            
+
             getBodyStmt->setSMSId(id);
             getBodyStmt->getBody(body);
             connection->commit(); // Need to reset BLOB (SELECT FOR UPDATE)
-            
-            DestroyBodyStatement* destroyBodyStmt 
+
+            DestroyBodyStatement* destroyBodyStmt
                 = connection->getDestroyBodyStatement();
-            
+
             destroyBodyStmt->setSMSId(id);
             destroyBodyStmt->destroyBody();
             connection->commit();
         }
     }
-    catch (StorageException& exc) 
+    catch (StorageException& exc)
     {
         connection->rollback();
         throw;
     }
-    
+
     body.setBinProperty(Tag::SMPP_SHORT_MESSAGE, (const char*)newMsg,
-                        (unsigned)newMsgLen); 
+                        (unsigned)newMsgLen);
     body.setIntProperty(Tag::SMPP_SM_LENGTH, (uint32_t)newMsgLen);
 
     ReplaceStatement* replaceStmt;
-    if (waitTime == 0 && validTime == 0) 
+    if (waitTime == 0 && validTime == 0)
     {
         replaceStmt = connection->getReplaceStatement();
     }
@@ -519,27 +521,27 @@ void StoreManager::doReplaceSms(StorageConnection* connection,
         ((ReplaceVWTStatement *)replaceStmt)->bindWaitTime(waitTime);
         ((ReplaceVWTStatement *)replaceStmt)->bindValidTime(validTime);
     }
-    
+
     replaceStmt->bindId(id);
     replaceStmt->bindOriginatingAddress((Address&) oa);
     replaceStmt->bindBody(body);
     replaceStmt->bindDeliveryReport((dvoid *) &deliveryReport,
                                     (sb4) sizeof(deliveryReport));
-    try 
+    try
     {
         connection->check(replaceStmt->execute());
-        
+
         int bodyLen = body.getBufferLength();
         if (bodyLen > MAX_BODY_LENGTH)
         {
-            SetBodyStatement* setBodyStmt 
+            SetBodyStatement* setBodyStmt
                 = connection->getSetBodyStatement();
 
             setBodyStmt->setSMSId(id);
             setBodyStmt->setBody(body);
         }
     }
-    catch (StorageException& exc) 
+    catch (StorageException& exc)
     {
         connection->rollback();
         throw exc;
@@ -558,14 +560,14 @@ void StoreManager::replaceSms(SMSId id, const Address& oa,
         throw(StorageException, NoSuchMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-    
+
     __require__(pool);
-    
+
     StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
-        try 
+        try
         {
             connection = (StorageConnection *)pool->getConnection();
             doReplaceSms(connection, id, oa, newMsg, newMsgLen,
@@ -573,15 +575,15 @@ void StoreManager::replaceSms(SMSId id, const Address& oa,
             pool->freeConnection(connection);
             break;
         }
-        catch (NoSuchMessageException& exc) 
+        catch (NoSuchMessageException& exc)
         {
             if (connection) pool->freeConnection(connection);
             throw;
         }
-        catch (StorageException& exc) 
+        catch (StorageException& exc)
         {
             if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount) 
+            if (iteration++ >= maxTriesCount)
             {
                 log.warn("Max tries count to replace message "
                          "#%d exceeded !\n", id);
@@ -591,51 +593,50 @@ void StoreManager::replaceSms(SMSId id, const Address& oa,
     }
 
 #else
-    
+
     MutexGuard guard(fakeMutex);
-    
+
     if (!fakeStore.Exist(id))
         throw NoSuchMessageException(id);
 
-    SMS sms = fakeStore.Get(id);
-    fakeStore.Delete(id);
+    SMS *sms=fakeStore.Get(id);
 
-    sms.setOriginatingAddress(oa);
-    sms.setDeliveryReport(deliveryReport);
-    sms.validTime = validTime;
-    sms.nextTime = waitTime;
-    sms.attempts = 0;
+    sms->setOriginatingAddress(oa);
+    sms->setDeliveryReport(deliveryReport);
+    sms->validTime = validTime;
+    sms->nextTime = waitTime;
+    sms->attempts = 0;
 
-    sms.getMessageBody().setBinProperty(Tag::SMPP_SHORT_MESSAGE, 
-        (const char*)newMsg, (unsigned)newMsgLen); 
-    sms.getMessageBody().setIntProperty(Tag::SMPP_SM_LENGTH, 
+    sms->getMessageBody().setBinProperty(Tag::SMPP_SHORT_MESSAGE,
+        (const char*)newMsg, (unsigned)newMsgLen);
+    sms->getMessageBody().setIntProperty(Tag::SMPP_SM_LENGTH,
         (uint32_t)newMsgLen);
-    
-    fakeStore.Insert(id, sms);
+
+    //fakeStore.Insert(id, new SMS(sms));
 
 #endif
-} 
+}
 
 void StoreManager::doChangeSmsStateToEnroute(StorageConnection* connection,
-    SMSId id, const Descriptor& dst, uint32_t failureCause, time_t nextTryTime) 
+    SMSId id, const Descriptor& dst, uint32_t failureCause, time_t nextTryTime)
         throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
 
     ToEnrouteStatement* toEnrouteStmt
         = connection->getToEnrouteStatement();
-    
+
     toEnrouteStmt->bindId(id);
     toEnrouteStmt->bindNextTime(nextTryTime);
     toEnrouteStmt->bindFailureCause((dvoid *)&(failureCause),
                                     (sb4) sizeof(failureCause));
     toEnrouteStmt->bindDestinationDescriptor((Descriptor &)dst);
 
-    try 
+    try
     {
         connection->check(toEnrouteStmt->execute());
     }
-    catch (StorageException& exc) 
+    catch (StorageException& exc)
     {
         connection->rollback();
         throw exc;
@@ -649,18 +650,18 @@ void StoreManager::doChangeSmsStateToEnroute(StorageConnection* connection,
     connection->commit();
 }
 void StoreManager::changeSmsStateToEnroute(SMSId id,
-    const Descriptor& dst, uint32_t failureCause, time_t nextTryTime) 
+    const Descriptor& dst, uint32_t failureCause, time_t nextTryTime)
         throw(StorageException, NoSuchMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-    
+
     __require__(pool);
-    
+
     StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
-        try 
+        try
         {
             connection = (StorageConnection *)pool->getConnection();
             doChangeSmsStateToEnroute(connection, id, dst,
@@ -668,15 +669,15 @@ void StoreManager::changeSmsStateToEnroute(SMSId id,
             pool->freeConnection(connection);
             break;
         }
-        catch (NoSuchMessageException& exc) 
+        catch (NoSuchMessageException& exc)
         {
             if (connection) pool->freeConnection(connection);
             throw;
         }
-        catch (StorageException& exc) 
+        catch (StorageException& exc)
         {
             if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount) 
+            if (iteration++ >= maxTriesCount)
             {
                 log.warn("Max tries count to update message state"
                          "#%d exceeded !\n", id);
@@ -686,29 +687,27 @@ void StoreManager::changeSmsStateToEnroute(SMSId id,
     }
 
 #else
-    
+
     MutexGuard guard(fakeMutex);
-    
+
     if (!fakeStore.Exist(id))
         throw NoSuchMessageException(id);
 
-    SMS sms = fakeStore.Get(id);
-    if (sms.getState() != ENROUTE)
+    SMS *sms=fakeStore.Get(id);
+    if (sms->getState() != ENROUTE)
         throw NoSuchMessageException(id);
-    
-    fakeStore.Delete(id);
 
-    sms.destinationDescriptor = dst;
-    sms.lastResult = failureCause;
-    sms.nextTime = nextTryTime;
-    sms.attempts++;
-    
-    fakeStore.Insert(id, sms);
+    sms->destinationDescriptor = dst;
+    sms->lastResult = failureCause;
+    sms->nextTime = nextTryTime;
+    sms->attempts++;
+
+    //fakeStore.Insert(id, sms);
 
 #endif
 }
 
-void StoreManager::doChangeSmsStateToDelivered(StorageConnection* connection, 
+void StoreManager::doChangeSmsStateToDelivered(StorageConnection* connection,
     SMSId id, const Descriptor& dst)
         throw(StorageException, NoSuchMessageException)
 {
@@ -716,15 +715,15 @@ void StoreManager::doChangeSmsStateToDelivered(StorageConnection* connection,
 
     ToDeliveredStatement* toDeliveredStmt
         = connection->getToDeliveredStatement();
-    
+
     toDeliveredStmt->bindId(id);
     toDeliveredStmt->bindDestinationDescriptor((Descriptor &)dst);
 
-    try 
+    try
     {
         connection->check(toDeliveredStmt->execute());
     }
-    catch (StorageException& exc) 
+    catch (StorageException& exc)
     {
         connection->rollback();
         throw exc;
@@ -737,18 +736,18 @@ void StoreManager::doChangeSmsStateToDelivered(StorageConnection* connection,
     }
     connection->commit();
 }
-void StoreManager::changeSmsStateToDelivered(SMSId id, const Descriptor& dst) 
+void StoreManager::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
     throw(StorageException, NoSuchMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-    
+
     __require__(pool);
-    
+
     StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
-        try 
+        try
         {
             connection = (StorageConnection *)pool->getConnection();
             doChangeSmsStateToDelivered(connection, id, dst);
@@ -756,15 +755,15 @@ void StoreManager::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
             pool->freeConnection(connection);
             break;
         }
-        catch (NoSuchMessageException& exc) 
+        catch (NoSuchMessageException& exc)
         {
             if (connection) pool->freeConnection(connection);
             throw;
         }
-        catch (StorageException& exc) 
+        catch (StorageException& exc)
         {
             if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount) 
+            if (iteration++ >= maxTriesCount)
             {
                 log.warn("Max tries count to update message state"
                          "#%d exceeded !\n", id);
@@ -774,23 +773,24 @@ void StoreManager::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
     }
 
 #else
-    
+
     MutexGuard guard(fakeMutex);
-    
+
     if (!fakeStore.Exist(id))
         throw NoSuchMessageException(id);
-    
-    SMS sms = fakeStore.Get(id);
-    if (sms.getState() != ENROUTE)
+
+    SMS *sms = fakeStore.Get(id);
+    if (sms->getState() != ENROUTE)
         throw NoSuchMessageException(id);
-    
+
+    delete sms;
     fakeStore.Delete(id);
 
 #endif
 }
 
 void StoreManager::doChangeSmsStateToUndeliverable(
-    StorageConnection* connection, SMSId id, 
+    StorageConnection* connection, SMSId id,
         const Descriptor& dst, uint32_t failureCause)
             throw(StorageException, NoSuchMessageException)
 {
@@ -798,17 +798,17 @@ void StoreManager::doChangeSmsStateToUndeliverable(
 
     ToUndeliverableStatement* toUndeliverableStmt
         = connection->getToUndeliverableStatement();
-    
+
     toUndeliverableStmt->bindId(id);
     toUndeliverableStmt->bindFailureCause((dvoid *)&(failureCause),
                                           (sb4) sizeof(failureCause));
     toUndeliverableStmt->bindDestinationDescriptor((Descriptor &)dst);
 
-    try 
+    try
     {
         connection->check(toUndeliverableStmt->execute());
     }
-    catch (StorageException& exc) 
+    catch (StorageException& exc)
     {
         connection->rollback();
         throw exc;
@@ -821,19 +821,19 @@ void StoreManager::doChangeSmsStateToUndeliverable(
     }
     connection->commit();
 }
-void StoreManager::changeSmsStateToUndeliverable(SMSId id, 
+void StoreManager::changeSmsStateToUndeliverable(SMSId id,
     const Descriptor& dst, uint32_t failureCause)
        throw(StorageException, NoSuchMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-    
+
     __require__(pool);
-    
+
     StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
-        try 
+        try
         {
             connection = (StorageConnection *)pool->getConnection();
             doChangeSmsStateToUndeliverable(connection, id,
@@ -842,15 +842,15 @@ void StoreManager::changeSmsStateToUndeliverable(SMSId id,
             pool->freeConnection(connection);
             break;
         }
-        catch (NoSuchMessageException& exc) 
+        catch (NoSuchMessageException& exc)
         {
             if (connection) pool->freeConnection(connection);
             throw;
         }
-        catch (StorageException& exc) 
+        catch (StorageException& exc)
         {
             if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount) 
+            if (iteration++ >= maxTriesCount)
             {
                 log.warn("Max tries count to update message state"
                          "#%d exceeded !\n", id);
@@ -860,16 +860,17 @@ void StoreManager::changeSmsStateToUndeliverable(SMSId id,
     }
 
 #else
-    
+
     MutexGuard guard(fakeMutex);
-    
+
     if (!fakeStore.Exist(id))
         throw NoSuchMessageException(id);
-    
-    SMS sms = fakeStore.Get(id);
-    if (sms.getState() != ENROUTE)
+
+    SMS *sms = fakeStore.Get(id);
+    if (sms->getState() != ENROUTE)
         throw NoSuchMessageException(id);
-    
+
+    delete sms;
     fakeStore.Delete(id);
 
 #endif
@@ -883,13 +884,13 @@ void StoreManager::doChangeSmsStateToExpired(
 
     ToExpiredStatement* toExpiredStmt
         = connection->getToExpiredStatement();
-    
+
     toExpiredStmt->bindId(id);
-    try 
+    try
     {
         connection->check(toExpiredStmt->execute());
     }
-    catch (StorageException& exc) 
+    catch (StorageException& exc)
     {
         connection->rollback();
         throw exc;
@@ -902,18 +903,18 @@ void StoreManager::doChangeSmsStateToExpired(
     }
     connection->commit();
 }
-void StoreManager::changeSmsStateToExpired(SMSId id) 
+void StoreManager::changeSmsStateToExpired(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-    
+
     __require__(pool);
-    
+
     StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
-        try 
+        try
         {
             connection = (StorageConnection *)pool->getConnection();
             doChangeSmsStateToExpired(connection, id);
@@ -921,15 +922,15 @@ void StoreManager::changeSmsStateToExpired(SMSId id)
             pool->freeConnection(connection);
             break;
         }
-        catch (NoSuchMessageException& exc) 
+        catch (NoSuchMessageException& exc)
         {
             if (connection) pool->freeConnection(connection);
             throw;
         }
-        catch (StorageException& exc) 
+        catch (StorageException& exc)
         {
             if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount) 
+            if (iteration++ >= maxTriesCount)
             {
                 log.warn("Max tries count to update message state"
                          "#%d exceeded !\n", id);
@@ -939,23 +940,23 @@ void StoreManager::changeSmsStateToExpired(SMSId id)
     }
 
 #else
-    
+
     MutexGuard guard(fakeMutex);
-    
+
     if (!fakeStore.Exist(id))
         throw NoSuchMessageException(id);
-    
-    SMS sms = fakeStore.Get(id);
-    if (sms.getState() != ENROUTE)
+
+    SMS *sms = fakeStore.Get(id);
+    if (sms->getState() != ENROUTE)
         throw NoSuchMessageException(id);
-    
+
     fakeStore.Delete(id);
 
 #endif
 }
 
 void StoreManager::doChangeSmsStateToDeleted(
-    StorageConnection* connection, SMSId id) 
+    StorageConnection* connection, SMSId id)
         throw(StorageException, NoSuchMessageException)
 {
     __require__(connection);
@@ -964,12 +965,12 @@ void StoreManager::doChangeSmsStateToDeleted(
         = connection->getToDeletedStatement();
 
     toDeletedStmt->bindId(id);
-    
-    try 
+
+    try
     {
         connection->check(toDeletedStmt->execute());
     }
-    catch (StorageException& exc) 
+    catch (StorageException& exc)
     {
         connection->rollback();
         throw exc;
@@ -982,18 +983,18 @@ void StoreManager::doChangeSmsStateToDeleted(
     }
     connection->commit();
 }
-void StoreManager::changeSmsStateToDeleted(SMSId id) 
+void StoreManager::changeSmsStateToDeleted(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-    
+
     __require__(pool);
-    
+
     StorageConnection* connection = 0L;
     unsigned iteration=1;
     while (true)
     {
-        try 
+        try
         {
             connection = (StorageConnection *)pool->getConnection();
             doChangeSmsStateToDeleted(connection, id);
@@ -1001,15 +1002,15 @@ void StoreManager::changeSmsStateToDeleted(SMSId id)
             pool->freeConnection(connection);
             break;
         }
-        catch (NoSuchMessageException& exc) 
+        catch (NoSuchMessageException& exc)
         {
             if (connection) pool->freeConnection(connection);
             throw;
         }
-        catch (StorageException& exc) 
+        catch (StorageException& exc)
         {
             if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount) 
+            if (iteration++ >= maxTriesCount)
             {
                 log.warn("Max tries count to update message state"
                          "#%d exceeded !\n", id);
@@ -1019,16 +1020,17 @@ void StoreManager::changeSmsStateToDeleted(SMSId id)
     }
 
 #else
-    
+
     MutexGuard guard(fakeMutex);
-    
+
     if (!fakeStore.Exist(id))
         throw NoSuchMessageException(id);
-    
-    SMS sms = fakeStore.Get(id);
-    if (sms.getState() != ENROUTE)
+
+    SMS *sms = fakeStore.Get(id);
+    if (sms->getState() != ENROUTE)
         throw NoSuchMessageException(id);
-    
+
+    delete sms;
     fakeStore.Delete(id);
 
 #endif
@@ -1040,7 +1042,7 @@ StoreManager::ReadyIdIterator::ReadyIdIterator(time_t retryTime)
     throw(StorageException) : IdIterator()
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-    
+
     connection = StoreManager::pool->getConnection();
     try
     {
@@ -1065,19 +1067,19 @@ StoreManager::ReadyIdIterator::ReadyIdIterator(time_t retryTime)
 }
 StoreManager::ReadyIdIterator::~ReadyIdIterator()
 {
-#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE    
-    
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+
     if (readyStmt) delete readyStmt;
     StoreManager::pool->freeConnection(connection);
 
 #endif
 }
 
-bool StoreManager::ReadyIdIterator::getNextId(SMSId &id) 
-    throw(StorageException) 
+bool StoreManager::ReadyIdIterator::getNextId(SMSId &id)
+    throw(StorageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-    
+
     if (readyStmt && connection->isAvailable())
     {
         sword status = readyStmt->fetch();
@@ -1094,23 +1096,23 @@ bool StoreManager::ReadyIdIterator::getNextId(SMSId &id)
 #endif
 }
 
-IdIterator* StoreManager::getReadyForRetry(time_t retryTime) 
-    throw(StorageException) 
+IdIterator* StoreManager::getReadyForRetry(time_t retryTime)
+    throw(StorageException)
 {
     return (new ReadyIdIterator(retryTime));
 }
 
-time_t StoreManager::getNextRetryTime() 
+time_t StoreManager::getNextRetryTime()
     throw(StorageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-    
+
     time_t minTime = 0;
     Connection* connection = StoreManager::pool->getConnection();
     if (connection)
     {
         MinNextTimeStatement* minTimeStmt = 0L;
-        try 
+        try
         {
             if (!connection->isAvailable())
             {
@@ -1126,7 +1128,7 @@ time_t StoreManager::getNextRetryTime()
 
         if (minTimeStmt)
         {
-            try 
+            try
             {
                 sword status = minTimeStmt->execute();
                 if (status != OCI_NO_DATA)
@@ -1152,4 +1154,3 @@ time_t StoreManager::getNextRetryTime()
 }
 
 }}
-
