@@ -1313,10 +1313,11 @@ unsigned char  lll_8bit_2_7bit[256] = {
 
 static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string& s_msc)
 {
+  __trace2__("MAP::%s ismsi %s, msc: %s",__FUNCTION__,s_imsi.c_str(),s_msc.c_str());
   if ( dialog->state == MAPST_END ){// already closed
     return;
   }
-  if ( s_imsi.length() != 0 && s_msc.length() != 0 )
+  if ( s_imsi.length() == 0 || s_msc.length() == 0 )
   {
     dialog->state = MAPST_WaitSubmitCmdConf;
     ResponseMO(dialog,9);
@@ -1326,6 +1327,8 @@ static void ContinueImsiReq(MapDialog* dialog,const string& s_imsi,const string&
   else
   {
     dialog->state = MAPST_WaitSubmitCmdConf;
+    dialog->s_imsi = s_imsi;
+    dialog->s_msc = s_msc;
     SendSubmitCommand(dialog);
   }
 }
@@ -1338,10 +1341,10 @@ static void PauseOnImsiReq(MapDialog* map)
     FormatText("MAP::%s can't create dialog",__FUNCTION__));
   unsigned dialogid_map = dialog->dialogid_map;
   MAP_TRY{
-    if ( dialog->sms.get() == 0 ) 
+    if ( map->sms.get() == 0 ) 
       throw runtime_error(
         FormatText("MAP::%s has no SMS",__FUNCTION__));
-    mkMapAddress( &dialog->m_msAddr, dialog->sms->getOriginatingAddress().value, dialog->sms->getOriginatingAddress().length );
+    mkMapAddress( &dialog->m_msAddr, map->sms->getOriginatingAddress().value, dialog->sms->getOriginatingAddress().length );
     mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
     mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
     mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
