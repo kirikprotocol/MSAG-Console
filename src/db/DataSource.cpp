@@ -13,48 +13,124 @@ Mutex                       DataSourceFactory::registryLock;
 const unsigned SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE = 10;
 const unsigned SMSC_DS_DEFAULT_CONNECTION_POOL_SIZE_LIMIT = 1000;
 
-bool Connection::registerStatement(const char* id, Statement* statement)
+bool Connection::_registerStatement(const char* id, Statement* statement)
 {
-    MutexGuard guard(statementsRegistryLock);
-    if (!id || id[0] == '\0' || statementsRegistry.Exists(id)) return false;
+    if (!statement || !id || id[0] == '\0' || statementsRegistry.Exists(id)) return false;
     statementsRegistry.Insert(id, statement);
     return true;
 }
-bool Connection::unregisterStatement(const char* id)
+bool Connection::registerStatement(const char* id, Statement* statement)
 {
     MutexGuard guard(statementsRegistryLock);
-    if (!id || id[0] == '\0' || !statementsRegistry.Exists(id)) return false;
+    return _registerStatement(id, statement);
+}
+bool Connection::unregisterStatement(const char* id)
+{
+    if (!id || id[0] == '\0') return false;
+    MutexGuard guard(statementsRegistryLock);
+    Statement** statementPtr = statementsRegistry.GetPtr(id);
+    if (!statementPtr) return false;
+    if (*statementPtr) delete *statementPtr;
     statementsRegistry.Delete(id);
     return true;
 }
-Statement* Connection::getStatement(const char* id)
+Statement* Connection::_getStatement(const char* id)
 {
-    MutexGuard guard(statementsRegistryLock);
-    if (!id || id[0] == '\0') return 0;
     Statement** statementPtr = statementsRegistry.GetPtr(id);
     return ((statementPtr) ? *statementPtr:0);
 }
+Statement* Connection::getStatement(const char* id)
+{
+    if (!id || id[0] == '\0') return 0;
+    MutexGuard guard(statementsRegistryLock);
+    return _getStatement(id);
+}
 Statement* Connection::getStatement(const char* id, const char* sql)
 {
-    Statement* statement = getStatement(id);
+    if (!id || id[0] == '\0' || !sql || sql[0] == '\0') return 0;
+
+    MutexGuard guard(statementsRegistryLock);
+    Statement* statement = _getStatement(id);
     if (!statement)
     {
-        if (!sql) return 0;
         statement = createStatement(sql);
-        registerStatement(id, statement);
+        if (statement && !_registerStatement(id, statement)) {
+            delete statement; statement = 0;
+        }
     }
     return statement;
 }
 
+bool Connection::_registerRoutine(const char* id, Routine* routine)
+{
+    if (!routine || !id || id[0] == '\0' || routinesRegistry.Exists(id)) return false;
+    routinesRegistry.Insert(id, routine);
+    return true;
+}
+bool Connection::registerRoutine(const char* id, Routine* routine)
+{
+    MutexGuard guard(routinesRegistryLock);
+    return _registerRoutine(id, routine);
+}
+
+bool Connection::unregisterRoutine(const char* id)
+{
+    if (!id || id[0] == '\0') return false;
+    MutexGuard guard(routinesRegistryLock);
+    Routine** routinePtr = routinesRegistry.GetPtr(id);
+    if (!routinePtr) return false;
+    if (*routinePtr) delete *routinePtr;
+    routinesRegistry.Delete(id);
+    return true;
+}
+Routine* Connection::_getRoutine(const char* id)
+{
+    Routine** routinePtr = routinesRegistry.GetPtr(id);
+    return ((routinePtr) ? *routinePtr:0);
+}
+Routine* Connection::getRoutine(const char* id)
+{
+    if (!id || id[0] == '\0') return 0;
+    MutexGuard guard(routinesRegistryLock);
+    return _getRoutine(id);
+}
+Routine* Connection::getRoutine(const char* id, const char* call, bool func)
+{
+    if (!id || id[0] == '\0' || !call || call[0] == '\0') return 0;
+
+    MutexGuard guard(routinesRegistryLock);
+    Routine* routine = _getRoutine(id);
+    if (!routine)
+    {
+        routine = createRoutine(call, func);
+        if (routine && !_registerRoutine(id, routine)) {
+            delete routine; routine = 0;
+        }
+    }
+    return routine;
+}
+
+
 void Connection::disconnect()
 {
-    MutexGuard guard(statementsRegistryLock);
+    {
+        MutexGuard guard(statementsRegistryLock);
 
-    char* key = 0; Statement* statement = 0; statementsRegistry.First();
-    while (statementsRegistry.Next(key, statement))
-        if (statement) delete statement;
-    
-    statementsRegistry.Empty();
+        char* key = 0; Statement* statement = 0; statementsRegistry.First();
+        while (statementsRegistry.Next(key, statement))
+            if (statement) delete statement;
+        
+        statementsRegistry.Empty();
+    }
+    {
+        MutexGuard guard(routinesRegistryLock);
+
+        char* key = 0; Routine* routine = 0; routinesRegistry.First();
+        while (routinesRegistry.Next(key, routine))
+            if (routine) delete routine;
+        
+        routinesRegistry.Empty();
+    }
 }
 
 void ConnectionPool::loadPoolSize(ConfigView* config)
@@ -206,6 +282,17 @@ void ConnectionPool::closeConnections()
 
     idleHead = 0; idleTail = 0; idleCount = 0; 
     count = 0; head = 0; tail = 0; queueLen = 0;
+}
+void ConnectionPool::closeRegisteredQueries(const char* id)
+{
+    MutexGuard  guard(monitor);
+
+    for (int i=0; i<connections.Count(); i++) {
+        Connection* connection = connections[i];
+        if (!connection) continue;
+        connection->unregisterStatement(id);
+        connection->unregisterRoutine(id);
+    }
 }
 
 /* ------------------- Connection WatchDog (DataSource) ------------------- */

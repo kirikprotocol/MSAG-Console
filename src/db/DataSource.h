@@ -260,12 +260,17 @@ namespace smsc { namespace db
 
         bool                isConnected, isDead;
         
-        Mutex               statementsRegistryLock;
+        Mutex               statementsRegistryLock, routinesRegistryLock;
         Hash<Statement *>   statementsRegistry;
+        Hash<Routine *>     routinesRegistry;
         
-        Connection() 
-            : next(0), log(Logger::getInstance("smsc.db.Connection")),
-                isConnected(false), isDead(false) {};
+        Connection() : next(0), log(Logger::getInstance("smsc.db.Connection")), 
+            isConnected(false), isDead(false) {};
+
+        Statement* _getStatement(const char* id);
+        bool _registerStatement(const char* id, Statement* statement);
+        Routine* _getRoutine(const char* id);
+        bool _registerRoutine(const char* id, Routine* routine);
 
     public:
         
@@ -275,16 +280,20 @@ namespace smsc { namespace db
             return (isConnected && !isDead);
         };
     
-        virtual Statement* createStatement(const char* sql) 
-            throw(SQLException) = 0;
-        virtual Routine* createRoutine(const char* call, bool func=false) 
-            throw(SQLException) = 0;
-
         bool registerStatement(const char* id, Statement* statement);
         bool unregisterStatement(const char* id);
         Statement* getStatement(const char* id);
         Statement* getStatement(const char* id, const char* sql);
-        
+        virtual Statement* createStatement(const char* sql) 
+            throw(SQLException) = 0;
+
+        bool registerRoutine(const char* id, Routine* routine);
+        bool unregisterRoutine(const char* id);
+        Routine* getRoutine(const char* id);
+        Routine* getRoutine(const char* id, const char* call, bool func=false);
+        virtual Routine* createRoutine(const char* call, bool func=false) 
+            throw(SQLException) = 0;
+
         virtual void connect() 
             throw(SQLException) = 0;
         virtual void disconnect();
@@ -392,6 +401,7 @@ namespace smsc { namespace db
         virtual Connection* getConnection() = 0;
         virtual void freeConnection(Connection* connection) = 0;
         virtual void closeConnections() = 0;
+        virtual void closeRegisteredQueries(const char* id) = 0;
     };
 
     class DataSourceFactory 
@@ -474,6 +484,7 @@ namespace smsc { namespace db
         Connection* getConnection();
         void freeConnection(Connection* connection);
         void closeConnections();
+        void closeRegisteredQueries(const char* id);
     };
 
     class PoolledDataSource : public DataSource
@@ -509,6 +520,9 @@ namespace smsc { namespace db
         void closeConnections() {
             pool->closeConnections();
         };
+        void closeRegisteredQueries(const char* id) {
+            pool->closeRegisteredQueries(id);
+        }
     };
     
 }}
