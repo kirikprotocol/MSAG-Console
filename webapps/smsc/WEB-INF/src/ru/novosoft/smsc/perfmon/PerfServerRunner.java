@@ -18,6 +18,7 @@ public class PerfServerRunner extends Thread {
         this.server = server;
         logger.debug("Connecting to performance data socket " + server.getSmscHost() + ":" + server.getPerfPort());
         smscSock = new Socket(server.getSmscHost(), server.getPerfPort());
+        smscSock.setSoLinger(true, 5);
         logger.debug("Connected to performance data socket " + server.getSmscHost() + ":" + server.getPerfPort());
     }
 
