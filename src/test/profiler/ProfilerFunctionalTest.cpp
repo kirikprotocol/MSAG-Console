@@ -156,34 +156,48 @@ void ProfilerFunctionalTest::executeTest(int numAddr)
 		SmsUtil::setupRandomCorrectAddress(&addr1[i]);
 		SmsUtil::setupRandomCorrectAddress(&addr2[i]);
 	}
+	addr1.push_back(Address(".0.0.0"));
+	addr1.push_back(Address(".0.0.1"));
+	addr2.push_back(Address(".0.0.79029246519"));
+	addr2.push_back(Address(".0.1.0"));
 	//На каждый адрес регистрация случайного количества профилей
-	for (int i = 0; i < numAddr; i++)
+	for (int i = 0; i < addr1.size(); i++)
 	{
 		executeTestCases(addr1[i]);
+	}
+	for (int i = 0; i < addr2.size(); i++)
+	{
 		tc->putCommand(addr2[i], RAND_TC);
 	}
 	sleep(1);
-	for (int i = 0; i < numAddr; i++)
-	{
-		tc->lookup(addr2[i]);
-	}
-	reinit();
-	//На каждый адрес регистрация случайного количества профилей
-	for (int i = 0; i < numAddr; i++)
-	{
-		executeTestCases(addr1[i]);
-		tc->putCommand(addr2[i], RAND_TC);
-	}
-	sleep(1);
-	for (int i = 0; i < numAddr; i++)
-	{
-		tc->lookup(addr2[i]);
-	}
 	reinit();
 	//Поиск профилей
-	for (int i = 0; i < numAddr; i++)
+	for (int i = 0; i < addr1.size(); i++)
 	{
 		tc->lookup(addr1[i]);
+	}
+	for (int i = 0; i < addr2.size(); i++)
+	{
+		tc->lookup(addr2[i]);
+	}
+	//На каждый адрес регистрация случайного количества профилей
+	for (int i = 0; i < addr1.size(); i++)
+	{
+		executeTestCases(addr1[i]);
+	}
+	for (int i = 0; i < addr2.size(); i++)
+	{
+		tc->putCommand(addr2[i], RAND_TC);
+	}
+	sleep(1);
+	reinit();
+	//Поиск профилей
+	for (int i = 0; i < addr1.size(); i++)
+	{
+		tc->lookup(addr1[i]);
+	}
+	for (int i = 0; i < addr2.size(); i++)
+	{
 		tc->lookup(addr2[i]);
 	}
 	//очистка памяти
