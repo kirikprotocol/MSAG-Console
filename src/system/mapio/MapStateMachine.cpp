@@ -506,12 +506,12 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
   unsigned dialogid_map = 0;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
-    __trace2__("MAP::%s ",__PRETY_FUNCTION__);
+    __trace2__("MAP::%s ",__PRETTY_FUNCTION__);
     string s_((char*)ss7Address_sp->ss7Addr,(char*)ss7Address_sp->ss7Addr+sizeof(ss7Address_sp->ss7Addr));
     map<string,unsigned>::iterator it = x_map.find(s_);
     if ( it == x_map.end() ){
       //throw MAPDIALOG_FATAL_ERROR("MAP::Et96MapGetACVersionConf has no address for AC resolving");
-      MAPDIALOG_ERROR("MAP::Et96MapGetACVersionConf has no address for AC resolving");
+      throw MAPDIALOG_ERROR("MAP::Et96MapGetACVersionConf has no address for AC resolving");
     }
     dialogid_map = it->second;
     x_map.erase(it);
