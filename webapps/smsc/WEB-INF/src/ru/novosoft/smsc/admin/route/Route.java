@@ -19,11 +19,12 @@ public class Route
 	private String name = null;
 	private SourceList src = null;
 	private DestinationList dst = null;
+	private int priority = 0;
 	private boolean enabling = true;
 	private boolean archiving = true;
 	private boolean billing = false;
 
-	public Route(String routeName, boolean isEnabling, boolean isBilling, boolean isArchiving,					 SourceList sources, DestinationList destinations)
+	public Route(String routeName, int priority, boolean isEnabling, boolean isBilling, boolean isArchiving, SourceList sources, DestinationList destinations)
 	{
 		if (routeName == null)
 			throw new NullPointerException("Route name is null");
@@ -32,12 +33,13 @@ public class Route
 		if (destinations == null)
 			throw new NullPointerException("Destinations list is null");
 
-		name = routeName;
-		src = sources;
-		dst = destinations;
-		enabling = isEnabling;
-		archiving = isArchiving;
-		billing = isBilling;
+		this.name = routeName;
+		this.priority = priority;
+		this.src = sources;
+		this.dst = destinations;
+		this.enabling = isEnabling;
+		this.archiving = isArchiving;
+		this.billing = isBilling;
 	}
 
 	public Route(String routeName)
@@ -48,7 +50,10 @@ public class Route
 		name = routeName;
 		src = new SourceList();
 		dst = new DestinationList();
+		priority = 0;
 		enabling = false;
+		archiving = false;
+		billing = false;
 	}
 
 	public Route(Element routeElem, SubjectList subjects, SMEList smes)
@@ -57,6 +62,7 @@ public class Route
 		name = routeElem.getAttribute("id");
 		src = new SourceList(routeElem, subjects);
 		dst = new DestinationList(routeElem, subjects, smes);
+		priority = Integer.decode(routeElem.getAttribute("priority")).intValue();
 		enabling = routeElem.getAttribute("enabling").equalsIgnoreCase("true");
 		archiving = routeElem.getAttribute("archiving").equalsIgnoreCase("true");
 		billing = routeElem.getAttribute("billing").equalsIgnoreCase("true");
@@ -184,10 +190,20 @@ public class Route
 	public PrintWriter store(PrintWriter out)
 	{
 		out.println("  <route id=\"" + StringEncoderDecoder.encode(getName()) + "\" billing=\"" + isBilling()
-						+ "\" archiving=\"" + isArchiving() + "\" enabling=\"" + isEnabling() + "\">");
+						+ "\" archiving=\"" + isArchiving() + "\" enabling=\"" + isEnabling() + "\" priority=\"" + getPriority() + "\">");
 		getSources().store(out);
 		getDestinations().store(out);
 		out.println("  </route>");
 		return out;
+	}
+
+	public int getPriority()
+	{
+		return priority;
+	}
+
+	public void setPriority(int priority)
+	{
+		this.priority = priority;
 	}
 }

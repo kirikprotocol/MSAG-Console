@@ -18,6 +18,7 @@ public class RoutesEdit extends SmscBean
 	protected String mbCancel = null;
 
 	protected String routeId = null;
+	protected int priority = 0;
 	protected String oldRouteId = null;
 	protected boolean permissible = false;
 	protected boolean billing = false;
@@ -57,6 +58,7 @@ public class RoutesEdit extends SmscBean
 				result = error(SMSCErrors.error.routes.nameNotSpecified);
 			else
 			{
+				priority = r.getPriority();
 				permissible = r.isEnabling();
 				billing = r.isBilling();
 				archiving = r.isArchiving();
@@ -148,6 +150,8 @@ public class RoutesEdit extends SmscBean
 	{
 		if (routeId == null || routeId.length() <= 0 || oldRouteId == null || oldRouteId.length() <= 0)
 			return error(SMSCErrors.error.routes.nameNotSpecified);
+		if (priority < 0 || priority > MAX_PRIORITY)
+			return error(SMSCErrors.error.routes.invalidPriority, String.valueOf(priority));
 
 		try
 		{
@@ -182,7 +186,7 @@ public class RoutesEdit extends SmscBean
 			}
 
 			smsc.getRoutes().remove(oldRouteId);
-			smsc.getRoutes().put(new Route(routeId, permissible, billing, archiving, sources, destinations));
+			smsc.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, sources, destinations));
 			appContext.getStatuses().setRoutesChanged(true);
 			return RESULT_DONE;
 		}
@@ -342,5 +346,15 @@ public class RoutesEdit extends SmscBean
 	public void setOldRouteId(String oldRouteId)
 	{
 		this.oldRouteId = oldRouteId;
+	}
+
+	public int getPriority()
+	{
+		return priority;
+	}
+
+	public void setPriority(int priority)
+	{
+		this.priority = priority;
 	}
 }

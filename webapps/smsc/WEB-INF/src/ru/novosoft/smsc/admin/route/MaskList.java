@@ -5,13 +5,18 @@
  */
 package ru.novosoft.smsc.admin.route;
 
+import ru.novosoft.smsc.admin.AdminException;
+
 import java.io.PrintWriter;
 import java.util.*;
+
+import org.apache.log4j.Category;
 
 
 public class MaskList
 {
 	private Map masks = new HashMap();
+	private Category logger = Category.getInstance(this.getClass());
 
 	public MaskList()
 	{
@@ -21,7 +26,15 @@ public class MaskList
 	{
 		for (StringTokenizer tokenizer = new StringTokenizer(masks); tokenizer.hasMoreTokens();)
 		{
-			add(new Mask(tokenizer.nextToken()));
+			final String mask = tokenizer.nextToken();
+			try
+			{
+				add(new Mask(mask));
+			}
+			catch (AdminException e)
+			{
+				logger.error("Couldn't load mask \"" + mask + "\", skipped", e);
+			}
 		}
 	}
 
@@ -30,7 +43,14 @@ public class MaskList
 		for (int i = 0; i < masks.length; i++)
 		{
 			String mask = masks[i].trim();
-			add(new Mask(mask));
+			try
+			{
+				add(new Mask(mask));
+			}
+			catch (AdminException e)
+			{
+				logger.error("Couldn't load mask \"" + mask + "\", skipped", e);
+			}
 		}
 	}
 

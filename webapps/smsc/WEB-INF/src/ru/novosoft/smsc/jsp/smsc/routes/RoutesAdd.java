@@ -18,6 +18,7 @@ public class RoutesAdd extends SmscBean
 	protected String mbCancel = null;
 
 	protected String routeId = null;
+	protected int priority = 0;
 	protected boolean permissible = false;
 	protected boolean billing = false;
 	protected boolean archiving = false;
@@ -119,6 +120,8 @@ public class RoutesAdd extends SmscBean
 			return error(SMSCErrors.error.routes.nameNotSpecified);
 		if (smsc.getRoutes().contains(routeId))
 			return error(SMSCErrors.error.routes.alreadyExists, routeId);
+		if (priority < 0 || priority > MAX_PRIORITY)
+			return error(SMSCErrors.error.routes.invalidPriority, String.valueOf(priority));
 
 		try
 		{
@@ -152,7 +155,7 @@ public class RoutesAdd extends SmscBean
 				destinations.add(new Destination(new Mask(mask), sme));
 			}
 
-			smsc.getRoutes().put(new Route(routeId, permissible, billing, archiving, sources, destinations));
+			smsc.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, sources, destinations));
 			appContext.getStatuses().setRoutesChanged(true);
 			return RESULT_DONE;
 		}
@@ -302,5 +305,15 @@ public class RoutesAdd extends SmscBean
 	public void setDst_mask_sme_(String dst_mask_sme_)
 	{
 		this.dst_mask_sme_ = dst_mask_sme_;
+	}
+
+	public int getPriority()
+	{
+		return priority;
+	}
+
+	public void setPriority(int priority)
+	{
+		this.priority = priority;
 	}
 }

@@ -4,6 +4,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.profiles.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
+TITLE = "Profiles List";
 switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
 	case Index.RESULT_DONE:
@@ -31,10 +32,7 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_PROFILES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-
 <%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-
-<h1>Profiles</h1>
 <%@ include file="/WEB-INF/inc/messages.jsp"%>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=profileMask>
@@ -59,16 +57,15 @@ function setSort(sorting)
 	return false;
 }
 </script>
-<table class=rep0 cellspacing=1 width="100%">
-<col width="1%">
+<table class=secRep cellspacing=1 width="100%">
 <col width="60%" align=left>
 <col width="20%" align=left>
-<col width="20%" align=center>
+<col width="20%" align=left>
 <thead>
 <tr>
-	<th><a href="#" title="Sort by mask" onclick='return setSort("mask")'>mask</a></th>
-	<th><a href="#" title="Sort by codepage" onclick='return setSort("codeset")'>codepage</a></th>
-	<th><a href="#" title="Sort by report info" onclick='return setSort("reportinfo")'>report&nbsp;info</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("mask")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by mask" onclick='return setSort("mask")'>mask</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("codeset")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by codepage" onclick='return setSort("codeset")'>codepage</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("reportinfo") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by report info" onclick='return setSort("reportinfo")'>report&nbsp;info</a></th>
 </tr>
 </thead>
 <tbody>
@@ -86,14 +83,10 @@ DataItem item = (DataItem) i.next();
 <%}}%>
 </tbody>
 </table>
-<div class=but0>
-<input class=btn type=submit name=mbAdd value="Add profile" title="Add profile"><br>
+<%@ include file="/WEB-INF/inc/navbar.jsp"%>
 
-<input class=btn type=submit name=mbFirst value="First" title="First page"<%=bean.isFirst() ? " disabled" : ""%>>
-<input class=btn type=submit name=mbPrev value="Prev" title="Previous page"<%=bean.isFirst() ? " disabled" : ""%>>
-<input class=btn type=submit name=mbNext value="Next" title="Next page"<%=bean.isLast() ? " disabled" : ""%>>
-<input class=btn type=submit name=mbLast value="Last" title="Last page"<%=bean.isLast() ? " disabled" : ""%>><br>
-<input class=btn type=submit name=mbFilter value="Filter" title="Filter profiles">
+<div class=secButtons>
+<input class=btn type=submit name=mbAdd value="Add profile" title="Add profile"><br>
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

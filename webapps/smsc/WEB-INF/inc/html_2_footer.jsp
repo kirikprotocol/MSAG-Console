@@ -1,3 +1,2 @@
-</div></td></form></tr></table>
-</td></tr></table>
+</div></td></tr></table></form>
 </body></html>

@@ -167,7 +167,7 @@ public class AddAdmServiceWizard
 	{
 		checkStage2();
 		checkStage3();
-		return new SME(systemId, SME.SMPP, typeOfNumber, numberingPlan, interfaceVersion, systemType, "", rangeOfAddress, -1, false, 8);
+		return new SME(systemId, -1, SME.SMPP, typeOfNumber, numberingPlan, interfaceVersion, systemType, "", rangeOfAddress, -1, false, 8);
 	}
 
 	protected void checkServiceContent(File incomingZip)

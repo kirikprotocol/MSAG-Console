@@ -3,9 +3,11 @@
 <jsp:setProperty name="bean" property="*"/>
 <%@page import="ru.novosoft.smsc.jsp.smsc.hosts.Index"%>
 <%
+TITLE = "Hosts List";
 switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
 	case Index.RESULT_OK:
+		STATUS.append("hosts:").append(bean.getHostNames().size());
 		break;
 	case Index.RESULT_DONE:
 		response.sendRedirect(CPATH+"/index.jsp");
@@ -18,12 +20,12 @@ switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("
 		return;
 	case Index.RESULT_ERROR:
 		// do nothing there, show errors below
+		STATUS.append("<span class=CF00>Error</span>");
 		break;
 	default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
-STATUS.append("hosts:").append(bean.getHostNames().size());
 MENU0_SELECTION = "MENU0_HOSTS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 
@@ -39,16 +41,15 @@ function viewHost(hostName)
 	return false;
 }
 </script>
-<h1>Hosts list</h1>
 <span class=CF00><%@ include file="/WEB-INF/inc/messages.jsp"%></span>
-<table class=rep0 cellspacing=1 width="100%">
+<table class=secRep cellspacing=1 width="100%">
 <col width="1%">
 <col width="79%" align=left>
 <col width="1%">
 <col width="10%" align=center>
 <thead>
 <tr>
-	<th>&nbsp;</th>
+	<th class=ico><img src="<%=CPATH%>/img/ico16_checked_sa.gif" class=ico16 alt=""></th>
 	<th>name</th>
 	<th>port</th>
 	<th>services ( total / running)</th>
@@ -71,7 +72,7 @@ String hostName = (String) i.next();
 <%}}%>
 </tbody>
 </table>
-<div class=but0>
+<div class=secButtons>
 <input class=btn type=submit name=mbAdd value="Add host" title="Add new host">
 <input class=btn type=submit name=mbDelete value="Delete host(s)" title="Delete selected hosts">
 </div>

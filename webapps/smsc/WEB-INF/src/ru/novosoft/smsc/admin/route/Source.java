@@ -8,6 +8,7 @@ package ru.novosoft.smsc.admin.route;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.admin.AdminException;
 
 import java.io.PrintWriter;
 
@@ -26,6 +27,7 @@ public class Source
 	}
 
 	public Source(Element srcElem, SubjectList subjects)
+		throws AdminException
 	{
 		NodeList list = srcElem.getElementsByTagName("subject");
 		if (list.getLength() > 0)

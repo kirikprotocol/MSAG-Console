@@ -20,6 +20,11 @@ public class QueryResultSetImpl implements QueryResultSet
 	private boolean last = false;
 	private int totalSize = 0;
 
+	public QueryResultSetImpl()
+	{
+		this.columns = new String[0];
+	}
+
 	public QueryResultSetImpl(String[] columns, Vector sortOrder)
 	{
 		this.columns = columns;

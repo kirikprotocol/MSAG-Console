@@ -13,6 +13,7 @@ import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.Utils;
 import ru.novosoft.util.jsp.MultipartDataSource;
@@ -34,6 +35,7 @@ public class ServiceAddExternalAdm extends PageBean
 
 	protected byte stage = 0;
 	private String serviceId = null;
+	private int priority = 0;
 	private String hostName = null;
 	private int port = -1;
 	private String startupArgs = null;
@@ -164,13 +166,17 @@ public class ServiceAddExternalAdm extends PageBean
 	protected int processStage3()
 	{
 		if (serviceManager.getSmeIds().contains(serviceId))
-			return error("Service \"" + serviceId + "\" already exists");
+			return error(SMSCErrors.error.services.alreadyExists, serviceId);
+		if (priority < 0 || priority > MAX_PRIORITY)
+			return error(SMSCErrors.error.services.invalidPriority, String.valueOf(priority));
+
 
 		ServiceInfo serviceInfo = new ServiceInfo(serviceId,
 																hostName,
 																port,
 																startupArgs,
 																new SME(serviceId,
+																		  priority,
 																		  SME.SMPP,
 																		  typeOfNumber,
 																		  numberingPlan,
@@ -454,5 +460,15 @@ public class ServiceAddExternalAdm extends PageBean
 	public void setMbCancel(String mbCancel)
 	{
 		this.mbCancel = mbCancel;
+	}
+
+	public int getPriority()
+	{
+		return priority;
+	}
+
+	public void setPriority(int priority)
+	{
+		this.priority = priority;
 	}
 }

@@ -59,6 +59,13 @@ function setSort(sorting)
 	opForm.submit();
 	return false;
 }
+function navigate(direction)
+{
+	document.all.jbutton.name = direction;
+	document.all.jbutton.value = direction;
+	opForm.submit();
+	return false;
+}
 </script>
 <table class=rep0 cellspacing=1 width="100%">
 <col width="1%">
@@ -98,10 +105,11 @@ String encRouteId = StringEncoderDecoder.encode(routeId);
 <input class=btn type=submit name=mbDelete value="Delete route(s)" title="Delete selected route(s)">
 <br>
 
-<input class=btn type=submit name=mbFirst value="First" title="First page"<%=bean.isFirst() ? " disabled" : ""%>>
-<input class=btn type=submit name=mbPrev value="Prev" title="Previous page"<%=bean.isFirst() ? " disabled" : ""%>>
-<input class=btn type=submit name=mbNext value="Next" title="Next page"<%=bean.isLast() ? " disabled" : ""%>>
-<input class=btn type=submit name=mbLast value="Last" title="Last page"<%=bean.isLast() ? " disabled" : ""%>><br>
+<label title="First page"><%if (bean.isFirst()) {%>&lt;&lt;<%} else {%><a href="#" onclick='return navigate("mbFirst")'>&lt;&lt;</a><%}%></label>
+<label title="Previous page"><%if (bean.isFirst()) {%>&lt;<%} else {%><a href="#" onclick='return navigate("mbPrev")'>&lt;</a><%}%></label>
+<label title="Next page"><%if (bean.isLast()) {%>&gt;<%} else {%><a href="#" onclick='return navigate("mbNext")'>&gt;</a><%}%></label>
+<label title="Last page"><%if (bean.isLast()) {%>&gt;&gt;<%} else {%><a href="#" onclick='return navigate("mbLast")'>&gt;&gt;</a><%}%></label>
+<br>
 <input class=btn type=submit name=mbFilter value="Filter" title="Filter routes">
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

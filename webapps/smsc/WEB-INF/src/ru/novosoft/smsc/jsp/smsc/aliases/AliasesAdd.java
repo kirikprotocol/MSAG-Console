@@ -7,6 +7,7 @@ package ru.novosoft.smsc.jsp.smsc.aliases;
 
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.SmscBean;
@@ -64,13 +65,26 @@ public class AliasesAdd extends SmscBean
 
 	protected int save()
 	{
-		if (smsc.getAliases().add(new Alias(new Mask(address), new Mask(alias), hide)))
+		if (!Mask.isMaskValid(address))
+			return error(SMSCErrors.error.aliases.invalidAddress, address);
+		if (!Mask.isMaskValid(alias))
+			return error(SMSCErrors.error.aliases.invalidAlias, alias);
+
+		try
 		{
-			appContext.getStatuses().setAliasesChanged(true);
-			return RESULT_DONE;
+			if (smsc.getAliases().add(new Alias(new Mask(address), new Mask(alias), hide)))
+			{
+				appContext.getStatuses().setAliasesChanged(true);
+				return RESULT_DONE;
+			}
+			else
+				return error(SMSCErrors.error.aliases.alreadyExists, alias);
 		}
-		else
-			return error(SMSCErrors.error.aliases.alreadyExists, alias);
+		catch (Throwable t)
+		{
+			logger.error("Couldn't add alias \"" + address + "\"-->\"" + alias + "\"", t);
+			return error(SMSCErrors.error.aliases.cantAdd, alias);
+		}
 	}
 
 	/*************************** properties *********************************/

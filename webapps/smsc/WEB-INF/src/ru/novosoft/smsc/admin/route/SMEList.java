@@ -84,6 +84,7 @@ public class SMEList
 			SME sme = (SME) i.next();
 			out.println("  <smerecord type=\"" + (sme.getType() == SME.SMPP ? "smpp" : "ss7") + "\" uid=\"" + sme.getId() + "\">");
 
+			out.println("    <param name=\"priority\" value=\"" + sme.getPriority() + "\"/>");
 			out.println("    <param name=\"typeOfNumber\" value=\"" + sme.getTypeOfNumber() + "\"/>");
 			out.println("    <param name=\"numberingPlan\" value=\"" + sme.getNumberingPlan() + "\"/>");
 			out.println("    <param name=\"interfaceVersion\" value=\"" + sme.getInterfaceVersion() + "\"/>");

@@ -30,6 +30,7 @@ switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
 }
 
+TITLE = "host \""+bean.getHostName()+":"+bean.getPort()+"\" view";
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_HOSTS";
 
@@ -48,26 +49,27 @@ function viewService(serviceId)
 	return false;
 }
 </script>
-<h1>host <span class=C00F><%=bean.getHostName()%>:<%=bean.getPort()%></span> view</h1>
 <%@ include file="/WEB-INF/inc/messages.jsp"%>
-<table class=frm1 cellspacing=0 width="100%">
+<div class=secInfo>Host infromation</div>
+<table class=secRep cellspacing=1 width="100%">
 <col width="15%" align=right>
 <col width="85%">
-<tr class=rowh><th colspan=2>information</th></tr>
+<tbody>
 <tr class=row0>
 	<th>host name:</th>
 	<td><%=bean.getHostName()%></td>
 </tr>
-<tr class=rowLast>
+<tr class=row1>
 	<th>host port:</th>
 	<td><%=bean.getPort()%></td>
 </tr>
-</table><%--div class=but0>
+</tbody></table>
+<%--div class=secButtons>
 <input class=btn type=submit name=mbEdit value="Edit host" title="Edit host information">
 <input class=btn type=submit name=mbCancel value="Cancel" title="Return to hosts list">
 </div--%>
-<h1>Services</h1>
-<table class=rep0 cellspacing=1 width="100%">
+<div class=secList>Host Services</div>
+<table class=secRep cellspacing=1 width="100%">
 <col width="1%">
 <col width="60%" align=left>
 <col width="20%" align=left>
@@ -97,7 +99,7 @@ String serviceControl = (row == 0) ? "start" : "stop";
 <%}}%>
 </tbody>
 </table>
-<div class=but0>
+<div class=secButtons>
 <input class=btn type=submit name=mbAddService value="Add service" title="Add service">
 <input class=btn type=submit name=mbDelete value="Delete service(s)" title="Delete selected services">
 &nbsp;&nbsp;&nbsp;&nbsp;

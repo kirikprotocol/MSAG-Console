@@ -15,6 +15,7 @@ public class SME
 	public static final byte SS7 = 1;
 
 	private String id = null;
+	private int priority = 0;
 	private byte type = SMPP;
 	private int typeOfNumber = 0;
 	private int numberingPlan = 0;
@@ -29,6 +30,7 @@ public class SME
 	/**
 	 * Constructor
 	 * @param <b>id</b> уникальный идентификатор SME
+	 * @param <b>priority</b> приоритет этого SME
 	 * @param <b>type</b> тип SME. может быть SME.SMPP или SME.SS7
 	 * @param <b>typeOfNumber</b> тип номера SME? возможные значения: <dl compact>
 	 * <dt>0</dt><dd>Unknown</dd>
@@ -58,7 +60,7 @@ public class SME
 	 * @param <b>smeN</b> <font color=red>???</font>
 	 * @throws NullPointerException if id, systemType, password, or addrRange is null
 	 */
-	public SME(String id, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType,
+	public SME(String id, int priority, byte type, int typeOfNumber, int numberingPlan, int interfaceVersion, String systemType,
 				  String password, String addrRange, int smeN, boolean wantAlias, int timeout)
 			  throws NullPointerException
 	{
@@ -66,6 +68,7 @@ public class SME
 			throw new NullPointerException("SME System ID is null");
 
 		this.id = id.trim();
+		this.priority = priority;
 		this.type = type;
 		this.typeOfNumber = typeOfNumber;
 		this.numberingPlan = numberingPlan;
@@ -92,6 +95,10 @@ public class SME
 			if (name.equals("typeOfNumber"))
 			{
 				typeOfNumber = Integer.decode(value).intValue();
+			}
+			else if (name.equals("priority"))
+			{
+				priority = Integer.decode(value).intValue();
 			}
 			else if (name.equals("numberingPlan"))
 			{
@@ -199,5 +206,10 @@ public class SME
 	public boolean isWantAlias()
 	{
 		return wantAlias;
+	}
+
+	public int getPriority()
+	{
+		return priority;
 	}
 }

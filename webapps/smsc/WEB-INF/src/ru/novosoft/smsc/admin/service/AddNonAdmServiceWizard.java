@@ -46,7 +46,7 @@ public class AddNonAdmServiceWizard
 	public SME createSme()
 			  throws AdminException
 	{
-		return new SME(systemId, SME.SMPP, typeOfNumber, numberingPlan, interfaceVersion, systemType, password,
+		return new SME(systemId, -1, SME.SMPP, typeOfNumber, numberingPlan, interfaceVersion, systemType, password,
 							rangeOfAddress, -1, false, 8);
 	}
 

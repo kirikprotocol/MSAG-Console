@@ -5,8 +5,10 @@
  */
 package ru.novosoft.smsc.admin.alias;
 
+import org.apache.log4j.Category;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.AliasDataSource;
@@ -23,6 +25,7 @@ public class AliasSet
 {
 	private Set aliases = new HashSet();
 	private AliasDataSource dataSource = new AliasDataSource();
+	private Category logger = Category.getInstance(this.getClass());
 
 	public AliasSet(Element aliasesElem)
 	{
@@ -30,10 +33,17 @@ public class AliasSet
 		for (int i = 0; i < aliasNodes.getLength(); i++)
 		{
 			Element aliasElem = (Element) aliasNodes.item(i);
-			add(new Alias(new Mask(aliasElem.getAttribute("addr")),
-							  new Mask(aliasElem.getAttribute("alias")),
-							  aliasElem.getAttribute("hide").equalsIgnoreCase("true"))
-			);
+			try
+			{
+				add(new Alias(new Mask(aliasElem.getAttribute("addr")),
+								  new Mask(aliasElem.getAttribute("alias")),
+								  aliasElem.getAttribute("hide").equalsIgnoreCase("true"))
+				);
+			}
+			catch (AdminException e)
+			{
+				logger.error("Couldn't load alias \"" + aliasElem.getAttribute("alias") + "\"-->\"" + aliasElem.getAttribute("addr") + "\", skipped", e);
+			}
 		}
 	}
 
@@ -69,9 +79,17 @@ public class AliasSet
 
 	public boolean remove(String alias)
 	{
-		Alias a = new Alias(new Mask(alias), new Mask(alias), false);
-		dataSource.remove(a);
-		return aliases.remove(a);
+		try
+		{
+			Alias a = new Alias(new Mask(alias), new Mask(alias), false);
+			dataSource.remove(a);
+			return aliases.remove(a);
+		}
+		catch (AdminException e)
+		{
+			logger.error("Couldn't remove alias \"" + alias + '"', e);
+			return false;
+		}
 	}
 
 	public QueryResultSet query(AliasQuery query)

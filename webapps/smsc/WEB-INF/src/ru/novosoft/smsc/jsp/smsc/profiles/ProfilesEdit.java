@@ -5,9 +5,9 @@
  */
 package ru.novosoft.smsc.jsp.smsc.profiles;
 
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.SmscBean;
@@ -19,7 +19,7 @@ public class ProfilesEdit extends SmscBean
 	protected String mbSave = null;
 	protected String mbCancel = null;
 
-   protected String mask = null;
+	protected String mask = null;
 	protected byte report = -1;
 	protected byte codepage = -1;
 
@@ -57,10 +57,13 @@ public class ProfilesEdit extends SmscBean
 
 	protected int save()
 	{
-		final Mask address = new Mask(mask);
-		Profile profile = new Profile(address, codepage, report);
+		if (!Mask.isMaskValid(mask))
+			return error(SMSCErrors.error.profiles.invalidMask, mask);
+
 		try
 		{
+			final Mask address = new Mask(mask);
+			Profile profile = new Profile(address, codepage, report);
 			switch (smsc.updateProfile(address, profile))
 			{
 				case 1:	//pusUpdated
@@ -75,15 +78,7 @@ public class ProfilesEdit extends SmscBean
 		}
 		catch (AdminException e)
 		{
-			try
-			{
-				logger.error("Couldn't update profile [\"" + profile.getMask().getMask() + "\", " + profile.getCodepageString() + ", " + profile.getReportOptionsString() + "]", e);
-			}
-			catch (AdminException e1)
-			{
-				logger.error("Couldn't log error about updating profile [\"" + profile.getMask().getMask() + "\"]", e1);
-				logger.error("Couldn't update profile [\"" + profile.getMask().getMask() + "\"]", e);
-			}
+			logger.error("Couldn't update profile [\"" + mask + "\", " + codepage + ", " + report + "]", e);
 			return error(SMSCErrors.error.profiles.couldntAdd, e);
 		}
 	}

@@ -3,13 +3,11 @@
 <title><%=(BROWSER_TITLE==null) ? TITLE : BROWSER_TITLE%></title>
 <link rel="STYLESHEET" type="text/css" href="<%=CPATH%>/style.jsp">
 </head><body bgcolor="#FFFFFF">
-<table height="100%" width="100%" cellspacing=1 cellpadding=0 class=wnd>
+<table align=center width="70%" cellspacing=0 cellpadding=0 class=wnd>
 <tr>
-	<td class=ico><img src="<%=CPATH%>/img/c_tmenu.gif" width="16" height="16"><br></td>
-	<td width="100%" class=title><%=TITLE%></td>
-	<td class=ico><img src="<%=CPATH%>/img/c_tmenu.gif" width="16" height="16"><br></td>
+	<td width="100%" class=title>SMSC&nbsp;/&nbsp;<%=TITLE%></td>
 </tr>
-<tr><td class=tmenu colspan=3><%
+<tr><td class=tmenu><%
 	%><a ID=MENU0_HOME href="<%=CPATH%>">status</a><%
 	%><a ID=MENU0_ROUTES href="<%=CPATH%>/routes/index.jsp">routes</a><%
 	%><a ID=MENU0_SUBJECTS href="<%=CPATH%>/subjects/index.jsp">subjects</a><%
@@ -21,4 +19,4 @@
 	%><script> document.all.<%=MENU0_SELECTION%>.className = 'tmenu_sel'; </script></td>
 </tr>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td class=content colspan=3><table class=content cellpadding=0 cellspacing=0><tr>
+<tr><td class=content>

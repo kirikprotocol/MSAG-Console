@@ -21,20 +21,21 @@ MENU0_SELECTION = "MENU0_HOSTS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
 <input type=hidden ID=jbutton value="jbutton">
-<h1>Add host</h1>
 <span class=CF00><%@ include file="/WEB-INF/inc/messages.jsp"%></span>
-<table class=frm0 cellspacing=0 width="100%">
+<div class=secInfo>Host infromation</div>
+<table class=secRep cellspacing=1 width="100%">
 <col width="15%" align=right>
 <col width="85%">
+<tbody>
 <tr class=row0>
-	<th>host name:</th>
+	<th class=label>host name:</th>
 	<td><input class=txtW name=hostName value="<%=bean.getHostName()%>"></td>
 </tr>
 <tr class=rowLast>
 	<th>host port:</th>
-	<td><input class=txt name=port value="<%=bean.getPort()%>"></td>
+	<td><input class=txt name=port size=10 value="<%=bean.getPort()%>"></td>
 </tr>
-</table><div class=but0>
+</table><div class=secButtons>
 <input type="submit" name="mbSave"   value="Save"   class="btn64" title="Save information">
 <input type="submit" name="mbCancel" value="Cancel" class="btn64" title="Return to host view">
 </div>

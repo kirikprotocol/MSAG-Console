@@ -29,6 +29,8 @@ public class SMSCErrors
 			public static final String couldntGetServiceInfo = B + "couldntGetServiceInfo";
 			public static final String coudntDeleteService = B + "coudntDeleteService";
 			public static final String coudntAddService = B + "coudntAddService";
+			public static final String invalidPriority = B + "invalidPriority";
+			public static final String alreadyExists = B + "alreadyExists";
 		}
 
 		public static class hosts
@@ -54,12 +56,17 @@ public class SMSCErrors
 			public static final String couldntAdd = B + "couldntAdd";
 			public static final String profileNotSpecified = B + "profileNotSpecified";
 			public static final String couldntLookup = B + "couldntLookup";
+			public static final String invalidMask = B + "invalidMask";
 		}
 
 		public static class aliases
 		{
 			private static final String B = error.B + "aliases.";
 			public static final String alreadyExists = B + "alreadyExists";
+			public static final String cantAdd = B + "cantAdd";
+			public static final String cantEdit = B + "cantEdit";
+			public static final String invalidAlias = B + "invalidAlias";
+			public static final String invalidAddress = B + "invalidAddress";
 		}
 
 		public static class subjects
@@ -78,6 +85,7 @@ public class SMSCErrors
 			public static final String cantAdd = B + "cantAdd";
 			public static final String cantEdit = B + "cantEdit";
 			public static final String nameNotSpecified = B + "nameNotSpecified";
+			public static final String invalidPriority = B + "invalidPriority";
 		}
 	}
 

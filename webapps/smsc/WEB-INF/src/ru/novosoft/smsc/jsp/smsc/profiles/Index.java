@@ -13,6 +13,7 @@ import ru.novosoft.smsc.jsp.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.ProfileFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.ProfileQuery;
+import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
 
 import java.util.List;
 import java.util.Vector;
@@ -77,6 +78,7 @@ public class Index extends SmscBean
 		catch (AdminException e)
 		{
 			logger.error("Couldn't query profiles", e);
+			profiles = new QueryResultSetImpl();
 			return error(SMSCErrors.error.profiles.queryError, e);
 		}
 
@@ -208,5 +210,10 @@ public class Index extends SmscBean
 	public void setSort(String sort)
 	{
 		this.sort = sort;
+	}
+
+	public int getPageSize()
+	{
+		return appContext.getUserPreferences().getProfilesPageSize();
 	}
 }

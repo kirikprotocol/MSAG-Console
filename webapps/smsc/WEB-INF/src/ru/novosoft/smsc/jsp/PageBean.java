@@ -27,6 +27,7 @@ public abstract class PageBean
 	protected SMSCAppContext appContext = null;
 	protected ServiceManager serviceManager = null;
 	protected DaemonManager daemonManager = null;
+	public static final int MAX_PRIORITY = 0x7FFF;
 
 
 	public SMSCAppContext getAppContext()

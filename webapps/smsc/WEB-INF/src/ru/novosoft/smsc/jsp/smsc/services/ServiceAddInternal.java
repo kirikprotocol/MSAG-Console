@@ -14,6 +14,7 @@ import java.util.List;
 public class ServiceAddInternal extends PageBean
 {
 	protected String serviceId = "";
+	protected int priority = 0;
 	protected String systemType = "";
 	protected int typeOfNumber = 0;
 	protected int numberingPlan = 0;
@@ -58,9 +59,14 @@ public class ServiceAddInternal extends PageBean
 
 	protected int addService()
 	{
+		if (serviceManager.getSmeIds().contains(serviceId))
+			return error(SMSCErrors.error.services.alreadyExists, serviceId);
+		if (priority < 0 || priority > MAX_PRIORITY)
+			return error(SMSCErrors.error.services.invalidPriority, String.valueOf(priority));
+
 		try
 		{
-			serviceManager.addNonAdmService(serviceId, systemType, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), rangeOfAddress, password);
+			serviceManager.addNonAdmService(serviceId, priority, systemType, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), rangeOfAddress, password);
 			appContext.getStatuses().setServicesChanged(true);
 		}
 		catch (Throwable t)
@@ -169,5 +175,15 @@ public class ServiceAddInternal extends PageBean
 	public void setHostName(String hostName)
 	{
 		this.hostName = hostName;
+	}
+
+	public int getPriority()
+	{
+		return priority;
+	}
+
+	public void setPriority(int priority)
+	{
+		this.priority = priority;
 	}
 }

@@ -31,13 +31,12 @@ if (bean.getStage() == 1 && multi != null)
 {
 	bean.receiveFile((MultipartServletRequest)request.getAttribute("multipart.request"));
 }
-
+TITLE = "Services List / Add service: step " + (bean.getStage() == 0 ? 2 : bean.getStage()+1);
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_SERVICES";
 %><%@ 
 include file="/WEB-INF/inc/html_3_header.jsp"%><%@ 
 include file="/WEB-INF/inc/html_3_middle.jsp"%>
-<h1>Add service: step <%=bean.getStage()+1%></h1>
 <%@ include file="/WEB-INF/inc/messages.jsp"%><%
 if (bean.getHostName() != null && bean.getStage() != 2)
 {
@@ -51,12 +50,13 @@ switch (bean.getStage())
 	case 1:
 	{%>
 	<input type="hidden" name="jsp" value="/services/serviceAddExternalAdm.jsp">
-	<table class=frm0 cellspacing=0 width="100%">
+	<div class=secInfo>Select service distribute:</div>
+	<table class=secRep cellspacing=1 width="100%">
 	<col width="15%" align=right>
 	<col width="85%">
 	<tr class=rowLast>
-		<th>Distribute:</th>
-		<td><input class=txt type=file name=distribute></td>
+		<th class=label>Distribute:</th>
+		<td><input class=txtW type=file name=distribute></td>
 	</tr>
 	</table>
 	<%}
@@ -155,7 +155,7 @@ switch (bean.getStage())
 	}
 }%>
 
-<div class=but0>
+<div class=secButtons>
 <input class=btn type=submit name=mbNext value="Next" title="Next page">
 <input class=btn type=submit name=mbCancel value="Cancel">
 </div>

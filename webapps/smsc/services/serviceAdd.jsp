@@ -1,5 +1,6 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%
+TITLE = "Services List / Add service: step 1";
 String hostName = request.getParameter("hostName");
 if (request.getParameter("mbCancel") != null)
 {
@@ -11,13 +12,13 @@ if (request.getParameter("mbCancel") != null)
 } else if (request.getParameter("mbNext") != null)
 {
 	if ("internal".equals(request.getParameter("serviceType"))) {
-		response.sendRedirect("serviceAddInternal.jsp?mbNext=next" + (hostName != null ? ("&hostName="+hostName) : ""));
+		response.sendRedirect("serviceAddInternal.jsp" + (hostName != null ? ("?hostName="+hostName) : ""));
 		return;
 	} else if ("external".equals(request.getParameter("serviceType"))) {
-		response.sendRedirect("serviceAddExternal.jsp?mbNext=next" + (hostName != null ? ("&hostName="+hostName) : ""));
+		response.sendRedirect("serviceAddExternal.jsp" + (hostName != null ? ("?hostName="+hostName) : ""));
 		return;
 	} else if ("external_adm".equals(request.getParameter("serviceType"))) {
-		response.sendRedirect("serviceAddExternalAdm.jsp?mbNext=next&stage=0" + (hostName != null ? ("&hostName="+hostName) : ""));
+		response.sendRedirect("serviceAddExternalAdm.jsp?stage=0" + (hostName != null ? ("&hostName="+hostName) : ""));
 		return;
 	}
 }
@@ -31,13 +32,19 @@ MENU0_SELECTION = "MENU0_SERVICES";
 {
 %><input type=hidden name=hostName value="<%=hostName%>"><%
 }%>
-<h1>Add service: step 1</h1>
-Select service type:<br>
-<input type=radio name=serviceType value="internal">Internal<br>
-<!--input type=radio name=serviceType value="external">External<br-->
-<input type=radio name=serviceType value="external_adm" checked>External Administrable<br>
-
-<div class=but0>
+<div class=secQuestion>Select service type:</div>
+<table class=secRep cellspacing=1 width="100%">
+<tbody>
+<tr class=row0>
+	<td class=name><input type=radio name=serviceType id=internal value=internal><label for=internal>Internal</label></td>
+</tr>
+<%--tr class=row1>
+	<td class=name><input type=radio name=serviceType id=external value="external" checked><label for=external>External</label></td>
+</tr--%>
+<tr class=row1>
+	<td class=name><input type=radio name=serviceType id=external_adm value="external_adm" checked><label for=external_adm>External Administrable</label></td>
+</tr>
+</table><div class=secButtons>
 <input class=btn type=submit name=mbNext value="Next" title="Next page">
 <input class=btn type=submit name=mbCancel value="Cancel">
 </div>

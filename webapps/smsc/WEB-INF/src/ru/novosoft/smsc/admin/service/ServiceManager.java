@@ -203,6 +203,7 @@ public class ServiceManager
 	}
 
 	public synchronized void addNonAdmService(String serviceId,
+															int priority,
 															String systemType,
 															int typeOfNumber,
 															int numberingPlan,
@@ -212,7 +213,7 @@ public class ServiceManager
 															)
 			  throws AdminException
 	{
-		SME sme = new SME(serviceId, SME.SMPP, typeOfNumber, numberingPlan, interfaceVersion, systemType, password,
+		SME sme = new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, interfaceVersion, systemType, password,
 								rangeOfAddress, -1, false, 8);
 		if (smsc.getSmes().getNames().contains(sme.getId()))
 			throw new AdminException("SME \"" + sme.getId() + "\" already exists");

@@ -14,7 +14,7 @@
 <%@ page import = "javax.servlet.http.*"%>
 <%@ page import = "java.util.*"%>
 <%@ page import = "java.net.URLEncoder"%>
-<%! final static String urlPrefix = "/smsc/smsc";%>
+<%! final static String urlPrefix = "/sm/smsc";%>
 <%! final static String smscPrefix = "/smsc_service";%>
 <%! final static String routesPrefix = "/smsc_service/routes";%>
 <%! final static String subjectsPrefix = "/smsc_service/subjects";%>

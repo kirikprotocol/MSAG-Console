@@ -1,4 +1,4 @@
-</tr></table></td></tr>
+</td></tr>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<tr><td colspan=3 class=status><%=STATUS%>&nbsp;</td></tr>
+<tr><td class=status><%=STATUS%>&nbsp;</td></tr>
 </table></body></html>

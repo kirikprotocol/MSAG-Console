@@ -32,6 +32,11 @@ MENU0_SELECTION = "MENU0_ROUTES";
 	<td>&nbsp;</td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
+	<th><label title="integer from 0 to 32767">priority:</label></th>
+	<td><input name=priority value="<%=bean.getPriority()%>" maxlength=5 class=txtW></td>
+	<td>&nbsp;</td>
+</tr>
+<tr class=row<%=(rowN++)&1%>>
 	<th>is premissible:</th>
 	<td><input class=txtW type=checkbox name=permissible <%=bean.isPermissible() ? "checked" : ""%>></td>
 	<td>&nbsp;</td>

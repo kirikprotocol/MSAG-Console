@@ -3,6 +3,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.ServiceAddInternal"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
+TITLE = "Services List / Add service: step 2";
 switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
 	case ServiceAddInternal.RESULT_DONE:
@@ -19,24 +20,27 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 MENU0_SELECTION = "MENU0_SERVICES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-<h1>Add service: step 2</h1>
 <%@ include file="/WEB-INF/inc/messages.jsp"%>
-
-<table class=frm0 cellspacing=0 width="100%">
+<div class=secInfo>Select service type:</div>
+<table class=secRep cellspacing=1 width="100%">
 <col width="15%" align=right>
 <col width="85%">
 <tr class=row0>
-	<th>System Id</th>
-	<td><input type="text" name="serviceId" value="<%=StringEncoderDecoder.encode(bean.getServiceId())%>" style="width: 100%;"></td>
+	<th class=label>system id:</th>
+	<td><input class=txt type="text" name="serviceId" value="<%=StringEncoderDecoder.encode(bean.getServiceId())%>"></td>
+</tr>
+<tr class=row1>
+	<th class=label>priority:</th>
+	<td><input class=txt type="text" name=priority maxlength=5 value="<%=bean.getPriority()%>"></td>
 </tr>
 <tr class=row0>
-	<th>System Type</th>
-	<td><input type="text" name="systemType" value="<%=StringEncoderDecoder.encode(bean.getSystemType())%>" maxlength="13" style="width: 100%;" onblur="checkSystemType(this)"></td>
+	<th class=label>system type:</th>
+	<td><input class=txt type="text" name="systemType" value="<%=StringEncoderDecoder.encode(bean.getSystemType())%>" maxlength="13"></td>
 </tr>
-<tr class=row0>
-	<th>Type of number</th>
-	<td>
-		<select name="typeOfNumber" style="width: 100%;">
+<tr class=row1>
+	<th class=label>type of number:</th>
+	<td><div class=select>
+		<select name="typeOfNumber">
 		<option value="0"<%=bean.getTypeOfNumber() == 0 ? " selected" : ""%>>Unknown</option>
 		<option value="1"<%=bean.getTypeOfNumber() == 1 ? " selected" : ""%>>International</option>
 		<option value="2"<%=bean.getTypeOfNumber() == 2 ? " selected" : ""%>>National</option>
@@ -44,13 +48,13 @@ MENU0_SELECTION = "MENU0_SERVICES";
 		<option value="4"<%=bean.getTypeOfNumber() == 4 ? " selected" : ""%>>Subscriber Number</option>
 		<option value="5"<%=bean.getTypeOfNumber() == 5 ? " selected" : ""%>>Alphanumeric</option>
 		<option value="6"<%=bean.getTypeOfNumber() == 6 ? " selected" : ""%>>Abbreviated</option>
-		</select>
+		</select></div>
 	</td>
 </tr>
 <tr class=row0>
-	<th>Numbering plan</th>
-	<td>
-		<select name="numberingPlan" style="width: 100%;">
+	<th class=label>numbering plan:</th>
+	<td><div class=select>
+		<select name="numberingPlan">
 		<option value="0" <%=bean.getNumberingPlan() == 0  ? " selected" : ""%>>Unknown</option>
 		<option value="1" <%=bean.getNumberingPlan() == 1  ? " selected" : ""%>>ISDN (E163/E164)</option>
 		<option value="3" <%=bean.getNumberingPlan() == 3  ? " selected" : ""%>>Data (X.121)</option>
@@ -61,28 +65,27 @@ MENU0_SELECTION = "MENU0_SERVICES";
 		<option value="10"<%=bean.getNumberingPlan() == 10 ? " selected" : ""%>>ERMES</option>
 		<option value="14"<%=bean.getNumberingPlan() == 14 ? " selected" : ""%>>Internet (IP)</option>
 		<option value="18"<%=bean.getNumberingPlan() == 18 ? " selected" : ""%>>WAP Client Id (to be defined by WAP Forum)</option>
-		</select>
+		</select></div>
 	</td>
 </tr>
-<tr class=row0>
-	<th>Interface version</th>
-	<td><input type="text" name="interfaceVersion" value="3.4" readonly style="width: 100%;"></td>
+<tr class=row1>
+	<th class=label>interface version:</th>
+	<td><input class=txt type="text" name="interfaceVersion" value="3.4" readonly></td>
 </tr>
 <tr class=row0>
-	<th>Range of Address</th>
-	<td><input maxlength="41" type="text" name="rangeOfAddress" value="<%=StringEncoderDecoder.encode(bean.getRangeOfAddress())%>" style="width: 100%;"></td>
+	<th class=label>range of address:</th>
+	<td><input class=txt maxlength="41" type="text" name="rangeOfAddress" value="<%=StringEncoderDecoder.encode(bean.getRangeOfAddress())%>"></td>
 </tr>
 <tr class=rowLast>
-	<th>Password</th>
-	<td><input maxlength="41" type="text" name="password" value="<%=StringEncoderDecoder.encode(bean.getPassword())%>" style="width: 100%;"></td>
+	<th class=label>password:</th>
+	<td><input class=txt maxlength="41" type="text" name="password" value="<%=StringEncoderDecoder.encode(bean.getPassword())%>"></td>
 </tr>
 </table>
-
 <%if (bean.getHostName() != null)
 {
-%><input type=hidden name=hostName value="<%=bean.getHostName()%>"><%
+%><input class=txt type=hidden name=hostName value="<%=bean.getHostName()%>"><%
 }%>
-<div class=but0>
+<div class=secButtons>
 <input class=btn type=submit name=mbNext value="Finish" title="Add service">
 <input class=btn type=submit name=mbCancel value="Cancel">
 </div>

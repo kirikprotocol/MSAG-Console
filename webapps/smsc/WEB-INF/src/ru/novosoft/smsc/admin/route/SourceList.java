@@ -7,14 +7,18 @@ package ru.novosoft.smsc.admin.route;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+import org.apache.log4j.Category;
 
 import java.io.PrintWriter;
 import java.util.*;
+
+import ru.novosoft.smsc.admin.AdminException;
 
 
 public class SourceList
 {
 	Map sources = new HashMap();
+	private Category logger = Category.getInstance(this.getClass());
 
 	public SourceList()
 	{
@@ -25,7 +29,14 @@ public class SourceList
 		NodeList list = sourceListElement.getElementsByTagName("source");
 		for (int i = 0; i < list.getLength(); i++)
 		{
-			add(new Source((Element) list.item(i), subjects));
+			try
+			{
+				add(new Source((Element) list.item(i), subjects));
+			}
+			catch (AdminException e)
+			{
+				logger.error("Couldn't load source, skipped", e);
+			}
 		}
 	}
 

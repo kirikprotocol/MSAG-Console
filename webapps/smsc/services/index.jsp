@@ -4,6 +4,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
+TITLE = "Services List";
 switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
 	case Index.RESULT_DONE:
@@ -54,16 +55,15 @@ function viewService(serviceId)
 	return false;
 }
 </script>
-<h1>Services list</h1>
 <%@ include file="/WEB-INF/inc/messages.jsp"%>
-<table class=rep0 cellspacing=1 width="100%">
+<table class=secRep cellspacing=1 width="100%">
 <col width="1%">
 <col width="60%" align=left>
 <col width="20%" align=left>
 <col width="20%" align=center>
 <thead>
 <tr>
-	<th>&nbsp;</th>
+	<th class=ico><img src="<%=CPATH%>/img/ico16_checked_sa.gif" class=ico16 alt=""></th>
 	<th>service</th>
 	<th>host</th>
 	<th>status</th>
@@ -105,7 +105,7 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 <%}}%>
 </tbody>
 </table>
-<div class=but0>
+<div class=secButtons>
 <input class=btn type=submit name=mbAddService value="Add service" title="Add service">
 <input class=btn type=submit name=mbDelete value="Delete service(s)" title="Delete selected services">
 &nbsp;&nbsp;&nbsp;&nbsp;

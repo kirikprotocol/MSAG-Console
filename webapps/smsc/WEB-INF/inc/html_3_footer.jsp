@@ -1,1 +1,1 @@
-</div></td></form><%@ include file="/WEB-INF/inc/html_1_footer.jsp"%>
+<%@ include file="/WEB-INF/inc/html_1_footer.jsp"%></form>
