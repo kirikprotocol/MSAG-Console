@@ -1,8 +1,7 @@
 package ru.novosoft.smsc.jsp.util.tables.impl.dl;
 
-import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
-import ru.novosoft.smsc.admin.dl.Principal;
+import ru.novosoft.smsc.jsp.util.tables.Filter;
 
 /**
  * Created by IntelliJ IDEA.

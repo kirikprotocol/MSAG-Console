@@ -1,89 +1,116 @@
+package ru.novosoft.smsc.jsp;
+
 /*
  * Created by igork
  * Date: 13.11.2002
  * Time: 16:29:15
  */
-package ru.novosoft.smsc.jsp;
+
 
 public class StatusesImpl implements Statuses
 {
-	private boolean routesChanged = false;
+  private boolean routesChanged = false;
   private boolean routesSaved = false;
   private boolean routesRestored = false;
   private boolean routesLoaded = false;
-	private boolean subjectsChanged = false;
-	private boolean aliasesChanged = false;
-	private boolean profilesChanged = false;
-	private boolean hostsChanged = false;
-	//private boolean servicesChanged = false;
-	private boolean usersChanged = false;
-	private boolean smscChanged = false;
+  private boolean subjectsChanged = false;
+  private boolean aliasesChanged = false;
+  private boolean profilesChanged = false;
+  private boolean hostsChanged = false;
+  //private boolean servicesChanged = false;
+  private boolean usersChanged = false;
+  private boolean smscChanged = false;
   private boolean webXmlChanged = false;
   private boolean providersChanged = false;
   private boolean categoriesChanged = false;
 
-	public boolean isRoutesChanged() {
-		return routesChanged;
-	}
-	public void setRoutesChanged(boolean routesChanged) {
-		this.routesChanged = routesChanged;
-    if (routesChanged) { routesRestored  = false;  routesLoaded = false; }
-	}
+  public boolean isRoutesChanged()
+  {
+    return routesChanged;
+  }
 
-  public boolean isSubjectsChanged() {
+  public void setRoutesChanged(boolean routesChanged)
+  {
+    this.routesChanged = routesChanged;
+    if (routesChanged) {
+      routesRestored = false;
+      routesLoaded = false;
+    }
+  }
+
+  public boolean isSubjectsChanged()
+  {
     return subjectsChanged;
   }
-  public void setSubjectsChanged(boolean subjectsChanged) {
+
+  public void setSubjectsChanged(boolean subjectsChanged)
+  {
     this.subjectsChanged = subjectsChanged;
-    if (subjectsChanged) { routesRestored  = false;  routesLoaded = false; }
+    if (subjectsChanged) {
+      routesRestored = false;
+      routesLoaded = false;
+    }
   }
 
-  public boolean isRoutesSaved() {
+  public boolean isRoutesSaved()
+  {
     return routesSaved;
   }
-  public void setRoutesSaved(boolean routesSaved) {
+
+  public void setRoutesSaved(boolean routesSaved)
+  {
     this.routesSaved = routesSaved;
   }
-  public boolean isRoutesRestored() {
+
+  public boolean isRoutesRestored()
+  {
     return routesRestored;
   }
-  public void setRoutesRestored(boolean routesRestored) {
+
+  public void setRoutesRestored(boolean routesRestored)
+  {
     this.routesRestored = routesRestored;
   }
 
-  public boolean isRoutesLoaded() {
+  public boolean isRoutesLoaded()
+  {
     return routesLoaded;
   }
-  public void setRoutesLoaded(boolean routesLoaded) {
+
+  public void setRoutesLoaded(boolean routesLoaded)
+  {
     this.routesLoaded = routesLoaded;
   }
 
-	public boolean isAliasesChanged()
-	{
-		return aliasesChanged;
-	}
-	public void setAliasesChanged(boolean aliasesChanged)
-	{
-		this.aliasesChanged = aliasesChanged;
-	}
+  public boolean isAliasesChanged()
+  {
+    return aliasesChanged;
+  }
 
-	public boolean isProfilesChanged()
-	{
-		return profilesChanged;
-	}
-	public void setProfilesChanged(boolean profilesChanged)
-	{
-		this.profilesChanged = profilesChanged;
-	}
+  public void setAliasesChanged(boolean aliasesChanged)
+  {
+    this.aliasesChanged = aliasesChanged;
+  }
 
-	public boolean isHostsChanged()
-	{
-		return hostsChanged;
-	}
-	public void setHostsChanged(boolean hostsChanged)
-	{
-		this.hostsChanged = hostsChanged;
-	}
+  public boolean isProfilesChanged()
+  {
+    return profilesChanged;
+  }
+
+  public void setProfilesChanged(boolean profilesChanged)
+  {
+    this.profilesChanged = profilesChanged;
+  }
+
+  public boolean isHostsChanged()
+  {
+    return hostsChanged;
+  }
+
+  public void setHostsChanged(boolean hostsChanged)
+  {
+    this.hostsChanged = hostsChanged;
+  }
 
 /*
 	public boolean isServicesChanged()
@@ -97,23 +124,25 @@ public class StatusesImpl implements Statuses
 	}
 */
 
-	public boolean isUsersChanged()
-	{
-		return usersChanged;
-	}
-	public void setUsersChanged(boolean usersChanged)
-	{
-		this.usersChanged = usersChanged;
-	}
+  public boolean isUsersChanged()
+  {
+    return usersChanged;
+  }
 
-	public boolean isSmscChanged()
-	{
-		return smscChanged;
-	}
-	public void setSmscChanged(boolean smscChanged)
-	{
-		this.smscChanged = smscChanged;
-	}
+  public void setUsersChanged(boolean usersChanged)
+  {
+    this.usersChanged = usersChanged;
+  }
+
+  public boolean isSmscChanged()
+  {
+    return smscChanged;
+  }
+
+  public void setSmscChanged(boolean smscChanged)
+  {
+    this.smscChanged = smscChanged;
+  }
 
   public boolean isWebXmlChanged()
   {
@@ -125,7 +154,8 @@ public class StatusesImpl implements Statuses
     this.providersChanged = providersChanged;
   }
 
-  public void setCategoriesChanged(boolean categoriesChanged) {
+  public void setCategoriesChanged(boolean categoriesChanged)
+  {
     this.categoriesChanged = categoriesChanged;
   }
 
@@ -135,9 +165,9 @@ public class StatusesImpl implements Statuses
   }
 
   public boolean isCategoriesChanged()
-   {
-     return categoriesChanged;
-   }
+  {
+    return categoriesChanged;
+  }
 
   public void setWebXmlChanged(boolean webXmlChanged)
   {

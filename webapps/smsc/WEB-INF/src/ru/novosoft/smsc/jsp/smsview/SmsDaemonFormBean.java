@@ -1,11 +1,11 @@
 package ru.novosoft.smsc.jsp.smsview;
 
-import ru.novosoft.smsc.jsp.PageBean;
-import ru.novosoft.smsc.jsp.SMSCErrors;
-import ru.novosoft.smsc.admin.smsview.archive.ArchiveDaemonContext;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
+import ru.novosoft.smsc.admin.smsview.archive.ArchiveDaemonContext;
+import ru.novosoft.smsc.jsp.PageBean;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
@@ -21,7 +21,7 @@ import java.util.*;
 public class SmsDaemonFormBean extends PageBean
 {
   public final static String LOC_SOURCES_SECTION = "ArchiveDaemon.Locations.sources";
-  public final static String SME_PARAMS_SECTION  = "ArchiveDaemon.Indexator.smeAddrChunkSize";
+  public final static String SME_PARAMS_SECTION = "ArchiveDaemon.Indexator.smeAddrChunkSize";
 
   private ArchiveDaemonContext daemonContext = null;
 
@@ -49,13 +49,16 @@ public class SmsDaemonFormBean extends PageBean
   public int process(HttpServletRequest request)
   {
     int result = super.process(request);
-    if (result != RESULT_OK)  return result;
+    if (result != RESULT_OK) return result;
 
     processParams(request);
 
-    if (mbStart != null)      return processStart();
-    else if (mbStop != null)  return processStop();
-    else if (mbSave != null)  return processApply();
+    if (mbStart != null)
+      return processStart();
+    else if (mbStop != null)
+      return processStop();
+    else if (mbSave != null)
+      return processApply();
     else if (mbReset != null) return processReset();
 
     return RESULT_OK;
@@ -71,7 +74,8 @@ public class SmsDaemonFormBean extends PageBean
         logger.error("Couldn't start Archive Daemon", e);
         return error(SMSCErrors.error.smsc.couldntStart, e);
       }
-    } else
+    }
+    else
       return RESULT_OK;
   }
 
@@ -85,7 +89,8 @@ public class SmsDaemonFormBean extends PageBean
         logger.error("Couldn't stop Archive Daemon", e);
         return error(SMSCErrors.error.smsc.couldntStop, e);
       }
-    } else
+    }
+    else
       return RESULT_OK;
   }
 
@@ -154,8 +159,9 @@ public class SmsDaemonFormBean extends PageBean
         toRemove.add(paramName);
       }
     }
-    for (int i=0; i<toRemove.size(); i++) params.remove(toRemove.get(i));
+    for (int i = 0; i < toRemove.size(); i++) params.remove(toRemove.get(i));
   }
+
   private int processParams(HttpServletRequest request)
   {
     int result = RESULT_OK;
@@ -166,20 +172,19 @@ public class SmsDaemonFormBean extends PageBean
 
     Enumeration parameterNames = request.getParameterNames();
 
-    while (parameterNames.hasMoreElements())
-    {
+    while (parameterNames.hasMoreElements()) {
       String s = (String) parameterNames.nextElement();
       if (s.indexOf('.') <= 0 || s.startsWith("newParamName_") || s.startsWith("newParamValue_")) continue;
 
       if (needCleanChangeable) {
-        clearChangeableParams(); needCleanChangeable = false;
+        clearChangeableParams();
+        needCleanChangeable = false;
       }
       isRequestHaveParams = true;
       Object oldValue = params.get(s);
       final String parameter = request.getParameter(s);
       //System.out.println("Param: "+s+"="+parameter+", old: "+oldValue);
-      if (oldValue != null)
-      {
+      if (oldValue != null) {
         if (oldValue instanceof Integer) {
           try {
             if (parameter != null && parameter.trim().length() > 0)
@@ -190,13 +195,13 @@ public class SmsDaemonFormBean extends PageBean
             logger.error("Invalid integer parameter: " + s + "=" + parameter);
             result = error(SMSCErrors.error.smsc.invalidIntParameter, s);
           }
-        } else if (oldValue instanceof Boolean)
+        }
+        else if (oldValue instanceof Boolean)
           params.put(s, Boolean.valueOf(parameter));
         else
           params.put(s, parameter);
       }
-      else
-      {
+      else {
         if (s.startsWith(LOC_SOURCES_SECTION)) {
           params.put(s, parameter);
         }
@@ -212,11 +217,15 @@ public class SmsDaemonFormBean extends PageBean
           }
         }
         else {
-          try { params.put(s, Integer.decode(parameter)); }
-          catch (NumberFormatException e) {
-            if (parameter.equalsIgnoreCase("true"))        params.put(s, Boolean.TRUE);
-            else if (parameter.equalsIgnoreCase("false"))  params.put(s, Boolean.FALSE);
-            else                                           params.put(s, parameter);
+          try {
+            params.put(s, Integer.decode(parameter));
+          } catch (NumberFormatException e) {
+            if (parameter.equalsIgnoreCase("true"))
+              params.put(s, Boolean.TRUE);
+            else if (parameter.equalsIgnoreCase("false"))
+              params.put(s, Boolean.FALSE);
+            else
+              params.put(s, parameter);
           }
         }
       }
@@ -241,19 +250,21 @@ public class SmsDaemonFormBean extends PageBean
     for (Iterator i = params.keySet().iterator(); i.hasNext();) {
       String paramName = (String) i.next();
       if (!paramName.startsWith(sectionName)) continue;
-      String shortName = paramName.substring(sectionName.length()+1);
+      String shortName = paramName.substring(sectionName.length() + 1);
       if (shortName.indexOf('.') != -1) continue;
       subParams.put(shortName, params.get(paramName));
     }
     return subParams;
   }
+
   public String getStringParam(String paramName)
   {
     Object param = params.get(paramName);
-    if (param == null)           return "<not specified>";
+    if (param == null) return "<not specified>";
     if (param instanceof String) return (String) param;
     return null;
   }
+
   public int getIntParam(String paramName)
   {
     Object param = params.get(paramName);
@@ -263,11 +274,13 @@ public class SmsDaemonFormBean extends PageBean
     }
     if (param instanceof Integer) {
       return ((Integer) param).intValue();
-    } else {
+    }
+    else {
       logger.error("parameter \"" + paramName + "\" is not integer.");
       return -1;
     }
   }
+
   public boolean getBoolParam(String paramName)
   {
     Object param = params.get(paramName);
@@ -277,44 +290,65 @@ public class SmsDaemonFormBean extends PageBean
     }
     if (param instanceof Boolean) {
       return ((Boolean) param).booleanValue();
-    } else {
+    }
+    else {
       logger.error("parameter \"" + paramName + "\" is not boolean.");
       return false;
     }
   }
 
-  public void setStringParam(String paramName, String paramValue) {
+  public void setStringParam(String paramName, String paramValue)
+  {
     params.put(paramName, paramValue);
   }
-  public void setIntParam(String paramName, int paramValue)  {
+
+  public void setIntParam(String paramName, int paramValue)
+  {
     params.put(paramName, new Integer(paramValue));
   }
-  public void setBoolParam(String paramName, boolean paramValue)  {
+
+  public void setBoolParam(String paramName, boolean paramValue)
+  {
     params.put(paramName, new Boolean(paramValue));
   }
 
-  public String getMbStart() {
+  public String getMbStart()
+  {
     return mbStart;
   }
-  public void setMbStart(String mbStart) {
+
+  public void setMbStart(String mbStart)
+  {
     this.mbStart = mbStart;
   }
-  public String getMbStop() {
+
+  public String getMbStop()
+  {
     return mbStop;
   }
-  public void setMbStop(String mbStop) {
+
+  public void setMbStop(String mbStop)
+  {
     this.mbStop = mbStop;
   }
-  public String getMbSave() {
+
+  public String getMbSave()
+  {
     return mbSave;
   }
-  public void setMbSave(String mbSave) {
+
+  public void setMbSave(String mbSave)
+  {
     this.mbSave = mbSave;
   }
-  public String getMbReset() {
+
+  public String getMbReset()
+  {
     return mbReset;
   }
-  public void setMbReset(String mbReset) {
+
+  public void setMbReset(String mbReset)
+  {
     this.mbReset = mbReset;
   }
 }

@@ -4,7 +4,7 @@ import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.impl.user.UserFilter;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.List;
 
 /**
  * Created by igork
@@ -64,13 +64,15 @@ public class UsersFilter extends SmscBean
       filter.setLastNameFilter(lastNameFilter);
       filter.setDepartmentFilter(departmentFilter);
       return RESULT_DONE;
-    } else if (mbClear != null) {
+    }
+    else if (mbClear != null) {
       loginFilter = "";
       firstNameFilter = "";
       lastNameFilter = "";
       departmentFilter = "";
       return RESULT_OK;
-    } else if (mbCancel != null)
+    }
+    else if (mbCancel != null)
       return RESULT_DONE;
 
     return RESULT_OK;

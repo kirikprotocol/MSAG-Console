@@ -1,3 +1,5 @@
+package ru.novosoft.smsc.jsp.smsc.users;
+
 /**
  * Created by IntelliJ IDEA.
  * User: igork
@@ -5,18 +7,20 @@
  * Time: 6:51:28 PM
  * To change this template use Options | File Templates.
  */
-package ru.novosoft.smsc.jsp.smsc.users;
 
-import ru.novosoft.smsc.admin.users.UserManager;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.user.UserQuery;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class Index extends IndexBean
 {
@@ -94,11 +98,14 @@ public class Index extends IndexBean
     return RESULT_OK;
   }
 
-  /******************************** properties **************************************/
+  /**
+   * ***************************** properties *************************************
+   */
   public QueryResultSet getUsers()
   {
     return users;
   }
+
   public boolean isLoginChecked(String login)
   {
     return checkedUserLoginsSet.contains(login);

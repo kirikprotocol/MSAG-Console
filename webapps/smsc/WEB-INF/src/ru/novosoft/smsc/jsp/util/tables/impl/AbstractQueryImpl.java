@@ -1,12 +1,13 @@
+package ru.novosoft.smsc.jsp.util.tables.impl;
+
 /*
  * Author: igork
  * Date: 11.06.2002
  * Time: 17:12:30
  */
-package ru.novosoft.smsc.jsp.util.tables.impl;
 
-import ru.novosoft.smsc.jsp.util.tables.Query;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
+import ru.novosoft.smsc.jsp.util.tables.Query;
 
 import java.util.Vector;
 

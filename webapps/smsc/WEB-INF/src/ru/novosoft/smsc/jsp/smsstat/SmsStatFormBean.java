@@ -1,3 +1,5 @@
+package ru.novosoft.smsc.jsp.smsstat;
+
 /**
  * Created by IntelliJ IDEA.
  * User: makarov
@@ -5,18 +7,20 @@
  * Time: 1:38:53 PM
  * To change this template use Options | File Templates.
  */
-package ru.novosoft.smsc.jsp.smsstat;
 
 import ru.novosoft.smsc.admin.smsstat.SmsStat;
 import ru.novosoft.smsc.admin.smsstat.StatQuery;
 import ru.novosoft.smsc.admin.smsstat.Statistics;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.util.Functions;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
 
 public class SmsStatFormBean extends IndexBean
 {
@@ -27,6 +31,7 @@ public class SmsStatFormBean extends IndexBean
   private SmsStat stat = new SmsStat();
 
   private String mbQuery = null;
+  private String mbDetail = null;
 
   protected int init(List errors)
   {
@@ -44,32 +49,81 @@ public class SmsStatFormBean extends IndexBean
     if (stat.getSmsc() == null) {
       stat.setDataSource(appContext.getConnectionPool());
       stat.setSmsc(appContext.getSmsc());
+      stat.setRouteSubjectManager(routeSubjectManager);
+      stat.setProviderManager(appContext.getProviderManager());
+      stat.setCategoryManager(appContext.getCategoryManager());
     }
 
     if (mbQuery != null) {
-      try { statistics = stat.getStatistics(query); }
-      catch (Exception exc) {
+      try {
+        statistics = stat.getStatistics(query);
+        // Date fromDate =query.getFromDate();
+        // Date TillDate=query.getTillDate();
+
+        String dateFrom = this.getFromDate();
+        String dateTill = this.getTillDate();
+
+        Collection ByRouteId = statistics.getRouteIdStat();
+        //HttpSession session =request.getSession();
+        session.removeAttribute("ByRouteId");
+        session.setAttribute("ByRouteId", ByRouteId);
+        session.removeAttribute("dateFrom");
+        session.setAttribute("dateFrom", dateFrom);
+        session.removeAttribute("dateTill");
+        session.setAttribute("dateTill", dateTill);
+
+      } catch (Exception exc) {
         statistics = null;
-        return error(exc.getMessage());
+        exc.printStackTrace();
+        return error(SMSCErrors.error.smsstat.QueryFailed, exc.getMessage());
       }
-    } else if (!query.isFromDateEnabled()) {
+    }
+    else if (!query.isFromDateEnabled()) {
       query.setFromDate(Functions.truncateTime(new Date()));
       query.setFromDateEnabled(true);
     }
-
+    if (mbDetail != null) {
+      try {
+        mbDetail = null;
+        return RESULT_FILTER;
+        // statistics = stat.getStatistics(query);
+      } catch (Exception exc) {
+        // statistics = null;
+        return error(exc.getMessage());
+      }
+    }
+    else if (!query.isFromDateEnabled()) {
+      //  query.setFromDate(Functions.truncateTime(new Date()));
+      //  query.setFromDateEnabled(true);
+    }
     mbQuery = null;
+    mbDetail = null;
     return RESULT_OK;
   }
 
-  public Statistics getStatistics() {
+  public Statistics getStatistics()
+  {
     return statistics;
   }
 
-  public String getMbQuery() {
+  public String getMbQuery()
+  {
     return mbQuery;
   }
-  public void setMbQuery(String mbQuery) {
+
+  public void setMbQuery(String mbQuery)
+  {
     this.mbQuery = mbQuery;
+  }
+
+  public String getMbDetail()
+  {
+    return mbDetail;
+  }
+
+  public void setMbDetail(String mbDetail)
+  {
+    this.mbDetail = mbDetail;
   }
 
   private Date convertStringToDate(String date)
@@ -96,7 +150,8 @@ public class SmsStatFormBean extends IndexBean
     if (fromDate != null && fromDate.trim().length() > 0) {
       query.setFromDate(convertStringToDate(fromDate));
       query.setFromDateEnabled(true);
-    } else {
+    }
+    else {
       query.setFromDateEnabled(false);
     }
   }
@@ -112,7 +167,8 @@ public class SmsStatFormBean extends IndexBean
     if (tillDate != null && tillDate.trim().length() > 0) {
       query.setTillDate(convertStringToDate(tillDate));
       query.setTillDateEnabled(true);
-    } else {
+    }
+    else {
       query.setTillDateEnabled(false);
     }
   }

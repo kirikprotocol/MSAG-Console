@@ -3,21 +3,22 @@ package ru.novosoft.smsc.jsp;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.PropertyConfigurator;
 import ru.novosoft.smsc.admin.acl.AclManager;
+import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.console.Console;
 import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.journal.Journal;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
+import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.resources.ResourcesManager;
 import ru.novosoft.smsc.admin.resources.ResourcesManagerImpl;
 import ru.novosoft.smsc.admin.route.RouteSubjectManagerImpl;
 import ru.novosoft.smsc.admin.service.HostsManager;
 import ru.novosoft.smsc.admin.service.ServiceManagerImpl;
-import ru.novosoft.smsc.admin.smsc_service.*;
+import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
+import ru.novosoft.smsc.admin.smsc_service.SmeManager;
+import ru.novosoft.smsc.admin.smsc_service.SmeManagerImpl;
+import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.users.UserManager;
-import ru.novosoft.smsc.admin.category.CategoryManager;
-import ru.novosoft.smsc.admin.category.Category;
-import ru.novosoft.smsc.admin.provider.ProviderManager;
-import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.perfmon.PerfServer;
 import ru.novosoft.smsc.topmon.TopServer;
 import ru.novosoft.smsc.util.LocaleMessages;
@@ -31,7 +32,8 @@ import javax.sql.DataSource;
 import java.io.*;
 import java.sql.SQLException;
 import java.util.*;
-import java.security.Principal;
+
+//import java.security.Principal;
 
 
 public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
@@ -45,8 +47,6 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
   private SmeManager smeManager = null;
   private RouteSubjectManager routeSubjectManager = null;
   private ResourcesManager resourcesManager = null;
-  private Provider provider = null;
-  private Category category = null;
   private ProviderManager providerManager = null;
   private CategoryManager categoryManager = null;
   private AclManager aclManager = null;
@@ -91,11 +91,13 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       if (is == null) {
         System.out.println("initializing log4j by BasicConfigurator");
         BasicConfigurator.configure();
-      } else {
+      }
+      else {
         System.out.println("initializing log4j by resource log4j.properties");
         initLoggerByProps(is);
       }
-    } else {
+    }
+    else {
       try {
         System.out.println("initializing log4j by external file: " + log4jinit.getAbsolutePath());
         initLoggerByProps(new FileInputStream(log4jinit));
@@ -115,7 +117,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       System.out.println("Starting SMSC Administartion Web Apllication **************************************************");
       initLogger();
       webappConfig = new Config(new File(configFileName));
-      System.out.println("webappConfig = "+configFileName+" **************************************************");
+      System.out.println("webappConfig = " + configFileName + " **************************************************");
       WebAppFolders.init(webappConfig.getString("system.webapp folder"), webappConfig.getString("system.work folder"), webappConfig.getString("smsc.config folder"));
 
       try {
@@ -213,20 +215,12 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
     return resourcesManager;
   }
 
-  public Provider getProvider() {
-    return provider;
-  }
-
-  public Category getCategory() {
-    return category;
-  }
-
   public ProviderManager getProviderManager()
   {
     return providerManager;
   }
 
-   public CategoryManager getCategoryManager()
+  public CategoryManager getCategoryManager()
   {
     return categoryManager;
   }
@@ -251,7 +245,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       }
   }
 
-   public Statuses getStatuses()
+  public Statuses getStatuses()
   {
     return statuses;
   }

@@ -8,9 +8,10 @@ import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataItem;
  * Date: Aug 18, 2003
  * Time: 3:06:40 PM
  */
-public class MscDataItem extends AbstractDataItem {
-  private boolean  mLock  = false;
-  private boolean  aLock  = false;
+public class MscDataItem extends AbstractDataItem
+{
+  private boolean mLock = false;
+  private boolean aLock = false;
 
   public MscDataItem(MscInfo info)
   {

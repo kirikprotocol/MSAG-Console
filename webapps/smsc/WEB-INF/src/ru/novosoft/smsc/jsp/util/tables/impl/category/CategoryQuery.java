@@ -1,19 +1,15 @@
-/**
- * Created by igork
- * Date: Nov 29, 2002
- * Time: 7:01:26 PM
- */
 package ru.novosoft.smsc.jsp.util.tables.impl.category;
 
-import ru.novosoft.smsc.jsp.util.tables.impl.AbstractQueryImpl;
-import ru.novosoft.smsc.jsp.util.tables.impl.provider.ProviderFilter;
+/**
+ Created by andrey Date: 07.02.2005 Time: 12:45:18
+ */
 
-import java.util.Vector;
+import ru.novosoft.smsc.jsp.util.tables.impl.AbstractQueryImpl;
 
 public class CategoryQuery extends AbstractQueryImpl
 {
-	public CategoryQuery(int expectedResultsQuantity, CategoryFilter filter, String sortOrder, int startPosition)
-	{
-		super(expectedResultsQuantity, filter, sortOrder, startPosition);
-	}
+  public CategoryQuery(int expectedResultsQuantity, CategoryFilter filter, String sortOrder, int startPosition)
+  {
+    super(expectedResultsQuantity, filter, sortOrder, startPosition);
+  }
 }

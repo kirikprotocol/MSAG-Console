@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.util.tables.impl.profile;
+
 /*
  * Created by igork
  * Date: 28.08.2002
  * Time: 18:23:21
  */
-package ru.novosoft.smsc.jsp.util.tables.impl.profile;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.profiler.Profile;
@@ -13,7 +14,10 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
 import ru.novosoft.util.conpool.NSConnectionPool;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 public class ProfileDataSource
 {
@@ -54,8 +58,8 @@ public class ProfileDataSource
       statement = connection.createStatement();
 
       final String queryStr = "select mask, reportinfo, codeset, locale, hidden, hidden_mod, divert, divert_act, divert_mod, udhConcat, translit from sms_profile " +
-                              createWhereStatement(query_to_run.getFilter(), query_to_run.getShow()) +
-                              " order by " + sortOrder;
+              createWhereStatement(query_to_run.getFilter(), query_to_run.getShow()) +
+              " order by " + sortOrder;
       sqlResultSet = statement.executeQuery(queryStr);
       System.out.println("queryStr = " + queryStr);
 
@@ -68,17 +72,17 @@ public class ProfileDataSource
       for (int i = 0; i < query_to_run.getExpectedResultsQuantity() && sqlResultSet.next(); i++, totalCount++) {
         //final String hidden = sqlResultSet.getString("hidden");
         results.add(new ProfileDataItem(new Profile(new Mask(sqlResultSet.getString("mask")),
-                                                    Profile.getCodepageString((byte) (sqlResultSet.getShort("codeset") & 0x7F)),
-                                                    String.valueOf((sqlResultSet.getShort("codeset") & 0x80) != 0),
-                                                    Profile.getReportOptionsString(sqlResultSet.getByte("reportinfo")),
-                                                    sqlResultSet.getString("locale"),
-                                                    sqlResultSet.getString("hidden"), //hidden != null && hidden.length() > 0 && Character.toUpperCase(hidden.charAt(0)) == 'Y',
-                                                    sqlResultSet.getString("hidden_mod"),
-                                                    sqlResultSet.getString("divert"),
-                                                    sqlResultSet.getString("divert_act"),
-                                                    sqlResultSet.getString("divert_mod"),
-                                                    sqlResultSet.getString("udhConcat"),
-                                                    sqlResultSet.getString("translit"))));
+                Profile.getCodepageString((byte) (sqlResultSet.getShort("codeset") & 0x7F)),
+                String.valueOf((sqlResultSet.getShort("codeset") & 0x80) != 0),
+                Profile.getReportOptionsString(sqlResultSet.getByte("reportinfo")),
+                sqlResultSet.getString("locale"),
+                sqlResultSet.getString("hidden"), //hidden != null && hidden.length() > 0 && Character.toUpperCase(hidden.charAt(0)) == 'Y',
+                sqlResultSet.getString("hidden_mod"),
+                sqlResultSet.getString("divert"),
+                sqlResultSet.getString("divert_act"),
+                sqlResultSet.getString("divert_mod"),
+                sqlResultSet.getString("udhConcat"),
+                sqlResultSet.getString("translit"))));
       }
 
       boolean isLast = true;

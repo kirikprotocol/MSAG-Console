@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.smsc.users;
+
 /**
  * Created by igork
  * Date: Dec 2, 2002
  * Time: 4:59:33 PM
  */
-package ru.novosoft.smsc.jsp.smsc.users;
 
 import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
@@ -69,7 +70,9 @@ public abstract class UsersEditBean extends SmscBean
     return appContext.getWebXmlConfig().getServiceIdFromRole(roleName);
   }
 
-  /****************************************** properties ****************************************************/
+  /**
+   * *************************************** properties ***************************************************
+   */
   public String getLogin()
   {
     return login;

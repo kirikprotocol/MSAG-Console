@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.util.tables.impl;
+
 /*
  * Author: igork
  * Date: 11.06.2002
  * Time: 15:27:04
  */
-package ru.novosoft.smsc.jsp.util.tables.impl;
 
 import ru.novosoft.smsc.jsp.util.tables.*;
 import ru.novosoft.smsc.util.SortedVector;

@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp;
+
 /*
  * Created by igork
  * Date: 25.10.2002
  * Time: 17:27:47
  */
-package ru.novosoft.smsc.jsp;
 
 
 public class SMSCErrors
@@ -173,6 +174,7 @@ public class SMSCErrors
       public static final String category_not_found = B + "Category not found";
 
     }
+
     public static class smsc
     {
       private static final String B = error.B + "smsc.";
@@ -267,6 +269,12 @@ public class SMSCErrors
       public static final String COULDNT_CREATE_ACL = B + "couldntCreateAcl";
       public static final String COULDNT_LOOKUP_ADDRESSES = B + "couldntLookupAddresses";
       public static final String COULDNT_REMOVE_ADD_ADDRESSES = B + "couldntRemoveAddAddresses";
+    }
+
+    public static class smsstat
+    {
+      private static final String B = error.B + "smsstat.";
+      public static final String QueryFailed = B + "QueryFailed";
     }
   }
 

@@ -1,8 +1,8 @@
 package ru.novosoft.smsc.jsp.util.tables.impl.dl;
 
-import ru.novosoft.smsc.jsp.util.tables.Filter;
-import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.jsp.util.tables.DataItem;
+import ru.novosoft.smsc.jsp.util.tables.Filter;
 
 /**
  * Created by igork

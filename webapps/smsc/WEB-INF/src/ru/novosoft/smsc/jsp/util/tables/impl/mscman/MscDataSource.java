@@ -8,7 +8,8 @@ import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
  * Date: Aug 18, 2003
  * Time: 3:06:54 PM
  */
-public class MscDataSource extends AbstractDataSourceImpl {
+public class MscDataSource extends AbstractDataSourceImpl
+{
   public MscDataSource()
   {
     super(new String[]{"commutator", "status", "failures"});

@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.util.tables.impl;
+
 /*
  * Author: igork
  * Date: 11.06.2002
  * Time: 17:01:37
  */
-package ru.novosoft.smsc.jsp.util.tables.impl;
 
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 

@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.jsp.util.tables.impl.dl;
 
-import ru.novosoft.smsc.jsp.util.tables.impl.AbstractQueryImpl;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
+import ru.novosoft.smsc.jsp.util.tables.impl.AbstractQueryImpl;
 
 /**
  * Created by IntelliJ IDEA.

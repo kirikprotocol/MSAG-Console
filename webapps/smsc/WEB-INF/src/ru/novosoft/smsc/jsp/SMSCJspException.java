@@ -1,9 +1,11 @@
+package ru.novosoft.smsc.jsp;
+
 /*
  * Created by igork
  * Date: 25.10.2002
  * Time: 19:38:12
  */
-package ru.novosoft.smsc.jsp;
+
 
 public class SMSCJspException extends Exception
 {
@@ -12,7 +14,7 @@ public class SMSCJspException extends Exception
   public static final byte ERROR_CLASS_MESSAGE = 2;
   public static final byte ERROR_CLASS_UNKNOWN = 3;
 
-	private String param = null;
+  private String param = null;
   private byte errorClass = ERROR_CLASS_ERROR;
 
   public SMSCJspException(String message, byte errorClass)
@@ -41,10 +43,10 @@ public class SMSCJspException extends Exception
     this.errorClass = errorClass;
   }
 
-	public String getParam()
-	{
-		return param;
-	}
+  public String getParam()
+  {
+    return param;
+  }
 
   public byte getErrorClass()
   {

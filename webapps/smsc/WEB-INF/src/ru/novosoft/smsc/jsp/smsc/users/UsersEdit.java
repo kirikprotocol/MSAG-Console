@@ -1,16 +1,18 @@
+package ru.novosoft.smsc.jsp.smsc.users;
+
 /**
  * Created by igork
  * Date: Nov 29, 2002
  * Time: 8:31:50 PM
  */
-package ru.novosoft.smsc.jsp.smsc.users;
 
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
 
 public class UsersEdit extends UsersEditBean
 {
@@ -25,13 +27,15 @@ public class UsersEdit extends UsersEditBean
         setRoles(new String[0]);
         login = password = confirmPassword = firstName = lastName = dept = workPhone = homePhone = cellPhone = email = "";
         return error(SMSCErrors.error.users.loginNotDefined);
-      } else {
+      }
+      else {
         User user = userManager.getUser(login);
         if (user == null) {
           setRoles(new String[0]);
           password = confirmPassword = firstName = lastName = dept = workPhone = homePhone = cellPhone = email = "";
           return error(SMSCErrors.error.users.userNotFound, login);
-        } else {
+        }
+        else {
           password = "";
           confirmPassword = "";
           setRoles((String[]) user.getRoles().toArray(new String[0]));
@@ -56,7 +60,8 @@ public class UsersEdit extends UsersEditBean
     User user = userManager.getUser(login);
     if (user == null) { // add new user
       return error(SMSCErrors.error.users.userNotFound, login);
-    } else {
+    }
+    else {
       if ((password == null || password.trim().length() == 0) && (confirmPassword == null || confirmPassword.length() == 0)) {
         password = confirmPassword = user.getPassword().trim();
       }

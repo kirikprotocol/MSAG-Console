@@ -1,9 +1,10 @@
+package ru.novosoft.smsc.jsp.util.tables.impl.profile;
+
 /*
  * Created by igork
  * Date: 28.08.2002
  * Time: 17:59:20
  */
-package ru.novosoft.smsc.jsp.util.tables.impl.profile;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.profiler.Profile;
