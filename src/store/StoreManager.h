@@ -25,6 +25,15 @@
 #include "ConnectionManager.h"
 #include "Archiver.h"
 
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+#define SMSC_FAKE_MEMORY_MESSAGE_STORE
+#endif
+
+#ifdef SMSC_FAKE_MEMORY_MESSAGE_STORE
+#include <core/buffers/IntHash.hpp>
+    using namespace smsc::core::buffers;
+#endif
+
 namespace smsc { namespace store
 {
     using namespace smsc::sms;
@@ -104,6 +113,11 @@ namespace smsc { namespace store
         
         static unsigned             maxTriesCount;
         static void loadMaxTriesCount(Manager& config);
+
+    #ifdef SMSC_FAKE_MEMORY_MESSAGE_STORE
+        static IntHash<SMS>     fakeStore;
+        static Mutex            fakeMutex;
+    #endif
 
         class ReadyIdIterator : public IdIterator
         {

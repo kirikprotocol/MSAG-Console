@@ -76,6 +76,7 @@ void StoreManager::startup(Manager& config)
             generator = new IDGenerator(archiver->getLastUsedId());
             archiver->Start();
 #else
+            pool = 0;
             archiver  = 0;
             generator = new IDGenerator(0);
 #endif
