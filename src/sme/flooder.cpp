@@ -120,6 +120,11 @@ int probIncompleteMessage=0;
 int probUssdMessage=0;
 int probInvalidUssdMessage=0;
 
+int probDefault=100;
+int probDatagram=0;
+int probForward=0;
+int probStoreAndForward=0;
+
 Option options[]=
 {
   {"host",'s',&host},
@@ -143,7 +148,11 @@ Option options[]=
   {"maxSegments",'i',&maxSegments},
   {"probIncompleteMessage",'i',&probIncompleteMessage},
   {"probUssdMessage",'i',&probUssdMessage},
-  {"probInvalidUssdMessage",'i',&probInvalidUssdMessage}
+  {"probInvalidUssdMessage",'i',&probInvalidUssdMessage},
+  {"probDefault",'i',&probDefault},
+  {"probDatagram",'i',&probDatagram},
+  {"probForward",'i',&probForward},
+  {"probStoreAndForward",'i',&probStoreAndForward}
 };
 
 int optionsCount=sizeof(options)/sizeof(options[0]);
@@ -286,6 +295,11 @@ int main(int argc,char* argv[])
       messageMode=1;//words
     }
 
+    if(probDefault+probDatagram+probForward+probStoreAndForward==0)
+    {
+      throw Exception("probDefault+probDatagram+probForward+probStoreAndForward==0");
+    }
+
     int delay=1000/speed;
 
     SmppSession ss(cfg,&lst);
@@ -316,6 +330,8 @@ int main(int argc,char* argv[])
       int dstidx=0;
       int msgidx=0;
       string wordsTemp;
+
+      int overdelay=0;
       while(!stopped)
       {
         hrtime_t msgstart=gethrtime();
@@ -354,6 +370,24 @@ int main(int argc,char* argv[])
           s.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,msgptr->c_str(),msgptr->length());
         }
         s.setIntProperty(Tag::SMPP_SM_LENGTH,0);
+
+        {
+          int mode=rand()%(probDefault+probDatagram+probForward+probStoreAndForward);
+          if(mode<probDefault)
+          {
+            s.setIntProperty(Tag::SMPP_ESM_CLASS,s.getIntProperty(Tag::SMPP_ESM_CLASS)&(~3));
+          }else if(mode<probDefault+probDatagram)
+          {
+            s.setIntProperty(Tag::SMPP_ESM_CLASS,(s.getIntProperty(Tag::SMPP_ESM_CLASS)&(~3))|1);
+          }else if(mode<probDefault+probDatagram+probForward)
+          {
+            s.setIntProperty(Tag::SMPP_ESM_CLASS,(s.getIntProperty(Tag::SMPP_ESM_CLASS)&(~3))|2);
+          }else
+          {
+            s.setIntProperty(Tag::SMPP_ESM_CLASS,(s.getIntProperty(Tag::SMPP_ESM_CLASS)&(~3))|3);
+          }
+        }
+
         fillSmppPduFromSms(&sm,&s);
         atr->submit(sm);
 
@@ -367,7 +401,17 @@ int main(int argc,char* argv[])
 
         //slev.Wait(delay);
         hrtime_t msgproc=gethrtime()-msgstart;
-        if(delay>msgproc/1000000)millisleep(delay-msgproc/1000000);
+        msgproc/=1000000;
+        if(delay>msgproc+overdelay)
+        {
+          msgstart=gethrtime();
+          millisleep(delay-msgproc-overdelay);
+          overdelay=(gethrtime()-msgstart)/1000000-(delay-msgproc-overdelay);
+        }else
+        {
+          overdelay-=delay;
+          if(overdelay<0)overdelay=0;
+        }
 
         time_t now=time(NULL);
         if((cnt%500)==0 || now-lasttime>5)
