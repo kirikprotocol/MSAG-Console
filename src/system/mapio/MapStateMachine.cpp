@@ -1186,7 +1186,10 @@ static bool SendSms(MapDialog* dialog){
   ET96MAP_SM_RP_UI_T* ui;
   dialog->auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(ui=new ET96MAP_SM_RP_UI_T);
   mkDeliverPDU(dialog->sms.get(),ui,mms);
-  if ( dialog->version > 1 && !dialog->mms && (ui->signalInfoLen > 98 || mms ) ) {
+  if ( dialog->version > 1 
+       && !dialog->mms 
+       && (ui->signalInfoLen > (143-(dialog->smRpOa.addrLen+1)-(dialog->smRpDa.addrLen+1)-(dialog->scAddr.ss7AddrLen)) 
+       || mms ) ) {
     result = Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 );
     if( result != ET96MAP_E_OK )
       throw MAPDIALOG_FATAL_ERROR(
