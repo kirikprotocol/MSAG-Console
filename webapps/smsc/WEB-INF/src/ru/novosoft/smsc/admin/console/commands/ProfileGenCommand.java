@@ -90,7 +90,7 @@ public abstract class ProfileGenCommand implements Command
     this.divertActiveBarred = divertActiveBarred; this.isDivertActiveBarred = true;
   }
   public void setDivertActiveBlocked(boolean divertActiveBlocked) {
-    this.divertActiveBlocked = divertActiveBlocked; this.divertActiveBlocked = true;
+    this.divertActiveBlocked = divertActiveBlocked; this.isDivertActiveBlocked = true;
   }
   public void setDivertActiveCapacity(boolean divertActiveCapacity) {
     this.divertActiveCapacity = divertActiveCapacity; this.isDivertActiveCapacity = true;
