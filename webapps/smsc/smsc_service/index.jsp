@@ -106,6 +106,8 @@ refreshStartStopButtonsStatus();
       param(out, "max tries count",         "MessageStore.maxTriesCount",   bean.getIntParam("MessageStore.maxTriesCount"));
       param(out, "billing directory",       "MessageStore.billingDir",      bean.getStringParam("MessageStore.billingDir"));
       param(out, "billing interval (secs)", "MessageStore.billingInterval", bean.getIntParam("MessageStore.billingInterval"));
+      param(out, "archive directory",       "MessageStore.archiveDir",      bean.getStringParam("MessageStore.archiveDir"));
+      param(out, "archive interval (secs)", "MessageStore.archiveInterval", bean.getIntParam("MessageStore.archiveInterval"));
     finishParams(out);
     //~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Storage ~~~~~~~~~~~~~~~~~~~~~~~~
     startSection(out, "MessageStore.Storage", "Storage", false);
@@ -113,15 +115,6 @@ refreshStartStopButtonsStatus();
         param(out, "DB instance",      "MessageStore.Storage.dbInstance",     bean.getStringParam("MessageStore.Storage.dbInstance"));
         param(out, "DB user name",     "MessageStore.Storage.dbUserName",     bean.getStringParam("MessageStore.Storage.dbUserName"));
         param(out, "DB user password", "MessageStore.Storage.dbUserPassword", bean.getStringParam("MessageStore.Storage.dbUserPassword"));
-      finishParams(out);
-    finishSection(out);
-    //~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Cleaner ~~~~~~~~~~~~~~~~~~~~~~~~
-    startSection(out, "MessageStore.Cleaner", "Cleaner", false);
-      startParams(out);
-        param(out, "enabled",         "MessageStore.Cleaner.enabled",  bean.getBoolParam("MessageStore.Cleaner.enabled"));
-        param(out, "age (days)",      "MessageStore.Cleaner.age",      bean.getIntParam( "MessageStore.Cleaner.age"));
-        param(out, "awake (secs)",    "MessageStore.Cleaner.awake",    bean.getIntParam( "MessageStore.Cleaner.awake"));
-        param(out, "interval (secs)", "MessageStore.Cleaner.interval", bean.getIntParam( "MessageStore.Cleaner.interval"));
       finishParams(out);
     finishSection(out);
     //~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Cache ~~~~~~~~~~~~~~~~~~~~~~~~
