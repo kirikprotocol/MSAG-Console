@@ -7,6 +7,7 @@
 #include <sax/SAXException.hpp>
 #include <framework/LocalFileInputSource.hpp>
 #include <util/XMLString.hpp>
+#include <util/debug.h>
 
 namespace smsc {
 namespace util {
@@ -94,6 +95,7 @@ private:
       #ifdef SMSC_DEBUG
         logger.debug("Resolved to \"%s\"", dtdNameTranscodedToCallCFunctionStat.get());
       #endif
+      __trace2__("DTD Resolved to \"%s\"", dtdNameTranscodedToCallCFunctionStat.get());
 			return new LocalFileInputSource(tmpDtdName);
     } else
       return 0;

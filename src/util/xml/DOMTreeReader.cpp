@@ -16,20 +16,29 @@ using smsc::util::Logger;
 DOMTreeReader::DOMTreeReader()
 {
 	initXerces();
-	parser = new DOMParser;
-	parser->setValidationScheme(DOMParser::Val_Always);
-	parser->setDoNamespaces(false);
-	parser->setDoSchema(false);
-	parser->setValidationSchemaFullChecking(false);
-	parser->setErrorHandler(new DOMErrorLogger("smsc.util.xml.DOMTreeReader"));
-	parser->setCreateEntityReferenceNodes(false);
-	parser->setToCreateXMLDeclTypeNode(false);
-	parser->setEntityResolver(new DtdResolver());
 }
 
 DOMTreeReader::~DOMTreeReader()
 {
-	delete parser;
+}
+
+
+DOMParser * DOMTreeReader::createParser() {
+	//logger.debug("Entering createParser()");
+	DOMParser *parser = new DOMParser;
+	parser->setValidationScheme(DOMParser::Val_Always);
+	parser->setDoNamespaces(false);
+	parser->setDoSchema(false);
+	parser->setValidationSchemaFullChecking(false);
+	//logger.debug("  Creating ErrorReporter");
+	DOMErrorLogger *errReporter = new DOMErrorLogger();
+	parser->setErrorHandler(errReporter);
+	parser->setCreateEntityReferenceNodes(false);
+	parser->setToCreateXMLDeclTypeNode(false);
+  parser->setEntityResolver(new DtdResolver());
+	//logger.debug("Leaving createParser()");
+
+	return parser;
 }
 
 DOM_Document DOMTreeReader::read(const char * const filename)
@@ -44,7 +53,7 @@ DOM_Document DOMTreeReader::read(const InputSource & source)
 {
 	try
 	{
-		parser->reset();
+    std::auto_ptr<DOMParser> parser(createParser());
 		parser->parse(source);
 		int errorCount = parser->getErrorCount();
 		if (errorCount > 0) {
@@ -52,6 +61,7 @@ DOM_Document DOMTreeReader::read(const InputSource & source)
 			logger.error("An %d errors occured during parsing received command", errorCount);
 			throw ParseException("An errors occured during parsing");
 		}
+    return parser->getDocument();
 	}
 	catch (const XMLException& e)
 	{
@@ -82,8 +92,6 @@ DOM_Document DOMTreeReader::read(const InputSource & source)
 		logger.error("An error occured during parsing  received command");
 		throw ParseException("An errors occured during parsing");
 	}
-
-	return parser->getDocument();
 }
 
 }

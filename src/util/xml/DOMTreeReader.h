@@ -29,7 +29,7 @@ public:
 	DOM_Document read(const InputSource & source) throw (ParseException);
 
 protected:
-	DOMParser *parser;
+  DOMParser *createParser();
 private:
 };
 
