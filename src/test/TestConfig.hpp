@@ -10,7 +10,6 @@ using smsc::sms::Address;
 
 //конфигурационный параметр core/reschedule_table
 const int rescheduleTimes[] = {30, 20};
-const int rescheduleSize = sizeof(rescheduleTimes) / sizeof(*rescheduleTimes);
 
 const int timeCheckAccuracy = 5; //5 сек
 const int sequentialPduInterval = 10; //10 сек
