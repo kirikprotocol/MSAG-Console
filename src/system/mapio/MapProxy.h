@@ -13,6 +13,7 @@
 
 //#if defined USE_MAP
 extern void MAPIO_PutCommand(const smsc::smeman::SmscCommand& cmd );
+extern void setMapProxyLimits(int timeout, int limit);
 //#endif
 
 namespace smsc{
@@ -49,7 +50,7 @@ public:
   void notifyOutThread(){}
   void checkLogging();
   virtual void updateSmeInfo(const SmeInfo& smeInfo){
-    MapDialogContainer::getInstance()->setPerformanceLimits(smeInfo.timeout, smeInfo.proclimit);
+    setMapProxyLimits(smeInfo.timeout, smeInfo.proclimit);
   }
   virtual void putCommand(const SmscCommand& cmd)
   {

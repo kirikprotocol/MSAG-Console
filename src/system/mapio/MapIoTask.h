@@ -547,8 +547,6 @@ public:
   }
 
   USHORT_T reAssignDialog(unsigned did,unsigned oldssn,unsigned ssn){
-    MAPSTATS_Update(MAPSTATS_REASSIGNDIALOG);
-
     MutexGuard g(sync);
     MapDialog* dlg = 0;
     hash_.Get(MKDID(did,oldssn),dlg);
