@@ -1,0 +1,38 @@
+
+#
+# $Id$	
+#
+#
+#
+
+SOURCES := $(wildcard *.cpp)
+OBJECTS := $(SOURCES:.cpp=.o)
+
+target:
+	cd $(SMSC_SRCDIR); make $(PACKAGE).build
+
+include $(SMSC_SRCDIR)/conf/modules_switcher
+
+__build_message__:
+	@echo build in module $(PACKAGE)
+
+only: __build_message__ $(SMSC_BUILDDIR)/obj/$(PACKAGE) $(SMSC_BUILDDIR)/obj/$(PACKAGE)/$(OBJECTS)
+
+build: only $(MODULES)
+
+rclean: clean $(foreach x,$(MODULES),$(x).rclean)
+	
+clean: 
+	@echo "clean in $(PACKAGE)"
+	rm -f $(SMSC_BUILDDIR)/obj/$(PACKAGE)/*.o
+		
+$(SMSC_BUILDDIR)/obj/$(PACKAGE):
+	mkdir -p $@
+
+$(SMSC_BUILDDIR)/obj/$(PACKAGE)/%.o:$(SMSC_SRCDIR)/$(PACKAGE)/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	
+
+
+
+

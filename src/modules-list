@@ -1,0 +1,4 @@
+#smpp	"SMPP protocol implementation"
+#core 	"SMSC core implementation"
+util	"Utility classes"
+

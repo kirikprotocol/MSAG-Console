@@ -1,0 +1,28 @@
+#
+# $Id$
+#
+#
+#
+
+ifeq (,$(wildcard modules-list))
+
+MODULES := 
+	
+else
+
+MODULES := $(shell cat modules-list | awk '//{print $$1}')
+__.empty.__:
+	@echo >> /dev/null
+
+$(MODULES) $(foreach x,$(MODULES),$(x).%): __.empty.__ 
+override _modules = $(subst ., ,$@)
+override _module = $(firstword $(_modules))
+override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@), build )
+	@if [ -d $(_module) ]; then \
+	    cd $(_module); make $(_subtarget); \
+	else \
+	    echo "'$(_module)' is not module"; exit 1;\
+	fi 
+
+endif
+
