@@ -291,9 +291,9 @@ namespace smsc {
         memcpy(vl,value,length);
         vl[length]=0;
         if ( type == 1 && plan == 1 ){
-          return sprintf(buf,buflen,"+%s",vl);
+          return snprintf(buf,buflen,"+%s",vl);
         }else if ( type == 0 && plan == 1 ){
-          return sprintf(buf,buflen,"%s",vl);
+          return snprintf(buf,buflen,"%s",vl);
         }else
           return snprintf(buf,buflen,".%d.%d.%s",type,plan,vl);
       }
