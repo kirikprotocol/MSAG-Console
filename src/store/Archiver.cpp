@@ -152,12 +152,13 @@ void Archiver::loadMaxUncommitedCount(Manager& config)
 }
 
 Archiver::Archiver(Manager& config) throw(ConfigException) 
-    : Thread(), finalizedCount(0), bStarted(false),
+    : Thread(), log(Logger::getCategory("smsc.store.Archiver")),
+        finalizedCount(0), bStarted(false),
         storageDBInstance(0L), storageDBUserName(0L), storageDBUserPassword(0L),
         billingDBInstance(0L), billingDBUserName(0L), billingDBUserPassword(0L),
             storageSelectStmt(0L), storageDeleteStmt(0L), archiveInsertStmt(0L),
-            billingInsertStmt(0L), billingCleanIdsStmt(0L), billingLookIdStmt(0L),
-            billingPutIdStmt(0L), log(Logger::getCategory("smsc.store.Archiver"))
+            billingCleanIdsStmt(0L), billingInsertStmt(0L), billingLookIdStmt(0L),
+            billingPutIdStmt(0L) 
 {
     storageDBInstance = 
         loadDBInstance(config, "MessageStore.Storage.dbInstance");
@@ -267,7 +268,7 @@ void Archiver::incrementFinalizedCount(unsigned count)
 {
     MutexGuard  guard(finalizedMutex);  
 
-    if ((finalizedCount += count) >= maxFinalizedCount) 
+    if ((unsigned)(finalizedCount += count) >= maxFinalizedCount) 
     {
         if (bStarted && !job.isSignaled()) 
         {
@@ -331,7 +332,7 @@ void Archiver::billing(bool check)
     {
         billingPutIdStmt->check(billingPutIdStmt->execute());
         // TO DO : Isert more code here ! Actual conversion to SMS_BR
-        billingInsertStmt->check(billingInsertStmt->execute());
+        //billingInsertStmt->check(billingInsertStmt->execute());
     }
 }
 
@@ -425,11 +426,12 @@ SMSId Archiver::getLastUsedId()
                                    Archiver::storageMaxIdSql);
     SMSId archiveId = getMaxUsedId(storageConnection, 
                                    Archiver::archiveMaxIdSql);
-    SMSId billingId = getMaxUsedId(billingConnection, 
-                                   Archiver::billingMaxIdSql);
+    /*SMSId billingId = getMaxUsedId(billingConnection, 
+                                   Archiver::billingMaxIdSql);*/
     
-    storageId = (storageId > archiveId) ? storageId : archiveId;
-    return ((storageId > billingId) ? storageId : billingId);
+    //storageId = (storageId > archiveId) ? storageId : archiveId;
+    //return ((storageId > billingId) ? storageId : billingId);
+    return ((storageId > archiveId) ? storageId : archiveId);
 }
 
 const char* Archiver::billingPutIdSql = (const char*)
