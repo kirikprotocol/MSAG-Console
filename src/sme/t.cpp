@@ -30,7 +30,7 @@ int mode=0;
 bool unicode=false;
 bool dataSm=false;
 bool smsc7bit=false;
-bool ussd=false;
+int ussd=0;
 
 bool ansi1251=false;
 
@@ -51,7 +51,7 @@ Option options[]={
 {"unicode",'b',&unicode},
 {"datasm",'b',&dataSm},
 {"7bit",'b',&smsc7bit},
-{"ussd",'b',&ussd},
+{"ussd",'i',&ussd},
 {"ansi1251",'b',&ansi1251},
 };
 
@@ -513,7 +513,7 @@ int main(int argc,char* argv[])
            "\t -u send messages in unicode\n"
            "\t -7 send messages in 7 in 8 bit\n"
            "\t -d send messages as DATA_SM\n"
-           "\t -s send sms with ussd service op\n"
+           "\t -s N send sms with ussd service op set to N\n"
            "\t -w autoanswer(ping pong) mode\n"
            "\t -c receive only mode\n"
            "\t -m {D|T} send messages in datagram or transaction mode\n"
@@ -558,11 +558,6 @@ int main(int argc,char* argv[])
       case 'd':
       {
         dataSm=true;
-        i--;
-      }continue;
-      case 's':
-      {
-        ussd=true;
         i--;
       }continue;
       case 'c':
@@ -640,6 +635,10 @@ int main(int argc,char* argv[])
         if(optarg[0]=='D')mode=1;
         else if(optarg[0]=='T')mode=2;
       }break;
+      case 's':
+      {
+        ussd=atoi(optarg);
+      }break;
       default:
       {
         fprintf(stderr,"Unknown option:%s\n",opt);
@@ -656,41 +655,19 @@ int main(int argc,char* argv[])
   SmppTransmitter *tr=ss.getSyncTransmitter();
 
   lst.setTrans(tr,ss.getAsyncTransmitter());
+
+  Address srcaddr;
   try{
+    srcaddr=Address(sourceAddress.c_str());
+  }catch(...)
+  {
+    fprintf(stderr,"Invalid source address\n");
+    return -1;
+  }
+  try{
+
     ss.connect(bindType);
-    PduSubmitSm sm;
-    sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-    PduDataSm dsm;
-    dsm.get_header().set_commandId(SmppCommandSet::DATA_SM);
 
-
-    SMS s;
-
-    {
-      try{
-        Address addr(sourceAddress.c_str());
-        s.setOriginatingAddress(addr);
-      }catch(...)
-      {
-        fprintf(stderr,"Invalid source address\n");
-        return -1;
-      }
-    }
-    char msc[]="";
-    char imsi[]="";
-    s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
-
-
-    s.setValidTime(0);
-
-
-    s.setIntProperty(Tag::SMPP_ESM_CLASS,mode);
-    s.setDeliveryReport(0);
-    s.setArchivationRequested(false);
-
-    //s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,1234);
-
-    s.setEServiceType("XXX");
     char *addr=NULL;
     char *message=NULL;
 
@@ -734,6 +711,12 @@ int main(int argc,char* argv[])
       }
       if(cmdFound)continue;
 
+      SMS s;
+
+      s.setOriginatingAddress(srcaddr);
+
+      __trace2__("org addr=%s",s.getOriginatingAddress().toString().c_str());
+
       if(cmd!="/")
       {
         try{
@@ -756,9 +739,31 @@ int main(int argc,char* argv[])
       if(!message)continue;
       int len=strlen(message);
 
-      if(ussd)s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,1);
+      PduSubmitSm sm;
+      sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+      PduDataSm dsm;
+      dsm.get_header().set_commandId(SmppCommandSet::DATA_SM);
+
+      char msc[]="";
+      char imsi[]="";
+      s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
+      s.setValidTime(0);
+      s.setIntProperty(Tag::SMPP_ESM_CLASS,mode);
+      s.setDeliveryReport(0);
+      s.setArchivationRequested(false);
+      s.setEServiceType("XXX");
+
+
+      if(ussd)s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,ussd);
       else s.messageBody.dropIntProperty(Tag::SMPP_USSD_SERVICE_OP);
 
+      if(s.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+      {
+        __trace2__("ussd=%d",s.getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+      }else
+      {
+        __trace__("no ussd");
+      }
 
       if(unicode)
       {

@@ -511,7 +511,7 @@ int partitionSms(SMS* sms,int dstdc)
         lastword=i;
         wl=0;
       }
-      if(dc==DataCoding::LATIN1)
+      if(dc==DataCoding::LATIN1 && dstdc==DataCoding::SMSC7BIT)
       {
         switch(msg[i])
         {
