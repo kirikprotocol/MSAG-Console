@@ -526,7 +526,6 @@ public:
         debug2(Scheduler::log,"Chain::SetHead, id=%lld - already in the chain!!!",d.id);
         return false;
       }
-      debug2(Scheduler::log,"Chain::SetHead, time=%d, id=%lld",sctime,d.id);
       Iterators its;
       its.li=queue.insert(d);
       its.mi=timedQueue.end();
@@ -542,6 +541,7 @@ public:
           headTime=expDate;
         }
       }
+      debug2(Scheduler::log,"Chain::SetHead, time=%d/%d, id=%lld",sctime,headTime,d.id);
       queueSize++;
       return true;
     }
@@ -814,6 +814,7 @@ public:
         Chain* rv=mc->Pop();
         if(rv)
         {
+          debug2(Scheduler::log,"TimeLine::Pop %d/%p (headTime=%d,now=%d)",i->first,i->second,rv->headTime,time(NULL));
           return rv;
         }
         debug1(Scheduler::log,"Sc: deleting empty multichain");
