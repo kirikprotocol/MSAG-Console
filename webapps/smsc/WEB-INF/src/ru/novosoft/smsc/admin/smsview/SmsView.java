@@ -577,7 +577,9 @@ public class SmsView
       {
         int headerLen = ((int)text[0])&0xff;  // convert negative byte to int
         if( headerLen >= textLen-1 ) {
-          text = "UDH len greater then message len "+headerLen+">"+(textLen-1); textLen = text.length();
+          text = new String("UDH len greater then message len "+headerLen+">"+(textLen-1)).getBytes(); 
+          textEncoding = DATA_CODING_LATIN1;
+          textLen = text.length;
         } else {
           byte msgText[] = new byte[textLen = textLen-headerLen-1];
           System.arraycopy(text,  headerLen+1, msgText, 0, textLen);
