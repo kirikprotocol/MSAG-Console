@@ -15,6 +15,7 @@
 #include <log4cplus/configurator.h>
 #include <log4cplus/fileappender.h>
 #include <log4cplus/layout.h>
+#include <logger/additional/SmscLayout.h>
 #endif
 ////////////////////////////// end of log library dependancy
 
@@ -58,7 +59,7 @@ void Logger::Init(const std::string &configFileName)
   try {
     isInitialized = false;
     log4cpp::Category::getRoot().removeAllAppenders();
-    log4cpp::PropertyConfigurator::configure(configFileName);
+	log4cpp::PropertyConfigurator::configure(configFileName);
   } catch (log4cpp::ConfigureFailure& exception) {
     fprintf( stderr, "Exception occured during configuration log4cpp: %s\n", exception.what() );
     log4cpp::Appender* appender = new log4cpp::FileAppender("FileAppender", "smsc.log");
@@ -225,6 +226,8 @@ void Logger::Init(const std::string &configFileName)
   try {
     isInitialized = false;
 	log4cplus::Logger::getDefaultHierarchy().resetConfiguration();
+	std::auto_ptr<log4cplus::spi::LayoutFactory> smscLayoutFactory(new smsc::logger::SmscLayoutFactory());
+	log4cplus::spi::getLayoutFactoryRegistry().put(smscLayoutFactory);
     log4cplus::PropertyConfigurator::doConfigure(configFileName);
 	if( log4cplus::Logger::getRoot().getAllAppenders().size() != 0 ) {
 		isInitialized = true;
