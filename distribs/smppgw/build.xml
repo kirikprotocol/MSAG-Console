@@ -97,7 +97,7 @@ Targets:
     <symlink resource="../tomcat/shared/classes/log4j.properties" link="${DISTR_DIR}/conf"/>
   </target>
 
-  <target name="update" depends="create_distr_tree_update, makegw, makeweb">
+  <target name="create_update" depends="create_distr_tree_update, makegw, makeweb">
     <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/db/exceptions/libdb_exc.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/>
@@ -107,6 +107,9 @@ Targets:
     <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
       <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd"/>
     </copy>
+  </target>
+
+  <target name="update" depends="create_update">
     <ant antfile="${WEBSRC_DIR}/build.xml" dir="${WEBSRC_DIR}" target="update"/>
   </target>
 
@@ -183,10 +186,11 @@ Targets:
     <delete file="${DISTR_DIR}/lib/extra_lib_links.list"/>
   </target>
 
-  <target name="create_distr" depends="create_distr_tree, update">
+  <target name="create_distr" depends="create_distr_tree, create_update">
   </target>
 
   <target name="distr" depends="create_distr, extra_libs, configure">
+    <ant antfile="${WEBSRC_DIR}/build.xml" dir="${WEBSRC_DIR}" target="install"/>
   </target>
 
 </project>
