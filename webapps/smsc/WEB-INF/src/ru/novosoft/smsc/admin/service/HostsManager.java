@@ -35,7 +35,12 @@ public class HostsManager
 		this.serviceManager = serviceManager;
 		this.smeManager = smeManager;
 		this.routeSubjectManager = routeSubjectManager;
-	}
+    try {
+      refreshServices();
+    } catch (AdminException e) {
+      logger.error("Couldn't refresh services, skipped", e);
+    }
+  }
 
 
 	/* ******************************** daemon operations ***************************************/
@@ -172,7 +177,7 @@ public class HostsManager
 		return daemonManager.get(hostName).getCountServices();
 	}
 
-	private void refreshServices() throws AdminException
+	public void refreshServices() throws AdminException
 	{
 		final long currentTime = System.currentTimeMillis();
 		if (currentTime - Constants.ServicesRefreshTimeoutMillis > serviceRefreshTimeStamp)
