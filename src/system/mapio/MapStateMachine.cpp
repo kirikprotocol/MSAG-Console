@@ -249,7 +249,7 @@ void ResponseMO(MapDialog* dialog,unsigned status)
     err.errorCode = 36;
     break;
   };
-  __trace2__("MAP::%s err.errCode 0x%x status 0x%x",__FUNCTION__,err.errorCode,status);
+  __trace2__("MAP::%s err.errCode 0x%x status 0x%x (state %d) /V:%d/",__FUNCTION__,err.errorCode,status,dialog->state,dialog->version);
   USHORT_T result; 
   if ( dialog->version == 2 ) {
     result = Et96MapV2ForwardSmMOResp(
