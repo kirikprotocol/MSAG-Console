@@ -23,15 +23,22 @@ using namespace smsc::core::synchronization;
 using smsc::core::buffers::IntHash;
 
 namespace ProfileReportOptions{
-  static const int ReportNone  =0;
-  static const int ReportFull  =1;
-  static const int ReportFinal =3;
+  const int ReportNone  =0;
+  const int ReportFull  =1;
+  const int ReportFinal =3;
 };
 
 namespace ProfileCharsetOptions{
-  static const int Default    =0;
-  static const int Ucs2       =smsc::smpp::DataCoding::UCS2;
+  const int Default    =0;
+  const int Ucs2       =smsc::smpp::DataCoding::UCS2;
 };
+
+namespace ProfilerMatchType{
+  const int mtDefault=0;
+  const int mtMask   =1;
+  const int mtExact  =2;
+};
+
 
 struct Profile{
   int codepage;
@@ -61,17 +68,20 @@ struct Profile{
 
 class ProfilesTable;
 
-static const int pusUpdated=1;
-static const int pusInserted=2;
-static const int pusUnchanged=3;
-static const int pusError=4;
+const int pusUpdated=1;
+const int pusInserted=2;
+const int pusUnchanged=3;
+const int pusError=4;
 
 class ProfilerInterface{
 public:
   virtual Profile& lookup(const Address& address)=0;
+  virtual Profile& lookupEx(const Address& address,int matchType,std::string& matchAddr)=0;
   virtual int update(const Address& address,const Profile& profile)=0;
   virtual int updatemask(const Address& address,const Profile& profile)=0;
   virtual void add(const Address& address,const Profile& profile)=0;
+  virtual void remove(const Address& address)=0;
+
 };//ProfilerInterface
 
 
@@ -85,11 +95,14 @@ public:
 
   /* from ProfilerInterface */
   Profile& lookup(const Address& address);
+  Profile& lookupEx(const Address& address,int matchType,std::string& matchAddr);
 
   int update(const Address& address,const Profile& profile);
   int updatemask(const Address& address,const Profile& profile);
 
   void add(const Address& address,const Profile& profile);
+
+  void remove(const Address& address);
 
   /* from SmppProxy */
 

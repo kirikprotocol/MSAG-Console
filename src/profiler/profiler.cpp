@@ -46,8 +46,8 @@ struct HashKey{
   HashKey(const Address& address)
   {
     addr=address;
-    defLength=0;
-    while(defLength<address.length && address.value[defLength]!='?')defLength++;
+    defLength=address.length;
+    while(defLength>0 && address.value[defLength-1]=='?')defLength--;
   }
 
   bool operator==(const HashKey& key)
@@ -89,7 +89,8 @@ public:
   {
     HashKey k(address);
     exact=false;
-    while(!Exists(k))
+    Profile *p;
+    while((p=GetPtr(k))==NULL)
     {
       if(!k.defLength)
       {
@@ -98,7 +99,30 @@ public:
       k.defLength--;
     }
     exact=k.defLength==address.length;
-    return Get(k);
+    return *p;
+  }
+  Profile& findEx(const Address& address,int matchType,string& matchAddr)
+  {
+    HashKey k(address);
+    matchType=ProfilerMatchType::mtDefault;
+    Profile *p;
+    while((p=GetPtr(k))==NULL)
+    {
+      if(!k.defLength)
+      {
+        return defaultProfile;
+      }
+      k.defLength--;
+    }
+    matchType=k.defLength==address.length?ProfilerMatchType::mtExact:ProfilerMatchType::mtMask;
+    char buf[32];
+    address.toString(buf,sizeof(buf));
+    matchAddr=buf;
+    for(int i=k.defLength;i<address.length;i++)
+    {
+      matchAddr.at(i)='?';
+    }
+    return *p;
   }
   Profile& add(const Address& address,const Profile& profile)
   {
@@ -136,6 +160,19 @@ Profile& Profiler::lookup(const Address& address)
   bool exact;
   return profiles->find(address,exact);
 }
+
+Profile& Profiler::lookupEx(const Address& address,int matchType,std::string& matchAddr)
+{
+  MutexGuard g(mtx);
+  return profiles->findEx(address,matchType,matchAddr);
+}
+
+void Profiler::remove(const Address& address)
+{
+  MutexGuard g(mtx);
+  profiles->Delete(address);
+}
+
 
 int Profiler::update(const Address& address,const Profile& profile)
 {
