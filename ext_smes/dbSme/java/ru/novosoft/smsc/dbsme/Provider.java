@@ -190,6 +190,7 @@ public class Provider extends DbsmeBean
     prefix = "DBSme.DataProviders." + StringEncoderDecoder.encodeDot(oldProviderName);
 
     if (prefix == null) prefix = "";
+    if (providerName == null) providerName = "";
     if (address == null) address = "";
     if (dbInstance == null) dbInstance = "";
     if (dbUserName == null) dbUserName = "";
@@ -204,6 +205,8 @@ public class Provider extends DbsmeBean
     if (input_parse == null) input_parse = "";
     if (output_format == null) output_format = "";
     if (invalid_config == null) invalid_config = "";
+
+    providerName = providerName.trim();
 
     return result;
   }
@@ -276,13 +279,13 @@ public class Provider extends DbsmeBean
   {
     prefix = "DBSme.DataProviders." + StringEncoderDecoder.encodeDot(providerName);
     return providerName.equals(oldProviderName)
-            && address.equals(getString(prefix + ".address"))
-            && connections == getInt(prefix + ".DataSource.connections")
-            && dbInstance.equals(getString(prefix + ".DataSource.dbInstance"))
-            && dbUserName.equals(getString(prefix + ".DataSource.dbUserName"))
-            && dbUserPassword.equals(getString(prefix + ".DataSource.dbUserPassword"))
-            && type.equals(getString(prefix + ".DataSource.type"))
-            && watchdog == getBool(prefix + ".DataSource.watchdog")
+            && isOptionalStringEqualsToConfig(prefix + ".address", address)
+            && config.containsParameter(prefix + ".DataSource.connections") && connections == getInt(prefix + ".DataSource.connections")
+            && isOptionalStringEqualsToConfig(prefix + ".DataSource.dbInstance", dbInstance)
+            && isOptionalStringEqualsToConfig(prefix + ".DataSource.dbUserName", dbUserName)
+            && isOptionalStringEqualsToConfig(prefix + ".DataSource.dbUserPassword", dbUserPassword)
+            && isOptionalStringEqualsToConfig(prefix + ".DataSource.type", type)
+            && config.containsParameter(prefix + ".DataSource.watchdog") && watchdog == getBool(prefix + ".DataSource.watchdog")
 
             && isOptionalStringEqualsToConfig(prefix + ".MessageSet.JOB_NOT_FOUND", job_not_found)
             && isOptionalStringEqualsToConfig(prefix + ".MessageSet.DS_FAILURE", ds_failure)
