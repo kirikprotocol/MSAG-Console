@@ -465,6 +465,11 @@ static void SendSubmitCommand(MapDialog* dialog)
   desc.setMsc(dialog->s_msc.length(),dialog->s_msc.c_str());
   __trace2__("MAP::Send OK to SMSC: MSC = %s",dialog->s_msc.c_str());
   dialog->sms->setOriginatingDescriptor(desc);
+  if ( dialog->isUSSD ) {
+    Address src_addr;
+    ConvAddrMap2Smc((const MAP_SMS_ADDRESS*)&dialog->m_msAddr,&src_addr);
+    __trace2__("MAP::%s:USSD request %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
+  }
   MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
   SmscCommand cmd = SmscCommand::makeSumbmitSm(
     *dialog->sms.get(),((uint32_t)dialog->dialogid_map)&0xffff);
@@ -1562,8 +1567,6 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       sms.setIntProperty(Tag::SMPP_SM_LENGTH,ms.len);
       sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
     }
-    Address src_addr;// = Address("911523");
-    ConvAddrMap2Smc((const MAP_SMS_ADDRESS*)&dialog->m_msAddr,&src_addr);
     Address dest_addr = Address(subsystem.c_str());
     unsigned esm_class = 0;
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
@@ -1580,7 +1583,6 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       ost << dialog->ussdSequence;
       //dialog->sms->setStrProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,message_reference.str());
     }
-    __trace2__("MAP::%s:USSD request %s",__FUNCTION__,RouteToString(dialog.get()).c_str());
     //SendSubmitCommand (dialog.get());
   }MAP_CATCH(__dialogid_map,0);
   return ET96MAP_E_OK;
