@@ -44,36 +44,36 @@ public:
 
   void Init(MessageStore* st,Smsc* psmsc);
 
-  void AddScheduledSms(time_t sctime,SMSId id,const Address& addr,SmeIndex idx)
+  void AddScheduledSms(SMSId id,const SMS& sms,SmeIndex idx)
   {
     MutexGuard guard(mon);
 
     Chain* c=GetProcessingChain(id);
 
-    if(!c)c=GetChain(addr);
+    if(!c)c=GetChain(sms.getDealiasedDestinationAddress());
     if(!c)
     {
-      c=CreateChain(sctime,addr,idx);
+      c=CreateChain(sms.getNextTime(),sms.getDealiasedDestinationAddress(),idx);
     }
-    ChainAddTimed(c,sctime,SchedulerData(id));
-    debug2(log,"AddScheduledSms: time=%d, id=%lld,addr=%s,c=%p",sctime,id,addr.toString().c_str(),c);
+    ChainAddTimed(c,sms.getNextTime(),SchedulerData(id,sms.getValidTime()));
+    debug2(log,"AddScheduledSms: time=%d, id=%lld,addr=%s,c=%p",sms.getNextTime(),id,sms.getDealiasedDestinationAddress().toString().c_str(),c);
     UpdateChainChedule(c);
     RescheduleChain(c,c->headTime);
   }
 
-  void UpdateSmsSchedule(SMSId id,time_t newtime,const Address& addr)
+  void UpdateSmsSchedule(SMSId id,const SMS& sms)
   {
     MutexGuard guard(mon);
 
-    Chain* c=GetChain(addr);
+    Chain* c=GetChain(sms.getDealiasedDestinationAddress());
     if(!c)
     {
-      warn2(log,"UpdateSmsSchedule: chain for %s not found",addr.toString().c_str());
+      warn2(log,"UpdateSmsSchedule: chain for %s not found",sms.getDealiasedDestinationAddress().toString().c_str());
       return;
     }
-    debug2(log,"UpdateSmsSchedule: time=%d,id=%lld,addr=%s,c=%p",newtime,id,addr.toString().c_str(),c);
+    debug2(log,"UpdateSmsSchedule: time=%d,id=%lld,addr=%s,c=%p",sms.getNextTime(),id,sms.getDealiasedDestinationAddress().toString().c_str(),c);
     if(c->CancelMsgId(id))DecSme(c);
-    ChainAddTimed(c,newtime,SchedulerData(id));
+    ChainAddTimed(c,sms.getNextTime(),SchedulerData(id,sms.getValidTime()));
     UpdateChainChedule(c);
     RescheduleChain(c,c->headTime);
   }
@@ -143,10 +143,10 @@ public:
     RescheduleChain(c,c->headTime);
   }
 
-  void AddFirstTimeForward(SMSId id)
+  void AddFirstTimeForward(SMSId id,const SMS& sms)
   {
     MutexGuard guard(mon);
-    firstQueue.Push(SchedulerData(id));
+    firstQueue.Push(SchedulerData(id,sms.getValidTime()));
   }
 
   time_t RescheduleSms(SMSId id,SMS& sms,int smeIndex)
@@ -166,12 +166,12 @@ public:
 
     if(sms.attempts==0)
     {
-      ChainPush(c,SchedulerData(id));
+      ChainPush(c,SchedulerData(id,sms.getValidTime()));
       debug2(log,"Resched: push sms %lld to tail (%d), c=%p",id,c->headTime,c);
     }else
     {
       debug2(log,"Resched: set sms %lld as head (%d),c=%p",id,sms.getNextTime(),c);
-      ChainSetHead(c,sms.getNextTime(),SchedulerData(id));
+      ChainSetHead(c,sms.getNextTime(),SchedulerData(id,sms.getValidTime()));
     }
     //smsCount++;
 
@@ -180,7 +180,10 @@ public:
     UpdateChainChedule(c);
     RescheduleChain(c,c->headTime);
 
-    return c->headTime;
+    if(c->timedQueue.size()>0)
+      return c->headTime;
+    else
+      return 0;
   }
 
   int getSmeCount(SmeIndex idx,time_t time)
@@ -309,6 +312,7 @@ public:
     time_t schedTime;
     int attCount;
     Address addr;
+    time_t validTime;
     char smeId[32];
   };
   Array<StartupItem> startupCache;
@@ -321,15 +325,22 @@ public:
   Array<SmscCommand> outQueue;
 
   struct SchedulerData{
-    SchedulerData():id(0),resched(false){}
+    SchedulerData():id(0),resched(false),expDate(0){}
     SchedulerData(const SchedulerData& d)
     {
       id=d.id;
       resched=d.resched;
+      expDate=d.expDate;
     }
-    SchedulerData(SMSId id,bool res=false):id(id),resched(res){}
+    SchedulerData(SMSId argId,time_t argExpDate,bool argRes=false):id(argId),expDate(argExpDate),resched(argRes){}
     SMSId id;
+    time_t expDate;
     bool resched;
+
+    bool operator<(const SchedulerData& rhs)const
+    {
+      return expDate<rhs.expDate;
+    }
   };
 
   bool tlPop(SchedulerData& d)
@@ -384,7 +395,7 @@ public:
     bool inTimeLine;
     bool inProcMap;
 
-    typedef std::list<SchedulerData> ScQueue;
+    typedef std::multiset<SchedulerData> ScQueue;
     ScQueue queue;
     int queueSize;
     typedef std::multimap<time_t,SchedulerData> ScTimedQueue;
@@ -430,6 +441,11 @@ public:
         time_t frontTime=timedQueue.begin()->first;
         if(frontTime<newtime)newtime=frontTime;
       }
+      if(!queue.empty())
+      {
+        time_t frontTime=queue.begin()->expDate;
+        if(frontTime<newtime)newtime=frontTime;
+      }
       headTime=newtime;
       return headTime;
     }
@@ -443,7 +459,7 @@ public:
       }
       debug2(Scheduler::log,"Chain::Push, id=%lld",d.id);
       Iterators its;
-      its.li=queue.insert(queue.end(),d);
+      its.li=queue.insert(d);
       its.mi=timedQueue.end();
       imap.insert(Id2IteratorsMap::value_type(d.id,its));
       queueSize++;
@@ -459,10 +475,10 @@ public:
       }
       debug2(Scheduler::log,"Chain::SetHead, time=%d, id=%lld",sctime,d.id);
       Iterators its;
-      its.li=queue.insert(queue.begin(),d);
+      its.li=queue.insert(d);
       its.mi=timedQueue.end();
       imap.insert(Id2IteratorsMap::value_type(d.id,its));
-      if(!inTimeLine)headTime=sctime;
+      if(!inTimeLine && queue.begin()->expDate>sctime)headTime=sctime;
       queueSize++;
       return true;
     }
@@ -483,9 +499,9 @@ public:
         }
       }
       if(queue.empty())return false;
-      d=queue.front();
+      d=*queue.begin();
       debug2(Scheduler::log,"Chain::Pop(queue), id=%lld",d.id);
-      queue.pop_front();
+      queue.erase(queue.begin());
       imap.erase(imap.find(d.id));
       queueSize--;
       return true;

@@ -2118,7 +2118,7 @@ StateType StateMachine::submit(Tuple& t)
   __trace2__("Sms scheduled to %d, now %d",(int)sms->getNextTime(),(int)now);
   if(!isDatagram && !isTransaction && stime>now)
   {
-    smsc->getScheduler()->AddScheduledSms(stime,t.msgId,sms->getDealiasedDestinationAddress(),dest_proxy_index);
+    smsc->getScheduler()->AddScheduledSms(t.msgId,*sms,dest_proxy_index);
     return ENROUTE_STATE;
   }
 
@@ -2583,8 +2583,8 @@ StateType StateMachine::forward(Tuple& t)
     smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
     smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
     try{
-      store->changeSmsStateToExpired(t.msgId);
       smsc->getScheduler()->InvalidSms(t.msgId);
+      store->changeSmsStateToExpired(t.msgId);
     }catch(...)
     {
       __warning__("FORWARD: failed to change state to expired");
@@ -2625,7 +2625,7 @@ StateType StateMachine::forward(Tuple& t)
   {
     debug2(smsLog, "FWD: nextTime>now (%d>%d)",sms.getNextTime(),now);
     SmeIndex idx=smsc->getSmeIndex(sms.dstSmeId);
-    smsc->getScheduler()->AddScheduledSms(sms.getNextTime(),t.msgId,sms.getDealiasedDestinationAddress(),idx);
+    smsc->getScheduler()->AddScheduledSms(t.msgId,sms,idx);
     return sms.getState();
   }
 
@@ -4204,7 +4204,7 @@ StateType StateMachine::replace(Tuple& t)
   }
   try{
     SmeIndex idx=smsc->getSmeIndex(sms.dstSmeId);
-    smsc->getScheduler()->UpdateSmsSchedule(t.msgId,newsched,sms.getDealiasedDestinationAddress());
+    smsc->getScheduler()->UpdateSmsSchedule(t.msgId,sms);
     t.command.getProxy()->putCommand
     (
       SmscCommand::makeReplaceSmResp
@@ -4354,6 +4354,7 @@ StateType StateMachine::cancel(Tuple& t)
         return t.state;
       }
     }
+    smsc->getScheduler()->CancelSms(t.msgId,sms.getDealiasedDestinationAddress());
     smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
   }catch(std::exception& e)
   {
@@ -4598,10 +4599,11 @@ void StateMachine::changeSmsStateToEnroute(SMS& sms,SMSId id,const Descriptor& d
   sms.setNextTime(nextTryTime);
   if(failureCause==Status::RESCHEDULEDNOW)
   {
-    smsc->getScheduler()->AddScheduledSms(nextTryTime,id,sms.getDealiasedDestinationAddress(),smsc->getSmeIndex(sms.dstSmeId));
+    smsc->getScheduler()->AddScheduledSms(id,sms,smsc->getSmeIndex(sms.dstSmeId));
   }else
   {
-    nextTryTime=smsc->getScheduler()->RescheduleSms(id,sms,smsc->getSmeIndex(sms.dstSmeId));
+    time_t ntt=smsc->getScheduler()->RescheduleSms(id,sms,smsc->getSmeIndex(sms.dstSmeId));
+    if(ntt)nextTryTime=ntt;
   }
 
 
@@ -4683,7 +4685,7 @@ void StateMachine::submitReceipt(SMS& sms,int type)
 
       store->createSms(sms,msgId,smsc::store::CREATE_NEW);
       //smsc->getScheduler()->AddScheduledSms(sms.getNextTime(),msgId,sms.getDealiasedDestinationAddress(),dest_proxy_index);
-      smsc->getScheduler()->AddFirstTimeForward(msgId);
+      smsc->getScheduler()->AddFirstTimeForward(msgId,sms);
     }else
     {
       __warning2__("There is no route for receipt %s->%s",

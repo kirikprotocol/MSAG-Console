@@ -27,6 +27,7 @@ void Scheduler::Init(MessageStore* st,Smsc* psmsc)
           si.schedTime=it->getTime();
           si.attCount=it->getAttempts();
           si.addr=ddabuf;
+          si.validTime=it->getValidTime();
           startupCache.Push(si);
           if(startupCache.Count()%1000==0)debug2(log,"Loading scheduler - %d",startupCache.Count());
         }
@@ -72,10 +73,10 @@ int Scheduler::Execute()
         }
         if(si.attCount==0)
         {
-          ChainAddTimed(c,si.schedTime,SchedulerData(si.id));
+          ChainAddTimed(c,si.schedTime,SchedulerData(si.id,si.validTime));
         }else
         {
-          ChainPush(c,SchedulerData(si.id));
+          ChainPush(c,SchedulerData(si.id,si.validTime));
         }
         timeLine.Add(c,this);
         //smsCount++;
