@@ -275,6 +275,27 @@ void SmsUtil::clearSms(SMS* sms)
 	sms->setEsmClass(0);
 }
 
+auto_ptr<char> SmsUtil::configString(const Address& addr)
+{
+	char* tmp = new char[32];
+	AddressValue addrVal;
+	addr.getValue(addrVal);
+	if (addr.getTypeOfNumber() == 1 && addr.getNumberingPlan() == 1)
+	{
+		sprintf(tmp, "+%s", addrVal);
+	}
+	else if (addr.getTypeOfNumber() == 2 && addr.getNumberingPlan() == 1)
+	{
+		sprintf(tmp, "%s", addrVal);
+	}
+	else
+	{
+		sprintf(tmp, ".%d.%d.%s", (int) addr.getTypeOfNumber(),
+				(int) addr.getNumberingPlan(), addrVal);
+	}
+	return auto_ptr<char>(tmp);
+}
+
 bool ltAddress::operator() (const Address& a1, const Address& a2) const
 {
 	if (a1.getTypeOfNumber() != a2.getTypeOfNumber())

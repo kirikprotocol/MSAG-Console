@@ -57,6 +57,8 @@ public:
 	static void setupRandomCorrectSms(SMS* sms);
 
 	static void clearSms(SMS* sms);
+
+	static auto_ptr<char> configString(const Address& addr);
 };
 
 struct ltAddress
