@@ -631,17 +631,9 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
                  getRedirectingNumberDescription(redirecting).c_str(),
                  getOriginalNumberDescription(original).c_str()
                 );
-  UCHAR_T causeValue = 0x14; /*subscriber absent*/
-  if (redirectionInfo_sp)
-  {
-    switch (redirectionInfo_sp->lastReason)
-    {
-      case EINSS7_I97_USER_BUSY : causeValue = 0x11;break; /* called user busy */
-      case EINSS7_I97_NO_REPLY  : causeValue = 0x13;break; /* no answer from user */
-      default                   : causeValue = 0x14;break; /*subscriber absent*/
-    }
-  }
-  releaseConnection(isupHead_sp,causeValue);
+  UCHAR_T causeValue = 0x15; /* call rejected          */
+  UCHAR_T inform = 0;        /* need to register event */
+
   /*
    * some exchange doesn't provide redirection information
    * so let's use presence of original called number as
@@ -649,8 +641,37 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
    */
   if (original)
   {
+    inform = 1;
+    if (redirectionInfo_sp)
+    {
+      switch (redirectionInfo_sp->lastReason)
+      {
+        case EINSS7_I97_USER_BUSY:
+          causeValue = 0x11; /* called user busy */
+          break;
+
+        case EINSS7_I97_NO_REPLY:
+          causeValue = 0x13; /* no answer from user */
+          break;
+
+        case EINSS7_I97_UNCOND:
+          causevalue = 0x15; /* call rejected */
+          inform = 0; /* don't inform when unconditional*/
+          break;
+        case EINSS7_I97_MOB_NOT_REACHED:
+          causevalue = 0x14; /*subscriber absent*/
+          break;
+      }
+    }
+  }
+
+  releaseConnection(isupHead_sp,causeValue);
+
+  if (original && inform)
+  {
     registerEvent(calling,original);
   }
+
   return EINSS7_I97_REQUEST_OK;
 }
 USHORT_T EINSS7_I97IsupReleaseConf(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
