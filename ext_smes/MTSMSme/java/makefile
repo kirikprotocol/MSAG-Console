@@ -1,0 +1,21 @@
+SERVLET_JAR := /export/home/smsc/tomcat/common/lib/servlet.jar
+CLASSPATH := ../../lib/classes12.jar:../../lib/log4j.jar:$(SERVLET_JAR):$(SMSC_BUILDDIR)/exploded/smsc/WEB-INF/lib/smsc.jar:$(SMSC_BUILDDIR)exploded/smsc/WEB-INF/lib/nsjsp.jar
+
+
+all: compile
+
+
+compile:
+	@echo Compile
+	@mkdir -p $(SMSC_BUILDDIR)/classes
+	@mkdir -p $(SMSC_BUILDDIR)/jars
+	@javac -sourcepath . -classpath $(CLASSPATH) -d $(SMSC_BUILDDIR)/classes `find . -follow -name *.java`
+	@echo create jar
+	@jar -cf $(SMSC_BUILDDIR)/jars/mtsmsme.jar -C $(SMSC_BUILDDIR)/classes .
+
+clean:
+	@echo Clean
+	@rm -rf $(SMSC_BUILDDIR)/classes
+	@rm -f $(SMSC_BUILDDIR)/jars/mtsmsme.jar
+
+rebuild: clean compile
