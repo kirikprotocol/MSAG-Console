@@ -290,6 +290,7 @@ static void CheckLockedByMO(MapDialog* dialog)
   XMOMAP::iterator it = x_momap.find(dialog->s_imsi);
   if ( it != x_momap.end() )
   {
+    __trace2__("MAP::%s locked, recv(%d)",__FUNCTION__,it->second.parts);
     if ( it->second.startTime+GetMOLockTimeout() <= time(0) )
     {
       x_momap.erase(it);
@@ -445,6 +446,7 @@ void ResponseMO(MapDialog* dialog,unsigned status)
     XMOMAP::iterator it = x_momap.find(dialog->s_imsi);
     if ( it == x_momap.end() )
     {
+      __trace2__("MAP:%s: create locker",__FUNCTION__);
       XMOMAPLocker lockerX;
       lockerX.imsi = dialog->s_imsi;
       lockerX.ref = INVALID;
@@ -454,14 +456,17 @@ void ResponseMO(MapDialog* dialog,unsigned status)
     else locker = &it->second;
     if ( locker->ref == dialog->udhiRef )
     {
+      __trace2__("MAP:%s: update locker part %d/%d",__FUNCTION__,dialog->udhiMsgNum,dialog->udhiMsgCount);
       ++locker->parts;
-      if ( locker->parts >= dialog->udhiMsgCount )
+      if ( locker->parts >= dialog->udhiMsgCount ){
         x_momap.erase(dialog->s_imsi);
-      else
+        __trace2__("MAP:%s: unlock part ",__FUNCTION__);
+      }else
         locker->startTime = time(0);
     }
     else
     {
+      __trace2__("MAP:%s: update locker part %d/%d",__FUNCTION__,dialog->udhiMsgNum,dialog->udhiMsgCount);
       locker->ref = dialog->udhiRef;
       locker->parts = 1;
       locker->startTime = time(0);
@@ -1832,7 +1837,7 @@ USHORT_T Et96MapDelimiterInd(
     __trace2__("   <exception>:%s",e.what());
     if ( !open_confirmed ){
       ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
-      MapDialogContainer::getInstance()->dropDialog(dialogueId);
+      //MapDialogContainer::getInstance()->dropDialog(dialogueId);
       Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
       Et96MapDelimiterReq(localSsn,dialogueId,0,0);
     }
