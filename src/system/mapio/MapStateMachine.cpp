@@ -631,7 +631,8 @@ static string RouteToString(MapDialog* dialog)
 static bool SendSms(MapDialog* dialog){
   __trace2__("MAP::%s: MAP.did: 0x%x",__FUNCTION__,dialog->dialogid_map);
   bool mms = dialog->chain.size() != 0;
-  if ( dialog->version < 2 ) mms = false;
+  //if ( dialog->version < 2 ) mms = false;
+  mms = false;
   ET96MAP_APP_CNTX_T appContext;
   appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
   SetVersion(appContext,dialog->version);
