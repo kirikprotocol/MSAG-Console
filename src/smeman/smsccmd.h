@@ -763,7 +763,7 @@ public:
       ((SmsResp*)_cmd->dta)->set_messageId(xsm->get_messageId());
       ((SmsResp*)_cmd->dta)->set_status(xsm->header.get_commandStatus());
 
-      if(pdu->commandId==SmppCommandSet::DELIVERY_SM_RESP)
+      if(pdu->commandId==SmppCommandSet::DELIVERY_SM_RESP || pdu->commandId==SmppCommandSet::DATA_SM_RESP)
       {
         int status=((SmsResp*)_cmd->dta)->get_status()&0xffff;
         switch(xsm->header.get_commandStatus())
