@@ -3,6 +3,8 @@
 
 #include "smeman/smeproxy.h"
 #include "core/buffers/Array.hpp"
+#include "core/buffers/IntHash.hpp"
+#include <list>
 #include "core/buffers/PriorityQueue.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/EventMonitor.hpp"
@@ -26,7 +28,7 @@ const int proxyTransceiver=smeTRX;
 
 class SmppProxy:public SmeProxy{
 public:
-  SmppProxy(SmppSocket* sock,int limit,int timeout):smppReceiverSocket(sock),smppTransmitterSocket(sock)
+  SmppProxy(SmppSocket* sock,int limit,int procLimit,int timeout):smppReceiverSocket(sock),smppTransmitterSocket(sock)
   {
     smppReceiverSocket->assignProxy(this);
     seq=1;
@@ -35,9 +37,12 @@ public:
     proxyType=proxyTransceiver;
     opened=true;
     if(timeout==0)timeout=8;
-    totalLimit=limit*timeout;
+    totalLimit=limit*timeout/2;
     submitLimit=totalLimit/2;
     submitCount=0;
+    processLimit=procLimit;
+    processTimeout=timeout+timeout/2;
+    __trace2__("SmppProxy: processLimit=%d, processTimeout=%u",processLimit,processTimeout);
   }
   virtual ~SmppProxy(){}
   virtual void close()
@@ -77,6 +82,10 @@ public:
       if(cmd->get_commandId()!=SUBMIT_RESP && outqueue.Count()>=totalLimit)
       {
         throw ProxyQueueLimitException(outqueue.Count(),totalLimit);
+      }
+      if(cmd->get_commandId()==DELIVERY)
+      {
+        checkProcessLimit(cmd);//can throw ProxyQueueLimitException
       }
       trace2("put command:total %d commands",outqueue.Count());
       outqueue.Push(cmd,cmd->get_priority());
@@ -180,6 +189,10 @@ public:
       if(inqueue.Count()>=totalLimit)
       {
         throw ProxyQueueLimitException(inqueue.Count(),totalLimit);
+      }
+      if(cmd->get_commandId()==DELIVERY_RESP)
+      {
+        processResonse(cmd);
       }
       inqueue.Push(cmd);
     }
@@ -355,6 +368,44 @@ protected:
   SmeIndex smeIndex;
   smsc::core::buffers::Array<SmscCommand> inqueue;
   smsc::core::buffers::PriorityQueue<SmscCommand,Array<SmscCommand>,0,31> outqueue;
+
+  struct ControlItem{
+    time_t submitTime;
+    int seqNum;
+  };
+
+  std::list<ControlItem> limitQueue;
+  smsc::core::buffers::IntHash<std::list<ControlItem>::iterator> limitHash;
+  int processLimit;
+  int processTimeout;
+
+  void checkProcessLimit(const SmscCommand& cmd)
+  {
+    if(processLimit==0)return;
+    MutexGuard g(mutex);
+    time_t now=time(NULL);
+    while(limitQueue.size()>0 && limitQueue.begin()->submitTime+processTimeout<now)
+    {
+      limitHash.Delete(limitQueue.begin()->seqNum);
+      limitQueue.erase(limitQueue.begin());
+    }
+    if(limitQueue.size()==processLimit)throw ProxyQueueLimitException(processLimit,limitQueue.size());
+    ControlItem ci={now,cmd->get_dialogId()};
+    limitQueue.push_back(ci);
+    limitHash.Insert(ci.seqNum,--limitQueue.end());
+  }
+
+  void processResonse(const SmscCommand& cmd)
+  {
+    if(processLimit==0)return;
+    MutexGuard g(mutex);
+    if(limitHash.Exist(cmd->get_dialogId()))
+    {
+      limitQueue.erase(limitHash.Get((int)cmd->get_dialogId()));
+      limitHash.Delete(cmd->get_dialogId());
+    }
+  }
+
   int seq;
   int proxyType;
   bool opened;

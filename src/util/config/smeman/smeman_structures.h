@@ -74,6 +74,7 @@ struct SmppSmeRecord
   bool wantAlias;
   bool forceDC;
   uint32_t timeout;
+  uint32_t proclimit;
   char* receiptSchemeName;
   bool disabled;
   ModeType mode;

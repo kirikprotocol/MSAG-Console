@@ -114,6 +114,9 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
             } else if (strcmp(name.get(), "timeout") == 0)
             {
               record->recdata.smppSme.timeout = strtoll(value.get(), (char**)0, 0);
+            } else if (strcmp(name.get(), "proclimit") == 0)
+            {
+              record->recdata.smppSme.proclimit = strtoll(value.get(), (char**)0, 0);
             } else if (strcmp(name.get(),"forceDC") == 0)
             {
               record->recdata.smppSme.forceDC=!strcmp(value.get(),"true");
@@ -128,32 +131,32 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
               record->recdata.smppSme.disabled = !strcmp(value.get(),"true");
             } else if (strcmp(name.get(), "mode") == 0)
             {
-							if (strcmp(value.get(),"tx") == 0)
-							{
-								record->recdata.smppSme.mode = MODE_TX;
-							} else if (strcmp(value.get(),"rx") == 0)
-							{
-								record->recdata.smppSme.mode = MODE_RX;
-							} else if (strcmp(value.get(),"trx") == 0)
-							{
-								record->recdata.smppSme.mode = MODE_TRX;
-							} else {
-								logger.warn("unknown mode value \"%s\"", value.get());
-							}
+              if (strcmp(value.get(),"tx") == 0)
+              {
+                record->recdata.smppSme.mode = MODE_TX;
+              } else if (strcmp(value.get(),"rx") == 0)
+              {
+                record->recdata.smppSme.mode = MODE_RX;
+              } else if (strcmp(value.get(),"trx") == 0)
+              {
+                record->recdata.smppSme.mode = MODE_TRX;
+              } else {
+                logger.warn("unknown mode value \"%s\"", value.get());
+              }
             } else {
               logger.warn("unknown param name \"%s\"", name.get());
             }
           }
         }
 
-				if (record->recdata.smppSme.systemType == 0)
-					record->recdata.smppSme.systemType = cStringCopy("");
-				if (record->recdata.smppSme.password == 0)
-					record->recdata.smppSme.password = cStringCopy("");
-				if (record->recdata.smppSme.addrRange == 0)
-					record->recdata.smppSme.addrRange = cStringCopy("");
-				if (record->recdata.smppSme.receiptSchemeName == 0)
-					record->recdata.smppSme.receiptSchemeName = cStringCopy("default");
+        if (record->recdata.smppSme.systemType == 0)
+          record->recdata.smppSme.systemType = cStringCopy("");
+        if (record->recdata.smppSme.password == 0)
+          record->recdata.smppSme.password = cStringCopy("");
+        if (record->recdata.smppSme.addrRange == 0)
+          record->recdata.smppSme.addrRange = cStringCopy("");
+        if (record->recdata.smppSme.receiptSchemeName == 0)
+          record->recdata.smppSme.receiptSchemeName = cStringCopy("default");
       }
       else if (strcmp(type.get(), "ss7"))
       {

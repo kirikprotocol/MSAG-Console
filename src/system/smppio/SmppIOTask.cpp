@@ -329,7 +329,7 @@ int SmppInputThread::Execute()
               if(!err)
               {
                 si=smeManager->getSmeInfo(proxyIndex);
-                if(!proxy)proxy=new SmppProxy(ss,totalLimit,si.timeout);
+                if(!proxy)proxy=new SmppProxy(ss,totalLimit,si.proclimit,si.timeout);
                 switch(pdu->get_commandId())
                 {
                   case SmppCommandSet::BIND_RECIEVER:
@@ -401,7 +401,12 @@ int SmppInputThread::Execute()
                         set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
                       err=true;
                     }
-                    if(rebindproxy)err=true;
+                    if(rebindproxy)
+                    {
+                      err=true;
+                      resppdu.get_header().
+                        set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                    }
                     if(!err)
                     {
                       proxy->setProxyType(proxyTransceiver);

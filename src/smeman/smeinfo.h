@@ -32,6 +32,7 @@ struct SmeInfo
   SmeBindMode bindMode;
   std::string receiptSchemeName;
   uint32_t timeout;
+  uint32_t proclimit;
   ~SmeInfo(){}
   SmeInfo(){}
 };

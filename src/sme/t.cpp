@@ -403,6 +403,7 @@ int main(int argc,char* argv[])
   catch(SmppConnectException& e)
   {
     printf("Bind error:%s\n",e.getTextReason());
+    return -1;
   }
   catch(std::exception& e)
   {
