@@ -2914,7 +2914,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
   if(sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST))
   {
-    if(sms.hasIntProperty(Tag::SMSC_UMR_LIST))
+    if(sms.hasBinProperty(Tag::SMSC_UMR_LIST))
     {
       unsigned len;
       unsigned char* lst=(unsigned char*)sms.getBinProperty(Tag::SMSC_UMR_LIST,&len);
