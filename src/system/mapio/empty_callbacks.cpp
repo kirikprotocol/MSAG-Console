@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "util/debug.h"
 
 extern "C"{
 

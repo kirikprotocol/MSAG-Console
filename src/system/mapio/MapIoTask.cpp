@@ -16,7 +16,10 @@ static void CloseDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId
 
 static void CloseAndRemoveDialog(	ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId)
 {
-  Et96MapCloseReq (lssn,dialogId,ET96MAP_NORMAL_RELEASE,0,0,0);
+  USHORT_T res = Et96MapCloseReq (lssn,dialogId,ET96MAP_NORMAL_RELEASE,0,0,0);
+  if ( res != ET96MAP_E_OK ){
+    __trace2__("close error, code 0x%hx",res);
+  }
   MapDialogContainer::getInstance()->dropDialog(dialogId);
 }
 
@@ -74,13 +77,14 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
 	try{
     mdci->dialogue->Et96MapV2ForwardSmMOInd(
       lssn,dialogId,invokeId,dstAddr,srcAddr,ud);
-    
-/*    USHORT_T err = Et96MapV2ForwardSmMOResp(lssn,dialogId,invokeId,0);
+    //ET96MAP_ERROR_FORW_SM_MO_T errcd;
+    //memset(errcd,0,sizeof(errcd));
+    USHORT_T err = Et96MapV2ForwardSmMOResp(lssn,dialogId,invokeId,0);
     if ( err != ET96MAP_E_OK ) {
       __trace2__("broken response with error 0x%hx",err);
       throw runtime_error("MAPIO::ERR broken response");
     }
-    CloseAndRemoveDialog(lssn,dialogId);*/
+    CloseAndRemoveDialog(lssn,dialogId);
 	}catch(...){
 		__trace__("MAP::Et96MapV2ForwardSmMOInd catch exception");
     CloseAndRemoveDialog(lssn,dialogId);
@@ -93,12 +97,12 @@ USHORT_T Et96MapDelimiterInd(
   UCHAR_T priorityOrder)
 {
   __trace2__("MAP::Et96MapDelimiterInd lssn 0x%hx, dialogId 0x%hx",lssn,dialogId);
-  USHORT_T err = Et96MapV2ForwardSmMOResp(lssn,dialogId,invokeId,0);
+  /*USHORT_T err = Et96MapV2ForwardSmMOResp(lssn,dialogId,invokeId,0);
   if ( err != ET96MAP_E_OK ) {
     __trace2__("broken response with error 0x%hx",err);
     throw runtime_error("MAPIO::ERR broken response");
   }
-  CloseAndRemoveDialog(lssn,dialogId);
+  CloseAndRemoveDialog(lssn,dialogId);*/
   return ET96MAP_E_OK;
 }
 
