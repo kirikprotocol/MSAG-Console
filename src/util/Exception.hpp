@@ -6,21 +6,30 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#define EX_FILL(fmt) \
+    va_list arglist;\
+    va_start(arglist,fmt);\
+    fill(fmt,arglist);\
+    va_end(arglist);
+
+
 namespace smsc{
 namespace util{
 
 class Exception:public std::exception{
 public:
+  Exception(){}
   Exception(const char* fmt,...)
+  {
+    EX_FILL(fmt);
+  }
+  inline void fill(const char* fmt,va_list arglist)
   {
     int size=strlen(fmt)*4;
     char *buf=new char[size];
-    va_list arglist;
     int res;
     do{
-      va_start(arglist,fmt);
       res=vsnprintf( buf, size,fmt,arglist);
-      va_end(arglist);
       if(res<0)
       {
         delete [] buf;
