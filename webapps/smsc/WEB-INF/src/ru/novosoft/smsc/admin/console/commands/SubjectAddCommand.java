@@ -20,14 +20,12 @@ public class SubjectAddCommand extends SubjectGenCommand
         try {
             SME sme = ctx.getSmeManager().get(defaultSmeId);
             if (sme != null) {
-                //todo notes param
-                Subject smscSubject = new Subject(subject, masks, sme, "");
+                Subject smscSubject = new Subject(subject, masks, sme, notes);
                 ctx.getRouteSubjectManager().getSubjects().add(smscSubject);
                 ctx.setMessage(out+" added");
                 ctx.setStatus(CommandContext.CMD_OK);
             } else {
-                ctx.setMessage("Couldn't add "+out+
-                               ". No default SME for id '"+defaultSmeId+"'");
+                ctx.setMessage("Couldn't add "+out+". No default SME for id '"+defaultSmeId+"'");
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             }
         } catch (Exception e) {

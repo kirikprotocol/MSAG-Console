@@ -43,6 +43,7 @@ public class SubjectAlterCommand extends SubjectGenCommand
                 ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
                 return;
             }
+            if (isNotes) smscSubject.setNotes(notes);
             if (defaultSmeId != null) {
                 SME sme = ctx.getSmeManager().get(defaultSmeId);
                 if (sme != null) {

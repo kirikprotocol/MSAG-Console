@@ -66,14 +66,14 @@ public class RouteAlterCommand extends RouteGenCommand
         return;
       }
 
-      //todo implement hide & forceReplayPath flags, notes, forceDelivery
       Route newRoute = new Route(route,
                                  oldRoute.getPriority(), oldRoute.isEnabling(), oldRoute.isBilling(),
                                  oldRoute.isArchiving(), oldRoute.isSuppressDeliveryReports(),
                                  oldRoute.isActive(), oldRoute.getServiceId(),
                                  oldRoute.getSources(), oldRoute.getDestinations(),
                                  oldRoute.getSrcSmeId(), oldRoute.getDeliveryMode(), oldRoute.getForwardTo(),
-                                 true, false, "", false);
+                                 oldRoute.isHide(), oldRoute.isForceReplayPath(), oldRoute.getNotes(),
+                                 oldRoute.isForceDelivery());
 
       if (target == TARGET_SRC) {
         for (int i = 0; i < srcs.size(); i++) {
@@ -209,6 +209,10 @@ public class RouteAlterCommand extends RouteGenCommand
       if (isDeliveryMode) newRoute.setDeliveryMode(deliveryMode);
       if (isForwardTo) newRoute.setForwardTo(forwardTo);
       if (isSrcSmeId) newRoute.setSrcSmeId(srcSmeId);
+      if (isHide) newRoute.setHide(hide);
+      if (isNotes) newRoute.setNotes(notes);
+      if (isForceReplayPath) newRoute.setForceReplayPath(forceReplayPath);
+      if (isForceDelivery) newRoute.setForceDelivery(forceDelivery);
 
       list.remove(oldRoute.getName());
       list.put(newRoute);
@@ -222,60 +226,35 @@ public class RouteAlterCommand extends RouteGenCommand
     ctx.setStatus(CommandContext.CMD_OK);
   }
 
-  public void setAction(byte action)
-  {
+  public void setAction(byte action) {
     this.action = action;
   }
-
-  public void setTarget(byte target)
-  {
+  public void setTarget(byte target) {
     this.target = target;
   }
-
-  public void setBill(boolean bill)
-  {
-    this.bill = bill;
-    setBill = true;
+  public void setBill(boolean bill) {
+    this.bill = bill; setBill = true;
+  }
+  public void setArc(boolean arc) {
+    this.arc = arc; setArc = true;
+  }
+  public void setAllow(boolean allow) {
+    this.allow = allow; setAllow = true;
+  }
+  public void setReceipt(boolean receipt) {
+    this.receipt = receipt;  setReceipt = true;
+  }
+  public void setActive(boolean active) {
+    this.active = active;  setActive = true;
+  }
+  public void setServiceId(int serviceid) {
+    this.serviceid = serviceid; setId = true;
+  }
+  public void setPriority(int priority) {
+    this.priority = priority; setPri = true;
   }
 
-  public void setArc(boolean arc)
-  {
-    this.arc = arc;
-    setArc = true;
-  }
-
-  public void setAllow(boolean allow)
-  {
-    this.allow = allow;
-    setAllow = true;
-  }
-
-  public void setReceipt(boolean receipt)
-  {
-    this.receipt = receipt;
-    setReceipt = true;
-  }
-
-  public void setActive(boolean active)
-  {
-    this.active = active;
-    setActive = true;
-  }
-
-  public void setServiceId(int serviceid)
-  {
-    this.serviceid = serviceid;
-    setId = true;
-  }
-
-  public void setPriority(int priority)
-  {
-    this.priority = priority;
-    setPri = true;
-  }
-
-  public String getId()
-  {
+  public String getId() {
     return "ROUTE_ALTER";
   }
 

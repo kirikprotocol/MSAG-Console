@@ -41,8 +41,12 @@ public class RouteViewCommand implements Command
         ctx.addResult("srcsme: "+smscRoute.getSrcSmeId());
         ctx.addResult("dm    : "+smscRoute.getDeliveryMode());
         ctx.addResult("fwd   : "+smscRoute.getForwardTo());
+        ctx.addResult("notes : "+smscRoute.getNotes());
         ctx.addResult("flags : "+
             (smscRoute.isActive() ? "active, ":"inactive, ")+
+            (smscRoute.isHide() ? "hide, ":"nohide, ")+
+            "forceReplayPath "+(smscRoute.isForceReplayPath() ? "on, ": "off, ")+
+            "forceDelivery "+(smscRoute.isForceDelivery() ? "on, ": "off, ")+
             (smscRoute.isBilling()   ? "billing, ":"no billing, ")+
             (smscRoute.isArchiving() ? "archiving, ": "no archiving, ")+
             (smscRoute.isEnabling()  ? "allowed, ":"denied, ")+

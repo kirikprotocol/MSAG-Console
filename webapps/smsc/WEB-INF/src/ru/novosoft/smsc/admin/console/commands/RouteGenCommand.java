@@ -19,13 +19,26 @@ public abstract class RouteGenCommand implements Command
   protected ArrayList srcs = new ArrayList();
   protected ArrayList dsts = new ArrayList();
 
-  protected String srcSmeId     = "";
-  protected String deliveryMode = "default";
-  protected String forwardTo    = "";
+  protected String srcSmeId    = "";
+  protected boolean isSrcSmeId = false;
 
-  protected boolean isSrcSmeId     = false;
+  protected String deliveryMode    = "default";
   protected boolean isDeliveryMode = false;
-  protected boolean isForwardTo    = false;
+
+  protected String forwardTo    = "";
+  protected boolean isForwardTo = false;
+
+  protected String notes    = "";
+  protected boolean isNotes = false;
+
+  protected boolean hide   = false;
+  protected boolean isHide = false;
+
+  protected boolean forceReplayPath   = false;
+  protected boolean isForceReplayPath = false;
+
+  protected boolean forceDelivery   = false;
+  protected boolean isForceDelivery = false;
 
   public void setRoute(String route) {
     this.route = route;
@@ -44,6 +57,20 @@ public abstract class RouteGenCommand implements Command
   }
   public void setForwardTo(String forwardTo) {
     this.forwardTo = forwardTo; isForwardTo = true;
+  }
+  public void setNotes(String notes) {
+    this.notes = notes; isNotes = true;
+  }
+  public void setHide(boolean hide) {
+    this.hide = hide; isHide = true;
+  }
+  public void setForceReplayPath(boolean forceReplayPath) {
+    this.forceReplayPath = forceReplayPath;
+    isForceReplayPath = true;
+  }
+  public void setForceDelivery(boolean forceDelivery) {
+    this.forceDelivery = forceDelivery;
+    isForceDelivery = true;
   }
 }
 

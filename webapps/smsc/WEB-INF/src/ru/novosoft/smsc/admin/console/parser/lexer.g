@@ -73,6 +73,10 @@ tokens {
   OPT_UDHCONCAT = "udhconcat"	 ;
   OPT_ON	= "on"		 ;
   OPT_OFF	= "off"		 ;
+  OPT_NOTES	= "notes"	 ;
+  
+  OPT_FRP	= "forceReplayPath";
+  OPT_FD	= "forceDelivery"  ;
   
   VAL_FULL	= "full"	 ;
   VAL_NONE	= "none"	 ;

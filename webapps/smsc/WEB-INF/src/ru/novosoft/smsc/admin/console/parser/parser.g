@@ -215,9 +215,8 @@ route_dm[RouteGenCommand cmd]
 addroute returns [RouteAddCommand cmd] {
     cmd = new RouteAddCommand();
 }
-	:	({
-		    cmd.setRoute(getnameid("Route name"));
-		})
+	:	({ cmd.setRoute(getnameid("Route name")); })
+		(OPT_NOTES { cmd.setNotes(getnameid("Subject notes")); })?
 		addroute_flags[cmd]
 		(OPT_SVCID num:STR {
 		    try {
@@ -243,6 +242,10 @@ addroute returns [RouteAddCommand cmd] {
 addroute_flags[RouteAddCommand cmd]
 	:	( OPT_ACTIVE 	{ cmd.setActive(true);  }
 		| OPT_INACTIVE	{ cmd.setActive(false);	})?
+		( OPT_HIDE      { cmd.setHide(true);    }
+		| OPT_NOHIDE    { cmd.setHide(false);   })?
+		( OPT_FRP	{ cmd.setForceReplayPath(true); })?
+		( OPT_FD	{ cmd.setForceDelivery(true);   })?
 		( OPT_BILL   	{ cmd.setBill(true);   	}
 		| OPT_NOBILL 	{ cmd.setBill(false);  	})
 		( OPT_ARCH   	{ cmd.setArc(true);    	}
@@ -254,24 +257,23 @@ addroute_flags[RouteAddCommand cmd]
 	;
 	exception
 	catch [RecognitionException ex] {
-           throw new RecognitionException("Route flags expected. Syntax: [active|inactive] (bill|nobill) (arc|noarc) (allow|deny) (receipt|noreceipt)");
+           throw new RecognitionException("Route flags expected. "+
+	   "Syntax: [active|inactive] [hide|nohide] [forceReplayPath] [forceDelivery]"+
+	   "(bill|nobill) (arc|noarc) (allow|deny) (receipt|noreceipt)");
 	}
 
 delroute returns [RouteDeleteCommand cmd] {
     cmd = new RouteDeleteCommand();
 }
-	:	({
-		    cmd.setRoute(getnameid("Route name"));
-		})
+	:	({  cmd.setRoute(getnameid("Route name")); })
 	;
 
 altroute returns [RouteAlterCommand cmd] {
     cmd = new RouteAlterCommand();
     boolean addAction = true;
 }
-	:	({
-		    cmd.setRoute(getnameid("Route name"));
-		})
+	:	({ cmd.setRoute(getnameid("Route name"));  })
+		(OPT_NOTES { cmd.setNotes(getnameid("Subject notes")); })?
 		altroute_flags[cmd]
 		(OPT_SVCID num:STR {
 		    try {
@@ -305,6 +307,12 @@ altroute returns [RouteAlterCommand cmd] {
 altroute_flags[RouteAlterCommand cmd]
 	:	( OPT_ACTIVE 	{ cmd.setActive(true);   }
 		| OPT_INACTIVE	{ cmd.setActive(false);	 })?
+		( OPT_HIDE      { cmd.setHide(true);     }
+		| OPT_NOHIDE    { cmd.setHide(false);    })?
+		( OPT_FRP (OPT_ON  { cmd.setForceReplayPath(true);  }
+			  |OPT_OFF { cmd.setForceReplayPath(false); }))?
+		( OPT_FD  (OPT_ON  { cmd.setForceDelivery(true);    }
+			  |OPT_OFF { cmd.setForceDelivery(false);   }))?
 		( OPT_BILL   	{ cmd.setBill(true);     } 
 		| OPT_NOBILL 	{ cmd.setBill(false);    })?
 		( OPT_ARCH   	{ cmd.setArc(true);      } 
@@ -316,15 +324,14 @@ altroute_flags[RouteAlterCommand cmd]
 	;
 	exception
 	catch [RecognitionException ex] {
-           throw new RecognitionException("Route flags expected. Syntax: [active|inactive] [bill|nobill] [arc|noarc] [allow|deny] [receipt|noreceipt]");
+           throw new RecognitionException("Route flags expected. "+
+	   "Syntax: [active|inactive] [hide|nohide] [bill|nobill] [arc|noarc] [allow|deny] [receipt|noreceipt]");
 	}
 
 viewroute returns [RouteViewCommand cmd] {
     cmd = new RouteViewCommand();
 }
-	:	({
-		    cmd.setRoute(getnameid("Route name"));
-		})
+	:	({ cmd.setRoute(getnameid("Route name")); })
 	;
 
 /* ----------------------- Alias command parsers ----------------------- */
@@ -396,42 +403,30 @@ addsubj_masks[SubjectGenCommand cmd]
 addsubject returns [SubjectAddCommand cmd] {
     cmd = new SubjectAddCommand();
 }
-	:	({
-		    cmd.setSubject(getnameid("Subject name"));
-		})
-		({
-		    cmd.setDefaultSmeId(getnameid("SME id"));
-		})
+	:	({ cmd.setSubject(getnameid("Subject name")); })
+		(OPT_NOTES { cmd.setNotes(getnameid("Subject notes")); })?
+		({ cmd.setDefaultSmeId(getnameid("SME id"));  })
 		addsubj_masks[cmd]
 	;
 altsubject returns [SubjectAlterCommand cmd] {
     cmd = new SubjectAlterCommand();
 }
-	:	({
-		    cmd.setSubject(getnameid("Subject name"));
-		})
-		(((ACT_ADD {
-		    cmd.setActionAdd();
-		} | ACT_DELETE {
-		    cmd.setActionDelete();
-		}) addsubj_masks[cmd]) | 
-		(OPT_DEFSME {
-		    cmd.setDefaultSmeId(getnameid("SME id"));
-		}))
+	:	({ cmd.setSubject(getnameid("Subject name")); })
+		(OPT_NOTES { cmd.setNotes(getnameid("Subject notes")); })?
+		(((ACT_ADD     { cmd.setActionAdd(); }
+		  |ACT_DELETE  { cmd.setActionDelete(); }) 
+		  addsubj_masks[cmd])
+		|(OPT_DEFSME { cmd.setDefaultSmeId(getnameid("SME id"));}))
 	;
 delsubject returns [SubjectDeleteCommand cmd] {
     cmd = new SubjectDeleteCommand();
 }
-	:	({
-		    cmd.setSubject(getnameid("Subject name"));
-		})
+	:	({ cmd.setSubject(getnameid("Subject name")); })
 	;
 viewsubject returns [SubjectViewCommand cmd] {
     cmd = new SubjectViewCommand();
 }
-	:	({
-		    cmd.setSubject(getnameid("Subject name"));
-		})
+	:	({ cmd.setSubject(getnameid("Subject name")); })
 	;
 
 /* ----------------------- Profile command parsers --------------------- */

@@ -429,9 +429,32 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-		
-				    cmd.setRoute(getnameid("Route name"));
-				
+		cmd.setRoute(getnameid("Route name"));
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_NOTES:
+		{
+			match(OPT_NOTES);
+			cmd.setNotes(getnameid("Subject notes"));
+			break;
+		}
+		case OPT_HIDE:
+		case OPT_NOHIDE:
+		case OPT_BILL:
+		case OPT_NOBILL:
+		case OPT_ACTIVE:
+		case OPT_INACTIVE:
+		case OPT_FRP:
+		case OPT_FD:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		addroute_flags(cmd);
 		{
@@ -588,14 +611,28 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-		
-				    cmd.setSubject(getnameid("Subject name"));
-				
+		cmd.setSubject(getnameid("Subject name"));
 		}
 		{
-		
-				    cmd.setDefaultSmeId(getnameid("SME id"));
-				
+		switch ( LA(1)) {
+		case OPT_NOTES:
+		{
+			match(OPT_NOTES);
+			cmd.setNotes(getnameid("Subject notes"));
+			break;
+		}
+		case STR:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		cmd.setDefaultSmeId(getnameid("SME id"));
 		}
 		addsubj_masks(cmd);
 		return cmd;
@@ -926,9 +963,7 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-		
-				    cmd.setRoute(getnameid("Route name"));
-				
+		cmd.setRoute(getnameid("Route name"));
 		}
 		return cmd;
 	}
@@ -964,9 +999,7 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-		
-				    cmd.setSubject(getnameid("Subject name"));
-				
+		cmd.setSubject(getnameid("Subject name"));
 		}
 		return cmd;
 	}
@@ -1103,9 +1136,46 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-		
-				    cmd.setRoute(getnameid("Route name"));
-				
+		cmd.setRoute(getnameid("Route name"));
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_NOTES:
+		{
+			match(OPT_NOTES);
+			cmd.setNotes(getnameid("Subject notes"));
+			break;
+		}
+		case EOF:
+		case ACT_ADD:
+		case ACT_DELETE:
+		case OPT_HIDE:
+		case OPT_NOHIDE:
+		case OPT_BILL:
+		case OPT_NOBILL:
+		case OPT_ARCH:
+		case OPT_NOARCH:
+		case OPT_ALLOW:
+		case OPT_DENY:
+		case OPT_RCPT:
+		case OPT_NORCPT:
+		case OPT_SVCID:
+		case OPT_PRI:
+		case OPT_ACTIVE:
+		case OPT_INACTIVE:
+		case OPT_DM:
+		case OPT_FWD:
+		case OPT_SRCSME:
+		case OPT_FRP:
+		case OPT_FD:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		altroute_flags(cmd);
 		{
@@ -1370,9 +1440,27 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-		
-				    cmd.setSubject(getnameid("Subject name"));
-				
+		cmd.setSubject(getnameid("Subject name"));
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_NOTES:
+		{
+			match(OPT_NOTES);
+			cmd.setNotes(getnameid("Subject notes"));
+			break;
+		}
+		case ACT_ADD:
+		case ACT_DELETE:
+		case OPT_DEFSME:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		}
 		{
 		switch ( LA(1)) {
@@ -1385,17 +1473,13 @@ public CommandParser(ParserSharedInputState state) {
 			case ACT_ADD:
 			{
 				match(ACT_ADD);
-				
-						    cmd.setActionAdd();
-						
+				cmd.setActionAdd();
 				break;
 			}
 			case ACT_DELETE:
 			{
 				match(ACT_DELETE);
-				
-						    cmd.setActionDelete();
-						
+				cmd.setActionDelete();
 				break;
 			}
 			default:
@@ -1412,9 +1496,7 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			{
 			match(OPT_DEFSME);
-			
-					    cmd.setDefaultSmeId(getnameid("SME id"));
-					
+			cmd.setDefaultSmeId(getnameid("SME id"));
 			}
 			break;
 		}
@@ -1778,9 +1860,7 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-		
-				    cmd.setRoute(getnameid("Route name"));
-				
+		cmd.setRoute(getnameid("Route name"));
 		}
 		return cmd;
 	}
@@ -1816,9 +1896,7 @@ public CommandParser(ParserSharedInputState state) {
 		
 		
 		{
-		
-				    cmd.setSubject(getnameid("Subject name"));
-				
+		cmd.setSubject(getnameid("Subject name"));
 		}
 		return cmd;
 	}
@@ -2163,6 +2241,76 @@ public CommandParser(ParserSharedInputState state) {
 				cmd.setActive(false);	
 				break;
 			}
+			case OPT_HIDE:
+			case OPT_NOHIDE:
+			case OPT_BILL:
+			case OPT_NOBILL:
+			case OPT_FRP:
+			case OPT_FD:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_HIDE:
+			{
+				match(OPT_HIDE);
+				cmd.setHide(true);
+				break;
+			}
+			case OPT_NOHIDE:
+			{
+				match(OPT_NOHIDE);
+				cmd.setHide(false);
+				break;
+			}
+			case OPT_BILL:
+			case OPT_NOBILL:
+			case OPT_FRP:
+			case OPT_FD:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_FRP:
+			{
+				match(OPT_FRP);
+				cmd.setForceReplayPath(true);
+				break;
+			}
+			case OPT_BILL:
+			case OPT_NOBILL:
+			case OPT_FD:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_FD:
+			{
+				match(OPT_FD);
+				cmd.setForceDelivery(true);
+				break;
+			}
 			case OPT_BILL:
 			case OPT_NOBILL:
 			{
@@ -2257,7 +2405,9 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException("Route flags expected. Syntax: [active|inactive] (bill|nobill) (arc|noarc) (allow|deny) (receipt|noreceipt)");
+			throw new RecognitionException("Route flags expected. "+
+				   "Syntax: [active|inactive] [hide|nohide] [forceReplayPath] [forceDelivery]"+
+				   "(bill|nobill) (arc|noarc) (allow|deny) (receipt|noreceipt)");
 				
 		}
 	}
@@ -2280,6 +2430,156 @@ public CommandParser(ParserSharedInputState state) {
 			{
 				match(OPT_INACTIVE);
 				cmd.setActive(false);	
+				break;
+			}
+			case EOF:
+			case ACT_ADD:
+			case ACT_DELETE:
+			case OPT_HIDE:
+			case OPT_NOHIDE:
+			case OPT_BILL:
+			case OPT_NOBILL:
+			case OPT_ARCH:
+			case OPT_NOARCH:
+			case OPT_ALLOW:
+			case OPT_DENY:
+			case OPT_RCPT:
+			case OPT_NORCPT:
+			case OPT_SVCID:
+			case OPT_PRI:
+			case OPT_DM:
+			case OPT_FWD:
+			case OPT_SRCSME:
+			case OPT_FRP:
+			case OPT_FD:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_HIDE:
+			{
+				match(OPT_HIDE);
+				cmd.setHide(true);
+				break;
+			}
+			case OPT_NOHIDE:
+			{
+				match(OPT_NOHIDE);
+				cmd.setHide(false);
+				break;
+			}
+			case EOF:
+			case ACT_ADD:
+			case ACT_DELETE:
+			case OPT_BILL:
+			case OPT_NOBILL:
+			case OPT_ARCH:
+			case OPT_NOARCH:
+			case OPT_ALLOW:
+			case OPT_DENY:
+			case OPT_RCPT:
+			case OPT_NORCPT:
+			case OPT_SVCID:
+			case OPT_PRI:
+			case OPT_DM:
+			case OPT_FWD:
+			case OPT_SRCSME:
+			case OPT_FRP:
+			case OPT_FD:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_FRP:
+			{
+				match(OPT_FRP);
+				{
+				switch ( LA(1)) {
+				case OPT_ON:
+				{
+					match(OPT_ON);
+					cmd.setForceReplayPath(true);
+					break;
+				}
+				case OPT_OFF:
+				{
+					match(OPT_OFF);
+					cmd.setForceReplayPath(false);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				break;
+			}
+			case EOF:
+			case ACT_ADD:
+			case ACT_DELETE:
+			case OPT_BILL:
+			case OPT_NOBILL:
+			case OPT_ARCH:
+			case OPT_NOARCH:
+			case OPT_ALLOW:
+			case OPT_DENY:
+			case OPT_RCPT:
+			case OPT_NORCPT:
+			case OPT_SVCID:
+			case OPT_PRI:
+			case OPT_DM:
+			case OPT_FWD:
+			case OPT_SRCSME:
+			case OPT_FD:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_FD:
+			{
+				match(OPT_FD);
+				{
+				switch ( LA(1)) {
+				case OPT_ON:
+				{
+					match(OPT_ON);
+					cmd.setForceDelivery(true);
+					break;
+				}
+				case OPT_OFF:
+				{
+					match(OPT_OFF);
+					cmd.setForceDelivery(false);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
 				break;
 			}
 			case EOF:
@@ -2446,7 +2746,8 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException("Route flags expected. Syntax: [active|inactive] [bill|nobill] [arc|noarc] [allow|deny] [receipt|noreceipt]");
+			throw new RecognitionException("Route flags expected. "+
+				   "Syntax: [active|inactive] [hide|nohide] [bill|nobill] [arc|noarc] [allow|deny] [receipt|noreceipt]");
 				
 		}
 	}
@@ -2473,14 +2774,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop84:
+			_loop94:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop84;
+					break _loop94;
 				}
 				
 			} while (true);
@@ -2903,6 +3204,9 @@ public CommandParser(ParserSharedInputState state) {
 		"\"udhconcat\"",
 		"\"on\"",
 		"\"off\"",
+		"\"notes\"",
+		"\"forceReplayPath\"",
+		"\"forceDelivery\"",
 		"\"full\"",
 		"\"none\"",
 		"\"default\"",

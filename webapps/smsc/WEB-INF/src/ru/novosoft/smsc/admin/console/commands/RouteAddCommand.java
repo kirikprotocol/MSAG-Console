@@ -101,10 +101,9 @@ public class RouteAddCommand extends RouteGenCommand
         }
       }
 
-      //todo implement hide & forceReplayPath flags, notes, forceDelivery
       smscRoute = new Route(route, priority, allow, bill, arc, !receipt,
                             active, serviceid, srcList, dstList, srcSmeId, deliveryMode, forwardTo,
-                            true, false, "", false);
+                            hide, forceReplayPath, notes, forceDelivery);
 
       if (priority < 0 || priority > 32000)
         throw new Exception("Priority value should be between 0 and 32000");
@@ -120,43 +119,29 @@ public class RouteAddCommand extends RouteGenCommand
     ctx.setStatus(CommandContext.CMD_OK);
   }
 
-  public void setBill(boolean bill)
-  {
+  public void setBill(boolean bill) {
     this.bill = bill;
   }
-
-  public void setArc(boolean arc)
-  {
+  public void setArc(boolean arc) {
     this.arc = arc;
   }
-
-  public void setAllow(boolean allow)
-  {
+  public void setAllow(boolean allow) {
     this.allow = allow;
   }
-
-  public void setServiceId(int serviceid)
-  {
+  public void setServiceId(int serviceid) {
     this.serviceid = serviceid;
   }
-
-  public void setPriority(int priority)
-  {
+  public void setPriority(int priority) {
     this.priority = priority;
   }
-
-  public void setReceipt(boolean receipt)
-  {
+  public void setReceipt(boolean receipt) {
     this.receipt = receipt;
   }
-
-  public void setActive(boolean active)
-  {
+  public void setActive(boolean active) {
     this.active = active;
   }
 
-  public String getId()
-  {
+  public String getId() {
     return "ROUTE_ADD";
   }
 
