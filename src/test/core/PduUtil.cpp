@@ -106,9 +106,8 @@ vector<int> PduReceiptFlag::checkSchedule(time_t recvTime) const
 
 vector<int> PduReceiptFlag::update(time_t recvTime, bool accepted)
 {
-	__trace2__("PduReceiptFlag::update(): this = %p, recvTime = %ld, accepted = %s",
-		this, recvTime, accepted ? "true" : "false");
 	vector<int> res;
+	int prevFlag = flag;
 	switch (flag)
 	{
 		case PDU_REQUIRED_FLAG:
@@ -130,6 +129,8 @@ vector<int> PduReceiptFlag::update(time_t recvTime, bool accepted)
 		default:
 			__unreachable__("Unknown flag");
 	}
+	__trace2__("PduReceiptFlag::update(): this = %p, startTime = %ld, endTime = %ld, recvTime = %ld, accepted = %s, flag = %d, prevFlag = %d",
+		this, startTime, endTime, recvTime, accepted ? "true" : "false", flag, prevFlag);
 	lastTime = recvTime;
 	return res;
 }
