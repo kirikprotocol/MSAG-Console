@@ -1336,6 +1336,8 @@ static void PauseOnImsiReq(MapDialog* map)
     DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialogImsiReq(SSN,map));
     if (dialog.isnull()) throw runtime_error(
       FormatText("MAP::%s can't create dialog",__FUNCTION__));
+    dialogid_map = dialog->dialgid_map;
+    dialog->mshlrAddr = map->mshlrAddr;
     QueryHlrVersion(dialog.get());
     success = true;
   }MAP_CATCH(dialogid_map,0);
