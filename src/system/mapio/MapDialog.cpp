@@ -171,7 +171,7 @@ unsigned ConvertSMSC7bit27bit(
 {
   //__require__(chars<=255);
   if ( chars > 160 ){
-    __trace2__("MAP::ConvertText27bit: text length(%d) > 160",chars);
+    __trace2__("MAP::ConvertSMSC7bit27bit: text length(%d) > 160",chars);
     throw runtime_error("text length > 160");
   }
   unsigned char* base = bit7buf;
@@ -184,7 +184,7 @@ unsigned ConvertSMSC7bit27bit(
     char b[chars+1];
     memcpy(b,text,chars);
     b[chars] = 0;
-    __trace2__("MAP::latin1->7bit: %s",b);
+    __trace2__("MAP::SMSC7bit->7bit: %s",b);
   }
   {
     char b[255*4];
