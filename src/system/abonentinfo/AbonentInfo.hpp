@@ -20,7 +20,12 @@ using namespace smsc::profiler;
 class AbonentInfoSme:public SmeProxy,public ThreadedTask{
 public:
   AbonentInfoSme(ProfilerInterface* profiler,
-    SmeRegistrar* smeman,const char* sysId):profiler(profiler),smeman(smeman),systemId(sysId)
+    SmeRegistrar* smeman,const char* sysId):
+      seq(1),
+      managerMonitor(NULL),
+      profiler(profiler),
+      smeman(smeman),
+      systemId(sysId)
   {
   }
 
@@ -92,8 +97,10 @@ public:
 
   void init()
   {
+    __trace__("AbonentInfo: init");
     managerMonitor=NULL;
     state=VALID;
+    seq=1;
   }
 
   SmeProxyPriority getPriority()const
