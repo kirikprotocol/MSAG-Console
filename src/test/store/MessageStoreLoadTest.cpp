@@ -11,8 +11,6 @@ using namespace smsc::util::config;
 using namespace smsc::test::store;
 using namespace smsc::test::util;
 
-TestTask t(0);
-
 class MessageStoreLoadTestTask : public TestTask
 {
 private:
