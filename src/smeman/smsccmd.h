@@ -254,6 +254,13 @@ struct ReplaceSm{
   int smLength;
   auto_ptr<char> shortMessage;
 
+  SMSId getMessageId()const
+  {
+    SMSId id=0;
+    if(messageId.get())sscanf(messageId.get(),"%lld",&id);
+    return id;
+  }
+
   ReplaceSm(PduReplaceSm* repl)
   {
     fillField(messageId,repl->get_messageId());
@@ -285,6 +292,12 @@ struct QuerySm{
       messageId.get()[0]=0;
     }
     fillSmppAddr(sourceAddr,q->get_source());
+  }
+  SMSId getMessageId()const
+  {
+    SMSId id=0;
+    if(messageId.get())sscanf(messageId.get(),"%lld",&id);
+    return id;
   }
 };
 
@@ -361,6 +374,12 @@ struct CancelSm{
     force=true;
   }
 
+  SMSId getMessageId()const
+  {
+    SMSId id=0;
+    if(messageId.get())sscanf(messageId.get(),"%lld",&id);
+    return id;
+  }
 };
 
 struct DlElement{
@@ -570,7 +589,7 @@ class SmscCommand
     //__require__ ( cmd != 0 );
     if ( !cmd )
     {
-      __warning__("cmd is zero");
+      //__warning__("cmd is zero");
       return 0;
     }
     MutexGuard guard(cmd->mutex);
@@ -976,21 +995,23 @@ public:
       //case BIND_TRANSMITTER: reinterpret_cast<PduBindTRX*>(_pdu)->dump(log); break;
       //case BIND_TRANSMITTER_RESP: reinterpret_cast<PduBindTRXResp*>(_pdu)->dump(log); break;
     case SmppCommandSet::QUERY_SM:
-        _cmd->cmdid=QUERY;
-        _cmd->dta=new QuerySm(reinterpret_cast<PduQuerySm*>(pdu));
-        goto end_construct;
+        {
+          _cmd->cmdid=QUERY;
+          _cmd->dta=new QuerySm(reinterpret_cast<PduQuerySm*>(pdu));
+          goto end_construct;
+        }
     case SmppCommandSet::QUERY_SM_RESP:
-    {
+      {
         _cmd->cmdid=QUERY_RESP;
         PduQuerySmResp* resp=reinterpret_cast<PduQuerySmResp*>(pdu);
-        uint32_t id=0;
+        uint64_t id=0;
         if(resp->messageId.size())sscanf(resp->messageId.cstr(),"%lld",&id);
         time_t findate=0;
         if(resp->finalDate.size())findate=smppTime2CTime(resp->finalDate);
         _cmd->dta=new QuerySmResp(resp->get_header().get_commandStatus(),id,findate,resp->get_messageState(),resp->get_errorCode());
         _cmd->dialogId=resp->get_header().get_sequenceNumber();
         goto end_construct;
-    }
+      }
     case SmppCommandSet::DATA_SM:
       {
         _cmd->cmdid = SUBMIT;
@@ -1010,9 +1031,18 @@ public:
       //case UNBIND: reinterpret_cast<PduUnbind*>(_pdu)->dump(log); break;
       //case UNBIND_RESP: reinterpret_cast<PduUnbindResp*>(_pdu)->dump(log); break;
     case SmppCommandSet::REPLACE_SM:
+      {
         _cmd->cmdid=REPLACE;
         _cmd->dta=new ReplaceSm(reinterpret_cast<PduReplaceSm*>(pdu));
         goto end_construct;
+      }
+    case SmppCommandSet::REPLACE_SM_RESP:
+      {
+        _cmd->cmdid=REPLACE_RESP;
+        _cmd->status=pdu->get_commandStatus();
+        _cmd->dialogId=pdu->get_sequenceNumber();
+        goto end_construct;
+      }
     /*case SmppCommandSet::REPLACE_SM_RESP:
         _cmd->cmdid=REPLACE_RESP;
         _cmd->dta=(void*)pdu->get_
@@ -1022,6 +1052,11 @@ public:
       case SmppCommandSet::CANCEL_SM:
         _cmd->cmdid=CANCEL;
         _cmd->dta=new CancelSm(reinterpret_cast<PduCancelSm*>(pdu));
+        goto end_construct;
+      case SmppCommandSet::CANCEL_SM_RESP:
+        _cmd->cmdid=CANCEL_RESP;
+        _cmd->status=pdu->get_commandStatus();
+        _cmd->dialogId=pdu->get_sequenceNumber();
         goto end_construct;
       //case CANCEL_SM_RESP: return reinterpret_cast<PduBindRecieverResp*>(_pdu)->size();
       //case BIND_TRANCIEVER: reinterpret_cast<PduBindTRX*>(_pdu)->dump(log); break;
@@ -1325,6 +1360,16 @@ public:
         repl->header.set_commandStatus(makeSmppStatus((uint32_t)c.status));
         return reinterpret_cast<SmppHeader*>(repl.release());
       }
+    case QUERY:
+      {
+        auto_ptr<PduQuerySm> query(new PduQuerySm);
+        query->header.set_commandId(SmppCommandSet::QUERY_SM);
+        query->header.set_sequenceNumber(c.get_dialogId());
+        query->header.set_commandStatus(makeSmppStatus((uint32_t)c.status));
+        query->set_messageId(c.get_querySm().messageId.get());
+        query->set_source(Address2PduAddress(c.get_querySm().sourceAddr.get()));
+        return reinterpret_cast<SmppHeader*>(query.release());
+      }
     case QUERY_RESP:
       {
         auto_ptr<PduQuerySmResp> qresp(new PduQuerySmResp);
@@ -1340,13 +1385,32 @@ public:
         );
         return reinterpret_cast<SmppHeader*>(qresp.release());
       }
+    case CANCEL:
+      {
+        auto_ptr<PduCancelSm> cnc(new PduCancelSm);
+        cnc->header.set_commandId(SmppCommandSet::CANCEL_SM);
+        cnc->header.set_sequenceNumber(c.get_dialogId());
+        cnc->header.set_commandStatus(makeSmppStatus((uint32_t)c.status));
+
+        if(c.get_cancelSm().serviceType.get())
+          cnc->set_serviceType(c.get_cancelSm().serviceType.get());
+        if(c.get_cancelSm().messageId.get())
+          cnc->set_messageId(c.get_cancelSm().messageId.get());
+
+        if(c.get_cancelSm().sourceAddr.get())
+          cnc->set_source(Address2PduAddress(c.get_cancelSm().sourceAddr.get()));
+        if(c.get_cancelSm().destAddr.get())
+          cnc->set_dest(Address2PduAddress(c.get_cancelSm().destAddr.get()));
+
+        return reinterpret_cast<SmppHeader*>(cnc.release());
+      }
     case CANCEL_RESP:
       {
-        auto_ptr<PduReplaceSmResp> repl(new PduReplaceSmResp);
-        repl->header.set_commandId(SmppCommandSet::CANCEL_SM_RESP);
-        repl->header.set_sequenceNumber(c.get_dialogId());
-        repl->header.set_commandStatus(makeSmppStatus((uint32_t)c.status));
-        return reinterpret_cast<SmppHeader*>(repl.release());
+        auto_ptr<PduCancelSmResp> cresp(new PduCancelSmResp);
+        cresp->header.set_commandId(SmppCommandSet::CANCEL_SM_RESP);
+        cresp->header.set_sequenceNumber(c.get_dialogId());
+        cresp->header.set_commandStatus(makeSmppStatus((uint32_t)c.status));
+        return reinterpret_cast<SmppHeader*>(cresp.release());
       }
     case ENQUIRELINK:
       {
