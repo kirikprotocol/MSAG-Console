@@ -243,7 +243,7 @@ void MapIoTask::init(unsigned timeout)
     sleep(timeout);
     cnt++;
   }*/
-  err = MsgConn(MY_USER_ID,ETSIMAP_ID)
+  err = MsgConn(MY_USER_ID,ETSIMAP_ID);
   if ( err != MSG_OK || err != 1009 ) { __map_warn2__("MAP: Error at MsgConn, code 0x%hx",err); throw runtime_error("MsgConn error"); }
   __map_trace2__("MAP:: pause self and wait map initialization");
   sleep(timeout);
