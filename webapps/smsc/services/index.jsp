@@ -4,7 +4,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Services List";
+TITLE = "Services";
 switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
 	case Index.RESULT_DONE:

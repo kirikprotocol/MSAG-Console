@@ -3,6 +3,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.ServiceEditSme"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
+TITLE = "Edit service \"" + bean.getServiceId() +"\" parameters";
 switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
 	case ServiceEditSme.RESULT_DONE:
@@ -15,7 +16,6 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 		STATUS.append("<span class=CF00>Error</span>");
 		break;
 }
-TITLE = "Services List / Edit service \"" + bean.getServiceId() +"\"parameters";
 MENU0_SELECTION = "MENU0_SERVICES";
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>

@@ -4,6 +4,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.profiles.ProfilesAdd"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
+TITLE = "Add profile";
 switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
 	case ProfilesAdd.RESULT_DONE:

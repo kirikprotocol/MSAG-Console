@@ -3,7 +3,7 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.jsp.dl.dlFilter"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-    TITLE="Distribution lists: Filter";
+    TITLE="Distribution lists filter";
     MENU0_SELECTION = "MENU0_DL";
 
     int beanResult = bean.RESULT_OK;

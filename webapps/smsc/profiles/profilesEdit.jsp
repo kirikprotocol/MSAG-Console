@@ -4,6 +4,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.profiles.ProfilesEdit"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
+TITLE = "Edit profile";
 switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
 	case ProfilesEdit.RESULT_DONE:

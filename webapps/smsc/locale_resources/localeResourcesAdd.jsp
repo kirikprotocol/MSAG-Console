@@ -3,10 +3,10 @@
                    ru.novosoft.util.jsp.MultipartServletRequest"
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.localeResources.LocaleResourcesAdd"
 /><%
+TITLE = "Add Resource";
 FORM_URI = CPATH+"/upload";
 FORM_METHOD = "POST";
 FORM_ENCTYPE = "multipart/form-data";
-TITLE = "Resources";
 MENU0_SELECTION = "MENU0_LOCALE_RESOURCES";
 MultipartServletRequest multi = (MultipartServletRequest)request.getAttribute("multipart.request");
 if (multi != null)

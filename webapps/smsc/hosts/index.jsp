@@ -3,7 +3,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%@page import="ru.novosoft.smsc.jsp.smsc.hosts.Index"%>
 <%
-TITLE = "Hosts List";
+TITLE = "Hosts";
 switch (bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
 {
 	case Index.RESULT_OK:

@@ -3,7 +3,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.localeResources.LocaleResourcesView"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Resources";
+TITLE = "Resource view";
 switch(bean.process(appContext, errorMessages))
 {
 	case LocaleResourcesView.RESULT_DONE:
