@@ -19,14 +19,16 @@ void bindCorrectSmeTc()
 {
 	__reg_tc__("bindCorrectSme",
 		"Установление IP соединения с SC и регистрация");
-	/*
 	__reg_tc__("bindCorrectSme.bindReceiver",
 		"Регистрация ресивера с помощью bind_receiver pdu");
 	__reg_tc__("bindCorrectSme.bindTransmitter",
 		"Регистрация трансмиттера с помощью bind_transmitter pdu");
-	*/
 	__reg_tc__("bindCorrectSme.bindTransceiver",
 		"Регистрация трансивера с помощью bind_transceiver pdu");
+	__reg_tc__("bindCorrectSme.checkCommandStatus",
+		"В bind респонсе значение поля command_status равно ESME_ROK");
+	__reg_tc__("bindCorrectSme.checkInterfaceVersion",
+		"В bind респонсе значение поля sc_interface_version равно 0x34");
 }
 
 void bindIncorrectSmeTc()
@@ -41,11 +43,21 @@ void bindIncorrectSmeTc()
 		"Установка соединения с недоступным SC (неизвестный хост) завершается корректно");
 	__reg_tc__("bindIncorrectSme.invalidPort",
 		"Установка соединения с недоступным SC (неправильный порт) завершается корректно");
+	__reg_tc__("bindIncorrectSme.invalidSystemIdLength",
+		"Длина поля system_id в bind pdu больше максимально допустимой");
+	__reg_tc__("bindIncorrectSme.invalidPasswordLength",
+		"Длина поля password в bind pdu больше максимально допустимой");
+	__reg_tc__("bindIncorrectSme.invalidSystemTypeLength",
+		"Длина поля system_type в bind pdu больше максимально допустимой");
 }
 
 void unbindTc()
 {
 	__reg_tc__("unbind", "Завершение соединения с SC");
+	__reg_tc__("unbind.checkCommandStatus",
+		"В unbind респонсе значение поля command_status равно ESME_ROK");
+	__reg_tc__("unbind.checkSocketClose",
+		"После отправки unbind респонса SC закрывает соединение");
 }
 
 void submitSmTc()
@@ -387,6 +399,42 @@ void checkMissingPduTc()
 		"GenericNack pdu доставляются (не теряются) с фиксированной задержкой с момента отправки некорректных pdu");
 }
 
+void protocolError()
+{
+	__reg_tc__("protocolError", "Тестирование ошибочных ситуаций");
+	//invalidBind
+	__reg_tc__("protocolError.invalidBind",
+		"Отправка неправильной bind pdu (сразу после установления соединения с SC)");
+	__reg_tc__("protocolError.invalidBind.smallerSize1",
+		"Если размер pdu меньше 16 байт (размер хедера), SC закрывает соединение");
+	__reg_tc__("protocolError.invalidBind.smallerSize2",
+		"Если размер pdu меньше правильного, SC закрывает соединение");
+	__reg_tc__("protocolError.invalidBind.greaterSize",
+		"Если размер pdu больше правильного, SC закрывает соединение");
+	__reg_tc__("protocolError.invalidBind.invalidCommandId",
+		"Если задан command_id отличный от bind_receiver, bind_transmitter или bind_transceiver, SC отправляет generic_nack с command_status = ESME_RINVBNDSTS");
+	__reg_tc__("protocolError.invalidBind.nonExistentCommandId",
+		"Если задан несуществующий в спецификации command_id, SC отправляет generic_nack с command_status = ESME_RINVBNDSTS");
+	//corruptedPdu
+	__reg_tc__("protocolError.invalidPdu",
+		"Отправка неправильных pdu после установления соединения и успешного bind");
+	__reg_tc__("protocolError.invalidPdu.smallerSize1",
+		"Если размер pdu меньше 16 байт (размер хедера), SC закрывает соединение");
+	__reg_tc__("protocolError.invalidPdu.smallerSize2",
+		"Если размер pdu меньше правильного, SC закрывает соединение");
+	__reg_tc__("protocolError.invalidPdu.greaterSize",
+		"Если размер pdu больше правильного, SC закрывает соединение");
+	__reg_tc__("protocolError.invalidPdu.invalidCommandId",
+		"При отправке pdu разрешенных к отправке только со стороны SC, SC отправляет generic_nack с command_status = ESME_RINVCMDID");
+	__reg_tc__("protocolError.invalidPdu.nonExistentCommandId",
+		"Если задан несуществующий в спецификации command_id, SC отправляет generic_nack с command_status = ESME_RINVCMDID");
+	//other
+	__reg_tc__("protocolError.equalSeqNum",
+		"Отправка нескольких submit_sm с одинаковым sequence_number не влияет на логику обработки pdu");
+	__reg_tc__("protocolError.submitAfterUnbind",
+		"Реквесты отправленные после unbind игнорируются SC");
+}
+
 void notImplementedTc()
 {
 	__reg_tc__("notImplemented", "Не имплементированные тест кейсы");
@@ -422,6 +470,7 @@ void allProtocolTc()
 	//processIntermediateNotificationTc();
 	//other
 	checkMissingPduTc();
+	protocolError();
 	notImplementedTc();
 }
 

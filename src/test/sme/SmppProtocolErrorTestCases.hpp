@@ -1,0 +1,114 @@
+#ifndef TEST_SME_SMPP_PROTOCOL_ERROR_TEST_CASES
+#define TEST_SME_SMPP_PROTOCOL_ERROR_TEST_CASES
+
+#include "test/util/BaseTestCases.hpp"
+#include "test/smpp/TestSmppSession.hpp"
+#include "SmppFixture.hpp"
+#include "smpp/smpp.h"
+
+namespace smsc {
+namespace test {
+namespace sme {
+
+using log4cpp::Category;
+using smsc::sms::Address;
+using smsc::sme::SmeConfig;
+using smsc::sme::SmppPduEventListener;
+using smsc::test::smpp::TestSmppSession;
+using smsc::test::util::TestCase;
+using smsc::test::util::BaseTestCases;
+using smsc::test::util::CheckList;
+using smsc::core::synchronization::Event;
+using namespace smsc::smpp; //constants, pdu
+
+/**
+ * Базовый класс сценариев.
+ */
+class SmppProtocolErrorScenario : public SmppPduEventListener
+{
+protected:
+	TestCase* tc;
+	bool isOk;
+	TestSmppSession sess;
+	const SmeConfig cfg;
+	const Address smeAddr;
+	Event event;
+	bool complete;
+	CheckList* chkList;
+	
+public:
+	SmppProtocolErrorScenario(const SmeConfig& conf, const Address& addr,
+		CheckList* _chkList)
+	: tc(NULL), isOk(true), sess(this), cfg(conf), smeAddr(addr),
+		complete(false), chkList(_chkList) {}
+	virtual ~SmppProtocolErrorScenario() {}
+
+	void connect();
+	void close();
+	void sendPdu(SmppHeader* pdu);
+
+	bool checkComplete(int timeout);
+	void setComplete(bool val);
+	
+	void checkBindResp(PduBindTRXResp* pdu);
+	void checkUnbindResp(PduUnbindResp* pdu);
+
+	SmppHeader* createPdu(uint32_t commandId);
+	SmppHeader* setupBindPdu(PduBindTRX& pdu);
+	SmppHeader* setupUnbindPdu(PduUnbind& pdu);
+	SmppHeader* setupSubmitSmPdu(PduSubmitSm& pdu);
+	SmppHeader* setupDeliverySmRespPdu(PduDeliverySmResp& pdu, uint32_t seqNum);
+	SmppHeader* setupGenericNackPdu(PduGenericNack& pdu, uint32_t seqNum);
+	
+	virtual void execute() = NULL;
+	virtual void handleEvent(SmppHeader* pdu) = NULL;
+	virtual void handleError(int errorCode) = NULL;
+};
+
+/**
+ * Этот класс содержит все test cases необходимые для тестирования ошибочных
+ * ситуаций smpp протокола.
+ * @author bryz
+ */
+class SmppProtocolErrorTestCases : public BaseTestCases
+{
+public:
+	SmppProtocolErrorTestCases(const SmeConfig& conf, const Address& addr,
+		CheckList* chkList);
+	virtual ~SmppProtocolErrorTestCases() {}
+
+	/**
+	 * Установливление соединения с SC и отправка неправильной bind pdu.
+	 */
+	void invalidBindScenario(int num);
+
+	/**
+	 * Установливление соединения с SC, правильной bind pdu и отправка
+	 * неправильной pdu.
+	 */
+	void invalidPduScenario(int num);
+
+	/**
+	 * Отправка нескольких submit_sm с одинаковыми sequence_number.
+	 */
+	void equalSequenceNumbersScenario();
+
+	/**
+	 * Отправка submit_sm после unbind.
+	 */
+	void submitAfterUnbindScenario();
+
+protected:
+	const SmeConfig cfg;
+	const Address smeAddr;
+	CheckList* chkList;
+
+	virtual Category& getLog();
+};
+
+}
+}
+}
+
+#endif /* TEST_SME_SMPP_PROTOCOL_ERROR_TEST_CASES */
+
