@@ -346,6 +346,10 @@ void Archiver::archivate()
             if (bNeedArchivate == 'Y')
             {
                 archiveInsertStmt->checkErr(archiveInsertStmt->execute());
+            } 
+            else 
+            {
+                log.debug("Message was't archived !");
             }
             billing();
             storageDeleteStmt->checkErr(storageDeleteStmt->execute());
@@ -410,7 +414,7 @@ SMSId Archiver::getLastUsedId()
 }
 
 const char* Archiver::storageCleanSql = (const char*)
-"DELETE FROM SMS_MSG WHERE ID<:ID AND NOT ST=:ST";
+"DELETE FROM SMS_MSG WHERE ID<=:ID AND NOT ST=:ST";
 void Archiver::cleanStorage(SMSId beforeId)
     throw(StorageException)
 {
