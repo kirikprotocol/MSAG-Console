@@ -143,7 +143,7 @@ namespace smsc { namespace store
 
         ub4 count;
         
-        FullAddressValue    oa, da, dda;
+        FullAddressValue    oa, da;
     
     public:
         
@@ -157,8 +157,6 @@ namespace smsc { namespace store
             throw(StorageException);
         void bindDestinationAddress(Address& da)
             throw(StorageException);
-        void bindDealiasedDestinationAddress(Address& dda)
-            throw(StorageException);
         
         bool needReject();
     };
@@ -168,7 +166,7 @@ namespace smsc { namespace store
     static const char* sql;
     protected:
         
-        FullAddressValue    oa, da, dda;
+        FullAddressValue    oa, da;
 
         NeedOverwriteStatement(Connection* connection, const char* sql,
                                bool assign=true)
@@ -183,8 +181,6 @@ namespace smsc { namespace store
         void bindOriginatingAddress(Address& oa)
             throw(StorageException);
         void bindDestinationAddress(Address& da)
-            throw(StorageException);
-        void bindDealiasedDestinationAddress(Address& dda)
             throw(StorageException);
         
         void getId(SMSId& id)

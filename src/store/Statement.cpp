@@ -60,7 +60,7 @@ void Statement::bind(ub4 pos, ub2 type,
                      dvoid* placeholder, sb4 size, dvoid* indp)
     throw(StorageException)
 {
-    __trace2__("%d : BindByPos called, pos=%d", stmt, pos);
+    __trace2__("%p : BindByPos called, pos=%d", stmt, pos);
 
     OCIBind *bind;
     check(OCIBindByPos(stmt, &bind, errhp, pos, 
@@ -73,7 +73,7 @@ void Statement::bind(CONST text* name, sb4 name_len, ub2 type,
                      dvoid* placeholder, sb4 size, dvoid* indp)
     throw(StorageException)
 {
-    __trace2__("%d : BindByName called, name=%s", stmt, name);
+    __trace2__("%p : BindByName called, name=%s", stmt, name);
 
     OCIBind *bind;
     check(OCIBindByName(stmt, &bind, errhp, name, name_len,
@@ -86,7 +86,7 @@ void Statement::define(ub4 pos, ub2 type,
                        dvoid* placeholder, sb4 size, dvoid* indp)
     throw(StorageException)
 {
-    __trace2__("%d : DefineByPos called, pos=%d", stmt, pos);
+    __trace2__("%p : DefineByPos called, pos=%d", stmt, pos);
 
     OCIDefine*  define;
     check(OCIDefineByPos(stmt, &define, errhp, pos, 
@@ -96,7 +96,7 @@ void Statement::define(ub4 pos, ub2 type,
 
 sword Statement::execute(ub4 mode, ub4 iters, ub4 rowoff)
 {
-    __trace2__("%d : Executing ...", stmt);
+    __trace2__("%p : Executing ...", stmt);
 
     sword result = OCIStmtExecute(svchp, stmt, errhp, iters, rowoff,
                                   (CONST OCISnapshot *) NULL, 
@@ -192,14 +192,14 @@ SetIdStatement::SetIdStatement(Connection* connection, const char* sql,
 /* ----------------------- NeedRejectStatement ---------------------- */
 const char* NeedRejectStatement::sql = (const char*)
 "SELECT NVL(COUNT(*), 0) FROM SMS_MSG\
- WHERE ST=:ENROUTE AND MR=:MR AND OA=:OA AND DDA=:DDA";
+ WHERE ST=:ENROUTE AND MR=:MR AND OA=:OA AND DA=:DA";
 
 NeedRejectStatement::NeedRejectStatement(Connection* connection, 
                                          bool assign)
     throw(StorageException)
         : Statement(connection, NeedRejectStatement::sql, assign)
 {
-    __trace2__("%d : NeedRejectStatement creating ...", stmt);
+    __trace2__("%p : NeedRejectStatement creating ...", stmt);
 
     bind(1 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
          (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
@@ -220,14 +220,8 @@ void NeedRejectStatement::bindOriginatingAddress(Address& address)
 void NeedRejectStatement::bindDestinationAddress(Address& address)
     throw(StorageException)
 {
-    /*convertAddressToString(address, da);
-    bind(3 , SQLT_STR, (dvoid *)(da), (sb4) sizeof(da));*/
-}
-void NeedRejectStatement::bindDealiasedDestinationAddress(Address& address)
-    throw(StorageException)
-{
-    convertAddressToString(address, dda);
-    bind(4 , SQLT_STR, (dvoid *)(dda), (sb4) sizeof(dda));
+    convertAddressToString(address, da);
+    bind(4 , SQLT_STR, (dvoid *)(da), (sb4) sizeof(da));
 }
 
 bool NeedRejectStatement::needReject()
@@ -238,13 +232,13 @@ bool NeedRejectStatement::needReject()
 /* ----------------------- NeedOverwriteStatement ---------------------- */
 const char* NeedOverwriteStatement::sql = (const char*)
 "SELECT ID FROM SMS_MSG WHERE ST=:ENROUTE\
- AND OA=:OA AND DDA=:DDA AND SVC_TYPE IS NULL";
+ AND OA=:OA AND DA=:DA AND SVC_TYPE IS NULL";
 NeedOverwriteStatement::NeedOverwriteStatement(Connection* connection, 
                                                bool assign)
     throw(StorageException)
         : IdStatement(connection, NeedOverwriteStatement::sql, assign)
 {
-    __trace2__("%d : NeedOverwriteStatement creating ...", stmt);
+    __trace2__("%p : NeedOverwriteStatement creating ...", stmt);
 
     bind(1 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
          (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
@@ -256,7 +250,7 @@ NeedOverwriteStatement::NeedOverwriteStatement(Connection* connection,
     throw(StorageException)
         : IdStatement(connection, sql, assign)
 {
-    __trace2__("%d : NeedOverwriteStatement creating ...", stmt);
+    __trace2__("%p : NeedOverwriteStatement creating ...", stmt);
 
     bind(1 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
          (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
@@ -272,14 +266,8 @@ void NeedOverwriteStatement::bindOriginatingAddress(Address& address)
 void NeedOverwriteStatement::bindDestinationAddress(Address& address)
     throw(StorageException)
 {
-    /*convertAddressToString(address, da);
-    bind(2 , SQLT_STR, (dvoid *)(da), (sb4) sizeof(da));*/
-}
-void NeedOverwriteStatement::bindDealiasedDestinationAddress(Address& address)
-    throw(StorageException)
-{
-    convertAddressToString(address, dda);
-    bind(3 , SQLT_STR, (dvoid *)(dda), (sb4) sizeof(dda));
+    convertAddressToString(address, da);
+    bind(3 , SQLT_STR, (dvoid *)(da), (sb4) sizeof(da));
 }
 
 void NeedOverwriteStatement::getId(SMSId& id)
@@ -290,14 +278,14 @@ void NeedOverwriteStatement::getId(SMSId& id)
 
 const char* NeedOverwriteSvcStatement::sql = (const char*)
 "SELECT ID FROM SMS_MSG WHERE ST=:ENROUTE\
- AND OA=:OA AND DDA=:DDA AND SVC_TYPE=:SVC_TYPE";
+ AND OA=:OA AND DA=:DA AND SVC_TYPE=:SVC_TYPE";
 NeedOverwriteSvcStatement::NeedOverwriteSvcStatement(Connection* connection, 
                                                      bool assign=true)
     throw(StorageException)
         : NeedOverwriteStatement(connection, 
                                  NeedOverwriteSvcStatement::sql, assign)
 {
-    __trace2__("%d : NeedOverwriteSvcStatement creating ...", stmt);
+    __trace2__("%p : NeedOverwriteSvcStatement creating ...", stmt);
 }
 void NeedOverwriteSvcStatement::bindEServiceType(dvoid* type, sb4 size)
     throw(StorageException)
@@ -321,7 +309,7 @@ OverwriteStatement::OverwriteStatement(Connection* connection, bool assign)
     throw(StorageException)
         : IdStatement(connection, OverwriteStatement::sql, assign)
 {
-    __trace2__("%d : OverwriteStatement creating ...", stmt);
+    __trace2__("%p : OverwriteStatement creating ...", stmt);
 }
 void OverwriteStatement::bindOldId(SMSId id)
     throw(StorageException)
@@ -424,7 +412,7 @@ StoreStatement::StoreStatement(Connection* connection, bool assign)
     throw(StorageException)
         : IdStatement(connection, StoreStatement::sql, assign)
 {
-    __trace2__("%d : StoreStatement creating ...", stmt);
+    __trace2__("%p : StoreStatement creating ...", stmt);
 
     bind(2 , SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE), 
          (sb4) sizeof(SMSC_BYTE_ENROUTE_STATE));
@@ -529,7 +517,7 @@ RetrieveStatement::RetrieveStatement(Connection* connection, bool assign)
     throw(StorageException)
         : IdStatement(connection, RetrieveStatement::sql, assign)
 {
-    __trace2__("%d : RetrieveStatement creating ...", stmt);
+    __trace2__("%p : RetrieveStatement creating ...", stmt);
 }
 
 void RetrieveStatement::bindId(SMSId id)
@@ -707,7 +695,7 @@ RetrieveBodyStatement::RetrieveBodyStatement(Connection* connection, bool assign
     throw(StorageException)
         : IdStatement(connection, RetrieveBodyStatement::sql, assign)
 {
-    __trace2__("%d : RetrieveBodyStatement creating ...", stmt);
+    __trace2__("%p : RetrieveBodyStatement creating ...", stmt);
 
     bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char), 
          SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE), 
@@ -766,7 +754,7 @@ ReplaceStatement::ReplaceStatement(Connection* connection, bool assign)
     throw(StorageException)
         : IdStatement(connection, ReplaceStatement::sql, assign) 
 {
-    __trace2__("%d : ReplaceStatement creating ...", stmt);
+    __trace2__("%p : ReplaceStatement creating ...", stmt);
 
     bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char), 
          SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE), 
@@ -777,7 +765,7 @@ ReplaceStatement::ReplaceStatement(Connection* connection, const char* sql,
     throw(StorageException) 
         : IdStatement(connection, sql, assign) 
 {
-    __trace2__("%d : ReplaceStatement creating ...", stmt);
+    __trace2__("%p : ReplaceStatement creating ...", stmt);
 
     bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char), 
          SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE), 
@@ -874,7 +862,7 @@ ToEnrouteStatement::ToEnrouteStatement(Connection* connection, bool assign)
     throw(StorageException)
         : IdStatement(connection, ToEnrouteStatement::sql, assign)
 {
-    __trace2__("%d : ToEnrouteStatement creating ...", stmt);
+    __trace2__("%p : ToEnrouteStatement creating ...", stmt);
 
     bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char),
          SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
@@ -926,7 +914,7 @@ ToDeliveredStatement::ToDeliveredStatement(Connection* connection, bool assign)
     throw(StorageException)
         : IdStatement(connection, ToDeliveredStatement::sql, assign)
 {
-    __trace2__("%d : ToDeliveredStatement creating ...", stmt);
+    __trace2__("%p : ToDeliveredStatement creating ...", stmt);
 
     bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char),
          SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
@@ -972,7 +960,7 @@ ToUndeliverableStatement::ToUndeliverableStatement(
         throw(StorageException)
             : IdStatement(connection, ToUndeliverableStatement::sql, assign)
 {
-    __trace2__("%d : ToUndeliverableStatement creating ...", stmt);
+    __trace2__("%p : ToUndeliverableStatement creating ...", stmt);
 
     bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char),
          SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
@@ -1021,7 +1009,7 @@ ToExpiredStatement::ToExpiredStatement(Connection* connection, bool assign)
         throw(StorageException)
             : IdStatement(connection, ToExpiredStatement::sql, assign)
 {
-    __trace2__("%d : ToExpiredStatement creating ...", stmt);
+    __trace2__("%p : ToExpiredStatement creating ...", stmt);
 
     bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char),
          SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
@@ -1051,7 +1039,7 @@ ToDeletedStatement::ToDeletedStatement(Connection* connection, bool assign)
     throw(StorageException)
         : IdStatement(connection, ToDeletedStatement::sql, assign)
 {
-    __trace2__("%d : ToDeletedStatement creating ...", stmt);
+    __trace2__("%p : ToDeletedStatement creating ...", stmt);
 
     bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char),
          SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
@@ -1081,7 +1069,7 @@ ReadyByNextTimeStatement::ReadyByNextTimeStatement(Connection* connection,
     bool assign) throw(StorageException)
         : IdStatement(connection, ReadyByNextTimeStatement::sql, assign)
 {
-    __trace2__("%d : ReadyByNextTimeStatement creating ...", stmt);
+    __trace2__("%p : ReadyByNextTimeStatement creating ...", stmt);
 
     bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char),
          SQLT_UIN, (dvoid *) &(SMSC_BYTE_ENROUTE_STATE),
@@ -1103,7 +1091,7 @@ MinNextTimeStatement::MinNextTimeStatement(Connection* connection,
     bool assign) throw(StorageException)
         : Statement(connection, MinNextTimeStatement::sql, assign)
 {
-    __trace2__("%d : MinNextTimeStatement creating ...", stmt);
+    __trace2__("%p : MinNextTimeStatement creating ...", stmt);
 
     indNextTime = OCI_IND_NOTNULL;
     bind((CONST text *)"ENROUTE", (sb4) 7*sizeof(char),
@@ -1153,7 +1141,6 @@ CancelIdsStatement::CancelIdsStatement(Connection* connection,
     define(1, SQLT_BIN, (dvoid *) &(smsId), (sb4) sizeof(smsId)); 
 }
 
-// ??? DA or DDA ???
 const char* DeliveryIdsStatement::sql = (const char*)
 "SELECT ID FROM SMS_MSG WHERE ST=:ENROUTE AND ATTEMPTS>0 AND DDA=:DA"; 
 DeliveryIdsStatement::DeliveryIdsStatement(Connection* connection, 
@@ -1195,7 +1182,7 @@ SetBodyStatement::SetBodyStatement(Connection* connection, bool assign)
     throw(StorageException) 
         : BodyStatement(connection, SetBodyStatement::sql, assign)
 {
-    __trace2__("%d : SetBodyStatement creating ...", stmt);
+    __trace2__("%p : SetBodyStatement creating ...", stmt);
 
     bind((CONST text *)"BODY", (sb4) 4*sizeof(char),
          SQLT_BLOB, (dvoid *) &locator, (sb4) 0, &indBody);
@@ -1204,7 +1191,7 @@ SetBodyStatement::SetBodyStatement(Connection* connection, bool assign)
 void SetBodyStatement::setBody(Body& body)
     throw(StorageException)
 {
-    __trace2__("%d : Writing to BLOB ...", stmt);
+    __trace2__("%p : Writing to BLOB ...", stmt);
 
     check(execute(OCI_DEFAULT, 1, 0));
 
@@ -1241,7 +1228,7 @@ GetBodyStatement::GetBodyStatement(Connection* connection, bool assign)
     throw(StorageException) 
         : BodyStatement(connection, GetBodyStatement::sql, assign)
 {
-    __trace2__("%d : GetBodyStatement creating ...", stmt);
+    __trace2__("%p : GetBodyStatement creating ...", stmt);
 
     define(1, SQLT_BLOB, (dvoid *) &locator, (sb4) 0, &indBody);
 }
@@ -1249,7 +1236,7 @@ GetBodyStatement::GetBodyStatement(Connection* connection, bool assign)
 bool GetBodyStatement::getBody(Body& body)
     throw(StorageException)
 {
-    __trace2__("%d : Reading from BLOB ...", stmt);
+    __trace2__("%p : Reading from BLOB ...", stmt);
 
     check(execute(OCI_DEFAULT, 1, 0));
 
@@ -1303,7 +1290,7 @@ DestroyBodyStatement::DestroyBodyStatement(Connection* connection,
     throw(StorageException)
         : BodyStatement(connection, DestroyBodyStatement::sql, assign)
 {
-    __trace2__("%d : DestroyBodyStatement creating ...", stmt);
+    __trace2__("%p : DestroyBodyStatement creating ...", stmt);
 }
 bool DestroyBodyStatement::destroyBody()
     throw(StorageException)
