@@ -18,6 +18,7 @@ using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
 
 static const char* shit = "~ !@#$%^&*()-_=+\\|{[}];:'\",<.>?";
+static const char* noRights = "Failed: Not enough rights to execute specified command";
 
 #define __m__(mask) v.push_back(mask)
 

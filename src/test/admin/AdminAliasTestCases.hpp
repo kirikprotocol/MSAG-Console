@@ -17,9 +17,11 @@ using smsc::test::util::CheckList;
  */
 class AdminAliasTestCases : public AdminBaseTestCases
 {
+	bool hasRights;
+
 public:
-	AdminAliasTestCases(AdminFixture* fixture)
-		: AdminBaseTestCases(fixture) {}
+	AdminAliasTestCases(AdminFixture* fixture, bool _hasRights)
+		: AdminBaseTestCases(fixture), hasRights(_hasRights) {}
 
 	virtual ~AdminAliasTestCases() {}
 

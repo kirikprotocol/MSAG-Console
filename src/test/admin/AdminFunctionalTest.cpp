@@ -6,12 +6,10 @@ using namespace smsc::test::admin;
 
 class AdminFunctionalTest
 {
-	AdminBaseTestCases baseTc;
-	AdminAliasTestCases aliasTc;
+	AdminFixture* fixture;
 
 public:
-	AdminFunctionalTest(AdminFixture* fixture)
-		: baseTc(fixture), aliasTc(fixture) {}
+	AdminFunctionalTest(AdminFixture* _fixture) : fixture(_fixture) {}
 	~AdminFunctionalTest() {}
 	void executeTest();
 };
@@ -19,13 +17,15 @@ public:
 void AdminFunctionalTest::executeTest()
 {
 	//base
+	AdminBaseTestCases baseTc(fixture);
 	//baseTc.loginCommands();
 	//baseTc.invalidCommands();
 	//baseTc.executeTestCases();
 	//alias
+	AdminAliasTestCases aliasTc(fixture, true);
 	aliasTc.loginCommands();
-	aliasTc.incorrectCommands(); //не мен€ют конфигурации
-	//aliasTc.correctCommands();
+	//aliasTc.incorrectCommands(); //не мен€ют конфигурации
+	aliasTc.correctCommands();
 	//aliasTc.executeTestCases();
 	aliasTc.apply();
 }
