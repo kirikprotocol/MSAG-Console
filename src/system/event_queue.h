@@ -63,6 +63,7 @@ class EventQueue
     MsgIdType msgId;
     StateType state;
     CmdRecord* cmds;
+    CommandId lastCommand;
     int priority;
     Locker() : locked(false), cmds(0) {}
     ~Locker()
@@ -75,8 +76,14 @@ class EventQueue
       }
     }
 
-    void push_back(CmdRecord* cmd)
+    void push_back(const CommandType& c)
     {
+      if(lastCommand==FORWARD && c->cmdid==FORWARD)
+      {
+        __trace__("Skipping forward");
+        return;
+      }
+      CmdRecord* cmd=new CmdRecord(c);
       CmdRecord** iter = &cmds;
       for ( ; *iter != 0; iter = &(*iter)->next );
       *iter = cmd;
@@ -255,7 +262,7 @@ public:
       unlocked.insert(LockerPair(weight,locker));
     }
     locker->msgId = msgId;
-    locker->push_back(new CmdRecord(command));
+    locker->push_back(command);
     //!__trace2__("enqueue: last unlocked=%p",last_unlocked);
     event.Signal();
   }
@@ -288,6 +295,7 @@ public:
               unlocked.erase(iter);
 
               locker->locked = true;
+              locker->lastCommand = result.command->cmdid;
               result.msgId = locker->msgId;
               result.state = locker->state;
               return;
@@ -323,9 +331,11 @@ public:
     if ( !locker ) throw runtime_error("incorrect msgid");
     if ( !locker->locked ) throw runtime_error("locker is not locked, can't change state");
     locker->state = state;
+    //locker->lastCommand=UNKNOWN;
 
     // разблокируем запись и добавляем в список активных
     locker->locked = false;
+
 
     if ( StateChecker::stateIsFinal(state) )
       ++counter;

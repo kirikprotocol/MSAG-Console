@@ -25,6 +25,7 @@ public:
     smsc::store::IdIterator *it=NULL;
     Array<SMSId> ids;
     SMSId id;
+    Event e;
     //int cnt;
     while(!isStopping)
     {
@@ -43,7 +44,8 @@ public:
           {
             SmscCommand cmd=SmscCommand::makeForward();
             queue.enqueue(ids[i],cmd);
-            thr_yield();
+            //thr_yield();
+            e.Wait(10);
           }
           ids.Clean();
         }
