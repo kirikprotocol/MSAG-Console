@@ -12,7 +12,6 @@
 #include <util/signal.hpp>
 #include <util/xml/init.h>
 #include <util/findConfigFile.h>
-#include <resourcemanager/ResourceManager.hpp>
 #include <smppgw/smscsignalhandlers.h>
 #include <core/threads/Thread.hpp>
 #include "license/check/license.hpp"
@@ -53,8 +52,6 @@ int main(int argc,char* argv[])
 
     cfgs.licconfig=&lic;
     smsc_log_info(logger,  "Starting up %s", getStrVersion());
-    smsc::resourcemanager::ResourceManager::init(cfgs.cfgman->getString("core.locales"), cfgs.cfgman->getString("core.default_locale"));
-    smsc_log_info(logger,  "Locale resources loaded" );
     smsc::util::config::smeman::SmeManConfig smemancfg;
     smemancfg.load(findConfigFile("sme.xml"));
     cfgs.smemanconfig=&smemancfg;

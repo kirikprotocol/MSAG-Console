@@ -10,7 +10,6 @@
 #include "logger/Logger.h"
 #include "util/regexp/RegExp.hpp"
 #include "util/config/ConfigView.h"
-#include "resourcemanager/ResourceManager.hpp"
 #include <typeinfo>
 #include "gwsme.hpp"
 #include "smppgw/billing/bill.hpp"
@@ -376,30 +375,12 @@ void Smsc::init(const SmscConfigs& cfg)
   {
     smsc_log_info(log, "Starting statemachines" );
     int cnt=cfg.cfgman->getInt("core.state_machines_count");
-    time_t maxValidTime=cfg.cfgman->getInt("sms.max_valid_time");
     for(int i=0;i<cnt;i++)
     {
       StateMachine *m=new StateMachine(eventqueue,this);
-      m->maxValidTime=maxValidTime;
-      Address addr(cfg.cfgman->getString("core.service_center_address"));
-      m->scAddress=addr;
       tp.startTask(m);
     }
     smsc_log_info(log, "Statemachines started" );
-  }
-
-  smsc::system::RescheduleCalculator::InitDefault(cfg.cfgman->getString("core.reschedule_table"));
-  {
-    using smsc::util::config::CStrSet;
-    CStrSet *params=cfg.cfgman->getChildStrParamNames("core.reshedule table");
-    CStrSet::iterator i=params->begin();
-    for(;i!=params->end();i++)
-    {
-      string pn="core.reshedule table.";
-      pn+=*i;
-      smsc::system::RescheduleCalculator::AddToTable(i->c_str(),cfg.cfgman->getString(pn.c_str()));
-    }
-    delete params;
   }
 
   {
@@ -430,23 +411,12 @@ void Smsc::init(const SmscConfigs& cfg)
   tp2.startTask(statMan);
   smsc_log_info(log, "Statistics manager started" );
 
-  /*
-  smsc::resourcemanager::ResourceManager::init
-  (
-    cfg.cfgman->getString("core.locales"),
-    cfg.cfgman->getString("core.default_locale")
-  );
-  */
-  smsc_log_info(log, "Resource manager configured" );
-
 
   smscHost=cfg.cfgman->getString("smpp.host");
   smscPort=cfg.cfgman->getInt("smpp.port");
   ssockman.setSmppSocketTimeout(cfg.cfgman->getInt("smpp.readTimeout"));
   ssockman.setInactivityTime(cfg.cfgman->getInt("smpp.inactivityTime"));
   ssockman.setInactivityTimeOut(cfg.cfgman->getInt("smpp.inactivityTimeOut"));
-
-  smsc_log_info(log, "MR cache loaded" );
 
   {
     smsc::system::performance::PerformanceServer *perfSrv=new smsc::system::performance::PerformanceServer
@@ -458,22 +428,6 @@ void Smsc::init(const SmscConfigs& cfg)
     tp2.startTask(perfSrv);
     smsc_log_info(log, "Performance server started" );
   }
-
-  {
-    Address addr(cfg.cfgman->getString("core.service_center_address"));
-    AddressValue addrval;
-    addr.getValue( addrval );
-    scAddr = addrval;
-  }
-
-  {
-    Address addr(cfg.cfgman->getString("core.ussd_center_address"));
-    AddressValue addrval;
-    addr.getValue( addrval );
-    ussdCenterAddr = addrval;
-  }
-
-  ussdSSN=cfg.cfgman->getInt("core.ussd_ssn");
 
   eventQueueLimit=1000;
   try{
