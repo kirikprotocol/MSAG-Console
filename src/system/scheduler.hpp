@@ -44,6 +44,11 @@ public:
 
   int getSmeCount(SmeIndex idx,time_t time);
 
+  int getSmsCount()
+  {
+    return timeLine.size();
+  }
+
 protected:
   EventQueue &queue;
   EventMonitor mon;

@@ -33,7 +33,7 @@ int StatusSme::Execute()
     if(cmd->cmdid==smsc::smeman::SUBMIT_RESP)continue;
     if(cmd->cmdid!=smsc::smeman::DELIVERY)
     {
-      __trace2__("AbonentInfoSme: incorrect command submitted:%d",cmd->cmdid);
+      __trace2__("StatusSme: incorrect command submitted:%d",cmd->cmdid);
       log.warn("Incorrect command received");
       continue;
     }
@@ -45,10 +45,20 @@ int StatusSme::Execute()
     putIncomingCommand(resp);
 
     getSmsText(sms,body,sizeof(body));
+    string request=body;
+    string answer;
 
-    //process
-    answer="test:";
-    answer+=body;
+    if(request=="scheduler")
+    {
+      char buf[32];
+      sprintf(buf,"%d",smsc->getSchedulesSmsCount());
+      answer=buf;
+      answer+=" sms in scheduler";
+    }else
+    {
+      answer="unknown command";
+    }
+
 
     time_t t=time(NULL)+60;
     s.setValidTime(t);
