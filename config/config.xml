@@ -21,7 +21,6 @@
 	    <section name="Connections">
 		<param name="max" type="int">5</param>
 		<param name="init" type="int">2</param>
-		<param name="queue" type="int">250</param>
 	    </section>
 	</section>
 	<section name="map">
