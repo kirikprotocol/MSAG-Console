@@ -182,7 +182,11 @@ public class RouteAlterCommand extends RouteGenCommand
             if (setArc) newRoute.setArchiving(arc);
             if (setAllow) newRoute.setEnabling(allow);
             if (setId) newRoute.setServiceId(serviceid);
-            if (setPri) newRoute.setPriority(priority);
+            if (setPri) {
+                if (priority < 0 || priority > 32000)
+                    throw new Exception("Priority value should be between 0 and 32000");
+                newRoute.setPriority(priority);
+            }
 
             list.remove(oldRoute.getName());
             list.put(newRoute);

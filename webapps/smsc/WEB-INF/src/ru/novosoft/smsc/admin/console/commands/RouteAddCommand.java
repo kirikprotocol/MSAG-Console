@@ -102,6 +102,8 @@ public class RouteAddCommand extends RouteGenCommand
 
             smscRoute = new Route(route, priority, allow, bill, arc,
                                   serviceid, srcList, dstList);
+            if (priority < 0 || priority > 32000)
+                throw new Exception("Priority value should be between 0 and 32000");
             list.put(smscRoute);
         }
         catch (Exception e) {
