@@ -14,7 +14,7 @@ my @OUT_FIELDS;
 {value=>''},                                                                               #8
 {value=>''},                                                                               #9
 {value=>''},                                                                               #10
-{value=>''},                                                                               #11
+{field=>'DD_TYPE',maxwidth=>2},                                                            #11
 {value=>''},                                                                               #12
 {value=>''},                                                                               #13
 {value=>''},                                                                               #14
@@ -30,7 +30,7 @@ my @OUT_FIELDS;
 {value=>''},                                                                               #23
 {value=>''},                                                                               #24
 {value=>''},                                                                               #25
-{value=>''},                                                                               #26
+{field=>'OTHER_ADDR',maxwidth=>24},                                                        #26
 {value=>''},                                                                               #27
 {value=>''},                                                                               #28
 {value=>''},                                                                               #29

@@ -380,6 +380,18 @@ sub process{
     $outfields->{PAYER_MSC}=$infields->{SRC_MSC};
 #    $outfields->{OTHER_ADDR}=$infields->{DST_ADDR};
     $outfields->{OTHER_ADDR}=conv_addr_other($infields->{DST_ADDR});
+
+    if($infields->{DST_ADDR}=~/^\.1\.1\./)
+    {
+      $outfields->{DD_TYPE}='05';
+    }elsif($infields->{DST_ADDR}=~/^\.0\.1\.8/)
+    {
+      $outfields->{DD_TYPE}='06';
+    }else
+    {
+      $outfields->{DD_TYPE}='';
+    }
+
     $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT});
     outrow($out,$outfields);
     if($infields->{RECORD_TYPE}==1) # diverted sms
