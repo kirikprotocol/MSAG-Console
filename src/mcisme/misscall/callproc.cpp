@@ -59,8 +59,11 @@ void MissedCallProcessor::fireMissedCallEvent(MissedCallEvent& event)
 {
   if (listener)
   {
-    MutexGuard g(lock);
-    if (listener) listener->missed(event);
+    {
+      MutexGuard g(lock);
+      if (listener) listener->missed(event);
+    }
+    smsc_log_debug(missedCallProcessorLogger, "was event: %s->%s",event.from.toString().c_str(),event.to.toString().c_str());
   }
 }
 void MissedCallProcessor::stop()
