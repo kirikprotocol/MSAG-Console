@@ -34,4 +34,5 @@ group by stat.statistic#, nam.name having sum(stat.value) > 0
 order by stat.statistic#
 
 --Проверка billing и archived атрибутов
-select oa, da, arc, br from sms_msg group by oa, da, arc, br order by oa, da
+select oa, da, arc, br, route_id, svc_id, prty, src_sme_id, dst_sme_id from sms_msg
+group by oa, da, arc, br, route_id, svc_id, prty, src_sme_id, dst_sme_id order by oa, da
