@@ -10,6 +10,9 @@ package ru.novosoft.smsc.admin.console.commands;
 import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
+import ru.novosoft.smsc.admin.dl.Principal;
+import ru.novosoft.smsc.admin.dl.exceptions.PrincipalAlreadyExistsException;
+import ru.novosoft.smsc.admin.dl.exceptions.PrincipalNotExistsException;
 
 public class PrincipalAlterCommand implements Command
 {
@@ -32,10 +35,27 @@ public class PrincipalAlterCommand implements Command
 
     public void process(CommandContext ctx)
     {
-        // todo implement alter principal in DistributionListAdmin
-        DistributionListAdmin admin = ctx.getSmsc().getDistributionListAdmin();
-        ctx.setMessage("Not implemented yet");
-        ctx.setStatus(ctx.CMD_PROCESS_ERROR);
+        if (!setMaxLists && !setMaxElements) {
+            ctx.setMessage("expecting 'numlist' and/or 'numelem' option. "+
+                           "Syntax: alter principal <principal_address> "+
+                           "[numlist <number>] [numelem <number>]");
+            ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
+        } else {
+            String out = "Principal for '"+address+"'";
+            try {
+                DistributionListAdmin admin = ctx.getSmsc().getDistributionListAdmin();
+                admin.alterPrincipal(new Principal(address, maxLists, maxElements),
+                                     setMaxLists, setMaxElements);
+                ctx.setMessage(out+" altered");
+                ctx.setStatus(ctx.CMD_OK);
+            } catch (PrincipalNotExistsException e) {
+                ctx.setMessage(out+" not exists");
+                ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+            } catch (Exception e) {
+                ctx.setMessage("Couldn't alter "+out+". Cause: "+e.getMessage());
+                ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+            }
+        }
     }
 
     public String getId() {
