@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+
+  <section name="DataSource">
+    <param name="connections" type="int">5</param>
+    <param name="dbInstance" type="string">SMSC</param>
+    <param name="dbUserName" type="string">smsc_XXX</param>
+    <param name="dbUserPassword" type="string">smsc_XXX</param>
+    <param name="type" type="string">OCI</param>
+  </section>
+
+  <section name="StartupLoader">
+    <section name="DataSourceDrivers">
+      <section name="OCIDataSourceDriver">
+        <param name="loadup" type="string">lib/libdb_oci.so</param>
+        <param name="type" type="string">OCI</param>
+      </section>
+    </section>
+  </section>
+
+
+  <section name="admin">
+    <param name="host" type="string">smsc</param>
+    <param name="port" type="int">4050</param>
+  </section>
+
+  <section name="core">
+    <param name="eventQueueLimit" type="int">1000</param>
+    <param name="protocol_id" type="int">34</param>
+    <param name="state_machines_count" type="int">2</param>
+
+    <section name="performance">
+      <param name="host" type="string">smsc</param>
+      <param name="port" type="int">4153</param>
+    </section>
+
+  </section>
+
+  <section name="billing">
+    <param name="module" type="string">../libsimplebilling.so</param>
+  </section>
+
+  <section name="smpp">
+    <param name="host" type="string">smsc</param>
+    <param name="inactivityTime" type="int">30</param>
+    <param name="inactivityTimeOut" type="int">30</param>
+    <param name="port" type="int">4002</param>
+    <param name="readTimeout" type="int">60</param>
+  </section>
+
+  <section name="smsc-connections">
+    <section name="smsc1">
+      <param name="host" type="string">smsc</param>
+      <param name="port" type="int">9001</param>
+      <param name="systemId" type="string">smppgw1</param>
+      <param name="password" type="string">smppgw1</param>
+      <param name="responseTimeout" type="int">20</param>
+      <param name="uniqueMsgIdPrefix" type="int">1</param>
+    </section>
+  </section>
+
+  <section name="trafficControl">
+    <param name="maxSmsPerSecond" type="int">1000</param>
+  </section>
+
+</config>
