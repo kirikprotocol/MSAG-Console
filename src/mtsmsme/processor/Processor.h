@@ -48,7 +48,7 @@ namespace smsc { namespace mtsmsme { namespace processor
          * @param   request     request to send
          * @return  true if request was sent, false otherwise 
          */
-        virtual bool send(const Request* request) = 0;
+        virtual bool send(Request* request) = 0;
 
         virtual ~RequestSender() {};
     
