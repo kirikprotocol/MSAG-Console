@@ -22,7 +22,7 @@ typedef smsc::core::buffers::Array<SmscCommand> MapIOQueue;
 
 class MapProxy:public SmeProxy{
 public:
-  MapProxy() {}
+  MapProxy() : seq(0) {}
   virtual ~MapProxy(){}
   virtual void close(){}
   void notifyOutThread(){}

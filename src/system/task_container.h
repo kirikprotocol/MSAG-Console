@@ -100,6 +100,9 @@ public:
     task->next = hash[hashcode];
     hash[hashcode] = task;
     task->timeout = time(NULL)+preferred_timeout;
+    __trace2__("TASK::createTask 0x%x:0x%x timeout 0x%x",
+               t->sequenceNumber,t->proxy_id,
+               preferred_timeout);
     return true;
   }
 
