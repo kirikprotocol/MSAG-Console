@@ -1,7 +1,9 @@
 #ifndef TEST_UTIL_BASE_TEST_CASES
 #define TEST_UTIL_BASE_TEST_CASES
 
-#include "test/util/Util.hpp"
+#include "AutoSync.hpp"
+#include "CheckList.hpp"
+#include "Util.hpp"
 #include "util/Logger.h"
 #include "core/threads/Thread.hpp"
 #include <iostream>
@@ -13,7 +15,54 @@ namespace util {
 
 using namespace std;
 using log4cpp::Category;
-using smsc::test::util::TCResult;
+
+typedef auto_sync<TestCase> SyncTestCase;
+
+//макросы для работы с тест кейсами
+#define __decl_tc__ \
+	TestCase* tc = NULL; \
+	bool isOk = true;
+
+#define __tc__(tcId) \
+	if (chkList) { tc = chkList->getTc(tcId); }
+
+#define __tc_ok__ \
+	if (chkList) { \
+		__require__(tc); \
+		__trace2__("%s: ok", tc->id.c_str()); \
+		SyncTestCase _tc(tc); \
+		_tc->correct++; \
+	}
+
+#define __tc_ok_cond__ \
+	if (chkList && isOk) { \
+		__require__(tc); \
+		__trace2__("%s: ok", tc->id.c_str()); \
+		SyncTestCase _tc(tc); \
+		_tc->correct++; \
+	}
+
+#define __tc_fail__(errCode) \
+	if (chkList) { \
+		__require__(tc); \
+		__trace2__("%s: err = %d", tc->id.c_str(), errCode); \
+		isOk = false; \
+		SyncTestCase _tc(tc); \
+		_tc->incorrect++; \
+		_tc->errCodes.insert(errCode); \
+	}
+
+#define __tc_fail2__(errList) \
+	if (chkList && errList.size()) { \
+		__require__(tc); \
+		ostringstream s; \
+		copy(errList.begin(), errList.end(), ostream_iterator<int>(s, ", ")); \
+		__trace2__("%s: err = %s", tc->id.c_str(), s.str().c_str()); \
+		isOk = false; \
+		SyncTestCase _tc(tc); \
+		_tc->incorrect++; \
+		_tc->errCodes.insert(errList.begin(), errList.end()); \
+	}
 
 /**
  * Этот класс является базовым для все тест кейс имплементаций.
@@ -29,7 +78,6 @@ public:
 protected:
 	virtual Category& getLog() = NULL;
 	void error();
-	void debug(const TCResult* res);
 };
 
 //BaseTestCases
@@ -50,16 +98,6 @@ inline void BaseTestCases::error()
 	}
 	catch(...)
 	{
-	}
-}
-
-inline void BaseTestCases::debug(const TCResult* res)
-{
-	if (res)
-	{
-		ostringstream os;
-		os << *res << endl;
-		getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
 	}
 }
 
