@@ -49,7 +49,14 @@ public:
     mutex_unlock(&mutex);
 #endif
   }
-
+  bool TryLock()
+  {
+#ifdef _WIN32
+    return WaitForSingleObject(mutex,1)!=WAIT_TIMEOUT;
+#else
+    return mutex_trylock(&mutex)==0;
+#endif
+  }
 protected:
 #ifdef _WIN32
   HANDLE mutex;
