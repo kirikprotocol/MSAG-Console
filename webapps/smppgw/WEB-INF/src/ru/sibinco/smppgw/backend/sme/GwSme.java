@@ -84,7 +84,8 @@ public class GwSme extends Sme
   protected PrintWriter storeBody(final PrintWriter out)
   {
     super.storeBody(out);
-    out.println("    <param name=\"providerId\"        value=\"" + provider.getId() + "\"/>");
+    if (null != provider)
+      out.println("    <param name=\"providerId\"        value=\"" + provider.getId() + "\"/>");
     return out;
   }
 
