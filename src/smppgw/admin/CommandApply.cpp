@@ -33,6 +33,10 @@ CommandApply::CommandApply(const xercesc::DOMDocument * doc)
           subj = CommandApply::config;
         else if (strcmp("routes", value.get()) == 0)
           subj = CommandApply::routes;
+        else if (strcmp("providers", value.get()) == 0)
+          subj = CommandApply::providers;
+        else if (strcmp("smscs", value.get()) == 0)
+          subj = CommandApply::smscs;
         else
           subj = CommandApply::unknown;
           

@@ -23,6 +23,8 @@ public class Constants
       public static final Constants COULDNT_REFRESH_SERVICES = new Constants("error.status.couldnt_refresh_services");
       public static final Constants COULDNT_GET_DAEMON = new Constants("error.status.couldnt_get_daemon");
       public static final Constants COULDNT_APPLY_USERS = new Constants("error.status.couldnt_apply_users");
+      public static final Constants COULDNT_APPLY_SMSCS = new Constants("error.status.couldnt_apply_smscs");
+      public static final Constants COULDNT_APPLY_PROVIDERS = new Constants("error.status.couldnt_apply_providers");
     }
 
 
@@ -85,6 +87,7 @@ public class Constants
     {
       public static final Constants SMSC_NOT_FOUND = new Constants("error.smscs.smsc_not_found");
     }
+
 
     public interface stat
     {

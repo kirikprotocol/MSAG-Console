@@ -9,9 +9,7 @@ import java.util.Iterator;
 
 
 /**
- * Created by igork
- * Date: 22.03.2004
- * Time: 19:13:00
+ * Created by igork Date: 22.03.2004 Time: 19:13:00
  */
 public class Index extends TabledBeanImpl implements TabledBean
 {
@@ -23,11 +21,12 @@ public class Index extends TabledBeanImpl implements TabledBean
   protected void delete()
   {
     for (Iterator i = checkedSet.iterator(); i.hasNext();) {
-      String smscId = (String) i.next();
-      GwSme sme = (GwSme) appContext.getGwSmeManager().getSmes().get(smscId);
-      if (sme != null)
+      final String smscId = (String) i.next();
+      final GwSme sme = (GwSme) appContext.getGwSmeManager().getSmes().get(smscId);
+      if (null != sme)
         sme.setSmscInfo(null);
     }
     appContext.getSmscsManager().getSmscs().keySet().removeAll(checkedSet);
+    appContext.getStatuses().setSmscsChanged(true);
   }
 }

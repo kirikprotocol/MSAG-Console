@@ -43,6 +43,7 @@ public class Edit extends EditBean
     } else {
       providerManager.setProviderName(id, name);
     }
+    appContext.getStatuses().setProvidersChanged(true);
     throw new DoneException();
   }
 

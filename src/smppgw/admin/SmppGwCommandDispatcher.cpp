@@ -204,6 +204,10 @@ Response * SmppGwCommandDispatcher::apply(CommandApply* command)
         return applyConfig();
       case CommandApply::routes:
         return applyRoutes();
+      case CommandApply::providers:
+        return applyProviders();
+      case CommandApply::smscs:
+        return applySmscs();
     }
     stopGw();
     startGw();
@@ -240,6 +244,36 @@ Response * SmppGwCommandDispatcher::applyRoutes()
     configs->routesconfig->reload();
     configs->smemanconfig->reload();
     runner->getApp()->reloadRoutes(*configs);
+    return new Response(Response::Ok, "none");
+  } catch (AdminException &e) {
+    return new Response(Response::Error, e.what());
+  } catch (const char * const e) {
+    return new Response(Response::Error, e);
+  } catch (...) {
+    return new Response(Response::Error, "Unknown exception");
+  }
+}
+
+Response * SmppGwCommandDispatcher::applyProviders()
+{
+  try
+  {
+    // do nothing
+    return new Response(Response::Ok, "none");
+  } catch (AdminException &e) {
+    return new Response(Response::Error, e.what());
+  } catch (const char * const e) {
+    return new Response(Response::Error, e);
+  } catch (...) {
+    return new Response(Response::Error, "Unknown exception");
+  }
+}
+Response * SmppGwCommandDispatcher::applySmscs()
+{
+  try
+  {
+    stopGw();
+    startGw();
     return new Response(Response::Ok, "none");
   } catch (AdminException &e) {
     return new Response(Response::Error, e.what());

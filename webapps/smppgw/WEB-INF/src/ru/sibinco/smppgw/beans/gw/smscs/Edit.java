@@ -11,9 +11,7 @@ import java.util.Map;
 
 
 /**
- * Created by igork
- * Date: 22.03.2004
- * Time: 20:04:20
+ * Created by igork Date: 22.03.2004 Time: 20:04:20
  */
 public class Edit extends EditBean
 {
@@ -25,13 +23,13 @@ public class Edit extends EditBean
   private int responseTimeout;
   private int uniqueMsgIdPrefix;
 
-  protected void load(String loadId) throws SmppgwJspException
+  protected void load(final String loadId) throws SmppgwJspException
   {
     final Map smscs = appContext.getSmscsManager().getSmscs();
     if (!smscs.containsKey(loadId))
       throw new SmppgwJspException(Constants.errors.smscs.SMSC_NOT_FOUND, loadId);
 
-    SmscInfo info = (SmscInfo) smscs.get(loadId);
+    final SmscInfo info = (SmscInfo) smscs.get(loadId);
     this.id = info.getId();
     this.host = info.getHost();
     this.port = info.getPort();
@@ -49,19 +47,20 @@ public class Edit extends EditBean
     smscs.put(id, info);
     if (isAdd()) {
       if (smes.containsKey(id)) {
-        GwSme sme = (GwSme) smes.get(id);
+        final GwSme sme = (GwSme) smes.get(id);
         sme.setSmscInfo(info);
       }
     } else {
       if (smes.containsKey(getEditId())) {
-        GwSme oldSme = (GwSme) smes.get(getEditId());
+        final GwSme oldSme = (GwSme) smes.get(getEditId());
         oldSme.setSmscInfo(null);
       }
       if (smes.containsKey(id)) {
-        GwSme sme = (GwSme) smes.get(id);
+        final GwSme sme = (GwSme) smes.get(id);
         sme.setSmscInfo(info);
       }
     }
+    appContext.getStatuses().setSmscsChanged(true);
     throw new DoneException();
   }
 
@@ -79,7 +78,7 @@ public class Edit extends EditBean
   {
     final SortedList smes = new SortedList(appContext.getGwSmeManager().getSmes().keySet());
     for (Iterator i = appContext.getSmscsManager().getSmscs().keySet().iterator(); i.hasNext();) {
-      String smscId = (String) i.next();
+      final String smscId = (String) i.next();
       if (!smscId.equals(id))
         smes.remove(smscId);
     }
@@ -91,7 +90,7 @@ public class Edit extends EditBean
     return id;
   }
 
-  public void setId(String id)
+  public void setId(final String id)
   {
     this.id = id;
   }
@@ -101,7 +100,7 @@ public class Edit extends EditBean
     return host;
   }
 
-  public void setHost(String host)
+  public void setHost(final String host)
   {
     this.host = host;
   }
@@ -111,7 +110,7 @@ public class Edit extends EditBean
     return port;
   }
 
-  public void setPort(int port)
+  public void setPort(final int port)
   {
     this.port = port;
   }
@@ -121,7 +120,7 @@ public class Edit extends EditBean
     return systemId;
   }
 
-  public void setSystemId(String systemId)
+  public void setSystemId(final String systemId)
   {
     this.systemId = systemId;
   }
@@ -131,7 +130,7 @@ public class Edit extends EditBean
     return password;
   }
 
-  public void setPassword(String password)
+  public void setPassword(final String password)
   {
     this.password = password;
   }
@@ -141,7 +140,7 @@ public class Edit extends EditBean
     return responseTimeout;
   }
 
-  public void setResponseTimeout(int responseTimeout)
+  public void setResponseTimeout(final int responseTimeout)
   {
     this.responseTimeout = responseTimeout;
   }
@@ -151,7 +150,7 @@ public class Edit extends EditBean
     return uniqueMsgIdPrefix;
   }
 
-  public void setUniqueMsgIdPrefix(int uniqueMsgIdPrefix)
+  public void setUniqueMsgIdPrefix(final int uniqueMsgIdPrefix)
   {
     this.uniqueMsgIdPrefix = uniqueMsgIdPrefix;
   }

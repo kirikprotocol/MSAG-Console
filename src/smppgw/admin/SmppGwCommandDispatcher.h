@@ -48,6 +48,8 @@ protected:
   Response * apply(CommandApply*);
   Response * applyConfig();
   Response * applyRoutes();
+  Response * applyProviders();
+  Response * applySmscs();
   
   Response * updateSmeInfo(CommandUpdateSmeInfo*);
   

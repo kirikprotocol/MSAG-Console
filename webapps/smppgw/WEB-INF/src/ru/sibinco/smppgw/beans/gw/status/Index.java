@@ -100,9 +100,41 @@ public class Index extends SmppgwBean
           applyConfig();
         if ("routes".equals(s))
           applyRoutes();
+        if ("providers".equals(s))
+          applyProviders();
+        if ("smscs".equals(s))
+          applySmscs();
         if ("users".equals(s))
           applyUsers();
       }
+  }
+
+  private void applySmscs() throws SmppgwJspException
+  {
+    try {
+      final Config gwConfig = appContext.getGwConfig();
+      appContext.getSmscsManager().store(gwConfig);
+      appContext.getGwConfig().save();
+      appContext.getGateway().apply("smscs");
+      appContext.getStatuses().setSmscsChanged(false);
+    } catch (Throwable e) {
+      logger.debug("Couldn't apply Service centers", e);
+      throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_SMSCS, e);
+    }
+  }
+
+  private void applyProviders() throws SmppgwJspException
+  {
+    try {
+      final Config gwConfig = appContext.getGwConfig();
+      appContext.getProviderManager().store(gwConfig);
+      appContext.getGwConfig().save();
+      appContext.getGateway().apply("providers");
+      appContext.getStatuses().setProvidersChanged(false);
+    } catch (Throwable e) {
+      logger.debug("Couldn't apply Service centers", e);
+      throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_PROVIDERS, e);
+    }
   }
 
   private void applyUsers() throws SmppgwJspException
@@ -190,6 +222,16 @@ public class Index extends SmppgwBean
   public boolean isRoutesChanged()
   {
     return appContext.getStatuses().isRoutesChanged();
+  }
+
+  public boolean isProvidersChanged()
+  {
+    return appContext.getStatuses().isProvidersChanged();
+  }
+
+  public boolean isSmscsChanged()
+  {
+    return appContext.getStatuses().isSmscsChanged();
   }
 
   public boolean isUsersChanged()

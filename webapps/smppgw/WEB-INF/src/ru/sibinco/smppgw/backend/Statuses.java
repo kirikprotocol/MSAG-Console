@@ -9,6 +9,8 @@ public class Statuses
   private boolean configChanged = false;
   private boolean routesChanged = false;
   private boolean usersChanged = false;
+  private boolean smscsChanged = false;
+  private boolean providersChanged = false;
 
   public boolean isConfigChanged()
   {
@@ -38,5 +40,25 @@ public class Statuses
   public void setUsersChanged(boolean usersChanged)
   {
     this.usersChanged = usersChanged;
+  }
+
+  public boolean isSmscsChanged()
+  {
+    return smscsChanged;
+  }
+
+  public void setSmscsChanged(boolean smscsChanged)
+  {
+    this.smscsChanged = smscsChanged;
+  }
+
+  public boolean isProvidersChanged()
+  {
+    return providersChanged;
+  }
+
+  public void setProvidersChanged(boolean providersChanged)
+  {
+    this.providersChanged = providersChanged;
   }
 }

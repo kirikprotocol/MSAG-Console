@@ -21,7 +21,9 @@ public:
   enum subjects {
     unknown,
     config,
-    routes
+    routes,
+    providers,
+    smscs
   };
   
   CommandApply(const xercesc::DOMDocument * document);
