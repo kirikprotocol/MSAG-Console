@@ -188,6 +188,16 @@ namespace SmppCommandSet{ /* SMPP v3.4 (5.1.2.1) */
   static const uint32_t DATA_SM_RESP                 = 0x80000103;
 };
 
+namespace SmppStatusSet
+{
+	static const uint32_t ESME_ROK										=  0x00000000;
+	static const uint32_t ESME_RSYSERR								=  0x00000008;
+	static const uint32_t ESME_RBINDFALD						  =  0x0000000d;
+	static const uint32_t ESME_RINVSYSID							=  0x0000000f;
+	static const uint32_t ESME_RCANCELFAL							=  0x00000011;
+	static const uint32_t ESME_RREPLACEFAL					  =  0x00000013;
+};
+
 namespace AddrSubunitValue{ /* SMPP v3.4 (5.3.2.1) */
   static const uint8_t UNKNOWN          = 0;
   static const uint8_t MS_DISPLAY       = 0x1;
@@ -315,10 +325,10 @@ inline void fprintf_tab(__LOG__ log, int align) { for( int i=0; i<align; ++i) fp
 #define dump_uint(field) dump_text("%s = %u",#field,(uint32_t)field);
 #define dump_int(field) dump_text("%s = %u",#field,(int32_t)field);
 #define dump_ostr(field){ dump_text("%s: length= %u", #field, (uint32_t)field.size()); \
-		if ( field.cstr() ){ \
-		for ( int i = 0; i < field.size() ; ++i ) fprintf(log,"%02x ",field.cstr()[i]); fprintf(log,"\n");}}
+    if ( field.cstr() ){ \
+    for ( int i = 0; i < field.size() ; ++i ) fprintf(log,"%02x ",field.cstr()[i]); fprintf(log,"\n");}}
 #define dump_cstr(field) { if ( field.cstr() ) {dump_text("%s = %s",#field,field.cstr());} \
-	else {dump_text("%s = NULL",#field);} }
+  else {dump_text("%s = NULL",#field);} }
 
 struct SmppHeader //: public MemoryManagerUnit
 {
@@ -332,17 +342,17 @@ struct SmppHeader //: public MemoryManagerUnit
     commandId(0),
     commandStatus(0),
     sequenceNumber(0) {}
-	inline void dump(__LOG__ log,int align)
-	{
-		dump_text("SmppHeader{");
-		++align;
-		dump_uint(commandLength);
-		dump_uint(commandId);
-		dump_uint(commandStatus);
-		dump_uint(sequenceNumber);
-		--align;
-		dump_text("}");
-	}
+  inline void dump(__LOG__ log,int align)
+  {
+    dump_text("SmppHeader{");
+    ++align;
+    dump_uint(commandLength);
+    dump_uint(commandId);
+    dump_uint(commandStatus);
+    dump_uint(sequenceNumber);
+    --align;
+    dump_text("}");
+  }
 };
 
 struct PduAddress //: public MemoryManagerUnit
@@ -360,16 +370,16 @@ struct PduAddress //: public MemoryManagerUnit
                    _s_int_property__(uint8_t,numberingPlan)
                    _s_cstr_property__(value));
   }
-	inline void dump(__LOG__ log,int align)
-	{
-		dump_text("PduAddress{");
-		++align;
-		dump_uint(typeOfNumber);
-		dump_uint(numberingPlan);
-		dump_cstr(value);
-		--align;
-		dump_text("} //PduAddress");
-	}
+  inline void dump(__LOG__ log,int align)
+  {
+    dump_text("PduAddress{");
+    ++align;
+    dump_uint(typeOfNumber);
+    dump_uint(numberingPlan);
+    dump_cstr(value);
+    --align;
+    dump_text("} //PduAddress");
+  }
 };
 
 struct PduDestAddress : public PduAddress
@@ -377,29 +387,29 @@ struct PduDestAddress : public PduAddress
   __int_property__(uint8_t,flag)
   PduDestAddress() : flag(0){};
   inline uint32_t size() { return PduAddress::size() + 1; }
-	inline void dump(__LOG__ log,int align)
-	{
-		dump_text("PduDestAddress{");
-		++align;
-		dump_uint(flag);
-		if ( flag == 0x1 )
-		{
-			dump_uint(typeOfNumber);
-			dump_uint(numberingPlan);
-		}
-		if ( flag == 0x02 || flag == 0x02)
-		{
-			dump_cstr(value);
-		}
-		--align;
-		dump_text("} //PduDestAddress");
-	}
+  inline void dump(__LOG__ log,int align)
+  {
+    dump_text("PduDestAddress{");
+    ++align;
+    dump_uint(flag);
+    if ( flag == 0x1 )
+    {
+      dump_uint(typeOfNumber);
+      dump_uint(numberingPlan);
+    }
+    if ( flag == 0x02 || flag == 0x02)
+    {
+      dump_cstr(value);
+    }
+    --align;
+    dump_text("} //PduDestAddress");
+  }
 };
 
 struct SmppOptional //: public MemoryManagerUnit
 {
   SmppOptional() : field_present(0) {}
-	uint64_t field_present;
+  uint64_t field_present;
 #define _o_int_property__(type,field) \
   type field;\
   inline bool has_##field(){ return field_present & SmppOptionalFields::field; } \
@@ -531,57 +541,57 @@ struct SmppOptional //: public MemoryManagerUnit
 #define _o_intarr_property__(type,field,size) if ( has_##field() ) {for ( int i=0; i < size; ++i) {dump_uint(field[i]);}}
 #define _o_cstr_property__(field) if ( has_##field() ) { dump_cstr(field); }
 #define _o_ostr_property__(field) if ( has_##field() ) { dump_ostr(field); }
-	inline void dump(__LOG__ log,int align)
-	{
-		dump_text("SmppOptional{");
-		++align;
-		_o_int_property__(uint8_t,destAddrSubunit) 
-		_o_int_property__(uint8_t,sourceAddrSubunit) 
-		_o_int_property__(uint8_t,destNetworkType) 
-		_o_int_property__(uint8_t,sourceNetworkType) 
-		_o_int_property__(uint8_t,destBearerType) 
-		_o_int_property__(uint8_t,sourceBearerType) 
-		_o_int_property__(uint16_t,destTelematicsId) 
-		_o_int_property__(uint8_t,sourceTelematicsId) 
-		_o_int_property__(uint32_t,qosTimeToLive)
-		_o_int_property__(uint8_t,payloadType) 
-		_o_cstr_property__(additionalStatusInfoText)
-		_o_cstr_property__(receiptedMessageId) 
-		_o_int_property__(uint8_t,msMsgWaitFacilities) 
-		_o_int_property__(uint8_t,privacyIndicator) 
-		_o_ostr_property__(sourceSubaddress)
-		_o_ostr_property__(destSubaddress)
-		_o_int_property__(uint16_t,userMessageReference)
-		_o_int_property__(uint8_t,userResponseCode)
-		_o_int_property__(uint8_t,languageIndicator)
-		_o_int_property__(uint16_t,sourcePort)
-		_o_int_property__(uint16_t,destinationPort)
-		_o_int_property__(uint16_t,sarMsgRefNum)
-		_o_int_property__(uint8_t,sarTotalSegments)
-		_o_int_property__(uint8_t,sarSegmentSegnum)
-		_o_int_property__(uint8_t,scInterfaceVersion)
-		_o_int_property__(uint8_t,displayTime)
-		_o_int_property__(uint8_t,msValidity)
-		_o_int_property__(uint8_t,dpfResult)
-		_o_int_property__(uint8_t,setDpf)
-		_o_int_property__(uint8_t,msAvailableStatus)
-		_o_intarr_property__(uint8_t,networkErrorCode,3)
-		_o_ostr_property__(messagePayload)
-		_o_int_property__(uint8_t,deliveryFailureReason)
-		_o_int_property__(uint8_t,moreMessagesToSend)
-		_o_int_property__(uint8_t,messageState)
-		_o_ostr_property__(callbackNum)
-		_o_int_property__(uint8_t,callbackNumPresInd)
-		_o_ostr_property__(callbackNumAtag)
-		_o_int_property__(uint8_t,numberOfMessages)
-		_o_int_property__(uint16_t,smsSignal)
-		_o_int_property__(uint8_t,itsReplyType)
-		_o_intarr_property__(uint8_t,itsSessionInfo,2)
-		_o_int_property__(uint8_t,ussdServiceOp)
-		_o_int_property__(bool,alertOnMessageDelivery)
-		--align;
-		dump_text("} //SmppOptional");
-	}
+  inline void dump(__LOG__ log,int align)
+  {
+    dump_text("SmppOptional{");
+    ++align;
+    _o_int_property__(uint8_t,destAddrSubunit) 
+    _o_int_property__(uint8_t,sourceAddrSubunit) 
+    _o_int_property__(uint8_t,destNetworkType) 
+    _o_int_property__(uint8_t,sourceNetworkType) 
+    _o_int_property__(uint8_t,destBearerType) 
+    _o_int_property__(uint8_t,sourceBearerType) 
+    _o_int_property__(uint16_t,destTelematicsId) 
+    _o_int_property__(uint8_t,sourceTelematicsId) 
+    _o_int_property__(uint32_t,qosTimeToLive)
+    _o_int_property__(uint8_t,payloadType) 
+    _o_cstr_property__(additionalStatusInfoText)
+    _o_cstr_property__(receiptedMessageId) 
+    _o_int_property__(uint8_t,msMsgWaitFacilities) 
+    _o_int_property__(uint8_t,privacyIndicator) 
+    _o_ostr_property__(sourceSubaddress)
+    _o_ostr_property__(destSubaddress)
+    _o_int_property__(uint16_t,userMessageReference)
+    _o_int_property__(uint8_t,userResponseCode)
+    _o_int_property__(uint8_t,languageIndicator)
+    _o_int_property__(uint16_t,sourcePort)
+    _o_int_property__(uint16_t,destinationPort)
+    _o_int_property__(uint16_t,sarMsgRefNum)
+    _o_int_property__(uint8_t,sarTotalSegments)
+    _o_int_property__(uint8_t,sarSegmentSegnum)
+    _o_int_property__(uint8_t,scInterfaceVersion)
+    _o_int_property__(uint8_t,displayTime)
+    _o_int_property__(uint8_t,msValidity)
+    _o_int_property__(uint8_t,dpfResult)
+    _o_int_property__(uint8_t,setDpf)
+    _o_int_property__(uint8_t,msAvailableStatus)
+    _o_intarr_property__(uint8_t,networkErrorCode,3)
+    _o_ostr_property__(messagePayload)
+    _o_int_property__(uint8_t,deliveryFailureReason)
+    _o_int_property__(uint8_t,moreMessagesToSend)
+    _o_int_property__(uint8_t,messageState)
+    _o_ostr_property__(callbackNum)
+    _o_int_property__(uint8_t,callbackNumPresInd)
+    _o_ostr_property__(callbackNumAtag)
+    _o_int_property__(uint8_t,numberOfMessages)
+    _o_int_property__(uint16_t,smsSignal)
+    _o_int_property__(uint8_t,itsReplyType)
+    _o_intarr_property__(uint8_t,itsSessionInfo,2)
+    _o_int_property__(uint8_t,ussdServiceOp)
+    _o_int_property__(bool,alertOnMessageDelivery)
+    --align;
+    dump_text("} //SmppOptional");
+  }
 #undef _o_int_property__
 #undef _o_intarr_property__
 #undef _o_cstr_property__
@@ -601,16 +611,16 @@ struct PduOutBind //: public SmppHeader//MemoryManagerUnit
                       _s_cstr_property__(systemId)
                       _s_cstr_property__(password));
   }
-	inline void dump(__LOG__ log,int align = 0)
-	{
-		dump_text("SmppOutBind{");
-		header.dump(log,align+1);
-		++align;
-		dump_cstr(systemId);
-		dump_cstr(password);
-		--align;
-		dump_text("} //SmppOutBind");
-	}
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("SmppOutBind{");
+    header.dump(log,align+1);
+    ++align;
+    dump_cstr(systemId);
+    dump_cstr(password);
+    --align;
+    dump_text("} //SmppOutBind");
+  }
 
 };
 
@@ -618,12 +628,12 @@ struct PduWithOnlyHeader //: public SmppHeader//MemoryManagerUnit
 {
   __ref_property__(SmppHeader,header);
   inline uint32_t size() { return _s_ref_property__(SmppHeader,header); }
-	inline void dump(__LOG__ log,int align = 0)
-	{
-		dump_text("PduWithOnlyHeader{");
-		header.dump(log,align+1);
-		dump_text("} //PduWithOnlyHeader");
-	}
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("PduWithOnlyHeader{");
+    header.dump(log,align+1);
+    dump_text("} //PduWithOnlyHeader");
+  }
 };
 
 typedef PduWithOnlyHeader PduUnbind;
@@ -650,14 +660,14 @@ struct PduPartSm //: public MemoryManagerUnit
   //__ostr_property__(shortMessage)
   OStr shortMessage;
   inline void set_shortMessage(const char* __value,int __len) 
-	{ 
-		//__require__(__value!=NULL); 
-		if ( !__value ) shortMessage.dispose(); 
-		else shortMessage.copy(__value,__len);
-	} 
+  { 
+    //__require__(__value!=NULL); 
+    if ( !__value ) shortMessage.dispose(); 
+    else shortMessage.copy(__value,__len);
+  } 
   inline const char* get_shortMessage() { return shortMessage.cstr(); } 
   inline int size_shortMessage(){ return shortMessage.size(); }
-	inline uint8_t get_smLength(){ return (uint8_t)shortMessage.size(); }
+  inline uint8_t get_smLength(){ return (uint8_t)shortMessage.size(); }
 
   PduPartSm() :
     numberOfDests(0),
@@ -671,7 +681,7 @@ struct PduPartSm //: public MemoryManagerUnit
     smDefaultMsgId(0){}
   inline uint32_t size(bool multi)
   {
-    return (uint32_t)(0	+ 1 // sizeof(smLength)
+    return (uint32_t)(0 + 1 // sizeof(smLength)
                       _s_cstr_property__(serviceType)
                       _s_ref_property__(PduAddress,source)
                       _s_ref_property__(PduAddress,dest)
@@ -688,29 +698,29 @@ struct PduPartSm //: public MemoryManagerUnit
                       _s_int_property__(uint8_t,smDefaultMsgId)
                       _s_ostr_property__(shortMessage)); 
   }
-	inline void dump(__LOG__ log,int align = 0)
-	{
-		dump_text("PduPartSm{");
-		++align;
-		dump_cstr(serviceType)
-		dump_text("source = "); source.dump(log,align+1);
-		dump_text("dest = "); dest.dump(log,align+1);
-		dump_uint(numberOfDests);
-		//_s_ptr_property__(PduDestAddress,dests)
-		dump_uint(esmClass);
-		dump_uint(protocolId);
-		dump_uint(priorityFlag);
-		dump_cstr(scheduleDeliveryTime);
-		dump_cstr(validityPeriod);
-		dump_uint(registredDelivery);
-		dump_uint(replaceIfPresentFlag);
-		dump_uint(dataCoding);
-		dump_uint(smDefaultMsgId);
-		//dump_uint(get_smLength());
-		dump_ostr(shortMessage); 
-		--align;
-		dump_text("} //PduPartSm");
-	}
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("PduPartSm{");
+    ++align;
+    dump_cstr(serviceType)
+    dump_text("source = "); source.dump(log,align+1);
+    dump_text("dest = "); dest.dump(log,align+1);
+    dump_uint(numberOfDests);
+    //_s_ptr_property__(PduDestAddress,dests)
+    dump_uint(esmClass);
+    dump_uint(protocolId);
+    dump_uint(priorityFlag);
+    dump_cstr(scheduleDeliveryTime);
+    dump_cstr(validityPeriod);
+    dump_uint(registredDelivery);
+    dump_uint(replaceIfPresentFlag);
+    dump_uint(dataCoding);
+    dump_uint(smDefaultMsgId);
+    //dump_uint(get_smLength());
+    dump_ostr(shortMessage); 
+    --align;
+    dump_text("} //PduPartSm");
+  }
 };
 
 struct PduXSm //: public SmppHeader//public MemoryManagerUnit
@@ -723,18 +733,18 @@ struct PduXSm //: public SmppHeader//public MemoryManagerUnit
     return (uint32_t)(0
                       _s_ref_property__(SmppHeader,header)
                       //_s_ref_property__(PduPartSm,message)
-											+ message.size(multi)
+                      + message.size(multi)
                       _s_ref_property__(SmppOptional,optional)
-											);
+                      );
   }
-	inline void dump(__LOG__ log,int align = 0)
-	{
-		dump_text("PduXSm{");
-		header.dump(log,align+1);
-		message.dump(log,align+1);
-		optional.dump(log,align+1);
-		dump_text("} //PduXSm");
-	}
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("PduXSm{");
+    header.dump(log,align+1);
+    message.dump(log,align+1);
+    optional.dump(log,align+1);
+    dump_text("} //PduXSm");
+  }
 };
 
 struct PduXSmResp //: public SmppHeader //MemoryManagerUnit
@@ -747,15 +757,15 @@ struct PduXSmResp //: public SmppHeader //MemoryManagerUnit
                       _s_ref_property__(SmppHeader,header)
                       _s_cstr_property__(messageId));
   }
-	inline void dump(__LOG__ log,int align = 0)
-	{
-		dump_text("PduXSmResp{");
-		header.dump(log,align+1);
-		++align;
-		dump_cstr(messageId);
-		--align;
-		dump_text("} //PduXSm");
-	}
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("PduXSmResp{");
+    header.dump(log,align+1);
+    ++align;
+    dump_cstr(messageId);
+    --align;
+    dump_text("} //PduXSm");
+  }
 };
 
 typedef PduXSm  PduSubmitSm;
@@ -791,15 +801,15 @@ struct PduMultiSmResp //: public SmppHeader//MemoryManagerUnit
     _s_int_property__(uint8_t,noUnsuccess)
     _s_ptr_property__(UnsuccessDeliveries,sme));
   }
-	inline void dump(__LOG__ log,int align = 0)
-	{
-		dump_text("PduMultiResp{");
-		header.dump(log,align+1);
-		++align;
-		dump_cstr(messageId);
-		--align;
-		dump_text("} //PduMultiResp");
-	}
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("PduMultiResp{");
+    header.dump(log,align+1);
+    ++align;
+    dump_cstr(messageId);
+    --align;
+    dump_text("} //PduMultiResp");
+  }
 };
 
 
@@ -822,19 +832,19 @@ struct PduBindTRX //: public SmppHeader//MemoryManagerUnit
                       _s_int_property__(uint8_t,interfaceVersion)
                       _s_ref_property__(PduAddress,addressRange));
   }
-	inline void dump(__LOG__ log,int align = 0)
-	{
-		dump_text("PduBindTRX{");
-		header.dump(log,align+1);
-		++align;
-		dump_cstr(systemId);
-		dump_cstr(password);
-		dump_cstr(systemType);
-		dump_uint(interfaceVersion);
-		dump_text("address_range = "); addressRange.dump(log,align+1);
-		--align;
-		dump_text("} //PduBindTRX");
-	}
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("PduBindTRX{");
+    header.dump(log,align+1);
+    ++align;
+    dump_cstr(systemId);
+    dump_cstr(password);
+    dump_cstr(systemType);
+    dump_uint(interfaceVersion);
+    dump_text("address_range = "); addressRange.dump(log,align+1);
+    --align;
+    dump_text("} //PduBindTRX");
+  }
 };
 
 struct PduBindTRXResp //: public SmppHeader//MemoryManagerUnit
@@ -853,16 +863,16 @@ struct PduBindTRXResp //: public SmppHeader//MemoryManagerUnit
                     //optional
                       _s_int_property__(int8_t,scInterfaceVersion));
   }
-	inline void dump(__LOG__ log,int align = 0)
-	{
-		dump_text("PduBindTRXResp{");
-		header.dump(log,align+1);
-		++align;
-		dump_cstr(systemId);
-		dump_uint(scInterfaceVersion);
-		--align;
-		dump_text("} //PduBindTRXResp");
-	}
+  inline void dump(__LOG__ log,int align = 0)
+  {
+    dump_text("PduBindTRXResp{");
+    header.dump(log,align+1);
+    ++align;
+    dump_cstr(systemId);
+    dump_uint(scInterfaceVersion);
+    --align;
+    dump_text("} //PduBindTRXResp");
+  }
 };
 
 inline bool smppPduHasSms(SmppHeader* pdu)
@@ -930,8 +940,8 @@ inline bool dump_pdu(SmppHeader* _pdu,FILE* log = stderr)
 {
   using namespace SmppCommandSet;
   //uint32_t length = 4*4; // header
-	_pdu->commandLength = calcSmppPacketLength(_pdu);
-	switch ( _pdu->commandId )
+  _pdu->commandLength = calcSmppPacketLength(_pdu);
+  switch ( _pdu->commandId )
   {
   case GENERIC_NACK:  reinterpret_cast<PduGenericNack*>(_pdu)->dump(log); break;
   case BIND_RECIEVER: reinterpret_cast<PduBindTRX*>(_pdu)->dump(log); break;
