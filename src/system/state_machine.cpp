@@ -1940,6 +1940,10 @@ StateType StateMachine::alert(Tuple& t)
     __trace2__("ALERT: Failed to retrieve sms:%lld",t.msgId);
     return UNKNOWN_STATE;
   }
+  char bufsrc[64],bufdst[64];
+  sms->getOriginatingAddress().toString(bufsrc,sizeof(bufsrc));
+  sms->getDestinationAddress().toString(bufdst,sizeof(bufdst));
+  __warning2__("ALERT: delivery timed out(%s->%s)",bufsrc,bufdst);
   try{
     store->changeSmsStateToEnroute(t.msgId,d,Status::DELIVERYTIMEDOUT,rescheduleSms(sms));
   }catch(std::exception& e)
