@@ -655,11 +655,11 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
           break;
 
         case EINSS7_I97_UNCOND:
-          causevalue = 0x15; /* call rejected */
+          causeValue = 0x15; /* call rejected */
           inform = 0; /* don't inform when unconditional*/
           break;
         case EINSS7_I97_MOB_NOT_REACHED:
-          causevalue = 0x14; /*subscriber absent*/
+          causeValue = 0x14; /*subscriber absent*/
           break;
       }
     }
