@@ -270,6 +270,8 @@ void executeBusinessCycleTest(int numThreads)
 			case 'a':
 				cout << "Time = " << tm.getExecutionTime() << endl;
 				cout << "Total ops = " << tm.getOps() << endl;
+				cout << "Queue length = " <<
+					StoreManager::getPendingQueueLength() << endl;
 				cout << "Connection pool size = " <<
 					StoreManager::getPoolSize() << endl;
 				cout << "Connections count = " <<
