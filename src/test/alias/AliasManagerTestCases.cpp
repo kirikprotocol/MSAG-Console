@@ -485,20 +485,19 @@ TCResult* AliasManagerTestCases::deleteAliases()
 }
 
 void AliasManagerTestCases::printFindResult(const char* name,
-	const Address& param, const AliasRegistry::AliasList& list)
+	const Address& param, const AliasHolder* aliasHolder)
 {
 	ostringstream os;
 	os << name << ": param = " << param;
-	os << ", result = (";
-	for (int i = 0; i < list.size(); i++)
+	os << ", result = ";
+	if (aliasHolder)
 	{
-		if (i)
-		{
-			os << ",";
-		}
-		os << *list[i];
+		os << aliasHolder->aliasInfo;
 	}
-	os << ")";
+	else
+	{
+		os << "NULL";
+	}
 	getLog().debug("[%d]\t%s", thr_self(), os.str().c_str());
 }
 
@@ -518,32 +517,26 @@ void AliasManagerTestCases::printFindResult(const char* tc,
 TCResult* AliasManagerTestCases::findAliasByAddress(const Address& addr)
 {
 	TCResult* res = new TCResult(TC_FIND_ALIAS_BY_ADDRESS);
-	const AliasRegistry::AliasList list = aliasReg->findAliasByAddress(addr);
-	printFindResult("AliasRegistry::findAliasByAddress()", addr, list);
+	const AliasHolder* aliasHolder = aliasReg->findAliasByAddress(addr);
+	printFindResult("AliasRegistry::findAliasByAddress()", addr, aliasHolder);
 	try
 	{
 		Address alias;
 		bool found = aliasMan->AddressToAlias(addr, alias);
 		printFindResult("AliasManager::AddressToAlias()", addr, found, alias);
-		if (!found && list.size())
+		if (!found && aliasHolder)
 		{
 			res->addFailure(101);
 		}
-		else if (found && !list.size())
+		else if (found && !aliasHolder)
 		{
 			res->addFailure(102);
 		}
-		else if (found && list.size())
+		else if (found && aliasHolder)
 		{
-			found = false;
-			for (int i = 0; i < list.size(); i++)
-			{
-				Address tmp;
-				if (list[i]->addressToAlias(addr, tmp))
-				{
-					found |= SmsUtil::compareAddresses(alias, tmp);
-				}
-			}
+			Address tmp;
+			found = (aliasHolder->addressToAlias(addr, tmp) &&
+				SmsUtil::compareAddresses(alias, tmp));
 			if (!found)
 			{
 				res->addFailure(103);
@@ -552,13 +545,8 @@ TCResult* AliasManagerTestCases::findAliasByAddress(const Address& addr)
 	}
 	catch(...)
 	{
-		bool exception = false;
-		for (int i = 0; i < list.size(); i++)
-		{
-			Address tmp;
-			exception |= !(list[i]->addressToAlias(addr, tmp));
-		}
-		if (!exception)
+		Address tmp;
+		if (aliasHolder->addressToAlias(addr, tmp))
 		{
 			error();
 			res->addFailure(100);
@@ -571,32 +559,26 @@ TCResult* AliasManagerTestCases::findAliasByAddress(const Address& addr)
 TCResult* AliasManagerTestCases::findAddressByAlias(const Address& alias)
 {
 	TCResult* res = new TCResult(TC_FIND_ADDRESS_BY_ALIAS);
-	const AliasRegistry::AliasList list = aliasReg->findAddressByAlias(alias);
-	printFindResult("AliasRegistry::findAddressByAlias()", alias, list);
+	const AliasHolder* aliasHolder = aliasReg->findAddressByAlias(alias);
+	printFindResult("AliasRegistry::findAddressByAlias()", alias, aliasHolder);
 	try
 	{
 		Address addr;
 		bool found = aliasMan->AliasToAddress(alias, addr);
 		printFindResult("AliasManager::AliasToAddress()", alias, found, addr);
-		if (!found && list.size())
+		if (!found && aliasHolder)
 		{
 			res->addFailure(101);
 		}
-		else if (found && !list.size())
+		else if (found && !aliasHolder)
 		{
 			res->addFailure(102);
 		}
-		else if (found && list.size())
+		else if (found && aliasHolder)
 		{
-			found = false;
-			for (int i = 0; i < list.size(); i++)
-			{
-				Address tmp;
-				if (list[i]->aliasToAddress(alias, tmp))
-				{
-					found |= SmsUtil::compareAddresses(addr, tmp);
-				}
-			}
+			Address tmp;
+			found = (aliasHolder->aliasToAddress(alias, tmp) &&
+				SmsUtil::compareAddresses(addr, tmp));
 			if (!found)
 			{
 				res->addFailure(103);
@@ -605,13 +587,8 @@ TCResult* AliasManagerTestCases::findAddressByAlias(const Address& alias)
 	}
 	catch(...)
 	{
-		bool exception = false;
-		for (int i = 0; i < list.size(); i++)
-		{
-			Address tmp;
-			exception |= !(list[i]->aliasToAddress(alias, tmp));
-		}
-		if (!exception)
+		Address tmp;
+		if (aliasHolder->aliasToAddress(alias, tmp))
 		{
 			error();
 			res->addFailure(100);

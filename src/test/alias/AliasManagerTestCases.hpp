@@ -17,6 +17,7 @@ using log4cpp::Category;
 using smsc::test::util::TCResult;
 using smsc::test::util::BaseTestCases;
 using smsc::test::core::AliasRegistry;
+using smsc::test::core::AliasHolder;
 using smsc::sms::Address;
 using smsc::alias::AliasInfo;
 using smsc::alias::AliasManager;
@@ -104,7 +105,7 @@ private:
 	void setupRandomAliasMatchWithQuestionMarks(AliasInfo* alias, int len);
 	//void setupRandomAliasMatchWithAsterisk(AliasInfo* alias, int adLen, int alLen);
 	void printFindResult(const char* name, const Address& param,
-		const AliasRegistry::AliasList& data);
+		const AliasHolder* aliasHolder);
 	void printFindResult(const char* tc, const Address& param, bool found,
 		const Address& result);
 };
