@@ -22,6 +22,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
   PerformanceLabel sctimeLabel;
   PerformanceBar perfbar;
   PerfInfoTable perfTable;
+  PerfQueueTable perfQueue;
   PerformanceGraph perfGraph;
   Label connectingLabel;
   PopupMenu popupMenu;
@@ -174,6 +175,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     perfbar.setFont(new Font("dialog", Font.PLAIN, 10));
     perfbar.addMouseListener(this);
     perfTable = new PerfInfoTable(snap);
+    perfQueue = new PerfQueueTable(snap);
     perfGraph = new PerformanceGraph(vLightGrid, vMinuteGrid, snap);
     perfGraph.setFont(new Font("dialog", Font.PLAIN, 10));
     perfGraph.addMouseListener(this);
@@ -201,12 +203,21 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     gbc.fill = GridBagConstraints.HORIZONTAL;
     add(p, gbc);
 
+    lg = new LabelGroup(localeText.getString("lab.pque"), LabelGroup.NORTHWEST);
+    lg.setLayout(new BorderLayout());
+    lg.add(perfQueue, BorderLayout.CENTER);
+    gbc.gridx = 1;
+    gbc.gridy = 2;
+    gbc.gridwidth = 2;
+    gbc.weighty = 0;
+    gbc.fill = GridBagConstraints.HORIZONTAL;
+    add(lg, gbc);
 
     lg = new LabelGroup();
     lg.setLayout(new BorderLayout());
     lg.add(perfbar, BorderLayout.CENTER);
 
-    gbc.gridy = 2;
+    gbc.gridy = 3;
     gbc.gridx = 1;
     gbc.gridwidth = 1;
     gbc.weighty = 3;
@@ -225,7 +236,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     lg.add(perfTable, BorderLayout.CENTER);
 
     gbc.gridx = 1;
-    gbc.gridy = 3;
+    gbc.gridy = 4;
     gbc.gridwidth = 2;
     gbc.weighty = 0;
     gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -254,6 +265,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
 //              System.out.println("Got snap: ls="+snap.last[PerfSnap.IDX_DELIVER]+" le="+snap.last[PerfSnap.IDX_DELIVERERR]+" upt="+snap.uptime+" tm="+(new Date(snap.sctime*1000)).toString());
             uptimeLabel.setText(snap.strUptime);
             sctimeLabel.setText(snap.strSctime);
+            perfQueue.setSnap(snap);
             perfbar.setSnap(snap);
             perfTable.setSnap(snap);
             perfGraph.addSnap(snap);

@@ -36,7 +36,7 @@ public class PerfInfoTable extends Canvas {
   String rows[];
 
   public PerfInfoTable(PerfSnap snap) {
-    this.snap = snap;
+    this.snap = new PerfSnap(snap);
     prefSize = new Dimension(100, 0);
 
     heads = new String[numHeads];
