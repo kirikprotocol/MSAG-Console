@@ -154,6 +154,7 @@ void Scheduler::UpdateSmsSchedule(time_t old,SMSId id,time_t newtime,SmeIndex id
     };
   }
   timeLine.insert(TimeIdPair(newtime,Data(id,idx)));
+  mon.notify();
 }
 
 int Scheduler::getSmeCount(SmeIndex idx,time_t time)

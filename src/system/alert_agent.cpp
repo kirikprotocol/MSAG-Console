@@ -26,7 +26,7 @@ int AlertAgent::Execute()
         ids.Push(id);
       }
       delete it;
-      __trace2__("AlertAgent: found %d messages",ids.Count());
+      __trace2__("AlertAgent: found %d messages for %s",ids.Count(),cmd->get_address().toString().c_str());
       time_t now=time(NULL);
       for(int i=0;i<ids.Count();i++)
       {
