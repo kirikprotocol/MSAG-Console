@@ -214,12 +214,14 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 		res.insert(ESME_RINVBNDSTS);
 		return res;
 	}
+	/*
 	//если в замещаемом сообщении message_payload
 	if (pdu->get_message().size_shortMessage() &&
 		pdu->get_optional().has_messagePayload())
 	{
 		res.insert(ESME_RREPLACEFAIL);
 	}
+	*/
 	//неправильная длина полей
 	__check_len__(ESME_RINVMSGID,
 		smsId.c_str(), MAX_MSG_ID_LENGTH);
@@ -270,7 +272,12 @@ set<uint32_t> SmppPduChecker::checkReplaceSm(PduData* pduData,
 		}
 		if (smsId.length() > 20)
 		{
-			res.insert(ESME_RINVMSGID);
+			//res.insert(ESME_RINVMSGID);
+			res.insert(ESME_RREPLACEFAIL);
+		}
+		if (smsId.length() && smsId[0] == '-')
+		{
+			res.insert(ESME_RREPLACEFAIL); //для smsId = -1
 		}
 		__require__(replacePduData->strProps.count("smsId"));
 		if (smsId != replacePduData->strProps["smsId"])
