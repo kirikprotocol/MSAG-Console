@@ -818,7 +818,7 @@ static void SendSubmitCommand(MapDialog* dialog)
   }
   catch(exception& e)
   {
-    __trace__("MAP:<exception>: ",e.what());
+    __trace2__("MAP:<exception>: %s",e.what());
   }
 
   MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
