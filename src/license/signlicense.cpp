@@ -13,7 +13,13 @@
 using namespace std;
 using smsc::core::buffers::Hash;
 
-extern bool ReadLicense(FILE* f,Hash<string>& lic);
+namespace smsc{
+namespace license{
+namespace check{
+bool ReadLicense(FILE* f,Hash<string>& lic);
+}
+}
+}
 
 static const unsigned char rsaprivatekey[]={
 0x30,0x82,0x09,0x27,0x02,0x01,0x00,0x02,0x82,0x02,0x01,0x00,0xC4,0xF1,0x44,0x34,0x08,0xD7,0x03,0xA3,
@@ -183,7 +189,7 @@ int main(int argc,char* argv[])
   }
 
   Hash<string> lic;
-  if(!ReadLicense(stdin,lic))
+  if(!smsc::license::check::ReadLicense(stdin,lic))
   {
     fprintf(stderr,"There are errors in license file\n");
     return -1;
