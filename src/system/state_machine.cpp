@@ -2039,6 +2039,7 @@ StateType StateMachine::submit(Tuple& t)
   Task task(uniqueId,dialogId2,isDatagram || isTransaction?new SMS(*sms):0);
   __trace2__("SUBMIT: task.sms=%p",task.sms);
   task.messageId=t.msgId;
+  task.diverted=diverted;
   if ( !smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
   {
     sms->setLastResult(Status::SYSERR);
@@ -2435,7 +2436,10 @@ StateType StateMachine::forward(Tuple& t)
 
   bool diverted=false;
   bool doRepartition=false;
-  if(t.command->get_forwardAllowDivert() && (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&DF_COND))
+  if(t.command->get_forwardAllowDivert() &&
+     (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&DF_COND) &&
+     !(sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&DF_UNCOND)
+    )
   {
     try{
       dst=sms.getStrProperty(Tag::SMSC_DIVERTED_TO).c_str();
@@ -3016,7 +3020,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   // concatenated message with conditional divert.
   // first part delivered ok.
   // other parts MUST be delivered to the same address.
-  if(sms.hasBinProperty(Tag::SMSC_CONCATINFO) && (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&DF_COND))
+  if(sms.hasBinProperty(Tag::SMSC_CONCATINFO) && (sms.getIntProperty(Tag::SMSC_DIVERTFLAGS)&(DF_COND|DF_UNCOND)))
   {
     smsc_log_debug(smsLog,"DLVRESP: msgId=%lld - delivered first part of multipart sms with conditional divert.",t.msgId);
     // first part was delivered to diverted address!
