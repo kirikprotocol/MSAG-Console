@@ -156,22 +156,22 @@ const char * const deliveryModeToStr(const uint8_t deliveryMode)
   }
 }
 
-const Route::ReplyPath strToReplyPath(const char * const replyPathStr)
+const smsc::router::ReplyPath strToReplyPath(const char * const replyPathStr)
 {
-  if (::stricmp("pass", replyPathStr) == 0)     return smsc::util::config::route::Route::REPLY_PATH_PASS;
-  if (::stricmp("force", replyPathStr) == 0)    return smsc::util::config::route::Route::REPLY_PATH_FORCE;
-  if (::stricmp("SUPPRESS", replyPathStr) == 0) return smsc::util::config::route::Route::REPLY_PATH_SUPPRESS;
-  return smsc::util::config::route::Route::REPLY_PATH_PASS;
+  if (::stricmp("pass", replyPathStr) == 0)     return smsc::router::ReplyPathPass;
+  if (::stricmp("force", replyPathStr) == 0)    return smsc::router::ReplyPathForce;
+  if (::stricmp("SUPPRESS", replyPathStr) == 0) return smsc::router::ReplyPathSuppress;
+  return smsc::router::ReplyPathPass;
 }
 
-const char * const replyPathToStr(const Route::ReplyPath replyPath)
+const char * const replyPathToStr(const smsc::router::ReplyPath replyPath)
 {
   switch(replyPath)
   {
-    case smsc::util::config::route::Route::REPLY_PATH_PASS:     return "pass";
-    case smsc::util::config::route::Route::REPLY_PATH_FORCE:    return "force";
-    case smsc::util::config::route::Route::REPLY_PATH_SUPPRESS: return "suppress";
-    default:                                                    return "pass";
+    case smsc::router::ReplyPathPass:     return "pass";
+    case smsc::router::ReplyPathForce:    return "force";
+    case smsc::router::ReplyPathSuppress: return "suppress";
+    default:                              return "pass";
   }
 }
 
