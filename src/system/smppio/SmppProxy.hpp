@@ -370,12 +370,23 @@ public:
     smppTransmitterSocket=ss;
   }
 
+  bool getForceDc()
+  {
+    return forceDc;
+  }
+
+  void setForceDc(bool val)
+  {
+    forceDc=val;
+  }
+
 protected:
   mutable Mutex mutex,mutexin,mutexout;
   std::string id;
   SmeIndex smeIndex;
   smsc::core::buffers::Array<SmscCommand> inqueue;
   smsc::core::buffers::PriorityQueue<SmscCommand,smsc::core::buffers::CyclicQueue<SmscCommand>,0,31> outqueue;
+  bool forceDc;
 
   struct ControlItem{
     time_t submitTime;

@@ -566,6 +566,7 @@ int SmppInputThread::Execute()
                   if(!rebindproxy && proxy)delete proxy;
                 }else
                 {
+                  proxy->setForceDc(smeManager->getSmeInfo(proxy->getSmeIndex()).forceDC);
                   ss->assignProxy(proxy);
                   ss->setSystemId(si.systemId.c_str());
                   __trace2__("assign proxy: %p/%p",ss,proxy);
@@ -667,7 +668,7 @@ int SmppInputThread::Execute()
                     SmscCommand cmd
                     (
                       pdu,
-                      smeManager->getSmeInfo(ss->getProxy()->getSmeIndex()).forceDC
+                      ss->getProxy()->getForceDc()
                     );
                     try{
                       if(ss->getProxy()->isOpened())
