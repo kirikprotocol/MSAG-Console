@@ -196,7 +196,7 @@ if (lastIndex >= bean.getTotalSizeInt() || bean.getPageSizeInt() < 0)
       </td>
   </tr>
   <tr class=row<%=rowN&1%>1>
-      <td colspan=8 style="border-top:dotted 1px #C0C0C0;"><%= (row.getText()!=null&&row.getText().startsWith("&#")?row.getText():StringEncoderDecoder.encode(row.getText()))%>&nbsp;</td>
+      <td colspan=8><%= (row.getText()!=null&&row.getText().startsWith("&#")?row.getText():StringEncoderDecoder.encode(row.getText()))%>&nbsp;</td>
   </tr><%
 }}
 %></tbody>

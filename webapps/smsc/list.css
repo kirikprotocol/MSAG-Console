@@ -58,24 +58,24 @@ table.list tr.row00 td,
 table.list tr.row00 th
 {
 	background-color: #F2EEDA;
-	border-bottom : 1px solid #E4E0CE;
+	border-bottom   : 1px dotted #C0C0C0;
 }
 table.list tr.row01 td,
 table.list tr.row01 th
 {
 	background-color: #F2EEDA;
-	border-bottom : 1px solid #E4E0CE;
+	border-bottom   : 1px solid  #E4E0CE;
 }
 
 table.list tr.row10 td,
 table.list tr.row10 th
 {
 	background-color: #F8F6EE;
-	border-bottom : 1px solid #E6E3D8;
+	border-bottom   : 1px dotted #C0C0C0;
 }
 table.list tr.row11 td,
 table.list tr.row11 th
 {
 	background-color: #F8F6EE;
-	border-bottom : 1px solid #E6E3D8;
+	border-bottom   : 1px solid #E6E3D8;
 }
