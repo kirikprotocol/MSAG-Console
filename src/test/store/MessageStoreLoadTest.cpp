@@ -11,6 +11,15 @@ using namespace smsc::util::config;
 using namespace smsc::test::store;
 using namespace smsc::test::util;
 
+/**
+ * Предназначен для измерения производительности Message Store.
+ * Выполняет только корректные операции по работе с Message Store.
+ * Результат выполнения теста представлен 2-мя цифрами:
+ * <ul>
+ * <li>Количество операций в секунду.
+ * <li>Полное число созданных в БД записей.
+ * </ul>
+ */
 class MessageStoreLoadTestTask : public TestTask
 {
 private:
@@ -33,12 +42,12 @@ public:
 		//tc.updateCorrectExistentSM(); ops++;
 		//tc.deleteExistentSM(); ops++;
 		//tc.loadExistentSM(); ops++;
-	};
+	}
 
-	int getOps()
+	int getOps() const
 	{
 		return ops;
-	};
+	}
 
 	virtual ~MessageStoreLoadTestTask() {}
 };
@@ -55,7 +64,7 @@ public:
 	{
 		ftime(&t1);
 		ops1 = getOps();
-	};
+	}
 
 	float getRate()
 	{
@@ -66,9 +75,9 @@ public:
 		t1 = t2;
 		ops1 = ops2;
 		return rate;
-	};
+	}
 
-	int getOps()
+	int getOps() const
 	{
 		int ops = 0;
 		for (int i = 0; i < tasks.size(); i++)
@@ -76,7 +85,7 @@ public:
 			ops += tasks[i]->getOps();
 		}
 		return ops;
-	};
+	}
 };
 
 int main(int argc, char* argv[])
@@ -85,7 +94,7 @@ int main(int argc, char* argv[])
 	if (argc != 2)
 	{
 		cout << "Usage: MessageStoreLoadTest <numThreads>" << endl;
-		__require__(false);
+		exit(0);
 	}
 	
 	//запустить таски
