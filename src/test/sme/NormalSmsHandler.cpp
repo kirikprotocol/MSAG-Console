@@ -156,7 +156,20 @@ void NormalSmsHandler::registerIntermediateNotificationMonitor(
 	time_t recvTime, time_t respTime)
 {
 	__require__(monitor && pduReg);
-	__require__(!pduReg->getIntermediateNotificationMonitor(monitor->msgRef));
+	//intermediate notification monitor отправляется только после первой
+	//неудачной попытка доставки с rescheduling
+	if (monitor->getLastAttempt())
+	{
+		return;
+	}
+	IntermediateNotificationMonitor* m =
+		pduReg->getIntermediateNotificationMonitor(monitor->msgRef);
+	//__require__(!m);
+	if (m)
+	{
+		__warning2__("registerIntermediateNotificationMonitor(): monitor = %p already registered", m);
+		return;
+	}
 	__decl_tc__;
 	uint8_t regDelivery =
 		SmppTransmitterTestCases::getRegisteredDelivery(monitor->pduData);
@@ -192,11 +205,12 @@ void NormalSmsHandler::registerIntermediateNotificationMonitor(
 			__unreachable__("Invalid respFlag");
 	}
 	//register
-	IntermediateNotificationMonitor* m = new IntermediateNotificationMonitor(
-		monitor->msgRef, startTime, monitor->pduData, PDU_REQUIRED_FLAG);
-	m->state = ENROUTE;
-	m->deliveryStatus = deliveryStatus;
-	pduReg->registerMonitor(m);
+	IntermediateNotificationMonitor* notifMonitor =
+		new IntermediateNotificationMonitor(monitor->msgRef, startTime,
+			monitor->pduData, PDU_REQUIRED_FLAG);
+	notifMonitor->state = ENROUTE;
+	notifMonitor->deliveryStatus = deliveryStatus;
+	pduReg->registerMonitor(notifMonitor);
 }
 
 void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* monitor,
@@ -207,7 +221,15 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 	DeliveryReceiptMonitor* m = pduReg->getDeliveryReceiptMonitor(monitor->msgRef);
 	if (m)
 	{
-		__require__(m->getFlag() == PDU_COND_REQUIRED_FLAG);
+		//если следующая попытка доставки сообщения приходится около validity_period,
+		//то попытка может как состояться, так и нет и delivery report нужно
+		//регистрировать/перерегистрировать в обоих случаях
+		//__require__(m->getFlag() == PDU_COND_REQUIRED_FLAG);
+		if (m->getFlag() != PDU_COND_REQUIRED_FLAG)
+		{
+			__warning2__("registerDeliveryReceiptMonitor(): monitor = %p status is not cond required", m);
+			return;
+		}
 		pduReg->removeMonitor(m);
 		delete m;
 	}
@@ -281,21 +303,18 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 			__unreachable__("Invalid respFlag");
 	}
 	//register
-	m = new DeliveryReceiptMonitor(monitor->msgRef, startTime, monitor->pduData, flag);
-	m->state = state;
-	m->deliveryStatus = deliveryStatus;
-	pduReg->registerMonitor(m);
+	DeliveryReceiptMonitor* rcptMonitor = new DeliveryReceiptMonitor(
+		monitor->msgRef, startTime, monitor->pduData,flag);
+	rcptMonitor->state = state;
+	rcptMonitor->deliveryStatus = deliveryStatus;
+	pduReg->registerMonitor(rcptMonitor);
 }
 
 void NormalSmsHandler::registerDeliveryReportMonitors(const DeliveryMonitor* monitor,
 	PduRegistry* pduReg, uint32_t deliveryStatus, time_t recvTime, time_t respTime)
 {
-	//intermediate notification monitor: первая попытка доставки с rescheduling
-	if (!monitor->getLastAttempt())
-	{
-		registerIntermediateNotificationMonitor(monitor, pduReg, deliveryStatus,
-			recvTime, respTime);
-	}
+	registerIntermediateNotificationMonitor(monitor, pduReg, deliveryStatus,
+		recvTime, respTime);
 	registerDeliveryReceiptMonitor(monitor, pduReg, deliveryStatus,
 		recvTime, respTime);
 }
