@@ -25,9 +25,9 @@ using namespace smsc::core::synchronization;
 class Smsc;
 
 class TrafficControl{
-protected:
-  typedef smsc::util::TimeSlotCounter<> IntTimeSlotCounter;
 public:
+  typedef smsc::util::TimeSlotCounter<> IntTimeSlotCounter;
+
   struct TrafficControlConfig{
     int maxSmsPerSecond;
     int protectThreshold;
@@ -63,6 +63,11 @@ public:
   {
 //    MutexGuard g(mtx);
     return totalCounter.Get();
+  }
+
+  IntTimeSlotCounter& getTotalCounter()
+  {
+    return totalCounter;
   }
 
 /*  int getTotalCountLong()
