@@ -151,6 +151,11 @@ public:
     scheduler->notify();
   }
 
+  void ChangeSmsSchedule(SMSId msgId,time_t t)
+  {
+    scheduler->ChangeSmsSchedule(msgId,t);
+  }
+
   smsc::profiler::Profiler* getProfiler()
   {
     return profiler;

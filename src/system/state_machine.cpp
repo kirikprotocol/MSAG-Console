@@ -1153,6 +1153,7 @@ StateType StateMachine::submit(Tuple& t)
   __trace2__("Sms scheduled to %d, now %d",(int)sms->getNextTime(),(int)now);
   if(stime>now)
   {
+    smsc->ChangeSmsSchedule(t.msgId,stime);
     smsc->notifyScheduler();
     return ENROUTE_STATE;
   }
