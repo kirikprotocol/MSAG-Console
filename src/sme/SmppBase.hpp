@@ -34,6 +34,7 @@ struct Buffer{
   int offset;
 
   Buffer(){buffer=0;size=0;offset=0;}
+  ~Buffer(){if(buffer)delete [] buffer;}
 
   void setSize(int newsize)
   {
@@ -446,7 +447,7 @@ public:
        resp->get_header().get_sequenceNumber()!=pdu.get_header().get_sequenceNumber() ||
        resp->get_header().get_commandStatus()!=SmppStatusSet::ESME_ROK)
     {
-      disposePdu((SmppHeader*)resp);
+      if(resp)disposePdu((SmppHeader*)resp);
       reader.Stop();
       writer.Stop();
       socket.Close();
@@ -454,6 +455,7 @@ public:
       writer.WaitFor();
       throw Exception("Unable to bind sme");
     }
+    disposePdu((SmppHeader*)resp);
     closed=false;
   }
   void close()

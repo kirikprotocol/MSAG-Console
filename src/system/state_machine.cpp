@@ -292,7 +292,10 @@ StateType StateMachine::submit(Tuple& t)
     }catch(...)
     {
     }
-    __warning__("SUBMIT_SM: invalid source address");
+    char buf[256];
+    sms->getOriginatingAddress().toString(buf,sizeof(buf));
+    __warning2__("SUBMIT_SM: invalid source address:%s(%s)",buf,
+      src_proxy->getSourceAddressRange().c_str());
     return ERROR_STATE;
   }
 
@@ -850,6 +853,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
         sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST)
       )
     )return;
+  __trace2__("sendNotifyReport: attemptsCount=%d",sms.getAttemptsCount());
   if(sms.getAttemptsCount()!=0)return;
   SMS rpt;
   rpt.setOriginatingAddress(scAddress);

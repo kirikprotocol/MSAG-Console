@@ -406,6 +406,7 @@ int main(int argc,char* argv[])
   cfg.port=cfgman.getInt("smpp.port");
   cfg.sid=cfgman.getString("smpp.systemId");
   cfg.timeOut=cfgman.getInt("smpp.timeout");
+  cfg.password=cfgman.getString("smpp.password");
   cfg.origAddr=cfgman.getString("smpp.sourceAddress");
 
   cfg::serviceType=cfgman.getString("smpp.serviceType");
@@ -446,14 +447,20 @@ int main(int argc,char* argv[])
     if(cfg::stopSme)break;
     for(;;)
     {
+      __trace__("Waiting for connection");
       auto_ptr<Socket> clnt(srv.Accept());
       if(!clnt.get())break;
       int sz;
+      clnt->setTimeOut(10);
+      __trace__("Got connection");
       if(clnt->ReadAll((char*)&sz,4)==-1)continue;
       sz=ntohl(sz);
+      __trace2__("Message size:%d",sz);
       buf.setSize(sz);
       if(clnt->ReadAll(buf.buffer,sz)==-1)continue;
+      __trace__("Processing message");
       int retcode=ProcessMessage(buf.buffer,sz);
+      __trace2__("Processing finished, code=%d",retcode);
       retcode=htonl(retcode);
       clnt->WriteAll(&retcode,4);
     }
