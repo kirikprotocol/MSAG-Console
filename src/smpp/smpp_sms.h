@@ -440,7 +440,81 @@ inline bool fetchSmsFromDataSmPdu(PduDataSm* pdu,SMS* sms,bool forceDC=false)
   }
   sms->setIntProperty(Tag::SMPP_ESM_CLASS,(uint32_t)data.get_esmClass());
   sms->setIntProperty(Tag::SMPP_REGISTRED_DELIVERY,data.get_registredDelivery());
-  sms->setIntProperty(Tag::SMPP_DATA_CODING,data.get_dataCoding());
+
+  int dc=(uint32_t)data.dataCoding;
+  if(forceDC)
+  {
+    int user_data_coding=dc;
+    sms->setIntProperty(Tag::SMSC_ORIGINAL_DC,dc);
+    sms->setIntProperty(Tag::SMSC_FORCE_DC,1);
+    unsigned encoding = 0;
+    if ( (user_data_coding & 0xc0) == 0 ||  // 00xxxxxx
+         (user_data_coding & 0xc0) == 0x40 )  // 01xxxxxx
+    {
+      if ( user_data_coding&(1<<5) )
+      {
+        __trace2__("SmppToSms: required compression");
+        return false;
+      }
+      encoding = user_data_coding&0x0c;
+      if(encoding==0)encoding=DataCoding::SMSC7BIT;
+      if(encoding==0x0c)encoding=DataCoding::BINARY;
+      if ( (user_data_coding & 0xc0) == 0x40 )
+      {
+        sms->setIntProperty(Tag::SMPP_MS_VALIDITY,0x03);
+      }
+      sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,(user_data_coding&0x03)+1);
+      if(sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)==0x03)
+      {
+        encoding=DataCoding::BINARY;
+      }
+    }
+    else if ( (user_data_coding & 0xf0) == 0xc0 ) // 1100xxxx
+    {
+      encoding = DataCoding::SMSC7BIT;
+      sms->setIntProperty(Tag::SMPP_MS_VALIDITY,0x3);
+      sms->setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
+                         (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
+    }
+    else if ( (user_data_coding & 0xf0) == 0xd0 ) // 1101xxxx
+    {
+      encoding = DataCoding::SMSC7BIT;
+      sms->setIntProperty(Tag::SMPP_MS_VALIDITY,0x0);
+      sms->setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
+                         (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
+    }
+    else if ( (user_data_coding & 0xf0) == 0xe0 ) // 1110xxxx
+    {
+      encoding = DataCoding::UCS2;
+      sms->setIntProperty(Tag::SMPP_MS_VALIDITY,0x0);
+      sms->setIntProperty(Tag::SMPP_MS_MSG_WAIT_FACILITIES,
+                         (user_data_coding&0x3)|((user_data_coding&0x8)<<4));
+    }
+    else if ( (user_data_coding & 0xf0) == 0xf0 ) // 1111xxxx
+    {
+      if ( user_data_coding & 0x4 ) encoding = DataCoding::BINARY;
+      else encoding = DataCoding::SMSC7BIT;
+      sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,(user_data_coding&0x3)+1);
+    }
+    else{
+      encoding=DataCoding::BINARY;
+    }
+    __trace2__("forceDC: %d->%d",dc,encoding);
+    sms->setIntProperty(Tag::SMPP_DATA_CODING,encoding);
+  }else
+  {
+    /*
+    if((dc&0xf0)==0xf0 && (dc&0x08)==0)
+    {
+      sms->setIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT,(dc&0x03)+1);
+      sms->setIntProperty(Tag::SMPP_DATA_CODING,(dc&0x04)?DataCoding::BINARY:DataCoding::SMSC7BIT);
+    }else
+    {
+    */
+      sms->setIntProperty(Tag::SMPP_DATA_CODING,dc);
+    //}
+  }
+
   fetchOptionals(pdu->optional,sms);
   sms->setValidTime(time(NULL)+pdu->optional.get_qosTimeToLive());
   sms->setIntProperty(Tag::SMPP_PRIORITY,0);
@@ -474,7 +548,13 @@ inline bool fillDataSmFromSms(PduDataSm* pdu,SMS* sms,bool forceDC=false)
     dest.set_numberingPlan(addr.getNumberingPlan());
   }
   fillOptional(pdu->optional,sms);
-  data.set_dataCoding((uint8_t)sms->getIntProperty(Tag::SMPP_DATA_CODING));
+  if(forceDC && sms->hasIntProperty(Tag::SMSC_ORIGINAL_DC))
+  {
+    data.set_dataCoding((uint8_t)sms->getIntProperty(Tag::SMSC_ORIGINAL_DC));
+  }else
+  {
+    data.set_dataCoding((uint8_t)sms->getIntProperty(Tag::SMPP_DATA_CODING));
+  }
   data.set_registredDelivery(sms->getIntProperty(Tag::SMPP_REGISTRED_DELIVERY));
   return true;
 }
