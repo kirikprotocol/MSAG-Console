@@ -350,7 +350,8 @@ sub conv_addr_payer{
   };
 
 #  print substr($addr, 1);
-  $addr = substr($addr, 1) if $addr=~/^7913/ || $addr=~/^83832/;
+
+  $addr = substr($addr, 1) if $addr=~/^(?:7913|83832|73832|838822|738822)/;
   if( $addr=~/913985(\d+)/ ) {
     $addr = "383213".$1;
   } elsif( $addr=~/913912(\d+)/ ) {
@@ -361,7 +362,10 @@ sub conv_addr_payer{
     $addr = "383292".$1;
   } elsif( $addr=~/913917(\d+)/ ) {
     $addr = "383299".$1;
+  } elsif( $addr=~/9139999(\d+)/ ) {
+    $addr = "3882299".$1;
   }
+
   return $addr;
 }
 
@@ -408,7 +412,7 @@ sub process{
   my $row;
   while($row=$csv->getline($in))
   {
-    last if @$row==0;
+    last if @$row!=@$hdr;
     my $infields={};
     $infields->{$hdr->[$_]}=$row->[$_]for(0..$#{$row});
     next if $infields->{STATUS}!=0;
