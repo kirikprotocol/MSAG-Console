@@ -38,6 +38,27 @@ USHORT_T Et96MapBindConf(ET96MAP_LOCAL_SSN_T lssn, ET96MAP_BIND_STAT_T status)
   return ET96MAP_E_OK;
 }
 
+USHORT_T Et96MapUAbortInd(ET96MAP_LOCAL_SSN_T lssn,
+                          ET96MAP_DIALOGUE_ID_T dialogid,
+                          ET96MAP_USER_REASON_T *reason,
+                          ET96MAP_DIAGNOSTIC_INFO_T* diag,
+                          ET96MAP_USERDATA_T *ud,
+                          UCHAR_T priorityOrder)
+{
+  __trace2__("MAP::Et96MapUAbortInd");
+  return ET96MAP_E_OK;
+}
+
+USHORT_T Et96MapPAbortInd(ET96MAP_LOCAL_SSN_T lssn,
+                          ET96MAP_DIALOGUE_ID_T dialogid,
+                          ET96MAP_PROV_REASON_T reason,
+                          ET96MAP_SOURCE_T source,
+                          UCHAR_T priorityOrder);
+{
+  __trace2__("MAP::Et96MapPAbortInd")
+  return ET96MAP_E_OK;
+}
+
 USHORT_T  Et96MapOpenInd(
 	ET96MAP_LOCAL_SSN_T lssn, 
 	ET96MAP_DIALOGUE_ID_T dialogId, 

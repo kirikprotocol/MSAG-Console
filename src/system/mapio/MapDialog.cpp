@@ -58,7 +58,7 @@ inline void PutChar(unsigned char*& ptr,unsigned& shift,unsigned char val8bit){
 }
 
 void Convert7BitToText(
-  const unsigned char* bit7buf, int chars,
+  const unsigned char* bit7buf, unsigned chars,
   MicroString* text)
 {
   __require__(chars<=255);
@@ -86,8 +86,10 @@ unsigned ConvertText27bit(
   const unsigned char* text, int chars, unsigned char* bit7buf)
 {
   //__require__(chars<=255);
-  __trace2__("MAP::ConvertText27bit: text length(%d) > 254",chars);
-  throw runtime_error("text length > 254");
+  if ( chars > 160 ){
+    __trace2__("MAP::ConvertText27bit: text length(%d) > 160",chars);
+    throw runtime_error("text length > 160");
+  }
   unsigned char* base = bit7buf;
   unsigned shift = 0;
   for ( int i=0; i< chars; ++i ){
