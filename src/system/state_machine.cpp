@@ -1061,8 +1061,8 @@ StateType StateMachine::submit(Tuple& t)
 
     sms->setIntProperty(Tag::SMSC_DIVERTFLAGS,divertFlags);
 
-    divert_failed:;
   }
+  divert_failed:;
 
 
   smsc::router::RouteInfo ri;
