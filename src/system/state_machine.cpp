@@ -273,6 +273,28 @@ StateType StateMachine::submit(Tuple& t)
     __warning__("SUBMIT_SM: invalid schedule");
     return ERROR_STATE;
   }
+
+  if(sms->hasBinProperty(Tag::SMPP_SHORT_MESSAGE) && sms->hasBinProperty(Tag::SMPP_PAYLOAD_TYPE))
+  {
+    sms->lastResult=Status::SUBMITFAIL;
+    smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
+    SmscCommand resp = SmscCommand::makeSubmitSmResp
+                         (
+                           /*messageId*/"0",
+                           dialogId,
+                           Status::SUBMITFAIL,
+                           sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
+                         );
+    try{
+      src_proxy->putCommand(resp);
+    }catch(...)
+    {
+      __warning__("SUBMIT_SM: failed to put response command");
+    }
+    __warning__("SUBMIT_SM: both short_message and payload present!!!");
+    return ERROR_STATE;
+  }
+
   if(sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::DEFAULT &&
      sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::UCS2 &&
      sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)!=DataCoding::BINARY &&
@@ -678,7 +700,7 @@ StateType StateMachine::forward(Tuple& t)
   {
     return sms.getState();
   }
-  if(sms.hasIntProperty(Tag::SMSC_USSD_OP))
+  if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
     Descriptor d;
     try{
@@ -853,6 +875,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
           __trace__("DELIVERYRESP: failed to change state to enroute");
         }
         smsc->notifyScheduler();
+        sms.lastResult=GET_STATUS_CODE(t.command->get_resp()->get_status());
+        smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
         return UNKNOWN_STATE;
       }break;
       case CMD_ERR_TEMP:
@@ -906,7 +930,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms);
   try{
     //smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
-    if(!sms.hasIntProperty(Tag::SMSC_USSD_OP))
+    if(!sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
     {
       if(//p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
          sms.getDeliveryReport() ||
@@ -1220,7 +1244,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
         sms.getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST)
       )
     )return;
-  if(sms.hasIntProperty(Tag::SMSC_USSD_OP))return;
+  if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))return;
   SMS rpt;
   rpt.setOriginatingAddress(scAddress);
   char msc[]="123";
@@ -1270,7 +1294,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
     )return;
   __trace2__("sendNotifyReport: attemptsCount=%d",sms.getAttemptsCount());
   if(sms.getAttemptsCount()!=0)return;
-  if(sms.hasIntProperty(Tag::SMSC_USSD_OP))return;
+  if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))return;
   SMS rpt;
   rpt.setOriginatingAddress(scAddress);
   char msc[]="123";
