@@ -264,6 +264,8 @@ public:
       if ( item->getAbonent() ) lock_map.Delete(item->getAbonent());
       hash.Delete(dialogueid);
       delete item;
+    }else{
+      __trace2__("MAP::dropDialog: has no dialog for dialogid 0x%x",dialogueid);
     }
   }
   

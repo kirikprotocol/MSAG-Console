@@ -998,8 +998,39 @@ USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
              sms->getDestinationAddress().value);
   }
   state = MAPST_RINFOIND;
+  if ( errorSendRoutingInfoForSm_sp != 0 ){
+    bool fatal = false;
+    switch( errorSendRoutingInfoForSm_sp->errorCode){
+    case 1: 
+    case 11:
+    case 13:
+    case 21:
+      fatal = true;
+    case 6:
+      fatal = false;
+    default:    
+      fatal = true;
+    }
+    if ( fatal ) {
+      cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_FATAL,MAP_NETWORKERROR));
+    }else{
+      cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_TEMP,MAP_NETWORKERROR));
+    }
+    __trace2__("MAP::Et96MapV2SendRInfoForSmConf errorSendRoutingInfoForSm_sp->errorCode 0x%hx",
+               errorSendRoutingInfoForSm_sp->errorCode);
+    throw runtime_error("MAP::Et96MapV2SendRInfoForSmConf error");
+  }
   if ( provErrCode_p != 0 ){
     // error hadling
+    if ( *prevErrCode_p == 0x02 || // unsupported service
+         *provErrCode_p == 0x03 || // mystyped parametor
+         *provErrCode_p == 0x06 || // unexcpected responnse from peer
+         *provErrCode_p == 0x09 || // invalid responce recived
+         (*provErrCode_p < 0x0a && *provErrrCode_p >= 0x10)) // unxpected component end other
+      cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_FATAL,MAP_NETWORKERROR));
+    }else{
+      cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,MAKE_ERRORCODE(CMD_ERR_TEMP,MAP_NETWORKERROR));
+    }
     __trace2__("MAP::Et96MapV2SendRInfoForSmConf provErrCode_p 0x%hx",*provErrCode_p);
     throw runtime_error("MAP::Et96MapV2SendRInfoForSmConf error");
   }
