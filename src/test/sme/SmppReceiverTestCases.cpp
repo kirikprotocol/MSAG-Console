@@ -1,5 +1,5 @@
 #include "SmppReceiverTestCases.hpp"
-#include "test/TestConfig.hpp"
+#include "test/conf/TestConfig.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "test/util/TextUtil.hpp"
 #include "core/synchronization/Mutex.hpp"
@@ -63,7 +63,7 @@ namespace sme {
 using smsc::util::Logger;
 using smsc::core::synchronization::MutexGuard;
 using smsc::sme::SmppTransmitter;
-using smsc::test::TestConfig;
+using smsc::test::conf::TestConfig;
 using namespace smsc::profiler;
 using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::smpp::SmppStatusSet;

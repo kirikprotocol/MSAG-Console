@@ -2,7 +2,7 @@
 #include "test/core/ProfileUtil.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "test/util/TextUtil.hpp"
-#include "test/TestConfig.hpp"
+#include "test/conf/TestConfig.hpp"
 #include "util/debug.h"
 #include "smeman/smsccmd.h"
 #include <algorithm>
@@ -13,10 +13,10 @@ namespace profiler {
 
 using smsc::util::Logger;
 using smsc::smeman::SmsResp;
+using smsc::test::conf::TestConfig;
 using namespace std;
 using namespace smsc::sms; //constants
 using namespace smsc::profiler; //constants
-using namespace smsc::test; //config params
 using namespace smsc::test::sms;
 using namespace smsc::test::core; //ProfileUtil, str()
 using namespace smsc::test::util;

@@ -1,7 +1,7 @@
 #include "RouteChecker.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "test/smpp/SmppUtil.hpp"
-#include "test/TestConfig.hpp"
+#include "test/conf/TestConfig.hpp"
 #include "util/debug.h"
 
 namespace smsc {
@@ -14,7 +14,7 @@ using smsc::sms::AddressValue;
 using smsc::test::sms::operator!=;
 using smsc::test::sms::str;
 using smsc::test::smpp::SmppUtil;
-using namespace smsc::test; //config constants
+using smsc::test::conf::TestConfig;
 
 RouteChecker::RouteChecker(const string& id, const Address& addr,
 	const SmeRegistry* _smeReg, const AliasRegistry* _aliasReg,

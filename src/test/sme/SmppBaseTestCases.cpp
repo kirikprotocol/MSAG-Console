@@ -1,5 +1,5 @@
 #include "SmppBaseTestCases.hpp"
-#include "test/TestConfig.hpp"
+#include "test/conf/TestConfig.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "test/util/Util.hpp"
 
@@ -9,7 +9,7 @@ namespace sme {
 
 using smsc::util::Logger;
 using smsc::core::synchronization::MutexGuard;
-using smsc::test::TestConfig;
+using smsc::test::conf::TestConfig;
 using namespace smsc::test::core; //flags
 using namespace smsc::test::util;
 using namespace smsc::smpp::SmppCommandSet;

@@ -1,6 +1,6 @@
 #include "SmppPduChecker.hpp"
 #include "test/smpp/SmppUtil.hpp"
-#include "test/TestConfig.hpp"
+#include "test/conf/TestConfig.hpp"
 
 namespace smsc {
 namespace test {
@@ -9,8 +9,8 @@ namespace sme {
 using smsc::test::smpp::SmppUtil;
 using smsc::test::util::TestCase;
 using smsc::test::util::SyncTestCase;
+using smsc::test::conf::TestConfig;
 using namespace std;
-using namespace smsc::test; //config constants
 using namespace smsc::test::core; //constants
 using namespace smsc::smpp::SmppCommandSet; //constants
 using namespace smsc::smpp::SmppStatusSet; //constants

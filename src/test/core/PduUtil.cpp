@@ -5,6 +5,8 @@ namespace smsc {
 namespace test {
 namespace core {
 
+using smsc::test::conf::TestConfig;
+
 void PduReceiptFlag::eval(time_t time, int& attempt, time_t& diff,
 	time_t& nextTime, time_t& calcTime) const
 {

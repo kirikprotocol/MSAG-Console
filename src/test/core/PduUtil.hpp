@@ -3,7 +3,7 @@
 
 #include "smpp/smpp_structures.h"
 #include "test/sms/SmsUtil.hpp"
-#include "test/TestConfig.hpp"
+#include "test/conf/TestConfig.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include <ctime>
 #include <string>
@@ -20,7 +20,6 @@ using smsc::core::synchronization::MutexGuard;
 using std::string;
 using std::map;
 using std::vector;
-using namespace smsc::test;
 
 typedef enum
 {

@@ -1,7 +1,7 @@
 #include "SmppUtil.hpp"
 #include "test/util/Util.hpp"
 #include "test/util/TextUtil.hpp"
-#include "test/TestConfig.hpp"
+#include "test/conf/TestConfig.hpp"
 #include "sms/sms.h"
 #include "util/debug.h"
 #include <algorithm>
@@ -12,9 +12,9 @@ namespace smsc {
 namespace test {
 namespace smpp {
 
+using smsc::test::conf::TestConfig;
 using namespace std;
 using namespace smsc::sms; //constants
-using namespace smsc::test; //config params
 using namespace smsc::test::util;
 //using smsc::test::sms::SmsUtil;
 

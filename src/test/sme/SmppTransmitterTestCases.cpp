@@ -1,5 +1,5 @@
 #include "SmppTransmitterTestCases.hpp"
-#include "test/TestConfig.hpp"
+#include "test/conf/TestConfig.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "test/smpp/SmppUtil.hpp"
 #include "test/util/TextUtil.hpp"
@@ -9,7 +9,7 @@ namespace test {
 namespace sme {
 
 using smsc::util::Logger;
-using smsc::test::TestConfig;
+using smsc::test::conf::TestConfig;
 using namespace smsc::sms; //constants
 using namespace smsc::profiler; //constants, Profile
 using namespace smsc::smpp::SmppCommandSet; //constants
