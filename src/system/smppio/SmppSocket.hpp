@@ -15,6 +15,12 @@ enum{
   ssModeWrite,
 };
 
+enum{
+  ctReceiver,    //channel type
+  ctTransmitter,
+  ctTransceiver,
+};
+
 #define SSOCK_PACKET_SIZE 1024
 #define SSOCK_INIT_READ_BUFFER 256
 
@@ -91,6 +97,15 @@ public:
 
   void notifyOutThread();
 
+  void setChannelType(int ct)
+  {
+    channelType=ct;
+  }
+
+  int getChannelType(){return channelType;}
+
+  bool hasOutput();
+
 protected:
   char* buffer;
   int dataLength;
@@ -103,6 +118,7 @@ protected:
   int timeOut;
   SmppIOTask *inThread,*outThread;
   SmppProxy *proxy;
+  int channelType;
 };//smppioSocket
 
 };//smppio

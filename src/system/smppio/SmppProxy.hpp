@@ -21,18 +21,16 @@ using namespace smsc::smeman;
 using namespace smsc::core::synchronization;
 using smsc::util::Exception;
 
-const int proxyTranmitter=smeTX;
+const int proxyTransmitter=smeTX;
 const int proxyReceiver=smeRX;
 const int proxyTransceiver=smeTRX;
 
 
-class SmppSocket;
-
 class SmppProxy:public SmeProxy{
 public:
-  SmppProxy(SmppSocket* sock):smppSocket(sock)
+  SmppProxy(SmppSocket* sock):smppReceiverSocket(sock),smppTransmitterSocket(sock)
   {
-    smppSocket->assignProxy(this);
+    smppReceiverSocket->assignProxy(this);
     seq=1;
     refcnt=2;
     managerMonitor=NULL;
@@ -47,10 +45,11 @@ public:
   virtual void disconnect()
   {
     MutexGuard g(mutex);
-    if(smppSocket)smppSocket->getSocket()->Close();
+    if(smppReceiverSocket)smppReceiverSocket->getSocket()->Close();
+    if(smppTransmitterSocket)smppTransmitterSocket->getSocket()->Close();
   }
-  bool CheckValidIncomingCmd(const SmscCommand& cmd);
-  bool CheckValidOutgoingCmd(const SmscCommand& cmd);
+  inline bool CheckValidIncomingCmd(const SmscCommand& cmd);
+  inline bool CheckValidOutgoingCmd(const SmscCommand& cmd);
 
 
   virtual void putCommand(const SmscCommand& cmd)
@@ -80,7 +79,8 @@ public:
       trace2("put command:total %d commands",outqueue.Count());
       outqueue.Push(cmd,cmd->get_priority());
     }
-    smppSocket->notifyOutThread();
+    if(smppReceiverSocket)smppReceiverSocket->notifyOutThread();
+    if(smppTransmitterSocket)smppTransmitterSocket->notifyOutThread();
   }
   virtual SmscCommand getCommand()
   {
@@ -132,7 +132,8 @@ public:
         if(!opened)return;
         outqueue.Push(errresp,errresp->get_priority());
       }
-      smppSocket->notifyOutThread();
+      if(smppReceiverSocket)smppReceiverSocket->notifyOutThread();
+      if(smppTransmitterSocket)smppTransmitterSocket->notifyOutThread();
       return;
     }
     /*if(cmd->get_commandId()==ENQUIRELINK)
@@ -174,16 +175,48 @@ public:
   }
   SmscCommand getOutgoingCommand()
   {
-    mutexout.Lock();
+    MutexGuard g(mutexout);
     SmscCommand cmd;
     outqueue.Pop(cmd);
-    mutexout.Unlock();
     return cmd;
   }
 
-  bool hasOutput()
+  bool hasOutput(int ct)
   {
     MutexGuard g(mutexout);
+    if(outqueue.Count()==0)return false;
+    if(ct==ctReceiver)
+    {
+      SmscCommand cmd;
+      if(outqueue.Peek(cmd))
+      {
+        int cmdid=cmd->get_commandId();
+        __trace2__("check output for receiver:cmdid=%d",cmdid);
+        return !(
+                 cmdid==SUBMIT_RESP ||
+                 cmdid==SUBMIT_MULTI_SM_RESP ||
+                 cmdid==CANCEL_RESP ||
+                 cmdid==QUERY_RESP ||
+                 cmdid==REPLACE_RESP
+               );
+      }
+    }else if(ct==ctTransmitter)
+    {
+      SmscCommand cmd;
+      if(outqueue.Peek(cmd))
+      {
+        outqueue.Peek(cmd);
+        int cmdid=cmd->get_commandId();
+        __trace2__("check output for transmitter:cmdid=%d",cmdid);
+        return (
+                 cmdid==SUBMIT_RESP ||
+                 cmdid==SUBMIT_MULTI_SM_RESP ||
+                 cmdid==CANCEL_RESP ||
+                 cmdid==QUERY_RESP ||
+                 cmdid==REPLACE_RESP
+               );
+      }
+    }
     return outqueue.Count()!=0;
   }
 
@@ -235,10 +268,29 @@ public:
     return opened;
   }
 
-  int Unref()
+  void AddRef()
   {
     MutexGuard g(mutex);
+    refcnt+=2;
+  }
+
+  int Unref(int ct)
+  {
+    MutexGuard g(mutex);
+    if(refcnt>2)
+    {
+      if(ct==ctReceiver && proxyType==proxyTransceiver)
+      {
+        proxyType=proxyTransmitter;
+        __trace2__("SmppProxy: downgrade to transmitter");
+      }else if(ct==ctTransmitter && proxyType==proxyTransceiver)
+      {
+        __trace2__("SmppProxy: downgrade to receiver");
+        proxyType=proxyReceiver;
+      }
+    }
     int cnt=--refcnt;
+    if(refcnt==1)close();
     return cnt;
   }
 
@@ -256,10 +308,21 @@ public:
   bool getPeers(char* in,char* out)
   {
     MutexGuard mg(mutex);
-    if(!smppSocket || !smppSocket->getSocket())return false;
-    smppSocket->getSocket()->GetPeer(in);
-    smppSocket->getSocket()->GetPeer(out);
-    return in[0]!=0;
+    if(!smppReceiverSocket && !smppTransmitterSocket)return false;
+    if(smppReceiverSocket)smppReceiverSocket->getSocket()->GetPeer(in);
+    else in[0]=0;
+    if(smppTransmitterSocket)smppTransmitterSocket->getSocket()->GetPeer(out);
+    else out[0]=0;
+    return in[0]!=0 || out[0]!=0;
+  }
+
+  void setReceiverSocket(SmppSocket* ss)
+  {
+    smppReceiverSocket=ss;
+  }
+  void setTransmitterSocket(SmppSocket* ss)
+  {
+    smppTransmitterSocket=ss;
   }
 
 protected:
@@ -273,7 +336,8 @@ protected:
   bool opened;
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
-  SmppSocket *smppSocket;
+  SmppSocket *smppReceiverSocket;
+  SmppSocket *smppTransmitterSocket;
   int refcnt;
 };
 
@@ -300,7 +364,7 @@ bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
         default:
           return false;
       }
-    case proxyTranmitter:
+    case proxyTransmitter:
       switch(cmd->get_commandId())
       {
         case SUBMIT_RESP:
@@ -351,7 +415,7 @@ bool SmppProxy::CheckValidOutgoingCmd(const SmscCommand& cmd)
         default:
           return false;
       }
-    case proxyTranmitter:
+    case proxyTransmitter:
       switch(cmd->get_commandId())
       {
         case SUBMIT:

@@ -26,10 +26,17 @@ const int SOCKET_SLOT_OUTPUTMULTI=5;
 const int SOCKET_SLOT_KILL=6;
 
 
-static void KillProxy(SmppProxy* proxy)
+static void KillProxy(int ct,SmppProxy* proxy,SmeManager* smeManager)
 {
-  if(proxy && !proxy->Unref())
+  if(proxy && !proxy->Unref(ct))
   {
+    try{
+      __trace2__("unregistering smeId=%s",proxy->getSystemId());
+      smeManager->unregisterSmeProxy(proxy->getSystemId());
+    }catch(...)
+    {
+      __trace2__("failed to unregister");
+    }
     __trace2__("KILLPROXY: %p(%s)",proxy,proxy->getSystemId());
     delete proxy;
   }
@@ -88,21 +95,7 @@ void SmppInputThread::killSocket(int idx)
     (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
   trace2("removing socket %p by input thread",s);
   int rcnt=m->removeSocket(s);
-  if(ss->getProxy())
-  {
-    ss->getProxy()->close();
-  }
-  if(!rcnt && ss->getProxy())
-  {
-    try{
-      __trace2__("unregistering smeId=%s",ss->getProxy()->getSystemId());
-      smeManager->unregisterSmeProxy(ss->getProxy()->getSystemId());
-    }catch(...)
-    {
-      __trace2__("failed to unregister");
-    }
-  }
-  KillProxy(ss->getProxy());
+  KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
   delete ss;
 }
 
@@ -297,11 +290,33 @@ int SmppInputThread::Execute()
               }
               PduBindTRX *bindpdu=
                 reinterpret_cast<smsc::smpp::PduBindTRX*>(pdu);
-              SmppProxy *proxy=new SmppProxy(ss);
-              SmeIndex proxyIndex;
-              bool err=false;
-              PduBindTRXResp resppdu;
+
               std::string sid=bindpdu->get_systemId()?bindpdu->get_systemId():"";
+
+              SmppProxy *proxy=NULL;
+              bool err=false;
+              bool rebindproxy=false;
+
+              try{
+                proxy=(SmppProxy*)smeManager->checkSmeProxy(
+                  bindpdu->get_systemId()?bindpdu->get_systemId():"",
+                  bindpdu->get_password()?bindpdu->get_password():""
+                );
+                if(proxy)
+                {
+                  rebindproxy=true;
+                  __trace2__("SmppProxy: rebind!");
+                }
+              }catch(...)
+              {
+                err=true;
+              }
+
+              if(!proxy)proxy=new SmppProxy(ss);
+
+              SmeIndex proxyIndex;
+              PduBindTRXResp resppdu;
+
               try{
                 proxyIndex=smeManager->lookup(sid);
               }catch(...)
@@ -314,36 +329,88 @@ int SmppInputThread::Execute()
               if(!err)
               {
                 si=smeManager->getSmeInfo(proxyIndex);
-              }
-              switch(pdu->get_commandId())
-              {
-                case SmppCommandSet::BIND_RECIEVER:
-                  proxy->setProxyType(proxyReceiver);
-                  if(!(si.bindMode==smeRX || si.bindMode==smeTRX))
-                  {
-                    resppdu.get_header().
-                      set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
-                    err=true;
-                  }
-                  break;
-                case SmppCommandSet::BIND_TRANSMITTER:
-                  proxy->setProxyType(proxyTranmitter);
-                  if(!(si.bindMode==smeTX || si.bindMode==smeTRX))
-                  {
-                    resppdu.get_header().
-                      set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
-                    err=true;
-                  }
-                  break;
-                case SmppCommandSet::BIND_TRANCIEVER:
-                  proxy->setProxyType(proxyTransceiver);
-                  if(si.bindMode!=smeTRX)
-                  {
-                    resppdu.get_header().
-                      set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
-                    err=true;
-                  }
-                  break;
+                switch(pdu->get_commandId())
+                {
+                  case SmppCommandSet::BIND_RECIEVER:
+                    if(!(si.bindMode==smeRX || si.bindMode==smeTRX))
+                    {
+                      resppdu.get_header().
+                        set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                      err=true;
+                    }
+                    if(!err)
+                    {
+                      if(rebindproxy)
+                      {
+                        if(proxy->getBindMode()!=proxyTransmitter)
+                        {
+                          resppdu.get_header().
+                            set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                          err=true;
+                        }else
+                        {
+                          __trace2__("SmppProxy: upgrade to transceiver");
+                          proxy->setProxyType(proxyTransceiver);
+                          proxy->setReceiverSocket(ss);
+                        }
+                      }else
+                        proxy->setProxyType(proxyReceiver);
+
+                      ss->setChannelType(ctReceiver);
+                      ((SmppSocket*)(ss->getSocket()->
+                        getData(SOCKET_SLOT_OUTPUTSMPPSOCKET)))->
+                        setChannelType(ctReceiver);
+                    }
+                    break;
+                  case SmppCommandSet::BIND_TRANSMITTER:
+                    if(!(si.bindMode==smeTX || si.bindMode==smeTRX))
+                    {
+                      resppdu.get_header().
+                        set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                      err=true;
+                    }
+                    if(!err)
+                    {
+                      if(rebindproxy)
+                      {
+                        if(proxy->getBindMode()!=proxyReceiver)
+                        {
+                          resppdu.get_header().
+                            set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                          err=true;
+                        }else
+                        {
+                          __trace2__("SmppProxy: upgrade to transceiver");
+                          proxy->setProxyType(proxyTransceiver);
+                          proxy->setTransmitterSocket(ss);
+                        }
+                      }else
+                        proxy->setProxyType(proxyTransmitter);
+
+                      ss->setChannelType(ctTransmitter);
+                      ((SmppSocket*)(ss->getSocket()->
+                        getData(SOCKET_SLOT_OUTPUTSMPPSOCKET)))->
+                        setChannelType(ctTransmitter);
+                    }
+                    break;
+                  case SmppCommandSet::BIND_TRANCIEVER:
+                    if(si.bindMode!=smeTRX)
+                    {
+                      resppdu.get_header().
+                        set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                      err=true;
+                    }
+                    if(rebindproxy)err=true;
+                    if(!err)
+                    {
+                      proxy->setProxyType(proxyTransceiver);
+                      ss->setChannelType(ctTransceiver);
+                      ((SmppSocket*)(ss->getSocket()->
+                        getData(SOCKET_SLOT_OUTPUTSMPPSOCKET)))->
+                        setChannelType(ctTransceiver);
+                    }
+                    break;
+                }
               }
               resppdu.get_header().
                 set_commandId(pdu->get_commandId()|0x80000000);
@@ -389,13 +456,19 @@ int SmppInputThread::Execute()
               if(!err)
               {
                 try{
-                  __trace2__("try to register sme:%s",sid.c_str());
-                  smeManager->registerSmeProxy(
-                    bindpdu->get_systemId()?bindpdu->get_systemId():"",
-                    bindpdu->get_password()?bindpdu->get_password():"",
-                    proxy);
-                  proxy->setId(sid,proxyIndex);
-                  __trace2__("NEWPROXY: p=%p, smid=%s, forceDC=%s",proxy,sid.c_str(),si.forceDC?"true":"false");
+                  if(!rebindproxy)
+                  {
+                    __trace2__("try to register sme:%s",sid.c_str());
+                    smeManager->registerSmeProxy(
+                      bindpdu->get_systemId()?bindpdu->get_systemId():"",
+                      bindpdu->get_password()?bindpdu->get_password():"",
+                      proxy);
+                    proxy->setId(sid,proxyIndex);
+                    __trace2__("NEWPROXY: p=%p, smid=%s, forceDC=%s",proxy,sid.c_str(),si.forceDC?"true":"false");
+                  }else
+                  {
+                    proxy->AddRef();
+                  }
                   resppdu.get_header().
                     set_commandStatus(SmppStatusSet::ESME_ROK);
                 }catch(SmeRegisterException& e)
@@ -450,7 +523,7 @@ int SmppInputThread::Execute()
                     break;
                   }
                 }
-                delete proxy;
+                if(!rebindproxy)delete proxy;
               }else
               {
                 ss->assignProxy(proxy);
@@ -475,7 +548,7 @@ int SmppInputThread::Execute()
                     )
                   );
                   ss->getProxy()->close();
-                  KillProxy(ss->getProxy());
+                  KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
                   ss->assignProxy(0);
                 }else
                 {
@@ -668,21 +741,7 @@ void SmppOutputThread::killSocket(int idx)
   SmppSocketsManager *m=
     (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
   int rcnt=m->removeSocket(s);
-  if(ss->getProxy())
-  {
-    ss->getProxy()->close();
-  }
-  if(!rcnt && ss->getProxy())
-  {
-    __trace2__("unregistering smeId=%s",ss->getProxy()->getSystemId());
-    try{
-      smeManager->unregisterSmeProxy(ss->getProxy()->getSystemId());
-    }catch(...)
-    {
-      __trace2__("failed to unregister");
-    }
-  }
-  KillProxy(ss->getProxy());
+  KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
   delete ss;
 }
 
@@ -720,7 +779,7 @@ int SmppOutputThread::Execute()
         i--;
         continue;
       }
-      if(!ss->hasData() && ss->getProxy() && ss->getProxy()->hasOutput())
+      if(!ss->hasData() && ss->getProxy() && ss->hasOutput())
       {
         SmscCommand cmd=ss->getProxy()->getOutgoingCommand();
 
@@ -745,7 +804,7 @@ int SmppOutputThread::Execute()
           {
             __trace__("SmppOutputThread: failed to unregister");
           }
-          KillProxy(ss->getProxy());
+          KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
           ss->assignProxy(0);
         }
       }

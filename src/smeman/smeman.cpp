@@ -192,6 +192,28 @@ __synchronized__
 }
 
 
+SmeProxy* SmeManager::checkSmeProxy(const SmeSystemId& systemId,const SmePassword& pwd)
+{
+  SmeIndex index = internalLookup(systemId);
+  if ( index == INVALID_SME_INDEX )
+  {
+    throw SmeRegisterException(SmeRegisterFailReasons::rfUnknownSystemId);
+  }
+  if ( records[index]->info.disabled)
+  {
+    __trace2__("Attempt to bind disabled sme:%s",systemId.c_str());
+    throw SmeRegisterException(SmeRegisterFailReasons::rfDisabled);
+  }
+  if ( records[index]->info.password!=pwd)
+  {
+    __trace2__("Invalid password for sme %s (%s!=%s)",systemId.c_str(),
+      records[index]->info.password.c_str(),pwd.c_str());
+    throw SmeRegisterException(SmeRegisterFailReasons::rfInvalidPassword);
+  }
+  return records[index]->proxy;
+}
+
+
 void SmeManager::registerSmeProxy(const SmeSystemId& systemId,
                                   const SmePassword& pwd,
                                   SmeProxy* smeProxy)

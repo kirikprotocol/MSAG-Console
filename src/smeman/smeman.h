@@ -198,6 +198,8 @@ public:
                                 SmeProxy* smeProxy);
   virtual void registerInternallSmeProxy(const SmeSystemId& systemId,
                                 SmeProxy* smeProxy);
+
+  SmeProxy* checkSmeProxy(const SmeSystemId& systemId,const SmePassword& pwd);
   virtual void unregisterSmeProxy(const SmeSystemId& systemId);
 
   // SmeDispatcher implementation

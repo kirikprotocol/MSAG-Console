@@ -3,6 +3,7 @@
 #endif
 
 #include "system/smppio/SmppSocket.hpp"
+#include "system/smppio/SmppProxy.hpp"
 #include <string.h>
 
 namespace smsc{
@@ -108,6 +109,11 @@ smsc::smpp::SmppHeader* SmppSocket::decode()
 void SmppSocket::notifyOutThread()
 {
   outThread->notify();
+}
+
+bool SmppSocket::hasOutput()
+{
+  return proxy->hasOutput(channelType);
 }
 
 

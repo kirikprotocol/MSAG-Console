@@ -48,6 +48,31 @@ public:
     return *this;
   }
 
+  bool Peek(T& item)
+  {
+    if(count==0)return false;
+    __require__(minuse>=0 && minuse<=max-min+1 && maxuse>=0 && maxuse<=max-min+1);
+    //__trace2__("PQ: enter pop - minuse=%d, maxuse=%d",minuse,maxuse);
+    int best=minuse,i;
+    double bestval=(double)counts[minuse]/((minuse+min)>0?(minuse+min):1);
+
+    for(i=minuse+1;i<=maxuse;i++)
+    {
+      if(queue[i].Count()==0)
+      {
+        continue;
+      }
+      double val=(double)counts[i]/((i+min)>0?(i+min):1);
+      if(val<bestval)
+      {
+        best=i;
+        bestval=val;
+      }
+    }
+    item=queue[best][0];
+    return true;
+  }
+
   bool Pop(T& item)
   {
     if(count==0)return false;
