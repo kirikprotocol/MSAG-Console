@@ -27,7 +27,7 @@
 
 #include "MessageStore.h"
 #include "ConnectionManager.h"
-#include "Archiver.h"
+#include "Cleaner.h"
 
 #undef SMSC_FAKE_MEMORY_MESSAGE_STORE
 //#define SMSC_FAKE_MEMORY_MESSAGE_STORE
@@ -145,22 +145,12 @@ namespace smsc { namespace store
             SMSId id, const Descriptor& dst,
             uint32_t failureCause, time_t nextTryTime, bool skipAttempt=false)
                 throw(StorageException, NoSuchMessageException);
-        void doChangeSmsStateToDelivered(StorageConnection* connection,
-            SMSId id, const Descriptor& dst)
-                throw(StorageException, NoSuchMessageException);
-        void doChangeSmsStateToUndeliverable(StorageConnection* connection,
-            SMSId id, const Descriptor& dst, uint32_t failureCause)
-                throw(StorageException, NoSuchMessageException);
-        void doChangeSmsStateToExpired(StorageConnection* connection,
-            SMSId id)
-                throw(StorageException, NoSuchMessageException);
-        void doChangeSmsStateToDeleted(StorageConnection* connection,
-            SMSId id)
-                throw(StorageException, NoSuchMessageException);
+        void doFinalizeSms(SMSId id, SMS& sms)
+            throw(StorageException);
+        
         void doChangeSmsConcatSequenceNumber(StorageConnection* connection,
                                              SMSId id, int8_t inc) 
                 throw(StorageException, NoSuchMessageException); 
-
 
     public:
 
@@ -376,13 +366,13 @@ namespace smsc { namespace store
         static Mutex mutex;
 
         static IDGenerator              *generator;
-        static Archiver                 *archiver;
+        static Cleaner                  *cleaner;
         static RemoteStore              *instance;
 
         static log4cpp::Category        &log;
 
         static bool needCache(Manager& config);
-        static bool needArchiver(Manager& config);
+        static bool needCleaner(Manager& config);
 
     public:
 
@@ -493,57 +483,46 @@ namespace smsc { namespace store
         }
 
         /**
-         * Позволяет принудительно активизировать подсистему архивации и
-         * создания биллинговых записей.
+         * Позволяет принудительно активизировать подсистему очистки
          *
          * @exception StorageException
          *                   возникает при ошибке хранилища физической природы,
          *                   т.н когда хранилище недоступно.
-         * @see Archiver
+         * @see Cleaner
          */
-        static void startArchiver()
+        static void startCleaner()
             throw (StorageException)
         {
-            __require__(archiver);
-            return archiver->Start();
+            __require__(cleaner);
+            cleaner->Start();
         }
         /**
-         * Позволяет принудительно остановить подсистему архивации и
-         * создания биллинговых записей.
+         * Позволяет принудительно остановить подсистему очистки
          *
-         * Ожидает завершения текущего минимального кванта работы архиватора.
-         * @see Archiver
+         * Ожидает завершения текущего минимального кванта работы.
+         * @see Cleaner
          */
-        static void stopArchiver() {
-            __require__(archiver);
-            return archiver->Stop();
+        static void stopCleaner() {
+            __require__(cleaner);
+            cleaner->Stop();
         }
         /**
-         * @return Возвращает признак, запущена ли подсистема архивации
-         *         и создания биллинговых записей в настоящее время.
-         * @see Archiver
+         * @return Возвращает признак, запущена ли подсистема очистки
+         *
+         * @see Cleaner
          */
-        static bool isArchiverStarted() {
-            __require__(archiver);
-            return archiver->isStarted();
+        static bool isCleanerStarted() {
+            __require__(cleaner);
+            return cleaner->isStarted();
         }
         /**
-         * @return Возвращает признак, работает ли реально процесс архивации
-         *         и создания биллинговых записей в настоящее время.
-         * @see Archiver
+         * @return Возвращает признак, работает ли реально процесс очистки
+         *
+         * @see Cleaner
          */
-        static bool isArchivationInProgress() {
-            __require__(archiver);
-            return archiver->isInProgress();
-        }
-
-        static void incrementFinalizedCount(unsigned count=1) {
-            __require__(archiver);
-            archiver->incrementFinalizedCount();
-        }
-        static void decrementFinalizedCount(unsigned count=1) {
-            __require__(archiver);
-            archiver->decrementFinalizedCount();
+        static bool isCleaningInProgress() {
+            __require__(cleaner);
+            return cleaner->isInProgress();
         }
 
     };

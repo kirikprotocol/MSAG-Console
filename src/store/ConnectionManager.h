@@ -387,10 +387,7 @@ namespace smsc { namespace store
         ReplaceAllStatement*        replaceAllStmt;
         
         ToEnrouteStatement*         toEnrouteStmt;
-        ToDeliveredStatement*       toDeliveredStmt;
-        ToUndeliverableStatement*   toUndeliverableStmt;
-        ToExpiredStatement*         toExpiredStmt;
-        ToDeletedStatement*         toDeletedStmt;
+        ToFinalStatement*           toFinalStmt;
         
         SetBodyStatement*           setBodyStmt;
         GetBodyStatement*           getBodyStmt;
@@ -553,33 +550,9 @@ namespace smsc { namespace store
          *                   возникает в случае потери реального соединения с
          *                   базой данных
          */
-        ToDeliveredStatement*       getToDeliveredStatement()
+        ToFinalStatement*       getToFinalStatement()
             throw(ConnectionFailedException); 
-        /**
-         * @return подготовленный (хранимый) SQL оператор
-         * @exception ConnectionFailedException
-         *                   возникает в случае потери реального соединения с
-         *                   базой данных
-         */
-        ToUndeliverableStatement*   getToUndeliverableStatement()
-            throw(ConnectionFailedException); 
-        /**
-         * @return подготовленный (хранимый) SQL оператор
-         * @exception ConnectionFailedException
-         *                   возникает в случае потери реального соединения с
-         *                   базой данных
-         */
-        ToExpiredStatement*         getToExpiredStatement()
-            throw(ConnectionFailedException); 
-        /**
-         * @return подготовленный (хранимый) SQL оператор
-         * @exception ConnectionFailedException
-         *                   возникает в случае потери реального соединения с
-         *                   базой данных
-         */
-        ToDeletedStatement*         getToDeletedStatement()
-            throw(ConnectionFailedException);
-
+        
         /**
          * @return подготовленный (хранимый) SQL оператор
          * @exception ConnectionFailedException

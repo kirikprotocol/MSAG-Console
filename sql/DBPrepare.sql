@@ -138,6 +138,49 @@ CREATE TABLE SMS_ARC
    BODY           RAW(1500)    NULL
 ) TABLESPACE SMSC_DATA;
 
+CREATE OR REPLACE PROCEDURE DO_FINALIZE_SMS 
+  (id IN NUMBER, st IN NUMBER, submitTime IN DATE, validTime IN DATE,
+   attempts IN NUMBER, lastResult IN NUMBER, 
+   lastTryTime IN DATE, nextTryTime IN DATE,
+   oa IN VARCHAR2, oaVal IN VARCHAR2, oaTon IN NUMBER, oaNpi IN NUMBER,
+   da IN VARCHAR2, daVal IN VARCHAR2, daTon IN NUMBER, daNpi IN NUMBER,
+   dda IN VARCHAR2,
+   mr IN NUMBER, svcType IN VARCHAR2, dr IN NUMBER, br IN NUMBER,
+   srcMsc IN VARCHAR2, srcImsi IN VARCHAR2, srcSmeN IN NUMBER,
+   dstMsc IN VARCHAR2, dstImsi IN VARCHAR2, dstSmeN IN NUMBER,
+   routeId IN VARCHAR2, svcId IN NUMBER, prty IN NUMBER, 
+   srcSmeId IN VARCHAR2, dstSmeId VARCHAR2, txtLength IN NUMBER,
+   bodyLen IN NUMBER, body IN RAW, arc IN NUMBER, bill IN NUMBER)
+IS
+BEGIN
+   
+   DELETE FROM SMS_MSG WHERE ID=id;
+   
+   IF arc != 0 THEN
+    INSERT INTO SMS_ARC
+	(ID, ST, SUBMIT_TIME, VALID_TIME, ATTEMPTS, LAST_RESULT,
+	 LAST_TRY_TIME, NEXT_TRY_TIME, OA, DA, DDA, MR, SVC_TYPE, DR, BR, 
+	 SRC_MSC, SRC_IMSI, SRC_SME_N, DST_MSC, DST_IMSI, DST_SME_N,
+	 ROUTE_ID, SVC_ID, PRTY, SRC_SME_ID, DST_SME_ID, 
+	 TXT_LENGTH, BODY_LEN, BODY) 
+    VALUES
+	(id, st, submitTime, validTime, attempts, lastResult,
+	 lastTryTime, nextTryTime, oa, da, dda, mr, svcType, dr, br,
+	 srcMsc, srcImsi, srcSmeN, dstMsc, dstImsi, dstSmeN,
+	 routeId, svcId, prty, srcSmeId, dstSmeId, 
+	 txtLength, bodyLen, body);
+   END IF;
+   
+   IF bill != 0 THEN
+	CREATE_BILLING_RECORD(id, 
+	    oaVal, oaTon, oaNpi, srcMsc, srcImsi, 
+	    daVal, daTon, daNpi, dstMsc, dstImsi,
+	    submitTime, lastTryTime, st, routeId, svcId, txtLength);
+   END IF;    	    
+
+END DO_FINALIZE_SMS;
+/
+
 CREATE INDEX SMS_ARC_LAST_TRY_TIME_IDX ON SMS_ARC (LAST_TRY_TIME)
 TABLESPACE SMSC_IDX NOSORT;
 
@@ -161,6 +204,7 @@ TABLESPACE SMSC_IDX NOLOGGING;
 
 CREATE BITMAP INDEX SMS_ARC_ROUTE_ID_IDX ON SMS_ARC (ROUTE_ID)
 TABLESPACE SMSC_IDX NOLOGGING;
+
 
 -- ********************** Billing table for SMSC ********************** --
 

@@ -12,26 +12,14 @@
 
   <section name="MessageStore">
     <param name="maxTriesCount" type="int">2</param>
-    <section name="Archive">
-      <param name="enabled" type="bool">false</param>
-      <param name="finalized" type="int">1000</param>
-      <param name="interval" type="int">60000</param>
-      <param name="uncommited" type="int">50</param>
-      <section name="Cleaner">
-        <param name="enabled" type="bool">true</param>
+
+    <section name="Cleaner">
+	<param name="enabled" type="bool">true</param>
 	<param name="interval" type="int">60</param> <!-- in seconds -->
 	<param name="awake" type="int">10</param>    <!-- in seconds -->
 	<param name="age" type="int">10</param>      <!-- in days -->
-      </section>
-
     </section>
-
-    <section name="Billing">
-      <param name="dbInstance" type="string">DBS_ORCL</param>
-      <param name="dbUserName" type="string">smsc</param>
-      <param name="dbUserPassword" type="string">smsc</param>
-    </section>
-
+    
     <section name="Cache">
       <param name="capacity" type="int">1000</param>
       <param name="enabled" type="bool">true</param>

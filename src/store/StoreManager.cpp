@@ -5,6 +5,7 @@
 #include <orl.h>
 
 #include <util/debug.h>
+#include <system/status.h>
 #include "StoreManager.h"
 
 namespace smsc { namespace store
@@ -12,6 +13,7 @@ namespace smsc { namespace store
 
 /* ----------------------------- StoreManager -------------------------- */
 using namespace smsc::sms;
+using namespace smsc::system;
 using smsc::util::Logger;
 using smsc::util::config::Manager;
 
@@ -19,7 +21,7 @@ const unsigned SMSC_MAX_TRIES_TO_PROCESS_OPERATION = 3;
 const unsigned SMSC_MAX_TRIES_TO_PROCESS_OPERATION_LIMIT = 1000;
 
 Mutex        StoreManager::mutex;
-Archiver*    StoreManager::archiver = 0;
+Cleaner*     StoreManager::cleaner = 0;
 IDGenerator* StoreManager::generator = 0;
 RemoteStore* StoreManager::instance  = 0;
 
@@ -47,19 +49,19 @@ bool StoreManager::needCache(Manager& config)
     }
     return cacheIsNeeded;
 }
-bool StoreManager::needArchiver(Manager& config)
+bool StoreManager::needCleaner(Manager& config)
 {
-    bool archiverIsNeeded = false;
+    bool cleanerIsNeeded = false;
     try
     {
-        archiverIsNeeded = config.getBool("MessageStore.Archive.enabled");
+        cleanerIsNeeded = config.getBool("MessageStore.Cleaner.enabled");
     }
     catch (ConfigException& exc)
     {
-        log.warn("Config parameter: <MessageStore.Archive.enabled> missed. "
-                 "Archiver disabled.");
+        log.warn("Config parameter: <MessageStore.Cleaner.enabled> missed. "
+                 "Cleaner disabled.");
     }
-    return archiverIsNeeded;
+    return cleanerIsNeeded;
 }
 void StoreManager::startup(Manager& config)
     throw(ConfigException, ConnectionFailedException)
@@ -77,12 +79,12 @@ void StoreManager::startup(Manager& config)
             instance = (needCache(config)) ? 
                         new CachedStore(config) : new RemoteStore(config);
             
-            archiver = new Archiver(config);
-            SMSId lid = archiver->getLastUsedId();
+            cleaner = new Cleaner(config);
+            SMSId lid = cleaner->getLastUsedId();
             generator = new IDGenerator(lid);
             __trace2__("Last used id=%llu", lid);
 
-            if (needArchiver(config)) archiver->Start();
+            if (needCleaner(config)) cleaner->Start();
 #else
             instance = new RemoteStore(config);
             generator = new IDGenerator(0);
@@ -91,7 +93,7 @@ void StoreManager::startup(Manager& config)
         catch (StorageException& exc)
         {
             if (instance) { delete instance; instance = 0; }
-            if (archiver) { delete archiver; archiver = 0; }
+            if (cleaner) { delete cleaner; cleaner = 0; }
             if (generator) { delete generator; generator = 0; }
             throw ConnectionFailedException(exc);
         }
@@ -109,8 +111,8 @@ void StoreManager::shutdown()
         delete instance; instance = 0;
         log.info("Storage Manager shutting down generator...");
         if (generator) delete generator; generator = 0;
-        log.info("Storage Manager shutting down archiver...");
-        if (archiver) delete archiver; archiver = 0;
+        log.info("Storage Manager shutting down cleaner...");
+        if (cleaner) delete cleaner; cleaner = 0;
         log.info("Storage Manager was shutdowned.");
     }
 }
@@ -998,44 +1000,9 @@ void RemoteStore::changeSmsStateToEnroute(SMSId id,
 #endif
 }
 
-void RemoteStore::doChangeSmsStateToDelivered(StorageConnection* connection,
-    SMSId id, const Descriptor& dst)
-        throw(StorageException, NoSuchMessageException)
+void RemoteStore::doFinalizeSms(SMSId id, SMS& sms)
+    throw(StorageException)
 {
-    __require__(connection);
-
-    ToDeliveredStatement* toDeliveredStmt
-        = connection->getToDeliveredStatement();
-
-    toDeliveredStmt->bindId(id);
-    toDeliveredStmt->bindDestinationDescriptor((Descriptor &)dst);
-
-    try
-    {
-        connection->check(toDeliveredStmt->execute());
-    }
-    catch (StorageException& exc)
-    {
-        try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
-        }
-        throw exc;
-    }
-
-    if (!toDeliveredStmt->wasUpdated())
-    {
-        try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
-        }
-        throw NoSuchMessageException(id);
-    }
-    connection->commit();
-}
-void RemoteStore::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
-    throw(StorageException, NoSuchMessageException)
-{
-#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
-
     __require__(pool);
 
     StorageConnection* connection = 0L;
@@ -1047,28 +1014,59 @@ void RemoteStore::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
             connection = (StorageConnection *)pool->getConnection();
             if (connection)
             {
-                doChangeSmsStateToDelivered(connection, id, dst);
-                StoreManager::incrementFinalizedCount();
+                try
+                {
+                    ToFinalStatement* toFinalStatement 
+                        = connection->getToFinalStatement();
+                    
+                    toFinalStatement->bindSms(id, sms);
+                    connection->check(toFinalStatement->execute());
+                    connection->commit();   
+                }
+                catch (StorageException& exc)
+                {
+                    try { connection->rollback(); } catch (...) {
+                        log.error("Failed to rollback");
+                    }
+                    throw exc;
+                }
+                
                 pool->freeConnection(connection);
             }
             break;
-        }
-        catch (NoSuchMessageException& exc)
-        {
-            if (connection) pool->freeConnection(connection);
-            throw;
         }
         catch (StorageException& exc)
         {
             if (connection) pool->freeConnection(connection);
             if (iteration++ >= maxTriesCount)
             {
-                log.warn("Max tries count to update message state"
+                log.warn("Max tries count to finalize message "
                          "#%d exceeded !\n", id);
                 throw;
             }
         }
+        catch (...) 
+        {
+            if (connection) pool->freeConnection(connection);
+            throw StorageException("Unknown exception thrown");
+        }
     }
+}
+
+void RemoteStore::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
+    throw(StorageException, NoSuchMessageException)
+{
+#ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
+
+    SMS sms; 
+    retriveSms(id, sms);
+    sms.state = smsc::sms::DELIVERED;
+    sms.attempts++;
+    sms.lastTime = time(NULL); 
+    sms.nextTime = 0;
+    sms.lastResult = 0;
+    sms.destinationDescriptor = dst;
+    doFinalizeSms(id, sms);
 
 #else
 
@@ -1087,82 +1085,21 @@ void RemoteStore::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
 #endif
 }
 
-void RemoteStore::doChangeSmsStateToUndeliverable(
-    StorageConnection* connection, SMSId id,
-        const Descriptor& dst, uint32_t failureCause)
-            throw(StorageException, NoSuchMessageException)
-{
-    __require__(connection);
-
-    ToUndeliverableStatement* toUndeliverableStmt
-        = connection->getToUndeliverableStatement();
-
-    toUndeliverableStmt->bindId(id);
-    toUndeliverableStmt->bindFailureCause((dvoid *)&(failureCause),
-                                          (sb4) sizeof(failureCause));
-    toUndeliverableStmt->bindDestinationDescriptor((Descriptor &)dst);
-
-    try
-    {
-        connection->check(toUndeliverableStmt->execute());
-    }
-    catch (StorageException& exc)
-    {
-        try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
-        }
-        throw exc;
-    }
-
-    if (!toUndeliverableStmt->wasUpdated())
-    {
-        try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
-        }
-        throw NoSuchMessageException(id);
-    }
-    connection->commit();
-}
 void RemoteStore::changeSmsStateToUndeliverable(SMSId id,
     const Descriptor& dst, uint32_t failureCause)
        throw(StorageException, NoSuchMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
-    __require__(pool);
-
-    StorageConnection* connection = 0L;
-    unsigned iteration=1;
-    while (true)
-    {
-        try
-        {
-            connection = (StorageConnection *)pool->getConnection();
-            if (connection)
-            {
-                doChangeSmsStateToUndeliverable(connection, id,
-                                                dst,failureCause);
-                StoreManager::incrementFinalizedCount();
-                pool->freeConnection(connection);
-            }
-            break;
-        }
-        catch (NoSuchMessageException& exc)
-        {
-            if (connection) pool->freeConnection(connection);
-            throw;
-        }
-        catch (StorageException& exc)
-        {
-            if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount)
-            {
-                log.warn("Max tries count to update message state"
-                         "#%d exceeded !\n", id);
-                throw;
-            }
-        }
-    }
+    SMS sms; 
+    retriveSms(id, sms);
+    sms.state = smsc::sms::UNDELIVERABLE;
+    sms.attempts++;
+    sms.lastTime = time(NULL); 
+    sms.nextTime = 0;
+    sms.lastResult = failureCause;
+    sms.destinationDescriptor = dst;
+    doFinalizeSms(id, sms);
 
 #else
 
@@ -1181,75 +1118,18 @@ void RemoteStore::changeSmsStateToUndeliverable(SMSId id,
 #endif
 }
 
-void RemoteStore::doChangeSmsStateToExpired(
-    StorageConnection* connection, SMSId id)
-        throw(StorageException, NoSuchMessageException)
-{
-    __require__(connection);
-
-    ToExpiredStatement* toExpiredStmt
-        = connection->getToExpiredStatement();
-
-    toExpiredStmt->bindId(id);
-    try
-    {
-        connection->check(toExpiredStmt->execute());
-    }
-    catch (StorageException& exc)
-    {
-        try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
-        }
-        throw exc;
-    }
-
-    if (!toExpiredStmt->wasUpdated())
-    {
-        try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
-        }
-        throw NoSuchMessageException(id);
-    }
-    connection->commit();
-}
 void RemoteStore::changeSmsStateToExpired(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
-    __require__(pool);
-
-    StorageConnection* connection = 0L;
-    unsigned iteration=1;
-    while (true)
-    {
-        try
-        {
-            connection = (StorageConnection *)pool->getConnection();
-            if (connection)
-            {
-                doChangeSmsStateToExpired(connection, id);
-                StoreManager::incrementFinalizedCount();
-                pool->freeConnection(connection);
-            }
-            break;
-        }
-        catch (NoSuchMessageException& exc)
-        {
-            if (connection) pool->freeConnection(connection);
-            throw;
-        }
-        catch (StorageException& exc)
-        {
-            if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount)
-            {
-                log.warn("Max tries count to update message state"
-                         "#%d exceeded !\n", id);
-                throw;
-            }
-        }
-    }
+    SMS sms; 
+    retriveSms(id, sms);
+    sms.state = smsc::sms::EXPIRED;
+    sms.lastTime = time(NULL); 
+    sms.nextTime = 0;
+    sms.lastResult = smsc::system::Status::EXPIRED;
+    doFinalizeSms(id, sms);
 
 #else
 
@@ -1267,76 +1147,18 @@ void RemoteStore::changeSmsStateToExpired(SMSId id)
 #endif
 }
 
-void RemoteStore::doChangeSmsStateToDeleted(
-    StorageConnection* connection, SMSId id)
-        throw(StorageException, NoSuchMessageException)
-{
-    __require__(connection);
-
-    ToDeletedStatement* toDeletedStmt
-        = connection->getToDeletedStatement();
-
-    toDeletedStmt->bindId(id);
-
-    try
-    {
-        connection->check(toDeletedStmt->execute());
-    }
-    catch (StorageException& exc)
-    {
-        try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
-        }
-        throw exc;
-    }
-
-    if (!toDeletedStmt->wasUpdated())
-    {
-        try { connection->rollback(); } catch (...) {
-            log.error("Failed to rollback");
-        }
-        throw NoSuchMessageException(id);
-    }
-    connection->commit();
-}
 void RemoteStore::changeSmsStateToDeleted(SMSId id)
     throw(StorageException, NoSuchMessageException)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
-    __require__(pool);
-
-    StorageConnection* connection = 0L;
-    unsigned iteration=1;
-    while (true)
-    {
-        try
-        {
-            connection = (StorageConnection *)pool->getConnection();
-            if (connection)
-            {
-                doChangeSmsStateToDeleted(connection, id);
-                StoreManager::incrementFinalizedCount();
-                pool->freeConnection(connection);
-            }
-            break;
-        }
-        catch (NoSuchMessageException& exc)
-        {
-            if (connection) pool->freeConnection(connection);
-            throw;
-        }
-        catch (StorageException& exc)
-        {
-            if (connection) pool->freeConnection(connection);
-            if (iteration++ >= maxTriesCount)
-            {
-                log.warn("Max tries count to update message state"
-                         "#%d exceeded !\n", id);
-                throw;
-            }
-        }
-    }
+    SMS sms; 
+    retriveSms(id, sms);
+    sms.state = smsc::sms::DELETED;
+    sms.lastTime = time(NULL);
+    sms.nextTime = 0;
+    sms.lastResult = smsc::system::Status::DELETED;
+    doFinalizeSms(id, sms);
 
 #else
 

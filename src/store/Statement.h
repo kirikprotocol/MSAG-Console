@@ -448,98 +448,35 @@ namespace smsc { namespace store
         };
     };
     
-    class ToDeliveredStatement : public IdStatement
+    class ToFinalStatement : public IdStatement
     {
     static const char* sql;
     protected:
 
-        OCIDate currTime;
-        sb2     indDstMsc, indDstImsi;
-
-    public:
-
-        ToDeliveredStatement(Connection* connection, bool assign=true)
-            throw(StorageException);
-        virtual ~ToDeliveredStatement() {};
-
-        void bindId(SMSId id)
-            throw(StorageException);
-        void bindDestinationDescriptor(Descriptor& dst)
-            throw(StorageException);
-
-        inline bool wasUpdated() {
-            return (getRowsAffectedCount() ? true:false);
-        };
-    };
-    
-    class ToUndeliverableStatement : public IdStatement
-    {
-    static const char* sql;
-    protected:
-
-        OCIDate currTime;
-        sb2     indDstMsc, indDstImsi;
-
-    public:
-
-        ToUndeliverableStatement(Connection* connection, bool assign=true)
-            throw(StorageException);
-        virtual ~ToUndeliverableStatement() {};
-
-        void bindId(SMSId id)
-            throw(StorageException);
-        void bindFailureCause(dvoid* cause, sb4 size)
-            throw(StorageException);
-        void bindDestinationDescriptor(Descriptor& dst)
-            throw(StorageException);
-
-        inline bool wasUpdated() {
-            return (getRowsAffectedCount() ? true:false);
-        };
-    };
-    
-    class ToExpiredStatement : public IdStatement
-    {
-    static const char* sql;
-    protected:
+        OCIDate submitTime, validTime, lastTime, nextTime;
+        sb2     indLastTime, indNextTime;
+        sb2     indSvcType, indDstMsc, indDstImsi; 
+        sb2     indRouteId, indSrcSmeId, indDstSmeId, indBody;
         
-        OCIDate currTime;
+        FullAddressValue    oa, da, dda;
+
+        int         bodyTextLen, bodyBufferLen;
+        uint8_t*    bodyBuffer;
 
     public:
-
-        ToExpiredStatement(Connection* connection, bool assign=true)
-            throw(StorageException);
-        virtual ~ToExpiredStatement() {};
-
-        void bindId(SMSId id)
-            throw(StorageException);
-
-        inline bool wasUpdated() {
-            return (getRowsAffectedCount() ? true:false);
-        };
-    };
-    
-    class ToDeletedStatement : public IdStatement
-    {
-    static const char* sql;
-    protected:
         
-        OCIDate currTime;
-
-    public:
-
-        ToDeletedStatement(Connection* connection, bool assign=true)
+        ToFinalStatement(Connection* connection, bool assign=true)
             throw(StorageException);
-        virtual ~ToDeletedStatement() {};
+        virtual ~ToFinalStatement() {};
 
-        void bindId(SMSId id)
+        void bindSms(SMSId id, SMS& sms)
             throw(StorageException);
-
-        inline bool wasUpdated() {
+        
+        inline bool wasFinalized() {
             return (getRowsAffectedCount() ? true:false);
         };
     };
-    
+
     class UpdateSeqNumStatement : public IdStatement
     {
     static const char* sql;
