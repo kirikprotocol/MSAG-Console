@@ -88,6 +88,10 @@ export EXTRADEPS
 DEBUG := YES
 endif
 
+ifeq ($(DISABLE_SMPP_CHECKS),YES)
+CXXFLAGS := $(CXXFLAGS) -DDISABLE_SMPP_CHECKS
+endif
+
 ifeq ($(LEAKTRACE),SIMPLE)
 LDFLAGS := $(LDFLAGS) -lcore-threads -lutil-leaktracing-simple -lcore-threads
 DEBUG := YES
