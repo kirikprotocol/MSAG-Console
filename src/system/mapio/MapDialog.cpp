@@ -96,7 +96,7 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   __trace2__("MAP::DIALOG::ForwardReaq: user_data_encoding = 0x%x",user_data_coding);
   unsigned char user_data_len = *(unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2);
   __trace2__("MAP::DIALOG::ForwardReaq: user_data_len = %d",user_data_len);
-  unsigned char* user_data = (unsigned char*)(user_data_len+1);
+  unsigned char* user_data = (unsigned char*)(ud->signalInfo+2+((ssfh->tp_vp==0||ssfh->tp_vp==2)?1:7)+msa_len+2+2);
   sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(const char*)user_data,user_data_len);
   sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
   sms.setIntProperty(Tag::SMPP_DATA_CODING,user_data_coding);
