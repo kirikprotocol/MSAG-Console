@@ -241,17 +241,9 @@ bool readFromDB(OCIEnv *envhp, OCIError *errhp,
   
   printf("Reading from LOB ...\nBytes to read: %d\n", amount);
         
-  #ifdef SPARC
   if (!checkerr (errhp, OCILobRead(svchp, errhp, blobLoc, &amount, offset,
                                    (dvoid *)bodyBuffer, sizeof(bodyBuffer), (dvoid *)0,
-                                   (sb4 (*)(dvoid *, const dvoid *, ub4, ub1)) 
                                    0, (ub2) 0, (ub1) 0))) return false;
-  #else // Linux & etc
-  if (!checkerr (errhp, OCILobRead(svchp, errhp, blobLoc, &amount, offset,
-                                   (dvoid *)bodyBuffer, sizeof(bodyBuffer), (dvoid *)0,
-                                   (sb4 (*)(dvoid *, dvoid *, ub4, ub1)) 0,
-                                   (ub2) 0, (ub1) 0))) return false;
-  #endif
 
   printf("Bytes read: %d\n", amount);
 
