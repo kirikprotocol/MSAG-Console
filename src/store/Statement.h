@@ -101,7 +101,6 @@ namespace smsc { namespace store
         
         uint8_t         uState;
         char            bStatusReport;
-        char            bRejectDuplicates;
         char            bHeaderIndicator;
         char            bNeedArchivate;
         

@@ -307,6 +307,7 @@ int Archiver::Execute()
         } 
         catch (StorageException& exc) 
         {
+            first = true;
             log.error("Exception occurred during archivation process : %s",
                       exc.what());
         }
