@@ -107,6 +107,11 @@ typedef char SmppTime[MAX_SMPP_TIME_LENGTH + 1];
 typedef char ShortMessage[MAX_SM_LENGTH];
 typedef char MessageId[MAX_MSG_ID_LENGTH + 1];
 
+const uint64_t OPT_ALL = 0xffffffffffffffff;
+const uint64_t OPT_RCPT_MSG_ID = 0x1 << 11;
+const uint64_t OPT_USER_MSG_REF = 0x1 << 16;
+const uint64_t OPT_MSG_PAYLOAD = 0x1 << 31;
+
 class SmppUtil
 {
 	static time_t string2time(const char* str, time_t base, bool check = true);
@@ -144,11 +149,11 @@ public:
 
 	static void setupRandomCorrectAddress(PduAddress* addr, bool check = true);
 	static void setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
-		uint64_t mask = 0xffffffffffffffff, bool check = true);
+		uint64_t mask = OPT_ALL, bool check = true);
 	static void setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
-		uint64_t mask = 0xffffffffffffffff, bool check = true);
+		uint64_t mask = OPT_ALL, bool check = true);
 	static void setupRandomCorrectOptionalParams(SmppOptional& opt,
-		uint64_t mask = 0xffffffffffffffff, bool check = true);
+		uint64_t mask = OPT_ALL, bool check = true);
 
 };
 
