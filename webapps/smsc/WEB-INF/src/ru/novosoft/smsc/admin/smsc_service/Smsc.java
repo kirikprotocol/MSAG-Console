@@ -180,16 +180,18 @@ public class Smsc extends Service
 		checkComponents();
 		saveSmesConfig();
 		saveRoutesConfig();
-		call(smsc_component, apply_routes_method, Type.Types[Type.StringType], new HashMap());
+		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+			call(smsc_component, apply_routes_method, Type.Types[Type.StringType], new HashMap());
 	}
 
 	public synchronized void applyServices()
 			throws AdminException
 	{
 		checkComponents();
-      saveSmesConfig();
+		saveSmesConfig();
 		saveRoutesConfig();
-		call(smsc_component, apply_services_method, Type.Types[Type.StringType], new HashMap());
+		if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+			call(smsc_component, apply_services_method, Type.Types[Type.StringType], new HashMap());
 	}
 
 	public synchronized void applyAliases()
@@ -211,7 +213,8 @@ public class Smsc extends Service
 			}
 			storeAliases(new PrintWriter(new FileOutputStream(aliasConfigFile), true)).close();
 
-			call(smsc_component, apply_aliases_method, Type.Types[Type.StringType], new HashMap());
+			if (getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+				call(smsc_component, apply_aliases_method, Type.Types[Type.StringType], new HashMap());
 		}
 		catch (Config.ParamNotFoundException e)
 		{
