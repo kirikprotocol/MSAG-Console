@@ -22,7 +22,7 @@ namespace buffers{
 
 //! use by String::Align
 enum AlignPosition{
-  apLeft,apCenter,apRight,apWords,
+  apLeft,apCenter,apRight,apWords
 };
 
 

@@ -15,7 +15,7 @@
 using namespace std;
 using smsc::core::buffers::Hash;
 
-static char *lkeys[]=
+static const char *lkeys[]=
 {
 "Organization",
 "Hostid",
