@@ -54,73 +54,122 @@ void Int8Formatter::format(
     std::string& output, FormatEntity& entity, GetAdapter& adapter)
         throw(FormattingException, AdapterException)
 {
-    char    buff[64] = "";
-    if (!adapter.isNull(entity.position))
+    const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+
+    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
     {
-        sprintf(buff, "%hd", adapter.getInt8(entity.position));
+        output += def;
     }
-    output += buff;
+    else if (!adapter.isNull(entity.position))
+    {
+        char    buff[64] = "";
+        sprintf(buff, "%hd", adapter.getInt8(entity.position));
+        output += buff;
+    }
 }
 void Int16Formatter::format(
     std::string& output, FormatEntity& entity, GetAdapter& adapter)
         throw(FormattingException, AdapterException)
 {
-    char    buff[64] = "";
-    if (!adapter.isNull(entity.position))
+    const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+
+    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
     {
-        sprintf(buff, "%d", adapter.getInt16(entity.position));
+        output += def;
     }
-    output += buff;
+    else if (!adapter.isNull(entity.position))
+    {
+        char    buff[64] = "";
+        sprintf(buff, "%d", adapter.getInt16(entity.position));
+        output += buff;
+    }
 }
 void Int32Formatter::format(
     std::string& output, FormatEntity& entity, GetAdapter& adapter)
         throw(FormattingException, AdapterException)
 {
-    char    buff[64] = "";
-    if (!adapter.isNull(entity.position))
+    const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+
+    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
     {
-        sprintf(buff, "%ld", adapter.getInt32(entity.position));
+        output += def;
     }
-    output += buff;
+    else if (!adapter.isNull(entity.position))
+    {
+        char    buff[64] = "";
+        sprintf(buff, "%ld", adapter.getInt32(entity.position));
+        output += buff;
+    }
 }
 void Uint8Formatter::format(
     std::string& output, FormatEntity& entity, GetAdapter& adapter)
         throw(FormattingException, AdapterException)
 {
-    char    buff[64] = "";
-    if (!adapter.isNull(entity.position))
+    const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+
+    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
     {
-        sprintf(buff, "%hu", adapter.getUint8(entity.position));
+        output += def;
     }
-    output += buff;
+    else if (!adapter.isNull(entity.position))
+    {
+        char    buff[64] = "";
+        sprintf(buff, "%hu", adapter.getUint8(entity.position));
+        output += buff;
+    }
 }
 void Uint16Formatter::format(
     std::string& output, FormatEntity& entity, GetAdapter& adapter)
         throw(FormattingException, AdapterException)
 {
-    char    buff[64] = "";
-    if (!adapter.isNull(entity.position))
+    const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+
+    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
     {
-        sprintf(buff, "%u", adapter.getUint16(entity.position));
+        output += def;
     }
-    output += buff;
+    else if (!adapter.isNull(entity.position))
+    {
+        char    buff[64] = "";
+        sprintf(buff, "%u", adapter.getUint16(entity.position));
+        output += buff;
+    }
 }
 void Uint32Formatter::format(
     std::string& output, FormatEntity& entity, GetAdapter& adapter)
         throw(FormattingException, AdapterException)
 {
-    char    buff[64] = "";
-    if (!adapter.isNull(entity.position))
+    const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+
+    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
     {
-        sprintf(buff, "%lu", adapter.getUint32(entity.position));
+        output += def;
     }
-    output += buff;
+    else if (!adapter.isNull(entity.position))
+    {
+        char    buff[64] = "";
+        sprintf(buff, "%lu", adapter.getUint32(entity.position));
+        output += buff;
+    }
 }
 void StringFormatter::format(
     std::string& output, FormatEntity& entity, GetAdapter& adapter)
         throw(FormattingException, AdapterException)
 {
-    if (!adapter.isNull(entity.position))
+    const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+
+    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
+    {
+        output += def;
+    }
+    else if (!adapter.isNull(entity.position))
     {
         const char* str = adapter.getString(entity.position);
         if (str)
@@ -167,34 +216,55 @@ void FloatFormatter::format(
     std::string& output, FormatEntity& entity, GetAdapter& adapter)
         throw(FormattingException, AdapterException)
 {
-    char    buff[128] = "";
-    if (!adapter.isNull(entity.position))
+    const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+
+    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
     {
-        sprintf(buff, "%f", adapter.getFloat(entity.position));
+        output += def;
     }
-    output += buff;
+    else if (!adapter.isNull(entity.position))
+    {
+        char    buff[128] = "";
+        sprintf(buff, "%f", adapter.getFloat(entity.position));
+        output += buff;
+    }
 }
 void DoubleFormatter::format(
     std::string& output, FormatEntity& entity, GetAdapter& adapter)
         throw(FormattingException, AdapterException)
 {
-    char    buff[128] = "";
-    if (!adapter.isNull(entity.position))
+    const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+
+    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
     {
-        sprintf(buff, "%e", adapter.getDouble(entity.position));
+        output += def;
     }
-    output += buff;
+    else if (!adapter.isNull(entity.position))
+    {
+        char    buff[128] = "";
+        sprintf(buff, "%e", adapter.getDouble(entity.position));
+        output += buff;
+    }
 }
 void LongDoubleFormatter::format(
     std::string& output, FormatEntity& entity, GetAdapter& adapter)
         throw(FormattingException, AdapterException)
 {
-    char    buff[256] = "";
-    if (!adapter.isNull(entity.position))
+    const char* def = entity.getOption(SMSC_DBSME_IO_FORMAT_DEFAULT_OPTION);
+    const char* arg = entity.getOption(SMSC_DBSME_IO_FORMAT_ARGUMENT_OPTION);
+
+    if ((!arg || !entity.position || adapter.isNull(entity.position)) && def)
     {
-        sprintf(buff, "%Le", adapter.getLongDouble(entity.position));
+        output += def;
     }
-    output += buff;
+    else if (!adapter.isNull(entity.position))
+    {
+        char    buff[256] = "";
+        sprintf(buff, "%Le", adapter.getLongDouble(entity.position));
+        output += buff;
+    }
 }
 void DateTimeFormatter::format(
     std::string& output, FormatEntity& entity, GetAdapter& adapter)
@@ -235,7 +305,11 @@ void DateTimeFormatter::format(
             tmdt.tm_hour = tmdt.tm_min = tmdt.tm_sec = 0;
             date = mktime(&tmdt);
         }
-        else return;
+        else
+        {
+            output += def;
+            return;
+        }
     }
     else if (!adapter.isNull(entity.position))
     {
