@@ -17,6 +17,8 @@
         <param name="ProtocolId" type="int">111</param>
 	<param name="origAddress" type="string">003</param>
 	<param name="systemType" type="string">smpp</param>
+	<param name="forceDataCoding" type="string">SMSC7BIT</param>
+	<!-- DataCoding values: UCS2, SMSC7BIT, LATIN1. DEFAULT: LATIN1 -->
         
         <section name="ThreadPool">
             <param name="max" type="int">15</param>

@@ -43,7 +43,7 @@ using namespace smsc::dbsme;
 
 static smsc::logger::Logger *logger = 0;
 
-static smsc::admin::service::ServiceSocketListener *adminListener;
+static std::auto_ptr<smsc::admin::service::ServiceSocketListener> adminListener;
 static bool bAdminListenerInited = false;
 
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
@@ -63,6 +63,8 @@ static Mutex needReconnectLock;
 static bool  bDBSmeIsStopped   = false;
 static bool  bDBSmeIsConnected = false;
 static bool  bDBSmeNeedReinit  = false;
+
+static uint8_t uDBSmeDataCoding = DataCoding::LATIN1;
 
 static void setNeedReinit(bool reinit=true) {
     MutexGuard gauard(needReinitLock);
@@ -146,8 +148,7 @@ public:
         command.setJobName(0);
 
         char smsTextBuff[MAX_ALLOWED_MESSAGE_LENGTH+1];
-        int smsTextBuffLen = getSmsText(&request,
-            (char *)&smsTextBuff, sizeof(smsTextBuff));
+        int smsTextBuffLen = getSmsText(&request, (char *)&smsTextBuff, sizeof(smsTextBuff));
         __require__(smsTextBuffLen < MAX_ALLOWED_MESSAGE_LENGTH);
 
         int textPos = 0;
@@ -228,13 +229,19 @@ public:
             if (out[outPos] == '\r' || out[outPos] == '\n') out[outPos] = ' ';
 
         char* msgBuf = 0;
-        if(hasHighBit(out,outLen))
+        if(hasHighBit(out,outLen) || uDBSmeDataCoding == DataCoding::UCS2)
         {
             int msgLen = outLen*2;
             msgBuf = new char[msgLen];
-            ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen,
-                                   CONV_ENCODING_CP1251);
+            ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen, CONV_ENCODING_CP1251);
             body.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::UCS2);
+            out = msgBuf; outLen = msgLen;
+        }
+        else if (uDBSmeDataCoding == DataCoding::SMSC7BIT) {
+            unsigned msgLen = outLen*2;
+            msgBuf = new char[msgLen];
+            msgLen = ConvertLatin1ToSMSC7Bit(out, outLen, msgBuf);
+            body.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::SMSC7BIT);
             out = msgBuf; outLen = msgLen;
         }
         else {
@@ -484,6 +491,30 @@ extern "C" void atExitHandler(void)
     smsc::logger::Logger::Shutdown();
 }
 
+static void initDataCoding(ConfigView* config)
+{
+    uDBSmeDataCoding = DataCoding::LATIN1;
+
+    static const char* STR_DATA_CODING_UCS2     = "UCS2";
+    static const char* STR_DATA_CODING_LATIN1   = "LATIN1";
+    static const char* STR_DATA_CODING_SMSC7BIT = "SMSC7BIT";
+
+    try {
+        const char* dcStr = config->getString("forceDataCoding");
+        if (!dcStr || dcStr[0] == '\0') throw Exception("DataCoding is NULL.");
+
+        if      (!strcmp(dcStr, STR_DATA_CODING_UCS2))     uDBSmeDataCoding = DataCoding::UCS2;
+        else if (!strcmp(dcStr, STR_DATA_CODING_LATIN1))   uDBSmeDataCoding = DataCoding::LATIN1;
+        else if (!strcmp(dcStr, STR_DATA_CODING_SMSC7BIT)) uDBSmeDataCoding = DataCoding::SMSC7BIT;
+        else throw Exception("DataCoding %s is undefined.", dcStr);
+
+    } catch (std::exception& exc) {
+        smsc_log_warn(logger, "DataCoding is not defined properly using default LATIN1. Details: %s", exc.what());        
+    } catch (...) {
+        smsc_log_warn(logger, "DataCoding is not defined properly using default LATIN1.");        
+    }
+}
+
 int main(void)
 {
     using smsc::db::DataSourceLoader;
@@ -493,14 +524,10 @@ int main(void)
 
     int resultCode = 0;
 
-    //added by igork
     atexit(atExitHandler);
-
     smsc::logger::Logger::Init();
     logger = Logger::getInstance("smsc.dbsme.DBSme");
-
-    std::auto_ptr<smsc::admin::service::ServiceSocketListener> adml(new smsc::admin::service::ServiceSocketListener());
-    adminListener = adml.get();
+    adminListener.reset(new smsc::admin::service::ServiceSocketListener());
 
     SQLJobFactory _sqlJobFactory;
     JobFactory::registerFactory(&_sqlJobFactory,
@@ -518,6 +545,7 @@ int main(void)
         DataSourceLoader::loadup(&dsConfig);
 
         ConfigView cpConfig(Manager::getInstance(), "DBSme");
+        initDataCoding(&cpConfig);
         CommandProcessor processor(&cpConfig);
 
         DBSmeAdminHandler adminHandler(processor);
@@ -540,6 +568,7 @@ int main(void)
                 DataSourceLoader::loadup(&dsConfig);
 
                 ConfigView cpConfig(Manager::getInstance(), "DBSme");
+                initDataCoding(&cpConfig);
                 processor.init(&cpConfig);
 
                 setNeedReinit(false);
