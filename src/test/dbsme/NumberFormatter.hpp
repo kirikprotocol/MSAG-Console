@@ -44,7 +44,7 @@ public:
 		}
 		else
 		{
-			sprintf(fmt, "%%.%dlg", digits - 1);
+			sprintf(fmt, "%%.%dlg", digits);
 		}
 	}
 	virtual const string format(double val) const
