@@ -372,7 +372,7 @@ void MapIoTask::dispatcher()
     MAP_dispatching = true;
     result = EINSS7CpMsgRecv_r(&message,100);
     MAP_dispatching = false;
-    if ( ++timecounter % 300 ) {
+    if ( ++timecounter == 300 ) {
       __trace2__("MAP: EINSS7CpMsgRecv_r TICK-TACK");
       if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
         result = MSG_BROKEN_CONNECTION;
