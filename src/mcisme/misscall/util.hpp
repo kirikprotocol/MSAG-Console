@@ -9,6 +9,7 @@ namespace misscall{
 namespace util{
 extern void pack_addr(UCHAR_T* dst, const char* src, int len);
 extern void unpack_addr(char* dst, UCHAR_T* src, int len);
+extern std::string getCalledNumberDescription(EINSS7_I97_CALLEDNUMB_T* called);
 extern std::string getCallingNumberDescription(EINSS7_I97_CALLINGNUMB_T* calling);
 extern std::string getRedirectingNumberDescription(EINSS7_I97_REDIRECTINGNUMB_T* redirNumb);
 extern std::string getOriginalNumberDescription(EINSS7_I97_ORIGINALNUMB_T* origNumb);

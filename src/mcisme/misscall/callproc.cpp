@@ -242,7 +242,7 @@ USHORT_T EINSS7_I97IsupBindConf(USHORT_T isupUserID,UCHAR_T result)
                  getIsupBindStatusDescription(result));
   return EINSS7_I97_REQUEST_OK;
 }
-USHORT_T releaseConnection(EINSS7_I97_ISUPHEAD_T *isupHead_sp)
+USHORT_T releaseConnection(EINSS7_I97_ISUPHEAD_T *isupHead_sp, UCHAR_T causeValue)
 {
   char r[]="9139254896";
   USHORT_T res;
@@ -250,7 +250,7 @@ USHORT_T releaseConnection(EINSS7_I97_ISUPHEAD_T *isupHead_sp)
   cause.location = EINSS7_I97_ISUP_USER;
   cause.codingStd = EINSS7_I97_ITU_STAND;
   cause.rec = 0;
-  cause.causeValue = 0x14; /*subscriber absent*/
+  cause.causeValue = causeValue; /*0x14 = subscriber absent*/
   cause.lengthOfDiagnostics = 0;
   cause.diagnostics_p = 0;
 
@@ -311,15 +311,26 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
                                 EINSS7_I97_OPTPARAMS_T *extraOpts_sp)
 {
   smsc_log_debug(missedCallProcessorLogger,
-                 "IsupSetupInd %s RG=%d %s %s %s %s",
+                 "IsupSetupInd %s RG=%d %s %s %s %s %s",
                  getHeadDescription(isupHead_sp).c_str(),
                  resourceGroup,
+                 getCalledNumberDescription(called).c_str(),
                  getCallingNumberDescription(calling).c_str(),
                  getRedirectionInfoDescription(redirectionInfo_sp).c_str(),
                  getRedirectingNumberDescription(redirecting).c_str(),
                  getOriginalNumberDescription(original).c_str()
                 );
-  releaseConnection(isupHead_sp);
+  UCHAR_T causeValue = 0x14; /*subscriber absent*/
+  if (redirectionInfo_sp)
+  {
+    switch (redirectionInfo_sp->lastReason)
+    {
+      case EINSS7_I97_USER_BUSY : causeValue = 0x11;break; /* called user busy */
+      case EINSS7_I97_NO_REPLY  : causeValue = 0x13;break; /* no answer from user */
+      default                   : causeValue = 0x14;break; /*subscriber absent*/
+    }
+  }
+  releaseConnection(isupHead_sp,causeValue);
   registerEvent(calling,original);
   return EINSS7_I97_REQUEST_OK;
 }

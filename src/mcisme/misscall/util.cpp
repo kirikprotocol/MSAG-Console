@@ -25,6 +25,21 @@ void pack_addr(UCHAR_T* dst, const char* src, int len)
     dst[(len+1)/2-1] &= 0x0F;
   }
 }
+std::string getCalledNumberDescription(EINSS7_I97_CALLEDNUMB_T* called)
+{
+  if (!called) return "";
+  vector<char> addr(called->noOfAddrSign + 1);
+  unpack_addr(&addr[0], called->addrSign_p, called->noOfAddrSign);
+  addr.insert(addr.begin(),'.');
+  addr.insert(addr.begin(),called->numberPlan + '0');
+  addr.insert(addr.begin(),'.');
+  addr.insert(addr.begin(),called->natureOfAddr + '0');
+  addr.insert(addr.begin(),'.');
+  char str[]="Called=";
+  char *end=str+sizeof(str)-1;
+  addr.insert(addr.begin(),str,end);
+  return &addr[0];
+}
 
 std::string getCallingNumberDescription(EINSS7_I97_CALLINGNUMB_T* calling)
 {
