@@ -71,12 +71,12 @@
 	<param name="disabled" value="false"/>
 	<param name="mode" value="trx"/>
 </smerecord>
-<smerecord type="smpp" uid="wsme">
+<smerecord type="smpp" uid="WSme">
 	<param name="typeOfNumber" value="0"/>
 	<param name="numberingPlan" value="0"/>
 	<param name="interfaceVersion" value="52"/>
 	<param name="systemType" value=""/>
-	<param name="password" value="wsme"/>
+	<param name="password" value="WSmePass"/>
 	<param name="addrRange" value=""/>
 	<param name="smeN" value="-1263206400"/>
 	<param name="wantAlias" value="yes"/>

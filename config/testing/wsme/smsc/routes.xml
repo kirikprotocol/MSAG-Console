@@ -2,7 +2,7 @@
 <!DOCTYPE routes SYSTEM "file://routes.dtd">
 
 <routes>
-  <subject_def id="wsme" defSme="wsme">
+  <subject_def id="wsme" defSme="WSme">
     <mask value="555"/>
   </subject_def>
   <subject_def id="subject00" defSme="sme00">
@@ -27,7 +27,7 @@
     <source>
       <subject id="subject02"/>
     </source>
-    <destination sme="wsme">
+    <destination sme="WSme">
       <subject id="wsme"/>
     </destination>
   </route>
@@ -35,7 +35,7 @@
     <source>
       <mask value="+11111111111"/>
     </source>
-    <destination sme="wsme">
+    <destination sme="WSme">
       <subject id="wsme"/>
     </destination>
   </route>
