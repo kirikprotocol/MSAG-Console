@@ -477,6 +477,7 @@ StateType StateMachine::submit(Tuple& t)
                           dst,
                           dest_proxy_index,dest_proxy,&ri);
   sms->setRouteId(ri.routeId.c_str());
+  if(ri.suppressDeliveryReports)sms->setIntProperty(Tag::SMSC_SUPPRESS_REPORTS,1);
   int prio=sms->getPriority()+ri.priority;
   if(prio>SmeProxyPriorityMax)prio=SmeProxyPriorityMax;
   sms->setPriority(ri.priority);
@@ -1259,7 +1260,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   smsc->registerStatisticalEvent(StatEvents::etDeliveredOk,&sms);
   try{
     //smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
-    if(!sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+    if(!sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP) && !sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS))
     {
       if(//p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
          sms.getDeliveryReport() ||
@@ -1642,6 +1643,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
       )
     )return;
   if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))return;
+  if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS))return;
   SMS *prpt=new SMS;
   SMS &rpt=*prpt;
   rpt.setOriginatingAddress(scAddress);
@@ -1696,6 +1698,7 @@ void StateMachine::sendNotifyReport(SMS& sms,MsgIdType msgId,const char* reason)
   __trace2__("sendNotifyReport: attemptsCount=%d",sms.getAttemptsCount());
   if(sms.getAttemptsCount()!=0)return;
   if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))return;
+  if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS))return;
   SMS *prpt=new SMS;
   SMS &rpt=*prpt;
   rpt.setOriginatingAddress(scAddress);
