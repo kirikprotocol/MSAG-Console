@@ -536,17 +536,6 @@ void executeBusinessCycleTest(int numThreads)
 	}
 }
 
-class CoreDumper
-{
-public:
-	~CoreDumper()
-	{
-		throw "It's fucking core dumper!";
-	}
-};
-
-//CoreDumper coreDumper;
-
 int main(int argc, char* argv[])
 {
 	if (argc != 2)
