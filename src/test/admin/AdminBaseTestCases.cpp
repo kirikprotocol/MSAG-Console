@@ -12,7 +12,7 @@ using namespace smsc::util::regexp;
 using namespace smsc::test::util;
 
 AdminBaseTestCases::AdminBaseTestCases(AdminFixture* _fixture)
-: fixture(_fixture), chkList(_fixture->chkList)
+: fixture(_fixture), chkList(_fixture->chkList), connected(false)
 {
 	int timeout = 8;
 	if (socket.Init(fixture->host, fixture->port, timeout) == -1)
@@ -59,7 +59,8 @@ bool AdminBaseTestCases::checkResponse(const char* pattern)
 	__require__(pattern);
 	__trace2__("regexp: %s", pattern);
 	RegExp chkResp;
-	chkResp.Compile(pattern);
+	int regExpOk = chkResp.Compile(pattern);
+	__require__(regExpOk);
 	Hash<SMatch> h;
 	SMatch match;
 	int matchcount = 1;
@@ -113,6 +114,7 @@ void AdminBaseTestCases::runTestCase(const char* id, const char* cmd,
 	const char* resp)
 {
 	__require__(id && cmd && resp);
+	__require__(connected);
 	bool isOk = true;
 	TestCase* tc = chkList->getTc(id);
 	sendRequest(cmd);
@@ -134,6 +136,10 @@ void AdminBaseTestCases::runTestCase(const char* id, const char* cmd,
 	__tc_ok_cond__;
 }
 
+#define __check_resp__(pattern) \
+	res &= checkResponse(pattern); \
+	if (!res) return false;
+
 bool AdminBaseTestCases::login(const char* login, const char* passwd,
 	bool correct)
 {
@@ -142,29 +148,29 @@ bool AdminBaseTestCases::login(const char* login, const char* passwd,
 	char pattern[128];
 	if (fixture->humanConsole)
 	{
-		res &= checkResponse("/.*Login:$/ms");
+		__check_resp__("/.*Login:$/ms");
 		sendRequest(login);
 		sprintf(pattern, "/^%s$/", login);
-		res &= checkResponse(pattern);
-		res &= checkResponse("/^Password:$/");
+		__check_resp__(pattern);
+		__check_resp__("/^Password:$/");
 		sendRequest(passwd);
 		if (correct)
 		{
-			res &= checkResponse("/^\\QWelcome to SMSC Remote Console.\\E$/");
-			res &= checkResponse("/^>$/");
+			__check_resp__("/^\\QWelcome to SMSC Remote Console.\\E$/");
+			__check_resp__("/^>$/");
 		}
 		else
 		{
-			res &= checkResponse("/^\\QAuthentication failed. Access denied.\\E$/");
+			__check_resp__("/^\\QAuthentication failed. Access denied.\\E$/");
 		}
 	}
 	else
 	{
-		res &= checkResponse("/^\\Q+ 100 Connected. Login:\\E$/");
+		__check_resp__("/^\\Q+ 100 Connected. Login:\\E$/");
 		sendRequest(login);
-		res &= checkResponse("/^\\Q+ 100 Login accepted. Password:\\E$/");
+		__check_resp__("/^\\Q+ 100 Login accepted. Password:\\E$/");
 		sendRequest(passwd);
-		res &= checkResponse(correct ?
+		__check_resp__(correct ?
 			"/^\\Q+ 100 Logged in. Access granted.\\E$/" :
 			"/^\\Q- 500 Authentication failed. Access denied.\\E$/");
 	}
@@ -188,7 +194,78 @@ void AdminBaseTestCases::executeTestCases()
 	}
 }
 
-void AdminBaseTestCases::loginCommands()
+void AdminBaseTestCases::login()
+{
+	__decl_tc__;
+	__tc__("adminConsole.login.correct");
+	if (login("superadmin", "123", true))
+	{
+		connected = true;
+	}
+	else
+	{
+		__tc_fail__(1);
+	}
+	__tc_ok_cond__;
+}
+
+void AdminBaseTestCases::logout()
+{
+	__decl_tc__;
+	__tc__("adminConsole.logout");
+	sendRequest("quit");
+	if (!checkResponse("/^quit$/"))
+	{
+		__tc_fail__(1);
+	}
+	if (!checkResponse("/^Exited from SMSC Remote Console.$/"))
+	{
+		__tc_fail__(2);
+	}
+	__tc_ok_cond__;
+	connected = false;
+}
+
+const char* AdminBaseTestCases::simpleResp(int code, const char* text)
+{
+	__require__(text);
+	static char resp[1024];
+	if (fixture->humanConsole)
+	{
+		sprintf(resp, "/^\\Q%s %s\\E$/", code < 0 ? "Failed:" : "Ok.", text);
+	}
+	else
+	{
+		sprintf(resp, "/^\\Q%c %s %s\\E$/", code < 0 ? '-' : '+', abs(code), text);
+	}
+	return resp;
+}
+
+const char* AdminBaseTestCases::respOk(int code)
+{
+	__require__(code >= 0);
+	static char resp[10];
+	if (fixture->humanConsole)
+	{
+		return "Ok.";
+	}
+	sprintf(resp, "+ %d", code);
+	return resp;
+}
+
+const char* AdminBaseTestCases::respFail(int code)
+{
+	__require__(code > 0);
+	static char resp[10];
+	if (fixture->humanConsole)
+	{
+		return "Failed:";
+	}
+	sprintf(resp, "- %d", code);
+	return resp;
+}
+
+void AdminBaseTestCases::invalidLoginCommands()
 {
 	__decl_tc__;
 	__tc__("adminConsole.login.incorrect");
@@ -201,12 +278,6 @@ void AdminBaseTestCases::loginCommands()
 		__tc_fail__(2);
 	}
 	__tc_ok_cond__;
-	__tc__("adminConsole.login.correct");
-	if (!login("superadmin", "123", true))
-	{
-		__tc_fail__(1);
-	}
-	__tc_ok_cond__;
 }
 
 #define __cmd__(id, cmd, resp) \
@@ -214,20 +285,18 @@ void AdminBaseTestCases::loginCommands()
 	
 void AdminBaseTestCases::invalidCommands()
 {
-	string symbols = "~!@#$%^&*()_+|{}:\"<>?`1234567890-=\[];',./" \
-		"1234567890" "ABCDEFGHIJKLMNOPQRSTUVWXYZ" \
-		"ÀÁÂÃÄÅ¨ÆÇÈÉÊËÌÍÎÏĞÑÒÓÔÕÖ×ØÙÚÛÜİŞß";
-	char cmd[16];
+	string symbols = "~!@#$%^&*()_+|{}:\"<>?`-=\[];'.10AZÀß";
+	char cmd[32];
 	char resp[128];
 	for (int i = 0; i < symbols.length(); i++)
 	{
 		const char* s = string(3, symbols[i]).c_str();
+		sprintf(resp, "/^\\Q%s\\E unexpected (char: \\Q%c\\E|token: \\Q%s\\E)+$/",
+			respFail(600), symbols[i], s);
 		//itself
 		sprintf(cmd, "%s", s);
-		sprintf(resp, "Failed: unexpected char: %c", symbols[i]);
 		__cmd__("adminConsole.invalidCommands", cmd, resp);
 		//add, delete, view, alter, list
-		sprintf(resp, "Failed: unexpected token: %s", s);
 		sprintf(cmd, "add %s", s);
 		__cmd__("adminConsole.invalidCommands", cmd, resp);
 		sprintf(cmd, "delete %s", s);

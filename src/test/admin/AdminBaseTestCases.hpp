@@ -36,17 +36,13 @@ struct Masks
 		__m__(".0.0.123456789012345678??");
 		return v;
 	}
-	static vector<const char*> invalid1()
+	static vector<const char*> invalid()
 	{
 		vector<const char*> v;
 		/*__m__("abc");*/ __m__("+abc"); __m__(".0.0.abc");
 		__m__("1.1.1"); __m__("1?2"); __m__("12*");
-		return v;
-	}
-	static vector<const char*> invalid2()
-	{
-		vector<const char*> v;
-		__m__(""); __m__("???"); __m__("+???"); __m__(".0.0.???");
+
+		__m__("???"); __m__("+???"); __m__(".0.0.???");
 		__m__(".0.2.123"); __m__(".7.0.123");
 		__m__("123456789012345678901");
 		__m__("+123456789012345678901");
@@ -86,9 +82,6 @@ public:
 
 	virtual ~AdminBaseTestCases();
 
-	bool login(const char* login, const char* passwd, bool correct);
-	void apply();
-
 	/**
 	 * Выполнение всех тест кейсов.
 	 */
@@ -97,7 +90,11 @@ public:
 	void addTestCase(const char* id, const char* cmd, const char* resp);
 	void runTestCase(const char* id, const char* cmd, const char* resp);
 
-	void loginCommands();
+	void login();
+	void logout();
+	void apply();
+
+	void invalidLoginCommands();
 	void invalidCommands();
 
 protected:
@@ -106,11 +103,17 @@ protected:
 	virtual Category& getLog();
 	void sendRequest(const char* cmd);
 	bool checkResponse(const char* pattern);
+	bool login(const char* login, const char* passwd, bool correct);
+
+	const char* simpleResp(int code, const char* text);
+	const char* respOk(int code);
+	const char* respFail(int code);
 
 private:
 	Socket socket;
 	CheckList* chkList;
 	vector<AdminTestCase*> testCases;
+	bool connected;
 };
 
 }
