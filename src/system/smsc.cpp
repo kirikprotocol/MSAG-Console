@@ -801,16 +801,15 @@ void Smsc::shutdown()
 
   smeman.unregisterSmeProxy("scheduler");
 
-  tp2.shutdown();
-
-
   if(mapProxy)
   {
 #ifndef NOMAPPROXY
     MapDialogContainer::getInstance()->unregisterSelf(&smeman);
 #endif
-    MapDialogContainer::dropInstance();
   }
+  tp2.shutdown();
+
+
 
   delete distlstman;
 

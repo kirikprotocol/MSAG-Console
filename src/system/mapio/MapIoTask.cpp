@@ -82,27 +82,27 @@ extern "C" {
 
 } // extern "C"
 
-void MapIoTask::deinit()
+void MapIoTask::deinit( boolean connected )
 {
   USHORT_T result;
   __map_trace2__("deinitialize");
   __global_bind_counter = 0;
   MapDialogContainer::destroyInstance();
-  result = Et96MapUnbindReq(SSN);
-  if ( result != ET96MAP_E_OK) {
-    __map_trace2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",SSN,result);
-//    return;
-  }
-  result = Et96MapUnbindReq(USSD_SSN);
-  if ( result != ET96MAP_E_OK) {
-    __map_trace2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",USSD_SSN,result);
-//    return;
-  }
-  result = MsgRel(MY_USER_ID,ETSIMAP_ID);
-  if ( result != MSG_OK) {
-    __map_warn2__("error at MsgRel errcode 0x%hx",result);
-    if ( !isStopping ) kill(getpid(),17);
-    return;
+  if( connected ) {
+      result = Et96MapUnbindReq(SSN);
+      if ( result != ET96MAP_E_OK) {
+	__map_trace2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",SSN,result);
+      }
+      result = Et96MapUnbindReq(USSD_SSN);
+      if ( result != ET96MAP_E_OK) {
+	__map_trace2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",USSD_SSN,result);
+      }
+      result = MsgRel(MY_USER_ID,ETSIMAP_ID);
+      if ( result != MSG_OK) {
+        __map_warn2__("error at MsgRel errcode 0x%hx",result);
+        if ( !isStopping ) kill(getpid(),17);
+        return;
+      }
   }
   result = MsgClose(MY_USER_ID);
   if ( result != MSG_OK) {
@@ -130,62 +130,28 @@ void MapIoTask::dispatcher()
   int bindTimer = 0;
   for (;;) {
     MAP_isAlive = true;
-    if ( isStopping ) return;
+    if ( isStopping ) {
+        deinit(connected);
+	return;
+    }
     MAP_dispatching = true;
     gettimeofday( &curtime, 0 );
     result = EINSS7CpMsgRecv_r(&message,1000);
     if ( time_logger.isDebugEnabled() ) gettimeofday( &utime, 0 );
 
     MAP_dispatching = false;
-/*    if ( ++timecounter == 60 ) {
-      __trace2__("MAP: EINSS7CpMsgRecv_r TICK-TACK");
-      time( &cur_time );
-      if( cur_time-last_msg > 120 ) {
-        result = MSG_BROKEN_CONNECTION;
-        kill(getpid(),17);
-        __trace2__("MAP:: no messages received in 2 minutes");
-      } else{
-        try{
-          MAPIO_QueryMscVersionInternal();
-        }catch(exception& e){
-          result = MSG_BROKEN_CONNECTION;
-        }
-      }
-      if ( __global_bind_counter != CORRECT_BIND_COUNTER ){
-        result = MSG_BROKEN_CONNECTION;
-        __trace2__("MAP:: not all binders dinded");
-      }
-      timecounter = 0;
-    }
-*/
+
     if ( result == MSG_TIMEOUT ) {
       if ( __global_bind_counter == CORRECT_BIND_COUNTER ) continue;
       __map_trace2__("MAP:: check binders %d", bindTimer);
       if ( ++bindTimer <= MAX_BIND_TIMEOUT ) continue;
-      result = MSG_BROKEN_CONNECTION;
       __map_warn2__("MAP:: not all binders binded in %d seconds. Restarting...", MAX_BIND_TIMEOUT);
+      if ( !isStopping ) kill(getpid(),17);
+      continue;
     }
     if ( result == MSG_BROKEN_CONNECTION ) {
-      __map_warn2__("Broken connection");
-      restart:
-      __map_warn2__("Try to restart MAP service");
-      bool ok = false;
-      while ( !ok ) {
-        __map_trace2__("Check stopped flag");
-        if ( isStopping ) return;
-        try {
-          __map_trace2__("Deinit MAP service");
-          deinit();
-          __map_trace2__("Init MAP service");
-          init(30);
-          __map_trace2__("Waiting binds");
-          timecounter = 0;
-          ok = true;
-        } catch (...) {
-          __map_warn2__("Error reinitialization");
-          sleep(1);
-        }
-      }
+      __map_warn2__("Broken connection %d", result);
+      if ( !isStopping ) kill(getpid(),17);
       continue;
     }
     if ( result != MSG_OK ) {
