@@ -145,7 +145,6 @@ int main(int argc,char* argv[])
   BIO* in=BIO_new(BIO_s_file());
   BIO_set_fp(in,stdin,BIO_NOCLOSE);
 
-  char* pwd="test password";
   RSA *rsa=NULL;
   const unsigned char* p=rsaprivatekey;
   d2i_RSAPrivateKey(&rsa,&p,sizeof(rsaprivatekey));
