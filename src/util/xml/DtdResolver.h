@@ -59,10 +59,6 @@ public:
     */
   virtual InputSource* resolveEntity(const XMLCh *const publicId, const XMLCh *const systemId)
   {
-    #ifdef SMSC_DEBUG
-      std::auto_ptr<char> translatedSystemId(XMLString::transcode(systemId));
-	  smsc_log_debug(logger, "Resolving entity \"%s\"", translatedSystemId.get());
-    #endif
     if (XMLString::endsWith(systemId, DOMString(".dtd").rawBuffer()))
     {
       int idx = XMLString::lastIndexOf(systemId, '/');
@@ -98,7 +94,6 @@ private:
 
     std::auto_ptr<char> dtdNameTranscodedToCallCFunctionStat(XMLString::transcode(tmpDtdName));
     if (stat(dtdNameTranscodedToCallCFunctionStat.get(), &s) == 0) {
-		smsc_log_debug(logger, "DTD Resolved to \"%s\"", dtdNameTranscodedToCallCFunctionStat.get());
       return new LocalFileInputSource(tmpDtdName);
     } else
       return 0;
