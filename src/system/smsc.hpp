@@ -421,6 +421,11 @@ public:
   {
     return tempStore;
   }
+  
+  AclAbstractMgr   *getAclMgr()
+  {
+    return aclmgr;
+  }
 
 
 protected:
