@@ -183,11 +183,11 @@ int partitionSms(SMS* sms,int dstdc)
   if(udhilen>140)return psErrorUdhi;
   auto_ptr<char> buf8;
   auto_ptr<char> bufTr;
+  len-=udhilen;
   if(dc==DataCoding::UCS2 && dstdc!=DataCoding::UCS2)
   {
     buf8=auto_ptr<char>(new char[len]);
     short *data=(short*)(msg+udhilen);
-    len-=udhilen;
     ConvertUCS2ToMultibyte(data,len/2,buf8.get(),len,CONV_ENCODING_CP1251);
     len/=2;
     bufTr=auto_ptr<char>(new char[udhilen+len*3]);
