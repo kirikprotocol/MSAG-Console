@@ -11,7 +11,13 @@
       <command name="1" target="divert_mgr"/>
       <command name="2" target="profile_mgr"/>
       <command name="3" target="smshelp_mgr"/>
-      <command name="(**)" target="MAIN_PAGE"/>
+      <command name="(**)" target="EXIT_PAGE"/>
+    </page>
+
+    <page id="EXIT_PAGE" question="0">
+      <pageExecutor class="ru.sibinco.mci.profile.ExitExecutor">
+        <bundle name="system"/>
+      </pageExecutor>
     </page>
 
     <page id="divert_mgr" question="0">

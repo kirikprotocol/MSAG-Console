@@ -5,19 +5,19 @@ import ru.sibinco.smpp.appgw.scenario.resources.ScenarioResourceBundle;
 import ru.sibinco.smpp.appgw.util.Transliterator;
 import ru.aurorisoft.smpp.Message;
 
-import java.util.Properties;
 import java.text.MessageFormat;
+import java.util.Properties;
 
 import org.apache.log4j.Category;
 
 /**
  * Created by IntelliJ IDEA.
  * User: makar
- * Date: 10.09.2004
- * Time: 14:32:45
+ * Date: 22.10.2004
+ * Time: 17:44:04
  * To change this template use File | Settings | File Templates.
  */
-public class MainExecutor implements Executor
+public class ExitExecutor implements Executor
 {
   private static Category logger = Category.getInstance(MainExecutor.class);
 
@@ -28,7 +28,7 @@ public class MainExecutor implements Executor
   {
     systemBundle = (ScenarioResourceBundle) properties.get(Constants.BUNDLE_SYSTEM);
     try {
-      pageFormat =  new MessageFormat(Transliterator.translit(systemBundle.getString(Constants.PAGE_MAIN)));
+      pageFormat =  new MessageFormat(Transliterator.translit(systemBundle.getString(Constants.PAGE_EXIT)));
     } catch (Exception e) {
       final String err = "Executor init error";
       logger.error(err, e);
@@ -40,7 +40,7 @@ public class MainExecutor implements Executor
   {
     Message resp = new Message();
     resp.setMessageString(pageFormat.format(new Object[] {}));
-    state.setAttribute(Constants.ATTR_MAIN, Constants.ATTR_MAIN);
-    return new ExecutorResponse(new Message[]{resp}, false);
+    return new ExecutorResponse(new Message[]{resp}, true);
   }
+
 }

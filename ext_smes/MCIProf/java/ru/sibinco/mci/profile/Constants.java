@@ -18,6 +18,7 @@ public class Constants
   public final static String VALUE_PREFIX   = "value_";
 
   public final static String PAGE_MAIN = PAGE_PREFIX + "main";
+  public final static String PAGE_EXIT = PAGE_PREFIX + "exit";
   public final static String PAGE_INFO = PAGE_PREFIX + "info";
   public final static String PAGE_SET  = PAGE_PREFIX + "set";
   public final static String PAGE_MAN  = PAGE_PREFIX + "man";
