@@ -218,8 +218,11 @@ public class Profile
 
   private void setAliasHide(String aliasHide)
   {
-    this.aliasHide = (aliasHide.equalsIgnoreCase("true") ||
+    if( aliasHide == null ) this.aliasHide = false;
+    else {
+      this.aliasHide = (aliasHide.equalsIgnoreCase("true") ||
                       aliasHide.equalsIgnoreCase("hide"));
+    }
   }
 
   public boolean isAliasModifiable()
