@@ -69,7 +69,8 @@ namespace smsc { namespace distrlist
             throw(SQLException, ListNotExistsException, 
                   PrincipalNotExistsException, SubmitterAlreadyExistsException);
         virtual void revokePosting(string dlName, const Address& submitter)
-            throw(SQLException, ListNotExistsException, SubmitterNotExistsException);
+            throw(SQLException, ListNotExistsException,
+                  SubmitterNotExistsException, IllegalSubmitterException);
         virtual bool checkPermission(string dlName, const Address& submitter)
             throw(SQLException, ListNotExistsException);
 

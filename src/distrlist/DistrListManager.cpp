@@ -28,14 +28,36 @@ DistrListManager::~DistrListManager()
     // Do nothing ?
 }
 
-const char* CHECK_DL_SQL = 
-"SELECT NVL(COUNT(*), 0) FROM DL_SET WHERE LIST=:LIST";
-const char* ADD_DL_SQL =
-"INSERT INTO DL_SET (LIST, MAX_EL, OWNER) VALUES (:LIST, :MAX_EL, :OWNER)";
-const char* GET_PRINCIPAL_SQL =
-"SELECT MAX_LST, MAX_EL FROM DL_PRINCIPALS WHERE ADDRESS=:OWNER";
-const char* COUNT_ONWNER_DLS_SQL =
-"SELECT NVL(COUNT(*), 0) FROM DL_SET WHERE OWNER=:OWNER";
+const char* CHECK_DL_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_SET WHERE LIST=:LIST";
+const char* LIST_DL_SQL =  "SELECT LIST, OWNER, MAX_EL FROM DL_SET";
+const char* ADD_DL_SQL =   "INSERT INTO DL_SET (LIST, MAX_EL, OWNER) VALUES (:LIST, :MAX_EL, :OWNER)";
+const char* GET_DL_SQL =   "SELECT OWNER, MAX_EL FROM DL_SET WHERE LIST=:LIST";
+
+const char* GET_PRINCIPAL_SQL =    "SELECT MAX_LST, MAX_EL FROM DL_PRINCIPALS WHERE ADDRESS=:OWNER";
+const char* COUNT_ONWNER_DLS_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_SET WHERE OWNER=:OWNER";
+const char* CHECK_PRINCIPAL_SQL =  "SELECT NVL(COUNT(*), 0) FROM DL_PRINCIPALS WHERE ADDRESS=:ADDRESS";
+const char* ADD_PRINCIPAL_SQL   =  "INSERT INTO DL_PRINCIPALS (ADDRESS, MAX_LST, MAX_EL) VALUES (:ADDRESS, :MAX_LST, :MAX_EL)";
+const char* CHANGE_PRINCIPAL_SQL = "UPDATE DL_PRINCIPALS SET MAX_EL=:MAX_EL, MAX_LST=:MAX_LST WHERE ADDRESS=:ADDRESS";
+const char* DELETE_PRINCIPAL_SQL =    "DELETE FROM DL_PRINCIPALS WHERE ADDRESS=:ADDRESS";
+const char* CHECK_SUB_PRINCIPAL_SQL = "SELECT NVL(COUNT(*), 0) FROM DL_SUBMITTERS WHERE ADDRESS=:ADDRESS";
+
+const char* CHECK_SUBMITTER_SQL =  "SELECT NVL(COUNT(*), 0) FROM DL_SUBMITTERS WHERE LIST=:LIST AND ADDRESS=:ADDRESS";
+const char* ADD_SUBMITTER_SQL =    "INSERT INTO DL_SUBMITTERS (LIST, ADDRESS) VALUES (:LIST, :ADDRESS)";
+const char* DELETE_SUBMITTER_SQL = "DELETE FROM DL_SUBMITTERS WHERE LIST=:LIST AND ADDRESS=:ADDRESS";
+
+const char* SELECT_MEMBERS_SQL  =  "SELECT ADDRESS FROM DL_MEMBERS WHERE LIST=:LIST";
+const char* DELETE_MEMBER_SQL =    "DELETE FROM DL_MEMBERS WHERE LIST=:LIST AND ADDRESS=:ADDRESS";
+const char* CHECK_MEMBER_SQL =     "SELECT NVL(COUNT(*), 0) FROM DL_MEMBERS WHERE LIST=:LIST AND ADDRESS=:ADDRESS";
+const char* COUNT_MEMBERS_SQL =    "SELECT NVL(COUNT(*), 0) FROM DL_MEMBERS WHERE LIST=:LIST";
+const char* ADD_MEMBER_SQL   =     "INSERT INTO DL_MEMBERS (LIST, ADDRESS) VALUES (:LIST, :ADDRESS)";
+
+const char* MAX_ONWNER_MEMBERS_SQL =
+"SELECT NVL(MAX(COUNT(LIST)), 0) FROM DL_MEMBERS WHERE LIST IN"
+"   (SELECT LIST FROM DL_SET WHERE OWNER=:OWNER) GROUP BY LIST";
+
+const char* DELETE_MEMBERS_SQL = "DELETE FROM DL_MEMBERS WHERE LIST=:LIST";
+const char* DELETE_DL_SUB_SQL  = "DELETE FROM DL_SUBMITTERS WHERE LIST=:LIST";
+const char* DELETE_DL_SQL      = "DELETE FROM DL_SET WHERE LIST=:LIST";
 
 void DistrListManager::addDistrList(string dlName, const Address& dlOwner) 
     throw(SQLException, ListAlreadyExistsException, 
@@ -52,6 +74,7 @@ void DistrListManager::addDistrList(string dlName, const Address& dlOwner)
         if (!(connection = ds.getConnection())) 
             throw SQLException(FAILED_TO_OBTAIN_CONNECTION);
         
+        // Check for list existence
         std::auto_ptr<Statement> checkListGuard(connection->createStatement(CHECK_DL_SQL));
         Statement* checkList = checkListGuard.get();
         if (!checkList)        
@@ -66,6 +89,7 @@ void DistrListManager::addDistrList(string dlName, const Address& dlOwner)
         if (checkListRs->getUint32(1))
             throw ListAlreadyExistsException("DL '%s' already exists", dlNameStr);
 
+        // Check for principal existence
         std::auto_ptr<Statement> getPrincipalGuard(connection->createStatement(GET_PRINCIPAL_SQL));
         Statement* getPrincipal = getPrincipalGuard.get();
         if (!getPrincipal)        
@@ -83,6 +107,7 @@ void DistrListManager::addDistrList(string dlName, const Address& dlOwner)
         int maxLst = getPrincipalRs->getInt32(1);
         int maxEl  = getPrincipalRs->getInt32(2);
 
+        // Check for principal maxLst constaint
         std::auto_ptr<Statement> countDlsGuard(connection->createStatement(COUNT_ONWNER_DLS_SQL));
         Statement* countDls = countDlsGuard.get();
         if (!countDls)        
@@ -100,6 +125,7 @@ void DistrListManager::addDistrList(string dlName, const Address& dlOwner)
             throw ListCountExceededException("DL count exceeded for owner '%s', maximum is %ld", 
                                              dlOwnerStr, maxLst); 
         
+        // Add distribution list
         std::auto_ptr<Statement> addListGuard(connection->createStatement(ADD_DL_SQL));
         Statement* addList = addListGuard.get();
         if (!addList)        
@@ -107,8 +133,35 @@ void DistrListManager::addDistrList(string dlName, const Address& dlOwner)
 
         addList->setString(1, dlNameStr);
         addList->setInt32 (2, maxEl);
-        addList->setString(3, dlOwnerStr, !dlOwnerStr);
+        addList->setString(3, dlOwnerStr);
         addList->executeUpdate();
+
+        // Check for submitter existence
+        std::auto_ptr<Statement> checkSubmitterGuard(connection->createStatement(CHECK_SUBMITTER_SQL));
+        Statement* checkSubmitter = checkSubmitterGuard.get();
+        if (!checkSubmitter)        
+            throw SQLException(FAILED_TO_CREATE_STATEMENT);
+
+        checkSubmitter->setString(1, dlNameStr);
+        checkSubmitter->setString(2, dlOwnerStr);
+        
+        std::auto_ptr<ResultSet> checkSubmitterRsGuard(checkSubmitter->executeQuery());
+        ResultSet* checkSubmitterRs = checkSubmitterRsGuard.get();
+        if (!checkSubmitterRs || !checkSubmitterRs->fetchNext()) 
+            throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
+        
+        if (!checkSubmitterRs->getUint32(1)) // owner as submitter not exists
+        {
+            // Add owner as distribution list submitter
+            std::auto_ptr<Statement> addSubmitterGuard(connection->createStatement(ADD_SUBMITTER_SQL));
+            Statement* addSubmitter = addSubmitterGuard.get();
+            if (!addSubmitter)        
+                throw SQLException(FAILED_TO_CREATE_STATEMENT);
+
+            addSubmitter->setString(1, dlNameStr);
+            addSubmitter->setString(2, dlOwnerStr);
+            addSubmitter->executeUpdate();
+        }
         connection->commit();
     }
     catch(Exception& exc) {
@@ -136,10 +189,6 @@ void DistrListManager::addDistrList(string dlName, const Address& dlOwner)
     
     if (connection) ds.freeConnection(connection);
 }
-
-const char* DELETE_MEMBERS_SQL = "DELETE FROM DL_MEMBERS WHERE LIST=:LIST";
-const char* DELETE_DL_SUB_SQL  = "DELETE FROM DL_SUBMITTERS WHERE LIST=:LIST";
-const char* DELETE_DL_SQL      = "DELETE FROM DL_SET WHERE LIST=:LIST";
 
 void DistrListManager::deleteDistrList(string dlName)
     throw(SQLException, ListNotExistsException)
@@ -204,8 +253,6 @@ void DistrListManager::deleteDistrList(string dlName)
     if (connection) ds.freeConnection(connection);
 }
 
-const char* GET_DL_SQL = "SELECT OWNER, MAX_EL FROM DL_SET WHERE LIST=:LIST";
-
 DistrList DistrListManager::getDistrList(string dlName)
     throw(SQLException, ListNotExistsException)
 {
@@ -255,8 +302,6 @@ DistrList DistrListManager::getDistrList(string dlName)
     if (connection) ds.freeConnection(connection);
     return list;
 }
-
-const char* LIST_DL_SQL = "SELECT LIST, OWNER, MAX_EL FROM DL_SET";
 
 Array<DistrList> DistrListManager::list()
     throw(SQLException)
@@ -314,11 +359,6 @@ Array<DistrList> DistrListManager::list()
     if (connection) ds.freeConnection(connection);
     return lists;
 }
-
-const char* SELECT_MEMBERS_SQL  = (const char*)
-"SELECT ADDRESS FROM DL_MEMBERS WHERE LIST=:LIST";
-const char* CHECK_SUBMITTER_SQL = (const char*)
-"SELECT NVL(COUNT(*), 0) FROM DL_SUBMITTERS WHERE LIST=:LIST AND ADDRESS=:ADDRESS";
 
 Array<Address> DistrListManager::members(string dlName, const Address& submitter)
     throw(SQLException, IllegalSubmitterException)
@@ -446,12 +486,6 @@ bool DistrListManager::checkPermission(string dlName, const Address& submitter)
     return result;
 }
 
-const char* CHECK_PRINCIPAL_SQL =  (const char*)
-"SELECT NVL(COUNT(*), 0) FROM DL_PRINCIPALS WHERE ADDRESS=:ADDRESS";
-const char* ADD_PRINCIPAL_SQL   =  (const char*)
-"INSERT INTO DL_PRINCIPALS (ADDRESS, MAX_LST, MAX_EL) "
-"VALUES (:ADDRESS, :MAX_LST, :MAX_EL)";
-
 void DistrListManager::addPrincipal(const Principal& prc)
     throw(SQLException, PrincipalAlreadyExistsException)
 {
@@ -517,11 +551,6 @@ void DistrListManager::addPrincipal(const Principal& prc)
     
     if (connection) ds.freeConnection(connection);
 }
-
-const char* DELETE_PRINCIPAL_SQL =  (const char*)
-"DELETE FROM DL_PRINCIPALS WHERE ADDRESS=:ADDRESS";
-const char* CHECK_SUB_PRINCIPAL_SQL =  (const char*)
-"SELECT NVL(COUNT(*), 0) FROM DL_SUBMITTERS WHERE ADDRESS=:ADDRESS";
 
 void DistrListManager::deletePrincipal(const Address& address) 
     throw(SQLException, PrincipalNotExistsException, PrincipalInUseException)
@@ -605,12 +634,6 @@ void DistrListManager::deletePrincipal(const Address& address)
     
     if (connection) ds.freeConnection(connection);
 }
-
-const char* CHANGE_PRINCIPAL_SQL =
-"UPDATE DL_PRINCIPALS SET MAX_EL=:MAX_EL, MAX_LST=:MAX_LST WHERE ADDRESS=:ADDRESS";
-const char* MAX_ONWNER_MEMBERS_SQL =
-"SELECT NVL(MAX(COUNT(LIST)), 0) FROM DL_MEMBERS WHERE LIST IN"
-"   (SELECT LIST FROM DL_SET WHERE OWNER=:OWNER) GROUP BY LIST";
 
 void DistrListManager::changePrincipal(const Principal& prc) 
     throw(SQLException, PrincipalNotExistsException, IllegalPrincipalException)
@@ -760,13 +783,6 @@ Principal DistrListManager::getPrincipal(const Address& address)
     return prc;
 }
 
-const char* CHECK_MEMBER_SQL = (const char*)
-"SELECT NVL(COUNT(*), 0) FROM DL_MEMBERS WHERE LIST=:LIST AND ADDRESS=:ADDRESS";
-const char* COUNT_MEMBERS_SQL = (const char*)
-"SELECT NVL(COUNT(*), 0) FROM DL_MEMBERS WHERE LIST=:LIST";
-const char* ADD_MEMBER_SQL   = (const char*)
-"INSERT INTO DL_MEMBERS (LIST, ADDRESS) VALUES (:LIST, :ADDRESS)";
-
 void DistrListManager::addMember(string dlName, const Address& member) 
     throw(SQLException, ListNotExistsException, 
           MemberAlreadyExistsException, MemberCountExceededException)
@@ -870,9 +886,6 @@ void DistrListManager::addMember(string dlName, const Address& member)
     
     if (connection) ds.freeConnection(connection);
 }
-
-const char* DELETE_MEMBER_SQL =
-"DELETE FROM DL_MEMBERS WHERE LIST=:LIST AND ADDRESS=:ADDRESS";
 
 void DistrListManager::deleteMember(string dlName, const Address& member) 
     throw(SQLException, ListNotExistsException, MemberNotExistsException)
@@ -1003,9 +1016,6 @@ void DistrListManager::deleteMembers(string dlName)
     if (connection) ds.freeConnection(connection);
 }
 
-const char* ADD_SUBMITTER_SQL = 
-"INSERT INTO DL_SUBMITTERS (LIST, ADDRESS) VALUES (:LIST, :ADDRESS)";
-
 void DistrListManager::grantPosting(string dlName, const Address& submitter) 
     throw(SQLException, ListNotExistsException, 
           PrincipalNotExistsException, SubmitterAlreadyExistsException)
@@ -1102,11 +1112,9 @@ void DistrListManager::grantPosting(string dlName, const Address& submitter)
     if (connection) ds.freeConnection(connection);
 }
 
-const char* DELETE_SUBMITTER_SQL =
-"DELETE FROM DL_SUBMITTERS WHERE LIST=:LIST AND ADDRESS=:ADDRESS";
-
 void DistrListManager::revokePosting(string dlName, const Address& submitter)
-    throw(SQLException, ListNotExistsException, SubmitterNotExistsException)
+    throw(SQLException, ListNotExistsException, 
+          SubmitterNotExistsException, IllegalSubmitterException)
 {
     const char* dlNameStr = dlName.c_str();
     const char* submitterStr = submitter.toString().c_str();
@@ -1119,20 +1127,25 @@ void DistrListManager::revokePosting(string dlName, const Address& submitter)
         if (!(connection = ds.getConnection())) 
             throw SQLException(FAILED_TO_OBTAIN_CONNECTION);
         
-        std::auto_ptr<Statement> checkListGuard(connection->createStatement(CHECK_DL_SQL));
-        Statement* checkList = checkListGuard.get();
-        if (!checkList)        
+        std::auto_ptr<Statement> getListGuard(connection->createStatement(GET_DL_SQL));
+        Statement* getList = getListGuard.get();
+        if (!getList)        
             throw SQLException(FAILED_TO_CREATE_STATEMENT);
 
-        checkList->setString(1, dlNameStr);
+        getList->setString(1, dlNameStr);
         
-        std::auto_ptr<ResultSet> checkListRsGuard(checkList->executeQuery());
-        ResultSet* checkListRs = checkListRsGuard.get();
-        if (!checkListRs || !checkListRs->fetchNext()) 
+        std::auto_ptr<ResultSet> getListRsGuard(getList->executeQuery());
+        ResultSet* getListRs = getListRsGuard.get();
+        if (!getListRs) 
             throw SQLException(FAILED_TO_OBTAIN_RESULTSET);
-        if (!checkListRs->getUint32(1))
+        if (!getListRs->fetchNext())
             throw ListNotExistsException("DL '%s' not exists", dlNameStr);
         
+        const char* owner = getListRs->isNull(1) ? 0:getListRs->getString(1);
+        if (owner && (strcmp(owner, submitterStr) == 0))
+            throw IllegalSubmitterException("Submitter '%s' is an owner of DL '%s'",
+                                            submitterStr, dlNameStr);
+
         std::auto_ptr<Statement> deleteSubmitterGuard(connection->createStatement(DELETE_SUBMITTER_SQL));
         Statement* deleteSubmitter = deleteSubmitterGuard.get();
         if (!deleteSubmitter)        
