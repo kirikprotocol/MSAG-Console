@@ -247,8 +247,8 @@ const unsigned char* c2t_Cp1251_table[] = {
 (const unsigned char*)"h",//õ 245
 (const unsigned char*)"c",//ö 246
 (const unsigned char*)"ch",//÷ 247
-(const unsigned char*)"s",//ø 248
-(const unsigned char*)"s",//ù 249
+(const unsigned char*)"sh",//ø 248
+(const unsigned char*)"sch",//ù 249
 (const unsigned char*)"'",//ú 250
 (const unsigned char*)"y",//û 251
 (const unsigned char*)"'",//ü 252
@@ -256,3 +256,4 @@ const unsigned char* c2t_Cp1251_table[] = {
 (const unsigned char*)"ju",//þ 254
 (const unsigned char*)"ja"//ÿ
 };
+

@@ -336,7 +336,7 @@ unsigned char w2c_Cp1251_table[] = {
   0xfc,
   0xfd,
   0xfe,
-  0x3f,
+  0xff,
   0x3f,
   0xb8,
   0x90,
@@ -514,3 +514,4 @@ unsigned char w2c_Cp1251_table[] = {
   0x3f,
   0x3f
 };
+
