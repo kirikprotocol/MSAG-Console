@@ -162,7 +162,9 @@ void MapIoTask::dispatcher()
       	    result = MSG_BROKEN_CONNECTION;
 	    __map_warn2__("MAP:: not all binders binded in %d seconds. Restarting...", MAX_BIND_TIMEOUT);
           }
-        } else continue;
+
+        }
+        continue;
     }
     if ( result == MSG_BROKEN_CONNECTION ){
       __map_warn2__("Broken connection");
