@@ -40,10 +40,16 @@ int StateMachine::Execute()
 StateType StateMachine::submit(Tuple& t)
 {
   __require__(t.state==UNKNOWN_STATE);
+  
   SmeProxy *src_proxy,*dest_proxy=0;
+
   src_proxy=t.command.getProxy();
+  
   __trace2__("StateMachine::submit:%lld",t.msgId);
+  
   SMS* sms = t.command->get_sms();
+
+  time_t now=time(NULL);
 
   uint32_t dialogId =  t.command->get_dialogId();
   __trace2__("SUBMIT: seq=%d",dialogId);
@@ -82,7 +88,12 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
-  if(sms->getNextTime()>time(NULL)+maxValidTime || sms->getNextTime()>sms->getValidTime())
+  if(sms->getValidTime()>now+maxValidTime)
+  {
+    sms->setValidTime(now+maxValidTime);
+  }
+
+  if(sms->getNextTime()>now+maxValidTime || sms->getNextTime()>sms->getValidTime())
   {
     SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, SmscCommand::Status::INVALIDSCHEDULE);
     try{
@@ -96,9 +107,9 @@ StateType StateMachine::submit(Tuple& t)
   __trace2__("Replace if present for message %lld=%d",t.msgId,sms->getIntProperty("SMPP_REPLACE_IF_PRESENT_FLAG"));
 
   try{
-    if(sms->getNextTime()<time(NULL))
+    if(sms->getNextTime()<now)
     {
-      sms->setNextTime(RescheduleCalculator::calcNextTryTime(time(NULL),1));
+      sms->setNextTime(RescheduleCalculator::calcNextTryTime(now,1));
     }
     store->createSms(*sms,t.msgId,
       sms->getIntProperty("SMPP_REPLACE_IF_PRESENT_FLAG")?smsc::store::SMPP_OVERWRITE_IF_PRESENT:smsc::store::CREATE_NEW);
@@ -128,8 +139,8 @@ StateType StateMachine::submit(Tuple& t)
     }
   }
 
-  __trace2__("Sms scheduled to %d, now %d",(int)sms->getNextTime(),(int)time(NULL));
-  if(sms->getNextTime()>time(NULL))
+  __trace2__("Sms scheduled to %d, now %d",(int)sms->getNextTime(),(int)now);
+  if(sms->getNextTime()>now)
   {
     smsc->notifyScheduler();
     return ENROUTE_STATE;
