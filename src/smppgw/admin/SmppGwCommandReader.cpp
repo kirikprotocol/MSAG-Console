@@ -10,6 +10,7 @@
 #include "CommandApply.h"
 #include "CommandUpdateSmeInfo.h"
 #include "CommandAddSme.h"
+#include "CommandStatusSme.h"
 #include "CommandDeleteSme.h"
 #include "CommandTraceRoute.h"
 #include "CommandLoadRoutes.h"
@@ -22,6 +23,7 @@ SmppGwCommandReader::SmppGwCommandReader(Socket * admSocket)
   : CommandReader(admSocket)
 {
   commandlist["addSme"] = CommandIds::addSme;
+  commandlist["statusSme"] = CommandIds::statusSme;
   commandlist["apply"] = CommandIds::apply;
   commandlist["deleteSme"] = CommandIds::deleteSme;
   commandlist["loadRoutes"] = CommandIds::loadRoutes;
@@ -52,6 +54,7 @@ Command * SmppGwCommandReader::createCommand(int id, const DOMDocument *data)
     case CommandIds::apply: return new CommandApply(data);
     case CommandIds::updateSmeInfo: return new CommandUpdateSmeInfo(data);
     case CommandIds::addSme: return new CommandAddSme(data);
+    case CommandIds::statusSme: return new CommandStatusSme(data);
     case CommandIds::deleteSme: return new CommandDeleteSme(data);
     case CommandIds::traceRoute: return new CommandTraceRoute(data);
     case CommandIds::loadRoutes: return new CommandLoadRoutes(data);
