@@ -1,6 +1,8 @@
 #include "Service.h"
 
+#ifndef __EXTENSIONS__
 #define __EXTENSIONS__
+#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
