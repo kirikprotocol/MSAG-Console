@@ -165,7 +165,7 @@ namespace smsc { namespace infosme
         Event       processEndEvent;
         Event       inProcessEvent;
         Mutex       inProcessLock;
-        Mutex       createTableLock;
+        Mutex       createTableLock, enableLock;
         bool        bInProcess;
 
         Mutex           messagesCacheLock;
@@ -229,9 +229,11 @@ namespace smsc { namespace infosme
             return info.priority;
         }
         inline bool isEnabled() {
+            MutexGuard guard(enableLock);
             return info.enabled;
         }
         inline bool setEnabled(bool enabled=true) {
+            MutexGuard guard(enableLock);
             return info.enabled = enabled;
         }
         inline const TaskInfo& getInfo() {

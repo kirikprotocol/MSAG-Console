@@ -41,6 +41,8 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
 
     Parameters e_task_params;
     e_task_params[ARGUMENT_NAME_TASK_ID] = Parameter(ARGUMENT_NAME_TASK_ID, StringType);
+    Method is_task_enabled((unsigned)isTaskEnabledMethod, "isTaskEnabled",
+                            e_task_params, BooleanType);
     e_task_params[ARGUMENT_NAME_ENABLED] = Parameter(ARGUMENT_NAME_ENABLED, BooleanType);
     Method set_task_enabled((unsigned)setTaskEnabledMethod, "setTaskEnabled",
                             e_task_params, StringType);
@@ -66,6 +68,7 @@ InfoSmeComponent::InfoSmeComponent(InfoSmeAdmin& admin)
     methods[remove_tasks.getName()]                 = remove_tasks;
     methods[start_tasks.getName()]                  = start_tasks;
     methods[stop_tasks.getName()]                   = stop_tasks;
+    methods[is_task_enabled.getName()]              = is_task_enabled;
     methods[set_task_enabled.getName()]             = set_task_enabled;
     methods[add_schedule.getName()]                 = add_schedule;
     methods[remove_schedule.getName()]              = remove_schedule;
@@ -116,6 +119,8 @@ Variant InfoSmeComponent::call(const Method& method, const Arguments& args)
         case stopTasksMethod:
             stopTasks(args);
             break;
+        case isTaskEnabledMethod:
+            return Variant(isTaskEnabled(args));
         case setTaskEnabledMethod:
             setTaskEnabled(args);
             break;
@@ -219,6 +224,17 @@ void InfoSmeComponent::stopTasks(const Arguments& args)
         if (!admin.stopTask(taskId))
             throw AdminException("Failed to stop task '%s'", taskId);
     }
+}
+bool InfoSmeComponent::isTaskEnabled(const Arguments& args)
+{
+    if (!args.Exists(ARGUMENT_NAME_TASK_ID)) 
+        error("isTaskEnabled", ARGUMENT_NAME_TASK_ID);
+    Variant arg = args[ARGUMENT_NAME_TASK_ID];
+    const char* taskId = (arg.getType() == StringType) ? arg.getStringValue():0;
+    if (!taskId || taskId[0] == '\0')
+        error("isTaskEnabled", ARGUMENT_NAME_TASK_ID);
+    
+    return admin.isTaskEnabled(taskId);
 }
 void InfoSmeComponent::setTaskEnabled(const Arguments& args)
 {

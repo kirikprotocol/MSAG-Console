@@ -33,8 +33,9 @@ namespace smsc { namespace infosme
         virtual bool removeTask(std::string taskId) = 0; 
         virtual bool startTask(std::string taskId) = 0;
         virtual bool stopTask(std::string taskId) = 0; 
+        virtual bool isTaskEnabled(std::string taskId) = 0;
         virtual bool setTaskEnabled(std::string taskId, bool enabled) = 0;
-
+        
         virtual bool addSchedule(std::string scheduleId) = 0;
         virtual bool removeSchedule(std::string scheduleId) = 0;
         virtual bool changeSchedule(std::string oldScheduleId, std::string newScheduleId) = 0;

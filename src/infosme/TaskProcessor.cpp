@@ -738,12 +738,18 @@ bool TaskProcessor::stopTask(std::string taskId)
     if (!task) return false; 
     return (task->isInProcess()) ? true:invokeEndProcess(task);
 }
+bool TaskProcessor::isTaskEnabled(std::string taskId)
+{
+    TaskGuard taskGuard = getTask(taskId);
+    Task* task = taskGuard.get();
+    return (task && task->isEnabled());
+}
 bool TaskProcessor::setTaskEnabled(std::string taskId, bool enabled)
 {
     TaskGuard taskGuard = getTask(taskId);
     Task* task = taskGuard.get();
     if (!task) return false; 
-    task->setEnabled();
+    task->setEnabled(enabled);
     return true;
 }
 bool TaskProcessor::addSchedule(std::string scheduleId)
