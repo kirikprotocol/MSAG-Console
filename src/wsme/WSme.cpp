@@ -205,7 +205,7 @@ protected:
                 {
                     // check responded or not, get msgid here
                     const char* msgid = ((PduXSmResp*)resp)->get_messageId();
-                    if (msgid && msgid[1] != '\0') {
+                    if (msgid && msgid[0] != '\0') {
                         __trace2__("Got responce, msgid=%s", msgid);
                         processor.processResponce(msisdn, msgid, true);
                     }
