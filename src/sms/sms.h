@@ -90,18 +90,16 @@ namespace smsc {
     using std::auto_ptr;
 
     const int MAX_ESERVICE_TYPE_LENGTH = 5;
+    const int MAX_ROUTE_ID_TYPE_LENGTH = 20;
     const int MAX_ADDRESS_VALUE_LENGTH = 20;
-    const int MAX_SHORT_MESSAGE_LENGTH = 255; //depricated
+    const int MAX_SHORT_MESSAGE_LENGTH = 255; // Depricated !!!
     const int MAX_BODY_LENGTH          = 1650;
-    // move it to SQL statements processing
-
-    //const char* DEFAULT_ETSI_GSM_SEVICE_NAME = "GSM-SM";
-
+    
+    typedef uint64_t    SMSId;
     typedef char        AddressValue[MAX_ADDRESS_VALUE_LENGTH+1];
     typedef char        EService[MAX_ESERVICE_TYPE_LENGTH+1];
-    //typedef uint8_t     SMSData[MAX_SHORT_MESSAGE_LENGTH]; depricated
-    typedef uint64_t    SMSId;
-
+    typedef char        RouteId[MAX_ROUTE_ID_TYPE_LENGTH+1];
+    
     /**
     * Структура Address предназначена для хранения
     * адресов в SMS сообщении.
@@ -950,8 +948,8 @@ namespace smsc {
         mutable TemporaryBodyInt temporaryBodyInt;
         mutable TemporaryBodyBin temporaryBodyBin;
       public:
-      /**
-                     * Default конструктор, просто инициализирует поля нулями
+        /**
+        * Default конструктор, просто инициализирует поля нулями
         */
         Body() : buffLen(0) {};
 
@@ -1132,10 +1130,10 @@ namespace smsc {
       */
       typedef enum {
         ENROUTE         = SMSC_BYTE_ENROUTE_STATE,
-          DELIVERED       = SMSC_BYTE_DELIVERED_STATE,
-          EXPIRED         = SMSC_BYTE_EXPIRED_STATE,
-          UNDELIVERABLE   = SMSC_BYTE_UNDELIVERABLE_STATE,
-          DELETED         = SMSC_BYTE_DELETED_STATE
+        DELIVERED       = SMSC_BYTE_DELIVERED_STATE,
+        EXPIRED         = SMSC_BYTE_EXPIRED_STATE,
+        UNDELIVERABLE   = SMSC_BYTE_UNDELIVERABLE_STATE,
+        DELETED         = SMSC_BYTE_DELETED_STATE
       } State;
 
       /**
@@ -1148,38 +1146,6 @@ namespace smsc {
       */
       struct SMS: public SMSDict
       {
-      /*                      !!! Depricated !!!
-
-        State       state;
-        uint16_t    messageReference;
-
-          Address     originatingAddress;
-          Address     destinationAddress;
-          Descriptor  originatingDescriptor;
-          Descriptor  destinationDescriptor;
-
-            time_t      waitTime;       // Время/Дата с которого пытаться доставить
-            time_t      validTime;      // Время/Дата до которого сообщение валидно
-            time_t      submitTime;     // Время/Дата поступления на SMSC
-            time_t      lastTime;       // Время/Дата последней попытки доставки
-            time_t      nextTime;       // Время/Дата слудующей попытки доставки
-
-              uint8_t     priority;
-              uint8_t     protocolIdentifier;
-
-                uint8_t     deliveryReport;
-                bool        needArchivate;
-
-                  uint8_t     failureCause;   // Причина неудачи последней попытки
-                  uint32_t    attempts;       // Количество неуспешных попыток доставки
-
-                    Body        messageBody;    // Закодированное & сжатое тело сообщения
-                    EService    eServiceType;
-
-                      SMSId       receiptSmsId;   // id сообщения на который идёт ответ-репорт
-                      uint8_t     esmClass;       // тип сообщения: нормальное, ответ ...
-        */
-
         State       state;
         time_t      submitTime;     // Время/Дата поступления на SMSC
         time_t      validTime;      // Время/Дата до которого сообщение валидно
@@ -1206,68 +1172,32 @@ namespace smsc {
         Body        messageBody;    // Тело сообщения + PDU поля.
         bool        attach;
 
-        /**
-        *                      !!! Depricated !!!
-        *
-        * Default конструктор, просто инициализирует поле state как ENROUTE
-        *
-        SMS() : state(ENROUTE), lastTime(0), nextTime(0),
-        failureCause(0), attempts(0), receiptSmsId(0), esmClass(0)
-        {
-        eServiceType[0]='\0';
-      };*/
+        RouteId     routeId;        // Additional fields
+        int32_t     serviceId;      // Additional fields
+        int32_t     priority;       // Additional fields
 
-      /**
-                     * Default конструктор, просто инициализирует поле state как ENROUTE
-           * и прочие поля дефолтными значениями
+        /**
+        * Default конструктор, просто инициализирует поле state как ENROUTE
+        * и прочие поля дефолтными значениями
         */
         SMS() : state(ENROUTE), submitTime(0), validTime(0),
           attempts(0), lastResult(0), lastTime(0), nextTime(0),
           messageReference(0), needArchivate(true),
-          deliveryReport(0), billingRecord(0), attach(false)
+          deliveryReport(0), billingRecord(0), attach(false),
+          serviceId(0), priority(0)
         {
-          eServiceType[0]='\0';
+          eServiceType[0]='\0'; routeId[0]='\0';
         };
 
 
         /**
-        *                      !!! Depricated !!!
-        *
         * Конструктор копирования, используется для создания
         * SMS по образцу
         *
         * @param sms    образец SMS
-        *
-        SMS(const SMS& sms) :
-        state(sms.state),
-        messageReference(sms.messageReference),
-        originatingAddress(sms.originatingAddress),
-        destinationAddress(sms.destinationAddress),
-        originatingDescriptor(sms.originatingDescriptor),
-        destinationDescriptor(sms.destinationDescriptor),
-        waitTime(sms.waitTime), validTime(sms.validTime),
-        submitTime(sms.submitTime), lastTime(sms.lastTime),
-        nextTime(sms.nextTime), priority(sms.priority),
-        protocolIdentifier(sms.protocolIdentifier),
-        deliveryReport(sms.deliveryReport),
-        needArchivate(sms.needArchivate),
-        failureCause(sms.failureCause),
-        attempts(sms.attempts),
-        messageBody(sms.messageBody),
-        receiptSmsId(sms.receiptSmsId),
-        esmClass(sms.esmClass)
-        {
-        strncpy(eServiceType, sms.eServiceType, sizeof(EService));
-          };*/
-
-          /**
-          * Конструктор копирования, используется для создания
-          * SMS по образцу
-          *
-          * @param sms    образец SMS
         */
         SMS(const SMS& sms) :
-        state(sms.state),
+          state(sms.state),
           submitTime(sms.submitTime),
           validTime(sms.validTime),
           attempts(sms.attempts),
@@ -1284,51 +1214,20 @@ namespace smsc {
           originatingDescriptor(sms.originatingDescriptor),
           destinationDescriptor(sms.destinationDescriptor),
           messageBody(sms.messageBody),
-          attach(sms.attach)
+          attach(sms.attach),
+          serviceId(sms.serviceId),
+          priority(sms.priority)
         {
-          strncpy(eServiceType, sms.eServiceType, sizeof(EService));
+          strncpy(eServiceType, sms.eServiceType, MAX_ESERVICE_TYPE_LENGTH);
+          strncpy(routeId, sms.routeId, MAX_ROUTE_ID_TYPE_LENGTH);
         };
 
-
         /**
-        *                      !!! Depricated !!!
-        *
         * Переопределённый оператор '=',
         * используется для копирования сообщений
         *
         * @param sms   Правая часть оператора '='
         * @return ссылку на себя
-        *
-        SMS& operator =(const SMS& sms)
-        {
-        state = sms.state;
-        originatingAddress = sms.originatingAddress;
-        destinationAddress = sms.destinationAddress;
-        originatingDescriptor = sms.originatingDescriptor;
-        destinationDescriptor = sms.destinationDescriptor;
-        waitTime = sms.waitTime; validTime = sms.validTime;
-        submitTime = sms.submitTime; lastTime = sms.lastTime;
-        nextTime = sms.nextTime; priority = sms.priority;
-        messageReference = sms.messageReference;
-        protocolIdentifier = sms.protocolIdentifier;
-        deliveryReport = sms.deliveryReport;
-        needArchivate = sms.needArchivate;
-        failureCause = sms.failureCause;
-        attempts = sms.attempts;
-        messageBody = sms.messageBody;
-        receiptSmsId = sms.receiptSmsId;
-        esmClass = sms.esmClass;
-
-          strncpy(eServiceType, sms.eServiceType, sizeof(EService));
-          return (*this);
-          };*/
-
-          /**
-          * Переопределённый оператор '=',
-          * используется для копирования сообщений
-          *
-          * @param sms   Правая часть оператора '='
-          * @return ссылку на себя
         */
         SMS& operator =(const SMS& sms)
         {
@@ -1350,8 +1249,11 @@ namespace smsc {
           destinationDescriptor = sms.destinationDescriptor;
           messageBody = sms.messageBody;
           attach = sms.attach;
+          serviceId = sms.serviceId;
+          priority = sms.priority;
 
-          strncpy(eServiceType, sms.eServiceType, sizeof(EService));
+          strncpy(eServiceType, sms.eServiceType, MAX_ESERVICE_TYPE_LENGTH);
+          strncpy(routeId, sms.routeId, MAX_ROUTE_ID_TYPE_LENGTH);
           return (*this);
         };
 
@@ -1469,8 +1371,6 @@ namespace smsc {
           return destinationAddress;
         };
 
-
-
         inline void setDealiasedDestinationAddress(uint8_t length, uint8_t type,
           uint8_t plan, const char* buff)
         { // Copies address value from 'buff' to static structure
@@ -1493,11 +1393,7 @@ namespace smsc {
         {
           return dealiasedDestinationAddress;
         };
-
-
-
-
-
+        
         /**
         * Устанавливает дескриптор отправителя
         * Копирует адрес во внутренние структуры
@@ -1561,14 +1457,14 @@ namespace smsc {
         *
         inline void setDestinationDescriptor(const Descriptor& descriptor)
         { // Copies descriptor from 'descriptor' to static structure
-        destinationDescriptor = descriptor;
-          };*/
+            destinationDescriptor = descriptor;
+        };*/
 
-          /**
-          * Возвращает дескриптор получателя
-          *
-          * @return дескриптор получателя
-          * @see Descriptor
+        /**
+        * Возвращает дескриптор получателя
+        *
+        * @return дескриптор получателя
+        * @see Descriptor
         */
         inline const Descriptor& getDestinationDescriptor() const
         {
@@ -1587,41 +1483,11 @@ namespace smsc {
           };*/
 
 
-          /**
-          *                      !!! Depricated !!!
-          *
-          * Устанавливает время ожидания.
-          *
-          * @param time   дата, когда сообщение должно быть отправлено
-          *               (не интервал ожидания).
-        */
-        /*inline void setWaitTime(time_t time)
-        {
-        __trace__("Method is depricated !!!");
-        __require__(false);
-        //waitTime = time;
-          };*/
-
-          /**
-          *                      !!! Depricated !!!
-          *
-          * Возвращает время ожидания.
-          *
-          * @return дата, когда сообщение должно быть отправлено
-          *         (не интервал ожидания).
-        */
-        /*inline time_t getWaitTime() const
-        {
-        __trace__("Method is depricated !!!");
-        __require__(false);
-        //return waitTime;
-          };*/
-
-          /**
-          * Устанавливает время валидности сообщения.
-          *
-          * @param time   дата, до которой сообщение валидно
-          *               (не интервал времени).
+        /**
+        * Устанавливает время валидности сообщения.
+        *
+        * @param time   дата, до которой сообщение валидно
+        *               (не интервал времени).
         */
         inline void setValidTime(time_t time)
         {
@@ -1666,13 +1532,13 @@ namespace smsc {
         *
         inline void setLastTime(time_t time)
         {
-        lastTime = time;
-          };*/
+            lastTime = time;
+        };*/
 
-          /**
-          * Возвращает время последней попытки доставки сообщения из SMSC
-          *
-          * @return время последней попытки доставки сообщения из SMSC
+        /**
+        * Возвращает время последней попытки доставки сообщения из SMSC
+        *
+        * @return время последней попытки доставки сообщения из SMSC
         */
         inline time_t getLastTime() const
         {
@@ -1722,73 +1588,9 @@ namespace smsc {
         };
 
         /**
-        *                      !!! Depricated !!!
+        * Устанавливает тип отчета о доставке сообщения
         *
-        * Устанавливает приоритет сообщения.
-        * В чистом стандарте SMS не используется, но нужен для SMPP
-        *
-        * @param pri    приоритет сообщения
-        */
-        /*inline void setPriority(uint8_t pri)
-        {
-        //__trace__("Method is depricated !!!");
-        //__require__(false);
-        //priority = pri;
-        setIntProperty(SMPP_PRIORITY,(uint32_t)pri);
-          };*/
-
-          /**
-          *                      !!! Depricated !!!
-          *
-          * Возвращает приоритет сообщения.
-          * В чистом стандарте SMS не используется, но нужен для SMPP
-          *
-          * @return приоритет сообщения
-        */
-        /*inline uint8_t getPriority() const
-        {
-        //__trace__("Method is depricated !!!");
-        //__require__(false);
-        //return priority;
-        return (uint8_t)getIntProperty(SMPP_PRIORITY);
-          };*/
-
-          /**
-          *                      !!! Depricated !!!
-          *
-          * Устанавливает прокол передачи сообщения.
-          * В чистом стандарте SMS не используется, но нужен для SMPP
-          *
-          * @param pid    прокол передачи сообщения
-        */
-        /*inline void setProtocolIdentifier(uint8_t pid)
-        {
-        //__trace__("Method is depricated !!!");
-        //__require__(false);
-        //protocolIdentifier = pid;
-        setIntProperty(SMPP_PROTOCOL_ID,(uint32_t)pid);
-          };*/
-
-          /**
-          *                      !!! Depricated !!!
-          *
-          * Возвращает прокол передачи сообщения.
-          * В чистом стандарте SMS не используется, но нужен для SMPP
-          *
-          * @return прокол передачи сообщения
-        */
-        /*inline uint8_t getProtocolIdentifier() const
-        {
-        //__trace__("Method is depricated !!!");
-        //__require__(false);
-        //return protocolIdentifier;
-        return (uint8_t)getIntProperty(SMPP_PROTOCOL_ID);
-          };*/
-
-          /**
-          * Устанавливает тип отчета о доставке сообщения
-          *
-          * @param req    тип отчета о доставке сообщения
+        * @param req    тип отчета о доставке сообщения
         */
         inline void setDeliveryReport(uint8_t report)
         {
@@ -1848,36 +1650,10 @@ namespace smsc {
         };
 
         /**
-        * Устанавливает причину в случае
-        * отказа/некорректности/недоставки сообщения
+        * Возвращает причину в случае
+        * отказа/некорректности/недоставки последней попытки доставки сообщения
         *
-        * @param cause  причина отказа/некорректности/недоставки сообщения
-        *
-        inline void setFailureCause(uint8_t cause)
-        {
-        failureCause = cause;
-          };*/
-
-          /**
-          *                      !!! Depricated !!!
-          *
-          * Возвращает причину в случае
-          * отказа/некорректности/недоставки сообщения
-          *
-          * @return причина отказа/некорректности/недоставки сообщения
-        */
-        /*inline uint8_t getFailureCause() const
-        {
-        __trace__("Method is depricated !!!");
-        //return failureCause;
-        return getLastResult();
-          };*/
-
-          /**
-          * Возвращает причину в случае
-          * отказа/некорректности/недоставки последней попытки доставки сообщения
-          *
-          * @return причина отказа/некорректности/недоставки сообщения
+        * @return причина отказа/некорректности/недоставки сообщения
         */
         inline uint32_t getLastResult() const
         {
@@ -1892,74 +1668,17 @@ namespace smsc {
         inline void setAttemptsCount(uint32_t count)
         {
         attempts = count;
-          };*/
+        };*/
 
-          /**
-          * Увеличивает количество неудач при доставке сообщения
-          * на указанную величину (по умолчанию 1)
-          *
-          * @param count  количество неудач при доставке сообщения
-          *
-          inline void incrementAttemptsCount(uint32_t count=1)
-          {
-          attempts += count;
-          };*/
-
-          /**
-          * Возвращает количество неудач при доставке сообщения
-          *
-          * @return количество неудач при доставке сообщения
+        /**
+        * Возвращает количество неудач при доставке сообщения
+        *
+        * @return количество неудач при доставке сообщения
         */
         inline uint32_t getAttemptsCount() const
         {
           return attempts;
         };
-
-        /**
-        *                      !!! Depricated !!!
-        *
-        * Устанавливает тело сообщения
-        *
-        * @param length длинна тела сообщения
-        * @param scheme схема кодировки тела сообщения
-        * @param header признак, содержит ли тело заголовок
-        * @param buff   закодированные данные в теле сообщения
-        * @see Body
-        */
-        //inline void setMessageBody(uint8_t length, uint8_t scheme,
-        //                           bool header, const uint8_t* buff)
-        //{ // Copies body data from 'buff' to static structure
-        //    /*messageBody.setCodingScheme(scheme);
-        //    messageBody.setHeaderIndicator(header);
-        //    messageBody.setData(length, buff);*/
-        //    __trace__("Method is depricated !!!");
-        //    setMessageBody((uint8_t *)buff, length);
-        //};
-
-        /**
-        * Устанавливает тело сообщения
-        *
-        * @param buff   закодированные данные в теле сообщения
-        * @param length длинна тела сообщения
-        *
-        * @see Body
-        */
-        //inline void setMessageBody(uint8_t* buff, int length)
-        //{ // Copies body data from 'buff' to static structure
-        //    messageBody.setBuffer(buff, length);
-        //};
-
-
-        /**
-        * Устанавливает тело сообщения
-        *
-        * @param body тело сообщения
-        * @see Body
-        */
-        //inline void setMessageBody(const Body& body)
-        //{ // Copies body data from 'body' to static structure
-        //    messageBody = body;
-        //};
 
         /**
         * Возвращает тело сообщения
@@ -1986,92 +1705,98 @@ namespace smsc {
         /**
         * Метод устанавливает имя-тип сервиса SME.
         *
-        * @param _len   длинна нового имени-типа
-        * @param _name имя-тип SME
+        * @param type имя-тип SME
         */
-        inline void setEServiceType(const char* _name)
+        inline void setEServiceType(const char* type)
         {
-          if (_name)
+          if (type)
           {
-            strncpy(eServiceType, _name, MAX_ESERVICE_TYPE_LENGTH);
+            strncpy(eServiceType, type, MAX_ESERVICE_TYPE_LENGTH);
             eServiceType[MAX_ESERVICE_TYPE_LENGTH]='\0';
           }
-          else
-          {
-            eServiceType[0]='\0';
-          }
+          else eServiceType[0]='\0';
+        };
+        /**
+        * Метод возвращает имя-тип сервиса
+        *
+        * @param type   указатель на буфер куда будет скопированно имя
+        *               буфер должен иметь размер не меньше
+        *               MAX_ESERVICE_TYPE_LENGTH+1, чтобы принять
+        *               любое значение
+        */
+        inline void getEServiceType(char* type) const
+        {
+          __require__(type);
+          strncpy(type, eServiceType, MAX_ESERVICE_TYPE_LENGTH);
+          type[MAX_ESERVICE_TYPE_LENGTH]='\0';
         };
 
         /**
-        * Метод копирует имя-тип сервиса SME и возвращает его длинну
         *
-        * @param _name указатель на буфер куда будет скопированно имя
-        *              буфер должен иметь размер не меньше
-        *              MAX_ESERVICE_TYPE_LENGTH+1, чтобы принять
-        *              любое значение
+        * Устанавливает приоритет сообщения.
+        *
+        * @param pri    приоритет сообщения
         */
-        inline void getEServiceType(char* _name) const
-        {
-          __require__(_name);
-
-          if (eServiceType)
-          {
-            strncpy(_name, eServiceType, MAX_ESERVICE_TYPE_LENGTH);
-            _name[MAX_ESERVICE_TYPE_LENGTH]='\0';
-          }
-          else
-          {
-            _name[0]='\0';
-          }
+        inline void setPriority(int32_t pri) {
+            priority = pri;
+        };
+        /**
+        *
+        * Возвращает приоритет сообщения.
+        *
+        * @return приоритет сообщения
+        */
+        inline int32_t getPriority() const {
+            return priority;
         };
 
         /**
-        *                      !!! Depricated !!!
         *
-        * Устанавливает id сообщения, на которое идёт ответ-репорт.
-        * Используется в случае если esmClass это ответ-репорт.
+        * Устанавливает идентификатор сервиса.
         *
-        * @param id     идентификационный номер сообщения
+        * @param id    идентификатор сервиса
         */
-        /*inline void setReceiptSmsId(SMSId id)
-        {
-        __trace__("Method is depricated !!!");
-        __require__(false);
-        //receiptSmsId = id;
-          };*/
+        inline void setServiceId(int32_t id) {
+            serviceId = id;
+        };
+        /**
+        *
+        * Возвращает идентификатор сервиса.
+        *
+        * @return идентификатор сервиса
+        */
+        inline uint32_t getServiceId() const {
+            return serviceId;
+        };
 
-          /**
-          *                      !!! Depricated !!!
-          *
-          * Возвращает id сообщения, на которое идёт ответ-репорт.
-          * Используется в случае если esmClass это ответ-репорт.
-          *
-          * @return идентификационный номер сообщения (MR)
+        /**
+        * Метод устанавливает идентификатор маршрута.
+        *
+        * @param route имя-тип SME
         */
-        /*inline SMSId getReceiptSmsId() const
+        inline void setRouteId(const char* route)
         {
-        __trace__("Method is depricated !!!");
-        __require__(false);
-        //return receiptSmsId;
-          };*/
-
-          /**
-          * Устанавливает тип-сообщения.
-          *
-          * @param type      тип-сообщения
+          if (route)
+          {
+            strncpy(routeId, route, MAX_ROUTE_ID_TYPE_LENGTH);
+            routeId[MAX_ROUTE_ID_TYPE_LENGTH]='\0';
+          }
+          else routeId[0]='\0';
+        };
+        /**
+        * Метод возвращает идентификатор маршрута
+        *
+        * @param route  указатель на буфер куда будет скопирован
+        *               идентификатор маршрута
+        *               буфер должен иметь размер не меньше
+        *               MAX_ROUTE_ID_TYPE_LENGTH+1
         */
-        /*inline void setEsmClass(uint8_t type)
+        inline void getRouteId(char* route) const
         {
-          };*/
-
-          /**
-          * Возвращает тип-сообщения.
-          *
-          * @return тип-сообщения
-        */
-        /*inline uint8_t getEsmClass() const
-        {
-          };*/
+          __require__(route);
+          strncpy(route, routeId, MAX_ROUTE_ID_TYPE_LENGTH);
+          route[MAX_ROUTE_ID_TYPE_LENGTH]='\0';
+        };
 
 #define ___SMS_DICT messageBody
         virtual void setStrProperty(const string& s,const string& value)
