@@ -15,7 +15,9 @@ final String CPATH = request.getContextPath() + "/smsc";
 final java.security.Principal loginedUserPrincipal = request.getUserPrincipal();
 ru.novosoft.smsc.jsp.SMSCAppContext appContext = (ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext");
 {
-%><%@ page import="java.util.*, 
-                   java.net.URLEncoder,
-				   ru.novosoft.smsc.util.StringEncoderDecoder"
+%><%@
+page errorPage="/error.jsp"%><%@ 
+page import="java.util.*, 
+             java.net.URLEncoder,
+			 ru.novosoft.smsc.util.StringEncoderDecoder"
 %><%@ include file="/WEB-INF/inc/messages_header.jsp"%>
