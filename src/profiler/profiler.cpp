@@ -396,6 +396,7 @@ int Profiler::Execute()
     {
       SmscCommand answer=SmscCommand::makeSumbmitSm(*smsarr[i],getNextSequenceNumber());
       putIncomingCommand(answer);
+      delete smsarr[i];
     }
   }
   return 0;
