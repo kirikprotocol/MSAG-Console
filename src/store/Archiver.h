@@ -62,7 +62,7 @@ namespace smsc { namespace store
             bool        bStarted, bNeedExit;
             Mutex       startLock, cleanupLock;
 
-            time_t      cleanupInterval;
+            time_t      cleanupInterval, awakeInterval;
             
             Connection* cleanerConnection;
             Statement*  cleanerMinTimeStmt;
@@ -72,6 +72,7 @@ namespace smsc { namespace store
             sb2         indDbTime;
 
             void loadCleanupInterval(Manager& config);
+            void loadCleanupAwakeInterval(Manager& config);
 
             static const char* cleanerMinTimeSql;
             static const char* cleanerDeleteSql;

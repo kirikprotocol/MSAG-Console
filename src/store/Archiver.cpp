@@ -425,7 +425,7 @@ void Archiver::archivate(bool first)
 
         if (status != OCI_NO_DATA)
             storageSelectStmt->check(status);
-	    
+        
         if (uncommited)
         {
             billingConnection->commit();
@@ -435,8 +435,13 @@ void Archiver::archivate(bool first)
     }
     catch (StorageException& exc)
     {
-        billingConnection->rollback();
-        storageConnection->rollback();
+        try { billingConnection->rollback(); } catch (...) {
+            log.error("Failed to rollback on billing connection.");
+        }
+        try { storageConnection->rollback(); } catch (...) {
+            log.error("Failed to rollback on storage connection.");
+        }
+        
         throw exc;
     }
 
@@ -808,7 +813,6 @@ void Archiver::prepareBillingInsertStmt() throw(StorageException)
 
 const unsigned SMSC_ARCHIVER_CLEANUP_INTERVAL_LIMIT = 365; // days
 const unsigned SMSC_ARCHIVER_CLEANUP_INTERVAL_DEFAULT = 30; // days
-
 void Archiver::Cleaner::loadCleanupInterval(Manager& config)
 {
     int interval;
@@ -838,7 +842,41 @@ void Archiver::Cleaner::loadCleanupInterval(Manager& config)
                  SMSC_ARCHIVER_CLEANUP_INTERVAL_DEFAULT);
     }
 
-    cleanupInterval = interval*3600*24;
+    cleanupInterval = interval*3600*24; // in seconds
+}
+
+const unsigned SMSC_ARCHIVER_CLEANUP_AWAKE_INTERVAL_LIMIT = 3600; // seconds
+const unsigned SMSC_ARCHIVER_CLEANUP_AWAKE_INTERVAL_DEFAULT =  5; // seconds
+void Archiver::Cleaner::loadCleanupAwakeInterval(Manager& config)
+{
+    int interval;
+    try 
+    {
+        interval = config.getInt("MessageStore.Archive.Cleaner.awake");
+        if (interval <= 0 || 
+            interval > SMSC_ARCHIVER_CLEANUP_AWAKE_INTERVAL_LIMIT)
+        {
+            interval = SMSC_ARCHIVER_CLEANUP_AWAKE_INTERVAL_DEFAULT;
+            log.warn("Awake interval for archive cleaner is incorrect "
+                     "(should be between 1 and %u seconds) ! "
+                     "Config parameter: <MessageStore.Archive.Cleaner.awake> "
+                     "Using default: %u", 
+                     SMSC_ARCHIVER_CLEANUP_AWAKE_INTERVAL_LIMIT,
+                     SMSC_ARCHIVER_CLEANUP_AWAKE_INTERVAL_DEFAULT);
+        }
+    } 
+    catch (ConfigException& exc) 
+    {
+        interval = SMSC_ARCHIVER_CLEANUP_AWAKE_INTERVAL_DEFAULT;
+        log.warn("Awake interval for archive cleaner missed "
+                 "(it should be between 1 and %u seconds) ! "
+                 "Config parameter: <MessageStore.Archive.Cleaner.awake> "
+                 "Using default: %u", 
+                 SMSC_ARCHIVER_CLEANUP_AWAKE_INTERVAL_LIMIT,
+                 SMSC_ARCHIVER_CLEANUP_AWAKE_INTERVAL_DEFAULT);
+    }
+
+    awakeInterval = interval*1000; // in mseconds
 }
 
 Archiver::Cleaner::Cleaner(Manager& config, Connection* connection)
@@ -847,6 +885,7 @@ Archiver::Cleaner::Cleaner(Manager& config, Connection* connection)
             bStarted(false), bNeedExit(false), cleanerConnection(connection)
 {
     loadCleanupInterval(config);
+    loadCleanupAwakeInterval(config);
     Start();
 }
 Archiver::Cleaner::~Cleaner()
@@ -878,31 +917,18 @@ void Archiver::Cleaner::Stop()
     }
 }
 
-const int CLEANER_BASE_AWAKE_INTERVAL = 3600000;
-const int CLEANER_SERVICE_AWAKE_INTERVAL = 1000;
-
 int Archiver::Cleaner::Execute()
 {
     bool first = true;
     while (!bNeedExit)
     {
-        int64_t timeLeft = 1000;
-        if (first) timeLeft = CLEANER_SERVICE_AWAKE_INTERVAL;
-        else timeLeft *= (int64_t)cleanupInterval;
-        
-        while (timeLeft>0 && !bNeedExit) 
-        {
-            int waitTime = (timeLeft >= CLEANER_BASE_AWAKE_INTERVAL) ?
-                CLEANER_BASE_AWAKE_INTERVAL : (int)timeLeft;
-            awake.Wait(waitTime);
-            timeLeft -= waitTime;
-        }
+        awake.Wait((first) ? 1000:awakeInterval);
         if (bNeedExit) break;
         try 
         {
-            __trace__("Archive cleaning up ...");
+            //__trace__("Archive cleaning up ...");
             cleanup(); first = false;
-            __trace__("Archive cleaned up.");
+            //__trace__("Archive cleaned up.");
         } 
         catch (StorageException& exc) 
         {
@@ -928,8 +954,8 @@ void Archiver::Cleaner::cleanup()
     else Statement::convertOCIDateToDate(&dbTime, &toDelete);
 
     time_t toTime = time(0) - cleanupInterval;
-    __trace2__("Archive cleanup from: %d to: %d (%d)", 
-               toDelete, toTime, toTime-toDelete);
+    /*__trace2__("Archive cleanup from: %d to: %d (%d)", 
+               toDelete, toTime, toTime-toDelete);*/
 
     while (toDelete>0 && toDelete<toTime && !bNeedExit)
     {
