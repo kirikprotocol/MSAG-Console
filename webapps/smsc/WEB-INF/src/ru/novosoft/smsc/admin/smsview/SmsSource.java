@@ -110,7 +110,7 @@ public abstract class SmsSource
              int partsCount = concatInfo.length/2;
              StringBuffer sb = new StringBuffer();
              for( int i = 0; i < concatInfo.length; i++ ) {
-               sb.append( Integer.toHexString(((int)concatInfo[i]))&0xFF) ).append(' ');
+               sb.append( Integer.toHexString(((int)concatInfo[i])&0xFF) ).append(' ');
              }
              System.out.println("Concat info: "+sb.toString());
              for( int i = 0; i < partsCount; i++ ) {
