@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+    
+    <section name="StartupLoader">
+	<section name="DataSourceDrivers">
+	    <section name="OCIDataSourceDriver">
+		<param name="type" type="string">OCI</param>
+		<param name="loadup" type="string">../db/oci/libdb_oci.so</param>
+	    </section>
+	</section>
+    </section>
+    
+    <section name="Applications">
+        <section name="DBSme">
+    	    <section name="DataProviders">
+	    
+	        <section name="SampleDataProvider1">
+		    <param name="address" type="string">1111111</param>
+		    
+		    <section name="DataSource">
+		        <param name="type" type="string">OCI</param>
+    		        <param name="connections" type="int">5</param>
+		        <param name="dbInstance" type="string">DBS_ORCL</param>
+		        <param name="dbUserName" type="string">smsc</param>
+		        <param name="dbUserPassword" type="string">smsc</param>
+		    </section>
+		    
+		    <section name="Jobs">
+		        
+			<section name="DefautJob">
+			    <param name="id" type="string">default</param>
+			    <param name="sql" type="string">blah-blah-blah</param>
+			    <param name="input" type="string">blah-blah-blah</param>
+			    <param name="output" type="string">blah-blah-blah</param>
+			    <param name="query" type="bool">true</param>
+			</section>
+			
+			<section name="SampleJob1">
+			    <param name="id" type="string">sample1</param>
+			    <param name="sql" type="string">blah-blah-blah</param>
+			    <param name="input" type="string">blah-blah-blah</param>
+			    <param name="output" type="string">blah-blah-blah</param>
+			    <param name="query" type="bool">true</param>
+			</section>
+			
+			<section name="Job3">
+			</section>
+			
+			<section name="Job4">
+			</section>
+		    
+		    </section>
+		    
+		</section>
+
+	        <section name="SampleDataProvider2">
+	    	</section>
+		
+	    </section>
+	</section>
+    </section>
+</config>
