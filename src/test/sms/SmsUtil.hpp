@@ -41,9 +41,9 @@ public:
 
 	static bool compareDescriptors(const Descriptor& d1, const Descriptor& d2);
 
-	static bool compareMessageBodies(const Body& b1, const Body& b2);
+	static vector<int> compareMessageBodies(Body& b1, Body& b2);
 
-	static vector<int> compareMessages(const SMS& sms1, const SMS& sms2,
+	static vector<int> compareMessages(SMS& sms1, SMS& sms2,
 		SmsCompareFlag flag = COMPARE_ALL);
 
 	static void setupRandomCorrectAddress(Address* addr);

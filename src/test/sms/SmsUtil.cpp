@@ -47,124 +47,95 @@ bool SmsUtil::compareDescriptors(const Descriptor& d1, const Descriptor& d2)
 	return res;
 }
 
-bool SmsUtil::compareMessageBodies(const Body& b1, const Body& b2)
+#define __compare_int_body_tag__(tagName, errCode) \
+	if ((b1.hasIntProperty(Tag::tagName) && !b2.hasIntProperty(Tag::tagName)) || \
+		(!b1.hasIntProperty(Tag::tagName) && b2.hasIntProperty(Tag::tagName)) || \
+		(b1.hasIntProperty(Tag::tagName) && b2.hasIntProperty(Tag::tagName) && \
+		b1.getIntProperty(Tag::tagName) != b2.getIntProperty(Tag::tagName))) \
+	{ res.push_back(errCode); }
+
+#define __compare_str_body_tag__(tagName, errCode) \
+	if ((b1.hasStrProperty(Tag::tagName) && !b2.hasStrProperty(Tag::tagName)) || \
+		(!b1.hasStrProperty(Tag::tagName) && b2.hasStrProperty(Tag::tagName)) || \
+		(b1.hasStrProperty(Tag::tagName) && b2.hasStrProperty(Tag::tagName) && \
+		b1.getStrProperty(Tag::tagName) != b2.getStrProperty(Tag::tagName))) \
+	{ res.push_back(errCode); }
+
+vector<int> SmsUtil::compareMessageBodies(Body& b1, Body& b2)
 {
-	bool res = b1.isHeaderIndicator() == b2.isHeaderIndicator() &&
-		b1.getCodingScheme() == b2.getCodingScheme() &&
-		b1.getDataLenght() == b2.getDataLenght();
-	if (res)
-	{
-		SMSData d1, d2;
-		b1.getData(d1);
-		b2.getData(d2);
-		res &= memcmp(d1, d2, b1.getDataLenght()) == 0;
-	}
+	//return (b1.getBufferLength() == b2.getBufferLength() &&
+	//	memcmp(b1.getBuffer(), b2.getBuffer(), b1.getBufferLength()) == 0);
+	vector<int> res;
+	__compare_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, 1);
+	__compare_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, 2);
+	__compare_int_body_tag__(SMPP_ESM_CLASS, 3);
+	__compare_int_body_tag__(SMPP_DATA_CODING, 4);
+	__compare_int_body_tag__(SMPP_SM_LENGTH, 5);
+	__compare_int_body_tag__(SMPP_REGISTRED_DELIVERY, 6);
+	__compare_int_body_tag__(SMPP_PROTOCOL_ID, 7);
+	__compare_str_body_tag__(SMPP_SHORT_MESSAGE, 8);
+	__compare_int_body_tag__(SMPP_PRIORITY, 9);
+	__compare_int_body_tag__(SMPP_USER_MESSAGE_REFERENCE, 10);
+	__compare_int_body_tag__(SMPP_USSD_SERVICE_OP, 11);
+	__compare_int_body_tag__(SMPP_DEST_ADDR_SUBUNIT, 12);
+	__compare_int_body_tag__(SMPP_PAYLOAD_TYPE, 13);
+	__compare_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID, 14);
+	__compare_int_body_tag__(SMPP_MS_MSG_WAIT_FACILITIES, 15);
+	__compare_int_body_tag__(SMPP_USER_RESPONSE_CODE, 16);
+	__compare_int_body_tag__(SMPP_SAR_MSG_REF_NUM, 17);
+	__compare_int_body_tag__(SMPP_LANGUAGE_INDICATOR, 18);
+	__compare_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS, 19);
+	__compare_int_body_tag__(SMPP_NUMBER_OF_MESSAGES, 20);
+	__compare_str_body_tag__(SMPP_MESSAGE_PAYLOAD, 21);
 	return res;
 }
 
-vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2,
-	SmsCompareFlag flag)
+#define __compare__(getter, errCode) \
+	if (sms1.getter() != sms2.getter()) { res.push_back(errCode); }
+
+#define __compare_addr__(getter, errCode) \
+	if (!compareAddresses(sms1.getter(), sms2.getter())) { res.push_back(errCode); }
+	
+#define __compare_desc__(getter, errCode) \
+	if (!compareDescriptors(sms1.getter(), sms2.getter())) { res.push_back(errCode); }
+
+vector<int> SmsUtil::compareMessages(SMS& sms1, SMS& sms2, SmsCompareFlag flag)
 {
 	vector<int> res;
-	if (!(flag & IGNORE_STATE) && sms1.getState() != sms2.getState())
-	{
-		res.push_back(1);
-	}
-	if (sms1.getMessageReference() != sms2.getMessageReference())
-	{
-		res.push_back(2);
-	}
-	if (!compareAddresses(sms1.getOriginatingAddress(),
-		sms2.getOriginatingAddress()))
-	{
-		res.push_back(3);
-	}
-	if (!compareAddresses(sms1.getDestinationAddress(),
-		sms2.getDestinationAddress()))
-	{
-		res.push_back(4);
-	}
-	if (!(flag & IGNORE_ORIGINATING_DESCRIPTOR) &&
-		!compareDescriptors(sms1.getOriginatingDescriptor(),
-		sms2.getOriginatingDescriptor()))
-	{
-		res.push_back(5);
-	}
-	if (!(flag & IGNORE_DESTINATION_DESCRIPTOR) &&
-		!compareDescriptors(sms1.getDestinationDescriptor(),
-		sms2.getDestinationDescriptor()))
-	{
-		res.push_back(6);
-	}
-	if (sms1.getWaitTime() != sms2.getWaitTime())
-	{
-		res.push_back(7);
-	}
-	if (sms1.getValidTime() != sms2.getValidTime())
-	{
-		res.push_back(8);
-	}
-	if (sms1.getSubmitTime() != sms2.getSubmitTime())
-	{
-		res.push_back(9);
-	}
-	//совпадение с точностью до 1-ой секунды
-	if (!(flag & IGNORE_LAST_TIME) &&
-		abs(sms1.getLastTime() - sms2.getLastTime()) > 1)
-	{
-		res.push_back(10);
-	}
-	if (!(flag & IGNORE_NEXT_TIME) && sms1.getNextTime() != sms2.getNextTime())
-	{
-		res.push_back(11);
-	}
-	if (sms1.getPriority() != sms2.getPriority())
+	__compare__(getState, 1);
+	__compare__(getSubmitTime, 2);
+	__compare__(getValidTime, 3);
+	__compare__(getAttemptsCount, 4);
+	__compare__(getLastResult, 5);
+	__compare__(getLastTime, 6);
+	__compare__(getNextTime, 7);
+	__compare_addr__(getOriginatingAddress, 8);
+	__compare_addr__(getDestinationAddress, 9);
+	__compare_addr__(getDealiasedDestinationAddress, 10);
+	__compare__(getMessageReference, 11);
+
+	EService serviceType1, serviceType2;
+	sms1.getEServiceType(serviceType1);
+	sms2.getEServiceType(serviceType2);
+	if (strcmp(serviceType1, serviceType2))
 	{
 		res.push_back(12);
 	}
-	if (sms1.getProtocolIdentifier() != sms2.getProtocolIdentifier())
+
+	__compare__(isArchivationRequested, 13);
+	__compare__(getDeliveryReport, 14);
+	__compare__(getBillingRecord, 15);
+	__compare_desc__(getOriginatingDescriptor, 16);
+	__compare_desc__(getDestinationDescriptor, 17);
+
+	vector<int> tmp = compareMessageBodies(sms1.getMessageBody(),
+		sms2.getMessageBody());
+	for (int i = 0; i < tmp.size(); i++)
 	{
-		res.push_back(13);
+		res.push_back(20 + tmp[i]);
 	}
-	if (sms1.getDeliveryReport() != sms2.getDeliveryReport())
-	{
-		res.push_back(14);
-	}
-	if (!(flag & IGNORE_ARCHIVATION_REQUESTED) &&
-		sms1.isArchivationRequested() != sms2.isArchivationRequested())
-	{
-		res.push_back(15);
-	}
-	if (!(flag & IGNORE_FAILURE_CAUSE) &&
-		sms1.getFailureCause() != sms2.getFailureCause())
-	{
-		res.push_back(16);
-	}
-	if (!(flag & IGNORE_ATTEMPTS_COUNT) &&
-		sms1.getAttemptsCount() != sms2.getAttemptsCount())
-	{
-		res.push_back(17);
-	}
-	if (!compareMessageBodies(sms1.getMessageBody(), sms2.getMessageBody()))
-	{
-		res.push_back(18);
-	}
-	char type1[MAX_ESERVICE_TYPE_LENGTH + 1];
-	char type2[MAX_ESERVICE_TYPE_LENGTH + 1];
-	sms1.getEServiceType(type1);
-	sms2.getEServiceType(type2);
-	if (strcmp(type1, type2))
-	{
-		res.push_back(19);
-	}
-	if (sms1.getReceiptSmsId() != sms2.getReceiptSmsId())
-	{
-		res.push_back(20);
-	}
-	if (sms1.getEsmClass() != sms2.getEsmClass())
-	{
-		res.push_back(21);
-	}
+	//bool attach;
+
 	return res;
 }
 
@@ -198,74 +169,102 @@ void SmsUtil::setupRandomCorrectDescriptor(Descriptor* desc)
 		desc->setSmeNumber((uint32_t) rand0(INT_MAX));
 	}
 }
-	
+
+#define __set_int_body_tag__(tagName, value) \
+	if ((mask >>= 1) & 0x1) { \
+		__trace__("set_int_body_tag: " #tagName); \
+		body->setIntProperty(Tag::tagName, value); \
+	}
+
+#define __set_str_body_tag__(tagName, len) \
+	if ((mask >>= 1) & 0x1) { \
+		__trace__("set_str_body_tag: " #tagName); \
+		auto_ptr<char> str = rand_char(len); \
+		body->setStrProperty(Tag::tagName, str.get()); \
+	}
+
 void SmsUtil::setupRandomCorrectBody(Body* body)
 {
-	if (body)
-	{
-		int len = rand1(MAX_SHORT_MESSAGE_LENGTH);
-		auto_ptr<uint8_t> data = rand_uint8_t(len);
-		body->setData(len, data.get());
-		body->setCodingScheme((uint8_t) rand0(255));
-		body->setHeaderIndicator((bool) rand0(1));
-	}
+	//поля сохраняются в body случайным образом
+	//даже обязательные для sms поля могут не сохраняться в БД
+	auto_ptr<uint8_t> tmp = rand_uint8_t(8);
+	uint64_t mask = *((uint64_t*) tmp.get());
+	int msgLen = rand1(MAX_SHORT_MESSAGE_LENGTH);
+
+	__set_int_body_tag__(SMPP_SCHEDULE_DELIVERY_TIME, time(NULL) + rand0(24 * 3600));
+	__set_int_body_tag__(SMPP_REPLACE_IF_PRESENT_FLAG, rand0(2));
+	__set_int_body_tag__(SMPP_ESM_CLASS, rand0(255));
+	__set_int_body_tag__(SMPP_DATA_CODING, rand0(255));
+	__set_int_body_tag__(SMPP_SM_LENGTH, msgLen);
+	__set_int_body_tag__(SMPP_REGISTRED_DELIVERY, rand0(255));
+	__set_int_body_tag__(SMPP_PROTOCOL_ID, rand0(255));
+	__set_str_body_tag__(SMPP_SHORT_MESSAGE, msgLen);
+	__set_int_body_tag__(SMPP_PRIORITY, rand0(255));
+	__set_int_body_tag__(SMPP_USER_MESSAGE_REFERENCE, rand0(65535));
+	__set_int_body_tag__(SMPP_USSD_SERVICE_OP, rand0(255));
+	__set_int_body_tag__(SMPP_DEST_ADDR_SUBUNIT, rand0(255));
+	__set_int_body_tag__(SMPP_PAYLOAD_TYPE, rand0(255));
+	__set_str_body_tag__(SMPP_RECEIPTED_MESSAGE_ID, rand1(64));
+	__set_int_body_tag__(SMPP_MS_MSG_WAIT_FACILITIES, rand0(255));
+	__set_int_body_tag__(SMPP_USER_RESPONSE_CODE, rand0(255));
+	__set_int_body_tag__(SMPP_SAR_MSG_REF_NUM, rand0(65535));
+	__set_int_body_tag__(SMPP_LANGUAGE_INDICATOR, rand0(255));
+	__set_int_body_tag__(SMPP_SAR_TOTAL_SEGMENTS, rand0(255));
+	__set_int_body_tag__(SMPP_NUMBER_OF_MESSAGES, rand0(255));
+	__set_str_body_tag__(SMPP_MESSAGE_PAYLOAD, rand1(65535));
 }
 
 void SmsUtil::setupRandomCorrectSms(SMS* sms)
 {
-	//sms->setState();
+	//sms->setState(...);
+	sms->setSubmitTime(time(NULL) + rand2(-3600, 0));
+	sms->setValidTime(time(NULL) + rand0(24 * 3600));
+	//sms->setAttemptsCount(...);
+	//sms->setLastResult(...);
+	//sms->setLastTime(...);
+	sms->setNextTime(time(NULL) + rand0(24 * 3600));
 	setupRandomCorrectAddress(&sms->getOriginatingAddress());
 	setupRandomCorrectAddress(&sms->getDestinationAddress());
-	setupRandomCorrectDescriptor(&sms->getOriginatingDescriptor());
-	//sms->setDestinationDescriptor();
-	sms->setWaitTime(time(NULL));
-	sms->setValidTime(time(NULL) + rand0(24 * 3600));
-	sms->setSubmitTime(time(NULL) + rand2(-3600, 0));
-	//sms->setLastTime();
-	sms->setNextTime(time(NULL) + rand0(24 * 3600));
-	sms->setMessageReference((uint8_t) rand0(255));
-	sms->setPriority((uint8_t) rand0(255));
-	sms->setProtocolIdentifier((uint8_t) rand0(255));
+	setupRandomCorrectAddress(&sms->getDealiasedDestinationAddress());
+	sms->setMessageReference(rand0(65535));
+	auto_ptr<char> serviceType = rand_char(MAX_ESERVICE_TYPE_LENGTH);
+	sms->setEServiceType(serviceType.get());
+	sms->setArchivationRequested(rand0(3));
 	//SMPP v3.4, пункт 5.2.17
 	//xxxxxx00 - No SMSC Delivery Receipt requested (default)
 	//xxxxxx01 - SMSC Delivery Receipt requested where final delivery
 	//			outcome is delivery success or failure
 	//xxxxxx10 - SMSC Delivery Receipt requested where the final
 	//			delivery outcome is delivery failure
-	sms->setDeliveryReport((uint8_t) rand0(255));
-	sms->setArchivationRequested(rand0(3));
-	//sms->setFailureCause();
-	//sms->setAttemptsCount();
+	sms->setDeliveryReport(rand0(255));
+	sms->setBillingRecord(rand0(3));
+	setupRandomCorrectDescriptor(&sms->getOriginatingDescriptor());
+	//setupRandomCorrectDescriptor(sms->getDestinationDescriptor());
 	setupRandomCorrectBody(&sms->getMessageBody());
-	auto_ptr<char> tmp = rand_char(MAX_ESERVICE_TYPE_LENGTH);
-	sms->setEServiceType(tmp.get());
-	sms->setReceiptSmsId(rand0(INT_MAX));
-	sms->setEsmClass((uint8_t) rand0(255));
+	//bool attach;
 }
 
 void SmsUtil::clearSms(SMS* sms)
 {
-	//sms->setState();
+	//sms->setState(...);
+	sms->setSubmitTime(0);
+	sms->setValidTime(0);
+	//sms->setAttemptsCount(...);
+	//sms->setLastResult(...);
+	//sms->setLastTime(...);
+	sms->setNextTime(0);
 	sms->setOriginatingAddress(1, 0, 0, "*");
 	sms->setDestinationAddress(1, 0, 0, "*");
-	sms->setOriginatingDescriptor(1, "*", 0, "*", 0);
-	//sms->setDestinationDescriptor();
-	sms->setWaitTime(0);
-	sms->setValidTime(0);
-	sms->setSubmitTime(0);
-	//sms->setLastTime();
-	//sms->setNextTime();
-	sms->setPriority(0);
+	sms->setDealiasedDestinationAddress(1, 0, 0, "*");
 	sms->setMessageReference(0);
-	sms->setProtocolIdentifier(0);
-	sms->setDeliveryReport(0);
-	sms->setArchivationRequested(false);
-	//sms->setFailureCause();
-	//sms->setAttemptsCount();
-	sms->setMessageBody(0, 0, false, NULL);
 	sms->setEServiceType("");
-	sms->setReceiptSmsId(0);
-	sms->setEsmClass(0);
+	sms->setArchivationRequested(false);
+	sms->setDeliveryReport(0);
+	sms->setBillingRecord(false);
+	sms->setOriginatingDescriptor(1, "*", 0, "*", 0);
+	//sms->setDestinationDescriptor(...);
+	sms->getMessageBody() = Body();
+	//bool attach;
 }
 
 auto_ptr<char> SmsUtil::configString(const Address& addr)
