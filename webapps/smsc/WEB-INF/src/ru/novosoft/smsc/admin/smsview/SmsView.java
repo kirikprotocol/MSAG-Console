@@ -44,7 +44,7 @@ public class SmsView
   private static short DATA_CODING_DEFAULT = 0;    // 0
   private static short DATA_CODING_BINARY = 4;    // BIT(2)
   private static short DATA_CODING_UCS2 = 8;    // BIT(3)
-  private static short DATA_CODING_SMSC7BIT = 0xf0; // 0xf0;
+  private static short DATA_CODING_LATIN1 = 3;
 
   private static String BASE_SQL_QUERY =
       "SELECT ID, ST, SUBMIT_TIME, VALID_TIME, ATTEMPTS, LAST_RESULT, " +
@@ -483,9 +483,9 @@ public class SmsView
       throws UnsupportedEncodingException
   {
     String message = "";
-    if (encoding == DATA_CODING_DEFAULT) {          // ISO-LATIN-1
+    if (encoding == DATA_CODING_LATIN1) {          // ISO-LATIN-1
       message = new String(text, 0, len, "ISO-8859-1");
-    } else if (encoding == DATA_CODING_SMSC7BIT) {  // US-ASCII
+    } else if (encoding == DATA_CODING_DEFAULT) {  // US-ASCII
       // todo add support for additional symbols here
       message = new String(text, 0, len, "US-ASCII");
     } else if (encoding == DATA_CODING_UCS2) {      // UTF-16

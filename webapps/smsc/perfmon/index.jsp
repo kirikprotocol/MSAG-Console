@@ -19,7 +19,7 @@
 		<param name="locale.country" value="ru">
 		<param name="locale.language" value="ru">
 		<param name="pixPerSecond" value="4">
-		<param name="scale" value="140">
+		<param name="scale" value="80">
 		<param name="block" value="7">
 		<param name="vLightGrid" value="4">
 		<param name="vMinuteGrid" value="6">
