@@ -290,8 +290,8 @@ public class SmsView
         if (text != null && (esmClass & 0x40) == 0x40) {
           DataInputStream input = new DataInputStream(
                                   new ByteArrayInputStream(text, 0, textLen));
-          int headerLen = (int)input.readByte();          // Byte ???
-          textLen -= headerLen+1; input.skip(headerLen);  // +1 ???
+          int headerLen = (int)input.readByte();
+          textLen -= headerLen; input.skip(headerLen);
           if (textLen > 0) {
             byte msgText[] = new byte[textLen];
             stream.read(msgText, 0, textLen);
