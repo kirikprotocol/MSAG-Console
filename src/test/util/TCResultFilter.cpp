@@ -24,7 +24,7 @@ bool TCResultStack::operator== (const TCResultStack& stack) const
 	bool res = true;
 	for (int i = 0; i < stack.size(); i++)
 	{
-		res &= (*this)[i] == stack[i];
+		res &= *(*this)[i] == *stack[i];
 	}
 	return res;
 }
@@ -70,6 +70,10 @@ inline TCResultFilter::TCValue& TCResultFilter::getTCValue(const string& tcId)
 
 void TCResultFilter::addResult(TCResult& result)
 {
+	//пометить test case как использованный
+	TCValue& tcVal = getTCValue(result.getId());
+	tcVal.used = true;
+
 	//проверить является ли переданный результат test case отрицательным 
 	if (result.value())
 	{
@@ -77,7 +81,6 @@ void TCResultFilter::addResult(TCResult& result)
 	}
 
 	//проверить нет ли уже идентичного test case
-	TCValue& tcVal = getTCValue(result.getId());
 	for (int i = 0; i < tcVal.tcStacks.size(); i++)
 	{
 		TCResultStack& stack = *(tcVal.tcStacks[i]);
@@ -95,6 +98,13 @@ void TCResultFilter::addResult(TCResult& result)
 
 void TCResultFilter::addResultStack(TCResultStack& stack)
 {
+	//пометить все test cases из стека как использованные
+	for (int i = 0; i < stack.size(); i++)
+	{
+		TCValue& tcVal = getTCValue(stack[i]->getId());
+		tcVal.used = true;
+	}
+
 	//проверить есть ли в переданном стеке test case с отрицательным 
 	//результатом
 	TCResult* failedTCResult = NULL;

@@ -37,10 +37,12 @@ public:
 
 	struct TCValue
 	{
-		TCValue(const std::string& _description)
-			: description(_description) {}
+		bool used;
 		std::string description;
 		std::vector<TCResultStack*> tcStacks;
+		
+		TCValue(const std::string& _description)
+			: description(_description), used(false) {}
 	};
 	typedef std::map<std::string, TCValue*> TCMap;
 
