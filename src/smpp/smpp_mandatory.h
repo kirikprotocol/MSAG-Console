@@ -129,7 +129,10 @@ static inline bool fillSmppPdu(SmppStream* stream,SmppHeader* _pdu)
     {
       PduXSmResp* pdu = reinterpret_cast<PduXSmResp*>(_pdu);
       fillSmppHeader(stream,pdu->header);
-      fillCOctetStr(stream,pdu->messageId);
+      if(!(cmdid==SUBMIT_SM_RESP && pdu->header.commandStatus!=0))
+      {
+        fillCOctetStr(stream,pdu->messageId);
+      }
       return true;
     }
     case SUBMIT_MULTI_RESP:
