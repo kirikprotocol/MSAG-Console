@@ -881,7 +881,9 @@ int SmppOutputThread::Execute()
           {
             __trace__("SmppOutputThread: failed to unregister");
           }*/
+          mon.Unlock();
           KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
+          mon.Lock();
           ss->assignProxy(0);
         }
       }
