@@ -211,6 +211,7 @@ int partitionSms(SMS* sms,int dstdc)
         case '~':
         case '\\':
         case '^':
+        case '|':
          xlen++;
       }
     }
@@ -302,6 +303,7 @@ int partitionSms(SMS* sms,int dstdc)
           case '~':
           case '\\':
           case '^':
+          case '|':
           {
             l++;
             wl++;
