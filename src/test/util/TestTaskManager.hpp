@@ -15,12 +15,23 @@ using namespace std;
 class TestTask : public smsc::core::threads::ThreadedTask
 {
 private:
-	const char* name;
+	char* name;
 	bool executeFlag;
 
 public:
 	TestTask(const char* _name)
-		: name(_name), executeFlag(true) {}
+		: executeFlag(true)
+	{
+		name = new char[100];
+		memcpy(name, _name, sizeof(_name));
+	}
+
+	TestTask(const char* className, int taskNum)
+		: executeFlag(true)
+	{
+		name = new char[100];
+		sprintf(name, "%s_%d", className, taskNum);
+	}
 
 	virtual void executeCycle() = NULL; //abstract
 
@@ -47,36 +58,28 @@ public:
 	}
 };
 
-template<class H>
+template<class T>
 class TestTaskManager
 {
 protected:
 	smsc::core::threads::ThreadPool tp;
-	vector<H*> taskHolders;
+	vector<T*> tasks;
 	timeb timeStart;
 
 public:
-	virtual ~TestTaskManager()
+	void addTask(T* task)
 	{
-		for (int i = 0; i < taskHolders.size(); i++)
-		{
-			delete taskHolders[i];
-		}
-	}
-
-	void addTask(H* taskHolder)
-	{
-		cout << "Starting task " << taskHolders.size() << " ... ";
-		tp.startTask(taskHolder->task);
-		taskHolders.push_back(taskHolder);
+		cout << "Starting task " << tasks.size() << " ... ";
+		tp.startTask(task);
+		tasks.push_back(task);
 		cout << "Started" << endl;
 	}
 
 	void stopTasks()
 	{
-		for (int i = 0; i < taskHolders.size(); i++)
+		for (int i = 0; i < tasks.size(); i++)
 		{
-			taskHolders[i]->stopTask();
+			tasks[i]->stop();
 		}
 		sleep(3);
 		while (!isStopped())
@@ -105,16 +108,7 @@ public:
 		return dt;
 	}
 
-private:
-	bool isStopped() const
-	{
-		bool stopped = true;
-		for (int i = 0; stopped && (i < taskHolders.size()); i++)
-		{
-			stopped &= taskHolders[i]->stopped;
-		}
-		return stopped;
-	}
+	virtual bool isStopped() const = NULL;
 };
 
 }
