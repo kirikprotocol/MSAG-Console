@@ -560,7 +560,7 @@ USHORT_T Et96MapOpenConf (
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
-    __trace2__("MAP::%s dialog 0x%x",__PRETY_FUNCTION__,dialogueId);
+    __trace2__("MAP::%s dialog 0x%x",__PRETTY_FUNCTION__,dialogueId);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
     if ( dialog.isnull() ) {throw 
       MAPDIALOG_HEREISNO_ID(
@@ -661,7 +661,7 @@ USHORT_T  Et96MapV2SendRInfoForSmConf (
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
-    __trace2__("MAP::%s dialog 0x%x",__PRETY_FUNCTION__,dialogid_map);
+    __trace2__("MAP::%s dialog 0x%x",__PRETTY_FUNCTION__,dialogid_map);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
     if ( dialog.isnull() ) {
       unsigned _di = dialogid_map;
@@ -733,7 +733,7 @@ USHORT_T Et96MapCloseInd(
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
-    __trace2__("MAP::%s dialog 0x%x",__PRETY_FUNCTION__,dialogid_map);
+    __trace2__("MAP::%s dialog 0x%x",__PRETTY_FUNCTION__,dialogid_map);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
     if ( dialog.isnull() ) {
       unsigned _di = dialogid_map;
@@ -771,7 +771,7 @@ USHORT_T Et96MapDelimiterInd(
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
-    __trace2__("MAP::%s dialog 0x%x",__PRETY_FUNCTION__,dialogid_map);
+    __trace2__("MAP::%s dialog 0x%x",__PRETTY_FUNCTION__,dialogid_map);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
     if ( dialog.isnull() ) {
       unsigned _di = dialogid_map;
@@ -808,7 +808,7 @@ USHORT_T Et96MapUAbortInd (
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
-    __trace2__("MAP::%s dialog 0x%x",__PRETY_FUNCTION__,dialogid_map);
+    __trace2__("MAP::%s dialog 0x%x",__PRETTY_FUNCTION__,dialogid_map);
     throw runtime_error("UABORT");
   }MAP_CATCH(dialogid_map,dialogid_smsc);
   return ET96MAP_E_OK;
@@ -824,7 +824,7 @@ USHORT_T Et96MapPAbortInd(
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
   MAP_TRY{
-    __trace2__("MAP::%s dialog 0x%x",__PRETY_FUNCTION__,dialogid_map);
+    __trace2__("MAP::%s dialog 0x%x",__PRETTY_FUNCTION__,dialogid_map);
     throw runtime_error("PABORT");
   }MAP_CATCH(dialogid_map,dialogid_smsc);
   return ET96MAP_E_OK;
@@ -842,7 +842,7 @@ USHORT_T Et96MapOpenInd (
   ET96MAP_USERDATA_T *specificInfo_sp)
 {
   try{
-    __trace2__("MAP::%s dialog 0x%x",__PRETY_FUNCTION__,dialogueId);
+    __trace2__("MAP::%s dialog 0x%x",__PRETTY_FUNCTION__,dialogueId);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialog(dialogueId,SSN/*,0*/));
     if ( dialog.isnull() )
       throw rumtime_error("MAP:: can't create dialog");
@@ -851,7 +851,7 @@ USHORT_T Et96MapOpenInd (
   }
   catch(exception& e)
   {
-    __trace2__("#except#MAP::%s# MAP.did 0x%x",__PRETY_FUNCTION__,dialogueId);
+    __trace2__("#except#MAP::%s# MAP.did 0x%x",__PRETTY_FUNCTION__,dialogueId);
     __trace2__("   <exception>:%s",e.what());
     ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
     MapDialogContainer::getInstance()->dropDialog(dialogueId);
@@ -872,7 +872,7 @@ USHORT_T Et96MapV2ForwardSmMOInd (
 {
   bool open_confirmed = false;
   try{
-    __trace2__("MAP::%s dialog 0x%x",__PRETY_FUNCTION__,dialogid_map);
+    __trace2__("MAP::%s dialog 0x%x",__PRETTY_FUNCTION__,dialogid_map);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
     if ( dialog.isnull() ) {
       throw MAPDIALOG_ERROR(
@@ -896,7 +896,7 @@ USHORT_T Et96MapV2ForwardSmMOInd (
   }
   catch(exception& e)
   {
-    __trace2__("#except#MAP::%s# MAP.did 0x%x",__PRETY_FUNCTION__,dialogueId);
+    __trace2__("#except#MAP::%s# MAP.did 0x%x",__PRETTY_FUNCTION__,dialogueId);
     __trace2__("   <exception>:%s",e.what());
     if ( !open_confirmed ){
       ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
@@ -919,7 +919,7 @@ USHORT_T Et96MapDelimiterInd(
   USHORT_T result;
   ET96MAP_REFUSE_REASON_T reason;
   try{
-    __trace2__("MAP::%s dialog 0x%x",__PRETY_FUNCTION__,dialogid_map);
+    __trace2__("MAP::%s dialog 0x%x",__PRETTY_FUNCTION__,dialogid_map);
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogid_map));
     if ( dialog.isnull() ) {
       throw MAPDIALOG_ERROR(
@@ -959,7 +959,7 @@ USHORT_T Et96MapDelimiterInd(
   }
   catch(exception& e)
   {
-    __trace2__("#except#MAP::%s# MAP.did 0x%x",__PRETY_FUNCTION__,dialogueId);
+    __trace2__("#except#MAP::%s# MAP.did 0x%x",__PRETTY_FUNCTION__,dialogueId);
     __trace2__("   <exception>:%s",e.what());
     if ( !open_confirmed ){
       ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
