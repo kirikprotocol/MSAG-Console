@@ -9,6 +9,7 @@
 
 namespace smsc{
 namespace util{
+namespace leaktracing{
 
 static void* threadstart=NULL;
 
@@ -44,7 +45,6 @@ public:
   virtual int Execute()
   {
     threadstart=__builtin_return_address(0);
-    printf("THRSTART:%x\n",threadstart);
   }
 };
 
@@ -79,6 +79,7 @@ public:
 
 void LeakHunter::Init()
 {
+  smsc::core::synchronization::MutexGuard guard(m);
   DummyThread t;
   t.Start();
   t.WaitFor();
@@ -156,6 +157,17 @@ void LeakHunter::RegisterAlloc(void* ptr,int size)
   }
 }
 
+static void PrintTrace()
+{
+  void* trace[TRACESIZE];
+  smsc::util::leaktracing::BackTrace(trace);
+  for(int i=0;i<TRACESIZE;i++)
+  {
+    if(!trace[i])break;
+    fprintf(stderr,"{0x%08X}\n",trace[i]);
+  }
+}
+
 void LeakHunter::RegisterDealloc(void* ptr)
 {
   smsc::core::synchronization::MutexGuard guard(m);
@@ -177,9 +189,12 @@ void LeakHunter::RegisterDealloc(void* ptr)
     }
   }
   fprintf(stderr,"Error: Block with address 0x%08X deallocated twice or wasn't allocated!\n",ptr);
+  PrintTrace();
+  throw "DELETE UNALLOCATED BLOCK";
 }
-}
-};
+}//leaktracing
+}//util
+}//smsc;
 
 void* operator new(unsigned int size)
 {
@@ -190,56 +205,41 @@ void* operator new(unsigned int size)
     fprintf(stderr,"OUT OF MEMORY!\n");
     throw "OUT OF MEMORY!\n";
   }
-  smsc::util::lh.RegisterAlloc(mem,size);
+  smsc::util::leaktracing::lh.RegisterAlloc(mem,size);
   return mem;
 }
 
 void* operator new[](unsigned int size)
 {
   void* mem=malloc(size);
-  //printf("ALLOC:%x(%d)\n",mem,size);
   if(!mem)
   {
     fprintf(stderr,"OUT OF MEMORY!\n");
     throw "OUT OF MEMORY!\n";
   }
-  smsc::util::lh.RegisterAlloc(mem,size);
+  smsc::util::leaktracing::lh.RegisterAlloc(mem,size);
   return mem;
 }
 
 void operator delete(void* mem)
 {
-  //printf("FREE:%x\n",mem);
   if(mem)
   {
-    smsc::util::lh.RegisterDealloc(mem);
+    smsc::util::leaktracing::lh.RegisterDealloc(mem);
     free(mem);
   }
 }
-
-static void PrintTrace()
-{
-  void* trace[TRACESIZE];
-  smsc::util::BackTrace(trace);
-  for(int i=0;i<TRACESIZE;i++)
-  {
-    if(!trace[i])break;
-    printf("{0x%08X}\n",trace[i]);
-  }
-}	      
 
 void operator delete[](void* mem)
 {
   //printf("FREE:%x\n",mem);
   if(mem)
   {
-    smsc::util::lh.RegisterDealloc(mem);
+    smsc::util::leaktracing::lh.RegisterDealloc(mem);
     free(mem);
   }else
   {
     fprintf(stderr,"FATAL ERROR: delete [] NULL\n");
-    void *trace[TRACESIZE];
-    PrintTrace();
-    //assert(mem!=NULL);
+    smsc::util::leaktracing::PrintTrace();
   }
 }
