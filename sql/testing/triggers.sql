@@ -1,4 +1,11 @@
 /*
+	“ест кейсы:
+	 - ¬ архиве сообщени€ только с финальным статусом
+	 - «аписи не тер€ютс€ при переносе из sms_msg в sms_arc
+	 - ƒанные не искажаютс€ при переносе из sms_msg в sms_arc
+	 - ¬се сообщени€ с финальным статусом перенос€тс€ из sms_msg в архив
+	 - “олько сообщени€ с установленным признаком архивации перенос€тс€ в архив
+	 
 	Ёмул€ци€ rollback по секундам:
 	                | 00 | 10 | 20 | 30 | 40 | 50 |
 	+---------------+----+----+----+----+----+----+
@@ -26,6 +33,7 @@ insert into results(tbl, msg_type, action) values ('sms_msg', 'total', 'insert')
 insert into results(tbl, msg_type, action) values ('sms_msg', 'arc', 'delete');
 insert into results(tbl, msg_type, action) values ('sms_msg', 'total', 'delete');
 insert into results(tbl, msg_type, action) values ('sms_arc', null, 'insert');
+insert into results(tbl, msg_type, action) values ('sms_arc', 'try_time', 'check');
 insert into results(tbl, msg_type, action) values ('sms_br', null, 'insert');
 --insert into results(tbl, msg_type, action) values ('sms_msg', null, 'rollback');
 --insert into results(tbl, msg_type, action) values ('sms_arc', null, 'rollback');
@@ -37,6 +45,8 @@ create or replace trigger smsc_arc_insert after insert on sms_arc
 declare
 	flag number;
 	sec char(2);
+	prev_try_time number;
+	cur_try_time number;
 	msg sms_msg%rowtype;
 begin
 	--emulate rollback
@@ -53,7 +63,22 @@ begin
 		where tbl = 'sms_arc' and action = 'insert';
 	--check
 	begin
+		--last_try_time order
+        select to_number(to_char(:arc.last_try_time, 'yymmddhh24MMss'))
+			into cur_try_time from dual;
+		select value into prev_try_time from results
+			where tbl = 'sms_arc' and msg_type = 'try_time' and action = 'check';
+		if prev_try_time > cur_try_time then
+			raise_application_error(-20201, 'last_try_time order is broken');
+		end if;
+		update results set value = cur_try_time
+			where tbl = 'sms_arc' and msg_type = 'try_time' and action = 'check';
+		--arc = 'Y'
 		select * into msg from sms_msg where id = :arc.id;
+		if msg.arc != 'Y' then
+			raise_application_error(-20201, 'Trying to archivate sms with arc != ''Y''');
+		end if;
+		--data
 		if msg.st != :arc.st then
 			raise_application_error(-20201, 'msg.st != arc.st');
 		end if;
