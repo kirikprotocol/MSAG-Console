@@ -15,10 +15,8 @@ void ServicesList::add(Service *service) throw (AdminException)
 		throw AdminException("Service already exists in list");
 	services[service->getId()] = service;
 	#ifdef SMSC_DEBUG
-		smsc_log_debug(logger, "Added service:\n  cmd=%s\n  port=%u  pid=%u",
+		smsc_log_debug(logger, "Added service:\n  cmd=%s\n  pid=%u",
 								 (services[service->getId()]->getId() == 0 ? "null" : services[service->getId()]->getId()),
-								 //(services[service->getId()]->getName() == 0 ? "null" : services[service->getId()]->getName()),
-								 services[service->getId()]->getPort(),
 								 services[service->getId()]->getPid());
 	#endif
 }
@@ -62,20 +60,13 @@ char * ServicesList::getText() const
 */		
 		char pid[sizeof(pid_t)*3 + 1];
 		snprintf(pid, sizeof(pid), "%lu", (unsigned long)s->getPid());
-		char port[sizeof(in_port_t)*3 + 1];
-		snprintf(port, sizeof(port), "%lu", (unsigned long)s->getPort());
 		std::auto_ptr<char> tmpServiceId(encode(s->getId()));
-		//std::auto_ptr<char> tmpServiceName(encode(s->getName()));
 		std::auto_ptr<char> tmpArgs(encode(s->getArgs()));
 		
 		result += "<service id=\"";
 		result += tmpServiceId.get();
-		//result += "\" name=\"";
-		//result += tmpServiceName.get();
 		result += "\" pid=\"";
 		result += pid;
-		result += "\" port=\"";
-		result += port;
 		result += "\" args=\"";
 		result += tmpArgs.get();
 		result += "\" autostart=\"";

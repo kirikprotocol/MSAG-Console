@@ -23,26 +23,25 @@ public:
 
 	Service(const char * const services_dir,
 		const char * const serviceId,
-		const in_port_t serviceAdminPort,
 		const char * const serviceArgs,
 		const bool autostartFlag = true,
 		const pid_t servicePID = 0,
 		const run_status serviceStatus = stopped)
 		: logger(Logger::getInstance("smsc.admin.daemon.Service")), autostart(autostartFlag)
 	{
-		init(services_dir, serviceId, serviceAdminPort, serviceArgs, servicePID, serviceStatus);
+		init(services_dir, serviceId, serviceArgs, servicePID, serviceStatus);
 	}
 
 	Service()
 		: logger(Logger::getInstance("smsc.admin.daemon.Service")), autostart(true)
 	{	
-		init(0, 0, 0, 0, 0, stopped);
+		init(0, 0, 0, 0, stopped);
 	}
 
 	Service(const Service & copy)
 		: logger(Logger::getInstance("smsc.admin.daemon.Service")), autostart(copy.autostart)
 	{
-		init(copy.service_dir.get(), copy.id.get(), copy.port, copy.args.get(), copy.pid);
+		init(copy.service_dir.get(), copy.id.get(), copy.args.get(), copy.pid);
 	}
 
 	pid_t start() throw (AdminException);
@@ -54,21 +53,11 @@ public:
 	const pid_t getPid() const {return pid;}
 	void setPid(const pid_t newPid) {pid = newPid; status = pid == 0 ? stopped : running;}
 	const char * const getArgs() const {return args.get();}
-	const in_port_t getPort() const {return port;}
 
 	Service &operator = (Service &copy)
 	{
-		init(copy.service_dir.get(), copy.id.get(), copy.port, copy.args.get(), copy.pid, copy.status);
+		init(copy.service_dir.get(), copy.id.get(), copy.args.get(), copy.pid, copy.status);
 		return *this;
-	}
-
-  void setPort(const in_port_t serviceAdminPort) throw (AdminException)
-	{
-		if (status != stopped)
-		{
-			throw AdminException("Changing service port not permitted: service is running");
-		}
-		port = serviceAdminPort;
 	}
 
 	void setArgs(const char * const serviceArgs) throw (AdminException)
@@ -93,10 +82,8 @@ public:
 protected:
 	char ** createArguments();
 	std::auto_ptr<char> id;
-	//std::auto_ptr<char> name;
 	pid_t pid;
 	std::auto_ptr<char> args;
-	in_port_t port;
 	static const char * const service_exe;
 	std::auto_ptr<char> service_dir;
 	bool autostart;
@@ -106,7 +93,6 @@ protected:
 
 	void init(const char * const services_dir,
 		const char * const serviceId,
-		const in_port_t serviceAdminPort,
 		const char * const serviceArgs,
 		const pid_t servicePID = 0,
 		const run_status serviceStatus = stopped);

@@ -69,7 +69,7 @@ protected:
 
 	static void addServicesFromConfig() throw ();
 	static void updateServiceFromConfig(Service * service) throw (AdminException);
-	void putServiceToConfig(const char * const serviceId, const in_port_t servicePort, const char * const serviceArgs, const bool autostart);
+	void putServiceToConfig(const char * const serviceId, const char * const serviceArgs, const bool autostart);
 	void removeServiceFromConfig(const char * const serviceId);
 
 };

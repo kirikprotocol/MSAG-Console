@@ -59,18 +59,18 @@ pid_t Service::start()
         {
           smsc_log_error(logger, "reopen stdout error : %s",strerror(errno));
         }
-  sigset_t set;
-  sigemptyset(&set);
-  sigaddset(&set,17);
-  sigaddset(&set, SIGBUS);
-  sigaddset(&set, SIGFPE);
-  sigaddset(&set, SIGILL);
-  sigaddset(&set, SIGSEGV);
-  sigaddset(&set, SIGALRM);
-  sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
-  if(pthread_sigmask(SIG_UNBLOCK,&set,NULL)!=0) {
-          __warning__("Faield to update signal mask");
-  }
+        sigset_t set;
+        sigemptyset(&set);
+        sigaddset(&set,17);
+        sigaddset(&set, SIGBUS);
+        sigaddset(&set, SIGFPE);
+        sigaddset(&set, SIGILL);
+        sigaddset(&set, SIGSEGV);
+        sigaddset(&set, SIGALRM);
+        sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
+        if(pthread_sigmask(SIG_UNBLOCK,&set,NULL)!=0) {
+                __warning__("Faield to update signal mask");
+        }
         execv(service_exe, createArguments());
         smsc_log_error(logger, "Couldn't start service (\"%s/%s\"), nested: %u: %s",
                      service_dir.get(), service_exe, errno, strerror(errno));
@@ -145,7 +145,6 @@ void Service::shutdown()
 
 void Service::init(const char * const services_dir,
            const char * const serviceId,
-           const in_port_t serviceAdminPort,
            const char * const serviceArgs,
            const pid_t servicePID,
                    const run_status serviceStatus)
@@ -156,7 +155,6 @@ void Service::init(const char * const services_dir,
   strcat(service_dir.get(), serviceId);
 
   id.reset(cStringCopy(serviceId));
-  port = serviceAdminPort;
   pid = servicePID;
   status = serviceStatus;
   args.reset(cStringCopy(serviceArgs));
@@ -172,13 +170,9 @@ char * substr(const char * from, const char * to)
 
 char ** Service::createArguments()
 {
-  char * port_str = new char[sizeof(in_port_t)*3+1];
-  snprintf(port_str, sizeof(in_port_t)*3+1, "%lu", (unsigned long) port);
-
   typedef std::vector<char *> chrvec;
   chrvec args_vector;
   args_vector.push_back(cStringCopy(service_exe));
-  args_vector.push_back(port_str);
 
   ///////////////////////////////////////
   // parse arguments

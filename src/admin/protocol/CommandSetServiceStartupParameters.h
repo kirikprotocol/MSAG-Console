@@ -11,7 +11,7 @@ public:
 	CommandSetServiceStartupParameters(const DOMDocument *doc)	throw (AdminException)
 		: CommandService(set_service_startup_parameters, doc)
 	{
-		smsc_log_debug(logger, "Add service command");
+		smsc_log_debug(logger, "Set service startup parameters command");
 		try
 		{
 			DOMElement *elem = doc->getDocumentElement();
@@ -21,7 +21,6 @@ public:
 				DOMElement *serviceElem = (DOMElement*) list->item(0);
 				//serviceName.reset(serviceElem.getAttribute("name").transcode());
 				serviceId.reset(XmlStr(serviceElem->getAttribute(XmlStr("id"))).c_release());
-				port = atol(XmlStr(serviceElem->getAttribute(XmlStr("port"))));
 				args.reset(XmlStr(serviceElem->getAttribute(XmlStr("args"))).c_release());
 				autostart = strcmp("true", XmlStr(serviceElem->getAttribute(XmlStr("autostart")))) == 0;
 			}
@@ -32,19 +31,9 @@ public:
 		}
 	}
 
-	/*const char * const getServiceName() const throw()
-	{
-		return serviceName.get();
-	}*/
-
 	const char * const getArgs() const throw ()
 	{
 		return args.get();
-	}
-
-	const in_port_t getPort() const throw ()
-	{
-		return port;
 	}
 
 	const bool isAutostart() const throw ()
@@ -54,8 +43,6 @@ public:
 
 
 protected:
-	/*std::auto_ptr<char> serviceName;*/
-	in_port_t port;
 	std::auto_ptr<char> args;
 	bool autostart;
 };

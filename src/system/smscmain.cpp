@@ -107,17 +107,10 @@ int main(int argc,char* argv[])
     smsc_log_info(logger,  "Route configuration loaded" );
 
     in_port_t servicePort = 0;
-    if (argc > 1)
+    try {
+      servicePort = cfgs.cfgman->getInt("admin.port");
+    } catch (std::exception e)
     {
-      servicePort = atoi(argv[1]);
-    }
-    if (servicePort == 0)
-    {
-      try {
-        servicePort = cfgs.cfgman->getInt("admin.port");
-      } catch (std::exception e)
-      {
-      }
     }
 
     char * admin_host = 0;
