@@ -2318,7 +2318,7 @@ USHORT_T Et96MapVxAlertSCInd_Impl(
       throw MAPDIALOG_ERROR(
         FormatText("MAP::%s dialog 0x%x is not present",__FUNCTION__,_di));
     }
-    dialog->version = version;
+    dialog->hlrVersion = version;
     dialogid_smsc = dialog->dialogid_smsc;
     __trace2__("MAP::%s: 0x%x  (state %d)",__FUNCTION__,dialog->dialogid_map,dialog->state);
     switch( dialog->state ){
