@@ -92,7 +92,7 @@ public:
       }catch(std::exception& e)
       {
         __trace2__("ex:%s",e.what());
-        listener->handleError(smppErrorNetwork);
+        if(!stopped)listener->handleError(smppErrorNetwork);
         break;
       }
       if(pdu)
@@ -160,7 +160,7 @@ public:
         sendPdu(pb);
       }catch(...)
       {
-        listener->handleError(smppErrorNetwork);
+        if(!stopped)listener->handleError(smppErrorNetwork);
         break;
       }
       delete pb.buf;
