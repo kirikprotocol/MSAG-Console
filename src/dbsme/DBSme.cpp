@@ -469,9 +469,8 @@ int main(void)
             log.info("Connecting to SMSC ... ");
             try
             {
-                session.connect();
-                sleep(1);
                 listener.setTrans(session.getSyncTransmitter());
+                session.connect();
                 bDBSmeIsConnected = true;
             }
             catch (SmppConnectException& exc)
