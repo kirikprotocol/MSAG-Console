@@ -628,27 +628,27 @@ __synchronized__
 
   if ( trace_enabled_ ) {
     ostringstream ost;
-    ost << "lookup for src proxy indices: " << srcidx;
+    ost << "lookup for src proxy: '" << sme_table->getSmeInfo(srcidx).systemId << "'";
     trace_.push_back(ost.str());
   }
 
   for ( ; rec != 0 ; rec = rec->alternate_pair ) {
     if ( trace_enabled_ ) {
       ostringstream ost;
-      ost << "src index: " << rec->srcProxyIdx;
+      ost << "alternative route with src proxy: '" << sme_table->getSmeInfo(rec->srcProxyIdx).systemId << "'";
       trace_.push_back(ost.str());
     }
     if ( rec->srcProxyIdx == srcidx ) {
       if ( trace_enabled_ ) {
         ostringstream ost;
-        ost << "found strong matching with src index" << rec->srcProxyIdx;
+        ost << "found strong matching with src proxy: '" << sme_table->getSmeInfo(rec->srcProxyIdx).systemId << "'";
         trace_.push_back(ost.str());
       }
       break;
     }
     if ( rec->srcProxyIdx == 0 ) {
       if ( trace_enabled_ )
-        trace_.push_back("found default src index");
+        trace_.push_back("found default src proxy (zero)");
       rec0 = rec;
     }
   }
@@ -656,13 +656,13 @@ __synchronized__
   if ( !rec ) rec = rec0;
   if ( !rec ) {
     if ( trace_enabled_ )
-      trace_.push_back("src proxy index matching not found");
+      trace_.push_back("src proxy matching not found");
     return false; // не найден
   }
 
   proxy = sme_table->getSmeProxy(rec->proxyIdx);
   if ( trace_enabled_ ) {
-    trace_.push_back(string("route fond, target proxy is ")+=rec->info.smeSystemId);
+    trace_.push_back((string("route found, target proxy is '")+=rec->info.smeSystemId)+="'");
   }
   if ( info ) *info = rec->info;
   if ( idx && rec->info.enabling ) *idx = rec->proxyIdx;
