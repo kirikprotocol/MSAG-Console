@@ -28,4 +28,6 @@ public interface SMSCAppContext extends AppContext
 	public DataSource getConnectionPool();
 
 	public UserPreferences getUserPreferences();
+
+	public Statuses getStatuses();
 }

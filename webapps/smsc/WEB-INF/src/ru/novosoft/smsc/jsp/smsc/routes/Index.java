@@ -3,13 +3,13 @@
  * Date: 04.11.2002
  * Time: 18:49:34
  */
-package ru.novosoft.smsc.jsp.smsc.subjects;
+package ru.novosoft.smsc.jsp.smsc.routes;
 
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SmscBean;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
-import ru.novosoft.smsc.jsp.util.tables.impl.SubjectQuery;
+import ru.novosoft.smsc.jsp.util.tables.impl.RouteQuery;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -22,15 +22,15 @@ public class Index extends SmscBean
 	public static final int RESULT_ADD = PRIVATE_RESULT + 1;
 	public static final int RESULT_EDIT = PRIVATE_RESULT + 2;
 
-	protected QueryResultSet subjects = null;
+	protected QueryResultSet routes = null;
 
 	protected int startPosition = 0;
 	protected int totalSize = 0;
 
-	protected String editName = null;
+	protected String editRouteId = null;
 
-	protected String[] checkedSubjects = new String[0];
-	protected Set checkedSubjectsSet = new HashSet();
+	protected String[] checkedRouteIds = new String[0];
+	protected Set checkedRouteIdsSet = new HashSet();
 
 	protected String mbAdd = null;
 	protected String mbDelete = null;
@@ -51,11 +51,11 @@ public class Index extends SmscBean
 			return result;
 
 		UserPreferences up = appContext.getUserPreferences();
-		int pageSize = up.getSubjectsPageSize();
+		int pageSize = up.getRoutesPageSize();
 		if (sort != null)
-			up.getSubjectsSortOrder().set(0, sort);
+			up.getRoutesSortOrder().set(0, sort);
 		else
-			sort = (String) up.getSubjectsSortOrder().get(0);
+			sort = (String) up.getRoutesSortOrder().get(0);
 
 		if (mbAdd != null)
 			return RESULT_ADD;
@@ -65,7 +65,7 @@ public class Index extends SmscBean
 			return RESULT_FILTER;
 		else if (mbDelete != null)
 		{
-			int dresult = deleteSubject();
+			int dresult = deleteRoutes();
 			if (dresult != RESULT_OK)
 				return result;
 		}
@@ -78,25 +78,25 @@ public class Index extends SmscBean
 		else if (mbLast != null)
 			startPosition = (totalSize / pageSize + (totalSize % pageSize == 0 ? -1 : 0)) * pageSize;
 
-		logger.debug("Subjects.Index - process with sorting [" + (String) up.getSubjectsSortOrder().get(0) + "]");
-		subjects = smsc.getSubjects().query(new SubjectQuery(pageSize, up.getSubjectsFilter(), up.getSubjectsSortOrder(), startPosition));
-		totalSize = subjects.getTotalSize();
+		logger.debug("Aliases.Index - process with sorting [" + (String) up.getAliasesSortOrder().get(0) + "]");
+		routes = smsc.getRoutes().query(new RouteQuery(pageSize, up.getRoutesFilter(), up.getRoutesSortOrder(), startPosition));
+		totalSize = routes.getTotalSize();
 
-		checkedSubjectsSet.addAll(Arrays.asList(checkedSubjects));
+		checkedRouteIdsSet.addAll(Arrays.asList(checkedRouteIds));
 
 		return RESULT_OK;
 	}
 
-	protected int deleteSubject()
+	protected int deleteRoutes()
 	{
-		for (int i = 0; i < checkedSubjects.length; i++)
+		for (int i = 0; i < checkedRouteIds.length; i++)
 		{
-			String subject = checkedSubjects[i];
-			smsc.getSubjects().remove(subject);
-			appContext.getStatuses().setSubjectsChanged(true);
+			String alias = checkedRouteIds[i];
+			smsc.getRoutes().remove(alias);
+			appContext.getStatuses().setRoutesChanged(true);
 		}
-		checkedSubjects = new String[0];
-		checkedSubjectsSet.clear();
+		checkedRouteIds = new String[0];
+		checkedRouteIdsSet.clear();
 		return RESULT_OK;
 	}
 
@@ -107,17 +107,22 @@ public class Index extends SmscBean
 
 	public boolean isLast()
 	{
-		return subjects.isLast();
+		return routes.isLast();
 	}
 
-	public boolean isSubjectChecked(String alias)
+	public boolean isRouteChecked(String alias)
 	{
-		return checkedSubjectsSet.contains(alias);
+		return checkedRouteIdsSet.contains(alias);
+	}
+
+
+	public QueryResultSet getRoutes()
+	{
+		return routes;
 	}
 
 
 	/******************** properties *************************/
-
 	public int getStartPosition()
 	{
 		return startPosition;
@@ -128,24 +133,34 @@ public class Index extends SmscBean
 		this.startPosition = startPosition;
 	}
 
-	public String getEditName()
+	public int getTotalSize()
 	{
-		return editName;
+		return totalSize;
 	}
 
-	public void setEditName(String editName)
+	public void setTotalSize(int totalSize)
 	{
-		this.editName = editName;
+		this.totalSize = totalSize;
 	}
 
-	public String[] getCheckedSubjects()
+	public String getEditRouteId()
 	{
-		return checkedSubjects;
+		return editRouteId;
 	}
 
-	public void setCheckedSubjects(String[] checkedSubjects)
+	public void setEditRouteId(String editRouteId)
 	{
-		this.checkedSubjects = checkedSubjects;
+		this.editRouteId = editRouteId;
+	}
+
+	public String[] getCheckedRouteIds()
+	{
+		return checkedRouteIds;
+	}
+
+	public void setCheckedRouteIds(String[] checkedRouteIds)
+	{
+		this.checkedRouteIds = checkedRouteIds;
 	}
 
 	public String getMbAdd()
@@ -236,25 +251,5 @@ public class Index extends SmscBean
 	public void setSort(String sort)
 	{
 		this.sort = sort;
-	}
-
-	public int getTotalSize()
-	{
-		return totalSize;
-	}
-
-	public void setTotalSize(int totalSize)
-	{
-		this.totalSize = totalSize;
-	}
-
-	public QueryResultSet getSubjects()
-	{
-		return subjects;
-	}
-
-	public void setSubjects(QueryResultSet subjects)
-	{
-		this.subjects = subjects;
 	}
 }

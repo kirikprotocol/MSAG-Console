@@ -11,7 +11,7 @@
 </tr>
 <tr><td class=tmenu colspan=3><%
 	%><a ID=MENU0_HOME href="<%=CPATH%>">status</a><%
-	%><a ID=MENU0_ROUTES href="<%=CPATH%>/routes">routes</a><%
+	%><a ID=MENU0_ROUTES href="<%=CPATH%>/routes/index.jsp">routes</a><%
 	%><a ID=MENU0_SUBJECTS href="<%=CPATH%>/subjects/index.jsp">subjects</a><%
 	%><a ID=MENU0_ALIASES href="<%=CPATH%>/aliases/index.jsp">aliases</a><%
 	%><a ID=MENU0_PROFILES href="<%=CPATH%>/profiles/index.jsp">profiles</a><%

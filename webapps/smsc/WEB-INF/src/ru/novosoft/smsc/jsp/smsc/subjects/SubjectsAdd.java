@@ -5,10 +5,7 @@
  */
 package ru.novosoft.smsc.jsp.smsc.subjects;
 
-import ru.novosoft.smsc.admin.alias.Alias;
-import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.route.Subject;
-import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.SmscBean;
@@ -68,6 +65,7 @@ public class SubjectsAdd extends SmscBean
 			try
 			{
 				smsc.getSubjects().add(new Subject(name, masks, smsc.getSmes().get(defSme)));
+				appContext.getStatuses().setSubjectsChanged(true);
 				return RESULT_DONE;
 			}
 			catch (Throwable e)

@@ -5,8 +5,9 @@
  */
 package ru.novosoft.smsc.admin.preferences;
 
-import ru.novosoft.smsc.jsp.util.tables.impl.ProfileFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.AliasFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.ProfileFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.RouteFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.SubjectFilter;
 
 import java.util.Vector;
@@ -25,11 +26,18 @@ public class UserPreferences
 	private SubjectFilter subjectsFilter = new SubjectFilter();
 	private Vector subjectsSortOrder = new Vector();
 
+	private int routesPageSize = 20;
+	private RouteFilter routesFilter = new RouteFilter();
+	private Vector routesSortOrder = new Vector();
+	private boolean routeShowSrc = false;
+	private boolean routeShowDst = false;
+
 	public UserPreferences()
 	{
 		this.profilesSortOrder.add("mask");
 		this.aliasesSortOrder.add("Alias");
 		this.subjectsSortOrder.add("Name");
+		this.routesSortOrder.add("Route ID");
 	}
 
 	public int getProfilesPageSize()
@@ -75,5 +83,40 @@ public class UserPreferences
 	public Vector getSubjectsSortOrder()
 	{
 		return subjectsSortOrder;
+	}
+
+	public int getRoutesPageSize()
+	{
+		return routesPageSize;
+	}
+
+	public RouteFilter getRoutesFilter()
+	{
+		return routesFilter;
+	}
+
+	public Vector getRoutesSortOrder()
+	{
+		return routesSortOrder;
+	}
+
+	public boolean isRouteShowSrc()
+	{
+		return routeShowSrc;
+	}
+
+	public void setRouteShowSrc(boolean routeShowSrc)
+	{
+		this.routeShowSrc = routeShowSrc;
+	}
+
+	public boolean isRouteShowDst()
+	{
+		return routeShowDst;
+	}
+
+	public void setRouteShowDst(boolean routeShowDst)
+	{
+		this.routeShowDst = routeShowDst;
 	}
 }

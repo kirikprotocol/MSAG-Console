@@ -19,6 +19,7 @@ public class SMSCErrors
 		public static final String appContextNotInitialized = B + "appContextNotInitialized";
 		public static final String serviceManagerNotInitialized = B + "serviceManagerNotInitialized";
 		public static final String daemonManagerNotInitialized = B + "daemonManagerNotInitialized";
+		public static final String couldntApplyChanges = B + "couldntApplyChanges";
 
 		public static class services
 		{
@@ -68,6 +69,15 @@ public class SMSCErrors
 			public static final String cantAdd = B + "cantAdd";
 			public static final String cantEdit = B + "cantEdit";
 			public static final String subjNotSpecified = B + "subjNotSpecified";
+		}
+
+		public static class routes
+		{
+			private static final String B = error.B + "routes.";
+			public static final String alreadyExists = B + "alreadyExists";
+			public static final String cantAdd = B + "cantAdd";
+			public static final String cantEdit = B + "cantEdit";
+			public static final String nameNotSpecified = B + "nameNotSpecified";
 		}
 	}
 

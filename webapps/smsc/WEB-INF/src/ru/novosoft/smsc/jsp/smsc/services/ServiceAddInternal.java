@@ -8,7 +8,6 @@ package ru.novosoft.smsc.jsp.smsc.services;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
-import ru.novosoft.smsc.admin.AdminException;
 
 import java.util.List;
 
@@ -51,7 +50,7 @@ public class ServiceAddInternal extends PageBean
 		int pos = version.indexOf('.');
 		if (pos > 0)
 		{
-			return (Integer.parseInt(version.substring(0, pos)) << 4) + (Integer.parseInt(version.substring(pos+1)));
+			return (Integer.parseInt(version.substring(0, pos)) << 4) + (Integer.parseInt(version.substring(pos + 1)));
 		}
 		else
 			return -1;
@@ -62,6 +61,7 @@ public class ServiceAddInternal extends PageBean
 		try
 		{
 			serviceManager.addNonAdmService(serviceId, systemType, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), rangeOfAddress, password);
+			appContext.getStatuses().setServicesChanged(true);
 		}
 		catch (Throwable t)
 		{

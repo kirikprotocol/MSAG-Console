@@ -45,6 +45,7 @@ public class HostEdit extends HostsBean
 		{
 			if (d.getPort() != port)
 				return error("Not yet implemented");
+			appContext.getStatuses().setHostsChanged(true);
 			return RESULT_DONE;
 		}
 		else if (mbCancel != null)

@@ -23,7 +23,7 @@ public class Route
 	private boolean archiving = true;
 	private boolean billing = false;
 
-	public Route(String routeName, boolean isEnabling, SourceList sources, DestinationList destinations)
+	public Route(String routeName, boolean isEnabling, boolean isBilling, boolean isArchiving,					 SourceList sources, DestinationList destinations)
 	{
 		if (routeName == null)
 			throw new NullPointerException("Route name is null");
@@ -36,6 +36,8 @@ public class Route
 		src = sources;
 		dst = destinations;
 		enabling = isEnabling;
+		archiving = isArchiving;
+		billing = isBilling;
 	}
 
 	public Route(String routeName)

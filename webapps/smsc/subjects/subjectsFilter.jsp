@@ -27,8 +27,8 @@ MENU0_SELECTION = "MENU0_SUBJECTS";
 <col width="85%">
 <col width="10%">
 <%int rowN = 0;%>
-<tr>
-	<th class=row<%=(rowN++)&1%> colspan="3">subjects</th>
+<tr class=row<%=(rowN++)&1%>>
+	<th colspan="3">subjects</th>
 </tr>
 <%
 for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
@@ -42,8 +42,8 @@ String encName = StringEncoderDecoder.encode(name);
 	<td>&nbsp;</td>
 </tr>
 <%}%>
-<tr>
-	<th class=row<%=(rowN++)&1%> colspan="3">default SMEs:</th>
+<tr class=row<%=(rowN++)&1%>>
+	<th colspan="3">default SMEs:</th>
 </tr>
 <%
 for (Iterator i = bean.getAllSmes().iterator(); i.hasNext();)
@@ -57,8 +57,8 @@ String encName = StringEncoderDecoder.encode(name);
 	<td>&nbsp;</td>
 </tr>
 <%}%>
-<tr>
-	<th class=row<%=(rowN++)&1%> colspan="3">masks:</th>
+<tr class=row<%=(rowN++)&1%>>
+	<th colspan="3">masks:</th>
 </tr>
 <%
 for (int i=0; i<bean.getMasks().length; i++)

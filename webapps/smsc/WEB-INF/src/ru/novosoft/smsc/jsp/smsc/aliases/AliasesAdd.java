@@ -64,9 +64,13 @@ public class AliasesAdd extends SmscBean
 
 	protected int save()
 	{
-		return smsc.getAliases().add(new Alias(new Mask(address), new Mask(alias), hide))
-				  ? RESULT_DONE
-				  : error(SMSCErrors.error.aliases.alreadyExists, alias);
+		if (smsc.getAliases().add(new Alias(new Mask(address), new Mask(alias), hide)))
+		{
+			appContext.getStatuses().setAliasesChanged(true);
+			return RESULT_DONE;
+		}
+		else
+			return error(SMSCErrors.error.aliases.alreadyExists, alias);
 	}
 
 	/*************************** properties *********************************/

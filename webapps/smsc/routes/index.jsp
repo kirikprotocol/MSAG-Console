@@ -1,7 +1,10 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.jsp.smsc.aliases.Index,
-                 ru.novosoft.smsc.jsp.util.tables.DataItem"%>
-<jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.aliases.Index"/>
+<%@ page import="ru.novosoft.smsc.jsp.smsc.routes.Index,
+                 ru.novosoft.smsc.jsp.util.tables.DataItem,
+				 ru.novosoft.smsc.admin.route.SourceList,
+				 ru.novosoft.smsc.admin.route.DestinationList
+"%>
+<jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.routes.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
 switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
@@ -16,42 +19,34 @@ switch(bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("a
 		STATUS.append("<span class=CF00>Error</span>");
 		break;
 	case Index.RESULT_FILTER:
-		response.sendRedirect("aliasesFilter.jsp");
+		response.sendRedirect("routesFilter.jsp");
 		return;
 	case Index.RESULT_ADD:
-		response.sendRedirect("aliasesAdd.jsp");
+		response.sendRedirect("routesAdd.jsp");
 		return;
 	case Index.RESULT_EDIT:
-		response.sendRedirect("aliasesEdit.jsp?alias="+URLEncoder.encode(bean.getEditAlias())
-		                                     +"&address="+URLEncoder.encode(bean.getEditAddress())
-		                                     +"&hide="+bean.isEditHide());
+		response.sendRedirect("routesEdit.jsp?routeId="+URLEncoder.encode(bean.getEditRouteId()));
 		return;
 	default:
 		STATUS.append("<span class=CF00>Error</span>");
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction));
 }
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
-MENU0_SELECTION = "MENU0_ALIASES";
+MENU0_SELECTION = "MENU0_ROUTES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
-
 <%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
-
-<h1>Aliases</h1>
+<h1>Routes</h1>
 <%@ include file="/WEB-INF/inc/messages.jsp"%>
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
-<input type=hidden name=editAlias>
-<input type=hidden name=editAddress>
-<input type=hidden name=editHide>
+<input type=hidden name=editRouteId>
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=sort>
 <input type=hidden ID=jbutton value="jbutton">
 <script>
-function edit(alias, address, hide)
+function edit(name_to_edit)
 {
 	document.all.jbutton.name = "mbEdit";
-	opForm.editAlias.value = alias;
-	opForm.editAddress.value = address;
-	opForm.editHide.value = hide;
+	opForm.editRouteId.value = name_to_edit;
 	opForm.submit();
 	return false;
 }
@@ -73,39 +68,41 @@ function setSort(sorting)
 <thead>
 <tr>
 	<th>&nbsp;</th>
-	<th><a href="#" title="Sort by mask" onclick='return setSort("Alias")'>alias</a></th>
-	<th><a href="#" title="Sort by codepage" onclick='return setSort("Address")'>address</a></th>
-	<th><a href="#" title="Sort by report info" onclick='return setSort("Hide")'>hide</a></th>
+	<th><a href="#" title="Sort by name" onclick='return setSort("Route ID")'>name</a></th>
 </tr>
 </thead>
 <tbody>
 <%{
 int row = 0;
-for(Iterator i = bean.getAliases().iterator(); i.hasNext(); row++)
+for(Iterator i = bean.getRoutes().iterator(); i.hasNext(); row++)
 {
 DataItem item = (DataItem) i.next();
-String encAlias = StringEncoderDecoder.encode((String)item.getValue("Alias"));
-String encAddress = StringEncoderDecoder.encode((String)item.getValue("Address"));
+String routeId = (String) item.getValue("Route ID");
+SourceList sources = (SourceList) item.getValue("sources");
+DestinationList destinations = (DestinationList) item.getValue("destinations");
+boolean isEnabling  = ((Boolean)item.getValue("isEnabling" )).booleanValue();
+boolean isBilling   = ((Boolean)item.getValue("isBilling"  )).booleanValue();
+boolean isArchiving = ((Boolean)item.getValue("isArchiving")).booleanValue();
+
+String encRouteId = StringEncoderDecoder.encode(routeId);
 %>
 <tr class=row<%=row&1%>>
-	<td class=check><input class=check type=checkbox name=checkedAliases value="<%=encAlias%>" <%=bean.isAliasChecked((String)item.getValue("Alias")) ? "checked" : ""%>></td>
-	<td class=name><a href="#" title="Edit alias" onClick='return edit("<%=encAlias%>", "<%=encAddress%>", "<%=item.getValue("Hide")%>")'><%=encAlias%></a></td>
-	<td><%=encAddress%></td>
-	<td><%=item.getValue("Hide")%></td>
+	<td class=check><input class=check type=checkbox name=checkedRouteIds value="<%=encRouteId%>" <%=bean.isRouteChecked(routeId) ? "checked" : ""%>></td>
+	<td class=name><a href="#" title="Edit route" onClick='return edit("<%=encRouteId%>")'><%=encRouteId%></a></td>
 </tr>
 <%}}%>
 </tbody>
 </table>
 <div class=but0>
-<input class=btn type=submit name=mbAdd value="Add alias" title="Add alias">
-<input class=btn type=submit name=mbDelete value="Delete alias(es)" title="Delete selected aliases">
+<input class=btn type=submit name=mbAdd value="Add route" title="Add new route">
+<input class=btn type=submit name=mbDelete value="Delete route(s)" title="Delete selected route(s)">
 <br>
 
 <input class=btn type=submit name=mbFirst value="First" title="First page"<%=bean.isFirst() ? " disabled" : ""%>>
 <input class=btn type=submit name=mbPrev value="Prev" title="Previous page"<%=bean.isFirst() ? " disabled" : ""%>>
 <input class=btn type=submit name=mbNext value="Next" title="Next page"<%=bean.isLast() ? " disabled" : ""%>>
 <input class=btn type=submit name=mbLast value="Last" title="Last page"<%=bean.isLast() ? " disabled" : ""%>><br>
-<input class=btn type=submit name=mbFilter value="Filter" title="Filter aliases">
+<input class=btn type=submit name=mbFilter value="Filter" title="Filter routes">
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

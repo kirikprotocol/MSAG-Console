@@ -103,6 +103,7 @@ public class Index extends PageBean
 					serviceManager.removeService(id);
 				else
 					serviceManager.removeSme(id);
+				appContext.getStatuses().setServicesChanged(true);
 			}
 			catch (Throwable e)
 			{
@@ -225,7 +226,8 @@ public class Index extends PageBean
 				return ServiceInfo.STATUS_UNKNOWN;
 			}
 		}
-		else return ServiceInfo.STATUS_RUNNING;
+		else
+			return ServiceInfo.STATUS_RUNNING;
 	}
 
 	/*************************** Properties *******************************/

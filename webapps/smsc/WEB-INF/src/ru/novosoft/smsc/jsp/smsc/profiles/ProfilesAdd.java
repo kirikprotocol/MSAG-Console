@@ -46,8 +46,8 @@ public class ProfilesAdd extends SmscBean
 			switch (smsc.updateProfile(address, profile))
 			{
 				case 1:	//pusUpdated
-					return RESULT_DONE;
 				case 2: //pusInserted
+					appContext.getStatuses().setProfilesChanged(true);
 					return RESULT_DONE;
 				case 3: //pusUnchanged
 					return error(SMSCErrors.error.profiles.identicalToDefault);

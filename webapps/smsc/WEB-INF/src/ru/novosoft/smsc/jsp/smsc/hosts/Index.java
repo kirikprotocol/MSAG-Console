@@ -54,6 +54,7 @@ public class Index extends HostsBean
 			try
 			{
 				serviceManager.removeDaemon(id);
+				appContext.getStatuses().setHostsChanged(true);
 			}
 			catch (AdminException e)
 			{

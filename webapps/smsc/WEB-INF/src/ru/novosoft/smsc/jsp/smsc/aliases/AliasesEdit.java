@@ -71,9 +71,13 @@ public class AliasesEdit extends SmscBean
 		if (!_oldAlias.equals(_newAlias) && _aliases.contains(_newAlias))
 			return error(SMSCErrors.error.aliases.alreadyExists);
 		_aliases.remove(_oldAlias);
-		return smsc.getAliases().add(_newAlias)
-				  ? RESULT_DONE
-				  : error(SMSCErrors.error.aliases.alreadyExists);
+		if (smsc.getAliases().add(_newAlias))
+		{
+			appContext.getStatuses().setAliasesChanged(true);
+			return RESULT_DONE;
+		}
+		else
+			return error(SMSCErrors.error.aliases.alreadyExists, alias);
 	}
 
 	/*************************** properties *********************************/

@@ -96,4 +96,9 @@ public class RouteList
 		}
 		return dataSource.query(query);
 	}
+
+	public boolean contains(String routeId)
+	{
+		return map.containsKey(routeId);
+	}
 }

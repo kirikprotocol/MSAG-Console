@@ -1,9 +1,9 @@
 package ru.novosoft.smsc.jsp;
 
-import ru.novosoft.smsc.admin.service.ServiceManager;
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
+import ru.novosoft.smsc.admin.service.ServiceManager;
+import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.config.ConfigManager;
 import ru.novosoft.util.conpool.NSConnectionPool;
@@ -22,6 +22,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	private Smsc smsc = null;
 	private NSConnectionPool connectionPool = null;
 	private UserPreferences userPreferences = new UserPreferences();
+	private Statuses statuses = new StatusesImpl();
 
 	public SMSCAppContextImpl(String configFileName)
 	{
@@ -35,8 +36,8 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			Properties props = new Properties();
 			props.setProperty("jdbc.source", configManager.getConfig().getString("profiler.jdbc.source"));
 			props.setProperty("jdbc.driver", configManager.getConfig().getString("profiler.jdbc.driver"));
-			props.setProperty("jdbc.user",   configManager.getConfig().getString("profiler.jdbc.user"));
-			props.setProperty("jdbc.pass",   configManager.getConfig().getString("profiler.jdbc.password"));
+			props.setProperty("jdbc.user", configManager.getConfig().getString("profiler.jdbc.user"));
+			props.setProperty("jdbc.pass", configManager.getConfig().getString("profiler.jdbc.password"));
 			connectionPool = new NSConnectionPool(props);
 			smsc = new Smsc(configManager, connectionPool);
 			serviceManager.init(configManager, smsc);
@@ -78,6 +79,11 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	public UserPreferences getUserPreferences()
 	{
 		return userPreferences;
+	}
+
+	public Statuses getStatuses()
+	{
+		return statuses;
 	}
 }
 

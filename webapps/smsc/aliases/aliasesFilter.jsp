@@ -27,16 +27,17 @@ MENU0_SELECTION = "MENU0_ALIASES";
 <col width="85%">
 <col width="10%">
 <%
+int rowN = 0;
 for (int i=0; i<bean.getAliases().length; i++)
 {
 %>
-<tr class=row0>
+<tr class=row<%=(rowN++)&1%>>
 	<th>alias:</th>
 	<td><input class=txtW name=aliases value="<%=bean.getAliases()[i]%>"></td>
 	<td>&nbsp;</td>
 </tr>
 <%}%>
-<tr class=row0>
+<tr class=row<%=(rowN++)&1%>>
 	<th>alias:</th>
 	<td><input class=txtW name=aliases></td>
 	<td><input class=btn type=submit name=mbAdd value="Add" title="Add new alias to filter"></td>
@@ -45,18 +46,18 @@ for (int i=0; i<bean.getAliases().length; i++)
 for (int i=0; i<bean.getAddresses().length; i++)
 {
 %>
-<tr class=row0>
+<tr class=row<%=(rowN++)&1%>>
 	<th>address:</th>
 	<td><input class=txtW name=addresses value="<%=bean.getAddresses()[i]%>"></td>
 	<td>&nbsp;</td>
 </tr>
 <%}%>
-<tr class=row0>
+<tr class=row<%=(rowN++)&1%>>
 	<th>address:</th>
 	<td><input class=txtW name=addresses></td>
 	<td><input class=btn type=submit name=mbAdd value="Add" title="Add new address to filter"></td>
 </tr>
-<tr class=row0>
+<tr class=row<%=(rowN++)&1%>>
 	<th>hide option:</th>
 	<td><select class=txt name=hide>
 			<option value="<%=AliasFilter.HIDE_NOFILTER%>" <%=AliasFilter.HIDE_NOFILTER == bean.getHide() ? "selected" : ""%>>all</option>

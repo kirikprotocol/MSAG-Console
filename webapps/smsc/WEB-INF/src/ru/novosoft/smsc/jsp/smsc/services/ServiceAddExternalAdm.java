@@ -188,6 +188,7 @@ public class ServiceAddExternalAdm extends PageBean
 			serviceManager.deployAdministrableService(incomingZip, serviceInfo);
 			Daemon d = daemonManager.getDaemon(serviceInfo.getHost());
 			d.addService(serviceInfo);
+			appContext.getStatuses().setServicesChanged(true);
 		}
 		catch (AdminException e)
 		{

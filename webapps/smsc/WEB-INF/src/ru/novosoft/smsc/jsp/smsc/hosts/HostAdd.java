@@ -44,6 +44,7 @@ public class HostAdd extends HostsBean
 				logger.error("Couldn't add host", e);
 				return error(SMSCErrors.error.hosts.couldntAddHost, hostName, e);
 			}
+			appContext.getStatuses().setHostsChanged(true);
 			return RESULT_DONE;
 		}
 		else if (mbCancel != null)

@@ -43,7 +43,7 @@ MENU0_SELECTION = "MENU0_PROFILES";
 </tr>
 </table>
 <div class=but0>
-<input class=btn type=submit name=mbSave value="Add profile" title="Add profile">
+<input class=btn type=submit name=mbSave value="Save" title="Save changes">
 <input class=btn type=submit name=mbCancel value="Cancel">
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

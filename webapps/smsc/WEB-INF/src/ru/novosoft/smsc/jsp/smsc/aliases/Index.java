@@ -95,6 +95,7 @@ public class Index extends SmscBean
 		{
 			String alias = checkedAliases[i];
 			smsc.getAliases().remove(alias);
+			appContext.getStatuses().setAliasesChanged(true);
 		}
 		checkedAliases = new String[0];
 		checkedAliasesSet.clear();

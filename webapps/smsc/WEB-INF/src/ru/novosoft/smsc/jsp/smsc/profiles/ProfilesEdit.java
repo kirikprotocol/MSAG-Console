@@ -66,6 +66,7 @@ public class ProfilesEdit extends SmscBean
 				case 1:	//pusUpdated
 				case 2: //pusInserted
 				case 3: //pusUnchanged
+					appContext.getStatuses().setProfilesChanged(true);
 					return RESULT_DONE;
 				case 4: //pusError
 				default:
