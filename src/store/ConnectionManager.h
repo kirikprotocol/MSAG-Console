@@ -10,7 +10,7 @@
 #include "StoreExceptions.h"
 
 using namespace smsc::core::synchronization;
-//using namespace smsc::core::buffers;
+using namespace smsc::core::buffers;
 
 namespace smsc { namespace store 
 {
