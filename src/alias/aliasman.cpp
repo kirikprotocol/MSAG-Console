@@ -1,3 +1,4 @@
+#define DISABLE_TRACING
 #include "aliasman.h"
 #include <stdexcept>
 #include <string>
@@ -13,6 +14,7 @@
 #define ENTER 
 #define LEAVE 
 #define LEAVE_(result) return result;
+#define DUMP_ARRAY 0
 
 extern void __qsort__ (void *const pbase, size_t total_elems, size_t size,int(*cmp)(const void*,const void*));
  
@@ -26,22 +28,43 @@ using namespace std;
 inline 
 void print(const APattern& pattern,char* text)
 {
-	__trace2__("#### %s = PATTERN {%s(len:%d/def:%d), npi: %d, ton: %d}",
+	__trace2__("#### %s = PATTERN {%s(len:%d/def:%d), npi: %d, ton: %d, num_n_plan: %d}",
               text, 
               pattern.value,
               pattern.length,
               pattern.defLength,
 							pattern.numberingPlan,
-							pattern.typeOfNumber);
+							pattern.typeOfNumber,
+						  pattern.num_n_plan);
+	__trace2__("---- val: %x.%x.%x.%x.%x mask %x.%x.%x.%x.%x -----",
+						 pattern.value_32[0],
+						 pattern.value_32[1],
+						 pattern.value_32[2],
+						 pattern.value_32[3],
+						 pattern.value_32[4],
+						 pattern.mask_32[0],
+						 pattern.mask_32[1],
+						 pattern.mask_32[2],
+						 pattern.mask_32[3],
+						 pattern.mask_32[4]
+						 );
 }
 void print(const AValue& val,char* text)
 {
-	__trace2__("#### %s = VALUE {%s(len:%d), npi: %d, ton: %d}",
+	__trace2__("#### %s = VALUE {%s(len:%d), npi: %d, ton: %d, num_n_plan: %d}",
               text, 
               val.value,
               val.length,
 							val.numberingPlan,
-							val.typeOfNumber);
+							val.typeOfNumber,
+						  val.num_n_plan);
+	__trace2__("---- val: %x.%x.%x.%x.%x -----",
+						 val.value_32[0],
+						 val.value_32[1],
+						 val.value_32[2],
+						 val.value_32[3],
+						 val.value_32[4]
+						 );
 }
 inline 
 int compare_val_pat(const AValue& val, const APattern& pattern,bool& strong)
@@ -49,17 +72,20 @@ int compare_val_pat(const AValue& val, const APattern& pattern,bool& strong)
 	__trace2__("compare (value ? pattern)");
 	print(val,"\tV:");
 	print(pattern,"\tP:");
-#define compare_v(n) \
-  ((pattern.mask_32[n]&val.value_32[n]) - pattern.value_32[n])
+//#define compare_v(n) \
+//  ((pattern.mask_32[n]&val.value_32[n]) - pattern.value_32[n])
 #define ifn0goto {if ( result ) goto result_; }
   int32_t result;
   result = val.num_n_plan-pattern.num_n_plan; ifn0goto;
-  result = compare_v(0); ifn0goto;
+	result = val.length - pattern.length; ifn0goto;
+/*  result = compare_v(0); ifn0goto;
   result = compare_v(1); ifn0goto;
   result = compare_v(2); ifn0goto;
   result = compare_v(3); ifn0goto;
-  result = compare_v(4); ifn0goto;
-	result = val.length - pattern.length; ifn0goto;
+  result = compare_v(4); ifn0goto; */
+	result = 
+		strncmp((char*)val.value,(char*)pattern.value,pattern.defLength);
+		ifn0goto;
   if ( pattern.defLength == val.length )
 		strong = true;
 	else
@@ -77,27 +103,52 @@ static inline int compare_pat_pat( const APattern& pat1,
 __trace2__("compare (%s)(pattern ? pattern)",strong?"strong":"weak");
 print(pat1,"\tP1");
 print(pat2,"\tP2");
-
-#define compare_v(n) (pat1.value_32[n]&pat2.mask_32[n] - pat2.value_32[n]&pat1.mask_32[n] )
 #define ifn0goto {if (result) goto result_;}
-  int32_t result;
+int32_t result;
   result = pat1.num_n_plan - pat2.num_n_plan; ifn0goto;
-  if ( strong )
-		{result = pat1.defLength - pat2.defLength; ifn0goto;}
-	else if ( pat1.defLength == pat2.defLength ) strong = true;
+	result = pat1.length - pat2.length; ifn0goto;
+if ( strong )
+{
+/*#define compare_v(n) (pat1.value_32[n] - pat2.value_32[n] )
   result = compare_v(0); ifn0goto;
   result = compare_v(1); ifn0goto;
   result = compare_v(2); ifn0goto;
   result = compare_v(3); ifn0goto;
   result = compare_v(4); ifn0goto;
-	result = pat1.length - pat2.length; ifn0goto;
+#undef compare_v*/
+/*	for ( int i=0; i < min(pat1.defLength,pat2.defLength); ++i)
+	{
+		if ( pat1.value[i] != pat2.value[i] )
+		{
+			result = pat1.value[i] > pat2.value[i] ? 1 : -1;
+			goto result_;
+		}
+	} */
+	result = 
+		strncmp((char*)pat1.value,(char*)pat2.value,min(pat1.defLength,pat2.defLength));
+		ifn0goto;
+	result = pat1.defLength - pat2.defLength; ifn0goto;
+}
+else
+{
+//#define compare_v(n) (pat1.value_32[n]&pat2.mask_32[n] - pat2.value_32[n]&pat1.mask_32[n] )
+/*  result = compare_v(0); ifn0goto;
+  result = compare_v(1); ifn0goto;
+  result = compare_v(2); ifn0goto;
+  result = compare_v(3); ifn0goto;
+  result = compare_v(4); ifn0goto; */
+	result = 
+		strncmp((char*)pat1.value,(char*)pat2.value,min(pat1.defLength,pat2.defLength));
+		ifn0goto;
+	if ( pat1.defLength == pat2.defLength ) strong = true;
+//#undef compare_v
+}
 result_:
   __trace2__("result(P1%cP2)%s%d",result>0?'>':result<0?'<':'=',
 			(result==0)?strong?"(strong)":"(weak)":"",
 		  result); 
   return (int32_t)result;
 #undef if0ngoto
-#undef compare_v
 }
 
 static TreeNode* findNodeByAliasRecurse(TreeNode* node,AValue& val,int& cmp)
@@ -117,11 +168,36 @@ static TreeNode* findNodeByAliasRecurse(TreeNode* node,AValue& val,int& cmp)
       fix me here, change to binary search 
     */
     //__watch__(node->child.size());
-    for ( int i=0; i<node->child.size(); ++i )
+    /*for ( int i=0; i<node->child.size(); ++i )
     {
       TreeNode* res = findNodeByAliasRecurse(node->child[i],val,cmp);
       if ( res ) return res;
+    }*/
+    #if DUMP_ARRAY
+		__trace2__("array has %d elements",node->child.size());
+		for ( int i=0; i<node->child.size(); ++i )
+    {
+			print (*(node->child[i]->alias),"@@@@");
     }
+		#endif
+		int left = 1;
+		int right = node->child.size();
+		if ( right > 0 ) for(;;)
+		{
+			int ptr = (right+left) >> 1;
+			TreeNode* res = findNodeByAliasRecurse(node->child[ptr-1],val,cmp);
+			if ( res ) LEAVE_(res);
+			__require__( cmp != 0 );
+			if ( right > left  ) 
+			{
+				__require__ ( right <= node->child.size() ); 
+				//__require__ ( left < right );
+				__require__ ( 0 < left );
+				if ( cmp < 0 )right = ptr-1;
+				else left = ptr+1;
+			}
+			else break;
+		}
     // is not found
     LEAVE_(node);
   }
@@ -145,13 +221,38 @@ TreeNode* findNodeByAddrRecurse(TreeNode* node,AValue& val, int& cmp)
       fix me here, change to binary search 
     */
     //__watch__(node->child.size());
-    for ( int i=0; i<node->child.size(); ++i )
+    /*for ( int i=0; i<node->child.size(); ++i )
     {
       TreeNode* res = findNodeByAddrRecurse(node->child[i],val,cmp);
       if ( res ) return res;
+    }*/
+    #if DUMP_ARRAY
+		__trace2__("array has %d elements",node->child.size());
+		for ( int i=0; i<node->child.size(); ++i )
+    {
+			print ( *(node->child[i]->addr),"@@@@");
     }
+		#endif
+		int left = 1;
+		int right = node->child.size();
+		if ( right > 0 ) for(;;)
+		{
+			int ptr = (right+left) >> 1;
+			TreeNode* res = findNodeByAddrRecurse(node->child[ptr-1],val,cmp);
+			if ( res ) LEAVE_(res);
+			__require__( cmp != 0 );
+			if ( right > left ) 
+			{
+				__require__ ( right <= node->child.size() ); 
+				//__require__ ( left < right );
+				__require__ ( 0 < left );
+				if ( cmp < 0 )right = ptr-1;
+				else left = ptr+1;
+			}
+			else break;
+		}
     // is not found
-    return node;
+    LEAVE_(node);
   }
   LEAVE_(0);
 }
@@ -185,11 +286,35 @@ int addIntoAliasTreeRecurse(TreeNode* node,AliasRecord* rec)
     /*
       fix me here, change to binary search 
     */
-    for ( int i=0; i<node->child.size(); ++i )
+    /*for ( int i=0; i<node->child.size(); ++i )
     {
       cmp = addIntoAliasTreeRecurse(node->child[i],rec);
       if ( cmp == 0 ) LEAVE_(0);
+    }*/
+    /*#if DUMP_ARRAY
+		for ( int i=0; i<node->child.size(); ++i )
+    {
+			print ( *(node->child[i]->alias),"@@@@");
     }
+		#endif*/
+		int left = 1;
+		int right = node->child.size();
+		if ( right > 0 ) for(;;)
+		{
+			int ptr = (right+left) >> 1;
+			cmp = addIntoAliasTreeRecurse(node->child[ptr-1],rec);
+			if ( cmp == 0 ) LEAVE_(0);
+			__require__( cmp != 0 );
+			if ( right > left ) 
+			{
+				__require__ ( right <= node->child.size() ); 
+				//__require__ ( left < right );
+				__require__ ( 0 < left );
+				if ( cmp < 0 )right = ptr-1;
+				else left = ptr+1;
+			}
+			else break;
+		}
     __trace__("**** add element ****");
 		TreeNode* newNode = new TreeNode;
     newNode->addr = &rec->addr;
@@ -228,11 +353,35 @@ int addIntoAddrTreeRecurse(TreeNode* node,AliasRecord* rec)
     /*
       fix me here, change to binary search 
     */
-    for ( int i=0; i<node->child.size(); ++i )
+    /*for ( int i=0; i<node->child.size(); ++i )
     {
       cmp = addIntoAddrTreeRecurse(node->child[i],rec);
       if ( cmp == 0 ) LEAVE_(0);
+    }*/
+    /*#if DUMP_ARRAY
+		for ( int i=0; i<node->child.size(); ++i )
+    {
+			print ( *(node->child[i]->addr),"@@@@");
     }
+		#endif*/
+		int left = 1;
+		int right = node->child.size();
+		if ( right > 0 ) for(;;)
+		{
+			int ptr = (right+left) >> 1;
+			cmp = addIntoAddrTreeRecurse(node->child[ptr-1],rec);
+			if ( cmp == 0 ) LEAVE_(0);
+			__require__( cmp != 0 );
+			if ( right > left ) 
+			{
+				__require__ ( right <= node->child.size() ); 
+				//__require__ ( left < right );
+				__require__ ( 0 < left );
+				if ( cmp < 0 )right = ptr-1;
+				else left = ptr+1;
+			}
+			else break;
+		}
     __trace2__("****add element*****");
 		TreeNode* newNode = new TreeNode;
     newNode->addr = &rec->addr;
@@ -1046,7 +1195,7 @@ __synchronized__
 	{
 		__trace__("\n");
 		print(tmp_vector[i]->addr,"from:");
-		print(tmp_vector[i]->alias,"\tto:");
+		//print(tmp_vector[i]->alias,"\tto:");
 	}
 	__trace2__("&---------- END --------------&");
 	for ( int i =0; i<new_aliases_count; ++i )
@@ -1060,7 +1209,7 @@ __synchronized__
 	{
 		__trace__("\n");
 		print(tmp_vector[i]->alias,"from: ");
-		print(tmp_vector[i]->addr,"\tto:");
+		//print(tmp_vector[i]->addr,"\tto:");
 	}
 	__trace2__("&---------- END --------------&");
 	for ( int i =0; i<new_aliases_count; ++i )
