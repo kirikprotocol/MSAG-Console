@@ -21,7 +21,7 @@ int PooledThread::Execute()
   int blocksheapquantum;
   sigset_t set;
   sigemptyset(&set);
-  sigaddset(&set,16);
+  sigaddset(&set,SIGINT);
   if(thr_sigsetmask(SIG_SETMASK,&set,NULL)!=0)
   {
     __warning__("failed to set thread signal mask!");
@@ -72,7 +72,10 @@ ThreadPool::ThreadPool()
   maxThreads=256;
 }
 
-static void disp(int sig){}
+static void disp(int sig)
+{
+  trace("got user signal");
+}
 
 ThreadPool::~ThreadPool()
 {
@@ -85,7 +88,7 @@ ThreadPool::~ThreadPool()
     usedThreads[i]->Kill(16);
   }
   trace("all tasks are notified");
-
+  Unlock();
   for(;;)
   {
     Lock();
@@ -94,6 +97,11 @@ ThreadPool::~ThreadPool()
     {
       Unlock();
       break;
+    }
+    for(int i=0;i<usedThreads.Count();i++)
+    {
+      usedThreads[i]->stopTask();
+      usedThreads[i]->Kill(16);
     }
     Unlock();
     Wait();
