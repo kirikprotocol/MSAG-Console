@@ -190,7 +190,7 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   using smsc::util::config::ConfigException;
   const char* sql = "INSERT INTO SMS_PROFILE (mask, reportinfo, codeset)"
                       " VALUES (:1, :2, :3)";
-  
+
   ConnectionGuard connection(ds);
 
   if(!connection.get())throw Exception("Profiler: Failed to get connection");
@@ -271,7 +271,7 @@ int Profiler::Execute()
       body[len]=0;
     }
     len=strlen(body);*/
-    getSmsText(sms,body);
+    len=getSmsText(sms,body);
 
     __trace2__("Profiler: received %s",body);
 
@@ -341,7 +341,7 @@ void Profiler::loadFromDB()
 
   ds->init(config);
   __trace__("Profiler: init ok");
-  
+
   ConnectionGuard connection(ds);
 
   if(!connection.get())throw Exception("Profiler: Failed to get connection");
