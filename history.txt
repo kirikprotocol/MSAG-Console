@@ -19,3 +19,7 @@ Build 1614
 Fix: OCIDataSource memory leak в createRoutine
 Fix: Admin interface. Не очищались сообщения об ошибках в сессионных бинах.
 Fix: Длина SubmitResp с ошибочным статусом на 2 больше чем полагается.
+
+Build 1615
+Fix: Memory leak при ошибочном submit в транзакционном режиме.
+Fix: Ненужная попытка changeStateToUndeliverable в транзакционном режиме.
