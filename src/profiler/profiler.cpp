@@ -15,12 +15,14 @@
 #include "db/DataSourceLoader.h"
 
 #include "util/recoder/recode_dll.h"
+#include "util/smstext.h"
 
 namespace smsc{
 namespace profiler{
 
 using namespace smsc::core::buffers;
 using smsc::util::Exception;
+using smsc::util::getSmsText;
 
 struct HashKey{
   Address addr;
@@ -231,8 +233,8 @@ int Profiler::Execute()
   SMS *sms;
   int len;
   char body[MAX_SHORT_MESSAGE_LENGTH+1];
-  char buf[MAX_SHORT_MESSAGE_LENGTH+1];
-  int coding;
+//  char buf[MAX_SHORT_MESSAGE_LENGTH+1];
+//  int coding;
   int status=MAKE_COMMAND_STATUS(CMD_OK,0);
 
 //  char *str=body;
@@ -252,30 +254,31 @@ int Profiler::Execute()
     sms = cmd->get_sms();
     Address& addr=sms->getOriginatingAddress();
     //len = sms->getMessageBody().getData( (uint8_t*)body );
-   	strncpy(buf,sms->getStrProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE).c_str(),sizeof(buf));
-   	len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
-   	coding = sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING);
-   	__trace2__("Profiler: data coding %d",coding);
-   	if(coding==DataCoding::DEFAULT)
-   	{
-   	  Convert7BitToText(buf,len,body,sizeof(body));
-   	}else if(coding==DataCoding::UCS2)
-   	{
-   	  ConvertUCS2ToMultibyte((const short*)buf,len,body,sizeof(body),CONV_ENCODING_ANSI);
-   	  body[len/2]=0;
-   	}else
-   	{
-   	  memcpy(body,buf,len);
-   	  body[len]=0;
-   	}
-   	len=strlen(body);
+    /*strncpy(buf,sms->getStrProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE).c_str(),sizeof(buf));
+    len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
+    coding = sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING);
+    __trace2__("Profiler: data coding %d",coding);
+    if(coding==DataCoding::DEFAULT)
+    {
+      Convert7BitToText(buf,len,body,sizeof(body));
+    }else if(coding==DataCoding::UCS2)
+    {
+      ConvertUCS2ToMultibyte((const short*)buf,len,body,sizeof(body),CONV_ENCODING_ANSI);
+      body[len/2]=0;
+    }else
+    {
+      memcpy(body,buf,len);
+      body[len]=0;
+    }
+    len=strlen(body);*/
+    getSmsText(sms,body);
 
-   	__trace2__("Profiler: received %s",body);
+    __trace2__("Profiler: received %s",body);
 
-   	int i;
-   	for(i=0;i<len;i++)body[i]=toupper(body[i]);
-   	i=0;
-   	while(!isalpha(body[i]) && i<len)i++;
+    int i;
+    for(i=0;i<len;i++)body[i]=toupper(body[i]);
+    i=0;
+    while(!isalpha(body[i]) && i<len)i++;
     if(!strncmp(body+i,"REPORT",6))
     {
       i+=7;
@@ -346,45 +349,12 @@ void Profiler::loadFromDB()
   if(!statement.get())throw Exception("Profiler: Failed to create statement");
   auto_ptr<ResultSet> rs(statement->executeQuery());
   if(!rs.get())throw Exception("Profiler: Failed to make a query to DB");
-  Address addr;
   const char* dta;
-  int np;
-  int ton;
   Profile p;
   while(rs->fetchNext())
   {
     dta = rs->getString(1);
-    int scaned = sscanf(dta,".%d.%d.%20s",
-         &ton,
-         &np,
-         addr.value);
-    if ( scaned == 3 )
-    {
-      addr.type=ton;
-      addr.plan=np;
-    }else
-    {
-      scaned = sscanf(dta,"+%[0123456789]20s",addr.value);
-      if ( scaned )
-      {
-        addr.plan = 1;//ISDN
-        addr.type = 1;//INTERNATIONAL
-      }
-      else
-      {
-        scaned = sscanf(dta,"%[0123456789]20s",addr.value);
-        if ( !scaned )
-        {
-          continue;
-        }
-        else
-        {
-          addr.plan = 1;//ISDN
-          addr.type = 2;//NATIONAL
-        }
-      }
-    }
-    addr.length=strlen((char*)addr.value);
+    Address addr(dta);
     p.reportoptions=rs->getInt8(2);
     p.codepage=rs->getInt8(3);
     profiles->add(addr,p);
