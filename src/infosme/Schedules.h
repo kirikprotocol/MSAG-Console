@@ -52,37 +52,37 @@ namespace smsc { namespace infosme
         time_t  startDateTime;  // full YYYY.MM.dd HH:mm:ss
         time_t  deadLine;       // full YYYY.MM.dd HH:mm:ss
         
-        Mutex           taskNamesLock;
-        Hash<bool>      taskNames;
+        Mutex           taskIdsLock;
+        Hash<bool>      taskIds;
         
         virtual ~Schedule() {};
         
         virtual time_t calulateNextTime() = 0;
         
-        virtual bool addTask(std::string taskName)
+        virtual bool addTask(std::string taskId)
         { 
-            MutexGuard guard(taskNamesLock);
+            MutexGuard guard(taskIdsLock);
 
-            const char* task_name = taskName.c_str();
-            if (!task_name || task_name[0] == '\0' || taskNames.Exists(task_name)) 
+            const char* task_id = taskId.c_str();
+            if (!task_id || task_id[0] == '\0' || taskIds.Exists(task_id)) 
                 return false;
-            else taskNames.Insert(task_name, true);
+            else taskIds.Insert(task_id, true);
             return true;
         };
-        virtual bool removeTask(std::string taskName)
+        virtual bool removeTask(std::string taskId)
         { 
-            MutexGuard guard(taskNamesLock);
+            MutexGuard guard(taskIdsLock);
 
-            const char* task_name = taskName.c_str();
-            if (!task_name || task_name[0] == '\0' || !taskNames.Exists(task_name)) 
+            const char* task_id = taskId.c_str();
+            if (!task_id || task_id[0] == '\0' || !taskIds.Exists(task_id)) 
                 return false;
-            else taskNames.Delete(task_name);
+            else taskIds.Delete(task_id);
             return true;
         };
 
         Hash<bool>& getTasks() {
-            MutexGuard guard(taskNamesLock);
-            return taskNames;
+            MutexGuard guard(taskIdsLock);
+            return taskIds;
         }
     
         static Schedule* create(ConfigView* config, std::string id);

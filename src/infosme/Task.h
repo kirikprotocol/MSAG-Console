@@ -18,6 +18,8 @@
 #include <util/config/ConfigView.h>
 #include <util/config/ConfigException.h>
 
+#include <util/templates/Formatters.h>
+
 #include <core/synchronization/Mutex.hpp>
 #include <core/synchronization/Event.hpp>
 
@@ -35,10 +37,14 @@ namespace smsc { namespace infosme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
+    using namespace smsc::util::templates;
+
     extern time_t parseDateTime(const char* str);
     extern time_t parseDate(const char* str);
     extern int    parseTime(const char* str);
     
+    static const char* TASK_TABLE_NAME_PREFIX = "INFOSME_TABLE_";
+
     struct Message
     {
 
@@ -49,6 +55,7 @@ namespace smsc { namespace infosme
     };
     struct TaskInfo
     {
+        std::string id;
         std::string name;
         bool        enabled;
         int         priority;
@@ -62,40 +69,49 @@ namespace smsc { namespace infosme
         time_t  validityDate;       // full date/time
         time_t  activePeriodStart;  // only HH:mm:ss in seconds
         time_t  activePeriodEnd;    // only HH:mm:ss in seconds
-        
+
         std::string dsId;
+        std::string tablePrefix;
         std::string querySql;
         std::string msgTemplate;
         std::string svcType;        // specified if replaceIfPresent == true
+
+        int     dsOwnTimeout, dsIntTimeout;
+        int     dsUncommited;
         
         TaskInfo()
-            : name(""), enabled(true), priority(0),
+            : id(""), name(""), enabled(true), priority(0),
               retryOnFail(false), replaceIfPresent(false),
               endDate(-1), retryTime(-1), 
               validityPeriod(-1), validityDate(-1),
               activePeriodStart(-1), activePeriodEnd(-1),
-              dsId(""), querySql(""), msgTemplate(""), svcType("") {};
+              dsId(""), tablePrefix(""), querySql(""), msgTemplate(""), svcType(""),
+              dsOwnTimeout(0), dsIntTimeout(0), dsUncommited(1) {};
         TaskInfo(const TaskInfo& info) 
-            : name(info.name), enabled(info.enabled), priority(info.priority),
+            : id(info.id), name(info.name), enabled(info.enabled), priority(info.priority),
               retryOnFail(info.retryOnFail), replaceIfPresent(info.replaceIfPresent),
               endDate(info.endDate), retryTime(info.retryTime), 
               validityPeriod(info.validityPeriod), validityDate(info.validityDate),
               activePeriodStart(info.activePeriodStart), activePeriodEnd(info.activePeriodEnd),
-              dsId(info.dsId), querySql(info.querySql), 
-              msgTemplate(info.msgTemplate), svcType(info.svcType) {};
+              dsId(info.dsId), tablePrefix(info.tablePrefix), querySql(info.querySql), 
+              msgTemplate(info.msgTemplate), svcType(info.svcType), 
+              dsOwnTimeout(info.dsOwnTimeout), dsIntTimeout(info.dsIntTimeout), 
+              dsUncommited(info.dsUncommited) {};
         
         virtual ~TaskInfo() {};
         
         TaskInfo& operator=(const TaskInfo& info)
         {
-            name = info.name; enabled = info.enabled; priority = info.priority;
+            id = info.id; name = info.name; enabled = info.enabled; priority = info.priority;
             retryOnFail = info.retryOnFail; replaceIfPresent = info.replaceIfPresent;
             endDate = info.endDate; retryTime = info.retryTime;
             validityPeriod = info.validityPeriod; validityDate = info.validityDate;
             activePeriodStart = info.activePeriodStart; 
             activePeriodEnd = info.activePeriodEnd;
-            dsId = info.dsId; querySql = info.querySql;
+            dsId = info.dsId; tablePrefix = info.tablePrefix; querySql = info.querySql;
             msgTemplate = info.msgTemplate; svcType = info.svcType;
+            dsOwnTimeout = info.dsOwnTimeout; dsIntTimeout = info.dsIntTimeout;
+            dsUncommited = info.dsUncommited;
             return *this;
         };
     };
@@ -107,6 +123,11 @@ namespace smsc { namespace infosme
     class Task
     {
     friend class TaskGuard;
+    protected:
+        
+        log4cpp::Category  &logger;
+        OutputFormatter*   formatter;
+
     private:
         
         Event       usersCountEvent;
@@ -125,25 +146,39 @@ namespace smsc { namespace infosme
         Event       processEndEvent;
         Event       inProcessEvent;
         Mutex       inProcessLock;
-        bool        bInProcess;
+        Mutex       statementLock;
+        Mutex       createTableLock;
+        bool        bInProcess, bTableCreated;
         
-        virtual void init(ConfigView* config, std::string taskName);
+        Statement* getStatement(Connection* connection, const char* id, const char* sql);
+        void createTable(Connection* connection);
+        
+        virtual void init(ConfigView* config, std::string taskId, std::string tablePrefix);
 
-        virtual ~Task() {};
+        virtual ~Task() {
+            if (formatter) delete formatter;
+        };
 
     public:
         
         Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt) 
-            : usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), bInProcess(false) 
+            : logger(Logger::getCategory("smsc.infosme.Task")), formatter(0),
+                usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), 
+                    bInProcess(false), bTableCreated(false)
+                
         {
             __require__(dsOwn && dsInt);
             this->info = info; this->dsOwn = dsOwn; this->dsInt = dsInt;
+            formatter = new OutputFormatter(info.msgTemplate.c_str());
         }
-        Task(ConfigView* config, std::string taskName, DataSource* dsOwn, DataSource* dsInt)
-            : usersCount(0), bFinalizing(false), 
-                dsOwn(dsOwn), dsInt(dsInt), bInProcess(false)
+        Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
+             DataSource* dsOwn, DataSource* dsInt)
+            : logger(Logger::getCategory("smsc.infosme.Task")), formatter(0),
+                usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt), 
+                    bInProcess(false), bTableCreated(false)
         {
-            init(config, taskName);
+            init(config, taskId, tablePrefix);
+            formatter = new OutputFormatter(info.msgTemplate.c_str());
         }
         
         void finalize()
@@ -166,11 +201,14 @@ namespace smsc { namespace infosme
             return bFinalizing;
         }
 
-        inline int getPriority() {
-            return info.priority;
+        inline std::string getId() {
+            return info.id;
         }
         inline std::string getName() {
             return info.name;
+        }
+        inline int getPriority() {
+            return info.priority;
         }
         inline bool isEnabled() {
             return info.enabled;
@@ -267,10 +305,10 @@ namespace smsc { namespace infosme
     struct TaskContainerAdapter
     {
         virtual bool addTask(Task* task) = 0;
-        virtual bool removeTask(std::string taskName) = 0;
-        virtual bool hasTask(std::string taskName) = 0;
+        virtual bool removeTask(std::string taskId) = 0;
+        virtual bool hasTask(std::string taskId) = 0;
 
-        virtual TaskGuard getTask(std::string taskName) = 0;
+        virtual TaskGuard getTask(std::string taskId) = 0;
         virtual TaskGuard getNextTask() = 0;
         
         virtual ~TaskContainerAdapter() {};

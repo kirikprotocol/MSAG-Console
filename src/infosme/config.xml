@@ -60,12 +60,17 @@
 	</section>
 
 	<section name="Tasks">
+
+	    <param name="taskTablesPrefix" type="string">INFOSME_TABLE_FOR_</param>
 	    <param name="switchTimeout" type="int">1000</param>
 	    
 	    <section name="Task1">
-		<param name="dsId" type="string">INTERNAL_DS</param>
+		<param name="name" type="string">Task 1</param>
+		<param name="dsId" type="string">WORKING_DS1</param>
+		<param name="dsOwnTimeout" type="int">10</param> <!-- in seconds -->
+		<param name="dsIntTimeout" type="int">10</param> <!-- in seconds -->
 		<param name="enabled" type="bool">true</param>
-		<param name="priority" type="int">10</param>
+		<param name="priority" type="int">100</param>
 		<param name="retryOnFail" type="bool">true</param>
 		<param name="replaceMessage" type="bool">false</param>
 		<param name="endDate" type="string">07.05.2003 00:00:00</param>
@@ -81,12 +86,41 @@
 		    Hi, $$string arg=1$$
 		</param>
 		<param name="svcType" type="string">TASK_1</param>
+		<param name="uncommited" type="int">50</param>
+	    </section>
+
+	    <section name="Task2">
+		<param name="name" type="string">Task 2</param>
+		<param name="dsId" type="string">WORKING_DS2</param>
+		<param name="dsOwnTimeout" type="int">10</param> <!-- in seconds -->
+		<param name="dsIntTimeout" type="int">10</param> <!-- in seconds -->
+		<param name="enabled" type="bool">true</param>
+		<param name="priority" type="int">200</param>
+		<param name="retryOnFail" type="bool">true</param>
+		<param name="replaceMessage" type="bool">false</param>
+		<param name="endDate" type="string">07.05.2003 00:00:00</param>
+		<param name="retryTime" type="string">03:10:10</param>
+		<param name="validityPeriod" type="string">01:00:00</param>
+		<param name="validityDate" type="string"></param>
+		<param name="activePeriodStart" type="string">09:00:00</param>
+		<param name="activePeriodEnd" type="string">20:00:00</param>
+		<param name="query" type="string">
+		    select ...
+		</param>
+		<param name="template" type="string">
+		    Hi, $$string arg=1$$
+		</param>
+		<param name="svcType" type="string">TASK_2</param>
+		<param name="uncommited" type="int">10</param>
 	    </section>
 	    
-	    <section name="Task2">
+	    <section name="Task3">
+		<param name="name" type="string">Task 3</param>
 		<param name="dsId" type="string">INTERNAL_DS</param>
+		<param name="dsOwnTimeout" type="int">10</param> <!-- in seconds -->
+		<param name="dsIntTimeout" type="int">10</param> <!-- in seconds -->
 		<param name="enabled" type="bool">true</param>
-		<param name="priority" type="int">10</param>
+		<param name="priority" type="int">300</param>
 		<param name="retryOnFail" type="bool">true</param>
 		<param name="replaceMessage" type="bool">false</param>
 		<param name="endDate" type="string">07.05.2003 00:00:00</param>
@@ -101,7 +135,8 @@
 		<param name="template" type="string">
 		    Hi, $$string arg=1$$
 		</param>
-		<param name="svcType" type="string">TASK_1</param>
+		<param name="svcType" type="string">TASK_3</param>
+		<param name="uncommited" type="int">5</param>
 	    </section>
 	</section>
 	

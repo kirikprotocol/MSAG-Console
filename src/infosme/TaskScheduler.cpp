@@ -91,15 +91,15 @@ int TaskScheduler::Execute()
         
         try 
         {
-            char* task_name = 0; bool task_key = false; tasks.First();
-            while (tasks.Next(task_name, task_key))
-                if (task_name && task_name[0] != '\0')
+            char* task_id = 0; bool task_key = false; tasks.First();
+            while (tasks.Next(task_id, task_key))
+                if (task_id && task_id[0] != '\0')
                 {
                     TaskGuard taskGuard = 
-                        processor->getTaskContainerAdapter().getTask(task_name);
+                        processor->getTaskContainerAdapter().getTask(task_id);
                     Task* task = taskGuard.get();
                     if (!task) { 
-                        logger.warn("Task '%s' not found.", task_name);
+                        logger.warn("Task '%s' not found.", task_id);
                         continue;
                     }
                     
@@ -145,27 +145,27 @@ void TaskScheduler::init(TaskProcessorAdapter* processor, ConfigView* config)
                 throw ConfigException("Schedule tasks set empty or wasn't specified.");
             
             const char* tasksCur = tasksStr;
-            std::string taskName = "";
+            std::string taskId = "";
             
             if (*tasksCur != '\0') do
             {
                 if (*tasksCur == ',' || *tasksCur == '\0') {
-                    const char* task_name = taskName.c_str();
-                    if (!task_name || task_name[0] == '\0') {
+                    const char* task_id = taskId.c_str();
+                    if (!task_id || task_id[0] == '\0') {
                         delete schedule;
-                        throw ConfigException("Task names is invalid.");
+                        throw ConfigException("Task id is invalid.");
                     }
-                    if (!processor->getTaskContainerAdapter().hasTask(taskName)) {
+                    if (!processor->getTaskContainerAdapter().hasTask(taskId)) {
                         delete schedule;
-                        throw ConfigException("Task '%s' wasn't defined.", task_name);
+                        throw ConfigException("Task '%s' wasn't defined.", task_id);
                     }
-                    if (!schedule->addTask(taskName)) {
+                    if (!schedule->addTask(taskId)) {
                         delete schedule;
-                        throw ConfigException("Task '%s' was already assigned to schedule.",task_name);
+                        throw ConfigException("Task '%s' was already assigned to schedule.",task_id);
                     }
-                    taskName = "";
+                    taskId = "";
                 } 
-                else taskName += *tasksCur;
+                else if (!isspace(*tasksCur)) taskId += *tasksCur;
             } 
             while (*tasksCur++);
             

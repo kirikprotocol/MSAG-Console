@@ -53,10 +53,10 @@ namespace smsc { namespace infosme
         virtual ~TaskContainer();
 
         virtual bool addTask(Task* task);
-        virtual bool removeTask(std::string taskName);
-        virtual bool hasTask(std::string taskName);
+        virtual bool removeTask(std::string taskId);
+        virtual bool hasTask(std::string taskId);
         
-        virtual TaskGuard getTask(std::string taskName);
+        virtual TaskGuard getTask(std::string taskId);
         virtual TaskGuard getNextTask();
     };
 
@@ -172,7 +172,7 @@ namespace smsc { namespace infosme
 
         TaskManager   manager;      // for tasks methods execution on thread pool
         DataProvider  provider;     // to obtain registered data source by key
-        TaskContainer container;    // contains tasks by name & priority
+        TaskContainer container;    // contains tasks by id & priority
         TaskScheduler scheduler;    // for scheduled messages generation
         
         Event       awake, exited;
@@ -180,6 +180,7 @@ namespace smsc { namespace infosme
         Mutex       startLock;
         int         switchTimeout;
 
+        const char* taskTablesPrefix;
         const char* dsInternalName;
         DataSource* dsInternal;
         

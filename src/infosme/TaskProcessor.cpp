@@ -20,40 +20,40 @@ bool TaskContainer::addTask(Task* task)
     __require__(task);
     MutexGuard guard(tasksLock);
 
-    const char* task_name = task->getName().c_str();
-    if (!task_name || task_name[0] == '\0' || tasks.Exists(task_name)) return false;
-    tasks.Insert(task_name, task);
+    const char* task_id = task->getId().c_str();
+    if (!task_id || task_id[0] == '\0' || tasks.Exists(task_id)) return false;
+    tasks.Insert(task_id, task);
     prioritySum += task->getPriority();
     return true;
 }
-bool TaskContainer::removeTask(std::string taskName)
+bool TaskContainer::removeTask(std::string taskId)
 {
     MutexGuard guard(tasksLock);
     
-    const char* task_name = taskName.c_str();
-    if (!task_name || task_name[0] == '\0' || !tasks.Exists(task_name)) return false;
-    Task* task = tasks.Get(task_name);
+    const char* task_id = taskId.c_str();
+    if (!task_id || task_id[0] == '\0' || !tasks.Exists(task_id)) return false;
+    Task* task = tasks.Get(task_id);
     if (!task) return false;
-    tasks.Delete(task_name);
+    tasks.Delete(task_id);
     prioritySum -= task->getPriority();
     task->finalize();
     return true;
 }
-bool TaskContainer::hasTask(std::string taskName)
+bool TaskContainer::hasTask(std::string taskId)
 {
     MutexGuard guard(tasksLock);
 
-    const char* task_name = taskName.c_str();
-    if (!task_name || task_name[0] == '\0' || !tasks.Exists(task_name)) return false;
+    const char* task_id = taskId.c_str();
+    if (!task_id || task_id[0] == '\0' || !tasks.Exists(task_id)) return false;
     return true;
 }
-TaskGuard TaskContainer::getTask(std::string taskName)
+TaskGuard TaskContainer::getTask(std::string taskId)
 {
     MutexGuard guard(tasksLock);
     
-    const char* task_name = taskName.c_str();
-    if (!task_name || task_name[0] == '\0' || !tasks.Exists(task_name)) return TaskGuard(0);
-    Task* task = tasks.Get(task_name);
+    const char* task_id = taskId.c_str();
+    if (!task_id || task_id[0] == '\0' || !tasks.Exists(task_id)) return TaskGuard(0);
+    Task* task = tasks.Get(task_id);
     return TaskGuard((task && !task->isFinalizing()) ? task:0);
 }
 TaskGuard TaskContainer::getNextTask()
@@ -81,7 +81,7 @@ TaskGuard TaskContainer::getNextTask()
 TaskProcessor::TaskProcessor(ConfigView* config)
     : TaskProcessorAdapter(), Thread(),
         logger(Logger::getCategory("smsc.infosme.TaskProcessor")), 
-            bStarted(false), bNeedExit(false), dsInternalName(0), dsInternal(0)
+            bStarted(false), bNeedExit(false), taskTablesPrefix(0), dsInternalName(0), dsInternal(0)
 {
     logger.info("Loading ...");
 
@@ -105,6 +105,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     std::auto_ptr<ConfigView> tasksCfgGuard(config->getSubConfig("Tasks"));
     ConfigView* tasksCfg = tasksCfgGuard.get();
     switchTimeout = tasksCfg->getInt("switchTimeout");
+    taskTablesPrefix = tasksCfg->getString("taskTablesPrefix");
     if (switchTimeout <= 0) 
         throw ConfigException("Task switch timeout should be positive");
     
@@ -114,25 +115,25 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     {
         try
         {
-            const char* taskName = (const char *)i->c_str();
-            if (!taskName || taskName[0] == '\0')
-                throw ConfigException("Task name empty or wasn't specified");
-            logger.info("Loading task '%s' ...", taskName);
+            const char* taskId = (const char *)i->c_str();
+            if (!taskId || taskId[0] == '\0')
+                throw ConfigException("Task id empty or wasn't specified");
+            logger.info("Loading task '%s' ...", taskId);
             
-            std::auto_ptr<ConfigView> taskConfigGuard(tasksCfg->getSubConfig(taskName));
+            std::auto_ptr<ConfigView> taskConfigGuard(tasksCfg->getSubConfig(taskId));
             ConfigView* taskConfig = taskConfigGuard.get();
             const char* dsId = taskConfig->getString("dsId");
             if (!dsId || dsId[0] == '\0')
                 throw ConfigException("DataSource id for task '%s' empty or wasn't specified",
-                                      taskName);
+                                      taskId);
             DataSource* taskDs = provider.getDataSource(dsId);
             if (!taskDs)
                 throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
-                                      dsId, taskName);
+                                      dsId, taskId);
             
-            if (!container.addTask(new Task(taskConfig, taskName, taskDs, dsInternal)))
-                throw ConfigException("Failed to add task. Task with name '%s' already registered.",
-                                      taskName);
+            if (!container.addTask(new Task(taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal)))
+                throw ConfigException("Failed to add task. Task with id '%s' already registered.",
+                                      taskId);
         }
         catch (ConfigException& exc)
         {
@@ -155,6 +156,7 @@ TaskProcessor::~TaskProcessor()
     this->Stop();
 
     if (dsInternalName) delete dsInternalName;
+    if (taskTablesPrefix) delete taskTablesPrefix;
 }
 void TaskProcessor::Start()
 {
@@ -209,10 +211,13 @@ int TaskProcessor::Execute()
 
 void TaskProcessor::MainLoop()
 {
-    logger.info("Entering MainLoop");
+    //logger.info("Entering MainLoop");
     TaskGuard taskGuard = container.getNextTask(); 
     Task* task = taskGuard.get();
     if (!task) return;
+    
+    //printf("Executing task '%s'\t priority=%d\n", 
+    //       task->getId().c_str(), task->getPriority());
     
     Message message;
     Connection* connection = dsInternal->getConnection();
