@@ -905,7 +905,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(PduReplaceSm* pdu, bool sync)
 void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 {
 	__require__(fixture->pduReg);
-	TCSelector s(num, 9);
+	TCSelector s(num, 8);
 	__decl_tc__;
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxValidPeriod);
@@ -936,6 +936,13 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 				replacePdu->get_message().get_scheduleDeliveryTime(), replacePduData->sendTime);
 			time_t validTime = SmppUtil::getValidTime(
 				replacePdu->get_message().get_validityPeriod(), replacePduData->sendTime);
+			bool udhi = replacePdu->get_message().get_esmClass() & ESM_CLASS_UDHI_INDICATOR;
+			uint8_t dc = replacePdu->get_message().get_dataCoding();
+			if (fixture->smeInfo.forceDC)
+			{
+				bool res = SmppUtil::extractDataCoding(dc, dc);
+				__require__(res);
+			}
 			switch (s.value())
 			{
 				case 1: //ничего особенного
@@ -984,15 +991,19 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 					}
 					break;
 				case 6: //пустое тело сообщения
-					__tc__("replaceSm.correct.smLengthMarginal");
-					pdu->set_shortMessage(NULL, 0);
-					//pdu->set_shortMessage("", 0);
+					if (!udhi)
+					{
+						__tc__("replaceSm.correct.smLengthMarginal");
+						pdu->set_shortMessage(NULL, 0);
+						//pdu->set_shortMessage("", 0);
+					}
 					break;
 				case 7: //тело сообщения максимальной длины
 					{
 						__tc__("replaceSm.correct.smLengthMarginal");
-						auto_ptr<char> msg = rand_char(MAX_SMPP_SM_LENGTH);
-						pdu->set_shortMessage(msg.get(), MAX_SMPP_SM_LENGTH);
+						int len = MAX_SMPP_SM_LENGTH;
+						auto_ptr<char> tmp = rand_text2(len, dc, udhi, false);
+						pdu->set_shortMessage(tmp.get(), len);
 					}
 					break;
 				case 8: //замещение уже ранее замещенного сообщения
@@ -1007,6 +1018,9 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 						}
 					}
 					break;
+				/*
+				//время следующей доставки в этом случае расчитывается не от
+				//schedule_delivery_time, а от нового вычисленного nextTryTime
 				case 9: //замещение существующего сообщения, но находящегося
 					//уже в процессе повторной доставки.
 					{
@@ -1020,6 +1034,7 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 						}
 					}
 					break;
+				*/
 				default:
 					__unreachable__("Invalid num");
 			}
