@@ -65,6 +65,7 @@ static const int DELETED=1030; //Message deleted
 static const int USSDDLGNFOUND=1031; // USSD dialog not found for response (PSSR_RESP)
 static const int USSDMSGTOOLONG=1032; // USSD msg can't be concatenated or truncated
 static const int INCOMPLETECONCATMSG=1033; //not all parts of concatenated message received
+static const int DUPLICATECONCATPART=1034; //duplicate part of concatenated message
 
 static const int MAP_PROVIDER_REASON_BASE=1120;
 static const int MAP_ABNORMAL_DIALOGUE = 1120;
