@@ -8,6 +8,9 @@
 #include <db/DataSource.h>
 #include <db/DataSourceLoader.h>
 
+#include <exception>
+using std::exception;
+
 int main(void) 
 {
     using namespace smsc::db;
@@ -91,7 +94,7 @@ int main(void)
             if (config) delete config;
         }
     } 
-    catch (Exception& exc) 
+    catch (exception& exc) 
     {
         printf("Exception : %s\n", exc.what());
         return -1;
