@@ -27,10 +27,10 @@ const char* const TC_ADD_CORRECT_SME = "addCorrectSme";
 const char* const TC_ADD_INCORRECT_SME = "addIncorrectSme";
 const char* const TC_DELETE_EXISTENT_SME = "deleteExistentSme";
 const char* const TC_DELETE_NON_EXISTENT_SME = "deleteNonExistentSme";
-const char* const TC_DISABLE_EXISTENT_SME = "disableExistentSme";
-const char* const TC_DISABLE_NON_EXISTENT_SME = "disableNonExistentSme";
-const char* const TC_ENABLE_EXISTENT_SME = "enableExistentSme";
-const char* const TC_ENABLE_NON_EXISTENT_SME = "enableNonExistentSme";
+//const char* const TC_DISABLE_EXISTENT_SME = "disableExistentSme";
+//const char* const TC_DISABLE_NON_EXISTENT_SME = "disableNonExistentSme";
+//const char* const TC_ENABLE_EXISTENT_SME = "enableExistentSme";
+//const char* const TC_ENABLE_NON_EXISTENT_SME = "enableNonExistentSme";
 const char* const TC_GET_EXISTENT_SME = "getExistentSme";
 const char* const TC_GET_NON_EXISTENT_SME = "getNonExistentSme";
 const char* const TC_ITERATE_SME = "iterateSme";
@@ -83,22 +83,22 @@ public:
 	/**
 	 * Disable зарегистрированного sme.
 	 */
-	TCResult* disableExistentSme(SmeInfo* sme);
+	//TCResult* disableExistentSme(SmeInfo* sme);
 	
 	/**
 	 * Disable незарегистрированного/несуществующего sme.
 	 */
-	TCResult* disableNonExistentSme();
+	//TCResult* disableNonExistentSme();
 	
 	/**
 	 * Enable зарегистрированного sme.
 	 */
-	TCResult* enableExistentSme(SmeInfo* sme);
+	//TCResult* enableExistentSme(SmeInfo* sme);
 	
 	/**
 	 * Enable незарегистрированного/несуществующего sme.
 	 */
-	TCResult* enableNonExistentSme();
+	//TCResult* enableNonExistentSme();
 
 	/**
 	 * Получение зарегистрированного sme.

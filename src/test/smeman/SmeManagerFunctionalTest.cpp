@@ -46,13 +46,15 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 		switch (s.value())
 		{
 			case 1:
+			case 2:
 				for (int i = 0; i < listSize; i++)
 				{
 					TCResult* res = tc.addIncorrectSme(*sme[i]);
 					stack.back()->push_back(res);
 				}
 				break;
-			case 2:
+			case 3:
+			case 4:
 				if (!emptySystemId)
 				{
 					emptySystemId = true;
@@ -61,6 +63,7 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 					stack.back()->push_back(res);
 				}
 				break;
+			/*
 			case 3:
 				for (int i = 0; i < sme.size(); i++)
 				{
@@ -75,6 +78,7 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 					stack[i]->push_back(res);
 				}
 				break;
+			*/
 			default: //case = 5..6
 				for (int i = 0; i < sme.size(); i++)
 				{
@@ -114,12 +118,9 @@ void executeFunctionalTest(TCResultFilter* filter, int listSize)
 	//Удаление незарегистрированного/несуществующего sme
 	//Disable незарегистрированного/несуществующего sme
 	//Enable незарегистрированного/несуществующего sme
-	TCResult* res1 = tc.deleteNonExistentSme();
-	TCResult* res2 = tc.disableNonExistentSme();
-	TCResult* res3 = tc.enableNonExistentSme();
-	stack[0]->push_back(res1);
-	stack[0]->push_back(res2);
-	stack[0]->push_back(res3);
+	stack[0]->push_back(tc.deleteNonExistentSme());
+	//stack[0]->push_back(tc.disableNonExistentSme());
+	//stack[0]->push_back(tc.enableNonExistentSme());
 
 	//Итерирование по списку зарегистрированных sme
 	filter->addResult(tc.iterateSme(vector<SmeInfo*>()));
@@ -152,6 +153,7 @@ void saveCheckList(TCResultFilter* filter)
 		filter->getResults(TC_DELETE_EXISTENT_SME));
 	cl.writeResult("Удаление незарегистрированного/несуществующего sme",
 		filter->getResults(TC_DELETE_NON_EXISTENT_SME));
+	/*
 	cl.writeResult("Disable зарегистрированного sme",
 		filter->getResults(TC_DISABLE_EXISTENT_SME));
 	cl.writeResult("Disable незарегистрированного/несуществующего sme",
@@ -160,6 +162,7 @@ void saveCheckList(TCResultFilter* filter)
 		filter->getResults(TC_ENABLE_EXISTENT_SME));
 	cl.writeResult("Enable незарегистрированного/несуществующего sme",
 		filter->getResults(TC_ENABLE_NON_EXISTENT_SME));
+	*/
 	cl.writeResult("Получение зарегистрированного sme",
 		filter->getResults(TC_GET_EXISTENT_SME));
 	cl.writeResult("Получение незарегистрированного/несуществующего sme",

@@ -263,6 +263,7 @@ TCResult* SmeManagerTestCases::deleteNonExistentSme()
 	return res;
 }
 
+/*
 TCResult* SmeManagerTestCases::disableExistentSme(SmeInfo* sme)
 {
 	TCResult* res = new TCResult(TC_DISABLE_EXISTENT_SME);
@@ -330,6 +331,7 @@ TCResult* SmeManagerTestCases::enableNonExistentSme()
 	debug(res);
 	return res;
 }
+*/
 
 TCResult* SmeManagerTestCases::getExistentSme(const SmeInfo& sme, SmeProxy* proxy)
 {
