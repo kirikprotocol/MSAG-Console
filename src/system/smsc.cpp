@@ -726,7 +726,9 @@ void Smsc::run()
     Event mapiostarted;
     MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN);
     tp.startTask(mapio);
+    __trace2__("wait for SMPP acceptor to start:%p",&accstarted);
     accstarted.Wait();
+    __trace2__("wait for MAPIO to start:%p",&mapiostarted);
     mapiostarted.Wait();
     if(!acc->isStarted()||!mapio->isStarted())
     {
