@@ -342,8 +342,8 @@ static void appSignalHandler(int sig)
 // added by igork
 void atExitHandler(void)
 {
-	sigsend(P_PID, getppid(), SIGCHLD);
-	smsc::util::xml::TerminateXerces();
+    sigsend(P_PID, getppid(), SIGCHLD);
+    smsc::util::xml::TerminateXerces();
 }
 
 
@@ -402,9 +402,10 @@ int main(void)
                 listener.setTrans(session.getSyncTransmitter());
                 bDBSmeIsConnected = true;
             }
-            catch (Exception& exc)
+            catch (exception& exc)
             {
-                printf("Connect failed.\n");
+                const char* msg = exc.what(); 
+                printf("Connect failed. Cause: %s\n", (msg) ? msg:"unknown");
                 bDBSmeIsConnected = false;
                 sleep(cfg.timeOut);
                 continue;
@@ -423,9 +424,9 @@ int main(void)
             printf("Disconnecting from SMSC ...\n");
         };
     }
-    catch (Exception& exc) 
+    catch (exception& exc) 
     {
-        printf("Exception : %s\n", exc.what());
+        printf("Top level exception : %s\n", exc.what());
         return -1;
     }
     return 0;
