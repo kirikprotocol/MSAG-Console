@@ -19,6 +19,9 @@ namespace smsc { namespace store
         virtual void remove(SMSId id) 
             throw(StorageException, NoSuchMessageException) = 0;
 
+        virtual void replace(SMSId id, const SMS &sms) 
+            throw(StorageException, NoSuchMessageException) = 0;
+
     protected:
         
         MessageStore() {};

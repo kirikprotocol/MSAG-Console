@@ -81,7 +81,6 @@ ConnectionPool::ConnectionPool(Manager& config)
     throw(ConfigException, ConnectionFailedException) 
         : log(Logger::getCategory("smsc.store.ConnectionPool"))
 {
-    
     loadMaxSize(config);
     loadInitSize(config);
     loadDBInstance(config);
@@ -194,7 +193,10 @@ void ConnectionPool::freeConnection(Connection* connection)
             dead.Delete(i);
             delete connection;
             count--;
-            monitor.notify();
+            if (count < size) 
+            {
+                monitor.notify();
+            }
             return;
         }
     }
@@ -234,30 +236,19 @@ void ConnectionPool::setSize(unsigned new_size)
         }
     }
 
-    size = new_size;
-    monitor.notify();
+    if (count < (size = new_size))
+    {
+        monitor.notify();
+    }
 }
 
 /* ----------------------------- ConnectionPool ------------------------ */
 
 /* ------------------------------- Connection -------------------------- */
 
-text* Connection::sqlGetMessagesCount = (text *)
-"SELECT NVL(MAX(ID), 0) FROM SMS_MSG";
- 
-text* Connection::sqlStoreInsert = (text *)
-"INSERT INTO SMS_MSG VALUES (:ID, :ST, :MR, :RM,\
- :OA_LEN, :OA_TON, :OA_NPI, :OA_VAL, :DA_LEN, :DA_TON, :DA_NPI, :DA_VAL,\
- :VALID_TIME, :WAIT_TIME, :SUBMIT_TIME, :DELIVERY_TIME,\
- :SRR, :RD, :PRI, :PID, :FCS, :DCS, :UDHI, :UDL, :UD)";
-
-text* Connection::sqlRetriveAll = (text *)
-"SELECT ST, MR, RM, OA_LEN, OA_TON, OA_NPI, OA_VAL, DA_LEN, DA_TON,\
- DA_NPI, DA_VAL, VALID_TIME, WAIT_TIME, SUBMIT_TIME, DELIVERY_TIME,\
- SRR, RD, PRI, PID, FCS, DCS, UDHI, UDL, UD FROM SMS_MSG WHERE ID=:ID";
-
-text* Connection::sqlRemove = (text *)
-"DELETE FROM SMS_MSG WHERE ID=:ID";
+/*text* Connection::sqlUpdatePart = (text *)
+"UPDATE SMS_MSG SET \
+ ST=:ST, DELIVERY_TIME=:DELIVERY_TIME, FCS=:FCS WHERE ID=:ID";*/
 
 Connection::Connection(ConnectionPool* pool) 
     throw(ConnectionFailedException) 
@@ -303,175 +294,17 @@ Connection::Connection(ConnectionPool* pool)
     checkConnErr(OCIAttrSet((dvoid *)svchp, (ub4) OCI_HTYPE_SVCCTX,
                             (dvoid *)sesshp, (ub4) 0,
                             (ub4) OCI_ATTR_SESSION, errhp));
-
-    // create & prepare statement for select max(id)
-    checkConnErr(stmtGetMessagesCount.
-                 create(envhp, svchp, errhp, sqlGetMessagesCount));
-    checkConnErr(stmtGetMessagesCount.
-                 define(1, SQLT_UIN, (dvoid *) &(smsId), 
-                        (sb4) sizeof(smsId), errhp));
-
-    // create & prepare statement for insertion
-    checkConnErr(stmtStoreInsert.
-                 create(envhp, svchp, errhp, sqlStoreInsert));
-    checkConnErr(stmtStoreInsert.
-                 bind(1 , SQLT_UIN, (dvoid *) &smsId, 
-                      (sb4) sizeof(smsId), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(2 , SQLT_UIN, (dvoid *) &(uState), 
-                      (sb4) sizeof(uState), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(3 , SQLT_UIN, (dvoid *) &(sms.messageReference), 
-                      (sb4) sizeof(sms.messageReference), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(4 , SQLT_UIN, (dvoid *) &(sms.messageIdentifier), 
-                      (sb4) sizeof(sms.messageIdentifier), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(5 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.lenght), 
-                      (sb4) sizeof(sms.originatingAddress.lenght), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(6 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.type), 
-                      (sb4) sizeof(sms.originatingAddress.type), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(7 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.plan), 
-                      (sb4) sizeof(sms.originatingAddress.plan), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(8 , SQLT_STR, (dvoid *) (sms.originatingAddress.value), 
-                      (sb4) sizeof(sms.originatingAddress.value), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(9 , SQLT_UIN, (dvoid *) &(sms.destinationAddress.lenght), 
-                      (sb4) sizeof(sms.destinationAddress.lenght), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(10, SQLT_UIN, (dvoid *) &(sms.destinationAddress.type), 
-                      (sb4) sizeof(sms.destinationAddress.type), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(11, SQLT_UIN, (dvoid *) &(sms.destinationAddress.plan), 
-                      (sb4) sizeof(sms.destinationAddress.plan), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(12, SQLT_STR, (dvoid *) (sms.destinationAddress.value), 
-                      (sb4) sizeof(sms.destinationAddress.value), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(13, SQLT_ODT, (dvoid *) &(validTime), 
-                      (sb4) sizeof(validTime), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(14, SQLT_ODT, (dvoid *) &(waitTime), 
-                      (sb4) sizeof(waitTime), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(15, SQLT_ODT, (dvoid *) &(submitTime), 
-                      (sb4) sizeof(submitTime), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(16, SQLT_ODT, (dvoid *) &(deliveryTime), 
-                      (sb4) sizeof(deliveryTime), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(17, SQLT_AFC, (dvoid *) &(bStatusReport), 
-                      (sb4) sizeof(bStatusReport), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(18, SQLT_AFC, (dvoid *) &(bRejectDuplicates), 
-                      (sb4) sizeof(bRejectDuplicates), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(19, SQLT_UIN, (dvoid *) &(sms.priority), 
-                      (sb4) sizeof(sms.priority), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(20, SQLT_UIN, (dvoid *) &(sms.protocolIdentifier), 
-                      (sb4) sizeof(sms.protocolIdentifier), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(21, SQLT_UIN, (dvoid *) &(sms.failureCause), 
-                      (sb4) sizeof(sms.failureCause), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(22, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme), 
-                      (sb4) sizeof(sms.messageBody.scheme), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(23, SQLT_AFC, (dvoid *) &(bHeaderIndicator), 
-                      (sb4) sizeof(bHeaderIndicator), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(24, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght), 
-                      (sb4) sizeof(sms.messageBody.lenght), errhp));
-    checkConnErr(stmtStoreInsert.
-                 bind(25, SQLT_BIN, (dvoid *) (sms.messageBody.data), 
-                      (sb4) sizeof(sms.messageBody.data), errhp));
-    
-    // create & prepare statement for retriving
-    checkConnErr(stmtRetriveAll.
-                 create(envhp, svchp, errhp, sqlRetriveAll));
-    checkConnErr(stmtRetriveAll.
-                 define(1 , SQLT_UIN, (dvoid *) &(uState),
-                        (sb4) sizeof(uState), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(2 , SQLT_UIN, (dvoid *) &(sms.messageReference),
-                        (sb4) sizeof(sms.messageReference), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(3 , SQLT_UIN, (dvoid *) &(sms.messageIdentifier),
-                        (sb4) sizeof(sms.messageIdentifier), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(4 , SQLT_UIN, (dvoid *)&(sms.originatingAddress.lenght),
-                        (sb4) sizeof(sms.originatingAddress.lenght), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(5 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.type),
-                        (sb4) sizeof(sms.originatingAddress.type), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(6 , SQLT_UIN, (dvoid *) &(sms.originatingAddress.plan),
-                        (sb4) sizeof(sms.originatingAddress.plan), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(7 , SQLT_STR, (dvoid *) (sms.originatingAddress.value),
-                        (sb4) sizeof(sms.originatingAddress.value), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(8 , SQLT_UIN, (dvoid *)&(sms.destinationAddress.lenght),
-                        (sb4) sizeof(sms.destinationAddress.lenght), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(9 , SQLT_UIN, (dvoid *) &(sms.destinationAddress.type),
-                        (sb4) sizeof(sms.destinationAddress.type), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(10, SQLT_UIN, (dvoid *) &(sms.destinationAddress.plan),
-                        (sb4) sizeof(sms.destinationAddress.plan), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(11, SQLT_STR, (dvoid *) (sms.destinationAddress.value),
-                        (sb4) sizeof(sms.destinationAddress.value), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(12, SQLT_ODT, (dvoid *) &(validTime),
-                        (sb4) sizeof(validTime), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(13, SQLT_ODT, (dvoid *) &(waitTime),
-                        (sb4) sizeof(waitTime), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(14, SQLT_ODT, (dvoid *) &(submitTime),
-                        (sb4) sizeof(submitTime), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(15, SQLT_ODT, (dvoid *) &(deliveryTime),
-                        (sb4) sizeof(deliveryTime), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(16, SQLT_AFC, (dvoid *) &(bStatusReport),
-                        (sb4) sizeof(bStatusReport), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(17, SQLT_AFC, (dvoid *) &(bRejectDuplicates),
-                        (sb4) sizeof(bRejectDuplicates), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(18, SQLT_UIN, (dvoid *) &(sms.priority),
-                        (sb4) sizeof(sms.priority), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(19, SQLT_UIN, (dvoid *) &(sms.protocolIdentifier),
-                        (sb4) sizeof(sms.protocolIdentifier), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(20, SQLT_UIN, (dvoid *) &(sms.failureCause),
-                        (sb4) sizeof(sms.failureCause), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(21, SQLT_UIN, (dvoid *) &(sms.messageBody.scheme),
-                        (sb4) sizeof(sms.messageBody.scheme), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(22, SQLT_AFC, (dvoid *) &(bHeaderIndicator),
-                        (sb4) sizeof(bHeaderIndicator), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(23, SQLT_UIN, (dvoid *) &(sms.messageBody.lenght),
-                        (sb4) sizeof(sms.messageBody.lenght), errhp));
-    checkConnErr(stmtRetriveAll.
-                 define(24, SQLT_BIN, (dvoid *) (sms.messageBody.data),
-                        (sb4) sizeof(sms.messageBody.data), errhp));
-    checkConnErr(stmtRetriveAll.
-                 bind(1, SQLT_UIN, (dvoid *) &(smsId),
-                      (sb4) sizeof(smsId), errhp));
-    
-    // create & prepare statement for removing
-    checkConnErr(stmtRemove.
-                 create(envhp, svchp, errhp, sqlRemove));
+    try
+    {
+        StoreStmt = new StoreStatement(this);
+        RemoveStmt = new RemoveStatement(this);
+        RetriveStmt = new RetriveStatement(this);
+        ReplaceStmt = new ReplaceStatement(this);
+    }
+    catch (StorageException& exc) 
+    {
+        throw ConnectionFailedException(exc);
+    }
 }
 
 Connection::~Connection()
@@ -479,6 +312,10 @@ Connection::~Connection()
     MutexGuard  guard(mutex);
 
     __require__(envhp && errhp && svchp);
+    
+    if (StoreStmt) delete StoreStmt;
+    if (RemoveStmt) delete RemoveStmt;
+    if (RetriveStmt) delete RetriveStmt;
     
     // logoff from database server
     (void) OCILogoff(svchp, errhp);
@@ -492,52 +329,25 @@ SMSId Connection::getMessagesCount()
 {
     MutexGuard  guard(mutex);
 
-    checkConnErr(stmtGetMessagesCount.execute(errhp, OCI_DEFAULT));
-    return smsId;
+    SMSId   maxId;
+    GetMaxIdStatement*  GetMaxIdStmt = new GetMaxIdStatement(this);
+    checkConnErr(GetMaxIdStmt->execute(OCI_DEFAULT));
+    maxId = GetMaxIdStmt->getMaxSMSId();
+    delete GetMaxIdStmt;
+    return maxId;
 }
 
-void Connection::store(const SMS &_sms, SMSId id) 
+void Connection::store(const SMS &sms, SMSId id) 
     throw(StorageException)
 {
     MutexGuard  guard(mutex);
 
-    smsId = id;
-    sms = _sms;
-    
-    tm* dt;
+    StoreStmt->setSMS(sms);
+    StoreStmt->setSMSId(id);
 
-    dt = localtime(&(sms.validTime));
-    OCIDateSetDate(&validTime, (sb2)(1900+dt->tm_year), 
-                   (ub1)(1+dt->tm_mon), (ub1)(dt->tm_mday));
-    OCIDateSetTime(&validTime, (ub1)(dt->tm_hour), 
-                   (ub1)(dt->tm_min), (ub1)(dt->tm_sec));
-    
-    dt = localtime(&(sms.waitTime));
-    OCIDateSetDate(&waitTime, (sb2)(1900+dt->tm_year), 
-                   (ub1)(1+dt->tm_mon), (ub1)(dt->tm_mday));
-    OCIDateSetTime(&waitTime, (ub1)(dt->tm_hour), 
-                   (ub1)(dt->tm_min), (ub1)(dt->tm_sec));
-    
-    dt = localtime(&(sms.submitTime));
-    OCIDateSetDate(&submitTime, (sb2)(1900+dt->tm_year), 
-                   (ub1)(1+dt->tm_mon), (ub1)(dt->tm_mday));
-    OCIDateSetTime(&submitTime, (ub1)(dt->tm_hour), 
-                   (ub1)(dt->tm_min), (ub1)(dt->tm_sec));
-    
-    dt = localtime(&(sms.deliveryTime));
-    OCIDateSetDate(&deliveryTime, (sb2)(1900+dt->tm_year), 
-                   (ub1)(1+dt->tm_mon), (ub1)(dt->tm_mday));
-    OCIDateSetTime(&deliveryTime, (ub1)(dt->tm_hour), 
-                   (ub1)(dt->tm_min), (ub1)(dt->tm_sec));
-    
-    bStatusReport = sms.statusReportRequested ? 'Y':'N';
-    bRejectDuplicates = sms.rejectDuplicates ? 'Y':'N';
-    bHeaderIndicator = sms.messageBody.header ? 'Y':'N';
-    uState = (uint8_t) sms.state;
-    
     try 
     {
-        checkErr(stmtStoreInsert.execute(errhp, OCI_DEFAULT));
+        checkErr(StoreStmt->execute(OCI_DEFAULT/*OCI_COMMIT_ON_SUCCESS*/));
         checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
     } 
     catch (StorageException& exc) 
@@ -547,55 +357,25 @@ void Connection::store(const SMS &_sms, SMSId id)
     }
 }
 
-void Connection::retrive(SMSId id, SMS &_sms) 
+void Connection::retrive(SMSId id, SMS &sms) 
     throw(StorageException, NoSuchMessageException)
 {
     MutexGuard  guard(mutex);
 
-    smsId = id;
-    sword status;
-    if ((status = stmtRetriveAll.execute(errhp, OCI_DEFAULT)) == OCI_NO_DATA)
+    RetriveStmt->setSMSId(id);
+    
+    sword status = RetriveStmt->execute(OCI_DEFAULT);
+    if ((status) == OCI_NO_DATA)
     {
-        NoSuchMessageException  exc(id);
+        NoSuchMessageException exc(id);
         log.error("Storage Exception : %s\n", exc.what());
         throw exc;
     }
-    checkErr(status);
-    
-    sms.state = (State) uState;
-    sms.statusReportRequested = (bStatusReport == 'Y');
-    sms.rejectDuplicates = (bRejectDuplicates == 'Y');
-    sms.messageBody.header = (bHeaderIndicator == 'Y');
-    
-    tm  dt;
-    sb2 year;
-    ub1 mon, mday, hour, min, sec;
-
-    OCIDateGetTime(&deliveryTime, (ub1 *) &hour, (ub1 *) &min, (ub1 *) &sec);
-    OCIDateGetDate(&deliveryTime, (sb2 *) &year, (ub1 *) &mon, (ub1 *) &mday);
-    dt.tm_year = year - 1900; dt.tm_mon = mon - 1; dt.tm_mday = mday;
-    dt.tm_hour = hour; dt.tm_min = min; dt.tm_sec = sec;
-    sms.deliveryTime = mktime(&dt);
-
-    OCIDateGetTime(&submitTime, (ub1 *) &hour, (ub1 *) &min, (ub1 *) &sec);
-    OCIDateGetDate(&submitTime, (sb2 *) &year, (ub1 *) &mon, (ub1 *) &mday);
-    dt.tm_year = year - 1900; dt.tm_mon = mon - 1; dt.tm_mday = mday;
-    dt.tm_hour = hour; dt.tm_min = min; dt.tm_sec = sec;
-    sms.submitTime = mktime(&dt);
-
-    OCIDateGetTime(&waitTime, (ub1 *) &hour, (ub1 *) &min, (ub1 *) &sec);
-    OCIDateGetDate(&waitTime, (sb2 *) &year, (ub1 *) &mon, (ub1 *) &mday);
-    dt.tm_year = year - 1900; dt.tm_mon = mon - 1; dt.tm_mday = mday;
-    dt.tm_hour = hour; dt.tm_min = min; dt.tm_sec = sec;
-    sms.waitTime = mktime(&dt);
-
-    OCIDateGetTime(&validTime, (ub1 *) &hour, (ub1 *) &min, (ub1 *) &sec);
-    OCIDateGetDate(&validTime, (sb2 *) &year, (ub1 *) &mon, (ub1 *) &mday);
-    dt.tm_year = year - 1900; dt.tm_mon = mon - 1; dt.tm_mday = mday;
-    dt.tm_hour = hour; dt.tm_min = min; dt.tm_sec = sec;
-    sms.validTime = mktime(&dt);
-    
-    _sms = sms;
+    else 
+    {
+        checkErr(status);
+        RetriveStmt->getSMS(sms);
+    }
 }
 
 void Connection::remove(SMSId id) 
@@ -603,21 +383,46 @@ void Connection::remove(SMSId id)
 {
     MutexGuard  guard(mutex);
     
-    checkErr(stmtRemove.bind(1, SQLT_UIN, (dvoid *) &(id),
-                             (sb4) sizeof(id), errhp)); 
-    SMSId rows = 0;
-    checkErr(stmtRemove.define(1, SQLT_UIN, (dvoid *) &(rows),
-                               (sb4) sizeof(rows), errhp));
-    
-    checkErr(stmtRemove.execute(errhp, OCI_DEFAULT));
-    if (!rows) 
+    RemoveStmt->setSMSId(id);
+
+    checkErr(RemoveStmt->execute(OCI_DEFAULT/*OCI_COMMIT_ON_SUCCESS*/));
+    if (!RemoveStmt->wasRemoved()) 
     {
-        NoSuchMessageException  exc(id);
+        NoSuchMessageException exc(id);
         log.error("Storage Exception : %s\n", exc.what());
         throw exc;
     }
     checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
 }
+
+void Connection::replace(SMSId id, const SMS &sms) 
+    throw(StorageException)
+{
+    MutexGuard  guard(mutex);
+    
+    ReplaceStmt->setSMS(sms);
+    ReplaceStmt->setSMSId(id);
+
+    try 
+    {
+        checkErr(ReplaceStmt->execute(OCI_DEFAULT/*OCI_COMMIT_ON_SUCCESS*/));
+    }
+    catch (StorageException& exc) 
+    {
+        checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
+        throw exc;
+    }
+
+    if (!ReplaceStmt->wasReplaced())
+    {
+        checkErr(OCITransRollback(svchp, errhp, OCI_DEFAULT));
+        NoSuchMessageException exc(id);
+        log.error("Storage Exception : %s\n", exc.what());
+        throw exc;
+    }
+    checkErr(OCITransCommit(svchp, errhp, OCI_DEFAULT));
+}
+
 
 void Connection::checkConnErr(sword status) 
     throw(ConnectionFailedException)
@@ -678,7 +483,7 @@ void Connection::checkErr(sword status)
     __require__(owner);
     owner->killConnection(this);
 
-    StorageException    exc((const char *)errbuf, (int)status);
+    StorageException exc((const char *)errbuf, (int)status);
     log.error("Storage Exception : %s\n", exc.what());
     throw exc;
 }

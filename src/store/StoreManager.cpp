@@ -196,6 +196,44 @@ void StoreManager::remove(SMSId id)
     }
 }
 
+void StoreManager::replace(SMSId id, const SMS &sms)
+    throw(StorageException, NoSuchMessageException)
+{
+    __require__(pool);
+    
+    for (int iteration=1; iteration<=maxTriesCount; iteration++)
+    {
+        Connection* connection = 0L;
+        try 
+        {
+            connection = pool->getConnection();
+            connection->replace(id, sms);
+            pool->freeConnection(connection);
+            break;
+        } 
+        catch (ConnectionFailedException& exc) 
+        {
+            if (connection) pool->freeConnection(connection);
+            throw;
+        }
+        catch (NoSuchMessageException& exc) 
+        {
+            if (connection) pool->freeConnection(connection);
+            throw;
+        }
+        catch (StorageException& exc) 
+        {
+            if (connection) pool->freeConnection(connection);
+            if (iteration >= maxTriesCount) 
+            {
+                log.warn("Max tries count to update message "
+                         "#%d exceeded !\n", id);
+                throw;
+            }
+        }
+    }
+}
+
 /* ----------------------------- StoreManager -------------------------- */
 
 }}

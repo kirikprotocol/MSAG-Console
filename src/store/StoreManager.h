@@ -104,6 +104,8 @@ namespace smsc { namespace store
             throw(StorageException, NoSuchMessageException);
         virtual void remove(SMSId id) 
             throw(StorageException, NoSuchMessageException);
+        virtual void replace(SMSId id, const SMS &sms) 
+            throw(StorageException, NoSuchMessageException);
     };
 
 }}

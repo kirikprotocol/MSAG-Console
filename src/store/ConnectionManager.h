@@ -10,10 +10,8 @@
 #include <util/Logger.h>
 #include <sms/sms.h>
 
-#include "StoreConfig.h"
 #include "StoreExceptions.h"
 #include "Statement.h"
-
 
 namespace smsc { namespace store 
 {
@@ -24,7 +22,7 @@ namespace smsc { namespace store
 
     using namespace smsc::core::synchronization;
     
-    struct Connection;
+    class Connection;
     class ConnectionPool
     {
     private:
@@ -101,15 +99,11 @@ namespace smsc { namespace store
 
     class Connection
     {
+    friend class Statement;
     protected:
         
         log4cpp::Category    &log;
 
-        static text*    sqlGetMessagesCount;
-        static text*    sqlStoreInsert;
-        static text*    sqlRetriveAll;
-        static text*    sqlRemove;
-        
         ConnectionPool* owner;
 
         OCIEnv*         envhp;  // OCI envirounment handle
@@ -118,25 +112,11 @@ namespace smsc { namespace store
         OCIError*       errhp;  // OCI error handle
         OCISession*     sesshp; // OCI session handle
         
-        // OCI prepared statements
-        Statement       stmtGetMessagesCount;
-        Statement       stmtStoreInsert;
-        Statement       stmtRetriveAll;
-        Statement       stmtRemove;
-        
-        SMS             sms;
-        SMSId           smsId;
-        
-        OCIDate         waitTime;
-        OCIDate         validTime;
-        OCIDate         submitTime;
-        OCIDate         deliveryTime;
-        
-        uint8_t         uState;
-        char            bStatusReport;
-        char            bRejectDuplicates;
-        char            bHeaderIndicator;
-        
+        StoreStatement*     StoreStmt;
+        RemoveStatement*    RemoveStmt;
+        RetriveStatement*   RetriveStmt;
+        ReplaceStatement*   ReplaceStmt;
+
         Mutex           mutex;
         
         void checkConnErr(sword status) 
@@ -160,6 +140,8 @@ namespace smsc { namespace store
             throw(StorageException, NoSuchMessageException);
         void remove(SMSId id) 
             throw(StorageException, NoSuchMessageException);
+        void replace(SMSId id, const SMS &sms) 
+            throw(StorageException);
     };
     
 }}
