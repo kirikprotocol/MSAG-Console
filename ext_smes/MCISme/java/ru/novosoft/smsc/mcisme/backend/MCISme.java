@@ -13,11 +13,11 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
  */
 public class MCISme extends MCISmeTransport
 {
-  public MCISme(ServiceInfo info) throws AdminException {
-    super(info);
+  public MCISme(final ServiceInfo info, final int port) throws AdminException {
+    super(info, port);
   }
 
-  public void updateInfo(SMSCAppContext appContext) throws AdminException {
+  public void updateInfo(final SMSCAppContext appContext) throws AdminException {
     setInfo(appContext.getHostsManager().getServiceInfo(getInfo().getId()));
   }
 }

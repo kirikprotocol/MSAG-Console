@@ -2,61 +2,57 @@ package ru.novosoft.smsc.mcisme.backend;
 
 import org.apache.log4j.Category;
 import org.xml.sax.SAXException;
-
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Properties;
-import java.io.IOException;
-import java.io.File;
-
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.util.conpool.NSConnectionPool;
 
-import javax.xml.parsers.ParserConfigurationException;
 import javax.sql.DataSource;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+
 
 /**
- * Created by IntelliJ IDEA.
- * User: makar
- * Date: 02.04.2004
- * Time: 16:19:19
- * To change this template use Options | File Templates.
+ * Created by IntelliJ IDEA. User: makar Date: 02.04.2004 Time: 16:19:19 To change this template use Options | File Templates.
  */
 public class MCISmeContext
 {
-  private final static Map instances = new HashMap();
+  private static final Map instances = new HashMap();
   private Category logger = Category.getInstance(this.getClass());
 
-  public static synchronized MCISmeContext getInstance(SMSCAppContext appContext, String smeId)
-      throws AdminException, ParserConfigurationException, IOException, SAXException
+  public static synchronized MCISmeContext getInstance(final SMSCAppContext appContext, final String smeId)
+      throws AdminException, ParserConfigurationException, IOException, SAXException, Config.WrongParamTypeException, Config.ParamNotFoundException
   {
     MCISmeContext instance = (MCISmeContext) instances.get(smeId);
-    if (instance == null) {
+    if (null == instance) {
       instance = new MCISmeContext(appContext, smeId);
       instances.put(smeId, instance);
     }
     return instance;
   }
 
+
   private final SMSCAppContext appContext;
   private Config config = null;
   private MCISme mciSme = null;
 
-  private boolean changedOptions   = false;
-  private boolean changedDrivers   = false;
+  private boolean changedOptions = false;
+  private boolean changedDrivers = false;
   private boolean changedTemplates = false;
+
   private DataSource dataSource = null;
   private String smeId = "MCISme";
 
-  private MCISmeContext(SMSCAppContext appContext, String smeId)
-      throws AdminException, ParserConfigurationException, SAXException, IOException
+
+  private MCISmeContext(final SMSCAppContext appContext, final String smeId)
+      throws AdminException, ParserConfigurationException, SAXException, IOException, Config.WrongParamTypeException, Config.ParamNotFoundException
   {
     this.smeId = smeId;
     this.appContext = appContext;
-    this.mciSme = new MCISme(appContext.getHostsManager().getServiceInfo(this.smeId));
     resetConfig();
+    this.mciSme = new MCISme(appContext.getHostsManager().getServiceInfo(this.smeId), config.getInt("MCISme.Admin.port"));
   }
 
   public Config loadCurrentConfig()
@@ -65,28 +61,29 @@ public class MCISmeContext
     return new Config(new File(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder(),
                                "conf" + File.separatorChar + "config.xml"));
   }
+
   public void resetConfig()
       throws AdminException, SAXException, ParserConfigurationException, IOException
   {
-    Config newConfig = loadCurrentConfig();
+    final Config newConfig = loadCurrentConfig();
     reloadDataSource(config, newConfig);
     config = newConfig;
   }
+
   public Config getConfig() {
     return config;
   }
 
-  public void reloadDataSource(Config oldConfig, Config newConfig)
+  public void reloadDataSource(final Config oldConfig, final Config newConfig)
   {
     try {
-      if (oldConfig == null
-              || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.jdbc.source")
-              || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.jdbc.driver")
-              || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.dbUserName")
-              || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.dbUserPassword") )
-      {
+      if (null == oldConfig
+          || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.jdbc.source")
+          || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.jdbc.driver")
+          || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.dbUserName")
+          || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.dbUserPassword")) {
         dataSource = null;
-        Properties properties = new Properties();
+        final Properties properties = new Properties();
         properties.setProperty("jdbc.source", newConfig.getString("MCISme.DataSource.jdbc.source"));
         properties.setProperty("jdbc.driver", newConfig.getString("MCISme.DataSource.jdbc.driver"));
         properties.setProperty("jdbc.user", newConfig.getString("MCISme.DataSource.dbUserName"));
@@ -105,24 +102,29 @@ public class MCISmeContext
   public boolean isChangedOptions() {
     return changedOptions;
   }
-  public void setChangedOptions(boolean changedOptions) {
+
+  public void setChangedOptions(final boolean changedOptions) {
     this.changedOptions = changedOptions;
   }
+
   public boolean isChangedDrivers() {
     return changedDrivers;
   }
-  public void setChangedDrivers(boolean changedDrivers) {
+
+  public void setChangedDrivers(final boolean changedDrivers) {
     this.changedDrivers = changedDrivers;
   }
+
   public boolean isChangedTemplates() {
     return changedTemplates;
   }
-  public void setChangedTemplates(boolean changedTemplates) {
+
+  public void setChangedTemplates(final boolean changedTemplates) {
     this.changedTemplates = changedTemplates;
   }
 
   public DataSource getDataSource() {
     return dataSource;
   }
-
 }
+
