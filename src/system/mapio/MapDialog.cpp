@@ -20,8 +20,8 @@ struct MicroString{
 
 extern unsigned char lll_7bit_2_8bit[128];
 
-
 inline char GetChar(const char*& ptr,unsigned& shift){
+  __trace2__("MAP: 7bit: shift %d *ptr 0x%x",shift,(unsigned char)*ptr);
   char val = (*ptr >> shift)&0x7f;
   if ( shift > 1 )
     val |= (*(ptr+1) << (8-shift))&0x7f;
