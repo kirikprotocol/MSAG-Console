@@ -94,7 +94,7 @@ class MapDialogContainer{
   static MapDialogContainer* container;
   static Mutex sync_object;
   MapProxy proxy;
-  XHash<ET96MAP_DIALOGUE_ID_T,MapDialogCntItem*,hash_func_ET96MAP_DID> hash;
+  XHash<ET96MAP_DIALOGUE_ID_T,MapDialog*,hash_func_ET96MAP_DID> hash;
   
 public:
   static MapDialogContainer* getInstance(){
