@@ -26,7 +26,7 @@ ostream& operator<< (ostream& os, const TestAliasData& data)
 	os << ", origAlias = " << data.origAlias;
 	os << ", destAddr = " << data.destAddr;
 
-	os << ", alias = " << *data.alias;
+	os << ", alias = {" << *data.alias << "}";
 }
 
 }
