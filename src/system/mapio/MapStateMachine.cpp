@@ -1603,7 +1603,6 @@ USHORT_T Et96MapDelimiterInd(
       SendNextMMS(dialog.get());
       break;
     case MAPST_WaitAlertDelimiter:
-      SendAlertToSMSC(dialog.get(),msisdnAlert_sp);
       ResponseAlertSC(dialog.get());
       CloseMapDialog(dialog->dialogid_map,dialog->ssn);
       DropMapDialog(dialog.get());
@@ -1870,6 +1869,7 @@ USHORT_T Et96MapVxAlertSCInd_Impl(
     switch( dialog->state ){
     case MAPST_WaitSms:
       dialog->invokeId = invokeId;
+      SendAlertToSMSC(dialog.get(),msisdnAlert_sp);
       dialog->state = MAPST_WaitAlertDelimiter;
       break;
     default:
