@@ -522,6 +522,7 @@ int main(void)
         {
             if (isNeedReinit())
             {
+                processor.clean();
                 Manager::reinit();
                 
                 DataSourceLoader::unload();
@@ -529,7 +530,6 @@ int main(void)
                 DataSourceLoader::loadup(&dsConfig);
                 
                 ConfigView cpConfig(Manager::getInstance(), "DBSme");
-                processor.clean();
                 processor.init(&cpConfig);
                 
                 setNeedReinit(false);
