@@ -94,7 +94,8 @@ const string DbSmeSelectJobTestCases::processSelectNullsJobOutput(
 		while (DbSmeTestRecord* r = it->next())
 		{
 			__require__(r->checkId());
-			if (!r->checkDate() && !r->getDefInput()->checkDate())
+			if (!r->checkDate() &&
+				!(r->getDefInput() && r->getDefInput()->checkDate()))
 			{
 				count++;
 				writeSelectJobRecord(os, r, &defOutput, t);
@@ -134,7 +135,8 @@ const string DbSmeSelectJobTestCases::processSelectValuesJobOutput()
 	while (DbSmeTestRecord* r = it->next())
 	{
 		__require__(r->checkId());
-		if (r->checkDate() || r->getDefInput()->checkDate())
+		if (r->checkDate() ||
+			(r->getDefInput() && r->getDefInput()->checkDate()))
 		{
 			count++;
 			writeSelectJobRecord(os, r, &defOutput, 0);
