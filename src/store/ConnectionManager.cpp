@@ -222,6 +222,7 @@ Connection* ConnectionPool::getConnection()
         queueLen++;
         cond_init(&queue.condition,0,0);
         if (!head) head = tail;
+        queue.connection = 0L;
         monitor.wait(&queue.condition);
         cond_destroy(&queue.condition);
         return queue.connection;

@@ -297,8 +297,11 @@ SMSId RemoteStore::createSms(SMS& sms, SMSId id, const CreateMode flag)
         try
         {
             connection = (StorageConnection *)pool->getConnection();
-            retId = doCreateSms(connection, sms, id, flag);
-            pool->freeConnection(connection);
+            if (connection)
+            {
+                retId = doCreateSms(connection, sms, id, flag);
+                pool->freeConnection(connection);
+            }
             break;
         }
         catch (DuplicateMessageException& exc)
@@ -389,8 +392,11 @@ void RemoteStore::retriveSms(SMSId id, SMS &sms)
         try
         {
             connection = (StorageConnection *)pool->getConnection();
-            doRetrieveSms(connection, id, sms);
-            pool->freeConnection(connection);
+            if (connection) 
+            {
+                doRetrieveSms(connection, id, sms);
+                pool->freeConnection(connection);
+            }
             break;
         }
         catch (NoSuchMessageException& exc)
@@ -462,8 +468,11 @@ void RemoteStore::destroySms(SMSId id)
         try
         {
             connection = (StorageConnection *)pool->getConnection();
-            doDestroySms(connection, id);
-            pool->freeConnection(connection);
+            if (connection)
+            {
+                doDestroySms(connection, id);
+                pool->freeConnection(connection);
+            }
             break;
         }
         catch (NoSuchMessageException& exc)
@@ -614,9 +623,12 @@ void RemoteStore::replaceSms(SMSId id, const Address& oa,
         try
         {
             connection = (StorageConnection *)pool->getConnection();
-            doReplaceSms(connection, id, oa, newMsg, newMsgLen,
-                         deliveryReport, validTime, waitTime);
-            pool->freeConnection(connection);
+            if (connection)
+            {
+                doReplaceSms(connection, id, oa, newMsg, newMsgLen,
+                             deliveryReport, validTime, waitTime);
+                pool->freeConnection(connection);
+            }
             break;
         }
         catch (NoSuchMessageException& exc)
@@ -708,9 +720,12 @@ void RemoteStore::changeSmsStateToEnroute(SMSId id,
         try
         {
             connection = (StorageConnection *)pool->getConnection();
-            doChangeSmsStateToEnroute(connection, id, dst,
-                                      failureCause, nextTryTime);
-            pool->freeConnection(connection);
+            if (connection)
+            {
+                doChangeSmsStateToEnroute(connection, id, dst,
+                                          failureCause, nextTryTime);
+                pool->freeConnection(connection);
+            }
             break;
         }
         catch (NoSuchMessageException& exc)
@@ -794,9 +809,12 @@ void RemoteStore::changeSmsStateToDelivered(SMSId id, const Descriptor& dst)
         try
         {
             connection = (StorageConnection *)pool->getConnection();
-            doChangeSmsStateToDelivered(connection, id, dst);
-            StoreManager::incrementFinalizedCount();
-            pool->freeConnection(connection);
+            if (connection)
+            {
+                doChangeSmsStateToDelivered(connection, id, dst);
+                StoreManager::incrementFinalizedCount();
+                pool->freeConnection(connection);
+            }
             break;
         }
         catch (NoSuchMessageException& exc)
@@ -880,10 +898,13 @@ void RemoteStore::changeSmsStateToUndeliverable(SMSId id,
         try
         {
             connection = (StorageConnection *)pool->getConnection();
-            doChangeSmsStateToUndeliverable(connection, id,
-                                            dst,failureCause);
-            StoreManager::incrementFinalizedCount();
-            pool->freeConnection(connection);
+            if (connection)
+            {
+                doChangeSmsStateToUndeliverable(connection, id,
+                                                dst,failureCause);
+                StoreManager::incrementFinalizedCount();
+                pool->freeConnection(connection);
+            }
             break;
         }
         catch (NoSuchMessageException& exc)
@@ -961,9 +982,12 @@ void RemoteStore::changeSmsStateToExpired(SMSId id)
         try
         {
             connection = (StorageConnection *)pool->getConnection();
-            doChangeSmsStateToExpired(connection, id);
-            StoreManager::incrementFinalizedCount();
-            pool->freeConnection(connection);
+            if (connection)
+            {
+                doChangeSmsStateToExpired(connection, id);
+                StoreManager::incrementFinalizedCount();
+                pool->freeConnection(connection);
+            }
             break;
         }
         catch (NoSuchMessageException& exc)
@@ -1041,9 +1065,12 @@ void RemoteStore::changeSmsStateToDeleted(SMSId id)
         try
         {
             connection = (StorageConnection *)pool->getConnection();
-            doChangeSmsStateToDeleted(connection, id);
-            StoreManager::incrementFinalizedCount();
-            pool->freeConnection(connection);
+            if (connection)
+            {
+                doChangeSmsStateToDeleted(connection, id);
+                StoreManager::incrementFinalizedCount();
+                pool->freeConnection(connection);
+            }
             break;
         }
         catch (NoSuchMessageException& exc)
@@ -1089,6 +1116,7 @@ RemoteStore::ReadyIdIterator::ReadyIdIterator(
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
     connection = pool->getConnection();
+    if (!connection) return;
     try
     {
         if (connection && !connection->isAvailable())
@@ -1103,7 +1131,7 @@ RemoteStore::ReadyIdIterator::ReadyIdIterator(
     }
     catch (...)
     {
-        pool->freeConnection(connection);
+        if (connection) pool->freeConnection(connection);
         throw;
     }
 #endif
@@ -1200,6 +1228,7 @@ RemoteStore::DeliveryIdIterator::DeliveryIdIterator(
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
     connection = pool->getConnection();
+    if (!connection) return;
     try
     {
         if (connection && !connection->isAvailable()) 
@@ -1261,6 +1290,7 @@ RemoteStore::CancelIdIterator::CancelIdIterator(StorageConnectionPool* _pool,
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
     connection = pool->getConnection();
+    if (!connection) return;
     try
     {
         if (connection && !connection->isAvailable()) 
