@@ -1343,6 +1343,14 @@ time_t RemoteStore::ReadyIdIterator::getTime()
     }
     return nextTime;
 }
+bool RemoteStore::ReadyIdIterator::getDstSmeId(char* buffer) 
+    throw(StorageException)
+{
+    __require__(buffer);
+    return (!isNull && readyStmt && connection && connection->isAvailable()) ?
+           readyStmt->getDstSmeId(buffer) : false;
+}
+
 
 TimeIdIterator* RemoteStore::getReadyForRetry(time_t retryTime, bool immediate)
     throw(StorageException)

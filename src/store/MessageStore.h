@@ -55,6 +55,8 @@ namespace smsc { namespace store
         virtual ~TimeIdIterator() {};
         virtual time_t getTime()
             throw(StorageException) = 0;
+        virtual bool getDstSmeId(char* buffer) 
+            throw(StorageException) = 0;
     };
 
     /**

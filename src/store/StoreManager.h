@@ -104,6 +104,8 @@ namespace smsc { namespace store
                 throw(StorageException);
             virtual time_t getTime()
                 throw(StorageException);
+            virtual bool getDstSmeId(char* buffer) 
+                throw(StorageException);
         };
 
         class CancelIdIterator : public IdIterator

@@ -505,9 +505,10 @@ namespace smsc { namespace store
     static const char* sql_immediate;
     private:
 
-        OCIDate     rTime, nextTime;
-        sb2         indNextTime;
-        uint32_t    lastResult;
+        OCIDate         rTime, nextTime;
+        sb2             indNextTime, indDstSmeId;
+        uint32_t        lastResult;
+        SmeSystemIdType dstSmeId;
 
     public:
 
@@ -519,6 +520,8 @@ namespace smsc { namespace store
         void bindRetryTime(time_t retryTime)
             throw(StorageException);
         time_t getNextTime()
+            throw(StorageException);
+        bool getDstSmeId(char* buffer) 
             throw(StorageException);
     };
 
