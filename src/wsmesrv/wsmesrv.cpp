@@ -33,7 +33,7 @@ static void sighandler( int signal ) {
   Deinit();
 }
 
-void Dump(char* nameUCHAR_T* buf,int len)
+void Dump(char* name,UCHAR_T* buf,int len)
 {
   fprintf(stderr,"%s, len=%d, packet:",name,len);
   for(int i=0;i<len;i++)
