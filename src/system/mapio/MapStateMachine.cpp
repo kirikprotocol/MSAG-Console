@@ -1624,6 +1624,8 @@ USHORT_T Et96MapV2ProcessUnstructuredSSRequestInd(
       sms.setIntProperty(Tag::SMPP_DATA_CODING,(unsigned)MAP_SMSC7BIT_ENCODING);
     }
     Address dest_addr = Address(subsystem.c_str());
+    dest_addr.type = 0;
+    dest_addr.plan = 1;
     unsigned esm_class = 0;
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
     sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,0);
