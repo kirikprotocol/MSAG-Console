@@ -288,6 +288,12 @@ public:
     return RefferGuard<RouteManager>(router_);
   }
 
+  RefferGuard<RouteManager> getTestRouterInstance()
+  {
+    MutexGuard g(routerSwitchMutex);
+    return RefferGuard<RouteManager>(testRouter_);
+  }
+
   RefferGuard<AliasManager> getAliaserInstance()
   {
     MutexGuard g(aliasesSwitchMutex);
@@ -301,6 +307,13 @@ public:
     router_ = new Reffer<RouteManager>(manager);
   }
 
+  void ResetTestRouteManager(RouteManager* manager)
+  {
+    MutexGuard g(routerSwitchMutex);
+    if ( testRouter_ ) testRouter_->Release();
+    testRouter_ = new Reffer<RouteManager>(manager);
+  }
+
   void ResetAliases(AliasManager* manager)
   {
     MutexGuard g(aliasesSwitchMutex);
@@ -309,6 +322,7 @@ public:
   }
 
   void reloadRoutes(const SmscConfigs& cfg);
+  void reloadTestRoutes(const RouteConfig& rcfg);
   void reloadAliases(const SmscConfigs& cfg);
 
   void flushStatistics()
@@ -331,6 +345,7 @@ protected:
   Mutex routerSwitchMutex;
   Mutex aliasesSwitchMutex;
   Reffer<RouteManager>* router_;
+  Reffer<RouteManager>* testRouter_;
   Reffer<AliasManager>* aliaser_;
   EventQueue eventqueue;
   smsc::store::MessageStore *store;

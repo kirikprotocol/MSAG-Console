@@ -81,8 +81,10 @@ class RouteManager : public RouteAdmin, public RouteTable
   RouteRecord* first_record;
   RouteRecord* new_first_record;
   RouteTreeNode  root;
+  vector<string> trace_;
+  bool trace_enabled_;
 public :
-  RouteManager() : sme_table(0),first_record(0),new_first_record(0)
+  RouteManager() : sme_table(0),first_record(0),new_first_record(0),trace_enabled_(false)
   {}
   
   virtual ~RouteManager() 
@@ -121,7 +123,8 @@ public :
   //
   virtual bool lookup(const Address& source, const Address& dest, SmeProxy*& proxy, int* idx=0,RouteInfo* info=0);
   virtual bool lookup(int srcidx, const Address& source, const Address& dest, SmeProxy*& proxy, int* idx=0,RouteInfo* info=0);
-
+  virtual void getTrace(vector<string>&);
+  virtual void enableTrace(bool);
 };
 
 }; // namespace route

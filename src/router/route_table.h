@@ -8,6 +8,10 @@
 
 #include "route_types.h"
 #include "sms/sms.h"
+#include <vector>
+#include <string>
+
+using namespace std;
 
 namespace smsc {
 namespace router {
@@ -29,6 +33,8 @@ public :
 
   //virtual RouteInfo getRouteInfo(int idx) = 0;
   //virtual SmeProxy* getSmeProxy(int idx) = 0;
+  virtual void getTrace(vector<string>&) = 0;
+  virtual void enableTrace(bool) = 0;
 };
 
 }; // namespace route

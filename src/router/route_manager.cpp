@@ -20,6 +20,7 @@
 #include <stdexcept>
 #include <memory>
 #include <algorithm>
+#include <string>
 
 #define __synchronized__
 
@@ -30,6 +31,7 @@ namespace router{
 using std::runtime_error;
 using std::auto_ptr;
 using std::sort;
+using namespace std;
 
 int calcDefLengthAndCheck(Address* addr)
 {
@@ -65,6 +67,14 @@ static inline void print(RouteRecord* record,const char* ppp= "")
   {
     __trace2__("%s=NULL",ppp);
   }
+}
+
+static inline 
+string AddrToString(Address& addr)
+{
+  char buff[128];
+  snprintf(buff,"%d.%d.%s\0",addr.plan,addr.type,addr.value);
+  return string(buff);
 }
 
 inline
@@ -247,7 +257,7 @@ RouteRecord* findInSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* r,int& xcm
 }
 
 static
-RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp )
+RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp,vector<string>* trace_ )
 {
   __trace2__("findInTreeRecurse");
   print(node->record,"\tnode->record");
@@ -256,6 +266,15 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp )
   int cmp = 0;
   if ( !node->record ) goto find_child;
   xcmp = compare_addr_addr_dest(r,node->record,strong);
+  if (trace_)
+  {
+    ostringstream ost;
+    ost << (xcmp?(strong?"strong":"weak  "):"none  ")
+      << " matching with " 
+      << AddrToString(node->record->info.source) << " -> "
+      << AddrToString(node->record->info.dst);
+    trace_->push_back(ost.str());
+  }
   if ( xcmp == 0 )
   {
     if ( !strong )
@@ -274,7 +293,7 @@ RouteRecord* findInTreeRecurse(RouteTreeNode* node,RouteRecord* r,int& xcmp )
       for(;right>=left;)
       {
         int ptr = (right+left) >> 1;
-        rec = findInTreeRecurse(node->child[ptr-1],r,cmp);
+        rec = findInTreeRecurse(node->child[ptr-1],r,cmp,trace_);
         if ( rec ) return rec; // found
         //if ( right > left )
         //{
@@ -306,7 +325,7 @@ find_by_source:
       {
         int ptr = (right+left) >> 1;
         __require__ ( ptr > 0 );
-        rec = findInSrcTreeRecurse(node->sources[ptr-1],r,cmp);
+        rec = findInSrcTreeRecurse(node->sources[ptr-1],r,cmp,trace_);
         if ( rec ) return rec;
         //if ( right > left )
         //{
@@ -328,7 +347,8 @@ find_by_source:
 inline
 RouteRecord* findInTree(RouteTreeNode* node,
                         const Address* source,
-                        const Address* dest)
+                        const Address* dest,
+                        vector<string>* trace_)
 {
   __trace2__("*** findInTree ***");
   int cmp = 0;
@@ -338,7 +358,7 @@ RouteRecord* findInTree(RouteTreeNode* node,
   r.src_def = calcDefLengthAndCheck(&r.info.source);
   r.dest_def = calcDefLengthAndCheck(&r.info.dest);
   print(&r,"find value");
-  RouteRecord* rec = findInTreeRecurse(node,&r,cmp);
+  RouteRecord* rec = findInTreeRecurse(node,&r,cmp,trace_);
   print(rec,"*** find result ***");
   return rec;
 }
@@ -585,17 +605,46 @@ __synchronized__
   proxy = 0;
   __require__(sme_table);
   // ....
-  RouteRecord* rec =  findInTree(&root,&source,&dest);
-  if ( !rec ) return false;
+  
+  if ( trace_enabled_ )
+    trace_.push_back(string("lookup for: ")+AddrToString(source)+" -> "+AddrToString(dest));
+
+  RouteRecord* rec =  findInTree(&root,&source,&dest,trace_enabled_?&trace_:0);
+  if ( !rec ) {
+    trace_.push_back("adress matching not found");
+    return false;
+  }
   // изменение от 4 июля 2003, ищем альтернативный маршрут
   RouteRecord* rec0 = 0;
+
+  if ( trace_enabled_ )
+    trace_.push_back(( ostringstream() << "lookup for src proxy indices: " << srcidx  ).str());
+
   for ( ; rec != 0 ; rec = rec->alternate_pair ) {
-    if ( rec->srcProxyIdx == srcidx ) break;
-    if ( rec->srcProxyIdx == 0 ) rec0 = rec;
+    if ( trace_enabled_ )
+      trace_.push_back(( ostringstream() << "src index: " << rec->srcProxyIdx  ).str());
+    if ( rec->srcProxyIdx == srcidx ) {
+      if ( trace_enabled_ )
+        trace_.push_back(( ostringstream() << "found strong matching with src index" << rec->srcProxyIdx  ).str());
+      break;
+    }
+    if ( rec->srcProxyIdx == 0 ) {
+      if ( trace_enabled_ )
+        trace_.push_back("found default src index");
+      rec0 = rec;
+    }
   }
+
   if ( !rec ) rec = rec0;
-  if ( !rec ) return false; // не найден
+  if ( !rec ) {
+    if ( trace_enabled_ )
+      trace_.push_back("src proxy index matching not found");
+    return false; // не найден
+  }
+
   proxy = sme_table->getSmeProxy(rec->proxyIdx);
+  if ( trace_enabled_ )
+    trace_.push_back(string("route fond, target proxy is ").append(rec->info.smeSystemId));
   if ( info ) *info = rec->info;
   if ( idx && rec->info.enabling ) *idx = rec->proxyIdx;
   if (!rec->info.enabling) return false;
@@ -607,6 +656,19 @@ bool RouteManager::lookup(const Address& source, const Address& dest, SmeProxy*&
 {
   return lookup(0,source,dest,proxy,idx,info);
 }
+
+void RouteManager::getTrace(vector<string>& tracelist)
+{
+  tracelist.swap(trace_);
+  vector<string>().swap(trace_);
+}
+
+void RouteManager::enableTrace(bool val)
+{
+  trace_enabled_ = val;
+  if ( !trace_enabled_ ) vector<string>().swap(trace_);
+}
+
 
 /*RouteInfo RouteManager::getRouteInfo(int idx)
 {

@@ -689,6 +689,14 @@ void Smsc::reloadRoutes(const SmscConfigs& cfg)
   ResetRouteManager(router.release());
 }
 
+void Smsc::reloadTestRoutes(const RouteConfig& rcfg)
+{
+  auto_ptr<RouteManager> router(new RouteManager());
+  router->assign(&smeman);
+  loadRoutes(router.get(),rcfg);
+  ResetTestRouteManager(router.release());
+}
+
 void Smsc::reloadAliases(const SmscConfigs& cfg)
 {
   auto_ptr<AliasManager> aliaser(new AliasManager());
