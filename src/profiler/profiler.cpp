@@ -481,13 +481,14 @@ int Profiler::Execute()
 
       try{
         len=getSmsText(sms,body,sizeof(body));
+        if(len<=0)throw Exception("sms for profiler too large");
       }catch(...)
       {
         status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,Status::INVOPTPARAMVAL);
         resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID).c_str(),
                                              cmd->get_dialogId(),status);
         putIncomingCommand(resp);
-        __warning2__("INVALID MESSAGE SENT TO PROFILER FROM",addr.toString().c_str());
+        __warning2__("INVALID MESSAGE SENT TO PROFILER FROM %s",addr.toString().c_str());
         continue;
       }
 

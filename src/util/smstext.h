@@ -15,7 +15,7 @@ using namespace smsc::sms;
 using namespace smsc::smpp;
 using namespace smsc::core::buffers;
 
-static inline int getSmsText(SMS* sms,char* buf,unsigned bufsize,ConvEncodingEnum enc=CONV_ENCODING_CP1251)
+inline int getSmsText(SMS* sms,char* buf,unsigned bufsize,ConvEncodingEnum enc=CONV_ENCODING_CP1251)
 {
   int coding = sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING);
   //int len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
@@ -34,24 +34,24 @@ static inline int getSmsText(SMS* sms,char* buf,unsigned bufsize,ConvEncodingEnu
   __trace2__("getSmsText: dc=%d, len=%d",coding,len);
   if(coding==DataCoding::UCS2)
   {
-    if(len/2>=bufsize)return -len/2;
+    if(len/2>=bufsize)return -((int)len/2+1);
     ConvertUCS2ToMultibyte((const short*)data,len,buf,bufsize,enc);
     len/=2;
   }else if(coding==DataCoding::SMSC7BIT)
   {
-    if(len>=bufsize)return -len;
+    if(len>=bufsize)return -(int)(len+1);
     len=ConvertSMSC7BitToLatin1(data,len,buf);
   }
   else
   {
-    if(len>=bufsize)return -len;
+    if(len>=bufsize)return -(int)(len+1);
     memcpy(buf,data,len);
   }
   buf[len]=0;
   return len;
 }
 
-static inline int getSmsText(SMS* sms,string& res,ConvEncodingEnum enc=CONV_ENCODING_CP1251)
+inline int getSmsText(SMS* sms,string& res,ConvEncodingEnum enc=CONV_ENCODING_CP1251)
 {
   int coding = sms->getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING);
   //int len = sms->getIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH);
