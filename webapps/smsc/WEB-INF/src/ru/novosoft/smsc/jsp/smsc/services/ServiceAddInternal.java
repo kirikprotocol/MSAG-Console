@@ -13,7 +13,7 @@ import java.util.List;
 
 public class ServiceAddInternal extends PageBean
 {
-	protected String serviceId = "";
+	protected String serviceId = null;
 	protected int priority = 0;
 	protected String systemType = "";
 	protected int typeOfNumber = 0;
@@ -34,6 +34,12 @@ public class ServiceAddInternal extends PageBean
 		int result = super.process(appContext, errors);
 		if (result != RESULT_OK)
 			return result;
+
+		if (serviceId == null)
+		{
+			serviceId = "";
+			wantAlias = true;
+		}
 
 		if (mbCancel != null)
 			return RESULT_DONE;

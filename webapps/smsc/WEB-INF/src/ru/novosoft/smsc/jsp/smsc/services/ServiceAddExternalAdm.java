@@ -162,6 +162,7 @@ public class ServiceAddExternalAdm extends PageBean
 		if (errors.size() == 0)
 		{
 			stage++;
+			wantAlias = true;
 			return RESULT_OK;
 		}
 		else
