@@ -849,7 +849,7 @@ static void SendSubmitCommand(MapDialog* dialog)
   MapProxy* proxy = MapDialogContainer::getInstance()->getProxy();
   unsigned ssn_var = (dialog->ssn == USSD_SSN) ? 0x10000 : 0;
   SmscCommand cmd = SmscCommand::makeSumbmitSm(
-    *dialog->sms.get(),((unsigned(dialog->dialogid_map)&0xffff)|ssn_var);
+    *dialog->sms.get(),(unsigned(dialog->dialogid_map)&0xffff)|ssn_var);
   proxy->putIncomingCommand(cmd);
 }
 
