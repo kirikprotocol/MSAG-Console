@@ -35,7 +35,7 @@ static void BackTrace(void** dump)
   frame* savfp;
 
   while(
-    ((int)fp)>0x1000 &&
+    ((unsigned long)fp)>0x1000 &&
     (savpc = ((void*)fp->fr_savpc)) &&
     counter < MAXTRACESIZE
   )
