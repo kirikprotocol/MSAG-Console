@@ -10,7 +10,7 @@ static string FormatText(const char* format,...)
   auto_ptr<char> b(new char[1024]);
   memset(b.get(),0,1024);
   va_list arg;
-  va_start(arg);
+  va_start(arg,format);
   vsnprintf(b.get(),1024-1,format,arg);
   va_end(arg);
   return string(b.get());
