@@ -95,6 +95,7 @@ Profile prefix <input class=txt name=filterMask value="<%=bean.getFilterMask()%>
 	<th><a href="#" <%=bean.getSort().endsWith("divert")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert"                 onclick='return setSort("divert")'    >divert</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("divert_act") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert active flag"     onclick='return setSort("divert_act")'>divert active</a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("divert_mod") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert modifiable flag" onclick='return setSort("divert_mod")'>divert modifiable</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("ussd7bit")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by USSD as 7 bit flag"     onclick='return setSort("ussd7bit")'  >ussd 7 bit</a></th>
 </tr>
 </thead>
 <tbody>
@@ -105,7 +106,9 @@ Profile prefix <input class=txt name=filterMask value="<%=bean.getFilterMask()%>
 			{
 				DataItem item = (DataItem) i.next();
 				final String profileMask = (String)item.getValue("Mask");
-				final String encProfileMask = StringEncoderDecoder.encode(profileMask);%>
+				final String encProfileMask = StringEncoderDecoder.encode(profileMask);
+        final String divert = (String)item.getValue("divert");
+        final String divertEnc = divert == null || divert.length() == 0 ? "&nbsp;" : StringEncoderDecoder.encode(divert);%>
 				<tr class=row<%=row&1%>>
 					<td><input class=check type=checkbox name=checked value="<%=encProfileMask%>" <%=bean.isProfileCheked(profileMask) ? "checked" : ""%> onclick="checkCheckboxes();"></td>
 					<td class=name><%
@@ -122,9 +125,10 @@ Profile prefix <input class=txt name=filterMask value="<%=bean.getFilterMask()%>
 					<td><%=StringEncoderDecoder.encode((String)item.getValue("locale"))%></td>
 					<td align=center><%if (((Boolean)item.getValue("hidden"    )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 					<td align=center><%if (((Boolean)item.getValue("hidden_mod")).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-					<td><%=StringEncoderDecoder.encode((String)item.getValue("divert"))%></td>
+					<td><%=divertEnc%></td>
 					<td align=center><%if (((Boolean)item.getValue("divert_act"    )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 					<td align=center><%if (((Boolean)item.getValue("divert_mod"    )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+					<td align=center><%if (((Boolean)item.getValue("ussd7bit"      )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 				</tr><%
 			}
 		}%>

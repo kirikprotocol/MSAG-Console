@@ -1,3 +1,6 @@
+<%@ page import="ru.novosoft.smsc.admin.profiler.Profile,
+                 java.util.Iterator,
+                 ru.novosoft.smsc.util.StringEncoderDecoder"%>
 <input type=hidden name=returnPath value="<%=bean.getReturnPath()%>">
 <div class=content>
 <div class=page_subtitle>Profile information</div>
@@ -17,7 +20,7 @@
 			<option value="<%=Profile.CODEPAGE_UCS2   %>" <%=bean.getByteCodepage() == Profile.CODEPAGE_UCS2    ? "SELECTED" : ""%>>UCS2</option>
 			<option value="<%=Profile.CODEPAGE_UCS2AndLatin1%>" <%=bean.getByteCodepage() == Profile.CODEPAGE_UCS2AndLatin1    ? "SELECTED" : ""%>>UCS2&Latin1</option>
 		</select>
-    <input class=check type=checkbox type="checkbox" name="ussd7bit" value="true"  <%=bean.isUssd7bit() ? "checked" : ""%>>USSD in 7-bit
+    <input id=ussd7bitCheckbox class=check type=checkbox type="checkbox" name="ussd7bit" value="true"  <%=bean.isUssd7bit() ? "checked" : ""%>><label for=ussd7bitCheckbox>USSD in 7-bit</label>
     </div>
   </td>
 </tr>

@@ -42,6 +42,7 @@ public class ProfilesEdit extends ProfilesBean
         Profile p = smsc.profileLookup(new Mask(mask));
         report = p.getReportOptions();
         codepage = p.getCodepage();
+        ussd7bit = p.isUssd7bit();
         locale = p.getLocale();
         aliasHide = p.isAliasHide();
         aliasModifiable = p.isAliasModifiable();

@@ -22,5 +22,6 @@ public class ProfileDataItem extends AbstractDataItem
     values.put("divert", profile.getDivert());
     values.put("divert_act", new Boolean(profile.isDivertActive()));
     values.put("divert_mod", new Boolean(profile.isDivertModifiable()));
+    values.put("ussd7bit", new Boolean(profile.isUssd7bit()));
 	}
 }
