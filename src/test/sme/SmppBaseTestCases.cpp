@@ -63,7 +63,7 @@ void SmppBaseTestCases::bindIncorrectSme(int num)
 {
 	//повторный bind убран из тест кейсов, т.к. приводит к пересозданию коннекта
 	//без ошибок
-	TCSelector s(num, 3);
+	TCSelector s(num, 4);
 	__decl_tc__;
 	for (; s.check(); s++)
 	{
@@ -73,7 +73,7 @@ void SmppBaseTestCases::bindIncorrectSme(int num)
 			{
 				case 1: //sme не зарегистрирована в SC
 					{
-						__tc__("bindIncorrectSme.smeNotRegistered");
+						__tc__("bindIncorrectSme.systemIdNotRegistered");
 						try
 						{
 							SmeConfig conf(config);
@@ -89,7 +89,25 @@ void SmppBaseTestCases::bindIncorrectSme(int num)
 						}
 					}
 					break;
-				case 2: //bind на недоступный SC (неизвестный хост)
+				case 2: //неправильный пароль
+					{
+						__tc__("bindIncorrectSme.invalidPassword");
+						try
+						{
+							SmeConfig conf(config);
+							auto_ptr<char> tmp = rand_char(8); //8 по спецификации
+							conf.password = tmp.get();
+							FakeReceiver receiver;
+							SmppSession sess(conf, &receiver);
+							sess.connect();
+						}
+						catch(...)
+						{
+							throw;
+						}
+					}
+					break;
+				case 3: //bind на недоступный SC (неизвестный хост)
 					{
 						__tc__("bindIncorrectSme.unknownHost");
 						try
@@ -107,7 +125,7 @@ void SmppBaseTestCases::bindIncorrectSme(int num)
 						}
 					}
 					break;
-				case 3: //bind на недоступный SC (неправильный порт)
+				case 4: //bind на недоступный SC (неправильный порт)
 					{
 						__tc__("bindIncorrectSme.invalidPort");
 						try

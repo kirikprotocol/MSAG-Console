@@ -33,8 +33,10 @@ void bindIncorrectSmeTc()
 {
 	__reg_tc__("bindIncorrectSme",
 		"Установление IP соединения с SC и регистрация с неправильными параметрами");
-	__reg_tc__("bindIncorrectSme.smeNotRegistered",
+	__reg_tc__("bindIncorrectSme.systemIdNotRegistered",
 		"Значение system_id не прописано в конфигурации SC");
+	__reg_tc__("bindIncorrectSme.invalidPassword",
+		"Неправильный пароль");
 	__reg_tc__("bindIncorrectSme.unknownHost",
 		"Установка соединения с недоступным SC (неизвестный хост) завершается корректно");
 	__reg_tc__("bindIncorrectSme.invalidPort",
@@ -179,6 +181,8 @@ void processRespTc()
 		"Если код ошибки ESME_RINVEXPIRY в поле command_status, то время validity_period действительно задано неправильно");
 	__reg_tc__("processResp.checkCmdStatusInvalidDataCoding",
 		"Если код ошибки ESME_RINVDCS в поле command_status, то кодировка сообщения действительно задана неправильно");
+	__reg_tc__("processResp.checkCmdStatusInvalidServiceType",
+		"Если код ошибки ESME_RINVSERTYP в поле command_status, то длина поля service_type действительно задана неправильно");
 	__reg_tc__("processResp.checkCmdStatusOther",
 		"Прочие коды ошибок соответствуют спецификации");
 }
