@@ -96,59 +96,25 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 		SMSId id;
 		SMS sms;
 		doStat(tc.storeCorrectSM(&id, &sms, RAND_TC));
-		doStat(tc.replaceCorrectSM(id, sms, RAND_TC));
+		doStat(tc.setCorrectSMStatus(id, &sms, RAND_TC));
+		doStat(tc.replaceCorrectSM(id, &sms, RAND_TC));
 		doStat(tc.loadExistentSM(id, sms));
-		doStat(tc.replaceIncorrectSM(id, sms, RAND_TC));
 		doStat(tc.deleteExistentSM(id));
-		doStat(tc.deleteNonExistentSM(id, RAND_TC));
-		doStat(tc.loadNonExistentSM(id, RAND_TC));
 	}
 
 	//создаю и удаляю кривые SM
-	//doStat(tc.storeIncorrectSM(correctSM, RAND_TC));
-	doStat(tc.replaceCorrectSM(correctId, correctSM, RAND_TC));
+	//doStat(tc.storeIncorrectSM(RAND_TC));
+	doStat(tc.storeDuplicateSM(correctSM, RAND_TC));
+	doStat(tc.setCorrectSMStatus(correctId, &correctSM, RAND_TC));
+	doStat(tc.setIncorrectSMStatus(correctId));
+	doStat(tc.replaceCorrectSM(correctId, &correctSM, RAND_TC));
 	doStat(tc.replaceIncorrectSM(correctId, correctSM, RAND_TC));
+	doStat(tc.loadExistentSM(correctId, correctSM));
 	doStat(tc.deleteExistentSM(correctId));
+	doStat(tc.setNonExistentSMStatus(correctId, RAND_TC));
 	doStat(tc.replaceNonExistentSM(correctId, RAND_TC));
-
-	//сначала создаю список, потом читаю этот список, потом удаляю
-	//список большой специально для того, чтобы было большое количество 
-	//одинаковых последовательных операций и вероятность ошибочного 
-	//использования shared buffers возросла (если в коде есть подобные 
-	//ошибки)
-	const int listSize = 20;
-	for (int j = 0; j < 3; j++)
-	{
-		SMSId id[listSize];
-		SMS sms[listSize];
-		for (int i = 0; i < listSize; i++)
-		{
-			doStat(tc.storeCorrectSM(&id[i], &sms[i], RAND_TC));
-		}
-		for (int i = 0; i < listSize; i++)
-		{
-			doStat(tc.loadExistentSM(id[i], sms[i]));
-		}
-		for (int i = 0; i < listSize; i++)
-		{
-			doStat(tc.replaceCorrectSM(id[i], sms[i], RAND_TC));
-		}
-		doStat(tc.replaceIncorrectSM(id[0], sms[0], RAND_TC));
-		doStat(tc.replaceIncorrectSM(id[listSize - 1], sms[listSize - 1], RAND_TC));
-		for (int i = 0; i < listSize; i++)
-		{
-			doStat(tc.deleteExistentSM(id[i]));
-		}
-		doStat(tc.loadNonExistentSM(id[0], RAND_TC));
-		doStat(tc.replaceNonExistentSM(id[0], RAND_TC));
-		doStat(tc.deleteNonExistentSM(id[0], RAND_TC));
-		doStat(tc.replaceNonExistentSM(id[listSize - 1], RAND_TC));
-		doStat(tc.loadNonExistentSM(id[listSize - 1], RAND_TC));
-		doStat(tc.deleteNonExistentSM(id[listSize - 1], RAND_TC));
-	}
-	//tc.setCorrectSMStatus(); ops++;
-	//tc.createBillingRecord(); ops++;
-	//tc.updateCorrectExistentSM(); ops++;
+	doStat(tc.deleteNonExistentSM(correctId, RAND_TC));
+	doStat(tc.loadNonExistentSM(correctId, RAND_TC));
 }
 
 inline void MessageStoreBusinessCycleTestTask::onStopped()
