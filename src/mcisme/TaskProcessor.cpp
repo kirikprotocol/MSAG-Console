@@ -338,6 +338,7 @@ void TaskProcessor::loadupTasks()
         {
             smsc_log_debug(logger, "Loadup: new message %lld put to out queue (state=%d). Events=%d Rows=%d",
                            message.id, (int)state, message.eventsCount, message.rowsCount);
+            if (state != WAIT_RESP) task->waitResponce();
             putToOutQueue(message, true);
         }
         else
