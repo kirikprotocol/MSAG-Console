@@ -74,10 +74,10 @@ deps:
 	    done; \
 	fi
 	@rm -f $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.binaries-rules
-	@cat binaries-list 2>>/dev/null | awk '/^[^\#-]./{print "$(SMSC_BUILDDIR)/bin/"$$1" : $(SMSC_BUILDDIR)/obj/$(LIBRARY)/"$$2".o\n"\
+	@cat binaries-list 2>>/dev/null | awk '/^[^\#-][a-zA-Z0-9]/{print "$(SMSC_BUILDDIR)/bin/"$$1" : $(SMSC_BUILDDIR)/obj/$(LIBRARY)/"$$2".o\n"\
 	    "\tmkdir -p `dirname $$@`\n"\
-	    "\t@echo linking $$@\n"\
-	    "\t$$(CXX) $$(CXXFLAGS) -o $$@ $$< $$(LDFLAGS) "$$3" "$$4" "$$5" "$$6" "$$7" "$$8" "$$9" "$$10 "\n"}' \
+	    "\techo linking $$@\n"\
+	    "\t$$(CXX) $$(CXXFLAGS) -o $$@ $$< $$(LDFLAGS) "$$3" "$$4" "$$5" "$$6" "$$7" "$$8" "$$9" "$$10" "$$11" "$$12" "$$13" "$$14" "$$15" "$$16" \n"}' \
 	    > $(SMSC_BUILDDIR)/deps/$(PACKAGEDIR)/.binaries-rules
 	@if [ -n "$(MODULES)" ] ; then \
 	    XXXX="$(MODULES)" ;\
@@ -90,7 +90,7 @@ deps:
 
 $(SMSC_BUILDDIR)/obj/$(LIBRARY)/%.o:$(SMSC_SRCDIR)/$(PACKAGEDIR)/%.cpp
 	@echo "compiling $<"
-	@$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 	
 
 
