@@ -403,7 +403,7 @@ void MAPSTATS_Flush(unsigned x,bool dump)
           MAPSTATS_close_in[0],
           MAPSTATS_close_out[0],
           MAPSTATS_dialogs_no,
-          MAPSTATS_recv[0],
+          MAPSTATS_recv[0]
           );
       }
     case MAPSTATS__MIN:
@@ -415,7 +415,7 @@ void MAPSTATS_Flush(unsigned x,bool dump)
           MAPSTATS_close_in[1],
           MAPSTATS_close_out[1],
           MAPSTATS_dialogs_no,
-          MAPSTATS_recv[1],
+          MAPSTATS_recv[1]
           );
       }
     case MAPSTATS__HOUR:
@@ -427,7 +427,7 @@ void MAPSTATS_Flush(unsigned x,bool dump)
           MAPSTATS_close_in[2],
           MAPSTATS_close_out[2],
           MAPSTATS_dialogs_no,
-          MAPSTATS_recv[2],
+          MAPSTATS_recv[2]
           );
       }
     }
