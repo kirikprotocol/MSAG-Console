@@ -302,7 +302,7 @@ void SmeManager::getFrame(vector<SmscCommand>& frames, unsigned long timeout)
   for ( Records::const_iterator p = records.begin(); p != records.end(); ++p ) {
     if ( (*p) ) {
       if ( (*p)->deleted ) continue;
-      if ( p->hasInput() ) {
+      if ( (*p)->hasInput() ) {
         try {
           frames.push_back((*p)->getCommand());
           frames.back().setProxy((*p));

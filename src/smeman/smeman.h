@@ -208,6 +208,7 @@ public:
 
   // SmeDispatcher implementation
   virtual SmeProxy* selectSmeProxy(unsigned long timeout=0,int* idx=0);
+  virtual void getFrame(vector<SmscCommand>& frames, unsigned long timeout);
   //virtual ~SmeManager(){}
 };
 
