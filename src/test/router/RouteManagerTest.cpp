@@ -58,26 +58,21 @@ void addRouteMatch(const Address& origAddr, const Address& destAddr,
 void executeTest()
 {
 /*
-addCorrectSme(10)->
+addCorrectSme(1)->
 registerCorrectSmeProxy(1)->
-addCorrectRouteNotMatch(25)->
+addCorrectRouteNotMatch(32)->
 
-addCorrectSme(6)->
-registerCorrectSmeProxy(1)->
-addCorrectRouteMatch(18)->
+addCorrectSme(2)->
+addCorrectRouteMatch(3)->
 
-addCorrectSme(5)->
-registerCorrectSmeProxy(1)->
-addCorrectRouteMatch(1)->
-lookupRoute(1){101}
+lookupRoute(1){103}
 */
 	Address origAddr, destAddr;
 	SmsUtil::setupRandomCorrectAddress(&origAddr);
 	SmsUtil::setupRandomCorrectAddress(&destAddr);
 
-	addRouteNotMatch(origAddr, destAddr, 10, true, 25);
-	addRouteMatch(origAddr, destAddr, 6, true, 18);
-	addRouteMatch(origAddr, destAddr, 5, true, 1);
+	addRouteNotMatch(origAddr, destAddr, 1, true, 32);
+	addRouteMatch(origAddr, destAddr, 2, false, 3);
 	cout << *tcRoute.lookupRoute(routeReg, origAddr, destAddr) << endl;
 
 /*
