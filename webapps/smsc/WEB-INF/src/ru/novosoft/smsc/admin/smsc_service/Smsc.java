@@ -22,6 +22,7 @@ import ru.novosoft.smsc.jsp.util.tables.impl.ProfileQuery;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.config.ConfigManager;
 import ru.novosoft.smsc.util.xml.Utils;
+import ru.novosoft.util.conpool.NSConnectionPool;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
@@ -46,7 +47,7 @@ public class Smsc extends Service
 
 	private Category logger = Category.getInstance(this.getClass());
 
-	public Smsc(ConfigManager configManager)
+	public Smsc(ConfigManager configManager, NSConnectionPool connectionPool)
 			  throws AdminException, Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		super(new ServiceInfo("SMSC",
@@ -73,12 +74,7 @@ public class Smsc extends Service
 			subjects = new SubjectList(routesDoc.getDocumentElement(), smes);
 			routes = new RouteList(routesDoc.getDocumentElement(), subjects, smes);
 			aliases = new AliasSet(aliasesDoc.getDocumentElement());
-			profileDataSource = new ProfileDataSource(
-					  configManager.getConfig().getString("profiler.jdbc.source"),
-					  configManager.getConfig().getString("profiler.jdbc.driver"),
-					  configManager.getConfig().getString("profiler.jdbc.user"),
-					  configManager.getConfig().getString("profiler.jdbc.password")
-			);
+			profileDataSource = new ProfileDataSource(connectionPool);
 		}
 		catch (FactoryConfigurationError error)
 		{

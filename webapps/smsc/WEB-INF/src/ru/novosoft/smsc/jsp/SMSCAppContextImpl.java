@@ -7,6 +7,8 @@ import ru.novosoft.smsc.util.config.ConfigManager;
 import ru.novosoft.util.conpool.NSConnectionPool;
 import ru.novosoft.util.jsp.AppContextImpl;
 
+import java.util.Properties;
+
 
 public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 {
@@ -24,7 +26,13 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
 			ConfigManager.Init(configFileName);
 			configManager = ConfigManager.getInstance();
-			smsc = new Smsc(configManager);
+			Properties props = new Properties();
+			props.setProperty("jdbc.source", configManager.getConfig().getString("profiler.jdbc.source"));
+			props.setProperty("jdbc.driver", configManager.getConfig().getString("profiler.jdbc.driver"));
+			props.setProperty("jdbc.user",   configManager.getConfig().getString("profiler.jdbc.user"));
+			props.setProperty("jdbc.pass",   configManager.getConfig().getString("profiler.jdbc.password"));
+			connectionPool = new NSConnectionPool(props);
+			smsc = new Smsc(configManager, connectionPool);
 			serviceManager.init(configManager, smsc);
 			serviceManager = ServiceManager.getInstance();
 		}
