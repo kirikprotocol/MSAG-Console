@@ -3082,7 +3082,7 @@ StateType StateMachine::DivertProcessing(Tuple& t,SMS& sms)
   t2.command=cmd;
   t2.msgId=t.msgId;
   t2.state=t.state;
-  return forward(t);
+  return forward(t2);
 }
 
 
