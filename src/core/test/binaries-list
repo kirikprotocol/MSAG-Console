@@ -1,9 +1,11 @@
-core/test/threadstest threadstest -lcore-threads -lcore-buffers -lthread
+-core/test/threadstest threadstest -lcore-threads -lcore-buffers -lthread
 core/test/socktest socktest -lcore-threads -lcore-network -lsocket -lthread
-core/test/socktest2 socktest2 -lcore-threads -lcore-network -lsocket -lthread
-core/test/socktest3 socktest3 -lcore-threads -lcore-network -lsocket -lthread
-core/test/threadtest2 threadtest2 -lcore-threads -lcore-buffers -lthread
-core/test/monitortest monitortest -lcore-threads -lcore-buffers -lthread
-core/test/monitortest0 monitortest0 -lcore-threads -lcore-buffers -lthread
-core/test/monitortest1 monitortest1 -lcore-threads -lcore-buffers -lthread
-core/test/mtx mtx -lcore-threads -lcore-buffers -lthread
+-core/test/socktest2 socktest2 -lcore-threads -lcore-network -lsocket -lthread
+-core/test/socktest3 socktest3 -lcore-threads -lcore-network -lsocket -lthread
+-core/test/threadtest2 threadtest2 -lcore-threads -lcore-buffers -lthread
+-core/test/monitortest monitortest -lcore-threads -lcore-buffers -lthread
+-core/test/monitortest0 monitortest0 -lcore-threads -lcore-buffers -lthread
+-core/test/monitortest1 monitortest1 -lcore-threads -lcore-buffers -lthread
+-core/test/mtx mtx -lcore-threads -lcore-buffers -lthread
+core/test/multi multi -lcore-network -lsocket -lcore-threads -lthread
+core/test/map map -lthread -lcore-threads

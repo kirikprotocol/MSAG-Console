@@ -157,15 +157,18 @@ void MemoryHeap::initHeap(int rawheapsize,
 {
   /* Init raw heap */
   rawHeapPageSize=rawheapsize;
-  char *rawheap=new char[rawHeapPageSize+sizeof(RawHeapPage)];
-  firstRawPage=lastRawPage=(PRawHeapPage)rawheap;
-  firstRawPage->pageSize=rawHeapPageSize;
-  firstRawPage->pageUsage=0;
-  firstRawPage->memPage=rawheap+sizeof(RawHeapPage);
-  firstRawPage->next=NULL;
-  blocksHeapQuantum=blocksheapquantum;
-  blocksMaxSize=maxblocksize;
-  blocksPerPool=blocksperpool;
+  if(rawheapsize)
+  {
+    char *rawheap=new char[rawHeapPageSize+sizeof(RawHeapPage)];
+    firstRawPage=lastRawPage=(PRawHeapPage)rawheap;
+    firstRawPage->pageSize=rawHeapPageSize;
+    firstRawPage->pageUsage=0;
+    firstRawPage->memPage=rawheap+sizeof(RawHeapPage);
+    firstRawPage->next=NULL;
+    blocksHeapQuantum=blocksheapquantum;
+    blocksMaxSize=maxblocksize;
+    blocksPerPool=blocksperpool;
+  }
 
   /* init blocks heap */
   int blocksize=blocksHeapQuantum;

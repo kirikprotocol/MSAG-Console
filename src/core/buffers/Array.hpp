@@ -6,38 +6,75 @@
   Template class for quantified array.
 */
 
-#ifndef __ARRAY_HPP__
-#define __ARRAY_HPP__
+#ifndef __CORE_BUFFERS_ARRAY_HPP__
+#define __CORE_BUFFERS_ARRAY_HPP__
 
 #ifndef __cplusplus
 #error This header is for use with C++ only
 #endif
 
 #include <new.h>
+#include <exception>
 
 namespace smsc{
 namespace core{
 namespace buffers{
 
+
 template <class T>
 class Array{
 protected:
-  T* _data;
+  char* _data;
   int _count;
   int _size;
   int _empty;
+  const int SZ;
+
+  inline void CallDestructor(T* obj)
+  {
+    obj->~T();
+  }
+
+  inline T* Ptr(int index=0)
+  {
+    return ((T*)_data)+index;
+  }
+  inline T& Obj(int index=0)
+  {
+    return *Ptr(index);
+  }
+
+  inline void DestroyRange(int from,int to)
+  {
+    for(int i=from;i<to;i++)CallDestructor(Ptr(i));
+  }
+
+  inline void InitRange(int from,int to)
+  {
+    for(int i=from;i<to;i++)new(Ptr(i))T();
+  }
+
   void Resize(int newsize)
   {
     if(newsize<=_size)return;
+    if(newsize<=_size+_empty)
+    {
+      _data-=_empty*SZ;
+      Copy(_empty,0,_count);
+      _size+=_empty;
+      _empty=0;
+      return;
+    }
     newsize=Increment(newsize);
-    T* newdata=(T*)new char[sizeof(T)*newsize];
+    char* newdata=new char[SZ*newsize];
     int i;
     for(i=0;i<_count;i++)
     {
-      new(newdata+i)T(_data[i]);
+      new(((T*)newdata)+i)T(Obj(i));
     }
     _size=newsize;
-    delete [] (_data-_empty);
+    DestroyRange(0,_count);
+    delete (_data-_empty*SZ);
     _empty=0;
     _data=newdata;
   }
@@ -53,26 +90,31 @@ protected:
     {
       for(int i=0;i<count;i++)
       {
-        _data[to+i]=_data[from+i];
+        new(Ptr(to+i))T(Obj(from+i));
+        CallDestructor(Ptr(from+i));
       }
     }else
     {
       for(int i=count-1;i>=0;i--)
       {
-        _data[to+i]=_data[from+i];
+        new(Ptr(to+i))T(Obj(from+i));
+        CallDestructor(Ptr(from+i));
       }
     }
   }
 public:
-  Array(){_data=0;_count=0;_size=0;_empty=0;}
-  Array(int n){_data=new T[n];_count=0;_size=n;_empty=0;}
-  Array(const Array<T>& src)
+  Array():SZ(sizeof(T)),_data(0),_count(0),_size(0),_empty(0){}
+  Array(int n):SZ(sizeof(T)),_count(0),_size(n),_empty(0)
   {
-    _data=(T*)new char[sizeof(T)*src.Count()];
+    _data=new char[SZ*n];
+  }
+  Array(const Array<T>& src):SZ(sizeof(T))
+  {
+    _data=new char[SZ*src.Count()];
     int i;
     for(i=0;i<src.Count();i++)
     {
-      new(_data+i)T(src[i]);
+      new((T*)_data+i)T(src[i]);
     }
     _size=src.Count();
     _count=_size;
@@ -87,11 +129,11 @@ public:
   {
     if(this==&src)return;
     Clean();
-    _data=(T*)new char[sizeof(T)*src.Count()];
+    _data=new char[SZ*src.Count()];
     int i;
     for(i=0;i<src.Count();i++)
     {
-      new(_data+i)T(src[i]);
+      new(Ptr(i))T(src[i]);
     }
     _size=src.Count();
     _count=_size;
@@ -101,20 +143,24 @@ public:
   {
     if(index<0)index+=_count;
     if(index>=_size)Resize(index+1);
-    if(index>=_count)_count=index+1;
-    return _data[index];
+    if(index>=_count)
+    {
+      InitRange(_count,index+1);
+      _count=index+1;
+    }
+    return Obj(index);
   }
   const T& operator[](int index)const
   {
     if(index<0)index+=_count;
-    if(index>=_count)return *((T*)0);
-    return _data[index];
+    if(index>=_count)throw exception("Array:Index out of bounds");
+    return const_cast<const T&>((const_cast<Array<T>*>(this))->Obj(index));
   }
 
   int Push(const T& item)
   {
     Resize(_count+1);
-    _data[_count]=item;
+    new(Ptr(_count))T(item);
     _count++;
     return _count;
   }
@@ -123,7 +169,8 @@ public:
   {
     if(_count==0)return 0;
     _count--;
-    item=_data[_count];
+    item=Obj(_count);
+    CallDestructor(Ptr(_count));
     return _count;
   }
 
@@ -131,16 +178,16 @@ public:
   {
     if(_empty)
     {
-      _data--;
+      _data-=SZ;
       _empty--;
-      _data[0]=item;
+      new(Ptr())T(item);
       _size++;
       _count++;
     }else
     {
       Resize(_count+1);
       Copy(0,1,_count);
-      _data[0]=item;
+      new(Ptr())T(item);
       _count++;
     }
     return _count;
@@ -149,8 +196,9 @@ public:
   int Shift(T& item)
   {
     if(_count==0)return 0;
-    item=_data[0];
-    _data++;
+    item=Obj();
+    CallDestructor(Ptr());
+    _data+=SZ;
     _empty++;
     _size--;
     _count--;
@@ -164,29 +212,30 @@ public:
     if(index>_count)
     {
       Resize(index+1);
-      _data[index]=item;
+      InitRange(_count,index);
+      new(Ptr(index))T(item);
       _count=index+1;
       return _count;
     }
     Resize(_count+1);
     Copy(index,index+1,_count-index);
-    _data[index]=item;
+    new(Ptr(index))T(item);
     _count++;
     return _count;
   }
 
-  int Insert(int index,const Array<T>& src,int count=-1)
+  int Insert(int index,const Array<T>& src)
   {
-    if(count==-1)count=src.Count();
     if(index<0)index+=_count;
     if(index<0)return -1;
     if(index>_count)
     {
       Resize(index+src.Count());
       int i;
+      InitRange(_count,index);
       for(i=0;i<src.Count();i++)
       {
-        _data[index+i]=src[i];
+        new(Ptr(index+i))T(src[i]);
       }
       _count=index+src.Count();
     }else
@@ -196,7 +245,7 @@ public:
       int i;
       for(i=0;i<src.Count();i++)
       {
-        _data[index+i]=src[i];
+        new(Ptr(index+i))T(src[i]);
       }
       _count+=src.Count();
     }
@@ -224,9 +273,11 @@ public:
     if(index>=_count)return 0;
     if(index+count>=_count)
     {
+      DestroyRange(index,_count);
       _count=index;
       return _count-index;
     }
+    DestroyRange(index,index+count);
     Copy(index+count,index,_count-(index+count));
     _count-=count;
     return count;
@@ -235,12 +286,13 @@ public:
   void Reverse()
   {
     int i;
-    T* newdata=(T*)new char[sizeof(T)*_size];
+    char *newdata=new char[SZ*_size];
     for(i=0;i<_count;i++)
     {
-      new(newdata+i)T(_data[_count-1-i]);
+      new(((T*)newdata)+i)T(Obj(_count-1-i));
     }
-    delete [] (_data-_empty);
+    DestroyRange(0,_count);
+    delete (_data-_empty*SZ);
     _empty=0;
     _data=newdata;
   }
@@ -250,7 +302,11 @@ public:
 
   void Clean()
   {
-    if(_data)delete [] (_data-_empty);
+    if(_data)
+    {
+      DestroyRange(0,_count);
+      delete [] (_data-_empty*SZ);
+    }
     _data=0;
     _size=0;
     _count=0;
@@ -261,6 +317,22 @@ public:
   {
     int oldsize=_size;
     Resize(count);
+    return oldsize;
+  }
+
+  int Shrink()
+  {
+    char *newdata=new char[_count*SZ];
+    int i;
+    for(i=0;i<_count;i++)
+    {
+      new(((T*)newdata)+i)T(Obj(i));
+    }
+    DestroyRange(0,_count);
+    delete [] (_data-_empty*SZ);
+    int oldsize=_size;
+    _size=_count;
+    _data=newdata;
     return oldsize;
   }
 

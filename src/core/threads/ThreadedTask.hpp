@@ -11,6 +11,7 @@ using namespace smsc::core::buffers;
 
 class ThreadedTask{
 public:
+  ThreadedTask():isStopping(false),heap(NULL){}
   virtual ~ThreadedTask(){}
   virtual int Execute()=0;
   virtual const char* taskName()=0;
@@ -61,8 +62,11 @@ public:
     heap->freeMem(ptr);
   }
 
+  void stop(){isStopping=true;}
+
 protected:
   smsc::core::buffers::MemoryHeap *heap;
+  bool isStopping;
 };//ThreadedTask
 
 };//threads

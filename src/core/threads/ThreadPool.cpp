@@ -24,14 +24,21 @@ int PooledThread::Execute()
     trace2("Thread %08X got a task\n",this);
     if(task==NULL)return 0;
     task->getMemoryInfo(rawheapsize,blocksheapquantum);
-    task->assignHeap(
-      owner->getMemoryHeap(
-        task->taskName(),
-        rawheapsize,
-        blocksheapquantum
-      )
-    );
-    task->Execute();
+    if(rawheapsize!=0 || blocksheapquantum!=0)
+    {
+      task->assignHeap(
+        owner->getMemoryHeap(
+          task->taskName(),
+          rawheapsize,
+          blocksheapquantum
+        )
+      );
+    }
+    try{
+      task->Execute();
+    }catch(...)
+    {
+    }
     trace2("Execution of task %s finished",task->taskName());
     task->releaseHeap();
     delete task;
