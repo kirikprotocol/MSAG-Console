@@ -18,20 +18,16 @@
 #include <util/config/ConfigView.h>
 #include <util/config/ConfigException.h>
 
-#include <core/threads/Thread.hpp>
 #include <core/synchronization/Mutex.hpp>
 #include <core/synchronization/Event.hpp>
 
 #include <db/DataSource.h>
-
-//#include "InfoSmeExceptions.h"
 
 namespace smsc { namespace infosme 
 {
     using namespace smsc::core::buffers;
     using namespace smsc::db;
     
-    using smsc::core::threads::Thread;
     using smsc::core::synchronization::Event;
     using smsc::core::synchronization::Mutex;
     
@@ -91,7 +87,7 @@ namespace smsc { namespace infosme
         void init(TaskInfo& info, DataSource* ds) {
             this->info = info;
             this->ds = ds;
-        }
+        };
 
         /**
          * Запускает процесс генерации сообщений для отправки в спец.таблицу задачи.
@@ -132,7 +128,6 @@ namespace smsc { namespace infosme
          * Удаляет все сгенерированные записи.
          */
         virtual void dropAllMessages() = 0;
-
     };
     
     class TaskFactory

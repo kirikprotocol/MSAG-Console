@@ -12,6 +12,10 @@ TaskProcessor::TaskProcessor(ConfigView* config)
 {
     logger.info("Loading ...");
 
+    std::auto_ptr<ConfigView> threadPoolCfgGuard(config->getSubConfig("ThreadPool"));
+    ConfigView* threadPoolCfg = threadPoolCfgGuard.get();
+    manager.init(threadPoolCfg); // loads up thread pool for tasks
+
     std::auto_ptr<ConfigView> providerCfgGuard(config->getSubConfig("DataProvider"));
     ConfigView* providerCfg = providerCfgGuard.get();
     provider.init(providerCfg);
@@ -33,7 +37,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     logger.info("Loading task schedule ...");
     std::auto_ptr<ConfigView> schedulerCfgGuard(config->getSubConfig("TaskScheduler"));
     ConfigView* schedulerCfg = schedulerCfgGuard.get();
-    scheduler.init(schedulerCfg);
+    scheduler.init(this, schedulerCfg);
     logger.info("Task schedule loaded.");
     logger.info("Load success.");
 }
@@ -60,6 +64,17 @@ int TaskProcessor::Execute()
 void TaskProcessor::MainLoop()
 {
     // TODO: implement it
+}
+
+bool TaskProcessor::addTask(const Task* task)
+{
+    // TODO: implement it
+    return false;
+}
+bool TaskProcessor::removeTask(std::string taskName)
+{
+    // TODO: implement it
+    return false;
 }
 
 }}

@@ -9,7 +9,7 @@
 
 #include <logger/Logger.h>
 #include <core/buffers/Array.hpp>
-#include <core/buffers/Hash.hpp>
+#include <core/buffers/IntHash.hpp>
 
 #include <core/threads/Thread.hpp>
 #include <core/synchronization/Mutex.hpp>
@@ -28,13 +28,19 @@ namespace smsc { namespace infosme
     
     using smsc::util::Logger;
     
+    class TaskProcessor;
     class TaskScheduler : public Thread
     {
     private:
 
+        TaskProcessor* processor;
+
         Event       awake, exited;
         bool        bStarted, bNeedExit;
         Mutex       startLock;
+
+        IntHash<Schedule*>  schedules;
+        Mutex               schedulesLock; 
         
     public:
 
@@ -50,7 +56,7 @@ namespace smsc { namespace infosme
          * @param config
          * @exception ConfigException throws when configuration is invalid
          */
-        void init(ConfigView* config);
+        void init(TaskProcessor* processor, ConfigView* config);
 
         virtual int Execute();
         void Start();
@@ -61,7 +67,7 @@ namespace smsc { namespace infosme
          *
          * @param schedule      shedule for task(s)
          */
-        void addSchedule(Schedule& schedule);
+        void addSchedule(Schedule* schedule);
 
         /**
          * Changes task schedule in scheduling plan and reactivates scheduler.
@@ -71,7 +77,7 @@ namespace smsc { namespace infosme
          * @param schedule      new shedule for task
          * @return false if task wasn't scheduled, else returns true.
          */
-        bool changeSchedule(int scheduleId, Schedule& schedule);
+        bool changeSchedule(int scheduleId, Schedule* schedule);
         
         /**
          * Removes task schedule from scheduling plan.

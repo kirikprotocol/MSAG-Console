@@ -25,10 +25,13 @@ time_t OnceSchedule::calulateNextTime()
     time_t st = startDate + startTime;
     if (ct <= st) return st;
     
-    if (!advanced.repeat || everyNSec <= 0) return -1;
+    if (!advanced.repeat || advanced.everyNSec <= 0) return -1;
     
-    while (st < ct && st < startDate+endTime) st += everyNSec;
-    return (st < startDate+endTime) ? st:-1;
+    bool   ets = advanced.endTime < 0;
+    time_t et = startDate+((ets) ? 0:advanced.endTime);
+    
+    while (st < ct && (ets ? (st < et):true)) st += advanced.everyNSec;
+    return (ets ? (st < et):true) ? st:-1;
 }
 time_t DailySchedule::calulateNextTime()
 {
@@ -39,9 +42,10 @@ time_t DailySchedule::calulateNextTime()
 
     time_t ct = time(NULL);
     time_t st = advanced.startDate + startTime;
-    time_t deadLine = ((advanced.endDate >= 0) ? endDate:0) + 
-                      ((advanced.endTime >= 0) ? endTime:0);
-    return (ct <= st && st <= deadLine) ? st:-1;
+    time_t deadLine = ((advanced.endDate >= 0) ? advanced.endDate:0) + 
+                      ((advanced.endTime >= 0) ? advanced.endTime:0);
+    if (ct >= deadLine) return -1;
+    if (ct <= st && st <= deadLine) return st;
     
     if (everyNDays > 0)
     {

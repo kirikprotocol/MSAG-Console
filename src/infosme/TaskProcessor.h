@@ -8,13 +8,14 @@
 #include <inttypes.h>
 
 #include <logger/Logger.h>
-#include <core/buffers/Array.hpp>
-#include <core/buffers/Hash.hpp>
 
 #include <util/config/ConfigView.h>
 #include <util/config/ConfigException.h>
 
+#include <core/buffers/Array.hpp>
+#include <core/buffers/Hash.hpp>
 #include <core/threads/Thread.hpp>
+#include <core/threads/ThreadPool.hpp>
 #include <core/synchronization/Mutex.hpp>
 #include <core/synchronization/Event.hpp>
 
@@ -24,14 +25,12 @@
 #include "TaskScheduler.h"
 #include "Task.h"
 
-//#include "InfoSmeExceptions.h"
-
 namespace smsc { namespace infosme 
 {
     using namespace smsc::core::buffers;
+    using namespace smsc::core::threads;
     using namespace smsc::db;
     
-    using smsc::core::threads::Thread;
     using smsc::core::synchronization::Event;
     using smsc::core::synchronization::Mutex;
     
@@ -40,6 +39,72 @@ namespace smsc { namespace infosme
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
 
+    class TaskRunner : public ThreadedTask
+    {
+    private:
+
+        Task* task;
+        int   method;
+        // add method params here !!!
+
+    public:
+        
+        TaskRunner(Task* task, int method)
+            : ThreadedTask(), task(task), method(method) {};
+        virtual ~TaskRunner() {};
+        
+        virtual int Execute() {
+            // TODO : implement it ! Call specified method
+            return 0;
+        };
+        virtual const char* taskName() {
+            return "InfoSmeTask";
+        };
+    };
+
+    class TaskManager 
+    {
+    private:
+    
+        log4cpp::Category  &logger;
+        ThreadPool          pool;
+        
+    public:
+    
+        TaskManager() : logger(Logger::getCategory("smsc.infosme.TaskManager")) {};
+        virtual ~TaskManager() {
+            shutdown();
+        };
+    
+        void shutdown() {
+            pool.shutdown();
+        }
+    
+        void init(ConfigView* config) // throw(ConfigException)
+        {
+            try 
+            {
+                int maxThreads = config->getInt("max");
+                pool.setMaxThreads(maxThreads);
+            } 
+            catch (ConfigException& exc) {
+                logger.warn("Maximum thread pool size wasn't specified !");
+            }
+            
+            try
+            {
+                int initThreads = config->getInt("init");
+                pool.preCreateThreads(initThreads);
+            }
+            catch (ConfigException& exc) {
+                logger.warn("Precreated threads count in pool wasn't specified !");
+            }
+        };
+        
+        void invokeTaskMethod(Task* task, int method) {
+            pool.startTask(new TaskRunner(task, method));
+        };
+    };
     
     class TaskProcessor : public Thread
     {
@@ -47,8 +112,9 @@ namespace smsc { namespace infosme
 
         log4cpp::Category  &logger;
 
-        TaskScheduler scheduler;
+        TaskManager   manager;  
         DataProvider  provider;
+        TaskScheduler scheduler;
         
         Event       awake, exited;
         bool        bStarted, bNeedExit;
@@ -75,6 +141,9 @@ namespace smsc { namespace infosme
         void Stop();
         
         inline bool isStarted() { return bStarted; };
+
+        bool addTask(const Task* task);
+        bool removeTask(std::string taskName);
     };
 
 }}
