@@ -12,12 +12,17 @@ package ru.novosoft.smsc.admin.smsview;
 import java.sql.*;
 import javax.sql.*;
 
+import java.util.Vector;
+//import java.util.Enumeration;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
+
+import ru.novosoft.smsc.admin.smsc_service.Smsc;
 
 public class SmsView
 {
@@ -32,10 +37,10 @@ public class SmsView
   private static short DATA_CODING_SMSC7BIT   = 0xf0; // 0xf0;
 
   private DataSource ds = null;
+  private Smsc smsc = null;
 
-  public void setDataSource(DataSource ds) {
-    this.ds = ds;
-  }
+  public void setDataSource(DataSource ds) { this.ds = ds; }
+  public void setSmsc(Smsc smsc) { this.smsc = smsc; }
 
   public SmsSet getSmsSet(SmsQuery query)
   {
@@ -61,10 +66,8 @@ public class SmsView
     return set;
   }
 
-  public int delSmsSet(SmsSet set, int storage)
+  public int delArchiveSmsSet(SmsSet set)
   {
-    if (storage == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) return 0;
-
     Connection connection = null;
     int deleted = 0;
     try {
@@ -88,6 +91,31 @@ public class SmsView
       catch (Exception cexc) { cexc.printStackTrace(); }
       System.out.println("Operation with DB failed !");
       exc.printStackTrace();
+    }
+    return deleted;
+  }
+
+  public int delOperativeSmsSet(SmsSet set)
+  {
+    if (smsc == null) return -1;
+    int deleted = 0;
+
+    Vector output = new Vector();
+    for (int i=0; i<set.getRowsCount(); i++) {
+      SmsRow row = set.getRow(i);
+      if (row != null) {
+        output.addElement(row.getIdString());
+        deleted++;
+      }
+    }
+    try
+    {
+      smsc.processCancelMessages(output);
+    }
+    catch (Exception exc) {
+      System.out.println("Failed to cancel messages on SMSC!");
+      exc.printStackTrace();
+      return -1;
     }
     return deleted;
   }

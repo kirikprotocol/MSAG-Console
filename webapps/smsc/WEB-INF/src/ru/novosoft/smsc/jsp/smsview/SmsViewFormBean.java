@@ -39,6 +39,7 @@ public class SmsViewFormBean extends SmsQuery
     if (context == null && ctx instanceof SMSCAppContext) {
       context = (SMSCAppContext)ctx;
       view.setDataSource(context.getConnectionPool());
+      view.setSmsc(context.getSmsc());
     }
   }
   public AppContext getAppContext() {
@@ -54,8 +55,15 @@ public class SmsViewFormBean extends SmsQuery
   }
   public void processDeleteAll()
   {
-    deletedRowsCount = view.delSmsSet(rows, getStorageType());
-    processQuery();
+    if (getStorageType() == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE) {
+      deletedRowsCount = view.delArchiveSmsSet(rows);
+      getStorageType();
+    }
+    else {
+      deletedRowsCount = view.delOperativeSmsSet(rows);
+      rows = null;
+      processFirstIndexing();
+    }
   }
 
   public void moveToPrev()  { processPrevIndexing();  }
