@@ -1437,6 +1437,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
         if ( cmd->get_commandId() == DELIVERY  && cmd->get_sms()->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP ) )
         {
           unsigned serviceOp = cmd->get_sms()->getIntProperty(Tag::SMPP_USSD_SERVICE_OP );
+          __map_trace2__("putCommand dialog /0x%x USSD OP %d",dialogid_smsc, serviceOp);
           string s_seq(cmd->get_sms()->getDestinationAddress().value);
           if (s_seq.length()==0) throw MAPDIALOG_FATAL_ERROR("MAP::PutCommand: empty destination address");
           long long sequence;
@@ -1524,6 +1525,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
                 DoUSSDRequestOrNotifyReq(dialog.get());
                 return;
               } else {
+                __map_trace2__("%s: trying to create USSD network intiated session",__FUNCTION__);
                 try{
                   if( !dialog2 ) { // not chained dialog
                     try {
