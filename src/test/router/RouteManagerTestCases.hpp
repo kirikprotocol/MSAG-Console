@@ -8,6 +8,7 @@
 #include "test/util/BaseTestCases.hpp"
 #include "test/util/Util.hpp"
 #include "test/core/RouteUtil.hpp"
+#include "test/core/RouteRegistry.hpp"
 #include <vector>
 
 namespace smsc {
@@ -22,6 +23,7 @@ using smsc::router::RouteInfo;
 using smsc::router::RouteManager;
 using smsc::smeman::SmeSystemId;
 using smsc::test::core::TestRouteData;
+using smsc::test::core::RouteRegistry;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::TCResult;
 
@@ -66,13 +68,13 @@ public:
 	/**
 	 * Поиск маршрута.
 	 */
-	TCResult* lookupRoute(const Address& origAddr, const Address& destAddr,
-		const vector<TestRouteData*>& routes);
+	TCResult* lookupRoute(const RouteRegistry& routeReg,
+		const Address& origAddr, const Address& destAddr);
 
 	/*
 	 * Итерирование по списку маршрутов.
 	 */
-	TCResult* iterateRoutes(const vector<TestRouteData*>& routes);
+	TCResult* iterateRoutes(const RouteRegistry& routeReg);
 
 protected:
 	virtual Category& getLog();

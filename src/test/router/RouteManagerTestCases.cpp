@@ -6,6 +6,7 @@
 #include "test/util/Util.hpp"
 #include <sys/types.h>
 #include <sstream>
+#include <util/debug.h>
 
 namespace smsc {
 namespace test {
@@ -53,6 +54,7 @@ TCResult* RouteManagerTestCases::addCorrectRoute(const SmeSystemId& smeSystemId,
 		{
 			RouteUtil::setupRandomCorrectRouteInfo(smeSystemId, route);
 			//origAddr
+			route->source = data->origAddr;
 			AddressValue origAddrVal;
 			uint8_t origAddrLen = data->origAddr.getValue(origAddrVal);
 			int oaLen = rand1(origAddrLen);
@@ -72,11 +74,15 @@ TCResult* RouteManagerTestCases::addCorrectRoute(const SmeSystemId& smeSystemId,
 				case 3: //source адрес с лишним '?'
 					if (origAddrLen < MAX_ADDRESS_VALUE_LENGTH)
 					{
-						data->origAddr.getValue(origAddrVal);
 						origAddrVal[origAddrLen] = '?';
 						route->source.setValue(origAddrLen + 1, origAddrVal);
-						data->match = false;
 					}
+					else
+					{
+						origAddrVal[origAddrLen - 1 ] = '+';
+						route->source.setValue(origAddrLen, origAddrVal);
+					}
+					data->match = false;
 					break;
 				case 4: //source адрес целиком или частично со '*' в конце
 					memset(origAddrVal + origAddrLen - oaLen, '*', oaLen2);
@@ -91,11 +97,10 @@ TCResult* RouteManagerTestCases::addCorrectRoute(const SmeSystemId& smeSystemId,
 				case 6: //source адрес с лишней '*'
 					if (origAddrLen < MAX_ADDRESS_VALUE_LENGTH)
 					{
-						data->origAddr.getValue(origAddrVal);
 						origAddrVal[origAddrLen] = '*';
 						route->source.setValue(origAddrLen + 1, origAddrVal);
-						data->origAddrMatch = 100;
 					}
+					data->origAddrMatch = 100;
 					break;
 				case 7: //source адрес с несовпадающим typeOfNumber
 					route->source.setTypeOfNumber(
@@ -111,6 +116,7 @@ TCResult* RouteManagerTestCases::addCorrectRoute(const SmeSystemId& smeSystemId,
 					throw s;
 			}
 			//destAddr
+			route->dest = data->destAddr;
 			AddressValue destAddrVal;
 			uint8_t destAddrLen = data->destAddr.getValue(destAddrVal);
 			int daLen = rand1(destAddrLen);
@@ -130,11 +136,15 @@ TCResult* RouteManagerTestCases::addCorrectRoute(const SmeSystemId& smeSystemId,
 				case 3: //dest адрес с лишним '?'
 					if (destAddrLen < MAX_ADDRESS_VALUE_LENGTH)
 					{
-						data->destAddr.getValue(destAddrVal);
 						destAddrVal[destAddrLen] = '?';
 						route->dest.setValue(destAddrLen + 1, destAddrVal);
-						data->match = false;
 					}
+					else
+					{
+						destAddrVal[destAddrLen - 1] = '+';
+						route->dest.setValue(destAddrLen, destAddrVal);
+					}
+					data->match = false;
 					break;
 				case 4: //dest адрес целиком или частично со '*' в конце
 					memset(destAddrVal + destAddrLen - daLen, '*', daLen2);
@@ -149,11 +159,10 @@ TCResult* RouteManagerTestCases::addCorrectRoute(const SmeSystemId& smeSystemId,
 				case 6: //dest адрес с лишней '*'
 					if (destAddrLen < MAX_ADDRESS_VALUE_LENGTH)
 					{
-						data->destAddr.getValue(destAddrVal);
 						destAddrVal[destAddrLen] = '*';
 						route->dest.setValue(destAddrLen + 1, destAddrVal);
-						data->destAddrMatch = 100;
 					}
+					data->destAddrMatch = 100;
 					break;
 				case 7: //dest адрес с несовпадающим typeOfNumber
 					route->dest.setTypeOfNumber(
@@ -180,6 +189,8 @@ TCResult* RouteManagerTestCases::addCorrectRoute(const SmeSystemId& smeSystemId,
 				default:
 					throw s;
 			}
+__require__(route->source.getLenght());
+__require__(route->dest.getLenght());
 debugRoute(*route);
 			routeMan->addRoute(*route);
 		}
@@ -299,7 +310,7 @@ TCResult* RouteManagerTestCases::addIncorrectRoute(const SmeSystemId& smeSystemI
 			switch(s.value())
 			{
 				case 1: //дублирующий routeId
-					route.routeId = existingRoute.routeId;
+					//route.routeId = existingRoute.routeId;
 					break;
 				case 2: //несуществующий smeSystemId
 					{
@@ -322,17 +333,21 @@ TCResult* RouteManagerTestCases::addIncorrectRoute(const SmeSystemId& smeSystemI
 	return res;
 }
 
-TCResult* RouteManagerTestCases::lookupRoute(const Address& origAddr,
-	const Address& destAddr, const vector<TestRouteData*>& routes)
+TCResult* RouteManagerTestCases::lookupRoute(const RouteRegistry& routeReg,
+	const Address& origAddr, const Address& destAddr)
 {
 	TCResult* res = new TCResult(TC_LOOKUP_ROUTE);
 	try
 	{
 		SmeProxy* proxy;
 		bool found = routeMan->lookup(origAddr, destAddr, proxy);
+		const vector<uint32_t> ids = routeReg.lookup(origAddr, destAddr);
 		if (!found)
 		{
-			res->addFailure(101);
+			if (ids.size())
+			{
+				res->addFailure(101);
+			}
 		}
 		else if (!proxy)
 		{
@@ -340,55 +355,19 @@ TCResult* RouteManagerTestCases::lookupRoute(const Address& origAddr,
 		}
 		else
 		{
-			//приоритеты маршрутов: destAddr, origAddr, priority
-			int idx = -1;
-			for (int i = 0; i < routes.size(); i++)
+			uint32_t id = proxy->getUniqueId();
+			found = false;
+			for (int i = 0; i < ids.size(); i++)
 			{
-				if (!routes[i]->match)
+				if (ids[i] == id)
 				{
-					continue;
-				}
-				if (!SmsUtil::compareAddresses(origAddr, routes[i]->origAddr) ||
-					!SmsUtil::compareAddresses(destAddr, routes[i]->destAddr))
-				{
-					continue;
-				}
-				if (idx < 0)
-				{
-					idx = i;
-					continue;
-				}
-				if (routes[idx]->destAddrMatch < routes[i]->destAddrMatch)
-				{
-					idx = i;
-					continue;
-				}
-				if (routes[idx]->destAddrMatch == routes[i]->destAddrMatch)
-				{
-					if (routes[idx]->origAddrMatch < routes[i]->origAddrMatch)
-					{
-						idx = i;
-						continue;
-					}
-					if (routes[idx]->origAddrMatch == routes[i]->origAddrMatch &&
-						routes[idx]->route->priority < routes[i]->route->priority)
-					{
-						idx = i;
-						continue;
-					}
+					found = true;
+					break;
 				}
 			}
-			if (idx < 0)
+			if (!found)
 			{
-				res->addFailure(103);
-			}
-			else
-			{
-				TestSmeProxy* _proxy = (TestSmeProxy*) proxy;
-				if (routes[idx]->route->smeSystemId != _proxy->getSystemId())
-				{
-					res->addFailure(104);
-				}
+				res->addFailure(104);
 			}
 		}
 	}
@@ -401,8 +380,7 @@ TCResult* RouteManagerTestCases::lookupRoute(const Address& origAddr,
 	return res;
 }
 
-TCResult* RouteManagerTestCases::iterateRoutes(
-	const vector<TestRouteData*>& routes)
+TCResult* RouteManagerTestCases::iterateRoutes(const RouteRegistry& routeReg)
 {
 	TCResult* res = new TCResult(TC_ITERATE_ROUTES);
 	try
@@ -417,24 +395,19 @@ TCResult* RouteManagerTestCases::iterateRoutes(
 			//SmeProxy* proxy = iter->getSmeProxy();
 			//int index = iter->getIndex();
 			RouteInfo route = iter->getRouteInfo();
-			bool found = false;
-			for (int i = 0; i < routes.size(); i++)
-			{
-				if (routes[i]->route->routeId == route.routeId)
-				{
-					found = true; foundRoutes++;
-					vector<int> tmp = RouteUtil::compareRoutes(
-						*routes[i]->route, route);
-					for (int j = 0; j < tmp.size(); j++)
-					{
-						mismatch[tmp[j]]++;
-					}
-					break;
-				}
-			}
-			if (!found)
+			const RouteInfo* correctRoute = routeReg.getRoute(route.routeId);
+			if (!correctRoute)
 			{
 				extraRoutes++;
+			}
+			else
+			{
+				foundRoutes++;
+				vector<int> tmp = RouteUtil::compareRoutes(*correctRoute, route);
+				for (int i = 0; i < tmp.size(); i++)
+				{
+					mismatch[tmp[i]]++;
+				}
 			}
 		}
 		delete iter;
@@ -444,7 +417,7 @@ TCResult* RouteManagerTestCases::iterateRoutes(
 			res->addFailure(101);
 		}
 		//итератор пропустил некоторые маршруты
-		if (foundRoutes != routes.size())
+		if (foundRoutes != routeReg.size())
 		{
 			res->addFailure(102);
 		}
