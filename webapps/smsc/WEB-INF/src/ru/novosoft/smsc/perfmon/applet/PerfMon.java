@@ -11,6 +11,8 @@ import java.io.DataInputStream;
 import java.io.IOException;
 
 import ru.novosoft.smsc.perfmon.PerfSnap;
+import ru.novosoft.smsc.util.applet.LabelGroup;
+import ru.novosoft.smsc.util.applet.AdvancedLabel;
 
 
 public class PerfMon extends Applet implements Runnable, MouseListener, ActionListener, ItemListener {
@@ -18,8 +20,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
 //  StatInfoPanel stat_p;
   public static final int VIEWMODE_IO = 0;
   public static final int VIEWMODE_SEPARATE = 1;
-  PerformanceLabel uptimeLabel;
-  PerformanceLabel sctimeLabel;
+  AdvancedLabel uptimeLabel;
+  AdvancedLabel sctimeLabel;
   PerformanceBar perfbar;
   PerfInfoTable perfTable;
   PerfQueueTable perfQueue;
@@ -180,8 +182,8 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
     perfGraph.setFont(new Font("dialog", Font.PLAIN, 10));
     perfGraph.addMouseListener(this);
 
-    uptimeLabel = new PerformanceLabel(snap.strUptime);
-    sctimeLabel = new PerformanceLabel(snap.strSctime);
+    uptimeLabel = new AdvancedLabel(snap.strUptime);
+    sctimeLabel = new AdvancedLabel(snap.strSctime);
 
 
     Panel p = new Panel(new GridLayout(1, 2));

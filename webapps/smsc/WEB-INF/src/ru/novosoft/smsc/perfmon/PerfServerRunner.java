@@ -1,5 +1,7 @@
 package ru.novosoft.smsc.perfmon;
 
+import ru.novosoft.smsc.util.SnapBufferReader;
+
 import java.net.Socket;
 import java.net.SocketException;
 import java.io.*;
@@ -74,115 +76,24 @@ public class PerfServerRunner extends Thread {
     }
   }
 
-  class SnapBufferReader {
-    byte buf[] = new byte[1024];
-    int offset;
-    int size;
-    public SnapBufferReader() {
-      offset = 0;
-    }
-    public void resetOffset(){
-      offset = 0;
-    }
-    public int read() throws EOFException {
-      if( offset >= size ) {
-        logger.error("Buffer: Requested byte at "+offset+" of "+size);
-        throw new EOFException();
-      }
-      return ((int)buf[offset++])&0xFF;
-    }
-
-    public void fill( InputStream is, int len ) throws IOException {
-//      logger.debug("filling buffer with: "+len+" was used: "+offset);
-      offset = 0;
-      size = 0;
-      int cnt = 0;
-      while( size < len ) {
-        cnt = is.read(buf, size, len-size);
-        if( cnt == -1 ) throw new EOFException();
-        size += cnt;
-      }
-//      logger.debug("filled buffer with: "+size);
-    }
-  }
-
-  protected short readNetworkShort(SnapBufferReader in)
-          throws IOException {
-    int ch1 = in.read();
-    int ch2 = in.read();
-    return (short) ((ch1 << 8) + ch2);
-  }
-
-  protected int readNetworkInt(SnapBufferReader in)
-          throws IOException {
-    int ch1 = in.read();
-    int ch2 = in.read();
-    int ch3 = in.read();
-    int ch4 = in.read();
-    return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + ch4);
-  }
-
-  protected int readNetworkInt(InputStream in)
-          throws IOException {
-    int ch1 = in.read();
-    int ch2 = in.read();
-    int ch3 = in.read();
-    int ch4 = in.read();
-    if( ch1 == -1 || ch2 == -1 || ch3 == -1 || ch4 == -1)
-      throw new EOFException();
-    return ((ch1 << 24) + (ch2 << 16) + (ch3 << 8) + ch4);
-  }
-
-  protected long readNetworkLong(SnapBufferReader in)
-          throws IOException {
-    int i1 = readNetworkInt(in);
-    int i2 = readNetworkInt(in);
-
-    return ((long) (i1) << 32) + (i2 & 0xFFFFFFFFL);
-  }
-
   protected void readSnap(InputStream istream, PerfSnap snap)
           throws IOException {
-    int len = readNetworkInt(istream);
+    int len = inbuf.readNetworkInt(istream);
     inbuf.fill(istream, len-4);
-    int numOfCounters = readNetworkInt(inbuf);
-    snap.last[PerfSnap.IDX_SUBMIT] = (long) readNetworkInt(inbuf);
-    snap.avg[PerfSnap.IDX_SUBMIT] = (long) readNetworkInt(inbuf);
-    snap.total[PerfSnap.IDX_SUBMIT] = readNetworkLong(inbuf);
+    snap.init(inbuf);
+  }
 
-    snap.last[PerfSnap.IDX_SUBMITERR] = (long) readNetworkInt(inbuf);
-    snap.avg[PerfSnap.IDX_SUBMITERR] = (long) readNetworkInt(inbuf);
-    snap.total[PerfSnap.IDX_SUBMITERR] = readNetworkLong(inbuf);
+  Object shutSemaphore = new Object();
+  boolean isStopping = false;
 
-    snap.last[PerfSnap.IDX_DELIVER] = (long) readNetworkInt(inbuf);
-    snap.avg[PerfSnap.IDX_DELIVER] = (long) readNetworkInt(inbuf);
-    snap.total[PerfSnap.IDX_DELIVER] = readNetworkLong(inbuf);
-
-    snap.last[PerfSnap.IDX_TEMPERR] = (long) readNetworkInt(inbuf);
-    snap.avg[PerfSnap.IDX_TEMPERR] = (long) readNetworkInt(inbuf);
-    snap.total[PerfSnap.IDX_TEMPERR] = readNetworkLong(inbuf);
-
-    snap.last[PerfSnap.IDX_DELIVERERR] = (long) readNetworkInt(inbuf);
-    snap.avg[PerfSnap.IDX_DELIVERERR] = (long) readNetworkInt(inbuf);
-    snap.total[PerfSnap.IDX_DELIVERERR] = readNetworkLong(inbuf);
-
-    snap.last[PerfSnap.IDX_RETRY] = (long) readNetworkInt(inbuf);
-    snap.avg[PerfSnap.IDX_RETRY] = (long) readNetworkInt(inbuf);
-    snap.total[PerfSnap.IDX_RETRY] = readNetworkLong(inbuf);
-
-/*    System.out.println("totals="
-            +snap.total[PerfSnap.IDX_SUBMIT]+"/"
-            +snap.total[PerfSnap.IDX_SUBMITERR]+"/"
-            +snap.total[PerfSnap.IDX_DELIVER]+"/"
-            +snap.total[PerfSnap.IDX_TEMPERR]+"/"
-            +snap.total[PerfSnap.IDX_DELIVERERR]+"/"
-            +snap.total[PerfSnap.IDX_RETRY]);
-  */
-    snap.queueSize = readNetworkInt(inbuf);
-    snap.uptime = readNetworkInt(inbuf);
-    snap.sctime = readNetworkInt(inbuf);
-    snap.processingSize = readNetworkInt(inbuf);
-    snap.schedulerSize = readNetworkInt(inbuf);
+  public void shutdown() {
+    synchronized (shutSemaphore) {
+      isStopping = true;
+      try {
+        shutSemaphore.wait();
+      } catch (InterruptedException e) {
+      }
+    }
   }
 
   void fillDebugSnap(PerfSnap snap) {
@@ -198,17 +109,13 @@ public class PerfServerRunner extends Thread {
     snap.avg[2] = snap.total[2] / snap.uptime;
     snap.avg[3] = snap.total[3] / snap.uptime;
   }
-
-  Object shutSemaphore = new Object();
-  boolean isStopping = false;
-
   protected void snapGenerator(DataOutputStream os)
           throws IOException {
     int scale = 160;
     PerfSnap snap = new PerfSnap();
     logger.debug("Prepare snap for first time");
     fillDebugSnap(snap);
-    int difsuccsess = 50;
+//    int difsuccsess = 50;
     int diferror = 10;
     int difresch = 10;
     Random rand = new Random(System.currentTimeMillis());
@@ -246,16 +153,6 @@ public class PerfServerRunner extends Thread {
       logger.debug("Writing snap: " + snap.uptime + " " + snap.sctime);
       snap.write(os);
       os.flush();
-    }
-  }
-
-  public void shutdown() {
-    synchronized (shutSemaphore) {
-      isStopping = true;
-      try {
-        shutSemaphore.wait();
-      } catch (InterruptedException e) {
-      }
     }
   }
 }

@@ -45,6 +45,7 @@ cp $SMSC_BUILDDIR/jars/smsc.jar $DISTR_DIR/webapps/smsc/WEB-INF/lib
 cp $SMSC_BUILDDIR/jars/smsc_tomcat_common.jar $DISTR_DIR/tomcat/common/lib
 cp $SMSC_BUILDDIR/jars/smsc_tomcat_server.jar $DISTR_DIR/tomcat/server/lib
 cp $SMSC_BUILDDIR/jars/perfmon.jar  $DISTR_DIR/webapps/smsc/perfmon
+cp $SMSC_BUILDDIR/jars/topmon.jar  $DISTR_DIR/webapps/smsc/topmon
 echo Copying web admin resources
 cd $SMSC_SRCDIR/webapp
 find . -type f -name "*.jsp" | cpio -pud $DISTR_DIR/webapps

@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.perfmon.applet;
+package ru.novosoft.smsc.util.applet;
 
 import java.awt.*;
 
@@ -6,7 +6,7 @@ import ru.novosoft.smsc.perfmon.PerfSnap;
 
 // not blinking on repair label
 
-public class PerformanceLabel extends Canvas {
+public class AdvancedLabel extends Canvas {
   Image offscreen;
 
   public final static int LEFT = 0;
@@ -19,14 +19,14 @@ public class PerformanceLabel extends Canvas {
 
   Dimension prefSize = new Dimension(0, 0);
 
-  public PerformanceLabel() {
+  public AdvancedLabel() {
   }
 
-  public PerformanceLabel(String text) {
+  public AdvancedLabel(String text) {
     this.text = text;
   }
 
-  public PerformanceLabel(String text, int align) {
+  public AdvancedLabel(String text, int align) {
     this.text = text;
     this.align = align;
   }

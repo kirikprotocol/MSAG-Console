@@ -1,4 +1,4 @@
-package ru.novosoft.smsc.perfmon.applet;
+package ru.novosoft.smsc.util.applet;
 
 import java.awt.*;
 import java.util.*;
@@ -162,6 +162,12 @@ public class LabelGroup
   }
 
   // -- Layout and painting --
+
+  public Dimension getMinimumSize() {
+    Insets insets = getInsets();
+    Dimension sz = new Dimension(insets.left+insets.right, insets.top+insets.bottom);
+    return super.getMinimumSize();
+  }
 
   /**
    * Returns the insets of this group.
