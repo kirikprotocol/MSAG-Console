@@ -311,7 +311,7 @@ namespace smsc { namespace store
     static const char* sql;
     protected:
         
-        OCIDate nextTime;
+        OCIDate nextTime, currTime;
         
         sb2     indDstMsc, indDstImsi;
 
@@ -340,6 +340,7 @@ namespace smsc { namespace store
     static const char* sql;
     protected:
 
+        OCIDate currTime;
         sb2     indDstMsc, indDstImsi;
 
     public:
@@ -363,6 +364,7 @@ namespace smsc { namespace store
     static const char* sql;
     protected:
 
+        OCIDate currTime;
         sb2     indDstMsc, indDstImsi;
 
     public:
