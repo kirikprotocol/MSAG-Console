@@ -353,7 +353,7 @@ int SmppInputThread::Execute()
                   SmeIndex proxyIndex=smeManager->lookup(sid);
                   SmeInfo si=smeManager->getSmeInfo(proxyIndex);
                   proxy->setForceDC(si.forceDC);
-                  __trace2__("smid=%s, forceDC=%s",si.forceDC?"true":"false");
+                  __trace2__("smid=%s, forceDC=%s",sid.c_str(),si.forceDC?"true":"false");
                   resppdu.get_header().
                     set_commandStatus(SmppStatusSet::ESME_ROK);
                 }catch(SmeRegisterException& e)
