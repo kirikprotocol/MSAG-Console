@@ -280,8 +280,8 @@ bool RollingStorage::create(bool bill)
         fclose(storageFile); storageFile = 0;
         needFile = false;
     }
-
-    storageFile = fopen(fullFilePathStr, "ab+");
+    
+    storageFile = fopen(fullFilePathStr, needFile ? "ab+":"rb+");
     if (!storageFile) {
         Exception exc("Failed to create %s file '%s'. Details: %s",
                       (bill ? "billing":"archive"), fullFilePathStr, strerror(errno));
@@ -728,7 +728,7 @@ bool PersistentStorage::create(bool create)
         throw StorageException(exc.what());
     }                   // openning for writing (appending)
 
-    storageFile = fopen(fullFilePathStr, "ab+");
+    storageFile = fopen(fullFilePathStr, needFile ? "ab+":"rb+");
     if (!storageFile) {
         Exception exc("Failed to open file '%s' for writing. Details: %s", 
                       fullFilePathStr, strerror(errno));
@@ -808,7 +808,7 @@ bool TextDumpStorage::create()
         needFile = false;
     } 
 
-    storageFile = fopen(fullFilePathStr, "ab+");
+    storageFile = fopen(fullFilePathStr, needFile ? "ab+":"rb+");
     if (!storageFile) {
         Exception exc("Failed to open file '%s' for writing. Details: %s", 
                       fullFilePathStr, strerror(errno));
