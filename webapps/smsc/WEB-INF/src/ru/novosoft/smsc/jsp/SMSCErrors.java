@@ -95,6 +95,8 @@ public class SMSCErrors
 			public static final String cantEdit = B + "cantEdit";
 			public static final String nameNotSpecified = B + "nameNotSpecified";
 			public static final String invalidPriority = B + "invalidPriority";
+			public static final String sourcesIsEmpty = B + "sourcesIsEmpty";
+			public static final String destinationsIsEmpty = B + "destinationsIsEmpty";
 		}
 
 		public static class users

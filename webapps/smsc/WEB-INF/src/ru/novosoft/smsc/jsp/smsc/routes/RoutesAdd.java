@@ -156,6 +156,11 @@ public class RoutesAdd extends SmscBean
 				destinations.add(new Destination(new Mask(mask), sme));
 			}
 
+			if (sources.isEmpty())
+				return error(SMSCErrors.error.routes.sourcesIsEmpty);
+			if (destinations.isEmpty())
+				return error(SMSCErrors.error.routes.destinationsIsEmpty);
+
 			smsc.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, serviceId, sources, destinations));
 			appContext.getStatuses().setRoutesChanged(true);
 			return RESULT_DONE;
