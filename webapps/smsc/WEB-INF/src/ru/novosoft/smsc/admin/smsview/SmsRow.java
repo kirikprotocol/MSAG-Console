@@ -51,7 +51,7 @@ public class SmsRow
   private Mask  dealiasedDestinationAddressMask;
 
   private int     status  = 0;
-  private String  text = "Message text ";
+  private String  text = "";
   private boolean textEncoded = false;
 
   private boolean marked = false;
