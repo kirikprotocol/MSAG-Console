@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+<config>
+    <section name="admin">
+	<section name="daemon">
+	    <param name="host" type="string">smsc</param>
+	    <param name="port" type="int">6680</param>
+	</section>
+    </section>
+</config>

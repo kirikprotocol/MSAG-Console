@@ -5,10 +5,12 @@
     <!ATTLIST command service CDATA #IMPLIED>
     <!ATTLIST command component CDATA #IMPLIED>
     <!ATTLIST command method CDATA #IMPLIED>
+    <!ATTLIST command returnType (string|int|bool) #IMPLIED>
     
 <!ELEMENT service (arg*)>
     <!ATTLIST service name CDATA #REQUIRED>
     <!ATTLIST service cmd_line CDATA #REQUIRED>
+    <!ATTLIST service config_file CDATA #REQUIRED>
     <!ATTLIST service port CDATA #REQUIRED>
 
 <!ELEMENT arg (#PCDATA)>
