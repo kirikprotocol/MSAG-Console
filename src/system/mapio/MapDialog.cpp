@@ -557,7 +557,7 @@ void MapDialog::Et96MapV2ForwardSmMTConf (
   ET96MAP_PROV_ERR_T *provErrCode_p)
 {
 #if defined USE_MAP
-  if ( !errForwardSMmt_sp && !provErrCode_p )
+  if ( !errorForwardSMmt_sp && !provErrCode_p )
   {
     SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",this->smscDialogId,CMD_OK);
     MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);

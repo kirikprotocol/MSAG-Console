@@ -118,7 +118,7 @@ USHORT_T Et96MapUAbortInd(ET96MAP_LOCAL_SSN_T lssn,
 }
 
 USHORT_T Et96MapV2ForwardSmMTConf (
-  ET96MAP_LOCAL_SSN_T localSsn,
+  ET96MAP_LOCAL_SSN_T lssn,
   ET96MAP_DIALOGUE_ID_T dialogid,
   ET96MAP_INVOKE_ID_T invokeId,
   ET96MAP_ERROR_FORW_SM_MT_T *errorForwardSMmt_sp,
