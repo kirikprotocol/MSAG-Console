@@ -4,11 +4,13 @@
 #include <pthread.h>
 
 #include "util/cstrings.h"
+#include "core/buffers/TmpBuf.hpp"
 
 namespace smsc {
 namespace logger {
 
 using namespace smsc::util;
+using namespace smsc::core::buffers;
 
 void rolloverFiles(const char * const filename, unsigned int maxBackupIndex)
 {
@@ -108,13 +110,14 @@ void RollingFileAppender::log(const char logLevelName, const char * const catego
 	char timeStr[32];
 	const size_t timeStrLength = ::strftime(timeStr, sizeof(timeStr)/sizeof(timeStr[0]), "%d-%m %H:%M:%S", &lcltm);
 	timeStr[timeStrLength] = 0;
-  char buffer[1024];
-  size_t length = snprintf(buffer, sizeof(buffer)/sizeof(buffer[0]), "%c %s,%3.3u %3.3u % 10.10s: %s\n", logLevelName, timeStr, tp.tv_usec/1000, ::pthread_self(), category, message);
-  buffer[sizeof(buffer)/sizeof(buffer[0])-1] = 0;
+  const size_t desiredLength = strlen(message)+128;
+  TmpBuf<char, 4096> buffer(desiredLength+1);
+  const size_t length = snprintf(buffer, desiredLength, "%c %s,%3.3u %3.3u % 10.10s: %s\n", logLevelName, timeStr, tp.tv_usec/1000, ::pthread_self(), category, message);
+  buffer[desiredLength] = 0;
   
   {
     smsc::core::synchronization::MutexGuard guard(mutex);
-    fwrite(buffer, length, 1, file != NULL ? file : stderr);
+    fwrite(buffer, length < desiredLength ? length : desiredLength, 1, file != NULL ? file : stderr);
     fflush(file);
     currentFilePos += length;
   	if (currentFilePos > maxFileSize)
