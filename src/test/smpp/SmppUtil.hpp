@@ -23,43 +23,31 @@ using namespace smsc::test::sms; //constants
 	#define __dumpReplaceSmPdu__(tc, id, pdu)
 	#define __dumpPdu__(tc, id, pdu)
 #else
-	#define __dumpSubmitSmPdu__(tc, id, pdu) \
-	if (pdu) { \
-		time_t lt = time(NULL); tm t; char buf[30]; \
-		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s", \
-			tc, id.c_str(), (pdu)->get_header().get_sequenceNumber(), \
-			SmppUtil::getWaitTime((pdu)->get_message().get_scheduleDeliveryTime(), time(NULL)), \
-			SmppUtil::getValidTime((pdu)->get_message().get_validityPeriod(), time(NULL)), \
-			asctime_r(localtime_r(&lt, &t), buf)); \
-		(pdu)->dump(TRACE_LOG_STREAM); \
-	} else { \
-		__trace2__("%s(): pdu = NULL", tc); \
-	}
-
-	#define __dumpReplaceSmPdu__(tc, id, pdu) \
-	if (pdu) { \
-		time_t lt = time(NULL); tm t; char buf[30]; \
-		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s", \
-			tc, id.c_str(), (pdu)->get_header().get_sequenceNumber(), \
-			SmppUtil::getWaitTime((pdu)->get_scheduleDeliveryTime(), time(NULL)), \
-			SmppUtil::getValidTime((pdu)->get_validityPeriod(), time(NULL)), \
-			asctime_r(localtime_r(&lt, &t), buf)); \
-		(pdu)->dump(TRACE_LOG_STREAM); \
-	} else { \
-		__trace2__("%s(): pdu = NULL", tc); \
-	}
-
-	#define __dumpPdu__(tc, id, pdu) \
-	if (pdu) { \
-		time_t lt = time(NULL); tm t; char buf[30]; \
-		__trace2__("%s(): systemId = %s, sequenceNumber = %u, system time = %s", \
-			tc, id.c_str(), (pdu)->get_header().get_sequenceNumber(), \
-			asctime_r(localtime_r(&lt, &t), buf)); \
-		(pdu)->dump(TRACE_LOG_STREAM); \
-	} else { \
-		__trace2__("%s(): pdu = NULL", tc); \
-	}
+	#define __dumpSubmitSmPdu__(tc, id, pdu) dumpSubmitSmPdu(tc, id, pdu)
+	#define __dumpReplaceSmPdu__(tc, id, pdu) dumpReplaceSmPdu(tc, id, pdu)
+	#define __dumpPdu__(tc, id, pdu) dumpPdu(tc, id, pdu)
 #endif //DISABLE_TRACING
+
+void dumpSubmitSmPdu(const char* tc, const string& id, PduSubmitSm* pdu);
+
+void dumpReplaceSmPdu(const char* tc, const string& id, PduReplaceSm* pdu);
+
+template <class Pdu>
+void dumpPdu(const char* tc, const string& id, Pdu* pdu)
+{
+	if (pdu)
+	{
+		time_t lt = time(NULL); tm t; char buf[30];
+		__trace2__("%s(): systemId = %s, sequenceNumber = %u, system time = %s",
+			tc, id.c_str(), pdu->get_header().get_sequenceNumber(),
+			asctime_r(localtime_r(&lt, &t), buf));
+		pdu->dump(TRACE_LOG_STREAM);
+	}
+	else
+	{
+		__trace2__("%s(): pdu = NULL", tc);
+	}
+}
 
 typedef enum
 { 
@@ -112,8 +100,8 @@ const uint8_t FAILURE_SMSC_DELIVERY_RECEIPT = 0x2;
 const uint8_t INTERMEDIATE_NOTIFICATION_REQUESTED = 0x10;
 
 //размеры структур и сами структуры
-const int MAX_SMPP_TIME_LENGTH = 20;
-typedef char SmppTime[MAX_SMPP_TIME_LENGTH];
+const int MAX_SMPP_TIME_LENGTH = 16;
+typedef char SmppTime[MAX_SMPP_TIME_LENGTH + 1];
 typedef char ShortMessage[MAX_SM_LENGTH];
 typedef char MessageId[MAX_MSG_ID_LENGTH + 1];
 

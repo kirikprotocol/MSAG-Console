@@ -17,6 +17,42 @@ using namespace smsc::test; //config params
 using namespace smsc::test::util;
 //using smsc::test::sms::SmsUtil;
 
+void dumpSubmitSmPdu(const char* tc, const string& id, PduSubmitSm* pdu)
+{
+	if (pdu)
+	{
+		time_t lt = time(NULL); tm t; char buf[30];
+		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s",
+			tc, id.c_str(), pdu->get_header().get_sequenceNumber(),
+			SmppUtil::getWaitTime(pdu->get_message().get_scheduleDeliveryTime(), time(NULL)),
+			SmppUtil::getValidTime(pdu->get_message().get_validityPeriod(), time(NULL)),
+			asctime_r(localtime_r(&lt, &t), buf));
+		pdu->dump(TRACE_LOG_STREAM);
+	}
+	else
+	{
+		__trace2__("%s(): pdu = NULL", tc);
+	}
+}
+
+void dumpReplaceSmPdu(const char* tc, const string& id, PduReplaceSm* pdu)
+{
+	if (pdu)
+	{
+		time_t lt = time(NULL); tm t; char buf[30];
+		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s",
+			tc, id.c_str(), pdu->get_header().get_sequenceNumber(),
+			SmppUtil::getWaitTime(pdu->get_scheduleDeliveryTime(), time(NULL)),
+			SmppUtil::getValidTime(pdu->get_validityPeriod(), time(NULL)),
+			asctime_r(localtime_r(&lt, &t), buf));
+		pdu->dump(TRACE_LOG_STREAM); \
+	}
+	else
+	{
+		__trace2__("%s(): pdu = NULL", tc);
+	}
+}
+
 PduAddress* SmppUtil::convert(const Address& smsAddr, PduAddress* smppAddr)
 {
 	smppAddr->set_typeOfNumber(smsAddr.getTypeOfNumber());
@@ -56,14 +92,14 @@ const char* SmppUtil::time2string(time_t lt, char* str, time_t base, int num, bo
 		case 1: //GMT time format
 			{
 				tm t;
-				int len = strftime(str, MAX_SMPP_TIME_LENGTH,
+				int len = strftime(str, MAX_SMPP_TIME_LENGTH + 1,
 					"%y%m%d%H%M%S000+", gmtime_r(&lt, &t));
 			}
 			break;
 		case 2: //local time format (+)
 			{
 				tm t;
-				int len = strftime(str, MAX_SMPP_TIME_LENGTH,
+				int len = strftime(str, MAX_SMPP_TIME_LENGTH + 1,
 					"%y%m%d%H%M%S0", localtime_r(&lt, &t));
 				int qtz = -timezone / 900 + (t.tm_isdst ? 4 : 0);
 				//для Новосибирка export TZ=NSD-6, а timezone = -21600
@@ -98,12 +134,21 @@ const char* SmppUtil::time2string(time_t lt, char* str, time_t base, int num, bo
 
 time_t SmppUtil::string2time(const char* str, time_t base, bool check)
 {
+	if (strlen(str) != MAX_SMPP_TIME_LENGTH)
+	{
+		return 0;
+	}
 	int tz;
 	char p;
 	tm t;
 	t.tm_isdst = 0;
-	sscanf(str, "%2d%2d%2d%2d%2d%2d0%2d%c", &t.tm_year, &t.tm_mon, &t.tm_mday,
-		&t.tm_hour, &t.tm_min, &t.tm_sec, &tz, &p);
+	int tenthSec;
+	int res = sscanf(str, "%2d%2d%2d%2d%2d%2d%1d%2d%c", &t.tm_year, &t.tm_mon,
+		&t.tm_mday, &t.tm_hour, &t.tm_min, &t.tm_sec, &tenthSec, &tz, &p);
+	if (res != 9)
+	{
+		return 0;
+	}
 	time_t lt;
 	char buf[MAX_SMPP_TIME_LENGTH];
 	switch (p)
@@ -135,7 +180,7 @@ time_t SmppUtil::string2time(const char* str, time_t base, bool check)
 			}
 			return lt;
 		default:
-			__unreachable__("Invalid time format");
+			return 0;
 	}
 }
 
@@ -294,8 +339,8 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	__set_int__(uint8_t, esmClass, rand0(255));
 	__set_int__(uint8_t, protocolId, rand0(255));
 	__set_int__(uint8_t, priorityFlag, rand0(255));
-	time_t waitTime = time(NULL) + rand1(60);
-	time_t validTime = waitTime + rand2(sequentialPduInterval, 60);
+	time_t waitTime = time(NULL) + rand1(maxWaitTime);
+	time_t validTime = waitTime + rand2(sequentialPduInterval, maxDeliveryPeriod);
 	__set_cstr2__(scheduleDeliveryTime, time2string(waitTime, tmp, time(NULL), __numTime__));
 	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
@@ -316,8 +361,8 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	//set & check fields
 	__set_cstr__(messageId, MAX_MSG_ID_LENGTH);
 	__set_addr__(source);
-	time_t waitTime = time(NULL) + rand1(60);
-	time_t validTime = waitTime + rand1(60);
+	time_t waitTime = time(NULL) + rand1(maxWaitTime);
+	time_t validTime = waitTime + rand1(maxDeliveryPeriod);
 	__set_cstr2__(scheduleDeliveryTime, time2string(waitTime, tmp, time(NULL), __numTime__));
 	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
