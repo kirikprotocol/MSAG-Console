@@ -2,6 +2,7 @@
 #define TEST_UTIL_TC_RESULT_FILTER
 
 #include "Util.hpp"
+#include <string>
 #include <vector>
 #include <map>
 
@@ -9,19 +10,25 @@ namespace smsc {
 namespace test {
 namespace util {
 
-class CheckList;
-
 /**
  * Стек для результатов выполнения test case
  * 
  * @author bryz
  */
-class TCResultStack : public std::vector<TCResult*>
+class TCResultStack : public std::vector<const TCResult*>
 {
 public:
-	~TCResultStack();
+	virtual ~TCResultStack();
 	bool operator== (const TCResult& result) const;
 	bool operator== (const TCResultStack& stack) const;
+};
+
+class TCResultStackList : public std::vector<const TCResultStack*>
+{
+public:
+	virtual ~TCResultStackList();
+	friend std::ostream& operator<< (std::ostream& os,
+		const TCResultStackList& stackList);
 };
 
 /**
@@ -32,42 +39,26 @@ public:
 class TCResultFilter
 {
 public:
-	//friend void CheckList::writeResult(const TCResultFilter&);
-	friend class CheckList;
-
-	struct TCValue
-	{
-		bool used;
-		std::string description;
-		std::vector<TCResultStack*> tcStacks;
-		
-		TCValue(const std::string& _description)
-			: description(_description), used(false) {}
-	};
-	typedef std::map<std::string, TCValue*> TCMap;
-
 	~TCResultFilter();
 
 	/**
-	 * Устанавливает соответствие между test case id и текстовым описанием test
-	 * case.
+	 * Добавить результаты тестирования test case
 	 */
-	void registerTC(const std::string& tcId, const std::string& tcDescription);
+	void addResult(const TCResult* result);
 
 	/**
 	 * Добавить результаты тестирования test case
 	 */
-	void addResult(TCResult& result);
+	void addResultStack(const TCResultStack& stack);
 
 	/**
-	 * Добавить результаты тестирования test case
+	 * @return отфильтрованные стеки результатов
 	 */
-	void addResultStack(TCResultStack& stack);
+	const TCResultStackList* getResults(const char* tcId);
 
 private:
+	typedef std::map<const std::string, TCResultStackList*> TCMap;
 	TCMap resmap;
-
-	TCValue& getTCValue(const std::string& tcId);
 };
 
 }
