@@ -56,9 +56,7 @@ public:
 	/**
 	 * Работа с профилем через submit_sm pdu.
 	 */
-	void putCommand(Address& addr, int num);
-
-	static void setupRandomCorrectProfile(Profile& profile);
+	void putCommand(const Address& addr, int num);
 
 protected:
 	virtual Category& getLog();
@@ -68,7 +66,6 @@ private:
 	ProfileRegistry* profileReg;
 	CheckList* chkList;
 
-	vector<int> compareProfiles(const Profile& p1, const Profile& p2);
 	void fillAddressWithQuestionMarks(Address& addr, int len);
 };
 
