@@ -13,6 +13,8 @@ using namespace smsc::store;
 using namespace smsc::test::store;
 using namespace smsc::test::util;
 
+class MessageStoreLoadTestTaskHolder;
+
 /**
  * Предназначен для измерения производительности Message Store.
  * Выполняет только корректные операции по работе с Message Store.
@@ -25,89 +27,139 @@ using namespace smsc::test::util;
 class MessageStoreLoadTestTask : public TestTask
 {
 private:
-	int ops;
+	MessageStoreLoadTestTaskHolder* holder;
 	MessageStoreTestCases tc; //throws exception
 
 public:
-	MessageStoreLoadTestTask(int taskNum) : TestTask(taskNum), ops(0) {};
-
-	virtual void executeCycle()
-	{
-		SMSId id;
-		SMS sms;
-		for (int maxOps = 200 * (2 + ops / 200); ops < maxOps; ops++)
-		{
-			delete tc.storeCorrectSM(&id, &sms, RAND_TC);
-			//tc.setCorrectSMStatus();
-			//tc.createBillingRecord();
-		}
-		//tc.updateCorrectExistentSM(); ops++;
-		//tc.deleteExistentSM(); ops++;
-		//tc.loadExistentSM(); ops++;
-	}
-
-	int getOps() const
-	{
-		return ops;
-	}
-
+	MessageStoreLoadTestTask(MessageStoreLoadTestTaskHolder* _holder);
 	virtual ~MessageStoreLoadTestTask() {}
+	virtual void executeCycle();
+	virtual void onStopped();
 };
 
+/**
+ * Holder для самого таска.
+ */
+class MessageStoreLoadTestTaskHolder
+{
+public:
+	char* taskName;
+	MessageStoreLoadTestTask* task;
+	bool stopped;
+	int ops;
+
+public:
+	MessageStoreLoadTestTaskHolder(int taskNum);
+	virtual ~MessageStoreLoadTestTaskHolder()
+	{
+		delete[] taskName;
+	}
+	void stopTask()
+	{
+		task->stop();
+	}
+};
+
+/**
+ * Таск менеджер.
+ */
 class MessageStoreLoadTestTaskManager
-	: public TestTaskManager<MessageStoreLoadTestTask>
+	: public TestTaskManager<MessageStoreLoadTestTaskHolder>
 {
 private:
 	timeb t1;
 	int ops1;
 
 public:
-	void startTimer()
-	{
-		ftime(&t1);
-		ops1 = getOps();
-	}
-
-	void printStatus()
-	{
-		for (int i = 0; i < tasks.size(); i++)
-		{
-			const char* taskName = tasks[i]->taskName();
-			int ops = tasks[i]->getOps();
-			cout << taskName << ": ops = " << ops << endl;
-			//cout << i << ": ops = " << tasks[i]->getOps() << endl;
-		}
-	}
-
-	float getRate()
-	{
-		int ops2 = getOps();
-		timeb t2; ftime(&t2);
-		float dt = (t2.time - t1.time) + (t2.millitm - t1.millitm) / 1000.0;
-		float rate = (ops2 - ops1) / dt;
-		t1 = t2;
-		ops1 = ops2;
-		return rate;
-	}
-
-	int getOps() const
-	{
-		int ops = 0;
-		for (int i = 0; i < tasks.size(); i++)
-		{
-			ops += tasks[i]->getOps();
-		}
-		return ops;
-	}
+	void startTimer();
+	void printStatus();
+	float getRate();
+	int getOps() const;
 };
 
+//MessageStoreLoadTestTask methods
+MessageStoreLoadTestTask::MessageStoreLoadTestTask(
+	MessageStoreLoadTestTaskHolder* _holder)
+	: TestTask(_holder->taskName), holder(_holder) {}
+
+void MessageStoreLoadTestTask::executeCycle()
+{
+	SMSId id;
+	SMS sms;
+	int maxOps = 10 * (2 + holder->ops / 10);
+	for (; holder->ops < maxOps; holder->ops++)
+	{
+		delete tc.storeCorrectSM(&id, &sms, RAND_TC);
+		//tc.setCorrectSMStatus();
+		//tc.createBillingRecord();
+	}
+	//tc.updateCorrectExistentSM(); ops++;
+	//tc.deleteExistentSM(); ops++;
+	//tc.loadExistentSM(); ops++;
+}
+
+inline void MessageStoreLoadTestTask::onStopped()
+{
+	holder->stopped = true;
+}
+
+//MessageStoreLoadTestTaskHolder methods
+MessageStoreLoadTestTaskHolder::MessageStoreLoadTestTaskHolder(int taskNum)
+	: stopped(false), ops(0)
+{
+	taskName = new char[15];
+	sprintf(taskName, "LoadTask_%d", taskNum);
+	task = new MessageStoreLoadTestTask(this);
+}
+
+//MessageStoreLoadTestTaskManager methods
+inline void MessageStoreLoadTestTaskManager::startTimer()
+{
+	ftime(&t1);
+	ops1 = getOps();
+}
+
+void MessageStoreLoadTestTaskManager::printStatus()
+{
+	for (int i = 0; i < taskHolders.size(); i++)
+	{
+		const char* taskName = taskHolders[i]->taskName;
+		int ops = taskHolders[i]->ops;
+		cout << taskName << ": ops = " << ops << endl;
+		//cout << i << ": ops = " << tasks[i]->getOps() << endl;
+	}
+}
+
+float MessageStoreLoadTestTaskManager::getRate()
+{
+	int ops2 = getOps();
+	timeb t2; ftime(&t2);
+	float dt = (t2.time - t1.time) + (t2.millitm - t1.millitm) / 1000.0;
+	float rate = (ops2 - ops1) / dt;
+	t1 = t2;
+	ops1 = ops2;
+	return rate;
+}
+
+int MessageStoreLoadTestTaskManager::getOps() const
+{
+	int ops = 0;
+	for (int i = 0; i < taskHolders.size(); i++)
+	{
+		ops += taskHolders[i]->ops;
+	}
+	return ops;
+}
+
+//test body
 void executeLoadTest(int numThreads)
 {
 	MessageStoreLoadTestTaskManager tm;
 	for (int i = 0; i < numThreads; i++)
 	{
-		MessageStoreLoadTestTask* task = new MessageStoreLoadTestTask(i);
-		tm.addTask(task);
+		MessageStoreLoadTestTaskHolder* taskHolder =
+			new MessageStoreLoadTestTaskHolder(i);
+		tm.addTask(taskHolder);
 	}
 	tm.startTimer();
 
@@ -145,12 +197,13 @@ int main(int argc, char* argv[])
 		Manager::init("config.xml");
 		StoreManager::startup(Manager::getInstance());
 		executeLoadTest(numThreads);
-cout << "AAA" << endl;
 		StoreManager::shutdown();
+		exit(0);
 	}
 	catch (...)
 	{
 		cout << "Failed to execute test. See the logs" << endl;
+		exit(-1);
 	}
 
 	return 0;

@@ -14,32 +14,24 @@ using namespace std;
 class TestTask : public smsc::core::threads::ThreadedTask
 {
 private:
-	char* name;
+	const char* name;
 	bool executeFlag;
-	bool stopped;
 
 public:
-	TestTask(int taskNum)
-		: executeFlag(true), stopped(false)
-	{
-		name = new char[15];
-		sprintf(name, "Task_%d", taskNum);
-	}
-
-	virtual ~TestTask()
-	{
-		delete[] name;
-	}
+	TestTask(const char* _name)
+		: name(_name), executeFlag(true) {}
 
 	virtual void executeCycle() = NULL; //abstract
 
+	virtual void onStopped() = NULL; //abstract
+	
 	virtual int Execute()
 	{
 		while (executeFlag)
 		{
 			executeCycle();
 		}
-		stopped = true;
+		onStopped();
 		return 0;
 	}
 
@@ -52,50 +44,45 @@ public:
 	{
 		executeFlag = false;
 	}
-
-	bool isStopped() const
-	{
-		return stopped;
-	}
 };
 
-template<class T>
+template<class H>
 class TestTaskManager
 {
 protected:
 	smsc::core::threads::ThreadPool tp;
-	vector<T*> tasks;
+	vector<H*> taskHolders;
 
 public:
 	virtual ~TestTaskManager()
 	{
-	  /*  for (int i = 0; i < tasks.size(); i++)
+		for (int i = 0; i < taskHolders.size(); i++)
 		{
-			delete tasks[i];
-		} */
+			delete taskHolders[i];
+		}
 	}
 
-	void addTask(T* task)
+	void addTask(H* taskHolder)
 	{
-		cout << "Starting task " << tasks.size() << " ... ";
-		tp.startTask(task);
-		tasks.push_back(task);
+		cout << "Starting task " << taskHolders.size() << " ... ";
+		tp.startTask(taskHolder->task);
+		taskHolders.push_back(taskHolder);
 		cout << "Started" << endl;
 	}
 
 	void stopTasks()
 	{
-		for (int i = 0; i < tasks.size(); i++)
+		for (int i = 0; i < taskHolders.size(); i++)
 		{
-			tasks[i]->stop();
+			taskHolders[i]->stopTask();
 		}
-		sleep(5);
+		sleep(3);
 		while (!isStopped())
 		{
-			cout << "Some tasks are still running. Stop (s) or wait (w) ?: ";
+			cout << "Some tasks are still running. Quit (q) or wait (w) ?: ";
 			char ch;
 			cin >> ch;
-			if (ch == 's')
+			if (ch == 'q')
 			{
 				throw exception();
 			}
@@ -106,10 +93,11 @@ private:
 	bool isStopped() const
 	{
 		bool stopped = true;
-		for (int i = 0; stopped && i < tasks.size(); i++)
+		for (int i = 0; stopped && (i < taskHolders.size()); i++)
 		{
-			stopped &= tasks[i]->isStopped();
+			stopped &= taskHolders[i]->stopped;
 		}
+		return stopped;
 	}
 };
 

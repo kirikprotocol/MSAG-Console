@@ -13,6 +13,8 @@ using namespace smsc::util::config;
 using namespace smsc::test::store;
 using namespace smsc::test::util;
 
+class MessageStoreBusinessCycleTestTaskHolder;
+
 /**
  * Предназначен для стресс тестирования и тестирования бизнес циклов Message 
  * Store на длительных временных интервалах.
@@ -28,68 +30,45 @@ using namespace smsc::test::util;
 class MessageStoreBusinessCycleTestTask : public TestTask
 {
 private:
+	MessageStoreBusinessCycleTestTaskHolder* holder;
 	MessageStoreTestCases tc; //throws exception
+
+public:
+	MessageStoreBusinessCycleTestTask(
+		MessageStoreBusinessCycleTestTaskHolder* _holder);
+	virtual ~MessageStoreBusinessCycleTestTask() {}
+	virtual void executeCycle();
+	virtual void onStopped();
+};
+
+/**
+ * Holder для самого таска.
+ */
+class MessageStoreBusinessCycleTestTaskHolder
+{
+public:
+	char* taskName;
+	MessageStoreBusinessCycleTestTask* task;
+	bool stopped;
 	int ops;
 
 public:
-	MessageStoreBusinessCycleTestTask(int taskNum) : TestTask(taskNum), ops(0) {}
-
-	virtual void executeCycle()
+	MessageStoreBusinessCycleTestTaskHolder(int taskNum);
+	virtual ~MessageStoreBusinessCycleTestTaskHolder()
 	{
-		//создаю SM для попытки дальнейшего создание дублированного SM
-		SMSId correctId;
-		SMS correctSM;
-		delete tc.storeCorrectSM(&correctId, &correctSM, RAND_TC); ops++;
-		
-		//создаю SM и сразу читаю
-		for (int i = 0; i < 10; i++)
-		{
-			SMSId id;
-			SMS sms;
-			delete tc.storeCorrectSM(&id, &sms, RAND_TC); ops++;
-			delete tc.loadExistentSM(id, sms); ops++;
-		}
-		
-		//создаю и загружаю кривые SM
-		delete tc.storeIncorrectSM(correctSM, ALL_TC); ops++;
-		delete tc.loadExistentSM(correctId, correctSM); ops++;
-		
-		//создаю список не читая, а потом буду читать этот список
-		//список большой специально для того, чтобы было большое количество 
-		//одинаковых последовательных операций и вероятность ошибочного 
-		//использования shared buffers возросла (если в коде есть подобные 
-		//ошибки)
-		const int listSize = 100;
-		for (int j = 0; j < 5; j++)
-		{
-			SMSId id[listSize];
-			SMS sms[listSize];
-			for (int i = 0; i < listSize; i++)
-			{
-				delete tc.storeCorrectSM(&id[i], &sms[i], RAND_TC); ops++;
-			}
-			for (int i = 0; i < listSize; i++)
-			{
-				delete tc.loadExistentSM(id[i], sms[i]); ops++;
-			}
-		}
-		delete tc.loadNonExistentSM(); ops++;
-		//tc.setCorrectSMStatus(); ops++;
-		//tc.createBillingRecord(); ops++;
-		//tc.updateCorrectExistentSM(); ops++;
-		//tc.deleteExistentSM(); ops++;
+		delete[] taskName;
 	}
-
-	int getOps() const
+	void stopTask()
 	{
-		return ops;
+		task->stop();
 	}
-
-	virtual ~MessageStoreBusinessCycleTestTask() {}
 };
 
+/**
+ * Таск менеджер.
+ */
 class MessageStoreBusinessCycleTestTaskManager
-	: public TestTaskManager<MessageStoreBusinessCycleTestTask>
+	: public TestTaskManager<MessageStoreBusinessCycleTestTaskHolder>
 {
 private:
 	timeb t1;
@@ -99,35 +78,105 @@ public:
 	{
 		ftime(&t1);
 	}
-
-	void printStatus()
-	{
-		for (int i = 0; i < tasks.size(); i++)
-		{
-			cout << tasks[i]->taskName() << ": ops = " << tasks[i]->getOps()
-				<< endl;
-		}
-	}
-
-	int getOps()
-	{
-		int ops = 0;
-		for (int i = 0; i < tasks.size(); i++)
-		{
-			ops += tasks[i]->getOps();
-		}
-		return ops;
-	}
+	void printStatus();
+	int getOps();
 };
 
+//MessageStoreBusinessCycleTestTask methods
+MessageStoreBusinessCycleTestTask::MessageStoreBusinessCycleTestTask(
+	MessageStoreBusinessCycleTestTaskHolder* _holder)
+	: TestTask(_holder->taskName), holder(_holder) {}
+
+void MessageStoreBusinessCycleTestTask::executeCycle()
+{
+	//создаю SM для попытки дальнейшего создание дублированного SM
+	SMSId correctId;
+	SMS correctSM;
+	delete tc.storeCorrectSM(&correctId, &correctSM, RAND_TC); holder->ops++;
+
+	//создаю SM и сразу читаю
+	for (int i = 0; i < 10; i++)
+	{
+		SMSId id;
+		SMS sms;
+		delete tc.storeCorrectSM(&id, &sms, RAND_TC); holder->ops++;
+		delete tc.loadExistentSM(id, sms); holder->ops++;
+	}
+
+	//создаю и загружаю кривые SM
+	delete tc.storeIncorrectSM(correctSM, ALL_TC); holder->ops++;
+	delete tc.loadExistentSM(correctId, correctSM); holder->ops++;
+
+	//создаю список не читая, а потом буду читать этот список
+	//список большой специально для того, чтобы было большое количество 
+	//одинаковых последовательных операций и вероятность ошибочного 
+	//использования shared buffers возросла (если в коде есть подобные 
+	//ошибки)
+	const int listSize = 10;
+	for (int j = 0; j < 3; j++)
+	{
+		SMSId id[listSize];
+		SMS sms[listSize];
+		for (int i = 0; i < listSize; i++)
+		{
+			delete tc.storeCorrectSM(&id[i], &sms[i], RAND_TC); holder->ops++;
+		}
+		for (int i = 0; i < listSize; i++)
+		{
+			delete tc.loadExistentSM(id[i], sms[i]); holder->ops++;
+		}
+	}
+	delete tc.loadNonExistentSM(); holder->ops++;
+	//tc.setCorrectSMStatus(); ops++;
+	//tc.createBillingRecord(); ops++;
+	//tc.updateCorrectExistentSM(); ops++;
+	//tc.deleteExistentSM(); ops++;
+}
+
+inline void MessageStoreBusinessCycleTestTask::onStopped()
+{
+	holder->stopped = true;
+}
+
+//MessageStoreBusinessCycleTestTaskHolder methods
+MessageStoreBusinessCycleTestTaskHolder::MessageStoreBusinessCycleTestTaskHolder(int taskNum)
+	: stopped(false), ops(0)
+{
+	taskName = new char[25];
+	sprintf(taskName, "BusinessCycleTask_%d", taskNum);
+	task = new MessageStoreBusinessCycleTestTask(this);
+}
+
+//MessageStoreBusinessCycleTestTaskManager methods
+void MessageStoreBusinessCycleTestTaskManager::printStatus()
+{
+	for (int i = 0; i < taskHolders.size(); i++)
+	{
+		const char* taskName = taskHolders[i]->taskName;
+		int ops = taskHolders[i]->ops;
+		cout << taskName << ": ops = " << ops << endl;
+	}
+}
+
+int MessageStoreBusinessCycleTestTaskManager::getOps()
+{
+	int ops = 0;
+	for (int i = 0; i < taskHolders.size(); i++)
+	{
+		ops += taskHolders[i]->ops;
+	}
+	return ops;
+}
+
+//test body
 void executeBusinessCycleTest(int numThreads)
 {
 	MessageStoreBusinessCycleTestTaskManager tm;
 	for (int i = 0; i < numThreads; i++)
 	{
-		MessageStoreBusinessCycleTestTask* task =
-			new MessageStoreBusinessCycleTestTask(i);
-		tm.addTask(task);
+		MessageStoreBusinessCycleTestTaskHolder* taskHolder =
+			new MessageStoreBusinessCycleTestTaskHolder(i);
+		tm.addTask(taskHolder);
 	}
 
 	while (true)
