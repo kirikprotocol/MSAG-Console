@@ -45,6 +45,7 @@ set<int> SmppPduChecker::checkSubmitSm(PduData* pduData)
 	{
 		res.insert(NO_ROUTE);
 	}
+	__cfg_int__(maxValidPeriod);
 	if (!validTime || validTime < pduData->submitTime ||
 		validTime > pduData->submitTime + maxValidPeriod)
 	{
@@ -110,6 +111,7 @@ void SmppPduChecker::processResp(PduData* pduData,
 	__require__(pduData);
 	__require__(respTime);
 	__decl_tc__;
+	__cfg_int__(timeCheckAccuracy);
 	//обновить smsId и sequenceNumber из респонса
 	pduReg->updatePdu(pduData);
 	//проверка ошибок
@@ -137,7 +139,6 @@ void SmppPduChecker::processResp(PduData* pduData,
 			{
 				__tc_fail__(2);
 			}
-			__tc_ok_cond__;
 			pduData->responseFlag = PDU_RECEIVED_FLAG;
 			break;
 		case PDU_RECEIVED_FLAG: //респонс уже получен ранее
@@ -148,6 +149,7 @@ void SmppPduChecker::processResp(PduData* pduData,
 		default:
 			__unreachable__("Unknown pduData->responseFlag");
 	}
+	__tc_ok_cond__;
 	if (respPdu.get_header().get_commandStatus() != ESME_ROK)
 	{
 		__tc__("processResp.checkDelivery");
@@ -155,52 +157,49 @@ void SmppPduChecker::processResp(PduData* pduData,
 		{
 			case PDU_REQUIRED_FLAG:
 			case PDU_MISSING_ON_TIME_FLAG:
-				__tc_ok__;
 				pduData->deliveryFlag = PDU_NOT_EXPECTED_FLAG;
 				break;
 			case PDU_RECEIVED_FLAG:
 				__tc_fail__(1);
 				break;
 			case PDU_NOT_EXPECTED_FLAG:
-				__tc_ok__;
 				break;
 			default:
 				__unreachable__("Unknown pduData->deliveryFlag");
 		}
+		__tc_ok_cond__;
 		__tc__("processResp.checkDeliveryReceipt");
 		switch (pduData->deliveryReceiptFlag)
 		{
 			case PDU_REQUIRED_FLAG:
 			case PDU_MISSING_ON_TIME_FLAG:
-				__tc_ok__;
 				pduData->deliveryReceiptFlag = PDU_NOT_EXPECTED_FLAG;
 				break;
 			case PDU_RECEIVED_FLAG:
 				__tc_fail__(1);
 				break;
 			case PDU_NOT_EXPECTED_FLAG:
-				__tc_ok__;
 				break;
 			default:
 				__unreachable__("Unknown pduData->deliveryReceiptFlag");
 		}
+		__tc_ok_cond__;
 		__tc__("processResp.checkIntermediateNotification");
 		switch (pduData->intermediateNotificationFlag)
 		{
 			case PDU_REQUIRED_FLAG:
 			case PDU_MISSING_ON_TIME_FLAG:
-				__tc_ok__;
 				pduData->intermediateNotificationFlag = PDU_NOT_EXPECTED_FLAG;
 				break;
 			case PDU_RECEIVED_FLAG:
 				__tc_fail__(1);
 				break;
 			case PDU_NOT_EXPECTED_FLAG:
-				__tc_ok__;
 				break;
 			default:
 				__unreachable__("Unknown pduData->intermediateNotificationFlag");
 		}
+		__tc_ok_cond__;
 		if (pduData->replacedByPdu)
 		{
 			pduData->replacedByPdu->replacePdu = NULL;
