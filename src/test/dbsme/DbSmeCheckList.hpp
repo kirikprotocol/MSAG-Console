@@ -12,6 +12,9 @@ using smsc::test::sme::SmppProtocolCheckList;
 #define __reg_tc__(id, desc) \
 	registerTc(id, desc)
 	
+#define __hide_tc__(id) \
+	hideTc(id)
+
 class DbSmeCheckList : public SmppProtocolCheckList
 {
 
@@ -204,9 +207,21 @@ public:
 	DbSmeCheckList()
 		: SmppProtocolCheckList("Результаты функционального тестирования db sme", "dbsme.chk")
 	{
+		__hide_tc__("bindIncorrectSme");
+		__hide_tc__("submitSm.correct");
+		__hide_tc__("submitSm.incorrect");
+		__hide_tc__("submitSm.assert");
+		__hide_tc__("replaceSm");
+		__hide_tc__("sendDeliverySmResp.sendRetry");
+		__hide_tc__("sendDeliverySmResp.sendError");
+		__hide_tc__("processReplaceSmResp");
+		__hide_tc__("processDeliverySm.normalSms");
+		//__hide_tc__("processDeliverySm.deliveryReceipt");
+		__hide_tc__("processDeliverySm.intermediateNotification");
+		__hide_tc__("notImplemented");
+
 		//submitDbSmeCmd.correct
-		__reg_tc__("submitDbSmeCmd",
-			"Отправка sms на db sme");
+		__reg_tc__("submitDbSmeCmd", "Отправка sms на db sme");
 		__reg_tc__("submitDbSmeCmd.cmdTextDefault",
 			"Текст команды в дефолтной кодировке SC");
 		__reg_tc__("submitDbSmeCmd.cmdTextUcs2",
