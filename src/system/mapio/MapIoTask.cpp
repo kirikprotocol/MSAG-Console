@@ -289,6 +289,7 @@ USHORT_T  Et96MapOpenInd(
 	__trace2__("MAP::Et96MapOpenInd ssn 0x%x, dalogid 0x%x",lssn,dialogId);
   __trace2__("MAP::Et96MapOpenInd appCtx->type:0x%x, appCtx->version:0x%x ",appCtx->acType,appCtx->version); 
   if ( appCtx->acType != current_Ctx ){
+    __trace2__("MAP::Et96MapOpenInd unsupported");
     ET96MAP_REFUSE_REASON_T reason = ET96MAP_APP_CONTEXT_NOT_SUPP;
     USHORT_T result = Et96MapOpenResp(SSN,dialogId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
     return ET96MAP_E_OK;
