@@ -1277,6 +1277,7 @@ public:
 				__unreachable__("Invalid cmdId");
 		}
 		__check__(2, pdu->get_commandStatus() == ESME_RINVBNDSTS);
+		__tc_ok_cond__;
 		setComplete(true);
 	}
 	virtual void handleError(int errorCode)
