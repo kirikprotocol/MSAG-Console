@@ -1,4 +1,8 @@
 <%int rowN = 0;%>
+<%
+if (beanResult == bean.RESULT_OK)
+{
+%>
 <table class=secRep cellspacing=0 cellpadding=2 width="100%">
 <col width="15%" align=right>
 <col width="85%">
@@ -33,3 +37,4 @@ for (int i=0; i<bean.getMasks().length; i++)
 	<td><input class=txtW name=masks validation="mask" onkeyup="resetValidation(this)"></td>
 </tr>
 </table>
+<%}%>

@@ -105,6 +105,11 @@ public class SubjectsEdit extends SmscBean
 		return name;
 	}
 
+	public void setName(String name)
+	{
+		this.name = name;
+	}
+
 	public String getDefSme()
 	{
 		return defSme;
