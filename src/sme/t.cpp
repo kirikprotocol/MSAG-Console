@@ -111,8 +111,8 @@ int main(int argc,char* argv[])
     char imsi[]="123";
     s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
     //s.setWaitTime(0);
-    time_t t=time(NULL)+60;
-    s.setValidTime(t);
+    //time_t t=time(NULL)+60;
+    s.setValidTime(0);
     //s.setSubmitTime(0);
     //s.setPriority(0);
     //s.setProtocolIdentifier(0);

@@ -14,12 +14,14 @@ namespace system{
 using namespace smsc::core::synchronization;
 
 #define TASK_CONTAINER_MAX_PROCESSED   (200*(8+1)) /* 200 msg/s * 8 sec */
+#define TASK_CONTAINER_MAX_TIMEOUTS    16
 
 struct Task
 {
   uint32_t proxy_id;
   uint32_t sequenceNumber;
-  unsigned long timeout;
+  time_t creationTime;
+  time_t timeout;
   smsc::sms::SMSId messageId;
   Task* next;
   Task* timeout_prev;
@@ -47,15 +49,18 @@ class TaskContainer
   Task* hash[TASK_CONTAINER_MAX_PROCESSED*2]; // hash table
   Task pool[TASK_CONTAINER_MAX_PROCESSED];
   Task *first_task;
-  Task *timeout_link_begin;
-  Task *timeout_link_end;
+  struct TimeOutList{
+    Task *timeout_link_begin;
+    Task *timeout_link_end;
+    time_t timeout;
+  };
+  TimeOutList toList[TASK_CONTAINER_MAX_TIMEOUTS];
+  int toCount;
   Mutex mutex;
 public:
-  TaskContainer():
-    //first_task(pool),
-    timeout_link_begin(0),
-    timeout_link_end(0)
+  TaskContainer()
   {
+    toCount=0;
     for ( int i=0; i<TASK_CONTAINER_MAX_PROCESSED; ++i )
     {
       pool[i].next = pool+i+1;
@@ -69,13 +74,18 @@ public:
   bool getExpired(Task* t)
   {
     MutexGuard guard(mutex);
-    unsigned long _time = time(NULL);
-	if ( timeout_link_begin && timeout_link_begin->timeout < _time )
+    unsigned long now = time(NULL);
+    for(int i=0;i<toCount;i++)
     {
-      *t = *timeout_link_begin;
-      __trace2__("TASK::getExpired 0x%x:0x%x",t->sequenceNumber,t->proxy_id);
-      __findAndRemove(timeout_link_begin);
-      return true;
+      if ( toList[i].timeout_link_begin &&
+           toList[i].timeout_link_begin->timeout+
+             toList[i].timeout_link_begin->creationTime < now )
+      {
+        *t = *toList[i].timeout_link_begin;
+        __trace2__("TASK::getExpired 0x%x:0x%x",t->sequenceNumber,t->proxy_id);
+        __findAndRemove(i,toList[i].timeout_link_begin);
+        return true;
+      }
     }
     return false;
   }
@@ -88,18 +98,34 @@ public:
     Task* task = first_task;
     first_task = first_task->next;
     *task = t;
-    if ( timeout_link_end )
+
+    int idx;
+    for(idx=0;idx<toCount;idx++)
     {
-      timeout_link_end->timeout_next = task;
+      if(toList[idx].timeout==(time_t)preferred_timeout)break;
     }
-    task->timeout_prev = timeout_link_end;
+    if(idx==toCount)
+    {
+      idx=toCount;
+      toCount++;
+      toList[idx].timeout_link_begin=0;
+      toList[idx].timeout_link_end=0;
+      toList[idx].timeout=preferred_timeout;
+    }
+
+    if ( toList[idx].timeout_link_end )
+    {
+      toList[idx].timeout_link_end->timeout_next = task;
+    }
+    task->timeout_prev = toList[idx].timeout_link_end;
     task->timeout_next = 0;
-    timeout_link_end = task;
-    if ( !timeout_link_begin ) timeout_link_begin = task;
+    toList[idx].timeout_link_end = task;
+    if ( !toList[idx].timeout_link_begin ) toList[idx].timeout_link_begin = task;
     int hashcode = calcHashCode(task->proxy_id,task->sequenceNumber);
     task->next = hash[hashcode];
     hash[hashcode] = task;
-    task->timeout = time(NULL)+preferred_timeout;
+    task->timeout = preferred_timeout;
+    task->creationTime=time(NULL);
     __trace2__("TASK::createTask 0x%x:0x%x timeout 0x%lx",
                task->sequenceNumber,task->proxy_id,
                preferred_timeout);
@@ -127,7 +153,14 @@ public:
     {
       if ( _res->proxy_id == proxy_idx && _res->sequenceNumber == sequenceNumber )
       {
-        remove(_res,prev,hash+hashcode);
+        int idx;
+        for(idx=0;idx<toCount;idx++)
+        {
+          __trace2__("toList.timeout=%d, _res->timeout=%d",toList[idx].timeout,_res->timeout);
+          if(toList[idx].timeout==_res->timeout)break;
+        }
+        __require__(idx<toCount);
+        remove(idx,_res,prev,hash+hashcode);
         *res = *_res;
         return true;
       }
@@ -137,7 +170,7 @@ public:
     return false;
   }
 
-  void __findAndRemove(Task* task)
+  void __findAndRemove(int idx,Task* task)
   {
     int hashcode = calcHashCode(task->proxy_id,task->sequenceNumber);
     Task* res = hash[hashcode];
@@ -146,7 +179,7 @@ public:
     {
       if ( task == res )
       {
-        remove(task,prev,hash+hashcode);
+        remove(idx,task,prev,hash+hashcode);
         return;
       }
       prev = res;
@@ -154,7 +187,7 @@ public:
     }
     //throw Exception("");
   }
-  void remove(Task* task,Task* prev,Task** addr)
+  void remove(int idx,Task* task,Task* prev,Task** addr)
   {
     // remove from hash
     if ( prev )
@@ -177,17 +210,23 @@ public:
         task->timeout_next->timeout_prev = task->timeout_prev;
       }
       else
-	  {
-	    __require__(timeout_link_end==task);
-        timeout_link_end=timeout_link_end->timeout_prev;
-	  }
+      {
+        __require__(toList[idx].timeout_link_end==task);
+        toList[idx].timeout_link_end=toList[idx].timeout_link_end->timeout_prev;
+      }
     }
     else
     {
-      __require__( task == timeout_link_begin );
-      timeout_link_begin = task->timeout_next;
-      if (timeout_link_begin) timeout_link_begin->timeout_prev = 0;
-      else timeout_link_end = 0;
+      __require__( task == toList[idx].timeout_link_begin );
+      toList[idx].timeout_link_begin = task->timeout_next;
+      if (toList[idx].timeout_link_begin)
+      {
+        toList[idx].timeout_link_begin->timeout_prev = 0;
+      }
+      else
+      {
+        toList[idx].timeout_link_end = 0;
+      }
     }
 
     // add into free_list

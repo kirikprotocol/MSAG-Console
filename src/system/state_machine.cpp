@@ -268,6 +268,7 @@ StateType StateMachine::submit(Tuple& t)
   if(sms->getValidTime()==0 || sms->getValidTime()>now+maxValidTime)
   {
     sms->setValidTime(now+maxValidTime);
+    __trace2__("maxValidTime=%d",maxValidTime);
   }
 
   __trace2__("Valid time for sms %lld=%u\n",t.msgId,(unsigned int)sms->getValidTime());
