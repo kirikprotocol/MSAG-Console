@@ -84,7 +84,7 @@ time_t DailySchedule::calulateNextTime()
     if (everyNDays <= 0) return -1;
     
     int interval = 86400*everyNDays;
-    st = ((ct-st)/interval)*interval+interval;
+    st += ((ct-st)/interval+1)*interval;
     return ((st <= deadLine) ? st:-1);
 }
 
@@ -98,9 +98,44 @@ void WeeklySchedule::init(ConfigView* config)
     
     weekDays = config->getString("weekDays");
     // TODO: check weekDays.
+    memset(&weekDaysSet, 0, sizeof(weekDaysSet));
+    weekDaysSet[0] = 0;
 }
 time_t WeeklySchedule::calulateNextTime()
 {
+    if (startDate <= 0 || startTime < 0 || everyNWeeks <= 0) return -1;
+    
+    time_t ct = time(NULL);
+    time_t deadLine = ((endDate >= 0) ? endDate:0) + 
+                      ((endTime >= 0) ? endTime:0);
+    if (ct >= deadLine) return -1;
+    time_t st = startDate;
+    
+    /* TODO: 
+            1) вычисляем понедельник стартовой недели (по StartDate+StartTime)
+            2) вычисляем понедельник последней недели запуска.
+            3) добавляем дни недели и смотрим когда они станут больше чем текущее время
+            4) если перебрали все, то добавляем интервал до след. понедельника.
+            5) добавляем дни недели и смотрим когда они станут больше чем текущее время
+            6) проверяем что вычисленное время не больше deadLine
+    */
+    tm dt; localtime_r(&st, &dt);
+    dt.tm_mday -= ((dt.tm_wday == 0) ? 6:(dt.tm_wday-1));
+    st = mktime(&dt); // Понедельник стартовой недели.
+
+    int interval = 86400*7*everyNWeeks;
+    st += ((ct-st)/interval)*interval+startTime; // понедельник очередной недели + startTime
+    
+    while (st < ct && st < deadLine)
+    {
+        for (int i=0; i<7; i++) {
+            if (st < ct) st += weekDaysSet[i]*86400;
+            else return ((st <= deadLine) ? st:-1);
+        }
+        st += interval;
+    }
+    
+    __require__(0); // unreachable code !!!
     return -1;
 }
 
@@ -111,12 +146,12 @@ void MonthlySchedule::init(ConfigView* config)
     dayOfMonth = -1;
     try { dayOfMonth = config->getInt("dayOfMonth"); } catch (...) {};
     if (dayOfMonth == -1) {
-        weekN = config->getString("weekN"); // week number: first, second, thierd, fourth, last
+        weekN = config->getString("weekN"); // week number: first, second, third, fourth, last
         weekDays = config->getString("weekDays");
     }
-    monthDays = config->getString("monthDays");
+    monthes = config->getString("monthes");
 
-    // TODO: check weekDays && monthDays.
+    // TODO: check weekDays && monthes.
 }
 time_t MonthlySchedule::calulateNextTime()
 {
@@ -143,7 +178,7 @@ time_t IntervalSchedule::calulateNextTime()
     if (ct <= st && st <= deadLine) return st;
     if (intervalTime <= 0) return -1;
     
-    st = ((ct-st)/intervalTime)*intervalTime+intervalTime;
+    st += ((ct-st)/intervalTime + 1)*intervalTime;
     return ((st <= deadLine) ? st:-1);
 }
 

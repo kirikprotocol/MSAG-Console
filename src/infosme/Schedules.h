@@ -130,6 +130,8 @@ namespace smsc { namespace infosme
     {
         int         everyNWeeks;
         std::string weekDays;   // ',' separated list Mon, Thu, ...
+        
+        int         weekDaysSet[7];
 
         WeeklySchedule(std::string id)
             : Schedule(id, WEEKLY), everyNWeeks(0), weekDays("") {};
@@ -149,16 +151,16 @@ namespace smsc { namespace infosme
         int         dayOfMonth;  // if -1 using weeks
         std::string weekN;       // ',' separated list first, second, third, fourth, last.
         std::string weekDays;    // ',' separated list Mon, Thu, ...  
-        std::string monthDays;   // ',' separated list Jan, Feb, ...
+        std::string monthes;     // ',' separated list Jan, Feb, ...
 
         MonthlySchedule(std::string id)
-            : Schedule(id, MONTHLY), dayOfMonth(1), weekN(""), weekDays(""), monthDays("") {};
+            : Schedule(id, MONTHLY), dayOfMonth(1), weekN(""), weekDays(""), monthes("") {};
 
         MonthlySchedule(std::string id, time_t startTime, time_t startDate, int dayOfMonth, 
-                        std::string weekN, std::string weekDays, std::string monthDays,
+                        std::string weekN, std::string weekDays, std::string monthes,
                         time_t endTime=-1, time_t endDate=-1)
             : Schedule(id, MONTHLY, startTime, startDate, endTime, endDate),
-              dayOfMonth(dayOfMonth), weekN(weekN), weekDays(weekDays), monthDays(monthDays) {};
+              dayOfMonth(dayOfMonth), weekN(weekN), weekDays(weekDays), monthes(monthes) {};
         
         virtual void init(ConfigView* config);
         virtual time_t calulateNextTime();
