@@ -20,8 +20,6 @@
 #include <util/xml/init.h>
 
 #include "TaskProcessor.h"
-#include "tasks/PeriodicTask.h"
-#include "tasks/DistributeTask.h"
 
 using namespace smsc::sme;
 using namespace smsc::smpp;
@@ -44,11 +42,6 @@ int main(void/*int argc, char* argv[]*/)
     using smsc::util::config::ConfigException;
 
     Logger::Init("log4cpp.infosme");
-
-    PeriodicTaskFactory _periodicTaskFactory;
-    TaskFactory::registerFactory(&_periodicTaskFactory, INFO_SME_PERIODIC_TASK_IDENTITY);
-    DistributeTaskFactory _distributeTaskFactory;
-    TaskFactory::registerFactory(&_distributeTaskFactory, INFO_SME_DISTRIBUTE_TASK_IDENTITY);
 
     try 
     {

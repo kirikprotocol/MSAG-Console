@@ -5,8 +5,6 @@
 namespace smsc { namespace infosme 
 {
 
-Hash<TaskFactory *>*  TaskFactory::registry = 0;
-
 /* ---------------------------- PriorityContainer ---------------------------- */
 
 TaskContainer::~TaskContainer()

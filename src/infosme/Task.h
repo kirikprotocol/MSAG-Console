@@ -89,12 +89,26 @@ namespace smsc { namespace infosme
         DataSource*     dsOwn;
         DataSource*     dsInt;
         
+        virtual void init(ConfigView* config) {
+            __require__(config);
+        };
+        
         Task() : usersCount(0), bFinalizing(false), dsOwn(0), dsInt(0) {};
         virtual ~Task() {};
 
-        virtual void init(ConfigView* config) = 0;
-
     public:
+        
+        Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt) 
+            : usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt) 
+        {
+            __require__(dsOwn && dsInt);
+            this->info = info; this->dsOwn = dsOwn; this->dsInt = dsInt;
+        }
+        Task(ConfigView* config, DataSource* dsOwn, DataSource* dsInt)
+            : usersCount(0), bFinalizing(false), dsOwn(dsOwn), dsInt(dsInt) 
+        {
+            init(config);
+        }
         
         void finalize()
         {
@@ -129,37 +143,20 @@ namespace smsc { namespace infosme
             return info.enabled = enabled;
         }
         
-        void init(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt)
-        {
-            __require__(dsOwn && dsInt);
-            this->info = info; this->dsOwn = dsOwn; this->dsInt = dsInt;
-        };
-        
-        void init(ConfigView* config, DataSource* dsOwn, DataSource* dsInt)
-        {
-            __require__(config);
-
-            TaskInfo taskInfo;
-            // TODO: fill taskInfo from config here !!
-            
-            init(taskInfo, dsOwn, dsInt);
-            init(config);
-        };
-        
-        virtual bool isInProcess() = 0;
+        bool isInProcess();
 
         /**
          * Запускает процесс генерации сообщений для отправки в спец.таблицу задачи.
          * Выполняестся на ThreadPool'е по команде от Scheduler'а
          * Использует два connection'а: один из своего,а другой внутреннего источника данных.
          */
-        virtual void beginProcess() = 0;
+        void beginProcess();
         /**
          * Останавливает процесс генерации сообщений для отправки в спец.таблицу задачи.
          * Выполняестся на ThreadPool'е по команде от Scheduler'а или TaskProcessor'а.
          * Выставляет Event для завершения beginProcess() и ждёт завершения.
          */
-        virtual void endProcess() = 0;
+        void endProcess();
         
         /**
          * Меняет состояние отправленного сообщения из спец.таблицы задачи.
@@ -170,14 +167,14 @@ namespace smsc { namespace infosme
          *
          * @param info
          */
-        virtual void doNotifyMessage(StateInfo& info) = 0;
+        void doNotifyMessage(StateInfo& info);
 
         /**
          * Останавливает процесс генерации сообщений для отправки в спец.таблицу задачи
          * посредством endProcess(). Удаляет все сгенерированные сообщения.
          * Использует connection из внутреннего источника данных.
          */
-        virtual void dropAllMessages() = 0;
+        void dropAllMessages();
         
         /**
          * Возвращает следующее сообщение для отправки из спец.таблицы задачи
@@ -188,7 +185,7 @@ namespace smsc { namespace infosme
          * @param message       следующее сообщение для отправки
          * @return              false если сообщений нет.
          */
-        virtual bool getNextMessage(Connection* connection, Message& message) = 0;
+        bool getNextMessage(Connection* connection, Message& message);
     };
     
     class TaskGuard
@@ -217,7 +214,6 @@ namespace smsc { namespace infosme
             return task;
         }
     };
-
     
     struct TaskInvokeAdapter
     {
@@ -247,33 +243,6 @@ namespace smsc { namespace infosme
         TaskContainerAdapter() {};
     };
     
-    class TaskFactory
-    {
-    protected:
-
-        static Hash<TaskFactory *>*   registry;
-        
-        TaskFactory() {};
-        virtual ~TaskFactory() {};
-        
-        virtual Task* createTask() = 0;
-        
-    public:
-
-        static void registerFactory(TaskFactory* tf, const char* type)
-        {
-            if (!registry) registry = new Hash<TaskFactory *>();
-            registry->Insert(type, tf);
-        };
-        
-        static Task* createTask(const char* type)
-        {
-            TaskFactory* tf = (registry) ? 
-                ((registry->Exists(type)) ? registry->Get(type):0):0;
-            return ((tf) ? tf->createTask():0);
-        };
-    };
-
 }}
 
 #endif //SMSC_INFO_SME_TASK_PROCESSOR
