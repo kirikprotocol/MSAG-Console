@@ -184,7 +184,7 @@ PduData* SmppProtocolTestCases::getFinalPdu()
 
 void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 {
-	TCSelector s(num, 14);
+	TCSelector s(num, 15);
 	__decl_tc__;
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxValidPeriod);
@@ -205,14 +205,12 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 				case 1: //ничего особенного
 					//__tc__("submitSm.correct");
 					break;
-				/*
 				case 2: //пустой serviceType
 					__tc__("submitSm.correct.serviceTypeMarginal");
 					//pdu->get_message().set_serviceType(NULL);
 					pdu->get_message().set_serviceType("");
 					break;
-				*/
-				case 2: //serviceType максимальной длины
+				case 3: //serviceType максимальной длины
 					{
 						__tc__("submitSm.correct.serviceTypeMarginal");
 						EService serviceType;
@@ -220,7 +218,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						pdu->get_message().set_serviceType(serviceType);
 					}
 					break;
-				case 3: //доставка уже должна была начаться
+				case 4: //доставка уже должна была начаться
 					{
 						__tc__("submitSm.correct.waitTimePast");
 						SmppTime t;
@@ -231,7 +229,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						pdu->get_message().set_registredDelivery(0);
 					}
 					break;
-				case 4: //срок валидности больше максимального
+				case 5: //срок валидности больше максимального
 					{
 						__tc__("submitSm.correct.validTimeExceeded");
 						SmppTime t;
@@ -241,20 +239,20 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
-				case 5: //немедленная доставка
+				case 6: //немедленная доставка
 					__tc__("submitSm.correct.waitTimeImmediate");
 					pdu->get_message().set_scheduleDeliveryTime("");
 					break;
-				case 6: //срок валидности по умолчанию
+				case 7: //срок валидности по умолчанию
 					__tc__("submitSm.correct.validTimeDefault");
 					pdu->get_message().set_validityPeriod("");
 					break;
-				case 7: //пустое тело сообщения
+				case 8: //пустое тело сообщения
 					__tc__("submitSm.correct.smLengthMarginal");
 					pdu->get_message().set_shortMessage(NULL, 0);
 					//pdu->get_message().set_shortMessage("", 0);
 					break;
-				case 8: //тело сообщения максимальной длины
+				case 9: //тело сообщения максимальной длины
 					{
 						__tc__("submitSm.correct.smLengthMarginal");
 						ShortMessage msg;
@@ -287,7 +285,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 					}
 					break;
 				*/
-				case 9: //отправка дублированного сообщения без замещения уже существующего
+				case 10: //отправка дублированного сообщения без замещения уже существующего
 					//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. Сообщение должно быть в 
 					//ENROTE state.
@@ -302,8 +300,10 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 							__tc__("submitSm.correct.notReplace");
 							PduSubmitSm* existentPdu =
 								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
-							pdu->get_message().set_serviceType(
-								existentPdu->get_message().get_serviceType());
+							const char* serviceType =
+								existentPdu->get_message().get_serviceType();
+							pdu->get_message().set_serviceType(serviceType ?
+								serviceType : "");
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
 								existentPdu->get_message().get_dest());
@@ -313,7 +313,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						}
 					}
 					break;
-				case 10: //отправка дублированного сообщения с попыткой замещения
+				case 11: //отправка дублированного сообщения с попыткой замещения
 					//уже существующего, но service_type не совпадает.
 					//Для несовпадающих source address и destination address
 					//тест кейсов не делаю, т.к. возникнут проблемы с маршрутами.
@@ -339,7 +339,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						}
 					}
 					break;
-				case 11: //отправка дублированного сообщения с замещением уже существующего
+				case 12: //отправка дублированного сообщения с замещением уже существующего
 					//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. Сообщение должно быть в 
 					//ENROTE state.
@@ -354,8 +354,10 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 							__tc__("submitSm.correct.replaceEnrote");
 							PduSubmitSm* replacePdu =
 								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
-							pdu->get_message().set_serviceType(
-								replacePdu->get_message().get_serviceType());
+							const char* serviceType =
+								replacePdu->get_message().get_serviceType();
+							pdu->get_message().set_serviceType(serviceType ?
+								serviceType : "");
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
 								replacePdu->get_message().get_dest());
@@ -363,7 +365,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						}
 					}
 					break;
-				case 12: //отправка дублированного сообщения с замещением уже
+				case 13: //отправка дублированного сообщения с замещением уже
 					//ранее замещенного
 					//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. Сообщение должно быть в 
@@ -379,8 +381,10 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 							__tc__("submitSm.correct.replaceReplacedEnrote");
 							PduSubmitSm* replacePdu =
 								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
-							pdu->get_message().set_serviceType(
-								replacePdu->get_message().get_serviceType());
+							const char* serviceType =
+								replacePdu->get_message().get_serviceType();
+							pdu->get_message().set_serviceType(serviceType ?
+								serviceType : "");
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
 								replacePdu->get_message().get_dest());
@@ -388,7 +392,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						}
 					}
 					break;
-				case 13: //отправка дублированного сообщения с замещением уже
+				case 14: //отправка дублированного сообщения с замещением уже
 					//существующего, но находящегося уже в финальном состоянии.
 					//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. Сообщение должно быть в 
@@ -404,8 +408,10 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 							__tc__("submitSm.correct.replaceFinal");
 							PduSubmitSm* finalPdu =
 								reinterpret_cast<PduSubmitSm*>(finalPduData->pdu);
-							pdu->get_message().set_serviceType(
-								finalPdu->get_message().get_serviceType());
+							const char* serviceType =
+								finalPdu->get_message().get_serviceType();
+							pdu->get_message().set_serviceType(serviceType ?
+								serviceType : "");
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
 								finalPdu->get_message().get_dest());
@@ -415,7 +421,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 						}
 					}
 					break;
-				case 14: //отправка дублированного сообщения с замещением уже
+				case 15: //отправка дублированного сообщения с замещением уже
 					//существующего, но находящегося уже в процессе повторной доставки.
 					//Согласно SMPP v3.4 пункт 5.2.18 должны совпадать: source address,
 					//destination address and service_type. Сообщение должно быть в 
@@ -431,8 +437,10 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 							__tc__("submitSm.correct.replaceRepeatedDeliveryEnrote");
 							PduSubmitSm* replacePdu =
 								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
-							pdu->get_message().set_serviceType(
-								replacePdu->get_message().get_serviceType());
+							const char* serviceType =
+								replacePdu->get_message().get_serviceType();
+							pdu->get_message().set_serviceType(serviceType ?
+								serviceType : "");
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
 								replacePdu->get_message().get_dest());
@@ -457,7 +465,7 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 
 void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 {
-	TCSelector s(num, 11);
+	TCSelector s(num, 12);
 	__decl_tc__;
 	__cfg_int__(maxWaitTime);
 	__cfg_int__(maxValidPeriod);
@@ -570,6 +578,14 @@ void SmppProtocolTestCases::submitSmIncorrect(bool sync, int num)
 				case 11: //недопустимый dataCoding
 					__tc__("submitSm.incorrect.dataCoding");
 					pdu->get_message().set_dataCoding(rand1(255));
+					break;
+				case 12: //serviceType больше максимальной длины
+					{
+						__tc__("submitSm.assert.serviceTypeInvalid");
+						char serviceType[MAX_SERVICE_TYPE_LENGTH + 10];
+						rand_char(MAX_SERVICE_TYPE_LENGTH + 1, serviceType);
+						pdu->get_message().set_serviceType(serviceType);
+					}
 					break;
 				default:
 					__unreachable__("Invalid num");
