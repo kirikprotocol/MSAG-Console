@@ -2,6 +2,7 @@
 #include "test/smpp/SmppUtil.hpp"
 #include "test/util/TextUtil.hpp"
 #include "test/conf/TestConfig.hpp"
+#include "system/status.h"
 
 namespace smsc {
 namespace test {
@@ -21,6 +22,8 @@ using namespace smsc::test::util;
 using namespace smsc::smpp::SmppCommandSet; //constants
 using namespace smsc::smpp::SmppStatusSet; //constants
 using namespace smsc::smpp::DataCoding; //constants
+using namespace smsc::system;
+
 
 inline bool SmppPduChecker::checkTransmitter()
 {
@@ -72,7 +75,7 @@ set<uint32_t> SmppPduChecker::checkSubmitSm(PduData* pduData)
 		pdu->get_message().get_source(), pdu->get_message().get_dest());
 	if (destType == SME_NO_ROUTE)
 	{
-		res.insert(ESME_RINVDSTADR);
+		res.insert(Status::NOROUTE);
 	}
 	__cfg_int__(maxValidPeriod);
 	if (!validTime || validTime < pduData->sendTime ||
@@ -428,6 +431,10 @@ void SmppPduChecker::processSubmitSmResp(ResponseMonitor* monitor,
 		case ESME_RINVBNDSTS:
 			__tc__("submitSm.resp.checkCmdStatusInvalidBindStatus");
 			__check__(1, checkRes.count(ESME_RINVBNDSTS));
+			break;
+		case Status::NOROUTE:
+			__tc__("submitSm.resp.checkCmdStatusNoRoute");
+			__check__(1, checkRes.count(Status::NOROUTE));
 			break;
 		default:
 			__tc__("submitSm.resp.checkCmdStatusOther");
