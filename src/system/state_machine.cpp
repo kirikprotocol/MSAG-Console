@@ -387,13 +387,14 @@ StateType StateMachine::forward(Tuple& t)
     if(p.codepage==smsc::profiler::ProfileCharsetOptions::Default &&
        sms.getIntProperty(smsc::sms::Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
     {
-      char buf7[200];
+      char buf[260];
+      char buf8[260];
       unsigned len;
-      int len7;
-      const short *msg=(const short*)sms.getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,&len);
-      len7=ConvertUCS2To7Bit(msg,len,buf7,len7);
-      sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf7,len7);
-      sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,len7);
+      const short*msg=(const short*)sms.getBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,&len);
+      len=ConvertUCS2ToMultibyte(msg,len,buf,sizeof(buf),CONV_ENCODING_CP1251);
+      int newlen=Transliterate(buf,len,CONV_ENCODING_CP1251,buf8,sizeof(buf8));
+      sms.setBinProperty(smsc::sms::Tag::SMPP_SHORT_MESSAGE,buf8,newlen);
+      sms.setIntProperty(smsc::sms::Tag::SMPP_SM_LENGTH,newlen);
       sms.setIntProperty(smsc::sms::Tag::SMPP_DATA_CODING,DataCoding::DEFAULT);
     }
     SmscCommand delivery = SmscCommand::makeDeliverySm(sms,dialogId2);
