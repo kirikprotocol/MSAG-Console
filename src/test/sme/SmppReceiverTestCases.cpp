@@ -32,16 +32,15 @@ using namespace smsc::test::smpp; //constants, SmppUtil
 using namespace smsc::smpp::SmppCommandSet; //constants
 using namespace smsc::smpp::SmppStatusSet; //constants
 
-SmppReceiverTestCases::SmppReceiverTestCases(SmppSession* sess,
-	const SmeSystemId& _systemId, const Address& addr,
-	const SmeRegistry* _smeReg, const AliasRegistry* _aliasReg,
-	const RouteRegistry* _routeReg, ResultHandler* handler,
-	RouteChecker* _routeChecker, SmppResponsePduChecker* _responseChecker)
-	: session(sess), systemId(_systemId), smeAddr(addr), smeReg(_smeReg),
+SmppReceiverTestCases::SmppReceiverTestCases(const SmeSystemId& _systemId,
+	const Address& addr, const SmeRegistry* _smeReg,
+	const AliasRegistry* _aliasReg, const RouteRegistry* _routeReg,
+	ResultHandler* handler, RouteChecker* _routeChecker,
+	SmppResponsePduChecker* _responseChecker)
+	: systemId(_systemId), smeAddr(addr), smeReg(_smeReg),
 	aliasReg(_aliasReg), routeReg(_routeReg), resultHandler(handler),
 	routeChecker(_routeChecker), responseChecker(_responseChecker)
 {
-	__require__(session);
 	__require__(smeReg);
 	__require__(aliasReg);
 	__require__(routeReg);
@@ -527,6 +526,42 @@ TCResult* SmppReceiverTestCases::processIntermediateNotification(
 		res->addFailure(300);
 	}
 	return res;
+}
+
+void SmppReceiverTestCases::processGenericNack(const PduGenericNack &pdu)
+{
+}
+
+void SmppReceiverTestCases::processDataSm(const PduDataSm &pdu)
+{
+}
+
+void SmppReceiverTestCases::processMultiResp(const PduMultiSmResp &pdu)
+{
+}
+
+void SmppReceiverTestCases::processReplaceSmResp(const PduReplaceSmResp &pdu)
+{
+}
+
+void SmppReceiverTestCases::processDataSmResp(const PduDataSmResp &pdu)
+{
+}
+
+void SmppReceiverTestCases::processQuerySmResp(const PduQuerySmResp &pdu)
+{
+}
+
+void SmppReceiverTestCases::processCancelSmResp(const PduCancelSmResp &pdu)
+{
+}
+
+void SmppReceiverTestCases::processAlertNotificatin(const PduAlertNotification &pdu)
+{
+}
+
+void SmppReceiverTestCases::handleError(int errorCode)
+{
 }
 
 }
