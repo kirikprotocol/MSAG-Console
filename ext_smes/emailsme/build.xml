@@ -1,7 +1,7 @@
-<project name="dbSme build" default="help" basedir=".">
-  <property name="esme_name" value="dbSme"/>
-  <property name="esme_bin_path" value="dbsme"/>
-  <property name="esme_bin_name" value="DBSme"/>
+<project name="EmailSme build" default="help" basedir=".">
+  <property name="esme_name" value="emailsme"/>
+  <property name="esme_bin_path" value="emailsme"/>
+  <property name="esme_bin_name" value="emailsme"/>
 
   <target name="help">
     <echo message="Do not build from this file directly"/>
@@ -21,10 +21,14 @@
 
   <target name="distr" depends="build" description="installs the webapp">
     <ant antfile="../make_esme.xml" target="distr"/>
+    <copy todir="${exploded}/bin" file="${BUILD_BIN}/${esme_bin_path}/mdAgent" />
+    <copy todir="${exploded}/bin" file="${SMSC_DIR}/src/emailsme/mailreaper.pl" />
   </target>
 
   <target name="update" depends="build" description="update existing installation">
     <ant antfile="../make_esme.xml" target="update"/>
+    <copy todir="${DISTR_DIR}/services/${esme_name}/bin" file="${BUILD_BIN}/${esme_bin_path}/mdAgent" />
+    <copy todir="${DISTR_DIR}/services/${esme_name}/bin" file="${SMSC_DIR}/src/emailsme/mailreaper.pl" />
   </target>
 
   <target name="clean" description="clean up">
