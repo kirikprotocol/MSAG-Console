@@ -139,7 +139,7 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
     __trace2__("MAP:%s: Preapre Abonent Status command",__FUNCTION__);
     AbonentStatus& as = dialog->QueryAbonentCommand->get_abonentStatus();
     __trace2__("MAP::%s: (%d.%d.%s)",__FUNCTION__,(unsigned)as.addr.type,(unsigned)as.addr.plan,as.addr.value);
-   mkMapAddress( &dialog->m_msAddr, as.addr.value, as.addr.length );
+    mkMapAddress( &dialog->m_msAddr, as.addr.value, as.addr.length );
     mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
     mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, 8 );
     mkSS7GTAddress( &dialog->mshlrAddr, &dialog->m_msAddr, 6 );
@@ -944,8 +944,8 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
     typedef multimap<string,unsigned>::iterator I;
     MutexGuard guard(x_map_lock);
     pair<I,I> range = x_map.equal_range(s_key);
-    if ( range.first == range.second )
-      throw runtime_error("MAP::Et96MapGetACVersionConf has no address for AC resolving");
+    if ( range.first == range.second ) return;
+      //throw runtime_error("MAP::Et96MapGetACVersionConf has no address for AC resolving");
     I it;
     for ( it = range.first; it != range.second;++it) {
       unsigned dialogid_map = 0;
@@ -1380,7 +1380,8 @@ USHORT_T Et96MapUAbortInd (
   unsigned dialogid_smsc = 0;
   MAP_TRY{
     __trace2__("MAP::%s dialog 0x%x , userReason: 0x%x",__FUNCTION__,dialogid_map,userReason_p?*userReason_p:-1);
-    throw runtime_error("UABORT");
+    //throw runtime_error("UABORT");
+    throw MAPDIALOG_TEMP_ERROR("UABORT",userReason_p?*userReason_p:-1);
   }MAP_CATCH(dialogid_map,dialogid_smsc);
   return ET96MAP_E_OK;
 }
@@ -1396,7 +1397,7 @@ USHORT_T Et96MapPAbortInd(
   unsigned dialogid_smsc = 0;
   MAP_TRY{
     __trace2__("MAP::%s dialog 0x%x provReason: 0x%x",__FUNCTION__,dialogid_map,provReason);
-    throw runtime_error("PABORT");
+    throw MAPDIALOG_TEMP_ERROR("PABORT",provReason);
   }MAP_CATCH(dialogid_map,dialogid_smsc);
   return ET96MAP_E_OK;
 }
