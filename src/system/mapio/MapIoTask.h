@@ -330,7 +330,7 @@ class MapDialogContainer{
   static MapDialogContainer* container;
   static Mutex sync_object;
   Mutex sync;
-  MapProxy proxy;
+  static MapProxy* proxy;
   time_t last_dump_time;
   XHash<unsigned,MapDialog*,hash_func_ET96MAP_DID> hash_;
   XHash<const string,MapDialog*,StringHashFunc> lock_map;
@@ -393,7 +393,7 @@ public:
   }
 
   MapProxy* getProxy() {
-    return &proxy;
+    return proxy;
   }
 
   MapDialog* getDialog(ET96MAP_DIALOGUE_ID_T dialogueid,ET96MAP_LOCAL_SSN_T lssn){
@@ -590,13 +590,18 @@ public:
   virtual int Execute();
   virtual const char* taskName() { return "MapIoTask";}
   bool isStarted() {return is_started;}
+  MapProxy proxy;
   MapIoTask(Event* startevent,const string& scAddr, const string& ussdCenterAddr, int ussdSSN) : startevent(startevent),is_started(false)
   {
     MapDialogContainer::SetSCAdress(scAddr);
     MapDialogContainer::SetUSSDAdress(ussdCenterAddr);
     MapDialogContainer::SetUSSDSSN(ussdSSN);
+    MapDialogContainer::proxy = &proxy;
   }
-  ~MapIoTask() {deinit();}
+  ~MapIoTask() {
+    deinit();
+    MapDialogContainer::proxy = 0;
+  }
 private:
   Event* startevent;
   bool is_started;
