@@ -92,8 +92,9 @@ namespace smsc {
 				void checkError() throw (PduListenerException) {
 					if (is_error) {
 						releaseError();
+						/*std::cout << "PduListenerException: errorCode = " << errorCode;*/
 						std::ostringstream sout;
-						sout << "SmppSessionListenerException: errorCode = " << errorCode;
+						sout << "PduListenerException: errorCode = " << errorCode;
 						throw PduListenerException(sout.str(), errorCode);
 					}
 				}
@@ -135,6 +136,7 @@ namespace smsc {
 				virtual PduListenerHandler getListener() throw() = 0;
 				virtual void setListener(PduListenerHandler &listener) throw(IllegalSmeOperation) = 0;
 				virtual void connect() throw(SmppException, IllegalSmeOperation) = 0;
+				virtual void reconnect() throw(SmppException, IllegalSmeOperation) = 0;
 				virtual void close() throw() = 0;
 				virtual uint32_t bind(const int bindType) throw(PduListenerException, IllegalSmeOperation) = 0;
 				virtual uint32_t unbind() throw(PduListenerException, IllegalSmeOperation) = 0;
@@ -224,9 +226,14 @@ namespace smsc {
 						}
 					}
 				}
+				virtual void reconnect() throw(SmppException, IllegalSmeOperation) {
+				  close();
+				  connect();
+				}
 				virtual void close() throw() {
 					if(session != 0) {
 						session->close();
+						session = SmppSessionHandler();
 					}
 				}
 				virtual uint32_t bind(const int bindType) throw(PduListenerException, IllegalSmeOperation);
@@ -285,6 +292,9 @@ namespace smsc {
 						queuedSme->log.debug("QueuedSmeListener: Mutex.Unlock()");
 						queuedSme->queueMutex.Unlock();
 					}
+					/*void handleError(int errorCode) {
+					  queuedSme->log.debug("QueuedSmeListener#handleError(%x)", errorCode);
+					}*/
 				};
 
 			public:

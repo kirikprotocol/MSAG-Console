@@ -160,6 +160,7 @@ namespace smsc {
 			}
 
 			uint32_t BasicSme::bind(const int bindType) throw(PduListenerException, IllegalSmeOperation) {
+			  log.debug("BasicSme#bind() enter");
 			  this->bindType = bindType;
 			  uint32_t sequence;
 			  if(session == 0) {
@@ -191,19 +192,23 @@ namespace smsc {
 					disposePdu((SmppHeader*)resp);
 				}
 				listener->checkError();
+				//listener->releaseError();
 
 			  } catch (smsc::sme::SmppConnectException ex) {
 				  std::ostringstream msg;
 				  msg << "PduListenerException: smsc::sme::SmppConnectException #" << ex.getReason() << ", " << ex.getTextReason();
 				  throw PduListenerException(msg.str(), ex.getReason());
-			  } catch(...) {
+			  } catch (std::exception ex) {
+				log.error("BasicSme#bind(): Unknown std::exception when binding\n, %s", ex.what());
+			  } catch (...) {
 				log.error("BasicSme#bind(): Unknown exception when binding");
-				throw;
 			  }
+			  log.debug("BasicSme#bind() exit");
 			  return sequence;
 			}
 
 			uint32_t BasicSme::unbind() throw(PduListenerException, IllegalSmeOperation) {
+			  log.debug("BasicSme#unbind() enter");
 			  uint32_t sequence;
 			  if(session == 0) {
 				throw IllegalSmeOperation("IllegalSmeOperation: can't unbind null session");
@@ -220,8 +225,20 @@ namespace smsc {
 				  log.error("Error when unbinding, PduUnbindResp != NULL");
 				  disposePdu((SmppHeader*)resp);
 			  }
-			  listener->checkError();
+			  try {
+				listener->checkError();
+				//listener->releaseError();
+			  } catch (smsc::sme::SmppConnectException ex) {
+				  std::ostringstream msg;
+				  msg << "PduListenerException: smsc::sme::SmppConnectException #" << ex.getReason() << ", " << ex.getTextReason();
+				  throw PduListenerException(msg.str(), ex.getReason());
+			  } catch (std::exception ex) {
+				log.error("BasicSme#unbind(): Unknown std::exception when unbinding\n, %s", ex.what());
+			  } catch (...) {
+				log.error("BasicSme#unbind(): Unknown exception when unbinding");
+			  }
 
+			  log.debug("BasicSme#unbind() exit");
 			  return sequence;
 			}
 

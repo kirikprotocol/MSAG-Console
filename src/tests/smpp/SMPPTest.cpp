@@ -30,7 +30,7 @@ namespace smsc {
 				// adding test cases
 				CPPUNIT_TEST_SUITE( SMPPTest );
 				CPPUNIT_TEST( testBind );
-				//CPPUNIT_TEST( testTransmitterReceiverEnquireLink );
+				CPPUNIT_TEST( testTransmitterReceiverEnquireLink );
 				//CPPUNIT_TEST_EXCEPTION( testException,  TestException );
 				CPPUNIT_TEST_SUITE_END();
 				// SME for testing
@@ -341,7 +341,7 @@ namespace smsc {
 				  return res;
 				}
 
-				// проверка того, что нельзя забайндить два (transmitter | receiver | transmitter) как 
+				// проверка того, что нельзя забайндить два (transceiver | receiver | transmitter) как 
 				// в одном сокете, так и в разных
 				bool checkDuplicateBinding(const int bindType) throw(PduListenerException) {
 				  try {
@@ -368,31 +368,21 @@ namespace smsc {
 					uint32_t sequence = sme->bind(bindType);
 					if(checkBind(sequence, bindType, sme)== false) {
 					  log.error("Test Error: error in response for %s bind pdu", mode.c_str());
-					  res = false;
-					  //return false;
+					  //res = false;
+					  return false;
 					}
 					log.debug("testBind: binding \"sme1\" as a " + mode + " in other socket");
 					sequence = sme1->bind(bindType);
 					if(checkBind(sequence, bindType, sme1)== false) {
 					  // все нормально, нельзя законнектиться вторым XXX
+					  sme1->reconnect();
 					} else {
 					  log.error("checkDuplicateBinding error: the second \"sme1\" has been successfully bound as " + mode);
-					  res = false;
-					  //return false;
-					}
-
-					log.debug("testBind: unbinding \"sme1\"");
-					try {
+					  log.debug("testBind: unbinding \"sme1\"");
 					  sequence = sme1->unbind();
-					  if(checkUnbind(sequence, sme1)== false) {
-						// все нормально, прошлый байнд был неудачным
-					  } else {
-						log.error("checkDuplicateBinding error: the second \"sme1\" has been successfully unbound as " + mode);
-						res = false;
-						//return false;
-					  }
-					} catch (PduListenerException ex) {
-					  // все нормально, прошлый байнд должен был быть неудачным
+					  checkUnbind(sequence, sme1);
+					  //res = false;
+					  return false;
 					}
 
 					// два в одном сокете
@@ -403,22 +393,21 @@ namespace smsc {
 						// все нормально, нельзя законнектиться вторым XXX
 					  } else {
 						log.error("checkDuplicateBinding error: the second " + mode + " has been successfully bound in the same socket");
-						res = false;
-						//return false;
+						log.debug("testBind: unbinding \"sme\"");
+						sequence = sme->unbind();
+						checkUnbind(sequence, sme);
+						//res = false;
+						return false;
 					  }
 					} catch (PduListenerException ex) {
 					  // все нормально, байнд должен был быть неудачным
 					}
-
 					log.debug("testBind: unbinding \"sme\"");
 					sequence = sme->unbind();
-					if(checkUnbind(sequence, sme)== false) {
-					  log.error("checkDuplicateBinding error: when unbinding the first \"sme\"");
-					  res = false;
-					  //return false;
-					}
+					checkUnbind(sequence, sme);
 
 					return res;
+
 				  } catch(...) {
 					log.error("SMPPTest#checkDuplicateBinding: unknown exception has occured");
 				  }
