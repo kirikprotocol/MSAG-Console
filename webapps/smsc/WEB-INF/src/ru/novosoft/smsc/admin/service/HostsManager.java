@@ -68,7 +68,7 @@ public class HostsManager
 	}
 
 	public Daemon removeHost(String host) throws AdminException
-	{
+	{ //? remove smes
 		final Daemon daemon = daemonManager.get(host);
 		final List serviceIds = daemon.getServiceIds(smeManager.getSmes());
 		for (Iterator i = serviceIds.iterator(); i.hasNext();)
@@ -78,7 +78,7 @@ public class HostsManager
 				throw new AdminException("SME \"" + serviceId + "\" is used");
 		}
 		serviceManager.removeAll(serviceIds);
-		smeManager.removeAllIfSme(serviceIds);
+		//smeManager.removeAllIfSme(serviceIds);
 		return daemonManager.remove(daemon.getHost());
 	}
 
@@ -147,57 +147,6 @@ public class HostsManager
 			throws AdminException
 	{
 		daemonManager.get(serviceManager.getInfo(serviceId).getHost()).shutdownService(serviceId);
-	}
-
-	protected Object callServiceMethod(String hostName, String serviceId, String componentName,
-												  String methodName, String returnTypeName, Map args)
-			throws AdminException
-	{//toremove
-		Service s = serviceManager.get(serviceId);
-		if (!s.getInfo().getHost().equals(hostName))
-			throw new AdminException("Wrong host name (\"" + hostName + "\")");
-		Component c = (Component) s.getInfo().getComponents().get(componentName);
-		if (c == null)
-			throw new AdminException("Wrong component name (\"" + componentName + "\")");
-		Method m = (Method) c.getMethods().get(methodName);
-		if (m == null)
-			throw new AdminException("Wrong method name (\"" + methodName + "\")");
-		Type t = Type.getInstance(returnTypeName);
-		if (!m.getType().equals(t))
-			throw new AdminException("Wrong method return type (\"" + returnTypeName + "\")");
-		Map params = m.getParams();
-		if (!params.keySet().equals(args.keySet()))
-			throw new AdminException("Wrong arguments");
-		Map arguments = new HashMap();
-		for (Iterator i = params.values().iterator(); i.hasNext();)
-		{
-			Parameter p = (Parameter) i.next();
-			if (args.get(p.getName()) == null)
-				throw new AdminException("Parameter \"" + p.getName() + "\" not specified");
-			switch (p.getType().getId())
-			{
-				case Type.StringType:
-					{
-						arguments.put(p.getName(), args.get(p.getName()));
-						break;
-					}
-				case Type.IntType:
-					{
-						arguments.put(p.getName(), Integer.decode((String) args.get(p.getName())));
-						break;
-					}
-				case Type.BooleanType:
-					{
-						arguments.put(p.getName(), Boolean.valueOf((String) args.get(p.getName())));
-						break;
-					}
-				default:
-					{
-						throw new AdminException("Unknown parameter \"" + p.getName() + "\" type \"" + p.getType().getName() + "\"");
-					}
-			}
-		}
-		return s.call(c, m, t, arguments);
 	}
 
 	public int getCountRunningServices(String hostName)

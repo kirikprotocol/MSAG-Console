@@ -84,45 +84,6 @@ public class ServiceManagerImpl implements ServiceManager
 
 	/*************************************************************************************************************/
 
-	protected AddAdmServiceWizard receiveNewServiceArchive(InputStream in)
-			throws AdminException
-	{ //toremove
-/*
-		AddAdmServiceWizard wizard = new AddAdmServiceWizard(in);
-		if (services.keySet().contains(wizard.getSystemId()))
-			throw new AdminException("Service \"" + wizard.getSystemId() + "\" already exists");
-		else
-			return wizard;
-*/
-		return null;
-	}
-
-
-	protected void addAdmService(AddAdmServiceWizard wizard)
-			throws AdminException
-	{//toremove
-/*
-		if (services.containsKey(wizard.getSystemId()))
-			throw new AdminException("Service \"" + wizard.getSystemId() + "\" already exists");
-		else if (smeManager.contains(wizard.getSystemId()))
-			throw new AdminException("SME \"" + wizard.getSystemId() + "\" already exists");
-		else
-		{
-			wizard.deploy(WebAppFolders.getDaemonsFolder(), WebAppFolders.getWebappFolder(), WebAppFolders.getWebinfLibFolder());
-
-			ServiceInfo serviceInfo = new ServiceInfo(wizard.getSystemId(), wizard.getHost(), wizard.getPort(),
-																	wizard.getStartupArgs(), wizard.createSme(), ServiceInfo.STATUS_STOPPED);
-
-			Daemon d = getDaemon(serviceInfo.getHost());
-			d.addService(serviceInfo);
-			putService(new Service(serviceInfo));
-			//smeManager.saveSmesConfig();
-			logger.debug("services added");
-		}
-*/
-	}
-
-
 	public ServiceInfo getInfo(String servoceId)
 			throws AdminException
 	{

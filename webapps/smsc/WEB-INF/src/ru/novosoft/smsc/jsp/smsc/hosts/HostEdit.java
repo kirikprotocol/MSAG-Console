@@ -10,7 +10,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 public class HostEdit extends SmscBean
-{//todo
+{
 	private String hostName = null;
 	private int port = -1;
 	private String mbSave = null;
