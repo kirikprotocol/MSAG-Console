@@ -2,6 +2,7 @@
 #define __SMSC_CORE_BUFFERS_PRIORITY_QUEUE_HPP__
 
 #include "core/buffers/Array.hpp"
+#include "util/debug.h"
 
 namespace smsc{
 namespace core{
@@ -40,6 +41,7 @@ public:
     {
       minuse=maxuse=idx;
     }
+    __require__(minuse>=0 && minuse<=max-min+1 && maxuse>=0 && maxuse<=max-min+1);
     queue[idx].Push(item);
     count++;
     return *this;
@@ -48,6 +50,7 @@ public:
   bool Pop(T& item)
   {
     if(count==0)return false;
+    __require__(minuse>=0 && minuse<=max-min+1 && maxuse>=0 && maxuse<=max-min+1);
     int best=minuse,i;
     double bestval=(double)counts[minuse]/((minuse+min)>0?(minuse+min):1);
 
@@ -66,13 +69,14 @@ public:
     }
     counts[best]++;
     //if(counts[best]>=best)counts[best]=0;
-    queue[best].Pop(item);
+    queue[best].Shift(item);
     count--;
     if(count>0)
     {
       while(queue[minuse].Count()==0)minuse++;
       while(queue[maxuse].Count()==0)maxuse--;
     }
+    __require__(minuse>=0 && minuse<=max-min+1 && maxuse>=0 && maxuse<=max-min+1);
     processed++;
     if(processed>=(max-min)*100)
     {

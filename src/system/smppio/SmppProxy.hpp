@@ -137,7 +137,13 @@ public:
         ,
         SmscCommandDefaultPriority
       );
-    }else
+    }/*else if(cmd->get_commandId()==GENERIC_NACK)
+    {
+      MutexGuard g(mutexout);
+      if(!opened)return;
+      outqueue.Push(cmd,SmscCommandDefaultPriority);
+    }*/
+    else
     {
       MutexGuard g(mutexin);
       if(!opened)

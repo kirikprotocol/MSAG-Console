@@ -247,7 +247,7 @@ int SmppInputThread::Execute()
             }
             continue;
           }
-          __trace2__("SmppInputThread: received commandId=%d",pdu->get_commandId());
+          __trace2__("SmppInputThread: received commandId=%x",pdu->get_commandId());
           switch(pdu->get_commandId())
           {
             case SmppCommandSet::BIND_RECIEVER:
@@ -431,7 +431,14 @@ int SmppInputThread::Execute()
                     ss->getProxy()->putIncomingCommand(cmd);
                   }else
                   {
-                    SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);
+                    PduEnquireLink pduresp;
+                    pduresp.get_header().set_commandId(SmppCommandSet::ENQUIRE_LINK_RESP);
+                    pduresp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+                    char buf[64];
+                    SmppStream s;
+                    assignStreamWith(&s,buf,sizeof(buf),false);
+                    fillSmppPdu(&s,reinterpret_cast<SmppHeader*>(&pduresp));
+                    ss->getSocket()->WriteAll(buf,pduresp.size());
                   }
                 }catch(...)
                 {
@@ -453,7 +460,15 @@ int SmppInputThread::Execute()
                 SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVBNDSTS);
               }else
               {
-                SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVCMDID);
+                ss->getProxy()->putCommand
+                (
+                  SmscCommand::makeGenericNack
+                  (
+                    pdu->get_sequenceNumber(),
+                    SmscCommand::Status::INVALIDCMDID
+                  )
+                );
+                //SendGNack(ss,pdu->get_sequenceNumber(),SmppStatusSet::ESME_RINVCMDID);
               }
               /*SmscCommand cmd=
                 SmscCommand::makeGenericNack
@@ -581,7 +596,7 @@ int SmppOutputThread::Execute()
         SmscCommand cmd=ss->getProxy()->getOutgoingCommand();
 
         SmppHeader *pdu=cmd.makePdu();
-        trace2("SmppOutThread: commandId=%d, seq number:%d",
+        trace2("SmppOutThread: commandId=%x, seq number:%d",
           pdu->get_commandId(),pdu->get_sequenceNumber());
         int size=calcSmppPacketLength(pdu);
         char* buf=ss->getBuffer(size);
