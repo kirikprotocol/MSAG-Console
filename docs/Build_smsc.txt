@@ -1,0 +1,90 @@
+Инструкции по использованию ant скриптов для билдования smsc.
+
+1. Профиль пользователя
+   Каждый пользователь в своей домашней директории имеет файл .profile.
+Этот файл обязательно должен содержать след. директивы:
+export PATH=/usr/ccs/bin:/opt/SUNWspro/bin:$PATH
+. /opt/oracle/.oraenv
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:.:./lib
+
+2. CVS
+   Настройка доступа к репозиторию:
+cvs -d :pserver:username@cvs:/cvsroot login
+   Checkout проекта в домашнюю директорию:
+cd ~
+cvs -d :pserver:username@cvs:/cvsroot co smsc
+
+3. Настройка параметров сборки.
+
+3.1. Настройка сборки smsc
+Необходимо выполнить след. комманды, чтобы скопировать темплейтные 
+файлы настроек:
+cp ~/smsc/src/modules-list-smsc ~/smsc/src/modules-list
+cp ~/smsc/distribs/smsc/build.properties.sample ~/smsc/distribs/smsc/build.properties
+cp ~/smsc/distribs/smsc/extra_lib_links.list.sample ~/smsc/distribs/smsc/extra_lib_links.list
+cp ~/smsc/distribs/smsc/extra_libs.list.sample ~/smsc/distribs/smsc/extra_libs.list
+cp ~/smsc/config/templates/smsc_sample.properties ~/smsc/distribs/smsc/smsc.properties
+
+Нужно отредактировать файл ~/smsc/distribs/smsc/build.properties:
+BUILD_DIR=/export/home/username/build
+SMSC_DIR=/export/home/username/smsc
+MAKE_ARGS="CXX=CC DEBUG=YES TRACE=YES DISABLE_SMPP_CHECKS=YES"
+для тестовой версии без MAP прокси:
+MAKE_ARGS="CXX=CC DEBUG=YES TRACE=YES DISABLE_SMPP_CHECKS=YES NOMAPPROXY=YES"
+CATALINA_HOME=/export/home/username/build/distr/tomcat
+CATALINA_BASE=/export/home/username/build/distr
+TEMPLATE_PROPS=/export/home/username/smsc/distribs/smsc/smsc.properties
+
+Нужно поправить файл ~/smsc/distribs/smsc/smsc.properties:
+Там необходимо исправить номера портов, настройки конектов к базе данных.
+
+4. Сборка:
+cd ~/smsc/distribs/smsc
+ant makedeps
+ant distr
+
+после чего в ~/build/distr у вас появляется готовый дистрибутив, его надо
+скопировать в директорию которая у вас будет использоваться для гоняния тестов.
+
+5. Сборка обновлений
+cd ~/smsc/distribs/smsc
+ant update
+
+после чего в ~/build/distr у вас появится готовая версия что скопировать поверх
+установленной, она не содержит файлов конфигураций, так что все настройки 
+будут сохранены после апдейта.
+
+6. Сборка дополнительных компонент.
+ant dbsme_distr
+ant dbsme_update
+
+ant infosme_distr
+ant infosme_update
+
+ant mcisme_distr
+ant mcisme_update
+
+ant mciprof_distr
+ant mciprof_update
+
+ant proxysme_distr
+ant proxysme_update
+
+ant emailsme_distr
+ant emailsme_update
+
+Дистрибутив компонент сохраняется в war файл в ~/build/distr/webapps.
+Апдейты компонент создают файлы в иерархии установленной версии. Т.е. 
+простым копирование поверх установленного все апдейтится.
+
+7. Полезные комманды:
+ant rmbuild 
+    - удаляет build директорию, полезно если хочется сделать полный rebuild
+ant -DMOD=module_name makemod 
+    - компиляет один сишный модуль, вместо make module_name в дире ~/smsc/src
+ant makeweb 
+    - компиляет только вебовскую часть, ~/build/exploded затем содержит все накомпиленное
+
+8. Примеры
+ant rmbuild makedeps update dbsme_update infosme_update
+    - пересобрать update для инсталяции центра с dbsme и infosme
