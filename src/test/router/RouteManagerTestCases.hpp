@@ -79,10 +79,6 @@ protected:
 
 private:
 	RouteManager* routeMan;
-
-	void setupRandomCorrectRouteInfo(const SmeSystemId& smeSystemId,
-		RouteInfo* info);
-	vector<int> compareRoutes(const RouteInfo& route1, const RouteInfo& route2);
 	void debugRoute(RouteInfo& route);
 };
 
