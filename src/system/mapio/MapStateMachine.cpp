@@ -104,11 +104,28 @@ static void QueryMcsVersion(MapDialog* dialog)
   x_map[s_] = dialog->dialogid_map;
 }
 
+static inline 
+void SetVersion(ET96MAP_APP_CNTX_T& ac,unsigned version){
+  if ( version > 3 || version == 0 ) throw runtime_error(
+    FormatText("MAP::%s: Opss, version = %d, why?",__PRETTY_FUNCTION__,version));
+  switch(version){
+  case 3:
+    ac.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_3;
+    break;
+  case 2:
+    ac.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
+    break;
+  case 1:
+    ac.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_1;
+    break;
+  }
+}
+
 static void SendRInfo(MapDialog* dialog)
 {
   ET96MAP_APP_CNTX_T appContext;
   appContext.acType = ET96MAP_SHORT_MSG_GATEWAY_CONTEXT;
-  appContext.version = dialog->version;
+  SetVersion(appContext,dialog->version);
   USHORT_T result = Et96MapOpenReq(
     SSN, dialog->dialogid_map, 
     &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
@@ -364,7 +381,7 @@ static bool SendSms(MapDialog* dialog){
   __trace2__("MAP::SendSms: MAP.did 0x%x",dialog->dialogid_map);
   ET96MAP_APP_CNTX_T appContext;
   appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
-  appContext.version = dialogid->version;
+  SetVersion(appContext,dialogid->version);
   USHORT_T result;
   bool segmentation = false;
 
