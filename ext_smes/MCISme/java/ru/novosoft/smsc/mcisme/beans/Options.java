@@ -111,7 +111,7 @@ public class Options extends MCISmeBean
             mciNvtIODevice   = getConfig().getString("MCISme.MSC.nvtIODevice");
             mciUsercode      = getConfig().getString("MCISme.MSC.usercode");
             mciUserpassword  = getConfig().getString("MCISme.MSC.userpassword");
-            voiceMailAddress = getConfig().getString("MCISme.VoiceMail");
+            voiceMailAddress = getConfig().getString("MCISme.MSC.voicemail");
           }
         } catch (Throwable th) {
           logger.warn("Parameter '"+MCI_PROF_LOCATION_PARAM+"' wasn't specified");
@@ -196,7 +196,7 @@ public class Options extends MCISmeBean
       getConfig().setString("MCISme.MSC.usercode", mciUsercode);
       getConfig().setString("MCISme.MSC.userpassword", mciUserpassword);
       getConfig().setString("MCISme.MSC.nvtIODevice", mciNvtIODevice);
-      getConfig().setString("MCISme.VoiceMail", voiceMailAddress);
+      getConfig().setString("MCISme.MSC.voicemail", voiceMailAddress);
     }
 
     getConfig().setInt   ("MCISme.SMPPThreadPool.max", smppThreadPoolMax);

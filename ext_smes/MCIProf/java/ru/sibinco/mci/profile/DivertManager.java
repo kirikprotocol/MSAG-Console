@@ -54,8 +54,8 @@ public class DivertManager
       mscNvtIODevice   = properties.getProperty("MSC.nvtIODevice");
       mscUserCode      = properties.getProperty("MSC.usercode");
       mscUserPassword  = properties.getProperty("MSC.userpassword");
+      voiceMailAddress = properties.getProperty("MCS.voicemail");
       mciSmeAddress    = properties.getProperty("MCISme.Address");
-      voiceMailAddress = properties.getProperty("MCISme.VoiceMail");
 
     } catch(Exception e) {
       throw new ScenarioInitializationException("Failed to load commutator properties", e);
