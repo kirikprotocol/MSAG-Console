@@ -27,8 +27,9 @@ using namespace smsc::util;
 
 
 static const bool SMS_SEGMENTATION = true;
-static inline unsigned GetMOLockTimeout() {return 45;}
-static inline unsigned GetBusyDelay() { return 5; }
+static inline unsigned GetMOLockTimeout() {return MapDialogContainer::getMOLockTimeout();}
+static inline unsigned GetBusyDelay() { return MapDialogContainer::getBusyMTDelay(); }
+static inline unsigned GetLockedByMODelay() { return MapDialogContainer::getLockedByMoDelay(); }
 static void SendRInfo(MapDialog* dialog);
 static bool SendSms(MapDialog* dialog);
 
@@ -370,13 +371,13 @@ static unsigned RemapDialog(MapDialog* dialog,unsigned ssn){
   return MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,dialog->ssn,ssn);
 }
 
-static void SendRescheduleToSmsc(unsigned dialogid)
+/*static void SendRescheduleToSmsc(unsigned dialogid)
 {
   if ( dialogid == 0 ) return;
   __map_trace__("Send RESCHEDULE NOW to SMSC");
   SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialogid,MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,0));
   MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
-}
+}*/
 
 static void SendAbonentStatusToSmsc(MapDialog* dialog,int status/*=AbonentStatus::UNKNOWN*/)
 {
@@ -391,8 +392,9 @@ static void SendErrToSmsc(unsigned dialogid,unsigned code)
   __map_trace2__("Send error 0x%x to SMSC dialogid=%x",code,dialogid);
   SmscCommand cmd = SmscCommand::makeDeliverySmResp("0",dialogid,code);
   if ( GET_STATUS_CODE(code) == Status::SUBSCRBUSYMT ){
-    __map_trace2__("Set Busy delay %d",GetBusyDelay());
     cmd->get_resp()->set_delay(GetBusyDelay());
+  } else if( GET_STATUS_CODE(code) == Status::LOCKEDBYMO ) {
+    cmd->get_resp()->set_delay(GetLockedByMODelay());
   }
   MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
 }

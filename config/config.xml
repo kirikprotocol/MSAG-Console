@@ -100,8 +100,9 @@
   </section>
 
   <section name="map">
-    <param name="hlr" type="string">hlr:address</param>
-    <param name="vlr" type="string">vlr:address</param>
+    <param name="busyMTDelay" type="int">20</param>
+    <param name="lockedByMODelay" type="int">20</param>
+    <param name="MOLockTimeout" type="int">45</param>
   </section>
 
   <section name="profiler">

@@ -333,6 +333,10 @@ class MapDialogContainer{
   static string SC_ADRESS_VALUE;
   static string USSD_ADRESS_VALUE;
   static ET96MAP_LOCAL_SSN_T ussdSSN;
+  static int busyMTDelay;
+  static int lockedByMoDelay;
+  static int MOLockTimeout;
+
   int    processTimeout;
   int    processLimit;
 
@@ -385,6 +389,14 @@ public:
   static void SetUSSDSSN(int ssn) { ussdSSN = (ET96MAP_LOCAL_SSN_T)ssn; }
   static void setProxy( MapProxy* _proxy ) { proxy = _proxy; }
   MapProxy* getProxy() { return proxy; }
+  static void setBusyMTDelay(int val){busyMTDelay=val;}
+  static int  getBusyMTDelay(){return busyMTDelay;}
+  static void setLockedByMoDelay(int val){lockedByMoDelay=val;}
+  static int  getLockedByMoDelay(){return lockedByMoDelay;}
+  static void setMOLockTimeout(int val){MOLockTimeout=val;}
+  static int  getMOLockTimeout(){return MOLockTimeout;}
+  static void SetUSSDAdress(const string& scAddr) { USSD_ADRESS_VALUE = scAddr; }
+  static ET96MAP_LOCAL_SSN_T GetUSSDSSN() { return ussdSSN; }
 
   static void dropInstance()
   {
@@ -656,12 +668,15 @@ public:
   virtual const char* taskName() { return "MapIoTask";}
   bool isStarted() {return is_started;}
   MapProxy proxy;
-  MapIoTask(Event* startevent,const string& scAddr, const string& ussdCenterAddr, int ussdSSN) : startevent(startevent),is_started(false)
+  MapIoTask(Event* startevent,const string& scAddr, const string& ussdCenterAddr, int ussdSSN, int busyMTDelay, int lockedByMODelay, int MOLockTimeout) : startevent(startevent),is_started(false)
   {
     MapDialogContainer::SetSCAdress(scAddr);
     MapDialogContainer::SetUSSDAdress(ussdCenterAddr);
     MapDialogContainer::SetUSSDSSN(ussdSSN);
     MapDialogContainer::setProxy( &proxy );
+    MapDialogContainer::setBusyMTDelay(busyMTDelay);
+    MapDialogContainer::setLockedByMoDelay(lockedByMoDelay);
+    MapDialogContainer::setMOLockTimeout(MOLockTimeout);
   }
   ~MapIoTask() {
     __mapdlg_trace__("Destroying MapIoTask");

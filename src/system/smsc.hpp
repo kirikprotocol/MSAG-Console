@@ -487,6 +487,9 @@ protected:
   string scAddr;
   string ussdCenterAddr;
   int    ussdSSN;
+  int    busyMTDelay;
+  int    lockedByMoDelay;
+  int    MOLockTimeout;
   time_t startTime;
 
   performance::SmePerformanceMonitor smePerfMonitor;

@@ -301,6 +301,10 @@ int MapIoTask::Execute(){
 string MapDialogContainer::SC_ADRESS_VALUE = "79029869999";
 string MapDialogContainer::USSD_ADRESS_VALUE = "79029869998";
 ET96MAP_LOCAL_SSN_T MapDialogContainer::ussdSSN = 6;
+int MapDialogContainer::busyMTDelay = 10;
+int MapDialogContainer::lockedByMoDelay = 10;
+int MapDialogContainer::MOLockTimeout = 45;
+
 MapProxy* MapDialogContainer::proxy = 0;
 
 void MapDialogContainer::abort()
