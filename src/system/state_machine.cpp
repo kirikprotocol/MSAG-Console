@@ -818,8 +818,17 @@ StateType StateMachine::submit(Tuple& t)
     profile.reportoptions,profile.codepage);
 
   __trace2__("SUBMIT_SM: profile options=%d",profile.reportoptions);
-  sms->setDeliveryReport(profile.reportoptions);
-
+  if((sms->getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x03)==0x01 ||
+     (sms->getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x03)==0x02 ||
+     (sms->getIntProperty(Tag::SMPP_REGISTRED_DELIVERY)&0x10)==0x10 ||
+     sms->getIntProperty(Tag::SMSC_STATUS_REPORT_REQUEST)
+    )
+  {
+    sms->setDeliveryReport(0);
+  }else
+  {
+    sms->setDeliveryReport(profile.reportoptions);
+  }
   smsc::router::RouteInfo ri;
 
   ////
@@ -1728,7 +1737,9 @@ StateType StateMachine::deliveryResp(Tuple& t)
       try{
         // send delivery
         Address src;
-        if(smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias && smsc->AddressToAlias(sms.getOriginatingAddress(),src))
+        if(smsc->getSmeInfo(dest_proxy->getIndex()).wantAlias &&
+           sms.getIntProperty(Tag::SMSC_HIDE) &&
+           smsc->AddressToAlias(sms.getOriginatingAddress(),src))
         {
           sms.setOriginatingAddress(src);
         }
@@ -2196,6 +2207,7 @@ void StateMachine::sendFailureReport(SMS& sms,MsgIdType msgId,int state,const ch
 
   if(sms.getIntProperty(Tag::SMSC_SUPPRESS_REPORTS) && !regdel &&
      sms.getDeliveryReport()!=REPORT_ACK)return;
+  if(!(sms.getDeliveryReport() || regdel))return;
   SMS *prpt=new SMS;
   SMS &rpt=*prpt;
   rpt.setOriginatingAddress(scAddress);
