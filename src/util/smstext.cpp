@@ -48,7 +48,7 @@ int splitSms(SMS* tmplSms,const char *text,int length,ConvEncodingEnum encoding,
     }while(datalen==-1);
     dc=DataCoding::DEFAULT;
   }
-  int maxlen=dc==DataCoding::DEFAULT?160:70;
+  int maxlen=dc==DataCoding::DEFAULT?160:140;
   int sent=0;
   while(sent<datalen)
   {
