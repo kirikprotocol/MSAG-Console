@@ -155,6 +155,7 @@ static void DropMapDialog_(unsigned dialogid){
         return;
       }
     }
+    __trace2__("MAP::%s: 0x%x - restart on next in chain - ",__FUNCTION__,__dialogid_map);
     SmscCommand cmd = dialog->chain.front();
     dialog->chain.pop_front();
     dialog->Clean();
@@ -734,12 +735,11 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2=0 )
                 throw MAPDIALOG_BAD_STATE(
                   FormatText("MAP::%s bad state %d, MAP.did 0x%x, SMSC.did 0x%x",__FUNCTION__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
               DoUSSRUserResponce(cmd,dialog.get());
+              return;
             }
             else
-            {
               throw MAPDIALOG_FATAL_ERROR(
                 FormatText("MAP::PutCommand: invaid USSD code 0x%x",serviceOp));
-            }
           }
           catch(...)
           {
