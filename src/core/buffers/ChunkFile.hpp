@@ -236,7 +236,7 @@ public:
   }
 
 
-  friend class ChunkHandle;
+  friend class smsc::core::buffers::ChunkFile::ChunkHandle;
 
   class ChunkHandle{
   public:
@@ -349,9 +349,7 @@ public:
     uint32_t readCount;
     File::offset_type lastPageOffset;
     ChunkPageHeader first,current,last;
-
     friend class ChunkFile;
-
   };
 
   ChunkHandle* CreateChunk()
