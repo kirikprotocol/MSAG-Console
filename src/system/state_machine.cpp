@@ -1025,6 +1025,12 @@ StateType StateMachine::submit(Tuple& t)
   bool generateDeliver=true; // do not generate in case of merge-concat
   bool allowCreateSms=true;
 
+  bool noPartitionSms=false; // do not call partitionSms if true!
+
+
+  smsc::util::extractPortsFromUdh(*sms);
+  convertSarToUdh(*sms);
+
   ////
   //
   //  Merging
@@ -1195,12 +1201,14 @@ StateType StateMachine::submit(Tuple& t)
           uint8_t idx0,num0;
           bool havemoreudh;
           smsc::util::findConcatInfo((unsigned char*)tmp.c_str()+ci->off[i],mr0,idx0,num0,havemoreudh);
+          __trace2__("SUBMIT_SM: merge check order %d:%d",i,idx0);
           totalMoreUdh=totalMoreUdh || havemoreudh;
           order.push_back(idx0);
           rightOrder=rightOrder && idx0==i+1;
         }
         if(!rightOrder)
         {
+          __trace__("SUBMIT_SM: not right order - need to reorder");
           //average number of parts is 2-3. so, don't f*ck mind with quick sort and so on.
           //maximum is 255.  65025 comparisons. not very good, but not so bad too.
           string newtmp;
@@ -1211,9 +1219,9 @@ StateType StateMachine::submit(Tuple& t)
             {
               if(order[j]==i)
               {
-                int partlen=i==num?tmp.length()-ci->off[i-1]:ci->off[i]-ci->off[i-1];
+                int partlen=j==num-1?tmp.length()-ci->off[j]:ci->off[j+1]-ci->off[j];
                 newci[i-1]=newtmp.length();
-                newtmp.append(tmp.c_str()+ci->off[i-1],partlen);
+                newtmp.append(tmp.c_str()+ci->off[j],partlen);
               }
             }
           }
@@ -1239,6 +1247,7 @@ StateType StateMachine::submit(Tuple& t)
           if(ri.smeSystemId=="MAP_PROXY")
           {
             pres=partitionSms(&newsms,profile.codepage);
+            noPartitionSms=true;
           }
         }else
         {
@@ -1433,7 +1442,8 @@ StateType StateMachine::submit(Tuple& t)
 
     if(ri.smeSystemId=="MAP_PROXY" &&
        !sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT)&&
-       !sms->hasBinProperty(Tag::SMSC_CONCATINFO)
+       !sms->hasBinProperty(Tag::SMSC_CONCATINFO) &&
+       !noPartitionSms
       )
     {
       pres=partitionSms(sms,profile.codepage);

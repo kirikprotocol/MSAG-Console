@@ -343,9 +343,9 @@ void Smsc::processCommand(SmscCommand& cmd)
   {
     case __CMD__(SUBMIT):
     {
-      if((cmd->get_sms()->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40) && !strcmp(cmd.getProxy()->getSystemId(),"MAP_PROXY"))
+      SMS &sms=*cmd->get_sms();
+      if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40) && !strcmp(cmd.getProxy()->getSystemId(),"MAP_PROXY"))
       {
-        SMS &sms=*cmd->get_sms();
         unsigned int len;
         unsigned char *body;
         if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
@@ -365,13 +365,13 @@ void Smsc::processCommand(SmscCommand& cmd)
           MergeCacheItem mci;
           mci.mr=mr;
           mci.oa=sms.getOriginatingAddress();
-          sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,1);
           sms.setConcatMsgRef(mr);
           sms.setConcatSeqNum(0);
           SMSId *pid=mergeCache.GetPtr(mci);
           if(!pid)
           {
             __trace__("first piece");
+            sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,1);
             id=store->getNextId();
             mergeCache.Insert(mci,id);
             reverseMergeCache.Insert(id,mci);
@@ -386,6 +386,39 @@ void Smsc::processCommand(SmscCommand& cmd)
         }else
         {
           id=store->getNextId();
+        }
+      }else
+      if(
+          sms.hasIntProperty(Tag::SMPP_SAR_MSG_REF_NUM) &&
+          sms.hasIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS) &&
+          sms.hasIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM)
+        )
+      {
+        uint16_t mr=sms.getIntProperty(Tag::SMPP_SAR_MSG_REF_NUM);
+        uint8_t idx=sms.getIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS),
+                num=sms.getIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM);
+        __trace2__("sms from %s have sar info:mr=%u, %u/%u",
+          sms.getOriginatingAddress().toString().c_str(),(unsigned)mr,(unsigned)idx,(unsigned)num);
+        MergeCacheItem mci;
+        mci.mr=mr;
+        mci.oa=sms.getOriginatingAddress();
+        sms.setConcatMsgRef(mr);
+        sms.setConcatSeqNum(0);
+        SMSId *pid=mergeCache.GetPtr(mci);
+        if(!pid)
+        {
+          __trace__("first piece");
+          sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,1);
+          id=store->getNextId();
+          mergeCache.Insert(mci,id);
+          reverseMergeCache.Insert(id,mci);
+          std::pair<time_t,SMSId> to(time(NULL)+mergeConcatTimeout,id);
+          mergeCacheTimeouts.push_back(to);
+        }else
+        {
+          __trace__("next piece");
+          sms.setIntProperty(Tag::SMSC_MERGE_CONCAT,2);
+          id=*pid;
         }
       }else
       {
