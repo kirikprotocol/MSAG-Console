@@ -1,0 +1,53 @@
+WEB-INF/classes/
+	сюда компиляются классы
+
+WEB-INF/classes/dtds/
+	необходимые .dtd's :
+	 	AliasRecords.dtd
+		SmeRecords.dtd
+		command.dtd
+		configuration.dtd
+		response.dtd
+		routes.dtd
+
+WEB-INF/daemons/
+	лежат сервиса, запущенные на хостах. 
+
+WEB-INF/daemons/<host name>/
+	здесь лежат только директории сервисов 
+
+WEB-INF/daemons/<host name>/<service id>/
+	собственно, корневая директория сервиса.
+
+WEB-INF/daemons/<host name>/<service id>/bin/
+	обязан лежать один выполняемый файл "service".
+
+WEB-INF/daemons/<host name>/<service id>/conf/
+	здесь хранятся кофиги сервиса
+
+WEB-INF/smsc/
+	лежит собственно сервис-центр
+
+WEB-INF/smsc/bin/
+	обязан лежать исполняемый файл "smsc" - собственно сервис-центр
+
+WEB-INF/smsc/conf/
+	необходимые конфиги:
+		aliases.xml  - алиасы
+		config.xml   - конфиг самого сервис-центра
+		routes.xml   - маршруты
+		sme.xml      - 
+
+WEB-INF/work/
+	директория необходима для работы веб-приложения.
+
+WEB-INF/config.xml
+	конфиг веб-приложения.
+
+WEB-INF/web.xml
+	ещё один конфиг веб-приложения. В нём необходимо прописать правильный путь 
+	до WEB-INF/config.xml 
+	(под Tomcat обычно ../webapps/<smsc webapp name>/WEB-INF/config.xml)
+
+esme_<service ID>
+	директория где лежат страницы сервиса.
