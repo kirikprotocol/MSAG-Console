@@ -5,7 +5,6 @@
 #include "MessageStoreTestCases.hpp"
 #include "test/util/TestTaskManager.hpp"
 #include <iostream>
-#include <sstream>
 #include <map>
 
 using namespace std;
@@ -95,6 +94,12 @@ public:
 	static int getOps();
 };
 
+void debug(const char* str)
+{
+	static Category& log = Logger::getCategory("smsc.test.store.BusinessCycleTest");
+	log.debug("[%d]\t%s", thr_self(), str);
+}
+
 //MessageStoreBusinessCycleTestTask methods
 MessageStoreBusinessCycleTestTask::MessageStoreBusinessCycleTestTask(int _taskNum)
 	: TestTask("BusinessCycleTask", _taskNum), taskNum(_taskNum) {}
@@ -116,6 +121,8 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 	{
 		evt.Wait(MessageStoreBusinessCycleTest::delay);
 	}
+
+	debug("*** start ***");
 
 	vector<SMSId*> id;
 	vector<SMS*> sms;
@@ -199,24 +206,27 @@ void MessageStoreBusinessCycleTestTask::executeCycle()
 		process(tc.changeExistentSmsStateEnrouteToFinal(*id[i], sms[i], RAND_TC));
 	}
 	
-	//Сохранение sms с замещением существующего sms финальном состоянии
 	//Перевод sms в финальном состоянии в любое другое состояние
+	//Сохранение sms с замещением существующего sms финальном состоянии
 	//Обновление sms в финальном состоянии
 	//Чтение существующего sms
 	for (TCSelector s(RAND_SET_TC, 5); s.check(); s++)
 	{
 		switch (s.value())
 		{
-			case 1: //только одно sms создаем в цикле
-				PREPARE_FOR_NEW_SMS
-				process(tc.storeReplaceSmsInFinalState(id.back(), sms.back(),
-					*id[0], *sms[0]));
-				break;
-			case 2:
+			case 1:
 				for (int i = 0; i < id.size(); i++)
 				{
 					process(tc.changeFinalSmsStateToAny(*id[i], RAND_TC));
 				}
+				break;
+			case 2: //только одно sms создаем в цикле
+				PREPARE_FOR_NEW_SMS
+				process(tc.storeReplaceSmsInFinalState(id.back(), sms.back(),
+					*id[0], *sms[0]));
+				//обязательно перевести созданное сообщение в финальной состояние
+				process(tc.changeExistentSmsStateEnrouteToFinal(
+					*id.back(), sms.back(), RAND_TC));
 				break;
 			case 3:
 				for (int i = 0; i < id.size(); i++)
@@ -309,13 +319,8 @@ inline bool MessageStoreBusinessCycleTest::isStopped()
 
 void MessageStoreBusinessCycleTest::process(int taskNum, const TCResult* res)
 {
-	static Category& log = Logger::getCategory("smsc.test.store.BusinessCycleTest");
 	if (res)
 	{
-		//вывод в лог
-		ostringstream os;
-		os << *res << endl;
-		log.debug("Task = %d, tc = %s", taskNum, os.str().c_str());
 		//обновить статистику
 		taskStat[taskNum].ops++;
 	    tcStat[res->getId()]++;

@@ -6,7 +6,6 @@
 #include "test/util/Util.hpp"
 #include "test/util/TCResultFilter.hpp"
 #include <iostream>
-#include <sstream>
 
 using namespace smsc::sms; //SMSId, SMS
 using namespace smsc::test::store; //constants, MessageStoreTestCases
@@ -20,16 +19,6 @@ using smsc::store::StoreManager;
 using smsc::core::synchronization::Event;
 
 static Category& log = Logger::getCategory("smsc.test.store.IntegrityTest");
-
-void debug(TCResult* res)
-{
-	if (res)
-	{
-		ostringstream os;
-		os << *res << endl;
-		log.debug("%s", os.str().c_str());
-	}
-}
 
 #define PREPARE_FOR_NEW_SMS \
 	id.push_back(new SMSId()); \
@@ -50,7 +39,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 	{
 		PREPARE_FOR_NEW_SMS
 		TCResult* res = tc.storeCorrectSms(id.back(), sms.back(), RAND_TC);
-		debug(res);
 		stack.back()->push_back(res);
 	}
 	
@@ -74,7 +62,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					PREPARE_FOR_NEW_SMS
 					TCResult* res = tc.storeCorrectSms(id.back(), sms.back(),
 						*id[i], *sms[i], RAND_TC);
-					debug(res);
 					stack.back()->push_back(res);
 				}
 				break;
@@ -84,7 +71,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					PREPARE_FOR_NEW_SMS
 					TCResult* res = tc.storeDuplicateSms(id.back(), sms.back(),
 						*id[i], *sms[i]);
-					debug(res);
 					stack.back()->push_back(res);
 				}
 				break;
@@ -92,7 +78,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.storeRejectDuplicateSms(*sms[i]);
-					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -100,14 +85,12 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; !duplicatesOk && i < id.size(); i++)
 				{
 					TCResult* res = tc.storeReplaceCorrectSms(*id[i], sms[i]);
-					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
 			case 5:
 				{
 					TCResult* res = tc.storeIncorrectSms(RAND_TC);
-					debug(res);
 					filter->addResult(res);
 					//stack[i]->push_back(res);
 				}
@@ -124,7 +107,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				{
 					TCResult* res = tc.changeExistentSmsStateEnrouteToEnroute(
 						*id[i], sms[i], RAND_TC);
-					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -132,7 +114,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.replaceCorrectSms(*id[i], sms[i], RAND_TC);
-					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -140,7 +121,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.replaceIncorrectSms(*id[i], *sms[i], RAND_TC);
-					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -148,7 +128,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.loadExistentSms(*id[i], *sms[i]);
-					debug(res);
 					stack[i]->push_back(res);
 				}
 		}
@@ -166,7 +145,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 	{
 		TCResult* res = tc.changeExistentSmsStateEnrouteToFinal(*id[i], 
 			sms[i], RAND_TC);
-		debug(res);
 		stack[i]->push_back(res);
 	}
 	
@@ -182,7 +160,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.changeFinalSmsStateToAny(*id[i], RAND_TC);
-					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -192,12 +169,10 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 					PREPARE_FOR_NEW_SMS
 					TCResult* res1 = tc.storeReplaceSmsInFinalState(id.back(),
 						sms.back(), *id[i], *sms[i]);
-					debug(res1);
 					stack.back()->push_back(res1);
 					//обязательно перевести созданное сообщение в финальной состояние
 					TCResult* res2 = tc.changeExistentSmsStateEnrouteToFinal(
 						*id.back(), sms.back(), RAND_TC);
-					debug(res2);
 					stack.back()->push_back(res2);
 				}
 				break;
@@ -205,7 +180,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.replaceFinalSms(*id[i], *sms[i]);
-					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -213,7 +187,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.loadExistentSms(*id[i], *sms[i]);
-					debug(res);
 					stack[i]->push_back(res);
 				}
 		}
@@ -223,7 +196,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 	for (int i = 0; i < id.size(); i++)
 	{
 		TCResult* res = tc.deleteExistentSms(*id[i]);
-		debug(res);
 		stack[i]->push_back(res);
 	}
 
@@ -239,7 +211,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.changeFinalSmsStateToAny(*id[i], RAND_TC);
-					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -248,7 +219,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				{
 					TCResult* res = tc.replaceIncorrectSms(*id[i], *sms[i], RAND_TC);
 					//TCResult* res = tc.replaceFinalSms(*id[i], *sms[i]);
-					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -256,7 +226,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.loadNonExistentSms(*id[i]);
-					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -264,7 +233,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 				for (int i = 0; i < id.size(); i++)
 				{
 					TCResult* res = tc.deleteNonExistentSms(*id[i]);
-					debug(res);
 					stack[i]->push_back(res);
 				}
 				break;
@@ -275,7 +243,6 @@ void executeIntegrityTest(TCResultFilter* filter, int listSize)
 #ifdef ASSERT_THROW_IF_FAIL
 	TCResult* res = tc.storeAssertSms(ALL_TC);
 	filter->addResult(res);
-	debug(res);
 #endif
 
 	//обработка результатов

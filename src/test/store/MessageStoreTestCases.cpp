@@ -6,6 +6,7 @@
 #include "store/StoreExceptions.h"
 #include <cstdlib>
 #include <ctime>
+#include <sstream>
 
 namespace smsc  {
 namespace test  {
@@ -28,15 +29,40 @@ MessageStoreTestCases::MessageStoreTestCases()
 	msgStore = StoreManager::getMessageStore();
 }
 
+inline void MessageStoreTestCases::error()
+{
+	try
+	{
+		throw;
+	}
+	catch(exception& e)
+	{
+		log.error("[%d]\t%s", thr_self(), e.what());
+	}
+	catch(...)
+	{
+	}
+}
+
+inline void MessageStoreTestCases::debug(const TCResult* res)
+{
+	if (res)
+	{
+		ostringstream os;
+		os << *res << endl;
+		log.debug("[%d]\t%s", thr_self(), os.str().c_str());
+	}
+}
+
 TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 {
 	TCSelector s(num, 13);
 	TCResult* res = new TCResult(TC_STORE_CORRECT_SMS, s.getChoice());
 	for (; s.check(); s++)
 	{
-		SMS sms;
 		try
 		{
+			SMS sms;
 			SmsUtil::setupRandomCorrectSms(&sms);
 			switch(s.value())
 			{
@@ -114,11 +140,13 @@ TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp, int num)
 		}
 		catch(...)
 		{
+			error();
 			*idp = 0;
 			SmsUtil::clearSms(smsp);
 			res->addFailure(s.value());
 		}
 	}
+	debug(res);
 	return res;
 }
 
@@ -146,13 +174,13 @@ TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp,
 	auto_ptr<char> randAddrValue = rand_char(randAddrLength);
 	for (; s.check(); s++)
 	{
-		SMS sms;
 		try
 		{
+			SMS sms;
 			SmsUtil::setupRandomCorrectSms(&sms);
 			SMSId smsId;
 			CreateMode flag = ETSI_REJECT_IF_PRESENT;
-			uint8_t shift = rand1(255);
+			uint8_t shift = rand1(254);
 			switch(s.value())
 			{
 				case 1001: //отличие только в msgRef
@@ -213,11 +241,13 @@ TCResult* MessageStoreTestCases::storeCorrectSms(SMSId* idp, SMS* smsp,
 		}
 		catch(...)
 		{
+			error();
 			*idp = 0;
 			SmsUtil::clearSms(smsp);
 			res->addFailure(s.value());
 		}
 	}
+	debug(res);
 	return res;
 }
 
@@ -241,10 +271,12 @@ TCResult* MessageStoreTestCases::storeDuplicateSms(SMSId* idp, SMS* smsp,
 	}
 	catch(...)
 	{
+		error();
 		*idp = 0;
 		SmsUtil::clearSms(smsp);
 		res->addFailure(100);
 	}
+	debug(res);
 	return res;
 }
 
@@ -269,8 +301,10 @@ TCResult* MessageStoreTestCases::storeRejectDuplicateSms(const SMS& existentSms)
 	}
 	catch(...)
 	{
+		error();
 		res->addFailure(100);
 	}
+	debug(res);
 	return res;
 }
 
@@ -300,8 +334,10 @@ TCResult* MessageStoreTestCases::storeReplaceCorrectSms(const SMSId existentId,
 	}
 	catch(...)
 	{
+		error();
 		res->addFailure(100);
 	}
+	debug(res);
 	return res;
 }
 
@@ -329,10 +365,12 @@ TCResult* MessageStoreTestCases::storeReplaceSmsInFinalState(SMSId* idp, SMS* sm
 	}
 	catch(...)
 	{
+		error();
 		*idp = 0;
 		SmsUtil::clearSms(smsp);
 		res->addFailure(100);
 	}
+	debug(res);
 	return res;
 }
 
@@ -346,6 +384,7 @@ TCResult* MessageStoreTestCases::storeIncorrectSms(int num)
 	//некорректный статус DELETED
 	//срок валидности уже закончилс€
 	//waitTime > validTime
+	debug(res);
 	return res;
 }
 
@@ -427,9 +466,11 @@ TCResult* MessageStoreTestCases::storeAssertSms(int num)
 		}
 		catch(...)
 		{
+			error();
 			res->addFailure(s.value());
 		}
 	}
+	debug(res);
 	return res;
 }
 
@@ -474,19 +515,21 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToEnroute(
 				default:
 					throw s;
 			}
+			msgStore->changeSmsStateToEnroute(id, dst, failureCause, nextTryTime);
 			//hack, все сеттеры запрещены
 			sms->destinationDescriptor = dst;
 			sms->failureCause = failureCause;
 			sms->attempts++;
 			sms->lastTime = time(NULL);
 			sms->nextTime = nextTryTime;
-			msgStore->changeSmsStateToEnroute(id, dst, failureCause, nextTryTime);
 		}
 		catch(...)
 		{
+			error();
 			res->addFailure(s.value());
 		}
 	}
+	debug(res);
 	return res;
 }
 
@@ -524,14 +567,14 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 				case 1: //DELIVERED, пустой imsi и msc
 					dst.setMsc(0, NULL);
 					dst.setImsi(0, NULL);
-					SET_DELIVERED_SMS
 					msgStore->changeSmsStateToDelivered(id, dst);
+					SET_DELIVERED_SMS
 					break;
 				case 2: //DELIVERED, пустой imsi и msc
 					dst.setMsc(0, "*");
 					dst.setImsi(0, "*");
-					SET_DELIVERED_SMS
 					msgStore->changeSmsStateToDelivered(id, dst);
+					SET_DELIVERED_SMS
 					break;
 				case 3: //DELIVERED, imsi и msc адреса максимальной длины
 					{
@@ -540,20 +583,20 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 						dst.setMsc(MAX_ADDRESS_LENGTH, mscAddr.get());
 						dst.setImsi(MAX_ADDRESS_LENGTH, imsiAddr.get());
 					}
-					SET_DELIVERED_SMS
 					msgStore->changeSmsStateToDelivered(id, dst);
+					SET_DELIVERED_SMS
 					break;
 				case 4: //UNDELIVERABLE, пустой imsi и msc
 					dst.setMsc(0, NULL);
 					dst.setImsi(0, NULL);
-					SET_UNDELIVERABLE_SMS
 					msgStore->changeSmsStateToUndeliverable(id, dst, failureCause);
+					SET_UNDELIVERABLE_SMS
 					break;
 				case 5: //UNDELIVERABLE, пустой imsi и msc
 					dst.setMsc(0, "*");
 					dst.setImsi(0, "*");
-					SET_UNDELIVERABLE_SMS
 					msgStore->changeSmsStateToUndeliverable(id, dst, failureCause);
+					SET_UNDELIVERABLE_SMS
 					break;
 				case 6: //UNDELIVERABLE, imsi и msc адреса максимальной длины
 					{
@@ -562,8 +605,8 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 						dst.setMsc(MAX_ADDRESS_LENGTH, mscAddr.get());
 						dst.setImsi(MAX_ADDRESS_LENGTH, imsiAddr.get());
 					}
-					SET_UNDELIVERABLE_SMS
 					msgStore->changeSmsStateToUndeliverable(id, dst, failureCause);
+					SET_UNDELIVERABLE_SMS
 					break;
 				case 7: //UNDELIVERABLE, failureCause не задан
 					{
@@ -573,21 +616,21 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 						dst.setImsi(MAX_ADDRESS_LENGTH, imsiAddr.get());
 					}
 					failureCause = 0;
-					SET_UNDELIVERABLE_SMS
 					msgStore->changeSmsStateToUndeliverable(id, dst, failureCause);
+					SET_UNDELIVERABLE_SMS
 					break;
 				case 8: //EXPIRED
+					msgStore->changeSmsStateToExpired(id);
 					//hack, все сеттеры запрещены
 					sms->state = EXPIRED;
 					sms->nextTime = 0;
-					msgStore->changeSmsStateToExpired(id);
 					break;
 				case 9: //DELETED
+					msgStore->changeSmsStateToDeleted(id);
 					//hack, все сеттеры запрещены
 					sms->state = DELETED;
 					//sms->lastTime = time(NULL);
 					sms->nextTime = 0;
-					msgStore->changeSmsStateToDeleted(id);
 					break;
 				default:
 					throw s;
@@ -595,9 +638,11 @@ TCResult* MessageStoreTestCases::changeExistentSmsStateEnrouteToFinal(
 		}
 		catch(...)
 		{
+			error();
 			res->addFailure(s.value());
 		}
 	}
+	debug(res);
 	return res;
 }
 
@@ -641,9 +686,11 @@ TCResult* MessageStoreTestCases::changeFinalSmsStateToAny(const SMSId id, int nu
 		}
 		catch(...)
 		{
+			error();
 			res->addFailure(s.value());
 		}
 	}
+	debug(res);
 	return res;
 }
 
@@ -688,6 +735,8 @@ TCResult* MessageStoreTestCases::replaceCorrectSms(const SMSId id, SMS* sms, int
 				default:
 					throw s;
 			}
+			msgStore->replaceSms(id, sms->getOriginatingAddress(),
+                body, deliveryReport, validTime, waitTime);
 			//данные новые, схема и наличие хедера прежние
 			uint8_t data[MAX_SHORT_MESSAGE_LENGTH];
 			uint8_t len = body.getData(data);
@@ -701,14 +750,14 @@ TCResult* MessageStoreTestCases::replaceCorrectSms(const SMSId id, SMS* sms, int
 			{
 				sms->setWaitTime(waitTime);
 			}
-			msgStore->replaceSms(id, sms->getOriginatingAddress(),
-                body, deliveryReport, validTime, waitTime);
 		}
 		catch(...)
 		{
+			error();
 			res->addFailure(s.value());
 		}
 	}
+	debug(res);
 	return res;
 }
 
@@ -758,9 +807,11 @@ TCResult* MessageStoreTestCases::replaceIncorrectSms(const SMSId id,
 		}
 		catch(...)
 		{
+			error();
 			res->addFailure(s.value());
 		}
 	}
+	debug(res);
 	return res;
 }
 
@@ -784,8 +835,10 @@ TCResult* MessageStoreTestCases::replaceFinalSms(const SMSId id, const SMS& sms)
 	}
 	catch(...)
 	{
+		error();
 		res->addFailure(100);
 	}
+	debug(res);
 	return res;
 }
 
@@ -811,8 +864,10 @@ TCResult* MessageStoreTestCases::loadExistentSms(const SMSId id, const SMS& sms)
 	}
 	catch(...)
 	{
+		error();
 		res->addFailure(100);
 	}
+	debug(res);
 	return res;
 }
 
@@ -831,8 +886,10 @@ TCResult* MessageStoreTestCases::loadNonExistentSms(const SMSId id)
 	}
 	catch(...)
 	{
+		error();
 		res->addFailure(100);
 	}
+	debug(res);
 	return res;
 }
 
@@ -845,8 +902,10 @@ TCResult* MessageStoreTestCases::deleteExistentSms(const SMSId id)
 	}
 	catch (...)
 	{
+		error();
 		res->addFailure(100);
 	}
+	debug(res);
 	return res;
 }
 	
@@ -864,8 +923,10 @@ TCResult* MessageStoreTestCases::deleteNonExistentSms(const SMSId id)
 	}
 	catch (...)
 	{
+		error();
 		res->addFailure(100);
 	}
+	debug(res);
 	return res;
 }
 	

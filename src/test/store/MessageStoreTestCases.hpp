@@ -242,6 +242,9 @@ public:
 private:
 	static Category& log;
 	MessageStore* msgStore;
+
+	void error();
+	void debug(const TCResult* res);
 };
 
 }
