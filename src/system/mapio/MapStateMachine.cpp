@@ -251,7 +251,7 @@ dropDialogLabel:
       {
         try{
           SmscCommand cmd = dialog->chain.front();
-          SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,0));
+          SendErrToSmsc(cmd->get_dialogId(),MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,Status::SUBSCRBUSYMT));
         }catch(exception& e){
           __trace2__("MAP::%s: exception %s",__FUNCTION__,e.what());
         }catch(...){
