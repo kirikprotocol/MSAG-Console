@@ -60,7 +60,6 @@ public class StringEncoderDecoder
       if( c < 10 ) sb.append( (char)('0'+c) );
       else sb.append( (char)('A'+(c-10)) );
     }
-    System.err.println("encodeHEX '"+str+"' to '"+sb.toString()+"'");
     return sb.toString();
   }
 
@@ -83,7 +82,6 @@ public class StringEncoderDecoder
       b[i/2] = (byte)ci;
       i+=2;
     }
-    System.err.println("decodeHEX '"+str+"' to '"+(new String( b ))+"'");
     return new String( b );
   }
 }
