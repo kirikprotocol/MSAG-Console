@@ -1,20 +1,104 @@
-#include "MessageStoreLoadTestTaskManager.hpp"
+#include "util/debug.h"
+#include "util/config/Manager.h"
+#include "MessageStoreTestCases.hpp"
+#include "test/util/TestTaskManager.hpp"
 #include <iostream>
+#include <sys/timeb.h>
 
 using namespace std;
+using namespace smsc::sms;
+using namespace smsc::util::config;
 using namespace smsc::test::store;
+using namespace smsc::test::util;
+
+TestTask t(0);
+
+class MessageStoreLoadTestTask : public TestTask
+{
+private:
+	int ops;
+	MessageStoreTestCases tc; //throws exception
+
+public:
+	MessageStoreLoadTestTask(int taskNum) : TestTask(taskNum), ops(0) {};
+
+	virtual void executeCycle()
+	{
+		SMSId id;
+		SMS sms;
+		for (int maxOps = 200 * (2 + ops / 200); ops < maxOps; ops++)
+		{
+			delete tc.storeCorrectSM(&id, &sms, RAND_TC);
+			//tc.setCorrectSMStatus();
+			//tc.createBillingRecord();
+		}
+		//tc.updateCorrectExistentSM(); ops++;
+		//tc.deleteExistentSM(); ops++;
+		//tc.loadExistentSM(); ops++;
+	};
+
+	int getOps()
+	{
+		return ops;
+	};
+
+	virtual ~MessageStoreLoadTestTask() {}
+};
+
+class MessageStoreLoadTestTaskManager
+	: public TestTaskManager<MessageStoreLoadTestTask>
+{
+private:
+	timeb t1;
+	int ops1;
+
+public:
+	void startTimer()
+	{
+		ftime(&t1);
+		ops1 = getOps();
+	};
+
+	float getRate()
+	{
+		int ops2 = getOps();
+		timeb t2; ftime(&t2);
+		float dt = (t2.time - t1.time) + (t2.millitm - t1.millitm) / 1000.0;
+		float rate = (ops2 - ops1) / dt;
+		t1 = t2;
+		ops1 = ops2;
+		return rate;
+	};
+
+	int getOps()
+	{
+		int ops = 0;
+		for (int i = 0; i < tasks.size(); i++)
+		{
+			ops += tasks[i]->getOps();
+		}
+		return ops;
+	};
+};
 
 int main(int argc, char* argv[])
 {
+    Manager::init("config.xml");
 	if (argc != 2)
 	{
 		cout << "Usage: MessageStoreLoadTest <numThreads>" << endl;
-		exit(-1);
+		__require__(false);
 	}
 	
+	//запустить таски
 	const int numThreads = atoi(argv[1]);
 	MessageStoreLoadTestTaskManager tm;
-	tm.startTasks(numThreads);
+	for (int i = 0; i < numThreads; i++)
+	{
+		tm.addTask(new MessageStoreLoadTestTask(i));
+	}
+	tm.startTimer();
+
 	while (true)
 	{
 		char ch;
