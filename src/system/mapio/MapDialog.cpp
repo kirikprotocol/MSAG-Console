@@ -29,6 +29,7 @@ inline char GetChar(const char*& ptr,unsigned& shift){
     shift&=0x7;
     ++ptr;
   }
+  return val;
 }
 
 void Convert7BitToText(
