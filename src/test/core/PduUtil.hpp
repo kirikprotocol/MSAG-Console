@@ -45,7 +45,8 @@ typedef enum
 	DELIVERY_MONITOR = 0x2,
 	DELIVERY_RECEIPT_MONITOR = 0x3,
 	INTERMEDIATE_NOTIFICATION_MONITOR = 0x4,
-	SME_ACK_MONITOR = 0x5
+	SME_ACK_MONITOR = 0x5,
+	GENERIC_NACK_MONITOR = 0x6
 } MonitorType;
 
 typedef enum
@@ -237,6 +238,18 @@ struct IntermediateNotificationMonitor : public PduMonitor
 	virtual ~IntermediateNotificationMonitor();
 
 	virtual MonitorType getType() const { return INTERMEDIATE_NOTIFICATION_MONITOR; }
+	virtual string str() const;
+};
+
+struct GenericNackMonitor : public PduMonitor
+{
+	uint32_t sequenceNumber;
+
+	GenericNackMonitor(uint32_t seqNum, PduData* pduData, PduFlag flag);
+	virtual ~GenericNackMonitor();
+
+	void setFlag(PduFlag _flag) { flag = _flag; }
+	virtual MonitorType getType() const { return GENERIC_NACK_MONITOR; }
 	virtual string str() const;
 };
 

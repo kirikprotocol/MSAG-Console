@@ -333,6 +333,9 @@ string PduMonitor::str() const
 		case SME_ACK_MONITOR:
 			s << ", type = sme ack";
 			break;
+		case GENERIC_NACK_MONITOR:
+			s << ", type = generic type";
+			break;
 		default:
 			__unreachable__("Invalid monitor type");
 	}
@@ -504,6 +507,26 @@ string IntermediateNotificationMonitor::str() const
 {
 	ostringstream s;
 	s << PduMonitor::str() << ", regDelivery = " << (int) regDelivery;
+	return s.str();
+}
+
+GenericNackMonitor::GenericNackMonitor(uint32_t seqNum, PduData* pduData,
+	PduFlag flag)
+: PduMonitor(pduData->submitTime, pduData->submitTime, pduData, flag),
+	sequenceNumber(seqNum)
+{
+	__trace2__("monitor created: %s", str().c_str());
+}
+
+GenericNackMonitor::~GenericNackMonitor()
+{
+	__trace2__("monitor deleted: %s", str().c_str());
+}
+
+string GenericNackMonitor::str() const
+{
+	ostringstream s;
+	s << PduMonitor::str() << ", sequenceNumber = " << sequenceNumber;
 	return s.str();
 }
 
