@@ -274,7 +274,7 @@ USHORT_T Et96MapPAbortInd(ET96MAP_LOCAL_SSN_T lssn,
   return ET96MAP_E_OK;
 }
 
-unsigned current_Ctx = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_1;
+unsigned current_Ctx = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
 
 USHORT_T  Et96MapOpenInd(
 	ET96MAP_LOCAL_SSN_T lssn, 
@@ -288,7 +288,7 @@ USHORT_T  Et96MapOpenInd(
 {
 	__trace2__("MAP::Et96MapOpenInd ssn 0x%x, dalogid 0x%x",lssn,dialogId);
   __trace2__("MAP::Et96MapOpenInd appCtx->type:0x%x, appCtx->version:0x%x ",appCtx->acType,appCtx->version); 
-  if ( appCtx->acType != current_Ctx ){
+  if ( appCtx->version != current_Ctx ){
     __trace2__("MAP::Et96MapOpenInd unsupported");
     USHORT_T result = Et96MapOpenResp(SSN,dialogId,ET96MAP_RESULT_NOT_OK,0,0,0,0);
     return ET96MAP_E_OK;
