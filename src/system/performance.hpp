@@ -17,17 +17,10 @@ using namespace smsc::core::synchronization;
 using smsc::core::buffers::Array;
 using smsc::core::network::Socket;
 
-#pragma pack(1)
 struct PerformanceCounter{
   int lastSecond;
   int average;
-  union{
-    uint64_t total;
-    struct {
-      uint32_t low;
-      uint32_t high;
-    };
-  };
+  uint64_t total;
 };
 
 const int performanceCounters=6;
@@ -41,8 +34,8 @@ struct PerformanceData{
   PerformanceCounter deliverErrPerm;
   PerformanceCounter rescheduled;
   */
-  uint16_t size;
-  uint8_t countersNumber;
+  uint32_t size;
+  uint32_t countersNumber;
   PerformanceCounter counters[performanceCounters];
   uint32_t eventQueueSize;
   time_t uptime;
@@ -51,7 +44,6 @@ struct PerformanceData{
   uint32_t inScheduler;
 };
 
-#pragma pack()
 
 class PerformanceListener{
 public:
@@ -75,8 +67,8 @@ public:
     PerformanceData ld=*data;
     int high,low;
 
-    uint16_t sz = htons(sizeof(ld));
-    ld.size = sz;
+    ld.size=htonl(sizeof(ld));
+    ld.countersNumber=htonl(ld.countersNumber);
 
 
     for(int i=0;i<performanceCounters;i++)
@@ -86,8 +78,7 @@ public:
 
       low=(int)(ld.counters[i].total&0xffffffff);
       high=(int)(ld.counters[i].total>>32);
-      ld.counters[i].high=htonl(high);
-      ld.counters[i].low=htonl(low);
+      ld.counters[i].total=(((uint64_t)htonl(high))<<32) | htonl(low);
     }
 
     ld.uptime=htonl(ld.uptime);
