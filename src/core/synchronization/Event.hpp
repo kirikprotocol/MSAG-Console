@@ -81,8 +81,8 @@ public:
     SetEvent(event);
 #else
     mutex.Lock();
-    cond_signal(&event);
     signaled=1;
+    cond_signal(&event);
     mutex.Unlock();
 #endif
   }
