@@ -35,6 +35,8 @@ using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
 using smsc::util::Exception;
 
+const int SmscCommandDefaultPriority=16;
+
 enum CommandId
 {
   UNKNOWN,       //0
@@ -239,7 +241,7 @@ struct _SmscCommand
   SmeProxy *proxy;
   int priority;
   SmeSystemId sourceId;
-  _SmscCommand() : ref_count(0), dta(0){};
+  _SmscCommand() : ref_count(0), dta(0), priority(SmscCommandDefaultPriority){};
   ~_SmscCommand()
   {
     switch ( cmdid )

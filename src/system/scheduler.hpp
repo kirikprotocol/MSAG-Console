@@ -41,7 +41,8 @@ public:
           delete it;
           for(int i=0;i<ids.Count();i++)
           {
-            queue.enqueue(ids[i],SmscCommand::makeForward());
+            SmscCommand cmd=SmscCommand::makeForward();
+            queue.enqueue(ids[i],cmd);
             thr_yield();
           }
           ids.Clean();
