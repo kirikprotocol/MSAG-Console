@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
+import ru.novosoft.smsc.util.*;
 
 import java.util.*;
 
@@ -119,7 +120,7 @@ public class RoutesEdit extends SmscBean
 				final String[] strings = (String[]) requestParameters.get(paramName);
 				if (strings.length > 0)
 				{
-					final String dstName = paramName.substring(subjprefix.length());
+					final String dstName = StringEncoderDecoder.decodeHEX(paramName.substring(subjprefix.length()));
 					selectedSmes.put(dstName, strings[0]);
 				}
 			}
@@ -128,7 +129,7 @@ public class RoutesEdit extends SmscBean
 				final String[] strings = (String[]) requestParameters.get(paramName);
 				if (strings.length > 0)
 				{
-					final String dstName = paramName.substring(maskprefix.length());
+					final String dstName = StringEncoderDecoder.decodeHEX(paramName.substring(maskprefix.length()));
 					selectedMaskSmes.put(dstName, strings[0]);
 				}
 			}
