@@ -434,6 +434,7 @@ StateType StateMachine::forward(Tuple& t)
     store->retriveSms((SMSId)t.msgId,sms);
   }catch(...)
   {
+    __trace__("FORWARD: failed to retriveSms");
     return UNKNOWN_STATE;
   }
   time_t now=time(NULL);
@@ -443,6 +444,7 @@ StateType StateMachine::forward(Tuple& t)
       store->changeSmsStateToExpired(t.msgId);
     }catch(...)
     {
+      __trace__("FORWARD: failed to change state to expired");
     }
     __trace2__("FORWARD: %lld expired (valid:%u - now:%u)",t.msgId,sms.getValidTime(),now);
     if(//p.reportoptions==smsc::profiler::ProfileReportOptions::ReportFull ||
@@ -552,14 +554,20 @@ StateType StateMachine::forward(Tuple& t)
 StateType StateMachine::deliveryResp(Tuple& t)
 {
   __trace2__("delivering resp for :%lld",t.msgId);
-  __require__(t.state==DELIVERING_STATE);
+  //__require__(t.state==DELIVERING_STATE);
+  if(t.state!=DELIVERING_STATE)
+  {
+    __warning__("DELIVERYRESP: state of SMS isn't DELIVERING!!!");
+    return t.state;
+  }
   smsc::sms::Descriptor d;
   SMS sms;
   try{
     store->retriveSms((SMSId)t.msgId,sms);
   }catch(exception& e)
   {
-    __trace2__("failed to retrieve sms:%s",e.what());
+    __trace2__("DELIVERYRESP: failed to retrieve sms:%s",e.what());
+    return UNKNOWN_STATE;
   }
   if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
   {
@@ -623,7 +631,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     __trace2__("change state to delivered exception:%s",e.what());
     log4cpp::Category &log=smsc::util::Logger::getCategory("smsc.system.StateMachine");
     log.error("Failed to change state to delivered for sms %lld",t.msgId);
-    return DELIVERED_STATE;
+    return UNKNOWN_STATE;
   }
   try{
     //smsc::profiler::Profile p=smsc->getProfiler()->lookup(sms.getOriginatingAddress());
