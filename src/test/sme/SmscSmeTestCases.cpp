@@ -224,8 +224,9 @@ void SmscSmeTestCases::processDeliveryReceipt(DeliveryReceiptMonitor* monitor,
 		opt.set_receiptedMessageId("");
 	}
 	uint8_t errCode[3];
-	*errCode = 3; //GSM
-	*((uint16_t*) (errCode + 1)) = rand0(65535);
+	*errCode = (uint8_t) 3; //GSM
+	uint16_t tmp = rand0(65535);
+	memcpy(errCode + 1, &tmp, 2);
 	uint8_t regDelivery =
 		SmppTransmitterTestCases::getRegisteredDelivery(monitor->pduData);
 	switch(monitor->state)
@@ -348,8 +349,9 @@ void SmscSmeTestCases::processIntermediateNotification(
 		opt.set_receiptedMessageId("");
 	}
 	uint8_t errCode[3];
-	*errCode = 3; //GSM
-	*((uint16_t*) (errCode + 1)) = rand0(65535);
+	*errCode = (uint8_t) 3; //GSM
+	uint16_t tmp = rand0(65535);
+	memcpy(errCode + 1, &tmp, 2);
 	switch(monitor->state)
 	{
 		case ENROUTE: //темпоральная ошибка
