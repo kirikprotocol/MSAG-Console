@@ -91,11 +91,11 @@ void MapIoTask::deinit( bool connected )
   if( connected ) {
       result = Et96MapUnbindReq(SSN);
       if ( result != ET96MAP_E_OK) {
-	__map_trace2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",SSN,result);
+  __map_trace2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",SSN,result);
       }
       result = Et96MapUnbindReq(USSD_SSN);
       if ( result != ET96MAP_E_OK) {
-	__map_trace2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",USSD_SSN,result);
+  __map_trace2__("error at Et96MapUnbindReq SSN=%d errcode 0x%hx",USSD_SSN,result);
       }
       result = MsgRel(MY_USER_ID,ETSIMAP_ID);
       if ( result != MSG_OK) {
@@ -132,7 +132,7 @@ void MapIoTask::dispatcher()
     MAP_isAlive = true;
     if ( isStopping ) {
         deinit(true);
-	return;
+  return;
     }
     MAP_dispatching = true;
     gettimeofday( &curtime, 0 );
@@ -177,7 +177,7 @@ void MapIoTask::dispatcher()
       __map_trace2__("MsgRecv hatching msg to reset priority order " );
       message.msg_p[4] = 0;
     }
-    if( message.primitive == 0x88 ) { 
+    if( message.primitive == 0x88 ) {
       // MapOpenInd
       if ( smsc::util::_map_cat->isDebugEnabled() ) {
         {
@@ -208,13 +208,13 @@ void MapIoTask::dispatcher()
         memcpy(specificInfo.specificData, message.msg_p+specificInfoLenPos+2, specificInfo.specificInfoLen );
       }
       const int ctx[2] = {(int)message.msg_p[4],(int)message.msg_p[5]};
-      map_result = Et96MapOpenInd( 
+      map_result = Et96MapOpenInd(
         (ET96MAP_LOCAL_SSN_T)message.msg_p[1], // SSN
         ((ET96MAP_DIALOGUE_ID_T)message.msg_p[2])|(((ET96MAP_DIALOGUE_ID_T)message.msg_p[3])<<8), // Dialogue ID
         (ET96MAP_APP_CNTX_T*)ctx, // AC version
         (message.msg_p[destAddrPos]>0)?(ET96MAP_SS7_ADDR_T*)(message.msg_p+destAddrPos):0, // dest ss7 addr
         (message.msg_p[orgAddrPos]>0)?(ET96MAP_SS7_ADDR_T*)(message.msg_p+orgAddrPos):0, // org ss7 addr
-#ifdef MAP_R12	
+#ifdef MAP_R12
         (message.msg_p[destRefPos]>0)?(ET96MAP_IMSI_OR_MSISDN_T*)(message.msg_p+destRefPos):0, // dest ref
 #else
         (message.msg_p[destRefPos]>0)?(ET96MAP_IMSI_T*)(message.msg_p+destRefPos):0, // dest ref
@@ -224,7 +224,7 @@ void MapIoTask::dispatcher()
       );
     } else {
       map_result = Et96MapHandleIndication(&message);
-      
+
     }
     if ( map_result != ET96MAP_E_OK && smsc::util::_map_cat->isWarnEnabled() ) {
       {
@@ -289,8 +289,8 @@ void MapIoTask::init(unsigned timeout)
 }
 
 #else
-void MapIoTask::deinit()
-{
+void MapIoTask::deinit(bool)
+     {
   __map_trace2__("MapIoTask::deinit: no map stack on this platform");
 }
 
@@ -445,7 +445,7 @@ void MAPSTATS_Flush(unsigned x,bool dump)
 {
   if ( dump ) {
     switch ( x ) {
-    case MAPSTATS__SEC: 
+    case MAPSTATS__SEC:
       {
         log4cpp::Category* log = MAPSTATS_GetLoggerSec();
         log->info("op(i/o) %d/%d, clo(i/o) %d/%d, dlg %d/%d, rcv %d",
