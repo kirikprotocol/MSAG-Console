@@ -50,8 +50,8 @@ public:
   }
   void clear()
   {
-    sockets.Clean();
-    fds.Clean();
+    sockets.Empty();
+    fds.Empty();
   }
   int canRead(SockArray& ready,SockArray& error,int timeout=-1)
   {

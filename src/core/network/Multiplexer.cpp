@@ -23,8 +23,8 @@ int Multiplexer::checkState(int mode,SockArray& ready,SockArray& error,int timeo
   {
     fds[i].events=mask;
   }
-  ready.Clean();
-  error.Clean();
+  ready.Empty();
+  error.Empty();
   int retval=poll(&fds[0],fds.Count(),timeout);
   if(retval<=0)return 0;
   int err=POLLNVAL|POLLERR|POLLHUP;
