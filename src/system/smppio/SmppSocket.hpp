@@ -56,6 +56,7 @@ public:
       bufferOffset=0;
     }
     log=0;
+    connectTime=time(NULL);
   }
 
   void setSystemId(const char* smeid)
@@ -116,6 +117,11 @@ public:
 
   bool hasOutput();
 
+  time_t getConnectTime()
+  {
+    return connectTime;
+  }
+
 protected:
   char* buffer;
   int dataLength;
@@ -130,6 +136,7 @@ protected:
   SmppProxy *proxy;
   int channelType;
   smsc::logger::Logger* log;
+  time_t connectTime;
 };//smppioSocket
 
 }//smppio

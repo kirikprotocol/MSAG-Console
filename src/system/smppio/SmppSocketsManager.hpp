@@ -6,6 +6,7 @@
 #include "core/threads/ThreadPool.hpp"
 #include "smeman/smeman.h"
 #include "core/synchronization/Mutex.hpp"
+#include "logger/Logger.h"
 
 #define SM_SOCK_PER_THREAD 16
 
@@ -20,7 +21,10 @@ using namespace smsc::core::synchronization;
 class SmppSocketsManager{
 public:
   SmppSocketsManager(ThreadPool *newtp,smsc::smeman::SmeManager* manager):
-    tp(newtp),smeManager(manager){}
+    tp(newtp),smeManager(manager)
+  {
+    log=smsc::logger::Logger::getInstance("smpp.sock");
+  }
   void registerSocket(Socket* sock);
   int removeSocket(Socket* sock);
   void setSmppSocketTimeout(int to)
@@ -43,6 +47,7 @@ protected:
   int inactivityTimeOut;
   smsc::smeman::SmeManager* smeManager;
   Mutex mtxAdd,mtxRemove;
+  smsc::logger::Logger* log;
 };//SocketsManager
 
 }//smppio

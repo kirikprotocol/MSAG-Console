@@ -57,7 +57,7 @@ int SmppSocketsManager::removeSocket(Socket* sock)
   trace2("socket ref count for %p:%d",sock,x);
   sock->setData(0,(void*)x);
   if(x)return x;
-  trace2("deleting socket:%p",sock);
+  info2(log,"deleting socket:%p",sock);
   sock->Abort();
   delete sock;
   return 0;

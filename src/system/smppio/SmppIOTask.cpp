@@ -154,6 +154,7 @@ int SmppInputThread::Execute()
         trace("in:got new socket");
       }
       if(isStopping)break;
+      time_t now=time(NULL);
       for(i=0;i<sockets.Count();i++)
       {
         SmppSocket *ss=sockets[i];
@@ -165,19 +166,20 @@ int SmppInputThread::Execute()
         }
         bool to=false;
         if(
-          s->getData(SOCKET_SLOT_KILL) ||
-          ss->isConnectionTimedOut() ||
-          (ss->getProxy() && time(NULL)-ss->getLastUpdate()-inactivityTime>inactivityTimeOut)
+            s->getData(SOCKET_SLOT_KILL) ||
+            ss->isConnectionTimedOut() ||
+            (ss->getProxy() && now-ss->getLastUpdate()-inactivityTime>inactivityTimeOut) ||
+            (!ss->getProxy() && now-ss->getConnectTime()>bindTimeout)
           )
         {
-          __trace__("SmppInputThread:: killing socket by request, timeout or invactivity timeout");
+          info2(log,"SmppInputThread:: killing socket %p by request, timeout or invactivity timeout",ss);
           s->Close();
           if(!s->getData(SOCKET_SLOT_KILL))outTask->removeSocket(s);
           killSocket(i);
           i--;
           continue;
         }
-        if(time(NULL)-ss->getLastUpdate()>inactivityTime && time(NULL)-ss->getLastEL()>5)
+        if(now-ss->getLastUpdate()>inactivityTime && now-ss->getLastEL()>5)
         {
           __trace2__("eqlink for %p/%p/%p",ss,ss->getSocket(),ss->getProxy());
           ss->updateLastEL();
@@ -331,7 +333,7 @@ int SmppInputThread::Execute()
                   if(proxy)
                   {
                     rebindproxy=true;
-                    __trace2__("SmppProxy: rebind %p!",proxy);
+                    info2(log,"SmppProxy: rebind(%s):%p!",proxy->getSystemId(),proxy);
                   }
                 }catch(...)
                 {
@@ -356,7 +358,7 @@ int SmppInputThread::Execute()
                   if(!proxy)
                   {
                     proxy=new SmppProxy(ss,totalLimit,si.proclimit,si.timeout);
-                    __trace2__("SmppProxy: new %p!",proxy);
+                    info2(log,"SmppProxy: new(%s) %p!",si.systemId.c_str(),proxy);
                   }
                   switch(pdu->get_commandId())
                   {
@@ -378,7 +380,7 @@ int SmppInputThread::Execute()
                             err=true;
                           }else
                           {
-                            __warning2__("SmppProxy: upgrade %p to transceiver (rss=%p)",proxy,ss);
+                            info2(log,"SmppProxy: upgrade(%s) %p to transceiver (rss=%p)",si.systemId.c_str(),proxy,ss);
                             proxy->setProxyType(proxyTransceiver);
                             proxy->setReceiverSocket(ss);
                           }
@@ -462,7 +464,7 @@ int SmppInputThread::Execute()
                 {
                   resppdu.get_header().
                     set_commandStatus(SmppStatusSet::ESME_RINVPASWD);
-                  __warning__("bind failed: password too long");
+                  warn1(log,"bind failed: password too long");
                   err=true;
                 }
 
@@ -471,7 +473,7 @@ int SmppInputThread::Execute()
                 {
                   resppdu.get_header().
                     set_commandStatus(SmppStatusSet::ESME_RINVSYSID);
-                  __warning__("bind failed: systemId too long");
+                  warn1(log,"bind failed: systemId too long");
                   err=true;
                 }
 
@@ -480,7 +482,7 @@ int SmppInputThread::Execute()
                 {
                   resppdu.get_header().
                     set_commandStatus(SmppStatusSet::ESME_RINVSYSTYP);
-                  __warning__("bind failed: systemType too long");
+                  warn1(log,"bind failed: systemType too long");
                   err=true;
                 }
 
@@ -489,7 +491,7 @@ int SmppInputThread::Execute()
                 {
                   resppdu.get_header().
                     set_commandStatus(SmppStatusSet::ESME_RINVPARLEN);
-                  __warning__("bind failed: systemType too long");
+                  warn1(log,"bind failed: systemType too long");
                   err=true;
                 }
 
@@ -499,7 +501,7 @@ int SmppInputThread::Execute()
                   try{
                     if(!rebindproxy)
                     {
-                      __trace2__("try to register sme:%s",sid.c_str());
+                      debug2(log,"try to register sme:%s",sid.c_str());
                       smsc_log_debug(snmpLog,"register sme:%s",sid.c_str());
                       smeManager->registerSmeProxy(
                         bindpdu->get_systemId()?bindpdu->get_systemId():"",
@@ -508,7 +510,7 @@ int SmppInputThread::Execute()
 
                       smsc_log_debug(snmpLog,"register sme:%s successful",sid.c_str());
                       proxy->setId(sid,proxyIndex);
-                      __trace2__("NEWPROXY: p=%p, smid=%s, forceDC=%s",proxy,sid.c_str(),si.forceDC?"true":"false");
+                      info2(log,"NEWPROXY: p=%p, smid=%s, forceDC=%s",proxy,sid.c_str(),si.forceDC?"true":"false");
                     }else
                     {
                       smsc_log_debug(snmpLog,"register second channel of sme:%s",sid.c_str());
@@ -530,7 +532,7 @@ int SmppInputThread::Execute()
                     }
                     resppdu.get_header().
                       set_commandStatus(errcode);
-                    trace2("registration failed:%s",e.what());
+                    warn2(log,"registration failed:%s",e.what());
                     //delete proxy;
                     err=true;
                   }
@@ -538,7 +540,7 @@ int SmppInputThread::Execute()
                   {
                     resppdu.get_header().
                       set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
-                    __trace2__("registration failed: %s", ex.what());
+                    warn2(log,"registration failed: %s", ex.what());
                     //delete proxy;
                     err=true;
                   }
@@ -546,7 +548,7 @@ int SmppInputThread::Execute()
                   {
                     resppdu.get_header().
                       set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
-                    __trace__("registration failed: unknown reason");
+                    warn1(log,"registration failed: unknown reason");
                     //delete proxy;
                     err=true;
                   }
@@ -609,7 +611,7 @@ int SmppInputThread::Execute()
               }break;
               case SmppCommandSet::UNBIND:
               {
-                __trace__("Received UNBIND");
+                info2(log,"Received UNBIND(%s):%p",ss->getProxy()->getSystemId(),ss->getProxy());
                 try{
                   if(ss->getProxy() && ss->getProxy()->isOpened())
                   {
@@ -634,15 +636,21 @@ int SmppInputThread::Execute()
                   }
                 }catch(...)
                 {
+                  warn1(log,"Exception during attempt to send bind response");
                 }
                 //ss->getSocket()->setData(SOCKET_SLOT_KILL,1);
               }break;
               case SmppCommandSet::GENERIC_NACK:
               {
-                __trace__("SmppInputThread: received gnack");
+                char buf[32];
+                ss->getSocket()->GetPeer(buf);
+                warn2(log,"SmppInputThread: received gnack from %s",buf);
               }break;
               case SmppCommandSet::ENQUIRE_LINK_RESP:
               {
+                char buf[32];
+                ss->getSocket()->GetPeer(buf);
+                debug2(log,"ENQUIRE_LINK_RESP:%s",buf);
               }break;
               case SmppCommandSet::ENQUIRE_LINK:
               {
@@ -911,7 +919,7 @@ int SmppOutputThread::Execute()
   Multiplexer::SockArray error;
   Multiplexer::SockArray tokill;
 
-  smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smpp.out");
+  smsc::logger::Logger *olog=smsc::logger::Logger::getInstance("smpp.out");
 
   int i;
   while(!isStopping)
@@ -956,7 +964,7 @@ int SmppOutputThread::Execute()
             pdu=cmd.makePdu(ss->getProxy()->getForceDc());
           }catch(...)
           {
-            warn2(log,"Failed to build pdu from command:%d,dlgid=%d",cmd->get_commandId(),cmd->get_dialogId());
+            warn2(olog,"Failed to build pdu from command:%d,dlgid=%d",cmd->get_commandId(),cmd->get_dialogId());
             continue;
           }
           if(pdu==0)continue;

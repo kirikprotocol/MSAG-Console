@@ -8,6 +8,7 @@
 #include "smeman/smeman.h"
 #include "core/network/Multiplexer.hpp"
 #include "util/config/Manager.h"
+#include "logger/Logger.h"
 
 namespace smsc{
 namespace system{
@@ -22,6 +23,10 @@ class SmppSocket;
 
 class SmppIOTask:public smsc::core::threads::ThreadedTask{
 public:
+  SmppIOTask()
+  {
+    log=smsc::logger::Logger::getInstance("smpp.io");
+  }
   int socketsCount()
   {
     return sockets.Count();
@@ -49,6 +54,7 @@ protected:
   Array<SmppSocket*> sockets;
   int inactivityTime;
   int inactivityTimeOut;
+  smsc::logger::Logger* log;
 };
 
 class SmppInputThread:public SmppIOTask{
@@ -57,6 +63,13 @@ public:
     smeManager(manager)
   {
     totalLimit=smsc::util::config::Manager::getInstance().getInt("trafficControl.maxSmsPerSecond");
+    try{
+      bindTimeout=smsc::util::config::Manager::getInstance().getInt("smpp.bindTimeout");
+    }catch(...)
+    {
+      bindTimeout=10;
+      warn2(log,"smpp.bindTimeout not found in config. using default value=%d",bindTimeout);
+    }
   }
   virtual ~SmppInputThread();
   virtual void addSocket(Socket* sock,int to);
@@ -70,6 +83,7 @@ protected:
   EventMonitor *outthreadmon;
   SmppIOTask *outTask;
   int totalLimit;
+  int bindTimeout;
 };
 
 class SmppOutputThread:public SmppIOTask{
