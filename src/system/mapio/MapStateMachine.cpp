@@ -1494,28 +1494,6 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
       FormatText("MAP::%s Et96MapDelimiterReq return error 0x%x",__func__,result));
 }
 
-static void DoUSSDNotifyCloseInfo(MapDialog* dialog)
-{
-  dialog->isUSSD = true;
-  __map_trace2__("%s: dialogid 0x%x",__func__,dialog->dialogid_map);
-  ET96MAP_USSD_STRING_T ussdString = {0,};
-  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 0x0f;
-  const char* text = "Closing...";
-  unsigned text_len = strlen( text );
-  unsigned bytes = 0;
-  unsigned elen = 0;
-  bytes = ConvertText27bit((const unsigned char*)text,text_len,ussdString.ussdStr,&elen);
-  if( bytes*8-text_len*7 == 7 ) ussdString.ussdStr[bytes-1] |= (0x0D<<1);
-  ussdString.ussdStrLen = bytes;
-  UCHAR_T result;
-  dialog->invokeId++;
-  ET96MAP_ALERTING_PATTERN_T alertPattern = ET96MAP_ALERTING_PATTERN_LEVEL2;
-  result = Et96MapV2UnstructuredSSNotifyReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, ussdEncoding, ussdString, &alertPattern);
-  if ( result != ET96MAP_E_OK )
-    throw runtime_error(
-      FormatText("MAP::%s Et96MapV2UnstructuredSSRequestReq return error 0x%x",__func__,result));
-}
-
 void MAPIO_PutCommand(const SmscCommand& cmd ){
 /*  if( MapDialogContainer::getInstance()->getNumberOfDialogs() > MAP_DIALOGS_LIMIT &&
       ( ( cmd->get_commandId() == DELIVERY && 
@@ -2833,7 +2811,6 @@ USHORT_T Et96MapDelimiterInd(
     case MAPST_WaitUSSDNotifyClose:
       dialog->state = MAPST_WaitSubmitUSSDNotifyConf;
       SendSubmitCommand(dialog.get());
-      DoUSSDNotifyCloseInfo(dialog.get());
       CloseMapDialog(dialog->dialogid_map,dialog->ssn);
       DropMapDialog(dialog.get());
       break;
