@@ -2,6 +2,7 @@
 #define TEST_UTIL_TEXT_UTIL
 
 #include "Util.hpp"
+#include "smpp/smpp.h"
 #include "util/recoder/recode_dll.h"
 #include <string>
 #include <vector>
@@ -15,13 +16,10 @@ using std::string;
 using std::vector;
 using std::auto_ptr;
 using std::pair;
+using smsc::smpp::DataCoding::DEFAULT;
 
-//data_coding
-const uint8_t DATA_CODING_SMSC_DEFAULT = 0x0;
-const uint8_t DATA_CODING_UCS2 = 0x8;
-
-auto_ptr<char> rand_text(int& length, uint8_t dataCoding = DATA_CODING_SMSC_DEFAULT);
-void rand_text(int& length, char* buf, uint8_t dataCoding = DATA_CODING_SMSC_DEFAULT);
+auto_ptr<char> rand_text(int& length, uint8_t dataCoding = DEFAULT);
+void rand_text(int& length, char* buf, uint8_t dataCoding = DEFAULT);
 
 string& mixedCase(string& str);
 

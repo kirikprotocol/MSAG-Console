@@ -10,6 +10,7 @@ namespace util {
 using namespace std;
 using namespace smsc::profiler;
 using namespace smsc::util;
+using namespace smsc::smpp::DataCoding;
 
 string& mixedCase(string& str)
 {
@@ -31,13 +32,13 @@ void rand_text(int& length, char* buf, uint8_t dataCoding)
 {
 	switch (dataCoding)
 	{
-		case DATA_CODING_SMSC_DEFAULT:
+		case DEFAULT:
 			for (int i = 0; i < length; i++)
 			{
 				buf[i] = rand0(127);
 			}
 			break;
-		case DATA_CODING_UCS2:
+		case UCS2:
 			{
 				char tmp[length / 2];
 				rand_uint8_t(length / 2, (uint8_t*) tmp);
@@ -57,14 +58,14 @@ auto_ptr<char> encode(const string& text, uint8_t dataCoding, int& msgLen)
 	char* msg;
 	switch (dataCoding)
 	{
-		case DATA_CODING_SMSC_DEFAULT:
+		case DEFAULT:
 			msgLen = text.length();
 			msg = new char[msgLen];
 			memcpy(msg, text.c_str(), msgLen);
 			//msgLen = ConvertTextTo7Bit(text.c_str(), text.length(),
 			//	msg, len, CONV_ENCODING_CP1251);
 			break;
-		case DATA_CODING_UCS2:
+		case UCS2:
 			{
 				int len = text.length() * 2 + 1;
 				msg = new char[len];
@@ -82,10 +83,10 @@ const string decode(const char* text, int len, uint8_t dataCoding)
 {
 	switch (dataCoding)
 	{
-		case DATA_CODING_SMSC_DEFAULT:
+		case DEFAULT:
 			//bufLen = Convert7BitToText(text, len, buf, sizeof(buf));
 			return string(text, len);
-		case DATA_CODING_UCS2:
+		case UCS2:
 			{
 				char buf[len + 1];
 				int bufLen = ConvertUCS2ToMultibyte((const short*) text, len,
@@ -108,20 +109,20 @@ const pair<string, uint8_t> convert(const string& text, int profileCodePage)
 				char buf[2 * text.length()];
 				int bufLen = Transliterate(text.c_str(), text.length(),
 					CONV_ENCODING_CP1251, buf, sizeof(buf));
-				return make_pair(string(buf, bufLen), DATA_CODING_SMSC_DEFAULT);
+				return make_pair(string(buf, bufLen), DEFAULT);
 			}
 			else
 			{
-				return make_pair(text, DATA_CODING_SMSC_DEFAULT);
+				return make_pair(text, DEFAULT);
 			}
 		case ProfileCharsetOptions::Ucs2:
 			if (hasHighBit(text.c_str(), text.length()))
 			{
-				return make_pair(text, DATA_CODING_UCS2);
+				return make_pair(text, UCS2);
 			}
 			else
 			{
-				return make_pair(text, DATA_CODING_SMSC_DEFAULT);
+				return make_pair(text, DEFAULT);
 			}
 		default:
 			__unreachable__("Invalid codepage");
@@ -136,8 +137,8 @@ vector<int> compare(uint8_t dc1, const char* str1, int len1,
 	//допустимая кодировка dc1
 	switch (dc1)
 	{
-		case DATA_CODING_SMSC_DEFAULT:
-		case DATA_CODING_UCS2:
+		case DEFAULT:
+		case UCS2:
 			break;
 		default:
 			res.push_back(1);
@@ -146,8 +147,8 @@ vector<int> compare(uint8_t dc1, const char* str1, int len1,
 	//допустимая кодировка dc2
 	switch (dc2)
 	{
-		case DATA_CODING_SMSC_DEFAULT:
-		case DATA_CODING_UCS2:
+		case DEFAULT:
+		case UCS2:
 			break;
 		default:
 			res.push_back(2);
@@ -164,8 +165,8 @@ vector<int> compare(uint8_t dc1, const char* str1, int len1,
 			res.push_back(4);
 		}
 	}
-	//DATA_CODING_SMSC_DEFAULT -> DATA_CODING_UCS2
-	else if (dc1 == DATA_CODING_SMSC_DEFAULT && dc2 == DATA_CODING_UCS2)
+	//DEFAULT -> UCS2
+	else if (dc1 == DEFAULT && dc2 == UCS2)
 	{
 		char ucs2Buf[2 * len1 + 1];
 		//int ucs2Len = Convert7BitToUCS2(str1, len1, (short*) ucs2Buf, sizeof(ucs2Buf));
@@ -180,8 +181,8 @@ vector<int> compare(uint8_t dc1, const char* str1, int len1,
 			res.push_back(6);
 		}
 	}
-	//DATA_CODING_UCS2 -> DATA_CODING_SMSC_DEFAULT (в транслит)
-	else if (dc1 == DATA_CODING_UCS2 && dc2 == DATA_CODING_SMSC_DEFAULT)
+	//UCS2 -> DEFAULT (в транслит)
+	else if (dc1 == UCS2 && dc2 == DEFAULT)
 	{
 		char defBuf[len1 + 1];
 		char transBuf[len1 + 1];
@@ -196,6 +197,7 @@ vector<int> compare(uint8_t dc1, const char* str1, int len1,
 		else if (memcmp(transBuf, str2, len2))
 		{
 			res.push_back(8);
+			//__trace2__("transBuf: %s\nstr2: %s", transBuf, str2);
 		}
 	}
 	else
@@ -207,15 +209,15 @@ vector<int> compare(uint8_t dc1, const char* str1, int len1,
 
 uint8_t getDataCoding(int num)
 {
-	const uint8_t dataCodings[] = {DATA_CODING_SMSC_DEFAULT, DATA_CODING_UCS2};
+	const uint8_t dataCodings[] = {DEFAULT, UCS2};
 	switch (num)
 	{
 		case RAND_TC:
 			return dataCodings[rand0(1)];
 		case ProfileCharsetOptions::Default:
-			return DATA_CODING_SMSC_DEFAULT;
+			return DEFAULT;
 		case ProfileCharsetOptions::Ucs2:
-			return DATA_CODING_UCS2;
+			return UCS2;
 		default:
 			__unreachable__("Invalid num");
 	}
@@ -225,9 +227,9 @@ int getMaxChars(uint8_t dataCoding)
 {
 	switch (dataCoding)
 	{
-		case DATA_CODING_SMSC_DEFAULT:
+		case DEFAULT:
 			return 160;
-		case DATA_CODING_UCS2:
+		case UCS2:
 			return 70;
 		default:
 			__unreachable__("Invalid dataCoding");
