@@ -191,6 +191,8 @@ void MapIoTask::dispatcher()
           MapDialog* dialog = MapDialogContainer::getInstance()->getDialog(dialogid);
           if ( dialog == 0 ){
             __trace2__("MAP::QueueProcessing: Opss, hereis no dialog with id x%x");
+            CloseDialog(SSN,dialogid);
+          }else{
             bool close_dlg = dialog->ProcessCmd(cmd);
             if ( close_dlg ) CloseAndRemoveDialog(SSN,dialogid);
           }

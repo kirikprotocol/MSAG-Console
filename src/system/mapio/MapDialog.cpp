@@ -32,7 +32,7 @@ bool MapDialog::ProcessCmd(SmscCommand& cmd){
       if ( result != ET96MAP_E_OK ) {
         __trace2__("MapDialog::ProcessCmdToMsg: Et96MapV2ForwardSmMOResp return error 0x%hx",result);
       }else{
-        __trace2__("MapDialog::ProcessCmdToMsg: Et96MapV2ForwardSmMOResp OK",result);
+        __trace2__("MapDialog::ProcessCmdToMsg: Et96MapV2ForwardSmMOResp OK");
       }
       return true;
     }
