@@ -98,12 +98,13 @@ public:
             command.setOutData(exc.what());
         }
 
+        sms.setEServiceType(processor.getSvcType());
         sms.setDestinationAddress(command.getFromAddress());
         sms.setOriginatingAddress(command.getToAddress());
         sms.setArchivationRequested(false);
         sms.setDeliveryReport(0);
         sms.setValidTime(time(NULL)+3600);
-
+        
         char* out = (char *)command.getOutData();
         int   outLen = (out) ? strlen(out) : 0;
         char  buff[MAX_ALLOWED_MESSAGE_LENGTH+1];
@@ -116,6 +117,8 @@ public:
 
             body.setIntProperty(Tag::SMPP_SM_LENGTH, strLen);
             body.setStrProperty(Tag::SMPP_SHORT_MESSAGE, buff);
+            body.setIntProperty(Tag::SMPP_PROTOCOL_ID, 
+                                processor.getProtocolId());
 
             PduSubmitSm sm;
             sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);

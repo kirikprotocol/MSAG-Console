@@ -65,6 +65,9 @@ namespace smsc { namespace dbsme
     {
     private:
 
+        int     protocolId;
+        char*   svcType;
+
         log4cpp::Category       &log;
         Hash<DataProvider *>    providers;  // by provider address
         
@@ -79,6 +82,9 @@ namespace smsc { namespace dbsme
             throw(ConfigException);
         void process(Command& command)
             throw(ServiceNotFoundException, CommandProcessException);
+
+        const char* getSvcType() { return (svcType) ? svcType:"DbSme"; };
+        int getProtocolId() { return protocolId; };
     };
 
 }}

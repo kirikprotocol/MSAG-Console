@@ -9,13 +9,15 @@ Hash<JobFactory *>*  JobFactory::registry = 0;
 /* ---------------------- Abstract Command Processing ---------------------- */
 
 CommandProcessor::CommandProcessor()
-    : log(Logger::getCategory("smsc.dbsme.CommandProcessor"))
+    : log(Logger::getCategory("smsc.dbsme.CommandProcessor")),
+        svcType(0), protocolId(0)
 {
 }
 
 CommandProcessor::CommandProcessor(ConfigView* config)
     throw(ConfigException)
-        : log(Logger::getCategory("smsc.dbsme.CommandProcessor"))
+        : log(Logger::getCategory("smsc.dbsme.CommandProcessor")),
+            svcType(0), protocolId(0)
 {
     init(config);
 }
@@ -23,6 +25,12 @@ CommandProcessor::CommandProcessor(ConfigView* config)
 void CommandProcessor::init(ConfigView* config)
     throw(ConfigException)
 {
+    try { protocolId = config->getInt("ProtocolId"); }
+    catch(ConfigException& exc) { protocolId = 0; };
+    
+    try { svcType = config->getString("SvcType"); }
+    catch(ConfigException& exc) { svcType = 0; };
+    
     // create Providers by config
     ConfigView* providersConfig = config->getSubConfig("DataProviders");
     std::set<std::string>* set = providersConfig->getSectionNames();
@@ -75,6 +83,8 @@ CommandProcessor::~CommandProcessor()
         if (provider) delete provider;
         //printf("Provider deleted !\n");
     }
+
+    if (svcType) delete svcType;
 }
 
 void CommandProcessor::process(Command& command)
