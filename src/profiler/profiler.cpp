@@ -1109,7 +1109,7 @@ int Profiler::Execute()
       }*/
       if(msg==msgDivertStatus && ans.getIntProperty(Tag::SMPP_USSD_SERVICE_OP))
       {
-        fillSms(&ans,shortmsg.c_str(),msgstr.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
+        fillSms(&ans,shortmsg.c_str(),shortmsg.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
         SmscCommand answer=SmscCommand::makeSumbmitSm(ans,getNextSequenceNumber());
         putIncomingCommand(answer);
         fillSms(&ans,msgstr.c_str(),msgstr.length(),CONV_ENCODING_CP1251,ProfileCharsetOptions::Ucs2);
