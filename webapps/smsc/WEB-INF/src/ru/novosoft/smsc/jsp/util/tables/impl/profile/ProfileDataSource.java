@@ -66,18 +66,18 @@ public class ProfileDataSource
       // retrieve data
       results = new QueryResultSetImpl(columnNames, query_to_run.getSortOrder());
       for (int i = 0; i < query_to_run.getExpectedResultsQuantity() && sqlResultSet.next(); i++, totalCount++) {
-        final String hidden = sqlResultSet.getString("hidden");
+        //final String hidden = sqlResultSet.getString("hidden");
         results.add(new ProfileDataItem(new Profile(new Mask(sqlResultSet.getString("mask")),
-                                                    (byte) (sqlResultSet.getShort("codeset") & 0x7F),
-                                                    (sqlResultSet.getShort("codeset") & 0x80) != 0,
-                                                    sqlResultSet.getByte("reportinfo"),
+                                                    Profile.getCodepageString((byte) (sqlResultSet.getShort("codeset") & 0x7F)),
+                                                    String.valueOf((sqlResultSet.getShort("codeset") & 0x80) != 0),
+                                                    Profile.getReportOptionsString(sqlResultSet.getByte("reportinfo")),
                                                     sqlResultSet.getString("locale"),
-                                                    hidden != null && hidden.length() > 0 && Character.toUpperCase(hidden.charAt(0)) == 'Y',
-                                                    sqlResultSet.getString("hidden_mod").equalsIgnoreCase("Y"),
+                                                    sqlResultSet.getString("hidden"), //hidden != null && hidden.length() > 0 && Character.toUpperCase(hidden.charAt(0)) == 'Y',
+                                                    sqlResultSet.getString("hidden_mod"),
                                                     sqlResultSet.getString("divert"),
                                                     sqlResultSet.getString("divert_act"),
-                                                    sqlResultSet.getString("divert_mod").equalsIgnoreCase("Y"),
-                                                    sqlResultSet.getString("udhConcat").equalsIgnoreCase("Y"))));
+                                                    sqlResultSet.getString("divert_mod"),
+                                                    sqlResultSet.getString("udhConcat"))));
       }
 
       boolean isLast = true;
