@@ -101,6 +101,8 @@ struct VClientData{
   int src_port;
   int dst_port;
 
+  int validTime;
+
   int respStatus;
 
   string sourceAddress;
@@ -179,6 +181,8 @@ bool& waitResp=defVC.waitResp;
 int& waitRespTimeout=defVC.waitRespTimeout;
 int& lastMr=defVC.lastMr;
 
+int& validTime=defVC.validTime;
+
 int& respStatus=defVC.respStatus;
 
 string& sourceAddress=defVC.sourceAddress;
@@ -221,7 +225,8 @@ Option options[]={
 {"autoanswer",'b',&autoAnswer},
 {"hexinput",'b',&hexinput},
 {"respstatus",'i',&respStatus},
-{"silent",'b',&silent}
+{"silent",'b',&silent},
+{"validTime",'i',&validTime}
 };
 
 const int optionsCount=sizeof(options)/sizeof(Option);
@@ -1608,7 +1613,7 @@ int main(int argc,char* argv[])
       char msc[]="";
       char imsi[]="";
       s.setOriginatingDescriptor(strlen(msc),msc,strlen(imsi),imsi,1);
-      s.setValidTime(0);
+      s.setValidTime(validTime?time(NULL)+validTime:0);
       s.setIntProperty(Tag::SMPP_ESM_CLASS,(esmclass&(~0x3))|mode);
       s.setDeliveryReport(0);
       s.setArchivationRequested(false);
