@@ -834,7 +834,24 @@ USHORT_T  MapDialog::Et96MapV2SendRInfoForSmConf ( ET96MAP_LOCAL_SSN_T localSsn,
 	smRpDa.typeOfAddress = ET96MAP_ADDRTYPE_IMSI;
 	smRpDa.addrLen = imsi_sp->imsiLen;
 	memcpy( smRpDa.addr, imsi_sp->imsi, imsi_sp->imsiLen );
-  
+#if !defined DISABLE_TRACING    
+  {
+    auto_ptr<char> b(new char[imsi_sp->imsiLen*4+1]);
+    memset(b.get(),0,imsi_sp->imsiLen*4+1);
+    for ( int i=0,k=0; i < imsi_sp->imsiLen; ++i ) {
+      k += sprintf(b.get()+k,"%02x ",imsi_sp->imsi[i]);
+    }
+    __trace2__("MAP::Et96MapV2SendRInfoForSmConf:IMSI: %s",b.get());
+  }
+  {
+    auto_ptr<char> b(new char[mscNumber_sp->addressLength*4+1]);
+    memset(b.get(),0,mscNumber_sp->addressLength*4+1);
+    for ( int i=0,k=0; i < (mscNumber_sp->addressLength+1)/2; ++i ) {
+      k += sprintf(b.get()+k,"%02x ",mscNumber_sp->address[i]);
+    }
+    __trace2__("MAP::Et96MapV2SendRInfoForSmConf:MSCNUMBER: %s",b.get());
+  }
+#endif
   state = MAPST_READY_FOR_SENDSMS;
 
 #endif
