@@ -63,6 +63,8 @@ ThreadPool::~ThreadPool()
   }
   for(int i=0;i<freeThreads.Count();i++)
   {
+    freeThreads[i]->assignTask(NULL);
+    freeThreads[i]->processTask();
     delete freeThreads[i];
   }
 }
