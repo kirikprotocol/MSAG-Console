@@ -179,7 +179,7 @@ void SmppTransmitterTestCases::cancelMonitor(PduMonitor* monitor,
 }
 
 SmppTransmitterTestCases::CancelResult SmppTransmitterTestCases::cancelPduMonitors(
-	PduData* pduData, time_t cancelTime, bool forceRemoveMonitors, State state)
+	PduData* pduData, time_t cancelTime, bool forceRemoveMonitors, SmppState state)
 {
 	__decl_tc__;
 	__require__(pduData && pduData->pdu->get_commandId() == SUBMIT_SM);
@@ -213,6 +213,8 @@ SmppTransmitterTestCases::CancelResult SmppTransmitterTestCases::cancelPduMonito
 			__unreachable__("Unknown lock type");
 	}
 	deliveryMonitor->state = state;
+	deliveryMonitor->respTime = cancelTime;
+	deliveryMonitor->respStatus = 0;
 	cancelMonitor(deliveryMonitor, cancelTime, condRequired, forceRemoveMonitors);
 	//delivery receipt monitor
 	DeliveryReceiptMonitor* rcptMonitor =
@@ -264,7 +266,7 @@ void SmppTransmitterTestCases::registerTransmitterReportMonitors(uint16_t msgRef
 			__tc_ok__;
 			IntermediateNotificationMonitor* notifMonitor =
 				new IntermediateNotificationMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
-			notifMonitor->state = ENROUTE;
+			notifMonitor->state = SMPP_ENROUTE_STATE;
 			notifMonitor->deliveryStatus = DELIVERY_STATUS_DEST_TRANSMITTER;
 			fixture->pduReg->registerMonitor(notifMonitor);
 			//delivery receipt
@@ -272,7 +274,7 @@ void SmppTransmitterTestCases::registerTransmitterReportMonitors(uint16_t msgRef
 			__tc_ok__;
 			DeliveryReceiptMonitor* rcptMonitor =
 				new DeliveryReceiptMonitor(msgRef, validTime, pduData, PDU_REQUIRED_FLAG);
-			rcptMonitor->state = EXPIRED;
+			rcptMonitor->state = SMPP_EXPIRED_STATE;
 			rcptMonitor->deliveryStatus = DELIVERY_STATUS_DEST_TRANSMITTER;
 			fixture->pduReg->registerMonitor(rcptMonitor);
 		}
@@ -305,7 +307,7 @@ void SmppTransmitterTestCases::registerNotBoundReportMonitors(uint16_t msgRef,
 			__tc_ok__;
 			IntermediateNotificationMonitor* notifMonitor =
 				new IntermediateNotificationMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
-			notifMonitor->state = ENROUTE;
+			notifMonitor->state = SMPP_ENROUTE_STATE;
 			notifMonitor->deliveryStatus = DELIVERY_STATUS_DEST_NOT_BOUND;
 			fixture->pduReg->registerMonitor(notifMonitor);
 			//delivery receipt
@@ -313,7 +315,7 @@ void SmppTransmitterTestCases::registerNotBoundReportMonitors(uint16_t msgRef,
 			__tc_ok__;
 			DeliveryReceiptMonitor* rcptMonitor =
 				new DeliveryReceiptMonitor(msgRef, validTime, pduData, PDU_REQUIRED_FLAG);
-			rcptMonitor->state = EXPIRED;
+			rcptMonitor->state = SMPP_EXPIRED_STATE;
 			rcptMonitor->deliveryStatus = DELIVERY_STATUS_DEST_NOT_BOUND;
 			fixture->pduReg->registerMonitor(rcptMonitor);
 		}
@@ -378,7 +380,7 @@ void SmppTransmitterTestCases::registerNormalSmeMonitors(PduSubmitSm* pdu,
 					deliveryMonitor->pduData->replacePdu = existentPduData;
 					existentPduData->replacedByPdu = pduData;
 					CancelResult res =
-						cancelPduMonitors(existentPduData, pduData->sendTime, false, ENROUTE);
+						cancelPduMonitors(existentPduData, pduData->sendTime, false, SMPP_ENROUTE_STATE);
 					__trace2__("replaced pdu:\n\tuserMessageReference = %d", (int) res.msgRef);
 				}
 				else
@@ -432,7 +434,7 @@ void SmppTransmitterTestCases::registerExtSmeMonitors(PduSubmitSm* pdu,
 		{
 			DeliveryReceiptMonitor* rcptMonitor =
 				new DeliveryReceiptMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
-			rcptMonitor->state = DELIVERED;
+			rcptMonitor->state = SMPP_DELIVERED_STATE;
 			rcptMonitor->deliveryStatus = ESME_ROK;
 			fixture->pduReg->registerMonitor(rcptMonitor);
 		}
@@ -466,7 +468,8 @@ void SmppTransmitterTestCases::registerNullSmeMonitors(PduSubmitSm* pdu,
 		{
 			DeliveryReceiptMonitor* rcptMonitor = 
 				new DeliveryReceiptMonitor(msgRef, waitTime, pduData, PDU_REQUIRED_FLAG);
-			rcptMonitor->state = deliveryStatus == ESME_ROK ? DELIVERED : UNDELIVERABLE;
+			rcptMonitor->state = deliveryStatus == ESME_ROK ?
+				SMPP_DELIVERED_STATE : SMPP_UNDELIVERABLE_STATE;
 			rcptMonitor->deliveryStatus = deliveryStatus;
 			fixture->pduReg->registerMonitor(rcptMonitor);
 		}
@@ -788,7 +791,7 @@ void SmppTransmitterTestCases::registerReplaceMonitors(PduSubmitSm* resPdu,
 			__unreachable__("Invalid sme type");
 	}
 	CancelResult res =
-		cancelPduMonitors(replacePduData, pduData->sendTime, true, ENROUTE);
+		cancelPduMonitors(replacePduData, pduData->sendTime, true, SMPP_ENROUTE_STATE);
 	__trace2__("replaced pdu:\n\tuserMessageReference = %d", (int) res.msgRef);
 	//delivery monitor
 	if (deliveryFlag)
@@ -1235,7 +1238,7 @@ void SmppTransmitterTestCases::processCancelledMonitors(PduCancelSm* pdu,
 	{
 		__require__(!pdu->get_serviceType());
 		__require__(cancelPduData);
-		CancelResult res = cancelPduMonitors(cancelPduData, cancelTime, false, DELETED);
+		CancelResult res = cancelPduMonitors(cancelPduData, cancelTime, false, SMPP_DELETED_STATE);
 		__trace2__("cancelled pdu:\n\tuserMessageReference = %d", (int) res.msgRef);
 	}
 	else
@@ -1266,7 +1269,7 @@ void SmppTransmitterTestCases::processCancelledMonitors(PduCancelSm* pdu,
 		for (int i = 0; i < cancelPduDataList.size(); i++)
 		{
 			CancelResult res =
-				cancelPduMonitors(cancelPduDataList[i], cancelTime, false, DELETED);
+				cancelPduMonitors(cancelPduDataList[i], cancelTime, false, SMPP_DELETED_STATE);
 			__trace2__("\tuserMessageReference = %d\n", (int) res.msgRef);
 		}
 	}

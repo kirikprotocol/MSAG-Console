@@ -487,7 +487,7 @@ void NormalSmsHandler::registerIntermediateNotificationMonitor(
 	IntermediateNotificationMonitor* notifMonitor =
 		new IntermediateNotificationMonitor(monitor->msgRef, startTime,
 			monitor->pduData, PDU_REQUIRED_FLAG);
-	notifMonitor->state = ENROUTE;
+	notifMonitor->state = SMPP_ENROUTE_STATE;
 	notifMonitor->deliveryStatus = deliveryStatus;
 	pduReg->registerMonitor(notifMonitor);
 }
@@ -559,30 +559,30 @@ void NormalSmsHandler::registerDeliveryReceiptMonitor(const DeliveryMonitor* mon
 	}
 	//startTime & state
 	time_t startTime;
-	State state;
+	SmppState state;
 	RespPduFlag respFlag = isAccepted(deliveryStatus);
 	switch (respFlag)
 	{
 		case RESP_PDU_OK:
 			startTime = respTime;
-			state = DELIVERED;
+			state = SMPP_DELIVERED_STATE;
 			break;
 		case RESP_PDU_ERROR:
 			startTime = respTime;
-			state = UNDELIVERABLE;
+			state = SMPP_UNDELIVERABLE_STATE;
 			break;
 		case RESP_PDU_RESCHED:
 			__tc__("deliverySm.reports.deliveryReceipt.expiredDeliveryReceipt");
 			__tc_ok__;
 			startTime = monitor->getValidTime();
-			state = EXPIRED;
+			state = SMPP_EXPIRED_STATE;
 			break;
 		case RESP_PDU_MISSING:
 			__tc__("deliverySm.reports.deliveryReceipt.expiredDeliveryReceipt");
 			__tc_ok__;
 			startTime = max(recvTime + (time_t) (fixture->smeInfo.timeout - 1),
 				monitor->getValidTime());
-			state = EXPIRED;
+			state = SMPP_EXPIRED_STATE;
 			break;
 		default:
 			__unreachable__("Invalid respFlag");
@@ -730,13 +730,13 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 		switch (respFlag)
 		{
 			case RESP_PDU_OK:
-				monitor->state = DELIVERED;
+				monitor->state = SMPP_DELIVERED_STATE;
 				break;
 			case RESP_PDU_ERROR:
-				monitor->state = UNDELIVERABLE;
+				monitor->state = SMPP_UNDELIVERABLE_STATE;
 				break;
 			case RESP_PDU_CONTINUE:
-				monitor->state = ENROUTE;
+				monitor->state = SMPP_ENROUTE_STATE;
 				break;
 			case RESP_PDU_RESCHED:
 			case RESP_PDU_MISSING:
@@ -744,10 +744,10 @@ void NormalSmsHandler::processPdu(PduDeliverySm& pdu, const Address origAddr,
 				{
 					case PDU_REQUIRED_FLAG:
 					case PDU_COND_REQUIRED_FLAG:
-						monitor->state = ENROUTE;
+						monitor->state = SMPP_ENROUTE_STATE;
 						break;
 					case PDU_NOT_EXPECTED_FLAG:
-						monitor->state = EXPIRED;
+						monitor->state = SMPP_EXPIRED_STATE;
 						break;
 					default: //PDU_MISSING_ON_TIME_FLAG
 						__unreachable__("Invalid flag");
