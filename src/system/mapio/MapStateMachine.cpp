@@ -1,4 +1,4 @@
-//$Id$
+ //$Id$
 
 #if defined USE_MAP
 #define MAP_DIALOGS_LIMIT 360
@@ -1333,9 +1333,12 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
       else dialog_ssn = SSN; 
       if ( dialog2 ) throw runtime_error("MAP::putCommand can't chain MAPINPUT");
       dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_map,dialog_ssn));
-      if ( dialog.isnull() )
+      if ( dialog.isnull() ) {
+        SendErrToSmsc(dialogid_smsc,MAKE_ERRORCODE(CMD_ERR_FATAL,
+          (dialog_ssn = USSD_SSN?Status::USSDDLGNFOUND:Status::DELIVERYTIMEDOUT)));
         throw MAPDIALOG_FATAL_ERROR(
           FormatText("MAP::putCommand: Opss, here is no dialog with id 0x%x/0x%x",dialogid_smsc,dialogid_map));
+      }
       //dialog->state = MAPST_START;
       dialogid_smsc = 0;
       __require__(dialog->ssn == dialog_ssn);
