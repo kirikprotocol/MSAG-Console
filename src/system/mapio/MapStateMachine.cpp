@@ -176,6 +176,7 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
 {
   __trace2__("MAP::%s: ",__FUNCTION__);
   dialog->dropChain = false;
+  dialog->associate = 0;
   if ( !dialog->isQueryAbonentStatus ) {
     __trace2__("MAP:%s: Preapre SMSC command",__FUNCTION__);
     dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
@@ -221,6 +222,7 @@ static void DropMapDialog_(unsigned dialogid){
         if ( dialog->associate != 0 && dialog->state != MAPST_END )
         {
           //Et96MapPAbortInd(SSN,dialog->associate->dialogid_map,0,0,0);
+          dialog->state = MAPST_END;
           ContinueImsiReq(dialog->associate,"","");
         }
         else if ( NeedNotifyHLR(dialog.get()) )

@@ -92,6 +92,8 @@ public:
 void freeDialogueId(ET96MAP_DIALOGUE_ID_T dialogueId);
 //ET96MAP_DIALOGUE_ID_T allocateDialogueId();
 
+static const unsigned MAX_DIALOGID_POOLED  = 8*200+1;
+
 /**
   \class MapDialog
 */
@@ -164,6 +166,7 @@ struct MapDialog{
     require ( ref_count == 0 );
     require ( chain.size() == 0 );
     if ( dialogid_smsc != 0 && dialogid_map != 0){
+      require(dialogid_map < MAX_DIALOGID_POOLED); 
       freeDialogueId(dialogid_map);
     }
     if ( associate ) associate->Release();
@@ -250,10 +253,10 @@ public:
   static MapDialogContainer* getInstance(){
     MutexGuard g(sync_object);
     if ( !container ) {
-	container = new MapDialogContainer();
-        for (unsigned n=1;n<8*200+1;++n){
-	  container->dialogId_pool.push_back(n);
-        }
+	    container = new MapDialogContainer();
+      for (unsigned n=1;n<MAX_DIALOGID_POOLED;++n){
+      	container->dialogId_pool.push_back(n);
+      }
     }
     __trace2__("MAP::access to container 0x%p",container);
     return container;
@@ -305,6 +308,7 @@ public:
     __trace2__("MAP:: new dialog 0x%p for dialogid 0x%x",dlg,map_dialog);
     dlg->AddRef();
     dlg->associate = associate->AddRef();
+    require ( dlg != associate );
     return dlg;
   }
 
