@@ -49,9 +49,14 @@ typedef enum
 class PduDataObject
 {
 	int count;
+	//не трогать count
+	PduDataObject(const PduDataObject&) {}
+
 public:
 	PduDataObject() : count(0) {}
 	virtual ~PduDataObject() {}
+	//не трогать count
+	PduDataObject& operator=(const PduDataObject&) { return *this; }
 	void ref();
 	void unref();
 };
@@ -59,6 +64,10 @@ public:
 class PduData
 {
 	int count;
+	//не трогать count
+	PduData(const PduData&) {}
+	PduData& operator=(const PduData&) { return *this; }
+
 public:
 	typedef map<const string, int> IntProps;
 	typedef map<const string, string> StrProps;
