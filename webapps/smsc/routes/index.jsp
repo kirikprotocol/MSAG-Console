@@ -115,7 +115,7 @@ java.util.HashMap aq = new java.util.HashMap();
 // aq.put("multiple", null);
  aq.put("onenter", "return setSort('Route ID')");
 
-java.util.Hashtable o = new java.util.Hashtable();
+java.util.TreeMap o = new java.util.TreeMap();
 o.put("Sources Subj", "1");
 o.put("Sources Mask", "2");
 o.put("Dest Subj", "3");
