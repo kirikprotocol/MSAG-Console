@@ -11,6 +11,7 @@
 #include "util/smstext.h"
 #include "util/templates/Formatters.h"
 #include "resourcemanager/ResourceManager.hpp"
+#include "profiler/profiler.hpp"
 //#include "system/state_machine.hpp"
 #include "util/regexp/RegExp.hpp"
 #include "logger/Logger.h"
@@ -23,7 +24,7 @@ using namespace smsc::smeman;
 using namespace smsc::util;
 using namespace smsc::util::templates;
 using namespace smsc::resourcemanager;
-using smsc::system::StateMachine;
+//using smsc::system::StateMachine;
 using smsc::logger::Logger;
 
 using std::exception;
