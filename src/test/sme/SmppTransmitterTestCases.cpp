@@ -703,7 +703,7 @@ void SmppTransmitterTestCases::submitSmIncorrect(bool sync, int num)
 						__tc__("submitSm.incorrect.validTimePast");
 						SmppTime t;
 						SmppUtil::time2string(
-							time(NULL) - rand1(maxDeliveryPeriod), t, time(NULL), __absoluteTime__);
+							time(NULL) - timeCheckAccuracy, t, time(NULL), __absoluteTime__);
 						pdu->get_message().set_validityPeriod(t);
 					}
 					break;
@@ -712,7 +712,7 @@ void SmppTransmitterTestCases::submitSmIncorrect(bool sync, int num)
 						__tc__("submitSm.incorrect.waitTimeInvalid1");
 						SmppTime t;
 						time_t validTime = time(NULL) + rand1(maxWaitTime);
-						time_t waitTime = validTime + rand1(maxWaitTime);
+						time_t waitTime = validTime + timeCheckAccuracy;
 						SmppUtil::time2string(waitTime, t, time(NULL), __numTime__);
 						pdu->get_message().set_scheduleDeliveryTime(t);
 						SmppUtil::time2string(validTime, t, time(NULL), __numTime__);
@@ -723,7 +723,7 @@ void SmppTransmitterTestCases::submitSmIncorrect(bool sync, int num)
 					{
 						__tc__("submitSm.incorrect.waitTimeInvalid2");
 						SmppTime t;
-						time_t waitTime = time(NULL) + maxValidPeriod + rand1(maxWaitTime);
+						time_t waitTime = time(NULL) + maxValidPeriod + timeCheckAccuracy;
 						SmppUtil::time2string(waitTime, t, time(NULL), __numTime__);
 						pdu->get_message().set_scheduleDeliveryTime(t);
 						pdu->get_message().set_validityPeriod("");
@@ -733,7 +733,7 @@ void SmppTransmitterTestCases::submitSmIncorrect(bool sync, int num)
 					{
 						__tc__("submitSm.incorrect.waitTimeInvalid3");
 						SmppTime t;
-						time_t waitTime = time(NULL) + maxValidPeriod + rand1(maxWaitTime);
+						time_t waitTime = time(NULL) + maxValidPeriod + timeCheckAccuracy;
 						time_t validTime = waitTime + rand1(maxDeliveryPeriod);
 						SmppUtil::time2string(waitTime, t, time(NULL), __numTime__);
 						pdu->get_message().set_scheduleDeliveryTime(t);
