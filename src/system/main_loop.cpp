@@ -41,109 +41,6 @@ bool Smsc::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProx
   return ok;
 }
 
-#if 0
-void Smsc::mainLoop()
-{
-  int src_proxy_index;
-  int dest_proxy_index;
-  SmeProxy* src_proxy;
-
-  for(;;)
-  {
-
-    do
-    {
-      src_proxy = smeman.selectSmeProxy(WAIT_DATA_TIMEOUT,&src_proxy_index);
-      if ( stopFlag ) return;
-    }
-    while(!src_proxy);
-
-    SmscCommand cmd = src_proxy->getCommand();
-    try
-    {
-      switch ( cmd->get_commandId() )
-      {
-      case __CMD__(SUBMIT):
-        {
-          __trace__("mainLoop:SUBMIT");
-          SMS* sms = cmd->get_sms();
-          uint32_t dialogId =  cmd->get_dialogId();
-          // route sms
-          SmeProxy* dest_proxy = 0;
-          bool has_route = routeSms(sms,dest_proxy_index,dest_proxy);
-          if ( !has_route )
-          {
-            //send_no_route;
-            SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, Status::NOROUTE);
-            src_proxy->putCommand(resp);
-            __warning__("SUBMIT_SM: no route");
-            break;
-          }
-          else if ( !dest_proxy )
-          {
-            SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, Status::SYSERR);
-            src_proxy->putCommand(resp);
-            __warning__("SUBMIT_SM: SME is not connected");
-            break;
-          }
-          // store sms
-          // create task
-          uint32_t dialogId2 = dest_proxy->getNextSequenceNumber();
-          //Task task((uint32_t)dest_proxy_index,dialogId2);
-          Task task(dest_proxy->getUniqueId(),dialogId2);
-          if ( !tasks.createTask(task) )
-          {
-            SmscCommand resp = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, Status::SYSERR);
-            src_proxy->putCommand(resp);
-            __warning__("SUBMIT_SM: can't create task");
-            break;
-          }
-          // send delivery
-          SmscCommand delivery = SmscCommand::makeDeliverySm(*sms,dialogId2);
-          dest_proxy->putCommand(delivery);
-          // send responce
-          SmscCommand resp2 = SmscCommand::makeSubmitSmResp(/*messageId*/"0", dialogId, Status::OK);
-          src_proxy->putCommand(resp2);
-          __trace__("mainLoop:SUBMIT:OK");
-          break;
-        }
-      case __CMD__(DELIVERY_RESP):
-        {
-          __trace__("mainLoop:DELIVERY_RESP");
-          //uint32_t status = cmd->get_resp()->get_status();
-          uint32_t dialogId = cmd->get_dialogId();
-          //const char* messageId = cmd->get_resp()->get_messageId();
-          Task task;
-          // find and remove task
-          if (!tasks.findAndRemoveTask(src_proxy->getUniqueId(),dialogId,&task))
-          {
-            __warning__("responce on unpresent task");
-            break;
-          }
-          // update sms state
-          //......
-          __trace__("mainLoop:DELIVERY_RESP:OK");
-          break;
-        }
-      default:
-        __warning__("received unsupported command");
-        // drop command
-      }
-    }
-    catch (exception& e)
-    {
-      __warning__(e.what());
-    }
-    catch (...)
-    {
-      __warning__("unknown exception catched");
-    }
-  }
-}
-#endif
-
-
-
 void Smsc::mainLoop()
 {
   typedef std::vector<SmscCommand> CmdVector;
@@ -154,20 +51,40 @@ void Smsc::mainLoop()
 #ifndef linux
   thr_setprio(thr_self(),127);
 #endif
+  time_t last_tm = time(NULL);
+  time_t now = 0;
   for(;;)
   {
     do
     {
       smeman.getFrame(frame,WAIT_DATA_TIMEOUT);
+      now = time(NULL);
       if ( stopFlag ) return;
       Task task;
-      while ( tasks.getExpired(&task) )
+      if( now > last_tm ) 
       {
-        SMSId id = task.messageId;
-        __trace2__("enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
-          task.sequenceNumber,task.proxy_id);
-        //eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
-        generateAlert(id,task.sms);
+        while ( tasks.getExpired(&task) )
+        {
+          SMSId id = task.messageId;
+          __trace2__("enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
+            task.sequenceNumber,task.proxy_id);
+          //eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
+          generateAlert(id,task.sms);
+        }
+        while(mergeCacheTimeouts.Count()>0 && mergeCacheTimeouts.Front().first<=now)
+        {
+          SMSId id=mergeCacheTimeouts.Front().second;
+          MergeCacheItem* pmci=reverseMergeCache.GetPtr(id);
+          if(pmci)
+          {
+            info2(log,"merging expired for msgId=%lld;oa=%s;da=%s;mr=%d",id,pmci->oa.toString().c_str(),pmci->da.toString().c_str(),(int)pmci->mr);
+            mergeCache.Delete(*pmci);
+            reverseMergeCache.Delete(id);
+            eventqueue.enqueue(id,SmscCommand::makeCancel(id));
+          }
+          mergeCacheTimeouts.Pop();
+        }
+        last_tm = now;
       }
     }while(!frame.size());
 
@@ -182,28 +99,13 @@ void Smsc::mainLoop()
     //
     //////
 
-    time_t now=time(NULL);
+//    time_t now=time(NULL);
 
     if(license.expdate<now)
     {
       stopFlag=true;
       break;
     }
-
-    while(mergeCacheTimeouts.Count()>0 && mergeCacheTimeouts.Front().first<=now)
-    {
-      SMSId id=mergeCacheTimeouts.Front().second;
-      MergeCacheItem* pmci=reverseMergeCache.GetPtr(id);
-      if(pmci)
-      {
-        info2(log,"merging expired for msgId=%lld;oa=%s;da=%s;mr=%d",id,pmci->oa.toString().c_str(),pmci->da.toString().c_str(),(int)pmci->mr);
-        mergeCache.Delete(*pmci);
-        reverseMergeCache.Delete(id);
-        eventqueue.enqueue(id,SmscCommand::makeCancel(id));
-      }
-      mergeCacheTimeouts.Pop();
-    }
-
 
     int submitCount=0;
     for(CmdVector::iterator i=frame.begin();i!=frame.end();i++)
@@ -236,18 +138,7 @@ void Smsc::mainLoop()
       }
       if((*i)->get_commandId()==SUBMIT || (*i)->get_commandId()==FORWARD)
       {
-        if(i->getProxy()->getSmeIndex()==smscSmeIdx)
-        {
-          try{
-            processCommand((*i));
-          }catch(...)
-          {
-            __warning2__("command processing failed:%d",(*i)->get_commandId());
-          }
-        }else
-        {
-          submitCount++;
-        }
+        submitCount++;
       }else
       {
         try{
@@ -272,13 +163,8 @@ void Smsc::mainLoop()
 
     while(frame.size())
     {
-      if(license.expdate<now)
-      {
-        stopFlag=true;
-        break;
-      }
       int cntInstant=tcontrol->getTotalCount();
-      int cntSmooth=tcontrol->getTotalCountLong();
+//      int cntSmooth=tcontrol->getTotalCountLong();
       /*if(cntInstant+1>maxsms && cntSmooth+1000<=maxsms*smt*1000)
       {
         __info2__(log,"cnt=%d, smooth_cnt=%d, submitCnt=%d",cntInstant,cntSmooth,submitCount);
@@ -303,15 +189,12 @@ void Smsc::mainLoop()
         frame.pop_back();
         if(cmd->get_commandId()==SUBMIT || cmd->get_commandId()==FORWARD)
         {
-          if(cmd.getProxy()->getSmeIndex()!=smscSmeIdx)
+          try{
+            processCommand(cmd);
+            tcontrol->incTotalCount(1);
+          }catch(...)
           {
-            try{
-              processCommand(cmd);
-              tcontrol->incTotalCount(1);
-            }catch(...)
-            {
-              __warning2__("command processing failed:%d",cmd->get_commandId());
-            }
+            __warning2__("command processing failed:%d",cmd->get_commandId());
           }
         }
         continue;
@@ -331,25 +214,6 @@ void Smsc::mainLoop()
       timestruc_t tv={0,1000000};
       nanosleep(&tv,0);
     }
-
-
-    /*
-    for(CmdVector::iterator i=frame.begin();i!=frame.end();i++)
-    {
-      if((*i)->get_commandId()==SUBMIT || (*i)->get_commandId()==FORWARD)
-      {
-        if(i->getProxy()->getSmeIndex()!=smscSmeIdx)
-        {
-          try{
-            processCommand((*i));
-          }catch(...)
-          {
-            __warning2__("command processing failed:%d",(*i)->get_commandId());
-          }
-        }
-      }
-    }
-    */
   } // end of main loop
 }
 
