@@ -446,18 +446,37 @@ struct Directive{
 void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
 {
   const char *body="";
+  TmpBuf<char,256> tmpBuf(0);
   unsigned int len=0;
   int dc=sms.getIntProperty(Tag::SMPP_DATA_CODING);
+  if(dc==DataCoding::BINARY)return;
   bool udhi=(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)==0x40;
   int udhiLen=0;
-  if(sms.getIntProperty(Tag::SMPP_SM_LENGTH))
+  if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))
   {
-    body=sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+    SMS tmp(sms);
+    extractSmsPart(&tmp,0);
+    if(tmp.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+    {
+      const char* tmpBody=tmp.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+      char *dst=tmpBuf.getSize(len);
+      body=dst;
+      memcpy(dst,tmpBody,len);
+    }else
+    {
+      const char* tmpBody=tmp.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+      char *dst=tmpBuf.getSize(len);
+      body=dst;
+      memcpy(dst,tmpBody,len);
+    }
   }else
   {
     if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
     {
       body=sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+    }else
+    {
+      body=sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
     }
   }
   unsigned int olen=len;
@@ -484,9 +503,10 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     }
   }
   if(!hasDirectives)return;
+  if(sms.hasBinProperty(Tag::SMSC_CONCATINFO))throw Exception("Directive found in multipart message");
   static const char *escchars="[]{}^~\\|";
-  auto_ptr<char> bufptr(new char[len*2+1]);
-  char *buf=bufptr.get();
+  TmpBuf<char,256> bufPtr(len*2+1);
+  char *buf=bufPtr.get();
 
   len=getSmsText(&sms,buf,len*2+1);
   if(((int)len)<0)throw Exception("message too long\n");
@@ -703,7 +723,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x40));
   }
 
-  auto_ptr<char> newBodyPtr(new char[olen*3+newtext.length()*3]);
+  TmpBuf<char,256> newBodyPtr(olen*3+newtext.length()*3);
   char* newBody=newBodyPtr.get();
   char *ptr=newBody;
   if(udhi)
@@ -733,7 +753,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
         memcpy(newBody+udhiLen,b.get(),(newlen-udhiLen)*2);
       }else //SMSC7BIT
       {
-        auto_ptr<char> x(new char[newlen-udhiLen+1]);
+        TmpBuf<char,256> x(newlen-udhiLen+1);
         int cvtlen=ConvertSMSC7BitToLatin1(newBody+udhiLen,newlen-udhiLen,x.get());
         ConvertMultibyteToUCS2
         (
@@ -770,7 +790,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
         newlen+=newtext.length();
       }else
       {
-        auto_ptr<char> nt(new char[newtext.length()*2]);
+        TmpBuf<char,256> nt(newtext.length()*2);
         int cvtlen=ConvertLatin1ToSMSC7Bit(newtext.c_str(),newtext.length(),nt.get());
         memcpy(newBody+newlen,nt.get(),cvtlen);
         newlen+=cvtlen;
@@ -1255,7 +1275,16 @@ StateType StateMachine::submit(Tuple& t)
     submitResp(t,sms,Status::INVOPTPARAMVAL);
     return ERROR_STATE;
   }
-  convertSarToUdh(*sms);
+
+  if(!convertSarToUdh(*sms))
+  {
+    warn2(smsLog,"convertSarToUdh failed. msgId=%lld, from %s to %s",
+                          t.msgId,
+                          sms->getOriginatingAddress().toString().c_str(),
+                          sms->getDestinationAddress().toString().c_str());
+    submitResp(t,sms,Status::INVOPTPARAMVAL);
+    return ERROR_STATE;
+  };
 
 
   ////
@@ -1593,6 +1622,17 @@ StateType StateMachine::submit(Tuple& t)
         smsc->getTempStore().AddPtr(t.msgId,smsptr);
       }else
       {
+        if(allParts)
+        {
+          try{
+            processDirectives(newsms,profile,srcprof);
+          }catch(...)
+          {
+            warn2(smsLog, "Failed to process directives for sms with id=%lld",t.msgId);
+            submitResp(t,&newsms,Status::SUBMITFAIL);
+            return ERROR_STATE;
+          }
+        }
         try{
           store->replaceSms(t.msgId,newsms);
         }catch(...)
@@ -1684,6 +1724,9 @@ StateType StateMachine::submit(Tuple& t)
   //  End of merging
   //
   ////
+
+  bool isDatagram=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1;
+  bool isTransaction=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2;
 
 
   if( !isForwardTo )
@@ -1877,8 +1920,6 @@ StateType StateMachine::submit(Tuple& t)
                 sms->getIntProperty(Tag::SMPP_SM_LENGTH)!=0));
 
 
-  bool isDatagram=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1;
-  bool isTransaction=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2;
   __trace2__("SUBMIT: isDg=%s, isTr=%s",isDatagram?"true":"false",isTransaction?"true":"false");
   if(!isDatagram && !isTransaction && allowCreateSms)
   {
