@@ -107,20 +107,20 @@ public abstract class SmsSource
          StringBuffer textBuffer = new StringBuffer(text.length);
          if( (esmClass & 0x40) == 0x40 ) {
            if(concatInfo != null) {
-             int partsCount = concatInfo.length/2;
+             int partsCount = concatInfo[0];
              StringBuffer sb = new StringBuffer();
              for( int i = 0; i < concatInfo.length; i++ ) {
                sb.append( Integer.toHexString(((int)concatInfo[i])&0xFF) ).append(' ');
              }
              System.out.println("Concat info: "+sb.toString());
              for( int i = 0; i < partsCount; i++ ) {
-               int offset = ((((int)concatInfo[i*2])&0xFF)<<8)|(((int)concatInfo[i*2+1])&0xFF);
+               int offset = ((((int)concatInfo[i*2]+1)&0xFF)<<8)|(((int)concatInfo[i*2+2])&0xFF);
                int len = text.length-offset;
-               System.out.println("len="+len+" tlen="+text.length+" offset="+offset+" 1="+(((int)concatInfo[i*2])&0xFF)+" 2="+(((int)concatInfo[i*2+1])&0xFF));
+               System.out.println("len="+len+" tlen="+text.length+" offset="+offset+" 1="+(((int)concatInfo[i*2+1])&0xFF)+" 2="+(((int)concatInfo[i*2+2])&0xFF));
                if( i < partsCount-1) {
-                 int offset_next = ((((int)concatInfo[(i+1)*2])&0xFF)<<8)|(((int)concatInfo[(i+1)*2+1])&0xFF);
+                 int offset_next = ((((int)concatInfo[(i+1)*2+1])&0xFF)<<8)|(((int)concatInfo[(i+1)*2+2])&0xFF);
                  len = offset_next-offset;
-                 System.out.println("next part len="+len+" tlen="+text.length+" offset="+offset+" 1="+(((int)concatInfo[(i+1)*2])&0xFF)+" 2="+(((int)concatInfo[(i+1)*2+1])&0xFF));
+                 System.out.println("next part len="+len+" tlen="+text.length+" offset="+offset+" 1="+(((int)concatInfo[(i+1)*2+1])&0xFF)+" 2="+(((int)concatInfo[(i+1)*2+2])&0xFF));
                }
                convertMessage(textBuffer, text, offset, len, true, textEncoding);
              }
