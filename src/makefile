@@ -6,7 +6,7 @@
 
 # to compile with sun compiler, use CXX=CC
 ifndef CXX
-CXX:=g++
+CXX:=CC
 endif
 export CXX
 
@@ -20,7 +20,7 @@ endif
 
 SSL_DIR:=/usr/local/ssl
 ifeq ($(CXX),CC)
-SSL_LIB:=$(SSL_DIR)/lib/libcrypto.a -lssl
+SSL_LIB:=$(SSL_DIR)/lib/libcrypto.a $(SSL_DIR)/lib/libssl.a
 else
 SSL_LIB:=-lcrypto -lssl
 endif
@@ -79,6 +79,11 @@ endif
 
 ifeq ($(LEAKTRACE),YES)
 LDFLAGS := $(LDFLAGS) -lcore-threads -lutil-leaktracing -lcore-threads
+DEBUG := YES
+endif
+
+ifeq ($(LEAKTRACE),SIMPLE)
+LDFLAGS := $(LDFLAGS) -lcore-threads -lutil-leaktracing-simple -lcore-threads
 DEBUG := YES
 endif
 
