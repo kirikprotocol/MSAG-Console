@@ -3,6 +3,7 @@
 #include "smeman/smsccmd.h"
 #include <memory>
 #include <list>
+#include <time.h>
 
 using namespace std;
 using namespace smsc::sms;
@@ -19,6 +20,7 @@ struct MicroString{
 };
 
 extern unsigned char lll_7bit_2_8bit[128];
+extern unsigned char lll_8bit_2_7bit[256];
 
 //list<unsigned> DialogMapContainer::dialogId_pool;
 
@@ -37,6 +39,23 @@ inline char GetChar(const unsigned char*& ptr,unsigned& shift){
   return lll_7bit_2_8bit[val];
 }
 
+inline void PutChar(unsigned char*& ptr,unsigned& shift,unsigned char val8bit){
+  __trace2__("MAP: 7bit: shift %d *ptr 0x%x",shift,*ptr);
+  unsigned char val = lll_8bit_2_7bit[val8bit];
+  //char val = (*ptr >> shift)&0x7f;
+  *ptr = *ptr | (val << shift);
+  if ( shift > 1 )
+    //val |= (*(ptr+1) << (8-shift))&0x7f;
+    *(ptr+1) = *(ptr+1) | (val >> (8-shift));
+  shift += 7;
+  if ( shift >= 8 ) 
+  {
+    shift&=0x7;
+    ++ptr;
+  }
+  __trace2__("MAP: 7bit : %x",val);
+}
+
 void Convert7BitToText(
   const unsigned char* bit7buf, int chars,
   MicroString* text)
@@ -48,6 +67,7 @@ void Convert7BitToText(
   }
   text->len = chars;
   text->bytes[chars] = 0;
+#if !defined DISABLE_TRACING
   __trace2__("MAP::7bit->latin1: %s",text->bytes);
   {
     char b[255*4];
@@ -58,6 +78,29 @@ void Convert7BitToText(
     }
     __trace2__("MAP::latin1(hex): %s",b);
   }
+#endif
+}
+
+void ConvertText27bit(
+  const unsigned char* text, int chars, unsigned char* bit7buf)
+{
+  __require__(chars<=255);
+  unsigned shift = 0;
+  for ( int i=0; i< chars; ++i ){
+     PutChar(bit7buf,shift,text[i]);
+  }
+#if !defined DISABLE_TRACING
+  __trace2__("MAP::latin1->7bit: %s",text);
+  {
+    char b[255*4];
+    unsigned k;
+    unsigned i;
+    for ( i=0,k=0; i<chars;++i){
+      k += sprintf(b+k,"%x ",text[i]);
+    }
+    __trace2__("MAP::7bit(hex): %s",b);
+  }
+#endif
 }
 
 #pragma pack(1)
@@ -75,6 +118,20 @@ struct SMS_SUMBMIT_FORMAT_HEADER{
     unsigned char _val_01;
   };
   unsigned char mr;
+};
+
+struct SMS_DELIVERY_FORMAT_HEADER{
+  union{
+    struct{
+      unsigned reserved:2;
+      unsigned srri:1;
+      unsigned udhi:1;
+      unsigned reply_path:1;
+      unsigned mms:1;
+      unsigned mg_type_ind:2;
+    }s;
+    unsigned char _val_01;
+  }uu;
 };
 
 struct MAP_SMS_ADDRESS{
@@ -221,11 +278,15 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
     sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,ms.bytes,ms.len);
     sms.setIntProperty(Tag::SMPP_DATA_CODING,0x0); // default
   }
-  else
+  else if ( (user_data_coding & 0x06) == 0x04  ) // UCS2
   {
     sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(const char*)user_data,user_data_len);
-    sms.setIntProperty(Tag::SMPP_DATA_CODING,user_data_coding);
+    sms.setIntProperty(Tag::SMPP_DATA_CODING,/*user_data_coding*/0x08);
   }
+  unsigned esm_class = 0;
+  esm_class |= (ssfh->udhi?0x40:0);
+  esm_class |= (ssfh->reply_path?0x80:0);
+  sms.setIntProperty(Tag::SMPP_ESM_CLASS,esm_class);
   sms.setIntProperty(Tag::SMPP_SM_LENGTH,user_data_len);
   sms.setIntProperty(Tag::SMPP_PROTOCOL_ID,protocol_id);
   sms.setMessageReference(ssfh->mr);
@@ -242,9 +303,101 @@ USHORT_T  MapDialog::Et96MapV2ForwardSmMOInd(
   return ET96MAP_E_OK;
 }
 
-ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms)
+struct MAP_TIMESTAMP{
+  struct{
+    unsigned second:4;
+    unsigned first:4;
+  }year;
+  struct{
+    unsigned second:4;
+    unsigned first:4
+  }mon;
+  struct{
+    unsigned second:4;
+    unsigned first:4
+  }day;
+  struct{
+    unsigned second:4;
+    unsigned first:4
+  }hour;
+  struct{
+    unsigned second:4;
+    unsigned first:4
+  }min;
+  struct{
+    unsigned second:4;
+    unsigned first:4
+  }sec;
+  unsigned char tz;
+};
+
+ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
 {
+#if defined USE_MAP
+  memset(pdu,0,sizeof(ET96MAP_SM_RP_UI_T));
+  SMS_DELIVERY_FORMAT_HEADER* header = (SMS_DELIVERY_FORMAT_HEADER*)pdu->signalInfo;
+  header->uu.s.mg_type_ind = 0;
+  header->uu.s.mms = 0;
+  header->uu.s.reply_path = (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x80)?1:0;;
+  header->uu.s.srri = 0;
+  header->uu.s.udhi = (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)?1:0;
+  MAP_SMS_ADDRESS* oa = (MAP_SMS_ADDRESS*)(pdu->signalInfo+1);
+  oa->st.ton = sms->getOriginatingAddress().getTypeOfNumber();
+  oa->st.npi = sms->getOriginatingAddress().getNumberingPlan();
+  oa->len = sms->getOriginatingAddress().getLength();
+  oa_length = (oa->len+1)/2; 
+  {
+    char* sval = sms->getOriginatingAddress().value;
+    for ( int i=0; i<oa->len; ++i ){
+      int bi = i/2;
+      if( i%2 == 1 ){ 
+        oa->val[bi] |= ((sval[i]-'0')<<4); // fill high octet
+      }else{
+        oa->val[bi] = (sval[i]-'0')&0x0F; // fill low octet
+      }
+    }
+    if( oa->len%2 != 0 ) oa->val[oa_length-1] |= 0xF0;
+  }
+  unsigned char *pdu_ptr = pdu->signalInfo+1+2+oa_length;
+  *pdu_ptr++ = (unsigned char)sms->getIntProperty(Tag::SMPP_PROTOCOL_ID);
+  unsigned encoding = sms->getIntProperty(Tag::SMPP_DATA_CODING);
+  if ( encoding == 0 ) *pdu_ptr++ = 0;
+  else if ( encoding == 0x08 ) *pdu_ptr++ = 0x04;
+  else{
+    __trace2__("MAP::mkDeliverPDU: unsuppprted encoding 0x%x",encoding);
+    throw runtime_exception("unsupported encoding");
+  }
+  {
+    time_t t;
+    time(&t);
+    struct tm* tms = gtime(&t);  
+    MAP_TIMESTAMP* pdu_tm = (MAP_TIMESTAMP*)pdu_ptr;
+    pdu_tm->year.first  =  ((tms->tm_year)%100)/10;
+    pdu_tm->year.second  = tms->tm_year%10;
+    pdu_tm->mon.first  =  (tms->tm_mon+1)/10;
+    pdu_tm->mon.second  = (tms->tm_mon+1)%10;
+    pdu_tm->day.first  =  tms->tm_mday/10;
+    pdu_tm->day.second  = tms->tm_mday%10;
+    pdu_tm->hour.first  =  tms->tm_hour/10;
+    pdu_tm->hour.second  = tms->tm_hour%10;
+    pdu_tm->min.first  =  tms->tm_min/10;
+    pdu_tm->min.second  = tms->tm_min%10;
+    pdu_tm->sec.first  =  tms->tm_sec/10;
+    pdu_tm->sec.second  = tms->tm_sec%10;
+    pdu_tm->tz = 0;
+    pdu_ptr+=sizeof(MAP_TIMESTAMP);
+  }
+  if ( encoding == 0 ){ // 7bit
+    unsigned text_len;
+    const unsigned char* text = (unsigned char*)sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&text_len);
+    *pdu_ptr++ = text_len;
+    ConvertText27bit(text,text_len,pdu_ptr);
+  }else{ // UCS2
+  }
+  return pdu.release();
+#else
   return 0;
+#endif
 }
 
 
@@ -414,6 +567,40 @@ unsigned char  lll_7bit_2_8bit[128] = {
 0x68,0x69,0x6a,0x6b,0x6c,0x6d,0x6e,0x6f, // 104
 0x70,0x71,0x72,0x73,0x74,0x75,0x76,0x77, // 112
 0x78,0x79,0x7a,0xe4,0xf6,0xf1,0xfc,0xe0}; // 120
+
+unsigned char  lll_8bit_2_7bit[256] = {
+0x1b,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x54,0x0a,0x54,0x54,0x0d,0x54,0x54,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x20,0x21,0x22,0x23,0x02,0x25,0x26,0x27,
+0x28,0x29,0x2a,0x2b,0x2c,0x2d,0x2e,0x2f,
+0x30,0x31,0x32,0x33,0x34,0x35,0x36,0x37,
+0x38,0x39,0x3a,0x3b,0x3c,0x3d,0x3e,0x3f,
+0x00,0x41,0x42,0x43,0x44,0x45,0x46,0x47,
+0x48,0x49,0x4a,0x4b,0x4c,0x4d,0x4e,0x4f,
+0x50,0x51,0x52,0x53,0x54,0x55,0x56,0x57,
+0x58,0x59,0x5a,0x54,0x54,0x54,0x54,0x11,
+0x54,0x61,0x62,0x63,0x64,0x65,0x66,0x67,
+0x68,0x69,0x6a,0x6b,0x6c,0x6d,0x6e,0x6f,
+0x70,0x71,0x72,0x73,0x74,0x75,0x76,0x77,
+0x78,0x79,0x7a,0x54,0x54,0x54,0x54,0x54,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x40,0x54,0x01,0x24,0x03,0x54,0x5f,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x54,0x54,0x54,0x54,0x54,0x54,0x60,
+0x54,0x54,0x54,0x54,0x5b,0x0e,0x1c,0x09,
+0x54,0x1f,0x54,0x54,0x54,0x54,0x54,0x54,
+0x54,0x5d,0x54,0x54,0x54,0x54,0x5c,0x54,
+0x0b,0x54,0x54,0x54,0x5e,0x54,0x54,0x1e,
+0x7f,0x54,0x54,0x54,0x7b,0x0f,0x1d,0x54,
+0x04,0x05,0x54,0x54,0x07,0x54,0x54,0x54,
+0x54,0x7d,0x08,0x54,0x54,0x54,0x7c,0x54,
+0x0c,0x06,0x54,0x54,0x7e,0x54,0x54,0x54};
 
 
 extern void CloseDialog(ET96MAP_LOCAL_SSN_T lssn,ET96MAP_DIALOGUE_ID_T dialogId);
