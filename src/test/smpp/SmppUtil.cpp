@@ -1,7 +1,9 @@
 #include "SmppUtil.hpp"
 #include "test/util/Util.hpp"
+#include "test/TestConfig.hpp"
 #include "sms/sms.h"
 #include "util/debug.h"
+#include <algorithm>
 #include <ctime>
 #include <map>
 
@@ -9,8 +11,9 @@ namespace smsc {
 namespace test {
 namespace smpp {
 
-using std::map;
+using namespace std;
 using namespace smsc::sms; //constants
+using namespace smsc::test; //config params
 using namespace smsc::test::util;
 //using smsc::test::sms::SmsUtil;
 
@@ -134,6 +137,24 @@ time_t SmppUtil::string2time(const char* str, time_t base, bool check)
 		default:
 			__unreachable__("Invalid time format");
 	}
+}
+
+time_t SmppUtil::getWaitTime(const char* str, time_t submitTime)
+{
+	//если schedule_delivery_time = NULL, то немедленная доставка
+	time_t waitTime = str && strlen(str) ?
+		SmppUtil::string2time(str, submitTime) : submitTime;
+	return waitTime;
+}
+
+time_t SmppUtil::getValidTime(const char* str, time_t submitTime)
+{
+	//если validity_period = NULL, то срок валидности по умолчанию
+	time_t validTime = str && strlen(str) ?
+		SmppUtil::string2time(str, submitTime) : submitTime + maxValidPeriod;
+	//если validity_period > maxValidPeriod, то maxValidPeriod
+	validTime = min(validTime, submitTime + maxValidPeriod);
+	return validTime;
 }
 
 /*
@@ -271,7 +292,7 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	__set_int__(uint8_t, protocolId, rand0(255));
 	__set_int__(uint8_t, priorityFlag, rand0(255));
 	time_t waitTime = time(NULL) + rand1(60);
-	time_t validTime = waitTime + rand1(60);
+	time_t validTime = waitTime + rand2(sequentialPduInterval, 60);
 	__set_cstr2__(scheduleDeliveryTime, time2string(waitTime, tmp, time(NULL), __numTime__));
 	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));

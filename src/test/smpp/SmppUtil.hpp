@@ -23,8 +23,8 @@ using namespace smsc::test::sms; //constants
 		time_t lt = time(NULL); tm t; char buf[30]; \
 		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s", \
 			tc, id.c_str(), (pdu)->get_header().get_sequenceNumber(), \
-			SmppUtil::string2time((pdu)->get_message().get_scheduleDeliveryTime(), time(NULL)), \
-			SmppUtil::string2time((pdu)->get_message().get_validityPeriod(), time(NULL)), \
+			SmppUtil::getWaitTime((pdu)->get_message().get_scheduleDeliveryTime(), time(NULL)), \
+			SmppUtil::getValidTime((pdu)->get_message().get_validityPeriod(), time(NULL)), \
 			asctime_r(localtime_r(&lt, &t), buf)); \
 		(pdu)->dump(TRACE_LOG_STREAM); \
 	} else { \
@@ -36,8 +36,8 @@ using namespace smsc::test::sms; //constants
 		time_t lt = time(NULL); tm t; char buf[30]; \
 		__trace2__("%s(): systemId = %s, sequenceNumber = %u, scheduleDeliveryTime = %ld, validityPeriod = %ld, system time = %s", \
 			tc, id.c_str(), (pdu)->get_header().get_sequenceNumber(), \
-			SmppUtil::string2time((pdu)->get_scheduleDeliveryTime(), time(NULL)), \
-			SmppUtil::string2time((pdu)->get_validityPeriod(), time(NULL)), \
+			SmppUtil::getWaitTime((pdu)->get_scheduleDeliveryTime(), time(NULL)), \
+			SmppUtil::getValidTime((pdu)->get_validityPeriod(), time(NULL)), \
 			asctime_r(localtime_r(&lt, &t), buf)); \
 		(pdu)->dump(TRACE_LOG_STREAM); \
 	} else { \
@@ -113,6 +113,8 @@ typedef char MessageId[MAX_MSG_ID_LENGTH + 1];
 
 class SmppUtil
 {
+	static time_t string2time(const char* str, time_t base, bool check = true);
+
 public:
 	/*
 	virtual SmppHeader* sendPdu(SmppHeader& pdu)=0;
@@ -134,7 +136,8 @@ public:
 	static MessageId& convert(const SMSId& smsId, MessageId& smppId);
 	*/
 	static const char* time2string(time_t t, char* str, time_t base, int num, bool check = true);
-	static time_t string2time(const char* str, time_t base, bool check = true);
+	static time_t getWaitTime(const char* str, time_t submitTime);
+	static time_t getValidTime(const char* str, time_t submitTime);
 
 	//static bool compareAddresses(PduAddress& a1, PduAddress& a2);
 	
