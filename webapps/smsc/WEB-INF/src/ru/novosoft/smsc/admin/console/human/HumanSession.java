@@ -18,9 +18,6 @@ import java.util.Iterator;
 
 public class HumanSession extends Session
 {
-    private final static int CONSOLE_AUTH_FAIL_SLEEP = 10000;
-    private final static int CONSOLE_AUTH_FAIL_TRIES = 3;
-
     private final static String CONSOLE_LOGIN     = "Login: ";
     private final static String CONSOLE_PASSWORD  = "Password: ";
     private final static String CONSOLE_AUTH_FAIL = "Authentication failed. Access denied.";
@@ -44,7 +41,7 @@ public class HumanSession extends Session
     protected boolean authorize(BufferedReader reader, PrintWriter writer)
         throws Exception
     {
-        int maxTriesCount = CONSOLE_AUTH_FAIL_TRIES;
+        int tries = 0;
         while (!isStopping)
         {
             writer.print(CONSOLE_LOGIN); writer.flush();
@@ -56,9 +53,10 @@ public class HumanSession extends Session
             if (authorizeUser(login, password)) return true;
 
             writer.println("\r\n"+CONSOLE_AUTH_FAIL+"\r\n"); writer.flush();
-            if (--maxTriesCount <= 0) {
-                sleep(CONSOLE_AUTH_FAIL_SLEEP); break;
-            }
+            if (++tries >= CONSOLE_AUTH_FAIL_TRIES) {
+                sleep(100);
+                break;
+            } else sleep(tries*CONSOLE_AUTH_FAIL_SLEEP);
         }
         return false;
     }

@@ -18,36 +18,45 @@ import java.util.Iterator;
 
 public class ScriptSession extends Session
 {
-    private final static int CONSOLE_AUTH_FAIL_SLEEP = 10000;
-
-    private final static String CONSOLE_AUTH_FAIL   = "Authentication failed. Access denied.";
-    private final static String CONSOLE_AUTH_OK     = "Logged in. Access granted.";
+    private final static String CONSOLE_CONNECT   = "Connected. Login:";
+    private final static String CONSOLE_LOGINOK   = "Login accepted. Password:";
+    private final static String CONSOLE_AUTH_FAIL = "Authentication failed. Access denied.";
+    private final static String CONSOLE_AUTH_OK   = "Logged in. Access granted.";
 
     public ScriptSession(Console owner, Socket socket) {
         super(owner, socket);
     }
 
+    private void showMessage(PrintWriter writer, int code, String message)
+    {
+        writer.print(((code == CommandContext.CMD_LIST ||
+                       code == CommandContext.CMD_OK) ? "+ ":"- ")+code);
+        if (message != null) writer.print(' '+message);
+        writer.println('\r');
+        writer.flush();
+    }
     protected boolean authorize(BufferedReader reader, PrintWriter writer)
             throws Exception
     {
+        int tries = 0;
         while (!isStopping)
         {
+            showMessage(writer, CommandContext.CMD_OK, CONSOLE_CONNECT);
             String login = reader.readLine();
             if (login == null || login.length() == 0) continue;
+            showMessage(writer, CommandContext.CMD_OK, CONSOLE_LOGINOK);
             String password = reader.readLine();
             if (password == null) continue;
 
             if (authorizeUser(login, password)) {
-                writer.print("+ "+CommandContext.CMD_OK);
-                writer.println(' '+CONSOLE_AUTH_OK+'\r');
-                writer.flush();
+                showMessage(writer, CommandContext.CMD_OK, CONSOLE_AUTH_OK);
                 return true;
             } else {
-                writer.print("- "+CommandContext.CMD_AUTH_ERROR);
-                writer.println(' '+CONSOLE_AUTH_FAIL+'\r');
-                writer.flush();
-                sleep(CONSOLE_AUTH_FAIL_SLEEP);
-                break;
+                showMessage(writer, CommandContext.CMD_AUTH_ERROR, CONSOLE_AUTH_FAIL);
+                if (++tries >= CONSOLE_AUTH_FAIL_TRIES) {
+                    sleep(100);
+                    break;
+                } else sleep(tries*CONSOLE_AUTH_FAIL_SLEEP);
             }
         }
         return false;
@@ -57,7 +66,6 @@ public class ScriptSession extends Session
     {
         int status = ctx.getStatus();
         String message = ctx.getMessage();
-
         if (status == CommandContext.CMD_LIST) {
             Iterator i = ctx.getResults().iterator();
             while (i.hasNext()) {
@@ -68,11 +76,7 @@ public class ScriptSession extends Session
                 }
             }
         }
-        writer.print(((status == CommandContext.CMD_LIST ||
-                       status == CommandContext.CMD_OK) ? "+ ":"- ")+status);
-        if (message != null) writer.print(' '+ctx.getMessage());
-        writer.println('\r');
-        writer.flush();
+        showMessage(writer, status, message);
     }
 
 }

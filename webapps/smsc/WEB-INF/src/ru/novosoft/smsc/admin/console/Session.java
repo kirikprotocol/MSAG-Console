@@ -23,6 +23,9 @@ public abstract class Session extends Thread
 
     private final static String COMMAND_QUIT = "quit";
 
+    protected final static int CONSOLE_AUTH_FAIL_SLEEP = 3000;
+    protected final static int CONSOLE_AUTH_FAIL_TRIES = 3;
+
     private Socket socket;
     private Console owner;
 
@@ -79,7 +82,7 @@ public abstract class Session extends Thread
         {
             prompt(writer);
             String input = reader.readLine();
-            if (input == null) continue;
+            if (input == null || input.length() == 0) continue;
             if (input.equalsIgnoreCase(COMMAND_QUIT)) {
                 farewell(writer); sleep(100); break;
             }
