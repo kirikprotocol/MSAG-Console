@@ -22,7 +22,7 @@ void SQLJob::init(ConfigView* config)
     throw(ConfigException)
 {
     __require__(config);
-    __trace__("SQLJob loading ... ");
+    //__trace__("SQLJob loading ... ");
     
     sql = config->getString("sql", "SQL request wasn't defined !");
     inputFormat = config->getString("input", 
@@ -41,7 +41,7 @@ void SQLJob::init(ConfigView* config)
         throw ConfigException("SQL Job init failed !: %s", exc.what());
     }
     
-    __trace__("SQLJob loaded !\n");
+    //__trace__("SQLJob loaded !\n");
 }
 
 void SQLJob::process(Command& command, DataSource& ds)

@@ -9,6 +9,8 @@ namespace smsc { namespace util { namespace templates
 
 using smsc::core::buffers::Hash;
 
+static bool ENTITY_TRACE = false;
+
 const char* FormatEntity::getOption(const char* name)
 {
     if (options.Exists(name))
@@ -90,7 +92,7 @@ void FormatEntity::renderOptions(const char* line)
                 value += line[curPos++];
         }
 
-        __trace2__("Result %s=%s", name.c_str(), value.c_str());
+        if (ENTITY_TRACE) __trace2__("Result %s=%s", name.c_str(), value.c_str());
         options.Insert(name.c_str(), value);
         
         while (isspace(line[curPos])) curPos++; // skip spaces after 'value'
@@ -111,7 +113,7 @@ FormatEntity::FormatEntity(std::string line, bool io, bool type)
         int i;
         for (i=0; i<ioEntityTypesNumber-1; i++)
         {
-            //__trace2__("Checking type: %s", ioEntityTypeStrings[i]);
+            if (ENTITY_TRACE) __trace2__("Checking type: %s", ioEntityTypeStrings[i]);
             if (raw == strstr(raw, ioEntityTypeStrings[i]))
             {
                 this->type = (EntityType)i;
@@ -184,7 +186,7 @@ FormatEntity::~FormatEntity()
 FormatEntityRenderer::FormatEntityRenderer(const char* format, bool io)
     throw(FormatRenderingException)
 {
-    __trace2__("Format for parsing is: '%s'", format);
+    if (ENTITY_TRACE) __trace2__("Format for parsing is: '%s'", format);
     
     std::string str = "";
 
@@ -240,7 +242,7 @@ FormatEntityRenderer::FormatEntityRenderer(const char* format, bool io)
         }
 
         const char* line = str.c_str();
-        __trace2__("%s line: <%s>", (opened) ? "Inner":"Outer", line);
+        if (ENTITY_TRACE) __trace2__("%s line: <%s>", (opened) ? "Inner":"Outer", line);
         
         if (opened || io)
         {
