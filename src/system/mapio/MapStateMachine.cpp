@@ -234,7 +234,10 @@ static void DropMapDialog_(unsigned dialogid){
             return; // do not drop dialog!
           }catch(exception& e){
             // drop dialog
-            AbortMapDialog(dialog->dialogid_map,dialog->ssn);
+            if ( dialog->id_opened ) {
+              AbortMapDialog(dialog->dialogid_map,dialog->ssn);
+              dialog->id_opened = false;
+            }
             __trace2__("MAP::%s <exception> %s",__FUNCTION__,e.what());
           }
         }
@@ -868,12 +871,18 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error = false,unsigned 
     __trace2__("MAP::%s: dialod state %d",__FUNCTION__,dialog->state);
     if ( send_error ){
       __trace2__("MAP::ABORT: dialog 0x%x",dialog->dialogid_map);
-      AbortMapDialog(dialog->dialogid_map,dialog->ssn);
+      if ( dialog->id_opened ){
+        AbortMapDialog(dialog->dialogid_map,dialog->ssn);
+        dialog->id_opened = false;
+      }
     }else{
       switch(dialog->state){
       case MAPST_ABORTED:
         __trace2__("MAP::ABORT: dialog 0x%x",dialog->dialogid_map);
-        AbortMapDialog(dialog->dialogid_map,dialog->ssn);
+        if ( dialog->id_opened ) {
+          AbortMapDialog(dialog->dialogid_map,dialog->ssn);
+          dialog->id_opened = false;
+        }
         break;
       default:
         CloseMapDialog(dialog->dialogid_map,dialog->ssn);
