@@ -63,7 +63,7 @@ bool StoreManager::needCleaner(Manager& config)
     }
     return cleanerIsNeeded;
 }
-void StoreManager::startup(Manager& config)
+void StoreManager::startup(Manager& config, SchedTimer* sched)
     throw(ConfigException, ConnectionFailedException)
 {
     MutexGuard guard(mutex);
@@ -77,7 +77,8 @@ void StoreManager::startup(Manager& config)
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
             instance = (needCache(config)) ?
-                        new CachedStore(config) : new RemoteStore(config);
+                        new CachedStore(config, sched) :
+                        new RemoteStore(config, sched);
 
             cleaner = new Cleaner(config);
             SMSId lid = cleaner->getLastUsedId();
@@ -86,7 +87,7 @@ void StoreManager::startup(Manager& config)
 
             if (needCleaner(config)) cleaner->Start();
 #else
-            instance = new RemoteStore(config);
+            instance = new RemoteStore(config, sched);
             generator = new IDGenerator(0);
 #endif
         }
@@ -147,9 +148,10 @@ void RemoteStore::loadMaxTriesCount(Manager& config)
     }
 }
 
-RemoteStore::RemoteStore(Manager& config)
+RemoteStore::RemoteStore(Manager& config, SchedTimer* sched)
     throw(ConfigException, StorageException)
-        : pool(0), maxTriesCount(SMSC_MAX_TRIES_TO_PROCESS_OPERATION)
+        : pool(0), scheduleTimer(sched), 
+            maxTriesCount(SMSC_MAX_TRIES_TO_PROCESS_OPERATION)
 {
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
     loadMaxTriesCount(config);
@@ -955,6 +957,9 @@ void RemoteStore::changeSmsStateToEnroute(SMSId id,
         bool skipAttempt)
             throw(StorageException, NoSuchMessageException)
 {
+    if (scheduleTimer) 
+        scheduleTimer->ChangeSmsSchedule(id, nextTryTime);
+
 #ifndef SMSC_FAKE_MEMORY_MESSAGE_STORE
 
     __require__(pool);
@@ -1565,9 +1570,9 @@ void CachedStore::loadMaxCacheCapacity(Manager& config)
     }
 }
 
-CachedStore::CachedStore(Manager& config)
+CachedStore::CachedStore(Manager& config, SchedTimer* sched)
     throw(ConfigException, StorageException)
-        : RemoteStore(config), cache(0),
+        : RemoteStore(config, sched), cache(0),
             maxCacheCapacity(SMSC_MAX_SMS_CACHE_CAPACITY)
 {
     loadMaxCacheCapacity(config);

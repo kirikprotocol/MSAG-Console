@@ -25,6 +25,8 @@
 #include <core/buffers/Array.hpp>
 #include <map>
 
+#include <system/sched_timer.hpp>
+
 #include "MessageStore.h"
 #include "ConnectionManager.h"
 #include "Cleaner.h"
@@ -42,10 +44,12 @@ namespace smsc { namespace store
     using namespace smsc::sms;
     using namespace smsc::core::synchronization;
     using namespace smsc::core::buffers;
-
+    
     using smsc::util::Logger;
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigException;
+
+    using smsc::system::SchedTimer;
 
     class RemoteStore : public MessageStore
     {
@@ -64,6 +68,7 @@ namespace smsc { namespace store
         unsigned                maxTriesCount;
 
         StorageConnectionPool*  pool;
+        SchedTimer*    scheduleTimer;
 
         class ReadyIdIterator : public IdIterator
         {
@@ -155,7 +160,7 @@ namespace smsc { namespace store
 
     public:
 
-        RemoteStore(Manager& config)
+        RemoteStore(Manager& config, SchedTimer* sched)
             throw(ConfigException, StorageException);
         virtual ~RemoteStore();
 
@@ -384,6 +389,7 @@ namespace smsc { namespace store
          * воспользоватьс€ методом getMessageStore()
          *
          * @param config интерфес дл€ получени€ конфигурационных параметров
+         * @param sched интерфейс дл€ изменени€ schedule time дл€ sms 
          * @exception ConfigException
          *                   возникает в случае некорректности и/или
          *                   неполноты набора конфигурационных параметров.
@@ -393,7 +399,7 @@ namespace smsc { namespace store
          * @see StoreManager::getMessageStore()
          * @see smsc::util::config::Manager
          */
-        static void startup(Manager& config)
+        static void startup(Manager& config, SchedTimer* sched)
             throw(ConfigException, ConnectionFailedException);
         /**
          * ћетод останавливает и уничтожает подсистему хранени€ сообщений.
@@ -586,7 +592,7 @@ namespace smsc { namespace store
 
     public:
 
-        CachedStore(Manager& config)
+        CachedStore(Manager& config, SchedTimer* sched)
             throw(ConfigException, StorageException);
         virtual ~CachedStore();
 
