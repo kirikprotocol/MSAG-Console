@@ -282,6 +282,19 @@ namespace util{
             #endif
             func,line);
   }
+  
+	inline void watchImpl(unsigned int e, const char* expr,
+                        const char* file, const char* func, int line)
+  {
+    fprintf(WATCH_LOG_STREAM,"*watch*: %s = %d     %s(%s):%d\n",
+            expr,e,
+            #if defined ENABLE_FILE_NAME
+              file,
+            #else
+              "",
+            #endif
+            func,line);
+  }
 
   inline void watchxImpl(int e, const char* expr,
                          const char* file, const char* func, int line)
