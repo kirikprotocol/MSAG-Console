@@ -38,7 +38,7 @@ void fillPduTime(MAP_TIMESTAMP* pdu_tm,struct tm* tms)
   pdu_tm->tz = tz;
 }
 
-ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
+ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false)
 {
 #if defined USE_MAP
   memset(pdu,0,sizeof(ET96MAP_SM_RP_UI_T));
@@ -46,7 +46,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu)
   int isrcpt=(esm&4)==4;
   SMS_DELIVERY_FORMAT_HEADER* header = (SMS_DELIVERY_FORMAT_HEADER*)pdu->signalInfo;
   header->uu.s.mg_type_ind = isrcpt?2:0;
-  header->uu.s.mms = 0;
+  header->uu.s.mms = mms;
   header->uu.s.reply_path = (esm&0x80)?1:0;;
   header->uu.s.srri = 0;
   header->uu.s.udhi = (esm&0x40)?1:0;
