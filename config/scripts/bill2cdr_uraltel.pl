@@ -102,8 +102,8 @@ for(@dir)
 sub outrow{
   my ($out,$fields)=@_;
 
-  return unless $fields->{PAYER_ADDR}=~/$addrrx/;
-  return unless $fields->{PAYER_MSC}=~/$mscrx/;
+#  return unless $fields->{PAYER_ADDR}=~/$addrrx/;
+#  return unless $fields->{PAYER_MSC}=~/$mscrx/;
 
   for my $f(@OUT_FIELDS)
   {
@@ -113,7 +113,7 @@ sub outrow{
       $v=$fields->{$f->{field}};
     }else
     {
-      $v=$fields->{$f->{value}};
+      $v=$f->{value};
     }
     if($f->{align} eq 'R')
     {
