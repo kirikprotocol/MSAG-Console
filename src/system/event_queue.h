@@ -65,7 +65,7 @@ class EventQueue
     CmdRecord* cmds;
     CommandId lastCommand;
     int priority;
-    Locker() : locked(false), cmds(0) {}
+    Locker() : locked(false), cmds(0),lastCommand(UNKNOWN) {}
     ~Locker()
     {
       while ( cmds )
@@ -258,7 +258,7 @@ public:
       locker->state = StateTypeValue::UNKNOWN_STATE;
       locker->priority=command->get_priority();
       int weight=calcWeight(locker->priority);
-      __trace2__("enqueue: prio=%d, weight=%d",locker->priority,weight);
+      //__trace2__("enqueue: prio=%d, weight=%d",locker->priority,weight);
       unlocked.insert(LockerPair(weight,locker));
     }
     locker->msgId = msgId;
@@ -286,7 +286,7 @@ public:
                StateChecker::stateIsSuperFinal((*iter).second->state))
           {
             Locker* locker = (*iter).second;
-            __trace2__("selectAndDequeue: weight=%d, msgId=%lld",(*iter).first,locker->msgId);
+            //__trace2__("selectAndDequeue: weight=%d, msgId=%lld",(*iter).first,locker->msgId);
 
             __require__(!locker->locked);
 
