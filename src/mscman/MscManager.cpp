@@ -31,7 +31,7 @@ namespace smsc { namespace mscman
             : MscInfo(""), op(UNKNOWN) {};
         MscInfoChange(MscInfoOp _op, const MscInfo& info)
             : MscInfo(info), op(_op) {};
-        MscInfoChange(MscInfoOp _op, string msc, bool mLock=false,
+        MscInfoChange(MscInfoOp _op, const char* msc, bool mLock=false,
                       bool aLock=false, int fc=0)
             : MscInfo(msc, mLock, aLock, fc), op(_op) {};
         MscInfoChange(const MscInfoChange& info)
@@ -113,8 +113,8 @@ void MscManager::startup(DataSource& ds, Manager& config)
     throw(ConfigException, InitException)
 {
     MutexGuard guard(startupLock);
-	if (!log)
-		log = Logger::getInstance("smsc.mscman.MscManager");
+  if (!log)
+    log = Logger::getInstance("smsc.mscman.MscManager");
     if (instance) throw InitException(MSCMAN_INSTANCE_EXIST);
     instance = new MscManagerImpl(ds, config);
     ((MscManagerImpl *)instance)->Start();
@@ -285,7 +285,7 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
         {
         case INSERT:
             statement = connection->createStatement(insertSql);
-            statement->setString(1, change.mscNum.c_str());
+            statement->setString(1, change.mscNum);
             statement->setString(2, change.manualLock ? "Y":"N");
             statement->setString(3, change.automaticLock ? "Y":"N");
             statement->setInt32 (4, change.failureCount);
@@ -295,11 +295,11 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
             statement->setString(1, change.manualLock ? "Y":"N");
             statement->setString(2, change.automaticLock ? "Y":"N");
             statement->setInt32 (3, change.failureCount);
-            statement->setString(4, change.mscNum.c_str());
+            statement->setString(4, change.mscNum);
             break;
         case DELETE:
             statement = connection->createStatement(deleteSql);
-            statement->setString(1, change.mscNum.c_str());
+            statement->setString(1, change.mscNum);
             break;
         default:
             throw Exception("Operation unknown", change.op);
@@ -318,7 +318,7 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
         try { if (connection) connection->rollback(); } catch (...) {
             smsc_log_error(log, "Rollback failed!");
         }
-        
+
     }
 }
 

@@ -8,39 +8,51 @@
 
 #include "MscExceptions.h"
 
-namespace smsc { namespace mscman 
+namespace smsc { namespace mscman
 {
     using std::string;
     using smsc::core::buffers::Array;
 
     struct MscInfo
     {
-        MscInfo(string msc="", bool mLock=false, bool aLock=false, int fc=0)
-            : mscNum(msc), manualLock(mLock), 
-                automaticLock(aLock), failureCount(fc) {};
+        MscInfo(const char* msc="", bool mLock=false, bool aLock=false, int fc=0)
+            : manualLock(mLock),
+                automaticLock(aLock), failureCount(fc)
+            {
+              setMscNum(msc);
+            };
         MscInfo(const MscInfo& info)
-            : mscNum(info.mscNum), manualLock(info.manualLock),
-                automaticLock(info.automaticLock), 
-                    failureCount(info.failureCount) {};
-        
+            : manualLock(info.manualLock),
+                automaticLock(info.automaticLock),
+                    failureCount(info.failureCount)
+            {
+              setMscNum(info.mscNum);
+            };
+
         MscInfo& operator=(const MscInfo& info) {
-            mscNum = info.mscNum;
+            setMscNum(info.mscNum);
             manualLock = info.manualLock;
             automaticLock = info.automaticLock;
             failureCount = info.failureCount;
             return (*this);
         }
 
-        string  mscNum;
+        void setMscNum(const char* msc)
+        {
+          strncpy(mscNum,msc,sizeof(mscNum)-1);
+          mscNum[sizeof(mscNum)-1]=0;
+        }
+
+        char    mscNum[22];
         bool    manualLock;
         bool    automaticLock;
         int     failureCount;
     };
-    
+
     class MscAdmin
     {
     protected:
-        
+
         MscAdmin() {};
 
     public:
@@ -56,4 +68,3 @@ namespace smsc { namespace mscman
 }}
 
 #endif //SMSC_MSCMAN_MSC_ADMIN
-
