@@ -18,6 +18,7 @@
 #include <set>
 #include "smppgw/gwsme.hpp"
 #include "smppgw/billing/bill.hpp"
+#include "smppgw/billing/rules/BillingRules.hpp"
 
 
 // строчка по русски, что б сработал autodetect :)
@@ -270,9 +271,9 @@ public:
     return trScInvalid;
   }
 
-  TrSmsStatus RegisterS2C(SMS& sms,const stat::StatInfo& si,time_t timeOut,TrafficRules& r,billing::TransactionIdType& idptr)
+  TrSmsStatus RegisterS2C(SMS& sms,const stat::StatInfo& si,time_t timeOut,RouteInfo& ri,billing::TransactionIdType& idptr)
   {
-    TrSmsStatus st=getS2CSmsStatus(sms,r);
+    TrSmsStatus st=getS2CSmsStatus(sms,ri.trafRules);
     __trace2__("S2C:%s",getStatusName(st));
     if((st&trDeniedBase) || (st&trInvalid))
     {
@@ -291,12 +292,31 @@ public:
 
       TransactionInfo ti(true,TransactionInfo::S2C);
       ti.si=si;
-      ti.trId=billing::GetBillingInterface()->BeginTransaction(sms,true);
-      if(ti.trId==billing::InvalidTransactionId)
+
+      bool doBilling=false;
+      try{
+        using namespace billing::rules;
+        doBilling=BillingRulesManager::getInstance()->getBillingRule(ri.billingId.c_str()).queryBill(sms);
+      }catch(...)
       {
-        __trace__("TMon: billing denied transaction");
-        return trDeniedByBilling;
+        __trace2__("TMon: billing forced. Rule %s not found",ri.billingId.c_str());
       }
+
+
+      if(doBilling)
+      {
+        ti.trId=billing::GetBillingInterface()->BeginTransaction(sms,true);
+
+        if(ti.trId==billing::InvalidTransactionId)
+        {
+          __trace__("TMon: billing denied transaction");
+          return trDeniedByBilling;
+        }
+      }else
+      {
+        ti.trId=billing::InvalidTransactionId;
+      }
+
       pair<TransactionMap::iterator,bool> pit=trMap.insert(std::make_pair(makeKey(sms),ti));
       timeList.push_back(make_pair(time(NULL)+timeOut,pit.first));
       TimeList::iterator lit=--timeList.end();
@@ -313,15 +333,31 @@ public:
         return st==trSmeUssdBillBegin?trSmeUssdInvalid:trSmeInvalid;
       }
       TransactionInfo& ti=it->second;
-      ti.trId=billing::GetBillingInterface()->BeginTransaction(sms,true);
-      if(ti.trId==billing::InvalidTransactionId)
+
+      bool doBilling=false;
+      try{
+        using namespace billing::rules;
+        doBilling=BillingRulesManager::getInstance()->getBillingRule(ri.billingId.c_str()).queryBill(sms);
+      }catch(...)
       {
-        __trace__("TMon: billing denied transaction");
-        trMap.erase(it);
-        BackMapping::iterator bit=backMapping.find(makeKey(sms));
-        timeList.erase(bit->second);
-        backMapping.erase(bit);
-        return trDeniedByBilling;
+        __trace2__("TMon: billing forced. Rule %s not found",ri.billingId.c_str());
+      }
+
+      if(doBilling)
+      {
+        ti.trId=billing::GetBillingInterface()->BeginTransaction(sms,true);
+        if(ti.trId==billing::InvalidTransactionId)
+        {
+          __trace__("TMon: billing denied transaction");
+          trMap.erase(it);
+          BackMapping::iterator bit=backMapping.find(makeKey(sms));
+          timeList.erase(bit->second);
+          backMapping.erase(bit);
+          return trDeniedByBilling;
+        }
+      }else
+      {
+        ti.trId=billing::InvalidTransactionId;
       }
     }
 
@@ -346,15 +382,27 @@ public:
     }
     if(st==trSmeGenerated)
     {
-      if(r.limitType!=TrafficRules::limitNoLimit)
+      if(ri.trafRules.limitType!=TrafficRules::limitNoLimit)
       {
         MutexGuard mg(mtx);
         incRouteCount(sms.getRouteId());
       }
-      billing::TransactionIdType trId=billing::GetBillingInterface()->BeginTransaction(sms,true);
-      if(trId==billing::InvalidTransactionId)
+      bool doBilling=false;
+      try{
+        using namespace billing::rules;
+        doBilling=BillingRulesManager::getInstance()->getBillingRule(ri.billingId.c_str()).queryBill(sms);
+      }catch(...)
       {
-        return trDeniedByBilling;
+        __trace2__("TMon: billing forced. Rule %s not found",ri.billingId.c_str());
+      }
+      billing::TransactionIdType trId=billing::InvalidTransactionId;
+      if(doBilling)
+      {
+        trId=billing::GetBillingInterface()->BeginTransaction(sms,true);
+        if(trId==billing::InvalidTransactionId)
+        {
+          return trDeniedByBilling;
+        }
       }
       idptr=trId;
       return st;
@@ -362,9 +410,9 @@ public:
     return st;
   }
 
-  TrSmsStatus RegisterC2S(SMS& sms,const stat::StatInfo& si,time_t timeOut,TrafficRules& r)
+  TrSmsStatus RegisterC2S(SMS& sms,const stat::StatInfo& si,time_t timeOut,RouteInfo& ri)
   {
-    TrSmsStatus st=getC2SSmsStatus(sms,r);
+    TrSmsStatus st=getC2SSmsStatus(sms,ri.trafRules);
     if((st&trDeniedBase) || (st&trInvalid))return st;
     if(st==trScUssdInit || st==trScRequest)
     {
@@ -378,12 +426,31 @@ public:
 
       TransactionInfo ti(st==trScUssdInit,TransactionInfo::C2S);
       ti.si=si;
-      ti.trId=GetBillingInterface()->BeginTransaction(sms,false);
-      if(ti.trId==billing::InvalidTransactionId)
+
+      bool doBilling=false;
+      try{
+        using namespace billing::rules;
+        doBilling=BillingRulesManager::getInstance()->getBillingRule(ri.billingId.c_str()).queryBill(sms);
+      }catch(...)
       {
-        __trace__("TMon: billing denied transaction");
+        __trace2__("TMon: billing denied by billing rules manager. Rule %s not found",ri.billingId.c_str());
         return trDeniedByBilling;
       }
+
+      if(doBilling)
+      {
+        ti.trId=GetBillingInterface()->BeginTransaction(sms,false);
+
+        if(ti.trId==billing::InvalidTransactionId)
+        {
+          __trace__("TMon: billing denied transaction");
+          return trDeniedByBilling;
+        }
+      }else
+      {
+        ti.trId=billing::InvalidTransactionId;
+      }
+
       pair<TransactionMap::iterator,bool> pit=trMap.insert(std::make_pair(makeKey(sms),ti));
 
       timeList.push_back(make_pair(time(NULL)+timeOut,pit.first));
@@ -399,17 +466,37 @@ public:
         __warning__("trmon: fuck, transaction not found :-/\n");
         return trScInvalid;
       }
-      TransactionInfo& ti=it->second;
-      ti.trId=billing::GetBillingInterface()->BeginTransaction(sms,false);
-      if(ti.trId==billing::InvalidTransactionId)
+      bool doBilling=false;
+      try{
+        using namespace billing::rules;
+        doBilling=BillingRulesManager::getInstance()->getBillingRule(ri.billingId.c_str()).queryBill(sms);
+      }catch(...)
       {
-        __trace__("TMon: billing denied transaction");
-        trMap.erase(it);
-        BackMapping::iterator bit=backMapping.find(makeKey(sms));
-        timeList.erase(bit->second);
-        backMapping.erase(bit);
+        __trace2__("TMon: billing denied by billing rules manager. Rule %s not found",ri.billingId.c_str());
         return trDeniedByBilling;
       }
+
+      TransactionInfo& ti=it->second;
+      if(doBilling)
+      {
+
+        ti.trId=billing::GetBillingInterface()->BeginTransaction(sms,false);
+
+
+        if(ti.trId==billing::InvalidTransactionId)
+        {
+          __trace__("TMon: billing denied transaction");
+          trMap.erase(it);
+          BackMapping::iterator bit=backMapping.find(makeKey(sms));
+          timeList.erase(bit->second);
+          backMapping.erase(bit);
+          return trDeniedByBilling;
+        }
+      }else
+      {
+        ti.trId=billing::InvalidTransactionId;
+      }
+
     }
     if(st==trScUssdEnd)
     {
@@ -917,7 +1004,7 @@ void StateMachine::submit(SmscCommand& cmd)
   sms.setDestinationSmeId(dst_proxy->getSystemId());
 
   billing::TransactionIdType trId=billing::InvalidTransactionId;
-  TransactionMonitor::TrSmsStatus st=tmon.RegisterS2C(sms,stat::StatInfo(src_proxy,ri),smsc->ussdTransactionTimeout,ri.trafRules,trId);
+  TransactionMonitor::TrSmsStatus st=tmon.RegisterS2C(sms,stat::StatInfo(src_proxy,ri),smsc->ussdTransactionTimeout,ri,trId);
 
   smsc_log_info(smsLog,"SBM: trstate for sms from %s to %s=%s",sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),TransactionMonitor::getStatusName(st));
 
@@ -1192,7 +1279,7 @@ void StateMachine::delivery(SmscCommand& cmd)
   sms.setDestinationSmeId(dst_proxy->getSystemId());
 
 
-  TransactionMonitor::TrSmsStatus st=tmon.RegisterC2S(sms,stat::StatInfo(dst_proxy,ri),smsc->ussdTransactionTimeout,ri.trafRules);
+  TransactionMonitor::TrSmsStatus st=tmon.RegisterC2S(sms,stat::StatInfo(dst_proxy,ri),smsc->ussdTransactionTimeout,ri);
 
   smsc_log_info(smsLog,"DLV: trstate for sms from %s to %s=%s",sms.getOriginatingAddress().toString().c_str(),sms.getDestinationAddress().toString().c_str(),TransactionMonitor::getStatusName(st));
 
