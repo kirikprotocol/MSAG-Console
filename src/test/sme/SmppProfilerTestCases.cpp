@@ -287,11 +287,6 @@ AckText* SmppProfilerTestCases::getExpectedResponse(SmeAckMonitor* monitor,
 	__unreachable__("Invalid sms was sent to profiler");
 }
 
-#define __check__(errCode, field, value) \
-	if (value != pdu.get_message().get_##field()) { \
-		__tc_fail__(errCode); \
-	}
-
 void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	PduDeliverySm& pdu, time_t recvTime)
 {
@@ -312,52 +307,29 @@ void SmppProfilerTestCases::processSmeAcknowledgement(SmeAckMonitor* monitor,
 	AckText* ack =
 		dynamic_cast<AckText*>(monitor->pduData->objProps["profilerTc.output"]);
 	__require__(ack);
-	if (!ack->valid)
+	if (ack->valid)
 	{
-		monitor->setCondRequired();
-		return;
-	}
-	//зафиксировать время изменения профиля
-	fixture->profileReg->setProfileUpdateTime(fixture->smeAddr, 0);
-	//проверить и обновить профиль
-	__tc__("updateProfile.ack.checkFields");
-    SmppOptional opt;
-	opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
-	__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 0);
-	__tc_ok_cond__;
-	__tc__("updateProfile.ack.checkText");
-	__check__(1, dataCoding, ack->dataCoding);
-	if (text.length() > getMaxChars(ack->dataCoding))
-	{
-		__tc_fail__(2);
-	}
-	int pos = ack->text.find(text);
-	__trace2__("profiler ack: pos = %d, received:\n%s\nexpected:\n%s\n",
-		pos, text.c_str(), ack->text.c_str());
-	if (pos == string::npos)
-	{
-		__tc_fail__(3);
-		monitor->setNotExpected();
-	}
-	else
-	{
-		__tc_ok__;
-		ack->text.erase(pos, text.length());
-		if (!ack->text.length())
+		//зафиксировать время изменения профиля
+		fixture->profileReg->setProfileUpdateTime(fixture->smeAddr, 0);
+		//проверить и обновить профиль
+		__tc__("updateProfile.ack.checkFields");
+		SmppOptional opt;
+		opt.set_userMessageReference(pdu.get_optional().get_userMessageReference());
+		__tc_fail2__(SmppUtil::compareOptional(opt, pdu.get_optional()), 0);
+		__tc_ok_cond__;
+		__tc__("updateProfile.ack.checkText");
+		if (pdu.get_message().get_dataCoding() != ack->dataCoding)
 		{
-			monitor->setNotExpected();
+			__tc_fail__(1);
 		}
-		else
+		if (text != ack->text)
 		{
-			__tc__("updateProfile.ack.multipleMessages");
-			if (text.length() != getMaxChars(ack->dataCoding) &&
-				ack->text.length() % getMaxChars(ack->dataCoding) != 0)
-			{
-				__tc_fail__(1);
-			}
-			__tc_ok_cond__;
+			__trace2__("profiler ack text mismatch: received:\n%s\nexpected:\n%s\n",
+				text.c_str(), ack->text.c_str());
+			__tc_fail__(2);
 		}
 	}
+	monitor->setNotExpected();
 }
 
 }
