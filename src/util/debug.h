@@ -9,11 +9,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/timeb.h>
+
+#include "util/Logger.h"
+
 #ifndef _WIN32
 #include <thread.h>
 #endif
 #include <stdexcept>
+
 using std::runtime_error;
+
+namespace smsc{
+namespace util{
+extern log4cpp::Category* _trace_cat;
+};
+};
 
 #ifdef _WIN32
 
@@ -120,9 +130,9 @@ static inline void warning2(const char* fmt,...)
 //  {if (expr) smsc::util::warningImpl("Warning !!! "#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__);}
 
 #if defined ENABLE_FILE_NAME
-#define __warning2__(text,arg...) fprintf(TRACE_LOG_STREAM,"*WARNING*[%d %d]: "text"\n\t%s(%s):%d\n",thr_self(),time(NULL),##arg,file,__PRETTY_FUNCTION__,__LINE__)
+#define __warning2__(text,arg...) smsc::util::_trace_cat->warn(text,##arg)
 #else
-#define __warning2__(text,arg...) fprintf(TRACE_LOG_STREAM,"*WARNING*[%d %d]: "text"\n\t%s(%s):%d\n",thr_self(),time(NULL),##arg,"",__PRETTY_FUNCTION__,__LINE__)
+#define __warning2__(text,arg...) smsc::util::_trace_cat->warn(text,##arg)
 #endif
 
 #if !defined DISABLE_WATCHDOG
@@ -242,17 +252,9 @@ static inline void warning2(const char* fmt,...)
     smsc::util::watchtextImpl(expr,len,#expr,__FILE__,__PRETTY_FUNCTION__,__LINE__)
   #define trace(text) trace2("%s", text)
   #if defined ENABLE_FILE_NAME
-    #define trace2(format,args...) do{ \
-      timeval tv;gettimeofday(&tv,0); \
-      fprintf(TRACE_LOG_STREAM,\
-        "*[%d %d.%03d]: " format " \n\t"__FILE__"(%s):%d\n",\
-        thr_self(), tv.tv_sec , tv.tv_usec / 1000, ##args,__PRETTY_FUNCTION__,__LINE__); }while(0)
+    #define trace2(format,args...) smsc::util::_trace_cat->debug(format,##args)
   #else
-    #define trace2(format,args...) do{ \
-      timeval tv;gettimeofday(&tv,0); \
-      fprintf(TRACE_LOG_STREAM,\
-        "*[%d %d.%03d]: " format "\n",\
-        thr_self(), tv.tv_sec , tv.tv_usec / 1000, ##args); }while(0)
+    #define trace2(format,args...) smsc::util::_trace_cat->debug(format,##args)
   #endif
 #else
   #define watch(expr)
@@ -280,7 +282,7 @@ namespace util{
   {
     if (!expr)
     {
-      fprintf(ASSERT_LOG_STREAM,"\n*%s*<%s(%s):%d>\n\tassertin %s failed\n",
+      smsc::util::_trace_cat->warn("\n*%s*<%s(%s):%d>\n\tassertin %s failed\n",
               ASSERT_LOG_DOMAIN,
               file,
               func,
@@ -295,7 +297,7 @@ namespace util{
     if (!expr)
     {
       char throw_message[512];
-      sprintf(throw_message,"\n*%.100s*[%d]<%.100s(%.100s):%d>\n\tassertin %.100s failed\n\n",
+      smsc::util::_trace_cat->warn("\n*%.100s*[%d]<%.100s(%.100s):%d>\n\tassertin %.100s failed\n\n",
               ASSERT_LOG_DOMAIN,
               thr_self(),
               file,
@@ -311,7 +313,7 @@ namespace util{
                             const char* file, const char* func, int line) throw()
   {
     if ( !expr )
-                        fprintf(ASSERT_LOG_STREAM,"*%s*<%s(%s):%d>\n\tassertin %s failed\n",
+                        smsc::util::_trace_cat->warn("*%s*<%s(%s):%d>\n\tassertin %s failed\n",
               ASSERT_LOG_DOMAIN,
               file,
               func,
@@ -322,7 +324,7 @@ namespace util{
   inline void abortIfReached(const char* expr_text,
                           const char* file, const char* func, int line) throw()
   {
-      fprintf(ASSERT_LOG_STREAM,"\n*%s*<%s(%s):%d>\n\t%s\n",
+      smsc::util::_trace_cat->warn("\n*%s*<%s(%s):%d>\n\t%s\n",
               UNREACHABLE_LOG_DOMAIN,
               file,
               func,
@@ -341,7 +343,7 @@ namespace util{
               func,
               line,
               expr_text);
-      fprintf(ASSERT_LOG_STREAM,throw_message);
+      smsc::util::_trace_cat->warn(throw_message);
       //throw throw_message;
                         throw AssertException();
   }
@@ -349,7 +351,7 @@ namespace util{
         inline void warningIfReached(const char* expr_text,
                             const char* file, const char* func, int line) throw()
   {
-      fprintf(ASSERT_LOG_STREAM,"*%s*<%s(%s):%d>\n\%s\n",
+      smsc::util::_trace_cat->warn("*%s*<%s(%s):%d>\n\%s\n",
               UNREACHABLE_LOG_DOMAIN,
               file,
               func,
@@ -360,7 +362,7 @@ namespace util{
         inline void watchImpl(bool e, const char* expr,
                         const char* file, const char* func, int line)
   {
-    fprintf(WATCH_LOG_STREAM,"*watch*: %s = %s     %s(%s):%d\n",
+    smsc::util::_trace_cat->warn("*watch*: %s = %s     %s(%s):%d\n",
             expr,e?"true":"false",
             #if defined ENABLE_FILE_NAME
               file,
@@ -373,7 +375,7 @@ namespace util{
   inline void watchImpl(int e, const char* expr,
                         const char* file, const char* func, int line)
   {
-    fprintf(WATCH_LOG_STREAM,"*watch*: %s = %d     %s(%s):%d\n",
+    smsc::util::_trace_cat->warn("*watch*: %s = %d     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
               file,
@@ -386,7 +388,7 @@ namespace util{
   inline void watchImpl(unsigned int e, const char* expr,
                         const char* file, const char* func, int line)
   {
-    fprintf(WATCH_LOG_STREAM,"*watch*: %s = %d     %s(%s):%d\n",
+    smsc::util::_trace_cat->warn("*watch*: %s = %d     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
               file,
@@ -399,7 +401,7 @@ namespace util{
   inline void watchxImpl(int e, const char* expr,
                          const char* file, const char* func, int line)
   {
-    fprintf(WATCH_LOG_STREAM,"*watch*: %s = %x     %s(%s):%d\n",
+    smsc::util::_trace_cat->warn("*watch*: %s = %x     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
               file,
@@ -412,7 +414,7 @@ namespace util{
   inline void watchxImpl(unsigned int e, const char* expr,
                          const char* file, const char* func, int line)
   {
-    fprintf(WATCH_LOG_STREAM,"*watch*: %s = %x     %s(%s):%d\n",
+    smsc::util::_trace_cat->warn("*watch*: %s = %x     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
               file,
@@ -425,7 +427,7 @@ namespace util{
   inline void watchImpl(char e, const char* expr,
                         const char* file, const char* func, int line)
   {
-    fprintf(WATCH_LOG_STREAM,"*watch*: %s = '%c'     %s(%s):%d\n",
+    smsc::util::_trace_cat->warn("*watch*: %s = '%c'     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
               file,
@@ -438,7 +440,7 @@ namespace util{
   inline void watchImpl(void* e, const char* expr,
                         const char* file, const char* func, int line)
   {
-    fprintf(WATCH_LOG_STREAM,"*watch*: %s = %p     %s(%s):%d\n",
+    smsc::util::_trace_cat->warn("*watch*: %s = %p     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
               file,
@@ -451,7 +453,7 @@ namespace util{
   inline void watchtImpl(const char* e, const char* expr,
                          const char* file, const char* func, int line)
   {
-    fprintf(WATCH_LOG_STREAM,"*watch*: %s = %s     %s(%s):%d\n",
+    smsc::util::_trace_cat->warn("*watch*: %s = %s     %s(%s):%d\n",
             expr,e,
             #if defined ENABLE_FILE_NAME
               file,
@@ -464,7 +466,7 @@ namespace util{
   inline void watchtextImpl(const char* e, int len, const char* expr,
                             const char* file, const char* func, int line)
   {
-    fprintf(WATCH_LOG_STREAM,"*watch*: %s = '",expr);
+    smsc::util::_trace_cat->warn("*watch*: %s = '",expr);
     fwrite(e,len,1,WATCH_LOG_STREAM);
     fprintf(WATCH_LOG_STREAM,"'\t%s(%s):%d\n",
             #if defined ENABLE_FILE_NAME
@@ -477,7 +479,7 @@ namespace util{
 
   inline void warningImpl(const char* e, const char* file, const char* func, int line)
   {
-    fprintf(TRACE_LOG_STREAM,"*WARNING* [%d %d]: %s\n\t%s(%s):%d\n",thr_self(),time(NULL),e,
+    smsc::util::_trace_cat->warn("*WARNING* [%d %d]: %s\n\t%s(%s):%d\n",thr_self(),time(NULL),e,
             #if defined ENABLE_FILE_NAME
               file,
             #else
@@ -490,7 +492,7 @@ namespace util{
                            const char* file, const char* func, int line)
   {
     if ( !expr )
-      fprintf(TRACE_LOG_STREAM,"*%s*[%d]: %s     %s(%s):%d\n",info,thr_self(),e,
+      smsc::util::_trace_cat->warn("*%s*[%d]: %s     %s(%s):%d\n",info,thr_self(),e,
             #if defined ENABLE_FILE_NAME
               file,
             #else
