@@ -119,31 +119,25 @@ namespace smsc { namespace wsme
             throw (ProcessException);
     };
     
-    class AdHistory
+    struct AdIdManager
     {
-    private:
-        
-        log4cpp::Category&  log;
-        DataSource&         ds;
+        AdIdManager() {};
+        virtual ~AdIdManager() {};
 
-        int     historyPeriod;
-    
-    public:
-
-        AdHistory(DataSource& _ds, ConfigView* config)
-            throw(ConfigException, InitException);
-        virtual ~AdHistory();
-
-        int getNextId(const std::string msisdn)
-            throw (ProcessException);
+        virtual int getFirstId() = 0;
+        virtual int getNextId(int id) = 0;
     };
-    
-    class AdRepository
+
+    class AdRepository : public AdIdManager
     {
     private:
         
         log4cpp::Category&  log;
         DataSource&         ds;
+
+        int maxAdId;
+        void loadMaxAdId()
+            throw(InitException);
     
     public:
 
@@ -151,9 +145,39 @@ namespace smsc { namespace wsme
             throw(ConfigException, InitException);
         virtual ~AdRepository();
 
-        bool getAd(int id, const std::string lang, std::string& ad)
+        virtual int getFirstId();
+        virtual int getNextId(int id);
+        
+        bool getAd(int id, const std::string lang, bool isLang, std::string& ad)
             throw (ProcessException);
     };
+    
+    class AdHistory
+    {
+    private:
+        
+        log4cpp::Category&  log;
+        DataSource&         ds;
+        
+        AdIdManager&        idManager;
+
+        int keepPeriod, lifePeriod;
+    
+    public:
+
+        AdHistory(DataSource& _ds, ConfigView* config, AdIdManager& idman)
+            throw(ConfigException, InitException);
+        virtual ~AdHistory();
+
+        bool getId(const std::string msisdn, int& id)
+            throw (ProcessException);
+        void respondAd(const std::string msisdn, 
+                       const std::string msgid, bool responded)
+            throw (ProcessException);
+        void receiptAd(const std::string msgid, bool receipted) 
+            throw (ProcessException);
+    };
+    
     
     class AdManager
     {
@@ -175,10 +199,14 @@ namespace smsc { namespace wsme
             throw(ConfigException, InitException);
         virtual ~AdManager();
 
-        bool getAd(const std::string msisdn, const std::string lang, 
+        bool getAd(const std::string msisdn, 
+                   const std::string lang, bool isLang,
                    std::string& ad) 
             throw (ProcessException);
-        void reportAd(const std::string msgid) 
+        void respondAd(const std::string msisdn, 
+                       const std::string msgid, bool responded)
+            throw (ProcessException);
+        void receiptAd(const std::string msgid, bool receipted) 
             throw (ProcessException);
     };
     
@@ -206,12 +234,13 @@ namespace smsc { namespace wsme
         virtual ~WSmeProcessor();
         
         virtual bool processNotification(const std::string msisdn, 
-                                         std::string& out)
+                                         std::string& out) 
             throw (ProcessException);
         virtual void processResponce(const std::string msisdn, 
-                                     const std::string msgid)
+                                     const std::string msgid, bool responded)
             throw (ProcessException);
-        virtual void processReceipt(const std::string msgid)
+
+        virtual void processReceipt(const std::string msgid, bool receipted)
             throw (ProcessException);
     };
 

@@ -34,9 +34,21 @@ static bool bWSmeIsStopped   = false;
 static bool bWSmeIsConnected = false;
 
 static log4cpp::Category& log = Logger::getCategory("smsc.wsme.WSme");
+static int messageLifePeriod;
 
 const int   MAX_ALLOWED_MESSAGE_LENGTH = 254;
 const int   MAX_ALLOWED_PAYLOAD_LENGTH = 65535;
+
+static bool convertMSISDNStringToAddress(const char* string, Address& address)
+{
+    try {
+        Address converted(string);
+        address = converted;
+    } catch (...) {
+        return false;
+    }
+    return true;
+};
 
 class WSmeTask : public ThreadedTask
 {
@@ -49,6 +61,7 @@ protected:
     void process()
     {
         {
+            // Send DeliverySmResp here for accepted DeliverySm
             PduDeliverySmResp smResp;
             smResp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
             smResp.set_messageId("");
@@ -58,37 +71,109 @@ protected:
         
         try 
         {
-            SMS request, responce;
+            SMS request;
             fetchSmsFromSmppPdu((PduXSm*)pdu, &request);
-            if (process(request, responce))
+            bool isReceipt = (request.hasIntProperty(Tag::SMPP_ESM_CLASS)) ? 
+                (request.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3C == 0x4) : false;
+
+            if (isReceipt)
             {
+                if (((PduXSm*)pdu)->get_optional().has_receiptedMessageId())
+                {
+                    const char* msgid = 
+                        ((PduXSm*)pdu)->get_optional().get_receiptedMessageId();
+                    if (msgid && msgid[1] != '\0')
+                        processor.processReceipt(msgid, true);
+                    // ??? TODO: check receipted or not
+                } 
+                return;
+            }
+            
+            char smsTextBuff[MAX_ALLOWED_MESSAGE_LENGTH+1];
+            int smsTextBuffLen = getSmsText(&request, 
+                (char *)&smsTextBuff, sizeof(smsTextBuff));
+            __require__(smsTextBuffLen < MAX_ALLOWED_MESSAGE_LENGTH);
+
+            std::string msisdn;
+            Address visitorAddress;
+            if (convertMSISDNStringToAddress(smsTextBuff, visitorAddress)) {
+                visitorAddress.toString(smsTextBuff, sizeof(smsTextBuff));
+                msisdn = smsTextBuff;
+            }
+            else
+                throw Exception("Visitor '%s' is not valid MSISDN address",
+                                (smsTextBuff) ? smsTextBuff:"");
+            
+            std::string outMsgStr = ""; 
+            if (processor.processNotification(msisdn, outMsgStr))
+            {
+                SMS responce; 
+                responce.setDestinationAddress(visitorAddress);
+                responce.setOriginatingAddress(request.getDestinationAddress());
+                responce.setArchivationRequested(false);
+                responce.setValidTime(time(NULL)+messageLifePeriod);
+                responce.setDeliveryReport(1);
+
+                //body.setIntProperty(Tag::SMPP_PROTOCOL_ID, ???);
+                responce.setIntProperty(Tag::SMPP_ESM_CLASS, 0 /*xx0000xx*/);
+                responce.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 0);
+                responce.setIntProperty(Tag::SMPP_PRIORITY, 0);
+                responce.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,
+                                        request.getIntProperty(
+                                        Tag::SMPP_USER_MESSAGE_REFERENCE));
+
+                const char* out = outMsgStr.c_str();
+                int outLen = outMsgStr.length();
+                char* msgBuf = 0;
+                if(hasHighBit(out,outLen)) {
+                    int msgLen = outLen*2+4;
+                    msgBuf = new char[msgLen];
+                    ConvertMultibyteToUCS2(out, outLen, (short*)msgBuf, msgLen, 
+                                           CONV_ENCODING_CP1251);
+                    responce.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::UCS2);
+                    out = msgBuf; outLen = msgLen;
+                } else {
+                    responce.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::DEFAULT);
+                }
+
+                try {
+                    if (outLen <= MAX_ALLOWED_MESSAGE_LENGTH) {
+                        responce.setBinProperty(Tag::SMPP_SHORT_MESSAGE, out, outLen);
+                        responce.setIntProperty(Tag::SMPP_SM_LENGTH, outLen);
+                    } else {
+                        responce.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD, out, 
+                                                (outLen <= MAX_ALLOWED_PAYLOAD_LENGTH) ? 
+                                                outLen : MAX_ALLOWED_PAYLOAD_LENGTH);
+                    }
+                } catch (...) {
+                    __trace__("Something is wrong with message body. "
+                              "Set/Get property failed"); 
+                    if (msgBuf) delete msgBuf; msgBuf = 0;
+                    throw; // ???
+                }
+                if (msgBuf) delete msgBuf;
+
                 PduSubmitSm sm;
                 sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
                 fillSmppPduFromSms(&sm, &responce);
                 PduSubmitSmResp *resp = transmitter.submit(sm);
-                if (resp) {
-                    // TODO: get msg_id and update WSmeProc history for msisdn
+                if (resp) 
+                {
+                    // check responded or not, get msgid here
+                    const char* msgid = ((PduXSmResp*)resp)->get_messageId();
+                    if (msgid && msgid[1] != '\0')
+                        processor.processResponce(msisdn, msgid, true);
+                    
                     disposePdu((SmppHeader*)resp);
                 }
             }
         }
         catch (exception& exc)
         {
-            // ∆Œœ¿ !!!
+            log.error(exc.what());
         }
     };
     
-    // @return need send responce or not
-    bool process(SMS& request, SMS& responce) 
-        throw (ProcessException)
-    {
-        // TODO: implement it !!!
-        std::string in, out;
-        processor.processNotification(in, out);
-        processor.processReceipt(in);
-        return false;
-    };
-
 public:
     
     WSmeTask(SmppHeader* pdu, WSmeProcessor& cp, SmppTransmitter& trans) 
@@ -308,7 +393,9 @@ int main(void)
         ConfigView ssConfig(manager, "WSme.SMSC");
         WSmeConfig cfg(&ssConfig);
         
-
+        messageLifePeriod = cpConfig.getInt("AdManager.History.lifePeriod", 
+                                            "Message life period wasn't defined !");
+        
         while (!bWSmeIsStopped)
         {
             WSmeTaskManager runner(&mnConfig);

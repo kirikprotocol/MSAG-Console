@@ -78,37 +78,36 @@ bool WSmeProcessor::processNotification(const std::string msisdn, std::string& o
     {
         std::string lang;
         bool isLang = langManager->getLangCode(msisdn, lang);
-        return adManager->getAd(msisdn, lang, out);
+        return adManager->getAd(msisdn, lang, isLang, out);
     }
     return false;
 }
-void WSmeProcessor::processResponce(const std::string msisdn, const std::string msgid)
+void WSmeProcessor::processResponce(const std::string msisdn, 
+                                    const std::string msgid, bool responded)
     throw (ProcessException)
 {
     __require__(adManager);
-
-    // TODO : update adManager::history.
+    adManager->respondAd(msisdn, msgid, responded);
 }
 
-void WSmeProcessor::processReceipt(const std::string msgid)
+void WSmeProcessor::processReceipt(const std::string msgid, bool receipted)
     throw (ProcessException)
 {
     __require__(adManager);
-
-    /* TODO: implement it
-        
-        1) check whether receipt is valid (???)
-        2) get msg_id from receipt
-        3) notify adManager to update history by msg_id
-    */
-
-    adManager->reportAd(msgid);
+    adManager->receiptAd(msgid, receipted);
 }
 
 
 /* ------------------------ Managers Implementation ------------------------ */
 
+bool compareMaskAndAddress(const std::string mask, 
+                           const std::string addr)
+{
+    // TODO: implement check
+    return true;
+}
 
+/* ------------------------ VisitorManager ------------------------ */
 VisitorManager::VisitorManager(DataSource& _ds) 
     throw (InitException)
         : ds(_ds) 
@@ -165,13 +164,6 @@ void VisitorManager::loadUpVisitors()
     }
 }
 
-bool compareMaskAndAddress(const std::string mask, 
-                           const std::string addr)
-{
-    // TODO: implement check
-    return true;
-}
-
 bool VisitorManager::isVisitor(const std::string msisdn) 
     throw (ProcessException)
 { 
@@ -183,6 +175,8 @@ bool VisitorManager::isVisitor(const std::string msisdn)
 
     return false;
 }
+
+/* ------------------------ LangManager ------------------------ */
 
 LangManager::LangManager(DataSource& _ds)
     throw (InitException)
@@ -256,18 +250,58 @@ bool LangManager::getLangCode(const std::string msisdn, std::string& lang)
     return false;
 }
 
+/* ------------------------ AdRepository ------------------------ */
+
 AdRepository::AdRepository(DataSource& _ds, ConfigView* config)
     throw(ConfigException, InitException) 
-        : log(Logger::getCategory("smsc.wsme.AdRepository")), ds(_ds)
+        : log(Logger::getCategory("smsc.wsme.AdRepository")), ds(_ds) 
 {
+    loadMaxAdId();
 }
 AdRepository::~AdRepository()
 {
 }
 
+const char* SQL_MAX_AD_ID = "SELECT NVL(MAX(ID), 0) FROM WSME_AD";
+void AdRepository::loadMaxAdId()
+    throw(InitException)
+{
+    ResultSet* rs = 0;
+    Statement* statement = 0; 
+    Connection* connection = 0;
+
+    try
+    {
+        connection = ds.getConnection();
+        if (!connection)
+            throw InitException("Get connection failed");
+        if (!connection->isAvailable()) connection->connect();
+        statement = connection->createStatement(SQL_MAX_AD_ID);
+        ResultSet* rs = statement->executeQuery();
+        if (!rs || !rs->fetchNext())
+            throw InitException("Get results failed");
+        maxAdId = rs->getInt32(1);
+        if (rs) delete rs;
+        if (statement) delete statement;
+        if (connection) ds.freeConnection(connection);
+    }
+    catch (Exception& exc)
+    {
+        if (rs) delete rs;
+        if (statement) delete statement;
+        if (connection) ds.freeConnection(connection);
+        InitException eee("Load ads failed, Cause: ", exc.what());
+        log.error(eee.what());
+        throw eee;
+    }
+}
+
+const char* SQL_GET_AD_BY_ID =
+"SELECT AD FROM WSME_AD WHERE ID=:ID AND LANG IS NULL";
 const char* SQL_GET_AD_BY_ID_LANG =
-"SELECT AD FROM WSME_AD WHERE ID=:ID AND (LANG=:LANG OR LANG IS NULL)";
-bool AdRepository::getAd(int id, const std::string lang, std::string& ad)
+"SELECT AD FROM WSME_AD WHERE ID=:ID AND LANG=:LANG";
+bool AdRepository::getAd(int id, const std::string lang, bool isLang, 
+                         std::string& ad)
     throw (ProcessException)
 {
     ResultSet* rs = 0;
@@ -281,11 +315,12 @@ bool AdRepository::getAd(int id, const std::string lang, std::string& ad)
             throw ProcessException("Get connection failed");
         if (!connection->isAvailable()) connection->connect();
 
-        statement = connection->createStatement(SQL_GET_AD_BY_ID_LANG);
+        statement = connection->createStatement(
+            (isLang) ? SQL_GET_AD_BY_ID_LANG : SQL_GET_AD_BY_ID);
         if (!statement)
             throw ProcessException("Create statement failed");
         statement->setInt32 (1, id);
-        statement->setString(2, lang.c_str());    
+        if (isLang) statement->setString(2, lang.c_str());    
 
         ResultSet* rs = statement->executeQuery();
         if (!rs)
@@ -309,25 +344,203 @@ bool AdRepository::getAd(int id, const std::string lang, std::string& ad)
     return true;
 }
 
-AdHistory::AdHistory(DataSource& _ds, ConfigView* config)
+int AdRepository::getFirstId()
+{
+    return 0;
+}
+int AdRepository::getNextId(int id)
+{
+    return (id+1)%(maxAdId+1);
+}
+
+/* ------------------------ AdHistory ------------------------ */
+
+AdHistory::AdHistory(DataSource& _ds, ConfigView* config, AdIdManager& idman)
     throw(ConfigException, InitException) 
         : log(Logger::getCategory("smsc.wsme.AdHistory")), 
-            ds(_ds), historyPeriod(0)
+            ds(_ds), idManager(idman)
 
 {
-    historyPeriod = config->getInt("period");
+    keepPeriod = config->getInt("keepPeriod");
+    lifePeriod = config->getInt("lifePeriod");
 }
 AdHistory::~AdHistory()
 {
 
 }
 
-int AdHistory::getNextId(const std::string msisdn)
+const char* SQL_SELECT_HISTORY_INFO =
+"SELECT ID, ST, LAST_UPDATE FROM WSME_HISTORY WHERE MSISDN=:MSISDN FOR UPDATE";
+const char* SQL_INSERT_HISTORY_INFO =
+"INSERT INTO WSME_HISTORY (MSISDN, ST, ID, MSG_ID, LAST_UPDATE)\
+ VALUES (:MSISDN, 0, :ID, NULL, :CT)";
+const char* SQL_UPDATE_NOTIFY_HISTORY_INFO =
+"UPDATE WSME_HISTORY SET ST=0, ID=:ID, MSG_ID=NULL, LAST_UPDATE=:CT\
+ WHERE MSISDN=:MSISDN";
+bool AdHistory::getId(const std::string msisdn, int& id)
     throw (ProcessException)
 {
-    // TODO: implement it
-    return 0;
+    bool result = false;
+
+    ResultSet* rs = 0;
+    Statement* selectStmt  = 0; 
+    Statement* insertStmt  = 0; 
+    Statement* updateStmt = 0; 
+    Connection* connection = 0;
+
+    try
+    {
+        connection = ds.getConnection();
+        if (!connection)
+            throw ProcessException("Get connection failed");
+        if (!connection->isAvailable()) connection->connect();
+
+        selectStmt = connection->createStatement(SQL_SELECT_HISTORY_INFO);
+        selectStmt->setString(1, msisdn.c_str());
+        
+        ResultSet* rs = selectStmt->executeQuery();
+        if (!rs || !rs->fetchNext()) 
+        {
+            id = idManager.getFirstId();
+            insertStmt = connection->createStatement(SQL_INSERT_HISTORY_INFO);
+            insertStmt->setString  (1, msisdn.c_str());
+            insertStmt->setInt32   (2, id);
+            insertStmt->setDateTime(3, time(NULL));
+            insertStmt->executeUpdate();
+            delete insertStmt; insertStmt = 0;
+            result = true;
+        }
+        else
+        {
+            uint32_t last_id = rs->getInt32(1);
+            uint8_t  st = rs->getUint8(2);
+            time_t interval = time(NULL) - rs->getDateTime(3);
+
+            if (st == 0 && (interval <= lifePeriod)) {
+                result = false;
+            } else {
+                id = idManager.getNextId(last_id);
+                updateStmt = connection->createStatement(SQL_UPDATE_NOTIFY_HISTORY_INFO);
+                updateStmt->setInt32   (1, id);
+                updateStmt->setDateTime(2, time(NULL));
+                updateStmt->setString  (3, msisdn.c_str());
+                updateStmt->executeUpdate();
+                delete updateStmt; updateStmt = 0;
+                result = true;
+            }
+        }
+        
+        connection->commit();
+
+        if (rs) delete rs;
+        if (selectStmt) delete selectStmt;
+        if (connection) ds.freeConnection(connection);
+    }
+    catch (Exception& exc)
+    {
+        log.error(exc.what());
+        if (rs) delete rs;
+        if (selectStmt) delete selectStmt;
+        if (insertStmt) delete insertStmt;
+        if (updateStmt) delete updateStmt;
+        if (connection) {
+            try {
+                connection->rollback();
+            } catch (Exception& eee) {
+                log.error("Rollback failed, Cause: %s", eee.what());
+            }
+            ds.freeConnection(connection);
+        }
+        throw ProcessException(exc.what());
+    }
+    return result;
 }
+
+const char* SQL_UPDATE_RESPONCE_HISTORY_INFO =
+"UPDATE WSME_HISTORY SET MSG_ID=:MSG_ID, LAST_UPDATE=:CT\
+ WHERE MSISDN=:MSISDN AND ST=0";
+void AdHistory::respondAd(const std::string msisdn, 
+                          const std::string msgid, bool responded)
+    throw (ProcessException)
+{
+    Statement* statement = 0; 
+    Connection* connection = 0;
+
+    try
+    {
+        connection = ds.getConnection();
+        if (!connection)
+            throw ProcessException("Get connection failed");
+        if (!connection->isAvailable()) connection->connect();
+
+        statement = connection->createStatement(SQL_UPDATE_RESPONCE_HISTORY_INFO);
+        statement->setString  (1, msgid.c_str());
+        statement->setDateTime(2, time(NULL));
+        statement->setString  (3, msisdn.c_str());
+        statement->executeUpdate();
+        connection->commit();
+        
+        if (statement) delete statement;
+        if (connection) ds.freeConnection(connection);
+    }
+    catch (Exception& exc)
+    {
+        if (statement) delete statement;
+        if (connection) {
+            try {
+                connection->rollback();
+            } catch (Exception& eee) {
+                log.error("Rollback failed, Cause: %s", eee.what());
+            }
+            ds.freeConnection(connection);
+        }
+        log.error(exc.what());
+        throw ProcessException(exc.what());
+    }
+}
+
+const char* SQL_UPDATE_RECEIPT_HISTORY_INFO =
+"UPDATE WSME_HISTORY SET ST=10, LAST_UPDATE=:CT\
+ WHERE MSG_ID=:MSG_ID AND ST=0";
+void AdHistory::receiptAd(const std::string msgid, bool receipted) 
+    throw (ProcessException)
+{
+    Statement* statement = 0; 
+    Connection* connection = 0;
+
+    try
+    {
+        connection = ds.getConnection();
+        if (!connection)
+            throw ProcessException("Get connection failed");
+        if (!connection->isAvailable()) connection->connect();
+
+        statement = connection->createStatement(SQL_UPDATE_RECEIPT_HISTORY_INFO);
+        statement->setDateTime(1, time(NULL));
+        statement->setString  (2, msgid.c_str());
+        statement->executeUpdate();
+        connection->commit();
+        
+        if (statement) delete statement;
+        if (connection) ds.freeConnection(connection);
+    }
+    catch (Exception& exc)
+    {
+        if (statement) delete statement;
+        if (connection) {
+            try {
+                connection->rollback();
+            } catch (Exception& eee) {
+                log.error("Rollback failed, Cause: %s", eee.what());
+            }
+            ds.freeConnection(connection);
+        }
+        log.error(exc.what());
+        throw ProcessException(exc.what());
+    }
+}
+
+/* ------------------------ AdManager ------------------------ */
 
 AdManager::AdManager(DataSource& _ds, ConfigView* config)
     throw(ConfigException, InitException) 
@@ -346,8 +559,8 @@ AdManager::AdManager(DataSource& _ds, ConfigView* config)
         historyConfig = adConfig->getSubConfig("History");
         repositoryConfig = adConfig->getSubConfig("Repository");
         
-        history = new AdHistory(ds, historyConfig);
         repository = new AdRepository(ds, repositoryConfig);
+        history = new AdHistory(ds, historyConfig, *repository);
     } 
     catch (Exception& exc) 
     {
@@ -373,21 +586,30 @@ AdManager::~AdManager()
     if (repository) delete repository;
 }
 
-bool AdManager::getAd(const std::string msisdn, const std::string lang, 
+bool AdManager::getAd(const std::string msisdn, 
+                      const std::string lang, bool isLang, 
                       std::string& ad)
     throw (ProcessException)
 {
     __require__(history && repository);
     
-    int id = history->getNextId(msisdn);
-    return repository->getAd(id, lang, ad);
+    int id = 0;
+    if (!(history->getId(msisdn, id))) return false;
+    return repository->getAd(id, lang, isLang, ad);
 }
-void AdManager::reportAd(const std::string msgid) 
+
+void AdManager::respondAd(const std::string msisdn, 
+                          const std::string msgid, bool responded)
     throw (ProcessException)
 {
     __require__(history);
-
-    // TODO : implement it
+    history->respondAd(msisdn, msgid, responded);
+}
+void AdManager::receiptAd(const std::string msgid, bool receipted) 
+    throw (ProcessException)
+{
+    __require__(history);
+    history->receiptAd(msgid, receipted);
 }
 
 
