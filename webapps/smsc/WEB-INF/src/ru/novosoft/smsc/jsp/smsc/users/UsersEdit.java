@@ -13,8 +13,7 @@ import ru.novosoft.smsc.admin.users.User;
 
 import java.util.List;
 
-public class UsersEdit
-		extends UsersEditBean
+public class UsersEdit extends UsersEditBean
 {
 	protected int init(List errors)
 	{
@@ -24,17 +23,35 @@ public class UsersEdit
 
 		if (firstName == null || lastName == null)
 		{
-			User user = userManager.getUser(login);
-			password = "";
-			confirmPassword = "";
-			setRoles(user.getRoles());
-			firstName = user.getFirstName();
-			lastName = user.getLastName();
-			dept = user.getDept();
-			workPhone = user.getWorkPhone();
-			homePhone = user.getHomePhone();
-			cellPhone = user.getCellPhone();
-			email = user.getEmail();
+			if (login == null || login.trim().length() == 0)
+			{
+				setRoles(new String[0]);
+				login = password = confirmPassword = firstName = lastName = dept = workPhone = homePhone = cellPhone = email = "";
+				return error(SMSCErrors.error.users.loginNotDefined);
+			}
+			else
+			{
+				User user = userManager.getUser(login);
+				if (user == null)
+				{
+					setRoles(new String[0]);
+					password = confirmPassword = firstName = lastName = dept = workPhone = homePhone = cellPhone = email = "";
+					return error(SMSCErrors.error.users.userNotFound, login);
+				}
+				else
+				{
+					password = "";
+					confirmPassword = "";
+					setRoles(user.getRoles());
+					firstName = user.getFirstName();
+					lastName = user.getLastName();
+					dept = user.getDept();
+					workPhone = user.getWorkPhone();
+					homePhone = user.getHomePhone();
+					cellPhone = user.getCellPhone();
+					email = user.getEmail();
+				}
+			}
 		}
 		return RESULT_OK;
 	}
