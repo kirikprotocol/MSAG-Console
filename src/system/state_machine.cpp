@@ -1352,9 +1352,9 @@ StateType StateMachine::submit(Tuple& t)
       unsigned char *newbody;
       unsigned int cilen;
       ConcatInfo *ci=(ConcatInfo*)newsms.getBinProperty(Tag::SMSC_CONCATINFO,&cilen);
+      newbody=(unsigned char*)newsms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&newlen);
       if(!isForwardTo)
       {
-        newbody=(unsigned char*)newsms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&newlen);
         __require__(ci!=NULL);
         for(int i=0;i<ci->num;i++)
         {
@@ -1392,7 +1392,7 @@ StateType StateMachine::submit(Tuple& t)
         }
       }else
       {
-        body=(unsigned char*)sms->getBinProperty(Tag::SMSC_MO_PDU,&newlen);
+        body=(unsigned char*)sms->getBinProperty(Tag::SMSC_MO_PDU,&len);
         dc=DataCoding::BINARY;
       }
       /*
