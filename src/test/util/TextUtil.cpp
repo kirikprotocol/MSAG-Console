@@ -25,7 +25,7 @@ const string encode(const char* text, uint8_t dataCoding)
 	return text;
 }
 
-const string decode(const char* text, uint8_t dataCoding)
+const string decode(const char* text, int len, uint8_t dataCoding)
 {
 	return text;
 }
