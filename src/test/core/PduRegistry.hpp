@@ -1,6 +1,7 @@
 #ifndef TEST_CORE_PDU_REGISTRY
 #define TEST_CORE_PDU_REGISTRY
 
+#include "PduUtil.hpp"
 #include "sms/sms.h"
 #include "smpp/smpp_structures.h"
 #include "core/synchronization/Mutex.hpp"
@@ -20,94 +21,6 @@ using smsc::sms::Address;
 using smsc::smpp::SmppHeader;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
-
-static const int PDU_REQUIRED_FLAG = 0x0; //pdu ожидаетс€, но еще не получена
-static const int PDU_RECEIVED_FLAG = 0x1; //pdu получена воврем€
-//pdu получена вне ожидаемого интервала или вообще не получена
-static const int PDU_MISSING_ON_TIME_FLAG = 0x2;
-static const int PDU_NOT_EXPECTED_FLAG = 0x3; //данной pdu быть не должно
-
-/*
-struct PduReceiptData
-{
-	static int rescheduleTimes[];
-	int flag;
-	const time_t startTime;
-	time_t receiptTime;
-
-	PduReceiptData() :
-		flag(PDU_REQUIRED_FLAG), startTime(0), receiptTime(0) {}
-
-	void eval(time_t time, int& attempt, time_t& diff);
-};
-
-int PduReceiptData::rescheduleTimes[] = {10};
-
-inline void PduReceiptData::eval(time_t time, int& attempt, time_t& diff)
-{
-	int num = sizeof(rescheduleTimes) / sizeof(int);
-	time_t t = startTime;
-	diff = abs(time - startTime);
-	for (int attempt = 1; attempt < num; attempt++)
-	{
-		if (abs(time - t) < diff)
-		{
-			diff = time - t;
-			t += rescheduleTimes[attempt - 1];
-			continue;
-		}
-		return;
-	}
-}
-*/
-
-/**
- * —труктура дл€ хранени€ данных pdu.
- */
-struct PduData
-{
-	SMSId smsId;
-	const uint16_t msgRef;
-	const time_t submitTime;
-	const time_t waitTime;
-	const time_t validTime;
-	SmppHeader* pdu;
-	int responseFlag; //флаг получени€ респонса
-	int deliveryFlag; //флаг получени€ сообщени€ плучателем
-	int deliveryReceiptFlag; //флаг получени€ подтверждени€ доставки
-	int intermediateNotificationFlag; //флаг получени€ всех нотификаций
-	PduData* replacePdu; //pdu, котора€ должна быть заменена текущей pdu
-	PduData* replacedByPdu; //pdu, котора€ замещает текущую pdu
-
-	PduData(uint16_t _msgRef, time_t _submitTime, time_t _waitTime,
-		time_t _validTime, SmppHeader* _pdu)
-		: smsId(0), msgRef(_msgRef), submitTime(_submitTime),
-		waitTime(_waitTime), validTime(_validTime),
-		pdu(_pdu), responseFlag(PDU_REQUIRED_FLAG),
-		deliveryFlag(PDU_REQUIRED_FLAG), deliveryReceiptFlag(PDU_REQUIRED_FLAG),
-		intermediateNotificationFlag(PDU_REQUIRED_FLAG), replacePdu(NULL),
-		replacedByPdu(NULL) {}
-
-	PduData(const PduData& data)
-		: smsId(data.smsId), msgRef(data.msgRef), submitTime(data.submitTime),
-		waitTime(data.waitTime), validTime(data.validTime),
-		pdu(data.pdu), responseFlag(data.responseFlag),
-		deliveryFlag(data.deliveryFlag),
-		deliveryReceiptFlag(data.deliveryReceiptFlag),
-		intermediateNotificationFlag(data.intermediateNotificationFlag),
-		replacePdu(data.replacePdu), replacedByPdu(data.replacedByPdu) {}
-
-	~PduData()
-	{
-		//disposePdu(pdu);
-	}
-
-	bool complete()
-	{
-		return responseFlag && deliveryFlag && deliveryReceiptFlag &&
-			intermediateNotificationFlag;
-	}
-};
 
 /**
  * –еестр отправленных pdu.

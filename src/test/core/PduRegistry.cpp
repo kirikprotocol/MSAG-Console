@@ -189,9 +189,9 @@ void PduRegistry::dump(FILE* log) const
 		fprintf(log, ", submitTime = %s, waitTime = %s, validTime = %s",
 			submitTime, waitTime, validTime);
 		fprintf(log, ", responseFlag = %d, deliveryFlag = %d",
-			data->responseFlag, data->deliveryFlag);
+			data->responseFlag, (int) data->deliveryFlag);
 		fprintf(log, ", deliveryReceiptFlag = %d, intermediateNotificationFlag = %d",
-			data->deliveryReceiptFlag, data->intermediateNotificationFlag);
+			(int) data->deliveryReceiptFlag, data->intermediateNotificationFlag);
 		fprintf(log, ", pdu = 0x%x, replacePdu = 0x%x, replacedByPdu = 0x%x}\n",
 			data->pdu, data->replacePdu, data->replacedByPdu);
 		switch (data->pdu->get_commandId())
