@@ -20,7 +20,7 @@ using smsc::sms::SMS;
 
 //constants
 const int MAX_ADDRESS_LENGTH = 20;
-const int MAX_MAP_SM_LENGTH = 160;
+const int MAX_MAP_SM_LENGTH = 140;
 const int MAX_SMPP_SM_LENGTH = 254;
 const int MAX_PAYLOAD_LENGTH = 65535;
 const int MAX_SERVICE_TYPE_LENGTH = 5;
