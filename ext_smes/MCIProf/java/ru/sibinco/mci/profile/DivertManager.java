@@ -39,7 +39,7 @@ public class DivertManager
 
   protected DivertManager() throws ScenarioInitializationException
   {
-    InputStream is = this.getClass().getClassLoader().getResourceAsStream(Constants.MCI_PROF_MTF_FILE);
+    InputStream is = this.getClass().getClassLoader().getResourceAsStream(Constants.MCI_PROF_MSC_FILE);
     if (is == null)
       throw new ScenarioInitializationException("Failed to locate commutator properties file");
 
@@ -52,7 +52,7 @@ public class DivertManager
       mscNvtIODevice   = properties.getProperty("MSC.nvtIODevice");
       mscUserCode      = properties.getProperty("MSC.usercode");
       mscUserPassword  = properties.getProperty("MSC.userpassword");
-      voiceMailAddress = properties.getProperty("MCS.voicemail");
+      voiceMailAddress = properties.getProperty("MSC.voicemail");
       mciSmeAddress    = properties.getProperty("MCISme.Address");
 
     } catch(Exception e) {
