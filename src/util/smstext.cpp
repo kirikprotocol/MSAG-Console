@@ -266,7 +266,7 @@ void extractSmsPart(SMS* sms,int partnum)
   buf[2]=3;
   buf[3]=sms->getConcatMsgRef();
   buf[4]=ci->num;
-  buf[5]=partnum;
+  buf[5]=partnum+1;
   memcpy(buf+6,msg+off,newlen);
   newlen+=6;
 
