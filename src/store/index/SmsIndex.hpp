@@ -84,6 +84,9 @@ public:
   void Init(ConfigView*);
   void IndexateSms(const char* dir,SMSId id,uint64_t offset,SMS& sms);
   int QuerySms(const char* dir,const ParamArray& params,ResultArray& res);
+  void BeginTransaction(){}
+  void EndTransaction(){}
+  void RollBack(){}
 protected:
   std::string loc;
 
