@@ -39,12 +39,11 @@ public class RouteViewCommand implements Command
         ctx.addResult("prio : "+smscRoute.getPriority());
         ctx.addResult("svcid: "+smscRoute.getServiceId());
         ctx.addResult("flags: "+
-                        (smscRoute.isArchiving() ? "archiving, ": "no archiving, ")+
-                        (smscRoute.isBilling()   ? "billing, ":"no billing, ")+
-                        (smscRoute.isEnabling()  ? "allowed, ":"denied, ")+
-                        (smscRoute.isSuppressDeliveryReports() ?
-                                                   "no receipt, ":"receipt, ")+
-                        (smscRoute.isActive() ? "active ":"inactive"));
+            (smscRoute.isActive() ? "active, ":"inactive, ")+
+            (smscRoute.isBilling()   ? "billing, ":"no billing, ")+
+            (smscRoute.isArchiving() ? "archiving, ": "no archiving, ")+
+            (smscRoute.isEnabling()  ? "allowed, ":"denied, ")+
+            (smscRoute.isSuppressDeliveryReports() ? "no receipt":"receipt"));
 
         String srcsStr = "";
         Iterator srcs = smscRoute.getSources().iterator();
