@@ -171,9 +171,11 @@ uint32_t PduMonitor::counter = 1;
 void PduDataObject::ref()
 {
 	count++;
+	//__trace2__("PduDataObject::ref(): this = %p, count = %d", this, count);
 }
 void PduDataObject::unref()
 {
+	//__trace2__("PduDataObject::unref(): this = %p, count = %d", this, count);
 	__require__(count > 0);
 	count--;
 	if (!count)
