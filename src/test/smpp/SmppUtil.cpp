@@ -1,5 +1,6 @@
 #include "SmppUtil.hpp"
 #include "test/util/Util.hpp"
+#include "test/util/TextUtil.hpp"
 #include "test/TestConfig.hpp"
 #include "sms/sms.h"
 #include "util/debug.h"
@@ -211,11 +212,15 @@ bool SmppUtil::compareAddresses(PduAddress& a1, PduAddress& a2)
 }
 */
 
+#define __trace_compare__ \
+	/*__trace2__("[%d]: " #field, pos - 1);*/
+	
 #define __compare__(field, expr, errCode) \
-	if ((p1.has_##field() && !p2.has_##field()) || \
+	if (!mask[pos++] && ((p1.has_##field() && !p2.has_##field()) || \
 		(!p1.has_##field() && p2.has_##field()) || \
-		(p1.has_##field() && p2.has_##field() && (expr))) \
-	{ res.push_back(errCode); }
+		(p1.has_##field() && p2.has_##field() && (expr)))) { \
+		__trace_compare__; \
+		res.push_back(errCode); }
 
 #define __compare_int__(field, errCode) \
 	__compare__(field, p1.get_##field() != p2.get_##field(), errCode)
@@ -231,9 +236,12 @@ bool SmppUtil::compareAddresses(PduAddress& a1, PduAddress& a2)
 	__compare__(field, p1.size_##field() != p2.size_##field() || \
 		strncmp(p1.get_##field(), p2.get_##field(), p1.size_##field()), errCode)
 
-vector<int> SmppUtil::compareOptional(SmppOptional& p1, SmppOptional& p2)
+vector<int> SmppUtil::compareOptional(SmppOptional& p1, SmppOptional& p2,
+	uint64_t excludeMask)
 {
 	vector<int> res;
+	Mask<uint64_t> mask(excludeMask);
+	int pos = 0;
 	__compare_int__(destAddrSubunit, 1);
 	__compare_int__(sourceAddrSubunit, 2);
 	__compare_int__(destNetworkType, 3);
@@ -298,6 +306,14 @@ vector<int> SmppUtil::compareOptional(SmppOptional& p1, SmppOptional& p2)
 	if (check) { __require__(p.size_##field() == len_##field && \
 		!strncmp(p.get_##field(), str_##field.get(), len_##field)); }
 
+#define __set_text__(field, length) \
+	__trace_set__("set_text"); \
+	int len_##field = length; \
+	auto_ptr<char> str_##field = rand_text(len_##field, DATA_CODING_SMSC_DEFAULT); \
+	p.set_##field(str_##field.get(), len_##field); \
+	if (check) { __require__(p.size_##field() == len_##field && \
+		!strncmp(p.get_##field(), str_##field.get(), len_##field)); }
+
 #define __set_cstr__(field, length) \
 	__trace_set__("set_cstr"); \
 	auto_ptr<char> str_##field = rand_char(length); \
@@ -347,7 +363,7 @@ void SmppUtil::setupRandomCorrectSubmitSmPdu(PduSubmitSm* pdu,
 	__set_int__(uint8_t, replaceIfPresentFlag, !rand0(10));
 	__set_int__(uint8_t, dataCoding, rand0(255));
 	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
-	__set_ostr__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH));
+	__set_text__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH));
 	mask &= 0xfffffffffffff7ff; //исключить userMessageReference
 	setupRandomCorrectOptionalParams(pdu->get_optional(), mask, check);
 }
@@ -367,7 +383,7 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 	__set_cstr2__(validityPeriod, time2string(validTime, tmp, time(NULL), __numTime__));
 	__set_int__(uint8_t, registredDelivery, rand0(255));
 	__set_int__(uint8_t, smDefaultMsgId, rand0(255)); //хбз что это такое
-	__set_ostr__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH));
+	__set_text__(shortMessage, rand1(MAX_SHORT_MESSAGE_LENGTH));
 }
 
 #define __trace_set_optional__(name) \
@@ -399,6 +415,19 @@ void SmppUtil::setupRandomCorrectReplaceSmPdu(PduReplaceSm* pdu,
 		__trace_set_optional__("set_optional_ostr"); \
 		int len_##field = length; \
 		auto_ptr<char> str_##field = rand_char(len_##field); \
+		opt.set_##field(str_##field.get(), len_##field); \
+		if (check) { \
+			OStr tmp_##field; \
+			tmp_##field.copy(str_##field.get(), len_##field); \
+			ostrMap.insert(OStrMap::value_type(#field, tmp_##field)); \
+		} \
+	}
+
+#define __set_optional_text__(field, length) \
+	if (mask[pos++]) { \
+		__trace_set_optional__("set_optional_text"); \
+		int len_##field = length; \
+		auto_ptr<char> str_##field = rand_text(len_##field, DATA_CODING_SMSC_DEFAULT); \
 		opt.set_##field(str_##field.get(), len_##field); \
 		if (check) { \
 			OStr tmp_##field; \
@@ -508,7 +537,7 @@ void SmppUtil::setupRandomCorrectOptionalParams(SmppOptional& opt,
 	__skip__; //__set_optional_int__(uint8_t, msAvailableStatus, rand0(255));
 	//int errCode = rand0(INT_MAX);
 	__skip__; //__set_optional_intarr__(networkErrorCode, (uint8_t*) &errCode, 3);
-	__set_optional_ostr__(messagePayload, rand0(65535));
+	__set_optional_text__(messagePayload, rand0(65535));
 	__skip__; //__set_optional_int__(uint8_t, deliveryFailureReason, rand0(255));
 	__skip__; //__set_optional_int__(uint8_t, moreMessagesToSend, rand0(255));
 	__skip__; //__set_optional_int__(uint8_t, messageState, rand0(255));
