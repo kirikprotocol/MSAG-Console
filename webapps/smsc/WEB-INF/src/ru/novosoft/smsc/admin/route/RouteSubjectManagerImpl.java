@@ -112,8 +112,8 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
     try {
       final File file = new File(WebAppFolders.getSmscConfFolder(), filename);
       final File newFile = Functions.createNewFilenameForSave(file);
-      PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), "ANSI1251")); //todo: select correct codepage
-      Functions.storeConfigHeader(out, "routes", "routes.dtd", "ANSI1251");
+      PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile)/*, "ANSI1251"*/)); //todo: select correct codepage
+      Functions.storeConfigHeader(out, "routes", "routes.dtd"/*, "ANSI1251"*/);
       subjects.store(out);
       routes.store(out);
       Functions.storeConfigFooter(out, "routes");
