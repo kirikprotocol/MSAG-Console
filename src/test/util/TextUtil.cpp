@@ -288,7 +288,7 @@ void convert(bool udhi, uint8_t dc1, const char* str1, int len1, int textOffset,
 	{
 		__require__(len2 >= len1 - textOffset);
 		dc2 = dc1;
-		memcpy(str2, str1 + udhLen + textOffset, len1 - udhLen - textOffset);
+		memcpy(str2 + udhLen, str1 + udhLen + textOffset, len1 - udhLen - textOffset);
 		len2 = len1 - textOffset;
 	}
 }

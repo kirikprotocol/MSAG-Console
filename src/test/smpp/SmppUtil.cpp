@@ -27,8 +27,6 @@ using namespace smsc::smpp::SmppCommandSet;
 using namespace smsc::smpp::DataCoding;
 //using smsc::test::sms::SmsUtil;
 
-static const int MAX_OSTR_PRINT_SIZE = 1000;
-
 void pdu2file(const char* pduName, const string& id, SmppHeader* pdu)
 {
 	/*

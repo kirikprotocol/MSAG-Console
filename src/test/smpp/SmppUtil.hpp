@@ -18,6 +18,8 @@ using smsc::sms::SMSId;
 using namespace smsc::smpp;
 using namespace smsc::test::sms; //constants
 
+#define MAX_OSTR_PRINT_SIZE 1000
+
 #define __numTime__ rand1(3)
 #define __absoluteTime__ rand1(2)
 
