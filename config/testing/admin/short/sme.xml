@@ -58,6 +58,7 @@
 	<param name="addrRange" value=""/>
 	<param name="smeN" value="0"/>
 	<param name="wantAlias" value="yes"/>
+	<param name="forceDC" value="false"/>
 	<param name="timeout" value="10"/>
 	<param name="priority" value="32"/>
 </smerecord>
@@ -70,6 +71,7 @@
 	<param name="addrRange" value=""/>
 	<param name="smeN" value="0"/>
 	<param name="wantAlias" value="yes"/>
+	<param name="forceDC" value="false"/>
 	<param name="timeout" value="10"/>
 	<param name="priority" value="32"/>
 </smerecord>
@@ -82,6 +84,7 @@
 	<param name="addrRange" value=""/>
 	<param name="smeN" value="0"/>
 	<param name="wantAlias" value="yes"/>
+	<param name="forceDC" value="false"/>
 	<param name="timeout" value="10"/>
 	<param name="priority" value="32"/>
 </smerecord>

@@ -25,7 +25,7 @@
 	<mask value="02"/>
 	<mask value="+02"/>
 </subject_def>
-<route id="route00" billing="false" archiving="false" enabling="false" priority="0" serviceId="0">
+<route id="route00" billing="false" archiving="false" enabling="false" priority="0" serviceId="0" suppressDeliveryReports="false">
 	<source>
 		<subject id="subject00"/>
 	</source>
@@ -39,7 +39,7 @@
 		<mask value=".0.0.00?"/>
 	</destination>
 </route>
-<route id="route01" billing="false" archiving="false" enabling="false" priority="1" serviceId="1">
+<route id="route01" billing="false" archiving="false" enabling="false" priority="1" serviceId="1" suppressDeliveryReports="false">
 	<source>
 		<subject id="subject01"/>
 	</source>
@@ -53,7 +53,7 @@
 		<mask value=".0.0.01?"/>
 	</destination>
 </route>
-<route id="route02" billing="false" archiving="false" enabling="false" priority="2" serviceId="2">
+<route id="route02" billing="false" archiving="false" enabling="false" priority="2" serviceId="2" suppressDeliveryReports="false">
 	<source>
 		<subject id="subject02"/>
 	</source>
@@ -67,7 +67,7 @@
 		<mask value=".0.0.02?"/>
 	</destination>
 </route>
-<route id="маршрут00" billing="true" archiving="true" enabling="true" priority="0" serviceId="0">
+<route id="маршрут00" billing="true" archiving="true" enabling="true" priority="0" serviceId="0" suppressDeliveryReports="true">
 	<source>
 		<subject id="субъект00"/>
 	</source>
@@ -81,7 +81,7 @@
 		<mask value=".0.0.01"/>
 	</destination>
 </route>
-<route id="маршрут01" billing="true" archiving="true" enabling="true" priority="1" serviceId="1">
+<route id="маршрут01" billing="true" archiving="true" enabling="true" priority="1" serviceId="1" suppressDeliveryReports="true">
 	<source>
 		<subject id="субъект01"/>
 	</source>
@@ -95,7 +95,7 @@
 		<mask value=".0.0.02"/>
 	</destination>
 </route>
-<route id="маршрут02" billing="true" archiving="true" enabling="true" priority="2" serviceId="2">
+<route id="маршрут02" billing="true" archiving="true" enabling="true" priority="2" serviceId="2" suppressDeliveryReports="true">
 	<source>
 		<subject id="субъект02"/>
 	</source>
