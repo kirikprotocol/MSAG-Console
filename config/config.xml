@@ -3,10 +3,12 @@
 <config>
 	<section name="db">
 	    <param name="instance" type="string">ORJP</param>
-	    <param name="userName" type="string">smsc</param>
-	    <param name="userPassword" type="string">smsc</param>
-	    <param name="maxconn" type="int">100</param>
-	    <param name="init" type="int">5</param>
+	    <param name="user" type="string">smsc</param>
+	    <param name="password" type="string">smsc</param>
+	    <section name="connections">
+		<param name="max" type="int">10</param>
+		<param name="init" type="int">5</param>
+	    </section>
 	</section>
 	<section name="map">
 	    <param name="hlr" type="string">hlr:address</param>
