@@ -215,7 +215,7 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
                 std::string trsFileName = "";
                 
                 PersistentStorage source(location, file);
-                //indexator->BeginTransaction(); // start transactional indecies
+                indexator->BeginTransaction(); // start transactional indecies
 
                 while (true)
                 {
@@ -282,7 +282,7 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
                             }
                         }
                         
-                        //indexator->IndexateSms(destinationDirName, id, (uint64_t)position, sms);
+                        indexator->IndexateSms(destinationDirName, id, (uint64_t)position, sms);
 
                         txtDestination->writeRecord(id, sms);
                         arcDestination->writeRecord(id, sms);
@@ -298,7 +298,7 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
                     }
                 } // while all records from source file will not be fetched
 
-                //indexator->EndTransaction(); // flush transactional indecies
+                indexator->EndTransaction(); // flush transactional indecies
                 
                 if (arcDestination) { delete arcDestination; arcDestination=0; }
                 if (txtDestination) { delete txtDestination; txtDestination=0; }
@@ -325,7 +325,7 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
               smsc_log_info(log, "Rolling '%s' to '*.err' ...", file.c_str());
               FileStorage::rollErrorFile(location, file);
           } catch (...) { smsc_log_error(log, "Failed to rool error file '%s'", file.c_str()); }
-          //indexator->RollBack();
+          indexator->RollBack();
           if (arcDestination) { delete arcDestination; arcDestination=0; }
           if (txtDestination) { delete txtDestination; txtDestination=0; }
         } catch (...) {
@@ -334,7 +334,7 @@ void ArchiveProcessor::process(const std::string& location, const Array<std::str
               smsc_log_info(log, "Rolling '%s' to '*.err' ...", file.c_str());
               FileStorage::rollErrorFile(location, file);
           } catch (...) { smsc_log_error(log, "Failed to rool error file '%s'", file.c_str()); }
-          //indexator->RollBack();
+          indexator->RollBack();
           if (arcDestination) { delete arcDestination; arcDestination=0; }
           if (txtDestination) { delete txtDestination; txtDestination=0; }
         }
