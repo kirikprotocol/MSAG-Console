@@ -256,7 +256,18 @@ void Archiver::connect()
 {
     if (!storageConnection->isAvailable())
     {
+        if (storageSelectStmt) {
+            delete storageSelectStmt; storageSelectStmt=0L;
+        }
+        if (storageDeleteStmt) {
+            delete storageDeleteStmt; storageDeleteStmt=0L;
+        }
+        if (archiveInsertStmt) {
+            delete archiveInsertStmt; storageDeleteStmt=0L;
+        }
+
         storageConnection->connect();
+        
         prepareStorageSelectStmt();
         prepareStorageDeleteStmt();
         prepareArchiveInsertStmt();
@@ -264,7 +275,21 @@ void Archiver::connect()
     
     if (!billingConnection->isAvailable())
     {
+        if (billingPutIdStmt) {
+            delete billingPutIdStmt; billingPutIdStmt=0L;
+        }
+        if (billingLookIdStmt) {
+            delete billingLookIdStmt; billingLookIdStmt=0L;
+        }
+        if (billingCleanIdsStmt) {
+            delete billingCleanIdsStmt; billingCleanIdsStmt=0L;
+        }
+        if (billingInsertStmt) {
+            delete billingInsertStmt; billingInsertStmt=0L;
+        }
+
         billingConnection->connect();
+        
         prepareBillingPutIdStmt();
         prepareBillingLookIdStmt();
         prepareBillingInsertStmt();
@@ -446,7 +471,6 @@ const char* Archiver::billingPutIdSql = (const char*)
 void Archiver::prepareBillingPutIdStmt()
     throw(StorageException)
 {
-    if (billingPutIdStmt) delete billingPutIdStmt;
     billingPutIdStmt = new Statement(billingConnection,
                                      Archiver::billingPutIdSql);
 
@@ -459,7 +483,6 @@ const char* Archiver::billingLookIdSql = (const char*)
 void Archiver::prepareBillingLookIdStmt()
     throw(StorageException)
 {
-    if (billingLookIdStmt) delete billingLookIdStmt;
     billingLookIdStmt = new Statement(billingConnection,
                                      Archiver::billingLookIdSql);
 
@@ -474,7 +497,6 @@ const char* Archiver::billingCleanIdsSql = (const char*)
 void Archiver::prepareBillingCleanIdsStmt()
     throw(StorageException)
 {
-    if (billingCleanIdsStmt) delete billingCleanIdsStmt;
     billingCleanIdsStmt = new Statement(billingConnection,
                                         Archiver::billingCleanIdsSql);
 }
@@ -501,7 +523,6 @@ const char* Archiver::storageSelectSql = (const char*)
  WHERE NOT ST=:ENROUTE ORDER BY DELIVERY_TIME ASC";
 void Archiver::prepareStorageSelectStmt() throw(StorageException)
 {
-    if (storageSelectStmt) delete storageSelectStmt;
     storageSelectStmt = new Statement(storageConnection, 
                                       Archiver::storageSelectSql);
     
@@ -560,7 +581,6 @@ const char* Archiver::storageDeleteSql = (const char*)
 "DELETE FROM SMS_MSG WHERE ID=:ID";
 void Archiver::prepareStorageDeleteStmt() throw(StorageException)
 {
-    if (storageDeleteStmt) delete storageDeleteStmt;
     storageDeleteStmt = new Statement(storageConnection, 
                                       Archiver::storageDeleteSql);
     
@@ -575,7 +595,6 @@ const char* Archiver::archiveInsertSql = (const char*)
  :PRI, :PID, :FCS, :DCS, :UDHI, :UDL, :UD)";
 void Archiver::prepareArchiveInsertStmt() throw(StorageException)
 {
-    if (archiveInsertStmt) delete archiveInsertStmt;
     archiveInsertStmt = new Statement(storageConnection, 
                                       Archiver::archiveInsertSql);
     
@@ -632,7 +651,6 @@ const char* Archiver::billingInsertSql = (const char*)
  :PRI, :PID, :FCS, :DCS, :UDHI, :UDL, :UD)";
 void Archiver::prepareBillingInsertStmt() throw(StorageException)
 {
-    if (billingInsertStmt) delete billingInsertStmt;
     billingInsertStmt = new Statement(billingConnection, 
                                       Archiver::billingInsertSql);
     
