@@ -54,11 +54,33 @@ static const int INVOPTPARAMVAL=196; //Invalid Optional Parameter Value
 static const int DELIVERYFAILURE=254; //Delivery Failure (used for data_sm_resp)
 static const int UNKNOWNERR=255; //Unknown Error
 static const int INVDCS=260; //Invalid Data Coding Scheme Specified DCS is invalid or MC does not support it.
+
+static const int SMSC_ERR_BASE=1024;
 static const int NOROUTE=1025; //No route defined for given source and destination addresses
 static const int EXPIRED=1026; //Message expired
 static const int DELIVERYTIMEDOUT=1027; //Delivery attempt timed out
 static const int SMENOTCONNECTED=1028; //Sme is not connected
 static const int BLOCKEDMSC=1029; //Msc is blocked
+
+static const int MAP_PROVIDER_ERR_BASE=1135;
+static const int MAP_DUPLICATED_INVOKE_ID=1136;
+static const int MAP_NOT_SUPPORTED_SERVICE=1137;
+static const int MAP_MISTYPED_PARAMETER=1138;
+static const int MAP_RESOURCE_LIMITATION=1139;
+static const int MAP_INITIATING_RELEASE=1140;
+static const int MAP_UNEXPECTED_RESPONSE_FROM_PEER=1141;
+static const int MAP_SERVICE_COMPLETION_FAILURE=1142;
+static const int MAP_NO_RESPONSE_FROM_PEER=1143;
+static const int MAP_INVALID_RESPONSE_RECEIVED=1144;
+static const int MAP_UNEXPECTED_TRANSACTION_ID=1145;
+static const int MAP_UNRECOGNIZED_COMPONENT=1146;
+static const int MAP_MISTYPED_COMPONENT=1147;
+static const int MAP_BADSTRUCTURED_COMPONENT=1148;
+static const int MAP_UNRECOGNIZED_LINKED_ID=1149;
+static const int MAP_LINKED_RESPONSE_UNEXPECTED=1150;
+static const int MAP_UNEXPECTED_LINKED_OPERATION=1151;
+
+static const int MAP_ERR_BASE=1152;
 static const int UNKSUBSCRIBER=1153; //Unknown subscriber
 static const int UNDEFSUBSCRIBER=1157; //Unidentified subscriber
 static const int ILLEGALSUBSCRIBER=1161; //Illegal subscriber
