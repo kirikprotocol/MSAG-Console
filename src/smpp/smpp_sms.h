@@ -180,7 +180,10 @@ inline bool fetchSmsFromSmppPdu(PduXSm* pdu,SMS* sms)
 		sms->setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,buffer);
   }
   else
-		sms->setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,0);
+	{
+		// nothing
+		//sms->setStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID,0);
+	}
     //sms->setReceiptSmsId(0);
   sms->setEServiceType(pdu->message.get_serviceType());
   //sms->setEsmClass(pdu->message.get_esmClass());
