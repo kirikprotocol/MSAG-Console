@@ -152,4 +152,8 @@ public class SmppGWAppContext
   {
     return statuses;
   }
+
+  public DataSource getDataSource() {
+    return connectionPool;
+  }
 }
