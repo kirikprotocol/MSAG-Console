@@ -215,8 +215,57 @@ public class Config
 			removeParam((String) i.next());
 	}
 
-	public synchronized void save(String encoding) throws IOException, WrongParamTypeException
+	/**
+	 * Записывает конфиг в тот файл, из которого прочитал в конструкторе. Если конфиг был построен через
+	 * Config(Reader configReader) - то есть файл конфига неизвестен - будет брошен NullPointerException <br>
+	 * В файл конфига будет записана кодировка "ISO-8859-1"
+	 * @throws IOException
+	 * @throws WrongParamTypeException
+	 * @throws NullPointerException если неизвестен файл конфига. Если вы создаёте конфиг с помощью
+	 * Config(Reader configReader), то будьте добры для записи использовать метод save(File configFileToSave, String encoding)
+	 * @see #save(File configFileToSave)
+	 */
+	public synchronized void save() throws IOException, WrongParamTypeException, NullPointerException
 	{
+		save("ISO-8859-1");
+	}
+
+	/**
+	 * Записывает конфиг в указанный файл.<br>
+	 * В файл конфига будет записана кодировка "ISO-8859-1"
+	 * @throws IOException
+	 * @throws WrongParamTypeException
+	 */
+	public synchronized void save(File configFile) throws IOException, WrongParamTypeException
+	{
+		if (configFile == null)
+			throw new NullPointerException("config file not specified");
+		File c = new File(configFile.getAbsolutePath());
+		try
+		{
+			save(configFile, "ISO-8859-1");
+		}
+		finally
+		{
+			configFile = c;
+		}
+	}
+
+	/**
+	 * Записывает конфиг в тот файл, из которого прочитал в конструкторе. Если конфиг был построен через
+	 * Config(Reader configReader) - то есть файл конфига неизвестен - будет брошен NullPointerException
+	 * @param encoding - кодировка, которая будет указана в файле конфига. Сейчас С-шный xerces понимает только
+	 * "ISO-8859-1"
+	 * @throws IOException
+	 * @throws WrongParamTypeException
+	 * @throws NullPointerException если неизвестен файл конфига. Если вы создаёте конфиг с помощью
+	 * Config(Reader configReader), то будьте добры для записи использовать метод save(File configFileToSave, String encoding)
+	 * @see #save(File configFileToSave, String encoding)
+	 */
+	public synchronized void save(String encoding) throws IOException, WrongParamTypeException, NullPointerException
+	{
+		if (configFile == null)
+			throw new NullPointerException("config file not specified");
 		File c = new File(configFile.getAbsolutePath());
 		try
 		{
@@ -228,6 +277,15 @@ public class Config
 		}
 	}
 
+	/**
+	 * Записывает конфиг в указанный файл.
+	 * @param encoding - кодировка, которая будет указана в файле конфига. Сейчас С-шный xerces понимает только
+	 * "ISO-8859-1"
+	 * @param configFileToSave
+	 * @param encoding
+	 * @throws IOException
+	 * @throws WrongParamTypeException
+	 */
 	public synchronized void save(File configFileToSave, String encoding) throws IOException, WrongParamTypeException
 	{
 		SaveableConfigTree tree = new SaveableConfigTree(this);
