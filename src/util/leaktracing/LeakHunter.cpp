@@ -39,10 +39,10 @@ static void sighandler(int);
 static void BackTrace(void** trace)
 {
   inbacktrace=1;
+  sigset(11,sighandler);
   sigsetjmp(j,0);
   if(!inbacktrace)
   {
-    sigset(11,sighandler);
     return;
   }
 #define TRACE_BACK(n) \
@@ -70,6 +70,7 @@ static void BackTrace(void** trace)
   TRACE_BACK(17)
   TRACE_BACK(18)
   TRACE_BACK(19)
+  inbacktrace=0;
 }
 
 static void PrintTrace();
