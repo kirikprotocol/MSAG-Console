@@ -91,6 +91,14 @@ public:
     return count;
   }
 
+  T Avg(int timeDiff=1000)
+  {
+    Inc(0);
+    int used=(last-first+slotSize)%slotSize;
+    if(used==0)return 0;
+    return count*timeDiff/(used*slotRes);
+  }
+
 protected:
   T *slot;
   T count;
