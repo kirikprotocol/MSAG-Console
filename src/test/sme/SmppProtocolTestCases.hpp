@@ -21,7 +21,7 @@ class SmppProtocolTestCases : public BaseTestCases
 {
 public:
 	SmppProtocolTestCases(SmppFixture* _fixture)
-	: fixture(_fixture), chkList(fixture->chkList) {}
+	: fixture(_fixture), chkList(_fixture->chkList) {}
 	
 	virtual ~SmppProtocolTestCases() {}
 

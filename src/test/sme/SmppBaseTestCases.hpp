@@ -23,7 +23,7 @@ class SmppBaseTestCases : BaseTestCases
 {
 public:
 	SmppBaseTestCases(const SmeConfig& _config, SmppFixture* _fixture)
-		: config(_config), fixture(_fixture), chkList(fixture->chkList)
+		: config(_config), fixture(_fixture), chkList(_fixture->chkList)
 	{ fixture->base = this; }
 	
 	virtual ~SmppBaseTestCases() {}
