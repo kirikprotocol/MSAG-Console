@@ -301,6 +301,12 @@ namespace smsc {
         }else
           return snprintf(buf,buflen,".%d.%d.%s",type,plan,vl);
       }
+      inline int toString(char* buf,int buflen)const{
+        char vl[32];
+        memcpy(vl,value,length);
+        vl[length]=0;
+        return snprintf(buf,buflen,".%d.%d.%s",type,plan,vl);
+      }
       };
 
       /**

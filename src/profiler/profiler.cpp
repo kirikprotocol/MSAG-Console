@@ -260,14 +260,20 @@ int Profiler::Execute()
     cmd=getOutgoingCommand();
     if(cmd->cmdid!=smsc::smeman::DELIVERY)
     {
-      __trace2__("Profiler: incorrect command submitted");
+      __warning__("Profiler: incorrect command submitted");
       continue;
     }
     sms = cmd->get_sms();
     int status=MAKE_COMMAND_STATUS(CMD_OK,0);
-    if(sms->getIntProperty(Tag::SMPP_ESM_CLASS)!=0)
+    if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3f)!=3 &&
+       (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3f)!=0
+      )
     {
       status=MAKE_COMMAND_STATUS(CMD_ERR_PERM,SmppStatusSet::ESME_RINVESMCLASS);
+      resp=SmscCommand::makeDeliverySmResp(sms->getStrProperty("SMPP_RECEIPTED_MESSAGE_ID").c_str(),
+                                           cmd->get_dialogId(),status);
+      putIncomingCommand(resp);
+      continue;
     };
 
     Address& addr=sms->getOriginatingAddress();
@@ -333,7 +339,6 @@ int Profiler::Execute()
                                            cmd->get_dialogId(),status);
 
     putIncomingCommand(resp);
-    if(sms->getIntProperty(Tag::SMPP_ESM_CLASS)!=0)continue;
     SMS ans;
     const char *msgstr;
     switch(msg)
