@@ -12,8 +12,6 @@ import ru.novosoft.smsc.admin.console.Console;
 import ru.novosoft.smsc.admin.console.CommandContext;
 
 import java.net.Socket;
-import java.io.PrintWriter;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -27,35 +25,29 @@ public class HumanSession extends Session
     private final static String CONSOLE_PROMPT    = "> ";
 
     private final static byte[] WILL_ECHO = {(byte)0xff, (byte)0xfb, (byte)0x01};
-    private final static byte[] WONT_ECHO = {(byte)0xff, (byte)0xfc, (byte)0x01};
+    //private final static byte[] WONT_ECHO = {(byte)0xff, (byte)0xfc, (byte)0x01};
     private final static byte[] DO_ECHO   = {(byte)0xff, (byte)0xfd, (byte)0x01};
-    private final static byte[] DONT_ECHO = {(byte)0xff, (byte)0xfe, (byte)0x01};
+    //private final static byte[] DONT_ECHO = {(byte)0xff, (byte)0xfe, (byte)0x01};
 
     private final static byte[] DO_TERMINAL_TYPE = {(byte)0xff, (byte)0xfd, (byte)0x18};
     private final static byte[] DO_SUPRESS_GA =    {(byte)0xff, (byte)0xfd, (byte)0x03};
     private final static byte[] DONT_LINEMODE =    {(byte)0xff, (byte)0xfe, (byte)0x22};
     private final static byte[] DO_LINEMODE =      {(byte)0xff, (byte)0xfd, (byte)0x22};
 
-    protected void greeting(PrintWriter writer) {
-        writer.println("\r\n\r\n"+CONSOLE_GREATING+'\r');
-        writer.flush();
+    protected void greeting() throws IOException {
+        printlnString("\r\n\r\n"+CONSOLE_GREATING);
     }
-    protected void farewell(PrintWriter writer) {
-        writer.println("\r\n"+CONSOLE_FAREWELL+'\r');
-        writer.flush();
+    protected void farewell() throws IOException {
+        printlnString("\r\n"+CONSOLE_FAREWELL);
     }
-    protected void prompt(PrintWriter writer) {
-        writer.print("\r\n"+CONSOLE_PROMPT);
-        writer.flush();
+    protected void prompt() throws IOException {
+        printString("\r\n"+CONSOLE_PROMPT);
     }
 
-
-    protected boolean authorize(BufferedReader reader, PrintWriter writer)
-        throws Exception
+    protected boolean authorize() throws Exception
     {
         int tries = 0;
 
-        writer.flush();
         sendBytes(DO_LINEMODE);
         sendBytes(DONT_LINEMODE);
         sendBytes(DO_TERMINAL_TYPE);
@@ -63,14 +55,14 @@ public class HumanSession extends Session
         sendBytes(DO_SUPRESS_GA);
         sendBytes(DO_ECHO);
 
-        while (!isStopping && !writer.checkError())
+        while (!isStopping)
         {
-            writer.print(CONSOLE_LOGIN); writer.flush();
+            printString(CONSOLE_LOGIN);
             String login = readTelnetLine(true);
             login = login.trim();
             if (login.length() == 0) continue;
 
-            writer.print(CONSOLE_PASSWORD); writer.flush();
+            printString(CONSOLE_PASSWORD);
             String password = readTelnetLine(false);
             if (password == null) continue;
             password = password.trim();
@@ -78,12 +70,12 @@ public class HumanSession extends Session
             if (authorizeUser(login, password)) return true;
 
             if (++tries >= CONSOLE_AUTH_FAIL_TRIES) {
-                writer.println("\r\n"+CONSOLE_AUTH_FAIL+"\r\n"); writer.flush();
+                printlnString("\r\n"+CONSOLE_AUTH_FAIL+"\r\n");
                 sleep(100);
                 break;
             } else {
                 sleep(tries*CONSOLE_AUTH_FAIL_SLEEP);
-                writer.println("\r\n"+CONSOLE_AUTH_FAIL+"\r\n"); writer.flush();
+                printlnString("\r\n"+CONSOLE_AUTH_FAIL);
             }
         }
         return false;
@@ -93,24 +85,25 @@ public class HumanSession extends Session
         super(owner, socket);
     }
 
-    protected void display(PrintWriter writer, CommandContext ctx)
+    protected void display(CommandContext ctx)
+        throws IOException
     {
         int status = ctx.getStatus();
         String message = ctx.getMessage();
 
         if (status == CommandContext.CMD_LIST) {
-            if (message != null) writer.println(ctx.getMessage()+":\r");
+            if (message != null) printlnString(ctx.getMessage()+":");
             Iterator i = ctx.getResults().iterator();
             while (i.hasNext()) {
                 Object obj = i.next();
                 if (obj != null) {
                     String str = (obj instanceof String) ? (String)obj:obj.toString();
-                    writer.println(' '+str+'\r');
+                    printlnString(" "+str);
                 }
             }
         } else {
-            writer.print((status == CommandContext.CMD_OK) ? "Ok. ":"Failed: ");
-            writer.println(message+'\r');
+            printString((status == CommandContext.CMD_OK) ? "Ok. ":"Failed: ");
+            printlnString(message);
         }
     }
 

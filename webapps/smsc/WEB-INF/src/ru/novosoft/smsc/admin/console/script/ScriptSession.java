@@ -12,8 +12,6 @@ import ru.novosoft.smsc.admin.console.Console;
 import ru.novosoft.smsc.admin.console.CommandContext;
 
 import java.net.Socket;
-import java.io.PrintWriter;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -28,13 +26,12 @@ public class ScriptSession extends Session
         super(owner, socket);
     }
 
-    private void showMessage(PrintWriter writer, int code, String message)
+    private void showMessage(int code, String message) throws IOException
     {
-        writer.print(((code == CommandContext.CMD_LIST ||
-                       code == CommandContext.CMD_OK) ? "+ ":"- ")+code);
-        if (message != null) writer.print(' '+message);
-        writer.println('\r');
-        writer.flush();
+        printString(((code == CommandContext.CMD_LIST ||
+                      code == CommandContext.CMD_OK) ? "+ ":"- ")+code);
+        if (message != null) printString(" "+message);
+        printString("\r\n");
     }
 
     protected String readTelnetLine(boolean echo)
@@ -43,24 +40,23 @@ public class ScriptSession extends Session
         return super.readTelnetLine(false);
     }
 
-    protected boolean authorize(BufferedReader reader, PrintWriter writer)
-            throws Exception
+    protected boolean authorize() throws Exception
     {
         int tries = 0;
-        while (!isStopping && !writer.checkError())
+        while (!isStopping)
         {
-            showMessage(writer, CommandContext.CMD_OK, CONSOLE_CONNECT);
+            showMessage(CommandContext.CMD_OK, CONSOLE_CONNECT);
             String login = readTelnetLine(false);
             if (login == null || login.length() == 0) continue;
-            showMessage(writer, CommandContext.CMD_OK, CONSOLE_LOGINOK);
+            showMessage(CommandContext.CMD_OK, CONSOLE_LOGINOK);
             String password = readTelnetLine(false);
             if (password == null) continue;
 
             if (authorizeUser(login, password)) {
-                showMessage(writer, CommandContext.CMD_OK, CONSOLE_AUTH_OK);
+                showMessage(CommandContext.CMD_OK, CONSOLE_AUTH_OK);
                 return true;
             } else {
-                showMessage(writer, CommandContext.CMD_AUTH_ERROR, CONSOLE_AUTH_FAIL);
+                showMessage(CommandContext.CMD_AUTH_ERROR, CONSOLE_AUTH_FAIL);
                 if (++tries >= CONSOLE_AUTH_FAIL_TRIES) {
                     sleep(100);
                     break;
@@ -70,7 +66,8 @@ public class ScriptSession extends Session
         return false;
     }
 
-    protected void display(PrintWriter writer, CommandContext ctx)
+    protected void display(CommandContext ctx)
+        throws IOException
     {
         int status = ctx.getStatus();
         String message = ctx.getMessage();
@@ -80,11 +77,11 @@ public class ScriptSession extends Session
                 Object obj = i.next();
                 if (obj != null) {
                     String str = (obj instanceof String) ? (String)obj:obj.toString();
-                    writer.println(' '+str+'\r');
+                    printlnString(" "+str);
                 }
             }
         }
-        showMessage(writer, status, message);
+        showMessage(status, message);
     }
 
 }

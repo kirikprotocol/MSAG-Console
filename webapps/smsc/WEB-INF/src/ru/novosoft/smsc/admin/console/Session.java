@@ -28,10 +28,10 @@ public abstract class Session extends Thread
 
     private Socket socket;
     private Console owner;
+    private Principal  user = null;
 
     private InputStream  is = null;
     private OutputStream os = null;
-    private Principal  user = null;
 
     public Session(Console owner, Socket socket) {
         this.owner = owner;
@@ -61,13 +61,12 @@ public abstract class Session extends Thread
         return false;
     }
 
-    protected void greeting(PrintWriter writer) {};
-    protected void farewell(PrintWriter writer) {};
-    protected void prompt(PrintWriter writer) {};
+    protected void greeting() throws IOException {};
+    protected void farewell() throws IOException {};
+    protected void prompt() throws IOException {}
 
-    protected abstract boolean authorize(BufferedReader reader, PrintWriter writer)
-            throws Exception;
-    protected abstract void display(PrintWriter writer, CommandContext ctx);
+    protected abstract boolean authorize() throws Exception;
+    protected abstract void display(CommandContext ctx) throws IOException;
 
     private final static int ESC_IAC = 255;
     private final static int ESC_SB = 250;
@@ -87,7 +86,8 @@ public abstract class Session extends Thread
         boolean escape = false;
         boolean parameter = false;
         boolean typeofop = false;
-        while( (b=is.read()) != -1 ) {
+        while(!isStopping && (b=is.read()) != -1)
+        {
             //System.out.println("Got CHR="+(char)b+" code "+b);
             if( b == ESC_IAC ) {
                 System.out.println("Got IAC, esc: "+escape);
@@ -161,19 +161,16 @@ public abstract class Session extends Thread
     private void process()
         throws Exception
     {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        PrintWriter writer = new PrintWriter(os);
+        if (!authorize()) return;
 
-        if (!authorize(reader, writer)) return;
-
-        greeting(writer);
-        while (!isStopping && !writer.checkError())
+        greeting();
+        while (!isStopping)
         {
-            prompt(writer);
+            prompt();
             String input = readTelnetLine(true);
             if (input == null || input.length() == 0) continue;
             if (input.equalsIgnoreCase(COMMAND_QUIT)) {
-                farewell(writer); sleep(1000); break;
+                farewell(); sleep(1000); break;
             }
             CommandContext ctx = new CommandContext(owner.getSmsc());
             try
@@ -193,7 +190,7 @@ public abstract class Session extends Thread
                 ctx.setMessage(e.getMessage());
                 ctx.setStatus(CommandContext.CMD_PARSE_ERROR);
             }
-            display(writer, ctx);
+            display(ctx);
         }
     }
 
@@ -229,12 +226,22 @@ public abstract class Session extends Thread
         synchronized(closeSemaphore) {
             isStopping = true;
             try {
-               closeSemaphore.wait();
-            } catch (InterruptedException e) {}
+                if (is != null) is.close();
+                if (os != null) os.close();
+                closeSemaphore.wait();
+            }
+            catch (InterruptedException e) {}
+            catch (Exception e) {}
         }
     }
 
-    protected void sendBytes( byte data[]) throws IOException {
+    protected void sendBytes(byte data[]) throws IOException {
         os.write( data ); os.flush();
+    }
+    protected void printString(String str) throws IOException {
+        sendBytes(str.getBytes());
+    }
+    protected void printlnString(String str) throws IOException {
+        printString(str+"\r\n");
     }
 }
