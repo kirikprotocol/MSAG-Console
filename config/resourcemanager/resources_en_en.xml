@@ -14,6 +14,8 @@
       <param name="msgUCS2">Now you will be able to receive ucs2-encoded messages</param>
       <param name="msgLatin1">Now you will be able to receive latin1-encoded messages</param>
       <param name="msgUCS2AndLat">Now you will be able to receive latin1 and ucs2  encoded messages</param>
+      <param name="msg7BitUssdOn">Now ussd sessions will be in default encoding only</param>
+      <param name="msg7BitUssdOff">Now ussd sessions will be in the same encoding as sms</param>
       <param name="msgReportFinal">Now you will receive final delivery reports</param>
       <param name="msgReportFull">Now you will receive auxiliary delivery reports</param>
       <param name="msgReportNone">Now you will receive only requested delivery reports</param>
