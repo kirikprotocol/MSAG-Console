@@ -48,6 +48,11 @@ public abstract class RouteGenCommand implements Command
   protected long aclId = -1;
   protected boolean isAclId = false;
 
+  protected long providerId = -1;
+  protected boolean isProviderId = false;
+  protected long categoryId = -1;
+  protected boolean isCategoryId = false;
+
   protected boolean allowBlocked   = false;
   protected boolean isAllowBlocked = false;
 
@@ -87,6 +92,38 @@ public abstract class RouteGenCommand implements Command
   }
   public void setAllowBlocked(boolean allowBlocked) {
     this.allowBlocked = allowBlocked; isAllowBlocked = true;
+  }
+
+  public long getProviderId() {
+    return providerId;
+  }
+
+  public void setProviderId(long providerId) {
+    this.providerId = providerId;
+  }
+
+  public boolean isProviderId() {
+    return isProviderId;
+  }
+
+  public void setProviderId(boolean providerId) {
+    isProviderId = providerId;
+  }
+
+  public long getCategoryId() {
+    return categoryId;
+  }
+
+  public void setCategoryId(long categoryId) {
+    this.categoryId = categoryId;
+  }
+
+  public boolean isCategoryId() {
+    return isCategoryId;
+  }
+
+  public void setCategoryId(boolean categoryId) {
+    isCategoryId = categoryId;
   }
 }
 

@@ -37,7 +37,7 @@ public class RoutesAdd extends RouteBody
       srcMasks = new String[0];
     if (dstMasks == null)
       dstMasks = new String[0];
-
+    
     checkedSources = Functions.trimStrings(checkedSources);
     checkedDestinations = Functions.trimStrings(checkedDestinations);
     srcMasks = Functions.trimStrings(srcMasks);
@@ -133,9 +133,13 @@ public class RoutesAdd extends RouteBody
         return error(SMSCErrors.error.routes.sourcesIsEmpty);
       if (destinations.isEmpty())
         return error(SMSCErrors.error.routes.destinationsIsEmpty);
+      if ((providerIdStr != null && providerIdStr.length() > 0))
+        providerId=Long.parseLong(providerIdStr);
+      if ((categoryIdStr != null && categoryIdStr.length() > 0))
+        categoryId=Long.parseLong(categoryIdStr);
 
       routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId,
-                                                    deliveryMode, forwardTo, hide, replayPath, notes, forceDelivery, aclId, allowBlocked));
+                                                    deliveryMode, forwardTo, hide, replayPath, notes, forceDelivery, aclId, allowBlocked,providerId,categoryId));
       journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_ADD);
       appContext.getStatuses().setRoutesChanged(true);
       return RESULT_DONE;

@@ -1,6 +1,8 @@
 package ru.novosoft.smsc.jsp.smsc.routes;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.category.CategoryManager;
+import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.route.Route;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 import ru.novosoft.smsc.util.SortedList;
@@ -24,6 +26,7 @@ public class RouteBody extends SmscBean
   protected boolean active = false;
   protected int serviceId = 0;
   protected String srcSmeId = null;
+
   protected String[] checkedSources = null;
   protected String[] srcMasks = null;
   protected String[] checkedDestinations = null;
@@ -41,6 +44,22 @@ public class RouteBody extends SmscBean
   protected boolean forceDelivery = false;
   protected long aclId = -1;
   protected boolean allowBlocked = false;
+  protected long providerId = -1;
+  protected long categoryId = -1;
+  protected String providerIdStr = null;
+  protected String categoryIdStr = null;
+  protected ProviderManager providerManager = null;
+  protected CategoryManager categoryManager = null;
+
+  protected int init(List errors)
+	{
+		int result = super.init(errors);
+		if (result != RESULT_OK)
+			return result;
+    providerManager = appContext.getProviderManager();
+    categoryManager = appContext.getCategoryManager();
+		return result;
+	}
 
   public boolean isSrcChecked(final String srcName)
   {
@@ -61,7 +80,15 @@ public class RouteBody extends SmscBean
   {
     return new SortedList(smeManager.getSmeNames());
   }
-
+     public Collection getProviders()
+  {
+    return new SortedList(providerManager.getProviders().values());
+  }
+ 
+  public Collection getCategories()
+  {
+    return new SortedList(categoryManager.getCategories().values());
+  }
   public boolean isSmeSelected(final String dstName, final String smeId)
   {
     return smeId.equals(selectedSmes.get(dstName));
@@ -254,6 +281,22 @@ public class RouteBody extends SmscBean
     this.srcSmeId = srcSmeId;
   }
 
+  public String getProviderIdStr() {
+    return providerIdStr;
+  }
+
+  public void setProviderIdStr(String providerIdStr) {
+    this.providerIdStr = providerIdStr;
+  }
+
+  public String getCategoryIdStr() {
+    return categoryIdStr;
+  }
+
+  public void setCategoryIdStr(String categoryIdStr) {
+    this.categoryIdStr = categoryIdStr;
+  }
+
   public String getDefaultSubjectSme(final String subjId)
   {
     try {
@@ -342,5 +385,21 @@ public class RouteBody extends SmscBean
   public void setAllowBlocked(final boolean allowBlocked)
   {
     this.allowBlocked = allowBlocked;
+  }
+
+  public long getProviderId() {
+    return providerId;
+  }
+
+  public void setProviderId(final long providerId) {
+    this.providerId = providerId;
+  }
+
+  public long getCategoryId() {
+    return categoryId;
+  }
+
+  public void setCategoryId(final long categoryId) {
+    this.categoryId = categoryId;
   }
 }

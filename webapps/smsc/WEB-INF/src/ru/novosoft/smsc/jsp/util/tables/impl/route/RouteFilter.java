@@ -322,7 +322,9 @@ public class RouteFilter implements Filter
         return isSourcesAllowed(srcs,0) != NOT_ALLOWED
                 && isDestinationsAllowed(dsts,0) != NOT_ALLOWED
                 && isSMEsAllowed(dsts) != NOT_ALLOWED
-                && isNamesAllowed(name) != NOT_ALLOWED;
+                && isNamesAllowed(name) != NOT_ALLOWED
+                && isProvidersAllowed(providerId) == ALLOWED
+                && isCategoriesAllowed(categoryId) == ALLOWED;
 
       case 1:
 
@@ -340,7 +342,9 @@ public class RouteFilter implements Filter
         return isSourcesAllowed(srcs,0) == ALLOWED
                 || isDestinationsAllowed(dsts,0) == ALLOWED
                 || isSMEsAllowed(dsts) == ALLOWED
-                || isNamesAllowed(name) == ALLOWED;
+                || isNamesAllowed(name) == ALLOWED
+                || isProvidersAllowed(providerId) == ALLOWED
+                || isCategoriesAllowed(categoryId) == ALLOWED;
 
       default:
         return true;

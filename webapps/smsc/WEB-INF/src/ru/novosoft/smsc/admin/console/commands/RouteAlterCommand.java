@@ -74,7 +74,7 @@ public class RouteAlterCommand extends RouteGenCommand
                                  oldRoute.getSrcSmeId(), oldRoute.getDeliveryMode(), oldRoute.getForwardTo(),
                                  oldRoute.isHide(), oldRoute.getReplayPath(), oldRoute.getNotes(),
                                  oldRoute.isForceDelivery(), oldRoute.getAclId(),
-                                 oldRoute.isAllowBlocked());
+                                 oldRoute.isAllowBlocked(), oldRoute.getProviderId(), oldRoute.getCategoryId());
 
       if (target == TARGET_SRC) {
         for (int i = 0; i < srcs.size(); i++) {

@@ -99,6 +99,17 @@ String encName = StringEncoderDecoder.encode(name);
   else  adst.put("size","10");
   adst.put("multiple","1");
 %>
+<input type=hidden name=initialized value=true>
+<table  with="100%">
+<tr>
+<td align="left" with="10%">    Name: &nbsp;</td><td with="40%" align="left"><input:text name="filteredName"    default="<%=bean.getFilteredName()%>"/> </td>
+<td align="left" with="10%">     &nbsp;</td><td with="40%" align="left">&nbsp;</td>
+</tr>
+<tr>
+<td align="left" with="10%">    Provider: &nbsp;</td><td with="40%" align="left"><input:text name="queryProvider"  default="<%=bean.getQueryProvider()%>"/> </td>
+<td align="left" with="10%">    Category: &nbsp;</td><td with="40%" align="left"><input:text name="queryCategory"  default="<%=bean.getQueryCategory()%>"/> </td>
+</tr>
+</table>
 <table  with="100%">
   <tr>
    <td with="45%">
@@ -260,8 +271,17 @@ String encName = StringEncoderDecoder.encode(name);
 <div class=page_subtitle>Options</div>
 <table class=properties_list cellspacing=0 cellspadding=0>
 <%rowN = 0;%>
-<tr class=row<%=(rowN++)&1%>>
+<%--<tr class=row<%=(rowN++)&1%>>
 	<td nowrap><input id=options_strict_filter class=check type="checkbox" name=strict <%=bean.isStrict() ? "checked" : ""%>>&nbsp;<label for=options_strict_filter>Strict Filter</label></td>
+</tr> --%>
+<tr class=row<%=(rowN++)&1%>>
+	<td nowrap><input:radio name="strict1" value="2" default="<%=String.valueOf(bean.getStrict1()) %>" />&nbsp;<label for=options_strict_filter>Soft Filter</label></td>
+</tr>
+<tr class=row<%=(rowN++)&1%>>
+	<td nowrap><input:radio name="strict1" value="1" default="<%=String.valueOf(bean.getStrict1()) %>" />&nbsp;<label for=options_strict_filter>Half-Soft Filter</label></td>
+</tr>
+<tr class=row<%=(rowN++)&1%>>
+	<td nowrap><input:radio name="strict1" value="0" default="<%=String.valueOf(bean.getStrict1()) %>" />&nbsp;<label for=options_strict_filter>Hard Filter</label></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
 	<td nowrap><input id=options_show_src class=check type="checkbox" name=showSrc <%=bean.isShowSrc() ? "checked" : ""%>>&nbsp;<label for=options_show_src>Show sources list</label></td>
@@ -269,6 +289,7 @@ String encName = StringEncoderDecoder.encode(name);
 <tr class=rowLast>
 	<td nowrap><input id=options_show_dst class=check type="checkbox" name=showDst <%=bean.isShowDst() ? "checked" : ""%>>&nbsp;<label for=options_show_dst>Show destinations list</label></td>
 </tr>
+
 </table>
 </td>
 </tr>

@@ -88,7 +88,9 @@
 			main_menu_submenu_item(out, "/aliases",  "MENU0_ALIASES",  "Aliases");
 			main_menu_submenu_item(out, "/subjects", "MENU0_SUBJECTS", "Subjects");
 			main_menu_submenu_item(out, "/routes",   "MENU0_ROUTES",   "Routes");
-			main_menu_submenu_item(out, "/acl",      "MENU0_ACL",      "Access Control Lists");
+      main_menu_submenu_item(out, "/providers",   "MENU0_PROVIDERS",   "Providers");
+      main_menu_submenu_item(out, "/categories",   "MENU0_CATEGORIES",   "Categories");
+      main_menu_submenu_item(out, "/acl",      "MENU0_ACL",      "Access Control Lists");
 			main_menu_submenu_item(out, "/tracer",   "MENU0_TRACER",   "Routes tracing");
 			main_menu_end_item(out);
 

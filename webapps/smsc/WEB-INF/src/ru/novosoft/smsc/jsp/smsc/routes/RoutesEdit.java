@@ -76,6 +76,8 @@ public class RoutesEdit extends RouteBody
         aclId = r.getAclId();
         allowBlocked = r.isAllowBlocked();
         forceDelivery = r.isForceDelivery();
+        providerId = r.getProviderId();
+        categoryId = r.getCategoryId();
       }
     }
 
@@ -177,10 +179,13 @@ public class RoutesEdit extends RouteBody
         return error(SMSCErrors.error.routes.sourcesIsEmpty);
       if (destinations.isEmpty())
         return error(SMSCErrors.error.routes.destinationsIsEmpty);
-
+       if ((providerIdStr != null && providerIdStr.length() > 0))
+        providerId=Long.parseLong(providerIdStr);
+      if ((categoryIdStr != null && categoryIdStr.length() > 0))
+        categoryId=Long.parseLong(categoryIdStr);
       routeSubjectManager.getRoutes().remove(oldRouteId);
       routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId,
-                                                    deliveryMode, forwardTo, hide, replayPath, notes, forceDelivery, aclId, allowBlocked));
+                                                    deliveryMode, forwardTo, hide, replayPath, notes, forceDelivery, aclId, allowBlocked,providerId,categoryId));
       if (oldRouteId.equals(routeId))
         journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY);
       else

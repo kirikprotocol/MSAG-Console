@@ -11,6 +11,9 @@ import ru.novosoft.smsc.jsp.util.tables.impl.dl.PrincipalsFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.user.UserFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.provider.ProviderFilter;
+import ru.novosoft.smsc.jsp.util.tables.impl.category.CategoryFilter;
+import ru.novosoft.smsc.jsp.SMSCAppContext;
 
 import java.util.Locale;
 import java.util.Vector;
@@ -31,6 +34,15 @@ public class UserPreferences {
 	private int usersPageSize = 20;
 	private UserFilter userFilter = new UserFilter();
 	private Vector usersSortOrder = new Vector();
+
+  private int providersPageSize = 20;
+  private ProviderFilter providerFilter = new ProviderFilter();
+  private String providersSortOrder = "id";
+
+  private int categoriesPageSize = 20;
+  private CategoryFilter categoryFilter = new CategoryFilter();
+  private String categoriesSortOrder = "id";
+
 
 	private int routesPageSize = 20;
 	private RouteFilter routesFilter = new RouteFilter();
@@ -55,14 +67,16 @@ public class UserPreferences {
 
 	private Locale locale = new Locale("ru");
 
-	public UserPreferences()
+	public UserPreferences(SMSCAppContext appContext)
 	{
 		this.profilesSortOrder = "mask";
 		this.aliasesSortOrder.add("Alias");
 		this.subjectsSortOrder.add("Name");
 		this.routesSortOrder.add("Route ID");
 		this.usersSortOrder.add("login");
-	}
+    this.routesFilter.setProviderManager(appContext.getProviderManager());
+    this.routesFilter.setCategoryManager(appContext.getCategoryManager());
+  }
 
 	public int getProfilesPageSize()
 	{
@@ -168,6 +182,54 @@ public class UserPreferences {
 	{
 		return usersSortOrder;
 	}
+
+  public int getProvidersPageSize() {
+    return providersPageSize;
+  }
+
+  public void setProvidersPageSize(int providersPageSize) {
+    this.providersPageSize = providersPageSize;
+  }
+
+  public ProviderFilter getProviderFilter() {
+    return providerFilter;
+  }
+
+  public void setProviderFilter(ProviderFilter providerFilter) {
+    this.providerFilter = providerFilter;
+  }
+
+  public String getProvidersSortOrder() {
+    return providersSortOrder;
+  }
+
+  public void setProvidersSortOrder(String providersSortOrder) {
+    this.providersSortOrder = providersSortOrder;
+  }
+
+  public int getCategoriesPageSize() {
+    return categoriesPageSize;
+  }
+
+  public void setCategoriesPageSize(int categoriesPageSize) {
+    this.categoriesPageSize = categoriesPageSize;
+  }
+
+  public CategoryFilter getCategoryFilter() {
+    return categoryFilter;
+  }
+
+  public void setCategoryFilter(CategoryFilter categoryFilter) {
+    this.categoryFilter = categoryFilter;
+  }
+
+  public String getCategoriesSortOrder() {
+    return categoriesSortOrder;
+  }
+
+  public void setCategoriesSortOrder(String categoriesSortOrder) {
+    this.categoriesSortOrder = categoriesSortOrder;
+  }
 
 	public int getSmsviewPageSize()
 	{

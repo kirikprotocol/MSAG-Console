@@ -43,11 +43,12 @@ public class Route
   private boolean forceDelivery = false;
   private long aclId;
   private boolean allowBlocked;
-
+  private long providerId;
+  private long categoryId;
   public Route(final String routeName, final int priority, final boolean isEnabling, final boolean isBilling, final boolean isArchiving,
                final boolean isSuppressDeliveryReports, final boolean active, final int serviceId, final SourceList sources,
                final DestinationList destinations, final String srcSmeId, final String deliveryMode, final String forwardTo, final boolean hide,
-               final byte replayPath, final String notes, final boolean forceDelivery, final long aclId, final boolean allowBlocked)
+               final byte replayPath, final String notes, final boolean forceDelivery, final long aclId, final boolean allowBlocked,final long providerId,final long categoryId)
   {
     if (routeName == null)
       throw new NullPointerException("Route name is null");
@@ -77,6 +78,8 @@ public class Route
     this.forceDelivery = forceDelivery;
     this.allowBlocked = allowBlocked;
     this.aclId = aclId;
+    this.providerId = providerId;
+    this.categoryId = categoryId;
   }
 
   public Route(final String routeName)
@@ -105,6 +108,8 @@ public class Route
     forceDelivery = false;
     aclId = -1;
     allowBlocked = false;
+    providerId=-1;
+    categoryId=-1;
   }
 
   public Route(final Element routeElem, final SubjectList subjects, final SmeManager smeManager) throws AdminException
@@ -135,6 +140,11 @@ public class Route
     final String aclIdStr = routeElem.getAttribute("aclId");
     aclId = aclIdStr != null && aclIdStr.trim().length() > 0 ? Long.decode(aclIdStr).longValue() : -1;
     allowBlocked = Boolean.valueOf(routeElem.getAttribute("allowBlocked")).booleanValue();
+    final String providerIdStr = routeElem.getAttribute("providerId");
+    providerId = providerIdStr != null && providerIdStr.trim().length() > 0 ? Long.decode(providerIdStr).longValue() : -1;
+    final String categoryIdStr = routeElem.getAttribute("categoryId");
+    categoryId = categoryIdStr != null && categoryIdStr.trim().length() > 0 ? Long.decode(categoryIdStr).longValue() : -1;
+
   }
 
   public static byte getReplayPathValue(final String replayPathStr)
@@ -299,6 +309,8 @@ public class Route
                 + ("MAP_PROXY".equals(getSrcSmeId()) ? "\" forwardTo=\"" + StringEncoderDecoder.encode(getForwardTo()) : "")
                 + "\" aclId=\"" + getAclId()
                 + "\" allowBlocked=\"" + isAllowBlocked()
+                + "\" providerId=\"" + getProviderId()
+                + "\" categoryId=\"" + getCategoryId()
                 + "\">");
     if (notes != null)
       out.println("    <notes>" + StringEncoderDecoder.encode(notes) + "</notes>");
@@ -437,4 +449,21 @@ public class Route
   {
     this.allowBlocked = allowBlocked;
   }
+
+  public long getProviderId() {
+    return providerId;
+  }
+
+  public void setProviderId(final long providerId) {
+    this.providerId = providerId;
+  }
+
+  public long getCategoryId() {
+    return categoryId;
+  }
+
+  public void setCategoryId(final long categoryId) {
+    this.categoryId = categoryId;
+  }
+
 }

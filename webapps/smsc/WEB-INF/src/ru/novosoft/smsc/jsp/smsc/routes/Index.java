@@ -7,6 +7,10 @@ package ru.novosoft.smsc.jsp.smsc.routes;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.category.CategoryManager;
+import ru.novosoft.smsc.admin.category.Category;
+import ru.novosoft.smsc.admin.provider.ProviderManager;
+import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.SMSCErrors;
@@ -37,7 +41,10 @@ public class Index extends IndexBean
   protected String querySubj = null;
   protected String queryMask = null;
   protected String querySMEs = null;
-
+  protected String queryProvider = null;
+  protected String queryCategory = null;
+  protected String queryProviderId = null;
+  protected String queryCategoryId = null;
   protected String mbAdd = null;
   protected String mbDelete = null;
   protected String mbEdit = null;
@@ -55,7 +62,12 @@ public class Index extends IndexBean
     protected String[] dstMasks = null;
     protected String[] smeChks = null;
     protected String[] names = null;
-
+    protected String[] providerNames = null;
+    protected String[] categoryNames = null;
+    protected ProviderManager providerManager = null;
+    protected CategoryManager categoryManager = null;
+    private  Map providers = Collections.synchronizedMap(new TreeMap());
+    private  Map categories = Collections.synchronizedMap(new TreeMap());
 
   protected int init(List errors)
   {
@@ -63,7 +75,10 @@ public class Index extends IndexBean
     if (result != RESULT_OK)
       return result;
 
-
+    providerManager = appContext.getProviderManager();
+    categoryManager = appContext.getCategoryManager();
+   // providers=providerManager.getProviders();
+    //providers=providerManager.getProviders();
     pageSize = preferences.getRoutesPageSize();
     if (sort != null)
       preferences.getRoutesSortOrder().set(0, sort);
@@ -88,6 +103,8 @@ public class Index extends IndexBean
         dstMasks = routesFilter.getDestinationMaskStrings();
         smeChks = routesFilter.getSmeIds();
         names = routesFilter.getNames();
+        providerNames = routesFilter.getProviders();
+        categoryNames = routesFilter.getCategories();
          try {
           queryName=names[0];
         } catch (Exception e) {
@@ -107,6 +124,16 @@ public class Index extends IndexBean
           querySMEs=smeChks[0];
         } catch (Exception e) {
           querySMEs="";
+        }
+         try {
+          queryProvider=providerNames[0];
+        } catch (Exception e) {
+          queryProvider="";
+        }
+        try {
+          queryCategory=categoryNames[0];
+        } catch (Exception e) {
+          queryCategory="";
         }
       }
 
@@ -176,6 +203,15 @@ public class Index extends IndexBean
                     routesFilter.setSmeIds(new String[]{querySMEs.toLowerCase()});
         else
                     routesFilter.setSmeIds(new String[0]);
+        if (queryProvider != null)
+           routesFilter.setProviders(new String[]{queryProvider.toLowerCase()});
+        else
+          routesFilter.setProviders(new String[0]);
+        if (queryCategory != null)
+           routesFilter.setCategories(new String[]{queryCategory.toLowerCase()});
+        else
+          routesFilter.setCategories(new String[0]);
+
         /*    if ("5".equals(filterSelect))
                     routesFilter.setSmeIds(new String[]{queryName});
       */
@@ -190,6 +226,8 @@ public class Index extends IndexBean
          final RouteFilter routesFilter = preferences.getRoutesFilter();
         // routesFilter.setIntersection(false);
              routesFilter.setNames(new String[0]);
+             routesFilter.setProviders(new String[0]);
+             routesFilter.setCategories(new String[0]);
              routesFilter.setSourceSubjectNames(new String[0]);
              routesFilter.setDestinationSubjectNames(new String[0]);
              routesFilter.setSourceMaskStrings(new String[0]);
@@ -408,6 +446,22 @@ public class Index extends IndexBean
     this.querySMEs = querySMEs;
   }
 
+  public String getQueryCategory() {
+    return queryCategory;
+  }
+
+  public void setQueryCategory(String queryCategory) {
+    this.queryCategory = queryCategory;
+  }
+
+  public String getQueryProvider() {
+    return queryProvider;
+  }
+
+  public void setQueryProvider(String queryProvider) {
+    this.queryProvider = queryProvider;
+  }
+
   public String getFilterSelect() {
     return filterSelect;
   }
@@ -438,5 +492,9 @@ public class Index extends IndexBean
 
   public void setInitialized(boolean initialized) {
     this.initialized = initialized;
+  }
+
+  public Map getProviders() {
+    return providers;
   }
 }

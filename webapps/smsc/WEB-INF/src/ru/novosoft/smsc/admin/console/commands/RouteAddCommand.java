@@ -105,7 +105,7 @@ public class RouteAddCommand extends RouteGenCommand
                             active, serviceid, srcList, dstList, srcSmeId, deliveryMode, forwardTo,
                             hide, (isReplayPath) ? replayPath : REPLAY_PATH_PASS,
                             notes, forceDelivery, ((isAclId) ? aclId : -1),
-                            (isAllowBlocked) ? allowBlocked : false);
+                            (isAllowBlocked) ? allowBlocked : false, ((isProviderId) ? providerId : -1), ((isCategoryId) ? categoryId : -1));
 
       if (priority < 0 || priority > 32000)
         throw new Exception("Priority value should be between 0 and 32000");
