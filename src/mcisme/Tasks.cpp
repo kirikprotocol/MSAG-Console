@@ -24,16 +24,15 @@ const char* GET_NEXT_SEQID_SQL  = "SELECT MCISME_MSG_SEQ.NEXTVAL FROM DUAL";
 
 const char* CREATE_NEW_MSG_ID   = "CREATE_NEW_MSG_ID";
 const char* DELETE_ANY_MSG_ID   = "DELETE_ANY_MSG_ID";
-const char* LOADUP_CUR_MSG_ID   = "LOADUP_CUR_MSG_ID";
 const char* SELECT_OLD_MSG_ID   = "SELECT_OLD_MSG_ID";
 const char* ROLLUP_CUR_MSG_ID   = "ROLLUP_CUR_MSG_ID";
 const char* LOADUP_TO_SKIP_ID   = "LOADUP_TO_SKIP_ID";
 const char* ROLLUP_TO_SKIP_ID   = "ROLLUP_TO_SKIP_ID";
+const char* LOADUP_TASK_ST_ID   = "LOADUP_TASK_ST_ID";
 
 const char* CREATE_NEW_MSG_SQL  = "INSERT INTO MCISME_MSG_SET (ID, STATE, ABONENT, SMSC_ID) "
                                   "VALUES (:ID, :STATE, :ABONENT, NULL)";
 const char* DELETE_ANY_MSG_SQL  = "DELETE FROM MCISME_MSG_SET WHERE ID=:ID";
-const char* LOADUP_CUR_MSG_SQL  = "SELECT STATE, SMSC_ID FROM MCISME_MSG_SET WHERE ID=:ID";
 const char* SELECT_OLD_MSG_SQL  = "SELECT ID, STATE, ABONENT FROM MCISME_MSG_SET WHERE SMSC_ID=:SMSC_ID";
 const char* ROLLUP_CUR_MSG_SQL  = "UPDATE MCISME_MSG_SET SET STATE=:STATE, SMSC_ID=:SMSC_ID WHERE ID=:ID";
 
@@ -56,23 +55,28 @@ const char* LOADUP_ALL_CUR_SQL  =
    "AND (MCISME_EVT_SET.MSG_ID=MCISME_CUR_MSG.ID OR MCISME_EVT_SET.MSG_ID IS NULL) "
 "ORDER  BY MCISME_CUR_MSG.ID, MCISME_EVT_SET.ID";
 
+const char* LOADUP_TASK_ST_SQL  = 
+"SELECT MCISME_CUR_MSG.ID, MCISME_MSG_SET.STATE, MCISME_MSG_SET.SMSC_ID, "
+       "MCISME_EVT_SET.ID, MCISME_EVT_SET.DT, MCISME_EVT_SET.CALLER, MCISME_EVT_SET.MSG_ID "
+"FROM   MCISME_CUR_MSG, MCISME_MSG_SET, MCISME_EVT_SET "
+"WHERE  MCISME_CUR_MSG.ABONENT = :ABONENT "
+   "AND MCISME_MSG_SET.ID = MCISME_CUR_MSG.ID "
+   "AND MCISME_EVT_SET.ABONENT = MCISME_MSG_SET.ABONENT "
+   "AND (MCISME_EVT_SET.MSG_ID=MCISME_CUR_MSG.ID OR MCISME_EVT_SET.MSG_ID IS NULL) "
+"ORDER  BY MCISME_EVT_SET.ID";
+
 /* ----------------------- Access to current events set (MCI_EVT_SET) ------------------------ */
 
-const char* LOADUP_MSG_EVT_ID   = "LOADUP_MSG_EVT_ID";
 const char* GET_EVT_CALLER_ID   = "GET_EVT_CALLER_ID";
 const char* CREATE_NEW_EVT_ID   = "CREATE_NEW_EVT_ID";
 const char* UPDATE_MSG_EVT_ID   = "UPDATE_MSG_EVT_ID";
-//const char* DELETE_MSG_EVT_ID   = "DELETE_MSG_EVT_ID";
 const char* DELETE_ALL_EVT_ID   = "DELETE_ALL_EVT_ID";
 const char* COUNT_CALLERS_ID    = "COUNT_CALLERS_ID";
 
-const char* LOADUP_MSG_EVT_SQL  = "SELECT ID, DT, CALLER, MSG_ID FROM MCISME_EVT_SET "
-                                  "WHERE ABONENT=:ABONENT AND (MSG_ID=:MSG_ID OR MSG_ID IS NULL) ORDER BY ID";
 const char* GET_EVT_CALLER_SQL  = "SELECT DISTINCT CALLER FROM MCISME_EVT_SET WHERE MSG_ID=:MSG_ID";
 const char* CREATE_NEW_EVT_SQL  = "INSERT INTO MCISME_EVT_SET (ID, ABONENT, DT, CALLER, MSG_ID) "
                                   "VALUES (:ID, :ABONENT, :DT, :CALLER, NULL)"; // MSG_ID is not assigned
 const char* UPDATE_MSG_EVT_SQL  = "UPDATE MCISME_EVT_SET SET MSG_ID=:MSG_ID WHERE ID=:ID"; // assigns MSG_ID
-//const char* DELETE_MSG_EVT_SQL= "DELETE FROM MCISME_EVT_SET WHERE ID=:ID";
 const char* DELETE_ALL_EVT_SQL  = "DELETE FROM MCISME_EVT_SET WHERE MSG_ID=:MSG_ID";
 
 const char* COUNT_ALL_CALLERS_SQL = "SELECT ABONENT, COUNT(DISTINCT CALLER) FROM MCISME_EVT_SET GROUP BY ABONENT";
@@ -82,13 +86,11 @@ const char* COUNT_CALLERS_SQL     = "SELECT COUNT(DISTINCT CALLER) FROM MCISME_E
 
 const char* INS_CURRENT_MSG_ID  = "INS_CURRENT_MSG_ID";
 const char* DEL_CURRENT_MSG_ID  = "DEL_CURRENT_MSG_ID";
-const char* GET_CURRENT_MSG_ID  = "GET_CURRENT_MSG_ID";
 const char* SET_CURRENT_MSG_ID  = "SET_CURRENT_MSG_ID";
 
 const char* INS_CURRENT_MSG_SQL = "INSERT INTO MCISME_CUR_MSG (ABONENT, ID) VALUES (:ABONENT, :ID)";
 const char* DEL_CURRENT_MSG_SQL = "DELETE FROM MCISME_CUR_MSG WHERE ABONENT=:ABONENT";
 const char* ALL_CURRENT_MSG_SQL = "SELECT ABONENT, ID FROM MCISME_CUR_MSG";
-const char* GET_CURRENT_MSG_SQL = "SELECT ID FROM MCISME_CUR_MSG WHERE ABONENT=:ABONENT"; // check is null
 const char* SET_CURRENT_MSG_SQL = "UPDATE MCISME_CUR_MSG SET ID=:ID WHERE ABONENT=:ABONENT";
 
 /* ----------------------- Error messages templates set ------------------------------------- */
@@ -363,89 +365,6 @@ Hash<Task *> Task::loadupAll()
 
 /* ----------------------- Main logic implementation ----------------------- */
 
-bool Task::loadup(uint64_t currId, Connection* connection/*=0*/) // private
-{
-    __require__(ds);
-
-    currentMessageId = currId;
-    events.Clean();
-
-    bool isConnectionGet = false;
-    try
-    {
-        if (!connection) {
-            connection = ds->getConnection();
-            if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
-            isConnectionGet = true;
-        }
-
-        abonentProfile = AbonentProfiler::getProfile(abonent.c_str(), connection);
-
-        /* SELECT STATE, SMSC_ID FROM MCISME_MSG_SET WHERE ID=:ID */
-        Statement* curMsgStmt = connection->getStatement(LOADUP_CUR_MSG_ID, LOADUP_CUR_MSG_SQL);
-        if (!curMsgStmt)
-            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "current task message loadup");
-        
-        curMsgStmt->setUint64(1, currentMessageId);
-        
-        std::auto_ptr<ResultSet> curRsGuard(curMsgStmt->executeQuery());
-        ResultSet* curRs = curRsGuard.get();
-        if (!curRs) 
-            throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "current task message loadup");
-        if (!curRs->fetchNext()) {
-            smsc_log_error(logger, "Task: current message for id=%lld is null for abonent %s",
-                           currentMessageId, abonent.c_str());
-            //throw Exception("Current task message is null for abonent %s", abonent.c_str());
-            return false;
-        }
-        
-        uint8_t msgState = curRs->getUint8(1);
-        if (msgState != MESSAGE_WAIT_RESP && msgState != MESSAGE_WAIT_CNCL && 
-            msgState != MESSAGE_WAIT_RCPT && msgState != MESSAGE_UNKNOWNST) 
-            throw Exception("Invalid message state %d for message #%lld", msgState, currentMessageId);
-        currentMessageState = (MessageState)msgState;
-
-        const char* smsc_id = (curRs->isNull(2)) ? 0:curRs->getString(2);
-        cur_smsc_id = (smsc_id) ? smsc_id:"";
-        
-        /* SELECT ID, DT, CALLER, MSG_ID FROM MCISME_EVT_SET 
-           WHERE ABONENT=:ABONENT AND (MSG_ID=:MSG_ID OR MSG_ID IS NULL) ORDER BY ID */
-        Statement* msgEvtStmt = connection->getStatement(LOADUP_MSG_EVT_ID, LOADUP_MSG_EVT_SQL);
-        if (!msgEvtStmt)
-            throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "current task events loadup");
-        
-        msgEvtStmt->setString(1, abonent.c_str());
-        msgEvtStmt->setUint64(2, currentMessageId);
-        
-        std::auto_ptr<ResultSet> evtRsGuard(msgEvtStmt->executeQuery());
-        ResultSet* evtRs = evtRsGuard.get();
-        if (!evtRs)
-            throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "current task events loadup");
-        
-        TaskEvent event; event.to = abonent;
-        while (evtRs->fetchNext())
-        {
-            event.id     = evtRs->getUint64  (1);
-            event.time   = evtRs->getDateTime(2);
-            event.from   = (evtRs->isNull(3)) ? "":evtRs->getString(3);
-            event.msg_id = (evtRs->isNull(4)) ?  0:evtRs->getUint64(4);
-            if (event.msg_id <= 0) newEventsCount++;
-            events.Push(event);
-        }
-
-        loadCallersCount(connection);
-        
-        if (connection && isConnectionGet) ds->freeConnection(connection);
-    }
-    catch (Exception& exc) {
-        smsc_log_error(logger, "%s", exc.what());
-        if (connection && isConnectionGet) ds->freeConnection(connection);
-        throw;
-    }
-    
-    return true;
-}
-
 void Task::loadCallersCount(Connection* connection)
 {
     callersCount = 0;
@@ -465,7 +384,6 @@ void Task::loadCallersCount(Connection* connection)
             callersCount = countRs->getUint32(1);
     }
 }
-
 
 // Used from loadupTasks()
 bool Task::loadupSkippedMessages(Array<Message>& cancels) // static
@@ -523,6 +441,7 @@ bool Task::loadupSkippedMessages(Array<Message>& cancels) // static
     smsc_log_debug(logger, "Task: %d skipped messages loaded", cancels.Count());
     return (cancels.Count() > 0);
 }
+
 // Used for each task on new event processing (if check enabled)
 bool Task::checkMessagesToSkip(Array<Message>& cancels)
 {
@@ -607,9 +526,23 @@ bool Task::checkMessagesToSkip(Array<Message>& cancels)
     return (cancels.Count() > 0);
 }
 
+/*
+const char* LOADUP_TASK_ST_SQL  = 
+"SELECT MCISME_CUR_MSG.ID, MCISME_MSG_SET.STATE, MCISME_MSG_SET.SMSC_ID, "
+       "MCISME_EVT_SET.ID, MCISME_EVT_SET.DT, MCISME_EVT_SET.CALLER, MCISME_EVT_SET.MSG_ID "
+"FROM   MCISME_CUR_MSG, MCISME_MSG_SET, MCISME_EVT_SET "
+"WHERE  MCISME_CUR_MSG.ABONENT = :ABONENT "
+   "AND MCISME_MSG_SET.ID = MCISME_CUR_MSG.ID "
+   "AND MCISME_EVT_SET.ABONENT = MCISME_MSG_SET.ABONENT "
+   "AND (MCISME_EVT_SET.MSG_ID=MCISME_CUR_MSG.ID OR MCISME_EVT_SET.MSG_ID IS NULL) "
+"ORDER  BY MCISME_EVT_SET.ID";
+*/
 void Task::loadup()
 {
     __require__(ds);
+    
+    currentMessageId=0; currentMessageState=UNKNOWNST; cur_smsc_id="";
+    events.Clean(); newEventsCount=0; callersCount = 0;
     
     Connection* connection = 0;
     try
@@ -617,27 +550,45 @@ void Task::loadup()
         connection = ds->getConnection();
         if (!connection) throw Exception(OBTAIN_CONNECTION_ERROR_MESSAGE);
 
-        /* SELECT ID FROM MCISME_CUR_MSG WHERE ABONENT=:ABONENT */
-        Statement* currMsgIdStmt = connection->getStatement(GET_CURRENT_MSG_ID, GET_CURRENT_MSG_SQL);
-        if (!currMsgIdStmt)
+        abonentProfile = AbonentProfiler::getProfile(abonent.c_str(), connection);
+
+        Statement* loadupStmt = connection->getStatement(LOADUP_TASK_ST_ID, LOADUP_TASK_ST_SQL);
+        if (!loadupStmt)
             throw Exception(OBTAIN_STATEMENT_ERROR_MESSAGE, "task loadup");
+        loadupStmt->setString(1, abonent.c_str());
         
-        currMsgIdStmt->setString(1, abonent.c_str());
-        
-        std::auto_ptr<ResultSet> rsGuard(currMsgIdStmt->executeQuery());
+        std::auto_ptr<ResultSet> rsGuard(loadupStmt->executeQuery());
         ResultSet* rs = rsGuard.get();
         if (!rs)
             throw Exception(OBTAIN_RESULTSET_ERROR_MESSAGE, "task loadup");
-        if (rs->fetchNext() && !rs->isNull(1)) {
+
+        if (rs->fetchNext() && !rs->isNull(1)) // current message defined
+        {
             currentMessageId = rs->getUint64(1);
-            loadup(currentMessageId, connection);
-        } else {
-            abonentProfile = AbonentProfiler::getProfile(abonent.c_str(), connection);
-            currentMessageId=0; currentMessageState=UNKNOWNST; cur_smsc_id="";
-            events.Clean(); newEventsCount=0; callersCount = 0;
-            loadCallersCount(connection);
-            // TODO: ??? cleanupOldEvents ???
+            
+            uint8_t msgState = rs->getUint8 (2);
+            if (msgState != MESSAGE_WAIT_RESP && msgState != MESSAGE_WAIT_CNCL && 
+                msgState != MESSAGE_WAIT_RCPT && msgState != MESSAGE_UNKNOWNST) 
+                throw Exception("Invalid message state %d for message #%lld", msgState, currentMessageId);
+            currentMessageState = (MessageState)msgState;
+
+            const char* smsc_id = (rs->isNull(3)) ? 0:rs->getString(3);
+            cur_smsc_id = (smsc_id) ? smsc_id:"";
+            
+            TaskEvent event; event.to = abonent;
+            do // loadup task events
+            {
+                event.id     = rs->getUint64  (4);
+                event.time   = rs->getDateTime(5);
+                event.from   = (rs->isNull(6)) ? "":rs->getString(6);
+                event.msg_id = (rs->isNull(7)) ?  0:rs->getUint64(7);
+                if (event.msg_id <= 0) newEventsCount++;
+                events.Push(event);
+            } 
+            while (rs->fetchNext());
         }
+
+        loadCallersCount(connection);
         
         if (connection) ds->freeConnection(connection);
     }

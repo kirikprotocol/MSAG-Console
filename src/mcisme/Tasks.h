@@ -82,7 +82,6 @@ namespace smsc { namespace mcisme
         InformTemplateFormatter* templateFormatter;
 
         void loadCallersCount(Connection* connection);
-        bool loadup(uint64_t currId, Connection* connection=0); // used from loadup() & loadupAll()
         void doWait(Connection* connection, const char* smsc_id, const MessageState& state);
         void doNewCurrent(Connection* connection);
         void clearCurrent(Connection* connection);

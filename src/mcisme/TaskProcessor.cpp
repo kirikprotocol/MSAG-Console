@@ -1216,10 +1216,13 @@ int ResponcesTracker::Execute()
                 Message* message = messages.GetPtr(respTimer.seqNum);
                 if (message) {
                     const char* smsc_id = message->smsc_id.c_str();
-                    smsc_log_warn(logger, "Responce for %s message #%lld smscId=%s is timed out. Resending...",
+                    smsc_log_warn(logger, "Responce for %s message #%lld smscId=%s is timed out. Treated as error.",
                                   (message->cancel) ? "cancel":"submit", message->id, smsc_id ? smsc_id:"-");
-                    processor->putToOutQueue(*message, true);
-                    messages.Delete(respTimer.seqNum);
+                    bool retry = message->cancel; // retry if it was cancel message
+                    processor->invokeProcessResponce(respTimer.seqNum, false, retry, retry,
+                                                     message->cancel, false, message->smsc_id);
+                    /* WAS: processor->putToOutQueue(*message, true);
+                           messages.Delete(respTimer.seqNum); */
                 }
                 else responcesMonitor.wait(TRACKER_SERVICE_SLEEP/100); 
             }
