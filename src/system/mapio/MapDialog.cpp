@@ -88,7 +88,7 @@ void ConvAddrMSISDN2Smc(const ET96MAP_SM_RP_OA_T* ma,Address* sa){
     char c = 0;
     sa->setValue(0,&c);
   }*/
-  sa->setValue((unsigned char)ma->addrLen,(unsigne char*)ma->addr);
+  sa->setValue((unsigned char)ma->addrLen,(unsigned char*)ma->addr);
   {
     char b[256] = {0,};
     int k = 0;
