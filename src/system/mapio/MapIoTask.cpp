@@ -126,11 +126,11 @@ void MapIoTask::dispatcher()
     MAP_isAlive = true;
     if ( isStopping ) return;
     MAP_dispatching = true;
-    gettimeofday( curtime, 0 );
+    gettimeofday( &curtime, 0 );
     printf( "MsgRecv begin: %ld.%ld\n", curtime.tv_sec-utime.tv_sec, curtime.tv_usec-utime.tv_usec );
     utime=curtime;
     result = EINSS7CpMsgRecv_r(&message,1000);
-    gettimeofday( curtime, 0 );
+    gettimeofday( &curtime, 0 );
     printf( "MsgRecv end: %ld.%ld\n", curtime.tv_sec-utime.tv_sec, curtime.tv_usec-utime.tv_usec );
     utime=curtime;
 //    result = MsgRecvEvent( &message, eventlist, &eventlist_len, 1000 );
