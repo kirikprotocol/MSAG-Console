@@ -170,7 +170,7 @@ Targets:
     <copy tofile="${DISTR_DIR}/daemon/logger.properties" file="${TEMPL_DIR}/logger/daemon.logger">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/smppgw/daemon.xml">
+    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/smsc/daemon.xml">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <symlink resource="../daemon/conf/daemon.xml" link="${DISTR_DIR}/conf/daemon.xml" overwrite="yes"/>
