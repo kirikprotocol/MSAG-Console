@@ -113,11 +113,11 @@ int DistrListProcess::Execute()
       }catch(exception& e){
         __trace2__(":DPL: <exception> %s",e.what());
         SmscCommand cmdR = SmscCommand::makeSubmitMultiResp(0,cmd->get_dialogId(),Status::CNTSUBDL);
-        putIncomingCommand(cmdR);
+        cmd.getProxy()->putCommand(cmdR);
       }catch(BIG_MULTI&){
         __trace2__(":DPL: <exception> counts of member of multi great then MAX_COUNT for task");
         SmscCommand cmdR = SmscCommand::makeSubmitMultiResp(0,cmd->get_dialogId(),Status::CNTSUBDL);
-        putIncomingCommand(cmdR);
+        cmd.getProxy()->putCommand(cmdR);
       }
     }
     else if ( cmd->get_commandId() == SUBMIT )
@@ -192,7 +192,13 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
     }
     if ( multi->dests[i].dest_flag ){
       __trace2__(":DPL: distrib list %s",multi->dests[i].value.c_str())
-      Array<Address> addresses = admin->members(multi->dests[i].value,multi->msg.getOriginatingAddress());
+      Array<Address> addresses;
+      try{
+        addresses = admin->members(multi->dests[i].value,multi->msg.getOriginatingAddress());
+      }catch(exception& e){
+        __trace2__(":DPL: <exception> : %s",e.what());
+        continue;
+      }
       unsigned count = addresses.Count();
       if ( count+task->count > MAX_COUNT ) {
         __trace2__(":DPL: members count(%d)+task->count(%d) great then MAX_COUNT for task",
