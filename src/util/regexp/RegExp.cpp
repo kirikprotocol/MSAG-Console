@@ -2761,7 +2761,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
           st->startstr=str;
           if(!minimizing)
           {
-            if(st->max)
+            if(st->max>=0)
             {
               if(str+st->max<end)
               {
@@ -3243,7 +3243,7 @@ int RegExp::InnerMatch(prechar str,const prechar end,PMatch match,int& matchcoun
     for(;;PopState())
     {
       if(0==(ps=GetState()))return 0;
-      dpf(("ps->op:%s\n",ops[ps->op]));
+      //dpf(("ps->op:%s\n",ops[ps->op]));
       switch(ps->op)
       {
         case opAlternative:
@@ -4336,6 +4336,4 @@ int RELibMatch(RELib& relib,MatchList& ml,const char* name,const char* start,con
 
 #endif
 
-}; //namespace XClasses
-};
-};
+};};};
