@@ -80,7 +80,7 @@ function setSort(sorting)
 
 function clickFilterSelect()
 {
-	document.all.jbutton.name = "filterSelect";
+	document.all.jbutton.name = "mbQuickFilter";
 	opForm.submit();
 	return false;
 }
@@ -132,12 +132,16 @@ o.put("SMEs", "5");
 <table>
 <tr>
 <td><input:select name="filterSelect" default="1"
-    attributes="<%= as %>" options="<%= o %>"  />
-    &nbsp; Query: &nbsp;<input:text name="query"  /> </td></tr>
+    attributes="<%= as %>" options="<%= o %>"  /></td></tr>
+
+<tr><td>    name: &nbsp;<input:text name="queryName"  /> </td></tr>
+<tr><td>    subj: &nbsp;<input:text name="querySubj"  /> </td></tr>
+<tr><td>    mask: &nbsp;<input:text name="queryMask"  /> </td></tr>
+<tr><td>    SMEs: &nbsp;<input:text name="querySMEs"  /> </td></tr>
 <tr><td>  &nbsp;&nbsp;
 <%
 page_small_menu_begin(out);
-page_menu_button(out, "mbApply",  "Apply",  "Apply filter");
+page_menu_button(out, "mbQuickFilter",  "Apply",  "Apply filter","return clickFilterSelect()",true);
 page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
 page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
 page_menu_space(out);

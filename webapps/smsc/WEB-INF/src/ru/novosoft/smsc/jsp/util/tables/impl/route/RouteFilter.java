@@ -1,8 +1,8 @@
 /*
- * Author: igork
- * Date: 13.06.2002
- * Time: 16:27:35
- */
+* Author: igork
+* Date: 13.06.2002
+* Time: 16:27:35
+*/
 package ru.novosoft.smsc.jsp.util.tables.impl.route;
 
 import ru.novosoft.smsc.admin.AdminException;
@@ -20,6 +20,7 @@ public class RouteFilter implements Filter
   private Set dst_subjects = null;
   private MaskList dst_masks = null;
   private List smes = null;
+  private List names = null;
   private boolean intersection = false;
   private static final int ALLOWED = 0;
   private static final int NOT_ALLOWED = 1;
@@ -32,6 +33,7 @@ public class RouteFilter implements Filter
     dst_subjects = new HashSet();
     dst_masks = new MaskList();
     smes = new Vector();
+    names = new Vector();
   }
 
   public RouteFilter(boolean isIntersection,
@@ -39,7 +41,7 @@ public class RouteFilter implements Filter
                      String src_masks,
                      Set destination_selected,
                      String dst_masks,
-                     List smes)
+                     List smes,List names)
   {
     intersection = isIntersection;
     // get sources
@@ -51,13 +53,14 @@ public class RouteFilter implements Filter
     this.dst_masks = new MaskList(dst_masks);
 
     this.smes = smes;
+    this.names = names;
   }
 
   public boolean isEmpty()
   {
     return this.src_subjects.isEmpty() && this.src_masks.isEmpty()
             && this.dst_subjects.isEmpty() && this.dst_masks.isEmpty()
-            && this.smes.isEmpty();
+            && this.smes.isEmpty()&& this.names.isEmpty();
   }
 
   protected static int isSubjectAllowed(Set subjects, String subj)
@@ -67,8 +70,16 @@ public class RouteFilter implements Filter
     if (subjects.contains(subj))
       return ALLOWED;
     else
-      return NOT_ALLOWED;
+    {
+      for (Iterator i = subjects.iterator(); i.hasNext();) {
+        String subject =  (String) i.next();
+        if (subj.indexOf(subject) != -1)
+          return ALLOWED;
+      }
+    }
+    return NOT_ALLOWED;
   }
+
 
   protected static int isMaskAllowed(MaskList masksSet, String maskStr)
   {
@@ -162,32 +173,66 @@ public class RouteFilter implements Filter
     for (Iterator i = dsts.iterator(); i.hasNext();) {
       Destination dst = (Destination) i.next();
       if (intersection) {
+
         if (!smes.contains(dst.getSme().getId()))
           return NOT_ALLOWED;
+        else
+        {
+          for (Iterator j = smes.iterator(); j.hasNext();) {
+            String subject =  (String) j.next();
+            if (dst.getSme().getId().indexOf(subject) == -1)
+              return NOT_ALLOWED;
+          }
+        }
       } else {
         if (smes.contains(dst.getSme().getId()))
           return ALLOWED;
+        else
+        {
+          for (Iterator j = smes.iterator(); j.hasNext();) {
+            String subject =  (String) j.next();
+            if (dst.getSme().getId().indexOf(subject) != -1)
+              return ALLOWED;
+          }
+        }
       }
     }
     return intersection ? ALLOWED : NOT_ALLOWED;
   }
 
+  protected int isNamesAllowed(String name)
+  {
+    if (names.isEmpty())
+      return UNKNOWN;
+
+    if (names.contains(name))
+      return ALLOWED;
+
+    for (Iterator j = names.iterator(); j.hasNext();) {
+      String subject =  (String) j.next();
+      if (name.indexOf(subject) != -1)
+        return ALLOWED;
+    }
+    return NOT_ALLOWED;
+  }
   public boolean isItemAllowed(DataItem item)
   {
     if (isEmpty())
       return true;
-
+    String name =(String)item.getValue("Route ID");
     SourceList srcs = (SourceList) item.getValue("sources");
     DestinationList dsts = (DestinationList) item.getValue("destinations");
 
     if (intersection) {
       return isSourcesAllowed(srcs) != NOT_ALLOWED
               && isDestinationsAllowed(dsts) != NOT_ALLOWED
-              && isSMEsAllowed(dsts) != NOT_ALLOWED;
+              && isSMEsAllowed(dsts) != NOT_ALLOWED
+              && isNamesAllowed(name) != NOT_ALLOWED;
     } else {
       return isSourcesAllowed(srcs) == ALLOWED
               || isDestinationsAllowed(dsts) == ALLOWED
-              || isSMEsAllowed(dsts) == ALLOWED;
+              || isSMEsAllowed(dsts) == ALLOWED
+              || isNamesAllowed(name) == ALLOWED;
     }
   }
 
@@ -215,6 +260,10 @@ public class RouteFilter implements Filter
   public String[] getSmeIds()
   {
     return (String[]) smes.toArray(new String[0]);
+  }
+  public String[] getNames()
+  {
+    return (String[]) names.toArray(new String[0]);
   }
 
   public boolean isIntersection()
@@ -246,9 +295,14 @@ public class RouteFilter implements Filter
   {
     this.smes = Arrays.asList(smes);
   }
-
+  public void setNames(String[] names)
+  {
+    this.names = Arrays.asList(names);
+  }
   public void setIntersection(boolean intersection)
   {
     this.intersection = intersection;
   }
+
+
 }

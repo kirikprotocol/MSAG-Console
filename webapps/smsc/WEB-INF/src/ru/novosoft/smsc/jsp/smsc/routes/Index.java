@@ -33,7 +33,10 @@ public class Index extends IndexBean
   protected Set checkedRouteIdsSet = new HashSet();
 
   protected String filterSelect = null;
-  protected String query = null;
+  protected String queryName = null;
+  protected String querySubj = null;
+  protected String queryMask = null;
+  protected String querySMEs = null;
 
   protected String mbAdd = null;
   protected String mbDelete = null;
@@ -61,7 +64,7 @@ public class Index extends IndexBean
   public int process(HttpServletRequest request)
   {
     routes = new EmptyResultSet();
-
+  //  System.out.println("mbQuickFilter= "+mbQuickFilter);
     int result = super.process(request);
     if (result != RESULT_OK)
       return result;
@@ -84,6 +87,7 @@ public class Index extends IndexBean
       return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
     }
        else if (mbQuickFilter != null) {
+     //  logger.debug("mbQuickFilter= "+mbQuickFilter);
        int dresult = updateFilter();
       return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
     }
@@ -100,16 +104,23 @@ public class Index extends IndexBean
     private int updateFilter() {
       try {
         final RouteFilter routesFilter = preferences.getRoutesFilter();
-        if ("Dest Mask".equals(filterSelect))
-            routesFilter.setDestinationMaskStrings(new String[]{query});
-        else if ("Dest Subj".equals(filterSelect))
-            routesFilter.setDestinationSubjectNames(new String[]{query});
-        else if ("Sources Mask".equals(filterSelect))
-                    routesFilter.setSourceMaskStrings(new String[]{query});
-        else if ("Sources Subj".equals(filterSelect))
-                    routesFilter.setSourceSubjectNames(new String[]{query});
-        else if ("SMEs".equals(filterSelect))
-                    routesFilter.setSmeIds(new String[]{query});
+        routesFilter.setIntersection(false);
+        if (queryName != null)
+            routesFilter.setNames(new String[]{queryName});
+        if (querySubj != null)
+            routesFilter.setSourceSubjectNames(new String[]{querySubj});
+            routesFilter.setDestinationSubjectNames(new String[]{querySubj});
+        if (queryMask != null) {
+            routesFilter.setSourceMaskStrings(new String[]{queryMask});
+            routesFilter.setDestinationMaskStrings(new String[]{queryMask});
+        }
+        if (querySMEs != null)
+                    routesFilter.setSmeIds(new String[]{querySMEs});
+    /*    if ("5".equals(filterSelect))
+                    routesFilter.setSmeIds(new String[]{queryName});
+        // logger.debug("routesFilter= "+routesFilter);
+      */
+        logger.debug("update Filter complit ! ");
       } catch (AdminException e) {
         return error(SMSCErrors.error.routes.CantUpdateFilter, e);
       }
@@ -290,14 +301,38 @@ public class Index extends IndexBean
     this.mbLoad = mbLoad;
   }
 
-      public String getQuery()
+      public String getQueryName()
   {
-    return query;
+    return queryName;
   }
 
-  public void setQuery(String query)
+  public void setQueryName(String queryName)
   {
-    this.query = query;
+    this.queryName = queryName;
+  }
+
+  public String getQuerySubj() {
+    return querySubj;
+  }
+
+  public void setQuerySubj(String querySubj) {
+    this.querySubj = querySubj;
+  }
+
+  public String getQueryMask() {
+    return queryMask;
+  }
+
+  public void setQueryMask(String queryMask) {
+    this.queryMask = queryMask;
+  }
+
+  public String getQuerySMEs() {
+    return querySMEs;
+  }
+
+  public void setQuerySMEs(String querySMEs) {
+    this.querySMEs = querySMEs;
   }
 
   public String getFilterSelect() {
@@ -315,4 +350,5 @@ public class Index extends IndexBean
   public void setMbQuickFilter(String mbQuickFilter) {
     this.mbQuickFilter = mbQuickFilter;
   }
+
 }
