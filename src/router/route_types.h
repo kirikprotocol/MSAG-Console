@@ -13,8 +13,8 @@ namespace smsc {
 namespace router {
 
 typedef int RoutePriority;
-static const RoutePriority RoutePriorityMax = 32767;
-static const RoutePriority RoutePriorityMin = 1;
+static const RoutePriority RoutePriorityMax = 32000;
+static const RoutePriority RoutePriorityMin = 0;
 
 typedef std::string RouteId;
 
