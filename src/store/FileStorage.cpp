@@ -13,6 +13,7 @@
 
 #include "Uint64Converter.h"
 #include "FileStorage.h"
+#include "core/buffers/TmpBuf.hpp"
 
 /* Static check for 64bit positions for files */
 template <bool cnd> struct StaticCheck {};
@@ -43,6 +44,8 @@ const char* SMSC_PERSIST_DIR_NAME_PATTERN  = "%04d%02d%02d";
 
 const uint16_t SMSC_ARCHIVE_VERSION_INFO = 0x0001;
 const char*    SMSC_ARCHIVE_HEADER_TEXT  = "SMSC.ARC";
+
+using smsc::core::buffers::TmpBuf;
 
 void FileStorage::findEntries(const std::string& location, Array<std::string>& entries,
                               bool files, const char* ext)
@@ -537,19 +540,19 @@ void FileStorage::save(SMSId id, SMS& sms, fpos_t* pos /*= 0 (no getPos) */)
     }
 }
 
-class UnlockableMutexGuard 
+class UnlockableMutexGuard
 {
 protected:
-  
+
     bool locked;
     Mutex& lock;
     Mutex  unlock;
 
 public:
-  
-    UnlockableMutexGuard(Mutex& _lock) : lock(_lock), locked(false) { 
+
+    UnlockableMutexGuard(Mutex& _lock) : lock(_lock), locked(false) {
         MutexGuard guard(unlock);
-        locked = true; lock.Lock(); 
+        locked = true; lock.Lock();
     }
     ~UnlockableMutexGuard() {
         MutexGuard guard(unlock);
@@ -890,14 +893,14 @@ static void decodeMessage(uint8_t* msg, int msgLen, int encoding, std::string& m
 {
     if (encoding == DataCoding::LATIN1)
     {
-        std::auto_ptr<char> textGuard(new char[msgLen+1]);
+        TmpBuf<char,256> textGuard(msgLen+1);
         char* text = textGuard.get();
         memcpy(text, msg, msgLen);
         text[msgLen] = '\0'; message += text;
     }
     else if (encoding == DataCoding::SMSC7BIT)
     {
-        std::auto_ptr<char> textGuard(new char[msgLen*2+1]);
+        TmpBuf<char,256> textGuard(msgLen*2+1);
         char* text = textGuard.get();
         int textLen = ConvertSMSC7BitToLatin1((const char *)msg, msgLen, text);
         if (textLen >= 0 && textLen <= msgLen*2) {
@@ -908,7 +911,7 @@ static void decodeMessage(uint8_t* msg, int msgLen, int encoding, std::string& m
     }
     else if (encoding == DataCoding::UCS2)
     {
-        std::auto_ptr<char> textGuard(new char[msgLen*2+1]);
+        TmpBuf<char,256> textGuard(msgLen*2+1);
         char* text = textGuard.get();
         int textLen = ConvertUCS2ToMultibyte((const short *)msg, msgLen, text, msgLen*2, CONV_ENCODING_CP1251);
         if (textLen >= 0 && textLen <= msgLen*2) {

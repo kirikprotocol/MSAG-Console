@@ -1,7 +1,7 @@
 #include "util/smstext.h"
 #include "util/debug.h"
 #include <memory>
-
+#include "core/buffers/TmpBuf.hpp"
 
 
 namespace smsc{
@@ -9,6 +9,8 @@ namespace util{
 
 using namespace std;
 using std::auto_ptr;
+
+using smsc::core::buffers::TmpBuf;
 
 static inline bool isEscapedChar(char c)
 {
@@ -157,8 +159,8 @@ void transLiterateSms(SMS* sms,int datacoding)
   int udhiDataLen=0;
   bool udhi=sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40;
 
-  auto_ptr<char> buf;
-  auto_ptr<char> buf8;
+  TmpBuf<char,256> buf(0);
+  TmpBuf<char,256> buf8(0);
 
   unsigned len;
   const short*msg=(const short*)sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
@@ -180,7 +182,7 @@ void transLiterateSms(SMS* sms,int datacoding)
     len-=udhiDataLen;
   }
 
-  buf=auto_ptr<char>(new char[len*2]);
+  buf.getSize(len*2);
 
   int newlen;
 
@@ -189,19 +191,19 @@ void transLiterateSms(SMS* sms,int datacoding)
   if(sms->getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
   {
     len=ConvertUCS2ToMultibyte(msg,len,buf.get(),len*2,CONV_ENCODING_CP1251);
-    buf8=auto_ptr<char>(new char[udhiDataLen+len*4+1]);
+    buf8.getSize(udhiDataLen+len*4+1);
     newlen=Transliterate(buf.get(),len,CONV_ENCODING_CP1251,buf8.get()+udhiDataLen,len*3+1);
     dc=DataCoding::LATIN1;
     if(datacoding==DataCoding::SMSC7BIT)
     {
-      buf=auto_ptr<char>(new char[newlen*2+1]);
+      buf.getSize(newlen*2+1);
       newlen=ConvertLatin1ToSMSC7Bit(buf8.get()+udhiDataLen,newlen,buf.get());
       memcpy(buf8.get()+udhiDataLen,buf.get(),newlen);
       dc=DataCoding::SMSC7BIT;
     }
   }else if(sms->getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::LATIN1)
   {
-    buf8=auto_ptr<char>(new char[udhiDataLen+len*2+1]);
+    buf8.getSize(udhiDataLen+len*2+1);
     newlen=ConvertLatin1ToSMSC7Bit((char*)msg,len,buf8.get()+udhiDataLen);
     dc=DataCoding::SMSC7BIT;
   }else

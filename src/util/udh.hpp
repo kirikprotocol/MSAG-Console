@@ -170,10 +170,13 @@ inline bool convertSarToUdh(SMS& sms)
   unsigned char userdata[256];
   unsigned int len;
   unsigned int udhilen=0;
-  const char* msg=sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
-  if(len==0 && sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+  const char* msg;
+  if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
   {
     msg=sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+  }else
+  {
+    sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
   }
   unsigned int off=1;
   if(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
@@ -212,7 +215,7 @@ inline bool convertSarToUdh(SMS& sms)
   }
 
   userdata[0]=off-1;
-  auto_ptr<char> buf(new char[off+len-udhilen]);
+  TmpBuf<char,256> buf(off+len-udhilen);
   memcpy(buf.get(),userdata,off);
   memcpy(buf.get()+off,msg+udhilen,len-udhilen);
   len-=udhilen;
