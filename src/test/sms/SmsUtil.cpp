@@ -194,6 +194,16 @@ vector<int> SmsUtil::compareMessages(const SMS& sms1, const SMS& sms2, uint64_t 
 	__compare_int_body_tag__(SMSC_DISCHARGE_TIME, 125);
 	__compare_str_body_tag__(SMSC_RECIPIENTADDRESS, 126);
 	__compare_int_body_tag__(SMSC_STATUS_REPORT_REQUEST, 127);
+	__compare_int_body_tag__(SMPP_SOURCE_PORT, 128);
+	__compare_int_body_tag__(SMPP_DESTINATION_PORT, 129);
+	__compare_int_body_tag__(SMPP_SAR_SEGMENT_SEQNUM, 130);
+	__compare_int_body_tag__(SMPP_MORE_MESSAGES_TO_SEND, 131);
+	__compare_int_body_tag__(SMPP_DEST_NETWORK_TYPE, 132);
+	__compare_int_body_tag__(SMPP_DEST_BEARER_TYPE, 133);
+	__compare_int_body_tag__(SMPP_QOS_TIME_TO_LIVE, 134);
+	__compare_int_body_tag__(SMPP_SET_DPF, 135);
+	__compare_int_body_tag__(SMPP_SOURCE_NETWORK_TYPE, 136);
+	__compare_int_body_tag__(SMPP_SOURCE_BEARER_TYPE, 137);
 	//bool attach;
 	return res;
 }
@@ -452,6 +462,17 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 	__set_int_body_tag__(SMSC_DISCHARGE_TIME, rand0(INT_MAX));
 	__set_str_body_tag__(SMSC_RECIPIENTADDRESS, rand1(30));
 	__set_int_body_tag__(SMSC_STATUS_REPORT_REQUEST, rand0(255));
+	__set_int_body_tag__(SMPP_SOURCE_PORT, rand0(255));
+	__set_int_body_tag__(SMPP_DESTINATION_PORT, rand0(255));
+	__set_int_body_tag__(SMPP_SAR_SEGMENT_SEQNUM, rand0(255));
+	__set_int_body_tag__(SMPP_MORE_MESSAGES_TO_SEND, rand0(255));
+	__set_int_body_tag__(SMPP_DEST_NETWORK_TYPE, rand0(255));
+	__set_int_body_tag__(SMPP_DEST_BEARER_TYPE, rand0(255));
+	__set_int_body_tag__(SMPP_QOS_TIME_TO_LIVE, rand0(255));
+	__set_int_body_tag__(SMPP_SET_DPF, rand0(255));
+	__set_int_body_tag__(SMPP_SOURCE_NETWORK_TYPE, rand0(255));
+	__set_int_body_tag__(SMPP_SOURCE_BEARER_TYPE, rand0(255));
+
 	//check fileds
 	if (check)
 	{
@@ -482,6 +503,16 @@ void SmsUtil::setupRandomCorrectSms(SMS* sms, uint64_t includeMask, bool check)
 		__check_int_body_tag__(SMSC_DISCHARGE_TIME);
 		__check_str_body_tag__(SMSC_RECIPIENTADDRESS);
 		__check_int_body_tag__(SMSC_STATUS_REPORT_REQUEST);
+		__check_int_body_tag__(SMPP_SOURCE_PORT);
+		__check_int_body_tag__(SMPP_DESTINATION_PORT);
+		__check_int_body_tag__(SMPP_SAR_SEGMENT_SEQNUM);
+		__check_int_body_tag__(SMPP_MORE_MESSAGES_TO_SEND);
+		__check_int_body_tag__(SMPP_DEST_NETWORK_TYPE);
+		__check_int_body_tag__(SMPP_DEST_BEARER_TYPE);
+		__check_int_body_tag__(SMPP_QOS_TIME_TO_LIVE);
+		__check_int_body_tag__(SMPP_SET_DPF);
+		__check_int_body_tag__(SMPP_SOURCE_NETWORK_TYPE);
+		__check_int_body_tag__(SMPP_SOURCE_BEARER_TYPE);
 	}
 	//bool attach;
 	for (BinMap::iterator it = binMap.begin(); it != binMap.end(); it++)
@@ -724,7 +755,16 @@ ostream& operator<< (ostream& os, SMS& sms)
 	__print_int_body_tag__(SMSC_DISCHARGE_TIME);
 	__print_str_body_tag__(SMSC_RECIPIENTADDRESS);
 	__print_int_body_tag__(SMSC_STATUS_REPORT_REQUEST);
-
+	__print_int_body_tag__(SMPP_SOURCE_PORT);
+	__print_int_body_tag__(SMPP_DESTINATION_PORT);
+	__print_int_body_tag__(SMPP_SAR_SEGMENT_SEQNUM);
+	__print_int_body_tag__(SMPP_MORE_MESSAGES_TO_SEND);
+	__print_int_body_tag__(SMPP_DEST_NETWORK_TYPE);
+	__print_int_body_tag__(SMPP_DEST_BEARER_TYPE);
+	__print_int_body_tag__(SMPP_QOS_TIME_TO_LIVE);
+	__print_int_body_tag__(SMPP_SET_DPF);
+	__print_int_body_tag__(SMPP_SOURCE_NETWORK_TYPE);
+	__print_int_body_tag__(SMPP_SOURCE_BEARER_TYPE);
 	//bool attach;
 }
 
