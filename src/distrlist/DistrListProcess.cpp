@@ -147,7 +147,6 @@ void DistrListProcess::putIncomingCommand(const SmscCommand& cmd)
   managerMonitor->Signal();
 }
 
-
 SmscCommand DistrListProcess::getOutgoingCommand()
 {
   MutexGuard g(mon);
@@ -176,9 +175,9 @@ void DistrListProcess::SubmitMulti(SmscCommand& cmd)
   if ( multi->number_of_dests == 0 ) {
     __trace__(":DPL: empty multisubmit");
     //return;
-    SmscCommand cmd2 = SmscCommand::makeSubmitMultiResp("",task->cmd->get_dialogId(),Status::INVNUMDESTS);
+    SmscCommand cmd2 = SmscCommand::makeSubmitMultiResp("",cmd->get_dialogId(),Status::INVNUMDESTS);
     cmd2->get_MultiResp()->set_unsuccessCount(0);
-    SmeProxy* srcproxy =  task->cmd.getProxy();
+    SmeProxy* srcproxy =  cmd.getProxy();
     srcproxy->putCommand(cmd2);
   }
   auto_ptr<ListTask> task(new ListTask());
