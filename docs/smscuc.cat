@@ -1,0 +1,4285 @@
+
+(object Petal
+    version    	44
+    _written   	"Rose 7.1.9642.27"
+    charSet    	204)
+
+(object Class_Category "Use-Case Model"
+    is_unit    	TRUE
+    is_loaded  	TRUE
+    quid       	"35B677F4010E"
+    documentation 	"Эта секция содержит обзор функциональных требований."
+    exportControl 	"Public"
+    logical_models 	(list unit_reference_list
+	(object Association "$UNNAMED$0"
+	    quid       	"3C85E2AE030E"
+	    roles      	(list role_list
+		(object Role "$UNNAMED$1"
+		    quid       	"3C85E2AF0201"
+		    supplier   	"Use Case View::Use-Case Model::Use Cases::Базовые функции::Прием сообщения::Прием сообщения"
+		    quidu      	"3C5EC63000F4"
+		    is_navigable 	TRUE)
+		(object Role "$UNNAMED$2"
+		    quid       	"3C85E2AF020C"
+		    supplier   	"Use Case View::Use-Case Model::Actors::SME"
+		    quidu      	"3C3C83310061")))
+	(object Association "$UNNAMED$3"
+	    quid       	"3C85E2F9017B"
+	    roles      	(list role_list
+		(object Role "$UNNAMED$4"
+		    quid       	"3C85E2F903C0"
+		    supplier   	"Use Case View::Use-Case Model::Actors::SME"
+		    quidu      	"3C3C83310061"
+		    is_navigable 	TRUE)
+		(object Role "$UNNAMED$5"
+		    quid       	"3C85E2F903D4"
+		    supplier   	"Use Case View::Use-Case Model::Use Cases::Базовые функции::Доставка сообщения::Доставка сообщения"
+		    quidu      	"3C5EC5CF0394")))
+	(object Association "$UNNAMED$6"
+	    quid       	"3C85E3280038"
+	    roles      	(list role_list
+		(object Role "$UNNAMED$7"
+		    quid       	"3C85E32A0398"
+		    supplier   	"Use Case View::Use-Case Model::Actors::SME"
+		    quidu      	"3C3C83310061"
+		    is_navigable 	TRUE)
+		(object Role "$UNNAMED$8"
+		    quid       	"3C85E32A03AC"
+		    supplier   	"Use Case View::Use-Case Model::Use Cases::Базовые функции::Уведомление о доставке::Уведомление о доставке"
+		    quidu      	"3C5ECA0D03B3")))
+	(object Association "$UNNAMED$9"
+	    quid       	"3C85E3EE039A"
+	    roles      	(list role_list
+		(object Role "$UNNAMED$10"
+		    quid       	"3C85E3EF026F"
+		    supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Администрирование"
+		    quidu      	"3C85E3D101FE"
+		    is_navigable 	TRUE)
+		(object Role "$UNNAMED$11"
+		    quid       	"3C85E3EF0271"
+		    supplier   	"Use Case View::Use-Case Model::Actors::Administrator"
+		    quidu      	"3C3C835302B9")))
+	(object Association "$UNNAMED$12"
+	    quid       	"3C85E7520095"
+	    roles      	(list role_list
+		(object Role "$UNNAMED$13"
+		    quid       	"3C85E7520280"
+		    supplier   	"Use Case View::Use-Case Model::Use Cases::Базовые функции::Выполнить команду::Выполнить команду"
+		    quidu      	"3C85E74A0224"
+		    is_navigable 	TRUE)
+		(object Role "$UNNAMED$14"
+		    quid       	"3C85E7520282"
+		    supplier   	"Use Case View::Use-Case Model::Actors::SME"
+		    quidu      	"3C3C83310061")))
+	(object Class_Category "Actors"
+	    quid       	"3518CBC9026C"
+	    documentation 	"Все действующие лица содержатся в этом пакете"
+	    stereotype 	"use-case package"
+	    visible_categories 	(list visibility_relationship_list
+		(object Visibility_Relationship
+		    quid       	"3C5E70470230"
+		    supplier   	"Use Case View::Use-Case Model::Use Cases::System Use Cases"
+		    quidu      	"3C3D6B550119"))
+	    exportControl 	"Public"
+	    logical_models 	(list unit_reference_list
+		(object Class "SME"
+		    quid       	"3C3C83310061"
+		    documentation 	
+|
+|Клиент, использующий функциональные и транспортные возможности SMPP протокола как инфраструктуру для взаимодействия с SMSC. Взаимодействие, как и в случае с мобильной станцией, заключается в способности отправлять короткие сообщения, принимать короткие сообщения, получать уведомление о статусе ранее посланного сообщения.
+|В качестве такого клиента будут выступать именно программные системы, использующие SMPP протокол. Например, рабочее место оператора SMS, позволяющее отправлять сообщения с обычного компьютера для организации отправки короткого сообщения через оператора.
+|Клиент, использующий мобильную сеть связи как инфраструктуру для взаимодействия с SMSC. Взаимодействие заключается в способности мобильной станции отправлять короткие сообщения, принимать короткие сообщения, получать уведомление о статусе ранее посланного сообщения.
+|В качестве такого клиента может выступать любой сотовый телефон с возможностью работы со службой коротких сообщений мобильной сети связи.
+		    
+		    stereotype 	"Actor")
+		(object Class "Administrator"
+		    quid       	"3C3C835302B9"
+		    documentation 	"администратор сервис-центра"
+		    stereotype 	"Actor")
+		(object Association "$UNNAMED$15"
+		    quid       	"3C3DADD501CC"
+		    roles      	(list role_list
+			(object Role "$UNNAMED$16"
+			    quid       	"3C3DADD60051"
+			    supplier   	"Use Case View::Use-Case Model::Use Cases::Мониторинг::Мониторинг::Мониторинг"
+			    quidu      	"3C3DAD4602B7"
+			    is_navigable 	TRUE)
+			(object Role "$UNNAMED$17"
+			    quid       	"3C3DADD60053"
+			    supplier   	"Use Case View::Use-Case Model::Actors::Administrator"
+			    quidu      	"3C3C835302B9")))
+		(object Association "$UNNAMED$18"
+		    quid       	"3C617B320293"
+		    roles      	(list role_list
+			(object Role "$UNNAMED$19"
+			    quid       	"3C617B3300BE"
+			    supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Управление пользователями::Управление пользователями"
+			    quidu      	"3C4C4FD601E1"
+			    is_navigable 	TRUE)
+			(object Role "$UNNAMED$20"
+			    quid       	"3C617B3300C8"
+			    supplier   	"Use Case View::Use-Case Model::Actors::Administrator"
+			    quidu      	"3C3C835302B9")))
+		(object Association "$UNNAMED$21"
+		    quid       	"3C617B400135"
+		    roles      	(list role_list
+			(object Role "$UNNAMED$22"
+			    quid       	"3C617B40030C"
+			    supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Управление языками::Управление языками"
+			    quidu      	"3C4D9BCC00DB"
+			    is_navigable 	TRUE)
+			(object Role "$UNNAMED$23"
+			    quid       	"3C617B400316"
+			    supplier   	"Use Case View::Use-Case Model::Actors::Administrator"
+			    quidu      	"3C3C835302B9"))))
+	    logical_presentations 	(list unit_reference_list))
+	(object Class_Category "Use Cases"
+	    quid       	"34E37E430280"
+	    stereotype 	"use-case package"
+	    exportControl 	"Public"
+	    logical_models 	(list unit_reference_list
+		(object Class_Category "System Use Cases"
+		    quid       	"3C3D6B550119"
+		    stereotype 	"use-case package"
+		    exportControl 	"Public"
+		    logical_models 	(list unit_reference_list
+			(object Class_Category "Протоколирование"
+			    quid       	"3C3D6EE30398"
+			    exportControl 	"Public"
+			    logical_models 	(list unit_reference_list
+				(object UseCase "Протоколирование"
+				    quid       	"3C3D6F07021E"
+				    documentation 	"С целью обнаружения дефектов и сбоев функционирования SMSC осуществляет протоколирование своей работы с записью протокола на постоянный носитель. Все события, используемые для протоколирования, должны быть разбиты на категории и приоритеты. Категории могут образовывать иерархии. Это позволит гибко разрешать и запрещать протоколирование целых групп событий. Также должна быть предусмотрена возможность одновременного протоколирования по нескольким адресатам с указанием формата вывода. Протокол должен представлять собой текст, удобный для составления отчетов о сбоях. "))
+			    logical_presentations 	(list unit_reference_list))
+			(object Class_Category "Сбор статистики"
+			    quid       	"3C3D9C880250"
+			    exportControl 	"Public"
+			    logical_models 	(list unit_reference_list
+				(object UseCase "Сбор статистики"
+				    quid       	"3C3D9CA800BB"
+				    documentation 	
+|SMSC должен осуществлять сбор и обработку статистической информации о своей работе. Это призвано отслеживать тенденции использования службы коротких сообщений и устойчивого функционирования системы.
+|Реализация должна частично опираться на возможность общесистемного протоколирования и на функциональные возможности конкретных подсистем 
+|Список статистических параметров может расширяться по мере разработки. Однако на данном этапе можно ограничиться следующими показателями
+|·	Число обработанных сообщений со времени последнего сброс счетчиков
+|·	Средняя скорость обработки со времени последнего сброс счетчиков
+|Возможность сохранения статистических показателей не предусматривается.
+|
+				    ))
+			    logical_presentations 	(list unit_reference_list)))
+		    logical_presentations 	(list unit_reference_list))
+		(object Class_Category "Базовые функции"
+		    quid       	"3C5EBE3202DD"
+		    documentation 	"Эта секция описывает функции обработки SMS и USSD запросов, независимые от конкретного транспорта (SMPP,MAP). Использование конкретного транспорта вносит специфику, которая будет описана позже. (не ниже а позже)"
+		    stereotype 	"use-case package"
+		    exportControl 	"Public"
+		    logical_models 	(list unit_reference_list
+			(object Class_Category "Управление сообщениями"
+			    quid       	"3C3D6FB401A4"
+			    exportControl 	"Public"
+			    logical_models 	(list unit_reference_list
+				(object UseCase "Управление сообщениями"
+				    quid       	"3C3D6FC8024D"
+				    documentation 	
+|В процессе обработки короткого сообщения SMSC должен сохранять их в долговременном хранилище. Это необходимо для повторной попытки доставки в случае неудачи и для восстановления утерянных сообщений по запросу клиента компании, эксплуатирующей SMSC.
+|Необходимо реализовать следующие функции управления сообщениями
+|·	хранение коротких сообщений в процессе их доставки получателю
+|·	просмотр сообщений, ожидающих доставки на определенный номер
+|·	удаление сообщений, ожидающих доставки на определенный номер
+|·	просмотр архива сообщений, доставленных на определенный номер
+|·	просмотр архива сообщений, доставленных с определенного номера
+|·	просмотр статистики причин недоставки сообщений с указанием количества абонентов, которым не были доставлены сообщения по этим причинам
+|SMSC хранит сообщения только за определенный период времени, задаваемый параметром конфигурации. Устаревшие сообщения должны либо удалятся, либо необходимо разработать механизм архивации.
+|Реализация хранилища основано на использовании сервера баз данных. При недостаточной производительности такой реализации по результатам тестирования должно быть принято решение об использовании более быстрых методов, например, использование файловых хранилищ.
+|Для обеспечения замера производительности SMSC точка обращения к хранилищу должна быть обложена условием, задаваемым либо режимом компиляции, либо параметром конфигурации.
+|
+				    
+				    logical_presentations 	(list unit_reference_list
+					(object UseCaseDiagram "Управление сообщениями"
+					    quid       	"3C73648A0198"
+					    title      	"Управление сообщениями"
+					    zoom       	100
+					    max_height 	28350
+					    max_width  	21600
+					    origin_x   	0
+					    origin_y   	0
+					    items      	(list diagram_item_list
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Управление сообщениями::Управление сообщениями" @1
+						    location   	(868, 124)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@1
+							location   	(868, 262)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"Управление сообщениями")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3C3D6FC8024D")
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Управление сообщениями::хранение" @2
+						    location   	(310, 620)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@2
+							location   	(310, 758)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"хранение")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3C7364A90189"
+						    height     	118)
+						(object InheritView "" @3
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    quidu      	"3C736D6701F5"
+						    client     	@2
+						    supplier   	@1
+						    line_style 	0)
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Управление сообщениями::доставка из архива" @4
+						    location   	(744, 682)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@4
+							location   	(744, 820)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"доставка из архива")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3C736D7602AB"
+						    height     	118)
+						(object InheritView "" @5
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    quidu      	"3C736D980033"
+						    client     	@4
+						    supplier   	@1
+						    line_style 	0)
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Управление сообщениями::просмотр" @6
+						    location   	(1209, 713)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@6
+							location   	(1209, 851)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"просмотр")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3C7386F303BC"
+						    height     	118)
+						(object InheritView "" @7
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    quidu      	"3C7387080362"
+						    client     	@6
+						    supplier   	@1
+						    line_style 	0)
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Управление сообщениями::удаление" @8
+						    location   	(1519, 682)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@8
+							location   	(1519, 820)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"удаление")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3C73871E022D"
+						    height     	118)
+						(object InheritView "" @9
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    quidu      	"3C73872803A4"
+						    client     	@8
+						    supplier   	@1
+						    line_style 	0)
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Управление сообщениями::просмотр архива получателя" @10
+						    location   	(341, 961)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@10
+							location   	(341, 1099)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"просмотр архива получателя")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3C73873401C0"
+						    height     	118)
+						(object InheritView "" @11
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    quidu      	"3C73875300C1"
+						    client     	@10
+						    supplier   	@1
+						    line_style 	0)
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Управление сообщениями::просмотр архива отправителя" @12
+						    location   	(1116, 961)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@12
+							location   	(1116, 1099)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"просмотр архива отправителя")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3C73878901FF"
+						    height     	118)
+						(object InheritView "" @13
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    quidu      	"3C73879C01DE"
+						    client     	@12
+						    supplier   	@1
+						    line_style 	0)))))
+				(object UseCase "хранение"
+				    quid       	"3C7364A90189"
+				    documentation 	"хранение коротких сообщений в процессе их доставки получателю"
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3C736D6701F5"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Базовые функции::Управление сообщениями::Управление сообщениями"
+					    quidu      	"3C3D6FC8024D")))
+				(object UseCase "доставка из архива"
+				    quid       	"3C736D7602AB"
+				    documentation 	"доставить указанное число последних архивных сообщений для указанного получателя"
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3C736D980033"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Базовые функции::Управление сообщениями::Управление сообщениями"
+					    quidu      	"3C3D6FC8024D")))
+				(object UseCase "просмотр"
+				    quid       	"3C7386F303BC"
+				    documentation 	"просмотр сообщений, ожидающих доставки на определенный номер"
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3C7387080362"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Базовые функции::Управление сообщениями::Управление сообщениями"
+					    quidu      	"3C3D6FC8024D")))
+				(object UseCase "удаление"
+				    quid       	"3C73871E022D"
+				    documentation 	"удаление сообщений, ожидающих доставки на определенный номер"
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3C73872803A4"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Базовые функции::Управление сообщениями::Управление сообщениями"
+					    quidu      	"3C3D6FC8024D")))
+				(object UseCase "просмотр архива получателя"
+				    quid       	"3C73873401C0"
+				    documentation 	"просмотр архива сообщений, доставленных на определенный номер"
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3C73875300C1"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Базовые функции::Управление сообщениями::Управление сообщениями"
+					    quidu      	"3C3D6FC8024D")))
+				(object UseCase "просмотр архива отправителя"
+				    quid       	"3C73878901FF"
+				    documentation 	"просмотр архива сообщений, доставленных с определенного номера"
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3C73879C01DE"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Базовые функции::Управление сообщениями::Управление сообщениями"
+					    quidu      	"3C3D6FC8024D"))))
+			    logical_presentations 	(list unit_reference_list))
+			(object Class_Category "Тарификация"
+			    quid       	"3C3D6CE20160"
+			    exportControl 	"Public"
+			    logical_models 	(list unit_reference_list
+				(object UseCase "Тарификация"
+				    quid       	"3C3D6CF800B7"
+				    documentation 	
+|SMSC должен сохранять сведения для начисления платы за услугу.
+|Реализация этой функции должна заключаться в 
+|Для обеспечения замера производительности SMSC точка обращения к этой функции должна быть обложена логическим условием, задаваемым либо режимом компиляции, либо параметром конфигурации.
+|
+				    ))
+			    logical_presentations 	(list unit_reference_list))
+			(object Class_Category "Уведомление о доставке"
+			    quid       	"3C6179140077"
+			    exportControl 	"Public"
+			    logical_models 	(list unit_reference_list
+				(object UseCase "Уведомление о доставке"
+				    quid       	"3C5ECA0D03B3"))
+			    logical_presentations 	(list unit_reference_list))
+			(object Class_Category "Маршрутизация сообщений"
+			    quid       	"3C6179220384"
+			    exportControl 	"Public"
+			    logical_models 	(list unit_reference_list
+				(object UseCase "Маршрутизация сообщений"
+				    quid       	"3C6169D10156"
+				    documentation 	
+|Поскольку клиенты физически могут находиться в разнородных сетях, SMSC должен обеспечивать сквозное взаимодействие различных типов клиентов. Например, Мобильная станция может послать короткое сообщение на Внешнее приложение и наоборот. Причем, клиент-отправитель сообщения ничего не знает о фактическом типе клиента-получателя, поскольку используется единая система адресации абонентов. Иными словами, SMSC должен обеспечивать прозрачное взаимодействие между клиентами.
+|Для обеспечения такого взаимодействия SMSC использует понятие модуля, обслуживающего клиентов. Один модуль может обслуживать несколько клиентов, расположенных в сети одного типа. Маршруты позволяют по модулю, через который сообщение попало в SMSC, и по номеру адресата определить модуль, осуществляющего дальнейшую обработку сообщения.
+|Содержимым таблиц маршрутизации управляет Администратор.
+				    
+				    logical_presentations 	(list unit_reference_list
+					(object UseCaseDiagram "Flow of Events"
+					    quid       	"3C6B5809014E"
+					    title      	"Flow of Events"
+					    zoom       	100
+					    max_height 	28350
+					    max_width  	21600
+					    origin_x   	0
+					    origin_y   	0
+					    items      	(list diagram_item_list
+						(object NoteView @14
+						    location   	(928, 706)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@14
+							location   	(43, 69)
+							fill_color 	13434879
+							nlines     	27
+							max_width  	1734
+							label      	
+|1 - проверить на алиая без маски
+|2 - проверить на алиас с маской
+|3 - проверить маршрут
+|4 - из всех маршрутов выбираются те , у которых диапазон номеров отправителей включает в себя номер отправителя , а диапазон номеров получателей включает в себя номер получателя. При этом считается , что диапазон номеров включает в себя номер только в том случае , если , во -первых , цифры номера соответствуют маске номеров диапазона , а во -вторых , его тип и план нумерации совпадают с теми же параметрами диапазона
+| 5 - Среди выбранных на предыдущем шаге маршрутов ищется такое , для которого диапазон номеров получателей самый узкий (задан маской с наибольшим числом цифр)
+| 6 - Если на предыдущем шаге будет найдено более одного маршрута, то среди найденных выбирается тот , где диапазон номеров отправителей включает в себя номер отправителя и при этом самый узкий (задан маской с наибольшим числом цифр) . Если таких маршрутов несколько , то выбирается первый попавшийся (нежелательно)
+							)
+						    line_color 	3342489
+						    fill_color 	13434879
+						    width      	1794
+						    height     	1287)))
+					(object UseCaseDiagram "Маршрутизация сообщений"
+					    quid       	"3C7CE17F0072"
+					    title      	"Маршрутизация сообщений"
+					    zoom       	100
+					    max_height 	28350
+					    max_width  	21600
+					    origin_x   	0
+					    origin_y   	0
+					    items      	(list diagram_item_list
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Маршрутизация сообщений::Маршрутизация сообщений" @15
+						    location   	(620, 155)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@15
+							location   	(620, 293)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"Маршрутизация сообщений")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3C6169D10156")
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Маршрутизация сообщений::найти марщрут" @16
+						    location   	(248, 558)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@16
+							location   	(248, 696)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"найти марщрут")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3C7CE1F303E0"
+						    height     	118)
+						(object InheritView "" @17
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    quidu      	"3C7CE22300C8"
+						    client     	@16
+						    supplier   	@15
+						    line_style 	0)))))
+				(object UseCase "найти марщрут"
+				    quid       	"3C7CE1F303E0"
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3C7CE22300C8"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Базовые функции::Маршрутизация сообщений::Маршрутизация сообщений"
+					    quidu      	"3C6169D10156"))))
+			    logical_presentations 	(list unit_reference_list))
+			(object Class_Category "Доставка сообщения"
+			    quid       	"3C61792F0062"
+			    exportControl 	"Public"
+			    logical_models 	(list unit_reference_list
+				(object UseCase "Доставка сообщения"
+				    quid       	"3C5EC5CF0394"))
+			    logical_presentations 	(list unit_reference_list))
+			(object Class_Category "Прием сообщения"
+			    attributes 	(list Attribute_Set
+				(object Attribute
+				    tool       	"RequisitePro"
+				    name       	"ReqProProjectPath"
+				    value      	"")
+				(object Attribute
+				    tool       	"RequisitePro"
+				    name       	"ReqProProjectGuid"
+				    value      	"")
+				(object Attribute
+				    tool       	"RequisitePro"
+				    name       	"ReqProDocType"
+				    value      	"")
+				(object Attribute
+				    tool       	"RequisitePro"
+				    name       	"ReqProReqType"
+				    value      	""))
+			    quid       	"3C6179410249"
+			    exportControl 	"Public"
+			    logical_models 	(list unit_reference_list
+				(object UseCase "Прием сообщения"
+				    attributes 	(list Attribute_Set
+					(object Attribute
+					    tool       	"RequisitePro"
+					    name       	"ReqProProjectPath"
+					    value      	"")
+					(object Attribute
+					    tool       	"RequisitePro"
+					    name       	"ReqProDocType"
+					    value      	"")
+					(object Attribute
+					    tool       	"RequisitePro"
+					    name       	"ReqProReqType"
+					    value      	"")
+					(object Attribute
+					    tool       	"RequisitePro"
+					    name       	"ReqProProjectGuid"
+					    value      	""))
+				    quid       	"3C5EC63000F4"
+				    logical_models 	(list unit_reference_list
+					(object Mechanism @18
+					    logical_models 	(list unit_reference_list)))
+				    logical_presentations 	(list unit_reference_list
+					(object InteractionDiagram "Flow of Events"
+					    mechanism_ref 	@18
+					    quid       	"3C62343A00D3"
+					    title      	"Flow of Events"
+					    zoom       	100
+					    max_height 	28350
+					    max_width  	21600
+					    origin_x   	0
+					    origin_y   	0
+					    items      	(list diagram_item_list
+						(object Label @19
+						    location   	(94, 63)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    nlines     	17
+						    max_width  	1300
+						    label      	
+|Flow of Events
+|Этот use-case стартует когда клиент посылает сообщение в систему
+|
+|1 Клиент посылает сообщение в систему
+|2 Система принимает сообщение
+|3 Система проверяет параметры сообщения
+|4 Если сообщение павильно то система отсылает положительное подтверждение, если нет -отрицательное
+|5 Система ставит сообщение в очередь на доставку
+|
+|Use-case заканчивается
+						    ))))))
+			    logical_presentations 	(list unit_reference_list))
+			(object Class_Category "Выполнить команду"
+			    quid       	"3C85E72D0269"
+			    exportControl 	"Public"
+			    logical_models 	(list unit_reference_list
+				(object UseCase "Выполнить команду"
+				    quid       	"3C85E74A0224"))
+			    logical_presentations 	(list unit_reference_list)))
+		    logical_presentations 	(list unit_reference_list))
+		(object Class_Category "Мониторинг"
+		    quid       	"3C6173240325"
+		    stereotype 	"use-case package"
+		    exportControl 	"Public"
+		    logical_models 	(list unit_reference_list
+			(object Class_Category "Мониторинг"
+			    quid       	"3C3DAD270014"
+			    exportControl 	"Public"
+			    logical_models 	(list unit_reference_list
+				(object UseCase "Мониторинг"
+				    quid       	"3C3DAD4602B7"
+				    documentation 	
+|SMSC должен позволять Администратор производить визуальный контроль функционирования в реальном времени, получать статистику и информацию о загрузке системы.
+|Реализация этой возможности должна быть основана на системных функциях протоколирования и сбора статистики. Визуализация предоставляемой информации должна быть реализована с использованием средств HTML, Java applets, Swing. В качестве терминала должен использоваться стандартный браузер, например, MS Internet Explorer версии 5 и выше. Поддержка других будет осуществляться по требованию.
+|
+				    ))
+			    logical_presentations 	(list unit_reference_list)))
+		    logical_presentations 	(list unit_reference_list))
+		(object Class_Category "Администрирование"
+		    quid       	"3C3D9B99013E"
+		    documentation 	
+|Администратор может использовать функции, описанные в этой секции, для конфигурирования SMSC.
+|В качестве терминала должен использоваться стандартный браузер, например, MS Internet Explorer версии 5 и выше. Поддержка других будет осуществляться по требованию.
+|
+		    
+		    stereotype 	"use-case package"
+		    exportControl 	"Public"
+		    logical_models 	(list unit_reference_list
+			(object UseCase "Администрирование"
+			    quid       	"3C85E3D101FE")
+			(object Class_Category "Управление короткими адресами"
+			    quid       	"3C617425014D"
+			    exportControl 	"Public"
+			    logical_models 	(list unit_reference_list
+				(object UseCase "Управление короткими адресами"
+				    quid       	"3C4C504D02B5"
+				    documentation 	
+|С целью повышения удобства SMSC должен поддерживать возможность использования коротких номеров для задания адресата короткого сообщения. Это особенно ценно для людей, которые используют те или иные клиенты для взаимодействия с SMSC.
+|Кроме этого короткий адрес может быть использован как средство сокрытия полного адреса и возможности гибкой переадресации на тот или иной полный адрес.
+|SMSC должен поддерживать взаимно однозначное соответствие между короткими и полными адресами. К основным функциям управления короткими адресами следует отнести
+|·	создание короткого адреса
+|·	удаление короткого адреса
+|·	просмотр списка коротких адресов
+|·	модификация свойств короткого номера (переадресация, сокрытие реального номера)
+|
+				    
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3C85E43B01D8"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Администрирование"
+					    quidu      	"3C85E3D101FE"))
+				    logical_presentations 	(list unit_reference_list
+					(object UseCaseDiagram "Analysis"
+					    quid       	"3C70BCDB0027"
+					    title      	"Analysis"
+					    zoom       	100
+					    max_height 	28350
+					    max_width  	21600
+					    origin_x   	0
+					    origin_y   	0
+					    items      	(list diagram_item_list
+						(object NoteView @20
+						    location   	(930, 527)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@20
+							location   	(92, 46)
+							fill_color 	13434879
+							nlines     	20
+							max_width  	1640
+							label      	
+|для чего могут быть полезны алиасы
+|1 - удобство набора
+|2 - мультиплексинг (много алиасов на один адрес)
+|3 - сокрытие абонента
+|4 - демультиплексинг (одни алиас на много номеров)
+|5 - бродкастинг
+|Категоризация
+|2,4,5 - каналы сообщений
+|1,3 - анонимность и удобство
+							)
+						    line_color 	3342489
+						    fill_color 	13434879
+						    width      	1700
+						    height     	975))))))
+			    logical_presentations 	(list unit_reference_list))
+			(object Class_Category "Управление маршрутами"
+			    quid       	"3C6174890075"
+			    exportControl 	"Public"
+			    logical_models 	(list unit_reference_list
+				(object UseCase "Управление маршрутами"
+				    quid       	"3C4C5079009B"
+				    documentation 	"SMSC должен обеспечивать управление информацией о маршрутах. Маршрут представляет собой диапазон разрешенных для этого маршрута входящих номеров, набор диапазонов выходящих номеров, и правила модификации свойств сообщения. Несколько маршрутов могут быть ассоциированы с модулем обработки клиента."
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3C85E42401D5"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Администрирование"
+					    quidu      	"3C85E3D101FE"))
+				    logical_presentations 	(list unit_reference_list
+					(object UseCaseDiagram "Управление маршрутами"
+					    quid       	"3CD7BAEA0351"
+					    title      	"Управление маршрутами"
+					    zoom       	100
+					    max_height 	28350
+					    max_width  	21600
+					    origin_x   	0
+					    origin_y   	0
+					    items      	(list diagram_item_list
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление маршрутами::Управление маршрутами" @21
+						    location   	(805, 675)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@21
+							location   	(805, 813)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"Управление маршрутами")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3C4C5079009B")
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление маршрутами::Создать маршрут" @22
+						    location   	(259, 162)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@22
+							location   	(259, 300)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"Создать маршрут")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3CD7BB0D02F8"
+						    height     	118)
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление маршрутами::Удалить маршрут" @23
+						    location   	(798, 165)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@23
+							location   	(798, 303)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"Удалить маршрут")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3CD7BB26000F"
+						    height     	118)
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление маршрутами::Изменить параметры маршрута" @24
+						    location   	(310, 1196)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@24
+							location   	(310, 1334)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"Изменить параметры маршрута")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3CD7BB3C0056"
+						    height     	118)
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление маршрутами::Добавить субъект в маршрут" @25
+						    location   	(1284, 1190)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@25
+							location   	(1284, 1328)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"Добавить субъект в маршрут")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3CD7BB55025B"
+						    height     	118)
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление маршрутами::Удалить субъекта из маршрута" @26
+						    location   	(1315, 165)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@26
+							location   	(1315, 303)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"Удалить субъекта из маршрута")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3CD7BB6F0294"
+						    height     	118)
+						(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление маршрутами::Запрос по шаблону" @27
+						    location   	(810, 1192)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@27
+							location   	(810, 1330)
+							anchor_loc 	1
+							nlines     	2
+							max_width  	630
+							justify    	0
+							label      	"Запрос по шаблону")
+						    icon_style 	"Icon"
+						    line_color 	3342489
+						    fill_color 	13434879
+						    quidu      	"3CD7BB87013A"
+						    height     	118)
+						(object InheritView "" @28
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    quidu      	"3CD7BB9D007E"
+						    client     	@22
+						    supplier   	@21
+						    line_style 	0)
+						(object InheritView "" @29
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    quidu      	"3CD7BB9F012B"
+						    client     	@23
+						    supplier   	@21
+						    line_style 	0)
+						(object InheritView "" @30
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    quidu      	"3CD7BBA10250"
+						    client     	@26
+						    supplier   	@21
+						    line_style 	0)
+						(object InheritView "" @31
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    quidu      	"3CD7BBA30307"
+						    client     	@24
+						    supplier   	@21
+						    line_style 	0)
+						(object InheritView "" @32
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    quidu      	"3CD7BBA502B0"
+						    client     	@27
+						    supplier   	@21
+						    line_style 	0)
+						(object InheritView "" @33
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    quidu      	"3CD7BBA800CA"
+						    client     	@25
+						    supplier   	@21
+						    line_style 	0)
+						(object NoteView @34
+						    location   	(1447, 678)
+						    font       	(object Font
+							size       	9
+							face       	"Arial"
+							charSet    	204
+							bold       	FALSE
+							italics    	FALSE
+							underline  	FALSE
+							strike     	FALSE
+							color      	0
+							default_color 	TRUE)
+						    label      	(object ItemLabel
+							Parent_View 	@34
+							location   	(1181, 619)
+							fill_color 	13434879
+							nlines     	2
+							max_width  	496
+							label      	"Class Diagram: Message Routing / Routing")
+						    line_color 	3342489
+						    fill_color 	13434879
+						    width      	556
+						    height     	131
+						    quidu      	"3CA875CF0218")
+						(object AttachView "" @35
+						    stereotype 	TRUE
+						    line_color 	3342489
+						    client     	@21
+						    supplier   	@34
+						    line_style 	0)))))
+				(object UseCase "Создать маршрут"
+				    quid       	"3CD7BB0D02F8"
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3CD7BB9D007E"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Управление маршрутами::Управление маршрутами"
+					    quidu      	"3C4C5079009B")))
+				(object UseCase "Удалить маршрут"
+				    quid       	"3CD7BB26000F"
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3CD7BB9F012B"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Управление маршрутами::Управление маршрутами"
+					    quidu      	"3C4C5079009B")))
+				(object UseCase "Изменить параметры маршрута"
+				    quid       	"3CD7BB3C0056"
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3CD7BBA30307"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Управление маршрутами::Управление маршрутами"
+					    quidu      	"3C4C5079009B")))
+				(object UseCase "Добавить субъект в маршрут"
+				    quid       	"3CD7BB55025B"
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3CD7BBA800CA"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Управление маршрутами::Управление маршрутами"
+					    quidu      	"3C4C5079009B")))
+				(object UseCase "Удалить субъекта из маршрута"
+				    quid       	"3CD7BB6F0294"
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3CD7BBA10250"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Управление маршрутами::Управление маршрутами"
+					    quidu      	"3C4C5079009B")))
+				(object UseCase "Запрос по шаблону"
+				    quid       	"3CD7BB87013A"
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3CD7BBA502B0"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Управление маршрутами::Управление маршрутами"
+					    quidu      	"3C4C5079009B"))))
+			    logical_presentations 	(list unit_reference_list))
+			(object Class_Category "Управление языками"
+			    quid       	"3C6174DC0327"
+			    exportControl 	"Public"
+			    logical_models 	(list unit_reference_list
+				(object UseCase "Управление языками"
+				    quid       	"3C4D9BCC00DB"
+				    documentation 	
+|SMSC должен поддерживать способность взаимодействия с клиентом, используя язык, заданный в параметрах клиента. К сообщениям, подлежащим интернационализации следует отнести
+|·	шаблоны для списков рассылки на разных языках
+|·	форматы уведомлений о доставке на разных языках
+|Кроме этого SMSC должен поддерживать способность обрабатывать короткие сообщения, набранные с использованием национальных кодировок.
+|
+|
+				    ))
+			    logical_presentations 	(list unit_reference_list))
+			(object Class_Category "Управление внешними сервисами"
+			    quid       	"3C6175330214"
+			    exportControl 	"Public"
+			    logical_models 	(list unit_reference_list
+				(object UseCase "Управление внешними сервисами"
+				    quid       	"3C4EACD00030"
+				    documentation 	
+|При обслуживании клиентов типа Мобильная станция система может использовать функциональность базы HLR для проверки прав на использование службы коротких сообщений. Однако для клиентов типа Внешнее приложение такую функциональность придется поддерживать средствами самого SMSC. 
+|Необходимо поддержать следующие функции
+|·	регистрация внешнего сервиса
+|·	удаление регистрационной записи внешнего сервиса
+|·	получение списка зарегистрированных внешних сервисов
+|
+				    
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3C85E41000C8"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Администрирование"
+					    quidu      	"3C85E3D101FE")))
+				(object UseCase "Зарегистрировать клиента"
+				    quid       	"3CDFBD8E01FA"
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3CDFBE19027C"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Управление внешними сервисами"
+					    quidu      	"3C4EACD00030"))
+				    statemachine 	(object State_Machine "State/Activity Model6"
+					quid       	"3CDFE79A0053"
+					states     	(list States
+					    (object State "система отображает форму ввода  пареметров сервиса"
+						quid       	"3CDFE9180247"
+						transitions 	(list transition_list
+						    (object State_Transition
+							quid       	"3CDFE9CB0335"
+							supplier   	"администратор заполняет форму и нажимает Next"
+							quidu      	"3CDFE9680288"
+							sendEvent  	(object sendEvent
+							    quid       	"3CDFE9CB0353")))
+						type       	"Normal")
+					    (object ActivityState "администратор заполняет форму и нажимает Next"
+						quid       	"3CDFE9680288"
+						transitions 	(list transition_list
+						    (object State_Transition
+							quid       	"3CDFEC8B0193"
+							supplier   	"система сообщает об успешности операции"
+							quidu      	"3CDFEC73008A"
+							sendEvent  	(object sendEvent
+							    quid       	"3CDFEC8B019D"))))
+					    (object State "$UNNAMED$24"
+						quid       	"3CDFEC8E03AA"
+						type       	"EndState")
+					    (object State "система сообщает об успешности операции"
+						quid       	"3CDFEC73008A"
+						transitions 	(list transition_list
+						    (object State_Transition
+							quid       	"3CDFEC93011C"
+							supplier   	"$UNNAMED$24"
+							quidu      	"3CDFEC8E03AA"
+							sendEvent  	(object sendEvent
+							    quid       	"3CDFEC93013A")))
+						type       	"Normal"))
+					partitions 	(list Partitions)
+					objects    	(list Objects)
+					statediagrams 	(list StateDiagrams
+					    (object ActivityDiagram "Primary flow"
+						quid       	"3CDFE79B0087"
+						title      	"Primary flow"
+						zoom       	100
+						max_height 	28350
+						max_width  	21600
+						origin_x   	0
+						origin_y   	0
+						items      	(list diagram_item_list
+						    (object Swimlane "" @36
+							line_color 	3342489
+							width      	450)
+						    (object NoteView @37
+							Parent_View 	@36
+							location   	(775, 72)
+							font       	(object Font
+							    size       	9
+							    face       	"Arial"
+							    charSet    	204
+							    bold       	FALSE
+							    italics    	FALSE
+							    underline  	FALSE
+							    strike     	FALSE
+							    color      	0
+							    default_color 	TRUE)
+							label      	(object ItemLabel
+							    Parent_View 	@37
+							    location   	(12, 6)
+							    fill_color 	13434879
+							    nlines     	2
+							    max_width  	1490
+							    label      	
+|этот вариант использования начинается когда администратор кликает по линку "add Service"
+							    )
+							line_color 	3342489
+							fill_color 	13434879
+							width      	1550
+							height     	144)
+						    (object StateView "Normal" "система отображает форму ввода  пареметров сервиса" @38
+							Parent_View 	@36
+							location   	(413, 420)
+							font       	(object Font
+							    size       	9
+							    face       	"Arial"
+							    charSet    	204
+							    bold       	FALSE
+							    italics    	FALSE
+							    underline  	FALSE
+							    strike     	FALSE
+							    color      	0
+							    default_color 	TRUE)
+							label      	(object ItemLabel
+							    Parent_View 	@38
+							    location   	(413, 402)
+							    fill_color 	13434879
+							    anchor_loc 	1
+							    nlines     	2
+							    max_width  	604
+							    justify    	0
+							    label      	"система отображает форму ввода  пареметров сервиса")
+							icon_style 	"Icon"
+							line_color 	3342489
+							fill_color 	13434879
+							quidu      	"3CDFE9180247"
+							width      	700
+							height     	143
+							autoResize 	TRUE)
+						    (object ActivityStateView "администратор заполняет форму и нажимает Next" @39
+							Parent_View 	@36
+							location   	(413, 700)
+							font       	(object Font
+							    size       	9
+							    face       	"Arial"
+							    charSet    	204
+							    bold       	FALSE
+							    italics    	FALSE
+							    underline  	FALSE
+							    strike     	FALSE
+							    color      	0
+							    default_color 	TRUE)
+							label      	(object ItemLabel
+							    Parent_View 	@39
+							    location   	(413, 669)
+							    fill_color 	13434879
+							    anchor_loc 	1
+							    nlines     	2
+							    max_width  	546
+							    justify    	0
+							    label      	"администратор заполняет форму и нажимает Next")
+							icon_style 	"Label"
+							line_color 	3342489
+							fill_color 	13434879
+							quidu      	"3CDFE9680288"
+							width      	694
+							height     	169
+							annotation 	1
+							autoResize 	TRUE)
+						    (object TransView "" @40
+							stereotype 	TRUE
+							line_color 	3342489
+							quidu      	"3CDFE9CB0335"
+							client     	@38
+							supplier   	@39
+							line_style 	0
+							x_offset   	FALSE)
+						    (object NoteView @41
+							Parent_View 	@36
+							location   	(1227, 423)
+							font       	(object Font
+							    size       	9
+							    face       	"Arial"
+							    charSet    	204
+							    bold       	FALSE
+							    italics    	FALSE
+							    underline  	FALSE
+							    strike     	FALSE
+							    color      	0
+							    default_color 	TRUE)
+							label      	(object ItemLabel
+							    Parent_View 	@41
+							    location   	(908, 295)
+							    fill_color 	13434879
+							    nlines     	5
+							    max_width  	603
+							    label      	
+|параметры
+|1 - системный идентификатор
+|2 - хост
+|3 - порт
+|4 - пароль
+							    )
+							line_color 	3342489
+							fill_color 	13434879
+							width      	663
+							height     	269)
+						    (object AttachView "" @42
+							stereotype 	TRUE
+							line_color 	3342489
+							client     	@38
+							supplier   	@41
+							line_style 	0)
+						    (object StateView "EndState" "$UNNAMED$24" @43
+							Parent_View 	@36
+							location   	(412, 1165)
+							font       	(object Font
+							    size       	9
+							    face       	"Arial"
+							    charSet    	204
+							    bold       	FALSE
+							    italics    	FALSE
+							    underline  	FALSE
+							    strike     	FALSE
+							    color      	0
+							    default_color 	TRUE)
+							label      	(object ItemLabel
+							    Parent_View 	@43
+							    location   	(466, 1123)
+							    nlines     	2
+							    max_width  	600
+							    label      	"")
+							icon_style 	"Icon"
+							line_color 	3342489
+							quidu      	"3CDFEC8E03AA"
+							autoResize 	TRUE)
+						    (object StateView "Normal" "система сообщает об успешности операции" @44
+							Parent_View 	@36
+							location   	(413, 964)
+							font       	(object Font
+							    size       	9
+							    face       	"Arial"
+							    charSet    	204
+							    bold       	FALSE
+							    italics    	FALSE
+							    underline  	FALSE
+							    strike     	FALSE
+							    color      	0
+							    default_color 	TRUE)
+							label      	(object ItemLabel
+							    Parent_View 	@44
+							    location   	(413, 933)
+							    fill_color 	13434879
+							    anchor_loc 	1
+							    nlines     	2
+							    max_width  	604
+							    justify    	0
+							    label      	"система сообщает об успешности операции")
+							icon_style 	"Icon"
+							line_color 	3342489
+							fill_color 	13434879
+							quidu      	"3CDFEC73008A"
+							width      	700
+							height     	169
+							autoResize 	TRUE)
+						    (object TransView "" @45
+							stereotype 	TRUE
+							line_color 	3342489
+							quidu      	"3CDFEC8B0193"
+							client     	@39
+							supplier   	@44
+							line_style 	0
+							x_offset   	FALSE)
+						    (object TransView "" @46
+							stereotype 	TRUE
+							line_color 	3342489
+							quidu      	"3CDFEC93011C"
+							client     	@44
+							supplier   	@43
+							line_style 	0
+							x_offset   	FALSE)
+						    (object NoteView @47
+							Parent_View 	@36
+							location   	(775, 215)
+							font       	(object Font
+							    size       	9
+							    face       	"Arial"
+							    charSet    	204
+							    bold       	FALSE
+							    italics    	FALSE
+							    underline  	FALSE
+							    strike     	FALSE
+							    color      	0
+							    default_color 	TRUE)
+							label      	(object ItemLabel
+							    Parent_View 	@47
+							    location   	(12, 153)
+							    fill_color 	13434879
+							    nlines     	2
+							    max_width  	1490
+							    label      	"предусловия - нет")
+							line_color 	3342489
+							fill_color 	13434879
+							width      	1550
+							height     	137)
+						    (object NoteView @48
+							Parent_View 	@36
+							location   	(781, 1315)
+							font       	(object Font
+							    size       	9
+							    face       	"Arial"
+							    charSet    	204
+							    bold       	FALSE
+							    italics    	FALSE
+							    underline  	FALSE
+							    strike     	FALSE
+							    color      	0
+							    default_color 	TRUE)
+							label      	(object ItemLabel
+							    Parent_View 	@48
+							    location   	(12, 1256)
+							    fill_color 	13434879
+							    nlines     	2
+							    max_width  	1503
+							    label      	"постусловие - в системе появляется регистрационная запись созданного клиента")
+							line_color 	3342489
+							fill_color 	13434879
+							width      	1563
+							height     	131))))))
+				(object UseCase "Удалить клиента"
+				    quid       	"3CDFBDFB002A"
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3CDFBE1B01DF"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Управление внешними сервисами"
+					    quidu      	"3C4EACD00030")))
+				(object UseCase "Изменить параметры клиента"
+				    quid       	"3CDFBE05036E"
+				    superclasses 	(list inheritance_relationship_list
+					(object Inheritance_Relationship
+					    quid       	"3CDFBE21001B"
+					    supplier   	"Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Управление внешними сервисами"
+					    quidu      	"3C4EACD00030"))))
+			    logical_presentations 	(list unit_reference_list
+				(object UseCaseDiagram "Управление внешними сервисами"
+				    quid       	"3CDFBD5B0174"
+				    title      	"Управление внешними сервисами"
+				    zoom       	100
+				    max_height 	28350
+				    max_width  	21600
+				    origin_x   	0
+				    origin_y   	0
+				    items      	(list diagram_item_list
+					(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Управление внешними сервисами" @49
+					    location   	(734, 200)
+					    font       	(object Font
+						size       	9
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	FALSE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    label      	(object ItemLabel
+						Parent_View 	@49
+						location   	(734, 338)
+						anchor_loc 	1
+						nlines     	2
+						max_width  	630
+						justify    	0
+						label      	"Управление внешними сервисами")
+					    icon_style 	"Icon"
+					    line_color 	3342489
+					    fill_color 	13434879
+					    quidu      	"3C4EACD00030")
+					(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Зарегистрировать клиента" @50
+					    location   	(309, 612)
+					    font       	(object Font
+						size       	9
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	FALSE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    label      	(object ItemLabel
+						Parent_View 	@50
+						location   	(309, 750)
+						anchor_loc 	1
+						nlines     	2
+						max_width  	630
+						justify    	0
+						label      	"Зарегистрировать клиента")
+					    icon_style 	"Icon"
+					    line_color 	3342489
+					    fill_color 	13434879
+					    quidu      	"3CDFBD8E01FA"
+					    height     	118)
+					(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Удалить клиента" @51
+					    location   	(744, 620)
+					    font       	(object Font
+						size       	9
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	FALSE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    label      	(object ItemLabel
+						Parent_View 	@51
+						location   	(744, 758)
+						anchor_loc 	1
+						nlines     	2
+						max_width  	630
+						justify    	0
+						label      	"Удалить клиента")
+					    icon_style 	"Icon"
+					    line_color 	3342489
+					    fill_color 	13434879
+					    quidu      	"3CDFBDFB002A"
+					    height     	118)
+					(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Изменить параметры клиента" @52
+					    location   	(1250, 612)
+					    font       	(object Font
+						size       	9
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	FALSE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    label      	(object ItemLabel
+						Parent_View 	@52
+						location   	(1250, 750)
+						anchor_loc 	1
+						nlines     	2
+						max_width  	630
+						justify    	0
+						label      	"Изменить параметры клиента")
+					    icon_style 	"Icon"
+					    line_color 	3342489
+					    fill_color 	13434879
+					    quidu      	"3CDFBE05036E"
+					    height     	118)
+					(object InheritView "" @53
+					    stereotype 	TRUE
+					    line_color 	3342489
+					    quidu      	"3CDFBE19027C"
+					    client     	@50
+					    supplier   	@49
+					    line_style 	0)
+					(object InheritView "" @54
+					    stereotype 	TRUE
+					    line_color 	3342489
+					    quidu      	"3CDFBE1B01DF"
+					    client     	@51
+					    supplier   	@49
+					    line_style 	0)
+					(object InheritView "" @55
+					    stereotype 	TRUE
+					    line_color 	3342489
+					    quidu      	"3CDFBE21001B"
+					    client     	@52
+					    supplier   	@49
+					    line_style 	0)
+					(object NoteView @56
+					    location   	(1422, 200)
+					    font       	(object Font
+						size       	9
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	FALSE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    label      	(object ItemLabel
+						Parent_View 	@56
+						location   	(1212, 110)
+						fill_color 	13434879
+						nlines     	3
+						max_width  	384
+						label      	"Class Diagram: SME Management / SME Management")
+					    line_color 	3342489
+					    fill_color 	13434879
+					    width      	444
+					    height     	193
+					    quidu      	"3C68F1B8029D")
+					(object AttachView "" @57
+					    stereotype 	TRUE
+					    line_color 	3342489
+					    client     	@49
+					    supplier   	@56
+					    line_style 	0)
+					(object NoteView @58
+					    location   	(303, 925)
+					    font       	(object Font
+						size       	9
+						face       	"Arial"
+						charSet    	204
+						bold       	FALSE
+						italics    	FALSE
+						underline  	FALSE
+						strike     	FALSE
+						color      	0
+						default_color 	TRUE)
+					    label      	(object ItemLabel
+						Parent_View 	@58
+						location   	(165, 865)
+						fill_color 	13434879
+						nlines     	2
+						max_width  	240
+						label      	"Activity Diagram: Зарегистрировать клиента / Primary flow")
+					    line_color 	3342489
+					    fill_color 	13434879
+					    width      	300
+					    height     	132
+					    quidu      	"3CDFE79B0087")
+					(object AttachView "" @59
+					    stereotype 	TRUE
+					    line_color 	3342489
+					    client     	@58
+					    supplier   	@50
+					    line_style 	0)))))
+			(object Class_Category "Управление пользователями"
+			    quid       	"3C61757E02C6"
+			    exportControl 	"Public"
+			    logical_models 	(list unit_reference_list
+				(object UseCase "Управление пользователями"
+				    quid       	"3C4C4FD601E1"
+				    documentation 	
+|Для обеспечения возможности разделения обязанностей по администрированию SMSC должен поддерживать возможность управления пользователями. Под пользователем здесь понимается активный субъект типа Администратор. После первичной инициализации в SMSC зарегистрирован единственный пользователь, который может заводить новых и управлять их правами.
+|Следует поддержать следующие функции управления пользователями
+|·	добавление пользователя
+|·	удаление пользователя
+|·	просмотр списка пользователей
+|·	модификация прав пользователя
+|Следовательно, SMSC должен обеспечить аутентификацию и авторизацию пользователей. Список прав должен быть определен позже.
+|Расщепление возможностей субъекта типа Администратор по непересекающийся набор ролей считается нецелесообразным, хотя и не исключается.
+|
+				    ))
+			    logical_presentations 	(list unit_reference_list)))
+		    logical_presentations 	(list unit_reference_list
+			(object UseCaseDiagram "Local  View - <Configure Server>"
+			    quid       	"3C3D9BDB0175"
+			    title      	"Local  View - <Configure Server>"
+			    documentation 	"основные функции при конфигурировании"
+			    zoom       	100
+			    max_height 	28350
+			    max_width  	21600
+			    origin_x   	0
+			    origin_y   	0
+			    items      	(list diagram_item_list
+				(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление пользователями::Управление пользователями" @60
+				    location   	(648, 196)
+				    font       	(object Font
+					size       	9
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@60
+					location   	(648, 334)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Управление пользователями")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C4C4FD601E1")
+				(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление короткими адресами::Управление короткими адресами" @61
+				    location   	(812, 518)
+				    font       	(object Font
+					size       	9
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@61
+					location   	(812, 656)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	636
+					justify    	0
+					label      	"Управление короткими адресами")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C4C504D02B5")
+				(object UseCaseView "Use Case View::Use-Case Model::Trash::Списки рассылки" @62
+				    location   	(1376, 416)
+				    font       	(object Font
+					size       	9
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@62
+					location   	(1376, 554)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Списки рассылки")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C4D9A78001E")
+				(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление языками::Управление языками" @63
+				    location   	(912, 944)
+				    font       	(object Font
+					size       	9
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@63
+					location   	(912, 1082)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Управление языками")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C4D9BCC00DB")
+				(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Управление внешними сервисами" @64
+				    location   	(1337, 146)
+				    font       	(object Font
+					size       	9
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@64
+					location   	(1337, 284)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	642
+					justify    	0
+					label      	"Управление внешними сервисами")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C4EACD00030")
+				(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление маршрутами::Управление маршрутами" @65
+				    location   	(1412, 800)
+				    font       	(object Font
+					size       	9
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@65
+					location   	(1412, 938)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Управление маршрутами")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C4C5079009B")
+				(object ClassView "Class" "Use Case View::Use-Case Model::Actors::Administrator" @66
+				    ShowCompartmentStereotypes 	TRUE
+				    IncludeAttribute 	TRUE
+				    IncludeOperation 	TRUE
+				    location   	(155, 496)
+				    font       	(object Font
+					size       	9
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@66
+					location   	(155, 656)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	889
+					justify    	0
+					label      	"Administrator")
+				    icon       	"Actor"
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    quidu      	"3C3C835302B9"
+				    annotation 	8
+				    autoResize 	TRUE)))))
+		(object Class_Category "Vlad"
+		    quid       	"3CA87EF40124"
+		    stereotype 	"use-case package"
+		    exportControl 	"Public"
+		    logical_models 	(list unit_reference_list
+			(object UseCase "GroupManagement"
+			    quid       	"3CA87F9200F9")
+			(object UseCase "CreateGroup"
+			    quid       	"3CA87FAB0376")
+			(object UseCase "RemoveGroup"
+			    quid       	"3CA87FB703E1")
+			(object UseCase "ViewGroup"
+			    quid       	"3CA87FD10104")
+			(object UseCase "ModifyGroup"
+			    quid       	"3CA87FEC0383")
+			(object UseCase "InsertSubscriberToGroup"
+			    quid       	"3CA8800A0156")
+			(object UseCase "RemoveSubscriberFromGroup"
+			    quid       	"3CA8801D0211")
+			(object UseCase "ViewSubscribersInGroup"
+			    quid       	"3CA8803201E0"))
+		    logical_presentations 	(list unit_reference_list)))
+	    logical_presentations 	(list unit_reference_list
+		(object UseCaseDiagram "Architecturally Significant Use-Cases"
+		    quid       	"34E36CFC03D4"
+		    title      	"Architecturally Significant Use-Cases"
+		    documentation 	"This diagram contains all architecturally significant use cases.  <Annotations may be added to the diagram to explain why particular use cases are architecturally significant.>"
+		    zoom       	100
+		    max_height 	28350
+		    max_width  	21600
+		    origin_x   	0
+		    origin_y   	0
+		    items      	(list diagram_item_list))))
+	(object Class_Category "Trash"
+	    quid       	"3C6171C20022"
+	    exportControl 	"Public"
+	    logical_models 	(list unit_reference_list
+		(object UseCase "Списки рассылки"
+		    quid       	"3C4D9A78001E"
+		    documentation 	"Управление списком рассылки. Считаю такую функциональность вредной, поскольку это функциональность внешнего приложения, причем использование SMS не по назначению. Доставка сообщений абонентам на основе их местоположения должна быть реализована с использованием Cell Broadcast. А простые списки рассылки нужно выносить во внешнее по отношению к SMSC приложение."))
+	    logical_presentations 	(list unit_reference_list))
+	(object Class_Category "Adm"
+	    quid       	"3CA425C60033"
+	    exportControl 	"Public"
+	    logical_models 	(list unit_reference_list
+		(object Class "User"
+		    quid       	"3C6265ED03AE"
+		    stereotype 	"Actor"
+		    visible_modules 	(list dependency_list
+			(object Dependency_Relationship
+			    quid       	"3C6266D702D0"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Настройка своих параметров посредством SMS или USSD"
+			    quidu      	"3C6266AD027F")))
+		(object Class "Admin"
+		    quid       	"3C612175010C"
+		    stereotype 	"Actor"
+		    visible_modules 	(list dependency_list
+			(object Dependency_Relationship
+			    quid       	"3C6240E20140"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Monitoring::Monitroing service parameters"
+			    quidu      	"3C612186020B")
+			(object Dependency_Relationship
+			    quid       	"3C6240E402F2"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::View service logs"
+			    quidu      	"3C6121A00258")
+			(object Dependency_Relationship
+			    quid       	"3C6240E6034F"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::Configure service"
+			    quidu      	"3C6121A902E8")
+			(object Dependency_Relationship
+			    quid       	"3C6240E900F0"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::Start service"
+			    quidu      	"3C612236031E")
+			(object Dependency_Relationship
+			    quid       	"3C6240EC0127"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::Stop service"
+			    quidu      	"3C61224001F6")
+			(object Dependency_Relationship
+			    quid       	"3C6240F10369"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::Kill service"
+			    quidu      	"3C612307015E")
+			(object Dependency_Relationship
+			    quid       	"3C6240FA03DA"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::View services list with statuses"
+			    quidu      	"3C62B23100A4")
+			(object Dependency_Relationship
+			    quid       	"3C62410000F4"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::View service configuration"
+			    quidu      	"3C6121B402D0")
+			(object Dependency_Relationship
+			    quid       	"3C6241F00386"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Monitoring::Monitoring суммарных параметров системы"
+			    quidu      	"3C6241C10374")
+			(object Dependency_Relationship
+			    quid       	"3C628FEB0150"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::Add administrator"
+			    quidu      	"3C628FB80160")
+			(object Dependency_Relationship
+			    quid       	"3C62B1B2008C"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::Add service"
+			    quidu      	"3C62B15902F0")
+			(object Dependency_Relationship
+			    quid       	"3C62B1C400ED"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::Remove service"
+			    quidu      	"3C62B1660014")
+			(object Dependency_Relationship
+			    quid       	"3C62C05D02DD"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами"
+			    quidu      	"3C62BFC203A1")
+			(object Dependency_Relationship
+			    quid       	"3C62C0CA02E5"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами"
+			    quidu      	"3C62C06F01DF")
+			(object Dependency_Relationship
+			    quid       	"3C62C0EA025F"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Monitoring"
+			    quidu      	"3C62C0D701CB")
+			(object Dependency_Relationship
+			    quid       	"3C62CDDB008F"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::Delete administrator"
+			    quidu      	"3C62C55A021E")
+			(object Dependency_Relationship
+			    quid       	"3C62CDDD00B0"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::Change administrator personal data"
+			    quidu      	"3C62C56703A3")
+			(object Dependency_Relationship
+			    quid       	"3C62CDDF01E0"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::Change administrator rights"
+			    quidu      	"3C62C57800CD")
+			(object Dependency_Relationship
+			    quid       	"3C62CE510163"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::View administrator's list with personal data"
+			    quidu      	"3C62CCF20060")
+			(object Dependency_Relationship
+			    quid       	"3C62CE5400F9"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::View administrator's list with groups and rights"
+			    quidu      	"3C62CD2502BD")
+			(object Dependency_Relationship
+			    quid       	"3C62CFBF02AD"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::Create group"
+			    quidu      	"3C62CF9203CA")
+			(object Dependency_Relationship
+			    quid       	"3C62CFC20103"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::Change group rights"
+			    quidu      	"3C62CFA2000C")
+			(object Dependency_Relationship
+			    quid       	"3C62CFC40282"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::Remove group"
+			    quidu      	"3C62CF9A0231")
+			(object Dependency_Relationship
+			    quid       	"3C62D01B0346"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::View group list with rights"
+			    quidu      	"3C62CFC903CA")
+			(object Dependency_Relationship
+			    quid       	"3C62D01E01E2"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::View group details"
+			    quidu      	"3C62D00F00BE")
+			(object Dependency_Relationship
+			    quid       	"3C62D02003BC"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::View group list with persons"
+			    quidu      	"3C62CFD703C0")
+			(object Dependency_Relationship
+			    quid       	"3C63D04D000E"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::Add/remove administrator from group"
+			    quidu      	"3C63D0260383")
+			(object Dependency_Relationship
+			    quid       	"3C63D0A802B9"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::Add/remove members from group"
+			    quidu      	"3C63D08B027B")
+			(object Dependency_Relationship
+			    quid       	"3C6BA834003F"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::Add Host"
+			    quidu      	"3C6BA81701BA")
+			(object Dependency_Relationship
+			    quid       	"3C6BA83602CD"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::Remove Host"
+			    quidu      	"3C6BA82701E5"))
+		    used_nodes 	(list uses_relationship_list
+			(object Uses_Relationship
+			    quid       	"3C62B41400FE"
+			    supplier   	"Use Case View::Use-Case Model::Adm::Admin"
+			    quidu      	"3C612175010C")))
+		(object UseCase "Настройка своих параметров посредством SMS или USSD"
+		    quid       	"3C6266AD027F"
+		    documentation 	"Настройка таких параметров как роуминг (вкл/выкл), автоопр. номера, и т.д....")
+		(object UseCase "Изменение параметров пользователя(пользователей)"
+		    quid       	"3C6268380317")
+		(object Class_Category "Управление сервисами"
+		    quid       	"3C62C06F01DF"
+		    exportControl 	"Public"
+		    logical_models 	(list unit_reference_list
+			(object UseCase "Add service"
+			    quid       	"3C62B15902F0"
+			    visible_modules 	(list dependency_list
+				(object Dependency_Relationship
+				    quid       	"3C62B23B0009"
+				    stereotype 	"include"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::View services list with statuses"
+				    quidu      	"3C62B23100A4")))
+			(object UseCase "Configure service"
+			    quid       	"3C6121A902E8"
+			    visible_modules 	(list dependency_list
+				(object Dependency_Relationship
+				    quid       	"3C61221401CA"
+				    stereotype 	"include"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::View service configuration"
+				    quidu      	"3C6121B402D0")))
+			(object UseCase "Start service"
+			    quid       	"3C612236031E"
+			    visible_modules 	(list dependency_list
+				(object Dependency_Relationship
+				    quid       	"3C61225503D7"
+				    stereotype 	"include"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::View services list with statuses"
+				    quidu      	"3C62B23100A4")))
+			(object UseCase "Stop service"
+			    quid       	"3C61224001F6"
+			    visible_modules 	(list dependency_list
+				(object Dependency_Relationship
+				    quid       	"3C612258011E"
+				    stereotype 	"include"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::View services list with statuses"
+				    quidu      	"3C62B23100A4")
+				(object Dependency_Relationship
+				    quid       	"3C62B18801FE"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::View service configuration"
+				    quidu      	"3C6121B402D0")
+				(object Dependency_Relationship
+				    quid       	"3C62B1900264"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::Start service"
+				    quidu      	"3C612236031E")
+				(object Dependency_Relationship
+				    quid       	"3C62B1950257"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Admin"
+				    quidu      	"3C612175010C")
+				(object Dependency_Relationship
+				    quid       	"3C62B215034D"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::Kill service"
+				    quidu      	"3C612307015E")))
+			(object UseCase "Remove service"
+			    quid       	"3C62B1660014"
+			    visible_modules 	(list dependency_list
+				(object Dependency_Relationship
+				    quid       	"3C62B1BC00FF"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Admin"
+				    quidu      	"3C612175010C")
+				(object Dependency_Relationship
+				    quid       	"3C62B23E01BB"
+				    stereotype 	"include"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::View services list with statuses"
+				    quidu      	"3C62B23100A4")))
+			(object UseCase "Kill service"
+			    quid       	"3C612307015E"
+			    visible_modules 	(list dependency_list
+				(object Dependency_Relationship
+				    quid       	"3C61231000AD"
+				    stereotype 	"include"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::View services list with statuses"
+				    quidu      	"3C62B23100A4")))
+			(object UseCase "View services list with statuses"
+			    quid       	"3C62B23100A4")
+			(object UseCase "View service configuration"
+			    quid       	"3C6121B402D0"
+			    visible_modules 	(list dependency_list
+				(object Dependency_Relationship
+				    quid       	"3C6121D901A7"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::Configure service"
+				    quidu      	"3C6121A902E8")))
+			(object UseCase "View service logs"
+			    quid       	"3C6121A00258")
+			(object UseCase "Add Host"
+			    quid       	"3C6BA81701BA"
+			    visible_modules 	(list dependency_list
+				(object Dependency_Relationship
+				    quid       	"3C6BA84C026B"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::View hosts with services"
+				    quidu      	"3C6BA83E0243")))
+			(object UseCase "Remove Host"
+			    quid       	"3C6BA82701E5"
+			    visible_modules 	(list dependency_list
+				(object Dependency_Relationship
+				    quid       	"3C6BA84E0296"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление сервисами::View hosts with services"
+				    quidu      	"3C6BA83E0243")))
+			(object UseCase "View hosts with services"
+			    quid       	"3C6BA83E0243"))
+		    logical_presentations 	(list unit_reference_list
+			(object UseCaseDiagram "Main"
+			    quid       	"3C62C261023A"
+			    title      	"Main"
+			    zoom       	100
+			    max_height 	28350
+			    max_width  	21600
+			    origin_x   	0
+			    origin_y   	0
+			    items      	(list diagram_item_list
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление сервисами::Add service" @67
+				    location   	(2016, 1248)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@67
+					location   	(2016, 1386)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Add service")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C62B15902F0"
+				    height     	118)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление сервисами::Configure service" @68
+				    location   	(416, 640)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@68
+					location   	(416, 778)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Configure service")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C6121A902E8"
+				    height     	118)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление сервисами::Kill service" @69
+				    location   	(1088, 1248)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@69
+					location   	(1088, 1386)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Kill service")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C612307015E"
+				    height     	118)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление сервисами::Remove service" @70
+				    location   	(1632, 1248)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@70
+					location   	(1632, 1386)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Remove service")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C62B1660014"
+				    height     	118)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление сервисами::Start service" @71
+				    location   	(320, 1248)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@71
+					location   	(320, 1386)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Start service")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C612236031E"
+				    height     	118)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление сервисами::Stop service" @72
+				    location   	(704, 1248)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@72
+					location   	(704, 1386)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Stop service")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C61224001F6"
+				    height     	118)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление сервисами::View service configuration" @73
+				    location   	(416, 160)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@73
+					location   	(416, 298)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"View service configuration")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C6121B402D0"
+				    height     	118)
+				(object DependencyView "" @74
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    stereotype 	FALSE
+				    line_color 	3342489
+				    quidu      	"3C61221401CA"
+				    client     	@68
+				    supplier   	@73
+				    line_style 	0)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление сервисами::View service logs" @75
+				    location   	(2000, 176)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@75
+					location   	(2000, 314)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"View service logs")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C6121A00258"
+				    height     	118)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление сервисами::View services list with statuses" @76
+				    location   	(1360, 1680)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@76
+					location   	(1360, 1818)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"View services list with statuses")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C62B23100A4"
+				    height     	118)
+				(object DependencyView "" @77
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    stereotype 	FALSE
+				    line_color 	3342489
+				    quidu      	"3C61225503D7"
+				    client     	@71
+				    supplier   	@76
+				    line_style 	0)
+				(object DependencyView "" @78
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    stereotype 	FALSE
+				    line_color 	3342489
+				    quidu      	"3C61231000AD"
+				    client     	@69
+				    supplier   	@76
+				    line_style 	0)
+				(object ClassView "Class" "Use Case View::Use-Case Model::Adm::Admin" @79
+				    ShowCompartmentStereotypes 	TRUE
+				    IncludeAttribute 	TRUE
+				    IncludeOperation 	TRUE
+				    location   	(1271, 651)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@79
+					location   	(1271, 811)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	973
+					justify    	0
+					label      	"Admin")
+				    icon       	"Actor"
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    quidu      	"3C612175010C"
+				    annotation 	8
+				    autoResize 	TRUE)
+				(object DependencyView "" @80
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    stereotype 	FALSE
+				    line_color 	3342489
+				    quidu      	"3C62B23E01BB"
+				    client     	@70
+				    supplier   	@76
+				    line_style 	0)
+				(object DependencyView "" @81
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C62B1BC00FF"
+				    client     	@70
+				    supplier   	@79
+				    line_style 	0)
+				(object DependencyView "" @82
+				    stereotype 	FALSE
+				    line_color 	3342489
+				    quidu      	"3C62B23B0009"
+				    client     	@67
+				    supplier   	@76
+				    line_style 	0)
+				(object DependencyView "" @83
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    stereotype 	FALSE
+				    line_color 	3342489
+				    quidu      	"3C62B23B0009"
+				    client     	@67
+				    supplier   	@76
+				    line_style 	0)
+				(object DependencyView "" @84
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    stereotype 	FALSE
+				    line_color 	3342489
+				    quidu      	"3C612258011E"
+				    client     	@72
+				    supplier   	@76
+				    line_style 	0)
+				(object DependencyView "" @85
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C6240E402F2"
+				    client     	@79
+				    supplier   	@75
+				    line_style 	0)
+				(object DependencyView "" @86
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C6240E6034F"
+				    client     	@79
+				    supplier   	@68
+				    line_style 	0)
+				(object DependencyView "" @87
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C6240E900F0"
+				    client     	@79
+				    supplier   	@71
+				    line_style 	0)
+				(object DependencyView "" @88
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C6240F10369"
+				    client     	@79
+				    supplier   	@69
+				    line_style 	0)
+				(object DependencyView "" @89
+				    stereotype 	FALSE
+				    line_color 	3342489
+				    quidu      	"3C6240FA03DA"
+				    client     	@79
+				    supplier   	@76
+				    line_style 	0)
+				(object DependencyView "" @90
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C62410000F4"
+				    client     	@79
+				    supplier   	@73
+				    line_style 	0)
+				(object DependencyView "" @91
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C62B1B2008C"
+				    client     	@79
+				    supplier   	@67
+				    line_style 	0)
+				(object DependencyView "" @92
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C62B1C400ED"
+				    client     	@79
+				    supplier   	@70
+				    line_style 	0)
+				(object DependencyView "" @93
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C6240EC0127"
+				    client     	@79
+				    supplier   	@72
+				    line_style 	0)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление сервисами::Add Host" @94
+				    location   	(2352, 1264)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@94
+					location   	(2352, 1402)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Add Host")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C6BA81701BA"
+				    height     	118)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление сервисами::Remove Host" @95
+				    location   	(2672, 1264)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@95
+					location   	(2672, 1402)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Remove Host")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C6BA82701E5"
+				    height     	118)
+				(object DependencyView "" @96
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C6BA834003F"
+				    client     	@79
+				    supplier   	@94
+				    line_style 	0)
+				(object DependencyView "" @97
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C6BA83602CD"
+				    client     	@79
+				    supplier   	@95
+				    line_style 	0)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление сервисами::View hosts with services" @98
+				    location   	(2528, 1616)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@98
+					location   	(2528, 1754)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"View hosts with services")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C6BA83E0243"
+				    height     	118)
+				(object DependencyView "" @99
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C6BA84C026B"
+				    client     	@94
+				    supplier   	@98
+				    line_style 	0)
+				(object DependencyView "" @100
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C6BA84E0296"
+				    client     	@95
+				    supplier   	@98
+				    line_style 	0)))))
+		(object Class_Category "Управление администраторами"
+		    quid       	"3C62BFC203A1"
+		    documentation 	"управление администраторами (жобавление/удаление, раздача прав) осуществляется администраторами, у которых есть на это право"
+		    exportControl 	"Public"
+		    logical_models 	(list unit_reference_list
+			(object UseCase "Add administrator"
+			    quid       	"3C628FB80160"
+			    visible_modules 	(list dependency_list
+				(object Dependency_Relationship
+				    quid       	"3C62CDE60117"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::View administrator's list with personal data"
+				    quidu      	"3C62CCF20060")
+				(object Dependency_Relationship
+				    quid       	"3C62CDEB02CD"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::View administrator's list with groups and rights"
+				    quidu      	"3C62CD2502BD")))
+			(object UseCase "Delete administrator"
+			    quid       	"3C62C55A021E"
+			    visible_modules 	(list dependency_list
+				(object Dependency_Relationship
+				    quid       	"3C62CDE803D7"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::View administrator's list with personal data"
+				    quidu      	"3C62CCF20060")
+				(object Dependency_Relationship
+				    quid       	"3C62CDEE0105"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::View administrator's list with groups and rights"
+				    quidu      	"3C62CD2502BD")))
+			(object UseCase "Change administrator personal data"
+			    quid       	"3C62C56703A3"
+			    documentation 	"Изменение информации об администраторе (номер сотового телефона, домашний адрес, девичья фамилия матери...)"
+			    visible_modules 	(list dependency_list
+				(object Dependency_Relationship
+				    quid       	"3C62CD1A02B7"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::View administrator's list with personal data"
+				    quidu      	"3C62CCF20060")
+				(object Dependency_Relationship
+				    quid       	"3C62CE0500AE"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::View administrator's list with groups and rights"
+				    quidu      	"3C62CD2502BD")))
+			(object UseCase "Change administrator rights"
+			    quid       	"3C62C57800CD"
+			    documentation 	"Добавление в / удаление из группы, добавление/удаление персональных прав"
+			    visible_modules 	(list dependency_list
+				(object Dependency_Relationship
+				    quid       	"3C62CD3A000A"
+				    stereotype 	"include"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::View administrator's list with groups and rights"
+				    quidu      	"3C62CD2502BD")
+				(object Dependency_Relationship
+				    quid       	"3C62CE120003"
+				    supplier   	"Use Case View::Use-Case Model::Adm::Управление администраторами::View administrator's list with personal data"
+				    quidu      	"3C62CCF20060")))
+			(object UseCase "View administrator's list with personal data"
+			    quid       	"3C62CCF20060")
+			(object UseCase "View administrator's list with groups and rights"
+			    quid       	"3C62CD2502BD")
+			(object UseCase "Create group"
+			    quid       	"3C62CF9203CA")
+			(object UseCase "Remove group"
+			    quid       	"3C62CF9A0231")
+			(object UseCase "Change group rights"
+			    quid       	"3C62CFA2000C")
+			(object UseCase "View group list with rights"
+			    quid       	"3C62CFC903CA")
+			(object UseCase "View group list with persons"
+			    quid       	"3C62CFD703C0")
+			(object UseCase "View group details"
+			    quid       	"3C62D00F00BE"
+			    documentation 	"Просмотр названия группы, списка членов группы и списка прав группы.")
+			(object UseCase "Add/remove administrator from group"
+			    quid       	"3C63D0260383")
+			(object UseCase "Add/remove members from group"
+			    quid       	"3C63D08B027B"))
+		    logical_presentations 	(list unit_reference_list
+			(object UseCaseDiagram "Main"
+			    quid       	"3C62C26E03AB"
+			    title      	"Main"
+			    zoom       	100
+			    max_height 	28350
+			    max_width  	21600
+			    origin_x   	0
+			    origin_y   	13
+			    items      	(list diagram_item_list
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление администраторами::Add administrator" @101
+				    location   	(672, 176)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@101
+					location   	(672, 314)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Add administrator")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C628FB80160")
+				(object ClassView "Class" "Use Case View::Use-Case Model::Adm::Admin" @102
+				    ShowCompartmentStereotypes 	TRUE
+				    IncludeAttribute 	TRUE
+				    IncludeOperation 	TRUE
+				    location   	(1240, 620)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@102
+					location   	(1240, 780)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	960
+					justify    	0
+					label      	"Admin")
+				    icon       	"Actor"
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    quidu      	"3C612175010C"
+				    annotation 	8
+				    autoResize 	TRUE)
+				(object DependencyView "" @103
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C628FEB0150"
+				    client     	@102
+				    supplier   	@101
+				    line_style 	0)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление администраторами::Delete administrator" @104
+				    location   	(672, 480)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@104
+					location   	(672, 618)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Delete administrator")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C62C55A021E"
+				    height     	118)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление администраторами::Change administrator personal data" @105
+				    location   	(672, 800)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@105
+					location   	(672, 938)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Change administrator personal data")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C62C56703A3"
+				    height     	118)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление администраторами::Change administrator rights" @106
+				    location   	(672, 1136)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@106
+					location   	(672, 1274)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Change administrator rights")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C62C57800CD"
+				    height     	118)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление администраторами::View administrator's list with personal data" @107
+				    location   	(279, 341)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@107
+					location   	(279, 479)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"View administrator's list with personal data")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C62CCF20060"
+				    height     	118)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление администраторами::View administrator's list with groups and rights" @108
+				    location   	(192, 880)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@108
+					location   	(192, 1018)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"View administrator's list with groups and rights")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C62CD2502BD"
+				    height     	118)
+				(object DependencyView "" @109
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C62CDDB008F"
+				    client     	@102
+				    supplier   	@104
+				    line_style 	0)
+				(object DependencyView "" @110
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C62CDDD00B0"
+				    client     	@102
+				    supplier   	@105
+				    line_style 	0)
+				(object DependencyView "" @111
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C62CDDF01E0"
+				    client     	@102
+				    supplier   	@106
+				    line_style 	0)
+				(object DependencyView "" @112
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C62CE510163"
+				    client     	@102
+				    supplier   	@107
+				    line_style 	0)
+				(object DependencyView "" @113
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C62CE5400F9"
+				    client     	@102
+				    supplier   	@108
+				    line_style 	0)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление администраторами::Create group" @114
+				    location   	(1840, 208)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@114
+					location   	(1840, 346)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Create group")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C62CF9203CA"
+				    height     	118)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление администраторами::Remove group" @115
+				    location   	(1840, 1152)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@115
+					location   	(1840, 1290)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Remove group")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C62CF9A0231"
+				    height     	118)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление администраторами::Change group rights" @116
+				    location   	(1840, 512)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@116
+					location   	(1840, 650)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Change group rights")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C62CFA2000C"
+				    height     	118)
+				(object DependencyView "" @117
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C62CFBF02AD"
+				    client     	@102
+				    supplier   	@114
+				    line_style 	0)
+				(object DependencyView "" @118
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C62CFC20103"
+				    client     	@102
+				    supplier   	@116
+				    line_style 	0)
+				(object DependencyView "" @119
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C62CFC40282"
+				    client     	@102
+				    supplier   	@115
+				    line_style 	0)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление администраторами::View group list with rights" @120
+				    location   	(2272, 288)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@120
+					location   	(2272, 426)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"View group list with rights")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C62CFC903CA"
+				    height     	118)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление администраторами::View group list with persons" @121
+				    location   	(2272, 1056)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@121
+					location   	(2272, 1194)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"View group list with persons")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C62CFD703C0"
+				    height     	118)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление администраторами::View group details" @122
+				    location   	(2272, 672)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@122
+					location   	(2272, 810)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"View group details")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C62D00F00BE"
+				    height     	118)
+				(object DependencyView "" @123
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C62D01B0346"
+				    client     	@102
+				    supplier   	@120
+				    line_style 	0)
+				(object DependencyView "" @124
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C62D01E01E2"
+				    client     	@102
+				    supplier   	@122
+				    line_style 	0)
+				(object DependencyView "" @125
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C62D02003BC"
+				    client     	@102
+				    supplier   	@121
+				    line_style 	0)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление администраторами::Add/remove administrator from group" @126
+				    location   	(672, 1408)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@126
+					location   	(672, 1546)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Add/remove administrator from group")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C63D0260383"
+				    height     	118)
+				(object DependencyView "" @127
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C63D04D000E"
+				    client     	@102
+				    supplier   	@126
+				    line_style 	0)
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Управление администраторами::Add/remove members from group" @128
+				    location   	(1840, 816)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@128
+					location   	(1840, 954)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Add/remove members from group")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C63D08B027B"
+				    height     	118)
+				(object DependencyView "" @129
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C63D0A802B9"
+				    client     	@102
+				    supplier   	@128
+				    line_style 	0)))))
+		(object Class_Category "Monitoring"
+		    quid       	"3C62C0D701CB"
+		    exportControl 	"Public"
+		    logical_models 	(list unit_reference_list
+			(object UseCase "Monitoring суммарных параметров системы"
+			    quid       	"3C6241C10374")
+			(object UseCase "Monitroing service parameters"
+			    quid       	"3C612186020B"
+			    documentation 	"Мониторинг параметров отдельного сервиса"))
+		    logical_presentations 	(list unit_reference_list
+			(object UseCaseDiagram "Main"
+			    quid       	"3C62C2750117"
+			    title      	"Main"
+			    zoom       	100
+			    max_height 	28350
+			    max_width  	21600
+			    origin_x   	0
+			    origin_y   	0
+			    items      	(list diagram_item_list
+				(object UseCaseView "Use Case View::Use-Case Model::Adm::Monitoring::Monitroing service parameters" @130
+				    location   	(1120, 272)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@130
+					location   	(1120, 410)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	630
+					justify    	0
+					label      	"Monitroing service parameters")
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    fill_color 	13434879
+				    quidu      	"3C612186020B")
+				(object ClassView "Class" "Use Case View::Use-Case Model::Adm::Admin" @131
+				    ShowCompartmentStereotypes 	TRUE
+				    IncludeAttribute 	TRUE
+				    IncludeOperation 	TRUE
+				    location   	(1116, 837)
+				    font       	(object Font
+					size       	10
+					face       	"Arial"
+					charSet    	204
+					bold       	FALSE
+					italics    	FALSE
+					underline  	FALSE
+					strike     	FALSE
+					color      	0
+					default_color 	TRUE)
+				    label      	(object ItemLabel
+					Parent_View 	@131
+					location   	(1116, 997)
+					anchor_loc 	1
+					nlines     	2
+					max_width  	965
+					justify    	0
+					label      	"Admin")
+				    icon       	"Actor"
+				    icon_style 	"Icon"
+				    line_color 	3342489
+				    quidu      	"3C612175010C"
+				    annotation 	8
+				    autoResize 	TRUE)
+				(object DependencyView "" @132
+				    stereotype 	TRUE
+				    line_color 	3342489
+				    quidu      	"3C6240E20140"
+				    client     	@131
+				    supplier   	@130
+				    line_style 	0))))))
+	    logical_presentations 	(list unit_reference_list
+		(object UseCaseDiagram "User"
+		    quid       	"3C62696F01D7"
+		    title      	"User"
+		    zoom       	100
+		    max_height 	28350
+		    max_width  	21600
+		    origin_x   	0
+		    origin_y   	0
+		    items      	(list diagram_item_list
+			(object ClassView "Class" "Use Case View::Use-Case Model::Adm::User" @133
+			    ShowCompartmentStereotypes 	TRUE
+			    IncludeAttribute 	TRUE
+			    IncludeOperation 	TRUE
+			    location   	(279, 310)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@133
+				location   	(279, 470)
+				anchor_loc 	1
+				nlines     	2
+				max_width  	954
+				justify    	0
+				label      	"User")
+			    icon       	"Actor"
+			    icon_style 	"Icon"
+			    line_color 	3342489
+			    quidu      	"3C6265ED03AE"
+			    annotation 	8
+			    autoResize 	TRUE)
+			(object UseCaseView "Use Case View::Use-Case Model::Adm::Настройка своих параметров посредством SMS или USSD" @134
+			    location   	(944, 320)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@134
+				location   	(944, 458)
+				anchor_loc 	1
+				nlines     	2
+				max_width  	630
+				justify    	0
+				label      	"Настройка своих параметров посредством SMS или USSD")
+			    icon_style 	"Icon"
+			    line_color 	3342489
+			    fill_color 	13434879
+			    quidu      	"3C6266AD027F"
+			    height     	118)
+			(object NoteView @135
+			    location   	(1664, 320)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@135
+				location   	(1470, 232)
+				fill_color 	13434879
+				nlines     	3
+				max_width  	352
+				label      	"Для меня это - обычный внешний сервис.")
+			    line_color 	3342489
+			    fill_color 	13434879
+			    width      	412
+			    height     	188)
+			(object DependencyView "" @136
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"3C6266D702D0"
+			    client     	@133
+			    supplier   	@134
+			    line_style 	0)
+			(object AttachView "" @137
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    client     	@135
+			    supplier   	@134
+			    line_style 	0)))
+		(object UseCaseDiagram "Main"
+		    quid       	"3C60FB1A026E"
+		    title      	"Main"
+		    zoom       	100
+		    max_height 	28350
+		    max_width  	21600
+		    origin_x   	0
+		    origin_y   	0
+		    items      	(list diagram_item_list
+			(object ClassView "Class" "Use Case View::Use-Case Model::Adm::Admin" @138
+			    ShowCompartmentStereotypes 	TRUE
+			    IncludeAttribute 	TRUE
+			    IncludeOperation 	TRUE
+			    location   	(1116, 527)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@138
+				location   	(1116, 687)
+				anchor_loc 	1
+				nlines     	2
+				max_width  	952
+				justify    	0
+				label      	"Admin")
+			    icon       	"Actor"
+			    icon_style 	"Icon"
+			    line_color 	3342489
+			    quidu      	"3C612175010C"
+			    annotation 	8
+			    autoResize 	TRUE)
+			(object CategoryView "Use Case View::Use-Case Model::Adm::Управление администраторами" @139
+			    location   	(608, 1040)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@139
+				location   	(423, 956)
+				fill_color 	13434879
+				nlines     	2
+				max_width  	370
+				justify    	0
+				label      	"Управление администраторами")
+			    icon_style 	"Icon"
+			    line_color 	3342489
+			    fill_color 	13434879
+			    quidu      	"3C62BFC203A1"
+			    width      	382
+			    height     	180)
+			(object DependencyView "" @140
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"3C62C05D02DD"
+			    client     	@138
+			    supplier   	@139
+			    line_style 	0)
+			(object CategoryView "Use Case View::Use-Case Model::Adm::Управление сервисами" @141
+			    location   	(1536, 1040)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@141
+				location   	(1392, 956)
+				fill_color 	13434879
+				nlines     	2
+				max_width  	288
+				justify    	0
+				label      	"Управление сервисами")
+			    icon_style 	"Icon"
+			    line_color 	3342489
+			    fill_color 	13434879
+			    quidu      	"3C62C06F01DF"
+			    width      	300
+			    height     	180)
+			(object DependencyView "" @142
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"3C62C0CA02E5"
+			    client     	@138
+			    supplier   	@141
+			    line_style 	0)
+			(object CategoryView "Use Case View::Use-Case Model::Adm::Monitoring" @143
+			    location   	(1104, 1040)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@143
+				location   	(960, 956)
+				fill_color 	13434879
+				nlines     	2
+				max_width  	288
+				justify    	0
+				label      	"Monitoring")
+			    icon_style 	"Icon"
+			    line_color 	3342489
+			    fill_color 	13434879
+			    quidu      	"3C62C0D701CB"
+			    width      	300
+			    height     	180)
+			(object DependencyView "" @144
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"3C62C0EA025F"
+			    client     	@138
+			    supplier   	@143
+			    line_style 	0))))))
+    logical_presentations 	(list unit_reference_list
+	(object UseCaseDiagram "Global View of Actors and Use Cases"
+	    quid       	"3C85DEEE03C2"
+	    title      	"Global View of Actors and Use Cases"
+	    zoom       	100
+	    max_height 	28350
+	    max_width  	21600
+	    origin_x   	0
+	    origin_y   	906
+	    items      	(list diagram_item_list
+		(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Маршрутизация сообщений::Маршрутизация сообщений" @145
+		    location   	(1023, 341)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@145
+			location   	(1023, 479)
+			anchor_loc 	1
+			nlines     	2
+			max_width  	630
+			justify    	0
+			label      	"Маршрутизация сообщений")
+		    icon_style 	"Icon"
+		    line_color 	3342489
+		    fill_color 	1567773
+		    quidu      	"3C6169D10156")
+		(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Тарификация::Тарификация" @146
+		    location   	(1054, 806)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@146
+			location   	(1054, 944)
+			anchor_loc 	1
+			nlines     	2
+			max_width  	630
+			justify    	0
+			label      	"Тарификация")
+		    icon_style 	"Icon"
+		    line_color 	3342489
+		    fill_color 	1567773
+		    quidu      	"3C3D6CF800B7")
+		(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление внешними сервисами::Управление внешними сервисами" @147
+		    location   	(1108, 1021)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@147
+			location   	(1108, 1159)
+			anchor_loc 	1
+			nlines     	2
+			max_width  	642
+			justify    	0
+			label      	"Управление внешними сервисами")
+		    icon_style 	"Icon"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C4EACD00030")
+		(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление маршрутами::Управление маршрутами" @148
+		    location   	(1073, 1235)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@148
+			location   	(1073, 1373)
+			anchor_loc 	1
+			nlines     	2
+			max_width  	630
+			justify    	0
+			label      	"Управление маршрутами")
+		    icon_style 	"Icon"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C4C5079009B")
+		(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Управление короткими адресами::Управление короткими адресами" @149
+		    location   	(1111, 1512)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@149
+			location   	(1111, 1650)
+			anchor_loc 	1
+			nlines     	2
+			max_width  	636
+			justify    	0
+			label      	"Управление короткими адресами")
+		    icon_style 	"Icon"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C4C504D02B5")
+		(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Администрирование::Администрирование" @150
+		    location   	(558, 1192)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@150
+			location   	(558, 1330)
+			anchor_loc 	1
+			nlines     	2
+			max_width  	630
+			justify    	0
+			label      	"Администрирование")
+		    icon_style 	"Icon"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C85E3D101FE")
+		(object InheritView "" @151
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C85E41000C8"
+		    client     	@147
+		    supplier   	@150
+		    line_style 	0)
+		(object InheritView "" @152
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C85E42401D5"
+		    client     	@148
+		    supplier   	@150
+		    line_style 	0)
+		(object InheritView "" @153
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C85E43B01D8"
+		    client     	@149
+		    supplier   	@150
+		    line_style 	0)
+		(object ClassView "Class" "Use Case View::Use-Case Model::Actors::Administrator" @154
+		    ShowCompartmentStereotypes 	TRUE
+		    IncludeAttribute 	TRUE
+		    IncludeOperation 	TRUE
+		    location   	(155, 1271)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@154
+			location   	(155, 1431)
+			anchor_loc 	1
+			nlines     	2
+			max_width  	772
+			justify    	0
+			label      	"Administrator")
+		    icon       	"Actor"
+		    icon_style 	"Icon"
+		    line_color 	3342489
+		    quidu      	"3C3C835302B9"
+		    autoResize 	TRUE)
+		(object AssociationViewNew "$UNNAMED$9" @155
+		    location   	(356, 1231)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C85E3EE039A"
+		    roleview_list 	(list RoleViews
+			(object RoleView "$UNNAMED$10" @156
+			    Parent_View 	@155
+			    location   	(108, 177)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"3C85E3EF026F"
+			    client     	@155
+			    supplier   	@150
+			    line_style 	0)
+			(object RoleView "$UNNAMED$11" @157
+			    Parent_View 	@155
+			    location   	(108, 177)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"3C85E3EF0271"
+			    client     	@155
+			    supplier   	@154
+			    line_style 	0)))
+		(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Мониторинг::Мониторинг::Мониторинг" @158
+		    location   	(527, 1488)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@158
+			location   	(527, 1626)
+			anchor_loc 	1
+			nlines     	2
+			max_width  	630
+			justify    	0
+			label      	"Мониторинг")
+		    icon_style 	"Icon"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C3DAD4602B7")
+		(object AssociationViewNew "$UNNAMED$15" @159
+		    location   	(341, 1379)
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C3DADD501CC"
+		    roleview_list 	(list RoleViews
+			(object RoleView "$UNNAMED$17" @160
+			    Parent_View 	@159
+			    location   	(-279, 15)
+			    font       	(object Font
+				size       	9
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object SegLabel @161
+				Parent_View 	@160
+				location   	(213, 1258)
+				font       	(object Font
+				    size       	9
+				    face       	"Arial"
+				    charSet    	204
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				hidden     	TRUE
+				anchor     	1
+				anchor_loc 	1
+				nlines     	1
+				max_width  	450
+				justify    	0
+				label      	""
+				pctDist    	0.800000
+				height     	42
+				orientation 	1)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"3C3DADD60053"
+			    client     	@159
+			    supplier   	@154
+			    line_style 	0)
+			(object RoleView "$UNNAMED$16" @162
+			    Parent_View 	@159
+			    location   	(-279, 15)
+			    font       	(object Font
+				size       	9
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object SegLabel @163
+				Parent_View 	@162
+				location   	(510, 1431)
+				font       	(object Font
+				    size       	9
+				    face       	"Arial"
+				    charSet    	204
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				hidden     	TRUE
+				anchor     	1
+				anchor_loc 	1
+				nlines     	1
+				max_width  	450
+				justify    	0
+				label      	""
+				pctDist    	0.800000
+				height     	42
+				orientation 	0)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"3C3DADD60051"
+			    client     	@159
+			    supplier   	@158
+			    line_style 	0)))
+		(object UseCaseView "Use Case View::Use-Case Model::Use Cases::System Use Cases::Протоколирование::Протоколирование" @164
+		    location   	(1054, 558)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@164
+			location   	(1054, 696)
+			anchor_loc 	1
+			nlines     	2
+			max_width  	630
+			justify    	0
+			label      	"Протоколирование")
+		    icon_style 	"Icon"
+		    line_color 	3342489
+		    fill_color 	1567773
+		    quidu      	"3C3D6F07021E")
+		(object UseCaseView "Use Case View::Use-Case Model::Use Cases::System Use Cases::Сбор статистики::Сбор статистики" @165
+		    location   	(1023, 124)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@165
+			location   	(1023, 262)
+			anchor_loc 	1
+			nlines     	2
+			max_width  	630
+			justify    	0
+			label      	"Сбор статистики")
+		    icon_style 	"Icon"
+		    line_color 	3342489
+		    fill_color 	1567773
+		    quidu      	"3C3D9CA800BB")
+		(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Прием сообщения::Прием сообщения" @166
+		    location   	(589, 403)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@166
+			location   	(589, 541)
+			anchor_loc 	1
+			nlines     	2
+			max_width  	630
+			justify    	0
+			label      	"Прием сообщения")
+		    icon_style 	"Icon"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C5EC63000F4")
+		(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Доставка сообщения::Доставка сообщения" @167
+		    location   	(589, 155)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@167
+			location   	(589, 293)
+			anchor_loc 	1
+			nlines     	2
+			max_width  	630
+			justify    	0
+			label      	"Доставка сообщения")
+		    icon_style 	"Icon"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C5EC5CF0394")
+		(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Уведомление о доставке::Уведомление о доставке" @168
+		    location   	(589, 620)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@168
+			location   	(589, 758)
+			anchor_loc 	1
+			nlines     	2
+			max_width  	630
+			justify    	0
+			label      	"Уведомление о доставке")
+		    icon_style 	"Icon"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C5ECA0D03B3")
+		(object UseCaseView "Use Case View::Use-Case Model::Use Cases::Базовые функции::Выполнить команду::Выполнить команду" @169
+		    location   	(589, 837)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@169
+			location   	(589, 975)
+			anchor_loc 	1
+			nlines     	2
+			max_width  	630
+			justify    	0
+			label      	"Выполнить команду")
+		    icon_style 	"Icon"
+		    line_color 	3342489
+		    fill_color 	13434879
+		    quidu      	"3C85E74A0224")
+		(object ClassView "Class" "Use Case View::Use-Case Model::Actors::SME" @170
+		    ShowCompartmentStereotypes 	TRUE
+		    IncludeAttribute 	TRUE
+		    IncludeOperation 	TRUE
+		    location   	(155, 403)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@170
+			location   	(155, 563)
+			anchor_loc 	1
+			nlines     	2
+			max_width  	777
+			justify    	0
+			label      	"SME")
+		    icon       	"Actor"
+		    icon_style 	"Icon"
+		    line_color 	3342489
+		    quidu      	"3C3C83310061"
+		    autoResize 	TRUE)
+		(object AssociationViewNew "$UNNAMED$0" @171
+		    location   	(345, 403)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C85E2AE030E"
+		    roleview_list 	(list RoleViews
+			(object RoleView "$UNNAMED$1" @172
+			    Parent_View 	@171
+			    location   	(190, 62)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"3C85E2AF0201"
+			    client     	@171
+			    supplier   	@166
+			    line_style 	0)
+			(object RoleView "$UNNAMED$2" @173
+			    Parent_View 	@171
+			    location   	(190, 62)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"3C85E2AF020C"
+			    client     	@171
+			    supplier   	@170
+			    line_style 	0)))
+		(object AssociationViewNew "$UNNAMED$3" @174
+		    location   	(259, 342)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C85E2F9017B"
+		    roleview_list 	(list RoleViews
+			(object RoleView "$UNNAMED$4" @175
+			    Parent_View 	@174
+			    location   	(-423, 218)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"3C85E2F903C0"
+			    client     	@174
+			    supplier   	@170
+			    line_style 	0)
+			(object RoleView "$UNNAMED$5" @176
+			    Parent_View 	@174
+			    location   	(-423, 218)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"3C85E2F903D4"
+			    client     	@174
+			    supplier   	@167
+			    line_style 	0)))
+		(object AssociationViewNew "$UNNAMED$6" @177
+		    location   	(372, 511)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C85E3280038"
+		    roleview_list 	(list RoleViews
+			(object RoleView "$UNNAMED$7" @178
+			    Parent_View 	@177
+			    location   	(-310, -171)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"3C85E32A0398"
+			    client     	@177
+			    supplier   	@170
+			    line_style 	0)
+			(object RoleView "$UNNAMED$8" @179
+			    Parent_View 	@177
+			    location   	(-310, -171)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"3C85E32A03AC"
+			    client     	@177
+			    supplier   	@168
+			    line_style 	0)))
+		(object AssociationViewNew "$UNNAMED$12" @180
+		    location   	(434, 682)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    quidu      	"3C85E7520095"
+		    roleview_list 	(list RoleViews
+			(object RoleView "$UNNAMED$13" @181
+			    Parent_View 	@180
+			    location   	(279, 279)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"3C85E7520280"
+			    client     	@180
+			    supplier   	@169
+			    line_style 	0)
+			(object RoleView "$UNNAMED$14" @182
+			    Parent_View 	@180
+			    location   	(279, 279)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"3C85E7520282"
+			    client     	@180
+			    supplier   	@170
+			    line_style 	0)))
+		(object NoteView @183
+		    location   	(1422, 1234)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@183
+			location   	(1284, 1174)
+			fill_color 	13434879
+			nlines     	2
+			max_width  	240
+			label      	"Use Case Diagram: Управление маршрутами / Управление маршрутами")
+		    line_color 	3342489
+		    fill_color 	13434879
+		    width      	300
+		    height     	132
+		    quidu      	"3CD7BAEA0351")
+		(object AttachView "" @184
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    client     	@148
+		    supplier   	@183
+		    line_style 	0)
+		(object NoteView @185
+		    location   	(1425, 1025)
+		    font       	(object Font
+			size       	9
+			face       	"Arial"
+			charSet    	204
+			bold       	FALSE
+			italics    	FALSE
+			underline  	FALSE
+			strike     	FALSE
+			color      	0
+			default_color 	TRUE)
+		    label      	(object ItemLabel
+			Parent_View 	@185
+			location   	(1287, 965)
+			fill_color 	13434879
+			nlines     	2
+			max_width  	240
+			label      	"Use Case Diagram: Управление внешними сервисами / Управление внешними сервисами")
+		    line_color 	3342489
+		    fill_color 	13434879
+		    width      	300
+		    height     	132
+		    quidu      	"3CDFBD5B0174")
+		(object AttachView "" @186
+		    stereotype 	TRUE
+		    line_color 	3342489
+		    client     	@147
+		    supplier   	@185
+		    line_style 	0)))))
