@@ -60,7 +60,6 @@ const char* const TC_GET_EXISTENT_SM_DELIVERY_FAILURE_STATISTICS =
 	"getExistentSMDeliveryFailureStatistics";
 const char* const TC_GET_NON_EXISTENT_SM_DELIVERY_FAILURE_STATISTICS = 
 	"getNonExistentSMDeliveryFailureStatistics";
-const char* const TC_CREATE_BILLING_RECORD = "createBillingRecord";
 
 /**
  * Этот класс содержит все test cases необходимые для тестирования подсистемы
@@ -237,11 +236,6 @@ public:
 	 * Просмотр пустой статистики причин недоставки сообщений.
 	 */
 	TCResult* getNonExistentSMDeliveryFailureStatistics();
-
-	/**
-	 * Создание записи для начисления оплаты.
-	 */
-	TCResult* createBillingRecord();
 
 private:
 	static Category& log;

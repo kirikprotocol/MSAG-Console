@@ -346,8 +346,6 @@ void saveCheckList(TCResultFilter* filter)
 		filter->getResults(TC_GET_EXISTENT_SM_DELIVERY_FAILURE_STATISTICS));
 	cl.writeResult("ѕросмотр пустой статистики причин недоставки сообщений",
 		filter->getResults(TC_GET_NON_EXISTENT_SM_DELIVERY_FAILURE_STATISTICS));
-	cl.writeResult("—оздание записи дл€ начислени€ оплаты",
-		filter->getResults(TC_CREATE_BILLING_RECORD));
 }
 
 /**
