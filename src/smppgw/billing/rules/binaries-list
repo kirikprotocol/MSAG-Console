@@ -1,0 +1,1 @@
+brmtest  test -L$(SMSC_BUILDDIR)/bin -llogger -lrt $(SOCKETLIB) -lnsl -lutil -lsms -lsmppgw-billing-rules -lutil-xml -llogger -lutil-regexp $(XERCES_LIB)
