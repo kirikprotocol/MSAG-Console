@@ -261,6 +261,11 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
           add(connectingLabel, gbc);
           validate();
           invalidate();
+          try {
+            Thread.currentThread().sleep(10);
+          } catch (InterruptedException e1) {
+          }
+          System.out.println( "I/O error: "+ex.getMessage()+". Reconnecting..." );
         }
       }
     } catch(Exception e) {
@@ -279,6 +284,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
         }
       ;
     }
+    System.out.println("Connection thread stopped");
   }
 
   Image offscreen;
