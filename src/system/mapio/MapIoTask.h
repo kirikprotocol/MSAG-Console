@@ -217,6 +217,7 @@ struct MapDialog{
     dialogid_smsc(0),
     version(version),
     associate(0),
+    invokeId(0),
     ssn(lssn),
     ussdSequence(0),
     ussdMrRef(0),
