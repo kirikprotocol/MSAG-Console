@@ -45,7 +45,7 @@ public:
             SmscCommand cmd=SmscCommand::makeForward();
             queue.enqueue(ids[i],cmd);
             //thr_yield();
-            e.Wait(10);
+            e.Wait(100);
             if(isStopping)break;
           }
           ids.Clean();
