@@ -16,25 +16,27 @@ using smsc::alias::AliasInfo;
 struct TestAliasData
 {
 	float addrMatch;
-	bool addrMatchException;
+	bool addrToAliasException;
 	const Address origAddr;
 	Address destAlias;
 
 	float aliasMatch;
-	bool aliasMatchException;
+	bool aliasToAddrException;
 	const Address origAlias;
 	Address destAddr;
 
 	AliasInfo* alias;
 
 	TestAliasData(const Address alias, const Address addr)
-		: addrMatch(0.0), addrMatchException(false), origAddr(addr),
-		aliasMatch(0.0), aliasMatchException(false), origAlias(alias), alias(NULL) {}
+		: addrMatch(0.0), addrToAliasException(false), origAddr(addr),
+		aliasMatch(0.0), aliasToAddrException(false), origAlias(alias), alias(NULL) {}
 
 	TestAliasData(const TestAliasData& data)
-		: addrMatch(data.addrMatch), addrMatchException(data.addrMatchException),
+		: addrMatch(data.addrMatch),
+		addrToAliasException(data.addrToAliasException),
 		origAddr(data.origAddr), destAlias(data.destAlias),
-		aliasMatch(data.aliasMatch), aliasMatchException(data.aliasMatchException),
+		aliasMatch(data.aliasMatch),
+		aliasToAddrException(data.aliasToAddrException),
         origAlias(data.origAlias), destAddr(data.destAddr),
 		alias(new AliasInfo(*data.alias)) {}
 

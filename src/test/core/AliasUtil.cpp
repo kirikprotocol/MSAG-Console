@@ -17,12 +17,12 @@ ostream& operator<< (ostream& os, const AliasInfo& alias)
 ostream& operator<< (ostream& os, const TestAliasData& data)
 {
 	os << "addrMatch = " << data.addrMatch;
-	os << ", addrMatchException = " << (data.addrMatchException ? "true" : "false");
+	os << ", addrToAliasException = " << (data.addrToAliasException ? "true" : "false");
 	os << ", origAddr = " << data.origAddr;
 	os << ", destAlias = " << data.destAlias;
 
 	os << ", aliasMatch = " << data.aliasMatch;
-	os << ", aliasMatchException = " << (data.aliasMatchException ? "true" : "false");
+	os << ", aliasToAddrException = " << (data.aliasToAddrException ? "true" : "false");
 	os << ", origAlias = " << data.origAlias;
 	os << ", destAddr = " << data.destAddr;
 
