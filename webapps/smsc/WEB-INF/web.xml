@@ -35,6 +35,7 @@
 			<web-resource-name></web-resource-name>
 			<url-pattern>/smsc/smsc_service/*</url-pattern>
 			<url-pattern>/smsc/reshedule/*</url-pattern>
+      <url-pattern>/smsc/directives/*</url-pattern>
 		</web-resource-collection>
 		<auth-constraint>
 			<role-name>smsc_service</role-name>
