@@ -563,21 +563,37 @@ void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
 				//__compare__(get_message().get_priorityFlag());
 				//__compare__(get_message().get_registredDelivery());
 				__tc_ok_cond__;
-				//передать дальнейшую проверку тест кейсам конкретных sme
+				//обновить статус
+				__tc__("processDeliverySm.smeAck.checkAllowed");
+				switch (monitor->getFlag())
+				{
+					case PDU_REQUIRED_FLAG:
+					case PDU_MISSING_ON_TIME_FLAG:
+						//ok
+						break;
+					case PDU_RECEIVED_FLAG:
+						__tc_fail__(1);
+						break;
+					case PDU_NOT_EXPECTED_FLAG:
+						__tc_fail__(2);
+						break;
+					default:
+						__unreachable__("Unknown flag");
+				}
+				__tc_ok_cond__;
+				//передать дальнейшую проверку (тела сообщения и опциональных
+				//полей) тест кейсам конкретных sme, обновить monitor
+				//__compare__(get_message().get_smLength());
+				//__compareOStr__(get_message().get_shortMessage());
+				//optional
+				//__tc_fail2__(SmppUtil::compareOptional(
+				//	pdu.get_optional(), origPdu->get_optional()), 10);
 				if (fixture->ackHandler)
 				{
 					pduReg->removeMonitor(monitor);
 					fixture->ackHandler->processSmeAcknowledgement(monitor, pdu);
 					pduReg->registerMonitor(monitor);
 				}
-				//правильность тела сообщения и опциональных полей
-				//проверяется отдельно для конкретных типов acknoledgement
-				//в processSmeAcknowledgement()
-				//__compare__(get_message().get_smLength());
-				//__compareOStr__(get_message().get_shortMessage());
-				//optional
-				//__tc_fail2__(SmppUtil::compareOptional(
-				//	pdu.get_optional(), origPdu->get_optional()), 10);
 				//для sme acknoledgement не проверяю повторную доставку
 				__tc__("processDeliverySm.smeAck.recvTimeChecks");
 				__cfg_int__(timeCheckAccuracy);
@@ -594,26 +610,6 @@ void SmppReceiverTestCases::processSmeAcknowledgement(PduDeliverySm &pdu,
 				uint32_t deliveryStatus = fixture->respSender->sendDeliverySmResp(pdu);
 				RespPduFlag respFlag = isAccepted(deliveryStatus);
 				__require__(respFlag == RESP_PDU_OK);
-				//обновить статус
-				__tc__("processDeliverySm.smeAck.checkAllowed");
-				switch (monitor->getFlag())
-				{
-					case PDU_REQUIRED_FLAG:
-					case PDU_MISSING_ON_TIME_FLAG:
-						pduReg->removeMonitor(monitor);
-						monitor->setReceived();
-						pduReg->registerMonitor(monitor);
-						break;
-					case PDU_RECEIVED_FLAG:
-						__tc_fail__(1);
-						break;
-					case PDU_NOT_EXPECTED_FLAG:
-						__tc_fail__(2);
-						break;
-					default:
-						__unreachable__("Unknown flag");
-				}
-				__tc_ok_cond__;
 			}
 		}
 	}

@@ -3,12 +3,14 @@
 
 #include "sms/sms.h"
 #include "alias/aliasman.h"
+#include <string>
 #include <ostream>
 
 namespace smsc {
 namespace test {
 namespace core {
 
+using std::string;
 using std::ostream;
 using smsc::sms::Address;
 using smsc::alias::AliasInfo;
@@ -37,6 +39,7 @@ public:
 
 ostream& operator<< (ostream& os, const AliasInfo& alias);
 ostream& operator<< (ostream& os, const AliasHolder& holder);
+const string str(const AliasInfo& alias);
 
 }
 }

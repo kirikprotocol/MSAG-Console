@@ -253,12 +253,18 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 				//__dumpSubmitSmPdu__("submitSmSyncBefore", fixture->systemId, pdu);
 				PduSubmitSmResp* respPdu =
 					fixture->session->getSyncTransmitter()->submit(*pdu);
-				__require__(respPdu);
 				time_t respTime = time(NULL);
 				{
 					MutexGuard mguard(fixture->pduReg->getMutex());
 					__dumpSubmitSmPdu__("submitSmSyncAfter", fixture->systemId, pdu);
-					processSubmitSmSync(pduData, respPdu, respTime);
+					if (respPdu)
+					{
+						processSubmitSmSync(pduData, respPdu, respTime);
+					}
+					else
+					{
+						__tc_fail__(1);
+					}
 				}
 			}
 			else
@@ -298,7 +304,7 @@ void SmppTransmitterTestCases::sendSubmitSmPdu(PduSubmitSm* pdu,
 			}
 			delete pdu; //disposePdu
 		}
-		__tc_ok__;
+		__tc_ok_cond__;
 	}
 	catch (...)
 	{

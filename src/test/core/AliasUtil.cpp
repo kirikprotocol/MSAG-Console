@@ -1,12 +1,14 @@
 #include "AliasUtil.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include "util/debug.h"
+#include <sstream>
 
 namespace smsc {
 namespace test {
 namespace core {
 
 using smsc::test::sms::operator<<;
+using namespace std;
 using namespace smsc::sms; //AddressValue, constants
 
 AliasHolder::AliasHolder(const AliasInfo& alias)
@@ -112,6 +114,13 @@ ostream& operator<< (ostream& os, const AliasInfo& alias)
 ostream& operator<< (ostream& os, const AliasHolder& holder)
 {
 	os << holder.aliasInfo;
+}
+
+const string str(const AliasInfo& alias)
+{
+	ostringstream os;
+	os << alias;
+	return os.str();
 }
 
 }

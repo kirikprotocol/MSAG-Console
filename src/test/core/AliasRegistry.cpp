@@ -1,7 +1,6 @@
 #include "AliasRegistry.hpp"
 #include "test/sms/SmsUtil.hpp"
 #include <fstream>
-#include <sstream>
 
 namespace smsc {
 namespace test {
@@ -82,19 +81,15 @@ bool AliasRegistry::putAlias(const AliasInfo& alias)
 	AddressMap::const_iterator it = addrMap.find(alias.addr);
 	if (it != addrMap.end())
 	{
-		ostringstream os;
-		os << "AliasRegistry::putAlias(): " << alias <<
-			" duplicates exising " << (it->second->aliasInfo);
-		__trace2__("%s", os.str().c_str());
+		__trace2__("AliasRegistry::putAlias(): %s duplicates exising %s",
+			str(alias).c_str(), str(it->second->aliasInfo).c_str());
 		return false;
 	}
 	AddressMap::const_iterator it2 = aliasMap.find(alias.alias);
 	if (it2 != aliasMap.end())
 	{
-		ostringstream os;
-		os << "AliasRegistry::putAlias(): " << alias <<
-			" duplicates exising " << ((it2->second->aliasInfo));
-		__trace2__("%s", os.str().c_str());
+		__trace2__("AliasRegistry::putAlias(): %s duplicates exising %s",
+			str(alias).c_str(), str(it2->second->aliasInfo).c_str());
 		return false;
 	}
 	//должно выполняться правило: d(a(A)) = A
@@ -107,10 +102,8 @@ bool AliasRegistry::putAlias(const AliasInfo& alias)
 		if (!checkAddr2Alias2AddrTransformation(alias, info) ||
 			!checkAddr2Alias2AddrTransformation(info, alias))
 		{
-			ostringstream os;
-			os << "AliasRegistry::putAlias(): " << alias <<
-				" conflicts with exising " << info;
-			__trace2__("%s", os.str().c_str());
+			__trace2__("AliasRegistry::putAlias(): %s conflicts with exising %s",
+				str(alias).c_str(), str(info).c_str());
 			return false;
 		}
 		/*
@@ -134,9 +127,7 @@ bool AliasRegistry::putAlias(const AliasInfo& alias)
 	}
 	aliasMap[alias.alias] = holder;
 	{
-		ostringstream os;
-		os << "AliasRegistry::putAlias(): " << alias << " added successfully";
-		__trace2__("%s", os.str().c_str());
+		__trace2__("AliasRegistry::putAlias(): %s added successfully", str(alias).c_str());
 	}
 	return true;
 }
