@@ -34,6 +34,13 @@
       <param name="dbUserPassword" type="string">smsc</param>
     </section>
 
+    <section name="LocalStore">
+      <param name="filename" type="string">store/localstore.bin</param>
+      <param name="maxStoreSize" type="int">100000000</param>
+      <param name="minRollTime" type="int">40</param>
+      <param name="msgidfile" type="string">store/msgid.bin</param>
+    </section>
+
   </section>
 
   <section name="StartupLoader">
