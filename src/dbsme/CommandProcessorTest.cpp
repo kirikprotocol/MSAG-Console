@@ -20,11 +20,11 @@ int main(void)
     using smsc::util::config::ConfigView;
     using smsc::util::config::ConfigException;
     
-    SampleJobFactory    _sampleJobFactory;
     SQLJobFactory       _sqlJobFactory;
+    PLSQLJobFactory     _plsqlJobFactory;
 
-    JobFactory::registerFactory(&_sampleJobFactory,
-                                SMSC_DBSME_SAMPLE_JOB_IDENTITY);
+    JobFactory::registerFactory(&_plsqlJobFactory,
+                                SMSC_DBSME_PLSQL_JOB_IDENTITY);
     JobFactory::registerFactory(&_sqlJobFactory,
                                 SMSC_DBSME_SQL_JOB_IDENTITY);
     try 
@@ -41,18 +41,12 @@ int main(void)
         // --------------------- Command Processing --------------------
 
         Command command;
-        const char* toAddressStr = "1111111";
+        const char* toAddressStr = "111";
         Address toAddress(strlen(toAddressStr), 0, 0, toAddressStr);
         command.setToAddress(toAddress);
         //command.setJobName("test-sql-job");
         command.setJobName(0);
-        /*command.setInData("-55 \t \t 666 \n -1573175230 129 3533 4364643 "
-                          "first \"second value\""
-                          " 243684.875874387835"
-                          " +5753.14e-10"
-                          " -45454.5e+7");*/
-        command.setInData("sample \"Testing string value\" 1 "
-                          "25 January, 2003 05:34 PM");
+        command.setInData("ProcTest");
         
         printf("\nInput  : '%s'\n",
                (command.getInData() ? command.getInData():""));

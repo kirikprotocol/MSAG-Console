@@ -115,7 +115,6 @@ public:
         Body& body = response.getMessageBody();
         body.setIntProperty(Tag::SMPP_PROTOCOL_ID, processor.getProtocolId());
         body.setIntProperty(Tag::SMPP_ESM_CLASS, 0 /*xx0000xx*/);
-        body.setIntProperty(Tag::SMPP_DATA_CODING, DataCoding::DEFAULT);
         body.setIntProperty(Tag::SMPP_REGISTRED_DELIVERY, 0);
         body.setIntProperty(Tag::SMPP_PRIORITY, 0);
         body.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,

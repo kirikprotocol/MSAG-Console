@@ -102,6 +102,8 @@ namespace smsc { namespace db { namespace oci
         OCISvcCtx       *svchp;
         OCIError        *errhp;
         OCIStmt         *stmt;
+
+        char            *sqlquery;          
     
         void convertDateToOCIDate(time_t* sms_date, OCIDate* oci_date);
         void convertOCIDateToDate(OCIDate* oci_date, time_t* sms_date);
@@ -217,6 +219,7 @@ namespace smsc { namespace db { namespace oci
             throw(InvalidArgumentException);
 
         void cleanupDescriptors();
+        bool isTextsEqual(text* txt1, ub4 len1, text* txt2, ub4 len2);
 
     public:
         
