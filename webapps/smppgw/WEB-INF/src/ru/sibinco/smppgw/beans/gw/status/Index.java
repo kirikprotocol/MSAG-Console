@@ -118,6 +118,7 @@ public class Index extends SmppgwBean
   private void applyConfig() throws SmppgwJspException
   {
     try {
+      appContext.getSmscsManager().store(appContext.getGwConfig());
       appContext.getProviderManager().store(appContext.getGwConfig());
       appContext.getGwSmeManager().apply();
       appContext.getGwConfig().save();
