@@ -238,7 +238,7 @@ int partitionSms(SMS* sms,int dstdc)
       if((i-lastpos)>=67)
       {
         __trace2__("PARTITIONSMS: part=%d, i=%d, lastpos=%d, lastword=%d",parts,i,lastpos,lastword);
-        if(lastword-lastpos<67)
+        if(i-lastword<67)
         {
           offsets[parts++]=(lastword+1)*2;
           lastpos=lastword+1;

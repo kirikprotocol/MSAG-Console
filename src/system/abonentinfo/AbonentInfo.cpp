@@ -108,7 +108,7 @@ int AbonentInfoSme::Execute()
       {
         __trace__("AbonentInfo: invalid address received. Ignored");
       }
-    }
+    }else
     if(cmd->cmdid==smsc::smeman::QUERYABONENTSTATUS_RESP)
     {
       AbonentStatus &as=cmd->get_abonentStatus();
