@@ -15,10 +15,9 @@ public class Route
   private String name = null;
   private SourceList src = null;
   private DestinationList dst = null;
-  Random random = new Random(System.currentTimeMillis());
   private boolean enabling = true;
 
-  public Route(String routeName, SourceList sources, DestinationList destinations)
+  public Route(String routeName, boolean isEnabling, SourceList sources, DestinationList destinations)
   {
     if (routeName == null)
       throw new NullPointerException("Route name is null");
@@ -30,7 +29,7 @@ public class Route
     name = routeName;
     src = sources;
     dst = destinations;
-    enabling = random.nextBoolean();
+    enabling = isEnabling;
   }
 
   public Route(String routeName)
@@ -41,7 +40,7 @@ public class Route
     name = routeName;
     src = new SourceList();
     dst = new DestinationList();
-    enabling = random.nextBoolean();
+    enabling = false;
   }
 
   public String getName()
@@ -133,5 +132,10 @@ public class Route
   public boolean isEnabling()
   {
     return enabling;
+  }
+
+  public void setEnabling(boolean enabling)
+  {
+    this.enabling = enabling;
   }
 }

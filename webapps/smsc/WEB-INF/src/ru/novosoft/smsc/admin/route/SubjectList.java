@@ -29,6 +29,11 @@ public class SubjectList
     subjects.put(s.getName(), s);
   }
 
+  public Subject remove(String subjectName)
+  {
+    return (Subject) subjects.remove(subjectName);
+  }
+
   public int size()
   {
     return subjects.size();

@@ -42,4 +42,14 @@ public class Subject
   {
     return defaultSme;
   }
+
+  public void setDefaultSme(SME defaultSme)
+  {
+    this.defaultSme = defaultSme;
+  }
+
+  public void setMasks(MaskList masks)
+  {
+    this.masks = masks;
+  }
 }
