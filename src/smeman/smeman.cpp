@@ -117,9 +117,9 @@ SmeIndex SmeManager::lookup(const SmeSystemId& systemId) const
 SmeProxy* SmeManager::getSmeProxy(SmeIndex index) const
 {
 __synchronized__
-  const SmeRecord& record = records.at(index);
+  SmeRecord& record = records.at(index);
   if ( record.deleted ) throw SmeError();
-  return record.proxy;
+  return &record;
 }
 
 SmeInfo SmeManager::getSmeInfo(SmeIndex index) const
@@ -132,8 +132,8 @@ __synchronized__
 
 static uint32_t nextProxyUniqueId()
 {
-	static uint32_t unique = 0;
-	return unique++;
+  static uint32_t unique = 0;
+  return unique++;
 }
 // ------ SmeRegistrar implementation --------------------------
 
@@ -154,44 +154,44 @@ __synchronized__
     __warning__("Sme proxy with tihs systemId already registered");
     throw runtime_error(string("proxy with id ")+systemId+" already exists");
   }
-	{
-		MutexGuard guard(records[index].mutex);
-		records[index].proxy = smeProxy;
-		records[index].uniqueId = nextProxyUniqueId();
-	}
+  {
+    MutexGuard guard(records[index].mutex);
+    records[index].proxy = smeProxy;
+    records[index].uniqueId = nextProxyUniqueId();
+  }
   dispatcher.attachSmeProxy(smeProxy,index);
 }
 
 void SmeManager::unregisterSmeProxy(const SmeSystemId& systemId)
 {
-	
-	SmeIndex index;
-	{
-		__synchronized__
-		index = internalLookup(systemId);
-		if ( index == INVALID_SME_INDEX ) throw SmeError();
-	}
-	
-	{
-		MutexGuard guard(records[index].mutex);
-		if ( records[index].proxy )
-			dispatcher.detachSmeProxy(records[index].proxy);
-		else
-			__warning__("unregister null proxy");
-		records[index].proxy = 0;
-	}
+  
+  SmeIndex index;
+  {
+    __synchronized__
+    index = internalLookup(systemId);
+    if ( index == INVALID_SME_INDEX ) throw SmeError();
+  }
+  
+  {
+    MutexGuard guard(records[index].mutex);
+    if ( records[index].proxy )
+      dispatcher.detachSmeProxy(records[index].proxy);
+    else
+      __warning__("unregister null proxy");
+    records[index].proxy = 0;
+  }
 }
 
 // SmeDispatcher implementation
 SmeProxy* SmeManager::selectSmeProxy(unsigned long timeout,int* idx)
 {
-	SmeProxy* proxy = dispatcher.dispatchIn(timeout,idx);
-	if ( proxy )
-	{
-	__synchronized__
-		return (SmeProxy*)&(records[*idx]);
-	}
-	else return 0;
+  SmeProxy* proxy = dispatcher.dispatchIn(timeout,idx);
+  if ( proxy )
+  {
+  __synchronized__
+    return (SmeProxy*)&(records[*idx]);
+  }
+  else return 0;
 }
 
 SmeIndex SmeManager::internalLookup(const SmeSystemId& systemId) const
