@@ -36,7 +36,7 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
     {
       char val[21];
       Address& addr = sms->getOriginatingAddress();
-      int val_length = addr.getValue((uint8_t*)val);
+      int val_length = addr.getValue(val);
       __require__ ( val_length <= sizeof(val) );   // fatal if out of range !!!!
       src.set_value(val);
       src.set_typeOfNumber(addr.getTypeOfNumber());
@@ -46,7 +46,7 @@ inline bool fillSmppPduFromSms(PduXSm* pdu,SMS* sms)
     {
       char val[21];
       Address& addr = sms->getDestinationAddress();
-      int val_length = addr.getValue((uint8_t*)val);
+      int val_length = addr.getValue(val);
       __require__ ( val_length <= sizeof(val) );   // fatal if out of range !!!!
       dest.set_value(val);
       dest.set_typeOfNumber(addr.getTypeOfNumber());
