@@ -544,11 +544,11 @@ void CommandProcessor::setProviderEnabled(std::string providerId, bool enabled)
     {
         ProviderGuard pg = getProvider(providerIdStr);
         provider = pg.get();
+        
+        if (!provider) 
+            throw Exception("Provider '%s' not exists.", providerIdStr);
     }
     
-    if (!provider) 
-        throw Exception("Provider '%s' not exists.", providerIdStr);
-
     provider->setEnabled(enabled);
 }
 
