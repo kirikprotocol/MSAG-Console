@@ -56,8 +56,12 @@ namespace smsc { namespace store
 
     public:    
         
-        static MessageStore* startup(Manager& config)
+        static void startup(Manager& config)
             throw(ConfigException, ConnectionFailedException);
+        
+        static MessageStore* getMessageStore() {
+            return ((MessageStore *)instance);
+        }
         
         static void shutdown(); 
         

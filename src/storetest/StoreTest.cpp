@@ -20,7 +20,7 @@ int main(void)
     try 
     {
         Manager::init("config.xml");
-        store = StoreManager::startup(Manager::getInstance());
+        StoreManager::startup(Manager::getInstance());
         printf("Connect Ok !\n");
     } 
     catch (exception& exc) 
@@ -31,7 +31,8 @@ int main(void)
 
     static char* oa = "123.456.7.890.123.456";
     static char* da = "098.7.654.321";
-    static char* body = "Test message's body !";
+    static char* body = "";
+    //static char* body = "Test message's body !";
 
     memset((void *)&sms, 0, sizeof(sms));
 
@@ -55,6 +56,8 @@ int main(void)
 
     try 
     {
+        store = StoreManager::getMessageStore();
+
         time_t begTime, endTime;
         printf("\nStoring %d messages, please wait ... \n", 
                 NUM_OF_TEST_MESSAGES);
@@ -73,7 +76,7 @@ int main(void)
         for (int i=1; i<NUM_OF_TEST_MESSAGES+1; i++)
         {
             store->retrive((SMSId)i, sms);
-            store->remove((SMSId)i);
+            //store->remove((SMSId)i);
         }
         endTime = time(0L) - begTime;
         printf("Time spent for retriving: %d (sec)\nPerformance: %d (msg per sec)\n", 

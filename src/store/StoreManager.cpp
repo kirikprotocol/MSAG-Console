@@ -18,14 +18,14 @@ IDGenerator* StoreManager::generator = 0L;
 StoreManager* StoreManager::instance = 0L;
 log4cpp::Category& StoreManager::log = Logger::getCategory("smsc.store.StoreManager");
 
-MessageStore* StoreManager::startup(Manager& config)
+void StoreManager::startup(Manager& config)
     throw(ConfigException, ConnectionFailedException)
 {
-    log.info("Storage Manager is starting ... ");
     MutexGuard guard(mutex);
     
     if (!instance)
     {
+        log.info("Storage Manager is starting ... ");
         Connection* connection = 0L; 
         try 
         {
@@ -52,27 +52,22 @@ MessageStore* StoreManager::startup(Manager& config)
         }
         pool->freeConnection(connection);
         instance = new StoreManager();
+        log.info("Storage Manager was started up.");
     }
-    
-    log.info("Storage Manager was started up.");
-    return ((MessageStore *)instance);
 }
         
 void StoreManager::shutdown() 
 {
-    log.info("Storage Manager is shutting down ...");
     MutexGuard guard(mutex);
 
-    if (pool) {
+    if (pool && instance && generator)
+    {
+        log.info("Storage Manager is shutting down ...");
         delete pool; pool = 0L;
-    }
-    if (instance) {
         delete instance; instance = 0L;
-    }
-    if (generator) {
         delete generator; generator = 0L;
-    }
-    log.info("Storage Manager was shutdowned.");
+        log.info("Storage Manager was shutdowned.");
+    }   
 }
 
 const int MAX_TRIES_TO_PROCESS = 3;
