@@ -123,64 +123,65 @@
             <td width="15%"><div align=right>${smeStat.permError}</div></td>
           </tr>
           <tr id="c${disNo}" style="display:none">
-            <td colspan=6><table class=list cellspacing=0 cellpadding=0 border=0>
+            <td colspan=6><table class=properties_list cellspacing=0 cellpadding=0 border=0>
               <tr class=row0>
-                <th width="25%"><div align=right>Errors</div></th>
+                <th width="25%"><div align=right>Error Code</div></th>
+                <th width="15%"><div align=right>Count</div></th>
                 <th width="15%">&nbsp;</th><th width="15%">&nbsp;</th>
-                <th width="15%">&nbsp;</th><th width="15%">&nbsp;</th><th width="15%">&nbsp;</th>
+                <th width="15%">&nbsp;</th><th width="15%">&nbsp;</th>
               </tr>
               <c:forEach var="smeErr" items="${smeStat.errors}">
                 <tr class=row1>
-                  <!-- TODO: Obtain errcode string -->
-                  <td><div align=right>${smeErr.errcode}</div></td>
+                  <td nowrap><div align=right>${fn:escapeXml(smf:getErrorMessage(pageContext.request.locale, smeErr.errcode, true))}</div></td>
                   <td><div align=right>${smeErr.counter}</div></td>
                   <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
                 </tr>
               </c:forEach>
               <tr class=row0>
                 <th width="25%"><div align=right>Transactions</div></th>
+                <th width="15%"><div align=right>Count</div></th>
                 <th width="15%">&nbsp;</th><th width="15%">&nbsp;</th>
-                <th width="15%">&nbsp;</th><th width="15%">&nbsp;</th><th width="15%">&nbsp;</th>
+                <th width="15%">&nbsp;</th><th width="15%">&nbsp;</th>
               </tr>
               <tr class=row1>
                 <td><div align=right>SmsTrOk</div></td>
-                <td><div align=right>${smeStat.SmsTrOk}</div></td>
-                <td collspan=4>&nbsp;</td>
+                <td><div align=right>${smeStat.smsTrOk}</div></td>
+                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
               </tr>
               <tr class=row1>
                 <td><div align=right>SmsTrFailed</div></td>
-                <td><div align=right>${smeStat.SmsTrFailed}</div></td>
-                <td collspan=4>&nbsp;</td>
+                <td><div align=right>${smeStat.smsTrFailed}</div></td>
+                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
               </tr>
               <tr class=row1>
                 <td><div align=right>UssdTrFromScOk</div></td>
-                <td><div align=right>${smeStat.UssdTrFromScOk}</div></td>
-                <td collspan=4>&nbsp;</td>
+                <td><div align=right>${smeStat.ussdTrFromScOk}</div></td>
+                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
               </tr>
               <tr class=row1>
                 <td><div align=right>UssdTrFromScFailed</div></td>
-                <td><div align=right>${smeStat.UssdTrFromScFailed}</div></td>
-                <td collspan=4>&nbsp;</td>
+                <td><div align=right>${smeStat.ussdTrFromScFailed}</div></td>
+                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
               </tr>
               <tr class=row1>
                 <td><div align=right>UssdTrFromScBilled</div></td>
-                <td><div align=right>${smeStat.UssdTrFromScBilled}</div></td>
-                <td collspan=4>&nbsp;</td>
+                <td><div align=right>${smeStat.ussdTrFromScBilled}</div></td>
+                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
               </tr>
               <tr class=row1>
                 <td><div align=right>UssdTrFromSmeOk</div></td>
-                <td><div align=right>${smeStat.UssdTrFromSmeOk}</div></td>
-                <td collspan=4>&nbsp;</td>
+                <td><div align=right>${smeStat.ussdTrFromSmeOk}</div></td>
+                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
               </tr>
               <tr class=row1>
                 <td><div align=right>UssdTrFromSmeFailed</div></td>
-                <td><div align=right>${smeStat.UssdTrFromSmeFailed}</div></td>
-                <td collspan=4>&nbsp;</td>
+                <td><div align=right>${smeStat.ussdTrFromSmeFailed}</div></td>
+                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
               </tr>
               <tr class=row1>
                 <td><div align=right>UssdTrFromSmeBilled</div></td>
-                <td><div align=right>${smeStat.UssdTrFromSmeBilled}</div></td>
-                <td collspan=4>&nbsp;</td>
+                <td><div align=right>${smeStat.ussdTrFromSmeBilled}</div></td>
+                <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
               </tr>
             </table></td>
           </tr>
@@ -214,16 +215,16 @@
             <td width="15%"><div align=right>${routeStat.permError}</div></td>
           </tr>
           <tr id="c${disNo}" style="display:none">
-            <td colspan=6><table class=list cellspacing=0 cellpadding=0 border=0>
+            <td colspan=6><table class=properties_list cellspacing=0 cellpadding=0 border=0>
               <tr class=row0>
-                <th width="25%"><div align=right>Errors</div></th>
+                <th width="25%"><div align=right>Error Code</div></th>
+                <th width="15%"><div align=right>Count</div></th>
                 <th width="15%">&nbsp;</th><th width="15%">&nbsp;</th>
-                <th width="15%">&nbsp;</th><th width="15%">&nbsp;</th><th width="15%">&nbsp;</th>
+                <th width="15%">&nbsp;</th><th width="15%">&nbsp;</th>
               </tr>
               <c:forEach var="routeErr" items="${routeStat.errors}">
                 <tr class=row1>
-                  <!-- TODO: Obtain errcode string -->
-                  <td><div align=right>${routeErr.errcode}</div></td>
+                  <td nowrap><div align=right>${fn:escapeXml(smf:getErrorMessage(pageContext.request.locale, routeErr.errcode, true))}</div></td>
                   <td><div align=right>${routeErr.counter}</div></td>
                   <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
                 </tr>
@@ -234,7 +235,23 @@
         </c:forEach>
 
         <c:if test="${bean.administrator}">
-          <!-- TODO: add errors statisctics-->
+          <c:set var="errorsStat" value="${statistics.errorStat}"/>
+          <tr>
+              <td colspan=8> <div class=page_subtitle>SMS delivery state</div></td>
+          </tr>
+          <tr class=row0>
+              <th width="25%"><div align=right>Error Code</div></th>
+              <th width="15%"><div align=right>Count</div></th>
+              <th width="15%">&nbsp;</th><th width="15%">&nbsp;</th>
+              <th width="15%">&nbsp;</th><th width="15%">&nbsp;</th>
+          </tr>
+          <c:forEach var="errStat" items="${errorsStat}" varStatus="i">
+            <tr class=row1>
+              <td nowrap><div align=right>${fn:escapeXml(smf:getErrorMessage(pageContext.request.locale, errStat.errcode, true))}</div></td>
+              <td><div align=right>${errStat.counter}</div></td>
+              <td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>
+            </tr>
+          </c:forEach>
         </c:if>
 
       </table>
