@@ -1024,9 +1024,94 @@ public:
 	}
 };
 
-void SmppProtocolErrorTestCases::bindUnbindCorrect(int num)
+void SmppProtocolErrorTestCases::bindUnbindScenario(int num)
 {
 	BindUnbindScenario scenario(cfg, smeAddr, chkList, num);
+	scenario.execute();
+}
+
+class InvalidBindStatusScenario : public SmppProtocolErrorScenario
+{
+	int num;
+	uint32_t cmdId;
+public:
+	InvalidBindStatusScenario(const SmeConfig& conf, const Address& addr,
+		CheckList* chkList, int _num)
+	: InvalidBindStatusScenario(conf, addr, chkList), num(_num), cmdId(0)
+	{
+		__trace2__("InvalidBindStatusScenario(): scenario = %p", this);
+	}
+	~InvalidBindStatusScenario()
+	{
+		__trace2__("~InvalidBindStatusScenario(): scenario = %p", this);
+	}
+	virtual void execute()
+	{
+		//connect & bind
+		connect();
+		PduBindTRX bindPdu;
+		sendPdu(setupBindPdu(bindPdu, BindType::Receiver));
+		TCSelector s(num, 3);
+		switch (s.value())
+		{
+			case 1:
+				__tc__("submitSm.receiver");
+				cmdId = SUBMIT_SM;
+				break;
+			case 2:
+				__tc__("querySm.receiver");
+				cmdId = QUERY_SM;
+				break;
+			case 3:
+				__tc__("cancelSm.receiver");
+				cmdId = CANCEL_SM;
+				break;
+			default:
+				__unreachable__("Invalid num");
+		}
+		SmppHeader* pdu = createPdu(cmdId);
+		sendPdu(pdu);
+		disposePdu(pdu);
+		__tc_ok__;
+	}
+	virtual void handleEvent(SmppHeader *pdu)
+	{
+		__decl_tc__;
+		switch (pdu->get_commandId())
+		{
+			case BIND_RECIEVER_RESP:
+			case BIND_TRANSMITTER_RESP:
+			case BIND_TRANCIEVER_RESP:
+				checkBindResp(pdu);
+				return;
+			case SUBMIT_SM_RESP:
+				__tc__("submitSm.resp.checkCmdStatusInvalidBindStatus");
+				__check__(1, cmdId == SUBMIT_SM);
+				break;
+			case QUERY_SM_RESP:
+				__tc__("querySm.resp.checkCmdStatusInvalidBindStatus");
+				__check__(1, cmdId == QUERY_SM);
+				break;
+			case CANCEL_SM_RESP:
+				__tc__("cancelSm.resp.checkCmdStatusInvalidBindStatus");
+				__check__(1, cmdId == QUERY_SM);
+				break;
+			default:
+				__unreachable__("not expected");
+		}
+		__check__(2, pdu->get_commandStatus() == ESME_RINVBNDSTS);
+		__tc_ok_cond__;
+	}
+	virtual void handleError(int errorCode)
+	{
+		__trace2__("handleError(): errorCode = %d", errorCode);
+		__unreachable__("not expected");
+	}
+};
+
+void SmppProtocolErrorTestCases::invalidBindStatusScenario(int num)
+{
+	InvalidBindStatusScenario scenario(cfg, smeAddr, chkList, num);
 	scenario.execute();
 }
 

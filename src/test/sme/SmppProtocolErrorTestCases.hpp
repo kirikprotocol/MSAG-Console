@@ -109,7 +109,9 @@ public:
 	/**
 	 * Bind sme зарегистрированной в smsc с проверкой внутренностей bind и unbind pdu.
 	 */
-	void bindUnbindCorrect(int num);
+	void bindUnbindScenario(int num);
+
+	void invalidBindStatusScenario(int num);
 
 protected:
 	const SmeConfig cfg;
