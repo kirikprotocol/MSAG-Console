@@ -214,6 +214,7 @@ int partitionSms(SMS* sms,int dstdc)
          xlen++;
       }
     }
+    __trace2__("PARTITIONSMS: udhilen=%d, xlen=%d",udhilen,xlen);
     xlen*=7;
     if(udhilen+xlen/8+(xlen%8?1:0)<maxfulllen)return psSingle;
   }else
