@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
-<!DOCTYPE records SYSTEM "SmeRecords.dtd">
+<!DOCTYPE records SYSTEM "file://SmeRecords.dtd">
 
 <records>
 <smerecord type="smpp" uid="1">
