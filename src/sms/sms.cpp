@@ -39,8 +39,8 @@ void Body::encode(uint8_t* buffer,int& length) const
   int offset=0;
   for(int i=0;i<=SMS_LAST_TAG;i++)
   {
-    if ( i == Tag::SMPP_SHORT_MESSAGE ) continue;
-    if ( i == Tag::SMPP_MESSAGE_PAYLOAD ) continue;
+		if ( i == Tag::SMPP_SHORT_MESSAGE ) continue;
+		if ( i == Tag::SMPP_MESSAGE_PAYLOAD ) continue;
     if(prop.properties[i].isSet)
     {
       __require__(offset<length);
@@ -201,7 +201,7 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
   if ( !HSNS_isEqual() ) {
     if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) ) {
       __trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
-      if ( !hasBinProperty(Tag::SMPP_SHORT_MESSAGE) )
+      if ( !prop.properties[unType(Tag::SMPP_SHORT_MESSAGE)].isSet )
       {
         if ( !prop.properties[unType(Tag::SMPP_DATA_CODING)].isSet )
           throw runtime_error(":SMS::MessageBody::getBinProperty: encoding scheme must be set");
@@ -225,7 +225,7 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
     }
     else if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) ){
       __trace2__(":SMS::Body::%s processing MESSAGE_PAYLOAD",__FUNCTION__);
-      if ( !hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD) )
+      if ( !prop.properties[unType(Tag::SMPP_MESSAGE_PAYLOAD)].isSet )
       {
         if ( !prop.properties[unType(Tag::SMPP_DATA_CODING)].isSet )
           throw runtime_error(":SMS::MessageBody::getBinProperty: encoding scheme must be set");
@@ -251,9 +251,9 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
 trivial:
     __trace2__(":SMS::Body::%s get trivial value",__FUNCTION__);
     if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) )
-      tag = unType(Tag::SMSC_RAW_SHORTMESSAGE);
-    if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) )
-      tag = unType(Tag::SMSC_RAW_PAYLOAD);
+	    tag = unType(Tag::SMSC_RAW_SHORTMESSAGE);
+	  if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) )
+	  	tag = unType(Tag::SMSC_RAW_PAYLOAD);
   }
   return prop.properties[tag].getBin(len);
 }
