@@ -55,7 +55,7 @@ public class Method
 
   public Method(Element methodElem)
   {
-    name = StringEncoderDecoder.decode(methodElem.getAttribute("name"));
+    name = methodElem.getAttribute("name");
     type = Type.getInstance(methodElem.getAttribute("type"));
     NodeList list = methodElem.getElementsByTagName("param");
     for (int i = 0; i < list.getLength(); i++) {

@@ -26,7 +26,7 @@ public class Parameter
 
   public Parameter(Element paramElement)
   {
-    name = StringEncoderDecoder.decode(paramElement.getAttribute("name"));
+    name = paramElement.getAttribute("name");
     type = Type.getInstance(paramElement.getAttribute("type"));
   }
 

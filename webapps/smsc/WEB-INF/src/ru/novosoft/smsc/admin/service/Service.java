@@ -44,18 +44,18 @@ public class Service extends Proxy
   {
     if (component != null && method != null
             && method.equals(component.getMethods().get(method.getName()))) {
-      Response r = runCommand(new CommandCall(info.getName(), component.getName(), method.getName(), returnType, arguments));
+      Response r = runCommand(new CommandCall(info.getId(), component.getName(), method.getName(), returnType, arguments));
       if (r.getStatus() != Response.StatusOk)
         throw new AdminException("Error occured: " + r.getDataAsString());
       Element resultElem = (Element) r.getData().getElementsByTagName("variant").item(0);
       Type resultType = Type.getInstance(resultElem.getAttribute("type"));
       switch (resultType.getId()) {
         case Type.StringType:
-          return StringEncoderDecoder.decode(Utils.getNodeText(resultElem));
+          return Utils.getNodeText(resultElem);
         case Type.IntType:
-          return Long.decode(StringEncoderDecoder.decode(Utils.getNodeText(resultElem)));
+          return Long.decode(Utils.getNodeText(resultElem));
         case Type.BooleanType:
-          return Boolean.valueOf(StringEncoderDecoder.decode(Utils.getNodeText(resultElem)));
+          return Boolean.valueOf(Utils.getNodeText(resultElem));
         default:
           throw new AdminException("Unknown result type");
       }
@@ -66,7 +66,7 @@ public class Service extends Proxy
   public void refreshComponents()
           throws AdminException
   {
-    Response r = runCommand(new CommandListComponents(info.getName()));
+    Response r = runCommand(new CommandListComponents(info.getId()));
     if (r.getStatus() != Response.StatusOk)
       throw new AdminException("Error occured: " + r.getDataAsString());
     info.setComponents(r.getData().getDocumentElement());

@@ -14,9 +14,9 @@ import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 public class CommandCall extends ServiceCommand
 {
-  public CommandCall(String serviceName, String componentName, String methodName, Type returnType, Map args)
+  public CommandCall(String serviceId, String componentName, String methodName, Type returnType, Map args)
   {
-    super("call", serviceName);
+    super("call", serviceId);
     Element callElem = document.getDocumentElement();
     callElem.setAttribute("component", StringEncoderDecoder.encode(componentName));
     callElem.setAttribute("method", StringEncoderDecoder.encode(methodName));

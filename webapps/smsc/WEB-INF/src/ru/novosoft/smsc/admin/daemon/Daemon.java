@@ -59,7 +59,7 @@ public class Daemon extends Proxy
   public void addService(ServiceInfo serviceInfo)
           throws AdminException
   {
-    logger.debug("Add service \"" + serviceInfo.getName() + "\" (" + serviceInfo.getHost() + ':'
+    logger.debug("Add service \"" + serviceInfo.getId() + "\" (" + serviceInfo.getHost() + ':'
                  + serviceInfo.getPort() + ")");
 
     if (getStatus() != StatusConnected)
@@ -69,9 +69,8 @@ public class Daemon extends Proxy
     Response r = runCommand(new CommandAddService(serviceInfo));
     logger.debug("checkpoint 2");
     if (r.getStatus() != Response.StatusOk)
-      throw new AdminException("Couldn't add service \"" + serviceInfo.getName()
-                               + "\" [" + serviceInfo.getCmdLine() + " "
-                               + serviceInfo.getArgs() + "], nested:" + r.getDataAsString());
+      throw new AdminException("Couldn't add service \"" + serviceInfo.getId() + '/' + serviceInfo.getId()
+                               + "\" [" + serviceInfo.getArgs() + "], nested:" + r.getDataAsString());
   }
 
   public void removeService(String serviceName)
@@ -126,7 +125,7 @@ public class Daemon extends Proxy
     NodeList list = r.getData().getElementsByTagName("service");
     for (int i = 0; i < list.getLength(); i++) {
       ServiceInfo newInfo = new ServiceInfo((Element) list.item(i), host);
-      result.put(newInfo.getName(), newInfo);
+      result.put(newInfo.getId(), newInfo);
     }
 
     return result;

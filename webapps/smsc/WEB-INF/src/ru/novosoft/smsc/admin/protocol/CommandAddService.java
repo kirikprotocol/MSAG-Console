@@ -16,13 +16,12 @@ public class CommandAddService extends Command
   {
     super("add_service");
 
-    logger.debug("Add service \"" + serviceInfo.getName() + "\" (" + serviceInfo.getHost() + ':'
+    logger.debug("Add service \"" + serviceInfo.getId() + "\" (" + serviceInfo.getHost() + ':'
                  + serviceInfo.getPort() + ")");
 
     Element serviceElem = document.createElement("service");
     serviceElem.setAttribute("name", StringEncoderDecoder.encode(serviceInfo.getName()));
-    serviceElem.setAttribute("cmd_line", StringEncoderDecoder.encode(serviceInfo.getCmdLine()));
-    serviceElem.setAttribute("config_file", StringEncoderDecoder.encode(serviceInfo.getConfigFileName()));
+    serviceElem.setAttribute("id", StringEncoderDecoder.encode(serviceInfo.getId()));
     serviceElem.setAttribute("port", StringEncoderDecoder.encode(String.valueOf(serviceInfo.getPort())));
     serviceElem.setAttribute("args", StringEncoderDecoder.encode(String.valueOf(serviceInfo.getArgs())));
     document.getDocumentElement().appendChild(serviceElem);

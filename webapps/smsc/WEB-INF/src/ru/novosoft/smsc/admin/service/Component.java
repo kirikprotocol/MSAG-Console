@@ -29,7 +29,7 @@ public class Component
 
   public Component(Element elem)
   {
-    this.name = StringEncoderDecoder.decode(elem.getAttribute("name"));
+    this.name = elem.getAttribute("name");
     NodeList list = elem.getElementsByTagName("method");
     for (int i = 0; i < list.getLength(); i++) {
       Element methodElem = (Element) list.item(i);

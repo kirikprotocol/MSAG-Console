@@ -41,7 +41,7 @@ public class Response
       InputSource source = new InputSource(inputStream);
       doc = builder.parse(source);
       Element main = doc.getDocumentElement();
-      status = parseStatus(StringEncoderDecoder.decode(main.getAttribute("status")));
+      status = parseStatus(main.getAttribute("status"));
     }
     catch(FactoryConfigurationError error)
     {

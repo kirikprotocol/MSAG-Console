@@ -6,10 +6,7 @@ String host = s.getHost();
 int port = s.getPort();
 String cmd = s.getCmdLine();
 String configFile = s.getConfigFileName();
-Vector argus = s.getArgs();
-String args = "";
-if (argus.size() > 0)
-	args = (String) argus.elementAt(0);
+String args = s.getArgs();
 %>
 <FORM action="edit_service_startup_2.jsp">
 	<input type="Hidden" name="host" value="<%=host%>">

@@ -16,47 +16,45 @@ import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 public class ServiceInfo
 {
+  protected String name = "";
+  protected String id = "";
+  protected String host = "";
+  protected int port = 0;
+  protected String args = "";
+  protected long pid = 0;
+  protected Map components = new HashMap();
+
+
   public ServiceInfo(Element serviceElement, String serviceHost)
           throws AdminException
   {
     host = serviceHost;
-    name = StringEncoderDecoder.decode(serviceElement.getAttribute("name"));
-    pid = Long.decode(StringEncoderDecoder.decode(serviceElement.getAttribute("pid"))).longValue();
-    cmdLine = StringEncoderDecoder.decode(serviceElement.getAttribute("command_line"));
-    configFileName = StringEncoderDecoder.decode(serviceElement.getAttribute("config"));
-    port = Integer.decode(StringEncoderDecoder.decode(serviceElement.getAttribute("port"))).intValue();
+    name = serviceElement.getAttribute("name");
+    pid = Long.decode(serviceElement.getAttribute("pid")).longValue();
+    port = Integer.decode(serviceElement.getAttribute("port")).intValue();
+    id = serviceElement.getAttribute("id");
 
-    args = StringEncoderDecoder.decode(serviceElement.getAttribute("args"));
-    if (this.name.equals("") || this.cmdLine.equals("")) {
-      throw new AdminException("service name or command line not specified in response");
+    args = serviceElement.getAttribute("args");
+    if (name.equals("") || id.equals("")) {
+      throw new AdminException("service name or service system id not specified in response");
     }
   }
 
-  public ServiceInfo(String name, String host, int port, String cmdLine, String configFileName, String args, long pid)
+  public ServiceInfo(String name, String id, String host, int port, String args, long pid)
   {
     this.name = name;
     this.host = host;
     this.port = port;
-    this.cmdLine = cmdLine;
-    this.configFileName = configFileName;
     this.args = args;
     this.pid = pid;
+    this.id = id;
   }
 
-  public ServiceInfo(String name, String host, int port, String cmdLine, String configFileName, String args)
+  public ServiceInfo(String name, String id, String host, int port, String args)
   {
-    this(name, host, port, cmdLine, configFileName, args, 0);
+    this(name, id, host, port, args, 0);
   }
 
-  protected String name = "";
-  protected String host = "";
-  protected int port = 0;
-  protected String cmdLine = "";
-
-  protected String configFileName = "config.xml";
-  protected String args = "";
-  protected long pid = 0;
-  protected Map components = new HashMap();
 
   public String getName()
   {
@@ -73,14 +71,9 @@ public class ServiceInfo
     return port;
   }
 
-  public String getCmdLine()
+  public String getId()
   {
-    return cmdLine;
-  }
-
-  public String getConfigFileName()
-  {
-    return configFileName;
+    return id;
   }
 
   public String getArgs()

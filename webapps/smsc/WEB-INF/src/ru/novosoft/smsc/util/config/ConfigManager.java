@@ -72,13 +72,8 @@ public class ConfigManager
   protected ConfigManager(String configFileName)
           throws FactoryConfigurationError, ParserConfigurationException, IOException, SAXException
   {
-    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-    DocumentBuilder builder = factory.newDocumentBuilder();
-    builder.setEntityResolver(new ConfigEntityResolver());
-    FileInputStream inputStream = new FileInputStream(configFileName);
-    InputSource source = new InputSource(inputStream);
-    Document doc = builder.parse(source);
-    config = new Config(doc);
+    InputStream inputStream = new BufferedInputStream(new FileInputStream(configFileName));
+    config = ConfigReader.readConfig(inputStream);
   }
 
   public Config getConfig()

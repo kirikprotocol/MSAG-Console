@@ -19,78 +19,80 @@ inline char * cStringCopy(const char * const src)
 		return 0;
 }
 
-const char ENCODE_DECODE_ESCAPE_CHAR = '%';
+const char ENCODE_DECODE_ESCAPE_CHAR = '/';
 
-inline std::string encode_(std::string src)
+inline const size_t calculateStringSizeAfterEncoding(const char * const src)
 {
-	std::string result;
-	for (std::string::const_iterator i = src.begin(); i != src.end(); i++)
+	size_t count = 0;
+	for (const char *p = src; *p != 0; p++)
 	{
-		char c = *i;
-		if (    c == ' ' ||  c == '_'
-				|| (c >= 'a' && c <= 'z')
-				|| (c >= 'A' && c <= 'Z')
-				|| (c >= '0' && c <= '9')
-				)
+		switch (*p)
 		{
-			result += c;
-		}
-		else
-		{
-			char num[3];
-			snprintf(num, sizeof(num), "%.2X", (uint8_t) c);
-			result += ENCODE_DECODE_ESCAPE_CHAR;
-			result += num;
+		case '<': // &lt;
+		case '>': // &gt;
+			count += 4;
+			break;
+		case '&': // &amp;
+			count += 5;
+			break;
+		case '"': // &quot;
+			count += 6;
+			break;
+		default:
+			count++;
 		}
 	}
+	return count;
+}
+
+inline char * encode(const char * const src)
+{
+	char * result = new char[calculateStringSizeAfterEncoding(src) +1];
+	for (const char *s = src, *d = result; *s != 0; s++)
+	{
+		switch (*s)
+		{
+		case '<': // &lt;
+			memcpy(d, "&lt;", 4);
+			d += 4;
+		case '>': // &gt;
+			memcpy(d, "&gt;", 4);
+			d += 4;
+			break;
+		case '&': // &amp;
+			memcpy(d, "&amp;", 5);
+			d += 5;
+			break;
+		case '"': // &quot;
+			memcpy(d, "&quot;", 6);
+			d += 6;
+			break;
+		default:
+			*d++ = *s;
+		}
+	}
+	*d=0;
 	return result;
 }
 
-inline char * encode_(const char* src)
+inline char* decodeDot(char * str)
 {
-	return cStringCopy(encode_(std::string(src)).c_str());
-}
-
-inline std::string decode_(const std::string &src)
-{
-	std::string result;
-	std::string::size_type pos = 0;
-	std::string::size_type curpos = src.find(ENCODE_DECODE_ESCAPE_CHAR);
-	while (curpos != std::string::npos)
+	for (char *p = str; *p != 0; p++)
 	{
-		result.append(src, pos, curpos - pos);
-		char numstr[3];
-		numstr[0] = src[curpos+1];
-		numstr[1] = src[curpos+2];
-		numstr[2] = 0;
-		char c = strtol(numstr, 0, 16);
-		if (c == 0 && errno == EINVAL)
-		{// error occured, take it unchanged
-			result += numstr;
-		}	else
-			result += c;
-		pos = curpos + 3;
-		curpos = src.find(ENCODE_DECODE_ESCAPE_CHAR, pos);
+		if (*p == ENCODE_DECODE_ESCAPE_CHAR)
+			*p = '.';
 	}
-	result.append(src, pos, src.size() - pos);
-	return result;
+	return str;
 }
 
-/**
- * декодирует строку, закодированную функцией encode.
- *
- * @param src    Строка, которую нужно декодировать.
- * @return Новую строку, в которой результат декодирования. <B>Удаление этой строки на совести вызывающего.</B>
- */
-inline char* decode_(const char * src)
+inline char* encodeDot(char * str)
 {
-	return cStringCopy(decode_(std::string(src)).c_str());
-}
-
-inline char* decode(DOMString src)
-{
-	std::auto_ptr<char> tmp(src.transcode());
-	return decode_(tmp.get());
+	for (char *p = str; *p != 0; p++)
+	{
+		if (*p == '.')
+			*p = ENCODE_DECODE_ESCAPE_CHAR;
+	}
+	return str;
 }
 
 }				

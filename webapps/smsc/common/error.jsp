@@ -1,8 +1,7 @@
 <%@ page isErrorPage="true" %>
 <%@ page import = "java.io.PrintWriter"%>
 <%@include file="/common/header.jsp"%>
-<% String message = request.getParameter("message");%>
-<h1 align="center" style="color=red"><%=message == null || message.equals("") ? "ERROR occured" : "ERROR occured:<br>"+message%></h1>
+<h1 align="center" style="color=red">ERROR occured</h1>
 <h3>Request:</h3>
 <dl>
 	<dt>Params:</dt>
@@ -30,10 +29,11 @@ if (exception != null) {
 }
 
 try {
-	serviceManager.refreshServices();
+	//serviceManager.refreshServices();
 } catch (Throwable e)
 {
 }
 
 %>
 <%@include file="footer.jsp"%>
+<!--html><body><h1 style="color: Red; background-color: Gray; text-align: center;">Error page is fault</h1></body></html-->

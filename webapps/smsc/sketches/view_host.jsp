@@ -3,5 +3,5 @@
 <H3>Services:</H3>
 <% boolean isFull = false; %>
 <%@ include file="_services_list.jsp"%>
-<a href="add_service.jsp">Add service</a>
+<a href="advanced_add_service.jsp">Add service</a>
 <%@ include file="footer.jsp"%>
