@@ -78,6 +78,7 @@ public:
       __trace2__("MAPPROXY::putIncomingCommand: locked");
       if(inqueue.Count()==MAP_PROXY_QUEUE_LIMIT)
       {
+        __trace2__("MAPPROXY::putIncomingCommand: proxy queue limit exceded");
         throw ProxyQueueLimitException();
       }
       inqueue.Push(cmd);
