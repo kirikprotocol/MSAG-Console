@@ -2,33 +2,98 @@
 <!DOCTYPE locale_resources SYSTEM "file://locale_resources.dtd">
 
 <locale_resources>
-<settings>
+  <settings>
     <section name="delimiter">
-	<param name="decimal">.</param>
-	<param name="list">,</param>
+      <param name="decimal">.</param>
+      <param name="list">,</param>
     </section>
-</settings>
-<resources>
+  </settings>
+  <resources>
     <section name="profiler">
-	<param name="msgReportFull"></param>
-	<param name="msgReportNone"></param>
-	<param name="msgUCS2"></param>
-	<param name="msgDefault"></param>
-	<param name="msgError">Unrecognized profile management command</param>
+      <param name="msgDefault" type="string">Now you are a default language user</param>
+      <param name="msgUCS2" type="string">Now you will be able to receive ucs2-encoded messages</param>
+      <param name="msgReportFull" type="string">Now you will receive auxiliary delivery reports</param>
+      <param name="msgReportNone" type="string">Now you will receive only requested delivery reports</param>
+      <param name="msgError" type="string">Unrecognized profile management command</param>
     </section>
     <section name="abonentinfo">
-	<param name="mobileFormat"></param>
-	<param name="smeFormat"></param>
+      <param name="mobileFormat">Abonent $$string import=abonent$$ is $$string import=status$$. msc $$string import=msc$$</param>
+      <param name="smeFormat">$$string import=abonent$$:$$int32 import=encoding$$,$$int32 import=status$$,$$string import=msc$$</param>
     </section>
     <section name="receipt">
-    	<section name="default">
-	    <param name="delivered">Message for $$string import=dest$$ delivered at $$date import=date$$</param>
-	    <param name="failed"></param>
-	    <param name="notify"></param>
-    	</section>
+      <section name="default">
+        <param name="deliveredFormat" type="string">Message for $$string import=dest$$ delivered at $$date import=date$$</param>
+        <param name="failedFormat" type="string">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't delivered, reason: $$string import=reason$$</param>
+        <param name="notifyFormat" type="string">Message for $$string import=dest$$ sent at $$date import=date$$ wasn't immediately delivered, reason: $$string import=reason$$</param>
+      </section>
     </section>
     <section name="reason">
-    	<param name="0">Ok</param>
+      <param name="0">No Error</param>
+      <param name="1">Message Length is invalid</param>
+      <param name="2">Command Length is invalid</param>
+      <param name="3">Invalid Command ID</param>
+      <param name="4">Incorrect BIND Status for given command</param>
+      <param name="5">ESME Already in Bound State</param>
+      <param name="6">Invalid Priority Flag</param>
+      <param name="7">Invalid Registered Delivery Flag</param>
+      <param name="8">System Error</param>
+      <param name="10">Invalid Source Address</param>
+      <param name="11">Invalid Dest Addr</param>
+      <param name="12">Message ID is invalid</param>
+      <param name="13">Bind Failed</param>
+      <param name="14">Invalid Password</param>
+      <param name="15">Invalid System ID</param>
+      <param name="17">Cancel SM Failed</param>
+      <param name="19">Replace SM Failed</param>
+      <param name="20">Message Queue Full</param>
+      <param name="21">Invalid Service Type</param>
+      <param name="51">Invalid number of destinations</param>
+      <param name="52">Invalid Distribution List name</param>
+      <param name="64">Destination flag is invalid (submit_multi)</param>
+      <param name="66">Invalid 'submit with replace' request (i.e.      submit_sm with replace_if_present_flag set)</param>
+      <param name="67">Invalid esm_class field data</param>
+      <param name="68">Cannot Submit to Distribution List</param>
+      <param name="69">submit_sm or submit_multi failed</param>
+      <param name="72">Invalid Source address TON</param>
+      <param name="73">Invalid Source address NPI</param>
+      <param name="80">Invalid Destination address TON</param>
+      <param name="81">Invalid Destination address NPI</param>
+      <param name="83">Invalid system_type field</param>
+      <param name="84">Invalid replace_if_present flag</param>
+      <param name="85">Invalid number of messages</param>
+      <param name="88">Throttling error (ESME has exceeded allowed message limits)</param>
+      <param name="97">Invalid Scheduled Delivery Time</param>
+      <param name="98">Invalid message validity period (Expiry time)</param>
+      <param name="99">Predefined Message Invalid or Not Found</param>
+      <param name="100">ESME Receiver Temporary App Error Code</param>
+      <param name="101">ESME Receiver Permanent App Error Code</param>
+      <param name="102">ESME Receiver Reject Message Error Code</param>
+      <param name="103">query_sm request failed</param>
+      <param name="192">Error in the optional part of the PDU Body</param>
+      <param name="193">Optional Parameter not allowed</param>
+      <param name="194">Invalid Parameter Length</param>
+      <param name="195">Expected Optional Parameter missing</param>
+      <param name="196">Invalid Optional Parameter Value</param>
+      <param name="254">Delivery Failure (used for data_sm_resp)</param>
+      <param name="255">Unknown Error</param>
+      <param name="260">Invalid Data Coding Scheme Specified DCS is invalid or MC does not support it.</param>
+      <param name="1025">No route defined for given source and destination addresses</param>
+      <param name="1026">Message expired</param>
+      <param name="1027">Delivery attempt timed out</param>
+      <param name="1028">Sme is not connected</param>
+      <param name="1029">Msc is blocked</param>
+      <param name="1153">Unknown subscriber</param>
+      <param name="1157">Unidentified subscriber</param>
+      <param name="1161">Illegal subscriber</param>
+      <param name="1164">Illegal Equipment</param>
+      <param name="1165">Call Barred</param>
+      <param name="1173">Facility Not Supported</param>
+      <param name="1179">Absent Subscriber</param>
+      <param name="1183">Subscriber Busy for MT SMS.</param>
+      <param name="1184">SM Delivery Failure</param>
+      <param name="1186">System Failure</param>
+      <param name="1187">Data Missing</param>
+      <param name="1188">Unexpected Data value</param>
     </section>
-</resources>
+  </resources>
 </locale_resources>
