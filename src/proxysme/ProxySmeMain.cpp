@@ -122,6 +122,26 @@ bool LoadConfig(ProxyConfig& pconf)
 #endif
 }
 
+#if !defined _WIN32
+static SMachine* machine = 0;
+void Stopper() {
+  if ( machine ) machine->Stop();
+}
+void SetStopper(SMachine* m){
+  machine = 0;
+  sigset_t set;
+  sigemptyset(&set);
+  sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
+  sigset(smsc::system::SHUTDOWN_SIGNAL, (void(*)(int))Stopper);
+  machine = m;
+}
+#else
+void SetStopper(SMachine*){}
+#endif
+
+
+#endif
+
 extern "C" 
 int main()
 {
@@ -157,6 +177,7 @@ int main()
     Queue     que(pconf);
     Mixer     mixer(que,pconf);
     SMachine  smachine(que,mixer,pconf);
+    SetStopper(smachine);
   
     if ( smachine.ProcessCommands(component) == END_PROCESSING ) break;
 
@@ -164,6 +185,7 @@ int main()
     if ( !LoadConfig(pconf) ) {
       smsc::util::Logger::getCategory("smsc.proxysme").error("can't relaod config, skipped");
     }
+    SetStopper(0);
   }
 
   return 0;
