@@ -440,7 +440,7 @@ void MAPIO_PutCommand(const SmscCommand& cmd )
 {
   unsigned dialogid_smsc = cmd->get_dialogId();
   unsigned dialogid_map = 0;
-  __trace2__(">>MAPPROXY::putCommand dialog:0x%x",did);
+  __trace2__(">>MAPPROXY::putCommand dialog:0x%x",dialogid_smsc);
   DialogRefGuard dialog;
   MAP_TRY {  
     if ( dialogid_smsc > 0xffff ) { // SMSC dialog
