@@ -194,12 +194,13 @@ namespace smsc {
 				listener->checkError();
 				//listener->releaseError();
 
-			  } catch (smsc::sme::SmppConnectException ex) {
+			  } catch (smsc::sme::SmppConnectException& ex) {
 				  std::ostringstream msg;
 				  msg << "PduListenerException: smsc::sme::SmppConnectException #" << ex.getReason() << ", " << ex.getTextReason();
 				  throw PduListenerException(msg.str(), ex.getReason());
-			  } catch (std::exception ex) {
-				log.error("BasicSme#bind(): Unknown std::exception when binding\n, %s", ex.what());
+			  } catch (std::exception& ex) {
+				log.error("BasicSme#bind(): Unknown std::exception when binding, %s, type=%s", ex.what(), typeid(ex).name());
+				//throw PduListenerException("PduListenerException: Unknown std::exception when binding", 0);
 			  } catch (...) {
 				log.error("BasicSme#bind(): Unknown exception when binding");
 			  }

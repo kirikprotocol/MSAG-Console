@@ -404,7 +404,7 @@ namespace smsc {
 
 				bool checkOutgoingValidity(SmppHeader* pdu)
 				{
-					true;
+					return true;
 					/*using namespace SmppCommandSet;
 					switch (pdu->get_commandId()) {
 					case BIND_TRANSMITTER:

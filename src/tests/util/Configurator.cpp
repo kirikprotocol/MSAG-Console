@@ -96,6 +96,8 @@ namespace smsc {
 
 			void ContextConfigurator::loadContextFromDir(string dirname) {
 				log.debug("Loading all XML-files from directory: " + dirname);
+				//int x[128];
+				//for(int i=0;i<sizeof(x)/sizeof(int);i++)x[i]=12;
 				DIR *dirDescr = opendir(dirname.c_str());
 				if (dirDescr) {	// каталог найден и успешно открыт
 					bool found = false;
@@ -111,6 +113,8 @@ namespace smsc {
 					if (!found) {
 						log.warn("There are no XML-files to process in directory: " + dirname);
 					}
+					//fprintf(stderr,"readdir finished!\n");
+					closedir(dirDescr);
 				} else { // ошибка открытия каталога
 					log.error("Error: Can't open directory: " + dirname);
 					throw ConfigurationException("Can't open directory: " + dirname);

@@ -373,10 +373,11 @@ namespace smsc {
 				}
 
 				PduHandler receiveWithSequence(int sequence, int timeout) {
-  					log.debug("receiveWithSequence: enter ####");
+  					log.debug("receiveWithSequence(%d, %d): --- enter", sequence, timeout);
 					queueMutex.Lock();
 					PduHandler pdu = findPduWithSequence(sequence);
 					if (pdu == 0) {
+  						log.debug("receiveWithSequence: the queue doesn't contain requested pdu");
 						if (sequenceLocks.Exist(sequence)) { //кто-то уже ждет
   							log.debug("receiveWithSequence: sequenceLocks for sequence=%u is alredy busy", sequence);
 							queueMutex.Unlock();
@@ -394,9 +395,10 @@ namespace smsc {
 							return pdu;
 						}
 						queueMutex.Lock();
+						pdu = findPduWithSequence(sequence);
 					}
-					pdu = findPduWithSequence(sequence);
 					queueMutex.Unlock();
+  					log.debug("receiveWithSequence: --- exit");
 
 					return pdu;
 				}
@@ -421,15 +423,21 @@ namespace smsc {
 			private:
 				PduHandler findPduWithSequence(int sequence) {
 					PduHandler pdu;
-					if (!queue.empty() && sequence < maxSequence) {
-						for (PduHandlerListIterator itr = queue.begin(); itr != queue.end(); ++itr) {
-							PduHandler queuedPdu = *itr;
-							if (sequence == queuedPdu->get_sequenceNumber()) {
-								pdu = queuedPdu;
-								queue.erase(itr);
-								break;
-							}
-						}
+					if (!queue.empty() && sequence <= maxSequence) {
+					  log.debug("findPduWithSequence: searching pdu with sequence %d", sequence);
+					  for (PduHandlerListIterator itr = queue.begin(); itr != queue.end(); itr++) {
+						  PduHandler queuedPdu = *itr;
+						  log.debug("findPduWithSequence: extracted pdu with sequence %d", queuedPdu->get_sequenceNumber());
+						  if (sequence == queuedPdu->get_sequenceNumber()) {
+							  log.debug("findPduWithSequence: pdu with sequence %d found", queuedPdu->get_sequenceNumber());
+							  pdu = queuedPdu;
+							  queue.erase(itr);
+							  break;
+						  }
+					  }
+					}
+					if(pdu != 0) {
+					  log.debug("findPduWithSequence: -- exit %d", pdu->get_sequenceNumber());
 					}
 					return pdu;
 				}
