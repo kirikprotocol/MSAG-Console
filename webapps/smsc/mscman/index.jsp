@@ -11,19 +11,19 @@
 <jsp:setProperty name="mscManagerFormBean" property="*"/>
 <%
     TITLE="Commutators lock status";
-    MENU0_SELECTION = "MENU0_SMSSTAT";
+    MENU0_SELECTION = "MENU0_MSCMAN";
 
     int beanResult = mscManagerFormBean.RESULT_OK;
     switch(beanResult = bean.process((ru.novosoft.smsc.jsp.SMSCAppContext)request.getAttribute("appContext"), errorMessages))
     {
-        case mscManagerFormBean.RESULT_DONE:
+        case MscManagerFormBean.RESULT_DONE:
             response.sendRedirect("index.jsp");
             return;
-        case mscManagerFormBean.RESULT_FILTER:
-        case mscManagerFormBean.RESULT_OK:
+        case MscManagerFormBean.RESULT_FILTER:
+        case MscManagerFormBean.RESULT_OK:
             STATUS.append("Ok");
             break;
-        case mscManagerFormBean.RESULT_ERROR:
+        case MscManagerFormBean.RESULT_ERROR:
             STATUS.append("<span class=CF00>Error</span>");
             break;
         default:
