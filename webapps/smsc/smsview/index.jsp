@@ -39,7 +39,11 @@ if (request.getMethod().equals("POST"))
 
 TITLE="SMSC SmsView utilite";
 MENU0_SELECTION = "MENU0_SMSVIEW";
-%><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+FORM_URI = CPATH+"/smsview/index.jsp";
+FORM_METHOD="POST";
+%>
+
+<%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <center>
 <table width="95%" cellpadding=2 cellspacing=2 border=0>
 <tr>
@@ -153,9 +157,6 @@ MENU0_SELECTION = "MENU0_SMSVIEW";
       <b>:</b>
       <input type="text" name="fromDateMinute" style="width:16pt;" value="<%=
         formBean.getFromDateMinute()%>" size=2 maxlength=2>
-      <b>:</b>
-      <input type="text" name="fromDateSecond" style="width:16pt;" value="<%=
-        formBean.getFromDateSecond()%>" size=2 maxlength=2>
       </td>
 
       <td colspan=2>
@@ -185,9 +186,6 @@ MENU0_SELECTION = "MENU0_SMSVIEW";
       <b>:</b>
       <input type="text" name="toDateMinute" style="width:16pt;" value="<%=
         formBean.getToDateMinute()%>" size=2 maxlength=2>
-      <b>:</b>
-      <input type="text" name="toDateSecond" style="width:16pt;" value="<%=
-        formBean.getToDateSecond()%>" size=2 maxlength=2>
       </td>
 </tr>
 <tr></tr>

@@ -58,18 +58,11 @@ public class SmsViewFormBean extends SmsQuery
     processQuery();
   }
 
-  public void moveToPrev() {
-    processPrevIndexing();
-  }
-  public void moveToNext() {
-    processNextIndexing();
-  }
-  public void moveToFirst() {
-    processFirstIndexing();
-  }
-  public void moveToLast() {
-    processLastIndexing();
-  }
+  public void moveToPrev()  { processPrevIndexing();  }
+  public void moveToNext()  { processNextIndexing();  }
+  public void moveToFirst() { processFirstIndexing(); }
+  public void moveToLast()  { processLastIndexing();  }
+
   public void moveToPage(String page) {
     try { processPageIndexing(Integer.parseInt(page)); }
     catch (Exception exc) {};
@@ -111,8 +104,6 @@ public class SmsViewFormBean extends SmsQuery
   public int getFromDateHour() { return fromDateHour; }
   public void setFromDateMinute(int minute) { fromDateMinute = minute; }
   public int getFromDateMinute() { return fromDateMinute; }
-  public void setFromDateSecond(int second) { fromDateSecond = second; }
-  public int getFromDateSecond() { return fromDateSecond; }
 
   public void setToDateDay(int day) { toDateDay = day; }
   public int getToDateDay() { return toDateDay; }
@@ -124,10 +115,9 @@ public class SmsViewFormBean extends SmsQuery
   public int getToDateHour() { return toDateHour; }
   public void setToDateMinute(int minute) { toDateMinute = minute; }
   public int getToDateMinute() { return toDateMinute; }
-  public void setToDateSecond(int second) { toDateSecond = second; }
-  public int getToDateSecond() { return toDateSecond; }
 
   public int getDeletedRowsCount() { return deletedRowsCount; }
+
   /* --------------------------- Private Part ----------------------------- */
 
   private boolean prevEnabled = false;
@@ -137,10 +127,8 @@ public class SmsViewFormBean extends SmsQuery
   private int rowsToDisplay = 10;
   private int rowIndex = 0;
 
-  private int fromDateYear, fromDateMonth, fromDateDay;
-  private int fromDateHour, fromDateMinute, fromDateSecond;
-  private int toDateYear, toDateMonth, toDateDay;
-  private int toDateHour, toDateMinute, toDateSecond;
+  private int fromDateYear, fromDateMonth, fromDateDay, fromDateHour, fromDateMinute;
+  private int toDateYear, toDateMonth, toDateDay, toDateHour, toDateMinute;
 
   private void processFirstIndexing() {
     rowIndex = 0; prevEnabled = false;
@@ -203,7 +191,6 @@ public class SmsViewFormBean extends SmsQuery
     fromDateDay = fdc.get(GregorianCalendar.DAY_OF_MONTH);
     fromDateHour = fdc.get(GregorianCalendar.HOUR_OF_DAY);
     fromDateMinute = fdc.get(GregorianCalendar.MINUTE);
-    fromDateSecond = fdc.get(GregorianCalendar.SECOND);
     GregorianCalendar tdc = new GregorianCalendar();
     tdc.setTime(getTillDate());
     toDateYear = tdc.get(GregorianCalendar.YEAR);
@@ -211,16 +198,15 @@ public class SmsViewFormBean extends SmsQuery
     toDateDay = tdc.get(GregorianCalendar.DAY_OF_MONTH);
     toDateHour = tdc.get(GregorianCalendar.HOUR_OF_DAY);
     toDateMinute = tdc.get(GregorianCalendar.MINUTE);
-    toDateSecond = tdc.get(GregorianCalendar.SECOND);
   }
   private void getDates()
   {
     setFromDate((new GregorianCalendar(
                       fromDateYear, fromDateMonth, fromDateDay,
-                      fromDateHour, fromDateMinute, fromDateSecond)).getTime());
+                      fromDateHour, fromDateMinute, 0)).getTime());
     setTillDate((new GregorianCalendar(
                       toDateYear, toDateMonth, toDateDay,
-                      toDateHour, toDateMinute, toDateSecond)).getTime());
+                      toDateHour, toDateMinute, 0)).getTime());
   }
 
 };
