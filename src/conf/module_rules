@@ -41,6 +41,7 @@ build only: __build_message__ $(SMSC_BUILDDIR)/lib/$(LIBRARY).a $(BINARIES)
 
 $(SMSC_BUILDDIR)/lib/$(LIBRARY).a : $(SMSC_BUILDDIR)/obj/$(LIBRARY) $(foreach x,$(OBJECTS),$(SMSC_BUILDDIR)/obj/$(LIBRARY)/$(x))
 	@echo "assemble module $(LIBRARY).a"
+	@rm -f $@
 	@$(AR) -r $@ $(foreach x,$(OBJECTS),$(SMSC_BUILDDIR)/obj/$(LIBRARY)/$(x))
 	@$(RANLIB) $@
 

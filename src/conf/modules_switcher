@@ -6,15 +6,15 @@
 
 ifeq (,$(wildcard modules-list))
 
-MODULES := 
-	
+MODULES :=
+
 else
 
 MODULES := $(shell cat modules-list | awk '{print $$1}' | grep -v "\#")
 __.empty.__:
 	@echo >> /dev/null
 
-$(MODULES) $(foreach x,$(MODULES),$(x).%): __.empty.__ 
+$(MODULES) $(foreach x,$(MODULES),$(x).%): __.empty.__
 override _modules = $(subst ., ,$@)
 override _module = $(firstword $(_modules))
 override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@), build )
@@ -22,7 +22,7 @@ override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@)
 	    cd $(_module); make $(_subtarget); \
 	else \
 	    echo "'$(_module)' is not module"; exit 1;\
-	fi 
+	fi
 
 endif
 

@@ -41,7 +41,7 @@ while(<IN>)
     $lpath=~s!-!/!g;
 #    print "lpath:$lpath\n";
     next unless -d "$srcdir/$lpath";
-    next if $lib eq $l;
+    #next if $lib eq $l;
     $libdeps.=" $builddir/lib/lib$l.a";
   }
   print OUT "$builddir/bin/$bin : $builddir/obj/lib$lib/$src.o$libdeps\n";
@@ -58,9 +58,32 @@ while(<IN>)
     next if $lib eq $l;
     next if $ldeps{"$builddir/lib/lib$l.a"};
     $ldeps{"$builddir/lib/lib$l.a"}=1;
-    print OUT "$builddir/lib/lib$l.a :\n";
+    print OUT "$builddir/lib/lib$l.a : ".calclibdeps("$srcdir/$lpath")."\n";
     print OUT "\t\@cd $srcdir/$lpath;make \$@\n\n";
   }
 }
 close OUT;
 close IN;
+
+sub calclibdeps{
+  my $lib=shift;
+  opendir(D,$lib);
+  my @s;
+  for(readdir(D))
+  {
+    next if $_ eq '.' || $_ eq '..';
+    next unless /\.cp?p?$/;
+    push @s,$_;
+  }
+  open(F,$lib.'/binaries-list');
+  while(<F>)
+  {
+    s/[\x0d\x0a]//gsm;
+    next if /^#/;
+    next unless $_=~/\S/;
+    my($bin,$file)=split(" ");
+    @s=grep !/$file\.cp?p?$/,@s;
+  }
+  s/\.cp?p?$/.o/ for @s;
+  return join(' ',map{"$lib/$_"}@s);
+}
