@@ -32,7 +32,7 @@ namespace smsc { namespace store
         unsigned    maxUncommitedCount;
         unsigned    awakeInterval;
         
-        bool        bStarted;
+        bool        bStarted, bArchivation;
         Mutex       processLock, startLock;
         
         static const char*  storageCountSql;
@@ -143,6 +143,13 @@ namespace smsc { namespace store
         
         void Start() throw(StorageException);
         void Stop();
+
+        inline bool isStarted() {
+            return bStarted;
+        }
+        inline bool isInProgress() {
+            return bArchivation;
+        }
     };
 
 }};

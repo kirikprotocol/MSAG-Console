@@ -155,7 +155,7 @@ void Archiver::loadMaxUncommitedCount(Manager& config)
 }
 
 Archiver::Archiver(Manager& config) throw(ConfigException, StorageException) 
-    : Thread(), finalizedCount(0), bStarted(false), 
+    : Thread(), finalizedCount(0), bStarted(false), bArchivation(false),
         storageDBInstance(0L), storageDBUserName(0L), storageDBUserPassword(0L),
         billingDBInstance(0L), billingDBUserName(0L), billingDBUserPassword(0L),
             storageSelectStmt(0L), storageDeleteStmt(0L), archiveInsertStmt(0L),
@@ -244,6 +244,7 @@ void Archiver::startup()
 {
     MutexGuard  finalizedGuard(finalizedMutex);  
 
+    bArchivation = false;
     connect();
     count();
 }
@@ -302,12 +303,14 @@ int Archiver::Execute()
         try 
         {
             __trace__("Doing archivation job ...");
+            bArchivation = true;
             archivate(first); first = false; 
+            bArchivation = false;
             __trace__("Archivation job done !");
         } 
         catch (StorageException& exc) 
         {
-            first = true;
+            first = true; bArchivation = false;
             log.error("Exception occurred during archivation process : %s",
                       exc.what());
         }

@@ -111,6 +111,14 @@ namespace smsc { namespace store
             __require__(archiver);
             return archiver->Stop();
         }
+        static bool isArchiverStarted() {
+            __require__(archiver);
+            return archiver->isStarted();
+        }
+        static bool isArchivationInProgress() {
+            __require__(archiver);
+            return archiver->isInProgress();
+        }
 
         virtual SMSId store(const SMS &sms)  
             throw(StorageException, DuplicateMessageException);
