@@ -300,10 +300,8 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 							__tc__("submitSm.correct.notReplace");
 							PduSubmitSm* existentPdu =
 								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
-							const char* serviceType =
-								existentPdu->get_message().get_serviceType();
-							pdu->get_message().set_serviceType(serviceType ?
-								serviceType : "");
+							pdu->get_message().set_serviceType(
+								nvl(existentPdu->get_message().get_serviceType()));
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
 								existentPdu->get_message().get_dest());
@@ -354,10 +352,8 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 							__tc__("submitSm.correct.replaceEnrote");
 							PduSubmitSm* replacePdu =
 								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
-							const char* serviceType =
-								replacePdu->get_message().get_serviceType();
-							pdu->get_message().set_serviceType(serviceType ?
-								serviceType : "");
+							pdu->get_message().set_serviceType(
+								nvl(replacePdu->get_message().get_serviceType()));
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
 								replacePdu->get_message().get_dest());
@@ -381,10 +377,8 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 							__tc__("submitSm.correct.replaceReplacedEnrote");
 							PduSubmitSm* replacePdu =
 								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
-							const char* serviceType =
-								replacePdu->get_message().get_serviceType();
-							pdu->get_message().set_serviceType(serviceType ?
-								serviceType : "");
+							pdu->get_message().set_serviceType(
+								nvl(replacePdu->get_message().get_serviceType()));
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
 								replacePdu->get_message().get_dest());
@@ -408,10 +402,8 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 							__tc__("submitSm.correct.replaceFinal");
 							PduSubmitSm* finalPdu =
 								reinterpret_cast<PduSubmitSm*>(finalPduData->pdu);
-							const char* serviceType =
-								finalPdu->get_message().get_serviceType();
-							pdu->get_message().set_serviceType(serviceType ?
-								serviceType : "");
+							pdu->get_message().set_serviceType(
+								nvl(finalPdu->get_message().get_serviceType()));
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
 								finalPdu->get_message().get_dest());
@@ -437,10 +429,8 @@ void SmppProtocolTestCases::submitSmCorrect(bool sync, int num)
 							__tc__("submitSm.correct.replaceRepeatedDeliveryEnrote");
 							PduSubmitSm* replacePdu =
 								reinterpret_cast<PduSubmitSm*>(existentPduData->pdu);
-							const char* serviceType =
-								replacePdu->get_message().get_serviceType();
-							pdu->get_message().set_serviceType(serviceType ?
-								serviceType : "");
+							pdu->get_message().set_serviceType(
+								nvl(replacePdu->get_message().get_serviceType()));
 							//pdu->get_message().set_source(...);
 							pdu->get_message().set_dest(
 								replacePdu->get_message().get_dest());
@@ -758,50 +748,96 @@ void SmppProtocolTestCases::querySmIncorrect(bool sync, int num)
 
 void SmppProtocolTestCases::sendInvalidPdu(bool sync, int num)
 {
-	TCSelector s(num, 3);
 	__decl_tc__;
-	__cfg_int__(maxWaitTime);
-	__cfg_int__(maxValidPeriod);
-	__cfg_int__(maxDeliveryPeriod);
-	__cfg_int__(timeCheckAccuracy);
+	TCSelector s(num, 15);
 	for (; s.check(); s++)
 	{
 		try
 		{
-			PduWithOnlyHeader* pdu = new PduWithOnlyHeader();
-			uint32_t commandId;
-			for (bool flag = true; flag; )
+			SmppHeader* pdu;
+			switch (s.value())
 			{
-				switch (s.value())
-				{
-					case 1: //0x00000000 - 0x00000015
-						__tc__("sendInvalidPdu.request");
-						commandId = rand0(0x15);
-						break;
-					case 2: //0x80000000 - 0x80000015 (респонсы)
-						__tc__("sendInvalidPdu.response");
-						commandId = 0x80000000 + (uint32_t) rand0(0x15);
-						break;
-					case 3: //все остальное
-						__tc__("sendInvalidPdu.invalidCommandId");
-						commandId = rand0(INT_MAX);
-						break;
-					default:
-						__unreachable__("Invalid num");
-				}
-				switch (commandId)
-				{
-					case UNBIND:
-					case GENERIC_NACK:
-					case ENQUIRE_LINK:
-					case ENQUIRE_LINK_RESP:
-						break;
-					default:
-						flag = false;
-				}
+				//реквесты
+				case 1:
+					__tc__("sendInvalidPdu.request");
+					pdu = reinterpret_cast<SmppHeader*>(new PduQuerySm());
+					pdu->set_commandId(QUERY_SM);
+					break;
+				case 2:
+					__tc__("sendInvalidPdu.request");
+					pdu = reinterpret_cast<SmppHeader*>(new PduDeliverySm());
+					pdu->set_commandId(DELIVERY_SM);
+					break;
+				case 3:
+					__tc__("sendInvalidPdu.request");
+					pdu = reinterpret_cast<SmppHeader*>(new PduCancelSm());
+					pdu->set_commandId(CANCEL_SM);
+					break;
+				case 4:
+					__tc__("sendInvalidPdu.request");
+					pdu = reinterpret_cast<SmppHeader*>(new PduOutBind());
+					pdu->set_commandId(OUTBIND);
+					break;
+				case 5:
+					__tc__("sendInvalidPdu.request");
+					pdu = reinterpret_cast<SmppHeader*>(new PduMultiSm());
+					pdu->set_commandId(SUBMIT_MULTI);
+					break;
+				case 6:
+					__tc__("sendInvalidPdu.request");
+					pdu = reinterpret_cast<SmppHeader*>(new PduAlertNotification());
+					pdu->set_commandId(ALERT_NOTIFICATION);
+					break;
+				case 7:
+					__tc__("sendInvalidPdu.request");
+					pdu = reinterpret_cast<SmppHeader*>(new PduDataSm());
+					pdu->set_commandId(DATA_SM);
+					break;
+				//респонсы
+				case 8:
+					__tc__("sendInvalidPdu.response");
+					pdu = reinterpret_cast<SmppHeader*>(new PduBindTRXResp());
+					pdu->set_commandId(BIND_RECIEVER_RESP);
+					break;
+				case 9:
+					__tc__("sendInvalidPdu.response");
+					pdu = reinterpret_cast<SmppHeader*>(new PduBindTRXResp());
+					pdu->set_commandId(BIND_TRANSMITTER_RESP);
+					break;
+				case 10:
+					__tc__("sendInvalidPdu.response");
+					pdu = reinterpret_cast<SmppHeader*>(new PduBindTRXResp());
+					pdu->set_commandId(BIND_TRANCIEVER_RESP);
+					break;
+				case 11:
+					__tc__("sendInvalidPdu.response");
+					pdu = reinterpret_cast<SmppHeader*>(new PduQuerySmResp());
+					pdu->set_commandId(QUERY_SM_RESP);
+					break;
+				case 12:
+					__tc__("sendInvalidPdu.response");
+					pdu = reinterpret_cast<SmppHeader*>(new PduSubmitSmResp());
+					pdu->set_commandId(SUBMIT_SM_RESP);
+					break;
+				case 13:
+					__tc__("sendInvalidPdu.response");
+					pdu = reinterpret_cast<SmppHeader*>(new PduCancelSmResp());
+					pdu->set_commandId(CANCEL_SM_RESP);
+					break;
+				case 14:
+					__tc__("sendInvalidPdu.response");
+					pdu = reinterpret_cast<SmppHeader*>(new PduMultiSmResp());
+					pdu->set_commandId(SUBMIT_MULTI_RESP);
+					break;
+				case 15:
+					__tc__("sendInvalidPdu.response");
+					pdu = reinterpret_cast<SmppHeader*>(new PduDataSmResp());
+					pdu->set_commandId(DATA_SM_RESP);
+					break;
+				default:
+					__unreachable__("Invalid num");
 			}
-			pdu->get_header().set_commandId(commandId);
-			pdu->get_header().set_commandStatus(rand0(1));
+			pdu->set_commandStatus(rand0(1));
 			//отправить и зарегистрировать pdu
 			fixture->transmitter->sendInvalidPdu(pdu, sync);
 			__tc_ok__;
