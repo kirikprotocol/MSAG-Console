@@ -28,7 +28,7 @@
 		<section name="DataProviders">
 
 			<section name="TestDataProvider">
-				<param name="address" type="string">+dbSmeAddr123</param>
+				<param name="address" type="string">+1597534682</param>
 
 				<section name="DataSource">
 					<param name="type" type="string">OCI</param>
@@ -54,7 +54,7 @@ select * from dual
 $$date pattern = "d/M/yy h:m:s t" export = "dt" default = "now" $$
 						</param>
 						<param name="output" type="string">
-Date: $$date pattern = "w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y yy yyy yyyy yyyyy h hh hhh m mm mmm t tt" import = "dt" $$
+Date: $$date pattern = "!@#$%^&amp;*()_+-=|\:;&quot;&apos;&lt;,&gt;.?/wMMMMMMMMwwyyWyyyyWWyyyyyydyyyyyyyyddhdddhhddddhhhMhhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt" import = "dt" $$
 						</param>
 					</section>
 
@@ -71,7 +71,7 @@ select * from dual
 $$date  pattern  =  "dd.MM.yyyy hh-mm-ss t"  export  =  "dt"  default  =  "today"  $$
 						</param>
 						<param name="output" type="string">
-Date: $$date  pattern  =  "w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y yy yyy yyyy yyyyy h hh hhh m mm mmm t tt"  import  =  "dt"  $$
+Date: $$date  pattern  =  "!@#$%^&amp;*()_+-=|\:;&quot;&apos;&lt;,&gt;.?/wMMMMMMMMwwyyWyyyyWWyyyyyydyyyyyyyyddhdddhhddddhhhMhhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt"  import  =  "dt"  $$-->
 						</param>
 					</section>
 
@@ -88,7 +88,7 @@ select * from dual
 $$date	pattern	=	"d-MMM-yy H m s"	export	=	"dt"	default	=	"yesterday"	$$
 						</param>
 						<param name="output" type="string">
-Date: $$date	pattern	=	"w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y(yy((yyy)yyyy))yyyyy h hh hhh m mm mmm t tt"	import	=	"dt"	$$
+Date: $$date	pattern	=	"!@#$%^&amp;*()_+-=|\:;&quot;&apos;&lt;,&gt;.?/wMMMMMMMMwwyyWyyyyWWyyyyyydyyyyyyyyddhdddhhddddhhhMhhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt"	import	=	"dt"	$$
 						</param>
 					</section>
 
@@ -105,7 +105,7 @@ select * from dual
 $$date		pattern		=		"dd MMMM yyyy HH.mm.ss"		export		=		"dt"		default		=		"tomorrow"		$$
 						</param>
 						<param name="output" type="string">
-Date: $$date		pattern		=		"w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y(yy((yyy)yyyy))yyyyy h hh hhh m mm mmm t tt"		import		=		"dt"		$$
+Date: $$date		pattern		=		"!@#$%^&amp;*()_+-=|\:;&quot;&apos;&lt;,&gt;.?/wMMMMMMMMwwyyWyyyyWWyyyyyydyyyyyyyyddhdddhhddddhhhMhhhhMMmMMMmmMMMMmmmMMMMMmmmmMMMMMMtMMMMMMMtt"		import		=		"dt"		$$
 						</param>
 					</section>
 
@@ -113,7 +113,7 @@ Date: $$date		pattern		=		"w ww  W.WW..d,dd,,ddd/M//MM-MMM--MMMM	MMMMM		y(yy((yy
 					?? ????????? ? input, ?????????????? ????????? ????? ?
 					escape ??????? ? output -->
 					<section name="OtherFormatJob">
-						<param name="name" type="string">OtherFormat</param>
+						<param name="name" type="string">OtherFormatJob</param>
 						<param name="type" type="string">sql-job</param>
 						<param name="query" type="bool">true</param>
 						<param name="sql" type="string">
@@ -181,7 +181,7 @@ rows-affected: $$int32 arg=1$$
 						<param name="query" type="bool">false</param>
 						<param name="sql" type="string">
 update db_sme_test set int16 = :1, int32 = :2, flt = :3, dbl = :4,
-dt = :5, str = :6 || ' from ' || :7 where mod(id, 2) = 0
+dt = :5, str = :6 || ' from ' || :7
 						</param>
 						<param name="input" type="string">
 $$int16 arg=1 export="numInt16" default=16$$
@@ -247,7 +247,7 @@ rows-affected: $$int32 arg=1$$
 						<param name="type" type="string">sql-job</param>
 						<param name="query" type="bool">true</param>
 						<param name="sql" type="string">
-select int16, int32, flt, dbl, dt, str from db_sme_test where mod(id, 2) = 0
+select int16, int32, flt, dbl, dt, str from db_sme_test
 						</param>
 						<param name="input" type="string">
 empty
@@ -258,25 +258,28 @@ $$int16 arg=1 default=160$$
 $$int32 arg=2 default=320$$
 $$float arg=3 default=160.16$$
 $$double arg=4 default=320.32$$
-$$date arg=5 pattern="dd-MM-yyyy HH:mm:ss" default="now"$$
 $$string arg=6 default="Empty"$$
+$$date arg=5 pattern="dd.MM.yyyy hh-mm-ss t" default="today"$$
+$$date arg=5 pattern="d-MMM-yy H m s" default="yesterday"$$
+$$date arg=5 pattern="dd MMMM yyyy HH.mm.ss" default="tomoroow"$$
+$$date arg=5 pattern="d/M/yy h:m:s t" default="now"$$
 						</param>
 					</section>
 
 					<!-- tc: select job ??? ???????? ?? ????????? ? output,
 					???????? ?????????? ? output ????? ????? arg -->
-					<section name="SelectJobNoDefault">
-						<param name="name" type="string">SelectJob</param>
+					<section name="SelectNoDefaultJob">
+						<param name="name" type="string">SelectNoDefaultJob</param>
 						<param name="type" type="string">sql-job</param>
 						<param name="query" type="bool">true</param>
 						<param name="sql" type="string">
-select int16, int32, flt, dbl, dt, str from db_sme_test where str like :1
+select int16, int32, flt, dbl, dt, str from db_sme_test
 						</param>
 						<param name="input" type="string">
-$$string arg=1 export="str" default="%"$$
+empty
 						</param>
 						<param name="output" type="string">
-SelectJobNoDefault:
+SelectNoDefaultJob:
 $$int16 arg=1$$
 $$int32 arg=2$$
 $$float arg=3$$
