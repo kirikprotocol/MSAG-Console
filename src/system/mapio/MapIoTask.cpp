@@ -81,6 +81,7 @@ USHORT_T  Et96MapOpenInd(
 	try{
     MapDialog* mdci = 
 		  MapDialogContainer::getInstance()->createDialog(dialogId,SSN);
+    __trace2__("MAP:: create dialog with ptr %x, dialogid 0x%x",mdci,dialogId);
   	//mdci->localSsn = SSN;
     ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
     USHORT_T result = Et96MapOpenResp(SSN,dialogId,ET96MAP_RESULT_OK,&reason,0,0,0);
@@ -108,7 +109,7 @@ USHORT_T  Et96MapV2ForwardSmMOInd(
 {
 	__trace2__("MAP::Et96MapV2ForwardSmMOInd ssn 0x%x, dalogid 0x%x",lssn,dialogId);
   MapDialog* mdci = MapDialogContainer::getInstance()->getDialog(dialogId);
-  __trace2__("MAP:: create dialog with ptr %x, dialogid 0x%x",mdci,dialogId);
+  __trace2__("MAP:: dialog with ptr %x, dialogid 0x%x",mdci,dialogId);
   if ( !mdci ) {
     __trace2__("MAP::dialog is not present")
   }else{
