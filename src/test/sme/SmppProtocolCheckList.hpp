@@ -362,6 +362,34 @@ void dataSmTc()
 		"Прочие коды ошибок соответствуют спецификации");
 }
 
+void directiveTc()
+{
+	__reg_tc__("directive.submitSm",
+		"Отправка submit_sm pdu с директивами (в short_message или message_payload)");
+	__reg_tc__("directive.dataSm",
+		"Отправка data_sm pdu с директивами (в message_payload)");
+	__reg_tc__("directive.mixedCase",
+		"Текст директивы в смешанном регистре");
+	__reg_tc__("directive.correct",
+		"Отправка sms с корректными директивами");
+	__reg_tc__("directive.correct.ack",
+		"Корректные ack директивы");
+	__reg_tc__("directive.correct.noack",
+		"Корректные noack директивы");
+	__reg_tc__("directive.correct.def",
+		"Корректные def директивы");
+	__reg_tc__("directive.correct.template",
+		"Корректные template директивы с различным количеством параметров (0..2), русские и латинские символы в параметрах и т.п.");
+	__reg_tc__("directive.incorrect",
+		"Отправка sms с некорректными директивами");
+	__reg_tc__("directive.incorrect.invalidDir",
+		"Несуществующие директивы");
+	__reg_tc__("directive.incorrect.invalidDefDir",
+		"Неправильно заданные параметры для def директивы");
+	__reg_tc__("directive.incorrect.invalidTemplateDir",
+		"Неправильно заданные параметры для template директивы");
+}
+
 void replaceSmTc()
 {
 	__reg_tc__("replaceSm", "Тест кейсы для replace_sm");
@@ -1023,6 +1051,7 @@ void allProtocolTc()
 	enquireLinkTc();
 	submitSmTc();
 	dataSmTc();
+	directiveTc();
 	replaceSmTc();
 	querySmTc();
 	cancelSmTc();

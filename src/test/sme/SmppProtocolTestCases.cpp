@@ -478,7 +478,7 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 						if (existentPduData)
 						{
 							__tc__("submitSm.correct.notReplace");
-							SmsPduWrapper existentPdu(existentPduData->pdu, 0);
+							SmsPduWrapper existentPdu(existentPduData);
 							pdu->get_message().set_serviceType(
 								nvl(existentPdu.getServiceType()));
 							__require__(pdu->get_message().get_source() ==
@@ -503,7 +503,7 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 						if (existentPduData)
 						{
 							__tc__("submitSm.correct.serviceTypeNotMatch");
-							SmsPduWrapper existentPdu(existentPduData->pdu, 0);
+							SmsPduWrapper existentPdu(existentPduData);
 							__require__(strcmp(nvl(pdu->get_message().get_serviceType()),
 								nvl(existentPdu.getServiceType())));
 							//pdu->get_message().set_serviceType(...);
@@ -526,7 +526,7 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 						existentPduData = getNonReplaceEnrotePdu();
 						if (existentPduData)
 						{
-							SmsPduWrapper existentPdu(existentPduData->pdu, 0);
+							SmsPduWrapper existentPdu(existentPduData);
 							if (pdu->get_message().get_dest() != existentPdu.getDest())
 							{
 								__tc__("submitSm.correct.destAddrNotMatch");
@@ -554,7 +554,7 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 						if (existentPduData)
 						{
 							__tc__("submitSm.correct.replaceEnrote");
-							SmsPduWrapper replacePdu(existentPduData->pdu, 0);
+							SmsPduWrapper replacePdu(existentPduData);
 							pdu->get_message().set_serviceType(
 								nvl(replacePdu.getServiceType()));
 							__require__(pdu->get_message().get_source() ==
@@ -578,7 +578,7 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 						if (existentPduData)
 						{
 							__tc__("submitSm.correct.replaceReplacedEnrote");
-							SmsPduWrapper replacePdu(existentPduData->pdu, 0);
+							SmsPduWrapper replacePdu(existentPduData);
 							pdu->get_message().set_serviceType(
 								nvl(replacePdu.getServiceType()));
 							__require__(pdu->get_message().get_source() ==
@@ -601,7 +601,7 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 						if (finalPduData)
 						{
 							__tc__("submitSm.correct.replaceFinal");
-							SmsPduWrapper finalPdu(finalPduData->pdu, 0);
+							SmsPduWrapper finalPdu(finalPduData);
 							pdu->get_message().set_serviceType(
 								nvl(finalPdu.getServiceType()));
 							__require__(pdu->get_message().get_source() ==
@@ -626,7 +626,7 @@ void SmppProtocolTestCases::submitSmCorrectComplex(bool sync, int num)
 						if (existentPduData)
 						{
 							__tc__("submitSm.correct.replaceRepeatedDeliveryEnrote");
-							SmsPduWrapper replacePdu(existentPduData->pdu, 0);
+							SmsPduWrapper replacePdu(existentPduData);
 							pdu->get_message().set_serviceType(
 								nvl(replacePdu.getServiceType()));
 							__require__(pdu->get_message().get_source() ==
@@ -991,7 +991,7 @@ void SmppProtocolTestCases::dataSmCorrect(bool sync, int num)
 						if (existentPduData)
 						{
 							__tc__("dataSm.correct.notReplace");
-							SmsPduWrapper existentPdu(existentPduData->pdu, 0);
+							SmsPduWrapper existentPdu(existentPduData);
 							pdu->get_data().set_serviceType(
 								nvl(existentPdu.getServiceType()));
 							__require__(pdu->get_data().get_source() ==
@@ -1144,6 +1144,503 @@ void SmppProtocolTestCases::dataSmIncorrect(bool sync, int num)
 	}
 }
 
+bool SmppProtocolTestCases::setDirective(SmppHeader* header, const string& dir,
+	int& offset)
+{
+	__require__(offset >= 0);
+	SmsPduWrapper pdu(header, 0);
+	__trace2__("setDirective(): dc = %d, dir = %s, offset = %d",
+		(int) pdu.getDataCoding(), dir.c_str(), offset);
+	//только для текстовых сообщений
+	switch (pdu.getDataCoding())
+	{
+		case DEFAULT:
+		case UCS2:
+		case SMSC7BIT:
+			break;
+		default:
+			return false;
+	}
+	//текст сообщения
+	char* text = NULL;
+	int len = 0;
+	bool udhi = pdu.getEsmClass() & ESM_CLASS_UDHI_INDICATOR;
+	if (pdu.get_optional().has_messagePayload())
+	{
+		int udhLen = udhi ?
+			1 + (unsigned char) *pdu.get_optional().get_messagePayload() : 0;
+		text = const_cast<char*>(pdu.get_optional().get_messagePayload()) +
+			udhLen + offset;
+		len = pdu.get_optional().size_messagePayload() - udhLen - offset;
+	}
+	else if (pdu.isSubmitSm() && pdu.get_message().size_shortMessage())
+	{
+		int udhLen = udhi ?
+			1 + (unsigned char) *pdu.get_message().get_shortMessage() : 0;
+		text = const_cast<char*>(pdu.get_message().get_shortMessage()) +
+			udhLen + offset;
+		len = pdu.get_message().size_shortMessage() - udhLen - offset;
+	}
+	if (len <= 0)
+	{
+		return false;
+	}
+	//вставить директиву
+	int dirLen;
+	auto_ptr<char> dirEnc = encode(dir, pdu.getDataCoding(), dirLen, false);
+	if (dirLen > len)
+	{
+		return false;
+	}
+	memcpy(text, dirEnc.get(), dirLen);
+	offset += dirLen;
+	return true;
+}
+
+bool SmppProtocolTestCases::correctAckDirectives(SmppHeader* header,
+	PduData::IntProps& intProps, int num)
+{
+	__require__(intProps.count("directive.offset"));
+	__decl_tc__;
+	TCSelector s(num, 9);
+	int& offset = intProps["directive.offset"];
+	string dir;
+	switch (s.value())
+	{
+		case 1: //нет директивы
+			break;
+		case 2: //ack директива
+			dir = "#ack#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.ack"); __tc_ok__;
+				__tc__("directive.mixedCase"); __tc_ok__;
+				intProps["directive.ack"] = 1;
+				return true;
+			}
+			break;
+		case 3: //ack директива
+			dir = "#noack##ack#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.ack"); __tc_ok__;
+				__tc__("directive.mixedCase"); __tc_ok__;
+				intProps["directive.ack"] = 1;
+				return true;
+			}
+			break;
+		case 4: //ack директива
+			dir = "#ack##ack#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.ack"); __tc_ok__;
+				__tc__("directive.mixedCase"); __tc_ok__;
+				intProps["directive.ack"] = 1;
+				return true;
+			}
+			break;
+		case 5: //noack директива
+			dir = "#noack#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.noack"); __tc_ok__;
+				__tc__("directive.mixedCase"); __tc_ok__;
+				intProps["directive.noack"] = 1;
+				return true;
+			}
+			break;
+		case 6: //noack директива
+			dir = "#ack##noack#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.noack"); __tc_ok__;
+				__tc__("directive.mixedCase"); __tc_ok__;
+				intProps["directive.noack"] = 1;
+				return true;
+			}
+			break;
+		case 7: //noack директива
+			dir = "#noack##noack#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.noack"); __tc_ok__;
+				__tc__("directive.mixedCase"); __tc_ok__;
+				intProps["directive.noack"] = 1;
+				return true;
+			}
+			break;
+		case 8: //ack директива с битой noack
+			dir = "#ack#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.ack"); __tc_ok__;
+				intProps["directive.ack"] = 1;
+				dir = "noack#";
+				int tmp = offset;
+				setDirective(header, mixedCase(dir), offset);
+				offset = tmp;
+				return false;
+			}
+			break;
+		case 9: //ack директива с битой noack
+			dir = "#ack#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.ack"); __tc_ok__;
+				intProps["directive.ack"] = 1;
+				dir = " #noack#";
+				int tmp = offset;
+				setDirective(header, mixedCase(dir), offset);
+				offset = tmp;
+				return false;
+			}
+			break;
+		default:
+			__unreachable__("Invalid num for ack directive");
+	}
+	return false;
+}
+
+bool SmppProtocolTestCases::correctDefDirectives(SmppHeader* header,
+	PduData::IntProps& intProps, int num)
+{
+	__require__(intProps.count("directive.offset"));
+	__decl_tc__;
+	TCSelector s(num, 4);
+	int& offset = intProps["directive.offset"];
+	string dir;
+	switch (s.value())
+	{
+		case 1: //нет директивы
+			break;
+		case 2: //немедленная доставка
+			dir = "#def 0#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.def"); __tc_ok__;
+				__tc__("directive.mixedCase"); __tc_ok__;
+				intProps["directive.def"] = 0;
+				return true;
+			}
+			break;
+		case 3: //заведомо превышает maxValidPeriod
+			dir = "#def 999#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.def"); __tc_ok__;
+				__tc__("directive.mixedCase"); __tc_ok__;
+				intProps["directive.def"] = 999 * 3600;
+				return true;
+			}
+			break;
+		case 4: //превышает максимум 999 и maxValidPeriod
+			dir = "#def 1000#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.def"); __tc_ok__;
+				__tc__("directive.mixedCase"); __tc_ok__;
+				intProps["directive.def"] = 1000 * 3600;
+				return true;
+			}
+			break;
+		default:
+			__unreachable__("Invalid num for def directive");
+	}
+	return false;
+}
+
+bool SmppProtocolTestCases::correctTemplateDirectives(SmppHeader* header,
+	PduData::IntProps& intProps, PduData::StrProps& strProps, int num)
+{
+	__require__(intProps.count("directive.offset"));
+	__decl_tc__;
+	TCSelector s(num, 9);
+	int& offset = intProps["directive.offset"];
+	string dir;
+	SmsPduWrapper pdu(header, 0);
+	switch (s.value())
+	{
+		case 1: //нет директивы
+			break;
+		case 2: //t0, без параметров
+			dir = "#template=templates.t0#";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.template"); __tc_ok__;
+				__tc__("directive.mixedCase"); __tc_ok__;
+				strProps["directive.template"] = "t0";
+			}
+			break;
+		case 3: //t1, параметр задан
+			{
+				string name = pdu.getDataCoding() == UCS2 ? "Мир" : "World";
+				ostringstream s;
+				dir = "#template=templates.t1# {name}=";
+				s << mixedCase(dir) << name;
+				if (setDirective(header, s.str(), offset))
+				{
+					__tc__("directive.correct.template"); __tc_ok__;
+					__tc__("directive.mixedCase"); __tc_ok__;
+					strProps["directive.template"] = "t1";
+					strProps["directive.template.t1.name"] = name;
+				}
+			}
+			break;
+		case 4: //t1, параметр в кавычках и содержит пробелы
+			{
+				string name = pdu.getDataCoding() == UCS2 ? "Мега мир" : "Super world";
+				ostringstream s;
+				dir = "#template=templates.t1# {name}=";
+				s << mixedCase(dir) << "\"" << name << "\"";
+				if (setDirective(header, s.str(), offset))
+				{
+					__tc__("directive.correct.template"); __tc_ok__;
+					__tc__("directive.mixedCase"); __tc_ok__;
+					strProps["directive.template"] = "t1";
+					strProps["directive.template.t1.name"] = name;
+				}
+			}
+			break;
+		case 5: //t1, параметр содержит спец символы исключая "
+			{
+				string name = "~!@#$%^&*()-_=+\\|{[}];:',<.>/?";
+				ostringstream s;
+				dir = "#template=templates.t1# {name}=";
+				s << mixedCase(dir) << "\"" << name << "\"";
+				if (setDirective(header, s.str(), offset))
+				{
+					__tc__("directive.correct.template"); __tc_ok__;
+					__tc__("directive.mixedCase"); __tc_ok__;
+					strProps["directive.template"] = "t1";
+					strProps["directive.template.t1.name"] = name;
+				}
+			}
+			break;
+		case 6: //t1, параметр по умолчанию
+			dir = "#template=templates.t1# {_name_}=111";
+			if (setDirective(header, mixedCase(dir), offset))
+			{
+				__tc__("directive.correct.template"); __tc_ok__;
+				__tc__("directive.mixedCase"); __tc_ok__;
+				strProps["directive.template"] = "t1";
+			}
+			break;
+		case 7: //t2, параметры заданы
+			{
+				string name1 = pdu.getDataCoding() == UCS2 ? "Мир" : "World";
+				string name2 = pdu.getDataCoding() == UCS2 ? "Мир 2" : "World 2";
+				ostringstream s;
+				dir = "#template=templates.t2# {name1}=";
+				s << mixedCase(dir) << name1;
+				dir = " {name2}=";
+				s << mixedCase(dir) << "\"" << name2 << "\"";
+				if (setDirective(header, s.str(), offset))
+				{
+					__tc__("directive.correct.template"); __tc_ok__;
+					__tc__("directive.mixedCase"); __tc_ok__;
+					strProps["directive.template"] = "t2";
+					strProps["directive.template.t2.name1"] = name1;
+					strProps["directive.template.t2.name2"] = name2;
+				}
+			}
+			break;
+		case 8: //t2, дефолтный параметр не задан
+			{
+				string name2 = pdu.getDataCoding() == UCS2 ? "Мир" : "World";
+				ostringstream s;
+				dir = "#template=templates.t2# {name2}=";
+				s << mixedCase(dir) << name2;
+				if (setDirective(header, s.str(), offset))
+				{
+					__tc__("directive.correct.template"); __tc_ok__;
+					__tc__("directive.mixedCase"); __tc_ok__;
+					strProps["directive.template"] = "t2";
+					strProps["directive.template.t2.name2"] = name2;
+				}
+			}
+			break;
+		case 9: //t2, параметры не заданы
+			{
+				ostringstream s;
+				dir = "#template=templates.t2#";
+				s << mixedCase(dir);
+				if (setDirective(header, s.str(), offset))
+				{
+					__tc__("directive.correct.template"); __tc_ok__;
+					__tc__("directive.mixedCase"); __tc_ok__;
+					strProps["directive.template"] = "t2";
+				}
+			}
+			break;
+		default:
+			__unreachable__("Invalid num for template directive");
+	}
+	return false; //после темплейта другие директивы запрещены
+}
+
+void SmppProtocolTestCases::correctDirectives(SmppHeader* header, PduData::IntProps& intProps,
+	PduData::StrProps& strProps, const TestCaseId& num)
+{
+	__require__(num.size() == 4);
+	//ack/noack директивы
+	bool dirCont = correctAckDirectives(header, intProps, num[1]);
+	//def директивы
+	if (dirCont)
+	{
+		dirCont = correctDefDirectives(header, intProps, num[2]);
+	}
+	//template директивы
+	if (dirCont)
+	{
+		dirCont = correctTemplateDirectives(header, intProps, strProps, num[3]);
+	}
+}
+
+void SmppProtocolTestCases::correctDirectives(bool sync, const TestCaseId& num)
+{
+	__decl_tc__;
+	PduData::IntProps intProps;
+	PduData::StrProps strProps;
+	intProps["directive.offset"] = 0;
+	try
+	{
+		//тип pdu
+		TCSelector s1(num[0], 2);
+		const Address* destAlias = fixture->smeReg->getRandomAddress();
+		__require__(destAlias);
+		switch (s1.value())
+		{
+			case 1: //submit_sm
+				{
+					__tc__("directive.submitSm");
+					PduSubmitSm* pdu = new PduSubmitSm();
+					fixture->transmitter->setupRandomCorrectSubmitSmPdu(
+						pdu, *destAlias, rand0(1));
+					correctDirectives(reinterpret_cast<SmppHeader*>(pdu),
+						intProps, strProps, num);
+					//отправить и зарегистрировать pdu
+					fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync, &intProps, &strProps);
+				}
+				break;
+			case 2: //data_sm
+				{
+					__tc__("directive.dataSm");
+					PduDataSm* pdu = new PduDataSm();
+					fixture->transmitter->setupRandomCorrectDataSmPdu(pdu, *destAlias);
+					correctDirectives(reinterpret_cast<SmppHeader*>(pdu),
+						intProps, strProps, num);
+					//отправить и зарегистрировать pdu
+					fixture->transmitter->sendDataSmPdu(pdu, NULL, sync, &intProps, &strProps);
+				}
+				break;
+			default:
+				__unreachable__("Invalid num for pdu type");
+		}
+		__tc_ok__;
+	}
+	catch(...)
+	{
+		__tc_fail__(100);
+		error();
+	}
+}
+
+template<typename T, int size>
+inline int sz(T (&)[size]) { return size; }
+
+void SmppProtocolTestCases::incorrectDirectives(SmppHeader* header, int num)
+{
+	__decl_tc__;
+	const string invalidDir[] =
+	{
+		"##", "###", "#aaa#",
+		"#ac#", "#ack2#", "# ack#", "#ack #", "#ack=#",
+		"#noac#", "#noack2#", "# noack#", "#noack #", "#noack=#",
+		"#def#", "#de 999#", "#def2 999#",
+		"#templat=templates.t0#", "#template2=templates.t0#",
+		"#template#"
+	};
+	const string invalidDefDir[] =
+	{
+		"#def #", "#def abc#"
+	};
+	const string invalidTemplateDir[] =
+	{
+		"#template=#", "#template=templates.t0#{}=aaa",
+		"#template=templates.t0#{name1}={name2}="
+	};
+	TCSelector s(num, 3);
+	int offset = 0;
+	switch (s.value())
+	{
+		case 1: //несуществующая директива
+			if (setDirective(header, invalidDir[rand0(sz(invalidDir) - 1)], offset))
+			{
+				__tc__("directive.incorrect.invalidDir"); __tc_ok__;
+			}
+			break;
+		case 2: //неправильные параметры для def директивы
+			if (setDirective(header, invalidDefDir[rand0(sz(invalidDefDir) - 1)], offset))
+			{
+				__tc__("directive.incorrect.invalidDefDir"); __tc_ok__;
+			}
+			break;
+		case 3: //неправильные параметры для template директивы
+			if (setDirective(header, invalidTemplateDir[rand0(sz(invalidTemplateDir) - 1)], offset))
+			{
+				__tc__("directive.incorrect.invalidTemplateDir"); __tc_ok__;
+			}
+			break;
+		default:
+			__unreachable__("Invalid num for template directive");
+	}
+}
+
+void SmppProtocolTestCases::incorrectDirectives(bool sync, const TestCaseId& num)
+{
+	__require__(num.size() == 2);
+	__decl_tc__;
+	try
+	{
+		//тип pdu
+		TCSelector s1(num[0], 2);
+		const Address* destAlias = fixture->smeReg->getRandomAddress();
+		__require__(destAlias);
+		switch (s1.value())
+		{
+			case 1: //submit_sm
+				{
+					__tc__("directive.submitSm");
+					PduSubmitSm* pdu = new PduSubmitSm();
+					fixture->transmitter->setupRandomCorrectSubmitSmPdu(
+						pdu, *destAlias, rand0(1));
+					incorrectDirectives(reinterpret_cast<SmppHeader*>(pdu), num[1]);
+					//отправить и зарегистрировать pdu
+					fixture->transmitter->sendSubmitSmPdu(pdu, NULL, sync);
+				}
+				break;
+			case 2: //data_sm
+				{
+					__tc__("directive.dataSm");
+					PduDataSm* pdu = new PduDataSm();
+					fixture->transmitter->setupRandomCorrectDataSmPdu(pdu, *destAlias);
+					incorrectDirectives(reinterpret_cast<SmppHeader*>(pdu), num[1]);
+					//отправить и зарегистрировать pdu
+					fixture->transmitter->sendDataSmPdu(pdu, NULL, sync);
+				}
+				break;
+			default:
+				__unreachable__("Invalid num for pdu type");
+		}
+		__tc_ok__;
+	}
+	catch(...)
+	{
+		__tc_fail__(100);
+		error();
+	}
+}
+
 void SmppProtocolTestCases::replaceSmIncorrect(PduReplaceSm* pdu, bool sync)
 {
 	__require__(pdu);
@@ -1194,7 +1691,7 @@ void SmppProtocolTestCases::replaceSmCorrect(bool sync, int num)
 			}
 			fixture->transmitter->setupRandomCorrectReplaceSmPdu(pdu, replacePduData);
 			//replaced pdu params
-			SmsPduWrapper replacePdu(replacePduData->pdu, replacePduData->sendTime);
+			SmsPduWrapper replacePdu(replacePduData);
 			bool udhi = replacePdu.getEsmClass() & ESM_CLASS_UDHI_INDICATOR;
 			uint8_t dc = replacePdu.getDataCoding();
 			if (fixture->smeInfo.forceDC)
@@ -1341,7 +1838,7 @@ void SmppProtocolTestCases::replaceSmIncorrect(bool sync, int num)
 				return;
 			}
 			fixture->transmitter->setupRandomCorrectReplaceSmPdu(pdu, replacePduData);
-			SmsPduWrapper replacePdu(replacePduData->pdu, replacePduData->sendTime);
+			SmsPduWrapper replacePdu(replacePduData);
 			switch (s.value())
 			{
 				case 1: //неправильный message_id
@@ -1815,7 +2312,7 @@ void SmppProtocolTestCases::cancelSmSingleCorrect(bool sync, int num)
 			__trace2__("cancelPduData = %p", cancelPduData);
 			//canceld pdu params
 			__require__(cancelPduData->strProps.count("smsId"));
-			SmsPduWrapper cancelPdu(cancelPduData->pdu, 0);
+			SmsPduWrapper cancelPdu(cancelPduData);
 			__require__(cancelPdu.getSource() == srcAddr);
 			switch (s.value())
 			{
@@ -1956,7 +2453,7 @@ void SmppProtocolTestCases::cancelSmIncorrect(bool sync, int num)
 			}
 			//canceld pdu params
 			__require__(cancelPduData->strProps.count("smsId"));
-			SmsPduWrapper cancelPdu(cancelPduData->pdu, 0);
+			SmsPduWrapper cancelPdu(cancelPduData);
 			switch (s.value())
 			{
 				case 1: //неправильный message_id

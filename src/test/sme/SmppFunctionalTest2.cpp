@@ -222,6 +222,7 @@ int TestSmeFunc::Execute()
 #ifdef LOAD_TEST
 	seq.push_back(201);
 #else
+	/*
 	seq.insert(seq.end(), 20, 1);
 	seq.insert(seq.end(), 20, 2);
 	seq.insert(seq.end(), 15, 3);
@@ -234,6 +235,9 @@ int TestSmeFunc::Execute()
 	seq.insert(seq.end(), 7, 10);
 	seq.insert(seq.end(), 20, 11);
 	seq.insert(seq.end(), 10, 12);
+	*/
+	seq.insert(seq.end(), 20, 13);
+	seq.insert(seq.end(), 10, 14);
 	seq.push_back(51);
 	seq.push_back(52);
 	seq.push_back(53);
@@ -320,6 +324,12 @@ void TestSmeFunc::executeCycle()
 			break;
 		case 12:
 			protocolTc.dataSmIncorrect(rand0(1), RAND_TC);
+			break;
+		case 13:
+			protocolTc.correctDirectives(rand0(1), TestCaseId(4));
+			break;
+		case 14:
+			protocolTc.incorrectDirectives(rand0(1), TestCaseId(2));
 			break;
 		//profilerTc
 		case 51: //обновление настроек кодировки

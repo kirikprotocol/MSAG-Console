@@ -35,6 +35,96 @@ void PduDataObject::unref()
 	}
 }
 
+PduData::PduData(SmppHeader* _pdu, time_t _sendTime, IntProps* _intProps,
+	StrProps* _strProps, ObjProps* _objProps)
+: pdu(_pdu), sendTime(_sendTime), count(0), replacePdu(NULL), replacedByPdu(NULL)
+{
+	__require__(pdu);
+	__trace2__("Create pduData = %p", this);
+	if (_intProps)
+	{
+		intProps = *_intProps;
+	}
+	if (_strProps)
+	{
+		strProps = *_strProps;
+	}
+	if (_objProps)
+	{
+		objProps = *_objProps;
+	}
+}
+
+PduData::~PduData()
+{
+	__trace2__("Delete pduData = %p", this);
+	//разорвать связь с замещающей и замещаемой pdu
+	if (replacePdu)
+	{
+		replacePdu->replacedByPdu = NULL;
+		replacePdu->unref();
+	}
+	if (replacedByPdu)
+	{
+		replacedByPdu->replacePdu = NULL;
+	}
+	__require__(pdu);
+	disposePdu(pdu);
+	for (ObjProps::iterator it = objProps.begin(); it != objProps.end(); it++)
+	{
+		__require__(it->second);
+		it->second->unref();
+	}
+}
+
+void PduData::ref()
+{
+	__trace2__("PduData::ref(): this = %p, count = %d", this, count);
+	//MutexGuard mguard(mutex);
+	count++;
+}
+void PduData::unref()
+{
+	__trace2__("PduData::unref(): this = %p, count = %d", this, count);
+	__require__(count > 0);
+	//mutex.Lock();
+	count--;
+	if (!count)
+	{
+		delete this;
+	}
+	/*
+	else
+	{
+		mutex.Unlock();
+	}
+	*/
+}
+
+string PduData::str() const
+{
+	ostringstream s;
+	s << "this = " << (void*) this;
+	s << ", pdu = " << (void*) pdu;
+	s << ", sendTime = " << sendTime;
+	s << ", replacePdu = " << (void*) replacePdu;
+	s << ", replacedByPdu = " << (void*) replacedByPdu;
+	s << ", count = " << count;
+	s << ", checkRes = {" << hex;
+	copy(checkRes.begin(), checkRes.end(), ostream_iterator<uint32_t>(s, ","));
+	s << "}";
+	return s.str();
+}
+
+SmsPduWrapper::SmsPduWrapper(SmppHeader* _pdu, time_t _sendTime)
+	: pdu(_pdu), sendTime(_sendTime), pduData(NULL)
+{
+	__require__(pdu);
+}
+
+SmsPduWrapper::SmsPduWrapper(PduData* _pduData)
+	: pdu(_pduData->pdu), sendTime(_pduData->sendTime), pduData(_pduData) {}
+
 #define __get_wrapper_prop__(filed) \
 	switch (pdu->get_commandId()) { \
 		case SUBMIT_SM: \
@@ -55,6 +145,10 @@ uint8_t SmsPduWrapper::getDataCoding() { __get_wrapper_prop__(dataCoding); }
 
 time_t SmsPduWrapper::getWaitTime()
 {
+	if (pduData && pduData->intProps.count("directive.def"))
+	{
+		return sendTime + pduData->intProps["directive.def"];
+	}
 	switch (pdu->get_commandId())
 	{
 		case SUBMIT_SM:
@@ -145,87 +239,6 @@ SmppOptional& SmsPduWrapper::get_optional()
 		default:
 			__unreachable__("Invalid commandId");
 	}
-}
-
-PduData::PduData(SmppHeader* _pdu, time_t _sendTime, IntProps* _intProps,
-	StrProps* _strProps, ObjProps* _objProps)
-: pdu(_pdu), sendTime(_sendTime), count(0), replacePdu(NULL), replacedByPdu(NULL)
-{
-	__require__(pdu);
-	__trace2__("Create pduData = %p", this);
-	if (_intProps)
-	{
-		intProps = *_intProps;
-	}
-	if (_strProps)
-	{
-		strProps = *_strProps;
-	}
-	if (_objProps)
-	{
-		objProps = *_objProps;
-	}
-}
-
-PduData::~PduData()
-{
-	__trace2__("Delete pduData = %p", this);
-	//разорвать связь с замещающей и замещаемой pdu
-	if (replacePdu)
-	{
-		replacePdu->replacedByPdu = NULL;
-		replacePdu->unref();
-	}
-	if (replacedByPdu)
-	{
-		replacedByPdu->replacePdu = NULL;
-	}
-	__require__(pdu);
-	disposePdu(pdu);
-	for (ObjProps::iterator it = objProps.begin(); it != objProps.end(); it++)
-	{
-		__require__(it->second);
-		it->second->unref();
-	}
-}
-
-void PduData::ref()
-{
-	__trace2__("PduData::ref(): this = %p, count = %d", this, count);
-	//MutexGuard mguard(mutex);
-	count++;
-}
-void PduData::unref()
-{
-	__trace2__("PduData::unref(): this = %p, count = %d", this, count);
-	__require__(count > 0);
-	//mutex.Lock();
-	count--;
-	if (!count)
-	{
-		delete this;
-	}
-	/*
-	else
-	{
-		mutex.Unlock();
-	}
-	*/
-}
-
-string PduData::str() const
-{
-	ostringstream s;
-	s << "this = " << (void*) this;
-	s << ", pdu = " << (void*) pdu;
-	s << ", sendTime = " << sendTime;
-	s << ", replacePdu = " << (void*) replacePdu;
-	s << ", replacedByPdu = " << (void*) replacedByPdu;
-	s << ", count = " << count;
-	s << ", checkRes = {" << hex;
-	copy(checkRes.begin(), checkRes.end(), ostream_iterator<uint32_t>(s, ","));
-	s << "}";
-	return s.str();
 }
 
 PduMonitor::PduMonitor(time_t _checkTime, time_t _validTime,

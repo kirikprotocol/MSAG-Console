@@ -33,6 +33,7 @@ using std::string;
 using std::map;
 using std::vector;
 using std::set;
+using std::pair;
 using smsc::profiler::ProfileReportOptions::ReportNone;
 
 typedef enum
@@ -93,38 +94,6 @@ public:
 	void unref();
 };
 
-/**
- * Wrapper для PduSubmitSm, PduDeliverySm и PduDataSm
- */
-class SmsPduWrapper
-{
-	time_t sendTime;
-	SmppHeader* pdu;
-public:
-	SmsPduWrapper(SmppHeader* _pdu, time_t _sendTime)
-		: pdu(_pdu), sendTime(_sendTime) { __require__(pdu); }
-	~SmsPduWrapper() { /* не владелец submitPdu и dataPdu */ }
-
-	bool isSubmitSm() { return (pdu->get_commandId() == SUBMIT_SM); }
-	bool isDeliverSm() { return (pdu->get_commandId() == DELIVERY_SM); }
-	bool isDataSm() { return (pdu->get_commandId() == DATA_SM); }
-	
-	const char* getServiceType();
-	PduAddress& getSource();
-	PduAddress& getDest();
-	uint8_t getEsmClass();
-	uint8_t getRegistredDelivery();
-	uint8_t getDataCoding();
-	time_t getWaitTime();
-	time_t getValidTime();
-	uint16_t getMsgRef();
-
-	SmppHeader& get_header();
-	PduPartSm& get_message();
-	PduDataPartSm& get_data();
-	SmppOptional& get_optional();
-};
-
 class PduData
 {
 	int count;
@@ -154,6 +123,46 @@ public:
 	void ref();
 	void unref();
 	string str() const;
+};
+
+/**
+ * Wrapper для PduSubmitSm, PduDeliverySm и PduDataSm
+ */
+class SmsPduWrapper
+{
+	time_t sendTime;
+	SmppHeader* pdu;
+	PduData* pduData;
+	
+public:
+	SmsPduWrapper(SmppHeader* pdu, time_t sendTime);
+	SmsPduWrapper(PduData* pduData);
+	~SmsPduWrapper() { /* не владелец submitPdu и dataPdu */ }
+
+	bool isSubmitSm() { return (pdu->get_commandId() == SUBMIT_SM); }
+	bool isDeliverSm() { return (pdu->get_commandId() == DELIVERY_SM); }
+	bool isDataSm() { return (pdu->get_commandId() == DATA_SM); }
+	
+	const char* getServiceType();
+	PduAddress& getSource();
+	PduAddress& getDest();
+	uint8_t getEsmClass();
+	uint8_t getRegistredDelivery();
+	uint8_t getDataCoding();
+	time_t getWaitTime();
+	time_t getValidTime();
+	uint16_t getMsgRef();
+
+	SmppHeader& get_header();
+	PduPartSm& get_message();
+	PduDataPartSm& get_data();
+	SmppOptional& get_optional();
+
+	bool isAck();
+	bool isNoAck();
+	bool getDef(int& hours);
+	bool getTemplate(const string& name, map<const string, const string>& params);
+	pair<const char*, int> getText();
 };
 
 /**
@@ -229,7 +238,6 @@ public:
 		PduData* pduData, PduFlag flag);
 	virtual ~ReschedulePduMonitor() {}
 
-	time_t getStartTime() const { return startTime; }
 	time_t getLastTime() const { return lastTime; }
 	time_t calcNextTime(time_t t) const;
 	int getLastAttempt() const { return lastAttempt; }

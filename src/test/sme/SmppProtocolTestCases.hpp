@@ -13,6 +13,7 @@ using log4cpp::Category;
 using smsc::smeman::SmeInfo;
 using smsc::test::util::BaseTestCases;
 using smsc::test::util::CheckList;
+using smsc::test::util::TestCaseId;
 
 /**
  * Этот класс содержит все test cases необходимые для тестирования sme.
@@ -40,6 +41,11 @@ public:
 	void submitSmIncorrect(bool sync, int num);
 
 	/**
+	 * Заполнение и отправка submit_sm pdu с недопустимыми значениями полей.
+	 */
+	void submitSmAssert(int num);
+
+	/**
 	 * Отправка корректной data_sm pdu другим sme.
 	 */
 	void dataSmCorrect(bool sync, int num);
@@ -50,9 +56,14 @@ public:
 	void dataSmIncorrect(bool sync, int num);
 
 	/**
-	 * Заполнение и отправка submit_sm pdu с недопустимыми значениями полей.
+	 * Заполнение и отправка submit_sm или data_sm pdu с правильными директивами.
 	 */
-	void submitSmAssert(int num);
+	void correctDirectives(bool sync, const TestCaseId& num);
+
+	/**
+	 * Заполнение и отправка submit_sm или data_sm pdu с неправильными директивами.
+	 */
+	void incorrectDirectives(bool sync, const TestCaseId& num);
 
 	/**
 	 * Корректное замещение ранее отправленной submit_sm pdu.
@@ -151,6 +162,16 @@ protected:
 	PduData* getNonReplaceRescheduledEnrotePdu();
 	PduData* getFinalPdu();
 	PduData* getPduByState(SmppState state);
+
+	bool setDirective(SmppHeader* header, const string& dir, int& offset);
+	bool correctAckDirectives(SmppHeader* header, PduData::IntProps& intProps, int num);
+	bool correctDefDirectives(SmppHeader* header, PduData::IntProps& intProps, int num);
+	bool correctTemplateDirectives(SmppHeader* header, PduData::IntProps& intProps,
+		PduData::StrProps& strProps, int num);
+	void correctDirectives(SmppHeader* header, PduData::IntProps& intProps,
+		PduData::StrProps& strProps, const TestCaseId& num);
+	void incorrectDirectives(SmppHeader* header, int num);
+
 	void replaceSmIncorrect(PduReplaceSm* pdu, bool sync);
 	PduData* getCancelSmGroupParams(bool checkServType, Address& srcAddr,
 		Address& destAddr, string& servType);
