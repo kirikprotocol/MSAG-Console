@@ -210,6 +210,30 @@ restart:
       __map_trace2__("MsgRecv hatching msg to reset priority order " );
       message.msg_p[4] = 0;
     }
+    else if( message.primitive == 0x88 && message.msg_p[1] == 147 ) {
+      int pos = 1+1+2+1+1;
+      int ss7addrLen = message.msg_p[pos];
+      pos += 1+ss7addrLen;
+      if( message.msg_p[pos] != 0 ) {
+        // we have imsi in dest ref, kill it.
+        __map_trace2__("MsgRecv hatching msg to cut imsi from procussdreq" );
+	int dstrefLen = message.msg_p[pos];
+	memmove( message.msg_p+pos+1, message.msg_p+pos+1+dstrefLen, message.size-(pos+1+dstrefLen)); 
+	message.msg_p[pos]=0; // new dstref len
+	message.size-=dstrefLen;
+	pos++;
+	// remove orgref
+	ss7addrLen = message.msg_p[pos];
+	pos += 1+ss7addrLen;
+	if( message.msg_p[pos] != 0 ) {
+	  int orgrefLen = 1+(message.msg_p[pos]+1)/2;
+	  memmove( message.msg_p+pos+1, message.msg_p+pos+1+orgrefLen, message.size-(pos+1+orgrefLen));
+	  message.msg_p[pos]=0;
+	  message.size-=orgrefLen;
+	  pos++;
+	}
+      }
+    }
     map_result = Et96MapHandleIndication(&message);
     if( map_result != ET96MAP_E_OK && smsc::util::_map_cat->isWarnEnabled() ) {
      {
