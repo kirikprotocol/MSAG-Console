@@ -1,11 +1,11 @@
 <project default="update" name="Sibinco Tomcat Authentication Module">
 
-  <property file="build.properties"/>
+  <property file="../build.properties"/>
   <property environment="env"/>
   <property name="jmx_jar" location="${CATALINA_HOME}/bin/jmx.jar"/>
   <property name="catalina_jar" location="${CATALINA_HOME}/server/lib/catalina.jar"/>
-  <property name="java_out" location="${BUILD_DIR}/build/classes/tomcat_auth_lib"/>
-  <property name="jar_out" location="${BUILD_DIR}/build/jars/"/>
+  <property name="java_out" location="${BUILD_DIR}/tomcat_auth_lib/classes/"/>
+  <property name="jar_out" location="${BUILD_DIR}/jars/"/>
 
   <target name="init">
     <tstamp/>
