@@ -484,6 +484,8 @@ void replaceSmTc()
 		"≈сли код ошибки ESME_RINVBNDSTS в поле command_status, то действительно sme зарегистрированна как receiver");
 	__reg_tc__("replaceSm.resp.checkCmdStatusInvalidMsgId",
 		"≈сли код ошибки ESME_RINVMSGID в поле command_status, то действительно message_id задан неправильно");
+	__reg_tc__("replaceSm.resp.checkCmdStatusInvalidMsgLen",
+		"≈сли код ошибки ESME_RINVMSGLEN в поле command_status, то действительно длина сообщени€ неправильна€ (например, наличие udhi в длинном MT сообщении)");
 	__reg_tc__("replaceSm.resp.checkCmdStatusReplaceFailed",
 		"≈сли код ошибки ESME_RREPLACEFAIL в поле command_status, то действительно замещаемое сообщение находитс€ в финальном состо€нии");
 	__reg_tc__("replaceSm.resp.checkCmdStatusOther",

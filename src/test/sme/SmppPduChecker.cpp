@@ -914,6 +914,10 @@ void SmppPduChecker::processReplaceSmResp(ResponseMonitor* monitor,
 			__tc__("replaceSm.resp.checkCmdStatusInvalidMsgId");
 			__check__(1, checkRes.count(ESME_RINVMSGID));
 			break;
+		case ESME_RINVMSGLEN:
+			__tc__("replaceSm.resp.checkCmdStatusInvalidMsgLen");
+			__check__(1, checkRes.count(ESME_RINVMSGLEN));
+			break;
 		case ESME_RREPLACEFAIL:
 			__tc__("replaceSm.resp.checkCmdStatusReplaceFailed");
 			__check__(1, checkRes.count(ESME_RREPLACEFAIL));

@@ -90,10 +90,18 @@ void NormalSmsHandler::checkNotMapMsgText(DeliveryMonitor* monitor,
 {
 	__decl_tc__;
 	__require__(monitor && header);
+	__require__(monitor->pduData->objProps.count("senderData"));
 	__require__(monitor->pduData->objProps.count("sms.msg"));
 	__require__(monitor->pduData->intProps.count("dataCoding"));
 	SmsMsg* msg = dynamic_cast<SmsMsg*>(monitor->pduData->objProps["sms.msg"]);
 	if (!msg->valid)
+	{
+		return;
+	}
+	//при отправке с нормальной sme на больную sme результат непредсказуемый
+	SenderData* senderData =
+		dynamic_cast<SenderData*>(monitor->pduData->objProps["senderData"]);
+	if (!senderData->smeInfo->forceDC && fixture->smeInfo.forceDC)
 	{
 		return;
 	}
@@ -500,6 +508,7 @@ PduFlag NormalSmsHandler::checkSimpleMapMsgText(DeliveryMonitor* monitor,
 PduFlag NormalSmsHandler::checkMapMsgText(DeliveryMonitor* monitor,
 	SmppHeader* header, RespPduFlag respFlag)
 {
+	__require__(!fixture->smeInfo.forceDC);
 	__require__(monitor && header);
 	__require__(monitor->pduData->objProps.count("map.msg"));
 	__require__(monitor->pduData->intProps.count("dataCoding"));
@@ -766,8 +775,11 @@ void NormalSmsHandler::processPdu(SmppHeader* header, const Address& origAddr,
 			throw TCException();
 		}
 		__tc_ok_cond__;
+		__require__(monitor->pduData->objProps.count("senderData"));
 		SmsPduWrapper pdu(header, 0);
 		SmsPduWrapper origPdu(monitor->pduData);
+		SenderData* senderData =
+			dynamic_cast<SenderData*>(monitor->pduData->objProps["senderData"]);
 		//проверить правильность маршрута
 		__tc__("sms.normalSms.checkRoute");
 		__tc_fail2__(checkRoute(monitor->pduData->pdu, header), 0);
@@ -805,8 +817,7 @@ void NormalSmsHandler::processPdu(SmppHeader* header, const Address& origAddr,
 		__tc__("sms.normalSms.checkOptionalFields");
 		//отключить message_payload, который проверяется в compareMsgText()
 		uint64_t excludeMask = OPT_MSG_PAYLOAD + OPT_RCPT_MSG_ID;
-		if (monitor->pduData->intProps.count("forceDC") ||
-			fixture->smeInfo.forceDC)
+		if (senderData->smeInfo->forceDC || fixture->smeInfo.forceDC)
 		{
 			excludeMask += OPT_DEST_ADDR_SUBUNIT +
 				OPT_MS_MSG_WAIT_FACILITIES + OPT_MS_VALIDITY;

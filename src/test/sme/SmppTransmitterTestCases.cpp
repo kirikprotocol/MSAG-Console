@@ -511,6 +511,7 @@ SmsMsg* SmppTransmitterTestCases::getSmsMsg(PduData* pduData)
 		dynamic_cast<RecipientData*>(pduData->objProps["recipientData"]);
 	__require__(pduData->intProps.count("dataCoding"));
 	uint8_t dc = pduData->intProps["dataCoding"];
+	__trace2__("getSmsMsg(): template = %s", pduData->strProps.count("directive.template") ? "true" : "false");
 	//проверить наличие темплейта
 	if (pduData->strProps.count("directive.template"))
 	{
@@ -649,7 +650,6 @@ PduData* SmppTransmitterTestCases::prepareSms(SmppHeader* header,
 	bool simMsg = false;
 	if (fixture->smeInfo.forceDC)
 	{
-		pduData->intProps["forceDC"] = 1;
 		uint8_t dc;
 		if (SmppUtil::extractDataCoding(pdu.getDataCoding(), dc, simMsg))
 		{
@@ -676,8 +676,6 @@ PduData* SmppTransmitterTestCases::prepareSms(SmppHeader* header,
 			pduData->intProps["suppressDeliveryReports"] = 1;
 		}
 		SmsMsg* msg = getSmsMsg(pduData);
-		__trace2__("sms msg registered: this = %p, udhi = %s, len = %d, dc = %d, orig dc = %d, valid = %s",
-			msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, (int) pdu.getDataCoding(), msg->valid ? "true" : "false");
 		msg->ref();
 		if (routeInfo->smeSystemId == "MAP_PROXY")
 		{
@@ -1222,10 +1220,6 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 		pduData->intProps["ussdServiceOp"] = resPdu.get_optional().get_ussdServiceOp();
 	}
 	pduData->strProps["smsId"] = nvl(pdu->get_messageId());
-	if (fixture->smeInfo.forceDC)
-	{
-		pduData->intProps["forceDC"] = 1;
-	}
 	if (replacePduData && replacePduData->intProps.count("simMsg"))
 	{
 		pduData->intProps["simMsg"] = 1;
@@ -1243,8 +1237,6 @@ PduData* SmppTransmitterTestCases::prepareReplaceSm(PduReplaceSm* pdu,
 				pduData->intProps["suppressDeliveryReports"] = 1;
 			}
 			SmsMsg* msg = getSmsMsg(pduData);
-			__trace2__("sms msg registered: this = %p, udhi = %s, len = %d, dc = %d, orig dc = %d, valid = %s",
-				msg, msg->udhi ? "true" : "false", msg->len, (int) msg->dataCoding, (int) resPdu.getDataCoding(), msg->valid ? "true" : "false");
 			msg->ref();
 			bool mapDest = routeInfo->smeSystemId == "MAP_PROXY";
 			pduData->objProps[mapDest ? "map.msg" : "sms.msg"] = msg;

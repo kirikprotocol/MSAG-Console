@@ -130,7 +130,8 @@ void SmppProfilerTestCases::sendUpdateProfilePdu(const string& _text,
 		__tc_ok__;
 		//обновить профиль, ответные сообщения от профайлера и
 		//подтверждения доставки  уже по новым настройкам
-		if (fixture->profileReg)
+		if (fixture->profileReg &&
+			(fixture->smeType == SME_TRANSMITTER || fixture->smeType == SME_TRANSCEIVER))
 		{
 			time_t t;
 			Profile profile = fixture->profileReg->getProfile(fixture->smeAddr, t);

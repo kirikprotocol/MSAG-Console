@@ -208,7 +208,11 @@ SmppHeader* SmppProtocolErrorScenario::createPdu(uint32_t commandId)
 			pdu = reinterpret_cast<SmppHeader*>(new PduUnbindResp());
 			break;
 		case REPLACE_SM:
-			pdu = reinterpret_cast<SmppHeader*>(new PduReplaceSm());
+			{
+				PduReplaceSm* p = new PduReplaceSm();
+				p->set_messageId("*");
+				pdu = reinterpret_cast<SmppHeader*>(p);
+			}
 			break;
 		case REPLACE_SM_RESP:
 			pdu = reinterpret_cast<SmppHeader*>(new PduReplaceSmResp());
@@ -1508,13 +1512,16 @@ public:
 			setComplete(false);
 			//последующие enquire_link
 			time_t t2 = time(NULL);
-			const int enquireLinkCount = 10;
-			for (int j = 0; j < enquireLinkCount; j++)
+			const int count = 5;
+			const int expectedInterval = 5; //5 seconds
+			__require__(count * expectedInterval + timeCheckAccuracy < smeInactivityTimeOut);
+			for (int j = 0; j < count; j++)
 			{
-				__check__(3, checkComplete(timeCheckAccuracy));
+				__check__(3, checkComplete(expectedInterval + timeCheckAccuracy));
 				setComplete(false);
 			}
-			__check__(4, abs(time(NULL) - t2 - enquireLinkCount * 1) < timeCheckAccuracy);
+			const int averageInterval = (time(NULL) - t2) / count;
+			__check__(4, abs(averageInterval - expectedInterval) < timeCheckAccuracy);
 			__tc_ok_cond__;
 			//отправить что-нибудь (sequenceNumber по фигу)
 			if (i == 0)

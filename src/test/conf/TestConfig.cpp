@@ -18,7 +18,7 @@ TestConfig::TestConfig()
 	intMap["missingPduCheckInterval"] = 20; //20 сек
 	intMap["scCmdTimeout"] = 8; //макс время жизни команды в SC
 	intMap["smeInactivityTime"] = 10; //период неактивности sme до начала enquire_link
-	intMap["smeInactivityTimeOut"] = 15; //закрывается соединение после начала enquire_link
+	intMap["smeInactivityTimeOut"] = 40; //закрывается соединение после начала enquire_link
 	intMap["proxyTimeout"] = 2; //таймаут для помирания прокси
 	intMap["maxValidPeriod"] = 150; //150 сек
 	intMap["maxWaitTime"] = 60; //max(waitTime)
