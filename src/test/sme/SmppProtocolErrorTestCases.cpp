@@ -78,6 +78,7 @@ inline void SmppProtocolErrorScenario::setComplete(bool val)
 
 SmppHeader* SmppProtocolErrorScenario::createPdu(uint32_t commandId)
 {
+	__trace2__("createPdu(): scenario = %p, commandId = %x", this, commandId);
 	SmppHeader* pdu;
 	switch (commandId)
 	{
@@ -193,6 +194,7 @@ inline SmppHeader* SmppProtocolErrorScenario::setupSubmitSmPdu(PduSubmitSm& pdu)
 	pdu.get_message().set_esmClass(ESM_CLASS_NORMAL_MESSAGE);
 	pdu.get_message().set_scheduleDeliveryTime("");
 	pdu.get_message().set_registredDelivery(0);
+	pdu.get_message().set_replaceIfPresentFlag(0);
 	return reinterpret_cast<SmppHeader*>(&pdu);
 }
 
@@ -242,6 +244,11 @@ public:
 		invalidCmdId(false)
 	{
 		__tc__("protocolError.invalidBind");
+		__trace2__("InvalidBindScenario(): scenario = %p", this);
+	}
+	~InvalidBindScenario()
+	{
+		__trace2__("~InvalidBindScenario(): scenario = %p", this);
 	}
 	virtual void execute()
 	{
@@ -314,13 +321,13 @@ public:
 					invalidSize = true;
 					break;
 				case 4: //неправильный commandId
-					__tc__("protocolError.submitWithoutBind.invalidCommandId");
+					__tc__("protocolError.invalidBind.invalidCommandId");
 					cmdId = invalidCmdIds[rand0(invalidCmdIdsSize - 1)];
 					pdu = createPdu(cmdId);
 					invalidCmdId = true;
 					break;
 				case 5:  //несуществующий commandId
-					__tc__("protocolError.submitWithoutBind.nonExistentCommandId");
+					__tc__("protocolError.invalidBind.nonExistentCommandId");
 					cmdId = rand2(0xa, INT_MAX);
 					pdu = createPdu(correctCmdIds[rand0(correctCmdIdsSize - 1)]);
 					invalidCmdId = true;
@@ -354,6 +361,7 @@ public:
 	}
 	virtual void handleEvent(SmppHeader *pdu)
 	{
+		__trace2__("handleEvent(): commandId = %x", pdu->get_commandId())
 		switch (pdu->get_commandId())
 		{
 			case GENERIC_NACK:
@@ -392,6 +400,11 @@ public:
 		invalidSize(false), invalidCmdId(false)
 	{
 		__tc__("protocolError.invalidPdu");
+		__trace2__("InvalidPduScenario(): scenario = %p", this);
+	}
+	~InvalidPduScenario()
+	{
+		__trace2__("~InvalidPduScenario(): scenario = %p", this);
 	}
 	virtual void execute()
 	{
@@ -548,6 +561,7 @@ public:
 	}
 	virtual void handleEvent(SmppHeader* pdu)
 	{
+		__trace2__("handleEvent(): commandId = %x", pdu->get_commandId())
 		switch (pdu->get_commandId())
 		{
 			case BIND_RECIEVER_RESP:
@@ -592,6 +606,11 @@ public:
 		bound(false)
 	{
 		__tc__("protocolError.equalSeqNum");
+		__trace2__("EqualSequenceNumbersScenario(): scenario = %p", this);
+	}
+	~EqualSequenceNumbersScenario()
+	{
+		__trace2__("~EqualSequenceNumbersScenario(): scenario = %p", this);
 	}
 	virtual void execute()
 	{
@@ -617,23 +636,24 @@ public:
 		sendPdu(setupUnbindPdu(unbindPdu));
 		if (!checkComplete(10000))
 		{
-			__tc_fail__(1);
+			__tc_fail__(2);
 		}
 		__tc_ok_cond__;
 	}
 	virtual void handleEvent(SmppHeader* pdu)
 	{
+		__trace2__("handleEvent(): commandId = %x", pdu->get_commandId())
 		switch (pdu->get_commandId())
 		{
 			case BIND_RECIEVER_RESP:
 			case BIND_TRANSMITTER_RESP:
 			case BIND_TRANCIEVER_RESP:
-				__check__(2, !bound);
+				__check__(3, !bound);
 				bound = true;
 				checkBindResp(reinterpret_cast<PduBindTRXResp*>(pdu));
 				break;
 			case UNBIND_RESP:
-				__check__(3, bound);
+				__check__(4, bound);
 				bound = false;
 				checkUnbindResp(reinterpret_cast<PduUnbindResp*>(pdu));
 				setComplete(true);
@@ -643,18 +663,18 @@ public:
 					__trace2__("deliver_sm_resp: serviceType = %s, sequenceNumber = %u, scenario = %p",
 						reinterpret_cast<PduDeliverySm*>(pdu)->get_message().get_serviceType(),
 						pdu->get_sequenceNumber(), this);
-					__check__(4, ++deliveryCount <= pduCount);
+					__check__(5, ++deliveryCount <= pduCount);
 					PduDeliverySmResp respPdu;
 					sendPdu(setupDeliverySmRespPdu(respPdu, pdu->get_sequenceNumber()));
 				}
 				break;
 			case SUBMIT_SM_RESP:
-				__check__(5, ++respCount <= pduCount);
-				__check__(6, pdu->get_commandStatus() == ESME_ROK);
-				__check__(7, pdu->get_sequenceNumber() == 0);
+				__check__(6, ++respCount <= pduCount);
+				__check__(7, pdu->get_commandStatus() == ESME_ROK);
+				__check__(8, pdu->get_sequenceNumber() == 0);
 				break;
 			default:
-				__tc_fail__(8);
+				__tc_fail__(9);
 		}
 		if (bound && respCount == pduCount && deliveryCount == pduCount)
 		{
@@ -664,7 +684,7 @@ public:
 	virtual void handleError(int errorCode)
 	{
 		//SC не закрывает сокет при unbind
-		__tc_fail__(9);
+		__tc_fail__(10);
 	}
 };
 
@@ -683,6 +703,11 @@ public:
 	: SmppProtocolErrorScenario(conf, addr, chkList), bound(false)
 	{
 		__tc__("protocolError.submitAfterUnbind");
+		__trace2__("SubmitAfterUnbindScenario(): scenario = %p", this);
+	}
+	~SubmitAfterUnbindScenario()
+	{
+		__trace2__("~SubmitAfterUnbindScenario(): scenario = %p", this);
 	}
 	virtual void execute()
 	{
@@ -704,7 +729,7 @@ public:
 	}
 	virtual void handleEvent(SmppHeader* pdu)
 	{
-		__trace2__("handleEvent(): commandId = %x", pdu->get_commandId());
+		__trace2__("handleEvent(): commandId = %x", pdu->get_commandId())
 		switch (pdu->get_commandId())
 		{
 			case BIND_RECIEVER_RESP:
