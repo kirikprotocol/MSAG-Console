@@ -51,8 +51,8 @@
     <param name="state_machines_count" type="int">5</param>
     <!-- last time will be repeated until max_valid_time -->
     <param name="reschedule_table" type="string">30s,1m,5m,15m,30m,1h,6h,12h,1d</param>
-    <param name="receipt_delivered" type="string">Message for $$string arg=dest import=dest$$ delivered</param>
-    <param name="receipt_failed" type="string">Message for $$string arg=dest import=dest$$ wasn't delivered, reason $$string arg=error import=error$$</param>
+    <param name="receipt_delivered" type="string">Message for $$string import=dest$$ delivered at $$date import=date$$</param>
+    <param name="receipt_failed" type="string">Message for $$string import=dest$$ wasn't delivered, reason $$string import=error$$</param>
     <param name="service_center_address" type="string">123</param>
   </section>
 
