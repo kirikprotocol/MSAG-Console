@@ -36,7 +36,7 @@ public class WSme extends WSmeTransport
   public WSme(Service wsmeService) throws AdminException
   {
     super(wsmeService.getInfo());
-  }  public void init()  throws AdminException {    try    {      ServiceInfo info = wsmeService.getInfo();      configFile = new File(new File(          WebAppFolders.getServiceFolder(info.getHost(), info.getId()), "conf"), "config.xml");      System.out.println("Config file '"+configFile.getAbsolutePath()+"'");      config = new Config(configFile);      loadup(null, config, false);    }    catch (Exception e) {      AdminException ae = new AdminException("WSme admin init failed, cause: "+e.getMessage());      throw ae;    }  }
+  }  public void init(Service wsmeService)  throws AdminException {    try    {      ServiceInfo info = wsmeService.getInfo();      configFile = new File(new File(          WebAppFolders.getServiceFolder(info.getHost(), info.getId()), "conf"), "config.xml");      System.out.println("Config file '"+configFile.getAbsolutePath()+"'");      config = new Config(configFile);      loadup(null, config, false);    }    catch (Exception e) {      AdminException ae = new AdminException("WSme admin init failed, cause: "+e.getMessage());      throw ae;    }  }
 
   private final static String CONFIG_PARAM_BASE = "WSme.Admin.Web.jdbc.";
   private synchronized void loadup(Config oldConfig, Config newConfig, boolean check)
