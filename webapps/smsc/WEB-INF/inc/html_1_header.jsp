@@ -16,20 +16,21 @@ function openPerfMon()
 <table align=center height="100%" width="80%" cellspacing=0 cellpadding=0 class=wnd>
 <tr><td width="100%" class=title>SMS Service Center (Preliminary Beta Version)</td></tr>
 <tr><td class=tmenu><%
-	%><a ID=MENU0_HOME href="<%=CPATH%>">Home</a><%
-	%><a ID=MENU0_SMSC href="<%=CPATH%>/smsc_service/index.jsp">SMSC</a><%
-	%><a ID=MENU0_PERFMON href="<%=CPATH%>/perfmon/index.jsp" target="SMSC Perfomance monitor" onclick="return openPerfMon();">Monitor</a><%
-	%><a ID=MENU0_SMSVIEW href="<%=CPATH%>/smsview/index.jsp">SMS view</a><%
-	%><a ID=MENU0_SMSSTAT href="<%=CPATH%>/smsstat/index.jsp">Statistics</a><%
-	%><a ID=MENU0_MSCMAN href="<%=CPATH%>/mscman/index.jsp">MSCs</a><%
-	%><a ID=MENU0_USERS href="<%=CPATH%>/users/index.jsp">Users</a><%
-	%><a ID=MENU0_ROUTES href="<%=CPATH%>/routes/index.jsp">Routes</a><%
-	%><a ID=MENU0_SUBJECTS href="<%=CPATH%>/subjects/index.jsp">Subjects</a><%
-	%><a ID=MENU0_ALIASES href="<%=CPATH%>/aliases/index.jsp">Aliases</a><%
-	%><a ID=MENU0_PROFILES href="<%=CPATH%>/profiles/index.jsp">Profiles</a><%
+	%><a ID=MENU0_HOME             href="<%=CPATH%>">Home</a><%
+	%><a ID=MENU0_SMSC             href="<%=CPATH%>/smsc_service/index.jsp">SMSC</a><%
+	%><a ID=MENU0_LOCALE_RESOURCES href="<%=CPATH%>/locale_resources/index.jsp">Resources</a><%
+	%><a ID=MENU0_PERFMON          href="<%=CPATH%>/perfmon/index.jsp" target="SMSC Perfomance monitor" onclick="return openPerfMon();">Monitor</a><%
+	%><a ID=MENU0_SMSVIEW          href="<%=CPATH%>/smsview/index.jsp">SMS view</a><%
+	%><a ID=MENU0_SMSSTAT          href="<%=CPATH%>/smsstat/index.jsp">Statistics</a><%
+	%><a ID=MENU0_MSCMAN           href="<%=CPATH%>/mscman/index.jsp">MSCs</a><%
+	%><a ID=MENU0_USERS            href="<%=CPATH%>/users/index.jsp">Users</a><%
+	%><a ID=MENU0_ROUTES           href="<%=CPATH%>/routes/index.jsp">Routes</a><%
+	%><a ID=MENU0_SUBJECTS         href="<%=CPATH%>/subjects/index.jsp">Subjects</a><%
+	%><a ID=MENU0_ALIASES          href="<%=CPATH%>/aliases/index.jsp">Aliases</a><%
+	%><a ID=MENU0_PROFILES         href="<%=CPATH%>/profiles/index.jsp">Profiles</a><%
 	%><%
-	%><a ID=MENU0_HOSTS href="<%=CPATH%>/hosts/index.jsp">Hosts</a><%
-	%><a ID=MENU0_SERVICES href="<%=CPATH%>/services/index.jsp">Services</a><%
+	%><a ID=MENU0_HOSTS            href="<%=CPATH%>/hosts/index.jsp">Hosts</a><%
+	%><a ID=MENU0_SERVICES         href="<%=CPATH%>/services/index.jsp">Services</a><%
 	%>&nbsp;&nbsp;&nbsp;<a ID=MENU0_LOGOUT href="<%=CPATH%>/logout.jsp">Logout</a><%
 	%><script> document.all.<%=MENU0_SELECTION%>.className = 'tmenu_sel'; </script><%
 	%></td>

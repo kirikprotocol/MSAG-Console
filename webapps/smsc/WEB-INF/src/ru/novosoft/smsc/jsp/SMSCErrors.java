@@ -135,6 +135,18 @@ public class SMSCErrors
 			private static final String B = error.B + "smsc.";
 			public static final String smscServerError = B + "smscServerError";
 		}
+
+		public static class localeResources
+		{
+			private static final String B = error.B + "localeResources.";
+			public static final String incorrectLocaleName = B + "incorrectLocaleName";
+			public static final String localeResourcesFileNotFound = B + "localeResourcesFileNotFound";
+			public static final String fileNotAttached = B + "fileNotAttached";
+			public static final String wrongFileType = B + "wrongFileType";
+			public static final String wrongFileName = B + "wrongFileName";
+			public static final String alreadyExists = B + "alreadyExists";
+			public static final String couldntReceiveFile = B + "couldntReceiveFile";
+		}
 	}
 
 	public static class warning

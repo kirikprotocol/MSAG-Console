@@ -37,7 +37,7 @@ public abstract class PageBean
 		this.errors = errors;
 		if (errors == null)
 		{
-			errors = new ArrayList();
+			this.errors = new ArrayList();
 			return error(SMSCErrors.error.errorListNotInitialized);
 		}
 

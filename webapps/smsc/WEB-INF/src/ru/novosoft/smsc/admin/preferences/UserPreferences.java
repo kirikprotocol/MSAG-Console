@@ -38,6 +38,9 @@ public class UserPreferences
 	private int smsviewMaxResults = 500;
 	private String smsviewSortOrder = "date";
 
+	private int localeResourcesPageSize = 20;
+	private String localeResourcesSortOrder = "locale";
+
 	private Locale locale = new Locale("ru");
 
 	public UserPreferences()
@@ -177,5 +180,25 @@ public class UserPreferences
 	public Locale getLocale()
 	{
 		return locale;
+	}
+
+	public int getLocaleResourcesPageSize()
+	{
+		return localeResourcesPageSize;
+	}
+
+	public void setLocaleResourcesPageSize(int localeResourcesPageSize)
+	{
+		this.localeResourcesPageSize = localeResourcesPageSize;
+	}
+
+	public String getLocaleResourcesSortOrder()
+	{
+		return localeResourcesSortOrder;
+	}
+
+	public void setLocaleResourcesSortOrder(String localeResourcesSortOrder)
+	{
+		this.localeResourcesSortOrder = localeResourcesSortOrder;
 	}
 }
