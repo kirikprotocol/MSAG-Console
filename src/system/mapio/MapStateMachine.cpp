@@ -695,6 +695,7 @@ static void TryDestroyDialog(unsigned dialogid,bool send_error = false,unsigned 
     }
     switch(dialog->state){
     case MAPST_ABORTED: 
+      __trace2__("MAP::ABORT: dialog 0x%x",dialog->dialogid_map);
       AbortMapDialog(dialog->dialogid_map,dialog->ssn);
       break;
     default:
