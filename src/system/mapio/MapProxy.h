@@ -98,7 +98,7 @@ public:
   {
     {
       MutexGuard g(mutex);
-      if( cmd.get_commandId() = SUBMIT && nqueue.Count()==MAP_PROXY_QUEUE_LIMIT )
+      if( cmd->get_commandId() = SUBMIT && inqueue.Count()==MAP_PROXY_QUEUE_LIMIT )
       {
         __mapproxy_trace__("putIncomingCommand: proxy queue limit exceded");
         throw ProxyQueueLimitException();
