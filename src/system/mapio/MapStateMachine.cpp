@@ -852,7 +852,7 @@ USHORT_T Et96MapOpenInd (
     DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialog(dialogueId,SSN/*,0*/));
     if ( dialog.isnull() )
       throw runtime_error("MAP:: can't create dialog");
-    __trace2__("MAP:: create dialog with ptr 0x%p, dialogid 0x%x",mdci.get(),dialogId);
+    __trace2__("MAP:: create dialog with ptr 0x%p, dialogid 0x%x",dialog.get(),dialogId);
     dialog->state = MAPST_WaitSms;
   }
   catch(exception& e)
