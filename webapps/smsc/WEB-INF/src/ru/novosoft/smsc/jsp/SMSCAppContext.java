@@ -11,6 +11,7 @@ import ru.novosoft.smsc.admin.smsc_service.*;
 import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.admin.resources.ResourcesManager;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.util.*;
 import ru.novosoft.util.jsp.AppContext;
 
 import javax.sql.DataSource;
@@ -36,7 +37,9 @@ public interface SMSCAppContext extends AppContext
 
 	public void destroy();
 
-	public ResourceBundle getLocaleMessages(Locale locale);
+	public String getLocaleString(Locale locale, String key );
+
+  public LocaleMessages getLocaleMessages();
 
 	SmeManager getSmeManager();
 

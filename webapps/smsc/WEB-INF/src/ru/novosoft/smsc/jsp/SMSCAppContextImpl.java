@@ -10,7 +10,7 @@ import ru.novosoft.smsc.admin.route.RouteSubjectManagerImpl;
 import ru.novosoft.smsc.admin.resources.ResourcesManager;
 import ru.novosoft.smsc.admin.resources.ResourcesManagerImpl;
 import ru.novosoft.smsc.perfmon.PerfServer;
-import ru.novosoft.smsc.util.WebAppFolders;
+import ru.novosoft.smsc.util.*;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.config.ConfigManager;
 import ru.novosoft.util.conpool.NSConnectionPool;
@@ -39,7 +39,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	private NSConnectionPool connectionPool = null;
 	private UserPreferences userPreferences = new UserPreferences();
 	private Statuses statuses = new StatusesImpl();
-	private Map localeMessages = new HashMap();
+  private LocaleMessages localeMessages = null;
 
 	private Console console = null;
 
@@ -118,6 +118,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
 			resourcesManager = new ResourcesManagerImpl();
 
+
 			loadLocaleMessages();
 			createConnectionPool(config);
 
@@ -155,10 +156,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
 	private void loadLocaleMessages()
 	{
-		Locale locale = new Locale("ru");
-		localeMessages.put(locale, ResourceBundle.getBundle("locales.messages", locale));
-		locale = new Locale("en");
-		localeMessages.put(locale, ResourceBundle.getBundle("locales.messages", locale));
+    localeMessages = new LocaleMessages();
 	}
 
 	private void startConsole() throws Exception
@@ -234,9 +232,13 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 		perfServer.shutdown();
 	}
 
-	public ResourceBundle getLocaleMessages(Locale locale)
+  public String getLocaleString(Locale locale, String key ) {
+    return localeMessages.getString( locale, key );
+  }
+
+	public LocaleMessages getLocaleMessages()
 	{
-		return (ResourceBundle) localeMessages.get(locale);
+		return localeMessages;
 	}
 }
 
