@@ -4,7 +4,6 @@
 
 <jsp:useBean id="formBean" scope="session"
              class="ru.novosoft.smsc.jsp.smsview.SmsViewFormBean" />
-
 <%
 if (request.getParameter("prev") != null) {
     formBean.moveToPrev();
@@ -59,6 +58,11 @@ if (request.getMethod().equals("POST"))
         formBean.getFromAddress()%>" size=25 maxlength=25>
       </td>
       <td colspan=1>
+      <b>Source&nbsp;SME&nbsp;id:</b><br>
+    	<input type="text" name="srcSmeId"  value="<%=
+        formBean.getSrcSmeId()%>" size=15 maxlength=15>
+      </td>
+      <td colspan=1>
     	<b>Select&nbsp;from&nbsp;date:</b><br>
       <input type="checkbox" name="fromDateEnabled" <%=
         (formBean.getFromDateEnabled()) ? "checked":""%>>
@@ -89,25 +93,17 @@ if (request.getMethod().equals("POST"))
       <input type="text" name="fromDateSecond" style="width:16pt;" value="<%=
         formBean.getFromDateSecond()%>" size=2 maxlength=2>
       </td>
-      <td colspan=1>
-    	<b>Sort&nbsp;results&nbsp;by:</b><br>
-      <select name="sortBy">
-	      <option value="Date" <%=
-          (formBean.getSortBy().equalsIgnoreCase("Date")) ? "selected":""%>>Date</option>
-	      <option value="Status" <%=
-          (formBean.getSortBy().equalsIgnoreCase("Status")) ? "selected":""%>>Status</option>
-	      <option value="From" <%=
-          (formBean.getSortBy().equalsIgnoreCase("From")) ? "selected":""%>>From</option>
-	      <option value="To" <%=
-          (formBean.getSortBy().equalsIgnoreCase("To")) ? "selected":""%>>To</option>
-      </select>
-	    </td>
 </tr>
 <tr>
       <td colspan=1>
     	<b>Destination&nbsp;address:</b><br>
     	<input type="text" name="toAddress" value="<%=
         formBean.getToAddress()%>" size=25 maxlength=25>
+      </td>
+      <td colspan=1>
+      <b>Destination&nbsp;SME&nbsp;id:</b><br>
+    	<input type="text" name="dstSmeId"  value="<%=
+        formBean.getDstSmeId()%>" size=15 maxlength=15>
       </td>
       <td colspan=1>
     	<b>Till&nbsp;date:</b><br>
@@ -140,6 +136,13 @@ if (request.getMethod().equals("POST"))
       <input type="text" name="toDateSecond" style="width:16pt;" value="<%=
         formBean.getToDateSecond()%>" size=2 maxlength=2>
       </td>
+</tr>
+<tr>
+      <td colspan=1>
+      <b>Route&nbsp;id:</b><br>
+    	<input type="text" name="routeId"  value="<%=
+        formBean.getRouteId()%>" size=20 maxlength=20>
+      </td>
       <td colspan=1>
       <b>Rows&nbsp;per&nbsp;page:</b><br>
     	<select name="rowsToDisplay"><%
@@ -154,6 +157,19 @@ if (request.getMethod().equals("POST"))
                                 rowsToDisplay > 50) ?  "selected":""%>>All</option>
 	    </select>
       </td>
+      <td colspan=1>
+    	<b>Sort&nbsp;results&nbsp;by:</b><br>
+      <select name="sortBy">
+	      <option value="Date" <%=
+          (formBean.getSortBy().equalsIgnoreCase("Date")) ? "selected":""%>>Date</option>
+	      <option value="Status" <%=
+          (formBean.getSortBy().equalsIgnoreCase("Status")) ? "selected":""%>>Status</option>
+	      <option value="From" <%=
+          (formBean.getSortBy().equalsIgnoreCase("From")) ? "selected":""%>>From</option>
+	      <option value="To" <%=
+          (formBean.getSortBy().equalsIgnoreCase("To")) ? "selected":""%>>To</option>
+      </select>
+	    </td>
 </tr>
 <tr>
   <td colspan=3 align=center>

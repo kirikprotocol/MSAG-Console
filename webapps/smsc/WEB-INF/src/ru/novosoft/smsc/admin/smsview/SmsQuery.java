@@ -20,6 +20,9 @@ public class SmsQuery
   private int    storageType = SMS_ARCHIVE_STORAGE_TYPE;
   private String fromAddress = "*";
   private String toAddress = "*";
+  private String srcSmeId = "*";
+  private String dstSmeId = "*";
+  private String routeId = "*";
   private Date   fromDate = new Date();
   private Date   tillDate = new Date();
   private String sortBy = "Date";
@@ -32,7 +35,14 @@ public class SmsQuery
   public String getFromAddress() { return fromAddress; }
   public void setFromAddress(String address) { fromAddress = address; }
   public String getToAddress() { return toAddress; }
-  public void setToAddress(String address){ toAddress = address; }
+  public void setToAddress(String address) { toAddress = address; }
+
+  public String getSrcSmeId() { return srcSmeId; }
+  public void setSrcSmeId(String id) { srcSmeId = id; }
+  public String getDstSmeId() { return dstSmeId; }
+  public void setDstSmeId(String id) { dstSmeId = id; }
+  public String getRouteId() { return routeId; }
+  public void setRouteId(String id) { routeId = id; }
 
   public void setFromDateEnabled(boolean enabled) { fromDateEnabled = enabled; }
   public boolean getFromDateEnabled() { return fromDateEnabled; }

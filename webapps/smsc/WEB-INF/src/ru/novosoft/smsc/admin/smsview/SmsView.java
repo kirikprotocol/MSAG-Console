@@ -80,6 +80,9 @@ public class SmsView
     int pos=1;
     stmt.setString(pos++, getLikeExpression(query.getFromAddress()));
     stmt.setString(pos++, getLikeExpression(query.getToAddress()));
+    stmt.setString(pos++, getLikeExpression(query.getRouteId()));
+    stmt.setString(pos++, getLikeExpression(query.getSrcSmeId()));
+    stmt.setString(pos++, getLikeExpression(query.getDstSmeId()));
     if (query.getFromDateEnabled())
       stmt.setTimestamp(pos++,
         new java.sql.Timestamp(query .getFromDate().getTime()));
@@ -146,6 +149,12 @@ public class SmsView
     where += (needLikeExpression(query.getFromAddress())) ? "LIKE ?":"= ?";
     where += " AND UPPER(DDA) ";
     where += (needLikeExpression(query.getToAddress())) ? "LIKE ?":"= ?";
+    where += " AND UPPER(ROUTE_ID) ";
+    where += (needLikeExpression(query.getRouteId())) ? "LIKE ?":"= ?";
+    where += " AND UPPER(SRC_SME_ID) ";
+    where += (needLikeExpression(query.getSrcSmeId())) ? "LIKE ?":"= ?";
+    where += " AND UPPER(DST_SME_ID) ";
+    where += (needLikeExpression(query.getDstSmeId())) ? "LIKE ?":"= ?";
     if (query.getFromDateEnabled()) {
       where += " AND SUBMIT_TIME >= ?";
     }
