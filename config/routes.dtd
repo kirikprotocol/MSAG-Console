@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <!ELEMENT routes (subject_def*, route*)>
-<!ELEMENT route (source+, destination+)>
+<!ELEMENT route (notes*, source+, destination+)>
 <!ATTLIST route
 	id CDATA #REQUIRED
 	billing (true | false) #REQUIRED
@@ -16,6 +16,7 @@
 	hide CDATA #IMPLIED
 	forceReplayPath CDATA #IMPLIED
 >
+<!ELEMENT notes #CDATA>
 <!ELEMENT source (subject | mask)>
 <!ELEMENT destination (subject | mask)>
 <!ATTLIST destination
