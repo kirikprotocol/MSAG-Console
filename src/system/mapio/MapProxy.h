@@ -28,7 +28,7 @@ typedef smsc::core::buffers::Array<SmscCommand> MapIOQueue;
 class MapProxy:public SmeProxy{
 public:
   MapProxy() : seq(0) {
-   time_logger = smsc::util::Logger::getCategory("map.otime")
+   time_logger = &smsc::util::Logger::getCategory("map.otime")
   }
   virtual ~MapProxy(){}
   virtual void close(){}
@@ -40,12 +40,10 @@ public:
     if( time_logger.isDebugEnabled() ) gettimeofday( &utime, 0 );
     ::MAPIO_PutCommand(cmd);
     if( time_logger.isDebugEnabled() ) {
-      char buf[128];
       long usecs;
       gettimeofday( &curtime, 0 );
       usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
-      snprintf( buf, 128, "cmdid=%d s=%ld us=%ld", cmd.get_commandId(), curtime.tv_sec-utime.tv_sec, usecs );
-      time_logger.debug( buf );
+      time_logger->debug( "cmdid=%d s=%ld us=%ld", cmd.get_commandId(), curtime.tv_sec-utime.tv_sec, usecs );
     }
 //#endif
   }
@@ -160,7 +158,7 @@ protected:
   int seq;
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
-  log4cpp::Category& time_logger;
+  log4cpp::Category* time_logger;
 };
 
 };//mappio
