@@ -8,6 +8,7 @@
 package ru.novosoft.smsc.wsme;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.service.Service;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.util.WebAppFolders;
@@ -128,8 +129,15 @@ public class WSme extends WSmeTransport
       connection = ds.getConnection();
       stmt = connection.prepareStatement(GET_VISITORS_SQL);
       rs = stmt.executeQuery();
-      while (rs.next())
-        visitors.add(rs.getString(1).trim());
+      while (rs.next()) {
+        String mask = rs.getString(1).trim();
+        try { mask = (new Mask(mask)).getMask().trim(); }
+        catch (Throwable th) {
+          System.out.println("Invalid mask retreived from DB: "+mask);
+          continue;
+        }
+        visitors.add(mask);
+      }
     }
     catch (Exception exc)
     {
@@ -174,8 +182,16 @@ public class WSme extends WSmeTransport
       connection = ds.getConnection();
       stmt = connection.prepareStatement(GET_LANGS_SQL);
       rs = stmt.executeQuery();
-      while (rs.next())
-        langs.add(new LangRow(rs.getString(1).trim(), rs.getString(2).trim()));
+      while (rs.next()) {
+        String mask = rs.getString(1).trim();
+        String lang = rs.getString(2).trim();
+        try { mask = (new Mask(mask)).getMask().trim(); }
+        catch (Throwable th) {
+          System.out.println("Invalid mask retreived from DB: "+mask);
+          continue;
+        }
+        langs.add(new LangRow(mask, lang));
+      }
     }
     catch (Exception exc)
     {

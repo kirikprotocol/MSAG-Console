@@ -8,6 +8,7 @@
 package ru.novosoft.smsc.wsme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.wsme.WSmeErrors;
 
 import java.util.List;
@@ -45,6 +46,11 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
   protected int addNewVisitor()
   {
     System.out.println("WSmeVisitors::addNewVisitor() called");
+    try {
+      newVisitor = (new Mask(newVisitor)).getNormalizedMask().trim();
+    } catch (AdminException exc) {
+      return error(WSmeErrors.error.admin.ParseError, exc.getMessage());
+    }
     int result = RESULT_OK;
     try {
        wsme.addVisitor(newVisitor);
@@ -60,7 +66,7 @@ public class WSmeVisitorsFormBean extends WSmeBaseFormBean
     int result = RESULT_OK;
     try {
       for (int i=0; i<selectedRows.length; i++)
-        wsme.removeVisitor(selectedRows[i]);
+        wsme.removeVisitor((new Mask(selectedRows[i])).getNormalizedMask().trim());
     }
     catch (AdminException exc) {
        result = error(WSmeErrors.error.remote.failure, exc.getMessage());

@@ -8,6 +8,7 @@
 package ru.novosoft.smsc.wsme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.wsme.WSmeErrors;
 
 import java.util.List;
@@ -46,12 +47,16 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
   protected int addNewLang()
   {
     System.out.println("WSmeLangs::addNewLang() called");
+    try {
+      newMask = (new Mask(newMask)).getNormalizedMask().trim();
+    } catch (AdminException exc) {
+      return error(WSmeErrors.error.admin.ParseError, exc.getMessage());
+    }
     int result = RESULT_OK;
     try {
-       wsme.addLang(newMask, newLang);
-    }
-    catch (AdminException exc) {
-       result = error(WSmeErrors.error.remote.failure, exc.getMessage());
+      wsme.addLang(newMask, newLang);
+    } catch (AdminException exc) {
+      result = error(WSmeErrors.error.remote.failure, exc.getMessage());
     }
     return result;
   }
@@ -61,7 +66,7 @@ public class WSmeLangsFormBean extends WSmeBaseFormBean
     int result = RESULT_OK;
     try {
       for (int i=0; i<selectedRows.length; i++)
-        wsme.removeLang(selectedRows[i]);
+        wsme.removeLang((new Mask(selectedRows[i])).getNormalizedMask().trim());
     }
     catch (AdminException exc) {
        result = error(WSmeErrors.error.remote.failure, exc.getMessage());
