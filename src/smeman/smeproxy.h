@@ -85,7 +85,7 @@ public:
   virtual const std::string& getSourceAddressRange(){return nullstr;};
   virtual const char * getSystemId() const = 0;
 
-  virtual void updateSmeInfo(const SmeInfo&){}
+  virtual void updateSmeInfo(const SmeInfo& _smeInfo){}
 
   virtual SmeIndex getSmeIndex(){return INVALID_SME_INDEX;}
 

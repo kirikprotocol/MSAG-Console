@@ -45,12 +45,29 @@ public:
   {
     if(smereg)smereg->unregisterSmeProxy("MAP_PROXY");
   }
+  void setPerformanceLimits(int newTimeOut,int newProcLimit)
+  {
+    __mapproxy_trace2__("Setting proccessing limits on map proxy timeout=%d, limit=%d");
+    processTimeOut=newTimeOut+newTimeOut/4;
+    processLimit=newProcLimit;
+  }
   virtual void close(){}
   void notifyOutThread(){}
   void checkLogging();
+  virtual void updateSmeInfo(const SmeInfo& smeInfo){
+    MutexGuard g(mutex);
+    setPerformanceLimits(smeInfo.timeout, smeInfo.proclimit);
+  }
   virtual void putCommand(const SmscCommand& cmd)
   {
 //#if defined USE_MAP
+    {
+      if(cmd->get_commandId()==DELIVERY)
+      {
+        MutexGuard g(mutex);
+        checkProcessLimit(cmd);
+      }
+    }
     struct timeval utime, curtime;
     if( time_logger->isDebugEnabled() ) gettimeofday( &utime, 0 );
     ::MAPIO_PutCommand(cmd);
@@ -90,6 +107,10 @@ public:
     __mapproxy_trace__("putIncomingCommand");
     {
       MutexGuard g(mutex);
+      if(cmd->get_commandId()==DELIVERY_RESP)
+      {
+        processResponse(cmd);
+      }
       if(inqueue.Count()==MAP_PROXY_QUEUE_LIMIT)
       {
         __mapproxy_trace__("putIncomingCommand: proxy queue limit exceded");
@@ -177,6 +198,46 @@ protected:
   ProxyMonitor *managerMonitor;
   smsc::logger::Logger* time_logger;
   SmeRegistrar *smereg;
+
+  int processTimeOut;
+  int processLimit;
+
+  struct ControlItem{
+    time_t submitTime;
+    int seqNum;
+  };
+
+  std::list<ControlItem> limitQueue;
+  smsc::core::buffers::IntHash<std::list<ControlItem>::iterator> limitHash;
+  int processLimit;
+  int processTimeout;
+
+  void checkProcessLimit(const SmscCommand& cmd)
+  {
+    if(processLimit==0)return;
+    //MutexGuard g(mutex);
+    time_t now=time(NULL);
+    while(limitQueue.size()>0 && limitQueue.begin()->submitTime+processTimeout<now)
+    {
+      limitHash.Delete(limitQueue.begin()->seqNum);
+      limitQueue.erase(limitQueue.begin());
+    }
+    if(limitQueue.size()==processLimit)throw ProxyQueueLimitException(processLimit,limitQueue.size());
+    ControlItem ci={now,cmd->get_dialogId()};
+    limitQueue.push_back(ci);
+    limitHash.Insert(ci.seqNum,--limitQueue.end());
+  }
+
+  void processResponse(const SmscCommand& cmd)
+  {
+    if(processLimit==0)return;
+    if(limitHash.Exist(cmd->get_dialogId()))
+    {
+      limitQueue.erase(limitHash.Get((int)cmd->get_dialogId()));
+      limitHash.Delete(cmd->get_dialogId());
+    }
+  }
+
 };
 
 }//mappio

@@ -748,6 +748,8 @@ void Smsc::run()
     MapDialogContainer::getInstance()->registerSelf(&smeman);
 #endif
     mapProxy=MapDialogContainer::getInstance()->getProxy();
+    SmeInfo si=smeman.getSmeInfo(smeman.lookup("MAP_PROXY"));
+    mapProxy->setPerformanceLimits( si.timeout,si.proclimit);
     MapDialogContainer::getInstance()->getProxy()->setId("MAP_PROXY");
   }
 
