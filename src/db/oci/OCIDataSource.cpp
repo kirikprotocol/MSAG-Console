@@ -80,7 +80,7 @@ void OCIConnection::connect()
     catch (SQLException& exc) 
     {
         disconnect();    
-        throw exc;
+        throw;
     }
 }
 

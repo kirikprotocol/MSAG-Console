@@ -75,7 +75,7 @@ int32_t ConfigView::getInt(const char* param, const char* error)
         log.error("Config parameter missed: <%s>. %s",
                   section, (error) ? error:"");
         if (section) delete section;
-        throw exc;
+        throw;
     }
     if (section) delete section;
     return result;
@@ -96,7 +96,7 @@ char* ConfigView::getString(const char* param, const char* error)
         log.error("Config parameter missed: <%s>. %s",
                   section, (error) ? error:"");
         if (section) delete section;
-        throw exc;
+        throw;
     }
     if (section) delete section;
     return result;
@@ -115,7 +115,7 @@ bool ConfigView::getBool(const char* param, const char* error)
         log.error("Config parameter missed: <%s>. %s",
                   section, (error) ? error:"");
         if (section) delete section;
-        throw exc;
+        throw;
     }
     if (section) delete section;
     return result;
