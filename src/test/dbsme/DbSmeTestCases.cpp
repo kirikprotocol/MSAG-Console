@@ -17,6 +17,7 @@ using smsc::util::Logger;
 using smsc::test::conf::TestConfig;
 using smsc::test::smpp::SmppUtil;
 using namespace smsc::test::core; //constants, PduData
+using namespace smsc::test::smpp;
 using namespace smsc::test::util;
 using namespace smsc::smpp::SmppCommandSet;
 
@@ -113,6 +114,13 @@ void DbSmeTestCases::sendDbSmePdu(const string& input, PduData::IntProps* intPro
 	__decl_tc__;
 	try
 	{
+		//создать pdu
+		PduSubmitSm* pdu = new PduSubmitSm();
+		__cfg_addr__(dbSmeAlias);
+		transmitter->setupRandomCorrectSubmitSmPdu(pdu, dbSmeAlias);
+		//установить немедленную доставку
+		pdu->get_message().set_scheduleDeliveryTime("");
+		//текст сообщения
 		switch (dataCoding)
 		{
 			case DATA_CODING_SMSC_DEFAULT:
@@ -124,15 +132,9 @@ void DbSmeTestCases::sendDbSmePdu(const string& input, PduData::IntProps* intPro
 			default:
 				__unreachable__("Invalid data coding");
 		}
-		//создать pdu
-		PduSubmitSm* pdu = new PduSubmitSm();
-		__cfg_addr__(dbSmeAlias);
-		transmitter->setupRandomCorrectSubmitSmPdu(pdu, dbSmeAlias);
-		//установить немедленную доставку
-		pdu->get_message().set_scheduleDeliveryTime("");
-		//текст сообщения
-		const string encText = encode(input.c_str(), dataCoding);
-		pdu->get_message().set_shortMessage(encText.c_str(), encText.length());
+		int msgLen;
+		auto_ptr<char> msg = encode(input, dataCoding, msgLen);
+		pdu->get_message().set_shortMessage(msg.get(), msgLen);
 		pdu->get_message().set_dataCoding(dataCoding);
 		transmitter->sendSubmitSmPdu(pdu, NULL, sync, intProps, strProps, objProps, false);
 		__tc_ok__;
@@ -626,25 +628,29 @@ void DbSmeTestCases::submitIncorrectParamsDbSmeCmd(bool sync,
 bool DbSmeTestCases::checkPdu(PduDeliverySm &pdu)
 {
 	__decl_tc__;
-	__tc__("processDbSmeRes.dataCoding");
+	__cfg_addr__(dbSmeAlias);
+	__cfg_str__(dbSmeServiceType);
+	__cfg_int__(dbSmeProtocolId);
+
+	__tc__("processDbSmeRes.checkFields");
+	Address srcAlias;
+	SmppUtil::convert(pdu.get_message().get_source(), &srcAlias);
+	if (srcAlias != dbSmeAlias)
+	{
+		__tc_fail__(1);
+	}
 	if (pdu.get_message().get_dataCoding() != DATA_CODING_SMSC_DEFAULT)
 	{
-		__tc_fail__(1);
+		__tc_fail__(2);
 		return false;
 	}
-	__tc_ok_cond__;
-	__tc__("processDbSmeRes.serviceType");
-	__cfg_str__(dbSmeServiceType);
 	if (dbSmeServiceType != pdu.get_message().get_serviceType())
 	{
-		__tc_fail__(1);
+		__tc_fail__(3);
 	}
-	__tc_ok_cond__;
-	__tc__("processDbSmeRes.protocolId");
-	__cfg_int__(dbSmeProtocolId);
 	if (pdu.get_message().get_protocolId() != dbSmeProtocolId)
 	{
-		__tc_fail__(1);
+		__tc_fail__(4);
 	}
 	__tc_ok_cond__;
 	return true;
