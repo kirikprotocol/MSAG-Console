@@ -81,9 +81,9 @@ namespace smsc { namespace dbsme
 
         /* ---------------- Admin interface implementation ----------------- */
 
-        void addJob(std::string jobId);
-        void removeJob(std::string jobId);
-        void changeJob(std::string jobId);
+        void addJob   (std::string providerId, std::string jobId);
+        void removeJob(std::string providerId, std::string jobId);
+        void changeJob(std::string providerId, std::string jobId);
     };
 
     class DataProvider

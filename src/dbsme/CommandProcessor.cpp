@@ -396,15 +396,15 @@ void DataProvider::process(Command& command)
 
 // TODO: implement all admin methods
 
-void CommandProcessor::addJob(std::string jobId)
+void CommandProcessor::addJob(std::string providerId, std::string jobId)
 {
     throw Exception("Not implemented yet"); 
 }
-void CommandProcessor::removeJob(std::string jobId)
+void CommandProcessor::removeJob(std::string providerId, std::string jobId)
 {
     throw Exception("Not implemented yet"); 
 }
-void CommandProcessor::changeJob(std::string jobId)
+void CommandProcessor::changeJob(std::string providerId, std::string jobId)
 {
     throw Exception("Not implemented yet"); 
 }

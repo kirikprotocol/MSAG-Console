@@ -444,14 +444,14 @@ struct DBSmeAdminHandler : public DBSmeAdmin
         logger.error("Administrator has requested restart");
         setNeedReinit(true);
     }
-    virtual void addJob(std::string jobId) {
-        processor.addJob(jobId);
+    virtual void addJob(std::string providerId, std::string jobId) {
+        processor.addJob(providerId, jobId);
     }
-    virtual void removeJob(std::string jobId) {
-        processor.removeJob(jobId);
+    virtual void removeJob(std::string providerId, std::string jobId) {
+        processor.removeJob(providerId, jobId);
     }
-    virtual void changeJob(std::string jobId) {
-        processor.changeJob(jobId);
+    virtual void changeJob(std::string providerId, std::string jobId) {
+        processor.changeJob(providerId, jobId);
     }
 
     DBSmeAdminHandler(CommandProcessor& processor)

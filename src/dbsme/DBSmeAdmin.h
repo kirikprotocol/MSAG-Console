@@ -14,9 +14,9 @@ namespace smsc { namespace dbsme
     {
         virtual void restart() = 0;
         
-        virtual void addJob(std::string jobId) = 0;
-        virtual void removeJob(std::string jobId) = 0; 
-        virtual void changeJob(std::string jobId) = 0;
+        virtual void addJob   (std::string providerId, std::string jobId) = 0;
+        virtual void removeJob(std::string providerId, std::string jobId) = 0; 
+        virtual void changeJob(std::string providerId, std::string jobId) = 0;
 
 	    virtual ~DBSmeAdmin() {};
 
