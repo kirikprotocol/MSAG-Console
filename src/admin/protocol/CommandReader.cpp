@@ -46,6 +46,7 @@ Command *CommandReader::read()
   std::auto_ptr<XMLByte> buf(new XMLByte [len+1]);
   readMessageBody(buf.get(), len);
 
+  smsc_log_debug(logger, "Received command:\n%s", buf.get());
   // parse message
   Wrapper4InputSource is(new MemBufInputSource (buf.get(), len, "received_command.xml"));
   return parseCommand(is);
@@ -79,6 +80,11 @@ void CommandReader::readMessageBody(XMLByte * buf, uint32_t len)
   }
 }
 
+int CommandReader::getCommandIdByName(const char * const command_name)
+{
+  return Command::getCommandIdByName(command_name);
+}
+
 Command* CommandReader::parseCommand(DOMInputSource &source)
   throw (AdminException)
 {
@@ -89,7 +95,7 @@ Command* CommandReader::parseCommand(DOMInputSource &source)
     DOMDocument *data = reader.read(source);
 
     std::auto_ptr<char> command_name(getCommandName(data));
-    Command::Id id = Command::getCommandIdByName(command_name.get());
+    int id = getCommandIdByName(command_name.get());
 
     if (id == Command::undefined)
     {
@@ -143,7 +149,7 @@ char * CommandReader::getCommandName(const DOMDocument *data)
   return XmlStr(commandElem->getAttribute(XmlStr("name"))).c_release();
 }
 
-Command * CommandReader::createCommand(Command::Id id, const DOMDocument *data) {
+Command * CommandReader::createCommand(int id, const DOMDocument *data) {
   switch (id)
   {
 /*  case Command::get_config:

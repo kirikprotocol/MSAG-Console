@@ -154,7 +154,7 @@ public:
       d.eventQueueSize=equnl;
       d.inProcessingCount=eqhash-equnl;
 
-      perfListener->reportPerformance(&d);
+      perfListener->reportGenPerformance(&d);
 
       for(i=0;i<smsc::system::performance::performanceCounters;i++)
       {

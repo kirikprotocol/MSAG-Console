@@ -16,49 +16,10 @@
 #include <smppgw/smscsignalhandlers.h>
 #include <core/threads/Thread.hpp>
 #include "license/check/license.hpp"
+#include "smppgw/admin/SmppGwCommandDispatcher.h"
+#include "smppgw/admin/SmppGwSocketListener.h"
 
 #include "smppgw/version.inc"
-
-
-
-class SmscRunner : public smsc::core::threads::Thread
-{
-public:
-  SmscRunner(smsc::smppgw::Smsc* smsc)
-    : _app(smsc)
-  {}
-  virtual ~SmscRunner()
-  {
-    _app = 0;
-  }
-
-  virtual int Execute()
-  {
-    try{
-      if (_app != 0)
-        _app->run();
-      else
-        fprintf(stderr,"smsc runner not initialized");
-    }catch(std::exception& e)
-    {
-      fprintf(stderr,"top level exception: %s\n",e.what());
-      return (-1);
-    }
-    catch(...)
-    {
-      fprintf(stderr,"FATAL EXCEPTION!\n");
-      return (-0);
-    }
-    _app->shutdown();
-    _app=0;
-    fprintf(stderr,"SMSC finished\n");
-    return 0;
-  }
-
-protected:
-  smsc::smppgw::Smsc* _app;
-};
-
 
 extern "C" void atExitHandler(void)
 {
@@ -145,35 +106,32 @@ int main(int argc,char* argv[])
       delete app;
       fprintf(stderr,"app deleted\n");
     } else {
-      using namespace smsc::admin::smsc_service;
-      using smsc::util::config::Manager;
+      using namespace smsc::smppgw::admin;
 
-      // init Admin part
-      SmscComponent smsc_component(cfgs);
-      ComponentManager::registerComponent(&smsc_component);
+      SmppGwCommandDispatcher::setGwConfigs(cfgs);
+      SmppGwCommandDispatcher::startGw();
+      fprintf(stderr,"SMPP GW started\n");
 
-      smsc::admin::service::ServiceSocketListener listener;
+      SmppGwSocketListener listener;
       listener.init(admin_host, servicePort);
 
-      smsc::smppgw::registerSmscSignalHandlers(&smsc_component, &listener);
+      smsc::smppgw::registerSmscSignalHandlers(&listener);
       listener.Start();
 
-      // start
-      smsc_component.runSmsc();
+      fprintf(stderr,"SMPP GW admin listener started\n");
 
+      //running...
+      fprintf(stderr,"running...\n");
 
-      //fprintf(stderr,"smsc started\n");
-      //running
       listener.WaitFor();
 
-      //fprintf(stderr,"smsc stopped, finishing\n");
-      // stopped
-      if (smsc_component.isSmscRunning() && !smsc_component.isSmscStopping())
-      smsc_component.stopSmsc();
+      fprintf(stderr,"SMPPGW shutdown...\n");
+      SmppGwCommandDispatcher::stopGw();
+      fprintf(stderr,"SMPPGW stopped\n");
 
-      Manager::deinit();
+      smsc::util::config::Manager::deinit();
 
-      //fprintf(stderr,"smsc finished\n");
+      fprintf(stderr,"all finished\n");
     }
 
   }

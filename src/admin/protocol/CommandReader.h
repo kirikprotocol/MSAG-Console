@@ -18,7 +18,7 @@ class CommandReader
 {
 public:
   CommandReader(Socket * admSocket);
-  ~CommandReader();
+  virtual ~CommandReader();
   Command * read() throw (AdminException);
   bool canRead() throw (AdminException)
   {
@@ -39,10 +39,12 @@ protected:
   char * getCommandName(const DOMDocument *data);
   void readMessageBody(XMLByte * buf, uint32_t len) throw (AdminException);
   uint32_t readMessageLength() throw (AdminException);
+  virtual int getCommandIdByName(const char * const command_name);
+  
   smsc::logger::Logger *logger;
   Socket * sock;
 
-  Command * createCommand(Command::Id id, const DOMDocument *data);
+  virtual Command * createCommand(int id, const DOMDocument *data);
   Command * parseCommand(DOMInputSource &source) throw (AdminException);
 
 private:

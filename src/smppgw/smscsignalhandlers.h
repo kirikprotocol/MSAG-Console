@@ -4,28 +4,22 @@
 #include <signal.h>
 
 //#include <admin/smsc_service//SmscComponent.h>
-#include <admin/service/ServiceSocketListener.h>
+#include "admin/service/ServiceSocketListener.h"
+#include "smppgw/admin/SmppGwCommandDispatcher.h"
+#include "smppgw/admin/SmppGwSocketListener.h"
 
 namespace smsc {
-namespace admin {
-namespace smsc_service {
-  class SmscComponent;
-}
-}
 namespace smppgw {
+
+using namespace smsc::smppgw::admin;
 
 class Smsc;
 
 static const int SHUTDOWN_SIGNAL = SIGTERM;
 
-//using smsc::system::Smsc;
-using smsc::admin::smsc_service::SmscComponent;
-using smsc::admin::service::ServiceSocketListener;
-
-
 
 void registerSmscSignalHandlers(Smsc * smsc);
-void registerSmscSignalHandlers(SmscComponent * smscComponent, ServiceSocketListener* socketListener);
+void registerSmscSignalHandlers(SmppGwSocketListener * socketListener);
 void clearThreadSignalMask();
 
 }

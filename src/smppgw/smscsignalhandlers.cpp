@@ -1,18 +1,17 @@
-#include <smppgw/smscsignalhandlers.h>
-#include <smppgw/smsc.hpp>
-#include <admin/smsc_service/SmscComponent.h>
-#include <admin/service/ServiceSocketListener.h>
+#include "smppgw/smscsignalhandlers.h"
+
+#include "smppgw/smsc.hpp"
+#include "admin/smsc_service/SmscComponent.h"
+#include "admin/service/ServiceSocketListener.h"
 
 namespace smsc {
 namespace smppgw {
 
 using smsc::smppgw::Smsc;
-using smsc::admin::smsc_service::SmscComponent;
-using smsc::admin::service::ServiceSocketListener;
+using namespace smsc::smppgw::admin;
 
 Smsc * _smsc = 0;
-SmscComponent * _smscComponent = 0;
-ServiceSocketListener* _socketListener = 0;
+SmppGwSocketListener* _socketListener = 0;
 
 void clearThreadSignalMask()
 {
@@ -36,8 +35,7 @@ extern "C" void sigAbortDispatcher(int sig)
   {
     if (_socketListener != 0)
       _socketListener->abort();
-    if (_smscComponent != 0)
-      _smscComponent->abort();
+    SmppGwCommandDispatcher::abortGw();
   }
 }
 
@@ -50,8 +48,7 @@ extern "C" void sigDumpDispatcher(int sig)
   {
     if (_socketListener != 0)
       _socketListener->abort();
-    if (_smscComponent != 0)
-      _smscComponent->dump();
+    SmppGwCommandDispatcher::dumpGw();
   }
 }
 
@@ -64,8 +61,7 @@ extern "C" void sigShutdownHandler(int signo)
   {
     if (_socketListener != 0)
       _socketListener->shutdown();
-    if (_smscComponent != 0)
-      _smscComponent->stopSmsc();
+    SmppGwCommandDispatcher::stopGw();
   }
 }
 
@@ -105,9 +101,8 @@ void registerSmscSignalHandlers(Smsc * smsc)
   registerSignalHandlers_internal();
 }
 
-void registerSmscSignalHandlers(SmscComponent * smscComponent, ServiceSocketListener* socketListener)
+void registerSmscSignalHandlers(SmppGwSocketListener * socketListener)
 {
-  _smscComponent = smscComponent;
   _socketListener = socketListener;
   registerSignalHandlers_internal();
 }

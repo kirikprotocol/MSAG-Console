@@ -17,16 +17,13 @@ namespace smsc {
 namespace admin {
 namespace service {
 
-using smsc::admin::AdminException;
-using smsc::admin::protocol::Command;
-using smsc::admin::protocol::CommandCall;
-using smsc::admin::protocol::CommandListComponents;
-using smsc::admin::protocol::Response;
 using smsc::core::network::Socket;
-using smsc::core::synchronization::Mutex;
-using smsc::core::synchronization::MutexGuard;
+using namespace smsc::admin;
+using namespace smsc::admin::protocol;
+using namespace smsc::admin::util;
+using namespace smsc::core::synchronization;
 
-class ServiceCommandDispatcher : public smsc::admin::util::CommandDispatcher
+class ServiceCommandDispatcher : public CommandDispatcher
 {
 public:
 	ServiceCommandDispatcher(Socket * admSocket) : CommandDispatcher(admSocket, "smsc.admin.service.ServiceCommandDispatcher")
