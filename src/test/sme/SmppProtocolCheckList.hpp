@@ -193,8 +193,10 @@ void submitSmTc()
 		"Значение schedule_delivery_time больше максимального validity_period для SC, срок валидности по умолчанию (validity_period = NULL)");
 	__reg_tc__("submitSm.incorrect.waitTimeInvalid3",
 		"Значения schedule_delivery_time меньше validity_period, но оба больше максимального validity_period для SC");
-	__reg_tc__("submitSm.incorrect.dataCoding",
-		"Недопустимые значения dataCoding");
+	__reg_tc__("submitSm.incorrect.dataCodingNormalSme",
+		"Недопустимые значения dataCoding для нормальных sme");
+	__reg_tc__("submitSm.incorrect.dataCodingForceDcSme",
+		"Недопустимые значения dataCoding для больных sme");
 	__reg_tc__("submitSm.incorrect.bothMessageFields",
 		"Заданы оба поля short_message и message_payload");
 	__reg_tc__("submitSm.incorrect.udhiLength",
@@ -296,8 +298,10 @@ void dataSmTc()
 		"Неправильный адрес отправителя");
 	__reg_tc__("dataSm.incorrect.destAddr",
 		"Неправильный адрес получателя");
-	__reg_tc__("dataSm.incorrect.dataCoding",
-		"Недопустимые значения dataCoding");
+	__reg_tc__("dataSm.incorrect.dataCodingNormalSme",
+		"Недопустимые значения dataCoding для нормальных sme");
+	__reg_tc__("dataSm.incorrect.dataCodingForceDcSme",
+		"Недопустимые значения dataCoding для больных sme");
 	__reg_tc__("dataSm.incorrect.udhiLength",
 		"Длина udh при выставленном флаге udhi задана некорректно");
 	__reg_tc__("dataSm.incorrect.serviceTypeLength",
