@@ -1211,8 +1211,10 @@ USHORT_T Et96MapDelimiterInd(
         throw runtime_error(
           FormatText("MAP::Et96MapDelimiterInd: dialog opened error 0x%x",result));
       __trace2__("MAP::Et96MapDelimiterInd: dialog opened");
-      dialog->state = MAPST_WaitSubmitCmdConf;
-      SendSubmitCommand(dialog.get());
+      //dialog->state = MAPST_WaitSubmitCmdConf;
+      //SendSubmitCommand(dialog.get());
+      dialog->state = MAPST_ImsiWaitRInfo;
+      SendRInfo(dialog.get());
       break;
     case MAPST_WaitSmsMODelimiter:
       open_confirmed = true;
