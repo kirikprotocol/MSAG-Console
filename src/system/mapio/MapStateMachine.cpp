@@ -1539,15 +1539,17 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
               if ( it != ussd_map.end() ) {
                 dialogid_map = it->second;
                 dialog_ssn = USSD_SSN;
-                __map_trace2__("%s: ussd lock found for %lld dialogid 0x%x ssn %d  (state %d)",__func__,sequence,dialogid_map,dialog_ssn);
                 dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_map,dialog_ssn));
                 if( !dialog.isnull() ) {
+                  __map_trace2__("%s: ussd lock found for %lld dialogid 0x%x ssn %d  (state %d)",__func__,sequence,dialogid_map,dialog_ssn,dialog->state);
                   if ( !dialog->isUSSD )
                     throw MAPDIALOG_FATAL_ERROR(
                       FormatText("MAP::putCommand: Opss, NO ussd dialog with id x%x, seq: %s",dialogid_smsc,s_seq.c_str()));
                   __require__(dialog->ssn == dialog_ssn);
-                  __map_trace2__("state %d for dlg 0x%p", dialog->state, dialog.get() );
                   dlg_found = true;
+                } else {
+                  __map_trace2__("%s: ussd lock found for %lld dialogid 0x%x but no dialog exists, erase ussd lock", __func__,sequence,dialogid_map);
+                  ussd_map.erase(sequence);
                 }
               }
             }
