@@ -198,8 +198,9 @@ int main(int argc,char* argv[])
 
       smsc::admin::service::ServiceSocketListener listener;
       listener.init(admin_host, servicePort);
-      listener.Start();
+
       smsc::system::registerSmscSignalHandlers(&smsc_component, &listener);
+      listener.Start();
       
       // start
       smsc_component.runSmsc();

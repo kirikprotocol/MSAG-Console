@@ -484,7 +484,7 @@ throw (AdminException)
     try
     {
       smsc_app_runner->stop();
-//      smsc_app_runner->WaitFor();
+      smsc_app_runner->WaitFor();
       smsc_app_runner.reset(0);
       isStopping = false;
     }
@@ -519,7 +519,7 @@ void SmscComponent::abort()
     try
     {
       smsc_app_runner->abort();
-//      smsc_app_runner->WaitFor();
+      smsc_app_runner->WaitFor();
       smsc_app_runner.reset(0);
     }
     catch (smsc::util::Exception &e)
@@ -546,7 +546,7 @@ void SmscComponent::dump()
     try
     {
       smsc_app_runner->dump();
-//      smsc_app_runner->WaitFor();
+      smsc_app_runner->WaitFor();
       smsc_app_runner.reset(0);
     }
     catch (smsc::util::Exception &e)

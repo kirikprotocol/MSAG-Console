@@ -105,7 +105,7 @@ protected:
 private:
 	void setLogCat(const char * catStr);
 
-	class SmscAppRunner/* : public Thread*/
+	class SmscAppRunner : public Thread
 	{
 	public:
 		SmscAppRunner(SmscConfigs &configs)
@@ -145,10 +145,6 @@ private:
 			_app->shutdown();
 			fprintf(stderr,"SMSC finished\n");
 			return 0;
-		}
-		
-		void Start() {
-		  Execute();
 		}
 
 		void stop()
