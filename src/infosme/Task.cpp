@@ -2,6 +2,8 @@
 #include "Task.h"
 #include "SQLAdapters.h"
 
+extern bool isMSISDNAddress(const char* string);
+
 namespace smsc { namespace infosme 
 {
 
@@ -153,7 +155,7 @@ Statement* Task::getStatement(Connection* connection, const char* id, const char
     return statement;
 }
 
-const char* NEW_TABLE_STATEMENT_SQL = (const char*)
+const char* NEW_TABLE_STATEMENT_SQL = 
 "CREATE TABLE %s (\n"
 "ID             NUMBER          NOT NULL,\n"
 "STATE          NUMBER(3)       NOT NULL,\n"
@@ -161,6 +163,9 @@ const char* NEW_TABLE_STATEMENT_SQL = (const char*)
 "SEND_DATE      DATE            NOT NULL,\n"
 "MESSAGE        VARCHAR2(2000)  NULL     \n"
 ")";
+const char* NEW_INDEX_STATEMENT_SQL = 
+"CREATE INDEX %s_ID_IDX ON %s (ID)";
+
 void Task::createTable()
 {
     MutexGuard guard(createTableLock);
@@ -177,13 +182,19 @@ void Task::createTable()
             
             std::auto_ptr<char> createTableSql(prepareSqlCall(NEW_TABLE_STATEMENT_SQL));
             statement = connection->createStatement(createTableSql.get());
-            //printf("Create table stmt: \n%s\n", createTableSql.get());
             if (!statement) 
                 throw Exception("Failed to create statement.");
             statement->execute();
+            delete statement;
 
-            // TODO: create indecies on user table here !!!
-
+            char indexSql[2048];
+            const char* tableName = (info.tablePrefix+info.id).c_str();
+            sprintf(indexSql, NEW_INDEX_STATEMENT_SQL, tableName, tableName);
+            statement = connection->createStatement(createTableSql.get());
+            if (!statement) 
+                throw Exception("Failed to create statement.");
+            statement->execute();
+            
             connection->commit();
             bTableCreated = true;
         } 
@@ -270,9 +281,9 @@ void Task::beginProcess()
             if (!fetched) break;
 
             const char* abonentAddress = rs->getString(1);
-            // TODO: check abonent address here !!! continue if invalid
-            if (!abonentAddress || abonentAddress[0] == '\0') {
-                logger.warn("Invalid abonent number selected.");
+            if (!abonentAddress || abonentAddress[0] == '\0' || !isMSISDNAddress(abonentAddress)) {
+                logger.warn("Invalid abonent number '%s' selected.", 
+                            abonentAddress ? abonentAddress:"-");
                 continue;
             }
             
