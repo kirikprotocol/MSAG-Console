@@ -45,7 +45,7 @@ void profilerTc()
 		"Неправильный текст команды");
 	//updateProfile.ack
 	__reg_tc__("updateProfile.ack",
-		"Сообщения от менеджера профилей");
+		"Ответные сообщения от менеджера профилей");
 	__reg_tc__("updateProfile.ack.checkFields",
 		"Поля pdu соответствуют настройкам менеджера профилей");
 	__reg_tc__("updateProfile.ack.checkText",
@@ -68,12 +68,18 @@ void profilerTc()
 
 void abonentInfoTc()
 {
+	//queryAbonentInfo
 	__reg_tc__("queryAbonentInfo",
 		"Отправка smpp сообщений abonent info sme");
 	__reg_tc__("queryAbonentInfo.cmdTextDefault",
 		"Текст команды в дефолтной кодировке SC");
 	__reg_tc__("queryAbonentInfo.cmdTextUcs2",
 		"Текст команды в кодировке UCS2");
+	__reg_tc__("queryAbonentInfo.smppAddr",
+		"Отправка команды на smpp адрес abonent info sme");
+	__reg_tc__("queryAbonentInfo.mapAddr",
+		"Отправка команды на map (mobile) адрес abonent info sme");
+	//queryAbonentInfo.correct
 	__reg_tc__("queryAbonentInfo.correct",
 		"Отправка корректных запросов на abonent info sme");
 	__reg_tc__("queryAbonentInfo.correct.existentAddr",
@@ -84,6 +90,7 @@ void abonentInfoTc()
 		"Команда с адресом в унифицированном (.ton.npi.addr) формате");
 	__reg_tc__("queryAbonentInfo.correct.humanFormat",
 		"Команда с адресом в сокращенной (+7902... или 83832...) записи");
+	//queryAbonentInfo.incorrect
 	__reg_tc__("queryAbonentInfo.incorrect",
 		"Отправка некорректных запросов на abonent info sme");
 	__reg_tc__("queryAbonentInfo.incorrect.addrFormat",
@@ -94,9 +101,12 @@ void abonentInfoTc()
 		"Недопустимые символы в строке адреса");
 	__reg_tc__("queryAbonentInfo.incorrect.extraWords",
 		"В тексте команды лишние слова (должен быть только адрес)");
-	__reg_tc__("processAbonentInfo.checkFields",
+	//queryAbonentInfo.ack
+	__reg_tc__("queryAbonentInfo.ack",
+		"Ответные сообщения от abonent info sme");
+	__reg_tc__("queryAbonentInfo.ack.checkFields",
 		"Поля pdu соответствуют настройкам abonent info sme");
-	__reg_tc__("processAbonentInfo.checkText",
+	__reg_tc__("queryAbonentInfo.ack.checkText",
 		"Тект сообщений правильный");
 }
 
