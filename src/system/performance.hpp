@@ -56,8 +56,13 @@ struct SmePerformanceCounter
     uint16_t   delivered, rescheduled;
     uint16_t   tempError, permError;
 
-    SmePerformanceCounter() 
-        : accepted(0), rejected(0), delivered(0), rescheduled(0), tempError(0), permError(0) {};
+    SmePerformanceCounter() { clear(); };
+    
+    inline void clear() {
+        accepted  = 0; rejected = 0;
+        delivered = 0; rescheduled = 0;
+        tempError = 0; permError = 0;
+    };
 };
 
 class SmePerformanceMonitor
@@ -250,6 +255,7 @@ public:
         while (smeCounters.Next(sme, smeCounter))
             if (sme && sme[0] && smeCounter)
                 smePerfDataSize += strlen(sme)+sizeof(uint16_t)*13;
+          
         smePerfDataSize += (sizeof(uint32_t)+sizeof(uint16_t)*2)*errCounters.Count();
 
         uint8_t* data = new uint8_t[smePerfDataSize];
@@ -309,6 +315,7 @@ public:
             cnt = permErrorCounters.Exists(sme) ? permErrorCounters.Get(sme):0;
             i16val = (cnt) ? htons((uint16_t)cnt->Avg()):0;
             memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
+            smeCounter->clear();
         }   
 
         // uint16_t     Error(s) count
@@ -316,7 +323,7 @@ public:
         memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
 
         IntHash<uint16_t>::Iterator it = errCounters.First();
-        int errcode = 0; uint16_t counter = 0;
+        int errcode = 0; uint16_t* counter = 0;
         while (it.Next(errcode, counter))
         {
             if (!counter) continue;
@@ -324,14 +331,14 @@ public:
             i32val = htonl((uint32_t)errcode);
             memcpy(packet, &i32val, sizeof(i32val)); packet += sizeof(i32val);
             //uint16_t(2)  error counter + avg (hour)
-            i16val = htons(counter);
+            i16val = htons(*counter);
             memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
             TimeSlotCounter<int>* cnt = errorCounters.Exist(errcode) ? errorCounters.Get(errcode):0;
             i16val = (cnt) ? htons((uint16_t)cnt->Avg()):0;
             memcpy(packet, &i16val, sizeof(i16val)); packet += sizeof(i16val);
+            *counter = 0;
         }
         
-        errCounters.Empty(); smeCounters.Empty();
         return data;
     };
 };
