@@ -9,6 +9,7 @@ import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.lib.backend.sme.SmeStatus;
 import ru.sibinco.smppgw.backend.protocol.commands.*;
 import ru.sibinco.smppgw.backend.sme.GwSme;
+import ru.sibinco.smppgw.backend.sme.SmscInfo;
 import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
 import org.w3c.dom.Element;
 
@@ -66,7 +67,21 @@ public class Gateway extends Proxy
       throw new SibincoException("Couldn't update sme info, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
   }
 
-   public synchronized List loadRoutes(final GwRoutingManager gwRoutingManager)
+  public void regSmsc(final SmscInfo SmscInfo) throws SibincoException
+  {
+    final Response response = super.runCommand(new RegSmsc(SmscInfo));
+    if (Response.StatusOk != response.getStatus())
+      throw new SibincoException("Couldn't register Smsc , nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+  }
+
+  public void unregSmsc(final SmscInfo SmscInfo) throws SibincoException
+   {
+     final Response response = super.runCommand(new UnregSmsc(SmscInfo));
+     if (Response.StatusOk != response.getStatus())
+       throw new SibincoException("Couldn't unregister Smsc , nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+   }
+
+  public synchronized List loadRoutes(final GwRoutingManager gwRoutingManager)
           throws SibincoException
   {
     gwRoutingManager.trace();
