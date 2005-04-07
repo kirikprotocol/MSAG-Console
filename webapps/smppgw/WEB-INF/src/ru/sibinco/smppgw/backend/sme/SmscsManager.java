@@ -42,6 +42,14 @@ public class SmscsManager
     this.smscsUnreg = smscsUnreg;
   }
 
+   public void store(final Config gwConfig) throws SibincoException
+  {
+    gwConfig.removeSection(SECTION_NAME);
+    for (Iterator i = smscs.values().iterator(); i.hasNext();) {
+      final SmscInfo smscInfo = (SmscInfo) i.next();
+      smscInfo.store(gwConfig, SECTION_NAME); //todo: ??!
+    }
+  }
   public void store(final Config gwConfig,final Gateway gateway) throws SibincoException
   {
     for (Iterator i = smscsUnreg.iterator(); i.hasNext();) {
