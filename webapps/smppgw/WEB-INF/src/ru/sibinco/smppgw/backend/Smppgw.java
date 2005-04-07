@@ -3,30 +3,16 @@ package ru.sibinco.smppgw.backend;
 import ru.sibinco.lib.backend.service.Service;
 import ru.sibinco.lib.backend.service.ServiceInfo;
 import ru.sibinco.lib.backend.service.Type;
-import ru.sibinco.lib.backend.util.xml.Utils;
-import ru.sibinco.lib.backend.util.Functions;
-import ru.sibinco.lib.backend.util.WebAppFolders;
 import ru.sibinco.lib.backend.sme.Sme;
 import ru.sibinco.lib.backend.sme.SmeStatus;
-import ru.sibinco.lib.backend.protocol.Response;
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
-import ru.sibinco.smppgw.backend.protocol.alias.AliasSet;
-import ru.sibinco.smppgw.backend.protocol.commands.LoadRoutes;
-import ru.sibinco.smppgw.backend.protocol.commands.CommandCall;
 import ru.sibinco.lib.Constants;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Iterator;
-import java.io.*;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.FactoryConfigurationError;
-import javax.xml.parsers.ParserConfigurationException;
 
 /**
  * Created by IntelliJ IDEA.
