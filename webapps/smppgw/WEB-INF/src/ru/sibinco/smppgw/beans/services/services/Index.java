@@ -84,7 +84,7 @@ public class Index extends TabledBeanImpl implements TabledBean
   {
     if (null == smeManager) {
       try {
-        throw new SibincoException( "Service Manager is null!!!");
+        throw new SibincoException( "Sme Manager is null!!!");
       } catch (SibincoException e) {
         e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
       }
@@ -424,7 +424,8 @@ public class Index extends TabledBeanImpl implements TabledBean
   }
    protected Collection getDataSource()
   {
-    return new ArrayList();//appContext.getGwRoutingManager().getRoutes().values();
+    return appContext.getGwSmeManager().getSmes().values();
+    //return new ArrayList();//appContext.getGwRoutingManager().getRoutes().values();
   }
 
   protected void delete()

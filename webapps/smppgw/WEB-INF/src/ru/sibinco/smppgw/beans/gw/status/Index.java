@@ -7,6 +7,7 @@ import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.lib.backend.service.ServiceInfo;
 import ru.sibinco.smppgw.Constants;
+import ru.sibinco.smppgw.backend.Gateway;
 import ru.sibinco.smppgw.beans.SmppgwBean;
 import ru.sibinco.smppgw.beans.SmppgwJspException;
 
@@ -127,7 +128,8 @@ public class Index extends SmppgwBean
   {
     try {
       final Config gwConfig = appContext.getGwConfig();
-      appContext.getSmscsManager().store(gwConfig);
+      Gateway gateway=appContext.getGateway();
+      appContext.getSmscsManager().store(gwConfig,gateway);
       appContext.getGwConfig().save();
       try {
         appContext.getGateway().apply("smscs");

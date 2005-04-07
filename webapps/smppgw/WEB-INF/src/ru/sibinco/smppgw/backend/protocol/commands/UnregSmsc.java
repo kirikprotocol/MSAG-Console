@@ -13,10 +13,10 @@ import ru.sibinco.smppgw.backend.sme.SmscInfo;
  */
 public class UnregSmsc extends Command
 {
-  public UnregSmsc(SmscInfo smscInfo) throws SibincoException
+  public UnregSmsc(String smscId) throws SibincoException
 
   {
     super("unregSme", "file:///command_gw.dtd");
-    createStringParam("id", smscInfo.getId());
+    createStringParam("id", smscId);
   }
 }

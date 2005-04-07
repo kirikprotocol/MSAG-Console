@@ -2,10 +2,10 @@ package ru.sibinco.smppgw.beans.gw.smscs;
 
 import ru.sibinco.lib.bean.TabledBean;
 import ru.sibinco.smppgw.backend.sme.GwSme;
+import ru.sibinco.smppgw.backend.sme.SmscsManager;
 import ru.sibinco.smppgw.beans.TabledBeanImpl;
 
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 
 
 /**
@@ -20,13 +20,15 @@ public class Index extends TabledBeanImpl implements TabledBean
 
   protected void delete()
   {
+    SmscsManager smscsManager=appContext.getSmscsManager();
     for (Iterator i = checkedSet.iterator(); i.hasNext();) {
       final String smscId = (String) i.next();
       final GwSme sme = (GwSme) appContext.getGwSmeManager().getSmes().get(smscId);
       if (null != sme)
         sme.setSmscInfo(null);
     }
-    appContext.getSmscsManager().getSmscs().keySet().removeAll(checkedSet);
+    smscsManager.getSmscs().keySet().removeAll(checkedSet);
+    smscsManager.setSmscsUnreg(checkedSet);
     appContext.getStatuses().setSmscsChanged(true);
   }
 }
