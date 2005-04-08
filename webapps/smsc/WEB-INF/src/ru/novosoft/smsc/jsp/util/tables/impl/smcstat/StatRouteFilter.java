@@ -81,14 +81,12 @@ public class StatRouteFilter implements Filter
     long filterProviderId = this.providerId != null ? this.providerId.longValue():-1;
     long filterCategoryId = this.categoryId != null ? this.categoryId.longValue():-1;
     boolean result = (filterProviderId == -1 || providerId == filterProviderId) && (filterCategoryId == -1 || categoryId == filterCategoryId);
-/*    boolean result = ((this.providerId == null || this.providerId.longValue() == providerId)
-            && (this.categoryId == null ||  this.categoryId.longValue() == categoryId));*/
-    System.out.println("statfilter: fpi="+filterProviderId+
+/*    System.out.println("statfilter: fpi="+filterProviderId+
         " pi="+providerId+
         " fci="+filterCategoryId+
         " ci="+categoryId+
         " res = "+result
-    );
+    );*/
     return result;
 
   }

@@ -76,7 +76,7 @@ page_small_menu_end(out);
 <tr class=row<%=(rowN++)&1%>>
 			<th>&nbsp;&nbsp;&nbsp;&nbsp;Provider&nbsp;</th>
 			<td><select name=providerId id=providerId >
-				<option value="" ></option>
+				<option value="-1" ></option>
 				<%for (Iterator iprov = bean.getProviders().iterator(); iprov.hasNext(); )
 				{
 					Provider provider = (Provider) iprov.next();
@@ -96,7 +96,7 @@ page_small_menu_end(out);
     <tr class=row<%=(rowN++)&1%>>
 			<th>&nbsp;&nbsp;&nbsp;&nbsp;Category&nbsp;</th>
 			<td><select name=categoryId id=categoryId >
-				<option value="" ></option>
+				<option value="-1" ></option>
 				<%for (Iterator jcat = bean.getCategories().iterator(); jcat.hasNext(); )
 				{
 				 Category category = (Category) jcat.next();
