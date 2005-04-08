@@ -75,9 +75,14 @@ public class StatRouteFilter implements Filter
     Long providerId = (Long) statitem.getValue("providerId");
     Long categoryId = (Long) statitem.getValue("categoryId");
 
-
-    return ((this.providerId == null || this.providerId == providerId)
-            && (this.categoryId == null || this.categoryId == categoryId));
+    boolean result = ((this.providerId == null || providerId == null || this.providerId.longValue() == providerId.longValue())
+            && (this.categoryId == null || categoryId == null || this.categoryId.longValue() == categoryId.longValue()));
+    System.out.println("statfilter: t.pi="+(this.providerId==null?"null":this.providerId.toString())+
+        " pi="+(providerId==null?"null":providerId.toString())+
+        " t.ci="+(this.categoryId==null?"null":this.categoryId.toString())+
+        " ci="+(categoryId==null?"null":categoryId.toString())
+    );
+    return result;
 
   }
 
