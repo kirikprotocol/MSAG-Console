@@ -6,6 +6,8 @@ package ru.novosoft.smsc.jsp.util.tables.impl.smcstat;
 
 import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.Filter;
+import ru.novosoft.smsc.admin.provider.Provider;
+import ru.novosoft.smsc.admin.category.Category;
 
 public class StatRouteFilter implements Filter
 {
@@ -72,15 +74,20 @@ public class StatRouteFilter implements Filter
     if (isEmpty())
       return true;
     StatRouteDataItem statitem = (StatRouteDataItem) item;
-    Long providerId = (Long) statitem.getValue("providerId");
-    Long categoryId = (Long) statitem.getValue("categoryId");
-
-    boolean result = ((this.providerId == null || providerId == null || this.providerId.longValue() == providerId.longValue())
-            && (this.categoryId == null || categoryId == null || this.categoryId.longValue() == categoryId.longValue()));
-    System.out.println("statfilter: t.pi="+(this.providerId==null?"null":this.providerId.toString())+
-        " pi="+(providerId==null?"null":providerId.toString())+
-        " t.ci="+(this.categoryId==null?"null":this.categoryId.toString())+
-        " ci="+(categoryId==null?"null":categoryId.toString())
+    Provider provider = (Provider) statitem.getValue("provider");
+    Category category = (Category) statitem.getValue("category");
+    long providerId = provider!=null?provider.getId():-1;
+    long categoryId = category!=null?category.getId():-1;
+    long filterProviderId = this.providerId != null ? this.providerId.longValue():-1;
+    long filterCategoryId = this.categoryId != null ? this.categoryId.longValue():-1;
+    boolean result = providerId == filterProviderId && categoryId == filterCategoryId;
+/*    boolean result = ((this.providerId == null || this.providerId.longValue() == providerId)
+            && (this.categoryId == null ||  this.categoryId.longValue() == categoryId));*/
+    System.out.println("statfilter: fpi="+filterProviderId+
+        " pi="+providerId+
+        " fci="+filterCategoryId+
+        " ci="+categoryId+
+        " res = "+result
     );
     return result;
 
