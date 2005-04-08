@@ -84,7 +84,7 @@ page_small_menu_end(out);
           long ProviderId=provider.getId();
           String ProviderIdStr=String.valueOf(ProviderId);
           String encProviderName = StringEncoderDecoder.encode(ProviderName);
-          if( ProviderId == bean.getProviderId().longValue() ) {
+          if( bean.getProviderId() != null && ProviderId == bean.getProviderId().longValue() ) {
             %><option selected value="<%=ProviderId%>" ><%=encProviderName%></option><%
           } else {
 					  %><option value="<%=ProviderId%>" ><%=encProviderName%></option><%
@@ -104,7 +104,7 @@ page_small_menu_end(out);
           String CategoryIdStr=String.valueOf(CategoryId);
 					String CategoryName =category.getName();
           String encCategoryName = StringEncoderDecoder.encode(CategoryName);
-          if( CategoryId == bean.getCategoryId().longValue()) {
+          if( bean.getCategoryId() != null && CategoryId == bean.getCategoryId().longValue()) {
 					  %><option selected value="<%=CategoryId%>" ><%=encCategoryName%></option><%
           } else {
 					  %><option value="<%=CategoryId%>" ><%=encCategoryName%></option><%
