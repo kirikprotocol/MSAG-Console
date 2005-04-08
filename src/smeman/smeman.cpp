@@ -5,11 +5,14 @@
 #include "logger/Logger.h"
 #include <stdexcept>
 #include <string>
+#include "admin/service/Variant.h"
+#include "admin/service/Type.h"
 
 namespace smsc {
 namespace smeman {
 
 using namespace std;
+using namespace smsc::admin::service;
 
 using core::synchronization::MutexGuard;
 #define __synchronized__ MutexGuard mguard(lock);
@@ -29,6 +32,77 @@ __synchronized__
   if ( index != INVALID_SME_INDEX ) throw runtime_error("Already exists");
   records.push_back(record.release());
 }
+
+void SmeManager::statusSme(Variant& result){ 
+    MutexGuard mg(mutex);
+    Records::iterator it = records.begin();
+    std::string str;
+    
+    for ( ; it != records.end(); ++it )
+    {
+        std::string status;
+        status += (*it)->info.systemId;
+        status += ",";
+        if ((*it)->info.internal)
+        {
+            status += "internal";
+        }
+        else
+        {
+            (*it)->mutex.Lock();
+            bool rv=(*it)->proxy!=NULL;
+            (*it)->mutex.Unlock();
+            
+            if (!rv)
+            {
+                status += "disconnected";
+            }
+            else
+            {
+                SmeProxy * smeProxy = (*it)->proxy;
+                try {
+                    std::string tmpStr;
+                    switch (smeProxy->getBindMode())
+                    {
+                    case smeTX:
+                        tmpStr += "tx,";
+                        break;
+                    case smeRX:
+                        tmpStr += "rx,";
+                        break;
+                    case smeTRX:
+                        tmpStr += "trx,";
+                        break;
+                    default:
+                        tmpStr += "unknown,";
+                    }
+                    char inIP[128], outIP[128];
+                    if (smeProxy->getPeers(inIP,outIP))
+                    {
+                        tmpStr += inIP;
+                        tmpStr += ",";
+                        tmpStr += outIP;
+                    }
+                    else
+                    {
+                        tmpStr += "unknown,unknown";
+                    }
+                    status += tmpStr;
+                } catch (...) {
+                    status += "unknown,unknown,unknown";
+                }
+            }
+        }
+        result.appendValueToStringList(status.c_str());
+
+        //str += status;
+        //str += '\n';
+    }
+
+    /*ofstream fout("/tmp/smppgw.log");
+    fout.write(str.c_str(), strlen(str.c_str()));
+    fout.close();*/
+  }
 
 void SmeManager::deleteSme(const SmeSystemId& systemId)
 {

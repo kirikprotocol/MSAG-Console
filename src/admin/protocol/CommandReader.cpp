@@ -88,7 +88,6 @@ int CommandReader::getCommandIdByName(const char * const command_name)
 Command* CommandReader::parseCommand(DOMInputSource &source)
   throw (AdminException)
 {
-
   try
   {
     smsc::util::xml::DOMTreeReader reader;

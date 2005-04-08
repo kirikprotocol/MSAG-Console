@@ -21,12 +21,16 @@
 #include "smedispatch.h"
 #include "dispatch.h"
 #include "core/synchronization/Mutex.hpp"
+#include "admin/service/Variant.h"
+#include "admin/service/Type.h"
+
 
 namespace smsc {
 namespace smeman {
 
 using std::runtime_error;
 using std::string;
+using namespace smsc::admin::service;
 
 class SmeProxyWrap;
 
@@ -175,7 +179,7 @@ class SmeManager :
 
   mutable Mutex lock;
   SmeProxyDispatcher dispatcher;
-  Records records;
+    Records records;
   SmeIndex internalLookup(const SmeSystemId& systemId) const;
 public:
   virtual ~SmeManager()
@@ -248,6 +252,10 @@ public:
       __warning2__("Sme %s %s",(*it)->info.systemId.c_str(),(*it)->proxy?"registered":"unregistered");
     }
   }
+
+  //=======================================
+  virtual void statusSme(Variant& result);
+  //=========================================
 };
 
 } // namespace smeman
