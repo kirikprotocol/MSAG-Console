@@ -129,9 +129,9 @@ public class Index extends SmppgwBean
     try {
       final Config gwConfig = appContext.getGwConfig();
       Gateway gateway=appContext.getGateway();
-      appContext.getSmscsManager().store(gwConfig,gateway);
-      appContext.getGwConfig().save();
       try {
+        appContext.getSmscsManager().store(gwConfig,gateway);
+        appContext.getGwConfig().save();
         appContext.getGateway().apply("smscs");
       } catch (SibincoException e) {
         if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
