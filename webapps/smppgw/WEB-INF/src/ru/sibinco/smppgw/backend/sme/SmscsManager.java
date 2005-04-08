@@ -15,6 +15,7 @@ public class SmscsManager
 {
   private Map smscs = Collections.synchronizedMap(new HashMap());
   private Set smscsUnreg =new HashSet();
+  private Set smscsNew =new HashSet();
   private static final String SECTION_NAME = "smsc-connections";
 
   public SmscsManager(final Config gwConfig) throws Config.WrongParamTypeException, Config.ParamNotFoundException
@@ -42,12 +43,22 @@ public class SmscsManager
     this.smscsUnreg = smscsUnreg;
   }
 
+  public Set getSmscsNew()
+  {
+    return smscsNew;
+  }
+
+  public void setSmscsNew(Set smscsNew)
+  {
+    this.smscsNew = smscsNew;
+  }
+
    public void store(final Config gwConfig) throws SibincoException
   {
     gwConfig.removeSection(SECTION_NAME);
     for (Iterator i = smscs.values().iterator(); i.hasNext();) {
       final SmscInfo smscInfo = (SmscInfo) i.next();
-      smscInfo.store(gwConfig, SECTION_NAME); //todo: ??!
+      smscInfo.store(gwConfig, SECTION_NAME); 
     }
   }
   public void store(final Config gwConfig,final Gateway gateway) throws SibincoException
@@ -60,8 +71,10 @@ public class SmscsManager
     gwConfig.removeSection(SECTION_NAME);
     for (Iterator i = smscs.values().iterator(); i.hasNext();) {
       final SmscInfo smscInfo = (SmscInfo) i.next();
-      smscInfo.store(gwConfig, SECTION_NAME); //todo: ??!
-      gateway.regSmsc(smscInfo);
+      smscInfo.store(gwConfig, SECTION_NAME);
+      if (smscsNew.contains(smscInfo.getId()))
+        gateway.regSmsc(smscInfo);
     }
+    smscsNew.clear();
   }
 }

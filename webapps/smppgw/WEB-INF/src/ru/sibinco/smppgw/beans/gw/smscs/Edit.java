@@ -65,6 +65,7 @@ public class Edit extends EditBean
         sme.setSmscInfo(info);
       }
     }
+    appContext.getSmscsManager().getSmscsNew().add(id);
     appContext.getStatuses().setSmscsChanged(true);
     throw new DoneException();
   }
