@@ -7,6 +7,7 @@
 #include <string>
 #include "admin/service/Variant.h"
 #include "admin/service/Type.h"
+#include "smppgw/gwsme.hpp"
 
 namespace smsc {
 namespace smeman {
@@ -43,55 +44,55 @@ void SmeManager::statusSme(Variant& result){
         std::string status;
         status += (*it)->info.systemId;
         status += ",";
-        if ((*it)->info.internal)
+        
+
+        (*it)->mutex.Lock();
+        bool rv=(*it)->proxy!=NULL;
+        // if gateway check isConnected method.
+        if ((*it)->info.internal){
+            rv = ((smsc::smppgw::GatewaySme*)((*it)->proxy))->isConnected();
+        }
+        (*it)->mutex.Unlock();
+            
+        if (!rv)
         {
-            status += "internal";
+            status += "disconnected";
         }
         else
         {
-            (*it)->mutex.Lock();
-            bool rv=(*it)->proxy!=NULL;
-            (*it)->mutex.Unlock();
-            
-            if (!rv)
-            {
-                status += "disconnected";
+            SmeProxy * smeProxy = (*it)->proxy;
+            try {
+               std::string tmpStr;
+               switch (smeProxy->getBindMode())
+               {
+               case smeTX:
+                    tmpStr += "tx,";
+                    break;
+               case smeRX:
+                    tmpStr += "rx,";
+                    break;
+               case smeTRX:
+                    tmpStr += "trx,";
+                    break;
+               default:
+                    tmpStr += "unknown,";
+               }
+               char inIP[128], outIP[128];
+               if (smeProxy->getPeers(inIP,outIP))
+               {
+                   tmpStr += inIP;
+                   tmpStr += ",";
+                   tmpStr += outIP;
+               }
+               else
+               {
+                   tmpStr += "unknown,unknown";
+               }
+               status += tmpStr;
+            } catch (...) {
+               status += "unknown,unknown,unknown";
             }
-            else
-            {
-                SmeProxy * smeProxy = (*it)->proxy;
-                try {
-                    std::string tmpStr;
-                    switch (smeProxy->getBindMode())
-                    {
-                    case smeTX:
-                        tmpStr += "tx,";
-                        break;
-                    case smeRX:
-                        tmpStr += "rx,";
-                        break;
-                    case smeTRX:
-                        tmpStr += "trx,";
-                        break;
-                    default:
-                        tmpStr += "unknown,";
-                    }
-                    char inIP[128], outIP[128];
-                    if (smeProxy->getPeers(inIP,outIP))
-                    {
-                        tmpStr += inIP;
-                        tmpStr += ",";
-                        tmpStr += outIP;
-                    }
-                    else
-                    {
-                        tmpStr += "unknown,unknown";
-                    }
-                    status += tmpStr;
-                } catch (...) {
-                    status += "unknown,unknown,unknown";
-                }
-            }
+
         }
         result.appendValueToStringList(status.c_str());
 
