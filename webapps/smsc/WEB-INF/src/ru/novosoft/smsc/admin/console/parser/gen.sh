@@ -9,4 +9,4 @@ java -classpath $CLASSPATH antlr.Tool lexer.g
 java -classpath $CLASSPATH antlr.Tool parser.g
 echo Code generation done.
 
-javac -classpath $CLASSPATH -d $CLASSOUTPATH *.java
+#javac -classpath $CLASSPATH -d $CLASSOUTPATH *.java

@@ -67,6 +67,7 @@ add returns [Command cmd] {
 	| TGT_DL	cmd = adddl
 	| TGT_DLSUB	cmd = adddlsubmitter
 	| TGT_DLMEM	cmd = adddlmember
+	| TGT_SME	cmd = addsme
 	;
 	
 /* ----------------------- Del action parser ---------------------- */
@@ -82,6 +83,7 @@ del returns [Command cmd] {
 	| TGT_DL	cmd = deldl
 	| TGT_DLSUB	cmd = deldlsubmitter
 	| TGT_DLMEM	cmd = deldlmember
+	| TGT_SME	cmd = delsme
 	;
 /* ----------------------- Alt action parser ---------------------- */
 alt returns [Command cmd] {
@@ -94,6 +96,7 @@ alt returns [Command cmd] {
 	| TGT_PRINCIPAL	cmd = altprincipal
 	| TGT_ACL	cmd = altacl
 	| TGT_DL	cmd = altdl
+	| TGT_SME	cmd = altsme
 	;
 /* ----------------------- Lst action parser ---------------------- */
 lst returns [Command cmd] {
@@ -103,8 +106,9 @@ lst returns [Command cmd] {
 	| TGT_ALIAS	{ cmd = new AliasListCommand();     }
 	| TGT_SUBJECT	{ cmd = new SubjectListCommand();   }
 	| TGT_PRINCIPAL	{ cmd = new PrincipalListCommand(); }
-	| TGT_ACL	{ cmd = new AclListCommand(); }
+	| TGT_ACL	{ cmd = new AclListCommand();       }
 	| TGT_DL	{ cmd = new DistributionListListCommand(); }
+	| TGT_SME	{ cmd = new SmeListCommand();       }
 	;
 /* ----------------------- View action parser --------------------- */
 view returns [Command cmd] {
@@ -117,6 +121,7 @@ view returns [Command cmd] {
 	| TGT_PRINCIPAL	cmd = viewprincipal
 	| TGT_ACL	cmd = viewacl
 	| TGT_DL	cmd = viewdl
+	| TGT_SME	cmd = viewsme
 	;
 /* ----------------------- Show action parser --------------------- */
 show returns [AliasShowCommand cmd] {
@@ -165,7 +170,7 @@ getnameid[String msg] returns [String out] {
 	catch [RecognitionException ex] {
 	    throw new RecognitionException(ex.getMessage()+". "+msg+" expected. ");
 	}
-/* ----------------------- Common long parser ------------------------- */
+/* ----------------------- Common number parsers ------------------------ */
 getlongid[String msg] returns [long id] {
     id = 0;
 } : (num:STR { id = Long.parseLong(num.getText()); })
@@ -176,6 +181,18 @@ catch [RecognitionException ex] {
 }
 catch [NumberFormatException ex] {
     throw new RecognitionException(ex.getMessage()+". Long value for <"+msg+"> expected. ");
+}
+
+getint[String msg] returns [int i] {
+    i = 0;
+} : (num:STR { i = Integer.parseInt(num.getText()); })
+  ;
+exception
+catch [RecognitionException ex] {
+    throw new RecognitionException(ex.getMessage()+". "+msg+" expected. ");
+}
+catch [NumberFormatException ex] {
+    throw new RecognitionException(ex.getMessage()+". Integer value for <"+msg+"> expected. ");
 }
 /* ----------------------- Common routes parsers ----------------------- */
 srcdef[RouteGenCommand cmd] { // Special command required !!!
@@ -247,31 +264,19 @@ addroute returns [RouteAddCommand cmd] {
 	: ({ cmd.setRoute(getnameid("Route name")); })
 	  (OPT_NOTES { cmd.setNotes(getnameid("Subject notes")); })?
 	  addroute_flags[cmd]
-	  (OPT_SVCID num:STR {
-	    try {
-	        cmd.setServiceId(Integer.parseInt(num.getText()));
-	    } catch (NumberFormatException ex) {
-	        throw new NumberFormatException("Expecting integer value for <serviceid>");
-	    }
-	  })
-	  (OPT_PRI pri:STR {
-	    try {
-	        cmd.setPriority(Integer.parseInt(pri.getText()));
-	    } catch (NumberFormatException ex) {
-	        throw new NumberFormatException("Expecting integer value for <priority>");
-	    }
-	  })
+	  (OPT_SVCID { cmd.setServiceId(getint("serviceid")); })
+	  (OPT_PRI   { cmd.setPriority(getint("priority")); })
 	  (OPT_DM route_dm[cmd])?
 	  (TGT_ACL    { cmd.setAclId(getlongid("acl id")); })?
-	  (OPT_SRCSME { cmd.setSrcSmeId(getnameid("srcSmeId value"));   } )?
-	  (OPT_FWD    { cmd.setForwardTo(getnameid("forwardTo value")); } )?
+	  (OPT_SRCSME { cmd.setSrcSmeId(getnameid("srcSmeId value"));   })?
+	  (OPT_FWD    { cmd.setForwardTo(getnameid("forwardTo value")); })?
 	  route_src[cmd]
 	  route_dst[cmd, true]
 	;
 
 addroute_flags[RouteAddCommand cmd]
 	: (OPT_ACTIVE 	          { cmd.setActive(true);   }
-	  |OPT_INACTIVE	          { cmd.setActive(false);	})?
+	  |OPT_INACTIVE	          { cmd.setActive(false);  })?
 	  (OPT_HIDE               { cmd.setHide(true);     }
 	  |OPT_NOHIDE             { cmd.setHide(false);    })?
 	  (OPT_RP	(VAL_FORCE      { cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_FORCE);    }
@@ -279,7 +284,7 @@ addroute_flags[RouteAddCommand cmd]
 		        |VAL_PASS       { cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_PASS);     }))?
 	  (OPT_BLOCKED (OPT_ALLOW { cmd.setAllowBlocked(true);  }
 	               |OPT_DENY  { cmd.setAllowBlocked(false); }))?
-	  (OPT_FD	                { cmd.setForceDelivery(true); })?
+	  (OPT_FD                 { cmd.setForceDelivery(true); })?
 	  (OPT_BILL   	          { cmd.setBill(true);   	 }
 	  |OPT_NOBILL 	          { cmd.setBill(false);  	 })
 	  (OPT_ARCH   	          { cmd.setArc(true);    	 }
@@ -309,20 +314,8 @@ altroute returns [RouteAlterCommand cmd] {
 	: ({ cmd.setRoute(getnameid("Route name"));  })
 	  (OPT_NOTES { cmd.setNotes(getnameid("Subject notes")); })?
 	  altroute_flags[cmd]
-	  (OPT_SVCID num:STR {
-	    try {
-		cmd.setServiceId(Integer.parseInt(num.getText()));
-	    } catch (NumberFormatException ex) {
-	        throw new NumberFormatException("Expecting integer value for <serviceid>");
-	    }
-	  })?
-	  (OPT_PRI pri:STR {
-	    try {
-		cmd.setPriority(Integer.parseInt(pri.getText()));		    
-	    } catch (NumberFormatException ex) {
-		throw new NumberFormatException("Expecting integer value for <priority>");
-	    }
-	  }) ?
+	  (OPT_SVCID { cmd.setServiceId(getint("serviceid")); })?
+	  (OPT_PRI   { cmd.setPriority(getint("priority"));   })?
 	  (OPT_DM route_dm[cmd])?
 	  (TGT_ACL     { cmd.setAclId(getlongid("acl id")); })?
 	  (OPT_SRCSME  { cmd.setSrcSmeId(getnameid("srcSmeId value"));   })?
@@ -605,20 +598,8 @@ addprincipal returns [PrincipalAddCommand cmd] {
     cmd = new PrincipalAddCommand();
 }
 	: (addr:STR  { cmd.setAddress(addr.getText()); })
-	  (OPT_NLIST numl:STR {
-	    try {
-		cmd.setMaxLists(Integer.parseInt(numl.getText()));
-	    } catch (NumberFormatException ex) {
-		throw new NumberFormatException("Expecting integer value for <numlist>");
-	    }
-	  })
-	  (OPT_NELEM nume:STR {
-	    try {
-		cmd.setMaxElements(Integer.parseInt(nume.getText()));
-	    } catch (NumberFormatException ex) {
-		throw new NumberFormatException("Expecting integer value for <numelem>");
-	    }
-	  })
+	  (OPT_NLIST { cmd.setMaxLists(getint("numlist"));    })
+	  (OPT_NELEM { cmd.setMaxElements(getint("numelem")); })
 	;
 exception[addr]
 catch [RecognitionException ex] {
@@ -641,20 +622,8 @@ altprincipal returns [PrincipalAlterCommand cmd] {
     cmd = new PrincipalAlterCommand();
 }
 	: (addr:STR  { cmd.setAddress(addr.getText()); })
-	  (OPT_NLIST numl:STR {
-	    try {
-	        cmd.setMaxLists(Integer.parseInt(numl.getText()));
-	    } catch (NumberFormatException ex) {
-	        throw new NumberFormatException("Expecting integer value for <numlist>");
-	    }
-	  })?
-	  (OPT_NELEM nume:STR {
-	    try {
-	        cmd.setMaxElements(Integer.parseInt(nume.getText()));
-	    } catch (NumberFormatException ex) {
-	        throw new NumberFormatException("Expecting integer value for <numelem>");
-	    }
-	  })?
+	  (OPT_NLIST { cmd.setMaxLists(getint("numlist")); })?
+	  (OPT_NELEM { cmd.setMaxElements(getint("numelem")); })?
 	;
 exception[addr]
 catch [RecognitionException ex] {
@@ -689,19 +658,9 @@ adddl returns [DistributionListAddCommand cmd] {
     cmd = new DistributionListAddCommand();
 }
 	: ({ cmd.setName(getnameid("Distribution list name")); })
-	  (OPT_NELEM nume:STR  {
-	    try {
-	        cmd.setMaxElements(Integer.parseInt(nume.getText()));
-	    } catch (NumberFormatException ex) {
-	        throw new NumberFormatException("Expecting integer value for <numelem>");
-	    }
-	  })		
+	  (OPT_NELEM { cmd.setMaxElements(getint("numelem")); })
 	  (OPT_OWNER owner:STR { cmd.setOwner(owner.getText()); })?
 	;
-exception[nume]
-catch [RecognitionException ex] {
-    throw new RecognitionException("'numelem' integer value expected");
-}
 exception[owner]
 catch [RecognitionException ex] {
     throw new RecognitionException("Owner address expected");
@@ -715,18 +674,8 @@ altdl returns [DistributionListAlterCommand cmd] {
     cmd = new DistributionListAlterCommand();
 }
 	: ({ cmd.setName(getnameid("Distribution list name")); })
-	  (OPT_NELEM nume:STR  {
-	    try {
-	        cmd.setMaxElements(Integer.parseInt(nume.getText()));
-	    } catch (NumberFormatException ex) {
-	        throw new NumberFormatException("Expecting integer value for <numelem>");
-	    }
-	  })		
+	  (OPT_NELEM { cmd.setMaxElements(getint("numelem")); })
 	;
-exception[nume]
-catch [RecognitionException ex] {
-    throw new RecognitionException("'numelem' integer value expected");
-}
 
 viewdl returns [DistributionListViewCommand cmd] {
     cmd = new DistributionListViewCommand();
@@ -841,3 +790,74 @@ exception[addr]
 catch [RecognitionException ex] {
     throw new RecognitionException("Address string expected");
 }
+
+/* ------------------ SME commands parsers ---------------- */
+
+sme_base_opt[SmeGenCommand cmd]
+	: (OPT_MODE (VAL_TX   { cmd.setMode(SmeGenCommand.MODE_TX);   }
+		    |VAL_RX   { cmd.setMode(SmeGenCommand.MODE_RX);   }
+		    |VAL_TRX  { cmd.setMode(SmeGenCommand.MODE_TRX);  }))?
+	  (OPT_TYPE (VAL_SMPP { cmd.setType(SmeGenCommand.TYPE_SMPP); }
+		    |VAL_SS7  { cmd.setType(SmeGenCommand.TYPE_SS7);  }))?
+	  (OPT_SME_N    { cmd.setSmeN(getint("smeN")); })?
+	  (OPT_A_RANGE  addr:STR { cmd.setAddressRange(addr.getText()); })?
+	  (OPT_PRI      { cmd.setPriority(getint("priority")); })?
+	  (OPT_TON      { cmd.setTON(getint("ton")); })?
+	  (OPT_NPI      { cmd.setNPI(getint("npi")); })?
+	  (OPT_INT_V    { cmd.setInterfaceVersion(getint("interfaceVersion")); })?
+	  (OPT_SYS_TYPE { cmd.setSystemType(getnameid("systemType")); })?
+	  (OPT_PASSWORD { cmd.setPassword(getnameid("password")); })?
+	  (OPT_TIMEOUT  { cmd.setTimeout(getint("timeout")); })?
+	  (OPT_R_SCHEME { cmd.setReceiptScheme(getnameid("receiptScheme")); })?
+	  (OPT_P_LIMIT  { cmd.setProclimit (getint("proclimit"));  })?
+	  (OPT_S_LIMIT  { cmd.setSchedlimit(getint("schedlimit")); })?
+	;
+exception[addr]
+catch [RecognitionException ex] {
+    throw new RecognitionException("Invalid addressRange value. Cause: "+ex.getMessage());
+}
+
+sme_add_opt[SmeGenCommand cmd]
+	: (sme_base_opt[cmd])
+	  (OPT_WANT_ALIAS { cmd.setWantAlias(true); })?
+	  (OPT_FORCE_DC   { cmd.setForceDC  (true); })?
+	  (OPT_DISABLED   { cmd.setDisabled (true); })?
+	;
+exception
+catch [RecognitionException ex] {
+    throw new RecognitionException("Sme add option(s) invalid. Details: "+ex.getMessage());
+}
+
+sme_alt_opt[SmeGenCommand cmd]
+	: (sme_base_opt[cmd])
+	  (OPT_WANT_ALIAS (OPT_ON  { cmd.setWantAlias (true); }
+			  |OPT_OFF { cmd.setWantAlias(false); }))?
+	  (OPT_FORCE_DC   (OPT_ON  { cmd.setForceDC   (true); }
+			  |OPT_OFF { cmd.setForceDC  (false); }))?
+	  (OPT_DISABLED   (OPT_ON  { cmd.setDisabled  (true); }
+			  |OPT_OFF { cmd.setDisabled (false); }))?
+	  (ACT_DISCONNECT { cmd.setDisconnect(); })?
+	;
+exception
+catch [RecognitionException ex] {
+    throw new RecognitionException("Sme alt option(s) invalid. Details: "+ex.getMessage());
+}
+
+addsme returns [SmeAddCommand cmd] {
+    cmd = new SmeAddCommand();
+}	: ({ cmd.setSmeId(getnameid("SME id to add")); })
+	  sme_add_opt[cmd]
+	;
+altsme returns [SmeAlterCommand cmd] {
+    cmd = new SmeAlterCommand();
+}	: ({ cmd.setSmeId(getnameid("SME id to alter")); })
+	  sme_alt_opt[cmd]
+	;
+delsme returns [SmeDeleteCommand cmd] {
+    cmd = new SmeDeleteCommand();
+}	: ({ cmd.setSmeId(getnameid("SME id to delete")); })
+	;
+viewsme returns [SmeViewCommand cmd] {
+    cmd = new SmeViewCommand();
+}	: ({ cmd.setSmeId(getnameid("SME id to view")); })
+	;

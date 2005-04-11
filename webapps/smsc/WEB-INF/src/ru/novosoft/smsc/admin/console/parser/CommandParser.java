@@ -194,6 +194,12 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=adddlmember();
 			break;
 		}
+		case TGT_SME:
+		{
+			match(TGT_SME);
+			cmd=addsme();
+			break;
+		}
 		default:
 		{
 			throw new NoViableAltException(LT(1), getFilename());
@@ -264,6 +270,12 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=deldlmember();
 			break;
 		}
+		case TGT_SME:
+		{
+			match(TGT_SME);
+			cmd=delsme();
+			break;
+		}
 		default:
 		{
 			throw new NoViableAltException(LT(1), getFilename());
@@ -322,6 +334,12 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=altdl();
 			break;
 		}
+		case TGT_SME:
+		{
+			match(TGT_SME);
+			cmd=altsme();
+			break;
+		}
 		default:
 		{
 			throw new NoViableAltException(LT(1), getFilename());
@@ -372,6 +390,12 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(TGT_DL);
 			cmd = new DistributionListListCommand();
+			break;
+		}
+		case TGT_SME:
+		{
+			match(TGT_SME);
+			cmd = new SmeListCommand();
 			break;
 		}
 		default:
@@ -430,6 +454,12 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(TGT_DL);
 			cmd=viewdl();
+			break;
+		}
+		case TGT_SME:
+		{
+			match(TGT_SME);
+			cmd=viewsme();
 			break;
 		}
 		default:
@@ -512,8 +542,6 @@ public CommandParser(ParserSharedInputState state) {
 	public final RouteAddCommand  addroute() throws RecognitionException, TokenStreamException {
 		RouteAddCommand cmd;
 		
-		Token  num = null;
-		Token  pri = null;
 		
 		cmd = new RouteAddCommand();
 		
@@ -550,27 +578,11 @@ public CommandParser(ParserSharedInputState state) {
 		addroute_flags(cmd);
 		{
 		match(OPT_SVCID);
-		num = LT(1);
-		match(STR);
-		
-			    try {
-			        cmd.setServiceId(Integer.parseInt(num.getText()));
-			    } catch (NumberFormatException ex) {
-			        throw new NumberFormatException("Expecting integer value for <serviceid>");
-			    }
-			
+		cmd.setServiceId(getint("serviceid"));
 		}
 		{
 		match(OPT_PRI);
-		pri = LT(1);
-		match(STR);
-		
-			    try {
-			        cmd.setPriority(Integer.parseInt(pri.getText()));
-			    } catch (NumberFormatException ex) {
-			        throw new NumberFormatException("Expecting integer value for <priority>");
-			    }
-			
+		cmd.setPriority(getint("priority"));
 		}
 		{
 		switch ( LA(1)) {
@@ -873,8 +885,6 @@ public CommandParser(ParserSharedInputState state) {
 		PrincipalAddCommand cmd;
 		
 		Token  addr = null;
-		Token  numl = null;
-		Token  nume = null;
 		
 		cmd = new PrincipalAddCommand();
 		
@@ -894,41 +904,11 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			{
 			match(OPT_NLIST);
-			try { // for error handling
-				numl = LT(1);
-				match(STR);
-			}
-			catch (RecognitionException ex) {
-				
-				throw new RecognitionException("'numlist' integer value expected");
-				
-			}
-			
-				    try {
-					cmd.setMaxLists(Integer.parseInt(numl.getText()));
-				    } catch (NumberFormatException ex) {
-					throw new NumberFormatException("Expecting integer value for <numlist>");
-				    }
-				
+			cmd.setMaxLists(getint("numlist"));
 			}
 			{
 			match(OPT_NELEM);
-			try { // for error handling
-				nume = LT(1);
-				match(STR);
-			}
-			catch (RecognitionException ex) {
-				
-				throw new RecognitionException("'numelem' integer value expected");
-				
-			}
-			
-				    try {
-					cmd.setMaxElements(Integer.parseInt(nume.getText()));
-				    } catch (NumberFormatException ex) {
-					throw new NumberFormatException("Expecting integer value for <numelem>");
-				    }
-				
+			cmd.setMaxElements(getint("numelem"));
 			}
 		}
 		catch (RecognitionException ex) {
@@ -997,7 +977,6 @@ public CommandParser(ParserSharedInputState state) {
 	public final DistributionListAddCommand  adddl() throws RecognitionException, TokenStreamException {
 		DistributionListAddCommand cmd;
 		
-		Token  nume = null;
 		Token  owner = null;
 		
 		cmd = new DistributionListAddCommand();
@@ -1009,22 +988,7 @@ public CommandParser(ParserSharedInputState state) {
 			}
 			{
 			match(OPT_NELEM);
-			try { // for error handling
-				nume = LT(1);
-				match(STR);
-			}
-			catch (RecognitionException ex) {
-				
-				throw new RecognitionException("'numelem' integer value expected");
-				
-			}
-			
-				    try {
-				        cmd.setMaxElements(Integer.parseInt(nume.getText()));
-				    } catch (NumberFormatException ex) {
-				        throw new NumberFormatException("Expecting integer value for <numelem>");
-				    }
-				
+			cmd.setMaxElements(getint("numelem"));
 			}
 			{
 			switch ( LA(1)) {
@@ -1111,6 +1075,20 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		cmd.setMember(member.getText());
 		}
+		return cmd;
+	}
+	
+	public final SmeAddCommand  addsme() throws RecognitionException, TokenStreamException {
+		SmeAddCommand cmd;
+		
+		
+		cmd = new SmeAddCommand();
+		
+		
+		{
+		cmd.setSmeId(getnameid("SME id to add"));
+		}
+		sme_add_opt(cmd);
 		return cmd;
 	}
 	
@@ -1287,11 +1265,22 @@ public CommandParser(ParserSharedInputState state) {
 		return cmd;
 	}
 	
+	public final SmeDeleteCommand  delsme() throws RecognitionException, TokenStreamException {
+		SmeDeleteCommand cmd;
+		
+		
+		cmd = new SmeDeleteCommand();
+		
+		
+		{
+		cmd.setSmeId(getnameid("SME id to delete"));
+		}
+		return cmd;
+	}
+	
 	public final RouteAlterCommand  altroute() throws RecognitionException, TokenStreamException {
 		RouteAlterCommand cmd;
 		
-		Token  num = null;
-		Token  pri = null;
 		
 		cmd = new RouteAlterCommand();
 		boolean addAction = true;
@@ -1347,15 +1336,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_SVCID:
 		{
 			match(OPT_SVCID);
-			num = LT(1);
-			match(STR);
-			
-				    try {
-					cmd.setServiceId(Integer.parseInt(num.getText()));
-				    } catch (NumberFormatException ex) {
-				        throw new NumberFormatException("Expecting integer value for <serviceid>");
-				    }
-				
+			cmd.setServiceId(getint("serviceid"));
 			break;
 		}
 		case EOF:
@@ -1380,15 +1361,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_PRI:
 		{
 			match(OPT_PRI);
-			pri = LT(1);
-			match(STR);
-			
-				    try {
-					cmd.setPriority(Integer.parseInt(pri.getText()));		    
-				    } catch (NumberFormatException ex) {
-					throw new NumberFormatException("Expecting integer value for <priority>");
-				    }
-				
+			cmd.setPriority(getint("priority"));
 			break;
 		}
 		case EOF:
@@ -1933,8 +1906,6 @@ public CommandParser(ParserSharedInputState state) {
 		PrincipalAlterCommand cmd;
 		
 		Token  addr = null;
-		Token  numl = null;
-		Token  nume = null;
 		
 		cmd = new PrincipalAlterCommand();
 		
@@ -1957,15 +1928,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_NLIST:
 			{
 				match(OPT_NLIST);
-				numl = LT(1);
-				match(STR);
-				
-					    try {
-					        cmd.setMaxLists(Integer.parseInt(numl.getText()));
-					    } catch (NumberFormatException ex) {
-					        throw new NumberFormatException("Expecting integer value for <numlist>");
-					    }
-					
+				cmd.setMaxLists(getint("numlist"));
 				break;
 			}
 			case EOF:
@@ -1984,15 +1947,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_NELEM:
 			{
 				match(OPT_NELEM);
-				nume = LT(1);
-				match(STR);
-				
-					    try {
-					        cmd.setMaxElements(Integer.parseInt(nume.getText()));
-					    } catch (NumberFormatException ex) {
-					        throw new NumberFormatException("Expecting integer value for <numelem>");
-					    }
-					
+				cmd.setMaxElements(getint("numelem"));
 				break;
 			}
 			case EOF:
@@ -2106,7 +2061,6 @@ public CommandParser(ParserSharedInputState state) {
 	public final DistributionListAlterCommand  altdl() throws RecognitionException, TokenStreamException {
 		DistributionListAlterCommand cmd;
 		
-		Token  nume = null;
 		
 		cmd = new DistributionListAlterCommand();
 		
@@ -2116,23 +2070,22 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		{
 		match(OPT_NELEM);
-		try { // for error handling
-			nume = LT(1);
-			match(STR);
+		cmd.setMaxElements(getint("numelem"));
 		}
-		catch (RecognitionException ex) {
-			
-			throw new RecognitionException("'numelem' integer value expected");
-			
-		}
+		return cmd;
+	}
+	
+	public final SmeAlterCommand  altsme() throws RecognitionException, TokenStreamException {
+		SmeAlterCommand cmd;
 		
-			    try {
-			        cmd.setMaxElements(Integer.parseInt(nume.getText()));
-			    } catch (NumberFormatException ex) {
-			        throw new NumberFormatException("Expecting integer value for <numelem>");
-			    }
-			
+		
+		cmd = new SmeAlterCommand();
+		
+		
+		{
+		cmd.setSmeId(getnameid("SME id to alter"));
 		}
+		sme_alt_opt(cmd);
 		return cmd;
 	}
 	
@@ -2253,6 +2206,19 @@ public CommandParser(ParserSharedInputState state) {
 		
 		{
 		cmd.setName(getnameid("Distribution list name"));
+		}
+		return cmd;
+	}
+	
+	public final SmeViewCommand  viewsme() throws RecognitionException, TokenStreamException {
+		SmeViewCommand cmd;
+		
+		
+		cmd = new SmeViewCommand();
+		
+		
+		{
+		cmd.setSmeId(getnameid("SME id to view"));
 		}
 		return cmd;
 	}
@@ -2418,6 +2384,36 @@ public CommandParser(ParserSharedInputState state) {
 		return id;
 	}
 	
+	public final int  getint(
+		String msg
+	) throws RecognitionException, TokenStreamException {
+		int i;
+		
+		Token  num = null;
+		
+		i = 0;
+		
+		
+		try {      // for error handling
+			{
+			num = LT(1);
+			match(STR);
+			i = Integer.parseInt(num.getText());
+			}
+		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException(ex.getMessage()+". "+msg+" expected. ");
+			
+		}
+		catch (NumberFormatException ex) {
+			
+			throw new RecognitionException(ex.getMessage()+". Integer value for <"+msg+"> expected. ");
+			
+		}
+		return i;
+	}
+	
 	public final void srcdef(
 		RouteGenCommand cmd
 	) throws RecognitionException, TokenStreamException {
@@ -2522,17 +2518,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_SRC);
 			{
-			int _cnt30=0;
-			_loop30:
+			int _cnt32=0;
+			_loop32:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					srcdef(cmd);
 				}
 				else {
-					if ( _cnt30>=1 ) { break _loop30; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt32>=1 ) { break _loop32; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt30++;
+				_cnt32++;
 			} while (true);
 			}
 			}
@@ -2554,17 +2550,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_DST);
 			{
-			int _cnt34=0;
-			_loop34:
+			int _cnt36=0;
+			_loop36:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					dstdef(cmd, needSmeId);
 				}
 				else {
-					if ( _cnt34>=1 ) { break _loop34; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt36>=1 ) { break _loop36; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt34++;
+				_cnt36++;
 			} while (true);
 			}
 			}
@@ -2641,7 +2637,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_INACTIVE:
 			{
 				match(OPT_INACTIVE);
-				cmd.setActive(false);	
+				cmd.setActive(false);
 				break;
 			}
 			case OPT_HIDE:
@@ -3315,14 +3311,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop106:
+			_loop108:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop106;
+					break _loop108;
 				}
 				
 			} while (true);
@@ -3749,6 +3745,692 @@ public CommandParser(ParserSharedInputState state) {
 		}
 	}
 	
+	public final void sme_base_opt(
+		SmeGenCommand cmd
+	) throws RecognitionException, TokenStreamException {
+		
+		Token  addr = null;
+		
+		{
+		switch ( LA(1)) {
+		case OPT_MODE:
+		{
+			match(OPT_MODE);
+			{
+			switch ( LA(1)) {
+			case VAL_TX:
+			{
+				match(VAL_TX);
+				cmd.setMode(SmeGenCommand.MODE_TX);
+				break;
+			}
+			case VAL_RX:
+			{
+				match(VAL_RX);
+				cmd.setMode(SmeGenCommand.MODE_RX);
+				break;
+			}
+			case VAL_TRX:
+			{
+				match(VAL_TRX);
+				cmd.setMode(SmeGenCommand.MODE_TRX);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			break;
+		}
+		case EOF:
+		case ACT_DISCONNECT:
+		case OPT_PRI:
+		case OPT_TYPE:
+		case OPT_SME_N:
+		case OPT_A_RANGE:
+		case OPT_TON:
+		case OPT_NPI:
+		case OPT_INT_V:
+		case OPT_SYS_TYPE:
+		case OPT_PASSWORD:
+		case OPT_TIMEOUT:
+		case OPT_R_SCHEME:
+		case OPT_P_LIMIT:
+		case OPT_S_LIMIT:
+		case OPT_WANT_ALIAS:
+		case OPT_FORCE_DC:
+		case OPT_DISABLED:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_TYPE:
+		{
+			match(OPT_TYPE);
+			{
+			switch ( LA(1)) {
+			case VAL_SMPP:
+			{
+				match(VAL_SMPP);
+				cmd.setType(SmeGenCommand.TYPE_SMPP);
+				break;
+			}
+			case VAL_SS7:
+			{
+				match(VAL_SS7);
+				cmd.setType(SmeGenCommand.TYPE_SS7);
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			break;
+		}
+		case EOF:
+		case ACT_DISCONNECT:
+		case OPT_PRI:
+		case OPT_SME_N:
+		case OPT_A_RANGE:
+		case OPT_TON:
+		case OPT_NPI:
+		case OPT_INT_V:
+		case OPT_SYS_TYPE:
+		case OPT_PASSWORD:
+		case OPT_TIMEOUT:
+		case OPT_R_SCHEME:
+		case OPT_P_LIMIT:
+		case OPT_S_LIMIT:
+		case OPT_WANT_ALIAS:
+		case OPT_FORCE_DC:
+		case OPT_DISABLED:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_SME_N:
+		{
+			match(OPT_SME_N);
+			cmd.setSmeN(getint("smeN"));
+			break;
+		}
+		case EOF:
+		case ACT_DISCONNECT:
+		case OPT_PRI:
+		case OPT_A_RANGE:
+		case OPT_TON:
+		case OPT_NPI:
+		case OPT_INT_V:
+		case OPT_SYS_TYPE:
+		case OPT_PASSWORD:
+		case OPT_TIMEOUT:
+		case OPT_R_SCHEME:
+		case OPT_P_LIMIT:
+		case OPT_S_LIMIT:
+		case OPT_WANT_ALIAS:
+		case OPT_FORCE_DC:
+		case OPT_DISABLED:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_A_RANGE:
+		{
+			match(OPT_A_RANGE);
+			try { // for error handling
+				addr = LT(1);
+				match(STR);
+			}
+			catch (RecognitionException ex) {
+				
+				throw new RecognitionException("Invalid addressRange value. Cause: "+ex.getMessage());
+				
+			}
+			cmd.setAddressRange(addr.getText());
+			break;
+		}
+		case EOF:
+		case ACT_DISCONNECT:
+		case OPT_PRI:
+		case OPT_TON:
+		case OPT_NPI:
+		case OPT_INT_V:
+		case OPT_SYS_TYPE:
+		case OPT_PASSWORD:
+		case OPT_TIMEOUT:
+		case OPT_R_SCHEME:
+		case OPT_P_LIMIT:
+		case OPT_S_LIMIT:
+		case OPT_WANT_ALIAS:
+		case OPT_FORCE_DC:
+		case OPT_DISABLED:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_PRI:
+		{
+			match(OPT_PRI);
+			cmd.setPriority(getint("priority"));
+			break;
+		}
+		case EOF:
+		case ACT_DISCONNECT:
+		case OPT_TON:
+		case OPT_NPI:
+		case OPT_INT_V:
+		case OPT_SYS_TYPE:
+		case OPT_PASSWORD:
+		case OPT_TIMEOUT:
+		case OPT_R_SCHEME:
+		case OPT_P_LIMIT:
+		case OPT_S_LIMIT:
+		case OPT_WANT_ALIAS:
+		case OPT_FORCE_DC:
+		case OPT_DISABLED:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_TON:
+		{
+			match(OPT_TON);
+			cmd.setTON(getint("ton"));
+			break;
+		}
+		case EOF:
+		case ACT_DISCONNECT:
+		case OPT_NPI:
+		case OPT_INT_V:
+		case OPT_SYS_TYPE:
+		case OPT_PASSWORD:
+		case OPT_TIMEOUT:
+		case OPT_R_SCHEME:
+		case OPT_P_LIMIT:
+		case OPT_S_LIMIT:
+		case OPT_WANT_ALIAS:
+		case OPT_FORCE_DC:
+		case OPT_DISABLED:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_NPI:
+		{
+			match(OPT_NPI);
+			cmd.setNPI(getint("npi"));
+			break;
+		}
+		case EOF:
+		case ACT_DISCONNECT:
+		case OPT_INT_V:
+		case OPT_SYS_TYPE:
+		case OPT_PASSWORD:
+		case OPT_TIMEOUT:
+		case OPT_R_SCHEME:
+		case OPT_P_LIMIT:
+		case OPT_S_LIMIT:
+		case OPT_WANT_ALIAS:
+		case OPT_FORCE_DC:
+		case OPT_DISABLED:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_INT_V:
+		{
+			match(OPT_INT_V);
+			cmd.setInterfaceVersion(getint("interfaceVersion"));
+			break;
+		}
+		case EOF:
+		case ACT_DISCONNECT:
+		case OPT_SYS_TYPE:
+		case OPT_PASSWORD:
+		case OPT_TIMEOUT:
+		case OPT_R_SCHEME:
+		case OPT_P_LIMIT:
+		case OPT_S_LIMIT:
+		case OPT_WANT_ALIAS:
+		case OPT_FORCE_DC:
+		case OPT_DISABLED:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_SYS_TYPE:
+		{
+			match(OPT_SYS_TYPE);
+			cmd.setSystemType(getnameid("systemType"));
+			break;
+		}
+		case EOF:
+		case ACT_DISCONNECT:
+		case OPT_PASSWORD:
+		case OPT_TIMEOUT:
+		case OPT_R_SCHEME:
+		case OPT_P_LIMIT:
+		case OPT_S_LIMIT:
+		case OPT_WANT_ALIAS:
+		case OPT_FORCE_DC:
+		case OPT_DISABLED:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_PASSWORD:
+		{
+			match(OPT_PASSWORD);
+			cmd.setPassword(getnameid("password"));
+			break;
+		}
+		case EOF:
+		case ACT_DISCONNECT:
+		case OPT_TIMEOUT:
+		case OPT_R_SCHEME:
+		case OPT_P_LIMIT:
+		case OPT_S_LIMIT:
+		case OPT_WANT_ALIAS:
+		case OPT_FORCE_DC:
+		case OPT_DISABLED:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_TIMEOUT:
+		{
+			match(OPT_TIMEOUT);
+			cmd.setTimeout(getint("timeout"));
+			break;
+		}
+		case EOF:
+		case ACT_DISCONNECT:
+		case OPT_R_SCHEME:
+		case OPT_P_LIMIT:
+		case OPT_S_LIMIT:
+		case OPT_WANT_ALIAS:
+		case OPT_FORCE_DC:
+		case OPT_DISABLED:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_R_SCHEME:
+		{
+			match(OPT_R_SCHEME);
+			cmd.setReceiptScheme(getnameid("receiptScheme"));
+			break;
+		}
+		case EOF:
+		case ACT_DISCONNECT:
+		case OPT_P_LIMIT:
+		case OPT_S_LIMIT:
+		case OPT_WANT_ALIAS:
+		case OPT_FORCE_DC:
+		case OPT_DISABLED:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_P_LIMIT:
+		{
+			match(OPT_P_LIMIT);
+			cmd.setProclimit (getint("proclimit"));
+			break;
+		}
+		case EOF:
+		case ACT_DISCONNECT:
+		case OPT_S_LIMIT:
+		case OPT_WANT_ALIAS:
+		case OPT_FORCE_DC:
+		case OPT_DISABLED:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case OPT_S_LIMIT:
+		{
+			match(OPT_S_LIMIT);
+			cmd.setSchedlimit(getint("schedlimit"));
+			break;
+		}
+		case EOF:
+		case ACT_DISCONNECT:
+		case OPT_WANT_ALIAS:
+		case OPT_FORCE_DC:
+		case OPT_DISABLED:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+	}
+	
+	public final void sme_add_opt(
+		SmeGenCommand cmd
+	) throws RecognitionException, TokenStreamException {
+		
+		
+		try {      // for error handling
+			{
+			sme_base_opt(cmd);
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_WANT_ALIAS:
+			{
+				match(OPT_WANT_ALIAS);
+				cmd.setWantAlias(true);
+				break;
+			}
+			case EOF:
+			case OPT_FORCE_DC:
+			case OPT_DISABLED:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_FORCE_DC:
+			{
+				match(OPT_FORCE_DC);
+				cmd.setForceDC  (true);
+				break;
+			}
+			case EOF:
+			case OPT_DISABLED:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_DISABLED:
+			{
+				match(OPT_DISABLED);
+				cmd.setDisabled (true);
+				break;
+			}
+			case EOF:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException("Sme add option(s) invalid. Details: "+ex.getMessage());
+			
+		}
+	}
+	
+	public final void sme_alt_opt(
+		SmeGenCommand cmd
+	) throws RecognitionException, TokenStreamException {
+		
+		
+		try {      // for error handling
+			{
+			sme_base_opt(cmd);
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_WANT_ALIAS:
+			{
+				match(OPT_WANT_ALIAS);
+				{
+				switch ( LA(1)) {
+				case OPT_ON:
+				{
+					match(OPT_ON);
+					cmd.setWantAlias (true);
+					break;
+				}
+				case OPT_OFF:
+				{
+					match(OPT_OFF);
+					cmd.setWantAlias(false);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				break;
+			}
+			case EOF:
+			case ACT_DISCONNECT:
+			case OPT_FORCE_DC:
+			case OPT_DISABLED:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_FORCE_DC:
+			{
+				match(OPT_FORCE_DC);
+				{
+				switch ( LA(1)) {
+				case OPT_ON:
+				{
+					match(OPT_ON);
+					cmd.setForceDC   (true);
+					break;
+				}
+				case OPT_OFF:
+				{
+					match(OPT_OFF);
+					cmd.setForceDC  (false);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				break;
+			}
+			case EOF:
+			case ACT_DISCONNECT:
+			case OPT_DISABLED:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_DISABLED:
+			{
+				match(OPT_DISABLED);
+				{
+				switch ( LA(1)) {
+				case OPT_ON:
+				{
+					match(OPT_ON);
+					cmd.setDisabled  (true);
+					break;
+				}
+				case OPT_OFF:
+				{
+					match(OPT_OFF);
+					cmd.setDisabled (false);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				break;
+			}
+			case EOF:
+			case ACT_DISCONNECT:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case ACT_DISCONNECT:
+			{
+				match(ACT_DISCONNECT);
+				cmd.setDisconnect();
+				break;
+			}
+			case EOF:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+		}
+		catch (RecognitionException ex) {
+			
+			throw new RecognitionException("Sme alt option(s) invalid. Details: "+ex.getMessage());
+			
+		}
+	}
+	
 	
 	public static final String[] _tokenNames = {
 		"<0>",
@@ -3765,6 +4447,8 @@ public CommandParser(ParserSharedInputState state) {
 		"\"grant\"",
 		"\"revoke\"",
 		"\"check\"",
+		"\"connect\"",
+		"\"disconnect\"",
 		"\"access\"",
 		"\"for\"",
 		"\"to\"",
@@ -3777,6 +4461,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"dlsubmitter\"",
 		"\"dlmember\"",
 		"\"acl\"",
+		"\"sme\"",
 		"\"name\"",
 		"\"hide\"",
 		"\"nohide\"",
@@ -3826,6 +4511,22 @@ public CommandParser(ParserSharedInputState state) {
 		"\"replayPath\"",
 		"\"forceDelivery\"",
 		"\"cache\"",
+		"\"mode\"",
+		"\"type\"",
+		"\"smeN\"",
+		"\"addressRange\"",
+		"\"ton\"",
+		"\"npi\"",
+		"\"interfaceVersion\"",
+		"\"systemType\"",
+		"\"password\"",
+		"\"timeout\"",
+		"\"receiptScheme\"",
+		"\"proclimit\"",
+		"\"schedlimit\"",
+		"\"wantAlias\"",
+		"\"forceDC\"",
+		"\"disabled\"",
 		"\"force\"",
 		"\"suppress\"",
 		"\"pass\"",
@@ -3838,6 +4539,11 @@ public CommandParser(ParserSharedInputState state) {
 		"\"store\"",
 		"\"forward\"",
 		"\"datagram\"",
+		"\"TX\"",
+		"\"RX\"",
+		"\"TRX\"",
+		"\"SMPP\"",
+		"\"SS7\"",
 		"WS",
 		"more input",
 		"quoted string",

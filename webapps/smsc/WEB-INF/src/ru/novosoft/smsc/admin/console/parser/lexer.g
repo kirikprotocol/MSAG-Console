@@ -24,6 +24,9 @@ tokens {
   ACT_GRANT     = "grant";
   ACT_REVOKE    = "revoke";
   ACT_CHECK     = "check";
+  
+  ACT_CONNECT	= "connect";
+  ACT_DISCONNECT= "disconnect";
 
   ADD_ACCESS    = "access";
   ADD_FOR       = "for";
@@ -38,6 +41,7 @@ tokens {
   TGT_DLSUB     = "dlsubmitter";
   TGT_DLMEM     = "dlmember";
   TGT_ACL       = "acl";
+  TGT_SME	= "sme";
 
   OPT_NAME      = "name";
   OPT_HIDE      = "hide";
@@ -88,7 +92,23 @@ tokens {
   OPT_RP        = "replayPath";
   OPT_FD        = "forceDelivery";
   OPT_CACHE     = "cache";
-
+  OPT_MODE	= "mode";
+  OPT_TYPE	= "type";
+  OPT_SME_N	= "smeN";
+  OPT_A_RANGE	= "addressRange";
+  OPT_TON	= "ton";
+  OPT_NPI	= "npi";
+  OPT_INT_V	= "interfaceVersion";
+  OPT_SYS_TYPE	= "systemType";
+  OPT_PASSWORD	= "password";
+  OPT_TIMEOUT	= "timeout";
+  OPT_R_SCHEME	= "receiptScheme";
+  OPT_P_LIMIT	= "proclimit";
+  OPT_S_LIMIT	= "schedlimit";
+  OPT_WANT_ALIAS= "wantAlias";
+  OPT_FORCE_DC	= "forceDC";
+  OPT_DISABLED	= "disabled";
+  
   VAL_FORCE     = "force";
   VAL_SUPPRESS  = "suppress";
   VAL_PASS      = "pass";
@@ -101,6 +121,11 @@ tokens {
   VAL_STORE     = "store";
   VAL_FORWARD   = "forward";
   VAL_DATAGRAM  = "datagram";
+  VAL_TX	= "TX";
+  VAL_RX	= "RX";
+  VAL_TRX	= "TRX";
+  VAL_SMPP	= "SMPP";
+  VAL_SS7	= "SS7";
 }
 
 WS    	: 	( STR_WS
@@ -134,7 +159,7 @@ STR_WS	:	' '|'\t'|'\f'
 
 protected
 STR_CHR	:	'a'..'z'|'A'..'Z'|'0'..'9'|'_'|'$'
-		|'.'|'?'|'!'|'#'|'+'|'-'|'/'|'*'|'%'
+		|'.'|'?'|'!'|'#'|'+'|'-'|'/'|'\\'|'*'|'%'
 		|'\u00C0'..'\u00FF'|'\u00B8'|'\u00A8'
 		|'\u0400'..'\u04FF'
 	;
