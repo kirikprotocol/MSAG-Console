@@ -4,6 +4,10 @@ import ru.sibinco.lib.backend.sme.SmeStatus;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.smppgw.backend.SmppGWAppContext;
 
+import java.util.Date;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+
 /**
  * Created by IntelliJ IDEA.
  * User: Andrey
@@ -53,16 +57,28 @@ public class SmeStatusFunctions
      }
      return result;
    }
-   public static String smeStatus(SmppGWAppContext appContext, String serviceId)
+  public static String smeStatus(SmeStatus status,String  smeId)
+  {
+    Date date=new Date();long time=date.getTime();
+    SimpleDateFormat format=new SimpleDateFormat();
+    System.out.println("getting sme status in "+format.format(date));
+    String elem_id = "CONNECTION_STATUSERVICE_" + StringEncoderDecoder.encode(smeId);
+    return "<span id=\"" + elem_id + "\" datasrc=#tdcConnStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(smeId) + "\" "+ showSmeStatus(status);
+  }
+
+/*  public static String smeStatus(SmppGWAppContext appContext, String serviceId)
  {
    SmeStatus status = null;
    try {
      status = appContext.getGateway().getSmeStatus(serviceId);
    }
    catch (Throwable e)
-   {}
+   {e.printStackTrace();}
+   Date date=new Date();long time=date.getTime();
+   SimpleDateFormat format=new SimpleDateFormat();
+   System.out.println("getting sme status in "+format.format(date));
    String elem_id = "CONNECTION_STATUSERVICE_" + StringEncoderDecoder.encode(serviceId);
    return "<span id=\"" + elem_id + "\" datasrc=#tdcConnStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\" "+ showSmeStatus(status);
  }
-
+  */
 }

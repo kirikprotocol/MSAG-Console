@@ -85,6 +85,12 @@ function edit(idToEdit)
           <c:when test="${column == 'checkbox'}">
             <td class=ico><input class=check type=checkbox name=checked value="${user['id']}" onClick="tableTag_checkChecks();" <c:if test="${smf:checked(bean, user['id'])}" >checked</c:if>></td>
           </c:when>
+          <c:when test="${column == 'status'}">
+            <td class=ico>  <c:set var="Id" value="${ user['id']}"/>
+           <c:set var="itemValue" value="${empty user[column] ? '&nbsp;' :  smf:smeStatus(user[column],Id)}"/>
+           ${itemValue}
+           </td>
+          </c:when>
           <c:otherwise>
             <c:set var="itemValue" value="${empty user[column] ? '&nbsp;' : fn:escapeXml(user[column])}"/>
             <td><c:if

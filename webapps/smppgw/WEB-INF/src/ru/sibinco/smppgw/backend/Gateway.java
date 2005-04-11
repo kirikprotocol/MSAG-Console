@@ -90,7 +90,7 @@ public class Gateway extends Proxy
     return res instanceof List ? (List) res : null;
   }
 
-  public synchronized SmeStatus getSmeStatus(final String id) throws SibincoException
+  public synchronized SmeStatus getSmeStatus(final String smeId) throws SibincoException
   {
     final long currentTime = System.currentTimeMillis();
     if (currentTime - Constants.ServicesRefreshTimeoutMillis > serviceRefreshTimeStamp) {
@@ -106,7 +106,7 @@ public class Gateway extends Proxy
         smeStatuses.put(smeStatus.getId(), smeStatus);
       }
     }
-    return (SmeStatus) smeStatuses.get(id);
+    return (SmeStatus) smeStatuses.get(smeId);
   }
   public Object call( final String commandId,final String err, final Type returnType, final Map arguments) throws SibincoException
    {
@@ -116,6 +116,7 @@ public class Gateway extends Proxy
        final Response r = runCommand(new CommandCall(commandId,  returnType, arguments));
        if (Response.StatusOk != r.getStatus())
          throw new SibincoException("Error occured: "+err + r.getDataAsString());
+       System.out.println("recived sme status in runCommand");
        final Element resultElem = (Element) r.getData().getElementsByTagName("variant").item(0);
        final Type resultType = Type.getInstance(resultElem.getAttribute("type"));
        switch (resultType.getId()) {

@@ -29,7 +29,7 @@
     <description>Show sme status</description>
     <name>smeStatus</name>
     <function-class>ru.sibinco.smppgw.backend.sme.SmeStatusFunctions</function-class>
-    <function-signature>java.lang.String smeStatus(ru.sibinco.smppgw.backend.SmppGWAppContext,java.lang.String)</function-signature>
+    <function-signature>java.lang.String smeStatus(ru.sibinco.lib.backend.sme.SmeStatus,java.lang.String)</function-signature>
     </function>
   <function>
     <description>Checks if obj is boolean.</description>

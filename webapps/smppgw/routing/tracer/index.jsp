@@ -70,7 +70,6 @@
 <c:set var="traceResults" value="${bean.traceResults}"/>
 <c:set var="routeInfo" value="${bean.routeInfo}"/>
 <c:set var="routeInfoMap" value="${bean.routeInfoMap}"/>
-<c:set var="rowN" value="0"/>
 <c:if test="${message !=null || traceResults !=null || routeInfo !=null }">
 <div class=content>
 <c:if test="${message !=null }">
@@ -91,15 +90,10 @@
  <br>
   <div class=page_subtitle>Route info</div>
   <table class=properties_list cell>
-<c:forEach items="${routeInfoMap}" var="i" >
+<c:forEach items="${routeInfoMap}" var="i" varStatus="status">
  <c:set var="key" value="${i.key}"/>
  <c:set var="val" value="${i.value}"/>
- <c:choose>
- <c:when test="${rowN == 0}" ><c:set var="rowN" value="1"/></c:when>
- <c:otherwise><c:set var="rowN" value="0"/></c:otherwise>
- </c:choose>
-<%--option value="${fn:escapeXml(i.key)}"></option--%>
- <tr class=row${rowN}>
+ <tr class='row${(status.count+1)%2}'>
        <th width="30%" nowrap><c:choose>
         <c:when test="${key != null && fn:length(fn:trim(key))>0}" ><c:out value="${fn:escapeXml(key)}" /></c:when>
         <c:otherwise>&nbsp;</c:otherwise>
@@ -109,7 +103,6 @@
         <c:otherwise>&nbsp;</c:otherwise>
         </c:choose></td>
       </tr>
-
 </c:forEach>
 </table>
 </c:if>

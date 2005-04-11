@@ -12,6 +12,7 @@ import ru.sibinco.smppgw.beans.TabledBeanImpl;
 import ru.sibinco.smppgw.beans.SmppgwJspException;
 import ru.sibinco.smppgw.Constants;
 import ru.sibinco.smppgw.backend.sme.GwSmeManager;
+import ru.sibinco.smppgw.backend.sme.GwSme;
 import ru.sibinco.lib.bean.TabledBean;
 import ru.sibinco.lib.backend.sme.SmeStatus;
 import ru.sibinco.lib.SibincoException;
@@ -66,11 +67,11 @@ public class Index extends TabledBeanImpl implements TabledBean
       else if (null != mbStopService)
       {}// stopServices();
       else if (null != mbView)
-          response.sendRedirect(CPATH+"/esme_"+URLEncoder.encode(this.getServiceId())+"/index.jsp");//return RESULT_VIEW;
+      {}//   response.sendRedirect(CPATH+"/esme_"+URLEncoder.encode(this.getServiceId())+"/index.jsp");//return RESULT_VIEW;
       else if (null != mbViewHost)
           response.sendRedirect(CPATH+"/hosts/hostView.jsp?hostName="+this.getHostId());// return RESULT_VIEW_HOST;
       else if (null != mbEdit)
-          response.sendRedirect(CPATH+"/services/serviceEditSme.jsp?serviceId="+URLEncoder.encode(this.getServiceId()));// return RESULT_EDIT;
+      {}//  response.sendRedirect(CPATH+"/services/serviceEditSme.jsp?serviceId="+URLEncoder.encode(this.getServiceId()));// return RESULT_EDIT;
       else if (null != mbDisconnectServices)
       {}//  disconnectServices();
       else
@@ -81,7 +82,7 @@ public class Index extends TabledBeanImpl implements TabledBean
   }
 
   public Collection getSmeIds()
-  {
+  { smeManager = appContext.getGwSmeManager();
     if (null == smeManager) {
       try {
         throw new SibincoException( "Sme Manager is null!!!");
@@ -136,12 +137,30 @@ public class Index extends TabledBeanImpl implements TabledBean
       return ServiceInfo.STATUS_RUNNING;
   }
    */
-  public SmeStatus getSmeStatus(final String id)
+    protected Collection getDataSource()
+  {
+    Map smes=appContext.getGwSmeManager().getSmes();
+    for (Iterator i = this.getSmeIds().iterator(); i.hasNext(); )
+    {
+      String smeId = (String) i.next();
+      SmeStatus status = this.getSmeStatus(smeId);
+      GwSme sme=(GwSme)smes.get(smeId);
+      sme.setStatus(status);smes.put(smeId,sme);
+    }
+    return smes.values(); //appContext.getGwSmeManager().getSmes().values();
+  }
+
+  protected void delete()
+  {
+   // appContext.getGwRoutingManager().getRoutes().keySet().removeAll(checkedSet);
+   // appContext.getStatuses().setRoutesChanged(true);
+  }
+  public SmeStatus getSmeStatus(final String smeId)
   {
     try {
-      return appContext.getGateway().getSmeStatus(id);
+      return appContext.getGateway().getSmeStatus(smeId);
     } catch (SibincoException e) {
-      logger.error("Couldn't get sme status for service \"" + id + "\", nested:" + e.getMessage());
+      logger.error("Couldn't get sme status for sme \"" + smeId + "\", nested:" + e.getMessage());
      // throw new SmppgwJspException(Constants.errors.services.couldntGetServiceInfo, id);
       return null;
     }
@@ -422,15 +441,5 @@ public class Index extends TabledBeanImpl implements TabledBean
   {
     this.mbDisconnectServices = mbDisconnectServices;
   }
-   protected Collection getDataSource()
-  {
-    return appContext.getGwSmeManager().getSmes().values();
-    //return new ArrayList();//appContext.getGwRoutingManager().getRoutes().values();
-  }
 
-  protected void delete()
-  {
-   // appContext.getGwRoutingManager().getRoutes().keySet().removeAll(checkedSet);
-   // appContext.getStatuses().setRoutesChanged(true);
-  }
 }
