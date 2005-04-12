@@ -8,6 +8,8 @@
 package ru.novosoft.smsc.admin.console;
 
 import ru.novosoft.smsc.admin.smsc_service.*;
+import ru.novosoft.smsc.admin.category.CategoryManager;
+import ru.novosoft.smsc.admin.provider.ProviderManager;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,64 +25,61 @@ public class CommandContext
 	protected Smsc smsc;
 	protected SmeManager smeManager;
 	protected RouteSubjectManager routeSubjectManager;
+    protected CategoryManager categoryManager;
+    protected ProviderManager providerManager;
+
 	protected int status = CMD_OK;
 	protected String message = "No message";
 	protected ArrayList results = new ArrayList();
 
-	public CommandContext(Smsc smsc, SmeManager smeManager, RouteSubjectManager routeSubjectManager)
+	public CommandContext(Smsc smsc, SmeManager smeManager, RouteSubjectManager routeSubjectManager,
+                          CategoryManager categoryManager, ProviderManager providerManager)
 	{
 		this.smsc = smsc;
 		this.smeManager = smeManager;
 		this.routeSubjectManager = routeSubjectManager;
+        this.categoryManager = categoryManager;
+        this.providerManager = providerManager;
 	}
 
-	public Smsc getSmsc()
-	{
+	public Smsc getSmsc() {
 		return smsc;
 	}
-
-	public SmeManager getSmeManager()
-	{
+	public SmeManager getSmeManager() {
 		return smeManager;
 	}
-
-	public RouteSubjectManager getRouteSubjectManager()
-	{
+	public RouteSubjectManager getRouteSubjectManager() {
 		return routeSubjectManager;
 	}
 
-	public String getMessage()
-	{
+    public CategoryManager getCategoryManager() {
+        return categoryManager;
+    }
+    public ProviderManager getProviderManager() {
+        return providerManager;
+    }
+
+	public String getMessage(){
 		return message;
 	}
-
-	public void setMessage(String message)
-	{
+	public void setMessage(String message){
 		this.message = message;
 	}
 
-	public int getStatus()
-	{
+	public int getStatus(){
 		return status;
 	}
-
-	public void setStatus(int status)
-	{
+	public void setStatus(int status) {
 		this.status = status;
 	}
 
-	public void addResult(Object res)
-	{
+	public void addResult(Object res) {
 		results.add(res);
 	}
-
-	public void addResults(Collection col)
-	{
+	public void addResults(Collection col) {
 		results.addAll(col);
 	}
-
-	public Collection getResults()
-	{
+	public Collection getResults() {
 		return results;
 	}
 }

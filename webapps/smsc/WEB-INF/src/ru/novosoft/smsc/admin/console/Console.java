@@ -11,6 +11,8 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.admin.smsc_service.*;
 import ru.novosoft.smsc.admin.console.human.HumanGate;
 import ru.novosoft.smsc.admin.console.script.ScriptGate;
+import ru.novosoft.smsc.admin.category.CategoryManager;
+import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.util.ArrayList;
@@ -25,30 +27,37 @@ public class Console extends Thread
 	private Smsc smsc = null;
 	private SmeManager smeManager = null;
 	private RouteSubjectManager routeSubjectManager = null;
+    private CategoryManager categoryManager = null;
+    private ProviderManager providerManager = null;
+
 	private Gate humanGate = null;
 	private Gate scriptGate = null;
 
-  private final static int DEFAULT_INACTIVITY_TIMEOUT = 60;
-  private long inactivityTimeout = DEFAULT_INACTIVITY_TIMEOUT*1000;
+    private final static int DEFAULT_INACTIVITY_TIMEOUT = 60;
+    private long inactivityTimeout = DEFAULT_INACTIVITY_TIMEOUT*1000;
 
 	private ArrayList sessions = new ArrayList();
 
 	private ResourceBundle commandRolesBundle = null;
 
-	public Console(SMSCAppContext context) throws IOException, Config.ParamNotFoundException, Config.WrongParamTypeException
+	public Console(SMSCAppContext context)
+            throws IOException, Config.ParamNotFoundException, Config.WrongParamTypeException
 	{
 		if (context != null)
 		{
 			this.smsc = context.getSmsc();
 			this.smeManager = context.getSmeManager();
 			this.routeSubjectManager = context.getRouteSubjectManager();
+            this.categoryManager = context.getCategoryManager();
+            this.providerManager = context.getProviderManager();
+
 			int humanPort = context.getConfig().getInt("console.humanPort");
 			int scriptPort = context.getConfig().getInt("console.scriptPort");
-      try { inactivityTimeout = context.getConfig().getInt("console.timeout"); }
-      catch (Config.ParamNotFoundException ce) {
-        inactivityTimeout = DEFAULT_INACTIVITY_TIMEOUT;
-        logger.warn("Missed <console.timeout> parameter. Using default: "+DEFAULT_INACTIVITY_TIMEOUT+" sec");
-      } inactivityTimeout *= 1000; // convert to msecs
+            try { inactivityTimeout = context.getConfig().getInt("console.timeout"); }
+            catch (Config.ParamNotFoundException ce) {
+              inactivityTimeout = DEFAULT_INACTIVITY_TIMEOUT;
+              logger.warn("Missed <console.timeout> parameter. Using default: "+DEFAULT_INACTIVITY_TIMEOUT+" sec");
+            } inactivityTimeout *= 1000; // convert to msecs
 			commandRolesBundle = ResourceBundle.getBundle("ru.novosoft.smsc.admin.console.commands.roles");
 			humanGate = new HumanGate(this, humanPort);
 			scriptGate = new ScriptGate(this, scriptPort);
@@ -111,12 +120,12 @@ public class Console extends Thread
     }
   }
 
-  public void addSession(Session session) {
-    synchronized (sessionMonitor)	{ sessions.add(session); }
-  }
-  public void removeSession(Session session) {
-    synchronized (sessionMonitor) { sessions.remove(session);	}
-  }
+    public void addSession(Session session) {
+      synchronized (sessionMonitor)	{ sessions.add(session); }
+    }
+    public void removeSession(Session session) {
+      synchronized (sessionMonitor) { sessions.remove(session);	}
+    }
 
 	public Smsc getSmsc() {
 		return smsc;
@@ -127,6 +136,12 @@ public class Console extends Thread
 	public RouteSubjectManager getRouteSubjectManager() {
 		return routeSubjectManager;
 	}
+    public CategoryManager getCategoryManager() {
+        return categoryManager;
+    }
+    public ProviderManager getProviderManager() {
+        return providerManager;
+    }
 
 	public String[] getCommandRoles(String command)
 	{

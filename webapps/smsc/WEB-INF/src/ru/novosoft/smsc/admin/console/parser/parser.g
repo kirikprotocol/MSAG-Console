@@ -15,6 +15,7 @@ import ru.novosoft.smsc.admin.console.commands.dl.*;
 import ru.novosoft.smsc.admin.console.commands.profile.*;
 import ru.novosoft.smsc.admin.console.commands.route.*;
 import ru.novosoft.smsc.admin.console.commands.sme.*;
+import ru.novosoft.smsc.admin.console.commands.misc.*;
 
 }
 
@@ -74,6 +75,8 @@ add returns [Command cmd] {
 	| TGT_DLSUB	cmd = adddlsubmitter
 	| TGT_DLMEM	cmd = adddlmember
 	| TGT_SME	cmd = addsme
+	| TGT_PROVIDER	cmd = addprovider
+	| TGT_CATEGORY	cmd = addcategory
 	;
 	
 /* ----------------------- Del action parser ---------------------- */
@@ -90,6 +93,8 @@ del returns [Command cmd] {
 	| TGT_DLSUB	cmd = deldlsubmitter
 	| TGT_DLMEM	cmd = deldlmember
 	| TGT_SME	cmd = delsme
+	| TGT_PROVIDER	cmd = delprovider
+	| TGT_CATEGORY	cmd = delcategory
 	;
 /* ----------------------- Alt action parser ---------------------- */
 alt returns [Command cmd] {
@@ -115,6 +120,8 @@ lst returns [Command cmd] {
 	| TGT_ACL	{ cmd = new AclListCommand();       }
 	| TGT_DL	{ cmd = new DistributionListListCommand(); }
 	| TGT_SME	{ cmd = new SmeListCommand();       }
+	| TGT_PROVIDER	{ cmd = new ProviderListCommand();  }
+	| TGT_CATEGORY	{ cmd = new CategoryListCommand();  }
 	;
 /* ----------------------- View action parser --------------------- */
 view returns [Command cmd] {
@@ -866,4 +873,24 @@ delsme returns [SmeDeleteCommand cmd] {
 viewsme returns [SmeViewCommand cmd] {
     cmd = new SmeViewCommand();
 }	: ({ cmd.setSmeId(getnameid("SME id to view")); })
+	;
+
+/* ------------------ Misc commands parsers ---------------- */
+
+addprovider returns [ProviderAddCommand cmd] {
+    cmd = new ProviderAddCommand();
+}	: ({ cmd.setProviderId(getnameid("Provider id")); })
+	;
+delprovider returns [ProviderDeleteCommand cmd] {
+    cmd = new ProviderDeleteCommand();
+}	: ({ cmd.setProviderId(getnameid("Provider id")); })
+	;
+
+addcategory returns [CategoryAddCommand cmd] {
+    cmd = new CategoryAddCommand();
+}	: ({ cmd.setCategoryId(getnameid("Category id")); })
+	;
+delcategory returns [CategoryDeleteCommand cmd] {
+    cmd = new CategoryDeleteCommand();
+}	: ({ cmd.setCategoryId(getnameid("Category id")); })
 	;
