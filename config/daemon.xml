@@ -18,6 +18,7 @@
       <param name="host" type="string">smsc</param>
       <param name="services folder" type="string">services</param>
       <param name="port" type="int">6680</param>
+      <param name="shutdown timeout" type="int">10</param>
     </section>
   </section>
 </config>
