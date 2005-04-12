@@ -109,13 +109,8 @@
 <c:if test="${ traceResults !=null && fn:length(traceResults)>0 }">
 <br>
   <div class=page_subtitle>Trace</div>
-  <textarea style="font-family:Courier New;height:300px">
-<c:forEach items="${traceResults}" var="result" >
-<c:set var="traceObj" value="${result}"/>
-<c:if test="${traceObj != null && smf:isString(traceObj)}">
-<c:out value="${traceObj}"/>
-</c:if>
-</c:forEach>
+<textarea style="font-family:Courier New;height:300px">
+<c:forEach items="${traceResults}" var="result" ><c:set var="traceObj" value="${result}"/><c:if test="${traceObj != null && smf:isString(traceObj)}">${traceObj}</c:if></c:forEach>
 </textarea>
 </div>
 </c:if>
