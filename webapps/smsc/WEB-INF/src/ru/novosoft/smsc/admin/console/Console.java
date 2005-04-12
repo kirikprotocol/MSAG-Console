@@ -70,29 +70,29 @@ public class Console extends Thread
   Object sessionMonitor = new Object();
 
   public void start()
-	{
-		logger.debug("Starting administration console ...");
-		humanGate.start(); scriptGate.start(); super.start();
-		logger.debug("Administration console started.");
-	}
+  {
+      logger.debug("Starting administration console ...");
+      humanGate.start(); scriptGate.start(); super.start();
+      logger.debug("Administration console started.");
+  }
 
   public void close()
-	{
-		logger.debug("Closing administration console ...");
-		synchronized(closeSemaphore) { // stop this thread
-        isStopping = true;
-        synchronized(sessionMonitor) { sessionMonitor.notifyAll(); }
-        try { closeSemaphore.wait(); }
-        catch (InterruptedException e) { }
-    }
-    humanGate.close(); scriptGate.close();
-		while (sessions.size() > 0)	{
-      Session session = (Session) sessions.get(0);
-      try { session.farewell(" Console server stopped"); sleep(500); } catch (Exception e) { }
-      session.close(true);
-		}
-		logger.debug("Administration console closed.");
-	}
+  {
+      logger.debug("Closing administration console ...");
+      synchronized(closeSemaphore) { // stop this thread
+          isStopping = true;
+          synchronized(sessionMonitor) { sessionMonitor.notifyAll(); }
+          try { closeSemaphore.wait(); }
+          catch (InterruptedException e) { }
+      }
+      humanGate.close(); scriptGate.close();
+      while (sessions.size() > 0)	{
+          Session session = (Session) sessions.get(0);
+          try { session.farewell(" Console server stopped"); sleep(500); } catch (Exception e) { }
+          session.close(true);
+      }
+      logger.debug("Administration console closed.");
+  }
 
   public void run()
   {
@@ -155,7 +155,6 @@ public class Console extends Thread
 		{
 			out[i] = st.nextToken();
 		}
-
 		return out;
 	}
 }

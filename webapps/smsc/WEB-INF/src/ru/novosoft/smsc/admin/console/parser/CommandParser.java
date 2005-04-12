@@ -16,6 +16,7 @@ import ru.novosoft.smsc.admin.console.commands.dl.*;
 import ru.novosoft.smsc.admin.console.commands.profile.*;
 import ru.novosoft.smsc.admin.console.commands.route.*;
 import ru.novosoft.smsc.admin.console.commands.sme.*;
+import ru.novosoft.smsc.admin.console.commands.misc.*;
 
 
 import antlr.TokenBuffer;
@@ -206,6 +207,18 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=addsme();
 			break;
 		}
+		case TGT_PROVIDER:
+		{
+			match(TGT_PROVIDER);
+			cmd=addprovider();
+			break;
+		}
+		case TGT_CATEGORY:
+		{
+			match(TGT_CATEGORY);
+			cmd=addcategory();
+			break;
+		}
 		default:
 		{
 			throw new NoViableAltException(LT(1), getFilename());
@@ -280,6 +293,18 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(TGT_SME);
 			cmd=delsme();
+			break;
+		}
+		case TGT_PROVIDER:
+		{
+			match(TGT_PROVIDER);
+			cmd=delprovider();
+			break;
+		}
+		case TGT_CATEGORY:
+		{
+			match(TGT_CATEGORY);
+			cmd=delcategory();
 			break;
 		}
 		default:
@@ -402,6 +427,18 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(TGT_SME);
 			cmd = new SmeListCommand();
+			break;
+		}
+		case TGT_PROVIDER:
+		{
+			match(TGT_PROVIDER);
+			cmd = new ProviderListCommand();
+			break;
+		}
+		case TGT_CATEGORY:
+		{
+			match(TGT_CATEGORY);
+			cmd = new CategoryListCommand();
 			break;
 		}
 		default:
@@ -599,6 +636,8 @@ public CommandParser(ParserSharedInputState state) {
 			break;
 		}
 		case TGT_ACL:
+		case TGT_PROVIDER:
+		case TGT_CATEGORY:
 		case OPT_SRC:
 		case OPT_FWD:
 		case OPT_SRCSME:
@@ -617,6 +656,49 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(TGT_ACL);
 			cmd.setAclId(getlongid("acl id"));
+			break;
+		}
+		case TGT_PROVIDER:
+		case TGT_CATEGORY:
+		case OPT_SRC:
+		case OPT_FWD:
+		case OPT_SRCSME:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case TGT_PROVIDER:
+		{
+			match(TGT_PROVIDER);
+			cmd.setProviderName(getnameid("provider name"));
+			break;
+		}
+		case TGT_CATEGORY:
+		case OPT_SRC:
+		case OPT_FWD:
+		case OPT_SRCSME:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case TGT_CATEGORY:
+		{
+			match(TGT_CATEGORY);
+			cmd.setCategoryName(getnameid("category name"));
 			break;
 		}
 		case OPT_SRC:
@@ -1098,6 +1180,32 @@ public CommandParser(ParserSharedInputState state) {
 		return cmd;
 	}
 	
+	public final ProviderAddCommand  addprovider() throws RecognitionException, TokenStreamException {
+		ProviderAddCommand cmd;
+		
+		
+		cmd = new ProviderAddCommand();
+		
+		
+		{
+		cmd.setProviderId(getnameid("Provider id"));
+		}
+		return cmd;
+	}
+	
+	public final CategoryAddCommand  addcategory() throws RecognitionException, TokenStreamException {
+		CategoryAddCommand cmd;
+		
+		
+		cmd = new CategoryAddCommand();
+		
+		
+		{
+		cmd.setCategoryId(getnameid("Category id"));
+		}
+		return cmd;
+	}
+	
 	public final RouteDeleteCommand  delroute() throws RecognitionException, TokenStreamException {
 		RouteDeleteCommand cmd;
 		
@@ -1284,6 +1392,32 @@ public CommandParser(ParserSharedInputState state) {
 		return cmd;
 	}
 	
+	public final ProviderDeleteCommand  delprovider() throws RecognitionException, TokenStreamException {
+		ProviderDeleteCommand cmd;
+		
+		
+		cmd = new ProviderDeleteCommand();
+		
+		
+		{
+		cmd.setProviderId(getnameid("Provider id"));
+		}
+		return cmd;
+	}
+	
+	public final CategoryDeleteCommand  delcategory() throws RecognitionException, TokenStreamException {
+		CategoryDeleteCommand cmd;
+		
+		
+		cmd = new CategoryDeleteCommand();
+		
+		
+		{
+		cmd.setCategoryId(getnameid("Category id"));
+		}
+		return cmd;
+	}
+	
 	public final RouteAlterCommand  altroute() throws RecognitionException, TokenStreamException {
 		RouteAlterCommand cmd;
 		
@@ -1307,6 +1441,8 @@ public CommandParser(ParserSharedInputState state) {
 		case ACT_ADD:
 		case ACT_DELETE:
 		case TGT_ACL:
+		case TGT_PROVIDER:
+		case TGT_CATEGORY:
 		case OPT_HIDE:
 		case OPT_NOHIDE:
 		case OPT_BILL:
@@ -1349,6 +1485,8 @@ public CommandParser(ParserSharedInputState state) {
 		case ACT_ADD:
 		case ACT_DELETE:
 		case TGT_ACL:
+		case TGT_PROVIDER:
+		case TGT_CATEGORY:
 		case OPT_PRI:
 		case OPT_DM:
 		case OPT_FWD:
@@ -1374,6 +1512,8 @@ public CommandParser(ParserSharedInputState state) {
 		case ACT_ADD:
 		case ACT_DELETE:
 		case TGT_ACL:
+		case TGT_PROVIDER:
+		case TGT_CATEGORY:
 		case OPT_DM:
 		case OPT_FWD:
 		case OPT_SRCSME:
@@ -1398,6 +1538,8 @@ public CommandParser(ParserSharedInputState state) {
 		case ACT_ADD:
 		case ACT_DELETE:
 		case TGT_ACL:
+		case TGT_PROVIDER:
+		case TGT_CATEGORY:
 		case OPT_FWD:
 		case OPT_SRCSME:
 		{
@@ -1415,6 +1557,53 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(TGT_ACL);
 			cmd.setAclId(getlongid("acl id"));
+			break;
+		}
+		case EOF:
+		case ACT_ADD:
+		case ACT_DELETE:
+		case TGT_PROVIDER:
+		case TGT_CATEGORY:
+		case OPT_FWD:
+		case OPT_SRCSME:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case TGT_PROVIDER:
+		{
+			match(TGT_PROVIDER);
+			cmd.setProviderName(getnameid("provider name"));
+			break;
+		}
+		case EOF:
+		case ACT_ADD:
+		case ACT_DELETE:
+		case TGT_CATEGORY:
+		case OPT_FWD:
+		case OPT_SRCSME:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		{
+		switch ( LA(1)) {
+		case TGT_CATEGORY:
+		{
+			match(TGT_CATEGORY);
+			cmd.setCategoryName(getnameid("category name"));
 			break;
 		}
 		case EOF:
@@ -2908,6 +3097,8 @@ public CommandParser(ParserSharedInputState state) {
 			case ACT_ADD:
 			case ACT_DELETE:
 			case TGT_ACL:
+			case TGT_PROVIDER:
+			case TGT_CATEGORY:
 			case OPT_HIDE:
 			case OPT_NOHIDE:
 			case OPT_BILL:
@@ -2953,6 +3144,8 @@ public CommandParser(ParserSharedInputState state) {
 			case ACT_ADD:
 			case ACT_DELETE:
 			case TGT_ACL:
+			case TGT_PROVIDER:
+			case TGT_CATEGORY:
 			case OPT_BILL:
 			case OPT_NOBILL:
 			case OPT_ARCH:
@@ -3015,6 +3208,8 @@ public CommandParser(ParserSharedInputState state) {
 			case ACT_ADD:
 			case ACT_DELETE:
 			case TGT_ACL:
+			case TGT_PROVIDER:
+			case TGT_CATEGORY:
 			case OPT_BILL:
 			case OPT_NOBILL:
 			case OPT_ARCH:
@@ -3070,6 +3265,8 @@ public CommandParser(ParserSharedInputState state) {
 			case ACT_ADD:
 			case ACT_DELETE:
 			case TGT_ACL:
+			case TGT_PROVIDER:
+			case TGT_CATEGORY:
 			case OPT_BILL:
 			case OPT_NOBILL:
 			case OPT_ARCH:
@@ -3124,6 +3321,8 @@ public CommandParser(ParserSharedInputState state) {
 			case ACT_ADD:
 			case ACT_DELETE:
 			case TGT_ACL:
+			case TGT_PROVIDER:
+			case TGT_CATEGORY:
 			case OPT_BILL:
 			case OPT_NOBILL:
 			case OPT_ARCH:
@@ -3164,6 +3363,8 @@ public CommandParser(ParserSharedInputState state) {
 			case ACT_ADD:
 			case ACT_DELETE:
 			case TGT_ACL:
+			case TGT_PROVIDER:
+			case TGT_CATEGORY:
 			case OPT_ARCH:
 			case OPT_NOARCH:
 			case OPT_ALLOW:
@@ -3202,6 +3403,8 @@ public CommandParser(ParserSharedInputState state) {
 			case ACT_ADD:
 			case ACT_DELETE:
 			case TGT_ACL:
+			case TGT_PROVIDER:
+			case TGT_CATEGORY:
 			case OPT_ALLOW:
 			case OPT_DENY:
 			case OPT_RCPT:
@@ -3238,6 +3441,8 @@ public CommandParser(ParserSharedInputState state) {
 			case ACT_ADD:
 			case ACT_DELETE:
 			case TGT_ACL:
+			case TGT_PROVIDER:
+			case TGT_CATEGORY:
 			case OPT_RCPT:
 			case OPT_NORCPT:
 			case OPT_SVCID:
@@ -3272,6 +3477,8 @@ public CommandParser(ParserSharedInputState state) {
 			case ACT_ADD:
 			case ACT_DELETE:
 			case TGT_ACL:
+			case TGT_PROVIDER:
+			case TGT_CATEGORY:
 			case OPT_SVCID:
 			case OPT_PRI:
 			case OPT_DM:
@@ -3317,14 +3524,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop108:
+			_loop112:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop108;
+					break _loop112;
 				}
 				
 			} while (true);
@@ -4468,6 +4675,8 @@ public CommandParser(ParserSharedInputState state) {
 		"\"dlmember\"",
 		"\"acl\"",
 		"\"sme\"",
+		"\"provider\"",
+		"\"category\"",
 		"\"name\"",
 		"\"hide\"",
 		"\"nohide\"",

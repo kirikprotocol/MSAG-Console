@@ -207,6 +207,7 @@ catch [RecognitionException ex] {
 catch [NumberFormatException ex] {
     throw new RecognitionException(ex.getMessage()+". Integer value for <"+msg+"> expected. ");
 }
+
 /* ----------------------- Common routes parsers ----------------------- */
 srcdef[RouteGenCommand cmd] { // Special command required !!!
     RouteSrcDef def = new RouteSrcDef();
@@ -240,7 +241,6 @@ dstdef[RouteGenCommand cmd, boolean needSmeId] { // Special command required !!!
 	;
 
 /* ----------------------- Route command parsers ----------------------- */
-
 route_src[RouteGenCommand cmd]
 	: (OPT_SRC (srcdef[cmd])+)
 	;
@@ -281,6 +281,8 @@ addroute returns [RouteAddCommand cmd] {
 	  (OPT_PRI   { cmd.setPriority(getint("priority")); })
 	  (OPT_DM route_dm[cmd])?
 	  (TGT_ACL    { cmd.setAclId(getlongid("acl id")); })?
+	  (TGT_PROVIDER { cmd.setProviderName(getnameid("provider name")); })?
+	  (TGT_CATEGORY { cmd.setCategoryName(getnameid("category name")); })?
 	  (OPT_SRCSME { cmd.setSrcSmeId(getnameid("srcSmeId value"));   })?
 	  (OPT_FWD    { cmd.setForwardTo(getnameid("forwardTo value")); })?
 	  route_src[cmd]
@@ -331,6 +333,8 @@ altroute returns [RouteAlterCommand cmd] {
 	  (OPT_PRI   { cmd.setPriority(getint("priority"));   })?
 	  (OPT_DM route_dm[cmd])?
 	  (TGT_ACL     { cmd.setAclId(getlongid("acl id")); })?
+	  (TGT_PROVIDER { cmd.setProviderName(getnameid("provider name")); })?
+	  (TGT_CATEGORY { cmd.setCategoryName(getnameid("category name")); })?
 	  (OPT_SRCSME  { cmd.setSrcSmeId(getnameid("srcSmeId value"));   })?
 	  (OPT_FWD     { cmd.setForwardTo(getnameid("forwardTo value")); })?
 	  (

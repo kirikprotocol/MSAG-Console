@@ -10,6 +10,8 @@ package ru.novosoft.smsc.admin.console.commands.route;
 
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.route.*;
+import ru.novosoft.smsc.admin.provider.Provider;
+import ru.novosoft.smsc.admin.category.Category;
 
 
 public class RouteAlterCommand extends RouteGenCommand
@@ -42,7 +44,8 @@ public class RouteAlterCommand extends RouteGenCommand
   public void process(CommandContext ctx)
   {
     String out = "Route '" + route + "'";
-    try {
+    try
+    {
       RouteList list = ctx.getRouteSubjectManager().getRoutes();
 
       Route oldRoute = list.get(route);
@@ -54,16 +57,24 @@ public class RouteAlterCommand extends RouteGenCommand
 
       if (isSrcSmeId) {
         SME sme = ctx.getSmeManager().get(srcSmeId);
-        if (sme == null) {
-          ctx.setMessage("SME '" + srcSmeId + "' not found (srcSmeId). Couldn't alter " + out);
-          ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-          return;
-        }
+        if (sme == null) throw new Exception("SME '" + srcSmeId + "' not found (srcSmeId)");
       }
-      if (isForwardTo && (!isSrcSmeId || !srcSmeId.equalsIgnoreCase("MAP_PROXY"))) {
-        ctx.setMessage("Option 'fwd' is valid only for srcSmeId='MAP_PROXY'. Couldn't alter " + out);
-        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-        return;
+
+      if (isForwardTo && (!isSrcSmeId || !srcSmeId.equalsIgnoreCase("MAP_PROXY")))
+        throw new Exception("Option 'fwd' is valid only for srcSmeId='MAP_PROXY'");
+
+      long providerId = oldRoute.getProviderId();
+      if (isProviderName) {
+          Provider provider = ctx.getProviderManager().getProviderByName(providerName);
+          if (provider == null) throw new Exception("Provider '" + providerName + "' not found");
+          providerId = provider.getId();
+      }
+
+      long categoryId = oldRoute.getCategoryId();
+      if (isCategoryName) {
+          Category category = ctx.getCategoryManager().getCategoryByName(categoryName);
+          if (category == null) throw new Exception("Category '" + categoryName + "' not found");
+          categoryId = category.getId();
       }
 
       Route newRoute = new Route(route,
@@ -74,9 +85,10 @@ public class RouteAlterCommand extends RouteGenCommand
                                  oldRoute.getSrcSmeId(), oldRoute.getDeliveryMode(), oldRoute.getForwardTo(),
                                  oldRoute.isHide(), oldRoute.getReplayPath(), oldRoute.getNotes(),
                                  oldRoute.isForceDelivery(), oldRoute.getAclId(),
-                                 oldRoute.isAllowBlocked(), oldRoute.getProviderId(), oldRoute.getCategoryId());
+                                 oldRoute.isAllowBlocked(), providerId, categoryId);
 
-      if (target == TARGET_SRC) {
+      if (target == TARGET_SRC)
+      {
         for (int i = 0; i < srcs.size(); i++) {
           Object obj = srcs.get(i);
           if (obj != null && obj instanceof RouteSrcDef) {
@@ -86,43 +98,28 @@ public class RouteAlterCommand extends RouteGenCommand
               src = new Source(new Mask(def.getSrc()));
             } else if (def.getType() == RouteSrcDef.TYPE_SUBJECT) {
               Subject subj = ctx.getRouteSubjectManager().getSubjects().get(def.getSrc());
-              if (subj == null) {
-                ctx.setMessage("Subject '" + def.getSrc() + "' in src definition not found. Couldn't alter " + out);
-                ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-                return;
-              }
+              if (subj == null)
+                  throw new Exception("Subject '" + def.getSrc() + "' in src definition not found");
               src = new Source(subj);
-            } else {
-              ctx.setMessage("Unsupported src definition for " + out);
-              ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-              return;
             }
+            else throw new Exception("Unsupported src definition for " + out);
 
             if (action == ACTION_ADD) {
               newRoute.addSource(src);
             } else if (action == ACTION_DEL) {
               Source oldSrc = newRoute.getSources().get(src.getName());
               if (oldSrc != null) {
-                if (newRoute.getSources().size() > 1) {
-                  newRoute.removeDestination(src.getName());
-                } else {
-                  ctx.setMessage("Couldn't delete source '" + src.getName() + "' for " + out + ". It rest only one.");
-                  ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-                  return;
-                }
-              } else {
-                ctx.setMessage("Source '" + src.getName() + "' not found for " + out);
-                ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-                return;
+                if (newRoute.getSources().size() > 1) newRoute.removeDestination(src.getName());
+                else throw new Exception("Couldn't delete source '" + src.getName() + "' for " + out + ". It rest only one");
               }
-            } else {
-              ctx.setMessage("Unsupported action on " + out + ". Allowed ADD & DELETE");
-              ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-              return;
+              else throw new Exception("Source '" + src.getName() + "' not found for " + out);
             }
+            else throw new Exception("Unsupported action on " + out + ". Allowed ADD & DELETE");
           }
         }
-      } else if (target == TARGET_DST) {
+      }
+      else if (target == TARGET_DST)
+      {
         for (int i = 0; i < dsts.size(); i++) {
           Object obj = dsts.get(i);
           if (obj != null && obj instanceof RouteDstDef) {
@@ -130,71 +127,43 @@ public class RouteAlterCommand extends RouteGenCommand
             if (action == ACTION_ADD) {
               Destination dst = null;
               SME sme = ctx.getSmeManager().get(def.getSmeId());
-              if (sme == null) {
-                ctx.setMessage("SME '" + def.getSmeId() + "' in dst definition not found. Couldn't alter " + out);
-                ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-                return;
-              }
+              if (sme == null)
+                  throw new Exception("SME '" + def.getSmeId() + "' in dst definition not found");
               if (def.getType() == RouteDstDef.TYPE_MASK) {
                 dst = new Destination(new Mask(def.getDst()), sme);
               } else if (def.getType() == RouteDstDef.TYPE_SUBJECT) {
                 Subject subj = ctx.getRouteSubjectManager().getSubjects().get(def.getDst());
-                if (subj == null) {
-                  ctx.setMessage("Subject '" + def.getDst() + "' in dst definition not found. Couldn't alter " + out);
-                  ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-                  return;
-                }
+                if (subj == null)
+                    throw new Exception("Subject '" + def.getDst() + "' in dst definition not found");
                 dst = new Destination(subj, sme);
-              } else {
-                ctx.setMessage("Unsupported dst definition for " + out);
-                ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-                return;
               }
+              else throw new Exception("Unsupported dst definition for " + out);
               newRoute.addDestination(dst);
-            } else if (action == ACTION_DEL) {
+            }
+            else if (action == ACTION_DEL) {
               String dstName;
               if (def.getType() == RouteDstDef.TYPE_MASK) {
                 dstName = (new Mask(def.getDst())).getMask();
               } else if (def.getType() == RouteDstDef.TYPE_SUBJECT) {
                 Subject subj = ctx.getRouteSubjectManager().getSubjects().get(def.getDst());
-                if (subj == null) {
-                  ctx.setMessage("Subject '" + def.getDst() + "' in dst definition not found. Couldn't alter " + out);
-                  ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-                  return;
-                }
+                if (subj == null)
+                    throw new Exception("Subject '" + def.getDst() + "' in dst definition not found");
                 dstName = subj.getName();
-              } else {
-                ctx.setMessage("Unsupported dst definition for " + out);
-                ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-                return;
               }
+              else throw new Exception("Unsupported dst definition for " + out);
 
               Destination oldDst = newRoute.getDestinations().get(dstName);
               if (oldDst != null) {
-                if (newRoute.getDestinations().size() > 1) {
-                  newRoute.removeDestination(dstName);
-                } else {
-                  ctx.setMessage("Couldn't delete destination '" + dstName + "' for " + out + ". It rest only one.");
-                  ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-                  return;
-                }
-              } else {
-                ctx.setMessage("Destination '" + dstName + "' not found for " + out);
-                ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-                return;
+                if (newRoute.getDestinations().size() > 1) newRoute.removeDestination(dstName);
+                else throw new Exception("Couldn't delete destination '" + dstName + "' for " + out + ". It rest only one.");
               }
-            } else {
-              ctx.setMessage("Unsupported action on " + out + ". Allowed ADD & DELETE");
-              ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-              return;
+              else throw new Exception("Destination '" + dstName + "' not found for " + out);
             }
+            else throw new Exception("Unsupported action on " + out + ". Allowed ADD & DELETE");
           }
         }
-      } else {
-        ctx.setMessage("Unsupported target on " + out + ". Allowed SRC & DST");
-        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-        return;
       }
+      else throw new Exception("Unsupported target on " + out + ". Allowed SRC & DST");
 
       if (setBill) newRoute.setBilling(bill);
       if (setArc) newRoute.setArchiving(arc);
@@ -219,7 +188,8 @@ public class RouteAlterCommand extends RouteGenCommand
 
       list.remove(oldRoute.getName());
       list.put(newRoute);
-    } catch (Exception e) {
+    }
+    catch (Exception e) {
       ctx.setMessage("Couldn't add " + out + ". Cause: " + e.getMessage());
       ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
       return;

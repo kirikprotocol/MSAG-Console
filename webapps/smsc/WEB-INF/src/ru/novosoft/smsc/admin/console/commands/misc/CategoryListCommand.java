@@ -26,9 +26,12 @@ public class CategoryListCommand  implements Command
                 ctx.setStatus(CommandContext.CMD_OK);
             } else {
                 while (i.hasNext()) {
-                    String categoryId = (String)i.next();
-                    if (categoryId != null && categoryId.length() > 0)
-                        ctx.addResult(categoryId);
+                    Long categoryId = (Long)i.next();
+                    Category category = manager.getCategory(categoryId);
+                    if (category != null) {
+                        String categoryName = (category.getName() != null) ? category.getName():"";
+                        ctx.addResult(""+categoryId.longValue()+" '"+categoryName+"'");
+                    }
                 }
                 ctx.setMessage("Categories list");
                 ctx.setStatus(CommandContext.CMD_LIST);

@@ -3,7 +3,9 @@ package ru.novosoft.smsc.admin.console.commands.misc;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.category.CategoryManager;
+import ru.novosoft.smsc.admin.category.Category;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
+import ru.novosoft.smsc.admin.provider.Provider;
 
 import java.util.Iterator;
 
@@ -26,14 +28,18 @@ public class ProviderListCommand  implements Command
                 ctx.setStatus(CommandContext.CMD_OK);
             } else {
                 while (i.hasNext()) {
-                    String providerId = (String)i.next();
-                    if (providerId != null && providerId.length() > 0)
-                        ctx.addResult(providerId);
+                    Long providerId = (Long)i.next();
+                    Provider provider = manager.getProvider(providerId);
+                    if (provider != null) {
+                        String providerName = (provider.getName() != null) ? provider.getName():"";
+                        ctx.addResult(""+providerId.longValue()+" '"+providerName+"'");
+                    }
                 }
                 ctx.setMessage("Providers list");
                 ctx.setStatus(CommandContext.CMD_LIST);
             }
         } catch (Exception e) {
+            e.printStackTrace();
             ctx.setMessage("Couldn't list providers. Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }

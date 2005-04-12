@@ -42,6 +42,8 @@ tokens {
   TGT_DLMEM     = "dlmember";
   TGT_ACL       = "acl";
   TGT_SME	= "sme";
+  TGT_PROVIDER	= "provider";
+  TGT_CATEGORY	= "category";
 
   OPT_NAME      = "name";
   OPT_HIDE      = "hide";

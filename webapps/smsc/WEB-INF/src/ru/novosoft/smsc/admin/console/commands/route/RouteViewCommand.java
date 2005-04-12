@@ -10,6 +10,8 @@ package ru.novosoft.smsc.admin.console.commands.route;
 import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.route.*;
+import ru.novosoft.smsc.admin.provider.Provider;
+import ru.novosoft.smsc.admin.category.Category;
 
 import java.util.Iterator;
 
@@ -55,6 +57,12 @@ public class RouteViewCommand implements Command
                   (smscRoute.isArchiving() ? "archiving, " : "no archiving, ") +
                   (smscRoute.isEnabling() ? "allowed, " : "denied, ") +
                   (smscRoute.isSuppressDeliveryReports() ? "no receipt" : "receipt"));
+    Provider provider = ctx.getProviderManager().getProvider(new Long(smscRoute.getProviderId()));
+    ctx.addResult("provider: " + (provider != null ? provider.getName():"-") +
+                                           " (" + smscRoute.getProviderId() + ")");
+    Category category = ctx.getCategoryManager().getCategory(new Long(smscRoute.getCategoryId()));
+    ctx.addResult("category: " + (category != null ? category.getName():"-") +
+                                           " (" + smscRoute.getCategoryId() + ")");
 
     String srcsStr = "";
     Iterator srcs = smscRoute.getSources().iterator();

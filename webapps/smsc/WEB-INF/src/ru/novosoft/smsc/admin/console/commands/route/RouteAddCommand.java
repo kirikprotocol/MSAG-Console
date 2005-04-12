@@ -10,156 +10,135 @@ package ru.novosoft.smsc.admin.console.commands.route;
 
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.route.*;
+import ru.novosoft.smsc.admin.provider.Provider;
+import ru.novosoft.smsc.admin.category.Category;
 
 
 public class RouteAddCommand extends RouteGenCommand
 {
-  private boolean bill = true;
-  private boolean arc = true;
-  private boolean allow = true;
-  private boolean receipt = true;
-  private boolean active = true;
-  private int serviceid;
-  private int priority;
+    private boolean bill = true;
+    private boolean arc = true;
+    private boolean allow = true;
+    private boolean receipt = true;
+    private boolean active = true;
+    private int serviceid;
+    private int priority;
 
-  public void process(CommandContext ctx)
-  {
-    String out = "Route '" + route + "'";
-    try {
-      RouteList list = ctx.getRouteSubjectManager().getRoutes();
-      Route smscRoute = list.get(route);
-      if (smscRoute != null) {
-        ctx.setMessage(out + " already exists");
-        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-        return;
-      }
+    public void process(CommandContext ctx)
+    {
+      String out = "Route '" + route + "'";
+      try {
+          RouteList list = ctx.getRouteSubjectManager().getRoutes();
+          Route smscRoute = list.get(route);
+          if (smscRoute != null) {
+            ctx.setMessage(out + " already exists");
+            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
+            return;
+          }
 
-      if (isSrcSmeId) {
-        SME sme = ctx.getSmeManager().get(srcSmeId);
-        if (sme == null) {
-          ctx.setMessage("SME '" + srcSmeId + "' not found (srcSmeId). Couldn't add " + out);
+          if (isSrcSmeId) {
+            SME sme = ctx.getSmeManager().get(srcSmeId);
+            if (sme == null) throw new Exception("SME '" + srcSmeId + "' not found (srcSmeId)");
+          }
+
+          long providerId = -1;
+          if (isProviderName) {
+              Provider provider = ctx.getProviderManager().getProviderByName(providerName);
+              if (provider == null) throw new Exception("Provider '" + providerName + "' not found");
+              providerId = provider.getId();
+          }
+
+          long categoryId = -1;
+          if (isCategoryName) {
+              Category category = ctx.getCategoryManager().getCategoryByName(categoryName);
+              if (category == null) throw new Exception("Category '" + categoryName + "' not found");
+              categoryId = category.getId();
+          }
+
+          if (isForwardTo && (!isSrcSmeId || !srcSmeId.equalsIgnoreCase("MAP_PROXY")))
+            throw new Exception("Option 'fwd' is valid only for srcSmeId='MAP_PROXY'");
+
+          SourceList srcList = new SourceList();
+          for (int i = 0; i < srcs.size(); i++) {
+            Object obj = srcs.get(i);
+            if (obj != null && obj instanceof RouteSrcDef) {
+              RouteSrcDef def = (RouteSrcDef) obj;
+              if (def.getType() == RouteSrcDef.TYPE_MASK) {
+                srcList.add(new Source(new Mask(def.getSrc())));
+              } else if (def.getType() == RouteSrcDef.TYPE_SUBJECT) {
+                Subject subj = ctx.getRouteSubjectManager().getSubjects().get(def.getSrc());
+                if (subj == null)
+                    throw new Exception("Subject '" + def.getSrc() + "' in src definition not found");
+                srcList.add(new Source(subj));
+              }
+              else throw new Exception("Unsupported src definition for " + out);
+            }
+          }
+
+          DestinationList dstList = new DestinationList();
+          for (int i = 0; i < dsts.size(); i++) {
+            Object obj = dsts.get(i);
+            if (obj != null && obj instanceof RouteDstDef) {
+              RouteDstDef def = (RouteDstDef) obj;
+              SME sme = ctx.getSmeManager().get(def.getSmeId());
+              if (sme == null)
+                  throw new Exception("SME '" + def.getSmeId() + "' in dst definition not found");
+              if (def.getType() == RouteDstDef.TYPE_MASK) {
+                dstList.add(new Destination(new Mask(def.getDst()), sme));
+              } else if (def.getType() == RouteDstDef.TYPE_SUBJECT) {
+                Subject subj = ctx.getRouteSubjectManager().getSubjects().get(def.getDst());
+                if (subj == null)
+                    throw new Exception("Subject '" + def.getDst() + "' in dst definition not found");
+                dstList.add(new Destination(subj, sme));
+              }
+              else throw new Exception("Unsupported dst definition for " + out);
+            }
+          }
+
+          smscRoute = new Route(route, priority, allow, bill, arc, !receipt,
+                                active, serviceid, srcList, dstList, srcSmeId, deliveryMode, forwardTo,
+                                hide, (isReplayPath) ? replayPath : REPLAY_PATH_PASS,
+                                notes, forceDelivery, ((isAclId) ? aclId : -1),
+                                (isAllowBlocked) ? allowBlocked : false, providerId, categoryId);
+
+          if (priority < 0 || priority > 32000)
+            throw new Exception("Priority value should be between 0 and 32000");
+
+          list.put(smscRoute);
+      } catch (Exception e) {
+          ctx.setMessage("Couldn't add " + out + ". Cause: " + e.getMessage());
           ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
           return;
-        }
       }
 
-      if (isForwardTo && (!isSrcSmeId || !srcSmeId.equalsIgnoreCase("MAP_PROXY"))) {
-        ctx.setMessage("Option 'fwd' is valid only for srcSmeId='MAP_PROXY'. Couldn't add " + out);
-        ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-        return;
-      }
-
-      SourceList srcList = new SourceList();
-      for (int i = 0; i < srcs.size(); i++) {
-        Object obj = srcs.get(i);
-        if (obj != null && obj instanceof RouteSrcDef) {
-          RouteSrcDef def = (RouteSrcDef) obj;
-          if (def.getType() == RouteSrcDef.TYPE_MASK) {
-            srcList.add(new Source(new Mask(def.getSrc())));
-          } else if (def.getType() == RouteSrcDef.TYPE_SUBJECT) {
-            Subject subj = ctx.getRouteSubjectManager().getSubjects().get(def.getSrc());
-            if (subj == null) {
-              ctx.setMessage("Subject '" + def.getSrc() + "' in src definition not found. Couldn't add " + out);
-              ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-              return;
-            }
-            srcList.add(new Source(subj));
-          } else {
-            ctx.setMessage("Unsupported src definition for " + out);
-            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-            return;
-          }
-        }
-      }
-
-      DestinationList dstList = new DestinationList();
-      for (int i = 0; i < dsts.size(); i++) {
-        Object obj = dsts.get(i);
-        if (obj != null && obj instanceof RouteDstDef) {
-          RouteDstDef def = (RouteDstDef) obj;
-          SME sme = ctx.getSmeManager().get(def.getSmeId());
-          if (sme == null) {
-            ctx.setMessage("SME '" + def.getSmeId() + "' in dst definition not found. Couldn't add " + out);
-            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-            return;
-          }
-          if (def.getType() == RouteDstDef.TYPE_MASK) {
-            dstList.add(new Destination(new Mask(def.getDst()), sme));
-          } else if (def.getType() == RouteDstDef.TYPE_SUBJECT) {
-            Subject subj = ctx.getRouteSubjectManager().getSubjects().get(def.getDst());
-            if (subj == null) {
-              ctx.setMessage("Subject '" + def.getDst() + "' in dst definition not found. Couldn't add " + out);
-              ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-              return;
-            }
-            dstList.add(new Destination(subj, sme));
-          } else {
-            ctx.setMessage("Unsupported dst definition for " + out);
-            ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-            return;
-          }
-        }
-      }
-
-      smscRoute = new Route(route, priority, allow, bill, arc, !receipt,
-                            active, serviceid, srcList, dstList, srcSmeId, deliveryMode, forwardTo,
-                            hide, (isReplayPath) ? replayPath : REPLAY_PATH_PASS,
-                            notes, forceDelivery, ((isAclId) ? aclId : -1),
-                            (isAllowBlocked) ? allowBlocked : false, ((isProviderId) ? providerId : -1), ((isCategoryId) ? categoryId : -1));
-
-      if (priority < 0 || priority > 32000)
-        throw new Exception("Priority value should be between 0 and 32000");
-
-      list.put(smscRoute);
-    } catch (Exception e) {
-      ctx.setMessage("Couldn't add " + out + ". Cause: " + e.getMessage());
-      ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
-      return;
+      ctx.setMessage(out + " added");
+      ctx.setStatus(CommandContext.CMD_OK);
     }
 
-    ctx.setMessage(out + " added");
-    ctx.setStatus(CommandContext.CMD_OK);
-  }
+    public void setBill(boolean bill) {
+      this.bill = bill;
+    }
+    public void setArc(boolean arc) {
+      this.arc = arc;
+    }
+    public void setAllow(boolean allow) {
+      this.allow = allow;
+    }
+    public void setServiceId(int serviceid) {
+      this.serviceid = serviceid;
+    }
+    public void setPriority(int priority) {
+      this.priority = priority;
+    }
+    public void setReceipt(boolean receipt) {
+      this.receipt = receipt;
+    }
+    public void setActive(boolean active) {
+      this.active = active;
+    }
 
-  public void setBill(boolean bill)
-  {
-    this.bill = bill;
-  }
-
-  public void setArc(boolean arc)
-  {
-    this.arc = arc;
-  }
-
-  public void setAllow(boolean allow)
-  {
-    this.allow = allow;
-  }
-
-  public void setServiceId(int serviceid)
-  {
-    this.serviceid = serviceid;
-  }
-
-  public void setPriority(int priority)
-  {
-    this.priority = priority;
-  }
-
-  public void setReceipt(boolean receipt)
-  {
-    this.receipt = receipt;
-  }
-
-  public void setActive(boolean active)
-  {
-    this.active = active;
-  }
-
-  public String getId()
-  {
-    return "ROUTE_ADD";
-  }
-
+    public String getId() {
+      return "ROUTE_ADD";
+    }
 }
 
