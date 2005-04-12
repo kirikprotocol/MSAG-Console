@@ -141,7 +141,6 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       aclManager = new AclManager(this);
 
       File usersConfig = new File(webappConfig.getString("system.users file"));
-      startConsole();
       userManager = new UserManager(usersConfig);
       providerManager = new ProviderManager(webappConfig);
       categoryManager = new CategoryManager(webappConfig);
@@ -150,6 +149,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       perfServer.start();
       topServer = new TopServer(webappConfig);
       topServer.start();
+      startConsole();
       System.out.println("SMSC Administartion Web Apllication Started  **************************************************");
     } catch (Exception e) {
       System.err.println("Exception in initialization:");
