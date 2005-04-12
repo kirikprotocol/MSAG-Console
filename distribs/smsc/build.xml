@@ -104,6 +104,8 @@ Targets:
     <mkdir dir="${DISTR_DIR}/temp"/>
     <mkdir dir="${DISTR_DIR}/logs"/>
     <mkdir dir="${DISTR_DIR}/work"/>
+    <mkdir dir="${DISTR_DIR}/arcnew"/>
+    <mkdir dir="${DISTR_DIR}/billnew"/>
     <mkdir dir="${DISTR_DIR}/services/SMSC/conf"/>
     <mkdir dir="${DISTR_DIR}/services/ArchiveDaemon/conf"/>
     <mkdir dir="${DISTR_DIR}/daemon/conf"/>
