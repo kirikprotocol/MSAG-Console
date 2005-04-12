@@ -10,6 +10,12 @@ import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
 
 import ru.novosoft.smsc.admin.console.commands.*;
+import ru.novosoft.smsc.admin.console.commands.acl.*;
+import ru.novosoft.smsc.admin.console.commands.alias.*;
+import ru.novosoft.smsc.admin.console.commands.dl.*;
+import ru.novosoft.smsc.admin.console.commands.profile.*;
+import ru.novosoft.smsc.admin.console.commands.route.*;
+import ru.novosoft.smsc.admin.console.commands.sme.*;
 
 
 import antlr.TokenBuffer;
