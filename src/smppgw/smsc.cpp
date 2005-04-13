@@ -502,6 +502,33 @@ void Smsc::init(const SmscConfigs& cfg)
   __trace__("Smsc::init completed");
 }
 
+bool Smsc::regSmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid)
+{
+    smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.regSmsc");
+
+    smsc::sme::SmeConfig gwcfg;
+    gwcfg.host=cfg.host;
+    gwcfg.port=cfg.port;
+    gwcfg.sid=cfg.sid;
+    gwcfg.password=cfg.password;
+    gwcfg.smppTimeOut=cfg.smppTimeOut;
+
+    smsc_log_info(log, "systemId %s",gwcfg.sid.c_str());
+
+    GatewaySme *gwsme=new GatewaySme(gwcfg,&smeman, altHost.c_str(), altPort);
+    gwsme->setId(systemId, smeman.lookup(systemId));
+    uint8_t newuid=uid;
+    if(gwSmeMap[newuid])
+    {
+        return false;
+    }
+    gwSmeMap[newuid]=gwsme;
+    gwsme->setPrefix(newuid);
+    smeman.registerInternallSmeProxy(systemId, gwsme);
+    tp.startTask(gwsme);
+    return true;
+}
+
 
 void Smsc::run()
 {

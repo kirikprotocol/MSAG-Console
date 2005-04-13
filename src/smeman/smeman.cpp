@@ -14,6 +14,7 @@ namespace smeman {
 
 using namespace std;
 using namespace smsc::admin::service;
+using smsc::smppgw::GatewaySme;
 
 using core::synchronization::MutexGuard;
 #define __synchronized__ MutexGuard mguard(lock);
@@ -37,7 +38,6 @@ __synchronized__
 void SmeManager::statusSme(Variant& result){ 
     MutexGuard mg(mutex);
     Records::iterator it = records.begin();
-    std::string str;
     
     for ( ; it != records.end(); ++it )
     {
@@ -95,15 +95,33 @@ void SmeManager::statusSme(Variant& result){
 
         }
         result.appendValueToStringList(status.c_str());
-
-        //str += status;
-        //str += '\n';
     }
-
-    /*ofstream fout("/tmp/smppgw.log");
-    fout.write(str.c_str(), strlen(str.c_str()));
-    fout.close();*/
   }
+
+uint8_t SmeManager::getSmscPrefix(const SmeSystemId& systemId)
+{
+  __synchronized__
+  SmeIndex index = internalLookup(systemId);
+  if ( index == INVALID_SME_INDEX ) throw SmeError();
+  if ( records[index]->proxy )    
+      return ((GatewaySme*)(records[index]->proxy))->getPrefix();
+  return 0;
+}
+
+void SmeManager::unregSmsc(const SmeSystemId& systemId)
+{
+  __synchronized__
+  SmeIndex index = internalLookup(systemId);
+  if ( index == INVALID_SME_INDEX ) throw SmeError();
+  records[index]->uniqueId = 0;
+  records[index]->info.internal = false;
+  if ( records[index]->proxy ){   
+      GatewaySme* p = (GatewaySme*)(records[index]->proxy);
+      p->disconnect();
+      delete p;
+      records[index]->proxy = 0;
+  }
+}
 
 void SmeManager::deleteSme(const SmeSystemId& systemId)
 {

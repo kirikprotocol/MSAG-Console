@@ -11,6 +11,9 @@
 #include "smeman/smereg.h"
 #include "util/Exception.hpp"
 
+#include <fstream>
+#include <iostream>
+
 namespace smsc{
 namespace smppgw{
 
@@ -31,8 +34,10 @@ public:
     seq=0;
     prefix=255;
     cfgIdx=0;
+
     hosts[0]=cfg.host;
     ports[0]=cfg.port;
+
     if(bh.length()>0)
     {
       hosts[1]=bh;
@@ -152,13 +157,15 @@ public:
   bool getPeers(char* in,char* out)
   {
     //TODO!!!
-    strcpy(in,"127.0.0.1");
+    sess.getPeer(in);
+    //strcpy(in,"127.0.0.1");
     strcpy(out,"127.0.0.1");
     return true;
   }
 
   void disconnect()
   {
+      sess.close();
   }
 
   void setPrefix(uint8_t p)

@@ -16,6 +16,7 @@
 #include "smppgw/performance.hpp"
 #include "db/DataSource.h"
 #include "db/DataSourceLoader.h"
+#include "sme/SmppBase.hpp"
 
 #include "smppgw/stat/StatisticsManager.h"
 
@@ -36,6 +37,8 @@ using smsc::router::RouteManager;
 using smsc::router::RouteInfo;
 using smsc::util::config::route::RouteConfig;
 using smsc::core::threads::ThreadedTask;
+using smsc::sme::SmeConfig;
+using smsc::smeman::SmeManager;
 //class smsc::store::MessageStore;
 
 template<class T>
@@ -173,6 +176,10 @@ public:
   void unregisterSmeProxy(const string& sysid)
   {
     smeman.unregisterSmeProxy(sysid);
+    uint8_t uid = smeman.getSmscPrefix(sysid);
+    if(uid)
+        gwSmeMap[uid] = 0;
+    smeman.unregSmsc(sysid);
   }
 
   SmeAdministrator* getSmeAdmin(){return &smeman;}
@@ -327,6 +334,8 @@ public:
   {
     tp.startTask(tsk);
   }
+
+  bool regSmsc(SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid);
 
   int ussdTransactionTimeout;
 

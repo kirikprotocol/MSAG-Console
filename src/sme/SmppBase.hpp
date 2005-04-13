@@ -625,6 +625,8 @@ public:
     if(!closed)return;
     if(socket.Init(cfg.host.c_str(),cfg.port,cfg.timeOut)==-1)
       throw SmppConnectException(SmppConnectException::Reason::networkResolve);
+
+    smsc::logger::Logger *log=smsc::logger::Logger::getInstance("SmppSession.connect");
     if(socket.Connect()==-1)
       throw SmppConnectException(SmppConnectException::Reason::networkConnect);
     reader.Start();
@@ -670,6 +672,7 @@ public:
       if(resp)
       {
         __warning2__("Unexpected bind response code:%04X",resp->get_header().get_commandStatus());
+        smsc_log_info(log, "14");
         disposePdu((SmppHeader*)resp);
       }
       reader.Stop();
@@ -709,6 +712,11 @@ public:
   SmppTransmitter* getAsyncTransmitter()
   {
     return &atrans;
+  }
+
+  void getPeer(char* in)
+  {
+      socket.GetPeer(in);
   }
 
 

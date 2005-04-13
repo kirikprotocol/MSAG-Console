@@ -14,6 +14,7 @@ int GatewaySme::Execute()
       sesscfg.host=hosts[cfgIdx];
       sesscfg.port=ports[cfgIdx];
       info2(log,"Connecting to %s:%d, systemId=%s",sesscfg.host.c_str(),sesscfg.port,sesscfg.sid.c_str());
+
       sess.setConfig(sesscfg);
       sess.connect();
     }catch(smsc::sme::SmppConnectException& e)
