@@ -121,44 +121,40 @@ public class Proxy
   protected void connect(String host, int port)
           throws AdminException
   {
+    logger.debug("connect()");
+    if (status == StatusConnected) {
+      final String err = "Already connected";
+      logger.warn(err);
+      throw new AdminException(err);
+    }
+
     Date current = new Date();
-    logger.debug("connect to \"" + host + ':' + port + '"');
-    if (current.getTime() - timeConnect.getTime() > 60000)
-      statusTime = StatusTimeEnabled;
-    else
-      statusTime = StatusTimeDisabled;
-    if (status == StatusDisconnected) {
-      if (statusTime == StatusTimeEnabled) {
-        this.host = host;
-        this.port = port;
-        try {
-          socket = new Socket(host, port);
-          socket.setSoTimeout(180000);
-          out = socket.getOutputStream();
-          in = socket.getInputStream();
-          writer = new CommandWriter(out);
-          reader = new ResponseReader(in);
-          status = StatusConnected;
-        } catch (IOException e) {
-          logger.warn("Couldn't connect to \"" + host + ':' + port + "\", nested: " + e.getMessage());
-          throw new AdminException("Couldn't connect to \"" + host + ':' + port + "\", nested: " + e.getMessage());
-        } finally {
-          timeConnect = new Date();
-        }
-      }
+    long interval = current.getTime() - timeConnect.getTime();
+    statusTime = (interval > 60000) ? StatusTimeEnabled:StatusTimeDisabled;
+    final String warning = "Couldn't connect to \"" + host + ':' + port + '"';
+    if (statusTime != StatusTimeEnabled) {
+      logger.debug(warning + " timeout");
+      throw new AdminException(warning + " timeout");
     }
-    else {
-      throw new AdminException("Already connected");
+    timeConnect = current;
+
+    this.host = host; this.port = port;
+    try {
+      logger.debug("connecting to \"" + host + ':' + port + "\" ...");
+      socket = new Socket(host, port);
+      socket.setSoTimeout(180000);
+      out = socket.getOutputStream();
+      in = socket.getInputStream();
+      writer = new CommandWriter(out);
+      reader = new ResponseReader(in);
+      status = StatusConnected;
+      logger.debug("connected to \"" + host + ':' + port + "'");
+    } catch (IOException e) {
+      final String err = warning + ", nested: "+e.getMessage();
+      logger.warn(err);
+      throw new AdminException(err);
     }
+
   }
 
-  public Date getTimeConnect()
-  {
-    return timeConnect;
-  }
-
-  public void setTimeConnect(Date timeConnect)
-  {
-    this.timeConnect = timeConnect;
-  }
 }
