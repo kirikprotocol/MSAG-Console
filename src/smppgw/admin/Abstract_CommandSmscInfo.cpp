@@ -21,6 +21,8 @@ using namespace smsc::util::xml;
 Abstract_CommandSmscInfo::Abstract_CommandSmscInfo(const Command::Id id, const xercesc::DOMDocument * const document)
   : SmppGwCommand(id)
 {
+  smsc::logger::Logger *log=smsc::logger::Logger::getInstance("Abstract_CommandSmscInfo");
+  smsc_log_info(log, "1");
   try {
     DOMElement *elem = document->getDocumentElement();
     DOMNodeList *list = elem->getElementsByTagName(XmlStr("param"));

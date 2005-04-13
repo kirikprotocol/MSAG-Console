@@ -103,8 +103,9 @@ uint8_t SmeManager::getSmscPrefix(const SmeSystemId& systemId)
   __synchronized__
   SmeIndex index = internalLookup(systemId);
   if ( index == INVALID_SME_INDEX ) throw SmeError();
-  if ( records[index]->proxy )    
+  if ( records[index]->proxy ){
       return ((GatewaySme*)(records[index]->proxy))->getPrefix();
+  }
   return 0;
 }
 
@@ -116,7 +117,7 @@ void SmeManager::unregSmsc(const SmeSystemId& systemId)
   records[index]->uniqueId = 0;
   records[index]->info.internal = false;
   if ( records[index]->proxy ){   
-      GatewaySme* p = (GatewaySme*)(records[index]->proxy);
+      SmeProxy* p = records[index]->proxy;
       p->disconnect();
       delete p;
       records[index]->proxy = 0;

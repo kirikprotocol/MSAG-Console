@@ -175,8 +175,11 @@ public:
 
   void unregisterSmeProxy(const string& sysid)
   {
+    smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.unreg");
+    smsc_log_info(log, "sysId: %s", sysid.c_str());
     smeman.unregisterSmeProxy(sysid);
     uint8_t uid = smeman.getSmscPrefix(sysid);
+    smsc_log_info(log, "uid: %d", uid);
     if(uid)
         gwSmeMap[uid] = 0;
     smeman.unregSmsc(sysid);
