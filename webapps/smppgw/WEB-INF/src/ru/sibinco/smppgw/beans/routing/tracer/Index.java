@@ -54,7 +54,6 @@ public class Index extends TabledBeanImpl implements TabledBean
          loadAndCheck();
       else if (null != mbTrace && null != dstAddress && null != srcAddress)
         traceRoute();
-
     }
 
     private void loadAndCheck() throws SmppgwJspException
@@ -148,7 +147,7 @@ public class Index extends TabledBeanImpl implements TabledBean
         traceResults.remove(0);
         traceResults.remove(0);
       } catch (SibincoException e) { e.printStackTrace();
-        throw new SmppgwJspException(Constants.errors.routing.tracer.TraceRouteFailed,e );
+        error("errors.routing.tracer.TraceRouteFailed",e.getMessage() );
 
       }
     }

@@ -12,7 +12,12 @@
  attribute name="form_uri"     required="false" %><%@
  attribute name="form_enctype" required="false"%><%@
  attribute name="onLoad"       required="false"%><%@
- attribute name="rawBody"      required="false"%><%
+ attribute name="rawBody"      required="false"%>
+<%! private java.util.List errorMessages = new java.util.ArrayList();%>
+<%
+errorMessages.clear();
+request.setAttribute(ru.sibinco.smppgw.Constants.SMPPGW_ERROR_MESSAGES_ATTRIBUTE_NAME, errorMessages);
+%><%
   Object beanClassObj = jspContext.getAttribute("beanClass");
   if (beanClassObj == null || (beanClassObj instanceof String && ((String)beanClassObj).trim().length() == 0)) //!pageContext
   {
@@ -44,11 +49,7 @@
   }
 
 %>
-<%! private java.util.List errorMessages = new java.util.ArrayList();%>
-<%
-errorMessages.clear();
-request.setAttribute(ru.sibinco.smppgw.Constants.SMPPGW_ERROR_MESSAGES_ATTRIBUTE_NAME, errorMessages);
-%><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
   <title>SMPP Gateway Administration Console<c:if test="${!empty title}">: ${title}</c:if></title>
@@ -261,6 +262,29 @@ request.setAttribute(ru.sibinco.smppgw.Constants.SMPPGW_ERROR_MESSAGES_ATTRIBUTE
           <c:otherwise><c:if test="${!empty generatedBeanClass}"><sm:bean className="ru.sibinco.smppgw.beans.${generatedBeanClass}"/></c:if></c:otherwise>
         </c:choose>
         <%--sm:message></sm:message--%>
+<%
+  //errorMessages=(java.util.List)request.getAttribute(ru.sibinco.smppgw.Constants.SMPPGW_ERROR_MESSAGES_ATTRIBUTE_NAME);
+
+  if (errorMessages.size() > 0)
+   {
+   	%><div class=content><%
+   	for(java.util.Iterator it = errorMessages.iterator(); it.hasNext();)
+   	{
+   		ru.sibinco.smppgw.beans.MessageException exc = (ru.sibinco.smppgw.beans.MessageException) it.next();
+      exc.printStackTrace(new java.io.PrintStream(System.err));
+   		String code = exc.getCode();
+      String text=exc.getMessage();
+       //String text = exc.getCause() == null ? "" : "<br>Nested: \"" + exc.getCause().getMessage() + "\" (" + exc.getCause().getClass().getName() + ")";
+           if(code.startsWith("errors."))
+             {%><div class=error><div class=header>Error:</div><div class=header><%=text%></div></div><%}
+           else if(code.startsWith("warning."))
+             {%><div class=warning><div class=warning_header>Warning:</div><%=text%></div><%}
+           else
+             {%><div class=message><div class=message_header>Attention!</div><%=text%></div><%}
+   	}
+   	%></div><%
+   }
+  %>
         <c:choose>
           <c:when test="${!empty rawBody}">${rawBody}</c:when>
           <c:otherwise>

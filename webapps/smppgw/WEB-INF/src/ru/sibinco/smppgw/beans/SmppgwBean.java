@@ -27,7 +27,7 @@ public abstract class SmppgwBean
     this.errors = (List) request.getAttribute(Constants.SMPPGW_ERROR_MESSAGES_ATTRIBUTE_NAME);
     if (null == errors) {
       this.errors = new ArrayList();
-      error("error.errorListNotInitialized");
+     error("error.errorListNotInitialized");
     }
     appContext = (SmppGWAppContext) request.getAttribute("appContext");
     loginedPrincipal = request.getUserPrincipal();
@@ -51,4 +51,4 @@ public abstract class SmppgwBean
   public java.security.Principal getLoginedPrincipal() {
     return loginedPrincipal;
   }
-}
+  }
