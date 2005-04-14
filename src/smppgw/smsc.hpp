@@ -114,7 +114,7 @@ class GatewaySme;
 class Smsc
 {
 public:
-  Smsc():ssockman(&tp,&smeman),stopFlag(false),router_(0),aliaser_(0)
+  Smsc():ssockman(&tp,&smeman),stopFlag(false),router_(0),testRouter_(0),aliaser_(0)
   {
     acceptedCounter=0;
     rejectedCounter=0;
