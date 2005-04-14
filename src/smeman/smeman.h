@@ -243,8 +243,7 @@ public:
   virtual void getFrame(vector<SmscCommand>& frames, unsigned long timeout,bool skipScheduler);
   //virtual ~SmeManager(){}
 
-  void unregSmsc(const SmeSystemId& systemId);
-  uint8_t getSmscPrefix(const SmeSystemId& systemId);
+  void unregSmsc(const SmeSystemId& systemId, uint8_t* uid);
 
   void Dump()
   {

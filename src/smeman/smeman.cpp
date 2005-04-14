@@ -9,6 +9,9 @@
 #include "admin/service/Type.h"
 #include "smppgw/gwsme.hpp"
 
+#include <fstream>
+#include <iostream>
+
 namespace smsc {
 namespace smeman {
 
@@ -98,29 +101,23 @@ void SmeManager::statusSme(Variant& result){
     }
   }
 
-uint8_t SmeManager::getSmscPrefix(const SmeSystemId& systemId)
+void SmeManager::unregSmsc(const SmeSystemId& systemId, uint8_t* uid)
 {
-  __synchronized__
+  lock.Lock();
   SmeIndex index = internalLookup(systemId);
   if ( index == INVALID_SME_INDEX ) throw SmeError();
-  if ( records[index]->proxy ){
-      return ((GatewaySme*)(records[index]->proxy))->getPrefix();
-  }
-  return 0;
-}
 
-void SmeManager::unregSmsc(const SmeSystemId& systemId)
-{
-  __synchronized__
-  SmeIndex index = internalLookup(systemId);
-  if ( index == INVALID_SME_INDEX ) throw SmeError();
+  records[index]->mutex.Lock();
+  *uid = records[index]->proxy->getPrefix();
   records[index]->uniqueId = 0;
   records[index]->info.internal = false;
-  if ( records[index]->proxy ){   
-      SmeProxy* p = records[index]->proxy;
-      p->disconnect();
-      delete p;
-      records[index]->proxy = 0;
+  if ( records[index]->proxy ){
+      lock.Unlock();
+      records[index]->mutex.Unlock();
+      delete (records[index]->proxy);
+  }else{
+      lock.Unlock();
+      records[index]->mutex.Unlock();
   }
 }
 
@@ -272,6 +269,7 @@ void SmeManager::registerInternallSmeProxy(const SmeSystemId& systemId,
                                 SmeProxy* smeProxy)
 {
 __synchronized__
+smsc::logger::Logger *log=smsc::logger::Logger::getInstance("regInter");
 
   __require__ ( smeProxy != NULL );
   {
@@ -294,7 +292,11 @@ __synchronized__
     MutexGuard guard(records[index]->mutex);
     smeProxy->setPriority(records[index]->info.priority);
     records[index]->proxy = smeProxy;
+    smsc_log_info(log, "systemId: %s index: %d is processed.", systemId.c_str(), index);
+    if(records[index]->proxy)
+        smsc_log_info(log, "systemId: %s index: %d is registred.", systemId.c_str(), index);
     records[index]->uniqueId = nextProxyUniqueId();
+    smsc_log_info(log, "uniqueId: %d", records[index]->uniqueId);
     records[index]->info.internal=true;
   }
   dispatcher.attachSmeProxy(smeProxy,index);
@@ -371,7 +373,6 @@ __synchronized__
 
 void SmeManager::unregisterSmeProxy(const SmeSystemId& systemId)
 {
-
   SmeIndex index;
   {
     __synchronized__
@@ -381,8 +382,9 @@ void SmeManager::unregisterSmeProxy(const SmeSystemId& systemId)
 
   {
     MutexGuard guard(records[index]->mutex);
-    if ( records[index]->proxy )
+    if ( records[index]->proxy ){
       dispatcher.detachSmeProxy(records[index]->proxy);
+    }
     else
       __warning2__("unregister null proxy(%s)",systemId.c_str());
     {
