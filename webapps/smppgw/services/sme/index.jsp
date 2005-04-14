@@ -3,7 +3,7 @@
   <jsp:attribute name="menu">
     <sm-pm:menu>
       <sm-pm:item name="mbAdd" value="Add" title="Register new SME"/>
-      <sm-pm:item name="mbDelete" value="Delete" title="Unregister checked SME(s)"/>
+      <sm-pm:item name="mbDelete" value="Delete" title="Unregister checked SME(s)" isCheckSensible="true"/>
       <sm-pm:space/>
     </sm-pm:menu>
   </jsp:attribute>
