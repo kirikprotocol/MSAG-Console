@@ -9,8 +9,8 @@ package ru.sibinco.smppgw;
 public class Constants
 {
   private final String id;
-   public static final String SMPPGW_SME_ID = "SMPPGW";
-
+  public static final String SMPPGW_SME_ID = "SMPPGW";
+  public static final String SMPPGW_ERROR_MESSAGES_ATTRIBUTE_NAME = "SMPPGW_ERROR_MESSAGES_ATTRIBUTE";
   public interface errors
   {
     public interface status

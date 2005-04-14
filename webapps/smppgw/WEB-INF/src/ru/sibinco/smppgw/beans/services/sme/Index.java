@@ -49,6 +49,7 @@ public class Index extends TabledBeanImpl implements TabledBean
         } catch (SibincoException e) {
           logger.error("Couldn't store smes", e);
         }
+         appContext.getSmscsManager().storeSmscs(appContext.getGwConfig());
       }
     }
   }

@@ -104,8 +104,8 @@ public class Index extends SmppgwBean
           applyRoutes();
         if ("providers".equals(s))
           applyProviders();
-        if ("smscs".equals(s))
-          applySmscs();
+      /*  if ("smscs".equals(s))
+          applySmscs();  */
         if ("users".equals(s))
           applyUsers();
         if ("billing".equals(s))
@@ -123,14 +123,14 @@ public class Index extends SmppgwBean
       throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_BILLING, e);
     }
   }
-
+/*
   private void applySmscs() throws SmppgwJspException
   {
     try {
       final Config gwConfig = appContext.getGwConfig();
       Gateway gateway=appContext.getGateway();
       try {
-        appContext.getSmscsManager().store(gwConfig,gateway);
+        appContext.getSmscsManager().store(gwConfig);
         appContext.getGwConfig().save();
         appContext.getGateway().apply("smscs");
       } catch (SibincoException e) {
@@ -145,7 +145,7 @@ public class Index extends SmppgwBean
       throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_SMSCS, e);
     }
   }
-
+  */
   private void applyProviders() throws SmppgwJspException
   {
     try {

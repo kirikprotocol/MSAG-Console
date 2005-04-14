@@ -1,9 +1,13 @@
 package ru.sibinco.smppgw.beans.gw.smscs;
 
 import ru.sibinco.lib.backend.util.SortedList;
+import ru.sibinco.lib.backend.util.config.Config;
+import ru.sibinco.lib.backend.protocol.Proxy;
+import ru.sibinco.lib.SibincoException;
 import ru.sibinco.smppgw.Constants;
 import ru.sibinco.smppgw.backend.sme.GwSme;
 import ru.sibinco.smppgw.backend.sme.SmscInfo;
+import ru.sibinco.smppgw.backend.Gateway;
 import ru.sibinco.smppgw.beans.*;
 
 import java.util.Iterator;
@@ -49,7 +53,6 @@ public class Edit extends EditBean
     final Map smes = getGlobalSmes();
     if (altHost==null) altHost="";
     final SmscInfo info = new SmscInfo(id, host, port, systemId, password, responseTimeout, uniqueMsgIdPrefix, altHost, altPort);
-    smscs.put(id, info);
     if (isAdd()) {
       if (smes.containsKey(id)) {
         final GwSme sme = (GwSme) smes.get(id);
@@ -65,9 +68,24 @@ public class Edit extends EditBean
         sme.setSmscInfo(info);
       }
     }
-    appContext.getSmscsManager().getSmscsNew().add(id);
-    appContext.getStatuses().setSmscsChanged(true);
+    regSmscs(info,isAdd());
+    smscs.put(id, info);
+    appContext.getSmscsManager().storeSmscs(appContext.getGwConfig());
     throw new DoneException();
+  }
+   private void regSmscs(SmscInfo info,boolean Add) throws SmppgwJspException
+  {
+    final Gateway gateway=appContext.getGateway();
+      try {
+       if (!Add) gateway.unregSmsc(id);
+        gateway.regSmsc(info);
+      } catch (SibincoException e) {
+        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+       if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
+          logger.debug("Couldn't register Service center", e);
+          throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_SMSCS, e);
+        }
+      }
   }
 
   private Map getGlobalSmscs()

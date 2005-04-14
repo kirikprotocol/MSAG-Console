@@ -1,11 +1,16 @@
 package ru.sibinco.smppgw.backend.sme;
 
 import ru.sibinco.lib.backend.util.config.Config;
+import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.smppgw.backend.Constants;
 import ru.sibinco.smppgw.backend.Gateway;
+import ru.sibinco.smppgw.backend.SmppGWAppContext;
+import ru.sibinco.smppgw.beans.SmppgwJspException;
 
 import java.util.*;
+
+import org.apache.log4j.Logger;
 
 
 /**
@@ -14,10 +19,8 @@ import java.util.*;
 public class SmscsManager
 {
   private Map smscs = Collections.synchronizedMap(new HashMap());
-  private Set smscsUnreg =new HashSet();
-  private Set smscsNew =new HashSet();
   private static final String SECTION_NAME = "smsc-connections";
-
+  protected Logger logger = Logger.getLogger(this.getClass());
   public SmscsManager(final Config gwConfig) throws Config.WrongParamTypeException, Config.ParamNotFoundException
   {
     final Set smscIds = gwConfig.getSectionChildShortSectionNames(Constants.SECTION_NAME_SMSC_CONNECTIONS);
@@ -33,27 +36,7 @@ public class SmscsManager
     return smscs;
   }
 
-  public Set getSmscsUnreg()
-  {
-    return smscsUnreg;
-  }
-
-  public void setSmscsUnreg(Set smscsUnreg)
-  {
-    this.smscsUnreg = smscsUnreg;
-  }
-
-  public Set getSmscsNew()
-  {
-    return smscsNew;
-  }
-
-  public void setSmscsNew(Set smscsNew)
-  {
-    this.smscsNew = smscsNew;
-  }
-
-   public void store(final Config gwConfig) throws SibincoException
+   public void store(final Config gwConfig)
   {
     gwConfig.removeSection(SECTION_NAME);
     for (Iterator i = smscs.values().iterator(); i.hasNext();) {
@@ -61,20 +44,14 @@ public class SmscsManager
       smscInfo.store(gwConfig, SECTION_NAME); 
     }
   }
-  public void store(final Config gwConfig,final Gateway gateway) throws SibincoException
+    public void storeSmscs(final Config gwConfig) throws SmppgwJspException
   {
-    for (Iterator i = smscsUnreg.iterator(); i.hasNext();) {
-      final String smscId = (String) i.next();
-      gateway.unregSmsc(smscId);
+    try {
+      store(gwConfig);
+      gwConfig.save();
+    } catch (Throwable e) {
+      logger.debug("Couldn't apply Service centers", e);
+      throw new SmppgwJspException(ru.sibinco.smppgw.Constants.errors.status.COULDNT_APPLY_SMSCS, e);
     }
-    smscsUnreg.clear();
-    gwConfig.removeSection(SECTION_NAME);
-    for (Iterator i = smscs.values().iterator(); i.hasNext();) {
-      final SmscInfo smscInfo = (SmscInfo) i.next();
-      smscInfo.store(gwConfig, SECTION_NAME);
-      if (smscsNew.contains(smscInfo.getId()))
-        gateway.regSmsc(smscInfo);
-    }
-    smscsNew.clear();
   }
 }

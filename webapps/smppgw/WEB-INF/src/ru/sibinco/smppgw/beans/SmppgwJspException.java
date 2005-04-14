@@ -14,7 +14,7 @@ public class SmppgwJspException extends SibincoException
 {
   private final String additionalInfo;
   private final Constants code;
-
+  
   public SmppgwJspException()
   {
     this(null, null, null);
