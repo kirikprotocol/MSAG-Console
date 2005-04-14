@@ -12,7 +12,8 @@
  attribute name="form_uri"     required="false" %><%@
  attribute name="form_enctype" required="false"%><%@
  attribute name="onLoad"       required="false"%><%@
- attribute name="rawBody"      required="false"%><%
+ attribute name="rawBody"      required="false"%><%@
+ attribute name="tableCheck"   required="false"%><%
   Object beanClassObj = jspContext.getAttribute("beanClass");
   if (beanClassObj == null || (beanClassObj instanceof String && ((String)beanClassObj).trim().length() == 0)) //!pageContext
   {
@@ -42,6 +43,12 @@
       //skip it
     }
   }
+
+%>
+<%! private java.util.List errorMessages = new java.util.ArrayList();%>
+<%
+errorMessages.clear();
+request.setAttribute(ru.sibinco.smppgw.Constants.SMPPGW_ERROR_MESSAGES_ATTRIBUTE_NAME, errorMessages);
 %><!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
@@ -254,12 +261,14 @@
           <c:when test="${!empty beanClass}"><sm:bean className="ru.sibinco.smppgw.beans.${beanClass}"/></c:when>
           <c:otherwise><c:if test="${!empty generatedBeanClass}"><sm:bean className="ru.sibinco.smppgw.beans.${generatedBeanClass}"/></c:if></c:otherwise>
         </c:choose>
+        <%--sm:message></sm:message--%>
         <c:choose>
           <c:when test="${!empty rawBody}">${rawBody}</c:when>
           <c:otherwise>
             <sm:content menu="${menu}" menu2="${menu2}">
               <jsp:doBody/>
             </sm:content>
+            <script>tableTag_checkChecks();</script>
           </c:otherwise>
         </c:choose>
       </form>
