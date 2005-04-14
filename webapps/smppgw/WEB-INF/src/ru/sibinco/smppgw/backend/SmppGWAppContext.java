@@ -68,7 +68,7 @@ public class SmppGWAppContext
       providerManager = new ProviderManager(gwConfig);
       gwSmeManager = new GwSmeManager(config.getString("sme_file"), gwConfig, providerManager);
       gwSmeManager.init();
-      smscsManager = new SmscsManager(gwConfig);
+      smscsManager = new SmscsManager(gwConfig,gwSmeManager);
       resourceManager = new ResourceManager(new File(gwConfigFolder));
       smppgw = new Smppgw(gwDaemonHost, (int)config.getInt("gw daemon.port"),gwConfigFolder, this);
      // smeHostsManager = new SmeHostsManager(config.getString("sme_file"), smppgw);

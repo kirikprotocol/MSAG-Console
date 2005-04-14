@@ -21,13 +21,17 @@ public class SmscsManager
   private Map smscs = Collections.synchronizedMap(new HashMap());
   private static final String SECTION_NAME = "smsc-connections";
   protected Logger logger = Logger.getLogger(this.getClass());
-  public SmscsManager(final Config gwConfig) throws Config.WrongParamTypeException, Config.ParamNotFoundException
-  {
+  public SmscsManager(final Config gwConfig, final GwSmeManager smeManager) throws Config.WrongParamTypeException, Config.ParamNotFoundException
+  { final Map smes=smeManager.getSmes();
     final Set smscIds = gwConfig.getSectionChildShortSectionNames(Constants.SECTION_NAME_SMSC_CONNECTIONS);
     for (Iterator i = smscIds.iterator(); i.hasNext();) {
       final String smscId = (String) i.next();
       final SmscInfo info = new SmscInfo(gwConfig, Constants.SECTION_NAME_SMSC_CONNECTIONS + '.' + smscId);
       smscs.put(smscId, info);
+      if (smes.containsKey(smscId)) {
+        final GwSme sme = (GwSme) smes.get(smscId);
+        sme.setSmscInfo(info);
+      }
     }
   }
 
