@@ -12,8 +12,7 @@
  attribute name="form_uri"     required="false" %><%@
  attribute name="form_enctype" required="false"%><%@
  attribute name="onLoad"       required="false"%><%@
- attribute name="rawBody"      required="false"%><%@
- attribute name="tableCheck"   required="false"%><%
+ attribute name="rawBody"      required="false"%><%
   Object beanClassObj = jspContext.getAttribute("beanClass");
   if (beanClassObj == null || (beanClassObj instanceof String && ((String)beanClassObj).trim().length() == 0)) //!pageContext
   {
