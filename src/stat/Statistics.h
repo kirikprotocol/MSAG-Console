@@ -20,17 +20,30 @@ namespace smsc { namespace stat
         virtual ~StatisticsException() throw() {};
     };
 
+    struct StatInfo
+    {
+        int errcode;       // 0 - if status ok
+        std::string smeId; // either src or dst smeId
+        std::string routeId;
+        signed long providerId, categoryId; // -1 if undefined
+
+        StatInfo(const std::string& _smeId, const std::string& _routeId, int _errcode = 0,
+                 signed long _providerId = -1, signed long _categoryId = -1)
+            : smeId(_smeId), routeId(_routeId), errcode(_errcode), 
+              providerId(_providerId), categoryId(_categoryId) {};
+    };
+
     class Statistics
     {
     public:
 
         virtual void flushStatistics() = 0;
 
-        virtual void updateAccepted (const char* srcSmeId, const char* routeId) = 0;
-        virtual void updateRejected (const char* srcSmeId, const char* routeId, int errcode) = 0;
-        virtual void updateTemporal (const char* dstSmeId, const char* routeId, int errcode) = 0;
-        virtual void updateChanged  (const char* dstSmeId, const char* routeId, int errcode = 0) = 0;
-        virtual void updateScheduled(const char* dstSmeId, const char* routeId) = 0;
+        virtual void updateAccepted (const StatInfo& info) = 0;
+        virtual void updateRejected (const StatInfo& info) = 0;
+        virtual void updateTemporal (const StatInfo& info) = 0;
+        virtual void updateChanged  (const StatInfo& info) = 0;
+        virtual void updateScheduled(const StatInfo& info) = 0;
         
         virtual ~Statistics() {};
         

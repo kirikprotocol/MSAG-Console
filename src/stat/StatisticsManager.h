@@ -145,11 +145,11 @@ namespace smsc { namespace stat
 
         virtual void flushStatistics();
 
-        virtual void updateAccepted (const char* srcSmeId, const char* routeId);
-        virtual void updateRejected (const char* srcSmeId, const char* routeId, int errcode);
-        virtual void updateTemporal (const char* dstSmeId, const char* routeId, int errcode);
-        virtual void updateChanged  (const char* dstSmeId, const char* routeId, int errcode = 0);
-        virtual void updateScheduled(const char* dstSmeId, const char* routeId);
+        virtual void updateAccepted (const StatInfo& info);
+        virtual void updateRejected (const StatInfo& info);
+        virtual void updateTemporal (const StatInfo& info);
+        virtual void updateChanged  (const StatInfo& info);
+        virtual void updateScheduled(const StatInfo& info);
         
         StatisticsManager(DataSource& ds);
         virtual ~StatisticsManager();

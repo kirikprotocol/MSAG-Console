@@ -24,13 +24,14 @@ void StatisticsManager::addError(IntHash<int>& hash, int errcode)
 }
 
 // SMS accepted by SMSC, affects accepted only
-void StatisticsManager::updateAccepted(const char* srcSmeId, const char* routeId)
+void StatisticsManager::updateAccepted(const StatInfo& info)
 {
     MutexGuard  switchGuard(switchLock);
     
     statGeneral[currentIndex].accepted++; 
     statGeneral[currentIndex].incICounter();
     
+    const char* srcSmeId = info.smeId.c_str();
     if (srcSmeId && srcSmeId[0])
     {
         SmsStat* stat = statBySmeId[currentIndex].GetPtr(srcSmeId);
@@ -41,6 +42,8 @@ void StatisticsManager::updateAccepted(const char* srcSmeId, const char* routeId
         }
         if (stat) stat->incICounter();
     }
+    
+    const char* routeId = info.routeId.c_str();
     if (routeId && routeId[0])
     {
         SmsStat* stat = statByRoute[currentIndex].GetPtr(routeId);
@@ -53,139 +56,146 @@ void StatisticsManager::updateAccepted(const char* srcSmeId, const char* routeId
     }
 }
 // SMS rejected by SMSC. Affects rejected && errors only
-void StatisticsManager::updateRejected(const char* srcSmeId, const char* routeId, int errcode)
+void StatisticsManager::updateRejected(const StatInfo& info)
 {
     MutexGuard  switchGuard(switchLock);
 
-    if (errcode != 0)
+    if (info.errcode != 0)
     {
         statGeneral[currentIndex].rejected++;
 
+        const char* srcSmeId = info.smeId.c_str();
         if (srcSmeId && srcSmeId[0])
         {
             SmsStat* stat = statBySmeId[currentIndex].GetPtr(srcSmeId);
             if (stat) {
                 stat->rejected++;
-                addError(stat->errors, errcode);
+                addError(stat->errors, info.errcode);
             }
             else {
                 SmsStat newStat(0, 1); // rejected
-                addError(newStat.errors, errcode);
+                addError(newStat.errors, info.errcode);
                 statBySmeId[currentIndex].Insert(srcSmeId, newStat);
             }
         }
 
+        const char* routeId = info.routeId.c_str();
         if (routeId && routeId[0])
         {
             SmsStat* stat = statByRoute[currentIndex].GetPtr(routeId);
             if (stat) {
                 stat->rejected++;
-                addError(stat->errors, errcode);
+                addError(stat->errors, info.errcode);
             }
             else {
                 SmsStat newStat(0, 1); // rejected
-                addError(newStat.errors, errcode);
+                addError(newStat.errors, info.errcode);
                 statByRoute[currentIndex].Insert(routeId, newStat);
             }
         }
     }
-    addError(statGeneral[currentIndex].errors, errcode);
+    addError(statGeneral[currentIndex].errors, info.errcode);
 }
 
 // SMS was't delivered by SMSC with temporal error. Affects temporal && errors only 
-void StatisticsManager::updateTemporal(const char* dstSmeId, const char* routeId, int errcode)
+void StatisticsManager::updateTemporal(const StatInfo& info)
 {
     MutexGuard  switchGuard(switchLock);
 
-    if (errcode != 0)
+    if (info.errcode != 0)
     {
         statGeneral[currentIndex].temporal++;
 
+        const char* dstSmeId = info.smeId.c_str();
         if (dstSmeId && dstSmeId[0])
         {
             SmsStat* stat = statBySmeId[currentIndex].GetPtr(dstSmeId);
             if (stat) {
                 stat->temporal++;
-                addError(stat->errors, errcode);
+                addError(stat->errors, info.errcode);
             }
             else {
                 SmsStat newStat(0, 0, 0, 0, 0, 1); // temporal
-                addError(newStat.errors, errcode);
+                addError(newStat.errors, info.errcode);
                 statBySmeId[currentIndex].Insert(dstSmeId, newStat);
             }
         }
         
+        const char* routeId = info.routeId.c_str();
         if (routeId && routeId[0])
         {
             SmsStat* stat = statByRoute[currentIndex].GetPtr(routeId);
             if (stat) {
                 stat->temporal++;
-                addError(stat->errors, errcode);
+                addError(stat->errors, info.errcode);
             }
             else {
                 SmsStat newStat(0, 0, 0, 0, 0, 1); // temporal
-                addError(newStat.errors, errcode);
+                addError(newStat.errors, info.errcode);
                 statByRoute[currentIndex].Insert(routeId, newStat);
             }
         }
     }
-    addError(statGeneral[currentIndex].errors, errcode);
+    addError(statGeneral[currentIndex].errors, info.errcode);
 }
 
 // SMS was delivered or failed by SMSC. Affects delivered or failed
-void StatisticsManager::updateChanged(const char* dstSmeId, const char* routeId, int errcode)
+void StatisticsManager::updateChanged(const StatInfo& info)
 {
     MutexGuard  switchGuard(switchLock);
 
+    const char* dstSmeId = info.smeId.c_str();
     if (dstSmeId && dstSmeId[0])
     {
         SmsStat* stat = statBySmeId[currentIndex].GetPtr(dstSmeId);
         if (stat) {
-            if (errcode == 0) stat->delivered++;
+            if (info.errcode == 0) stat->delivered++;
             else stat->failed++;
-            addError(stat->errors, errcode);
+            addError(stat->errors, info.errcode);
         }
         else {
-            SmsStat newStat(0, 0, (errcode) ? 0:1, (errcode) ? 1:0, 0, 0); // delivered or failed
-            addError(newStat.errors, errcode);
+            SmsStat newStat(0, 0, (info.errcode) ? 0:1, (info.errcode) ? 1:0, 0, 0); // delivered or failed
+            addError(newStat.errors, info.errcode);
             statBySmeId[currentIndex].Insert(dstSmeId, newStat);
-            if (errcode == 0) {
+            if (info.errcode == 0) {
                 stat = statBySmeId[currentIndex].GetPtr(dstSmeId);
             }
         }
-        if (errcode == 0 && stat) stat->incOCounter();
+        if (info.errcode == 0 && stat) stat->incOCounter();
     }
     
+    const char* routeId = info.routeId.c_str();
     if (routeId && routeId[0])
     {
         SmsStat* stat = statByRoute[currentIndex].GetPtr(routeId);
         if (stat) {
-            if (errcode == 0) stat->delivered++;
+            if (info.errcode == 0) stat->delivered++;
             else stat->failed++;
-            addError(stat->errors, errcode);
+            addError(stat->errors, info.errcode);
         }
         else {
-            SmsStat newStat(0, 0, (errcode) ? 0:1, (errcode) ? 1:0, 0, 0); // delivered or failed
-            addError(newStat.errors, errcode);
+            SmsStat newStat(0, 0, (info.errcode) ? 0:1, (info.errcode) ? 1:0, 0, 0); // delivered or failed
+            addError(newStat.errors, info.errcode);
             statByRoute[currentIndex].Insert(routeId, newStat);
-            if (errcode == 0) {
+            if (info.errcode == 0) {
                 stat = statByRoute[currentIndex].GetPtr(routeId);
             }
         }
-        if (errcode == 0 && stat) stat->incOCounter();
+        if (info.errcode == 0 && stat) stat->incOCounter();
     }
     
-    if (errcode == 0) {
+    if (info.errcode == 0) {
         statGeneral[currentIndex].delivered++;
         statGeneral[currentIndex].incOCounter();
     }
     else statGeneral[currentIndex].failed++;
-    addError(statGeneral[currentIndex].errors, errcode);
+    addError(statGeneral[currentIndex].errors, info.errcode);
 }
-void StatisticsManager::updateScheduled(const char* dstSmeId, const char* routeId)
+void StatisticsManager::updateScheduled(const StatInfo& info)
 {
     MutexGuard  switchGuard(switchLock);
 
+    const char* dstSmeId = info.smeId.c_str();
     if (dstSmeId && dstSmeId[0])
     {
         SmsStat* stat = statBySmeId[currentIndex].GetPtr(dstSmeId);
@@ -193,6 +203,7 @@ void StatisticsManager::updateScheduled(const char* dstSmeId, const char* routeI
         else statBySmeId[currentIndex].Insert(dstSmeId, SmsStat(0, 0, 0, 0, 1, 0)); 
     }
     
+    const char* routeId = info.routeId.c_str();
     if (routeId && routeId[0])
     {
         SmsStat* stat = statByRoute[currentIndex].GetPtr(routeId);
