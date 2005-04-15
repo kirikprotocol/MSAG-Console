@@ -66,10 +66,10 @@ public class Index extends TabledBeanImpl implements TabledBean
         messageType = traceRouteStatus;
         routeInfo = null;
         traceResults.remove(0);
+        appContext.getStatuses().setRoutesLoaded(true);
       } catch (SibincoException e) {  e.printStackTrace();
-        throw new SmppgwJspException(Constants.errors.routing.tracer.LoadAndCheckFailed,e.getMessage() );
+        error("errors.routing.tracer.LoadAndCheckFailed",e.getMessage() );
       }
-      appContext.getStatuses().setRoutesLoaded(true);
     }
     private String decodeString(final String str)
     {
