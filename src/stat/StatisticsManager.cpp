@@ -46,10 +46,11 @@ void StatisticsManager::updateAccepted(const StatInfo& info)
     const char* routeId = info.routeId.c_str();
     if (routeId && routeId[0])
     {
-        SmsStat* stat = statByRoute[currentIndex].GetPtr(routeId);
+        RouteStat* stat = statByRoute[currentIndex].GetPtr(routeId);
         if (stat) stat->accepted++;
         else {
-            statByRoute[currentIndex].Insert(routeId, SmsStat(1));
+            RouteStat newStat(1, 0, 0, 0, 0, 0, info.providerId, info.categoryId); // accepted
+            statByRoute[currentIndex].Insert(routeId, newStat);
             stat = statByRoute[currentIndex].GetPtr(routeId);
         }
         if (stat) stat->incICounter();
@@ -73,7 +74,7 @@ void StatisticsManager::updateRejected(const StatInfo& info)
                 addError(stat->errors, info.errcode);
             }
             else {
-                SmsStat newStat(0, 1); // rejected
+                RouteStat newStat(0, 1, 0, 0, 0, 0, info.providerId, info.categoryId); // rejected
                 addError(newStat.errors, info.errcode);
                 statBySmeId[currentIndex].Insert(srcSmeId, newStat);
             }
@@ -82,13 +83,13 @@ void StatisticsManager::updateRejected(const StatInfo& info)
         const char* routeId = info.routeId.c_str();
         if (routeId && routeId[0])
         {
-            SmsStat* stat = statByRoute[currentIndex].GetPtr(routeId);
+            RouteStat* stat = statByRoute[currentIndex].GetPtr(routeId);
             if (stat) {
                 stat->rejected++;
                 addError(stat->errors, info.errcode);
             }
             else {
-                SmsStat newStat(0, 1); // rejected
+                RouteStat newStat(0, 1, 0, 0, 0, 0, info.providerId, info.categoryId); // rejected
                 addError(newStat.errors, info.errcode);
                 statByRoute[currentIndex].Insert(routeId, newStat);
             }
@@ -124,13 +125,13 @@ void StatisticsManager::updateTemporal(const StatInfo& info)
         const char* routeId = info.routeId.c_str();
         if (routeId && routeId[0])
         {
-            SmsStat* stat = statByRoute[currentIndex].GetPtr(routeId);
+            RouteStat* stat = statByRoute[currentIndex].GetPtr(routeId);
             if (stat) {
                 stat->temporal++;
                 addError(stat->errors, info.errcode);
             }
             else {
-                SmsStat newStat(0, 0, 0, 0, 0, 1); // temporal
+                RouteStat newStat(0, 0, 0, 0, 0, 1, info.providerId, info.categoryId); // temporal
                 addError(newStat.errors, info.errcode);
                 statByRoute[currentIndex].Insert(routeId, newStat);
             }
@@ -167,14 +168,15 @@ void StatisticsManager::updateChanged(const StatInfo& info)
     const char* routeId = info.routeId.c_str();
     if (routeId && routeId[0])
     {
-        SmsStat* stat = statByRoute[currentIndex].GetPtr(routeId);
+        RouteStat* stat = statByRoute[currentIndex].GetPtr(routeId);
         if (stat) {
             if (info.errcode == 0) stat->delivered++;
             else stat->failed++;
             addError(stat->errors, info.errcode);
         }
         else {
-            SmsStat newStat(0, 0, (info.errcode) ? 0:1, (info.errcode) ? 1:0, 0, 0); // delivered or failed
+            RouteStat newStat(0, 0, (info.errcode) ? 0:1, (info.errcode) ? 1:0, 0, 0,
+                              info.providerId, info.categoryId); // delivered or failed
             addError(newStat.errors, info.errcode);
             statByRoute[currentIndex].Insert(routeId, newStat);
             if (info.errcode == 0) {
@@ -206,9 +208,12 @@ void StatisticsManager::updateScheduled(const StatInfo& info)
     const char* routeId = info.routeId.c_str();
     if (routeId && routeId[0])
     {
-        SmsStat* stat = statByRoute[currentIndex].GetPtr(routeId);
+        RouteStat* stat = statByRoute[currentIndex].GetPtr(routeId);
         if (stat) stat->rescheduled++;
-        else statByRoute[currentIndex].Insert(routeId, SmsStat(0, 0, 0, 0, 1, 0));
+        else {
+            RouteStat newStat(0, 0, 0, 0, 1, 0, info.providerId, info.categoryId); // rescheduled
+            statByRoute[currentIndex].Insert(routeId, newStat);
+        }
     }
     
     statGeneral[currentIndex].rescheduled++;
@@ -362,7 +367,7 @@ void StatisticsManager::flushCounters(short index)
         insertStatRouteStmt->setUint32(1, period);
         insertStatRouteStateStmt->setUint32(1, period);
         statByRoute[index].First();
-        char* routeId = 0; SmsStat* routeStat = 0;
+        char* routeId = 0; RouteStat* routeStat = 0;
         while (statByRoute[index].Next(routeId, routeStat))
         {
             if (!routeStat || !routeId || routeId[0] == '\0') continue;

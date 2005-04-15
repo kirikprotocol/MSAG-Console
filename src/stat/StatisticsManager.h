@@ -110,6 +110,23 @@ namespace smsc { namespace stat
         
     };
 
+    struct RouteStat : public SmsStat
+    {
+        signed long providerId, categoryId;
+
+        RouteStat(int accepted = 0, int rejected = 0, 
+                  int delivered = 0, int failed = 0, 
+                  int rescheduled = 0, int temporal = 0,
+                  signed long _providerId = -1, signed long _categoryId = -1) 
+            : SmsStat(accepted, rejected, delivered, rescheduled, temporal), 
+              providerId(_providerId), categoryId(_categoryId) {};
+
+        RouteStat(const RouteStat& stat) 
+            : SmsStat(stat), providerId(stat.providerId), categoryId(stat.categoryId) {};
+
+        virtual ~RouteStat() {};
+    };
+
     class StatisticsManager : public Statistics, public ThreadedTask
     {
     protected:
@@ -119,7 +136,7 @@ namespace smsc { namespace stat
         
         SmsStat         statGeneral[2];
         Hash<SmsStat>   statBySmeId[2];
-        Hash<SmsStat>   statByRoute[2];
+        Hash<RouteStat> statByRoute[2];
         
         short   currentIndex;
         bool    bExternalFlush;
