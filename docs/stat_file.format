@@ -4,12 +4,12 @@
 <File>
 	<FileHeader>
 		<char[10] id_mark>SMSC.STAT</char[10]>
-		<uint16 version>01</uint32>
+		<int16 version>01</int32>
 	</FileHeader>
 
 	<StatRecords (0..EOF)>
 	
-		<uint32 period/> // YYYY MM DD HH mm (as int)
+		<int32 period/> // YYYY MM DD HH mm (as int)
 
 	  	// General statistics for period
 		<int32 accepted   /> 
@@ -31,7 +31,8 @@
 		// Sme statistics for period
 		<int32 sme_counter/>
 		<0..sme_counter>
-			<char[20] sme_id  />
+			<int32 sme_id_len />
+			<char[n] sme_id   />
 		  	<int32 accepted   /> 
 			<int32 rejected   />
 			<int32 delivered  />
@@ -42,7 +43,7 @@
 			<int32 peak_o     />
 
 			// Error statistics for sme
-			<uint32 sme_err_counter/>
+			<int32 sme_err_counter/>
 			<0..sme_err_counter>
 				<int32 errcode/>
 				<int32 counter/>
@@ -52,20 +53,21 @@
 		// Route statistics for period
 		<int32 route_counter/>
 		<0..route_counter>
-			<char[33] route_id/>
-			<int64 providerId />
-			<int64 categoryId />
-		  	<int32 accepted   /> 
-			<int32 rejected   />
-			<int32 delivered  />
-			<int32 failed     />
-			<int32 rescheduled/>
-			<int32 temporal   />
-			<int32 peak_i     />
-			<int32 peak_o     />
+			<int32 route_id_len/>
+			<char[n] route_id  />
+			<int64 providerId  />
+			<int64 categoryId  />
+		  	<int32 accepted    /> 
+			<int32 rejected    />
+			<int32 delivered   />
+			<int32 failed      />
+			<int32 rescheduled />
+			<int32 temporal    />
+			<int32 peak_i      />
+			<int32 peak_o      />
 
 			// Error statistics for route
-			<uint32 route_err_counter/>
+			<int32 route_err_counter/>
 			<0..route_err_counter>
 				<int32 errcode/>
 				<int32 counter/>
