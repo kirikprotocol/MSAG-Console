@@ -307,6 +307,18 @@ Targets:
     <ant dir="${SMSC_DIR}/ext_smes" target="mciprof_distr"/>
   </target>
 
+  <target name="mtsmsme_build">
+    <ant dir="${SRC_DIR}" target="mod">
+      <property name="MOD" value="mtsmsme"/>
+    </ant>
+  </target>
+  <target name="mtsmsme_update" depends="mtsmsme_build" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="mtsmsme_update"/>
+  </target>
+  <target name="mtsmsme_distr" depends="mtsmsme_build" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="mtsmsme_distr"/>
+  </target>
+  
   <target name="infosme_build">
     <ant dir="${SRC_DIR}" target="mod">
       <property name="MOD" value="infosme"/>
