@@ -15,7 +15,7 @@
 %>
 <jsp:setProperty name="routeDetailBean" property="*"/>
 <%
-    TITLE="SMS Routs Statistics Details";
+    TITLE="SMS Routes Statistics Details";
     MENU0_SELECTION = "MENU0_SMSSTAT";
 
     int beanResult = RouteDetailBean.RESULT_OK;
