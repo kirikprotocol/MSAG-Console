@@ -22,14 +22,14 @@
 		<int32 peak_o     />
 
 		// General error statistics for period
-		<uint32 err_counter/>
+		<int32 err_counter/>
 		<0..err_counter>
 			<int32 errcode/>
 			<int32 counter/>
 		</0..err_counter>
 
 		// Sme statistics for period
-		<uint32 sme_counter/>
+		<int32 sme_counter/>
 		<0..sme_counter>
 			<char[20] sme_id  />
 		  	<int32 accepted   /> 
@@ -50,9 +50,11 @@
 		</0..sme_counter>
 
 		// Route statistics for period
-		<uint32 route_counter/>
+		<int32 route_counter/>
 		<0..route_counter>
 			<char[33] route_id/>
+			<int64 providerId />
+			<int64 categoryId />
 		  	<int32 accepted   /> 
 			<int32 rejected   />
 			<int32 delivered  />
