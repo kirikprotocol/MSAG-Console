@@ -290,7 +290,8 @@ struct Address
     vl[length]=0;
     return snprintf(buf,buflen,".%d.%d.%s",type,plan,vl);
   }
-  inline std::string toString()const{
+  inline std::string toString()const
+  {
     if(length>32)abort();
     char vl[32];
     char buf[48];
@@ -298,6 +299,13 @@ struct Address
     vl[length]=0;
     snprintf(buf,sizeof(buf),".%d.%d.%s",type,plan,vl);
     return buf;
+  }
+  void Clear()
+  {
+    value[0]=0;
+    length=0;
+    type=0;
+    plan=0;
   }
 };
 
@@ -509,45 +517,67 @@ struct Descriptor
     return sme;
   };
 
+  void Clear()
+  {
+    mscLength=0;
+    imsiLength=0;
+    msc[0]=0;
+    imsi[0]=0;
+    sme=0;
+  }
 };
 
 static const string nullStr="";
 
 struct OptionalProperty{
-  uint16_t isSet;
+  uint16_t isSetVal;
   uint16_t type;
   union{
     int iValue;
     string* sValue;
     string* bValue;
   };
-  OptionalProperty():isSet(0),type(SMS_INT_TAG),iValue(0){}
-  OptionalProperty(const OptionalProperty& prop)
+  OptionalProperty():isSetVal(0),type(SMS_INT_TAG),iValue(0){}
+  OptionalProperty(const OptionalProperty& prop):isSetVal(0),iValue(0)
   {
     *this=prop;
   }
+  bool isSet()
+  {
+    return isSetVal==1;
+  }
   OptionalProperty& operator=(const OptionalProperty& src)
   {
-    if(!src.isSet)
+    //printf("isSetVal:%d->%d, type: %d->%d\n",isSetVal,src.isSetVal,type,src.type);
+    if(src.isSetVal==0 || src.isSetVal==2)
     {
-      this->~OptionalProperty();
-      new(this)OptionalProperty();
+      if(isSetVal==1)isSetVal=2;
+    }else
+    {
+      isSetVal=1;
     }
-    isSet=src.isSet;
     type=src.type;
-    if(isSet)
+    if(src.isSetVal==1)
     {
       switch(type)
       {
         case SMS_INT_TAG:iValue=src.iValue;break;
         case SMS_STR_TAG:
         {
-          if(!sValue)sValue=new string;
+          if(!sValue)
+          {
+            sValue=new string;
+            //printf("allocStr:%p\n",sValue);
+          }
           sValue->assign(src.sValue->data(),src.sValue->length());
         }break;
         case SMS_BIN_TAG:
         {
-          if(!bValue)bValue=new string;
+          if(!bValue)
+          {
+            bValue=new string;
+            //printf("allocBin:%p\n",sValue);
+          }
           bValue->assign(src.bValue->data(),src.bValue->length());
         }break;
       }
@@ -556,32 +586,53 @@ struct OptionalProperty{
   }
   ~OptionalProperty()
   {
-    if(isSet)
+    if(isSetVal)
     {
-      if(type==SMS_STR_TAG)delete sValue;
-      else
-      if(type==SMS_BIN_TAG)delete bValue;
+      if(type==SMS_STR_TAG)
+      {
+        delete sValue;
+        sValue=0;
+      }
+      else if(type==SMS_BIN_TAG)
+      {
+        delete bValue;
+        bValue=0;
+      }
     }
   }
   void setInt(int value)
   {
     type=SMS_INT_TAG;
     iValue=value;
-    isSet=1;
+    isSetVal=1;
   }
   void setStr(const char* str)
   {
     type=SMS_STR_TAG;
-    if(!isSet)sValue=new string;
+    if(!isSetVal)
+    {
+      sValue=new string;
+      //printf("allocStr(%p):%p\n",this,sValue);
+    }else
+    {
+      //printf("setStr(%p):%p\n",this,sValue);
+    }
     *sValue=str;
-    isSet=1;
+    isSetVal=1;
   }
   void setBin(const char* bin,int len)
   {
     type=SMS_BIN_TAG;
-    if(!isSet)bValue=new string;
+    if(!isSetVal)
+    {
+      bValue=new string;
+      //printf("allocBin(%p):%p\n",this,bValue);
+    }else
+    {
+      //printf("setBin(%p):%p\n",this,sValue);
+    }
     bValue->assign(bin,len);
-    isSet=1;
+    isSetVal=1;
   }
   int getInt()const
   {
@@ -589,12 +640,12 @@ struct OptionalProperty{
   }
   const string& getStr()const
   {
-    if(isSet)return *sValue;
+    if(isSetVal==1)return *sValue;
     else return nullStr;
   }
   const char* getBin(unsigned* len)const
   {
-    if(isSet)
+    if(isSetVal==1)
     {
       if(len)*len=bValue->length();
       return bValue->c_str();
@@ -603,6 +654,10 @@ struct OptionalProperty{
       if(len)*len=0;
       return 0;
     }
+  }
+  void Unset()
+  {
+    if(isSetVal)isSetVal=2;
   }
 };
 
@@ -775,7 +830,7 @@ public:
     __require__((tag>>8)==SMS_INT_TAG);
     tag&=0xff;
     __require__(tag<=SMS_LAST_TAG);
-    return prop.properties[tag].isSet!=0;
+    return prop.properties[tag].isSet();
   }
 
   bool hasStrProperty(int tag)const
@@ -783,7 +838,7 @@ public:
     __require__((tag>>8)==SMS_STR_TAG);
     tag&=0xff;
     __require__(tag<=SMS_LAST_TAG);
-    return prop.properties[tag].isSet!=0;
+    return prop.properties[tag].isSet();
   }
 
   bool hasBinProperty(int tag)const
@@ -799,7 +854,7 @@ public:
       //return prop.properties[Tag::SMSC_RAW_SHORTMESSAGE].isSet!=0;;
       tag = unType(Tag::SMSC_RAW_PAYLOAD);
     }
-    return prop.properties[tag].isSet!=0;
+    return prop.properties[tag].isSet();
   }
 
   void dropProperty(int tag)
@@ -807,18 +862,25 @@ public:
     __require__((tag>>8)==SMS_BIN_TAG);
     tag&=0xff;
     __require__(tag<=SMS_LAST_TAG);
-    prop.properties[tag].~OptionalProperty();
-    new(&prop.properties[tag]) OptionalProperty();
+    prop.properties[tag].Unset();
   }
   void dropIntProperty(int tag)
   {
     __require__((tag>>8)==SMS_INT_TAG);
     tag&=0xff;
     __require__(tag<=SMS_LAST_TAG);
-    prop.properties[tag].isSet=0;
+    prop.properties[tag].isSetVal=0;
     prop.properties[tag].iValue=0;
   }
   void Print(FILE *f);
+
+  void Clear()
+  {
+    for(int i=0;i<=SMS_LAST_TAG;i++)
+    {
+      prop.properties[i].Unset();
+    }
+  }
 
 };
 
@@ -873,8 +935,6 @@ struct SMS
   uint8_t     concatSeqNum;   //
 
   int         dialogId;  // used for transaction mode, not stored in DB
-  bool        createdInStore;
-  int         providerId;
 
   /**
   * Default конструктор, просто инициализирует поле state как ENROUTE
@@ -884,7 +944,7 @@ struct SMS
     attempts(0), lastResult(0), oldResult(0),lastTime(0), nextTime(0),
     messageReference(0), needArchivate(true),
     deliveryReport(0), billingRecord(0), attach(false),
-    serviceId(0), priority(0),concatMsgRef(0),concatSeqNum(0),dialogId(-1),createdInStore(true),providerId(-1)
+    serviceId(0), priority(0),concatMsgRef(0),concatSeqNum(0),dialogId(-1)
   {
     eServiceType[0]='\0'; routeId[0]='\0';
     srcSmeId[0]='\0'; dstSmeId[0]='\0';
@@ -921,9 +981,7 @@ struct SMS
     priority(sms.priority),
     concatMsgRef(sms.concatMsgRef),
     concatSeqNum(sms.concatSeqNum),
-    dialogId(sms.dialogId),
-    createdInStore(sms.createdInStore),
-    providerId(sms.providerId)
+    dialogId(sms.dialogId)
   {
     strncpy(eServiceType, sms.eServiceType, sizeof(eServiceType));
     strncpy(routeId, sms.routeId, sizeof(routeId));
@@ -966,9 +1024,6 @@ struct SMS
     concatSeqNum=sms.concatSeqNum;
 
     dialogId=sms.dialogId;
-    createdInStore=sms.createdInStore;
-
-    providerId=sms.providerId;
 
 
     strncpy(eServiceType, sms.eServiceType, sizeof(eServiceType));
@@ -1656,11 +1711,11 @@ struct SMS
   {
     return messageBody.getBinProperty(tag,len);
   }
-  uint32_t getIntProperty(int tag)
+  uint32_t getIntProperty(int tag)const
   {
     return messageBody.getIntProperty(tag);
   }
-  bool hasIntProperty(int tag)
+  bool hasIntProperty(int tag)const
   {
     return messageBody.hasIntProperty(tag);
   }
@@ -1692,6 +1747,42 @@ struct SMS
     return true;
   }
 
+  void Clear()
+  {
+    state=ENROUTE;
+    submitTime=0;
+    validTime=0;
+    attempts=0;
+    lastResult=0;
+    oldResult=0;
+    lastTime=0;
+    nextTime=0;
+    messageReference=0;
+    needArchivate=false;
+
+    deliveryReport=0;
+    billingRecord=0;
+    attach=false;
+
+    serviceId=0;
+    priority=0;
+    concatMsgRef=0;
+    concatSeqNum=0;
+    dialogId=-1;
+
+    eServiceType[0]='\0';
+    routeId[0]='\0';
+    srcSmeId[0]='\0';
+    dstSmeId[0]='\0';
+    originatingAddress.Clear();
+    destinationAddress.Clear();
+    dealiasedDestinationAddress.Clear();
+
+    originatingDescriptor.Clear();
+    destinationDescriptor.Clear();
+
+    messageBody.Clear();
+  }
 };
 
 }//sms

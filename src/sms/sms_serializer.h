@@ -83,7 +83,7 @@ namespace BufOps{
 
   inline SmsBuffer& operator<<(SmsBuffer& buf,const uint64_t& val)
   {
-    uint32_t nval=ntohl((val>>32)&0xFFFFFFFF);
+    uint32_t nval=ntohl((uint32_t)(val>>32)&0xFFFFFFFF);
     buf.Append((char*)&nval,4);
     nval=ntohl(val&0xFFFFFFFF);
     buf.Append((char*)&nval,4);
@@ -198,7 +198,7 @@ inline void Deserialize(BufOps::SmsBuffer& src,SMS& sms)
 
   sms.state=(State)smsState;
 
-  uint32_t bodyLength=sms.messageBody.getBufferLength();
+  uint32_t bodyLength;//=sms.messageBody.getBufferLength();
   src>>bodyLength;
   uint8_t* bodyBuffer = new uint8_t[bodyLength];
   src.Read((char*)bodyBuffer,bodyLength);

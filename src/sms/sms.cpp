@@ -17,7 +17,7 @@ int Body::getRequiredBufferSize() const
   {
     if ( i == unType(Tag::SMPP_SHORT_MESSAGE) ) continue;
     if ( i == unType(Tag::SMPP_MESSAGE_PAYLOAD) ) continue;
-    if(prop.properties[i].isSet)
+    if(prop.properties[i].isSet())
     {
       switch(prop.properties[i].type)
       {
@@ -47,7 +47,7 @@ void Body::encode(uint8_t* buffer,int& length) const
   {
     if ( i == unType(Tag::SMPP_SHORT_MESSAGE) ) continue;
     if ( i == unType(Tag::SMPP_MESSAGE_PAYLOAD) ) continue;
-    if(prop.properties[i].isSet)
+    if(prop.properties[i].isSet())
     {
       __require__(offset<length);
       switch(prop.properties[i].type)
@@ -102,10 +102,13 @@ void Body::decode(uint8_t* buffer,int length)
   //__require__( buffer != 0 );
   __require__( length >= 0 );
   int offset=0;
+  //printf("Unset:");
   for(int i=0;i<=SMS_LAST_TAG;i++)
   {
-    prop.properties[i]=OptionalProperty();
+    //printf("[%d/%p]: %d/%p, ",i,&prop.properties[i],prop.properties[i].isSetVal,prop.properties[i].sValue);
+    prop.properties[i].Unset();
   }
+  //printf("\n");
   while(offset<length)
   {
     uint16_t tag;
@@ -115,6 +118,7 @@ void Body::decode(uint8_t* buffer,int length)
     int type=tag>>8;
     tag&=0xff;
     __require__(tag<=SMS_LAST_TAG);
+    if(Tag::tagTypes[tag]!=type)throw Exception("Invalid type for tag %d(%d!=%d)",tag,Tag::tagTypes[tag],type);
     switch(type)
     {
       case SMS_INT_TAG:
@@ -149,6 +153,14 @@ void Body::decode(uint8_t* buffer,int length)
       default:__unreachable__("SMS decoding failure");
     }
   }
+  /*
+  printf("Dump:");
+  for(int i=0;i<=SMS_LAST_TAG;i++)
+  {
+    printf("[%d/%p]: %d/%p, ",i,&prop.properties[i],prop.properties[i].isSetVal,prop.properties[i].sValue);
+  }
+  printf("\n");
+  */
 };
 
 
@@ -163,18 +175,18 @@ void Body::setBinProperty(int tag,const char* value, unsigned len)
       //__trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
       dropProperty(Tag::SMPP_SHORT_MESSAGE);
       if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) ){
-        if ( !prop.properties[unType(Tag::SMPP_DATA_CODING)].isSet )
+        if ( !prop.properties[unType(Tag::SMPP_DATA_CODING)].isSet() )
           throw runtime_error(":SMS::MessageBody::setBinProperty: encoding scheme must be set");
-        if ( !prop.properties[unType(Tag::SMPP_ESM_CLASS)].isSet )
+        if ( !prop.properties[unType(Tag::SMPP_ESM_CLASS)].isSet() )
           throw runtime_error(":SMS::MessageBody::getBinProperty: ems_class must be set");
         unsigned encoding = prop.properties[unType(Tag::SMPP_DATA_CODING)].getInt();
         if ( encoding != 0x8 ) goto trivial;
-        if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet)
+        if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet())
         {
           TmpBuf<char,256> buffer(len);
           char *bufptr=buffer.get();
           uint8_t *dcl=0;
-          if(prop.properties[unType(Tag::SMSC_DC_LIST)].isSet)
+          if(prop.properties[unType(Tag::SMSC_DC_LIST)].isSet())
           {
             dcl=(uint8_t*)prop.properties[unType(Tag::SMSC_DC_LIST)].getBin(0);
           }
@@ -215,19 +227,19 @@ void Body::setBinProperty(int tag,const char* value, unsigned len)
       //__trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
       dropProperty(Tag::SMPP_MESSAGE_PAYLOAD);
       if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) ){
-        if ( !prop.properties[unType(Tag::SMPP_DATA_CODING)].isSet )
+        if ( !prop.properties[unType(Tag::SMPP_DATA_CODING)].isSet() )
           throw runtime_error(":SMS::MessageBody::setBinProperty: encoding scheme must be set");
-        if ( !prop.properties[unType(Tag::SMPP_ESM_CLASS)].isSet )
+        if ( !prop.properties[unType(Tag::SMPP_ESM_CLASS)].isSet() )
           throw runtime_error(":SMS::MessageBody::getBinProperty: ems_class must be set");
         unsigned encoding = prop.properties[unType(Tag::SMPP_DATA_CODING)].getInt();
         if ( encoding != 0x8 ) goto trivial;
 
-        if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet && prop.properties[unType(Tag::SMSC_CONCATINFO)].isSet)
+        if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet() && prop.properties[unType(Tag::SMSC_CONCATINFO)].isSet())
         {
           TmpBuf<char,256> buffer(len);
           char *bufptr=buffer.get();
           uint8_t *dcl=0;
-          if(prop.properties[unType(Tag::SMSC_DC_LIST)].isSet)
+          if(prop.properties[unType(Tag::SMSC_DC_LIST)].isSet())
           {
             dcl=(uint8_t*)prop.properties[unType(Tag::SMSC_DC_LIST)].getBin(0);
           }
@@ -282,11 +294,11 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
   if ( !HSNS_isEqual() ) {
     if ( tag == unType(Tag::SMPP_SHORT_MESSAGE) ) {
       //__trace2__(":SMS::Body::%s processing SHORT_MESSAGE",__FUNCTION__);
-      if ( !prop.properties[unType(Tag::SMPP_SHORT_MESSAGE)].isSet )
+      if ( !prop.properties[unType(Tag::SMPP_SHORT_MESSAGE)].isSet() )
       {
-        if ( !prop.properties[unType(Tag::SMPP_DATA_CODING)].isSet )
+        if ( !prop.properties[unType(Tag::SMPP_DATA_CODING)].isSet() )
           throw runtime_error(":SMS::MessageBody::getBinProperty: encoding scheme must be set");
-        if ( !prop.properties[unType(Tag::SMPP_ESM_CLASS)].isSet )
+        if ( !prop.properties[unType(Tag::SMPP_ESM_CLASS)].isSet() )
           throw runtime_error(":SMS::MessageBody::getBinProperty: ems_class must be set");
         unsigned encoding = prop.properties[unType(Tag::SMPP_DATA_CODING)].getInt();
         if ( encoding != 0x8 ) goto trivial;
@@ -297,11 +309,11 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
 
           buffer = auto_ptr<char>(new char[len]);
 
-          if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet)
+          if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet())
           {
             char *bufptr=buffer.get();
             uint8_t *dcl=0;
-            if(prop.properties[unType(Tag::SMSC_DC_LIST)].isSet)
+            if(prop.properties[unType(Tag::SMSC_DC_LIST)].isSet())
             {
               dcl=(uint8_t*)prop.properties[unType(Tag::SMSC_DC_LIST)].getBin(0);
             }
@@ -342,11 +354,11 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
     }
     else if ( tag == unType(Tag::SMPP_MESSAGE_PAYLOAD) ){
       //__trace2__(":SMS::Body::%s processing MESSAGE_PAYLOAD",__FUNCTION__);
-      if ( !prop.properties[unType(Tag::SMPP_MESSAGE_PAYLOAD)].isSet )
+      if ( !prop.properties[unType(Tag::SMPP_MESSAGE_PAYLOAD)].isSet() )
       {
-        if ( !prop.properties[unType(Tag::SMPP_DATA_CODING)].isSet )
+        if ( !prop.properties[unType(Tag::SMPP_DATA_CODING)].isSet() )
           throw runtime_error(":SMS::MessageBody::getBinProperty: encoding scheme must be set");
-        if ( !prop.properties[unType(Tag::SMPP_ESM_CLASS)].isSet )
+        if ( !prop.properties[unType(Tag::SMPP_ESM_CLASS)].isSet() )
           throw runtime_error(":SMS::MessageBody::getBinProperty: ems_class must be set");
         unsigned encoding = prop.properties[unType(Tag::SMPP_DATA_CODING)].getInt();
         if ( encoding != 0x8 ) goto trivial;
@@ -355,11 +367,11 @@ const char* Body::getBinProperty(int tag,unsigned* len)const
         const char* orig = prop.properties[unType(Tag::SMSC_RAW_PAYLOAD)].getBin(&len);
         if ( len > 0 ){
           buffer = auto_ptr<char>(new char[len]);
-          if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet && prop.properties[unType(Tag::SMSC_CONCATINFO)].isSet)
+          if(prop.properties[unType(Tag::SMSC_MERGE_CONCAT)].isSet() && prop.properties[unType(Tag::SMSC_CONCATINFO)].isSet())
           {
             char *bufptr=buffer.get();
             uint8_t *dcl=0;
-            if(prop.properties[unType(Tag::SMSC_DC_LIST)].isSet)
+            if(prop.properties[unType(Tag::SMSC_DC_LIST)].isSet())
             {
               dcl=(uint8_t*)prop.properties[unType(Tag::SMSC_DC_LIST)].getBin(0);
             }
@@ -411,7 +423,7 @@ void Body::Print(FILE* f)
 {
   for(int i=0;i<=SMS_LAST_TAG;i++)
   {
-    if(prop.properties[i].isSet)
+    if(prop.properties[i].isSet())
     {
       switch(prop.properties[i].type)
       {
