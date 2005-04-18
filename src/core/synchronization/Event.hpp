@@ -78,7 +78,7 @@ public:
     }
 
 #else
-    timestruc_t tv;
+    timestruc_t tv={0,0};
     clock_gettime(CLOCK_REALTIME,&tv);
     tv.tv_sec+=timeout/1000;
     tv.tv_nsec+=(timeout%1000)*1000000L;
