@@ -974,6 +974,10 @@ public:
       printf("\nReceived async submit sm resp:status=%#x, msgId=%s\n",
         pdu->get_commandStatus(),
         ((PduXSmResp*)pdu)->get_messageId()?((PduXSmResp*)pdu)->get_messageId():"NULL");
+    }else if(pdu->get_commandId()==SmppCommandSet::UNBIND)
+    {
+      printf("Received unbind\n");
+      connected=false;
     }
     if(!cmdfile && !vcmode)rl_forced_update_display();
   }
