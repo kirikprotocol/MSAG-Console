@@ -528,8 +528,15 @@ protected:
     }
   };
 
+  struct SMSIdHashFunc{
+    static inline unsigned int CalcHash(SMSId key)
+    {
+      return (unsigned int)key;
+    }
+  };
+
   smsc::core::buffers::XHash<MergeCacheItem,SMSId,MergeCacheHashFunc> mergeCache;
-  smsc::core::buffers::XHash<SMSId,MergeCacheItem> reverseMergeCache;
+  smsc::core::buffers::XHash<SMSId,MergeCacheItem,SMSIdHashFunc> reverseMergeCache;
   smsc::core::buffers::CyclicQueue<std::pair<time_t,SMSId> > mergeCacheTimeouts;
   time_t mergeConcatTimeout;
 

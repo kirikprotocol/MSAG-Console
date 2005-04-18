@@ -476,7 +476,13 @@ public:
     {
     }
   };
-  smsc::core::buffers::XHash<SMSId,StoreData*> store;
+  struct SMSIdHashFunc{
+    static inline unsigned int CalcHash(SMSId key)
+    {
+      return (unsigned int)key;
+    }
+  };
+  smsc::core::buffers::XHash<SMSId,StoreData*,SMSIdHashFunc> store;
   Mutex storeMtx;
   std::vector<StoreData*> storeDataPool;
 

@@ -85,7 +85,7 @@ namespace BufOps{
   {
     uint32_t nval=ntohl((uint32_t)(val>>32)&0xFFFFFFFF);
     buf.Append((char*)&nval,4);
-    nval=ntohl(val&0xFFFFFFFF);
+    nval=ntohl((uint32_t)(val&0xFFFFFFFF));
     buf.Append((char*)&nval,4);
     return buf;
   }

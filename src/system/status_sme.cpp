@@ -105,7 +105,7 @@ int StatusSme::Execute()
       answer+=')';
     }else if (request=="eventqueue" || request=="eq")
     {
-      int cnt=smsc->eventqueue.getCounter();
+      int cnt=(int)smsc->eventqueue.getCounter();
       int eqhash,equnl;
       smsc->eventqueue.getStats(eqhash,equnl);
       char buf[128];
