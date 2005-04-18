@@ -125,6 +125,7 @@ refreshStartStopButtonsStatus();
       param(out, "billing interval (secs)", "MessageStore.billingInterval", bean.getIntParam("MessageStore.billingInterval"));
       param(out, "archive directory",       "MessageStore.archiveDir",      bean.getStringParam("MessageStore.archiveDir"));
       param(out, "archive interval (secs)", "MessageStore.archiveInterval", bean.getIntParam("MessageStore.archiveInterval"));
+      param(out, "statistics directory",    "MessageStore.statisticsDir",   bean.getStringParam("MessageStore.statisticsDir"));
     finishParams(out);
     //~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Storage ~~~~~~~~~~~~~~~~~~~~~~~~
     startSection(out, "MessageStore.Storage", "Storage", false);
