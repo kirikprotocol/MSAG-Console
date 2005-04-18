@@ -199,6 +199,7 @@ throw (SubjectNotFoundException)
   XmlStr allowBlocked(elem.getAttribute(XmlStr("allowBlocked")));
   const signed long providerId = atol(XmlStr(elem.getAttribute(XmlStr("providerId"))));
   XmlStr billingRuleId(elem.getAttribute(XmlStr("billingId")));
+  const signed long categoryId = atol(XmlStr(elem.getAttribute(XmlStr("categoryId"))));
 
   std::string routeid(id);
   if(routeid.length()>32)
@@ -225,7 +226,8 @@ throw (SubjectNotFoundException)
                                    strcmp("true", forceDelivery) == 0,
                                    strcmp("true", allowBlocked) == 0,
                                    providerId,
-                                   (const char * const)billingRuleId)
+                                   (const char * const)billingRuleId,
+                                   categoryId)
                          );
 
   DOMNodeList *srcs = elem.getElementsByTagName(XmlStr("source"));
