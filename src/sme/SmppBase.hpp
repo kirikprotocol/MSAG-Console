@@ -15,6 +15,7 @@
 #include <string>
 #include <string.h>
 #include <errno.h>
+#include "util/sleep.h"
 
 namespace smsc{
 namespace sme{
@@ -287,16 +288,24 @@ public:
     socket(sock)
   {
     running=false;
+    shutdown=false;
   }
   int Execute()
   {
     PduBuffer pb;
     mon.Lock();
     running=true;
+    shutdown=false;
+    stopped=false;
     while(!stopped)
     {
       while(queue.Count()==0 && !stopped)
       {
+        if(shutdown)
+        {
+          stopped=true;
+          break;
+        }
         mon.wait();
       }
       if(stopped)break;
@@ -326,6 +335,15 @@ public:
     stopped=true;
     mon.notify();
   }
+  void Shutdown()
+  {
+    {
+      MutexGuard lock(mon);
+      shutdown=true;
+      mon.notify();
+    }
+    WaitFor();
+  }
   void enqueue(SmppHeader* pdu)
   {
     MutexGuard lock(mon);
@@ -351,6 +369,7 @@ protected:
   SmppPduEventListener *listener;
   Socket *socket;
   bool running;
+  bool shutdown;
 
   void sendPdu(PduBuffer& pb)
   {
@@ -830,6 +849,8 @@ protected:
       case BIND_TRANCIEVER_RESP:
       case ENQUIRE_LINK:
       case ENQUIRE_LINK_RESP:
+      case UNBIND:
+      case UNBIND_RESP:
         return true;
     }
     switch(bindType)
@@ -840,7 +861,6 @@ protected:
           case DATA_SM:
           case DELIVERY_SM:
           case GENERIC_NACK:
-          case UNBIND_RESP:
             return true;
           default:
             return false;
@@ -857,7 +877,6 @@ protected:
           case CANCEL_SM_RESP:
           case QUERY_SM_RESP:
           case REPLACE_SM_RESP:
-          case UNBIND:
             return true;
           default:
             return false;
@@ -870,11 +889,9 @@ protected:
           case GENERIC_NACK:
           case SUBMIT_SM_RESP:
           case SUBMIT_MULTI_RESP:
-          case UNBIND_RESP:
           case CANCEL_SM_RESP:
           case QUERY_SM_RESP:
           case REPLACE_SM_RESP:
-          case UNBIND:
           case DELIVERY_SM:
             return true;
           default:
@@ -894,6 +911,8 @@ protected:
       case BIND_TRANCIEVER:
       case ENQUIRE_LINK:
       case ENQUIRE_LINK_RESP:
+      case UNBIND:
+      case UNBIND_RESP:
         return true;
     }
     switch(bindType)
@@ -901,8 +920,6 @@ protected:
       case BindType::Receiver:
         switch(pdu->get_commandId())
         {
-          case UNBIND:
-          case UNBIND_RESP:
           case DELIVERY_SM_RESP:
           case GENERIC_NACK:
             return true;
@@ -920,8 +937,6 @@ protected:
           case CANCEL_SM:
           case REPLACE_SM:
           case QUERY_SM:
-          case UNBIND:
-          case UNBIND_RESP:
             return true;
           default:
             return false;
@@ -937,8 +952,6 @@ protected:
           case CANCEL_SM:
           case REPLACE_SM:
           case QUERY_SM:
-          case UNBIND:
-          case UNBIND_RESP:
           case DELIVERY_SM_RESP:
             return true;
           default:
@@ -1045,6 +1058,19 @@ protected:
       {
         lockMutex.Unlock();
         listener->handleEvent(pdu);
+      }break;
+      case UNBIND:
+      {
+        lockMutex.Unlock();
+        listener->handleEvent(pdu);
+        PduUnbindResp resp;
+        resp.get_header().set_commandId(UNBIND_RESP);
+        resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+        resp.get_header().set_commandStatus(0);
+        writer.enqueue((SmppHeader*)&resp);
+        //disposePdu(pdu);
+        writer.Shutdown();
+        close();
       }break;
       default:
       {
