@@ -509,6 +509,7 @@ struct _SmscCommand
     case ENQUIRELINK_RESP:
     case SMEALERT:
     case KILLEXPIREDTRANSACTIONS:
+    case UNBIND:
       // nothing to delete
       break;
     default:
@@ -558,6 +559,10 @@ struct _SmscCommand
     return *((KillMrCacheItemCmd*)dta);
   }
 
+  int get_mode()
+  {
+    return (int)dta;
+  }
 };
 
 class SmscCommand
@@ -777,6 +782,20 @@ public:
     _cmd.ref_count=1;
     _cmd.cmdid=GENERIC_NACK;
     _cmd.status=status;
+    _cmd.dialogId=dialogId;
+    return cmd;
+  }
+
+
+  static SmscCommand makeUnbind(int dialogId,int mode=0)
+  {
+    SmscCommand cmd;
+    cmd.cmd=new _SmscCommand;
+    _SmscCommand& _cmd=*cmd.cmd;
+    _cmd.ref_count=1;
+    _cmd.cmdid=UNBIND;
+    _cmd.dta=(void*)mode;
+    _cmd.status=0;
     _cmd.dialogId=dialogId;
     return cmd;
   }
@@ -1275,6 +1294,14 @@ public:
         gnack->header.set_sequenceNumber(c.get_dialogId());
         gnack->header.set_commandStatus(makeSmppStatus((uint32_t)c.status));
         return reinterpret_cast<SmppHeader*>(gnack.release());
+      }
+    case UNBIND:
+      {
+        auto_ptr<PduUnbind> unb(new PduUnbind);
+        unb->header.set_commandId(SmppCommandSet::UNBIND);
+        unb->header.set_sequenceNumber(c.get_dialogId());
+        unb->header.set_commandStatus(0);
+        return reinterpret_cast<SmppHeader*>(unb.release());
       }
     case UNBIND_RESP:
       {
