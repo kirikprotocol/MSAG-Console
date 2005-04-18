@@ -2,16 +2,17 @@
 #define SMSC_STAT_STATISTICS
 
 #include <util/Exception.hpp>
+#include "sms/sms.h"
 
-namespace smsc { namespace stat 
+namespace smsc { namespace stat
 {
     using smsc::util::Exception;
 
     class StatisticsException : public Exception
     {
     public:
-        
-        StatisticsException() 
+
+        StatisticsException()
             : Exception("Statistics collection failed !") {};
         StatisticsException(const char* fmt,...)
             : Exception() { SMSC_UTIL_EX_FILL(fmt); };
@@ -29,8 +30,16 @@ namespace smsc { namespace stat
 
         StatInfo(const std::string& _smeId, const std::string& _routeId, int _errcode = 0,
                  signed long _providerId = -1, signed long _categoryId = -1)
-            : smeId(_smeId), routeId(_routeId), errcode(_errcode), 
+            : smeId(_smeId), routeId(_routeId), errcode(_errcode),
               providerId(_providerId), categoryId(_categoryId) {};
+        StatInfo(const smsc::sms::SMS& sms,bool isSrcSmeId=true)
+        {
+          errcode=sms.getLastResult();
+          smeId=isSrcSmeId?sms.getSourceSmeId():sms.getDestinationSmeId();
+          routeId=sms.getRouteId();
+          providerId=sms.getIntProperty(smsc::sms::Tag::SMSC_PROVIDERID);
+          categoryId=sms.getIntProperty(smsc::sms::Tag::SMSC_CATEGORYID);
+        }
     };
 
     class Statistics
@@ -44,15 +53,14 @@ namespace smsc { namespace stat
         virtual void updateTemporal (const StatInfo& info) = 0;
         virtual void updateChanged  (const StatInfo& info) = 0;
         virtual void updateScheduled(const StatInfo& info) = 0;
-        
+
         virtual ~Statistics() {};
-        
+
     protected:
-        
+
         Statistics() {};
     };
 
 }}
 
 #endif // SMSC_STAT_STATISTICS
-
