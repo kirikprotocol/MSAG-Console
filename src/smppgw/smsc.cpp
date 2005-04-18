@@ -442,6 +442,7 @@ void Smsc::init(const SmscConfigs& cfg)
   }
 
   {
+    //MutexGuard mg(gatewaySwitchMutex);
     using smsc::util::config::ConfigView;
     using smsc::util::config::CStrSet;
     std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.cfgman,"smsc-connections"));
@@ -465,7 +466,7 @@ void Smsc::init(const SmscConfigs& cfg)
       {
         throw Exception("Duplicate gwsmeid %d!",(int)uid);
       }
-      gwSmeMap[uid]=gwsme;
+      gwSmeMap[uid]=gwsme->AddRef();
       gwsme->setPrefix(uid);
       smeman.registerInternallSmeProxy(*it,gwsme);
       tp.startTask(gwsme);
@@ -504,7 +505,7 @@ void Smsc::init(const SmscConfigs& cfg)
 
 bool Smsc::regSmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid)
 {
-    smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.regSmsc");
+    MutexGuard mg(gatewaySwitchMutex);
 
     smsc::sme::SmeConfig gwcfg;
     gwcfg.host=cfg.host;
@@ -513,8 +514,6 @@ bool Smsc::regSmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPor
     gwcfg.password=cfg.password;
     gwcfg.smppTimeOut=cfg.smppTimeOut;
 
-    smsc_log_info(log, "systemId %s",gwcfg.sid.c_str());
-
     GatewaySme *gwsme=new GatewaySme(gwcfg,&smeman, altHost.c_str(), altPort);
     gwsme->setId(systemId, smeman.lookup(systemId));
     uint8_t newuid=uid;
@@ -522,7 +521,7 @@ bool Smsc::regSmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPor
     {
         return false;
     }
-    gwSmeMap[newuid]=gwsme;
+    gwSmeMap[newuid]=gwsme->AddRef();
     gwsme->setPrefix(newuid);
     smeman.registerInternallSmeProxy(systemId, gwsme);
     tp.startTask(gwsme);

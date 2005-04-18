@@ -1166,6 +1166,7 @@ void StateMachine::submitResp(SmscCommand& cmd)
     }
     if(gwsme)
     {
+      gwsme->AddRef();
       id|=gwsme->getPrefix()&0xFF;
       char buf[64];
       sprintf(buf,"%lld",id);
@@ -1211,6 +1212,7 @@ void StateMachine::submitResp(SmscCommand& cmd)
         smsc->updateCounter(stat::Counters::cntPerm,rd.si,smsc::system::Status::RX_T_APPN);
         smsc->updatePerformance(performance::Counters::cntDeliverErr);
       }
+      gwsme->Release();
     }else
     {
       warn1(smsLog,"SBMRESP: incorrect command direction (submit response to to gatewaysme)");

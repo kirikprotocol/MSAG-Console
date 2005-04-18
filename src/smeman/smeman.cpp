@@ -9,8 +9,7 @@
 #include "admin/service/Type.h"
 #include "smppgw/gwsme.hpp"
 
-#include <fstream>
-#include <iostream>
+#include "logger/Logger.h"
 
 namespace smsc {
 namespace smeman {
@@ -18,6 +17,7 @@ namespace smeman {
 using namespace std;
 using namespace smsc::admin::service;
 using smsc::smppgw::GatewaySme;
+using namespace smsc::logger;
 
 using core::synchronization::MutexGuard;
 #define __synchronized__ MutexGuard mguard(lock);
@@ -101,24 +101,14 @@ void SmeManager::statusSme(Variant& result){
     }
   }
 
-void SmeManager::unregSmsc(const SmeSystemId& systemId, uint8_t* uid)
+void SmeManager::unregSmsc(const SmeSystemId& systemId)
 {
-  lock.Lock();
+  __synchronized__
   SmeIndex index = internalLookup(systemId);
   if ( index == INVALID_SME_INDEX ) throw SmeError();
 
-  records[index]->mutex.Lock();
-  *uid = records[index]->proxy->getPrefix();
   records[index]->uniqueId = 0;
   records[index]->info.internal = false;
-  if ( records[index]->proxy ){
-      lock.Unlock();
-      records[index]->mutex.Unlock();
-      delete (records[index]->proxy);
-  }else{
-      lock.Unlock();
-      records[index]->mutex.Unlock();
-  }
 }
 
 void SmeManager::deleteSme(const SmeSystemId& systemId)
@@ -269,7 +259,6 @@ void SmeManager::registerInternallSmeProxy(const SmeSystemId& systemId,
                                 SmeProxy* smeProxy)
 {
 __synchronized__
-smsc::logger::Logger *log=smsc::logger::Logger::getInstance("regInter");
 
   __require__ ( smeProxy != NULL );
   {
@@ -292,11 +281,7 @@ smsc::logger::Logger *log=smsc::logger::Logger::getInstance("regInter");
     MutexGuard guard(records[index]->mutex);
     smeProxy->setPriority(records[index]->info.priority);
     records[index]->proxy = smeProxy;
-    smsc_log_info(log, "systemId: %s index: %d is processed.", systemId.c_str(), index);
-    if(records[index]->proxy)
-        smsc_log_info(log, "systemId: %s index: %d is registred.", systemId.c_str(), index);
     records[index]->uniqueId = nextProxyUniqueId();
-    smsc_log_info(log, "uniqueId: %d", records[index]->uniqueId);
     records[index]->info.internal=true;
   }
   dispatcher.attachSmeProxy(smeProxy,index);

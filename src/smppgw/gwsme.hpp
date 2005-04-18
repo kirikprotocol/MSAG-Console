@@ -24,10 +24,53 @@ using namespace smsc::core::threads;
 using namespace smsc::smeman;
 using namespace smsc::core::synchronization;
 
+/*class GatewayReffer
+{
+public:
+    GatewayReffer() : refcount_(1)
+    {
+    }
+
+    void AddRef()
+    {
+      smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.unreg");
+      MutexGuard g(sync_);
+      refcount_++;
+      smsc_log_info(log, "AddRef count: %d", refcount_);
+    }
+
+    void Release()
+    {
+      smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.unreg");
+      unsigned counter;
+      {
+          MutexGuard g(sync_);
+          smsc_log_info(log, "Release refcount: %d", refcount_);
+          counter = --refcount_;
+          smsc_log_info(log, "Release count: %d", counter);
+      }
+      smsc_log_info(log, "Release count: %d befor if", counter);
+      if ( counter == 0 )
+      {
+          smsc_log_info(log, "Release count: %d into if", counter);
+          //delete this;
+      }
+    }
+    int refcount()
+    {
+      MutexGuard g(sync_);
+      return refcount_;
+    }
+protected:
+    int refcount_;
+    Mutex sync_;
+};*/
+
 class GatewaySme:public SmeProxy,public ThreadedTask{
 public:
   GatewaySme(const SmeConfig& cfg,smsc::smeman::SmeRegistrar* sr,const std::string& bh,int bp):lst(*this),sess(cfg,&lst),sesscfg(cfg),smereg(sr)
   {
+    refcount_ = 1;
     managerMonitor=NULL;
     connected=false;
     log=smsc::logger::Logger::getInstance("gwsme");
@@ -52,7 +95,9 @@ public:
   ~GatewaySme()
   {
     sess.close();
+    smsc_log_info(log, "Smpp session is clossed.");
     smereg->unregisterSmeProxy(id);
+    smsc_log_info(log, "Sme proxy is unregistred.");
   }
 
   int Execute();
@@ -179,6 +224,26 @@ public:
     return prefix;
   }
 
+  GatewaySme* AddRef()
+  {
+      MutexGuard g(sync_);
+      refcount_++;
+      return this;
+  }
+
+  void Release()
+  {
+      unsigned counter;
+      {
+          MutexGuard g(sync_);
+          counter = --refcount_;
+      }
+      if ( counter == 0 )
+      {
+          stop();
+      }
+  }
+
 protected:
   mutable Mutex mutex,mutexin;
   mutable EventMonitor mutexout;
@@ -186,6 +251,8 @@ protected:
   SmeIndex smeIndex;
   int seq;
   smsc::core::buffers::CyclicQueue<SmscCommand> inqueue,outqueue;
+  int refcount_;
+  Mutex sync_;
 
   class PduListener:public smsc::sme::SmppPduEventListener{
   public:

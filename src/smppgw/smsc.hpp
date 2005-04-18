@@ -21,10 +21,13 @@
 #include "smppgw/stat/StatisticsManager.h"
 
 #include "smppgw/mrcache.hpp"
+#include "smppgw/gwsme.hpp"
 
 #include <sys/types.h>
 
 #include "core/buffers/XHash.hpp"
+
+#include "logger/Logger.h"
 
 
 namespace smsc{
@@ -39,6 +42,8 @@ using smsc::util::config::route::RouteConfig;
 using smsc::core::threads::ThreadedTask;
 using smsc::sme::SmeConfig;
 using smsc::smeman::SmeManager;
+using smsc::smppgw::GatewaySme;
+using namespace smsc::logger;
 //class smsc::store::MessageStore;
 
 template<class T>
@@ -175,10 +180,24 @@ public:
 
   void unregisterSmeProxy(const string& sysid)
   {
+    MutexGuard mg(gatewaySwitchMutex);
+
     uint8_t uid = 0;
-    smeman.unregSmsc(sysid, &uid);
-    if(uid)
-        gwSmeMap[uid] = 0;
+
+    SmeRecord* p = (SmeRecord*)getSmeProxy(sysid);
+    GatewaySme* gwsme = dynamic_cast<GatewaySme*>(p->proxy);
+
+    if(gwsme){
+        smeman.unregSmsc(sysid);
+        uid = gwsme->getPrefix();
+
+        gwsme->Release();
+        
+        if(uid){
+            gwSmeMap[uid]->Release();            
+            gwSmeMap[uid] = 0;
+        }
+    }
   }
 
   SmeAdministrator* getSmeAdmin(){return &smeman;}
@@ -323,10 +342,12 @@ public:
 
   GatewaySme* getGwSme(uint8_t uid)
   {
+    MutexGuard mg(gatewaySwitchMutex);
     return gwSmeMap[uid];
   }
   void setGwSme(uint8_t uid, GatewaySme* gwSme)
   {
+    MutexGuard mg(gatewaySwitchMutex);
     gwSmeMap[uid] = gwSme;
   }
   void startTpTask(ThreadedTask *tsk)
@@ -348,6 +369,7 @@ protected:
   smsc::smeman::SmeManager smeman;
   Mutex routerSwitchMutex;
   Mutex aliasesSwitchMutex;
+  Mutex gatewaySwitchMutex;
   Reffer<RouteManager>* router_;
   Reffer<RouteManager>* testRouter_;
   Reffer<AliasManager>* aliaser_;

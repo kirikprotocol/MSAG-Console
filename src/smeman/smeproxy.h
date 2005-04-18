@@ -108,7 +108,6 @@ public:
   virtual const std::string& getSourceAddressRange(){return nullstr;};
   virtual const char * getSystemId() const = 0;
   virtual int getProviderId() const {return -1;};
-  virtual uint8_t getPrefix() {return 0;};
 
   virtual void updateSmeInfo(const SmeInfo& _smeInfo){}
 

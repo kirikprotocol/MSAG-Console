@@ -21,9 +21,8 @@ using namespace smsc::util::xml;
 
 Response * CommandRegSmsc::CreateResponse(smsc::smppgw::Smsc * SmscApp)
 {
-  smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smppgw.admin");
+  smsc::logger::Logger *log = smsc::logger::Logger::getInstance("CommandRegSmsc");
   try {      
-      //SmeManager* smeman =  (SmeManager*)(SmscApp->getSmeAdmin());
 
       smsc::sme::SmeConfig gwcfg;
       gwcfg.host = smscConfig.host;
@@ -31,21 +30,6 @@ Response * CommandRegSmsc::CreateResponse(smsc::smppgw::Smsc * SmscApp)
       gwcfg.sid = smscConfig.sid;
       gwcfg.password = smscConfig.password;
       gwcfg.smppTimeOut = smscConfig.smppTimeOut;
-
-      /*GatewaySme *gwsme=new GatewaySme(gwcfg, smeman, altHost.c_str(), altPort);
-      gwsme->setId(systemId.c_str(), smeman->lookup(systemId.c_str()));
-
-      if(SmscApp->getGwSme(uid))
-      {
-          throw Exception("Duplicate gwsmeid %d!",(int)uid);
-      }
-
-      SmscApp->setGwSme(uid, gwsme);
-      gwsme->setPrefix(uid);
-      smeman->registerInternallSmeProxy(systemId.c_str(),gwsme);
-      SmscApp->startTpTask(gwsme);*/
-
-      smsc_log_warn(log, "CommandRegSmsc systemId: %s", smscConfig.sid.c_str());
 
       if(!SmscApp->regSmsc(gwcfg, altHost, altPort, systemId, uid))
          throw Exception("Duplicate gwsmeid %d!",(int)uid);
