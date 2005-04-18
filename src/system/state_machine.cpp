@@ -1188,6 +1188,9 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
+  sms->setIntProperty(Tag::SMSC_PROVIDERID,ri.providerId);
+  sms->setIntProperty(Tag::SMSC_CATEGORYID,ri.categoryId);
+
   bool aclCheck=false;
   std::string aclAddr;
 
@@ -1437,26 +1440,19 @@ StateType StateMachine::submit(Tuple& t)
     }else
     {
       info2(smsLog, "merging sms Id=%lld, next part arrived(%u/%u), mr=%d,dc=%d",t.msgId,idx,num,(int)mr,dc);
-      SMS* smsptr=smsc->getTempStore().Extract(t.msgId);
-      SMS _sms;
-      SMS& newsms=smsptr?*smsptr:_sms;
-      bool tempStore=false;
-      if(!smsptr)
+      SMS newsms;
+      try{
+        store->retriveSms(t.msgId,newsms);
+      }catch(...)
       {
-        try{
-          store->retriveSms(t.msgId,newsms);
-        }catch(...)
-        {
-          warn2(smsLog, "sms with id %lld not found or store error",t.msgId);
-          submitResp(t,sms,Status::SYSERR);
-          return ERROR_STATE;
-        }
+        warn2(smsLog, "sms with id %lld not found or store error",t.msgId);
+        submitResp(t,sms,Status::SYSERR);
+        return ERROR_STATE;
       }
       if(!newsms.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
       {
         warn2(smsLog, "smsId=%lld:one more part of concatenated message received, but all parts are collected.",t.msgId);
         submitResp(t,sms,Status::SUBMITFAIL);
-        if(smsptr)delete smsptr;
         return ERROR_STATE;
       }
       unsigned int newlen;
@@ -1497,7 +1493,6 @@ StateType StateMachine::submit(Tuple& t)
 
 
             warn2(smsLog, "Duplicate or invalid concatenated message part for id=%lld(idx:%d-%d,num:%d-%d,mr:%d-%d)",t.msgId,idx0,idx,num0,num,mr0,mr);
-            if(smsptr)delete smsptr;
             return ENROUTE_STATE;
           }
         }
@@ -1511,7 +1506,6 @@ StateType StateMachine::submit(Tuple& t)
           {
             warn2(smsLog, "smsId=%lld: different number of parts detected %d!=%d.",t.msgId,len,num);
             submitResp(t,sms,Status::INVOPTPARAMVAL);
-            if(smsptr)delete smsptr;
             return ERROR_STATE;
           }
         }
@@ -1700,19 +1694,13 @@ StateType StateMachine::submit(Tuple& t)
       {
         newsms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,tmp.c_str(),(int)tmp.length());
       }
-      if(smsptr)
+      try{
+        store->replaceSms(t.msgId,newsms);
+      }catch(...)
       {
-        smsc->getTempStore().AddPtr(t.msgId,smsptr);
-      }else
-      {
-        try{
-          store->replaceSms(t.msgId,newsms);
-        }catch(...)
-        {
-          warn2(smsLog, "Failed to replace sms with id=%lld",t.msgId);
-          submitResp(t,&newsms,Status::SUBMITFAIL);
-          return ERROR_STATE;
-        }
+        warn2(smsLog, "Failed to replace sms with id=%lld",t.msgId);
+        submitResp(t,&newsms,Status::SUBMITFAIL);
+        return ERROR_STATE;
       }
       if(!allParts)
       {
@@ -1744,15 +1732,6 @@ StateType StateMachine::submit(Tuple& t)
       *sms=newsms;
 
       int status=Status::OK;
-      /*
-      try{
-        store->createSms(*sms,t.msgId,smsc::store::CREATE_NEW);
-      }catch(...)
-      {
-        status=Status::SYSERR;
-      }
-      smsc->getTempStore().Delete(t.msgId);
-      */
 
       char buf[64];
       sprintf(buf,"%lld",t.msgId);
@@ -2047,21 +2026,12 @@ StateType StateMachine::submit(Tuple& t)
          throw "Invalid sms";
       }
       bool rip=sms->getIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG)!=0;
-      //if(rip || stime>now || )
-      //{
-        SMSId replaceId=store->createSms(*sms,t.msgId,rip?smsc::store::SMPP_OVERWRITE_IF_PRESENT:smsc::store::CREATE_NEW);
-        sms->createdInStore=true;
-        if(rip && replaceId!=t.msgId)
-        {
-          smsc->getScheduler()->CancelSms(replaceId,sms->getDealiasedDestinationAddress());
-        }
-      //}else
-      /*
+
+      SMSId replaceId=store->createSms(*sms,t.msgId,rip?smsc::store::SMPP_OVERWRITE_IF_PRESENT:smsc::store::CREATE_NEW);
+      if(rip && replaceId!=t.msgId)
       {
-        smsc->getTempStore().AddSms(t.msgId,*sms);
-        sms->createdInStore=false;
+        smsc->getScheduler()->CancelSms(replaceId,sms->getDealiasedDestinationAddress());
       }
-      */
 
     }catch(...)
     {
@@ -2078,7 +2048,7 @@ StateType StateMachine::submit(Tuple& t)
 
 
 
-  if(!isDatagram && !isTransaction && sms->createdInStore && needToSendResp) // Store&Forward mode
+  if(!isDatagram && !isTransaction && needToSendResp) // Store&Forward mode
   {
 
     if(!sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT) || sms->getIntProperty(Tag::SMSC_MERGE_CONCAT)==3)
@@ -2148,60 +2118,7 @@ StateType StateMachine::submit(Tuple& t)
       if(!sms)return;
       bool sandf=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0 ||
                  (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x3;
-      /*
-      if((sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0 ||
-         (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x3)return;
-      */
-      /*
-      if(sandf)//store and forward mode
-      {
-        if(sms->lastResult!=Status::OK)
-        {
-          bool ok=true;
-          if(!sms->createdInStore)
-          {
-            sm->smsc->getTempStore().Delete(msgId);
-            try{
-              sms->createdInStore=true;
-              sm->store->createSms(*sms,msgId,smsc::store::CREATE_NEW);
-            }catch(...)
-            {
-              __warning2__("SBM: failed to create sms with id=%lld",msgId);
-              sms->lastResult=Status::SYSERR;
-              ok=false;
-            }
-            if(ok)
-            {
-              sm->smsc->registerStatisticalEvent(StatEvents::etSubmitOk,sms);
-            }else
-            {
-              sm->smsc->registerStatisticalEvent(StatEvents::etSubmitErr,sms);
-            }
-            char buf[64];
-            sprintf(buf,"%lld",msgId);
-            SmscCommand resp = SmscCommand::makeSubmitSmResp
-                                 (
-                                   ok?buf:"0",
-                                   sms->dialogId,
-                                   sms->lastResult,
-                                   sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
-                                 );
-            try{
-              prx->putCommand(resp);
-            }catch(...)
-            {
-              __trace__("SUBMIT: failed to put response command");
-            }
-          }
-          Descriptor d;
-          try{
-            sm->changeSmsStateToEnroute(*sms,msgId,d,sms->lastResult,sm->rescheduleSms(*sms));
-          }catch(...)
-          {
-            __warning__("SUBMIT: failed to change state to enroute");
-          }
-        }
-      }else*/
+
       if(!sandf)
       {
         if(sms->lastResult!=Status::OK)
@@ -2542,27 +2459,13 @@ StateType StateMachine::forward(Tuple& t)
 {
   __trace2__("FWD: id=%lld",t.msgId);
   SMS sms;
-  if(smsc->getTempStore().Get(t.msgId,sms))
+  try{
+    store->retriveSms((SMSId)t.msgId,sms);
+  }catch(...)
   {
-    __trace2__("FWD: sms %lld found in temp store... need to create it",t.msgId);
-    smsc->getTempStore().Delete(t.msgId);
-    try{
-      store->createSms(sms,t.msgId,smsc::store::CREATE_NEW);
-    }catch(...)
-    {
-      smsc_log_warn(smsLog, "FWD: failed to createSms %lld",t.msgId);
-      return UNKNOWN_STATE;
-    }
-  }else
-  {
-    try{
-      store->retriveSms((SMSId)t.msgId,sms);
-    }catch(...)
-    {
-      smsc_log_warn(smsLog, "FWD: failed to retriveSms %lld",t.msgId);
-      smsc->getScheduler()->InvalidSms(t.msgId);
-      return UNKNOWN_STATE;
-    }
+    smsc_log_warn(smsLog, "FWD: failed to retriveSms %lld",t.msgId);
+    smsc->getScheduler()->InvalidSms(t.msgId);
+    return UNKNOWN_STATE;
   }
 
 
@@ -3158,62 +3061,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
   {
     sms=*t.command->get_resp()->get_sms();
     sms.destinationDescriptor=t.command->get_resp()->getDescriptor();
-  }else if(smsc->getTempStore().Get(t.msgId,sms))
-  {
-    sms.destinationDescriptor=t.command->get_resp()->getDescriptor();
-    smsc->getTempStore().Delete(t.msgId);
-    int status=Status::OK;
-    if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK ||
-       sms.hasBinProperty(Tag::SMSC_CONCATINFO))
-    {
-      try{
-        store->createSms(sms,t.msgId,smsc::store::CREATE_NEW);
-      }catch(...)
-      {
-        smsc_log_warn(smsLog, "DLVRSP: failed to createSms %lld",t.msgId);
-        status=Status::SYSERR;
-      }
-    }else
-    {
-      sms.state=DELIVERED;
-      try{
-        store->createFinalizedSms(t.msgId,sms);
-        finalized=true;
-      }catch(...)
-      {
-        smsc_log_warn(smsLog, "DLVRSP: failed to create finalized Sms %lld",t.msgId);
-        status=Status::SYSERR;
-      }
-    }
-    if(status==Status::OK)
-    {
-      smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
-    }else
-    {
-      smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
-    }
-    SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
-    if(src_proxy)
-    {
-      sms.setLastResult(status);
-      char msgId[64];
-      sprintf(msgId,"%lld",t.msgId);
-      SmscCommand resp = SmscCommand::makeSubmitSmResp
-                           (
-                             status==Status::OK?msgId:"0",
-                             sms.dialogId,
-                             status,
-                             sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
-                           );
-      try{
-        src_proxy->putCommand(resp);
-      }catch(...)
-      {
-        __warning__("SUBMIT_SM: failed to put response command");
-      }
-    }
-    if(status!=Status::OK)return UNKNOWN_STATE;
-  }else
+  }
+  else
   {
     try{
       store->retriveSms((SMSId)t.msgId,sms);
@@ -3937,40 +3786,8 @@ StateType StateMachine::alert(Tuple& t)
   if(t.command->get_sms())
   {
     sms=*t.command->get_sms();
-  }else if(smsc->getTempStore().Get(t.msgId,sms))
-  {
-    smsc->getTempStore().Delete(t.msgId);
-    smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
-    int status=Status::OK;
-    try{
-      store->createSms(sms,t.msgId,smsc::store::CREATE_NEW);
-    }catch(...)
-    {
-      smsc_log_warn(smsLog, "ALERT: failed to createSms %lld",t.msgId);
-      status=Status::SYSERR;
-    }
-    SmeProxy *src_proxy=smsc->getSmeProxy(sms.srcSmeId);
-    if(src_proxy)
-    {
-      sms.setLastResult(status);
-      smsc->registerStatisticalEvent(StatEvents::etSubmitErr,&sms);
-      char msgId[64];
-      sprintf(msgId,"%lld",t.msgId);
-      SmscCommand resp = SmscCommand::makeSubmitSmResp
-                           (
-                             status==Status::OK?msgId:"0",
-                             sms.dialogId,
-                             status,
-                             sms.getIntProperty(Tag::SMPP_DATA_SM)!=0
-                           );
-      try{
-        src_proxy->putCommand(resp);
-      }catch(...)
-      {
-        __warning__("ALERT: failed to put response command");
-      }
-    }
-  }else
+  }
+  else
   {
     try{
       store->retriveSms((SMSId)t.msgId,sms);
@@ -4608,11 +4425,6 @@ void StateMachine::changeSmsStateToEnroute(SMS& sms,SMSId id,const Descriptor& d
   if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x1 ||
      (sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2)return;
   sms.setLastResult(failureCause);
-  if(!sms.createdInStore)
-  {
-    debug2(smsLog, "ENROUTE: msgId=%lld - aborted for non-store message",id);
-    return;
-  }
   sms.setNextTime(nextTryTime);
   if(failureCause==Status::RESCHEDULEDNOW)
   {
