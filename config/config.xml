@@ -17,7 +17,7 @@
     <param name="billingDir" type="string">/export/home/user/install/.../bill</param> <!-- SET -->
     <param name="archiveInterval" type="int">60</param> <!-- in seconds -->
     <param name="billingInterval" type="int">60</param> <!-- in seconds -->
-
+    <param name="statisticsDir" type="string"></param>
     <section name="Cache">
       <param name="capacity" type="int">1000</param>
       <param name="enabled" type="bool">true</param>
