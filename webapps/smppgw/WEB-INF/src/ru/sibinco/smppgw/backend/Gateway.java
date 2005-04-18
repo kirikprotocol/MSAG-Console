@@ -73,7 +73,12 @@ public class Gateway extends Proxy
     if (Response.StatusOk != response.getStatus())
       throw new SibincoException("Couldn't register Smsc , nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
   }
-
+   public void modifySmsc(final SmscInfo SmscInfo) throws SibincoException
+  {
+    final Response response = super.runCommand(new ModifySmsc(SmscInfo));
+    if (Response.StatusOk != response.getStatus())
+      throw new SibincoException("Couldn't modify Smsc , nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+  }
   public void unregSmsc(final String SmscId) throws SibincoException
    {
      final Response response = super.runCommand(new UnregSmsc(SmscId));

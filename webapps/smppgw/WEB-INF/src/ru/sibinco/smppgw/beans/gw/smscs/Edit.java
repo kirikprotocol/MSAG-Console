@@ -68,17 +68,17 @@ public class Edit extends EditBean
         sme.setSmscInfo(info);
       }
     }
-    regSmscs(info,isAdd());
     smscs.put(id, info);
     appContext.getSmscsManager().storeSmscs(appContext.getGwConfig());
+    regSmscs(info,isAdd());
     throw new DoneException();
   }
    private void regSmscs(SmscInfo info,boolean Add) throws SmppgwJspException
   {
     final Gateway gateway=appContext.getGateway();
       try {
-       if (!Add) gateway.unregSmsc(id);
-        gateway.regSmsc(info);
+       if (!Add) gateway.modifySmsc(info);
+       else gateway.regSmsc(info);
       } catch (SibincoException e) {
         e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
        if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
