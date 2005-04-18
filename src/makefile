@@ -203,7 +203,7 @@ __build_message__:
 build: __build_message__ $(SMSC_BUILDDIR_LIST)
 	@if [ -n "$(MODULES)" ]; then \
 	    XXXX="$(MODULES)"; \
-	    set -e; for i in $$XXXX; do make -s $$i.rbuild ; done; \
+	    set -e; for i in $$XXXX; do $(MAKE) -s $$i.rbuild ; done; \
 	fi
 
 ubuild: .update .build
@@ -213,14 +213,14 @@ clean:
 	@echo "clean all"
 	@if [ -n "$(MODULES)" ]; then \
 	    XXXX="$(MODULES)"; \
-	    set -e; for i in $$XXXX; do make -s $$i.rclean ; done; \
+	    set -e; for i in $$XXXX; do $(MAKE) -s $$i.rclean ; done; \
 	fi
 
 deps:
 	@echo "build dependencies"
 	@if [ -n "$(MODULES)" ]; then \
 	    XXXX="$(MODULES)"; \
-	    set -e; for i in $$XXXX; do make -s $$i.deps ; done; \
+	    set -e; for i in $$XXXX; do $(MAKE) -s $$i.deps ; done; \
 	fi
 
 $(SMSC_BUILDDIR): $(SMSC_BUILDDIR_LIST)
@@ -233,7 +233,7 @@ override _modules = $(subst ., ,$@)
 override _module = $(firstword $(_modules))
 override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@), rbuild )
 	@if [ -d $(_module) ]; then \
-	    cd $(_module); make -s $(_subtarget); \
+	    cd $(_module); $(MAKE) -s $(_subtarget); \
 	else \
 	    echo "'$(_module)' is not module"; exit 1;\
 	fi
