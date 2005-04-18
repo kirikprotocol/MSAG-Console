@@ -169,6 +169,7 @@ struct RouteInfo
   bool allowBlocked;
   signed long providerId;
   BillingId billingId;
+  signed long categoryId;
 };
 
 } // namespace router
