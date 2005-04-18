@@ -65,7 +65,7 @@ while(<IN>)
     next if $ldeps{"$builddir/lib/lib$l.a"};
     $ldeps{"$builddir/lib/lib$l.a"}=1;
     print OUT "$builddir/lib/lib$l.a : __emptylib__\n";#.calclibdeps($l,"$srcdir/$lpath")."\n";
-    print OUT "\t\@cd $srcdir/$lpath;make \$@\n\n";
+    print OUT "\t\@cd $srcdir/$lpath;\$(MAKE) \$@\n\n";
   }
   my $gccflags=$ENV{GCCFLAGS};
   $gccflags=~s/(?<=\s)\+w2?\s//gsm;
