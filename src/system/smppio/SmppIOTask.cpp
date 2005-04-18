@@ -139,6 +139,7 @@ int SmppInputThread::Execute()
 {
   Multiplexer::SockArray ready;
   Multiplexer::SockArray error;
+  smsc::logger::Logger* snmpLog=smsc::logger::Logger::getInstance("sms.snmp.alarm");
   int i;
   while(!isStopping)
   {
@@ -165,14 +166,25 @@ int SmppInputThread::Execute()
           mul.add(s);
         }
         bool to=false;
+        SmppProxy *prx=ss->getProxy();
         if(
             s->getData(SOCKET_SLOT_KILL) ||
             ss->isConnectionTimedOut() ||
-            (ss->getProxy() && now-ss->getLastUpdate()-inactivityTime>inactivityTimeOut) ||
-            (!ss->getProxy() && now-ss->getConnectTime()>bindTimeout)
+            (prx && now-ss->getLastUpdate()-inactivityTime>inactivityTimeOut) ||
+            (prx && prx->isDisconnecting() && now-prx->getDisconnectTime()>10)||
+            (!prx && now-ss->getConnectTime()>bindTimeout)
           )
         {
-          info2(log,"SmppInputThread:: killing socket %p by request, timeout or invactivity timeout",ss);
+          bool evt[5]=
+          {
+            s->getData(SOCKET_SLOT_KILL),
+            ss->isConnectionTimedOut(),
+            (prx && now-ss->getLastUpdate()-inactivityTime>inactivityTimeOut),
+            (prx && now-prx->isDisconnecting() && now-prx->getDisconnectTime()>10),
+            (!prx && now-ss->getConnectTime()>bindTimeout)
+          };
+          char smb[6]={evt[0]?'Y':'N',evt[1]?'Y':'N',evt[2]?'Y':'N',evt[3]?'Y':'N',evt[4]?'Y':'N',0};
+          info2(log,"SmppInputThread:: killing socket %p by request, timeout or invactivity timeout:%s",ss,smb);
           s->Close();
           if(!s->getData(SOCKET_SLOT_KILL))outTask->removeSocket(s);
           killSocket(i);
@@ -324,6 +336,9 @@ int SmppInputThread::Execute()
                 bool err=false;
                 bool rebindproxy=false;
 
+                PduBindTRXResp resppdu;
+
+
                 try{
                   proxy=getRegisteredProxy(
                     smeManager,
@@ -335,13 +350,30 @@ int SmppInputThread::Execute()
                     rebindproxy=true;
                     info2(log,"SmppProxy: rebind(%s):%p!",proxy->getSystemId(),proxy);
                   }
-                }catch(...)
+                }catch(SmeRegisterException& e)
+                {
+                  smsc_log_debug(snmpLog,"registration of sme:%s failed",sid.c_str());
+                  int errcode=SmppStatusSet::ESME_RBINDFAIL;
+                  switch(e.getReason())
+                  {
+                    case SmeRegisterFailReasons::rfUnknownSystemId:errcode=SmppStatusSet::ESME_RBINDFAIL;break;
+                    case SmeRegisterFailReasons::rfAlreadyRegistered:errcode=SmppStatusSet::ESME_RALYBND;break;
+                    case SmeRegisterFailReasons::rfInvalidPassword:errcode=SmppStatusSet::ESME_RBINDFAIL;break;
+                    case SmeRegisterFailReasons::rfDisabled:errcode=SmppStatusSet::ESME_RBINDFAIL;break;
+                    //case SmeRegisterFailReasons::rfInternalError:;
+                  }
+                  resppdu.get_header().set_commandStatus(errcode);
+                  warn2(log,"registration failed:%s",e.what());
+                  //delete proxy;
+                  err=true;
+                }
+                catch(...)
                 {
                   err=true;
+                  resppdu.get_header().set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
                 }
 
                 SmeIndex proxyIndex;
-                PduBindTRXResp resppdu;
 
                 try{
                   proxyIndex=smeManager->lookup(sid);
@@ -497,7 +529,6 @@ int SmppInputThread::Execute()
 
                 if(!err)
                 {
-                  smsc::logger::Logger* snmpLog=smsc::logger::Logger::getInstance("sms.snmp.alarm");
                   try{
                     if(!rebindproxy)
                     {
@@ -524,10 +555,10 @@ int SmppInputThread::Execute()
                     int errcode=SmppStatusSet::ESME_RBINDFAIL;
                     switch(e.getReason())
                     {
-                      case SmeRegisterFailReasons::rfUnknownSystemId:errcode=SmppStatusSet::ESME_RINVSYSID;
-                      case SmeRegisterFailReasons::rfAlreadyRegistered:errcode=SmppStatusSet::ESME_RALYBND;
-                      case SmeRegisterFailReasons::rfInvalidPassword:errcode=SmppStatusSet::ESME_RINVPASWD;
-                      case SmeRegisterFailReasons::rfDisabled:errcode=SmppStatusSet::ESME_RBINDFAIL;
+                      case SmeRegisterFailReasons::rfUnknownSystemId:errcode=SmppStatusSet::ESME_RBINDFAIL;break;
+                      case SmeRegisterFailReasons::rfAlreadyRegistered:errcode=SmppStatusSet::ESME_RALYBND;break;
+                      case SmeRegisterFailReasons::rfInvalidPassword:errcode=SmppStatusSet::ESME_RBINDFAIL;break;
+                      case SmeRegisterFailReasons::rfDisabled:errcode=SmppStatusSet::ESME_RBINDFAIL;break;
                       //case SmeRegisterFailReasons::rfInternalError:;
                     }
                     resppdu.get_header().
@@ -607,6 +638,15 @@ int SmppInputThread::Execute()
                     assignProxy(proxy);
                   ((SmppSocket*)(ss->getSocket()->
                     getData(SOCKET_SLOT_OUTPUTSMPPSOCKET)))->setSystemId(si.systemId.c_str());
+                }
+              }break;
+              case SmppCommandSet::UNBIND_RESP:
+              {
+                SmppProxy* proxy=ss->getProxy();
+                if(proxy && proxy->isDisconnecting())
+                {
+                  ss->getSocket()->Close();
+                  proxy->close();
                 }
               }break;
               case SmppCommandSet::UNBIND:

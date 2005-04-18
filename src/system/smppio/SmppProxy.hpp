@@ -47,6 +47,8 @@ public:
     processLimit=procLimit;
     processTimeout=timeout;
     inQueueCount=0;
+    disconnecting=false;
+    disconnectionStart=0;
     __trace2__("SmppProxy: processLimit=%d, processTimeout=%u",processLimit,processTimeout);
   }
   virtual ~SmppProxy(){}
@@ -56,10 +58,33 @@ public:
   }
   virtual void disconnect()
   {
-    MutexGuard g(mutex);
-    if(smppReceiverSocket)smppReceiverSocket->getSocket()->Close();
-    if(smppTransmitterSocket)smppTransmitterSocket->getSocket()->Close();
+    if(disconnecting)return;
+    //if(smppReceiverSocket)smppReceiverSocket->getSocket()->Close();
+    //if(smppTransmitterSocket)smppTransmitterSocket->getSocket()->Close();
+    disconnecting=true;
+    disconnectionStart=time(NULL);
+    MutexGuard g(mutexout);
+    if(smppReceiverSocket==smppTransmitterSocket)
+    {
+      outqueue.Push(SmscCommand::makeUnbind(getNextSequenceNumber()),0);
+    }else
+    {
+      outqueue.Push(SmscCommand::makeUnbind(getNextSequenceNumber(),1),0);
+      outqueue.Push(SmscCommand::makeUnbind(getNextSequenceNumber(),2),0);
+    }
   }
+
+  bool isDisconnecting()
+  {
+    return disconnecting;
+  }
+
+  time_t getDisconnectTime()
+  {
+    return disconnectionStart;
+  }
+
+
   inline bool CheckValidIncomingCmd(const SmscCommand& cmd);
   inline bool CheckValidOutgoingCmd(const SmscCommand& cmd);
 
@@ -67,6 +92,10 @@ public:
   virtual void putCommand(const SmscCommand& cmd)
   {
     trace("put command:enter");
+    if(disconnecting)
+    {
+      throw smsc::util::Exception("proxy is disconnecting");
+    }
     if(!CheckValidIncomingCmd(cmd))
     {
       /*putIncomingCommand
@@ -152,7 +181,7 @@ public:
 
   void putIncomingCommand(const SmscCommand& cmd)
   {
-    if(!CheckValidOutgoingCmd(cmd))
+    if(!CheckValidOutgoingCmd(cmd) || disconnecting)
     {
       __trace2__("SmppProxy::putIncomingCommand: command for invalid bind state: %d",cmd->get_commandId());
       SmscCommand errresp;
@@ -284,6 +313,12 @@ public:
       {
         int cmdid=cmd->get_commandId();
         __trace2__("check output for receiver:cmdid=%d",cmdid);
+
+        if(cmdid==UNBIND)
+        {
+          return cmd->get_mode()==1;
+        }
+
         if((cmdid==ENQUIRELINK || cmdid==ENQUIRELINK_RESP || cmdid==UNBIND_RESP) &&
            ((int)cmd->dta)!=ctReceiver)return false;
         return !(
@@ -299,9 +334,15 @@ public:
       SmscCommand cmd;
       if(outqueue.Peek(cmd))
       {
-        outqueue.Peek(cmd);
+        //outqueue.Peek(cmd);
         int cmdid=cmd->get_commandId();
         __trace2__("check output for transmitter:cmdid=%d",cmdid);
+
+        if(cmdid==UNBIND)
+        {
+          return cmd->get_mode()==2;
+        }
+
         if((cmdid==ENQUIRELINK || cmdid==ENQUIRELINK_RESP || cmdid==UNBIND_RESP) &&
            ((int)cmd->dta)!=ctTransmitter)return false;
         return (
@@ -512,6 +553,9 @@ protected:
   int totalLimit;
   int submitLimit;
   int submitCount;
+
+  bool disconnecting;
+  time_t disconnectionStart;
 };
 
 bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
