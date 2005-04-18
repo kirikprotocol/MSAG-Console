@@ -105,7 +105,7 @@ public:
       d.countersNumber=performance::performanceCounters;
       for(i=0;i<performance::performanceCounters;i++)
       {
-        d.counters[i].lastSecond=perf[i]-lastPerfCnt[i];
+        d.counters[i].lastSecond=(int)perf[i]-lastPerfCnt[i];
         d.counters[i].total=perf[i];
       }
 
