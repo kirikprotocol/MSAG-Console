@@ -208,6 +208,7 @@ public:
 
   void registerStatisticalEvent(int eventType,const SMS* sms)
   {
+    using namespace smsc::stat;
     using namespace StatEvents;
     switch(eventType)
     {
@@ -220,42 +221,42 @@ public:
       */
       case etSubmitOk:
       {
-        statMan->updateAccepted(sms->getSourceSmeId(),sms->getRouteId());
+        statMan->updateAccepted(*sms);
         MutexGuard g(perfMutex);
         submitOkCounter++;
         smePerfMonitor.incAccepted(sms->getSourceSmeId());
       }break;
       case etSubmitErr:
       {
-        statMan->updateRejected(sms->getSourceSmeId(),sms->getRouteId(), sms->getLastResult());
+        statMan->updateRejected(*sms);
         MutexGuard g(perfMutex);
         submitErrCounter++;
         smePerfMonitor.incRejected(sms->getSourceSmeId(), sms->getLastResult());
       }break;
       case etDeliveredOk:
       {
-        statMan->updateChanged(sms->getDestinationSmeId(),sms->getRouteId(),0);
+        statMan->updateChanged(StatInfo(*sms,false));
         MutexGuard g(perfMutex);
         deliverOkCounter++;
         smePerfMonitor.incDelivered(sms->getDestinationSmeId());
       }break;
       case etDeliverErr:
       {
-        statMan->updateTemporal(sms->getDestinationSmeId(),sms->getRouteId(),sms->getLastResult());
+        statMan->updateTemporal(StatInfo(*sms,false));
         MutexGuard g(perfMutex);
         deliverErrTempCounter++;
         smePerfMonitor.incFailed(sms->getDestinationSmeId(), sms->getLastResult());
       }break;
       case etUndeliverable:
       {
-        statMan->updateChanged(sms->getDestinationSmeId(),sms->getRouteId(),sms->getLastResult());
+        statMan->updateChanged(StatInfo(*sms,false));
         MutexGuard g(perfMutex);
         deliverErrPermCounter++;
         smePerfMonitor.incFailed(sms->getDestinationSmeId(), sms->getLastResult());
       }break;
       case etRescheduled:
       {
-        statMan->updateScheduled(sms->getDestinationSmeId(),sms->getRouteId());
+        statMan->updateScheduled(StatInfo(*sms,false));
         MutexGuard g(perfMutex);
         rescheduleCounter++;
         smePerfMonitor.incRescheduled(sms->getDestinationSmeId());
