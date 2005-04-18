@@ -985,6 +985,9 @@ void StateMachine::submit(SmscCommand& cmd)
     return;
   }
 
+  sms.setIntProperty(Tag::SMSC_PROVIDERID,ri.providerId);
+  sms.setIntProperty(Tag::SMSC_CATEGORYID,ri.categoryId);
+
   debug2(smsLog,"route found:%s",ri.routeId.c_str());
 
   if(!sms.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE))

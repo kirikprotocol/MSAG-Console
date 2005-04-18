@@ -31,7 +31,7 @@ int main(int argc,char* argv[])
   s.setDestinationSmeId("dstsme");
   s.setRouteId("routeId");
   s.setServiceId(1);
-  s.providerId=2;
+  s.setIntProperty(Tag::SMSC_PROVIDERID,2);
 
   try{
 

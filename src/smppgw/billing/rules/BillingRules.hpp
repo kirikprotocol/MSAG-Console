@@ -212,7 +212,7 @@ protected:
             case mtProviderId:
             {
               char buf[32];
-              sprintf(buf,"%d",sms.providerId);
+              sprintf(buf,"%d",sms.getIntProperty(smsc::sms::Tag::SMSC_PROVIDERID));
               return MatchField(buf)?mrMatched:mrNotMatched;
             }
             default:throw Exception("ntRoute - unknown matchTarget %d",matchTarget);
