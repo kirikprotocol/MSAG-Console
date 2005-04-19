@@ -27,7 +27,7 @@ public class ModifySmsc extends Command
     createStringParam("host", smscInfo.getHost());
     createStringParam("password", smscInfo.getPassword());
     createIntParam("port", smscInfo.getPort());
-    createIntParam("responceTimeout", smscInfo.getResponseTimeout());
+    createIntParam("responseTimeout", smscInfo.getResponseTimeout());
     createStringParam("systemId", smscInfo.getSystemId());
     createIntParam("uniqueMsgIdPrefix", smscInfo.getUniqueMsgIdPrefix());
   }
