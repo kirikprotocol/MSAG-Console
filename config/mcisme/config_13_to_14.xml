@@ -1,0 +1,53 @@
+
+1) Replace file header
+<?xml version="1.0" encoding="windows-1251"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+<section name="MCISme">
+
+2) Add following params
+    <param name="MCIProfLocation" type="string">/export/home/makar/install/daemon/services/MCIProf/conf</param>
+    <param name="defaultInform" type="bool">true</param>
+    <param name="defaultNotify" type="bool">false</param>
+    <param name="defaultReasonsMask" type="int">31</param>
+    <param name="maxCallersCount" type="int">-1</param>
+    <param name="maxMessagesCount" type="int">3</param>
+
+3) Add MSC section
+    <section name="MSC">
+      <param name="host" type="string">10.112.2.1</param>
+      <param name="mcisme" type="string">555</param>
+      <param name="nvtIODevice" type="string">220</param>
+      <param name="port" type="int">5010</param>
+      <param name="usercode" type="string">mca</param>
+      <param name="userpassword" type="string">T3JSJkYQ</param>
+      <param name="voicemail" type="string"></param>
+    </section>
+	
+4) Add options skipUnknownCaller & strategy
+    <section name="Reasons">
+      <param name="skipUnknownCaller" type="bool">false</param>
+      <param name="strategy" type="int">2</param>
+5) Add new reason Detach section
+      <section name="Detach">
+        <param name="cause" type="int">20</param>
+        <param name="inform" type="bool">false</param>
+      </section>
+    </section>
+
+6) For all Inform templates add option unknownCaller
+    <section name="Templates">
+      <section name="Inform">
+        <param name="default" type="int">3</param>
+        <section name="....">
+	  ...
+          <param name="unknownCaller" type="string">неизвестный</param>
+        </section>
+      </section>
+    </section>
+    
+        
+</section>
+</config>
+
