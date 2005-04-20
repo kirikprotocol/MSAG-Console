@@ -210,12 +210,37 @@ public:
 
   void disconnect()
   {
-      sess.close();
+    MutexGuard g(mutex);
+    sess.close();
+    connected = false;
   }
 
   void setPrefix(uint8_t p)
   {
     prefix=p;
+  }
+
+  void setSesscfg(SmeConfig cfg)
+  {
+    sesscfg.host = cfg.host;
+    sesscfg.port=cfg.port;
+    sesscfg.sid=cfg.sid;
+    sesscfg.password=cfg.password;
+    sesscfg.smppTimeOut=cfg.smppTimeOut;
+  }
+
+  void setConnParam(std::string host, int port, std::string altHost, int altPort)
+  {
+    MutexGuard mgc(mutexconn);
+    hosts[0] = host;
+    ports[0] = port;
+    hosts[1] = altHost;
+    ports[1] = altPort;
+  }
+
+  void setCfgIdx(int newCfgIdx)
+  {
+    cfgIdx = newCfgIdx;
   }
 
   uint8_t getPrefix()
@@ -245,7 +270,7 @@ public:
   }
 
 protected:
-  mutable Mutex mutex,mutexin;
+  mutable Mutex mutex,mutexin, mutexconn;
   mutable EventMonitor mutexout;
   std::string id;
   SmeIndex smeIndex;

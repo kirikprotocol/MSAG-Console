@@ -11,8 +11,11 @@ int GatewaySme::Execute()
   {
     try{
       if(cfgIdx>1)cfgIdx=0;
+
+      MutexGuard mgc(mutexconn);
       sesscfg.host=hosts[cfgIdx];
       sesscfg.port=ports[cfgIdx];
+
       info2(log,"Connecting to %s:%d, systemId=%s",sesscfg.host.c_str(),sesscfg.port,sesscfg.sid.c_str());
 
       sess.setConfig(sesscfg);

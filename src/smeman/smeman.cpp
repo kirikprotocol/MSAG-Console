@@ -81,6 +81,8 @@ void SmeManager::statusSme(Variant& result){
                     tmpStr += "unknown,";
                }
                char inIP[128], outIP[128];
+               for(int i=0; i<=127; i++)
+                   inIP[i] = 0;
                if (smeProxy->getPeers(inIP,outIP))
                {
                    tmpStr += inIP;

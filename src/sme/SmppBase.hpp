@@ -691,7 +691,6 @@ public:
       if(resp)
       {
         __warning2__("Unexpected bind response code:%04X",resp->get_header().get_commandStatus());
-        smsc_log_info(log, "14");
         disposePdu((SmppHeader*)resp);
       }
       reader.Stop();

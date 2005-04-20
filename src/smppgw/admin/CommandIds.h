@@ -25,7 +25,8 @@ namespace CommandIds {
     traceRoute,
     loadRoutes,
     regSmsc,
-    unregSme
+    unregSme,
+    modifySmsc
   };
 }
 

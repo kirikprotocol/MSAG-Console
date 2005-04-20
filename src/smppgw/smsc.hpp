@@ -356,6 +356,7 @@ public:
   }
 
   bool regSmsc(SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid);
+  bool modifySmsc(SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid);
 
   int ussdTransactionTimeout;
 

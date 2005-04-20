@@ -528,6 +528,41 @@ bool Smsc::regSmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPor
     return true;
 }
 
+bool Smsc::modifySmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid)
+{
+    MutexGuard mg(gatewaySwitchMutex);
+    SmeRecord* p = (SmeRecord*)getSmeProxy(systemId);
+    GatewaySme* gwsme = dynamic_cast<GatewaySme*>(p->proxy);
+
+    if(gwsme){
+        
+        uint8_t olduid = gwsme->getPrefix();
+        if(uid != olduid){
+            if(gwSmeMap[uid])
+                return false;
+        }else{
+            if(!(gwSmeMap[uid]))
+                return false;
+        }
+
+        gwsme->setSesscfg(cfg);        
+        gwsme->setConnParam(cfg.host.c_str(), cfg.port, altHost, altPort);        
+        gwsme->setCfgIdx(1);        
+        gwsme->disconnect();       
+        gwsme->setPrefix(uid);
+        
+
+        if(olduid != uid){
+            gwSmeMap[uid] = gwSmeMap[olduid];
+            gwSmeMap[olduid] = 0;
+        }
+        
+        return true;
+    }
+    
+    return false;
+}
+
 
 void Smsc::run()
 {

@@ -16,6 +16,7 @@
 #include "CommandDeleteSme.h"
 #include "CommandTraceRoute.h"
 #include "CommandLoadRoutes.h"
+#include "CommandModifySmsc.h"
 
 namespace smsc {
 namespace smppgw {
@@ -33,6 +34,7 @@ SmppGwCommandReader::SmppGwCommandReader(Socket * admSocket)
   commandlist["updateSmeInfo"] = CommandIds::updateSmeInfo;
   commandlist["regSmsc"] = CommandIds::regSmsc;
   commandlist["unregSme"] = CommandIds::unregSme;
+  commandlist["modifySmsc"] = CommandIds::modifySmsc;
 }
 
 SmppGwCommandReader::~SmppGwCommandReader()
@@ -64,6 +66,7 @@ Command * SmppGwCommandReader::createCommand(int id, const DOMDocument *data)
     case CommandIds::loadRoutes: return new CommandLoadRoutes(data);
     case CommandIds::regSmsc: return new CommandRegSmsc(data);
     case CommandIds::unregSme: return new CommandUnregSme(data);
+    case CommandIds::modifySmsc: return new CommandModifySmsc(data);
 
     default: 
       smsc_log_warn(logger, "Unknown command id \"%i\"", id);
