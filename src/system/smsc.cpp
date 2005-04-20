@@ -460,7 +460,6 @@ void Smsc::init(const SmscConfigs& cfg)
     using smsc::util::config::ConfigView;
     const char* OCI_DS_FACTORY_IDENTITY = "OCI";
 
-
     std::auto_ptr<ConfigView> dsConfig(new smsc::util::config::ConfigView(*cfg.cfgman, "StartupLoader"));
     DataSourceLoader::loadup(dsConfig.get());
 
@@ -471,9 +470,15 @@ void Smsc::init(const SmscConfigs& cfg)
     dataSource->init(config.get());
     smsc_log_info(log, "Datasource configured" );
   }
-  statMan=new smsc::stat::StatisticsManager(*dataSource);
-  tp2.startTask(statMan);
-  smsc_log_info(log, "Statistics manager started" );
+  {
+    smsc_log_info(log, "Statistics manager starting..." );
+    using smsc::util::config::ConfigView;
+    std::auto_ptr<ConfigView> msConfig(new smsc::util::config::ConfigView(*cfg.cfgman, "MessageStore"));
+    const char* statisticsLocation = msConfig.get()->getString("statisticsDir");
+    statMan=new smsc::stat::StatisticsManager(statisticsLocation);
+    tp2.startTask(statMan);
+    smsc_log_info(log, "Statistics manager started" );
+  }
 
   aclmgr = AclAbstractMgr::Create2();
   aclmgr->LoadUp(dataSource);

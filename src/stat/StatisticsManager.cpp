@@ -1,15 +1,36 @@
 
+#include <sys/types.h>
+#include <netinet/in.h>
+
+#ifdef _WIN32
+#include <stdint.h>
+#else
+#include <inttypes.h>
+#endif
+
+#include <sys/stat.h>
+#include <dirent.h>
+#include <unistd.h>
+#include <errno.h>
+
 #include "StatisticsManager.h"
 
 namespace smsc { namespace stat
 {
 
-StatisticsManager::StatisticsManager(DataSource& _ds)
+const uint16_t SMSC_STAT_DUMP_INTERVAL = 60; // in seconds
+const uint16_t SMSC_STAT_VERSION_INFO  = 0x0001;
+const char*    SMSC_STAT_HEADER_TEXT   = "SMSC.STAT";
+const char*    SMSC_STAT_DIR_NAME_FORMAT  = "%04d-%02d";
+const char*    SMSC_STAT_FILE_NAME_FORMAT = "%02d.rts";
+
+StatisticsManager::StatisticsManager(const std::string& location)
     : Statistics(), ThreadedTask(),
         logger(Logger::getInstance("smsc.stat.StatisticsManager")),
-            ds(_ds), currentIndex(0), isStarted(false), bExternalFlush(false)
+        currentIndex(0), isStarted(false), bExternalFlush(false)
 {
     resetCounters(0); resetCounters(1);
+    storage.setLocation(location);
 }
 StatisticsManager::~StatisticsManager()
 {
@@ -227,7 +248,7 @@ int StatisticsManager::Execute()
     {
         int toSleep = calculateToSleep();
         smsc_log_debug(logger, "Execute() >> Start wait %d", toSleep);
-        awakeEvent.Wait(toSleep); // Wait for next hour begins ...
+        awakeEvent.Wait(toSleep); // Wait for next interval begins ...
         smsc_log_debug(logger, "Execute() >> End wait");
 
         flushCounters(switchCounters());
@@ -276,170 +297,243 @@ short StatisticsManager::switchCounters()
     return flushIndex;
 }
 
-uint32_t StatisticsManager::calculatePeriod()
+void StatisticsManager::calculateTime(tm& flushTM)
 {
-    time_t currTime = time(0);
-    if (!bExternalFlush) currTime -= 60;
-    tm tmCT; localtime_r(&currTime, &tmCT);
-    return  (tmCT.tm_year+1900)*1000000+(tmCT.tm_mon+1)*10000+
-            (tmCT.tm_mday)*100+tmCT.tm_hour;
+    time_t flushTime = time(0);
+    if (!bExternalFlush) flushTime -= SMSC_STAT_DUMP_INTERVAL;
+    gmtime_r(&flushTime, &flushTM); flushTM.tm_sec = 0;
 }
-int StatisticsManager::calculateToSleep() // returns msecs to next hour
+int StatisticsManager::calculateToSleep() // returns msecs to next minute
 {
     time_t currTime = time(0);
-    time_t nextTime = currTime + 60;
+    time_t nextTime = currTime + SMSC_STAT_DUMP_INTERVAL;
     tm tmNT; localtime_r(&nextTime, &tmNT);
     tmNT.tm_sec = 0; nextTime = mktime(&tmNT);
     return (((nextTime-currTime)*1000)+1);
 }
 
-const char* insertStatSmsSql = (const char*)
-"INSERT INTO sms_stat_sms (period, accepted, rejected, delivered, failed, rescheduled, temporal, peak_i, peak_o) "
-"VALUES (:period, :accepted, :rejected, :delivered, :failed, :rescheduled, :temporal, :peak_i, :peak_o)";
-const char* insertStatSmeSql = (const char*)
-"INSERT INTO sms_stat_sme (period, systemid, accepted, rejected, delivered, failed, rescheduled, temporal, peak_i, peak_o)\
- VALUES (:period, :systemid, :accepted, :rejected, :delivered, :failed, :rescheduled, :temporal, :peak_i, :peak_o)";
-const char* insertStatRouteSql = (const char*)
-"INSERT INTO sms_stat_route (period, routeid, accepted, rejected, delivered, failed, rescheduled, temporal, peak_i, peak_o)\
- VALUES (:period, :routeid, :accepted, :rejected, :delivered, :failed, :rescheduled, :temporal, :peak_i, :peak_o)";
-const char* insertStatStateSql = (const char*)
-"INSERT INTO sms_stat_state (period, errcode, counter) "
-"VALUES (:period, :errcode, :counter)";
-const char* insertStatSmeStateSql = (const char*)
-"INSERT INTO sms_stat_sme_state (period, systemid, errcode, counter) "
-"VALUES (:period, :systemid, :errcode, :counter)";
-const char* insertStatRouteStateSql = (const char*)
-"INSERT INTO sms_stat_route_state (period, routeid, errcode, counter) "
-"VALUES (:period, :routeid, :errcode, :counter)";
+void StatStorage::close()
+{
+    if (file) { 
+        bFileTM = false; fclose(file); file = 0;
+    }
+}
+void StatStorage::flush()
+{
+    if (file && fflush(file)) {
+        int error = ferror(file);
+        Exception exc("Failed to flush file. Details: %s", strerror(error));
+        close(); throw exc;
+    }
+}
+void StatStorage::write(const void* data, size_t size)
+{
+    if (file && fwrite(data, size, 1, file) != 1) {
+        int error = ferror(file);
+        Exception exc("Failed to write file. Details: %s", strerror(error));
+        close(); throw exc;
+    }
+}
+bool StatStorage::createDir(const std::string& dir)
+{
+    if (mkdir(dir.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) {
+        if (errno == EEXIST) return false;
+        throw Exception("Failed to create directory '%s'. Details: %s", 
+                        dir.c_str(), strerror(errno));
+    }
+    return true;
+}
+void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
+{
+    smsc_log_debug(logger, "Statistics dump called for %02d:%02d GMT", 
+                   flushTM.tm_hour, flushTM.tm_min);
 
+    char dirName[128]; bool hasDir = false;
+
+    if (!bFileTM || fileTM.tm_mon != flushTM.tm_mon || fileTM.tm_year != flushTM.tm_year)
+    {
+        sprintf(dirName, SMSC_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
+        createDir(location + "/" + dirName); bFileTM = false; hasDir = true;
+        smsc_log_debug(logger, "New dir '%s' created", dirName);
+    }
+
+    if (!bFileTM || fileTM.tm_mday != flushTM.tm_mday)
+    {
+        close(); // close old file (if it was opened)
+        
+        char fileName[128]; 
+        std::string fullPath = location;
+        if (!hasDir) sprintf(dirName, SMSC_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
+        sprintf(fileName, SMSC_STAT_FILE_NAME_FORMAT, flushTM.tm_mday);
+        fullPath += '/'; fullPath += (const char*)dirName; 
+        fullPath += '/'; fullPath += (const char*)fileName; 
+        const char* fullPathStr = fullPath.c_str();
+
+        bool needHeader = true;
+        file = fopen(fullPathStr, "r");
+        if (file) { // file already exists (was opened for reading)
+            close(); needHeader = false;
+        }
+        
+        file = fopen(fullPathStr, "ab+"); // open or create for append
+        if (!file)
+            throw Exception("Failed to create/open file '%s'. Details: %s", 
+                            fullPathStr, strerror(errno));
+        
+        if (fseek(file, 0, SEEK_END)) { // set position to EOF
+            int error = ferror(file);
+            Exception exc("Failed to seek EOF. Details: %s", strerror(error));
+            close(); throw exc;
+        }
+
+        if (needHeader) { // create header (if new file created)
+            write(SMSC_STAT_HEADER_TEXT, strlen(SMSC_STAT_HEADER_TEXT));
+            uint16_t version = htons(SMSC_STAT_VERSION_INFO);
+            write(&version, sizeof(version));
+            flush();
+        }
+        fileTM = flushTM; bFileTM = true;
+        smsc_log_debug(logger, "%s file '%s' %s", (needHeader) ? "New":"Existed",
+                       fileName, (needHeader) ? "created":"opened");
+    }
+    
+    smsc_log_debug(logger, "Statistics data dump...");
+    uint32_t value32 = htonl(buffLen);
+    write((const void *)&value32, sizeof(value32));
+    write((const void *)buff, buffLen); // write dump to it
+    write((const void *)&value32, sizeof(value32));
+    flush();
+    smsc_log_debug(logger, "Statistics data dumped.");
+}
+
+uint64_t toNetworkOrder(uint64_t value)
+{
+    uint64_t result = 0;
+    unsigned char *ptr=(unsigned char *)&result;
+    ptr[0]=(value>>56)&0xFF; ptr[1]=(value>>48)&0xFF;
+    ptr[2]=(value>>40)&0xFF; ptr[3]=(value>>32)&0xFF;
+    ptr[4]=(value>>24)&0xFF; ptr[5]=(value>>16)&0xFF;
+    ptr[6]=(value>>8 )&0xFF; ptr[7]=(value    )&0xFF;
+    return result;
+}
 void StatisticsManager::flushCounters(short index)
 {
-    uint32_t period = calculatePeriod();
-
-    smsc_log_debug(logger, "Flushing statistics for period: %d / %d", period, time(0));
-
-    Connection* connection = 0;
-
-    Statement* insertStatSmeStmt    = 0;
-    Statement* insertStatSmsStmt    = 0;
-    Statement* insertStatRouteStmt  = 0;
-    Statement* insertStatStateStmt       = 0;
-    Statement* insertStatSmeStateStmt    = 0;
-    Statement* insertStatRouteStateStmt  = 0;
-
+    tm flushTM; calculateTime(flushTM);
+    smsc_log_debug(logger, "Flushing statistics for %02d.%02d.%04d %02d:%02d:%02d GMT",
+                   flushTM.tm_mday, flushTM.tm_mon+1, flushTM.tm_year+1900,
+                   flushTM.tm_hour, flushTM.tm_min, flushTM.tm_sec);
     try
     {
-        if (!(connection = ds.getConnection()))
-            throw SQLException("Statistics: Failed to obtain DB connection!");
+        TmpBuf<uint8_t, 4096> buff(4096);
 
-        insertStatSmsStmt   = connection->createStatement(insertStatSmsSql);
-        insertStatSmeStmt   = connection->createStatement(insertStatSmeSql);
-        insertStatRouteStmt = connection->createStatement(insertStatRouteSql);
-        insertStatStateStmt      = connection->createStatement(insertStatStateSql);
-        insertStatSmeStateStmt   = connection->createStatement(insertStatSmeStateSql);
-        insertStatRouteStateStmt = connection->createStatement(insertStatRouteStateSql);
+        // General statistics dump
+        uint8_t value8 = 0;
+        value8 = (uint8_t)(flushTM.tm_hour); buff.Append((uint8_t *)&value8, sizeof(value8));
+        value8 = (uint8_t)(flushTM.tm_min);  buff.Append((uint8_t *)&value8, sizeof(value8));
+        
+        int32_t value32 = 0; 
+        value32 = htonl(statGeneral[index].accepted);    buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(statGeneral[index].rejected);    buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(statGeneral[index].delivered);   buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(statGeneral[index].failed);      buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(statGeneral[index].rescheduled); buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(statGeneral[index].temporal);    buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(statGeneral[index].peak_i);      buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(statGeneral[index].peak_o);      buff.Append((uint8_t *)&value32, sizeof(value32));
 
-        if (!insertStatSmeStmt || !insertStatSmsStmt || !insertStatRouteStmt || 
-            !insertStatStateStmt || !insertStatSmeStateStmt || !insertStatRouteStateStmt)
-            throw SQLException("Statistics: Failed to create service statements!");
-
-        insertStatSmsStmt->setUint32(1, period);
-        insertStatSmsStmt->setInt32 (2, statGeneral[index].accepted);
-        insertStatSmsStmt->setInt32 (3, statGeneral[index].rejected);
-        insertStatSmsStmt->setInt32 (4, statGeneral[index].delivered);
-        insertStatSmsStmt->setInt32 (5, statGeneral[index].failed);
-        insertStatSmsStmt->setInt32 (6, statGeneral[index].rescheduled);
-        insertStatSmsStmt->setInt32 (7, statGeneral[index].temporal);
-        insertStatSmsStmt->setInt32 (8, statGeneral[index].peak_i);
-        insertStatSmsStmt->setInt32 (9, statGeneral[index].peak_o);
-        insertStatSmsStmt->executeUpdate();
-
-        insertStatStateStmt->setUint32(1, period);
+        // General errors statistics dump
+        value32 = statGeneral[index].errors.Count(); value32 = htonl(value32);
+        buff.Append((uint8_t *)&value32, sizeof(value32));
         IntHash<int>::Iterator it = statGeneral[index].errors.First();
         int ecError, eCounter;
         while (it.Next(ecError, eCounter))
         {
-            insertStatStateStmt->setInt32(2, ecError);
-            insertStatStateStmt->setInt32(3, eCounter);
-            insertStatStateStmt->executeUpdate();
+            value32 = htonl(ecError);  buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(eCounter); buff.Append((uint8_t *)&value32, sizeof(value32));
         }
 
-        insertStatRouteStmt->setUint32(1, period);
-        insertStatRouteStateStmt->setUint32(1, period);
-        statByRoute[index].First();
-        char* routeId = 0; RouteStat* routeStat = 0;
-        while (statByRoute[index].Next(routeId, routeStat))
-        {
-            if (!routeStat || !routeId || routeId[0] == '\0') continue;
-            insertStatRouteStmt->setString(2 , routeId);
-            insertStatRouteStmt->setInt32 (3 , routeStat->accepted);
-            insertStatRouteStmt->setInt32 (4 , routeStat->rejected);
-            insertStatRouteStmt->setInt32 (5 , routeStat->delivered);
-            insertStatRouteStmt->setInt32 (6 , routeStat->failed);
-            insertStatRouteStmt->setInt32 (7 , routeStat->rescheduled);
-            insertStatRouteStmt->setInt32 (8 , routeStat->temporal);
-            insertStatRouteStmt->setInt32 (9 , routeStat->peak_i);
-            insertStatRouteStmt->setInt32 (10, routeStat->peak_o);
-            insertStatRouteStmt->executeUpdate();
-
-            insertStatRouteStateStmt->setString(2, routeId);
-            IntHash<int>::Iterator rit = routeStat->errors.First();
-            int recError, reCounter;
-            while (rit.Next(recError, reCounter))
-            {
-                insertStatRouteStateStmt->setInt32(3, recError);
-                insertStatRouteStateStmt->setInt32(4, reCounter);
-                insertStatRouteStateStmt->executeUpdate();
-            }
-            routeStat = 0;
-        }
-
-        insertStatSmeStmt->setUint32(1, period);
-        insertStatSmeStateStmt->setUint32(1, period);
+        // Sme statistics dump
+        value32 = statBySmeId[index].GetCount(); 
+        value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
         statBySmeId[index].First();
         char* smeId = 0; SmsStat* smeStat = 0;
         while (statBySmeId[index].Next(smeId, smeStat))
         {
-            if (!smeStat || !smeId || smeId[0] == '\0') continue;
-            insertStatSmeStmt->setString(2 , smeId);
-            insertStatSmeStmt->setInt32 (3 , smeStat->accepted);
-            insertStatSmeStmt->setInt32 (4 , smeStat->rejected);
-            insertStatSmeStmt->setInt32 (5 , smeStat->delivered);
-            insertStatSmeStmt->setInt32 (6 , smeStat->failed);
-            insertStatSmeStmt->setInt32 (7 , smeStat->rescheduled);
-            insertStatSmeStmt->setInt32 (8 , smeStat->temporal);
-            insertStatSmeStmt->setInt32 (9 , smeStat->peak_i);
-            insertStatSmeStmt->setInt32 (10, smeStat->peak_o);
-            insertStatSmeStmt->executeUpdate();
+            if (!smeStat || !smeId || smeId[0] == '\0')
+                throw Exception("Invalid sme stat record!");
 
-            insertStatSmeStateStmt->setString(2, smeId);
+            uint8_t smeIdLen = (uint8_t)strlen(smeId);
+            buff.Append((uint8_t *)&smeIdLen, sizeof(smeIdLen));
+            buff.Append((uint8_t *)smeId, smeIdLen);
+            value32 = htonl(smeStat->accepted);    buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(smeStat->rejected);    buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(smeStat->delivered);   buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(smeStat->failed);      buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(smeStat->rescheduled); buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(smeStat->temporal);    buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(smeStat->peak_i);      buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(smeStat->peak_o);      buff.Append((uint8_t *)&value32, sizeof(value32));
+
+            // Sme error statistics dump
+            value32 = smeStat->errors.Count(); 
+            value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
             IntHash<int>::Iterator sit = smeStat->errors.First();
             int secError, seCounter;
             while (sit.Next(secError, seCounter))
             {
-                insertStatSmeStateStmt->setInt32(3, secError);
-                insertStatSmeStateStmt->setInt32(4, seCounter);
-                insertStatSmeStateStmt->executeUpdate();
+                value32 = htonl(secError);  buff.Append((uint8_t *)&value32, sizeof(value32));
+                value32 = htonl(seCounter); buff.Append((uint8_t *)&value32, sizeof(value32));
             }
-            smeStat = 0;
+            smeStat = 0; // ???
         }
 
-        connection->commit();
+        // Route statistics dump
+        value32 = statByRoute[index].GetCount(); 
+        value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
+        statByRoute[index].First();
+        char* routeId = 0; RouteStat* routeStat = 0;
+        while (statByRoute[index].Next(routeId, routeStat))
+        {
+            if (!routeStat || !routeId || routeId[0] == '\0')
+                throw Exception("Invalid route stat record!");
+
+            uint8_t routeIdLen = (uint8_t)strlen(routeId);
+            buff.Append((uint8_t *)&routeIdLen, sizeof(routeIdLen));
+            buff.Append((uint8_t *)routeId, routeIdLen);
+
+            int64_t value64 = 0;
+            value64 = toNetworkOrder(routeStat->providerId); buff.Append((uint8_t *)&value64, sizeof(value64));
+            value64 = toNetworkOrder(routeStat->categoryId); buff.Append((uint8_t *)&value64, sizeof(value64));
+
+            value32 = htonl(routeStat->accepted);    buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(routeStat->rejected);    buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(routeStat->delivered);   buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(routeStat->failed);      buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(routeStat->rescheduled); buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(routeStat->temporal);    buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(routeStat->peak_i);      buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(routeStat->peak_o);      buff.Append((uint8_t *)&value32, sizeof(value32));
+
+            // Route errors statistics dump
+            value32 = routeStat->errors.Count(); 
+            value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
+            IntHash<int>::Iterator rit = routeStat->errors.First();
+            int recError, reCounter;
+            while (rit.Next(recError, reCounter))
+            {
+                value32 = htonl(recError);  buff.Append((uint8_t *)&value32, sizeof(value32));
+                value32 = htonl(reCounter); buff.Append((uint8_t *)&value32, sizeof(value32));
+            }
+            routeStat = 0; // ???
+        }
+
+        storage.dump(buff, buff.GetPos(), flushTM);
     }
     catch (Exception& exc)
     {
-        smsc_log_error(logger, exc.what());
-        try { if (connection) connection->rollback(); } catch (...) {}
+        smsc_log_error(logger, "Statistics flush failed. Cause: %s", exc.what());
     }
-
-    if (insertStatSmeStmt)   delete insertStatSmeStmt;
-    if (insertStatSmsStmt)   delete insertStatSmsStmt;
-    if (insertStatRouteStmt) delete insertStatRouteStmt;
-    if (insertStatStateStmt)      delete insertStatStateStmt;
-    if (insertStatSmeStateStmt)   delete insertStatSmeStateStmt;
-    if (insertStatRouteStateStmt) delete insertStatRouteStateStmt;
-    if (connection) ds.freeConnection(connection);
-
+    
     resetCounters(index);
 }
 void StatisticsManager::resetCounters(short index)

@@ -6,22 +6,21 @@
 #include <core/synchronization/Mutex.hpp>
 #include <core/synchronization/Event.hpp>
 #include <core/buffers/IntHash.hpp>
+#include <core/buffers/TmpBuf.hpp>
 #include <core/buffers/Hash.hpp>
-
 #include <core/threads/ThreadedTask.hpp>
 
-#include <db/DataSource.h>
 #include <logger/Logger.h>
 
 #include <util/timeslotcounter.hpp>
 
 namespace smsc { namespace stat 
 {
-    using namespace smsc::db;
     using namespace core::threads;
     using namespace core::synchronization;
     
     using core::buffers::IntHash;
+    using core::buffers::TmpBuf;
     using core::buffers::Hash;
     
     using smsc::logger::Logger;
@@ -127,12 +126,42 @@ namespace smsc { namespace stat
         virtual ~RouteStat() {};
     };
 
+    class StatStorage
+    {
+    private:
+    
+        smsc::logger::Logger    *logger;
+
+        std::string     location;
+        bool            bFileTM;
+        tm              fileTM;
+        FILE*           file;
+    
+        void close();
+        void flush();
+        void write(const void* data, size_t size);
+
+        static bool createDir(const std::string& dir);
+    
+    public:
+    
+        StatStorage(const std::string& _location = "")
+            : logger(Logger::getInstance("smsc.stat.StatStorage")),
+              location(_location), bFileTM(false), file(0) {};
+        ~StatStorage() { close(); };
+    
+        inline void setLocation(const std::string& _location) {
+            this->location = _location;
+        }
+        
+        void dump(const uint8_t* buff, int buffLen, const tm& flushTM);
+    };
+    
     class StatisticsManager : public Statistics, public ThreadedTask
     {
     protected:
     
 		smsc::logger::Logger    *logger;
-        DataSource              &ds;
         
         SmsStat         statGeneral[2];
         Hash<SmsStat>   statBySmeId[2];
@@ -144,15 +173,16 @@ namespace smsc { namespace stat
         Mutex   stopLock, switchLock, flushLock;
         Event   awakeEvent, exitEvent, doneEvent;
         bool    isStarted;
+
+        StatStorage storage;
         
         short switchCounters();
         void  resetCounters(short index);
         void  flushCounters(short index);
-        
-        uint32_t calculatePeriod();
-        int      calculateToSleep();
-
         void  addError(IntHash<int>& hash, int errcode);
+
+        void  calculateTime(tm& flushTM);
+        int   calculateToSleep(); // returns msecs to next minute
 
     public:
         
@@ -168,7 +198,7 @@ namespace smsc { namespace stat
         virtual void updateChanged  (const StatInfo& info);
         virtual void updateScheduled(const StatInfo& info);
         
-        StatisticsManager(DataSource& ds);
+        StatisticsManager(const std::string& location);
         virtual ~StatisticsManager();
     };
 
