@@ -33,13 +33,11 @@ using namespace std;
 inline
 void print(const APattern& pattern,const char* text)
 {
-  __trace2__("#### %s = PATTERN {%s(len:%d/def:%d), npi: %d, ton: %d, num_n_plan: %d}",
+  __trace2__("#### %s = PATTERN {%s(len:%d/def:%d), num_n_plan: %d}",
               text,
               pattern.value,
               pattern.length,
               pattern.defLength,
-              pattern.numberingPlan,
-              pattern.typeOfNumber,
               pattern.num_n_plan);
   /*__trace2__("---- val: %x.%x.%x.%x.%x mask %x.%x.%x.%x.%x -----",
              pattern.value_32[0],
@@ -56,12 +54,10 @@ void print(const APattern& pattern,const char* text)
 }
 void print(const AValue& val,const char* text)
 {
-  __trace2__("#### %s = VALUE {%s(len:%d), npi: %d, ton: %d, num_n_plan: %d}",
+  __trace2__("#### %s = VALUE {%s(len:%d), num_n_plan: %d}",
               text,
               val.value,
               val.length,
-              val.numberingPlan,
-              val.typeOfNumber,
               val.num_n_plan);
   __trace2__("---- val: %x.%x.%x.%x.%x -----",
              val.value_32[0],
@@ -269,10 +265,11 @@ int addIntoAliasTreeRecurse(TreeNode* node,AliasRecord* rec)
   {
     if ( strong )
     {
-      __warning__("duplicate alias, is has not added into aliases set");
+      __warning2__("duplicate alias, is has not added into aliases set:.%d.%d.%s->.%d.%d.%s",rec->addr.num_n_plan&0xff,(rec->addr.num_n_plan>>8)&0xff,rec->addr.value,
+      rec->alias.num_n_plan&0xff,(rec->alias.num_n_plan>>8)&0xff,rec->alias.value);
       LEAVE_(0);
     }
-    __trace__("weak equal:")
+    __trace__("weak equal:");
     if (node->alias->defLength > rec->alias.defLength)
     {
       __unreachable__("incorrect tree");
@@ -331,10 +328,11 @@ int addIntoAddrTreeRecurse(TreeNode* node,AliasRecord* rec)
   {
     if ( strong )
     {
-      __warning__("duplicate alias, is has not added into aliases set");
+      __warning2__("duplicate alias, is has not added into aliases set:.%d.%d.%s->.%d.%d.%s",rec->addr.num_n_plan&0xff,(rec->addr.num_n_plan>>8)&0xff,rec->addr.value,
+      rec->alias.num_n_plan&0xff,(rec->alias.num_n_plan>>8)&0xff,rec->alias.value);
       LEAVE_(0);
     }
-    __trace__("weak equal:")
+    __trace__("weak equal:");
     if (node->addr->defLength > rec->addr.defLength)
     {
       __unreachable__("incorrect tree");
@@ -450,12 +448,13 @@ static inline void makeAddressFromValueByAlias(
 static inline void makeAPattern(APattern& pat, const Address& addr)
 {
   ENTER;
-  char buf[21];
+  const char *buf=addr.value;
   char pat_mask[21];
   //pat.numberingPlan = addr.getNumberingPlan();
   //pat.typeOfNumber = addr.getTypeOfNumber();
   pat.num_n_plan = (((uint16_t) addr.getTypeOfNumber())<<8) | addr.getNumberingPlan();
-  int length = addr.getValue(buf);
+  __trace2__("addr.value=%s, addr.length=%d",addr.value,addr.length);
+  int length = addr.length;//addr.getValue(buf);
   __require__ ( length < 21 );
   memset(pat_mask,0,21);
   pat.defLength = 0;
@@ -482,9 +481,11 @@ static inline void makeAPattern(APattern& pat, const Address& addr)
     }
   }
   //for_break:;
+  __trace2__("length=%d",length);
   memset(pat.value,0,21);
   for ( int i=0; i<length; ++i)
   {
+    __trace2__("buf[%d]=%c, mask[%d]=%c",i,buf[i],i,pat_mask[i]);
     pat.value[i] = buf[i] & pat_mask[i];
   }
   LEAVE;
