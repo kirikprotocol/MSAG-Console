@@ -2,7 +2,8 @@ package ru.novosoft.smsc.admin.smsview;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
-import ru.novosoft.smsc.admin.smsview.archive.Message;
+import ru.novosoft.smsc.admin.smsview.operative.Message;
+//import ru.novosoft.smsc.admin.smsview.archive.Message;
 import ru.novosoft.smsc.admin.smsview.operative.RsFileMessage;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCJspException;
@@ -10,8 +11,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 
 /**
@@ -69,74 +69,161 @@ public class SmsOperativeSource extends SmsSource
 
   public SmsSet getSmsSet(SmsQuery query) throws AdminException
   {
-    FileInputStream input = null;
+    BufferedInputStream input = null;
+    BufferedInputStream input2 = null;
+    //RandomAccessFile input=null;
     SmsSet set = new SmsSet();
     set.setHasMore(false);
     Map smes = new HashMap();
+    Map smesId = new HashMap();
+    Set smesPoint = new HashSet();
     int rowsMaximum = query.getRowsMaximum();
+    int bufferSize=2048;
     if (rowsMaximum == 0) return set;
     boolean allReaded = false;
     try {
-      input = new FileInputStream(smsstorePath);
+      input = new BufferedInputStream(new FileInputStream(smsstorePath),bufferSize);
+     // input = new FileInputStream(smsstorePath);
+      //input=new RandomAccessFile(smsstorePath,"r");
     } catch (FileNotFoundException e) {
       e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
 
     }
     // QueryMessage request = new QueryMessage(query);
-    Message responce;
-    ;
+    //Message responce=new RsFileMessage(new SmsRow(),new SmsId()); //inicialising static field
 
+    Message responce;
+    System.out.println("start reading File in: "+new Date());
     try {
-      String FileName = Message.readString(input, 9);
-      int version = (int) Message.readUInt32(input);
+      String FileName = RsFileMessage.readString(input, 9);
+      int version = (int) RsFileMessage.readUInt32(input);
       int toReceive = (rowsMaximum < MAX_SMS_FETCH_SIZE) ? rowsMaximum : MAX_SMS_FETCH_SIZE;
+      long offset = 13;
       while (!allReaded) {
-        responce = receive(input);
-        allReaded = ((RsFileMessage) responce).isAllReaded();
-        if (!querySelect(query, responce)) continue;
-        if (responce == null)
+        responce = new RsFileMessage();
+        try {
+          responce.receiveSms(input );
+
+        } catch (EOFException e) {
+         System.out.println("EOFException");
+          ((RsFileMessage)responce).setAllReaded(true);//break;
+        }
+        allReaded = ((RsFileMessage)responce).isAllReaded();
+        SmsRow smsNew = ((RsFileMessage)responce).getSms();
+        if (!querySelect(query, smsNew)) continue;
+        if ( responce== null)
           throw new AdminException("Message from file  is NULL");
-        if (!allReaded || ((RsFileMessage) responce).isBodyRecived()) {
-          SmsRow smsNew = ((RsFileMessage) responce).getSms();
+        if (!allReaded || ((RsFileMessage)responce).isBodyRecived()) {
           Long msgId = new Long(smsNew.getId());
-          SmsRow smsOld = (SmsRow) smes.get(msgId);
-          if (smsOld != null) {smes.remove(msgId);set.setHasMore(false);}
-          if (!set.isHasMore()) {
-            //set.addRow(smsNew);
+          SmsId smsOld = (SmsId) smesId.get(msgId);
+          //Long counter=(Long)smesId.get(msgId);
+          if (smsOld != null) {smes.remove(msgId); set.setHasMore(false);}
+           if (!set.isHasMore()) {
             smes.put(msgId, smsNew);
           }
           if (--toReceive <= 0) {
             toReceive = rowsMaximum - smes.size();
             if (toReceive <= 0) {
               set.setHasMore(true);
-              break;
+             // break;
             }
             else {
               toReceive = (toReceive < MAX_SMS_FETCH_SIZE) ? toReceive : MAX_SMS_FETCH_SIZE;
             }
+          }// if
+        } //if (!allReaded || ((RsFileMessage) responce).isBodyRecived())
+     }// while (!allReaded)
+      System.out.println("end reading smsId in: "+new Date());
+    //  smesPoint.addAll(smesId.values());
+      System.out.println("end putting smesPoint in: "+new Date());
+     // allReaded = false;  RsFileMessage.setAllReaded(false);//for static sluchay
+   /*   System.out.println("end reading smsId in: "+new Date());
+      System.out.println("opening second file: ");
+      input2 = new BufferedInputStream(new FileInputStream(smsstorePath));
+      System.out.println("opened second file sucessfully: ");
+      String  FileName2 = RsFileMessage.readString(input2, 9);
+      int version2 = (int) RsFileMessage.readUInt32(input2);
+
+       i=1; boolean skipSms=false;
+      while (!allReaded) {
+       // Message message = new RsFileMessage();
+           try {
+             if (smesPoint.contains(new Long(i))) {RsFileMessage.receiveSms(input2); skipSms=false;}
+             else {RsFileMessage.skipSms(input2 ); skipSms=true;}
+           } catch (EOFException e) {
+              System.out.println("EOFException");   //To change body of catch statement use File | Settings | File Templates.
+             RsFileMessage.setAllReaded(true);//break;
+           }
+        //responce=receiveSms(input2 );
+       i++; allReaded = RsFileMessage.isAllReaded();
+       if (skipSms) continue;
+        SmsRow smsNew = RsFileMessage.getSms();
+        if (!querySelect(query, smsNew)) continue;
+        if (offset == 13)
+          throw new AdminException("Message from file  is NULL");
+        if (!allReaded || RsFileMessage.isBodyRecived()) {
+          Long msgId = new Long(smsNew.getId());
+       //   SmsRow smsOld = (SmsRow) smes.get(msgId);
+        /*  if (smsOld != null) {
+            smes.remove(msgId);set.setHasMore(false);
           }
+          if (!set.isHasMore()) {
+            smes.put(msgId, smsNew);
+          }
+          if (--toReceive <= 0) {
+            toReceive = rowsMaximum - smes.size();
+            if (toReceive <= 0) {
+              set.setHasMore(true);
+             // break;
+            }
+            else {
+              toReceive = (toReceive < MAX_SMS_FETCH_SIZE) ? toReceive : MAX_SMS_FETCH_SIZE;
+            }
+          }// if (--toReceive <= 0)
+        } //if (!allReaded || ((RsFileMessage) responce).isBodyRecived())
+     }// while (!allReaded)
+      allReaded = false;  RsFileMessage.setAllReaded(false);//for static sluchay
+      // input2 = new FileInputStream(smsstorePath);
+ /*     for (Iterator iterator = smes.values().iterator(); iterator.hasNext();) {
+       SmsRow sms =  (SmsRow)iterator.next();
+       Long msgId = new Long(sms.getId());
+       offset=sms.getPointer();
+       input2.skip(offset);
+       responce = receiveSms(input2);
+       SmsRow smsNew = ((RsFileMessage) responce).getSms();
+       //smes.remove(msgId);
+       smes.put(msgId,smsNew);
+     }   */
+     System.out.println("end reading sms in: "+new Date());
 
-        }
-
-      }
     } catch (IOException e) {
       e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
     } finally {
       try {
         if (input != null) input.close();
+        if (input2 != null) input2.close();
       } catch (Exception exc) {
       }
       ;
 
     }
     set.addAll(smes.values());
+    System.out.println("end adding sms in set in: "+new Date());
     return set;
   }
-
-  public boolean querySelect(SmsQuery query, Message responce)
+  public boolean querySelectId(SmsQuery query, SmsId smsId)
   {
     boolean allowed = true;
-    boolean allowedSmsId = true;
+    if (needExpression(query.getSmsId())) {
+      if (!String.valueOf(smsId).equalsIgnoreCase(query.getSmsId())) allowed = false;
+    }
+   return allowed;
+  }
+
+  public boolean querySelect(SmsQuery query, SmsRow sms)
+  {
+    boolean allowed = true;
+    //boolean allowedSmsId = true;
     boolean allowedAbAddress = true;
     boolean allowedOrAddress = true;
     boolean allowedDDAddress = true;
@@ -151,7 +238,7 @@ public class SmsOperativeSource extends SmsSource
     boolean allowedLastResult = true;
     boolean finalResult=true;
     final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
-    SmsRow sms = ((RsFileMessage) responce).getSms();
+   // SmsRow sms = ((RsFileMessage) responce).getSms();
 
     if (needExpression(query.getSmsId())) {
       if (!String.valueOf(sms.getId()).equalsIgnoreCase(query.getSmsId())) allowed = false;
@@ -216,13 +303,12 @@ public class SmsOperativeSource extends SmsSource
     if (query.getLastResult() != SmsQuery.SMS_UNDEFINED_VALUE) {// list.add("LAST_RESULT=" + query.getLastResult());
       if (sms.getLastResult() != query.getLastResult()) allowedLastResult = false;
     }
-    finalResult= allowed && allowedSmsId && allowedAbAddress && allowedAddress && allowedRouteId && allowedSmeId &&
+    finalResult= allowed  && allowedAbAddress && allowedAddress && allowedRouteId && allowedSmeId &&
             allowedSrcSmeId && allowedDstSmeId && allowedFromTime && allowedTillTime && allowedStatus &&
             allowedLastResult;
     return finalResult;
   }
-
-
+/*
   public Message receive(InputStream input) throws IOException
   {
     Message message = new RsFileMessage();
@@ -234,33 +320,71 @@ public class SmsOperativeSource extends SmsSource
     }
     return message;
   }
+ /*
+  public Message receiveId(InputStream input, long offset) throws IOException
+  {
+    Message message = new RsFileMessage();
+    try {
+      message.receiveId(input, offset);
+    } catch (EOFException e) {
+      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+      ((RsFileMessage) message).setAllReaded(true);//break;
+    }
+    return message;
+  }*/
+   public Message receiveSms(BufferedInputStream input ) throws IOException
+  {
+    Message message = new RsFileMessage();
+    try {
+      message.receiveSms(input);
+    } catch (EOFException e) {
+       System.out.println("EOFException");
+      ((RsFileMessage) message).setAllReaded(true);//break;
+    }
+    return message;
+  }
+  /*
+  public Message receiveSms(InputStream input , long pointer) throws IOException
+  {
+    Message message = new RsFileMessage();
+    try {
+      message.receiveSms(input,  pointer);
+    } catch (EOFException e) {
+      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+      ((RsFileMessage) message).setAllReaded(true);//break;
+    }
+    return message;
+  }
+    */
 
   public SmsSet getSmsCount(SmsQuery query) throws AdminException
   {
-    InputStream input = null;
+   BufferedInputStream input = null;
     SmsSet set = new SmsSet();
     set.setHasMore(true);
     Map smes = new HashMap();
     int rowsMaximum = query.getRowsMaximum();
     if (rowsMaximum == 0) return set;
+    int bufferSize=2048;
     boolean allReaded = false;
     int toReceive = (rowsMaximum < MAX_SMS_FETCH_SIZE) ? rowsMaximum : MAX_SMS_FETCH_SIZE;
     int smsCount = 0;
     try {
-      input = new FileInputStream(smsstorePath);
-
+     // input = new FileInputStream(smsstorePath);
+       input=new BufferedInputStream(new FileInputStream(smsstorePath),bufferSize);
       Message responce;
       try {
-        String FileName = Message.readString(input, 9);
-        int version = (int) Message.readUInt32(input);
+        String FileName = RsFileMessage.readString(input, 9);
+        int version = (int) RsFileMessage.readUInt32(input);
         while (!allReaded) {
-          responce = receive(input);
+          responce = receiveSms(input);
           allReaded = ((RsFileMessage) responce).isAllReaded();
-          if (!querySelect(query, responce)) continue;
+          SmsRow smsNew = ((RsFileMessage) responce).getSms();
+          if (!querySelect(query, smsNew)) continue;
           if (responce == null)
             throw new AdminException("Message from file  is NULL");
           if (!allReaded || ((RsFileMessage) responce).isBodyRecived()) {
-            SmsRow smsNew = ((RsFileMessage) responce).getSms();
+
             Long msgId = new Long(smsNew.getId());
             SmsRow smsOld = (SmsRow) smes.get(msgId);
             if (smsOld != null) {smes.remove(msgId);  smsCount--;set.setHasMore(false);}
@@ -272,11 +396,9 @@ public class SmsOperativeSource extends SmsSource
             toReceive = rowsMaximum - smes.size();//set.getRowsCount();
             if (toReceive <= 0) {
               set.setHasMore(true);
-            }
-          }
-
-        }
-
+         }// if (--toReceive <= 0)
+        } //if (!allReaded || ((RsFileMessage) responce).isBodyRecived())
+     }// while (!allReaded)
       } catch (IOException e) {
         e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
       } finally {
