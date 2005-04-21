@@ -62,6 +62,11 @@ std::string getRedirectingNumberDescription(EINSS7_I97_REDIRECTINGNUMB_T* redirN
   if (!redirNumb) return "";
   vector<char> addr(redirNumb->noOfAddrSign + 1);
   unpack_addr(&addr[0], redirNumb->addrSign_p, redirNumb->noOfAddrSign);
+  addr.insert(addr.begin(),'.');
+  addr.insert(addr.begin(),redirNumb->numberPlan + '0');
+  addr.insert(addr.begin(),'.');
+  addr.insert(addr.begin(),redirNumb->natureOfAddr + '0');
+  addr.insert(addr.begin(),'.');
   char str[]="RedirectingNumber=";
   char *end=str+sizeof(str)-1;
   addr.insert(addr.begin(),str,end);
@@ -167,7 +172,7 @@ void unpack_addr(char* dst, UCHAR_T* src, int len)
     else
     {
       sign = src[i/2] & 0x0f;
-    }  
+    }
     switch(sign)
     {
       case 0: case 1: case 2: case 3: case 4: case 5:

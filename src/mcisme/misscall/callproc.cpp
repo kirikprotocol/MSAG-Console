@@ -11,9 +11,9 @@
 
 
 using namespace std;
-void mts(EINSS7_I97_ISUPHEAD_T *head,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp);
-void taif(EINSS7_I97_ISUPHEAD_T *head,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp);
-void taifmixed(EINSS7_I97_ISUPHEAD_T *head,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp);
+void mts(EINSS7_I97_ISUPHEAD_T *head,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,EINSS7_I97_REDIRECTINGNUMB_T *redirecting);
+void taif(EINSS7_I97_ISUPHEAD_T *head,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,EINSS7_I97_REDIRECTINGNUMB_T *redirecting);
+void taifmixed(EINSS7_I97_ISUPHEAD_T *head,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,EINSS7_I97_REDIRECTINGNUMB_T *redirecting);
 
 namespace smsc{
 namespace misscall{
@@ -283,7 +283,8 @@ static void (*strategy)(EINSS7_I97_ISUPHEAD_T *head,
                         EINSS7_I97_CALLINGNUMB_T *calling,
                         EINSS7_I97_CALLEDNUMB_T *called,
                         EINSS7_I97_ORIGINALNUMB_T *original,
-                        EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp) = mts;
+                        EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,
+                        EINSS7_I97_REDIRECTINGNUMB_T *redirecting) = mts;
 
 void MissedCallProcessor::setReleaseSettings(ReleaseSettings params)
 {
@@ -806,7 +807,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling, EINSS7_I97_CALLEDNUMB_T *c
 }
 
 void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling,
-                   EINSS7_I97_ORIGINALNUMB_T *called,
+                   EINSS7_I97_REDIRECTINGNUMB_T *called,
                    uint8_t eventType)
 {
   MissedCallEvent event;
@@ -818,7 +819,7 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling,
    * It's a known bug in Siemens mobile switch
    * Change request from URALTEL
    */
-  EINSS7_I97_ORIGINALNUMB_T fixed_called;
+  EINSS7_I97_REDIRECTINGNUMB_T fixed_called;
   UCHAR_T fixed_called_p[32] = {0};
   if (called &&
       called->natureOfAddr == EINSS7_I97_NATIONAL_NO)
@@ -837,8 +838,8 @@ void registerEvent(EINSS7_I97_CALLINGNUMB_T *calling,
       fixed_called.addrSign_p = fixed_called_p;
       smsc_log_debug(missedCallProcessorLogger,
                      "modify original called address: %s -> %s",
-                     getOriginalNumberDescription(called).c_str(),
-                     getOriginalNumberDescription(&fixed_called).c_str());
+                     getRedirectingNumberDescription(called).c_str(),
+                     getRedirectingNumberDescription(&fixed_called).c_str());
       called = &fixed_called;
     }
   }
@@ -917,7 +918,8 @@ void taif(
           EINSS7_I97_CALLINGNUMB_T *calling,
           EINSS7_I97_CALLEDNUMB_T *called,
           EINSS7_I97_ORIGINALNUMB_T *original,
-          EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp
+          EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,
+          EINSS7_I97_REDIRECTINGNUMB_T *redirecting
          )
 {
   UCHAR_T causeValue = relCauses.otherCause; /* must be 121 */
@@ -977,7 +979,8 @@ void mts(
          EINSS7_I97_CALLINGNUMB_T *calling,
          EINSS7_I97_CALLEDNUMB_T *called,
          EINSS7_I97_ORIGINALNUMB_T *original,
-         EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp
+         EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,
+         EINSS7_I97_REDIRECTINGNUMB_T *redirecting
         )
 {
   UCHAR_T causeValue = relCauses.otherCause;
@@ -986,10 +989,10 @@ void mts(
 
   /*
    * some exchange doesn't provide redirection information
-   * so let's use presence of original called number as
+   * so let's use presence of redirecting number as
    * call forward/divert indication
    */
-  if (original)
+  if (redirecting)
   {
     inform = relCauses.otherInform;
     if (redirectionInfo_sp)
@@ -1023,13 +1026,12 @@ void mts(
       }
     }
   }
-
   releaseConnection(head,causeValue);
 
 
-  if (original && inform)
+  if (redirecting && inform)
   {
-    registerEvent(calling,original,eventType);
+    registerEvent(calling,redirecting,eventType);
   }
 
 }
@@ -1038,17 +1040,18 @@ void taifmixed(
           EINSS7_I97_CALLINGNUMB_T *calling,
           EINSS7_I97_CALLEDNUMB_T *called,
           EINSS7_I97_ORIGINALNUMB_T *original,
-          EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp
+          EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,
+          EINSS7_I97_REDIRECTINGNUMB_T *redirecting
          )
 {
   UCHAR_T causeValue = relCauses.otherCause;
-  if (original)
+  if (redirecting)
   {
-    mts(head,calling,called,original,redirectionInfo_sp);
+    mts(head,calling,called,original,redirectionInfo_sp,redirecting);
   }
   else
   {
-    taif(head,calling,called,original,redirectionInfo_sp);
+    taif(head,calling,called,original,redirectionInfo_sp,redirecting);
   }
 }
 USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
@@ -1078,7 +1081,7 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
                  getRedirectingNumberDescription(redirecting).c_str(),
                  getOriginalNumberDescription(original).c_str()
                 );
-  strategy(isupHead_sp,calling,called,original,redirinfo);
+  strategy(isupHead_sp,calling,called,original,redirinfo,redirecting);
   return EINSS7_I97_REQUEST_OK;
 }
 USHORT_T EINSS7_I97IsupReleaseConf(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
