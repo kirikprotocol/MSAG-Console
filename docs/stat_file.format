@@ -3,7 +3,7 @@
 
 <File>
 	<FileHeader>
-		<char[10] id_mark>SMSC.STAT</char[10]>
+		<char[9] id_mark>SMSC.STAT</char[9]>
 		<int16 version>01</int16>
 	</FileHeader>
 
