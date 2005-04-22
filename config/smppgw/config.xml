@@ -10,7 +10,10 @@
     <param name="dbUserPassword" type="string">smsc_XXX</param>
     <param name="type" type="string">OCI</param>
   </section>
-
+  <section name="MessageStorage">
+      <param name="statisticsDir" type="string">/export/home/andreybig/gwinstall/statistics/</param>
+ </section>
+	
   <section name="StartupLoader">
     <section name="DataSourceDrivers">
       <section name="OCIDataSourceDriver">
