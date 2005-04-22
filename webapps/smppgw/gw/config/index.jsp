@@ -20,6 +20,12 @@
         </sm-et:properties>
       </sm-et:section>
 
+      <sm-et:section title="Message Storage" name="MessageStorage">
+              <sm-et:properties>
+                <sm-et:txt title="Statistics Dir" name="statisticsDir" type="string"/>
+              </sm-et:properties>
+            </sm-et:section>
+
       <sm-et:section title="Startup Loader" name="StartupLoader">
         <sm-et:section title="Data Source Drivers" name="DataSourceDrivers">
           <sm-et:section title="OCI Data Source Driver" name="OCIDataSourceDriver">
