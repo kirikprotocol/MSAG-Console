@@ -411,9 +411,28 @@ void Smsc::init(const SmscConfigs& cfg)
     smsc_log_info(log, "Speedmonitor started" );
   }
 
-  statMan=new smsc::smppgw::stat::GWStatisticsManager(*dataSource);
-  tp2.startTask(statMan);
-  smsc_log_info(log, "Statistics manager started" );
+  try{
+      using smsc::util::config::ConfigView;
+      std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.cfgman,"MessageStorage"));
+
+      auto_ptr <char> loc(cv->getString("statisticsDir"));
+      if(!loc.get())
+          throw Exception("MessageStorage.statisticsDir not found");
+
+      std::string location = loc.get();
+      statMan=new smsc::smppgw::stat::GWStatisticsManager(location);
+
+      if(!statMan->createStatDir())
+          throw Exception("Can't open statistics directory: %s", loc.get());
+
+      tp2.startTask(statMan);
+      smsc_log_info(log, "Statistics manager started" );
+  }catch(exception& e){
+      smsc_log_warn(log, "Smsc.init exception: %s", e.what());
+      __warning__("Statistics manager is not started.");
+  }catch(...){
+      __warning__("Statistics manager is not started.");
+  }
 
 
   smscHost=cfg.cfgman->getString("smpp.host");

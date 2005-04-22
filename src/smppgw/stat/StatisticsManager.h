@@ -7,7 +7,7 @@
 #include <core/synchronization/Event.hpp>
 #include <core/buffers/IntHash.hpp>
 #include <core/buffers/Hash.hpp>
-
+#include <core/buffers/TmpBuf.hpp>
 #include <core/threads/ThreadedTask.hpp>
 
 #include <db/DataSource.h>
@@ -26,6 +26,7 @@ namespace stat {
     using namespace core::synchronization;
 
     using core::buffers::IntHash;
+    using core::buffers::TmpBuf;
     using core::buffers::Hash;
 
     using smsc::logger::Logger;
@@ -81,12 +82,46 @@ namespace stat {
       }
     };
 
+    class StatStorage
+    {
+    private:
+    
+        smsc::logger::Logger    *logger;
+
+        std::string     location;
+        bool            bFileTM;
+        tm              fileTM;
+        FILE*           file;
+    
+        void close();
+        void flush();
+        void write(const void* data, size_t size);
+
+        static bool createDir(const std::string& dir);
+    
+    public:
+    
+        StatStorage(const std::string& _location = "")
+            : logger(Logger::getInstance("smsc.stat.StatStorage")),
+              location(_location), bFileTM(false), file(0) {};
+        ~StatStorage() { close(); };
+    
+        inline void setLocation(const std::string& _location) {
+            this->location = _location;
+        }
+
+        std::string getLocation();
+        bool createStatDir();
+        
+        void dump(const uint8_t* buff, int buffLen, const tm& flushTM);
+    };
+
     class GWStatisticsManager : public IStatistics, public ThreadedTask
     {
       protected:
 
         smsc::logger::Logger    *logger;
-        DataSource              &ds;
+        //DataSource              &ds;
 
         struct TotalStat{
           CommonStat common;
@@ -103,10 +138,13 @@ namespace stat {
         Event   awakeEvent, exitEvent, doneEvent;
         bool    isStarted;
 
+        StatStorage storage;
+
         int switchCounters();
         void  resetCounters(int index);
         void  flushCounters(int index);
 
+        void  calculateTime(tm& flushTM);
         uint32_t calculatePeriod();
         int      calculateToSleep();
 
@@ -122,8 +160,10 @@ namespace stat {
 
         virtual void updateCounter(int counter,const StatInfo& si,int errorCode);
 
-        GWStatisticsManager(DataSource& ds);
+        //GWStatisticsManager(DataSource& ds);
+        GWStatisticsManager(std::string& location);
         virtual ~GWStatisticsManager();
+        bool createStatDir();   
     };
 
 }//namespace stat
