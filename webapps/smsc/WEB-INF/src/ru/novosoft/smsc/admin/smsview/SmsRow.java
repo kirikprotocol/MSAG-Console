@@ -45,6 +45,7 @@ public class SmsRow
   private String dstSmeId;
   private short concatMsgRef;
   private short concatSeqNum;
+  private long pointer=0;
 
   private Mask originatingAddressMask;
   private Mask destinationAddressMask;
@@ -417,6 +418,15 @@ public class SmsRow
       return super.equals(obj);
   }
 
+  public long getPointer()
+  {
+    return pointer;
+  }
+
+  public void setPointer(long pointer)
+  {
+    this.pointer = pointer;
+  }
 }
 
 ;
