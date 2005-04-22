@@ -422,9 +422,6 @@ void Smsc::init(const SmscConfigs& cfg)
       std::string location = loc.get();
       statMan=new smsc::smppgw::stat::GWStatisticsManager(location);
 
-      if(!statMan->createStatDir())
-          throw Exception("Can't open statistics directory: %s", loc.get());
-
       tp2.startTask(statMan);
       smsc_log_info(log, "Statistics manager started" );
   }catch(exception& e){

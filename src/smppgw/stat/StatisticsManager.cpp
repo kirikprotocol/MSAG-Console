@@ -38,7 +38,7 @@ const char*    SMSC_STAT_FILE_NAME_FORMAT = "%02d.rts";
 
 GWStatisticsManager::GWStatisticsManager(std::string& _location)
     :  logger(Logger::getInstance("smsc.stat.GWStatisticsManager")),
-            storage(_location), currentIndex(0), isStarted(false), bExternalFlush(false)
+       currentIndex(0), bExternalFlush(false), isStarted(false), storage(_location)
 {      
 }
 
@@ -217,11 +217,6 @@ int GWStatisticsManager::calculateToSleep() // returns msecs to next hour
     tmNT.tm_sec = 0;
     nextTime = mktime(&tmNT);
     return (((nextTime-currTime)*1000)+1);
-}
-
-bool GWStatisticsManager::createStatDir() // check location directory
-{
-    return storage.createStatDir();
 }
 
 /*
@@ -505,6 +500,18 @@ void GWStatisticsManager::resetCounters(int index)
   //statCommon[index].Reset();
   totalStatBySmeId[index].Empty();
   commonStatByRoute[index].Empty();
+}
+
+StatStorage::StatStorage(const std::string& _location)
+    : logger(Logger::getInstance("smsc.stat.StatStorage")),
+      location(_location), bFileTM(false), file(0) 
+{
+    if (!createStatDir()) 
+        throw Exception("Can't open statistics directory: '%s'", location.c_str());
+}
+StatStorage::~StatStorage()
+{
+    close();
 }
 
 void StatStorage::close()

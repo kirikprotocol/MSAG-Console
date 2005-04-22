@@ -98,20 +98,12 @@ namespace stat {
         void write(const void* data, size_t size);
 
         static bool createDir(const std::string& dir);
+        bool createStatDir();
     
     public:
     
-        StatStorage(const std::string& _location = "")
-            : logger(Logger::getInstance("smsc.stat.StatStorage")),
-              location(_location), bFileTM(false), file(0) {};
-        ~StatStorage() { close(); };
-    
-        inline void setLocation(const std::string& _location) {
-            this->location = _location;
-        }
-
-        std::string getLocation();
-        bool createStatDir();
+        StatStorage(const std::string& location);
+        ~StatStorage();
         
         void dump(const uint8_t* buff, int buffLen, const tm& flushTM);
     };
@@ -121,7 +113,6 @@ namespace stat {
       protected:
 
         smsc::logger::Logger    *logger;
-        //DataSource              &ds;
 
         struct TotalStat{
           CommonStat common;
@@ -131,7 +122,7 @@ namespace stat {
         Hash<TotalStat>    totalStatBySmeId[2];
         Hash<CommonStat>   commonStatByRoute[2];
 
-        int   currentIndex;
+        int     currentIndex;
         bool    bExternalFlush;
 
         Mutex   stopLock, switchLock, flushLock;
@@ -163,7 +154,6 @@ namespace stat {
         //GWStatisticsManager(DataSource& ds);
         GWStatisticsManager(std::string& location);
         virtual ~GWStatisticsManager();
-        bool createStatDir();   
     };
 
 }//namespace stat
