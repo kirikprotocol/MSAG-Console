@@ -19,7 +19,8 @@
 	</tr>
 	</table>
 </td></tr>
-</table></body>
+</table>
+</body>
 <script>
 selectFirstTextInput();
 </script>

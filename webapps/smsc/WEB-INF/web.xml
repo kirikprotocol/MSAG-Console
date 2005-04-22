@@ -10,7 +10,7 @@
     <servlet-class>ru.novosoft.smsc.jsp.SMSCJspController</servlet-class>
     <init-param>
       <param-name>config</param-name>
-      <param-value>conf/webconfig.xml</param-value>
+      <param-value>c:\andrey\smscweb\conf\webconfig.xml</param-value>
     </init-param>
     <load-on-startup>1</load-on-startup>
   </servlet>

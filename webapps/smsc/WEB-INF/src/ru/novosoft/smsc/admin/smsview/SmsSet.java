@@ -9,16 +9,13 @@ package ru.novosoft.smsc.admin.smsview;
  * @version 1.0
  */
 
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 
 public class SmsSet
 {
   public static int MAX_SMS_FETCH_COUNT = 10000;
 
-  private Vector rows = new Vector();
+  private ArrayList rows = new ArrayList();
   private boolean hasMore = false;
   private int maxRows = 0;
   private int smesRows = 0;
@@ -38,11 +35,6 @@ public class SmsSet
     this.smesRows = smesRows;
   }
 
-  public Enumeration getRows()
-  {
-    return rows.elements();
-  }
-
   public List getRowsList()
   {
     return rows;
@@ -50,7 +42,7 @@ public class SmsSet
 
   public void addRow(SmsRow row)
   {
-    rows.addElement(row);
+    rows.add(row);
   }
 
   public void addAll(Collection smes)
@@ -60,18 +52,18 @@ public class SmsSet
 
   public void removeRow(SmsRow row)
   {
-    rows.removeElement(row);
+    rows.remove(row);
   }
 
   public void clean()
   {
-    rows.removeAllElements();
+    rows.clear();
     hasMore = false;
   }
 
   public SmsRow getRow(int index)
   {
-    return ((SmsRow) rows.elementAt(index));
+    return ((SmsRow) rows.get(index));
   }
 
   public SmsRow getRow(String id)
