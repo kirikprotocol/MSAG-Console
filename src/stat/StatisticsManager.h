@@ -193,7 +193,7 @@ namespace smsc { namespace stat
         virtual void updateChanged  (const StatInfo& info);
         virtual void updateScheduled(const StatInfo& info);
         
-        StatisticsManager(std::string& location);
+        StatisticsManager(const std::string& location);
         virtual ~StatisticsManager();
     };
 

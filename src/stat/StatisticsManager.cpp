@@ -25,7 +25,7 @@ const char*    SMSC_STAT_HEADER_TEXT   = "SMSC.STAT";
 const char*    SMSC_STAT_DIR_NAME_FORMAT  = "%04d-%02d";
 const char*    SMSC_STAT_FILE_NAME_FORMAT = "%02d.rts";
 
-StatisticsManager::StatisticsManager(std::string& _location)
+StatisticsManager::StatisticsManager(const std::string& _location)
     :  logger(Logger::getInstance("smsc.stat.StatisticsManager")),
        currentIndex(0), bExternalFlush(false), isStarted(false), storage(_location)
 {     
@@ -349,27 +349,18 @@ void StatStorage::write(const void* data, size_t size)
 
 bool StatStorage::createStatDir()
 {
-    int len = strlen(location.c_str());
-    if(len == 0)
-        return false;
-
-    if((location.c_str())[0] != '/')
-        return false;
-
-    if(strcmp(location.c_str(), "/") == 0)
-        return true;
+    const char* loc = location.c_str();
+    int len = location.length();
+    if (!loc || len <= 0 || loc[0] != '/') return false;
+    else if (loc[0] == '/' && !loc[1]) return true;
 
     ++len;
     TmpBuf<char, 512> tmpBuff(len);
     char* buff = tmpBuff.get();
-    memcpy(buff, location.c_str(), len);
-    if(buff[len-2] == '/'){
+    memcpy(buff, loc, len);
+    if (buff[len-2] == '/') {
        buff[len-2] = 0;
-       if(len > 2){
-          if(buff[len-3] == '/'){
-              return false;
-           }
-       }
+       if(len > 2 && (buff[len-3] == '/')) return false;
     }
 
     std::vector<char*> dirs(0);
@@ -377,12 +368,11 @@ bool StatStorage::createStatDir()
     char* p1 = buff+1;
     int dirlen = 0;
     char* p2 = strchr(p1, '/');
-    int pos = p2 - buff;
-    while(p2){
+    while(p2)
+    {
        int len = p2 - p1;
        dirlen += len + 1;
-       if(len == 0)
-           return false;
+       if (len == 0) return false;
 
        int direclen = dirlen + 1;
        TmpBuf<char, 512> tmpBuff(direclen);
@@ -400,9 +390,9 @@ bool StatStorage::createStatDir()
     for(it = dirs.begin(); it != dirs.end(); it++){
 
         DIR* dirp = opendir(*it);
-        if(dirp){
+        if (dirp) {
             closedir(dirp);            
-        }else{
+        } else {
             try{
                 createDir(std::string(*it));
             }catch(...){
