@@ -441,6 +441,8 @@ void StatisticsManager::flushCounters(short index)
         value32 = htonl(statGeneral[index].peak_i);      buff.Append((uint8_t *)&value32, sizeof(value32));
         value32 = htonl(statGeneral[index].peak_o);      buff.Append((uint8_t *)&value32, sizeof(value32));
 
+        smsc_log_debug(logger, "General peak i/o: %d/%d", statGeneral[index].peak_i, statGeneral[index].peak_o);
+
         // General errors statistics dump
         value32 = statGeneral[index].errors.Count(); value32 = htonl(value32);
         buff.Append((uint8_t *)&value32, sizeof(value32));
@@ -473,6 +475,8 @@ void StatisticsManager::flushCounters(short index)
             value32 = htonl(smeStat->temporal);    buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(smeStat->peak_i);      buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(smeStat->peak_o);      buff.Append((uint8_t *)&value32, sizeof(value32));
+
+            smsc_log_debug(logger, "Sme '%s' peak i/o: %d/%d", smeId, smeStat->peak_i, smeStat->peak_o);
 
             // Sme error statistics dump
             value32 = smeStat->errors.Count(); 
@@ -513,6 +517,8 @@ void StatisticsManager::flushCounters(short index)
             value32 = htonl(routeStat->temporal);    buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(routeStat->peak_i);      buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(routeStat->peak_o);      buff.Append((uint8_t *)&value32, sizeof(value32));
+
+            smsc_log_debug(logger, "Route '%s' peak i/o: %d/%d", routeId, routeStat->peak_i, routeStat->peak_o);
 
             // Route errors statistics dump
             value32 = routeStat->errors.Count(); 
