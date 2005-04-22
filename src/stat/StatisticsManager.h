@@ -142,17 +142,12 @@ namespace smsc { namespace stat
         void write(const void* data, size_t size);
 
         static bool createDir(const std::string& dir);
+        bool createStatDir();
     
     public:
     
-        StatStorage(const std::string& _location = "")
-            : logger(Logger::getInstance("smsc.stat.StatStorage")),
-              location(_location), bFileTM(false), file(0) {};
-        ~StatStorage() { close(); };
-    
-        inline void setLocation(const std::string& _location) {
-            this->location = _location;
-        }
+        StatStorage(const std::string& location);
+        ~StatStorage();
         
         void dump(const uint8_t* buff, int buffLen, const tm& flushTM);
     };
@@ -198,7 +193,7 @@ namespace smsc { namespace stat
         virtual void updateChanged  (const StatInfo& info);
         virtual void updateScheduled(const StatInfo& info);
         
-        StatisticsManager(const std::string& location);
+        StatisticsManager(std::string& location);
         virtual ~StatisticsManager();
     };
 

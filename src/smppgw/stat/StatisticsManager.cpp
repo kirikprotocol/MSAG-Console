@@ -30,12 +30,6 @@ const char*    SMSC_STAT_HEADER_TEXT   = "SMPPGW.STAT";
 const char*    SMSC_STAT_DIR_NAME_FORMAT  = "%04d-%02d";
 const char*    SMSC_STAT_FILE_NAME_FORMAT = "%02d.rts";
 
-/*GWStatisticsManager::GWStatisticsManager(DataSource& _ds)
-    :  logger(Logger::getInstance("smsc.stat.GWStatisticsManager")),
-            ds(_ds), currentIndex(0), isStarted(false), bExternalFlush(false)
-{
-}*/
-
 GWStatisticsManager::GWStatisticsManager(std::string& _location)
     :  logger(Logger::getInstance("smsc.stat.GWStatisticsManager")),
        currentIndex(0), bExternalFlush(false), isStarted(false), storage(_location)
@@ -219,62 +213,13 @@ int GWStatisticsManager::calculateToSleep() // returns msecs to next hour
     return (((nextTime-currTime)*1000)+1);
 }
 
-/*
-const char* insertStatSmsSql = (const char*)
-"INSERT INTO smppgw_stat (period,accepted,rejected,delivered,temperror,permerror) "
-"VALUES (:period,:accepted,:rejected,:delivered,:temperror,:permerror)";
-*/
-
-const char* insertStatSmeSql = (const char*)
-"INSERT INTO smppgw_stat_sme ("
-  "period,systemid,providerid,accepted,rejected,delivered,temperror,permerror,"
-  "SmsTrOk,SmsTrFailed,SmsTrBilled,"
-  "UssdTrFromScOk,UssdTrFromScFailed,UssdTrFromScBilled,"
-  "UssdTrFromSmeOk,UssdTrFromSmeFailed,UssdTrFromSmeBilled"
-") VALUES ("
-  ":period,:systemid,:providerid,:accepted,:rejected,:delivered,:temperror,:permerror,"
-  ":SmsTrOk,:SmsTrFailed,:SmsTrBilled,"
-  ":UssdTrFromScOk,:UssdTrFromScFailed,:UssdTrFromScBilled,"
-  ":UssdTrFromSmeOk,:UssdTrFromSmeFailed,:UssdTrFromSmeBilled"
-")";
-
-const char* insertStatRouteSql = (const char*)
-"INSERT INTO smppgw_stat_route (period,routeid,providerid,accepted,rejected,delivered,temperror,permerror)"
-"VALUES (:period,:routeid,:providerid,:accepted,:rejected,:delivered,:temperror,:permerror)";
-
-const char* insertStatErrSql = (const char*)
-"INSERT INTO smppgw_stat_errors (period, errcode, counter) "
-"VALUES (:period, :errcode, :counter)";
-const char* insertStatSmeErrSql = (const char*)
-"INSERT INTO SMPPGW_STAT_SME_ERRORS (period, systemid, errcode, counter) "
-"VALUES (:period, :systemid, :errcode, :counter)";
-const char* insertStatRouteErrSql = (const char*)
-"INSERT INTO SMPPGW_STAT_ROUTE_ERRORS (period, routeid, errcode, counter) "
-"VALUES (:period, :routeid, :errcode, :counter)";
-
 void GWStatisticsManager::flushCounters(int index)
 {
 
-    /*uint32_t period = calculatePeriod();
-
-    smsc_log_debug(logger, "Flushing statistics for period: %d / %d", period, time(0));*/
     tm flushTM; calculateTime(flushTM);
     smsc_log_debug(logger, "Flushing statistics for %02d.%02d.%04d %02d:%02d:%02d GMT",
                    flushTM.tm_mday, flushTM.tm_mon+1, flushTM.tm_year+1900,
                    flushTM.tm_hour, flushTM.tm_min, flushTM.tm_sec);
-
-    //=======================================================
-    /*Connection* connection = 0;
-
-    using std::auto_ptr;
-
-    auto_ptr<Statement> insertStatSmeStmt;
-    auto_ptr<Statement> insertStatSmsStmt;
-    auto_ptr<Statement> insertStatRouteStmt;
-    auto_ptr<Statement> insertStatErrStmt;
-    auto_ptr<Statement> insertStatSmeErrStmt;
-    auto_ptr<Statement> insertStatRouteErrStmt;*/
-    //=======================================================
 
     try
     {
@@ -284,57 +229,6 @@ void GWStatisticsManager::flushCounters(int index)
         uint8_t value8 = 0;
         value8 = (uint8_t)(flushTM.tm_hour); buff.Append((uint8_t *)&value8, sizeof(value8));
         value8 = (uint8_t)(flushTM.tm_min);  buff.Append((uint8_t *)&value8, sizeof(value8));
-
-        //==================================================================
-        /*if (!(connection = ds.getConnection()))
-            throw SQLException("Statistics: Failed to obtain DB connection!");
-
-#define CREATE_STATEMENT(st) st##Stmt   = auto_ptr<Statement>(connection->createStatement(st##Sql))
-        CREATE_STATEMENT(insertStatSme);
-        //CREATE_STATEMENT(insertStatSms);
-        CREATE_STATEMENT(insertStatRoute);
-        CREATE_STATEMENT(insertStatErr);
-        CREATE_STATEMENT(insertStatSmeErr);
-        CREATE_STATEMENT(insertStatRouteErr);
-#undef CREATE_STATEMENT*/
-        //===================================================================
-
-        //====================================================================
-        //if (!insertStatSmeStmt.get() || /*!insertStatSmsStmt.get() ||*/ !insertStatRouteStmt.get() ||
-        //    !insertStatErrStmt.get() || !insertStatSmeErrStmt.get() || !insertStatRouteErrStmt.get())
-        //    throw SQLException("Statistics: Failed to create service statements!");
-        //=====================================================================
-
-        /*
-        try{
-        insertStatSmsStmt->setUint32(1, period);
-        insertStatSmsStmt->setInt32 (2, statCommon[index].accepted);
-        insertStatSmsStmt->setInt32 (3, statCommon[index].rejected);
-        insertStatSmsStmt->setInt32 (4, statCommon[index].delivered);
-        insertStatSmsStmt->setInt32 (5, statCommon[index].temperror);
-        insertStatSmsStmt->setInt32 (6, statCommon[index].permerror);
-        insertStatSmsStmt->executeUpdate();
-        }catch(...){__trace__("insertStatSmsStmt failed");throw;}
-        */
-        /*
-        try{
-        insertStatErrStmt->setUint32(1, period);
-        IntHash<int>::Iterator it = statCommon[index].errors.First();
-        int ecError, eCounter;
-        while (it.Next(ecError, eCounter))
-        {
-            insertStatErrStmt->setInt32(2, ecError);
-            insertStatErrStmt->setInt32(3, eCounter);
-            insertStatErrStmt->executeUpdate();
-        }
-        }catch(...){__trace__("insertStatErrStmt failed");throw;}
-        */
-
-        //try{
-        //=======================================================
-        //insertStatRouteStmt->setUint32(1, period);
-        //insertStatRouteErrStmt->setUint32(1, period);
-        //=======================================================
 
         // Route statistic
         int32_t value32 = 0;
@@ -348,16 +242,6 @@ void GWStatisticsManager::flushCounters(int index)
         {
             if (!routeStat || !routeId || routeId[0] == '\0') continue;
             __trace2__("routeid=%s",routeId);
-            //=====================================================
-            /*insertStatRouteStmt->setString(2 , routeId);
-            insertStatRouteStmt->setInt32 (3 , routeStat->providerId);
-            insertStatRouteStmt->setInt32 (4 , routeStat->accepted);
-            insertStatRouteStmt->setInt32 (5 , routeStat->rejected);
-            insertStatRouteStmt->setInt32 (6 , routeStat->delivered);
-            insertStatRouteStmt->setInt32 (7 , routeStat->temperror);
-            insertStatRouteStmt->setInt32 (8 , routeStat->permerror);
-            insertStatRouteStmt->executeUpdate();*/
-            //======================================================
             // Writes length of routeId and routId
             uint8_t routIdLen = (uint8_t)strlen(routeId);
             buff.Append((uint8_t *)&routIdLen, sizeof(routIdLen));
@@ -370,9 +254,6 @@ void GWStatisticsManager::flushCounters(int index)
             value32 = htonl(routeStat->temperror);      buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(routeStat->permerror);      buff.Append((uint8_t *)&value32, sizeof(value32));
 
-            //======================================================
-            //insertStatRouteErrStmt->setString(2, routeId);
-            //======================================================
             // Writes route errors count.
             value32 = routeStat->errors.Count(); 
             value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
@@ -380,24 +261,12 @@ void GWStatisticsManager::flushCounters(int index)
             int recError, reCounter;
             while (rit.Next(recError, reCounter))
             {
-                //==================================================
-                /*insertStatRouteErrStmt->setInt32(3, recError);
-                insertStatRouteErrStmt->setInt32(4, reCounter);
-                insertStatRouteErrStmt->executeUpdate();*/
-                //==================================================
                 // Statistics for this errors
                 value32 = htonl(recError);  buff.Append((uint8_t *)&value32, sizeof(value32));
                 value32 = htonl(reCounter); buff.Append((uint8_t *)&value32, sizeof(value32));
             }
             routeStat = 0;
         }
-        //}catch(...){__trace__("insertStatRouteStmt failed");throw;}
-
-        //try{
-        //=======================================================
-        //insertStatSmeStmt->setUint32(1, period);
-        //insertStatSmeErrStmt->setUint32(1, period);
-        //=======================================================
 
         // Sme statistics
         value32 = totalStatBySmeId[index].GetCount(); 
@@ -410,28 +279,6 @@ void GWStatisticsManager::flushCounters(int index)
         {
             if (!smeStat || !smeId || smeId[0] == '\0') continue;
             int cnt=2;
-            //=====================================================================
-            /*insertStatSmeStmt->setString(cnt++ , smeId);
-            insertStatSmeStmt->setInt32 (cnt++ , smeStat->common.providerId);
-            insertStatSmeStmt->setInt32 (cnt++ , smeStat->common.accepted);
-            insertStatSmeStmt->setInt32 (cnt++ , smeStat->common.rejected);
-            insertStatSmeStmt->setInt32 (cnt++ , smeStat->common.delivered);
-            insertStatSmeStmt->setInt32 (cnt++ , smeStat->common.temperror);
-            insertStatSmeStmt->setInt32 (cnt++ , smeStat->common.permerror);
-            insertStatSmeStmt->setInt32 (cnt++ , smeStat->service.SmsTrOk);
-            insertStatSmeStmt->setInt32 (cnt++ , smeStat->service.SmsTrFailed);
-            insertStatSmeStmt->setInt32 (cnt++ , smeStat->service.SmsTrBilled);
-            insertStatSmeStmt->setInt32 (cnt++ , smeStat->service.UssdTrFromScOk);
-            insertStatSmeStmt->setInt32 (cnt++ , smeStat->service.UssdTrFromScFailed);
-            insertStatSmeStmt->setInt32 (cnt++ , smeStat->service.UssdTrFromScBilled);
-            insertStatSmeStmt->setInt32 (cnt++ , smeStat->service.UssdTrFromSmeOk);
-            insertStatSmeStmt->setInt32 (cnt++ , smeStat->service.UssdTrFromSmeFailed);
-            insertStatSmeStmt->setInt32 (cnt++ , smeStat->service.UssdTrFromSmeBilled);*/
-
-            //insertStatSmeStmt->executeUpdate();
-
-            //insertStatSmeErrStmt->setString(2, smeId);
-            //======================================================================
             // Writes length of smeId and smeId
             uint8_t smeIdLen = (uint8_t)strlen(smeId);
             buff.Append((uint8_t *)&smeIdLen, sizeof(smeIdLen));
@@ -459,37 +306,20 @@ void GWStatisticsManager::flushCounters(int index)
             int secError, seCounter;
             while (sit.Next(secError, seCounter))
             {
-                //======================================================
-                /*insertStatSmeErrStmt->setInt32(3, secError);
-                insertStatSmeErrStmt->setInt32(4, seCounter);
-                insertStatSmeErrStmt->executeUpdate();*/
-                //======================================================
                 // Statistics for this errors
                 value32 = htonl(secError);  buff.Append((uint8_t *)&value32, sizeof(value32));
                 value32 = htonl(seCounter); buff.Append((uint8_t *)&value32, sizeof(value32));
             }
             smeStat = 0;
         }
-        //}catch(...){__trace__("insertStatSmeStmt failed");throw;}
-
-        //====================================================
-        //connection->commit();
-        //====================================================
 
         storage.dump(buff, buff.GetPos(), flushTM);
 
     }
     catch (Exception& exc)
     {
-        //=====================================================
-        /*smsc_log_error(logger, exc.what());
-        try { if (connection) connection->rollback(); } catch (...) {}*/
-        //=====================================================
         smsc_log_error(logger, "Statistics flush failed. Cause: %s", exc.what());
     }
-    //=========================================================
-    //if (connection) ds.freeConnection(connection);
-    //=========================================================
 
     resetCounters(index);
 

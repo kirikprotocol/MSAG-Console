@@ -12,6 +12,7 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <errno.h>
+#include <vector>
 
 #include "StatisticsManager.h"
 
@@ -24,17 +25,16 @@ const char*    SMSC_STAT_HEADER_TEXT   = "SMSC.STAT";
 const char*    SMSC_STAT_DIR_NAME_FORMAT  = "%04d-%02d";
 const char*    SMSC_STAT_FILE_NAME_FORMAT = "%02d.rts";
 
-StatisticsManager::StatisticsManager(const std::string& location)
-    : Statistics(), ThreadedTask(),
-        logger(Logger::getInstance("smsc.stat.StatisticsManager")),
-        currentIndex(0), isStarted(false), bExternalFlush(false)
-{
+StatisticsManager::StatisticsManager(std::string& _location)
+    :  logger(Logger::getInstance("smsc.stat.StatisticsManager")),
+       currentIndex(0), bExternalFlush(false), isStarted(false), storage(_location)
+{     
     resetCounters(0); resetCounters(1);
-    storage.setLocation(location);
 }
+
 StatisticsManager::~StatisticsManager()
 {
-    MutexGuard guard(stopLock);
+  MutexGuard guard(stopLock);
 }
 
 void StatisticsManager::addError(IntHash<int>& hash, int errcode)
@@ -312,6 +312,18 @@ int StatisticsManager::calculateToSleep() // returns msecs to next minute
     return (((nextTime-currTime)*1000)+1);
 }
 
+StatStorage::StatStorage(const std::string& _location)
+    : logger(Logger::getInstance("smsc.stat.StatStorage")),
+      location(_location), bFileTM(false), file(0) 
+{
+    if (!createStatDir()) 
+        throw Exception("Can't open statistics directory: '%s'", location.c_str());
+}
+StatStorage::~StatStorage()
+{
+    close();
+}
+
 void StatStorage::close()
 {
     if (file) { 
@@ -334,6 +346,74 @@ void StatStorage::write(const void* data, size_t size)
         close(); throw exc;
     }
 }
+
+bool StatStorage::createStatDir()
+{
+    int len = strlen(location.c_str());
+    if(len == 0)
+        return false;
+
+    if((location.c_str())[0] != '/')
+        return false;
+
+    if(strcmp(location.c_str(), "/") == 0)
+        return true;
+
+    ++len;
+    TmpBuf<char, 512> tmpBuff(len);
+    char* buff = tmpBuff.get();
+    memcpy(buff, location.c_str(), len);
+    if(buff[len-2] == '/'){
+       buff[len-2] = 0;
+       if(len > 2){
+          if(buff[len-3] == '/'){
+              return false;
+           }
+       }
+    }
+
+    std::vector<char*> dirs(0);
+
+    char* p1 = buff+1;
+    int dirlen = 0;
+    char* p2 = strchr(p1, '/');
+    int pos = p2 - buff;
+    while(p2){
+       int len = p2 - p1;
+       dirlen += len + 1;
+       if(len == 0)
+           return false;
+
+       int direclen = dirlen + 1;
+       TmpBuf<char, 512> tmpBuff(direclen);
+       char * dir = tmpBuff.get();
+       memcpy(dir, buff, dirlen);
+       dir[dirlen] = 0;
+       dirs.push_back(dir);
+
+       p1 = p1 + len + 1;
+       p2 = strchr(p1, '/');
+    }
+    dirs.push_back(buff);
+
+    std::vector<char*>::iterator it = dirs.begin();
+    for(it = dirs.begin(); it != dirs.end(); it++){
+
+        DIR* dirp = opendir(*it);
+        if(dirp){
+            closedir(dirp);            
+        }else{
+            try{
+                createDir(std::string(*it));
+            }catch(...){
+                return false;
+            }
+        }
+    }
+    
+    return true;
+}
+
 bool StatStorage::createDir(const std::string& dir)
 {
     if (mkdir(dir.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) {
@@ -440,8 +520,8 @@ void StatisticsManager::flushCounters(short index)
         value32 = htonl(statGeneral[index].temporal);    buff.Append((uint8_t *)&value32, sizeof(value32));
         value32 = htonl(statGeneral[index].peak_i);      buff.Append((uint8_t *)&value32, sizeof(value32));
         value32 = htonl(statGeneral[index].peak_o);      buff.Append((uint8_t *)&value32, sizeof(value32));
-
-        smsc_log_debug(logger, "General peak i/o: %d/%d", statGeneral[index].peak_i, statGeneral[index].peak_o);
+	
+	smsc_log_debug(logger, "General peak i/o: %d/%d", statGeneral[index].peak_i, statGeneral[index].peak_o);
 
         // General errors statistics dump
         value32 = statGeneral[index].errors.Count(); value32 = htonl(value32);
@@ -475,8 +555,8 @@ void StatisticsManager::flushCounters(short index)
             value32 = htonl(smeStat->temporal);    buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(smeStat->peak_i);      buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(smeStat->peak_o);      buff.Append((uint8_t *)&value32, sizeof(value32));
-
-            smsc_log_debug(logger, "Sme '%s' peak i/o: %d/%d", smeId, smeStat->peak_i, smeStat->peak_o);
+	    
+	    smsc_log_debug(logger, "Sme '%s' peak i/o: %d/%d", smeId, smeStat->peak_i, smeStat->peak_o);
 
             // Sme error statistics dump
             value32 = smeStat->errors.Count(); 
@@ -517,8 +597,8 @@ void StatisticsManager::flushCounters(short index)
             value32 = htonl(routeStat->temporal);    buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(routeStat->peak_i);      buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(routeStat->peak_o);      buff.Append((uint8_t *)&value32, sizeof(value32));
-
-            smsc_log_debug(logger, "Route '%s' peak i/o: %d/%d", routeId, routeStat->peak_i, routeStat->peak_o);
+	    
+	    smsc_log_debug(logger, "Route '%s' peak i/o: %d/%d", routeId, routeStat->peak_i, routeStat->peak_o);
 
             // Route errors statistics dump
             value32 = routeStat->errors.Count(); 
