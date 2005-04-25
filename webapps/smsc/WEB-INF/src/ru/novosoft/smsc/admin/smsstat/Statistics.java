@@ -76,4 +76,12 @@ public class Statistics
     Collections.sort(byRouteId);
     return byRouteId;
   }
+   public void addRecord(Statistics stat)
+  {
+    byDates.add(stat.getDateStat());
+    total.increment(stat.getTotal());
+    total.addError((ErrorCounterSet)stat.getErrorStat());
+    bySmeId.add(stat.getSmeIdStat());
+    byRouteId.add(stat.getRouteIdStat());
+  }
 }
