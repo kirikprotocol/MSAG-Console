@@ -309,7 +309,7 @@ public class DivertManager extends Thread
     logger.info("Command sent");
     String responce = readTelnetString(ESC_PROMPT);
     logger.info("Got responce: "+responce);
-    if (responce == null || responce.length() <= 0 || !responce.startsWith(RESPONCE_OK))
+    if (responce == null || responce.length() <= 0 || !(responce.trim().startsWith(RESPONCE_OK)))
       throw new DivertManagerException("Set divert settings failed", DivertManagerException.NOT_ACCEPTED);
   }
   // clear divert for abonent=msisdn for reason=ss
@@ -323,7 +323,7 @@ public class DivertManager extends Thread
     logger.info("Command sent");
     String responce = readTelnetString(ESC_PROMPT);
     logger.info("Got responce: "+responce);
-    if (responce == null || responce.length() <= 0 || !responce.startsWith(RESPONCE_OK))
+    if (responce == null || responce.length() <= 0 || !(responce.trim().startsWith(RESPONCE_OK)))
       throw new DivertManagerException("Del divert settings failed", DivertManagerException.NOT_ACCEPTED);
   }
 
