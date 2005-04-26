@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE config SYSTEM "xmap.dtd">
+<config smsc_ssn="8" ussd_ssn="6" mqueuelen="100" autostart="1">
+
+     <timeout val="100"></timeout>
+     <msc address="79998880001"/>		
+
+     <pipe oraddr="002" destaddr="005" random="12" text="bvbfmn"   imsi="9090909090909090"/>
+     <pipe oraddr="003" destaddr="004" random="12" text="llllll"   imsi="8989898989898989"/>
+     <pipe oraddr="004" destaddr="003" random="12" text="76yutyu"  imsi="7878787878787878" />
+     <pipe oraddr="005" destaddr="002" random="12" text="mnngfjnb" imsi="6767676767676767" />
+
+
+</config>
+											    
+											    

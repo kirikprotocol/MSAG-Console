@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE config SYSTEM "xmap.dtd">
+<config smsc_ssn="8" ussd_ssn="6" mqueuelen="4" autostart="1">
+
+     <timeout val="100"></timeout>
+     <msc address="79998880001"/>
+
+     <pipe oraddr="002" destaddr="005" random="12" text="bvbfmn"   imsi="9090909090909090"/>
+     <pipe oraddr="003" destaddr="004" random="12" text="llllll"   imsi="8989898989898989"/>
+     <pipe oraddr="004" destaddr="003" random="12" text="76yutyu"  imsi="7878787878787878" />
+     <pipe oraddr="005" destaddr="002" random="12" text="mnngfjnb" imsi="6767676767676767" />
+
+
+</config>
+
+
+
+<!ENTITY % sectionbody "(timeout | msc | pipe )*">
+
+<!ELEMENT config %sectionbody;>
+<!ATTLIST config
+    ussd_ssn  CDATA #REQUIRED
+    smsc_ssn  CDATA #REQUIRED
+    mqueuelen CDATA #REQUIRED
+    autostart CDATA #REQUIRED
+
+
+>
+
+<!ELEMENT timeout (#PCDATA)>
+<!ATTLIST timeout val CDATA #REQUIRED>
+
+<!ELEMENT msc (#PCDATA)>
+<!ATTLIST msc address CDATA #REQUIRED>
+
+<!ELEMENT pipe (#PCDATA)>
+<!ATTLIST pipe  oraddr   CDATA #REQUIRED
+                destaddr CDATA #REQUIRED
+                random   CDATA #REQUIRED
+                text     CDATA #REQUIRED
+                imsi     CDATA #REQUIRED
+                >
+
+
+
+
+

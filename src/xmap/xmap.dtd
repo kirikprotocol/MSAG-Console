@@ -1,0 +1,26 @@
+<!ENTITY % sectionbody "(timeout | msc | pipe )*">
+
+<!ELEMENT config %sectionbody;>
+<!ATTLIST config 
+    ussd_ssn  CDATA #REQUIRED
+    smsc_ssn  CDATA #REQUIRED
+    mqueuelen CDATA #REQUIRED
+    autostart CDATA #REQUIRED
+	    
+	    
+>
+
+<!ELEMENT timeout (#PCDATA)>
+<!ATTLIST timeout val CDATA #REQUIRED>
+
+<!ELEMENT msc (#PCDATA)>
+<!ATTLIST msc address CDATA #REQUIRED>
+
+<!ELEMENT pipe (#PCDATA)>
+<!ATTLIST pipe  oraddr   CDATA #REQUIRED
+	        destaddr CDATA #REQUIRED
+		random   CDATA #REQUIRED
+		text 	 CDATA #REQUIRED
+		imsi 	 CDATA #REQUIRED
+		>
+				

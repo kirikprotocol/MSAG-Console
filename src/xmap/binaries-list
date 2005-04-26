@@ -1,0 +1,10 @@
+# $Id$
+# this file contains binaries definitions
+
+# binary name source name libraries         
+#qtest qtest $(SOCKETLIB) -lnsl $(SSL_LIB) $(__LIBRARIES) -lpthread  -L$(SS7_STACK_HOME)/lib -leinss7_r $(MICROMAP_BUILDDIR)/lib/liblogger.so
+xmap  xmap -lxmap $(SOCKETLIB) -lnsl $(SSL_LIB) $(__LIBRARIES) $(XERCES_LIB)  -lutil-xml  -lcore-threads  -lthread  -L$(SS7_STACK_HOME)/lib -leinss7_r  -L$(SMSC_BUILDDIR)/bin -llogger -lutil-recoder-recode_dll  $(SMSC_BUILDDIR)/bin/libjslib.so -ljs -lrt -ljs-fdlibm -L$(NSPR_HOME)/solaris/lib -lnspr4
+#MapDialogStm  MapDialogStm -lxmap $(SOCKETLIB) -lnsl $(SSL_LIB) $(__LIBRARIES) $(XERCES_LIB)  -lutil-xml  -lcore-threads  -lthread  -L$(SS7_STACK_HOME)/lib -leinss7  -L$(SMSC_BUILDDIR)/bin -llogger 
+  
+#b b  -lxmap $(SOCKETLIB) -lnsl $(SSL_LIB) $(__LIBRARIES) $(XERCES_LIB)  -lutil-xml  -lcore-threads  -lthread  -L$(SS7_STACK_HOME)/lib -leinss7   -L$(SMSC_BUILDDIR)/bin -llogger
+
