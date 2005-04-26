@@ -351,7 +351,7 @@ bool StatStorage::createStatDir()
 {
     const char* loc = location.c_str();
     int len = location.length();
-    if (!loc || len <= 0 || loc[0] != '/') return false;
+    if (!loc || len <= 0) return false;
     else if (loc[0] == '/' && !loc[1]) return true;
 
     ++len;

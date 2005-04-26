@@ -475,7 +475,7 @@ void Smsc::init(const SmscConfigs& cfg)
     using smsc::util::config::ConfigView;
     std::auto_ptr<ConfigView> msConfig(new smsc::util::config::ConfigView(*cfg.cfgman, "MessageStore"));
     const char* statisticsLocation = msConfig.get()->getString("statisticsDir");
-    statMan=new smsc::stat::StatisticsManager(std::string(statisticsLocation));
+    statMan=new smsc::stat::StatisticsManager(statisticsLocation);
     tp2.startTask(statMan);
     smsc_log_info(log, "Statistics manager started" );
   }
