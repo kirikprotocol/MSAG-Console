@@ -39,7 +39,10 @@ public class Statistics
   {
     total.addError(set);
   }
-
+    public void addAllErrors(Collection err)
+  {
+    total.addAllErrors(err);
+  }
   public Collection getErrorStat()
   {
     return total.getErrors();
@@ -80,7 +83,7 @@ public class Statistics
   {
     byDates.add(stat.getDateStat());
     total.increment(stat.getTotal());
-    total.addError((ErrorCounterSet)stat.getErrorStat());
+    total.addAllErrors(stat.getErrorStat());
     bySmeId.add(stat.getSmeIdStat());
     byRouteId.add(stat.getRouteIdStat());
   }
