@@ -382,9 +382,6 @@ bool StatStorage::createStatDir()
     if(len == 0)
         return false;
 
-    if((location.c_str())[0] != '/')
-        return false;
-
     if(strcmp(location.c_str(), "/") == 0)
         return true;
 
