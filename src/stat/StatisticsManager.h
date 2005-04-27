@@ -174,8 +174,7 @@ namespace smsc { namespace stat
         short switchCounters();
         void  resetCounters(short index);
         void  flushCounters(short index);
-        void  addError(IntHash<int>& hash, int errcode);
-
+        
         void  calculateTime(tm& flushTM);
         int   calculateToSleep(); // returns msecs to next minute
 
@@ -192,6 +191,10 @@ namespace smsc { namespace stat
         virtual void updateTemporal (const StatInfo& info);
         virtual void updateChanged  (const StatInfo& info);
         virtual void updateScheduled(const StatInfo& info);
+        
+        static void addError(IntHash<int>& hash, int errcode, int count=1);
+        static void flush(const tm& flushTM, StatStorage& storage, SmsStat& general,
+                          Hash<SmsStat>& statSme, Hash<RouteStat>& statRoute);
         
         StatisticsManager(const std::string& location);
         virtual ~StatisticsManager();

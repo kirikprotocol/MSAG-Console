@@ -37,11 +37,11 @@ StatisticsManager::~StatisticsManager()
   MutexGuard guard(stopLock);
 }
 
-void StatisticsManager::addError(IntHash<int>& hash, int errcode)
+void StatisticsManager::addError(IntHash<int>& hash, int errcode, int count/*=1*/)
 {
     int* counter = hash.GetPtr(errcode);
-    if (!counter) hash.Insert(errcode, 1);
-    else (*counter)++;
+    if (!counter) hash.Insert(errcode, count);
+    else (*counter) += count;
 }
 
 // SMS accepted by SMSC, affects accepted only
@@ -92,11 +92,11 @@ void StatisticsManager::updateRejected(const StatInfo& info)
             SmsStat* stat = statBySmeId[currentIndex].GetPtr(srcSmeId);
             if (stat) {
                 stat->rejected++;
-                addError(stat->errors, info.errcode);
+                StatisticsManager::addError(stat->errors, info.errcode);
             }
             else {
                 RouteStat newStat(0, 1, 0, 0, 0, 0, info.providerId, info.categoryId); // rejected
-                addError(newStat.errors, info.errcode);
+                StatisticsManager::addError(newStat.errors, info.errcode);
                 statBySmeId[currentIndex].Insert(srcSmeId, newStat);
             }
         }
@@ -107,16 +107,16 @@ void StatisticsManager::updateRejected(const StatInfo& info)
             RouteStat* stat = statByRoute[currentIndex].GetPtr(routeId);
             if (stat) {
                 stat->rejected++;
-                addError(stat->errors, info.errcode);
+                StatisticsManager::addError(stat->errors, info.errcode);
             }
             else {
                 RouteStat newStat(0, 1, 0, 0, 0, 0, info.providerId, info.categoryId); // rejected
-                addError(newStat.errors, info.errcode);
+                StatisticsManager::addError(newStat.errors, info.errcode);
                 statByRoute[currentIndex].Insert(routeId, newStat);
             }
         }
     }
-    addError(statGeneral[currentIndex].errors, info.errcode);
+    StatisticsManager::addError(statGeneral[currentIndex].errors, info.errcode);
 }
 
 // SMS was't delivered by SMSC with temporal error. Affects temporal && errors only 
@@ -134,11 +134,11 @@ void StatisticsManager::updateTemporal(const StatInfo& info)
             SmsStat* stat = statBySmeId[currentIndex].GetPtr(dstSmeId);
             if (stat) {
                 stat->temporal++;
-                addError(stat->errors, info.errcode);
+                StatisticsManager::addError(stat->errors, info.errcode);
             }
             else {
                 SmsStat newStat(0, 0, 0, 0, 0, 1); // temporal
-                addError(newStat.errors, info.errcode);
+                StatisticsManager::addError(newStat.errors, info.errcode);
                 statBySmeId[currentIndex].Insert(dstSmeId, newStat);
             }
         }
@@ -149,16 +149,16 @@ void StatisticsManager::updateTemporal(const StatInfo& info)
             RouteStat* stat = statByRoute[currentIndex].GetPtr(routeId);
             if (stat) {
                 stat->temporal++;
-                addError(stat->errors, info.errcode);
+                StatisticsManager::addError(stat->errors, info.errcode);
             }
             else {
                 RouteStat newStat(0, 0, 0, 0, 0, 1, info.providerId, info.categoryId); // temporal
-                addError(newStat.errors, info.errcode);
+                StatisticsManager::addError(newStat.errors, info.errcode);
                 statByRoute[currentIndex].Insert(routeId, newStat);
             }
         }
     }
-    addError(statGeneral[currentIndex].errors, info.errcode);
+    StatisticsManager::addError(statGeneral[currentIndex].errors, info.errcode);
 }
 
 // SMS was delivered or failed by SMSC. Affects delivered or failed
@@ -173,11 +173,11 @@ void StatisticsManager::updateChanged(const StatInfo& info)
         if (stat) {
             if (info.errcode == 0) stat->delivered++;
             else stat->failed++;
-            addError(stat->errors, info.errcode);
+            StatisticsManager::addError(stat->errors, info.errcode);
         }
         else {
             SmsStat newStat(0, 0, (info.errcode) ? 0:1, (info.errcode) ? 1:0, 0, 0); // delivered or failed
-            addError(newStat.errors, info.errcode);
+            StatisticsManager::addError(newStat.errors, info.errcode);
             statBySmeId[currentIndex].Insert(dstSmeId, newStat);
             if (info.errcode == 0) {
                 stat = statBySmeId[currentIndex].GetPtr(dstSmeId);
@@ -193,12 +193,12 @@ void StatisticsManager::updateChanged(const StatInfo& info)
         if (stat) {
             if (info.errcode == 0) stat->delivered++;
             else stat->failed++;
-            addError(stat->errors, info.errcode);
+            StatisticsManager::addError(stat->errors, info.errcode);
         }
         else {
             RouteStat newStat(0, 0, (info.errcode) ? 0:1, (info.errcode) ? 1:0, 0, 0,
                               info.providerId, info.categoryId); // delivered or failed
-            addError(newStat.errors, info.errcode);
+            StatisticsManager::addError(newStat.errors, info.errcode);
             statByRoute[currentIndex].Insert(routeId, newStat);
             if (info.errcode == 0) {
                 stat = statByRoute[currentIndex].GetPtr(routeId);
@@ -212,7 +212,7 @@ void StatisticsManager::updateChanged(const StatInfo& info)
         statGeneral[currentIndex].incOCounter();
     }
     else statGeneral[currentIndex].failed++;
-    addError(statGeneral[currentIndex].errors, info.errcode);
+    StatisticsManager::addError(statGeneral[currentIndex].errors, info.errcode);
 }
 void StatisticsManager::updateScheduled(const StatInfo& info)
 {
@@ -467,7 +467,7 @@ void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
                        fileName, (needHeader) ? "created":"opened");
     }
     
-    smsc_log_debug(logger, "Statistics data dump...");
+    smsc_log_debug(logger, "Statistics data dump (%d bytes)...", buffLen);
     uint32_t value32 = htonl(buffLen);
     write((const void *)&value32, sizeof(value32));
     write((const void *)buff, buffLen); // write dump to it
@@ -486,125 +486,134 @@ uint64_t toNetworkOrder(uint64_t value)
     ptr[6]=(value>>8 )&0xFF; ptr[7]=(value    )&0xFF;
     return result;
 }
+
+void StatisticsManager::flush(const tm& flushTM, StatStorage& _storage, SmsStat& general,
+                              Hash<SmsStat>& statSme, Hash<RouteStat>& statRoute)
+{
+    const int MAX_STACK_BUFFER_SIZE = 64*1024;
+    TmpBuf<uint8_t, MAX_STACK_BUFFER_SIZE> buff(MAX_STACK_BUFFER_SIZE);
+
+    // General statistics dump
+    uint8_t value8 = 0;
+    value8 = (uint8_t)(flushTM.tm_hour); buff.Append((uint8_t *)&value8, sizeof(value8));
+    value8 = (uint8_t)(flushTM.tm_min);  buff.Append((uint8_t *)&value8, sizeof(value8));
+
+    int32_t value32 = 0; 
+    value32 = htonl(general.accepted);    buff.Append((uint8_t *)&value32, sizeof(value32));
+    value32 = htonl(general.rejected);    buff.Append((uint8_t *)&value32, sizeof(value32));
+    value32 = htonl(general.delivered);   buff.Append((uint8_t *)&value32, sizeof(value32));
+    value32 = htonl(general.failed);      buff.Append((uint8_t *)&value32, sizeof(value32));
+    value32 = htonl(general.rescheduled); buff.Append((uint8_t *)&value32, sizeof(value32));
+    value32 = htonl(general.temporal);    buff.Append((uint8_t *)&value32, sizeof(value32));
+    value32 = htonl(general.peak_i);      buff.Append((uint8_t *)&value32, sizeof(value32));
+    value32 = htonl(general.peak_o);      buff.Append((uint8_t *)&value32, sizeof(value32));
+
+    //smsc_log_debug(logger, "General peak i/o: %d/%d", statGeneral[index].peak_i, statGeneral[index].peak_o);
+
+    // General errors statistics dump
+    value32 = general.errors.Count(); value32 = htonl(value32);
+    buff.Append((uint8_t *)&value32, sizeof(value32));
+    IntHash<int>::Iterator it = general.errors.First();
+    int ecError, eCounter;
+    while (it.Next(ecError, eCounter))
+    {
+        value32 = htonl(ecError);  buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(eCounter); buff.Append((uint8_t *)&value32, sizeof(value32));
+    }
+
+    // Sme statistics dump
+    value32 = statSme.GetCount(); 
+    value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
+    statSme.First();
+    char* smeId = 0; SmsStat* smeStat = 0;
+    while (statSme.Next(smeId, smeStat))
+    {
+        if (!smeStat || !smeId || smeId[0] == '\0')
+            throw Exception("Invalid sme stat record!");
+
+        uint8_t smeIdLen = (uint8_t)strlen(smeId);
+        buff.Append((uint8_t *)&smeIdLen, sizeof(smeIdLen));
+        buff.Append((uint8_t *)smeId, smeIdLen);
+        value32 = htonl(smeStat->accepted);    buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(smeStat->rejected);    buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(smeStat->delivered);   buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(smeStat->failed);      buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(smeStat->rescheduled); buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(smeStat->temporal);    buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(smeStat->peak_i);      buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(smeStat->peak_o);      buff.Append((uint8_t *)&value32, sizeof(value32));
+
+        //smsc_log_debug(logger, "Sme '%s' peak i/o: %d/%d", smeId, smeStat->peak_i, smeStat->peak_o);
+
+        // Sme error statistics dump
+        value32 = smeStat->errors.Count(); 
+        value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
+        IntHash<int>::Iterator sit = smeStat->errors.First();
+        int secError, seCounter;
+        while (sit.Next(secError, seCounter))
+        {
+            value32 = htonl(secError);  buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(seCounter); buff.Append((uint8_t *)&value32, sizeof(value32));
+        }
+        smeStat = 0; // ???
+    }
+
+    // Route statistics dump
+    value32 = statRoute.GetCount(); 
+    value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
+    statRoute.First();
+    char* routeId = 0; RouteStat* routeStat = 0;
+    while (statRoute.Next(routeId, routeStat))
+    {
+        if (!routeStat || !routeId || routeId[0] == '\0')
+            throw Exception("Invalid route stat record!");
+
+        uint8_t routeIdLen = (uint8_t)strlen(routeId);
+        buff.Append((uint8_t *)&routeIdLen, sizeof(routeIdLen));
+        buff.Append((uint8_t *)routeId, routeIdLen);
+
+        int64_t value64 = 0;
+        value64 = toNetworkOrder(routeStat->providerId); buff.Append((uint8_t *)&value64, sizeof(value64));
+        value64 = toNetworkOrder(routeStat->categoryId); buff.Append((uint8_t *)&value64, sizeof(value64));
+
+        value32 = htonl(routeStat->accepted);    buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(routeStat->rejected);    buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(routeStat->delivered);   buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(routeStat->failed);      buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(routeStat->rescheduled); buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(routeStat->temporal);    buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(routeStat->peak_i);      buff.Append((uint8_t *)&value32, sizeof(value32));
+        value32 = htonl(routeStat->peak_o);      buff.Append((uint8_t *)&value32, sizeof(value32));
+
+        //smsc_log_debug(logger, "Route '%s' peak i/o: %d/%d", routeId, routeStat->peak_i, routeStat->peak_o);
+
+        // Route errors statistics dump
+        value32 = routeStat->errors.Count(); 
+        value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
+        IntHash<int>::Iterator rit = routeStat->errors.First();
+        int recError, reCounter;
+        while (rit.Next(recError, reCounter))
+        {
+            value32 = htonl(recError);  buff.Append((uint8_t *)&value32, sizeof(value32));
+            value32 = htonl(reCounter); buff.Append((uint8_t *)&value32, sizeof(value32));
+        }
+        routeStat = 0; // ???
+    }
+
+    _storage.dump(buff, buff.GetPos(), flushTM);
+}
+
 void StatisticsManager::flushCounters(short index)
 {
     tm flushTM; calculateTime(flushTM);
     smsc_log_debug(logger, "Flushing statistics for %02d.%02d.%04d %02d:%02d:%02d GMT",
                    flushTM.tm_mday, flushTM.tm_mon+1, flushTM.tm_year+1900,
                    flushTM.tm_hour, flushTM.tm_min, flushTM.tm_sec);
-    try
+    try 
     {
-        TmpBuf<uint8_t, 64096> buff(64096);
-
-        // General statistics dump
-        uint8_t value8 = 0;
-        value8 = (uint8_t)(flushTM.tm_hour); buff.Append((uint8_t *)&value8, sizeof(value8));
-        value8 = (uint8_t)(flushTM.tm_min);  buff.Append((uint8_t *)&value8, sizeof(value8));
-        
-        int32_t value32 = 0; 
-        value32 = htonl(statGeneral[index].accepted);    buff.Append((uint8_t *)&value32, sizeof(value32));
-        value32 = htonl(statGeneral[index].rejected);    buff.Append((uint8_t *)&value32, sizeof(value32));
-        value32 = htonl(statGeneral[index].delivered);   buff.Append((uint8_t *)&value32, sizeof(value32));
-        value32 = htonl(statGeneral[index].failed);      buff.Append((uint8_t *)&value32, sizeof(value32));
-        value32 = htonl(statGeneral[index].rescheduled); buff.Append((uint8_t *)&value32, sizeof(value32));
-        value32 = htonl(statGeneral[index].temporal);    buff.Append((uint8_t *)&value32, sizeof(value32));
-        value32 = htonl(statGeneral[index].peak_i);      buff.Append((uint8_t *)&value32, sizeof(value32));
-        value32 = htonl(statGeneral[index].peak_o);      buff.Append((uint8_t *)&value32, sizeof(value32));
-	
-	smsc_log_debug(logger, "General peak i/o: %d/%d", statGeneral[index].peak_i, statGeneral[index].peak_o);
-
-        // General errors statistics dump
-        value32 = statGeneral[index].errors.Count(); value32 = htonl(value32);
-        buff.Append((uint8_t *)&value32, sizeof(value32));
-        IntHash<int>::Iterator it = statGeneral[index].errors.First();
-        int ecError, eCounter;
-        while (it.Next(ecError, eCounter))
-        {
-            value32 = htonl(ecError);  buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(eCounter); buff.Append((uint8_t *)&value32, sizeof(value32));
-        }
-
-        // Sme statistics dump
-        value32 = statBySmeId[index].GetCount(); 
-        value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
-        statBySmeId[index].First();
-        char* smeId = 0; SmsStat* smeStat = 0;
-        while (statBySmeId[index].Next(smeId, smeStat))
-        {
-            if (!smeStat || !smeId || smeId[0] == '\0')
-                throw Exception("Invalid sme stat record!");
-
-            uint8_t smeIdLen = (uint8_t)strlen(smeId);
-            buff.Append((uint8_t *)&smeIdLen, sizeof(smeIdLen));
-            buff.Append((uint8_t *)smeId, smeIdLen);
-            value32 = htonl(smeStat->accepted);    buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(smeStat->rejected);    buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(smeStat->delivered);   buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(smeStat->failed);      buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(smeStat->rescheduled); buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(smeStat->temporal);    buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(smeStat->peak_i);      buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(smeStat->peak_o);      buff.Append((uint8_t *)&value32, sizeof(value32));
-	    
-	    smsc_log_debug(logger, "Sme '%s' peak i/o: %d/%d", smeId, smeStat->peak_i, smeStat->peak_o);
-
-            // Sme error statistics dump
-            value32 = smeStat->errors.Count(); 
-            value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
-            IntHash<int>::Iterator sit = smeStat->errors.First();
-            int secError, seCounter;
-            while (sit.Next(secError, seCounter))
-            {
-                value32 = htonl(secError);  buff.Append((uint8_t *)&value32, sizeof(value32));
-                value32 = htonl(seCounter); buff.Append((uint8_t *)&value32, sizeof(value32));
-            }
-            smeStat = 0; // ???
-        }
-
-        // Route statistics dump
-        value32 = statByRoute[index].GetCount(); 
-        value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
-        statByRoute[index].First();
-        char* routeId = 0; RouteStat* routeStat = 0;
-        while (statByRoute[index].Next(routeId, routeStat))
-        {
-            if (!routeStat || !routeId || routeId[0] == '\0')
-                throw Exception("Invalid route stat record!");
-
-            uint8_t routeIdLen = (uint8_t)strlen(routeId);
-            buff.Append((uint8_t *)&routeIdLen, sizeof(routeIdLen));
-            buff.Append((uint8_t *)routeId, routeIdLen);
-
-            int64_t value64 = 0;
-            value64 = toNetworkOrder(routeStat->providerId); buff.Append((uint8_t *)&value64, sizeof(value64));
-            value64 = toNetworkOrder(routeStat->categoryId); buff.Append((uint8_t *)&value64, sizeof(value64));
-
-            value32 = htonl(routeStat->accepted);    buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(routeStat->rejected);    buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(routeStat->delivered);   buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(routeStat->failed);      buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(routeStat->rescheduled); buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(routeStat->temporal);    buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(routeStat->peak_i);      buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(routeStat->peak_o);      buff.Append((uint8_t *)&value32, sizeof(value32));
-	    
-	    smsc_log_debug(logger, "Route '%s' peak i/o: %d/%d", routeId, routeStat->peak_i, routeStat->peak_o);
-
-            // Route errors statistics dump
-            value32 = routeStat->errors.Count(); 
-            value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
-            IntHash<int>::Iterator rit = routeStat->errors.First();
-            int recError, reCounter;
-            while (rit.Next(recError, reCounter))
-            {
-                value32 = htonl(recError);  buff.Append((uint8_t *)&value32, sizeof(value32));
-                value32 = htonl(reCounter); buff.Append((uint8_t *)&value32, sizeof(value32));
-            }
-            routeStat = 0; // ???
-        }
-
-        storage.dump(buff, buff.GetPos(), flushTM);
-    }
+        StatisticsManager::flush(flushTM, storage, statGeneral[index],
+                                 statBySmeId[index], statByRoute[index]);
+    } 
     catch (Exception& exc)
     {
         smsc_log_error(logger, "Statistics flush failed. Cause: %s", exc.what());
