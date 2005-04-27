@@ -41,6 +41,7 @@ const char* SME_STAT_SQL =
 "       max(sms_stat_sme.peak_i), max(sms_stat_sme.peak_o) "
 "FROM   sms_stat_sme, sms_stat_sme_state "
 "WHERE  sms_stat_sme.systemid = sms_stat_sme_state.systemid "
+"  AND  sms_stat_sme.period = sms_stat_sme_state.period "
 "  AND  sms_stat_sme.period = :period "
 "GROUP BY sms_stat_sme.systemid, sms_stat_sme_state.errcode "
 "ORDER BY sms_stat_sme.systemid ASC";
@@ -55,6 +56,7 @@ const char* ROUTE_STAT_SQL =
 "       max(sms_stat_route.peak_i), max(sms_stat_route.peak_o) "
 "FROM  sms_stat_route, sms_stat_route_state "
 "WHERE sms_stat_route.routeid = sms_stat_route_state.routeid "
+"  AND sms_stat_route.period = sms_stat_route_state.period "
 "  AND sms_stat_route.period = :period "
 "GROUP BY sms_stat_route.routeid, sms_stat_route_state.errcode "
 "ORDER BY sms_stat_route.routeid ASC";
