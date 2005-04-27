@@ -188,7 +188,6 @@ void process(Connection* connection, const char* location)
             
             StatisticsManager::flush(flushTM, storage, stat, statSme, statRoute);
             stat.Empty(); statSme.Empty(); statRoute.Empty();
-            convertPeriod(period, flushTM); // sets flushTM structure
         }
         
         if (!genRs->isNull(2)) // increment general errors statistics
@@ -208,7 +207,7 @@ void process(Connection* connection, const char* location)
         int32_t peak_o    = (genRs->isNull(11) ? 0:genRs->getInt32(11));
         if (stat.peak_i < peak_i) stat.peak_i = peak_i;
         if (stat.peak_i < peak_o) stat.peak_o = peak_o;
-        lastPeriod = period;
+        lastPeriod = period; convertPeriod(period, flushTM);
     }
 
     if (period != 0) // process & flush data for last period
