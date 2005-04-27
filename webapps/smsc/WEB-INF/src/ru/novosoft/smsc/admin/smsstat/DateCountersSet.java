@@ -15,14 +15,18 @@ import java.util.Vector;
 public class DateCountersSet extends CountersSet
 {
   private Date date;
-
+  private int dateFile;
   private Vector byHours = new Vector(); // contains HourCountersSet
 
   DateCountersSet(Date date)
   {
     this.date = date;
   }
-
+     DateCountersSet(Date date,int dateFile)
+  {
+    this.date = date;
+    this.dateFile = dateFile;
+  }
   public void addHourStat(HourCountersSet set)
   {
     byHours.addElement(set);
@@ -37,5 +41,10 @@ public class DateCountersSet extends CountersSet
   public Date getDate()
   {
     return date;
+  }
+
+  public int getDateFile()
+  {
+    return dateFile;
   }
 }

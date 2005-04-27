@@ -94,10 +94,18 @@ if (stat != null) {
     <td width="11%" align=right><%= total.peak_i%>&nbsp;/&nbsp;<%= total.peak_o%></td>
 </tr>
 <%
+int ci = 0;
 Iterator i = dates.iterator();
 while (i.hasNext()) {
-    DateCountersSet date = (DateCountersSet)i.next();
-    SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
+  ci++;
+  Object obj = i.next();
+  DateCountersSet date = null;
+  try {
+    date = (DateCountersSet)obj;
+  } catch (ClassCastException e) {
+   // System.out.println("#"+ci+" tried cast "+obj.getClass().getName()+" to DateCountersSet");
+  }
+  SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
     String dateStr = formatter.format(date.getDate());
 %>  <tr class=row0>
         <td width="23%" align=right style="cursor:hand" onClick="toggleVisible(opForm.all.p<%=disNo%>, opForm.all.c<%=disNo%>);"><div id="p<%=disNo%>" class=collapsing_list_<%=i.hasNext() ? "closed" : "opened"%>><%= dateStr%><div></td>

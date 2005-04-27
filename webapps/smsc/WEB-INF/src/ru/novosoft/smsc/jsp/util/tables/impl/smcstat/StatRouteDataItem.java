@@ -19,14 +19,14 @@ public class StatRouteDataItem extends AbstractDataItem
     values.put("Route ID", r.routeid);
     //values.put("providerId", new Long(r.providerId));
     //values.put("categoryId", new Long(r.categoryId));
-    values.put("accepted", new Integer(r.accepted));
-    values.put("rejected", new Integer(r.rejected));
-    values.put("delivered", new Integer(r.delivered));
-    values.put("failed", new Integer(r.failed));
-    values.put("rescheduled", new Integer(r.rescheduled));
-    values.put("temporal", new Integer(r.temporal));
-    values.put("peak_i", new Integer(r.peak_i));
-    values.put("peak_o", new Integer(r.peak_o));
+    values.put("accepted", new Long(r.accepted));
+    values.put("rejected", new Long(r.rejected));
+    values.put("delivered", new Long(r.delivered));
+    values.put("failed", new Long(r.failed));
+    values.put("rescheduled", new Long(r.rescheduled));
+    values.put("temporal", new Long(r.temporal));
+    values.put("peak_i", new Long(r.peak_i));
+    values.put("peak_o", new Long(r.peak_o));
     //values.put("providerName",r.providerName);
     //values.put("categoryName", r.categoryName);
     values.put("provider", r.provider);
@@ -41,46 +41,46 @@ public class StatRouteDataItem extends AbstractDataItem
   }
 
 
-  public int getAccepted()
+  public long getAccepted()
   {
-    return ((Integer) values.get("accepted")).intValue();
+    return ((Long) values.get("accepted")).longValue();
   }
 
 
-  public int getDelivered()
+  public long getDelivered()
   {
-    return ((Integer) values.get("delivered")).intValue();
+    return ((Long) values.get("delivered")).longValue();
   }
 
-  public int getFailed()
+  public long getFailed()
   {
-    return ((Integer) values.get("failed")).intValue();
+    return ((Long) values.get("failed")).longValue();
   }
 
-  public int getPeak_i()
+  public long getPeak_i()
   {
-    return ((Integer) values.get("peak_i")).intValue();
+    return ((Long) values.get("peak_i")).longValue();
   }
 
-  public int getPeak_o()
+  public long getPeak_o()
   {
-    return ((Integer) values.get("peak_o")).intValue();
+    return ((Long) values.get("peak_o")).longValue();
   }
 
 
-  public int getRejected()
+  public long getRejected()
   {
-    return ((Integer) values.get("rejected")).intValue();
+    return ((Long) values.get("rejected")).longValue();
   }
 
-  public int getRescheduled()
+  public long getRescheduled()
   {
-    return ((Integer) values.get("rescheduled")).intValue();
+    return ((Long) values.get("rescheduled")).longValue();
   }
 
-  public int getTemporal()
+  public long getTemporal()
   {
-    return ((Integer) values.get("temporal")).intValue();
+    return ((Long) values.get("temporal")).longValue();
   }
 
   public Provider getProvider()

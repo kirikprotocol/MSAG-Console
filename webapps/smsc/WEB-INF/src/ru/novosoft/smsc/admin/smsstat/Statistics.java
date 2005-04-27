@@ -29,7 +29,11 @@ public class Statistics
     byDates.add(set);
     total.increment(set);
   }
-
+    public void mergeDateStat(DateCountersSet set)
+  {
+    byDates.add(set);
+    total.increment(set);
+  }
   public Collection getDateStat()
   {
     return byDates;
@@ -39,6 +43,10 @@ public class Statistics
   {
     total.addError(set);
   }
+   public void putErrorStat(ErrorCounterSet set)
+  {
+    total.putErr(set.errcode,set);
+  }
     public void addAllErrors(Collection err)
   {
     total.addAllErrors(err);
@@ -47,7 +55,10 @@ public class Statistics
   {
     return total.getErrors();
   }
-
+   public ErrorCounterSet getErrStat(int errcode)
+  {
+    return total.getErr(errcode);
+  }
   public void addSmeIdStat(SmeIdCountersSet set)
   {
     bySmeId.add(set);
@@ -78,13 +89,5 @@ public class Statistics
   {
     Collections.sort(byRouteId);
     return byRouteId;
-  }
-   public void addRecord(Statistics stat)
-  {
-    byDates.add(stat.getDateStat());
-    total.increment(stat.getTotal());
-    total.addAllErrors(stat.getErrorStat());
-    bySmeId.add(stat.getSmeIdStat());
-    byRouteId.add(stat.getRouteIdStat());
   }
 }

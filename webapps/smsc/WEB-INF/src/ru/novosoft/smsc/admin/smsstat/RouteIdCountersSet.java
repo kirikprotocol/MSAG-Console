@@ -26,15 +26,15 @@ public class RouteIdCountersSet extends ExtendedCountersSet implements Comparabl
     this.routeid = routeid;
   }
 
-  public RouteIdCountersSet(int accepted, int rejected, int delivered,
-                            int failed, int rescheduled, int temporal, int i, int o, String routeid)
+  public RouteIdCountersSet(long accepted, long rejected, long delivered,
+                            long failed, long rescheduled, long temporal, long i, long o, String routeid)
   {
     super(accepted, rejected, delivered, failed, rescheduled, temporal, i, o);
     this.routeid = routeid;
   }
 
-  public RouteIdCountersSet(int accepted, int rejected, int delivered, int failed, int rescheduled,
-                            int temporal, int i, int o, String routeid, Provider provider, Category category)
+  public RouteIdCountersSet(long accepted, long rejected, long delivered, long failed, long rescheduled,
+                            long temporal, long i, long o, String routeid, Provider provider, Category category)
   {
     super(accepted, rejected, delivered, failed, rescheduled, temporal, i, o);
     this.routeid = routeid;

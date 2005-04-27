@@ -11,11 +11,15 @@ package ru.novosoft.smsc.admin.smsstat;
 public class ErrorCounterSet
 {
   public int errcode;
-  public int counter;
+  public long counter;
 
-  ErrorCounterSet(int err, int count)
+  ErrorCounterSet(int err, long count)
   {
     errcode = err;
     counter = count;
+  }
+   protected void increment(int count)
+  {
+    this.counter += count;
   }
 }

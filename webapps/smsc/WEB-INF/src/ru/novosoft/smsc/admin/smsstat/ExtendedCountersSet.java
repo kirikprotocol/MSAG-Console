@@ -2,6 +2,7 @@ package ru.novosoft.smsc.admin.smsstat;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 
 /**
  * Created by IntelliJ IDEA.
@@ -13,13 +14,13 @@ import java.util.Collection;
 public class ExtendedCountersSet extends CountersSet
 {
   private ArrayList errors = new ArrayList();
-
+  private HashMap err=new HashMap();
   public ExtendedCountersSet()
   {
   }
 
-  public ExtendedCountersSet(int accepted, int rejected, int delivered,
-                             int failed, int rescheduled, int temporal, int i, int o)
+  public ExtendedCountersSet(long accepted, long rejected, long delivered,
+                             long failed, long rescheduled, long temporal, long i, long o)
   {
     super(accepted, rejected, delivered, failed, rescheduled, temporal, i, o);
   }
@@ -28,6 +29,10 @@ public class ExtendedCountersSet extends CountersSet
   {
     errors.add(set);
   }
+  public void putErr(int errcode ,ErrorCounterSet set)
+    {
+      err.put(new Integer(errcode),set);
+    }
 
   public void addAllErrors(Collection err)
   {
@@ -36,7 +41,10 @@ public class ExtendedCountersSet extends CountersSet
 
   public Collection getErrors()
   {
-    return errors;
+    return err.values();
   }
-
+    public ErrorCounterSet getErr(int errcode)
+  {
+    return (ErrorCounterSet)err.get(new Integer(errcode));
+  }
 }

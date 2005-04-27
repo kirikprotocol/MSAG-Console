@@ -8,9 +8,10 @@ package ru.novosoft.smsc.jsp.smsstat;
  * To change this template use Options | File Templates.
  */
 
-import ru.novosoft.smsc.admin.smsstat.SmsStat;
 import ru.novosoft.smsc.admin.smsstat.StatQuery;
 import ru.novosoft.smsc.admin.smsstat.Statistics;
+import ru.novosoft.smsc.admin.smsstat.SmsStat;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.util.Functions;
@@ -45,9 +46,14 @@ public class SmsStatFormBean extends IndexBean
     int result = super.process(request);
     if (result != RESULT_OK)
       return result;
-
+    try {
+      stat.init(appContext);
+    } catch (AdminException e) {
+      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+      return error(SMSCErrors.error.smsstat.QueryFailed, e.getMessage());
+    }
     if (stat.getSmsc() == null) {
-      stat.setDataSource(appContext.getConnectionPool());
+     // smsStat.setDataSource(appContext.getConnectionPool());
       stat.setSmsc(appContext.getSmsc());
       stat.setRouteSubjectManager(routeSubjectManager);
       stat.setProviderManager(appContext.getProviderManager());

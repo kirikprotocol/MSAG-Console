@@ -17,4 +17,6 @@ public interface Constants
 
   public static final String ARCHIVE_DAEMON_SVC_ID = "ArchiveDaemon";
   String CONSOLE_SESSION_ID = "Console Session";
+  public static final long Day=86400000;
+  public static final long Hour=3600000;
 }

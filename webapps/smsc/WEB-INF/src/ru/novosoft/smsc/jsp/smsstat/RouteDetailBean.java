@@ -9,7 +9,6 @@ package ru.novosoft.smsc.jsp.smsstat;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.smsstat.RouteIdCountersSet;
-import ru.novosoft.smsc.admin.smsstat.SmsStat;
 import ru.novosoft.smsc.admin.smsstat.StatRouteList;
 import ru.novosoft.smsc.admin.smsstat.Statistics;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
@@ -30,8 +29,6 @@ public class RouteDetailBean extends IndexBean
   // private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
 
   private Statistics statistics = null;
-//  private StatQuery query = new StatQuery();
-  private SmsStat stat = new SmsStat();
   public static final int RESULT_BACK = 4;
 
   private String mbBack = null;
@@ -65,13 +62,6 @@ public class RouteDetailBean extends IndexBean
     if (result != RESULT_OK)
       return result;
 
-    if (stat.getSmsc() == null) {
-      // stat.setDataSource(appContext.getConnectionPool());
-      //  stat.setSmsc(appContext.getSmsc());
-      stat.setRouteSubjectManager(routeSubjectManager);
-      stat.setProviderManager(appContext.getProviderManager());
-      stat.setCategoryManager(appContext.getCategoryManager());
-    }
     RoutesFull = new ArrayList((Collection) session.getAttribute("ByRouteId"));
     if (!filteron) ByRouteId = new ArrayList(RoutesFull);
     dateFrom = (String) session.getAttribute("dateFrom");
@@ -80,22 +70,11 @@ public class RouteDetailBean extends IndexBean
       try {
         mbBack = null;
         return RESULT_BACK;
-        // statistics = stat.getStatistics(query);
-        //Collection ByRouteId=statistics.getRouteIdStat();
-        //HttpSession session =request.getSession();
-        //session.removeAttribute("ByRouteId");
-        //session.setAttribute("ByRouteId",ByRouteId);
       } catch (Exception exc) {
         statistics = null;
         return error(exc.getMessage());
       }
     }
-/*  else {
-        if (!query.isFromDateEnabled()) {
-      query.setFromDate(Functions.truncateTime(new Date()));
-      query.setFromDateEnabled(true);
-    }
-     } */
     else if (mbQuickFilter != null) {
       int dresult = updateFilter();
       return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
@@ -105,8 +84,6 @@ public class RouteDetailBean extends IndexBean
       return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
     }
 
-
-    //ByRouteId=
     mbBack = null;
     mbDetail = null;
     return RESULT_OK;
@@ -156,9 +133,6 @@ public class RouteDetailBean extends IndexBean
     final StatRouteFilter filter = preferences.getStatRouteFilter();
     filter.setProviderId(null);
     filter.setCategoryId(null);
-    // HttpSession session =request.getSession();
-    //ByRouteId.clear();
-    //ByRouteId=new ArrayList(RoutesFull);
 
     return RESULT_OK;
   }

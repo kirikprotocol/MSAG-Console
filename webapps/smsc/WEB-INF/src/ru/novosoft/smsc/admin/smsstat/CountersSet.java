@@ -10,22 +10,22 @@ package ru.novosoft.smsc.admin.smsstat;
 
 public class CountersSet
 {
-  public int accepted = 0;
-  public int rejected = 0;
-  public int delivered = 0;
-  public int failed = 0;
-  public int rescheduled = 0;
-  public int temporal = 0;
-  public int peak_i = 0;
-  public int peak_o = 0;
+  public long accepted = 0;
+  public long rejected = 0;
+  public long delivered = 0;
+  public long failed = 0;
+  public long rescheduled = 0;
+  public long temporal = 0;
+  public long peak_i = 0;
+  public long peak_o = 0;
 
   public CountersSet()
   {
   }
 
-  public CountersSet(int accepted, int rejected, int delivered,
-                     int failed, int rescheduled, int temporal,
-                     int i, int o)
+  public CountersSet(long accepted, long rejected, long delivered,
+                     long failed, long rescheduled, long temporal,
+                     long i, long o)
   {
     this.accepted = accepted;
     this.rejected = rejected;
