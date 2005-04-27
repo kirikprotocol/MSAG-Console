@@ -53,7 +53,8 @@ public:
           heapSize=(pos+count)*2;
           T* tmp=new T[heapSize];
           std::copy(realBuf,realBuf+pos,tmp);
-          delete [] realBuf;
+          delete [] heapBuf;
+          heapBuf=tmp;
           realBuf=tmp;
         }
       }else
