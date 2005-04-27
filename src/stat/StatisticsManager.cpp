@@ -467,13 +467,12 @@ void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
                        fileName, (needHeader) ? "created":"opened");
     }
     
-    smsc_log_debug(logger, "Statistics data dump (%d bytes)...", buffLen);
     uint32_t value32 = htonl(buffLen);
     write((const void *)&value32, sizeof(value32));
     write((const void *)buff, buffLen); // write dump to it
     write((const void *)&value32, sizeof(value32));
     flush();
-    smsc_log_debug(logger, "Statistics data dumped.");
+    smsc_log_debug(logger, "Record dumped (%d bytes)", buffLen);
 }
 
 uint64_t toNetworkOrder(uint64_t value)

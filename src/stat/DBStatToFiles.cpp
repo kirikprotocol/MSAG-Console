@@ -74,6 +74,26 @@ void convertPeriod(uint32_t period, tm& flushTM)
     gmtime_r(&flushTime, &flushTM); flushTM.tm_sec = 0;
 }
 
+void incStat(SmsStat* stat, ResultSet* rs, int pos)
+{
+    if (!rs->isNull(pos)) // increment errors statistics
+    { 
+        int32_t errcode = rs->getInt32(pos); pos++;
+        int32_t counter = (rs->isNull(pos) ? 0:rs->getInt32(pos)); pos++;
+        StatisticsManager::addError(stat->errors, errcode, counter);
+    }
+    
+    stat->accepted    += (rs->isNull(pos) ? 0:rs->getInt32(pos)); pos++;
+    stat->rejected    += (rs->isNull(pos) ? 0:rs->getInt32(pos)); pos++;
+    stat->delivered   += (rs->isNull(pos) ? 0:rs->getInt32(pos)); pos++;
+    stat->failed      += (rs->isNull(pos) ? 0:rs->getInt32(pos)); pos++;
+    stat->rescheduled += (rs->isNull(pos) ? 0:rs->getInt32(pos)); pos++;
+    stat->temporal    += (rs->isNull(pos) ? 0:rs->getInt32(pos)); pos++;
+    int32_t peak_i     = (rs->isNull(pos) ? 0:rs->getInt32(pos)); pos++;
+    int32_t peak_o     = (rs->isNull(pos) ? 0:rs->getInt32(pos)); pos++;
+    if (stat->peak_i < peak_i) stat->peak_i = peak_i;
+    if (stat->peak_i < peak_o) stat->peak_o = peak_o;
+}
 void fillSmes(Connection* connection, Hash<SmsStat>& stat, uint32_t period)
 {
     Statement* stmt = connection->getStatement(SME_STAT_ID, SME_STAT_SQL);
@@ -96,23 +116,7 @@ void fillSmes(Connection* connection, Hash<SmsStat>& stat, uint32_t period)
             sstat = stat.GetPtr(smeId);
         }
 
-        if (!rs->isNull(2)) // increment errors statistics
-        { 
-            int32_t errcode = rs->getInt32(2);
-            int32_t counter = (rs->isNull(3) ? 0:rs->getInt32(3));
-            StatisticsManager::addError(sstat->errors, errcode, counter);
-        }
-
-        sstat->accepted    += (rs->isNull (4) ? 0:rs->getInt32 (4));
-        sstat->rejected    += (rs->isNull (5) ? 0:rs->getInt32 (5));
-        sstat->delivered   += (rs->isNull (6) ? 0:rs->getInt32 (6));
-        sstat->failed      += (rs->isNull (7) ? 0:rs->getInt32 (7));
-        sstat->rescheduled += (rs->isNull (8) ? 0:rs->getInt32 (8));
-        sstat->temporal    += (rs->isNull (9) ? 0:rs->getInt32 (9));
-        int32_t peak_i      = (rs->isNull(10) ? 0:rs->getInt32(10));
-        int32_t peak_o      = (rs->isNull(11) ? 0:rs->getInt32(11));
-        if (sstat->peak_i < peak_i) sstat->peak_i = peak_i;
-        if (sstat->peak_i < peak_o) sstat->peak_o = peak_o;
+        incStat(sstat, rs, 2);
     }
 }
 void fillRoutes(Connection* connection, Hash<RouteStat>& stat, uint32_t period)
@@ -137,23 +141,7 @@ void fillRoutes(Connection* connection, Hash<RouteStat>& stat, uint32_t period)
             rstat = stat.GetPtr(routeId);
         }
 
-        if (!rs->isNull(2)) // increment errors statistics
-        { 
-            int32_t errcode = rs->getInt32(2);
-            int32_t counter = (rs->isNull(3) ? 0:rs->getInt32(3));
-            StatisticsManager::addError(rstat->errors, errcode, counter);
-        }
-
-        rstat->accepted    += (rs->isNull (4) ? 0:rs->getInt32 (4));
-        rstat->rejected    += (rs->isNull (5) ? 0:rs->getInt32 (5));
-        rstat->delivered   += (rs->isNull (6) ? 0:rs->getInt32 (6));
-        rstat->failed      += (rs->isNull (7) ? 0:rs->getInt32 (7));
-        rstat->rescheduled += (rs->isNull (8) ? 0:rs->getInt32 (8));
-        rstat->temporal    += (rs->isNull (9) ? 0:rs->getInt32 (9));
-        int32_t peak_i      = (rs->isNull(10) ? 0:rs->getInt32(10));
-        int32_t peak_o      = (rs->isNull(11) ? 0:rs->getInt32(11));
-        if (rstat->peak_i < peak_i) rstat->peak_i = peak_i;
-        if (rstat->peak_i < peak_o) rstat->peak_o = peak_o;
+        incStat(rstat, rs, 2);
     }
 }
 void process(Connection* connection, const char* location)
@@ -186,35 +174,24 @@ void process(Connection* connection, const char* location)
             fillSmes(connection, statSme, lastPeriod);
             fillRoutes(connection, statRoute, lastPeriod);
             
+            smsc_log_debug(logger, "Dumping period %ld", period);
             StatisticsManager::flush(flushTM, storage, stat, statSme, statRoute);
             stat.Empty(); statSme.Empty(); statRoute.Empty();
         }
         
-        if (!genRs->isNull(2)) // increment general errors statistics
-        { 
-            int32_t errcode = genRs->getInt32(2);
-            int32_t counter = genRs->isNull(3) ? 0:genRs->getInt32(3);
-            StatisticsManager::addError(stat.errors, errcode, counter);
+        incStat(&stat, genRs, 2); // increment general errors statistics
+        
+        if (lastPeriod != period) {
+            lastPeriod = period; convertPeriod(period, flushTM); 
         }
-
-        stat.accepted    += (genRs->isNull (4) ? 0:genRs->getInt32 (4));
-        stat.rejected    += (genRs->isNull (5) ? 0:genRs->getInt32 (5));
-        stat.delivered   += (genRs->isNull (6) ? 0:genRs->getInt32 (6));
-        stat.failed      += (genRs->isNull (7) ? 0:genRs->getInt32 (7));
-        stat.rescheduled += (genRs->isNull (8) ? 0:genRs->getInt32 (8));
-        stat.temporal    += (genRs->isNull (9) ? 0:genRs->getInt32 (9));
-        int32_t peak_i    = (genRs->isNull(10) ? 0:genRs->getInt32(10));
-        int32_t peak_o    = (genRs->isNull(11) ? 0:genRs->getInt32(11));
-        if (stat.peak_i < peak_i) stat.peak_i = peak_i;
-        if (stat.peak_i < peak_o) stat.peak_o = peak_o;
-        lastPeriod = period; convertPeriod(period, flushTM);
     }
 
     if (period != 0) // process & flush data for last period
     {
-        convertPeriod(period, flushTM);
         fillSmes(connection, statSme, period);
         fillRoutes(connection, statRoute, period);
+
+        smsc_log_debug(logger, "Dumping period %ld", period);
         StatisticsManager::flush(flushTM, storage, stat, statSme, statRoute);
     }
     
