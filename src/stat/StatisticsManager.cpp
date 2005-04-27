@@ -494,7 +494,7 @@ void StatisticsManager::flushCounters(short index)
                    flushTM.tm_hour, flushTM.tm_min, flushTM.tm_sec);
     try
     {
-        TmpBuf<uint8_t, 4096> buff(4096);
+        TmpBuf<uint8_t, 64096> buff(64096);
 
         // General statistics dump
         uint8_t value8 = 0;
