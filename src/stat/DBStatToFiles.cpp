@@ -67,6 +67,7 @@ const char* ERR_RS_MESSAGE   = "Failed to get %s result set";
 void convertPeriod(uint32_t period, tm& flushTM)
 {
     //period format = YYYYMMDDHH (by local time)
+    flushTM.tm_isdst = -1;
     flushTM.tm_year = (period/1000000) - 1900;
     flushTM.tm_mon  = (period%1000000)/10000 - 1;
     flushTM.tm_mday = (period%10000)/100;
@@ -205,6 +206,20 @@ int main(void)
     Logger::Init();
     logger = Logger::getInstance("smsc.stat.DBStatToFiles");
     
+    /* daylight check
+    tm flushTM1;
+    convertPeriod(2004022515, flushTM1);
+    printf("1: %s", asctime(&flushTM1));
+    convertPeriod(2004062515, flushTM1);
+    printf("2: %s", asctime(&flushTM1));
+    tm flushTM2;
+    convertPeriod(2004062515, flushTM2);
+    printf("4: %s", asctime(&flushTM2));
+    convertPeriod(2004022515, flushTM2);
+    printf("3: %s", asctime(&flushTM2));
+    return 0;
+    */
+
     const char* OCI_DS_FACTORY_IDENTITY = "OCI";
     DataSourceLoader::loadupDataSourceFactory("../db/oci/libdb_oci.so", OCI_DS_FACTORY_IDENTITY);
     DataSource* ds = DataSourceFactory::getDataSource(OCI_DS_FACTORY_IDENTITY);
