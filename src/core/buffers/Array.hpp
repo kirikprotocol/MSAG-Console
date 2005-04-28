@@ -33,7 +33,7 @@ protected:
 
   inline void CallDestructor(T* obj)
   {
-    obj->~T();
+    if( obj != 0 ) obj->~T();
   }
 
   inline T* Ptr(int index=0)

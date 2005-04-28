@@ -98,7 +98,7 @@ void SmppInputThread::removeSocket(Socket *sock)
 void SmppInputThread::killSocket(int idx)
 {
   SmppSocket *ss=sockets[idx];
-  if( ss != null ) {
+  if( ss != 0 ) {
     Socket *s=ss->getSocket();
     mul.remove(s);
     sockets.Delete(idx);
@@ -110,6 +110,8 @@ void SmppInputThread::killSocket(int idx)
     mon.Lock();
     int rcnt=m->removeSocket(s);
     delete ss;
+  } else {
+    sockets.Delete(idx);
   }
 }
 
@@ -976,16 +978,20 @@ void SmppOutputThread::removeSocket(Socket *sock)
 void SmppOutputThread::killSocket(int idx)
 {
   SmppSocket *ss=sockets[idx];
-  Socket *s=ss->getSocket();
-  sockets.Delete(idx);
-  trace2("removing socket %p by output thread",s);
-  SmppSocketsManager *m=
-    (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
-  mon.Unlock(); // this method is always called only with locked mon.
-  KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
-  mon.Lock();
-  int rcnt=m->removeSocket(s);
-  delete ss;
+  if( ss != 0 ) {
+    Socket *s=ss->getSocket();
+    sockets.Delete(idx);
+    trace2("removing socket %p by output thread",s);
+    SmppSocketsManager *m=
+      (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
+    mon.Unlock(); // this method is always called only with locked mon.
+    KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
+    mon.Lock();
+    int rcnt=m->removeSocket(s);
+    delete ss;
+  } else {
+    sockets.Delete(idx);
+  }
 }
 
 int SmppOutputThread::Execute()
