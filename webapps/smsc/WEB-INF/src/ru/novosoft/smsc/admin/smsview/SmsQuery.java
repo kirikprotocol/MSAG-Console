@@ -110,11 +110,11 @@ public class SmsQuery
       } catch (AdminException e) {
         logger.warn("Invalid address specified: "+address);
         abonentAddressMask = null;
-        isFilterAbonentAddress = true;
+        isFilterAbonentAddress = false;
       }
     } else {
       abonentAddressMask = null;
-      isFilterAbonentAddress = true;
+      isFilterAbonentAddress = false;
 
     }
   }
@@ -130,14 +130,15 @@ public class SmsQuery
     if( isStringHaveValue(address) ) {
       try {
         fromAddressMask = new Mask(address);
+        isFilterFromAddress = true;
       } catch (AdminException e) {
         logger.warn("Invalid address specified: "+address);
         fromAddressMask = null;
-        isFilterFromAddress = true;
+        isFilterFromAddress = false;
       }
     } else {
       fromAddressMask = null;
-      isFilterFromAddress = true;
+      isFilterFromAddress = false;
     }
   }
 
@@ -152,14 +153,15 @@ public class SmsQuery
     if( isStringHaveValue(address) ) {
       try {
         toAddressMask = new Mask(address);
+        isFilterToAddress = true;
       } catch (AdminException e) {
         logger.warn("Invalid address specified: "+address);
         toAddressMask = null;
-        isFilterToAddress = true;
+        isFilterToAddress = false;
       }
     } else {
       toAddressMask = null;
-      isFilterToAddress = true;
+      isFilterToAddress = false;
     }
   }
 

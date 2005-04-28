@@ -108,9 +108,9 @@ public class SmsOperativeSource extends SmsSource
             if (result < 0) throw new EOFException("Protocol error. Failed to read " + msgSize1 + " bytes");
             read += result;
           }
-          InputStream bis = new ByteArrayInputStream(message);
-          int msgSize2 = (int) Message.readUInt32(bis);
+          int msgSize2 = (int) Message.readUInt32(input);
           if (msgSize1 != msgSize2) throw new IOException("Protocol error sz1=" + msgSize1 + " sz2=" + msgSize2);
+          InputStream bis = new ByteArrayInputStream(message, 0, msgSize1);
           long msgId=Message.readInt64(bis);
           Long lmsgId = new Long(msgId);
           if( msgs.get(lmsgId) != null ) {
@@ -122,7 +122,7 @@ public class SmsOperativeSource extends SmsSource
               msgs.put(lmsgId, resp.getSms());
               smsCount++;
             }
-          } else if( !msgIds.contains(lmsgId) ) {
+          } else if( calcExactCount && !msgIds.contains(lmsgId) ) {
             if( resp.receive(bis, query, message, msgId, true) ) {
               msgIds.add( lmsgId );
               smsCount++;
