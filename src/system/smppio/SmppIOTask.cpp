@@ -186,7 +186,16 @@ int SmppInputThread::Execute()
           char smb[6]={evt[0]?'Y':'N',evt[1]?'Y':'N',evt[2]?'Y':'N',evt[3]?'Y':'N',evt[4]?'Y':'N',0};
           info2(log,"SmppInputThread:: killing socket %p by request, timeout or invactivity timeout:%s",ss,smb);
           s->Close();
-          if(!s->getData(SOCKET_SLOT_KILL))outTask->removeSocket(s);
+          if(!s->getData(SOCKET_SLOT_KILL))
+          {
+            mon.Unlock();
+            try{
+              outTask->removeSocket(s);
+            }catch(...)
+            {
+            }
+            mon.Lock();
+          }
           killSocket(i);
           i--;
           continue;
@@ -262,7 +271,13 @@ int SmppInputThread::Execute()
           {
             if(sockets[j]->getSocket()==error[i])
             {
-              outTask->removeSocket(error[i]);
+              mon.Unlock();
+              try{
+                outTask->removeSocket(error[i]);
+              }catch(...)
+              {
+              }
+              mon.Lock();
               killSocket(j);
               break;
             }
@@ -280,7 +295,13 @@ int SmppInputThread::Execute()
             {
               if(sockets[i]==ss)
               {
-                outTask->removeSocket(ss->getSocket());
+                mon.Unlock();
+                try{
+                  outTask->removeSocket(ss->getSocket());
+                }catch(...)
+                {
+                }
+                mon.Lock();
                 killSocket(i);
                 break;
               }
@@ -295,7 +316,13 @@ int SmppInputThread::Execute()
               {
                 if(sockets[i]==ss)
                 {
-                  outTask->removeSocket(ss->getSocket());
+                  mon.Unlock();
+                  try{
+                    outTask->removeSocket(ss->getSocket());
+                  }catch(...)
+                  {
+                  }
+                  mon.Lock();
                   killSocket(i);
                   break;
                 }
@@ -398,7 +425,7 @@ int SmppInputThread::Execute()
                       if(!(si.bindMode==smeRX || si.bindMode==smeTRX))
                       {
                         resppdu.get_header().
-                          set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                          set_commandStatus(SmppStatusSet::ESME_RALYBND);
                         err=true;
                       }
                       if(!err)
@@ -408,7 +435,7 @@ int SmppInputThread::Execute()
                           if(proxy->getBindMode()!=proxyTransmitter)
                           {
                             resppdu.get_header().
-                              set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                              set_commandStatus(SmppStatusSet::ESME_RALYBND);
                             err=true;
                           }else
                           {
@@ -432,7 +459,7 @@ int SmppInputThread::Execute()
                       if(!(si.bindMode==smeTX || si.bindMode==smeTRX))
                       {
                         resppdu.get_header().
-                          set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                          set_commandStatus(SmppStatusSet::ESME_RALYBND);
                         err=true;
                       }
                       if(!err)
@@ -442,7 +469,7 @@ int SmppInputThread::Execute()
                           if(proxy->getBindMode()!=proxyReceiver)
                           {
                             resppdu.get_header().
-                              set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                              set_commandStatus(SmppStatusSet::ESME_RALYBND);
                             err=true;
                           }else
                           {
@@ -466,14 +493,14 @@ int SmppInputThread::Execute()
                       if(si.bindMode!=smeTRX)
                       {
                         resppdu.get_header().
-                          set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                          set_commandStatus(SmppStatusSet::ESME_RALYBND);
                         err=true;
                       }
                       if(rebindproxy)
                       {
                         err=true;
                         resppdu.get_header().
-                          set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                          set_commandStatus(SmppStatusSet::ESME_RALYBND);
                       }
                       if(!err)
                       {
@@ -613,7 +640,13 @@ int SmppInputThread::Execute()
                   {
                     if(sockets[i]==ss)
                     {
-                      outTask->removeSocket(ss->getSocket());
+                      mon.Unlock();
+                      try{
+                        outTask->removeSocket(ss->getSocket());
+                      }catch(...)
+                      {
+                      }
+                      mon.Lock();
                       killSocket(i);
                       break;
                     }
@@ -989,7 +1022,13 @@ int SmppOutputThread::Execute()
         if(s->getData(SOCKET_SLOT_KILL))
         {
           trace("try to remove socket from inTask");
-          inTask->removeSocket(s);
+          mon.Unlock();
+          try{
+            inTask->removeSocket(s);
+          }catch(...)
+          {
+          }
+          mon.Lock();
           trace("remove ok. Killing socket");
           killSocket(i);
           i--;
@@ -1125,9 +1164,13 @@ int SmppOutputThread::Execute()
           }
         }
         mon.Unlock();
-        for(int j=0;j<tokill.Count();j++)
+        try{
+          for(int j=0;j<tokill.Count();j++)
+          {
+            inTask->removeSocket(tokill[j]);
+          }
+        }catch(...)
         {
-          inTask->removeSocket(tokill[j]);
         }
         tokill.Empty();
       } // if ready
