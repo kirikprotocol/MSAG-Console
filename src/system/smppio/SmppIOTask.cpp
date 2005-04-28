@@ -98,17 +98,19 @@ void SmppInputThread::removeSocket(Socket *sock)
 void SmppInputThread::killSocket(int idx)
 {
   SmppSocket *ss=sockets[idx];
-  Socket *s=ss->getSocket();
-  mul.remove(s);
-  sockets.Delete(idx);
-  SmppSocketsManager *m=
-    (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
-  trace2("removing socket %p by input thread",s);
-  mon.Unlock();
-  KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
-  mon.Lock();
-  int rcnt=m->removeSocket(s);
-  delete ss;
+  if( ss != null ) {
+    Socket *s=ss->getSocket();
+    mul.remove(s);
+    sockets.Delete(idx);
+    SmppSocketsManager *m=
+      (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
+    trace2("removing socket %p by input thread",s);
+    mon.Unlock();
+    KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
+    mon.Lock();
+    int rcnt=m->removeSocket(s);
+    delete ss;
+  }
 }
 
 
