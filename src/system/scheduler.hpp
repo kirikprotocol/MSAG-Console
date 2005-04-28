@@ -576,7 +576,9 @@ public:
         virtual void createFinalizedSms(SMSId id, SMS& sms)
                 throw(StorageException, DuplicateMessageException)
         {
-          debug2(log,"createFinalizedSms: msgId=%lld",id);
+          sms.lastTime = time(NULL);
+          if (sms.needArchivate) archiveStorage.createRecord(id, sms);
+          if (sms.billingRecord) billingStorage.createRecord(id, sms);
         }
 
         virtual void changeSmsConcatSequenceNumber(SMSId id, int8_t inc=1)
