@@ -14,12 +14,12 @@ import ru.novosoft.smsc.admin.provider.Provider;
 public class RouteIdCountersSet extends ExtendedCountersSet implements Comparable
 {
   public String routeid;
-  public long providerId;
-  public long categoryId;
-  public String providerName;
-  public String categoryName;
-  public Provider provider;
-  public Category category;
+  public long providerId = -1;
+  public long categoryId = -1;
+  public String providerName = "";
+  public String categoryName = "";
+  public Provider provider = new Provider(-1, "");
+  public Category category = new Category(-1, "");
 
   public RouteIdCountersSet(String routeid)
   {
@@ -51,4 +51,12 @@ public class RouteIdCountersSet extends ExtendedCountersSet implements Comparabl
     if (o == null || routeid == null || !(o instanceof RouteIdCountersSet)) return -1;
     return routeid.compareTo(((RouteIdCountersSet) o).routeid);
   }
+
+    public void setProvider(Provider provider) {
+        this.provider = provider;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
 }

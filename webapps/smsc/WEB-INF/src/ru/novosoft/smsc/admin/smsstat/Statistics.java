@@ -12,82 +12,42 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-public class Statistics
+public class Statistics extends ExtendedCountersSet
 {
-  private ExtendedCountersSet total = new ExtendedCountersSet();
-  private ArrayList byDates = new ArrayList(100); // contains DateCountersSet
-  private ArrayList bySmeId = new ArrayList(100); // contains SmeIdCountersSet
-  private ArrayList byRouteId = new ArrayList(100); // contains RouteIdCountersSet
+    private ArrayList byDates = new ArrayList(100); // contains DateCountersSet
+    private ArrayList bySmeId = new ArrayList(100); // contains SmeIdCountersSet
+    private ArrayList byRouteId = new ArrayList(100); // contains RouteIdCountersSet
 
-  public CountersSet getTotal()
-  {
-    return total;
-  }
+    public CountersSet getTotal() {
+        return this;
+    }
 
-  public void addDateStat(DateCountersSet set)
-  {
-    byDates.add(set);
-    total.increment(set);
-  }
-    public void mergeDateStat(DateCountersSet set)
-  {
-    byDates.add(set);
-    total.increment(set);
-  }
-  public Collection getDateStat()
-  {
-    return byDates;
-  }
+    public Collection getDateStat() // index.jsp
+    {
+      return byDates;
+    }
+    public Collection getErrorStat() // index.jsp
+    {
+      return this.getErrors();
+    }
 
-  public void addErrorStat(ErrorCounterSet set)
-  {
-    total.addError(set);
-  }
-   public void putErrorStat(ErrorCounterSet set)
-  {
-    total.putErr(set.errcode,set);
-  }
-    public void addAllErrors(Collection err)
-  {
-    total.addAllErrors(err);
-  }
-  public Collection getErrorStat()
-  {
-    return total.getErrors();
-  }
-   public ErrorCounterSet getErrStat(int errcode)
-  {
-    return total.getErr(errcode);
-  }
-  public void addSmeIdStat(SmeIdCountersSet set)
-  {
-    bySmeId.add(set);
-  }
+    public void addSmeIdCollection(Collection col)
+    {
+      bySmeId.addAll(col);
+    }
+    public Collection getSmeIdStat() // index.jsp
+    {
+      Collections.sort(bySmeId);
+      return bySmeId;
+    }
 
-  public void addSmeIdCollection(Collection col)
-  {
-    bySmeId.addAll(col);
-  }
-
-  public Collection getSmeIdStat()
-  {
-    Collections.sort(bySmeId);
-    return bySmeId;
-  }
-
-  public void addRouteIdStat(RouteIdCountersSet set)
-  {
-    byRouteId.add(set);
-  }
-
-  public void addRouteIdCollection(Collection col)
-  {
-    byRouteId.addAll(col);
-  }
-
-  public Collection getRouteIdStat()
-  {
-    Collections.sort(byRouteId);
-    return byRouteId;
-  }
+    public void addRouteIdCollection(Collection col)
+    {
+      byRouteId.addAll(col);
+    }
+    public Collection getRouteIdStat() // index.jsp
+    {
+      Collections.sort(byRouteId);
+      return byRouteId;
+    }
 }

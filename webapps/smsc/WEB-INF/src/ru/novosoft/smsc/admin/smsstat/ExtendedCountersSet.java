@@ -13,37 +13,32 @@ import java.util.HashMap;
  */
 public class ExtendedCountersSet extends CountersSet
 {
-  private ArrayList errors = new ArrayList();
   private HashMap err=new HashMap();
-  public ExtendedCountersSet()
-  {
-  }
 
+  public ExtendedCountersSet() {}
   public ExtendedCountersSet(long accepted, long rejected, long delivered,
                              long failed, long rescheduled, long temporal, long i, long o)
   {
     super(accepted, rejected, delivered, failed, rescheduled, temporal, i, o);
   }
 
-  public void addError(ErrorCounterSet set)
+  public void incError(int errcode, long count)
   {
-    errors.add(set);
+      Integer key = new Integer(errcode);
+      ErrorCounterSet set = (ErrorCounterSet)err.get(key);
+      if (set == null) err.put(key, new ErrorCounterSet(errcode, count));
+      else set.increment(count);
   }
-  public void putErr(int errcode ,ErrorCounterSet set)
-    {
-      err.put(new Integer(errcode),set);
-    }
-
-  public void addAllErrors(Collection err)
+  public void putErr(int errcode, ErrorCounterSet set)
   {
-    errors.addAll(err);
+    err.put(new Integer(errcode), set);
   }
 
   public Collection getErrors()
   {
     return err.values();
   }
-    public ErrorCounterSet getErr(int errcode)
+  public ErrorCounterSet getErr(int errcode)
   {
     return (ErrorCounterSet)err.get(new Integer(errcode));
   }

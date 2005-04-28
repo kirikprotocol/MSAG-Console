@@ -1,12 +1,12 @@
 package ru.novosoft.smsc.admin.smsstat;
 
-import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.route.Route;
 import ru.novosoft.smsc.admin.category.CategoryManager;
+import ru.novosoft.smsc.admin.category.Category;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
-import ru.novosoft.smsc.admin.smsview.SmsSet;
-import ru.novosoft.smsc.admin.smsview.SmsQuery;
+import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.admin.smsview.DateConvertor;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
@@ -15,7 +15,6 @@ import ru.novosoft.smsc.util.config.Config;
 
 import java.io.*;
 import java.util.*;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
@@ -28,204 +27,339 @@ import java.text.ParseException;
  */
 public class SmsStat
 {
-  Category logger = Category.getInstance(SmsStat.class);
-  private String statstorePath;
-  private static final String SECTION_NAME_MessageStore = "MessageStore";
-  private static final String PARAM_NAME_statisticsDir = "statisticsDir";
-  private String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-  private String DATE_DIR_FILE_FORMAT = "yyyy-MM-dd";
-  private String DATE_DIR_INT_FORMAT = "yyyyMM";
-  private String DATE_DIR_FORMAT = "yyyy-MM";
-  private static final String PERIOD_DATE_FORMAT = "yyyyMMdd";
-  private TreeMap selectedFiles=new TreeMap();
-  SimpleDateFormat dateFormat=new SimpleDateFormat(DATE_FORMAT);
-  private String dirPrefics = "/";//Solaris
-  private Statistics stat = null;
-  private Smsc smsc = null;
-  protected RouteSubjectManager routeSubjectManager = null;
-  protected ProviderManager providerManager = null;
-  protected CategoryManager categoryManager = null;
+    org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(SmsStat.class);
 
-  public void init(SMSCAppContext appContext) throws AdminException
-  {
-    Smsc smsc = appContext.getSmsc();
-    String configPath = smsc.getConfigFolder().getAbsolutePath();
-    //dirPrefics = "/";
-    int len = configPath.lastIndexOf(dirPrefics) + 1; //Solaris
-    if (len < 1) {
-      dirPrefics = "\\";//Windows
-      //  len = configPath.lastIndexOf(dirPrefics) + 1;//Windows
-    }
-    //   String absolutePath = configPath.substring(0, len);
-    Config config = smsc.getSmscConfig();
+    private final static String PARAM_NAME_STAT_DIR = "MessageStore.statisticsDir";
 
-    try {
-      statstorePath = config.getString(SECTION_NAME_MessageStore + '.' + PARAM_NAME_statisticsDir);
-    } catch (Config.ParamNotFoundException e) {
-      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-    } catch (Config.WrongParamTypeException e) {
-      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-    }
-    /*  if (statstorePath.indexOf(dirPrefics) != 0)
-    statstorePath = absolutePath + statstorePath;
-    */
-  }
-  public TreeMap getStatQueryDirs(StatQuery query) throws AdminException
-  {
-    dateFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-    Date fromDate =new Date();
-    Date tillDate =new Date();
-    TreeMap selected=new TreeMap();
-    if (query.isTillDateEnabled()) {
-      tillDate=DateConvertor.convertLocalToGMT(query.getTillDate());
-    }
-    if (query.isFromDateEnabled()) {
-      fromDate =  DateConvertor.convertLocalToGMT(query.getFromDate());
-    }
-    File filePath=new File(statstorePath);
-    String[] dirNames=filePath.list();
-    if (dirNames==null || dirNames.length==0) throw new AdminException("No statistics directories");
-    for (int i = 0; i < dirNames.length; i++) {
-      String dirName = dirNames[i];
-      File[] dirFiles=(new File(statstorePath+dirPrefics+dirName)).listFiles();
-      if (dirFiles==null || dirFiles.length==0) continue;
-      dateFormat.applyPattern(DATE_DIR_FORMAT);
-      try {
-        Date dirDate=dateFormat.parse(dirName);
-        dateFormat.applyPattern(DATE_DIR_INT_FORMAT);
-        String dirDate1=dateFormat.format(dirDate);
-        int dirDate2=Integer.parseInt(dirDate1);
-        String fromDate1=dateFormat.format(fromDate);
-        int fromDate2=Integer.parseInt(fromDate1);
-        String tillDate1=dateFormat.format(tillDate);
-        int tillDate2=Integer.parseInt(tillDate1);
-        if (query.isFromDateEnabled() && fromDate2>dirDate2+1) continue;
-        if (query.isTillDateEnabled() && tillDate2<dirDate2+1) continue;
-        dateFormat.applyPattern(DATE_DIR_FILE_FORMAT);
-        for (int j = 0; j < dirFiles.length; j++) {
-          String fileName=dirFiles[j].getName();
-          Date fileDate=dateFormat.parse(dirName+"-"+fileName.substring(0,2));
-          if (query.isFromDateEnabled() && fromDate.getTime()>fileDate.getTime()+Constants.Day) continue;
-          if (query.isTillDateEnabled() && tillDate.getTime()<fileDate.getTime()+Constants.Day) continue;
-          selected.put(fileDate,statstorePath+dirPrefics+dirName+dirPrefics+fileName);
+    private final static String DIR_SEPARATOR = "/";
+    private final static String DATE_DIR_FORMAT = "yyyy-MM";
+    private final static String DATE_DIR_FILE_FORMAT = DATE_DIR_FORMAT + DIR_SEPARATOR + "dd";
+    private final static String DATE_FILE_EXTENSION = ".rts";
+
+    private String statstorePath;
+
+    Calendar calendar = new GregorianCalendar();
+    //SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
+    SimpleDateFormat dateDirFormat = new SimpleDateFormat(DATE_DIR_FORMAT);
+    SimpleDateFormat dateDirFileFormat = new SimpleDateFormat(DATE_DIR_FILE_FORMAT);
+    Date fromQueryDate = null; // TODO: move to getStatistics ???
+    Date tillQueryDate = null;
+
+    private Statistics stat = null;
+    private Smsc smsc = null;
+
+    protected RouteSubjectManager routeSubjectManager = null;
+    protected ProviderManager providerManager = null;
+    protected CategoryManager categoryManager = null;
+
+    public void init(SMSCAppContext appContext) throws AdminException
+    {
+        Smsc smsc = appContext.getSmsc();
+        Config config = smsc.getSmscConfig();
+
+        try { statstorePath = config.getString(PARAM_NAME_STAT_DIR); }
+        catch (Exception e) {
+            throw new AdminException("Failed to obtain statistics dir. Details: "+e.getMessage());
         }
-      } catch (ParseException e) {
-        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        throw new AdminException(e.getMessage());
-      }
+
+        dateDirFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        dateDirFileFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
     }
-    return selected;
-  }
-  public InputStream openStream(String path) throws AdminException
-  {
-    InputStream in = null;
-    try {
-      return new FileInputStream(path);
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-      throw new AdminException(e.getMessage());
+
+    private TreeMap getStatQueryDirs() throws AdminException
+    {
+        File filePath=new File(statstorePath);
+        String[] dirNames=filePath.list();
+        if (dirNames==null || dirNames.length==0)
+            throw new AdminException("No statistics directories");
+
+        TreeMap selected = new TreeMap();
+        for (int i = 0; i<dirNames.length; i++)
+        {
+            String dirName = dirNames[i];
+            if (dirName == null || dirName.length() <= 0) continue;
+            String currentDir = statstorePath + DIR_SEPARATOR + dirName;
+
+            File[] dirFiles = (new File(currentDir)).listFiles();
+            if (dirFiles==null || dirFiles.length==0) continue;
+
+            Date dirDate = null;
+            try { dirDate = dateDirFormat.parse(dirName); }
+            catch(ParseException exc) { continue; }
+            calendar.setTime(dirDate); calendar.add(Calendar.MONTH, 1);
+            Date fDate = calendar.getTime();
+            if (fromQueryDate != null && fDate.getTime() < fromQueryDate.getTime()) continue;
+            if (tillQueryDate != null && fDate.getTime() > tillQueryDate.getTime()) continue;
+
+            for (int j = 0; j < dirFiles.length; j++)
+            {
+                String fileName = dirFiles[j].getName();
+                if (fileName == null || fileName.length() <= 0 ||
+                        !fileName.toLowerCase().endsWith(DATE_FILE_EXTENSION)) continue;
+
+                String dirFileName = dirName+DIR_SEPARATOR+fileName;
+                Date fileDate = null;
+                try { fileDate = dateDirFileFormat.parse(dirFileName); }
+                catch (ParseException exc) { continue; }
+                if (fromQueryDate != null && fileDate.getTime()+Constants.Day < fromQueryDate.getTime()) continue;
+                if (tillQueryDate != null && fileDate.getTime()+Constants.Day > tillQueryDate.getTime()) continue;
+
+                selected.put(fileDate, statstorePath + DIR_SEPARATOR + dirFileName);
+            }
+        }
+        return selected;
     }
-  }
-  public void closeStream(InputStream input) throws AdminException
-  {
-    try {
-      if (input != null) input.close();
-      input = null;
-    } catch (Exception exc) {
+
+    private void initQueryPeriod(StatQuery query)
+    {
+        if (query.isFromDateEnabled()) fromQueryDate = query.getFromDate();
+        if (query.isTillDateEnabled()) tillQueryDate = query.getTillDate();
+        if (fromQueryDate != null) tillQueryDate = DateConvertor.convertLocalToGMT(query.getTillDate());
+        if (tillQueryDate != null) fromQueryDate = DateConvertor.convertLocalToGMT(query.getFromDate());
     }
-  }
-  public Statistics getStatistics(StatQuery query) throws AdminException
-  {
-    selectedFiles=getStatQueryDirs(query);
-    stat = new Statistics();
-    DateCountersSet dateCounters = null; int nextDate;
-    HashMap countersForSme = new HashMap();
-    HashMap countersForRoute = new HashMap();
-    HashSet warnRoutId=new HashSet();
-    HashMap warnProvId=new HashMap();
-    HashMap warnCatId=new HashMap();
-    SimpleDateFormat formatter = new SimpleDateFormat(PERIOD_DATE_FORMAT);
-    formatter.setTimeZone(TimeZone.getDefault());
-    for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext();) {
-      Date dateFile = (Date) iterator.next();
-      String path=(String)selectedFiles.get(dateFile);
-      InputStream input = null;
-      try {
-        input = new FileInputStream(path);
-        StatFileReader record;
-        String dateFileLOCAL=formatter.format(dateFile);
-        int dateFileInt=Integer.parseInt(dateFileLOCAL);
-        if (dateCounters != null && dateCounters.getDateFile()!=dateFileInt) {
-          stat.addDateStat(dateCounters);  dateCounters = null;}
-        String FileName = StatFileReader.readString(input, 9);
-        if (FileName == null || !FileName.equals("SMSC.STAT"))
-          throw new AdminException("unsupported header of file (support only SMSC.STAT file )");
-        int version = (int) StatFileReader.readUInt16(input);
-        record = new StatFileReader(routeSubjectManager,providerManager,
-                categoryManager, warnRoutId,warnProvId,warnCatId,stat,
-                countersForSme,countersForRoute,dateCounters);
-        stat=record.receiveStat(input,dateFile);
-        dateCounters=record.getDateCounters();
-        countersForSme=record.getCountersForSme();
-        countersForRoute=record.getCountersForRoute();
-        warnRoutId=record.getWarnRoutId();
-        warnProvId=record.getWarnProvId();
-        warnCatId=record.getWarnCatId();
-        if (!iterator.hasNext()) stat.addDateStat(dateCounters);
-      } catch (IOException e) {
-        throw new AdminException(e.getMessage());
-      }
-      finally {
-        try { if (input != null) input.close(); } catch(Throwable th) { th.printStackTrace(); }
-      }
-    } // for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext();)
-    Collection countersSme = countersForSme.values();
-    if (countersSme != null ) stat.addSmeIdCollection(countersSme);
-    Collection countersRoute = countersForRoute.values();
-    if (countersRoute != null ) stat.addRouteIdCollection(countersRoute);
+
+    private void scanCounters(CountersSet set, InputStream is) throws IOException
+    {
+        int accepted = (int)readUInt32(is);
+        int rejected = (int)readUInt32(is);
+        int delivered = (int)readUInt32(is);
+        int failed  = (int)readUInt32(is);
+        int rescheduled = (int)readUInt32(is);
+        int temporal = (int)readUInt32(is);
+        int peak_i = (int)readUInt32(is);
+        int peak_o = (int)readUInt32(is);
+        set.increment(accepted, rejected, delivered, failed, rescheduled,
+                      temporal, peak_i, peak_o);
+    }
+    private void scanErrors(ExtendedCountersSet set, InputStream is) throws IOException
+    {
+        int counter = (int)readUInt32(is);
+        while ( counter-- > 0)
+        {
+          int errcode = (int)readUInt32(is);
+          int count = (int)readUInt32(is);
+          set.incError(errcode, count);
+        }
+    }
+    private void scanSmes(HashMap map, InputStream is) throws IOException
+    {
+        int counter = (int)readUInt32(is);
+        while ( counter-- > 0)
+        {
+            int sme_id_len = (int)readUInt8(is);
+            String smeId = readString(is, sme_id_len);
+            SmeIdCountersSet set = (SmeIdCountersSet)map.get(smeId);
+            if (set == null) {
+                set = new SmeIdCountersSet(smeId);
+                map.put(smeId, set);
+            }
+            scanCounters(set, is);
+            scanErrors(set, is);
+        }
+    }
+
+    private HashSet warnRoutId = null;
+    private HashMap warnProvId = null;
+    private HashMap warnCatId  = null;
+
+    private void scanRoutes(HashMap map, InputStream is) throws IOException
+    {
+        int counter = (int)readUInt32(is);
+        while ( counter-- > 0)
+        {
+            int route_id_len = (int)readUInt8(is);
+            String routeId = readString(is, route_id_len);
+
+            long providerId = readInt64(is);
+            long categoryId = readInt64(is);
+            /* TODO: !!!
+            Provider provider = null; Category category = null;
+            final Route r =  routeSubjectManager.getRoutes().get(routeId);
+            if (r == null) {
+              warnRoutId.add(routeId);// logger.warn("Route '"+routeId+"' is undefined");
+              if (categoryId != -1) category = categoryManager.getCategory(new Long(categoryId));
+              if (providerId != -1) provider = providerManager.getProvider(new Long(providerId));
+            }
+            else {
+              if (providerId == -1) provider = null;
+              else if (r.getProviderId() != providerId) {
+                warnProvId.put(routeId,new Long(providerId));//logger.warn("ProviderId='"+providerId+"' doesn't match for route '"+routeId+"'  ");
+                provider = new Provider(providerId, "undefined ("+providerId+")");
+              }
+              else provider = providerManager.getProvider(new Long(providerId));
+              if (categoryId == -1) category = null;
+              else if (r.getCategoryId() != categoryId) {
+                warnCatId.put(routeId,new Long(categoryId));//logger.warn("CategoryId='"+providerId+"' doesn't match for route '"+routeId+"'  ");
+                category = new Category(categoryId, "undefined ("+categoryId+")");
+              }
+              else category = categoryManager.getCategory(new Long(categoryId));
+            }
+            if (provider == null) provider = new Provider(-1, "");
+            if (category == null) category = new Category(-1, "");*/
+
+            RouteIdCountersSet set = (RouteIdCountersSet)map.get(routeId);
+            if (set == null) {
+                set = new RouteIdCountersSet(routeId);
+                map.put(routeId, set);
+            }
+            // TODO: add provider & category logic
+            //set.setProvider(provider);
+            //set.setCategory(category);
+
+            scanCounters(set, is);
+            scanErrors(set, is);
+        }
+    }
+
+    public Statistics getStatistics(StatQuery query) throws AdminException
+    {
+        stat = new Statistics();
+
+        warnRoutId = new HashSet();
+        warnProvId = new HashMap();
+        warnCatId  = new HashMap();
+
+        initQueryPeriod(query);
+        TreeMap selectedFiles = getStatQueryDirs();
+        if (selectedFiles == null || selectedFiles.size() <= 0) return stat;
+
+        TreeMap statByHours = new TreeMap(); // to add lastHourCounter to it
+        CountersSet lastHourCounter = new CountersSet();
+        ExtendedCountersSet totalCounter = new ExtendedCountersSet();
+        HashMap countersForSme = new HashMap(); // contains SmeIdCountersSet
+        HashMap countersForRoute = new HashMap(); // contains RouteIdCountersSet
+
+        Date lastDate = null;
+        for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext();)
+        {
+            Date fileDate = (Date)iterator.next(); // GMT
+            String path = (String)selectedFiles.get(fileDate);
+            InputStream input = null;
+            try
+            {
+                input = new FileInputStream(path);
+                String fileStamp = readString(input, 9);
+                if (fileStamp == null || !fileStamp.equals("SMSC.STAT"))
+                    throw new AdminException("unsupported header of file (support only SMSC.STAT file )");
+                readUInt16(input); // read version for support reasons
+
+                while (true) // iterate file records (by minutes)
+                {
+                    try
+                    {
+                        int rs1 = (int)readUInt32(input);
+                        int hour = (int)readUInt8(input); int min = (int)readUInt8(input);
+                        calendar.setTime(fileDate);
+                        calendar.add(Calendar.HOUR, hour); calendar.add(Calendar.MINUTE, min);
+                        Date curDate = calendar.getTime();
+
+                        boolean skipRecord =
+                         ((fromQueryDate != null && curDate.getTime() < fromQueryDate.getTime()) ||
+                          (tillQueryDate != null && curDate.getTime() > tillQueryDate.getTime()));
+                        if (skipRecord || lastDate == null ||
+                           (curDate.getTime()-lastDate.getTime() >= Constants.Hour) )
+                        {
+                            lastDate = curDate;
+                            statByHours.put(lastDate, lastHourCounter);
+                            lastHourCounter.reset();
+                        }
+
+                        // TODO: records skipping !!!
+                        if (skipRecord) readString(input, rs1 - 2);
+                        else {
+                            scanCounters(lastHourCounter, input);
+                            scanErrors(stat, input);
+
+                            scanSmes(countersForSme, input);
+                            scanRoutes(countersForRoute, input);
+                        }
+
+                        int rs2 = (int)readUInt32(input);
+                        if (rs1 != rs2)
+                            throw new IOException("Invalid file format rs1="+rs1+", rs2="+rs2);
+                    }
+                    catch (EOFException exc) { break; }
+                }
+
+            } catch (IOException e) {
+                throw new AdminException(e.getMessage());
+            }
+            finally {
+                try { if (input != null) input.close(); } catch(Throwable th) { th.printStackTrace(); }
+            }
+        } // for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext();)
 
 
-    return stat;
-  }
+        DateCountersSet dateCounters = null;
+        Calendar localCaledar = new GregorianCalendar(TimeZone.getDefault());
+        for (Iterator it = statByHours.keySet().iterator(); it.hasNext();)
+        {
+            Date fileDate = (Date)it.next();
+            CountersSet hour = (CountersSet)statByHours.get(fileDate);
+            localCaledar.setTime(fileDate);
+            /*localCaledar.
 
-  public CategoryManager getCategoryManager()
-  {
-    return categoryManager;
-  }
+            if (dateCounters == null || ) {
+                dateCounters = new DateCountersSet(fileDate);
+            }*/
+        }
 
-  public void setCategoryManager(CategoryManager categoryManager)
-  {
-    this.categoryManager = categoryManager;
-  }
+        Collection countersSme = countersForSme.values();
+        if (countersSme != null ) stat.addSmeIdCollection(countersSme);
+        Collection countersRoute = countersForRoute.values();
+        if (countersRoute != null ) stat.addRouteIdCollection(countersRoute);
 
-  public ProviderManager getProviderManager()
-  {
-    return providerManager;
-  }
+        // TODO: warnings
+        return stat;
+    }
 
-  public void setProviderManager(ProviderManager providerManager)
-  {
-    this.providerManager = providerManager;
-  }
+    public static int readUInt8(InputStream is) throws IOException
+    {
+        int b = is.read();
+        if (b == -1) throw new EOFException();
+        return b;
+    }
+    public static int readUInt16(InputStream is) throws IOException
+    {
+        return (readUInt8(is) << 8 | readUInt8(is));
+    }
+    public static long readUInt32(InputStream is) throws IOException
+    {
+        return ((long) readUInt8(is) << 24) | ((long) readUInt8(is) << 16) |
+                ((long) readUInt8(is) << 8) | ((long) readUInt8(is));
+    }
+    public static long readInt64(InputStream is) throws IOException
+    {
+        return (readUInt32(is) << 32) | readUInt32(is);
+    }
+    public static String readString(InputStream is, int size) throws IOException
+    {
+        if (size <= 0) return "";
+        byte buff[] = new byte[size];
+        int pos = 0;
+        int cnt = 0;
+        while (pos < size) {
+            cnt = is.read(buff, pos, size - pos);
+            if (cnt == -1) throw new EOFException();
+            pos += cnt;
+        }
+        return new String(buff);
+    }
 
-  public RouteSubjectManager getRouteSubjectManager()
-  {
-    return routeSubjectManager;
-  }
-
-  public void setRouteSubjectManager(RouteSubjectManager routeSubjectManager)
-  {
-    this.routeSubjectManager = routeSubjectManager;
-  }
-
-  public Smsc getSmsc()
-  {
-    return smsc;
-  }
-
-  public void setSmsc(Smsc smsc)
-  {
-    this.smsc = smsc;
-  }
+    public void setCategoryManager(CategoryManager categoryManager) {
+        this.categoryManager = categoryManager;
+    }
+    public void setProviderManager(ProviderManager providerManager) {
+        this.providerManager = providerManager;
+    }
+    public void setRouteSubjectManager(RouteSubjectManager routeSubjectManager) {
+        this.routeSubjectManager = routeSubjectManager;
+    }
+    public void setSmsc(Smsc smsc)  {
+        this.smsc = smsc;
+    }
+    public Smsc getSmsc() {
+        return smsc;
+    }
 
 }

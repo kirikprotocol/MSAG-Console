@@ -115,7 +115,7 @@ public class StatFileReader
     return new String(buff);
   }
 
-  public static String readString8(InputStream is) throws IOException
+/*  public static String readString8(InputStream is) throws IOException
   {
     return readString(is, readUInt8(is));
   }
@@ -129,6 +129,7 @@ public class StatFileReader
   {
     return readString(is, (int) readUInt32(is));
   }
+ */
   public  Statistics receiveStat(InputStream bis , Date dateFile) throws AdminException ,IOException
   {
 

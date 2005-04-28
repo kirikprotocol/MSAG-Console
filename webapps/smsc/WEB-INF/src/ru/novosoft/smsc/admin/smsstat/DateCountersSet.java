@@ -10,41 +10,25 @@ package ru.novosoft.smsc.admin.smsstat;
 
 import java.util.Collection;
 import java.util.Date;
-import java.util.Vector;
+import java.util.ArrayList;
 
 public class DateCountersSet extends CountersSet
 {
   private Date date;
-  private int dateFile;
-  private Vector byHours = new Vector(); // contains HourCountersSet
+  private ArrayList byHours = new ArrayList(); // contains HourCountersSet
 
-  DateCountersSet(Date date)
-  {
+  DateCountersSet(Date date) {
     this.date = date;
   }
-     DateCountersSet(Date date,int dateFile)
-  {
-    this.date = date;
-    this.dateFile = dateFile;
-  }
-  public void addHourStat(HourCountersSet set)
-  {
-    byHours.addElement(set);
+  public void addHourStat(HourCountersSet set) {
+    byHours.add(set);
     super.increment(set);
   }
 
-  public Collection getHourStat()
-  {
+  public Collection getHourStat() {
     return byHours;
   }
-
-  public Date getDate()
-  {
+  public Date getDate() {
     return date;
-  }
-
-  public int getDateFile()
-  {
-    return dateFile;
   }
 }
