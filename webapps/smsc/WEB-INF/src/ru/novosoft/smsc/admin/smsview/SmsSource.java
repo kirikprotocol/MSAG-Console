@@ -1,5 +1,7 @@
 package ru.novosoft.smsc.admin.smsview;
 
+import org.apache.log4j.Category;
+
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,7 +16,7 @@ import java.io.UnsupportedEncodingException;
  */
 public abstract class SmsSource
 {
-  //private org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(Class.class);
+  private static Category logger = Category.getInstance(SmsSource.class);
 
   private final static byte INT_TAG_TYPE = 0;
   private final static byte STR_TAG_TYPE = 1;
@@ -158,7 +160,6 @@ public abstract class SmsSource
           for (int i = 0; i < concatInfo.length; i++) {
             sb.append(Integer.toHexString(((int) concatInfo[i]) & 0xFF)).append(' ');
           }
-          System.out.println("Concat info: " + sb.toString());
           if (partsEncoding != null && partsCount != partsEncoding.length) {
             IOException exc = new IOException("Invalid partsEncoding count dc:" + partsEncoding.length +
                     " ci:" + partsCount);
@@ -169,11 +170,9 @@ public abstract class SmsSource
           for (int i = 0; i < partsCount; i++) {
             int offset = ((((int) concatInfo[i * 2 + 1]) & 0xFF) << 8) | (((int) concatInfo[i * 2 + 2]) & 0xFF);
             int len = text.length - offset;
-            System.out.println("len=" + len + " tlen=" + text.length + " offset=" + offset + " 1=" + (((int) concatInfo[i * 2 + 1]) & 0xFF) + " 2=" + (((int) concatInfo[i * 2 + 2]) & 0xFF));
             if (i < partsCount - 1) {
               int offset_next = ((((int) concatInfo[(i + 1) * 2 + 1]) & 0xFF) << 8) | (((int) concatInfo[(i + 1) * 2 + 2]) & 0xFF);
               len = offset_next - offset;
-              System.out.println("next part len=" + len + " tlen=" + text.length + " offset=" + offset + " 1=" + (((int) concatInfo[(i + 1) * 2 + 1]) & 0xFF) + " 2=" + (((int) concatInfo[(i + 1) * 2 + 2]) & 0xFF));
             }
             convertMessage(textBuffer, text, offset, len, true,
                     (partsEncoding != null) ? partsEncoding[i] : textEncoding);
@@ -188,8 +187,7 @@ public abstract class SmsSource
       row.setTextEncoded(textEncoding == DATA_CODING_UCS2);
       row.setText(textBuffer.toString());
     } catch (IOException exc) {
-      System.out.println("SMS Body parsing failed !");
-      exc.printStackTrace();
+      logger.warn("SMS Body parsing failed", exc);
     }
     //System.out.println("SMS body parsed.");
   }

@@ -100,7 +100,7 @@ public class SmsStatFormBean extends IndexBean
     }
     else if (!query.isFromDateEnabled()) {
       //  query.setFromDate(Functions.truncateTime(new Date()));
-      //  query.setFromDateEnabled(true);
+      //  query.setFilterFromDate(true);
     }
     mbQuery = null;
     mbDetail = null;

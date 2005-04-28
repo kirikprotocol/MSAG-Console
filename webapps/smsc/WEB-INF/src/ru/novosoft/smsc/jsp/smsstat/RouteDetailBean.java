@@ -74,8 +74,7 @@ public class RouteDetailBean extends IndexBean
         statistics = null;
         return error(exc.getMessage());
       }
-    }
-    else if (mbQuickFilter != null) {
+    } else if (mbQuickFilter != null) {
       int dresult = updateFilter();
       return (dresult != RESULT_OK) ? dresult : RESULT_DONE;
     }
@@ -299,10 +298,10 @@ public class RouteDetailBean extends IndexBean
   {
     if (fromDate != null && fromDate.trim().length() > 0) {
       query.setFromDate(convertStringToDate(fromDate));
-      query.setFromDateEnabled(true);
+      query.setFilterFromDate(true);
     }
     else {
-      query.setFromDateEnabled(false);
+      query.setFilterFromDate(false);
     }
   }
 
@@ -316,10 +315,10 @@ public class RouteDetailBean extends IndexBean
   {
     if (tillDate != null && tillDate.trim().length() > 0) {
       query.setTillDate(convertStringToDate(tillDate));
-      query.setTillDateEnabled(true);
+      query.setFilterTillDate(true);
     }
     else {
-      query.setTillDateEnabled(false);
+      query.setFilterTillDate(false);
     }
   }
 

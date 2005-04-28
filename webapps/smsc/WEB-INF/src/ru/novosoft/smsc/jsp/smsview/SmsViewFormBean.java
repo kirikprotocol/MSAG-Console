@@ -446,7 +446,7 @@ public class SmsViewFormBean extends IndexBean
 
   public String getFromDate()
   {
-    if (query.getFromDateEnabled()) {
+    if (query.getFilterFromDate()) {
       SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
       return formatter.format(query.getFromDate());
     }
@@ -457,7 +457,7 @@ public class SmsViewFormBean extends IndexBean
   public void setFromDate(String dateString)
   {
     final boolean dateEnabled = dateString != null && dateString.trim().length() > 0;
-    query.setFromDateEnabled(dateEnabled);
+    query.setFilterFromDate(dateEnabled);
     if (dateEnabled) {
       try {
         SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
@@ -471,7 +471,7 @@ public class SmsViewFormBean extends IndexBean
 
   public String getTillDate()
   {
-    if (query.getTillDateEnabled()) {
+    if (query.getFilterTillDate()) {
       SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
       return formatter.format(query.getTillDate());
     }
@@ -482,7 +482,7 @@ public class SmsViewFormBean extends IndexBean
   public void setTillDate(String dateString)
   {
     final boolean dateEnabled = dateString != null && dateString.trim().length() > 0;
-    query.setTillDateEnabled(dateEnabled);
+    query.setFilterTillDate(dateEnabled);
     if (dateEnabled) {
       try {
         SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);

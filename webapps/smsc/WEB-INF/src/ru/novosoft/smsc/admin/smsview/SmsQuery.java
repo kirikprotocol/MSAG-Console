@@ -10,32 +10,65 @@ package ru.novosoft.smsc.admin.smsview;
  */
 
 import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.admin.route.Mask;
+import ru.novosoft.smsc.admin.AdminException;
 
 import java.util.Date;
 
+import org.apache.log4j.Category;
+
 public class SmsQuery
 {
+  Category logger = Category.getInstance(SmsQuery.class);
+
   public final static int SMS_OPERATIVE_STORAGE_TYPE = 100;
   public final static int SMS_ARCHIVE_STORAGE_TYPE = 200;
   public final static int SMS_UNDEFINED_VALUE = -1;
 
   private int storageType = SMS_ARCHIVE_STORAGE_TYPE;
   private int rowsMaximum = 500;
+
   private String abonentAddress = "*";
+  private Mask   abonentAddressMask = null;
+  public boolean isFilterAbonentAddress = false;
+
   private String fromAddress = "*";
+  private Mask   fromAddressMask = null;
+  public boolean isFilterFromAddress = false;
+
   private String toAddress = "*";
+  private Mask   toAddressMask = null;
+  public boolean isFilterToAddress = false;
+
   private String smeId = "*";
+  public boolean isFilterSmeId = false;
+
   private String srcSmeId = "*";
+  public boolean isFilterSrcSmeId = false;
+
   private String dstSmeId = "*";
+  public boolean isFilterDstSmeId = false;
+
   private String routeId = "*";
+  public boolean isFilterRouteId = false;
+
   private String smsId = "*";
+  public boolean isFilterSmsId = false;
+  public long    smsIdValue = -1;
+
   private Date fromDate = Functions.truncateTime(new Date());
+  public boolean isFilterFromDate = true;
+
   private Date tillDate = new Date();
-  private String sortBy = "lastDate";
-  private boolean fromDateEnabled = true;
-  private boolean tillDateEnabled = false;
+  public boolean isFilterTillDate = false;
+
   private int status = SMS_UNDEFINED_VALUE;
+  public boolean isFilterStatus = false;
+
   private int lastResult = SMS_UNDEFINED_VALUE;
+  public boolean isFilterLastResult = false;
+
+  private String sortBy = "lastDate";
 
   public int getStorageType()
   {
@@ -62,9 +95,28 @@ public class SmsQuery
     return abonentAddress;
   }
 
+  public boolean isStringHaveValue(String str) {
+    if( str != null && str.length() > 0 && !str.equals("*") ) return true;
+    return false;
+  }
+
   public void setAbonentAddress(String address)
   {
     abonentAddress = address;
+    if( isStringHaveValue(address) ) {
+      try {
+        abonentAddressMask = new Mask(address);
+        isFilterAbonentAddress = true;
+      } catch (AdminException e) {
+        logger.warn("Invalid address specified: "+address);
+        abonentAddressMask = null;
+        isFilterAbonentAddress = true;
+      }
+    } else {
+      abonentAddressMask = null;
+      isFilterAbonentAddress = true;
+
+    }
   }
 
   public String getFromAddress()
@@ -75,6 +127,18 @@ public class SmsQuery
   public void setFromAddress(String address)
   {
     fromAddress = address;
+    if( isStringHaveValue(address) ) {
+      try {
+        fromAddressMask = new Mask(address);
+      } catch (AdminException e) {
+        logger.warn("Invalid address specified: "+address);
+        fromAddressMask = null;
+        isFilterFromAddress = true;
+      }
+    } else {
+      fromAddressMask = null;
+      isFilterFromAddress = true;
+    }
   }
 
   public String getToAddress()
@@ -85,6 +149,18 @@ public class SmsQuery
   public void setToAddress(String address)
   {
     toAddress = address;
+    if( isStringHaveValue(address) ) {
+      try {
+        toAddressMask = new Mask(address);
+      } catch (AdminException e) {
+        logger.warn("Invalid address specified: "+address);
+        toAddressMask = null;
+        isFilterToAddress = true;
+      }
+    } else {
+      toAddressMask = null;
+      isFilterToAddress = true;
+    }
   }
 
   public String getSmeId()
@@ -95,6 +171,7 @@ public class SmsQuery
   public void setSmeId(String id)
   {
     smeId = id;
+    isFilterSmeId = isStringHaveValue(id);
   }
 
   public String getSrcSmeId()
@@ -105,6 +182,7 @@ public class SmsQuery
   public void setSrcSmeId(String id)
   {
     srcSmeId = id;
+    isFilterSrcSmeId = isStringHaveValue(id);
   }
 
   public String getDstSmeId()
@@ -115,6 +193,7 @@ public class SmsQuery
   public void setDstSmeId(String id)
   {
     dstSmeId = id;
+    isFilterDstSmeId = isStringHaveValue(id);
   }
 
   public String getRouteId()
@@ -125,6 +204,7 @@ public class SmsQuery
   public void setRouteId(String id)
   {
     routeId = id;
+    isFilterRouteId = isStringHaveValue(id);
   }
 
   public String getSmsId()
@@ -135,16 +215,23 @@ public class SmsQuery
   public void setSmsId(String id)
   {
     smsId = id;
+    if(isStringHaveValue(id)) {
+      isFilterSmsId = true;
+      smsIdValue = Long.valueOf(id).longValue();
+    } else {
+      isFilterSmsId = false;
+      smsIdValue = -1;
+    }
   }
 
-  public void setFromDateEnabled(boolean enabled)
+  public void setFilterFromDate(boolean enabled)
   {
-    fromDateEnabled = enabled;
+    isFilterFromDate = enabled;
   }
 
-  public boolean getFromDateEnabled()
+  public boolean getFilterFromDate()
   {
-    return fromDateEnabled;
+    return isFilterFromDate;
   }
 
   public Date getFromDate()
@@ -157,14 +244,14 @@ public class SmsQuery
     fromDate = date;
   }
 
-  public void setTillDateEnabled(boolean enabled)
+  public void setFilterTillDate(boolean enabled)
   {
-    tillDateEnabled = enabled;
+    isFilterTillDate = enabled;
   }
 
-  public boolean getTillDateEnabled()
+  public boolean getFilterTillDate()
   {
-    return tillDateEnabled;
+    return isFilterTillDate;
   }
 
   public Date getTillDate()
@@ -195,6 +282,7 @@ public class SmsQuery
   public void setStatus(int status)
   {
     this.status = status;
+    isFilterStatus = status != SMS_UNDEFINED_VALUE;
   }
 
   public int getLastResult()
@@ -205,8 +293,22 @@ public class SmsQuery
   public void setLastResult(int lastResult)
   {
     this.lastResult = lastResult;
+    isFilterLastResult = lastResult != SMS_UNDEFINED_VALUE;
   }
 
-}
+  public long getSmsIdValue() {
+    return smsIdValue;
+  }
 
-;
+  public Mask getAbonentAddressMask() {
+    return abonentAddressMask;
+  }
+
+  public Mask getFromAddressMask() {
+    return fromAddressMask;
+  }
+
+  public Mask getToAddressMask() {
+    return toAddressMask;
+  }
+}

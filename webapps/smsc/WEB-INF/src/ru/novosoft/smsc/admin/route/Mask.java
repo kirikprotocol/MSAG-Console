@@ -24,6 +24,12 @@ public class Mask
   private byte npi = 0;
   private String mask = null;
 
+  public Mask(byte tone, byte npi, String mask) {
+    this.tone = tone;
+    this.npi = npi;
+    this.mask = mask;
+  }
+
   public Mask(String mask) throws AdminException
   {
     String tmpMask = mask.trim();
@@ -134,6 +140,7 @@ public class Mask
     return addressConfirm(new Mask(address));
   }
 
+
   public boolean addressConfirm(Mask address)
   {
     return address.tone == tone
@@ -141,4 +148,5 @@ public class Mask
             && mask.length() == address.mask.length()
             && address.mask.startsWith(mask.substring(0, mask.length() - getQuestionsCount()));
   }
+
 }

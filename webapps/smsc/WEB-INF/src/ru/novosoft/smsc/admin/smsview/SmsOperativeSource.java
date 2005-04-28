@@ -75,238 +75,71 @@ public class SmsOperativeSource extends SmsSource
 
   public SmsSet getSmsSet(SmsQuery query) throws AdminException
   {
-    return getSmsCount(query);
-  }
-
-/*  public SmsSet getSmsSet(SmsQuery query) throws AdminException
-  {
-    FileInputStream input = null;
-    SmsSet set = new SmsSet();
-    set.setHasMore(false);
-    Map smes = new HashMap();
-    int rowsMaximum = query.getRowsMaximum();
-    if (rowsMaximum == 0) return set;
-    boolean allReaded = false;
-    try {
-      input = new FileInputStream(smsstorePath);
-    } catch (FileNotFoundException e) {
-      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-
-    }
-    // QueryMessage request = new QueryMessage(query);
-    Message responce;
-    ;
-    System.out.println("start reading File in: " + new Date());
-    try {
-      String FileName = Message.readString(input, 9);
-      int version = (int) Message.readUInt32(input);
-      int toReceive = (rowsMaximum < MAX_SMS_FETCH_SIZE) ? rowsMaximum : MAX_SMS_FETCH_SIZE;
-      int counter = 0;
-      while (!allReaded) {
-        responce = receive(input);
-        allReaded = ((RsFileMessage) responce).isAllReaded();
-        if (!querySelect(query, responce)) continue;
-        if (responce == null)
-          throw new AdminException("Message from file  is NULL");
-        if (!allReaded || ((RsFileMessage) responce).isBodyRecived()) {
-          SmsRow smsNew = ((RsFileMessage) responce).getSms();
-          Long msgId = new Long(smsNew.getId());
-          SmsRow smsOld = (SmsRow) smes.get(msgId);
-          if (smsOld == null) {
-//            set.setHasMore(false);
-            counter++;
-          }
-          if (!set.isHasMore()) {
-            //set.addRow(smsNew);
-            smes.put(msgId, smsNew);
-          }
-          else {
-            smes.put(msgId, null);
-          }
-          if (--toReceive <= 0) {
-            toReceive = rowsMaximum - smes.size();
-            if (toReceive <= 0) {
-              set.setHasMore(true);
-            }
-            else {
-              toReceive = (toReceive < MAX_SMS_FETCH_SIZE) ? toReceive : MAX_SMS_FETCH_SIZE;
-            }
-          }
-
-        }
-
-      }
-    } catch (IOException e) {
-      logger.error("IO error", e);
-    } finally {
-      try {
-        if (input != null) input.close();
-      } catch (Exception exc) {
-      }
-      ;
-    }
-    System.out.println("end reading File in: " + new Date());
-    set.addAll(smes.values());
-    return set;
-  }
-*/
-  public boolean querySelect(SmsQuery query, SmsRow sms)
-  {
-   /* boolean allowed = true;
-    boolean allowedSmsId = true;
-    boolean allowedAbAddress = true;
-   */
-    boolean allowedOrAddress = true;
-    boolean allowedDDAddress = true;
-   /* boolean allowedAddress = true;
-    boolean allowedRouteId = true;
-    boolean allowedSmeId = true;
-    boolean allowedSrcSmeId = true;
-    boolean allowedDstSmeId = true;
-    boolean allowedFromTime = true;
-    boolean allowedTillTime = true;
-    boolean allowedStatus = true;
-    boolean allowedLastResult = true;
-    boolean finalResult = true;
-   */
-    final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
-    //SmsRow sms = ((RsFileMessage) responce).getSms();
-
-    if (needExpression(query.getSmsId())) {
-      if (!String.valueOf(sms.getId()).equalsIgnoreCase(query.getSmsId())) return false;
-    }
-
-    if (query.getFromDateEnabled()) { //list.add("SUBMIT_TIME >=?");
-      if (sms.getSubmitTime().compareTo(query.getFromDate()) <= 0) return false;
-    }
-    if (query.getTillDateEnabled()) {//list.add("SUBMIT_TIME <=?");
-      if (sms.getSubmitTime().compareTo(query.getTillDate()) >= 0) return false;
-    }
-
-    String abAddress = query.getAbonentAddress();
-    String smsOrAdd = sms.getOriginatingAddress();
-    String smsDDAdd = sms.getDealiasedDestinationAddress();
-    if (needExpression(abAddress)) {
-      if (needLikeExpression(abAddress)) { //  abonentCheck = " LIKE ?";
-        if (smsOrAdd.indexOf(abAddress) == -1 && smsDDAdd.indexOf(abAddress) == -1) return false;
-      }
-      else { //  abonentCheck = "=?";
-        if (!smsOrAdd.equalsIgnoreCase(abAddress) && !smsDDAdd.equalsIgnoreCase(abAddress)) return false;
-      }
-    }
-    else {
-      if (needExpression(query.getFromAddress()) && needSmsExpression(smsOrAdd)) {
-        if (!smsOrAdd.equalsIgnoreCase(query.getFromAddress())) allowedOrAddress = false;
-      }
-      if (needExpression(query.getToAddress()) && needSmsExpression(smsDDAdd)) {
-        if (!smsDDAdd.equalsIgnoreCase(query.getToAddress())) allowedDDAddress = false;
-      }
-      if (!allowedOrAddress || !allowedDDAddress) return false;
-    }
-    String RouteId = query.getRouteId();
-    String smsRouteId = sms.getRouteId();
-    String querySrcSmeId = query.getSrcSmeId();
-    String smsSrcSmeId = sms.getSrcSmeId();
-    if (needExpression(RouteId) && needSmsExpression(smsRouteId)) {
-      if (!smsRouteId.equalsIgnoreCase(RouteId)) return false;
-    }
-    String SmeId = query.getSmeId();
-    if (needExpression(SmeId)) {
-      if (needSmsExpression(sms.getSrcSmeId()) && needSmsExpression(sms.getDstSmeId())) {
-        if ((needLikeExpression(SmeId))) {//  smeCheck = " LIKE ?";
-          if (sms.getSrcSmeId().indexOf(SmeId) == -1 && sms.getDstSmeId().indexOf(SmeId) == -1) return false;
-        }
-        else { //  smeCheck = "=?";
-          if (!sms.getSrcSmeId().equalsIgnoreCase(SmeId) && !sms.getDstSmeId().equalsIgnoreCase(SmeId)) return false;
-        }
-      }
-    }
-    else {
-      if (needExpression(query.getSrcSmeId()) && needSmsExpression(sms.getSrcSmeId())) {
-        if (!sms.getSrcSmeId().equalsIgnoreCase(query.getSrcSmeId())) return false;
-      }
-      if (needExpression(query.getDstSmeId()) && needSmsExpression(sms.getDstSmeId())) {
-        if (!sms.getDstSmeId().equalsIgnoreCase(query.getDstSmeId())) return false;
-      }
-    }
-
-
-    if (query.getStatus() != SmsQuery.SMS_UNDEFINED_VALUE) {//list.add("ST=" + query.getStatus());
-      if (!sms.getStatus().equalsIgnoreCase(String.valueOf(query.getStatus()))) return false;
-    }
-    if (query.getLastResult() != SmsQuery.SMS_UNDEFINED_VALUE) {// list.add("LAST_RESULT=" + query.getLastResult());
-      if (sms.getLastResult() != query.getLastResult()) return false;
-    }
-    return true;
+    return getRows(query, true);
   }
 
 
-  public Message receive(InputStream input) throws IOException
-  {
-    Message message = new RsFileMessage();
-    try {
-      message.receive(input);
-    } catch (EOFException e) {
-      ((RsFileMessage) message).setAllReaded(true);//break;
-    }
-    return message;
-  }
-
-  public SmsSet getSmsCount(SmsQuery query) throws AdminException
-  {
+  private SmsSet getRows(SmsQuery query, boolean calcExactCount) {
     InputStream input = null;
     SmsSet set = new SmsSet();
     set.setHasMore(true);
-    HashMap msgs = new HashMap(5000);
-    HashSet msgIds = new HashSet(5000);
     int rowsMaximum = query.getRowsMaximum();
     if (rowsMaximum == 0) return set;
-    boolean allReaded = false;
-   // int toReceive = (rowsMaximum < MAX_SMS_FETCH_SIZE) ? rowsMaximum : MAX_SMS_FETCH_SIZE;
+
     int smsCount = 0;
+    HashMap msgs = new HashMap(5000);
+    System.out.println("start reading File in: " + new Date());
     long tm = System.currentTimeMillis();
     try {
       input = new FileInputStream(smsstorePath);
-      System.out.println("start reading File in: " + new Date());
-      Message responce;
+
+      String FileName = Message.readString(input, 9);
+      int version = (int) Message.readUInt32(input);
+
+      HashSet msgIds = new HashSet(5000);
       try {
-        String FileName = Message.readString(input, 9);
-        int version = (int) Message.readUInt32(input);
-        while (!allReaded) {
-          responce = receive(input);
-          allReaded = ((RsFileMessage) responce).isAllReaded();
-          if (!allReaded ) {
-          SmsRow smsNew = ((RsFileMessage) responce).getSms();
-          if (!querySelect(query, smsNew)) continue;
-            Long msgId = new Long(smsNew.getId());
-            if ( msgIds.contains(msgId) ) {
-              msgs.put(msgId, smsNew);
-            } else {
-              msgIds.add(msgId);
-              if (msgs.size()<rowsMaximum) {
-                msgs.put(msgId, smsNew);
-              }
+        RsFileMessage resp = new RsFileMessage();
+        byte message[] = new byte[256*1024];
+        while(true) {
+          int msgSize1 = (int) Message.readUInt32(input);
+          int read = 0;
+          while (read < msgSize1) {
+            int result = input.read(message, read, msgSize1 - read);
+            if (result < 0) throw new EOFException("Protocol error. Failed to read " + msgSize1 + " bytes");
+            read += result;
+          }
+          InputStream bis = new ByteArrayInputStream(message);
+          int msgSize2 = (int) Message.readUInt32(bis);
+          if (msgSize1 != msgSize2) throw new IOException("Protocol error sz1=" + msgSize1 + " sz2=" + msgSize2);
+          long msgId=Message.readInt64(bis);
+          Long lmsgId = new Long(msgId);
+          if( msgs.get(lmsgId) != null ) {
+            if( resp.receive(bis, query, message, msgId, false) ) {
+              msgs.put(lmsgId, resp.getSms());
+            }
+          } else if( msgs.size() < rowsMaximum ) {
+            if( resp.receive(bis, query, message, msgId, false) ) {
+              msgs.put(lmsgId, resp.getSms());
               smsCount++;
             }
-          }// if (!allReaded )
-        }// while (!allReaded)
-      } catch (IOException e) {
-        e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-      } finally {
-        try {
-          if (input != null) input.close();
-        } catch (Exception exc) {
+          } else if( !msgIds.contains(lmsgId) ) {
+            if( resp.receive(bis, query, message, msgId, true) ) {
+              msgIds.add( lmsgId );
+              smsCount++;
+            }
+          }
         }
+      } catch (EOFException e) {
       }
-    } catch (Exception exc) {
-      exc.printStackTrace();
-      throw new AdminException(exc.getMessage());
+    } catch (Exception e) {
+      logger.error("Unexpected exception occured reading operative store file", e);
     } finally {
-      try {
-        if (input != null) input.close();
-        input = null;
-      } catch (Exception exc) {
-      }
+      if( input != null )
+        try {
+          input.close();
+        } catch (IOException e) {
+          logger.warn("can't close file");
+        }
       System.out.println("end reading File in: " + new Date()+" spent: "+(System.currentTimeMillis()-tm)/1000);
       set.addAll(msgs.values());
     }
@@ -314,20 +147,11 @@ public class SmsOperativeSource extends SmsSource
     return set;
   }
 
-  private boolean needExpression(String str)
+  public SmsSet getSmsCount(SmsQuery query) throws AdminException
   {
-    return (str != null && str.length() != 0 && !str.trim().equalsIgnoreCase("*"));
+    return getRows(query, true);
   }
 
-  private boolean needSmsExpression(String str)
-  {
-    return (str != null && str.length() != 0);
-  }
-
-  private boolean needLikeExpression(String str)
-  {
-    return (str.indexOf('*') >= 0 || str.indexOf('?') >= 0);
-  }
 
   public String getSmsstorePath()
   {

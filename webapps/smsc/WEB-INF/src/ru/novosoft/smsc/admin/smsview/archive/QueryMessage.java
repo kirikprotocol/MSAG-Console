@@ -87,9 +87,9 @@ public class QueryMessage extends Message
       }
       list.add(new Param(T_SMS_ID, idValue));
     }
-    if (query.getFromDateEnabled())
+    if (query.getFilterFromDate())
       list.add(new Param(T_FROM_DATE, Message.convertStringToDate(query.getFromDate())));
-    if (query.getTillDateEnabled())
+    if (query.getFilterTillDate())
       list.add(new Param(T_TILL_DATE, Message.convertStringToDate(query.getTillDate())));
 
     if (isMeaning(query.getAbonentAddress())) {

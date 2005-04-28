@@ -15,6 +15,7 @@ import ru.novosoft.smsc.admin.route.Mask;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Hashtable;
+import java.io.ByteArrayInputStream;
 
 public class SmsRow
 {
@@ -58,6 +59,7 @@ public class SmsRow
   private boolean marked = false;
 
   private Hashtable parameters = new Hashtable();
+  byte    body[] = null;
 
   public void setId(long id)
   {
@@ -88,6 +90,12 @@ public class SmsRow
     }
   }
 
+  public void setOriginatingAddress(Mask mask)
+  {
+    originatingAddress = mask.toString();
+    originatingAddressMask = mask;
+  }
+
   public String getDestinationAddress()
   {
     return destinationAddress;
@@ -102,10 +110,16 @@ public class SmsRow
     }
   }
 
+  public void setDestinationAddress(Mask mask)
+  {
+    destinationAddress = mask.toString();
+    destinationAddressMask = mask;
+  }
   public String getDealiasedDestinationAddress()
   {
     return dealiasedDestinationAddress;
   };
+
   public void setDealiasedDestinationAddress(String address) throws AdminException
   {
     dealiasedDestinationAddress = address;
@@ -114,6 +128,12 @@ public class SmsRow
     } catch (Exception ex) {
       dealiasedDestinationAddressMask = new Mask(".5.0.invalid_addr");
     }
+  }
+
+  public void setDealiasedDestinationAddress(Mask mask)
+  {
+    dealiasedDestinationAddress = mask.toString();
+    dealiasedDestinationAddressMask = mask;
   }
 
   public String getToString()
@@ -406,6 +426,10 @@ public class SmsRow
 
   public Hashtable getBodyParameters()
   {
+    if( body != null ) {
+      SmsSource.parseBody(new ByteArrayInputStream(body, 0, body.length), this);
+      body = null;
+    }
     return parameters;
   }
 
@@ -427,6 +451,12 @@ public class SmsRow
   {
     this.pointer = pointer;
   }
-}
 
-;
+  public byte[] getBody() {
+    return body;
+  }
+
+  public void setBody(byte[] body) {
+    this.body = body;
+  }
+}
