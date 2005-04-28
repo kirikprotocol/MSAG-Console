@@ -103,7 +103,8 @@ public class RsSmsMessage extends Message
         if (cnt == -1) throw new EOFException();
         pos += cnt;
       }
-      SmsSource.parseBody(new ByteArrayInputStream(body, 0, bodyLen), sms);
+//      SmsSource.parseBody(new ByteArrayInputStream(body, 0, bodyLen), sms);
+      sms.setBody(body);
     }
   }
 }
