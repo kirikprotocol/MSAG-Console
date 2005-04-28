@@ -74,7 +74,7 @@ void convertPeriod(uint32_t period, tm& flushTM)
     flushTM.tm_hour = (period%100);
     flushTM.tm_min  = 0; flushTM.tm_sec = 0;
     time_t flushTime = mktime(&flushTM);
-    gmtime_r(&flushTime, &flushTM); flushTM.tm_sec = 0;
+    gmtime_r(&flushTime, &flushTM);
 }
 
 void incStat(SmsStat* stat, ResultSet* rs, int pos)
@@ -177,7 +177,7 @@ void process(Connection* connection, const char* location)
             fillSmes(connection, statSme, lastPeriod);
             fillRoutes(connection, statRoute, lastPeriod);
             
-            smsc_log_debug(logger, "Dumping period %ld", period);
+            smsc_log_debug(logger, "Dumping period %ld", lastPeriod);
             StatisticsManager::flush(flushTM, storage, stat, statSme, statRoute);
             stat.Empty(); statSme.Empty(); statRoute.Empty();
         }
@@ -209,17 +209,24 @@ int main(void)
     /* daylight check
     tm flushTM1;
     convertPeriod(2004022515, flushTM1);
-    printf("1: %s", asctime(&flushTM1));
+    printf("1: 2004022515 = %02d.%02d.%04d %02d:%02d:%02d GMT\n",
+           flushTM1.tm_mday, flushTM1.tm_mon+1, flushTM1.tm_year+1900,
+           flushTM1.tm_hour, flushTM1.tm_min, flushTM1.tm_sec);
     convertPeriod(2004062515, flushTM1);
-    printf("2: %s", asctime(&flushTM1));
+    printf("2: 2004062515 = %02d.%02d.%04d %02d:%02d:%02d GMT\n",
+           flushTM1.tm_mday, flushTM1.tm_mon+1, flushTM1.tm_year+1900,
+           flushTM1.tm_hour, flushTM1.tm_min, flushTM1.tm_sec);
     tm flushTM2;
     convertPeriod(2004062515, flushTM2);
-    printf("4: %s", asctime(&flushTM2));
+    printf("4: 2004062515 = %02d.%02d.%04d %02d:%02d:%02d GMT\n",
+           flushTM2.tm_mday, flushTM2.tm_mon+1, flushTM2.tm_year+1900,
+           flushTM2.tm_hour, flushTM2.tm_min, flushTM2.tm_sec);
     convertPeriod(2004022515, flushTM2);
-    printf("3: %s", asctime(&flushTM2));
-    return 0;
-    */
-
+    printf("3: 2004022515 = %02d.%02d.%04d %02d:%02d:%02d GMT\n",
+           flushTM2.tm_mday, flushTM2.tm_mon+1, flushTM2.tm_year+1900,
+           flushTM2.tm_hour, flushTM2.tm_min, flushTM2.tm_sec);
+    return 0;*/
+    
     const char* OCI_DS_FACTORY_IDENTITY = "OCI";
     DataSourceLoader::loadupDataSourceFactory("../db/oci/libdb_oci.so", OCI_DS_FACTORY_IDENTITY);
     DataSource* ds = DataSourceFactory::getDataSource(OCI_DS_FACTORY_IDENTITY);
