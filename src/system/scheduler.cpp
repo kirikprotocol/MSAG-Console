@@ -396,43 +396,58 @@ int Scheduler::Execute()
       outQueue.Shift(cmd);
       if(cmd->cmdid==SMEALERT)
       {
-        int idx=cmd->get_smeIndex();
-        debug2(log,"SMEALERT for %d",idx);
-        int cnt=0;
-        time_t sctime=time(NULL);
-        SmeStatMap::iterator it=smeStatMap.find(idx);
-        if(it==smeStatMap.end())continue;
-        SmeStat::ChainSet::iterator cit=it->second.chainSet.begin();
-        for(;cit!=it->second.chainSet.end();cit++)
-        {
-          Chain* c=*cit;
-          RescheduleChain(c,sctime);
-          cnt++;
-          if(cnt==5)
+        try{
+          int idx=cmd->get_smeIndex();
+          debug2(log,"SMEALERT for %d",idx);
+          int cnt=0;
+          time_t sctime=time(NULL);
+          SmeStatMap::iterator it=smeStatMap.find(idx);
+          if(it==smeStatMap.end())continue;
+          SmeStat::ChainSet::iterator cit=it->second.chainSet.begin();
+          for(;cit!=it->second.chainSet.end();cit++)
           {
-            sctime++;
-            cnt=0;
+            Chain* c=*cit;
+            RescheduleChain(c,sctime);
+            cnt++;
+            if(cnt==5)
+            {
+              sctime++;
+              cnt=0;
+            }
           }
+        }catch(std::exception& e)
+        {
+          warn2(log,"Exception during SMEALERT:%s",e.what());
         }
       }else if(cmd->cmdid==HLRALERT)
       {
-        info2(smsLog,"SCALERT:%s",cmd->get_address().toString().c_str());
-        Chain* c=GetChain(cmd->get_address());
-        if(!c)continue;
-        if(c->inProcMap)continue;
-        RescheduleChain(c,time(NULL));
+        try{
+          info2(smsLog,"SCALERT:%s",cmd->get_address().toString().c_str());
+          Chain* c=GetChain(cmd->get_address());
+          if(!c)continue;
+          if(c->inProcMap)continue;
+          RescheduleChain(c,time(NULL));
+        }catch(std::exception& e)
+        {
+          warn2(log,"Exception during SCALERT:%s",e.what());
+        }
       }
     }
 
-    if(t-lastBillRoll>billingStorage.getStorageInterval())
+    try{
+      if(t-lastBillRoll>billingStorage.getStorageInterval())
+      {
+        billingStorage.roll();
+        lastBillRoll=t;
+      }
+      if(t-lastArcRoll>archiveStorage.getStorageInterval())
+      {
+        archiveStorage.roll();
+        lastArcRoll=t;
+      }
+    }catch(std::exception& e)
     {
-      billingStorage.roll();
-      lastBillRoll=t;
-    }
-    if(t-lastArcRoll>archiveStorage.getStorageInterval())
-    {
-      archiveStorage.roll();
-      lastArcRoll=t;
+      warn2(log,"Exception during archive/billing roll:%s",e.what());
     }
 
     if(timeLine.size()>0 && timeLine.headTime()<t)
@@ -444,6 +459,7 @@ int Scheduler::Execute()
       mon.wait(1000);
     }
   }
+  warn1(log,"Scheduler exited\n");
   billingStorage.close();
   archiveStorage.close();
   return 0;
@@ -517,6 +533,7 @@ void Scheduler::changeSmsStateToEnroute(SMSId id,
   if(!ptr)throw NoSuchMessageException();
   SMS& sms=(*ptr)->sms;
   sms.destinationDescriptor=dst;
+  sns.lastTime=time(NULL);
   sms.setLastResult(failureCause);
   sms.setNextTime(nextTryTime);
   sms.setAttemptsCount(attempts);
