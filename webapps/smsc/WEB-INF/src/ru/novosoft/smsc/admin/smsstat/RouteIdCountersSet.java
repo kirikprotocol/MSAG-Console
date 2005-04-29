@@ -16,10 +16,6 @@ public class RouteIdCountersSet extends ExtendedCountersSet implements Comparabl
   public String routeid;
   public long providerId = -1;
   public long categoryId = -1;
-  public String providerName = "";
-  public String categoryName = "";
-  public Provider provider = new Provider(-1, "");
-  public Category category = new Category(-1, "");
 
   public RouteIdCountersSet(String routeid)
   {
@@ -33,17 +29,23 @@ public class RouteIdCountersSet extends ExtendedCountersSet implements Comparabl
     this.routeid = routeid;
   }
 
-  public RouteIdCountersSet(long accepted, long rejected, long delivered, long failed, long rescheduled,
-                            long temporal, long i, long o, String routeid, Provider provider, Category category)
+  public RouteIdCountersSet(long accepted, long rejected, long delivered,
+                             long failed, long rescheduled, long temporal, long i, long o, String routeid,
+                            long providerId,long categoryId)
+   {
+     super(accepted, rejected, delivered, failed, rescheduled, temporal, i, o);
+     this.routeid = routeid;
+     this.providerId=providerId;
+     this.categoryId=categoryId;
+   }
+
+  public void setCategoryId(long categoryId)
   {
-    super(accepted, rejected, delivered, failed, rescheduled, temporal, i, o);
-    this.routeid = routeid;
-    this.provider = provider;
-    this.category = category;
-    this.providerName = provider.getName();
-    this.categoryName = category.getName();
-    this.providerId = provider.getId();
-    this.categoryId = category.getId();
+    this.categoryId = categoryId;
+  }
+  public void setProviderId(long providerId)
+  {
+    this.providerId = providerId;
   }
 
   public int compareTo(Object o)
@@ -52,11 +54,4 @@ public class RouteIdCountersSet extends ExtendedCountersSet implements Comparabl
     return routeid.compareTo(((RouteIdCountersSet) o).routeid);
   }
 
-    public void setProvider(Provider provider) {
-        this.provider = provider;
-    }
-
-    public void setCategory(Category category) {
-        this.category = category;
-    }
 }

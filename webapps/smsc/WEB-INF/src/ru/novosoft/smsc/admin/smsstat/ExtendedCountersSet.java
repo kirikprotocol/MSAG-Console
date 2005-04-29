@@ -3,6 +3,7 @@ package ru.novosoft.smsc.admin.smsstat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.TreeMap;
 
 /**
  * Created by IntelliJ IDEA.
@@ -13,7 +14,7 @@ import java.util.HashMap;
  */
 public class ExtendedCountersSet extends CountersSet
 {
-  private HashMap err=new HashMap();
+  private TreeMap err=new TreeMap();
 
   public ExtendedCountersSet() {}
   public ExtendedCountersSet(long accepted, long rejected, long delivered,
@@ -33,11 +34,19 @@ public class ExtendedCountersSet extends CountersSet
   {
     err.put(new Integer(errcode), set);
   }
-
+    public void addAllErr(Collection err)
+  {
+    err.addAll(err);
+  }
   public Collection getErrors()
   {
     return err.values();
   }
+  public TreeMap getErrorsMap()
+   {
+     return err;
+   }
+
   public ErrorCounterSet getErr(int errcode)
   {
     return (ErrorCounterSet)err.get(new Integer(errcode));

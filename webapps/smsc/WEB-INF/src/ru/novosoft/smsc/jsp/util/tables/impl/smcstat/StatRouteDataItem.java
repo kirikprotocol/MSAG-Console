@@ -29,8 +29,8 @@ public class StatRouteDataItem extends AbstractDataItem
     values.put("peak_o", new Long(r.peak_o));
     //values.put("providerName",r.providerName);
     //values.put("categoryName", r.categoryName);
-    values.put("provider", r.provider);
-    values.put("category", r.category);
+    values.put("provider",new Long(r.providerId));
+    values.put("category",new Long(r.categoryId));
     values.put("errors", r.getErrors());
 
   }
@@ -82,7 +82,7 @@ public class StatRouteDataItem extends AbstractDataItem
   {
     return ((Long) values.get("temporal")).longValue();
   }
-
+ /*
   public Provider getProvider()
   {
     return (Provider) values.get("provider");
@@ -92,22 +92,22 @@ public class StatRouteDataItem extends AbstractDataItem
   {
     return (Category) values.get("category");
   }
-
+   */
   public Collection getErrors()
   {
     return (Collection) values.get("errors");
   }
 
-  /*
-  public Long getProviderId()
-  {
-    return (Long) values.get("providerId");
-  }
-  public Long getCategoryId()
-  {
-    return (Long) values.get("categoryId");
-  }
 
+  public long getProviderId()
+  {
+    return ((Long) values.get("providerId")).longValue();
+  }
+  public long getCategoryId()
+  {
+    return ((Long) values.get("categoryId")).longValue();
+  }
+  /*
    public String getProviderName()
   {
     return (String)values.get("providerName");

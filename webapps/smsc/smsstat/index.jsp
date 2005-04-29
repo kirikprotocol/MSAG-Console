@@ -272,9 +272,11 @@ page_menu_end(out);
         }
     }
 
-    Collection errids = stat.getErrorStat();
-    i = errids.iterator();
-    if (i.hasNext()) {
+    Iterator itMap = stat.getErrorsMap().keySet().iterator();
+
+    //Collection errids = stat.getErrorStat();
+    //i = errids.iterator();
+    if (itMap.hasNext()) {
 %>
 <tr>
     <td colspan=8><div class=page_subtitle>SMS delivery state</div></td>
@@ -289,8 +291,9 @@ page_menu_end(out);
     <th width="11%">&nbsp;</th>
     <th width="11%">&nbsp;</th>
 </tr>  <%
-        while (i.hasNext()) {
-            ErrorCounterSet errid = (ErrorCounterSet)i.next();
+        while (itMap.hasNext()) {
+          Integer errcode = (Integer) itMap.next();
+          ErrorCounterSet errid = (ErrorCounterSet)stat.getErrorsMap().get(errcode);
         %>
         <tr class=row1>
             <td width="23%" align=right nowrap>
@@ -309,6 +312,7 @@ page_menu_end(out);
             <td width="11%" align=right>&nbsp;</td>
         </tr><%
         }
+
     }
 %>
 </table>

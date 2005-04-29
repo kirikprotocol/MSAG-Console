@@ -117,9 +117,9 @@ public class RouteDetailBean extends IndexBean
     for (Iterator iterator = routesResult.iterator(); iterator.hasNext();) {
       StatRouteDataItem o = (StatRouteDataItem) iterator.next();
       RouteIdCountersSet r = new RouteIdCountersSet(o.getAccepted(), o.getRejected(), o.getDelivered(), o.getFailed(), o.getRescheduled(),
-              o.getTemporal(), o.getPeak_i(), o.getPeak_o(), o.getRouteID(), o.getProvider(), o.getCategory());
+              o.getTemporal(), o.getPeak_i(), o.getPeak_o(), o.getRouteID(), o.getProviderId(), o.getCategoryId());
       Collection errors = o.getErrors();
-      r.addAllErrors(errors);
+      r.addAllErr(errors);
       ByRouteId.add(r);
     }
     return RESULT_OK;

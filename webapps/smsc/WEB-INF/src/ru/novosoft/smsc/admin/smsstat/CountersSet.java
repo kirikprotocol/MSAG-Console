@@ -41,8 +41,8 @@ public class CountersSet
         this.accepted += accepted; this.rejected += rejected;
         this.delivered += delivered; this.failed += failed;
         this.rescheduled += rescheduled; this.temporal += temporal;
-        if (peak_i > this.peak_i) this.peak_i = i;
-        if (peak_o > this.peak_o) this.peak_o = o;
+        if (i > this.peak_i) this.peak_i = i;
+        if (o > this.peak_o) this.peak_o = o;
     }
     public void reset()
     {
