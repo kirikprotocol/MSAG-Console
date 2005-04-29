@@ -190,7 +190,7 @@ int AbonentInfoSme::Execute()
         if(status!=AbonentStatus::UNKNOWNVALUE)
         {
           __trace__("AbonentInfo: request for sme address.");
-          cmd=SmscCommand::makeQueryAbonentStatusResp(cmd->get_abonentStatus(),status,"");
+          cmd=SmscCommand::makeQueryAbonentStatusResp(cmd->get_abonentStatus(),status,"","");
           __trace2__("AbonentInfo: cmdid=%d, QAS_RESP=%d",cmd->cmdid,smsc::smeman::QUERYABONENTSTATUS_RESP);
         }
         else
@@ -243,6 +243,7 @@ int AbonentInfoSme::Execute()
           ce.exportInt("status",as.status);
           ce.exportInt("encoding",p.codepage);
           ce.exportStr("msc",as.msc.length()?("+"+as.msc).c_str():"");
+          ce.exportStr("imsi",as.imsi.length()?as.msc.c_str():"");
           Profile pr=smsc->getProfiler()->lookup(as.sourceAddr);
           OutputFormatter* f=ResourceManager::getInstance()->getFormatter(pr.locale,"abonentinfo.smeFormat");
           __trace2__("AbonentInfo: formatter=%p",f);

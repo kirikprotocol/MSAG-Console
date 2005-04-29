@@ -41,7 +41,7 @@ struct XMOMAPLocker {
 };
 struct ET96MAP_ADDRESS_LESS:public binary_function<bool,ET96MAP_ADDRESS_T,ET96MAP_ADDRESS_T> {
   bool operator()(const ET96MAP_ADDRESS_T& a, const ET96MAP_ADDRESS_T& b) const {
-    return a.addressLength<b.addressLength || 
+    return a.addressLength<b.addressLength ||
       (a.addressLength == b.addressLength && memcmp(a.address,b.address,(a.addressLength+1)/2)<0);
   }
 };
@@ -123,7 +123,7 @@ string LocationInfoToString(const ET96MAP_LOCATION_INFO_T* msc)
   string result = ost.str();
 //  __map_trace2__("MSC: %s",result.c_str());
   return result;
-}                                       
+}
 
 static unsigned MakeMrRef()
 {
@@ -303,7 +303,7 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
     if( dialog->sms->hasStrProperty( Tag::SMSC_FORWARD_MO_TO ) ) {
       ForwardMO( dialog );
       return;
-    } 
+    }
     CheckLockedByMO(dialog);
   }else{
     AbonentStatus& as = dialog->QueryAbonentCommand->get_abonentStatus();
@@ -414,7 +414,7 @@ static unsigned RemapDialog(MapDialog* dialog,unsigned ssn){
 static void SendAbonentStatusToSmsc(MapDialog* dialog,int status/*=AbonentStatus::UNKNOWN*/)
 {
   __map_trace2__("Send abonent status(%d) to SMSC dlg 0x%x",status,dialog->dialogid_map);
-  SmscCommand cmd = SmscCommand::makeQueryAbonentStatusResp(dialog->QueryAbonentCommand->get_abonentStatus(),status,dialog->s_msc);
+  SmscCommand cmd = SmscCommand::makeQueryAbonentStatusResp(dialog->QueryAbonentCommand->get_abonentStatus(),status,dialog->s_msc,dialog->s_imsi);
   MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(cmd);
 }
 
@@ -490,7 +490,7 @@ static void SendRInfo(MapDialog* dialog)
       if( sms->getIntProperty(Tag::SMPP_PRIORITY) == 3 ) {
         hiPrior = true;
       } else {
-        if( sms->getLastResult() != Status::ABSENTSUBSCR && 
+        if( sms->getLastResult() != Status::ABSENTSUBSCR &&
             sms->getLastResult() != Status::SMDELIFERYFAILURE ) {
           hiPrior = true;
         } else if( (sms->getAttemptsCount())%4 == 0 ) {
@@ -677,7 +677,7 @@ static void ForwardMO(MapDialog* dialog) {
     }
     text[k]=0;
     __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_WARN, "rpoa: %s",text);
-    
+
     buf = (unsigned char *)&ui;
     buflen = ui.signalInfoLen+1;
     k = 0;
@@ -700,7 +700,7 @@ static void ForwardMO(MapDialog* dialog) {
   result = Et96MapV2ForwardSmMOReq(SSN,dialog->dialogid_map, 1, &smRpDa, &smRpOa, &ui);
   if ( result != ET96MAP_E_OK )
     throw MAPDIALOG_FATAL_ERROR(FormatText("ForwardMO: Et96MapV2ForwardSmMOReq error 0x%x",result),MAP_FALURE);
-  
+
   result = Et96MapDelimiterReq(SSN,dialog->dialogid_map, 0, 0);
   if ( result != ET96MAP_E_OK )
     throw MAPDIALOG_FATAL_ERROR(FormatText("ForwardMO: Et96MapV2ForwardSmMOReq error 0x%x",result),MAP_FALURE);
@@ -1160,9 +1160,9 @@ static bool SendSms(MapDialog* dialog){
   ET96MAP_SM_RP_UI_T* ui;
   dialog->auto_ui = auto_ptr<ET96MAP_SM_RP_UI_T>(ui=new ET96MAP_SM_RP_UI_T);
   mkDeliverPDU(dialog->sms.get(),ui,mms);
-  if ( dialog->version > 1 
-       && !dialog->mms 
-       && (ui->signalInfoLen > (143-(dialog->smRpOa.addrLen+1)-(dialog->smRpDa.addrLen+1)-(dialog->scAddr.ss7AddrLen)) 
+  if ( dialog->version > 1
+       && !dialog->mms
+       && (ui->signalInfoLen > (143-(dialog->smRpOa.addrLen+1)-(dialog->smRpDa.addrLen+1)-(dialog->scAddr.ss7AddrLen))
        || mms ) ) {
     result = Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 );
     if( result != ET96MAP_E_OK )
@@ -1283,7 +1283,7 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
     sprintf( text, "Error %d", dialog->routeErr );
   }
   unsigned text_len = strlen(text);
-  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 
+  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding =
     fillUSSDString(MAP_LATIN1_ENCODING,(unsigned char*)text,text_len, &ussdString);
   UCHAR_T result;
   if ( dialog->version == 2 )
@@ -1333,7 +1333,7 @@ static void DoUSSRUserResponce( MapDialog* dialog)
   if ( text_len > 160 )
     throw runtime_error(FormatText("MAP::%s MAP.did:{0x%x} very long msg text %d",__func__,dialog->dialogid_map,text_len));
 
-  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 
+  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding =
     fillUSSDString( encoding, text, text_len, &ussdString );
   UCHAR_T result;
   if ( dialog->version == 2 )
@@ -1397,9 +1397,9 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   if ( text_len > 160 )
     throw runtime_error(FormatText("%s: dlg=0x%x very long msg text %d",__func__,dialog->dialogid_map,text_len));
 
-  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding = 
+  ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding =
     fillUSSDString(encoding,text,text_len, &ussdString);
-  
+
   int serviceOp = dialog->sms->getIntProperty(Tag::SMPP_USSD_SERVICE_OP);
   if( serviceOp == USSD_USSR_REQ ) {
     dialog->state = MAPST_WaitUSSDReqConf;
@@ -1443,7 +1443,7 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   if ( result != ET96MAP_E_OK )
     throw runtime_error(
       FormatText("%s: Et96MapV2UnstructuredSSRequestReq return error 0x%x",__func__,result));
-  
+
   result = Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 );
   if ( result != ET96MAP_E_OK )
     throw runtime_error(
@@ -1463,7 +1463,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
   DialogRefGuard dialog;
   MAP_TRY {
     if( !isMapBound() ) throw runtime_error("MAP is not bound yet");
-    if ( cmd->get_commandId() != SUBMIT_RESP ) { 
+    if ( cmd->get_commandId() != SUBMIT_RESP ) {
       if ( cmd->get_commandId() != DELIVERY && cmd->get_commandId() != QUERYABONENTSTATUS)
         throw MAPDIALOG_BAD_STATE("putCommand: must be DELIVERY or QUERYABONENTSTATUS");
       try
@@ -1708,7 +1708,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
     }else{ // !delivery !query abonent status it's submit resp
       dialogid_map = dialogid_smsc&0x0ffff;
       if ( ((dialogid_smsc >> 16)&0x3) == 1 ) dialog_ssn = USSD_SSN;
-      else dialog_ssn = SSN; 
+      else dialog_ssn = SSN;
       if ( dialog2 ) throw runtime_error("MAP::putCommand can't chain MAPINPUT");
       dialog.assign(MapDialogContainer::getInstance()->getDialog(dialogid_map,dialog_ssn));
       if ( dialog.isnull() ) {
@@ -2060,7 +2060,7 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
     dialog->routeErr = 0;
 
     if ( errorSendRoutingInfoForSm_sp ) {
-         
+
       if(errorSendRoutingInfoForSm_sp->errorCode == 27 )
       {
         __map_trace2__("%s: absent subscriber",__func__);
@@ -2096,8 +2096,8 @@ static USHORT_T  Et96MapVxSendRInfoForSmConf_Impl(
     case MAPST_ImsiWaitRInfo:
       {
         if ( dialog->routeErr ) {
-          if(errorSendRoutingInfoForSm_sp && errorSendRoutingInfoForSm_sp->errorCode == 13 && 
-             MapDialogContainer::getAllowCallBarred() == true && 
+          if(errorSendRoutingInfoForSm_sp && errorSendRoutingInfoForSm_sp->errorCode == 13 &&
+             MapDialogContainer::getAllowCallBarred() == true &&
              dialog->state == MAPST_ImsiWaitRInfo) {
             // normal situation no error
             // smsc will accept message from abonent
@@ -2471,18 +2471,18 @@ static USHORT_T Et96MapVxForwardSmMOInd_Impl (
       DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));
       if ( !dialog.isnull() ) {
         dialog->state = MAPST_ABORTED;
-      	__require__(dialog->ssn==localSsn);
+        __require__(dialog->ssn==localSsn);
       }
       Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0);
 //      Et96MapDelimiterReq(localSsn,dialogueId,0,0);
-    } 
+    }
     ET96MAP_ERROR_FORW_SM_MO_T moResp;
     moResp.errorCode = ET96MAP_UE_SYS_FAILURE;
     moResp.u.systemFailureNetworkResource_s.networkResourcePresent = 0;
     if( version == 3 ) {
-	ET96MAP_SM_RP_UI_T ui;
+  ET96MAP_SM_RP_UI_T ui;
         ui.signalInfoLen=0;
-      
+
         Et96MapV3ForwardSmMOResp(
         localSsn,
         dialogueId,
@@ -2520,10 +2520,10 @@ USHORT_T Et96MapV1ForwardSmMOInd (
 }
 
 extern "C"
-USHORT_T Et96MapV2ForwardSmMOConf(ET96MAP_LOCAL_SSN_T localSsn, 
+USHORT_T Et96MapV2ForwardSmMOConf(ET96MAP_LOCAL_SSN_T localSsn,
                                 ET96MAP_DIALOGUE_ID_T dialogueId,
                                 ET96MAP_INVOKE_ID_T invokeId,
-                                ET96MAP_ERROR_FORW_SM_MO_T* errorForwardSMmo_sp, 
+                                ET96MAP_ERROR_FORW_SM_MO_T* errorForwardSMmo_sp,
                                 ET96MAP_PROV_ERR_T* provErrCode_p) {
   unsigned dialogid_map = dialogueId;
   unsigned dialogid_smsc = 0;
@@ -3078,7 +3078,7 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
     ET96MAP_USSD_DATA_CODING_SCHEME_T *ussdDataCodingScheme_p,
     ET96MAP_USSD_STRING_T *ussdString_sp,
     ET96MAP_ERROR_UNSTRUCTURED_SS_REQUEST_T *errorUnstructuredSSReq_sp,
-    ET96MAP_PROV_ERR_T *provErrCode_p) 
+    ET96MAP_PROV_ERR_T *provErrCode_p)
 {
   MAP_TRY{
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));
@@ -3106,7 +3106,7 @@ USHORT_T Et96MapV2UnstructuredSSRequestConf(
         k+=sprintf(text+k,"%02x ",(unsigned)ussdString_sp->ussdStr[i]);
       }
       text[k]=0;
-      __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, 
+      __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG,
         "%s: ussd string len=%d, %s",__func__, ussdString_sp->ussdStrLen, text);
       delete text;
      }
@@ -3163,7 +3163,7 @@ USHORT_T Et96MapV2UnstructuredSSNotifyConf(
     ET96MAP_INVOKE_ID_T invokeId,
     ET96MAP_ERROR_USSD_NOTIFY_T *errorUssdNotify_sp,
     ET96MAP_PROV_ERR_T *provErrCode_p)
-{    
+{
   MAP_TRY{
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));
     if ( dialog.isnull() )
@@ -3215,7 +3215,7 @@ static void SendAlertToSMSC(MapDialog* dialog,ET96MAP_ADDRESS_T *mapAddr)
         k+=sprintf(text+k,"%02x ",(unsigned)mapAddr->address[i]);
       }
       text[k]=0;
-      __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, 
+      __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG,
         "%s: mapaddress len=%d, type=%x, val=%s",__func__, mapAddr->addressLength, mapAddr->typeOfAddress, text);
       delete text;
      }
@@ -3346,7 +3346,7 @@ USHORT_T Et96MapV2InformSCInd (
        unsigned char* buf = (unsigned char*)msisdnAlert_sp;
        int k = 0;
        for ( int i=0; i<len; i++) {
-	   k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
+     k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
        }
        text[k]=0;
        __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "msisdnAlert_s: %s",text);
@@ -3359,7 +3359,7 @@ USHORT_T Et96MapV2InformSCInd (
        unsigned char* buf = (unsigned char*)mwdStatus_sp;
        int k = 0;
        for ( int i=0; i<len; i++){
-	   k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
+     k+=sprintf(text+k,"%02x ",(unsigned)buf[i]);
        }
        text[k]=0;
        __log2__(smsc::logger::_map_cat,smsc::logger::Logger::LEVEL_DEBUG, "mwdStatus_s: %s",text);
@@ -3422,8 +3422,8 @@ static void NotifyHLR(MapDialog* dialog)
   else {
     __map_trace2__("%s: no way! isUSSD=%s hlrWasNotified=%s hlrVersion=%d wasDelivered=%s routeErr=%x hasMwd=%s subscriberAbsent=%s mwdStatus.mnrf=%x memoryExceeded=%s mwdStatus.mcef=%x",__func__,
         dialog->isUSSD?"Y":"N",
-  	    dialog->hlrWasNotified?"Y":"N", 
-  	    dialog->hlrVersion,
+        dialog->hlrWasNotified?"Y":"N",
+        dialog->hlrVersion,
         dialog->wasDelivered?"Y":"N",
         dialog->routeErr,
         dialog->hasMwdStatus?"Y":"N",
@@ -3503,7 +3503,7 @@ USHORT_T Et96MapNoticeInd (
   ET96MAP_DIALOGUE_ID_T dialogueId,
   ET96MAP_DIALOGUE_ID_T relDialogueId,
   ET96MAP_DIAGNOSTIC_PROBLEM_T diagProblem,
-  ET96MAP_RETURNED_OPERATION_T *retOperation_sp) 
+  ET96MAP_RETURNED_OPERATION_T *retOperation_sp)
 {
   __map_trace2__("%s: dialogid 0x%x relDialogid 0x%x diagProblem %d retop 0x%x", __func__,
                 dialogueId,relDialogueId,diagProblem,retOperation_sp );
@@ -3526,7 +3526,7 @@ void MAPIO_PutCommand(const SmscCommand& cmd )
 {
   if ( cmd->get_commandId() == QUERYABONENTSTATUS )
   {
-    SmscCommand xcmd = SmscCommand::makeQueryAbonentStatusResp(cmd->get_abonentStatus(),AbonentStatus::ONLINE,"");
+    SmscCommand xcmd = SmscCommand::makeQueryAbonentStatusResp(cmd->get_abonentStatus(),AbonentStatus::ONLINE,"","");
     MapDialogContainer::getInstance()->getProxy()->putIncomingCommand(xcmd);
   }
 }
