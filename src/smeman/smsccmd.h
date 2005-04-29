@@ -95,6 +95,7 @@ struct AbonentStatus{
   string  originalAddr;
   bool isMobileRequest;
   string msc;
+  string imsi;
 
   AbonentStatus(const Address& addr):
     addr(addr),
@@ -103,17 +104,16 @@ struct AbonentStatus{
     isMobileRequest(false)
   {
   }
-  AbonentStatus(const AbonentStatus& as,int status,const string& _msc):
+  AbonentStatus(const AbonentStatus& as,int status,const string& _msc,const string& _imsi):
     addr(as.addr),
     sourceAddr(as.sourceAddr),
     destAddr(as.destAddr),
     status(status),
     userMessageReference(as.userMessageReference),
     originalAddr(as.originalAddr),
-    isMobileRequest(as.isMobileRequest)
+    isMobileRequest(as.isMobileRequest),
+    msc(_msc),imsi(_imsi)
   {
-    //msc=_msc;
-    msc.assign(_msc.data(),_msc.length());
   }
   static const int OFFLINE=0;
   static const int ONLINE=1;
@@ -886,14 +886,14 @@ public:
     return cmd;
   }
 
-  static SmscCommand makeQueryAbonentStatusResp(const AbonentStatus& as,int status,const string& msc)
+  static SmscCommand makeQueryAbonentStatusResp(const AbonentStatus& as,int status,const string& msc,const string& imsi)
   {
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
     _SmscCommand& _cmd = *cmd.cmd;
     _cmd.ref_count = 1;
     _cmd.cmdid = QUERYABONENTSTATUS_RESP;
-    _cmd.dta = new AbonentStatus(as,status,msc);
+    _cmd.dta = new AbonentStatus(as,status,msc,imsi);
     _cmd.dialogId = 0;
     return cmd;
   }
