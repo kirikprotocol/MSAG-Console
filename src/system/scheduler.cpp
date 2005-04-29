@@ -532,8 +532,9 @@ void Scheduler::changeSmsStateToEnroute(SMSId id,
   StoreData** ptr=store.GetPtr(id);
   if(!ptr)throw NoSuchMessageException();
   SMS& sms=(*ptr)->sms;
+  sms.state = ENROUTE;
   sms.destinationDescriptor=dst;
-  sns.lastTime=time(NULL);
+  sms.lastTime=time(NULL);
   sms.setLastResult(failureCause);
   sms.setNextTime(nextTryTime);
   sms.setAttemptsCount(attempts);
