@@ -77,15 +77,12 @@ void SmppInputThread::addSocket(Socket* sock,int to)
 void SmppInputThread::removeSocket(Socket *sock)
 {
   mon.Lock();
+  sock->setData(SOCKET_SLOT_KILL,(void*)1);
   for(int i=0;i<sockets.Count();i++)
   {
     if(sockets[i]->getSocket()==sock)
     {
-      if(sock->getData(SOCKET_SLOT_INPUTMULTI))
-      {
-        sock->setData(SOCKET_SLOT_KILL,(void*)1);
-      }
-      else
+      if(!sock->getData(SOCKET_SLOT_INPUTMULTI))
       {
         killSocket(i);
       }
@@ -98,21 +95,18 @@ void SmppInputThread::removeSocket(Socket *sock)
 void SmppInputThread::killSocket(int idx)
 {
   SmppSocket *ss=sockets[idx];
-  if( ss != 0 ) {
-    Socket *s=ss->getSocket();
-    mul.remove(s);
-    sockets.Delete(idx);
-    SmppSocketsManager *m=
-      (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
-    trace2("removing socket %p by input thread",s);
-    mon.Unlock();
-    KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
-    mon.Lock();
-    int rcnt=m->removeSocket(s);
-    delete ss;
-  } else {
-    sockets.Delete(idx);
-  }
+  Socket *s=ss->getSocket();
+  s->setData(SOCKET_SLOT_KILL,(void*)1);
+  mul.remove(s);
+  sockets.Delete(idx);
+  SmppSocketsManager *m=
+    (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
+  trace2("removing socket %p by input thread",s);
+  mon.Unlock();
+  KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
+  mon.Lock();
+  int rcnt=m->removeSocket(s);
+  delete ss;
 }
 
 
@@ -190,16 +184,6 @@ int SmppInputThread::Execute()
           char smb[6]={evt[0]?'Y':'N',evt[1]?'Y':'N',evt[2]?'Y':'N',evt[3]?'Y':'N',evt[4]?'Y':'N',0};
           info2(log,"SmppInputThread:: killing socket %p by request, timeout or invactivity timeout:%s",ss,smb);
           s->Close();
-          if(!s->getData(SOCKET_SLOT_KILL))
-          {
-            mon.Unlock();
-            try{
-              outTask->removeSocket(s);
-            }catch(...)
-            {
-            }
-            mon.Lock();
-          }
           killSocket(i);
           i--;
           continue;
@@ -235,7 +219,7 @@ int SmppInputThread::Execute()
     }
     //trace("in: canRead\n");
     try{
-      if(mul.canRead(ready,error,1000)>0)
+      if(mul.canRead(ready,error,100)>0)
       {
         MutexGuard g(mon);
         for(i=0;i<sockets.Count();i++)
@@ -275,13 +259,6 @@ int SmppInputThread::Execute()
           {
             if(sockets[j]->getSocket()==error[i])
             {
-              mon.Unlock();
-              try{
-                outTask->removeSocket(error[i]);
-              }catch(...)
-              {
-              }
-              mon.Lock();
               killSocket(j);
               break;
             }
@@ -299,13 +276,6 @@ int SmppInputThread::Execute()
             {
               if(sockets[i]==ss)
               {
-                mon.Unlock();
-                try{
-                  outTask->removeSocket(ss->getSocket());
-                }catch(...)
-                {
-                }
-                mon.Lock();
                 killSocket(i);
                 break;
               }
@@ -320,13 +290,6 @@ int SmppInputThread::Execute()
               {
                 if(sockets[i]==ss)
                 {
-                  mon.Unlock();
-                  try{
-                    outTask->removeSocket(ss->getSocket());
-                  }catch(...)
-                  {
-                  }
-                  mon.Lock();
                   killSocket(i);
                   break;
                 }
@@ -644,13 +607,6 @@ int SmppInputThread::Execute()
                   {
                     if(sockets[i]==ss)
                     {
-                      mon.Unlock();
-                      try{
-                        outTask->removeSocket(ss->getSocket());
-                      }catch(...)
-                      {
-                      }
-                      mon.Lock();
                       killSocket(i);
                       break;
                     }
@@ -957,15 +913,12 @@ void SmppOutputThread::addSocket(Socket* sock,int to)
 void SmppOutputThread::removeSocket(Socket *sock)
 {
   mon.Lock();
+  sock->setData(SOCKET_SLOT_KILL,(void*)1);
   for(int i=0;i<sockets.Count();i++)
   {
     if(sockets[i]->getSocket()==sock)
     {
-      if(sock->getData(SOCKET_SLOT_OUTPUTMULTI))
-      {
-        sock->setData(SOCKET_SLOT_KILL,(void*)1);
-      }
-      else
+      if(!sock->getData(SOCKET_SLOT_OUTPUTMULTI))
       {
         killSocket(i);
       }
@@ -978,20 +931,17 @@ void SmppOutputThread::removeSocket(Socket *sock)
 void SmppOutputThread::killSocket(int idx)
 {
   SmppSocket *ss=sockets[idx];
-  if( ss != 0 ) {
-    Socket *s=ss->getSocket();
-    sockets.Delete(idx);
-    trace2("removing socket %p by output thread",s);
-    SmppSocketsManager *m=
-      (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
-    mon.Unlock(); // this method is always called only with locked mon.
-    KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
-    mon.Lock();
-    int rcnt=m->removeSocket(s);
-    delete ss;
-  } else {
-    sockets.Delete(idx);
-  }
+  Socket *s=ss->getSocket();
+  s->setData(SOCKET_SLOT_KILL,(void*)1);
+  sockets.Delete(idx);
+  trace2("removing socket %p by output thread",s);
+  SmppSocketsManager *m=
+    (SmppSocketsManager*)s->getData(SOCKET_SLOT_SOCKETSMANAGER);
+  mon.Unlock(); // this method is always called only with locked mon.
+  KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
+  mon.Lock();
+  int rcnt=m->removeSocket(s);
+  delete ss;
 }
 
 int SmppOutputThread::Execute()
@@ -1029,15 +979,6 @@ int SmppOutputThread::Execute()
         Socket *s=ss->getSocket();
         if(s->getData(SOCKET_SLOT_KILL))
         {
-          trace("try to remove socket from inTask");
-          mon.Unlock();
-          try{
-            inTask->removeSocket(s);
-          }catch(...)
-          {
-          }
-          mon.Lock();
-          trace("remove ok. Killing socket");
           killSocket(i);
           i--;
           continue;
@@ -1134,8 +1075,6 @@ int SmppOutputThread::Execute()
                 break;
               }
             }
-            //inTask->removeSocket(s);
-            tokill.Push(s);
             killSocket(i);
             i--;
           }
@@ -1146,8 +1085,6 @@ int SmppOutputThread::Execute()
           {
             if(sockets[j]->getSocket()==error[i])
             {
-              //inTask->removeSocket(error[i]);
-              tokill.Push(error[i]);
               killSocket(j);
               break;
             }
@@ -1163,8 +1100,6 @@ int SmppOutputThread::Execute()
             {
               if(sockets[j]==ss)
               {
-                //inTask->removeSocket(ss->getSocket());
-                tokill.Push(ss->getSocket());
                 killSocket(j);
                 break;
               }
@@ -1172,16 +1107,7 @@ int SmppOutputThread::Execute()
           }
         }
         mon.Unlock();
-        try{
-          for(int j=0;j<tokill.Count();j++)
-          {
-            inTask->removeSocket(tokill[j]);
-          }
-        }catch(...)
-        {
-        }
-        tokill.Empty();
-      } // if ready
+      }
     }catch(std::exception& e)
     {
       __warning2__("exception2 in smppouttask:%s",e.what());
