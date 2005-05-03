@@ -357,7 +357,7 @@ public class RsFileMessage  extends Message
     if( query.isFilterSrcSmeId && !query.getSrcSmeId().equals(srcSmeId) ) return false;
     String dstSmeId = Message.readString8(is);
     if( query.isFilterDstSmeId && !query.getDstSmeId().equals(dstSmeId) ) return false;
-    if( query.isFilterSmeId && !(query.getSmeId().equals(srcSmeId) || query.getSmeId().equals(dstSmeId)))
+    if( query.isFilterSmeId && !(query.getSmeId().equals(srcSmeId) || query.getSmeId().equals(dstSmeId))) return false;
 
     if( justCheck ) return true;
     // parse rest and fill SmsRow
