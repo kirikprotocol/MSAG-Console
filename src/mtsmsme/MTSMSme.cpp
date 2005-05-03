@@ -104,10 +104,16 @@ public:
             if (!alias || !alias[0])
                 throw ConfigException("Alias for address '%s' is empty or wasn't specified", address);
 
+            Address addressAddress;
+            if (!convertMSISDNStringToAddress(address, addressAddress)) {
+                smsc_log_warn(logger, "Address '%s' has invalid format, skipped", address);
+                continue;
+            }
+            address = addressAddress.toString().c_str();
             if (!aliasByAddress.Exists(address)) {
                 Address aliasAddress;
                 if (convertMSISDNStringToAddress(alias, aliasAddress)) aliasByAddress.Insert(address, aliasAddress);
-                else smsc_log_warn(logger, "Alias '%s' for address '%s' has invalid format", alias, address);
+                else smsc_log_warn(logger, "Alias '%s' for address '%s' has invalid format, skipped", alias, address);
             }
             else smsc_log_warn(logger, "Alias for address '%s' already defined", address);
         }
