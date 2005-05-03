@@ -327,6 +327,12 @@
     <role-name>services</role-name>
   </security-role>
   <security-role>
+    <role-name>providers</role-name>
+  </security-role>
+  <security-role>
+    <role-name>categories</role-name>
+  </security-role>
+  <security-role>
     <description>Access Control List manager</description>
     <role-name>acls</role-name>
   </security-role>
