@@ -413,6 +413,9 @@ bool StatStorage::createDir(const std::string& dir)
     }
     return true;
 }
+
+const int MAX_STACK_BUFFER_SIZE = 64*1024;
+
 void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
 {
     smsc_log_debug(logger, "Statistics dump called for %02d:%02d GMT", 
@@ -467,10 +470,12 @@ void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
                        fileName, (needHeader) ? "created":"opened");
     }
     
+    TmpBuf<uint8_t, MAX_STACK_BUFFER_SIZE> writeBuff(MAX_STACK_BUFFER_SIZE);
     uint32_t value32 = htonl(buffLen);
-    write((const void *)&value32, sizeof(value32));
-    write((const void *)buff, buffLen); // write dump to it
-    write((const void *)&value32, sizeof(value32));
+    writeBuff.Append((uint8_t *)&value32, sizeof(value32));
+    writeBuff.Append((uint8_t *)buff, buffLen);
+    writeBuff.Append((uint8_t *)&value32, sizeof(value32));
+    write((const void *)writeBuff, writeBuff.GetPos());
     flush();
     smsc_log_debug(logger, "Record dumped (%d bytes)", buffLen);
 }
@@ -489,7 +494,7 @@ uint64_t toNetworkOrder(uint64_t value)
 void StatisticsManager::flush(const tm& flushTM, StatStorage& _storage, SmsStat& general,
                               Hash<SmsStat>& statSme, Hash<RouteStat>& statRoute)
 {
-    const int MAX_STACK_BUFFER_SIZE = 64*1024;
+    
     TmpBuf<uint8_t, MAX_STACK_BUFFER_SIZE> buff(MAX_STACK_BUFFER_SIZE);
 
     // General statistics dump
