@@ -92,7 +92,7 @@ public class SmsRow
 
   public void setOriginatingAddress(Mask mask)
   {
-    originatingAddress = mask.toString();
+    originatingAddress = mask.getMask();
     originatingAddressMask = mask;
   }
 
@@ -112,7 +112,7 @@ public class SmsRow
 
   public void setDestinationAddress(Mask mask)
   {
-    destinationAddress = mask.toString();
+    destinationAddress = mask.getMask();
     destinationAddressMask = mask;
   }
   public String getDealiasedDestinationAddress()
@@ -132,7 +132,7 @@ public class SmsRow
 
   public void setDealiasedDestinationAddress(Mask mask)
   {
-    dealiasedDestinationAddress = mask.toString();
+    dealiasedDestinationAddress = mask.getMask();
     dealiasedDestinationAddressMask = mask;
   }
 

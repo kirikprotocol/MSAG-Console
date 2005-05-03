@@ -170,6 +170,7 @@ switch(beanResult = bean.process(request))
   %>
 </tbody>
 </table>
+<br><br><br><br><br><br><br><br><br><br>
 <%}%>
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
