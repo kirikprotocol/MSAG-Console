@@ -106,15 +106,15 @@
     </containerElement>
     <containerElement type="module" name="tomcat_auth_common">
       <attribute name="method" value="5" />
-      <attribute name="URI" value="/opt/tomcat4/common/lib/tomcat_auth_common.jar" />
+      <attribute name="URI" value="/WEB-INF/lib/tomcat_auth_common.jar" />
     </containerElement>
     <containerElement type="module" name="tomcat_auth_server">
       <attribute name="method" value="5" />
-      <attribute name="URI" value="/opt/tomcat4/server/lib/tomcat_auth_server.jar" />
+      <attribute name="URI" value="/WEB-INF/lib/tomcat_auth_server.jar" />
     </containerElement>
     <containerElement type="module" name="tomcat_auth_webapp">
-      <attribute name="method" value="1" />
-      <attribute name="URI" value="/WEB-INF/classes" />
+      <attribute name="method" value="5" />
+      <attribute name="URI" value="/WEB-INF/lib/tomcat_auth_webapp.jar" />
     </containerElement>
     <containerElement type="library" level="module">
       <attribute name="method" value="1" />
@@ -141,7 +141,7 @@
       <attribute name="URI" value="/WEB-INF/lib/nsjsp.jar" />
       <url>jar://$MODULE_DIR$/../libs/nsjsp.jar!/</url>
     </containerElement>
-    <deploymentDescriptor name="web.xml" url="file://$MODULE_DIR$/WEB-INF/web.xml" version="2.3" />
+    <deploymentDescriptor name="web.xml" url="file://$MODULE_DIR$/../../../smsc_webapp/resources/WEB-INF/web.xml" version="2.3" />
     <webroots>
       <root url="file://$MODULE_DIR$" relative="/" />
     </webroots>

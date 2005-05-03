@@ -245,4 +245,14 @@ public class Functions
   {
     return (s1 == null && s2 == null) || (s1 != null && s2 != null && s1.equals(s2));
   }
+
+  public static void readBuffer( InputStream is, byte buffer[], int size ) throws IOException {
+    int read = 0;
+    while (read < size) {
+      int result = is.read(buffer, read, size - read);
+      if (result < 0) throw new EOFException("Failed to read " + size + " bytes, read failed at "+read);
+      read += result;
+    }
+
+  }
 }

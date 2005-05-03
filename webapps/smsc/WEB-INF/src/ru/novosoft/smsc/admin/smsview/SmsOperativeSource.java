@@ -8,6 +8,7 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCJspException;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.util.Functions;
 
 import java.io.*;
 import java.util.HashMap;
@@ -102,12 +103,7 @@ public class SmsOperativeSource extends SmsSource
         byte message[] = new byte[256*1024];
         while(true) {
           int msgSize1 = (int) Message.readUInt32(input);
-          int read = 0;
-          while (read < msgSize1) {
-            int result = input.read(message, read, msgSize1 - read);
-            if (result < 0) throw new EOFException("Protocol error. Failed to read " + msgSize1 + " bytes");
-            read += result;
-          }
+          Functions.readBuffer(input, message, msgSize1);
           int msgSize2 = (int) Message.readUInt32(input);
           if (msgSize1 != msgSize2) throw new IOException("Protocol error sz1=" + msgSize1 + " sz2=" + msgSize2);
           InputStream bis = new ByteArrayInputStream(message, 0, msgSize1);
