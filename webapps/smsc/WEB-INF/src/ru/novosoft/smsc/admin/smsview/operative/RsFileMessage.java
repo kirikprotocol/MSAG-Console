@@ -310,7 +310,7 @@ public class RsFileMessage  extends Message
     String finall=Message.readString(is,1);
 
     int smsStatus = Message.readUInt8(is);
-    if(query.isFilterStatus && smsStatus != query.getStatus() ) return false;
+//    if(query.isFilterStatus && smsStatus != query.getStatus() ) return false;
 
     Date submitTime = new Date(Message.readUInt32(is)*1000);
     if( query.isFilterFromDate && submitTime.compareTo(query.getFromDate()) < 0) return false;
@@ -322,7 +322,7 @@ public class RsFileMessage  extends Message
     int attempts = (int)Message.readUInt32(is);
 
     int lastResult = (int)Message.readUInt32(is);
-    if(query.isFilterLastResult && lastResult != query.getLastResult()) return false;
+//    if(query.isFilterLastResult && lastResult != query.getLastResult()) return false;
 
     int strLen = Message.readUInt8(is);
     Mask origMask = new Mask((byte)Message.readUInt8(is), (byte)Message.readUInt8(is), Message.readString(is,strLen));

@@ -73,13 +73,13 @@ public class SmeStatus
           try {
             inAddress = tokenizer.nextToken();
           } catch (Exception e) {
-            logger.debug("inAddress unknown", e);
+//            logger.debug("inAddress unknown", e);
             inAddress = "unknown";
           }
           try {
             outAddress = tokenizer.nextToken();
           } catch (Exception e) {
-            logger.debug("outAddress unknown", e);
+//            logger.debug("outAddress unknown", e);
             outAddress = "unknown";
           }
         }

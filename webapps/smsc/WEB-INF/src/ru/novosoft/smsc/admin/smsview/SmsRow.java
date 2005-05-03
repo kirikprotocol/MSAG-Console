@@ -20,6 +20,11 @@ import java.io.ByteArrayInputStream;
 public class SmsRow
 {
   private static int numStates = 5;
+  public static int MSG_STATE_ENROUTE = 0;
+  public static int MSG_STATE_DELIVERED = 1;
+  public static int MSG_STATE_EXPIRED = 2;
+  public static int MSG_STATE_UNDELIVERABLE = 3;
+  public static int MSG_STATE_DELETED = 4;
   private static String states[] = {"ENROUTE", "DELIVERED", "EXPIRED", "UNDELIVERABLE", "DELETED"};
 
   private long id;
@@ -166,6 +171,11 @@ public class SmsRow
   public String getStatus()
   {
     return getStatusString(status);
+  }
+
+  public int getStatusInt()
+  {
+    return status;
   }
 
   public void setStatus(int status)

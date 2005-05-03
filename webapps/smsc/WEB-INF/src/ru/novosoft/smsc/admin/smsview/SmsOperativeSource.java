@@ -11,10 +11,7 @@ import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.Functions;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Date;
-import java.util.HashSet;
+import java.util.*;
 
 import org.apache.log4j.Category;
 
@@ -97,7 +94,7 @@ public class SmsOperativeSource extends SmsSource
       String FileName = Message.readString(input, 9);
       int version = (int) Message.readUInt32(input);
 
-      HashSet msgIds = new HashSet(5000);
+//      HashSet msgIds = new HashSet(5000);
       try {
         RsFileMessage resp = new RsFileMessage();
         byte message[] = new byte[256*1024];
@@ -109,23 +106,31 @@ public class SmsOperativeSource extends SmsSource
           InputStream bis = new ByteArrayInputStream(message, 0, msgSize1);
           long msgId=Message.readInt64(bis);
           Long lmsgId = new Long(msgId);
-          if( msgs.get(lmsgId) != null ) {
-            if( resp.receive(bis, query, message, msgId, false) ) {
+          if( resp.receive(bis, query, message, msgId, false) ) {
+            if( resp.getSms().getStatusInt() == SmsRow.MSG_STATE_ENROUTE ) {
               msgs.put(lmsgId, resp.getSms());
-            }
-          } else if( msgs.size() < rowsMaximum ) {
-            if( resp.receive(bis, query, message, msgId, false) ) {
-              msgs.put(lmsgId, resp.getSms());
-              smsCount++;
-            }
-          } else if( calcExactCount && !msgIds.contains(lmsgId) ) {
-            if( resp.receive(bis, query, message, msgId, true) ) {
-              msgIds.add( lmsgId );
-              smsCount++;
+            } else {
+              msgs.remove(lmsgId);
             }
           }
         }
       } catch (EOFException e) {
+      }
+      if( query.isFilterLastResult || query.isFilterStatus ) {
+        Map.Entry entry = null;
+        SmsRow row = null;
+        for( Iterator it = msgs.entrySet().iterator(); it.hasNext(); ) {
+          entry = (Map.Entry)it.next();
+          row = (SmsRow) entry.getValue();
+          if( query.isFilterStatus && row.getStatusInt() != query.getStatus() ) {
+            it.remove();
+            continue;
+          }
+          if( query.isFilterLastResult && row.getLastResult() != query.getLastResult() ) {
+            it.remove();
+            continue;
+          }
+        }
       }
     } catch (Exception e) {
       logger.error("Unexpected exception occured reading operative store file", e);
@@ -139,7 +144,7 @@ public class SmsOperativeSource extends SmsSource
       System.out.println("end reading File in: " + new Date()+" spent: "+(System.currentTimeMillis()-tm)/1000);
       set.addAll(msgs.values());
     }
-    set.setSmesRows(smsCount);
+    set.setSmesRows(msgs.size());
     return set;
   }
 
