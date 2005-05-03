@@ -29,7 +29,7 @@ public class SmsStatFormBean extends IndexBean
 
   private Statistics statistics = null;
   private StatQuery query = new StatQuery();
-  private SmsStat stat = new SmsStat();
+  private SmsStat stat = null;
 
   private String mbQuery = null;
   private String mbDetail = null;
@@ -47,30 +47,19 @@ public class SmsStatFormBean extends IndexBean
     if (result != RESULT_OK)
       return result;
     try {
-      stat.init(appContext);
+      if (stat == null) stat = SmsStat.getInstance(appContext);
     } catch (AdminException e) {
       e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
       return error(SMSCErrors.error.smsstat.QueryFailed, e.getMessage());
-    }
-    if (stat.getSmsc() == null) {
-     // smsStat.setDataSource(appContext.getConnectionPool());
-      stat.setSmsc(appContext.getSmsc());
-      stat.setRouteSubjectManager(routeSubjectManager);
-      stat.setProviderManager(appContext.getProviderManager());
-      stat.setCategoryManager(appContext.getCategoryManager());
     }
 
     if (mbQuery != null) {
       try {
         statistics = stat.getStatistics(query);
-        // Date fromDate =query.getFromDate();
-        // Date TillDate=query.getTillDate();
-
         String dateFrom = this.getFromDate();
         String dateTill = this.getTillDate();
 
         Collection ByRouteId = statistics.getRouteIdStat();
-        //HttpSession session =request.getSession();
         session.removeAttribute("ByRouteId");
         session.setAttribute("ByRouteId", ByRouteId);
         session.removeAttribute("dateFrom");
@@ -92,9 +81,7 @@ public class SmsStatFormBean extends IndexBean
       try {
         mbDetail = null;
         return RESULT_FILTER;
-        // statistics = stat.getStatistics(query);
       } catch (Exception exc) {
-        // statistics = null;
         return error(exc.getMessage());
       }
     }
