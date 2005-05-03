@@ -260,43 +260,46 @@ public class SmsStat {
               throw new IOException("Invalid file format "+path+" rs1=" + rs1 + ", rs2=" + rs2+" at record="+recordNum);
 
             ByteArrayInputStream is = new ByteArrayInputStream(buffer, 0, rs1);
-            int hour = readUInt8(is);
-            int min = readUInt8(is);
-            calendar.setTime(fileDate);
-            calendar.set(Calendar.HOUR, hour);
-            calendar.set(Calendar.MINUTE, min);
-            curDate = calendar.getTime();
+            try {
+              int hour = readUInt8(is);
+              int min = readUInt8(is);
+              calendar.setTime(fileDate);
+              calendar.set(Calendar.HOUR, hour);
+              calendar.set(Calendar.MINUTE, min);
+              curDate = calendar.getTime();
 
-            if (fromQueryDate != null && curDate.getTime() < fromQueryDate.getTime()) {
-              logger.debug("Hour: "+hour+" skipped");
-              continue;
+              if (fromQueryDate != null && curDate.getTime() < fromQueryDate.getTime()) {
+                logger.debug("Hour: "+hour+" skipped");
+                continue;
+              }
+
+              if (prevHour == -1) prevHour = hour;
+              if (lastDate == null) lastDate = curDate;
+
+              if (hour != prevHour && haveValues) { // switch to new hour
+                logger.debug("New hour: " + hour + ", dump stat for: " + dateDayFormat.format(lastDate) + " GMT");
+                statByHours.put(lastDate, lastHourCounter);
+                haveValues = false;
+                lastDate = curDate;
+                prevHour = hour;
+                lastHourCounter = new CountersSet();
+              }
+
+              if (tillQueryDate != null && curDate.getTime() >= tillQueryDate.getTime()) {
+                finished = true;
+                break; // finish work
+              }
+
+              haveValues = true; // read and increase counters
+              scanCounters(lastHourCounter, is);
+              scanErrors(stat, is);
+              scanSmes(countersForSme, is);
+              scanRoutes(countersForRoute, is);
+            } catch (EOFException exc) {
+              logger.warn("Incomplete record #"+recordNum+" in "+path+"");
             }
-
-            if (prevHour == -1) prevHour = hour;
-            if (lastDate == null) lastDate = curDate;
-
-            if (hour != prevHour && haveValues) { // switch to new hour
-              logger.debug("New hour: " + hour + ", dump stat for: " + dateDayFormat.format(lastDate) + " GMT");
-              statByHours.put(lastDate, lastHourCounter);
-              haveValues = false;
-              lastDate = curDate;
-              prevHour = hour;
-              lastHourCounter = new CountersSet();
-            }
-
-            if (tillQueryDate != null && curDate.getTime() >= tillQueryDate.getTime()) {
-              finished = true;
-              break; // finish work
-            }
-
-            haveValues = true; // read and increase counters
-            scanCounters(lastHourCounter, is);
-            scanErrors(stat, is);
-            scanSmes(countersForSme, is);
-            scanRoutes(countersForRoute, is);
-
           } catch (EOFException exc) {
-            logger.warn("Incomplete record #"+recordNum+" in "+path+"");
+            break;
           }
         }
         if (haveValues) {
