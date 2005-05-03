@@ -227,18 +227,21 @@ int main(void)
            flushTM2.tm_hour, flushTM2.tm_min, flushTM2.tm_sec);
     return 0;*/
     
-    const char* OCI_DS_FACTORY_IDENTITY = "OCI";
-    DataSourceLoader::loadupDataSourceFactory("../db/oci/libdb_oci.so", OCI_DS_FACTORY_IDENTITY);
-    DataSource* ds = DataSourceFactory::getDataSource(OCI_DS_FACTORY_IDENTITY);
+    Manager::init("config.xml");
+    ConfigView dsLoaderConfig(Manager::getInstance(), "StartupLoader");
+    DataSourceLoader::loadup(&dsLoaderConfig);
     
+    std::auto_ptr<ConfigView> dsCfgGuard(new ConfigView(Manager::getInstance(), "DataSource"));
+    ConfigView* dsConfig = dsCfgGuard.get();
+    std::auto_ptr<char> dsIdentity(dsConfig->getString("type"));
+    const char* dsIdentityStr = dsIdentity.get();
+    DataSource* ds = DataSourceFactory::getDataSource(dsIdentityStr);
     if (!ds) {
         smsc_log_error(logger, "Create DataSource failed!");
         return -1;
     }
+    ds->init(dsConfig);
     
-    Manager::init("config.xml");
-    std::auto_ptr<ConfigView> dsConfig(new ConfigView(Manager::getInstance(), "DataSource"));
-    ds->init(dsConfig.get());
     std::auto_ptr<ConfigView> msConfig(new ConfigView(Manager::getInstance(), "MessageStore"));
     const char* location = msConfig.get()->getString("statisticsDir");
     
@@ -259,6 +262,7 @@ int main(void)
         smsc_log_error(logger, "Exception occured: %s", exc.what());
     }
     
+    DataSourceLoader::unload();
     smsc_log_info(logger, "Exit");
     return 0;
 }
