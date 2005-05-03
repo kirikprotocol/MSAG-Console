@@ -2,22 +2,20 @@ package ru.novosoft.smsc.admin.smsstat;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.route.Route;
-import ru.novosoft.smsc.admin.category.CategoryManager;
-import ru.novosoft.smsc.admin.category.Category;
-import ru.novosoft.smsc.admin.provider.ProviderManager;
-import ru.novosoft.smsc.admin.provider.Provider;
-import ru.novosoft.smsc.admin.smsview.DateConvertor;
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
-import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.util.conpool.NSConnectionPool;
 
+import javax.sql.DataSource;
 import java.io.*;
 import java.util.*;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
+import java.sql.Statement;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.PreparedStatement;
 
 /**
  * Created by IntelliJ IDEA.
@@ -26,393 +24,656 @@ import java.text.ParseException;
  * Time: 15:32:13
  * To change this template use File | Settings | File Templates.
  */
-public class SmsStat {
-  org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(SmsStat.class);
+public class SmsStat
+ {
+    org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(SmsStat.class);
 
-  private final static String PARAM_NAME_STAT_DIR = "MessageStore.statisticsDir";
+    private final static String DIR_SEPARATOR   = "/";
+    private final static String DATE_DIR_FORMAT = "yyyy-MM";
+    private final static String DATE_DAY_FORMAT = "yyyy-MM-dd hh:mm";
+    private final static String DATE_DIR_FILE_FORMAT = DATE_DIR_FORMAT + DIR_SEPARATOR + "dd";
+    private final static String DATE_FILE_EXTENSION  = ".rts";
+    private final static String DATE_PERIOD_FORMAT = "yyyyMMddhhmm";
 
-  private final static String DIR_SEPARATOR = "/";
-  private final static String DATE_DIR_FORMAT = "yyyy-MM";
-  private final static String DATE_DAY_FORMAT = "yyyy-MM-dd hh:mm";
-  private final static String DATE_DIR_FILE_FORMAT = DATE_DIR_FORMAT + DIR_SEPARATOR + "dd";
-  private final static String DATE_FILE_EXTENSION = ".rts";
+    private Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
+    private Calendar localCaledar = Calendar.getInstance(TimeZone.getDefault());
+    private SimpleDateFormat dateDirFormat = new SimpleDateFormat(DATE_DIR_FORMAT);
+    private SimpleDateFormat dateDirFileFormat = new SimpleDateFormat(DATE_DIR_FILE_FORMAT);
+    private SimpleDateFormat dateDayFormat = new SimpleDateFormat(DATE_DAY_FORMAT);
+    private SimpleDateFormat dateDayLocalFormat = new SimpleDateFormat(DATE_DAY_FORMAT);
+    private SimpleDateFormat datePeriodLocalFormat = new SimpleDateFormat(DATE_PERIOD_FORMAT);
 
-  private String statstorePath;
+    private String statstorePath;
+    private final static String PARAM_NAME_STAT_DIR = "MessageStore.statisticsDir";
 
-  Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
-  Calendar localCaledar = Calendar.getInstance(TimeZone.getDefault());
+    private Date fromQueryDate = null;
+    private Date tillQueryDate = null;
 
-  //SimpleDateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
-  SimpleDateFormat dateDirFormat = new SimpleDateFormat(DATE_DIR_FORMAT);
-  SimpleDateFormat dateDirFileFormat = new SimpleDateFormat(DATE_DIR_FILE_FORMAT);
+    private ExportSettings defaultExportSettings = null;
 
-  SimpleDateFormat dateDayFormat = new SimpleDateFormat(DATE_DAY_FORMAT);
-  SimpleDateFormat dateDayLocalFormat = new SimpleDateFormat(DATE_DAY_FORMAT);
+    private static Object instanceLock = new Object();
+    private static SmsStat instance = null;
 
-  Date fromQueryDate = null;
-  Date tillQueryDate = null;
-
-  private Statistics stat = null;
-  private Smsc smsc = null;
-
-  protected RouteSubjectManager routeSubjectManager = null;
-  protected ProviderManager providerManager = null;
-  protected CategoryManager categoryManager = null;
-
-  public void init(SMSCAppContext appContext) throws AdminException {
-    Smsc smsc = appContext.getSmsc();
-    Config config = smsc.getSmscConfig();
-
-    try {
-      statstorePath = config.getString(PARAM_NAME_STAT_DIR);
-    } catch (Exception e) {
-      throw new AdminException("Failed to obtain statistics dir. Details: " + e.getMessage());
-    }
-
-    dateDirFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-    dateDirFileFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-    dateDayFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
-    dateDayLocalFormat.setTimeZone(TimeZone.getDefault());
-  }
-
-  private TreeMap getStatQueryDirs() throws AdminException {
-    File filePath = new File(statstorePath);
-    String[] dirNames = filePath.list();
-    if (dirNames == null || dirNames.length == 0)
-      throw new AdminException("No statistics directories");
-
-    Date tillQueryDirTime = tillQueryDate;
-    Date tillQueryFileTime = tillQueryDate;
-    Date fromQueryDirTime = null;
-    Date fromQueryFileTime = null;
-    if (fromQueryDate != null) {
-      calendar.setTime(fromQueryDate);
-      calendar.set(Calendar.HOUR_OF_DAY, 0);
-      calendar.set(Calendar.MINUTE, 0);
-      calendar.set(Calendar.MILLISECOND, 0);
-      fromQueryFileTime = calendar.getTime();
-      calendar.set(Calendar.DAY_OF_MONTH, 0);
-      fromQueryDirTime = calendar.getTime();
-    }
-
-    TreeMap selected = new TreeMap();
-    for (int i = 0; i < dirNames.length; i++) {
-      String dirName = dirNames[i];
-      if (dirName == null || dirName.length() <= 0) continue;
-
-      Date dirDate;
-      try {
-        dirDate = dateDirFormat.parse(dirName);
-      } catch (ParseException exc) {
-        continue;
-      }
-
-      if (fromQueryDirTime != null && dirDate.getTime() < fromQueryDirTime.getTime()) continue;
-      if (tillQueryDirTime != null && dirDate.getTime() > tillQueryDirTime.getTime()) continue;
-
-      String currentDir = statstorePath + DIR_SEPARATOR + dirName;
-      File[] dirFiles = (new File(currentDir)).listFiles();
-      if (dirFiles == null || dirFiles.length == 0) continue;
-
-      for (int j = 0; j < dirFiles.length; j++) {
-        String fileName = dirFiles[j].getName();
-        if (fileName == null || fileName.length() <= 0 ||
-                !fileName.toLowerCase().endsWith(DATE_FILE_EXTENSION))
-          continue;
-
-        String dirFileName = dirName + DIR_SEPARATOR + fileName;
-        Date fileDate;
-        try {
-          fileDate = dateDirFileFormat.parse(dirFileName);
-        } catch (ParseException exc) {
-          continue;
-        }
-        if (fromQueryFileTime != null && fileDate.getTime() < fromQueryFileTime.getTime()) continue;
-        if (tillQueryFileTime != null && fileDate.getTime() > tillQueryFileTime.getTime()) continue;
-
-        selected.put(fileDate, statstorePath + DIR_SEPARATOR + dirFileName);
-      }
-    }
-    return selected;
-  }
-
-  private void initQueryPeriod(StatQuery query) {
-    fromQueryDate = query.isFromDateEnabled() ? query.getFromDate() : null;
-    tillQueryDate = query.isTillDateEnabled() ? query.getTillDate() : null;
-  }
-
-  private void scanCounters(CountersSet set, InputStream is) throws IOException {
-    int accepted = (int) readUInt32(is);
-    int rejected = (int) readUInt32(is);
-    int delivered = (int) readUInt32(is);
-    int failed = (int) readUInt32(is);
-    int rescheduled = (int) readUInt32(is);
-    int temporal = (int) readUInt32(is);
-    int peak_i = (int) readUInt32(is);
-    int peak_o = (int) readUInt32(is);
-    set.increment(accepted, rejected, delivered, failed, rescheduled,
-            temporal, peak_i, peak_o);
-  }
-
-  private void scanErrors(ExtendedCountersSet set, InputStream is) throws IOException {
-    int counter = (int) readUInt32(is);
-    while (counter-- > 0) {
-      int errcode = (int) readUInt32(is);
-      int count = (int) readUInt32(is);
-      set.incError(errcode, count);
-    }
-  }
-
-  private void scanSmes(HashMap map, InputStream is) throws IOException {
-    int counter = (int) readUInt32(is);
-    while (counter-- > 0) {
-      int sme_id_len = readUInt8(is);
-      String smeId = readString(is, sme_id_len);
-      SmeIdCountersSet set = (SmeIdCountersSet) map.get(smeId);
-      if (set == null) {
-        set = new SmeIdCountersSet(smeId);
-        map.put(smeId, set);
-      }
-      scanCounters(set, is);
-      scanErrors(set, is);
-    }
-  }
-
-  private void scanRoutes(HashMap map, InputStream is) throws IOException {
-    int counter = (int) readUInt32(is);
-    while (counter-- > 0) {
-      int route_id_len = readUInt8(is);
-      String routeId = readString(is, route_id_len);
-
-      long providerId = readInt64(is);
-      long categoryId = readInt64(is);
-
-      RouteIdCountersSet set = (RouteIdCountersSet) map.get(routeId);
-      if (set == null) {
-        set = new RouteIdCountersSet(routeId);
-        map.put(routeId, set);
-      }
-      set.setProviderId(providerId);
-      set.setCategoryId(categoryId);
-
-      scanCounters(set, is);
-      scanErrors(set, is);
-    }
-  }
-
-  public Statistics getStatistics(StatQuery query) throws AdminException {
-    stat = new Statistics();
-
-    initQueryPeriod(query);
+    public static SmsStat getInstance(SMSCAppContext appContext) throws AdminException
     {
-      String fromDate = " -";
-      if (fromQueryDate != null) {
-        fromDate = " from " + dateDayLocalFormat.format(fromQueryDate);
-        fromDate += " (" + dateDayFormat.format(fromQueryDate) + " GMT)";
-      }
-      String tillDate = " -";
-      if (tillQueryDate != null) {
-        tillDate = " till " + dateDayLocalFormat.format(tillQueryDate);
-        tillDate += " (" + dateDayFormat.format(tillQueryDate) + " GMT)";
-      }
-      logger.info("Query stat" + fromDate + tillDate);
+        synchronized(instanceLock) {
+            if (instance == null) instance = new SmsStat(appContext);
+            return instance;
+        }
     }
 
-    TreeMap selectedFiles = getStatQueryDirs();
-    if (selectedFiles == null || selectedFiles.size() <= 0) return stat;
-
-    TreeMap statByHours = new TreeMap(); // to add lastHourCounter to it
-    HashMap countersForSme = new HashMap(); // contains SmeIdCountersSet
-    HashMap countersForRoute = new HashMap(); // contains RouteIdCountersSet
-    // System.out.println("Start scanning statistics at: " + new Date());
-    long tm = System.currentTimeMillis();
-
-    boolean finished = false;
-    for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext() && !finished;) {
-      Date fileDate = (Date) iterator.next(); // GMT
-      String path = (String) selectedFiles.get(fileDate);
-      {
-        logger.debug("Parsing file: "+dateDayFormat.format(fileDate)+" GMT ("+dateDayLocalFormat.format(fileDate)+" local)");
-      }
-      InputStream input = null;
-      try {
-        input = new BufferedInputStream(new FileInputStream(path));
-        String fileStamp = readString(input, 9);
-        if (fileStamp == null || !fileStamp.equals("SMSC.STAT"))
-          throw new AdminException("unsupported header of file (support only SMSC.STAT file )");
-        readUInt16(input); // read version for support reasons
-        CountersSet lastHourCounter = new CountersSet();
-        Date lastDate = null;
-        Date curDate = null;
-        int prevHour = -1;
-        byte buffer[] = new byte[512 * 1024];
-        boolean haveValues = false;
-        int recordNum = 0;
-        while (true) // iterate file records (by minutes)
-        {
-          try {
-            recordNum++;
-            int rs1 = (int) readUInt32(input);
-            if (buffer.length < rs1) buffer = new byte[rs1];
-            Functions.readBuffer(input,buffer,rs1);
-            int rs2 = (int) readUInt32(input);
-            if (rs1 != rs2)
-              throw new IOException("Invalid file format "+path+" rs1=" + rs1 + ", rs2=" + rs2+" at record="+recordNum);
-
-            ByteArrayInputStream is = new ByteArrayInputStream(buffer, 0, rs1);
-            try {
-              int hour = readUInt8(is);
-              int min = readUInt8(is);
-              calendar.setTime(fileDate);
-              calendar.set(Calendar.HOUR, hour);
-              calendar.set(Calendar.MINUTE, min);
-              curDate = calendar.getTime();
-
-              if (fromQueryDate != null && curDate.getTime() < fromQueryDate.getTime()) {
-                logger.debug("Hour: "+hour+" skipped");
-                continue;
-              }
-
-              if (prevHour == -1) prevHour = hour;
-              if (lastDate == null) lastDate = curDate;
-
-              if (hour != prevHour && haveValues) { // switch to new hour
-                logger.debug("New hour: " + hour + ", dump stat for: " + dateDayFormat.format(lastDate) + " GMT");
-                statByHours.put(lastDate, lastHourCounter);
-                haveValues = false;
-                lastDate = curDate;
-                prevHour = hour;
-                lastHourCounter = new CountersSet();
-              }
-
-              if (tillQueryDate != null && curDate.getTime() >= tillQueryDate.getTime()) {
-                finished = true;
-                break; // finish work
-              }
-
-              haveValues = true; // read and increase counters
-              scanCounters(lastHourCounter, is);
-              scanErrors(stat, is);
-              scanSmes(countersForSme, is);
-              scanRoutes(countersForRoute, is);
-            } catch (EOFException exc) {
-              logger.warn("Incomplete record #"+recordNum+" in "+path+"");
-            }
-          } catch (EOFException exc) {
-            break;
-          }
-        }
-        if (haveValues) {
-          logger.debug("Last dump stat for: " + dateDayFormat.format(lastDate) + " GMT");
-          statByHours.put(lastDate, lastHourCounter);
+    protected SmsStat(SMSCAppContext appContext) throws AdminException
+    {
+        Config config = appContext.getSmsc().getSmscConfig();
+        try { statstorePath = config.getString(PARAM_NAME_STAT_DIR); } catch (Exception e) {
+            throw new AdminException("Failed to obtain statistics dir. Details: " + e.getMessage());
         }
 
-      } catch (IOException e) {
-        throw new AdminException(e.getMessage());
-      } finally {
+        Config webConfig = appContext.getConfig(); // webappConfig
         try {
-          if (input != null) input.close();
-        } catch (Throwable th) {
-          th.printStackTrace();
+            final String section = "statsave_datasource";
+            final String source = webConfig.getString(section + ".source");
+            final String driver = webConfig.getString(section + ".driver");
+            final String user   = webConfig.getString(section + ".user");
+            final String pass   = webConfig.getString(section + ".pass");
+            final String prefix = webConfig.getString(section + ".tables_prefix");
+            defaultExportSettings = new ExportSettings(source, driver, user, pass, prefix);
+        } catch (Exception e) {
+            throw new AdminException("Failed to configure default export settings. Details: " + e.getMessage());
         }
-      }
-    } // for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext();)
-    logger.debug("End scanning statistics at: " + new Date() + " time spent: " + (System.currentTimeMillis() - tm) / 1000);
 
+        dateDirFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        dateDirFileFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        dateDayFormat.setTimeZone(TimeZone.getTimeZone("GMT"));
+        dateDayLocalFormat.setTimeZone(TimeZone.getDefault());
+        datePeriodLocalFormat.setTimeZone(TimeZone.getDefault());
+    }
 
-    DateCountersSet dateCounters = null;
-    Date lastDate = null;
-    for (Iterator it = statByHours.keySet().iterator(); it.hasNext();) {
-      Date hourDate = (Date) it.next();
-      CountersSet hourCounter = (CountersSet) statByHours.get(hourDate);
-      localCaledar.setTime(hourDate);
-      int hour = localCaledar.get(Calendar.HOUR_OF_DAY);
+    private TreeMap getStatQueryDirs() throws AdminException
+    {
+        File filePath = new File(statstorePath);
+        String[] dirNames = filePath.list();
+        if (dirNames == null || dirNames.length == 0)
+            throw new AdminException("No statistics directories");
 
-      if (lastDate == null || hourDate.getTime() - lastDate.getTime() >= Constants.Day) {
-        localCaledar.set(Calendar.HOUR_OF_DAY, 0);
-        localCaledar.set(Calendar.MINUTE, 0);
-        localCaledar.set(Calendar.SECOND, 0);
-        localCaledar.set(Calendar.MILLISECOND, 0);
-        lastDate = localCaledar.getTime();
+        Date tillQueryDirTime = tillQueryDate;
+        Date tillQueryFileTime = tillQueryDate;
+        Date fromQueryDirTime = null;
+        Date fromQueryFileTime = null;
+        if (fromQueryDate != null) {
+            calendar.setTime(fromQueryDate);
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.MILLISECOND, 0);
+            fromQueryFileTime = calendar.getTime();
+            calendar.set(Calendar.DAY_OF_MONTH, 0);
+            fromQueryDirTime = calendar.getTime();
+        }
+
+        TreeMap selected = new TreeMap();
+        for (int i = 0; i < dirNames.length; i++) {
+            String dirName = dirNames[i];
+            if (dirName == null || dirName.length() <= 0) continue;
+
+            Date dirDate;
+            try {
+                dirDate = dateDirFormat.parse(dirName);
+            } catch (ParseException exc) {
+                continue;
+            }
+
+            if (fromQueryDirTime != null && dirDate.getTime() < fromQueryDirTime.getTime()) continue;
+            if (tillQueryDirTime != null && dirDate.getTime() > tillQueryDirTime.getTime()) continue;
+
+            String currentDir = statstorePath + DIR_SEPARATOR + dirName;
+            File[] dirFiles = (new File(currentDir)).listFiles();
+            if (dirFiles == null || dirFiles.length == 0) continue;
+
+            for (int j = 0; j < dirFiles.length; j++) {
+                String fileName = dirFiles[j].getName();
+                if (fileName == null || fileName.length() <= 0 ||
+                        !fileName.toLowerCase().endsWith(DATE_FILE_EXTENSION))
+                    continue;
+
+                String dirFileName = dirName + DIR_SEPARATOR + fileName;
+                Date fileDate;
+                try {
+                    fileDate = dateDirFileFormat.parse(dirFileName);
+                } catch (ParseException exc) {
+                    continue;
+                }
+                if (fromQueryFileTime != null && fileDate.getTime() < fromQueryFileTime.getTime()) continue;
+                if (tillQueryFileTime != null && fileDate.getTime() > tillQueryFileTime.getTime()) continue;
+
+                selected.put(fileDate, statstorePath + DIR_SEPARATOR + dirFileName);
+            }
+        }
+        return selected;
+    }
+
+    private void initQueryPeriod(StatQuery query) {
+        fromQueryDate = query.isFromDateEnabled() ? query.getFromDate() : null;
+        tillQueryDate = query.isTillDateEnabled() ? query.getTillDate() : null;
+    }
+
+    private void scanCounters(CountersSet set, InputStream is) throws IOException {
+        int accepted = (int) readUInt32(is);
+        int rejected = (int) readUInt32(is);
+        int delivered = (int) readUInt32(is);
+        int failed = (int) readUInt32(is);
+        int rescheduled = (int) readUInt32(is);
+        int temporal = (int) readUInt32(is);
+        int peak_i = (int) readUInt32(is);
+        int peak_o = (int) readUInt32(is);
+        set.increment(accepted, rejected, delivered, failed, rescheduled,
+                      temporal, peak_i, peak_o);
+    }
+
+    private void scanErrors(ExtendedCountersSet set, InputStream is) throws IOException {
+        int counter = (int) readUInt32(is);
+        while (counter-- > 0) {
+            int errcode = (int) readUInt32(is);
+            int count = (int) readUInt32(is);
+            set.incError(errcode, count);
+        }
+    }
+
+    private void scanSmes(HashMap map, InputStream is) throws IOException {
+        int counter = (int) readUInt32(is);
+        while (counter-- > 0) {
+            int sme_id_len = readUInt8(is);
+            String smeId = readString(is, sme_id_len);
+            SmeIdCountersSet set = (SmeIdCountersSet) map.get(smeId);
+            if (set == null) {
+                set = new SmeIdCountersSet(smeId);
+                map.put(smeId, set);
+            }
+            scanCounters(set, is);
+            scanErrors(set, is);
+        }
+    }
+
+    private void scanRoutes(HashMap map, InputStream is) throws IOException {
+        int counter = (int) readUInt32(is);
+        while (counter-- > 0) {
+            int route_id_len = readUInt8(is);
+            String routeId = readString(is, route_id_len);
+
+            long providerId = readInt64(is);
+            long categoryId = readInt64(is);
+
+            RouteIdCountersSet set = (RouteIdCountersSet) map.get(routeId);
+            if (set == null) {
+                set = new RouteIdCountersSet(routeId);
+                map.put(routeId, set);
+            }
+            set.setProviderId(providerId);
+            set.setCategoryId(categoryId);
+
+            scanCounters(set, is);
+            scanErrors(set, is);
+        }
+    }
+
+    private Object generalLock = new Object();
+
+    public Statistics getStatistics(StatQuery query) throws AdminException
+    {
+        synchronized(generalLock) {
+           return _getStatistics(query);
+        }
+    }
+    public long exportStatistics(StatQuery query, ExportSettings export) throws AdminException
+    {
+        synchronized(generalLock) {
+           return _exportStatistics(query, (export != null) ? export : defaultExportSettings);
+        }
+    }
+    public long exportStatistics(StatQuery query) throws AdminException
+    {
+        synchronized(generalLock) {
+           return _exportStatistics(query, defaultExportSettings);
+        }
+    }
+
+    private Statistics _getStatistics(StatQuery query) throws AdminException
+    {
+        initQueryPeriod(query);
+        if (logger.isInfoEnabled())
+        {
+            String fromDate = " -";
+            if (fromQueryDate != null) {
+                fromDate = " from " + dateDayLocalFormat.format(fromQueryDate);
+                fromDate += " (" + dateDayFormat.format(fromQueryDate) + " GMT)";
+            }
+            String tillDate = " -";
+            if (tillQueryDate != null) {
+                tillDate = " till " + dateDayLocalFormat.format(tillQueryDate);
+                tillDate += " (" + dateDayFormat.format(tillQueryDate) + " GMT)";
+            }
+            logger.info("Query stat" + fromDate + tillDate);
+        }
+
+        Statistics stat = new Statistics();
+        TreeMap selectedFiles = getStatQueryDirs();
+        if (selectedFiles == null || selectedFiles.size() <= 0) return stat;
+
+        TreeMap statByHours = new TreeMap(); // to add lastHourCounter to it
+        HashMap countersForSme = new HashMap(); // contains SmeIdCountersSet
+        HashMap countersForRoute = new HashMap(); // contains RouteIdCountersSet
+
+        long tm = System.currentTimeMillis();  boolean finished = false;
+        for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext() && !finished;) {
+            Date fileDate = (Date) iterator.next(); // GMT
+            String path = (String) selectedFiles.get(fileDate);
+            {
+                logger.debug("Parsing file: "+dateDayFormat.format(fileDate)+" GMT ("+dateDayLocalFormat.format(fileDate)+" local)");
+            }
+            InputStream input = null;
+            try {
+                input = new BufferedInputStream(new FileInputStream(path));
+                String fileStamp = readString(input, 9);
+                if (fileStamp == null || !fileStamp.equals("SMSC.STAT"))
+                    throw new AdminException("unsupported header of file (support only SMSC.STAT file )");
+                readUInt16(input); // read version for support reasons
+                CountersSet lastHourCounter = new CountersSet();
+                Date lastDate = null;
+                Date curDate = null;
+                int prevHour = -1;
+                byte buffer[] = new byte[512 * 1024];
+                boolean haveValues = false;
+                int recordNum = 0;
+                while (true) // iterate file records (by minutes)
+                {
+                    try {
+                        recordNum++;
+                        int rs1 = (int) readUInt32(input);
+                        if (buffer.length < rs1) buffer = new byte[rs1];
+                        Functions.readBuffer(input,buffer,rs1);
+                        int rs2 = (int) readUInt32(input);
+                        if (rs1 != rs2)
+                            throw new IOException("Invalid file format "+path+" rs1=" + rs1 + ", rs2=" + rs2+" at record="+recordNum);
+
+                        ByteArrayInputStream is = new ByteArrayInputStream(buffer, 0, rs1);
+                        try {
+                            int hour = readUInt8(is);
+                            int min = readUInt8(is);
+                            calendar.setTime(fileDate);
+                            calendar.set(Calendar.HOUR, hour);
+                            calendar.set(Calendar.MINUTE, min);
+                            curDate = calendar.getTime();
+
+                            if (fromQueryDate != null && curDate.getTime() < fromQueryDate.getTime()) {
+                                logger.debug("Hour: "+hour+" skipped");
+                                continue;
+                            }
+
+                            if (prevHour == -1) prevHour = hour;
+                            if (lastDate == null) lastDate = curDate;
+
+                            if (hour != prevHour && haveValues) { // switch to new hour
+                                logger.debug("New hour: " + hour + ", dump stat for: " + dateDayFormat.format(lastDate) + " GMT");
+                                statByHours.put(lastDate, lastHourCounter);
+                                haveValues = false;
+                                lastDate = curDate;
+                                prevHour = hour;
+                                lastHourCounter = new CountersSet();
+                            }
+
+                            if (tillQueryDate != null && curDate.getTime() >= tillQueryDate.getTime()) {
+                                finished = true;
+                                break; // finish work
+                            }
+
+                            haveValues = true; // read and increase counters
+                            scanCounters(lastHourCounter, is);
+                            scanErrors(stat, is);
+                            scanSmes(countersForSme, is);
+                            scanRoutes(countersForRoute, is);
+                        } catch (EOFException exc) {
+                            logger.warn("Incomplete record #"+recordNum+" in "+path+"");
+                        }
+                    } catch (EOFException exc) {
+                        break;
+                    }
+                }
+                if (haveValues) {
+                    logger.debug("Last dump stat for: " + dateDayFormat.format(lastDate) + " GMT");
+                    statByHours.put(lastDate, lastHourCounter);
+                }
+
+            } catch (IOException e) {
+                throw new AdminException(e.getMessage());
+            } finally {
+                try {
+                    if (input != null) input.close();
+                } catch (Throwable th) {
+                    th.printStackTrace();
+                }
+            }
+        } // for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext();)
+        logger.debug("End scanning statistics at: " + new Date() + " time spent: " +
+                     (System.currentTimeMillis() - tm) / 1000);
+
+        DateCountersSet dateCounters = null;
+        Date lastDate = null;
+        for (Iterator it = statByHours.keySet().iterator(); it.hasNext();)
+        {
+            Date hourDate = (Date) it.next();
+            CountersSet hourCounter = (CountersSet) statByHours.get(hourDate);
+            localCaledar.setTime(hourDate);
+            int hour = localCaledar.get(Calendar.HOUR_OF_DAY);
+
+            if (lastDate == null || (hourDate.getTime() - lastDate.getTime()) >= Constants.Day) {
+                localCaledar.set(Calendar.HOUR_OF_DAY, 0);
+                localCaledar.set(Calendar.MINUTE, 0);
+                localCaledar.set(Calendar.SECOND, 0);
+                localCaledar.set(Calendar.MILLISECOND, 0);
+                lastDate = localCaledar.getTime();
+                if (dateCounters != null) stat.addDateStat(dateCounters);
+                dateCounters = new DateCountersSet(lastDate);
+            }
+
+            HourCountersSet set = new HourCountersSet(hour);
+            set.increment(hourCounter);
+            dateCounters.addHourStat(set);
+        }
         if (dateCounters != null) stat.addDateStat(dateCounters);
-        dateCounters = new DateCountersSet(lastDate);
-        String lastDateLocalStr = dateDayLocalFormat.format(lastDate);
-      }
 
-      HourCountersSet set = new HourCountersSet(hour);
-      set.increment(hourCounter);
-      dateCounters.addHourStat(set);
+        Collection countersSme = countersForSme.values();
+        if (countersSme != null) stat.addSmeIdCollection(countersSme);
+        Collection countersRoute = countersForRoute.values();
+        if (countersRoute != null) stat.addRouteIdCollection(countersRoute);
+
+        return stat;
     }
-    if (dateCounters != null) stat.addDateStat(dateCounters);
 
-    Collection countersSme = countersForSme.values();
-    if (countersSme != null) stat.addSmeIdCollection(countersSme);
-    Collection countersRoute = countersForRoute.values();
-    if (countersRoute != null) stat.addRouteIdCollection(countersRoute);
+    private final static String WHERE_OP_SQL  = " WHERE";
+    private final static String DELETE_OP_SQL = "DELETE FROM ";
+    private final static String INSERT_OP_SQL = "INSERT INTO ";
+    
+    private final static String VALUES_SMS_SQL = 
+        " (period, accepted, rejected, delivered, failed, rescheduled, temporal, peak_i, peak_o)"+
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private final static String VALUES_SMS_ERR_SQL =
+        " (period, errcode, counter) VALUES (?, ?, ?)";
+    private final static String VALUES_SME_SQL =
+        " (period, systemid, accepted, rejected, delivered, failed, rescheduled, temporal, peak_i, peak_o)"+
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private final static String VALUES_SME_ERR_SQL =
+        " (period, systemid, errcode, counter) VALUES (?, ?, ?, ?)";
+    private final static String VALUES_ROUTE_SQL =
+        " (period, routeid, accepted, rejected, delivered, failed, rescheduled, temporal, peak_i, peak_o)"+
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    private final static String VALUES_ROUTE_ERR_SQL =
+        " (period, routeid, errcode, counter) VALUES (?, ?, ?, ?)";
 
-    return stat;
-  }
-
-  public static int readUInt8(InputStream is) throws IOException {
-    int b = is.read();
-    if (b == -1) throw new EOFException();
-    return b;
-  }
-
-  public static int readUInt16(InputStream is) throws IOException {
-    return (readUInt8(is) << 8 | readUInt8(is));
-  }
-
-  public static long readUInt32(InputStream is) throws IOException {
-    return ((long) readUInt8(is) << 24) | ((long) readUInt8(is) << 16) |
-            ((long) readUInt8(is) << 8) | ((long) readUInt8(is));
-  }
-
-  public static long readInt64(InputStream is) throws IOException {
-    return (readUInt32(is) << 32) | readUInt32(is);
-  }
-
-  public static String readString(InputStream is, int size) throws IOException {
-    if (size <= 0) return "";
-    byte buff[] = new byte[size];
-    int pos = 0;
-    int cnt = 0;
-    while (pos < size) {
-      cnt = is.read(buff, pos, size - pos);
-      if (cnt == -1) throw new EOFException();
-      pos += cnt;
+    private DataSource createDataSource(ExportSettings export) throws SQLException
+    {
+      Properties props = new Properties();
+      props.setProperty("jdbc.source", export.getSource());
+      props.setProperty("jdbc.driver", export.getDriver());
+      props.setProperty("jdbc.user", export.getUser());
+      props.setProperty("jdbc.pass", export.getPassword());
+      return new NSConnectionPool(props);
     }
-    return new String(buff);
-  }
 
-  public static void skipBytes(InputStream is, int size) throws IOException {
-    int pos = 0;
-    int cnt = 0;
-    while (pos < size) {
-      cnt = is.read();
-      if (cnt == -1) throw new EOFException();
-      pos += 1;
+    private String prepareWherePart(long from, long till)
+    {
+        if (from < -1 && till < -1) return "";
+        String result = WHERE_OP_SQL;
+        if (from > 0) {
+            result += (" period >= " + from);
+        }
+        if (till > 0) {
+            if (from > 0) result += " AND";
+            result += (" period < " + till);
+        }
+        return result;
     }
-  }
+    private long calculatePeriod(Date date) throws AdminException
+    {
+        try {
+          String str = datePeriodLocalFormat.format(date);
+          return Long.parseLong(str);
+        } catch (Exception exc) {
+            logger.error(exc);
+            throw new AdminException("Invalid period format. Details: "+exc.getMessage());
+        }
+    }
 
-  public void setCategoryManager(CategoryManager categoryManager) {
-    this.categoryManager = categoryManager;
-  }
+    private void setValues(PreparedStatement stmt, long period, String id, CountersSet set) throws SQLException
+    {
+        int pos = 1;
+        stmt.setLong(pos++, period);
+        if (id != null) stmt.setString(pos++, id);
+        stmt.setLong(pos++, set.accepted);
+        stmt.setLong(pos++, set.rejected);
+        stmt.setLong(pos++, set.delivered);
+        stmt.setLong(pos++, set.failed);
+        stmt.setLong(pos++, set.rescheduled);
+        stmt.setLong(pos++, set.temporal);
+        stmt.setLong(pos++, set.peak_i);
+        stmt.setLong(pos++, set.peak_o);
+    }
+    private void setError(PreparedStatement stmt, long period, String id, ErrorCounterSet err) throws SQLException
+    {
+        int pos = 1;
+        stmt.setLong(pos++, period);
+        if (id != null) stmt.setString(pos++, id);
+        stmt.setInt(pos++, err.errcode);
+        stmt.setLong(pos++, err.counter);
+    }
 
-  public void setProviderManager(ProviderManager providerManager) {
-    this.providerManager = providerManager;
-  }
+    private long _exportStatistics(StatQuery query, ExportSettings export) throws AdminException
+    {
+        final String tablesPrefix = export.getTablesPrefix();
+        final String totalSmsTable = tablesPrefix + "_sms";
+        final String totalErrTable = tablesPrefix + "_state";
+        final String smeSmsTable   = tablesPrefix + "_sme";
+        final String smeErrTable   = tablesPrefix + "_sme_state";
+        final String routeSmsTable = tablesPrefix + "_route";
+        final String routeErrTable = tablesPrefix + "_route_state";
 
-  public void setRouteSubjectManager(RouteSubjectManager routeSubjectManager) {
-    this.routeSubjectManager = routeSubjectManager;
-  }
+        long fromPeriod = query.isFromDateEnabled() ? calculatePeriod(query.getFromDate()) : -1;
+        long tillPeriod = query.isTillDateEnabled() ? calculatePeriod(query.getTillDate()) : -1;
 
-  public void setSmsc(Smsc smsc) {
-    this.smsc = smsc;
-  }
+        DataSource ds = null;
+        Connection connection = null;
+        String errMessage = null;
+        PreparedStatement insertSms = null; PreparedStatement insertErr = null;
+        PreparedStatement insertSmeSms = null; PreparedStatement insertSmeErr = null;
+        PreparedStatement insertRouteSms = null; PreparedStatement insertRouteErr = null;
+        try {
+            // create DS by export & obtain connection from it
+            errMessage = "Failed to init & connect to DataSource. Details: ";
+            ds = createDataSource(export);
+            connection = ds.getConnection();
 
-  public Smsc getSmsc() {
-    return smsc;
-  }
+            // delete old statistics data
+            errMessage = "Failed to drop old statistics data. Details: ";
+            Statement stmt = connection.createStatement();
+            final String wherePart = prepareWherePart(fromPeriod, tillPeriod);
+            stmt.executeUpdate(DELETE_OP_SQL + totalSmsTable + wherePart);
+            stmt.executeUpdate(DELETE_OP_SQL + totalErrTable + wherePart);
+            stmt.executeUpdate(DELETE_OP_SQL + smeSmsTable + wherePart);
+            stmt.executeUpdate(DELETE_OP_SQL + smeErrTable + wherePart);
+            stmt.executeUpdate(DELETE_OP_SQL + routeSmsTable + wherePart);
+            stmt.executeUpdate(DELETE_OP_SQL + routeErrTable + wherePart);
 
+            // perepare statements for Insert operations
+            errMessage = "Failed to create insert statements. Details: ";
+            insertSms = connection.prepareStatement(INSERT_OP_SQL + totalSmsTable + VALUES_SMS_SQL);
+            insertErr = connection.prepareStatement(INSERT_OP_SQL + totalErrTable + VALUES_SMS_ERR_SQL);
+            insertSmeSms = connection.prepareStatement(INSERT_OP_SQL + smeSmsTable + VALUES_SME_SQL);
+            insertSmeErr = connection.prepareStatement(INSERT_OP_SQL + smeErrTable + VALUES_SME_ERR_SQL);
+            insertRouteSms = connection.prepareStatement(INSERT_OP_SQL + routeSmsTable + VALUES_ROUTE_SQL);
+            insertRouteErr = connection.prepareStatement(INSERT_OP_SQL + routeErrTable + VALUES_ROUTE_ERR_SQL);
+        }
+        catch(SQLException exc) {
+            try { if (connection != null) { connection.rollback(); connection.close(); } }
+            catch(Throwable th) { th.printStackTrace(); }
+            throw new AdminException(errMessage+exc.getMessage());
+        }
+
+        long recordsExported = 0;
+        initQueryPeriod(query);
+        TreeMap selectedFiles = getStatQueryDirs();
+        if (selectedFiles == null || selectedFiles.size() <= 0) {
+            // if no records found commit deleted data
+            try { if (connection != null) { connection.commit(); connection.close(); } }
+            catch(Throwable th) { th.printStackTrace(); }
+            return 0;
+        }
+
+        boolean finished = false;
+        for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext() && !finished;)
+        {
+            Date fileDate = (Date) iterator.next(); // GMT
+            String path = (String) selectedFiles.get(fileDate);
+            if (logger.isDebugEnabled()) {
+                logger.debug("Parsing file: "+dateDayFormat.format(fileDate)+" GMT ("+dateDayLocalFormat.format(fileDate)+" local)");
+            }
+            InputStream input = null;
+            try
+            {
+                input = new BufferedInputStream(new FileInputStream(path));
+                String fileStamp = readString(input, 9);
+                if (fileStamp == null || !fileStamp.equals("SMSC.STAT"))
+                    throw new AdminException("unsupported header of file (support only SMSC.STAT file )");
+                readUInt16(input); // read version for support reasons
+
+                byte buffer[] = new byte[512 * 1024];
+                Date curDate = null; int recordNum = 0;
+                while (true) // iterate file records (by minutes)
+                {
+                    try {
+                        recordNum++;
+                        int rs1 = (int) readUInt32(input);
+                        if (buffer.length < rs1) buffer = new byte[rs1];
+                        Functions.readBuffer(input, buffer, rs1);
+                        int rs2 = (int) readUInt32(input);
+                        if (rs1 != rs2)
+                            throw new IOException("Invalid file format "+path+" rs1=" + rs1 + ", rs2=" + rs2+" at record="+recordNum);
+
+                        ByteArrayInputStream is = new ByteArrayInputStream(buffer, 0, rs1);
+                        try {
+                            int hour = readUInt8(is);
+                            int min = readUInt8(is);
+                            calendar.setTime(fileDate);
+                            calendar.set(Calendar.HOUR, hour);
+                            calendar.set(Calendar.MINUTE, min);
+                            curDate = calendar.getTime();
+
+                            if (fromQueryDate != null && curDate.getTime() < fromQueryDate.getTime()) {
+                                logger.debug("Hour: "+hour+" skipped");
+                                continue;
+                            }
+                            if (tillQueryDate != null && curDate.getTime() >= tillQueryDate.getTime()) {
+                                finished = true;
+                                break; // finish work
+                            }
+
+                            ExtendedCountersSet totalCounters = new ExtendedCountersSet();
+                            HashMap routeCounters = new HashMap();
+                            HashMap smeCounters = new HashMap();
+                            scanCounters(totalCounters, is);
+                            scanErrors(totalCounters, is);
+                            scanSmes(smeCounters, is);
+                            scanRoutes(routeCounters, is);
+
+                            try // dump counters to DB for curDate
+                            {
+                                long period = calculatePeriod(curDate);
+                                setValues(insertSms, period, null, totalCounters);
+                                insertSms.executeUpdate();
+                                for (Iterator eit=totalCounters.getErrors().iterator(); eit.hasNext();) {
+                                    ErrorCounterSet err = (ErrorCounterSet)eit.next();
+                                    if (err == null) continue;
+                                    setError(insertErr, period, null, err);
+                                    insertErr.executeUpdate();
+                                }
+                                for (Iterator it=smeCounters.values().iterator(); it.hasNext();) {
+                                    SmeIdCountersSet sme = (SmeIdCountersSet)it.next();
+                                    if (sme == null) continue;
+                                    setValues(insertSmeSms, period, sme.smeid, sme);
+                                    insertSmeSms.executeUpdate();
+                                    for (Iterator eit=sme.getErrors().iterator(); eit.hasNext();) {
+                                        ErrorCounterSet err = (ErrorCounterSet)eit.next();
+                                        if (err == null) continue;
+                                        setError(insertSmeErr, period, sme.smeid, err);
+                                        insertSmeErr.executeUpdate();
+                                    }
+                                }
+                                for (Iterator it=routeCounters.values().iterator(); it.hasNext();) {
+                                    RouteIdCountersSet route = (RouteIdCountersSet)it.next();
+                                    if (route == null) continue;
+                                    setValues(insertRouteSms, period, route.routeid, route);
+                                    insertRouteSms.executeUpdate();
+                                    for (Iterator eit=route.getErrors().iterator(); eit.hasNext();) {
+                                        ErrorCounterSet err = (ErrorCounterSet)eit.next();
+                                        if (err == null) continue;
+                                        setError(insertRouteErr, period, route.routeid, err);
+                                        insertRouteErr.executeUpdate();
+                                    }
+                                }
+                                recordsExported++;
+                            }
+                            catch (Exception exc) {
+                                try { if (connection != null) { connection.rollback(); connection.close(); } }
+                                catch(Throwable th) { th.printStackTrace(); }
+                                throw new AdminException("Failed to add statistics data. Details: "+exc.getMessage());
+                            }
+
+                        } catch (EOFException exc) {
+                            logger.warn("Incomplete record #"+recordNum+" in "+path+"");
+                        }
+                    } catch (EOFException exc) {
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                try { if (connection != null) { connection.rollback(); connection.close(); } }
+                catch(Throwable th) { th.printStackTrace(); }
+                throw new AdminException(e.getMessage());
+            } finally {
+                try { if (input != null) input.close(); } catch (Throwable th) { th.printStackTrace(); }
+            }
+        } // for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext();)
+
+        // commit all exported data into DB
+        try { if (connection != null) { connection.commit(); connection.close(); } }
+        catch(Exception exc) {
+            throw new AdminException(exc.getMessage());
+        }
+        return recordsExported;
+    }
+
+    private static int readUInt8(InputStream is) throws IOException {
+        int b = is.read();
+        if (b == -1) throw new EOFException();
+        return b;
+    }
+    private static int readUInt16(InputStream is) throws IOException {
+        return (readUInt8(is) << 8 | readUInt8(is));
+    }
+    private static long readUInt32(InputStream is) throws IOException {
+        return ((long) readUInt8(is) << 24) | ((long) readUInt8(is) << 16) |
+                ((long) readUInt8(is) << 8) | ((long) readUInt8(is));
+    }
+    private static long readInt64(InputStream is) throws IOException {
+        return (readUInt32(is) << 32) | readUInt32(is);
+    }
+    private static String readString(InputStream is, int size) throws IOException {
+        if (size <= 0) return "";
+        byte buff[] = new byte[size];
+        int pos = 0;
+        int cnt = 0;
+        while (pos < size) {
+            cnt = is.read(buff, pos, size - pos);
+            if (cnt == -1) throw new EOFException();
+            pos += cnt;
+        }
+        return new String(buff);
+    }
 }
