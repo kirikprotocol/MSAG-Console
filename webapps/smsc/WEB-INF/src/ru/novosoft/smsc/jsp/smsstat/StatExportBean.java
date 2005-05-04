@@ -11,6 +11,8 @@ import ru.novosoft.smsc.util.Functions;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Date;
+import java.util.Calendar;
+import java.util.TimeZone;
 import java.text.SimpleDateFormat;
 import java.text.ParseException;
 
@@ -25,11 +27,18 @@ public class StatExportBean extends IndexBean
 {
     org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(StatExportBean.class);
 
-    private static final String DATE_FORMAT = "dd.MM.yyyy";
+    private final static String DATE_FORMAT = "dd.MM.yyyy";
 
+    public final static int DEFAULT_DESTINATION = 0;
+    public final static int USER_DESTINATION = 1;
+
+    private int destination = DEFAULT_DESTINATION;
+    private ExportSettings defaultExport = null;
     private ExportSettings export = new ExportSettings();
     private StatQuery query = new StatQuery();
     private SmsStat stat = null;
+
+    private Calendar localCaledar = Calendar.getInstance(TimeZone.getDefault());
 
     private String mbExport = null;
     private long recordsExported = 0;
@@ -47,7 +56,10 @@ public class StatExportBean extends IndexBean
         if (result != RESULT_OK) return result;
 
         try {
-          if (stat == null) stat = SmsStat.getInstance(appContext);
+          if (stat == null) {
+              stat = SmsStat.getInstance(appContext);
+              defaultExport = stat.getDefaultExportSettings();
+          }
         } catch (AdminException e) {
           logger.error("Failed to get stat instance", e);
           return error(SMSCErrors.error.smsstat.QueryFailed, e.getMessage());
@@ -55,9 +67,23 @@ public class StatExportBean extends IndexBean
 
         if (mbExport != null) {
             try {
+                if (query.isFromDateEnabled())
+                {
+                    Date fromDate = query.getFromDate();
+                    localCaledar.setTime(fromDate);
+                    localCaledar.set(Calendar.HOUR_OF_DAY, 0); localCaledar.set(Calendar.MINUTE, 0);
+                    localCaledar.set(Calendar.SECOND, 0); localCaledar.set(Calendar.MILLISECOND, 0);
+                    fromDate = localCaledar.getTime();
+                    query.setFromDate(fromDate);
+                    localCaledar.add(Calendar.DAY_OF_MONTH, 1);
+                    Date tillDate = localCaledar.getTime();
+                    query.setTillDate(tillDate); query.setTillDateEnabled(true);
+                }
                 recordsExported = 0;
-                if (export == null || export.isEmpty()) recordsExported = stat.exportStatistics(query);
+                if (destination == DEFAULT_DESTINATION || export == null || export.isEmpty())
+                     recordsExported = stat.exportStatistics(query);
                 else recordsExported = stat.exportStatistics(query, export);
+                message("Exported " + recordsExported + " records");
             } catch (Exception exc) {
               logger.error("Failed to export stat", exc);
               return error(SMSCErrors.error.smsstat.QueryFailed, exc.getMessage());
@@ -82,7 +108,7 @@ public class StatExportBean extends IndexBean
             SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
             converted = formatter.parse(date);
         } catch (ParseException e) {
-            logger.error("Invaluid date format", e);
+            logger.error("Invalid date format", e);
         }
         return converted;
     }
@@ -95,48 +121,86 @@ public class StatExportBean extends IndexBean
     {
       if (date != null && date.trim().length() > 0) {
         query.setFromDate(convertStringToDate(date));
-        query.setFromDateEnabled(true);
+        query.setFromDateEnabled(true); query.setTillDateEnabled(false);
       }
       else query.setFromDateEnabled(false);
     }
     public String getDate()
     {
-      return (query.isFromDateEnabled()) ?
-              convertDateToString(query.getFromDate()) : "";
+      return (query.isFromDateEnabled()) ? convertDateToString(query.getFromDate()) : "";
     }
 
     public String getSource() {
+        if (destination == DEFAULT_DESTINATION && defaultExport != null && !defaultExport.isEmpty())
+            return defaultExport.getSource();
         return (export.getSource() == null) ? "":export.getSource();
+    }
+    public String getDefaultSource() {
+        return (defaultExport == null || defaultExport.getSource() == null) ? "":defaultExport.getSource();
     }
     public void setSource(String source) {
         export.setSource(source);
     }
 
     public String getDriver() {
+        if (destination == DEFAULT_DESTINATION && defaultExport != null && !defaultExport.isEmpty())
+            return defaultExport.getDriver();
         return (export.getDriver() == null) ? "":export.getDriver();
+    }
+    public String getDefaultDriver() {
+        return (defaultExport == null || defaultExport.getDriver() == null) ? "":defaultExport.getDriver();
     }
     public void setDriver(String driver) {
         export.setDriver(driver);
     }
 
     public String getUser() {
+        if (destination == DEFAULT_DESTINATION && defaultExport != null && !defaultExport.isEmpty())
+            return defaultExport.getUser();
         return (export.getUser() == null) ? "":export.getUser();
+    }
+    public String getDefaultUser() {
+        return (defaultExport == null || defaultExport.getUser() == null) ? "":defaultExport.getUser();
     }
     public void setUser(String user) {
         export.setUser(user);
     }
 
     public String getPassword() {
+        if (destination == DEFAULT_DESTINATION && defaultExport != null && !defaultExport.isEmpty())
+            return defaultExport.getPassword();
         return (export.getPassword() == null) ? "":export.getPassword();
+    }
+    public String getDefaultPassword() {
+        return (defaultExport == null || defaultExport.getPassword() == null) ? "":defaultExport.getPassword();
     }
     public void setPassword(String password) {
         export.setPassword(password);
     }
 
     public String getTablesPrefix() {
+        if (destination == DEFAULT_DESTINATION && defaultExport != null && !defaultExport.isEmpty())
+            return defaultExport.getTablesPrefix();
         return (export.getTablesPrefix() == null) ? "":export.getTablesPrefix();
+    }
+    public String getDefaultTablesPrefix() {
+        return (defaultExport == null || defaultExport.getTablesPrefix() == null) ? "":defaultExport.getTablesPrefix();
     }
     public void setTablesPrefix(String tablesPrefix) {
         export.setTablesPrefix(tablesPrefix);
+    }
+
+    public int getDestination() {
+        return destination;
+    }
+    public void setDestination(int destination) {
+        this.destination = destination;
+    }
+
+    public String getMbExport() {
+        return mbExport;
+    }
+    public void setMbExport(String mbExport) {
+        this.mbExport = mbExport;
     }
 }

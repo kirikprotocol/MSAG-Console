@@ -235,6 +235,9 @@ public class SmsStat
            return _exportStatistics(query, defaultExportSettings);
         }
     }
+    public ExportSettings getDefaultExportSettings() {
+        return defaultExportSettings;
+    }
 
     private Statistics _getStatistics(StatQuery query) throws AdminException
     {
@@ -509,6 +512,9 @@ public class SmsStat
             insertSmeErr = connection.prepareStatement(INSERT_OP_SQL + smeErrTable + VALUES_SME_ERR_SQL);
             insertRouteSms = connection.prepareStatement(INSERT_OP_SQL + routeSmsTable + VALUES_ROUTE_SQL);
             insertRouteErr = connection.prepareStatement(INSERT_OP_SQL + routeErrTable + VALUES_ROUTE_ERR_SQL);
+
+            connection.commit();
+            logger.debug("Old statistics data deleted");
         }
         catch(SQLException exc) {
             try { if (connection != null) { connection.rollback(); connection.close(); } }
@@ -520,8 +526,7 @@ public class SmsStat
         initQueryPeriod(query);
         TreeMap selectedFiles = getStatQueryDirs();
         if (selectedFiles == null || selectedFiles.size() <= 0) {
-            // if no records found commit deleted data
-            try { if (connection != null) { connection.commit(); connection.close(); } }
+            try { if (connection != null) connection.close(); }
             catch(Throwable th) { th.printStackTrace(); }
             return 0;
         }
@@ -617,6 +622,7 @@ public class SmsStat
                                         insertRouteErr.executeUpdate();
                                     }
                                 }
+                                connection.commit();
                                 recordsExported++;
                             }
                             catch (Exception exc) {
@@ -641,9 +647,8 @@ public class SmsStat
             }
         } // for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext();)
 
-        // commit all exported data into DB
-        try { if (connection != null) { connection.commit(); connection.close(); } }
-        catch(Exception exc) {
+        try { if (connection != null) connection.close(); }
+        catch (Exception exc) {
             throw new AdminException(exc.getMessage());
         }
         return recordsExported;
