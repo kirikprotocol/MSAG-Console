@@ -47,9 +47,11 @@ public class EntryExecutor implements Executor
   {
     this.loadup();
 
-    if (strategy == Constants.RELEASE_MIXED_STRATEGY || strategy == Constants.RELEASE_PREFIXED_STRATEGY)
+    if (strategy == Constants.RELEASE_MIXED_STRATEGY ||
+        strategy == Constants.RELEASE_PREFIXED_STRATEGY)
       jumpPage = initProperties.getProperty(Constants.PAGE_PREFIXED_STRATEGY);
-    else if (strategy == Constants.RELEASE_REDIRECT_STRATEGY)
+    else if (strategy == Constants.RELEASE_REDIRECT_STRATEGY ||
+             strategy == Constants.RELEASE_REDIRECT_RULES_STRATEGY)
       jumpPage = initProperties.getProperty(Constants.PAGE_REDIRECT_STRATEGY);
     else
       throw new ScenarioInitializationException("Invalid MCISme strategy '"+strategy+"' defined");

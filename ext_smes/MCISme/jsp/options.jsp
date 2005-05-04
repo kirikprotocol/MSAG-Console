@@ -173,6 +173,8 @@ switchConstraint();
     (bean.getReleaseStrategyInt() == MCISmeBean.RELEASE_PREFIXED_STRATEGY) ? "selected":""%>>USE PREFIXED B-NUMBERS</option>
     <option value="<%= MCISmeBean.RELEASE_MIXED_STRATEGY   %>" <%=
     (bean.getReleaseStrategyInt() == MCISmeBean.RELEASE_MIXED_STRATEGY   ) ? "selected":""%>>USE REDIRECT AND B-NUMBERS</option>
+    <option value="<%= MCISmeBean.RELEASE_REDIRECT_RULES_STRATEGY %>" <%=
+    (bean.getReleaseStrategyInt() == MCISmeBean.RELEASE_REDIRECT_RULES_STRATEGY) ? "selected":""%>>USE REDIRECT RULES</option>
   </select>
   </td>
 </tr>

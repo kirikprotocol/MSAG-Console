@@ -5,6 +5,7 @@
   sme_menu_button(out, "mbMenu",  "options",   "Options",    "Global MCISme options");
   sme_menu_button(out, "mbMenu",  "circuits",  "Circuits",   "Global MSC circuits options");
   sme_menu_button(out, "mbMenu",  "templates", "Templates",  "Message templates");
+  sme_menu_button(out, "mbMenu",  "rules",     "Rules",      "Redirect rules");
   sme_menu_button(out, "mbMenu",  "drivers",   "Drivers",    "DB drivers");
   sme_menu_space(out);
   sme_menu_button(out, "mbMenu",  "stat",      "Statistics", "Messages statistics");

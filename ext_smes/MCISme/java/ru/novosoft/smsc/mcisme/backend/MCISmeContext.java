@@ -19,112 +19,116 @@ import java.util.*;
  */
 public class MCISmeContext
 {
-  private static final Map instances = new HashMap();
-  private Category logger = Category.getInstance(this.getClass());
+    private static final Map instances = new HashMap();
+    private Category logger = Category.getInstance(this.getClass());
 
-  public static synchronized MCISmeContext getInstance(final SMSCAppContext appContext, final String smeId)
-      throws AdminException, ParserConfigurationException, IOException, SAXException, Config.WrongParamTypeException, Config.ParamNotFoundException
-  {
-    MCISmeContext instance = (MCISmeContext) instances.get(smeId);
-    if (null == instance) {
-      instance = new MCISmeContext(appContext, smeId);
-      instances.put(smeId, instance);
+    public static synchronized MCISmeContext getInstance(final SMSCAppContext appContext, final String smeId)
+            throws AdminException, ParserConfigurationException, IOException, SAXException, Config.WrongParamTypeException, Config.ParamNotFoundException
+    {
+        MCISmeContext instance = (MCISmeContext) instances.get(smeId);
+        if (null == instance) {
+            instance = new MCISmeContext(appContext, smeId);
+            instances.put(smeId, instance);
+        }
+        return instance;
     }
-    return instance;
-  }
+        
+    private final SMSCAppContext appContext;
+    private Config config = null;
+    private MCISme mciSme = null;
+
+    private boolean changedOptions = false;
+    private boolean changedDrivers = false;
+    private boolean changedTemplates = false;
+    private boolean changedRules     = false;
+
+    private DataSource dataSource = null;
+    private String smeId = "MCISme";
 
 
-  private final SMSCAppContext appContext;
-  private Config config = null;
-  private MCISme mciSme = null;
-
-  private boolean changedOptions = false;
-  private boolean changedDrivers = false;
-  private boolean changedTemplates = false;
-
-  private DataSource dataSource = null;
-  private String smeId = "MCISme";
-
-
-  private MCISmeContext(final SMSCAppContext appContext, final String smeId)
-      throws AdminException, ParserConfigurationException, SAXException, IOException, Config.WrongParamTypeException, Config.ParamNotFoundException
-  {
-    this.smeId = smeId;
-    this.appContext = appContext;
-    resetConfig();
-    this.mciSme = new MCISme(appContext.getHostsManager().getServiceInfo(this.smeId), config.getInt("MCISme.Admin.port"));
-  }
-
-  public Config loadCurrentConfig()
-      throws AdminException, IOException, SAXException, ParserConfigurationException
-  {
-    return new Config(new File(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder(),
-                               "conf" + File.separatorChar + "config.xml"));
-  }
-
-  public void resetConfig()
-      throws AdminException, SAXException, ParserConfigurationException, IOException
-  {
-    final Config newConfig = loadCurrentConfig();
-    reloadDataSource(config, newConfig);
-    config = newConfig;
-  }
-
-  public Config getConfig() {
-    return config;
-  }
-
-  public void reloadDataSource(final Config oldConfig, final Config newConfig)
-  {
-    try {
-      if (null == oldConfig
-          || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.jdbc.source")
-          || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.jdbc.driver")
-          || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.dbUserName")
-          || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.dbUserPassword")) {
-        dataSource = null;
-        final Properties properties = new Properties();
-        properties.setProperty("jdbc.source", newConfig.getString("MCISme.DataSource.jdbc.source"));
-        properties.setProperty("jdbc.driver", newConfig.getString("MCISme.DataSource.jdbc.driver"));
-        properties.setProperty("jdbc.user", newConfig.getString("MCISme.DataSource.dbUserName"));
-        properties.setProperty("jdbc.pass", newConfig.getString("MCISme.DataSource.dbUserPassword"));
-        dataSource = new NSConnectionPool(properties);
-      }
-    } catch (Throwable e) {
-      logger.error("Could not init datasource", e);
+    private MCISmeContext(final SMSCAppContext appContext, final String smeId)
+            throws AdminException, ParserConfigurationException, SAXException, IOException, Config.WrongParamTypeException, Config.ParamNotFoundException
+    {
+        this.smeId = smeId;
+        this.appContext = appContext;
+        resetConfig();
+        this.mciSme = new MCISme(appContext.getHostsManager().getServiceInfo(this.smeId), config.getInt("MCISme.Admin.port"));
     }
-  }
 
-  public MCISme getMCISme() {
-    return mciSme;
-  }
+    public Config loadCurrentConfig()
+            throws AdminException, IOException, SAXException, ParserConfigurationException
+    {
+        return new Config(new File(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder(),
+                "conf" + File.separatorChar + "config.xml"));
+    }
 
-  public boolean isChangedOptions() {
-    return changedOptions;
-  }
+    public void resetConfig()
+            throws AdminException, SAXException, ParserConfigurationException, IOException
+    {
+        final Config newConfig = loadCurrentConfig();
+        reloadDataSource(config, newConfig);
+        config = newConfig;
+    }
 
-  public void setChangedOptions(final boolean changedOptions) {
-    this.changedOptions = changedOptions;
-  }
+    public Config getConfig() {
+        return config;
+    }
 
-  public boolean isChangedDrivers() {
-    return changedDrivers;
-  }
+    public void reloadDataSource(final Config oldConfig, final Config newConfig)
+    {
+        try {
+            if (null == oldConfig
+                    || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.jdbc.source")
+                    || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.jdbc.driver")
+                    || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.dbUserName")
+                    || !Config.isParamEquals(oldConfig, newConfig, "MCISme.DataSource.dbUserPassword")) {
+                dataSource = null;
+                final Properties properties = new Properties();
+                properties.setProperty("jdbc.source", newConfig.getString("MCISme.DataSource.jdbc.source"));
+                properties.setProperty("jdbc.driver", newConfig.getString("MCISme.DataSource.jdbc.driver"));
+                properties.setProperty("jdbc.user", newConfig.getString("MCISme.DataSource.dbUserName"));
+                properties.setProperty("jdbc.pass", newConfig.getString("MCISme.DataSource.dbUserPassword"));
+                dataSource = new NSConnectionPool(properties);
+            }
+        } catch (Throwable e) {
+            logger.error("Could not init datasource", e);
+        }
+    }
 
-  public void setChangedDrivers(final boolean changedDrivers) {
-    this.changedDrivers = changedDrivers;
-  }
+    public MCISme getMCISme() {
+        return mciSme;
+    }
 
-  public boolean isChangedTemplates() {
-    return changedTemplates;
-  }
+    public boolean isChangedOptions() {
+        return changedOptions;
+    }
+    public void setChangedOptions(final boolean changedOptions) {
+        this.changedOptions = changedOptions;
+    }
 
-  public void setChangedTemplates(final boolean changedTemplates) {
-    this.changedTemplates = changedTemplates;
-  }
+    public boolean isChangedDrivers() {
+        return changedDrivers;
+    }
+    public void setChangedDrivers(final boolean changedDrivers) {
+        this.changedDrivers = changedDrivers;
+    }
 
-  public DataSource getDataSource() {
-    return dataSource;
-  }
+    public boolean isChangedTemplates() {
+        return changedTemplates;
+    }
+    public void setChangedTemplates(final boolean changedTemplates) {
+        this.changedTemplates = changedTemplates;
+    }
+
+    public boolean isChangedRules() {
+        return changedRules;
+    }
+    public void setChangedRules(boolean changedRules) {
+        this.changedRules = changedRules;
+    }
+
+    public DataSource getDataSource() {
+        return dataSource;
+    }
 }
 

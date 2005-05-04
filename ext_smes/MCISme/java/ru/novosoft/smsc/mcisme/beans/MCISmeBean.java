@@ -27,13 +27,17 @@ public class MCISmeBean extends PageBean
   public final static int RESULT_CIRCUITS    = PageBean.PRIVATE_RESULT + 4;
   public final static int RESULT_DRIVERS     = PageBean.PRIVATE_RESULT + 5;
   public final static int RESULT_TEMPLATES   = PageBean.PRIVATE_RESULT + 6;
-  public final static int RESULT_INFORM_ADD  = PageBean.PRIVATE_RESULT + 7;
-  public final static int RESULT_INFORM_EDIT = PageBean.PRIVATE_RESULT + 8;
-  public final static int RESULT_NOTIFY_ADD  = PageBean.PRIVATE_RESULT + 9;
-  public final static int RESULT_NOTIFY_EDIT = PageBean.PRIVATE_RESULT + 10;
-  protected final static int PRIVATE_RESULT  = PageBean.PRIVATE_RESULT + 11;
+  public final static int RESULT_RULES       = PageBean.PRIVATE_RESULT + 7;
+  public final static int RESULT_RULE_ADD    = PageBean.PRIVATE_RESULT + 8;
+  public final static int RESULT_RULE_EDIT   = PageBean.PRIVATE_RESULT + 9;
+  public final static int RESULT_INFORM_ADD  = PageBean.PRIVATE_RESULT + 10;
+  public final static int RESULT_INFORM_EDIT = PageBean.PRIVATE_RESULT + 11;
+  public final static int RESULT_NOTIFY_ADD  = PageBean.PRIVATE_RESULT + 12;
+  public final static int RESULT_NOTIFY_EDIT = PageBean.PRIVATE_RESULT + 13;
+  protected final static int PRIVATE_RESULT  = PageBean.PRIVATE_RESULT + 14;
 
-  public final static String TEMPLATES_SECTION_NAME        = "MCISme.Templates";
+  public final static String RULES_SECTION_NAME     = "MCISme.Rules"; 
+  public final static String TEMPLATES_SECTION_NAME = "MCISme.Templates";
   public final static String INFORM_TEMPLATES_SECTION_NAME = TEMPLATES_SECTION_NAME+".Inform";
   public final static String NOTIFY_TEMPLATES_SECTION_NAME = TEMPLATES_SECTION_NAME+".Notify";
 
@@ -46,9 +50,10 @@ public class MCISmeBean extends PageBean
 
   public final static String MCI_PROF_LOCATION_PARAM = "MCISme.MCIProfLocation";
 
-  public final static int RELEASE_PREFIXED_STRATEGY = 0x01;
-  public final static int RELEASE_REDIRECT_STRATEGY = 0x02; // MTS default strategy
-  public final static int RELEASE_MIXED_STRATEGY    = 0x03;
+  public final static int RELEASE_PREFIXED_STRATEGY       = 0x01;
+  public final static int RELEASE_REDIRECT_STRATEGY       = 0x02; // MTS default strategy
+  public final static int RELEASE_MIXED_STRATEGY          = 0x03;
+  public final static int RELEASE_REDIRECT_RULES_STRATEGY = 0x04;
 
   private String mbMenu = null;
 
@@ -96,6 +101,7 @@ public class MCISmeBean extends PageBean
     else if ("options".equals(mbMenu))   return RESULT_OPTIONS;
     else if ("circuits".equals(mbMenu))  return RESULT_CIRCUITS;
     else if ("templates".equals(mbMenu)) return RESULT_TEMPLATES;
+    else if ("rules".equals(mbMenu))     return RESULT_RULES;
     else if ("drivers".equals(mbMenu))   return RESULT_DRIVERS;
     else return result;
   }

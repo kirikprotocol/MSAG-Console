@@ -20,9 +20,10 @@ public class Constants
 
   public final static String PAGE_PREFIXED_STRATEGY = "pagePrefixedStrategy";
   public final static String PAGE_REDIRECT_STRATEGY = "pageRedirectStrategy";
-  public final static int RELEASE_PREFIXED_STRATEGY = 0x01;
-  public final static int RELEASE_REDIRECT_STRATEGY = 0x02; // MTS default strategy
-  public final static int RELEASE_MIXED_STRATEGY    = 0x03;
+  public final static int RELEASE_PREFIXED_STRATEGY       = 0x01;
+  public final static int RELEASE_REDIRECT_STRATEGY       = 0x02; // MTS default strategy
+  public final static int RELEASE_MIXED_STRATEGY          = 0x03;
+  public final static int RELEASE_REDIRECT_RULES_STRATEGY = 0x04;
 
   public final static String PARAM_SHORTCUT  = "shortcut";
   public final static String PARAM_ON_ABSENT = "onAbsent";

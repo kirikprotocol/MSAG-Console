@@ -45,7 +45,8 @@ public class MainExecutor implements Executor
       throw new ExecutingException("Strategy is undefined", ErrorCode.PAGE_EXECUTOR_EXCEPTION);
     int strategy = strategyInt.intValue();
     String msg = null;
-    if (strategy == Constants.RELEASE_REDIRECT_STRATEGY) msg = pageFormat.format(new Object[] {});
+    if (strategy == Constants.RELEASE_REDIRECT_STRATEGY ||
+        strategy == Constants.RELEASE_REDIRECT_RULES_STRATEGY) msg = pageFormat.format(new Object[] {});
     else if (strategy == Constants.RELEASE_PREFIXED_STRATEGY ||
              strategy == Constants.RELEASE_MIXED_STRATEGY) msg = pageFormatAlt.format(new Object[] {});
     else
