@@ -25,18 +25,18 @@
 		<%!
 		void main_menu_begin_item(JspWriter out, String menuId, String submenuId, String name) throws java.io.IOException
 		{
-			out.print("<td width=1% style='position:relative; top:0; left:0;'");
-      out.print(" onMouseOver='" + submenuId + ".runtimeStyle.visibility=\"visible\";document.all." + submenuId + "_h.runtimeStyle.visibility=\"visible\";");
-      out.print("document.all." + submenuId + "_h.runtimeStyle.width="+submenuId+".offsetWidth;");
-      out.print("document.all." + submenuId + "_h.runtimeStyle.height="+submenuId+".offsetHeight;");
-      out.print("' onMouseOut='" + submenuId + ".runtimeStyle.visibility=\"hidden\";document.all." + submenuId + "_h.runtimeStyle.visibility=\"hidden\";'>");
-			out.print("<a ID=" + menuId + ">" + name + "</a>");
-      out.print("<iframe id=" + submenuId + "_h class=hiddenLayer src='/images/blank.html' width='100%' height='0px'></iframe>");
-			out.print("<table class=submenu cellspacing=0 cellpadding=0 id=" + submenuId);
-			out.print(" onMouseOver='" + submenuId + ".runtimeStyle.visibility=\"visible\";document.all." + submenuId + "_h.runtimeStyle.visibility=\"visible\";");
-      out.print("document.all." + submenuId + "_h.runtimeStyle.width="+submenuId+".offsetWidth;");
-      out.print("document.all." + submenuId + "_h.runtimeStyle.height="+submenuId+".offsetHeight;");
-			out.print("' onMouseOut='" + submenuId + ".runtimeStyle.visibility=\"hidden\";document.all." + submenuId + "_h.runtimeStyle.visibility=\"hidden\";'>");
+            out.print("<td width=1% style='position:relative; top:0; left:0;'");
+            out.print(" onMouseOver='" + submenuId + ".runtimeStyle.visibility=\"visible\";document.all." + submenuId + "_h.runtimeStyle.visibility=\"visible\";");
+            out.print("document.all." + submenuId + "_h.runtimeStyle.width="+submenuId+".offsetWidth;");
+            out.print("document.all." + submenuId + "_h.runtimeStyle.height="+submenuId+".offsetHeight;");
+            out.print("' onMouseOut='" + submenuId + ".runtimeStyle.visibility=\"hidden\";document.all." + submenuId + "_h.runtimeStyle.visibility=\"hidden\";'>");
+            out.print("<a ID=" + menuId + ">" + name + "</a>");
+            out.print("<iframe id=" + submenuId + "_h class=hiddenLayer src='/images/blank.html' width='100%' height='0px'></iframe>");
+            out.print("<table class=submenu cellspacing=0 cellpadding=0 id=" + submenuId);
+            out.print(" onMouseOver='" + submenuId + ".runtimeStyle.visibility=\"visible\";document.all." + submenuId + "_h.runtimeStyle.visibility=\"visible\";");
+            out.print("document.all." + submenuId + "_h.runtimeStyle.width="+submenuId+".offsetWidth;");
+            out.print("document.all." + submenuId + "_h.runtimeStyle.height="+submenuId+".offsetHeight;");
+            out.print("' onMouseOut='" + submenuId + ".runtimeStyle.visibility=\"hidden\";document.all." + submenuId + "_h.runtimeStyle.visibility=\"hidden\";'>");
 		}
 		void main_menu_submenu_item(JspWriter out, String url, String id, String name) throws java.io.IOException
 		{
@@ -65,55 +65,56 @@
 		<tr>
 			<td width=26></td>
 			<%
-			main_menu_begin_item(out, "MENU0_SMSC_menu", "MENU0_SMSC_submenu", "SMSC");
-			main_menu_submenu_item(out, "/smsc_service",               "MENU0_SMSC",             "Configuration");
-      main_menu_submenu_item(out, "/reshedule",                  "MENU0_SMSC_Reshedule",   "Reschedule");
-      main_menu_submenu_item(out, "/directives",                 "MENU0_SMSC_Directives",  "Directives");
-			main_menu_submenu_i_fu(out, "/smsc_service/status.jsp",    "MENU0_SMSC_Status",      "Status");
-			main_menu_submenu_i_fu(out, "/smsc_service/logging.jsp",   "MENU0_SMSC_LOGGING",     "Logging");
-			main_menu_submenu_item(out, "/users",                      "MENU0_USERS",            "Users");
-			main_menu_submenu_item(out, "/locale_resources",           "MENU0_LOCALE_RESOURCES", "Resources");
-      main_menu_submenu_item(out, "/journal",                    "MENU0_JOURNAL",          "Journal");
-			main_menu_end_item(out);
+                main_menu_begin_item(out, "MENU0_SMSC_menu", "MENU0_SMSC_submenu", "SMSC");
+                main_menu_submenu_item(out, "/smsc_service",               "MENU0_SMSC",             "Configuration");
+                main_menu_submenu_item(out, "/reshedule",                  "MENU0_SMSC_Reshedule",   "Reschedule");
+                main_menu_submenu_item(out, "/directives",                 "MENU0_SMSC_Directives",  "Directives");
+                main_menu_submenu_i_fu(out, "/smsc_service/status.jsp",    "MENU0_SMSC_Status",      "Status");
+                main_menu_submenu_i_fu(out, "/smsc_service/logging.jsp",   "MENU0_SMSC_LOGGING",     "Logging");
+                main_menu_submenu_item(out, "/users",                      "MENU0_USERS",            "Users");
+                main_menu_submenu_item(out, "/locale_resources",           "MENU0_LOCALE_RESOURCES", "Resources");
+                main_menu_submenu_item(out, "/journal",                    "MENU0_JOURNAL",          "Journal");
+                main_menu_end_item(out);
 
-			main_menu_begin_item(out, "MENU0_Statistics_menu", "MENU0_Statistics_submenu", "Statistics");
-			main_menu_submenu_item(out, "/perfmon",            "MENU0_PERFMON"  , "Monitor", "SMSC Perfomance monitor", "return openPerfMon();");
-			main_menu_submenu_item(out, "/topmon",            "MENU0_TOPMON"  , "Sme Monitor", "SMSC SME monitor", "return openTopMon();");
-      main_menu_submenu_item(out, "/smsstat",            "MENU0_SMSSTAT",   "Statistics");
-      main_menu_submenu_i_fu(out, "/smsview/daemon.jsp", "MENU0_SMSDAEMON", "SMS Daemon");
-			main_menu_submenu_i_fu(out, "/smsview/index.jsp" , "MENU0_SMSVIEW",   "SMS View");
-			main_menu_end_item(out);
+                main_menu_begin_item(out, "MENU0_Statistics_menu", "MENU0_Statistics_submenu", "Statistics");
+                main_menu_submenu_item(out, "/perfmon",            "MENU0_PERFMON",   "Monitor", "SMSC Perfomance monitor", "return openPerfMon();");
+                main_menu_submenu_item(out, "/topmon",             "MENU0_TOPMON",    "Sme Monitor", "SMSC SME monitor", "return openTopMon();");
+                main_menu_submenu_item(out, "/smsstat",            "MENU0_SMSSTAT",   "Stat View");
+                main_menu_submenu_item(out, "/smsstat/export.jsp", "MENU0_SMSSTAT",   "Stat Export");
+                main_menu_submenu_i_fu(out, "/smsview/daemon.jsp", "MENU0_SMSDAEMON", "SMS Daemon");
+                main_menu_submenu_i_fu(out, "/smsview/index.jsp" , "MENU0_SMSVIEW",   "SMS View");
+                main_menu_end_item(out);
 
-			main_menu_begin_item(out, "MENU0_Routing_menu", "MENU0_Routing_submenu", "Routing");
-			main_menu_submenu_item(out, "/aliases",  "MENU0_ALIASES",  "Aliases");
-			main_menu_submenu_item(out, "/subjects", "MENU0_SUBJECTS", "Subjects");
-			main_menu_submenu_item(out, "/routes",   "MENU0_ROUTES",   "Routes");
-      main_menu_submenu_item(out, "/providers",   "MENU0_PROVIDERS",   "Providers");
-      main_menu_submenu_item(out, "/categories",   "MENU0_CATEGORIES",   "Categories");
-      main_menu_submenu_item(out, "/acl",      "MENU0_ACL",      "Access Control Lists");
-			main_menu_submenu_item(out, "/tracer",   "MENU0_TRACER",   "Routes tracing");
-			main_menu_end_item(out);
+                main_menu_begin_item(out, "MENU0_Routing_menu", "MENU0_Routing_submenu", "Routing");
+                main_menu_submenu_item(out, "/aliases",  "MENU0_ALIASES",  "Aliases");
+                main_menu_submenu_item(out, "/subjects", "MENU0_SUBJECTS", "Subjects");
+                main_menu_submenu_item(out, "/routes",   "MENU0_ROUTES",   "Routes");
+                main_menu_submenu_item(out, "/providers",   "MENU0_PROVIDERS",   "Providers");
+                main_menu_submenu_item(out, "/categories",   "MENU0_CATEGORIES",   "Categories");
+                main_menu_submenu_item(out, "/acl",      "MENU0_ACL",      "Access Control Lists");
+                main_menu_submenu_item(out, "/tracer",   "MENU0_TRACER",   "Routes tracing");
+                main_menu_end_item(out);
 
-			main_menu_begin_item(out, "MENU0_Profiles_menu", "MENU0_Profiles_submenu", "Profiles");
-			main_menu_submenu_item(out, "/profiles",            "MENU0_PROFILES",        "List");
-			main_menu_submenu_i_fu(out, "/profiles/groups.jsp", "MENU0_PROFILES_GROUPS", "Groups");
-			main_menu_submenu_i_fu(out, "/profiles/lookup.jsp", "MENU0_PROFILES_LOOKUP", "Lookup profile");
-			main_menu_end_item(out);
+                main_menu_begin_item(out, "MENU0_Profiles_menu", "MENU0_Profiles_submenu", "Profiles");
+                main_menu_submenu_item(out, "/profiles",            "MENU0_PROFILES",        "List");
+                main_menu_submenu_i_fu(out, "/profiles/groups.jsp", "MENU0_PROFILES_GROUPS", "Groups");
+                main_menu_submenu_i_fu(out, "/profiles/lookup.jsp", "MENU0_PROFILES_LOOKUP", "Lookup profile");
+                main_menu_end_item(out);
 
-			main_menu_begin_item(out, "MENU0_Services_menu", "MENU0_Services_submenu", "Services");
-			main_menu_submenu_item(out, "/hosts",    "MENU0_HOSTS",    "Hosts");
-			main_menu_submenu_item(out, "/services", "MENU0_SERVICES", "Services");
-			main_menu_end_item(out);
+                main_menu_begin_item(out, "MENU0_Services_menu", "MENU0_Services_submenu", "Services");
+                main_menu_submenu_item(out, "/hosts",    "MENU0_HOSTS",    "Hosts");
+                main_menu_submenu_item(out, "/services", "MENU0_SERVICES", "Services");
+                main_menu_end_item(out);
 
-			main_menu_begin_item(out, "MENU0_Options_menu", "MENU0_Options_submenu", "Options");
-			main_menu_submenu_item(out, "/mscman",            "MENU0_MSCMAN",        "MSCs");
-			main_menu_submenu_item(out, "/dl",                "MENU0_DL",            "Distribution lists");
-      main_menu_submenu_i_fu(out, "/dl/principals.jsp", "MENU0_DL_PRINCIPALS", "Distribution lists - principals");
-			main_menu_end_item(out);
+                main_menu_begin_item(out, "MENU0_Options_menu", "MENU0_Options_submenu", "Options");
+                main_menu_submenu_item(out, "/mscman",            "MENU0_MSCMAN",        "MSCs");
+                main_menu_submenu_item(out, "/dl",                "MENU0_DL",            "Distribution lists");
+                main_menu_submenu_i_fu(out, "/dl/principals.jsp", "MENU0_DL_PRINCIPALS", "Distribution lists - principals");
+                main_menu_end_item(out);
 
-			main_menu_begin_item(out, "MENU0_Help_menu", "MENU0_Help_submenu", "Help");
-			main_menu_submenu_i_fu(out, "/admin_guide.jsp",            "MENU0_ADMINGUIDE",        "Administration Guide");
-			main_menu_end_item(out);
+                main_menu_begin_item(out, "MENU0_Help_menu", "MENU0_Help_submenu", "Help");
+                main_menu_submenu_i_fu(out, "/admin_guide.jsp",  "MENU0_ADMINGUIDE",     "Administration Guide");
+                main_menu_end_item(out);
 			%>
 			<td width="100%">&nbsp;</td>
 			<td><a ID=MENU0_LOGOUT href="logout.jsp">Logout</a></td>

@@ -106,35 +106,35 @@ public class StatExportBean extends IndexBean
     }
 
     public String getSource() {
-        return export.getSource();
+        return (export.getSource() == null) ? "":export.getSource();
     }
     public void setSource(String source) {
         export.setSource(source);
     }
 
     public String getDriver() {
-        return export.getDriver();
+        return (export.getDriver() == null) ? "":export.getDriver();
     }
     public void setDriver(String driver) {
         export.setDriver(driver);
     }
 
     public String getUser() {
-        return export.getUser();
+        return (export.getUser() == null) ? "":export.getUser();
     }
     public void setUser(String user) {
         export.setUser(user);
     }
 
     public String getPassword() {
-        return export.getPassword();
+        return (export.getPassword() == null) ? "":export.getPassword();
     }
     public void setPassword(String password) {
         export.setPassword(password);
     }
 
     public String getTablesPrefix() {
-        return export.getTablesPrefix();
+        return (export.getTablesPrefix() == null) ? "":export.getTablesPrefix();
     }
     public void setTablesPrefix(String tablesPrefix) {
         export.setTablesPrefix(tablesPrefix);
