@@ -57,4 +57,13 @@
     <param name="webapp folder" type="string">webapps/smsc</param>
     <param name="work folder" type="string">temp</param>
   </section>
+  
+  <section name="statsave_datasource">
+      <param name="source" type="string">@jdbc.source@</param>
+      <param name="driver" type="string">@jdbc.driver@</param>
+      <param name="user" type="string">@db.user@</param>
+      <param name="pass" type="string">@db.password@</param>
+      <param name="tables_prefix" type="string">sms_stat</param>
+  </section>
+  
 </config>
