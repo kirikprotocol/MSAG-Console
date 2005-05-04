@@ -39,7 +39,7 @@ public class Rules extends MCISmeBean
       public int compare(Object o1, Object o2) {
         if (o1 != null && o1 instanceof Rules.Identity && o2 != null && o2 instanceof Rules.Identity) {
           Rules.Identity i1 = (Rules.Identity)o1; Rules.Identity i2 = (Rules.Identity)o2;
-          return (i1.priority-i2.priority);
+          return (i2.priority-i1.priority);
         }
         return 0;
       }
@@ -75,7 +75,7 @@ public class Rules extends MCISmeBean
           Set set = config.getSectionChildShortSectionNames(RULES_SECTION_NAME);
           for (Iterator i = set.iterator(); i.hasNext();) {
             String section = (String)i.next();
-            int priority = config.getInt(RULES_SECTION_NAME+'.'+section+".priority");
+            int priority = config.getInt(RULES_SECTION_NAME + '.' + section + ".priority");
             rules.add(new Rules.Identity(priority, section));
           }
         } catch (Exception e) {
@@ -87,12 +87,12 @@ public class Rules extends MCISmeBean
     {
         try
         {
-          final String rulePrefix = RULES_SECTION_NAME + '.';
-          for (int i = 0; i < checked.length; i++)
+          final String rulesPrefix = RULES_SECTION_NAME + '.';
+          for (int i=0; i<checked.length; i++)
           {
-            String section = rulePrefix+StringEncoderDecoder.encodeDot(checked[i]);
+            String section = rulesPrefix + StringEncoderDecoder.encodeDot(checked[i]);
             getConfig().removeSection(section);
-            getMCISmeContext().setChangedTemplates(true);
+            getMCISmeContext().setChangedRules(true);
             checkedSet.remove(checked[i]);
           }
         } catch (Exception e) {
@@ -125,21 +125,23 @@ public class Rules extends MCISmeBean
     }
 
     public String getMbAdd() {
-      return mbAdd;
+        return mbAdd;
     }
     public void setMbAdd(String mbAdd) {
-      this.mbAdd = mbAdd;
+        this.mbAdd = mbAdd;
     }
+
     public String getMbEdit() {
-      return mbEdit;
+        return mbEdit;
     }
-    public void setMbmEdit(String mbEdit) {
-      this.mbEdit = mbEdit;
+    public void setMbEdit(String mbEdit) {
+        this.mbEdit = mbEdit;
     }
+
     public String getMbDelete() {
-      return mbDelete;
+        return mbDelete;
     }
     public void setMbDelete(String mbDelete) {
-      this.mbDelete = mbDelete;
+        this.mbDelete = mbDelete;
     }
 }

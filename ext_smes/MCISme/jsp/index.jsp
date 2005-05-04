@@ -75,6 +75,9 @@ function checkApplyResetButtons()
     <tr class=row0>
       <td style="padding-right:3px">&nbsp;</td><th>&nbsp;</th><td>&nbsp;</td>
     </tr>
+    <tr class=row1>
+      <td style="padding-right:3px">&nbsp;</td><th>&nbsp;</th><td>&nbsp;</td>
+    </tr>
     </table>
   </td>
   <td>&nbsp;</td>
@@ -93,6 +96,10 @@ function checkApplyResetButtons()
     <tr class=row0>
       <th>Templates definitions</th>
       <td><%= configStatus(bean.isTemplatesChanged())%></td>
+    </tr>
+    <tr class=row1>
+      <th>Rules definitions</th>
+      <td><%= configStatus(bean.isRulesChanged())%></td>
     </tr>
     </table>
   </td>
