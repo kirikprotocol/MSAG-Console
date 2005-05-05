@@ -1,7 +1,9 @@
 #ifndef __FILE_HPP__
 #define __FILE_HPP__
 
+#ifndef __USE_FILE_OFFSET64
 #define __USE_FILE_OFFSET64
+#endif
 #ifndef _FILE_OFFSET_BITS
 #define _FILE_OFFSET_BITS 64
 #else
@@ -389,7 +391,7 @@ public:
         bufferPosition=(int)off;
       }else
       {
-        fpos_t p(off);
+        fpos_t p=off;
         if(fsetpos(f,&p)!=0)throw FileException(FileException::errSeekFailed,filename.c_str());
       }
     }else if(whence==SEEK_END)
