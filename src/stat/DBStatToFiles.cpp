@@ -108,7 +108,7 @@ void fillSmes(Hash<SmsStat>& stat, ResultSet* rs, ResultSet* errRs)
     }
     while (errRs && errRs->fetchNext())
     {
-        const char* smeId = (rs->isNull(1) ? 0:rs->getString(1));
+        const char* smeId = (errRs->isNull(1) ? 0:errRs->getString(1));
         if (!smeId || !smeId[0]) { smsc_log_warn(logger, "Got null err sme_id"); continue; }
 
         SmsStat* sstat = stat.GetPtr(smeId);
@@ -134,7 +134,7 @@ void fillRoutes(Hash<RouteStat>& stat, ResultSet* rs, ResultSet* errRs)
     }
     while (errRs && errRs->fetchNext())
     {
-        const char* routeId = (rs->isNull(1) ? 0:rs->getString(1));
+        const char* routeId = (errRs->isNull(1) ? 0:errRs->getString(1));
         if (!routeId || !routeId[0]) { smsc_log_warn(logger, "Got null route_id"); continue; }
         
         RouteStat* rstat = stat.GetPtr(routeId);
