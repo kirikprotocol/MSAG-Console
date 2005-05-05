@@ -505,7 +505,7 @@ void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
 
         if (!bFileTM || fileTM.tm_mon != flushTM.tm_mon || fileTM.tm_year != flushTM.tm_year)
         {
-            createDir(location + "/" + dirName); bFileTM = false;
+            createDir(fullPath); bFileTM = false;
             smsc_log_debug(logger, "New dir '%s' created", dirName);
         }
 

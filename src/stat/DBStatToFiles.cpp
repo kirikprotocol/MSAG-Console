@@ -176,7 +176,7 @@ void process(Connection* connection, const char* location)
     Hash<SmsStat>   statSme;
     Hash<RouteStat> statRoute;
 
-    smsc_log_info(logger, "Statements creating, fecthing records...");
+    smsc_log_info(logger, "Statements created. Fecthing records...");
 
     while (genRs->fetchNext())
     {
