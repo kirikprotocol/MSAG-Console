@@ -167,7 +167,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
             const char* ruleName = (const char *)i->c_str();
             if (!ruleName || !ruleName[0]) continue;
 
-            std::auto_ptr<ConfigView> ruleCfgGuard(circuitsCfg->getSubConfig(ruleName));
+            std::auto_ptr<ConfigView> ruleCfgGuard(rulesCfg->getSubConfig(ruleName));
             ConfigView* ruleCfg = ruleCfgGuard.get();
 
             Rule rule;
