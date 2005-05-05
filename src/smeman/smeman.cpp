@@ -38,16 +38,16 @@ __synchronized__
   records.push_back(record.release());
 }
 
-void SmeManager::statusSme(Variant& result){ 
-    MutexGuard mg(mutex);
+void SmeManager::statusSme(Variant& result){
+    MutexGuard mg(lock);
     Records::iterator it = records.begin();
-    
+
     for ( ; it != records.end(); ++it )
     {
         std::string status;
         status += (*it)->info.systemId;
         status += ",";
-        
+
 
         (*it)->mutex.Lock();
         bool rv=(*it)->proxy!=NULL;
@@ -56,7 +56,7 @@ void SmeManager::statusSme(Variant& result){
             rv = ((smsc::smppgw::GatewaySme*)((*it)->proxy))->isConnected();
         }
         (*it)->mutex.Unlock();
-            
+
         if (!rv)
         {
             status += "disconnected";
