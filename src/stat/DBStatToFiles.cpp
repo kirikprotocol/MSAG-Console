@@ -20,46 +20,36 @@ using smsc::util::config::ConfigException;
 smsc::logger::Logger* logger = 0;
 
 const char* GENERAL_STAT_SQL = 
-"SELECT sms_stat_sms.period, "
-"       sms_stat_state.errcode, sum(sms_stat_state.counter), "
-"       sum(sms_stat_sms.accepted), sum(sms_stat_sms.rejected), "
-"       sum(sms_stat_sms.delivered), sum(sms_stat_sms.failed), "
-"       sum(sms_stat_sms.rescheduled), sum(sms_stat_sms.temporal), "
-"       max(sms_stat_sms.peak_i), max(sms_stat_sms.peak_o) "
-"FROM   sms_stat_sms, sms_stat_state "
-"WHERE  sms_stat_state.period = sms_stat_sms.period "
-"GROUP BY sms_stat_sms.period, sms_stat_state.errcode "
-"ORDER BY sms_stat_sms.period ASC";
+"SELECT period, " 
+"       sum(accepted), sum(rejected), sum(delivered), sum(failed), "
+"       sum(rescheduled), sum(temporal), max(peak_i), max(peak_o) "
+"FROM sms_stat_sms GROUP BY period ORDER BY period ASC";
+const char* GENERAL_STAT_ERR_SQL = 
+"SELECT errcode, sum(counter) "
+"FROM sms_stat_state WHERE period = :period "
+"GROUP BY errcode ORDER BY errcode ASC";
 
-const char* SME_STAT_ID  = "SME_STAT_ID"; 
 const char* SME_STAT_SQL = 
-"SELECT sms_stat_sme.systemid, "
-"       sms_stat_sme_state.errcode, sum(sms_stat_sme_state.counter), "
-"       sum(sms_stat_sme.accepted), sum(sms_stat_sme.rejected), "
-"       sum(sms_stat_sme.delivered), sum(sms_stat_sme.failed), "   
-"       sum(sms_stat_sme.rescheduled), sum(sms_stat_sme.temporal), "
-"       max(sms_stat_sme.peak_i), max(sms_stat_sme.peak_o) "
-"FROM   sms_stat_sme, sms_stat_sme_state "
-"WHERE  sms_stat_sme.systemid = sms_stat_sme_state.systemid "
-"  AND  sms_stat_sme.period = sms_stat_sme_state.period "
-"  AND  sms_stat_sme.period = :period "
-"GROUP BY sms_stat_sme.systemid, sms_stat_sme_state.errcode "
-"ORDER BY sms_stat_sme.systemid ASC";
+"SELECT systemid, " 
+"       sum(accepted), sum(rejected), sum(delivered), sum(failed), "   
+"       sum(rescheduled), sum(temporal), max(peak_i), max(peak_o) "
+"FROM sms_stat_sme WHERE period = :period "
+"GROUP BY systemid ORDER BY systemid ASC";
+const char* SME_STAT_ERR_SQL = 
+"SELECT systemid, errcode, sum(counter) "
+"FROM sms_stat_sme_state WHERE period = :period "
+"GROUP BY systemid, errcode ORDER BY systemid ASC, errcode ASC";
 
-const char* ROUTE_STAT_ID  = "ROUTE_STAT_ID";
 const char* ROUTE_STAT_SQL = 
-"SELECT sms_stat_route.routeid, "
-"       sms_stat_route_state.errcode, sum(sms_stat_route_state.counter), "
-"       sum(sms_stat_route.accepted), sum(sms_stat_route.rejected), "
-"       sum(sms_stat_route.delivered), sum(sms_stat_route.failed), "
-"       sum(sms_stat_route.rescheduled), sum(sms_stat_route.temporal), "
-"       max(sms_stat_route.peak_i), max(sms_stat_route.peak_o) "
-"FROM  sms_stat_route, sms_stat_route_state "
-"WHERE sms_stat_route.routeid = sms_stat_route_state.routeid "
-"  AND sms_stat_route.period = sms_stat_route_state.period "
-"  AND sms_stat_route.period = :period "
-"GROUP BY sms_stat_route.routeid, sms_stat_route_state.errcode "
-"ORDER BY sms_stat_route.routeid ASC";
+"SELECT routeid, "
+"       sum(accepted), sum(rejected), sum(delivered), sum(failed), "   
+"       sum(rescheduled), sum(temporal), max(peak_i), max(peak_o) "
+"FROM  sms_stat_route WHERE period = :period "
+"GROUP BY routeid ORDER BY routeid ASC";
+const char* ROUTE_STAT_ERR_SQL = 
+"SELECT routeid, errcode, sum(counter) "
+"FROM sms_stat_route_state WHERE period = :period "
+"GROUP BY routeid, errcode ORDER BY routeid ASC, errcode ASC";
 
 const char* ERR_STMT_MESSAGE = "Failed to obtain %s statement";
 const char* ERR_RS_MESSAGE   = "Failed to get %s result set";
@@ -77,7 +67,7 @@ void convertPeriod(uint32_t period, tm& flushTM)
     gmtime_r(&flushTime, &flushTM);
 }
 
-void incStat(SmsStat* stat, ResultSet* rs, int pos)
+void incError(SmsStat* stat, ResultSet* rs, int pos)
 {
     if (!rs->isNull(pos)) // increment errors statistics
     { 
@@ -85,7 +75,9 @@ void incStat(SmsStat* stat, ResultSet* rs, int pos)
         int32_t counter = (rs->isNull(pos) ? 0:rs->getInt32(pos)); pos++;
         StatisticsManager::addError(stat->errors, errcode, counter);
     }
-    
+}
+void incCounters(SmsStat* stat, ResultSet* rs, int pos)
+{
     stat->accepted    += (rs->isNull(pos) ? 0:rs->getInt32(pos)); pos++;
     stat->rejected    += (rs->isNull(pos) ? 0:rs->getInt32(pos)); pos++;
     stat->delivered   += (rs->isNull(pos) ? 0:rs->getInt32(pos)); pos++;
@@ -97,41 +89,36 @@ void incStat(SmsStat* stat, ResultSet* rs, int pos)
     if (stat->peak_i < peak_i) stat->peak_i = peak_i;
     if (stat->peak_i < peak_o) stat->peak_o = peak_o;
 }
-void fillSmes(Connection* connection, Hash<SmsStat>& stat, uint32_t period)
-{
-    Statement* stmt = connection->getStatement(SME_STAT_ID, SME_STAT_SQL);
-    if (!stmt) throw Exception(ERR_STMT_MESSAGE, "smes");
-    stmt->setUint32(1, period);
-    std::auto_ptr<ResultSet> rsGuard(stmt->executeQuery());
-    ResultSet* rs = rsGuard.get();
-    if (!rs) throw Exception(ERR_RS_MESSAGE, "smes");
 
-    while (rs->fetchNext())
+void fillSmes(Hash<SmsStat>& stat, ResultSet* rs, ResultSet* errRs)
+{
+    while (rs && rs->fetchNext())
     {
         const char* smeId = (rs->isNull(1) ? 0:rs->getString(1));
         if (!smeId || !smeId[0]) { smsc_log_warn(logger, "Got null sme_id"); continue; }
         
         SmsStat* sstat = stat.GetPtr(smeId);
-        if (!sstat) // new route record starts => insert new
+        if (!sstat) // new route sme starts => insert new
         {
             SmsStat newStat; // empty
             stat.Insert(smeId, newStat);
             sstat = stat.GetPtr(smeId);
         }
+        incCounters(sstat, rs, 2);
+    }
+    while (errRs && errRs->fetchNext())
+    {
+        const char* smeId = (rs->isNull(1) ? 0:rs->getString(1));
+        if (!smeId || !smeId[0]) { smsc_log_warn(logger, "Got null err sme_id"); continue; }
 
-        incStat(sstat, rs, 2);
+        SmsStat* sstat = stat.GetPtr(smeId);
+        if (!sstat) { smsc_log_warn(logger, "Sme '%s' record not found", smeId); continue; }
+        incError(sstat, errRs, 2);
     }
 }
-void fillRoutes(Connection* connection, Hash<RouteStat>& stat, uint32_t period)
+void fillRoutes(Hash<RouteStat>& stat, ResultSet* rs, ResultSet* errRs)
 {
-    Statement* stmt = connection->getStatement(ROUTE_STAT_ID, ROUTE_STAT_SQL);
-    if (!stmt) throw Exception(ERR_STMT_MESSAGE, "routes");
-    stmt->setUint32(1, period);
-    std::auto_ptr<ResultSet> rsGuard(stmt->executeQuery());
-    ResultSet* rs = rsGuard.get();
-    if (!rs) throw Exception(ERR_RS_MESSAGE, "routes");
-
-    while (rs->fetchNext())
+    while (rs && rs->fetchNext())
     {
         const char* routeId = (rs->isNull(1) ? 0:rs->getString(1));
         if (!routeId || !routeId[0]) { smsc_log_warn(logger, "Got null route_id"); continue; }
@@ -143,13 +130,21 @@ void fillRoutes(Connection* connection, Hash<RouteStat>& stat, uint32_t period)
             stat.Insert(routeId, newStat);
             rstat = stat.GetPtr(routeId);
         }
-
-        incStat(rstat, rs, 2);
+        incCounters(rstat, rs, 2);
+    }
+    while (errRs && errRs->fetchNext())
+    {
+        const char* routeId = (rs->isNull(1) ? 0:rs->getString(1));
+        if (!routeId || !routeId[0]) { smsc_log_warn(logger, "Got null route_id"); continue; }
+        
+        RouteStat* rstat = stat.GetPtr(routeId);
+        if (!rstat) { smsc_log_warn(logger, "Route '%s' record not found", routeId); continue; }
+        incError(rstat, errRs, 2);
     }
 }
 void process(Connection* connection, const char* location)
 {
-    smsc_log_info(logger, "Dump process started ...");
+    smsc_log_info(logger, "Dump process started, creating statements...");
     
     std::auto_ptr<Statement> generalGuard(connection->createStatement(GENERAL_STAT_SQL));
     Statement* general = generalGuard.get();
@@ -157,47 +152,66 @@ void process(Connection* connection, const char* location)
     std::auto_ptr<ResultSet> genRsGuard(general->executeQuery());
     ResultSet* genRs = genRsGuard.get();
     if (!genRs) throw Exception(ERR_RS_MESSAGE, "general");
-    
+    std::auto_ptr<Statement> generalErrGuard(connection->createStatement(GENERAL_STAT_ERR_SQL));
+    Statement* generalErr = generalErrGuard.get();
+    if (!generalErr) throw Exception(ERR_STMT_MESSAGE, "general err");
+
+    std::auto_ptr<Statement> smeGuard(connection->createStatement(SME_STAT_SQL));
+    Statement* sme = smeGuard.get();
+    if (!sme) throw Exception(ERR_STMT_MESSAGE, "sme");
+    std::auto_ptr<Statement> smeErrGuard(connection->createStatement(SME_STAT_ERR_SQL));
+    Statement* smeErr = smeErrGuard.get();
+    if (!sme) throw Exception(ERR_STMT_MESSAGE, "sme err");
+
+    std::auto_ptr<Statement> routeGuard(connection->createStatement(ROUTE_STAT_SQL));
+    Statement* route = routeGuard.get();
+    if (!route) throw Exception(ERR_STMT_MESSAGE, "route");
+    std::auto_ptr<Statement> routeErrGuard(connection->createStatement(ROUTE_STAT_ERR_SQL));
+    Statement* routeErr = routeErrGuard.get();
+    if (!routeErr) throw Exception(ERR_STMT_MESSAGE, "route err");
+
     StatStorage storage(location); tm flushTM;
     
     SmsStat         stat;
     Hash<SmsStat>   statSme;
     Hash<RouteStat> statRoute;
-    
-    uint32_t period  = 0; 
-    uint32_t lastPeriod = 0;
+
+    smsc_log_info(logger, "Statements creating, fecthing records...");
 
     while (genRs->fetchNext())
     {
-        period = (genRs->isNull(1) ? 0:genRs->getUint32(1));
+        uint32_t period = (genRs->isNull(1) ? 0:genRs->getUint32(1));
         if (period == 0) { smsc_log_warn(logger, "Got null period"); continue; }
-        
-        if (lastPeriod != 0 && lastPeriod != period) // if new period starts (all errors was got)
+
+        incCounters(&stat, genRs, 2);
+
+        {   // get & add all errors stat
+            generalErr->setUint32(1, period);
+            std::auto_ptr<ResultSet> genErrRsGuard(generalErr->executeQuery());
+            ResultSet* genErrRs = genErrRsGuard.get();
+            while (genErrRs && genErrRs->fetchNext()) incError(&stat, genErrRs, 1);
+        }
         {
-            fillSmes(connection, statSme, lastPeriod);
-            fillRoutes(connection, statRoute, lastPeriod);
-            
-            smsc_log_debug(logger, "Dumping period %ld", lastPeriod);
-            StatisticsManager::flush(flushTM, storage, stat, statSme, statRoute);
-            stat.Empty(); statSme.Empty(); statRoute.Empty();
+            sme->setUint32(1, period);
+            smeErr->setUint32(1, period);
+            std::auto_ptr<ResultSet> smeRsGuard(sme->executeQuery());
+            std::auto_ptr<ResultSet> smeErrRsGuard(smeErr->executeQuery());
+            fillSmes(statSme, smeRsGuard.get(), smeErrRsGuard.get());
+        }
+        {
+            route->setUint32(1, period);
+            routeErr->setUint32(1, period);
+            std::auto_ptr<ResultSet> routeRsGuard(route->executeQuery());
+            std::auto_ptr<ResultSet> routeErrRsGuard(routeErr->executeQuery());
+            fillRoutes(statRoute, routeRsGuard.get(), routeErrRsGuard.get());
         }
         
-        incStat(&stat, genRs, 2); // increment general errors statistics
-        
-        if (lastPeriod != period) {
-            lastPeriod = period; convertPeriod(period, flushTM); 
-        }
-    }
-
-    if (period != 0) // process & flush data for last period
-    {
-        fillSmes(connection, statSme, period);
-        fillRoutes(connection, statRoute, period);
-
+        convertPeriod(period, flushTM);
         smsc_log_debug(logger, "Dumping period %ld", period);
         StatisticsManager::flush(flushTM, storage, stat, statSme, statRoute);
+        stat.Empty(); statSme.Empty(); statRoute.Empty();
     }
-    
+
     smsc_log_info(logger, "Dump process finished");
 }
 
@@ -205,27 +219,6 @@ int main(void)
 {
     Logger::Init();
     logger = Logger::getInstance("smsc.stat.DBStatToFiles");
-    
-    /* daylight check
-    tm flushTM1;
-    convertPeriod(2004022515, flushTM1);
-    printf("1: 2004022515 = %02d.%02d.%04d %02d:%02d:%02d GMT\n",
-           flushTM1.tm_mday, flushTM1.tm_mon+1, flushTM1.tm_year+1900,
-           flushTM1.tm_hour, flushTM1.tm_min, flushTM1.tm_sec);
-    convertPeriod(2004062515, flushTM1);
-    printf("2: 2004062515 = %02d.%02d.%04d %02d:%02d:%02d GMT\n",
-           flushTM1.tm_mday, flushTM1.tm_mon+1, flushTM1.tm_year+1900,
-           flushTM1.tm_hour, flushTM1.tm_min, flushTM1.tm_sec);
-    tm flushTM2;
-    convertPeriod(2004062515, flushTM2);
-    printf("4: 2004062515 = %02d.%02d.%04d %02d:%02d:%02d GMT\n",
-           flushTM2.tm_mday, flushTM2.tm_mon+1, flushTM2.tm_year+1900,
-           flushTM2.tm_hour, flushTM2.tm_min, flushTM2.tm_sec);
-    convertPeriod(2004022515, flushTM2);
-    printf("3: 2004022515 = %02d.%02d.%04d %02d:%02d:%02d GMT\n",
-           flushTM2.tm_mday, flushTM2.tm_mon+1, flushTM2.tm_year+1900,
-           flushTM2.tm_hour, flushTM2.tm_min, flushTM2.tm_sec);
-    return 0;*/
     
     Manager::init("config.xml");
     ConfigView dsLoaderConfig(Manager::getInstance(), "StartupLoader");
