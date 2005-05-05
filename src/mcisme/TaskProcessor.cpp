@@ -1,5 +1,6 @@
 
 #include <exception>
+#include <algorithm>
 
 #include "TaskProcessor.h"
 
@@ -154,11 +155,35 @@ TaskProcessor::TaskProcessor(ConfigView* config)
     if (circuitsMap.GetCount() <= 0) 
         throw ConfigException("No one valid MSC section <MCISme.Circuits.XXX> defined.");
     
-    
+    std::vector<Rule> rules; // loadup all redirection rules
+    std::auto_ptr<ConfigView> rulesCfgGuard(config->getSubConfig("Rules"));
+    ConfigView* rulesCfg = rulesCfgGuard.get();
+    if (rulesCfg) 
+    {
+        std::auto_ptr< std::set<std::string> > rulesSetGuard(rulesCfg->getShortSectionNames());
+        std::set<std::string>* rulesSet = rulesSetGuard.get();
+        for (std::set<std::string>::iterator i=rulesSet->begin();i!=rulesSet->end();i++)
+        {
+            const char* ruleName = (const char *)i->c_str();
+            if (!ruleName || !ruleName[0]) continue;
+
+            std::auto_ptr<ConfigView> ruleCfgGuard(circuitsCfg->getSubConfig(ruleName));
+            ConfigView* ruleCfg = ruleCfgGuard.get();
+
+            Rule rule;
+            rule.name     = ruleName;
+            rule.rx       = ruleCfg->getString("regexp");
+            rule.priority = ruleCfg->getInt("priority");
+            rule.inform   = ruleCfg->getInt("inform");
+            rule.cause    = ruleCfg->getInt("cause");
+            rules.push_back(rule);
+        }
+        std::sort(rules.begin(), rules.end());
+    }
+
+    ReleaseSettings releaseSettings;
     std::auto_ptr<ConfigView> releaseSettingsCfgGuard(config->getSubConfig("Reasons"));
     ConfigView* releaseSettingsCfg = releaseSettingsCfgGuard.get();
-    
-    ReleaseSettings releaseSettings;
     try { releaseSettings.detachCause   = releaseSettingsCfg->getInt ("Detach.cause"); } catch (...) {
         smsc_log_warn(logger, "Parameter <MCISme.Reasons.Detach.cause> missed. Using default (20)");
         releaseSettings.detachCause = 20;
@@ -179,7 +204,6 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         releaseSettings.strategy != REDIRECT_STRATEGY && releaseSettings.strategy != MIXED_STRATEGY) 
         throw ConfigException("Parameter <MCISme.Reasons.strategy> value '%d' is invalid.", 
                               releaseSettings.strategy);
-    
     releaseCallsStrategy = releaseSettings.strategy;
     releaseSettings.busyCause           = releaseSettingsCfg->getInt ("Busy.cause");
     releaseSettings.busyInform          = releaseSettingsCfg->getBool("Busy.inform") ? 1:0;
@@ -198,7 +222,7 @@ TaskProcessor::TaskProcessor(ConfigView* config)
         throw ConfigException("Redirection address string '%s' is invalid", 
                               redirectionAddress ? redirectionAddress:"-");
     
-    mciModule = new MCIModule(circuitsMap, releaseSettings, redirectionAddress,
+    mciModule = new MCIModule(circuitsMap, rules, releaseSettings, redirectionAddress,
                               callingMask.c_str(), calledMask.c_str());
     
     smsc_log_info(logger, "MCI Module starting...");

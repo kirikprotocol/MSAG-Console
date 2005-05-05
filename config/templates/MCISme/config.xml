@@ -96,6 +96,27 @@
 	  </section>
 	</section>
     
+        <section name="Rules">
+	  <section name="Rule 1">
+    	    <param name="cause" type="int">0</param>
+            <param name="inform" type="int">1</param>
+	    <param name="priority" type="int">1000</param>
+    	    <param name="regexp" type="string"></param>
+          </section>
+	  <section name="Rule 2">
+    	    <param name="cause" type="int">0</param>
+            <param name="inform" type="int">0</param>
+	    <param name="priority" type="int">200</param>
+    	    <param name="regexp" type="string"></param>
+          </section>
+	  <section name="Rule 3">
+    	    <param name="cause" type="int">0</param>
+            <param name="inform" type="int">1</param>
+	    <param name="priority" type="int">300</param>
+            <param name="regexp" type="string"></param>
+          </section>
+        </section>
+    
         <section name="Templates">
 
 	  <section name="Inform">
