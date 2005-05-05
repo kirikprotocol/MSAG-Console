@@ -67,7 +67,7 @@ namespace smsc { namespace mcisme
 
     public:
 
-        MCIModule(Hash<Circuits>& circuits, const vector<Rule>& rules, 
+        MCIModule(Hash<Circuits>& circuits, std::vector<Rule>& rules, 
                   const ReleaseSettings& releaseSettings, const char* redirectionAddress,
                   const char* callingMask, const char* calledMask) 
             : Thread(), logger(Logger::getInstance("smsc.mcisme.MCIModule")), 
