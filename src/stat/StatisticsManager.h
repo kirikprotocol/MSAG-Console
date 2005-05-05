@@ -135,13 +135,18 @@ namespace smsc { namespace stat
         std::string     location;
         bool            bFileTM;
         tm              fileTM;
-        FILE*           file;
+        FILE*           statFile;
     
-        void close();
-        void flush();
-        void write(const void* data, size_t size);
-
+        static bool read(FILE* file, void* data, size_t size);
+        static void write(FILE* file, const void* data, size_t size);
+        static void flush(FILE* file);
+        static void seekPos(FILE* file, long offset, int whence);
+        static void getPos(FILE* file, fpos_t* pos);
+        static void setPos(FILE* file, const fpos_t* pos);
+        static void deleteFile(const char* path);
+        static void truncateFile(const char* path, off_t length);
         static bool createDir(const std::string& dir);
+
         bool createStatDir();
     
     public:

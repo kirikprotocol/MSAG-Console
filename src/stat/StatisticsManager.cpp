@@ -24,6 +24,7 @@ const uint16_t SMSC_STAT_VERSION_INFO  = 0x0001;
 const char*    SMSC_STAT_HEADER_TEXT   = "SMSC.STAT";
 const char*    SMSC_STAT_DIR_NAME_FORMAT  = "%04d-%02d";
 const char*    SMSC_STAT_FILE_NAME_FORMAT = "%02d.rts";
+const char*    SMSC_TRNS_FILE_NAME_FORMAT = "%02d.trs";
 
 StatisticsManager::StatisticsManager(const std::string& _location)
     :  logger(Logger::getInstance("smsc.stat.StatisticsManager")),
@@ -314,37 +315,95 @@ int StatisticsManager::calculateToSleep() // returns msecs to next minute
 
 StatStorage::StatStorage(const std::string& _location)
     : logger(Logger::getInstance("smsc.stat.StatStorage")),
-      location(_location), bFileTM(false), file(0) 
+      location(_location), bFileTM(false), statFile(0) 
 {
     if (!createStatDir()) 
         throw Exception("Can't open statistics directory: '%s'", location.c_str());
 }
 StatStorage::~StatStorage()
 {
-    close();
+    if (statFile) fclose(statFile);
 }
 
-void StatStorage::close()
+// Static members
+bool StatStorage::read(FILE* file, void* data, size_t size)
 {
-    if (file) { 
-        bFileTM = false; fclose(file); file = 0;
+    if (!file) return false;
+    if (fread(data, size, 1, file) != 1) {
+        if (feof(file)) {
+            clearerr(file);
+            return false;
+        }
+        int error = ferror(file);
+        Exception exc("Failed to read from file. Details: %s", strerror(error));
+        fclose(file); throw exc;
+    }
+    return true;
+}
+void StatStorage::write(FILE* file, const void* data, size_t size)
+{
+    if (file && fwrite(data, size, 1, file) != 1) {
+        int error = ferror(file);
+        Exception exc("Failed to write to file. Details: %s", strerror(error));
+        fclose(file); throw exc;
     }
 }
-void StatStorage::flush()
+void StatStorage::flush(FILE* file)
 {
     if (file && fflush(file)) {
         int error = ferror(file);
         Exception exc("Failed to flush file. Details: %s", strerror(error));
-        close(); throw exc;
+        fclose(file); throw exc;
     }
 }
-void StatStorage::write(const void* data, size_t size)
+void StatStorage::seekPos(FILE* file, long offset, int whence)
 {
-    if (file && fwrite(data, size, 1, file) != 1) {
+    if (file && fseek(file, offset, whence)) {
         int error = ferror(file);
-        Exception exc("Failed to write file. Details: %s", strerror(error));
-        close(); throw exc;
+        Exception exc("Failed to seek %s. Details: %s", 
+                      (whence == SEEK_END) ? "EOF":"BOF", strerror(error));
+        fclose(file); throw exc;
     }
+}
+void StatStorage::getPos(FILE* file, fpos_t* pos)
+{
+    __require__(pos);
+
+    if (file && fgetpos(file, pos) != 0) {
+        int error = ferror(file);
+        Exception exc("Failed to get file pos. Details: %s", strerror(error));
+        fclose(file); throw exc;
+    }
+}
+void StatStorage::setPos(FILE* file, const fpos_t* pos)
+{
+    __require__(pos);
+
+    if (file && fsetpos(file, pos) != 0) {
+        int error = ferror(file);
+        Exception exc("Failed to set file pos. Details: %s", strerror(error));
+        fclose(file); throw exc;
+    }
+}
+void StatStorage::deleteFile(const char* path)
+{
+    if (remove(path) != 0)
+        throw Exception("Failed to remove file '%s'. Details: %s", path, strerror(errno));
+}
+void StatStorage::truncateFile(const char* path, off_t length)
+{
+    if (truncate(path, length) != 0)
+        throw Exception("Failed to truncate file '%s' to %d bytes. Details: %s",
+                         path, length, strerror(errno));
+}
+bool StatStorage::createDir(const std::string& dir)
+{
+    if (mkdir(dir.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) {
+        if (errno == EEXIST) return false;
+        throw Exception("Failed to create directory '%s'. Details: %s", 
+                        dir.c_str(), strerror(errno));
+    }
+    return true;
 }
 
 bool StatStorage::createStatDir()
@@ -404,82 +463,6 @@ bool StatStorage::createStatDir()
     return true;
 }
 
-bool StatStorage::createDir(const std::string& dir)
-{
-    if (mkdir(dir.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) {
-        if (errno == EEXIST) return false;
-        throw Exception("Failed to create directory '%s'. Details: %s", 
-                        dir.c_str(), strerror(errno));
-    }
-    return true;
-}
-
-const int MAX_STACK_BUFFER_SIZE = 64*1024;
-
-void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
-{
-    smsc_log_debug(logger, "Statistics dump called for %02d:%02d GMT", 
-                   flushTM.tm_hour, flushTM.tm_min);
-
-    char dirName[128]; bool hasDir = false;
-
-    if (!bFileTM || fileTM.tm_mon != flushTM.tm_mon || fileTM.tm_year != flushTM.tm_year)
-    {
-        sprintf(dirName, SMSC_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
-        createDir(location + "/" + dirName); bFileTM = false; hasDir = true;
-        smsc_log_debug(logger, "New dir '%s' created", dirName);
-    }
-
-    if (!bFileTM || fileTM.tm_mday != flushTM.tm_mday)
-    {
-        close(); // close old file (if it was opened)
-        
-        char fileName[128]; 
-        std::string fullPath = location;
-        if (!hasDir) sprintf(dirName, SMSC_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
-        sprintf(fileName, SMSC_STAT_FILE_NAME_FORMAT, flushTM.tm_mday);
-        fullPath += '/'; fullPath += (const char*)dirName; 
-        fullPath += '/'; fullPath += (const char*)fileName; 
-        const char* fullPathStr = fullPath.c_str();
-
-        bool needHeader = true;
-        file = fopen(fullPathStr, "r");
-        if (file) { // file already exists (was opened for reading)
-            close(); needHeader = false;
-        }
-        
-        file = fopen(fullPathStr, "ab+"); // open or create for append
-        if (!file)
-            throw Exception("Failed to create/open file '%s'. Details: %s", 
-                            fullPathStr, strerror(errno));
-        
-        if (fseek(file, 0, SEEK_END)) { // set position to EOF
-            int error = ferror(file);
-            Exception exc("Failed to seek EOF. Details: %s", strerror(error));
-            close(); throw exc;
-        }
-
-        if (needHeader) { // create header (if new file created)
-            write(SMSC_STAT_HEADER_TEXT, strlen(SMSC_STAT_HEADER_TEXT));
-            uint16_t version = htons(SMSC_STAT_VERSION_INFO);
-            write(&version, sizeof(version));
-            flush();
-        }
-        fileTM = flushTM; bFileTM = true;
-        smsc_log_debug(logger, "%s file '%s' %s", (needHeader) ? "New":"Existed",
-                       fileName, (needHeader) ? "created":"opened");
-    }
-    
-    TmpBuf<uint8_t, MAX_STACK_BUFFER_SIZE> writeBuff(MAX_STACK_BUFFER_SIZE);
-    uint32_t value32 = htonl(buffLen);
-    writeBuff.Append((uint8_t *)&value32, sizeof(value32));
-    writeBuff.Append((uint8_t *)buff, buffLen);
-    writeBuff.Append((uint8_t *)&value32, sizeof(value32));
-    write((const void *)writeBuff, writeBuff.GetPos());
-    flush();
-    smsc_log_debug(logger, "Record dumped (%d bytes)", buffLen);
-}
-
 uint64_t toNetworkOrder(uint64_t value)
 {
     uint64_t result = 0;
@@ -489,6 +472,124 @@ uint64_t toNetworkOrder(uint64_t value)
     ptr[4]=(value>>24)&0xFF; ptr[5]=(value>>16)&0xFF;
     ptr[6]=(value>>8 )&0xFF; ptr[7]=(value    )&0xFF;
     return result;
+}
+uint64_t toHostOrder(uint64_t value)
+{
+    unsigned char *ptr=(unsigned char *)&value;
+    return (((((uint64_t)ptr[0])<<56)&0xFF00000000000000)|
+            ((((uint64_t)ptr[1])<<48)&0x00FF000000000000)|
+            ((((uint64_t)ptr[2])<<40)&0x0000FF0000000000)|
+            ((((uint64_t)ptr[3])<<32)&0x000000FF00000000)|
+            ((((uint64_t)ptr[4])<<24)&0x00000000FF000000)|
+            ((((uint64_t)ptr[5])<<16)&0x0000000000FF0000)|
+            ((((uint64_t)ptr[6])<< 8)&0x000000000000FF00)|
+            ((((uint64_t)ptr[7])    )&0x00000000000000FF));
+}
+
+const int MAX_STACK_BUFFER_SIZE = 64*1024;
+
+void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
+{
+    smsc_log_debug(logger, "Statistics dump called for %02d:%02d GMT", 
+                   flushTM.tm_hour, flushTM.tm_min);
+    
+    FILE* trnsFile = 0;
+    try 
+    {
+        char dirName[128]; char fileName[128]; 
+        sprintf(dirName, SMSC_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
+        sprintf(fileName, SMSC_STAT_FILE_NAME_FORMAT, flushTM.tm_mday);
+        std::string fullPath = location; fullPath += '/'; fullPath += (const char*)dirName;
+        std::string statPath = fullPath; statPath += '/'; statPath += (const char*)fileName; 
+        const char* statPathStr = statPath.c_str();
+
+        if (!bFileTM || fileTM.tm_mon != flushTM.tm_mon || fileTM.tm_year != flushTM.tm_year)
+        {
+            createDir(location + "/" + dirName); bFileTM = false;
+            smsc_log_debug(logger, "New dir '%s' created", dirName);
+        }
+
+        bool needHeader = false;
+        if (!bFileTM || fileTM.tm_mday != flushTM.tm_mday)
+        {
+            if (statFile) { // close old RTS file (if it was opened)
+                fclose(statFile); statFile = 0;
+            }
+
+            needHeader = true;
+            statFile = fopen(statPathStr, "r");
+            if (statFile) { // file already exists (was opened for reading)
+                fclose(statFile); statFile = 0; needHeader = false;
+            }
+            statFile = fopen(statPathStr, "ab+"); // open or create for append
+            if (!statFile)
+                throw Exception("Failed to create/open file '%s'. Details: %s", 
+                                statPathStr, strerror(errno));
+
+            fileTM = flushTM; bFileTM = true;
+            smsc_log_debug(logger, "%s file '%s' %s", (needHeader) ? "New":"Existed",
+                           fileName, (needHeader) ? "created":"opened");
+        }
+
+        sprintf(fileName, SMSC_TRNS_FILE_NAME_FORMAT, fileTM.tm_mday);
+        std::string trnsPath = fullPath; trnsPath += '/'; trnsPath += (const char*)fileName; 
+        const char* trnsPathStr = trnsPath.c_str();
+
+        trnsFile = fopen(trnsPathStr, "r");
+        if (trnsFile) // transaction file exists => last record(s) in RTS file invalid
+        { 
+            smsc_log_warn(logger, "Found transaction file '%s'", trnsPathStr);
+            StatStorage::seekPos(trnsFile, 0, SEEK_SET); // set TRANS file position to BOF
+            uint64_t pos;
+            StatStorage::read(trnsFile, &pos, sizeof(pos));
+            fpos_t fpos = (fpos_t)toHostOrder(pos);
+            StatStorage::truncateFile(statPathStr, (off_t)fpos); // truncate RTS file
+            StatStorage::seekPos(statFile, 0, SEEK_END); // set RTS file position to EOF
+            if (fpos <= 0) needHeader = true; 
+            smsc_log_warn(logger, "Rollback to RTS file position %lld in file '%s'",
+                          fpos, statPathStr);
+        } 
+        else // create new TRANS file & write RTS position to it
+        { 
+            StatStorage::seekPos(statFile, 0, SEEK_END); // set RTS file position to EOF
+            trnsFile = fopen(trnsPathStr, "ab+"); // open or create for append
+            if (!trnsFile) 
+                throw Exception("Failed to create/open file '%s'. Details: %s", 
+                                trnsPathStr, strerror(errno));
+            StatStorage::seekPos(trnsFile, 0, SEEK_SET); // set TRANS file position to BOF
+            fpos_t fpos = 0;
+            StatStorage::getPos(statFile, &fpos);
+            uint64_t pos = toNetworkOrder((uint64_t)fpos);
+            StatStorage::write(trnsFile, &pos, sizeof(pos));
+            StatStorage::flush(trnsFile);
+        }
+
+        if (trnsFile) { fclose(trnsFile); trnsFile = 0; }
+
+        TmpBuf<uint8_t, MAX_STACK_BUFFER_SIZE> writeBuff(MAX_STACK_BUFFER_SIZE);
+        if (needHeader) // create header (if new file created)
+        { 
+            writeBuff.Append((uint8_t *)SMSC_STAT_HEADER_TEXT, strlen(SMSC_STAT_HEADER_TEXT));
+            uint16_t version = htons(SMSC_STAT_VERSION_INFO);
+            writeBuff.Append((uint8_t *)&version, sizeof(version));
+        }
+        uint32_t value32 = htonl(buffLen);
+        writeBuff.Append((uint8_t *)&value32, sizeof(value32));
+        writeBuff.Append((uint8_t *)buff, buffLen);
+        writeBuff.Append((uint8_t *)&value32, sizeof(value32));
+        StatStorage::write(statFile, (const void *)writeBuff, writeBuff.GetPos());
+        StatStorage::flush(statFile);
+        StatStorage::deleteFile(trnsPathStr); // drop TRANS file
+
+        smsc_log_debug(logger, "Record dumped (%d bytes)", buffLen);
+    }
+    catch (Exception exc)
+    {
+        bFileTM = false;
+        if (trnsFile) fclose(trnsFile); trnsFile = 0;
+        if (statFile) fclose(statFile); statFile = 0; 
+        throw exc;
+    }
 }
 
 void StatisticsManager::flush(const tm& flushTM, StatStorage& _storage, SmsStat& general,
