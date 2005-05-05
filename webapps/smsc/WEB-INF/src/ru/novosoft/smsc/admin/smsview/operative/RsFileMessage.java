@@ -193,7 +193,7 @@ public class RsFileMessage  extends Message
       sms.setSrcSmeId(readString8(bis));
       sms.setDstSmeId(readString8(bis));
       int concatMsgRef=readUInt16(bis);
-      String concatSeqNum=readString(bis,1);
+      short concatSeqNum=(short)Message.readUInt8(bis);
       int bodyLen = (int) readUInt32(bis);
       if (bodyLen > 0) {
         byte body[] = new byte[bodyLen];
@@ -210,97 +210,6 @@ public class RsFileMessage  extends Message
      int msgSize2 = (int) Message.readUInt32(bis);
 
     }
-  /*
-   public void receiveId(RandomAccessFile bis) throws IOException
-    {
-    sms = new SmsRow();
-    long pointer=bis.getFilePointer();
-    sms.setPointer(pointer);
-    int msgSize1 = (int) Message.readUInt32(bis);
-    pointer=bis.getFilePointer();
-    long msgId=Message.readInt64(bis);
-    sms.setId(msgId);
-    bis.seek(msgSize1+pointer);
-    int msgSize2 = (int) Message.readUInt32(bis);
-    if (msgSize1 != msgSize2)
-       throw new IOException("Protocol error sz1=" + msgSize1 + " sz2=" + msgSize2);
-    }
-
-   public void receiveSms(RandomAccessFile bis , long pointer) throws IOException
-   {  bis.seek(pointer);
-      sms = new SmsRow();
-      int msgSize1 = (int) Message.readUInt32(bis);
-
-      long msgId=Message.readInt64(bis);
-      sms.setId(msgId);
-      int seq=(int)Message.readUInt32(bis);
-      String finall=Message.readString(bis,1);
-      sms.setStatus(Message.readUInt8(bis));
-      sms.setSubmitTime(new Date(Message.readUInt32(bis)*1000));
-      sms.setValidTime(new Date(Message.readUInt32(bis)*1000));
-      sms.setLastTryTime(new Date(Message.readUInt32(bis)*1000));
-      sms.setNextTryTime(new Date(Message.readUInt32(bis)*1000));
-      sms.setAttempts((int) Message.readUInt32(bis));
-      sms.setLastResult((int) Message.readUInt32(bis));
-      try {
-        int len=Message.readUInt8(bis);
-        String type=Message.readString(bis,1);
-        String plan=Message.readString(bis,1);
-        String address=Message.readString(bis,len);
-        sms.setOriginatingAddress(address);
-      } catch (AdminException e) {
-        throw new IOException(e.getMessage());
-      }
-      try {
-        int len=Message.readUInt8(bis);
-        String type=Message.readString(bis,1);
-        String plan=Message.readString(bis,1);
-        String address=Message.readString(bis,len);
-        sms.setDestinationAddress(address);
-      } catch (AdminException e) {
-        throw new IOException(e.getMessage());
-      }
-      try {
-        int len=Message.readUInt8(bis);
-        String type=Message.readString(bis,1);
-        String plan=Message.readString(bis,1);
-        String address=Message.readString(bis,len);
-        sms.setDealiasedDestinationAddress(address);
-      } catch (AdminException e) {
-        throw new IOException(e.getMessage());
-      }
-      sms.setMessageReference(Message.readUInt16(bis));
-      sms.setServiceType(Message.readString8(bis));
-      sms.setDeliveryReport((short) Message.readUInt8(bis));
-      sms.setBillingRecord((short) Message.readUInt8(bis));
-      String odMsc = Message.readString8(bis);
-      String odImsi = Message.readString8(bis);
-      sms.setOriginatingDescriptor(new SmsDescriptor(odImsi, odMsc, (int) Message.readUInt32(bis)));
-      String ddMsc = Message.readString8(bis);
-      String ddImsi = Message.readString8(bis);
-      sms.setDestinationDescriptor(new SmsDescriptor(ddImsi, ddMsc, (int) Message.readUInt32(bis)));
-      sms.setRouteId(Message.readString8(bis));
-      sms.setServiceId((int) Message.readUInt32(bis));
-      sms.setPriority((int) Message.readUInt32(bis));
-      sms.setSrcSmeId(Message.readString8(bis));
-      sms.setDstSmeId(Message.readString8(bis));
-      int concatMsgRef=Message.readUInt16(bis);
-      String concatSeqNum=Message.readString(bis,1);
-      int bodyLen = (int) Message.readUInt32(bis);
-      if (bodyLen > 0) {
-        byte body[] = new byte[bodyLen];
-        int pos = 0;
-        int cnt = 0;
-        while (pos < bodyLen) {
-          cnt = bis.read(body, pos, bodyLen - pos);
-          if (cnt == -1) { BodyRecived=true;throw new EOFException();
-          };
-          pos += cnt;
-        }
-        SmsSource.parseBody(new ByteArrayInputStream(body, 0, bodyLen), sms);
-      }
-    }
-  */
 
   public boolean receive(InputStream is, SmsQuery query, byte message[], long msgId, boolean justCheck) throws IOException
   {
@@ -385,7 +294,7 @@ public class RsFileMessage  extends Message
     sms.setSrcSmeId(srcSmeId);
     sms.setDstSmeId(dstSmeId);
     int concatMsgRef=Message.readUInt16(is);
-    String concatSeqNum=Message.readString(is,1);
+    short concatSeqNum=(short)Message.readUInt8(is);
     int bodyLen = (int) Message.readUInt32(is);
     if (bodyLen > 0) {
       byte body[] = new byte[bodyLen];
