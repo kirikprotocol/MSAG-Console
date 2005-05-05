@@ -247,7 +247,7 @@ public:
 
   void Dump()
   {
-    MutexGuard mg(mutex);
+    MutexGuard mg(lock);
     Records::iterator it = records.begin();
     for ( ; it != records.end(); ++it )
     {
