@@ -27,7 +27,7 @@ public:
   T* operator +(int i) const { require(ptr!=0); return ptr+i; }
   bool IsNot0() const { return ptr!=0; }
   bool IsNull() const { return ptr==0; }
-  T* get() const {return t;}
+  T* get() const {return ptr;}
   T* forget() const { T* tmp = ptr; ptr=0; return tmp; }
 private:
   mutable T* ptr;
