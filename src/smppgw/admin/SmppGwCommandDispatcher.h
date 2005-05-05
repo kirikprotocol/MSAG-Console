@@ -1,4 +1,4 @@
-// 
+//
 // File:   SmppGwCommandDispatcher.h
 // Author: igork
 //
@@ -6,7 +6,7 @@
 //
 
 #ifndef _SMPPGW_ADMIN_SmppGwCommandDispatcher_H
-#define	_SMPPGW_ADMIN_SmppGwCommandDispatcher_H
+#define _SMPPGW_ADMIN_SmppGwCommandDispatcher_H
 
 #include "CommandActions.h"
 #include "admin/AdminException.h"
@@ -36,7 +36,7 @@ using namespace smsc::admin::util;
 using namespace smsc::smppgw;
 using smsc::admin::AdminException;
 using smsc::core::network::Socket;
-using smsc::smppgw::admin::Actions;
+using namespace smsc::smppgw::admin::Actions;
 
 class SmppGwCommandDispatcher : public CommandDispatcherTempl<SmppGwCommandReader, ResponseWriter>
 {
@@ -61,5 +61,4 @@ private:
 }
 }
 
-#endif	/* _SMPPGW_ADMIN_SmppGwCommandDispatcher_H */
-
+#endif  /* _SMPPGW_ADMIN_SmppGwCommandDispatcher_H */
