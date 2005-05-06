@@ -39,7 +39,7 @@ public class StatExportCommand implements Command
             return;
         }
         SmsStat stat = null;
-        try { 
+        try {
             stat = SmsStat.getInstance(ctx.getSmscConfig(), ctx.getWebappConfig());
         } catch(Exception e) {
             ctx.setMessage("Failed to get stat instance. Details: "+e.getMessage());
@@ -91,7 +91,7 @@ public class StatExportCommand implements Command
     }
 
     public String getId() {
-        return "STAT_EXPORT";
+        return "EXPORT_STATS";
     }
 
 }

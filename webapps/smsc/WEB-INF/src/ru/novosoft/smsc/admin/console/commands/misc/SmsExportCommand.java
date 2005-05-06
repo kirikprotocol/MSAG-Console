@@ -42,7 +42,7 @@ public class SmsExportCommand implements Command
     }
 
     public String getId() {
-        return "SMS_EXPORT";
+        return "EXPORT_SMS";
     }
 
 }

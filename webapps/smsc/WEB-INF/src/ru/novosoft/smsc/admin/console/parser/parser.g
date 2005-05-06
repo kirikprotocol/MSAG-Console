@@ -58,6 +58,7 @@ parse returns [Command cmd] {
 	| ACT_GRANT	cmd = grant
 	| ACT_REVOKE	cmd = revoke
 	| ACT_CHECK	cmd = check
+	| ACT_EXPORT	cmd = export
 	| ACT_APPLY	{ cmd = new ApplyCommand(); }
 	;
 	
@@ -167,6 +168,16 @@ check returns[Command cmd] {
 }
   : ADD_ACCESS ADD_TO TGT_ACL cmd = checkacl
   ;
+/* ----------------------- Export action parser ---------------------- */
+export returns [Command cmd] {
+    cmd = null;
+}
+	: TGT_STATS	cmd = exportstats
+	| TGT_STATS_E	cmd = exportstats
+	| TGT_SMS	cmd = exportsms
+	| TGT_SMS_E	cmd = exportsms
+	;
+
 
 /* ----------------------- Common names parser ------------------------- */
 getnameid[String msg] returns [String out] {
@@ -897,4 +908,24 @@ addcategory returns [CategoryAddCommand cmd] {
 delcategory returns [CategoryDeleteCommand cmd] {
     cmd = new CategoryDeleteCommand();
 }	: ({ cmd.setCategoryId(getnameid("Category id")); })
+	;
+	
+exportstats returns[StatExportCommand cmd] {
+    cmd = new StatExportCommand();
+}
+	: (ADD_FOR { cmd.setDate(getnameid("Date to export"));        })
+	  (ADD_TO  { cmd.setDriver(getnameid("Driver"));              }
+		   { cmd.setSource(getnameid("Source"));              }
+		   { cmd.setUser(getnameid("User"));                  }
+		   { cmd.setPassword(getnameid("Password"));          } 
+		   { cmd.setTablesPrefix(getnameid("tables prefix")); })?
+	;
+exportsms returns[SmsExportCommand cmd] {
+    cmd = new SmsExportCommand();
+}
+	: (ADD_TO  { cmd.setDriver(getnameid("Driver"));        }
+		   { cmd.setSource(getnameid("Source"));        }
+		   { cmd.setUser(getnameid("User"));            }
+		   { cmd.setPassword(getnameid("Password"));    }
+		   { cmd.setTableName(getnameid("table name")); })?
 	;

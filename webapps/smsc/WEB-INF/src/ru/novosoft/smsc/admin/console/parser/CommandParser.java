@@ -125,6 +125,12 @@ public CommandParser(ParserSharedInputState state) {
 			cmd=check();
 			break;
 		}
+		case ACT_EXPORT:
+		{
+			match(ACT_EXPORT);
+			cmd=export();
+			break;
+		}
 		case ACT_APPLY:
 		{
 			match(ACT_APPLY);
@@ -579,6 +585,46 @@ public CommandParser(ParserSharedInputState state) {
 		match(ADD_TO);
 		match(TGT_ACL);
 		cmd=checkacl();
+		return cmd;
+	}
+	
+	public final Command  export() throws RecognitionException, TokenStreamException {
+		Command cmd;
+		
+		
+		cmd = null;
+		
+		
+		switch ( LA(1)) {
+		case TGT_STATS:
+		{
+			match(TGT_STATS);
+			cmd=exportstats();
+			break;
+		}
+		case TGT_STATS_E:
+		{
+			match(TGT_STATS_E);
+			cmd=exportstats();
+			break;
+		}
+		case TGT_SMS:
+		{
+			match(TGT_SMS);
+			cmd=exportsms();
+			break;
+		}
+		case TGT_SMS_E:
+		{
+			match(TGT_SMS_E);
+			cmd=exportsms();
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
 		return cmd;
 	}
 	
@@ -2499,6 +2545,74 @@ public CommandParser(ParserSharedInputState state) {
 		return cmd;
 	}
 	
+	public final StatExportCommand  exportstats() throws RecognitionException, TokenStreamException {
+		StatExportCommand cmd;
+		
+		
+		cmd = new StatExportCommand();
+		
+		
+		{
+		match(ADD_FOR);
+		cmd.setDate(getnameid("Date to export"));
+		}
+		{
+		switch ( LA(1)) {
+		case ADD_TO:
+		{
+			match(ADD_TO);
+			cmd.setDriver(getnameid("Driver"));
+			cmd.setSource(getnameid("Source"));
+			cmd.setUser(getnameid("User"));
+			cmd.setPassword(getnameid("Password"));
+			cmd.setTablesPrefix(getnameid("tables prefix"));
+			break;
+		}
+		case EOF:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		return cmd;
+	}
+	
+	public final SmsExportCommand  exportsms() throws RecognitionException, TokenStreamException {
+		SmsExportCommand cmd;
+		
+		
+		cmd = new SmsExportCommand();
+		
+		
+		{
+		switch ( LA(1)) {
+		case ADD_TO:
+		{
+			match(ADD_TO);
+			cmd.setDriver(getnameid("Driver"));
+			cmd.setSource(getnameid("Source"));
+			cmd.setUser(getnameid("User"));
+			cmd.setPassword(getnameid("Password"));
+			cmd.setTableName(getnameid("table name"));
+			break;
+		}
+		case EOF:
+		{
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		}
+		return cmd;
+	}
+	
 	public final String  getnameid(
 		String msg
 	) throws RecognitionException, TokenStreamException {
@@ -2713,17 +2827,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_SRC);
 			{
-			int _cnt32=0;
-			_loop32:
+			int _cnt33=0;
+			_loop33:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					srcdef(cmd);
 				}
 				else {
-					if ( _cnt32>=1 ) { break _loop32; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt33>=1 ) { break _loop33; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt32++;
+				_cnt33++;
 			} while (true);
 			}
 			}
@@ -2745,17 +2859,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_DST);
 			{
-			int _cnt36=0;
-			_loop36:
+			int _cnt37=0;
+			_loop37:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					dstdef(cmd, needSmeId);
 				}
 				else {
-					if ( _cnt36>=1 ) { break _loop36; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt37>=1 ) { break _loop37; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt36++;
+				_cnt37++;
 			} while (true);
 			}
 			}
@@ -3524,14 +3638,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop112:
+			_loop113:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop112;
+					break _loop113;
 				}
 				
 			} while (true);
@@ -4660,6 +4774,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"grant\"",
 		"\"revoke\"",
 		"\"check\"",
+		"\"export\"",
 		"\"connect\"",
 		"\"disconnect\"",
 		"\"access\"",
@@ -4677,6 +4792,10 @@ public CommandParser(ParserSharedInputState state) {
 		"\"sme\"",
 		"\"provider\"",
 		"\"category\"",
+		"\"stats\"",
+		"\"statistics\"",
+		"\"sms\"",
+		"\"messages\"",
 		"\"name\"",
 		"\"hide\"",
 		"\"nohide\"",

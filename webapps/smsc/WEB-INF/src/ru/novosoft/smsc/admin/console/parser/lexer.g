@@ -24,6 +24,7 @@ tokens {
   ACT_GRANT     = "grant";
   ACT_REVOKE    = "revoke";
   ACT_CHECK     = "check";
+  ACT_EXPORT    = "export";
   
   ACT_CONNECT	= "connect";
   ACT_DISCONNECT= "disconnect";
@@ -44,6 +45,10 @@ tokens {
   TGT_SME	= "sme";
   TGT_PROVIDER	= "provider";
   TGT_CATEGORY	= "category";
+  TGT_STATS	= "stats";
+  TGT_STATS_E	= "statistics";
+  TGT_SMS	= "sms";
+  TGT_SMS_E	= "messages";
 
   OPT_NAME      = "name";
   OPT_HIDE      = "hide";
@@ -161,7 +166,7 @@ STR_WS	:	' '|'\t'|'\f'
 
 protected
 STR_CHR	:	'a'..'z'|'A'..'Z'|'0'..'9'|'_'|'$'
-		|'.'|'?'|'!'|'#'|'+'|'-'|'/'|'\\'|'*'|'%'
+		|'.'|'?'|'!'|'#'|'+'|'-'|'/'|'\\'|'*'|'%'|'@'|':'
 		|'\u00C0'..'\u00FF'|'\u00B8'|'\u00A8'
 		|'\u0400'..'\u04FF'
 	;
