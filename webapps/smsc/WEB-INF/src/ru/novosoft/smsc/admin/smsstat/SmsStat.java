@@ -2,7 +2,6 @@ package ru.novosoft.smsc.admin.smsstat;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.util.conpool.NSConnectionPool;
@@ -54,22 +53,19 @@ public class SmsStat
     private static Object instanceLock = new Object();
     private static SmsStat instance = null;
 
-    public static SmsStat getInstance(SMSCAppContext appContext) throws AdminException
+    public static SmsStat getInstance(Config smscConfig, Config webConfig) throws AdminException
     {
         synchronized(instanceLock) {
-            if (instance == null) instance = new SmsStat(appContext);
+            if (instance == null) instance = new SmsStat(smscConfig, webConfig);
             return instance;
         }
     }
 
-    protected SmsStat(SMSCAppContext appContext) throws AdminException
+    protected SmsStat(Config smscConfig, Config webConfig) throws AdminException
     {
-        Config config = appContext.getSmsc().getSmscConfig();
-        try { statstorePath = config.getString(PARAM_NAME_STAT_DIR); } catch (Exception e) {
+        try { statstorePath = smscConfig.getString(PARAM_NAME_STAT_DIR); } catch (Exception e) {
             throw new AdminException("Failed to obtain statistics dir. Details: " + e.getMessage());
         }
-
-        Config webConfig = appContext.getConfig(); // webappConfig
         try {
             final String section = "statsave_datasource";
             final String source = webConfig.getString(section + ".source");

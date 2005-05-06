@@ -47,9 +47,9 @@ public class SmsStatFormBean extends IndexBean
     if (result != RESULT_OK)
       return result;
     try {
-      if (stat == null) stat = SmsStat.getInstance(appContext);
+      if (stat == null)
+          stat = SmsStat.getInstance(appContext.getSmsc().getSmscConfig(), appContext.getConfig());
     } catch (AdminException e) {
-      e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
       return error(SMSCErrors.error.smsstat.QueryFailed, e.getMessage());
     }
 

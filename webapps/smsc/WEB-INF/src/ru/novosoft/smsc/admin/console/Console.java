@@ -29,6 +29,7 @@ public class Console extends Thread
 	private RouteSubjectManager routeSubjectManager = null;
     private CategoryManager categoryManager = null;
     private ProviderManager providerManager = null;
+    private Config webappConfig = null;
 
 	private Gate humanGate = null;
 	private Gate scriptGate = null;
@@ -50,10 +51,11 @@ public class Console extends Thread
 			this.routeSubjectManager = context.getRouteSubjectManager();
             this.categoryManager = context.getCategoryManager();
             this.providerManager = context.getProviderManager();
+            this.webappConfig = context.getConfig();
 
-			int humanPort = context.getConfig().getInt("console.humanPort");
-			int scriptPort = context.getConfig().getInt("console.scriptPort");
-            try { inactivityTimeout = context.getConfig().getInt("console.timeout"); }
+			int humanPort = webappConfig.getInt("console.humanPort");
+			int scriptPort = webappConfig.getInt("console.scriptPort");
+            try { inactivityTimeout = webappConfig.getInt("console.timeout"); }
             catch (Config.ParamNotFoundException ce) {
               inactivityTimeout = DEFAULT_INACTIVITY_TIMEOUT;
               logger.warn("Missed <console.timeout> parameter. Using default: "+DEFAULT_INACTIVITY_TIMEOUT+" sec");
@@ -61,7 +63,6 @@ public class Console extends Thread
 			commandRolesBundle = ResourceBundle.getBundle("ru.novosoft.smsc.admin.console.commands.roles");
 			humanGate = new HumanGate(this, humanPort);
 			scriptGate = new ScriptGate(this, scriptPort);
-			//this.start();
 		}
 	}
 
@@ -141,6 +142,9 @@ public class Console extends Thread
     }
     public ProviderManager getProviderManager() {
         return providerManager;
+    }
+    public Config getWebappConfig() {
+        return webappConfig;
     }
 
 	public String[] getCommandRoles(String command)

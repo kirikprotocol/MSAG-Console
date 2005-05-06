@@ -10,6 +10,7 @@ package ru.novosoft.smsc.admin.console;
 import ru.novosoft.smsc.admin.smsc_service.*;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
+import ru.novosoft.smsc.util.config.Config;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -27,19 +28,22 @@ public class CommandContext
 	protected RouteSubjectManager routeSubjectManager;
     protected CategoryManager categoryManager;
     protected ProviderManager providerManager;
+    private Config webappConfig = null;
 
 	protected int status = CMD_OK;
 	protected String message = "No message";
 	protected ArrayList results = new ArrayList();
 
 	public CommandContext(Smsc smsc, SmeManager smeManager, RouteSubjectManager routeSubjectManager,
-                          CategoryManager categoryManager, ProviderManager providerManager)
+                          CategoryManager categoryManager, ProviderManager providerManager,
+                          Config webappConfig)
 	{
 		this.smsc = smsc;
 		this.smeManager = smeManager;
 		this.routeSubjectManager = routeSubjectManager;
         this.categoryManager = categoryManager;
         this.providerManager = providerManager;
+        this.webappConfig = webappConfig;
 	}
 
 	public Smsc getSmsc() {
@@ -51,12 +55,17 @@ public class CommandContext
 	public RouteSubjectManager getRouteSubjectManager() {
 		return routeSubjectManager;
 	}
-
     public CategoryManager getCategoryManager() {
         return categoryManager;
     }
     public ProviderManager getProviderManager() {
         return providerManager;
+    }
+    public Config getSmscConfig() {
+        return (smsc == null) ? null : smsc.getSmscConfig();
+    }
+    public Config getWebappConfig() {
+        return webappConfig;
     }
 
 	public String getMessage(){

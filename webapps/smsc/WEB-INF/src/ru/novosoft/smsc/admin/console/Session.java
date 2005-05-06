@@ -191,8 +191,9 @@ public abstract class Session extends Thread
           if (input.equalsIgnoreCase(COMMAND_QUIT)) {
               farewell(null); sleep(1000); break;
           }
-          CommandContext ctx = new CommandContext(owner.getSmsc(), owner.getSmeManager(), owner.getRouteSubjectManager(),
-                                                  owner.getCategoryManager(), owner.getProviderManager());
+          CommandContext ctx = new CommandContext(owner.getSmsc(), owner.getSmeManager(),
+                                                  owner.getRouteSubjectManager(), owner.getCategoryManager(),
+                                                  owner.getProviderManager(), owner.getWebappConfig());
           try
           {
               CommandLexer lexer = new CommandLexer(new StringReader(input));

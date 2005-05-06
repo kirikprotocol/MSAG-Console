@@ -57,7 +57,7 @@ public class StatExportBean extends IndexBean
 
         try {
           if (stat == null) {
-              stat = SmsStat.getInstance(appContext);
+              stat = SmsStat.getInstance(appContext.getSmsc().getSmscConfig(), appContext.getConfig());
               defaultExport = stat.getDefaultExportSettings();
           }
         } catch (AdminException e) {
