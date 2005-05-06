@@ -537,10 +537,7 @@ public class SmsStat
             {
                 Date fileDate = (Date) iterator.next(); // GMT
                 String path = (String) selectedFiles.get(fileDate);
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Parsing file: "+dateDayFormat.format(fileDate)+" GMT ("+
-                                 dateDayLocalFormat.format(fileDate)+" local)");
-                }
+                logger.debug("Parsing file '"+path+"' ...");
                 errMessage = "Failed to read statistics file '"+path+"'";
                 InputStream input = null;
                 try
@@ -574,7 +571,7 @@ public class SmsStat
                                 curDate = calendar.getTime();
 
                                 if (fromQueryDate != null && curDate.getTime() < fromQueryDate.getTime()) {
-                                    //logger.debug("Hour: "+hour+" skipped");
+                                    logger.debug("Hour: "+hour+" skipped");
                                     continue;
                                 }
                                 if (tillQueryDate != null && curDate.getTime() >= tillQueryDate.getTime()) {
@@ -642,6 +639,7 @@ public class SmsStat
                        logger.error("Failed to close input file stream", th);
                     }
                 }
+                logger.debug("File '"+path+"' parsed Ok");
             } // for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext();)
         }
         catch(Exception exc) { // global cacth to close transaction
