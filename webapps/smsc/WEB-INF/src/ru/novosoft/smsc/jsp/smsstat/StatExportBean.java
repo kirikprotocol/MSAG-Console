@@ -32,6 +32,7 @@ public class StatExportBean extends IndexBean
     public final static int DEFAULT_DESTINATION = 0;
     public final static int USER_DESTINATION = 1;
 
+    private boolean initialized = false;
     private int destination = DEFAULT_DESTINATION;
     private ExportSettings defaultExport = null;
     private ExportSettings export = new ExportSettings();
@@ -55,6 +56,7 @@ public class StatExportBean extends IndexBean
         int result = super.process(request);
         if (result != RESULT_OK) return result;
 
+        if (!initialized) date = Functions.truncateTime(new Date());
         try {
           if (stat == null) {
               stat = SmsStat.getInstance(appContext.getSmsc().getSmscConfig(), appContext.getConfig());
@@ -191,6 +193,13 @@ public class StatExportBean extends IndexBean
     }
     public void setDestination(int destination) {
         this.destination = destination;
+    }
+
+    public boolean isInitialized() {
+        return initialized;
+    }
+    public void setInitialized(boolean initialized) {
+        this.initialized = initialized;
     }
 
     public String getMbExport() {
