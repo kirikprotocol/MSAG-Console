@@ -7,10 +7,7 @@
 <%@ page import="ru.novosoft.smsc.admin.smsstat.*"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsstat.*"%>
 <jsp:useBean id="statExportBean" scope="session" class="ru.novosoft.smsc.jsp.smsstat.StatExportBean" />
-<%
-	StatExportBean bean = statExportBean;
-    bean.setDate(null);
-%>
+<% StatExportBean bean = statExportBean; %>
 <jsp:setProperty name="statExportBean" property="*"/>
 <%
     TITLE="SMS Statistics export";
