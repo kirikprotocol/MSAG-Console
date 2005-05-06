@@ -468,8 +468,25 @@ public class SmsStat
         stmt.setLong(pos++, err.counter);
     }
 
+    private void rollbackConnection(Connection connection)
+    {
+        try { if (connection != null) connection.rollback(); }
+        catch(Throwable th) { logger.error("Failed to rollback on connection", th); }
+    }
+    private void closeConnection(Connection connection)
+    {
+        try { if (connection != null) connection.close(); }
+        catch(Throwable th) { logger.error("Failed to close connection", th); }
+    }
+    private void closeStatement(Statement stmt)
+    {
+        try { if (stmt != null) stmt.close(); }
+        catch(Throwable th) { logger.error("Failed to close statement", th); }
+    }
     private long _exportStatistics(StatQuery query, ExportSettings export) throws AdminException
     {
+        long recordsExported = 0;
+
         final String tablesPrefix = export.getTablesPrefix();
         final String totalSmsTable = tablesPrefix + "_sms";
         final String totalErrTable = tablesPrefix + "_state";
@@ -481,21 +498,20 @@ public class SmsStat
         long fromPeriod = query.isFromDateEnabled() ? calculatePeriod(query.getFromDate()) : -1;
         long tillPeriod = query.isTillDateEnabled() ? calculatePeriod(query.getTillDate()) : -1;
 
-        DataSource ds = null;
-        Connection connection = null;
-        String errMessage = null;
+        DataSource ds = null; String errMessage = null;
+        Connection connection = null; Statement stmt = null;
         PreparedStatement insertSms = null; PreparedStatement insertErr = null;
         PreparedStatement insertSmeSms = null; PreparedStatement insertSmeErr = null;
         PreparedStatement insertRouteSms = null; PreparedStatement insertRouteErr = null;
-        try {
-            // create DS by export & obtain connection from it
-            errMessage = "Failed to init & connect to DataSource. Details: ";
-            ds = createDataSource(export);
-            connection = ds.getConnection();
+        try
+        {   // create DS by export & obtain connection from it
+            errMessage = "Failed to init & connect to DataSource";
+            ds = createDataSource(export); connection = ds.getConnection();
+            if (connection == null) throw new SQLException("Failed to obtain connection");
 
             // delete old statistics data
-            errMessage = "Failed to drop old statistics data. Details: ";
-            Statement stmt = connection.createStatement();
+            errMessage = "Failed to drop old statistics data";
+            stmt = connection.createStatement();
             final String wherePart = prepareWherePart(fromPeriod, tillPeriod);
             stmt.executeUpdate(DELETE_OP_SQL + totalSmsTable + wherePart);
             stmt.executeUpdate(DELETE_OP_SQL + totalErrTable + wherePart);
@@ -503,92 +519,82 @@ public class SmsStat
             stmt.executeUpdate(DELETE_OP_SQL + smeErrTable + wherePart);
             stmt.executeUpdate(DELETE_OP_SQL + routeSmsTable + wherePart);
             stmt.executeUpdate(DELETE_OP_SQL + routeErrTable + wherePart);
+            connection.commit(); // commit old stat delete
+            logger.debug("Old statistics data deleted");
+
+            initQueryPeriod(query);
+            TreeMap selectedFiles = getStatQueryDirs();
+            if (selectedFiles == null || selectedFiles.size() <= 0) return 0;
 
             // perepare statements for Insert operations
-            errMessage = "Failed to create insert statements. Details: ";
+            errMessage = "Failed to create insert statements";
             insertSms = connection.prepareStatement(INSERT_OP_SQL + totalSmsTable + VALUES_SMS_SQL);
             insertErr = connection.prepareStatement(INSERT_OP_SQL + totalErrTable + VALUES_SMS_ERR_SQL);
             insertSmeSms = connection.prepareStatement(INSERT_OP_SQL + smeSmsTable + VALUES_SME_SQL);
             insertSmeErr = connection.prepareStatement(INSERT_OP_SQL + smeErrTable + VALUES_SME_ERR_SQL);
             insertRouteSms = connection.prepareStatement(INSERT_OP_SQL + routeSmsTable + VALUES_ROUTE_SQL);
             insertRouteErr = connection.prepareStatement(INSERT_OP_SQL + routeErrTable + VALUES_ROUTE_ERR_SQL);
+            errMessage = null;
 
-            connection.commit();
-            logger.debug("Old statistics data deleted");
-        }
-        catch(SQLException exc) {
-            try { if (connection != null) { connection.rollback(); connection.close(); } }
-            catch(Throwable th) { th.printStackTrace(); }
-            throw new AdminException(errMessage+exc.getMessage());
-        }
-
-        long recordsExported = 0;
-        initQueryPeriod(query);
-        TreeMap selectedFiles = getStatQueryDirs();
-        if (selectedFiles == null || selectedFiles.size() <= 0) {
-            try { if (connection != null) connection.close(); }
-            catch(Throwable th) { th.printStackTrace(); }
-            return 0;
-        }
-
-        boolean finished = false;
-        for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext() && !finished;)
-        {
-            Date fileDate = (Date) iterator.next(); // GMT
-            String path = (String) selectedFiles.get(fileDate);
-            if (logger.isDebugEnabled()) {
-                logger.debug("Parsing file: "+dateDayFormat.format(fileDate)+" GMT ("+dateDayLocalFormat.format(fileDate)+" local)");
-            }
-            InputStream input = null;
-            try
+            boolean finished = false;
+            for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext() && !finished;)
             {
-                input = new BufferedInputStream(new FileInputStream(path));
-                String fileStamp = readString(input, 9);
-                if (fileStamp == null || !fileStamp.equals("SMSC.STAT"))
-                    throw new AdminException("unsupported header of file (support only SMSC.STAT file )");
-                readUInt16(input); // read version for support reasons
+                Date fileDate = (Date) iterator.next(); // GMT
+                String path = (String) selectedFiles.get(fileDate);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Parsing file: "+dateDayFormat.format(fileDate)+" GMT ("+
+                                 dateDayLocalFormat.format(fileDate)+" local)");
+                }
+                errMessage = "Failed to read statistics file '"+path+"'";
+                InputStream input = null;
+                try
+                {   // reading stat file
+                    input = new BufferedInputStream(new FileInputStream(path));
+                    String fileStamp = readString(input, 9);
+                    if (fileStamp == null || !fileStamp.equals("SMSC.STAT"))
+                        throw new AdminException("unsupported header of file (support only SMSC.STAT file )");
+                    readUInt16(input); // read version for support reasons
 
-                byte buffer[] = new byte[512 * 1024];
-                Date curDate = null; int recordNum = 0;
-                while (true) // iterate file records (by minutes)
-                {
-                    try {
-                        recordNum++;
-                        int rs1 = (int) readUInt32(input);
-                        if (buffer.length < rs1) buffer = new byte[rs1];
-                        Functions.readBuffer(input, buffer, rs1);
-                        int rs2 = (int) readUInt32(input);
-                        if (rs1 != rs2)
-                            throw new IOException("Invalid file format "+path+" rs1=" + rs1 + ", rs2=" + rs2+" at record="+recordNum);
+                    byte buffer[] = new byte[512 * 1024];
+                    Date curDate = null; int recordNum = 0;
+                    while (true) // iterate file records (by minutes)
+                    {
+                        try { // read record from file to buffer
+                            recordNum++;
+                            int rs1 = (int) readUInt32(input);
+                            if (buffer.length < rs1) buffer = new byte[rs1];
+                            Functions.readBuffer(input, buffer, rs1);
+                            int rs2 = (int) readUInt32(input);
+                            if (rs1 != rs2)
+                                throw new IOException("Invalid file format "+path+" rs1=" + rs1 +
+                                                      ", rs2=" + rs2+" at record="+recordNum);
 
-                        ByteArrayInputStream is = new ByteArrayInputStream(buffer, 0, rs1);
-                        try {
-                            int hour = readUInt8(is);
-                            int min = readUInt8(is);
-                            calendar.setTime(fileDate);
-                            calendar.set(Calendar.HOUR, hour);
-                            calendar.set(Calendar.MINUTE, min);
-                            curDate = calendar.getTime();
+                            ByteArrayInputStream is = new ByteArrayInputStream(buffer, 0, rs1);
+                            try { // read record from buffer
+                                int hour = readUInt8(is);
+                                int min = readUInt8(is);
+                                calendar.setTime(fileDate);
+                                calendar.set(Calendar.HOUR, hour); calendar.set(Calendar.MINUTE, min);
+                                curDate = calendar.getTime();
 
-                            if (fromQueryDate != null && curDate.getTime() < fromQueryDate.getTime()) {
-                                logger.debug("Hour: "+hour+" skipped");
-                                continue;
-                            }
-                            if (tillQueryDate != null && curDate.getTime() >= tillQueryDate.getTime()) {
-                                finished = true;
-                                break; // finish work
-                            }
+                                if (fromQueryDate != null && curDate.getTime() < fromQueryDate.getTime()) {
+                                    //logger.debug("Hour: "+hour+" skipped");
+                                    continue;
+                                }
+                                if (tillQueryDate != null && curDate.getTime() >= tillQueryDate.getTime()) {
+                                    finished = true;
+                                    break; // finish work
+                                }
 
-                            ExtendedCountersSet totalCounters = new ExtendedCountersSet();
-                            HashMap routeCounters = new HashMap();
-                            HashMap smeCounters = new HashMap();
-                            scanCounters(totalCounters, is);
-                            scanErrors(totalCounters, is);
-                            scanSmes(smeCounters, is);
-                            scanRoutes(routeCounters, is);
+                                ExtendedCountersSet totalCounters = new ExtendedCountersSet();
+                                HashMap routeCounters = new HashMap();
+                                HashMap smeCounters = new HashMap();
+                                scanCounters(totalCounters, is);
+                                scanErrors(totalCounters, is);
+                                scanSmes(smeCounters, is);
+                                scanRoutes(routeCounters, is);
 
-                            try // dump counters to DB for curDate
-                            {
+                                errMessage = "Failed to add statistics data";
                                 long period = calculatePeriod(curDate);
                                 setValues(insertSms, period, null, totalCounters);
                                 insertSms.executeUpdate();
@@ -622,34 +628,37 @@ public class SmsStat
                                         insertRouteErr.executeUpdate();
                                     }
                                 }
-                                connection.commit();
-                                recordsExported++;
-                            }
-                            catch (Exception exc) {
-                                try { if (connection != null) { connection.rollback(); connection.close(); } }
-                                catch(Throwable th) { th.printStackTrace(); }
-                                throw new AdminException("Failed to add statistics data. Details: "+exc.getMessage());
-                            }
+                                connection.commit(); // commit inserted data for period
+                                recordsExported++; errMessage = null;
 
+                            } catch (EOFException exc) {
+                                logger.warn("Incomplete record #"+recordNum+" in "+path+"");
+                            }
                         } catch (EOFException exc) {
-                            logger.warn("Incomplete record #"+recordNum+" in "+path+"");
+                            break; // current file ends
                         }
-                    } catch (EOFException exc) {
-                        break;
                     }
                 }
-            } catch (IOException e) {
-                try { if (connection != null) { connection.rollback(); connection.close(); } }
-                catch(Throwable th) { th.printStackTrace(); }
-                throw new AdminException(e.getMessage());
-            } finally {
-                try { if (input != null) input.close(); } catch (Throwable th) { th.printStackTrace(); }
-            }
-        } // for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext();)
-
-        try { if (connection != null) connection.close(); }
-        catch (Exception exc) {
-            throw new AdminException(exc.getMessage());
+                catch (IOException e) { // stream fails or file has incorrect header
+                    throw new AdminException(e.getMessage());
+                } finally { // close stream
+                    try { if (input != null) input.close(); } catch (Throwable th) {
+                       logger.error("Failed to close input file stream", th);
+                    }
+                }
+            } // for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext();)
+        }
+        catch(Exception exc) { // global cacth to close transaction
+            rollbackConnection(connection);
+            final String err = (errMessage != null) ? errMessage : "";
+            throw new AdminException(err+". Details: "+exc.getMessage());
+        }
+        finally { // close connection & stmt(s)
+            closeStatement(stmt);
+            closeStatement(insertSms); closeStatement(insertErr);
+            closeStatement(insertSmeSms); closeStatement(insertSmeErr);
+            closeStatement(insertRouteSms); closeStatement(insertRouteErr);
+            closeConnection(connection);
         }
         return recordsExported;
     }

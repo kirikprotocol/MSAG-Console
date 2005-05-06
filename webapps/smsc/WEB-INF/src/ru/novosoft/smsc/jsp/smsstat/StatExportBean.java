@@ -35,7 +35,7 @@ public class StatExportBean extends IndexBean
     private int destination = DEFAULT_DESTINATION;
     private ExportSettings defaultExport = null;
     private ExportSettings export = new ExportSettings();
-    private StatQuery query = new StatQuery();
+    private Date date = Functions.truncateTime(new Date());
     private SmsStat stat = null;
 
     private Calendar localCaledar = Calendar.getInstance(TimeZone.getDefault());
@@ -65,33 +65,32 @@ public class StatExportBean extends IndexBean
           return error(SMSCErrors.error.smsstat.QueryFailed, e.getMessage());
         }
 
-        if (mbExport != null) {
-            try {
-                if (query.isFromDateEnabled())
-                {
-                    Date fromDate = query.getFromDate();
-                    localCaledar.setTime(fromDate);
-                    localCaledar.set(Calendar.HOUR_OF_DAY, 0); localCaledar.set(Calendar.MINUTE, 0);
-                    localCaledar.set(Calendar.SECOND, 0); localCaledar.set(Calendar.MILLISECOND, 0);
-                    fromDate = localCaledar.getTime();
-                    query.setFromDate(fromDate);
-                    localCaledar.add(Calendar.DAY_OF_MONTH, 1);
-                    Date tillDate = localCaledar.getTime();
-                    query.setTillDate(tillDate); query.setTillDateEnabled(true);
-                }
-                recordsExported = 0;
+        if (mbExport != null)
+        {
+            recordsExported = 0;
+            if (date == null) return error("Please specify date to export");
+            try
+            {
+                StatQuery query = new StatQuery();
+                localCaledar.setTime(date);
+                localCaledar.set(Calendar.HOUR_OF_DAY, 0); localCaledar.set(Calendar.MINUTE, 0);
+                localCaledar.set(Calendar.SECOND, 0); localCaledar.set(Calendar.MILLISECOND, 0);
+                Date fromDate = localCaledar.getTime();
+                query.setFromDate(fromDate); query.setFromDateEnabled(true);
+                localCaledar.add(Calendar.DAY_OF_MONTH, 1);
+                Date tillDate = localCaledar.getTime();
+                query.setTillDate(tillDate); query.setTillDateEnabled(true);
+
                 if (destination == DEFAULT_DESTINATION || export == null || export.isEmpty())
                      recordsExported = stat.exportStatistics(query);
                 else recordsExported = stat.exportStatistics(query, export);
+
                 message("Exported " + recordsExported + " records");
-            } catch (Exception exc) {
+            }
+            catch (Exception exc) {
               logger.error("Failed to export stat", exc);
               return error(SMSCErrors.error.smsstat.QueryFailed, exc.getMessage());
             }
-        }
-        else if (!query.isFromDateEnabled()) {
-          query.setFromDate(Functions.truncateTime(new Date()));
-          query.setFromDateEnabled(true); query.setTillDateEnabled(false);
         }
         mbExport = null;
         return RESULT_OK;
@@ -103,7 +102,7 @@ public class StatExportBean extends IndexBean
 
     private Date convertStringToDate(String date)
     {
-        Date converted = new Date();
+        Date converted = null;
         try {
             SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
             converted = formatter.parse(date);
@@ -117,17 +116,14 @@ public class StatExportBean extends IndexBean
       SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
       return formatter.format(date);
     }
-    public void setDate(String date)
+    public void setDate(String dateStr)
     {
-      if (date != null && date.trim().length() > 0) {
-        query.setFromDate(convertStringToDate(date));
-        query.setFromDateEnabled(true); query.setTillDateEnabled(false);
-      }
-      else query.setFromDateEnabled(false);
+      this.date = (dateStr != null && dateStr.trim().length() > 0) ?
+                   convertStringToDate(dateStr) : null;
     }
     public String getDate()
     {
-      return (query.isFromDateEnabled()) ? convertDateToString(query.getFromDate()) : "";
+      return ((date != null) ? convertDateToString(date) : "");
     }
 
     public String getSource() {
