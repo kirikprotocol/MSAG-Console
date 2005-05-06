@@ -5,6 +5,7 @@ import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.smsstat.ExportSettings;
 import ru.novosoft.smsc.admin.smsstat.SmsStat;
 import ru.novosoft.smsc.admin.smsstat.StatQuery;
+import ru.novosoft.smsc.admin.smsstat.ExportResults;
 
 import java.util.Date;
 import java.util.Calendar;
@@ -48,7 +49,7 @@ public class StatExportCommand implements Command
 
         try
         {
-            long recordsExported = 0;
+            ExportResults results = new ExportResults();
             StatQuery query = new StatQuery();
             localCaledar.setTime(date);
             localCaledar.set(Calendar.HOUR_OF_DAY, 0); localCaledar.set(Calendar.MINUTE, 0);
@@ -60,9 +61,11 @@ public class StatExportCommand implements Command
             query.setTillDate(tillDate); query.setTillDateEnabled(true);
 
             if (export == null || export.isEmpty())
-                 recordsExported = stat.exportStatistics(query);
-            else recordsExported = stat.exportStatistics(query, export);
-            ctx.setMessage("Exported "+recordsExported+" records");
+                 stat.exportStatistics(query, results);
+            else stat.exportStatistics(query, results, export);
+            ctx.setMessage("Exported: total "+results.total.records+"/"+results.total.errors+
+                           ", smes "+results.smes.records+"/"+results.smes.errors+
+                           ", routes "+results.routes.records+"/"+results.routes.errors);
             ctx.setStatus(CommandContext.CMD_OK);
         }
         catch (Exception e) {

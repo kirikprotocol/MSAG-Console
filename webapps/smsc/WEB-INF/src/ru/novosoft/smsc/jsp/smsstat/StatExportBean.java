@@ -5,6 +5,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.admin.smsstat.StatQuery;
 import ru.novosoft.smsc.admin.smsstat.SmsStat;
 import ru.novosoft.smsc.admin.smsstat.ExportSettings;
+import ru.novosoft.smsc.admin.smsstat.ExportResults;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.util.Functions;
 
@@ -42,7 +43,6 @@ public class StatExportBean extends IndexBean
     private Calendar localCaledar = Calendar.getInstance(TimeZone.getDefault());
 
     private String mbExport = null;
-    private long recordsExported = 0;
 
     protected int init(List errors)
     {
@@ -69,7 +69,7 @@ public class StatExportBean extends IndexBean
 
         if (mbExport != null)
         {
-            recordsExported = 0;
+            ExportResults results = new ExportResults();
             if (date == null) return error("Please specify date to export");
             try
             {
@@ -84,10 +84,12 @@ public class StatExportBean extends IndexBean
                 query.setTillDate(tillDate); query.setTillDateEnabled(true);
 
                 if (destination == DEFAULT_DESTINATION || export == null || export.isEmpty())
-                     recordsExported = stat.exportStatistics(query);
-                else recordsExported = stat.exportStatistics(query, export);
+                     stat.exportStatistics(query, results);
+                else stat.exportStatistics(query, results, export);
 
-                message("Exported " + recordsExported + " records");
+                message("Exported: total "+results.total.records+"/"+results.total.errors+
+                        ", smes "+results.smes.records+"/"+results.smes.errors+
+                        ", routes "+results.routes.records+"/"+results.routes.errors);
             }
             catch (Exception exc) {
               logger.error("Failed to export stat", exc);
@@ -96,10 +98,6 @@ public class StatExportBean extends IndexBean
         }
         mbExport = null;
         return RESULT_OK;
-    }
-
-    public long getRecordsExported() {
-        return recordsExported;
     }
 
     private Date convertStringToDate(String date)

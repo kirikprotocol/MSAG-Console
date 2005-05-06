@@ -219,16 +219,17 @@ public class SmsStat
            return _getStatistics(query);
         }
     }
-    public long exportStatistics(StatQuery query, ExportSettings export) throws AdminException
+    public void exportStatistics(StatQuery query, ExportResults results,
+                                 ExportSettings export) throws AdminException
     {
         synchronized(generalLock) {
-           return _exportStatistics(query, (export != null) ? export : defaultExportSettings);
+           _exportStatistics(query, results, (export != null) ? export : defaultExportSettings);
         }
     }
-    public long exportStatistics(StatQuery query) throws AdminException
+    public void exportStatistics(StatQuery query, ExportResults results) throws AdminException
     {
         synchronized(generalLock) {
-           return _exportStatistics(query, defaultExportSettings);
+           _exportStatistics(query, results, defaultExportSettings);
         }
     }
     public ExportSettings getDefaultExportSettings() {
@@ -479,10 +480,63 @@ public class SmsStat
         try { if (stmt != null) stmt.close(); }
         catch(Throwable th) { logger.error("Failed to close statement", th); }
     }
-    private long _exportStatistics(StatQuery query, ExportSettings export) throws AdminException
+    
+    private void dumpTotalCounters(PreparedStatement stmt, PreparedStatement errStmt, 
+                                   ExtendedCountersSet set, long period, 
+                                   ExportResults results) throws SQLException
     {
-        long recordsExported = 0;
+        setValues(stmt, period, null, set);
+        stmt.executeUpdate(); results.total.records++;
+        for (Iterator eit=set.getErrors().iterator(); eit.hasNext();) {
+            ErrorCounterSet err = (ErrorCounterSet)eit.next();
+            if (err == null) continue;
+            setError(errStmt, period, null, err);
+            errStmt.executeUpdate();
+            results.total.errors++;
+        }
+    }
+    private void dumpSmeCounters(PreparedStatement stmt, PreparedStatement errStmt, 
+                                 HashMap map, long period,
+                                 ExportResults results) throws SQLException
+    {
+        for (Iterator it=map.values().iterator(); it.hasNext();) {
+            SmeIdCountersSet sme = (SmeIdCountersSet)it.next();
+            if (sme == null) continue;
+            setValues(stmt, period, sme.smeid, sme);
+            stmt.executeUpdate();
+            results.smes.records++;
+            for (Iterator eit=sme.getErrors().iterator(); eit.hasNext();) {
+                ErrorCounterSet err = (ErrorCounterSet)eit.next();
+                if (err == null) continue;
+                setError(errStmt, period, sme.smeid, err);
+                errStmt.executeUpdate();
+                results.smes.errors++;
+            }
+        }
+    }
+    private void dumpRouteCounters(PreparedStatement stmt, PreparedStatement errStmt,
+                                   HashMap map, long period,
+                                   ExportResults results) throws SQLException
+    {
+        for (Iterator it=map.values().iterator(); it.hasNext();) {
+            RouteIdCountersSet route = (RouteIdCountersSet)it.next();
+            if (route == null) continue;
+            setValues(stmt, period, route.routeid, route);
+            stmt.executeUpdate();
+            results.routes.records++;
+            for (Iterator eit=route.getErrors().iterator(); eit.hasNext();) {
+                ErrorCounterSet err = (ErrorCounterSet)eit.next();
+                if (err == null) continue;
+                setError(errStmt, period, route.routeid, err);
+                errStmt.executeUpdate();
+                results.routes.errors++;
+            }
+        }
+    }
 
+    private void _exportStatistics(StatQuery query, ExportResults results,
+                                   ExportSettings export) throws AdminException
+    {
         final String tablesPrefix = export.getTablesPrefix();
         final String totalSmsTable = tablesPrefix + "_sms";
         final String totalErrTable = tablesPrefix + "_state";
@@ -520,7 +574,7 @@ public class SmsStat
 
             initQueryPeriod(query);
             TreeMap selectedFiles = getStatQueryDirs();
-            if (selectedFiles == null || selectedFiles.size() <= 0) return 0;
+            if (selectedFiles == null || selectedFiles.size() <= 0) return;
 
             // perepare statements for Insert operations
             errMessage = "Failed to create insert statements";
@@ -532,7 +586,7 @@ public class SmsStat
             insertRouteErr = connection.prepareStatement(INSERT_OP_SQL + routeErrTable + VALUES_ROUTE_ERR_SQL);
             errMessage = null;
 
-            boolean finished = false;
+            long tm = System.currentTimeMillis(); boolean finished = false;
             for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext() && !finished;)
             {
                 Date fileDate = (Date) iterator.next(); // GMT
@@ -548,8 +602,15 @@ public class SmsStat
                         throw new AdminException("unsupported header of file (support only SMSC.STAT file )");
                     readUInt16(input); // read version for support reasons
 
+                    boolean haveValues = false;
+                    ExtendedCountersSet totalCounters = new ExtendedCountersSet();
+                    HashMap routeCounters = new HashMap();
+                    HashMap smeCounters = new HashMap();
+                    
                     byte buffer[] = new byte[512 * 1024];
-                    Date curDate = null; int recordNum = 0;
+                    Date curDate = null; Date lastDate = null; 
+                    int recordNum = 0; int prevHour = -1;
+                    
                     while (true) // iterate file records (by minutes)
                     {
                         try { // read record from file to buffer
@@ -565,64 +626,49 @@ public class SmsStat
                             ByteArrayInputStream is = new ByteArrayInputStream(buffer, 0, rs1);
                             try { // read record from buffer
                                 int hour = readUInt8(is);
-                                int min = readUInt8(is);
+                                int min = readUInt8(is); min = 0; // skip minute
                                 calendar.setTime(fileDate);
-                                calendar.set(Calendar.HOUR, hour); calendar.set(Calendar.MINUTE, min);
+                                calendar.set(Calendar.HOUR, hour);
+                                calendar.set(Calendar.MINUTE, min);
                                 curDate = calendar.getTime();
 
                                 if (fromQueryDate != null && curDate.getTime() < fromQueryDate.getTime()) {
                                     logger.debug("Hour: "+hour+" skipped");
                                     continue;
                                 }
+                                
+                                if (prevHour == -1) prevHour = hour;
+                                if (lastDate == null) lastDate = curDate;
+
+                                if (hour != prevHour && haveValues) { // switch to new hour
+                                    logger.debug("New hour: " + hour + ", dump stat for: " + dateDayFormat.format(lastDate) + " GMT");
+                                    errMessage = "Failed to dump statistics data";
+                                    
+                                    long period = calculatePeriod(lastDate); // dump counters to DB
+                                    dumpTotalCounters(insertSms, insertErr, totalCounters, period, results);
+                                    dumpSmeCounters(insertSmeSms, insertSmeErr, smeCounters, period, results);
+                                    dumpRouteCounters(insertRouteSms, insertRouteErr, routeCounters, period, results);
+                                    connection.commit(); // commit inserted data for period
+                                    
+                                    haveValues = false; lastDate = curDate; prevHour = hour;
+                                    totalCounters = new ExtendedCountersSet();
+                                    routeCounters = new HashMap();
+                                    smeCounters = new HashMap();
+                                    errMessage = null;
+                                }
+                                
                                 if (tillQueryDate != null && curDate.getTime() >= tillQueryDate.getTime()) {
                                     finished = true;
                                     break; // finish work
                                 }
 
-                                ExtendedCountersSet totalCounters = new ExtendedCountersSet();
-                                HashMap routeCounters = new HashMap();
-                                HashMap smeCounters = new HashMap();
+                                haveValues = true; // read and increase counters
+                                errMessage = "Failed to read statistics file '"+path+"'";
                                 scanCounters(totalCounters, is);
                                 scanErrors(totalCounters, is);
                                 scanSmes(smeCounters, is);
                                 scanRoutes(routeCounters, is);
-
-                                errMessage = "Failed to add statistics data";
-                                long period = calculatePeriod(curDate);
-                                setValues(insertSms, period, null, totalCounters);
-                                insertSms.executeUpdate();
-                                for (Iterator eit=totalCounters.getErrors().iterator(); eit.hasNext();) {
-                                    ErrorCounterSet err = (ErrorCounterSet)eit.next();
-                                    if (err == null) continue;
-                                    setError(insertErr, period, null, err);
-                                    insertErr.executeUpdate();
-                                }
-                                for (Iterator it=smeCounters.values().iterator(); it.hasNext();) {
-                                    SmeIdCountersSet sme = (SmeIdCountersSet)it.next();
-                                    if (sme == null) continue;
-                                    setValues(insertSmeSms, period, sme.smeid, sme);
-                                    insertSmeSms.executeUpdate();
-                                    for (Iterator eit=sme.getErrors().iterator(); eit.hasNext();) {
-                                        ErrorCounterSet err = (ErrorCounterSet)eit.next();
-                                        if (err == null) continue;
-                                        setError(insertSmeErr, period, sme.smeid, err);
-                                        insertSmeErr.executeUpdate();
-                                    }
-                                }
-                                for (Iterator it=routeCounters.values().iterator(); it.hasNext();) {
-                                    RouteIdCountersSet route = (RouteIdCountersSet)it.next();
-                                    if (route == null) continue;
-                                    setValues(insertRouteSms, period, route.routeid, route);
-                                    insertRouteSms.executeUpdate();
-                                    for (Iterator eit=route.getErrors().iterator(); eit.hasNext();) {
-                                        ErrorCounterSet err = (ErrorCounterSet)eit.next();
-                                        if (err == null) continue;
-                                        setError(insertRouteErr, period, route.routeid, err);
-                                        insertRouteErr.executeUpdate();
-                                    }
-                                }
-                                connection.commit(); // commit inserted data for period
-                                recordsExported++; errMessage = null;
+                                errMessage = null;
 
                             } catch (EOFException exc) {
                                 logger.warn("Incomplete record #"+recordNum+" in "+path+"");
@@ -630,6 +676,15 @@ public class SmsStat
                         } catch (EOFException exc) {
                             break; // current file ends
                         }
+                    } // while has more records in file 
+                    if (haveValues) { // dump the rest of data
+                        if (logger.isDebugEnabled())
+                            logger.debug("Last dump stat for: " + dateDayFormat.format(lastDate) + " GMT");
+                        long period = calculatePeriod(lastDate); // dump counters to DB
+                        dumpTotalCounters(insertSms, insertErr, totalCounters, period, results);
+                        dumpSmeCounters(insertSmeSms, insertSmeErr, smeCounters, period, results);
+                        dumpRouteCounters(insertRouteSms, insertRouteErr, routeCounters, period, results);
+                        connection.commit(); // commit inserted data for period
                     }
                 }
                 catch (IOException e) { // stream fails or file has incorrect header
@@ -641,11 +696,13 @@ public class SmsStat
                 }
                 logger.debug("File '"+path+"' parsed Ok");
             } // for (Iterator iterator = selectedFiles.keySet().iterator(); iterator.hasNext();)
+            logger.debug("End dumping statistics at: " + new Date() + " time spent: " +
+                         (System.currentTimeMillis() - tm) / 1000);
         }
-        catch(Exception exc) { // global cacth to close transaction
+        catch (Exception exc) { // global cacth to close transaction
             rollbackConnection(connection);
-            final String err = (errMessage != null) ? errMessage : "";
-            throw new AdminException(err+". Details: "+exc.getMessage());
+            final String err = (errMessage != null) ? (errMessage+". Details: ") : "";
+            throw new AdminException(err+exc.getMessage());
         }
         finally { // close connection & stmt(s)
             closeStatement(stmt);
@@ -654,7 +711,6 @@ public class SmsStat
             closeStatement(insertRouteSms); closeStatement(insertRouteErr);
             closeConnection(connection);
         }
-        return recordsExported;
     }
 
     private static int readUInt8(InputStream is) throws IOException {
