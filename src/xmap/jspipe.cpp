@@ -20,11 +20,11 @@
 #include "common.h"
 #include "xmap.h"
 //#include "sms.h"
-#include "sms/sms.h"
-#include <util/recoder/recode_dll.h>
-using namespace smsc::sms;
-using namespace smsc::sms::Tag;
-using namespace smsc::smpp;
+//#include "sms/sms.h"
+//  #include <util/recoder/recode_dll.h>
+//  using namespace smsc::sms;
+//  using namespace smsc::sms::Tag;
+//using namespace smsc::smpp;
 ////
 //////////////////////////////////////////////////////////////////////////
 // pipe
@@ -481,7 +481,6 @@ void JSPipe::sendOpenDialogInd(USHORT_T dlgid,ET96MAP_APP_CNTX_T cntx,std::strin
        int len = dsaddr.addressLength/2+dsaddr.addressLength%2+2;
    dsaddr.addressLength=len-1;; 
   messmaker.insertPtr((unsigned char *)&dsaddr,len);
-
 
 #endif
   ///

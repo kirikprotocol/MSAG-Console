@@ -15,6 +15,7 @@
 #include <core/synchronization/EventMonitor.hpp>
 #include <core/synchronization/Event.hpp>
 #include <sms/sms.h>
+#include <smpp/smpp.h>
 #include <util/recoder/recode_dll.h>
 #include <logger/Logger.h>
 
