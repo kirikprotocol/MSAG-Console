@@ -15,7 +15,7 @@
 #include <core/buffers/FastMTQueue.hpp>
 #include <core/synchronization/EventMonitor.hpp>
 #include <core/synchronization/Event.hpp>
-#include "sme/SmppBase.hpp"
+//#include "sme/SmppBase.hpp"
 #include <sms/sms.h>
 
 #include <util/recoder/recode_dll.h>
@@ -25,8 +25,8 @@ using namespace smsc::logger;
 using namespace smsc::core::synchronization;
 using namespace smsc::sms;
 using namespace smsc::sms::Tag;
-using namespace smsc::smpp;
-using namespace smsc::sme;
+//using namespace smsc::smpp;
+//using namespace smsc::sme;
 
 extern smsc::logger::Logger *logger;
 

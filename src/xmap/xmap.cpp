@@ -7,7 +7,7 @@
 //#include "dinfo.h"
 #include "piper.hpp"
 #include "syncque.hpp"
-#include "smet.h"
+//#include "smet.h"
 #include "../src/core/threads/Thread.hpp"
 
 

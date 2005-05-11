@@ -25,7 +25,7 @@
 #include <util/recoder/recode_dll.h>
 //  using namespace smsc::sms;
 //  using namespace smsc::sms::Tag;
-using namespace smsc::smpp;
+//using namespace smsc::smpp;
 using namespace smsc::sms;
 using namespace smsc::sms::Tag;
 using namespace smsc::sme;
