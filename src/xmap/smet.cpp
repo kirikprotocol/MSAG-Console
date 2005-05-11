@@ -60,7 +60,7 @@ Main trend is RX message are moved to TX message.*/
   void MyListener::handleError(int errorCode)
   {
     printf("error!\n");
-    stopped=1;
+    stopProcess=1;
   }
 
   void MyListener::setTrans(SmppTransmitter *t)
