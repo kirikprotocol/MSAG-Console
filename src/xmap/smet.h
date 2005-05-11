@@ -1,4 +1,4 @@
-#indef __SME_T_H__
+#ifndef __SME_T_H__
 #define __SME_T_H__
 
 #include <stdio.h>
