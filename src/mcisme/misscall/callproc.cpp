@@ -8,12 +8,14 @@
 #include "util/regexp/RegExp.hpp"
 #include "core/buffers/Hash.hpp"
 #include "core/buffers/IntHash.hpp"
+#include <utility>
 
 
 using namespace std;
 void mts(EINSS7_I97_ISUPHEAD_T *head,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,EINSS7_I97_REDIRECTINGNUMB_T *redirecting);
 void taif(EINSS7_I97_ISUPHEAD_T *head,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,EINSS7_I97_REDIRECTINGNUMB_T *redirecting);
 void taifmixed(EINSS7_I97_ISUPHEAD_T *head,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,EINSS7_I97_REDIRECTINGNUMB_T *redirecting);
+void redirect_rule(EINSS7_I97_ISUPHEAD_T *head,EINSS7_I97_CALLINGNUMB_T *calling,EINSS7_I97_CALLEDNUMB_T *called,EINSS7_I97_ORIGINALNUMB_T *original,EINSS7_I97_REDIRECTIONINFO_T *redirectionInfo_sp,EINSS7_I97_REDIRECTINGNUMB_T *redirecting);
 
 namespace smsc{
 namespace misscall{
@@ -22,6 +24,9 @@ using smsc::logger::Logger;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
 using smsc::misscall::util::getReturnCodeDescription;
+using smsc::util::regexp::RegExp;
+using smsc::util::regexp::SMatch;
+using std::vector;
 
 #define MAXENTRIES 1000
 #define USER USER02_ID
@@ -267,6 +272,45 @@ void MissedCallProcessor::setCircuits(Hash<Circuits>& circuits)
   }
 }
 
+struct InternalRule {
+  Rule   rule;
+  RegExp exp;
+  vector<SMatch> m;
+  int n;
+  InternalRule(Rule& _rule)
+  {
+    rule = _rule;
+    if ( !exp.Compile(rule.rx.c_str()) )
+      smsc_log_error(missedCallProcessorLogger,
+                     "rule='%s' rx='%s' compiling failed",
+                     rule.name.c_str(),rule.rx.c_str());
+    m.resize(exp.GetBracketsCount());
+    n=m.size();
+  }
+  int match(const char* rx,UCHAR_T* cause,UCHAR_T* inform)
+  {
+      int res = exp.Match(rx,&m[0],n);
+      if (res)
+      {
+        *cause  = rule.cause;
+        *inform = rule.inform;
+      }
+      return res;
+  }
+};
+
+static vector<InternalRule*> rules;
+
+void MissedCallProcessor::setRules(vector<Rule>& _rules)
+{
+  vector<Rule>::iterator it = _rules.begin(),end = _rules.end();
+  for(;it != end;++it)
+  {
+    InternalRule* item = new InternalRule(*it);
+    rules.push_back(item);
+  }
+}
+
 static ReleaseSettings relCauses = {
 /* strategy */ REDIRECT_STRATEGY,
 /* busy     */ 0x11 /* called user busy    */, 0x01 /* inform              */,
@@ -292,6 +336,7 @@ void MissedCallProcessor::setReleaseSettings(ReleaseSettings params)
   if (relCauses.strategy == REDIRECT_STRATEGY) strategy = mts;
   if (relCauses.strategy == PREFIXED_STRATEGY) strategy = taif;
   if (relCauses.strategy == MIXED_STRATEGY) strategy = taifmixed;
+  if (relCauses.strategy == REDIREC_RULE_STRATEGY) strategy = redirect_rule;
 }
 
 MissedCallProcessor* MissedCallProcessor::instance()
@@ -301,6 +346,7 @@ MissedCallProcessor* MissedCallProcessor::instance()
     if ( processor == 0 )
     {
       processor = new MissedCallProcessor();
+      smsc::util::regexp::RegExp::InitLocale();
     }
   }
   return processor;
@@ -633,6 +679,8 @@ using smsc::misscall::DETACH;
 using smsc::misscall::strategy;
 using smsc::misscall::Connection;
 using smsc::misscall::connections;
+using smsc::misscall::InternalRule;
+using smsc::misscall::rules;
 using namespace smsc::misscall::util;
 using smsc::sms::MAX_FULL_ADDRESS_VALUE_LENGTH;
 
@@ -1035,6 +1083,81 @@ void mts(
   }
 
 }
+void redirect_rule(
+         EINSS7_I97_ISUPHEAD_T *head,
+         EINSS7_I97_CALLINGNUMB_T *cg,
+         EINSS7_I97_CALLEDNUMB_T *called,
+         EINSS7_I97_ORIGINALNUMB_T *original,
+         EINSS7_I97_REDIRECTIONINFO_T *redirinf,
+         EINSS7_I97_REDIRECTINGNUMB_T *redirecting
+        )
+{
+  UCHAR_T causeValue = relCauses.otherCause;
+  UCHAR_T inform = 0;        /* need to register event */
+  uint8_t eventType = NONE;
+
+  /*
+   * some exchange doesn't provide redirection information
+   * so let's use presence of redirecting number as
+   * call forward/divert indication
+   */
+
+  if (redirecting)
+  {
+    inform = relCauses.otherInform;
+    if (redirinf)
+    {
+      switch (redirinf->lastReason)
+      {
+        case EINSS7_I97_USER_BUSY:       eventType  = BUSY;    break;
+        case EINSS7_I97_NO_REPLY:        eventType  = NOREPLY; break;
+        case EINSS7_I97_UNCOND:          eventType  = UNCOND;  break;
+        case EINSS7_I97_MOB_NOT_REACHED: eventType  = ABSENT;  break;
+      }
+
+      /* FILL CALL INFO STRING */
+      /* format of call string: 'spn,cause,a-number */
+      /*max length of 'spn,cause,.ton.npi.digits' = 3+1+3+1+1+3+1+1+1+20 = 35*/
+      char callinfo[36] = {0};
+      int pos = snprintf(callinfo,sizeof(callinfo),
+                         "%d,%d,.%d.%d.",
+                         head->span,
+                         redirinf->lastReason,
+                         cg->natureOfAddr,
+                         cg->numberPlan);
+      unpack_addr(callinfo+pos, cg->addrSign_p, cg->noOfAddrSign);
+
+      vector<InternalRule*>::iterator it = rules.begin(),end = rules.end();
+      for(;it != end;++it)
+      {
+        InternalRule* rule = *it;
+        if (rule->match(&callinfo[0],&causeValue,&inform))
+        {
+          smsc_log_debug(missedCallProcessorLogger,
+                         "match rule \"%s\" cause=%d inform=%d",
+                          rule->rule.name.c_str(),
+                          causeValue,
+                          inform);
+          break;
+        }
+      }
+      if( it == end)
+      {
+        causeValue = relCauses.otherCause;
+        inform     = relCauses.otherInform;
+      }
+    }
+  }
+  releaseConnection(head,causeValue);
+
+
+  if (redirecting && inform)
+  {
+    registerEvent(cg,redirecting,eventType);
+  }
+
+}
+
 void taifmixed(
           EINSS7_I97_ISUPHEAD_T *head,
           EINSS7_I97_CALLINGNUMB_T *calling,
