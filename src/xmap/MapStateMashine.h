@@ -15,7 +15,7 @@
 #include <core/synchronization/EventMonitor.hpp>
 #include <core/synchronization/Event.hpp>
 #include "sms/sms.h"
-
+#include <smpp/smpp.h>
 using namespace smsc::core::threads;
 using namespace smsc::core::synchronization;
 using namespace smsc::smpp;
