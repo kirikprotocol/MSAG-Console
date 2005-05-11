@@ -482,6 +482,7 @@ void JSPipe::sendOpenDialogInd(USHORT_T dlgid,ET96MAP_APP_CNTX_T cntx,std::strin
    dsaddr.addressLength=len-1;; 
   messmaker.insertPtr((unsigned char *)&dsaddr,len);
 
+
 #endif
   ///
   //messmaker.insertPtr((UCHAR_T*)&dsaddr ,dsaddr.addressLength%2+dsaddr.addressLength/2+2);
