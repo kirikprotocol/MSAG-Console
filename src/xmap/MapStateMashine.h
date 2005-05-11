@@ -14,10 +14,11 @@
 #include <core/buffers/FastMTQueue.hpp>
 #include <core/synchronization/EventMonitor.hpp>
 #include <core/synchronization/Event.hpp>
+#include "sms/sms.h"
 
 using namespace smsc::core::threads;
 using namespace smsc::core::synchronization;
-
+using namespace smsc::smpp;
 using namespace smsc::sms;
 using namespace smsc::sms::Tag;
 //#include "mmqueue.h"

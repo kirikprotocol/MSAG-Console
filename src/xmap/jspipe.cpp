@@ -24,7 +24,7 @@
 #include <util/recoder/recode_dll.h>
 using namespace smsc::sms;
 using namespace smsc::sms::Tag;
-
+using namespace smsc::smpp;
 ////
 //////////////////////////////////////////////////////////////////////////
 // pipe
@@ -861,7 +861,7 @@ void JSPipe::send_PSSR_or_USSR_UssdRequestInd(UCHAR_T subsistem_number, bool isP
  messmaker.insertUShort(dlgid);
  messmaker.insertUChar(InvokedId);
 
- messmaker.insertUChar(DataCoding::SMSC7BIT);
+ messmaker.insertUChar(smsc::smpp::DataCoding::SMSC7BIT);
 
  UCHAR_T * tp_user_data = new UCHAR_T[200];
  unsigned elen=0;
