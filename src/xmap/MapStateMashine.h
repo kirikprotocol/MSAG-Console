@@ -4,7 +4,7 @@
 #include "xmap.h"
 //#include <map>
 //#include <vector>
-#include <sms/sms.h>
+//#include <sms/sms.h>
 //#include "MapDialog.h"
 //#include "queue.h"
 #include "syncque.hpp"
@@ -14,13 +14,16 @@
 #include <core/buffers/FastMTQueue.hpp>
 #include <core/synchronization/EventMonitor.hpp>
 #include <core/synchronization/Event.hpp>
+
+#include "sme/SmppBase.hpp"
 #include "sms/sms.h"
-#include <smpp/smpp.h>
+ 
 using namespace smsc::core::threads;
 using namespace smsc::core::synchronization;
 using namespace smsc::smpp;
 using namespace smsc::sms;
 using namespace smsc::sms::Tag;
+using namespace smsc::sme;
 //#include "mmqueue.h"
 //#include "dinfo.h"
 
