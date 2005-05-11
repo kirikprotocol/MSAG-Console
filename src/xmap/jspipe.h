@@ -7,6 +7,8 @@
 #ifndef _JSPIPE_H
 #define _JSPIPE_H
 
+typedef unsigned __int8 uint8_t;
+
 #include "pipeobj.h"
 #include "xmap.h"
 //#include "MapDialog.h"
