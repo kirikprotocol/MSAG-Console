@@ -1,4 +1,16 @@
+/*
 
+  Panin Gregory 
+  green@sibinco.ru
+
+  изменения
+  в
+1: JSPipe::sendSms вставлена переменная m_dialogid 
+2: простая - не растянутая сессия USSD -> <PSSR/>                                                                  
+   в скрипте проверять флажки  таким образом: 
+         JSPipe::isUssdSessionClsoed(); -проверка на активность сессии
+         JSPipe::isUssdRecieved(); - проверка приемного буффера, есть ли ответ от центра  
+*/
 
 #include <string>
 #include <jsapi.h>
@@ -45,6 +57,10 @@ JSFunctionSpec JSPipe::Pipe_methods[] =
  {"Register",Register,1,0,0},
  {"generateMsisdn",generateMsisdn,1,0,0},
  {"generateImsi",generateImsi,1,0,0},
+ {"openUssdSession",openUssdSession,1,0,0},
+ {"sendUssdMessage",sendUssdMessage,1,0,0},
+ {"isUssdRecieved",isUssdRecieved,1,0,0},
+ {"isUssdSessionClosed",isUssdSessionClosed,1,0,0},
     { 0, 0, 0, 0, 0 }
 };
 
@@ -179,6 +195,7 @@ JSBool JSPipe::JSConstructor(JSContext *cx, JSObject *obj, uintN argc,
  priv->setPipe(new Pipe());
  JS_SetPrivate(cx, obj, (void *) priv);
 
+ priv->m_dialogid=0;
 
  //priv->getQall()->vPipesInform.insert(pi);
 
@@ -240,21 +257,23 @@ JSBool JSPipe::sendSms(JSContext *cx, JSObject *obj, uintN argc,
   if(!mdc) 
    return JS_FALSE;
 
- USHORT_T di = mdc->addDialog(s_imsi,s_originating_address);
+ p->m_dialogid = mdc->addDialog(s_imsi,s_originating_address);
 
- if(di==0)// overflow dlgid 0xffff/2 max
+ if(p->m_dialogid==0)// overflow dlgid 0xffff/2 max
  {
    *rval = BOOLEAN_TO_JSVAL(false);
    return JS_TRUE;
  }
 
+ mdc->setMultiple(p->m_dialogid,false);
+
  ET96MAP_APP_CNTX_T cntx;
  cntx.acType = ET96MAP_SHORT_MSG_MO_RELAY;
  cntx.version= ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
 
- p->sendOpenDialogInd(di,cntx,s_originating_address,s_destination_address);//cdinfo status++ (in RX if confirmed --)
- p->forwardSMS(di,s_originating_address,s_destination_address,s_message_text,s_mscaddr);
- p->sendDelimiterInd(di);//cdinfo status++     (in RX if confirmed --)
+ p->sendOpenDialogInd(p->m_dialogid,cntx,s_originating_address,s_destination_address);//cdinfo status++ (in RX if confirmed --)
+ p->forwardSMS(p->m_dialogid,s_originating_address,s_destination_address,s_message_text,s_mscaddr);
+ p->sendDelimiterInd(p->m_dialogid);//cdinfo status++     (in RX if confirmed --)
 
  p->getQall()->map_statemachine_event.Signal();
 
@@ -453,10 +472,17 @@ void JSPipe::sendOpenDialogInd(USHORT_T dlgid,ET96MAP_APP_CNTX_T cntx,std::strin
   _mkMapAddress(&oraddr,orastr.c_str(),oraddr_len);
   _mkMapAddress(&dsaddr,dstastr.c_str(),dstaddr_len);
 
+#ifdef OLD_ADDRESSING
   
   messmaker.insertUChar(dsaddr.addressLength/2+dsaddr.addressLength%2+1);
   messmaker.insertUChar(dsaddr.typeOfAddress);
   messmaker.insertPtr((UCHAR_T*)&dsaddr.addressLength,dsaddr.addressLength/2+dsaddr.addressLength%2);
+#else
+       int len = dsaddr.addressLength/2+dsaddr.addressLength%2+2;
+   dsaddr.addressLength=len-1;; 
+  messmaker.insertPtr((unsigned char *)&dsaddr,len);
+
+#endif
   ///
   //messmaker.insertPtr((UCHAR_T*)&dsaddr ,dsaddr.addressLength%2+dsaddr.addressLength/2+2);
   //
@@ -464,9 +490,17 @@ void JSPipe::sendOpenDialogInd(USHORT_T dlgid,ET96MAP_APP_CNTX_T cntx,std::strin
   //
   //messmaker.insertPtr((UCHAR_T*)&oraddr ,oraddr.addressLength%2+oraddr.addressLength/2+2);
   //
+#ifdef  OLD_ADDRESSING
+  
   messmaker.insertUChar(oraddr.addressLength/2+oraddr.addressLength%2+1);
   messmaker.insertUChar(oraddr.typeOfAddress);
   messmaker.insertPtr((UCHAR_T*)&oraddr.addressLength,oraddr.addressLength/2+oraddr.addressLength%2);
+#else
+  len = oraddr.addressLength/2+oraddr.addressLength%2+2;
+  oraddr.addressLength=len-1;; 
+  messmaker.insertPtr((unsigned char *)&oraddr,len);
+
+#endif
 
   messmaker.insertUChar(0);//oref infolen
   messmaker.insertUChar(0);//spec info len 1
@@ -590,15 +624,28 @@ void JSPipe::forwardSMS(USHORT_T dlgid,std::string str_oa,std::string str_da,std
  messmaker.insertUChar(InvokedId);
 
  messmaker.insertUChar(ET96MAP_ADDRTYPE_SCADDR);
+
+#ifdef OLD_ADDRESSING
  messmaker.insertUChar(SM_RP_DA.addressLength/2+2);
  messmaker.insertUChar(SM_RP_DA.typeOfAddress);
  messmaker.insertPtr((unsigned char*)&SM_RP_DA.address,SM_RP_DA.addressLength/2+1);
+#else
+    int len = SM_RP_DA.addressLength/2+SM_RP_DA.addressLength%2+2;
+  SM_RP_DA.addressLength=len-1; 
+ messmaker.insertPtr((unsigned char *)&SM_RP_DA,len);
+#endif
 
  messmaker.insertUChar(ET96MAP_ADDRTYPE_SCADDR);
+
+#ifdef OLD_ADDRESSING
  messmaker.insertUChar(SM_RP_OA.addressLength/2+2);
  messmaker.insertUChar(SM_RP_OA.typeOfAddress);
  messmaker.insertPtr((unsigned char*)&SM_RP_OA.address,SM_RP_OA.addressLength/2+1);
- 
+#else
+ len = SM_RP_OA.addressLength/2+SM_RP_OA.addressLength%2+2;
+  SM_RP_OA.addressLength=len-1;
+ messmaker.insertPtr((unsigned char *)&SM_RP_OA,len);
+#endif
  messmaker.insertUChar(pdu.signalInfoLen);
  messmaker.insertPtr((UCHAR_T*)pdu.signalInfo,pdu.signalInfoLen);
 
@@ -671,10 +718,191 @@ void JSPipe::SendCPMessage(MSG_T * msg)
 
   delete msg->msg_p;
 
+  
+  int k=0; char str[256];
+  for(int i=0;i<message_to_send.size;i++)
+  {
+   k += sprintf(str+k,"%02x ",message_to_send.msg_p[i]);
+  }
+  str[k]=0;
+
+
+  xmap_trace(logger,"dump in %s message %s",__func__,str);
+
 //  connected = true;
  }
  else
  {
   xmap_trace(logger,"%s error SendCPMessage->unable to connect-> return: %d ",__func__,res);
  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+// USSD Jspipe routines
+//////////////////////////////////////////////////////////////////////////
+
+JSBool JSPipe::openUssdSession(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  JSPipe *p = (JSPipe*) JS_GetPrivate(cx, obj);
+  
+  if(argc<1) 
+   return JS_FALSE;
+
+  std::string s_message_text= JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
+
+  std::string s_originating_address= p->getPipe()->GetMsisdn();
+  std::string s_imsi= p->getPipe()->GetImsi();
+  std::string s_mscaddr =p->getPipe()->GetMSCAddr();
+
+
+  MapDialogContainer * mdc =  p->getDialogConatiner();
+  
+  if(!mdc) 
+   return JS_FALSE;
+
+ p->m_dialogid = mdc->addDialog(s_imsi,s_originating_address);
+
+ if(p->m_dialogid==0)// overflow dlgid 0xffff/2 max
+ {
+   *rval = BOOLEAN_TO_JSVAL(false);
+   return JS_TRUE;
+ }
+ 
+ mdc->setMultiple(p->m_dialogid,false);
+ ET96MAP_APP_CNTX_T cntx;
+ cntx.acType = ET96MAP_SHORT_MSG_MO_RELAY;
+ cntx.version= ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
+
+ /** send <PSSR> tag opening */
+ p->sendOpenDialogInd(p->m_dialogid,cntx,s_originating_address,s_mscaddr);//cdinfo status++ (in RX if confirmed --)
+ p->send_PSSR_or_USSR_UssdRequestInd(SSN,true,p->m_dialogid,s_originating_address,s_message_text);
+    p->sendDelimiterInd(p->m_dialogid);
+ 
+ //unused
+ p->getQall()->map_statemachine_event.Signal();
+
+    *rval = BOOLEAN_TO_JSVAL(true); 
+
+ return JS_TRUE;
+}
+
+/************************************************************************/
+/*@@JSBool JSPipe::sendUssdMessage()         */
+/* для растянутого обмена                                               */
+/************************************************************************/
+JSBool JSPipe::sendUssdMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+
+ /* ответить можно только когда прийдет MAP_USSD_REQ*/
+
+    *rval = BOOLEAN_TO_JSVAL(true); 
+ return JS_TRUE;
+}
+
+/************************************************************************/
+JSBool JSPipe::isUssdRecieved(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+
+ JSPipe *p = (JSPipe*) JS_GetPrivate(cx, obj);
+ 
+   
+  long flag = p->getQall()->PipesList.getFlag(p->getPipe()->GetImsi(),PL_FLAG_USSD_FLAG);
+
+  *rval = BOOLEAN_TO_JSVAL(false);
+
+  
+  if(flag!=-1)
+  {
+  if (flag==PF_USSD_RECIEVED)
+  {
+
+#ifdef ERROR_RESOLVED_1
+   std::string txt = p->getQall()->PipesList.getText(p->getPipe()->GetImsi());
+   p->getPipe()->SetText(txt);
+#endif
+
+    *rval = BOOLEAN_TO_JSVAL(true); 
+   p->getQall()->PipesList.setFlag(p->getPipe()->GetImsi(),PF_NOTHING,PL_FLAG_RX_FLAG);
+    
+  }
+    
+  }
+
+ return JS_TRUE;
+}
+/************************************************************************/
+JSBool JSPipe::isUssdSessionClosed(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+ 
+    JSPipe *p = (JSPipe*) JS_GetPrivate(cx, obj);
+    MapDialogContainer * mdc =  p->getDialogConatiner();
+
+ *rval = BOOLEAN_TO_JSVAL(mdc->hasDialog(p->m_dialogid)); 
+
+ return JS_TRUE;
+}
+/************************************************************************/
+void JSPipe::send_PSSR_or_USSR_UssdRequestInd(UCHAR_T subsistem_number, bool isPSSR,USHORT_T dlgid,std::string str_da,std::string str_text)
+{
+ ET96MAP_ADDRESS_T SM_RP_DA;
+ UCHAR_T InvokedId=0;
+ UCHAR_T primitive = isPSSR?MAP_PROC_USSD_IND:MAP_USSD_IND;
+ 
+ 
+  __assign_message_(primitive);
+
+ if(str_da.length()>0)
+  _mkMapAddress(&SM_RP_DA,str_da.c_str(),str_da.length());//sms center address
+
+  SS7MapMsg messmaker;
+ 
+ messmaker.insertUChar(primitive);
+ messmaker.insertUChar(subsistem_number);
+ messmaker.insertUShort(dlgid);
+ messmaker.insertUChar(InvokedId);
+
+ messmaker.insertUChar(DataCoding::SMSC7BIT);
+
+ UCHAR_T * tp_user_data = new UCHAR_T[200];
+ unsigned elen=0;
+
+ 
+ if(str_text.length()>0)
+ {
+  unsigned _7bit_text_len = ConvertTextTo7Bit((  const char*)str_text.c_str(),
+             str_text.length() +1,
+             (char * )tp_user_data,
+             200,CONV_ENCODING_ANSI);
+
+
+  messmaker.insertUChar(_7bit_text_len );
+  messmaker.insertPtr(tp_user_data,_7bit_text_len);
+ }
+ else
+ {
+  messmaker.insertUChar(0); //empty string ????
+ }
+
+ if(str_da.length()>0)
+ {
+#ifdef OLD_ADDRESSING
+  messmaker.insertUChar(SM_RP_DA.addressLength/2+2);
+  messmaker.insertUChar(SM_RP_DA.typeOfAddress);
+  messmaker.insertPtr((unsigned char*)&SM_RP_DA.address,SM_RP_DA.addressLength/2+1);
+#else
+  // тут MSISDN аддресс - длин а вполуоктеттах не включая типа адреса.
+  
+        int len = SM_RP_DA.addressLength/2+SM_RP_DA.addressLength%2+2;
+  
+  messmaker.insertPtr((unsigned char *)&SM_RP_DA,len);
+
+#endif
+ }
+ 
+
+ __send_message_();
+
+ delete tp_user_data;
+ 
+ xmap_trace(logger,"%s dialog %d",__func__,dlgid);
 }

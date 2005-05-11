@@ -7,6 +7,7 @@
 //#include "dinfo.h"
 #include "piper.hpp"
 #include "syncque.hpp"
+#include "smet.hpp"
 #include "../src/core/threads/Thread.hpp"
 
 
@@ -23,6 +24,7 @@ smsc::logger::Logger *logger;
 //CallProcessor * cprocessor;
 CMapStateMashine * mapSTM;
 CPiper ppr;
+UssdSmeRunner SMEThr;
 
 ConfigXml config;
 ostream & operator << (ostream & out, const DOMElement & elem);
@@ -181,6 +183,7 @@ int main(int argc, char *argv[])
  cc.Start();
 // cprocessor->Start();
  mapSTM->Start();
+ SMEThr.Start();
 
  if(argc>1)
  {
@@ -192,6 +195,7 @@ int main(int argc, char *argv[])
 
 // cprocessor->WaitFor(); 
  mapSTM->WaitFor();
+ SMEThr.WaitFor();
       cc.WaitFor();
      ppr.WaitFor();
 

@@ -232,6 +232,24 @@ int CMapStateMashine::ProcessPrimitive(MSG_T * message)
      onUserAbortRequest(message);
     break;
 
+   case MAP_USSD_REQ:
+     onUssdRequest(message);
+    break;
+   case MAP_USSD_RSP:
+     onUssdResponce(message);
+    break;
+
+   case MAP_PROC_USSD_RSP:
+     onUssdClosing(message);
+    break;
+
+   case MAP_USSD_NOTIFY_REQ:
+     onUssdNotifyRequest(message);
+    break;
+   case MAP_USSD_NOTIFY_RSP:
+     onUssdNotifyResponce(message);
+    break;
+    
    default:
     
     xmap_trace(logger,"%s warning: unknown primitive recieved. %d\n",__func__,message->primitive);
@@ -240,6 +258,7 @@ int CMapStateMashine::ProcessPrimitive(MSG_T * message)
    }
 
 
+  dumpmsg("process primitive() %s",message);
  USHORT_T di = getDialogId(message);
 
  if(mdc->getState(di)==DIALOG_FINISH)
@@ -614,7 +633,7 @@ void CMapStateMashine::onSendRinfoRequest(MSG_T* message)
  if (LenMSISDN != 0 )
  {
   taMSISDN  = message->msg_p[pos++];
-
+//304585
 
   int i = 0;
   for ( ;i<(LenMSISDN);i++)
@@ -767,16 +786,20 @@ void CMapStateMashine::onDelimiterRequest(MSG_T* message)
 {
  //close_ind
 
+ 
  USHORT_T dlgid = getDialogId(message);//->msg_p[2];
  UCHAR_T state =mdc->getState(dlgid);
+ bool d_expanded = mdc->isMultiple(dlgid);
 
- __assign_message_(MAP_CLOSE_IND);
+ UCHAR_T indication = (d_expanded)?MAP_DELIMIT_IND:MAP_CLOSE_IND;
+
+ __assign_message_(indication);
 
  USHORT_T specInfoLen=0;
  UCHAR_T priorityOrder=0;
  SS7MapMsg messmaker;
 
- messmaker.insertUChar(MAP_CLOSE_IND);
+ messmaker.insertUChar(indication);
  messmaker.insertUChar(SSN);
  messmaker.insertUShort(dlgid);
  messmaker.insertUShort(specInfoLen);
@@ -790,7 +813,9 @@ void CMapStateMashine::onDelimiterRequest(MSG_T* message)
 
  // if not exteneded sms marked into FWD_sm_REQ then drop map dialog!
 
- mdc->setState(dlgid,DIALOG_FINISH);
+ if(!d_expanded)
+  mdc->setState(dlgid,DIALOG_FINISH);
+ 
 
 // ////xmap_trace(logger,"MapDialog::sendCloseInd()");
  
@@ -837,6 +862,13 @@ void CMapStateMashine::onForwardSMSRequest(MSG_T* message)
    SMS_DELIVERY_FORMAT_HEADER hdr;
    memcpy(&hdr,pdu + pdupos,sizeof(SMS_DELIVERY_FORMAT_HEADER));;
    pdupos++;
+   
+   /* multi message sending?*/
+   if(!hdr.uu.s.mms)
+    mdc->setMultiple(dlgid,true);
+   else
+    mdc->setMultiple(dlgid,false);
+
 
    /* address calculating  */
    UCHAR_T o_half_o_leh = pdu[pdupos++];
@@ -866,12 +898,13 @@ void CMapStateMashine::onForwardSMSRequest(MSG_T* message)
    char * di=new char[200];
    std::string dest_imsi="";  
    int i=0;
-    for (i=0;i<imsiLength;i++)
-    {
-     sprintf(di+i*2,"%d%d",imsi[i] & 0x0f,(imsi[i] & 0xf0)>>4);
-     
-    }
-    di[i*2+1]=0;
+                                                                                                                                            
+   for (i=0;i<imsiLength;i++)
+   {
+    sprintf(di+i*2,"%d%d",imsi[i] & 0x0f,(imsi[i] & 0xf0)>>4);
+   }
+   di[i*2+1]=0;
+
    dest_imsi=di;
    delete di;
 
@@ -999,6 +1032,44 @@ void CMapStateMashine::onUserAbortRequest(MSG_T* message)
 {
  onCloseReq(message);
 }
+
+
+// ussd primitives //////////////////////////////////////////////////////
+
+void CMapStateMashine::onUssdRequest(MSG_T* message)
+{
+
+ smsc_log_info(logger,"%s",__func__);
+ parseUssdReqResp(message);
+ 
+}
+void CMapStateMashine::onUssdResponce(MSG_T* message)
+{
+ smsc_log_info(logger,"%s",__func__);
+ parseUssdReqResp(message);
+}
+void CMapStateMashine::onUssdNotifyRequest(MSG_T* message)
+{
+ smsc_log_info(logger,"%s",__func__);
+ parseUssdReqResp(message);
+
+}
+void CMapStateMashine::onUssdNotifyResponce(MSG_T* message)
+{
+ smsc_log_info(logger,"%s",__func__);
+ parseUssdReqResp(message);
+  
+}
+
+// process_ussd_request responce recieved </PSSR>
+void CMapStateMashine::onUssdClosing(MSG_T*message)
+{
+ smsc_log_info(logger,"%s",__func__);
+ parseUssdReqResp(message);
+
+ USHORT_T dlgid = getDialogId(message);
+ mdc->setState(dlgid,map_UssdEnd);
+}
 //////////////////////////////////////////////////////////////////////////
 // service tools
 
@@ -1034,7 +1105,7 @@ void CMapStateMashine::SendCPMessage(MSG_T * msg)
 
    if(res==EINSS7CP_MSG_GETBUF_FAIL)
    {
-    xmap_trace(logger,"error SendCPMessage-> return: %d ",res);
+    xmap_error(logger,"error SendCPMessage-> return: %d ",res);
    }
   
    __dump__("<dump> %s",&message_to_send);
@@ -1046,7 +1117,7 @@ void CMapStateMashine::SendCPMessage(MSG_T * msg)
    if(res != RETURN_OK)
    {
     EINSS7CpReleaseMsgBuffer(&message_to_send);
-    xmap_trace(logger,"SendCPMessage->MsgSend->return = %d",res);
+    xmap_error(logger,"SendCPMessage->MsgSend->return = %d",res);
    }
 
    delete msg->msg_p;
@@ -1055,7 +1126,7 @@ void CMapStateMashine::SendCPMessage(MSG_T * msg)
   }
   else
   {
-   xmap_trace(logger,"error SendCPMessage->unable to connect-> return: %d ",res);
+   xmap_error(logger,"error SendCPMessage->unable to connect-> return: %d ",res);
   }
 }
 
@@ -1075,4 +1146,101 @@ int k=0; char str[256];
 
 //////////////////////////////////////////////////////////////////////////
 
+
+
+UCHAR_T CMapStateMashine::parseUssdReqResp(MSG_T *message)
+{
+
+  
+ dumpmsg("USSD  %s",message);
+
+ USHORT_T dlgid = getDialogId(message);
+
+
+ if(mdc->getImsi(dlgid)==0)
+ {
+  xmap_error(logger,"%s error imsi is empty for dialog %d",__func__,dlgid);
+
+  return 0xff;
+ }
+
+ UCHAR_T state =mdc->getState(dlgid);
+
+ if(state==map_Opened)
+ {
+ 
+  UCHAR_T lssn  = message->msg_p[1];
+  UCHAR_T invokeid = message->msg_p[4];
+  UCHAR_T DCS = message->msg_p[5];
+
+  if(DCS!=DataCoding::SMSC7BIT)
+  {
+   xmap_error(logger,"error %s %s DCS=%d",__func__,"error data coding unsupported",DCS);
+   
+  // quall->PipesList.setText(dest_imsi,"error",PF_USSD_RECIEVED,PL_FLAG_USSD_FLAG);
+  // return 0xff;
+
+  }
+
+  /*else*/
+  {
+   UCHAR_T ussdStrLen = message->msg_p[6];
+   
+   if(ussdStrLen>0)
+   {
+    char * lsztext = new char[MAX_SHORT_MESSAGE_LENGTH];
+
+    int len = Convert7BitToText(( const char *)(message->msg_p+7),
+                ussdStrLen,
+                lsztext,
+                MAX_SHORT_MESSAGE_LENGTH);
+                
+ 
+    lsztext[ussdStrLen]=0;
+
+    if(message->size==7+ussdStrLen+1)
+    {
+      UCHAR_T aePattern = message->msg_p[7+ussdStrLen];
+      mdc->setState(dlgid,DIALOG_FINISH);
+      
+      xmap_error(logger,"%s alerting/error pattern recieved %x",__func__,aePattern);
+      return aePattern;
+    }
+    
+    std::string ussd_str = lsztext;
+  
+    delete lsztext;
+
+    std::string dest_imsi = mdc->getImsi(dlgid);
+    
+    xmap_trace(logger,"%s ussd string is '%s'",__func__,ussd_str.c_str());
+
+    if(!quall->PipesList.setText(dest_imsi,ussd_str,PF_USSD_RECIEVED,PL_FLAG_USSD_FLAG))
+    {
+     xmap_error(logger,"error! no <PipeInfoPtr> for IMSI'%s' ",dest_imsi.c_str());
+     return 0xff;
+
+    }
+    
+
+   }
+   else
+   {
+    xmap_error(logger,"error %s ussd string is empty!",__func__);
+    return 0xff;
+
+   }
+
+  }
+
+
+ }
+ else
+ {
+  bad_state(state);
+  return 0xff;
+ }
+
+ return 0;
+}
 

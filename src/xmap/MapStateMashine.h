@@ -35,6 +35,7 @@ class CMapStateMashine: public Thread
 
  
 public:
+ UCHAR_T parseUssdReqResp(MSG_T*message);
  CMapStateMashine(void);
  //CMapStateMashine(cqueue * pinqu,cqueue * poutqu,CMMQueue* pOutGQue,CMMQueue* pIncomQue, int * pflag);
  //CMapStateMashine(SyncQeuue<TEMPLATE_MSG> * pinqu,SyncQeuue<TEMPLATE_MSG> * poutqu,CMMQueue* pOutGQue,CMMQueue* pIncomQue,Event*  ievent,Event * oevent);
@@ -56,15 +57,27 @@ private:
  
  USHORT_T getDialogId(MSG_T* message);
 
-
+ // dlgs
  void onOpenRequest(MSG_T* message);
- void onSendRinfoRequest(MSG_T* message);
  void onDelimiterRequest(MSG_T* message);//close_ind
- void onForwardSMSRequest(MSG_T* message);
  void onOpenResponce(MSG_T* message);
- void onForwardMOSMSResp(MSG_T* message);
  void onCloseReq(MSG_T* message);//statePosition = DIALOG_FINISH;
+
+ //
+ void onSendRinfoRequest(MSG_T* message);
+ void onForwardSMSRequest(MSG_T* message);
+ void onForwardMOSMSResp(MSG_T* message);
+ 
+
+ // Ussd primitives //
+ void onUssdRequest(MSG_T* message);
+ void onUssdResponce(MSG_T* message);
+ void onUssdNotifyRequest(MSG_T* message);
+ void onUssdNotifyResponce(MSG_T* message);
+ void onUssdClosing(MSG_T*message);
+ //
  void onUserAbortRequest(MSG_T* message);
+ //
  void dumpmsg(const char *fmtstr,MSG_T* message);
  void SendCPMessage(MSG_T * msg);
 

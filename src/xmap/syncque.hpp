@@ -26,6 +26,8 @@ using namespace smsc::core::synchronization;
 #define PL_FLAG_RX_FLAG 0
 #define PL_FLAG_TX_FLAG 1
 #define PL_FLAG_ERR_FLAG 3
+#define PL_FLAG_USSD_FLAG 4
+
 
 #define PIPE_ACTIVE  1
 #define PIPE_IS_ABSENT  2
@@ -79,6 +81,9 @@ protected:
 #define PF_SMS_RECIEVED 3
 #define PF_SMS_SEND 4
 
+#define PF_USSD_SEND_ERROR 5
+#define PF_USSD_RECIEVED 6
+
 
 typedef struct PipeInfo{
  char * imsi;
@@ -88,6 +93,7 @@ typedef struct PipeInfo{
  char send_flag;
  char recv_flag;
  char error_flag;
+ char ussd_flag;
  int val;
  USHORT_T dialogid;
  bool absent;
@@ -119,6 +125,11 @@ public:
     pi->error_flag = flag;
      
     break;
+   case PL_FLAG_USSD_FLAG:
+    pi->ussd_flag = flag;
+     
+    break;
+
 
    default:
     break;
@@ -212,6 +223,10 @@ public:
    case PL_FLAG_ERR_FLAG:
     return (long)pi->error_flag;
     break;
+   case PL_FLAG_USSD_FLAG:
+    return (long)pi->ussd_flag;
+    break;
+
 
    default:
      break;
@@ -437,6 +452,7 @@ typedef struct sMapDialog
  char * msisdn;
  UCHAR_T state;
  USHORT_T dialogid;
+ bool multiple;
 };
 
 class MapDialogContainer
@@ -471,7 +487,8 @@ class MapDialogContainer
    MutexGuard g(mtx);
    sMapDialog * smd = (sMapDialog*)malloc(sizeof(sMapDialog));
    smd->state=0;
-   
+   smd->multiple = false;
+
    smd->dialogid=searchFreeDialog();
    
    smd->imsi = new char[imsi.length()];
@@ -511,6 +528,7 @@ class MapDialogContainer
    sMapDialog * smd = (sMapDialog*)malloc(sizeof(sMapDialog));
    smd->state=0;
    smd->dialogid=id;
+   smd->multiple = false;
 
    smd->imsi = new char[imsi.length()];
    smd->msisdn = new char[msisdn.length()];
@@ -527,6 +545,7 @@ class MapDialogContainer
    xmap_trace(logger,"%s end",__func__);
   };
 
+  
   // leak tracing
   void deleteDialog(USHORT_T id)
   {
@@ -584,6 +603,38 @@ class MapDialogContainer
    else
    return 0;
 
+  };
+
+  bool isMultiple(USHORT_T id)
+  {
+   MutexGuard g(mtx);
+   if(dialogs.GetPtr(id))
+    return dialogs.Get(id)->multiple;
+   else
+   return false;
+
+  };
+
+  void setMultiple(USHORT_T id,bool mtp)
+  {
+   MutexGuard g(mtx);
+   
+   if(dialogs.GetPtr(id))
+   {
+    dialogs.Get(id)->multiple = mtp;
+
+    xmap_trace(logger,"%s end",__func__);
+   }
+   else
+    smsc_log_info(logger,"error in %s try to set multiple for  empty dialog<%d> or bussed by JSPIPE",__func__,id);
+
+   
+  };
+
+  bool hasDialog(USHORT_T id)
+  {
+   MutexGuard g(mtx);
+   return (dialogs.GetPtr(id)!=0);
   };
 
  protected:

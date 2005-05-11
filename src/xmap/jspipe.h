@@ -77,6 +77,12 @@ public:
  static JSBool generateImsi(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
  static JSBool generateMsisdn(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
 
+ static JSBool openUssdSession(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+ static JSBool sendUssdMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+ static JSBool isUssdRecieved(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+ static JSBool isUssdSessionClosed(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval);
+
+
  static JSClass Pipe_class;
 
     void setPipe(Pipe *pipe)
@@ -94,7 +100,8 @@ public:
  void SendCPMessage(MSG_T * msg);
  void forwardSMS(USHORT_T dlgid,std::string str_oa,std::string str_da,std::string str_text,std::string str_msc_addr);
  void sendDelimiterInd(USHORT_T dlgid);
-
+ 
+ void send_PSSR_or_USSR_UssdRequestInd(UCHAR_T subsistem_number, bool isPSSR,USHORT_T dlgid,std::string str_da,std::string str_text);
 
 /*
  PipeInfo * getPiByImsi()
@@ -162,6 +169,8 @@ public:
  {
   qall->vPipesInform.push_back(pnf);
  }*/
+public:
+  USHORT_T m_dialogid;
 protected:
 
 private:

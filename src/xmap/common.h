@@ -3,6 +3,8 @@
 
 #define __FUNCTION__ __func__
 
+#define FULL_LOG
+
 struct SMS_DELIVERY_FORMAT_HEADER{
   union{
     struct{
@@ -167,6 +169,9 @@ extern unsigned char  lll_8bit_2_7bit[256];
 #define map_After_FwdSms  6
 #define map_Opened_To_rx_Sms 7
 #define map_After_RxSms 8
+#define map_UssdBegin  9
+#define map_UssdEnd  10
+
 
 
 #define __assign_message_(_primitive_)  MSG_T msg;\
@@ -190,6 +195,8 @@ extern unsigned char  lll_8bit_2_7bit[256];
  #define xmap_trace
 
 #endif
+
+#define xmap_error smsc_log_info
 
 #define bad_state(st) smsc_log_info(logger,"bad dialog state %d in %s",st,__func__)
 
