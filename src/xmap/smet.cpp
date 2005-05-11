@@ -6,6 +6,7 @@ by Mc.Green green@sibinco.ru
 smsc::logger::Logger* smelogger;
 extern bool stopProcess;
 Event e;
+SmppTransmitter *tr;
 
 /** Listener to SME for USSD processing.
 Main trend is RX message are moved to TX message.*/
@@ -91,6 +92,9 @@ int UssdSmeRunner::Execute()
  try{
    ss.connect();
    smsc_log_info(smelogger, "SME was connected.");
+
+   tr=ss.getSyncTransmitter();
+   lst.setTrans(tr);
    while(!stopProcess)
    {
     e.Wait();

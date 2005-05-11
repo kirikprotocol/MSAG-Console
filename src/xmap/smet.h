@@ -1,4 +1,4 @@
-#ifndef __SME_T_H__
+#indef __SME_T_H__
 #define __SME_T_H__
 
 #include <stdio.h>
@@ -18,7 +18,6 @@ using namespace smsc::logger;
 using namespace smsc::core::threads;
 
 extern bool stopProcess;
-Event e;
 
 /**
 Listener to SME for USSD processing.
@@ -36,8 +35,7 @@ protected:
 class UssdSmeRunner:public Thread
 {
 public:
-	int Execute();
+ int Execute();
 };
 
 
-#endif
