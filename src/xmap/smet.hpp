@@ -2,13 +2,13 @@
 Ussd Sme for XMAP application
 by Mc.Green green@sibinco.ru
 */
+#include <stdio.h>
 #include "sme/SmppBase.hpp"
 #include "sms/sms.h"
 #include <unistd.h>
 #include "util/smstext.h"
 #include <logger/Logger.h>
 #include "core/synchronization/Event.hpp"
-#include "../src/core/threads/Thread.hpp"
 
 using namespace smsc::sms;
 using namespace smsc::sme;
@@ -16,6 +16,7 @@ using namespace smsc::smpp;
 using namespace smsc::core::synchronization;
 using namespace smsc::util;
 using namespace smsc::logger;
+
 
 
 using namespace smsc::core::threads;
@@ -120,10 +121,8 @@ public:
     SmppSession ss(cfg,&lst);
 
     try{
-
     ss.connect();
     smsc_log_info(smelogger, "SME was connected.");
-
     while(!stopProcess)
     {
      e.Wait();
