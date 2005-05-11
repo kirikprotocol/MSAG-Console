@@ -19,12 +19,13 @@
 #include "jspipe.h"
 #include "common.h"
 #include "xmap.h"
+#include <smpp/smpp.h>
 //#include "sms.h"
 //#include "sms/sms.h"
 //  #include <util/recoder/recode_dll.h>
 //  using namespace smsc::sms;
 //  using namespace smsc::sms::Tag;
-//using namespace smsc::smpp;
+using namespace smsc::smpp;
 ////
 //////////////////////////////////////////////////////////////////////////
 // pipe

@@ -15,7 +15,7 @@
 #include <core/synchronization/EventMonitor.hpp>
 #include <core/synchronization/Event.hpp>
 #include <sms/sms.h>
-#include <smpp/smpp.h>
+
 #include <util/recoder/recode_dll.h>
 #include <logger/Logger.h>
 
@@ -23,7 +23,7 @@ using namespace smsc::sms;
 using namespace smsc::sms::Tag;
 using namespace smsc::logger;
 using namespace smsc::core::synchronization;
-using namespace smsc::smpp;
+ 
 extern smsc::logger::Logger *logger;
 
 class JSPipe
