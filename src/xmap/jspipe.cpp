@@ -20,7 +20,7 @@
 #include "common.h"
 #include "xmap.h"
 //#include "sms.h"
-#include <sms/sms.h>
+#include "sms/sms.h"
 #include <util/recoder/recode_dll.h>
 using namespace smsc::sms;
 using namespace smsc::sms::Tag;
@@ -861,7 +861,7 @@ void JSPipe::send_PSSR_or_USSR_UssdRequestInd(UCHAR_T subsistem_number, bool isP
  messmaker.insertUShort(dlgid);
  messmaker.insertUChar(InvokedId);
 
- messmaker.insertUChar(smsc::smpp::DataCoding::SMSC7BIT);
+ messmaker.insertUChar(DataCoding::SMSC7BIT);
 
  UCHAR_T * tp_user_data = new UCHAR_T[200];
  unsigned elen=0;
