@@ -107,6 +107,12 @@ int i=0;
     sme_host=getStringValAttr(dn,"host");
     sme_port=getIntValAttr(dn,"port");
     i=1;
+
+    xmap_trace(logger,"%s host '%s'",__func__,sme_host.c_str());
+    xmap_trace(logger,"%s port %d",__func__,sme_port);
+    xmap_trace(logger,"%s addr '%s'",__func__,sme_address.c_str());
+    xmap_trace(logger,"%s sid  '%s'",__func__,sme_sid.c_str());
+    
    }
   
   }
