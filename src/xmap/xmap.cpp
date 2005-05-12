@@ -1,3 +1,8 @@
+#include "sme/SmppBase.hpp"
+#include "sms/sms.h"
+#include <unistd.h>
+#include "util/smstext.h"
+
 #include "xmap.h"
 //#include "common.h"
 //#include "callProcessor.h"
