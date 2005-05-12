@@ -89,12 +89,12 @@ int UssdSmeRunner::Execute()
  smsc_log_info(smelogger, "Starting...");
 
  SmeConfig cfg;
- cfg.host="localhost";
- cfg.port=29012;
- cfg.sid="t1";
+ cfg.host=message_store.config->getSmeHost();
+ cfg.port=message_store.config->getSmePort();
+ cfg.sid=message_store.config->getSmeSid();
  cfg.timeOut=10;
  cfg.password="";
- cfg.origAddr="001";
+ cfg.origAddr=message_store.config->getSmeAddress();
  MyListener lst;
  SmppSession ss(cfg,&lst);
 

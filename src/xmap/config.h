@@ -60,7 +60,7 @@ public:
 
  std::string getSmeAddress();
  std::string getSmeHost();
- std::string getSmePort();
+ int getSmePort();
  std::string getSmeSid();
 
 // std::vector<cpipe> vpipes;

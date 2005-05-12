@@ -320,6 +320,16 @@ std::string ConfigXml::getSmeSid()
 {
  return sme_sid;
 }
+
+int ConfigXml::getSmePort()
+{
+ return sme_port;
+}
+
+std::string ConfigXml::getSmeHost()
+{
+ return sme_host;
+}
 ////////////
 //cpipe
  
