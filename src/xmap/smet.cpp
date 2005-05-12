@@ -41,14 +41,14 @@ Main trend is RX message are moved to TX message.*/
     /* addressing exchange orig_new = dest_old etc...*/
        src_addr  = xsms.getDestinationAddress();
        dest_addr = xsms.getOriginatingAddress();
-    uint32_t mref =  xsms.getIntProperty(Tag::SMPP_USSD_MESSAGE_REFERENCE);
+    uint32_t mref =  xsms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
     
        xsms.setDestinationAddress(src_addr);
        xsms.setOriginatingAddress(dest_addr);
        xsms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)message,len);
        xsms.setIntProperty(Tag::SMPP_SM_LENGTH,len);
        xsms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_RESP);
-    xsms.setIntProperty(Tag::SMPP_USSD_MESSAGE_REFERENCE,mref);
+    xsms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,mref);
 
     
     PduSubmitSm sm;
