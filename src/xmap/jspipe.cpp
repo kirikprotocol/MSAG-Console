@@ -19,7 +19,7 @@
 #include "jspipe.h"
 #include "common.h"
 #include "xmap.h"
-#include <sme/SmppBase.hpp>
+//#include <sme/SmppBase.hpp>
 #include <sms/sms.h>
 //#include "sms/sms.h"
 #include <util/recoder/recode_dll.h>

@@ -15,15 +15,15 @@
 #include <core/synchronization/EventMonitor.hpp>
 #include <core/synchronization/Event.hpp>
 
-#include "sme/SmppBase.hpp"
+//#include "sme/SmppBase.hpp"
 #include "sms/sms.h"
  
 using namespace smsc::core::threads;
 using namespace smsc::core::synchronization;
-using namespace smsc::smpp;
+//using namespace smsc::smpp;
 using namespace smsc::sms;
 using namespace smsc::sms::Tag;
-using namespace smsc::sme;
+//using namespace smsc::sme;
 //#include "mmqueue.h"
 //#include "dinfo.h"
 
