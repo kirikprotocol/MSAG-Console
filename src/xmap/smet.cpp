@@ -80,7 +80,7 @@ int UssdSmeRunner::Execute()
 {
 
  // wait smsc powering
- while(message_store.bindOK!=2)
+ while(message_store.bindOK!=2 && !stopProcess)
  {
   sleep(1);
  }
