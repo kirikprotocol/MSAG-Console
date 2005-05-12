@@ -82,7 +82,7 @@ int UssdSmeRunner::Execute()
  // wait smsc powering
  while(message_store.bindOK!=2)
  {
-  Sleep(1);
+  sleep(1);
  }
  smelogger =  Logger::getInstance("xmapussd");
  smsc_log_info(smelogger, "Starting...");
