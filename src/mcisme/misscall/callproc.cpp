@@ -1118,14 +1118,19 @@ void redirect_rule(
       /* FILL CALL INFO STRING */
       /* format of call string: 'spn,cause,a-number */
       /*max length of 'spn,cause,.ton.npi.digits' = 3+1+3+1+1+3+1+1+1+20 = 35*/
-      char callinfo[36] = {0};
-      int pos = snprintf(callinfo,sizeof(callinfo),
-                         "%d,%d,.%d.%d.",
-                         head->span,
-                         redirinf->lastReason,
-                         cg->natureOfAddr,
-                         cg->numberPlan);
-      unpack_addr(callinfo+pos, cg->addrSign_p, cg->noOfAddrSign);
+      char callinfo[36] = {0};int pos;
+      pos = snprintf(callinfo,sizeof(callinfo),
+                     "%d,%d,",
+                     head->span,
+                     redirinf->lastReason);
+      if (cg)
+      {
+        pos += snprintf(callinfo+pos,sizeof(callinfo),
+                        ".%d.%d.",
+                        cg->natureOfAddr,
+                        cg->numberPlan);
+        unpack_addr(callinfo+pos, cg->addrSign_p, cg->noOfAddrSign);
+      }
 
       vector<InternalRule*>::iterator it = rules.begin(),end = rules.end();
       for(;it != end;++it)
