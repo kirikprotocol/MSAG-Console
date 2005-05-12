@@ -4,7 +4,7 @@
 
      <timeout val="100"></timeout>
      <msc address="79998880001"/>		
-     <sme address="001" sid="t1" host="localhost" port="29012" password/>		
+     <sme address="001" sid="t1" host="localhost" port="29012" password=""/>		
 
 
 </config>
