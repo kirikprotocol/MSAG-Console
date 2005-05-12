@@ -19,6 +19,9 @@
 <!ELEMENT sme (#PCDATA)>
 <!ATTLIST sme address CDATA #REQUIRED
 	      sid CDATA #REQUIRED	
+	      host CDATA #REQUIRED	
+	      port CDATA #REQUIRED	
+	      password CDATA #REQUIRED	
 
 >
 

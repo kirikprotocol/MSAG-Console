@@ -57,12 +57,20 @@ public:
  
  long getMqueueLength();
  std::string getMscAddr();
+
+ std::string getSmeAddress();
+ std::string getSmeHost();
+ std::string getSmePort();
+ std::string getSmeSid();
+
 // std::vector<cpipe> vpipes;
 
 
 private:
  int readTimeouts(DOMElement *docElem);
  int readMscAddr(DOMElement *docElem);
+ int readSmes(DOMElement *docElem);
+ 
 
  long getIntValAttr(DOMNode* node,const char * attr_name);
  std::string getStringValAttr(DOMNode* node,const char * attr_name);
@@ -75,7 +83,10 @@ private:
  bool autostart;
  std::string str_mscaddr;
  EventMonitor mtx;
-
+ std::string sme_address;
+ std::string sme_sid;
+ std::string sme_host;
+ int sme_port;
  
 };
 

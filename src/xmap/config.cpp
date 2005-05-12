@@ -87,6 +87,35 @@ int ConfigXml::readMscAddr(DOMElement *docElem)
  return i;
 }
 
+int ConfigXml::readSmes(DOMElement *docElem)
+{
+int i=0;
+ if(!docElem)return 0;
+
+ XmlStr _str_timeouts("sme");
+ DOMNodeList *dnl=docElem->getElementsByTagName((XMLCh*)_str_timeouts.x_str ());
+    if(dnl)
+ {
+  if(dnl->getLength()>0)
+  {
+
+   DOMNode* dn=dnl->item(0);
+   if(dn)
+   {
+    sme_address=getStringValAttr(dn,"address");
+    sme_sid=getStringValAttr(dn,"sid");
+    sme_host=getStringValAttr(dn,"host");
+    sme_port=getIntValAttr(dn,"port");
+    i=1;
+   }
+  
+  }
+
+
+ }
+
+ return i;
+}
 //DEL USHORT_T ConfigXml::getPipesCount()
 //DEL {
 //DEL  MutexGuard g(mtx);
@@ -250,6 +279,7 @@ int ConfigXml::readXMLConfig(const char* filename)
     //if (int k=readPipes(docElem)){
      //xmap_trace(logger,"pipes count %d",vpipes.size());
     //}
+    readSmes(docElem);
 
     result=1;
 
@@ -280,6 +310,15 @@ std::string ConfigXml::getMscAddr()
  MutexGuard g(mtx);
  mtx.notify();
  return str_mscaddr;
+}
+
+std::string ConfigXml::getSmeAddress()
+{
+ return sme_address;
+}
+std::string ConfigXml::getSmeSid()
+{
+ return sme_sid;
 }
 ////////////
 //cpipe
