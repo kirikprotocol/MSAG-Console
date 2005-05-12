@@ -1,4 +1,4 @@
-<!ENTITY % sectionbody "(timeout | msc | pipe )*">
+<!ENTITY % sectionbody "(timeout | msc | sme | pipe )*">
 
 <!ELEMENT config %sectionbody;>
 <!ATTLIST config 
