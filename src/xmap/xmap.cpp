@@ -1,5 +1,5 @@
 #include "xmap.h"
-#include "common.h"
+//#include "common.h"
 //#include "callProcessor.h"
 #include "MapStateMashine.h"
 //#include "queue.h"
@@ -27,7 +27,7 @@ CPiper ppr;
 UssdSmeRunner SMEThr;
 
 ConfigXml config;
-ostream & operator << (ostream & out, const DOMElement & elem);
+//ostream & operator << (ostream & out, const DOMElement & elem);
 
 qMessage_t message_store;
 
