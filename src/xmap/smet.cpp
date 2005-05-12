@@ -3,6 +3,8 @@ Ussd Sme for XMAP application
 by Mc.Green green@sibinco.ru
 */
 #include "smet.h"
+#include "syncque.hpp"
+
 smsc::logger::Logger* smelogger;
 extern bool stopProcess;
 Event e;

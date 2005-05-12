@@ -187,8 +187,9 @@ int main(int argc, char *argv[])
  
  cc.Start();
 // cprocessor->Start();
+ 
  mapSTM->Start();
-// SMEThr.Start();
+ SMEThr.Start();
 
  if(argc>1)
  {
@@ -200,7 +201,7 @@ int main(int argc, char *argv[])
 
 // cprocessor->WaitFor(); 
  mapSTM->WaitFor();
-// SMEThr.WaitFor();
+ SMEThr.WaitFor();
       cc.WaitFor();
      ppr.WaitFor();
 
