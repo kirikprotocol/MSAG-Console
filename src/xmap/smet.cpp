@@ -7,7 +7,7 @@ by Mc.Green green@sibinco.ru
 
 smsc::logger::Logger* smelogger;
 extern bool stopProcess;
-Event e;
+Event ussd_evt;
 SmppTransmitter *tr;
 extern qMessage_t message_store;
 
@@ -56,9 +56,10 @@ Main trend is RX message are moved to TX message.*/
        PduSubmitSmResp *resp=tr->submit(sm); 
 
     if(resp)disposePdu((SmppHeader*)resp);
-
-      e.Signal();
+      ussd_evt.Signal();
     }
+ 
+  
   }
   void MyListener::handleError(int errorCode)
   {
@@ -105,7 +106,7 @@ int UssdSmeRunner::Execute()
    lst.setTrans(tr);
    while(!stopProcess)
    {
-    e.Wait();
+    ussd_evt.Wait();
     
    }
   }
@@ -114,13 +115,16 @@ int UssdSmeRunner::Execute()
  {
   
  printf("%s Exception: %s\n",__func__,e.what());
+ fflush(stdout);
  smsc_log_info(smelogger, "%s Exception %s",__func__,e.what());
  
- stopProcess=true;
+  stopProcess=true;
  }
  catch(...)
  {
  printf("unknown exception\n");
+ fflush(stdout);
+  stopProcess=true;
  }
 
  ss.close();

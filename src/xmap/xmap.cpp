@@ -37,7 +37,7 @@ ConfigXml config;
 qMessage_t message_store;
 
 MapDialogContainer * g_mdc;
-
+extern Event ussd_evt;
 class commandChecker:public Thread
 {
 
@@ -111,6 +111,7 @@ public:
     {
      kill( getpid(), SIGINT );
      stopProcess=true;
+     ussd_evt.Signal();
      return 1;
     }
     else
