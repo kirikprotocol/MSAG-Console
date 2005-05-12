@@ -7,6 +7,7 @@ smsc::logger::Logger* smelogger;
 extern bool stopProcess;
 Event e;
 SmppTransmitter *tr;
+extern qMessage_t message_store;
 
 /** Listener to SME for USSD processing.
 Main trend is RX message are moved to TX message.*/
@@ -76,6 +77,11 @@ Thread for running SME listener
 int UssdSmeRunner::Execute()
 {
 
+ // wait smsc powering
+ while(message_store.bindOK!=2)
+ {
+  Sleep(1);
+ }
  smelogger =  Logger::getInstance("xmapussd");
  smsc_log_info(smelogger, "Starting...");
 
