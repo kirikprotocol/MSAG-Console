@@ -4,6 +4,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.util.conpool.NSConnectionPool;
 
 import javax.sql.DataSource;
@@ -27,10 +28,9 @@ public class SmsStat
  {
     org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(SmsStat.class);
 
-    private final static String DIR_SEPARATOR   = "/";
     private final static String DATE_DIR_FORMAT = "yyyy-MM";
     private final static String DATE_DAY_FORMAT = "yyyy-MM-dd hh:mm";
-    private final static String DATE_DIR_FILE_FORMAT = DATE_DIR_FORMAT + DIR_SEPARATOR + "dd";
+    private final static String DATE_DIR_FILE_FORMAT = DATE_DIR_FORMAT + File.separatorChar + "dd";
     private final static String DATE_FILE_EXTENSION  = ".rts";
     private final static String DATE_PERIOD_FORMAT = "yyyyMMddhhmm";
 
@@ -63,7 +63,11 @@ public class SmsStat
 
     protected SmsStat(Config smscConfig, Config webConfig) throws AdminException
     {
-        try { statstorePath = smscConfig.getString(PARAM_NAME_STAT_DIR); } catch (Exception e) {
+        try {
+            statstorePath = smscConfig.getString(PARAM_NAME_STAT_DIR);
+            if (statstorePath == null || statstorePath.length() <= 0)
+                throw new AdminException("store path is empty");
+        } catch (Exception e) {
             throw new AdminException("Failed to obtain statistics dir. Details: " + e.getMessage());
         }
         try {
@@ -87,10 +91,19 @@ public class SmsStat
 
     private TreeMap getStatQueryDirs() throws AdminException
     {
-        File filePath = new File(statstorePath);
-        String[] dirNames = filePath.list();
+        File statPath = new File(statstorePath);
+        if (statPath == null || !statPath.isAbsolute()) {
+            File smscConfFile = WebAppFolders.getSmscConfFolder();
+            String smscDirFile = smscConfFile.getParent();
+            statPath = new File(smscDirFile, statstorePath);
+            logger.debug("Stat path: by smsc conf '"+statPath.getAbsolutePath()+"'");
+        } else {
+            logger.debug("Stat path: is absolute '"+statPath.getAbsolutePath()+"'");
+        }
+
+        String[] dirNames = statPath.list();
         if (dirNames == null || dirNames.length == 0)
-            throw new AdminException("No statistics directories");
+            throw new AdminException("No stat directories at path '"+statPath.getAbsolutePath()+"'");
 
         Date tillQueryDirTime = tillQueryDate;
         Date tillQueryFileTime = tillQueryDate;
@@ -112,36 +125,31 @@ public class SmsStat
             if (dirName == null || dirName.length() <= 0) continue;
 
             Date dirDate;
-            try {
-                dirDate = dateDirFormat.parse(dirName);
-            } catch (ParseException exc) {
-                continue;
-            }
+            try { dirDate = dateDirFormat.parse(dirName); }
+            catch (ParseException exc) { continue; }
 
             if (fromQueryDirTime != null && dirDate.getTime() < fromQueryDirTime.getTime()) continue;
             if (tillQueryDirTime != null && dirDate.getTime() > tillQueryDirTime.getTime()) continue;
 
-            String currentDir = statstorePath + DIR_SEPARATOR + dirName;
-            File[] dirFiles = (new File(currentDir)).listFiles();
+            File dirNameFile = new File(statPath, dirName);
+            File[] dirFiles = dirNameFile.listFiles();
+            //logger.debug("Stat path: dir '" + dirNameFile.getAbsolutePath() + "'");
             if (dirFiles == null || dirFiles.length == 0) continue;
 
             for (int j = 0; j < dirFiles.length; j++) {
                 String fileName = dirFiles[j].getName();
                 if (fileName == null || fileName.length() <= 0 ||
-                        !fileName.toLowerCase().endsWith(DATE_FILE_EXTENSION))
-                    continue;
+                   !fileName.toLowerCase().endsWith(DATE_FILE_EXTENSION)) continue;
 
-                String dirFileName = dirName + DIR_SEPARATOR + fileName;
                 Date fileDate;
-                try {
-                    fileDate = dateDirFileFormat.parse(dirFileName);
-                } catch (ParseException exc) {
-                    continue;
-                }
+                try { fileDate = dateDirFileFormat.parse(dirName + File.separatorChar + fileName); }
+                catch (ParseException exc) { continue; }
+
                 if (fromQueryFileTime != null && fileDate.getTime() < fromQueryFileTime.getTime()) continue;
                 if (tillQueryFileTime != null && fileDate.getTime() > tillQueryFileTime.getTime()) continue;
 
-                selected.put(fileDate, statstorePath + DIR_SEPARATOR + dirFileName);
+                final String fullFilePath = (new File(dirNameFile, fileName)).getAbsolutePath();
+                selected.put(fileDate, fullFilePath);
             }
         }
         return selected;
