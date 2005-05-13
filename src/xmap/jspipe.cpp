@@ -277,7 +277,7 @@ JSBool JSPipe::sendSms(JSContext *cx, JSObject *obj, uintN argc,
 
  p->sendOpenDialogInd(p->m_dialogid,false,cntx,s_originating_address,s_destination_address);//cdinfo status++ (in RX if confirmed --)
  p->forwardSMS(p->m_dialogid,s_originating_address,s_destination_address,s_message_text,s_mscaddr);
- p->sendDelimiterInd(p->m_dialogid);//cdinfo status++     (in RX if confirmed --)
+ p->sendDelimiterInd(p->m_dialogid,SSN);//cdinfo status++     (in RX if confirmed --)
 
  p->getQall()->map_statemachine_event.Signal();
 
@@ -660,7 +660,7 @@ void JSPipe::forwardSMS(USHORT_T dlgid,std::string str_oa,std::string str_da,std
 }
 
 
-void JSPipe::sendDelimiterInd(USHORT_T dlgid)
+void JSPipe::sendDelimiterInd(USHORT_T dlgid,UCHAR_T subsistem_n)
 {
  __assign_message_(MAP_DELIMIT_IND);
 
@@ -668,7 +668,7 @@ void JSPipe::sendDelimiterInd(USHORT_T dlgid)
  UCHAR_T priorityOrder=0;
 
  messmaker.insertUChar(MAP_DELIMIT_IND);
- messmaker.insertUChar(SSN);
+ messmaker.insertUChar(subsistem_n);
  messmaker.insertUShort(dlgid);
  messmaker.insertUChar(priorityOrder);
 
@@ -780,7 +780,7 @@ JSBool JSPipe::openUssdSession(JSContext *cx, JSObject *obj, uintN argc, jsval *
  /** send <PSSR> tag opening */
  p->sendOpenDialogInd(p->m_dialogid,true,cntx,s_originating_address,s_mscaddr);//cdinfo status++ (in RX if confirmed --)
  p->send_PSSR_or_USSR_UssdRequestInd(USSD_SSN,true,p->m_dialogid,s_originating_address,s_message_text);//SSN
-    p->sendDelimiterInd(p->m_dialogid);
+    p->sendDelimiterInd(p->m_dialogid,USSD_SSN);
  
  //unused
  p->getQall()->map_statemachine_event.Signal();

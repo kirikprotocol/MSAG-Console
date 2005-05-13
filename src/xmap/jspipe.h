@@ -103,7 +103,7 @@ public:
  ET96MAP_SM_RP_UI_T*  mkSubmitPDU(Address destaddr,const char * text,ET96MAP_SM_RP_UI_T* pdu,bool mms);
  void SendCPMessage(MSG_T * msg);
  void forwardSMS(USHORT_T dlgid,std::string str_oa,std::string str_da,std::string str_text,std::string str_msc_addr);
- void sendDelimiterInd(USHORT_T dlgid);
+ void sendDelimiterInd(USHORT_T dlgid,UCHAR_T subsistem_n);
  
  void send_PSSR_or_USSR_UssdRequestInd(UCHAR_T subsistem_number, bool isPSSR,USHORT_T dlgid,std::string str_da,std::string str_text);
 
