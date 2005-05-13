@@ -23,7 +23,7 @@ Main trend is RX message are moved to TX message.*/
    char message[256];
       getPduText(((PduXSm*)pdu),msg,sizeof(msg));
 //////////////////////////////////////////////////////////////////////////
-   printf("recieved '%s'",msg);
+   printf("%s recieved '%s'",__func__,msg);
    smsc_log_info(smelogger,"%s recieved '%s'",__func__,msg);
    fflush(stdout);
    sprintf(message,"USSD response '%s'",msg);
@@ -49,6 +49,7 @@ Main trend is RX message are moved to TX message.*/
        xsms.setIntProperty(Tag::SMPP_SM_LENGTH,len);
        xsms.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_RESP);
     xsms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,mref);
+       xsms.setIntProperty(Tag::SMPP_DATA_CODING,0);
 
     
     PduSubmitSm sm;
@@ -56,7 +57,7 @@ Main trend is RX message are moved to TX message.*/
     fillSmppPduFromSms(&sm,&xsms);
 
        PduSubmitSmResp *resp=tr->submit(sm); 
-
+     
     if(resp)disposePdu((SmppHeader*)resp);
       ussd_evt.Signal();
     }
