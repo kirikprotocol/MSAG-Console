@@ -7,7 +7,6 @@ import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.util.conpool.NSConnectionPool;
 
-import javax.sql.DataSource;
 import java.io.*;
 import java.util.*;
 import java.text.SimpleDateFormat;
@@ -416,7 +415,7 @@ public class SmsStat
     private final static String VALUES_ROUTE_ERR_SQL =
         " (period, routeid, errcode, counter) VALUES (?, ?, ?, ?)";
 
-    private DataSource createDataSource(ExportSettings export) throws SQLException
+    private NSConnectionPool createDataSource(ExportSettings export) throws SQLException
     {
       Properties props = new Properties();
       props.setProperty("jdbc.source", export.getSource());
@@ -473,15 +472,20 @@ public class SmsStat
         stmt.setLong(pos++, err.counter);
     }
 
-    private void rollbackConnection(Connection connection)
+    private void shutdownPool(NSConnectionPool pool)
     {
-        try { if (connection != null) connection.rollback(); }
-        catch(Throwable th) { logger.error("Failed to rollback on connection", th); }
+        try { if (pool != null) pool.shutdown(); }
+        catch(Throwable th) { logger.error("Failed to close data source", th); }
     }
     private void closeConnection(Connection connection)
     {
         try { if (connection != null) connection.close(); }
         catch(Throwable th) { logger.error("Failed to close connection", th); }
+    }
+    private void rollbackConnection(Connection connection)
+    {
+        try { if (connection != null) connection.rollback(); }
+        catch(Throwable th) { logger.error("Failed to rollback on connection", th); }
     }
     private void closeStatement(Statement stmt)
     {
@@ -556,7 +560,7 @@ public class SmsStat
         long fromPeriod = query.isFromDateEnabled() ? calculatePeriod(query.getFromDate()) : -1;
         long tillPeriod = query.isTillDateEnabled() ? calculatePeriod(query.getTillDate()) : -1;
 
-        DataSource ds = null; String errMessage = null;
+        NSConnectionPool pool = null; String errMessage = null;
         Connection connection = null; Statement stmt = null;
         PreparedStatement insertSms = null; PreparedStatement insertErr = null;
         PreparedStatement insertSmeSms = null; PreparedStatement insertSmeErr = null;
@@ -564,7 +568,7 @@ public class SmsStat
         try
         {   // create DS by export & obtain connection from it
             errMessage = "Failed to init & connect to DataSource";
-            ds = createDataSource(export); connection = ds.getConnection();
+            pool = createDataSource(export); connection = pool.getConnection();
             if (connection == null) throw new SQLException("Failed to obtain connection");
 
             // delete old statistics data
@@ -718,6 +722,7 @@ public class SmsStat
             closeStatement(insertSmeSms); closeStatement(insertSmeErr);
             closeStatement(insertRouteSms); closeStatement(insertRouteErr);
             closeConnection(connection);
+            shutdownPool(pool); pool = null;
         }
     }
 
