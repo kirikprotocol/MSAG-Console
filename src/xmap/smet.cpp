@@ -60,6 +60,16 @@ Main trend is RX message are moved to TX message.*/
     if(resp)disposePdu((SmppHeader*)resp);
       ussd_evt.Signal();
     }
+ else
+ {
+   char msg[256];
+   char message[256];
+   getPduText(((PduXSm*)pdu),msg,sizeof(msg));
+   printf("recieved '%s'",msg);
+   smsc_log_info(smelogger,"%s cmd id %d recieved '%s'",__func__,pdu->get_commandId(),msg);
+   fflush(stdout);
+ 
+ }
  
   
   }
