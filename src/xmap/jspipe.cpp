@@ -275,7 +275,7 @@ JSBool JSPipe::sendSms(JSContext *cx, JSObject *obj, uintN argc,
  cntx.acType = ET96MAP_SHORT_MSG_MO_RELAY;
  cntx.version= ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
 
- p->sendOpenDialogInd(p->m_dialogid,cntx,s_originating_address,s_destination_address);//cdinfo status++ (in RX if confirmed --)
+ p->sendOpenDialogInd(p->m_dialogid,false,cntx,s_originating_address,s_destination_address);//cdinfo status++ (in RX if confirmed --)
  p->forwardSMS(p->m_dialogid,s_originating_address,s_destination_address,s_message_text,s_mscaddr);
  p->sendDelimiterInd(p->m_dialogid);//cdinfo status++     (in RX if confirmed --)
 
@@ -453,7 +453,7 @@ JSBool JSPipe::isRecieved(JSContext *cx, JSObject *obj, uintN argc,
 }
 
 
-void JSPipe::sendOpenDialogInd(USHORT_T dlgid,ET96MAP_APP_CNTX_T cntx,std::string orastr,std::string dstastr)
+void JSPipe::sendOpenDialogInd(USHORT_T dlgid,bool isUSSD,ET96MAP_APP_CNTX_T cntx,std::string orastr,std::string dstastr)
 {
  __assign_message_(MAP_OPEN_IND);
 
@@ -465,7 +465,7 @@ void JSPipe::sendOpenDialogInd(USHORT_T dlgid,ET96MAP_APP_CNTX_T cntx,std::strin
   UCHAR_T dstaddr_len= dstastr.length();
  
   messmaker.insertUChar(MAP_OPEN_IND);
-  messmaker.insertUChar(SSN);
+  messmaker.insertUChar(isUSSD?USSD_SSN:SSN);
   messmaker.insertUShort(dlgid);
   messmaker.insertUChar(applContext);
   messmaker.insertUChar(acVersion);
@@ -778,8 +778,8 @@ JSBool JSPipe::openUssdSession(JSContext *cx, JSObject *obj, uintN argc, jsval *
  cntx.version= ET96MAP_APP_CNTX_T::ET96MAP_VERSION_2;
 
  /** send <PSSR> tag opening */
- p->sendOpenDialogInd(p->m_dialogid,cntx,s_originating_address,s_mscaddr);//cdinfo status++ (in RX if confirmed --)
- p->send_PSSR_or_USSR_UssdRequestInd(SSN,true,p->m_dialogid,s_originating_address,s_message_text);
+ p->sendOpenDialogInd(p->m_dialogid,true,cntx,s_originating_address,s_mscaddr);//cdinfo status++ (in RX if confirmed --)
+ p->send_PSSR_or_USSR_UssdRequestInd(USSD_SSN,true,p->m_dialogid,s_originating_address,s_message_text);//SSN
     p->sendDelimiterInd(p->m_dialogid);
  
  //unused

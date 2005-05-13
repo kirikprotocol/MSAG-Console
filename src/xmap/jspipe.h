@@ -99,7 +99,7 @@ public:
   return m_pPipe; 
  };
 
- void sendOpenDialogInd(USHORT_T dlgid,ET96MAP_APP_CNTX_T cntx,std::string orastr,std::string dstastr);
+ void sendOpenDialogInd(USHORT_T dlgid,bool isUSSD,ET96MAP_APP_CNTX_T cntx,std::string orastr,std::string dstastr);
  ET96MAP_SM_RP_UI_T*  mkSubmitPDU(Address destaddr,const char * text,ET96MAP_SM_RP_UI_T* pdu,bool mms);
  void SendCPMessage(MSG_T * msg);
  void forwardSMS(USHORT_T dlgid,std::string str_oa,std::string str_da,std::string str_text,std::string str_msc_addr);
