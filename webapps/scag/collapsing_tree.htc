@@ -1,0 +1,16 @@
+<PUBLIC:ATTACH EVENT="onclick" ONEVENT="collapsing_tree_click_tree_section()" />
+<SCRIPT>
+function collapsing_tree_click_tree_section()
+{
+  var bodyElem = opForm.all[this.id + "_body"];
+
+  if (bodyElem.style.display != 'none') {
+    bodyElem.style.display = 'none';
+    this.className = "closed";
+  } else {
+    bodyElem.style.display = 'block';
+    this.className = "opened";
+  }
+  return false;
+}
+</SCRIPT>

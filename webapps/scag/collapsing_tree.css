@@ -1,0 +1,29 @@
+dl.collapsing_tree
+{
+  margin: 0px;
+}
+dl.collapsing_tree dt
+{
+  background-repeat: no-repeat;
+  padding-left: 18px;
+  height: 17px;
+  cursor: hand;
+  behavior: url(collapsing_tree.htc);
+	border-bottom: 1px solid #161E49;
+	width: 280px;
+}
+dl.collapsing_tree dt.opened
+{
+	background-color: #F8F6EE;
+	background-image: url(/images/list_opened.gif);
+}
+dl.collapsing_tree dt.closed
+{
+	background-color: #F3F0E3;
+	background-image: url(/images/list_closed.gif);
+	border-bottom: 1px solid #C8BE9E;
+}
+dl.collapsing_tree dd
+{
+  margin-left: 56px;
+}

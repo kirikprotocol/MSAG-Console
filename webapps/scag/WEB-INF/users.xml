@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="WINDOWS-1251"?>
+<!DOCTYPE users SYSTEM "file://users.dtd">
+
+<users>
+  <user login="admin" password="password" firstName="default" lastName="default" dept="default">
+    <role name="gw"/>
+    <role name="routing"/>
+    <role name="services"/>
+  </user>
+</users>
