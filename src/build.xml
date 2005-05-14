@@ -17,6 +17,7 @@ Targets:
       admin (depends: logger)
       system (depends: logger, db, snmp if SNMP_MOD_NAME=snmp)
       smppgw (depends: logger, db)
+      scag (depends: logger, db)
       mod (use -DMOD=modulename in ant command line args)
 Required environment: ORACLE_HOME
     </echo>
@@ -61,6 +62,13 @@ Required environment: ORACLE_HOME
       <property name="targets" value="smppgw"/>
     </ant>
   </target>
+
+  <target name="scag" depends="logger, db" >
+      <ant antfile="${SRC_DIR}/conf/make.xml">
+        <property name="targets" value="scag"/>
+    </ant>
+  </target>
+		  
 
   <target name="store" depends="logger" >
     <ant antfile="${SRC_DIR}/conf/make.xml">

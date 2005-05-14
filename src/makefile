@@ -164,19 +164,11 @@ endif
 
 CXXFLAGS := $(CXXFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/rdbms/public -I$(ORACLE_HOME)/network/public
 CFLAGS := $(CFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/rdbms/public -I$(ORACLE_HOME)/network/public
- 
-ifneq ("$(NOMAP)","YES")
-ifeq ("$(MACHTYPE)","sparc-sun-solaris")
-MAP_LIBRARIES := -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -lsystem-mapio
-CXXFLAGS := $(CXXFLAGS) -DUSE_MAP
-endif
-endif
 
 export CXXFLAGS
 export CFLAGS
 export LDFLAGS
 export COMPFLAGS
-export MAP_LIBRARIES
 
 MODULES := $(shell cat modules-list | awk '/^[^\#]./{print $$1}' )
 SMSC_BUILDDIR_LIST = $(foreach x,lib bin obj etc doc,$(SMSC_BUILDDIR)/$(x))
@@ -248,4 +240,3 @@ override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@)
 
 webapp.newbuild:
 	@cd ../webapps/smsc;perl $(SMSC_SRCDIR)/conf/newbuild.pl webapp
-

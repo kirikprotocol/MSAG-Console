@@ -1,1 +1,0 @@
-libsimplebilling.so  samplemodule $(SHARED_OPT) -ldl $(__LIBRARIES) -lrt $(SOCKETLIB) -lnsl -lutil -lsms
