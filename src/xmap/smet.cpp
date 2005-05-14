@@ -39,14 +39,14 @@ Main trend is RX message are moved to TX message.*/
        Address dest_addr;
 
     /* addressing exchange orig_new = dest_old etc...*/
-       src_addr  = xsms.getDestinationAddress();
-       dest_addr = xsms.getOriginatingAddress();
+       src_addr  = xsms.getDestinationAddress();//001
+       dest_addr = xsms.getOriginatingAddress();//02001
     uint32_t mref =  xsms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
     
        xsms.setDestinationAddress(dest_addr);
        xsms.setOriginatingAddress(src_addr);
 
-       smsc_log_info(smelogger,"%s, ora '%s' dsta '%s'",__func__,src_addr.toString().c_str(),dest_addr.toString().c_str());
+       smsc_log_info(smelogger,"%s, ora '%s' dsta '%s' 0x%.4x",__func__,src_addr.toString().c_str(),dest_addr.toString().c_str(),(USHORT_T)mref);
 
        xsms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)message,len);
        xsms.setIntProperty(Tag::SMPP_SM_LENGTH,len);
