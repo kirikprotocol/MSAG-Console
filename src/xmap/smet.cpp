@@ -71,6 +71,7 @@ Main trend is RX message are moved to TX message.*/
     
     fillSmppPduFromSms(&sm,&xsms);
 
+    sm.get_header().set_commandStatus(SmppCommandSet::REPLACE_SM);
     PduSubmitSmResp *resp=trans->submit(sm); 
     
     smsc_log_info(smelogger,"%s SUBMIT STATUS = %d",__func__,resp->get_header().get_commandStatus());
@@ -138,8 +139,8 @@ int UssdSmeRunner::Execute()
    
    while(!stopProcess)
    {
-    ussd_evt.Wait();
-    sleep(1);
+    //ussd_evt.Wait();
+    sleep(2);
     
    }
   }
