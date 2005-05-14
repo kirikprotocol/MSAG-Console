@@ -3,4 +3,4 @@ SMSC_DIR=/home/serge/smsc
 MAKE_ARGS="DEBUG=YES TRACE=YES DISABLE_SMPP_CHECKS=YES"
 CATALINA_HOME=/home/serge/build/distr/tomcat
 CATALINA_BASE=/home/serge/build/distr
-TEMPLATE_PROPS=smppgw.properties
+TEMPLATE_PROPS=scag.properties
