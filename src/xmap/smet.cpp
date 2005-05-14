@@ -56,22 +56,25 @@ Main trend is RX message are moved to TX message.*/
        xsms.setIntProperty(Tag::SMPP_DATA_CODING,0);
 
     
-    PduSubmitSm sm;
+    PduXSm sm;
 
     fillSmppPduFromSms(&sm,&xsms);
+
+    sm.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
 
        //PduSubmitSmResp *resp=trans->submit(sm); 
     
     //smsc_log_info(smelogger,"%s SUBMIT STATUS = %d",__func__,resp->get_header().get_commandStatus());
     //if(resp)disposePdu((SmppHeader*)resp);
  
-    
-  PduDeliverySmResp resp;
+     trans->sendDeliverySmResp(sm);
+
+ /* PduDeliverySmResp resp;
   resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
   resp.set_messageId("");
   resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
   trans->sendDeliverySmResp(resp);
-
+*/
 
     ussd_evt.Signal();
 
