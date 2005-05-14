@@ -1,4 +1,4 @@
-<project name="SMPP gateway" default="help">
+<project name="SCA gateway" default="help">
   <property file="build.properties"/>
   <condition property="INIT_FAILED" value="yes" >
     <not>
@@ -22,7 +22,7 @@
   <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
   <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
   <property name="WEBSRC_DIR" value="${SMSC_DIR}/webapps"/>
-  <property name="WEBINF_DIR" value="${DISTR_DIR}/webapps/smppgw/WEB-INF"/>
+  <property name="WEBINF_DIR" value="${DISTR_DIR}/webapps/scag/WEB-INF"/>
   <property name="SERVICE2HOME_PATH" value="../.."/>
   <property name="DAEMON2HOME_PATH" value=".."/>
 
@@ -40,7 +40,7 @@ Targets:
   </target>
 
   <target name="makegw">
-    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="smppgw"/>
+    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="scag"/>
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="admin"/>
   </target>
 
@@ -68,8 +68,8 @@ Targets:
     <mkdir dir="${DISTR_DIR}/conf"/>
     <mkdir dir="${DISTR_DIR}/lib"/>
     <mkdir dir="${DISTR_DIR}/services"/>
-    <mkdir dir="${DISTR_DIR}/services/smppgw"/>
-    <mkdir dir="${DISTR_DIR}/services/smppgw/bin"/>
+    <mkdir dir="${DISTR_DIR}/services/scag"/>
+    <mkdir dir="${DISTR_DIR}/services/scag/bin"/>
     <mkdir dir="${DISTR_DIR}/daemon"/>
     <mkdir dir="${DISTR_DIR}/daemon/bin"/>
     <mkdir dir="${DISTR_DIR}/webapps"/>
@@ -84,20 +84,20 @@ Targets:
     <mkdir dir="${DISTR_DIR}/temp"/>
     <mkdir dir="${DISTR_DIR}/logs"/>
     <mkdir dir="${DISTR_DIR}/work"/>
-    <mkdir dir="${DISTR_DIR}/services/smppgw/conf"/>
+    <mkdir dir="${DISTR_DIR}/services/scag/conf"/>
     <mkdir dir="${DISTR_DIR}/daemon/conf"/>
 
-    <symlink resource="${SERVICE2HOME_PATH}/lib" link="${DISTR_DIR}/services/smppgw"/>
-    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/smppgw"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/command.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/response.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/AliasRecords.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/SmeRecords.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/command_gw.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/locale_resources.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/routes.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/billing_rules.dtd" link="${DISTR_DIR}/services/smppgw/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/lib" link="${DISTR_DIR}/services/scag"/>
+    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/scag"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/command.dtd" link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/response.dtd" link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/AliasRecords.dtd" link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/SmeRecords.dtd" link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/command_gw.dtd" link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/locale_resources.dtd" link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/routes.dtd" link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/billing_rules.dtd" link="${DISTR_DIR}/services/scag/conf"/>
 
     <symlink resource="${DAEMON2HOME_PATH}/lib" link="${DISTR_DIR}/daemon"/>
     <symlink resource="${DAEMON2HOME_PATH}/logs" link="${DISTR_DIR}/daemon"/>
@@ -105,7 +105,7 @@ Targets:
     <symlink resource="${DAEMON2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/daemon/conf"/>
     <symlink resource="${DAEMON2HOME_PATH}/../conf/response.dtd" link="${DISTR_DIR}/daemon/conf"/>
 
-    <symlink resource="../webapps/smppgw/WEB-INF/classes/log4j.properties" link="${DISTR_DIR}/conf"/>
+    <symlink resource="../webapps/scag/WEB-INF/classes/log4j.properties" link="${DISTR_DIR}/conf"/>
   </target>
 
   <target name="create_update" depends="create_distr_tree_update, makegw, makeweb">
@@ -113,15 +113,15 @@ Targets:
     <copy file="${BUILD_BIN}/db/exceptions/libdb_exc.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/libsimplebilling.so" todir="${DISTR_DIR}/lib"/>
-    <copy file="${BUILD_BIN}/smppgw/smppgw" todir="${DISTR_DIR}/services/smppgw/bin"/>
-    <chmod file="${DISTR_DIR}/services/smppgw/bin/smppgw" perm="755"/>
+    <copy file="${BUILD_BIN}/scag/scag" todir="${DISTR_DIR}/services/scag/bin"/>
+    <chmod file="${DISTR_DIR}/services/scag/bin/scag" perm="755"/>
     <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
     <chmod file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" perm="755"/>
     <chmod perm="755">
       <fileset dir="${DISTR_DIR}/lib" includes="*"/>
     </chmod>
     <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
-      <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd SmeRecords.dtd smppgw/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd smppgwbilling/billing-rules.dtd"/>
+      <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd SmeRecords.dtd scag/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd scagbilling/billing-rules.dtd"/>
     </copy>
   </target>
 
@@ -137,7 +137,7 @@ Targets:
       </fileset>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <copy todir="${DISTR_DIR}/webapps/smppgw/WEB-INF/classes/" file="${TEMPL_DIR}/log4j.properties" flatten="yes" >
+    <copy todir="${DISTR_DIR}/webapps/scag/WEB-INF/classes/" file="${TEMPL_DIR}/log4j.properties" flatten="yes" >
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <copy todir="${DISTR_DIR}" flatten="yes">
@@ -147,7 +147,7 @@ Targets:
     <copy tofile="${DISTR_DIR}/tomcat/tomcat_runner.sh" file="${TEMPL_DIR}/tomcat_runner.sh">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <copy tofile="${DISTR_DIR}/conf/webconfig.xml" file="${TEMPL_DIR}/smppgw/webapp.xml">
+    <copy tofile="${DISTR_DIR}/conf/webconfig.xml" file="${TEMPL_DIR}/scag/webapp.xml">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
 
@@ -155,7 +155,7 @@ Targets:
     <copy tofile="${DISTR_DIR}/daemon/logger.properties" file="${TEMPL_DIR}/logger/daemon.logger">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/smppgw/daemon.xml">
+    <copy tofile="${DISTR_DIR}/daemon/conf/daemon.xml" file="${TEMPL_DIR}/scag/daemon.xml">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <symlink resource="../daemon/conf/daemon.xml" link="${DISTR_DIR}/conf/daemon.xml" overwrite="yes"/>
@@ -168,23 +168,23 @@ Targets:
     </copy>
 
     <!-- gateway configuration-->
-    <copy tofile="${DISTR_DIR}/services/smppgw/logger.properties" file="${TEMPL_DIR}/logger/smppgw.logger">
+    <copy tofile="${DISTR_DIR}/services/scag/logger.properties" file="${TEMPL_DIR}/logger/scag.logger">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <copy tofile="${DISTR_DIR}/services/smppgw/bin/service" file="${TEMPL_DIR}/service/smppgw">
+    <copy tofile="${DISTR_DIR}/services/scag/bin/service" file="${TEMPL_DIR}/service/scag">
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <chmod file="${DISTR_DIR}/services/smppgw/bin/service" perm="755"/>
-    <copy todir="${DISTR_DIR}/services/smppgw/conf" flatten="yes">
-      <fileset dir="${TEMPL_DIR}/smppgw" includes="config.xml routes.xml routes_.xml routes__.xml sme.xml billing_rules.xml"/>
+    <chmod file="${DISTR_DIR}/services/scag/bin/service" perm="755"/>
+    <copy todir="${DISTR_DIR}/services/scag/conf" flatten="yes">
+      <fileset dir="${TEMPL_DIR}/scag" includes="config.xml routes.xml routes_.xml routes__.xml sme.xml billing_rules.xml"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <symlink resource="../services/smppgw/conf/config.xml" link="${DISTR_DIR}/conf/smppgw.xml" overwrite="yes"/>
-    <symlink resource="../services/smppgw/conf/routes.xml" link="${DISTR_DIR}/conf/routes.xml" overwrite="yes"/>
-    <symlink resource="../services/smppgw/conf/routes_.xml" link="${DISTR_DIR}/conf/routes_.xml" overwrite="yes"/>
-    <symlink resource="../services/smppgw/conf/routes__.xml" link="${DISTR_DIR}/conf/routes__.xml" overwrite="yes"/>
-    <symlink resource="../services/smppgw/conf/sme.xml" link="${DISTR_DIR}/conf/sme.xml" overwrite="yes"/>
-    <symlink resource="../services/smppgw/conf/billing_rules.xml" link="${DISTR_DIR}/conf/billing_rules.xml" overwrite="yes"/>
+    <symlink resource="../services/scag/conf/config.xml" link="${DISTR_DIR}/conf/scag.xml" overwrite="yes"/>
+    <symlink resource="../services/scag/conf/routes.xml" link="${DISTR_DIR}/conf/routes.xml" overwrite="yes"/>
+    <symlink resource="../services/scag/conf/routes_.xml" link="${DISTR_DIR}/conf/routes_.xml" overwrite="yes"/>
+    <symlink resource="../services/scag/conf/routes__.xml" link="${DISTR_DIR}/conf/routes__.xml" overwrite="yes"/>
+    <symlink resource="../services/scag/conf/sme.xml" link="${DISTR_DIR}/conf/sme.xml" overwrite="yes"/>
+    <symlink resource="../services/scag/conf/billing_rules.xml" link="${DISTR_DIR}/conf/billing_rules.xml" overwrite="yes"/>
 
     <!-- turn scripts be executable -->
     <chmod perm="755">
@@ -224,15 +224,15 @@ Targets:
   </target>
 
   <target name="tar" description="tar distr directory">
-    <tar destfile="${DISTR_DIR}/smppgw_update_${DSTAMP}_${TSTAMP}.tar.gz" compression="gzip">
+    <tar destfile="${DISTR_DIR}/scag_update_${DSTAMP}_${TSTAMP}.tar.gz" compression="gzip">
       <tarfileset dir="${DISTR_DIR}" mode="775">
         <include name="daemon/bin/smsc_ssdaemon"/>
-        <include name="services/smppgw/bin/smppgw"/>
+        <include name="services/scag/bin/scag"/>
         <include name="tomcat/bin/*.sh"/>
       </tarfileset>
       <tarfileset dir="${DISTR_DIR}" mode="664">
         <exclude name="daemon/bin/smsc_ssdaemon"/>
-        <exclude name="services/smppgw/bin/smppgw"/>
+        <exclude name="services/scag/bin/scag"/>
         <exclude name="tomcat/bin/*.sh"/>
         <include name="**/*"/>
       </tarfileset>
