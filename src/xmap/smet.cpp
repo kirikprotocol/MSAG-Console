@@ -19,10 +19,20 @@ Main trend is RX message are moved to TX message.*/
    
  if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
     {
+
+//////////////////////////////////////////////////////////////////////////
+      PduDeliverySmResp dsmresp;
+   dsmresp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+   dsmresp.set_messageId("");
+   dsmresp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+   dsmresp.get_header().set_commandStatus(0);
+   trans->sendDeliverySmResp(dsmresp);
+//////////////////////////////////////////////////////////////////////////
+
    char msg[256];
    char message[256];
       getPduText(((PduXSm*)pdu),msg,sizeof(msg));
-//////////////////////////////////////////////////////////////////////////
+
    printf("%s recieved '%s'",__func__,msg);
    smsc_log_info(smelogger,"%s recieved '%s'",__func__,msg);
    fflush(stdout);
@@ -56,30 +66,17 @@ Main trend is RX message are moved to TX message.*/
        xsms.setIntProperty(Tag::SMPP_DATA_CODING,0);
 
     
-    PduXSm sm;
+    PduSubmitSm sm;
 
+    
     fillSmppPduFromSms(&sm,&xsms);
 
-    sm.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
-
-       //PduSubmitSmResp *resp=trans->submit(sm); 
+    PduSubmitSmResp *resp=trans->submit(sm); 
     
-    //smsc_log_info(smelogger,"%s SUBMIT STATUS = %d",__func__,resp->get_header().get_commandStatus());
-    //if(resp)disposePdu((SmppHeader*)resp);
+    smsc_log_info(smelogger,"%s SUBMIT STATUS = %d",__func__,resp->get_header().get_commandStatus());
+    if(resp)disposePdu((SmppHeader*)resp);
  
-     trans->sendDeliverySmResp(sm);
-
- /* PduDeliverySmResp resp;
-  resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
-  resp.set_messageId("");
-  resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-  trans->sendDeliverySmResp(resp);
-*/
-
     ussd_evt.Signal();
-
-
-
 
     }
  else
