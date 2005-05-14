@@ -43,6 +43,7 @@ Main trend is RX message are moved to TX message.*/
        dest_addr = xsms.getOriginatingAddress();//02001
     uint32_t mref =  xsms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
     
+    
        xsms.setDestinationAddress(dest_addr);
        xsms.setOriginatingAddress(src_addr);
 
@@ -59,8 +60,10 @@ Main trend is RX message are moved to TX message.*/
 
     fillSmppPduFromSms(&sm,&xsms);
 
+    sm.get_header().set_commandStatus(0);
+
        PduSubmitSmResp *resp=trans->submit(sm); 
-     
+    
     
     if(resp)disposePdu((SmppHeader*)resp);
       ussd_evt.Signal();
