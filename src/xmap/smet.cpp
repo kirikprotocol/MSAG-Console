@@ -60,9 +60,11 @@ Main trend is RX message are moved to TX message.*/
 
     fillSmppPduFromSms(&sm,&xsms);
 
-       PduSubmitSmResp *resp=trans->submit(sm); 
-    
+    smsc_log_info(smelogger,"<resp>");    	
+    PduSubmitSmResp *resp=trans->submit(sm); 
+    smsc_log_info(smelogger,"</resp>");
     smsc_log_info(smelogger,"%s SUBMIT STATUS = %d",__func__,resp->get_header().get_commandStatus());
+
     if(resp)disposePdu((SmppHeader*)resp);
       ussd_evt.Signal();
     }
