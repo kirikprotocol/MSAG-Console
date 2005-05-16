@@ -9,9 +9,9 @@
 #include "scag/admin/SCAGSocketListener.h"
 
 namespace smsc {
-namespace smppgw {
+namespace scag {
 
-using namespace smsc::smppgw::admin;
+using namespace smsc::scag::admin;
 
 class Smsc;
 

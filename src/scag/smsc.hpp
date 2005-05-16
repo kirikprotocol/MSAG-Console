@@ -379,7 +379,7 @@ protected:
   std::string smscHost;
   int smscPort;
 
-  smsc::svag::performance::PerformanceDataDispatcher perfDataDisp;
+  smsc::scag::performance::PerformanceDataDispatcher perfDataDisp;
   smsc::db::DataSource *dataSource;
 
   SmeProxy* abonentInfoProxy;
