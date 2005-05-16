@@ -1,17 +1,17 @@
 logger
+db
+system
 snmp    "SNMP agent implementation"
 smpp  "SMPP protocol implementation"
 core  "SMSC core implementation"
 util  "Utility classes"
 sms   "SMS declaration"
 store   "Store implementation"
-db
 dbsme
 #storetest  "Service program to test store module"
 admin   "Administration subsystem"
 smeman
 router
-system
 alias
 profiler
 #test
