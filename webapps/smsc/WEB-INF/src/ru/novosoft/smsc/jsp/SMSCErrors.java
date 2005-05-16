@@ -276,6 +276,11 @@ public class SMSCErrors
       private static final String B = error.B + "smsstat.";
       public static final String QueryFailed = B + "QueryFailed";
     }
+     public static class smsexport
+    {
+      private static final String B = error.B + "smsexport.";
+      public static final String ExportFailed = B + "ExportFailed";
+    }
   }
 
 

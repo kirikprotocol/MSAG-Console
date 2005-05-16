@@ -24,7 +24,6 @@ public class SmsExportBean extends IndexBean
   public final static String ERR_CODES_PREFIX = "smsc.errcode.";
   public final static String ERR_CODE_UNKNOWN = ERR_CODES_PREFIX + UNKNOWN_STR;
 
-  private SmsView view = new SmsView();
   private SmsExport operative = null;
   private ExportSettings exportSettings = null;
   private ExportSettings defaultExportSettings = null;
@@ -96,11 +95,7 @@ public class SmsExportBean extends IndexBean
     }
     if (mbExport != null)
       result = processQuery();
-    // else if (mbClear != null) result = clearQuery();
-    // else result = processResortAndNavigate(false);
-
-    // mbClear = null;
-
+ 
     return result;
   }
 
