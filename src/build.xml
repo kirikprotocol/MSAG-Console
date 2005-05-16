@@ -63,7 +63,7 @@ Required environment: ORACLE_HOME
     </ant>
   </target>
   
-  <target name="scagw" depends="logger, db" >
+  <target name="scag" depends="logger, db" >
     <ant antfile="${SRC_DIR}/conf/make.xml">
       <property name="targets" value="scag"/>
     </ant>
