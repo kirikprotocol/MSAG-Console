@@ -59,7 +59,15 @@ public class SmsExportBean extends IndexBean
   {
     int result = super.init(errors);
     if (result != RESULT_OK) return result;
-     Config webConfig = appContext.getConfig(); // webappConfig
+
+    return RESULT_OK;
+  }
+
+  public int process(HttpServletRequest request)
+  {
+    int result = super.process(request);
+    if (result != RESULT_OK) return result;
+      Config webConfig = appContext.getConfig(); // webappConfig
      try {
          final String section = "opersave_datasource";
          final String source = webConfig.getString(section + ".source");
@@ -71,16 +79,9 @@ public class SmsExportBean extends IndexBean
      } catch (Exception e) {
          return error("Failed to configure default export settings. Details: " + e.getMessage());
      }
-    return RESULT_OK;
-  }
-
-  public int process(HttpServletRequest request)
-  {
-    int result = super.process(request);
-    if (result != RESULT_OK) return result;
-
+     Config smscConfig=appContext.getSmsc().getSmscConfig();
     try {
-      if (operative == null) operative = SmsExport.getInstance(appContext);
+      if (operative == null) operative = SmsExport.getInstance(webConfig,smscConfig);
     } catch (AdminException e) {
       e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
       return error(SMSCErrors.error.smsexport.ExportFailed, e.getMessage());
@@ -95,7 +96,7 @@ public class SmsExportBean extends IndexBean
     }
     if (mbExport != null)
       result = processQuery();
- 
+
     return result;
   }
 

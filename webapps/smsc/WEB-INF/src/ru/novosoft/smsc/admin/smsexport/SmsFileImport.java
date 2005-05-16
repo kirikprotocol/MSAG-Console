@@ -36,8 +36,8 @@ public class SmsFileImport  extends Message
   public SmsRow getSms()
   {
     return sms;
-  } */
-
+  }
+*/
   public SqlSms getSqlSms()
    {
      return sqlsms;
@@ -185,7 +185,7 @@ public class SmsFileImport  extends Message
       String dstSmeId = Message.readString8(is);
 
       // parse rest and fill SmsRow
- /*     sms = new SmsRow();
+  /*    sms = new SmsRow();
 
       sms.setId(msgId);
      // sms.setSeq(seq);
@@ -209,7 +209,7 @@ public class SmsFileImport  extends Message
       sms.setServiceId(serviceId);
       sms.setPriority(priority);
       sms.setSrcSmeId(srcSmeId);
-      sms.setDstSmeId(dstSmeId);    */
+      sms.setDstSmeId(dstSmeId);   */
       short concatMsgRef=(short)Message.readUInt16(is);
      // sms.setConcatMsgRef(concatMsgRef);
       short concatSeqNum=(short)Message.readUInt8(is);

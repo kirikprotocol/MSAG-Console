@@ -8,6 +8,8 @@ import ru.novosoft.smsc.admin.smsview.*;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.Functions;
+import ru.novosoft.smsc.util.WebAppFolders;
+import ru.novosoft.util.conpool.NSConnectionPool;
 
 import java.io.*;
 import java.util.*;
@@ -23,6 +25,8 @@ import oracle.jdbc.driver.OracleCallableStatement;
 import oracle.jdbc.OracleConnection;
 import oracle.sql.*;
 
+import javax.sql.DataSource;
+
 
 /**
  * Created by IntelliJ IDEA.
@@ -35,7 +39,7 @@ public class SmsExport extends SmsSource //implements ORAData
 {
   private final static String INSERT_OP_SQL = "INSERT INTO ";
   private final static String UPDATE_OP_SQL = "UPDATE ";
-  private final static String DELETE_OP_SQL = "DELETE FROM ";
+  private final static String DELETE_OP_SQL = "TRUNCATE TABLE ";
   private final static String WHERE_SMS_ID_SQL = " WHERE ID=?";
   private final static String CALL_multinsert_sms_SQL = "{ call multinsert_sms(?,?) }"; //1-integer , 2-msgs in arraylist
   private final static String CREATE_PROC_INSERT_RECORD=" create or replace procedure insert_rec( msg in sms ) is begin ";
@@ -58,6 +62,7 @@ private final static String INSERT_VALUES =
   private String smsstorePath;
   private static final String SECTION_NAME_LocalStore = "MessageStore.LocalStore";
   private static final String PARAM_NAME_filename = "filename";
+  private static final String PARAM_NAME_SMSSTORE = "MessageStore.LocalStore.filename";
   private Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
 
   private ExportSettings defaultExportSettings = null;
@@ -65,17 +70,24 @@ private final static String INSERT_VALUES =
   private static Object instanceLock = new Object();
   private static SmsExport instance = null;
 
-  public static SmsExport getInstance(SMSCAppContext appContext) throws AdminException
+  public static SmsExport getInstance(Config webConfig ,Config smscConfig) throws AdminException
   {
     synchronized (instanceLock) {
-      if (instance == null) instance = new SmsExport(appContext);
+      if (instance == null) instance = new SmsExport( webConfig , smscConfig);
       return instance;
     }
   }
 
-  protected SmsExport(SMSCAppContext appContext) throws AdminException
+  protected SmsExport(Config webConfig ,Config smscConfig) throws AdminException
   {
-    Config webConfig = appContext.getConfig(); // webappConfig
+    //Config webConfig = appContext.getConfig(); // webappConfig
+     try {
+            smsstorePath = smscConfig.getString(PARAM_NAME_SMSSTORE);
+            if (smsstorePath == null || smsstorePath.length() <= 0)
+                throw new AdminException("store path is empty");
+        } catch (Exception e) {
+            throw new AdminException("Failed to obtain MessageStore.LocalStore.filename Details: " + e.getMessage());
+        }
     try {
       final String section = "opersave_datasource";
       final String source = webConfig.getString(section + ".source");
@@ -87,9 +99,18 @@ private final static String INSERT_VALUES =
     } catch (Exception e) {
       throw new AdminException("Failed to configure default export settings. Details: " + e.getMessage());
     }
-
-    Smsc smsc = appContext.getSmsc();
-    String configPath = smsc.getConfigFolder().getAbsolutePath();
+     File statPath = new File(smsstorePath);
+        if (statPath == null || !statPath.isAbsolute()) {
+            File smscConfFile = WebAppFolders.getSmscConfFolder();
+            String absolutePath = smscConfFile.getParent();
+            statPath = new File(absolutePath, smsstorePath);
+            logger.debug("Sms store path: by smsc conf '"+statPath.getAbsolutePath()+"'");
+        } else {
+            logger.debug("Sms store path: is absolute '"+statPath.getAbsolutePath()+"'");
+        }
+    smsstorePath = statPath.getAbsolutePath();
+   // Smsc smsc = appContext.getSmsc();
+  /*  String configPath = smsc.getConfigFolder().getAbsolutePath();
     String dirPrefics = "/"; //Solaris
     int len = configPath.lastIndexOf(dirPrefics) + 1; //Solaris
     if (len < 1) {
@@ -97,10 +118,10 @@ private final static String INSERT_VALUES =
       len = configPath.lastIndexOf(dirPrefics) + 1;//Windows
     }
     String absolutePath = configPath.substring(0, len);
-    Config config = smsc.getSmscConfig();
+    //Config smscConfig = smsc.getSmscConfig();
 
     try {
-      smsstorePath = config.getString(SECTION_NAME_LocalStore + '.' + PARAM_NAME_filename);
+      smsstorePath = smscConfig.getString(SECTION_NAME_LocalStore + '.' + PARAM_NAME_filename);
     } catch (Config.ParamNotFoundException e) {
       e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
     } catch (Config.WrongParamTypeException e) {
@@ -108,6 +129,7 @@ private final static String INSERT_VALUES =
     }
     if (smsstorePath.indexOf(dirPrefics) != 0)
       smsstorePath = absolutePath + smsstorePath;
+  */
     FileInputStream input = null;
     try {
       input = new FileInputStream(smsstorePath);
@@ -139,7 +161,7 @@ private final static String INSERT_VALUES =
       _export(defaultExportSettings);
     }
   }
-/*
+
   private DataSource createDataSource(ExportSettings export) throws SQLException
   {
     Properties props = new Properties();
@@ -148,7 +170,7 @@ private final static String INSERT_VALUES =
     props.setProperty("jdbc.user", export.getUser());
     props.setProperty("jdbc.pass", export.getPassword());
     return new NSConnectionPool(props);
-  }  */
+  }
     private oracle.jdbc.OracleConnection getOracleConnection(ExportSettings export) throws SQLException
   {
     OracleConnection con = null;
@@ -231,8 +253,7 @@ private final static String INSERT_VALUES =
     InputStream input = null;
 
     HashMap msgsFull = new HashMap(5000);
-    System.out.println("start reading File in: " + new Date());
-    long tm = System.currentTimeMillis();
+     long tm=0;
    // DataSource ds = null;
     Connection conn = null;
     PreparedStatement clearStmt = null;
@@ -240,15 +261,11 @@ private final static String INSERT_VALUES =
     OracleCallableStatement callinsertStmt = null;
     try {
       input = new FileInputStream(smsstorePath);
-     // ds = createDataSource(export);
-     // conn =ds.getConnection();
-      conn = getOracleConnection(export);
-
-      clearStmt = conn.prepareStatement(CLEAR_SQL);
+     System.out.println("start reading File in: " + new Date());
+     tm = System.currentTimeMillis();
       String FileName = Message.readString(input, 9);
       int version = (int) Message.readUInt32(input);
       try {
-        clearTable(conn, clearStmt);
         SmsFileImport resp = new SmsFileImport();
         byte message[] = new byte[256 * 1024];   int j=0;
         while (true) {
@@ -274,6 +291,16 @@ private final static String INSERT_VALUES =
       } catch (EOFException e) {
       }
       System.out.println("end reading File in: " + new Date() + " spent: " + (System.currentTimeMillis() - tm) / 1000);
+      System.out.println("start clearing old data from Table in: " + new Date());
+ //   long tmTable = System.currentTimeMillis();
+//      ds = createDataSource(export);
+//      conn =ds.getConnection();
+      tm = System.currentTimeMillis();
+      conn = getOracleConnection(export);
+
+      clearStmt = conn.prepareStatement(CLEAR_SQL);
+      clearTable(conn, clearStmt);
+      System.out.println("end clearing old data from Table in: " + new Date() + " spent: " + (System.currentTimeMillis() - tm) / 1000);
       tm = System.currentTimeMillis();
       int cnt = 0;   int ArraySize=25000;
       SqlSms msgs[]= new SqlSms[ArraySize] ;
