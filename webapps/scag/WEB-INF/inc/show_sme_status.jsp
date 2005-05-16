@@ -1,4 +1,4 @@
-<%@ page import="ru.sibinco.lib.backend.sme.SmeStatus,ru.sibinco.smppgw.backend.SmppGWAppContext,
+<%@ page import="ru.sibinco.lib.backend.sme.SmeStatus,ru.sibinco.scag.backend.SmppGWAppContext,
                  ru.sibinco.lib.backend.sme.Sme,
                  ru.sibinco.lib.backend.util.StringEncoderDecoder"%><%!
 String showSmeStatus(SmeStatus status)
