@@ -461,4 +461,9 @@ private final static String INSERT_VALUES =
     return smsstorePath;
   }
 
+  public ExportSettings getDefaultExportSettings()
+  {
+    return defaultExportSettings;
+  }
+
 }

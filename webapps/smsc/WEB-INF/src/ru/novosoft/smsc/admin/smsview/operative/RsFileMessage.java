@@ -192,7 +192,7 @@ public class RsFileMessage  extends Message
       sms.setPriority((int) readUInt32(bis));
       sms.setSrcSmeId(readString8(bis));
       sms.setDstSmeId(readString8(bis));
-      int concatMsgRef=readUInt16(bis);
+      short concatMsgRef=(short)readUInt16(bis);
       short concatSeqNum=(short)Message.readUInt8(bis);
       int bodyLen = (int) readUInt32(bis);
       if (bodyLen > 0) {

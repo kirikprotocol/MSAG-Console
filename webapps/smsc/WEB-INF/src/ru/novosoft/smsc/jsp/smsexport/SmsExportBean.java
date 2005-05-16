@@ -24,6 +24,11 @@ public class SmsExportBean extends IndexBean
   public final static String ERR_CODES_PREFIX = "smsc.errcode.";
   public final static String ERR_CODE_UNKNOWN = ERR_CODES_PREFIX + UNKNOWN_STR;
 
+  public final static int DEFAULT_DESTINATION = 0;
+  public final static int USER_DESTINATION = 1;
+  private int destination = DEFAULT_DESTINATION;
+
+
   private SmsExport operative = null;
   private ExportSettings exportSettings = null;
   private ExportSettings defaultExportSettings = null;
@@ -33,7 +38,6 @@ public class SmsExportBean extends IndexBean
   private String password = null;
   private String tablesPrefix = null;
 
-  //private String mbClear = null;
   private String mbExport = null;
 
 
@@ -67,28 +71,19 @@ public class SmsExportBean extends IndexBean
   {
     int result = super.process(request);
     if (result != RESULT_OK) return result;
+
+    if (!request.isUserInRole("smsView") && !request.isUserInRole("smsView_operative"))
+      return error(SMSCErrors.error.smsview.AccessDeniedToOperative);
+
       Config webConfig = appContext.getConfig(); // webappConfig
-     try {
-         final String section = "opersave_datasource";
-         final String source = webConfig.getString(section + ".source");
-         final String driver = webConfig.getString(section + ".driver");
-         final String user   = webConfig.getString(section + ".user");
-         final String pass   = webConfig.getString(section + ".pass");
-         final String prefix = webConfig.getString(section + ".tables_prefix");
-         defaultExportSettings = new ExportSettings(source, driver, user, pass, prefix);
-     } catch (Exception e) {
-         return error("Failed to configure default export settings. Details: " + e.getMessage());
-     }
-     Config smscConfig=appContext.getSmsc().getSmscConfig();
+      Config smscConfig=appContext.getSmsc().getSmscConfig();
     try {
       if (operative == null) operative = SmsExport.getInstance(webConfig,smscConfig);
     } catch (AdminException e) {
       e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
       return error(SMSCErrors.error.smsexport.ExportFailed, e.getMessage());
     }
-
-    if (!request.isUserInRole("smsView") && !request.isUserInRole("smsView_operative"))
-      return error(SMSCErrors.error.smsview.AccessDeniedToOperative);
+    defaultExportSettings=operative.getDefaultExportSettings();
 
     if (source!=null &&  driver!=null && user!=null && password!=null && tablesPrefix!=null)
     {
@@ -151,4 +146,69 @@ public class SmsExportBean extends IndexBean
   {
     return defaultExportSettings;
   }
+
+  public int getDestination()
+  {
+    return destination;
+  }
+/*  public String getSource() {
+        if (destination == DEFAULT_DESTINATION && defaultExportSettings != null && !defaultExportSettings.isEmpty())
+            return defaultExportSettings.getSource();
+        return (exportSettings.getSource() == null) ? "":exportSettings.getSource();
+    }
+    public String getDefaultSource() {
+        return (defaultExportSettings == null || defaultExportSettings.getSource() == null) ? "":defaultExportSettings.getSource();
+    }
+    public void setSource(String source) {
+        exportSettings.setSource(source);
+    }
+
+    public String getDriver() {
+        if (destination == DEFAULT_DESTINATION && defaultExportSettings != null && !defaultExportSettings.isEmpty())
+            return defaultExportSettings.getDriver();
+        return (exportSettings.getDriver() == null) ? "":exportSettings.getDriver();
+    }
+    public String getDefaultDriver() {
+        return (defaultExportSettings == null || defaultExportSettings.getDriver() == null) ? "":defaultExportSettings.getDriver();
+    }
+    public void setDriver(String driver) {
+        exportSettings.setDriver(driver);
+    }
+
+    public String getUser() {
+        if (destination == DEFAULT_DESTINATION && defaultExportSettings != null && !defaultExportSettings.isEmpty())
+            return defaultExportSettings.getUser();
+        return (exportSettings.getUser() == null) ? "":exportSettings.getUser();
+    }
+    public String getDefaultUser() {
+        return (defaultExportSettings == null || defaultExportSettings.getUser() == null) ? "":defaultExportSettings.getUser();
+    }
+    public void setUser(String user) {
+        exportSettings.setUser(user);
+    }
+
+    public String getPassword() {
+        if (destination == DEFAULT_DESTINATION && defaultExportSettings != null && !defaultExportSettings.isEmpty())
+            return defaultExportSettings.getPassword();
+        return (exportSettings.getPassword() == null) ? "":exportSettings.getPassword();
+    }
+    public String getDefaultPassword() {
+        return (defaultExportSettings == null || defaultExportSettings.getPassword() == null) ? "":defaultExportSettings.getPassword();
+    }
+    public void setPassword(String password) {
+        exportSettings.setPassword(password);
+    }
+
+    public String getTablesPrefix() {
+        if (destination == DEFAULT_DESTINATION && defaultExportSettings != null && !defaultExportSettings.isEmpty())
+            return defaultExportSettings.getTablesPrefix();
+        return (exportSettings.getTablesPrefix() == null) ? "":exportSettings.getTablesPrefix();
+    }
+    public String getDefaultTablesPrefix() {
+        return (defaultExportSettings == null || defaultExportSettings.getTablesPrefix() == null) ? "":defaultExportSettings.getTablesPrefix();
+    }
+    public void setTablesPrefix(String tablesPrefix) {
+        exportSettings.setTablesPrefix(tablesPrefix);
+    }
+  */
 }
