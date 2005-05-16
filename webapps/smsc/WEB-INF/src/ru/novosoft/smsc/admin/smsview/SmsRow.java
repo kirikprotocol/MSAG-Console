@@ -52,7 +52,7 @@ public class SmsRow
   private short concatMsgRef;
   private short concatSeqNum;
   private long pointer=0;
-
+  private int bodyLen;
   private Mask originatingAddressMask;
   private Mask destinationAddressMask;
   private Mask dealiasedDestinationAddressMask;
@@ -468,5 +468,15 @@ public class SmsRow
 
   public void setBody(byte[] body) {
     this.body = body;
+  }
+
+  public int getBodyLen()
+  {
+    return bodyLen;
+  }
+
+  public void setBodyLen(int bodyLen)
+  {
+    this.bodyLen = bodyLen;
   }
 }

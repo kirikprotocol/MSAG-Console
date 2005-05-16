@@ -233,7 +233,7 @@ public class NSConnectionPool implements DataSource, ConnectionEventListener
    * Remove connection from connections list.
    * Should be called from synchronized block.
    *
-   * @param con pooled connection to remove
+   * @param pcon pooled connection to remove
    */
   protected void removeConnection(NSPooledConnection pcon)
   {
