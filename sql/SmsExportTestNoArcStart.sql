@@ -70,7 +70,7 @@ CREATE OR REPLACE TYPE sms AS OBJECT
 );
 /
 
-CREATE OR REPLACE TYPE arraylist AS ARRAY(1000) OF sms;
+CREATE OR REPLACE TYPE arraylist AS ARRAY(25000) OF sms;
 /
 
 -- создаётся из Java с текущим именем таблицы + создать один раз вначале для определения процедуры insert_rec();
@@ -91,14 +91,14 @@ end;
 /
 
 --создаётся один раз
-create or replace procedure multinsert_sms(maxRow  integer,msg  sms ) is
+create or replace procedure multinsert_sms(maxRow  integer,msgs  arraylist ) is
         i number(6);
 	msg sms;
 begin
-
-	while i <= maxRow loop
+        i:=1;
+        while i <= maxRow loop
                 msg:=msgs(i);
-		insert_rec(msg);
+               	insert_rec(msg);
 		i := i + 1;
 	end loop;
 	commit;
