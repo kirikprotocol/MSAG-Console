@@ -1188,6 +1188,12 @@ StateType StateMachine::submit(Tuple& t)
     return ERROR_STATE;
   }
 
+  debug2(smsLog,"SBM: route %s->%s found:%s",
+      sms->getOriginatingAddress().toString().c_str(),
+      sms->getDestinationAddress().toString().c_str(),
+      ri.routeId.c_str());
+
+
   sms->setIntProperty(Tag::SMSC_PROVIDERID,ri.providerId);
   sms->setIntProperty(Tag::SMSC_CATEGORYID,ri.categoryId);
 
@@ -1797,6 +1803,8 @@ StateType StateMachine::submit(Tuple& t)
       {
         // allow override
         sms->setIntProperty( Tag::SMPP_ESM_CLASS, esmcls|(ri.deliveryMode&0x03) );
+        isDatagram=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==1;
+        isTransaction=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2;
       }
     }
 
