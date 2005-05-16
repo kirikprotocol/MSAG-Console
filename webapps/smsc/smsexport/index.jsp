@@ -41,19 +41,19 @@
 {%>
 <div class=page_subtitle>Database Settings</div>
 <table class=properties_list cell>
-<tr class=row1>
+<tr class=row0>
   <th>Data Source:</th>
- < <td><input class=txt type="text" id="source" name="source" value="<%=defExpSett.getSource()%>" size=25 maxlength=25 onkeyup="hideAddresses()"></td>
+  <td><input class=txt type="text" id="source" name="source" value="<%=defExpSett.getSource()%>" size=25 maxlength=25 onkeyup="hideAddresses()"></td>
   <th>Driver:</th>
   <td><input class=txt type="text" id="driver" name="driver" value="<%=defExpSett.getDriver()%>" size=17 maxlength=15 onkeyup="hideSmeIds()"></td>
 </tr>
-<tr class=row0>
+<tr class=row1>
   <th>User:</th>
   <td><input class=txt type="text" id="user" name="user"  value="<%=defExpSett.getUser()%>" size=25 maxlength=25></td>
   <th>Password:</th>
   <td><input class=txt type="text" id="password" name="password"  value="<%=defExpSett.getPassword()%>" size=17 maxlength=15></td>
 </tr>
-<tr class=row1>
+<tr class=row0>
   <th>Table Name:</th>
   <td><input class=txt type="text" id="tablesPrefix" name="tablesPrefix" value="<%=defExpSett.getTablesPrefix()%>" size=25 maxlength=25></td>
   <th>&nbsp</th>
