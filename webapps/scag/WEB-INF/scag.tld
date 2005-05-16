@@ -28,7 +28,7 @@
   <function>
     <description>Show sme status</description>
     <name>smeStatus</name>
-    <function-class>ru.sibinco.scag.backend.sme.SmeStatusFunctions</function-class>
+    <function-class>ru.sibinco.smppgw.backend.sme.SmeStatusFunctions</function-class>
     <function-signature>java.lang.String smeStatus(ru.sibinco.lib.backend.sme.SmeStatus,java.lang.String)</function-signature>
     </function>
   <function>

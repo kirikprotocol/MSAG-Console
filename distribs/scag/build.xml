@@ -126,7 +126,7 @@ Targets:
   </target>
 
   <target name="update" depends="create_update">
-    <ant antfile="${WEBSRC_DIR}/build.xml" dir="${WEBSRC_DIR}" target="update"/>
+    <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="update"/>
   </target>
 
   <target name="configure" depends="create_distr_tree" >
@@ -210,7 +210,7 @@ Targets:
   </target>
 
   <target name="distr" depends="create_distr, extra_libs, configure">
-    <ant antfile="${WEBSRC_DIR}/build.xml" dir="${WEBSRC_DIR}" target="install"/>
+    <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="install"/>
   </target>
 
   <target name="notomcat" description="removes tomcat distrib from update. Use before tar">
