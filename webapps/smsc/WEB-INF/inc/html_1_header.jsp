@@ -83,6 +83,7 @@
                 main_menu_submenu_i_fu(out, "/smsstat/export.jsp", "MENU0_SMSSTAT",   "Stat Export");
                 main_menu_submenu_i_fu(out, "/smsview/daemon.jsp", "MENU0_SMSDAEMON", "SMS Daemon");
                 main_menu_submenu_i_fu(out, "/smsview/index.jsp" , "MENU0_SMSVIEW",   "SMS View");
+                main_menu_submenu_i_fu(out, "/smsview/export.jsp" , "MENU0_SMSEXPORT",   "SMS Export");  
                 main_menu_end_item(out);
 
                 main_menu_begin_item(out, "MENU0_Routing_menu", "MENU0_Routing_submenu", "Routing");

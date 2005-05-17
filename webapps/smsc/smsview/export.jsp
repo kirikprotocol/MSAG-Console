@@ -40,6 +40,15 @@ int rowN=0;
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <div class=content><%
 {%>
+<script>
+function default(){
+  document.opForm.inp.value="defaultval";
+}
+function disable(){
+  document.opForm.inp.disabled=true;
+}
+
+</script>
 <div class=page_subtitle>Database Settings</div>
 <table class=properties_list cell>
 <tr class=row<%= (rowN++)%2%>>
