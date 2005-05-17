@@ -43,16 +43,41 @@
 </table>
 <br/>
 <div class=page_subtitle>Export destination</div>
+<script>
+function defaultSetting(){
+  document.all.source.value="<%=bean.getSource()%>";
+  document.all.driver.value="<%=bean.getDriver()%>";
+  document.all.user.value="<%=bean.getUser()%>";
+  document.all.password.value="<%=bean.getPassword()%>";
+  document.all.tablesPrefix.value="<%=bean.getTablesPrefix()%>";
+
+  document.all.source.disabled=true;
+  document.all.driver.disabled=true;
+  document.all.user.disabled=true;
+  document.all.password.disabled=true;
+  document.all.tablesPrefix.disabled=true;
+
+}
+
+function userDefined(){
+  document.all.source.disabled=false;
+  document.all.driver.disabled=false;
+  document.all.user.disabled=false;
+  document.all.password.disabled=false;
+  document.all.tablesPrefix.disabled=false;
+}
+
+</script>
 <table class=properties_list cellspacing=0>
 <tr class=row<%= (rowN++)%2%>>
   <!-- TODO: add script feature to disable/restore edit fields when switching to DEFAULT destination -->
   <td nowrap><input
       class=radio type="radio" name="destination" id=destinationDefault value="<%= StatExportBean.DEFAULT_DESTINATION%>"
-      <%= (bean.getDestination() == StatExportBean.DEFAULT_DESTINATION) ? "checked":""%>>
+      <%= (bean.getDestination() == StatExportBean.DEFAULT_DESTINATION) ? "checked":""%> onclick="javascript:defaultSetting()">
       <label for=destinationDefault>Default destination</label></td>
   <td nowrap><input
       class=radio type="radio" name="destination" id=destinationUser value="<%= StatExportBean.USER_DESTINATION%>"
-      <%= (bean.getDestination() == StatExportBean.USER_DESTINATION) ? "checked":""%>>
+      <%= (bean.getDestination() == StatExportBean.USER_DESTINATION) ? "checked":""%>  onclick="javascript:userDefined()">
       <label for=destinationUser>User defined</label>
   </td>
 </tr>
