@@ -46,7 +46,7 @@ MENU0_SELECTION = "MENU0_CATEGORIES";
 <%
    page_menu_begin(out);
    page_menu_button(out, "mbAdd",  "Add category",  "Add new category");
-   page_menu_button(out, "mbDelete", "Delete category(ies)", "Delete selected category(ies)");
+  // page_menu_button(out, "mbDelete", "Delete category(ies)", "Delete selected category(ies)");
    page_menu_space(out);
    page_menu_end(out);
  %><div class=content>
@@ -165,7 +165,7 @@ if (have) {
  <%
    page_menu_begin(out);
    page_menu_button(out, "mbAdd",  "Add category",  "Add new category");
-   page_menu_button(out, "mbDelete", "Delete category(ies)", "Delete selected category(ies)");
+  // page_menu_button(out, "mbDelete", "Delete category(ies)", "Delete selected category(ies)");
    page_menu_space(out);
    page_menu_end(out);
  %>
