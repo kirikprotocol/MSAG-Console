@@ -32,6 +32,7 @@ public class TopMenu extends ArrayList {
             statisticItems.add(new MenuItem("top_menu.stat.smsstat.export", "/smsc/smsstat/export.jsp"));
             statisticItems.add(new MenuItem("top_menu.stat.smsview.daemon", "/smsc/smsview/daemon.jsp"));
             statisticItems.add(new MenuItem("top_menu.stat.smsview", "/smsc/smsview/index.jsp"));
+            statisticItems.add(new MenuItem("top_menu.stat.export", "/smsc/smsview/export.jsp"));
             add(new MenuItem("top_menu.statistic", "", statisticItems));
 
             Collection routingItems = new ArrayList();
