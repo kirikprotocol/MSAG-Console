@@ -1,8 +1,8 @@
-package ru.sibinco.smppgw.backend.protocol.commands;
+package ru.sibinco.scag.backend.protocol.commands;
 
 import ru.sibinco.lib.backend.protocol.Command;
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.smppgw.backend.sme.SmscInfo;
+import ru.sibinco.scag.backend.sme.SmscInfo;
 
 /**
  * Created by IntelliJ IDEA.

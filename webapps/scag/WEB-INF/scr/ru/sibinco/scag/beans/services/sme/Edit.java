@@ -1,12 +1,12 @@
-package ru.sibinco.smppgw.beans.services.sme;
+package ru.sibinco.scag.beans.services.sme;
 
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.backend.sme.Sme;
-import ru.sibinco.smppgw.Constants;
-import ru.sibinco.smppgw.backend.Gateway;
-import ru.sibinco.smppgw.backend.sme.*;
-import ru.sibinco.smppgw.beans.*;
+import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.Gateway;
+import ru.sibinco.scag.backend.sme.*;
+import ru.sibinco.scag.beans.*;
 
 import java.util.*;
 
@@ -39,11 +39,11 @@ public class Edit extends EditBean
     return id;
   }
 
-  protected void load(final String loadId) throws SmppgwJspException
+  protected void load(final String loadId) throws SCAGJspException
   {
     final GwSme sme = (GwSme) appContext.getGwSmeManager().getSmes().get(loadId);
     if (null == sme)
-      throw new SmppgwJspException(Constants.errors.sme.SME_NOT_FOUND, loadId);
+      throw new SCAGJspException(Constants.errors.sme.SME_NOT_FOUND, loadId);
 
     this.id = sme.getId();
     this.priority = sme.getPriority();
@@ -68,17 +68,17 @@ public class Edit extends EditBean
     }
   }
 
-  protected void save() throws SmppgwJspException
+  protected void save() throws SCAGJspException
   {
     if (null == id || 0 == id.length() || !isAdd() && (null == getEditId() || 0 == getEditId().length()))
-      throw new SmppgwJspException(Constants.errors.sme.SME_ID_NOT_SPECIFIED);
+      throw new SCAGJspException(Constants.errors.sme.SME_ID_NOT_SPECIFIED);
 
     if (null == password)
       password = "";
 
     final Map smes = appContext.getGwSmeManager().getSmes();
     if (smes.containsKey(id) && (isAdd() || !id.equals(getEditId())))
-      throw new SmppgwJspException(Constants.errors.sme.SME_ALREADY_EXISTS, id);
+      throw new SCAGJspException(Constants.errors.sme.SME_ALREADY_EXISTS, id);
     smes.remove(getEditId());
     final GwSme newGwSme;
     if (this.smsc) {
@@ -99,7 +99,7 @@ public class Edit extends EditBean
       appContext.getGwSmeManager().store();
     } catch (SibincoException e) {
       if (Proxy.StatusConnected == gateway.getStatus()) {
-        throw new SmppgwJspException(Constants.errors.sme.COULDNT_APPLY, id, e);
+        throw new SCAGJspException(Constants.errors.sme.COULDNT_APPLY, id, e);
       }
     }
     throw new DoneException();

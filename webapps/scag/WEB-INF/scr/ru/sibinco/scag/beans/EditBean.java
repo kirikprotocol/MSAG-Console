@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.beans;
+package ru.sibinco.scag.beans;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletResponse;
  * Date: 18.03.2004
  * Time: 17:53:33
  */
-public abstract class EditBean extends SmppgwBean
+public abstract class EditBean extends SCAGBean
 {
   private String editId = null;
   private boolean add = false;
@@ -18,7 +18,7 @@ public abstract class EditBean extends SmppgwBean
 
   public abstract String getId();
 
-  public void process(HttpServletRequest request, HttpServletResponse response) throws SmppgwJspException
+  public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException
   {
     super.process(request, response);
 
@@ -31,9 +31,9 @@ public abstract class EditBean extends SmppgwBean
       save();
   }
 
-  protected abstract void load(final String loadId) throws SmppgwJspException;
+  protected abstract void load(final String loadId) throws SCAGJspException;
 
-  protected abstract void save() throws SmppgwJspException;
+  protected abstract void save() throws SCAGJspException;
 
 
   public String getEditId()

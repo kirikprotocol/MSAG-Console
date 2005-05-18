@@ -1,8 +1,8 @@
-package ru.sibinco.smppgw.backend.sme;
+package ru.sibinco.scag.backend.sme;
 
 import ru.sibinco.lib.backend.sme.SmeStatus;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
-import ru.sibinco.smppgw.backend.SmppGWAppContext;
+import ru.sibinco.scag.backend.SCAGAppContext;
 
 import java.util.Date;
 import java.text.DateFormat;
@@ -66,7 +66,7 @@ public class SmeStatusFunctions
     return "<span id=\"" + elem_id + "\" datasrc=#tdcConnStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(smeId) + "\" "+ showSmeStatus(status);
   }
 
-/*  public static String smeStatus(SmppGWAppContext appContext, String serviceId)
+/*  public static String smeStatus(SCAGAppContext appContext, String serviceId)
  {
    SmeStatus status = null;
    try {

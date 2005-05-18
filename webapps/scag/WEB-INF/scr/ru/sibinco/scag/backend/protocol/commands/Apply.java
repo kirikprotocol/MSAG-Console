@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend.protocol.commands;
+package ru.sibinco.scag.backend.protocol.commands;
 
 import org.w3c.dom.Element;
 import ru.sibinco.lib.SibincoException;

@@ -1,10 +1,10 @@
-package ru.sibinco.smppgw.beans.gw.providers;
+package ru.sibinco.scag.beans.gw.providers;
 
 import ru.sibinco.lib.bean.TabledBean;
-import ru.sibinco.smppgw.Constants;
-import ru.sibinco.smppgw.backend.sme.GwSme;
-import ru.sibinco.smppgw.beans.SmppgwJspException;
-import ru.sibinco.smppgw.beans.TabledBeanImpl;
+import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.sme.GwSme;
+import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.beans.TabledBeanImpl;
 
 import java.util.*;
 
@@ -19,7 +19,7 @@ public class Index extends TabledBeanImpl implements TabledBean
     return appContext.getProviderManager().getProviders().values();
   }
 
-  protected void delete() throws SmppgwJspException
+  protected void delete() throws SCAGJspException
   {
     final List toRemove = new ArrayList(checked.length);
     for (int i = 0; i < checked.length; i++) {
@@ -32,7 +32,7 @@ public class Index extends TabledBeanImpl implements TabledBean
     for (Iterator i = smes.values().iterator(); i.hasNext();) {
       final GwSme sme = (GwSme) i.next();
       if (!sme.isSmsc() && toRemove.contains(new Long(sme.getProviderId())))
-        throw new SmppgwJspException(Constants.errors.providers.COULDNT_DELETE_PROVIDER, sme.getProviderName());
+        throw new SCAGJspException(Constants.errors.providers.COULDNT_DELETE_PROVIDER, sme.getProviderName());
     }
 
     appContext.getProviderManager().getProviders().keySet().removeAll(toRemove);

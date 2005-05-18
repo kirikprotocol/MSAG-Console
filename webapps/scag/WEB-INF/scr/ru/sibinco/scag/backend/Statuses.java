@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend;
+package ru.sibinco.scag.backend;
 
 
 /**

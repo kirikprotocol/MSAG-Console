@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.beans.gw.journal;
+package ru.sibinco.scag.beans.gw.journal;
 
 
 /**

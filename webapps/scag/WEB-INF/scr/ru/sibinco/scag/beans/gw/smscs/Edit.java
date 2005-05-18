@@ -1,14 +1,14 @@
-package ru.sibinco.smppgw.beans.gw.smscs;
+package ru.sibinco.scag.beans.gw.smscs;
 
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.smppgw.Constants;
-import ru.sibinco.smppgw.backend.sme.GwSme;
-import ru.sibinco.smppgw.backend.sme.SmscInfo;
-import ru.sibinco.smppgw.backend.Gateway;
-import ru.sibinco.smppgw.beans.*;
+import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.sme.GwSme;
+import ru.sibinco.scag.backend.sme.SmscInfo;
+import ru.sibinco.scag.backend.Gateway;
+import ru.sibinco.scag.beans.*;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -29,11 +29,11 @@ public class Edit extends EditBean
   private String altHost;
   private int altPort;
 
-  protected void load(final String loadId) throws SmppgwJspException
+  protected void load(final String loadId) throws SCAGJspException
   {
     final Map smscs = appContext.getSmscsManager().getSmscs();
     if (!smscs.containsKey(loadId))
-      throw new SmppgwJspException(Constants.errors.smscs.SMSC_NOT_FOUND, loadId);
+      throw new SCAGJspException(Constants.errors.smscs.SMSC_NOT_FOUND, loadId);
 
     final SmscInfo info = (SmscInfo) smscs.get(loadId);
     this.id = info.getId();
@@ -47,7 +47,7 @@ public class Edit extends EditBean
     this.altPort = info.getAltPort();
   }
 
-  protected void save() throws SmppgwJspException
+  protected void save() throws SCAGJspException
   {
     final Map smscs = getGlobalSmscs();
     final Map smes = getGlobalSmes();
@@ -73,7 +73,7 @@ public class Edit extends EditBean
     regSmscs(info,isAdd());
     throw new DoneException();
   }
-   private void regSmscs(SmscInfo info,boolean Add) throws SmppgwJspException
+   private void regSmscs(SmscInfo info,boolean Add) throws SCAGJspException
   {
     final Gateway gateway=appContext.getGateway();
       try {
@@ -83,7 +83,7 @@ public class Edit extends EditBean
         e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
        if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
           logger.debug("Couldn't register Service center", e);
-          throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_SMSCS, e);
+          throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_SMSCS, e);
         }
       }
   }

@@ -1,13 +1,13 @@
-package ru.sibinco.smppgw.beans.routing.tracer;
+package ru.sibinco.scag.beans.routing.tracer;
 
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.bean.TabledBean;
-import ru.sibinco.smppgw.beans.SmppgwJspException;
-import ru.sibinco.smppgw.beans.TabledBeanImpl;
-import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
-import ru.sibinco.smppgw.backend.sme.GwSmeManager;
-import ru.sibinco.smppgw.backend.Gateway;
-import ru.sibinco.smppgw.Constants;
+import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.beans.TabledBeanImpl;
+import ru.sibinco.scag.backend.routing.GwRoutingManager;
+import ru.sibinco.scag.backend.sme.GwSmeManager;
+import ru.sibinco.scag.backend.Gateway;
+import ru.sibinco.scag.Constants;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -40,15 +40,15 @@ public class Index extends TabledBeanImpl implements TabledBean
 
     protected GwRoutingManager gwRoutingManager = null;
     protected GwSmeManager gwSmeManager = null;
-   // protected Smppgw smppgw = null;
+   // protected SCAG scag = null;
     protected Gateway gateway = null;
 
-  public void process(final HttpServletRequest request, final HttpServletResponse response) throws SmppgwJspException
+  public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException
     {
       super.process(request,response);
       gwRoutingManager = appContext.getGwRoutingManager();
       gwSmeManager = appContext.getGwSmeManager();
-    //  smppgw=appContext.getSmppgw();
+    //  scag=appContext.getSCAG();
       gateway=appContext.getGateway();
       if (null != mbCheck)
          loadAndCheck();
@@ -56,7 +56,7 @@ public class Index extends TabledBeanImpl implements TabledBean
         traceRoute();
     }
 
-    private void loadAndCheck() throws SmppgwJspException
+    private void loadAndCheck() throws SCAGJspException
     {
       try {
         traceResults = gateway.loadRoutes(gwRoutingManager);
@@ -115,20 +115,20 @@ public class Index extends TabledBeanImpl implements TabledBean
       return list;
     }
 
-    private void traceRoute() throws SmppgwJspException
+    private void traceRoute() throws SCAGJspException
     {
       try {
       /*  final Mask srcAddressMask = new Mask(srcAddress);
         final Mask dstAddressMask = new Mask(dstAddress);
-        if (appContext.getSmppgw().getAliases().isContainsAlias(srcAddressMask)) {
-          final Alias a = appContext.getSmppgw().getAliases().getAliasByAddress(srcAddressMask);
+        if (appContext.getSCAG().getAliases().isContainsAlias(srcAddressMask)) {
+          final Alias a = appContext.getSCAG().getAliases().getAliasByAddress(srcAddressMask);
           if (a != null && a.isHide())
              throw new SibincoException(Constants.errors.routing.tracer.srcAddressIsAlias
-                     +srcAddress + " -> " + appContext.getSmppgw().getAliases().getAddressByAlias(srcAddressMask).getAddress().getMask());
+                     +srcAddress + " -> " + appContext.getSCAG().getAliases().getAddressByAlias(srcAddressMask).getAddress().getMask());
         }
-        if (appContext.getSmppgw().getAliases().isContainsAlias(dstAddressMask))
+        if (appContext.getSCAG().getAliases().isContainsAlias(dstAddressMask))
          throw new SibincoException(Constants.errors.routing.tracer.srcAddressIsAlias
-                    +dstAddress + " -> " + appContext.getSmppgw().getAliases().getAddressByAlias(dstAddressMask).getAddress().getMask());
+                    +dstAddress + " -> " + appContext.getSCAG().getAliases().getAddressByAlias(dstAddressMask).getAddress().getMask());
        */
        traceResults = appContext.getGateway().traceRoute(dstAddress, srcAddress, srcSysId);
         if (null == traceResults || 1 >= traceResults.size())

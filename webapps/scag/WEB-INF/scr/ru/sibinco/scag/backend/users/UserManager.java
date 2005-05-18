@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend.users;
+package ru.sibinco.scag.backend.users;
 
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;

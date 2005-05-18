@@ -1,7 +1,7 @@
-package ru.sibinco.smppgw.beans.routing.routes;
+package ru.sibinco.scag.beans.routing.routes;
 
 import ru.sibinco.lib.bean.TabledBean;
-import ru.sibinco.smppgw.beans.TabledBeanImpl;
+import ru.sibinco.scag.beans.TabledBeanImpl;
 
 import java.util.Collection;
 

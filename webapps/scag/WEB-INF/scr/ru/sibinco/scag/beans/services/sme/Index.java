@@ -1,13 +1,13 @@
-package ru.sibinco.smppgw.beans.services.sme;
+package ru.sibinco.scag.beans.services.sme;
 
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.bean.TabledBean;
-import ru.sibinco.smppgw.Constants;
-import ru.sibinco.smppgw.backend.Gateway;
-import ru.sibinco.smppgw.backend.sme.GwSme;
-import ru.sibinco.smppgw.beans.SmppgwJspException;
-import ru.sibinco.smppgw.beans.TabledBeanImpl;
+import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.Gateway;
+import ru.sibinco.scag.backend.sme.GwSme;
+import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.beans.TabledBeanImpl;
 
 import java.util.*;
 
@@ -22,7 +22,7 @@ public class Index extends TabledBeanImpl implements TabledBean
     return appContext.getGwSmeManager().getSmes().values();
   }
 
-  protected void delete() throws SmppgwJspException
+  protected void delete() throws SCAGJspException
   {
     final Gateway gateway = appContext.getGateway();
     final Map smes = appContext.getGwSmeManager().getSmes();
@@ -40,7 +40,7 @@ public class Index extends TabledBeanImpl implements TabledBean
       } catch (SibincoException e) {
         if (Proxy.StatusConnected == gateway.getStatus()) {
           logger.error("Couldn't delete sme \"" + smeId + '"', e);
-          throw new SmppgwJspException(Constants.errors.sme.COULDNT_DELETE, smeId, e);
+          throw new SCAGJspException(Constants.errors.sme.COULDNT_DELETE, smeId, e);
         } else
           smes.remove(smeId);
       } finally {

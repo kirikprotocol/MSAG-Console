@@ -1,8 +1,8 @@
-package ru.sibinco.smppgw.beans;
+package ru.sibinco.scag.beans;
 
 
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.smppgw.Constants;
+import ru.sibinco.scag.Constants;
 
 
 /**
@@ -10,32 +10,32 @@ import ru.sibinco.smppgw.Constants;
  * Date: 11.03.2004
  * Time: 22:05:34
  */
-public class SmppgwJspException extends SibincoException
+public class SCAGJspException extends SibincoException
 {
   private final String additionalInfo;
   private final Constants code;
   
-  public SmppgwJspException()
+  public SCAGJspException()
   {
     this(null, null, null);
   }
 
-  public SmppgwJspException(Constants code)
+  public SCAGJspException(Constants code)
   {
     this(code, null, null);
   }
 
-  public SmppgwJspException(Constants code, Throwable cause)
+  public SCAGJspException(Constants code, Throwable cause)
   {
     this(code, null, cause);
   }
 
-  public SmppgwJspException(Constants code, String additionalInfo)
+  public SCAGJspException(Constants code, String additionalInfo)
   {
     this(code, additionalInfo, null);
   }
 
-  public SmppgwJspException(Constants code, String additionalInfo, Throwable cause)
+  public SCAGJspException(Constants code, String additionalInfo, Throwable cause)
   {
     super("Exception: " + (code != null ? code.getId() : "internal") + (additionalInfo != null && additionalInfo.length() > 0 ? ", info:\"" + additionalInfo + '"' : ""), cause);
     this.code = code;

@@ -1,9 +1,9 @@
-package ru.sibinco.smppgw.beans.gw.users;
+package ru.sibinco.scag.beans.gw.users;
 
 import ru.sibinco.lib.backend.users.User;
-import ru.sibinco.smppgw.Constants;
-import ru.sibinco.smppgw.backend.sme.Provider;
-import ru.sibinco.smppgw.beans.*;
+import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.sme.Provider;
+import ru.sibinco.scag.beans.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,7 +36,7 @@ public class Edit extends EditBean
     return login;
   }
 
-  public void process(final HttpServletRequest request, final HttpServletResponse response) throws SmppgwJspException
+  public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException
   {
     super.process(request, response);
 
@@ -54,26 +54,26 @@ public class Edit extends EditBean
     providerNames = (String[]) names.toArray(new String[0]);
   }
 
-  protected void save() throws SmppgwJspException
+  protected void save() throws SCAGJspException
   {
     if ((null != password && 0 < password.length()) || (null != confirmPassword && 0 < confirmPassword.length()))
       if (null != password ? !password.equals(confirmPassword) : !confirmPassword.equals(password))
-        throw new SmppgwJspException(Constants.errors.users.PASSWORD_NOT_CONFIRM);
+        throw new SCAGJspException(Constants.errors.users.PASSWORD_NOT_CONFIRM);
 
     final Map users = appContext.getUserManager().getUsers();
 
     if (isAdd()) {
       if (null == login || 0 == login.length())
-        throw new SmppgwJspException(Constants.errors.users.LOGIN_NOT_SPECIFIED);
+        throw new SCAGJspException(Constants.errors.users.LOGIN_NOT_SPECIFIED);
       if (null == password || 0 == password.length())
-        throw new SmppgwJspException(Constants.errors.users.PASSWORD_NOT_SPECIFIED);
+        throw new SCAGJspException(Constants.errors.users.PASSWORD_NOT_SPECIFIED);
       if (users.containsKey(login))
-        throw new SmppgwJspException(Constants.errors.users.USER_ALREADY_EXISTS, login);
+        throw new SCAGJspException(Constants.errors.users.USER_ALREADY_EXISTS, login);
     } else {
       if (null == getEditId() || 0 == getEditId().length() || null == login || 0 == login.length())
-        throw new SmppgwJspException(Constants.errors.users.LOGIN_NOT_SPECIFIED);
+        throw new SCAGJspException(Constants.errors.users.LOGIN_NOT_SPECIFIED);
       if (users.containsKey(login) && !getEditId().equals(login))
-        throw new SmppgwJspException(Constants.errors.users.USER_ALREADY_EXISTS, login);
+        throw new SCAGJspException(Constants.errors.users.USER_ALREADY_EXISTS, login);
 
       final User user = (User) users.remove(getEditId());
       if (null != user) {
@@ -86,13 +86,13 @@ public class Edit extends EditBean
     throw new DoneException();
   }
 
-  protected void load(final String userLogin) throws SmppgwJspException
+  protected void load(final String userLogin) throws SCAGJspException
   {
     if (null == userLogin || 0 == userLogin.length())
-      throw new SmppgwJspException(Constants.errors.users.LOGIN_NOT_SPECIFIED);
+      throw new SCAGJspException(Constants.errors.users.LOGIN_NOT_SPECIFIED);
 
     if (!appContext.getUserManager().getUsers().containsKey(userLogin))
-      throw new SmppgwJspException(Constants.errors.users.USER_NOT_FOUND, userLogin);
+      throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, userLogin);
 
     final User user = (User) appContext.getUserManager().getUsers().get(userLogin);
     login = user.getLogin();

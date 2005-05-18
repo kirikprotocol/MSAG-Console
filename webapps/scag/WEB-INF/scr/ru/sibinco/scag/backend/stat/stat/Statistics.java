@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend.stat.stat;
+package ru.sibinco.scag.backend.stat.stat;
 
 import java.util.ArrayList;
 import java.util.Collection;

@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend.protocol.alias;
+package ru.sibinco.scag.backend.protocol.alias;
 
 /**
  * Created by IntelliJ IDEA.
@@ -14,13 +14,13 @@ import org.w3c.dom.NodeList;
 import ru.sibinco.lib.backend.route.Mask;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.smppgw.backend.SmppGWAppContext;
-import ru.sibinco.smppgw.backend.protocol.journal.SubjectTypes;
-import ru.sibinco.smppgw.backend.protocol.journal.Actions;
-import ru.sibinco.smppgw.backend.protocol.journal.Action;
-import ru.sibinco.smppgw.backend.protocol.tables.impl.alias.AliasDataSource;
-import ru.sibinco.smppgw.backend.protocol.tables.impl.alias.AliasQuery;
-import ru.sibinco.smppgw.backend.protocol.tables.QueryResultSet;
+import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.protocol.journal.SubjectTypes;
+import ru.sibinco.scag.backend.protocol.journal.Actions;
+import ru.sibinco.scag.backend.protocol.journal.Action;
+import ru.sibinco.scag.backend.protocol.tables.impl.alias.AliasDataSource;
+import ru.sibinco.scag.backend.protocol.tables.impl.alias.AliasQuery;
+import ru.sibinco.scag.backend.protocol.tables.QueryResultSet;
 
 import java.io.PrintWriter;
 import java.util.*;
@@ -31,11 +31,11 @@ public class AliasSet
   private Set aliases = new HashSet();
   private AliasDataSource dataSource = new AliasDataSource();
   private Category logger = Category.getInstance(this.getClass());
-  private final SmppGWAppContext smppGWAppContext;
+  private final SCAGAppContext scagAppContext;
 
-  public AliasSet(final Element aliasesElem, final SmppGWAppContext smppGWAppContext)
+  public AliasSet(final Element aliasesElem, final SCAGAppContext scagAppContext)
   {
-    this.smppGWAppContext = smppGWAppContext;
+    this.scagAppContext = scagAppContext;
     final NodeList aliasNodes = aliasesElem.getElementsByTagName("record");
     for (int i = 0; i < aliasNodes.getLength(); i++) {
       final Element aliasElem = (Element) aliasNodes.item(i);
@@ -68,8 +68,8 @@ public class AliasSet
       action.setAction(Actions.ACTION_ADD);
       action.setSubjectType(SubjectTypes.TYPE_alias);
       action.setSubjectId(newAlias.getAlias().getMask());
-      smppGWAppContext.getJournal().append(action);
-      smppGWAppContext.getStatuses().setAliasesChanged(true);
+      scagAppContext.getJournal().append(action);
+      scagAppContext.getStatuses().setAliasesChanged(true);
       return true;
     } else
       return false;
@@ -122,8 +122,8 @@ public class AliasSet
     if (remove(oldAlias) && !oldAlias.getAlias().equals(newAlias.getAlias()))
       action.setAdditionalValue("old alias", oldAlias.getAlias().getMask());
     if (add(newAlias)) {
-      smppGWAppContext.getJournal().append(action);
-      smppGWAppContext.getStatuses().setAliasesChanged(true);
+      scagAppContext.getJournal().append(action);
+      scagAppContext.getStatuses().setAliasesChanged(true);
       return true;
     } else
       return false;

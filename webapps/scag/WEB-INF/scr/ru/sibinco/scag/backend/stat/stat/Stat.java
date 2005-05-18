@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend.stat.stat;
+package ru.sibinco.scag.backend.stat.stat;
 
 import javax.sql.DataSource;
 import java.util.Date;

@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend.protocol.tables.impl;
+package ru.sibinco.scag.backend.protocol.tables.impl;
 
 /**
  * Created by IntelliJ IDEA.
@@ -8,7 +8,7 @@ package ru.sibinco.smppgw.backend.protocol.tables.impl;
  * To change this template use File | Settings | File Templates.
  */
 
-import ru.sibinco.smppgw.backend.protocol.tables.DataItem;
+import ru.sibinco.scag.backend.protocol.tables.DataItem;
 
 import java.util.Comparator;
 import java.util.Vector;

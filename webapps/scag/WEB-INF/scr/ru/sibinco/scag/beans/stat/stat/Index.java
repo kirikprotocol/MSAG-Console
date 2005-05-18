@@ -1,13 +1,13 @@
-package ru.sibinco.smppgw.beans.stat.stat;
+package ru.sibinco.scagw.beans.stat.stat;
 
-import ru.sibinco.smppgw.beans.SmppgwJspException;
-import ru.sibinco.smppgw.beans.SmppgwBean;
-import ru.sibinco.smppgw.backend.stat.stat.StatQuery;
-import ru.sibinco.smppgw.backend.stat.stat.Statistics;
-import ru.sibinco.smppgw.backend.stat.stat.Stat;
-import ru.sibinco.smppgw.backend.sme.Provider;
-import ru.sibinco.smppgw.backend.SmppGWAppContext;
-import ru.sibinco.smppgw.Constants;
+import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.beans.SCAGBean;
+import ru.sibinco.scag.backend.stat.stat.StatQuery;
+import ru.sibinco.scag.backend.stat.stat.Statistics;
+import ru.sibinco.scag.backend.stat.stat.Stat;
+import ru.sibinco.scag.backend.sme.Provider;
+import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.backend.users.User;
 import ru.sibinco.lib.backend.util.Functions;
 
@@ -25,7 +25,7 @@ import java.security.Principal;
  * Time: 14:32:38
  * To change this template use File | Settings | File Templates.
  */
-public class Index extends SmppgwBean
+public class Index extends SCAGBean
 {
   private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
   private static final String ALL_PROVIDERS = "ALL PROVIDERS";
@@ -43,17 +43,17 @@ public class Index extends SmppgwBean
   private String[] providerIds = null;
   private String[] providerNames = null;
 
-  private void init() throws SmppgwJspException
+  private void init() throws SCAGJspException
   {
-    SmppGWAppContext context = getAppContext();
+    SCAGAppContext context = getAppContext();
     stat.setDataSource(context.getDataSource());
     Principal userPrincipal = super.getLoginedPrincipal();
     if (userPrincipal == null)
-      throw new SmppgwJspException(
+      throw new SCAGJspException(
         Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");
     User user = (User)context.getUserManager().getUsers().get(userPrincipal.getName());
     if (user == null)
-      throw new SmppgwJspException(
+      throw new SCAGJspException(
         Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '"+userPrincipal.getName()+"'");
 
     userProviderId = user.getProviderId();
@@ -82,14 +82,14 @@ public class Index extends SmppgwBean
       query.setProviderId(userProviderId);
       Object obj = context.getProviderManager().getProviders().get(new Long(userProviderId));
       if (obj == null || !(obj instanceof Provider))
-        throw new SmppgwJspException(Constants.errors.providers.PROVIDER_NOT_FOUND,
+        throw new SCAGJspException(Constants.errors.providers.PROVIDER_NOT_FOUND,
           "Failed to locate provider for id="+userProviderId);
       providerName = ((Provider)obj).getName();
     }
   }
 
   public void process(HttpServletRequest request, HttpServletResponse response)
-      throws SmppgwJspException
+      throws SCAGJspException
   {
     super.process(request, response);
     this.init();
@@ -102,7 +102,7 @@ public class Index extends SmppgwBean
         statistics = stat.getStatistics(query);
       } catch (Exception exc) {
         statistics = null; mbQuery = null;
-        throw new SmppgwJspException(Constants.errors.stat.GET_STATISTICS_FAILED, exc);
+        throw new SCAGJspException(Constants.errors.stat.GET_STATISTICS_FAILED, exc);
       }
     } else if (!query.isFromDateEnabled()) {
       query.setFromDate(Functions.truncateTime(new Date()));

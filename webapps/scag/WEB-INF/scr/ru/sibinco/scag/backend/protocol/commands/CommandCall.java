@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend.protocol.commands;
+package ru.sibinco.scag.backend.protocol.commands;
 
 import ru.sibinco.lib.backend.protocol.Command;
 import ru.sibinco.lib.backend.service.Type;

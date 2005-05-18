@@ -1,8 +1,8 @@
-package ru.sibinco.smppgw.beans.gw.resources;
+package ru.sibinco.scag.beans.gw.resources;
 
 import ru.sibinco.lib.bean.TabledBean;
-import ru.sibinco.smppgw.beans.SmppgwJspException;
-import ru.sibinco.smppgw.beans.TabledBeanImpl;
+import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.beans.TabledBeanImpl;
 
 import java.util.Collection;
 
@@ -20,7 +20,7 @@ public class Index extends TabledBeanImpl implements TabledBean
     return appContext.getResourceManager().getResources().values();
   }
 
-  protected void delete() throws SmppgwJspException
+  protected void delete() throws SCAGJspException
   {
   }
 

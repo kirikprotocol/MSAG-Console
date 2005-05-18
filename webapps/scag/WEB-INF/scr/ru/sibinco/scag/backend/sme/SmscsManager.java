@@ -1,12 +1,12 @@
-package ru.sibinco.smppgw.backend.sme;
+package ru.sibinco.scag.backend.sme;
 
 import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.smppgw.backend.Constants;
-import ru.sibinco.smppgw.backend.Gateway;
-import ru.sibinco.smppgw.backend.SmppGWAppContext;
-import ru.sibinco.smppgw.beans.SmppgwJspException;
+import ru.sibinco.scag.backend.Constants;
+import ru.sibinco.scag.backend.Gateway;
+import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.beans.SCAGJspException;
 
 import java.util.*;
 
@@ -48,14 +48,14 @@ public class SmscsManager
       smscInfo.store(gwConfig, SECTION_NAME); 
     }
   }
-    public void storeSmscs(final Config gwConfig) throws SmppgwJspException
+    public void storeSmscs(final Config gwConfig) throws SCAGJspException
   {
     try {
       store(gwConfig);
       gwConfig.save();
     } catch (Throwable e) {
       logger.debug("Couldn't apply Service centers", e);
-      throw new SmppgwJspException(ru.sibinco.smppgw.Constants.errors.status.COULDNT_APPLY_SMSCS, e);
+      throw new SCAGJspException(ru.sibinco.scag.Constants.errors.status.COULDNT_APPLY_SMSCS, e);
     }
   }
 }

@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend.sme;
+package ru.sibinco.scag.backend.sme;
 
 import ru.sibinco.lib.backend.util.config.Config;
 

@@ -1,12 +1,12 @@
-package ru.sibinco.smppgw.backend.routing;
+package ru.sibinco.scag.backend.routing;
 
 import org.w3c.dom.Element;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.route.*;
 import ru.sibinco.lib.backend.sme.SmeManager;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
-import ru.sibinco.smppgw.backend.sme.Provider;
-import ru.sibinco.smppgw.backend.sme.ProviderManager;
+import ru.sibinco.scag.backend.sme.Provider;
+import ru.sibinco.scag.backend.sme.ProviderManager;
 
 import java.io.PrintWriter;
 import java.util.Iterator;

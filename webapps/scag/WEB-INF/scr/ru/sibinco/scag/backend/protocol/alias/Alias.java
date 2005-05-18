@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend.protocol.alias;
+package ru.sibinco.scag.backend.protocol.alias;
 
 /**
  * Created by IntelliJ IDEA.

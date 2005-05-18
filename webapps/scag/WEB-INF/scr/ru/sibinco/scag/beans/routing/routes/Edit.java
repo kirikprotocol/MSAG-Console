@@ -1,16 +1,16 @@
-package ru.sibinco.smppgw.beans.routing.routes;
+package ru.sibinco.scag.beans.routing.routes;
 
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.route.*;
 import ru.sibinco.lib.backend.sme.Sme;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
-import ru.sibinco.smppgw.Constants;
-import ru.sibinco.smppgw.backend.SmppGWAppContext;
-import ru.sibinco.smppgw.backend.routing.GwRoute;
-import ru.sibinco.smppgw.backend.routing.TrafficRules;
-import ru.sibinco.smppgw.backend.sme.Provider;
-import ru.sibinco.smppgw.beans.*;
+import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.routing.GwRoute;
+import ru.sibinco.scag.backend.routing.TrafficRules;
+import ru.sibinco.scag.backend.sme.Provider;
+import ru.sibinco.scag.beans.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -65,9 +65,9 @@ public class Edit extends EditBean
     return name;
   }
 
-  public void process(final HttpServletRequest request, final HttpServletResponse response) throws SmppgwJspException
+  public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException
   {
-    appContext = (SmppGWAppContext) request.getAttribute("appContext");
+    appContext = (SCAGAppContext) request.getAttribute("appContext");
 
     billingIds.clear();
     billingIds.add(" ");
@@ -88,18 +88,18 @@ public class Edit extends EditBean
         }
         final Subject subj = (Subject) appContext.getGwRoutingManager().getSubjects().get(subjName);
         if (null == subj)
-          throw new SmppgwJspException(Constants.errors.routing.routes.DEST_SUBJ_NOT_FOUND, subjName);
+          throw new SCAGJspException(Constants.errors.routing.routes.DEST_SUBJ_NOT_FOUND, subjName);
         final String smeId = smeName.toString();
         final Sme sme = (Sme) appContext.getGwSmeManager().getSmes().get(smeId);
         if (null == sme)
-          throw new SmppgwJspException(Constants.errors.routing.routes.SME_NOT_FOUND, smeId);
+          throw new SCAGJspException(Constants.errors.routing.routes.SME_NOT_FOUND, smeId);
 
         try {
           final Destination destination = new Destination(subj, sme);
           destinations.put(destination.getName(), destination);
         } catch (SibincoException e) {
           logger.debug("Could not create destination", e);
-          throw new SmppgwJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION, e);
+          throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION, e);
         }
       } else if (s.startsWith(DST_MASK_PREFIX)) {
         final String maskName = s.substring(DST_MASK_PREFIX.length());
@@ -116,19 +116,19 @@ public class Edit extends EditBean
             mask = new Mask(maskName);
           } catch (SibincoException e) {
             logger.debug("Could not create destination mask", e);
-            throw new SmppgwJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION_MASK, maskName, e);
+            throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION_MASK, maskName, e);
           }
           final String smeId = smeName.toString();
           final Sme sme = (Sme) appContext.getGwSmeManager().getSmes().get(smeId);
           if (null == sme)
-            throw new SmppgwJspException(Constants.errors.routing.routes.SME_NOT_FOUND, smeId);
+            throw new SCAGJspException(Constants.errors.routing.routes.SME_NOT_FOUND, smeId);
 
           try {
             final Destination destination = new Destination(mask, sme);
             destinations.put(destination.getName(), destination);
           } catch (SibincoException e) {
             logger.debug("Could not create destination", e);
-            throw new SmppgwJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION, e);
+            throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION, e);
           }
         }
       }
@@ -139,11 +139,11 @@ public class Edit extends EditBean
         mask = new Mask(new_dstMask);
       } catch (SibincoException e) {
         logger.debug("Could not create destination mask", e);
-        throw new SmppgwJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION_MASK, new_dstMask, e);
+        throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION_MASK, new_dstMask, e);
       }
       final Sme sme = (Sme) appContext.getGwSmeManager().getSmes().get(new_dst_mask_sme_);
       if (null == sme)
-        throw new SmppgwJspException(Constants.errors.routing.routes.SME_NOT_FOUND, new_dst_mask_sme_);
+        throw new SCAGJspException(Constants.errors.routing.routes.SME_NOT_FOUND, new_dst_mask_sme_);
       try {
         final Destination destination = new Destination(mask, sme);
         destinations.put(destination.getName(), destination);
@@ -152,13 +152,13 @@ public class Edit extends EditBean
         new_dstMask = "";
       } catch (SibincoException e) {
         logger.debug("Could not create destination", e);
-        throw new SmppgwJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION, e);
+        throw new SCAGJspException(Constants.errors.routing.routes.COULD_NOT_CREATE_DESTINATION, e);
       }
     }
     super.process(request, response);
   }
 
-  protected void load(final String loadId) throws SmppgwJspException
+  protected void load(final String loadId) throws SCAGJspException
   {
     if (null == new_dst_mask_sme_ && 0 < appContext.getGwSmeManager().getSmes().size())
       new_dst_mask_sme_ = (String) appContext.getGwSmeManager().getSmes().keySet().iterator().next();
@@ -226,7 +226,7 @@ public class Edit extends EditBean
     }
   }
 
-  protected void save() throws SmppgwJspException
+  protected void save() throws SCAGJspException
   {
     billingId = null == billingId ? "" : billingId.trim();
 
@@ -241,19 +241,19 @@ public class Edit extends EditBean
                                                          trafficRules_allowUssdDialogInit, trafficRules_ussdSiDialogLimit);
       if (isAdd()) {
         if (routes.containsKey(name))
-          throw new SmppgwJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, name);
+          throw new SCAGJspException(Constants.errors.routing.routes.ROUTE_ALREADY_EXISTS, name);
         routes.put(name,
                    new GwRoute(name, priority, enabling, active, serviceId, sources, destinations, srcSmeId, notes, providerObj, trafficRules, billingId));
       } else {
         if (!getEditId().equals(name) && routes.containsKey(name))
-          throw new SmppgwJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
+          throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
         routes.remove(getEditId());
         routes.put(name,
                    new GwRoute(name, priority, enabling, active, serviceId, sources, destinations, srcSmeId, notes, providerObj, trafficRules, billingId));
       }
     } catch (SibincoException e) {
       logger.error("Could not create new subject", e);
-      throw new SmppgwJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
+      throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
     }
     appContext.getStatuses().setRoutesChanged(true);
     throw new DoneException();

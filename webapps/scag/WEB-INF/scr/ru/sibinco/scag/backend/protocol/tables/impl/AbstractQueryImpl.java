@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend.protocol.tables.impl;
+package ru.sibinco.scag.backend.protocol.tables.impl;
 
 /**
  * Created by IntelliJ IDEA.
@@ -8,8 +8,8 @@ package ru.sibinco.smppgw.backend.protocol.tables.impl;
  * To change this template use File | Settings | File Templates.
  */
 
-import ru.sibinco.smppgw.backend.protocol.tables.Query;
-import ru.sibinco.smppgw.backend.protocol.tables.Filter;
+import ru.sibinco.scag.backend.protocol.tables.Query;
+import ru.sibinco.scag.backend.protocol.tables.Filter;
 
 import java.util.Vector;
 

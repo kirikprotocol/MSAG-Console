@@ -1,15 +1,15 @@
-package ru.sibinco.smppgw.beans.gw.smscs;
+package ru.sibinco.scag.beans.gw.smscs;
 
 import ru.sibinco.lib.bean.TabledBean;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.backend.util.config.Config;
-import ru.sibinco.smppgw.backend.sme.GwSme;
-import ru.sibinco.smppgw.backend.sme.SmscsManager;
-import ru.sibinco.smppgw.backend.Gateway;
-import ru.sibinco.smppgw.beans.TabledBeanImpl;
-import ru.sibinco.smppgw.beans.SmppgwJspException;
-import ru.sibinco.smppgw.Constants;
+import ru.sibinco.scag.backend.sme.GwSme;
+import ru.sibinco.scag.backend.sme.SmscsManager;
+import ru.sibinco.scag.backend.Gateway;
+import ru.sibinco.scag.beans.TabledBeanImpl;
+import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.Constants;
 
 import java.util.*;
 
@@ -24,7 +24,7 @@ public class Index extends TabledBeanImpl implements TabledBean
     return appContext.getSmscsManager().getSmscs().values();
   }
 
-  protected void delete() throws SmppgwJspException
+  protected void delete() throws SCAGJspException
   {
     SmscsManager smscsManager=appContext.getSmscsManager();
     Gateway gateway=appContext.getGateway();
@@ -42,7 +42,7 @@ public class Index extends TabledBeanImpl implements TabledBean
       e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
       if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
         logger.debug("Couldn't apply Service centers", e);
-        throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_SMSCS, e);
+        throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_SMSCS, e);
       }
     }
   }

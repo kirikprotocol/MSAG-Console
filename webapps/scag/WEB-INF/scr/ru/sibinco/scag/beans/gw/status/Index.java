@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.beans.gw.status;
+package ru.sibinco.scag.beans.gw.status;
 
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.daemon.Daemon;
@@ -6,10 +6,10 @@ import ru.sibinco.lib.backend.service.ServiceInfo;
 import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.lib.backend.service.ServiceInfo;
-import ru.sibinco.smppgw.Constants;
-import ru.sibinco.smppgw.backend.Gateway;
-import ru.sibinco.smppgw.beans.SmppgwBean;
-import ru.sibinco.smppgw.beans.SmppgwJspException;
+import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.Gateway;
+import ru.sibinco.scag.beans.SCAGBean;
+import ru.sibinco.scag.beans.SCAGJspException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -19,7 +19,7 @@ import java.io.IOException;
 /**
  * Created by IntelliJ IDEA. User: igork Date: 03.03.2004 Time: 18:39:37
  */
-public class Index extends SmppgwBean
+public class Index extends SCAGBean
 {
   private String mbApply;
   private String mbRestore;
@@ -29,7 +29,7 @@ public class Index extends SmppgwBean
   private boolean gwRunning;
   private boolean gwStopped;
 
-  public void process(final HttpServletRequest request, final HttpServletResponse response) throws SmppgwJspException
+  public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException
   {
     super.process(request, response);
     final Daemon gwDaemon = appContext.getGwDaemon();
@@ -37,10 +37,10 @@ public class Index extends SmppgwBean
       gwDaemon.refreshServices(appContext.getGwSmeManager());
     } catch (SibincoException e) {
       logger.error("Could not refresh services", e);
-      throw new SmppgwJspException(Constants.errors.status.COULDNT_REFRESH_SERVICES);
+      throw new SCAGJspException(Constants.errors.status.COULDNT_REFRESH_SERVICES);
     } catch (NullPointerException e) {
       logger.error("Could not get GW daemon");
-      throw new SmppgwJspException(Constants.errors.status.COULDNT_GET_DAEMON);
+      throw new SCAGJspException(Constants.errors.status.COULDNT_GET_DAEMON);
     }
     final ServiceInfo info = gwDaemon.getServiceInfo(appContext.getGateway().getId());
     if (null != info) {
@@ -59,23 +59,23 @@ public class Index extends SmppgwBean
       apply();
   }
 
-  private void stop() throws SmppgwJspException
+  private void stop() throws SCAGJspException
   {
     try {
       appContext.getGwDaemon().shutdownService(appContext.getGateway().getId());
     } catch (SibincoException e) {
       logger.error("Could not stop Gateway", e);
-      throw new SmppgwJspException(Constants.errors.status.COULDNT_STOP_GATEWAY, e);
+      throw new SCAGJspException(Constants.errors.status.COULDNT_STOP_GATEWAY, e);
     }
   }
 
-  private void start() throws SmppgwJspException
+  private void start() throws SCAGJspException
   {
     try {
       appContext.getGwDaemon().startService(appContext.getGateway().getId());
     } catch (SibincoException e) {
       logger.error("Could not start Gateway", e);
-      throw new SmppgwJspException(Constants.errors.status.COULDNT_START_GATEWAY, e);
+      throw new SCAGJspException(Constants.errors.status.COULDNT_START_GATEWAY, e);
     }
   }
 
@@ -93,7 +93,7 @@ public class Index extends SmppgwBean
   {
   }
 
-  private void apply() throws SmppgwJspException
+  private void apply() throws SCAGJspException
   {
     if (null != subj && 0 < subj.length)
       for (int i = 0; i < subj.length; i++) {
@@ -113,18 +113,18 @@ public class Index extends SmppgwBean
       }
   }
 
-  private void applyBilling() throws SmppgwJspException
+  private void applyBilling() throws SCAGJspException
   {
     try {
       appContext.getBillingManager().save();
       appContext.getStatuses().setBillingChanged(false);
     } catch (Throwable e) {
       logger.debug("Couldn't apply Route billing rules", e);
-      throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_BILLING, e);
+      throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_BILLING, e);
     }
   }
 /*
-  private void applySmscs() throws SmppgwJspException
+  private void applySmscs() throws SCAGJspException
   {
     try {
       final Config gwConfig = appContext.getGwConfig();
@@ -136,17 +136,17 @@ public class Index extends SmppgwBean
       } catch (SibincoException e) {
         if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
           logger.debug("Couldn't apply Service centers", e);
-          throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_SMSCS, e);
+          throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_SMSCS, e);
         }
       }
       appContext.getStatuses().setSmscsChanged(false);
     } catch (Throwable e) {
       logger.debug("Couldn't apply Service centers", e);
-      throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_SMSCS, e);
+      throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_SMSCS, e);
     }
   }
   */
-  private void applyProviders() throws SmppgwJspException
+  private void applyProviders() throws SCAGJspException
   {
     try {
       final Config gwConfig = appContext.getGwConfig();
@@ -157,28 +157,28 @@ public class Index extends SmppgwBean
       } catch (SibincoException e) {
         if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
           logger.debug("Couldn't apply providers", e);
-          throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_PROVIDERS, e);
+          throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_PROVIDERS, e);
         }
       }
       appContext.getStatuses().setProvidersChanged(false);
     } catch (Throwable e) {
       logger.debug("Couldn't apply providers", e);
-      throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_PROVIDERS, e);
+      throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_PROVIDERS, e);
     }
   }
 
-  private void applyUsers() throws SmppgwJspException
+  private void applyUsers() throws SCAGJspException
   {
     try {
       appContext.getUserManager().apply();
       appContext.getStatuses().setUsersChanged(false);
     } catch (Throwable e) {
       logger.debug("Couldn't apply users", e);
-      throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_USERS, e);
+      throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_USERS, e);
     }
   }
 
-  private void applyRoutes() throws SmppgwJspException
+  private void applyRoutes() throws SCAGJspException
   {
     try {
       appContext.getGwRoutingManager().apply();
@@ -188,17 +188,17 @@ public class Index extends SmppgwBean
       } catch (SibincoException e) {
         if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
           logger.debug("Couldn't apply routes", e);
-          throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_ROUTES, e);
+          throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_ROUTES, e);
         }
       }
       appContext.getStatuses().setRoutesChanged(false);
     } catch (SibincoException e) {
       logger.debug("Couldn't apply routes", e);
-      throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_ROUTES, e);
+      throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_ROUTES, e);
     }
   }
 
-  private void applyConfig() throws SmppgwJspException
+  private void applyConfig() throws SCAGJspException
   {
     try {
       appContext.getSmscsManager().store(appContext.getGwConfig());
@@ -211,19 +211,19 @@ public class Index extends SmppgwBean
       } catch (SibincoException e) {
         if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
           logger.debug("Couldn't apply config", e);
-          throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_CONFIG, e);
+          throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_CONFIG, e);
         }
       }
       appContext.getStatuses().setConfigChanged(false);
     } catch (SibincoException e) {
       logger.debug("Couldn't apply config", e);
-      throw new SmppgwJspException(Constants.errors.status.COULDNT_APPLY_CONFIG, e);
+      throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_CONFIG, e);
     } catch (Config.WrongParamTypeException e) {
       logger.debug("Couldn't save config", e);
-      throw new SmppgwJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
+      throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
     } catch (IOException e) {
       logger.debug("Couldn't save config", e);
-      throw new SmppgwJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
+      throw new SCAGJspException(Constants.errors.status.COULDNT_SAVE_CONFIG, e);
     }
   }
 

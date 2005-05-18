@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend.resources;
+package ru.sibinco.scag.backend.resources;
 
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;

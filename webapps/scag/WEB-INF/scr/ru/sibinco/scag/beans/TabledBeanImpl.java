@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.beans;
+package ru.sibinco.scag.beans;
 
 import ru.sibinco.lib.backend.util.SortByPropertyComparator;
 import ru.sibinco.lib.backend.util.SortedList;
@@ -14,7 +14,7 @@ import java.util.*;
  * Date: 09.03.2004
  * Time: 14:29:00
  */
-public abstract class TabledBeanImpl extends SmppgwBean implements TabledBean
+public abstract class TabledBeanImpl extends SCAGBean implements TabledBean
 {
   protected List tabledItems = new ArrayList();
   protected String sort = null;
@@ -28,7 +28,7 @@ public abstract class TabledBeanImpl extends SmppgwBean implements TabledBean
   protected String mbAdd = null;
   protected String mbDelete = null;
 
-  public void process(HttpServletRequest request, HttpServletResponse response) throws SmppgwJspException
+  public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException
   {
     super.process(request, response);
     if (mbEdit != null)
@@ -56,7 +56,7 @@ public abstract class TabledBeanImpl extends SmppgwBean implements TabledBean
     return "id";
   }
 
-  protected abstract void delete() throws SmppgwJspException;
+  protected abstract void delete() throws SCAGJspException;
 
   public final List getTabledItems()
   {

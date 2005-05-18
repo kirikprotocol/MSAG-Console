@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend;
+package ru.sibinco.scag.backend;
 
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.service.ServiceInfo;
@@ -7,10 +7,10 @@ import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.backend.protocol.Response;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.lib.backend.sme.SmeStatus;
-import ru.sibinco.smppgw.backend.protocol.commands.*;
-import ru.sibinco.smppgw.backend.sme.GwSme;
-import ru.sibinco.smppgw.backend.sme.SmscInfo;
-import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
+import ru.sibinco.scag.backend.protocol.commands.*;
+import ru.sibinco.scag.backend.sme.GwSme;
+import ru.sibinco.scag.backend.sme.SmscInfo;
+import ru.sibinco.scag.backend.routing.GwRoutingManager;
 import org.w3c.dom.Element;
 
 import java.util.*;
@@ -22,7 +22,7 @@ import java.util.*;
 public class Gateway extends Proxy
 {
   private final String id;
-  private static final String SMPPGW_COMPONENT_ID = "SMPPGW";
+  private static final String SCAG_COMPONENT_ID = "SCAG";
   private static final String LOAD_ROUTES_METHOD_ID = "loadRoutes";
   private static final String TRACE_ROUTE_METHOD_ID = "traceRoute";
   private static final String SME_STATUS_ID = "statusSme";
@@ -147,7 +147,7 @@ public class Gateway extends Proxy
     args.put("dstAddress", dstAddress);
     args.put("srcAddress", srcAddress);
     args.put("srcSysId", srcSysId);
-    //final Object res = call(SMPPGW_COMPONENT_ID, TRACE_ROUTE_METHOD_ID, Type.Types[Type.StringListType], args);
+    //final Object res = call(SCAG_COMPONENT_ID, TRACE_ROUTE_METHOD_ID, Type.Types[Type.StringListType], args);
     final Object res =call(TRACE_ROUTE_METHOD_ID,err,Type.Types[Type.StringListType], args);
     return res instanceof List ? (List) res : null;
   }

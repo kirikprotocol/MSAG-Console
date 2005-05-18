@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend.sme;
+package ru.sibinco.scag.backend.sme;
 
 import org.apache.log4j.Category;
 import org.w3c.dom.Element;

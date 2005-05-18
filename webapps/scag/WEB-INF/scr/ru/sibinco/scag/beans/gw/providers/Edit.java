@@ -1,9 +1,9 @@
-package ru.sibinco.smppgw.beans.gw.providers;
+package ru.sibinco.scag.beans.gw.providers;
 
-import ru.sibinco.smppgw.Constants;
-import ru.sibinco.smppgw.backend.sme.Provider;
-import ru.sibinco.smppgw.backend.sme.ProviderManager;
-import ru.sibinco.smppgw.beans.*;
+import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.sme.Provider;
+import ru.sibinco.scag.backend.sme.ProviderManager;
+import ru.sibinco.scag.beans.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -18,24 +18,24 @@ public class Edit extends EditBean
   private long id = -1;
   private String name;
 
-  public void process(final HttpServletRequest request, final HttpServletResponse response) throws SmppgwJspException
+  public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException
   {
     super.process(request, response);
   }
 
-  protected void load(final String loadId) throws SmppgwJspException
+  protected void load(final String loadId) throws SCAGJspException
   {
     final Map providers = appContext.getProviderManager().getProviders();
     final Long longLoadId = Long.decode(loadId);
     if (!providers.containsKey(longLoadId))
-      throw new SmppgwJspException(Constants.errors.providers.PROVIDER_NOT_FOUND, loadId);
+      throw new SCAGJspException(Constants.errors.providers.PROVIDER_NOT_FOUND, loadId);
 
     final Provider info = (Provider) providers.get(longLoadId);
     this.id = info.getId();
     this.name = info.getName();
   }
 
-  protected void save() throws SmppgwJspException
+  protected void save() throws SCAGJspException
   {
     final ProviderManager providerManager = appContext.getProviderManager();
     if (isAdd()) {

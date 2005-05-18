@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.beans;
+package ru.sibinco.scag.beans;
 
 import ru.sibinco.lib.SibincoException;
 

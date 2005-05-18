@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend.sme;
+package ru.sibinco.scag.backend.sme;
 
 import org.apache.log4j.Logger;
 import org.w3c.dom.Element;
@@ -6,7 +6,7 @@ import org.xml.sax.SAXException;
 import ru.sibinco.lib.backend.sme.Sme;
 import ru.sibinco.lib.backend.sme.SmeManager;
 import ru.sibinco.lib.backend.util.config.Config;
-import ru.sibinco.smppgw.backend.Constants;
+import ru.sibinco.scag.backend.Constants;
 
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;

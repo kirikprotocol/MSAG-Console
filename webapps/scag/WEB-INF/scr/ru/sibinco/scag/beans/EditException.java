@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.beans;
+package ru.sibinco.scag.beans;
 
 
 /**
@@ -6,7 +6,7 @@ package ru.sibinco.smppgw.beans;
  * Date: 15.03.2004
  * Time: 16:12:48
  */
-public class EditException extends SmppgwJspException
+public class EditException extends SCAGJspException
 {
   private final String editId;
 

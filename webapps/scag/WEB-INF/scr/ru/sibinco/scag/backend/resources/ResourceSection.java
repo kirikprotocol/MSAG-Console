@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend.resources;
+package ru.sibinco.scag.backend.resources;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;

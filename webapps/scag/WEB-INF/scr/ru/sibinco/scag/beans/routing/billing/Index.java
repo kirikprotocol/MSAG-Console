@@ -1,8 +1,8 @@
-package ru.sibinco.smppgw.beans.routing.billing;
+package ru.sibinco.scag.beans.routing.billing;
 
 import ru.sibinco.lib.bean.TabledBean;
-import ru.sibinco.smppgw.beans.SmppgwJspException;
-import ru.sibinco.smppgw.beans.TabledBeanImpl;
+import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.beans.TabledBeanImpl;
 
 import java.util.Collection;
 
@@ -17,7 +17,7 @@ public class Index extends TabledBeanImpl implements TabledBean
     return appContext.getBillingManager().getRules().values();
   }
 
-  protected void delete() throws SmppgwJspException
+  protected void delete() throws SCAGJspException
   {
     if (null != checkedSet && 0 < checkedSet.size()) {
       appContext.getBillingManager().getRules().keySet().removeAll(checkedSet);

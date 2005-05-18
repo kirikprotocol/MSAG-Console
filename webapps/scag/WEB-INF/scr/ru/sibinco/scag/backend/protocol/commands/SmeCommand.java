@@ -1,9 +1,9 @@
-package ru.sibinco.smppgw.backend.protocol.commands;
+package ru.sibinco.scag.backend.protocol.commands;
 
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.protocol.Command;
 import ru.sibinco.lib.backend.sme.Sme;
-import ru.sibinco.smppgw.backend.sme.GwSme;
+import ru.sibinco.scag.backend.sme.GwSme;
 
 
 /**

@@ -1,8 +1,8 @@
-package ru.sibinco.smppgw.beans;
+package ru.sibinco.scag.beans;
 
 import org.apache.log4j.Logger;
-import ru.sibinco.smppgw.backend.SmppGWAppContext;
-import ru.sibinco.smppgw.Constants;
+import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.Constants;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -15,21 +15,21 @@ import java.util.ArrayList;
  * Date: 03.03.2004
  * Time: 19:37:44
  */
-public abstract class SmppgwBean
+public abstract class SCAGBean
 {
-  protected SmppGWAppContext appContext;
+  protected SCAGAppContext appContext;
   protected Logger logger = Logger.getLogger(this.getClass());
   protected java.security.Principal loginedPrincipal = null;
   protected List errors = null;
 
-  public void process(HttpServletRequest request, HttpServletResponse response) throws SmppgwJspException
+  public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException
   {
-    this.errors = (List) request.getAttribute(Constants.SMPPGW_ERROR_MESSAGES_ATTRIBUTE_NAME);
+    this.errors = (List) request.getAttribute(Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAME);
     if (null == errors) {
       this.errors = new ArrayList();
      error("error.errorListNotInitialized");
     }
-    appContext = (SmppGWAppContext) request.getAttribute("appContext");
+    appContext = (SCAGAppContext) request.getAttribute("appContext");
     loginedPrincipal = request.getUserPrincipal();
   }
   protected void error(final String errorCode)
@@ -44,7 +44,7 @@ public abstract class SmppgwBean
   {
     errors.add(e);
   }
-  public final SmppGWAppContext getAppContext() {
+  public final SCAGAppContext getAppContext() {
     return appContext;
   }
 

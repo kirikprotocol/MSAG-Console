@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.beans.gw.logging;
+package ru.sibinco.scag.beans.gw.logging;
 
 
 /**

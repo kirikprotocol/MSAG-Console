@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend.protocol.tables;
+package ru.sibinco.scag.backend.protocol.tables;
 
 /**
  * Created by IntelliJ IDEA.

@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend.protocol.journal;
+package ru.sibinco.scag.backend.protocol.journal;
 
 /**
  * Created by IntelliJ IDEA.

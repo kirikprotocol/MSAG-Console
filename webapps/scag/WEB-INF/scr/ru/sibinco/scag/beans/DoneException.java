@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.beans;
+package ru.sibinco.scag.beans;
 
 
 /**
@@ -6,7 +6,7 @@ package ru.sibinco.smppgw.beans;
  * Date: 12.03.2004
  * Time: 17:18:45
  */
-public class DoneException extends SmppgwJspException
+public class DoneException extends SCAGJspException
 {
   public DoneException()
   {

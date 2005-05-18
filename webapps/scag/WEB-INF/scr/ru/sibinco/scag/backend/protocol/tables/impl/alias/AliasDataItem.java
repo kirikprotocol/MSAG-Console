@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend.protocol.tables.impl.alias;
+package ru.sibinco.scag.backend.protocol.tables.impl.alias;
 
 /**
  * Created by IntelliJ IDEA.
@@ -8,8 +8,8 @@ package ru.sibinco.smppgw.backend.protocol.tables.impl.alias;
  * To change this template use File | Settings | File Templates.
  */
 
-import ru.sibinco.smppgw.backend.protocol.alias.Alias;
-import ru.sibinco.smppgw.backend.protocol.tables.AbstractDataItem;
+import ru.sibinco.scag.backend.protocol.alias.Alias;
+import ru.sibinco.scag.backend.protocol.tables.AbstractDataItem;
 
 
 public class AliasDataItem extends AbstractDataItem

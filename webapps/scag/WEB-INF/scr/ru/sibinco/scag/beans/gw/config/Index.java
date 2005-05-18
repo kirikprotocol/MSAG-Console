@@ -1,9 +1,9 @@
-package ru.sibinco.smppgw.beans.gw.config;
+package ru.sibinco.scag.beans.gw.config;
 
 import ru.sibinco.lib.backend.util.config.Config;
-import ru.sibinco.smppgw.Constants;
-import ru.sibinco.smppgw.backend.Statuses;
-import ru.sibinco.smppgw.beans.*;
+import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.Statuses;
+import ru.sibinco.scag.beans.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -19,7 +19,7 @@ public class Index extends EditBean
   private Map requestParams = null;
   private static final String COLLAPSING_TREE_PARAM_PREFIX = "collapsing_tree_param.";
 
-  public void process(HttpServletRequest request, HttpServletResponse response) throws SmppgwJspException
+  public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException
   {
     requestParams = request.getParameterMap();
     super.process(request, response);
@@ -30,7 +30,7 @@ public class Index extends EditBean
     return null;
   }
 
-  protected void load(String loadId) throws SmppgwJspException
+  protected void load(String loadId) throws SCAGJspException
   {
     for (Iterator i = requestParams.entrySet().iterator(); i.hasNext();) {
       Map.Entry entry = (Map.Entry) i.next();
@@ -68,7 +68,7 @@ public class Index extends EditBean
     }
   }
 
-  protected void save() throws SmppgwJspException
+  protected void save() throws SCAGJspException
   {
     final Config gwConfig = appContext.getGwConfig();
     final Statuses statuses = appContext.getStatuses();
@@ -82,7 +82,7 @@ public class Index extends EditBean
           try {
             gwConfig.setInt((String) entry.getKey(), Integer.parseInt((String) entry.getValue()));
           } catch (NumberFormatException e) {
-            throw new SmppgwJspException(Constants.errors.config.INVALID_INTEGER, (String) entry.getValue());
+            throw new SCAGJspException(Constants.errors.config.INVALID_INTEGER, (String) entry.getValue());
           }
         else if (parameter instanceof Boolean)
           gwConfig.setBool((String) entry.getKey(), Boolean.valueOf((String) entry.getValue()).booleanValue());

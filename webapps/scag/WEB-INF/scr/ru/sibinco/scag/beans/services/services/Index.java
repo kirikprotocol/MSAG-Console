@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.beans.services.services;
+package ru.sibinco.scag.beans.services.services;
 
 /**
  * Created by IntelliJ IDEA.
@@ -8,11 +8,11 @@ package ru.sibinco.smppgw.beans.services.services;
  * To change this template use File | Settings | File Templates.
  */
 
-import ru.sibinco.smppgw.beans.TabledBeanImpl;
-import ru.sibinco.smppgw.beans.SmppgwJspException;
-import ru.sibinco.smppgw.Constants;
-import ru.sibinco.smppgw.backend.sme.GwSmeManager;
-import ru.sibinco.smppgw.backend.sme.GwSme;
+import ru.sibinco.scag.beans.TabledBeanImpl;
+import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.Constants;
+import ru.sibinco.scag.backend.sme.GwSmeManager;
+import ru.sibinco.scag.backend.sme.GwSme;
 import ru.sibinco.lib.bean.TabledBean;
 import ru.sibinco.lib.backend.sme.SmeStatus;
 import ru.sibinco.lib.SibincoException;
@@ -43,10 +43,10 @@ public class Index extends TabledBeanImpl implements TabledBean
   protected String mbViewHost = null;
   protected String mbEdit = null;
   protected String mbDisconnectServices = null;
-  private String CPATH = "/smppgw";
+  private String CPATH = "/scag";
   protected GwSmeManager smeManager = null;
 
-  public void process(final HttpServletRequest request,final HttpServletResponse response) throws SmppgwJspException
+  public void process(final HttpServletRequest request,final HttpServletResponse response) throws SCAGJspException
   {
     super.process(request, response);
     smeManager = appContext.getGwSmeManager();
@@ -59,7 +59,7 @@ public class Index extends TabledBeanImpl implements TabledBean
         if (request.isUserInRole("services"))
         {}//  deleteServices();
         else
-         throw new SmppgwJspException(Constants.errors.services.notAuthorizedForDeletingService );
+         throw new SCAGJspException(Constants.errors.services.notAuthorizedForDeletingService );
          // return error(Constants.errors.services.notAuthorizedForDeletingService);
       }
       else if (null != mbStartService)
@@ -94,7 +94,7 @@ public class Index extends TabledBeanImpl implements TabledBean
     }
     else {
       final List smeIds = smeManager.getSmeNames();
-      smeIds.remove(Constants.SMPPGW_SME_ID);
+      smeIds.remove(Constants.SCAG_SME_ID);
       return smeIds;
     }
   }
@@ -110,14 +110,14 @@ public class Index extends TabledBeanImpl implements TabledBean
   }
 
 
-  public String getHost(final String sId) throws SmppgwJspException
+  public String getHost(final String sId) throws SCAGJspException
   {
    String Host="";
     try {
       Host= hostsManager.getServiceInfo(sId).getHost();
     } catch (Throwable e) {
       logger.error("Couldn't get service info for service \"" + sId + '"', e);
-      throw new SmppgwJspException(Constants.errors.services.couldntGetServiceInfo, e);
+      throw new SCAGJspException(Constants.errors.services.couldntGetServiceInfo, e);
     }
     return Host;
   }
@@ -129,7 +129,7 @@ public class Index extends TabledBeanImpl implements TabledBean
         return hostsManager.getServiceInfo(serviceId).getStatus();
       } catch (Throwable t) {
         logger.error("Couldn't get service info for service \"" + serviceId + '"', t);
-       // throw new SmppgwJspException(Constants.errors.services.couldntGetServiceInfo, serviceId);
+       // throw new SCAGJspException(Constants.errors.services.couldntGetServiceInfo, serviceId);
         return ServiceInfo.STATUS_UNKNOWN;
       }
     }
@@ -161,7 +161,7 @@ public class Index extends TabledBeanImpl implements TabledBean
       return appContext.getGateway().getSmeStatus(smeId);
     } catch (SibincoException e) {
       logger.error("Couldn't get sme status for sme \"" + smeId + "\", nested:" + e.getMessage());
-     // throw new SmppgwJspException(Constants.errors.services.couldntGetServiceInfo, id);
+     // throw new SCAGJspException(Constants.errors.services.couldntGetServiceInfo, id);
       return null;
     }
   }
@@ -171,7 +171,7 @@ public class Index extends TabledBeanImpl implements TabledBean
     try {
       return appContext.getSmeHostsManager().get(serviceId).isDisabled();
     } catch (SibincoException e) {
-     // throw new SmppgwJspException(Constants.errors.services.couldntGetServiceInfo, serviceId);
+     // throw new SCAGJspException(Constants.errors.services.couldntGetServiceInfo, serviceId);
       return false;
     }
   }
@@ -187,17 +187,17 @@ public class Index extends TabledBeanImpl implements TabledBean
         return false;
       }
     } catch (SibincoException e) {
-     // throw new SmppgwJspException(Constants.errors.services.couldntGetServiceInfo, serviceId);
+     // throw new SCAGJspException(Constants.errors.services.couldntGetServiceInfo, serviceId);
       return false;
     }
   }
  /*
-  public boolean isSmppgwAlive()
+  public boolean isSCAGAlive()
   {
     try {
-      return ServiceInfo.STATUS_RUNNING == hostsManager.getServiceInfo(Constants.SMPPGW_SME_ID).getStatus();
+      return ServiceInfo.STATUS_RUNNING == hostsManager.getServiceInfo(Constants.SCAG_SME_ID).getStatus();
     } catch (SibincoException e) {
-    // throw new SmppgwJspException(Constants.errors.services.couldntGetServiceInfo, Constants.SMPPGW_SME_ID);
+    // throw new SCAGJspException(Constants.errors.services.couldntGetServiceInfo, Constants.SCAG_SME_ID);
       return false;
     }
   }  */

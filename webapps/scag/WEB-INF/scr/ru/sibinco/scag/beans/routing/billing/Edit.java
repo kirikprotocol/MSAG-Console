@@ -1,7 +1,7 @@
-package ru.sibinco.smppgw.beans.routing.billing;
+package ru.sibinco.scag.beans.routing.billing;
 
-import ru.sibinco.smppgw.backend.routing.BillingRule;
-import ru.sibinco.smppgw.beans.*;
+import ru.sibinco.scag.backend.routing.BillingRule;
+import ru.sibinco.scag.beans.*;
 
 import java.util.Map;
 
@@ -24,7 +24,7 @@ public class Edit extends EditBean
     this.id = id;
   }
 
-  protected void load(final String loadId) throws SmppgwJspException
+  protected void load(final String loadId) throws SCAGJspException
   {
     id = loadId;
     final BillingRule ruleObj = (BillingRule) appContext.getBillingManager().getRules().get(id);
@@ -34,7 +34,7 @@ public class Edit extends EditBean
       rule = "";
   }
 
-  protected void save() throws SmppgwJspException
+  protected void save() throws SCAGJspException
   {
     final Map rules = appContext.getBillingManager().getRules();
     final BillingRule ruleObj = (BillingRule) rules.get(id);
