@@ -5,7 +5,7 @@
   xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee web-jsptaglibrary_2_0.xsd" version="2.0">
   <description>SCAG global functions</description>
   <tlib-version>1.0</tlib-version>
-  <short-name>SmppgwTagLibrary:Functions</short-name>
+  <short-name>SCAGTagLibrary:Functions</short-name>
   <uri>/scag/func</uri>
   <function>
     <description>Checks if string is present in string array.</description>
@@ -28,7 +28,7 @@
   <function>
     <description>Show sme status</description>
     <name>smeStatus</name>
-    <function-class>ru.sibinco.smppgw.backend.sme.SmeStatusFunctions</function-class>
+    <function-class>ru.sibinco.scag.backend.sme.SmeStatusFunctions</function-class>
     <function-signature>java.lang.String smeStatus(ru.sibinco.lib.backend.sme.SmeStatus,java.lang.String)</function-signature>
     </function>
   <function>

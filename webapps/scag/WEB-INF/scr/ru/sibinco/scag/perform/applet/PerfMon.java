@@ -1,8 +1,8 @@
-package ru.sibinco.smppgw.perfmon.applet;
+package ru.sibinco.scag.perfmon.applet;
 
 import ru.sibinco.lib.backend.applet.AdvancedLabel;
 import ru.sibinco.lib.backend.applet.LabelGroup;
-import ru.sibinco.smppgw.perfmon.PerfSnap;
+import ru.sibinco.scag.perfmon.PerfSnap;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -68,7 +68,7 @@ public class PerfMon extends Applet implements Runnable, MouseListener, ActionLi
   public void init() {
     System.out.println("Initing...");
     locale = new Locale(getParameter("locale.language").toLowerCase(), getParameter("locale.country").toLowerCase() );
-    localeText = ResourceBundle.getBundle("ru.sibinco.smppgw.perfmon.applet.text", locale);
+    localeText = ResourceBundle.getBundle("ru.sibinco.scag.perfmon.applet.text", locale);
     dateFormat = new SimpleDateFormat(localeText.getString("sctime"));
     gridFormat = new SimpleDateFormat(localeText.getString("gridtime"));
 

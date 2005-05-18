@@ -60,8 +60,8 @@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%><%@
     printWriter.flush();
   }
 
-  if (exception instanceof SmppgwJspException) {
-    SmppgwJspException e = (SmppgwJspException) exception;
+  if (exception instanceof SCAGJspException) {
+    SCAGJspException e = (SCAGJspException) exception;
     pageContext.setAttribute("exception", e);
     String message = "Unknown exception";
     if (e.getCode() != null)

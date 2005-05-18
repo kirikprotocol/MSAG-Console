@@ -1,6 +1,6 @@
-package ru.sibinco.smppgw.perfmon.applet;
+package ru.sibinco.scag.perfmon.applet;
 
-import ru.sibinco.smppgw.perfmon.PerfSnap;
+import ru.sibinco.scag.perfmon.PerfSnap;
 
 import java.awt.*;
 

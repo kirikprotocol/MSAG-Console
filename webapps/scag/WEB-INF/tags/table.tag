@@ -1,6 +1,6 @@
 <%@taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%><%@
  taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%><%@
- taglib prefix="smf" uri="/smppgw/func"%><%@
+ taglib prefix="smf" uri="/scag/func"%><%@
  tag body-content="empty" %><%@
  attribute name="columns" required="true"%><%@
  attribute name="names" required="true"%><%@

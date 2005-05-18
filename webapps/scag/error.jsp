@@ -1,7 +1,7 @@
 <%@ page import="java.io.PrintWriter,
                  java.io.StringWriter,
                  ru.sibinco.lib.SibincoException,
-                 ru.sibinco.smppgw.beans.SmppgwJspException,
+                 ru.sibinco.scag.beans.SCAGJspException,
                  ru.sibinco.lib.LocaleMessages,
                  java.util.Locale,
                  java.security.Principal"%>
@@ -24,8 +24,8 @@
     printWriter.flush();
   }
 
-  if (exception instanceof SmppgwJspException) {
-    SmppgwJspException e = (SmppgwJspException) exception;
+  if (exception instanceof SCAGJspException) {
+    SCAGJspException e = (SCAGJspException) exception;
     pageContext.setAttribute("exception", e);
     String message = "Unknown exception";
     if (e.getCode() != null)

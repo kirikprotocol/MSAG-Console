@@ -1,5 +1,5 @@
 <%@include file="/WEB-INF/inc/header.jspf"%>
-<sm:page title="Status" onLoad="enableDisableStartStopButtonsForSmppGwStatusPage();">
+<sm:page title="Status" onLoad="enableDisableStartStopButtonsForSCAGStatusPage();">
   <jsp:attribute name="menu">
     <sm-pm:menu>
       <sm-pm:item name="mbApply" value="Apply" title="Apply changes" isCheckSensible="true"/>
@@ -47,11 +47,11 @@
         items[i].disabled = isDisabled;
       }
     }
-    function enableDisableStartStopButtonsForSmppGwStatusPage()
+    function enableDisableStartStopButtonsForSCAGStatusPage()
     {
-      enableDisableByIdFunction('mbStart', document.all.SmppgwStatusSpan.innerText != ' stopped');
-      enableDisableByIdFunction('mbStop', document.all.SmppgwStatusSpan.innerText != ' running');
-      window.setTimeout(enableDisableStartStopButtonsForSmppGwStatusPage, 1000);
+      enableDisableByIdFunction('mbStart', document.all.SCAGStatusSpan.innerText != ' stopped');
+      enableDisableByIdFunction('mbStop', document.all.SCAGStatusSpan.innerText != ' running');
+      window.setTimeout(enableDisableStartStopButtonsForSCAGStatusPage, 1000);
     }
     </script>
   </jsp:body>

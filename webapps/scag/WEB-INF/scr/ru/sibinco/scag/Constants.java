@@ -3,14 +3,14 @@
  * Date: 12.03.2004
  * Time: 13:28:42
  */
-package ru.sibinco.smppgw;
+package ru.sibinco.scag;
 
 
 public class Constants
 {
   private final String id;
-  public static final String SMPPGW_SME_ID = "SMPPGW";
-  public static final String SMPPGW_ERROR_MESSAGES_ATTRIBUTE_NAME = "SMPPGW_ERROR_MESSAGES_ATTRIBUTE";
+  public static final String SCAG_SME_ID = "SCAG";
+  public static final String SCAG_ERROR_MESSAGES_ATTRIBUTE_NAME = "SCAG_ERROR_MESSAGES_ATTRIBUTE";
   public interface errors
   {
     public interface status

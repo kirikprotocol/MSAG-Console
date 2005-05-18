@@ -1,13 +1,13 @@
 <%@ page import="java.util.Iterator"%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
-<jsp:useBean id="bean" class="ru.sibinco.smppgw.beans.services.services.Index"
+<jsp:useBean id="bean" class="ru.sibinco.scag.beans.services.services.Index"
 /><%@ include file = "/WEB-INF/inc/show_sme_status.jsp"
 %><%
 /*try
 {*/
  bean.process(request,response);
- //SmppGWAppContext appContext= (SmppGWAppContext) request.getAttribute("appContext");
- SmppGWAppContext appContext=bean.getAppContext();
+ //SCAGAppContext appContext= (SCAGAppContext) request.getAttribute("appContext");
+ SCAGAppContext appContext=bean.getAppContext();
 //System.out.println("*** connected_statuses.jsp called");
   //out.println();
 	SmeStatus status = null;

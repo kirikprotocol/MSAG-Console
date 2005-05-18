@@ -1,10 +1,10 @@
-<%@ page import="ru.sibinco.smppgw.backend.SmppGWAppContext"%><html>
+<%@ page import="ru.sibinco.scag.backend.SCAGAppContext"%><html>
 <head>
 	<link rel="STYLESHEET" type="text/css" href="/styles/common.css">
 </head>
 <body style="margin: 0px 0px 0px 0px;">
 <%
-	SmppGWAppContext appContext = (SmppGWAppContext) request.getAttribute("appContext");
+	SCAGAppContext appContext = (SCAGAppContext) request.getAttribute("appContext");
 	long port = 6695;
 	if (appContext != null)
 	{
@@ -15,7 +15,7 @@
 		}
 	}
 %>
-	<applet code="ru.sibinco.smppgw.perfmon.applet.PerfMon.class" width="100%" height="100%" archive="perfmon.jar">
+	<applet code="ru.sibinco.scag.perfmon.applet.PerfMon.class" width="100%" height="100%" archive="perfmon.jar">
 		<param name="locale.country" value="us">
 		<param name="locale.language" value="en">
 		<param name="pixPerSecond" value="4">

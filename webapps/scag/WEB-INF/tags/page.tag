@@ -16,7 +16,7 @@
 <%! private java.util.List errorMessages = new java.util.ArrayList();%>
 <%
 errorMessages.clear();
-request.setAttribute(ru.sibinco.smppgw.Constants.SMPPGW_ERROR_MESSAGES_ATTRIBUTE_NAME, errorMessages);
+request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAME, errorMessages);
 %><%
   Object beanClassObj = jspContext.getAttribute("beanClass");
   if (beanClassObj == null || (beanClassObj instanceof String && ((String)beanClassObj).trim().length() == 0)) //!pageContext
@@ -41,7 +41,7 @@ request.setAttribute(ru.sibinco.smppgw.Constants.SMPPGW_ERROR_MESSAGES_ATTRIBUTE
 
     final String generatedBeanClass = buffer.substring(1);
     try {
-      Thread.currentThread().getContextClassLoader().loadClass("ru.sibinco.smppgw.beans." + generatedBeanClass);
+      Thread.currentThread().getContextClassLoader().loadClass("ru.sibinco.scag.beans." + generatedBeanClass);
       jspContext.setAttribute("generatedBeanClass", generatedBeanClass); //!pageContext
     } catch(ClassNotFoundException e) {
       //skip it
@@ -158,7 +158,7 @@ request.setAttribute(ru.sibinco.smppgw.Constants.SMPPGW_ERROR_MESSAGES_ATTRIBUTE
   <!--end of calendar-->
 
   <%if (request.getUserPrincipal() != null) {%>
-  <OBJECT id="tdcSmppgwStatusObject" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
+  <OBJECT id="tdcSCAGStatusObject" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
     <PARAM NAME="DataURL" VALUE="gw/status/status.jsp">
     <PARAM NAME="UseHeader" VALUE="True">
     <PARAM NAME="TextQualifier" VALUE='"'>
@@ -171,13 +171,13 @@ request.setAttribute(ru.sibinco.smppgw.Constants.SMPPGW_ERROR_MESSAGES_ATTRIBUTE
     return false;
   }
   <%if (request.getUserPrincipal() != null) {%>
-  function refreshTdcSmppgwStatusObject()
+  function refreshTdcSCAGStatusObject()
   {
-    document.all.tdcSmppgwStatusObject.DataURL = document.all.tdcSmppgwStatusObject.DataURL;
-    document.all.tdcSmppgwStatusObject.reset();
-    window.setTimeout(refreshTdcSmppgwStatusObject, 5000);
+    document.all.tdcSCAGStatusObject.DataURL = document.all.tdcSCAGStatusObject.DataURL;
+    document.all.tdcSCAGStatusObject.reset();
+    window.setTimeout(refreshTdcSCAGStatusObject, 5000);
   }
-  refreshTdcSmppgwStatusObject();
+  refreshTdcSCAGStatusObject();
   <%}%>
   </script>
 
@@ -204,7 +204,7 @@ request.setAttribute(ru.sibinco.smppgw.Constants.SMPPGW_ERROR_MESSAGES_ATTRIBUTE
       </table>
       <!-- main menu -->
       <sm-mm:menu>
-        <sm-mm:section menuId="MENU_SMPPGW_menu" submenuId="MENU_SMPPGW_submenu" name="SMPP&nbsp;Gateway">
+        <sm-mm:section menuId="MENU_SCAG_menu" submenuId="MENU_SCAG_submenu" name="SMPP&nbsp;Gateway">
           <sm-mm:item url="gw/status"                name="Status"          title=""/>
           <sm-mm:item url="gw/config"                name="Configuration"   title=""/>
           <sm-mm:item url="gw/providers"             name="Providers"       title=""/>
@@ -244,7 +244,7 @@ request.setAttribute(ru.sibinco.smppgw.Constants.SMPPGW_ERROR_MESSAGES_ATTRIBUTE
       <table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
         <tr>
           <th background="/images/smsc_17.jpg" nowrap>${title}</th>
-          <td align="right">&nbsp;<%if (request.getUserPrincipal() != null) {%><span id="SmppgwStatusSpan" datasrc=#tdcSmppgwStatusObject DATAFORMATAS=html datafld="status"/><%}%></td>
+          <td align="right">&nbsp;<%if (request.getUserPrincipal() != null) {%><span id="SCAGStatusSpan" datasrc=#tdcSCAGStatusObject DATAFORMATAS=html datafld="status"/><%}%></td>
           <td width=12px background="/images/smsc_19.jpg" style="padding-right:0px;"></td>
         </tr>
       </table>
@@ -258,19 +258,19 @@ request.setAttribute(ru.sibinco.smppgw.Constants.SMPPGW_ERROR_MESSAGES_ATTRIBUTE
         <input type=hidden ID=jbutton value=jbutton>
 
         <c:choose>
-          <c:when test="${!empty beanClass}"><sm:bean className="ru.sibinco.smppgw.beans.${beanClass}"/></c:when>
-          <c:otherwise><c:if test="${!empty generatedBeanClass}"><sm:bean className="ru.sibinco.smppgw.beans.${generatedBeanClass}"/></c:if></c:otherwise>
+          <c:when test="${!empty beanClass}"><sm:bean className="ru.sibinco.scag.beans.${beanClass}"/></c:when>
+          <c:otherwise><c:if test="${!empty generatedBeanClass}"><sm:bean className="ru.sibinco.scag.beans.${generatedBeanClass}"/></c:if></c:otherwise>
         </c:choose>
         <%--sm:message></sm:message--%>
 <%
-  //errorMessages=(java.util.List)request.getAttribute(ru.sibinco.smppgw.Constants.SMPPGW_ERROR_MESSAGES_ATTRIBUTE_NAME);
+  //errorMessages=(java.util.List)request.getAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAME);
 
   if (errorMessages.size() > 0)
    {
    	%><div class=content><%
    	for(java.util.Iterator it = errorMessages.iterator(); it.hasNext();)
    	{
-   		ru.sibinco.smppgw.beans.MessageException exc = (ru.sibinco.smppgw.beans.MessageException) it.next();
+   		ru.sibinco.scag.beans.MessageException exc = (ru.sibinco.scag.beans.MessageException) it.next();
       exc.printStackTrace(new java.io.PrintStream(System.err));
    		String code = exc.getCode();
       String text=exc.getMessage();

@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.perfmon;
+package ru.sibinco.scag.perfmon;
 
 import java.net.*;
 import java.io.IOException;

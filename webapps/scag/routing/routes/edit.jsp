@@ -2,7 +2,7 @@
                  ru.sibinco.lib.backend.util.StringEncoderDecoder"%>
 <%@include file="/WEB-INF/inc/header.jspf"%><%@
  taglib uri="http://java.sun.com/jsp/jstl/functions" prefix="fn"%>
-<!--jsp:useBean id="bean" beanName="bean"  class="ru.sibinco.smppgw.beans.routing.routes.Edit"/-->
+<!--jsp:useBean id="bean" beanName="bean"  class="ru.sibinco.scag.beans.routing.routes.Edit"/-->
 <sm:page>
   <jsp:attribute name="title">
     <c:choose>

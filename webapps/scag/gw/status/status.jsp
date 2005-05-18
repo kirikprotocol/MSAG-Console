@@ -1,5 +1,5 @@
 <%@ page import="ru.sibinco.lib.backend.service.ServiceInfo"
- %><jsp:useBean id="bean" class="ru.sibinco.smppgw.beans.gw.status.Status"
+ %><jsp:useBean id="bean" class="ru.sibinco.scag.beans.gw.status.Status"
  />status
 <%
   bean.process(request, response);

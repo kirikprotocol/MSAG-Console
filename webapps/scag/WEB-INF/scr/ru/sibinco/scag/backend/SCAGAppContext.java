@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.backend;
+package ru.sibinco.scag.backend;
 
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
@@ -7,13 +7,13 @@ import ru.sibinco.lib.backend.daemon.Daemon;
 import ru.sibinco.lib.backend.service.ServiceInfo;
 import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.lib.backend.util.conpool.NSConnectionPool;
-import ru.sibinco.smppgw.backend.resources.ResourceManager;
-import ru.sibinco.smppgw.backend.routing.BillingManager;
-import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
-import ru.sibinco.smppgw.backend.sme.*;
-import ru.sibinco.smppgw.backend.users.UserManager;
-import ru.sibinco.smppgw.backend.protocol.journal.Journal;
-import ru.sibinco.smppgw.perfmon.PerfServer;
+import ru.sibinco.scag.backend.resources.ResourceManager;
+import ru.sibinco.scag.backend.routing.BillingManager;
+import ru.sibinco.scag.backend.routing.GwRoutingManager;
+import ru.sibinco.scag.backend.sme.*;
+import ru.sibinco.scag.backend.users.UserManager;
+import ru.sibinco.scag.backend.protocol.journal.Journal;
+import ru.sibinco.scag.perfmon.PerfServer;
 import ru.sibinco.tomcat_auth.XmlAuthenticator;
 
 import javax.sql.DataSource;
@@ -27,9 +27,9 @@ import java.util.Properties;
 /**
  * Created by IntelliJ IDEA. User: igork Date: 25.02.2004 Time: 17:22:47
  */
-public class SmppGWAppContext
+public class SCAGAppContext
 {
-  private static SmppGWAppContext instance = null;
+  private static SCAGAppContext instance = null;
 
   private Logger logger = Logger.getLogger(this.getClass());
 
@@ -50,9 +50,9 @@ public class SmppGWAppContext
   private final DataSource connectionPool;
   private final BillingManager billingManager;
   private Journal journal = new Journal();
-  private Smppgw smppgw = null;
+  private SCAG scag = null;
 
-  private SmppGWAppContext(final String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException,
+  private SCAGAppContext(final String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException,
                                                                 Config.ParamNotFoundException, SibincoException
   {
     try {
@@ -70,8 +70,8 @@ public class SmppGWAppContext
       gwSmeManager.init();
       smscsManager = new SmscsManager(gwConfig,gwSmeManager);
       resourceManager = new ResourceManager(new File(gwConfigFolder));
-      smppgw = new Smppgw(gwDaemonHost, (int)config.getInt("gw daemon.port"),gwConfigFolder, this);
-     // smeHostsManager = new SmeHostsManager(config.getString("sme_file"), smppgw);
+      scag = new SCAG(gwDaemonHost, (int)config.getInt("gw daemon.port"),gwConfigFolder, this);
+     // smeHostsManager = new SmeHostsManager(config.getString("sme_file"), scag);
       billingManager = new BillingManager(new File(gwConfigFolder, "billing-rules.xml"));
       gwRoutingManager = new GwRoutingManager(new File(gwConfigFolder), gwSmeManager, providerManager, billingManager);
       gwRoutingManager.init();
@@ -80,7 +80,7 @@ public class SmppGWAppContext
       gateway = new Gateway(gwServiceInfo, (int) gwConfig.getInt("admin.port"));
       //DaemonManager daemonManager = new DaemonManager(smeManager, config);
      // ServiceManager serviceManager = new ServiceManager();
-     // serviceManager.add(smppgw);
+     // serviceManager.add(scag);
       //hostsManager = new HostsManager(daemonManager, serviceManager, smeManager, gwRoutingManager);
       statuses = new Statuses();
       perfServer = new PerfServer(config);
@@ -107,7 +107,7 @@ public class SmppGWAppContext
     perfServer.shutdown();
   }
 
-  public static synchronized SmppGWAppContext getInstance(final String config_filename) throws Throwable, IOException, ParserConfigurationException,
+  public static synchronized SCAGAppContext getInstance(final String config_filename) throws Throwable, IOException, ParserConfigurationException,
                                                                                                Config.ParamNotFoundException, SAXException, SibincoException
   {
 
@@ -115,7 +115,7 @@ public class SmppGWAppContext
       return instance;
     }
     else {
-      instance = new SmppGWAppContext(config_filename);
+      instance = new SCAGAppContext(config_filename);
       return instance ;
     }
   }
@@ -190,9 +190,9 @@ public class SmppGWAppContext
     return journal;
   }
 
-  public Smppgw getSmppgw()
+  public SCAG getSCAG()
   {
-    return smppgw;
+    return scag;
   }
 /*
   public SmeHostsManager getSmeHostsManager()

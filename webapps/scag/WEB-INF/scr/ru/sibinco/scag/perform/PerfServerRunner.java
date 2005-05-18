@@ -1,4 +1,4 @@
-package ru.sibinco.smppgw.perfmon;
+package ru.sibinco.scag.perfmon;
 
 import ru.sibinco.lib.backend.util.SnapBufferReader;
 

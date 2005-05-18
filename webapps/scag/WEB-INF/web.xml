@@ -6,7 +6,7 @@
   xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
   <filter>
     <filter-name>SCAG</filter-name>
-    <filter-class>ru.sibinco.smppgw.beans.SmppGWFilter</filter-class>
+    <filter-class>ru.sibinco.scag.beans.SCAGFilter</filter-class>
   </filter>
 
   <security-constraint>
@@ -94,11 +94,11 @@
 
   <jsp-config>
     <taglib>
-      <taglib-uri>/smppgw/func</taglib-uri>
+      <taglib-uri>/scag/func</taglib-uri>
       <taglib-location>/WEB-INF/scag.tld</taglib-location>
     </taglib>
     <!--jsp-property-group>
-      <display-name>SMPP Gateway</display-name>
+      <display-name>SCAG Gateway</display-name>
       <url-pattern>*.jsp</url-pattern>
       <el-ignored>false</el-ignored>
       <scripting-invalid>false</scripting-invalid>
