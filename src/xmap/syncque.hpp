@@ -241,7 +241,7 @@ public:
   MutexGuard g(mtx);
 
   PipeInfo * pi = getByImsi(imsi);
-  std::string str="";
+  std::string str="<null>";
   if(pi)
   {
    if(pi->text)

@@ -350,6 +350,8 @@ JSBool JSPipe::Register(JSContext *cx, JSObject *obj, uintN argc,
 
  pi->send_flag=PF_SMS_SEND_CONFIRM;
  
+ pi->ussd_flag=PF_USSD_RECIEVED;
+
  pi->recv_flag=PF_SMS_RECIEVED;
   
  pi->error_flag=PF_NOTHING;
@@ -612,10 +614,13 @@ void JSPipe::forwardSMS(USHORT_T dlgid,std::string str_oa,std::string str_da,std
 
  smsc::sms::Address addr(str_da.c_str());
 
+ smsc_log_info(logger,"addr=%s typeof number =%d",addr.toString().c_str(),addr.getTypeOfNumber());
+
  mkSubmitPDU(addr,str_text.c_str(),&pdu,false);
  
 
   __assign_message_(MAP_FWD_SM_IND);
+ 
  
   _mkMapAddress( &SM_RP_OA,str_oa.c_str(),str_oa.length());//orig address
  _mkMapAddress( &SM_RP_DA, str_msc_addr.c_str(),str_msc_addr.length());//sms center address
@@ -874,10 +879,12 @@ void JSPipe::send_PSSR_or_USSR_UssdRequestInd(UCHAR_T subsistem_number, bool isP
  if(str_text.length()>0)
  {
   unsigned _7bit_text_len = ConvertTextTo7Bit((  const char*)str_text.c_str(),
-             str_text.length() +1,
+             str_text.length()/* +1*/,
              (char * )tp_user_data,
              200,CONV_ENCODING_ANSI);
 
+
+    smsc_log_info(logger,"%s , text27bit len=%d ",__func__,_7bit_text_len);
 
   messmaker.insertUChar(_7bit_text_len );
   messmaker.insertPtr(tp_user_data,_7bit_text_len);

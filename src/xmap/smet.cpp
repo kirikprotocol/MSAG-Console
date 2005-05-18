@@ -1,7 +1,15 @@
-/*
-Ussd Sme for XMAP application
-by Mc.Green green@sibinco.ru
-*/
+/********************************************************************
+ created: 2005/05/17
+ created: 17:5:2005   16:19
+ filename:  D:\users\green\projects\smsc\xmap\smet.cpp
+ file path: D:\users\green\projects\smsc\xmap
+ file base: smet
+ file ext: cpp
+ author:  Gregory Panin
+ 
+ purpose: 
+*********************************************************************/
+
 #include "smet.h"
 #include "syncque.hpp"
 
@@ -10,7 +18,8 @@ extern bool stopProcess;
 Event ussd_evt;
 SmppTransmitter *tr;
 extern qMessage_t message_store;
-
+SMS xsms;
+bool bSend;
 /** Listener to SME for USSD processing.
 Main trend is RX message are moved to TX message.*/
 
@@ -33,15 +42,16 @@ Main trend is RX message are moved to TX message.*/
    char message[256];
       getPduText(((PduXSm*)pdu),msg,sizeof(msg));
 
-   printf("%s recieved '%s'",__func__,msg);
+   //printf("%s recieved '%s'",__func__,msg);
+
    smsc_log_info(smelogger,"%s recieved '%s'",__func__,msg);
    fflush(stdout);
-   sprintf(message,"USSD response '%s'",msg);
+   sprintf(message,"%s",msg);
       int len=strlen((char*)message);
 
 //////////////////////////////////////////////////////////////////////////
 
-   SMS xsms;
+   
       fetchSmsFromSmppPdu(((PduXSm*)pdu),&xsms);
 
 
@@ -54,10 +64,12 @@ Main trend is RX message are moved to TX message.*/
     uint32_t mref =  xsms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
     
     
+    //dest_addr.setValue(5,"02001");
        xsms.setDestinationAddress(dest_addr);
        xsms.setOriginatingAddress(src_addr);
 
-       smsc_log_info(smelogger,"%s, ora '%s' dsta '%s' 0x%.4x",__func__,src_addr.toString().c_str(),dest_addr.toString().c_str(),(USHORT_T)mref);
+
+       smsc_log_info(smelogger,"%s, ora '%s' dsta '%s' 0x%.4x   string length= %d",__func__,src_addr.toString().c_str(),dest_addr.toString().c_str(),(USHORT_T)mref,len);
 
        xsms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)message,len);
        xsms.setIntProperty(Tag::SMPP_SM_LENGTH,len);
@@ -65,29 +77,14 @@ Main trend is RX message are moved to TX message.*/
     xsms.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,mref);
        xsms.setIntProperty(Tag::SMPP_DATA_CODING,0);
 
-    
-    PduSubmitSm sm;
-
-    
-    fillSmppPduFromSms(&sm,&xsms);
-
-    sm.get_header().set_commandStatus(SmppCommandSet::REPLACE_SM);
-    PduSubmitSmResp *resp=trans->submit(sm); 
-    
-    smsc_log_info(smelogger,"%s SUBMIT STATUS = %d",__func__,resp->get_header().get_commandStatus());
-    if(resp)disposePdu((SmppHeader*)resp);
- 
+    // signalize to sender thread
+    bSend = true;
     ussd_evt.Signal();
 
     }
  else
  {
-   char msg[256];
-   char message[256];
-   getPduText(((PduXSm*)pdu),msg,sizeof(msg));
-   printf("recieved '%s'",msg);
-   smsc_log_info(smelogger,"%s cmd id %d recieved '%s'",__func__,pdu->get_commandId(),msg);
-   fflush(stdout);
+   smsc_log_info(smelogger,"%s cmd id 0x%.8x  recieved",__func__,pdu->get_commandId());
  
  }
  
@@ -112,6 +109,7 @@ Thread for running SME listener
 int UssdSmeRunner::Execute()
 {
 
+ bSend=false;
  // wait smsc powering
  while(message_store.bindOK!=2 && !stopProcess)
  {
@@ -127,10 +125,12 @@ int UssdSmeRunner::Execute()
  cfg.timeOut=10;
  cfg.password="";
  cfg.origAddr=message_store.config->getSmeAddress();
+
  MyListener lst;
  SmppSession ss(cfg,&lst);
 
  try{
+
    ss.connect();
    smsc_log_info(smelogger, "SME was connected.");
 
@@ -139,8 +139,29 @@ int UssdSmeRunner::Execute()
    
    while(!stopProcess)
    {
-    //ussd_evt.Wait();
-    sleep(2);
+    //  [5/17/2005]
+    // wait while ...
+    ussd_evt.Wait();
+
+    //send all
+    if(bSend)
+    {
+     PduSubmitSm sm;
+     fillSmppPduFromSms(&sm,&xsms);
+
+     SmppHeader* resp;
+     resp=(SmppHeader*)tr->submit(sm); 
+     
+     smsc_log_info(smelogger,"%s resp is 0x%x trans is 0x%x",__func__,resp,tr);
+
+     if(resp)
+     {
+      smsc_log_info(smelogger,"%s command status =%d",__func__,resp->get_commandStatus());
+      disposePdu((SmppHeader*)resp);
+     }
+     bSend = false;
+    }
+    
     
    }
   }

@@ -531,12 +531,12 @@ void _mkSS7GTAddress( ET96MAP_SS7_ADDR_T *addr, const ET96MAP_ADDRESS_T *saddr, 
  }
 }
 
-void _mkMapAddress( ET96MAP_ADDRESS_T *addr, const char *saddr, unsigned len) 
+void _mkMapAddress(ET96MAP_ADDRESS_T *addr, const char *saddr, unsigned len) 
 {
  unsigned i;
  int sz = (len+1)/2;
  addr->addressLength = len;
- addr->typeOfAddress = 0x91; // InterNational, ISDN
+ addr->typeOfAddress = 0x81; // InterNational, ISDN
  for( i = 0; i < len; i++ ) {
   int bi = i/2;
   if( i%2 == 1 ) {
@@ -1185,6 +1185,8 @@ UCHAR_T CMapStateMashine::parseUssdReqResp(MSG_T *message)
   /*else*/
   {
    UCHAR_T ussdStrLen = message->msg_p[6];
+   std::string dest_imsi = mdc->getImsi(dlgid);
+   UCHAR_T aePattern=0;
    
    if(ussdStrLen>0)
    {
@@ -1198,22 +1200,30 @@ UCHAR_T CMapStateMashine::parseUssdReqResp(MSG_T *message)
  
     lsztext[ussdStrLen]=0;
 
-    if(message->size==7+ussdStrLen+1)
-    {
-      UCHAR_T aePattern = message->msg_p[7+ussdStrLen];
-      mdc->setState(dlgid,DIALOG_FINISH);
-      
-      xmap_error(logger,"%s alerting/error pattern recieved %x",__func__,aePattern);
-      return aePattern;
-    }
-    
-    std::string ussd_str = lsztext;
+
+    std::string ussd_str;
+
+    if(lsztext && ussdStrLen)
+       ussd_str = lsztext;
   
     delete lsztext;
-
-    std::string dest_imsi = mdc->getImsi(dlgid);
     
-    xmap_trace(logger,"%s ussd string is '%s'",__func__,ussd_str.c_str());
+
+    if(message->size==7+ussdStrLen+1) // alerting paatern if end =0 on error !=0
+    {
+      aePattern = message->msg_p[7+ussdStrLen];
+      
+      mdc->setState(dlgid,DIALOG_FINISH);
+
+    }
+    xmap_trace(logger,"%s ussd string is '%s' len1=%d len2=%d",__func__,ussd_str.c_str(),len,ussdStrLen);
+    
+    if(aePattern!=0)
+    {
+     xmap_trace(logger,"%s exror, Alerting pattern recieved  %d",__func__,aePattern);
+    }
+    
+    
 
     if(!quall->PipesList.setText(dest_imsi,ussd_str,PF_USSD_RECIEVED,PL_FLAG_USSD_FLAG))
     {
@@ -1226,7 +1236,17 @@ UCHAR_T CMapStateMashine::parseUssdReqResp(MSG_T *message)
    }
    else
    {
-    xmap_error(logger,"error %s ussd string is empty!",__func__);
+    UCHAR_T ap;
+    if(message->size==8) // alerting paatern if end =0 on error !=0
+    {
+      aePattern= message->msg_p[7];
+      if(!aePattern)
+       mdc->setState(dlgid,DIALOG_FINISH);
+
+    }
+    xmap_error(logger,"%s empty ussd responce, alerting patter =%d",__func__,aePattern);
+    std::string strerr = "<null>";
+    quall->PipesList.setText(dest_imsi,strerr,PF_USSD_RECIEVED,PL_FLAG_USSD_FLAG);
     return 0xff;
 
    }
