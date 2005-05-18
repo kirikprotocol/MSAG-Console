@@ -43,12 +43,12 @@ MENU0_SELECTION = "MENU0_SERVICES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAddService",  "Add",  "Add service");
-page_menu_button(out, "mbDelete", "Delete", "Delete selected services", "return confirm('Are you sure to delete all selected services?')");
+page_menu_button(session, out, "mbAddService",  "Add",  "Add service");
+page_menu_button(session, out, "mbDelete", "Delete", "Delete selected services", "return confirm('Are you sure to delete all selected services?')");
 page_menu_space(out);
-page_menu_button(out, "mbDisconnectServices",  "Disconnect",  "Disconnect all selected services", "return confirm('Are you sure to disconnect all selected services?')", bean.isSmscAlive());
-page_menu_button(out, "mbStartService",  "Start",  "Start selected services");
-page_menu_button(out, "mbStopService",  "Stop",  "Stop selected services");
+page_menu_button(session, out, "mbDisconnectServices",  "Disconnect",  "Disconnect all selected services", "return confirm('Are you sure to disconnect all selected services?')", bean.isSmscAlive());
+page_menu_button(session, out, "mbStartService",  "Start",  "Start selected services");
+page_menu_button(session, out, "mbStopService",  "Stop",  "Stop selected services");
 page_menu_end(out);
 %><div class=content>
 <input type=hidden name=serviceId>
@@ -151,13 +151,13 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 <%
 page_menu_begin(out);
 if (request.isUserInRole("services")) {
-  page_menu_button(out, "mbAddService",  "Add",  "Add service");
-  page_menu_button(out, "mbDelete", "Delete", "Delete selected services", "return confirm('Are you sure to delete all selected services?');");
+  page_menu_button(session, out, "mbAddService",  "Add",  "Add service");
+  page_menu_button(session, out, "mbDelete", "Delete", "Delete selected services", "return confirm('Are you sure to delete all selected services?');");
 }
 page_menu_space(out);
-page_menu_button(out, "mbDisconnectServices",  "Disconnect",  "Disconnect all selected services", "return confirm('Are you sure to disconnect all selected services?')", bean.isSmscAlive());
-page_menu_button(out, "mbStartService",  "Start",  "Start selected services");
-page_menu_button(out, "mbStopService",  "Stop",  "Stop selected services");
+page_menu_button(session, out, "mbDisconnectServices",  "Disconnect",  "Disconnect all selected services", "return confirm('Are you sure to disconnect all selected services?')", bean.isSmscAlive());
+page_menu_button(session, out, "mbStartService",  "Start",  "Start selected services");
+page_menu_button(session, out, "mbStopService",  "Stop",  "Stop selected services");
 page_menu_end(out);
 %><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

@@ -110,9 +110,13 @@
 </tr>
 <tr class=row0>
   <th>From Date:</th>
-  <td nowrap><input type=text id=fromDate name=fromDate class=calendarField value="<%=bean.getFromDate()%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button></td>
+  <td nowrap><input type=text id=fromDate name=fromDate class=calendarField value="<%=bean.getFromDate()%>" maxlength=20 style="z-index:22;">
+    <button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button>
+  </td>
   <th>Till Date:</th>
-  <td nowrap><input type=text id="tillDate" name="tillDate" class=calendarField value="<%=bean.getTillDate()%>" maxlength=20><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
+  <td nowrap><input type=text id="tillDate" name="tillDate" class=calendarField value="<%=bean.getTillDate()%>" maxlength=20>
+    <button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button>
+  </td>
 </tr>
 <tr class=row1>
   <th>Rows maximum / Per page:</th>
@@ -171,8 +175,8 @@ hideSmeIds();
 <%}
 %></div><%
 page_menu_begin(out);
-page_menu_button(out, "mbQuery",  "Query !",  "Run query");
-page_menu_button(out, "mbClear", "Clear", "Clear query parameters");
+page_menu_button(session, out, "mbQuery",  "Query !",  "Run query");
+page_menu_button(session, out, "mbClear", "Clear", "Clear query parameters");
 page_menu_space(out);
 page_menu_end(out);
 %><div class=content><%
@@ -278,8 +282,8 @@ if (lastIndex >= bean.getTotalSizeInt() || bean.getPageSizeInt() < 0)
 </div>
 <% if (bean.getTotalSizeInt()>0 && bean.getStorageType() == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) {
 page_menu_begin(out);
-page_menu_button(out, "mbRemove", "Delete checked",  "Delete checked messages");
-page_menu_button(out, "mbDelete", "Delete All fetched", "Delete All fetched messages");
+page_menu_button(session, out, "mbRemove", "Delete checked",  "Delete checked messages");
+page_menu_button(session, out, "mbDelete", "Delete All fetched", "Delete All fetched messages");
 page_menu_space(out);
 page_menu_end(out);
 } %>

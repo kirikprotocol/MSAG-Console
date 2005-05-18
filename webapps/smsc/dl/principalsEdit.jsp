@@ -50,8 +50,8 @@
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbDone",  "Save",  "Save principal");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_button(session, out, "mbDone",  "Save",  "Save principal");
+page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

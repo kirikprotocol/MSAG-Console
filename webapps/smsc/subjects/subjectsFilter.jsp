@@ -25,9 +25,9 @@ MENU0_SELECTION = "MENU0_SUBJECTS";
 <%int rowN = 0;%>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbApply",  "Apply",  "Apply filter");
-page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_button(session, out, "mbApply",  "Apply",  "Apply filter");
+page_menu_button(session, out, "mbClear", "Clear", "Clear filter", "clickClear()");
+page_menu_button(session, out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -35,8 +35,8 @@ page_menu_end(out);
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Default SMEs ~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <div class=page_subtitle>Default SMEs</div>
 <table class=properties_list cellspacing=0 cellspadding=0>
-<col width=1%>
-<col width=99%>
+<col width="1%">
+<col width="99%">
 <%
 rowN = 0;
 for (Iterator i = bean.getAllSmes().iterator(); i.hasNext();)
@@ -90,9 +90,9 @@ for (int i=0; i<bean.getMasks().length; i++)
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbApply",  "Apply",  "Apply filter");
-page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_button(session, out, "mbApply",  "Apply",  "Apply filter");
+page_menu_button(session, out, "mbClear", "Clear", "Clear filter", "clickClear()");
+page_menu_button(session, out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

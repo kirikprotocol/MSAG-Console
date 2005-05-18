@@ -32,8 +32,8 @@ MENU0_SELECTION = "MENU0_HOSTS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add host",  "Add new host");
-page_menu_button(out, "mbDelete", "Delete host(s)", "Delete selected host(s)");
+page_menu_button(session, out, "mbAdd",  "Add host",  "Add new host");
+page_menu_button(session, out, "mbDelete", "Delete host(s)", "Delete selected host(s)");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -85,8 +85,8 @@ String hostName = (String) i.next();
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add host",  "Add new host");
-page_menu_button(out, "mbDelete", "Delete host(s)", "Delete selected host(s)");
+page_menu_button(session, out, "mbAdd",  "Add host",  "Add new host");
+page_menu_button(session, out, "mbDelete", "Delete host(s)", "Delete selected host(s)");
 page_menu_space(out);
 page_menu_end(out);
 %>

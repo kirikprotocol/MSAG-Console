@@ -29,9 +29,9 @@ MENU0_SELECTION = "MENU0_ROUTES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbApply",  "Apply",  "Apply filter");
-page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_button(session, out, "mbApply",  "Apply",  "Apply filter");
+page_menu_button(session, out, "mbClear", "Clear", "Clear filter", "clickClear()");
+page_menu_button(session, out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -300,9 +300,9 @@ String encName = StringEncoderDecoder.encode(name);
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbApply",  "Apply",  "Apply filter");
-page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_button(session, out, "mbApply",  "Apply",  "Apply filter");
+page_menu_button(session, out, "mbClear", "Clear", "Clear filter", "clickClear()");
+page_menu_button(session, out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

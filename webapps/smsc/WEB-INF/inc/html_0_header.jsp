@@ -15,5 +15,15 @@
   <link rel="STYLESHEET" type="text/css" href="/styles/page_menu.css">
   <link rel="STYLESHEET" type="text/css" href="/styles/sme_menu.css">
   <script src="/scripts/scripts.js" type="text/javascript"></script>
-</head>
-<body>
+
+<%@include file="top_menu.jsp"%>
+
+  </head>
+
+<%if(topMenu.size() > 0){%>
+  <body onload="initjsDOMenu()">
+
+<% setBrawser(session, request);%>
+<%}else{%>
+  <body>
+<%}%>

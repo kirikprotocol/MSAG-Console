@@ -45,7 +45,7 @@ MENU0_SELECTION = "MENU0_PROVIDERS";
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
    page_menu_begin(out);
-   page_menu_button(out, "mbAdd",  "Add provider",  "Add new provider");
+   page_menu_button(session, out, "mbAdd",  "Add provider",  "Add new provider");
    //page_menu_button(out, "mbDelete", "Delete provider(s)", "Delete selected provider(s)");
    page_menu_space(out);
    page_menu_end(out);
@@ -164,7 +164,7 @@ if (have) {
 </div>
  <%
    page_menu_begin(out);
-   page_menu_button(out, "mbAdd",  "Add provider",  "Add new provider");
+   page_menu_button(session, out, "mbAdd",  "Add provider",  "Add new provider");
   // page_menu_button(out, "mbDelete", "Delete provider(s)", "Delete selected provider(s)");
    page_menu_space(out);
    page_menu_end(out);

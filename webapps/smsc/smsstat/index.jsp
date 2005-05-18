@@ -48,7 +48,7 @@
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbQuery",  "Query !",  "Run query");
+page_menu_button(session, out, "mbQuery",  "Query !",  "Run query");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -211,7 +211,7 @@ while (i.hasNext()) {
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbDetail",  "Routes Statistics Details !",  "Run detail");
+page_menu_button(session, out, "mbDetail",  "Routes Statistics Details !",  "Run detail");
 page_menu_space(out);
 page_menu_end(out);
 %>

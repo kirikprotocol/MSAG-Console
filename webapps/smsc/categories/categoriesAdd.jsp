@@ -21,16 +21,16 @@ MENU0_SELECTION = "MENU0_CATEGORIES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbSave",  "Save",  "Save new category info");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel category adding", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "Save",  "Save new category info");
+page_menu_button(session, out, "mbCancel", "Cancel", "Cancel category adding", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>
 <%@ include file="categoryBody.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbSave",  "Save",  "Save new category info");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel category adding", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "Save",  "Save new category info");
+page_menu_button(session, out, "mbCancel", "Cancel", "Cancel category adding", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

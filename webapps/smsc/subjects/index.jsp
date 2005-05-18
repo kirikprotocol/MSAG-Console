@@ -109,7 +109,7 @@ function clickClickable(headId, bodyId)
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbQuery",  "Query",  "Query subjects");
+page_menu_button(session, out, "mbQuery",  "Query",  "Query subjects");
 page_menu_space(out);
 page_menu_end(out);%>
 <div class=content>
@@ -238,15 +238,15 @@ for(Iterator i = bean.getSubjects().iterator(); i.hasNext(); row++)
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add subject",  "Add new subject");
-page_menu_button(out, "mbDelete", "Delete subject(s)", "Delete selected subject(s)");
+page_menu_button(session, out, "mbAdd",  "Add subject",  "Add new subject");
+page_menu_button(session, out, "mbDelete", "Delete subject(s)", "Delete selected subject(s)");
 if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
   if (!bean.getAppContext().getStatuses().isRoutesRestored())
-    page_menu_button(out, "mbSave", "Save current", "Save current routing configuration");
+    page_menu_button(session, out, "mbSave", "Save current", "Save current routing configuration");
 if (bean.getAppContext().getStatuses().isRoutesSaved() && !bean.getAppContext().getStatuses().isRoutesRestored())
-    page_menu_button(out, "mbRestore", "Load saved", "Load saved routing configuration");
+    page_menu_button(session, out, "mbRestore", "Load saved", "Load saved routing configuration");
 if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
-    page_menu_button(out, "mbLoad", "Restore applied", "Restore applied routing configuration");
+    page_menu_button(session, out, "mbLoad", "Restore applied", "Restore applied routing configuration");
 page_menu_space(out);
 page_menu_end(out);%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

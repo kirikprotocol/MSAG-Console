@@ -42,15 +42,15 @@ MENU0_SELECTION = "MENU0_ROUTES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add route",  "Add new route");
-page_menu_button(out, "mbDelete", "Delete route(s)", "Delete selected route(s)");
+page_menu_button(session, out, "mbAdd",  "Add route",  "Add new route");
+page_menu_button(session, out, "mbDelete", "Delete route(s)", "Delete selected route(s)");
 if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
   if (!bean.getAppContext().getStatuses().isRoutesRestored())
-    page_menu_button(out, "mbSave", "Save current", "Save current routing configuration");
+    page_menu_button(session, out, "mbSave", "Save current", "Save current routing configuration");
 if (bean.getAppContext().getStatuses().isRoutesSaved() && !bean.getAppContext().getStatuses().isRoutesRestored())
-    page_menu_button(out, "mbRestore", "Load saved", "Load saved routing configuration");
+    page_menu_button(session, out, "mbRestore", "Load saved", "Load saved routing configuration");
 if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
-    page_menu_button(out, "mbLoad", "Restore applied", "Restore applied routing configuration");
+    page_menu_button(session, out, "mbLoad", "Restore applied", "Restore applied routing configuration");
 page_menu_space(out);
 page_menu_end(out);%>
 <div class=content>
@@ -121,8 +121,8 @@ function clickClickable(headId, bodyId)
 
 <%
 page_small_menu_begin(out);
-page_menu_button(out, "mbQuickFilter",  "Apply",  "Apply filter","return clickFilterSelect()",true);
-page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
+page_menu_button(session, out, "mbQuickFilter",  "Apply",  "Apply filter","return clickFilterSelect()",true);
+page_menu_button(session, out, "mbClear", "Clear", "Clear filter", "clickClear()");
 //page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
 //page_menu_space(out);
 page_small_menu_end(out);
@@ -248,19 +248,19 @@ for(Iterator i = bean.getRoutes().iterator(); i.hasNext(); row++)
   }
 
   page_menu_begin(out);
-  page_menu_button(out, "mbAdd",  "Add route",  "Add new route");
-  page_menu_button(out, "mbDelete", "Delete route(s)", "Delete selected route(s)");
+  page_menu_button(session, out, "mbAdd",  "Add route",  "Add new route");
+  page_menu_button(session, out, "mbDelete", "Delete route(s)", "Delete selected route(s)");
   if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
     if (!bean.getAppContext().getStatuses().isRoutesRestored())
-      page_menu_button(out, "mbSave", "Save current", "Save current routing configuration");
+      page_menu_button(session, out, "mbSave", "Save current", "Save current routing configuration");
   if (bean.getAppContext().getStatuses().isRoutesSaved() && !bean.getAppContext().getStatuses().isRoutesRestored())
-    page_menu_button(out, "mbRestore", "Load saved", "Load saved routing configuration",
+    page_menu_button(session, out, "mbRestore", "Load saved", "Load saved routing configuration",
                      restoreDate != null
                         ? "return confirm('Date of saved file is " + restoreDate + ". Are you sure to load this file?');"
                         : null
                      );
   if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
-    page_menu_button(out, "mbLoad", "Restore applied", "Restore applied routing configuration",
+    page_menu_button(session, out, "mbLoad", "Restore applied", "Restore applied routing configuration",
                      loadDate != null
                         ? "return confirm('Date of restore file is " + loadDate + ". Are you sure to load this file?');"
                         : null

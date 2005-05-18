@@ -111,7 +111,7 @@ function setSort(sorting)
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbClearNonappliable",  "Clear non-appliable",  "Clear all non-appliable entries", "return confirm('Are you sure to clear all non-appliable entries?');");
+page_menu_button(session, out, "mbClearNonappliable",  "Clear non-appliable",  "Clear all non-appliable entries", "return confirm('Are you sure to clear all non-appliable entries?');");
 page_menu_space(out);
 page_menu_end(out);
 %>

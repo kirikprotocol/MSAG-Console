@@ -1,7 +1,7 @@
 <link rel="STYLESHEET" type="text/css" href="/styles/calendar.css">
 <script src="/scripts/calendar.js" type="text/javascript"></script>
 <iframe id=calendarIFrame class=calendarHiddenLayer2 src="/images/blank.html"></iframe>
-<div id=calendarPanel class=calendarHiddenLayer
+<div id="calendarPanel" class="calendarHiddenLayer"
   oncontextmenu="return false;"
   onselectstart="return false;"
   ondragstart="return false;"
@@ -10,17 +10,17 @@
   onmousemove="return calendarMM();"
   onlosecapture="return calendarClose();"
   onfocusout="return calendarClose();">
-<table border=1 bgcolor="#dododo" cellpadding=0 cellspacing=2>
+<table border="1" bgcolor="#dododo" cellpadding="0" cellspacing="2">
 <tr>
 <td style="border:0;">
-  <table cellpadding=1 cellspacing=0>
+  <table cellpadding="1" cellspacing="0">
     <tr>
       <td style="border:0; border-bottom:solid 1px #000000; padding-bottom:2px;padding-top:0px">
-        <table height=100% cellpadding=0 cellspacing=0>
-          <tr align=center class=calendarYear>
-            <td colspan=5 id=calendarYearPanel></td>
-            <td colspan=2 align=rigth>
-              <table cellpadding=0 cellspacing=0 class=calendarMonth>
+        <table height="100%" cellpadding="0" cellspacing="0">
+          <tr align="center" class="calendarYear">
+            <td colspan="5" id="calendarYearPanel"></td>
+            <td colspan="2" align="rigth">
+              <table cellpadding="0" cellspacing="0" class="calendarMonth">
                 <tr align=right>
                   <td width="100%" name=calendarMonthMinus style="font-family: Webdings;">3</td>
                   <td name=calendarMonthPlus style="font-family: Webdings;">4</td>
@@ -28,13 +28,13 @@
               </table>
             </td>
           </tr>
-          <tr align=center style="padding-top:2px" class=calendarWeekDay id=calendarWeekDays></tr>
+          <tr align="center" style="padding-top:2px" class="calendarWeekDay" id="calendarWeekDays"></tr>
         </table>
       </td>
     </tr>
     <tr>
       <td id=calendarDaysPanel style="border:0; border-top:solid 1px #ffffff; padding-top:2px">
-        <table height=100% cellpadding=0 cellspacing=0 class=calendarDate id=calendarDaysTable></table>
+        <table height="100%" cellpadding="0" cellspacing="0" class="calendarDate" id="calendarDaysTable"></table>
       </td>
     </tr>
     <tr>

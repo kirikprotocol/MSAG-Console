@@ -42,7 +42,7 @@ Commutator&nbsp;number&nbsp;prefix:<input class=txt name=prefix value="<%=bean.g
 </div>
 <%
   page_menu_begin(out);
-  page_menu_button(out, "mbQuery",  "Query",  "Query");
+  page_menu_button(session, out, "mbQuery",  "Query",  "Query");
   page_menu_space(out);
   page_menu_end(out);
 %>

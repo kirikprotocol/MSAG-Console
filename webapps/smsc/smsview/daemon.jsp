@@ -50,11 +50,11 @@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
 %>
 <%
   page_menu_begin(out);
-  page_menu_button(out, "mbSave",  "Save",  "Save config");
-  page_menu_button(out, "mbReset", "Reset", "Reset", "clickCancel()");
+  page_menu_button(session, out, "mbSave",  "Save",  "Save config");
+  page_menu_button(session, out, "mbReset", "Reset", "Reset", "clickCancel()");
   page_menu_space(out);
-  page_menu_button(out, "mbStart", "Start", "Start daemon", bean.getStatus() == ServiceInfo.STATUS_STOPPED);
-  page_menu_button(out, "mbStop",  "Stop",  "Stop daemon", bean.getStatus() == ServiceInfo.STATUS_RUNNING);
+  page_menu_button(session, out, "mbStart", "Start", "Start daemon", bean.getStatus() == ServiceInfo.STATUS_STOPPED);
+  page_menu_button(session, out, "mbStop",  "Stop",  "Stop daemon", bean.getStatus() == ServiceInfo.STATUS_RUNNING);
   page_menu_end(out);
 %>
 <script language="JavaScript">
@@ -189,8 +189,8 @@ function delParam(sectionName, paramName)
     finishSection(out);
 %></div><%
   page_menu_begin(out);
-  page_menu_button(out, "mbSave",  "Save",  "Save config");
-  page_menu_button(out, "mbReset", "Reset", "Reset", "clickCancel()");
+  page_menu_button(session, out, "mbSave",  "Save",  "Save config");
+  page_menu_button(session, out, "mbReset", "Reset", "Reset", "clickCancel()");
   page_menu_space(out);
   page_menu_end(out);
 %>

@@ -38,8 +38,8 @@ MENU0_SELECTION = "MENU0_ALIASES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add alias",  "Add alias");
-page_menu_button(out, "mbDelete", "Delete alias(es)", "Delete selected aliases");
+page_menu_button(session, out, "mbAdd",  "Add alias",  "Add alias");
+page_menu_button(session, out, "mbDelete", "Delete alias(es)", "Delete selected aliases");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -106,8 +106,8 @@ String encAddress = StringEncoderDecoder.encode((String)item.getValue("Address")
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add alias",  "Add alias");
-page_menu_button(out, "mbDelete", "Delete alias(es)", "Delete selected aliases");
+page_menu_button(session, out, "mbAdd",  "Add alias",  "Add alias");
+page_menu_button(session, out, "mbDelete", "Delete alias(es)", "Delete selected aliases");
 page_menu_space(out);
 page_menu_end(out);
 %>

@@ -27,8 +27,8 @@ MENU0_SELECTION = "MENU0_LOCALE_RESOURCES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 	page_menu_begin(out);
-	page_menu_button(out, "mbEdit", "Edit", "Edit this resource file");
-   page_menu_button(out, "mbDone", "Done", "Return to locales list");
+	page_menu_button(session, out, "mbEdit", "Edit", "Edit this resource file");
+   page_menu_button(session, out, "mbDone", "Done", "Return to locales list");
 	page_menu_space(out);
 	page_menu_end(out);
 %>
@@ -38,8 +38,8 @@ MENU0_SELECTION = "MENU0_LOCALE_RESOURCES";
 </div>
 <%
 	page_menu_begin(out);
-	page_menu_button(out, "mbEdit", "Edit", "Edit this resource file");
-   page_menu_button(out, "mbDone", "Done", "Return to locales list");
+	page_menu_button(session, out, "mbEdit", "Edit", "Edit this resource file");
+   page_menu_button(session, out, "mbDone", "Done", "Return to locales list");
 	page_menu_space(out);
 	page_menu_end(out);
 %>

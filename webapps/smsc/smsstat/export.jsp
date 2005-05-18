@@ -105,7 +105,7 @@ function userDefined(){
 </div> <!-- content -->
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbExport",  "Export !",  "Process export statistics to selected destination");
+page_menu_button(session, out, "mbExport",  "Export !",  "Process export statistics to selected destination");
 page_menu_space(out);
 page_menu_end(out);
 %>

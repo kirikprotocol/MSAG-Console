@@ -33,7 +33,7 @@ MENU0_SELECTION = "MENU0_LOCALE_RESOURCES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add locale resource",  "Add locale resource");
+page_menu_button(session, out, "mbAdd",  "Add locale resource",  "Add locale resource");
 //page_menu_button(out, "mbDelete", "Delete locale resource(s)", "Delete selected locale resource(s)");
 page_menu_space(out);
 page_menu_end(out);
@@ -96,7 +96,7 @@ String encLocale = StringEncoderDecoder.encode(locale);
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add locale resource",  "Add locale resource");
+page_menu_button(session, out, "mbAdd",  "Add locale resource",  "Add locale resource");
 //page_menu_button(out, "mbDelete", "Delete locale resource(s)", "Delete selected locale resource(s)");
 page_menu_space(out);
 page_menu_end(out);

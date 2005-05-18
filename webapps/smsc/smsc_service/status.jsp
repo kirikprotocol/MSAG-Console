@@ -96,7 +96,7 @@ switch(bean.process(request))
 MENU0_SELECTION = "MENU0_SMSC_Status";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%><%
 page_menu_begin(out);
-page_menu_button(out, "mbApply",  "Apply",  "Apply");
+page_menu_button(session, out, "mbApply",  "Apply",  "Apply");
 page_menu_space(out);
 page_menu_end(out);
 %><div class="content">
@@ -134,7 +134,7 @@ page_menu_end(out);
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbApply",  "Apply",  "Apply");
+page_menu_button(session, out, "mbApply",  "Apply",  "Apply");
 page_menu_space(out);
 page_menu_end(out);
 %><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

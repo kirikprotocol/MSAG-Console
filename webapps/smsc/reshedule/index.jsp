@@ -39,11 +39,11 @@ switch(bean.process(request))
 include file="/WEB-INF/inc/html_3_header.jsp"%><%@
 include file="/WEB-INF/inc/collapsing_tree.jsp"%><%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add",  "Add new reshedule policy", !bean.isAllErrorsAssigned(request.getLocale()));
-page_menu_button(out, "mbDelete",  "Delete",  "Delete all checked reshedules", "return confirm('Are you sure to delete all checked reshedules?')");
+page_menu_button(session, out, "mbAdd",  "Add",  "Add new reshedule policy", !bean.isAllErrorsAssigned(request.getLocale()));
+page_menu_button(session, out, "mbDelete",  "Delete",  "Delete all checked reshedules", "return confirm('Are you sure to delete all checked reshedules?')");
 page_menu_space(out);
-page_menu_button(out, "mbSave",  "Save",  "Save current shedules to config");
-page_menu_button(out, "mbReset", "Reset", "Read reshedules from config");
+page_menu_button(session, out, "mbSave",  "Save",  "Save current shedules to config");
+page_menu_button(session, out, "mbReset", "Reset", "Read reshedules from config");
 page_menu_end(out);
 %><%-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMSC Config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <div class=content>
@@ -108,11 +108,11 @@ function clickEdit(value)
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add",  "Add new reshedule policy", !bean.isAllErrorsAssigned(request.getLocale()));
-page_menu_button(out, "mbDelete",  "Delete",  "Delete all checked reshedules", "return confirm('Are you sure to delete all checked reshedules?')");
+page_menu_button(session, out, "mbAdd",  "Add",  "Add new reshedule policy", !bean.isAllErrorsAssigned(request.getLocale()));
+page_menu_button(session, out, "mbDelete",  "Delete",  "Delete all checked reshedules", "return confirm('Are you sure to delete all checked reshedules?')");
 page_menu_space(out);
-page_menu_button(out, "mbSave",  "Save",  "Save current shedules to config");
-page_menu_button(out, "mbReset", "Reset", "Read reshedules from config");
+page_menu_button(session, out, "mbSave",  "Save",  "Save current shedules to config");
+page_menu_button(session, out, "mbReset", "Reset", "Read reshedules from config");
 page_menu_end(out);
 %><%@
  include file="/WEB-INF/inc/html_3_footer.jsp"%><%@

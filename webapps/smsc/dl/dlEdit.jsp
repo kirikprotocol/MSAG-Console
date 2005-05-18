@@ -19,8 +19,8 @@ switch (bean.process(request))
 <%@ include file="dlBody.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbSave",  "Save",  "Save Distribution list");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "Save",  "Save Distribution list");
+page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

@@ -29,8 +29,8 @@ MENU0_SELECTION = "MENU0_SERVICES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbNext",  "Next",  "Next page");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel");
+page_menu_button(session, out, "mbNext",  "Next",  "Next page");
+page_menu_button(session, out, "mbCancel", "Cancel", "Cancel");
 page_menu_space(out);
 page_menu_end(out);
 %><div class=content>
@@ -54,8 +54,8 @@ page_menu_end(out);
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbNext",  "Next",  "Next page");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel");
+page_menu_button(session, out, "mbNext",  "Next",  "Next page");
+page_menu_button(session, out, "mbCancel", "Cancel", "Cancel");
 page_menu_space(out);
 page_menu_end(out);
 %><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

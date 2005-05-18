@@ -45,7 +45,8 @@ MENU0_SELECTION = "MENU0_CATEGORIES";
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
    page_menu_begin(out);
-   page_menu_button(out, "mbAdd",  "Add category",  "Add new category");
+
+   page_menu_button(session, out, "mbAdd",  "Add category",  "Add new category");
   // page_menu_button(out, "mbDelete", "Delete category(ies)", "Delete selected category(ies)");
    page_menu_space(out);
    page_menu_end(out);
@@ -164,7 +165,7 @@ if (have) {
 </div>
  <%
    page_menu_begin(out);
-   page_menu_button(out, "mbAdd",  "Add category",  "Add new category");
+   page_menu_button(session, out, "mbAdd",  "Add category",  "Add new category");
   // page_menu_button(out, "mbDelete", "Delete category(ies)", "Delete selected category(ies)");
    page_menu_space(out);
    page_menu_end(out);

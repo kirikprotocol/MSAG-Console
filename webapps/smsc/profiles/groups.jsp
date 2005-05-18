@@ -138,8 +138,8 @@ if (divertActive.length() == 0)
 if (bean.isEditAllowed())
 {
 	page_menu_begin(out);
-	page_menu_button(out, "mbAdd",  "Add profile",  "Add new profile");
-	page_menu_button(out, "mbDelete", "Delete", "Delete checked profiles", "return confirm('Are you sure to delete all checked profiles?');");
+	page_menu_button(session, out, "mbAdd",  "Add profile",  "Add new profile");
+	page_menu_button(session, out, "mbDelete", "Delete", "Delete checked profiles", "return confirm('Are you sure to delete all checked profiles?');");
 	page_menu_space(out);
 	page_menu_end(out);
 }%>

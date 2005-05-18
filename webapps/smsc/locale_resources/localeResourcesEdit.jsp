@@ -210,8 +210,8 @@ function addSection(parentSectionName)
 </script>
 <%
 	page_menu_begin(out);
-	page_menu_button(out, "mbSave", "Save", "Save changes and return to locales list");
-   page_menu_button(out, "mbCancel", "Cancel", "Cancel changes and return to locales list");
+	page_menu_button(session, out, "mbSave", "Save", "Save changes and return to locales list");
+   page_menu_button(session, out, "mbCancel", "Cancel", "Cancel changes and return to locales list");
 	page_menu_space(out);
 	page_menu_end(out);
 %>
@@ -224,8 +224,8 @@ function addSection(parentSectionName)
 </div>
 <%
 	page_menu_begin(out);
-	page_menu_button(out, "mbSave", "Save", "Save changes and return to locales list");
-   page_menu_button(out, "mbCancel", "Cancel", "Cancel changes and return to locales list");
+	page_menu_button(session, out, "mbSave", "Save", "Save changes and return to locales list");
+   page_menu_button(session, out, "mbCancel", "Cancel", "Cancel changes and return to locales list");
 	page_menu_space(out);
 	page_menu_end(out);
 %>

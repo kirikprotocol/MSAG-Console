@@ -37,8 +37,8 @@
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add distribution list",  "Create new distribution list");
-page_menu_button(out, "mbDelete", "Delete distribution list(s)", "Delete selected distribution list(s)");
+page_menu_button(session, out, "mbAdd",  "Add distribution list",  "Create new distribution list");
+page_menu_button(session, out, "mbDelete", "Delete distribution list(s)", "Delete selected distribution list(s)");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -99,8 +99,8 @@ for (Iterator i = bean.getDls().iterator(); i.hasNext(); )
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add distribution list",  "Create new distribution list");
-page_menu_button(out, "mbDelete", "Delete distribution list(s)", "Delete selected distribution list(s)");
+page_menu_button(session, out, "mbAdd",  "Add distribution list",  "Create new distribution list");
+page_menu_button(session, out, "mbDelete", "Delete distribution list(s)", "Delete selected distribution list(s)");
 page_menu_space(out);
 page_menu_end(out);
 %>

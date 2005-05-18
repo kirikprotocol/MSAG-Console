@@ -38,8 +38,8 @@ MENU0_SELECTION = "MENU0_USERS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add user",  "Add new user");
-page_menu_button(out, "mbDelete", "Delete user(s)", "Delete selected user(s)");
+page_menu_button(session, out, "mbAdd",  "Add user",  "Add new user");
+page_menu_button(session, out, "mbDelete", "Delete user(s)", "Delete selected user(s)");
 page_menu_space(out);
 page_menu_end(out);
 %><div class=content>
@@ -107,8 +107,8 @@ String encDept = StringEncoderDecoder.encode((String) item.getValue("dept"));
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add user",  "Add new user");
-page_menu_button(out, "mbDelete", "Delete user(s)", "Delete selected user(s)");
+page_menu_button(session, out, "mbAdd",  "Add user",  "Add new user");
+page_menu_button(session, out, "mbDelete", "Delete user(s)", "Delete selected user(s)");
 page_menu_space(out);
 page_menu_end(out);
 %>

@@ -62,9 +62,9 @@ for (int i=0; i<bean.getNames().length; i++)
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbApply",  "Apply",  "Apply filter to distribution lists list");
-page_menu_button(out, "mbClear", "Clear", "Clear filter");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing");
+page_menu_button(session, out, "mbApply",  "Apply",  "Apply filter to distribution lists list");
+page_menu_button(session, out, "mbClear", "Clear", "Clear filter");
+page_menu_button(session, out, "mbCancel", "Cancel", "Cancel filter editing");
 page_menu_space(out);
 page_menu_end(out);
 %>

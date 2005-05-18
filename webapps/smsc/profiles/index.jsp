@@ -67,7 +67,7 @@ Profile prefix <input class=txt name=filterMask value="<%=bean.getFilterMask()%>
 </div>
 <%
 	page_menu_begin(out);
-	page_menu_button(out, "mbQuery",  "Query",  "Query");
+	page_menu_button(session, out, "mbQuery",  "Query",  "Query");
 	page_menu_space(out);
 	page_menu_end(out);
 	if (bean.isQueried())
@@ -158,8 +158,8 @@ Profile prefix <input class=txt name=filterMask value="<%=bean.getFilterMask()%>
 		if (bean.isEditAllowed())
 		{
 			page_menu_begin(out);
-			page_menu_button(out, "mbAdd",  "Add profile",  "Add new profile");
-			page_menu_button(out, "mbDelete", "Delete", "Delete checked profiles", "return confirm('Are you sure to delete all checked profiles?');", false);
+			page_menu_button(session, out, "mbAdd",  "Add profile",  "Add new profile");
+			page_menu_button(session, out, "mbDelete", "Delete", "Delete checked profiles", "return confirm('Are you sure to delete all checked profiles?');", false);
 			page_menu_space(out);
 			page_menu_end(out);
 		}

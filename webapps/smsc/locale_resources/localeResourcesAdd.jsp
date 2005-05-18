@@ -28,8 +28,8 @@ switch(bean.process(request))
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbUpload",  "Upload",  "Upload selected resource file");
-page_menu_button(out, "mbCancel", "Cancel", "Return to locales list without uploading resources");
+page_menu_button(session, out, "mbUpload",  "Upload",  "Upload selected resource file");
+page_menu_button(session, out, "mbCancel", "Cancel", "Return to locales list without uploading resources");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -39,8 +39,8 @@ Resource file: <input class=txt type="file" name="resourceFile" accept="text/xml
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbUpload",  "Upload",  "Upload selected resource file");
-page_menu_button(out, "mbCancel", "Cancel", "Return to locales list without uploading resources");
+page_menu_button(session, out, "mbUpload",  "Upload",  "Upload selected resource file");
+page_menu_button(session, out, "mbCancel", "Cancel", "Return to locales list without uploading resources");
 page_menu_space(out);
 page_menu_end(out);
 %>

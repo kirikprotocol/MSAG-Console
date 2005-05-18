@@ -43,7 +43,7 @@ abonent number <input class=txt name=profile value="<%=bean.getProfile() != null
 </div>
 	<%
 	page_menu_begin(out);
-	page_menu_button(out, "mbLookup",  "Lookup",  "Lookup profile");
+	page_menu_button(session, out, "mbLookup",  "Lookup",  "Lookup profile");
 	page_menu_space(out);
 	page_menu_end(out);
 
@@ -161,16 +161,16 @@ abonent number <input class=txt name=profile value="<%=bean.getProfile() != null
 	switch (bean.getMatchType())
 	{
 		case ProfileEx.MATCH_MASK:
-			page_menu_button(out, "mbAdd",        "Add profile",  "Add new profile");
-			page_menu_button(out, "mbEditMask",   "Edit mask",    "Edit matched mask");
-			page_menu_button(out, "mbDeleteMask", "Delete mask",  "Delete matched mask", "return confirm('Are you sure to delete matched mask?');");
+			page_menu_button(session, out, "mbAdd",        "Add profile",  "Add new profile");
+			page_menu_button(session, out, "mbEditMask",   "Edit mask",    "Edit matched mask");
+			page_menu_button(session, out, "mbDeleteMask", "Delete mask",  "Delete matched mask", "return confirm('Are you sure to delete matched mask?');");
 			break;
 		case ProfileEx.MATCH_DEFAULT:
-			page_menu_button(out, "mbAdd",      "Add profile",  "Add new profile");
+			page_menu_button(session, out, "mbAdd",      "Add profile",  "Add new profile");
 			break;
 		case ProfileEx.MATCH_EXACT:
-			page_menu_button(out, "mbEdit",   "Edit",   "Edit this profile");
-			page_menu_button(out, "mbDelete", "Delete", "Delete this profile", "return confirm('Are you sure to delete this profile?');");
+			page_menu_button(session, out, "mbEdit",   "Edit",   "Edit this profile");
+			page_menu_button(session, out, "mbDelete", "Delete", "Delete this profile", "return confirm('Are you sure to delete this profile?');");
 			break;
 	}
 	page_menu_space(out);

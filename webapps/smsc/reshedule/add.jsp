@@ -26,8 +26,8 @@ switch(bean.process(request))
 include file="/WEB-INF/inc/html_3_header.jsp"%><%@
 include file="/WEB-INF/inc/collapsing_tree.jsp"%><%
 page_menu_begin(out);
-page_menu_button(out, "mbSave",  "Done",  "Save config");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "Done",  "Save config");
+page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %><%-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMSC Config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
@@ -35,8 +35,8 @@ page_menu_end(out);
 <%@ include file="body.jsp"%>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbSave",  "Done",  "Save config");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "Done",  "Save config");
+page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %><%@

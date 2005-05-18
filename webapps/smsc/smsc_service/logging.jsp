@@ -36,8 +36,8 @@
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>
 <%
   page_menu_begin(out);
-  page_menu_button(out, "mbSave",  "Save",  "Save user info");
-  page_menu_button(out, "mbCancel", "Cancel", "Cancel user editing", "clickCancel()");
+  page_menu_button(session, out, "mbSave",  "Save",  "Save user info");
+  page_menu_button(session, out, "mbCancel", "Cancel", "Cancel user editing", "clickCancel()");
   page_menu_space(out);
   page_menu_end(out);
 %><div class=content><%!
@@ -91,8 +91,8 @@
   printCategory(out, bean.getRootCategory());
 %></div><%
 page_menu_begin(out);
-page_menu_button(out, "mbSave",  "Save",  "Save user info");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel user editing", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "Save",  "Save user info");
+page_menu_button(session, out, "mbCancel", "Cancel", "Cancel user editing", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %><%@

@@ -141,8 +141,8 @@ function addDirectiveAlias()
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbDone",  "Done",  "Done");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel user editing", "clickCancel()");
+page_menu_button(session, out, "mbDone",  "Done",  "Done");
+page_menu_button(session, out, "mbCancel", "Cancel", "Cancel user editing", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

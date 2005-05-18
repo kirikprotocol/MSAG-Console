@@ -47,7 +47,7 @@ Address starts with <input class=txt name=filterAddress value="<%=bean.getFilter
 </div>
 <%
   page_menu_begin(out);
-  page_menu_button(out, "mbQuery",  "Query",  "Query");
+  page_menu_button(session, out, "mbQuery",  "Query",  "Query");
   page_menu_space(out);
   page_menu_end(out);
   if (bean.isInitialized())
@@ -110,8 +110,8 @@ for (Iterator i = bean.getPrincipals().iterator(); i.hasNext(); )
 <%
     }
     page_menu_begin(out);
-    page_menu_button(out, "mbAdd",  "Add principal",  "Create new principal");
-    page_menu_button(out, "mbDelete", "Delete principal(s)", "Delete selected principal(s)", "return confirm('Are you sure to delete all checked principal(s)?');");
+    page_menu_button(session, out, "mbAdd",  "Add principal",  "Create new principal");
+    page_menu_button(session, out, "mbDelete", "Delete principal(s)", "Delete selected principal(s)", "return confirm('Are you sure to delete all checked principal(s)?');");
     page_menu_space(out);
     page_menu_end(out);
   }

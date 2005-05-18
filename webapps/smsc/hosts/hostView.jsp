@@ -42,11 +42,11 @@ MENU0_SELECTION = "MENU0_HOSTS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAddService",  "Add service",  "Add new service");
-page_menu_button(out, "mbDelete", "Delete service(s)", "Delete selected service(s)");
+page_menu_button(session, out, "mbAddService",  "Add service",  "Add new service");
+page_menu_button(session, out, "mbDelete", "Delete service(s)", "Delete selected service(s)");
 page_menu_space(out);
-page_menu_button(out, "mbStartService",  "Start service(s)",  "Start selected service(s)");
-page_menu_button(out, "mbStopService", "Stop service(s)", "Stop selected service(s)");
+page_menu_button(session, out, "mbStartService",  "Start service(s)",  "Start selected service(s)");
+page_menu_button(session, out, "mbStopService", "Stop service(s)", "Stop selected service(s)");
 page_menu_end(out);
 %>
 <div class=content>
@@ -127,11 +127,11 @@ String serviceControl = (row == 0) ? "start" : "stop";
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAddService",  "Add service",  "Add new service");
-page_menu_button(out, "mbDelete", "Delete service(s)", "Delete selected service(s)");
+page_menu_button(session, out, "mbAddService",  "Add service",  "Add new service");
+page_menu_button(session, out, "mbDelete", "Delete service(s)", "Delete selected service(s)");
 page_menu_space(out);
-page_menu_button(out, "mbStartService",  "Start service(s)",  "Start selected service(s)");
-page_menu_button(out, "mbStopService", "Stop service(s)", "Stop selected service(s)");
+page_menu_button(session, out, "mbStartService",  "Start service(s)",  "Start selected service(s)");
+page_menu_button(session, out, "mbStopService", "Stop service(s)", "Stop selected service(s)");
 page_menu_end(out);
 %><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

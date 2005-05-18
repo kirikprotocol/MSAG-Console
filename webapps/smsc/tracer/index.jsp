@@ -53,8 +53,8 @@
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbCheck", "Loadup & Check", "Load & Check routing configuration");
-page_menu_button(out, "mbTrace", "Trace route", "Trace route");
+page_menu_button(session, out, "mbCheck", "Loadup & Check", "Load & Check routing configuration");
+page_menu_button(session, out, "mbTrace", "Trace route", "Trace route");
 page_menu_space(out);
 page_menu_end(out);
 } else { %>
@@ -68,7 +68,7 @@ page_menu_end(out);
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbCheck", "Loadup & Check", "Load & Check routing configuration");
+page_menu_button(session, out, "mbCheck", "Loadup & Check", "Load & Check routing configuration");
 page_menu_space(out);
 page_menu_end(out);
 }

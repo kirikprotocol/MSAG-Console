@@ -46,9 +46,9 @@ MENU0_SELECTION = "MENU0_ACL";
   </select>
 </div><%
   page_menu_begin(out);
-  page_menu_button(out, "mbLookup",  "Lookup ACL",  "Lookup ACL");
-  page_menu_button(out, "mbAddAcl",  "Add ACL",     "Create new ACL");
-  page_menu_button(out, "mbDelAcl",  "Delete ACL",  "Delete selected ACL");
+  page_menu_button(session, out, "mbLookup",  "Lookup ACL",  "Lookup ACL");
+  page_menu_button(session, out, "mbAddAcl",  "Add ACL",     "Create new ACL");
+  page_menu_button(session, out, "mbDelAcl",  "Delete ACL",  "Delete selected ACL");
   page_menu_space(out);
   page_menu_end(out);
   if (aclInfo != null)
@@ -84,7 +84,7 @@ MENU0_SELECTION = "MENU0_ACL";
       Addresses prefix <input class=txt name=prefix value="<%=bean.getPrefix()%>">
     </div><%
     page_menu_begin(out);
-    page_menu_button(out, "mbLookupAddresses",  "Lookup addresses",  "Lookup ACL addresses");
+    page_menu_button(session, out, "mbLookupAddresses",  "Lookup addresses",  "Lookup ACL addresses");
     page_menu_space(out);
     page_menu_end(out);
     %><div class="content">
@@ -151,7 +151,7 @@ MENU0_SELECTION = "MENU0_ACL";
       </tr>
     </table></div><%
     page_menu_begin(out);
-    page_menu_button(out, "mbSave",  "Save changes",  "Save changes");
+    page_menu_button(session, out, "mbSave",  "Save changes",  "Save changes");
     page_menu_space(out);
     page_menu_end(out);
   }
