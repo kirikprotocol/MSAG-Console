@@ -38,7 +38,7 @@ public class SCAG  extends Service
   }
   public SCAG(final String scagHost,final int scagPort,final String smscConfFolderString,  SCAGAppContext smscAppContext) throws SibincoException
   {
-  super(new ServiceInfo(SCAF_SME_ID, scagHost, "", "", true, null, ServiceInfo.STATUS_STOPPED), scagPort);
+  super(new ServiceInfo(SCAG_SME_ID, scagHost, "", "", true, null, ServiceInfo.STATUS_STOPPED), scagPort);
  
   }
 
