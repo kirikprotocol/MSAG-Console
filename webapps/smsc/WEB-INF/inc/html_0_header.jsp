@@ -22,8 +22,6 @@
 
 <%if(topMenu.size() > 0){%>
   <body onload="initjsDOMenu()">
-
-<% setBrawser(session, request);%>
 <%}else{%>
   <body>
 <%}%>

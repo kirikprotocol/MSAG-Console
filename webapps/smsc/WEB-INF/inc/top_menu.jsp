@@ -13,6 +13,7 @@
 
 <SCRIPT type="text/javascript">
   <%renderTopMenu(request, out, "createjsDOMenu", getTopMenu());%>
+  <%setBrowser(session, request);%>
 </SCRIPT>
 
 <%!
@@ -42,9 +43,11 @@
    * @param session current session
    * @param request current request
    */
-  public void setBrawser(HttpSession session, HttpServletRequest request){
+  public void setBrowser(HttpSession session, HttpServletRequest request){
       String brawserType = null;
+
       Cookie[] cookies = request.getCookies();
+      if(cookies != null)
       for (int i = 0; i < cookies.length; i++) {
           if(cookies[i].getName().equals("BRAWSER_TYPE")){
                  brawserType = cookies[i].getValue();
