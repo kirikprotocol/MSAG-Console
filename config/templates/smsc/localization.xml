@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="WINDOWS-1251"?>
+<!DOCTYPE config SYSTEM "configuration.dtd">
+
+<config>
+ <section name="conf">
+  <param name="defaultLang" type="string">en</param>
+  <param name="bundleName" type="string">locales.messages</param>
+  <param name="jsConfig" type="string">/scripts/localization.js</param>
+ </section>
+
+ <section name="languages">
+
+  <section name="en">
+   <section name="images">
+    <param name="but_filter" type="string">/images/but_filter.gif</param>
+    <param name="but_filter_dis" type="string">/images/but_filter_dis.gif</param>
+    <param name="but_lock" type="string">/images/but_lock.gif</param>
+    <param name="but_lock_dis" type="string">/images/but_lock_dis.gif</param>
+    <param name="but_unlock" type="string">/images/but_unlock.gif</param>
+    <param name="but_unlock_dis" type="string">/images/but_unlock_dis.gif</param>
+    <param name="but_register" type="string">/images/but_register.gif</param>
+    <param name="but_register_dis" type="string">/images/but_register_dis.gif</param>
+    <param name="but_unregister" type="string">/images/but_unregister.gif</param>
+    <param name="but_unregister_dis" type="string">/images/but_unregister_dis.gif</param>
+   </section>
+   <section name="jsMessages">
+    <param name="scripts" type="string">/scripts/scripts_msg_en.js</param>
+    <param name="calendar" type="string">/scripts/calendar_msg_en.js</param>
+   </section>
+  </section>
+
+  <section name="ru">
+   <section name="images">
+    <param name="but_filter" type="string">/images/but_filter.gif</param>
+    <param name="but_filter_dis" type="string">/images/but_filter_dis.gif</param>
+    <param name="but_lock" type="string">/images/but_lock.gif</param>
+    <param name="but_lock_dis" type="string">/images/but_lock_dis.gif</param>
+    <param name="but_unlock" type="string">/images/but_unlock.gif</param>
+    <param name="but_unlock_dis" type="string">/images/but_unlock_dis.gif</param>
+    <param name="but_register" type="string">/images/but_register.gif</param>
+    <param name="but_register_dis" type="string">/images/but_register_dis.gif</param>
+    <param name="but_unregister" type="string">/images/but_unregister.gif</param>
+    <param name="but_unregister_dis" type="string">/images/but_unregister_dis.gif</param>
+   </section>
+   <section name="jsMessages">
+    <param name="scripts" type="string">/scripts/scripts_msg_ru.js</param>
+    <param name="calendar" type="string">/scripts/calendar_msg_ru.js</param>
+   </section>
+  </section>
+
+  <section name="de">
+   <section name="images">
+    <param name="but_filter" type="string">/images/but_filter.gif</param>
+    <param name="but_filter_dis" type="string">/images/but_filter_dis.gif</param>
+    <param name="but_lock" type="string">/images/but_lock.gif</param>
+    <param name="but_lock_dis" type="string">/images/but_lock_dis.gif</param>
+    <param name="but_unlock" type="string">/images/but_unlock.gif</param>
+    <param name="but_unlock_dis" type="string">/images/but_unlock_dis.gif</param>
+    <param name="but_register" type="string">/images/but_register.gif</param>
+    <param name="but_register_dis" type="string">/images/but_register_dis.gif</param>
+    <param name="but_unregister" type="string">/images/but_unregister.gif</param>
+    <param name="but_unregister_dis" type="string">/images/but_unregister_dis.gif</param>
+   </section>
+   <section name="jsMessages">
+    <param name="scripts" type="string">/scripts/scripts_msg_de.js</param>
+    <param name="calendar" type="string">/scripts/calendar_msg_de.js</param>
+   </section>
+  </section>
+
+ </section>
+</config>
