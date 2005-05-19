@@ -126,7 +126,7 @@ function userDefined(){
 <%}
 %></div><%
 page_menu_begin(out);
-page_menu_button(out, "mbExport",  "Export !",  "Run export");
+page_menu_button(session,out, "mbExport",  "Export !",  "Run export");
 page_menu_space(out);
 page_menu_end(out);
 %>
