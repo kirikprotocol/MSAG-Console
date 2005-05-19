@@ -41,7 +41,7 @@
 <%int rowN = 0;%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbBack",  "Back",  "Run Back");
+page_menu_button(out, "mbBack",  "Back",  "Run Back");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -66,8 +66,8 @@ page_menu_end(out);
 
 <%
 page_small_menu_begin(out);
-page_menu_button(session, out, "mbQuickFilter",  "Apply",  "Apply filter");
-page_menu_button(session, out, "mbClear", "Clear", "Clear filter");
+page_menu_button(out, "mbQuickFilter",  "Apply",  "Apply filter");
+page_menu_button(out, "mbClear", "Clear", "Clear filter");
 //page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
 //page_menu_space(out);
 page_small_menu_end(out);
