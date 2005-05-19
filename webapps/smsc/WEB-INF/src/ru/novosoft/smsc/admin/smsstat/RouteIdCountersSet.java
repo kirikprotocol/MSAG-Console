@@ -16,6 +16,8 @@ public class RouteIdCountersSet extends ExtendedCountersSet implements Comparabl
   public String routeid;
   public long providerId = -1;
   public long categoryId = -1;
+  private Provider provider=null;
+  private Category category=null;
 
   public RouteIdCountersSet(String routeid)
   {
@@ -54,4 +56,23 @@ public class RouteIdCountersSet extends ExtendedCountersSet implements Comparabl
     return routeid.compareTo(((RouteIdCountersSet) o).routeid);
   }
 
+  public Category getCategory()
+  {
+    return category;
+  }
+
+  public void setCategory(Category category)
+  {
+    this.category = category;
+  }
+
+  public Provider getProvider()
+  {
+    return provider;
+  }
+
+  public void setProvider(Provider provider)
+  {
+    this.provider = provider;
+  }
 }
