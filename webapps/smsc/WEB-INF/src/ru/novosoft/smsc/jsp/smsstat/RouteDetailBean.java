@@ -7,10 +7,13 @@ package ru.novosoft.smsc.jsp.smsstat;
  */
 
 import ru.novosoft.smsc.admin.category.CategoryManager;
+import ru.novosoft.smsc.admin.category.Category;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
+import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.admin.smsstat.RouteIdCountersSet;
 import ru.novosoft.smsc.admin.smsstat.StatRouteList;
 import ru.novosoft.smsc.admin.smsstat.Statistics;
+import ru.novosoft.smsc.admin.route.Route;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.smcstat.StatRouteDataItem;
@@ -116,8 +119,15 @@ public class RouteDetailBean extends IndexBean
     ByRouteId.clear();
     for (Iterator iterator = routesResult.iterator(); iterator.hasNext();) {
       StatRouteDataItem o = (StatRouteDataItem) iterator.next();
+      Provider   provider = providerManager.getProvider(new Long(o.getProviderId()));
+      Category   category = categoryManager.getCategory(new Long(o.getCategoryId()));
+      if (provider == null) provider = new Provider(-1, "");
+      if (category == null) category = new Category(-1, "");
+
       RouteIdCountersSet r = new RouteIdCountersSet(o.getAccepted(), o.getRejected(), o.getDelivered(), o.getFailed(), o.getRescheduled(),
               o.getTemporal(), o.getPeak_i(), o.getPeak_o(), o.getRouteID(), o.getProviderId(), o.getCategoryId());
+      r.setProvider(provider);
+      r.setCategory(category);
       Collection errors = o.getErrors();
       r.addAllErr(errors);
       ByRouteId.add(r);
