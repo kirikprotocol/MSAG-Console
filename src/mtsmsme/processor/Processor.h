@@ -7,8 +7,8 @@
 #include <string>
 
 #include <sms/sms.h>
-#include <util/recoder/recode_dll.h>
-#include <util/smstext.h>
+//#include <util/recoder/recode_dll.h>
+//#include <util/smstext.h>
 
 namespace smsc { namespace mtsmsme { namespace processor
 {
