@@ -15,6 +15,10 @@
 #include "core/threads/Thread.hpp"
 #include <map>
 
+#ifdef linux
+typedef timespec timestruc_t;
+#endif
+
 using namespace smsc::sms;
 using namespace smsc::sme;
 using namespace smsc::smpp;
