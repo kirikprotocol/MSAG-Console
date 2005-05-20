@@ -51,7 +51,7 @@ public class SmsRow
   private String dstSmeId;
   private short concatMsgRef;
   private short concatSeqNum;
-  private long pointer=0;
+  private long pointer = 0;
   private int bodyLen;
   private Mask originatingAddressMask;
   private Mask destinationAddressMask;
@@ -165,7 +165,7 @@ public class SmsRow
 
   public static String getStatusString(int status)
   {
-    return (status >= 0 && status < numStates) ? states[status] : "UNKNOUN";
+    return (status >= 0 && status < numStates) ? states[status] : "UNKNOWN";
   }
 
   public String getStatus()

@@ -28,39 +28,43 @@ import java.util.Set;
 
 public interface SMSCAppContext extends AppContext
 {
-  Config getConfig();
+	Config getConfig();
 
-  HostsManager getHostsManager();
+	HostsManager getHostsManager();
 
-  UserManager getUserManager();
+	UserManager getUserManager();
 
-  Smsc getSmsc();
+	Smsc getSmsc();
 
-  DataSource getConnectionPool();
+	DataSource getConnectionPool();
 
-  UserPreferences getUserPreferences(java.security.Principal loginedPrincipal);
+//	UserPreferences getUserPreferences(java.security.Principal loginedPrincipal);
 
-  Statuses getStatuses();
+	Statuses getStatuses();
 
-  void destroy();
+	void destroy();
 
-  String getLocaleString(Locale locale, String key);
+	String getInitErrorCode();
 
-  public Set getLocaleStrings(Locale locale, String prefix);
+	Locale getLocale();
 
-  SmeManager getSmeManager();
+	String getLocaleString(String key);
 
-  ProviderManager getProviderManager();
+	Set getLocaleStrings(String prefix);
 
-  CategoryManager getCategoryManager();
+	SmeManager getSmeManager();
 
-  RouteSubjectManager getRouteSubjectManager();
+	ProviderManager getProviderManager();
 
-  ResourcesManager getResourcesManager();
+	CategoryManager getCategoryManager();
 
-  Journal getJournal();
+	RouteSubjectManager getRouteSubjectManager();
 
-  WebXml getWebXmlConfig();
+	ResourcesManager getResourcesManager();
 
-  AclManager getAclManager();
+	Journal getJournal();
+
+	WebXml getWebXmlConfig();
+
+	AclManager getAclManager();
 }

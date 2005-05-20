@@ -6,6 +6,7 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.dl.PrincipalsDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.dl.PrincipalsFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.dl.PrincipalsQuery;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import javax.servlet.http.HttpServletRequest;
 import java.sql.Connection;
@@ -47,7 +48,7 @@ public class Principals extends IndexBean
     if (result != RESULT_OK)
       return result;
 
-    filter = appContext.getUserPreferences(loginedPrincipal).getDlPrincipalsFilter();
+    filter = preferences.getDlPrincipalsFilter();
     if (filterAddress == null) {
       if (initialized)
         filter.setFilterAddress(filterAddress = "*");
@@ -60,14 +61,14 @@ public class Principals extends IndexBean
       filterAddress = "*";
 
     if (sort == null)
-      sort = appContext.getUserPreferences(loginedPrincipal).getDlPrincipalsSortOrder();
+      sort = preferences.getDlPrincipalsSortOrder();
     else
-      appContext.getUserPreferences(loginedPrincipal).setDlPrincipalsSortOrder(sort);
+      preferences.setDlPrincipalsSortOrder(sort);
 
     if (pageSize < 1)
-      pageSize = appContext.getUserPreferences(loginedPrincipal).getDlPrincipalsPageSize();
+      pageSize = preferences.getDlPrincipalsPageSize();
     else
-      appContext.getUserPreferences(loginedPrincipal).setDlPrincipalsPageSize(pageSize);
+      preferences.setDlPrincipalsPageSize(pageSize);
 
     checkedSet.addAll(Arrays.asList(checked));
 
@@ -104,12 +105,12 @@ public class Principals extends IndexBean
           statement.executeUpdate();
         } catch (SQLException e) {
           logger.error("Could not delete principal \"" + address + "\"", e);
-          result = error("Could not delete principal \"" + address + "\"", e);
+          result = error(SMSCErrors.error.dl.couldntDeletePrincipal, address, e);
         }
       }
     } catch (SQLException e) {
       logger.error("Exception", e);
-      result = error("Exception", e);
+      result = error(SMSCErrors.error.sql.exception, e);
     } finally {
       if (connection != null) {
         try {
@@ -117,7 +118,7 @@ public class Principals extends IndexBean
           connection.close();
         } catch (SQLException e) {
           logger.error("Could not close database connection", e);
-          return error("Could not close database connection", e);
+          return error(SMSCErrors.error.sql.coulndtCloseDBConnection, e);
         }
       }
     }

@@ -143,21 +143,21 @@ public class dlEdit extends dlBody
   {
     int result = RESULT_DONE;
     if (fullMembersList.size() > maxElements)
-      result = error("Too much members");
+      result = error(SMSCErrors.error.dl.tooMuchMembers);
     if (!system) {
       if (owner == null || owner.trim().length() == 0) {
-        result = error("Owner not specified");
+        result = error(SMSCErrors.error.dl.ownerNotSpecified);
       } else {
         try {
           Principal principal = admin.getPrincipal(new Mask(owner).getNormalizedMask());
           if (maxElements > principal.getMaxElements())
-            result = error("Max members cannot be greater than owner's max members value (" + principal.getMaxElements() + ')');
+            result = error(SMSCErrors.error.dl.exceedMaxMembersValue,"" + principal.getMaxElements());
         } catch (PrincipalNotExistsException e) {
           logger.error("Unknown owner \"" + owner + '"');
-          result = error("Unknown owner", owner);
+          result = error(SMSCErrors.error.dl.unknownOwner, owner);
         } catch (AdminException e) {
           logger.error("Could not find owner \"" + owner + '"', e);
-          result = error("Could not find owner", owner, e);
+          result = error(SMSCErrors.error.dl.couldntFindOwner, owner, e);
         }
       }
     }
@@ -170,7 +170,7 @@ public class dlEdit extends dlBody
       admin.alterDistributionList(name, maxElements);
     } catch (AdminException e) {
       logger.error("Could not alter distribution list \"" + name + '"', e);
-      return error("Could not alter distribution list", name, e);
+      return error(SMSCErrors.error.dl.couldntAlterDL, name, e);
     }
     return RESULT_DONE;
   }

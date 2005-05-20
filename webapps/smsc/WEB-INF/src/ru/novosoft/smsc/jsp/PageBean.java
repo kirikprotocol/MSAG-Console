@@ -8,6 +8,7 @@ package ru.novosoft.smsc.jsp;
 
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.service.HostsManager;
 
@@ -27,13 +28,13 @@ public abstract class PageBean
 
   protected Category logger = Category.getInstance(this.getClass());
 
-  protected List errors = null;
-  protected SMSCAppContext appContext = null;
-  protected HostsManager hostsManager = null;
-  protected Principal loginedPrincipal = null;
-  protected HttpSession session = null;
-  protected String sessionId = null;
-  protected UserPreferences preferences = null;
+	protected List errors = null;
+	protected SMSCAppContext appContext = null;
+	protected HostsManager hostsManager = null;
+	protected UserManager userManager = null;
+	protected HttpSession session = null;
+	protected String sessionId = null;
+	protected UserPreferences preferences = null;
 
   public int process(final HttpServletRequest request)
   {
@@ -47,9 +48,20 @@ public abstract class PageBean
     if (null == this.appContext)
       return error(SMSCErrors.error.appContextNotInitialized);
 
-    this.loginedPrincipal = request.getUserPrincipal();
-    if (null != this.appContext)
-      this.preferences = this.appContext.getUserPreferences(this.loginedPrincipal);
+	if (this.appContext.getInitErrorCode() != null)
+		return error(this.appContext.getInitErrorCode());
+
+	this.preferences = new UserPreferences();
+	if (this.appContext != null)
+	{
+		this.userManager = this.appContext.getUserManager();
+		if (this.userManager != null)
+		{
+			this.userManager.setLoginedPrincipal(request.getUserPrincipal());
+		//this.preferences = this.appContext.getUserPreferences(this.getLoginedPrincipal());
+		if (this.userManager.getLoginedUser() != null) this.preferences = this.userManager.getLoginedUser().getPrefs();
+		}
+	}
 
     session = request.getSession(false);
     sessionId = null != session ? session.getId() : "unknown";
@@ -59,12 +71,12 @@ public abstract class PageBean
 
   protected int init(final List errors)
   {
-    hostsManager = appContext.getHostsManager();
+	hostsManager = appContext.getHostsManager();
 
-    if (null == hostsManager)
-      return error(SMSCErrors.error.serviceManagerNotInitialized);
+	if (null == hostsManager)
+		return error(SMSCErrors.error.serviceManagerNotInitialized);
 
-    return RESULT_OK;
+	return RESULT_OK;
   }
 
   protected int error(final String errorCode)
@@ -86,6 +98,12 @@ public abstract class PageBean
   {
     return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR, param, cause));
   }
+
+	protected int error(final String errorCode, final String param, final Throwable cause, final String prefix)
+	{
+	  return _error(new SMSCJspException(errorCode, SMSCJspException.ERROR_CLASS_ERROR, param, cause, prefix));
+	}
+
 
   protected int warning(final String errorCode)
   {
@@ -140,21 +158,21 @@ public abstract class PageBean
 
   public Principal getLoginedPrincipal()
   {
-    return loginedPrincipal;
+    return userManager.getLoginedPrincipal();
   }
 
   public void journalAppend(final byte subjectType, final String subjectId, final byte action)
   {
-    appContext.getJournal().append(loginedPrincipal.getName(), sessionId, subjectType, subjectId, action);
+    appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), sessionId, subjectType, subjectId, action);
   }
 
   public void journalAppend(final byte subjectType, final String subjectId, final byte action, final String additionalKey, final String additionalValue)
   {
-    appContext.getJournal().append(loginedPrincipal.getName(), sessionId, subjectType, subjectId, action, additionalKey, additionalValue);
+    appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), sessionId, subjectType, subjectId, action, additionalKey, additionalValue);
   }
 
   public void journalAppend(final byte subjectType, final String subjectId, final byte action, final Map additional)
   {
-    appContext.getJournal().append(loginedPrincipal.getName(), sessionId, subjectType, subjectId, action, additional);
+    appContext.getJournal().append(userManager.getLoginedPrincipal().getName(), sessionId, subjectType, subjectId, action, additional);
   }
 }

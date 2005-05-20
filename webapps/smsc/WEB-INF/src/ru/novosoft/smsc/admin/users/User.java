@@ -12,12 +12,13 @@ import java.security.Principal;
 import java.util.*;
 
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.admin.preferences.UserPreferences;
 
 public class User implements Principal
 {
 	public static final String[] columnNames = {
 		"login", "password", "roles", "firstName", "lastName", "dept",
-		"workPhone", "homePhone", "cellPhone", "email"
+		"workPhone", "homePhone", "cellPhone", "email", "lang"
 	};
 
 	private String login = null;
@@ -30,7 +31,13 @@ public class User implements Principal
 	private String homePhone = null;
 	private String cellPhone = null;
 	private String email = null;
+	private UserPreferences prefs = null;
 
+	public User(String login, String password, String[] roles, String firstName, String lastName, String dept, String workPhone, String homePhone, String cellPhone, String email, UserPreferences prefs)
+	{
+		this(login,password,roles,firstName,lastName,dept,workPhone,homePhone,cellPhone,email);
+		this.prefs = prefs;
+	}
 
 	public User(String login, String password, String[] roles, String firstName, String lastName, String dept, String workPhone, String homePhone, String cellPhone, String email)
 	{
@@ -44,6 +51,7 @@ public class User implements Principal
 		this.homePhone = homePhone;
 		this.cellPhone = cellPhone;
 		this.email = email;
+		this.prefs = new UserPreferences();
 
 		if (this.firstName == null) this.firstName = "";
 		if (this.lastName == null) this.lastName = "";
@@ -66,6 +74,9 @@ public class User implements Principal
 			Element roleElem = (Element) roleList.item(i);
 			this.roles.add(roleElem.getAttribute("name"));
 		}
+
+		NodeList prefList = userElem.getElementsByTagName("pref");
+		prefs = new UserPreferences(prefList);
 
 		this.firstName = userElem.getAttribute("firstName");
 		this.lastName = userElem.getAttribute("lastName");
@@ -125,10 +136,12 @@ public class User implements Principal
 		result += " cellPhone=\"" + StringEncoderDecoder.encode(cellPhone) + '"';
 		result += " email=\"" + StringEncoderDecoder.encode(email) + '"';
 		result += ">\n";
-    for (Iterator i = roles.iterator(); i.hasNext();) {
-      String role = (String) i.next();
-      result += "\t\t<role name=\"" + StringEncoderDecoder.encode(role) + "\"/>\n";
-    }
+		for (Iterator i = roles.iterator(); i.hasNext();)
+		{
+			String role = (String) i.next();
+			result += "\t\t<role name=\"" + StringEncoderDecoder.encode(role) + "\"/>\n";
+		}
+		result += "\t\t"+prefs.getXmlText();
 		result += "\t</user>\n";
 
 		return result;
@@ -232,6 +245,10 @@ public class User implements Principal
 	public void setEmail(String email)
 	{
 		this.email = email;
+	}
+	public UserPreferences getPrefs()
+	{
+		return prefs;
 	}
 
   public void grantRole(String roleName)

@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.jsp.dl;
 
 import ru.novosoft.smsc.jsp.PageBean;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.Functions;
 
 import javax.servlet.http.HttpServletRequest;
@@ -70,7 +71,7 @@ public class dlFilter extends PageBean
         Pattern pattern = Pattern.compile(string);
       } catch (PatternSyntaxException e) {
         logger.error(cat + " pattern \"" + string + "\" is invalid", e);
-        error(cat + " pattern is invalid", string, e);
+        error(SMSCErrors.error.dl.patternIsInvalid, string, e, cat);
         result = false;
       }
     }

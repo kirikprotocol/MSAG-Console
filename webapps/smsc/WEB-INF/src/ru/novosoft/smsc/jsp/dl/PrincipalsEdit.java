@@ -8,6 +8,7 @@ import ru.novosoft.smsc.admin.dl.exceptions.PrincipalAlreadyExistsException;
 import ru.novosoft.smsc.admin.dl.exceptions.PrincipalNotExistsException;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -46,10 +47,10 @@ public class PrincipalsEdit extends SmscBean
           max_el = principal.getMaxElements();
         } catch (PrincipalNotExistsException e) {
           logger.error("Principal \"" + address + "\" not found");
-          return error("Principal \"" + address + "\" not found");
+          return error(SMSCErrors.error.dl.principalNotFound, address);
         } catch (AdminException e) {
           logger.error("Cannot load principal \"" + address + "\"", e);
-          return error("Cannot load principal \"" + address + "\"", e);
+          return error(SMSCErrors.error.dl.cannotLoadPrincipal, address, e);
         }
       }
     }
@@ -78,7 +79,7 @@ public class PrincipalsEdit extends SmscBean
       addressMask = new Mask(address);
     } catch (AdminException e) {
       logger.error("Invalid address \"" + address + "\"", e);
-      return error("Invalid address \"" + address + "\"", e);
+      return error(SMSCErrors.error.dl.invalidAddress, address, e);
     }
 
     ru.novosoft.smsc.admin.dl.Principal principal = new ru.novosoft.smsc.admin.dl.Principal(addressMask.getNormalizedMask(), max_lst, max_el);
@@ -89,19 +90,23 @@ public class PrincipalsEdit extends SmscBean
         admin.alterPrincipal(principal, true, true);
     } catch (PrincipalAlreadyExistsException e) {
       logger.error("Principal \"" + address + "\" already exists");
-      return error("Principal \"" + address + "\" already exists");
+      return error(SMSCErrors.error.dl.principalAlreadyExist, address);
     } catch (PrincipalNotExistsException e) {
       logger.error("Principal \"" + address + "\" not found");
-      return error("Principal \"" + address + "\" not found");
+      return error(SMSCErrors.error.dl.principalNotFound, address);
     } catch (ListsCountExceededException e) {
       logger.error("Max lists count (" + max_lst + ") too small for principal \"" + address + "\"");
-      return error("Max lists count too small");
+      return error(SMSCErrors.error.dl.maxListsCountTooSmall);
     } catch (MembersCountExceededForOwnerException e) {
       logger.error("Max members count (" + max_el + ") too small for principal \"" + address + "\"");
-      return error("Max members count too small");
+      return error(SMSCErrors.error.dl.maxMembersCountTooSmall);
     } catch (AdminException e) {
-      logger.error("Could not " + (create ? "create" : "update") + " principal \"" + address + '"', e);
-      return error("Could not " + (create ? "create" : "update") + " principal", address, e);
+		logger.error("Could not " + (create ? "create" : "update") + " principal \"" + address + '"', e);
+		int i = (create
+				? error(SMSCErrors.error.dl.couldntCreatePrincipal, address, e)
+				: error(SMSCErrors.error.dl.couldntUpdatePrincipal, address, e)
+				);
+		return i;
     }
     return RESULT_DONE;
   }
@@ -147,7 +152,7 @@ public class PrincipalsEdit extends SmscBean
       this.max_lst = Integer.decode(max_lst).intValue();
     } catch (NumberFormatException e) {
       logger.error("Incorrect value \"" + max_lst + "\" for maximum lists", e);
-      error("Incorrect value \"" + max_lst + "\" for maximum lists", e);
+      error(SMSCErrors.error.dl.maxListsIncorrectValue, max_lst, e);
     }
   }
 
@@ -162,7 +167,7 @@ public class PrincipalsEdit extends SmscBean
       this.max_el = Integer.decode(max_el).intValue();
     } catch (NumberFormatException e) {
       logger.error("Incorrect value \"" + max_el + "\" for maximum elements", e);
-      error("Incorrect value \"" + max_el + "\" for maximum elements", e);
+      error(SMSCErrors.error.dl.maxElementsIncorrectValue, max_el, e);
     }
   }
 

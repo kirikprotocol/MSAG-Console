@@ -25,11 +25,15 @@ import ru.novosoft.smsc.util.xml.Utils;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.util.*;
+import java.security.Principal;
 
 public class UserManager implements DataSource
 {
-  private File configFile = null;
-  private Map users = new HashMap();
+	private File configFile = null;
+	private Map users = new HashMap();
+
+	private Principal loginedPrincipal = null;
+	private User loginedUser = null;
 
   public UserManager(File configFile)
       throws Exception, SAXException, IOException
@@ -157,4 +161,31 @@ public class UserManager implements DataSource
       user.revokeRole(roleName);
     }
   }
+	public Principal getLoginedPrincipal ()
+	{
+		return loginedPrincipal;
+	}
+
+	public User getLoginedUser()
+	{
+		return loginedUser;
+	}
+
+	public void setLoginedPrincipal (Principal principal)
+	{
+		if (principal != null)
+			{
+			Object o = users.get(principal.getName());
+			if (o != null)
+				{
+				loginedPrincipal = principal;
+				loginedUser = (User) o;
+				}
+			}
+		else
+		{
+			loginedPrincipal = null;
+			loginedUser = null;
+		}
+	}
 }

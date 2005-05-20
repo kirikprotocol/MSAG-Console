@@ -40,7 +40,7 @@ public class SmsDaemonFormBean extends PageBean
       daemonContext = ArchiveDaemonContext.getInstance(appContext);
     } catch (Exception exc) {
       exc.printStackTrace();
-      return error("Context init failed", exc.getMessage());
+      return error(SMSCErrors.error.smsc.contextInitFailed, exc.getMessage());
     }
 
     return result;
@@ -260,7 +260,7 @@ public class SmsDaemonFormBean extends PageBean
   public String getStringParam(String paramName)
   {
     Object param = params.get(paramName);
-    if (param == null) return "<not specified>";
+    if (param == null) return "<" + appContext.getLocaleString("common.util.notSpecified") + ">";
     if (param instanceof String) return (String) param;
     return null;
   }

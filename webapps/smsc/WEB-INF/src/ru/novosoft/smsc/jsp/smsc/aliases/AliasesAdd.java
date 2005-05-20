@@ -79,7 +79,7 @@ public class AliasesAdd extends SmscBean
       if (smsc.getAliases().contains(newAlias))
         return error(SMSCErrors.error.aliases.alreadyExistsAlias, alias);
 
-      return smsc.getAliases().add(newAlias, new Action(loginedPrincipal.getName(), sessionId))
+      return smsc.getAliases().add(newAlias, new Action(getLoginedPrincipal().getName(), sessionId))
               ? RESULT_DONE
               : error(SMSCErrors.error.aliases.alreadyExistsAddress, alias);
     } catch (Throwable t) {
