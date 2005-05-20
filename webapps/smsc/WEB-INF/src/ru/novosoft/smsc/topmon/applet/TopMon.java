@@ -23,6 +23,7 @@ public class TopMon extends Applet implements Runnable, MouseListener, ActionLis
   public static ResourceBundle messagesText;
   public static Locale locale;
   private Label connectingLabel;
+  private ScrollPane pane;
   private SnapHistory snapHistory;
   private SmeTopGraph smeTopGraph;
   private ErrTopGraph errTopGraph;
@@ -50,10 +51,8 @@ public class TopMon extends Applet implements Runnable, MouseListener, ActionLis
     setBackground(SystemColor.control);
     GridBagConstraints gbc = new GridBagConstraints();
     gbc.fill = GridBagConstraints.BOTH;
-
     connectingLabel = new Label(localeText.getString("connecting"));
     add(connectingLabel, gbc);
-
     validate();
   }
 
@@ -62,7 +61,6 @@ public class TopMon extends Applet implements Runnable, MouseListener, ActionLis
     remove(connectingLabel);
     GridBagConstraints gbc = new GridBagConstraints();
     gbc.fill = GridBagConstraints.BOTH;
-
     snapHistory = new SnapHistory();
     smeTopGraph = new SmeTopGraph(snap, maxSpeed, graphScale, graphGrid, graphHiGrid, graphHead, localeText, messagesText, snapHistory);
 //    errTopGraph = new ErrTopGraph(snap);
@@ -85,8 +83,10 @@ public class TopMon extends Applet implements Runnable, MouseListener, ActionLis
     gbc.weighty = 1;
     gbc.fill = GridBagConstraints.BOTH;
 //    add(screenSplitter, gbc);
-    add(lgSme, gbc);
-
+    //add(lgSme, gbc);
+    pane =new ScrollPane();
+    pane.add(lgSme,BorderLayout.CENTER);
+    add(pane,gbc);
     smeTopGraph.requestFocus();
 
     validate();
@@ -117,7 +117,6 @@ public class TopMon extends Applet implements Runnable, MouseListener, ActionLis
           gotFirstSnap(snap);
           while (!isStopping) {
             snap.read(is);
-            smeTopGraph.setSnap(snap);
 //              System.out.println("Got snap: ls="+snap.last[PerfSnap.IDX_DELIVER]+" le="+snap.last[PerfSnap.IDX_DELIVERERR]+" upt="+snap.uptime+" tm="+(new Date(snap.sctime*1000)).toString());
           }
         } catch (IOException ex) {
