@@ -1,7 +1,8 @@
 <%@page import="java.util.*, ru.novosoft.smsc.admin.service.ServiceInfo,
 					 ru.novosoft.smsc.admin.route.SmeStatus,
-					 ru.novosoft.smsc.admin.route.SME"
-%><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Statuses"
+					 ru.novosoft.smsc.admin.route.SME"%>
+<%@ include file="/WEB-INF/inc/localization.jsp"%>
+<jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Statuses"
 /><%!
 String CPATH = "/smsc";
 %><%@ include file = "/WEB-INF/inc/show_sme_status.jsp"

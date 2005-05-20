@@ -6,7 +6,7 @@
 page pageEncoding="windows-1251"%><%@
 page contentType="text/html; charset=windows-1251"%><%@
 page buffer="64kb"%><%!
-private String TITLE = "SMS Center Administration Console";
+private String TITLE = getLocString("common.mainTitle");
 private String BROWSER_TITLE = null;
 private String FORM_METHOD = "POST";
 private String FORM_URI = "";
@@ -17,7 +17,8 @@ private String ServiceIDForShowStatus = null;
 private boolean isServiceStatusColored = false;
 private boolean isServiceStatusNeeded = false;
 private java.util.List errorMessages = new ArrayList();
-%><%
+%><%@
+ include file="/WEB-INF/inc/localization.jsp"%><%
 errorMessages.clear();
 request.setAttribute(Constants.SMSC_ERROR_MESSAGES_ATTRIBUTE_NAME, errorMessages);
 FORM_URI = (String)request.getAttribute("requestURI");

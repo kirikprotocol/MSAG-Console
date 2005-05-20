@@ -6,7 +6,7 @@ void button(JspWriter out, String srcImgUrl, String name, String value, String t
 
 void button(JspWriter out, String srcImgUrl, String name, String value, String title, String onclick) throws IOException
 {
-	out.print("<img src=\"/images/" + srcImgUrl + "\" class=button jbuttonName=\"" + name + "\" jbuttonValue=\"" + value + "\" title=\"" + title + "\""
+	out.print("<img src=\"" + srcImgUrl + "\" class=button jbuttonName=\"" + name + "\" jbuttonValue=\"" + value + "\" title=\"" + getLocString(title) + "\""
 				+ (onclick != null && onclick.length() > 0 ? " jbuttonOnclick=\"" + onclick + "\"" : "") + ">");
 }
 void addButton(JspWriter out, String name, String value, String title) throws IOException
@@ -15,7 +15,7 @@ void addButton(JspWriter out, String name, String value, String title) throws IO
 }
 void addButton(JspWriter out, String name, String value, String title, String onclick) throws IOException
 {
-	button(out, "but_add.gif", name, value, title, onclick);
+	button(out, "/images/but_add.gif", name, value, title, onclick);
 }
 void delButton(JspWriter out, String name, String value, String title) throws IOException
 {
@@ -23,6 +23,6 @@ void delButton(JspWriter out, String name, String value, String title) throws IO
 }
 void delButton(JspWriter out, String name, String value, String title, String onclick) throws IOException
 {
-	button(out, "but_del.gif", name, value, title, onclick);
+	button(out, "/images/but_del.gif", name, value, title, onclick);
 }
 %>

@@ -7,13 +7,13 @@ String showSmeStatus(SmeStatus status)
 	{
 		if (status.isInternal())
 		{
-			result += "><img src=\"/images/ic_internal.gif\" width=10 height=10 title='internal'></span>";
+			result += "><img src=\"/images/ic_internal.gif\" width=10 height=10 title='" + getLocString("common.hints.internal") + "'></span>";
 		}
 		else
 		{
 			if (!status.isConnected())
 			{
-				result += "><img src=\"/images/ic_disconnct.gif\" width=10 height=10 title='disconnected'></span>";
+				result += "><img src=\"/images/ic_disconnct.gif\" width=10 height=10 title='" + getLocString("common.hints.disconnected") + "'></span>";
 			}
 			else
 			{
@@ -31,14 +31,14 @@ String showSmeStatus(SmeStatus status)
             result += " class=C080>TRX&nbsp;" + (inAddress.equals(outAddress) ? inAddress : inAddress + "/" + outAddress) + "</span>";
 						break;
 					default:
-						result += " class=C080>unknown&nbsp;" + status.getInAddress() + '/' + status.getOutAddress() + "</span>";
+						result += " class=C080>" + getLocString("common.statuses.unknown") + "&nbsp;" + status.getInAddress() + '/' + status.getOutAddress() + "</span>";
 				}
 			}
 		}
 	}
 	else
 	{
-		result += " class=C000>unknown</span>";
+		result += " class=C000>" + getLocString("common.statuses.unknown") + "</span>";
 	}
 	return result;
 }

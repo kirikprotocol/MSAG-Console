@@ -1,4 +1,7 @@
-<%@page import="java.util.*, ru.novosoft.smsc.admin.service.ServiceInfo"%><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Statuses"/><jsp:setProperty name="bean" property="*"/><%
+<%@page import="java.util.*, ru.novosoft.smsc.admin.service.ServiceInfo"%>
+<%@ include file="/WEB-INF/inc/localization.jsp"%>
+<jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.Statuses"/>
+<jsp:setProperty name="bean" property="*"/><%
 /*try
 {*/
 String CPATH = request.getContextPath() + "/smsc";
@@ -23,19 +26,19 @@ for (Iterator i = c.iterator(); i.hasNext(); )
 		switch (bean.getServiceStatus(sId))
 		{
 			case ServiceInfo.STATUS_RUNNING:
-				out.print("<img src=\"/images/ic_running.gif\" width=10 height=10 title='running'>");
+				out.print("<img src=\"/images/ic_running.gif\" width=10 height=10 title='" + getLocString("common.statuses.running") + "'>");
 				break;
 			case ServiceInfo.STATUS_STOPPING:
-				out.print("<img src=\"/images/ic_stopping.gif\" width=10 height=10 title='stopping'>");
+				out.print("<img src=\"/images/ic_stopping.gif\" width=10 height=10 title='" + getLocString("common.statuses.stopping") + "'>");
 				break;
 			case ServiceInfo.STATUS_STOPPED:
-				out.print("<img src=\"/images/ic_stopped.gif\" width=10 height=10 title='stopped'>");
+				out.print("<img src=\"/images/ic_stopped.gif\" width=10 height=10 title='" + getLocString("common.statuses.stopped") + "'>");
 				break;
 			case ServiceInfo.STATUS_STARTING:
-				out.print("<img src=\"/images/ic_starting.gif\" width=10 height=10 title='starting'>");
+				out.print("<img src=\"/images/ic_starting.gif\" width=10 height=10 title='" + getLocString("common.statuses.starting") + "'>");
 				break;
 			default:
-				out.print("<img src=\"/images/ic_unknown.gif\" width=10 height=10 title='unknown'>");
+				out.print("<img src=\"/images/ic_unknown.gif\" width=10 height=10 title='" + getLocString("common.statuses.unknown") + "'>");
 				break;
 		}
 	}
@@ -44,19 +47,19 @@ for (Iterator i = c.iterator(); i.hasNext(); )
 		switch (bean.getServiceStatus(sId))
 		{
 			case ServiceInfo.STATUS_RUNNING:
-				out.print("running");
+				out.print(getLocString("common.statuses.running"));
 				break;
 			case ServiceInfo.STATUS_STOPPING:
-				out.print("stopping");
+				out.print(getLocString("common.statuses.stopping"));
 				break;
 			case ServiceInfo.STATUS_STOPPED:
-				out.print("stopped");
+				out.print(getLocString("common.statuses.stopped"));
 				break;
 			case ServiceInfo.STATUS_STARTING:
-				out.print("starting");
+				out.print(getLocString("common.statuses.starting"));
 				break;
 			default:
-				out.print("unknown");
+				out.print(getLocString("common.statuses.unknown"));
 				break;
 		}
 	}

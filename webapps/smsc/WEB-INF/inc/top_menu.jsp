@@ -3,7 +3,9 @@
                  ru.novosoft.util.menu.MenuItem,
                  java.util.Iterator,
                  ru.novosoft.util.menu.TopMenu,
-                 ru.novosoft.util.menu.Menu"%>
+                 ru.novosoft.util.menu.Menu,
+                 ru.novosoft.smsc.util.LocaleMessages,
+                 ru.novosoft.util.menu.Common"%>
 <jsp:useBean id="topMenu" class="ru.novosoft.util.menu.TopMenu" scope="session"/>
 
 <!--link rel="stylesheet" type="text/css" href="<%=request.getContextPath()%>/styles/main_menu.css" /-->
@@ -19,6 +21,8 @@
 <%!
 
   void renderTopMenu(HttpServletRequest request, JspWriter out, String menuName, Collection menu) throws IOException{
+
+    Common.messages = LocaleMessages.getResourceBundle(getLoc());
 
     out.println("function "+menuName+"() {");
       out.println("menuBar = new jsDOMenuBar(); //CREATE MAIN MENU ITEMS");

@@ -51,7 +51,8 @@ function validateField_port(elem)
 {
 	var intValue = elem.value/1;
 	return isNaN(intValue) || intValue >= 0xFFFF
-		? validationError(elem, "Port must be integer less than " + 0xFFFF)
+		//? validationError(elem, "Port must be integer less than " + 0xFFFF)
+		? validationError(elem, portErrorMsg + 0xFFFF)
 		: true;
 }
 
@@ -77,7 +78,8 @@ function validateField_mask(elem)
 			   (elem.value.match(        pattern1) == null || elem.value.match(        pattern2) == null)
 			&& (elem.value.match(special_pattern1) == null || elem.value.match(special_pattern2) == null)
 		   )
-		? validationError(elem, "Invalid mask")
+		//? validationError(elem, "Invalid mask")
+		? validationError(elem, maskErrorMsg)
 		: true;
 }
 
@@ -89,7 +91,8 @@ function validateField_routeMask(elem)
 function validateField_select(elem)
 {
 	return (elem.selectedIndex == 0)
-		? validationError(elem, "Please, select something")
+		//? validationError(elem, "Please, select something")
+		? validationError(elem, selectErrorMsg)
 		: true;
 }
 
@@ -97,7 +100,8 @@ function validateField_priority(elem)
 {
 	var intValue = elem.value/1;
 	return isNaN(intValue) || intValue < 0  || intValue > (0x10000/2)
-		? validationError(elem, "Priority must be positive integer less than " + (0x10000/2))
+		//? validationError(elem, "Priority must be positive integer less than " + (0x10000/2))
+		? validationError(elem, priorityErrorMsg + (0x10000/2))
 		: true;
 }
 
@@ -105,15 +109,27 @@ function validateField_route_serviceId(elem)
 {
 	var intValue = elem.value/1;
 	return isNaN(intValue) || intValue < 0
-		? validationError(elem, "Service ID must be positive integer")
+		//? validationError(elem, "Service ID must be positive integer")
+		? validationError(elem, servIDErrorMsg)
 		: true;
 }
 
 function validateField_nonEmpty(elem)
 {
 	return elem.value == null || elem.value.length == 0
-		? validationError(elem, "Must be not empty")
+		//? validationError(elem, "Must be not empty")
+		? validationError(elem, nonEmptyErrorMsg)
 		: true;
+}
+
+function validateField_language(elem)
+{
+	var result = false;
+	for (var e in supportedLanguages) if (elem.value == supportedLanguages[e]) result = true;
+	if (!result) elem.value = defaultLanguage;
+	return result
+		? true
+		: validationError(elem, nonLanguageErrorMsg);
 }
 
 function validateField_email(elem)
@@ -121,7 +137,7 @@ function validateField_email(elem)
 	//var r = RegExp("(^).*\@.*\..*$");
 	var r = /(^).*\@.*\..*$/
 	return elem.value == null || elem.value.match(r) == null
-		? validationError(elem, "Invalid mask")
+		? validationError(elem, maskErrorMsg)
 		: true;
 }
 
@@ -129,7 +145,7 @@ function validateField_positive(elem)
 {
 	var intValue = elem.value/1;
 	return isNaN(intValue) || intValue <= 0
-		? validationError(elem, "value must be a positive integer")
+		? validationError(elem, valueErrorMsg)
 		: true;
 }
 
@@ -139,7 +155,7 @@ function validateField_int_range(elem)
 	var intMin = elem.range_min == null ? (1/0) : (elem.range_min/1);
 	var intMax = elem.range_max == null ? (1/0) : (elem.range_max/1);
 	return isNaN(intValue) || ((!isNaN(intMin)) && intValue < intMin) || ((!isNaN(intMax)) && intValue > intMax)
-		? validationError(elem, "value must be an integer in range ["+elem.range_min+", "+elem.range_max+"]")
+		? validationError(elem, rangeValueErrorMsg_pre+elem.range_min+", "+elem.range_max+"]")
 		: true;
 }
 
@@ -149,7 +165,7 @@ function validateField_unsigned(elem)
 	//var r = RegExp("^(\\s*)(\\d+)(\\s*)$");
 	var r = /^(\s*)(\d+)(\s*)$/;
 	return elem.value == null || elem.value.match(r) == null
-		? validationError(elem, "value must be decimal without sign")
+		? validationError(elem, valueSignErrorMsg)
 		: true;
 }
 
@@ -165,7 +181,7 @@ function validateField_address(elem)
     var r2 = /^\.5\.0\.[ _\-:0-9A-Za-z]{1,20}$/;
 
 	return elem.value == null || (elem.value.match(r1) == null && elem.value.match(r2) == null)
-		? validationError(elem, "Invalid address")
+		? validationError(elem, addressErrorMsg)
 		: true;
 }
 
@@ -181,7 +197,7 @@ function validateField_address_prefix(elem)
 	var r2 = /^\.5\.0\.[ _\-:0-9A-Za-z\*]{1,20}$/;
 
 	return elem.value == null || (elem.value.match(r1) == null && elem.value.match(r2) == null)
-		? validationError(elem, "Invalid address prefix")
+		? validationError(elem, addrPreErrorMsg)
 		: true;
 }
 
@@ -196,7 +212,7 @@ function validateField_id(elem)
 	var r = /^[a-zA-Z_0-9]+$/
 
 	return elem.value == null || elem.value.match(r) == null
-		? validationError(elem, "Invalid id")
+		? validationError(elem, idErrorMsg)
 		: true;
 }
 
@@ -209,7 +225,7 @@ function validateField_reschedule(elem)
 	var r = /^(\d+[s|m|h|d](\:\d+)?\,)*(\d+[s|m|h|d](\:(\d+|\*))?)$/
 
 	return elem.value == null || elem.value.match(r) == null
-		? validationError(elem, "Invalid reschedule policy")
+		? validationError(elem, policyErrorMsg)
 		: true;
 }
 
@@ -218,16 +234,16 @@ var release_causes = [1,2,3,4,5,8,9,16,17,18,19,20,21,22,27,28,29,31,34,38,41,42
 function validateField_release_cause(elem)
 {
 	if (elem.value == null || elem.value.length == 0)
-		return validationError(elem, "Invalid release cause: value is null");
+		return validationError(elem, causeNullValueErrorMsg);
 
 	var intValue = elem.value/1;
 	if (isNaN(intValue) || intValue <= 0)
-		return validationError(elem, "Release cause value must be a positive integer");
+		return validationError(elem, causePositiveErrorMsg);
 
   for (var e in release_causes)
     if (intValue == release_causes[e]) return true;
 
-  return validationError(elem, "Invalid release cause: value '"+intValue+"' is undefined");
+  return validationError(elem, causeValueErrorMsg_pre+intValue+causeValueErrorMsg_post);
 }
 
 function validateField(elem)
@@ -250,8 +266,9 @@ function validateField(elem)
 		case "unsigned": return validateField_unsigned(elem);
 		case "reschedule": return validateField_reschedule(elem);
 		case "release_cause": return validateField_release_cause(elem);
+		case "language": return validateField_language(elem);
 	}
-	alert("unknown validation type:"+elem.validation);
+	alert(unknownValidationTypeErrorMsg + ": "+elem.validation);
 	return false;
 }
 
@@ -383,6 +400,7 @@ function clickFilter()
 	opForm.submit();
 	return false;
 }
+
 function noValidationSubmit(buttonElem)
 {
   document.all.jbutton.value = buttonElem.jbuttonValue;

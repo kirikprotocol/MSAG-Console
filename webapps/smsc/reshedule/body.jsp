@@ -1,16 +1,16 @@
 <%@ page import="ru.novosoft.smsc.jsp.smsc.reshedule.Body,
                  ru.novosoft.smsc.util.SortedList,
                  java.util.*"%>
-<%= bean.isDefaultReshedule() ? "Default reschedule policy" : "Reschedule policy"%>: <input class=txt name=reshedule value="<%=bean.getReshedule()%>" validation="reschedule">
+<%= bean.isDefaultReshedule() ? getLocString("reschedule.defaultPolicy") : getLocString("reschedule.policy")%>: <input class=txt name=reshedule value="<%=bean.getReshedule()%>" validation="reschedule">
 <%
   if (!bean.isDefaultReshedule()) {
 %>
-<div class=page_subtitle>Errors</div>
+<div class=page_subtitle><%=getLocString("common.titles.errors")%></div>
 <table class=properties_list>
 <col width=1>
 <col width=1 align=right>
 <%
-    Collection allErrorCodes = new SortedList(bean.getAllErrCodes(request.getLocale()), new Comparator() {
+    Collection allErrorCodes = new SortedList(bean.getAllErrCodes(), new Comparator() {
       public int compare(Object o1, Object o2)
       {
         if (o1 instanceof String && o2 instanceof String)
@@ -35,12 +35,12 @@
       if (isErrChecked || !bean.isErrorAssigned(errCode)) {%>
         <td><input id=checkedErrs_id_<%=i%> class=check type=checkbox name=checkedErrs value=<%=errCode%> <%=isErrChecked ? "checked" : ""%>></td>
         <td><label for=checkedErrs_id_<%=i%>><%=errCode%></label></td>
-        <td><label for=checkedErrs_id_<%=i%>><%=bean.getErrorString(request.getLocale(), errCode)%></label></td>
+        <td><label for=checkedErrs_id_<%=i%>><%=bean.getErrorString(errCode)%></label></td>
         </tr>
       <%} else {%>
         <td>&nbsp;</td>
         <td disabled><%=errCode%></td>
-        <td disabled><%=bean.getErrorString(request.getLocale(), errCode)%></td>
+        <td disabled><%=bean.getErrorString(errCode)%></td>
         </tr><%
       }
     }

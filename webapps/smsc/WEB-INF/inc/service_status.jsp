@@ -32,19 +32,19 @@ String serviceStatus(SMSCAppContext appContext, String serviceId, String elem_id
 		switch (status)
 		{
 			case ServiceInfo.STATUS_RUNNING:
-				result += "<img src=\"/images/ic_running.gif\" width=10 height=10 title='running'>";
+				result += "<img src=\"/images/ic_running.gif\" width=10 height=10 title='" + getLocString("common.statuses.running") + "'>";
 				break;
 			case ServiceInfo.STATUS_STOPPING:
-				result += "<img src=\"/images/ic_stopping.gif\" width=10 height=10 title='stopping'>";
+				result += "<img src=\"/images/ic_stopping.gif\" width=10 height=10 title='" + getLocString("common.statuses.stopping") + "'>";
 				break;
 			case ServiceInfo.STATUS_STOPPED:
-				result += "<img src=\"/images/ic_stopped.gif\" width=10 height=10 title='stopped'>";
+				result += "<img src=\"/images/ic_stopped.gif\" width=10 height=10 title='" + getLocString("common.statuses.stopped") + "'>";
 				break;
 			case ServiceInfo.STATUS_STARTING:
-				result += "<img src=\"/images/ic_starting.gif\" width=10 height=10 title='starting'>";
+				result += "<img src=\"/images/ic_starting.gif\" width=10 height=10 title='" + getLocString("common.statuses.starting") + "'>";
 				break;
 			default:
-				result += "<img src=\"/images/ic_unknown.gif\" width=10 height=10 title='unknown'>";
+				result += "<img src=\"/images/ic_unknown.gif\" width=10 height=10 title='" + getLocString("common.statuses.unknown") + "'>";
 				break;
 		}
 	}
@@ -53,19 +53,19 @@ String serviceStatus(SMSCAppContext appContext, String serviceId, String elem_id
 		switch (status)
 		{
 			case ServiceInfo.STATUS_RUNNING:
-				result += "running";
+				result += getLocString("common.statuses.running");
 				break;
 			case ServiceInfo.STATUS_STOPPING:
-				result += "stopping";
+				result += getLocString("common.statuses.stopping");
 				break;
 			case ServiceInfo.STATUS_STOPPED:
-				result += "stopped";
+				result += getLocString("common.statuses.stopped");
 				break;
 			case ServiceInfo.STATUS_STARTING:
-				result += "starting";
+				result += getLocString("common.statuses.starting");
 				break;
 			default:
-				result += "unknown";
+				result += getLocString("common.statuses.unknown");
 				break;
 		}
 	}

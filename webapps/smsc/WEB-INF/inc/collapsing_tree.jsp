@@ -13,6 +13,30 @@
 		out.print("<div class=" + (opened ? "collapsing_tree_opened" : "collapsing_tree_closed") + "  id=\"sectionHeader_" + sectionId + "\" onclick=\"collasping_tree_showhide_section('" + sectionId + "')\">");
 		if (additionalPresented)
 			out.print("<table cellspacing=0><tr><td width=100% >");
+		out.print(getLocString(sectionName));
+		if (additionalPresented)
+		{
+			out.print("</td>");
+			out.print("<td>" + additional + "</td>");
+			out.print("</tr></table>");
+		}
+		out.print("</div>");
+
+		out.print("<table cellspacing=0 cellpadding=0 id=\"sectionValue_" + sectionId + "\" " + (opened ? "" : "style=\"display:none\"") + ">");
+		out.print("<col width='56px'/>");
+
+		out.print("<tr><th/><td>");
+	}
+	void startSectionPre(JspWriter out, String sectionId, String sectionName, boolean opened) throws IOException
+	{
+		startSectionPre(out, sectionId, sectionName, opened, null);
+	}
+	void startSectionPre(JspWriter out, String sectionId, String sectionName, boolean opened, String additional) throws IOException
+	{
+		final boolean additionalPresented = additional != null && additional.length() > 0;
+		out.print("<div class=" + (opened ? "collapsing_tree_opened" : "collapsing_tree_closed") + "  id=\"sectionHeader_" + sectionId + "\" onclick=\"collasping_tree_showhide_section('" + sectionId + "')\">");
+		if (additionalPresented)
+			out.print("<table cellspacing=0><tr><td width=100% >");
 		out.print(sectionName);
 		if (additionalPresented)
 		{
@@ -27,6 +51,7 @@
 
 		out.print("<tr><th/><td>");
 	}
+
 	void continueSection(JspWriter out) throws IOException
 	{
 		out.print("</td></tr><tr><th/><td>");
@@ -54,7 +79,7 @@
 	{
 	  final boolean additionalPresented = additional != null && additional.length() > 0;
 	  out.print("<tr class=row" + ((row++) & 1) + (rowId == null || rowId.length() == 0 ? "" : " id=\"" + rowId + '"') + ">");
-	  out.print("<th nowrap>" + label + "</th>");
+	  out.print("<th nowrap>" + getLocString(label) + "</th>");
 	  out.print("<td nowrap><input class=txt" + (isWide ? "W" : "") + " name=\"" + id + "\" id=\"" + id + "\" value=\"" + StringEncoderDecoder.encode(value) + "\""
 					+ (validation != null && validation.length() > 0 ? " validation=\"" + validation + "\" onkeyup=\"resetValidation(this)\"" : "") + "></td>");
 	  if (additionalPresented)
@@ -76,8 +101,22 @@
 	void param(JspWriter out, String label, String id, boolean value, String rowId) throws IOException
 	{
 		out.print("<tr class=row" + ((row++) & 1) + (rowId != null && rowId.length() > 0 ? " id=\"" + rowId + "\"" : "") + ">");
-		out.print("<th nowrap><label for=\"" + id + "\">" + label + "</label></th>");
+		out.print("<th nowrap><label for=\"" + id + "\">" + getLocString(label) + "</label></th>");
 		out.print("<td><input class=check type=checkbox name=\"" + id + "\" id=\"" + id + "\" value=true " + (value ? "checked" : "") + "></td>");
+		out.print("</tr>");
+	}
+	void paramCheck(JspWriter out, String label, String name, String id, String valueStr, boolean value, String rowId) throws IOException
+	{
+		out.print("<tr class=row" + ((row++) & 1) + (rowId != null && rowId.length() > 0 ? " id=\"" + rowId + "\"" : "") + ">");
+		out.print("<th nowrap><label for=" + id + ">" + getLocString(label) + "</label></th>");
+		out.print("<td><input class=check type=checkbox name=" + name + " id=" + id + " value=\""+valueStr+"\" " + (value ? "checked" : "") + "></td>");
+		out.print("</tr>");
+	}
+	void paramCheckPre(JspWriter out, String label, String name, String id, String valueStr, boolean value, String rowId) throws IOException
+	{
+		out.print("<tr class=row" + ((row++) & 1) + (rowId != null && rowId.length() > 0 ? " id=\"" + rowId + "\"" : "") + ">");
+		out.print("<th nowrap><label for=" + id + ">" + label + "</label></th>");
+		out.print("<td><input class=check type=checkbox name=" + name + " id=" + id + " value=\""+valueStr+"\" " + (value ? "checked" : "") + "></td>");
 		out.print("</tr>");
 	}
 	void param(JspWriter out, String label, String id, String value, boolean isWide) throws IOException
@@ -86,7 +125,26 @@
 	}
 	void param(JspWriter out, String label, String id, String value, String rowId, String additional) throws IOException
 	{
-	  param(out, label, id, value, rowId, additional, additional != null && additional.length() > 0);
+		param(out, label, id, value, rowId, additional, additional != null && additional.length() > 0);
+	}
+	void paramPre(JspWriter out, String label, String id, String value, String rowId, String additional) throws IOException
+	{
+		paramPre(out, label, id, value, rowId, additional, additional != null && additional.length() > 0);
+	}
+	void paramPre(JspWriter out, String label, String id, String value, String rowId, String additional, boolean isWide) throws IOException
+	{
+		paramPre(out, label, id, value, rowId, additional, isWide, null);
+	}
+	void paramPre(JspWriter out, String label, String id, String value, String rowId, String additional, boolean isWide, String validation) throws IOException
+	{
+		final boolean additionalPresented = additional != null && additional.length() > 0;
+		out.print("<tr class=row" + ((row++) & 1) + (rowId == null || rowId.length() == 0 ? "" : " id=\"" + rowId + '"') + ">");
+		out.print("<th nowrap>" + label + "</th>");
+		out.print("<td nowrap><input class=txt" + (isWide ? "W" : "") + " name=\"" + id + "\" id=\"" + id + "\" value=\"" + StringEncoderDecoder.encode(value) + "\""
+					+ (validation != null && validation.length() > 0 ? " validation=\"" + validation + "\" onkeyup=\"resetValidation(this)\"" : "") + "></td>");
+		if (additionalPresented)
+		out.print("<td>" + additional + "</td>");
+		out.print("</tr>");
 	}
 	void finishParams(JspWriter out) throws IOException
 	{
@@ -96,11 +154,30 @@
 	{
 		paramSelect(out, label, id, values, selectedValue, null, null);
 	}
-  void paramSelect(JspWriter out, String label, String id, Collection values, String selectedValue, String onChange) throws IOException
-  {
-    paramSelect(out, label, id, values, selectedValue, onChange, null);
-  }
+	void paramSelect(JspWriter out, String label, String id, Collection values, String selectedValue, String onChange) throws IOException
+	{
+		paramSelect(out, label, id, values, selectedValue, onChange, null);
+	}
 	void paramSelect(JspWriter out, String label, String id, Collection values, String selectedValue, String onChange, String style) throws IOException
+	{
+		out.print("<tr class=row" + ((row++) & 1) + ">");
+		out.print("<th nowrap>" + getLocString(label) + "</th>");
+		out.print("<td><select name=\"" + id + "\" id=\"" + id + "\""
+              + (onChange != null && onChange.length() > 0 ? " onchange=\"" + onChange + "\"" : "")
+              + (style    != null && style   .length() > 0 ? " style=\""    + style    + "\"" : "")
+              + ">");
+		for (Iterator i = values.iterator(); i.hasNext();) {
+			String value = (String) i.next();
+			final String encValue = StringEncoderDecoder.encode(value);
+			out.print("<option value=\"" + encValue + "\"");
+			if (selectedValue != null && selectedValue.equals(value))
+				out.print(" selected");
+			out.print(">" + encValue + "</option>");
+		}
+		out.print("</select></td>");
+		out.print("</tr>");
+	}
+	void paramSelectPre(JspWriter out, String label, String id, Collection values, String selectedValue, String onChange, String style) throws IOException
 	{
 		out.print("<tr class=row" + ((row++) & 1) + ">");
 		out.print("<th nowrap>" + label + "</th>");
@@ -122,8 +199,12 @@
 	void paramTextarea(JspWriter out, String label, String id, String value) throws IOException
 	{
 	  out.print("<tr class=row" + ((row++) & 1) + ">");
-	  out.print("<th nowrap>" + label + "</th>");
+	  out.print("<th nowrap>" + getLocString(label) + "</th>");
 	  out.print("<td><textarea name=\"" + id + "\">" + StringEncoderDecoder.encode(value) + "</textarea></td>");
 	  out.print("</tr>");
+	}
+	void paramHidden(JspWriter out, String name, String value) throws IOException
+	{
+		out.print("<input type=\"hidden\" name=" + name + " value=\"" + value + "\">");
 	}
 %>

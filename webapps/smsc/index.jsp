@@ -5,7 +5,7 @@
 <%
 if (request.isUserInRole("super-admin"))
 {
-TITLE = "Configuration status";
+TITLE = getLocString("home.confStatusTitle");
 }
 
 switch(bean.process(request))
