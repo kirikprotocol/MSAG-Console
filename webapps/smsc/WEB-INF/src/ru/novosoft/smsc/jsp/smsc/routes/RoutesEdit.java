@@ -135,7 +135,7 @@ public class RoutesEdit extends RouteBody
     if (null != mbCancel)
       return RESULT_DONE;
     else if (null != mbSave)
-      return save(loginedPrincipal, sessionId);
+      return save(getLoginedPrincipal(), sessionId);
 
     return result;
   }

@@ -3,7 +3,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.users.UsersEdit"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Edit user";
+TITLE = getLocString("users.editTitle");
 switch (bean.process(request))
 {
 	case UsersEdit.RESULT_DONE:
@@ -21,16 +21,16 @@ MENU0_SELECTION = "MENU0_USERS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Save",  "Save user info");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel user editing", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "common.buttons.save",  "users.saveEditHint");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "users.cancelEditHint", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>
 <%@ include file="userBody.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Save",  "Save user info");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel user editing", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "common.buttons.save",  "users.saveEditHint");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "users.cancelEditHint", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

@@ -29,7 +29,7 @@ function openTopMon()
     <th background="/images/smsc_17.jpg" nowrap><%=TITLE%></th>
     <td >&nbsp;<%
       if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0){
-        %><%=StringEncoderDecoder.encode(ServiceIDForShowStatus)%>&nbsp;<%=getLocString("grammatic.is")%>&nbsp;<%=serviceStatus(request, (SMSCAppContext) request.getAttribute("appContext"),  ServiceIDForShowStatus)%><%
+        %><%=StringEncoderDecoder.encode(ServiceIDForShowStatus)%>&nbsp;<%=getLocString("grammatic.is")%>&nbsp;<%=serviceStatus((SMSCAppContext) request.getAttribute("appContext"),  ServiceIDForShowStatus)%><%
       }%></td>
     <td width=12px background="/images/smsc_19.jpg" style="padding-right:0px;"></td>
   </tr>

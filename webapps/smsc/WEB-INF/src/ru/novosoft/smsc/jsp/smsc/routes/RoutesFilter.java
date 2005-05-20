@@ -55,7 +55,7 @@ public class RoutesFilter extends SmscBean
     if (result != RESULT_OK)
       return result;
 
-    filter = preferences.getRoutesFilter();
+    filter = preferences.getRoutesFilter(appContext);
 
     if (srcMasks == null || dstMasks == null) {
       srcChks = filter.getSourceSubjectNames();
@@ -192,7 +192,7 @@ public class RoutesFilter extends SmscBean
         srcChksSet = dstChksSet = smeChksSet = new HashSet();
         mbApply = mbClear = mbCancel = null;
         */
-      filter = preferences.getRoutesFilter();
+      filter = preferences.getRoutesFilter(appContext);
       // filter.setIntersection(false);
       filter.setNames(new String[0]);
       filter.setProviders(new String[0]);

@@ -15,8 +15,6 @@ function makeYear(year, curYear){ // +2:-7; +20:-79; +200:-799; ... etc
 	}
 	return calcYear;
 }
-var calendarMonths = new Array("January","February","March","April","May","June","July","August","September","October","November","December");
-var calendarWD = new Array("Su","Mo","Tu","We","Th","Fr","Sa","Su");
 var calendarLastPos = -1;
 var calendarLastDayPos = -1;
 var calendarCurYear=-1;

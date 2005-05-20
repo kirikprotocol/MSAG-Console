@@ -10,10 +10,10 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.jsp.dl.DistributionListAdminFormBean" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-  TITLE="Distribution lists";
+  TITLE = getLocString("dl.title");
   MENU0_SELECTION = "MENU0_DL";
 
-  int beanResult = bean.RESULT_OK;
+  int beanResult = PageBean.RESULT_OK;
   switch(beanResult = bean.process(request))  {
     case PageBean.RESULT_OK:
     case PageBean.RESULT_ERROR:
@@ -22,7 +22,7 @@
       response.sendRedirect("index.jsp");
       return;
     case DistributionListAdminFormBean.RESULT_EDIT:
-      response.sendRedirect("dlEdit.jsp?name=" + URLEncoder.encode(bean.getEditDl()));
+      response.sendRedirect("dlEdit.jsp?name=" + URLEncoder.encode(bean.getEditDl(), "UTF-8"));
       return;
     case DistributionListAdminFormBean.RESULT_ADD:
       response.sendRedirect("dlAdd.jsp");
@@ -37,8 +37,8 @@
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbAdd",  "Add distribution list",  "Create new distribution list");
-page_menu_button(session, out, "mbDelete", "Delete distribution list(s)", "Delete selected distribution list(s)");
+page_menu_button(session, out, "mbAdd",  "dl.add",  "dl.addHint");
+page_menu_button(session, out, "mbDelete", "dl.delete", "dl.deleteHint");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -73,8 +73,8 @@ function edit(dlName)
 <thead>
 <tr>
 	<th>&nbsp;</th>
-	<th><a href="#" <%=bean.getSort().endsWith("name")  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by name"  onclick='return setSort("name") '>name</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("owner") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by owner" onclick='return setSort("owner")'>owner</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("name")  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.nameHint")%>"  onclick='return setSort("name") '><%=getLocString("common.sortmodes.name")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("owner") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.ownerHint")%>" onclick='return setSort("owner")'><%=getLocString("common.sortmodes.owner")%></a></th>
 </tr>
 </thead>
 <tbody><%
@@ -88,7 +88,7 @@ for (Iterator i = bean.getDls().iterator(); i.hasNext(); )
 	%>
 	<tr class=row<%=(row++)&1%>>
 		<td class=check><input class=check type=checkbox name=checkedDls value="<%=encName%>" <%=bean.isDlChecked(name) ? "checked" : ""%>></td>
-		<td class=name><a href="#" title="Edit distribution list" onClick='return edit("<%=encName%>")'><%=encName%></a></td>
+		<td class=name><a href="#" title="<%=getLocString("dl.editTitle")%>" onClick='return edit("<%=encName%>")'><%=encName%></a></td>
 		<td><%=encOwner%></td>
 	</tr><%
 }
@@ -99,8 +99,8 @@ for (Iterator i = bean.getDls().iterator(); i.hasNext(); )
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbAdd",  "Add distribution list",  "Create new distribution list");
-page_menu_button(session, out, "mbDelete", "Delete distribution list(s)", "Delete selected distribution list(s)");
+page_menu_button(session, out, "mbAdd",  "dl.add",  "dl.addHint");
+page_menu_button(session, out, "mbDelete", "dl.delete", "dl.deleteHint");
 page_menu_space(out);
 page_menu_end(out);
 %>

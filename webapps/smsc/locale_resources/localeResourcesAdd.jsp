@@ -6,7 +6,7 @@
                    ru.novosoft.smsc.admin.Constants"
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.localeResources.LocaleResourcesAdd"
 /><%
-TITLE = "Add Resource";
+TITLE = getLocString("locale.addTitle");
 FORM_URI = CPATH+"/upload";
 FORM_METHOD = "POST";
 FORM_ENCTYPE = "multipart/form-data";
@@ -28,19 +28,19 @@ switch(bean.process(request))
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbUpload",  "Upload",  "Upload selected resource file");
-page_menu_button(session, out, "mbCancel", "Cancel", "Return to locales list without uploading resources");
+page_menu_button(session, out, "mbUpload",  "common.buttons.upload",  "locale.uploadHint");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "locale.cancelUploadHint");
 page_menu_space(out);
 page_menu_end(out);
 %>
 <div class=content>
 <input type="hidden" name="jsp" value="/locale_resources/localeResourcesAdd.jsp">
-Resource file: <input class=txt type="file" name="resourceFile" accept="text/xml" class="txt">
+<%=getLocString("locale.file")%>: <input class=txt type="file" name="resourceFile" accept="text/xml" class="txt">
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbUpload",  "Upload",  "Upload selected resource file");
-page_menu_button(session, out, "mbCancel", "Cancel", "Return to locales list without uploading resources");
+page_menu_button(session, out, "mbUpload",  "common.buttons.upload",  "locale.uploadHint");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "locale.cancelUploadHint");
 page_menu_space(out);
 page_menu_end(out);
 %>

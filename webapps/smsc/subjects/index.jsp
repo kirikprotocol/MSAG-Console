@@ -9,7 +9,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.subjects.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Subjects";
+TITLE = getLocString("subjects.title");
 switch(bean.process(request))
 {
 	case Index.RESULT_DONE:
@@ -28,7 +28,7 @@ switch(bean.process(request))
 		response.sendRedirect("subjectsAdd.jsp");
 		return;
 	case Index.RESULT_EDIT:
-		response.sendRedirect("subjectsEdit.jsp?name="+URLEncoder.encode(bean.getEditName()));
+		response.sendRedirect("subjectsEdit.jsp?name="+URLEncoder.encode(bean.getEditName(), "UTF-8"));
 		return;
 	default:
 
@@ -84,7 +84,7 @@ function clickClickable(headId, bodyId)
   }
 }
 </script>
-<div class=page_subtitle>Filter masks</div>
+<div class=page_subtitle><%=getLocString("subjects.filterMasks")%></div>
 <table id=filterMasksTable>
 <col width="1%">
 <col width="1%">
@@ -109,7 +109,7 @@ function clickClickable(headId, bodyId)
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbQuery",  "Query",  "Query subjects");
+page_menu_button(session, out, "mbQuery",  "common.buttons.query",  "subjects.queryHint");
 page_menu_space(out);
 page_menu_end(out);%>
 <div class=content>
@@ -164,9 +164,9 @@ function clickMasks(idSuffix)
 <thead>
 <tr>
 	<th>&nbsp;</th>
-	<th><a href="#" <%=bean.getSort().endsWith("Name") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by name" onclick='return setSort("Name")'>name</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("Default SME") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by default SME" onclick='return setSort("Default SME")'>default SME</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("Masks") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by masks" onclick='return setSort("Masks")'>masks</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("Name") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.nameHint")%>" onclick='return setSort("Name")'><%=getLocString("common.sortmodes.name")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("Default SME") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("subjects.sortDefaultSmeHint")%>" onclick='return setSort("Default SME")'><%=getLocString("subjects.sortDefaultSme")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("Masks") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.masksHint")%>" onclick='return setSort("Masks")'><%=getLocString("common.sortmodes.masks")%></a></th>
 </tr>
 </thead>
 <tbody>
@@ -192,7 +192,7 @@ for(Iterator i = bean.getSubjects().iterator(); i.hasNext(); row++)
 %>
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=checkedSubjects value="<%=encName%>" <%=bean.isSubjectChecked(name) ? "checked" : ""%>></td>
-	<td <%=onClick%>><div id=<%=rowId%>_HEAD <%=encNotes.length() > 0 ? "class=collapsing_list_closed" : "class=collapsing_list_empty"%>><a href="#" title="Edit subject" onClick='return edit("<%=encName%>")'><%=encName%></a></div></td>
+	<td <%=onClick%>><div id=<%=rowId%>_HEAD <%=encNotes.length() > 0 ? "class=collapsing_list_closed" : "class=collapsing_list_empty"%>><a href="#" title="<%=getLocString("subjects.editSubTitle")%>" onClick='return edit("<%=encName%>")'><%=encName%></a></div></td>
 	<td <%=onClick%>><%=encDefSme%></td>
 	<td><%
     if (masks.size() > 0)
@@ -224,7 +224,7 @@ for(Iterator i = bean.getSubjects().iterator(); i.hasNext(); row++)
         %></div><%
       }
     } else {
-      out.print("none");
+      out.print(getLocString("common.util.none"));
     }
   %></td>
 </tr>
@@ -238,15 +238,15 @@ for(Iterator i = bean.getSubjects().iterator(); i.hasNext(); row++)
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>
 </div><%
 page_menu_begin(out);
-page_menu_button(session, out, "mbAdd",  "Add subject",  "Add new subject");
-page_menu_button(session, out, "mbDelete", "Delete subject(s)", "Delete selected subject(s)");
+page_menu_button(session, out, "mbAdd",  "subjects.add",  "subjects.addHint");
+page_menu_button(session, out, "mbDelete", "subjects.delete", "subjects.deleteHint");
 if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
   if (!bean.getAppContext().getStatuses().isRoutesRestored())
-    page_menu_button(session, out, "mbSave", "Save current", "Save current routing configuration");
+    page_menu_button(session, out, "mbSave", "common.buttons.saveCurrent", "routes.saveCurrentHint");
 if (bean.getAppContext().getStatuses().isRoutesSaved() && !bean.getAppContext().getStatuses().isRoutesRestored())
-    page_menu_button(session, out, "mbRestore", "Load saved", "Load saved routing configuration");
+    page_menu_button(session, out, "mbRestore", "common.buttons.loadSaved", "routes.loadSavedHint");
 if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
-    page_menu_button(session, out, "mbLoad", "Restore applied", "Restore applied routing configuration");
+    page_menu_button(session, out, "mbLoad", "common.buttons.restoreApplied", "routes.restoreAppliedHint");
 page_menu_space(out);
 page_menu_end(out);%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

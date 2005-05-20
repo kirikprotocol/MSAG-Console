@@ -14,44 +14,52 @@ public class SMSCErrors
 
   public static class error
   {
-    private static final String B = SMSCErrors.B + "error.";
-    public static final String failed = B + "failed";
-    public static final String unknown = B + "unknown";
-    public static final String system = B + "system";
-    public static final String errorListNotInitialized = B + "errorListNotInitialized";
-    public static final String appContextNotInitialized = B + "appContextNotInitialized";
-    public static final String serviceManagerNotInitialized = B + "serviceManagerNotInitialized";
-    public static final String daemonManagerNotInitialized = B + "daemonManagerNotInitialized";
-    public static final String couldntApplyChanges = B + "couldntApplyChanges";
-    public static final String notYetImplemented = B + "notYetImplemented";
-    public static final String CouldntGetSMSCStatus = B + "CouldntGetSMSCStatus";
+	private static final String B = SMSCErrors.B + "error.";
+	public static final String failed = B + "failed";
+	public static final String unknown = B + "unknown";
+	public static final String system = B + "system";
+	public static final String errorListNotInitialized = B + "errorListNotInitialized";
+	public static final String appContextNotInitialized = B + "appContextNotInitialized";
+	public static final String serviceManagerNotInitialized = B + "serviceManagerNotInitialized";
+	public static final String daemonManagerNotInitialized = B + "daemonManagerNotInitialized";
+	public static final String couldntApplyChanges = B + "couldntApplyChanges";
+	public static final String notYetImplemented = B + "notYetImplemented";
+	public static final String CouldntGetSMSCStatus = B + "CouldntGetSMSCStatus";
+	public static final String CouldntGetBundleKey = B + "CoulndtGetBundleKey";
 
 
-    public static class services
-    {
-      private static final String B = SMSCErrors.error.B + "services.";
-      public static final String couldntStartInternalService = B + "couldntStartInternalService";
-      public static final String unknownAction = B + "unknownAction";
-      public static final String couldntGetServiceInfo = B + "couldntGetServiceInfo";
-      public static final String coudntDeleteService = B + "coudntDeleteService";
-      public static final String coudntAddService = B + "coudntAddService";
-      public static final String invalidPriority = B + "invalidPriority";
-      public static final String alreadyExists = B + "alreadyExists";
-      public static final String NotAllParametersDefined = B + "NotAllParametersDefined";
-      public static final String ServiceIdNotDefined = B + "ServiceIdNotDefined";
-      public static final String ServiceIdTooLong = B + "ServiceIdTooLong";
-      public static final String ServiceNotFound = B + "ServiceNotFound";
-      public static final String fileNotAttached = B + "fileNotAttached";
-      public static final String serviceDistributiveNotAttached = B + "serviceDistributiveNotAttached";
-      public static final String serviceAlreadyExists = B + "serviceAlreadyExists";
-      public static final String distributiveFileMustBeZipCompressed = B + "distributiveFileMustBeZipCompressed";
-      public static final String couldntReceiveFile = B + "couldntReceiveFile";
-      public static final String hostNotSelected = B + "hostNotSelected";
-      public static final String incorrectPortValue = B + "incorrectPortValue";
-      public static final String couldntSaveWebXml = B + "couldntSaveWebXml";
-      public static final String somethingGlobalIsChanged = B + "somethingGlobalIsChanged";
-      public static final String notAuthorizedForDeletingService = B + "notAuthorizedForDeletingService";
-    }
+	public static class sql
+	{
+		private static final String B = SMSCErrors.error.B + "sql.";
+		public static final String exception = B + "exception";
+		public static final String coulndtCloseDBConnection = B + "couldntCloseDBConnection";
+	}
+	public static class services
+	{
+		private static final String B = SMSCErrors.error.B + "services.";
+		public static final String couldntStartInternalService = B + "couldntStartInternalService";
+		public static final String unknownAction = B + "unknownAction";
+		public static final String couldntGetServiceInfo = B + "couldntGetServiceInfo";
+		public static final String coudntDeleteService = B + "coudntDeleteService";
+		public static final String coudntAddService = B + "coudntAddService";
+		public static final String invalidPriority = B + "invalidPriority";
+		public static final String alreadyExists = B + "alreadyExists";
+		public static final String NotAllParametersDefined = B + "NotAllParametersDefined";
+		public static final String ServiceIdNotDefined = B + "ServiceIdNotDefined";
+		public static final String ServiceIdTooLong = B + "ServiceIdTooLong";
+		public static final String ServiceNotFound = B + "ServiceNotFound";
+		public static final String fileNotAttached = B + "fileNotAttached";
+		public static final String serviceDistributiveNotAttached = B + "serviceDistributiveNotAttached";
+		public static final String serviceAlreadyExists = B + "serviceAlreadyExists";
+		public static final String distributiveFileMustBeZipCompressed = B + "distributiveFileMustBeZipCompressed";
+		public static final String couldntReceiveFile = B + "couldntReceiveFile";
+		public static final String hostNotSelected = B + "hostNotSelected";
+		public static final String incorrectPortValue = B + "incorrectPortValue";
+		public static final String couldntSaveWebXml = B + "couldntSaveWebXml";
+		public static final String somethingGlobalIsChanged = B + "somethingGlobalIsChanged";
+		public static final String notAuthorizedForDeletingService = B + "notAuthorizedForDeletingService";
+		public static final String serviceManagerIsNull = B + "serviceManagerIsNull";
+	}
 
 
     public static class hosts
@@ -103,19 +111,20 @@ public class SMSCErrors
     }
 
 
-    public static class subjects
-    {
-      private static final String B = error.B + "subjects.";
-      public static final String alreadyExists = B + "alreadyExists";
-      public static final String cantAdd = B + "cantAdd";
-      public static final String cantDelete = B + "cantDelete";
-      public static final String cantEdit = B + "cantEdit";
-      public static final String subjNotSpecified = B + "subjNotSpecified";
-      public static final String masksNotDefined = B + "masksNotDefined";
-      public static final String incorrectMask = B + "incorrectMask";
-      public static final String subjNotFound = B + "subjNotFound";
-      public static final String defaultSmeNotFound = B + "defaultSmeNotFound";
-    }
+	public static class subjects
+	{
+		private static final String B = error.B + "subjects.";
+		public static final String alreadyExists = B + "alreadyExists";
+		public static final String cantAdd = B + "cantAdd";
+		public static final String cantDelete = B + "cantDelete";
+		public static final String cantEdit = B + "cantEdit";
+		public static final String subjNotSpecified = B + "subjNotSpecified";
+		public static final String masksNotDefined = B + "masksNotDefined";
+		public static final String incorrectMask = B + "incorrectMask";
+		public static final String incorrectFilterMask = B + "incorrectFilterMask";
+		public static final String subjNotFound = B + "subjNotFound";
+		public static final String defaultSmeNotFound = B + "defaultSmeNotFound";
+	}
 
 
     public static class routes
@@ -175,22 +184,23 @@ public class SMSCErrors
 
     }
 
-    public static class smsc
-    {
-      private static final String B = error.B + "smsc.";
-      public static final String daemonNotFound = B + "daemonNotFound";
-      public static final String couldntRefreshStatus = B + "couldntRefreshStatus";
-      public static final String couldntStart = B + "couldntStart";
-      public static final String couldntStop = B + "couldntStop";
-      public static final String couldntApply = B + "couldntApply";
-      public static final String couldntSave = B + "couldntSave";
-      public static final String couldntRefreshComponents = B + "couldntRefreshComponents";
-      public static final String couldntGetConfig = B + "couldntGetConfig";
-      public static final String invalidParameter = B + "invalidParameter";
-      public static final String invalidIntParameter = B + "invalidIntParameter";
-      public static final String invalidBoolParameter = B + "invalidBoolParameter";
-      public static final String couldntGetLogCats = B + "couldntGetLogCats";
-      public static final String couldntSetLogCats = B + "couldntSetLogCats";
+	public static class smsc
+	{
+		private static final String B = error.B + "smsc.";
+		public static final String contextInitFailed = B + "contextInitFailed";
+		public static final String daemonNotFound = B + "daemonNotFound";
+		public static final String couldntRefreshStatus = B + "couldntRefreshStatus";
+		public static final String couldntStart = B + "couldntStart";
+		public static final String couldntStop = B + "couldntStop";
+		public static final String couldntApply = B + "couldntApply";
+		public static final String couldntSave = B + "couldntSave";
+		public static final String couldntRefreshComponents = B + "couldntRefreshComponents";
+		public static final String couldntGetConfig = B + "couldntGetConfig";
+		public static final String invalidParameter = B + "invalidParameter";
+		public static final String invalidIntParameter = B + "invalidIntParameter";
+		public static final String invalidBoolParameter = B + "invalidBoolParameter";
+		public static final String couldntGetLogCats = B + "couldntGetLogCats";
+		public static final String couldntSetLogCats = B + "couldntSetLogCats";
 
 
       public static class reshedule
@@ -228,34 +238,52 @@ public class SMSCErrors
     }
 
 
-    public static class dl
-    {
-      private static final String B = error.B + "dl.";
-      public static final String CouldntListDistributionLists = B + "CouldntListDistributionLists";
-      public static final String couldntdelete = B + "couldntdelete";
-      public static final String unknownDL = B + "unknownDL";
-      public static final String couldntadd = B + "couldntadd";
-      public static final String couldntaddAlreadyexists = B + "couldntaddAlreadyexists";
-      public static final String couldntListLists = B + "couldntListLists";
-      public static final String dlNotDefined = B + "dlNotDefined";
-      public static final String wildcardsNotAllowedInAddress = B + "wildcardsNotAllowedInAddress";
-      public static final String couldntSave = B + "couldntSave";
-      public static final String couldntGetSubmitters = B + "couldntGetSubmitters";
-      public static final String couldntGetMembers = B + "couldntGetMembers";
-      public static final String invalidAddress = B + "invalidAddress";
-      public static final String noSubmittersEntered = B + "noSubmittersEntered";
-      public static final String noMembersEntered = B + "noMembersEntered";
+	public static class dl
+	{
+		private static final String B = error.B + "dl.";
+		public static final String CouldntListDistributionLists = B + "CouldntListDistributionLists";
+		public static final String couldntdelete = B + "couldntdelete";
+		public static final String unknownDL = B + "unknownDL";
+		public static final String couldntadd = B + "couldntadd";
+		public static final String couldntaddAlreadyexists = B + "couldntaddAlreadyexists";
+		public static final String couldntListLists = B + "couldntListLists";
+		public static final String dlNotDefined = B + "dlNotDefined";
+		public static final String wildcardsNotAllowedInAddress = B + "wildcardsNotAllowedInAddress";
+		public static final String couldntSave = B + "couldntSave";
+		public static final String couldntGetSubmitters = B + "couldntGetSubmitters";
+		public static final String couldntGetMembers = B + "couldntGetMembers";
+		public static final String invalidAddress = B + "invalidAddress";
+		public static final String noSubmittersEntered = B + "noSubmittersEntered";
+		public static final String noMembersEntered = B + "noMembersEntered";
+		public static final String tooMuchMembers = B + "tooMuchMembers";
+		public static final String ownerNotSpecified = B + "ownerNotSpecified";
+		public static final String unknownOwner = B + "unknownOwner";
+		public static final String couldntFindOwner = B + "couldntFindOwner";
+		public static final String couldntAlterDL = B + "couldntAlterDL";
+		public static final String exceedMaxMembersValue = B + "exceedMaxMembersValue";
+		public static final String patternIsInvalid = B + "patternIsInvalid";
+		public static final String principalNotFound = B + "principalNotFound";
+		public static final String cannotLoadPrincipal = B + "cannotLoadPrincipal";
+		public static final String principalAlreadyExist = B + "principalAlreadyExist";
+		public static final String couldntCreatePrincipal = B + "couldntCreatePrincipal";
+		public static final String couldntUpdatePrincipal = B + "couldntUpdatePrincipal";
+		public static final String couldntDeletePrincipal = B + "couldntDeletePrincipal";
+		public static final String maxListsCountTooSmall = B + "maxListsCountTooSmall";
+		public static final String maxMembersCountTooSmall = B + "maxMembersCountTooSmall";
+		public static final String maxListsIncorrectValue = B + "maxListsIncorrectValue";
+		public static final String maxElementsIncorrectValue = B + "maxElementsIncorrectValue";
     }
 
 
-    public static class smsview
-    {
-      private static final String B = error.B + "smsview.";
-      public static final String QueryFailed = B + "QueryFailed";
-      public static final String DeleteFailed = B + "DeleteFailed";
-      public static final String AccessDeniedToOperative = B + "AccessDeniedToOperative";
-      public static final String AccessDeniedToArchive = B + "AccessDeniedToArchive";
-    }
+	public static class smsview
+	{
+		private static final String B = error.B + "smsview.";
+		public static final String InitFailed = B + "InitFailed";
+		public static final String QueryFailed = B + "QueryFailed";
+		public static final String DeleteFailed = B + "DeleteFailed";
+		public static final String AccessDeniedToOperative = B + "AccessDeniedToOperative";
+		public static final String AccessDeniedToArchive = B + "AccessDeniedToArchive";
+	}
 
 
     public static class acl
@@ -271,10 +299,11 @@ public class SMSCErrors
       public static final String COULDNT_REMOVE_ADD_ADDRESSES = B + "couldntRemoveAddAddresses";
     }
 
-    public static class smsstat
-    {
-      private static final String B = error.B + "smsstat.";
-      public static final String QueryFailed = B + "QueryFailed";
+	public static class smsstat
+	{
+		private static final String B = error.B + "smsstat.";
+		public static final String QueryFailed = B + "QueryFailed";
+		public static final String StatError = B + "StatError";
     }
      public static class smsexport
     {

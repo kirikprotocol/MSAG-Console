@@ -3,7 +3,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.subjects.SubjectsAdd"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Add subject";
+TITLE = getLocString("subjects.addTitle");
 int beanResult = bean.process(request);
 switch(beanResult)
 {
@@ -23,16 +23,16 @@ MENU0_SELECTION = "MENU0_SUBJECTS";
 <%boolean isNew = true;%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Add subject",  "Add new subject");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "subjects.add",  "subjects.addHint");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>
 <%@ include file="subjectBody.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Add subject",  "Add new subject");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "subjects.add",  "subjects.addHint");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

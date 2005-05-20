@@ -17,7 +17,7 @@ name="bean" property="*"
 /><%
 	MENU0_SELECTION = "MENU0_LOCALE_RESOURCES";
 	FORM_METHOD = "POST";
-	TITLE = "Resource edit";
+	TITLE = getLocString("locale.editTitle");
 	switch (bean.process(request))
 	{
 		case LocaleResourcesEdit.RESULT_DONE:
@@ -36,9 +36,9 @@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
 	{
 		String sectionFullName = section.getFullName();
 		out.print("<tr class=row" + ((row++) & 1) + ">");
-      out.print("<th><input class=txt id=\"newParamName_" + sectionFullName + "\" name=\"newParamName_" + sectionFullName + "\"></th>");
+		out.print("<th><input class=txt id=\"newParamName_" + sectionFullName + "\" name=\"newParamName_" + sectionFullName + "\"></th>");
 		out.print("<td width=100% ><input class=txtW id=\"newParamValue_" + sectionFullName + "\" name=\"newParamValue_" + sectionFullName + "\"></td>");
-		out.print("<td><img src=\"/images/but_add.gif\" onclick=\"addParam('" + sectionFullName + "')\" title='Add new parameter'></td>");
+		out.print("<td><img src=\"/images/but_add.gif\" onclick=\"addParam('" + sectionFullName + "')\" title='" + getLocString("common.hints.addParam") + "'></td>");
 		out.print("</tr>");
 	}
 	void printAddSection(JspWriter out, Section section) throws IOException
@@ -46,22 +46,22 @@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
 		String sectionFullName = section.getFullName();
 		out.print("<div>");
 		out.print("<input class=txt id=\"newSectionInput_" + sectionFullName + "\" name=\"newSectionInput_" + sectionFullName + "\">");
-		out.print("<img src=\"/images/but_add.gif\" onclick=\"addSection('" + sectionFullName + "')\" title='Add new section' style='position:relative;top:4px'></div>");
+		out.print("<img src=\"/images/but_add.gif\" onclick=\"addSection('" + sectionFullName + "')\" title='" + getLocString("common.hints.addSection") + "' style='position:relative;top:4px'></div>");
 	}
 	void printResourceSection(JspWriter out, Section section) throws IOException
 	{
 		final String sectionFullName = section.getFullName();
-		startSection(out, sectionFullName, section.getName(), section.getParent() == null,
-						 "<img src=\"/images/but_del.gif\" onclick=\"removeSection('" + sectionFullName + "')\" title='Remove this section'>");
+		startSectionPre(out, sectionFullName, section.getName(), section.getParent() == null,
+						 "<img src=\"/images/but_del.gif\" onclick=\"removeSection('" + sectionFullName + "')\" title='" + getLocString("common.hints.delSection") + "'>");
 		startParams(out, "paramTable_" + sectionFullName);
 		for (Iterator i = section.getParamNames().iterator(); i.hasNext();) {
 			String paramName = (String) i.next();
-			param(out,
+			paramPre(out,
 					paramName,
 					sectionFullName + '.' + paramName,
 					section.getParam(paramName),
 					"paramRow_" + sectionFullName + Section.NAME_DELIMETER + paramName,
-					"<img src=\"/images/but_del.gif\" onclick=\"removeParam('" + sectionFullName + "', '" + paramName +"')\" title='Remove this parameter'>");
+					"<img src=\"/images/but_del.gif\" onclick=\"removeParam('" + sectionFullName + "', '" + paramName +"')\" title='" + getLocString("common.hints.delParam") + "'>");
 		}
 		printAddParam(out, section);
 		finishParams(out);
@@ -140,7 +140,7 @@ function sectionHeader(sectionName, fullName)
 		+ sectionName
 		+ "</td>"
 		+ "<td>"
-		+ createImgButton("/images/but_del.gif", "removeSection('" + fullName + "')", "Remove this section")
+		+ createImgButton("/images/but_del.gif", "removeSection('" + fullName + "')", "<%=getLocString("common.hints.delSection")%>")
 		+ "</td>"
 		+ "</tr></table></div>";
 }
@@ -154,7 +154,7 @@ function addSectionField(sectionFN)
 	return ""
 		+ "<div>"
 		+ createInput(newSectionInput, "txt")
-		+ createImgButton2("/images/but_add.gif", "addSection('" + sectionFN + "')", "Add new section",  "position:relative;top:4px")
+		+ createImgButton2("/images/but_add.gif", "addSection('" + sectionFN + "')", "<%=getLocString("common.hints.addSection")%>",  "position:relative;top:4px")
 		+ "</div>";
 }
 function addParamField(sectionFN)
@@ -172,7 +172,7 @@ function addParamField(sectionFN)
 		+   "</td><td>"
 		+     createInput(newParamValue, "txtW")
 		+   "</td><td>"
-		+     createImgButton("/images/but_add.gif", "addParam('" + sectionFN + "')", "Add new param")
+		+     createImgButton("/images/but_add.gif", "addParam('" + sectionFN + "')", "<%=getLocString("common.hints.addParam")%>")
 		+   "</td>"
 		+ "</tr>"
 		+ "</table>";
@@ -210,22 +210,22 @@ function addSection(parentSectionName)
 </script>
 <%
 	page_menu_begin(out);
-	page_menu_button(session, out, "mbSave", "Save", "Save changes and return to locales list");
-   page_menu_button(session, out, "mbCancel", "Cancel", "Cancel changes and return to locales list");
+	page_menu_button(session, out, "mbSave", "common.buttons.save", "locale.saveHint");
+	page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "locale.cancelHint");
 	page_menu_space(out);
 	page_menu_end(out);
 %>
 <div class=content>
 <input type=hidden name=locale value="<%=bean.getLocale()%>">
 <input type=hidden name=initialized value=true>
-<h2>Locale "<%=bean.getLocale()%>"</h2>
+<h2><%=getLocString("locale.locale")%> "<%=bean.getLocale()%>"</h2>
 <%printResourceSection(out, bean.getSettings());%>
 <%printResourceSection(out, bean.getResources());%>
 </div>
 <%
 	page_menu_begin(out);
-	page_menu_button(session, out, "mbSave", "Save", "Save changes and return to locales list");
-   page_menu_button(session, out, "mbCancel", "Cancel", "Cancel changes and return to locales list");
+	page_menu_button(session, out, "mbSave", "common.buttons.save", "locale.saveHint");
+	page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "locale.cancelHint");
 	page_menu_space(out);
 	page_menu_end(out);
 %>

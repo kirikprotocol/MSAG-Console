@@ -6,6 +6,8 @@ package ru.novosoft.smsc.admin.preferences;
  * Time: 19:06:21
  */
 
+//todo Надо бы сделать контейнер для topmonPrefs, perfmonPrefs и других будущих хэшмапных префов, чтобы код не воротить каждый раз
+
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.category.CategoryFilter;
@@ -16,9 +18,12 @@ import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.smcstat.StatRouteFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.user.UserFilter;
+import ru.novosoft.smsc.util.LocaleMessages;
 
-import java.util.Locale;
-import java.util.Vector;
+import java.util.*;
+
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Element;
 
 public class UserPreferences
 {
@@ -71,18 +76,81 @@ public class UserPreferences
   private String dlPrincipalsSortOrder = "address";
   private PrincipalsFilter dlPrincipalsFilter = new PrincipalsFilter(null);
 
-  private Locale locale = new Locale("ru");
+	private Locale locale = null;
 
-  public UserPreferences(SMSCAppContext appContext)
-  {
-    this.profilesSortOrder = "mask";
-    this.aliasesSortOrder.add("Alias");
-    this.subjectsSortOrder.add("Name");
-    this.routesSortOrder.add("Route ID");
-    this.usersSortOrder.add("login");
-    this.routesFilter.setProviderManager(appContext.getProviderManager());
-    this.routesFilter.setCategoryManager(appContext.getCategoryManager());
-  }
+	private HashMap topmonPrefs = new HashMap();
+	private HashMap perfmonPrefs = new HashMap();
+
+	public static String[] getDefaultPrefsNames()
+	{
+		String[] result = new String[11];
+		result[0]  = "locale";
+		result[1]  = "topmon.graph.scale";
+		result[2]  = "topmon.graph.grid";
+		result[3]  = "topmon.graph.higrid";
+		result[4]  = "topmon.graph.head";
+		result[5]  = "topmon.max.speed";
+		result[6]  = "perfmon.pixPerSecond";
+		result[7]  = "perfmon.scale";
+		result[8]  = "perfmon.block";
+		result[9]  = "perfmon.vLightGrid";
+		result[10] = "perfmon.vMinuteGrid";
+		return result;
+	}
+
+	public static String[] getDefaultPrefsValues()
+	{
+		String[] result = new String[11];
+		result[0] = LocaleMessages.DEFAULT_PREFERRED_LANGUAGE;
+		result[1]  = "3";
+		result[2]  = "2";
+		result[3]  = "10";
+		result[4]  = "20";
+		result[5]  = "50";
+		result[6]  = "4";
+		result[7]  = "80";
+		result[8]  = "8";
+		result[9]  = "4";
+		result[10] = "6";
+		return result;
+	}
+
+	public UserPreferences()
+	{
+		locale = new Locale(LocaleMessages.DEFAULT_PREFERRED_LANGUAGE);
+		this.profilesSortOrder = "mask";
+		this.aliasesSortOrder.add("Alias");
+		this.subjectsSortOrder.add("Name");
+		this.routesSortOrder.add("Route ID");
+		this.usersSortOrder.add("login");
+		topmonPrefs.put("topmon.graph.scale","3");
+		topmonPrefs.put("topmon.graph.grid","2");
+		topmonPrefs.put("topmon.graph.higrid","10");
+		topmonPrefs.put("topmon.graph.head","20");
+		topmonPrefs.put("topmon.max.speed","50");
+		perfmonPrefs.put("perfmon.pixPerSecond","4");
+		perfmonPrefs.put("perfmon.scale","80");
+		perfmonPrefs.put("perfmon.block","8");
+		perfmonPrefs.put("perfmon.vLightGrid","4");
+		perfmonPrefs.put("perfmon.vMinuteGrid","6");
+	}
+
+	public UserPreferences(NodeList values)
+	{
+		this();
+		this.setValues(values);
+	}
+
+/*	public UserPreferences(SMSCAppContext appContext)
+	{
+		this.profilesSortOrder = "mask";
+		this.aliasesSortOrder.add("Alias");
+		this.subjectsSortOrder.add("Name");
+		this.routesSortOrder.add("Route ID");
+		this.usersSortOrder.add("login");
+		this.routesFilter.setProviderManager(appContext.getProviderManager());
+		this.routesFilter.setCategoryManager(appContext.getCategoryManager());
+	}*/
 
   public int getProfilesPageSize()
   {
@@ -144,10 +212,13 @@ public class UserPreferences
     return routesPageSize;
   }
 
-  public RouteFilter getRoutesFilter()
-  {
-    return routesFilter;
-  }
+	public RouteFilter getRoutesFilter(SMSCAppContext appContext)
+	{
+		this.routesFilter.setProviderManager(appContext.getProviderManager());
+		this.routesFilter.setCategoryManager(appContext.getCategoryManager());
+
+		return routesFilter;
+	}
 
   public Vector getRoutesSortOrder()
   {
@@ -314,6 +385,11 @@ public class UserPreferences
     return locale;
   }
 
+  public void setLocale(Locale loc)
+  {
+    locale = loc;
+  }
+
   public int getLocaleResourcesPageSize()
   {
     return localeResourcesPageSize;
@@ -393,4 +469,90 @@ public class UserPreferences
   {
     this.dlPrincipalsFilter = dlPrincipalsFilter;
   }
+	public void setValues(String[] names, String[] values)
+	{
+		for (int i = 0; i < values.length; i++)
+		{
+			if (names[i].equals("locale")) {locale = new Locale(values[i]);}
+			if (names[i].startsWith("topmon."))
+			{
+				if (topmonPrefs.containsKey(names[i])) topmonPrefs.remove(names[i]);
+				topmonPrefs.put(names[i], values[i]);
+			}
+			if (names[i].startsWith("perfmon."))
+			{
+				if (perfmonPrefs.containsKey(names[i])) perfmonPrefs.remove(names[i]);
+				perfmonPrefs.put(names[i], values[i]);
+			}
+		}
+	}
+
+	public void setValues(NodeList values)
+	{
+		if (values != null) 
+		{
+			for (int i = 0; i < values.getLength(); i++)
+			{
+				Element elem = (Element) values.item(i);
+				String name = elem.getAttribute("name");
+				String value = elem.getAttribute("value");
+				if (name.equals("locale")) {locale = new Locale(value);}
+				if (name.startsWith("topmon."))
+				{
+					if (topmonPrefs.containsKey(name)) topmonPrefs.remove(name);
+					topmonPrefs.put(name, value);
+				}
+				if (name.startsWith("perfmon."))
+				{
+					if (perfmonPrefs.containsKey(name)) perfmonPrefs.remove(name);
+					perfmonPrefs.put(name, value);
+				}
+			}
+		}
+	}
+	public String getXmlText()
+	{
+		String result = "";
+		result += "<pref name=\"locale\" value=\"" + this.locale.getLanguage() + "\"/>\n";
+		Set t = topmonPrefs.keySet();
+		for(Iterator i = t.iterator(); i.hasNext();)
+		{
+			String name = (String) i.next();
+			result += "<pref name=\"" + name + "\" value=\"" + topmonPrefs.get(name) + "\"/>\n";
+		}
+		t = perfmonPrefs.keySet();
+		for(Iterator i = t.iterator(); i.hasNext();)
+		{
+			String name = (String) i.next();
+			result += "<pref name=\"" + name + "\" value=\"" + perfmonPrefs.get(name) + "\"/>\n";
+		}
+
+		return result;
+	}
+
+	public String[] getPrefsValues()
+	{
+		String[] result = new String[11];
+		result = getDefaultPrefsValues();
+		result[0]  = locale.getLanguage();
+		if (topmonPrefs.containsKey("topmon.graph.scale"))  result[1]  = (String) topmonPrefs.get("topmon.graph.scale");
+		if (topmonPrefs.containsKey("topmon.graph.grid"))   result[2]  = (String) topmonPrefs.get("topmon.graph.grid");
+		if (topmonPrefs.containsKey("topmon.graph.higrid")) result[3]  = (String) topmonPrefs.get("topmon.graph.higrid");
+		if (topmonPrefs.containsKey("topmon.graph.head"))   result[4]  = (String) topmonPrefs.get("topmon.graph.head");
+		if (topmonPrefs.containsKey("topmon.max.speed"))    result[5]  = (String) topmonPrefs.get("topmon.max.speed");
+		if (perfmonPrefs.containsKey("perfmon.pixPerSecond")) result[6]  = (String) perfmonPrefs.get("perfmon.pixPerSecond");
+		if (perfmonPrefs.containsKey("perfmon.scale"))        result[7]  = (String) perfmonPrefs.get("perfmon.scale");
+		if (perfmonPrefs.containsKey("perfmon.block"))        result[8]  = (String) perfmonPrefs.get("perfmon.block");
+		if (perfmonPrefs.containsKey("perfmon.vLightGrid"))   result[9]  = (String) perfmonPrefs.get("perfmon.vLightGrid");
+		if (perfmonPrefs.containsKey("perfmon.vMinuteGrid"))  result[10] = (String) perfmonPrefs.get("perfmon.vMinuteGrid");
+		return result;
+	}
+
+	public HashMap getTopmonPrefs() {
+		return topmonPrefs;
+	}
+
+	public HashMap getPerfmonPrefs() {
+		return perfmonPrefs;
+	}
 }

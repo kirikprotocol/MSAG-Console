@@ -6,7 +6,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.localeResources.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Resources";
+TITLE = getLocString("locale.title");
 switch(bean.process(request))
 {
 	case Index.RESULT_DONE:
@@ -23,7 +23,7 @@ switch(bean.process(request))
 		response.sendRedirect("localeResourcesAdd.jsp");
 		return;
 	case Index.RESULT_VIEW:
-		response.sendRedirect("localeResourcesView.jsp?locale="+URLEncoder.encode(bean.getViewLocaleResource()));
+		response.sendRedirect("localeResourcesView.jsp?locale="+URLEncoder.encode(bean.getViewLocaleResource(), "UTF-8"));
 		return;
 	default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
@@ -33,8 +33,8 @@ MENU0_SELECTION = "MENU0_LOCALE_RESOURCES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbAdd",  "Add locale resource",  "Add locale resource");
-//page_menu_button(out, "mbDelete", "Delete locale resource(s)", "Delete selected locale resource(s)");
+page_menu_button(session, out, "mbAdd",  "locale.add",  "locale.add");
+//page_menu_button(out, "mbDelete", "locale.delete", "locale.deleteHint");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -74,7 +74,7 @@ function navigate(direction)
 <thead>
 <tr>
 	<%--th>&nbsp;</th--%>
- 	<th><a href="#" <%=bean.getSort().endsWith("locale") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by mask" onclick='return setSort("locale")'>locale name</a></th>
+ 	<th><a href="#" <%=bean.getSort().endsWith("locale") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.localeHint")%>" onclick='return setSort("locale")'><%=getLocString("common.sortmodes.locale")%></a></th>
 </tr>
 </thead>
 <tbody>
@@ -87,7 +87,7 @@ String encLocale = StringEncoderDecoder.encode(locale);
 %>
 <tr class=row<%=(row++)&1%>>
 	<%--td class=check><input class=check type=checkbox name=checkedLocales value="<%=encLocale%>" <%=bean.isLocaleChecked(locale) ? "checked" : ""%>></td--%>
-	<td class=name><a href="#" title="View contens of resource file" onClick='return view("<%=encLocale%>")'><%=encLocale%></a></td>
+	<td class=name><a href="#" title="<%=getLocString("locale.viewSubTitle")%>" onClick='return view("<%=encLocale%>")'><%=encLocale%></a></td>
 </tr>
 <%}}%>
 </tbody>
@@ -96,8 +96,8 @@ String encLocale = StringEncoderDecoder.encode(locale);
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbAdd",  "Add locale resource",  "Add locale resource");
-//page_menu_button(out, "mbDelete", "Delete locale resource(s)", "Delete selected locale resource(s)");
+page_menu_button(session, out, "mbAdd",  "locale.add",  "locale.add");
+//page_menu_button(out, "mbDelete", "locale.delete", "locale.deleteHint");
 page_menu_space(out);
 page_menu_end(out);
 %>

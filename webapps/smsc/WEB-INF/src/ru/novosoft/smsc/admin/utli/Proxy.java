@@ -79,12 +79,15 @@ public class Proxy
     if (getStatus() != StatusConnected)
       connect(host, port);
 
-    try {
+    try
+    {
       logger.debug("write command " + command);
       writer.write(command);
       logger.debug("reading response");
       return reader.read();
-    } catch (IOException e) {
+    }
+    catch (IOException e)
+    {
       try {
         reconnect();
         writer.write(command);
@@ -93,6 +96,10 @@ public class Proxy
         disconnect();
         throw new AdminException(e1.getMessage());
       }
+    }
+    catch (Exception e)
+    {
+     throw new AdminException(e.getMessage());        
     }
   }
 

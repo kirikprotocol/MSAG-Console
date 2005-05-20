@@ -4,7 +4,7 @@
 <jsp:setProperty name="dl_dlEdit_bean" property="*"/>
 <%
 ru.novosoft.smsc.jsp.dl.dlEdit bean = dl_dlEdit_bean;
-TITLE = "Edit distribution list";
+TITLE = getLocString("dl.editTitle");
 MENU0_SELECTION = "MENU0_DL";
 final boolean isEditing = true;
 
@@ -19,8 +19,8 @@ switch (bean.process(request))
 <%@ include file="dlBody.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Save",  "Save Distribution list");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "common.buttons.save",  "dl.saveHint");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

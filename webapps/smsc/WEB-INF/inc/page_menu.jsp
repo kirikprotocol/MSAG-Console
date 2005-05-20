@@ -55,14 +55,14 @@ void page_menu_button(HttpSession session, JspWriter out, String name, String va
     if(isNotNull){
 	    if(session.getAttribute("BRAWSER_TYPE").equals("IE")){
 	        out.print("<a id=\"" + name + "\" jbuttonName=\"" + name + "\" jbuttonValue=\"" + value + "\"" + (enabled ? "" : " disabled")
-				+ ((title != null && title.length() > 0) ? " title=\"" + title + "\"" : "")
+				+ ((title != null && title.length() > 0) ? " title=\"" + getLocString(title) + "\"" : "")
 				+ ((onclick != null && onclick.length() > 0) ? (" jbuttonOnclick=\"" + onclick + '"') : "" )
-				+">" + value + "</a>");
+				+">" + getLocString(value) + "</a>");
         }else{
-            out.print("<input type=submit id=\"" + name + "\" name=\"" + name + "\" value=\"" + value + "\" title=\"" + title + "\"" + (enabled ? "" : " disabled") + ((onclick != null && onclick.length() > 0) ? (" onclick=\"" + onclick + '"') : "" ) +">");
+            out.print("<input type=submit id=\"" + name + "\" name=\"" + name + "\" value=\"" + getLocString(value) + "\" title=\"" + getLocString(title) + "\"" + (enabled ? "" : " disabled") + ((onclick != null && onclick.length() > 0) ? (" onclick=\"" + onclick + '"') : "" ) +">");
         }
     }else{
-        out.print("<input type=submit id=\"" + name + "\" name=\"" + name + "\" value=\"" + value + "\" title=\"" + title + "\"" + (enabled ? "" : " disabled") + ((onclick != null && onclick.length() > 0) ? (" onclick=\"" + onclick + '"') : "" ) +">");
+        out.print("<input type=submit id=\"" + name + "\" name=\"" + name + "\" value=\"" + getLocString(value) + "\" title=\"" + getLocString(title) + "\"" + (enabled ? "" : " disabled") + ((onclick != null && onclick.length() > 0) ? (" onclick=\"" + onclick + '"') : "" ) +">");
     }
 	out.print("</td>");
 	page_menu_delimiter_needed = true;

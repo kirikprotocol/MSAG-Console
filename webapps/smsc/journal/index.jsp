@@ -13,10 +13,10 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.jsp.journal.Index" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-  TITLE="Journal";
+  TITLE = getLocString("journal.title");
   MENU0_SELECTION = "MENU0_JOURNAL";
 
-  int beanResult = bean.RESULT_OK;
+  int beanResult = PageBean.RESULT_OK;
   switch(beanResult = bean.process(request))
   {
     case Index.RESULT_DONE:
@@ -66,25 +66,25 @@ function setSort(sorting)
 <col width="25%">
 <thead>
 <tr>
-	<th><a href="#" <%=bean.getSort().endsWith("timestamp")  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by time"  onclick='return setSort("timestamp") '>time</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("user") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by user" onclick='return setSort("user")'>user</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("timestamp")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.timeHint")%>"        onclick='return setSort("timestamp") '> <%=getLocString("common.sortmodes.time")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("user")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.userHint")%>"        onclick='return setSort("user")'>       <%=getLocString("common.sortmodes.user")%></a></th>
 	<%--th><a href="#" <%=bean.getSort().endsWith("sessionId") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by session" onclick='return setSort("sessionId")'>session ID</a></th--%>
-	<th><a href="#" <%=bean.getSort().endsWith("subjectType") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by subject type" onclick='return setSort("subjectType")'>subject type</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("subjectId") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by subject ID" onclick='return setSort("subjectId")'>subject ID</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("action") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by action" onclick='return setSort("action")'>action</a></th>
-  <th colspan=2>additional info</th>
+	<th><a href="#" <%=bean.getSort().endsWith("subjectType") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.subjectTypeHint")%>" onclick='return setSort("subjectType")'><%=getLocString("common.sortmodes.subjectType")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("subjectId")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.subjectIdHint")%>"   onclick='return setSort("subjectId")'>  <%=getLocString("common.sortmodes.subjectId")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("action")      ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.actionHint")%>"      onclick='return setSort("action")'>     <%=getLocString("common.sortmodes.action")%></a></th>
+  <th colspan=2><%=getLocString("common.sortmodes.addInfo")%></th>
 </tr>
 </thead>
 <tbody>
 <%
   int row = 0;
-  DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM, request.getLocale());
+  DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.MEDIUM, getLoc());
   for (Iterator i = bean.getActions().iterator(); i.hasNext(); )
   {
     Action action = (Action) i.next();
     final String rowspan = action.getAdditionalKeys().size() > 0 ? " rowspan=" + action.getAdditionalKeys().size() : "";
 %><tr class=row<%=(row++)&1%>>
-	  <td<%=rowspan%> nowrap><%=StringEncoderDecoder.encode(dateFormat.format(action.getTimestamp()))%></td>
+	<td<%=rowspan%> nowrap><%=StringEncoderDecoder.encode(dateFormat.format(action.getTimestamp()))%></td>
     <td<%=rowspan%>><%=StringEncoderDecoder.encode(action.getUser())%></td>
     <%--td<%=rowspan%>><%=StringEncoderDecoder.encode(action.getSessionId())%></td--%>
     <td<%=rowspan%>><%=StringEncoderDecoder.encode(SubjectTypes.typeToString(action.getSubjectType()))%></td>
@@ -111,7 +111,7 @@ function setSort(sorting)
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbClearNonappliable",  "Clear non-appliable",  "Clear all non-appliable entries", "return confirm('Are you sure to clear all non-appliable entries?');");
+page_menu_button(session, out, "mbClearNonappliable",  "journal.clear",  "journal.clearHint", "return confirm('"+getLocString("journal.clearConfirm")+"');");
 page_menu_space(out);
 page_menu_end(out);
 %>

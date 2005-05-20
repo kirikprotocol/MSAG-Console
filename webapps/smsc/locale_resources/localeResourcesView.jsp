@@ -6,7 +6,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.localeResources.LocaleResourcesView"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Resource view";
+TITLE = getLocString("locale.viewTitle");
 switch(bean.process(request))
 {
 	case LocaleResourcesView.RESULT_OK:
@@ -15,7 +15,7 @@ switch(bean.process(request))
 		response.sendRedirect("index.jsp");
 		return;
 	case LocaleResourcesView.RESULT_EDIT:
-		response.sendRedirect("localeResourcesEdit.jsp?locale=" + URLEncoder.encode(bean.getLocale()));
+		response.sendRedirect("localeResourcesEdit.jsp?locale=" + URLEncoder.encode(bean.getLocale(), "UTF-8"));
 		return;
 	case LocaleResourcesView.RESULT_ERROR:
 		break;
@@ -27,19 +27,19 @@ MENU0_SELECTION = "MENU0_LOCALE_RESOURCES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 	page_menu_begin(out);
-	page_menu_button(session, out, "mbEdit", "Edit", "Edit this resource file");
-   page_menu_button(session, out, "mbDone", "Done", "Return to locales list");
+	page_menu_button(session, out, "mbEdit", "common.buttons.edit", "locale.editHint");
+	page_menu_button(session, out, "mbDone", "common.buttons.done", "locale.doneHint");
 	page_menu_space(out);
 	page_menu_end(out);
 %>
 <div class=content>
 <input type=hidden name=locale value="<%=bean.getLocale()%>">
-<iframe width="100%" height="400px" src="<%=CPATH%>/locale_resources/localeResourcesResourceFile.jsp?locale=<%=URLEncoder.encode(bean.getLocale())%>"></iframe>
+<iframe width="100%" height="400px" src="<%=CPATH%>/locale_resources/localeResourcesResourceFile.jsp?locale=<%=URLEncoder.encode(bean.getLocale(), "UTF-8")%>"></iframe>
 </div>
 <%
 	page_menu_begin(out);
-	page_menu_button(session, out, "mbEdit", "Edit", "Edit this resource file");
-   page_menu_button(session, out, "mbDone", "Done", "Return to locales list");
+	page_menu_button(session, out, "mbEdit", "common.buttons.edit", "locale.editHint");
+	page_menu_button(session, out, "mbDone", "common.buttons.done", "locale.doneHint");
 	page_menu_space(out);
 	page_menu_end(out);
 %>

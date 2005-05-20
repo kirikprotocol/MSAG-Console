@@ -15,7 +15,7 @@
 %>
 <jsp:setProperty name="routeDetailBean" property="*"/>
 <%
-    TITLE="SMS Routes Statistics Details";
+    TITLE = getLocString("stat.routTitle");
     MENU0_SELECTION = "MENU0_SMSSTAT";
 
     int beanResult = RouteDetailBean.RESULT_OK;
@@ -41,18 +41,18 @@
 <%int rowN = 0;%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbBack",  "Back",  "Run Back");
+page_menu_button(session, out, "mbBack",  "common.buttons.back",  "common.buttons.runBack");
 page_menu_space(out);
 page_menu_end(out);
 %>
 <div class=content>
 
-<div class=page_subtitle>Query statistics</div>
+<div class=page_subtitle><%=getLocString("stat.subTitle")%></div>
 <table class=properties_list cellspacing=0>
 <tr class=row0>
-	<th>From Date:</th>
+	<th><%=getLocString("common.util.FromDate")%>:</th>
 	<td nowrap><%=bean.getDateFrom()%></td>
-	<th>Till Date:</th>
+	<th><%=getLocString("common.util.TillDate")%>:</th>
 	<td nowrap><%=bean.getDateTill()%></td>
 </tr>
 </table>
@@ -62,19 +62,19 @@ page_menu_end(out);
 <td><input:select name="filterSelect" default="1"
     attributes="<%= as %>" options="<%= o %>"  /></td></tr> --%>
 
-<tr><td align="left" with="10%"> &nbsp;&nbsp;&nbsp;Filter By: &nbsp;  </td><td align="left" with="80%">  &nbsp;  </td>
+<tr><td align="left" with="10%"> &nbsp;&nbsp;&nbsp;<%=getLocString("common.util.FilterBy")%>: &nbsp;  </td><td align="left" with="80%">  &nbsp;  </td>
 
 <%
 page_small_menu_begin(out);
-page_menu_button(session, out, "mbQuickFilter",  "Apply",  "Apply filter");
-page_menu_button(session, out, "mbClear", "Clear", "Clear filter");
-//page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_button(session, out, "mbQuickFilter",  "common.buttons.apply",  "common.buttons.applyFilter");
+page_menu_button(session, out, "mbClear", "common.buttons.clear", "common.buttons.clearFilter");
+//page_menu_button(out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelFilterEditing", "clickCancel()");
 //page_menu_space(out);
 page_small_menu_end(out);
 %>  <td align="left" with="1%">  &nbsp;  </td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-			<th>&nbsp;&nbsp;&nbsp;&nbsp;Provider&nbsp;</th>
+			<th>&nbsp;&nbsp;&nbsp;&nbsp;<%=getLocString("common.util.Provider")%>&nbsp;</th>
 			<td><select name=providerId id=providerId >
 				<option value="-1" ></option>
 				<%for (Iterator iprov = bean.getProviders().iterator(); iprov.hasNext(); )
@@ -94,7 +94,7 @@ page_small_menu_end(out);
 			</select></td>
 		</tr>
     <tr class=row<%=(rowN++)&1%>>
-			<th>&nbsp;&nbsp;&nbsp;&nbsp;Category&nbsp;</th>
+			<th>&nbsp;&nbsp;&nbsp;&nbsp;<%=getLocString("common.util.Category")%>&nbsp;</th>
 			<td><select name=categoryId id=categoryId >
 				<option value="-1" ></option>
 				<%for (Iterator jcat = bean.getCategories().iterator(); jcat.hasNext(); )
@@ -141,19 +141,19 @@ int disNo = 1;
     if (i.hasNext()) {
 %>
 <tr>
-    <td colspan=10> <div class=page_subtitle>Traffic by routes</div></td>
+    <td colspan=10> <div class=page_subtitle><%=getLocString("stat.routSubTitle")%></div></td>
 </tr>
 <tr class=row0>
-    <th width="19%"><div align=right>Route Id</div></th>
-    <th width="9%"><div align=right>Provider </div></th>
-    <th width="9%"><div align=right>Category </div></th>
-    <th width="9%"><div align=right>Accepted</div></th>
-    <th width="9%"><div align=right>Rejected</div></th>
-    <th width="9%"><div align=right>Delivered</div></th>
-    <th width="9%"><div align=right>Failed</div></th>
-    <th width="9%"><div align=right>Rescheduled</div></th>
-    <th width="9%"><div align=right>Temporal</div></th>
-    <th width="9%"><div align=right>Peak in / out</div></th>
+    <th width="19%"><div align=right><%=getLocString("smsview.routeId")%></div></th>
+    <th width="9%"><div align=right><%=getLocString("common.util.Provider")%></div></th>
+    <th width="9%"><div align=right><%=getLocString("common.util.Category")%></div></th>
+    <th width="9%"><div align=right><%=getLocString("stat.accepted")%></div></th>
+    <th width="9%"><div align=right><%=getLocString("stat.rejected")%></div></th>
+    <th width="9%"><div align=right><%=getLocString("stat.delivered")%></div></th>
+    <th width="9%"><div align=right><%=getLocString("stat.failed")%></div></th>
+    <th width="9%"><div align=right><%=getLocString("stat.rescheduled")%></div></th>
+    <th width="9%"><div align=right><%=getLocString("stat.temporal")%></div></th>
+    <th width="9%"><div align=right><%=getLocString("stat.peakInOut")%></div></th>
 </tr>  <%
         while (i.hasNext()) {
             RouteIdCountersSet route = (RouteIdCountersSet)i.next();
@@ -183,8 +183,8 @@ int disNo = 1;
           %>
           <tr class=row1>
               <td width="23%" align=right nowrap>
-          <%  String errMessage = bean.getAppContext().getLocaleString(request.getLocale(), "smsc.errcode."+errid.errcode);
-              if (errMessage == null) errMessage = bean.getAppContext().getLocaleString(request.getLocale(), "smsc.errcode.unknown"); %>
+          <%  String errMessage = getLocString("smsc.errcode."+errid.errcode);
+              if (errMessage == null) errMessage = getLocString("smsc.errcode.unknown"); %>
           <%= StringEncoderDecoder.encode(errMessage == null ? "" : errMessage)%>
           (<%=errid.errcode%>)
               </td>

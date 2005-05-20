@@ -15,7 +15,7 @@
 <%@ taglib uri="http://jakarta.apache.org/taglibs/input-1.0" prefix="input" %>
 
 <%
-TITLE = "Providers";
+TITLE = getLocString("providers.title");
 switch(bean.process(request))
 {
 	case IndexProvider.RESULT_DONE:
@@ -34,7 +34,7 @@ switch(bean.process(request))
 		response.sendRedirect("providersAdd.jsp");
 		return;
 	case IndexProvider.RESULT_EDIT:
-		response.sendRedirect("providersEdit.jsp?name="+URLEncoder.encode(bean.getEditName())+"&&id="+URLEncoder.encode(bean.getEditId()));
+		response.sendRedirect("providersEdit.jsp?name="+URLEncoder.encode(bean.getEditName(), "UTF-8")+"&&id="+URLEncoder.encode(bean.getEditId()));
 		return;
 default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
@@ -45,8 +45,8 @@ MENU0_SELECTION = "MENU0_PROVIDERS";
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
    page_menu_begin(out);
-   page_menu_button(session, out, "mbAdd",  "Add provider",  "Add new provider");
-   //page_menu_button(out, "mbDelete", "Delete provider(s)", "Delete selected provider(s)");
+   page_menu_button(session, out, "mbAdd",  "providers.add",  "providers.addHint");
+//   page_menu_button(out, "mbDelete", "providers.delete", "providers.deleteHint");
    page_menu_space(out);
    page_menu_end(out);
  %><div class=content>
@@ -120,8 +120,8 @@ function clickClickable(headId, bodyId)
 <thead>
 <tr>
 	<th width="1%" class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
-	<th width="14%" align=left><a href="#" <%=bean.getSort().endsWith("id")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by id" onclick='return setSort("id")'  >id</a></th>
-	<th width="20%" align=left><a href="#" <%=bean.getSort().endsWith("name")  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by name" onclick='return setSort("name")'  >name</a></th>
+	<th width="14%" align=left><a href="#" <%=bean.getSort().endsWith("id")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.idHint")%>"   onclick='return setSort("id")'  ><%=getLocString("common.sortmodes.id")%></a></th>
+	<th width="20%" align=left><a href="#" <%=bean.getSort().endsWith("name")  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.nameHint")%>" onclick='return setSort("name")'  ><%=getLocString("common.sortmodes.name")%></a></th>
   <th width="65%" align=left>&nbsp </th>
   </tr>
 </thead>
@@ -149,7 +149,7 @@ if (have) {
 <tr class=row<%=row&1%>>
 <td><input class=check type=checkbox name=checkedProviderNames value="<%=encName%>" <%=bean.isProviderChecked(name) ? "checked" : ""%>></td>
 	<td><%=encProviderId%>&nbsp;</td>
-  <td><a href="#" title="Edit provider" onClick='return edit("<%=encProviderId%>","<%=encName%>")'><%=encName%></a></td>
+  <td><a href="#" title="<%=getLocString("providers.editSubTitle")%>" onClick='return edit("<%=encProviderId%>","<%=encName%>")'><%=encName%></a></td>
 </tr>
 <tr class=row<%=row&1%> id=<%=rowId%>_BODY style="display:none">
   <td>&nbsp;</td>
@@ -164,8 +164,8 @@ if (have) {
 </div>
  <%
    page_menu_begin(out);
-   page_menu_button(session, out, "mbAdd",  "Add provider",  "Add new provider");
-  // page_menu_button(out, "mbDelete", "Delete provider(s)", "Delete selected provider(s)");
+   page_menu_button(session, out, "mbAdd",  "providers.add",  "providers.addHint");
+ //page_menu_button(out, "mbDelete", "providers.delete", "providers.deleteHint");
    page_menu_space(out);
    page_menu_end(out);
  %>

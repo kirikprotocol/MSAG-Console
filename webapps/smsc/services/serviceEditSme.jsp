@@ -3,7 +3,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.ServiceEditSme"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Edit service \"" + bean.getServiceId() +"\" parameters";
+TITLE = getLocString("services.editTitlePre") + " \"" + bean.getServiceId() +"\"";
 switch(bean.process(request))
 {
 	case ServiceEditSme.RESULT_DONE:
@@ -21,8 +21,8 @@ MENU0_SELECTION = "MENU0_SERVICES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Save",  "Save new service parameters");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "common.buttons.save",  "services.saveParamsHint");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -30,15 +30,15 @@ page_menu_end(out);
 <%int rowN = 0;%>
 <input type=hidden name="serviceId" value="<%=StringEncoderDecoder.encode(bean.getServiceId())%>">
 
-<div class=page_subtitle>Service parameters:</div>
+<div class=page_subtitle><%=getLocString("services.parameters")%>:</div>
 <table class=properties_list cellspacing=0>
 <%@include file="serviceSmeBody.jsp"%>
 </table>
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Save",  "Save new service parameters");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "common.buttons.save",  "services.saveParamsHint");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

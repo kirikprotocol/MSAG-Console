@@ -6,7 +6,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
   final boolean add = bean.isAdd();
-  TITLE = add ? " Create Access Control List" : "Edit Access Control List";
+  TITLE = add ? getLocString("acl.addTitle") : getLocString("acl.editTitle");
   switch(bean.process(request))
   {
     case Edit.RESULT_DONE:
@@ -23,8 +23,8 @@
 MENU0_SELECTION = "MENU0_ACL";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%><%
   page_menu_begin(out);
-  page_menu_button(session, out, "mbSave",  add ? "Add" : "Save",  add ? "Add new acl" : "Save changes");
-  page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+  page_menu_button(session, out, "mbSave",  add ? "common.buttons.add" : "common.buttons.save",  add ? "acl.addNew" : "common.buttons.saveChanges");
+  page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelHint", "clickCancel()");
   page_menu_space(out);
   page_menu_end(out);
 %>
@@ -56,24 +56,24 @@ function addAclAddress()
 }
 </script>
 <div class=content>
-  <div class="page_subtitle"><%=add ? "New Access Control List" : "Access Control List"%></div>
+  <div class="page_subtitle"><%=add ? getLocString("acl.addSubTitle") : getLocString("acl.subTitle")%></div>
   <table class=properties_list cellspacing=0 cellspadding=0>
   <col width="15%">
   <col width="85%">
   <tr class=row1>
-  	<td>name</td>
+  	<td><%=getLocString("acl.name")%></td>
   	<td><input class=txt name="name" value="<%=bean.getName()%>" validation="nonEmpty" onkeyup="resetValidation(this)"></td>
   </tr>
   <tr class=row0>
-  	<td>description</td>
+  	<td><%=getLocString("acl.description")%></td>
   	<td><input class=txt name="description" value="<%=bean.getDescription()%>"></td>
   </tr>
   <tr class=row1>
-    <td>cache type</td>
+    <td><%=getLocString("acl.cacheType")%></td>
     <td><div class=select><select class=txt name="cache_type">
-      <option value='0' <%=bean.getCache_type() == '0' ? "selected" : ""%>>unknown</option>
-      <option value='1' <%=bean.getCache_type() == '1' ? "selected" : ""%>>no cache</option>
-      <option value='2' <%=bean.getCache_type() == '2' ? "selected" : ""%>>full cache</option>
+      <option value='0' <%=bean.getCache_type() == '0' ? "selected" : ""%>><%=getLocString("acl.cacheType.unknown")%></option>
+      <option value='1' <%=bean.getCache_type() == '1' ? "selected" : ""%>><%=getLocString("acl.cacheType.noCache")%></option>
+      <option value='2' <%=bean.getCache_type() == '2' ? "selected" : ""%>><%=getLocString("acl.cacheType.fullCache")%></option>
     </select></div></td>
   </tr>
   </table>
@@ -81,17 +81,17 @@ function addAclAddress()
   <col width="15%">
   <col width="85%">
   <tr>
-  	<th colspan="2">adresses</th>
+  	<th colspan="2"><%=getLocString("acl.addresses")%></th>
   </tr>
   <tr class=row0>
   	<td><input class=txt name="addresses" id="new_address"></td>
-  	<td><%addButton(out, "add address", "add address", "add address", "return addAclAddress()");%></td>
+  	<td><%addButton(out, "add address", "add address", "acl.addButtonHint", "return addAclAddress()");%></td>
   </tr>
   </table>
 </div><%
   page_menu_begin(out);
-  page_menu_button(session, out, "mbSave",  add ? "Add" : "Save",  add ? "Add new acl" : "Save changes");
-  page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+  page_menu_button(session, out, "mbSave",  add ? "common.buttons.add" : "common.buttons.save",  add ? "acl.addNew" : "common.buttons.saveChanges");
+  page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelHint", "clickCancel()");
   page_menu_space(out);
   page_menu_end(out);
 %>

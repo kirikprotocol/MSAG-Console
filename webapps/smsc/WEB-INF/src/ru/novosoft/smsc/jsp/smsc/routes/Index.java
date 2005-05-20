@@ -92,7 +92,7 @@ public class Index extends IndexBean
       return result;
 
     if (!initialized) {
-      final RouteFilter routesFilter = preferences.getRoutesFilter();
+      final RouteFilter routesFilter = preferences.getRoutesFilter(appContext);
       srcChks = routesFilter.getSourceSubjectNames();
       srcMasks = routesFilter.getSourceMaskStrings();
       dstChks = routesFilter.getDestinationSubjectNames();
@@ -164,7 +164,7 @@ public class Index extends IndexBean
     }
 
     logger.debug("Routes.Index - process with sorting [" + (String) preferences.getRoutesSortOrder().get(0) + "]");
-    routes = routeSubjectManager.getRoutes().query(new RouteQuery(pageSize, preferences.getRoutesFilter(), preferences.getRoutesSortOrder(), startPosition));
+    routes = routeSubjectManager.getRoutes().query(new RouteQuery(pageSize, preferences.getRoutesFilter(appContext), preferences.getRoutesSortOrder(), startPosition));
     totalSize = routes.getTotalSize();
 
     checkedRouteIdsSet.addAll(Arrays.asList(checkedRouteIds));
@@ -175,7 +175,7 @@ public class Index extends IndexBean
   private int updateFilter()
   {
     try {
-      final RouteFilter routesFilter = preferences.getRoutesFilter();
+      final RouteFilter routesFilter = preferences.getRoutesFilter(appContext);
       routesFilter.setIntersection(1);
       if (queryName != null)
         routesFilter.setNames(new String[]{queryName.toLowerCase()});
@@ -222,7 +222,7 @@ public class Index extends IndexBean
   private int clearFilter()
   {
     try {
-      final RouteFilter routesFilter = preferences.getRoutesFilter();
+      final RouteFilter routesFilter = preferences.getRoutesFilter(appContext);
       // routesFilter.setIntersection(false);
       routesFilter.setNames(new String[0]);
       routesFilter.setProviders(new String[0]);

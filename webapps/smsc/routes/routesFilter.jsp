@@ -9,7 +9,7 @@
 <jsp:setProperty name="bean" property="*"/>
 
 <%
-TITLE = "Filter routes";
+TITLE = getLocString("routes.filterTitle");
 switch(bean.process(request))
 {
 	case RoutesFilter.RESULT_DONE:
@@ -29,9 +29,9 @@ MENU0_SELECTION = "MENU0_ROUTES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbApply",  "Apply",  "Apply filter");
-page_menu_button(session, out, "mbClear", "Clear", "Clear filter", "clickClear()");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_button(session, out, "mbApply",  "common.buttons.apply",  "common.buttons.applyFilter");
+page_menu_button(session, out, "mbClear", "common.buttons.clear", "common.buttons.clearFilter", "clickClear()");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelFilterEditing", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -104,19 +104,19 @@ String encName = StringEncoderDecoder.encode(name);
 <input type=hidden name=initialized value=true>
 <table  with="100%">
 <tr>
-<td align="left" with="10%">    Name: &nbsp;</td><td with="40%" align="left"><input:text name="filteredName"    default="<%=bean.getFilteredName()%>"/> </td>
+<td align="left" with="10%">    <%=getLocString("common.util.Name")%>: &nbsp;</td><td with="40%" align="left"><input:text name="filteredName"    default="<%=bean.getFilteredName()%>"/> </td>
 <td align="left" with="10%">     &nbsp;</td><td with="40%" align="left">&nbsp;</td>
 </tr>
 <tr>
-<td align="left" with="10%">    Provider: &nbsp;</td><td with="40%" align="left"><input:text name="queryProvider"  default="<%=bean.getQueryProvider()%>"/> </td>
-<td align="left" with="10%">    Category: &nbsp;</td><td with="40%" align="left"><input:text name="queryCategory"  default="<%=bean.getQueryCategory()%>"/> </td>
+<td align="left" with="10%">    <%=getLocString("common.util.Provider")%>: &nbsp;</td><td with="40%" align="left"><input:text name="queryProvider"  default="<%=bean.getQueryProvider()%>"/> </td>
+<td align="left" with="10%">    <%=getLocString("common.util.Category")%>: &nbsp;</td><td with="40%" align="left"><input:text name="queryCategory"  default="<%=bean.getQueryCategory()%>"/> </td>
 </tr>
 </table>
 <table  with="100%">
   <tr>
    <td with="45%">
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~ sources ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-    <div class=page_subtitle>Sources</div>
+    <div class=page_subtitle><%=getLocString("common.titles.sources")%></div>
     <table  with="100%">
      <tr>
       <td><input:select name="srcChks" bean="bean"
@@ -130,7 +130,7 @@ String encName = StringEncoderDecoder.encode(name);
    <td with="45%">
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~ destinations ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 
-     <div class=page_subtitle>Destinations</div>
+     <div class=page_subtitle><%=getLocString("common.titles.destinations")%></div>
 
 
      <table  with="100%">
@@ -158,7 +158,7 @@ for (int i=0; i<bean.getSrcMasks().length; i++)
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
 	<td width=100%><input class=txtW name=srcMasks validation="mask" onkeyup="resetValidation(this)"></td>
-	<td><%addButton(out, "mbAdd", "Add", "Add new mask to sources filter");%></td>
+	<td><%addButton(out, "mbAdd", "Add", "routes.addMask2SourcesHint");%></td>
 </tr>
 </table>
 </td>
@@ -177,7 +177,7 @@ for (int i=0; i<bean.getDstMasks().length; i++)
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
 	<td width=100%><input class=txtW name=dstMasks validation="mask" onkeyup="resetValidation(this)"></td>
-	<td><%addButton(out, "mbAdd", "Add", "Add new mask to destinations filter");%></td>
+	<td><%addButton(out, "mbAdd", "Add", "routes.addMask2DestHint");%></td>
 </tr>
 </table>
 </td>
@@ -188,7 +188,7 @@ for (int i=0; i<bean.getDstMasks().length; i++)
   <tr>
    <td with="45%">
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMEs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<div class=page_subtitle>SMEs</div>
+<div class=page_subtitle><%=getLocString("common.titles.smes")%></div>
 <%
 TreeMap osme = new TreeMap();
 HashMap asme = new HashMap();
@@ -270,26 +270,26 @@ String encName = StringEncoderDecoder.encode(name);
 </table>
 --%>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<div class=page_subtitle>Options</div>
+<div class=page_subtitle><%=getLocString("common.titles.options")%></div>
 <table class=properties_list cellspacing=0 cellspadding=0>
 <%rowN = 0;%>
 <%--<tr class=row<%=(rowN++)&1%>>
 	<td nowrap><input id=options_strict_filter class=check type="checkbox" name=strict <%=bean.isStrict() ? "checked" : ""%>>&nbsp;<label for=options_strict_filter>Strict Filter</label></td>
 </tr> --%>
 <tr class=row<%=(rowN++)&1%>>
-	<td nowrap><input:radio name="strict1" value="2" default="<%=String.valueOf(bean.getStrict1()) %>" />&nbsp;<label for=options_strict_filter>Soft Filter</label></td>
+	<td nowrap><input:radio name="strict1" value="2" default="<%=String.valueOf(bean.getStrict1()) %>" />&nbsp;<label for=options_strict_filter><%=getLocString("routes.softFilter")%></label></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<td nowrap><input:radio name="strict1" value="1" default="<%=String.valueOf(bean.getStrict1()) %>" />&nbsp;<label for=options_strict_filter>Half-Soft Filter</label></td>
+	<td nowrap><input:radio name="strict1" value="1" default="<%=String.valueOf(bean.getStrict1()) %>" />&nbsp;<label for=options_strict_filter><%=getLocString("routes.halfSoftFilter")%></label></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<td nowrap><input:radio name="strict1" value="0" default="<%=String.valueOf(bean.getStrict1()) %>" />&nbsp;<label for=options_strict_filter>Hard Filter</label></td>
+	<td nowrap><input:radio name="strict1" value="0" default="<%=String.valueOf(bean.getStrict1()) %>" />&nbsp;<label for=options_strict_filter><%=getLocString("routes.hardFilter")%></label></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<td nowrap><input id=options_show_src class=check type="checkbox" name=showSrc <%=bean.isShowSrc() ? "checked" : ""%>>&nbsp;<label for=options_show_src>Show sources list</label></td>
+	<td nowrap><input id=options_show_src class=check type="checkbox" name=showSrc <%=bean.isShowSrc() ? "checked" : ""%>>&nbsp;<label for=options_show_src><%=getLocString("routes.showSourcesList")%></label></td>
 </tr>
 <tr class=rowLast>
-	<td nowrap><input id=options_show_dst class=check type="checkbox" name=showDst <%=bean.isShowDst() ? "checked" : ""%>>&nbsp;<label for=options_show_dst>Show destinations list</label></td>
+	<td nowrap><input id=options_show_dst class=check type="checkbox" name=showDst <%=bean.isShowDst() ? "checked" : ""%>>&nbsp;<label for=options_show_dst><%=getLocString("routes.showDestinationsList")%></label></td>
 </tr>
 
 </table>
@@ -300,9 +300,9 @@ String encName = StringEncoderDecoder.encode(name);
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbApply",  "Apply",  "Apply filter");
-page_menu_button(session, out, "mbClear", "Clear", "Clear filter", "clickClear()");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_button(session, out, "mbApply",  "common.buttons.apply",  "common.buttons.applyFilter");
+page_menu_button(session, out, "mbClear", "common.buttons.clear", "common.buttons.clearFilter", "clickClear()");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelFilterEditing", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

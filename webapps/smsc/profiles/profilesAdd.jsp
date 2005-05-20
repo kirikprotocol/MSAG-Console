@@ -5,12 +5,12 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.profiles.ProfilesAdd"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Add profile";
+TITLE = getLocString("profiles.addTitle");
 switch(bean.process(request))
 {
 	case ProfilesAdd.RESULT_DONE:
 		if ("lookup".equals(bean.getReturnPath()))
-			response.sendRedirect("lookup.jsp?profile=" + URLEncoder.encode(bean.getMask()));
+			response.sendRedirect("lookup.jsp?profile=" + URLEncoder.encode(bean.getMask(), "UTF-8"));
 		else if ("groups".equals(bean.getReturnPath()))
 			response.sendRedirect("groups.jsp");
 		else if ("profiles".equals(bean.getReturnPath()))
@@ -29,16 +29,16 @@ MENU0_SELECTION = "MENU0_PROFILES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Add profile",  "Add new profile");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel profile creating", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "profiles.add",  "profiles.addHint");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "profiles.cancelAddHint", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>
 <%@ include file="profileBody.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Add profile",  "Add new profile");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel profile creating", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "profiles.add",  "profiles.addHint");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "profiles.cancelAddHint", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

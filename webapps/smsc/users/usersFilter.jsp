@@ -3,7 +3,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.users.UsersFilter"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Filter users";
+TITLE = getLocString("users.filterTitle");
 switch(bean.process(request))
 {
 	case UsersFilter.RESULT_DONE:
@@ -21,9 +21,9 @@ MENU0_SELECTION = "MENU0_USERS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbApply",  "Apply",  "Apply filter");
-page_menu_button(session, out, "mbClear", "Clear", "Clear filter");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel filter editing");
+page_menu_button(session, out, "mbApply",  "common.buttons.apply",  "common.buttons.applyFilter");
+page_menu_button(session, out, "mbClear", "common.buttons.clear", "common.buttons.clearFilter");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelFilterEditing");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -35,28 +35,28 @@ page_menu_end(out);
 <col width="85%">
 <%--<tr><td colspan=2 class=secInner><div class=secList>Default SMEs</div></td></tr>--%>
 <tr class=row<%=(rowN++)&1%>>
-	<th>name:</th>
-	<td><input title="Use the regexp format (.* as wildcart, for example)" class=txt name=loginFilter value="<%=bean.getLoginFilter()%>"></td>
+	<th><%=getLocString("common.sortmodes.login")%>:</th>
+	<td><input title="<%=getLocString("common.hints.filter")%>" class=txt name=loginFilter value="<%=bean.getLoginFilter()%>"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th>first name:</th>
-	<td><input title="Use the regexp format (.* as wildcart, for example)" class=txt name=firstNameFilter value="<%=bean.getFirstNameFilter()%>"></td>
+	<th><%=getLocString("common.sortmodes.firstName")%>:</th>
+	<td><input title="<%=getLocString("common.hints.filter")%>" class=txt name=firstNameFilter value="<%=bean.getFirstNameFilter()%>"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th>last name:</th>
-	<td><input title="Use the regexp format (.* as wildcart, for example)" class=txt name=lastNameFilter value="<%=bean.getLastNameFilter()%>"></td>
+	<th><%=getLocString("common.sortmodes.lastName")%>:</th>
+	<td><input title="<%=getLocString("common.hints.filter")%>" class=txt name=lastNameFilter value="<%=bean.getLastNameFilter()%>"></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-	<th>department:</th>
-	<td><input title="Use the regexp format (.* as wildcart, for example)" class=txt name=departmentFilter value="<%=bean.getDepartmentFilter()%>"></td>
+	<th><%=getLocString("common.sortmodes.department")%>:</th>
+	<td><input title="<%=getLocString("common.hints.filter")%>" class=txt name=departmentFilter value="<%=bean.getDepartmentFilter()%>"></td>
 </tr>
 </table>
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbApply",  "Apply",  "Apply filter");
-page_menu_button(session, out, "mbClear", "Clear", "Clear filter");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel filter editing");
+page_menu_button(session, out, "mbApply",  "common.buttons.apply",  "common.buttons.applyFilter");
+page_menu_button(session, out, "mbClear", "common.buttons.clear", "common.buttons.clearFilter");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelFilterEditing");
 page_menu_space(out);
 page_menu_end(out);
 %>

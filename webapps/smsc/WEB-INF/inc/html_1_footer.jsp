@@ -15,7 +15,7 @@
 	<table cellpadding="0" cellspacing="0">
 	<tr>
 		<td width="12" background="/images/smsc_30.jpg"></td>
-		<td align="right" bgcolor="#161E49"><span style="color: #6F77A3;">Copyright&nbsp;&copy;&nbsp;2003.&nbsp;All&nbsp;rights&nbsp;reserved</span></td>
+		<td align="right" bgcolor="#161E49"><span style="color: #6F77A3;"><%=getLocString("common.copyright")%></span></td>
 		<td width="12" background="/images/smsc_32.jpg"></td>
 	</tr>
 	</table>

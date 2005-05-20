@@ -13,11 +13,10 @@
 <jsp:useBean id="smsExportBean" scope="session" class="ru.novosoft.smsc.jsp.smsexport.SmsExportBean" />
 <%
   SmsExportBean bean = smsExportBean;
-
 %>
 <jsp:setProperty name="smsExportBean" property="*"/>
 <%
-  TITLE="SMS Export";
+  TITLE = getLocString("smsview.exportTitle");
   MENU0_SELECTION = "MENU0_SMSEXPORT";
 
   int beanResult = bean.process(request);
@@ -75,11 +74,11 @@ function userDefined(){
   <td nowrap><input
       class=radio type="radio" name="destination" id=destinationDefault  value="<%= SmsExportBean.DEFAULT_DESTINATION%>"
       <%= (bean.getDestination() == SmsExportBean.DEFAULT_DESTINATION) ? "checked":""%>  onclick="javascript:defaultSetting()" >
-      <label for=destinationDefault>Default destination</label></td>
+      <label for=destinationDefault><%=getLocString("common.dests.default")%></label></td>
   <td nowrap><input
       class=radio type="radio" name="destination" id=destinationUser onclick="javascript:userDefined()" value="<%= SmsExportBean.USER_DESTINATION%>"
       <%= (bean.getDestination() == SmsExportBean.USER_DESTINATION) ? "checked":""%>>
-      <label for=destinationUser>User defined</label>
+      <label for=destinationUser><%=getLocString("common.dests.user")%></label>
   </td>
 </tr>
 <tr class=row<%= (rowN++)%2%>>
@@ -126,7 +125,7 @@ function userDefined(){
 <%}
 %></div><%
 page_menu_begin(out);
-page_menu_button(session,out, "mbExport",  "Export !",  "Run export");
+page_menu_button(session, out, "mbExport",  "common.buttons.export",  "common.buttons.smsExportHint");
 page_menu_space(out);
 page_menu_end(out);
 %>

@@ -15,7 +15,7 @@
 /><jsp:setProperty name="bean" property="*"/><%
 //ServiceIDForShowStatus = Constants.SMSC_SME_ID;
 FORM_METHOD = "POST";
-TITLE = "SMSC Rescheduling";
+TITLE = getLocString("reschedule.title");
 MENU0_SELECTION = "MENU0_SMSC_Reshedule";
 switch(bean.process(request))
 {
@@ -39,11 +39,11 @@ switch(bean.process(request))
 include file="/WEB-INF/inc/html_3_header.jsp"%><%@
 include file="/WEB-INF/inc/collapsing_tree.jsp"%><%
 page_menu_begin(out);
-page_menu_button(session, out, "mbAdd",  "Add",  "Add new reshedule policy", !bean.isAllErrorsAssigned(request.getLocale()));
-page_menu_button(session, out, "mbDelete",  "Delete",  "Delete all checked reshedules", "return confirm('Are you sure to delete all checked reshedules?')");
+page_menu_button(session, out, "mbAdd",    "common.buttons.add",  "reschedule.addHint", !bean.isAllErrorsAssigned());
+page_menu_button(session, out, "mbDelete", "common.buttons.delete",  "reschedule.deleteHint", "return confirm('"+getLocString("reschedule.deleteConfirm")+"')");
 page_menu_space(out);
-page_menu_button(session, out, "mbSave",  "Save",  "Save current shedules to config");
-page_menu_button(session, out, "mbReset", "Reset", "Read reshedules from config");
+page_menu_button(session, out, "mbSave",  "common.buttons.save",  "reschedule.saveHint");
+page_menu_button(session, out, "mbReset", "common.buttons.reset", "reschedule.resetHint");
 page_menu_end(out);
 %><%-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMSC Config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <div class=content>
@@ -63,7 +63,7 @@ function clickEdit(value)
   if (defaultReshedule == null || defaultReshedule.trim().length() == 0)
     defaultReshedule = "&lt;not specified&gt;";
 %>
-<div class=page_subtitle>Rescheduling policies</div><br>
+<div class=page_subtitle><%=getLocString("reschedule.subTitle")%></div><br>
 <table class=list>
 <col width=1px>
 <tr class=row0>
@@ -72,7 +72,7 @@ function clickEdit(value)
 </tr>
 <tr  class=row1>
 <td>&nbsp;</td>
-<td>Default resheduling policy</td></tr>
+<td><%=getLocString("reschedule.defaultPolicy")%></td></tr>
 <%
   for (Iterator i = bean.getReshedules().iterator(); i.hasNext();) {
     String reshedule = (String) i.next();
@@ -89,7 +89,7 @@ function clickEdit(value)
     if (resheduleErrors.size() <= 0 )
     {
  %>
-     <tr class=row1><td>&nbsp;</td><td><i>no selected errors</i></td></tr>
+     <tr class=row1><td>&nbsp;</td><td><i><%=getLocString("common.util.noSelectedErrors")%></i></td></tr>
  <%
     }
     else {
@@ -97,7 +97,7 @@ function clickEdit(value)
       <td colspan=2><table style="border:none"><col width=80px><%
       for (Iterator j = resheduleErrors.iterator(); j.hasNext();) {
         String errorCode = (String) j.next();
-        String errorCodeString = bean.getErrorString(request.getLocale(), errorCode);
+        String errorCodeString = bean.getErrorString(errorCode);
         %><tr style="border:none">
       <td style="border:none" align=right>(<%=errorCode%>)</td><td style="border:none"><%=errorCodeString != null ? errorCodeString : ""%></td></tr><%
       }
@@ -108,11 +108,11 @@ function clickEdit(value)
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(session, out, "mbAdd",  "Add",  "Add new reshedule policy", !bean.isAllErrorsAssigned(request.getLocale()));
-page_menu_button(session, out, "mbDelete",  "Delete",  "Delete all checked reshedules", "return confirm('Are you sure to delete all checked reshedules?')");
+page_menu_button(session, out, "mbAdd",    "common.buttons.add",  "reschedule.addHint", !bean.isAllErrorsAssigned());
+page_menu_button(session, out, "mbDelete", "common.buttons.delete",  "reschedule.deleteHint", "return confirm('"+getLocString("reschedule.deleteConfirm")+"')");
 page_menu_space(out);
-page_menu_button(session, out, "mbSave",  "Save",  "Save current shedules to config");
-page_menu_button(session, out, "mbReset", "Reset", "Read reshedules from config");
+page_menu_button(session, out, "mbSave",  "common.buttons.save",  "reschedule.saveHint");
+page_menu_button(session, out, "mbReset", "common.buttons.reset", "reschedule.resetHint");
 page_menu_end(out);
 %><%@
  include file="/WEB-INF/inc/html_3_footer.jsp"%><%@

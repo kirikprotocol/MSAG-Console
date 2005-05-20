@@ -13,7 +13,7 @@
 %>
 <jsp:setProperty name="statExportBean" property="*"/>
 <%
-    TITLE="SMS Statistics export";
+    TITLE = getLocString("stat.exportTitle");
     MENU0_SELECTION = "MENU0_SMSSTAT";
 
     int beanResult = StatExportBean.RESULT_OK;
@@ -33,16 +33,16 @@
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <div class=content>
 <input type=hidden name=initialized value=true>
-<div class=page_subtitle>Export statistics</div>
+<div class=page_subtitle><%=getLocString("stat.exportSubTitle")%></div>
 <table class=properties_list cellspacing=0>
 <%int rowN=0;%>
 <tr class=row<%= rowN%>>
-	<th width="20%">Date to export</th>
+	<th width="20%"><%=getLocString("stat.exportDate")%></th>
 	<td width="80%" nowrap><input type=text id="date" name="date" class=calendarField value="<%=bean.getDate()%>" maxlength=10 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(date, false, false);">...</button></td>
 </tr>
 </table>
 <br/>
-<div class=page_subtitle>Export destination</div>
+<div class=page_subtitle><%=getLocString("stat.exportDest")%></div>
 <script>
 function defaultSetting(){
   document.all.source.value="<%=bean.getSource()%>";
@@ -74,38 +74,38 @@ function userDefined(){
   <td nowrap><input
       class=radio type="radio" name="destination" id=destinationDefault value="<%= StatExportBean.DEFAULT_DESTINATION%>"
       <%= (bean.getDestination() == StatExportBean.DEFAULT_DESTINATION) ? "checked":""%> onclick="javascript:defaultSetting()">
-      <label for=destinationDefault>Default destination</label></td>
+      <label for=destinationDefault><%=getLocString("common.dests.default")%></label></td>
   <td nowrap><input
       class=radio type="radio" name="destination" id=destinationUser value="<%= StatExportBean.USER_DESTINATION%>"
       <%= (bean.getDestination() == StatExportBean.USER_DESTINATION) ? "checked":""%>  onclick="javascript:userDefined()">
-      <label for=destinationUser>User defined</label>
+      <label for=destinationUser><%=getLocString("common.dests.user")%></label>
   </td>
 </tr>
 <tr class=row<%= (rowN++)%2%>>
-	<th>JDBC source</th>
+	<th><%=getLocString("stat.export.source")%></th>
 	<td nowrap><input class=txt type=text id="source" name="source" value="<%=bean.getSource()%>"></td>
 </tr>
 <tr class=row<%= (rowN++)%2%>>
-	<th>JDBC driver</th>
+	<th><%=getLocString("stat.export.driver")%></th>
 	<td nowrap><input class=txt type=text id="driver" name="driver" value="<%=bean.getDriver()%>"></td>
 </tr>
 <tr class=row<%= (rowN++)%2%>>
-	<th>User</th>
+	<th><%=getLocString("stat.export.user")%></th>
 	<td nowrap><input class=txt type=text id="user" name="user" value="<%=bean.getUser()%>"></td>
 </tr>
 <tr class=row<%= (rowN++)%2%>>
-	<th>Password</th>
+	<th><%=getLocString("stat.export.password")%></th>
 	<td nowrap><input class=txt type=password id="password" name="password" value="<%=bean.getPassword()%>"></td>
 </tr>
 <tr class=row<%= (rowN++)%2%>>
-	<th>Stat tables prefix</th>
+	<th><%=getLocString("stat.export.tablePrefix")%></th>
 	<td nowrap><input class=txt type=text id="tablesPrefix" name="tablesPrefix" value="<%=bean.getTablesPrefix()%>"></td>
 </tr>
 </table>
 </div> <!-- content -->
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbExport",  "Export !",  "Process export statistics to selected destination");
+page_menu_button(session, out, "mbExport",  "common.buttons.export",  "common.buttons.exportHint");
 page_menu_space(out);
 page_menu_end(out);
 %>

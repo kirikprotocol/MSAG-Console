@@ -10,7 +10,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.aliases.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Aliases";
+TITLE = getLocString("aliases.title");
 switch(bean.process(request))
 {
   case PageBean.RESULT_OK:
@@ -26,8 +26,8 @@ switch(bean.process(request))
 		response.sendRedirect("aliasesAdd.jsp");
 		return;
 	case Index.RESULT_EDIT:
-		response.sendRedirect("aliasesEdit.jsp?alias="+URLEncoder.encode(bean.getEditAlias())
-		                                     +"&address="+URLEncoder.encode(bean.getEditAddress())
+		response.sendRedirect("aliasesEdit.jsp?alias="+URLEncoder.encode(bean.getEditAlias(), "UTF-8")
+		                                     +"&address="+URLEncoder.encode(bean.getEditAddress(), "UTF-8")
 		                                     +"&hide="+bean.isEditHide());
 		return;
 	default:
@@ -38,8 +38,8 @@ MENU0_SELECTION = "MENU0_ALIASES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbAdd",  "Add alias",  "Add alias");
-page_menu_button(session, out, "mbDelete", "Delete alias(es)", "Delete selected aliases");
+page_menu_button(session, out, "mbAdd",  "aliases.add",  "aliases.add");
+page_menu_button(session, out, "mbDelete", "aliases.delete", "aliases.deleteHint");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -79,9 +79,9 @@ function setSort(sorting)
 <thead>
 <tr>
 	<th>&nbsp;</th>
-	<th><a href="#" <%=bean.getSort().endsWith("Alias") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by mask" onclick='return setSort("Alias")'>alias</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("Address") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by codepage" onclick='return setSort("Address")'>address</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("Hide") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by report info" onclick='return setSort("Hide")'>hide</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("Alias") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.aliasHint")%>" onclick='return setSort("Alias")'><%=getLocString("common.sortmodes.alias")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("Address") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.addressHint")%>" onclick='return setSort("Address")'><%=getLocString("common.sortmodes.address")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("Hide") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.hideHint")%>" onclick='return setSort("Hide")'><%=getLocString("common.sortmodes.hide")%></a></th>
 </tr>
 </thead>
 <tbody>
@@ -95,7 +95,7 @@ String encAddress = StringEncoderDecoder.encode((String)item.getValue("Address")
 %>
 <tr class=row<%=(row++)&1%>>
 	<td class=check><input class=check type=checkbox name=checkedAliases value="<%=encAlias%>" <%=bean.isAliasChecked((String)item.getValue("Alias")) ? "checked" : ""%>></td>
-	<td class=name><a href="#" title="Edit alias" onClick='return edit("<%=encAlias%>", "<%=encAddress%>", "<%=item.getValue("Hide")%>")'><%=encAlias%></a></td>
+	<td class=name><a href="#" title="<%=getLocString("aliases.editTitle")%>" onClick='return edit("<%=encAlias%>", "<%=encAddress%>", "<%=item.getValue("Hide")%>")'><%=encAlias%></a></td>
 	<td><%=encAddress%></td>
 	<td><%=item.getValue("Hide")%></td>
 </tr>
@@ -106,8 +106,8 @@ String encAddress = StringEncoderDecoder.encode((String)item.getValue("Address")
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbAdd",  "Add alias",  "Add alias");
-page_menu_button(session, out, "mbDelete", "Delete alias(es)", "Delete selected aliases");
+page_menu_button(session, out, "mbAdd",  "aliases.add",  "aliases.add");
+page_menu_button(session, out, "mbDelete", "aliases.delete", "aliases.deleteHint");
 page_menu_space(out);
 page_menu_end(out);
 %>

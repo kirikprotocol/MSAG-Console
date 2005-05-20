@@ -14,6 +14,8 @@
   <link rel="STYLESHEET" type="text/css" href="/styles/messages.css">
   <link rel="STYLESHEET" type="text/css" href="/styles/page_menu.css">
   <link rel="STYLESHEET" type="text/css" href="/styles/sme_menu.css">
+  <script src="<%=getScriptsLocMsgFileName()%>" type="text/javascript"></script>
+  <script src="<%=getLocJSConfFileName()%>" type="text/javascript"></script>
   <script src="/scripts/scripts.js" type="text/javascript"></script>
 
 <%@include file="top_menu.jsp"%>

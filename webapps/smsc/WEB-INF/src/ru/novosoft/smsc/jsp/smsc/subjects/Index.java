@@ -63,7 +63,7 @@ public final class Index extends IndexBean
         preferences.getSubjectsFilter().setMasks(filter_masks);
       } catch (AdminException e) {
         logger.error("Incorrect filter mask(s)", e);
-        return error("Incorrect filter mask(s)", e);
+        return error(SMSCErrors.error.subjects.incorrectFilterMask, e.getMessage());
       }
     else
       filter_masks = (String[]) preferences.getSubjectsFilter().getMaskStrings().toArray(new String[0]);

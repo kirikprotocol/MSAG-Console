@@ -16,7 +16,7 @@
 %>
 <jsp:setProperty name="smsViewBean" property="*"/>
 <%
-  TITLE="SMS View";
+  TITLE = getLocString("smsview.title");
   MENU0_SELECTION = "MENU0_SMSVIEW";
 
   int beanResult = bean.process(request);
@@ -37,50 +37,50 @@
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <div class=content><%
 {%>
-<div class=page_subtitle>Search parameters</div>
+<div class=page_subtitle><%=getLocString("common.titles.searchParams")%></div>
 <table class=properties_list cell>
 <tr class=row0>
-  <th>Storage:</th>
+  <th><%=getLocString("smsview.storage")%>:</th>
   <td nowrap><input
       class=radio type="radio" name="storageType" id=storageTypeArchive value="<%=
         SmsQuery.SMS_ARCHIVE_STORAGE_TYPE%>"   <%=
         (bean.getStorageType()==SmsQuery.SMS_ARCHIVE_STORAGE_TYPE) ?
-        "checked":""%>><label for=storageTypeArchive>Archive</label></td>
+        "checked":""%>><label for=storageTypeArchive><%=getLocString("smsview.archive")%></label></td>
   <td nowrap><input
       class=radio type="radio" name="storageType" id=storageTypeOperative value="<%=
         SmsQuery.SMS_OPERATIVE_STORAGE_TYPE%>" <%=
         (bean.getStorageType()==SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) ?
-        "checked":""%>><label for=storageTypeOperative>Operative</label>
+        "checked":""%>><label for=storageTypeOperative><%=getLocString("smsview.operative")%></label>
   </td>
   <td>&nbsp;</td>
   </td>
 </tr>
 <tr class=row1>
-  <th>Abonent Address:</th>
+  <th><%=getLocString("smsview.abonentAddress")%>:</th>
   <td><input class=txt type="text" id="abonentAddress" name="abonentAddress" value="<%=bean.getAbonentAddress()%>" size=25 maxlength=25 onkeyup="hideAddresses()"></td>
-  <th>SME Id:</th>
+  <th><%=getLocString("smsview.smeId")%>:</th>
   <td><input class=txt type="text" id="smeId" name="smeId" value="<%=bean.getSmeId()%>" size=17 maxlength=15 onkeyup="hideSmeIds()"></td>
 </tr>
 <tr class=row0>
-  <th>Source Address:</th>
+  <th><%=getLocString("smsview.sourceAddress")%>:</th>
   <td><input class=txt type="text" id="fromAddress" name="fromAddress"  value="<%=bean.getFromAddress()%>" size=25 maxlength=25></td>
-  <th>Source SME Id:</th>
+  <th><%=getLocString("smsview.sourceSmeId")%>:</th>
   <td><input class=txt type="text" id="srcSmeId" name="srcSmeId"  value="<%=bean.getSrcSmeId()%>" size=17 maxlength=15></td>
 </tr>
 <tr class=row1>
-  <th>Destination Address:</th>
+  <th><%=getLocString("smsview.destAddress")%>:</th>
   <td><input class=txt type="text" id="toAddress" name="toAddress" value="<%=bean.getToAddress()%>" size=25 maxlength=25></td>
-  <th>Destination SME Id:</th>
+  <th><%=getLocString("smsview.destSmeId")%>:</th>
   <td><input class=txt type="text" id="dstSmeId" name="dstSmeId"  value="<%=bean.getDstSmeId()%>" size=17 maxlength=15></td>
 </tr>
 <tr class=row0>
-  <th>SMS Id:</th>
+  <th><%=getLocString("smsview.smsId")%>:</th>
   <td><input class=txt type="text" name="smsId"  value="<%=bean.getSmsId()%>" size=16 maxlength=16></td>
-  <th>Route Id:</th>
+  <th><%=getLocString("smsview.routeId")%>:</th>
   <td><input class=txt type="text" name="routeId"  value="<%=bean.getRouteId()%>" size=32 maxlength=32></td>
 </tr>
 <tr class=row1>
-  <th>SMS Status:</th>
+  <th><%=getLocString("smsview.smsStatus")%>:</th>
   <td nowrap>
   <select name="status"><%int status=bean.getStatus();%>
     <option value="-1" <%= (status == SmsQuery.SMS_UNDEFINED_VALUE) ? "selected":""%>>ALL</option>
@@ -91,7 +91,7 @@
     <option value="4"  <%= (status == 4) ? "selected":""%>>DELETED</option>
   </select>
   </td>
-  <th>Last result:</th>
+  <th><%=getLocString("smsview.lastResult")%>:</th>
   <td nowrap>
   <select name="lastResult"><%int lastResult=bean.getLastResult();%>
     <option value="-1" <%= (lastResult == SmsQuery.SMS_UNDEFINED_VALUE) ? "selected":""%>>ALL</option>
@@ -109,17 +109,17 @@
   </td>
 </tr>
 <tr class=row0>
-  <th>From Date:</th>
+  <th><%=getLocString("common.util.FromDate")%>:</th>
   <td nowrap><input type=text id=fromDate name=fromDate class=calendarField value="<%=bean.getFromDate()%>" maxlength=20 style="z-index:22;">
     <button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button>
   </td>
-  <th>Till Date:</th>
+  <th><%=getLocString("common.util.TillDate")%>:</th>
   <td nowrap><input type=text id="tillDate" name="tillDate" class=calendarField value="<%=bean.getTillDate()%>" maxlength=20>
     <button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button>
   </td>
 </tr>
 <tr class=row1>
-  <th>Rows maximum / Per page:</th>
+  <th><%=getLocString("smsview.rowsMaxPerPage")%>:</th>
   <td nowrap>
   <select name="rowsMaximum"><%int rowsMaximum = bean.getRowsMaximum();%>
 		<option value="100" <%= (rowsMaximum <= 100) ?   "selected":""%>>100</option>
@@ -142,7 +142,7 @@
   </td>
   <td nowrap>
     <input class=check type=checkbox name=exactRowsCount id=exactRowsCount <%=bean.isExactRowsCount() ? "checked" : ""%>>
-    <label for=exactRowsCount>Query exact rows count</label>
+    <label for=exactRowsCount><%=getLocString("smsview.queryExactRowsCount")%></label>
   </td>
 </tr>
 </table>
@@ -175,8 +175,8 @@ hideSmeIds();
 <%}
 %></div><%
 page_menu_begin(out);
-page_menu_button(session, out, "mbQuery",  "Query !",  "Run query");
-page_menu_button(session, out, "mbClear", "Clear", "Clear query parameters");
+page_menu_button(session, out, "mbQuery",  "common.buttons.queryExcl",  "common.buttons.runQuery");
+page_menu_button(session, out, "mbClear", "common.buttons.clear", "common.buttons.clearQueryParams");
 page_menu_space(out);
 page_menu_end(out);
 %><div class=content><%
@@ -198,22 +198,22 @@ function setSort(sorting)
 <br>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <%
-  SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+  SimpleDateFormat dateFormatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss", getLoc());
 %>
-<div class=page_subtitle>Search results: <%= bean.getTotalRowsCount()%> rows fetched by query<%=
-    ((!bean.isExactRowsCount() && bean.isHasMore()) ? " (has more rows...)":"")%></div>
+<div class=page_subtitle><%=getLocString("common.titles.searchResultsPre") + bean.getTotalRowsCount() + getLocString("common.titles.searchResultsPost") +
+    ((!bean.isExactRowsCount() && bean.isHasMore()) ? getLocString("common.titles.searchResultsPost2"):"")%></div>
 <%@ include file="/WEB-INF/inc/navbar_nofilter.jsp"%>
 <table class=list cellspacing=0>
 <thead>
 <tr class=row0>
   <th>&nbsp;</th>
-  <th><a href="#" <%=bean.getSort().endsWith("name")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by SMS Id" onclick='return setSort("name")'>ID</a></th>
-  <th><a href="#" <%=bean.getSort().endsWith("sendDate") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Submit date/time" onclick='return setSort("sendDate")'>Sms submit/valid</a></th>
-  <th><a href="#" <%=bean.getSort().endsWith("lastDate") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Last try date/time" onclick='return setSort("lastDate")'>Tried last/next</a></th>
-  <th><a href="#" <%=bean.getSort().endsWith("from")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Source address" onclick='return setSort("from")'>Source</a></th>
-  <th><a href="#" <%=bean.getSort().endsWith("to")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by Destination address" onclick='return setSort("to")'>Destination</a></th>
-  <th>Route</th>
-  <th><a href="#" <%=bean.getSort().endsWith("status") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by delivery status" onclick='return setSort("status")'>Status</a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("name")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.idHint")%>"          onclick='return setSort("name")'><%=getLocString("common.sortmodes.id")%></a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("sendDate") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.sortSubmitHint")%>"  onclick='return setSort("sendDate")'><%=getLocString("smsview.sortSubmit")%></a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("lastDate") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.sortTriedHint")%>"   onclick='return setSort("lastDate")'><%=getLocString("smsview.sortTried")%></a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("from")     ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.sourceHint")%>"      onclick='return setSort("from")'><%=getLocString("common.sortmodes.source")%></a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("to")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.destinationHint")%>" onclick='return setSort("to")'><%=getLocString("common.sortmodes.destination")%></a></th>
+  <th><%=getLocString("smsview.route")%></th>
+  <th><a href="#" <%=bean.getSort().endsWith("status") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("smsview.statusHint")%>" onclick='return setSort("status")'><%=getLocString("common.sortmodes.status")%></a></th>
 </tr></thead>
 <tbody><%
 int firstIndex = bean.getStartPositionInt()+1;
@@ -233,7 +233,7 @@ if (lastIndex >= bean.getTotalSizeInt() || bean.getPageSizeInt() < 0)
         <input class=check type=checkbox name=checkedRows value="<%= smsRowId%>" <%=bean.isRowChecked(smsRowId) ? "checked" : ""%>>
       </td>
       <td nowrap valign=top style="text-align: right">
-        <a target="smsc_smsview" href="<%= CPATH%>/smsview/view.jsp?viewId=<%= smsRowId%>&mbView=show" title="Detailed view"><%= smsRowId%></a><br>
+        <a target="smsc_smsview" href="<%= CPATH%>/smsview/view.jsp?viewId=<%= smsRowId%>&mbView=show" title="<%=getLocString("smsview.viewDetailSubTitle")%>"><%= smsRowId%></a><br>
         <!--%= row.getAttempts()%-->
       </td>
       <td nowrap style="padding-left: 5px; border-left:dotted 1px #C0C0C0;">
@@ -266,8 +266,8 @@ if (lastIndex >= bean.getTotalSizeInt() || bean.getPageSizeInt() < 0)
       <td nowrap style="padding-left: 5px; border-left:dotted 1px #C0C0C0;">
         <%= StringEncoderDecoder.encode(row.getStatus())%> (<%=row.getLastResult()%>) <br>
         <%
-            String errMessage = bean.getAppContext().getLocaleString(request.getLocale(), SmsViewFormBean.ERR_CODES_PREFIX+row.getLastResult());
-            if (errMessage == null) errMessage = bean.getAppContext().getLocaleString(request.getLocale(), SmsViewFormBean.ERR_CODE_UNKNOWN); %>
+            String errMessage = getLocString(SmsViewFormBean.ERR_CODES_PREFIX+row.getLastResult());
+            if (errMessage == null) errMessage = getLocString(SmsViewFormBean.ERR_CODE_UNKNOWN); %>
         <%= StringEncoderDecoder.encode(errMessage == null ? "" : errMessage)%>
       </td>
   </tr>
@@ -282,8 +282,8 @@ if (lastIndex >= bean.getTotalSizeInt() || bean.getPageSizeInt() < 0)
 </div>
 <% if (bean.getTotalSizeInt()>0 && bean.getStorageType() == SmsQuery.SMS_OPERATIVE_STORAGE_TYPE) {
 page_menu_begin(out);
-page_menu_button(session, out, "mbRemove", "Delete checked",  "Delete checked messages");
-page_menu_button(session, out, "mbDelete", "Delete All fetched", "Delete All fetched messages");
+page_menu_button(session, out, "mbRemove", "common.buttons.deleteChecked", "smsview.deleteCheckedHint");
+page_menu_button(session, out, "mbDelete", "common.buttons.deleteAllFetched", "smsview.deleteAllFetchedHint");
 page_menu_space(out);
 page_menu_end(out);
 } %>

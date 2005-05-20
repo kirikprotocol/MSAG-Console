@@ -13,7 +13,7 @@
 %>
 <jsp:setProperty name="smsStatFormBean" property="*"/>
 <%
-    TITLE="SMS Statistics";
+    TITLE = getLocString("stat.title");
     MENU0_SELECTION = "MENU0_SMSSTAT";
 
     int beanResult = SmsStatFormBean.RESULT_OK;
@@ -36,19 +36,19 @@
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <div class=content>
 
-<div class=page_subtitle>Query statistics</div>
+<div class=page_subtitle><%=getLocString("stat.subTitle")%></div>
 <table class=properties_list cellspacing=0>
 <tr class=row0>
-	<th>From Date:</th>
+	<th><%=getLocString("common.util.FromDate")%>:</th>
 	<td nowrap><input type=text id="fromDate" name="fromDate" class=calendarField value="<%=bean.getFromDate()%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button></td>
-	<th>Till Date:</th>
+	<th><%=getLocString("common.util.TillDate")%>:</th>
 	<td nowrap><input type=text id="tillDate" name="tillDate" class=calendarField value="<%=bean.getTillDate()%>" maxlength=20><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
 </tr>
 </table>
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbQuery",  "Query !",  "Run query");
+page_menu_button(session, out, "mbQuery",  "common.buttons.queryExcl", "common.buttons.runQuery");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -71,20 +71,20 @@ if (stat != null) {
 </script>
 <table class=list cellspacing=0>
 <tr>
-    <td colspan=8><div class=page_subtitle>General statistics</div></td>
+    <td colspan=8><div class=page_subtitle><%=getLocString("stat.generalSubTitle")%></div></td>
 </tr>
 <tr class=row0>
     <th width="23%"><div align=right>&nbsp;</div></th>
-    <th width="11%"><div align=right>Accepted</div></th>
-    <th width="11%"><div align=right>Rejected</div></th>
-    <th width="11%"><div align=right>Delivered</div></th>
-    <th width="11%"><div align=right>Failed</div></th>
-    <th width="11%"><div align=right>Rescheduled</div></th>
-    <th width="11%"><div align=right>Temporal</div></th>
-    <th width="11%"><div align=right>Peak in / out</div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.accepted")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.rejected")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.delivered")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.failed")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.rescheduled")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.temporal")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.peakInOut")%></div></th>
 </tr>
 <tr class=row1>
-    <td width="23%" align=right>Total SMS processed:</td>
+    <td width="23%" align=right><%=getLocString("stat.totalSmsProcessed")%>:</td>
     <td width="11%" align=right><%= total.accepted%></td>
     <td width="11%" align=right><%= total.rejected%></td>
     <td width="11%" align=right><%= total.delivered%></td>
@@ -105,8 +105,8 @@ while (i.hasNext()) {
   } catch (ClassCastException e) {
    // System.out.println("#"+ci+" tried cast "+obj.getClass().getName()+" to DateCountersSet");
   }
-  SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy");
-    String dateStr = formatter.format(date.getDate());
+  SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy", getLoc());
+  String dateStr = formatter.format(date.getDate());
 %>  <tr class=row0>
         <td width="23%" align=right style="cursor:hand" onClick="toggleVisible(opForm.all.p<%=disNo%>, opForm.all.c<%=disNo%>);"><div id="p<%=disNo%>" class=collapsing_list_<%=i.hasNext() ? "closed" : "opened"%>><%= dateStr%><div></td>
         <td width="11%" align=right><%= date.accepted%></td>
@@ -144,17 +144,17 @@ while (i.hasNext()) {
     if (i.hasNext()) {
 %>
 <tr>
-    <td colspan=8><div class=page_subtitle>SME activity</div></td>
+    <td colspan=8><div class=page_subtitle><%=getLocString("stat.smeActSubTitle")%></div></td>
 </tr>
 <tr class=row0>
-    <th width="23%"><div align=right>SME Id</div></th>
-    <th width="11%"><div align=right>Accepted</div></th>
-    <th width="11%"><div align=right>Rejected</div></th>
-    <th width="11%"><div align=right>Delivered</div></th>
-    <th width="11%"><div align=right>Failed</div></th>
-    <th width="11%"><div align=right>Rescheduled</div></th>
-    <th width="11%"><div align=right>Temporal</div></th>
-    <th width="11%"><div align=right>Peak in / out</div></th>
+    <th width="23%"><div align=right><%=getLocString("smsview.smeId")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.accepted")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.rejected")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.delivered")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.failed")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.rescheduled")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.temporal")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.peakInOut")%></div></th>
 </tr><%
         while (i.hasNext()) {
             SmeIdCountersSet sme = (SmeIdCountersSet)i.next();
@@ -180,8 +180,8 @@ while (i.hasNext()) {
           %>
           <tr class=row1>
               <td width="23%" align=right nowrap>
-          <%  String errMessage = bean.getAppContext().getLocaleString(request.getLocale(), "smsc.errcode."+errid.errcode);
-              if (errMessage == null) errMessage = bean.getAppContext().getLocaleString(request.getLocale(), "smsc.errcode.unknown"); %>
+          <%  String errMessage = getLocString("smsc.errcode."+errid.errcode);
+              if (errMessage == null) errMessage = getLocString("smsc.errcode.unknown"); %>
           <%= StringEncoderDecoder.encode(errMessage == null ? "" : errMessage)%>
           (<%=errid.errcode%>)
               </td>
@@ -205,13 +205,13 @@ while (i.hasNext()) {
     if (i.hasNext()) {
 %>
 <tr>
-    <td colspan=8> <div class=page_subtitle>Traffic by routes</div></td>
+    <td colspan=8> <div class=page_subtitle><%=getLocString("stat.routSubTitle")%></div></td>
 </tr>
 </table>
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbDetail",  "Routes Statistics Details !",  "Run detail");
+page_menu_button(session, out, "mbDetail",  "stat.routDetails", "common.buttons.runDetail");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -219,14 +219,14 @@ page_menu_end(out);
 <div class=content>
 <table class=list cellspacing=0>
 <tr colspan=8 class=row0>
-    <th width="23%"><div align=right>Route Id</div></th>
-    <th width="11%"><div align=right>Accepted</div></th>
-    <th width="11%"><div align=right>Rejected</div></th>
-    <th width="11%"><div align=right>Delivered</div></th>
-    <th width="11%"><div align=right>Failed</div></th>
-    <th width="11%"><div align=right>Rescheduled</div></th>
-    <th width="11%"><div align=right>Temporal</div></th>
-    <th width="11%"><div align=right>Peak in / out</div></th>
+    <th width="23%"><div align=right><%=getLocString("smsview.routeId")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.accepted")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.rejected")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.delivered")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.failed")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.rescheduled")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.temporal")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("stat.peakInOut")%></div></th>
 </tr>  <%
         while (i.hasNext()) {
             RouteIdCountersSet route = (RouteIdCountersSet)i.next();
@@ -252,8 +252,8 @@ page_menu_end(out);
           %>
           <tr class=row1>
               <td width="23%" align=right nowrap>
-          <%  String errMessage = bean.getAppContext().getLocaleString(request.getLocale(), "smsc.errcode."+errid.errcode);
-              if (errMessage == null) errMessage = bean.getAppContext().getLocaleString(request.getLocale(), "smsc.errcode.unknown"); %>
+          <%  String errMessage = getLocString("smsc.errcode."+errid.errcode);
+              if (errMessage == null) errMessage = getLocString("smsc.errcode.unknown"); %>
           <%= StringEncoderDecoder.encode(errMessage == null ? "" : errMessage)%>
           (<%=errid.errcode%>)
               </td>
@@ -279,11 +279,11 @@ page_menu_end(out);
     if (i.hasNext()) {
 %>
 <tr>
-    <td colspan=8><div class=page_subtitle>SMS delivery state</div></td>
+    <td colspan=8><div class=page_subtitle><%=getLocString("stat.smsSubTitle")%></div></td>
 </tr>
 <tr class=row0>
-    <th width="23%"><div align=right>Error Code</div></th>
-    <th width="11%"><div align=right>Count</div></th>
+    <th width="23%"><div align=right><%=getLocString("stat.errorCode")%></div></th>
+    <th width="11%"><div align=right><%=getLocString("common.util.Count")%></div></th>
     <th width="11%">&nbsp;</th>
     <th width="11%">&nbsp;</th>
     <th width="11%">&nbsp;</th>
@@ -299,8 +299,8 @@ page_menu_end(out);
         <tr class=row1>
             <td width="23%" align=right nowrap>
         <%
-          String errMessage = bean.getAppContext().getLocaleString(request.getLocale(), "smsc.errcode."+errid.errcode);
-          if (errMessage == null) errMessage = bean.getAppContext().getLocaleString(request.getLocale(), "smsc.errcode.unknown"); %>
+          String errMessage = getLocString("smsc.errcode."+errid.errcode);
+          if (errMessage == null) errMessage = getLocString("smsc.errcode.unknown"); %>
         <%= StringEncoderDecoder.encode(errMessage == null ? "" : errMessage)%>
         (<%=errid.errcode%>)
             </td>

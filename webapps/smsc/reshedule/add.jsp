@@ -8,7 +8,7 @@
 /><jsp:setProperty name="bean" property="*"/><%
 //ServiceIDForShowStatus = Constants.SMSC_SME_ID;
 FORM_METHOD = "POST";
-TITLE = "SMSC Rescheduling";
+TITLE = getLocString("reschedule.title");
 MENU0_SELECTION = "MENU0_SMSC_Reshedule";
 switch(bean.process(request))
 {
@@ -26,8 +26,8 @@ switch(bean.process(request))
 include file="/WEB-INF/inc/html_3_header.jsp"%><%@
 include file="/WEB-INF/inc/collapsing_tree.jsp"%><%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Done",  "Save config");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "common.buttons.done",  "common.buttons.saveConfig");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %><%-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMSC Config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
@@ -35,8 +35,8 @@ page_menu_end(out);
 <%@ include file="body.jsp"%>
 </div><%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Done",  "Save config");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "common.buttons.done",  "common.buttons.saveConfig");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %><%@

@@ -9,7 +9,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.profiles.Lookup"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Lookup profile";
+TITLE = getLocString("profiles.lookupTitle");
 int beanResult = bean.process(request);
 switch(beanResult)
 {
@@ -21,16 +21,16 @@ switch(beanResult)
 	case Lookup.RESULT_ERROR:
 		break;
 	case Lookup.RESULT_ADD:
-		response.sendRedirect("profilesAdd.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getProfileDealiased() != null ? bean.getProfileDealiased() : bean.getProfile()));
+		response.sendRedirect("profilesAdd.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getProfileDealiased() != null ? bean.getProfileDealiased() : bean.getProfile(), "UTF-8"));
 		return;
 	case Lookup.RESULT_REFRESH:
-		response.sendRedirect("lookup.jsp?mbRefreshed=true&profile=" + URLEncoder.encode(bean.getProfile() == null ? "" : bean.getProfile()));
+		response.sendRedirect("lookup.jsp?mbRefreshed=true&profile=" + URLEncoder.encode(bean.getProfile() == null ? "" : bean.getProfile(), "UTF-8"));
 		return;
 	case Lookup.RESULT_EDIT:
-		response.sendRedirect("profilesEdit.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getProfileDealiased() != null ? bean.getProfileDealiased() : bean.getProfile()));
+		response.sendRedirect("profilesEdit.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getProfileDealiased() != null ? bean.getProfileDealiased() : bean.getProfile(), "UTF-8"));
 		return;
 	case Lookup.RESULT_EDIT_MASK:
-		response.sendRedirect("profilesEdit.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getMatchAddress().getMask()));
+		response.sendRedirect("profilesEdit.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getMatchAddress().getMask(), "UTF-8"));
 		return;
 	default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
@@ -39,11 +39,11 @@ switch(beanResult)
 MENU0_SELECTION = "MENU0_PROFILES_LOOKUP";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <div class=content>
-abonent number <input class=txt name=profile value="<%=bean.getProfile() != null ? bean.getProfile() : ""%>" validation="mask" onkeyup="resetValidation(this)">
+<%=getLocString("profiles.abonentNumber")%>&nbsp;<input class=txt name=profile value="<%=bean.getProfile() != null ? bean.getProfile() : ""%>" validation="mask" onkeyup="resetValidation(this)">
 </div>
 	<%
 	page_menu_begin(out);
-	page_menu_button(session, out, "mbLookup",  "Lookup",  "Lookup profile");
+	page_menu_button(session, out, "mbLookup",  "common.buttons.lookup",  "profiles.lookupHint");
 	page_menu_space(out);
 	page_menu_end(out);
 
@@ -54,25 +54,25 @@ abonent number <input class=txt name=profile value="<%=bean.getProfile() != null
 	<div class=query_result><%
 		switch (bean.getMatchType()) {
 			case ProfileEx.MATCH_DEFAULT:
-				out.print("default profile matched");
+				out.print(getLocString("profiles.matchedResult.default"));
 				break;
 			case ProfileEx.MATCH_EXACT:
-				out.print("profile matched exactly");
+				out.print(getLocString("profiles.matchedResult.exact"));
 				break;
 			case ProfileEx.MATCH_MASK:
-				out.print("mask &quot;" + bean.getMatchAddress().getNormalizedMask() + "&quot; matched");
+				out.print(getLocString("profiles.matchedResult.maskPre") + bean.getMatchAddress().getNormalizedMask() + getLocString("profiles.matchedResult.maskPost"));
 				break;
 			default:
-				out.print("unknown");
+				out.print(getLocString("profiles.matchedResult.unknown"));
 		}
 
     if (bean.getProfileDealiased() != null)
     {
-      %><br>alias <%=bean.getProfile()%> dealiased to <%=bean.getProfileDealiased()%><%
+      %><br><%=getLocString("profiles.dealiasedPre") + bean.getProfile() + getLocString("profiles.dealiasedPost") + bean.getProfileDealiased() + "\""%><%
     }
     if (bean.getMatchType() == ProfileEx.MATCH_EXACT && bean.getProfileAliased() != null)
     {
-      %><br>profile <%=bean.getMatchAddress().getMask()%> has alias <%=bean.getProfileAliased()%><br><%
+      %><br><%=getLocString("profiles.aliasedPre") + bean.getMatchAddress().getMask() + getLocString("profiles.aliasedPost") + bean.getProfileAliased() + "\""%><br><%
     }
 		%>
   </div>
@@ -80,78 +80,78 @@ abonent number <input class=txt name=profile value="<%=bean.getProfile() != null
 	<table class=properties_list cellspacing=0>
 	<col width="15%">
 	<tr class=row<%=(rowN++)&1%>>
-		<th nowrap>code page</th>
+		<th nowrap><%=getLocString("profiles.codepage")%></th>
 		<td><%=bean.getCodepage()%></td>
 	</tr>
 	<tr class=row<%=(rowN++)&1%>>
-    <th nowrap>USSD 7 bit</th>
+    <th nowrap><%=getLocString("profiles.ussd7bit")%></th>
     <td><img src="/images/ic_<%=bean.isUssd7bit() ? "" : "not_"%>checked.gif"></td>
 	</tr>
 	<tr class=row<%=(rowN++)&1%>>
-		<th nowrap>report options</th>
+		<th nowrap><%=getLocString("profiles.reportOptions")%></th>
 		<td><%=bean.getReportOptions()%></td>
 	</tr>
 	<tr class=row<%=(rowN++)&1%>>
-		<th nowrap>locale</th>
+		<th nowrap><%=getLocString("profiles.locale")%></th>
 		<td><%=bean.getLocale()%>&nbsp;</td>
 	</tr>
 	<tr class=row<%=(rowN++)&1%>>
-		<th nowrap>alias hide</th>
+		<th nowrap><%=getLocString("profiles.aliasHide")%></th>
 		<td><%
       switch (bean.getAliasHide()) {
         case Profile.ALIAS_HIDE_false: {
-          %><img src="/images/ic_not_checked.gif"> no hide<%
+          %><img src="/images/ic_not_checked.gif"> <%=getLocString("profiles.aliasHide.unhide")%><%
         }
           break;
         case Profile.ALIAS_HIDE_true: {
-          %><img src="/images/ic_checked.gif"> hide<%
+          %><img src="/images/ic_checked.gif"> <%=getLocString("profiles.aliasHide.hide")%><%
         }
           break;
         case Profile.ALIAS_HIDE_substitute: {
-          %>substitute<%
+          %><%=getLocString("profiles.aliasHide.substitute")%><%
         }
           break;
       }
 		%></td>
 	</tr>
 	<tr class=row<%=(rowN++)&1%>>
-		<th nowrap>alias modifiable</th>
+		<th nowrap><%=getLocString("profiles.aliasModifiable")%></th>
 		<td><img src="/images/ic_<%=bean.isAliasModifiable() ? "" : "not_"%>checked.gif"></td>
 	</tr>
 	<tr class=row<%=(rowN++)&1%>>
-		<th nowrap>divert</th>
+		<th nowrap><%=getLocString("profiles.divert")%></th>
 		<td><%=bean.getDivert()%>&nbsp;</td>
 	</tr>
   <tr class=row<%=(rowN++)&1%>>
-    <th nowrap>divert active unconditional</th>
+    <th nowrap><%=getLocString("profiles.divertActiveUnconditional")%></th>
     <td><img src="/images/ic_<%=bean.isDivertActiveUnconditional() ? "" : "not_"%>checked.gif"></td>
   </tr>
   <tr class=row<%=(rowN++)&1%>>
-    <th nowrap>divert active absent</th>
+    <th nowrap><%=getLocString("profiles.divertActiveAbsent")%></th>
     <td><img src="/images/ic_<%=bean.isDivertActiveAbsent() ? "" : "not_"%>checked.gif"></td>
   </tr>
   <tr class=row<%=(rowN++)&1%>>
-    <th nowrap>divert active blocked</th>
+    <th nowrap><%=getLocString("profiles.divertActiveBlocked")%></th>
     <td><img src="/images/ic_<%=bean.isDivertActiveBlocked() ? "" : "not_"%>checked.gif"></td>
   </tr>
   <tr class=row<%=(rowN++)&1%>>
-    <th nowrap>divert active barred</th>
+    <th nowrap><%=getLocString("profiles.divertActiveBarred")%></th>
     <td><img src="/images/ic_<%=bean.isDivertActiveBarred() ? "" : "not_"%>checked.gif"></td>
   </tr>
   <tr class=row<%=(rowN++)&1%>>
-    <th nowrap>divert active capacity</th>
+    <th nowrap><%=getLocString("profiles.divertActiveCapacity")%></th>
     <td><img src="/images/ic_<%=bean.isDivertActiveCapacity() ? "" : "not_"%>checked.gif"></td>
   </tr>
   <tr class=row<%=(rowN++)&1%>>
-    <th nowrap>divert modifiable</th>
+    <th nowrap><%=getLocString("profiles.divertModifiable")%></th>
     <td><img src="/images/ic_<%=bean.isDivertModifiable() ? "" : "not_"%>checked.gif"></td>
   </tr>
   <tr class=row<%=(rowN++)&1%>>
-    <th nowrap>UDH concatenate</th>
+    <th nowrap><%=getLocString("profiles.udhConcatenate")%></th>
     <td><img src="/images/ic_<%=bean.isUdhConcat() ? "" : "not_"%>checked.gif"></td>
   </tr>
   <tr class=row<%=(rowN++)&1%>>
-    <th nowrap>translit</th>
+    <th nowrap><%=getLocString("profiles.translit")%></th>
     <td><img src="/images/ic_<%=bean.isTranslit() ? "" : "not_"%>checked.gif"></td>
   </tr>
 	</table>
@@ -161,16 +161,16 @@ abonent number <input class=txt name=profile value="<%=bean.getProfile() != null
 	switch (bean.getMatchType())
 	{
 		case ProfileEx.MATCH_MASK:
-			page_menu_button(session, out, "mbAdd",        "Add profile",  "Add new profile");
-			page_menu_button(session, out, "mbEditMask",   "Edit mask",    "Edit matched mask");
-			page_menu_button(session, out, "mbDeleteMask", "Delete mask",  "Delete matched mask", "return confirm('Are you sure to delete matched mask?');");
+			page_menu_button(session, out, "mbAdd",        "profiles.add",      "profiles.addHint");
+			page_menu_button(session, out, "mbEditMask",   "profiles.editMask", "profiles.editMaskHint");
+			page_menu_button(session, out, "mbDeleteMask", "profiles.deleteMask",  "profiles.deleteMaskHint", "return confirm('"+getLocString("profiles.deleteMaskConfirm")+"');");
 			break;
 		case ProfileEx.MATCH_DEFAULT:
-			page_menu_button(session, out, "mbAdd",      "Add profile",  "Add new profile");
+			page_menu_button(session, out, "mbAdd",        "profiles.add",  "profiles.addHint");
 			break;
 		case ProfileEx.MATCH_EXACT:
-			page_menu_button(session, out, "mbEdit",   "Edit",   "Edit this profile");
-			page_menu_button(session, out, "mbDelete", "Delete", "Delete this profile", "return confirm('Are you sure to delete this profile?');");
+			page_menu_button(session, out, "mbEdit",   "common.buttons.edit",   "profiles.editProfileHint");
+			page_menu_button(session, out, "mbDelete", "common.buttons.delete", "profiles.deleteProfileHint", "return confirm('"+getLocString("profiles.deleteProfileConfirm")+"');");
 			break;
 	}
 	page_menu_space(out);

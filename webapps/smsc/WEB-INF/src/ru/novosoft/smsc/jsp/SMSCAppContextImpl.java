@@ -7,7 +7,6 @@ import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.console.Console;
 import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.journal.Journal;
-import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.resources.ResourcesManager;
 import ru.novosoft.smsc.admin.resources.ResourcesManagerImpl;
@@ -19,6 +18,7 @@ import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.admin.smsc_service.SmeManagerImpl;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.admin.users.UserManager;
+import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.perfmon.PerfServer;
 import ru.novosoft.smsc.topmon.TopServer;
 import ru.novosoft.smsc.util.LocaleMessages;
@@ -38,27 +38,27 @@ import java.util.*;
 
 public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 {
-  private Config webappConfig = null;
-  private WebXml webXmlConfig = null;
-  private HostsManager hostsManager = null;
-  private UserManager userManager = null;
-  private PerfServer perfServer = null;
-  private TopServer topServer = null;
-  private SmeManager smeManager = null;
-  private RouteSubjectManager routeSubjectManager = null;
-  private ResourcesManager resourcesManager = null;
-  private ProviderManager providerManager = null;
-  private CategoryManager categoryManager = null;
-  private AclManager aclManager = null;
+	private Config webappConfig = null;
+	private WebXml webXmlConfig = null;
+	private HostsManager hostsManager = null;
+	private UserManager userManager = null;
+	private PerfServer perfServer = null;
+	private TopServer topServer = null;
+	private SmeManager smeManager = null;
+	private RouteSubjectManager routeSubjectManager = null;
+	private ResourcesManager resourcesManager = null;
+	private ProviderManager providerManager = null;
+	private CategoryManager categoryManager = null;
+	private AclManager aclManager = null;
 
-  private Smsc smsc = null;
-  private NSConnectionPool connectionPool = null;
-  private Map userPreferences = new HashMap();
-  private Statuses statuses = new StatusesImpl();
-  private LocaleMessages localeMessages = null;
-  private Journal journal = new Journal();
+	private Smsc smsc = null;
+	private NSConnectionPool connectionPool = null;
+	private Statuses statuses = new StatusesImpl();
+	private Journal journal = new Journal();
 
-  private Console console = null;
+	private Console console = null;
+
+	private String initErrorCode = null;
 
   private void initLoggerByProps(InputStream is)
   {
@@ -114,7 +114,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
   {
     super();
     try {
-      System.out.println("Starting SMSC Administartion Web Apllication **************************************************");
+      System.out.println("Starting SMSC Administartion Web Application **************************************************");
       initLogger();
       webappConfig = new Config(new File(configFileName));
       System.out.println("webappConfig = " + configFileName + " **************************************************");
@@ -128,7 +128,6 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       }
 
       resourcesManager = new ResourcesManagerImpl();
-      loadLocaleMessages();
       createConnectionPool(webappConfig);
 
       smsc = new Smsc(webappConfig.getString("smsc.host"), webappConfig.getInt("smsc.port"), webappConfig.getString("smsc.config folder"), connectionPool, this);
@@ -140,8 +139,10 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       hostsManager = new HostsManager(daemonManager, serviceManager, smeManager, routeSubjectManager);
       aclManager = new AclManager(this);
 
-      File usersConfig = new File(webappConfig.getString("system.users file"));
-      userManager = new UserManager(usersConfig);
+		Config localeConfig = new Config(new File(webappConfig.getString("system.localization file")));
+		LocaleMessages.init(localeConfig); // должно вызыватьс€ раньше, чем ёзерћанагер
+		File usersConfig = new File(webappConfig.getString("system.users file"));
+		userManager = new UserManager(usersConfig);
       providerManager = new ProviderManager(webappConfig);
       categoryManager = new CategoryManager(webappConfig);
       statuses.setRoutesSaved(routeSubjectManager.hasSavedConfiguration());
@@ -150,11 +151,14 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       topServer = new TopServer(webappConfig);
       topServer.start();
       startConsole();
-      System.out.println("SMSC Administartion Web Apllication Started  **************************************************");
-    } catch (Exception e) {
-      System.err.println("Exception in initialization:");
-      e.printStackTrace();
+      System.out.println("SMSC Administartion Web Application Started  **************************************************");
     }
+	catch (Exception e)
+	{
+		System.err.println("Exception in initialization:");
+		e.printStackTrace();
+		initErrorCode = SMSCErrors.error.appContextNotInitialized;
+	}
   }
 
   private void createConnectionPool(Config config) throws Config.ParamNotFoundException, Config.WrongParamTypeException, SQLException
@@ -165,11 +169,6 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
     props.setProperty("jdbc.user", config.getString("profiler.jdbc.user"));
     props.setProperty("jdbc.pass", config.getString("profiler.jdbc.password"));
     connectionPool = new NSConnectionPool(props);
-  }
-
-  private void loadLocaleMessages()
-  {
-    localeMessages = new LocaleMessages();
   }
 
   private void startConsole() throws Exception
@@ -230,21 +229,6 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
     return connectionPool;
   }
 
-  public UserPreferences getUserPreferences(java.security.Principal loginedPrincipal)
-  {
-    if (loginedPrincipal == null)
-      return new UserPreferences(this);
-    else
-      synchronized (userPreferences) {
-        UserPreferences prefs = (UserPreferences) userPreferences.get(loginedPrincipal);
-        if (prefs == null) {
-          prefs = new UserPreferences(this);
-          userPreferences.put(loginedPrincipal, prefs);
-        }
-        return prefs;
-      }
-  }
-
   public Statuses getStatuses()
   {
     return statuses;
@@ -262,15 +246,62 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
     if (topServer != null) topServer.shutdown();
   }
 
-  public String getLocaleString(Locale locale, String key)
-  {
-    return localeMessages.getString(locale, key);
-  }
+	public Locale getLocale()
+	{
+		Locale result = null;
+		if (userManager != null)
+		{
+			User user = userManager.getLoginedUser();
+			if (user != null)	result = user.getPrefs().getLocale();
+		}
+		if (result == null) result = new Locale(LocaleMessages.DEFAULT_PREFERRED_LANGUAGE);
+		return result;
+	}
 
-  public Set getLocaleStrings(Locale locale, String prefix)
-  {
-    return localeMessages.getStrings(locale, prefix);
-  }
+	public String getLocaleString(String key)
+	{
+		String result = null;
+		if (userManager != null) // на вс€кий случай
+		{
+			User user = userManager.getLoginedUser();
+			if (user != null) result = getLocaleString(user.getPrefs().getLocale(),key);
+		}
+		if (result == null)
+		{
+			try
+			{
+				ResourceBundle bundle = ResourceBundle.getBundle(LocaleMessages.SMSC_BUNDLE_NAME, new Locale(LocaleMessages.DEFAULT_PREFERRED_LANGUAGE));
+				result = bundle.getString(key);
+			}
+			catch (MissingResourceException e)
+			{
+				result = "ResourceNotFound: " + key;
+			}
+
+		}
+		return result;
+	}
+
+	private String getLocaleString(Locale locale, String key)
+	{
+		return LocaleMessages.getString(locale, key);
+	}
+
+	public Set getLocaleStrings(String prefix)
+	{
+		return getLocaleStrings(userManager.getLoginedUser().getPrefs().getLocale(), prefix);
+	}
+
+
+	private Set getLocaleStrings(Locale locale, String prefix)
+	{
+		return LocaleMessages.getStrings(locale, prefix);
+	}
+
+	public String getInitErrorCode()
+	{
+		return initErrorCode;
+	}
 
   public Journal getJournal()
   {

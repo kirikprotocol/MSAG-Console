@@ -82,7 +82,7 @@ public class SmsStatFormBean extends IndexBean
         mbDetail = null;
         return RESULT_FILTER;
       } catch (Exception exc) {
-        return error(exc.getMessage());
+        return error(SMSCErrors.error.smsstat.StatError, exc.getMessage());
       }
     }
     else if (!query.isFromDateEnabled()) {
@@ -123,7 +123,7 @@ public class SmsStatFormBean extends IndexBean
   {
     Date converted = new Date();
     try {
-      SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
+      SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT, appContext.getLocale());
       converted = formatter.parse(date);
     } catch (ParseException e) {
       e.printStackTrace();
@@ -133,7 +133,7 @@ public class SmsStatFormBean extends IndexBean
 
   private String convertDateToString(Date date)
   {
-    SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
+    SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT, appContext.getLocale());
     return formatter.format(date);
   }
 

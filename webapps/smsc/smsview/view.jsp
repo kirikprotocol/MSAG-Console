@@ -14,7 +14,7 @@
 <jsp:setProperty name="smsViewBean" property="mbView"/>
 <jsp:setProperty name="smsViewBean" property="viewId"/>
 <%
-TITLE="SMS Detailed View";
+TITLE = getLocString("smsview.viewDetailTitle");
 
 int beanResult = SmsViewFormBean.RESULT_OK;
 switch(beanResult = bean.process(request))
@@ -37,7 +37,7 @@ switch(beanResult = bean.process(request))
 <%
   SmsRow row = bean.getRow();
   if (row != null) {
-    SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMMM, yyyy HH:mm:ss");
+    SimpleDateFormat dateFormatter = new SimpleDateFormat("dd MMMM, yyyy HH:mm:ss", getLoc());
     int rowN=0;
     Hashtable ht = row.getBodyParameters();
   %>
@@ -45,90 +45,90 @@ switch(beanResult = bean.process(request))
 <table class=properties_list cellspacing=0>
 <tbody>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top>Originating Address</th>
+    <th width="1%" nowrap valign=top><%=getLocString("smsview.originAddress")%></th>
     <td nowrap valign=top>
       <% String oaMask = row.getOriginatingAddressMask().getMask();%>
       <%= (oaMask != null && oaMask.length() > 0) ? StringEncoderDecoder.encode(oaMask):"&nbsp;"%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top>Destination Address</th>
+    <th width="1%" nowrap valign=top><%=getLocString("smsview.destAddress")%></th>
     <td nowrap valign=top>
       <% String daMask = row.getDestinationAddressMask().getMask();%>
       <%= (daMask != null && daMask.length() > 0) ? StringEncoderDecoder.encode(daMask):"&nbsp;"%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top>Dealiased Destination Address</th>
+    <th width="1%" nowrap valign=top><%=getLocString("smsview.dealiasedDestAddress ")%></th>
     <td nowrap valign=top>
       <% String ddaMask = row.getDealiasedDestinationAddressMask().getMask();%>
       <%= (ddaMask != null && ddaMask.length() > 0) ? StringEncoderDecoder.encode(ddaMask):"&nbsp;"%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top>Source SME Id</th>
+    <th width="1%" nowrap valign=top><%=getLocString("smsview.sourceSmeId")%></th>
     <td nowrap valign=top>
       <% String srcSmeId = row.getSrcSmeId();%>
       <%= (srcSmeId != null && srcSmeId.length() > 0) ? StringEncoderDecoder.encode(srcSmeId):"&nbsp;"%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top>Destination SME Id</th>
+    <th width="1%" nowrap valign=top><%=getLocString("smsview.destSmeId")%></th>
     <td nowrap valign=top>
       <% String dstSmeId = row.getDstSmeId();%>
       <%= (dstSmeId != null && dstSmeId.length() > 0) ? StringEncoderDecoder.encode(dstSmeId):"&nbsp;"%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top>Route Id</th>
+    <th width="1%" nowrap valign=top><%=getLocString("smsview.routeId")%></th>
     <td nowrap valign=top>
       <% String routeId = row.getRouteId();%>
       <%= (routeId != null && routeId.length() > 0) ? StringEncoderDecoder.encode(routeId):"&nbsp;"%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top>Status</th>
+    <th width="1%" nowrap valign=top><%=getLocString("smsview.smsStatus")%></th>
     <td nowrap valign=top>
       <%= StringEncoderDecoder.encode(row.getStatus())%> (<%=row.getLastResult()%>)
       <%
-         String errMessage = bean.getAppContext().getLocaleString(request.getLocale(), "smsc.errcode."+row.getLastResult());
-         if (errMessage == null) errMessage = bean.getAppContext().getLocaleString(request.getLocale(), "smsc.errcode.unknown");
+         String errMessage = getLocString("smsc.errcode."+row.getLastResult());
+         if (errMessage == null) errMessage = getLocString("smsc.errcode.unknown");
       %>
       <%= StringEncoderDecoder.encode(errMessage == null ? "" : errMessage)%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top>Submit Time</th>
+    <th width="1%" nowrap valign=top><%=getLocString("smsview.submitTime")%></th>
     <td nowrap valign=top>
       <%= (row.getSubmitTime()!= null) ? StringEncoderDecoder.encode(dateFormatter.format(row.getSubmitTime())):"&nbsp;"%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top>Valid Time</th>
+    <th width="1%" nowrap valign=top><%=getLocString("smsview.validTime")%></th>
     <td nowrap valign=top>
       <%= (row.getValidTime()!= null) ? StringEncoderDecoder.encode(dateFormatter.format(row.getValidTime())):"&nbsp;"%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top>Last Try Time</th>
+    <th width="1%" nowrap valign=top><%=getLocString("smsview.lastTryTime")%></th>
     <td nowrap valign=top>
       <%= (row.getLastTryTime()!= null) ? StringEncoderDecoder.encode(dateFormatter.format(row.getLastTryTime())):"&nbsp;"%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top>Next Try Time</th>
+    <th width="1%" nowrap valign=top><%=getLocString("smsview.nextTryTime")%></th>
     <td nowrap valign=top>
       <%= (row.getNextTryTime()!= null) ? StringEncoderDecoder.encode(dateFormatter.format(row.getNextTryTime())):"&nbsp;"%>
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top>Decoded Message</th>
+    <th width="1%" nowrap valign=top><%=getLocString("smsview.decodedMessage")%></th>
     <td valign=top><%= (row.getText()!=null && row.isTextEncoded()) ? row.getText():StringEncoderDecoder.encode(row.getText())%>&nbsp;</td>
   </tr>
 </tbody>
 </table>
 
-<div class=page_subtitle>SMS Body</div>
+<div class=page_subtitle><%=getLocString("smsview.viewSubTitle")%></div>
 <table class=list cellspacing=0>
 <tbody>
   <%
@@ -138,7 +138,7 @@ switch(beanResult = bean.process(request))
       Object value = ht.get(key); %>
     <tr class=row<%=rowN++&1%>0>
       <th width="1%" nowrap valign=top><%
-        String keyMsg = bean.getAppContext().getLocaleString(request.getLocale(), "sms.body.tag."+key);
+        String keyMsg = getLocString("sms.body.tag."+key);
         if( keyMsg == null ) keyMsg = key;
       %><%= keyMsg%></th>
       <td valign=top><%
@@ -161,7 +161,7 @@ switch(beanResult = bean.process(request))
           }
           valMsg = sb.toString();
         } else {
-          valMsg = "Invalid data type: "+value.getClass().getName();
+          valMsg = getLocString("smsview.invalidDataType") + ": "+value.getClass().getName();
         }
       %><span style="font-family: Courier;"><%= valMsg%></span></td>
     </tr>

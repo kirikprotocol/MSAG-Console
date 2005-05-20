@@ -9,7 +9,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.users.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Users";
+TITLE = getLocString("users.title");
 switch(bean.process(request))
 {
 	case Index.RESULT_DONE:
@@ -28,7 +28,7 @@ switch(bean.process(request))
 		response.sendRedirect("usersAdd.jsp");
 		return;
 	case Index.RESULT_EDIT:
-		response.sendRedirect("usersEdit.jsp?login="+URLEncoder.encode(bean.getEditUserLogin()));
+		response.sendRedirect("usersEdit.jsp?login="+URLEncoder.encode(bean.getEditUserLogin(), "UTF-8"));
 		return;
 default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
@@ -38,8 +38,8 @@ MENU0_SELECTION = "MENU0_USERS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbAdd",  "Add user",  "Add new user");
-page_menu_button(session, out, "mbDelete", "Delete user(s)", "Delete selected user(s)");
+page_menu_button(session, out, "mbAdd",  "users.addUser",  "users.addUserHint");
+page_menu_button(session, out, "mbDelete", "users.deleteUser", "users.deleteUserHint");
 page_menu_space(out);
 page_menu_end(out);
 %><div class=content>
@@ -75,10 +75,10 @@ function setSort(sorting)
 <thead>
 <tr>
 	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
-	<th><a href="#" <%=bean.getSort().endsWith("login") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by login" onclick='return setSort("login")'>name</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("firstName") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by login" onclick='return setSort("firstName")'>first name</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("lastName") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by login" onclick='return setSort("lastName")'>last name</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("dept") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by login" onclick='return setSort("dept")'>department</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("login") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.loginHint")%>" onclick='return setSort("login")'><%=getLocString("common.sortmodes.login")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("firstName") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.firstNameHint")%>" onclick='return setSort("firstName")'><%=getLocString("common.sortmodes.firstName")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("lastName") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.lastNameHint")%>" onclick='return setSort("lastName")'><%=getLocString("common.sortmodes.lastName")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("dept") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.departmentHint")%>" onclick='return setSort("dept")'><%=getLocString("common.sortmodes.department")%></a></th>
 </tr>
 </thead>
 <tbody>
@@ -95,7 +95,7 @@ String encDept = StringEncoderDecoder.encode((String) item.getValue("dept"));
 %>
 <tr class=row<%=row&1%>>
 	<td><input class=check type=checkbox name=checkedUserLogins value="<%=encLogin%>" <%=bean.isLoginChecked(login) ? "checked" : ""%>></td>
-	<td><a href="#" title="Edit user" onClick='return edit("<%=encLogin%>")'><%=encLogin%></a></td>
+	<td><a href="#" title="<%=getLocString("users.editSubTitle")%>" onClick='return edit("<%=encLogin%>")'><%=encLogin%></a></td>
 	<td><%=encFirstName%>&nbsp;</td>
 	<td><%=encLastName%>&nbsp;</td>
 	<td><%=encDept%>&nbsp;</td>
@@ -107,8 +107,8 @@ String encDept = StringEncoderDecoder.encode((String) item.getValue("dept"));
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbAdd",  "Add user",  "Add new user");
-page_menu_button(session, out, "mbDelete", "Delete user(s)", "Delete selected user(s)");
+page_menu_button(session, out, "mbAdd",  "users.addUser",  "users.addUserHint");
+page_menu_button(session, out, "mbDelete", "users.deleteUser", "users.deleteUserHint");
 page_menu_space(out);
 page_menu_end(out);
 %>

@@ -44,15 +44,15 @@ if (bean.getStage() == 1)
 	FORM_ENCTYPE = "application/x-www-form-urlencoded";
 }
 
-TITLE = "Add service: step " + (bean.getStage() == 0 ? 2 : bean.getStage()+1);
+TITLE = getLocString("services.addTitlePre") + (bean.getStage() == 0 ? 2 : bean.getStage()+1);
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 MENU0_SELECTION = "MENU0_SERVICES";
 %><%@ 
 include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbNext",  "Next",  "Next page");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_button(session, out, "mbNext",  "common.buttons.next",  "common.buttons.nextPage");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %><div class=content><%
@@ -68,12 +68,12 @@ switch (bean.getStage())
 	case 1:
 	{%>
 	<input type="hidden" name="jsp" value="/services/serviceAddExternalAdm.jsp">
-	<div class=secInfo>Select service distribute:</div>
+	<div class=secInfo><%=getLocString("services.selectServiceDistribute")%>:</div>
 	<table class=properties_list cellspacing=0 cellpadding=0>
 	<col width="15%" align=right>
 	<col width="85%">
 	<tr class=row0>
-		<th>Distribute:</th>
+		<th><%=getLocString("services.distribute")%>:</th>
 		<td><input class=txt type=file name=distribute></td>
 	</tr>
 	</table>
@@ -81,12 +81,12 @@ switch (bean.getStage())
 	break;
 	case 2:
 	{%>
-	<h3>hosting parameters:</h3>
+	<h3><%=getLocString("services.hostingParameters")%>:</h3>
 	<table class=properties_list cellspacing=0 cellpadding=0>
 	<col width="15%" align=right>
 	<col width="85%">
 	<tr class=row0>
-		<th>host name:</th>
+		<th><%=getLocString("services.hostName")%>:</th>
 		<td><select name="hostName">
 				<%
 				for (Iterator i = bean.getHostNames().iterator(); i.hasNext(); )
@@ -99,11 +99,11 @@ switch (bean.getStage())
 				</select></td>
 		</tr>
 		<tr class=row0>
-			<th>host port:</th>
+			<th><%=getLocString("services.hostPort")%>:</th>
 			<td><input class=txt name=port maxlength="5" value="<%=bean.getPortInt() != -1 ? bean.getPort() : ""%>" validation="port"></td>
 		</tr>
 		<tr class=rowLast>
-			<th>Startup&nbsp;Arguments:</th>
+			<th><%=getLocString("services.startupArgs")%>:</th>
 			<td><textarea rows="5" name="startupArgs" wrap="off"><%=bean.getStartupArgs() != null ? StringEncoderDecoder.encode(bean.getStartupArgs()) : ""%></textarea></td>
 		</tr>
 		</table>
@@ -114,7 +114,7 @@ switch (bean.getStage())
 		int rowN = 0;%>
 		<table class=properties_list cellspacing=0 cellpadding=0>
 		<tr class=row<%=(rowN++)&1%>>
-			<th>System Id</th>
+			<th><%=getLocString("services.systemId")%></th>
 			<td><input class=text type="text" name="serviceId" readonly value="<%=StringEncoderDecoder.encode(bean.getServiceId())%>"></td>
 		</tr>
 		<%@include file="serviceSmeBody.jsp"%>
@@ -128,8 +128,8 @@ switch (bean.getStage())
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbNext",  "Next",  "Next page");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_button(session, out, "mbNext",  "common.buttons.next",  "common.buttons.nextPage");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

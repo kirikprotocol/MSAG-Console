@@ -9,7 +9,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.profiles.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Profiles list";
+TITLE = getLocString("profiles.title");
 switch(bean.process(request))
 {
 	case Index.RESULT_DONE:
@@ -18,7 +18,7 @@ switch(bean.process(request))
 	case Index.RESULT_OK:
 		break;
 	case Index.RESULT_REFRESH:
-		response.sendRedirect("index.jsp?refreshed=true&initialized=" + bean.isInitialized() + "&startPosition=" + bean.getStartPositionInt() + "&filterMask=" + URLEncoder.encode(bean.getFilterMask()));
+		response.sendRedirect("index.jsp?refreshed=true&initialized=" + bean.isInitialized() + "&startPosition=" + bean.getStartPositionInt() + "&filterMask=" + URLEncoder.encode(bean.getFilterMask(), "UTF-8"));
 		return;
 	case Index.RESULT_ERROR:
 		break;
@@ -29,7 +29,7 @@ switch(bean.process(request))
 		response.sendRedirect("profilesAdd.jsp?returnPath=profiles");
 		return;
 	case Index.RESULT_EDIT:
-		response.sendRedirect("profilesEdit.jsp?returnPath=profiles&mask="+URLEncoder.encode(bean.getProfileMask()));
+		response.sendRedirect("profilesEdit.jsp?returnPath=profiles&mask="+URLEncoder.encode(bean.getProfileMask(), "UTF-8"));
 		return;
 	default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
@@ -63,11 +63,11 @@ function setSort(sorting)
 	return false;
 }
 </script>
-Profile prefix <input class=txt name=filterMask value="<%=bean.getFilterMask()%>" validation="address_prefix" onkeyup="resetValidation(this)">
+<%=getLocString("profiles.profilePrefix")%> <input class=txt name=filterMask value="<%=bean.getFilterMask()%>" validation="address_prefix" onkeyup="resetValidation(this)">
 </div>
 <%
 	page_menu_begin(out);
-	page_menu_button(session, out, "mbQuery",  "Query",  "Query");
+	page_menu_button(session, out, "mbQuery",  "common.buttons.query",  "common.buttons.query");
 	page_menu_space(out);
 	page_menu_end(out);
 	if (bean.isQueried())
@@ -86,16 +86,16 @@ Profile prefix <input class=txt name=filterMask value="<%=bean.getFilterMask()%>
 <thead>
 <tr>
 	<th><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
-	<th><a href="#" <%=bean.getSort().endsWith("mask")          ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by mask"                             onclick='return setSort("mask")'         >mask</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("codeset")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by codepage"                         onclick='return setSort("codeset")'      >codepage</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("reportinfo")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by report info"                      onclick='return setSort("reportinfo")'   >report&nbsp;info</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("locale")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"                           onclick='return setSort("locale")'       >locale</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("hidden")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"                           onclick='return setSort("hidden")'       >hidden</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("hidden_mod")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by locale"                           onclick='return setSort("hidden_mod")'   >modifiable</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("divert")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert"                           onclick='return setSort("divert")'       >divert</a></th>
-	<th>divert active</th>
-	<th><a href="#" <%=bean.getSort().endsWith("divert_mod")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by divert modifiable flag"           onclick='return setSort("divert_mod")'   >divert modifiable</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("ussd7bit")      ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by USSD as 7 bit flag"               onclick='return setSort("ussd7bit")'     >ussd 7 bit</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("mask")          ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.maskHint")%>"              onclick='return setSort("mask")'         ><%=getLocString("common.sortmodes.mask")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("codeset")       ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.codepageHint")%>"          onclick='return setSort("codeset")'      ><%=getLocString("common.sortmodes.codepage")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("reportinfo")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.reportInfoHint")%>"        onclick='return setSort("reportinfo")'   ><%=getLocString("common.sortmodes.reportInfo")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("locale")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.localeHint")%>"            onclick='return setSort("locale")'       ><%=getLocString("common.sortmodes.locale")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("hidden")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.hiddenHint")%>"            onclick='return setSort("hidden")'       ><%=getLocString("common.sortmodes.hidden")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("hidden_mod")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.modifiableHint")%>"        onclick='return setSort("hidden_mod")'   ><%=getLocString("common.sortmodes.modifiable")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("divert")        ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.divertHint")%>"            onclick='return setSort("divert")'       ><%=getLocString("common.sortmodes.divert")%></a></th>
+	<th><%=getLocString("common.sortmodes.divertActive")%></th>
+	<th><a href="#" <%=bean.getSort().endsWith("divert_mod")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.divertModifiableHint")%>"  onclick='return setSort("divert_mod")'   ><%=getLocString("common.sortmodes.divertModifiable")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("ussd7bit")      ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.ussd7bitHint")%>"          onclick='return setSort("ussd7bit")'     ><%=getLocString("common.sortmodes.ussd7bit")%></a></th>
 </tr>
 </thead>
 <tbody>
@@ -132,7 +132,7 @@ Profile prefix <input class=txt name=filterMask value="<%=bean.getFilterMask()%>
 					<td class=name><%
 					if (bean.isEditAllowed())
 						{
-							%><a href="#" title="Edit profile" onClick='return editProfile("<%=profileMask%>")'><%=encProfileMask%></a><%
+							%><a href="#" title="<%=getLocString("profiles.editSubTitle")%>" onClick='return editProfile("<%=profileMask%>")'><%=encProfileMask%></a><%
 						}
 						else
 						{
@@ -158,8 +158,8 @@ Profile prefix <input class=txt name=filterMask value="<%=bean.getFilterMask()%>
 		if (bean.isEditAllowed())
 		{
 			page_menu_begin(out);
-			page_menu_button(session, out, "mbAdd",  "Add profile",  "Add new profile");
-			page_menu_button(session, out, "mbDelete", "Delete", "Delete checked profiles", "return confirm('Are you sure to delete all checked profiles?');", false);
+			page_menu_button(session, out, "mbAdd",  "profiles.add",  "profiles.addHint");
+			page_menu_button(session, out, "mbDelete", "common.buttons.delete", "profiles.deleteHint", "return confirm('"+getLocString("profiles.deleteConfirm")+"');", false);
 			page_menu_space(out);
 			page_menu_end(out);
 		}

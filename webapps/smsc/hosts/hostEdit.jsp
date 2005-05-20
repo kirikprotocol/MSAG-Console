@@ -3,7 +3,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.hosts.HostEdit"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Host \""+bean.getHostName()+":"+bean.getPort()+"\" edit";
+TITLE = getLocString("host.editTitlePre") + " \"" + bean.getHostName() + ":" + bean.getPort() + "\"";
 switch (bean.process(request))
 {
 	case HostEdit.RESULT_ERROR:
@@ -21,8 +21,8 @@ MENU0_SELECTION = "MENU0_HOSTS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Save",  "Apply changes");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "common.buttons.save",  "common.buttons.applyChanges");
+page_menu_button(session, out, "mbCancel", "common.buttons.ñancel", "common.buttons.ñancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -31,23 +31,23 @@ page_menu_end(out);
 <col width="15%" align=right>
 <col width="85%">
 <tr class=row0>
-	<th>host name:</th>
+	<th><%=getLocString("host.name")%>:</th>
 	<td><input class=txt name=hostName value="<%=bean.getHostName()%>" readonly></td>
 </tr>
 <tr class=rowLast>
-	<th>host port:</th>
+	<th><%=getLocString("host.port")%>:</th>
 	<td><input class=txt name=port value="<%=bean.getPort()%>" validation="port" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row0>
-	<th>host services folder:</th>
+	<th><%=getLocString("host.servicesFolder")%>:</th>
 	<td><input class=txt name=hostServicesFolder value="<%=bean.getHostServicesFolder()%>"></td>
 </tr>
 </table>
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Save",  "Apply changes");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "common.buttons.save",  "common.buttons.applyChanges");
+page_menu_button(session, out, "mbCancel", "common.buttons.ñancel", "common.buttons.ñancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

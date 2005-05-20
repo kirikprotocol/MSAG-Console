@@ -6,7 +6,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.subjects.SubjectsFilter"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Filter subjects";
+TITLE = getLocString("subjects.filterTitle");
 switch(bean.process(request))
 {
 	case SubjectsFilter.RESULT_DONE:
@@ -25,15 +25,15 @@ MENU0_SELECTION = "MENU0_SUBJECTS";
 <%int rowN = 0;%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbApply",  "Apply",  "Apply filter");
-page_menu_button(session, out, "mbClear", "Clear", "Clear filter", "clickClear()");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_button(session, out, "mbApply",  "common.buttons.apply",  "common.buttons.applyFilter");
+page_menu_button(session, out, "mbClear", "common.buttons.clear", "common.buttons.clearFilter", "clickClear()");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelFilterEditing", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>
 <div class=content>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Default SMEs ~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<div class=page_subtitle>Default SMEs</div>
+<div class=page_subtitle><%=getLocString("subjects.defaultSmes")%></div>
 <table class=properties_list cellspacing=0 cellspadding=0>
 <col width="1%">
 <col width="99%">
@@ -51,7 +51,7 @@ String encName = StringEncoderDecoder.encode(name);
 <%}%>
 </table>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Subjects ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<div class=page_subtitle>Subjects</div>
+<div class=page_subtitle><%=getLocString("common.titles.subjects")%></div>
 <table class=properties_list cellspacing=0 cellspadding=0>
 <col width=1%>
 <col width=99%>
@@ -69,7 +69,7 @@ String encName = StringEncoderDecoder.encode(name);
 <%}%>
 </table>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Masks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<div class=page_subtitle>Masks</div>
+<div class=page_subtitle><%=getLocString("common.titles.masks")%></div>
 <table class=properties_list cellspacing=0 cellspadding=0>
 <col width=1%>
 <col width=99%>
@@ -84,15 +84,15 @@ for (int i=0; i<bean.getMasks().length; i++)
 <%}%>
 <tr class=rowLast>
 	<td><input class=txt name=masks validation="mask" onkeyup="resetValidation(this)"></td>
-	<td><%addButton(out, "mbAdd", "Add", "Add new mask to subjects filter");%></td>
+	<td><%addButton(out, "mbAdd", "Add", "subjects.addMask2FilterHint");%></td>
 </tr>
 </table>
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbApply",  "Apply",  "Apply filter");
-page_menu_button(session, out, "mbClear", "Clear", "Clear filter", "clickClear()");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_button(session, out, "mbApply",  "common.buttons.apply",  "common.buttons.applyFilter");
+page_menu_button(session, out, "mbClear", "common.buttons.clear", "common.buttons.clearFilter", "clickClear()");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelFilterEditing", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

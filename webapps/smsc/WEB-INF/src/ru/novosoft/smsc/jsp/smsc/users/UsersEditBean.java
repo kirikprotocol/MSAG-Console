@@ -8,30 +8,33 @@ package ru.novosoft.smsc.jsp.smsc.users;
 
 import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
+import ru.novosoft.smsc.util.xml.WebXml;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 public abstract class UsersEditBean extends SmscBean
 {
-  protected UserManager userManager = null;
-  protected String login = null;
-  protected String password = null;
-  protected String confirmPassword = null;
-  protected String[] roles = null;
-  protected String firstName = null;
-  protected String lastName = null;
-  protected String dept = null;
-  protected String workPhone = null;
-  protected String homePhone = null;
-  protected String cellPhone = null;
-  protected String email = null;
-  protected String mbCancel = null;
-  protected String mbSave = null;
-  protected Set rolesSet = new HashSet();
-  protected List serviceRoles = new LinkedList();
+	protected UserManager userManager = null;
+	protected String login = null;
+	protected String password = null;
+	protected String confirmPassword = null;
+	protected String[] roles = null;
+	protected String firstName = null;
+	protected String lastName = null;
+	protected String dept = null;
+	protected String workPhone = null;
+	protected String homePhone = null;
+	protected String cellPhone = null;
+	protected String email = null;
+	protected String mbCancel = null;
+	protected String mbSave = null;
+	protected Set rolesSet = new HashSet();
+	protected List serviceRoles = new LinkedList();
+	protected String[] prefsNames = null;
+	protected String[] prefsValues = null;
 
-  protected int init(List errors)
+	protected int init(List errors)
   {
     int result = super.init(errors);
     if (result != RESULT_OK)
@@ -67,7 +70,7 @@ public abstract class UsersEditBean extends SmscBean
 
   public String getServiceIdFromRole(String roleName)
   {
-    return appContext.getWebXmlConfig().getServiceIdFromRole(roleName);
+    return WebXml.getServiceIdFromRole(roleName);
   }
 
   /**
@@ -201,4 +204,34 @@ public abstract class UsersEditBean extends SmscBean
   {
     return serviceRoles;
   }
+
+	public String[] getPrefsNames()
+	{
+		return prefsNames;
+	}
+
+	public void setPrefsNames(String[] names)
+	{
+		this.prefsNames = names;
+	}
+
+	public String[] getPrefsValues()
+	{
+		return prefsValues;
+	}
+
+	public void setPrefsValues(String[] values)
+	{
+		this.prefsValues = values;
+	}
+
+	public String getPref(String prefName)
+	{
+		String result = "";
+		for (int i = 0; i < prefsNames.length; i++)
+		{
+			if (prefsNames[i].equals(prefName)) {result = prefsValues[i];break;}
+		}
+		return result;
+	}
 }

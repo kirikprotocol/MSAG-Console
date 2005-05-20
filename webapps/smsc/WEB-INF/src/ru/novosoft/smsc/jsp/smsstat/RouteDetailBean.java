@@ -19,6 +19,7 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.smcstat.StatRouteDataItem;
 import ru.novosoft.smsc.jsp.util.tables.impl.smcstat.StatRouteFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.smcstat.StatRouteQuery;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.SortedList;
 
 import javax.servlet.http.HttpServletRequest;
@@ -75,7 +76,7 @@ public class RouteDetailBean extends IndexBean
         return RESULT_BACK;
       } catch (Exception exc) {
         statistics = null;
-        return error(exc.getMessage());
+        return error(SMSCErrors.error.smsstat.StatError, exc.getMessage());
       }
     } else if (mbQuickFilter != null) {
       int dresult = updateFilter();

@@ -5,7 +5,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.dl.PrincipalsEdit"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-  TITLE = "Edit principal";
+  TITLE = getLocString("dl.editPrincipalTitle");
   MENU0_SELECTION = "MENU0_DL_PRINCIPALS";
 
   switch (bean.process(request))
@@ -25,7 +25,7 @@
 <col width="85%">
 </thead>
 <tr class=row0>
-	<th>address</th>
+	<th><%=getLocString("common.util.address")%></th>
 	<td><%
 
     final String address = bean.getAddress();
@@ -40,18 +40,18 @@
 	%></td>
 </tr>
 <tr class=row1>
-	<th>maximum lists</th>
+	<th><%=getLocString("dl.maximumLists")%></th>
 	<td><input class=txt name=max_lst value="<%=bean.getMax_lst()%>" validation="positive" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row0>
-	<th>maximum elements</th>
+	<th><%=getLocString("dl.maximumElements")%></th>
 	<td><input class=txt name=max_el value="<%=bean.getMax_el()%>" validation="positive" onkeyup="resetValidation(this)"></td>
 </tr>
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(session, out, "mbDone",  "Save",  "Save principal");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+page_menu_button(session, out, "mbDone",  "common.buttons.save",  "dl.savePrincipal");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancel", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

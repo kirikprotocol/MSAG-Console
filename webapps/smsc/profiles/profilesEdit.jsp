@@ -5,12 +5,12 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.profiles.ProfilesEdit"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Edit profile";
+TITLE = getLocString("profiles.editTitle");
 switch(bean.process(request))
 {
 	case ProfilesEdit.RESULT_DONE:
 		if ("lookup".equals(bean.getReturnPath()))
-			response.sendRedirect("lookup.jsp?profile=" + URLEncoder.encode(bean.getMask()));
+			response.sendRedirect("lookup.jsp?profile=" + URLEncoder.encode(bean.getMask(), "UTF-8"));
 		else if ("groups".equals(bean.getReturnPath()))
 			response.sendRedirect("groups.jsp");
 		else if ("profiles".equals(bean.getReturnPath()))
@@ -29,16 +29,16 @@ MENU0_SELECTION = "MENU0_PROFILES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Save",  "Save changes");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel profile editing", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "common.buttons.save",  "common.buttons.saveChanges");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "profiles.cancelEditHint", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>
 <%@ include file="profileBody.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Save",  "Save changes");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel profile editing", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "common.buttons.save",  "common.buttons.saveChanges");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "profiles.cancelEditHint", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

@@ -3,7 +3,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.services.ServiceAddInternal"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Add service: step 2";
+TITLE = getLocString("services.addTitle2");
 switch(bean.process(request))
 {
 	case ServiceAddInternal.RESULT_DONE:
@@ -22,17 +22,17 @@ MENU0_SELECTION = "MENU0_SERVICES";
 <%@ include file="/WEB-INF/inc/html_3_middle.jsp"%>
 <%int rowN = 0;
 page_menu_begin(out);
-page_menu_button(session, out, "mbNext",  "Finish",  "Add service");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "return clickCancel()");
+page_menu_button(session, out, "mbNext",  "common.buttons.finish",  "services.add");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancel", "return clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %><div class=content>
-<div class=page_subtitle>Select service type:</div>
+<div class=page_subtitle><%=getLocString("services.addSubTitle")%>:</div>
 <table class=properties_list cellspacing=0 cellpadding=0>
 <col width="15%" align=right>
 <col width="85%">
 <tr class=row<%=(rowN++)&1%>>
-	<th>system id:</th>
+	<th><%=getLocString("services.systemId")%>:</th>
 	<td><input class=txt type="text" name="serviceId" value="<%=StringEncoderDecoder.encode(bean.getServiceId())%>"></td>
 </tr>
 <%@include file="serviceSmeBody.jsp"%>
@@ -44,8 +44,8 @@ page_menu_end(out);
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbNext",  "Finish",  "Add service");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "return clickCancel()");
+page_menu_button(session, out, "mbNext",  "common.buttons.finish",  "services.add");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancel", "return clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

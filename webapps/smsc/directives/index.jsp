@@ -9,7 +9,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.directives.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Directives";
+TITLE = getLocString("directives.title");
 switch(bean.process(request))
 {
   case PageBean.RESULT_OK:
@@ -30,7 +30,7 @@ MENU0_SELECTION = "MENU0_SMSC_Directives";
 <col width="15%">
 <col width="1%">
 <col width="69%">
-<tr><th>alias</th><th>directive</th><th>&nbsp;</th><th></th></tr>
+<tr><th><%=getLocString("common.sortmodes.alias")%></th><th><%=getLocString("common.sortmodes.directive")%></th><th>&nbsp;</th><th></th></tr>
 <script>
 function removeDirectiveAlias(rowId)
 {
@@ -77,11 +77,11 @@ function addDirectiveAlias()
   var aHex = encodeHEX(a);
 
   if (a == null || a.length == 0) {
-    alert("Alias name not specified");
+    alert("<%=getLocString("directives.alerts.nameNotSpecified")%>");
     return false;
   }
   if (tbl.rows('row_' + aHex) != null) {
-    alert("alias \"" + a + "\" already exists");
+    alert("<%=getLocString("directives.alerts.aliasAlreadyExists")%>: " + a);
     return false;
   }
 
@@ -141,8 +141,8 @@ function addDirectiveAlias()
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbDone",  "Done",  "Done");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel user editing", "clickCancel()");
+page_menu_button(session, out, "mbDone",  "common.buttons.done",  "common.buttons.done");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "directives.cancelHint", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

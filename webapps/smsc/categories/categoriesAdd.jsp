@@ -3,7 +3,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.categories.CategoriesAdd"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Add Category";
+TITLE = getLocString("categories.addTitle");
 switch (bean.process(request))
 {
 	case ProvidersAdd.RESULT_DONE:
@@ -21,16 +21,16 @@ MENU0_SELECTION = "MENU0_CATEGORIES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Save",  "Save new category info");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel category adding", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "common.buttons.save",  "categories.saveAddHint");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "categories.cancelAddHint", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>
 <%@ include file="categoryBody.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Save",  "Save new category info");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel category adding", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "common.buttons.save",  "categories.saveAddHint");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "categories.cancelAddHint", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

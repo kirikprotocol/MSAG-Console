@@ -6,10 +6,10 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.jsp.dl.dlFilter"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-  TITLE="Distribution lists filter";
+  TITLE=getLocString("dl.filterTitle");
   MENU0_SELECTION = "MENU0_DL";
 
-  int beanResult = bean.RESULT_OK;
+  int beanResult = PageBean.RESULT_OK;
   switch(beanResult = bean.process(request)) {
     case PageBean.RESULT_OK:
     case PageBean.RESULT_ERROR:
@@ -24,7 +24,7 @@
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <div class=content>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Names ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<div class=page_subtitle>Names</div>
+<div class=page_subtitle><%=getLocString("common.titles.names")%></div>
 <table class=list cellspacing=0>
 <col width="15%">
 <col width="85%">
@@ -38,11 +38,11 @@ for (int i=0; i<bean.getNames().length; i++)
 <%}%>
 <tr>
 	<td><input class=txt name=names></td>
-	<td><%addButton(out, "mbAdd", "Add", "Add new distribution list name to filter.\nUses java regexp format");%></td>
+	<td><%addButton(out, "mbAdd", "Add", "dl.addNameHint");%></td>
 </tr>
 </table>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Owners ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<div class=page_subtitle>Owners</div>
+<div class=page_subtitle><%=getLocString("common.titles.owners")%></div>
 <table class=list cellspacing=0>
 <col width="15%">
 <col width="85%">
@@ -56,15 +56,15 @@ for (int i=0; i<bean.getNames().length; i++)
 <%}%>
 <tr>
 	<td><input class=txt name=owners></td>
-	<td><%addButton(out, "mbAdd", "Add", "Add new distribution list owner to filter.\nUses java regexp format");%></td>
+	<td><%addButton(out, "mbAdd", "Add", "dl.addOwnerHint");%></td>
 </tr>
 </table>
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbApply",  "Apply",  "Apply filter to distribution lists list");
-page_menu_button(session, out, "mbClear", "Clear", "Clear filter");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel filter editing");
+page_menu_button(session, out, "mbApply",  "common.buttons.apply",  "dl.applyFilter");
+page_menu_button(session, out, "mbClear", "common.buttons.clear", "common.buttons.clearFilter");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelFilterEditing");
 page_menu_space(out);
 page_menu_end(out);
 %>

@@ -15,7 +15,7 @@
 <%@ taglib uri="http://jakarta.apache.org/taglibs/input-1.0" prefix="input" %>
 
 <%
-TITLE = "Categories";
+TITLE = getLocString("categories.title");
 switch(bean.process(request))
 {
 	case IndexProvider.RESULT_DONE:
@@ -34,7 +34,7 @@ switch(bean.process(request))
 		response.sendRedirect("categoriesAdd.jsp");
 		return;
 	case IndexProvider.RESULT_EDIT:
-		response.sendRedirect("categoriesEdit.jsp?name="+URLEncoder.encode(bean.getEditName())+"&&id="+URLEncoder.encode(bean.getEditId()));
+		response.sendRedirect("categoriesEdit.jsp?name="+URLEncoder.encode(bean.getEditName(), "UTF-8")+"&&id="+URLEncoder.encode(bean.getEditId(), "UTF-8"));
 		return;
 default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
@@ -46,8 +46,8 @@ MENU0_SELECTION = "MENU0_CATEGORIES";
 <%
    page_menu_begin(out);
 
-   page_menu_button(session, out, "mbAdd",  "Add category",  "Add new category");
-  // page_menu_button(out, "mbDelete", "Delete category(ies)", "Delete selected category(ies)");
+   page_menu_button(session, out, "mbAdd",  "categories.add",  "categories.addHint");
+   //page_menu_button(out, "mbDelete", "categories.delete", "categories.deleteHint");
    page_menu_space(out);
    page_menu_end(out);
  %><div class=content>
@@ -121,8 +121,8 @@ function clickClickable(headId, bodyId)
 <thead>
 <tr>
 	<th width="1%" class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
-	<th width="14%" align=left><a href="#" <%=bean.getSort().endsWith("id")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by id" onclick='return setSort("id")'  >id</a></th>
-	<th width="20%" align=left><a href="#" <%=bean.getSort().endsWith("name")  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by name" onclick='return setSort("name")'  >name</a></th>
+	<th width="14%" align=left><a href="#" <%=bean.getSort().endsWith("id")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.idHint")%>" onclick='return setSort("id")'  ><%=getLocString("common.sortmodes.id")%></a></th>
+	<th width="20%" align=left><a href="#" <%=bean.getSort().endsWith("name")  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.nameHint")%>" onclick='return setSort("name")'  ><%=getLocString("common.sortmodes.name")%></a></th>
   <th width="65%" align=left>&nbsp </th>
   </tr>
 </thead>
@@ -150,7 +150,7 @@ if (have) {
 <tr class=row<%=row&1%>>
 <td><input class=check type=checkbox name=checkedCategoryNames value="<%=encName%>" <%=bean.isCategoryChecked(name) ? "checked" : ""%>></td>
 	<td><%=encCategoryId%>&nbsp;</td>
-  <td><a href="#" title="Edit category" onClick='return edit("<%=encCategoryId%>","<%=encName%>")'><%=encName%></a></td>
+  <td><a href="#" title="<%=getLocString("categories.editTitle")%>" onClick='return edit("<%=encCategoryId%>","<%=encName%>")'><%=encName%></a></td>
 </tr>
 <tr class=row<%=row&1%> id=<%=rowId%>_BODY style="display:none">
   <td>&nbsp;</td>
@@ -165,8 +165,8 @@ if (have) {
 </div>
  <%
    page_menu_begin(out);
-   page_menu_button(session, out, "mbAdd",  "Add category",  "Add new category");
-  // page_menu_button(out, "mbDelete", "Delete category(ies)", "Delete selected category(ies)");
+   page_menu_button(session, out, "mbAdd",  "categories.add",  "categories.addHint");
+//   page_menu_button(out, "mbDelete", "categories.delete", "categories.deleteHint");
    page_menu_space(out);
    page_menu_end(out);
  %>

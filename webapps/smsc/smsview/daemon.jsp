@@ -13,7 +13,7 @@
 /><jsp:setProperty name="bean" property="*"/><%
   ServiceIDForShowStatus = Constants.ARCHIVE_DAEMON_SVC_ID;
   FORM_METHOD = "POST";
-  TITLE = "SMS Archive Daemon";
+  TITLE = getLocString("smsview.daemonTitle");
   MENU0_SELECTION = "MENU0_SMSDAEMON";
   switch(bean.process(request))
   {
@@ -35,7 +35,7 @@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
     out.print("<tr class=row" + ((row++) & 1) + ">");
     out.print("<th><input class=txt id=\"newParamName_"+section+"\" name=\"newParamName_"+section+"\"></th>");
     out.print("<td width=100% ><input class=txtW id=\"newParamValue_"+section+"\" name=\"newParamValue_"+section+"\"></td>");
-    out.print("<td><img src=\"/images/but_add.gif\" onclick=\"addParam('"+section+"')\" title='Add new parameter'></td>");
+    out.print("<td><img src=\"/images/but_add.gif\" onclick=\"addParam('"+section+"')\" title='" + getLocString("common.hints.addParam") + "'></td>");
     out.print("</tr>");
   }
   void printDelParam(JspWriter out, String section, String param, String value) throws IOException
@@ -44,24 +44,24 @@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
     out.print("<tr class=row" + ((row++) & 1) + " id=\"paramRow_"+fullParam+"\">");
     out.print("<th nowrap>"+param+"</th>");
     out.print("<td width=100% ><input class=txtW id=\""+fullParam+"\" name=\""+fullParam+"\" value=\""+StringEncoderDecoder.encode(value)+"\"></td>");
-    out.print("<td><img src=\"/images/but_del.gif\" onclick=\"delParam('"+section+"', '"+param+"')\" title='Remove parameter'></td>");
+    out.print("<td><img src=\"/images/but_del.gif\" onclick=\"delParam('"+section+"', '"+param+"')\" title='" + getLocString("common.hints.delParam") + "'></td>");
     out.print("</tr>");
   }
 %>
 <%
   page_menu_begin(out);
-  page_menu_button(session, out, "mbSave",  "Save",  "Save config");
-  page_menu_button(session, out, "mbReset", "Reset", "Reset", "clickCancel()");
+  page_menu_button(session, out, "mbSave",  "common.buttons.save",  "common.buttons.saveConfig");
+  page_menu_button(session, out, "mbReset", "common.buttons.reset", "common.buttons.reset", "clickCancel()");
   page_menu_space(out);
-  page_menu_button(session, out, "mbStart", "Start", "Start daemon", bean.getStatus() == ServiceInfo.STATUS_STOPPED);
-  page_menu_button(session, out, "mbStop",  "Stop",  "Stop daemon", bean.getStatus() == ServiceInfo.STATUS_RUNNING);
+  page_menu_button(session, out, "mbStart", "common.buttons.start", "smsview.startDaemon", bean.getStatus() == ServiceInfo.STATUS_STOPPED);
+  page_menu_button(session, out, "mbStop",  "common.buttons.stop",  "smsview.stopDaemon", bean.getStatus() == ServiceInfo.STATUS_RUNNING);
   page_menu_end(out);
 %>
 <script language="JavaScript">
 function refreshStartStopButtonsStatus()
 {
-	document.all.mbStart.disabled = (document.all.RUNNING_STATUSERVICE_<%=Constants.ARCHIVE_DAEMON_SVC_ID%>.innerText != "stopped");
-	document.all.mbStop.disabled = (document.all.RUNNING_STATUSERVICE_<%=Constants.ARCHIVE_DAEMON_SVC_ID%>.innerText != "running");
+	document.all.mbStart.disabled = (document.all.RUNNING_STATUSERVICE_<%=Constants.ARCHIVE_DAEMON_SVC_ID%>.innerText != "<%=getLocString("common.statuses.stopped")%>");
+	document.all.mbStop.disabled = (document.all.RUNNING_STATUSERVICE_<%=Constants.ARCHIVE_DAEMON_SVC_ID%>.innerText != "<%=getLocString("common.statuses.running")%>");
 	window.setTimeout(refreshStartStopButtonsStatus, 500);
 }
 refreshStartStopButtonsStatus();
@@ -112,40 +112,40 @@ function delParam(sectionName, paramName)
 </script>
 <%-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~ SMSC Config ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <div class=content>
-<div class=secSmsc>Archive Daemon Configuration</div>
+<div class=secSmsc><%=getLocString("smsview.daemonSubTitle")%></div>
 <%
     //################################## Global #############################
     startParams(out);
-      param(out, "Start interval", "ArchiveDaemon.interval", bean.getIntParam("ArchiveDaemon.interval"));
+      param(out, "smsview.startInterval", "ArchiveDaemon.interval", bean.getIntParam("ArchiveDaemon.interval"));
     finishParams(out);
     //################################## View #############################
-    startSection(out, "View", "SMS View", false);
+    startSection(out, "View", "smsview.smsview", false);
       startParams(out);
-        param(out, "host", "ArchiveDaemon.View.host", bean.getStringParam("ArchiveDaemon.View.host"));
-        param(out, "port", "ArchiveDaemon.View.port", bean.getIntParam("ArchiveDaemon.View.port"));
+        param(out, "common.util.host", "ArchiveDaemon.View.host", bean.getStringParam("ArchiveDaemon.View.host"));
+        param(out, "common.util.port", "ArchiveDaemon.View.port", bean.getIntParam("ArchiveDaemon.View.port"));
       finishParams(out);
     finishSection(out);
     //################################## Queries #############################
-    startSection(out, "Queries", "SMS Queries", false);
+    startSection(out, "Queries", "smsview.smsqueries", false);
       startParams(out);
-        param(out, "maximum", "ArchiveDaemon.Queries.max", bean.getIntParam("ArchiveDaemon.Queries.max"));
-        param(out, "initial", "ArchiveDaemon.Queries.init", bean.getIntParam("ArchiveDaemon.Queries.init"));
+        param(out, "smsview.maximum", "ArchiveDaemon.Queries.max", bean.getIntParam("ArchiveDaemon.Queries.max"));
+        param(out, "smsview.initial", "ArchiveDaemon.Queries.init", bean.getIntParam("ArchiveDaemon.Queries.init"));
       finishParams(out);
     finishSection(out);
     //################################## Transactions ##########################
-    startSection(out, "Transactions", "Transactions", false);
+    startSection(out, "Transactions", "smsview.transactions", false);
       startParams(out);
-        param(out, "maximum transaction size (sms)", "ArchiveDaemon.Transactions.maxSmsCount",     bean.getIntParam("ArchiveDaemon.Transactions.maxSmsCount"));
-        param(out, "maximum transaction time (sec)", "ArchiveDaemon.Transactions.maxTimeInterval", bean.getIntParam("ArchiveDaemon.Transactions.maxTimeInterval"));
+        param(out, "smsview.maxTransSize", "ArchiveDaemon.Transactions.maxSmsCount",     bean.getIntParam("ArchiveDaemon.Transactions.maxSmsCount"));
+        param(out, "smsview.maxTransTime", "ArchiveDaemon.Transactions.maxTimeInterval", bean.getIntParam("ArchiveDaemon.Transactions.maxTimeInterval"));
       finishParams(out);
     finishSection(out);
     //################################## Locations #############################
-    startSection(out, "Locations", "Locations", true);
+    startSection(out, "Locations", "smsview.locations", true);
       startParams(out);
-        param(out, "archive destination", "ArchiveDaemon.Locations.baseDestination", bean.getStringParam("ArchiveDaemon.Locations.baseDestination"));
-        param(out, "textual destination", "ArchiveDaemon.Locations.textDestination", bean.getStringParam("ArchiveDaemon.Locations.textDestination"));
+        param(out, "smsview.archDest", "ArchiveDaemon.Locations.baseDestination", bean.getStringParam("ArchiveDaemon.Locations.baseDestination"));
+        param(out, "smsview.textDest", "ArchiveDaemon.Locations.textDestination", bean.getStringParam("ArchiveDaemon.Locations.textDestination"));
       finishParams(out);
-      startSection(out, "sources", "sources", true);
+      startSection(out, "sources", "smsview.sources", true);
         final String baseSrcSection = SmsDaemonFormBean.LOC_SOURCES_SECTION;
         startParams(out, "paramTable_"+baseSrcSection);
           HashMap locationsMap = bean.getSubParams(baseSrcSection);
@@ -160,20 +160,20 @@ function delParam(sectionName, paramName)
       finishSection(out);
     finishSection(out);
     //################################## Indexator #############################
-    startSection(out, "Indexator", "Indexator", true);
+    startSection(out, "Indexator", "smsview.indexator", true);
       startParams(out);
-        param(out, "smsIdHashSize",    "ArchiveDaemon.Indexator.smsIdHashSize",    bean.getIntParam("ArchiveDaemon.Indexator.smsIdHashSize"));
-        param(out, "smeIdHashSize",    "ArchiveDaemon.Indexator.smeIdHashSize",    bean.getIntParam("ArchiveDaemon.Indexator.smeIdHashSize"));
-        param(out, "routeIdHashSize",  "ArchiveDaemon.Indexator.routeIdHashSize",  bean.getIntParam("ArchiveDaemon.Indexator.routeIdHashSize"));
-        param(out, "addrHashSize",     "ArchiveDaemon.Indexator.addrHashSize",     bean.getIntParam("ArchiveDaemon.Indexator.addrHashSize"));
-        param(out, "smeIdRootSize",    "ArchiveDaemon.Indexator.smeIdRootSize",    bean.getIntParam("ArchiveDaemon.Indexator.smeIdRootSize"));
-        param(out, "smeIdChunkSize",   "ArchiveDaemon.Indexator.smeIdChunkSize",   bean.getIntParam("ArchiveDaemon.Indexator.smeIdChunkSize"));
-        param(out, "routeIdRootSize",  "ArchiveDaemon.Indexator.routeIdRootSize",  bean.getIntParam("ArchiveDaemon.Indexator.routeIdRootSize"));
-        param(out, "routeIdChunkSize", "ArchiveDaemon.Indexator.routeIdChunkSize", bean.getIntParam("ArchiveDaemon.Indexator.routeIdChunkSize"));
-        param(out, "addrRootSize",     "ArchiveDaemon.Indexator.addrRootSize",     bean.getIntParam("ArchiveDaemon.Indexator.addrRootSize"));
-        param(out, "defAddrChunkSize", "ArchiveDaemon.Indexator.defAddrChunkSize", bean.getIntParam("ArchiveDaemon.Indexator.defAddrChunkSize"));
+        param(out, "smsview.smsIdHashSize",    "ArchiveDaemon.Indexator.smsIdHashSize",    bean.getIntParam("ArchiveDaemon.Indexator.smsIdHashSize"));
+        param(out, "smsview.smeIdHashSize",    "ArchiveDaemon.Indexator.smeIdHashSize",    bean.getIntParam("ArchiveDaemon.Indexator.smeIdHashSize"));
+        param(out, "smsview.routeIdHashSize",  "ArchiveDaemon.Indexator.routeIdHashSize",  bean.getIntParam("ArchiveDaemon.Indexator.routeIdHashSize"));
+        param(out, "smsview.addrHashSize",     "ArchiveDaemon.Indexator.addrHashSize",     bean.getIntParam("ArchiveDaemon.Indexator.addrHashSize"));
+        param(out, "smsview.smeIdRootSize",    "ArchiveDaemon.Indexator.smeIdRootSize",    bean.getIntParam("ArchiveDaemon.Indexator.smeIdRootSize"));
+        param(out, "smsview.smeIdChunkSize",   "ArchiveDaemon.Indexator.smeIdChunkSize",   bean.getIntParam("ArchiveDaemon.Indexator.smeIdChunkSize"));
+        param(out, "smsview.routeIdRootSize",  "ArchiveDaemon.Indexator.routeIdRootSize",  bean.getIntParam("ArchiveDaemon.Indexator.routeIdRootSize"));
+        param(out, "smsview.routeIdChunkSize", "ArchiveDaemon.Indexator.routeIdChunkSize", bean.getIntParam("ArchiveDaemon.Indexator.routeIdChunkSize"));
+        param(out, "smsview.addrRootSize",     "ArchiveDaemon.Indexator.addrRootSize",     bean.getIntParam("ArchiveDaemon.Indexator.addrRootSize"));
+        param(out, "smsview.defAddrChunkSize", "ArchiveDaemon.Indexator.defAddrChunkSize", bean.getIntParam("ArchiveDaemon.Indexator.defAddrChunkSize"));
       finishParams(out);
-      startSection(out, "smeAddrChunkSize", "smeAddrChunkSize", true);
+      startSection(out, "smeAddrChunkSize", "smsview.smeAddrChunkSize", true);
         final String baseSmeSection = SmsDaemonFormBean.SME_PARAMS_SECTION;
         startParams(out, "paramTable_"+baseSmeSection);
           HashMap smeMap = bean.getSubParams(baseSmeSection);
@@ -189,8 +189,8 @@ function delParam(sectionName, paramName)
     finishSection(out);
 %></div><%
   page_menu_begin(out);
-  page_menu_button(session, out, "mbSave",  "Save",  "Save config");
-  page_menu_button(session, out, "mbReset", "Reset", "Reset", "clickCancel()");
+  page_menu_button(session, out, "mbSave",  "common.buttons.save",  "common.buttons.saveConfig");
+  page_menu_button(session, out, "mbReset", "common.buttons.reset", "common.buttons.reset", "clickCancel()");
   page_menu_space(out);
   page_menu_end(out);
 %>

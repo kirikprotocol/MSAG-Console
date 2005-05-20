@@ -87,7 +87,6 @@
         <include name="${topmon_path}/SmeSnap.class"/>
         <include name="${smsc_package_path}/util/applet/**"/>
         <include name="${smsc_package_path}/util/SnapBufferReader.class"/>
-        <include name="locales/**"/>
       </fileset>
     </jar>
     <copy todir="${exploded}" preservelastmodified="yes">

@@ -76,7 +76,7 @@ public class Index extends PageBean
   public Collection getSmeIds()
   {
     if (null == hostsManager) {
-      error("Service Manager is null!!!");
+      error(SMSCErrors.error.services.serviceManagerIsNull);
       return new LinkedList();
     }
     else {

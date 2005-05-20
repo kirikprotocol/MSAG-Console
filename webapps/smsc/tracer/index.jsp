@@ -10,7 +10,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.tracer.Index"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-  TITLE = "Routes Tracing";
+  TITLE = getLocString("tracer.title");
   switch(bean.process(request))
   {
     case Index.RESULT_DONE:
@@ -33,42 +33,42 @@
 <%if (bean.getAppContext().getStatuses().isRoutesLoaded()) {
 %>
 <div class=content>
-<div class=page_subtitle>Tracing parameters</div>
+<div class=page_subtitle><%=getLocString("tracer.paramSubTitle")%></div>
 <table class=properties_list cell>
   <tr class=row1>
-    <th width="30%">Source Address:</th>
+    <th width="30%"><%=getLocString("tracer.sourceAddress")%>:</th>
     <td width="70%" nowrap><input class=txt type="text" name="srcAddress"
         value="<%=StringEncoderDecoder.encode(bean.getSrcAddress())%>" validation="mask" size=25 maxlength=25></td>
   </tr>
   <tr class=row0>
-    <th width="30%">Destination Address:</th>
+    <th width="30%"><%=getLocString("tracer.destAddress")%>:</th>
     <td width="70%" nowrap><input class=txt type="text" name="dstAddress"
         value="<%=StringEncoderDecoder.encode(bean.getDstAddress())%>" validation="mask" size=25 maxlength=25></td>
   </tr>
   <tr class=row0>
-    <th width="30%">Source System Id:</th>
+    <th width="30%"><%=getLocString("tracer.sourceSystemId")%>:</th>
     <td width="70%" nowrap><input class=txt type="text" name="srcSysId"
         value="<%=StringEncoderDecoder.encode(bean.getSrcSysId())%>" size=25 maxlength=25></td>
   </tr>
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(session, out, "mbCheck", "Loadup & Check", "Load & Check routing configuration");
-page_menu_button(session, out, "mbTrace", "Trace route", "Trace route");
+page_menu_button(session, out, "mbCheck", "tracer.loadAndCheck", "tracer.loadAndCheckHint");
+page_menu_button(session, out, "mbTrace", "tracer.tracert", "tracer.tracert");
 page_menu_space(out);
 page_menu_end(out);
 } else { %>
 <div class=content>
 <table class=properties_list cell>
   <tr class=row0><td>
-    <span class="C800"><b>Warning !</b></span><br><br>
-    <span class="C000">Active routing configuration is not loaded or has been changed.</span><br>
-    <span class="C000">Please loadup new routing information to route tracer.</span><br>&nbsp;
+    <span class="C800"><b><%=getLocString("common.util.WarningExcl")%></b></span><br><br>
+    <span class="C000"><%=getLocString("tracer.warning1")%></span><br>
+    <span class="C000"><%=getLocString("tracer.warning2")%></span><br>&nbsp;
   </td></tr>
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(session, out, "mbCheck", "Loadup & Check", "Load & Check routing configuration");
+page_menu_button(session, out, "mbCheck", "tracer.loadAndCheck", "tracer.loadAndCheckHint");
 page_menu_space(out);
 page_menu_end(out);
 }
@@ -82,8 +82,8 @@ page_menu_end(out);
   int mt = bean.getMessageType();%>
   <table class=properties_list cell>
   <tr><td>
-  <span class="<%= (mt == bean.TRACE_ROUTE_FOUND) ? "C080":
-                   ((mt == bean.TRACE_ROUTE_NOT_FOUND) ? "C800":"C008")%>">
+  <span class="<%= (mt == Index.TRACE_ROUTE_FOUND) ? "C080":
+                   ((mt == Index.TRACE_ROUTE_NOT_FOUND) ? "C800":"C008")%>">
     <b><%=StringEncoderDecoder.encode(message)%></b>
   </span>
   </td></tr>
@@ -91,7 +91,7 @@ page_menu_end(out);
 <%}%>
 <%if (routeInfo != null) {%>
   <br>
-  <div class=page_subtitle>Route info</div>
+  <div class=page_subtitle><%=getLocString("tracer.infoSubTitle")%></div>
   <table class=properties_list cell><%
     for (int i=0; i<routeInfo.size(); i+=2)
     {
@@ -106,7 +106,7 @@ page_menu_end(out);
 <%}%>
 <%if (traceResults != null && traceResults.size() > 0) {%>
   <br>
-  <div class=page_subtitle>Trace</div>
+  <div class=page_subtitle><%=getLocString("tracer.traceSubTitle")%></div>
   <textarea style="font-family:Courier New;height:300px"><%
     for (int i=0; i<traceResults.size(); i++) {
       Object traceObj = traceResults.get(i);

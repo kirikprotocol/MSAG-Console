@@ -3,7 +3,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.providers.ProvidersAdd"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Add Provider";
+TITLE = getLocString("providers.addTitle");
 switch (bean.process(request))
 {
 	case ProvidersAdd.RESULT_DONE:
@@ -21,16 +21,16 @@ MENU0_SELECTION = "MENU0_PROVIDERS";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Save",  "Save new provider info");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel provider adding", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "common.buttons.save",  "providers.saveAddHint");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "providers.cancelAddHint", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>
 <%@ include file="providerBody.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Save",  "Save new provider info");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel provider adding", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "common.buttons.save",  "providers.saveAddHint");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "providers.cancelAddHint", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

@@ -4,7 +4,7 @@
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.aliases.AliasesFilter"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
-TITLE = "Alias Filter";
+TITLE = getLocString("aliases.filterTitle");
 switch(bean.process(request))
 {
 	case AliasesFilter.RESULT_DONE:
@@ -16,15 +16,15 @@ MENU0_SELECTION = "MENU0_ALIASES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbApply",  "Apply",  "Apply filter");
-page_menu_button(session, out, "mbClear", "Clear", "Clear filter", "clickClear()");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_button(session, out, "mbApply",  "common.buttons.apply",  "common.buttons.applyFilter");
+page_menu_button(session, out, "mbClear", "common.buttons.clear", "common.buttons.clearFilter", "clickClear()");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelFilterEditing", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>
 <div class=content>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Aliases ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<div class=page_subtitle>Aliases</div>
+<div class=page_subtitle><%=getLocString("common.titles.aliases")%></div>
 <table class=properties_list cellspacing=0 cellspadding=0>
 <col width=1px>
 <col align=left>
@@ -40,11 +40,11 @@ for (int i=0; i<bean.getAliases().length; i++)
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
 	<td><input class=txt name=aliases validation="mask" onkeyup="resetValidation(this)"></td>
-	<td><%addButton(out, "mbAdd", "Add", "Add new alias to filter");%></td>
+	<td><%addButton(out, "mbAdd", "Add", "aliases.addAliasHint");%></td>
 </tr>
 </table>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Addresses ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<div class=page_subtitle>Addresses</div>
+<div class=page_subtitle><%=getLocString("common.titles.addresses")%></div>
 <table class=properties_list cellspacing=0 cellspadding=0>
 <col width=1px>
 <col align=left>
@@ -60,29 +60,29 @@ for (int i=0; i<bean.getAddresses().length; i++)
 <%}%>
 <tr class=row<%=(rowN++)&1%>>
 	<td><input class=txt name=addresses validation="mask" onkeyup="resetValidation(this)"></td>
-	<td><%addButton(out, "mbAdd", "Add", "Add new address to filter");%></td>
+	<td><%addButton(out, "mbAdd", "Add", "aliases.addAddressHint");%></td>
 </tr>
 </table>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Options ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
-<div class=page_subtitle>Options</div>
+<div class=page_subtitle><%=getLocString("common.titles.options")%></div>
 <table class=properties_list cellspacing=0 cellspadding=0>
 <col width=1px>
 <%rowN = 0;%>
 <tr class=row<%=(rowN++)&1%>>
-	<th>hide&nbsp;option:</th>
+	<th><%=getLocString("aliases.hideOption")%>:</th>
 	<td><div class=select><select class=txt name=hide>
-			<option value="<%=AliasFilter.HIDE_NOFILTER%>" <%=AliasFilter.HIDE_NOFILTER == bean.getHideByte() ? "selected" : ""%>>all</option>
-			<option value="<%=AliasFilter.HIDE_SHOW_HIDE%>" <%=AliasFilter.HIDE_SHOW_HIDE == bean.getHideByte() ? "selected" : ""%>>show hided only</option>
-			<option value="<%=AliasFilter.HIDE_SHOW_NOHIDE%>" <%=AliasFilter.HIDE_SHOW_NOHIDE == bean.getHideByte() ? "selected" : ""%>>show not hided only</option>
+			<option value="<%=AliasFilter.HIDE_NOFILTER%>" <%=AliasFilter.HIDE_NOFILTER == bean.getHideByte() ? "selected" : ""%>><%=getLocString("aliases.hideOption.all")%></option>
+			<option value="<%=AliasFilter.HIDE_SHOW_HIDE%>" <%=AliasFilter.HIDE_SHOW_HIDE == bean.getHideByte() ? "selected" : ""%>><%=getLocString("aliases.hideOption.hide")%></option>
+			<option value="<%=AliasFilter.HIDE_SHOW_NOHIDE%>" <%=AliasFilter.HIDE_SHOW_NOHIDE == bean.getHideByte() ? "selected" : ""%>><%=getLocString("aliases.hideOption.noHide")%></option>
 		</select></div></td>
 </tr>
 </table>
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbApply",  "Apply",  "Apply filter");
-page_menu_button(session, out, "mbClear", "Clear", "Clear filter", "clickClear()");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_button(session, out, "mbApply",  "common.buttons.apply",  "common.buttons.applyFilter");
+page_menu_button(session, out, "mbClear", "common.buttons.clear", "common.buttons.clearFilter", "clickClear()");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelFilterEditing", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

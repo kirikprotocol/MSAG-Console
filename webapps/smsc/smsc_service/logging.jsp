@@ -14,7 +14,7 @@
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.smsc_service.Logging"
 /><jsp:setProperty name="bean" property="*"/><%
   FORM_METHOD = "POST";
-	TITLE = "SMSC";
+	TITLE = getLocString("smsc.title");
 	MENU0_SELECTION = "MENU0_SMSC_LOGGING";
 	switch (bean.process(request))
 	{
@@ -36,8 +36,8 @@
 <%@ include file="/WEB-INF/inc/collapsing_tree.jsp"%>
 <%
   page_menu_begin(out);
-  page_menu_button(session, out, "mbSave",  "Save",  "Save user info");
-  page_menu_button(session, out, "mbCancel", "Cancel", "Cancel user editing", "clickCancel()");
+  page_menu_button(session, out, "mbSave",  "common.buttons.save",  "users.saveEditHint");
+  page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "users.cancelEditHint", "clickCancel()");
   page_menu_space(out);
   page_menu_end(out);
 %><div class=content><%!
@@ -59,7 +59,7 @@
 
   private final void printCategory(JspWriter out, Logging.LoggerCategoryInfo category) throws IOException
   {
-    startSection(out, category.getFullName(), category.getName(), category.isRoot(), createSelection(Logging.catParamNamePrefix, category.getFullName(), category.getPriority()));
+    startSectionPre(out, category.getFullName(), category.getName(), category.isRoot(), createSelection(Logging.catParamNamePrefix, category.getFullName(), category.getPriority()));
     {
       { // print childs that has not subchilds
         boolean paramsStarted = false;
@@ -71,7 +71,7 @@
               startParams(out);
               paramsStarted = true;
             }
-            paramSelect(out, child.getName(), Logging.catParamNamePrefix + child.getFullName(), Arrays.asList(PRIORITIES), child.getPriority(), null, "font-size:80%;");
+            paramSelectPre(out, child.getName(), Logging.catParamNamePrefix + child.getFullName(), Arrays.asList(PRIORITIES), child.getPriority(), null, "font-size:80%;");
           }
         }
         if (paramsStarted)
@@ -91,8 +91,8 @@
   printCategory(out, bean.getRootCategory());
 %></div><%
 page_menu_begin(out);
-page_menu_button(session, out, "mbSave",  "Save",  "Save user info");
-page_menu_button(session, out, "mbCancel", "Cancel", "Cancel user editing", "clickCancel()");
+page_menu_button(session, out, "mbSave",  "common.buttons.save",  "users.saveEditHint");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "users.cancelEditHint", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %><%@
