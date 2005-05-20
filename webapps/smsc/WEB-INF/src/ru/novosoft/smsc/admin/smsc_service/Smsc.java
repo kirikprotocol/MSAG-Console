@@ -366,17 +366,21 @@ public class Smsc extends Service
     return localesString.matches(".*\\b" + locale + "\\b.*");
   }
 
-  public synchronized List getRegisteredLocales() throws Config.ParamNotFoundException, Config.WrongParamTypeException
-  {
-    final List result = new SortedList();
-    final Config config = getSmscConfig();
-    String localesString = config.getString("core.locales");
-    final StringTokenizer tokenizer = new StringTokenizer(localesString, ",");
-    while (tokenizer.hasMoreTokens()) {
-      result.add(tokenizer.nextToken().trim());
-    }
-    return result;
-  }
+	public synchronized List getRegisteredLocales() throws Config.ParamNotFoundException, Config.WrongParamTypeException
+	{
+		final List result = new SortedList();
+		final Config config = getSmscConfig();
+		if (config != null)
+		{
+			String localesString = config.getString("core.locales");
+			final StringTokenizer tokenizer = new StringTokenizer(localesString, ",");
+			while (tokenizer.hasMoreTokens())
+			{
+				result.add(tokenizer.nextToken().trim());
+			}
+		}
+		return result;
+	}
 
   public synchronized DistributionListAdmin getDistributionListAdmin()
   {
