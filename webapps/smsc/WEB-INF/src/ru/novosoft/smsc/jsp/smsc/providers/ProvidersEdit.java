@@ -40,7 +40,8 @@ public class ProvidersEdit extends ProvidersEditBean
   {
     if (name == null || name.trim().length() == 0)
       return error(SMSCErrors.error.providers.nameNotDefined);
-    Long idl = Long.getLong(id);
+    //Long idl = Long.getLong(id);
+	Long idl = Long.decode(id);  
     Provider provider = providerManager.getProvider(idl);
     if (provider == null) { // add new provider
       return error(SMSCErrors.error.providers.providerNotFound, name);

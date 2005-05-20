@@ -6,6 +6,7 @@ package ru.novosoft.smsc.jsp.smsc.categories;
 
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
+import ru.novosoft.smsc.util.xml.WebXml;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -57,7 +58,7 @@ public abstract class CategoriesEditBean extends SmscBean
 
   public String getServiceIdFromRole(String roleName)
   {
-    return appContext.getWebXmlConfig().getServiceIdFromRole(roleName);
+    return WebXml.getServiceIdFromRole(roleName);
   }
 
   /**

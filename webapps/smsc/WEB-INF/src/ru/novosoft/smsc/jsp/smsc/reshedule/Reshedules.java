@@ -147,11 +147,11 @@ class Reshedules
     appContext.getStatuses().setSmscChanged(true);
   }
 
-  public String getErrorString(Locale locale, String errorCode)
+  public String getErrorString(String errorCode)
   {
-    String result = appContext.getLocaleString(locale, ERR_CODES_PREFIX + errorCode);
+    String result = appContext.getLocaleString(ERR_CODES_PREFIX + errorCode);
     if (result == null) {
-      result = appContext.getLocaleString(locale, ERR_CODE_UNKNOWN);
+      result = appContext.getLocaleString(ERR_CODE_UNKNOWN);
       if (result == null)
         result = "unknown";
     }
@@ -187,9 +187,9 @@ class Reshedules
     return assignedErrorsSet.contains(errorCode);
   }
 
-  public boolean isAllErrorsAssigned(Locale locale)
+  public boolean isAllErrorsAssigned()
   {
-    return assignedErrorsSet.size() == getAllErrorCodes(locale).size();
+    return assignedErrorsSet.size() == getAllErrorCodes().size();
   }
 
   public String getDefaultReshedule()
@@ -210,8 +210,8 @@ class Reshedules
     config.setString(RESHEDULE_DEFAULT, defaultReshedule);
   }
 
-  public Set getAllErrorCodes(Locale locale)
+  public Set getAllErrorCodes()
   {
-    return appContext.getLocaleStrings(locale, ERR_CODES_PREFIX);
+    return appContext.getLocaleStrings(ERR_CODES_PREFIX);
   }
 }

@@ -160,9 +160,9 @@ public class Index extends PageBean
     this.mbEdit = mbEdit;
   }
 
-  public String getErrorString(Locale locale, String errorCode)
+  public String getErrorString(String errorCode)
   {
-    return reshedules.getErrorString(locale, errorCode);
+    return reshedules.getErrorString(errorCode);
   }
 
   public String getMbReset()
@@ -210,9 +210,9 @@ public class Index extends PageBean
     return checkedShedulesSet.contains(shedule);
   }
 
-  public boolean isAllErrorsAssigned(Locale locale)
+  public boolean isAllErrorsAssigned()
   {
-    return reshedules.isAllErrorsAssigned(locale);
+    return reshedules.isAllErrorsAssigned();
   }
 
   public String getDefaultReshedule()
@@ -225,8 +225,8 @@ public class Index extends PageBean
     return Reshedules.DEFAULT_RESHEDULE_NAME;
   }
 
-  public Set getAllErrorCodes(Locale locale) throws AdminException
+  public Set getAllErrorCodes() throws AdminException
   {
-    return reshedules.getAllErrorCodes(locale);
+    return reshedules.getAllErrorCodes();
   }
 }

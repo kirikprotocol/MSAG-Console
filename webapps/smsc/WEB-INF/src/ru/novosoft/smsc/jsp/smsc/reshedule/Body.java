@@ -88,14 +88,14 @@ public class Body extends PageBean
     this.checkedErrs = checkedErrs;
   }
 
-  public Set getAllErrCodes(Locale locale)
+  public Set getAllErrCodes()
   {
-    return reshedules.getAllErrorCodes(locale);
+    return reshedules.getAllErrorCodes();
   }
 
-  public String getErrorString(Locale locale, String errorCode)
+  public String getErrorString(String errorCode)
   {
-    return reshedules.getErrorString(locale, errorCode);
+    return reshedules.getErrorString(errorCode);
   }
 
   protected boolean isReshedulePresent()

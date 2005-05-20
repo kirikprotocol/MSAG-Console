@@ -40,7 +40,8 @@ public class CategoriesEdit extends CategoriesEditBean
   {
     if (name == null || name.trim().length() == 0)
       return error(SMSCErrors.error.categories.nameNotDefined);
-    Long idl = Long.getLong(id);
+    //Long idl = Long.getLong(id);
+	Long idl = Long.decode(id);  
     Category category = categoryManager.getCategory(idl);
     if (category == null) { // add new category
       return error(SMSCErrors.error.categories.categoryNotFound, name);

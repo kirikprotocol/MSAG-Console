@@ -121,7 +121,7 @@ public class AliasesEdit extends SmscBean
       return error(SMSCErrors.error.aliases.alreadyExistsAddress, al.getAddress().getMask());
 
     try {
-      return smsc.getAliases().modify(oldAl, al, new Action(loginedPrincipal.getName(), sessionId))
+      return smsc.getAliases().modify(oldAl, al, new Action(getLoginedPrincipal().getName(), sessionId))
               ? RESULT_DONE
               : error(SMSCErrors.error.aliases.alreadyExistsAlias, alias);
     } catch (Throwable t) {
