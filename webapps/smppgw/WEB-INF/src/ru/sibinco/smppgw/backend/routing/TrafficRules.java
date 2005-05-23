@@ -32,8 +32,10 @@ public class TrafficRules
   {
     for (StringTokenizer tokenizer = new StringTokenizer(rulesString, ", ", false); tokenizer.hasMoreTokens();) {
       final String token = tokenizer.nextToken();
-      if (token.startsWith("")) {
-      } else if ("allow_receive".equals(token)) {
+     /* if (token.startsWith("")) {
+      }
+      else */
+        if ("allow_receive".equals(token)) {
         this.allowReceive = true;
       } else if ("allow_answer".equals(token)) {
         this.allowAnswer = true;
