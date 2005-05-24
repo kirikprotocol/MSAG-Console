@@ -393,6 +393,24 @@ public:
       return 1;
     }
   }
+
+  VT& InsertEx(const KT& key,const VT& value)
+  {
+    unsigned index;
+    Link *link=FindLinkEx(key,index);
+    if(link)
+    {
+      link->_keyval._value=value;
+    }else
+    {
+      _count++;
+      if(ResizeHash())index=((unsigned int)HF::CalcHash(key)) % _bucketsnum;
+      link=_buckets[index].Add(key);
+      link->_keyval._value=value;
+    }
+    return link->_keyval._value;
+  }
+
   void First(){_iterindex=0;_iterlink=NULL;};
 
   class Iterator{
