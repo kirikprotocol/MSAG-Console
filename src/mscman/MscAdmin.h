@@ -5,6 +5,7 @@
 #include <string>
 
 #include <core/buffers/Array.hpp>
+#include "core/buffers/File.hpp"
 
 #include "MscExceptions.h"
 
@@ -12,6 +13,8 @@ namespace smsc { namespace mscman
 {
     using std::string;
     using smsc::core::buffers::Array;
+    using smsc::core::buffers::File;
+
 
     struct MscInfo
     {
@@ -19,6 +22,7 @@ namespace smsc { namespace mscman
             : manualLock(mLock),
                 automaticLock(aLock), failureCount(fc)
             {
+              offset=-1;
               setMscNum(msc);
             };
         MscInfo(const MscInfo& info)
@@ -34,6 +38,7 @@ namespace smsc { namespace mscman
             manualLock = info.manualLock;
             automaticLock = info.automaticLock;
             failureCount = info.failureCount;
+            offset=info.offset;
             return (*this);
         }
 
@@ -43,10 +48,33 @@ namespace smsc { namespace mscman
           mscNum[sizeof(mscNum)-1]=0;
         }
 
+        void Read(File& f)
+        {
+          offset=f.Pos();
+          f.Read(mscNum,sizeof(mscNum));
+          manualLock=f.ReadByte()==1;
+          automaticLock=f.ReadByte()==1;
+          failureCount=f.ReadNetInt32();
+        }
+
+        void Write(File& f)const
+        {
+          f.Write(mscNum,sizeof(mscNum));
+          f.WriteByte(manualLock?1:0);
+          f.WriteByte(automaticLock?1:0);
+          f.WriteNetInt32(failureCount);
+        }
+
+        static int Size()
+        {
+          return sizeof(MscInfo::mscNum)+1+1+4;
+        }
+
         char    mscNum[22];
         bool    manualLock;
         bool    automaticLock;
-        int     failureCount;
+        uint32_t     failureCount;
+        File::offset_type offset;
     };
 
     class MscAdmin

@@ -1,19 +1,15 @@
-
 #include <core/synchronization/Mutex.hpp>
-#include <core/synchronization/Event.hpp>
+#include <core/synchronization/EventMonitor.hpp>
 #include <core/buffers/Hash.hpp>
 #include <core/buffers/Array.hpp>
 #include <core/threads/Thread.hpp>
 
-#include <db/DataSource.h>
-
 #include "MscManager.h"
 
-namespace smsc { namespace mscman
-{
+namespace smsc {
+namespace mscman {
     using std::string;
 
-    using namespace smsc::db;
     using namespace core::threads;
     using namespace core::buffers;
     using namespace core::synchronization;
@@ -22,64 +18,84 @@ namespace smsc { namespace mscman
     const char* MSCMAN_INSTANCE_EXIST = "MscManager already instantiated";
     const char* MSCMAN_NOT_STARTED    = "MscManager wasn't started";
 
-    typedef enum { INSERT=1, UPDATE=2, DELETE=3, UNKNOWN=4 } MscInfoOp;
-    struct MscInfoChange : public MscInfo
+    typedef enum
     {
+      MSCOP_UNKNOWN,
+      MSCOP_INSERT,
+      MSCOP_DELETE,
+      MSCOP_BLOCK,
+      MSCOP_REPORT,
+      MSCOP_CLEAR
+    } MscInfoOp;
+
+    static const char* opNames[]=
+    {
+      "Unknown",
+      "Insert",
+      "Delete",
+      "Block",
+      "Report",
+      "Clear"
+    };
+
+    struct MscInfoChange
+    {
+
         MscInfoOp   op;
+        char        mscNum[22];
+        int         data;
 
-        MscInfoChange()
-            : MscInfo(""), op(UNKNOWN) {};
-        MscInfoChange(MscInfoOp _op, const MscInfo& info)
-            : MscInfo(info), op(_op) {};
-        MscInfoChange(MscInfoOp _op, const char* msc, bool mLock=false,
-                      bool aLock=false, int fc=0)
-            : MscInfo(msc, mLock, aLock, fc), op(_op) {};
-        MscInfoChange(const MscInfoChange& info)
-            : MscInfo(info), op(info.op) {};
+        MscInfoChange(): op(MSCOP_UNKNOWN)
+        {
+          memset(mscNum,0,sizeof(mscNum));
+        }
 
-        MscInfoChange& operator=(const MscInfoChange& info) {
-            op = info.op;
-            MscInfo::operator=(info);
-            return (*this);
-        };
+        MscInfoChange(MscInfoOp argOp,const char* argMsc,int argData=0)
+            : op(argOp)
+        {
+          if(argMsc)
+          {
+            strncpy(mscNum,argMsc,sizeof(mscNum));
+            mscNum[sizeof(mscNum)-1]=0;
+          }
+        }
+        MscInfoChange(const MscInfoChange& that)
+        {
+          op=that.op;
+          strcpy(mscNum,that.mscNum);
+          data=that.data;
+        }
     };
 
     class MscManagerImpl : public MscManager, public Thread
     {
-    private:
-
-        static const char* selectSql;
-        static const char* insertSql;
-        static const char* updateSql;
-        static const char* deleteSql;
-
     protected:
 
-        Mutex               hashLock;
-        bool                bStarted, bNeedExit;
-        Event               flushEvent, exitedEvent;
-
-        Connection*         connection;
+        EventMonitor mon;
+        bool         isStopping;
 
         Hash<MscInfo*>          mscs;
         Array<MscInfoChange>    changes;
         Mutex                   changesLock;
 
-        void addChange(const MscInfoChange& change, bool signal=true);
-        void processChange(const MscInfoChange& change);
-
         void init(Manager& config)
             throw(ConfigException, InitException);
 
+        void insertToFile(MscInfo& mscinfo);
+        void updateFile(MscInfo& mscinfo);
+        void removeFromFile(MscInfo& mscinfo);
+
     public:
 
-        MscManagerImpl(DataSource& ds, Manager& config)
+        MscManagerImpl(Manager& config)
             throw(ConfigException, InitException);
         virtual ~MscManagerImpl();
 
-        void Start();
         void Stop();
         virtual int Execute();
+
+        void processChange(const MscInfoChange& change);
+
 
         /* MscStatus implementation */
         virtual void report(const char* msc, bool status);
@@ -97,9 +113,9 @@ Mutex MscManager::startupLock;
 MscManager* MscManager::instance = 0;
 smsc::logger::Logger *MscManager::log = 0;
 
-MscManager::MscManager(DataSource& _ds, Manager& config)
+MscManager::MscManager(Manager& config)
     throw(ConfigException)
-        : MscStatus(), MscAdmin(), ds(_ds)
+        : MscStatus(), MscAdmin()
 {
     automaticRegistration = config.getBool("MscManager.automaticRegistration");
     failureLimit = config.getInt("MscManager.failureLimit");
@@ -109,13 +125,13 @@ MscManager::~MscManager()
     // Do nothing ?
 }
 
-void MscManager::startup(DataSource& ds, Manager& config)
+void MscManager::startup(Manager& config)
     throw(ConfigException, InitException)
 {
     MutexGuard guard(startupLock);
-    if (!log) log = Logger::getInstance("smsc.mscman.MscManager");
+    if (!log) log = Logger::getInstance("smsc.msc");
     if (instance) throw InitException(MSCMAN_INSTANCE_EXIST);
-    instance = new MscManagerImpl(ds, config);
+    instance = new MscManagerImpl(config);
     ((MscManagerImpl *)instance)->Start();
 }
 void MscManager::shutdown()
@@ -138,16 +154,16 @@ MscManager& MscManager::getInstance()
 
 
 /* ---------------------- MscManager implementation ---------------------- */
-MscManagerImpl::MscManagerImpl(DataSource& _ds, Manager& config)
+MscManagerImpl::MscManagerImpl(Manager& config)
     throw(ConfigException, InitException)
-        : MscManager(_ds, config), Thread(),
-            bStarted(false), bNeedExit(false)
+        : MscManager(config), Thread(),
+            isStopping(false)
 {
     init(config);
 }
 MscManagerImpl::~MscManagerImpl()
 {
-    MutexGuard  guard(hashLock);
+    MutexGuard  guard(mon);
 
     // Clean msc info hash here.
     mscs.First();
@@ -155,76 +171,35 @@ MscManagerImpl::~MscManagerImpl()
     while (mscs.Next(key, info))
         if (info) delete info;
 
-    if (connection) ds.freeConnection(connection);
-}
-void MscManagerImpl::Start()
-{
-    if (!bStarted)
-    {
-        bNeedExit = false;
-        Thread::Start();
-        bStarted = true;
-    }
 }
 void MscManagerImpl::Stop()
 {
-    if (bStarted)
-    {
-        bNeedExit = true;
-        flushEvent.Signal();
-        exitedEvent.Wait();
-    }
+  MutexGuard mg(mon);
+  isStopping=true;
+  mon.notify();
 }
 int MscManagerImpl::Execute()
 {
-    do
+  MutexGuard mg(mon);
+  while(!isStopping)
+  {
+    while(!isStopping && changes.Count()==0)
     {
-        flushEvent.Wait(); // ??? sleepInterval
-
-        MscInfoChange change;
-        bool process = true;
-        while (process)
-        {
-            {
-                MutexGuard guard(changesLock);
-                if (changes.Count() > 0) {
-                    changes.Shift(change);
-                    process = true;
-                } else process = false;
-            }
-            if (process) processChange(change);
-        }
+      mon.wait(5000);
     }
-    while (!bNeedExit);
-
-    bStarted = false;
-    exitedEvent.Signal();
-    return 0;
+    if(isStopping)break;
+    MscInfoChange change;
+    changes.Pop(change);
+    processChange(change);
+  }
+  return 0;
 }
-
-void MscManagerImpl::addChange(const MscInfoChange& change, bool signal)
-{
-    MutexGuard  guard(changesLock);
-    changes.Push(change);
-    if (signal) flushEvent.Signal();
-}
-
-const char* MscManagerImpl::selectSql =
-"SELECT MSC, M_LOCK, A_LOCK, F_COUNT FROM MSC_LOCK";
-const char* MscManagerImpl::insertSql =
-"INSERT INTO MSC_LOCK (MSC, M_LOCK, A_LOCK, F_COUNT) "
-"VALUES (:MSC, :M_LOCK, :A_LOCK, :F_COUNT)";
-const char* MscManagerImpl::updateSql =
-"UPDATE MSC_LOCK SET M_LOCK=:M_LOCK, A_LOCK=:A_LOCK, F_COUNT=:F_COUNT "
-"WHERE MSC=:MSC";
-const char* MscManagerImpl::deleteSql =
-"DELETE FROM MSC_LOCK WHERE MSC=:MSC";
 
 void MscManagerImpl::init(Manager& config)
     throw(ConfigException, InitException)
 {
     // Loadup extra params from config if needed
-           
+    /*
     connection = ds.getConnection();
     if (!connection)
     {
@@ -270,167 +245,252 @@ void MscManagerImpl::init(Manager& config)
         smsc_log_error(log, exc.what());
         throw InitException(exc.what());
     }
+    */
+  const char sig[]="SMSCMSCM";
+  uint32_t ver=0x00010000;
+  string fileName=config.getString("MscManager.storeFile");
+  if(!File::Exists(fileName.c_str()))
+  {
+    storeFile.RWCreate(fileName.c_str());
+    storeFile.Write(sig,8);
+    storeFile.WriteNetInt32(ver);
+    return;
+  }else
+  {
+    storeFile.RWOpen(fileName.c_str());
+  }
+  char fileSig[9]={0,};
+  uint32_t fileVer;
+  storeFile.Read(fileSig,8);
+  if(strcmp(sig,fileSig))
+  {
+    throw InitException("Invalid msc store file(%s!=%s):%s",sig,fileSig,fileName.c_str());
+  }
+  fileVer=storeFile.ReadNetInt32();
+  if(fileVer!=ver)
+  {
+    throw InitException("Invalid msc store file version:%s",fileName.c_str());
+  }
+  File::offset_type pos=storeFile.Pos();
+  File::offset_type sz=storeFile.Size();
+  MutexGuard  guard(mon);
+  while(pos<sz)
+  {
+    bool used=storeFile.ReadByte()==1;
+    if(used)
+    {
+      MscInfo* info=new MscInfo;
+      info->Read(storeFile);
+      mscs.Insert(info->mscNum, info);
+    }else
+    {
+      holes.push_back(pos);
+      storeFile.SeekCur(MscInfo::Size());
+    }
+    pos+=1+MscInfo::Size();
+    if(sz-pos<1+MscInfo::Size())
+    {
+      holes.push_back(pos);
+      break;
+    }
+  }
 }
 
 void MscManagerImpl::processChange(const MscInfoChange& change)
 {
-    __require__(connection);
-
-    Statement* statement = 0;
-    try
+  MscInfo** infoptr=mscs.GetPtr(change.mscNum);
+  info2(log,"ChangeOp=%s, changeMsc=%s, %s",opNames[change.op],change.mscNum,infoptr?"Exists":"Doesn't exists");
+  try{
+    switch (change.op)
     {
-        if (!connection->isAvailable()) connection->connect();
-
-        switch (change.op)
+      case MSCOP_INSERT:
+      {
+        if(!infoptr)
         {
-        case INSERT:
-            statement = connection->createStatement(insertSql);
-            statement->setString(1, change.mscNum);
-            statement->setString(2, change.manualLock ? "Y":"N");
-            statement->setString(3, change.automaticLock ? "Y":"N");
-            statement->setInt32 (4, change.failureCount);
-            break;
-        case UPDATE:
-            statement = connection->createStatement(updateSql);
-            statement->setString(1, change.manualLock ? "Y":"N");
-            statement->setString(2, change.automaticLock ? "Y":"N");
-            statement->setInt32 (3, change.failureCount);
-            statement->setString(4, change.mscNum);
-            break;
-        case DELETE:
-            statement = connection->createStatement(deleteSql);
-            statement->setString(1, change.mscNum);
-            break;
-        default:
-            throw Exception("Operation %d is unknown", change.op);
+          MscInfo* info = new MscInfo(change.mscNum, false, !automaticRegistration, 0);
+          mscs.Insert(info->mscNum,info);
+          insertToFile(*info);
+        }
+      }break;
+      case MSCOP_CLEAR:
+      {
+        if (infoptr)
+        {
+          MscInfo& info = **infoptr;
+          if (info.manualLock || info.automaticLock)
+          {
+            info.manualLock = false;
+            info.automaticLock = false;
+            info.failureCount = 0;
+            updateFile(info);
+          }
+        }
+      }break;
+      case MSCOP_DELETE:
+      {
+        if(infoptr)
+        {
+          removeFromFile(**infoptr);
+          mscs.Delete(change.mscNum);
+        }
+      }break;
+      case MSCOP_BLOCK:
+      {
+        if (infoptr)
+        {
+          MscInfo& info = **infoptr;
+          if (!info.manualLock)
+          {
+            info.manualLock = true;
+            updateFile(info);
+          }
+        }
+      }break;
+      case MSCOP_REPORT:
+      {
+        bool wasInsert=false;
+        if(!infoptr)
+        {
+          MscInfo* tmp=new MscInfo(change.mscNum);
+          if(!automaticRegistration)tmp->manualLock=true;
+          infoptr=mscs.SetItem(change.mscNum,tmp);
+          wasInsert=true;
         }
 
-        if (statement) {
-            statement->executeUpdate();
-            connection->commit();
-            delete statement;
+        MscInfo& info=**infoptr;
+        if(change.data)
+        {
+          info.automaticLock=false;
+        }else
+        {
+          info.failureCount++;
+          info.automaticLock=info.failureCount>=failureLimit;
         }
-    }
-    catch (Exception& exc)
-    {
-        smsc_log_error(log, "Process change failed. %s", exc.what());
-        if (statement) delete statement;
-        try { if (connection) connection->rollback(); } catch (...) {
-            smsc_log_error(log, "Rollback failed!");
+        if(wasInsert)
+        {
+          insertToFile(info);
+        }else
+        {
+          updateFile(info);
         }
-
+      }break;
     }
+  }
+  catch (Exception& exc)
+  {
+    smsc_log_error(log, "Process change failed. %s", exc.what());
+  }
 }
+
+void MscManagerImpl::insertToFile(MscInfo& mscinfo)
+{
+  File::offset_type offset;
+  if(holes.empty())
+  {
+    offset=storeFile.Size();
+  }else
+  {
+    offset=holes.back();
+    holes.pop_back();
+  }
+  mscinfo.offset=offset;
+  storeFile.Seek(offset-1);
+  storeFile.WriteByte(1);
+  mscinfo.Write(storeFile);
+  storeFile.Flush();
+  info2(log,"Insert into file %s, offset=%llx",mscinfo.mscNum,mscinfo.offset);
+}
+
+void MscManagerImpl::updateFile(MscInfo& mscinfo)
+{
+  info2(log,"Update file %s, offset=%llx",mscinfo.mscNum,mscinfo.offset);
+  storeFile.Seek(mscinfo.offset);
+  mscinfo.Write(storeFile);
+  storeFile.Flush();
+}
+
+void MscManagerImpl::removeFromFile(MscInfo& mscinfo)
+{
+  info2(log,"Delete from file %s, offset=%llx",mscinfo.mscNum,mscinfo.offset);
+  holes.push_back(mscinfo.offset);
+  storeFile.Seek(mscinfo.offset-1);
+  storeFile.WriteByte(0);
+  storeFile.Flush();
+}
+
 
 /* ------------------------ MscStatus implementation ------------------------ */
 
 void MscManagerImpl::report(const char* msc, bool status)
 {
-    if (!msc || !msc[0]) return;
-    MutexGuard  guard(hashLock);
-
-    bool needInsert = false;
-    MscInfo* info = 0;
-    if (mscs.Exists(msc)) info = mscs.Get(msc);
-    if (!info)
-    {
-        info = new MscInfo(msc);
-        if (automaticRegistration == false) info->manualLock = true;
-        mscs.Insert(msc, info);
-        needInsert = true;
-    }
-
-    if (status) info->automaticLock = false;
-    else info->automaticLock = (++(info->failureCount) >= failureLimit);
-
-    MscInfoChange change((needInsert) ? INSERT:UPDATE, *info);
-    addChange(change);
+  if (!msc || !msc[0]) return;
+  MutexGuard  guard(mon);
+  changes.Push(MscInfoChange(MSCOP_REPORT,msc,status?1:0));
 }
+
 bool MscManagerImpl::check(const char* msc)
 {
-    if (!msc || !msc[0]) return false;
-    MutexGuard  guard(hashLock);
+  if (!msc || !msc[0]) return false;
+  MutexGuard  guard(mon);
 
-    if (!mscs.Exists(msc)) return true;
-    MscInfo* info = mscs.Get(msc);
-    return !(info->manualLock || info->automaticLock);
+  MscInfo** infoptr=mscs.GetPtr(msc);
+  if (!infoptr) return true;
+  MscInfo& info = **infoptr;
+  return !(info.manualLock || info.automaticLock);
 }
 
 /* ------------------------ MscAdmin implementation ------------------------ */
 
 void MscManagerImpl::registrate(const char* msc)
 {
-    if (!msc || !msc[0]) return;
-    MutexGuard  guard(hashLock);
-
-    if (!mscs.Exists(msc))
-    {
-        MscInfo* info = new MscInfo(msc, false, !automaticRegistration, 0);
-        mscs.Insert(msc, info);
-        MscInfoChange change(INSERT, *info);
-        addChange(change);
-    }
+  if (!msc || !msc[0]) return;
+  MutexGuard  guard(mon);
+  changes.Push(MscInfoChange(MSCOP_INSERT,msc));
+  mon.notify();
 }
+
 void MscManagerImpl::unregister(const char* msc)
 {
-    if (!msc || !msc[0]) return;
-    MutexGuard  guard(hashLock);
-
-    if (mscs.Exists(msc))
-    {
-        MscInfo* info = mscs.Get(msc);
-        mscs.Delete(msc);
-        MscInfoChange change(DELETE, *info);
-        if (info) delete info;
-        addChange(change);
-    }
+  if (!msc || !msc[0]) return;
+  MutexGuard  guard(mon);
+  changes.Push(MscInfoChange(MSCOP_DELETE,msc));
+  mon.notify();
 }
+
 void MscManagerImpl::block(const char* msc)
 {
-    if (!msc || !msc[0]) return;
-    MutexGuard  guard(hashLock);
-
-    if (mscs.Exists(msc))
-    {
-        MscInfo* info = mscs.Get(msc);
-        if (!info->manualLock)
-        {
-            info->manualLock = true;
-            MscInfoChange change(UPDATE, *info);
-            addChange(change);
-        }
-    }
+  if (!msc || !msc[0]) return;
+  MutexGuard  guard(mon);
+  changes.Push(MscInfoChange(MSCOP_BLOCK,msc));
+  mon.notify();
 }
+
 void MscManagerImpl::clear(const char* msc)
 {
-    if (!msc || !msc[0]) return;
-    MutexGuard  guard(hashLock);
-
-    if (mscs.Exists(msc))
-    {
-        MscInfo* info = mscs.Get(msc);
-        if (info->manualLock || info->automaticLock)
-        {
-            info->manualLock = false;
-            info->automaticLock = false;
-            info->failureCount = 0;
-            MscInfoChange change(UPDATE, *info);
-            addChange(change);
-        }
-    }
+  if (!msc || !msc[0]) return;
+  MutexGuard  guard(mon);
+  changes.Push(MscInfoChange(MSCOP_CLEAR,msc));
+  mon.notify();
 }
+
 Array<MscInfo> MscManagerImpl::list()
 {
-    Array<MscInfo> list;
+  Array<MscInfo> list;
 
-    MutexGuard  guard(hashLock);
+  MutexGuard  guard(mon);
 
-    mscs.First();
-    char* key=0; MscInfo* info = 0;
-    while (mscs.Next(key, info))
-        if (info) list.Push(*info);
+  mscs.First();
+  char* key=0;
+  MscInfo* info = 0;
+  while (mscs.Next(key, info))
+  {
+    if (info)
+    {
+      list.Push(*info);
+    }
+  }
 
-    return list;
+  return list;
 }
 
 

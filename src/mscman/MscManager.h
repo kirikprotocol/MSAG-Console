@@ -1,29 +1,26 @@
-
 #ifndef SMSC_MSCMAN_MSC_MANAGER
 #define SMSC_MSCMAN_MSC_MANAGER
+
+#include <vector>
 
 #include <core/synchronization/Mutex.hpp>
 #include <core/synchronization/Event.hpp>
 
 #include <logger/Logger.h>
 #include <util/config/Manager.h>
-
-#include <db/DataSource.h>
-
 #include "MscExceptions.h"
 #include "MscStatus.h"
 #include "MscAdmin.h"
 
-namespace smsc { namespace mscman 
-{
-    using smsc::db::DataSource;
+namespace smsc {
+namespace mscman {
 
     using smsc::logger::Logger;
     using smsc::util::config::Manager;
     using smsc::util::config::ConfigException;
-    
+
     using namespace core::synchronization;
-    
+
     class MscManager : public MscStatus, public MscAdmin
     {
     protected:
@@ -31,23 +28,24 @@ namespace smsc { namespace mscman
         static Mutex                startupLock;
         static MscManager*          instance;
         static smsc::logger::Logger *log;
-        
-        DataSource&         ds;
+
         bool                automaticRegistration;
         int                 failureLimit;
-        
-        MscManager(DataSource& ds, Manager& config)
+        File storeFile;
+        std::vector<File::offset_type> holes;
+
+        MscManager(Manager& config)
             throw(ConfigException);
-    
+
     public:
-        
+
         virtual ~MscManager();
 
-        static void startup(DataSource& ds, Manager& config)
-            throw(ConfigException, InitException); 
+        static void startup(Manager& config)
+            throw(ConfigException, InitException);
         static void shutdown();
-        
-        static MscManager& getInstance() 
+
+        static MscManager& getInstance()
             throw(InitException);
 
         static MscStatus& getMscStatus() throw(InitException) {
@@ -58,7 +56,7 @@ namespace smsc { namespace mscman
         };
     };
 
-}}
+}//mscman
+}//smsc
 
 #endif //SMSC_MSCMAN_MSC_MANAGER
-
