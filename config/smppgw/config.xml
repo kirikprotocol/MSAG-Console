@@ -12,6 +12,7 @@
   </section>
   <section name="MessageStorage">
       <param name="statisticsDir" type="string">/export/home/andreybig/gwinstall/statistics/</param>
+      <param name="trafficDir" type="string">traffic</param>
  </section>
 	
   <section name="StartupLoader">
