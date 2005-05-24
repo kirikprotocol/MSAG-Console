@@ -1,5 +1,13 @@
 -- ********************* Testing tables for SmsExport without field ARC********************* --
 -- “аблица дл€ SMS экспорта ( в дальнейшем надо добавить поле ARC )
+--если понадобитс€ изменить пол€ таблицы и типа Sms раскоментировать следующие 6 строчек:
+--DROP TABLE OPER_SMS;
+--/
+-- DROP TYPE arraylist;
+--/
+-- DROP TYPE sms;
+--/
+
 CREATE TABLE OPER_SMS
 (
    ID             NUMBER(22)   NOT NULL
@@ -31,7 +39,7 @@ CREATE TABLE OPER_SMS
    DST_SME_ID     VARCHAR2(15) NULL,
    MSG_REF        NUMBER(5)    NULL,
    SEQ_NUM        NUMBER(3)    NOT NULL,
-   ARC            NUMBER(1)    NOT NULL,
+   ARC            NUMBER(2)    NOT NULL,
    BODY_LEN       NUMBER(10)   NOT NULL
    );
  /
@@ -67,12 +75,12 @@ CREATE OR REPLACE TYPE sms AS OBJECT
    DST_SME_ID     VARCHAR2(15) ,
    MSG_REF        NUMBER(5)    ,
    SEQ_NUM        NUMBER(3)    ,
-   ARC            NUMBER(1)    ,
+   ARC            NUMBER(2)    ,
    BODY_LEN       NUMBER(10)
 );
 /
 
-CREATE OR REPLACE TYPE arraylist AS ARRAY(25000) OF sms;
+CREATE OR REPLACE TYPE arraylist AS VARRAY(25000) OF sms;
 /
 
 -- создаЄтс€ из Java с текущим именем таблицы + создать один раз вначале дл€ определени€ процедуры insert_rec();
