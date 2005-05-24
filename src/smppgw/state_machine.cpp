@@ -19,6 +19,9 @@
 #include "smppgw/gwsme.hpp"
 #include "smppgw/billing/bill.hpp"
 #include "smppgw/billing/rules/BillingRules.hpp"
+#include "hourlycounter.h"
+#include "TrafficWriter.h"
+#include "util/Timer.hpp"
 
 
 // строчка по русски, что б сработал autodetect :)
@@ -196,8 +199,10 @@ public:
       return trSmeUssdInvalid;
     }
     if(r.limitType==TrafficRules::limitDenied)return trDeniedByRule;
+
     if(r.limitType!=TrafficRules::limitNoLimit)
     {
+
       if(getRouteCount(sms.getRouteId(),r.limitType)>=r.sendLimit)
       {
         return trDeniedByLimit;
@@ -687,31 +692,28 @@ public:
                        (tmCT.tm_mday)*100+tmCT.tm_hour;
       int counterValue=0;
 
-      smsc::db::Connection* connection=StateMachine::dataSource->getConnection();
-      if(connection)
       {
-        try{
-          using std::auto_ptr;
-          using namespace smsc::db;
-          auto_ptr<Statement> getCntStatement;
-          const char* sql="select sum(accepted) from smppgw_stat_route where routeId=:rtid and period>=:per";
-          getCntStatement=auto_ptr<Statement>(connection->createStatement(sql));
-          getCntStatement->setString(1,rtId);
-          getCntStatement->setInt32(2,period);
-          auto_ptr<ResultSet> rs(getCntStatement->executeQuery());
-          if(rs.get())
-          {
-            if(rs->fetchNext())
-            {
-              counterValue=rs->getInt32(1);
-            }
+          MutexGuard mg(StateMachine::trafficMutex);
+          HourlyCounter* hc = hourlyCounters.GetPtr(rtId);
+          if(hc){
+              switch(limitType)
+              {
+              case TrafficRules::limitPerHour:
+                  counterValue = hc->HourCount();
+                  break;
+              case TrafficRules::limitPerDay:
+                  counterValue = hc->DayCount();
+                  break;
+              case TrafficRules::limitPerWeek:
+                  counterValue = hc->WeekCount();
+                  break;
+              case TrafficRules::limitPerMonth:
+                  counterValue = hc->MonthCount();
+                  break;
+              }
           }
-        }catch(...)
-        {
-          connection->rollback();
-        }
-        StateMachine::dataSource->freeConnection(connection);
       }
+
       countersHash.Insert(rtId,cnt);
       cnt->IncEven(counterValue);
       return counterValue;
@@ -735,6 +737,32 @@ public:
              sms.getDestinationAddress(),
              (int)sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE)
            );
+  }
+  
+  void newTrafficRout(const struct TrafficWriter::routData& rd, bool update){
+	hourlyCounters.Insert(rd.routId, HourlyCounter(rd, update));
+  }
+
+  bool isTrafficRout(const char* routId){
+       return (hourlyCounters.GetPtr(routId) != NULL);
+  }
+
+  void newRoutMsg(const char* routId, int& offset, int& delay, int& value, time_t& dt){
+      HourlyCounter* cnt = hourlyCounters.GetPtr(routId);
+      if(cnt)
+          cnt->update(offset, delay, value, dt);
+  }
+
+  void FirstTrafficRoute(){
+      hourlyCounters.First();
+  }
+
+  int NextTrafficRoute(char*& routeId, TrafficWriter::routData& rd){
+      HourlyCounter hc;
+      if(!hourlyCounters.Next(routeId, hc))
+          return 0;
+      hc.getRoutData(rd);
+      return 1;
   }
 
 protected:
@@ -768,10 +796,12 @@ protected:
   BackMapping backMapping;
 
   Hash<TimeSlotCounter<>*> countersHash;
+  Hash<HourlyCounter> hourlyCounters;
 
 };
 
 static TransactionMonitor tmon;
+static TrafficWriter tw;
 
 using smsc::smppgw::stat::StatInfo;
 
@@ -890,6 +920,8 @@ static RespRegistry replaceRegistry;
 static RespRegistry queryRegistry;
 static RespRegistry cancelRegistry;
 
+Mutex StateMachine::trafficMutex;
+
 StateMachine::StateMachine(EventQueue& q,
                Smsc *app):
                eq(q),
@@ -897,6 +929,37 @@ StateMachine::StateMachine(EventQueue& q,
 
 {
   smsLog = smsc::logger::Logger::getInstance("sms.trace");
+}
+
+void StateMachine::initHourlyCounters(const char* location)
+{
+	smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.traffic");
+	smsc_log_info(log, "Traffic writer starting..." );
+	
+	tw.setLocation(location);
+	
+	TrafficWriter::routData rd;
+	int pos = 0;
+    int i = 0;
+	while((pos = tw.readAt(pos, &rd)) != -1){		
+		tmon.newTrafficRout(rd, true);
+        //if(strcmp(rd.routId, "tosc") == 0)
+        //    dump(rd);
+	}
+
+    // Update traffic file.
+    tmon.FirstTrafficRoute();
+    char *routeId;
+    int offset = 0;
+    while(tmon.NextTrafficRoute(routeId, rd)){
+        int32_t offset_ = 0;
+        memcpy((void*)&offset_, (const void*)rd.offset_, 4);
+        int32_t offset = ntohl(offset_);
+        offset = (int32_t)(offset/2921)*2921;
+        tw.updateRec((int)offset, rd);
+    }
+
+    smsc_log_info(log, "Traffic writer started" );
 }
 
 
@@ -1112,6 +1175,9 @@ void StateMachine::submit(SmscCommand& cmd)
     src_proxy->putCommand(resp);
     return;
   }
+
+  // Update traffic
+  updateTraffic(ri.routeId.c_str());
 
   smsc->updatePerformance(performance::Counters::cntAccepted);
 
@@ -1597,6 +1663,22 @@ void StateMachine::cancelResp(SmscCommand& cmd)
   }
 }
 
+void StateMachine::updateTraffic(const char* routId)
+{
+  MutexGuard mg(trafficMutex);
+  if(tmon.isTrafficRout(routId)){
+      int offset, delay, value;
+      time_t dt;
+      tmon.newRoutMsg(routId, offset, delay, value, dt);
+      tw.updateRec(offset, delay, value, dt);
+  }else{
+      int offset = 0;
+      time_t dt = time(0);
+      struct TrafficWriter::routData rd(routId, dt);
+      rd.offset(offset);
+      tmon.newTrafficRout(rd, false);
+  }
+}
 
 }//system
 }//smsc

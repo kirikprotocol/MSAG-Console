@@ -10,6 +10,7 @@
 #include "core/buffers/Hash.hpp"
 #include <list>
 #include <exception>
+#include "TrafficWriter.h"
 
 namespace smsc{
 namespace smppgw{
@@ -33,6 +34,10 @@ public:
 
   static smsc::db::DataSource* dataSource;
 
+  static void initHourlyCounters(const char* location);
+
+  static Mutex trafficMutex;
+
 protected:
 
   EventQueue& eq;
@@ -54,6 +59,8 @@ protected:
   void cancelResp(SmscCommand& cmd);
 
   void KillExpiredTrans();
+
+  static void updateTraffic(const char* routId);
 
 };
 

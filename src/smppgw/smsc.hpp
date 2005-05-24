@@ -14,8 +14,8 @@
 #include "util/config/alias/aliasconf.h"
 #include "util/config/route/RouteConfig.h"
 #include "smppgw/performance.hpp"
-#include "db/DataSource.h"
-#include "db/DataSourceLoader.h"
+//#include "db/DataSource.h"
+//#include "db/DataSourceLoader.h"
 #include "sme/SmppBase.hpp"
 
 #include "smppgw/stat/StatisticsManager.h"
@@ -380,7 +380,7 @@ protected:
   int smscPort;
 
   smsc::smppgw::performance::PerformanceDataDispatcher perfDataDisp;
-  smsc::db::DataSource *dataSource;
+  //smsc::db::DataSource *dataSource;
 
   SmeProxy* abonentInfoProxy;
 

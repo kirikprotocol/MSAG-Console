@@ -349,7 +349,7 @@ void Smsc::init(const SmscConfigs& cfg)
     const char* OCI_DS_FACTORY_IDENTITY = "OCI";
 
 
-    std::auto_ptr<ConfigView> dsConfig(new smsc::util::config::ConfigView(*cfg.cfgman, "StartupLoader"));
+    /*std::auto_ptr<ConfigView> dsConfig(new smsc::util::config::ConfigView(*cfg.cfgman, "StartupLoader"));
     DataSourceLoader::loadup(dsConfig.get());
 
     dataSource = DataSourceFactory::getDataSource(OCI_DS_FACTORY_IDENTITY);
@@ -357,11 +357,11 @@ void Smsc::init(const SmscConfigs& cfg)
     std::auto_ptr<ConfigView> config(new ConfigView(*cfg.cfgman,"DataSource"));
 
     dataSource->init(config.get());
-    smsc_log_info(log, "Datasource configured" );
+    smsc_log_info(log, "Datasource configured" );*/
   }
 
 
-  StateMachine::dataSource=dataSource;
+  //StateMachine::dataSource=dataSource;
 
   {
     billing::InitBillingInterface(cfg.cfgman->getString("billing.module"));
@@ -385,6 +385,22 @@ void Smsc::init(const SmscConfigs& cfg)
       tp.startTask(m);
     }
     smsc_log_info(log, "Statemachines started" );
+  }
+
+  try{
+    using smsc::util::config::ConfigView;
+    std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.cfgman,"MessageStorage"));
+
+    auto_ptr <char> loc(cv->getString("trafficDir", 0, 0));
+    if(!loc.get())
+        throw Exception("MessageStorage.trafficDir not found");
+
+     StateMachine::initHourlyCounters(loc.get());
+  }catch(exception& e){
+      smsc_log_warn(log, "Smsc.init exception: %s", e.what());
+      __warning__("Traffic writer is not started.");
+  }catch(...){
+      __warning__("Traffic writer is not started.");
   }
 
   {
@@ -640,7 +656,7 @@ void Smsc::shutdown()
 
   tp2.shutdown();
 
-  if(dataSource)delete dataSource;
+  //if(dataSource)delete dataSource;
 }
 
 void Smsc::reloadRoutes(const SmscConfigs& cfg)
