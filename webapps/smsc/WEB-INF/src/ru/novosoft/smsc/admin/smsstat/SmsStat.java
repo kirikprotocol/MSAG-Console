@@ -28,10 +28,10 @@ public class SmsStat
     org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(SmsStat.class);
 
     private final static String DATE_DIR_FORMAT = "yyyy-MM";
-    private final static String DATE_DAY_FORMAT = "yyyy-MM-dd hh:mm";
+    private final static String DATE_DAY_FORMAT = "yyyy-MM-dd HH:mm";
     private final static String DATE_DIR_FILE_FORMAT = DATE_DIR_FORMAT + File.separatorChar + "dd";
     private final static String DATE_FILE_EXTENSION  = ".rts";
-    private final static String DATE_PERIOD_FORMAT = "yyyyMMddhhmm";
+    private final static String DATE_PERIOD_FORMAT = "yyyyMMddHHmm";
 
     private Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("GMT"));
     private Calendar localCaledar = Calendar.getInstance(TimeZone.getDefault());
@@ -311,7 +311,7 @@ public class SmsStat
                             curDate = calendar.getTime();
 
                             if (fromQueryDate != null && curDate.getTime() < fromQueryDate.getTime()) {
-                                logger.debug("Hour: "+hour+" skipped");
+                                //logger.debug("Hour: "+hour+" skipped");
                                 continue;
                             }
 
