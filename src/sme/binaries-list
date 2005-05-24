@@ -3,6 +3,7 @@
 -sme/testsme3 testsme3 -lcore-network -lsms $(SOCKETLIB) -lsme -lcore-threads -lthread
 sme/t t -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lthread -lrt -lutil-recoder-recode_dll $(__LIBRARIES) -lreadline -ltermcap -lnsl
 sme/flooder flooder -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lthread -lrt -lutil-recoder-recode_dll $(__LIBRARIES) -lnsl
+sme/multisme multisme -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lthread -lrt -lutil-recoder-recode_dll $(__LIBRARIES) -lnsl
 #sme/t2 t2 -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
 -sme/pingpong pingpong -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
 -sme/replacetest replacetest  -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
