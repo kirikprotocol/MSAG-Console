@@ -41,9 +41,9 @@ namespace util{
 template <class T=int,T init_v=0,T inc_v=1>
 class TimeSlotCounter{
 public:
-  TimeSlotCounter(int nsec,int msecres=100)
+  TimeSlotCounter(unsigned int nsec,unsigned int msecres=100)
   {
-    slotsCount=nsec*1000/msecres;
+    slotsCount=nsec*1000UL/msecres;
     slotRes=msecres;
     slot=new T[slotsCount];
     lastTime=0;
