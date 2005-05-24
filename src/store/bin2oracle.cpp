@@ -25,7 +25,7 @@ int main(int argc,char* argv[])
   smsc::util::config::Manager::init(findConfigFile("config.xml"));
   StoreManager::startup(smsc::util::config::Manager::getInstance(),0);
   MessageStore *store=StoreManager::getMessageStore();
-  TimeIdIterator* it=store->getReadyForRetry(time(NULL)+30*24*60*60);
+
   smsc::system::SmscConfigs cfgs;
   Smsc smsc;
   cfgs.cfgman=&cfgs.cfgman->getInstance();
@@ -56,29 +56,20 @@ int main(int argc,char* argv[])
 
   smsc.init(cfgs);
 
-  int count=0;
-  if(it)
+
+  LocalFileStore::IdSeqPairList::iterator it;
+  SMS sms,tmp;
+  Scheduler& sc=*smsc.getScheduler();
+  for(it=sc.currentSnap.begin();it!=sc.currentSnap.end();it++)
   {
-    SMSId id;
-    SMS sms;
-    while(it->getNextId(id))
-    {
-      store->retriveSms(id,sms);
-      smsc.getScheduler()->LocalFileStoreSave(id,0,sms,false);
-      count++;
-    }
-    delete it;
-  }else
-  {
-    printf("Failed to create timeid iterator!\n");
+    sc.retriveSms(it->first,sms);
+    tmp=sms;
+    store->createSms(tmp,it->first,CREATE_NEW);
+    store->changeSmsStateToEnroute(it->first,sms.getDestinationDescriptor(),sms.lastResult,sms.nextTime,sms.attempts);
   }
-  smsc.getScheduler()->idSeq=store->getNextId();
-  smsc.getScheduler()->lastIdSeqFlush=Scheduler::MessageIdSequenceExtent;
-  smsc.getScheduler()->getNextId();
 
 
   smsc.shutdown();
-  printf("\n\n%d records imported ok\n",count);
 
 
   return 0;
