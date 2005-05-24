@@ -3198,6 +3198,13 @@ StateType StateMachine::deliveryResp(Tuple& t)
         {
           try{
             __trace__("DELIVERYRESP: change state to undeliverable");
+
+            if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO) && !t.command->get_resp()->get_diverted())
+            {
+              sms.getMessageBody().dropProperty(Tag::SMSC_DIVERTED_TO);
+              store->replaceSms(t.msgId,sms);
+            }
+
             store->changeSmsStateToUndeliverable
             (
               t.msgId,
@@ -3639,6 +3646,12 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
       try{
         __trace__("change state to delivered");
+
+        if(sms.hasStrProperty(Tag::SMSC_DIVERTED_TO) && !t.command->get_resp()->get_diverted())
+        {
+          sms.getMessageBody().dropProperty(Tag::SMSC_DIVERTED_TO);
+          store->replaceSms(t.msgId,sms);
+        }
 
         store->changeSmsStateToDelivered(t.msgId,t.command->get_resp()->getDescriptor());
 
