@@ -307,6 +307,7 @@ struct Address
     type=0;
     plan=0;
   }
+
 };
 
 /**
