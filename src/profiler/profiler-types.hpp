@@ -3,11 +3,14 @@
 
 #include "sms/sms.h"
 #include "smpp/smpp.h"
+#include "core/buffers/File.hpp"
+#include <algorithm>
 
 namespace smsc{
 namespace profiler{
 
 using namespace smsc::sms;
+using smsc::core::buffers::File;
 
 namespace ProfileReportOptions{
   const int ReportNone  =0;
@@ -77,6 +80,8 @@ struct Profile{
   bool udhconcat;
   bool translit;
 
+  File::offset_type offset;
+
   Profile()
   {
     codepage=0;
@@ -94,6 +99,8 @@ struct Profile{
     divertActiveCapacity=false;
     udhconcat=true;
     translit=true;
+
+    offset=-1;
   }
 
   Profile(const Profile& src)
@@ -119,6 +126,7 @@ struct Profile{
 
     udhconcat=src.udhconcat;
     translit=src.translit;
+    offset=src.offset;
     return *this;
   }
 
@@ -143,8 +151,89 @@ struct Profile{
 
   void assign(const Profile& src)
   {
+    File::offset_type saveoff=offset;
     *this=src;
+    offset=saveoff;
   }
+
+  void Write(File& f)const
+  {
+    f.WriteNetInt32(codepage);
+    f.WriteNetInt32(reportoptions);
+    f.WriteNetInt32(hide);
+
+    char buf[32]={0,};
+    memcpy(buf,locale.c_str(),std::min(sizeof(buf),locale.length()));
+    f.Write(buf,sizeof(buf));
+
+    f.WriteByte(hideModifiable);
+
+    memset(buf,0,sizeof(buf));
+    memcpy(buf,divert.c_str(),std::min(sizeof(buf),divert.length()));
+    f.Write(buf,sizeof(buf));
+
+    f.WriteByte(divertActive);
+    f.WriteByte(divertActiveAbsent);
+    f.WriteByte(divertActiveBlocked);
+    f.WriteByte(divertActiveBarred);
+    f.WriteByte(divertActiveCapacity);
+    f.WriteByte(divertModifiable);
+    f.WriteByte(udhconcat);
+    f.WriteByte(translit);
+  }
+  void Read(File& f)
+  {
+    offset=f.Pos();
+    codepage=f.ReadNetInt32();
+    reportoptions=f.ReadNetInt32();
+    hide=f.ReadNetInt32();
+    char buf[32]={0,};
+    f.Read(buf,sizeof(buf));
+    locale=buf;
+
+    hideModifiable=f.ReadByte();
+
+    f.Read(buf,sizeof(buf));
+    divert=buf;
+
+
+    divertActive=f.ReadByte();
+    divertActiveAbsent=f.ReadByte();
+    divertActiveBlocked=f.ReadByte();
+    divertActiveBarred=f.ReadByte();
+    divertActiveCapacity=f.ReadByte();
+    divertModifiable=f.ReadByte();
+    udhconcat=f.ReadByte();
+    translit=f.ReadByte();
+  }
+  static uint32_t Size()
+  {
+    return 4+4+4+32+1+32+1+1+1+1+1+1+1+1;
+  }
+
+  string toString()const
+  {
+    string rv;
+    char buf[64];
+    sprintf(buf,"r=%d;",reportoptions);
+    rv+=buf;
+    sprintf(buf,"dc=%d;",codepage);
+    rv+=buf;
+    sprintf(buf,"l=%s;",locale.c_str());
+    rv+=buf;
+    sprintf(buf,"h=%d;",hide);
+    rv+=buf;
+    sprintf(buf,"hm=%c;",hideModifiable?'Y':'N');
+    rv+=buf;
+    sprintf(buf,"d=%s;",divert.length()==0?"(NULL)":divert.c_str());
+    rv+=buf;
+    sprintf(buf,"da=%c;",divertActive?'Y':'N');
+    rv+=buf;
+    sprintf(buf,"dm=%c;",divertModifiable?'Y':'N');
+    rv+=buf;
+    return rv;
+  }
+
 };
 
 

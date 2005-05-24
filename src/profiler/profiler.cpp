@@ -2,7 +2,6 @@
 #include <memory>
 #include <ctype.h>
 
-
 #include "profiler/profiler.hpp"
 
 #include "core/buffers/Array.hpp"
@@ -22,9 +21,15 @@
 
 #include <exception>
 #include "util/timeslotcounter.hpp"
+#include "util/Exception.hpp"
+#include "core/buffers/TmpBuf.hpp"
+
+#include "sms/sms_util.h"
 
 namespace smsc{
 namespace profiler{
+
+static char profileMagic[]="SmScPrOf";
 
 using namespace smsc::core::buffers;
 using smsc::util::Exception;
@@ -34,6 +39,8 @@ using namespace smsc::util;
 using namespace smsc::system;
 
 using namespace smsc::resourcemanager;
+
+using namespace smsc::sms;
 
 class AccessDeniedException{};
 
@@ -82,28 +89,6 @@ static uint32_t CalcHash(const HashKey& key)
 }
 };
 
-static string DumpProfile(const Profile& profile)
-{
-  string rv;
-  char buf[64];
-  sprintf(buf,"r=%d;",profile.reportoptions);
-  rv+=buf;
-  sprintf(buf,"dc=%d;",profile.codepage);
-  rv+=buf;
-  sprintf(buf,"l=%s;",profile.locale.c_str());
-  rv+=buf;
-  sprintf(buf,"h=%d;",profile.hide);
-  rv+=buf;
-  sprintf(buf,"hm=%c;",profile.hideModifiable?'Y':'N');
-  rv+=buf;
-  sprintf(buf,"d=%s;",profile.divert.length()?"(NULL)":profile.divert.c_str());
-  rv+=buf;
-  sprintf(buf,"da=%c;",profile.divertActive?'Y':'N');
-  rv+=buf;
-  sprintf(buf,"da=%c;",profile.divertModifiable?'Y':'N');
-  rv+=buf;
-  return rv;
-}
 
 class ProfilesTable: public smsc::core::buffers::XHash<HashKey,Profile,HashFunc>
 {
@@ -156,10 +141,10 @@ public:
     }
     return *p;
   }
-  void add(const Address& address,const Profile& profile)
+  Profile& add(const Address& address,const Profile& profile)
   {
     HashKey k(address);
-    Insert(k,profile);
+    return InsertEx(k,profile);
   }
 };
 
@@ -203,7 +188,15 @@ Profile& Profiler::lookupEx(const Address& address,int& matchType,std::string& m
 void Profiler::remove(const Address& address)
 {
   MutexGuard g(mtx);
-  profiles->Delete(address);
+  bool exact;
+  Profile& profRef=profiles->find(address,exact);
+  if(exact)
+  {
+    storeFile.Seek(profRef.offset-AddressSize()-1);
+    storeFile.WriteByte(0);
+    holes.push_back(profRef.offset-AddressSize()-1);
+    profiles->Delete(address);
+  }
 }
 
 
@@ -212,10 +205,11 @@ int Profiler::update(const Address& address,const Profile& profile)
   MutexGuard g(mtx);
   bool exact;
   Profile &prof=profiles->find(address,exact);
-  debug2(log,"update %s:%s->%s",
+  debug2(log,"update %s/%#llx:%s->%s",
      address.toString().c_str(),
-      DumpProfile(prof).c_str(),
-      DumpProfile(profile).c_str(),
+      prof.offset,
+      prof.toString().c_str(),
+      profile.toString().c_str(),
       exact?"exact":"inexact");
   if(prof==profile)return pusUnchanged;
 
@@ -225,19 +219,19 @@ int Profiler::update(const Address& address,const Profile& profile)
   if(exact)
   {
     prof.assign(profile);
-    dbUpdate(address,prof);
-    debug2(log,"update %s",address.toString().c_str());
+    fileUpdate(address,prof);
+    debug2(log,"update %s/%#llx",address.toString().c_str(),prof.offset);
     return pusUpdated;
   }else
   {
-    profiles->add(address,profile);
-    dbInsert(address,profile);
+    Profile& profRef=profiles->add(address,profile);
+    fileInsert(address,profRef);
     debug2(log,"insert %s",address.toString().c_str());
     return pusInserted;
   }
-  }catch(...)
+  }catch(std::exception& e)
   {
-    smsc_log_error(log, "Database exception during profile update/insert");
+    smsc_log_error(log, "exception during profile update/insert:%s",e.what());
     return pusError;
   }
 }
@@ -247,20 +241,20 @@ int Profiler::updatemask(const Address& address,const Profile& profile)
   MutexGuard g(mtx);
   HashKey k(address);
   bool exists=profiles->Exists(k);
-  profiles->add(address,profile);
+  Profile& profRef=profiles->add(address,profile);
   try{
     if(exists)
     {
-      dbUpdate(address,profile);
+      fileUpdate(address,profile);
       return pusUpdated;
     }else
     {
-      dbInsert(address,profile);
+      fileInsert(address,profRef);
       return pusInserted;
     }
-  }catch(...)
+  }catch(std::exception& e)
   {
-    smsc_log_error(log, "Database exception during mask profile update");
+    smsc_log_error(log, "exception during profile update/insert:%s",e.what());
     return pusError;
   }
 }
@@ -295,8 +289,15 @@ public:
   }
 };
 
-void Profiler::dbUpdate(const Address& addr,const Profile& profile)
+void Profiler::fileUpdate(const Address& addr,const Profile& profile)
 {
+  __trace2__("Profiler: Update(%llx) %s=%d,%d,%s,%d,%c,%s,%c,%c",profile.offset,addr.toString().c_str(),profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.hide,profile.hideModifiable?'Y':'N',profile.divert.c_str(),profile.divertActive?'Y':'N',profile.divertModifiable?'Y':'N');
+
+  storeFile.Seek(profile.offset);
+  profile.Write(storeFile);
+  storeFile.Flush();
+
+  /*
   using namespace smsc::db;
   using smsc::util::config::Manager;
   using smsc::util::config::ConfigView;
@@ -332,10 +333,40 @@ void Profiler::dbUpdate(const Address& addr,const Profile& profile)
   statement->setString(11,addrbuf);
   statement->executeUpdate();
   connection->commit();
+  */
 }
 
-void Profiler::dbInsert(const Address& addr,const Profile& profile)
+void Profiler::fileInsert(const Address& addr,Profile& profile)
 {
+  __trace2__("Profiler: Insert %s=%d,%d,%s,%d,%c,%s,%c,%c",addr.toString().c_str(),profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.hide,profile.hideModifiable?'Y':'N',profile.divert.c_str(),profile.divertActive?'Y':'N',profile.divertModifiable?'Y':'N');
+  File::offset_type endOffset=0;
+  if(holes.empty())
+  {
+    storeFile.SeekEnd(0);
+    endOffset=storeFile.Pos();
+  }else
+  {
+    File::offset_type off=holes.back();
+    holes.pop_back();
+    storeFile.Seek(off);
+  }
+  storeFile.WriteByte(1);
+  storeFile.Write(profileMagic,8);
+  WriteAddress(storeFile,addr);
+  profile.offset=storeFile.Pos();
+  profile.Write(storeFile);
+  try{
+    storeFile.Flush();
+  }catch(...)
+  {
+     if(endOffset!=0)
+     {
+       holes.push_back(endOffset);
+     }
+     throw;
+  }
+
+  /*
   using namespace smsc::db;
   using smsc::util::config::Manager;
   using smsc::util::config::ConfigView;
@@ -373,6 +404,7 @@ void Profiler::dbInsert(const Address& addr,const Profile& profile)
   statement->setString(11,profile.translit?"Y":"N");
   statement->executeUpdate();
   connection->commit();
+  */
 }
 
 static const int _update_report=1;
@@ -1182,8 +1214,79 @@ static int RsAsHide(smsc::db::ResultSet* rs,int idx)
   return toupper(*r)=='Y'?HideOption::hoEnabled:toupper(*r)=='S'?HideOption::hoSubstitute:HideOption::hoDisabled;
 }
 
-void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
+
+
+void Profiler::load(const char* filename)
 {
+  hrtime_t st=gethrtime();
+
+  const char sig[]="SMSCPROF";
+  const uint32_t ver=0x00010000;
+
+  if(!File::Exists(filename))
+  {
+    __warning2__("Profiler store file not found:%s",filename);
+    storeFile.RWCreate(filename);
+    storeFile.Write(sig,8);
+    storeFile.WriteNetInt32(ver);
+    storeFile.Flush();
+    return;
+  }
+  storeFile.RWOpen(filename);
+
+  char fileSig[9]={0,};
+  storeFile.Read(fileSig,8);
+  if(strcmp(fileSig,sig))
+  {
+    __warning2__("Invalid or corrupted store file:%s",filename);
+    throw Exception("Invalid or corrupted store file:%s",filename);
+  }
+
+  uint32_t fileVer;
+  fileVer=storeFile.ReadNetInt32();
+
+  if(ver!=fileVer)
+  {
+    __warning2__("Incompatible version of profiler store file(%x!=%x):%s",fileVer,ver,filename);
+    throw Exception("Incompatible version of profiler store file(%x!=%x):%s",fileVer,ver,filename);
+  }
+
+  File::offset_type sz=storeFile.Size();
+  File::offset_type pos=storeFile.Pos();
+  Profile p;
+  Address addr;
+  __trace2__("pos=%lld, sz=%lld",pos,sz);
+
+  char magic[9]={0,};
+
+  while(pos<sz)
+  {
+    bool used=storeFile.ReadByte();
+    if(used)
+    {
+      storeFile.Read(magic,8);
+      if(memcmp(profileMagic,magic,8))
+      {
+        __warning2__("Broken profiles storage file at offset %lld",pos);
+        break;
+      }
+      ReadAddress(storeFile,addr);
+      p.Read(storeFile);
+      profiles->add(addr,p);
+    }else
+    {
+      holes.push_back(pos);
+      storeFile.SeekCur(8+AddressSize()+Profile::Size());
+    }
+    pos+=1+8+AddressSize()+Profile::Size();
+    if(sz-pos<1+8+AddressSize()+Profile::Size())
+    {
+      holes.push_back(pos);
+      break;
+    }
+  }
+
+  /*
   ds=datasrc;
   using namespace smsc::db;
   using smsc::util::config::Manager;
@@ -1203,7 +1306,6 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
   if(!rs.get())throw Exception("Profiler: Failed to make a query to DB");
   const char* dta;
 
-  hrtime_t st=gethrtime();
 
   while(rs->fetchNext())
   {
@@ -1248,23 +1350,15 @@ void Profiler::loadFromDB(smsc::db::DataSource *datasrc)
 
     profiles->add(addr,p);
   }
-
-
-  /*
-  for(int i=0;i<500000;i++)
-  {
-    char buf[32];
-    sprintf(buf,".1.1.913%07d",i);
-    Address addr(buf);
-    Profile p;
-    profiles->add(addr,p);
-  }
   */
+
+
   st=gethrtime()-st;
   smsc_log_info(log,"load time=%lld",st/1000000l);
   int mc,bu,bn;
   profiles->GetStats(mc,bu,bn);
   smsc_log_info(log,"hash stats max=%d,bucks used=%d,count=%d,bucks num=%d",mc,bu,profiles->Count(),bn);
+
 }
 
 }//profiler

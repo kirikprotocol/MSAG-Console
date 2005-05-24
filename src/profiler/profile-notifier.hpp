@@ -131,11 +131,17 @@ public:
         if(socketOk)
         {
           debug2(log,"PN: writing to socket:%s",str.c_str());
-          if(s.WriteAll(str.c_str(),str.length())==-1)
+          mon.Unlock();
+          try{
+            if(s.WriteAll(str.c_str(),str.length())==-1)
+            {
+              debug1(log,"PN: write to socket failed");
+              socketOk=false;
+            }
+          }catch(...)
           {
-            debug1(log,"PN: write to socket failed");
-            socketOk=false;
           }
+          mon.Lock();
         }
         if(!socketOk)
         {

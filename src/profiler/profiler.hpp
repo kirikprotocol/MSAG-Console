@@ -139,7 +139,7 @@ public:
     return seq++;
   }
 
-  void loadFromDB(smsc::db::DataSource *datasrc);
+  void load(const char* filename);
 
   string serviceType;
   int protocolId;
@@ -166,6 +166,8 @@ protected:
   ProfilesTable *profiles;
   SmeRegistrar *smeman;
   Mutex mtx;
+  File storeFile;
+  std::vector<File::offset_type> holes;
 
   smsc::logger::Logger *log;
 
@@ -177,8 +179,8 @@ protected:
   smsc::db::DataSource *ds;
   ProfileNotifierInterface* notifier;
 
-  void dbUpdate(const Address& addr,const Profile& profile);
-  void dbInsert(const Address& addr,const Profile& profile);
+  void fileUpdate(const Address& addr,const Profile& profile);
+  void fileInsert(const Address& addr,Profile& profile);
 
   void internal_update(int flag,const Address& addr,int value,const char* svalue=NULL);
 
