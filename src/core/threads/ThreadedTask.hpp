@@ -11,10 +11,13 @@ using namespace smsc::core::buffers;
 
 class ThreadedTask{
 public:
-  ThreadedTask():heap(NULL),isStopping(false){}
+  ThreadedTask():/*heap(NULL),*/isStopping(false){}
   virtual ~ThreadedTask(){}
   virtual int Execute()=0;
   virtual const char* taskName()=0;
+
+  /*
+
   virtual void getMemoryInfo(int& rawheapsize,int& blocksheapquantum);
   void assignHeap(MemoryHeap* newheap)
   {
@@ -61,11 +64,12 @@ public:
   {
     heap->freeMem(ptr);
   }
+  */
 
   virtual void stop(){isStopping=true;}
 
 protected:
-  smsc::core::buffers::MemoryHeap *heap;
+  //smsc::core::buffers::MemoryHeap *heap;
   volatile bool isStopping;
 };//ThreadedTask
 

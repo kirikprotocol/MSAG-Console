@@ -9,11 +9,13 @@ namespace threads{
 
 using namespace std;
 
+/*
 void ThreadedTask::getMemoryInfo(int& rawheapsize,int& blocksheapquantum)
 {
   rawheapsize=0;//MM_DEFAULT_RAWHEAP_SIZE;
   blocksheapquantum=0;//MM_BLOCKS_HEAP_QUANTUM;
 };
+*/
 
 
 int PooledThread::Execute()
@@ -38,6 +40,7 @@ int PooledThread::Execute()
     taskEvent.Wait();
     trace2("Thread %p got a task",this);
     if(task==NULL)return 0;
+    /*
     task->getMemoryInfo(rawheapsize,blocksheapquantum);
     if(rawheapsize!=0 || blocksheapquantum!=0)
     {
@@ -49,6 +52,7 @@ int PooledThread::Execute()
         )
       );
     }
+    */
     try{
       task->Execute();
     }
@@ -61,7 +65,7 @@ int PooledThread::Execute()
       trace2("Unknown exception in task:%s",task->taskName());
     }
     trace2("Execution of task %s finished",task->taskName());
-    task->releaseHeap();
+    //task->releaseHeap();
     delete task;
     task=NULL;
     owner->releaseThread(this);
