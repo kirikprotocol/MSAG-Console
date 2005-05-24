@@ -644,10 +644,10 @@ int SmppInputThread::Execute()
               }break;
               case SmppCommandSet::UNBIND:
               {
-                info2(log,"Received UNBIND(%s):%p",ss->getProxy()->getSystemId(),ss->getProxy());
                 try{
                   if(ss->getProxy() && ss->getProxy()->isOpened())
                   {
+                    info2(log,"Received UNBIND(%s):%p",ss->getProxy()->getSystemId(),ss->getProxy());
                     __trace2__("UNBINDRESP sent for %p",ss->getProxy());
                     ss->getProxy()->putCommand
                     (
