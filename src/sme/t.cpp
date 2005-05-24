@@ -904,6 +904,10 @@ public:
         }
         printf("\n");
       }
+      if(s.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
+      {
+        printf("Ussd op:%d\n",s.getIntProperty(Tag::SMPP_USSD_SERVICE_OP));
+      }
       if(s.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::BINARY)
       {
         printf("Esm class: %02X\n",s.getIntProperty(Tag::SMPP_ESM_CLASS));
