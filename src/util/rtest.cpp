@@ -71,9 +71,10 @@ void split(const string& str,char delim,vector<string>& out)
 
 int main(int argc,char* argv[])
 {
-  if(argc!=2)return 0;
+  if(argc!=4)return 0;
 
   smsc::logger::Logger::Init();
+  smsc::logger::Logger* log=smsc::logger::Logger::getInstance("debug");
 
   RouteManager rm;
   smsc::smeman::SmeManager smeman;
@@ -133,7 +134,7 @@ int main(int argc,char* argv[])
           smeman.addSme(si);
         }catch(...)
         {
-          //smsc_log_warn(log, "UNABLE TO REGISTER SME:%s",si.systemId.c_str());
+          smsc_log_warn(log, "UNABLE TO REGISTER SME:%s",si.systemId.c_str());
         }
       }
     }
@@ -145,7 +146,15 @@ int main(int argc,char* argv[])
 
 
   rc.load("routes.xml");
-  smsc::system::loadRoutes(&rm,rc);
+  smsc::system::loadRoutes(&rm,rc,true);
+  vector<string> trc;
+  rm.getTrace(trc);
+  for(vector<string>::iterator it=trc.begin();it!=trc.end();it++)
+  {
+    printf("trace:%s\n",it->c_str());
+  }
+
+  /*
 
   int mapidx=smeman.lookup("MAP_PROXY");
 
@@ -200,5 +209,29 @@ int main(int argc,char* argv[])
     }
   }
   //printf("finished\n");
+  */
+  try{
+    Address src(argv[1]),dst(argv[2]);
+    int smeIdx=smeman.lookup(argv[3]);
+    if(smeIdx==INVALID_SME_INDEX)
+    {
+      throw std::runtime_error("Invalid source sme id");
+    }
+    int idx;
+    RouteInfo ri;
+    smsc::smeman::SmeProxy* prx;
+    if(rm.lookup(smeIdx,src,dst,prx,&idx,&ri))
+    {
+      printf("Found:%s\n",ri.routeId.c_str());
+    }else
+    {
+      printf("Not found\n");
+    }
+  }catch(std::exception& e)
+  {
+    fprintf(stderr,"exception: %s\n",e.what());
+  }
+
+
   return 0;
 }
