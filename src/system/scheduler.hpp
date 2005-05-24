@@ -547,7 +547,8 @@ public:
             uint8_t deliveryReport, time_t validTime = 0, time_t nextTime = 0)
                 throw(StorageException, NoSuchMessageException)
         {
-
+          __warning__("replaceSms unimplemented");
+          abort();
         }
         virtual void replaceSms(SMSId id, SMS& sms)
                 throw(StorageException, NoSuchMessageException);
@@ -593,26 +594,36 @@ public:
         virtual void destroySms(SMSId id)
                 throw(StorageException, NoSuchMessageException)
         {
+          __warning__("destroySms unimplemented");
+          abort();
         }
         virtual smsc::store::IdIterator* getReadyForDelivery(const Address& da)
                 throw(StorageException)
         {
+          __warning__("getReadyForDelivery unimplemented");
+          abort();
           return 0;
         }
         virtual smsc::store::IdIterator* getReadyForCancel(const Address& oa,
             const Address& da, const char* svcType = 0)
                 throw(StorageException)
         {
+          __warning__("getReadyForCancel unimplemented");
+          abort();
           return 0;
         }
         virtual smsc::store::TimeIdIterator* getReadyForRetry(time_t retryTime, bool immediate=false)
                 throw(StorageException)
         {
+          __warning__("getReadyForRetry unimplemented");
+          abort();
           return 0;
         }
         virtual time_t getNextRetryTime()
                 throw(StorageException)
         {
+          __warning__("getNextRetryTime unimplemented");
+          abort();
           return 0;
         }
 

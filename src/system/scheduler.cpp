@@ -459,7 +459,9 @@ int Scheduler::Execute()
       mon.wait(1000);
     }
   }
-  warn1(log,"Scheduler exited\n");
+  warn1(log,"Scheduler exited");
+  billingStorage.roll();
+  archiveStorage.roll();
   billingStorage.close();
   archiveStorage.close();
   return 0;
