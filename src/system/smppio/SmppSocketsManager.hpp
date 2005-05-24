@@ -7,6 +7,8 @@
 #include "smeman/smeman.h"
 #include "core/synchronization/Mutex.hpp"
 #include "logger/Logger.h"
+#include "core/buffers/Hash.hpp"
+#include <map>
 
 #define SM_SOCK_PER_THREAD 16
 
@@ -24,6 +26,7 @@ public:
     tp(newtp),smeManager(manager)
   {
     log=smsc::logger::Logger::getInstance("smpp.sock");
+
   }
   void registerSocket(Socket* sock);
   int removeSocket(Socket* sock);
@@ -39,6 +42,16 @@ public:
   {
     inactivityTimeOut=to;
   }
+  void setDefaultConnectionsLimit(int lim)
+  {
+    defaultConnectLimit=lim;
+  }
+  void setLimitForIp(const char* ip,int lim)
+  {
+    MutexGuard mg(mtxRemove);
+    connectLim.Insert(ip,lim);
+    info2(log,"Set limit for %s to %d",ip,lim);
+  }
 protected:
   Array<SmppIOTask*> intasks,outtasks;
   ThreadPool *tp;
@@ -48,6 +61,12 @@ protected:
   smsc::smeman::SmeManager* smeManager;
   Mutex mtxAdd,mtxRemove;
   smsc::logger::Logger* log;
+
+  int defaultConnectLimit;
+  typedef std::map<Socket*,std::string> Ptr2AddrMap;
+  Ptr2AddrMap ptr2addr;
+  smsc::core::buffers::Hash<int> connectCnt;
+  smsc::core::buffers::Hash<int> connectLim;
 };//SocketsManager
 
 }//smppio
