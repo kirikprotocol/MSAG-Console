@@ -53,8 +53,9 @@ protected:
   SmeProxyState state;
   ProxyMonitor *managerMonitor;
   int seq;
+  SmeRegistrar* smereg;
 public:
-  DistrListProcess(DistrListAdmin* admin);
+  DistrListProcess(DistrListAdmin* admin,SmeRegistrar* sm);
   virtual ~DistrListProcess();
   virtual void close();
   /// кидает exception если был достигнут лимит

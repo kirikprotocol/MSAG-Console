@@ -10,6 +10,8 @@
 
 #define __FUNCTION__ __func__
 
+#define DLSMSADMIN
+
 namespace smsc{
 namespace distrlist{
 
@@ -23,13 +25,17 @@ static uint32_t GetNextDialogId()
 
 struct BIG_MULTI{};
 
-DistrListProcess::DistrListProcess(DistrListAdmin* admin) :
+DistrListProcess::DistrListProcess(DistrListAdmin* admin,SmeRegistrar* reg) :
   admin(admin),
   managerMonitor(0),
-  seq(1)
+  seq(1),
+  smereg(reg)
 {}
 
-DistrListProcess::~DistrListProcess() {}
+DistrListProcess::~DistrListProcess()
+{
+  smereg->unregisterSmeProxy("DSTRLST");
+}
 void DistrListProcess::close()  {}
 
 /// кидает exception если был достигнут лимит
@@ -188,7 +194,7 @@ int DistrListProcess::Execute()
         {
           try{
             tmpl="dl.adderr";
-            admin->addDistrList(fullarg,sms.getOriginatingAddress());
+            admin->addDistrList(fullarg,false,sms.getOriginatingAddress(),0);
             tmpl="dl.addok";
           }catch(ListAlreadyExistsException& e)
           {
@@ -308,9 +314,11 @@ int DistrListProcess::Execute()
               if(sms.getIntProperty(Tag::SMPP_DATA_CODING)==DataCoding::UCS2)
               {
                 newsms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,msg+argend*2,len-argend*2);
+                newsms.setIntProperty(Tag::SMPP_SM_LENGTH,len-argend*2);
               }else
               {
                 newsms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,msg+argend,len-argend);
+                newsms.setIntProperty(Tag::SMPP_SM_LENGTH,len-argend);
               }
             }
             for(int i=0;i<m.Count();i++)
@@ -327,6 +335,13 @@ int DistrListProcess::Execute()
             reason="access denied";
           }
         }
+#ifdef DLSMSADMIN
+        else if(cmd=="addprincipal")
+        {
+          Principal p(fullarg.c_str(),10,10);
+          admin->addPrincipal(p);
+        }
+#endif //DLSMSADMIN
       }catch(SQLException& e)
       {
         reason="database error";
