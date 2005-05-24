@@ -45,6 +45,7 @@ public class SqlSms implements SQLData
   public short concatMsgRef;
   public short concatSeqNum;
   public int bodyLen;
+  public byte arc=-1;
 
    public SqlSms()
   {
@@ -133,6 +134,7 @@ public class SqlSms implements SQLData
    concatMsgRef = stream.readShort();
    concatSeqNum = stream.readShort();
    bodyLen = stream.readInt();
+   arc=stream.readByte();
  }
 
  public void writeSQL(SQLOutput stream)
@@ -167,6 +169,16 @@ public class SqlSms implements SQLData
    stream.writeShort(concatMsgRef);
    stream.writeShort(concatSeqNum);
    stream.writeInt(bodyLen);
+   stream.writeByte(arc);
  }
 
+  public byte getArc()
+  {
+    return arc;
+  }
+
+  public void setArc(byte arc)
+  {
+    this.arc = arc;
+  }
 }

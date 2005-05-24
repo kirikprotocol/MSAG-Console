@@ -19,8 +19,6 @@ public class RsFileMessage  extends Message
 {
   private SmsRow sms = null;
   private SmsId smsId =null;
-  private boolean BodyRecived=false;
-  private boolean allReaded=false;
   public RsFileMessage()
   {
     super(Message.SMSC_BYTE_RSSMS_TYPE);
@@ -127,6 +125,7 @@ public class RsFileMessage  extends Message
     }
     return offset;
   }
+ /*
     public void skipSms(BufferedInputStream bis ) throws IOException
    {
      int msgSize1 = (int)readUInt32(bis);
@@ -210,8 +209,8 @@ public class RsFileMessage  extends Message
      int msgSize2 = (int) Message.readUInt32(bis);
 
     }
-
-  public boolean receive(InputStream is, SmsQuery query, byte message[], long msgId, boolean justCheck) throws IOException
+  */
+  public boolean receive(InputStream is, SmsQuery query, byte message[], long msgId, boolean justCheck , boolean haveArc) throws IOException
   {
     if( query.isFilterSmsId && msgId != query.smsIdValue ) return false;
 
@@ -295,6 +294,9 @@ public class RsFileMessage  extends Message
     sms.setDstSmeId(dstSmeId);
     int concatMsgRef=Message.readUInt16(is);
     short concatSeqNum=(short)Message.readUInt8(is);
+    if (haveArc) {
+      sms.setArc((byte)Message.readUInt8(is));
+    }
     int bodyLen = (int) Message.readUInt32(is);
     if (bodyLen > 0) {
       byte body[] = new byte[bodyLen];
@@ -302,7 +304,7 @@ public class RsFileMessage  extends Message
       int cnt = 0;
       while (pos < bodyLen) {
         cnt = is.read(body, pos, bodyLen - pos);
-        if (cnt == -1) { BodyRecived=true;throw new EOFException();
+        if (cnt == -1) { throw new EOFException();
         };
         pos += cnt;
       }
@@ -311,18 +313,4 @@ public class RsFileMessage  extends Message
     return true;
   }
 
-  public boolean isBodyRecived()
-  {
-    return BodyRecived;
-  }
-
-  public boolean isAllReaded()
-  {
-    return allReaded;
-  }
-
-  public void setAllReaded(boolean allReaded)
-  {
-    this.allReaded = allReaded;
-  }
 }

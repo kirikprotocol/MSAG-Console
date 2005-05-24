@@ -48,14 +48,14 @@ public class SmsExport extends SmsSource //implements ORAData
           " (id,st,submit_time,valid_time,attempts,last_result, "+
 	"	last_try_time,next_try_time,oa,da,dda,mr,svc_type,dr,br,src_msc,     "+
 	"	src_imsi,src_sme_n,dst_msc,dst_imsi,dst_sme_n,route_id,svc_id,prty,  "+
-  "              src_sme_id,dst_sme_id,msg_ref,seq_num,body_len) ";
+  "              src_sme_id,dst_sme_id,msg_ref,seq_num,arc,body_len) ";
 private final static String INSERT_VALUES =
         "	values (msg.id,msg.st,msg.submit_time,msg.valid_time,msg.attempts, " +
 "		msg.last_result,msg.last_try_time,msg.next_try_time,msg.oa,msg.da,  "+
 "		msg.dda,msg.mr,msg.svc_type,msg.dr,msg.br,msg.src_msc,   "+
 "		msg.src_imsi,msg.src_sme_n,msg.dst_msc,msg.dst_imsi,msg.dst_sme_n, "+
 "		msg.route_id,msg.svc_id,msg.prty,msg.src_sme_id,msg.dst_sme_id, "+
-               " msg.msg_ref,msg.seq_num,msg.body_len); "+
+               " msg.msg_ref,msg.seq_num,msg.arc,msg.body_len); "+
 "end; ";
 
   Category logger = Category.getInstance(SmsExport.class);
@@ -259,12 +259,14 @@ private final static String INSERT_VALUES =
     PreparedStatement clearStmt = null;
     PreparedStatement createprocStmt = null;
     OracleCallableStatement callinsertStmt = null;
+    boolean haveArc=false;
     try {
       input = new FileInputStream(smsstorePath);
      System.out.println("start reading File in: " + new Date());
      tm = System.currentTimeMillis();
       String FileName = Message.readString(input, 9);
       int version = (int) Message.readUInt32(input);
+      if (version > 0x010000 ) haveArc=true;
       try {
         SmsFileImport resp = new SmsFileImport();
         byte message[] = new byte[256 * 1024];   int j=0;
@@ -277,7 +279,7 @@ private final static String INSERT_VALUES =
           long msgId = Message.readInt64(bis);
           Long lmsgId = new Long(msgId);
 
-          if (resp.receive(bis, msgId)) {
+          if (resp.receive(bis, msgId,haveArc)) {
             j++;
             SqlSms sms = resp.getSqlSms();
             if (sms.getStatusInt() == SmsRow.MSG_STATE_ENROUTE) {

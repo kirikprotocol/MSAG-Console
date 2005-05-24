@@ -83,7 +83,7 @@ public class SmsOperativeSource extends SmsSource
     set.setHasMore(true);
     int rowsMaximum = query.getRowsMaximum();
     if (rowsMaximum == 0) return set;
-
+    boolean haveArc=false;
     int smsCount = 0;
     HashMap msgs = new HashMap(5000);
     System.out.println("start reading File in: " + new Date());
@@ -92,8 +92,8 @@ public class SmsOperativeSource extends SmsSource
       input = new FileInputStream(smsstorePath);
 
       String FileName = Message.readString(input, 9);
-      int version = (int) Message.readUInt32(input);
-
+      long version = Message.readUInt32(input);
+      if ( version> 0x010000 ) haveArc=true;
 //      HashSet msgIds = new HashSet(5000);
       try {
         RsFileMessage resp = new RsFileMessage();
@@ -106,7 +106,7 @@ public class SmsOperativeSource extends SmsSource
           InputStream bis = new ByteArrayInputStream(message, 0, msgSize1);
           long msgId=Message.readInt64(bis);
           Long lmsgId = new Long(msgId);
-          if( resp.receive(bis, query, message, msgId, false) ) {
+          if( resp.receive(bis, query, message, msgId, false,haveArc) ) {
             if( resp.getSms().getStatusInt() == SmsRow.MSG_STATE_ENROUTE ) {
               msgs.put(lmsgId, resp.getSms());
             } else {
@@ -115,6 +115,7 @@ public class SmsOperativeSource extends SmsSource
           }
         }
       } catch (EOFException e) {
+        e.printStackTrace();
       }
       if( query.isFilterLastResult || query.isFilterStatus ) {
         Map.Entry entry = null;
@@ -133,6 +134,7 @@ public class SmsOperativeSource extends SmsSource
         }
       }
     } catch (Exception e) {
+      e.printStackTrace();
       logger.error("Unexpected exception occured reading operative store file", e);
     } finally {
       if( input != null )

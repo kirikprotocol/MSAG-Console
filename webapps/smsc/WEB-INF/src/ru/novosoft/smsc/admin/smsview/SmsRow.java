@@ -60,6 +60,7 @@ public class SmsRow
   private int status = 0;
   private String text = "";
   private boolean textEncoded = false;
+  private byte arc;
 
   private boolean marked = false;
 
@@ -478,5 +479,15 @@ public class SmsRow
   public void setBodyLen(int bodyLen)
   {
     this.bodyLen = bodyLen;
+  }
+
+  public byte getArc()
+  {
+    return arc;
+  }
+
+  public void setArc(byte arc)
+  {
+    this.arc = arc;
   }
 }

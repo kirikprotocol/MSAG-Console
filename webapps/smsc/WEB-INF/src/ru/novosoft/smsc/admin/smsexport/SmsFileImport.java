@@ -141,7 +141,7 @@ public class SmsFileImport  extends Message
      int msgSize2 = (int) Message.readUInt32(bis);
    }
    */
-  public boolean receive(InputStream is,long msgId) throws IOException
+  public boolean receive(InputStream is,long msgId,boolean haveArc) throws IOException
     {
       int seq=(int)Message.readUInt32(is);
       String finall=Message.readString(is,1);
@@ -214,6 +214,10 @@ public class SmsFileImport  extends Message
      // sms.setConcatMsgRef(concatMsgRef);
       short concatSeqNum=(short)Message.readUInt8(is);
     //  sms.setConcatSeqNum(concatSeqNum);
+      byte arc=-1;
+      if (haveArc)  {
+        arc=((byte)Message.readUInt8(is));
+      }
       int bodyLen = (int) Message.readUInt32(is);
     //  sms.setBodyLen(bodyLen);
       sqlsms = new SqlSms("SMS",msgId,smsStatus,submitTime,new Date(validTime*1000),attempts,
@@ -222,6 +226,7 @@ public class SmsFileImport  extends Message
                 billr,odMsc,odImsi,odSme,ddMsc,
                 ddImsi,ddSme,routeId,serviceId,priority,
                srcSmeId,dstSmeId,concatMsgRef,concatSeqNum,bodyLen);
+      sqlsms.setArc(arc);
       if (bodyLen > 0) {
        // byte body[] = new byte[bodyLen];
         int pos = 0;
@@ -236,19 +241,5 @@ public class SmsFileImport  extends Message
       }
       return true;
     }
- /*
-  public boolean isBodyRecived()
-  {
-    return BodyRecived;
-  }
 
-  public boolean isAllReaded()
-  {
-    return allReaded;
-  }
-
-  public void setAllReaded(boolean allReaded)
-  {
-    this.allReaded = allReaded;
-  } */
 }
