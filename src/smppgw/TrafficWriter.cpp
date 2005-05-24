@@ -102,8 +102,13 @@ void TrafficWriter::newRec(const char* routId, int& offset, time_t dt)
             int err = ferror(cfPtr);
             throw Exception("Can't get current position of traffic file. Details: %s", strerror(err));
         }
-		long long tmp = pos.__pos;
-		offset = tmp;
+
+        #ifdef linux
+            long long tmp = pos.__pos;
+        #else
+            long long tmp = pos;
+        #endif
+        offset = tmp;
 		
 		offset += (MAX_ROUTE_ID_TYPE_LENGTH + 9);
 		rd.offset(offset);

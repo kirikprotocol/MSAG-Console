@@ -28,7 +28,7 @@ struct routData {
 	char acceptedCnt[2880];
 	routData(const char* routId_, time_t dt){
 		
-		strcpy(routId, routId_);
+		std::strcpy(routId, routId_);
 		
 		tm tmDate;
 		localtime_r(&dt, &tmDate);
@@ -38,7 +38,7 @@ struct routData {
 		char hour = tmDate.tm_hour;
 		uint16_t netYear = htons(year);
 		
-		memcpy((void*)date, (const void*)&netYear, 2);
+		std::memcpy((void*)date, (const void*)&netYear, 2);
 		date[2] = month;
 		date[3] = day;
 		date[4] = hour;
@@ -47,13 +47,13 @@ struct routData {
 		int32_t val = 0;
 		val = htonl(start_cnt);
 		printf("val: %d\n", val);
-		memcpy((void*)acceptedCnt, (const void*)&val, 4);
+		std::memcpy((void*)acceptedCnt, (const void*)&val, 4);
 		
 		for(char* p=acceptedCnt+4; p<=acceptedCnt+4*719; p = p + 4){
 			int32_t reset = 0;
 			int32_t val = 0;
 			val = htonl(reset);
-			memcpy((void*)(p), (const void*)&val, 4);
+			std::memcpy((void*)(p), (const void*)&val, 4);
 		}
 		
 		for(int i=0; i<=3; i++)	
@@ -74,7 +74,7 @@ struct routData {
 	}
 	void offset(int offset){
 		int32_t val = htonl(offset);
-		memcpy((void*)offset_, (const void*)&val, 4);
+		std::memcpy((void*)offset_, (const void*)&val, 4);
 	}
 };
 
