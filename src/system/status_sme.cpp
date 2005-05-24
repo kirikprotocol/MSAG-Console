@@ -177,7 +177,19 @@ int StatusSme::Execute()
     {
       answer=getStrVersion();
     }
-    else
+    else if(request=="lookup")
+    {
+      int mt;
+      string addr;
+      Profile& p=smsc->profiler->lookupEx(arg.c_str(),mt,addr);
+      char buf[128];
+      sprintf(buf,"Match type=%s, match address=%s, offset=%#llx,profile:",
+        mt==ProfilerMatchType::mtDefault?"default":
+        mt==ProfilerMatchType::mtMask?"mask":"exact",
+        addr.c_str(),p.offset);
+      answer=buf;
+      answer+=p.toString();
+    }else
     {
       answer="unknown command";
     }
