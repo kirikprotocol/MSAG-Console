@@ -67,10 +67,10 @@ public:
       clock_gettime(CLOCK_REALTIME,&start);
     Event ev;
     __trace__("enter SpeedMonitor");
-    firstCell=0;
-    time_t perfStart=start.tv_sec;
-    for(int i=0;i<60;i++)times[i]=start.tv_sec;
+
+    time_t perfStart=time(NULL);
     int lastIdx=0;
+
     memset(perfCnt,0,sizeof(perfCnt));
     uint64_t lastPerfCnt[performance::performanceCounters]={0,};
     //now.tv_sec=0;
@@ -109,55 +109,45 @@ public:
         d.counters[i].total=perf[i];
       }
 
-
-      int scnt=(now.tv_sec-perfStart)/60;
-      //__trace2__("SpeedMonitor: scnt=%d",scnt);
-      if(scnt<0)scnt=0;
-      int curIdx=scnt;
-      if(scnt>=60)
+      int secs=now.tv_sec-perfStart;
+      int scnt=secs/60;
+      int curIdx=scnt%60;
+      if(lastIdx!=curIdx)
       {
-        firstCell++;
-        if(firstCell>=60)firstCell=0;
-        perfStart=times[firstCell];
-        scnt=59;
-        curIdx=firstCell-1;
-        if(curIdx<0)curIdx=59;
-        times[curIdx]=now.tv_sec;
+        lastIdx=curIdx;
         for(i=0;i<performance::performanceCounters;i++)perfCnt[i][curIdx]=0;
       }
-      if(curIdx!=lastIdx)
+      if(scnt>60)
       {
-        times[curIdx]=now.tv_sec;
-        lastIdx=curIdx;
+        scnt=60;
+        secs=60*60;
       }
       for(int j=0;j<performance::performanceCounters;j++)
       {
         d.counters[j].average=0;
       }
-      int idx=firstCell;
-      for(i=0;i<=scnt;i++,idx++)
+      int idx=curIdx;
+
+      for(int j=0;j<performance::performanceCounters;j++)
       {
-        if(idx>=60)idx=0;
-        if(i==scnt)
-        {
-          for(int j=0;j<performance::performanceCounters;j++)
-          {
-            perfCnt[j][idx]+=d.counters[j].lastSecond;
-          }
-        }
+        perfCnt[j][curIdx]+=d.counters[j].lastSecond;
+      }
+
+      for(i=0;i<scnt;i++,idx--)
+      {
+        if(idx<0)idx=59;
         for(int j=0;j<performance::performanceCounters;j++)
         {
           d.counters[j].average+=perfCnt[j][idx];
         }
       }
-      int diff=now.tv_sec-times[firstCell];
-      if(diff==0)diff=1;
-      //__trace2__("ca=%d,ea=%d,ra=%d, time diff=%u",
-      //  d.success.average,d.error.average,d.rescheduled.average,diff);
 
-      for(i=0;i<performance::performanceCounters;i++)
+      if(secs)
       {
-        d.counters[i].average/=diff;
+        for(i=0;i<performance::performanceCounters;i++)
+        {
+          d.counters[i].average/=secs;
+        }
       }
 
       d.now=now.tv_sec;
@@ -195,8 +185,6 @@ public:
 protected:
   EventQueue& queue;
   int perfCnt[performance::performanceCounters][60];
-  int firstCell;
-  time_t times[60];
   timespec start;
   performance::PerformanceListener* perfListener;
   performance::PerformanceListener* perfSmeListener;
@@ -483,15 +471,15 @@ void Smsc::init(const SmscConfigs& cfg)
   aclmgr = AclAbstractMgr::Create2();
   aclmgr->LoadUp(dataSource);
 
-  distlstman=new DistrListManager(*dataSource,*cfg.cfgman);
+  distlstman=new DistrListManager(*cfg.cfgman);
 
-  distlstsme=new DistrListProcess(distlstman);
+  distlstsme=new DistrListProcess(distlstman,&smeman);
   tp.startTask(distlstsme);
   smsc_log_info(log, "Distribution list processor started" );
 
   smeman.registerInternallSmeProxy("DSTRLST",distlstsme);
 
-  smsc::mscman::MscManager::startup(*dataSource,*cfg.cfgman);
+  smsc::mscman::MscManager::startup(*cfg.cfgman);
   smsc_log_info(log, "MSC manager started" );
 
   /*
@@ -580,7 +568,7 @@ void Smsc::init(const SmscConfigs& cfg)
     profiler->setNotifier(pnot);
   }
   smsc_log_info(log, "Profiler configured" );
-  profiler->loadFromDB(dataSource);
+  profiler->load(cfg.cfgman->getString("profiler.storeFile"));
   smsc_log_info(log, "Profiler data loaded" );
 
 
@@ -660,6 +648,19 @@ void Smsc::init(const SmscConfigs& cfg)
   ssockman.setSmppSocketTimeout(cfg.cfgman->getInt("smpp.readTimeout"));
   ssockman.setInactivityTime(cfg.cfgman->getInt("smpp.inactivityTime"));
   ssockman.setInactivityTimeOut(cfg.cfgman->getInt("smpp.inactivityTimeOut"));
+  ssockman.setDefaultConnectionsLimit(cfg.cfgman->getInt("smpp.defaultConnectionsLimit"));
+  {
+    using smsc::util::config::CStrSet;
+    CStrSet *params=cfg.cfgman->getChildIntParamNames("smpp.connectionsLimitsForIps");
+    CStrSet::iterator i=params->begin();
+    for(;i!=params->end();i++)
+    {
+      std::string nm="smpp.connectionsLimitsForIps.";
+      nm+=*i;
+      ssockman.setLimitForIp(i->c_str(),cfg.cfgman->getInt(nm.c_str()));
+    }
+    delete params;
+  }
 
   smsc_log_info(log, "MR cache loaded" );
 
@@ -891,7 +892,7 @@ void Smsc::shutdown()
   smeman.Dump();
 
   delete smscsme;
-  smeman.unregisterSmeProxy("DSTRLST");
+  //smeman.unregisterSmeProxy("DSTRLST");
 
   tp.shutdown();
 
