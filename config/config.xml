@@ -152,6 +152,9 @@
     <param name="readTimeout" type="int">60</param>
     <param name="inactivityTime" type="int">600</param>
     <param name="inactivityTimeOut" type="int">60</param>
+    <param name="defaultConnectionsLimit" type="int">1000</param>
+    <section name="connectionsLimitsForIps">
+    </section>
   </section>
 
   <section name="sms">
@@ -161,7 +164,13 @@
   <section name="MscManager">
     <param name="automaticRegistration" type="bool">true</param>
     <param name="failureLimit" type="int">1000</param>
+    <param name="storeFile" type="string">store/msc.bin</param>
   </section>
+
+  <section name="distrList">
+    <param name="storeDir" type="string">store/dl</param>
+  </section>
+
 
   <section name="trafficControl">
     <param name="maxSmsPerSecond" type="int">10</param>
