@@ -37,7 +37,6 @@
 #include <sys/types.h>
 
 #include "core/buffers/XHash.hpp"
-#include "system/temp_store.h"
 
 namespace smsc{
 namespace system{
@@ -415,10 +414,6 @@ public:
     }
   }
 
-  TemporaryStore& getTempStore()
-  {
-    return tempStore;
-  }
 
   AclAbstractMgr   *getAclMgr()
   {
@@ -469,7 +464,6 @@ protected:
 
   MessageReferenceCache mrCache;
 
-  TemporaryStore tempStore;
 
   AclAbstractMgr   *aclmgr;
   DistrListManager *distlstman;
