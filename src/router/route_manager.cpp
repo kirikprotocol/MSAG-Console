@@ -376,7 +376,7 @@ RouteRecord* findInTree(RouteTreeNode* node,
 inline void print_step(int step)
 {
 #ifndef DISABLE_TRACING
-  for(int st=0; st<step;++st) fprintf(stderr,"  ");
+  //for(int st=0; st<step;++st) fprintf(stderr,"  ");
 #endif
 }
 
@@ -424,7 +424,7 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
       bool conflicted = false;
       for ( RouteRecord* r0 = node->record; r0 != 0 ; r0 = r0->alternate_pair ) {
         if ( r0->srcProxyIdx == rec->srcProxyIdx ) {
-          __warning__("duplicate route, is not added");
+          __warning2__("duplicate route %s, is not added",rec->info.routeId.c_str());
           if ( trace_ ) {
             {
               ostringstream ost;
@@ -531,7 +531,7 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec,vector<string>*
         return 0;
       //}
     }
-    __trace__("weak equal:")
+    __trace__("weak equal:");
     if (node->record->dest_def > rec->dest_def)
     {
       __unreachable__("incorrect tree");
