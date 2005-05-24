@@ -645,7 +645,7 @@ public class SmsStat
                                 curDate = calendar.getTime();
 
                                 if (fromQueryDate != null && curDate.getTime() < fromQueryDate.getTime()) {
-                                    logger.debug("Hour: "+hour+" skipped");
+                                    //logger.debug("Hour: "+hour+" skipped");
                                     continue;
                                 }
                                 
