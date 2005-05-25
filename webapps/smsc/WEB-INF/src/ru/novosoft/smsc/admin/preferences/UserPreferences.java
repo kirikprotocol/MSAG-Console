@@ -518,13 +518,13 @@ public class UserPreferences
 		for(Iterator i = t.iterator(); i.hasNext();)
 		{
 			String name = (String) i.next();
-			result += "<pref name=\"" + name + "\" value=\"" + topmonPrefs.get(name) + "\"/>\n";
+			result += "\t\t<pref name=\"" + name + "\" value=\"" + topmonPrefs.get(name) + "\"/>\n";
 		}
 		t = perfmonPrefs.keySet();
 		for(Iterator i = t.iterator(); i.hasNext();)
 		{
 			String name = (String) i.next();
-			result += "<pref name=\"" + name + "\" value=\"" + perfmonPrefs.get(name) + "\"/>\n";
+			result += "\t\t<pref name=\"" + name + "\" value=\"" + perfmonPrefs.get(name) + "\"/>\n";
 		}
 
 		return result;
