@@ -1068,7 +1068,8 @@ void CMapStateMashine::onUssdClosing(MSG_T*message)
  parseUssdReqResp(message);
 
  USHORT_T dlgid = getDialogId(message);
- mdc->setState(dlgid,map_UssdEnd);
+ mdc->setState(dlgid,DIALOG_FINISH);
+ smsc_log_info(logger,"%d ussd dialog closed",dlgid);
 }
 //////////////////////////////////////////////////////////////////////////
 // service tools
@@ -1214,6 +1215,7 @@ UCHAR_T CMapStateMashine::parseUssdReqResp(MSG_T *message)
       aePattern = message->msg_p[7+ussdStrLen];
       
       mdc->setState(dlgid,DIALOG_FINISH);
+      quall->PipesList.setFlag(dest_imsi,PF_SMS_SEND_CONFIRM,PL_FLAG_TX_FLAG);
 
     }
     xmap_trace(logger,"%s ussd string is '%s' len1=%d len2=%d",__func__,ussd_str.c_str(),len,ussdStrLen);

@@ -844,10 +844,22 @@ JSBool JSPipe::isUssdSessionClosed(JSContext *cx, JSObject *obj, uintN argc, jsv
 {
  
     JSPipe *p = (JSPipe*) JS_GetPrivate(cx, obj);
-    MapDialogContainer * mdc =  p->getDialogConatiner();
+    long flag = p->getQall()->PipesList.getFlag(p->getPipe()->GetImsi(),PL_FLAG_TX_FLAG);
 
- *rval = BOOLEAN_TO_JSVAL(mdc->hasDialog(p->m_dialogid)); 
+    *rval = BOOLEAN_TO_JSVAL(false);
 
+ if(flag!=-1)
+ {
+  if(flag==PF_SMS_SEND_CONFIRM)
+  {
+   *rval = BOOLEAN_TO_JSVAL(true); 
+
+   p->getQall()->PipesList.setFlag(p->getPipe()->GetImsi(),PF_NOTHING,PL_FLAG_TX_FLAG);
+
+  }
+
+
+ }
  return JS_TRUE;
 }
 /************************************************************************/
@@ -879,7 +891,7 @@ void JSPipe::send_PSSR_or_USSR_UssdRequestInd(UCHAR_T subsistem_number, bool isP
  if(str_text.length()>0)
  {
   unsigned _7bit_text_len = ConvertTextTo7Bit((  const char*)str_text.c_str(),
-             str_text.length()/* +1*/,
+             str_text.length() +1,
              (char * )tp_user_data,
              200,CONV_ENCODING_ANSI);
 

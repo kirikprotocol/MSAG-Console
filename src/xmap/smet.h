@@ -36,6 +36,7 @@ protected:
 class UssdSmeRunner:public Thread
 {
 public:
+ void Reply();
  int Execute();
 };
 #endif
