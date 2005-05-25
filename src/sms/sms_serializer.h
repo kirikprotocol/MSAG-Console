@@ -173,7 +173,7 @@ inline void Serialize(const SMS& sms,BufOps::SmsBuffer& dst)
      <<sms.concatMsgRef<<sms.concatSeqNum;
 
   //added in version 0x010001;
-  dst<<sms.needArchivate;
+  dst<<(uint8_t)sms.needArchivate;
 
   uint32_t bodyLength=sms.messageBody.getBufferLength();
   dst<<bodyLength;
@@ -201,7 +201,9 @@ inline void Deserialize(BufOps::SmsBuffer& src,SMS& sms,int ver)
 
   if(ver>0x010000)
   {
-    src>>sms.needArchivate;
+    uint8_t na;
+    src>>na;
+    sms.needArchivate=na;
   }
 
   sms.state=(State)smsState;
