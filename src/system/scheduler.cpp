@@ -25,7 +25,7 @@ struct LoadUpInfo{
 typedef XHash<SMSId,LoadUpInfo> LoadUpHash;
 
 const char LocalFileStore::storeSig[10]="SMSCSTORE";
-const uint32_t LocalFileStore::storeVer=0x10001;
+const uint32_t LocalFileStore::storeVer=0x10000;
 
 
 void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
@@ -85,9 +85,9 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
         }
         fileVer=pf->ReadNetInt32();
         fPos+=4;
-        if(fileVer>storeVer)
+        if(fileVer!=storeVer)
         {
-          __warning2__("File version doesn't match current version:%d<%d",storeVer,fileVer);
+          __warning2__("File version doesn't match current version:%d!=%d",storeVer,fileVer);
         }
         while(fPos<fSize)
         {
@@ -122,7 +122,7 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
           }
 
           smsBuf.SetPos(0);
-          Deserialize(smsBuf,item.sms,fileVer);
+          Deserialize(smsBuf,item.sms);
 
           if(itemPtr)
           {
@@ -550,7 +550,7 @@ void Scheduler::changeSmsStateToDelivered(SMSId id,
 {
   debug2(log,"changeSmsStateToDelivered: msgId=%lld",id);
   MutexGuard mg(storeMtx);
-  doFinalizeSms(id,smsc::sms::DELIVERED,smsc::system::Status::OK);
+  doFinalizeSms(id,smsc::sms::DELIVERED,smsc::system::Status::OK,dst);
 }
 
 void Scheduler::changeSmsStateToUndeliverable(SMSId id,
@@ -590,7 +590,8 @@ void Scheduler::changeSmsConcatSequenceNumber(SMSId id, int8_t inc)
   LocalFileStoreSave(id,(*ptr)->seq,sms);
 }
 
-void Scheduler::doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult)
+void Scheduler::doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult,const Descriptor& dstDsc);
+
 {
   StoreData** ptr=store.GetPtr(id);
   if(!ptr)throw NoSuchMessageException();
@@ -602,6 +603,7 @@ void Scheduler::doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult)
   sd->sms.lastResult=lastResult;
   sd->sms.lastTime = time(NULL);
   sd->sms.nextTime = 0;
+  sd->sms.destinationDescriptor=dstDsc;
 
   LocalFileStoreSave(id,++sd->seq,sd->sms,true);
   if (sd->sms.needArchivate) archiveStorage.createRecord(id, sd->sms);

@@ -628,7 +628,7 @@ public:
           return 0;
         }
 
-        void doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult);
+        void doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult,const Descriptor& dstDsc=Descriptor());
 
 
         void getMassCancelIds(const SMS& sms,Array<SMSId>& ids)
