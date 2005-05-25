@@ -590,8 +590,7 @@ void Scheduler::changeSmsConcatSequenceNumber(SMSId id, int8_t inc)
   LocalFileStoreSave(id,(*ptr)->seq,sms);
 }
 
-void Scheduler::doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult,const Descriptor& dstDsc);
-
+void Scheduler::doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult,const Descriptor& dstDsc)
 {
   StoreData** ptr=store.GetPtr(id);
   if(!ptr)throw NoSuchMessageException();
