@@ -134,7 +134,7 @@ public CommandParser(ParserSharedInputState state) {
 		case ACT_APPLY:
 		{
 			match(ACT_APPLY);
-			cmd = new ApplyCommand();
+			cmd=apply();
 			break;
 		}
 		default:
@@ -618,6 +618,58 @@ public CommandParser(ParserSharedInputState state) {
 		{
 			match(TGT_SMS_E);
 			cmd=exportsms();
+			break;
+		}
+		default:
+		{
+			throw new NoViableAltException(LT(1), getFilename());
+		}
+		}
+		return cmd;
+	}
+	
+	public final Command  apply() throws RecognitionException, TokenStreamException {
+		Command cmd;
+		
+		
+		cmd = null;
+		
+		
+		switch ( LA(1)) {
+		case TGT_ALL:
+		{
+			match(TGT_ALL);
+			cmd = new ApplyAllCommand();
+			break;
+		}
+		case TGT_ROUTES:
+		{
+			match(TGT_ROUTES);
+			cmd = new ApplyRoutesCommand();
+			break;
+		}
+		case TGT_ALIASES:
+		{
+			match(TGT_ALIASES);
+			cmd = new ApplyAliasesCommand();
+			break;
+		}
+		case TGT_PROFILES:
+		{
+			match(TGT_PROFILES);
+			cmd = new ApplyProfilesCommand();
+			break;
+		}
+		case TGT_PROVEDERS:
+		{
+			match(TGT_PROVEDERS);
+			cmd = new ApplyProvidersCommand();
+			break;
+		}
+		case TGT_CATEGORIES:
+		{
+			match(TGT_CATEGORIES);
+			cmd = new ApplyCategoriesCommand();
 			break;
 		}
 		default:
@@ -2827,17 +2879,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_SRC);
 			{
-			int _cnt33=0;
-			_loop33:
+			int _cnt34=0;
+			_loop34:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					srcdef(cmd);
 				}
 				else {
-					if ( _cnt33>=1 ) { break _loop33; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt34>=1 ) { break _loop34; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt33++;
+				_cnt34++;
 			} while (true);
 			}
 			}
@@ -2859,17 +2911,17 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			match(OPT_DST);
 			{
-			int _cnt37=0;
-			_loop37:
+			int _cnt38=0;
+			_loop38:
 			do {
 				if ((LA(1)==OPT_MASK||LA(1)==OPT_SUBJ)) {
 					dstdef(cmd, needSmeId);
 				}
 				else {
-					if ( _cnt37>=1 ) { break _loop37; } else {throw new NoViableAltException(LT(1), getFilename());}
+					if ( _cnt38>=1 ) { break _loop38; } else {throw new NoViableAltException(LT(1), getFilename());}
 				}
 				
-				_cnt37++;
+				_cnt38++;
 			} while (true);
 			}
 			}
@@ -3638,14 +3690,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop113:
+			_loop114:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop113;
+					break _loop114;
 				}
 				
 			} while (true);
@@ -4780,9 +4832,13 @@ public CommandParser(ParserSharedInputState state) {
 		"\"access\"",
 		"\"for\"",
 		"\"to\"",
+		"\"all\"",
 		"\"alias\"",
+		"\"aliases\"",
 		"\"route\"",
+		"\"routes\"",
 		"\"profile\"",
+		"\"profiles\"",
 		"\"subject\"",
 		"\"principal\"",
 		"\"dl\"",
@@ -4791,7 +4847,9 @@ public CommandParser(ParserSharedInputState state) {
 		"\"acl\"",
 		"\"sme\"",
 		"\"provider\"",
+		"\"providers\"",
 		"\"category\"",
+		"\"categories\"",
 		"\"stats\"",
 		"\"statistics\"",
 		"\"sms\"",
@@ -4885,7 +4943,8 @@ public CommandParser(ParserSharedInputState state) {
 		"STR_CHR",
 		"comma character ','",
 		"ESC",
-		"DIGIT"
+		"DIGIT",
+		"TGT_PROVEDERS"
 	};
 	
 	

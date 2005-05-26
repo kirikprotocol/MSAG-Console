@@ -33,9 +33,13 @@ tokens {
   ADD_FOR       = "for";
   ADD_TO        = "to";
 
+  TGT_ALL	= "all";
   TGT_ALIAS     = "alias";
+  TGT_ALIASES	= "aliases";
   TGT_ROUTE     = "route";
+  TGT_ROUTES    = "routes";
   TGT_PROFILE   = "profile";
+  TGT_PROFILES  = "profiles";
   TGT_SUBJECT   = "subject";
   TGT_PRINCIPAL = "principal";
   TGT_DL      	= "dl";
@@ -44,7 +48,9 @@ tokens {
   TGT_ACL       = "acl";
   TGT_SME	= "sme";
   TGT_PROVIDER	= "provider";
+  TGT_PROVIDERS	= "providers";
   TGT_CATEGORY	= "category";
+  TGT_CATEGORIES= "categories";
   TGT_STATS	= "stats";
   TGT_STATS_E	= "statistics";
   TGT_SMS	= "sms";

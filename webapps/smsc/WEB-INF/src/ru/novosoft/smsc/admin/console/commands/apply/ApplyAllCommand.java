@@ -5,12 +5,12 @@
  * Time: 7:24:53 PM
  * To change this template use Options | File Templates.
  */
-package ru.novosoft.smsc.admin.console.commands;
+package ru.novosoft.smsc.admin.console.commands.apply;
 
 import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
 
-public class ApplyCommand implements Command
+public class ApplyAllCommand implements Command
 {
     public void process(CommandContext ctx)
     {
@@ -20,18 +20,17 @@ public class ApplyCommand implements Command
             ctx.getCategoryManager().apply();
             ctx.getProviderManager().apply();
             ctx.getSmsc().applyRoutes(ctx.getRouteSubjectManager());
-            ctx.setMessage("Changes applied succesfully");
+            ctx.setMessage("All changes applied succesfully");
             ctx.setStatus(CommandContext.CMD_OK);
         } catch (Exception e) {
-            ctx.setMessage("Couldn't apply changes. Cause: "+e.getMessage());
+            ctx.setMessage("Couldn't apply all changes. Cause: "+e.getMessage());
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
             e.printStackTrace();
         }
     }
 
     public String getId() {
-        return "APPLY";
+        return "APPLY_ALL";
     }
-
 }
 

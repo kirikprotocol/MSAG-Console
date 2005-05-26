@@ -59,9 +59,21 @@ parse returns [Command cmd] {
 	| ACT_REVOKE	cmd = revoke
 	| ACT_CHECK	cmd = check
 	| ACT_EXPORT	cmd = export
-	| ACT_APPLY	{ cmd = new ApplyCommand(); }
+	| ACT_APPLY	cmd = apply
 	;
 	
+/* --------------------- Apply action parser ---------------------- */
+apply returns [Command cmd] {
+    cmd = null;
+}
+	: TGT_ALL	 { cmd = new ApplyAllCommand();        }
+	| TGT_ROUTES	 { cmd = new ApplyRoutesCommand();     }
+	| TGT_ALIASES	 { cmd = new ApplyAliasesCommand();    }
+	| TGT_PROFILES	 { cmd = new ApplyProfilesCommand();   }
+	| TGT_PROVEDERS  { cmd = new ApplyProvidersCommand();  } 
+	| TGT_CATEGORIES { cmd = new ApplyCategoriesCommand(); }
+	;
+
 /* ----------------------- Add action parser ---------------------- */
 add returns [Command cmd] {
     cmd = null;
