@@ -16,6 +16,7 @@ import ru.novosoft.smsc.admin.console.commands.profile.*;
 import ru.novosoft.smsc.admin.console.commands.route.*;
 import ru.novosoft.smsc.admin.console.commands.sme.*;
 import ru.novosoft.smsc.admin.console.commands.misc.*;
+import ru.novosoft.smsc.admin.console.commands.apply.*;
 
 }
 
