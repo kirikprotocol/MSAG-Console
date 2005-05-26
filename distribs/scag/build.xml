@@ -49,7 +49,7 @@ Targets:
     <chmod perm="775">
       <fileset dir="${DISTR_DIR}/tomcat/bin" includes="*.sh"/>
     </chmod>
-    <ant antfile="${WEBSRC_DIR}/build.xml" dir="${WEBSRC_DIR}" target="build"/>
+    <ant antfile="${WEBSRC_DIR}/build_scag.xml" dir="${WEBSRC_DIR}" target="build"/>
     <copy todir="${DISTR_DIR}/webapps">
       <fileset dir="${WEBSRC_DIR}" includes="images/**/*, styles/**/*, scripts/**/*"/>
     </copy>
