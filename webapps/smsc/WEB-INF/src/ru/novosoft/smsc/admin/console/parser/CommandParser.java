@@ -655,12 +655,6 @@ public CommandParser(ParserSharedInputState state) {
 			cmd = new ApplyAliasesCommand();
 			break;
 		}
-		case TGT_PROFILES:
-		{
-			match(TGT_PROFILES);
-			cmd = new ApplyProfilesCommand();
-			break;
-		}
 		case TGT_PROVEDERS:
 		{
 			match(TGT_PROVEDERS);
@@ -4839,7 +4833,6 @@ public CommandParser(ParserSharedInputState state) {
 		"\"route\"",
 		"\"routes\"",
 		"\"profile\"",
-		"\"profiles\"",
 		"\"subject\"",
 		"\"principal\"",
 		"\"dl\"",

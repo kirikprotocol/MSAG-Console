@@ -39,7 +39,6 @@ tokens {
   TGT_ROUTE     = "route";
   TGT_ROUTES    = "routes";
   TGT_PROFILE   = "profile";
-  TGT_PROFILES  = "profiles";
   TGT_SUBJECT   = "subject";
   TGT_PRINCIPAL = "principal";
   TGT_DL      	= "dl";
