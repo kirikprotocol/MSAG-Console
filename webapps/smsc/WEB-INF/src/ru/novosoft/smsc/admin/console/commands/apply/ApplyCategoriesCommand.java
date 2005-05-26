@@ -10,7 +10,7 @@ import ru.novosoft.smsc.admin.console.CommandContext;
  * Time: 16:17:09
  * To change this template use File | Settings | File Templates.
  */
-public class ApplyCategoriesConnad implements Command
+public class ApplyCategoriesCommand implements Command
 {
     public void process(CommandContext ctx)
     {
