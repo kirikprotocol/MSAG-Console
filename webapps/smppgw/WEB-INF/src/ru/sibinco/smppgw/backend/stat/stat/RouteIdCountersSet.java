@@ -11,6 +11,11 @@ public class RouteIdCountersSet extends ExtendedCountersSet implements Comparabl
 {
   protected String routeid;
 
+  public RouteIdCountersSet(String routeid)
+   {
+     this.routeid = routeid;
+   }
+
   public RouteIdCountersSet(long accepted, long rejected, long delivered,
                             long tempError, long permError, String routeid)
   {

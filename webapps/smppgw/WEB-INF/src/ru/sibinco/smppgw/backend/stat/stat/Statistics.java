@@ -24,7 +24,7 @@ public class Statistics
 
   public void addDateStat(DateCountersSet set) {
     byDates.add(set);
-    total.increment(set);
+    total.incrementFull(set);
   }
   public Collection getDateStat() {
     return byDates;

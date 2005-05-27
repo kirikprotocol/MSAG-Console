@@ -32,7 +32,7 @@ public class Index extends SmppgwBean
 
   private String mbQuery = null;
 
-  private Stat stat = new Stat();
+ // private Stat stat = new Stat(gwConfig);
   private StatQuery query = new StatQuery();
   private Statistics statistics = null;
 
@@ -99,6 +99,7 @@ public class Index extends SmppgwBean
         if (userProviderId != StatQuery.ALL_PROVIDERS && userProviderId != query.getProviderId())
           throw new Exception("Permission denied for user '"+providerName+
                               "' to access other providers's statistics");
+        Stat stat=Stat.getInstance(appContext.getGwConfig());
         statistics = stat.getStatistics(query);
       } catch (Exception exc) {
         statistics = null; mbQuery = null;

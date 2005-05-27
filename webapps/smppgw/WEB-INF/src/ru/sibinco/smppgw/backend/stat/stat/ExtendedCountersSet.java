@@ -1,8 +1,9 @@
 package ru.sibinco.smppgw.backend.stat.stat;
 
-import java.util.Vector;
-import java.util.Collection;
 
+import java.util.Collection;
+import java.util.TreeMap;
+//import java.util.Vector;
 /**
  * Created by IntelliJ IDEA.
  * User: makar
@@ -12,8 +13,8 @@ import java.util.Collection;
  */
 public class ExtendedCountersSet extends CountersSet
 {
-  private Vector errors = new Vector();
-
+  //private Vector errors = new Vector();
+  private TreeMap err=new TreeMap();
   public ExtendedCountersSet() {}
   public ExtendedCountersSet(long accepted, long rejected, long delivered, long tempError, long permError)
   {
@@ -30,11 +31,41 @@ public class ExtendedCountersSet extends CountersSet
           ussdTrFromScOk, ussdTrFromScFailed, ussdTrFromScBilled,
           ussdTrFromSmeOk, ussdTrFromSmeFailed, ussdTrFromSmeBilled);
   }
+   public void incError(int errcode, long count)
+    {
+        Integer key = new Integer(errcode);
+        ErrorCounterSet set = (ErrorCounterSet)err.get(key);
+        if (set == null) err.put(key, new ErrorCounterSet(errcode, count));
+        else set.increment(count);
+    }
+    
+   public void putErr(int errcode, ErrorCounterSet set)
+    {
+        err.put(new Integer(errcode), set);
+    }
+    public void addAllErr(Collection err)
+    {
+        err.addAll(err);
+    }
+    public Collection getErrors()
+    {
+        return err.values();
+    }
+    public TreeMap getErrorsMap()
+    {
+        return err;
+    }
 
+    public ErrorCounterSet getErr(int errcode)
+    {
+        return (ErrorCounterSet)err.get(new Integer(errcode));
+    }
+ /*
   public void addError(ErrorCounterSet set) {
     errors.addElement(set);
   }
+
   public Collection getErrors() {
     return errors;
-  }
+  }  */
 }

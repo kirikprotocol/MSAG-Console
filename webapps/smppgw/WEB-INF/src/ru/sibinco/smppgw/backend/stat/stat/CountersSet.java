@@ -46,7 +46,29 @@ public class CountersSet
     this.ussdTrFromSmeFailed = ussdTrFromSmeFailed; this.ussdTrFromSmeBilled = ussdTrFromSmeBilled;
   }
 
-  protected void increment(CountersSet set)
+   protected void increment(long accepted, long rejected, long delivered,
+                             long tempError, long permerror )
+    {
+        this.accepted += accepted; this.rejected += rejected;
+        this.delivered += delivered; this.tempError += tempError;
+        this.permError += permError;
+
+    }
+
+   protected void incrementFull(long accepted, long rejected, long delivered,
+                             long tempError, long permerror, long smsTrOk, long smsTrFailed ,
+   long smsTrBilled , long ussdTrFromScOk , long ussdTrFromScFailed , long ussdTrFromScBilled ,
+   long ussdTrFromSmeOk , long ussdTrFromSmeFailed , long ussdTrFromSmeBilled )
+  {
+    this.accepted += accepted; this.rejected += rejected; this.delivered += delivered;
+    this.tempError += tempError; this.permError += permError;
+    this.smsTrOk += smsTrOk; this.smsTrFailed += smsTrFailed; this.smsTrBilled += smsTrBilled;
+    this.ussdTrFromScOk += ussdTrFromScOk; this.ussdTrFromScFailed += ussdTrFromScFailed;
+    this.ussdTrFromScBilled += ussdTrFromScBilled; this.ussdTrFromSmeOk += ussdTrFromSmeOk;
+    this.ussdTrFromSmeFailed += ussdTrFromSmeFailed; this.ussdTrFromSmeBilled += ussdTrFromSmeBilled;
+  }
+
+  protected void incrementFull(CountersSet set)
   {
     this.accepted += set.accepted; this.rejected += set.rejected; this.delivered += set.delivered;
     this.tempError += set.tempError; this.permError += set.permError;

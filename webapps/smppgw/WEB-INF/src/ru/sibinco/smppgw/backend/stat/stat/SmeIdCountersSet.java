@@ -10,6 +10,11 @@ package ru.sibinco.smppgw.backend.stat.stat;
 public class SmeIdCountersSet extends ExtendedCountersSet implements Comparable
 {
   protected String smeid;
+  public int providerId = -1;
+   public SmeIdCountersSet(String smeid)
+  {
+    this.smeid = smeid;
+  }
 
   public SmeIdCountersSet(long accepted, long rejected, long delivered, long tempError, long permError, String smeid)
   {
@@ -39,4 +44,13 @@ public class SmeIdCountersSet extends ExtendedCountersSet implements Comparable
     return smeid;
   }
 
+  public int getProviderId()
+  {
+    return providerId;
+  }
+
+  public void setProviderId(int providerId)
+  {
+    this.providerId = providerId;
+  }
 }
