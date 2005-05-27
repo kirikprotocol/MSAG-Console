@@ -164,7 +164,7 @@ Targets:
 
   </target>
 
-  <target name="update" depends="create_update,updateweb">
+  <target name="update" depends="create_update, updateweb">
   </target>
 
   <target name="configure">
@@ -186,7 +186,7 @@ Targets:
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <copy todir="${DISTR_DIR}/webapps/smsc/WEB-INF">
-      <fileset dir="${TEMPL_DIR}/smsc" includes="web.xml users.xml"/>
+      <fileset dir="${TEMPL_DIR}/smsc" includes="web.xml users.xml localization.xml"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <copy tofile="${DISTR_DIR}/conf/webconfig.xml" file="${TEMPL_DIR}/smsc/webapp.xml">
