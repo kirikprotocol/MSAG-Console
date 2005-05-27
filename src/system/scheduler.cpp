@@ -25,7 +25,7 @@ struct LoadUpInfo{
 typedef XHash<SMSId,LoadUpInfo> LoadUpHash;
 
 const char LocalFileStore::storeSig[10]="SMSCSTORE";
-const uint32_t LocalFileStore::storeVer=0x10000;
+const uint32_t LocalFileStore::storeVer=0x10001;
 
 
 void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
@@ -131,7 +131,7 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
           }
 
           smsBuf.SetPos(0);
-          Deserialize(smsBuf,item.sms);
+          Deserialize(smsBuf,item.sms,fileVer);
 
           if(itemPtr)
           {
