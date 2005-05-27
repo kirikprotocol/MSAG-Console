@@ -226,4 +226,13 @@ public class Functions
     System.out.println("Webapp encoding: " + System.getProperty("file.encoding", "WINDOWS-1251"));
     return System.getProperty("file.encoding", "WINDOWS-1251");
   }
+  
+  public static void readBuffer( InputStream is, byte buffer[], int size ) throws IOException {
+    int read = 0;
+    while (read < size) {
+      int result = is.read(buffer, read, size - read);
+      if (result < 0) throw new EOFException("Failed to read " + size + " bytes, read failed at "+read);
+      read += result;
+    }
+  }
 }

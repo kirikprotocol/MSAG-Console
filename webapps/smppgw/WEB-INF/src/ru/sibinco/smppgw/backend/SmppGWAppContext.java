@@ -7,6 +7,7 @@ import ru.sibinco.lib.backend.daemon.Daemon;
 import ru.sibinco.lib.backend.service.ServiceInfo;
 import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.lib.backend.util.conpool.NSConnectionPool;
+import ru.sibinco.lib.backend.util.WebAppFolders;
 import ru.sibinco.smppgw.backend.resources.ResourceManager;
 import ru.sibinco.smppgw.backend.routing.BillingManager;
 import ru.sibinco.smppgw.backend.routing.GwRoutingManager;
@@ -51,6 +52,7 @@ public class SmppGWAppContext
   private final BillingManager billingManager;
   private Journal journal = new Journal();
   private Smppgw smppgw = null;
+  protected static File gwConfFolder = null;
 
   private SmppGWAppContext(final String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException,
                                                                 Config.ParamNotFoundException, SibincoException
@@ -63,7 +65,8 @@ public class SmppGWAppContext
       gwConfig = new Config(new File(config.getString("gw_config")));
       String gwDaemonHost=config.getString("gw daemon.host");
       String gwConfigFolder=config.getString("gw_config_folder");
-    //  connectionPool = createConnectionPool(config);
+      gwConfFolder=new File(gwConfigFolder);
+      //  connectionPool = createConnectionPool(config);
       userManager = new UserManager(config.getString("users_config_file"));
       providerManager = new ProviderManager(gwConfig);
       gwSmeManager = new GwSmeManager(config.getString("sme_file"), gwConfig, providerManager);
@@ -193,6 +196,11 @@ public class SmppGWAppContext
   public Smppgw getSmppgw()
   {
     return smppgw;
+  }
+
+  public static File getGwConfFolder()
+  {
+    return gwConfFolder;
   }
 /*
   public SmeHostsManager getSmeHostsManager()
