@@ -46,7 +46,7 @@ public class Index extends SmppgwBean
   private void init() throws SmppgwJspException
   {
     SmppGWAppContext context = getAppContext();
-    stat.setDataSource(context.getDataSource());
+    //stat.setDataSource(context.getDataSource());
     Principal userPrincipal = super.getLoginedPrincipal();
     if (userPrincipal == null)
       throw new SmppgwJspException(
