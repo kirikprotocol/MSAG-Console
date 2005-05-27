@@ -1,0 +1,95 @@
+ 
+Формат файлов статистики генерируемых SMPPGW
+
+<File>
+	<FileHeader>
+		<char[10] id_mark>SMPPGW.STAT</char[10]>
+		<int16 version>01</int16>
+	</FileHeader>
+
+	<StatRecords (0..EOF)>    
+
+		<uint32 recordSize1/>
+
+		<uint8 hour/>
+		<uint8 minute/> // см. пункт 6 и 7.
+
+		// Route statistics for period
+		<int32 route_counter/>
+		<0..route_counter>                   	
+			<uint8 route_id_len />
+			<char[n]   route_id />
+		  	<int32   providerId /> 
+			<int32     accepted />
+			<int32     rejected />
+			<int32    delivered />
+			<int32    temperror />
+			<int32    permerror />
+
+			// Error statistics for route
+			<int32 route_err_counter/>
+			<0..route_err_counter>
+				<int32 errcode/>
+				<int32 counter/>
+			</0..route_err_counter>
+		</0..route_counter>
+
+		// Sme statistics for period
+		<int32 sme_counter/>
+		<0..sme_counter>
+			<uint8 sme_id_len                  />
+			<char[n] sme_id                    />
+			<int32 common.providerId           />
+			<int32 common.accepted             />
+		  	<int32 common.rejected             /> 
+			<int32 common.delivered            />
+			<int32 common.temperror            />
+			<int32 common.permerror            />
+			<int32 service.SmsTrOk             />
+			<int32 service.SmsTrFailed         />
+			<int32 service.SmsTrBilled         />
+			<int32 service.UssdTrFromScOk      />
+			<int32 service.UssdTrFromScFailed  />
+			<int32 service.UssdTrFromSmeFailed />
+			<int32 service.UssdTrFromSmeBilled />
+
+			// Error statistics for sme
+			<int32 sme_err_counter/>
+			<0..sme_err_counter>
+				<int32 errcode/>
+				<int32 counter/>
+			</0..sme_err_counter>
+		</0..sme_counter>
+		
+		<uint32 recordSize2/>
+
+	</StatRecords (0..EOF)>
+</File>
+
+
+Важные моменты:
+	
+1) Файлы генерируются SMSC автоматически в поддиректориях от указанной диры
+2) Поддиректории соответствуют месяцам, имя в формате YYYY-MM (т.н. 2005-04)
+3) В каждой поддиректории создаются файлы за дни в формате DD.rts
+4) Минимальная гранулярность записей в файле 1 минута 
+   (т.е. количество записей в одном файле 24*60 = 1440).
+   ! Но, записей может быть больше или меньше:
+	а) если будет использоваться запрос на сброс статистики с морды,
+	б) или если произойдёт переход времени на зимнее/летнее
+     Периоды могут повторяться. Каунтеры за один период должны суммироваться.
+5) Последняя запись может быть не закончена (т.н. если ещё не успела сбросится).
+   Если обнаружен конец файла в процессе формирования записи, то
+   пишем ворнинг, а эту запись скипаем.
+6) Дата и время в GMT. Не локальное !
+   (и для задания периода, и для имени файла, и для поддиректорий).
+7) Записи h=00 m=00 -> с 00:00 по 0001, ... ,
+          h=23 m=59 -> с 23:59 по 00:00 след. дня
+8) Размер тела каждой записи задаётся непосредственно перед и после неё, 
+   должно быть recordSize1 == recordSize2.
+   Это значение не включает собственно байты под длинну и 
+   указывает именно размер тела: <uint32 rs1/> [тело] <uint32 rs2/>
+9) Строковые значения для полей sme_id и route_id предваряются их длинной
+   в 8битном поле.
+
+   
