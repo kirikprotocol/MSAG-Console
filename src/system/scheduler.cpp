@@ -25,7 +25,7 @@ struct LoadUpInfo{
 typedef XHash<SMSId,LoadUpInfo> LoadUpHash;
 
 const char LocalFileStore::storeSig[10]="SMSCSTORE";
-const uint32_t LocalFileStore::storeVer=0x10001;
+const uint32_t LocalFileStore::storeVer=0x10000;
 
 
 void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
@@ -49,8 +49,16 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
   LoadUpVector luVector;
   vector<string> toDelete;
 
+  if(File::Exists((mainFileName+".bak").c_str()) ||
+     File::Exists((rolFileName+".bak").c_str()))
+  {
+    __warning__("store .bak file found! Previous startup attempt failed! Rename bak files and try again");
+    abort();
+  }
+
   if(File::Exists(mainFileName.c_str()))
   {
+
     File *f=new File();
     f->ROpen(mainFileName.c_str());
     f->Rename((mainFileName+".bak").c_str());
@@ -88,6 +96,7 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
         if(fileVer>storeVer)
         {
           __warning2__("File version doesn't match current version:%d<%d",storeVer,fileVer);
+          abort();
         }
         while(fPos<fSize)
         {
@@ -122,7 +131,7 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
           }
 
           smsBuf.SetPos(0);
-          Deserialize(smsBuf,item.sms,fileVer);
+          Deserialize(smsBuf,item.sms);
 
           if(itemPtr)
           {
