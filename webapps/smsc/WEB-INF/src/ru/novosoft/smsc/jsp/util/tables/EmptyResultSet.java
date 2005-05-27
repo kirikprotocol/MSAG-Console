@@ -41,7 +41,10 @@ public class EmptyResultSet implements QueryResultSet
     return new Vector();
   }
 
-  public boolean isLast()
+  public void setSortOrder(Vector sortOrder) {
+
+  }
+    public boolean isLast()
   {
     return true;
   }

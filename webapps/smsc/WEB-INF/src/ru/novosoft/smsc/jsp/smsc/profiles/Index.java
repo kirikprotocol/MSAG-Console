@@ -17,12 +17,15 @@ import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
+import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileDataItem;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Collections;
+import java.util.Vector;
 
 public class Index extends IndexBean
 {
@@ -33,6 +36,9 @@ public class Index extends IndexBean
 
   private QueryResultSet profiles = null;
   private boolean queried = false;
+  private boolean runQuery = true;
+  private boolean closeQuery = false;
+
 
   private String profileMask = null;
   private String filterMask = null;
@@ -62,7 +68,7 @@ public class Index extends IndexBean
     if (!initialized) {
       filterMask = preferences.getProfilesFilter();
       if (filterMask == null || filterMask.length() == 0)
-        filterMask = "*";
+        filterMask = "+";
     }
     else
       preferences.setProfilesFilter(filterMask);
@@ -78,7 +84,7 @@ public class Index extends IndexBean
   {
     if (prefix == null || prefix.length() == 0)
       return "";
-    if (prefix.equals("*"))
+    if (prefix.equals("+"))
       return prefix;
 
     if (prefix.startsWith(".")) {
@@ -117,18 +123,48 @@ public class Index extends IndexBean
     else if (!refreshed)
       return RESULT_REFRESH;
 
-    if (initialized && preferences.getProfilesFilter() != null && preferences.getProfilesFilter().length() > 0) {
-      try {
-        profiles = smsc.profilesQuery(new ProfileQuery(pageSize, normalizeAddresPrefix(preferences.getProfilesFilter()), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_ADDRESSES));
-        totalSize = profiles.getTotalSize();
-        queried = true;
-      } catch (AdminException e) {
-        logger.error("Couldn't query profiles", e);
-        return error(SMSCErrors.error.profiles.queryError, e);
-      }
-    }
+//    if (initialized && preferences.getProfilesFilter() != null && preferences.getProfilesFilter().length() > 0) {
+//      try {
+//        profiles = smsc.profilesQuery(new ProfileQuery(pageSize, normalizeAddresPrefix(preferences.getProfilesFilter()), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_ADDRESSES));
+//        totalSize = profiles.getTotalSize();
+//        queried = true;
+//      } catch (AdminException e) {
+//        logger.error("Couldn't query profiles", e);
+//        return error(SMSCErrors.error.profiles.queryError, e);
+//      }
+//    }
+//
+//    return isEditAllowed() ? RESULT_OK : error(SMSCErrors.error.profiles.smscNotConnected);
+//  }
 
-    return isEditAllowed() ? RESULT_OK : error(SMSCErrors.error.profiles.smscNotConnected);
+      if (initialized && preferences.getProfilesFilter() != null && preferences.getProfilesFilter().length() > 0) {
+          try {
+
+              if (isRunQuery()) {
+                  profiles = smsc.profilesQueryFromFile(new ProfileQuery(pageSize, normalizeAddresPrefix(preferences.getProfilesFilter()), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_ADDRESSES));
+                  totalSize = profiles.getTotalSize();
+                  Vector vector = profiles.getSortOrder();
+                  Collections.sort(vector, ProfileDataItem.comparator(preferences.getProfilesSortOrder()));
+                  profiles.setSortOrder(vector);
+                  request.getSession().setAttribute("profiles", profiles);
+              } else {
+                  profiles = (QueryResultSet) request.getSession().getAttribute("profiles");
+                  Vector vector = profiles.getSortOrder();
+                  Collections.sort(vector, ProfileDataItem.comparator(preferences.getProfilesSortOrder()));
+                  profiles.setSortOrder(vector);
+              }
+              totalSize = profiles.getTotalSize();
+              queried = true;
+              if (isCloseQuery()) {
+                  request.getSession().removeAttribute("profiles");
+                  queried = false;
+              }
+          } catch (AdminException e) {
+              logger.error("Couldn't query profiles", e);
+              return error(SMSCErrors.error.profiles.queryError, e);
+          }
+      }
+      return isEditAllowed() ? RESULT_OK : RESULT_ERROR;
   }
 
   private int delete()
@@ -266,4 +302,22 @@ public class Index extends IndexBean
   {
     this.refreshed = refreshed;
   }
+
+    public boolean isRunQuery() {
+            return runQuery;
+        }
+
+        public void setRunQuery(boolean runQuery) {
+            this.runQuery = runQuery;
+        }
+
+        public boolean isCloseQuery() {
+            return closeQuery;
+        }
+
+        public void setCloseQuery(boolean closeQuery) {
+            this.closeQuery = closeQuery;
+        }
+
+
 }

@@ -24,7 +24,8 @@ String jscript = "navigatePage";
 function navigatePage(pageNum)
 {
 	document.all.startPosition.value = pageNum*<%=bean.getPageSize()%>;
-	opForm.submit();
+    document.all.runQuery.value = false;
+    opForm.submit();
 	return false;
 }
 </script>

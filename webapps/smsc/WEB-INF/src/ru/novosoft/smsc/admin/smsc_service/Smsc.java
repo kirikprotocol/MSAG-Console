@@ -16,6 +16,7 @@ import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.DistributionListManager;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.profiler.ProfileEx;
+import ru.novosoft.smsc.admin.profiler.ProfileDataFile;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.route.SmeStatus;
@@ -92,6 +93,8 @@ public class Smsc extends Service
   private AliasSet aliases = null;
   private ProfileDataSource profileDataSource = null;
 
+  private ProfileDataFile profileDataFile = null;
+
   private long serviceRefreshTimeStamp = 0;
   private static final char LOGGER_DELIMITER = ',';
 
@@ -104,6 +107,9 @@ public class Smsc extends Service
       final Document aliasesDoc = Utils.parse(new FileReader(new File(configFolder, "aliases.xml")));
       aliases = new AliasSet(aliasesDoc.getDocumentElement(), smscAppContext);
       profileDataSource = new ProfileDataSource(connectionPool);
+      profileDataFile = new ProfileDataFile();
+      profileDataFile.init(getSmscConfig(), getConfigFolder().getAbsolutePath());
+
     } catch (FactoryConfigurationError error) {
       logger.error("Couldn't configure xml parser factory", error);
       throw new AdminException("Couldn't configure xml parser factory: " + error.getMessage());
@@ -249,6 +255,10 @@ public class Smsc extends Service
   {
     return profileDataSource.query(query);
   }
+
+ public synchronized QueryResultSet profilesQueryFromFile(final ProfileQuery query) throws AdminException {
+     return profileDataFile.query(query);
+ }
 
   public synchronized void applyProfiles()
   {

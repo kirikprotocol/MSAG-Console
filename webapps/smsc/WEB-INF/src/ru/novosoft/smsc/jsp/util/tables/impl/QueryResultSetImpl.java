@@ -12,6 +12,9 @@ import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 
 
 public class QueryResultSetImpl implements QueryResultSet
@@ -70,6 +73,10 @@ public class QueryResultSetImpl implements QueryResultSet
     return sortOrder;
   }
 
+  public void setSortOrder(Vector sortOrder){
+    this.sortOrder = sortOrder;
+  }
+
   public boolean isLast()
   {
     return last;
@@ -104,7 +111,7 @@ public class QueryResultSetImpl implements QueryResultSet
       DataItem dataItem = (DataItem) results.get(i);
       System.out.println("dataItem = " + dataItem);
       if (dataItem != null)
-        System.out.println("dataItem.getValue(columnName) = " + dataItem.getValue(columnName));
+        //System.out.println("dataItem.getValue(columnName) = " + dataItem.getValue(columnName));
       if (!dataItem.getValue(columnName).equals(startValue))
         return i;
     }
@@ -125,4 +132,5 @@ public class QueryResultSetImpl implements QueryResultSet
   {
     this.totalSize = totalSize;
   }
+
 }

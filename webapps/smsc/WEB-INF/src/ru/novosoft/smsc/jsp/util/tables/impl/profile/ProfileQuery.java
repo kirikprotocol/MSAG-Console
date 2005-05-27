@@ -19,6 +19,7 @@ public class ProfileQuery
   private int startPosition;
   private byte show;
 
+
   public ProfileQuery(int expectedResultsQuantity, String filter, String sortOrder, int startPosition, byte show)
   {
     this.expectedResultsQuantity = expectedResultsQuantity;
@@ -52,4 +53,5 @@ public class ProfileQuery
   {
     return show;
   }
+
 }

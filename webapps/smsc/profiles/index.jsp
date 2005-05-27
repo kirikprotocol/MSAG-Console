@@ -18,7 +18,7 @@ switch(bean.process(request))
 	case Index.RESULT_OK:
 		break;
 	case Index.RESULT_REFRESH:
-		response.sendRedirect("index.jsp?refreshed=true&initialized=" + bean.isInitialized() + "&startPosition=" + bean.getStartPositionInt() + "&filterMask=" + URLEncoder.encode(bean.getFilterMask(), "UTF-8"));
+		response.sendRedirect("index.jsp?refreshed=true&initialized=" + bean.isInitialized() + "&startPosition=" + bean.getStartPositionInt() + "&filterMask=" + URLEncoder.encode(bean.getFilterMask(), "UTF-8") + "&runQuery=" + bean.isRunQuery() + "&closeQuery=" + bean.isCloseQuery());
 		return;
 	case Index.RESULT_ERROR:
 		break;
@@ -41,6 +41,8 @@ MENU0_SELECTION = "MENU0_PROFILES";
 
 <input type=hidden name=startPosition value="<%=bean.getStartPosition()%>">
 <input type=hidden name=profileMask>
+<input type="hidden" name="runQuery">
+<input type="hidden" name="closeQuery">
 <input type=hidden name=totalSize value=<%=bean.getTotalSize()%>>
 <input type=hidden name=sort>
 <input type=hidden name=initialized value=true>
@@ -59,18 +61,26 @@ function setSort(sorting)
 		opForm.sort.value = "-<%=bean.getSort()%>";
 	else
 		opForm.sort.value = sorting;
+        document.all.runQuery.value = false;
 	opForm.submit();
 	return false;
+}
+function runQuery(){
+    document.all.runQuery.value = true;
+}
+function closeQuery(){
+    document.all.closeQuery.value = true;
+    document.all.runQuery.value = false;
 }
 </script>
 <%=getLocString("profiles.profilePrefix")%> <input class=txt name=filterMask value="<%=bean.getFilterMask()%>" validation="address_prefix" onkeyup="resetValidation(this)">
 </div>
 <%
 	page_menu_begin(out);
-	page_menu_button(session, out, "mbQuery",  "common.buttons.query",  "common.buttons.query");
+	page_menu_button(session, out, "mbQuery",  "common.buttons.query",  "common.buttons.query", "onClick=runQuery()");
 	page_menu_space(out);
 	page_menu_end(out);
-	if (bean.isQueried())
+    if (bean.isQueried())
 	{
 %>
 <div class=content>
@@ -99,10 +109,8 @@ function setSort(sorting)
 </tr>
 </thead>
 <tbody>
-<%! void appendDivertActiveFlag(StringBuffer divertActive, boolean value, String valueTitle)
-{
-  if (value)
-  {
+<%! void appendDivertActiveFlag(StringBuffer divertActive, boolean value, String valueTitle){
+  if (value){
     if (divertActive.length() >0)
       divertActive.append(", ");
     divertActive.append(valueTitle);
@@ -110,10 +118,13 @@ function setSort(sorting)
 }
 %><%
 		{
-			int row = 0;
-			for(Iterator i = bean.getProfiles().iterator(); i.hasNext(); row++)
-			{
-				DataItem item = (DataItem) i.next();
+            int firstIndex = bean.getStartPositionInt()+1;
+            int lastIndex = bean.getStartPositionInt()+bean.getPageSizeInt();
+            if (lastIndex >= bean.getTotalSizeInt() || bean.getPageSizeInt() < 0)
+            	lastIndex = bean.getTotalSizeInt();
+            int row = 0;
+            for (int cnt=firstIndex; cnt<=lastIndex; cnt++, row++) {
+               DataItem item = (DataItem)bean.getProfiles().get(cnt-1);
 				final String profileMask = (String)item.getValue("Mask");
 				final String encProfileMask = StringEncoderDecoder.encode(profileMask);
         final String divert = (String)item.getValue("divert");
@@ -154,6 +165,13 @@ function setSort(sorting)
 </table>
 <%@ include file="/WEB-INF/inc/navbar_nofilter.jsp"%>
 </div>
+<%      if (bean.isQueried()){
+            page_menu_begin(out);
+            page_menu_button(session, out, "mbClose",  "Close",  "Close Query", "onClick=closeQuery()");
+            page_menu_space(out);
+	        page_menu_end(out);
+        }
+%>
 <%
 		if (bean.isEditAllowed())
 		{

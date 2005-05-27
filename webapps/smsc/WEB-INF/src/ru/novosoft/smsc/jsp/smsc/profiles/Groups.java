@@ -17,12 +17,15 @@ import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
+import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileDataItem;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Vector;
+import java.util.Collections;
 
 public class Groups extends IndexBean
 {
@@ -74,15 +77,32 @@ public class Groups extends IndexBean
     else if (mbDelete != null)
       return delete();
 
-    try {
-      profiles = smsc.profilesQuery(new ProfileQuery(pageSize, preferences.getProfilesFilter(), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_MASKS));
-      totalSize = profiles.getTotalSize();
-    } catch (AdminException e) {
-      logger.error("Couldn't query profiles", e);
-      return error(SMSCErrors.error.profiles.queryError, e);
-    }
+//    try {
+//      profiles = smsc.profilesQuery(new ProfileQuery(pageSize, preferences.getProfilesFilter(), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_MASKS));
+//      totalSize = profiles.getTotalSize();
+//    } catch (AdminException e) {
+//      logger.error("Couldn't query profiles", e);
+//      return error(SMSCErrors.error.profiles.queryError, e);
+//    }
+//
+//    return isEditAllowed() ? RESULT_OK : error(SMSCErrors.error.profiles.smscNotConnected);
+//  }
 
-    return isEditAllowed() ? RESULT_OK : error(SMSCErrors.error.profiles.smscNotConnected);
+
+      try {
+          profiles = smsc.profilesQueryFromFile(new ProfileQuery(pageSize, preferences.getProfilesFilter(), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_MASKS));
+          totalSize = profiles.getTotalSize();
+          Vector vector = profiles.getSortOrder();
+          Collections.sort(vector, ProfileDataItem.comparator(preferences.getProfilesSortOrder()));
+          profiles.setSortOrder(vector);
+          request.getSession().setAttribute("profiles", profiles);
+          totalSize = profiles.getTotalSize();
+
+      } catch (AdminException e) {
+          logger.error("Couldn't query profiles", e);
+          return error(SMSCErrors.error.profiles.queryError, e);
+      }
+      return isEditAllowed() ? RESULT_OK : RESULT_ERROR;
   }
 
   private int delete()
