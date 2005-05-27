@@ -247,8 +247,8 @@ this.ds = ds;
             try {
                 input = new BufferedInputStream(new FileInputStream(path));
                 String fileStamp = readString(input, 10);
-                if (fileStamp == null || !fileStamp.equals("SMSC.STAT"))
-                    throw new MessageException("unsupported header of file (support only SMSC.STAT file )");
+                if (fileStamp == null || !fileStamp.equals("SMPPGW.STAT"))
+                    throw new MessageException("unsupported header of file (support only SMPPGW.STAT file )");
                 readUInt16(input); // read version for support reasons
                 //CountersSet lastHourCounter = new CountersSet();
              //   Date lastDate = null;
