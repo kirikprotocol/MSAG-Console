@@ -47,7 +47,7 @@ public class SmppGWAppContext
   private final Daemon gwDaemon;
   private final Gateway gateway;
   private final Statuses statuses;
-  private final DataSource connectionPool;
+ // private final DataSource connectionPool;
   private final BillingManager billingManager;
   private Journal journal = new Journal();
   private Smppgw smppgw = null;
@@ -63,7 +63,7 @@ public class SmppGWAppContext
       gwConfig = new Config(new File(config.getString("gw_config")));
       String gwDaemonHost=config.getString("gw daemon.host");
       String gwConfigFolder=config.getString("gw_config_folder");
-      connectionPool = createConnectionPool(config);
+    //  connectionPool = createConnectionPool(config);
       userManager = new UserManager(config.getString("users_config_file"));
       providerManager = new ProviderManager(gwConfig);
       gwSmeManager = new GwSmeManager(config.getString("sme_file"), gwConfig, providerManager);
@@ -179,12 +179,12 @@ public class SmppGWAppContext
   {
     return billingManager;
   }
-
+/*
   public DataSource getDataSource()
   {
     return connectionPool;
   }
-
+  */
   public Journal getJournal()
   {
     return journal;
