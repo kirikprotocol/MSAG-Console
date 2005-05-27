@@ -64,7 +64,7 @@ public class Stat
 //  private SimpleDateFormat datePeriodLocalFormat = new SimpleDateFormat(DATE_PERIOD_FORMAT);
 
   private String statstorePath;
-  private final static String PARAM_NAME_STAT_DIR = "MessageStore.statisticsDir";
+  private final static String PARAM_NAME_STAT_DIR = "MessageStorage.statisticsDir";
 
   private Date fromQueryDate = null;
   private Date tillQueryDate = null;
