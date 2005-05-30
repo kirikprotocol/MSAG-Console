@@ -241,7 +241,7 @@ public class ProfileDataFile {
                                String divertResult, short divertModifiable,
                                short udhconcat, short translit) throws AdminException {
         Profile profile = new Profile(mask,
-                Profile.getCodepageString((byte) codepage),
+                Profile.getCodepageString((byte) ((byte) codepage & 0x7F)),
                 String.valueOf((codepage & 0x80) != 0),
                 Profile.getReportOptionsString((byte) reportoptions),
                 locale,
