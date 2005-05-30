@@ -20,6 +20,7 @@ use vars qw($eoln);
 
 use FixedWidth;
 use CommaSeparated;
+use CommaSeparated2;
 
 #use re 'debug';
 

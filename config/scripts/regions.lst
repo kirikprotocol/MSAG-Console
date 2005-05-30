@@ -6,4 +6,5 @@
 # LAST REGION IN IS YOUR DEFAULT REGION AND REGEXP _MUST_ BE '.*' !
 #
 kem:CommaSeparated:91333[01]\d{4}
+tuva:CommaSeparated2:913340\d{4}
 nsk:FixedWidth:.*
