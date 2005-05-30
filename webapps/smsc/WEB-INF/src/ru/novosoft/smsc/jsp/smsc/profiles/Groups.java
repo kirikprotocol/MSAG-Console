@@ -92,10 +92,7 @@ public class Groups extends IndexBean
       try {
           profiles = smsc.profilesQueryFromFile(new ProfileQuery(pageSize, preferences.getProfilesFilter(), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_MASKS));
           totalSize = profiles.getTotalSize();
-          Vector vector = profiles.getSortOrder();
-          Collections.sort(vector, ProfileDataItem.comparator(preferences.getProfilesSortOrder()));
-          profiles.setSortOrder(vector);
-          request.getSession().setAttribute("profiles", profiles);
+          profiles.sortBycolumnName(preferences.getProfilesSortOrder());
           totalSize = profiles.getTotalSize();
 
       } catch (AdminException e) {

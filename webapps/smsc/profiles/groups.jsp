@@ -95,7 +95,7 @@ int row = 0;
 for(Iterator i = bean.getProfiles().iterator(); i.hasNext(); row++)
 {
 DataItem item = (DataItem) i.next();
-final String profileMask = (String)item.getValue("Mask");
+final String profileMask = (String)item.getValue("mask");
 final String encProfileMask = StringEncoderDecoder.encode(profileMask);
 final String divert = (String)item.getValue("divert");
 final String divertEnc = divert == null || divert.length() == 0 ? "&nbsp;" : StringEncoderDecoder.encode(divert);
@@ -119,10 +119,10 @@ if (divertActive.length() == 0)
 		{
 			%><%=encProfileMask%><%
 		}%></td>
-	<td><%=StringEncoderDecoder.encode((String)item.getValue("Codepage"))%></td>
-	<td><%=StringEncoderDecoder.encode((String)item.getValue("Report info"))%></td>
+	<td><%=StringEncoderDecoder.encode((String)item.getValue("codeset"))%></td>
+	<td><%=StringEncoderDecoder.encode((String)item.getValue("reportinfo"))%></td>
 	<td><%=StringEncoderDecoder.encode((String)item.getValue("locale"))%></td>
-  <td align=center><%=item.getValue("alias hide")%></td>
+  <td align=center><%=item.getValue("alias_hide")%></td>
   <td align=center><%if (((Boolean)item.getValue("hidden_mod"    )).booleanValue()){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
   <td><%=divertEnc%></td>
   <td><%=divertActive%></td>

@@ -4,7 +4,6 @@
 package ru.novosoft.smsc.admin.profiler;
 
 import org.apache.log4j.Category;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileDataItem;
@@ -12,8 +11,8 @@ import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.smsview.archive.Message;
 import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.util.WebAppFolders;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -21,7 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
-import java.util.HashMap;
+import java.io.File;
 import java.util.Date;
 import java.util.Collections;
 
@@ -35,32 +34,31 @@ import java.util.Collections;
 public class ProfileDataFile {
 
     Category logger = Category.getInstance(ProfileDataFile.class);
-    private final int MAX_SMS_FETCH_SIZE = 200;
     private String profilerStorePath;
-    private static final String[] columnNames = {"Mask", "Codepage", "Report info", "Locale", "Alias hide", "Hide modifiable", "divert", "divert_act", "divert_mod", "ussd7bit"};
+    private static final String[] columnNames = {"mask", "codeset", "reportinfo", "locale", "alias_hide", "Hide modifiable", "divert", "divert_act", "divert_mod", "ussd7bit"};
 
-    public static final String SECTION_NAME_LOCAL_STORE = "profiler";
-    public static final String PARAM_NAME_FILE_NAME = "storeFile";
+    private static final String PARAM_NAME_FILE_NAME = "profiler.storeFile";
 
     public void init(Config config, String configPath) throws AdminException {
 
-        String dirPrefics = "/"; //Solaris
-        int len = configPath.lastIndexOf(dirPrefics) + 1; // Solaris
-        if (len < 1) {
-            dirPrefics = "\\"; //Windows
-            len = configPath.lastIndexOf(dirPrefics) + 1; //Windows
-        }
-        String absolutPath = configPath.substring(0, len);
-
         try {
-            profilerStorePath = config.getString(SECTION_NAME_LOCAL_STORE + '.' + PARAM_NAME_FILE_NAME);
-        } catch (Config.ParamNotFoundException e) {
-            e.printStackTrace();
-        } catch (Config.WrongParamTypeException e) {
-            e.printStackTrace();
+            profilerStorePath = config.getString(PARAM_NAME_FILE_NAME);
+            if (profilerStorePath == null || profilerStorePath.length() <= 0)
+                throw new AdminException("store path is empty");
+        } catch (Exception e) {
+            throw new AdminException("Failed to obtain " + PARAM_NAME_FILE_NAME + " Details: " + e.getMessage());
         }
-        if (profilerStorePath.indexOf(dirPrefics) != 0)
-            profilerStorePath = absolutPath + profilerStorePath;
+        File statPath = new File(profilerStorePath);
+        if (statPath == null || !statPath.isAbsolute()) {
+            File smscConfFile = WebAppFolders.getSmscConfFolder();
+            String absolutePath = smscConfFile.getParent();
+            statPath = new File(absolutePath, profilerStorePath);
+            logger.debug("Sms store path: by smsc conf '" + statPath.getAbsolutePath() + "'");
+        } else {
+            logger.debug("Sms store path: is absolute '" + statPath.getAbsolutePath() + "'");
+        }
+        profilerStorePath = statPath.getAbsolutePath();
+
         FileInputStream input = null;
         try {
             input = new FileInputStream(profilerStorePath);
@@ -88,11 +86,7 @@ public class ProfileDataFile {
 
             String FileName = Message.readString(fis, 8);
             int version = (int) Message.readUInt32(fis);
-
-
-            int n = 0;
             while (true) {
-                //while (n < 100) {
                 int msgSize1 = 117;
                 readBuffer(fis, buf, msgSize1);
                 InputStream bis = new ByteArrayInputStream(buf, 0, msgSize1);
@@ -102,7 +96,6 @@ public class ProfileDataFile {
                 byte type = (byte) Message.readUInt8(bis); //f.WriteByte(addr.type);
                 byte plan = (byte) Message.readUInt8(bis); //f.WriteByte(addr.plan);
 
-                //String address = getCleanString(Message.readString(bis, 21));//f.Write(buf,sizeof(buf)); sizeof(AddressValue)==21
                 String address = Message.readString(bis, 21);//f.Write(buf,sizeof(buf)); sizeof(AddressValue)==21
                 Mask mask = new Mask(type, plan, address);
                 int codepage = (int) Message.readUInt32(bis);//f.WriteNetInt32(codepage);
@@ -123,7 +116,7 @@ public class ProfileDataFile {
                 short udhconcat = (short) Message.readUInt8(bis);//f.WriteByte(udhconcat);
                 short translit = (short) Message.readUInt8(bis);//f.WriteByte(translit);
 
-                if (isAddProfile(mask, queryFilter, show)) {
+                if (used == 1 && isAddProfile(mask, queryFilter, show)) {
                     String divertActiveStr = String.valueOf(divertActive != 0);
                     String divertActiveAbsentStr = String.valueOf(divertActiveAbsent != 0);
                     String divertActiveBlockedStr = String.valueOf(divertActiveBlocked != 0);
@@ -136,16 +129,14 @@ public class ProfileDataFile {
                             new Boolean(divertActiveBarredStr).booleanValue(),
                             new Boolean(divertActiveCapacityStr).booleanValue());
 
-                    Profile profile = setProfile(mask, codepage, used, reportoptions,
+                    Profile profile = setProfile(mask, codepage, reportoptions,
                             locale, hide, hideModifiable, divert, divertResult,
                             divertModifiable, udhconcat, translit);
 
                     results.add(new ProfileDataItem(profile));
-
                     totalCount++;
                     isLast = false;
                 }
-                n++;
                 bis.close();
             }
         } catch (EOFException e) {
@@ -194,7 +185,7 @@ public class ProfileDataFile {
 
         } else if (show == ProfileQuery.SHOW_MASKS) {
             filter = mask.getNormalizedMask().indexOf(queryFilter) != -1;
-        }else{
+        } else {
             filter = true;
         }
         return filter;
@@ -244,23 +235,23 @@ public class ProfileDataFile {
     }
 
     private Profile setProfile(Mask mask, int codepage,
-                               int used, int reportoptions,
+                               int reportoptions,
                                String locale, int hide,
                                short hideModifiable, String divert,
                                String divertResult, short divertModifiable,
                                short udhconcat, short translit) throws AdminException {
         Profile profile = new Profile(mask,
                 Profile.getCodepageString((byte) codepage),
-                String.valueOf((used) != 0),
+                String.valueOf((codepage & 0x80) != 0),
                 Profile.getReportOptionsString((byte) reportoptions),
                 locale,
                 String.valueOf((hide) != 0),
-                new Short(hideModifiable).toString(),
+                String.valueOf((hideModifiable) != 0),
                 divert,
                 divertResult,
-                new Short(divertModifiable).toString(),
-                new Short(udhconcat).toString(),
-                new Short(translit).toString());
+                String.valueOf((divertModifiable) != 0),
+                String.valueOf((udhconcat) != 0),
+                String.valueOf((translit) != 0));
         return profile;
     }
 

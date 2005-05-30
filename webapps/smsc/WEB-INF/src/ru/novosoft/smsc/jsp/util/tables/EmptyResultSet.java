@@ -44,6 +44,10 @@ public class EmptyResultSet implements QueryResultSet
   public void setSortOrder(Vector sortOrder) {
 
   }
+
+    public void sortBycolumnName(String columnName) {
+    }
+
     public boolean isLast()
   {
     return true;

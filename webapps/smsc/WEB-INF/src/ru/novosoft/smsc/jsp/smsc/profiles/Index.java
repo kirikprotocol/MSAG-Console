@@ -143,15 +143,12 @@ public class Index extends IndexBean
               if (isRunQuery()) {
                   profiles = smsc.profilesQueryFromFile(new ProfileQuery(pageSize, normalizeAddresPrefix(preferences.getProfilesFilter()), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_ADDRESSES));
                   totalSize = profiles.getTotalSize();
-                  Vector vector = profiles.getSortOrder();
-                  Collections.sort(vector, ProfileDataItem.comparator(preferences.getProfilesSortOrder()));
-                  profiles.setSortOrder(vector);
+                  profiles.sortBycolumnName(preferences.getProfilesSortOrder());
                   request.getSession().setAttribute("profiles", profiles);
               } else {
                   profiles = (QueryResultSet) request.getSession().getAttribute("profiles");
-                  Vector vector = profiles.getSortOrder();
-                  Collections.sort(vector, ProfileDataItem.comparator(preferences.getProfilesSortOrder()));
-                  profiles.setSortOrder(vector);
+                  profiles.sortBycolumnName(preferences.getProfilesSortOrder());
+                  request.getSession().setAttribute("profiles", profiles);
               }
               totalSize = profiles.getTotalSize();
               queried = true;

@@ -101,6 +101,10 @@ public class QueryResultSetImpl implements QueryResultSet
     results = newResults;
   }
 
+  public void sortBycolumnName(String columnName) {
+      Collections.sort(results, new DataItemComparator(columnName));
+  }
+
   private int getBlockEnd(int blockStart, String columnName)
   {
     System.out.println("QueryResultSetImpl.getBlockEnd(\"" + columnName + "\")");
