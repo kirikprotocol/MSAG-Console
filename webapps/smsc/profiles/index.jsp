@@ -167,7 +167,7 @@ function closeQuery(){
 </div>
 <%      if (bean.isQueried()){
             page_menu_begin(out);
-            page_menu_button(session, out, "mbClose",  "Close",  "Close Query", "onClick=closeQuery()");
+            page_menu_button(session, out, "mbClose",  "common.buttons.close",  "profiles.closeHint", "onClick=closeQuery()");
             page_menu_space(out);
 	        page_menu_end(out);
         }
