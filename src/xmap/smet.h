@@ -29,6 +29,7 @@ public:
   void handleEvent(SmppHeader *pdu);
   void handleError(int errorCode);
   void setTrans(SmppTransmitter *t);
+   void ReplySms(SMS*sm);
 protected:
   SmppTransmitter* trans;
 };
@@ -36,9 +37,20 @@ protected:
 class UssdSmeRunner:public Thread
 {
 public:
+
  void Reply();
  int Execute();
 };
+
+
+class UssdSmeTransmitter:public Thread
+{
+public:
+ int Execute();
+ void Reply();
+
+};
+
 #endif
 
 

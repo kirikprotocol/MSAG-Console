@@ -15,14 +15,18 @@
 
 smsc::logger::Logger* smelogger;
 extern bool stopProcess;
-Event ussd_evt;
-SmppTransmitter *tr;
+Event ussd_evt,ussd_TX_evt;
+
+SmppTransmitter *tr=0;
 extern qMessage_t message_store;
 SMS xsms;
 bool bSend;
 /** Listener to SME for USSD processing.
 Main trend is RX message are moved to TX message.*/
 
+SmeConfig   *sme_cfg=0;
+SmppSession *sme_sess=0;
+/*
 typedef struct sm_st
 {
  // for 1st send
@@ -32,22 +36,37 @@ typedef struct sm_st
  SMS s;
 
 };
-
-SyncQeuue<sm_st> smque;
+*/
+SyncQeuue<SMS> smque;
 
 void MyListener::handleEvent(SmppHeader *pdu)
 {
    
  if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
     {
-  sm_st sm;
-  sm.seguencenumber = pdu->get_sequenceNumber();
-  fetchSmsFromSmppPdu(((PduXSm*)pdu),&sm.s);
-  smque.Push(sm);
+  if(trans)
+  {
+   SMS sm;
+      PduDeliverySmResp dsmresp;
+  dsmresp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+  dsmresp.set_messageId("");
+  dsmresp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+  dsmresp.get_header().set_commandStatus(0);
+
+  trans->sendDeliverySmResp(dsmresp);
+
+
+  fetchSmsFromSmppPdu(((PduXSm*)pdu),&sm);
+  //smque.Push(sm);
+
+  ReplySms(&sm);
 
    // signalize to sender thread
-    bSend = true;
+   bSend = true;
+  
+  }
     ussd_evt.Signal();
+  
 
     }
  else
@@ -69,6 +88,46 @@ void MyListener::setTrans(SmppTransmitter *t)
 {
     trans=t;
 }
+void MyListener::ReplySms(SMS *sm)
+{
+    Address src_addr;
+       Address dest_addr;
+
+    /* addressing exchange orig_new = dest_old etc...*/
+       src_addr  = sm->getDestinationAddress();//001
+       dest_addr = sm->getOriginatingAddress();//02001
+    uint32_t mref =  sm->getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+    
+    
+    //dest_addr.setValue(5,"02001");
+       sm->setDestinationAddress(dest_addr);
+       sm->setOriginatingAddress(src_addr);
+
+
+    //   it.s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)message,len);
+    //   it.s.setIntProperty(Tag::SMPP_SM_LENGTH,len);
+       sm->setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_RESP);
+    sm->setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,mref);
+       sm->setIntProperty(Tag::SMPP_DATA_CODING,0);
+
+
+    PduSubmitSm replsm;
+  fillSmppPduFromSms(&replsm,sm);
+
+  SmppHeader* resp;
+  resp=(SmppHeader*)trans->submit(replsm); 
+
+  smsc_log_info(smelogger,"%s resp is 0x%x trans is 0x%x",__func__,resp,trans);
+
+  if(resp)
+  {
+   smsc_log_info(smelogger,"%s command status =%d",__func__,resp->get_commandStatus());
+   disposePdu((SmppHeader*)resp);
+  }
+    
+}
+
+///////////////////////////////////////////////////////////////
 
 /**
 Thread for running SME listener
@@ -87,7 +146,7 @@ int UssdSmeRunner::Execute()
  smelogger =  Logger::getInstance("xmapussd");
  smsc_log_info(smelogger, "Starting...");
 
- SmeConfig cfg;
+ SmeConfig cfg; 
  cfg.host=message_store.config->getSmeHost();
  cfg.port=message_store.config->getSmePort();
  cfg.sid=message_store.config->getSmeSid();
@@ -106,6 +165,8 @@ int UssdSmeRunner::Execute()
    tr=ss.getAsyncTransmitter();//Sync
    lst.setTrans(tr);
    
+   ussd_TX_evt.Signal();
+
    while(!stopProcess)
    {
     //  [5/17/2005]
@@ -113,11 +174,11 @@ int UssdSmeRunner::Execute()
     ussd_evt.Wait();
 
     //send all
-    if(bSend)
-    {
-     Reply();
-     bSend = false;
-    }
+    //if(bSend)
+    //{
+    // Reply();
+    // bSend = false;
+    //}
     
     
    }
@@ -145,70 +206,87 @@ return 1;
 };
 
 
-void UssdSmeRunner::Reply()
+void UssdSmeRunner::Reply(){}
+
+int UssdSmeTransmitter::Execute()
 {
-
- sm_st it;
- if(smque.Pop(it,100))
- {
-    PduDeliverySmResp dsmresp;
-    dsmresp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
-    dsmresp.set_messageId("");
-    dsmresp.get_header().set_sequenceNumber(it.seguencenumber);
-    dsmresp.get_header().set_commandStatus(0);
-    tr->sendDeliverySmResp(dsmresp);
-//////////////////////////////////////////////////////////////////////////
 /*
+ ussd_TX_evt.Wait();
 
-   char msg[256];
-   char message[256];
-      getPduText(((PduXSm*)pdu),msg,sizeof(msg));
+ smsc_log_info(smelogger,"%s start Ussd thread transmitter",__func__);
 
-   //printf("%s recieved '%s'",__func__,msg);
-
-   smsc_log_info(smelogger,"%s recieved '%s'",__func__,msg);
-   fflush(stdout);
-   sprintf(message,"%s",msg);
-      int len=strlen((char*)message);
-   fetchSmsFromSmppPdu(((PduXSm*)pdu),&xsms);
-*/
-
-//////////////////////////////////////////////////////////////////////////
-
-    Address src_addr;
-       Address dest_addr;
-
-    /* addressing exchange orig_new = dest_old etc...*/
-       src_addr  = it.s.getDestinationAddress();//001
-       dest_addr = it.s.getOriginatingAddress();//02001
-    uint32_t mref =  it.s.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
-    
-    
-    //dest_addr.setValue(5,"02001");
-       it.s.setDestinationAddress(dest_addr);
-       it.s.setOriginatingAddress(src_addr);
+ while(!stopProcess)
+ {
+  Reply();
+ }*/
+ return 1;
+}
 
 
-    //   it.s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)message,len);
-    //   it.s.setIntProperty(Tag::SMPP_SM_LENGTH,len);
-       it.s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_RESP);
-    it.s.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,mref);
-       it.s.setIntProperty(Tag::SMPP_DATA_CODING,0);
-
-
-    PduSubmitSm sm;
-  fillSmppPduFromSms(&sm,&it.s);
-
-  SmppHeader* resp;
-  resp=(SmppHeader*)tr->submit(sm); 
-
-  xmap_trace(smelogger,"%s resp is 0x%x trans is 0x%x",__func__,resp,tr);
-
-   if(resp)
-   {
-    xmap_trace(smelogger,"%s command status =%d",__func__,resp->get_commandStatus());
-    disposePdu((SmppHeader*)resp);
-   }
-    }
-
+void UssdSmeTransmitter::Reply()
+{
+//  SMS it;
+// smsc_log_info(smelogger,"%s tik...",__func__);
+//
+// while(smque.Pop(it,100))
+// {
+//  if(stopProcess || tr==0)
+//  {
+//   sleep(1);
+//   return;
+//  }
+// 
+////////////////////////////////////////////////////////////////////////////
+///*
+//
+//   char msg[256];
+//   char message[256];
+//      getPduText(((PduXSm*)pdu),msg,sizeof(msg));
+//
+//   //printf("%s recieved '%s'",__func__,msg);
+//
+//   smsc_log_info(smelogger,"%s recieved '%s'",__func__,msg);
+//   fflush(stdout);
+//   sprintf(message,"%s",msg);
+//      int len=strlen((char*)message);
+//   fetchSmsFromSmppPdu(((PduXSm*)pdu),&xsms);
+//*/
+//
+////////////////////////////////////////////////////////////////////////////
+//
+//    Address src_addr;
+//       Address dest_addr;
+//
+//    /* addressing exchange orig_new = dest_old etc...*/
+//       src_addr  = it.getDestinationAddress();//001
+//       dest_addr = it.getOriginatingAddress();//02001
+//    uint32_t mref =  it.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+//    
+//    
+//    //dest_addr.setValue(5,"02001");
+//       it.setDestinationAddress(dest_addr);
+//       it.setOriginatingAddress(src_addr);
+//
+//
+//    //   it.s.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)message,len);
+//    //   it.s.setIntProperty(Tag::SMPP_SM_LENGTH,len);
+//       it.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,USSD_PSSR_RESP);
+//    it.setIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE,mref);
+//       it.setIntProperty(Tag::SMPP_DATA_CODING,0);
+//
+//
+//    PduSubmitSm sm;
+//  fillSmppPduFromSms(&sm,&it);
+//
+//  SmppHeader* resp;
+//  resp=(SmppHeader*)tr->submit(sm); 
+//
+//  smsc_log_info(smelogger,"%s resp is 0x%x trans is 0x%x",__func__,resp,tr);
+//
+//   if(resp)
+//   {
+//    smsc_log_info(smelogger,"%s command status =%d",__func__,resp->get_commandStatus());
+//    disposePdu((SmppHeader*)resp);
+//   }
+//    }
 }

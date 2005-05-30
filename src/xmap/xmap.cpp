@@ -30,7 +30,7 @@ smsc::logger::Logger *logger;
 CMapStateMashine * mapSTM;
 CPiper ppr;
 UssdSmeRunner SMEThr;
-
+UssdSmeTransmitter SMETX;
 ConfigXml config;
 //ostream & operator << (ostream & out, const DOMElement & elem);
 
@@ -191,6 +191,7 @@ int main(int argc, char *argv[])
  
  mapSTM->Start();
  SMEThr.Start();
+ SMETX.Start();
 
  if(argc>1)
  {
@@ -203,6 +204,7 @@ int main(int argc, char *argv[])
 // cprocessor->WaitFor(); 
  mapSTM->WaitFor();
  SMEThr.WaitFor();
+ SMETX.WaitFor();
       cc.WaitFor();
      ppr.WaitFor();
 

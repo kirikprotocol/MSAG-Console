@@ -9,6 +9,7 @@
 #include <thread.h>
 
 #include <stdio.h>
+#include <stdlib.h>
 
 extern qMessage_t message_store;
 extern bool stopProcess;
@@ -168,6 +169,20 @@ static JSBool _sleep_ms(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
 }
 
+
+static JSBool _system(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+
+ if(argc!=1) 
+  return JS_FALSE;
+
+ std::string text=JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
+
+ system(text.c_str());
+
+ return JS_TRUE;
+
+}
 static JSBool _exit_process(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
 
@@ -206,6 +221,7 @@ static JSFunctionSpec Global_functions[] = {
  {"WaitRecieve",wait_recieve,1},
  {"XMAPCooperate",map_state_machine_cooperate,1},
  {"fputs",write_file,1},
+ {"system",_system,1},
  {0}
 };
 
