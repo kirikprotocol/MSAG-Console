@@ -88,8 +88,8 @@ inline void fillSmppOptional(SmppStream* stream,SmppOptional* opt)
   /*network_error_code(5.3.2.31)*/
   if ( opt->has_networkErrorCode() )
   {
-    fillX(stream,SmppOptionalTags::networkErrorCode); // tag
-    fillX(stream,3);                                // length
+    fillX(stream,SmppOptionalTags::networkErrorCode);  // tag
+    fillX(stream,SmppOptionalLength::networkErrorCode);// length
     fillX(stream,opt->networkErrorCode[0]);
     fillX(stream,opt->networkErrorCode[1]);
     fillX(stream,opt->networkErrorCode[2]);
@@ -105,15 +105,15 @@ inline void fillSmppOptional(SmppStream* stream,SmppOptional* opt)
   /*alert_on_message_delivery(5.3.2.41)*/
   if ( opt->has_alertOnMessageDelivery() )
   {
-    fillX(stream,SmppOptionalTags::alertOnMessageDelivery); // tag
-    fillX(stream,0);                                        // length
+    fillX(stream,SmppOptionalTags::alertOnMessageDelivery);  // tag
+    fillX(stream,SmppOptionalLength::alertOnMessageDelivery);// length
   }
   /*its_reply_type(5.3.2.42)*/        macroFillField(itsReplyType);
   /*its_session_info(5.3.2.43)*/
   if ( opt->has_itsSessionInfo() )
   {
-    fillX(stream,SmppOptionalTags::itsSessionInfo); // tag
-    fillX(stream,2);                                // length
+    fillX(stream,SmppOptionalTags::itsSessionInfo);  // tag
+    fillX(stream,SmppOptionalLength::itsSessionInfo);// length
     fillX(stream,opt->itsSessionInfo[0]);
     fillX(stream,opt->itsSessionInfo[1]);
   }
