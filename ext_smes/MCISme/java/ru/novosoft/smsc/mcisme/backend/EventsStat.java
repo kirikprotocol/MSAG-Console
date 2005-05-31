@@ -52,7 +52,7 @@ public class EventsStat
       str += " period >= ? ";
       if (query.isTillDateEnabled()) str += " AND ";
     }
-    if (query.isTillDateEnabled()) str += " period <= ? ";
+    if (query.isTillDateEnabled()) str += " period < ? ";
     return str;
   }
 
