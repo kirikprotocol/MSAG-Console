@@ -49,6 +49,7 @@ public:
     inQueueCount=0;
     disconnecting=false;
     disconnectionStart=0;
+    unbinding=false;
     __trace2__("SmppProxy: processLimit=%d, processTimeout=%u",processLimit,processTimeout);
   }
   virtual ~SmppProxy(){}
@@ -84,6 +85,17 @@ public:
     return disconnectionStart;
   }
 
+  void Unbind()
+  {
+    MutexGuard mg(mutex);
+    unbinding=true;
+  }
+
+  bool isUnbinding()
+  {
+    MutexGuard mg(mutex);
+    return unbinding;
+  }
 
   inline bool CheckValidIncomingCmd(const SmscCommand& cmd);
   inline bool CheckValidOutgoingCmd(const SmscCommand& cmd);
@@ -412,6 +424,12 @@ public:
     return opened;
   }
 
+  bool isAlive()
+  {
+    MutexGuard mg(mutex);
+    return opened && !disconnecting && !unbinding;
+  }
+
   void AddRef()
   {
     MutexGuard g(mutex);
@@ -437,6 +455,7 @@ public:
           smppTransmitterSocket=0;
           __warning2__("SmppProxy: downgrade %p to receiver(rc=%d,pt=%d)",this,refcnt,proxyType);
         }
+        unbinding=false;
       }
       if(proxyType==proxyTransceiver)
       {
@@ -556,6 +575,7 @@ protected:
 
   bool disconnecting;
   time_t disconnectionStart;
+  bool unbinding;
 };
 
 bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)

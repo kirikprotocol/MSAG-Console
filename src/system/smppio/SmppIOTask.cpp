@@ -304,12 +304,24 @@ int SmppInputThread::Execute()
               case SmppCommandSet::BIND_TRANSMITTER:
               case SmppCommandSet::BIND_TRANCIEVER:
               {
-                if(ss->getProxy() && ss->getProxy()->isOpened())
+                if(ss->getProxy() &&
+                    (
+                      ss->getProxy()->isOpened() ||
+                      ss->getProxy()->isDisconnecting() ||
+                      ss->getProxy()->isUnbinding()
+                    )
+                  )
                 {
+                  __trace__("Decline bind of sme that is already bound, disconnecting or unbinding");
                   SmppHeader *resp=(SmppHeader*)new PduBindTRXResp();
                   resp->set_commandId(pdu->get_commandId()|0x80000000);
                   resp->set_sequenceNumber(pdu->get_sequenceNumber());
-                  resp->set_commandStatus(SmppStatusSet::ESME_RALYBND);
+                  resp->set_commandStatus
+                  (
+                    ss->getProxy()->isOpened()?
+                      SmppStatusSet::ESME_RALYBND:
+                      SmppStatusSet::ESME_RBINDFAIL
+                  );
                   ((PduBindTRXResp*)resp)->set_scInterfaceVersion(0x34);
                   ((PduBindTRXResp*)resp)->set_systemId("smsc");
                   SmscCommand cmd=SmscCommand::makeSmppPduCommand(resp);
@@ -659,6 +671,7 @@ int SmppInputThread::Execute()
                       )
                     );
                     //ss->getProxy()->close();
+                    ss->getProxy()->Unbind();
                     mon.Unlock();
                     KillProxy(ss->getChannelType(),ss->getProxy(),smeManager);
                     mon.Lock();
