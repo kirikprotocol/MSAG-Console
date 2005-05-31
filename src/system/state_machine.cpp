@@ -2452,10 +2452,11 @@ StateType StateMachine::submit(Tuple& t)
     tg.active=false;
   }
   sms->lastResult=Status::OK;
-  info2(smsLog, "SBM: submit ok, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
+  info2(smsLog, "SBM: submit ok, seqnum=%d Id=%lld;seq=%d;oa=%s;da=%s;dda=%s;srcprx=%s;dstprx=%s",
     dialogId2,
     t.msgId,dialogId,
     sms->getOriginatingAddress().toString().c_str(),
+    dstOriginal.toString().c_str(),
     sms->getDestinationAddress().toString().c_str(),
     src_proxy->getSystemId(),
     ri.smeSystemId.c_str()
@@ -3104,13 +3105,14 @@ StateType StateMachine::deliveryResp(Tuple& t)
   }
 
   int sttype=GET_STATUS_TYPE(t.command->get_resp()->get_status());
-  info2(smsLog, "DLVRSP: msgId=%lld;class=%s;st=%d;od=%s;da=%s",t.msgId,
+  info2(smsLog, "DLVRSP: msgId=%lld;class=%s;st=%d;oa=%s;da=%s;dda=%s",t.msgId,
       sttype==CMD_OK?"OK":
       sttype==CMD_ERR_RESCHEDULENOW?"RESCHEDULEDNOW":
       sttype==CMD_ERR_TEMP?"TEMP ERROR":"PERM ERROR",
       GET_STATUS_CODE(t.command->get_resp()->get_status()),
       sms.getOriginatingAddress().toString().c_str(),
-      sms.getDestinationAddress().toString().c_str()
+      sms.getDestinationAddress().toString().c_str(),
+      sms.getDealiasedDestinationAddress().toString().c_str()
     );
 
 
