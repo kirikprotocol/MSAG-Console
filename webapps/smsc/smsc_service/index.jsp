@@ -253,9 +253,9 @@ refreshStartStopButtonsStatus();
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~ profiler.notify ~~~~~~~~~~~~~~~~~~~~~~~~~
     startSection(out, "profiler.notify", "smsc.profiler.notify", false);
       startParams(out);
-        param(out, "smsc.profiler.notify.host",     "profiler.notify.host", bean.getIntParam("profiler.notify.host"));
+        param(out, "smsc.profiler.notify.host",     "profiler.notify.host", bean.getStringParam("profiler.notify.host"));
         param(out, "smsc.profiler.notify.port",     "profiler.notify.port", bean.getIntParam("profiler.notify.port"));
-        param(out, "smsc.profiler.notify.dir",      "profiler.notify.dir",  bean.getIntParam("profiler.notify.dir"));
+        param(out, "smsc.profiler.notify.dir",      "profiler.notify.dir",  bean.getStringParam("profiler.notify.dir"));
       finishParams(out);
     finishSection(out);
   finishSection(out);
