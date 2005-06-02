@@ -111,7 +111,11 @@ protected:
     logGetCategoriesMethod, logSetCategoriesMethod,
     traceRouteMethod, loadRoutesMethod,
     aclListNamesMethod, aclGetMethod, aclRemoveMethod, aclCreateMethod, aclUpdateInfoMethod,
-      aclLookupAddressesMethod, aclRemoveAddressesMethod, aclAddAddressesMethod
+      aclLookupAddressesMethod, aclRemoveAddressesMethod, aclAddAddressesMethod,
+    prcListPrincipalsMethod, prcAddPrincipalMethod, prcDeletePrincipalMethod, prcGetPrincipalMethod, prcAlterPrincipalMethod,
+    memAddMemberMethod, memDeleteMemberMethod, memGetMemberMethod, sbmAddSubmiterMethod,
+    sbmDeleteSubmiterMethod, sbmListSubmitersMethod, 
+    dlAddMethod, dlDeleteMethod, dlGetMethod, dlListMethod, dlAlterMethod
   };
 
   smsc::core::synchronization::Mutex mutex;

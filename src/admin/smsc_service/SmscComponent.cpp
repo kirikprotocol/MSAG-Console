@@ -94,6 +94,74 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
   acl_addresses_params["id"] = Parameter("id", LongType);
   acl_addresses_params["addresses"] = Parameter("addresses", StringListType);
 
+  /*---------------------loomox---------------*/
+
+ 
+
+  Parameters prc_list_params;
+  //prc_list_params[""] = Parameter("", BooleanType);
+  
+  Parameters prc_add_params;
+  prc_add_params["address"] = Parameter("address", StringListType);
+  prc_add_params["maxLists"] = Parameter("maxLists", LongType);
+  prc_add_params["maxElements"] = Parameter("maxElements", LongType);
+  
+  Parameters prc_delete_params;
+  prc_delete_params["address"] = Parameter("address", StringType);
+  
+  Parameters  prc_get_params;
+  prc_get_params["address"] = Parameter("address", StringType);
+
+  Parameters prc_alter_params;
+  prc_alter_params["address"] = Parameter("address", StringType);
+  prc_alter_params["maxLists"] = Parameter("maxLists", LongType);
+  prc_alter_params["maxElements"] = Parameter("maxElements", LongType);
+  prc_alter_params["altLists"] = Parameter("altLists", BooleanType);
+  prc_alter_params["altElements"] = Parameter("altElements", BooleanType);
+
+  Parameters mem_add_params;
+  mem_add_params["dlname"] = Parameter("dlname", StringType);
+  mem_add_params["address"] = Parameter("address", StringType);
+
+
+  Parameters mem_delete_params;
+  mem_delete_params[""] = Parameter("dlname", StringType);
+  mem_delete_params[""] = Parameter("address", StringType);
+
+  Parameters mem_get_params;
+  mem_get_params[""] = Parameter("dlname", StringType);
+
+  Parameters sbm_add_params;
+  sbm_add_params[""] = Parameter("dlname", StringType);
+  sbm_add_params[""] = Parameter("submitter", StringType);
+
+  Parameters sbm_delete_params;
+  sbm_delete_params[""] = Parameter("dlname", StringType);
+  sbm_delete_params[""] = Parameter("submitter", StringType);
+
+  Parameters sbm_list_params;
+  sbm_list_params[""] = Parameter("dlname", StringType);
+
+  Parameters dl_add_params;
+  dl_add_params[""] = Parameter("name", StringType);
+  dl_add_params[""] = Parameter("owner", StringType);
+  dl_add_params[""] = Parameter("maxElements", LongType);
+
+  Parameters dl_delete_params;
+  dl_delete_params[""] = Parameter("dlname", StringType);
+
+  Parameters dl_get_params;
+  dl_get_params[""] = Parameter("dlname", StringType);
+
+  Parameters dl_list_params;
+  dl_list_params[""] = Parameter("names", StringListType);
+  dl_list_params[""] = Parameter("owners", StringListType);
+  
+  Parameters dl_alter_params;
+  dl_alter_params[""] = Parameter("dlname", StringType);
+  dl_alter_params[""] = Parameter("maxElements", LongType);
+
+ 
 
   /**************************** method declarations *************************/
   Method apply_routes          ((unsigned)applyRoutesMethod,         "apply_routes",          empty_params, StringType);
@@ -142,6 +210,27 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
   Method acl_remove_addresses ((unsigned)aclRemoveAddressesMethod, "acl_remove_addresses",  acl_addresses_params,        BooleanType);
   Method acl_add_addresses    ((unsigned)aclAddAddressesMethod,    "acl_add_addresses",     acl_addresses_params,        BooleanType);
 
+  /*-------------loomox-----------*/
+  Method prc_list        ((unsigned)prcListPrincipalsMethod,   "prc_list",           prc_list_params,              BooleanType);
+  Method prc_add         ((unsigned)prcAddPrincipalMethod,     "prc_add",            prc_add_params,               StringListType);
+  Method prc_delete      ((unsigned)prcDeletePrincipalMethod,  "prc_delete",         prc_delete_params,            StringType);
+  Method prc_get         ((unsigned)prcGetPrincipalMethod,     "prc_get",            prc_get_params,               StringListType);
+  Method prc_alter       ((unsigned)prcAlterPrincipalMethod,   "prc_alter",          prc_alter_params,             StringListType);
+
+  Method mem_add         ((unsigned)memAddMemberMethod,        "mem_add",            mem_add_params,               StringListType);
+  Method mem_delete      ((unsigned)memDeleteMemberMethod,     "mem_delete",         mem_delete_params,            StringListType);
+  Method mem_get         ((unsigned)memGetMemberMethod,        "mem_get",            mem_get_params,               StringType);
+
+  Method sbm_add         ((unsigned)sbmAddSubmiterMethod,      "sbm_add",            sbm_add_params,               StringListType);
+  Method sbm_delete      ((unsigned)sbmDeleteSubmiterMethod,   "sbm_delete",         sbm_delete_params,            StringListType);
+  Method sbm_list        ((unsigned)sbmListSubmitersMethod,    "sbm_list",           sbm_list_params,              StringListType);
+
+  Method dl_add          ((unsigned)dlAddMethod,               "dl_add",             dl_add_params,                StringListType);
+  Method dl_delete       ((unsigned)dlDeleteMethod,            "dl_delete",          dl_delete_params,             StringType);
+  Method dl_get          ((unsigned)dlGetMethod,               "dl_get",             dl_get_params,                StringListType);
+  Method dl_list         ((unsigned)dlListMethod,              "dl_list",            dl_list_params,               StringListType);
+  Method dl_alter        ((unsigned)dlAlterMethod,             "dl_alter",           dl_alter_params,              StringListType);
+
   /***************************** method assigns *****************************/
   methods[apply_routes         .getName()] = apply_routes;
   methods[apply_aliases        .getName()] = apply_aliases;
@@ -183,6 +272,29 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
   methods[acl_lookup_addresses.getName()] = acl_lookup_addresses;
   methods[acl_remove_addresses.getName()] = acl_remove_addresses;
   methods[acl_add_addresses.getName()] = acl_add_addresses;
+
+  /*--------loomox------------*/
+
+  methods[prc_list.getName()] = prc_list;
+  methods[prc_add.getName()] = prc_add;
+  methods[prc_delete.getName()] = prc_delete;
+  methods[prc_get.getName()] = prc_get;
+  methods[prc_alter.getName()] = prc_alter;
+
+  methods[mem_add.getName()] = mem_add;
+  methods[mem_delete.getName()] = mem_delete;
+  methods[mem_get.getName()] = mem_get;
+
+  methods[sbm_add.getName()] = sbm_add;
+  methods[sbm_delete.getName()] = sbm_delete;
+  methods[sbm_list.getName()] = sbm_list;
+
+  methods[dl_add.getName()] = dl_add;
+  methods[dl_delete.getName()] = dl_delete;
+  methods[dl_get.getName()] = dl_get;
+  methods[dl_list.getName()] = dl_list;
+  methods[dl_alter.getName()] = dl_alter;
+
 
   smsc_app_runner.reset(0);
 }
@@ -294,6 +406,63 @@ throw (AdminException)
         return aclRemoveAddresses(args);
       case aclAddAddressesMethod:
         return aclAddAddresses(args);
+
+
+/*------loomox-----------*/
+      case prcListPrincipalsMethod:
+        smsc_log_debug(logger, "list principals...");
+        return Variant("");
+      case prcAddPrincipalMethod:
+        smsc_log_debug(logger, "add principals...");
+        return Variant("");
+      case prcDeletePrincipalMethod:
+        smsc_log_debug(logger, "delete principals...");
+        return Variant("");
+      case prcGetPrincipalMethod:
+        smsc_log_debug(logger, "get principals...");
+        return Variant("");
+      case prcAlterPrincipalMethod:
+        smsc_log_debug(logger, "alter principals...");
+        return Variant("");
+
+
+      case memAddMemberMethod:
+        smsc_log_debug(logger, "add member...");
+        return Variant("");
+      case memDeleteMemberMethod:
+        smsc_log_debug(logger, "delete member...");
+        return Variant("");
+      case memGetMemberMethod:
+        smsc_log_debug(logger, "get member...");
+        return Variant("");
+
+      case sbmAddSubmiterMethod:
+        smsc_log_debug(logger, "add submiter...");
+        return Variant("");
+      case sbmDeleteSubmiterMethod:
+        smsc_log_debug(logger, "delete submiter...");
+        return Variant("");
+      case sbmListSubmitersMethod:
+        smsc_log_debug(logger, "list submiters...");
+        return Variant("");
+
+      case dlAddMethod:
+        smsc_log_debug(logger, "add dl...");
+        return Variant("");
+      case dlDeleteMethod:
+        smsc_log_debug(logger, "delete dl...");
+        return Variant("");
+      case dlGetMethod:
+        smsc_log_debug(logger, "get dl...");
+        return Variant("");
+      case dlListMethod:
+        smsc_log_debug(logger, "list dl...");
+        return Variant("");
+      case dlAlterMethod:
+        smsc_log_debug(logger, "alter dl...");
+        return Variant("");
+
+
 
       default:
         smsc_log_debug(logger, "unknown method \"%s\" [%u]", method.getName(), method.getId());
