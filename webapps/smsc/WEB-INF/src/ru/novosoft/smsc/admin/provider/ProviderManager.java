@@ -2,7 +2,11 @@ package ru.novosoft.smsc.admin.provider;
 
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.util.tables.DataSource;
+import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.Query;
+import ru.novosoft.smsc.jsp.util.tables.Filter;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
+import ru.novosoft.smsc.jsp.util.tables.impl.QueryResultSetImpl;
 import ru.novosoft.smsc.jsp.util.tables.impl.provider.ProviderDataItem;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.config.Config;
@@ -14,9 +18,9 @@ import java.util.*;
 /**
  * Created by andrey Date: 07.02.2005 Time: 12:45:18
  */
-public class ProviderManager extends AbstractDataSourceImpl implements DataSource
+public class ProviderManager //extends AbstractDataSourceImpl implements DataSource
 {
-  private static final String[] COLUMN_NAMES = new String[]{"id", "name"};
+ // private static final String[] COLUMN_NAMES = new String[]{"id", "name"};
   private final Map providers = Collections.synchronizedMap(new TreeMap());
   private int lastUsedId;
   private static final String SECTION_NAME_providers = "providers";
@@ -26,7 +30,7 @@ public class ProviderManager extends AbstractDataSourceImpl implements DataSourc
 
   public ProviderManager(final Config gwConfig) throws Config.WrongParamTypeException, Config.ParamNotFoundException, NumberFormatException
   {
-    super(COLUMN_NAMES);
+   // super(COLUMN_NAMES);
     this.webappConfig = gwConfig;
     if (!gwConfig.containsSection(SECTION_NAME_providers)) {
       gwConfig.setInt(SECTION_NAME_providers + '.' + PARAM_NAME_last_used_id, 0);
@@ -37,15 +41,15 @@ public class ProviderManager extends AbstractDataSourceImpl implements DataSourc
       final String providerIdStr = (String) i.next();
       if (!PARAM_NAME_last_used_id.equalsIgnoreCase(providerIdStr)) {
         final Long providerId = Long.decode(providerIdStr);
-        //  final Provider provider = createProvider(providerId.longValue(), gwConfig.getString(SECTION_NAME_providers + '.' + providerIdStr));
-        //  providers.put(providerId, provider);
-        final Provider provider = new Provider(providerId.longValue(), gwConfig.getString(SECTION_NAME_providers + '.' + providerIdStr));
-        addProvider(provider);
+        final Provider provider = createProvider(providerId.longValue(), gwConfig.getString(SECTION_NAME_providers + '.' + providerIdStr));
+        providers.put(providerId, provider);
+       // final Provider provider = new Provider(providerId.longValue(), gwConfig.getString(SECTION_NAME_providers + '.' + providerIdStr));
+       // addProvider(provider);
       }
     }
   }
 
-/*
+
    public synchronized QueryResultSet query(Query query_to_run)
   {
 
@@ -106,7 +110,7 @@ public class ProviderManager extends AbstractDataSourceImpl implements DataSourc
       }
     });
   }
-*/
+
 
   public synchronized Map getProviders()
   {
@@ -136,20 +140,30 @@ public class ProviderManager extends AbstractDataSourceImpl implements DataSourc
   {
     if (!providers.containsKey(new Long(provider.getId()))) {
       providers.put(new Long(provider.getId()), provider);
-      super.add(new ProviderDataItem(provider));
+     // super.add(new ProviderDataItem(provider));
       return true;
     }
     else
       return false;
   }
+  public synchronized Provider createProvider(final long id, final String name)
+   {
+     final Provider provider = new Provider(id, name);
+     providers.put(new Long(provider.getId()), provider);
+     return provider;
+   }
 
-  public synchronized Provider createProvider(final String name)
+   public synchronized Provider createProvider( final String name)
+   {
+     return createProvider(++lastUsedId, name);
+   }
+/*  public synchronized Provider createProvider(final String name)
   {
     final Provider provider = new Provider(++lastUsedId, name);
     providers.put(new Long(provider.getId()), provider);
     super.add(new ProviderDataItem(provider));
     return provider;
-  }
+  }  */
 
   public synchronized void setProviderName(final long id, final String name) throws NullPointerException
   {
@@ -190,7 +204,7 @@ public class ProviderManager extends AbstractDataSourceImpl implements DataSourc
     }
     final Long providerId = new Long(id);
     final Provider provider = (Provider) providers.remove(providerId);
-    remove(new ProviderDataItem(provider));
+   // remove(new ProviderDataItem(provider));
     return provider;
   }
 }
