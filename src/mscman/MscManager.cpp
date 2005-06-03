@@ -254,6 +254,7 @@ void MscManagerImpl::init(Manager& config)
     storeFile.RWCreate(fileName.c_str());
     storeFile.Write(sig,8);
     storeFile.WriteNetInt32(ver);
+    storeFile.Flush();
     return;
   }else
   {
