@@ -27,12 +27,12 @@ const int SOCKET_SLOT_KILL=6;
 
 static Mutex getKillMutex;
 
-static SmppProxy* getRegisteredProxy(SmeManager* smeManager,const char* sysId,const char* pass)
+static SmppProxy* getRegisteredProxy(SmeManager* smeManager,const char* sysId,const char* pass,int ct)
 {
   MutexGuard mg(getKillMutex);
   SmppProxy* proxy=(SmppProxy*)smeManager->checkSmeProxy(sysId,pass);
   if(!proxy)return 0;
-  proxy->AddRef();
+  proxy->AddRef(ct);
   return proxy;
 }
 
@@ -42,7 +42,7 @@ static void KillProxy(int ct,SmppProxy* proxy,SmeManager* smeManager)
   if(proxy && !proxy->Unref(ct))
   {
     try{
-      __trace2__("unregistering smeId=%s",proxy->getSystemId());
+      __trace2__("unregistering(%p) smeId=%s",proxy,proxy->getSystemId());
       smsc_log_debug(smsc::logger::Logger::getInstance("sms.snmp.alarm"),"unregister sme:%s",proxy->getSystemId());
       smeManager->unregisterSmeProxy(proxy->getSystemId());
     }catch(...)
@@ -306,7 +306,7 @@ int SmppInputThread::Execute()
               {
                 if(ss->getProxy() &&
                     (
-                      ss->getProxy()->isOpened() ||
+                      !ss->getProxy()->isOpened() ||
                       ss->getProxy()->isDisconnecting() ||
                       ss->getProxy()->isUnbinding()
                     )
@@ -349,7 +349,11 @@ int SmppInputThread::Execute()
                   proxy=getRegisteredProxy(
                     smeManager,
                     bindpdu->get_systemId()?bindpdu->get_systemId():"",
-                    bindpdu->get_password()?bindpdu->get_password():""
+                    bindpdu->get_password()?bindpdu->get_password():"",
+                    pdu->get_commandId()==SmppCommandSet::BIND_RECIEVER?
+                    proxyReceiver:
+                    pdu->get_commandId()==SmppCommandSet::BIND_TRANSMITTER?
+                    proxyTransmitter:-1
                   );
                   if(proxy)
                   {
@@ -373,8 +377,15 @@ int SmppInputThread::Execute()
                   //delete proxy;
                   err=true;
                 }
+                catch(std::exception& e)
+                {
+                  warn2(log,"exception:%s",e.what());
+                  err=true;
+                  resppdu.get_header().set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
+                }
                 catch(...)
                 {
+                  warn1(log,"Unknown exception");
                   err=true;
                   resppdu.get_header().set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
                 }
@@ -385,6 +396,7 @@ int SmppInputThread::Execute()
                   proxyIndex=smeManager->lookup(sid);
                 }catch(...)
                 {
+                  warn2(log,"smeMan->lookup failed for %s",sid.c_str());
                   resppdu.get_header().
                     set_commandStatus(SmppStatusSet::ESME_RBINDFAIL);
                   err=true;
@@ -625,8 +637,17 @@ int SmppInputThread::Execute()
                   }
                   if(rebindproxy)
                   {
-                    KillProxy(-1,proxy,smeManager);
-                    KillProxy(-1,proxy,smeManager);
+                    if(pdu->get_commandId()==SmppCommandSet::BIND_RECIEVER)
+                    {
+                      warn1(log,"rebind failed, removing receiver channel references");
+                      KillProxy(proxyReceiver,proxy,smeManager);
+                      KillProxy(proxyReceiver,proxy,smeManager);
+                    }else
+                    {
+                      warn1(log,"rebind failed, removing transmitter channel references");
+                      KillProxy(proxyTransmitter,proxy,smeManager);
+                      KillProxy(proxyTransmitter,proxy,smeManager);
+                    }
                   }else
                   {
                     if(proxy)delete proxy;

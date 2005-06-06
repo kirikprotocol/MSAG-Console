@@ -33,8 +33,11 @@ public:
   SmppProxy(SmppSocket* sock,int limit,int procLimit,int timeout):smppReceiverSocket(sock),smppTransmitterSocket(sock)
   {
     smppReceiverSocket->assignProxy(this);
+    dualChannel=false;
     seq=1;
     refcnt=2;
+    rxcnt=0;
+    txcnt=0;
     managerMonitor=NULL;
     proxyType=proxyTransceiver;
     opened=true;
@@ -65,7 +68,7 @@ public:
     disconnecting=true;
     disconnectionStart=time(NULL);
     MutexGuard g(mutexout);
-    if(smppReceiverSocket==smppTransmitterSocket)
+    if(!dualChannel)
     {
       outqueue.Push(SmscCommand::makeUnbind(getNextSequenceNumber()),0);
     }else
@@ -155,8 +158,14 @@ public:
     }
     {
       MutexGuard g(mutex);
-      if(smppReceiverSocket)smppReceiverSocket->notifyOutThread();
-      if(smppTransmitterSocket)smppTransmitterSocket->notifyOutThread();
+      if(dualChannel)
+      {
+        if(smppReceiverSocket)smppReceiverSocket->notifyOutThread();
+        if(smppTransmitterSocket)smppTransmitterSocket->notifyOutThread();
+      }else
+      {
+        if(smppReceiverSocket)smppReceiverSocket->notifyOutThread();
+      }
     }
   }
   virtual bool getCommand(SmscCommand& cmd)
@@ -233,8 +242,14 @@ public:
       }
       {
         MutexGuard g(mutex);
-        if(smppReceiverSocket)smppReceiverSocket->notifyOutThread();
-        if(smppTransmitterSocket)smppTransmitterSocket->notifyOutThread();
+        if(dualChannel)
+        {
+          if(smppReceiverSocket)smppReceiverSocket->notifyOutThread();
+          if(smppTransmitterSocket)smppTransmitterSocket->notifyOutThread();
+        }else
+        {
+          if(smppReceiverSocket)smppReceiverSocket->notifyOutThread();
+        }
       }
       return;
     }
@@ -409,6 +424,12 @@ public:
   {
     MutexGuard g(mutex);
     proxyType=newtype;
+    if(proxyType!=proxyTransceiver && !dualChannel)
+    {
+      dualChannel=true;
+      if(newtype==proxyReceiver)rxcnt+=2;
+      if(newtype==proxyTransmitter)txcnt+=2;
+    }
   }
 
   void setId(const std::string& newid,SmeIndex idx)
@@ -430,41 +451,86 @@ public:
     return opened && !disconnecting && !unbinding;
   }
 
-  void AddRef()
+  void AddRef(int ct)
   {
     MutexGuard g(mutex);
+    if(disconnecting || unbinding)throw smsc::util::Exception("AddRef failed: disconnecting or unbinding");
+    if(dualChannel)
+    {
+      if(ct==proxyTransmitter)
+      {
+        if(txcnt!=0)throw smsc::util::Exception("Transmitter channel (%s) not ready for upgrade",id.c_str());
+        txcnt+=2;
+      }
+      else if(ct==proxyReceiver)
+      {
+        if(rxcnt!=0)throw smsc::util::Exception("Receiver channel (%s) not ready for upgrade",id.c_str());
+        rxcnt+=2;
+      }else
+      {
+        throw smsc::util::Exception("Transsceiver cannot be upgraded");
+      }
+    }else
+    {
+      if(refcnt>0) throw smsc::util::Exception("Attempt to rebind single channel proxy");
+    }
     refcnt+=2;
+    __warning2__("SmppProxy::AddRef(%s): pt=%d; cnts=%d/%d/%d",id.c_str(),proxyType,refcnt,rxcnt,txcnt);
   }
 
   int Unref(int ct)
   {
     MutexGuard g(mutex);
-    __warning2__("SmppProxy: unref %p/rc=%d/pt=%d",this,refcnt,proxyType);
+    __warning2__("SmppProxy: unref(%s) %p;rc=%d/%d/%d;pt=%d;ct=%d",id.c_str(),this,refcnt,rxcnt,txcnt,proxyType,ct);
     if(ct!=-1)
     {
-      if(refcnt==3)
+      if(dualChannel)
       {
-        if(ct==ctReceiver && proxyType==proxyTransceiver)
+        if(ct==ctReceiver)
         {
-          proxyType=proxyTransmitter;
-          smppReceiverSocket=0;
-          __warning2__("SmppProxy: downgrade %p to transmitter(rc=%d,pt=%d)",this,refcnt,proxyType);
-        }else if(ct==ctTransmitter && proxyType==proxyTransceiver)
+          if(proxyType==proxyTransceiver)
+          {
+            proxyType=proxyTransmitter;
+            smppReceiverSocket=0;
+            __warning2__("SmppProxy: downgrade(%s) %p to transmitter(rc=%d,pt=%d)",id.c_str(),this,refcnt,proxyType);
+          }
+          rxcnt--;
+          if(rxcnt==0)unbinding=false;
+        }else if(ct==ctTransmitter)
         {
-          proxyType=proxyReceiver;
-          smppTransmitterSocket=0;
-          __warning2__("SmppProxy: downgrade %p to receiver(rc=%d,pt=%d)",this,refcnt,proxyType);
+          if(proxyType==proxyTransceiver)
+          {
+            proxyType=proxyReceiver;
+            smppTransmitterSocket=0;
+            __warning2__("SmppProxy: downgrade(%s) %p to receiver(rc=%d,pt=%d)",id.c_str(),this,refcnt,proxyType);
+          }
+          txcnt--;
+          if(txcnt==0)unbinding=false;
         }
-        unbinding=false;
-      }
-      if(proxyType==proxyTransceiver)
-      {
-        smppReceiverSocket=0;
-        smppTransmitterSocket=0;
       }
     }
+
+    if(dualChannel)
+    {
+      if(rxcnt!=2)smppReceiverSocket=0;
+      if(txcnt!=2)smppTransmitterSocket=0;
+    }
+    else
+    {
+      smppReceiverSocket=0;
+      smppTransmitterSocket=0;
+    }
+
     int cnt=--refcnt;
-    if(refcnt==1)close();
+    if(refcnt==1 || (rxcnt<=1 && txcnt<=1))
+    {
+      close();
+      disconnecting=true;
+      disconnectionStart=time(NULL);
+    }
+
+    if(refcnt<0 || rxcnt<0 || txcnt<0 || (dualChannel && refcnt!=rxcnt+txcnt))abort();
+
     return cnt;
   }
 
@@ -569,6 +635,8 @@ protected:
   volatile SmppSocket *smppReceiverSocket;
   volatile SmppSocket *smppTransmitterSocket;
   volatile int refcnt;
+  volatile int rxcnt;
+  volatile int txcnt;
   int totalLimit;
   int submitLimit;
   int submitCount;
@@ -576,6 +644,7 @@ protected:
   bool disconnecting;
   time_t disconnectionStart;
   bool unbinding;
+  bool dualChannel;
 };
 
 bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
