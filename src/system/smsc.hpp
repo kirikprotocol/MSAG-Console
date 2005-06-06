@@ -363,6 +363,7 @@ public:
   void reloadRoutes(const SmscConfigs& cfg);
   void reloadTestRoutes(const RouteConfig& rcfg);
   void reloadAliases(const SmscConfigs& cfg);
+  void reloadReschedule();
 
   void flushStatistics()
   {

@@ -4,6 +4,7 @@
 #include "core/buffers/Array.hpp"
 #include "core/buffers/IntHash.hpp"
 #include "util/Exception.hpp"
+#include "core/synchronization/Mutex.hpp"
 #include <time.h>
 
 namespace smsc{
@@ -11,10 +12,13 @@ namespace system{
 
 using smsc::util::Exception;
 using namespace smsc::core::buffers;
+using smsc::core::synchronization::Mutex;
 
 class RescheduleCalculator{
 public:
 
+  static void init(const char* filename);
+  static void reset();
   static void InitDefault(const char* timestring)throw(Exception);
   static void AddToTable(const char* timeline,const char* codes);
   static time_t calcNextTryTime(time_t lasttry,int code,int attempt);
@@ -30,6 +34,7 @@ protected:
 
   static void ParseTimeLine(const char* timestring,RescheduleCalculator::TimeArray& arr,int& limit);
 
+  static Mutex rescheduleMutex;
   static TimeArray RescheduleTable;
   static int DefaultAttemptsLimit;
   static IntHash<TimeArray*> CodesTable;

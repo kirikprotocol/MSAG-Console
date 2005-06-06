@@ -19,6 +19,7 @@
 #include "resourcemanager/ResourceManager.hpp"
 #include <typeinfo>
 #include "system/status_sme.hpp"
+#include <util/findConfigFile.h>
 
 #include "profiler/profile-notifier.hpp"
 
@@ -406,8 +407,13 @@ void Smsc::init(const SmscConfigs& cfg)
     smsc_log_info(log, "Statemachines started" );
   }
 
-  RescheduleCalculator::InitDefault(cfg.cfgman->getString("core.reschedule_table"));
-  {
+  //RescheduleCalculator::InitDefault(cfg.cfgman->getString("core.reschedule_table"));
+  try{
+      RescheduleCalculator::init(findConfigFile("schedule.xml"));
+  }catch(...){
+      smsc_log_info(log, "Exception during reading 'schedule.xml'" );
+  }
+  /*{
     using smsc::util::config::CStrSet;
     CStrSet *params=cfg.cfgman->getChildStrParamNames("core.reshedule table");
     CStrSet::iterator i=params->begin();
@@ -418,7 +424,7 @@ void Smsc::init(const SmscConfigs& cfg)
       RescheduleCalculator::AddToTable(i->c_str(),cfg.cfgman->getString(pn.c_str()));
     }
     delete params;
-  }
+  }*/
 
   {
     SpeedMonitor *sm=new SpeedMonitor(eventqueue,&perfDataDisp,&perfSmeDataDisp,this);
@@ -963,6 +969,11 @@ void Smsc::reloadAliases(const SmscConfigs& cfg)
   }
 
   ResetAliases(aliaser.release());
+}
+
+void Smsc::reloadReschedule(){
+    //RescheduleCalculator::reset();
+    RescheduleCalculator::init(findConfigFile("schedule.xml"));
 }
 
 }//system

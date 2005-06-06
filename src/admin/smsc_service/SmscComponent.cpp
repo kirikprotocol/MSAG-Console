@@ -166,6 +166,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
   /**************************** method declarations *************************/
   Method apply_routes          ((unsigned)applyRoutesMethod,         "apply_routes",          empty_params, StringType);
   Method apply_aliases         ((unsigned)applyAliasesMethod,        "apply_aliases",         empty_params, StringType);
+  Method apply_reschedule      ((unsigned)applyRescheduleMethod,     "apply_reschedule",      empty_params, StringType);
   Method apply_smsc_config     ((unsigned)applySmscConfigMethod,     "apply_smsc_config",     empty_params, StringType);
   Method apply_services        ((unsigned)applyServicesMethod,       "apply_services",        empty_params, StringType);
   Method apply_locale_resource ((unsigned)applyLocaleResourceMethod, "apply_locale_resources",empty_params, StringType);
@@ -234,6 +235,7 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
   /***************************** method assigns *****************************/
   methods[apply_routes         .getName()] = apply_routes;
   methods[apply_aliases        .getName()] = apply_aliases;
+  methods[apply_reschedule     .getName()] = apply_reschedule;
   methods[apply_smsc_config    .getName()] = apply_smsc_config;
   methods[apply_services       .getName()] = apply_services;
   methods[apply_locale_resource.getName()] = apply_locale_resource;
@@ -323,6 +325,11 @@ throw (AdminException)
         smsc_log_debug(logger, "applying aliases...");
         applyAliases();
         smsc_log_debug(logger, "aliases applied");
+        return Variant("");
+      case applyRescheduleMethod:
+        smsc_log_debug(logger, "applying reschedule...");
+        applyReschedule();
+        smsc_log_debug(logger, "reschedule applied");
         return Variant("");
       case profileLookupMethod:
         smsc_log_debug(logger, "lookup profile...");
@@ -1025,6 +1032,12 @@ throw (AdminException)
 {
   configs.aliasconfig->reload();
   smsc_app_runner->getApp()->reloadAliases(configs);
+}
+
+void SmscComponent::applyReschedule()
+throw (AdminException)
+{
+  smsc_app_runner->getApp()->reloadReschedule();
 }
 
 void SmscComponent::reReadConfigs()

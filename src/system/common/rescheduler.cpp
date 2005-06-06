@@ -1,12 +1,22 @@
 #include "system/common/rescheduler.hpp"
 #include "util/debug.h"
+#include "util/xml/DOMTreeReader.h"
+#include "util/xml/utilFunctions.h"
+#include "util/Exception.hpp"
+#include <xercesc/dom/DOM.hpp>
 #include <ctype.h>
 #include <memory>
 
 namespace smsc{
 namespace system{
 
+using namespace smsc::util::xml;
+using smsc::util::Exception;
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
 
+
+Mutex RescheduleCalculator::rescheduleMutex;
 RescheduleCalculator::TimeArray RescheduleCalculator::RescheduleTable;
 IntHash<RescheduleCalculator::TimeArray*> RescheduleCalculator::CodesTable;
 int RescheduleCalculator::DefaultAttemptsLimit;
@@ -97,6 +107,75 @@ void RescheduleCalculator::InitDefault(const char* timestring)throw(Exception)
   ParseTimeLine(timestring,RescheduleTable,DefaultAttemptsLimit);
 }
 
+void RescheduleCalculator::init(const char* filename){
+  MutexGuard mg(rescheduleMutex);
+
+  RescheduleTable.Clean();
+  CodesTable.Empty();
+  AttemptsLimits.Empty();
+
+  try
+  {
+
+    smsc::util::xml::DOMTreeReader reader;
+    DOMDocument *document = reader.read(filename);
+    DOMElement *elem = document->getDocumentElement();
+    DOMNodeList *list = elem->getElementsByTagName(XmlStr("section"));
+    unsigned listLength = list->getLength();
+    for (unsigned i=0; i<listLength; i++)
+    {
+      DOMNode *node = list->item(i);
+      DOMNamedNodeMap *attrs = node->getAttributes();      
+      XmlStr secname(attrs->getNamedItem(XmlStr("name"))->getNodeValue());
+      if (strcmp(secname, "core") == 0)
+      {
+        
+        DOMNodeList *childs = node->getChildNodes();
+        unsigned childsLength = childs->getLength();
+        for (unsigned j=0; j<childsLength; j++)
+        {
+          DOMNode *child = childs->item(j);
+          if (child->getNodeType() == DOMNode::ELEMENT_NODE)
+          {
+            DOMNamedNodeMap *childAttrs = child->getAttributes();
+            XmlStr name(childAttrs->getNamedItem(XmlStr("name"))->getNodeValue());
+            XmlStr value(child->getTextContent());
+            if (strcmp(name, "reschedule_table") == 0) {
+                InitDefault(value.c_str());
+            }else if(strcmp(name, "reschedule table") == 0){
+                DOMNodeList *tab_childs = child->getChildNodes();
+                unsigned tab_childsLength = tab_childs->getLength();
+                for(int k=0; k<tab_childsLength; k++){
+                    DOMNode *tab_child = tab_childs->item(k);
+                    if (tab_child->getNodeType() == DOMNode::ELEMENT_NODE){
+                        DOMNamedNodeMap *tab_childAttrs = tab_child->getAttributes();
+                        XmlStr tab_name(tab_childAttrs->getNamedItem(XmlStr("name"))->getNodeValue());
+                        XmlStr tab_value(tab_child->getTextContent());
+                        AddToTable(tab_name.c_str(), tab_value.c_str());
+                    }
+                }
+            }
+          }
+        }
+      } 
+      else if(strcmp(secname, "reschedule table") == 0){
+      }
+      else
+      {
+        throw Exception("Unknown section name \"%s\"", secname.c_str());
+      }
+    }
+  }catch (...) {
+      throw Exception("Can't read shedule.xml");
+  }
+}
+
+void RescheduleCalculator::reset(){
+    RescheduleTable.Clean();
+    CodesTable.Empty();
+    AttemptsLimits.Empty();
+}
+
 void RescheduleCalculator::AddToTable(const char* timeline,const char* codes)
 {
   std::auto_ptr<TimeArray> ta(new TimeArray);
@@ -116,6 +195,7 @@ void RescheduleCalculator::AddToTable(const char* timeline,const char* codes)
 
 time_t RescheduleCalculator::calcNextTryTime(time_t lasttry,int code,int attempt)
 {
+  MutexGuard mg(rescheduleMutex);
   if(CodesTable.Exist(code))
   {
     TimeArray *ta=CodesTable.Get(code);
