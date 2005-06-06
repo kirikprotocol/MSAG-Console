@@ -301,20 +301,20 @@ public class Index extends IndexBean
   }
 
     public boolean isRunQuery() {
-            return runQuery;
-        }
+        return runQuery;
+    }
 
-        public void setRunQuery(boolean runQuery) {
-            this.runQuery = runQuery;
-        }
+    public void setRunQuery(boolean runQuery) {
+        this.runQuery = runQuery;
+    }
 
-        public boolean isCloseQuery() {
-            return closeQuery;
-        }
+    public boolean isCloseQuery() {
+        return closeQuery;
+    }
 
-        public void setCloseQuery(boolean closeQuery) {
-            this.closeQuery = closeQuery;
-        }
+    public void setCloseQuery(boolean closeQuery) {
+        this.closeQuery = closeQuery;
+    }
 
 
 }
