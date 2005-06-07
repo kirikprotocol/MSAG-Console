@@ -218,7 +218,7 @@ Targets:
     </copy>
     <chmod file="${DISTR_DIR}/services/SMSC/bin/service" perm="755"/>
     <copy todir="${DISTR_DIR}/services/SMSC/conf" flatten="yes">
-      <fileset dir="${TEMPL_DIR}/smsc" includes="config.xml routes.xml routes_.xml routes__.xml sme.xml aliases.xml"/>
+      <fileset dir="${TEMPL_DIR}/smsc" includes="config.xml routes.xml routes_.xml routes__.xml sme.xml aliases.xml reschedule.xml"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <symlink resource="../services/SMSC/conf/config.xml" link="${DISTR_DIR}/conf/config.xml" overwrite="yes"/>
@@ -227,6 +227,7 @@ Targets:
     <symlink resource="../services/SMSC/conf/routes__.xml" link="${DISTR_DIR}/conf/routes__.xml" overwrite="yes"/>
     <symlink resource="../services/SMSC/conf/sme.xml" link="${DISTR_DIR}/conf/sme.xml" overwrite="yes"/>
     <symlink resource="../services/SMSC/conf/aliases.xml" link="${DISTR_DIR}/conf/aliases.xml" overwrite="yes"/>
+    <symlink resource="../services/SMSC/conf/reschedule.xml" link="${DISTR_DIR}/conf/reschedule.xml" overwrite="yes"/>
 
     <!-- archiver configuration-->
     <copy tofile="${DISTR_DIR}/services/ArchiveDaemon/logger.properties" file="${TEMPL_DIR}/logger/archiver.logger" >
