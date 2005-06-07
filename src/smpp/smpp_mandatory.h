@@ -304,7 +304,10 @@ static inline SmppHeader* fetchSmppPdu(SmppStream* stream)
       fetchCOctetStr(stream,pdu->password,9);
       fetchCOctetStr(stream,pdu->systemType,13);
       fetchX(stream,pdu->interfaceVersion);
-      fetchPduAddress(stream,pdu->addressRange);
+      //fetchPduAddress(stream,pdu->addressRange);
+      fetchX(stream,pdu->addressRange.typeOfNumber);
+      fetchX(stream,pdu->addressRange.numberingPlan);
+      fetchCOctetStr(stream,pdu->addressRange.value,41);
       return reinterpret_cast<SmppHeader*>(pdu.release());
     }
     case BIND_TRANSMITTER_RESP:
