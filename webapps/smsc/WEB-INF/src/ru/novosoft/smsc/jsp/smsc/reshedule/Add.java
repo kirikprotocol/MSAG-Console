@@ -52,6 +52,7 @@ public class Add extends Body
     try {
       putSheduleToConfig();
       journalAppend(SubjectTypes.TYPE_schedule, getReshedule(), Actions.ACTION_ADD);
+      appContext.getStatuses().setScheduleChanged(true);
     } catch (AdminException e) {
       return error(SMSCErrors.error.smsc.reshedule.couldntSaveConfig, e);
     }

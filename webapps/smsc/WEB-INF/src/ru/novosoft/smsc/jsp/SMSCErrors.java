@@ -196,6 +196,7 @@ public class SMSCErrors
 		public static final String couldntSave = B + "couldntSave";
 		public static final String couldntRefreshComponents = B + "couldntRefreshComponents";
 		public static final String couldntGetConfig = B + "couldntGetConfig";
+		public static final String couldntGetScheduleConfig = B + "couldntGetScheduleConfig";
 		public static final String invalidParameter = B + "invalidParameter";
 		public static final String invalidIntParameter = B + "invalidIntParameter";
 		public static final String invalidBoolParameter = B + "invalidBoolParameter";
@@ -208,6 +209,7 @@ public class SMSCErrors
         private static final String B = smsc.B + "reshedule.";
         public static final String couldntGetErrorCodes = B + "couldntGetErrorCodes";
         public static final String couldntSaveConfig = B + "couldntSaveConfig";
+		public static final String couldntResetConfig = B + "couldntResetConfig";
         public static final String couldntGetReshedules = B + "couldntGetReshedules";
         public static final String resheduleAlreadyPresent = B + "resheduleAlreadyPresent";
         public static final String couldntGetResheduleInstance = B + "couldntGetResheduleInstance";

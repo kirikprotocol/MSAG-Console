@@ -23,6 +23,7 @@ public class StatusesImpl implements Statuses
   private boolean webXmlChanged = false;
   private boolean providersChanged = false;
   private boolean categoriesChanged = false;
+  private boolean scheduleChanged = false;
 
   public boolean isRoutesChanged()
   {
@@ -173,4 +174,14 @@ public class StatusesImpl implements Statuses
   {
     this.webXmlChanged = webXmlChanged;
   }
+
+	public boolean isScheduleChanged()
+	{
+		return scheduleChanged;
+	}
+
+	public void setScheduleChanged(boolean scheduleChanged)
+	{
+		this.scheduleChanged = scheduleChanged;
+	}
 }

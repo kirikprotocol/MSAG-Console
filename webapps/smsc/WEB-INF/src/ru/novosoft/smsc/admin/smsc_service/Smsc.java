@@ -46,6 +46,8 @@ public class Smsc extends Service
 
   private static final String APPLY_ALIASES_METHOD_ID = "apply_aliases";
 
+  private static final String APPLY_RESCHEDULE_ID = "apply_reschedule";
+
   private static final String APPLY_ROUTES_METHOD_ID = "apply_routes";
   private static final String LOAD_ROUTES_METHOD_ID = "load_routes";
   private static final String TRACE_ROUTE_METHOD_ID = "trace_route";
@@ -105,7 +107,7 @@ public class Smsc extends Service
     try {
       this.configFolder = new File(smscConfFolderString);
       final Document aliasesDoc = Utils.parse(new FileReader(new File(configFolder, "aliases.xml")));
-      aliases = new AliasSet(aliasesDoc.getDocumentElement(), smscAppContext);
+      aliases = new AliasSet(aliasesDoc.getDocumentElement());
       profileDataSource = new ProfileDataSource(connectionPool);
       profileDataFile = new ProfileDataFile();
       profileDataFile.init(getSmscConfig(), getConfigFolder().getAbsolutePath());
@@ -508,12 +510,25 @@ public class Smsc extends Service
     call(SMSC_COMPONENT_ID, LOG_SET_CATEGORIES_ID, Type.Types[Type.BooleanType], params);
   }
 
+  public synchronized void applyReschedule() throws AdminException
+  {
+    if (ServiceInfo.STATUS_RUNNING == getInfo().getStatus()) {
+      call(SMSC_COMPONENT_ID, APPLY_RESCHEDULE_ID, Type.Types[Type.StringType], new HashMap());
+    }
+     else {
+       logger.debug("Couldn't call apply reschedule method on SMSC - SMSC is not running. Status is " + getInfo().getStatusStr() + " (" + getInfo().getStatus() + ")");
+    }
+  }
+
   public synchronized void applyLocaleResources() throws AdminException
   {
     if (ServiceInfo.STATUS_RUNNING == getInfo().getStatus()) {
       call(SMSC_COMPONENT_ID, APPLY_LOCALE_RESOURCES_METHOD_ID, Type.Types[Type.StringType], new HashMap());
     }
-  }
+     else {
+       logger.debug("Couldn't call apply local resources method on SMSC - SMSC is not running. Status is " + getInfo().getStatusStr() + " (" + getInfo().getStatus() + ")");
+   }
+ }
 
   public File getConfigFolder()
   {

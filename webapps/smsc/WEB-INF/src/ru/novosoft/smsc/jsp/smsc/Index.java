@@ -25,7 +25,6 @@ public class Index extends SmscBean
   static
   {
     smscSubjectTypes.add(new Byte(SubjectTypes.TYPE_smsc_config));
-    smscSubjectTypes.add(new Byte(SubjectTypes.TYPE_schedule));
     smscSubjectTypes.add(new Byte(SubjectTypes.TYPE_directive));
   }
 
@@ -82,6 +81,8 @@ public class Index extends SmscBean
         result = applyCategories();
       else if ("smsc".equalsIgnoreCase(check))
         result = applySmsc();
+      else if ("reschedule".equalsIgnoreCase(check))
+        result = applyReschedule();
     }
     return result;
   }
@@ -98,6 +99,22 @@ public class Index extends SmscBean
       return error(SMSCErrors.error.smsc.couldntSave);
     }
   }
+
+	private int applyReschedule()
+	{
+		try
+		{
+			appContext.getSmsc().applyReschedule();
+			statuses.setScheduleChanged(false);
+			journal.clear(SubjectTypes.TYPE_schedule);
+			return RESULT_OK;
+		}
+		catch (Throwable t)
+		{
+			logger.error("Couldn't apply changes", t);
+			return error(SMSCErrors.error.couldntApplyChanges, t);
+		}
+	}
 
   private int applyRoutes()
   {
@@ -293,6 +310,11 @@ public class Index extends SmscBean
     return statuses.isSmscChanged();
   }
 
+	public boolean isRescheduleChanged()
+	{
+		return statuses.isScheduleChanged();
+	}
+
   public String getMbApply()
   {
     return mbApply;
@@ -353,4 +375,9 @@ public class Index extends SmscBean
   {
     return journal.getActions(smscSubjectTypes);
   }
+
+	public List getJournalReschedule()
+	{
+		return journal.getActions(SubjectTypes.TYPE_schedule);
+	}
 }

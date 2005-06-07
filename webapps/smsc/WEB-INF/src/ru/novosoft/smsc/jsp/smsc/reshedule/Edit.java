@@ -68,7 +68,8 @@ public class Edit extends Body
       if (!oldShedule.equals(getReshedule()))
         removeShedule(oldShedule);
       putSheduleToConfig();
-      journalAppend(SubjectTypes.TYPE_schedule, getReshedule(), Actions.ACTION_MODIFY);
+      journalAppend(SubjectTypes.TYPE_schedule, getReshedule(), Actions.ACTION_MODIFY, "old schedule", oldShedule);
+      appContext.getStatuses().setScheduleChanged(true);
     } catch (AdminException e) {
       return error(SMSCErrors.error.smsc.reshedule.couldntSaveConfig, e);
     }

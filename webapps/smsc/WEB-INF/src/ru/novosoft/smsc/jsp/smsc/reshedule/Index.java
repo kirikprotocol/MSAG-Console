@@ -3,8 +3,8 @@ package ru.novosoft.smsc.jsp.smsc.reshedule;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -14,11 +14,11 @@ import java.util.*;
  * Date: Aug 22, 2003
  * Time: 2:31:17 PM
  */
-public class Index extends PageBean
+public class Index extends SmscBean
 {
-  public static final int RESULT_ADD = PageBean.PRIVATE_RESULT + 0;
-  public static final int RESULT_EDIT = PageBean.PRIVATE_RESULT + 1;
-  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 2;
+  public static final int RESULT_ADD = SmscBean.PRIVATE_RESULT + 0;
+  public static final int RESULT_EDIT = SmscBean.PRIVATE_RESULT + 1;
+  protected static final int PRIVATE_RESULT = SmscBean.PRIVATE_RESULT + 2;
 
   private String mbAdd = null;
   private String mbDelete = null;
@@ -76,6 +76,7 @@ public class Index extends PageBean
     for (int i = 0; i < checkedShedules.length; i++) {
       reshedules.removeShedule(checkedShedules[i]);
       journalAppend(SubjectTypes.TYPE_schedule, checkedShedules[i], Actions.ACTION_DEL);
+      appContext.getStatuses().setScheduleChanged(true);
     }
     return RESULT_DONE;
   }
@@ -84,8 +85,8 @@ public class Index extends PageBean
   {
     try {
       reshedules.save();
-    } catch (AdminException e) {
-      logger.error("Couldn't save reshedules to config", e);
+    } catch (Throwable e) {
+      logger.error("Couldn't save reschedules to config", e);
       return error(SMSCErrors.error.smsc.reshedule.couldntSaveConfig, e);
     }
     return RESULT_DONE;
@@ -93,8 +94,14 @@ public class Index extends PageBean
 
   private int reset()
   {
-    reshedules.reset();
-    return RESULT_DONE;
+	try {
+		reshedules.reset();
+		return RESULT_DONE;
+	}
+	catch (Throwable t) {
+		logger.error("Couldn't reset reschedules from config", t);
+		return error(SMSCErrors.error.smsc.reshedule.couldntResetConfig, t);
+	}
   }
 
   public Collection getReshedules()

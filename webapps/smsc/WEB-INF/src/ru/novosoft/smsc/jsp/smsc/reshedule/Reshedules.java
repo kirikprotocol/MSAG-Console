@@ -3,11 +3,14 @@ package ru.novosoft.smsc.jsp.smsc.reshedule;
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.util.WebAppFolders;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.util.*;
+import java.io.File;
 
 
 /**
@@ -17,7 +20,8 @@ import java.util.*;
  */
 class Reshedules
 {
-  private static final String RESHEDULE_TABLE_PREFIX = "core.reshedule table";
+  private static final String RESHEDULE_CONFIG = "core.reschedule_config";
+  private static final String RESHEDULE_TABLE_PREFIX = "core.reschedule table";
   private static final String RESHEDULE_DEFAULT = "core.reschedule_table";
   private static final String ERR_CODES_PREFIX = "smsc.errcode.";
   private static final String ERR_CODE_UNKNOWN = ERR_CODES_PREFIX + "unknown";
@@ -43,20 +47,25 @@ class Reshedules
 
   private Category logger = Category.getInstance(this.getClass());
   private SMSCAppContext appContext = null;
+  private Config smscConfig = null;
   private Config config = null;
   private Set assignedErrorsSet = new HashSet();
 
-  public Reshedules(SMSCAppContext appContext) throws Throwable
-  {
-    try {
-      this.appContext = appContext;
-      config = appContext.getSmsc().getSmscConfig();
-      recalculateAssignedErrorsSet();
-    } catch (Throwable e) {
-      logger.debug("Couldn't get smsc config", e);
-      throw e;
-    }
-  }
+	public Reshedules(SMSCAppContext appContext) throws Throwable
+	{
+		try
+		{
+			this.appContext = appContext;
+			config = getScheduleConfig();
+			if (config == null) {throw new AdminException(SMSCErrors.error.smsc.couldntGetScheduleConfig);}
+			recalculateAssignedErrorsSet();
+		}
+		catch (Throwable e)
+		{
+			logger.debug("Couldn't get smsc config", e);
+			throw e;
+		}
+	}
 
   public Collection getShedules()
   {
@@ -90,7 +99,6 @@ class Reshedules
     return result;
   }
 
-
   public void putShedule(String shedule, Collection errCodes) throws AdminException
   {
     if (config == null) {
@@ -118,9 +126,9 @@ class Reshedules
     recalculateAssignedErrorsSet();
   }
 
-  public void save() throws AdminException
+  public void save() throws Throwable
   {
-    Config currentConfig = appContext.getSmsc().getSmscConfig();
+    Config currentConfig = getScheduleConfig();
     currentConfig.removeSection(RESHEDULE_TABLE_PREFIX);
     for (Iterator i = config.getSectionChildParamsNames(RESHEDULE_TABLE_PREFIX).iterator(); i.hasNext();) {
       String fullSheduleName = (String) i.next();
@@ -143,8 +151,7 @@ class Reshedules
       currentConfig.removeParam(RESHEDULE_DEFAULT);
     }
 
-    appContext.getSmsc().saveSmscConfig(config = currentConfig);
-    appContext.getStatuses().setSmscChanged(true);
+    currentConfig.save();
   }
 
   public String getErrorString(String errorCode)
@@ -163,9 +170,10 @@ class Reshedules
     return config.getParameter(RESHEDULE_TABLE_PREFIX + '.' + shedule) != null;
   }
 
-  public void reset()
+  public void reset() throws Throwable
   {
-    config = appContext.getSmsc().getSmscConfig();
+	config = getScheduleConfig();
+	if (config == null) {throw new AdminException(SMSCErrors.error.smsc.couldntGetScheduleConfig);}
     recalculateAssignedErrorsSet();
   }
 
@@ -214,4 +222,14 @@ class Reshedules
   {
     return appContext.getLocaleStrings(ERR_CODES_PREFIX);
   }
+
+	private Config getScheduleConfig() throws Throwable
+	{
+		smscConfig = appContext.getSmsc().getSmscConfig();
+		if (smscConfig == null) {throw new AdminException(SMSCErrors.error.smsc.couldntGetConfig);}
+		String configName = smscConfig.getString(RESHEDULE_CONFIG);
+		File confFile = new File(WebAppFolders.getSmscConfFolder(), configName);
+		Config result = new Config(confFile);
+		return result;
+	}
 }

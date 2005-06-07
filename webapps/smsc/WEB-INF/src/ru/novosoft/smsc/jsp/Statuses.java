@@ -63,4 +63,8 @@ public interface Statuses
   boolean isCategoriesChanged();
 
   void setCategoriesChanged(boolean providersChanged);
+
+  boolean isScheduleChanged();
+
+  void setScheduleChanged(boolean scheduleChanged);
 }

@@ -126,6 +126,9 @@ page_menu_end(out);
   if (request.isUserInRole("users"))         printOptionsString(out, request, bean.getJournalUsers(), rowN++, "users", bean.isUsersChanged(), "users.roles.users");
   if (request.isUserInRole("providers"))     printOptionsString(out, request, bean.getJournalProviders(), rowN++, "providers", bean.isProvidersChanged(), "users.roles.providers");
   if (request.isUserInRole("categories"))    printOptionsString(out, request, bean.getJournalCategories(), rowN++, "categories", bean.isCategoriesChanged(), "users.roles.categories");
+//todo security-constraint для reschedule  if (request.isUserInRole("reschedule"))
+  printOptionsString(out, request, bean.getJournalReschedule(), rowN++, "reschedule", bean.isRescheduleChanged(), "users.roles.reschedule");
+    
   if (request.isUserInRole("smsc_service"))  printOptionsString(out, request, bean.getJournalSmsc(), rowN++, "smsc", bean.isSmscChanged(), "users.roles.smscServ");
 %>
 </tbody>
