@@ -8,12 +8,12 @@
 package ru.novosoft.smsc.admin.console.commands.route;
 
 
-import ru.novosoft.smsc.admin.console.Command;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.route.Route;
 
 import java.util.ArrayList;
 
-public abstract class RouteGenCommand implements Command
+public abstract class RouteGenCommand extends CommandClass
  {
     public final static byte REPLAY_PATH_PASS = Route.REPLAY_PATH_PASS;
     public final static byte REPLAY_PATH_FORCE = Route.REPLAY_PATH_FORCE;

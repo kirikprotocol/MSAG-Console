@@ -9,12 +9,15 @@ package ru.novosoft.smsc.jsp.smsc.aliases;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.journal.Action;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Date;
 
 
 public class AliasesEdit extends SmscBean
@@ -121,9 +124,16 @@ public class AliasesEdit extends SmscBean
       return error(SMSCErrors.error.aliases.alreadyExistsAddress, al.getAddress().getMask());
 
     try {
-      return smsc.getAliases().modify(oldAl, al, new Action(getLoginedPrincipal().getName(), sessionId))
-              ? RESULT_DONE
-              : error(SMSCErrors.error.aliases.alreadyExistsAlias, alias);
+      smsc.getAliases().remove(oldAl);
+      if (smsc.getAliases().add(al)) {
+        if (aliasChanged)
+          journalAppend(SubjectTypes.TYPE_alias, al.getAlias().getMask(), Actions.ACTION_MODIFY, "old alias", oldAl.getAlias().getMask());
+        else
+          journalAppend(SubjectTypes.TYPE_alias, al.getAlias().getMask(), Actions.ACTION_MODIFY);
+        appContext.getStatuses().setAliasesChanged(true);
+        return RESULT_DONE;
+      } else
+        return error(SMSCErrors.error.aliases.alreadyExistsAlias, alias);
     } catch (Throwable t) {
       logger.error("Couldn't edit alias \"" + address + "\"-->\"" + alias + "\"", t);
       return error(SMSCErrors.error.aliases.cantEdit, alias);

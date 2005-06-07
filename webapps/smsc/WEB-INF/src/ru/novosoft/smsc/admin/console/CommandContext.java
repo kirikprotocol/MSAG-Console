@@ -10,7 +10,9 @@ package ru.novosoft.smsc.admin.console;
 import ru.novosoft.smsc.admin.smsc_service.*;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
+import ru.novosoft.smsc.admin.journal.Journal;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.jsp.Statuses;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,28 +28,36 @@ public class CommandContext
 	protected Smsc smsc;
 	protected SmeManager smeManager;
 	protected RouteSubjectManager routeSubjectManager;
-    protected CategoryManager categoryManager;
-    protected ProviderManager providerManager;
-    private Config webappConfig = null;
+	protected CategoryManager categoryManager;
+	protected ProviderManager providerManager;
+	protected Journal journal;
+	protected Statuses statuses;
+	private Config webappConfig = null;
 
 	protected int status = CMD_OK;
 	protected String message = "No message";
 	protected ArrayList results = new ArrayList();
 
-	public CommandContext(Smsc smsc, SmeManager smeManager, RouteSubjectManager routeSubjectManager,
-                          CategoryManager categoryManager, ProviderManager providerManager,
-                          Config webappConfig)
+	public CommandContext(Console owner)
 	{
-		this.smsc = smsc;
-		this.smeManager = smeManager;
-		this.routeSubjectManager = routeSubjectManager;
-        this.categoryManager = categoryManager;
-        this.providerManager = providerManager;
-        this.webappConfig = webappConfig;
+		this.smsc = owner.getSmsc();
+		this.smeManager = owner.getSmeManager();
+		this.routeSubjectManager = owner.getRouteSubjectManager();
+		this.categoryManager = owner.getCategoryManager();
+		this.providerManager = owner.getProviderManager();
+		this.webappConfig = owner.getWebappConfig();
+		this.journal = owner.getJournal();
+		this.statuses = owner.getStatuses();
 	}
 
 	public Smsc getSmsc() {
 		return smsc;
+	}
+	public Journal getJournal() {
+		return journal;
+	}
+	public Statuses getStatuses() {
+		return statuses;
 	}
 	public SmeManager getSmeManager() {
 		return smeManager;

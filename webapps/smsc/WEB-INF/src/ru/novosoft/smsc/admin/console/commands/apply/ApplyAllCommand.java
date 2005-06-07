@@ -7,10 +7,11 @@
  */
 package ru.novosoft.smsc.admin.console.commands.apply;
 
-import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 
-public class ApplyAllCommand implements Command
+public class ApplyAllCommand extends CommandClass
 {
     public void process(CommandContext ctx)
     {
@@ -32,5 +33,19 @@ public class ApplyAllCommand implements Command
     public String getId() {
         return "APPLY_ALL";
     }
+
+	public void updateJournalAndStatuses(CommandContext ctx, String userName)
+	{
+		ctx.getStatuses().setRoutesChanged(false);
+		ctx.getJournal().clear(SubjectTypes.TYPE_route);
+		ctx.getStatuses().setCategoriesChanged(false);
+		ctx.getJournal().clear(SubjectTypes.TYPE_category);
+		ctx.getStatuses().setProvidersChanged(false);
+		ctx.getJournal().clear(SubjectTypes.TYPE_provider);
+		ctx.getStatuses().setAliasesChanged(false);
+		ctx.getJournal().clear(SubjectTypes.TYPE_alias);
+		ctx.getStatuses().setProfilesChanged(false);
+		ctx.getJournal().clear(SubjectTypes.TYPE_profile);
+	}
 }
 

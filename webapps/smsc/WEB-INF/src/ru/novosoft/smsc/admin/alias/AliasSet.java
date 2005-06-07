@@ -9,9 +9,7 @@ import org.apache.log4j.Category;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.journal.*;
 import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasQuery;
@@ -26,18 +24,19 @@ public class AliasSet
   private Set aliases = new HashSet();
   private AliasDataSource dataSource = new AliasDataSource();
   private Category logger = Category.getInstance(this.getClass());
-  private final SMSCAppContext smscAppContext;
 
-  public AliasSet(final Element aliasesElem, final SMSCAppContext smscAppContext)
+  public AliasSet()
   {
-    this.smscAppContext = smscAppContext;
+  }
+
+  public AliasSet(final Element aliasesElem)
+  {
     final NodeList aliasNodes = aliasesElem.getElementsByTagName("record");
     for (int i = 0; i < aliasNodes.getLength(); i++) {
       final Element aliasElem = (Element) aliasNodes.item(i);
       try {
-        add(new Alias(new Mask(aliasElem.getAttribute("addr")),
-                      new Mask(aliasElem.getAttribute("alias")),
-                      "true".equalsIgnoreCase(aliasElem.getAttribute("hide"))));
+        add(new Alias(new Mask(aliasElem.getAttribute("addr")), new Mask(aliasElem.getAttribute("alias")), "true".equalsIgnoreCase(
+            aliasElem.getAttribute("hide"))));
       } catch (AdminException e) {
         logger.error("Couldn't load alias \"" + aliasElem.getAttribute("alias") + "\"-->\"" + aliasElem.getAttribute("addr") + "\", skipped", e);
       }
@@ -57,20 +56,7 @@ public class AliasSet
     return out;
   }
 
-  public boolean add(final Alias newAlias, final Action action)
-  {
-    if (add(newAlias)) {
-      action.setAction(Actions.ACTION_ADD);
-      action.setSubjectType(SubjectTypes.TYPE_alias);
-      action.setSubjectId(newAlias.getAlias().getMask());
-      smscAppContext.getJournal().append(action);
-      smscAppContext.getStatuses().setAliasesChanged(true);
-      return true;
-    } else
-      return false;
-  }
-
-  private boolean add(final Alias new_alias)
+  public boolean add(final Alias new_alias)
   {
     if (aliases.contains(new_alias))
       return false;
@@ -106,22 +92,6 @@ public class AliasSet
       logger.error("Couldn't remove alias \"" + alias + '"', e);
       return false;
     }
-  }
-
-  public boolean modify(final Alias oldAlias, final Alias newAlias, final Action action)
-  {
-    assert null != oldAlias && null != newAlias && null != action;
-    action.setAction(Actions.ACTION_MODIFY);
-    action.setSubjectType(SubjectTypes.TYPE_alias);
-    action.setSubjectId(newAlias.getAlias().getMask());
-    if (remove(oldAlias) && !oldAlias.getAlias().equals(newAlias.getAlias()))
-      action.setAdditionalValue("old alias", oldAlias.getAlias().getMask());
-    if (add(newAlias)) {
-      smscAppContext.getJournal().append(action);
-      smscAppContext.getStatuses().setAliasesChanged(true);
-      return true;
-    } else
-      return false;
   }
 
   public QueryResultSet query(final AliasQuery query)

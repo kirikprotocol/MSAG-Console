@@ -1,6 +1,6 @@
 package ru.novosoft.smsc.admin.console.commands.acl;
 
-import ru.novosoft.smsc.admin.console.Command;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.acl.AclInfo;
 
 /**
@@ -10,7 +10,7 @@ import ru.novosoft.smsc.admin.acl.AclInfo;
  * Time: 14:11:25
  * To change this template use File | Settings | File Templates.
  */
-public abstract class AclGenCommand implements Command
+public abstract class AclGenCommand extends CommandClass
 {
   public final static char CACHE_UNDEFINED = AclInfo.ACT_UNDEFINED;
   public final static char CACHE_DBSDIRECT = AclInfo.ACT_DBSDIRECT;

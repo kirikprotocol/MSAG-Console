@@ -1,7 +1,8 @@
 package ru.novosoft.smsc.admin.console.commands.apply;
 
-import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 
 /**
  * Created by IntelliJ IDEA.
@@ -10,7 +11,7 @@ import ru.novosoft.smsc.admin.console.CommandContext;
  * Time: 16:20:16
  * To change this template use File | Settings | File Templates.
  */
-public class ApplyRoutesCommand implements Command
+public class ApplyRoutesCommand extends CommandClass
 {
     public void process(CommandContext ctx)
     {
@@ -28,4 +29,10 @@ public class ApplyRoutesCommand implements Command
     public String getId() {
         return "ROUTES_APPLY";
     }
+
+	public void updateJournalAndStatuses(CommandContext ctx, String userName)
+	{
+		ctx.getStatuses().setRoutesChanged(false);
+		ctx.getJournal().clear(SubjectTypes.TYPE_route);
+	}
 }

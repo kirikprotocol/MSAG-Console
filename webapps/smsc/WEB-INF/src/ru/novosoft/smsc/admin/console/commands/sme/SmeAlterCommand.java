@@ -3,6 +3,8 @@ package ru.novosoft.smsc.admin.console.commands.sme;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.admin.route.SME;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -63,4 +65,9 @@ public class SmeAlterCommand extends SmeGenCommand
     public String getId() {
         return "SME_ALTER";
     }
+
+	public void updateJournalAndStatuses(CommandContext ctx, String userName)
+	{
+		journalAppend(ctx, userName, SubjectTypes.TYPE_service, smeId, Actions.ACTION_MODIFY);
+	}
 }

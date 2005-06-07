@@ -1,9 +1,7 @@
 package ru.novosoft.smsc.admin.console.commands.sme;
 
-import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.route.Route;
-import ru.novosoft.smsc.admin.route.SME;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 
 import java.util.Iterator;
@@ -15,7 +13,7 @@ import java.util.Iterator;
  * Time: 17:42:28
  * To change this template use File | Settings | File Templates.
  */
-public class SmeListCommand implements Command
+public class SmeListCommand extends CommandClass
 {
     public void process(CommandContext ctx)
     {

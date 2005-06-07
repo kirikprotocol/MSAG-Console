@@ -8,11 +8,13 @@
 package ru.novosoft.smsc.admin.console.commands.route;
 
 
-import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.route.Route;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 
-public class RouteDeleteCommand implements Command
+public class RouteDeleteCommand extends CommandClass
 {
     private String route;
 
@@ -45,5 +47,10 @@ public class RouteDeleteCommand implements Command
         return "ROUTE_DELETE";
     }
 
+	public void updateJournalAndStatuses(CommandContext ctx, String userName)
+	{
+		journalAppend(ctx, userName, SubjectTypes.TYPE_route, route, Actions.ACTION_DEL);
+		ctx.getStatuses().setRoutesChanged(true);
+	}
 }
 

@@ -7,7 +7,8 @@ package ru.novosoft.smsc.jsp.smsc.aliases;
  */
 
 import ru.novosoft.smsc.admin.alias.Alias;
-import ru.novosoft.smsc.admin.journal.Action;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
@@ -79,9 +80,12 @@ public class AliasesAdd extends SmscBean
       if (smsc.getAliases().contains(newAlias))
         return error(SMSCErrors.error.aliases.alreadyExistsAlias, alias);
 
-      return smsc.getAliases().add(newAlias, new Action(getLoginedPrincipal().getName(), sessionId))
-              ? RESULT_DONE
-              : error(SMSCErrors.error.aliases.alreadyExistsAddress, alias);
+      if (smsc.getAliases().add(newAlias)) {
+        journalAppend(SubjectTypes.TYPE_alias, newAlias.getAlias().getMask(), Actions.ACTION_ADD);
+        appContext.getStatuses().setAliasesChanged(true);
+        return RESULT_DONE;
+      } else
+        return error(SMSCErrors.error.aliases.alreadyExistsAddress, alias);
     } catch (Throwable t) {
       logger.error("Couldn't add alias \"" + address + "\"-->\"" + alias + "\"", t);
       return error(SMSCErrors.error.aliases.cantAdd, alias);

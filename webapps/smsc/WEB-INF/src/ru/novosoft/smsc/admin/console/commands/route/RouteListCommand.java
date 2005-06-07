@@ -8,12 +8,12 @@
 package ru.novosoft.smsc.admin.console.commands.route;
 
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.console.Command;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.route.Route;
 
 import java.util.Iterator;
 
-public class RouteListCommand implements Command
+public class RouteListCommand extends CommandClass
 {
     public void process(CommandContext ctx)
     {

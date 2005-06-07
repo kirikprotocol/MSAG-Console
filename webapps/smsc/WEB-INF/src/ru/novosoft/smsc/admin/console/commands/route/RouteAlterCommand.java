@@ -12,6 +12,8 @@ import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.admin.category.Category;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 
 
 public class RouteAlterCommand extends RouteGenCommand
@@ -232,5 +234,10 @@ public class RouteAlterCommand extends RouteGenCommand
     return "ROUTE_ALTER";
   }
 
+	public void updateJournalAndStatuses(CommandContext ctx, String userName)
+	{
+		journalAppend(ctx, userName, SubjectTypes.TYPE_route, route, Actions.ACTION_MODIFY);
+		ctx.getStatuses().setRoutesChanged(true);
+	}
 }
 

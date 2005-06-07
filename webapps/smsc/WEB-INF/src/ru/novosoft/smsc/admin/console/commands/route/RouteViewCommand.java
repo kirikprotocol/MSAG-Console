@@ -7,8 +7,8 @@
  */
 package ru.novosoft.smsc.admin.console.commands.route;
 
-import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.admin.category.Category;
@@ -16,7 +16,7 @@ import ru.novosoft.smsc.admin.category.Category;
 import java.util.Iterator;
 
 
-public class RouteViewCommand implements Command
+public class RouteViewCommand extends CommandClass
 {
   private String route;
 

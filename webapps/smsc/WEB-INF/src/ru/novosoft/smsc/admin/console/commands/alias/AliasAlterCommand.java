@@ -13,19 +13,21 @@
  */
 package ru.novosoft.smsc.admin.console.commands.alias;
 
-import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.journal.Action;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 
-public class AliasAlterCommand implements Command
+public class AliasAlterCommand extends CommandClass
 {
   private String address = null;
   private String alias = null;
   private boolean hide = false;
   private boolean hideSet = false;
+  private boolean aliasChanged = false;
+  private String oldAliasMask = null;
 
   public void setAddress(String address) {
     this.address = address;
@@ -44,12 +46,15 @@ public class AliasAlterCommand implements Command
     if (smscAlias != null) {
       try {
         Alias newAlias = new Alias(new Mask(address), new Mask(alias), (hideSet) ? hide:smscAlias.isHide());
-        boolean ok = ctx.getSmsc().getAliases().modify(new Alias(new Mask(alias), new Mask(alias), false), newAlias, new Action("console user", Constants.CONSOLE_SESSION_ID)); //todo: pass console user name to method
+		ctx.getSmsc().getAliases().remove(alias);
+        boolean ok = ctx.getSmsc().getAliases().add(newAlias);
         if (ok) {
-          ctx.setMessage(out+" altered");
-          ctx.setStatus(CommandContext.CMD_OK);
+			aliasChanged = !smscAlias.getAlias().equals(newAlias.getAlias());
+			if (aliasChanged) {oldAliasMask = smscAlias.getAlias().getMask();}
+			ctx.setMessage(out+" altered");
+			ctx.setStatus(CommandContext.CMD_OK);
         } else {
-          ctx.getSmsc().getAliases().add(smscAlias, new Action("console user", Constants.CONSOLE_SESSION_ID)); //todo: pass console user name to method
+          ctx.getSmsc().getAliases().add(smscAlias);
           ctx.setMessage(out+" already exists or has equivalent");
           ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
         }
@@ -67,6 +72,13 @@ public class AliasAlterCommand implements Command
   public String getId() {
     return "ALIAS_ALTER";
   }
+
+	public void updateJournalAndStatuses(CommandContext ctx, String userName)
+	{
+		if (aliasChanged) {journalAppend(ctx, userName, SubjectTypes.TYPE_alias, alias, Actions.ACTION_MODIFY, "old alias", oldAliasMask);}
+			else journalAppend(ctx, userName, SubjectTypes.TYPE_alias, alias, Actions.ACTION_MODIFY);
+		ctx.getStatuses().setAliasesChanged(true);
+	}
 }
 
 

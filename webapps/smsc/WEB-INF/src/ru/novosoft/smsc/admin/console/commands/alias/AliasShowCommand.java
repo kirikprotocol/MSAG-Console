@@ -7,14 +7,14 @@
  */
 package ru.novosoft.smsc.admin.console.commands.alias;
 
-import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.route.Mask;
 
 import java.util.Iterator;
 
-public class AliasShowCommand implements Command
+public class AliasShowCommand extends CommandClass
 {
     private String address = null;
 

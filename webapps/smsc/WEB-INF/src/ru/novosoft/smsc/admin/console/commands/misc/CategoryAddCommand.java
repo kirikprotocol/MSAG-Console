@@ -1,10 +1,11 @@
 package ru.novosoft.smsc.admin.console.commands.misc;
 
-import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.category.Category;
-import ru.novosoft.smsc.admin.smsc_service.SmeManager;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 
 /**
  * Created by IntelliJ IDEA.
@@ -14,7 +15,7 @@ import ru.novosoft.smsc.admin.smsc_service.SmeManager;
  * To change this template use File | Settings | File Templates.
  */
 
-public class CategoryAddCommand implements Command
+public class CategoryAddCommand extends CommandClass
 {
     protected String categoryId = null;
 
@@ -41,5 +42,11 @@ public class CategoryAddCommand implements Command
     public String getId() {
         return "CATEGORY_ADD";
     }
+
+	public void updateJournalAndStatuses(CommandContext ctx, String userName)
+	{
+		journalAppend(ctx, userName, SubjectTypes.TYPE_category, categoryId, Actions.ACTION_ADD);
+		ctx.getStatuses().setCategoriesChanged(true);
+	}
 }
 

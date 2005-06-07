@@ -655,9 +655,9 @@ public CommandParser(ParserSharedInputState state) {
 			cmd = new ApplyAliasesCommand();
 			break;
 		}
-		case TGT_PROVEDERS:
+		case TGT_PROVIDERS:
 		{
-			match(TGT_PROVEDERS);
+			match(TGT_PROVIDERS);
 			cmd = new ApplyProvidersCommand();
 			break;
 		}
