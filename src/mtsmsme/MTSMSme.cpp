@@ -41,7 +41,7 @@ static bool  bMTSMSmeIsConnecting = false;
 
 // TODO: Implement Stop & Reconnect logic !!!
 
-/* 
+/*
 static void setNeedStop(bool stop=true) {
     MutexGuard gauard(needStopLock);
     bMCISmeIsStopped = stop;
@@ -81,11 +81,11 @@ private:
     Hash<Address>   aliasByAddress;
 
 public:
-    
+
     AliasManager(ConfigView* config) throw(ConfigException)
     {
         MutexGuard guard(aliasLock); // init alias mapping
-        
+
         smsc_log_info(logger, "Address to alias mapping loading ...");
         std::auto_ptr< std::set<std::string> > setGuard(config->getShortSectionNames());
         std::set<std::string>* set = setGuard.get();
@@ -132,7 +132,7 @@ public:
             if (!aliasPtr) return false;
             alias = *aliasPtr;
             return true;
-        } 
+        }
         catch (Exception& exc) {
             smsc_log_error(logger, "Alias mapping failure");
             return false;
@@ -148,7 +148,7 @@ private:
     IntHash<Request*> requestBySeqNum;
 
 public:
-    
+
     RequestController() {};
     ~RequestController()
     {
@@ -159,10 +159,10 @@ public:
         while (it.Next(seqNum, request))
         {
             if (!request) {
-                smsc_log_error(logger, "RequestController shutdown: request is null for seqNum=%d", seqNum);    
+                smsc_log_error(logger, "RequestController shutdown: request is null for seqNum=%d", seqNum);
                 continue;
             }
-            smsc_log_warn(logger, "RequestController shutdown: request for seqNum=%d skipped", seqNum);    
+            smsc_log_warn(logger, "RequestController shutdown: request for seqNum=%d skipped", seqNum);
             request->setSendResult(SMENOTCONNECTED); // TODO: what errorcode ???
         }
 
@@ -172,7 +172,7 @@ public:
     {
         MutexGuard guard(requestLock);
         if (requestBySeqNum.Exist(seqNum)) {
-            smsc_log_error(logger, "RequestController: SMPP seqNum=%d already exists", seqNum);    
+            smsc_log_error(logger, "RequestController: SMPP seqNum=%d already exists", seqNum);
             return false;
         }
         requestBySeqNum.Insert(seqNum, request);
@@ -185,7 +185,7 @@ public:
             MutexGuard guard(requestLock);
             Request** requestPtr = requestBySeqNum.GetPtr(seqNum);
             if (!requestPtr || !(*requestPtr)) {
-                smsc_log_error(logger, "RequestController: Request is undefined for seqNum=%d", seqNum);    
+                smsc_log_error(logger, "RequestController: Request is undefined for seqNum=%d", seqNum);
                 return false;
             }
             request = *requestPtr;
@@ -199,15 +199,15 @@ public:
 class MTSMSmeRequestSender: public RequestSender
 {
 private:
-    
+
     SmppSession*        session;
     AliasManager&       aliaser;
     RequestController&  controller;
     Mutex               sendLock;
 
 public:
-    
-    MTSMSmeRequestSender(SmppSession* _session, AliasManager& _aliaser, 
+
+    MTSMSmeRequestSender(SmppSession* _session, AliasManager& _aliaser,
                          RequestController& _controller) : RequestSender(),
         session(_session), aliaser(_aliaser), controller(_controller) {};
 
@@ -219,7 +219,7 @@ public:
     virtual bool send(Request* request)
     {
         MutexGuard guard(sendLock);
-        
+
         if (!request) {
             smsc_log_error(logger, "Request to send is null in RequestSender");
             return false;
@@ -233,7 +233,7 @@ public:
             smsc_log_error(logger, "Smpp transmitter is undefined in RequestSender");
             return false;
         }
-        
+
         const SMS* sms = &(request->sms);
         Address da;
         if (!aliaser.getAliasForAddress(sms->destinationAddress, da)) {
@@ -242,14 +242,14 @@ public:
             request->setSendResult(NOROUTE);
             return false;
         }
-        
+
         PduSubmitSm  sm;
         sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
         fillSmppPduFromSms(&sm, (SMS *)sms);
         sm.get_message().get_dest()  .set_typeOfNumber(da.type);
         sm.get_message().get_dest()  .set_numberingPlan(da.plan);
         sm.get_message().get_dest()  .set_value(da.value);
-        
+
         // TODO: set transactional mode in ESM_CLASS (by OR) ???
         int seqNum = sm.get_header().get_sequenceNumber();
         controller.setRequest(seqNum,request);
@@ -261,14 +261,14 @@ public:
 class MTSMSmePduListener: public SmppPduEventListener
 {
 protected:
-    
+
     RequestController&  controller;
 
     SmppTransmitter*    syncTransmitter;
     SmppTransmitter*    asyncTransmitter;
 
 public:
-    
+
     MTSMSmePduListener(RequestController& _controller) : SmppPduEventListener(),
         controller(_controller), syncTransmitter(0), asyncTransmitter(0) {};
     virtual ~MTSMSmePduListener() {};
@@ -279,14 +279,14 @@ public:
     void setAsyncTransmitter(SmppTransmitter *transmitter) {
         asyncTransmitter = transmitter;
     }
-    
+
     void processResponce(SmppHeader *pdu)
     {
         if (!pdu) return;
-        
+
         int seqNum = pdu->get_sequenceNumber();
         int status = pdu->get_commandStatus();
-        
+
         // search and report status to Request via RequestController
         smsc_log_info(logger, "Got responce for seqNum=%d (status=%d)", seqNum, status);
         controller.stateRequest(seqNum, status);
@@ -313,7 +313,7 @@ public:
             smsc_log_debug(logger, "Received unsupported Pdu %d !", pdu->get_commandId());
             break;
         }
-        
+
         disposePdu(pdu);
     }
     void handleError(int errorCode)
@@ -326,21 +326,21 @@ public:
 class MTSMSmeConfig : public SmeConfig
 {
 private:
-    
+
     char *strHost, *strSid, *strPassword, *strSysType, *strOrigAddr;
 
 public:
-    
+
     MTSMSmeConfig(ConfigView* config) throw(ConfigException)
         : SmeConfig(), strHost(0), strSid(0), strPassword(0), strSysType(0), strOrigAddr(0)
     {
         // Mandatory fields
         strHost = config->getString("host", "SMSC host wasn't defined !"); host = strHost;
         strSid = config->getString("sid", "MTSMSme id wasn't defined !");   sid = strSid;
-        
+
         port = config->getInt("port", "SMSC port wasn't defined !");
         timeOut = config->getInt("timeout", "Connect timeout wasn't defined !");
-        
+
         // Optional fields
         try {
             strPassword = config->getString("password", "MTSMSme password wasn't defined !");
@@ -384,7 +384,7 @@ extern "C" void atExitHandler(void)
 extern "C" void setShutdownHandler(void)
 {
     sigset_t set;
-    sigemptyset(&set); 
+    sigemptyset(&set);
     sigaddset(&set, smsc::system::SHUTDOWN_SIGNAL);
     if(pthread_sigmask(SIG_UNBLOCK, &set, NULL) != 0) {
         if (logger) smsc_log_error(logger, "Failed to set signal mask (shutdown handler)");
@@ -416,28 +416,28 @@ struct ShutdownThread : public Thread
         return 0;
     };
     void Stop() {
-        shutdownEvent.Signal();    
+        shutdownEvent.Signal();
     };
 } shutdownThread;
 
 int main(void)
 {
     smsc::logger::Logger::Init();
-    logger = smsc::logger::Logger::getInstance("smsc.mtsmsme.MTSMSme");
-    
+    logger = smsc::logger::Logger::getInstance("mt.sme");
+
     atexit(atExitHandler);
     clearSignalMask();
 
     shutdownThread.Start();
 
     int resultCode = 0;
-    try 
+    try
     {
         smsc_log_info(logger, getStrVersion());
 
         Manager::init("config.xml");
         Manager& manager = Manager::getInstance();
-        
+
         ConfigView smscConfig(manager, "MTSMSme.SMSC");
         MTSMSmeConfig cfg(&smscConfig);
 
@@ -453,13 +453,13 @@ int main(void)
             MTSMSmePduListener      listener(controller);
             SmppSession             session(cfg, &listener);
             MTSMSmeRequestSender    sender(&session, aliaser, controller);
-            
+
             smsc_log_info(logger, "Connecting to SMSC ... ");
             try
             {
                 listener.setSyncTransmitter(session.getSyncTransmitter());
                 listener.setAsyncTransmitter(session.getAsyncTransmitter());
-                
+
                 bMTSMSmeIsConnecting = true;
                 mtsmSmeReady.Wait(0);
                 setNeedReconnect(false);
@@ -470,7 +470,7 @@ int main(void)
             }
             catch (SmppConnectException& exc)
             {
-                const char* msg = exc.what(); 
+                const char* msg = exc.what();
                 smsc_log_error(logger, "Connect to SMSC failed. Cause: %s", (msg) ? msg:"unknown");
                 bMTSMSmeIsConnecting = false;
                 setNeedReconnect(true);
@@ -480,11 +480,11 @@ int main(void)
                 continue;
             }
             smsc_log_info(logger, "Connected.");
-            
+
             smsc_log_info(logger, "Running RequestProcessor ...");
             processor->Run();
             smsc_log_info(logger, "RequestProcessor exited");
-            
+
             clearSignalMask();
             smsc_log_info(logger, "Disconnecting from SMSC ...");
             session.close();
@@ -507,9 +507,7 @@ int main(void)
         smsc_log_error(logger, "Unknown exception: '...' caught. Exiting");
         resultCode = -5;
     }
-    
+
     shutdownThread.Stop();
     return resultCode;
 }
-
-
