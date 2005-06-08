@@ -36,12 +36,12 @@ public class ProfilesAdd extends ProfilesBean
       return result;
 
     if (mbSave != null)
-      return save();
+      return save(request);
 
     return RESULT_OK;
   }
 
-  protected int save()
+  protected int save(final HttpServletRequest request)
   {
     logger.debug("Add new profile: " + mask);
     if (!Mask.isMaskValid(mask))
@@ -52,6 +52,7 @@ public class ProfilesAdd extends ProfilesBean
     try {
       final Mask address = new Mask(mask);
       Profile profile = new Profile(address, codepage, ussd7bit, report, locale, aliasHide, aliasModifiable, divert, divertActiveUnconditional, divertActiveAbsent, divertActiveBlocked, divertActiveBarred, divertActiveCapacity, divertModifiable, udhConcat, translit);
+      request.getSession().setAttribute("PROFILE_ADD_MASK", address.getMask());
       switch (smsc.profileUpdate(address, profile)) {
         case 1: //pusUpdated
           journalAppend(SubjectTypes.TYPE_profile, address.getMask(), Actions.ACTION_MODIFY);

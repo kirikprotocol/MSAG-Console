@@ -135,12 +135,12 @@ public class RoutesEdit extends RouteBody
     if (null != mbCancel)
       return RESULT_DONE;
     else if (null != mbSave)
-      return save(getLoginedPrincipal(), sessionId);
+      return save(getLoginedPrincipal(), request);
 
     return result;
   }
 
-  protected int save(final Principal loginedPrincipal, final String sessionId)
+  protected int save(final Principal loginedPrincipal, final HttpServletRequest request)
   {
     if (null == routeId || 0 >= routeId.length() || null == oldRouteId || 0 >= oldRouteId.length())
       return error(SMSCErrors.error.routes.nameNotSpecified);
@@ -193,6 +193,7 @@ public class RoutesEdit extends RouteBody
       else
         journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY, "old route ID", oldRouteId);
       appContext.getStatuses().setRoutesChanged(true);
+      request.getSession().setAttribute("ROUT_ID", routeId);
       return RESULT_DONE;
     } catch (Throwable e) {
       return error(SMSCErrors.error.routes.cantAdd, routeId, e);

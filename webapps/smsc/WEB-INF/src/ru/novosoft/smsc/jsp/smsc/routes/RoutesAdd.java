@@ -14,6 +14,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.util.Functions;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import java.util.*;
 
 
@@ -90,12 +91,12 @@ public class RoutesAdd extends RouteBody
     if (mbCancel != null)
       return RESULT_DONE;
     else if (mbSave != null)
-      return save(request.getSession(false).getId());
+      return save(request);
 
     return RESULT_OK;
   }
 
-  protected int save(final String sessionId)
+  protected int save(final HttpServletRequest request)
   {
     if (routeId == null || routeId.length() <= 0)
       return error(SMSCErrors.error.routes.nameNotSpecified);
@@ -142,6 +143,7 @@ public class RoutesAdd extends RouteBody
 
       routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId,
               deliveryMode, forwardTo, hide, replayPath, notes, forceDelivery, aclId, allowBlocked, providerId, categoryId));
+        request.getSession().setAttribute("ROUT_ID", routeId);
       journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_ADD);
       appContext.getStatuses().setRoutesChanged(true);
       return RESULT_DONE;

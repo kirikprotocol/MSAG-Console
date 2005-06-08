@@ -24,7 +24,7 @@ public class ProfilesEdit extends ProfilesBean
   public ProfilesEdit()
   {
     report = -1;
-    codepage = -1;
+    codepage = -1;     
   }
 
   protected int init(final List errors)
@@ -73,12 +73,12 @@ public class ProfilesEdit extends ProfilesBean
       return result;
 
     if (null != mbSave)
-      return save();
+      return save(request);
 
     return RESULT_OK;
   }
 
-  protected int save()
+  protected int save(final HttpServletRequest request)
   {
     if (!Mask.isMaskValid(mask))
       return error(SMSCErrors.error.profiles.invalidMask, mask);
@@ -86,6 +86,7 @@ public class ProfilesEdit extends ProfilesBean
     try {
       final Mask address = new Mask(mask);
       final Profile profile = new Profile(address, codepage, ussd7bit, report, locale, aliasHide, aliasModifiable, divert, divertActiveUnconditional, divertActiveAbsent, divertActiveBlocked, divertActiveBarred, divertActiveCapacity, divertModifiable, udhConcat, translit);
+        request.getSession().setAttribute("PROFILE_EDIT_MASK", address.getMask());
       switch (smsc.profileUpdate(address, profile)) {
         case 1: //pusUpdated
           journalAppend(SubjectTypes.TYPE_profile, address.getMask(), Actions.ACTION_MODIFY);

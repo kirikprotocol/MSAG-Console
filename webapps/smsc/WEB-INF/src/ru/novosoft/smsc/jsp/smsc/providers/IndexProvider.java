@@ -10,6 +10,7 @@ import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.impl.provider.ProviderQuery;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,6 +18,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Iterator;
 
 public class IndexProvider extends IndexBean
 {
@@ -75,12 +77,36 @@ public class IndexProvider extends IndexBean
     logger.debug("Providers.Index - process with sorting [" + preferences.getProvidersSortOrder() + "]");
     ProviderQuery query = new ProviderQuery(pageSize, preferences.getProviderFilter(), preferences.getProvidersSortOrder(), startPosition);
     providers = appContext.getProviderManager().query(query);
+    if(request.getSession().getAttribute("PROVADER_NAME") != null){
+          providers = getProvidersByName((String) request.getSession().getAttribute("PROVADER_NAME"));
+          request.getSession().removeAttribute("PROVADER_NAME");
+      }
     totalSize = providers.getTotalSize();
 
     checkedProviderNamesSet.addAll(Arrays.asList(checkedProviderNames));
 
     return RESULT_OK;
   }
+
+  private QueryResultSet getProvidersByName(String name) {
+        boolean found = false;
+        QueryResultSet providers = null;
+        while (!found) {
+            ProviderQuery query = new ProviderQuery(pageSize, preferences.getProviderFilter(), preferences.getProvidersSortOrder(), startPosition);
+            providers = appContext.getProviderManager().query(query);
+            for (Iterator i = providers.iterator(); i.hasNext();) {
+                DataItem item = (DataItem) i.next();
+                String al = (String) item.getValue("name");
+                if (al.equals(name)) {
+                    found = true;
+                }
+            }
+            if (!found) {
+                startPosition += pageSize;
+            }
+        }
+        return providers;
+    }
 
   private int deleteProviders()
   {

@@ -15,6 +15,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.route.RouteQuery;
 
@@ -165,12 +166,35 @@ public class Index extends IndexBean
 
     logger.debug("Routes.Index - process with sorting [" + (String) preferences.getRoutesSortOrder().get(0) + "]");
     routes = routeSubjectManager.getRoutes().query(new RouteQuery(pageSize, preferences.getRoutesFilter(appContext), preferences.getRoutesSortOrder(), startPosition));
+    if (request.getSession().getAttribute("ROUT_ID") != null) {
+          routes = getRoutesByName((String) request.getSession().getAttribute("ROUT_ID"));
+          request.getSession().removeAttribute("ROUT_ID");
+    }
     totalSize = routes.getTotalSize();
 
     checkedRouteIdsSet.addAll(Arrays.asList(checkedRouteIds));
 
     return RESULT_OK;
   }
+
+   private QueryResultSet getRoutesByName(String name) {
+        boolean found = false;
+        QueryResultSet routes = null;
+        while (!found) {
+            routes = routeSubjectManager.getRoutes().query(new RouteQuery(pageSize, preferences.getRoutesFilter(appContext), preferences.getRoutesSortOrder(), startPosition));
+            for (Iterator i = routes.iterator(); i.hasNext();) {
+                DataItem item = (DataItem) i.next();
+                String al = (String) item.getValue("Route ID");
+                if (al.equals(name)) {
+                    found = true;
+                }
+            }
+            if (!found) {
+                startPosition += pageSize;
+            }
+        }
+        return routes;
+    }
 
   private int updateFilter()
   {

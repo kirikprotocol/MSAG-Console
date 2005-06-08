@@ -14,6 +14,7 @@ import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.impl.user.UserQuery;
 
 import javax.servlet.http.HttpServletRequest;
@@ -21,6 +22,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Iterator;
 
 public class Index extends IndexBean
 {
@@ -79,12 +81,37 @@ public class Index extends IndexBean
 
     logger.debug("Users.Index - process with sorting [" + (String) preferences.getUsersSortOrder().get(0) + "]");
     users = appContext.getUserManager().query(new UserQuery(pageSize, preferences.getUserFilter(), preferences.getUsersSortOrder(), startPosition));
+    if (request.getSession().getAttribute("USER_LOGIN_ADD_EDIT") != null) {
+        users = getUsersByLogin((String) request.getSession().getAttribute("USER_LOGIN_ADD_EDIT"));
+        request.getSession().removeAttribute("USER_LOGIN_ADD_EDIT");
+    }
     totalSize = users.getTotalSize();
 
     checkedUserLoginsSet.addAll(Arrays.asList(checkedUserLogins));
 
     return RESULT_OK;
   }
+
+    private QueryResultSet getUsersByLogin(String login) {
+        boolean found = false;
+        QueryResultSet users = null;
+        while (!found) {
+            UserQuery query = new UserQuery(pageSize, preferences.getUserFilter(), preferences.getUsersSortOrder(), startPosition);
+            users = appContext.getUserManager().query(query);
+            for (Iterator i = users.iterator(); i.hasNext();) {
+                DataItem item = (DataItem) i.next();
+                String al = (String) item.getValue("login");
+                if (al.equals(login)) {
+                    found = true;
+                }
+            }
+            if (!found) {
+                startPosition += pageSize;
+            }
+        }
+        return users;
+    }
+
 
   private int deleteUsers()
   {

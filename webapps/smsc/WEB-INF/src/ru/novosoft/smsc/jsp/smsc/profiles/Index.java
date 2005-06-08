@@ -16,6 +16,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
 
 import javax.servlet.http.HttpServletRequest;
@@ -23,6 +24,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Iterator;
 
 public class Index extends IndexBean
 {
@@ -138,13 +140,24 @@ public class Index extends IndexBean
           try {
 
               if (isRunQuery()) {
-                  profiles = smsc.profilesQueryFromFile(new ProfileQuery(pageSize, normalizeAddresPrefix(preferences.getProfilesFilter()), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_ADDRESSES));
+
+                  if (request.getSession().getAttribute("PROFILE_ADD_MASK") != null) {
+                      profiles = getProfilesAddByMask((String) request.getSession().getAttribute("PROFILE_ADD_MASK"));
+                      request.getSession().removeAttribute("PROFILE_ADD_MASK");
+                  } else {
+                      profiles = smsc.profilesQueryFromFile(new ProfileQuery(pageSize, normalizeAddresPrefix(preferences.getProfilesFilter()), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_ADDRESSES));
+                      profiles.sortBycolumnName(preferences.getProfilesSortOrder());
+
+                  }
                   totalSize = profiles.getTotalSize();
-                  profiles.sortBycolumnName(preferences.getProfilesSortOrder());
                   request.getSession().setAttribute("profiles", profiles);
               } else {
                   profiles = (QueryResultSet) request.getSession().getAttribute("profiles");
                   profiles.sortBycolumnName(preferences.getProfilesSortOrder());
+                  if (request.getSession().getAttribute("PROFILE_EDIT_MASK") != null) {
+                      profiles = getProfilesEditByMask((String) request.getSession().getAttribute("PROFILE_EDIT_MASK"), profiles);
+                      request.getSession().removeAttribute("PROFILE_EDIT_MASK");
+                  }
                   request.getSession().setAttribute("profiles", profiles);
               }
               totalSize = profiles.getTotalSize();
@@ -160,6 +173,42 @@ public class Index extends IndexBean
       }
       return isEditAllowed() ? RESULT_OK : RESULT_ERROR;
   }
+
+    private QueryResultSet getProfilesAddByMask(String mask) throws AdminException {
+        boolean found = false;
+        while (!found) {
+            QueryResultSet profiles = null;
+            profiles = smsc.profilesQueryFromFile(new ProfileQuery(pageSize, normalizeAddresPrefix(preferences.getProfilesFilter()), preferences.getProfilesSortOrder(), startPosition, ProfileQuery.SHOW_ADDRESSES));
+            for (Iterator i = profiles.iterator(); i.hasNext();) {
+                DataItem item = (DataItem) i.next();
+                String al = (String) item.getValue("mask");
+                if (al.equals(mask)) {
+                    found = true;
+                }
+            }
+            if (!found) {
+                startPosition += pageSize;
+            }
+        }
+        return profiles;
+    }
+
+    private QueryResultSet getProfilesEditByMask(String mask, QueryResultSet profiles){
+        boolean found = false;
+        while (!found) {
+            for (Iterator i = profiles.iterator(); i.hasNext();) {
+                DataItem item = (DataItem) i.next();
+                String al = (String) item.getValue("mask");
+                if (al.equals(mask)) {
+                    found = true;
+                }
+            }
+            if (!found) {
+                startPosition += pageSize;
+            }
+        }
+        return profiles;
+    }
 
   private int delete()
   {

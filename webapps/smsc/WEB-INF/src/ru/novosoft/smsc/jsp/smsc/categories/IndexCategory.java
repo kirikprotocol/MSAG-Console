@@ -77,9 +77,9 @@ public class IndexCategory extends IndexBean
     logger.debug("Providers.Index - process with sorting [" + preferences.getCategoriesSortOrder() + "]");
     CategoryQuery query = new CategoryQuery(pageSize, preferences.getCategoryFilter(), preferences.getCategoriesSortOrder(), startPosition);
     categories = appContext.getCategoryManager().query(query);
-      if(request.getSession().getAttribute("categoryName") != null){
-          categories = getCategoriesByName((String) request.getSession().getAttribute("categoryName"));
-          request.getSession().removeAttribute("categoryName");
+      if(request.getSession().getAttribute("CATEGORY_NAME") != null){
+          categories = getCategoriesByName((String) request.getSession().getAttribute("CATEGORY_NAME"));
+          request.getSession().removeAttribute("CATEGORY_NAME");
       }
     totalSize = categories.getTotalSize();
 

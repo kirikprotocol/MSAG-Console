@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 public class ProvidersAdd extends ProvidersEditBean
@@ -27,7 +28,7 @@ public class ProvidersAdd extends ProvidersEditBean
     return RESULT_OK;
   }
 
-  protected int save()
+  protected int save(final HttpServletRequest request)
   {
     if (name == null || name.trim().length() == 0)
       return error(SMSCErrors.error.providers.nameNotDefined);
@@ -41,6 +42,7 @@ public class ProvidersAdd extends ProvidersEditBean
     if (provider == null) {
       provider = providerManager.createProvider(name);
       if (provider != null) {
+          request.getSession().setAttribute("PROVADER_NAME", name);
         journalAppend(SubjectTypes.TYPE_provider, name, Actions.ACTION_ADD);
         appContext.getStatuses().setProvidersChanged(true);
         return RESULT_DONE;
