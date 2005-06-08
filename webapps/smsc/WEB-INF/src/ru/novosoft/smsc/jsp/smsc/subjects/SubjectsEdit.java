@@ -59,12 +59,12 @@ public class SubjectsEdit extends SmscBean
       return result;
 
     if (mbSave != null)
-      return save();
+      return save(request);
 
     return RESULT_OK;
   }
 
-  protected int save()
+  protected int save(HttpServletRequest request)
   {
     try {
       if (masks == null || masks.length <= 0) {
@@ -82,6 +82,7 @@ public class SubjectsEdit extends SmscBean
       s.setNotes(notes);
       journalAppend(SubjectTypes.TYPE_subject, name, Actions.ACTION_MODIFY);
       appContext.getStatuses().setSubjectsChanged(true);
+        request.getSession().setAttribute("SUBJECT_NAME", name);
       return RESULT_DONE;
     } catch (Throwable e) {
       logger.debug("Can't save subject \"" + name + "\"", e);

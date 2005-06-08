@@ -42,12 +42,12 @@ public abstract class CategoriesEditBean extends SmscBean
     if (mbCancel != null)
       return RESULT_DONE;
     else if (mbSave != null)
-      return save();
+      return save(request);
 
     return RESULT_OK;
   }
 
-  protected abstract int save();
+  protected abstract int save(HttpServletRequest request);
 
   public abstract boolean isNew();
 

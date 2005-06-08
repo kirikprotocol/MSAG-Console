@@ -10,6 +10,7 @@ import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.impl.category.CategoryQuery;
 
 import javax.servlet.http.HttpServletRequest;
@@ -17,6 +18,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Iterator;
 
 public class IndexCategory extends IndexBean
 {
@@ -75,12 +77,36 @@ public class IndexCategory extends IndexBean
     logger.debug("Providers.Index - process with sorting [" + preferences.getCategoriesSortOrder() + "]");
     CategoryQuery query = new CategoryQuery(pageSize, preferences.getCategoryFilter(), preferences.getCategoriesSortOrder(), startPosition);
     categories = appContext.getCategoryManager().query(query);
+      if(request.getSession().getAttribute("categoryName") != null){
+          categories = getCategoriesByName((String) request.getSession().getAttribute("categoryName"));
+          request.getSession().removeAttribute("categoryName");
+      }
     totalSize = categories.getTotalSize();
 
     checkedCategoryNamesSet.addAll(Arrays.asList(checkedCategoryNames));
 
     return RESULT_OK;
   }
+
+    private QueryResultSet getCategoriesByName(String name) {
+        boolean found = false;
+        QueryResultSet categories = null;
+        while (!found) {
+            CategoryQuery query = new CategoryQuery(pageSize, preferences.getCategoryFilter(), preferences.getCategoriesSortOrder(), startPosition);
+            categories = appContext.getCategoryManager().query(query);
+            for (Iterator i = categories.iterator(); i.hasNext();) {
+                DataItem item = (DataItem) i.next();
+                String al = (String) item.getValue("name");
+                if (al.equals(name)) {
+                    found = true;
+                }
+            }
+            if (!found) {
+                startPosition += pageSize;
+            }
+        }
+        return categories;
+    }
 
   private int deleteCategories()
   {

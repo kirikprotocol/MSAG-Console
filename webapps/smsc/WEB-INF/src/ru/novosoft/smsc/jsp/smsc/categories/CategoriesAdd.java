@@ -9,6 +9,7 @@ import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 public class CategoriesAdd extends CategoriesEditBean
@@ -27,7 +28,7 @@ public class CategoriesAdd extends CategoriesEditBean
     return RESULT_OK;
   }
 
-  protected int save()
+  protected int save(HttpServletRequest request)
   {
     if (name == null || name.trim().length() == 0)
       return error(SMSCErrors.error.categories.nameNotDefined);
@@ -43,6 +44,7 @@ public class CategoriesAdd extends CategoriesEditBean
       if (category != null) {
         journalAppend(SubjectTypes.TYPE_category, name, Actions.ACTION_ADD);
         appContext.getStatuses().setCategoriesChanged(true);
+          request.getSession().setAttribute("CATEGORY_NAME", name);
         return RESULT_DONE;
       }
       else

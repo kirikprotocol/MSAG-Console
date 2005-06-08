@@ -13,6 +13,7 @@ import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.impl.subject.SubjectQuery;
 import ru.novosoft.smsc.util.Functions;
 
@@ -21,6 +22,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Iterator;
 
 public final class Index extends IndexBean
 {
@@ -102,12 +104,36 @@ public final class Index extends IndexBean
 
     logger.debug("Subjects.Index - process with sorting [" + (String) preferences.getSubjectsSortOrder().get(0) + "]");
     subjects = routeSubjectManager.getSubjects().query(new SubjectQuery(pageSize, preferences.getSubjectsFilter(), preferences.getSubjectsSortOrder(), startPosition));
+    if (request.getSession().getAttribute("SUBJECT_NAME") != null) {
+        subjects = getSubjectsByName((String) request.getSession().getAttribute("SUBJECT_NAME"));
+        request.getSession().removeAttribute("SUBJECT_NAME");
+    }
     totalSize = subjects.getTotalSize();
 
     checkedSubjectsSet.addAll(Arrays.asList(checkedSubjects));
 
     return result;
   }
+
+  private QueryResultSet getSubjectsByName(String name) {
+        boolean found = false;
+        QueryResultSet subjects = null;
+        while (!found) {
+            SubjectQuery query = new SubjectQuery(pageSize, preferences.getSubjectsFilter(), preferences.getSubjectsSortOrder(), startPosition);
+            subjects = routeSubjectManager.getSubjects().query(query);
+            for (Iterator i = subjects.iterator(); i.hasNext();) {
+                DataItem item = (DataItem) i.next();
+                String al = (String) item.getValue("Name");
+                if (al.equals(name)) {
+                    found = true;
+                }
+            }
+            if (!found) {
+                startPosition += pageSize;
+            }
+        }
+        return subjects;
+    }
 
   protected int deleteSubject()
   {

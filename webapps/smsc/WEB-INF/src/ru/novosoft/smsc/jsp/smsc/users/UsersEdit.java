@@ -12,6 +12,7 @@ import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
 
@@ -63,7 +64,7 @@ public class UsersEdit extends UsersEditBean
 		return RESULT_OK;
 	}
 
-  protected int save()
+  protected int save(final HttpServletRequest request)
   {
     if (login == null || login.trim().length() == 0)
       return error(SMSCErrors.error.users.loginNotDefined);
@@ -92,6 +93,7 @@ public class UsersEdit extends UsersEditBean
 		user.getPrefs().setValues(prefsNames, prefsValues);
       journalAppend(SubjectTypes.TYPE_user, login, Actions.ACTION_MODIFY);
       appContext.getStatuses().setUsersChanged(true);
+      request.getSession().setAttribute("USER_LOGIN_ADD_EDIT", login);
       return RESULT_DONE;
     }
   }

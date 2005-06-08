@@ -54,12 +54,12 @@ public class SubjectsAdd extends SmscBean
     if (mbCancel != null)
       return RESULT_DONE;
     else if (mbSave != null)
-      return save();
+      return save(request);
 
     return RESULT_OK;
   }
 
-  protected int save()
+  protected int save(HttpServletRequest request)
   {
     if (routeSubjectManager.getSubjects().contains(name))
       return error(SMSCErrors.error.subjects.alreadyExists, name);
@@ -69,6 +69,7 @@ public class SubjectsAdd extends SmscBean
       }
       try {
         routeSubjectManager.getSubjects().add(new Subject(name, masks, smeManager.get(defSme), notes));
+          request.getSession().setAttribute("SUBJECT_NAME", name);
         journalAppend(SubjectTypes.TYPE_subject, name, Actions.ACTION_ADD);
         appContext.getStatuses().setSubjectsChanged(true);
         return RESULT_DONE;

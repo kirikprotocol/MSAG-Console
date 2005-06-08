@@ -12,6 +12,7 @@ import ru.novosoft.smsc.admin.users.User;
 import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 public class UsersAdd
@@ -41,7 +42,7 @@ public class UsersAdd
 		return RESULT_OK;
 	}
 
-	protected int save()
+	protected int save(final HttpServletRequest request)
 	{
 		if (login == null || login.trim().length() == 0)
 		return error(SMSCErrors.error.users.loginNotDefined);
@@ -58,6 +59,7 @@ public class UsersAdd
 			prefs.setValues(prefsNames, prefsValues);
 			if (userManager.addUser(new User(login, password.trim(), roles, firstName, lastName, dept, workPhone, homePhone, cellPhone, email, prefs)))
 			{
+                request.getSession().setAttribute("USER_LOGIN_ADD_EDIT", login);
 				journalAppend(SubjectTypes.TYPE_user, login, Actions.ACTION_ADD);
 				appContext.getStatuses().setUsersChanged(true);
 				return RESULT_DONE;
