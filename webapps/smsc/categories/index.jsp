@@ -19,7 +19,7 @@ TITLE = getLocString("categories.title");
 switch(bean.process(request))
 {
 	case IndexProvider.RESULT_DONE:
-		response.sendRedirect("index.jsp");
+		response.sendRedirect("index.jsp"); // + "?startPosition=" + bean.getStartPositionInt());
 		return;
 	case IndexProvider.RESULT_OK:
 

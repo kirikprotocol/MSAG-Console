@@ -14,9 +14,9 @@ switch(bean.process(request))
 		else if ("groups".equals(bean.getReturnPath()))
 			response.sendRedirect("groups.jsp");
 		else if ("profiles".equals(bean.getReturnPath()))
-			response.sendRedirect("index.jsp");
+			response.sendRedirect("index.jsp" + "?queried=true");
 		else
-			response.sendRedirect("index.jsp");
+			response.sendRedirect("index.jsp" + "?queried=true");
 		return;
 	case ProfilesEdit.RESULT_OK:
 		break;
@@ -34,6 +34,7 @@ page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "profiles.ca
 page_menu_space(out);
 page_menu_end(out);
 %>
+<input type=hidden name=queried value="true">
 <%@ include file="profileBody.jsp"%>
 <%
 page_menu_begin(out);
