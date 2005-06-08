@@ -11,13 +11,16 @@ import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
+import ru.novosoft.smsc.jsp.util.tables.DataItem;
 import ru.novosoft.smsc.jsp.util.tables.impl.alias.AliasQuery;
+import ru.novosoft.smsc.util.StringEncoderDecoder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Iterator;
 
 public class Index extends IndexBean
 {
@@ -75,14 +78,37 @@ public class Index extends IndexBean
 
     logger.debug("Aliases.Index - process with sorting [" + (String) preferences.getAliasesSortOrder().get(0) + "]");
     aliases = smsc.getAliases().query(new AliasQuery(pageSize, preferences.getAliasesFilter(), preferences.getAliasesSortOrder(), startPosition));
-    totalSize = aliases.getTotalSize();
+      if (request.getSession().getAttribute("alias") != null) {
+          aliases = getAliasesByAlias((String) request.getSession().getAttribute("alias"));
+          request.getSession().removeAttribute("alias");
+      }
+      totalSize = aliases.getTotalSize();
 
     checkedAliasesSet.addAll(Arrays.asList(checkedAliases));
 
     return RESULT_OK;
   }
 
-  protected int deleteAliases()
+    private QueryResultSet getAliasesByAlias(String alias) {
+        boolean found = false;
+        QueryResultSet aliases = null;
+        while (!found) {
+            aliases = smsc.getAliases().query(new AliasQuery(pageSize, preferences.getAliasesFilter(), preferences.getAliasesSortOrder(), startPosition));
+            for (Iterator i = aliases.iterator(); i.hasNext();) {
+                DataItem item = (DataItem) i.next();
+                String al = (String) item.getValue("Alias");
+                if (al.equals(alias)) {
+                    found = true;
+                }
+            }
+            if (!found) {
+                startPosition += pageSize;
+            }
+        }
+        return aliases;
+    }
+
+    protected int deleteAliases()
   {
     for (int i = 0; i < checkedAliases.length; i++) {
       String alias = checkedAliases[i];
@@ -183,4 +209,5 @@ public class Index extends IndexBean
   {
     this.mbDelete = mbDelete;
   }
+
 }

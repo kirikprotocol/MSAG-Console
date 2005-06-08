@@ -50,7 +50,7 @@ public class AliasesAdd extends SmscBean
       return result;
 
     if (null != mbSave)
-      return save();
+      return save(request);
 
     return RESULT_OK;
   }
@@ -64,7 +64,7 @@ public class AliasesAdd extends SmscBean
       return 0;
   }
 
-  protected int save()
+  protected int save(final HttpServletRequest request)
   {
     if (!Mask.isMaskValid(address))
       return error(SMSCErrors.error.aliases.invalidAddress, address);

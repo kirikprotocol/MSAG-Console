@@ -83,7 +83,7 @@ public class AliasesEdit extends SmscBean
       return error(SMSCErrors.error.aliases.QuestionCountsNotMathes);
 
     if (null != mbSave)
-      return save();
+      return save(request);
 
     return RESULT_OK;
   }
@@ -97,7 +97,7 @@ public class AliasesEdit extends SmscBean
       return 0;
   }
 
-  protected int save()
+  protected int save(final HttpServletRequest request)
   {
     final Alias al;
     try {
