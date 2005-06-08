@@ -126,6 +126,7 @@ public class AliasesEdit extends SmscBean
     try {
       smsc.getAliases().remove(oldAl);
       if (smsc.getAliases().add(al)) {
+          request.getSession().setAttribute("alias",alias);
         if (aliasChanged)
           journalAppend(SubjectTypes.TYPE_alias, al.getAlias().getMask(), Actions.ACTION_MODIFY, "old alias", oldAl.getAlias().getMask());
         else

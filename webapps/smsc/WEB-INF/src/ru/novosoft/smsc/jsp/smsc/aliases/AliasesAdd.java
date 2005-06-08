@@ -81,6 +81,7 @@ public class AliasesAdd extends SmscBean
         return error(SMSCErrors.error.aliases.alreadyExistsAlias, alias);
 
       if (smsc.getAliases().add(newAlias)) {
+          request.getSession().setAttribute("alias",alias);
         journalAppend(SubjectTypes.TYPE_alias, newAlias.getAlias().getMask(), Actions.ACTION_ADD);
         appContext.getStatuses().setAliasesChanged(true);
         return RESULT_DONE;
