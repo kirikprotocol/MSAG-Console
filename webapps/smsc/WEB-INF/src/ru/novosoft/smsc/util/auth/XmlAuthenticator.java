@@ -1,10 +1,7 @@
-package ru.novosoft.smsc.util.auth;
-
 /*
- * Created by igork
- * Date: 22.11.2002
- * Time: 20:21:04
+ * Copyright (c) 2005 Your Corporation. All Rights Reserved.
  */
+package ru.novosoft.smsc.util.auth;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
