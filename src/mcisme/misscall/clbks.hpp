@@ -1,3 +1,4 @@
+#include "ss7cp.h"
 #include "portss7.h"
 #include "ss7tmc.h"
 #include "i97isup_api.h"

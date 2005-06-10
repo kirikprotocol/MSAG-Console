@@ -1,6 +1,7 @@
 #ifndef __SMSC_MISSCALL_UTIL_HPP__
 #define __SMSC_MISSCALL_UTIL_HPP__
 #include <string>
+#include "ss7cp.h"
 #include "portss7.h"
 #include "ss7tmc.h"
 #include "i97isup_api.h"
