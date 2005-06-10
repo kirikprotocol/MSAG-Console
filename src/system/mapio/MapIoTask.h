@@ -49,6 +49,7 @@ using smsc::core::threads::ThreadedTask;
 using smsc::core::synchronization::Event;
 
 extern "C" {
+#include <ss7cp.h>
 #include <portss7.h>
 #include <ss7tmc.h>
 #include <ss7log.h>
