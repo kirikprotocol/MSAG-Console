@@ -1,19 +1,11 @@
-<%--
-  Created by IntelliJ IDEA.
-  User: starkom
-  Date: 14.04.2005
-  Time: 14:51:17
-  To change this template use File | Settings | File Templates.
---%>
 <%@ page import="java.util.*,
                  java.net.URLEncoder,
                  ru.novosoft.smsc.util.StringEncoderDecoder,
                  ru.novosoft.smsc.jsp.SMSCAppContext,
                  ru.novosoft.smsc.jsp.SMSCJspException,
                  ru.novosoft.smsc.jsp.SMSCErrors,
-                 ru.novosoft.smsc.util.LocaleMessages"
-%><%!
- private HttpServletRequest req = null;%><%!
+                 ru.novosoft.smsc.util.LocaleMessages" %><%!
+    private HttpServletRequest req = null;
     String getLocJSConfFileName()
     {
       String result = "/scripts/localization.js";
@@ -90,6 +82,4 @@
       }
       catch (MissingResourceException e) {result = "ResourceNotFound: " + key;}
       return result;
-    }
-%><%
-    req = request;%>
+    }%><%req = request;%>
