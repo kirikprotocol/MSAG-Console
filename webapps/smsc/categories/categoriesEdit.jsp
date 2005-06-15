@@ -1,18 +1,19 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
-<%@ page import="ru.novosoft.smsc.jsp.smsc.providers.ProvidersEdit"%>
+<%@ page import="ru.novosoft.smsc.jsp.smsc.providers.ProvidersEdit,
+                 ru.novosoft.smsc.jsp.smsc.categories.CategoriesEdit"%>
 <jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.categories.CategoriesEdit"/>
 <jsp:setProperty name="bean" property="*"/>
 <%
 TITLE = getLocString("categories.editTitle");
 switch (bean.process(request))
 {
-	case ProvidersEdit.RESULT_DONE:
+	case CategoriesEdit.RESULT_DONE:
 		response.sendRedirect("index.jsp");
 		return;
-	case ProvidersEdit.RESULT_OK:
+	case CategoriesEdit.RESULT_OK:
 
 		break;
-	case ProvidersEdit.RESULT_ERROR:
+	case CategoriesEdit.RESULT_ERROR:
 
 		break;
 }

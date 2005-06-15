@@ -17,7 +17,6 @@ public class Principal extends AbstractDataItem
     values.put("max_lst", new Integer(maxLists));
     values.put("max_el", new Integer(maxElements));
   }
-
   public String getAddress()
   {
     return (String) values.get("address");
@@ -47,4 +46,13 @@ public class Principal extends AbstractDataItem
   {
     values.put("max_el", new Integer(maxElements));
   }
+     public Integer getMaxListsInteger()
+  {
+    return (Integer)values.get("max_lst");
+  }
+  public Integer getMaxElementsInteger()
+    {
+      return (Integer)values.get("max_el");
+    }
+
 }

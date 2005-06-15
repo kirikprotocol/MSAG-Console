@@ -32,6 +32,7 @@ public class Route
   private boolean enabling = true;
   private boolean archiving = true;
   private boolean billing = false;
+  private boolean transit = false;
   private int serviceId = 0;
   private boolean suppressDeliveryReports = false;
   private boolean active;
@@ -47,7 +48,7 @@ public class Route
   private long providerId;
   private long categoryId;
 
-  public Route(final String routeName, final int priority, final boolean isEnabling, final boolean isBilling, final boolean isArchiving,
+  public Route(final String routeName, final int priority, final boolean isEnabling, final boolean isBilling,final boolean isTransit, final boolean isArchiving,
                final boolean isSuppressDeliveryReports, final boolean active, final int serviceId, final SourceList sources,
                final DestinationList destinations, final String srcSmeId, final String deliveryMode, final String forwardTo, final boolean hide,
                final byte replayPath, final String notes, final boolean forceDelivery, final long aclId, final boolean allowBlocked, final long providerId, final long categoryId)
@@ -68,6 +69,7 @@ public class Route
     this.enabling = isEnabling;
     this.archiving = isArchiving;
     this.billing = isBilling;
+    this.transit = isTransit;
     this.serviceId = serviceId;
     this.suppressDeliveryReports = isSuppressDeliveryReports;
     this.active = active;
@@ -98,6 +100,7 @@ public class Route
     enabling = false;
     archiving = false;
     billing = false;
+    transit=false;
     serviceId = 0;
     suppressDeliveryReports = false;
     active = false;
@@ -127,6 +130,7 @@ public class Route
     enabling = routeElem.getAttribute("enabling").equalsIgnoreCase("true");
     archiving = routeElem.getAttribute("archiving").equalsIgnoreCase("true");
     billing = routeElem.getAttribute("billing").equalsIgnoreCase("true");
+    transit = routeElem.getAttribute("transit").equalsIgnoreCase("true");
     serviceId = Integer.decode(routeElem.getAttribute("serviceId")).intValue();
     suppressDeliveryReports = Boolean.valueOf(routeElem.getAttribute("suppressDeliveryReports")).booleanValue();
     active = Boolean.valueOf(routeElem.getAttribute("active")).booleanValue();
@@ -285,6 +289,16 @@ public class Route
     this.billing = billing;
   }
 
+  public boolean isTransit()
+  {
+    return transit;
+  }
+
+  public void setTransit(boolean transit)
+  {
+    this.transit = transit;
+  }
+
   public boolean isArchiving()
   {
     return archiving;
@@ -299,6 +313,7 @@ public class Route
   {
     out.println("  <route id=\"" + StringEncoderDecoder.encode(getName())
             + "\" billing=\"" + isBilling()
+            + "\" transit=\"" + isTransit()
             + "\" archiving=\"" + isArchiving()
             + "\" enabling=\"" + isEnabling()
             + "\" priority=\"" + getPriority()

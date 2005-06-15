@@ -161,6 +161,10 @@ function srcSmeIdChanged()
 			<td><input id="allowBlocked" class=check type=checkbox name="allowBlocked" <%=bean.isAllowBlocked() ? "checked" : ""%>></td>
 			<td><label for=allowBlocked style="padding-left:4px;"><%=getLocString("routes.allowBlocked")%></label></td>
 		</tr>
+    <tr>
+			<td><input class=check type=checkbox id=transit name=transit <%=bean.isTransit() ? "checked" : ""%>></td>
+			<td><label for=billing style="padding-left:4px;"><%=getLocString("routes.transit")%></label></td>
+		</tr>
 		</table>
 	</td>
 </tr>

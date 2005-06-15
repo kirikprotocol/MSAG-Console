@@ -26,5 +26,6 @@ public class RouteDataItem extends AbstractDataItem
     values.put("suppressDeliveryReports", new Boolean(r.isSuppressDeliveryReports()));
     values.put("srcSmeId", r.getSrcSmeId());
     values.put("notes", r.getNotes());
+    values.put("isTransit", new Boolean(r.isTransit()));
   }
 }

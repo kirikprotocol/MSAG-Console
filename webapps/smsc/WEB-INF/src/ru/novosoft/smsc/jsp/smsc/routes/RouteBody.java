@@ -21,6 +21,7 @@ public class RouteBody extends SmscBean
   protected int priority = 0;
   protected boolean permissible = false;
   protected boolean billing = false;
+  protected boolean transit = false;
   protected boolean archiving = false;
   protected boolean suppressDeliveryReports = false;
   protected boolean active = false;
@@ -163,6 +164,16 @@ public class RouteBody extends SmscBean
   public void setBilling(final boolean billing)
   {
     this.billing = billing;
+  }
+
+  public boolean isTransit()
+  {
+    return transit;
+  }
+
+  public void setTransit(boolean transit)
+  {
+    this.transit = transit;
   }
 
   public boolean isArchiving()

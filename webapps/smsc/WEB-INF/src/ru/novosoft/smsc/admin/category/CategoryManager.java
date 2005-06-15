@@ -167,7 +167,7 @@ public class CategoryManager
 
   public Category removeCategory(String name)
   {
-    Category categoryFounded = null;
+  //  Category categoryFounded = null;
     long id = 0;
     for (Iterator i = categories.values().iterator(); i.hasNext();) {
       Category category = (Category) i.next();

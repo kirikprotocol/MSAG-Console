@@ -172,12 +172,13 @@ o.put("SMEs", "5");
  </table>
 <table class=list cellspacing=0 cellpadding=0 id=ROUTE_LIST_TABLE>
 <col width="1%">
-<col width="60%" align=left>
-<col width="20%" align=center>
-<col width="20%" align=center>
-<col width="20%" align=center>
-<col width="20%" align=center>
-<col width="20%" align=center>
+<col width="51%" align=left>
+<col width="8%" align=center>
+<col width="8%" align=center>
+<col width="8%" align=center>
+<col width="8%" align=center>
+<col width="8%" align=center>
+<col width="8%" align=center>
 <thead>
 <tr>
 	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
@@ -188,6 +189,7 @@ o.put("SMEs", "5");
 	<th><a href="#" <%=bean.getSort().endsWith("isBilling")               ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.billingHint")%>"   onclick='return setSort("isBilling")'              ><%=getLocString("common.sortmodes.billing")%></a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("isArchiving")             ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.archivingHint")%>" onclick='return setSort("isArchiving")'            ><%=getLocString("common.sortmodes.archiving")%></a></th>
 	<th><a href="#" <%=bean.getSort().endsWith("suppressDeliveryReports") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.reportsHint")%>"   onclick='return setSort("suppressDeliveryReports")'><%=getLocString("common.sortmodes.reports")%></a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("isTransit")               ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.transitHint")%>"   onclick='return setSort("isTransit")'              ><%=getLocString("common.sortmodes.transit")%></a></th>
 </tr>
 </thead>
 <tbody>
@@ -204,6 +206,7 @@ for(Iterator i = bean.getRoutes().iterator(); i.hasNext(); row++)
   boolean isBilling                 = ((Boolean)item.getValue("isBilling"              )).booleanValue();
   boolean isArchiving               = ((Boolean)item.getValue("isArchiving"            )).booleanValue();
   boolean isSuppressDeliveryReports = ((Boolean)item.getValue("suppressDeliveryReports")).booleanValue();
+  boolean isTransit                 = ((Boolean)item.getValue("isTransit"              )).booleanValue();
   String notes                      = (String) item.getValue("notes");
   if (notes == null)
     notes = "";
@@ -221,10 +224,11 @@ for(Iterator i = bean.getRoutes().iterator(); i.hasNext(); row++)
 	<td <%=onClick%>><%if (isBilling                ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 	<td <%=onClick%>><%if (isArchiving              ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 	<td <%=onClick%>><%if (isSuppressDeliveryReports){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td <%=onClick%>><%if (isTransit                ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 </tr>
 <tr class=row<%=row&1%> id=<%=rowId%>_BODY style="display:none">
   <td>&nbsp;</td>
-	<td colspan=6><%=encNotes%></td>
+	<td colspan=7><%=encNotes%></td>
 </tr>
 <%}}%>
 </tbody>

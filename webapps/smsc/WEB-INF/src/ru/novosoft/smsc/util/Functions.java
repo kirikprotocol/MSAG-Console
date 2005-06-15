@@ -253,6 +253,6 @@ public class Functions
       if (result < 0) throw new EOFException("Failed to read " + size + " bytes, read failed at "+read);
       read += result;
     }
-
   }
-}
+
+ }
