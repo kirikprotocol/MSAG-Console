@@ -64,61 +64,6 @@
 		<table width="100%" id="MAIN_MENU_TABLE" border="0"  cellspacing="0" cellpadding="0" class="main_menu">
 		<tr>
 			<td background="/images/smsc_14.jpg" width="26"></td>
-			<%
-/*
-			main_menu_begin_item(out, "MENU0_SMSC_menu", "MENU0_SMSC_submenu", "menu.smsc");
-			main_menu_submenu_item(out, "/smsc_service",               "MENU0_SMSC",             "menu.smsc.configuration");
-			main_menu_submenu_item(out, "/reshedule",                  "MENU0_SMSC_Reshedule",   "menu.smsc.reschedule");
-			main_menu_submenu_item(out, "/directives",                 "MENU0_SMSC_Directives",  "menu.smsc.directives");
-			main_menu_submenu_i_fu(out, "/smsc_service/status.jsp",    "MENU0_SMSC_Status",      "menu.smsc.status");
-			main_menu_submenu_i_fu(out, "/smsc_service/logging.jsp",   "MENU0_SMSC_LOGGING",     "menu.smsc.logging");
-			main_menu_submenu_item(out, "/users",                      "MENU0_USERS",            "menu.smsc.users");
-			main_menu_submenu_item(out, "/locale_resources",           "MENU0_LOCALE_RESOURCES", "menu.smsc.resources");
-			main_menu_submenu_item(out, "/journal",                    "MENU0_JOURNAL",          "menu.smsc.journal");
-			main_menu_end_item(out);
-
-			main_menu_begin_item(out, "MENU0_Statistics_menu", "MENU0_Statistics_submenu", "menu.stat");
-			main_menu_submenu_item(out, "/perfmon",            "MENU0_PERFMON"  , "menu.stat.perfmon", "SMSC Performance monitor", "return openPerfMon();");
-			main_menu_submenu_item(out, "/topmon",            "MENU0_TOPMON"  ,   "menu.stat.topmon",  "SMSC Sme Monitor", "return openTopMon();");
-			main_menu_submenu_item(out, "/smsstat",            "MENU0_SMSSTAT",   "menu.stat.smsstat");
-			main_menu_submenu_i_fu(out, "/smsstat/export.jsp", "MENU0_SMSSTAT",   "menu.stat.statexport");
-			main_menu_submenu_i_fu(out, "/smsview/daemon.jsp", "MENU0_SMSDAEMON", "menu.stat.daemon");
-			main_menu_submenu_i_fu(out, "/smsview/index.jsp" , "MENU0_SMSVIEW",   "menu.stat.smsview");
-			main_menu_submenu_i_fu(out, "/smsview/export.jsp" ,"MENU0_SMSEXPORT", "menu.stat.smsexport");
-			main_menu_end_item(out);
-
-			main_menu_begin_item(out, "MENU0_Routing_menu", "MENU0_Routing_submenu", "menu.routing");
-			main_menu_submenu_item(out, "/aliases",  "MENU0_ALIASES",  "menu.routing.aliases");
-			main_menu_submenu_item(out, "/subjects", "MENU0_SUBJECTS", "menu.routing.subjects");
-			main_menu_submenu_item(out, "/routes",   "MENU0_ROUTES",   "menu.routing.routes");
-			main_menu_submenu_item(out, "/providers",   "MENU0_PROVIDERS",   "menu.routing.providers");
-			main_menu_submenu_item(out, "/categories",   "MENU0_CATEGORIES", "menu.routing.categories");
-			main_menu_submenu_item(out, "/acl",      "MENU0_ACL",      "menu.routing.acl");
-			main_menu_submenu_item(out, "/tracer",   "MENU0_TRACER",   "menu.routing.tracer");
-			main_menu_end_item(out);
-
-			main_menu_begin_item(out, "MENU0_Profiles_menu", "MENU0_Profiles_submenu", "menu.profiles");
-			main_menu_submenu_item(out, "/profiles",            "MENU0_PROFILES",        "menu.profiles.list");
-			main_menu_submenu_i_fu(out, "/profiles/groups.jsp", "MENU0_PROFILES_GROUPS", "menu.profiles.groups");
-			main_menu_submenu_i_fu(out, "/profiles/lookup.jsp", "MENU0_PROFILES_LOOKUP", "menu.profiles.lookup");
-			main_menu_end_item(out);
-
-			main_menu_begin_item(out, "MENU0_Services_menu", "MENU0_Services_submenu", "menu.services");
-			main_menu_submenu_item(out, "/hosts",    "MENU0_HOSTS",    "menu.services.hosts");
-			main_menu_submenu_item(out, "/services", "MENU0_SERVICES", "menu.services.services");
-			main_menu_end_item(out);
-
-			main_menu_begin_item(out, "MENU0_Options_menu", "MENU0_Options_submenu", "menu.options");
-			main_menu_submenu_item(out, "/mscman",            "MENU0_MSCMAN",        "menu.options.mscs");
-			main_menu_submenu_item(out, "/dl",                "MENU0_DL",            "menu.options.dl");
-			main_menu_submenu_i_fu(out, "/dl/principals.jsp", "MENU0_DL_PRINCIPALS", "menu.options.principals");
-			main_menu_end_item(out);
-
-			main_menu_begin_item(out, "MENU0_Help_menu", "MENU0_Help_submenu", "menu.help");
-			main_menu_submenu_i_fu(out, "/admin_guide.jsp",            "MENU0_ADMINGUIDE", "menu.help.adminguide");
-			main_menu_end_item(out);
-            */
-			%>
 			<td background="/images/smsc_14.jpg" width="100%">&nbsp;</td>
             <%
                if (request.getUserPrincipal() != null)
@@ -127,14 +72,6 @@
 			<td background="/images/smsc_14.jpg" width="52"></td>
 		</tr>
 		</table>
-
-<%--		<table width="100%" id="MAIN_MENU_BACKGROUND_TABLE" border="0" cellspacing="0" cellpadding="0" class="main_menu_background">--%>
-<%--			<tr>--%>
-<%--				<td width="80" background="/images/smsc_13.jpg"></td>--%>
-<%--				<td background="/images/smsc_14.jpg">&nbsp;</td>--%>
-<%--				<td width="80" background="/images/smsc_16.jpg"></td>--%>
-<%--			</tr>--%>
-<%--		</table>--%>
 		<span id="MENU0_NONE"></span>
 		<script>document.all.MENU0_NONE.className = 'submenu_sel';</script>
 
