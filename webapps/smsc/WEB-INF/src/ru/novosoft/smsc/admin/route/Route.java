@@ -100,7 +100,7 @@ public class Route
     enabling = false;
     archiving = false;
     billing = false;
-    transit=false;
+    transit = false;
     serviceId = 0;
     suppressDeliveryReports = false;
     active = false;

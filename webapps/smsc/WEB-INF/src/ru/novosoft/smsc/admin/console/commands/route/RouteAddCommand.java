@@ -19,7 +19,7 @@ import ru.novosoft.smsc.admin.journal.SubjectTypes;
 public class RouteAddCommand extends RouteGenCommand
 {
     private boolean bill = true;
-    private boolean transit=false;
+    private boolean transit = false;
     private boolean arc = true;
     private boolean allow = true;
     private boolean receipt = true;
@@ -98,7 +98,7 @@ public class RouteAddCommand extends RouteGenCommand
             }
           }
 
-          smscRoute = new Route(route, priority, allow, bill,transit, arc, !receipt,
+          smscRoute = new Route(route, priority, allow, bill, transit, arc, !receipt,
                                 active, serviceid, srcList, dstList, srcSmeId, deliveryMode, forwardTo,
                                 hide, (isReplayPath) ? replayPath : REPLAY_PATH_PASS,
                                 notes, forceDelivery, ((isAclId) ? aclId : -1),

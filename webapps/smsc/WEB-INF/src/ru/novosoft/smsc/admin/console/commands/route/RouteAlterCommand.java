@@ -83,7 +83,7 @@ public class RouteAlterCommand extends RouteGenCommand
 
       Route newRoute = new Route(route,
                                  oldRoute.getPriority(), oldRoute.isEnabling(), oldRoute.isBilling(),
-                                 oldRoute.isTransit(),oldRoute.isArchiving(), oldRoute.isSuppressDeliveryReports(),
+                                 oldRoute.isTransit(), oldRoute.isArchiving(), oldRoute.isSuppressDeliveryReports(),
                                  oldRoute.isActive(), oldRoute.getServiceId(),
                                  oldRoute.getSources(), oldRoute.getDestinations(),
                                  oldRoute.getSrcSmeId(), oldRoute.getDeliveryMode(), oldRoute.getForwardTo(),
