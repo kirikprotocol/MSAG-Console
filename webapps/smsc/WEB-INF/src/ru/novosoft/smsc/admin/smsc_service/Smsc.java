@@ -129,7 +129,7 @@ public class Smsc extends Service
       throw new AdminException("Couldn't parse: " + e.getMessage());
     }
 
-    distributionListAdmin = new DistributionListManager(connectionPool);
+   // distributionListAdmin = new DistributionListManager(super.getInfo(),smscPort /*,connectionPool*/);
   }
 
   protected PrintWriter storeAliases(final PrintWriter out)
