@@ -1,5 +1,5 @@
 <%@include file="/WEB-INF/inc/header.jspf"%>
-<sm:page form_uri="j_security_check" form_method="post" title="Login to SMPP GW">
+<sm:page form_uri="j_security_check" form_method="post" title="Login to SCAG">
   <jsp:attribute name="menu">
     <sm-pm:menu>
       <sm-pm:item name="jsubmit" value="Login" title="Login with provided username and password"/>
