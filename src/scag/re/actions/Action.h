@@ -10,7 +10,7 @@ namespace scag { namespace re { namespace actions
      */
     struct Action
     {
-        void run(ActionContext& context) = 0;
+        virtual void run(ActionContext& context) = 0;
         virtual ~Action() {};
 
     protected:
