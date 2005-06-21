@@ -5,8 +5,8 @@
       <sm-pm:item name="mbApply" value="Apply" title="Apply changes" isCheckSensible="true"/>
       <sm-pm:item name="mbRestore" value="Restore" title="Undo changes" isCheckSensible="true"/>
       <sm-pm:space/>
-      <sm-pm:item name="mbStart" value="Start" title="Start SMPP GW" isCheckSensible="false"/>
-      <sm-pm:item name="mbStop" value="Stop" title="Stop SMPP GW" isCheckSensible="false"/>
+      <sm-pm:item name="mbStart" value="Start" title="Start SCAG" isCheckSensible="false"/>
+      <sm-pm:item name="mbStop" value="Stop" title="Stop SCAG" isCheckSensible="false"/>
     </sm-pm:menu>
   </jsp:attribute>
 
