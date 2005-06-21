@@ -783,7 +783,7 @@ void TaskProcessor::processNotificationResponce(Message& message,
     else // accepted
     { 
         smsc_log_debug(logger, "Succeeded to send notification message to abonent %s", abonent);
-        if(statistics) statistics->incNotified();
+        if(statistics) statistics->incNotified(abonent);
     }
 }
 

@@ -5,10 +5,12 @@ namespace smsc { namespace mcisme
 {
 
 StatisticsManager::StatisticsManager(Connection* connection)
-    : Statistics(), Thread(), logger(Logger::getInstance("smsc.mcisme.StatisticsManager")),
+    : Statistics(), Thread(), logger(0), processLog(0), 
             connection(connection), currentIndex(0), 
                 bExternalFlush(false), bStarted(false), bNeedExit(false)
 {
+    logger = Logger::getInstance("smsc.mcisme.StatisticsManager");
+    processLog = Logger::getInstance("smsc.mcisme.Process");
 }
 StatisticsManager::~StatisticsManager()
 {
@@ -20,25 +22,29 @@ EventsStat StatisticsManager::getStatistics()
     MutexGuard guard(switchLock);
     return statistics[currentIndex];
 }
-void StatisticsManager::incMissed(unsigned inc)
+void StatisticsManager::incMissed(const char* abonent)
 {
     MutexGuard  guard(switchLock);
-    statistics[currentIndex].missed += inc;
+    statistics[currentIndex].missed++;
+    smsc_log_info(processLog, "M %s", abonent ? abonent:"-");
 }
-void StatisticsManager::incDelivered(unsigned inc)
+void StatisticsManager::incDelivered(const char* abonent)
 {
     MutexGuard  guard(switchLock);
-    statistics[currentIndex].delivered += inc;
+    statistics[currentIndex].delivered++;
+    smsc_log_info(processLog, "D %s", abonent ? abonent:"-");
 }
-void StatisticsManager::incFailed(unsigned inc)
+void StatisticsManager::incFailed(const char* abonent)
 {
     MutexGuard  guard(switchLock);
-    statistics[currentIndex].failed += inc;
+    statistics[currentIndex].failed++;
+    smsc_log_info(processLog, "F %s", abonent ? abonent:"-");
 }
-void StatisticsManager::incNotified(unsigned inc)
+void StatisticsManager::incNotified(const char* abonent)
 {
     MutexGuard  guard(switchLock);
-    statistics[currentIndex].notified += inc;
+    statistics[currentIndex].notified++;
+    smsc_log_info(processLog, "N %s", abonent ? abonent:"-");
 }
 
 int StatisticsManager::Execute()

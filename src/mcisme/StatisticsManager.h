@@ -24,6 +24,7 @@ namespace smsc { namespace mcisme
     protected:
     
         smsc::logger::Logger*   logger;
+        smsc::logger::Logger*   processLog;
         Connection*             connection;
         
         EventsStat              statistics[2];
@@ -51,10 +52,10 @@ namespace smsc { namespace mcisme
         virtual void flushStatistics();
         virtual EventsStat getStatistics();
 
-        virtual void incMissed   (unsigned inc=1);
-        virtual void incDelivered(unsigned inc=1);
-        virtual void incFailed   (unsigned inc=1);
-        virtual void incNotified (unsigned inc=1);
+        virtual void incMissed   (const char* abonent);
+        virtual void incDelivered(const char* abonent);
+        virtual void incFailed   (const char* abonent);
+        virtual void incNotified (const char* abonent);
         
         StatisticsManager(Connection* connection);
         virtual ~StatisticsManager();

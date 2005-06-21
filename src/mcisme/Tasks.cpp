@@ -684,7 +684,7 @@ void Task::addEvent(const MissedCallEvent& event)
         throw;
     }
     
-    if (statistics) statistics->incMissed();
+    if (statistics) statistics->incMissed(abonent.c_str());
 }
 
 bool Task::formatMessage(Message& message)
@@ -1047,8 +1047,8 @@ Array<std::string> Task::finalizeMessage(const char* smsc_id, bool delivered,
         ds->freeConnection(connection);
 
         if (statistics) {
-            if (delivered) statistics->incDelivered();
-            else statistics->incFailed();
+            if (!delivered) statistics->incDelivered(abonent.c_str());
+            else statistics->incFailed(abonent.c_str());
         }
     } 
     catch (Exception& exc)
