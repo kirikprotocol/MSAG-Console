@@ -1,6 +1,6 @@
 <%@include file="/WEB-INF/inc/header.jspf"%>
 <script src="tree.js"></script>
-<sm:page title="Edit SMPP GW configuration">
+<sm:page title="Edit SCAG configuration">
   <jsp:attribute name="menu">
     <sm-pm:menu>
       <sm-pm:item name="mbSave" value="Save" title="Save user info"/>

@@ -15,7 +15,7 @@
       <col width="1px"/>
       <tr class="row0">
         <td><input class="check" type="checkbox" name="subj" id="chk_cofig"     value="config" <c:if test="${!bean.configChanged}">disabled</c:if>></td>
-        <td><label for="chk_cofig">GW config</label></td><td><sm:status changed="${bean.configChanged}"/></td>
+        <td><label for="chk_cofig">SCAG config</label></td><td><sm:status changed="${bean.configChanged}"/></td>
       </tr>
       <tr class="row1">
         <td><input class="check" type="checkbox" name="subj" id="chk_routes"    value="routes" <c:if test="${!bean.routesChanged}">disabled</c:if>></td>
