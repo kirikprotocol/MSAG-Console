@@ -36,7 +36,7 @@ namespace scag { namespace transport { namespace smpp
 
         // TODO: Add SmppReader & SmppWriter
 
-        virtual bool checkCommand(const SmppCommand& command) = 0;
+        virtual bool checkCommand(const SmppCommand* command) = 0;
         SmppProxy(SmppProxyOwner& _owner) : owner(_owner) {};
 
     public:
@@ -52,7 +52,7 @@ namespace scag { namespace transport { namespace smpp
     {
     protected:
 
-        virtual bool checkCommand(const SmppCommand& command);
+        virtual bool checkCommand(const SmppCommand* command);
 
     public:
 
@@ -64,7 +64,7 @@ namespace scag { namespace transport { namespace smpp
     {
     protected:
 
-        virtual bool checkCommand(const SmppCommand& command);
+        virtual bool checkCommand(const SmppCommand* command);
 
     public:
 
