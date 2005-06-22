@@ -125,7 +125,7 @@ refreshStartStopButtonsStatus();
       param(out, "smsc.mesStor.billingInterval", "MessageStore.billingInterval", bean.getIntParam("MessageStore.billingInterval"));
       param(out, "smsc.mesStor.archiveDir",      "MessageStore.archiveDir",      bean.getStringParam("MessageStore.archiveDir"));
       param(out, "smsc.mesStor.archiveInterval", "MessageStore.archiveInterval", bean.getIntParam("MessageStore.archiveInterval"));
-      param(out, "smsc.mesStor.statDir",         "MessageStore.statisticsDir", bean.getIntParam("MessageStore.statisticsDir"));
+      param(out, "smsc.mesStor.statDir",         "MessageStore.statisticsDir", bean.getStringParam("MessageStore.statisticsDir"));
     finishParams(out);
     //~~~~~~~~~~~~~~~~~~~~~~~~ MessageStore.Storage ~~~~~~~~~~~~~~~~~~~~~~~~
     startSection(out, "MessageStore.Storage", "smsc.mesStor.storage", false);
