@@ -11,15 +11,17 @@ namespace scag { namespace transport { namespace smpp
     {
         /**
          * Method used to notify SmppManager that proxy has received SmppCommand
-         * @param   proxy   signalling SmppProxy
+         * @param   proxy       signalling SmppProxy
+         * @param   command     received command
          */
-        virtual void reportCommand(const SmppProxy& proxy) = 0; 
+        virtual void reportCommand(const SmppProxy& proxy, SmppCommand* command) = 0; 
 
         /**
          * Method used to notify SmppManager that proxy has disconnected ???
-         * @param   proxy   signalling SmppProxy
+         * @param   proxy       signalling SmppProxy
+         * @param   error       SMPP error code
          */
-        virtual void reportError(const SmppProxy& proxy) = 0; 
+        virtual void reportError(const SmppProxy& proxy, int error) = 0; 
     
     protected:
 
@@ -43,8 +45,7 @@ namespace scag { namespace transport { namespace smpp
         
         int getBindState();
 
-        SmppCommand& getCommand();
-        void putCommand(const SmppCommand& command);
+        void putCommand(const SmppCommand* command);
     };
 
     class SmeProxy : public SmppProxy

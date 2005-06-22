@@ -14,7 +14,7 @@ namespace scag { namespace transport { namespace smpp
          * @return  null or command
          */
         virtual SmppCommand* getCommand() = 0;
-        virtual putCommand(SmppCommand& command) = 0;
+        virtual putCommand(SmppCommand* command) = 0;
 
     protected:
 

@@ -20,12 +20,12 @@ namespace scag { namespace transport { namespace smpp
         /**
          * Method used from SmppProxies to notify that command received
          */
-        virtual void reportCommand(const SmppProxy& proxy);
+        virtual void reportCommand(const SmppProxy& proxy, SmppCommand* command);
         
         /**
          * Method used from SmppProxies to report error
          */
-        virtual void reportError(const SmppProxy& proxy);
+        virtual void reportError(const SmppProxy& proxy, int error);
 
         /**
          * Method used from StateMachines to obtain next command
