@@ -36,9 +36,13 @@ public class Index extends SmscBean
     if (result != RESULT_OK)
       return result;
 
-    try {
-      reshedules = Reshedules.getInstance(appContext);
-    } catch (Throwable e) {
+    try
+	{
+		reshedules = Reshedules.getInstance(appContext);
+		if (reshedules == null) {throw new Throwable();}
+    }
+	catch (Throwable e)
+	{
       logger.error("couldn't instantiate Reshedules", e);
       return error(SMSCErrors.error.smsc.reshedule.couldntGetReshedules, e);
     }
@@ -106,7 +110,8 @@ public class Index extends SmscBean
 
   public Collection getReshedules()
   {
-    return reshedules.getShedules();
+	if (reshedules != null) return reshedules.getShedules();
+	else return null;  
   }
 
   public Collection getResheduleErrors(String reshedule)
@@ -219,12 +224,14 @@ public class Index extends SmscBean
 
   public boolean isAllErrorsAssigned()
   {
-    return reshedules.isAllErrorsAssigned();
+	if (reshedules != null) return reshedules.isAllErrorsAssigned();
+	else return false;
   }
 
   public String getDefaultReshedule()
   {
-    return reshedules.getDefaultReshedule();
+	if (reshedules != null) return reshedules.getDefaultReshedule();
+	else return null;
   }
 
   public String getDefaultResheduleName()

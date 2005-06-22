@@ -62,7 +62,7 @@ class Reshedules
 		}
 		catch (Throwable e)
 		{
-			logger.debug("Couldn't get smsc config", e);
+			logger.debug("Couldn't get reschedule config", e);
 			throw e;
 		}
 	}

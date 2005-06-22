@@ -74,6 +74,8 @@ function clickEdit(value)
 <td>&nbsp;</td>
 <td><%=getLocString("reschedule.defaultPolicy")%></td></tr>
 <%
+ if (bean.getReshedules() != null)
+ {
   for (Iterator i = bean.getReshedules().iterator(); i.hasNext();) {
     String reshedule = (String) i.next();
     Collection resheduleErrors = bean.getResheduleErrors(reshedule);
@@ -104,6 +106,7 @@ function clickEdit(value)
       %></table></td></tr><%
     }
   }
+ }    
 %>
 </table>
 </div><%
