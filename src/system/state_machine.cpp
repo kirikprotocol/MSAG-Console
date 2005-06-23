@@ -1193,6 +1193,13 @@ StateType StateMachine::submit(Tuple& t)
       sms->getDestinationAddress().toString().c_str(),
       ri.routeId.c_str());
 
+  if(ri.transit)
+  {
+    if(sms->hasIntProperty(Tag::SMSC_MERGE_CONCAT))
+    {
+      sms->getMessageBody().dropIntProperty(Tag::SMSC_MERGE_CONCAT);
+    }
+  }
 
   sms->setIntProperty(Tag::SMSC_PROVIDERID,ri.providerId);
   sms->setIntProperty(Tag::SMSC_CATEGORYID,ri.categoryId);
@@ -1326,26 +1333,40 @@ StateType StateMachine::submit(Tuple& t)
 
   bool noPartitionSms=false; // do not call partitionSms if true!
 
-
-  if(!extractPortsFromUdh(*sms))
+  if(!ri.transit)
   {
-    warn2(smsLog,"extractPortsFromUdh failed. msgId=%lld, from %s to %s",
-                          t.msgId,
-                          sms->getOriginatingAddress().toString().c_str(),
-                          sms->getDestinationAddress().toString().c_str());
-    submitResp(t,sms,Status::INVOPTPARAMVAL);
-    return ERROR_STATE;
+    if(!extactConcatInfoToSar(*sms))
+    {
+      warn2(smsLog,"extactConcatInfoToSar failed. msgId=%lld, from %s to %s",
+                            t.msgId,
+                            sms->getOriginatingAddress().toString().c_str(),
+                            sms->getDestinationAddress().toString().c_str());
+      submitResp(t,sms,Status::INVOPTPARAMVAL);
+      return ERROR_STATE;
+    }
+
+
+    if(!extractPortsFromUdh(*sms))
+    {
+      warn2(smsLog,"extractPortsFromUdh failed. msgId=%lld, from %s to %s",
+                            t.msgId,
+                            sms->getOriginatingAddress().toString().c_str(),
+                            sms->getDestinationAddress().toString().c_str());
+      submitResp(t,sms,Status::INVOPTPARAMVAL);
+      return ERROR_STATE;
+    }
+
+
+    if(!convertSarToUdh(*sms))
+    {
+      warn2(smsLog,"convertSarToUdh failed. msgId=%lld, from %s to %s",
+                            t.msgId,
+                            sms->getOriginatingAddress().toString().c_str(),
+                            sms->getDestinationAddress().toString().c_str());
+      submitResp(t,sms,Status::INVOPTPARAMVAL);
+      return ERROR_STATE;
+    };
   }
-
-  if(!convertSarToUdh(*sms))
-  {
-    warn2(smsLog,"convertSarToUdh failed. msgId=%lld, from %s to %s",
-                          t.msgId,
-                          sms->getOriginatingAddress().toString().c_str(),
-                          sms->getDestinationAddress().toString().c_str());
-    submitResp(t,sms,Status::INVOPTPARAMVAL);
-    return ERROR_STATE;
-  };
 
 
   ////
@@ -1786,7 +1807,7 @@ StateType StateMachine::submit(Tuple& t)
   bool isTransaction=(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2;
 
 
-  if( !isForwardTo )
+  if( !isForwardTo && !ri.transit)
   {
 
     sms->getMessageBody().dropProperty(Tag::SMSC_MO_PDU);
@@ -1975,6 +1996,7 @@ StateType StateMachine::submit(Tuple& t)
     // Traffic Control
     //
 
+    /*
     bool ussdSession=false;
     if(sms->hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
     {
@@ -1988,7 +2010,7 @@ StateType StateMachine::submit(Tuple& t)
         ussdSession=true;
       }
     }
-    if(!ussdSession && !smsc->allowCommandProcessing(t.command))
+    if(!ussdSession)
     {
       submitResp(t,sms,Status::THROTTLED);
       warn2(smsLog, "SBM: traffic control denied message Id=%lld;seq=%d;oa=%s;da=%s;srcprx=%s;dstprx=%s",
@@ -2000,6 +2022,7 @@ StateType StateMachine::submit(Tuple& t)
       );
       return ERROR_STATE;
     }
+    */
 
     //
     // End of traffic Control
@@ -2317,7 +2340,7 @@ StateType StateMachine::submit(Tuple& t)
       // profile lookup performed before partitioning
       //profile=smsc->getProfiler()->lookup(dst);
       //
-      if(!sms->hasBinProperty(Tag::SMSC_CONCATINFO) && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3)
+      if(!sms->hasBinProperty(Tag::SMSC_CONCATINFO) && sms->getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 && !ri.transit)
       {
         using namespace smsc::profiler::ProfileCharsetOptions;
         if(
@@ -2564,6 +2587,7 @@ StateType StateMachine::forward(Tuple& t)
   //
 
 
+  /*
   if(!smsc->allowCommandProcessing(t.command))
   {
     sms.setLastResult(Status::THROTTLED);
@@ -2579,6 +2603,7 @@ StateType StateMachine::forward(Tuple& t)
     smsc->registerStatisticalEvent(StatEvents::etDeliverErr,&sms);
     return ENROUTE_STATE;
   };
+  */
 
   //
   // End of traffic Control
@@ -2818,7 +2843,7 @@ StateType StateMachine::forward(Tuple& t)
     sms.setDestinationAddress(dst);
     if(!sms.hasBinProperty(Tag::SMSC_CONCATINFO))
     {
-      if(sms.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3)
+      if(sms.getIntProperty(Tag::SMPP_DEST_ADDR_SUBUNIT)!=0x3 && !ri.transit)
       {
         using namespace smsc::profiler::ProfileCharsetOptions;
         if(
@@ -3056,7 +3081,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
   }
   */
 
-  smsc->allowCommandProcessing(t.command);
+  //smsc->allowCommandProcessing(t.command);
 
   //
   // end of traffic control code

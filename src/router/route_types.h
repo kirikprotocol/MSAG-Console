@@ -153,6 +153,7 @@ struct RouteInfo
   bool suppressDeliveryReports;
   bool hide;
   bool forceDelivery;
+  bool transit;
   ReplyPath replyPath;
   int serviceId;
   smsc::acls::AclIdent aclId;
