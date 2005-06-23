@@ -32,7 +32,7 @@
 
 #include "system/mrcache.hpp"
 
-#include "system/traffic_control.hpp"
+//#include "system/traffic_control.hpp"
 
 #include <sys/types.h>
 
@@ -132,9 +132,13 @@ public:
     deliverErrPermCounter=0;
     rescheduleCounter=0;
     startTime=time(NULL);
-    tcontrol=0;
+    //tcontrol=0;
     license.maxsms=0;
     license.expdate=0;
+    totalCounter=0;
+    statCounter=0;
+    maxTotalCounter=0;
+    maxStatCounter=0;
   };
   ~Smsc();
   void init(const SmscConfigs& cfg);
@@ -379,10 +383,12 @@ public:
     return mapProxy;
   }
 
+  /*
   bool allowCommandProcessing(SmscCommand& cmd)
   {
     return tcontrol->processCommand(cmd);
   }
+  */
 
   void InitLicense(const Hash<string>& lic)
   {
@@ -421,6 +427,26 @@ public:
     return aclmgr;
   }
 
+  enum{smsWeight=10000};
+
+  typedef smsc::util::TimeSlotCounter<> IntTimeSlotCounter;
+  IntTimeSlotCounter& getTotalCounter(){return *totalCounter;}
+  IntTimeSlotCounter& getStatCounter(){return *statCounter;}
+
+  void incTotalCounter(int perslot)
+  {
+    totalCounter->IncDistr(smsWeight,perslot);
+    int cntVal=(totalCounter->Get()+smsWeight*shapeTimeFrame/2)/(smsWeight*shapeTimeFrame);
+    if(cntVal>maxTotalCounter)maxTotalCounter=cntVal;
+  }
+
+  void incStatCounter()
+  {
+    statCounter->Inc(1);
+    int cntVal=statCounter->Get()/statTimeFrame;
+    if(cntVal>maxStatCounter)maxStatCounter=cntVal;
+  }
+
 
 protected:
 
@@ -449,7 +475,17 @@ protected:
   performance::PerformanceDataDispatcher perfSmeDataDisp;
   smsc::db::DataSource *dataSource;
 
-  TrafficControl *tcontrol;
+  //TrafficControl *tcontrol;
+
+  IntTimeSlotCounter* totalCounter;
+  IntTimeSlotCounter* statCounter;
+  int shapeTimeFrame;
+  int statTimeFrame;
+  int maxSmsPerSecond;
+  int maxTotalCounter;
+  int maxStatCounter;
+  int lastUpdateHour;
+
 
   SmeProxy* abonentInfoProxy;
 
