@@ -19,6 +19,7 @@
 #include "resourcemanager/ResourceManager.hpp"
 #include <typeinfo>
 #include "system/status_sme.hpp"
+#include <util/findConfigFile.h>
 
 #include "profiler/profile-notifier.hpp"
 
@@ -407,8 +408,16 @@ void Smsc::init(const SmscConfigs& cfg)
     smsc_log_info(log, "Statemachines started" );
   }
 
-  RescheduleCalculator::InitDefault(cfg.cfgman->getString("core.reschedule_table"));
+  //RescheduleCalculator::InitDefault(cfg.cfgman->getString("core.reschedule_table"));
+  try{
+      RescheduleCalculator::init(findConfigFile("schedule.xml"));
+  }catch(std::exception& e)
   {
+      smsc_log_warn(log, "Exception during reading 'schedule.xml':%s" ,e.what());
+  }catch(...){
+      smsc_log_warn(log, "Exception during reading 'schedule.xml'" );
+  }
+  /*{
     using smsc::util::config::CStrSet;
     CStrSet *params=cfg.cfgman->getChildStrParamNames("core.reshedule table");
     CStrSet::iterator i=params->begin();
@@ -419,7 +428,7 @@ void Smsc::init(const SmscConfigs& cfg)
       RescheduleCalculator::AddToTable(i->c_str(),cfg.cfgman->getString(pn.c_str()));
     }
     delete params;
-  }
+  }*/
 
   {
     SpeedMonitor *sm=new SpeedMonitor(eventqueue,&perfDataDisp,&perfSmeDataDisp,this);
@@ -470,17 +479,17 @@ void Smsc::init(const SmscConfigs& cfg)
   }
 
   aclmgr = AclAbstractMgr::Create2();
-  aclmgr->LoadUp(dataSource);
+  aclmgr->LoadUp(*cfg.cfgman);
 
-  distlstman=new DistrListManager(*dataSource,*cfg.cfgman);
+  distlstman=new DistrListManager(*cfg.cfgman);
 
-  distlstsme=new DistrListProcess(distlstman);
+  distlstsme=new DistrListProcess(distlstman,&smeman);
   tp.startTask(distlstsme);
   smsc_log_info(log, "Distribution list processor started" );
 
   smeman.registerInternallSmeProxy("DSTRLST",distlstsme);
 
-  smsc::mscman::MscManager::startup(*dataSource,*cfg.cfgman);
+  smsc::mscman::MscManager::startup(*cfg.cfgman);
   smsc_log_info(log, "MSC manager started" );
 
   /*
@@ -569,7 +578,7 @@ void Smsc::init(const SmscConfigs& cfg)
     profiler->setNotifier(pnot);
   }
   smsc_log_info(log, "Profiler configured" );
-  profiler->loadFromDB(dataSource);
+  profiler->load(cfg.cfgman->getString("profiler.storeFile"));
   smsc_log_info(log, "Profiler data loaded" );
 
 
@@ -649,6 +658,19 @@ void Smsc::init(const SmscConfigs& cfg)
   ssockman.setSmppSocketTimeout(cfg.cfgman->getInt("smpp.readTimeout"));
   ssockman.setInactivityTime(cfg.cfgman->getInt("smpp.inactivityTime"));
   ssockman.setInactivityTimeOut(cfg.cfgman->getInt("smpp.inactivityTimeOut"));
+  ssockman.setDefaultConnectionsLimit(cfg.cfgman->getInt("smpp.defaultConnectionsLimit"));
+  {
+    using smsc::util::config::CStrSet;
+    CStrSet *params=cfg.cfgman->getChildIntParamNames("smpp.connectionsLimitsForIps");
+    CStrSet::iterator i=params->begin();
+    for(;i!=params->end();i++)
+    {
+      std::string nm="smpp.connectionsLimitsForIps.";
+      nm+=*i;
+      ssockman.setLimitForIp(i->c_str(),cfg.cfgman->getInt(nm.c_str()));
+    }
+    delete params;
+  }
 
   smsc_log_info(log, "MR cache loaded" );
 
@@ -897,7 +919,7 @@ void Smsc::shutdown()
   smeman.Dump();
 
   delete smscsme;
-  smeman.unregisterSmeProxy("DSTRLST");
+  //smeman.unregisterSmeProxy("DSTRLST");
 
   tp.shutdown();
 
@@ -968,6 +990,11 @@ void Smsc::reloadAliases(const SmscConfigs& cfg)
   }
 
   ResetAliases(aliaser.release());
+}
+
+void Smsc::reloadReschedule(){
+    //RescheduleCalculator::reset();
+    RescheduleCalculator::init(findConfigFile("schedule.xml"));
 }
 
 }//system
