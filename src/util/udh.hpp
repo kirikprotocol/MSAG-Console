@@ -159,6 +159,89 @@ inline bool extractPortsFromUdh(SMS& sms)
   return true;
 }
 
+
+inline bool extactConcatInfoToSar(SMS& sms)
+{
+  if(!(sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x40))return true;
+  unsigned char* body;
+  unsigned int len;
+  if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+  {
+    body=(unsigned char*)sms.getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
+  }else
+  {
+    body=(unsigned char*)sms.getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
+  }
+  unsigned char* ptr=body+1;
+  unsigned char* end=body+body[0]+1;
+  if(body[0]<2)return false;
+  bool needRemove=false;
+  bool haveChanges=false;
+  int udhLen=body[0];
+  while(ptr<end)
+  {
+    needRemove=false;
+    if(*ptr==0)
+    {
+      sms.setIntProperty(Tag::SMPP_SAR_MSG_REF_NUM,ptr[2]);
+      sms.setIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS,ptr[3]);
+      sms.setIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM,ptr[4]);
+      needRemove=true;
+    }else if (*ptr==8)
+    {
+      sms.setIntProperty(Tag::SMPP_SAR_MSG_REF_NUM,(ptr[2]<<8)|ptr[3]);
+      sms.setIntProperty(Tag::SMPP_SAR_TOTAL_SEGMENTS,ptr[4]);
+      sms.setIntProperty(Tag::SMPP_SAR_SEGMENT_SEQNUM,ptr[5]);
+      needRemove=true;
+    }
+    if(needRemove)
+    {
+      /*
+         +---+---+----+---
+         |TAG|LEN|DATA|TAG ...
+         +---+---+----+---
+         ^            ^
+         |            |
+         PTR          SRC
+
+      */
+      unsigned char* src=ptr+ptr[1]+2;
+      if(src>end)
+      {
+        return false;
+      }
+      memmove(ptr,src,body+len-src);
+      end-=src-ptr;
+      len-=src-ptr;
+      udhLen-=src-ptr;
+      haveChanges=true;
+      continue;
+    }
+    ptr+=ptr[1]+2;
+  }
+  if(ptr!=end)return false;
+  if(!haveChanges)return true;
+  if(udhLen>0)
+  {
+    body[0]=udhLen;
+  }else
+  {
+    // udh exhausted, remove it
+    memmove(body,body+1,len-1);
+    len--;
+    sms.setIntProperty(Tag::SMPP_ESM_CLASS,sms.getIntProperty(Tag::SMPP_ESM_CLASS)&(~0x40));
+  }
+  if(sms.hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
+  {
+    sms.setBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,(char*)body,len);
+  }else
+  {
+    sms.setBinProperty(Tag::SMPP_SHORT_MESSAGE,(char*)body,len);
+    sms.setIntProperty(Tag::SMPP_SM_LENGTH,len);
+  }
+  return true;
+}
+
 inline bool convertSarToUdh(SMS& sms)
 {
   if(!(
