@@ -15,7 +15,7 @@
 <%@ taglib uri="http://jakarta.apache.org/taglibs/input-1.0" prefix="input" %>
 
 <%
-TITLE = "Routes";
+TITLE = getLocString("routes.title");
 switch(bean.process(request))
 {
 	case Index.RESULT_DONE:
@@ -32,7 +32,7 @@ switch(bean.process(request))
 		response.sendRedirect("routesAdd.jsp");
 		return;
 	case Index.RESULT_EDIT:
-		response.sendRedirect("routesEdit.jsp?routeId="+URLEncoder.encode(bean.getEditRouteId()));
+		response.sendRedirect("routesEdit.jsp?routeId="+URLEncoder.encode(bean.getEditRouteId(), "UTF-8"));
 		return;
 	default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
@@ -42,15 +42,15 @@ MENU0_SELECTION = "MENU0_ROUTES";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",  "Add route",  "Add new route");
-page_menu_button(out, "mbDelete", "Delete route(s)", "Delete selected route(s)");
+page_menu_button(session, out, "mbAdd",  "routes.add",  "routes.addHint");
+page_menu_button(session, out, "mbDelete", "routes.delete", "routes.deleteHint");
 if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
   if (!bean.getAppContext().getStatuses().isRoutesRestored())
-    page_menu_button(out, "mbSave", "Save current", "Save current routing configuration");
+    page_menu_button(session, out, "mbSave", "common.buttons.saveCurrent", "routes.saveCurrentHint");
 if (bean.getAppContext().getStatuses().isRoutesSaved() && !bean.getAppContext().getStatuses().isRoutesRestored())
-    page_menu_button(out, "mbRestore", "Load saved", "Load saved routing configuration");
+    page_menu_button(session, out, "mbRestore", "common.buttons.loadSaved", "routes.loadSavedHint");
 if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
-    page_menu_button(out, "mbLoad", "Restore applied", "Restore applied routing configuration");
+    page_menu_button(session, out, "mbLoad", "common.buttons.restoreApplied", "routes.restoreAppliedHint");
 page_menu_space(out);
 page_menu_end(out);%>
 <div class=content>
@@ -117,13 +117,13 @@ function clickClickable(headId, bodyId)
 <td><input:select name="filterSelect" default="1"
     attributes="<%= as %>" options="<%= o %>"  /></td></tr> --%>
 
-<tr><td align="left" with="10%"> Filter By: &nbsp;  </td><td align="left" with="90%">  &nbsp;  </td>
+<tr><td align="left" with="10%"><%=getLocString("common.util.FilterBy")%>:</td><td align="left" with="90%">  &nbsp;  </td>
 
 <%
 page_small_menu_begin(out);
-page_menu_button(out, "mbQuickFilter",  "Apply",  "Apply filter","return clickFilterSelect()",true);
-page_menu_button(out, "mbClear", "Clear", "Clear filter", "clickClear()");
-//page_menu_button(out, "mbCancel", "Cancel", "Cancel filter editing", "clickCancel()");
+page_menu_button(session, out, "mbQuickFilter",  "common.buttons.apply",  "common.buttons.applyFilter","return clickFilterSelect()",true);
+page_menu_button(session, out, "mbClear", "common.buttons.clear", "common.buttons.clearFilter", "clickClear()");
+//page_menu_button(out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelFilterEditing", "clickCancel()");
 //page_menu_space(out);
 page_small_menu_end(out);
 %>
@@ -153,16 +153,16 @@ o.put("SMEs", "5");
     attributes="<%= as %>" options="<%= o %>"  /></td></tr> --%>
 
 <tr>
-<td align="left" with="10%">    Name: &nbsp;</td><td with="40%" align="left"><input:text name="queryName"  default="<%=bean.getQueryName()%>"/> </td>
-<td align="left" with="10%">    Subj: &nbsp;</td><td with="40%" align="left"><input:text name="querySubj"  default="<%=bean.getQuerySubj()%>"/> </td>
+<td align="left" with="10%">    <%=getLocString("common.util.Name")%>: &nbsp;</td><td with="40%" align="left"><input:text name="queryName"  default="<%=bean.getQueryName()%>"/> </td>
+<td align="left" with="10%">    <%=getLocString("common.util.Subj")%>: &nbsp;</td><td with="40%" align="left"><input:text name="querySubj"  default="<%=bean.getQuerySubj()%>"/> </td>
 </tr>
 <tr>
-<td align="left" with="10%">    SMEs: &nbsp;</td><td with="40%" align="left"><input:text name="querySMEs" default="<%=bean.getQuerySMEs()%>"/>  </td>
-<td align="left" with="10%">    Mask: &nbsp;</td><td with="40%" align="left"><input:text name="queryMask" default="<%=bean.getQueryMask()%>"/>  </td>
+<td align="left" with="10%">    <%=getLocString("common.util.SMEs")%>: &nbsp;</td><td with="40%" align="left"><input:text name="querySMEs" default="<%=bean.getQuerySMEs()%>"/>  </td>
+<td align="left" with="10%">    <%=getLocString("common.util.Mask")%>: &nbsp;</td><td with="40%" align="left"><input:text name="queryMask" default="<%=bean.getQueryMask()%>"/>  </td>
 </tr>
 <tr>
-<td align="left" with="10%">    Providers: &nbsp;</td><td with="40%" align="left"><input:text name="queryProvider" default="<%=bean.getQueryProvider()%>"/>  </td>
-<td align="left" with="10%">    Categories: &nbsp;</td><td with="40%" align="left"><input:text name="queryCategory" default="<%=bean.getQueryCategory()%>"/>  </td>
+<td align="left" with="10%">    <%=getLocString("common.util.Providers")%>: &nbsp;</td><td with="40%" align="left"><input:text name="queryProvider" default="<%=bean.getQueryProvider()%>"/>  </td>
+<td align="left" with="10%">    <%=getLocString("common.util.Categories")%>: &nbsp;</td><td with="40%" align="left"><input:text name="queryCategory" default="<%=bean.getQueryCategory()%>"/>  </td>
 </tr>
 <tr><td colspan="2">  &nbsp;&nbsp;
 
@@ -179,19 +179,17 @@ o.put("SMEs", "5");
 <col width="8%" align=center>
 <col width="8%" align=center>
 <col width="8%" align=center>
-
 <thead>
 <tr>
 	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
-	<th><a href="#" <%=bean.getSort().endsWith("Route ID")                ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by name" onclick='return setSort("Route ID")'                        >name</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("active")                  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by active status" onclick='return setSort("active")'                 >active</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("Route ID")                ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.nameHint")%>"      onclick='return setSort("Route ID")'               ><%=getLocString("common.sortmodes.name")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("active")                  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.activeHint")%>"    onclick='return setSort("active")'                 ><%=getLocString("common.sortmodes.active")%></a></th>
 
-	<th><a href="#" <%=bean.getSort().endsWith("isEnabling")              ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by active status" onclick='return setSort("isEnabling")'             >allow</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("isBilling")               ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by active status" onclick='return setSort("isBilling")'              >billing</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("isArchiving")             ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by active status" onclick='return setSort("isArchiving")'            >archiving</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("suppressDeliveryReports") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by active status" onclick='return setSort("suppressDeliveryReports")'>reports</a></th>
-        <th><a href="#" <%=bean.getSort().endsWith("isTransit")               ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by active status" onclick='return setSort("isTransit")'              >transit</a></th>
-
+	<th><a href="#" <%=bean.getSort().endsWith("isEnabling")              ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.allowHint")%>"     onclick='return setSort("isEnabling")'             ><%=getLocString("common.sortmodes.allow")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("isBilling")               ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.billingHint")%>"   onclick='return setSort("isBilling")'              ><%=getLocString("common.sortmodes.billing")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("isArchiving")             ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.archivingHint")%>" onclick='return setSort("isArchiving")'            ><%=getLocString("common.sortmodes.archiving")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("suppressDeliveryReports") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.reportsHint")%>"   onclick='return setSort("suppressDeliveryReports")'><%=getLocString("common.sortmodes.reports")%></a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("isTransit")               ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%=getLocString("common.sortmodes.transitHint")%>"   onclick='return setSort("isTransit")'              ><%=getLocString("common.sortmodes.transit")%></a></th>
 </tr>
 </thead>
 <tbody>
@@ -220,13 +218,13 @@ for(Iterator i = bean.getRoutes().iterator(); i.hasNext(); row++)
 %>
 <tr class=row<%=row&1%>>
 	<td><input class=check type=checkbox name=checkedRouteIds value="<%=encRouteId%>" <%=bean.isRouteChecked(routeId) ? "checked" : ""%>></td>
-	<td <%=onClick%>><div id=<%=rowId%>_HEAD <%=encNotes.length() > 0 ? "class=collapsing_list_closed" : "class=collapsing_list_empty"%>><a href="#" title="Edit route" onClick='return edit("<%=encRouteId%>")'><%=encRouteId%></a></div></td>
+	<td <%=onClick%>><div id=<%=rowId%>_HEAD <%=encNotes.length() > 0 ? "class=collapsing_list_closed" : "class=collapsing_list_empty"%>><a href="#" title="<%=getLocString("routes.editSubTitle")%>" onClick='return edit("<%=encRouteId%>")'><%=encRouteId%></a></div></td>
 	<td <%=onClick%>><%if (isActive                 ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 	<td <%=onClick%>><%if (isEnabling               ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 	<td <%=onClick%>><%if (isBilling                ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 	<td <%=onClick%>><%if (isArchiving              ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 	<td <%=onClick%>><%if (isSuppressDeliveryReports){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
-        <td <%=onClick%>><%if (isTransit                ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
+  <td <%=onClick%>><%if (isTransit                ){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
 </tr>
 <tr class=row<%=row&1%> id=<%=rowId%>_BODY style="display:none">
   <td>&nbsp;</td>
@@ -237,7 +235,7 @@ for(Iterator i = bean.getRoutes().iterator(); i.hasNext(); row++)
 </table>
 <%@ include file="/WEB-INF/inc/navbar.jsp"%>
 </div><%
-  final Locale locale = request.getLocale();
+  final Locale locale = getLoc();
   Calendar restoreCalendar = new GregorianCalendar(locale);
   DateFormat dateFormat = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM, locale);
   String restoreDate = null;
@@ -254,21 +252,21 @@ for(Iterator i = bean.getRoutes().iterator(); i.hasNext(); row++)
   }
 
   page_menu_begin(out);
-  page_menu_button(out, "mbAdd",  "Add route",  "Add new route");
-  page_menu_button(out, "mbDelete", "Delete route(s)", "Delete selected route(s)");
+  page_menu_button(session, out, "mbAdd",  "routes.add",  "routes.addHint");
+  page_menu_button(session, out, "mbDelete", "routes.delete", "routes.deleteHint");
   if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
     if (!bean.getAppContext().getStatuses().isRoutesRestored())
-      page_menu_button(out, "mbSave", "Save current", "Save current routing configuration");
+      page_menu_button(session, out, "mbSave", "common.buttons.saveCurrent", "routes.saveCurrentHint");
   if (bean.getAppContext().getStatuses().isRoutesSaved() && !bean.getAppContext().getStatuses().isRoutesRestored())
-    page_menu_button(out, "mbRestore", "Load saved", "Load saved routing configuration",
+    page_menu_button(session, out, "mbRestore", "common.buttons.loadSaved", "routes.loadSavedHint",
                      restoreDate != null
-                        ? "return confirm('Date of saved file is " + restoreDate + ". Are you sure to load this file?');"
+                        ? "return confirm('" + getLocString("routes.loadSavedConfirmPre") + restoreDate + getLocString("routes.loadSavedConfirmPost") + "');"
                         : null
                      );
   if (bean.getAppContext().getStatuses().isRoutesChanged() || bean.getAppContext().getStatuses().isSubjectsChanged())
-    page_menu_button(out, "mbLoad", "Restore applied", "Restore applied routing configuration",
+    page_menu_button(session, out, "mbLoad", "common.buttons.restoreApplied", "routes.restoreAppliedHint",
                      loadDate != null
-                        ? "return confirm('Date of restore file is " + loadDate + ". Are you sure to load this file?');"
+                        ? "return confirm('" + getLocString("routes.restoreAppliedConfirmPre") + loadDate + getLocString("routes.restoreAppliedConfirmPost") + "');"
                         : null
                      );
   page_menu_space(out);

@@ -12,6 +12,8 @@ import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.admin.category.Category;
+import ru.novosoft.smsc.admin.journal.Actions;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 
 
 public class RouteAddCommand extends RouteGenCommand
@@ -96,7 +98,7 @@ public class RouteAddCommand extends RouteGenCommand
             }
           }
 
-          smscRoute = new Route(route, priority, allow, bill, arc, !receipt,
+          smscRoute = new Route(route, priority, allow, bill,transit, arc, !receipt,
                                 active, serviceid, srcList, dstList, srcSmeId, deliveryMode, forwardTo,
                                 hide, (isReplayPath) ? replayPath : REPLAY_PATH_PASS,
                                 notes, forceDelivery, ((isAclId) ? aclId : -1),
@@ -137,7 +139,8 @@ public class RouteAddCommand extends RouteGenCommand
     public void setActive(boolean active) {
       this.active = active;
     }
-      public void setTransit(boolean transit)
+
+  public void setTransit(boolean transit)
   {
     this.transit = transit;
   }
@@ -145,5 +148,10 @@ public class RouteAddCommand extends RouteGenCommand
     public String getId() {
       return "ROUTE_ADD";
     }
+	public void updateJournalAndStatuses(CommandContext ctx, String userName)
+	{
+		journalAppend(ctx, userName, SubjectTypes.TYPE_route, route, Actions.ACTION_ADD);
+		ctx.getStatuses().setRoutesChanged(true);
+	}
 }
 

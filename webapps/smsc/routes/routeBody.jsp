@@ -21,28 +21,28 @@ function srcSmeIdChanged()
 <col width="45%">
 <tr>
 	<td valign=top><%rowN = 0;%>
-		<div class=page_subtitle>Route information</div>
+		<div class=page_subtitle><%=getLocString("routes.subTitle")%></div>
 		<table cellspacing=0 cellpadding=0>
 		<col width="1%">
 		<col width="98%">
 		<tr class=row<%=(rowN++)&1%>>
-			<th>name</th>
+			<th><%=getLocString("routes.name")%></th>
 			<td><input class=txt name=routeId value="<%=bean.getRouteId()%>"></td>
 		</tr>
 		<tr class=row<%=(rowN++)&1%>>
-			<th>notes</th>
+			<th><%=getLocString("routes.notes")%></th>
 			<td><input class=txt name=notes value="<%=bean.getNotes()%>"></td>
 		</tr>
 		<tr class=row<%=(rowN++)&1%>>
-			<th><label title="integer from 0 to 32767">priority</label></th>
+			<th><label title="<%=getLocString("common.hints.priority")%>"><%=getLocString("routes.priority")%></label></th>
 			<td><input class=txt name=priority value="<%=bean.getPriority()%>" maxlength=5 validation="priority" onkeyup="resetValidation(this)"></td>
 		</tr>
 		<tr class=row<%=(rowN++)&1%>>
-			<th>service&nbsp;ID&nbsp;</th>
+			<th><%=getLocString("routes.serviceId")%></th>
 			<td><input class=txt name=serviceId value="<%=bean.getServiceId()%>" maxlength=5 validation="route_serviceId" onkeyup="resetValidation(this)"></td>
 		</tr>
 		<tr class=row<%=(rowN++)&1%>>
-			<th>delivery&nbsp;mode</th>
+			<th><%=getLocString("routes.deliveryMode")%></th>
 			<td><select name=deliveryMode>
 				<option value="default"  <%="default" .equalsIgnoreCase(bean.getDeliveryMode()) ? "selected" : ""%>>default</option>
 				<option value="store"    <%="store"   .equalsIgnoreCase(bean.getDeliveryMode()) ? "selected" : ""%>>store and forward</option>
@@ -51,7 +51,7 @@ function srcSmeIdChanged()
 			</select></td>
     </tr>
 		<tr class=row<%=(rowN++)&1%>>
-			<th>source&nbsp;SME&nbsp;ID</th>
+			<th><%=getLocString("routes.sourceSmeId")%></th>
 			<td><select name=srcSmeId id=srcSmeId onchange="srcSmeIdChanged()">
 				<option value="" <%=(bean.getSrcSmeId() == null || bean.getSrcSmeId().length() == 0) ? "selected" : ""%>></option>
 				<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )
@@ -64,7 +64,7 @@ function srcSmeIdChanged()
 			</select></td>
 		</tr>
     <tr class=row<%=(rowN++)&1%>>
-			<th>Provider&nbsp;</th>
+			<th><%=getLocString("routes.provider")%></th>
 			<td><select name=providerIdStr id=providerId >
 				<option value="" <%=(bean.getProviderId() == -1 ) ? "selected" : ""%>></option>
 				<%for (Iterator iprov = bean.getProviders().iterator(); iprov.hasNext(); )
@@ -80,7 +80,7 @@ function srcSmeIdChanged()
 			</select></td>
 		</tr>
     <tr class=row<%=(rowN++)&1%>>
-			<th>Category&nbsp;</th>
+			<th><%=getLocString("routes.category")%></th>
 			<td><select name=categoryIdStr id=categoryId >
 				<option value="" <%=(bean.getCategoryId() == -1) ? "selected" : ""%>></option>
 				<%for (Iterator jcat = bean.getCategories().iterator(); jcat.hasNext(); )
@@ -96,11 +96,11 @@ function srcSmeIdChanged()
 			</select></td>
 		</tr>
     <tr class=row<%=(rowN++)&1%> id=forwardTo_row>
-      <th>forward to</th>
+      <th><%=getLocString("routes.forwardTo")%></th>
       <td><input id=forwardTo class=txt name=forwardTo value="<%=StringEncoderDecoder.encode(bean.getForwardTo())%>" validation="address" onkeyup="resetValidation(this)"><script>srcSmeIdChanged();</script></td>
     </tr>
     <tr class=row<%=(rowN++)&1%>>
-      <th>Access&nbsp;Control&nbsp;List</th>
+      <th><%=getLocString("routes.acl")%></th>
       <td>
         <div class=select><select class=txt name="aclId">
           <option value="-1">&nbsp;</option>
@@ -114,7 +114,7 @@ function srcSmeIdChanged()
       </td>
     </tr>
 		<tr>
-      <th>replay path</th>
+      <th><%=getLocString("routes.replayPath")%></th>
 			<td colspan="2"><select name="replayPath">
         <option value="<%=Route.REPLAY_PATH_PASS%>"     <%=bean.getReplayPath() == Route.REPLAY_PATH_PASS     ? "selected" : ""%>>pass</option>
         <option value="<%=Route.REPLAY_PATH_FORCE%>"    <%=bean.getReplayPath() == Route.REPLAY_PATH_FORCE    ? "selected" : ""%>>force</option>
@@ -125,47 +125,46 @@ function srcSmeIdChanged()
 	</td>
 	<td>&nbsp;</td>
 	<td valign=top><%rowN = 0;%>
-		<div class=page_subtitle>Route options</div>
+		<div class=page_subtitle><%=getLocString("routes.optionsTitle")%></div>
 		<table cellspacing=2 cellpadding=0>
 		<col width=1%>
 		<col width=99%>
 		<tr>
 			<td><input id=active class=check type=checkbox name=active <%=bean.isActive() ? "checked" : ""%>></td>
-			<td><label for=active style="padding-left:4px;">active</label></td>
+			<td><label for=active style="padding-left:4px;"><%=getLocString("routes.active")%></label></td>
 		</tr>
 		<tr>
 			<td><input id=permissible class=check type=checkbox name=permissible <%=bean.isPermissible() ? "checked" : ""%>></td>
-			<td><label for=permissible style="padding-left:4px;">allowed</label></td>
+			<td><label for=permissible style="padding-left:4px;"><%=getLocString("routes.allowed")%></label></td>
 		</tr>
 		<tr>
 			<td><input class=check type=checkbox id=billing name=billing <%=bean.isBilling() ? "checked" : ""%>></td>
-			<td><label for=billing style="padding-left:4px;">billing</label></td>
+			<td><label for=billing style="padding-left:4px;"><%=getLocString("routes.billing")%></label></td>
 		</tr>
 		<tr>
 			<td><input id=archiving class=check type=checkbox name=archiving <%=bean.isArchiving() ? "checked" : ""%>></td>
-			<td><label for=archiving style="padding-left:4px;">archiving</label></td>
+			<td><label for=archiving style="padding-left:4px;"><%=getLocString("routes.archiving")%></label></td>
 		</tr>
 		<tr>
 			<td><input id=suppressDeliveryReports class=check type=checkbox name=suppressDeliveryReports <%=bean.isSuppressDeliveryReports() ? "checked" : ""%>></td>
-			<td><label for=suppressDeliveryReports style="padding-left:4px;">suppress delivery reports</label></td>
+			<td><label for=suppressDeliveryReports style="padding-left:4px;"><%=getLocString("routes.suppressDeliveryReports")%></label></td>
 		</tr>
 		<tr>
 			<td><input id=hide class=check type=checkbox name=hide <%=bean.isHide() ? "checked" : ""%>></td>
-			<td><label for=hide style="padding-left:4px;">hide</label></td>
+			<td><label for=hide style="padding-left:4px;"><%=getLocString("routes.hide")%></label></td>
 		</tr>
 		<tr>
 			<td><input id=forceDelivery class=check type=checkbox name=forceDelivery <%=bean.isForceDelivery() ? "checked" : ""%>></td>
-			<td><label for=forceDelivery style="padding-left:4px;">force delivery</label></td>
+			<td><label for=forceDelivery style="padding-left:4px;"><%=getLocString("routes.forceDelivery")%></label></td>
 		</tr>
 		<tr>
 			<td><input id="allowBlocked" class=check type=checkbox name="allowBlocked" <%=bean.isAllowBlocked() ? "checked" : ""%>></td>
-			<td><label for=allowBlocked style="padding-left:4px;">allow blocked</label></td>
+			<td><label for=allowBlocked style="padding-left:4px;"><%=getLocString("routes.allowBlocked")%></label></td>
 		</tr>
-		    <tr>
+    <tr>
 			<td><input class=check type=checkbox id=transit name=transit <%=bean.isTransit() ? "checked" : ""%>></td>
-			<td><label for=billing style="padding-left:4px;">transit</label></td>
+			<td><label for=billing style="padding-left:4px;"><%=getLocString("routes.transit")%></label></td>
 		</tr>
-
 		</table>
 	</td>
 </tr>
@@ -178,7 +177,7 @@ function srcSmeIdChanged()
 <col width="45%">
 <tr>
 	<td valign=top><%rowN = 0;%>
-		<div class=page_subtitle>Sources</div>
+		<div class=page_subtitle><%=getLocString("common.titles.sources")%></div>
 		<table cellspacing=0 cellpadding=0>
 		<col width="50%" align=left>
 		<col width="50%" align=right>
@@ -186,7 +185,7 @@ function srcSmeIdChanged()
 		<!--col width="50%" align=right>
 		<col width="0%"-->
 		<tr valign="middle">
-			<td>Subject</td>
+			<td><%=getLocString("common.util.Subject")%></td>
 			<td><select id=srcSubjSelect name="fake_name" class="txt" ><%
 				for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
 				{
@@ -199,7 +198,7 @@ function srcSmeIdChanged()
 				}%></select></td>
 			<td><img src="/images/but_add.gif" onclick="addSourceSubj()" style="cursor:hand;"></td>
 		</tr><tr>
-			<td>Mask</td>
+			<td><%=getLocString("common.util.Mask")%></td>
 			<td><input id=newSrcMask class=txt name=srcMasks validation="routeMask" onkeyup="resetValidation(this)"></td>
 			<td><img src="/images/but_add.gif" onclick="addSourceMask(opForm.all.newSrcMask)" style="cursor:hand;"></td>
 		</tr>
@@ -207,14 +206,14 @@ function srcSmeIdChanged()
 	</td>
 	<td>&nbsp;&nbsp;&nbsp;&nbsp;</td>
 	<td valign=top>
-		<div class=page_subtitle>Destinations</div>
+		<div class=page_subtitle><%=getLocString("common.titles.destinations")%></div>
 		<table cellspacing=0 cellpadding=0>
 		<col width="89%">
 		<col width="10%" align=right>
 		<col width="1%">
 		<col width="0%">
 		<tr>
-			<td>Subject</td>
+			<td><%=getLocString("common.util.Subject")%></td>
 			<td><select id=dstSubjSelect onchange="return selectDefaultSme();"><%
 				for (Iterator i = bean.getAllSubjects().iterator(); i.hasNext();)
 				{
@@ -235,7 +234,7 @@ function srcSmeIdChanged()
 			<td><img src="/images/but_add.gif" onclick="addDestSubj()" style="cursor:hand;"></td>
 		</tr>
 		<tr>
-			<td>Mask</td>
+			<td><%=getLocString("common.util.Mask")%></td>
 			<td><input id=newDstMask class=txt name=dstMasks validation="routeMask" onkeyup="resetValidation(this)"></td>
 			<td><select name=dst_mask_sme_ id=newDstMaskSme>
 				<%for (Iterator j = bean.getAllSmes().iterator(); j.hasNext(); )

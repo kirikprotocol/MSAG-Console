@@ -48,7 +48,7 @@ public class Route
   private long providerId;
   private long categoryId;
 
-    public Route(final String routeName, final int priority, final boolean isEnabling, final boolean isBilling,final boolean isTransit, final boolean isArchiving,
+  public Route(final String routeName, final int priority, final boolean isEnabling, final boolean isBilling,final boolean isTransit, final boolean isArchiving,
                final boolean isSuppressDeliveryReports, final boolean active, final int serviceId, final SourceList sources,
                final DestinationList destinations, final String srcSmeId, final String deliveryMode, final String forwardTo, final boolean hide,
                final byte replayPath, final String notes, final boolean forceDelivery, final long aclId, final boolean allowBlocked, final long providerId, final long categoryId)
@@ -288,7 +288,8 @@ public class Route
   {
     this.billing = billing;
   }
-    public boolean isTransit()
+
+  public boolean isTransit()
   {
     return transit;
   }
@@ -297,7 +298,6 @@ public class Route
   {
     this.transit = transit;
   }
-
 
   public boolean isArchiving()
   {
