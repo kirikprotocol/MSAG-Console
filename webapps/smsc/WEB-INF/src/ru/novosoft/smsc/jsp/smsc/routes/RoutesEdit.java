@@ -135,12 +135,12 @@ public class RoutesEdit extends RouteBody
     if (null != mbCancel)
       return RESULT_DONE;
     else if (null != mbSave)
-      return save(getLoginedPrincipal(), request);
+      return save(loginedPrincipal, sessionId);
 
     return result;
   }
 
-  protected int save(final Principal loginedPrincipal, final HttpServletRequest request)
+  protected int save(final Principal loginedPrincipal, final String sessionId)
   {
     if (null == routeId || 0 >= routeId.length() || null == oldRouteId || 0 >= oldRouteId.length())
       return error(SMSCErrors.error.routes.nameNotSpecified);
@@ -186,14 +186,13 @@ public class RoutesEdit extends RouteBody
       if ((categoryIdStr != null && categoryIdStr.length() > 0))
         categoryId = Long.parseLong(categoryIdStr);
       routeSubjectManager.getRoutes().remove(oldRouteId);
-      routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing, transit, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId,
+          routeSubjectManager.getRoutes().put(new Route(routeId, priority, permissible, billing,transit, archiving, suppressDeliveryReports, active, serviceId, sources, destinations, srcSmeId,
               deliveryMode, forwardTo, hide, replayPath, notes, forceDelivery, aclId, allowBlocked, providerId, categoryId));
       if (oldRouteId.equals(routeId))
         journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY);
       else
         journalAppend(SubjectTypes.TYPE_route, routeId, Actions.ACTION_MODIFY, "old route ID", oldRouteId);
       appContext.getStatuses().setRoutesChanged(true);
-      request.getSession().setAttribute("ROUT_ID", routeId);
       return RESULT_DONE;
     } catch (Throwable e) {
       return error(SMSCErrors.error.routes.cantAdd, routeId, e);

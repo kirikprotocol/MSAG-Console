@@ -165,8 +165,7 @@ public class RouteBody extends SmscBean
   {
     this.billing = billing;
   }
-
-  public boolean isTransit()
+    public boolean isTransit()
   {
     return transit;
   }

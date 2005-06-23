@@ -13,7 +13,8 @@ import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
 
 public class RouteDataSource extends AbstractDataSourceImpl
 {
-  private static final String[] columnNames = {"Route ID", "providerId", "categoryId", "isEnabling", "isBilling", "isTransit", "isArchiving", "active", "suppressDeliveryReports"};
+   private static final String[] columnNames = {"Route ID", "providerId", "categoryId", "isEnabling", "isBilling", "isTransit", "isArchiving", "active", "suppressDeliveryReports"};
+
 
 
   public RouteDataSource()
