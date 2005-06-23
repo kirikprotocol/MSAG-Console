@@ -118,6 +118,7 @@ int StatusSme::Execute()
       answer=buf;
     }else if (request=="tc")
     {
+      /*
       if(arg.length()==0)
       {
         int cnt;
@@ -148,6 +149,10 @@ int StatusSme::Execute()
           answer=buf;
         }
       }
+      */
+      char buf[64];
+      sprintf(buf,"maxTotalCounter=%d, maxStatCounter=%d",smsc->maxTotalCounter,smsc->maxStatCounter);
+      answer=buf;
     }else if(request=="getsched")
     {
       if(arg.length()==0)
@@ -183,10 +188,10 @@ int StatusSme::Execute()
       string addr;
       Profile& p=smsc->profiler->lookupEx(arg.c_str(),mt,addr);
       char buf[128];
-      sprintf(buf,"Match type=%s, match address=%s, offset=%#llx,profile:",
+      sprintf(buf,"Match type=%s, match address=%s, profile:",
         mt==ProfilerMatchType::mtDefault?"default":
         mt==ProfilerMatchType::mtMask?"mask":"exact",
-        addr.c_str(),p.offset);
+        addr.c_str());
       answer=buf;
       answer+=p.toString();
     }else
