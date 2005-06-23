@@ -60,14 +60,16 @@ public:
   void Inc(T inc=inc_v)
   {
     hrtime_t now=gethrtime();
-    unsigned int diff=(now-lastTime)/1000000/slotRes;
+    hrtime_t hrdif=(now-lastTime)/1000000;
+    unsigned int diff=(hrdif+slotRes/2)/slotRes;
+    //diff=(diff+500000)/1000000;
     if(diff==0)
     {
       slot[last]+=inc;
       count+=inc;
       return;
     }
-    lastTime=now;
+    lastTime=lastTime+1000000ll*diff*slotRes;
     if(diff>slotsCount)
     {
       first=0;
@@ -100,7 +102,9 @@ public:
     count+=inc;
     if(count>maxperslot*slotsCount)
     {
-      maxperslot=count/slotsCount;
+      //inc-=count-maxperslot*slotsCount-1;
+      //count=maxperslot*slotsCount+1;
+      maxperslot+=(count-maxperslot*slotsCount+slotsCount/2)/slotsCount;
     }
     while(inc>0)
     {
@@ -116,7 +120,7 @@ public:
       if(l==first)break;
     }
     //count-=inc;
-    slot[last]+=inc;
+    slot[first]+=inc;
   }
 
   void IncEven(T inc)
