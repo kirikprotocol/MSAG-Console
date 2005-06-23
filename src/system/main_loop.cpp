@@ -90,6 +90,12 @@ void Smsc::mainLoop()
   typedef std::vector<int> IntVector;
   IntVector shuffle;
 
+  smsc::logger::Logger *tslog = smsc::logger::Logger::getInstance("timestat");
+
+  int sbmcnt=0;
+
+  time_t lastTimeStatCheck=last_tm;
+
   for(;;)
   {
     if(enqueueVector.size())
@@ -99,26 +105,44 @@ void Smsc::mainLoop()
       int sz=enqueueVector.size();
       enqueueVector.clear();
       hrtime_t eqEnd=gethrtime();
-      info2(log,"eventQueue.enqueue time=%lld, size=%d",eqEnd-eqStart,sz);
+      debug2(log,"eventQueue.enqueue time=%lld, size=%d",eqEnd-eqStart,sz);
     }
 
-    int stf=tcontrol->getConfig().shapeTimeFrame;
-    //int smt=tcontrol->getConfig().smoothTimeFrame;
-    int maxsms=tcontrol->getConfig().maxSmsPerSecond;
+    int maxScaled=smsWeight*maxSmsPerSecond*shapeTimeFrame;
+    //maxScaled+=maxScaled/4;
+
+    int perSlot=smsWeight*maxSmsPerSecond/(1000/getTotalCounter().getSlotRes());
+
+    //perSlot+=perSlot/4;
 
 
-    int maxScaled=1000*maxsms*stf;
-    maxScaled+=maxScaled/4;
+    now = time(NULL);
+    if(now-lastTimeStatCheck>60)
+    {
+      tm nowtm;
+      localtime_r(&now,&nowtm);
+      if(nowtm.tm_hour!=lastUpdateHour)
+      {
+        lastUpdateHour=nowtm.tm_hour;
+        info2(tslog,"maxTotalCounter=%d, maxStatCounter=%d",maxTotalCounter,maxStatCounter);
+        maxTotalCounter=0;
+        maxStatCounter=0;
+      }
+      lastTimeStatCheck=now;
+      warn2(log,"sbmcnt=%d",sbmcnt);
+    }
 
-    int perSlot=1000*maxsms/(1000/tcontrol->getTotalCounter().getSlotRes());
 
     do
     {
       hrtime_t gfStart=gethrtime();
-      smeman.getFrame(frame,WAIT_DATA_TIMEOUT,tcontrol->getTotalCount()>maxScaled);
+      smeman.getFrame(frame,WAIT_DATA_TIMEOUT,getTotalCounter().Get()>maxScaled);
       hrtime_t gfEnd=gethrtime();
-      if(frame.size()>0)info2(log,"getFrame time:%lld",gfEnd-gfStart);
+      if(frame.size()>0)debug2(log,"getFrame time:%lld",gfEnd-gfStart);
       now = time(NULL);
+
+
+
       if ( stopFlag ) return;
       Task task;
       if( now > last_tm )
@@ -138,7 +162,7 @@ void Smsc::mainLoop()
           MergeCacheItem* pmci=reverseMergeCache.GetPtr(id);
           if(pmci)
           {
-            info2(log,"merging expired for msgId=%lld;oa=%s;da=%s;mr=%d",id,pmci->oa.toString().c_str(),pmci->da.toString().c_str(),(int)pmci->mr);
+            debug2(log,"merging expired for msgId=%lld;oa=%s;da=%s;mr=%d",id,pmci->oa.toString().c_str(),pmci->da.toString().c_str(),(int)pmci->mr);
             mergeCache.Delete(*pmci);
             reverseMergeCache.Delete(id);
             eventqueue.enqueue(id,SmscCommand::makeCancel(id));
@@ -147,7 +171,7 @@ void Smsc::mainLoop()
         }
         last_tm = now;
         hrtime_t expEnd=gethrtime();
-        info2(log,"expiration processing time:%lld",expEnd-expStart);
+        debug2(log,"expiration processing time:%lld",expEnd-expStart);
       }
     }while(!frame.size());
 
@@ -208,7 +232,7 @@ void Smsc::mainLoop()
           hrtime_t cmdStart=gethrtime();
           processCommand((*i),enqueueVector,findTaskVector);
           hrtime_t cmdEnd=gethrtime();
-          info2(log,"command %d processing time:%lld",(*i)->get_commandId(),cmdEnd-cmdStart);
+          debug2(log,"command %d processing time:%lld",(*i)->get_commandId(),cmdEnd-cmdStart);
         }catch(...)
         {
           __warning2__("command processing failed:%d",(*i)->get_commandId());
@@ -231,7 +255,7 @@ void Smsc::mainLoop()
       }
       findTaskVector.clear();
       hrtime_t frEnd=gethrtime();
-      info2(log,"findAndRemoveTaskTime time:%lld, size=%d",frEnd-frStart,sz);
+      debug2(log,"findAndRemoveTaskTime time:%lld, size=%d",frEnd-frStart,sz);
     }
 
     if(submitCount==0)
@@ -246,7 +270,7 @@ void Smsc::mainLoop()
       int sz=enqueueVector.size();
       enqueueVector.clear();
       hrtime_t eqEnd=gethrtime();
-      info2(log,"eventQueue.enqueue time=%lld, size=%d",eqEnd-eqStart,sz);
+      debug2(log,"eventQueue.enqueue time=%lld, size=%d",eqEnd-eqStart,sz);
     }
 
     shuffle.clear();
@@ -273,7 +297,7 @@ void Smsc::mainLoop()
     for(int j=0;j<frame.size();j++)
     {
       SmscCommand* i=&frame[shuffle[j]];
-      cntInstant=tcontrol->getTotalCount();
+      cntInstant=getTotalCounter().Get();
       eventqueue.getStats(eqsize,equnsize);
       while(equnsize+1>eventQueueLimit)
       {
@@ -293,26 +317,27 @@ void Smsc::mainLoop()
         nanosleep(&tv,0);
         eventqueue.getStats(eqsize,equnsize);
         hrtime_t nslEnd=gethrtime();
-        info2(log,"eqlimit(%d/%d) nanosleep block time:%lld",equnsize+1,eventQueueLimit,nslEnd-nslStart);
+        debug2(log,"eqlimit(%d/%d) nanosleep block time:%lld",equnsize+1,eventQueueLimit,nslEnd-nslStart);
       }
       if((*i)->get_commandId()==SUBMIT || (*i)->get_commandId()==FORWARD)
       {
+        incStatCounter();
         try{
           if((*i)->get_commandId()==FORWARD || !isUSSDSessionSms((*i)->get_sms()))
           {
-            if(tcontrol->getTotalCount()>maxScaled)
+            if(getTotalCounter().Get()>maxScaled)
             {
               if((*i)->get_commandId()==SUBMIT)
               {
                 info2(log,"Sms %s->%s sbm rejected: %d/%d (%d)",
                   (*i)->get_sms()->getOriginatingAddress().toString().c_str(),
                   (*i)->get_sms()->getDestinationAddress().toString().c_str(),
-                  tcontrol->getTotalCount(),maxScaled,perSlot);
+                  getTotalCounter().Get(),maxScaled,perSlot);
                 RejectSms(*i);
               }else
               {
                 info2(log,"Sms id=%lld fwd rejected: %d/%d (%d)",(*i)->get_forwardMsgId(),
-                  tcontrol->getTotalCount(),maxScaled,perSlot);
+                  getTotalCounter().Get(),maxScaled,perSlot);
                 scheduler->RejectForward((*i)->get_forwardMsgId());
               }
               continue;
@@ -320,9 +345,10 @@ void Smsc::mainLoop()
           }
           hrtime_t cmdStart=gethrtime();
           processCommand((*i),enqueueVector,findTaskVector);
-          tcontrol->getTotalCounter().IncDistr(1000,perSlot);
+          incTotalCounter(perSlot);
+          sbmcnt++;
           hrtime_t cmdEnd=gethrtime();
-          info2(log,"command %d processing time:%lld",(*i)->get_commandId(),cmdEnd-cmdStart);
+          debug2(log,"command %d processing time:%lld",(*i)->get_commandId(),cmdEnd-cmdStart);
         }catch(...)
         {
           __warning2__("command processing failed:%d",(*i)->get_commandId());
