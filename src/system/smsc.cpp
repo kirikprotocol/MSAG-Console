@@ -19,7 +19,6 @@
 #include "resourcemanager/ResourceManager.hpp"
 #include <typeinfo>
 #include "system/status_sme.hpp"
-#include <util/findConfigFile.h>
 
 #include "profiler/profile-notifier.hpp"
 
@@ -46,6 +45,8 @@ using smsc::acls::AclAbstractMgr;
 Smsc::~Smsc()
 {
   SaveStats();
+  delete totalCounter;
+  delete statCounter;
 }
 
 class SpeedMonitor:public smsc::core::threads::ThreadedTask{
@@ -111,17 +112,17 @@ public:
       }
 
       int secs=now.tv_sec-perfStart;
-      int scnt=secs/60;
-      int curIdx=scnt%60;
+      int mcnt=secs/60;
+      int curIdx=mcnt%60;
       if(lastIdx!=curIdx)
       {
         lastIdx=curIdx;
         for(i=0;i<performance::performanceCounters;i++)perfCnt[i][curIdx]=0;
       }
-      if(scnt>60)
+      if(mcnt>=60)
       {
-        scnt=60;
-        secs=60*60;
+        mcnt=59;
+        secs=60*60-(60-secs%60);
       }
       for(int j=0;j<performance::performanceCounters;j++)
       {
@@ -133,8 +134,7 @@ public:
       {
         perfCnt[j][curIdx]+=d.counters[j].lastSecond;
       }
-
-      for(i=0;i<scnt;i++,idx--)
+      for(i=0;i<=mcnt;i++,idx--)
       {
         if(idx<0)idx=59;
         for(int j=0;j<performance::performanceCounters;j++)
@@ -407,13 +407,8 @@ void Smsc::init(const SmscConfigs& cfg)
     smsc_log_info(log, "Statemachines started" );
   }
 
-  //RescheduleCalculator::InitDefault(cfg.cfgman->getString("core.reschedule_table"));
-  try{
-      RescheduleCalculator::init(findConfigFile("schedule.xml"));
-  }catch(...){
-      smsc_log_info(log, "Exception during reading 'schedule.xml'" );
-  }
-  /*{
+  RescheduleCalculator::InitDefault(cfg.cfgman->getString("core.reschedule_table"));
+  {
     using smsc::util::config::CStrSet;
     CStrSet *params=cfg.cfgman->getChildStrParamNames("core.reshedule table");
     CStrSet::iterator i=params->begin();
@@ -424,7 +419,7 @@ void Smsc::init(const SmscConfigs& cfg)
       RescheduleCalculator::AddToTable(i->c_str(),cfg.cfgman->getString(pn.c_str()));
     }
     delete params;
-  }*/
+  }
 
   {
     SpeedMonitor *sm=new SpeedMonitor(eventqueue,&perfDataDisp,&perfSmeDataDisp,this);
@@ -477,15 +472,15 @@ void Smsc::init(const SmscConfigs& cfg)
   aclmgr = AclAbstractMgr::Create2();
   aclmgr->LoadUp(dataSource);
 
-  distlstman=new DistrListManager(*cfg.cfgman);
+  distlstman=new DistrListManager(*dataSource,*cfg.cfgman);
 
-  distlstsme=new DistrListProcess(distlstman,&smeman);
+  distlstsme=new DistrListProcess(distlstman);
   tp.startTask(distlstsme);
   smsc_log_info(log, "Distribution list processor started" );
 
   smeman.registerInternallSmeProxy("DSTRLST",distlstsme);
 
-  smsc::mscman::MscManager::startup(*cfg.cfgman);
+  smsc::mscman::MscManager::startup(*dataSource,*cfg.cfgman);
   smsc_log_info(log, "MSC manager started" );
 
   /*
@@ -574,7 +569,7 @@ void Smsc::init(const SmscConfigs& cfg)
     profiler->setNotifier(pnot);
   }
   smsc_log_info(log, "Profiler configured" );
-  profiler->load(cfg.cfgman->getString("profiler.storeFile"));
+  profiler->loadFromDB(dataSource);
   smsc_log_info(log, "Profiler data loaded" );
 
 
@@ -654,19 +649,6 @@ void Smsc::init(const SmscConfigs& cfg)
   ssockman.setSmppSocketTimeout(cfg.cfgman->getInt("smpp.readTimeout"));
   ssockman.setInactivityTime(cfg.cfgman->getInt("smpp.inactivityTime"));
   ssockman.setInactivityTimeOut(cfg.cfgman->getInt("smpp.inactivityTimeOut"));
-  ssockman.setDefaultConnectionsLimit(cfg.cfgman->getInt("smpp.defaultConnectionsLimit"));
-  {
-    using smsc::util::config::CStrSet;
-    CStrSet *params=cfg.cfgman->getChildIntParamNames("smpp.connectionsLimitsForIps");
-    CStrSet::iterator i=params->begin();
-    for(;i!=params->end();i++)
-    {
-      std::string nm="smpp.connectionsLimitsForIps.";
-      nm+=*i;
-      ssockman.setLimitForIp(i->c_str(),cfg.cfgman->getInt(nm.c_str()));
-    }
-    delete params;
-  }
 
   smsc_log_info(log, "MR cache loaded" );
 
@@ -732,6 +714,7 @@ void Smsc::init(const SmscConfigs& cfg)
   }
 
   {
+    /*
     TrafficControl::TrafficControlConfig tccfg;
     tccfg.smsc=this;
     tccfg.store=store;
@@ -751,6 +734,22 @@ void Smsc::init(const SmscConfigs& cfg)
     tccfg.smoothTimeFrame=5;
 
     tcontrol=new TrafficControl(tccfg);
+    */
+    maxSmsPerSecond=cfg.cfgman->getInt("trafficControl.maxSmsPerSecond");
+    if(maxSmsPerSecond>license.maxsms)
+    {
+      smsc_log_warn(log, "maxSmsPerSecond in configuration is greater than license limit, adjusting\n");
+      maxSmsPerSecond=license.maxsms;
+    }
+    if(maxSmsPerSecond<=0)maxSmsPerSecond=license.maxsms;
+    shapeTimeFrame=cfg.cfgman->getInt("trafficControl.shapeTimeFrame");
+    statTimeFrame=cfg.cfgman->getInt("trafficControl.statTimeFrame");
+    totalCounter=new IntTimeSlotCounter(shapeTimeFrame,10);
+    statCounter=new IntTimeSlotCounter(statTimeFrame,10);
+    time_t t=time(NULL);
+    tm now;
+    localtime_r(&t,&now);
+    lastUpdateHour=now.tm_hour;
   }
 
 
@@ -898,7 +897,7 @@ void Smsc::shutdown()
   smeman.Dump();
 
   delete smscsme;
-  //smeman.unregisterSmeProxy("DSTRLST");
+  smeman.unregisterSmeProxy("DSTRLST");
 
   tp.shutdown();
 
@@ -969,11 +968,6 @@ void Smsc::reloadAliases(const SmscConfigs& cfg)
   }
 
   ResetAliases(aliaser.release());
-}
-
-void Smsc::reloadReschedule(){
-    //RescheduleCalculator::reset();
-    RescheduleCalculator::init(findConfigFile("schedule.xml"));
 }
 
 }//system
