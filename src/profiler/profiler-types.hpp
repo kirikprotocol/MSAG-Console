@@ -156,6 +156,7 @@ struct Profile{
     offset=saveoff;
   }
 
+  /*
   void Write(File& f)const
   {
     f.WriteNetInt32(codepage);
@@ -210,6 +211,7 @@ struct Profile{
   {
     return 4+4+4+32+1+32+1+1+1+1+1+1+1+1;
   }
+  */
 
   string toString()const
   {
