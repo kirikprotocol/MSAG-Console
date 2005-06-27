@@ -5,8 +5,9 @@
 #include <vector>
 #include <algorithm>
 #include <functional>
+#include "util/config/Manager.h"
 
-#include "db/DataSource.h"
+//#include "db/DataSource.h"
 
 namespace smsc {
 namespace acls {
@@ -20,11 +21,11 @@ typedef std::string    AclDescription;
 typedef unsigned long  AclIdent;
 
 typedef const char*    AclPChar;
-typedef std::pair<AclIdent,AclName> AclNamedIdent; 
-inline AclNamedIdent MakeAclNamedIdent(AclIdent ident,const AclName& name) 
+typedef std::pair<AclIdent,AclName> AclNamedIdent;
+inline AclNamedIdent MakeAclNamedIdent(AclIdent ident,const AclName& name)
 { return AclNamedIdent(ident,name); }
 
-enum AclCacheType { 
+enum AclCacheType {
   ACT_UNKNOWN   = '0',
   ACT_DBSDIRECT = '1',
   ACT_FULLCACHE = '2'
@@ -53,7 +54,7 @@ inline AclInfo MakeAclInfo(AclIdent ident,const char * name,const char * desc,Ac
 struct AclEditor
 {
   virtual void    enumerate(std::vector<AclNamedIdent>& result) = 0;
-  virtual AclInfo getInfo(AclIdent) = 0;  
+  virtual AclInfo getInfo(AclIdent) = 0;
   virtual void    remove(AclIdent) = 0;
   virtual void    create(
                         AclIdent,
@@ -94,10 +95,11 @@ private:
 };
 
 struct AclAbstractMgr : public AclEditor, public AclLookuper
-{  
+{
   //virtual void AddRef() = 0;
   //virtual void Release() = 0;
-  virtual void LoadUp(smsc::db::DataSource*) = 0;
+  virtual void LoadUp(smsc::util::config::Manager& cfgMgr) = 0;
+  //virtual void LoadUp(smsc::db::DataSource*) = 0;
   //virtual void Relax() = 0;
   //protected:
   virtual ~AclAbstractMgr() {}

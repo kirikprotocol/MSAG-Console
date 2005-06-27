@@ -46,7 +46,7 @@ struct AclRecord
   AclInfo                info_;
   unsigned               usecount_;
   vector<uint64_t>       granted_cache_;
-  void Release() { 
+  void Release() {
     MutexGuard g(refcount_locker_);
     if ( --usecount_ == 0 ) delete this;
   }
@@ -104,9 +104,9 @@ class AclManager2 : public AclAbstractMgr
   {
     MutexGuard g(records_locker_);
     records_t::iterator i = records_.find(arg->info_.ident);
-    if ( i != records_.end() ) 
+    if ( i != records_.end() )
       std::swap((*i).second,arg);
-    else 
+    else
       records_.insert(records_t::value_type(arg->info_.ident,arg));
   }
 
@@ -122,12 +122,12 @@ class AclManager2 : public AclAbstractMgr
 public:
 
   AclManager2() {
-    mgr_ = auto_ptr<AclAbstractMgr>(AclAbstractMgr::Create());    
+    mgr_ = auto_ptr<AclAbstractMgr>(AclAbstractMgr::Create());
   }
-  
+
   //struct AclEditor
   virtual void    enumerate(vector<AclNamedIdent>& result);
-  virtual AclInfo getInfo(AclIdent);  
+  virtual AclInfo getInfo(AclIdent);
   virtual void    remove(AclIdent);
   virtual void    create(AclIdent,const char* aclname,const char* descr,const vector<AclPhoneNumber>& phones,AclCacheType act);
   virtual AclIdent create2(const char* aclname,const char* descr,const vector<AclPhoneNumber>& phones,AclCacheType act);
@@ -138,7 +138,7 @@ public:
   //struct AclLookuper
   virtual bool    isGranted(AclIdent aclid,const AclPhoneNumber& phone);
   // struct AclAbstractManager
-  virtual void LoadUp(DataSource* ds);
+  virtual void LoadUp(smsc::util::config::Manager& cfgMgr);
 };
 
 void AclManager2::UpdateAcl(AclIdent aid)
@@ -149,7 +149,7 @@ void AclManager2::UpdateAcl(AclIdent aid)
     arg->LoadFrom(aclinfo,mgr_.get());
     SetCachedAcl(arg);
   }
-  else 
+  else
     UncacheAcl(aclinfo.ident);
 }
 
@@ -222,14 +222,14 @@ bool AclManager2::isGranted(AclIdent aclid,const AclPhoneNumber& phone)
     vector<uint64_t>::iterator i = lower_bound(aclrec->granted_cache_.begin(),aclrec->granted_cache_.end(),ph);
     return i != aclrec->granted_cache_.end() && *i == ph;
   }
-  else 
+  else
     return mgr_->isGranted(aclid,phone);
 }
 
-void AclManager2::LoadUp(DataSource* ds)
+void AclManager2::LoadUp(smsc::util::config::Manager& cfgMgr)
 {
   MutexGuard g(modify_locker_);
-  mgr_->LoadUp(ds);
+  mgr_->LoadUp(cfgMgr);
   vector<AclNamedIdent> acls;
   mgr_->enumerate(acls);
   for ( vector<AclNamedIdent>::iterator i = acls.begin(), iE = acls.end(); i != iE; ++i )

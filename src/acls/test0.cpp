@@ -35,7 +35,7 @@ int main(int argc,char* argv[])
 
   try
   {
-    
+
     DataSource *dataSource;
     const char* OCI_DS_FACTORY_IDENTITY = "OCI";
 
@@ -52,7 +52,7 @@ int main(int argc,char* argv[])
     dataSource->init(config.get());
 
     auto_ptr<AclAbstractMgr> acl ( AclAbstractMgr::Create2() );
-    acl->LoadUp(dataSource);
+    acl->LoadUp(cfgman);
     acl->remove(1);
 
     {
@@ -141,4 +141,3 @@ extern "C" void atExitHandler(void)
   smsc::util::xml::TerminateXerces();
   smsc::logger::Logger::Shutdown();
 }
-
