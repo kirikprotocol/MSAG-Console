@@ -1070,7 +1070,7 @@ int main(int argc,char* argv[])
   }
   Logger::Init();
   SmeConfig cfg;
-  string host="smsc";
+  string host="sunfire";
   int port=9001;
 
 
