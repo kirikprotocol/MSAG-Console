@@ -30,15 +30,21 @@
 #endif
 
 
+#ifndef NOLOGGERPLEASE
 #include <util/debug.h>
+#else
+#define __require__(x)
+#endif
 #include "sms/sms_const.h"
 #include "sms/sms_tags.h"
 
 namespace smsc {
 
+#ifndef NOLOGGERPLEASE
 namespace logger{
 extern smsc::logger::Logger* _sms_err_cat;
 }
+#endif
 
 
 namespace sms  {
@@ -1737,8 +1743,10 @@ struct SMS
     {
       if(messageBody.hasBinProperty(Tag::SMSC_RAW_SHORTMESSAGE))
       {
-    logger::_sms_err_cat->log_(logger::Logger::LEVEL_WARN, "both rawpayload and rawshortmessage present at %s:%d",file,line);
-    smsc_log_warn(logger::_sms_err_cat, "both rawpayload and rawshortmessage present at %s:%d",file,line);
+#ifndef NOLOGGERPLEASE
+        logger::_sms_err_cat->log_(logger::Logger::LEVEL_WARN, "both rawpayload and rawshortmessage present at %s:%d",file,line);
+        smsc_log_warn(logger::_sms_err_cat, "both rawpayload and rawshortmessage present at %s:%d",file,line);
+#endif
         unsigned len;
         messageBody.getBinProperty(Tag::SMSC_RAW_SHORTMESSAGE,&len);
         if(len==0)return true;
