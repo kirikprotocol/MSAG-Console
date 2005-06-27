@@ -655,9 +655,9 @@ public CommandParser(ParserSharedInputState state) {
 			cmd = new ApplyAliasesCommand();
 			break;
 		}
-		case TGT_PROVIDERS:
+		case TGT_PROVEDERS:
 		{
-			match(TGT_PROVIDERS);
+			match(TGT_PROVEDERS);
 			cmd = new ApplyProvidersCommand();
 			break;
 		}
@@ -702,6 +702,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_BLOCKED:
 		case OPT_RP:
 		case OPT_FD:
+		case OPT_TRANSIT:
 		{
 			break;
 		}
@@ -1556,6 +1557,7 @@ public CommandParser(ParserSharedInputState state) {
 		case OPT_SRCSME:
 		case OPT_RP:
 		case OPT_FD:
+		case OPT_TRANSIT:
 		{
 			break;
 		}
@@ -3003,6 +3005,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_BLOCKED:
 			case OPT_RP:
 			case OPT_FD:
+			case OPT_TRANSIT:
 			{
 				break;
 			}
@@ -3031,6 +3034,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_BLOCKED:
 			case OPT_RP:
 			case OPT_FD:
+			case OPT_TRANSIT:
 			{
 				break;
 			}
@@ -3077,6 +3081,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_NOBILL:
 			case OPT_BLOCKED:
 			case OPT_FD:
+			case OPT_TRANSIT:
 			{
 				break;
 			}
@@ -3116,6 +3121,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_BILL:
 			case OPT_NOBILL:
 			case OPT_FD:
+			case OPT_TRANSIT:
 			{
 				break;
 			}
@@ -3131,6 +3137,26 @@ public CommandParser(ParserSharedInputState state) {
 			{
 				match(OPT_FD);
 				cmd.setForceDelivery(true);
+				break;
+			}
+			case OPT_BILL:
+			case OPT_NOBILL:
+			case OPT_TRANSIT:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_TRANSIT:
+			{
+				match(OPT_TRANSIT);
+				cmd.setTransit(true);
 				break;
 			}
 			case OPT_BILL:
@@ -3229,7 +3255,7 @@ public CommandParser(ParserSharedInputState state) {
 			
 			throw new RecognitionException("Route flags expected. "+
 				"Syntax: [active|inactive] [hide|nohide] [forceReplayPath] [forceDelivery]"+
-				"(bill|nobill) (arc|noarc) (allow|deny) (receipt|noreceipt)");
+				"[transit] (bill|nobill) (arc|noarc) (allow|deny) (receipt|noreceipt)");
 			
 		}
 	}
@@ -3278,6 +3304,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_SRCSME:
 			case OPT_RP:
 			case OPT_FD:
+			case OPT_TRANSIT:
 			{
 				break;
 			}
@@ -3323,6 +3350,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_SRCSME:
 			case OPT_RP:
 			case OPT_FD:
+			case OPT_TRANSIT:
 			{
 				break;
 			}
@@ -3386,6 +3414,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_FWD:
 			case OPT_SRCSME:
 			case OPT_FD:
+			case OPT_TRANSIT:
 			{
 				break;
 			}
@@ -3442,6 +3471,7 @@ public CommandParser(ParserSharedInputState state) {
 			case OPT_FWD:
 			case OPT_SRCSME:
 			case OPT_FD:
+			case OPT_TRANSIT:
 			{
 				break;
 			}
@@ -3468,6 +3498,62 @@ public CommandParser(ParserSharedInputState state) {
 				{
 					match(OPT_OFF);
 					cmd.setForceDelivery(false);
+					break;
+				}
+				default:
+				{
+					throw new NoViableAltException(LT(1), getFilename());
+				}
+				}
+				}
+				break;
+			}
+			case EOF:
+			case ACT_ADD:
+			case ACT_DELETE:
+			case TGT_ACL:
+			case TGT_PROVIDER:
+			case TGT_CATEGORY:
+			case OPT_BILL:
+			case OPT_NOBILL:
+			case OPT_ARCH:
+			case OPT_NOARCH:
+			case OPT_ALLOW:
+			case OPT_DENY:
+			case OPT_RCPT:
+			case OPT_NORCPT:
+			case OPT_SVCID:
+			case OPT_PRI:
+			case OPT_DM:
+			case OPT_FWD:
+			case OPT_SRCSME:
+			case OPT_TRANSIT:
+			{
+				break;
+			}
+			default:
+			{
+				throw new NoViableAltException(LT(1), getFilename());
+			}
+			}
+			}
+			{
+			switch ( LA(1)) {
+			case OPT_TRANSIT:
+			{
+				match(OPT_TRANSIT);
+				{
+				switch ( LA(1)) {
+				case OPT_ON:
+				{
+					match(OPT_ON);
+					cmd.setTransit(true);
+					break;
+				}
+				case OPT_OFF:
+				{
+					match(OPT_OFF);
+					cmd.setTransit(false);
 					break;
 				}
 				default:
@@ -3657,8 +3743,7 @@ public CommandParser(ParserSharedInputState state) {
 		}
 		catch (RecognitionException ex) {
 			
-			throw new RecognitionException("Route flags expected. "+
-				"Syntax: [active|inactive] [hide|nohide] [bill|nobill] [arc|noarc] [allow|deny] [receipt|noreceipt]");
+			throw new RecognitionException("Route flags expected");
 			
 		}
 	}
@@ -3685,14 +3770,14 @@ public CommandParser(ParserSharedInputState state) {
 			{
 			addsubj_mask(cmd);
 			{
-			_loop114:
+			_loop117:
 			do {
 				if ((LA(1)==COMMA)) {
 					match(COMMA);
 					addsubj_mask(cmd);
 				}
 				else {
-					break _loop114;
+					break _loop117;
 				}
 				
 			} while (true);
@@ -4913,6 +4998,7 @@ public CommandParser(ParserSharedInputState state) {
 		"\"wantAlias\"",
 		"\"forceDC\"",
 		"\"disabled\"",
+		"\"transit\"",
 		"\"force\"",
 		"\"suppress\"",
 		"\"pass\"",

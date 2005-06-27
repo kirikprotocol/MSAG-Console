@@ -52,6 +52,7 @@ public class RouteViewCommand extends CommandClass
                   (smscRoute.isHide() ? "hide, " : "nohide, ") +
                   "replayPath " + Route.getReplayPathValue(smscRoute.getReplayPath()) +
                   "forceDelivery " + (smscRoute.isForceDelivery() ? "on, " : "off, ") +
+                  "transit "+(smscRoute.isTransit() ? "on, " : "off, ") +
                   "blocked "+(smscRoute.isAllowBlocked() ? "allowed, ":"denied, ") +
                   (smscRoute.isBilling() ? "billing, " : "no billing, ") +
                   (smscRoute.isArchiving() ? "archiving, " : "no archiving, ") +

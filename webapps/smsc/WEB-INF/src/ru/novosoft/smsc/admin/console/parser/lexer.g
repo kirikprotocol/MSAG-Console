@@ -120,6 +120,7 @@ tokens {
   OPT_WANT_ALIAS= "wantAlias";
   OPT_FORCE_DC	= "forceDC";
   OPT_DISABLED	= "disabled";
+  OPT_TRANSIT	= "transit";
   
   VAL_FORCE     = "force";
   VAL_SUPPRESS  = "suppress";

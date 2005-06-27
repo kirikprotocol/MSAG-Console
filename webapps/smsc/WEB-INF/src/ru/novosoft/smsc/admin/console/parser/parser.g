@@ -320,9 +320,10 @@ addroute_flags[RouteAddCommand cmd]
 	  (OPT_RP	(VAL_FORCE      { cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_FORCE);    }
 			|VAL_SUPPRESS   { cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_SUPPRESS); }
 		        |VAL_PASS       { cmd.setReplayPath(RouteGenCommand.REPLAY_PATH_PASS);     }))?
-	  (OPT_BLOCKED (OPT_ALLOW { cmd.setAllowBlocked(true);  }
-	               |OPT_DENY  { cmd.setAllowBlocked(false); }))?
-	  (OPT_FD                 { cmd.setForceDelivery(true); })?
+	  (OPT_BLOCKED (OPT_ALLOW { cmd.setAllowBlocked(true);   }
+	               |OPT_DENY  { cmd.setAllowBlocked(false);  }))?
+	  (OPT_FD                 { cmd.setForceDelivery(true);  })?
+	  (OPT_TRANSIT            { cmd.setTransit(true);        })?
 	  (OPT_BILL   	          { cmd.setBill(true);   	 }
 	  |OPT_NOBILL 	          { cmd.setBill(false);  	 })
 	  (OPT_ARCH   	          { cmd.setArc(true);    	 }
@@ -336,7 +337,7 @@ exception
 catch [RecognitionException ex] {
     throw new RecognitionException("Route flags expected. "+
 	"Syntax: [active|inactive] [hide|nohide] [forceReplayPath] [forceDelivery]"+
-	"(bill|nobill) (arc|noarc) (allow|deny) (receipt|noreceipt)");
+	"[transit] (bill|nobill) (arc|noarc) (allow|deny) (receipt|noreceipt)");
 }
 
 delroute returns [RouteDeleteCommand cmd] {
@@ -385,6 +386,8 @@ altroute_flags[RouteAlterCommand cmd]
 	               |OPT_DENY  { cmd.setAllowBlocked(false); }))?
 	  (OPT_FD (OPT_ON         { cmd.setForceDelivery(true); }
 	          |OPT_OFF        { cmd.setForceDelivery(false); }))?
+	  (OPT_TRANSIT (OPT_ON    { cmd.setTransit(true);  }
+		       |OPT_OFF   { cmd.setTransit(false); }))?
 	  (OPT_BILL   	          { cmd.setBill(true);     }
 	  |OPT_NOBILL 	          { cmd.setBill(false);    })?
 	  (OPT_ARCH   	          { cmd.setArc(true);      }
@@ -396,8 +399,7 @@ altroute_flags[RouteAlterCommand cmd]
 	;
 exception
 catch [RecognitionException ex] {
-    throw new RecognitionException("Route flags expected. "+
-	"Syntax: [active|inactive] [hide|nohide] [bill|nobill] [arc|noarc] [allow|deny] [receipt|noreceipt]");
+    throw new RecognitionException("Route flags expected");
 }
 
 viewroute returns [RouteViewCommand cmd] {

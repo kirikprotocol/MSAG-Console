@@ -27,23 +27,23 @@ public class RouteAlterCommand extends RouteGenCommand
   private byte action = ACTION_ADD;
   private byte target = TARGET_SRC;
 
-  private boolean bill = true;
-  private boolean trans = true;
-  private boolean arc = true;
-  private boolean allow = true;
+  private boolean bill    = true;
+  private boolean transit = true;
+  private boolean arc     = true;
+  private boolean allow   = true;
   private boolean receipt = true;
-  private boolean active = true;
+  private boolean active  = true;
   private int serviceid;
   private int priority;
 
-  private boolean setBill = false;
-  private boolean setTrans = false;
-  private boolean setArc = false;
-  private boolean setAllow = false;
-  private boolean setId = false;
-  private boolean setPri = false;
+  private boolean setBill    = false;
+  private boolean setTransit = false;
+  private boolean setArc     = false;
+  private boolean setAllow   = false;
+  private boolean setId      = false;
+  private boolean setPri     = false;
   private boolean setReceipt = false;
-  private boolean setActive = false;
+  private boolean setActive  = false;
 
   public void process(CommandContext ctx)
   {
@@ -83,7 +83,8 @@ public class RouteAlterCommand extends RouteGenCommand
 
       Route newRoute = new Route(route,
                                  oldRoute.getPriority(), oldRoute.isEnabling(), oldRoute.isBilling(),
-                                 oldRoute.isTransit(),oldRoute.isArchiving(), oldRoute.isSuppressDeliveryReports(),
+                                 oldRoute.isTransit(), oldRoute.isArchiving(),
+                                 oldRoute.isSuppressDeliveryReports(),
                                  oldRoute.isActive(), oldRoute.getServiceId(),
                                  oldRoute.getSources(), oldRoute.getDestinations(),
                                  oldRoute.getSrcSmeId(), oldRoute.getDeliveryMode(), oldRoute.getForwardTo(),
@@ -170,7 +171,7 @@ public class RouteAlterCommand extends RouteGenCommand
       else throw new Exception("Unsupported target on " + out + ". Allowed SRC & DST");
 
       if (setBill) newRoute.setBilling(bill);
-      if (setTrans) newRoute.setTransit(trans);
+      if (setTransit) newRoute.setTransit(transit);
       if (setArc) newRoute.setArchiving(arc);
       if (setAllow) newRoute.setEnabling(allow);
       if (setReceipt) newRoute.setSuppressDeliveryReports(!receipt);
@@ -213,10 +214,8 @@ public class RouteAlterCommand extends RouteGenCommand
   public void setBill(boolean bill) {
     this.bill = bill; setBill = true;
   }
-
-  public void setTrans(boolean trans)
-  {
-    this.trans = trans; setTrans=true;
+  public void setTransit(boolean transit) {
+    this.transit = transit; setTransit = true;
   }
 
   public void setArc(boolean arc) {
