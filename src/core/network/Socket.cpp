@@ -101,7 +101,7 @@ void Socket::Abort()
 
 int Socket::canRead(int to)
 {
-  if(!connected)return -1;
+  if(!connected || sock==INVALID_SOCKET)return -1;
   if(bufPos<inBuffer)return 1;
   if(to==0)to=timeOut;
   if(to==0)return 1;
@@ -116,7 +116,7 @@ int Socket::canRead(int to)
 
 int Socket::canWrite(int to)
 {
-  if(!connected)return -1;
+  if(!connected || sock==INVALID_SOCKET)return -1;
   if(to==0)to=timeOut;
   if(to==0)return 1;
   FD_ZERO(&fd);
