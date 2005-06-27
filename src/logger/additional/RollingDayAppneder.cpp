@@ -31,21 +31,9 @@ void RollingDayAppender::clearLogDir(time_t dat)
   while (dirp) {
       errno = 0;
       if ((dp = readdir(dirp)) != NULL) {
-          int year = 0, month = 0, day = 0;
-            if(strlen(dp->d_name) == 18){
-                char name_[5] = {0, 0, 0, 0, 0,};
-			    memcpy((void*)name_, (const void*)dp->d_name, 4);
-			    if(strcmp(name_, "day_") == 0){
-				    char year_[5] = {0, 0, 0, 0, 0,}, month_[3] = {0, 0, 0,}, day_[3] = {0, 0, 0,};
-				    //printf("name: %s\n", dp->d_name);
-				    memcpy((void*)year_, (const void*)(dp->d_name + 10), 4);
-				    memcpy((void*)month_, (const void*)(dp->d_name + 7), 2);
-				    memcpy((void*)day_, (const void*)(dp->d_name + 4), 2);
-				    //printf("year: %s, month: %s, day: %s\n", year_, month_, day_);
-				    year = atoi(year_);
-				    month = atoi(month_);
-				    day = atoi(day_);
-				    //printf("year: %d, month: %d, day: %d\n", year, month, day);
+          int year = 0, month = 0, day = 0, res = 0;
+          std::string fname = prefix + "%02d_%02d_%04d.log";
+            if((res = sscanf(fname.c_str(), dp->d_name, &day, &month, &year)) == 3){
 
                     // Saves old files
                     time_t fdate;
@@ -63,7 +51,7 @@ void RollingDayAppender::clearLogDir(time_t dat)
 				    //printf("delay: %d\n", delay);
 				    if(delay >= maxBackupIndex)
 					    fnames.push_back(pathname + std::string("/") + std::string(dp->d_name));
-			    }
+			    
 		    }
       } else {
           if (errno == 0) {
@@ -91,8 +79,8 @@ RollingDayAppender::RollingDayAppender(const char * const _name, const Propertie
   if (properties.Exists("maxindex"))
     maxBackupIndex = atoi(properties["maxindex"]);
 
-  if (properties.Exists("name")){
-    std::auto_ptr<char> path( cStringCopy(properties["name"]) );
+  if (properties.Exists("dir")){
+    std::auto_ptr<char> path( cStringCopy(properties["dir"]) );
     if(strlen(path.get()) == 0)
         pathname = ".";
     else{
@@ -102,6 +90,11 @@ RollingDayAppender::RollingDayAppender(const char * const _name, const Propertie
     }
   }else
     pathname = ".";
+
+  if (properties.Exists("prefix")){
+    prefix = cStringCopy(properties["prefix"]);
+  }else
+    prefix = "";
 
   date_ = time(0);
   tm rtm; localtime_r(&date_, &rtm);
@@ -117,10 +110,10 @@ RollingDayAppender::RollingDayAppender(const char * const _name, const Propertie
   // Clear log dir
   clearLogDir(date_);
   char name_[512];
-  sprintf(name_, "day_%2.2d_%2.2d_%4.4d.log", day, month, year);
-  char path_[512];
-  sprintf(path_, "%s/%s", pathname.c_str(), name_);
-  file = fopen(path_, "a");
+  sprintf(name_, "%02d_%02d_%04d.log", day, month, year);
+  std::string path = pathname + "/";
+  path += prefix + name_;
+  file = fopen(path.c_str(), "a");
 }
 
 void RollingDayAppender::rollover(time_t dat) throw()
@@ -141,10 +134,10 @@ void RollingDayAppender::rollover(time_t dat) throw()
   rtm.tm_isdst = -1;
 
   char name_[512];
-  sprintf(name_, "day_%2.2d_%2.2d_%4.4d.log", day, month, year);
-  char path_[512];
-  sprintf(path_, "%s/%s", pathname.c_str(), name_);
-  file = fopen(path_, "w");
+  sprintf(name_, "%02d_%02d_%04d.log", day, month, year);
+  std::string path = pathname + "/";
+  path += prefix + name_;
+  file = fopen(path.c_str(), "w");
   date_ = dat;
 
   currentFilePos = 0;
@@ -165,7 +158,9 @@ void RollingDayAppender::log(const char logLevelName, const char * const categor
   ::timeval tp;
   ::gettimeofday(&tp, 0);
   ::tm lcltm;
+  ::tm ltm;
   ::localtime_r(&tp.tv_sec, &lcltm);
+  ::localtime_r(&tp.tv_sec, &ltm);
   pthread_t thrId=::pthread_self();
   int msec=tp.tv_usec/1000;
 #endif
@@ -173,8 +168,8 @@ void RollingDayAppender::log(const char logLevelName, const char * const categor
   smsc::core::synchronization::MutexGuard guard(mutex);
 
   time_t dat;
-  lcltm.tm_hour = 0;  lcltm.tm_min = 0;   lcltm.tm_sec = 0; lcltm.tm_isdst = -1;
-  dat = mktime(&lcltm);
+  ltm.tm_hour = 0;  ltm.tm_min = 0;   ltm.tm_sec = 0; ltm.tm_isdst = -1;
+  dat = mktime(&ltm);
   int delay = (int)( difftime(dat, date_)/(3600.*24.) );
   if(delay > 0)
       rollover(dat);

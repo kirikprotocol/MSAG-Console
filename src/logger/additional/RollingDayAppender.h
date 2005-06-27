@@ -27,6 +27,7 @@ private:
 	smsc::core::synchronization::Mutex mutex;
 	unsigned int maxBackupIndex;
     std::string pathname;
+    std::string prefix;
 	FILE * file;
 	long currentFilePos;
     time_t date_;
