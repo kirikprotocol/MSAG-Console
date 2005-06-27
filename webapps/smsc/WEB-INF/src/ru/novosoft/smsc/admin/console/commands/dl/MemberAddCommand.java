@@ -7,13 +7,15 @@
  */
 package ru.novosoft.smsc.admin.console.commands.dl;
 
-import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.exceptions.ListNotExistsException;
 import ru.novosoft.smsc.admin.dl.exceptions.MemberAlreadyExistsException;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 
-public class MemberAddCommand implements Command
+public class MemberAddCommand extends CommandClass
 {
     private String name = null;
     private String member = null;
@@ -33,7 +35,7 @@ public class MemberAddCommand implements Command
             DistributionListAdmin admin = ctx.getSmsc().getDistributionListAdmin();
             admin.addMember(name, member);
             ctx.setMessage(mout+" "+" added to "+dlout);
-            ctx.setStatus(ctx.CMD_OK);
+            ctx.setStatus(CommandContext.CMD_OK);
         } catch (ListNotExistsException e) {
             ctx.setMessage(dlout+" not exists");
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
@@ -50,4 +52,9 @@ public class MemberAddCommand implements Command
     public String getId() {
         return "MEMBER_ADD";
     }
+
+	public void updateJournalAndStatuses(CommandContext ctx, String userName)
+	{
+		journalAppend(ctx, userName, SubjectTypes.TYPE_dl, name, Actions.ACTION_MODIFY);
+	}
 }

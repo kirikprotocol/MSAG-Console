@@ -1,7 +1,8 @@
 package ru.novosoft.smsc.admin.console.commands.apply;
 
-import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
 
 /**
  * Created by IntelliJ IDEA.
@@ -10,13 +11,13 @@ import ru.novosoft.smsc.admin.console.CommandContext;
  * Time: 16:18:45
  * To change this template use File | Settings | File Templates.
  */
-public class ApplyProvidersCommand implements Command
+public class ApplyProvidersCommand extends CommandClass
 {
     public void process(CommandContext ctx)
     {
         try {
             ctx.getProviderManager().apply();
-            ctx.setMessage("Proviers applied succesfully");
+            ctx.setMessage("Providers applied succesfully");
             ctx.setStatus(CommandContext.CMD_OK);
         } catch (Exception e) {
             ctx.setMessage("Couldn't apply provider(s) changes. Cause: "+e.getMessage());
@@ -26,6 +27,12 @@ public class ApplyProvidersCommand implements Command
     }
 
     public String getId() {
-        return "ROVIDERS_APPLY";
+        return "PROVIDERS_APPLY";
     }
+
+	public void updateJournalAndStatuses(CommandContext ctx, String userName)
+	{
+		ctx.getStatuses().setProvidersChanged(false);
+		ctx.getJournal().clear(SubjectTypes.TYPE_provider);
+	}
 }

@@ -7,12 +7,11 @@
  */
 package ru.novosoft.smsc.admin.console.commands.route;
 
-
-import ru.novosoft.smsc.admin.console.Command;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
 
 import java.util.ArrayList;
 
-public abstract class SubjectGenCommand implements Command
+public abstract class SubjectGenCommand extends CommandClass
 {
   protected String subject;
   protected String defaultSmeId = null;

@@ -7,14 +7,16 @@
  */
 package ru.novosoft.smsc.admin.console.commands.dl;
 
-import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.exceptions.ListNotExistsException;
 import ru.novosoft.smsc.admin.dl.exceptions.PrincipalNotExistsException;
 import ru.novosoft.smsc.admin.dl.exceptions.SubmitterAlreadyExistsException;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 
-public class SubmitterAddCommand implements Command
+public class SubmitterAddCommand extends CommandClass
 {
     private String name = null;
     private String submitter = null;
@@ -35,7 +37,7 @@ public class SubmitterAddCommand implements Command
             DistributionListAdmin admin = ctx.getSmsc().getDistributionListAdmin();
             admin.grantPosting(name, submitter);
             ctx.setMessage(sout+" "+" added to "+dlout);
-            ctx.setStatus(ctx.CMD_OK);
+            ctx.setStatus(CommandContext.CMD_OK);
         } catch (ListNotExistsException e) {
             ctx.setMessage(dlout+" not exists");
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
@@ -55,4 +57,9 @@ public class SubmitterAddCommand implements Command
     public String getId() {
         return "SUBMITTER_ADD";
     }
+
+	public void updateJournalAndStatuses(CommandContext ctx, String userName)
+	{
+		journalAppend(ctx, userName, SubjectTypes.TYPE_dl, name, Actions.ACTION_MODIFY);
+	}
 }

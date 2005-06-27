@@ -9,6 +9,7 @@ package ru.novosoft.smsc.admin.console;
 
 public interface Command
 {
-    public String getId();
-    public void process(CommandContext ctx);
+	public String getId();
+	public void process(CommandContext ctx);
+	public void updateJournalAndStatuses(CommandContext ctx, String userName);
 }

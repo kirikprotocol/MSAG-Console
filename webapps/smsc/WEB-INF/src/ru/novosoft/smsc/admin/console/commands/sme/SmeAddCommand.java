@@ -1,9 +1,9 @@
 package ru.novosoft.smsc.admin.console.commands.sme;
 
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.route.SME;
-import ru.novosoft.smsc.admin.route.Subject;
 import ru.novosoft.smsc.admin.smsc_service.SmeManager;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 
 /**
  * Created by IntelliJ IDEA.
@@ -34,4 +34,9 @@ public class SmeAddCommand extends SmeGenCommand
     public String getId() {
         return "SME_ADD";
     }
+
+	public void updateJournalAndStatuses(CommandContext ctx, String userName)
+	{
+		journalAppend(ctx, userName, SubjectTypes.TYPE_service, smeId, Actions.ACTION_ADD);
+	}
 }

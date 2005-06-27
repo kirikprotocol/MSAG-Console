@@ -1,9 +1,11 @@
 package ru.novosoft.smsc.admin.console.commands.misc;
 
-import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.category.Category;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 
 /**
  * Created by IntelliJ IDEA.
@@ -12,7 +14,7 @@ import ru.novosoft.smsc.admin.category.Category;
  * Time: 14:46:34
  * To change this template use File | Settings | File Templates.
  */
-public class CategoryDeleteCommand implements Command
+public class CategoryDeleteCommand extends CommandClass
 {
     protected String categoryId = null;
 
@@ -39,5 +41,11 @@ public class CategoryDeleteCommand implements Command
     public String getId() {
         return "CATEGORY_DELETE";
     }
+
+	public void updateJournalAndStatuses(CommandContext ctx, String userName)
+	{
+		journalAppend(ctx, userName, SubjectTypes.TYPE_category, categoryId, Actions.ACTION_DEL);
+		ctx.getStatuses().setCategoriesChanged(true);
+	}
 }
 

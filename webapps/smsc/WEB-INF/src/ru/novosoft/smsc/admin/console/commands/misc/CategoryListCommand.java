@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.admin.console.commands.misc;
 
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.console.Command;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.category.Category;
 
@@ -14,7 +14,7 @@ import java.util.Iterator;
  * Time: 14:47:27
  * To change this template use File | Settings | File Templates.
  */
-public class CategoryListCommand  implements Command
+public class CategoryListCommand  extends CommandClass
 {
     public void process(CommandContext ctx)
     {

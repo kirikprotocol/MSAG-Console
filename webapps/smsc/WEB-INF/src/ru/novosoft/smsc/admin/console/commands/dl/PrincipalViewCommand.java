@@ -7,13 +7,13 @@
  */
 package ru.novosoft.smsc.admin.console.commands.dl;
 
-import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.Principal;
 import ru.novosoft.smsc.admin.dl.exceptions.PrincipalNotExistsException;
 
-public class PrincipalViewCommand implements Command
+public class PrincipalViewCommand extends CommandClass
 {
     private String address = null;
 
@@ -30,7 +30,7 @@ public class PrincipalViewCommand implements Command
             if (prc == null) throw new PrincipalNotExistsException(address);
             ctx.setMessage(out+", maxLists: "+prc.getMaxLists()+
                                ", maxElemets: "+prc.getMaxElements());
-            ctx.setStatus(ctx.CMD_OK);
+            ctx.setStatus(CommandContext.CMD_OK);
         } catch (PrincipalNotExistsException e) {
             ctx.setMessage(out+" not exists");
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);

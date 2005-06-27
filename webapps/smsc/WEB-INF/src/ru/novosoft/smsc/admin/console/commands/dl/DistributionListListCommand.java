@@ -7,15 +7,15 @@
  */
 package ru.novosoft.smsc.admin.console.commands.dl;
 
-import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
+import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.DistributionList;
 
 import java.util.Iterator;
 
 
-public class DistributionListListCommand implements Command
+public class DistributionListListCommand extends CommandClass
 {
     public void process(CommandContext ctx)
     {
