@@ -20,7 +20,9 @@
 #include <string.h>
 #include <errno.h>
 #include "util/int.h"
+#ifndef NOLOGGERPLEASE
 #include "util/debug.h"
+#endif
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -156,8 +158,17 @@ public:
 
   void Swap(File& swp)
   {
+    if(flags&FLG_RDBUF)flags&=~FLG_RDBUF;
+    if(flags&FLG_WRBUF)Flush();
+    if(swp.flags&FLG_RDBUF)swp.flags&=~FLG_RDBUF;
+    if(swp.flags&FLG_WRBUF)swp.Flush();
+
+    if(buffer!=initBuffer || swp.buffer!=swp.initBuffer)
+    {
+      std::swap(buffer,swp.buffer);
+    }
+
     std::swap(fd,swp.fd);
-    std::swap(buffer,swp.buffer);
     std::swap(bufferSize,swp.bufferSize);
     std::swap(fileSize,swp.fileSize);
     std::swap(bufferPosition,swp.bufferPosition);
@@ -221,7 +232,9 @@ public:
   {
     if(!isInMemory() || fd==-1)throw FileException(FileException::errFileNotOpened,filename.c_str());
     std::string tmp=filename+".tmp";
+#ifndef NOLOGGERPLEASE
     __trace2__("File: memflush %s->%s",filename.c_str(),tmp.c_str());
+#endif
     int g=open(tmp.c_str(),O_WRONLY | O_CREAT | O_TRUNC| O_LARGEFILE);
     if(g==-1)throw FileException(FileException::errOpenFailed,filename.c_str());
     if(write(g,buffer,(size_t)fileSize)!=(ssize_t)fileSize)
@@ -251,7 +264,9 @@ public:
     if(!isInMemory() || fd!=-1)throw FileException(FileException::errFileNotOpened,filename.c_str());
     flags&=~FLG_INMEMORY;
     int sz=(int)Size();
+#ifndef NOLOGGERPLEASE
     __trace2__("File: discard %s, oldsz=%d, newsz=%d",filename.c_str(),fileSize,sz);
+#endif
     if(bufferSize<sz)
     {
       if(buffer!=initBuffer)delete [] buffer;
@@ -368,7 +383,7 @@ public:
     }
     Check();
     if(flags&FLG_WRBUF)Flush();
-    if((flags&FLG_BUFFERED) && !(flags&FLG_RDBUF) && sz<bufferSize)
+    if((flags&FLG_BUFFERED) && (flags&FLG_RDBUF)!=FLG_RDBUF && sz<bufferSize)
     {
       bufferUsed=read(fd,buffer,bufferSize);
       bufferPosition=0;
@@ -551,12 +566,17 @@ public:
       Flush();
       if(flags&FLG_RDBUF)
       {
-        if(whence==SEEK_CUR && bufferPosition+off>0 && bufferPosition+off<bufferUsed)
+        if(whence==SEEK_CUR)
         {
-          bufferPosition+=off;
-          return;
+          if(bufferPosition+off>0 && bufferPosition+off<bufferUsed)
+          {
+            bufferPosition+=off;
+            return;
+          }
+          off-=bufferUsed-bufferPosition;
         }
         flags&=~FLG_RDBUF;
+
       }
       if(lseek(fd,off,whence)==-1)throw FileException(FileException::errSeekFailed,filename.c_str());
     }
@@ -733,12 +753,30 @@ public:
     Write(buf,SZ);
   }
 
+  template <size_t SZ>
+  void WriteFixedString(const std::string& str)
+  {
+    char buf[SZ]={0,};
+    memcpy(buf,str.c_str(),std::min((size_t)SZ,str.length()));
+    Write(buf,SZ);
+  }
+
   template <unsigned int SZ>
   void ReadFixedString(char (&str)[SZ])
   {
     Read(str,SZ);
     str[SZ-1]=0;
   }
+
+  template <unsigned int SZ>
+  void ReadFixedString(std::string& str)
+  {
+    char buf[SZ+1];
+    buf[SZ-1]=0;
+    Read(buf,SZ);
+    str=buf;
+  }
+
 
   void Rename(const char* newname)
   {
