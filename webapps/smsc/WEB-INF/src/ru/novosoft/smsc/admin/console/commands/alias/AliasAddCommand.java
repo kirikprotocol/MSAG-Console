@@ -14,16 +14,16 @@
 
 package ru.novosoft.smsc.admin.console.commands.alias;
 
+import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.console.commands.CommandClass;
 
 import ru.novosoft.smsc.admin.alias.Alias;
 
 import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.admin.journal.Actions;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.journal.Action;
 
-public class AliasAddCommand extends CommandClass
+public class AliasAddCommand implements Command
 {
   private String address = null;
   private String alias = null;
@@ -46,7 +46,7 @@ public class AliasAddCommand extends CommandClass
     boolean ok = false;
     try {
       Alias smscAlias = new Alias(new Mask(address), new Mask(alias), hide);
-      ok = ctx.getSmsc().getAliases().add(smscAlias);
+      ok = ctx.getSmsc().getAliases().add(smscAlias, new Action("console user", Constants.CONSOLE_SESSION_ID)); //todo: pass console user name to method
       if (ok) {
         ctx.setMessage(out+" added");
         ctx.setStatus(CommandContext.CMD_OK);
@@ -64,10 +64,5 @@ public class AliasAddCommand extends CommandClass
     return "ALIAS_ADD";
   }
 
-	public void updateJournalAndStatuses(CommandContext ctx, String userName)
-	{
-		journalAppend(ctx, userName, SubjectTypes.TYPE_alias, alias, Actions.ACTION_ADD);
-		ctx.getStatuses().setAliasesChanged(true);
-	}
 }
 

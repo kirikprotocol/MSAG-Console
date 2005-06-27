@@ -1,7 +1,9 @@
 package ru.novosoft.smsc.admin.console.commands.misc;
 
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.console.commands.CommandClass;
+import ru.novosoft.smsc.admin.console.Command;
+import ru.novosoft.smsc.admin.category.CategoryManager;
+import ru.novosoft.smsc.admin.category.Category;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.provider.Provider;
 
@@ -14,7 +16,7 @@ import java.util.Iterator;
  * Time: 14:48:17
  * To change this template use File | Settings | File Templates.
  */
-public class ProviderListCommand extends CommandClass
+public class ProviderListCommand  implements Command
 {
     public void process(CommandContext ctx)
     {

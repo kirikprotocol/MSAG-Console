@@ -8,15 +8,15 @@
 package ru.novosoft.smsc.admin.console.commands.profile;
 
 
+import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.alias.Alias;
 import ru.novosoft.smsc.admin.alias.AliasSet;
 
-public class ProfileViewCommand extends CommandClass
+public class ProfileViewCommand implements Command
 {
   private String address;
 

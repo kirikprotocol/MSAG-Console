@@ -10,8 +10,6 @@ package ru.novosoft.smsc.admin.console.commands.route;
 
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.route.Subject;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.admin.journal.Actions;
 
 public class SubjectDeleteCommand extends SubjectGenCommand
 {
@@ -39,10 +37,5 @@ public class SubjectDeleteCommand extends SubjectGenCommand
         return "SUBJECT_DELETE";
     }
 
-	public void updateJournalAndStatuses(CommandContext ctx, String userName)
-	{
-		journalAppend(ctx, userName, SubjectTypes.TYPE_subject, subject, Actions.ACTION_DEL);
-		ctx.getStatuses().setSubjectsChanged(true);
-	}
 }
 

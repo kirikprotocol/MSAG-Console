@@ -12,8 +12,6 @@ import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.admin.category.Category;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.admin.journal.Actions;
 
 
 public class RouteAlterCommand extends RouteGenCommand
@@ -28,22 +26,23 @@ public class RouteAlterCommand extends RouteGenCommand
   private byte target = TARGET_SRC;
 
   private boolean bill    = true;
-  private boolean transit = true;
   private boolean arc     = true;
   private boolean allow   = true;
   private boolean receipt = true;
   private boolean active  = true;
+  private boolean transit = true;
+
   private int serviceid;
   private int priority;
 
   private boolean setBill    = false;
-  private boolean setTransit = false;
   private boolean setArc     = false;
   private boolean setAllow   = false;
   private boolean setId      = false;
   private boolean setPri     = false;
   private boolean setReceipt = false;
   private boolean setActive  = false;
+  private boolean setTransit = false;
 
   public void process(CommandContext ctx)
   {
@@ -82,9 +81,9 @@ public class RouteAlterCommand extends RouteGenCommand
       }
 
       Route newRoute = new Route(route,
-                                 oldRoute.getPriority(), oldRoute.isEnabling(), oldRoute.isBilling(),
-                                 oldRoute.isTransit(), oldRoute.isArchiving(),
-                                 oldRoute.isSuppressDeliveryReports(),
+                                 oldRoute.getPriority(), oldRoute.isEnabling(),
+                                 oldRoute.isBilling(), oldRoute.isTransit(),
+                                 oldRoute.isArchiving(), oldRoute.isSuppressDeliveryReports(),
                                  oldRoute.isActive(), oldRoute.getServiceId(),
                                  oldRoute.getSources(), oldRoute.getDestinations(),
                                  oldRoute.getSrcSmeId(), oldRoute.getDeliveryMode(), oldRoute.getForwardTo(),
@@ -171,7 +170,6 @@ public class RouteAlterCommand extends RouteGenCommand
       else throw new Exception("Unsupported target on " + out + ". Allowed SRC & DST");
 
       if (setBill) newRoute.setBilling(bill);
-      if (setTransit) newRoute.setTransit(transit);
       if (setArc) newRoute.setArchiving(arc);
       if (setAllow) newRoute.setEnabling(allow);
       if (setReceipt) newRoute.setSuppressDeliveryReports(!receipt);
@@ -214,10 +212,6 @@ public class RouteAlterCommand extends RouteGenCommand
   public void setBill(boolean bill) {
     this.bill = bill; setBill = true;
   }
-  public void setTransit(boolean transit) {
-    this.transit = transit; setTransit = true;
-  }
-
   public void setArc(boolean arc) {
     this.arc = arc; setArc = true;
   }
@@ -236,16 +230,14 @@ public class RouteAlterCommand extends RouteGenCommand
   public void setPriority(int priority) {
     this.priority = priority; setPri = true;
   }
+  public void setTransit(boolean transit) {
+    this.transit = transit; setTransit = true;
+  }
 
   public String getId()
   {
     return "ROUTE_ALTER";
   }
 
-	public void updateJournalAndStatuses(CommandContext ctx, String userName)
-	{
-		journalAppend(ctx, userName, SubjectTypes.TYPE_route, route, Actions.ACTION_MODIFY);
-		ctx.getStatuses().setRoutesChanged(true);
-	}
 }
 

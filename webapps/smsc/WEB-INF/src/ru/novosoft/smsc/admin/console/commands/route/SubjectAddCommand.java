@@ -11,8 +11,6 @@ package ru.novosoft.smsc.admin.console.commands.route;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.route.Subject;
 import ru.novosoft.smsc.admin.route.SME;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.admin.journal.Actions;
 
 public class SubjectAddCommand extends SubjectGenCommand
 {
@@ -40,9 +38,4 @@ public class SubjectAddCommand extends SubjectGenCommand
         return "SUBJECT_ADD";
     }
 
-	public void updateJournalAndStatuses(CommandContext ctx, String userName)
-	{
-		journalAppend(ctx, userName, SubjectTypes.TYPE_subject, subject, Actions.ACTION_ADD);
-		ctx.getStatuses().setSubjectsChanged(true);
-	}
 }

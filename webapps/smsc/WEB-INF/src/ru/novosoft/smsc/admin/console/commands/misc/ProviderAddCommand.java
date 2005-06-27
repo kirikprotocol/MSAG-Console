@@ -1,11 +1,9 @@
 package ru.novosoft.smsc.admin.console.commands.misc;
 
+import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.provider.Provider;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.admin.journal.Actions;
 
 /**
  * Created by IntelliJ IDEA.
@@ -14,7 +12,7 @@ import ru.novosoft.smsc.admin.journal.Actions;
  * Time: 14:42:13
  * To change this template use File | Settings | File Templates.
  */
-public class ProviderAddCommand extends CommandClass
+public class ProviderAddCommand implements Command
 {
     protected String providerId = null;
 
@@ -41,10 +39,4 @@ public class ProviderAddCommand extends CommandClass
     public String getId() {
         return "PROVIDER_ADD";
     }
-
-	public void updateJournalAndStatuses(CommandContext ctx, String userName)
-	{
-		journalAppend(ctx, userName, SubjectTypes.TYPE_provider, providerId, Actions.ACTION_ADD);
-		ctx.getStatuses().setProvidersChanged(true);
-	}
 }

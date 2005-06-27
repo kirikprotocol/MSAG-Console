@@ -7,8 +7,8 @@
  */
 package ru.novosoft.smsc.admin.console.commands.dl;
 
+import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.DistributionList;
 import ru.novosoft.smsc.admin.dl.Principal;
@@ -16,7 +16,7 @@ import ru.novosoft.smsc.admin.dl.exceptions.ListNotExistsException;
 
 import java.util.Iterator;
 
-public class DistributionListViewCommand extends CommandClass
+public class DistributionListViewCommand implements Command
 {
     private String name = null;
 
@@ -49,7 +49,7 @@ public class DistributionListViewCommand extends CommandClass
                 if (i.hasNext()) subInfo += ", ";
             }
             ctx.addResult("Submitters: "+subInfo);
-            ctx.setStatus(CommandContext.CMD_LIST);
+            ctx.setStatus(ctx.CMD_LIST);
         } catch (ListNotExistsException e) {
             ctx.setMessage(out+" not exists");
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);

@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.admin.console.commands.misc;
 
+import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.smsstat.ExportSettings;
 import ru.novosoft.smsc.admin.smsstat.SmsStat;
 import ru.novosoft.smsc.admin.smsstat.StatQuery;
@@ -19,7 +19,7 @@ import java.text.SimpleDateFormat;
  * Time: 19:03:29
  * To change this template use File | Settings | File Templates.
  */
-public class StatExportCommand extends CommandClass
+public class StatExportCommand implements Command
 {
     // export stats for 25.04.2005 [to driver source user pass table_prefix]
     private final static String DATE_FORMAT = "dd.MM.yyyy";

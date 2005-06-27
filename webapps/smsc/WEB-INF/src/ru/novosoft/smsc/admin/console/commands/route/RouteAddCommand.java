@@ -12,18 +12,16 @@ import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.route.*;
 import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.admin.category.Category;
-import ru.novosoft.smsc.admin.journal.Actions;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 
 
 public class RouteAddCommand extends RouteGenCommand
 {
     private boolean bill    = true;
-    private boolean transit = false;
     private boolean arc     = true;
     private boolean allow   = true;
     private boolean receipt = true;
     private boolean active  = true;
+    private boolean transit = false;
 
     private int serviceid;
     private int priority;
@@ -141,16 +139,11 @@ public class RouteAddCommand extends RouteGenCommand
       this.active = active;
     }
     public void setTransit(boolean transit) {
-      this.transit = transit;
+        this.transit = transit;
     }
 
     public String getId() {
       return "ROUTE_ADD";
     }
-	public void updateJournalAndStatuses(CommandContext ctx, String userName)
-	{
-		journalAppend(ctx, userName, SubjectTypes.TYPE_route, route, Actions.ACTION_ADD);
-		ctx.getStatuses().setRoutesChanged(true);
-	}
 }
 

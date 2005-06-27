@@ -7,10 +7,10 @@
  */
 package ru.novosoft.smsc.admin.console.commands.profile;
 
-import ru.novosoft.smsc.admin.console.commands.CommandClass;
+import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.profiler.Profile;
 
-public abstract class ProfileGenCommand extends CommandClass
+public abstract class ProfileGenCommand implements Command
 {
   public final static byte ALIAS_HIDE    = Profile.ALIAS_HIDE_true;
   public final static byte ALIAS_NOHIDE  = Profile.ALIAS_HIDE_false;

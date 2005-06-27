@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.admin.console.commands.misc;
 
+import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.smsexport.SmsExport;
 import ru.novosoft.smsc.admin.smsstat.ExportSettings;
 
@@ -12,7 +12,7 @@ import ru.novosoft.smsc.admin.smsstat.ExportSettings;
  * Time: 19:08:47
  * To change this template use File | Settings | File Templates.
  */
-public class SmsExportCommand extends CommandClass
+public class SmsExportCommand implements Command
 {
     private ExportSettings export = new ExportSettings();
 

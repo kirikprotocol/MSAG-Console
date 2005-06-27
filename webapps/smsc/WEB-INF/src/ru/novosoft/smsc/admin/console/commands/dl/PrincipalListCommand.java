@@ -7,14 +7,14 @@
  */
 package ru.novosoft.smsc.admin.console.commands.dl;
 
+import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.Principal;
 
 import java.util.Iterator;
 
-public class PrincipalListCommand extends CommandClass
+public class PrincipalListCommand implements Command
 {
     public void process(CommandContext ctx)
     {
@@ -23,10 +23,10 @@ public class PrincipalListCommand extends CommandClass
             Iterator i = admin.principals().iterator();
             if (!i.hasNext()) {
                 ctx.setMessage("No principals defined");
-                ctx.setStatus(CommandContext.CMD_OK);
+                ctx.setStatus(ctx.CMD_OK);
             } else {
                 ctx.setMessage("Principals");
-                ctx.setStatus(CommandContext.CMD_LIST);
+                ctx.setStatus(ctx.CMD_LIST);
                 while (i.hasNext()) {
                     Principal prc = (Principal)i.next();
                     ctx.addResult(prc.getAddress());

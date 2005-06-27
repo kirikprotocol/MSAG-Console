@@ -8,14 +8,12 @@
 package ru.novosoft.smsc.admin.console.commands.profile;
 
 
+import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.console.commands.CommandClass;
 
 import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.admin.journal.Actions;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 
-public class ProfileDeleteCommand extends CommandClass
+public class ProfileDeleteCommand implements Command
 {
     private String mask;
 
@@ -40,10 +38,5 @@ public class ProfileDeleteCommand extends CommandClass
         return "PROFILE_DELETE";
     }
 
-	public void updateJournalAndStatuses(CommandContext ctx, String userName)
-	{
-		journalAppend(ctx, userName, SubjectTypes.TYPE_profile, mask, Actions.ACTION_DEL);
-		ctx.getStatuses().setProfilesChanged(true);
-	}
 }
 

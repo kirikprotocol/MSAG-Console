@@ -13,8 +13,6 @@ import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.route.Subject;
 import ru.novosoft.smsc.admin.route.MaskList;
 import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.admin.journal.Actions;
 
 import java.util.Iterator;
 
@@ -94,10 +92,5 @@ public class SubjectAlterCommand extends SubjectGenCommand
         return "SUBJECT_ALTER";
     }
 
-	public void updateJournalAndStatuses(CommandContext ctx, String userName)
-	{
-		journalAppend(ctx, userName, SubjectTypes.TYPE_subject, subject, Actions.ACTION_MODIFY);
-		ctx.getStatuses().setSubjectsChanged(true);
-	}
 }
 

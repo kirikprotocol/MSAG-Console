@@ -7,13 +7,13 @@
  */
 package ru.novosoft.smsc.admin.console.commands.dl;
 
+import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.Principal;
 import ru.novosoft.smsc.admin.dl.exceptions.PrincipalNotExistsException;
 
-public class PrincipalAlterCommand extends CommandClass
+public class PrincipalAlterCommand implements Command
 {
     private String address = null;
     private int maxLists = 0;

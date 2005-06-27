@@ -8,13 +8,11 @@
 package ru.novosoft.smsc.admin.console;
 
 import ru.novosoft.smsc.jsp.SMSCAppContext;
-import ru.novosoft.smsc.jsp.Statuses;
 import ru.novosoft.smsc.admin.smsc_service.*;
 import ru.novosoft.smsc.admin.console.human.HumanGate;
 import ru.novosoft.smsc.admin.console.script.ScriptGate;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
-import ru.novosoft.smsc.admin.journal.Journal;
 import ru.novosoft.smsc.util.config.Config;
 
 import java.util.ArrayList;
@@ -26,13 +24,18 @@ public class Console extends Thread
 {
 	private org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(this.getClass());
 
-	private SMSCAppContext context = null;
+	private Smsc smsc = null;
+	private SmeManager smeManager = null;
+	private RouteSubjectManager routeSubjectManager = null;
+    private CategoryManager categoryManager = null;
+    private ProviderManager providerManager = null;
+    private Config webappConfig = null;
 
 	private Gate humanGate = null;
 	private Gate scriptGate = null;
 
-	private final static int DEFAULT_INACTIVITY_TIMEOUT = 60;
-	private long inactivityTimeout = DEFAULT_INACTIVITY_TIMEOUT*1000;
+    private final static int DEFAULT_INACTIVITY_TIMEOUT = 60;
+    private long inactivityTimeout = DEFAULT_INACTIVITY_TIMEOUT*1000;
 
 	private ArrayList sessions = new ArrayList();
 
@@ -43,17 +46,20 @@ public class Console extends Thread
 	{
 		if (context != null)
 		{
-			this.context = context; 
-			Config cfg = context.getConfig();
-			int humanPort = cfg.getInt("console.humanPort");
-			int scriptPort = cfg.getInt("console.scriptPort");
+			this.smsc = context.getSmsc();
+			this.smeManager = context.getSmeManager();
+			this.routeSubjectManager = context.getRouteSubjectManager();
+            this.categoryManager = context.getCategoryManager();
+            this.providerManager = context.getProviderManager();
+            this.webappConfig = context.getConfig();
 
-			try { inactivityTimeout = cfg.getInt("console.timeout"); }
-			catch (Config.ParamNotFoundException ce) {
-				inactivityTimeout = DEFAULT_INACTIVITY_TIMEOUT;
-				logger.warn("Missed <console.timeout> parameter. Using default: "+DEFAULT_INACTIVITY_TIMEOUT+" sec");
-			} inactivityTimeout *= 1000; // convert to msecs
-
+			int humanPort = webappConfig.getInt("console.humanPort");
+			int scriptPort = webappConfig.getInt("console.scriptPort");
+            try { inactivityTimeout = webappConfig.getInt("console.timeout"); }
+            catch (Config.ParamNotFoundException ce) {
+              inactivityTimeout = DEFAULT_INACTIVITY_TIMEOUT;
+              logger.warn("Missed <console.timeout> parameter. Using default: "+DEFAULT_INACTIVITY_TIMEOUT+" sec");
+            } inactivityTimeout *= 1000; // convert to msecs
 			commandRolesBundle = ResourceBundle.getBundle("ru.novosoft.smsc.admin.console.commands.roles");
 			humanGate = new HumanGate(this, humanPort);
 			scriptGate = new ScriptGate(this, scriptPort);
@@ -123,31 +129,23 @@ public class Console extends Thread
     }
 
 	public Smsc getSmsc() {
-		return context.getSmsc();
+		return smsc;
 	}
 	public SmeManager getSmeManager() {
-		return context.getSmeManager();
+		return smeManager;
 	}
 	public RouteSubjectManager getRouteSubjectManager() {
-		return context.getRouteSubjectManager();
+		return routeSubjectManager;
 	}
     public CategoryManager getCategoryManager() {
-        return context.getCategoryManager();
+        return categoryManager;
     }
     public ProviderManager getProviderManager() {
-        return context.getProviderManager();
+        return providerManager;
     }
     public Config getWebappConfig() {
-        return context.getConfig();
+        return webappConfig;
     }
-
-	public Journal getJournal() {
-		return context.getJournal();
-	}
-
-	public Statuses getStatuses() {
-		return context.getStatuses();
-	}
 
 	public String[] getCommandRoles(String command)
 	{

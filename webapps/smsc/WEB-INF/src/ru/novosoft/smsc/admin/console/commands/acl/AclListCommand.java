@@ -1,7 +1,7 @@
 package ru.novosoft.smsc.admin.console.commands.acl;
 
+import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.acl.AclInfo;
 
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.List;
  * Time: 14:39:38
  * To change this template use File | Settings | File Templates.
  */
-public class AclListCommand extends CommandClass
+public class AclListCommand implements Command
 {
   public void process(CommandContext ctx)
   {

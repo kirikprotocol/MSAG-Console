@@ -7,13 +7,13 @@
  */
 package ru.novosoft.smsc.admin.console.commands.dl;
 
+import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.Principal;
 import ru.novosoft.smsc.admin.dl.exceptions.PrincipalAlreadyExistsException;
 
-public class PrincipalAddCommand extends CommandClass
+public class PrincipalAddCommand implements Command
 {
     private String address = null;
     private int maxLists = 0;
@@ -36,7 +36,7 @@ public class PrincipalAddCommand extends CommandClass
             DistributionListAdmin admin = ctx.getSmsc().getDistributionListAdmin();
             admin.addPrincipal(new Principal(address, maxLists, maxElements));
             ctx.setMessage(out+" added");
-            ctx.setStatus(CommandContext.CMD_OK);
+            ctx.setStatus(ctx.CMD_OK);
         } catch (PrincipalAlreadyExistsException e) {
             ctx.setMessage(out+" already exists");
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);

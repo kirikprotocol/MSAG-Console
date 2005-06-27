@@ -1,6 +1,6 @@
 package ru.novosoft.smsc.admin.console.commands.sme;
 
-import ru.novosoft.smsc.admin.console.commands.CommandClass;
+import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.route.SME;
 
 /**
@@ -10,7 +10,7 @@ import ru.novosoft.smsc.admin.route.SME;
  * Time: 16:48:08
  * To change this template use File | Settings | File Templates.
  */
-public abstract class SmeGenCommand extends CommandClass
+public abstract class SmeGenCommand implements Command
 {
     public static final byte TYPE_SMPP = SME.SMPP;
     public static final byte TYPE_SS7  = SME.SS7;

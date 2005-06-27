@@ -7,15 +7,13 @@
  */
 package ru.novosoft.smsc.admin.console.commands.dl;
 
+import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.exceptions.ListNotExistsException;
 import ru.novosoft.smsc.admin.dl.exceptions.SubmitterNotExistsException;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.admin.journal.Actions;
 
-public class SubmitterDeleteCommand extends CommandClass
+public class SubmitterDeleteCommand implements Command
 {
     private String name = null;
     private String submitter = null;
@@ -35,7 +33,7 @@ public class SubmitterDeleteCommand extends CommandClass
             DistributionListAdmin admin = ctx.getSmsc().getDistributionListAdmin();
             admin.revokePosting(name, submitter);
             ctx.setMessage(sout+" "+" deleted from "+dlout);
-            ctx.setStatus(CommandContext.CMD_OK);
+            ctx.setStatus(ctx.CMD_OK);
         } catch (ListNotExistsException e) {
             ctx.setMessage(dlout+" not exists");
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
@@ -52,9 +50,4 @@ public class SubmitterDeleteCommand extends CommandClass
     public String getId() {
         return "SUBMITTER_DELETE";
     }
-
-	public void updateJournalAndStatuses(CommandContext ctx, String userName)
-	{
-		journalAppend(ctx, userName, SubjectTypes.TYPE_dl, name, Actions.ACTION_MODIFY);
-	}
 }

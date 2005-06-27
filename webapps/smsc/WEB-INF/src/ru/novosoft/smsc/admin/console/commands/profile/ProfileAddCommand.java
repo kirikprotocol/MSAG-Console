@@ -10,13 +10,10 @@ package ru.novosoft.smsc.admin.console.commands.profile;
 import ru.novosoft.smsc.admin.console.CommandContext;
 import ru.novosoft.smsc.admin.profiler.Profile;
 import ru.novosoft.smsc.admin.route.Mask;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.admin.journal.Actions;
 
 public class ProfileAddCommand extends ProfileGenCommand
 {
-	private String mask;
-	int updateResult;
+  private String mask;
 
   public void setMask(String mask)
   {
@@ -55,8 +52,7 @@ public class ProfileAddCommand extends ProfileGenCommand
                                     divertActiveBlocked, divertActiveBarred, divertActiveCapacity,
                                     divertModifiable, udhConcat, translit);
 
-      updateResult = ctx.getSmsc().profileUpdate(profileMask, profile);
-      switch (updateResult) {
+      switch (ctx.getSmsc().profileUpdate(profileMask, profile)) {
         case 1:	//pusUpdated
           ctx.setMessage(out + " was updated");
           ctx.setStatus(CommandContext.CMD_OK);
@@ -85,18 +81,5 @@ public class ProfileAddCommand extends ProfileGenCommand
     return "PROFILE_ADD";
   }
 
-
-	public void updateJournalAndStatuses(CommandContext ctx, String userName)
-	{
-		byte act = 0;
-		switch (updateResult)
-		{
-			case 1: act = Actions.ACTION_MODIFY;break;
-			case 2: act = Actions.ACTION_ADD;break;
-			default: return;
-		}
-		journalAppend(ctx, userName, SubjectTypes.TYPE_profile, mask, act);
-		ctx.getStatuses().setProfilesChanged(true);
-	}
 }
 

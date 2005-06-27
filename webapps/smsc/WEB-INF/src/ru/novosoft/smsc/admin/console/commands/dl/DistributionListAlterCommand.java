@@ -7,14 +7,12 @@
  */
 package ru.novosoft.smsc.admin.console.commands.dl;
 
+import ru.novosoft.smsc.admin.console.Command;
 import ru.novosoft.smsc.admin.console.CommandContext;
-import ru.novosoft.smsc.admin.console.commands.CommandClass;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
 import ru.novosoft.smsc.admin.dl.exceptions.ListNotExistsException;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.admin.journal.Actions;
 
-public class DistributionListAlterCommand extends CommandClass
+public class DistributionListAlterCommand implements Command
 {
     private String name = null;
     private int maxElements = 0;
@@ -33,7 +31,7 @@ public class DistributionListAlterCommand extends CommandClass
             DistributionListAdmin admin = ctx.getSmsc().getDistributionListAdmin();
             admin.alterDistributionList(name, maxElements);
             ctx.setMessage(out+" altered");
-            ctx.setStatus(CommandContext.CMD_OK);
+            ctx.setStatus(ctx.CMD_OK);
         } catch (ListNotExistsException e) {
             ctx.setMessage(out+" not exists");
             ctx.setStatus(CommandContext.CMD_PROCESS_ERROR);
@@ -46,9 +44,4 @@ public class DistributionListAlterCommand extends CommandClass
     public String getId() {
         return "DL_ALTER";
     }
-
-	public void updateJournalAndStatuses(CommandContext ctx, String userName)
-	{
-		journalAppend(ctx, userName, SubjectTypes.TYPE_dl, name, Actions.ACTION_MODIFY);
-	}
 }
