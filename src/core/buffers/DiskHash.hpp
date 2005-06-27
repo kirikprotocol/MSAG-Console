@@ -4,7 +4,9 @@
 #include "File.hpp"
 #include "util/crc32.h"
 #include <string>
+#ifndef NOLOGGERPLEASE
 #include "util/debug.h"
+#endif
 #include <exception>
 
 namespace smsc{
@@ -124,6 +126,8 @@ protected:
   int count;
   int size;
 
+  enum{flagEmpty,flagUsed,flagDeleted};
+
   int reallocPercent;
 
   void CalcRecSize()
@@ -137,7 +141,9 @@ protected:
 
   void Rehash()
   {
+#ifndef NOLOGGERPLEASE
     __warning2__("disk hash rehashing %d/%d",count,size);
+#endif
     File g;
     std::string tmp=name+".tmp";
     g.RWCreate(tmp.c_str());
@@ -162,13 +168,13 @@ protected:
     for(int i=0;i<size;i++)
     {
       fl=f.ReadNetInt16();
-      if(!fl)
+      if(fl!=flagUsed)
       {
         try{
           f.SeekCur(recsize-2);
         }catch(...)
         {
-          printf("fuck:%d/%d\n",i,size);
+          //fprintf(stderr,"seek failed:%d/%d\n",i,size);
           throw;
         }
         continue;
@@ -184,15 +190,16 @@ protected:
         idx=(hc%h.size)*recsize;
         g.Seek(idx+h.Size());
         fl=g.ReadNetInt16();
-        if(!fl)break;
+        if(fl!=flagUsed)break;
       }
       g.Seek(idx+h.Size());
-      fl=1;
+      fl=flagUsed;
       g.WriteNetInt16(fl);
       g.WriteNetInt32(hc);
       k.Write(g);
       v.Write(g);
     }
+    g.Flush();
     //g.MemoryFlush();
     //g.Close();
     size=h.size;
@@ -208,7 +215,9 @@ protected:
       g.Rename(name.c_str());
       f.Swap(g);
     }
+#ifndef NOLOGGERPLEASE
     __warning__("rehashing finished");
+#endif
   }
 
 public:
@@ -240,7 +249,7 @@ public:
     name=file;
     isCached=cached;
     isReadOnly=readonly;
-    f.SetUnbuffered();
+    //f.SetUnbuffered();
     if(cached)f.OpenInMemory(0);
     DiskHashHeader h;
     h.Read(f);
@@ -257,7 +266,7 @@ public:
     if(File::Exists(file))RTERROR("disk hash already exists");
     name=file;
     f.RWCreate(file);
-    f.SetUnbuffered();
+    //f.SetUnbuffered();
     isReadOnly=false;
     isCached=cached;
     DiskHashHeader h;
@@ -270,6 +279,7 @@ public:
     h.flags|=inplacekey?flagInplaceKey:0;
     h.flags|=inplaceval?flagInplaceValue:0;
     h.Write(f);
+    f.Flush();
     f.ZeroFill(recsize*prealloc);
     //auto_ptr<char> buf(new char[recsize]);
     //memset(buf.get(),0,recsize);
@@ -304,6 +314,7 @@ public:
       h.count=count;
       f.Seek(0);
       h.Write(f);
+      f.Flush();
       if(isCached)f.MemoryFlush();
     }
     f.Close();
@@ -336,7 +347,7 @@ public:
       uint32_t idx=(hc%size)*recsize;
       f.Seek(DiskHashHeader::Size()+idx);
       uint16_t fl=f.ReadNetInt16();
-      if(fl)
+      if(fl==flagUsed)
       {
         f.ReadNetInt32();
         K k;
@@ -345,11 +356,12 @@ public:
         continue;
       }
       f.Seek(DiskHashHeader::Size()+idx);
-      fl=1;
+      fl=flagUsed;
       f.WriteNetInt16(fl);
       f.WriteNetInt32(hc);
       key.Write(f);
       value.Write(f);
+      f.Flush();
       count++;
       return;
     }
@@ -365,7 +377,8 @@ public:
       uint32_t idx=(hc%size)*recsize;
       f.Seek(DiskHashHeader::Size()+idx);
       uint16_t fl=f.ReadNetInt16();
-      if(!fl)return false;
+      if(fl==flagEmpty)return false;
+      if(fl==flagDeleted)continue;
       uint32_t fhc=f.ReadNetInt32();
       if(fhc!=hc)continue;
       K fkey;
@@ -375,6 +388,32 @@ public:
       return true;
     }
   }
+
+  void Delete(const K& key)
+  {
+    if(!isFileOpen)RTERROR("Attempt to insert into not opened hash file");
+    int attempt=0;
+    for(;;attempt++)
+    {
+      if(attempt==size)return;
+      uint32_t hc=key.HashCode(attempt);
+      uint32_t idx=(hc%size)*recsize;
+      f.Seek(DiskHashHeader::Size()+idx);
+      uint16_t fl=f.ReadNetInt16();
+      if(fl==flagEmpty)return;
+      uint32_t fhc=f.ReadNetInt32();
+      if(fhc!=hc)continue;
+      K fkey;
+      fkey.Read(f);
+      if(!(fkey==key))continue;
+      f.Seek(DiskHashHeader::Size()+idx);
+      f.WriteNetInt16(flagDeleted);
+      f.Flush();
+      count--;
+      return;
+    }
+  }
+  int Count(){return count;}
 };
 
 } //namespace buffers
