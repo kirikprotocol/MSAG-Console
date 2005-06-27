@@ -306,7 +306,7 @@ public:
           stopped=true;
           break;
         }
-        mon.wait();
+        mon.wait(2000);
       }
       if(stopped)break;
       queue.Shift(pb);
