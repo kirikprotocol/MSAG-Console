@@ -125,11 +125,11 @@ void RescheduleCalculator::init(const char* filename){
     for (unsigned i=0; i<listLength; i++)
     {
       DOMNode *node = list->item(i);
-      DOMNamedNodeMap *attrs = node->getAttributes();      
+      DOMNamedNodeMap *attrs = node->getAttributes();
       XmlStr secname(attrs->getNamedItem(XmlStr("name"))->getNodeValue());
       if (strcmp(secname, "core") == 0)
       {
-        
+
         DOMNodeList *childs = node->getChildNodes();
         unsigned childsLength = childs->getLength();
         for (unsigned j=0; j<childsLength; j++)
@@ -157,7 +157,7 @@ void RescheduleCalculator::init(const char* filename){
             }
           }
         }
-      } 
+      }
       else if(strcmp(secname, "reschedule table") == 0){
       }
       else
@@ -165,8 +165,18 @@ void RescheduleCalculator::init(const char* filename){
         throw Exception("Unknown section name \"%s\"", secname.c_str());
       }
     }
-  }catch (...) {
-      throw Exception("Can't read shedule.xml");
+  }
+  catch(const XMLException& e)
+  {
+    XmlStr s(e.getMessage());
+    throw Exception("XMLException:%s",s.c_str());
+  }
+  catch(std::exception& e)
+  {
+    throw;
+  }
+  catch (...) {
+      throw Exception("Can't read %s",filename);
   }
 }
 
