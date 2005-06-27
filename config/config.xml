@@ -174,4 +174,10 @@
     <param name="allowedDeliveryFailures" type="int">5</param>
     <param name="lookAheadTime" type="int">5</param>
   </section>
+
+  <section name="acl">
+    <param name="preCreateSize" type="int">10000</param>
+    <param name="storeDir" type="string">store/acl</param>
+  </section>
+
 </config>
