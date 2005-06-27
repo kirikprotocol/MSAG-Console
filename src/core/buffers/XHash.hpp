@@ -25,9 +25,10 @@ class XHashInvalidKeyException{};
 
 class DefXHashFunc{
 public:
-  static inline unsigned int CalcHash(int key)
+  template <class T>
+  static inline unsigned int CalcHash(T key)
   {
-    return key;
+    return (unsigned int)key;
   }
 };
 
