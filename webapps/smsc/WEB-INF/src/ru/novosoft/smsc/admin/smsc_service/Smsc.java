@@ -128,8 +128,8 @@ public class Smsc extends Service
       logger.error("Couldn't parse", e);
       throw new AdminException("Couldn't parse: " + e.getMessage());
     }
-    distributionListAdmin = new DistributionListManager(connectionPool);
-   // distributionListAdmin = new DistributionListManager(super.getInfo(),smscPort /*,connectionPool*/);
+
+    distributionListAdmin = new DistributionListManager(super.getInfo(),smscPort /*,connectionPool*/);
   }
 
   protected PrintWriter storeAliases(final PrintWriter out)
