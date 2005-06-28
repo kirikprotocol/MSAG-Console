@@ -63,7 +63,8 @@ public class SCAGAppContext
       gwConfig = new Config(new File(config.getString("gw_config")));
       String gwDaemonHost=config.getString("gw daemon.host");
       String gwConfigFolder=config.getString("gw_config_folder");
-      connectionPool = createConnectionPool(config);
+      connectionPool = null;
+      //connectionPool = createConnectionPool(config);
       userManager = new UserManager(config.getString("users_config_file"));
       providerManager = new ProviderManager(gwConfig);
       gwSmeManager = new GwSmeManager(config.getString("sme_file"), gwConfig, providerManager);

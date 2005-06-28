@@ -83,8 +83,8 @@
     <role-name>stat</role-name>
   </security-role>
 
-  <display-name>SMPP Gateway</display-name>
-  <description>SMPP GatewayAdministrationApplication</description>
+  <display-name>SCA Gateway</display-name>
+  <description>SCA GatewayAdministrationApplication</description>
 
   <context-param>
     <description>Application config file</description>

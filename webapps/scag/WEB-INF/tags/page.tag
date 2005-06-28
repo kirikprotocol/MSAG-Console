@@ -52,7 +52,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <html>
 <head>
-  <title>SMPP Gateway Administration Console<c:if test="${!empty title}">: ${title}</c:if></title>
+  <title>SCA Gateway Administration Console<c:if test="${!empty title}">: ${title}</c:if></title>
   <base href="<%=request.getScheme()%>://<%=request.getServerName()%>:<%=request.getServerPort()+request.getContextPath()%>/">
   <link rel="STYLESHEET" type="text/css" href="/styles/colors.css">
   <link rel="STYLESHEET" type="text/css" href="/styles/common.css">
