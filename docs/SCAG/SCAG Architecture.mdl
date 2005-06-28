@@ -13585,18 +13585,20 @@
 				concurrency 	"Sequential"
 				opExportControl 	"Public"
 				uid        	0)
-			    (object Operation "getTrafic"
+			    (object Operation "checkTraffic"
 				quid       	"42C0E10B0353"
 				parameters 	(list Parameters
 				    (object Parameter "routeId"
 					quid       	"42C0E1EF0343"
-					type       	"string"))
-				result     	"Trafic"
+					type       	"string")
+				    (object Parameter "period"
+					quid       	"42C12C3F0140"
+					type       	"int"))
+				result     	"bool"
 				concurrency 	"Sequential"
 				opExportControl 	"Public"
-				uid        	0
-				quidu      	"42C1065C03D0")))
-		    (object Class "Trafic"
+				uid        	0)))
+		    (object Class "TrafficRecord"
 			quid       	"42C1065C03D0"
 			operations 	(list Operations
 			    (object Operation "inc"
@@ -13609,9 +13611,6 @@
 				opExportControl 	"Public"
 				uid        	0))
 			class_attributes 	(list class_attribute_list
-			    (object ClassAttribute "sec"
-				quid       	"42C1066602E5"
-				type       	"long")
 			    (object ClassAttribute "min"
 				quid       	"42C1066A02B7"
 				type       	"long")
@@ -13644,7 +13643,7 @@
 			    (object Role "traficByRouteId[2]"
 				quid       	"42C1069B02E5"
 				label      	"traficByRouteId[2]"
-				supplier   	"Logical View::stat::Trafic"
+				supplier   	"Logical View::stat::TrafficRecord"
 				quidu      	"42C1065C03D0"
 				client_cardinality 	(value cardinality "0..*")
 				Containment 	"By Value"
@@ -13805,7 +13804,7 @@
 						ordinal    	6
 						quidu      	"42C0E01802D6"
 						creation   	FALSE)
-					    (object Message "getTrafic(string)"
+					    (object Message "checkTraffic(string, int)"
 						quid       	"42C10EC40017"
 						frequency  	"Aperiodic"
 						synchronization 	"Simple"
@@ -13866,7 +13865,7 @@
 					supplier   	"$UNNAMED$149"
 					quidu      	"42C109D50007"
 					messages   	(list Messages
-					    (object Message "getTrafic(string)"
+					    (object Message "checkTraffic(string, int)"
 						quid       	"42C10E8001DC"
 						frequency  	"Aperiodic"
 						synchronization 	"Simple"
@@ -14048,7 +14047,7 @@
 				IncludeAttribute 	TRUE
 				IncludeOperation 	TRUE
 				ShowOperationSignature 	TRUE
-				location   	(1392, 1536)
+				location   	(1392, 1552)
 				font       	(object Font
 				    size       	10
 				    face       	"Arial"
@@ -14061,10 +14060,10 @@
 				    default_color 	TRUE)
 				label      	(object ItemLabel
 				    Parent_View 	@556
-				    location   	(989, 1421)
+				    location   	(840, 1437)
 				    fill_color 	13434879
 				    nlines     	1
-				    max_width  	806
+				    max_width  	1104
 				    justify    	0
 				    label      	"Statistics")
 				icon       	"Interface"
@@ -14074,7 +14073,7 @@
 				quidu      	"42C0DFE700A3"
 				compartment 	(object Compartment
 				    Parent_View 	@556
-				    location   	(989, 1482)
+				    location   	(840, 1498)
 				    font       	(object Font
 					size       	10
 					face       	"Arial"
@@ -14089,13 +14088,13 @@
 				    fill_color 	13434879
 				    anchor     	2
 				    nlines     	5
-				    max_width  	622)
-				width      	824
+				    max_width  	878)
+				width      	1122
 				height     	430
 				annotation 	8
 				autoResize 	TRUE)
 			    (object AssociationViewNew "$UNNAMED$142" @557
-				location   	(1392, 1864)
+				location   	(1392, 1872)
 				font       	(object Font
 				    size       	10
 				    face       	"Arial"
@@ -14112,7 +14111,7 @@
 				roleview_list 	(list RoleViews
 				    (object RoleView "$UNNAMED$143" @558
 					Parent_View 	@557
-					location   	(-32, 600)
+					location   	(-32, 608)
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"42C0DEDE02D6"
@@ -14121,7 +14120,7 @@
 					line_style 	0)
 				    (object RoleView "$UNNAMED$144" @559
 					Parent_View 	@557
-					location   	(-32, 600)
+					location   	(-32, 608)
 					stereotype 	TRUE
 					line_color 	3342489
 					quidu      	"42C0DEDE02E6"
@@ -14234,7 +14233,7 @@
 				    fill_color 	16777215
 				    anchor     	2
 				    nlines     	9
-				    max_width  	668)
+				    max_width  	659)
 				width      	796
 				height     	536
 				annotation 	8
@@ -14287,7 +14286,7 @@
 				client     	@562
 				supplier   	@560
 				line_style 	0)
-			    (object ClassView "Class" "Logical View::stat::Trafic" @568
+			    (object ClassView "Class" "Logical View::stat::TrafficRecord" @568
 				ShowCompartmentStereotypes 	TRUE
 				IncludeAttribute 	TRUE
 				IncludeOperation 	TRUE
@@ -14305,19 +14304,19 @@
 				    default_color 	TRUE)
 				label      	(object ItemLabel
 				    Parent_View 	@568
-				    location   	(2333, 610)
+				    location   	(2333, 635)
 				    fill_color 	13434879
 				    nlines     	1
 				    max_width  	422
 				    justify    	0
-				    label      	"Trafic")
+				    label      	"TrafficRecord")
 				icon_style 	"Icon"
 				line_color 	3342489
 				fill_color 	13434879
 				quidu      	"42C1065C03D0"
 				compartment 	(object Compartment
 				    Parent_View 	@568
-				    location   	(2333, 671)
+				    location   	(2333, 696)
 				    font       	(object Font
 					size       	10
 					face       	"Arial"
@@ -14331,10 +14330,10 @@
 				    icon_style 	"Icon"
 				    fill_color 	13434879
 				    anchor     	2
-				    nlines     	7
-				    max_width  	365)
+				    nlines     	6
+				    max_width  	356)
 				width      	440
-				height     	436
+				height     	386
 				annotation 	8
 				autoResize 	TRUE)
 			    (object AssociationViewNew "$UNNAMED$145" @569
@@ -14792,7 +14791,7 @@
 				    quidu      	"42C109DC01BE"
 				    anchor_loc 	1
 				    nlines     	1
-				    max_width  	476
+				    max_width  	485
 				    justify    	0
 				    label      	"StatisticsManager(Config)"
 				    pctDist    	0.620596
@@ -14918,7 +14917,7 @@
 				    quidu      	"42C10A340315"
 				    anchor_loc 	1
 				    nlines     	1
-				    max_width  	450
+				    max_width  	475
 				    justify    	0
 				    label      	"register(SmppCommand)"
 				    pctDist    	0.321023
@@ -14960,7 +14959,7 @@
 				    quidu      	"42C10A5A01CD"
 				    anchor_loc 	1
 				    nlines     	1
-				    max_width  	460
+				    max_width  	475
 				    justify    	0
 				    label      	"register(SmppCommand)"
 				    pctDist    	0.264881
@@ -15002,7 +15001,7 @@
 				    quidu      	"42C10ADE02D6"
 				    anchor_loc 	1
 				    nlines     	1
-				    max_width  	294
+				    max_width  	300
 				    justify    	0
 				    label      	"flushCounters( )"
 				    pctDist    	1.040000
@@ -15044,7 +15043,7 @@
 				    quidu      	"42C10B8B0017"
 				    anchor_loc 	1
 				    nlines     	1
-				    max_width  	310
+				    max_width  	317
 				    justify    	0
 				    label      	"dumpCounters( )"
 				    pctDist    	1.040000
@@ -15086,7 +15085,7 @@
 				    quidu      	"42C10BEE0140"
 				    anchor_loc 	1
 				    nlines     	1
-				    max_width  	273
+				    max_width  	285
 				    justify    	0
 				    label      	"loadupTraffic( )"
 				    pctDist    	0.920000
@@ -15128,7 +15127,7 @@
 				    quidu      	"42C10C470334"
 				    anchor_loc 	1
 				    nlines     	1
-				    max_width  	326
+				    max_width  	328
 				    justify    	0
 				    label      	"switchCounters( )"
 				    pctDist    	1.133333
@@ -15170,9 +15169,9 @@
 				    quidu      	"42C10E8001DC"
 				    anchor_loc 	1
 				    nlines     	1
-				    max_width  	288
+				    max_width  	419
 				    justify    	0
-				    label      	"getTrafic(string)"
+				    label      	"checkTraffic(string, int)"
 				    pctDist    	0.500000
 				    height     	45
 				    orientation 	1)
@@ -15212,7 +15211,7 @@
 				    quidu      	"42C10E6C0391"
 				    anchor_loc 	1
 				    nlines     	1
-				    max_width  	122
+				    max_width  	126
 				    justify    	0
 				    label      	"Stop( )"
 				    pctDist    	0.500000
@@ -15240,7 +15239,7 @@
 				    default_color 	TRUE)
 				label      	(object SegLabel @623
 				    Parent_View 	@622
-				    location   	(880, 1700)
+				    location   	(817, 1702)
 				    font       	(object Font
 					size       	10
 					face       	"Arial"
@@ -15254,11 +15253,11 @@
 				    quidu      	"42C10EC40017"
 				    anchor_loc 	1
 				    nlines     	1
-				    max_width  	288
+				    max_width  	419
 				    justify    	0
-				    label      	"getTrafic(string)"
-				    pctDist    	0.500000
-				    height     	45
+				    label      	"checkTraffic(string, int)"
+				    pctDist    	0.694704
+				    height     	42
 				    orientation 	1)
 				line_color 	3342489
 				client     	@591
