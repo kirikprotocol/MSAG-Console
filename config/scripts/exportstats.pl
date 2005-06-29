@@ -19,7 +19,7 @@ $sck->write($1."\n");
 getline($sck);
 $sck->write($2."\n");
 getline($sck);
-my @tm=localtime;
+my @tm=localtime(time-24*60*60);
 my $date=sprintf("%02d.%02d.%04d",$tm[3],$tm[4]+1,$tm[5]+1900);
 $sck->write("export stats for $date\n");
 getline($sck);

@@ -46,9 +46,15 @@ MENU0_SELECTION = "MENU0_ACL";
   </select>
 </div><%
   page_menu_begin(out);
+<<<<<<< index.jsp
+  page_menu_button(session, out, "mbLookup",  "Lookup ACL",  "Lookup ACL");
+  page_menu_button(session, out, "mbAddAcl",  "Add ACL",     "Create new ACL");
+  page_menu_button(session, out, "mbDelAcl",  "Delete ACL",  "Delete selected ACL");
+=======
   page_menu_button(session, out, "mbLookup",  "acl.lookup",  "acl.lookup");
   page_menu_button(session, out, "mbAddAcl",  "acl.add",     "acl.addHint");
   page_menu_button(session, out, "mbDelAcl",  "acl.delete",  "acl.deleteHint");
+>>>>>>> 1.7
   page_menu_space(out);
   page_menu_end(out);
   if (aclInfo != null)
@@ -84,7 +90,11 @@ MENU0_SELECTION = "MENU0_ACL";
       <%=getLocString("acl.addressesPrefix")%> <input class=txt name=prefix value="<%=bean.getPrefix()%>">
     </div><%
     page_menu_begin(out);
+<<<<<<< index.jsp
+    page_menu_button(session, out, "mbLookupAddresses",  "Lookup addresses",  "Lookup ACL addresses");
+=======
     page_menu_button(session, out, "mbLookupAddresses",  "acl.lookupAddresses", "acl.lookupAddressesHint");
+>>>>>>> 1.7
     page_menu_space(out);
     page_menu_end(out);
     %><div class="content">
@@ -151,7 +161,11 @@ MENU0_SELECTION = "MENU0_ACL";
       </tr>
     </table></div><%
     page_menu_begin(out);
+<<<<<<< index.jsp
+    page_menu_button(session, out, "mbSave",  "Save changes",  "Save changes");
+=======
     page_menu_button(session, out, "mbSave",  "common.buttons.saveChanges", "common.buttons.saveChanges");
+>>>>>>> 1.7
     page_menu_space(out);
     page_menu_end(out);
   }

@@ -23,8 +23,13 @@
 MENU0_SELECTION = "MENU0_ACL";
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%><%
   page_menu_begin(out);
+<<<<<<< edit.jsp
+  page_menu_button(session, out, "mbSave",  add ? "Add" : "Save",  add ? "Add new acl" : "Save changes");
+  page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+=======
   page_menu_button(session, out, "mbSave",  add ? "common.buttons.add" : "common.buttons.save",  add ? "acl.addNew" : "common.buttons.saveChanges");
   page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelHint", "clickCancel()");
+>>>>>>> 1.5
   page_menu_space(out);
   page_menu_end(out);
 %>
@@ -90,8 +95,13 @@ function addAclAddress()
   </table>
 </div><%
   page_menu_begin(out);
+<<<<<<< edit.jsp
+  page_menu_button(session, out, "mbSave",  add ? "Add" : "Save",  add ? "Add new acl" : "Save changes");
+  page_menu_button(session, out, "mbCancel", "Cancel", "Cancel", "clickCancel()");
+=======
   page_menu_button(session, out, "mbSave",  add ? "common.buttons.add" : "common.buttons.save",  add ? "acl.addNew" : "common.buttons.saveChanges");
   page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelHint", "clickCancel()");
+>>>>>>> 1.5
   page_menu_space(out);
   page_menu_end(out);
 %>
