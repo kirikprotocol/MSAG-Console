@@ -298,10 +298,10 @@ public class DistributionListManager extends Service implements DistributionList
     final List result = new LinkedList();
     int i = 0;
     while (i < listStr.size())  {
-      String name = (String)listStr.get(0);
-      String owner = (String)listStr.get(1);
+      String name = (String)listStr.get(i++);
+      String owner = (String)listStr.get(i++);
       if (owner.equals("")) owner=null;
-      int maxElements = Integer.parseInt((String)listStr.get(2));
+      int maxElements = Integer.parseInt((String)listStr.get(i++));
       final DistributionList dl=new DistributionList(name, owner, maxElements);
      // if (filter == null || filter.isItemAllowed(dl)) {
       result.add(dl);
