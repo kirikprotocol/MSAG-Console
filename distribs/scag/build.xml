@@ -4,6 +4,7 @@
     <not>
       <and>
         <isset property="BUILD_DIR"/>
+	<isset property="DISTR_DIR"/>
         <isset property="SMSC_DIR"/>
         <isset property="TEMPLATE_PROPS"/>
         <isset property="CATALINA_HOME"/>
@@ -17,7 +18,7 @@
   <fail unless="TEMPLATE_PROPS_FOUND" message="Template properties file not found"/>
   <tstamp/>
   <property environment="env"/>
-  <property name="DISTR_DIR" value="${BUILD_DIR}/distr"/>
+  <!--property name="DISTR_DIR" value="${BUILD_DIR}/distr"/-->
   <property name="SRC_DIR" value="${SMSC_DIR}/src"/>
   <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
   <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
@@ -112,9 +113,9 @@ Targets:
     <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/db/exceptions/libdb_exc.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/>
-    <!--copy file="${BUILD_BIN}/libsimplebilling.so" todir="${DISTR_DIR}/lib"/-->
-    <!--copy file="${BUILD_BIN}/scag/scag" todir="${DISTR_DIR}/services/scag/bin"/-->
-    <!--chmod file="${DISTR_DIR}/services/scag/bin/scag" perm="755"/-->
+    <!--copy file="${BUILD_BIN}/libsimplebilling.so" todir="${DISTR_DIR}/lib"/>
+    <copy file="${BUILD_BIN}/scag/scag" todir="${DISTR_DIR}/services/scag/bin"/>
+    <chmod file="${DISTR_DIR}/services/scag/bin/scag" perm="755"/-->
     <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
     <chmod file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" perm="755"/>
     <chmod perm="755">

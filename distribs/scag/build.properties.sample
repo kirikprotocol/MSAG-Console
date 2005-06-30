@@ -1,6 +1,7 @@
 BUILD_DIR=/home/serge/build
+DISTR_DIR=/export/home/makar/build/scag_distr
 SMSC_DIR=/home/serge/smsc
 MAKE_ARGS="DEBUG=YES TRACE=YES DISABLE_SMPP_CHECKS=YES"
-CATALINA_HOME=/home/serge/build/distr/tomcat
-CATALINA_BASE=/home/serge/build/distr
+CATALINA_HOME=/home/serge/build/scag_distr/tomcat
+CATALINA_BASE=/home/serge/build/scag_distr
 TEMPLATE_PROPS=scag.properties
