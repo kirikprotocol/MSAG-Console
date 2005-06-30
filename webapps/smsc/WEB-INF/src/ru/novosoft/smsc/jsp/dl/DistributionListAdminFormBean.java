@@ -8,10 +8,13 @@
 package ru.novosoft.smsc.jsp.dl;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.service.Service;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.journal.Actions;
 import ru.novosoft.smsc.admin.dl.DistributionList;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
+import ru.novosoft.smsc.admin.dl.DistributionListManager;
 import ru.novosoft.smsc.admin.dl.exceptions.ListNotExistsException;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
@@ -21,6 +24,7 @@ import java.util.*;
 
 public class DistributionListAdminFormBean extends IndexBean
 {
+   private static final String SMSC_COMPONENT_ID = "SMSC";
   public static final int RESULT_EDIT = IndexBean.PRIVATE_RESULT;
   public static final int RESULT_ADD = IndexBean.PRIVATE_RESULT + 1;
   protected static final int PRIVATE_RESULT = IndexBean.PRIVATE_RESULT + 2;
@@ -60,9 +64,17 @@ public class DistributionListAdminFormBean extends IndexBean
     int result = super.process(request);
     if (result != RESULT_OK)
       return result;
-
+    ServiceInfo info = null;
+    try {
+       info=appContext.getHostsManager().getService(SMSC_COMPONENT_ID ).getInfo();
+    } catch (AdminException e) {
+      e.printStackTrace();
+      logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
+    }
+    admin.setInfo(info);
     //query names
     try {
+
       dls = admin.list(preferences.getDlFilter());
     } catch (AdminException e) {
       return error(SMSCErrors.error.dl.CouldntListDistributionLists);

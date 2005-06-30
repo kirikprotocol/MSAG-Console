@@ -95,6 +95,11 @@ public class DistributionListManager extends Service implements DistributionList
    // this.ds = ds;
   }
 
+  public synchronized void setInfo(ServiceInfo info) 
+  {
+   super.setInfo(info);
+  }
+
   private List parsePrincipalList(final List listStr)
   {
     if (null == listStr || 0 == listStr.size())
@@ -114,6 +119,7 @@ public class DistributionListManager extends Service implements DistributionList
   public synchronized List principals() throws AdminException
   {
     List list;
+
     if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
       throw new AdminException("SMSC is not running.");
 

@@ -8,6 +8,7 @@
 package ru.novosoft.smsc.admin.dl;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.dl.exceptions.*;
 import ru.novosoft.smsc.jsp.util.tables.impl.dl.DlFilter;
 
@@ -187,4 +188,7 @@ public interface DistributionListAdmin
      */
     public void alterDistributionList(String dlname, int maxElements)
         throws AdminException, ListNotExistsException;
+
+ public  void setInfo(ServiceInfo info); 
+
 }
