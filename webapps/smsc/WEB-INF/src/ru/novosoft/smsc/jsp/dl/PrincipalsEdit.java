@@ -1,7 +1,9 @@
 package ru.novosoft.smsc.jsp.dl;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
+import ru.novosoft.smsc.admin.dl.DistributionListManager;
 import ru.novosoft.smsc.admin.dl.exceptions.ListsCountExceededException;
 import ru.novosoft.smsc.admin.dl.exceptions.MembersCountExceededForOwnerException;
 import ru.novosoft.smsc.admin.dl.exceptions.PrincipalAlreadyExistsException;
@@ -38,7 +40,6 @@ public class PrincipalsEdit extends SmscBean
       return result;
 
     admin = appContext.getSmsc().getDistributionListAdmin();
-
     if (!initialized) {
       if (!create) {
         try {

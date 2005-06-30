@@ -7,6 +7,11 @@ import ru.novosoft.smsc.jsp.util.tables.impl.dl.PrincipalsDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.dl.PrincipalsFilter;
 import ru.novosoft.smsc.jsp.util.tables.impl.dl.PrincipalsQuery;
 import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
+import ru.novosoft.smsc.admin.dl.DistributionListManager;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.smsc_service.Smsc;
 
 import javax.servlet.http.HttpServletRequest;
 import java.sql.Connection;
@@ -41,12 +46,15 @@ public class Principals extends IndexBean
   private String mbDelete = null;
   private PrincipalsFilter filter;
   private boolean initialized = false;
+  DistributionListAdmin admin=null;
 
   protected int init(List errors)
   {
     int result = super.init(errors);
     if (result != RESULT_OK)
       return result;
+    if (this.admin == null)
+      admin = appContext.getSmsc().getDistributionListAdmin();
 
     filter = preferences.getDlPrincipalsFilter();
     if (filterAddress == null) {
@@ -71,14 +79,12 @@ public class Principals extends IndexBean
       preferences.setDlPrincipalsPageSize(pageSize);
 
     checkedSet.addAll(Arrays.asList(checked));
-
     if (initialized)
       principals = new PrincipalsDataSource(appContext).query(new PrincipalsQuery(pageSize, filter, sort, startPosition));
     totalSize = principals.getTotalSize();
 
     return result;
   }
-
   public int process(HttpServletRequest request)
   {
     int result = super.process(request);
@@ -94,32 +100,16 @@ public class Principals extends IndexBean
   private int delete()
   {
     int result = RESULT_DONE;
-    Connection connection = null;
-    try {
-      connection = appContext.getConnectionPool().getConnection();
-      PreparedStatement statement = connection.prepareStatement("delete from dl_principals where address=?");
-      for (int i = 0; i < checked.length; i++) {
-        String address = checked[i];
-        statement.setString(1, address);
-        try {
-          statement.executeUpdate();
-        } catch (SQLException e) {
-          logger.error("Could not delete principal \"" + address + "\"", e);
-          result = error(SMSCErrors.error.dl.couldntDeletePrincipal, address, e);
-        }
-      }
-    } catch (SQLException e) {
-      logger.error("Exception", e);
-      result = error(SMSCErrors.error.sql.exception, e);
-    } finally {
-      if (connection != null) {
-        try {
-          connection.commit();
-          connection.close();
-        } catch (SQLException e) {
-          logger.error("Could not close database connection", e);
-          return error(SMSCErrors.error.sql.coulndtCloseDBConnection, e);
-        }
+    //  PreparedStatement statement = connection.prepareStatement("delete from dl_principals where address=?");
+
+    for (int i = 0; i < checked.length; i++) {
+      String address = checked[i];
+      try {
+        admin.deletePrincipal(address);
+      } catch (AdminException e) {
+        e.printStackTrace();
+        logger.error("Could not delete principal \"" + address + "\"", e);
+        result = error(SMSCErrors.error.dl.couldntDeletePrincipal, address, e);
       }
     }
     return result;

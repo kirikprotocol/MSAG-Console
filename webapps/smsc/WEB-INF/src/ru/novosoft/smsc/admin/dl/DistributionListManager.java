@@ -34,7 +34,7 @@ import java.util.*;
 
 public class DistributionListManager extends Service implements DistributionListAdmin
 {
-  private static final String DL_COMPONENT_ID = "SMSC";
+  private static final String SMSC_COMPONENT_ID = "SMSC";
 
   private static final String GET_PRINCIPALS_METHOD_ID = "prc_list";
   private final static String ADD_PRINCIPAL_METHOD_ID = "prc_add";
@@ -124,7 +124,7 @@ public class DistributionListManager extends Service implements DistributionList
       throw new AdminException("SMSC is not running.");
 
     final Map args = new HashMap();
-    final Object res = call(DL_COMPONENT_ID, GET_PRINCIPALS_METHOD_ID, Type.Types[Type.StringListType], args);
+    final Object res = call(SMSC_COMPONENT_ID, GET_PRINCIPALS_METHOD_ID, Type.Types[Type.StringListType], args);
 
     list = res instanceof List ? (List) res : null;
     return parsePrincipalList(list);
@@ -137,7 +137,7 @@ public class DistributionListManager extends Service implements DistributionList
         throw new AdminException("SMSC is not running.");
       final Map args = new HashMap();
       args.put("address", address);
-      final Object res = call(DL_COMPONENT_ID, GET_PRINCIPALS_METHOD_ID, Type.Types[Type.StringListType], args);
+      final Object res = call(SMSC_COMPONENT_ID, GET_PRINCIPALS_METHOD_ID, Type.Types[Type.StringListType], args);
 
       list = res instanceof List ? (List) res : null;
       return parsePrincipalList(list);
@@ -153,7 +153,7 @@ public class DistributionListManager extends Service implements DistributionList
     args.put("address", prc.getAddress());
     args.put("maxLists", prc.getMaxListsInteger());
     args.put("maxElements",prc.getMaxElementsInteger());
-    call(DL_COMPONENT_ID, ADD_PRINCIPAL_METHOD_ID, Type.Types[Type.StringType], args);
+    call(SMSC_COMPONENT_ID, ADD_PRINCIPAL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized void deletePrincipal(String address) throws AdminException, PrincipalNotExistsException, PrincipalInUseException
@@ -168,7 +168,7 @@ public class DistributionListManager extends Service implements DistributionList
       throw new AdminException("SMSC is not running.");
     final Map args = new HashMap();
     args.put("address", address);
-    call(DL_COMPONENT_ID, DELETE_PRINCIPAL_METHOD_ID, Type.Types[Type.StringType], args);
+    call(SMSC_COMPONENT_ID, DELETE_PRINCIPAL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized Principal getPrincipal(String address) throws AdminException, PrincipalNotExistsException
@@ -179,7 +179,7 @@ public class DistributionListManager extends Service implements DistributionList
 
     final Map args = new HashMap();
     args.put("address", address);
-    final Object res = call(DL_COMPONENT_ID, GET_PRINCIPAL_METHOD_ID, Type.Types[Type.StringListType], args);
+    final Object res = call(SMSC_COMPONENT_ID, GET_PRINCIPAL_METHOD_ID, Type.Types[Type.StringListType], args);
     list = res instanceof List ? (List) res : null;
     if (list==null)  throw new AdminException("Unsupported return type for commmand "+GET_PRINCIPAL_METHOD_ID);
     String addr=(String)list.get(0);
@@ -201,7 +201,7 @@ public class DistributionListManager extends Service implements DistributionList
     args.put("maxElements", prc.getMaxElementsInteger());
     args.put("altLists",  new Boolean(altLists) );
     args.put("altElements",new Boolean(altElements));
-    call(DL_COMPONENT_ID, ALT_PRINCIPAL_METHOD_ID, Type.Types[Type.StringType], args);
+    call(SMSC_COMPONENT_ID, ALT_PRINCIPAL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized void addMember(String dlname, String address) throws AdminException, ListNotExistsException, MemberAlreadyExistsException
@@ -211,7 +211,7 @@ public class DistributionListManager extends Service implements DistributionList
     final Map args = new HashMap();
     args.put("address", address);
     args.put("dlname", dlname);
-    call(DL_COMPONENT_ID, ADD_MEMBER_METHOD_ID, Type.Types[Type.StringType], args);
+    call(SMSC_COMPONENT_ID, ADD_MEMBER_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized void deleteMember(String dlname, String address) throws AdminException, ListNotExistsException, MemberNotExistsException
@@ -221,7 +221,7 @@ public class DistributionListManager extends Service implements DistributionList
     final Map args = new HashMap();
     args.put("address", address);
     args.put("dlname", dlname);
-    call(DL_COMPONENT_ID, DELETE_MEMBER_METHOD_ID, Type.Types[Type.StringType], args);
+    call(SMSC_COMPONENT_ID, DELETE_MEMBER_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized List members(String dlname) throws AdminException, ListNotExistsException
@@ -231,7 +231,7 @@ public class DistributionListManager extends Service implements DistributionList
       throw new AdminException("SMSC is not running.");
     final Map args = new HashMap();
     args.put("dlname", dlname);
-    final Object res = call(DL_COMPONENT_ID, GET_MEMBERS_METHOD_ID, Type.Types[Type.StringListType], args);
+    final Object res = call(SMSC_COMPONENT_ID, GET_MEMBERS_METHOD_ID, Type.Types[Type.StringListType], args);
     list = res instanceof List ? (List) res : null;
     if (list==null)  throw new AdminException("Unsupported return type for commmand "+GET_MEMBERS_METHOD_ID);
     return list;
@@ -244,7 +244,7 @@ public class DistributionListManager extends Service implements DistributionList
     final Map args = new HashMap();
     args.put("dlname", dlname);
     args.put("address", submitter);
-    call(DL_COMPONENT_ID, ADD_SUBMITTER_METHOD_ID, Type.Types[Type.StringType], args);
+    call(SMSC_COMPONENT_ID, ADD_SUBMITTER_METHOD_ID, Type.Types[Type.StringType], args);
 
   }
 
@@ -255,7 +255,7 @@ public class DistributionListManager extends Service implements DistributionList
     final Map args = new HashMap();
     args.put("dlname", dlname);
     args.put("address", submitter);
-    call(DL_COMPONENT_ID, DELETE_SUBMITTER_METHOD_ID, Type.Types[Type.StringType], args);
+    call(SMSC_COMPONENT_ID, DELETE_SUBMITTER_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized List submitters(String dlname) throws AdminException, ListNotExistsException
@@ -265,7 +265,7 @@ public class DistributionListManager extends Service implements DistributionList
       throw new AdminException("SMSC is not running.");
     final Map args = new HashMap();
     args.put("dlname", dlname);
-    final Object res = call(DL_COMPONENT_ID, SUBMITTERS_METHOD_ID, Type.Types[Type.StringListType], args);
+    final Object res = call(SMSC_COMPONENT_ID, SUBMITTERS_METHOD_ID, Type.Types[Type.StringListType], args);
     list = res instanceof List ? (List) res : null;
     if (list==null)  throw new AdminException("Unsupported return type for commmand "+SUBMITTERS_METHOD_ID);
     return parsePrincipalList(list);
@@ -279,7 +279,7 @@ public class DistributionListManager extends Service implements DistributionList
     args.put("dlname", dl.getName());
     args.put("owner", dl.getOwner());
     args.put("maxElements",new Integer(dl.getMaxElements()));
-    call(DL_COMPONENT_ID, ADD_DL_METHOD_ID, Type.Types[Type.StringType], args);
+    call(SMSC_COMPONENT_ID, ADD_DL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized void deleteDistributionList(String dlname) throws AdminException, ListNotExistsException
@@ -288,7 +288,7 @@ public class DistributionListManager extends Service implements DistributionList
       throw new AdminException("SMSC is not running.");
     final Map args = new HashMap();
     args.put("dlname", dlname);
-    call(DL_COMPONENT_ID, DELETE_DL_METHOD_ID, Type.Types[Type.StringType], args);
+    call(SMSC_COMPONENT_ID, DELETE_DL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   public synchronized DistributionList getDistributionList(String dlname) throws AdminException, ListNotExistsException
@@ -299,7 +299,7 @@ public class DistributionListManager extends Service implements DistributionList
       throw new AdminException("SMSC is not running.");
     final Map args = new HashMap();
     args.put("dlname", dlname);
-    final Object res = call(DL_COMPONENT_ID, GET_DL_METHOD_ID, Type.Types[Type.StringListType], args);
+    final Object res = call(SMSC_COMPONENT_ID, GET_DL_METHOD_ID, Type.Types[Type.StringListType], args);
     list = res instanceof List ? (List) res : null;
     if (list==null)  throw new AdminException("Unsupported return type for commmand "+GET_DL_METHOD_ID);
     String name = (String)list.get(0);
@@ -342,7 +342,7 @@ public class DistributionListManager extends Service implements DistributionList
         args.put("names", names); args.put("owners", owners);
       }
     }
-    final Object res = call(DL_COMPONENT_ID, LIST_DL_METHOD_ID, Type.Types[Type.StringListType], args);
+    final Object res = call(SMSC_COMPONENT_ID, LIST_DL_METHOD_ID, Type.Types[Type.StringListType], args);
     list = res instanceof List ? (List) res : null;
     if (list==null)  throw new AdminException("Unsupported return type for commmand "+LIST_DL_METHOD_ID);
     return parseDistributionList(list /*,filter*/);
@@ -414,7 +414,7 @@ public class DistributionListManager extends Service implements DistributionList
     final Map args = new HashMap();
     args.put("dlname", dlname);
     args.put("maxElements",new Integer(maxElements));
-    call(DL_COMPONENT_ID, ALT_DL_METHOD_ID, Type.Types[Type.StringType], args);
+    call(SMSC_COMPONENT_ID, ALT_DL_METHOD_ID, Type.Types[Type.StringType], args);
   }
 
   ////////////////////////////////////////////////////

@@ -24,7 +24,6 @@ import java.util.*;
 
 public class DistributionListAdminFormBean extends IndexBean
 {
-   private static final String SMSC_COMPONENT_ID = "SMSC";
   public static final int RESULT_EDIT = IndexBean.PRIVATE_RESULT;
   public static final int RESULT_ADD = IndexBean.PRIVATE_RESULT + 1;
   protected static final int PRIVATE_RESULT = IndexBean.PRIVATE_RESULT + 2;
@@ -64,14 +63,6 @@ public class DistributionListAdminFormBean extends IndexBean
     int result = super.process(request);
     if (result != RESULT_OK)
       return result;
-    ServiceInfo info = null;
-    try {
-       info=appContext.getHostsManager().getService(SMSC_COMPONENT_ID ).getInfo();
-    } catch (AdminException e) {
-      e.printStackTrace();
-      logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
-    }
-    admin.setInfo(info);
     //query names
     try {
 

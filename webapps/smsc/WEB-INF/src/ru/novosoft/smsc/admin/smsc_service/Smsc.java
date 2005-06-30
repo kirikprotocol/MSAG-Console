@@ -396,6 +396,7 @@ public class Smsc extends Service
 
   public synchronized DistributionListAdmin getDistributionListAdmin()
   {
+    distributionListAdmin.setInfo(getInfo());
     return distributionListAdmin;
   }
 
