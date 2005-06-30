@@ -2,9 +2,9 @@
 <!DOCTYPE config SYSTEM "configuration.dtd">
 <config>
   <section name="services">
-    <section name="smppgw">
-      <param name="args" type="string">@smppgw.service.args@</param>
-      <param name="autostart" type="bool">@smppgw.service.autostart@</param>
+    <section name="scag">
+      <param name="args" type="string">@scag.service.args@</param>
+      <param name="autostart" type="bool">@scag.service.autostart@</param>
     </section>
   </section>
   <section name="admin">

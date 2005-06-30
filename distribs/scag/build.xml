@@ -28,7 +28,7 @@
 
   <target name="help">
     <echo>
-SMPP Gateway build script
+SCA Gateway build script
 Targets:
       rmbuild
 
@@ -49,7 +49,7 @@ Targets:
     <chmod perm="775">
       <fileset dir="${DISTR_DIR}/tomcat/bin" includes="*.sh"/>
     </chmod>
-    <ant antfile="${WEBSRC_DIR}/build_scag.xml" dir="${WEBSRC_DIR}" target="build"/>
+    <ant antfile="${WEBSRC_DIR}/build-scag.xml" dir="${WEBSRC_DIR}" target="build"/>
     <copy todir="${DISTR_DIR}/webapps">
       <fileset dir="${WEBSRC_DIR}" includes="images/**/*, styles/**/*, scripts/**/*"/>
     </copy>
@@ -87,19 +87,19 @@ Targets:
     <mkdir dir="${DISTR_DIR}/services/scag/conf"/>
     <mkdir dir="${DISTR_DIR}/daemon/conf"/>
 
-    <symlink resource="${SERVICE2HOME_PATH}/lib" link="${DISTR_DIR}/services/scag"/>
+    <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/scag"/>
     <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/scag"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/command.dtd" link="${DISTR_DIR}/services/scag/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/services/scag/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/response.dtd" link="${DISTR_DIR}/services/scag/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/AliasRecords.dtd" link="${DISTR_DIR}/services/scag/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/SmeRecords.dtd" link="${DISTR_DIR}/services/scag/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/command_gw.dtd" link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/command.dtd"          link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd"    link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/response.dtd"         link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/AliasRecords.dtd"     link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/SmeRecords.dtd"       link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/command_gw.dtd"       link="${DISTR_DIR}/services/scag/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/locale_resources.dtd" link="${DISTR_DIR}/services/scag/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/routes.dtd" link="${DISTR_DIR}/services/scag/conf"/>
-    <symlink resource="${SERVICE2HOME_PATH}/../conf/billing_rules.dtd" link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/routes.dtd"           link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/billing-rules.dtd"    link="${DISTR_DIR}/services/scag/conf"/>
 
-    <symlink resource="${DAEMON2HOME_PATH}/lib" link="${DISTR_DIR}/daemon"/>
+    <symlink resource="${DAEMON2HOME_PATH}/lib"  link="${DISTR_DIR}/daemon"/>
     <symlink resource="${DAEMON2HOME_PATH}/logs" link="${DISTR_DIR}/daemon"/>
     <symlink resource="${DAEMON2HOME_PATH}/../conf/command.dtd" link="${DISTR_DIR}/daemon/conf"/>
     <symlink resource="${DAEMON2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/daemon/conf"/>
@@ -112,16 +112,17 @@ Targets:
     <copy file="${BUILD_BIN}/liblogger.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/db/exceptions/libdb_exc.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/>
-    <copy file="${BUILD_BIN}/libsimplebilling.so" todir="${DISTR_DIR}/lib"/>
-    <copy file="${BUILD_BIN}/scag/scag" todir="${DISTR_DIR}/services/scag/bin"/>
-    <chmod file="${DISTR_DIR}/services/scag/bin/scag" perm="755"/>
+    <!--copy file="${BUILD_BIN}/libsimplebilling.so" todir="${DISTR_DIR}/lib"/-->
+    <!--copy file="${BUILD_BIN}/scag/scag" todir="${DISTR_DIR}/services/scag/bin"/-->
+    <!--chmod file="${DISTR_DIR}/services/scag/bin/scag" perm="755"/-->
     <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
     <chmod file="${DISTR_DIR}/daemon/bin/smsc_ssdaemon" perm="755"/>
     <chmod perm="755">
       <fileset dir="${DISTR_DIR}/lib" includes="*"/>
     </chmod>
     <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
-      <fileset dir="${SMSC_DIR}/config" includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd SmeRecords.dtd scag/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd scagbilling/billing-rules.dtd"/>
+      <fileset dir="${SMSC_DIR}/config" 
+               includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd SmeRecords.dtd scag/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd scag/billing-rules.dtd"/>
     </copy>
   </target>
 
@@ -133,7 +134,7 @@ Targets:
     <!-- webapps configuration -->
     <copy todir="${DISTR_DIR}/conf" flatten="yes" >
       <fileset dir="${TEMPL_DIR}">
-        <include name="tomcat5/*"/>
+        <include name="scag/tomcat/*"/>
       </fileset>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
@@ -176,15 +177,15 @@ Targets:
     </copy>
     <chmod file="${DISTR_DIR}/services/scag/bin/service" perm="755"/>
     <copy todir="${DISTR_DIR}/services/scag/conf" flatten="yes">
-      <fileset dir="${TEMPL_DIR}/scag" includes="config.xml routes.xml routes_.xml routes__.xml sme.xml billing_rules.xml"/>
+      <fileset dir="${TEMPL_DIR}/scag" includes="config.xml routes.xml routes_.xml routes__.xml sme.xml billing-rules.xml"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
-    <symlink resource="../services/scag/conf/config.xml" link="${DISTR_DIR}/conf/scag.xml" overwrite="yes"/>
-    <symlink resource="../services/scag/conf/routes.xml" link="${DISTR_DIR}/conf/routes.xml" overwrite="yes"/>
-    <symlink resource="../services/scag/conf/routes_.xml" link="${DISTR_DIR}/conf/routes_.xml" overwrite="yes"/>
-    <symlink resource="../services/scag/conf/routes__.xml" link="${DISTR_DIR}/conf/routes__.xml" overwrite="yes"/>
-    <symlink resource="../services/scag/conf/sme.xml" link="${DISTR_DIR}/conf/sme.xml" overwrite="yes"/>
-    <symlink resource="../services/scag/conf/billing_rules.xml" link="${DISTR_DIR}/conf/billing_rules.xml" overwrite="yes"/>
+    <symlink resource="../services/scag/conf/config.xml"        link="${DISTR_DIR}/conf/scag.xml" overwrite="yes"/>
+    <symlink resource="../services/scag/conf/routes.xml"        link="${DISTR_DIR}/conf/routes.xml" overwrite="yes"/>
+    <symlink resource="../services/scag/conf/routes_.xml"       link="${DISTR_DIR}/conf/routes_.xml" overwrite="yes"/>
+    <symlink resource="../services/scag/conf/routes__.xml"      link="${DISTR_DIR}/conf/routes__.xml" overwrite="yes"/>
+    <symlink resource="../services/scag/conf/sme.xml"           link="${DISTR_DIR}/conf/sme.xml" overwrite="yes"/>
+    <symlink resource="../services/scag/conf/billing-rules.xml" link="${DISTR_DIR}/conf/billing-rules.xml" overwrite="yes"/>
 
     <!-- turn scripts be executable -->
     <chmod perm="755">
@@ -238,6 +239,5 @@ Targets:
       </tarfileset>
     </tar>
   </target>
-
 
 </project>

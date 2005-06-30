@@ -3,11 +3,11 @@
 
 <config>
 
-  <param name="users_config_file" type="string">webapps/smppgw/WEB-INF/users.xml</param>
-  <param name="sme_file" type="string">services/smppgw/conf/sme.xml</param>
-  <param name="gw_config" type="string">services/smppgw/conf/config.xml</param>
-  <param name="gw_config_folder" type="string">services/smppgw/conf</param>
-  <param name="gw name" type="string">smppgw</param>
+  <param name="users_config_file" type="string">webapps/scag/WEB-INF/users.xml</param>
+  <param name="sme_file" type="string">services/scag/conf/sme.xml</param>
+  <param name="gw_config" type="string">services/scag/conf/config.xml</param>
+  <param name="gw_config_folder" type="string">services/scag/conf</param>
+  <param name="gw name" type="string">scag</param>
   <section name="gw daemon">
     <param name="host" type="string">@connect.host@</param>
     <param name="port" type="int">@daemon.admin.port@</param>
@@ -16,7 +16,7 @@
   <section name="perfmon">
     <param name="appletport" type="int">@perfmon.applet.port@</param>
     <param name="gwhost" type="string">@connect.host@</param>
-    <param name="gwport" type="int">@perfmon.smppgw.port@</param>
+    <param name="gwport" type="int">@perfmon.scag.port@</param>
   </section>
   <section name="jdbc">
     <param name="driver" type="string">@jdbc.driver@</param>
