@@ -24,6 +24,17 @@ public interface DistributionListAdmin
      */
     public List principals()
         throws AdminException;
+  /**
+       * Returns list of principals for specified address with expression like
+       *
+       * @param address principal address to be retreived
+       * @return list of principals for specified address with expression like
+       * @throws AdminException
+       * @throws PrincipalNotExistsException if principal with specified address doesn't exist
+       *
+       */
+      public List principals(String address)
+          throws AdminException, PrincipalNotExistsException;
     /**
      * Creates new principal
      *
@@ -55,7 +66,7 @@ public interface DistributionListAdmin
     public Principal getPrincipal(String address)
         throws AdminException, PrincipalNotExistsException;
 
-    /**
+      /**
      * Updates principal's maxList and/or maxElements limits
      *
      * @param prc principal with altered maxList and/or maxElements limits
@@ -188,7 +199,11 @@ public interface DistributionListAdmin
      */
     public void alterDistributionList(String dlname, int maxElements)
         throws AdminException, ListNotExistsException;
-
- public  void setInfo(ServiceInfo info); 
+  /**
+     * Update Current ServiceInfo data
+     *
+     * @param info ServiceInfo name to be updated
+     */
+ public  void setInfo(ServiceInfo info);
 
 }

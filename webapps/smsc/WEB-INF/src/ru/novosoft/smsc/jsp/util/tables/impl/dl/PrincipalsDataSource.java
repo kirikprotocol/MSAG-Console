@@ -2,6 +2,8 @@ package ru.novosoft.smsc.jsp.util.tables.impl.dl;
 
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.dl.Principal;
+import ru.novosoft.smsc.admin.dl.DistributionListAdmin;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.util.tables.EmptyResultSet;
 import ru.novosoft.smsc.jsp.util.tables.Query;
@@ -12,6 +14,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 /**
  * Created by IntelliJ IDEA.
@@ -23,23 +26,19 @@ public class PrincipalsDataSource extends AbstractDataSourceImpl
 {
   private Category logger = Category.getInstance(this.getClass());
   private final SMSCAppContext appContext;
-
   public PrincipalsDataSource(SMSCAppContext appContext)
   {
     super(new String[]{"address", "max_lst", "max_el"});
     this.appContext = appContext;
   }
 
-  public QueryResultSet query(Query query_to_run)
+  public QueryResultSet query(Query query_to_run,DistributionListAdmin admin )
   {
-    clear();
-    Connection connection = null;
+    clear(); List list;
     try {
-      connection = appContext.getConnectionPool().getConnection();
-      PreparedStatement statement;
       final PrincipalsFilter filter = (PrincipalsFilter) query_to_run.getFilter();
       if (filter == null || filter.isEmpty())
-        statement = connection.prepareStatement("select * from dl_principals");
+          list=admin.principals();
       else {
         String f = filter.getFilterAddress().replace('*', '%');
         if (f.charAt(f.length() - 1) != '%')
@@ -49,25 +48,17 @@ public class PrincipalsDataSource extends AbstractDataSourceImpl
         else if (f.charAt(0) != '.')
           f = ".0.1." + f;
         logger.debug("filter: \"" + f + "\"");
-        statement = connection.prepareStatement("select * from dl_principals where address like ?");
-        statement.setString(1, f);
+        list=admin.principals(f);
       }
-      ResultSet resultSet = statement.executeQuery();
-      while (resultSet.next()) {
-        add(new Principal(resultSet.getString("address"), resultSet.getInt("max_lst"), resultSet.getInt("max_el")));
+      int i=0;
+      while (i<list.size()) {
+         add((Principal)list.get(i++));
       }
-    } catch (SQLException e) {
-      logger.error("Could not query principals", e);
+    } catch (AdminException e) {
+          e.printStackTrace();
+          logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
       return new EmptyResultSet();
-    } finally {
-      try {
-        if (connection != null)
-          connection.close();
-      } catch (SQLException e) {
-        logger.error("Could not close connection", e);
-        return new EmptyResultSet();
-      }
-    }
+     }
     return super.query(query_to_run);
   }
 }

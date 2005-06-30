@@ -95,7 +95,7 @@ public class DistributionListManager extends Service implements DistributionList
    // this.ds = ds;
   }
 
-  public synchronized void setInfo(ServiceInfo info) 
+  public synchronized void setInfo(ServiceInfo info)
   {
    super.setInfo(info);
   }
@@ -129,6 +129,19 @@ public class DistributionListManager extends Service implements DistributionList
     list = res instanceof List ? (List) res : null;
     return parsePrincipalList(list);
   }
+
+  public synchronized List principals(String address) throws AdminException
+    {
+      List list;
+    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
+        throw new AdminException("SMSC is not running.");
+      final Map args = new HashMap();
+      args.put("address", address);
+      final Object res = call(DL_COMPONENT_ID, GET_PRINCIPALS_METHOD_ID, Type.Types[Type.StringListType], args);
+
+      list = res instanceof List ? (List) res : null;
+      return parsePrincipalList(list);
+    }
 
   public synchronized void addPrincipal(Principal prc) throws AdminException, PrincipalAlreadyExistsException
   {
