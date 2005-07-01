@@ -124,6 +124,7 @@ public class DistributionListManager extends Service implements DistributionList
       throw new AdminException("SMSC is not running.");
 
     final Map args = new HashMap();
+    args.put("address", "");
     final Object res = call(SMSC_COMPONENT_ID, GET_PRINCIPALS_METHOD_ID, Type.Types[Type.StringListType], args);
 
     list = res instanceof List ? (List) res : null;
