@@ -49,11 +49,11 @@ void page_menu_button(HttpSession session, JspWriter out, String name, String va
 		out.print("<td width=\"1px\">|</td>");
 	    out.print("<td width=\"1px\">");
     boolean isNotNull = false;
-    if(session.getAttribute("BRAWSER_TYPE") != null){
+    if(session.getAttribute("BROWSER_TYPE") != null){
         isNotNull = true;
     }
     if(isNotNull){
-	    if(session.getAttribute("BRAWSER_TYPE").equals("IE")){
+	    if(session.getAttribute("BROWSER_TYPE").equals("IE")){
 	        out.print("<a id=\"" + name + "\" jbuttonName=\"" + name + "\" jbuttonValue=\"" + value + "\"" + (enabled ? "" : " disabled")
 				+ ((title != null && title.length() > 0) ? " title=\"" + getLocString(title) + "\"" : "")
 				+ ((onclick != null && onclick.length() > 0) ? (" jbuttonOnclick=\"" + onclick + '"') : "" )

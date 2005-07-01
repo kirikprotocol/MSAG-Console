@@ -48,16 +48,16 @@
    * @param request current request
    */
   public void setBrowser(HttpSession session, HttpServletRequest request){
-      String brawserType = null;
+      String browserType = null;
 
       Cookie[] cookies = request.getCookies();
       if(cookies != null)
       for (int i = 0; i < cookies.length; i++) {
-          if(cookies[i].getName().equals("BRAWSER_TYPE")){
-                 brawserType = cookies[i].getValue();
+          if(cookies[i].getName().equals("BROWSER_TYPE")){
+                 browserType = cookies[i].getValue();
           }
       }
-      session.setAttribute("BRAWSER_TYPE", brawserType);
+      session.setAttribute("BROWSER_TYPE", browserType);
   }
 
   void createMenu(HttpServletRequest request, JspWriter out, String menuName, String msize, Collection menu) throws IOException{
