@@ -40,9 +40,9 @@ public class PrincipalsDataSource extends AbstractDataSourceImpl
       if (filter == null || filter.isEmpty())
           list=admin.principals();
       else {
-        String f = filter.getFilterAddress().replace('*', '%');
-        if (f.charAt(f.length() - 1) != '%')
-          f += '%';
+        String f = filter.getFilterAddress();//.replace('*', '%');
+      //  if (f.charAt(f.length() - 1) != '%')
+       //   f += '%';
         if (f.charAt(0) == '+')
           f = ".1.1." + f;
         else if (f.charAt(0) != '.')
