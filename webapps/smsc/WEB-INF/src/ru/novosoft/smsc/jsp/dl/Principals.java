@@ -80,7 +80,7 @@ public class Principals extends IndexBean
 
     checkedSet.addAll(Arrays.asList(checked));
     if (initialized)
-      principals = new PrincipalsDataSource(appContext).query(new PrincipalsQuery(pageSize, filter, sort, startPosition));
+      principals = new PrincipalsDataSource(appContext).query(new PrincipalsQuery(pageSize, filter, sort, startPosition),admin);
     totalSize = principals.getTotalSize();
 
     return result;
