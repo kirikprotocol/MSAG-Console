@@ -96,6 +96,7 @@ namespace stat {
 
         Hash<TotalStat>    totalStatBySmeId[2];
         Hash<CommonStat>   commonStatByRoute[2];
+        Hash<TrafficRecord> trafficByRouteId;
 
         int     currentIndex;
         bool    bExternalFlush;
@@ -109,6 +110,9 @@ namespace stat {
         void  flushCounters(int index);
         void  dumpCounters(const uint8_t* buff, int buffLen, const tm& flushTM);
 
+        void flushTraffic(const tm& tmDate);
+        void dumpTraffic(const IntHash<TrafficRecord>& traff);
+
         void  calculateTime(tm& flushTM);
         int   calculateToSleep();
 
@@ -121,20 +125,28 @@ namespace stat {
         bool            bFileTM;
         tm              fileTM;
         FILE*           file;
+        FILE*           tfile;
     
         void close();
+        void fflush()
         void write(const void* data, size_t size);
 
+        std::string traffloc;
+        void tfopen();
+        void tfseek(long offset, int whence);
+        void tfclose();
+        void tfflush();
+        void tfwrite(const void* data, size_t size);
+        void initTraffic();
+
         static bool createDir(const std::string& dir);
-        bool createStatDir();
+        bool createStorageDir(const string loc);
 
     public:
 
         virtual const char* taskName() { return "StatisticsTask"; };
         virtual int Execute();
         virtual void stop();
-
-        virtual void flushStatistics();
 
         virtual void registerCommand(SmppCommand cmd);
         virtual void registerCommand(WapCommand cmd);

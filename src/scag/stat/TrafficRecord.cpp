@@ -3,8 +3,9 @@
 namespace scag{
 namespace stat{
 
-TrafficRecord::TrafficRecord(long min_, long hour_, long day_, long month_) :
-	min(min_), hour(hour_), day(day_), month(month_), date(date_)
+TrafficRecord::TrafficRecord(long mincnt_, long hourcnt_, long daycnt_, long monthcnt_, uint8_t year_, uint8_t month_, uint8_t day_, uint8_t hour_, uint8_t min_) :
+	mincnt(mincnt_), hourcnt(hourcnt_), daycnt(daycnt_), monthcnt(monthcnt_), 
+    year(year_), month(month_), day(day_), hour(hour_), min(min_)
 {
 }
 
@@ -15,49 +16,49 @@ TrafficRecord::~TrafficRecord()
 void TrafficRecord::inc(const tm& tmDate)
 {
 	bool update = false;
-	if(year_ != tmDate.tm_year){
-		min = 1;
-		hour = 1;
-		day = 1;
-		month = 1;
+	if(year != tmDate.tm_year){
+		mincnt = 1;
+		hourcnt = 1;
+		daycnt = 1;
+		monthcnt = 1;
 		update = true;
-	}else if(month_ != tmDate.tm_month){
-		min = 1;
-		hour = 1;
-		day = 1;
-		month = 1;
+	}else if(month != tmDate.tm_month){
+		mincnt = 1;
+		hourcnt = 1;
+		daycnt = 1;
+		monthcnt = 1;
 		update = true;
-	}else if(day_ != tmDate.tm_mday){
-		min = 1;
-		hour = 1;
-		day = 1;
-		month++;
+	}else if(day != tmDate.tm_mday){
+		mincnt = 1;
+		hourcnt = 1;
+		daycnt = 1;
+		monthcnt++;
 		update = true;
-	}else if(hour_ != tmDate.tm_hour){
-		hour = 1;
-		min = 1;
-		day++;
-		month++;
+	}else if(hour != tmDate.tm_hour){
+		hourcnt = 1;
+		mincnt = 1;
+		daycnt++;
+		monthcnt++;
 		update = true;
-	}else if(min_ != tmDate.tm_min){
-		min = 1;
-		hour++;
-		day++;
-		month++;
+	}else if(min != tmDate.tm_min){
+		mincnt = 1;
+		hourcnt++;
+		daycnt++;
+		monthcnt++;
 		update = true;
 	}else{
-		min++;
-		hour++;
-		day++;
-		month++;
+		mincnt++;
+		hourcnt++;
+		daycnt++;
+		monthcnt++;
 	}
 	
 	if(update){
-		year_ = tmDate.tm_year;
-		month_ = tmDate.tm_month;
-		day_ = tmDate.tm_day;
-		hour_ = tmDate.tm_hour;
-		min_ = tmDate.tm_min;
+		year = tmDate.tm_year;
+		month = tmDate.tm_month;
+		day = tmDate.tm_day;
+		hour = tmDate.tm_hour;
+		min = tmDate.tm_min;
 	}
 	
 }

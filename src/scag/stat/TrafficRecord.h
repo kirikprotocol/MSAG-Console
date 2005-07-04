@@ -9,21 +9,21 @@ namespace stat {
 class TrafficRecord
 {
 public:
-	TrafficRecord(long min_, long hour_, long day_, long mont_, time_t date_);
+	TrafficRecord(long mincnt, long hourcnt, long daycnt, long monthcnt, uint8_t year_, uint8_t month_, uint8_t day_, uint8_t hour_, uint8_t min_);
 	virtual ~TrafficRecord();
 	void inc(const tm& tmDate);
 protected:
-	long min;
-	long hour;
-	long day;
-	long month;
+	long mincnt;
+	long hourcnt;
+	long daycnt;
+	long monthcnt;
 	
 	// Update date
-	int year_;
-	int month_;
-	int day_;
-	int hour_;
-	int min_;
+	uint8_t year;
+	uint8_t month;
+	uint8_t day;
+	uint8_t hour;
+	uint8_t min;
 }
 
 }

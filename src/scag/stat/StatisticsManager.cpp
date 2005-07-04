@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <vector>
+#include <string>
 
 
 namespace scag {
@@ -30,11 +31,34 @@ const char*    SMSC_STAT_DIR_NAME_FORMAT  = "%04d-%02d";
 const char*    SMSC_STAT_FILE_NAME_FORMAT = "%02d.rts";
 
 StatisticsManager::StatisticsManager(Config config)
-    :  logger(Logger::getInstance("smsc.stat.GWStatisticsManager")),
+    :  logger(Logger::getInstance("scag.stat.StatisticsManager")),
        currentIndex(0), bExternalFlush(false), isStarted(false)
 {
-    if (!createStatDir()) 
+    try
+    {
+        location = config.getString("MessageStorage.statisticsDir");
+    }catch(...)
+    {
+        throw Exception("Can't find parameter in config: 'MessageStorage.statisticsDir'");
+    }
+
+    try
+    {
+        location = config.getString("MessageStorage.trafficDir");
+    }catch(...)
+    {
+        throw Exception("Can't find parameter in config: 'MessageStorage.trafficDir'");
+    }
+
+    if (!createStorageDir(location)) 
         throw Exception("Can't open statistics directory: '%s'", location.c_str());
+
+    if (!createStorageDir(traffloc)) 
+        throw Exception("Can't open traffic directory: '%s'", traffloc.c_str());
+
+    // Opens traffic file and initializes traffic hash
+    tfopen();
+    initTraffic();
 }
 
 StatisticsManager::~StatisticsManager()
@@ -301,6 +325,12 @@ int StatisticsManager::Execute()
         smsc_log_debug(logger, "Execute() >> End wait");
 
         flushCounters(switchCounters());
+
+        tm tmDate;
+        time_t date = time(0);
+        localtime_r(&date, &tmDate);
+        flushTraffic(tmDate);
+
         bExternalFlush = false;
         doneEvent.Signal();
         smsc_log_debug(logger, "Execute() >> Flushed");
@@ -325,16 +355,6 @@ void StatisticsManager::stop()
         exitEvent.Wait();
     }
     smsc_log_debug(logger, "stop() exited");
-}
-
-void StatisticsManager::flushStatistics()
-{
-    MutexGuard flushGuard(flushLock);
-
-    if (doneEvent.isSignaled()) doneEvent.Wait(0);
-    bExternalFlush = true;
-    awakeEvent.Signal();
-    doneEvent.Wait();
 }
 
 int StatisticsManager::switchCounters()
@@ -495,6 +515,7 @@ void StatisticsManager::flush()
         close(); throw exc;
     }
 }
+
 void StatisticsManager::write(const void* data, size_t size)
 {
     if (file && fwrite(data, size, 1, file) != 1) {
@@ -503,6 +524,50 @@ void StatisticsManager::write(const void* data, size_t size)
         close(); throw exc;
     }
 }
+
+void StatisticsManager::tfseek(long offset, int whence)
+{
+    if (tfile && fseek(tfile, offset, whence)) {
+        int error = ferror(tfile);
+        Exception exc("Failed to seek traffic file. Details: %s", strerror(error));
+        tfclose(); throw exc;
+    }
+}
+
+void StatisticsManager::tfclose()
+{
+    if (tfile) { 
+        fclose(tfile); tfile = 0;
+    }
+}
+
+void StatisticsManager::tfopen()
+{
+    std::string loc = traffloc + std::string('/') + "traffic.dat";
+    tfile = fopen(loc.c_str(), "rb+"); // open or create for update
+    if (!tfile)
+        throw Exception("Failed to create/open traffic file '%s'. Details: %s", 
+                            loc.c_str(), strerror(errno));
+}
+
+void StatisticsManager::tfflush()
+{
+    if (tfile && fflush(tfile)) {
+        int error = ferror(file);
+        Exception exc("Failed to flush traffic file. Details: %s", strerror(error));
+        tfclose(); throw exc;
+    }
+}
+
+void StatisticsManager::tfwrite(const void* data, size_t size)
+{
+    if (tfile && fwrite(data, size, 1, tffile) != 1) {
+        int error = ferror(file);
+        Exception exc("Failed to write traffic file. Details: %s", strerror(error));
+        tfclose(); throw exc;
+    }
+}
+
 bool StatisticsManager::createDir(const std::string& dir)
 {
     if (mkdir(dir.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) {
@@ -513,19 +578,19 @@ bool StatisticsManager::createDir(const std::string& dir)
     return true;
 }
 
-bool StatisticsManager::createStatDir()
+bool StatisticsManager::createStorageDir(const std::string loc)
 {
-    int len = strlen(location.c_str());
+    int len = strlen(loc.c_str());
     if(len == 0)
         return false;
 
-    if(strcmp(location.c_str(), "/") == 0)
+    if(strcmp(loc.c_str(), "/") == 0)
         return true;
 
     ++len;
     TmpBuf<char, 512> tmpBuff(len);
     char* buff = tmpBuff.get();
-    memcpy(buff, location.c_str(), len);
+    memcpy(buff, loc.c_str(), len);
     if(buff[len-2] == '/'){
        buff[len-2] = 0;
        if(len > 2){
@@ -638,6 +703,106 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
     write((const void *)&value32, sizeof(value32));
     flush();
     smsc_log_debug(logger, "Statistics data dumped.");
+}
+
+void StatisticsManager::flushTraffic(const tm& tmDate)
+{
+    {
+        MutexGuard mg(switchLock);
+        Hash<TrafficRecord> traff;
+        traff = trafficByRoutedId;
+    }
+
+    dumpTraffic(traff);
+}
+
+void StatisticsManager::dumpTraffic(const IntHash<TrafficRecord>& traff)
+{
+    char buff[25];
+
+    IntHash<TrafficRecord>::Iterator traffit = traff.First();
+    int routeId = 0;
+    TrafficRecord routeTraff;
+    while (traffit.Next(routeId, routeTraff))
+    {
+        // Copies routeId
+        uint32_t val = htonl(routeId);
+        memcpy((void*)buff, (const void*)(&val), 4);
+
+        // Copies counters
+        uint32_t lval = routeTraff.mincnt;
+        val = htonl(lval);
+        memcpy((void*)(buff + 4), (const void*)(&val), 4);
+        lval = routeTraff.hourcnt;
+        val = htonl(lval);
+        memcpy((void*)(buff + 8), (const void*)(&val), 4);
+        lval = routeTraff.daycnt;
+        val = htonl(lval);
+        memcpy((void*)(buff + 12), (const void*)(&val), 4);
+        lval = routeTraff.monthcnt;
+        val = htonl(lval);
+        memcpy((void*)(buff + 16), (const void*)(&val), 4);
+
+        // Copies date
+        memcpy((void*)(buff + 20), (const void*)(&routeTraff.year), 1);
+        memcpy((void*)(buff + 21), (const void*)(&routeTraff.month), 1);
+        memcpy((void*)(buff + 22), (const void*)(&routeTraff.day), 1);
+        memcpy((void*)(buff + 23), (const void*)(&routeTraff.hour), 1);
+        memcpy((void*)(buff + 24), (const void*)(&routeTraff.min), 1);
+
+        int offset = 0;
+        tfseek(offset, SEEK_SET);
+        tfwrite((const void*)buff, 25);
+        tfflush();
+    }
+}
+
+void initTraffic()
+{
+    if(!tfile)
+        return;
+
+    tfseek(0, SEEK_SET);
+
+    char buff[25];
+    uint32_t val;
+    uint8_t year, month, day, hour, min;
+
+    int read_size = -1;
+    while( (read_size = fread(buff, 25, 1, tfile)) == 1){
+
+        // Copies routeId
+        memcpy((void*)&val, (const void*)buff, 4);
+        int id = ntohl(val);
+
+        // Coies counters
+        memcpy((void*)&val, (const void*)(buff + 4), 4);
+        long mincnt = ntohl(val);
+        memcpy((void*)&val, (const void*)(buff + 8), 4);
+        long hourcnt = ntohl(val);
+        memcpy((void*)&val, (const void*)(buff + 12), 4);
+        long daycnt = ntohl(val);
+        memcpy((void*)&val, (const void*)(buff + 16), 4);
+        long monthcnt = ntohl(val);
+
+        // Copies date
+        memcpy((void*)&year, (const void*)(buff + 20), 1);
+        memcpy((void*)&month, (const void*)(buff + 21), 1);
+        memcpy((void*)&day, (const void*)(buff + 22), 1);
+        memcpy((void*)&hour, (const void*)(buff + 23), 1);
+        memcpy((void*)&min, (const void*)(buff + 24), 1);
+
+        TrafficRecord tr(mincnt, hourcnt, daycnt, monthcnt, 
+                         year, month, day, hour, min);
+
+        trafficByRouteId.Insert(id, tr);
+
+    }
+
+    if(read_size != 0){
+        int err = ferror(tfile);
+        throw Exception("Can't read route data from traffic file. Details: %s", strerror(err));
+    }
 }
 
 }//namespace stat
