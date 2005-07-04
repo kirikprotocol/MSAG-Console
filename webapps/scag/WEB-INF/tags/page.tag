@@ -204,7 +204,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
       </table>
       <!-- main menu -->
       <sm-mm:menu>
-        <sm-mm:section menuId="MENU_SCAG_menu" submenuId="MENU_SCAG_submenu" name="SMPP&nbsp;Gateway">
+        <sm-mm:section menuId="MENU_SCAG_menu" submenuId="MENU_SCAG_submenu" name="SCAG&nbsp;Gateway">
           <sm-mm:item url="gw/status"                name="Status"          title=""/>
           <sm-mm:item url="gw/config"                name="Configuration"   title=""/>
           <sm-mm:item url="gw/providers"             name="Providers"       title=""/>
