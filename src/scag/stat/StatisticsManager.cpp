@@ -20,7 +20,6 @@
 #include <vector>
 
 
-namespace smsc {
 namespace scag {
 namespace stat {
 
@@ -30,25 +29,28 @@ const char*    SMSC_STAT_HEADER_TEXT   = "SCAG.STAT";
 const char*    SMSC_STAT_DIR_NAME_FORMAT  = "%04d-%02d";
 const char*    SMSC_STAT_FILE_NAME_FORMAT = "%02d.rts";
 
-GWStatisticsManager::GWStatisticsManager(std::string& _location)
+StatisticsManager::StatisticsManager(Config config)
     :  logger(Logger::getInstance("smsc.stat.GWStatisticsManager")),
-       currentIndex(0), bExternalFlush(false), isStarted(false), storage(_location)
-{      
+       currentIndex(0), bExternalFlush(false), isStarted(false)
+{
+    if (!createStatDir()) 
+        throw Exception("Can't open statistics directory: '%s'", location.c_str());
 }
 
-GWStatisticsManager::~GWStatisticsManager()
+StatisticsManager::~StatisticsManager()
 {
   MutexGuard guard(stopLock);
+  close();
 }
 
-void GWStatisticsManager::incError(IntHash<int>& hash, int errcode)
+void StatisticsManager::incError(IntHash<int>& hash, int errcode)
 {
     int* counter = hash.GetPtr(errcode);
     if (!counter) hash.Insert(errcode, 1);
     else (*counter)++;
 }
 
-void GWStatisticsManager::updateCounter(int counter,const StatInfo& si, int errcode)
+void StatisticsManager::registerCommand(SmppCommand cmd)
 {
   MutexGuard  switchGuard(switchLock);
 
@@ -56,7 +58,7 @@ void GWStatisticsManager::updateCounter(int counter,const StatInfo& si, int errc
   CommonStat* routeSt=0;
   ServiceStat* srvSt=0;
 
-  if (si.smeId && si.smeId[0])
+  /*if (si.smeId && si.smeId[0])
   {
     TotalStat *st = totalStatBySmeId[currentIndex].GetPtr(si.smeId);
     if(!st)
@@ -78,18 +80,18 @@ void GWStatisticsManager::updateCounter(int counter,const StatInfo& si, int errc
       commonStatByRoute[currentIndex].Insert(si.routeId, newStat);
       routeSt=commonStatByRoute[currentIndex].GetPtr(si.routeId);
     }
-  }
+  }*/
 
   using namespace Counters;
 
-  if(counter<cntServiceBase)
+  /*if(counter<cntServiceBase)
   {
     if(smeSt)incError(smeSt->errors,errcode);
     if(routeSt)incError(routeSt->errors,errcode);
-  }
+  }*/
 
-  if(smeSt && si.smeProviderId!=-1)smeSt->providerId=si.smeProviderId;
-  if(routeSt && si.routeProviderId!=-1)routeSt->providerId=si.routeProviderId;
+  //if(smeSt && si.smeProviderId!=-1)smeSt->providerId=si.smeProviderId;
+  //if(routeSt && si.routeProviderId!=-1)routeSt->providerId=si.routeProviderId;
 
   switch(counter)
   {
@@ -124,12 +126,170 @@ void GWStatisticsManager::updateCounter(int counter,const StatInfo& si, int errc
 
 #undef UPDATE_SRV_STAT_CNT
   }
-
-  //incError(statCommon[currentIndex].errors, errcode);
 }
 
+void StatisticsManager::registerCommand(WapCommand cmd)
+{
+  MutexGuard  switchGuard(switchLock);
 
-int GWStatisticsManager::Execute()
+  CommonStat* smeSt=0;
+  CommonStat* routeSt=0;
+  ServiceStat* srvSt=0;
+
+  /*if (si.smeId && si.smeId[0])
+  {
+    TotalStat *st = totalStatBySmeId[currentIndex].GetPtr(si.smeId);
+    if(!st)
+    {
+      TotalStat newStat;
+      totalStatBySmeId[currentIndex].Insert(si.smeId, newStat);
+      st=totalStatBySmeId[currentIndex].GetPtr(si.smeId);
+    }
+    smeSt=&st->common;
+    srvSt=&st->service;
+  }
+
+  if (si.routeId && si.routeId[0])
+  {
+    routeSt = commonStatByRoute[currentIndex].GetPtr(si.routeId);
+    if(!routeSt)
+    {
+      CommonStat newStat;
+      commonStatByRoute[currentIndex].Insert(si.routeId, newStat);
+      routeSt=commonStatByRoute[currentIndex].GetPtr(si.routeId);
+    }
+  }*/
+
+  using namespace Counters;
+
+  /*if(counter<cntServiceBase)
+  {
+    if(smeSt)incError(smeSt->errors,errcode);
+    if(routeSt)incError(routeSt->errors,errcode);
+  }*/
+
+  //if(smeSt && si.smeProviderId!=-1)smeSt->providerId=si.smeProviderId;
+  //if(routeSt && si.routeProviderId!=-1)routeSt->providerId=si.routeProviderId;
+
+  switch(counter)
+  {
+#define INC_STAT(cnt,field) case cnt:{\
+      if(smeSt)smeSt->field++; \
+      if(routeSt)routeSt->field++; \
+      }break;
+
+    INC_STAT(cntAccepted,accepted)
+    INC_STAT(cntRejected,rejected)
+    INC_STAT(cntDelivered,delivered)
+    INC_STAT(cntTemp,temperror)
+    INC_STAT(cntPerm,permerror)
+
+#undef INC_STAT
+
+#define UPDATE_SRV_STAT_CNT(name) \
+    case cnt##name: \
+      if(srvSt)srvSt->name++; \
+      break;
+
+    UPDATE_SRV_STAT_CNT(DeniedByBilling)
+    UPDATE_SRV_STAT_CNT(SmsTrOk)
+    UPDATE_SRV_STAT_CNT(SmsTrFailed)
+    UPDATE_SRV_STAT_CNT(SmsTrBilled)
+    UPDATE_SRV_STAT_CNT(UssdTrFromScOk)
+    UPDATE_SRV_STAT_CNT(UssdTrFromScFailed)
+    UPDATE_SRV_STAT_CNT(UssdTrFromScBilled)
+    UPDATE_SRV_STAT_CNT(UssdTrFromSmeOk)
+    UPDATE_SRV_STAT_CNT(UssdTrFromSmeFailed)
+    UPDATE_SRV_STAT_CNT(UssdTrFromSmeBilled)
+
+#undef UPDATE_SRV_STAT_CNT
+  }
+}
+
+void StatisticsManager::registerCommand(MmsCommand cmd)
+{
+  MutexGuard  switchGuard(switchLock);
+
+  CommonStat* smeSt=0;
+  CommonStat* routeSt=0;
+  ServiceStat* srvSt=0;
+
+  /*if (si.smeId && si.smeId[0])
+  {
+    TotalStat *st = totalStatBySmeId[currentIndex].GetPtr(si.smeId);
+    if(!st)
+    {
+      TotalStat newStat;
+      totalStatBySmeId[currentIndex].Insert(si.smeId, newStat);
+      st=totalStatBySmeId[currentIndex].GetPtr(si.smeId);
+    }
+    smeSt=&st->common;
+    srvSt=&st->service;
+  }
+
+  if (si.routeId && si.routeId[0])
+  {
+    routeSt = commonStatByRoute[currentIndex].GetPtr(si.routeId);
+    if(!routeSt)
+    {
+      CommonStat newStat;
+      commonStatByRoute[currentIndex].Insert(si.routeId, newStat);
+      routeSt=commonStatByRoute[currentIndex].GetPtr(si.routeId);
+    }
+  }*/
+
+  using namespace Counters;
+
+  /*if(counter<cntServiceBase)
+  {
+    if(smeSt)incError(smeSt->errors,errcode);
+    if(routeSt)incError(routeSt->errors,errcode);
+  }*/
+
+  //if(smeSt && si.smeProviderId!=-1)smeSt->providerId=si.smeProviderId;
+  //if(routeSt && si.routeProviderId!=-1)routeSt->providerId=si.routeProviderId;
+
+  switch(counter)
+  {
+#define INC_STAT(cnt,field) case cnt:{\
+      if(smeSt)smeSt->field++; \
+      if(routeSt)routeSt->field++; \
+      }break;
+
+    INC_STAT(cntAccepted,accepted)
+    INC_STAT(cntRejected,rejected)
+    INC_STAT(cntDelivered,delivered)
+    INC_STAT(cntTemp,temperror)
+    INC_STAT(cntPerm,permerror)
+
+#undef INC_STAT
+
+#define UPDATE_SRV_STAT_CNT(name) \
+    case cnt##name: \
+      if(srvSt)srvSt->name++; \
+      break;
+
+    UPDATE_SRV_STAT_CNT(DeniedByBilling)
+    UPDATE_SRV_STAT_CNT(SmsTrOk)
+    UPDATE_SRV_STAT_CNT(SmsTrFailed)
+    UPDATE_SRV_STAT_CNT(SmsTrBilled)
+    UPDATE_SRV_STAT_CNT(UssdTrFromScOk)
+    UPDATE_SRV_STAT_CNT(UssdTrFromScFailed)
+    UPDATE_SRV_STAT_CNT(UssdTrFromScBilled)
+    UPDATE_SRV_STAT_CNT(UssdTrFromSmeOk)
+    UPDATE_SRV_STAT_CNT(UssdTrFromSmeFailed)
+    UPDATE_SRV_STAT_CNT(UssdTrFromSmeBilled)
+
+#undef UPDATE_SRV_STAT_CNT
+  }
+}
+
+bool StatisticsManager::checkTraffic(string routeId, int period)
+{
+        return true;
+}
+
+int StatisticsManager::Execute()
 {
     smsc_log_debug(logger, "Execute() started (%d)", isStopping);
     isStarted = true; bExternalFlush = false;
@@ -151,7 +311,7 @@ int GWStatisticsManager::Execute()
     return 0;
 }
 
-void GWStatisticsManager::stop()
+void StatisticsManager::stop()
 {
     MutexGuard guard(stopLock);
 
@@ -167,7 +327,7 @@ void GWStatisticsManager::stop()
     smsc_log_debug(logger, "stop() exited");
 }
 
-void GWStatisticsManager::flushStatistics()
+void StatisticsManager::flushStatistics()
 {
     MutexGuard flushGuard(flushLock);
 
@@ -177,7 +337,7 @@ void GWStatisticsManager::flushStatistics()
     doneEvent.Wait();
 }
 
-int GWStatisticsManager::switchCounters()
+int StatisticsManager::switchCounters()
 {
     MutexGuard  switchGuard(switchLock);
 
@@ -186,24 +346,14 @@ int GWStatisticsManager::switchCounters()
     return flushIndex;
 }
 
-uint32_t GWStatisticsManager::calculatePeriod()
-{
-    time_t currTime = time(0);
-    if (!bExternalFlush) currTime -= 60;
-    tm tmCT;
-    localtime_r(&currTime, &tmCT);
-    return  (tmCT.tm_year+1900)*1000000+(tmCT.tm_mon+1)*10000+
-            (tmCT.tm_mday)*100+tmCT.tm_hour;
-}
-
-void GWStatisticsManager::calculateTime(tm& flushTM)
+void StatisticsManager::calculateTime(tm& flushTM)
 {
     time_t flushTime = time(0);
     if (!bExternalFlush) flushTime -= SMSC_STAT_DUMP_INTERVAL;
     gmtime_r(&flushTime, &flushTM); flushTM.tm_sec = 0;
 }
 
-int GWStatisticsManager::calculateToSleep() // returns msecs to next hour
+int StatisticsManager::calculateToSleep() // returns msecs to next hour
 {
     time_t currTime = time(0);
     time_t nextTime = currTime + 60;
@@ -213,7 +363,7 @@ int GWStatisticsManager::calculateToSleep() // returns msecs to next hour
     return (((nextTime-currTime)*1000)+1);
 }
 
-void GWStatisticsManager::flushCounters(int index)
+void StatisticsManager::flushCounters(int index)
 {
 
     tm flushTM; calculateTime(flushTM);
@@ -313,7 +463,7 @@ void GWStatisticsManager::flushCounters(int index)
             smeStat = 0;
         }
 
-        storage.dump(buff, buff.GetPos(), flushTM);
+        dumpCounters(buff, buff.GetPos(), flushTM);
 
     }
     catch (Exception& exc)
@@ -325,32 +475,19 @@ void GWStatisticsManager::flushCounters(int index)
 
 }
 
-void GWStatisticsManager::resetCounters(int index)
+void StatisticsManager::resetCounters(int index)
 {
-  //statCommon[index].Reset();
   totalStatBySmeId[index].Empty();
   commonStatByRoute[index].Empty();
 }
 
-StatStorage::StatStorage(const std::string& _location)
-    : logger(Logger::getInstance("smsc.stat.StatStorage")),
-      location(_location), bFileTM(false), file(0) 
-{
-    if (!createStatDir()) 
-        throw Exception("Can't open statistics directory: '%s'", location.c_str());
-}
-StatStorage::~StatStorage()
-{
-    close();
-}
-
-void StatStorage::close()
+void StatisticsManager::close()
 {
     if (file) { 
         bFileTM = false; fclose(file); file = 0;
     }
 }
-void StatStorage::flush()
+void StatisticsManager::flush()
 {
     if (file && fflush(file)) {
         int error = ferror(file);
@@ -358,7 +495,7 @@ void StatStorage::flush()
         close(); throw exc;
     }
 }
-void StatStorage::write(const void* data, size_t size)
+void StatisticsManager::write(const void* data, size_t size)
 {
     if (file && fwrite(data, size, 1, file) != 1) {
         int error = ferror(file);
@@ -366,7 +503,7 @@ void StatStorage::write(const void* data, size_t size)
         close(); throw exc;
     }
 }
-bool StatStorage::createDir(const std::string& dir)
+bool StatisticsManager::createDir(const std::string& dir)
 {
     if (mkdir(dir.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) {
         if (errno == EEXIST) return false;
@@ -376,7 +513,7 @@ bool StatStorage::createDir(const std::string& dir)
     return true;
 }
 
-bool StatStorage::createStatDir()
+bool StatisticsManager::createStatDir()
 {
     int len = strlen(location.c_str());
     if(len == 0)
@@ -440,7 +577,7 @@ bool StatStorage::createStatDir()
     return true;
 }
 
-void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
+void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm& flushTM)
 {
     smsc_log_debug(logger, "Statistics dump called for %02d:%02d GMT", 
                    flushTM.tm_hour, flushTM.tm_min);
@@ -505,4 +642,3 @@ void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
 
 }//namespace stat
 }//namespace scag
-}//namespace smsc

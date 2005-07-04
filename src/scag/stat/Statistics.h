@@ -5,9 +5,16 @@
 #include "router/route_types.h"
 #include "sms/sms.h"
 
-namespace smsc {
+#include "scag/transport/smpp/SmppCommand.h"
+#include "scag/transport/smpp/WapCommand.h"
+#include "scag/transport/smpp/MmsCommand.h"
+
 namespace scag {
 namespace stat {
+
+using scag::transport::smpp::SmppCommand;
+using scag::transport::smpp::WapCommand;
+using scag::transport::smpp::MmsCommand;
 
     namespace Counters{
         enum StatCounter{
@@ -32,59 +39,23 @@ namespace stat {
         };
     }
 
-    struct StatInfo{
-      char smeId[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
-      char routeId[smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH+1];
-      int  smeProviderId;
-      int  routeProviderId;
-      StatInfo()
-      {
-        smeId[0]=0;
-        routeId[0]=0;
-        smeProviderId=-1;
-        routeProviderId=-1;
-      }
-      StatInfo(smsc::smeman::SmeProxy* proxy)
-      {
-        strncpy(smeId,proxy->getSystemId(),sizeof(smeId));
-        smeProviderId=proxy->getProviderId();
-        routeId[0]=0;
-        routeProviderId=-1;
-      }
-      StatInfo(smsc::smeman::SmeProxy* proxy,const smsc::router::RouteInfo& ri)
-      {
-        strncpy(smeId,proxy->getSystemId(),sizeof(smeId));
-        smeProviderId=proxy->getProviderId();
-        strncpy(routeId,ri.routeId.c_str(),sizeof(routeId));
-        routeProviderId=ri.providerId;
-      }
-      StatInfo(const StatInfo& src)
-      {
-        memcpy(smeId,src.smeId,sizeof(smeId));
-        memcpy(routeId,src.routeId,sizeof(routeId));
-        smeProviderId=src.smeProviderId;
-        routeProviderId=src.routeProviderId;
-      }
-    };
 
-
-    class IStatistics
+    class Statistics
     {
     public:
 
-        virtual void flushStatistics() = 0;
+        virtual void registerCommand(SmppCommand cmd) = 0;
+        virtual void registerCommand(WapCommand cmd) = 0;
+        virtual void registerCommand(MmsCommand cmd) = 0;
+        virtual bool checkTraffic(string routeId, int period) = 0;
 
-        virtual void updateCounter(int counter,const StatInfo& si,int errorCode=0) = 0;
-
-        virtual ~IStatistics() {};
+        virtual ~Statistics() {};
 
     protected:
-
-        IStatistics() {};
+        Statistics() {};
     };
 
 }//namespace stat
 }//namespace scag
-}//namespace smsc
 
 #endif // SMSC_STAT_STATISTICS

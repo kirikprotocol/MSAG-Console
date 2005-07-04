@@ -14,23 +14,24 @@
 #include <logger/Logger.h>
 
 #include <util/timeslotcounter.hpp>
-
-namespace smsc {
+#include "util/config/Config.h"
 
 namespace scag {
 
 namespace stat {
 
-    using namespace smsc::db;
-    using namespace core::threads;
-    using namespace core::synchronization;
+    //using namespace smsc::db;
+    using namespace smsc::core::threads;
+    using namespace smsc::core::synchronization;
 
-    using core::buffers::IntHash;
-    using core::buffers::TmpBuf;
-    using core::buffers::Hash;
+    using smsc::core::buffers::IntHash;
+    //using core::buffers::TmpBuf;
+    using smsc::core::buffers::Hash;
 
     using smsc::logger::Logger;
-    using smsc::util::TimeSlotCounter;
+    //using smsc::util::TimeSlotCounter;
+
+    using smsc::util::config::Config;
 
     struct CommonStat
     {
@@ -82,33 +83,7 @@ namespace stat {
       }
     };
 
-    class StatStorage
-    {
-    private:
-    
-        smsc::logger::Logger    *logger;
-
-        std::string     location;
-        bool            bFileTM;
-        tm              fileTM;
-        FILE*           file;
-    
-        void close();
-        void flush();
-        void write(const void* data, size_t size);
-
-        static bool createDir(const std::string& dir);
-        bool createStatDir();
-    
-    public:
-    
-        StatStorage(const std::string& location);
-        ~StatStorage();
-        
-        void dump(const uint8_t* buff, int buffLen, const tm& flushTM);
-    };
-
-    class GWStatisticsManager : public IStatistics, public ThreadedTask
+    class StatisticsManager : public Statistics, public ThreadedTask
     {
       protected:
 
@@ -129,17 +104,29 @@ namespace stat {
         Event   awakeEvent, exitEvent, doneEvent;
         bool    isStarted;
 
-        StatStorage storage;
-
-        int switchCounters();
+        int   switchCounters();
         void  resetCounters(int index);
         void  flushCounters(int index);
+        void  dumpCounters(const uint8_t* buff, int buffLen, const tm& flushTM);
 
         void  calculateTime(tm& flushTM);
-        uint32_t calculatePeriod();
-        int      calculateToSleep();
+        int   calculateToSleep();
 
         void  incError(IntHash<int>& hash, int errcode);
+
+        //File storage
+    private:
+
+        std::string     location;
+        bool            bFileTM;
+        tm              fileTM;
+        FILE*           file;
+    
+        void close();
+        void write(const void* data, size_t size);
+
+        static bool createDir(const std::string& dir);
+        bool createStatDir();
 
     public:
 
@@ -149,15 +136,16 @@ namespace stat {
 
         virtual void flushStatistics();
 
-        virtual void updateCounter(int counter,const StatInfo& si,int errorCode);
+        virtual void registerCommand(SmppCommand cmd);
+        virtual void registerCommand(WapCommand cmd);
+        virtual void registerCommand(MmsCommand cmd);
+        bool checkTraffic(string routeId, int period);
 
-        //GWStatisticsManager(DataSource& ds);
-        GWStatisticsManager(std::string& location);
-        virtual ~GWStatisticsManager();
+        StatisticsManager(Config config);
+        virtual ~StatisticsManager();
     };
 
 }//namespace stat
 }//namespace scag
-}//namespace smsc
 
 #endif //SMSC_STAT_STATISTICS_MANAGER
