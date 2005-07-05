@@ -326,10 +326,7 @@ int StatisticsManager::Execute()
 
         flushCounters(switchCounters());
 
-        tm tmDate;
-        time_t date = time(0);
-        localtime_r(&date, &tmDate);
-        flushTraffic(tmDate);
+        flushTraffic();
 
         bExternalFlush = false;
         doneEvent.Signal();
@@ -360,6 +357,11 @@ void StatisticsManager::stop()
 int StatisticsManager::switchCounters()
 {
     MutexGuard  switchGuard(switchLock);
+
+    tm tmDate;
+    time_t date = time(0);
+    localtime_r(&date, &tmDate);
+    incTraffic(tmDate);
 
     int flushIndex = currentIndex;
     currentIndex ^= 1; //switch between 0 and 1
@@ -705,7 +707,7 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
     smsc_log_debug(logger, "Statistics data dumped.");
 }
 
-void StatisticsManager::flushTraffic(const tm& tmDate)
+void StatisticsManager::flushTraffic()
 {
     {
         MutexGuard mg(switchLock);
@@ -719,6 +721,8 @@ void StatisticsManager::flushTraffic(const tm& tmDate)
 void StatisticsManager::dumpTraffic(const IntHash<TrafficRecord>& traff)
 {
     char buff[25];
+    long mincnt_, hourcnt_, daycnt_, monthcnt_; 
+    uint8_t year_, month_, day_, hour_, min_;
 
     IntHash<TrafficRecord>::Iterator traffit = traff.First();
     int routeId = 0;
@@ -729,26 +733,29 @@ void StatisticsManager::dumpTraffic(const IntHash<TrafficRecord>& traff)
         uint32_t val = htonl(routeId);
         memcpy((void*)buff, (const void*)(&val), 4);
 
+        routeTraff.getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                                    year_, month_, day_, hour_, min_);
+
         // Copies counters
-        uint32_t lval = routeTraff.mincnt;
+        uint32_t lval = mincnt_;
         val = htonl(lval);
         memcpy((void*)(buff + 4), (const void*)(&val), 4);
-        lval = routeTraff.hourcnt;
+        lval = hourcnt_;
         val = htonl(lval);
         memcpy((void*)(buff + 8), (const void*)(&val), 4);
-        lval = routeTraff.daycnt;
+        lval = daycnt_;
         val = htonl(lval);
         memcpy((void*)(buff + 12), (const void*)(&val), 4);
-        lval = routeTraff.monthcnt;
+        lval = monthcnt_;
         val = htonl(lval);
         memcpy((void*)(buff + 16), (const void*)(&val), 4);
 
         // Copies date
-        memcpy((void*)(buff + 20), (const void*)(&routeTraff.year), 1);
-        memcpy((void*)(buff + 21), (const void*)(&routeTraff.month), 1);
-        memcpy((void*)(buff + 22), (const void*)(&routeTraff.day), 1);
-        memcpy((void*)(buff + 23), (const void*)(&routeTraff.hour), 1);
-        memcpy((void*)(buff + 24), (const void*)(&routeTraff.min), 1);
+        memcpy((void*)(buff + 20), (const void*)(&year_), 1);
+        memcpy((void*)(buff + 21), (const void*)(&month_), 1);
+        memcpy((void*)(buff + 22), (const void*)(&day_), 1);
+        memcpy((void*)(buff + 23), (const void*)(&hour_), 1);
+        memcpy((void*)(buff + 24), (const void*)(&min_), 1);
 
         int offset = 0;
         tfseek(offset, SEEK_SET);
@@ -767,30 +774,32 @@ void initTraffic()
     char buff[25];
     uint32_t val;
     uint8_t year, month, day, hour, min;
+    int id;
+    long mincnt, hourcnt, daycnt, monthcnt;
 
     int read_size = -1;
     while( (read_size = fread(buff, 25, 1, tfile)) == 1){
 
         // Copies routeId
         memcpy((void*)&val, (const void*)buff, 4);
-        int id = ntohl(val);
+        id = ntohl(val);
 
         // Coies counters
         memcpy((void*)&val, (const void*)(buff + 4), 4);
-        long mincnt = ntohl(val);
+        mincnt = ntohl(val);
         memcpy((void*)&val, (const void*)(buff + 8), 4);
-        long hourcnt = ntohl(val);
+        hourcnt = ntohl(val);
         memcpy((void*)&val, (const void*)(buff + 12), 4);
-        long daycnt = ntohl(val);
+        daycnt = ntohl(val);
         memcpy((void*)&val, (const void*)(buff + 16), 4);
-        long monthcnt = ntohl(val);
+        monthcnt = ntohl(val);
 
         // Copies date
-        memcpy((void*)&year, (const void*)(buff + 20), 1);
-        memcpy((void*)&month, (const void*)(buff + 21), 1);
-        memcpy((void*)&day, (const void*)(buff + 22), 1);
-        memcpy((void*)&hour, (const void*)(buff + 23), 1);
-        memcpy((void*)&min, (const void*)(buff + 24), 1);
+        memcpy((void*)&year,    (const void*)(buff + 20), 1);
+        memcpy((void*)&month,   (const void*)(buff + 21), 1);
+        memcpy((void*)&day,     (const void*)(buff + 22), 1);
+        memcpy((void*)&hour,    (const void*)(buff + 23), 1);
+        memcpy((void*)&min,     (const void*)(buff + 24), 1);
 
         TrafficRecord tr(mincnt, hourcnt, daycnt, monthcnt, 
                          year, month, day, hour, min);
@@ -802,6 +811,26 @@ void initTraffic()
     if(read_size != 0){
         int err = ferror(tfile);
         throw Exception("Can't read route data from traffic file. Details: %s", strerror(err));
+    }
+}
+
+void incTraffc(const tm& tmDate)
+{
+    IntHash<TrafficRecord>::Iterator traffit = traff.First();
+    int routeId = 0;
+    TrafficRecord routeTraff;
+    while (traffit.Next(routeId, routeTraff))
+    {
+        routeTraff.inc(tmDate);
+    }
+}
+
+void incRouteTraffic(const int routeId, const tm& tmDate)
+{
+    TrafficRecord *tr = 0;
+    tr = trafficByRouteId.GetPtr(routeId);
+    if(tr){
+        tr->inc(tmDate);
     }
 }
 

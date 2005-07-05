@@ -110,8 +110,10 @@ namespace stat {
         void  flushCounters(int index);
         void  dumpCounters(const uint8_t* buff, int buffLen, const tm& flushTM);
 
-        void flushTraffic(const tm& tmDate);
+        void flushTraffic();
         void dumpTraffic(const IntHash<TrafficRecord>& traff);
+        void incTraffic(const tm& tmDate);
+        void incRouteTraffic(const int routeId, const tm& tmDate);
 
         void  calculateTime(tm& flushTM);
         int   calculateToSleep();

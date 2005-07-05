@@ -63,5 +63,18 @@ void TrafficRecord::inc(const tm& tmDate)
 	
 }
 
+void TrafficRecord::getRouteData(long& mincnt_, long& hourcnt_, long& daycnt_, long& monthcnt_, uint8_t& year_, uint8_t& month_, uint8_t& day_, uint8_t& hour_, uint8_t& min_)
+{
+    mincnt_ = mincnt;
+    hourcnt_ = hourcnt;
+    daycnt_ = daycnt;
+    monthcnt_ = monthcnt;
+    year_ = year;
+    month_ = month;
+    day_ = day;
+    hour_ = hour;
+    min_ = min;
+}
+
 }
 }
