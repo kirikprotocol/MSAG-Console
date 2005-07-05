@@ -1074,8 +1074,8 @@ Check browser compatibility and create the menus.
 function initjsDOMenu() { // Public method
   if (document.createElement && document.getElementById) {
     createjsDOMenu();
-    //document.cookie = "BRAWSER_TYPE" + "=" + getBrawserType();
-    document.cookie = "BRAWSER_TYPE" + "=" + escape(getBrawserType());
+    //document.cookie = "BROWSER_TYPE" + "=" + getBrawserType();
+    document.cookie = "BROWSER_TYPE" + "=" + escape(getBrawserType());
   }
 }
 
