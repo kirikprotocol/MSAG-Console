@@ -9,6 +9,7 @@
 
 #include "logger/additional/StderrAppender.h"
 #include "logger/additional/RollingFileAppender.h"
+#include "logger/additional/RollingDayAppender.h"
 #include "util/cstrings.h"
 #include "core/synchronization/Mutex.hpp"
 
@@ -262,6 +263,9 @@ void Logger::configureAppenders(const ConfigReader & configs) throw (Exception)
     }
     else if (strcasecmp(info->type.get(), "file") == 0) {
       appenders.Insert(key, new RollingFileAppender(key, *info->params));
+    }
+    else if (strcasecmp(info->type.get(), "dayfile") == 0) {
+      appenders.Insert(key, new RollingDayAppender(key, *info->params));
     }
     else {
       std::string msg("Unknown appender type: \"");
