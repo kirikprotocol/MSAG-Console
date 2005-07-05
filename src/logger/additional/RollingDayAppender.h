@@ -26,8 +26,7 @@ private:
     void clearLogDir(time_t dat);
 	smsc::core::synchronization::Mutex mutex;
 	unsigned int maxBackupIndex;
-    std::string pathname;
-    std::string prefix;
+    std::string filename;
 	FILE * file;
 	long currentFilePos;
     time_t date_;

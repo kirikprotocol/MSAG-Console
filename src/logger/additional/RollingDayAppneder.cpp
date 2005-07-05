@@ -21,10 +21,23 @@ using namespace smsc::core::buffers;
 
 void RollingDayAppender::clearLogDir(time_t dat)
 {
+  char fn[512];
+  sprintf(fn, "%s", filename.c_str());
+  char *p = strrchr(fn, '/');
+  char *c = fn;
+  std::string pathname = "";
+  if(p){
+      int len = p - fn;
+      char path[512];
+      fn[len] = 0;
+      pathname = fn;
+      c = fn + len + 1;
+  }
+  std::string fname = c;
 
   DIR *dirp;
   dirent *dp;
-  dirp = opendir(pathname.c_str());
+  dirp = opendir(filename.c_str());
 
   std::vector<std::string> fnames(0);
 
@@ -32,8 +45,8 @@ void RollingDayAppender::clearLogDir(time_t dat)
       errno = 0;
       if ((dp = readdir(dirp)) != NULL) {
           int year = 0, month = 0, day = 0, res = 0;
-          std::string fname = prefix + "%02d_%02d_%04d.log";
-            if((res = sscanf(fname.c_str(), dp->d_name, &day, &month, &year)) == 3){
+          std::string fname_ = fname + ".%04d-%02d-%02d";
+            if((res = sscanf(fname_.c_str(), dp->d_name, &year, &month, &day)) == 3){
 
                     // Saves old files
                     time_t fdate;
@@ -49,8 +62,12 @@ void RollingDayAppender::clearLogDir(time_t dat)
 				    
 				    int delay = (int)( difftime(date_, fdate)/(3600.*24.) );
 				    //printf("delay: %d\n", delay);
-				    if(delay >= maxBackupIndex)
-					    fnames.push_back(pathname + std::string("/") + std::string(dp->d_name));
+				    if(delay >= maxBackupIndex){
+                        if(pathname.length() == 0)
+                            fnames.push_back(pathname + std::string("/") + std::string(dp->d_name));
+                        else
+                            fnames.push_back(std::string(dp->d_name));
+                    }
 			    
 		    }
       } else {
@@ -79,22 +96,10 @@ RollingDayAppender::RollingDayAppender(const char * const _name, const Propertie
   if (properties.Exists("maxindex"))
     maxBackupIndex = atoi(properties["maxindex"]);
 
-  if (properties.Exists("dir")){
-    std::auto_ptr<char> path( cStringCopy(properties["dir"]) );
-    if(strlen(path.get()) == 0)
-        pathname = ".";
-    else{
-        if(path.get()[strlen(path.get()) - 1] == '/')
-            path.get()[strlen(path.get()) - 1] = 0;
-        pathname = path.get();
-    }
-  }else
-    pathname = ".";
-
-  if (properties.Exists("prefix")){
-    prefix = cStringCopy(properties["prefix"]);
-  }else
-    prefix = "";
+  if (properties.Exists("name"))
+    filename = cStringCopy(properties["name"]);
+  else
+    filename = cStringCopy("smsc.log");
 
   date_ = time(0);
   tm rtm; localtime_r(&date_, &rtm);
@@ -110,9 +115,8 @@ RollingDayAppender::RollingDayAppender(const char * const _name, const Propertie
   // Clear log dir
   clearLogDir(date_);
   char name_[512];
-  sprintf(name_, "%02d_%02d_%04d.log", day, month, year);
-  std::string path = pathname + "/";
-  path += prefix + name_;
+  sprintf(name_, ".%04d-%02d-%02d", year, month, day);
+  std::string path = filename + name_;
   file = fopen(path.c_str(), "a");
 }
 
@@ -134,9 +138,8 @@ void RollingDayAppender::rollover(time_t dat) throw()
   rtm.tm_isdst = -1;
 
   char name_[512];
-  sprintf(name_, "%02d_%02d_%04d.log", day, month, year);
-  std::string path = pathname + "/";
-  path += prefix + name_;
+  sprintf(name_, ".%04d-%02d-%02d", year, month, day);
+  std::string path = filename + name_;
   file = fopen(path.c_str(), "w");
   date_ = dat;
 
