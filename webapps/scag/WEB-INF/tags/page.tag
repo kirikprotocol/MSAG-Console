@@ -72,7 +72,8 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
   <script src="/scripts/scripts.js" type="text/javascript"></script>
   <script src="/scripts/calendar.js" type="text/javascript"></script>
 </head>
-<body onload="${onLoad}">
+<%--<body onload="${onLoad}">--%>
+<body onload="initjsDOMenu()">
 
   <!--calendar-->
   <iframe id=calendarIFrame class=calendarHiddenLayer2 src="/images/blank.html"></iframe>
@@ -203,51 +204,30 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
       </tr>
       </table>
       <!-- main menu -->
-      <sm-mm:menu>
-        <sm-mm:section menuId="MENU_SCAG_menu" submenuId="MENU_SCAG_submenu" name="SCAG&nbsp;Gateway">
-          <sm-mm:item url="gw/status"                name="Status"          title=""/>
-          <sm-mm:item url="gw/config"                name="Configuration"   title=""/>
-          <sm-mm:item url="gw/providers"             name="Providers"       title=""/>
-          <sm-mm:item url="gw/smscs"                 name="Service centers" title=""/>
-          <!--sm-mm:item url="smsc_service/logging.jsp" name="Logging"         title=""/-->
-          <sm-mm:item url="gw/users"                 name="Users"           title=""/>
-          <!--sm-mm:item url="gw/resources"             name="Resources"       title=""/-->
-          <!--sm-mm:item url="journal"                  name="Journal"         title=""/-->
-        </sm-mm:section>
+      <sm-mm:top_menu/>
 
-        <sm-mm:section menuId="MENU0_Statistics_menu" submenuId="MENU0_Statistics_submenu" name="Statistics">
-          <sm-mm:item url="stat/monitor" name="Monitor"    target="SMPP GW Perfomance monitor" title="SMPP GW Perfomance monitor" onClick="return openPerfMon();"/>
-          <sm-mm:item url="stat/stat"    name="Statistics" title="SMPP GW Statistics"/>
-        </sm-mm:section>
-
-        <sm-mm:section menuId="MENU0_Routing_menu" submenuId="MENU0_Routing_submenu" name="Routing">
-          <sm-mm:item url="routing/subjects" name="Subjects"       title=""/>
-          <sm-mm:item url="routing/routes"   name="Routes"         title=""/>
-          <sm-mm:item url="routing/billing"  name="Billing"        title=""/>
-          <sm-mm:item url="routing/tracer"   name="Routes tracing" title=""/>
-        </sm-mm:section>
-
-        <sm-mm:section menuId="MENU0_Services_menu" submenuId="MENU0_Services_submenu" name="Services">
-          <sm-mm:item url="services/sme" name="SME's" title=""/>
-          <sm-mm:item url="services/services" name="Services" title=""/>
-        </sm-mm:section>
-      </sm-mm:menu>
-
-      <table id=MAIN_MENU_BACKGROUND_TABLE border=0 cellspacing=0 cellpadding=0 class=main_menu_background>
-        <tr>
-          <td width=80 background="/images/smsc_13.jpg"></td>
-          <td background="/images/smsc_14.jpg">&nbsp;</td>
-          <td width=80 background="/images/smsc_16.jpg"></td>
-        </tr>
-      </table>
-      <span id="MENU0_NONE"></span>
-      <table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
-        <tr>
-          <th background="/images/smsc_17.jpg" nowrap>${title}</th>
-          <td align="right">&nbsp;<%if (request.getUserPrincipal() != null) {%><span id="SCAGStatusSpan" datasrc=#tdcSCAGStatusObject DATAFORMATAS=html datafld="status"/><%}%></td>
-          <td width=12px background="/images/smsc_19.jpg" style="padding-right:0px;"></td>
-        </tr>
-      </table>
+      <table width="100%" id="MAIN_MENU_TABLE" border="0"  cellspacing="0" cellpadding="0" class="main_menu">
+		<tr>
+			<td background="/images/smsc_13.jpg" width="26"></td>
+			<td background="/images/smsc_14.jpg" width="100%">&nbsp;</td>
+            <%
+                if (request != null && request.getUserPrincipal() != null) {
+            %>
+                   <td background="/images/smsc_14.jpg"><a ID="MENU0_LOGOUT" href="logout.jsp">Logout&nbsp;"<%=request.getUserPrincipal().getName()%>"</a></td>
+            <%
+                }
+            %>
+			<td background="/images/smsc_16.jpg" width="52"></td>
+		</tr>
+		</table>
+		<span id="MENU0_NONE"></span>
+        <table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
+           <tr>
+             <th background="/images/smsc_17.jpg" nowrap>${title}</th>
+             <td align="right">&nbsp;<%if (request.getUserPrincipal() != null) {%><span id="SCAGStatusSpan" datasrc="#tdcSCAGStatusObject" DATAFORMATAS="html" datafld="status"/><%}%></td>
+             <td width=12px background="/images/smsc_19.jpg" style="padding-right:0px;"></td>
+           </tr>
+        </table>
 
       <form name="opForm" id=opForm
                 <c:if test="${!empty form_uri}">action="${form_uri}"</c:if>
