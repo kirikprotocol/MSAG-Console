@@ -173,6 +173,7 @@
     <param name="protectThreshold" type="int">20</param>
     <param name="allowedDeliveryFailures" type="int">5</param>
     <param name="lookAheadTime" type="int">5</param>
+    <param name="statTimeFrame" type="int">1</param>
   </section>
 
   <section name="acl">
