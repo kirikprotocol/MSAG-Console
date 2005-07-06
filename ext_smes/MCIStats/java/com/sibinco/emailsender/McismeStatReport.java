@@ -192,7 +192,7 @@ public class McismeStatReport {
             buffer.append("\n\n");
             buffer.append(unicAbonents.format(null)).append(" ").append(LogReader.getAbonents(log_unic_abonents, new Date(), "D"));
             buffer.append("\n\n");
-            buffer.append(applyToServise.format(null)).append(" ").append(LogReader.applyToServise(mciprof_file, new Date(), "session", "created."));
+            buffer.append(applyToServise.format(null)).append(" ").append(LogReader.applyToServise(mciprof_file, new Date(), prop.getProperty("session.pattern")));
 
             msgText1 = buffer.toString();
 

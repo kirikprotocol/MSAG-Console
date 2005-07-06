@@ -67,11 +67,10 @@ public class LogReader {
         return result;
     }
 
-    public static int applyToServise(String fileToRead, Date date, String sign1, String sign2) {
+    public static int applyToServise(String fileToRead, Date date, String patternString) {
         int result = 0;
         long time = date.getTime() - Utils.ONE_DAY;
         date = new Date(time);
-        //2005-07-04
 
         String fileDate = Utils.formatDate(date, Utils.DATE_FORMAT_YEAR_MONTH_DAY);
         String fileName =  fileToRead + fileDate;
@@ -81,11 +80,11 @@ public class LogReader {
         }
         FileReader filereader = null;
         BufferedReader bufferedreader = null;
-        String dateString = Utils.formatDate(date, Utils.DATE_FORMAT_MONTH_DAY);
         String line;
 
         try {
-          Pattern pattern = Pattern.compile("(?i).+\\s+ \\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3} \\(.*?\\)\\s+ SessionManager\\s+  Creating\\s+ session:");
+//          Pattern pattern = Pattern.compile("(?ix).\\s+\\d{2}/\\d{2}\\s+\\d{2}:\\d{2}:\\d{2}\\.\\d{3}\\s+\\(.*?\\)\\s+SessionManager\\s+Creating\\s+session:");
+          Pattern pattern = Pattern.compile(patternString);
             filereader = new FileReader(file);
             bufferedreader = new BufferedReader(filereader);
             while ((line = bufferedreader.readLine()) != null) {
