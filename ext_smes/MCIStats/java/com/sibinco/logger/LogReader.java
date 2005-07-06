@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.File;
 import java.util.StringTokenizer;
 import java.util.Date;
+import java.util.regex.Pattern;
 
 /**
  * The <code>LogReader</code> class represents
@@ -84,35 +85,11 @@ public class LogReader {
         String line;
 
         try {
+          Pattern pattern = Pattern.compile("(?i).+\\s+ \\d{2}/\\d{2} \\d{2}:\\d{2}:\\d{2}.\\d{3} \\(.*?\\)\\s+ SessionManager\\s+  Creating\\s+ session:");
             filereader = new FileReader(file);
             bufferedreader = new BufferedReader(filereader);
             while ((line = bufferedreader.readLine()) != null) {
-                //line = line.substring(LOG_INFO_PRPERTIES);
-                StringTokenizer st = new StringTokenizer(line);
-                while (st.hasMoreTokens()) {
-                    String token = st.nextToken();
-
-                    if (token.equals(dateString)) {
-                        st.nextToken();
-                        //System.out.println("st.nextToken()1=" + st.nextToken());
-                        //System.out.println("st.nextToken()2=" + st.nextToken());
-                        if (st.nextToken().equals("(nsGateWayEngine)")) {
-                            if (st.nextToken().equals("SessionManager")) {
-                                if (st.nextToken().substring(0, 1).equals("+")) {
-
-                                    if (st.nextToken().equals(sign1)) {
-                                        //String token2 = st.nextToken();
-                                        //System.out.println("token2=" + token2);
-                                        if (st.nextToken().equals(sign2)) {
-                                            //System.out.println(st.nextToken());
-                                            result += 1;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                if( pattern.matcher(line).matches() ) result++;
             }
             filereader.close();
         } catch (FileNotFoundException e) {
