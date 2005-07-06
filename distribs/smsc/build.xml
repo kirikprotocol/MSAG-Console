@@ -18,6 +18,7 @@
 
   <property environment="env"/>
   <tstamp/>
+  <property name="CONF_ENCODING" value="windows-1251"/>
   <property name="version" value="${DSTAMP}_${TSTAMP}"/>
   <property name="DISTR_DIR" value="${BUILD_DIR}/distr"/>
   <property name="SRC_DIR" value="${SMSC_DIR}/src"/>
