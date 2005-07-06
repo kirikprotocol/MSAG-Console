@@ -122,7 +122,7 @@ public class McismeStatReport {
                 logger.error("Con't load property file" + fileName);
             }
 
-            String currentDate = Utils.formatDate(new Date(), Utils.DATE_FORMAT_FULL);
+            String currentDate = Utils.formatDate(new Date(), "yyyyMMdd");
             file = new File(prop.get("out_file").toString() + currentDate + ".txt");
 
             log_unic_abonents = prop.get("log_unic_abonents").toString();
