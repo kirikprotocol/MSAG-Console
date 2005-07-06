@@ -91,6 +91,12 @@ namespace smsc { namespace distrlist
         virtual Array<DistrList> list()
             throw(smsc::core::buffers::FileException) = 0;
 
+        virtual void changeDistrList(const string& dlName,int maxElements)
+          throw(smsc::core::buffers::FileException,ListNotExistsException) = 0;
+
+        virtual void getSubmitters(const string& dlName,Array<Address>& sbm)
+          throw(smsc::core::buffers::FileException,ListNotExistsException)=0;
+
         virtual void addPrincipal(const Principal& prc)
             throw(smsc::core::buffers::FileException, PrincipalAlreadyExistsException) = 0;
         virtual void deletePrincipal(const Address& address)
@@ -99,6 +105,9 @@ namespace smsc { namespace distrlist
             throw(smsc::core::buffers::FileException, PrincipalNotExistsException, IllegalPrincipalException) = 0;
         virtual Principal getPrincipal(const Address& address)
             throw(smsc::core::buffers::FileException, PrincipalNotExistsException) = 0;
+
+        virtual Array<Principal> getPrincipals()
+            throw(smsc::core::buffers::FileException)=0;
 
         virtual void addMember(string dlName, const Address& member)
             throw(smsc::core::buffers::FileException, ListNotExistsException,
@@ -110,12 +119,26 @@ namespace smsc { namespace distrlist
         virtual Array<Address> members(string dlName, const Address& submitter)
             throw(smsc::core::buffers::FileException, ListNotExistsException,IllegalSubmitterException) = 0;
 
+        virtual Array<Address> members(string dlName)
+            throw(smsc::core::buffers::FileException, ListNotExistsException) = 0;
+
         virtual void grantPosting(string dlName, const Address& submitter)
             throw(smsc::core::buffers::FileException, ListNotExistsException,
                   PrincipalNotExistsException, SubmitterAlreadyExistsException) = 0;
+
+        virtual void grantPosting(const string& dlName, const Address& owner,const Address& submitter)
+            throw(smsc::core::buffers::FileException, ListNotExistsException,
+                  PrincipalNotExistsException, SubmitterAlreadyExistsException) = 0;
+
+
         virtual void revokePosting(string dlName, const Address& submitter)
             throw(smsc::core::buffers::FileException, ListNotExistsException,
                   SubmitterNotExistsException, IllegalSubmitterException) = 0;
+
+        virtual void revokePosting(string dlName, const Address& owner,const Address& submitter)
+            throw(smsc::core::buffers::FileException, ListNotExistsException,
+                  SubmitterNotExistsException, IllegalSubmitterException) = 0;
+
         virtual bool checkPermission(string dlName, const Address& submitter)
             throw(smsc::core::buffers::FileException, ListNotExistsException) = 0;
     };

@@ -338,8 +338,9 @@ void DistrListManager::deleteDistrList(string dlName)
       }
     }
     lstFile.Delete(lst.offset);
+    DistrListRecord* ptr=*lstPtr;
     lists.Delete(lst.name);
-    delete *lstPtr;
+    delete ptr;
 
     /*
     const char* dlNameStr  = dlName.c_str();
@@ -402,6 +403,19 @@ void DistrListManager::deleteDistrList(string dlName)
     if (connection) ds.freeConnection(connection);
     */
 }
+
+
+void DistrListManager::changeDistrList(const string& dlName,int maxElements)
+          throw(smsc::core::buffers::FileException,ListNotExistsException)
+{
+  MutexGuard mg(mtx);
+  DistrListRecord** lstPtr=lists.GetPtr(dlName.c_str());
+  if(!lstPtr)throw ListNotExistsException();
+  DistrListRecord& lst=**lstPtr;
+  lst.maxEl=maxElements;
+  lstFile.Write(lst.offset,lst);
+}
+
 
 DistrList DistrListManager::getDistrList(string dlName)
     throw(smsc::core::buffers::FileException, ListNotExistsException)
@@ -622,6 +636,22 @@ Array<DistrList> DistrListManager::list()
     */
 }
 
+Array<Address> DistrListManager::members(string dlName)
+            throw(smsc::core::buffers::FileException, ListNotExistsException)
+{
+    MutexGuard mg(mtx);
+    DistrListRecord** lstPtr=lists.GetPtr(dlName.c_str());
+    if(!lstPtr)throw ListNotExistsException();
+    DistrListRecord& lst=**lstPtr;
+    Array<Address> members(lst.members.size());
+    for(DistrListRecord::MembersContainer::iterator it=lst.members.begin();it!=lst.members.end();it++)
+    {
+      members.Push(it->addr);
+    }
+    return members;
+}
+
+
 Array<Address> DistrListManager::members(string dlName, const Address& submitter)
     throw(smsc::core::buffers::FileException, ListNotExistsException, IllegalSubmitterException)
 {
@@ -629,6 +659,9 @@ Array<Address> DistrListManager::members(string dlName, const Address& submitter
     DistrListRecord** lstPtr=lists.GetPtr(dlName.c_str());
     if(!lstPtr)throw ListNotExistsException();
     DistrListRecord& lst=**lstPtr;
+
+    if(submitter.length && lst.submitters.find(SubmitterRecord(lst,submitter))==lst.submitters.end())
+      throw IllegalSubmitterException();
 
     Array<Address> members(lst.members.size());
     for(DistrListRecord::MembersContainer::iterator it=lst.members.begin();it!=lst.members.end();it++)
@@ -963,8 +996,8 @@ void DistrListManager::changePrincipal(const Principal& prc)
     PrincipalRecord* prcPtr=principals.GetPtr(prc.address.toString().c_str());
     if(!prcPtr)throw PrincipalNotExistsException();
     if(prcPtr->lstCount>0)throw IllegalPrincipalException("Principal for address '%s' is in use %ld times as DL owner. "
-                                                "Can't change maximum lists count to %ld",
-                                                 prc.address.toString().c_str(), prcPtr->lstCount, prc.maxLst);
+                                                "Can't change maximum lists count to %ld or maximum elements to %ld",
+                                                 prc.address.toString().c_str(), prcPtr->lstCount, prc.maxLst,prc.maxEl);
     prcPtr->maxLst=prc.maxLst;
     prcPtr->maxEl=prc.maxEl;
     prcFile.Write(prcPtr->offset,*prcPtr);
@@ -1124,6 +1157,22 @@ Principal DistrListManager::getPrincipal(const Address& address)
     return prc;
     */
 }
+
+Array<Principal> DistrListManager::getPrincipals()
+            throw(smsc::core::buffers::FileException)
+{
+  MutexGuard mg(mtx);
+  char* key;
+  PrincipalRecord rec;
+  principals.First();
+  Array<Principal> rv;
+  while(principals.Next(key,rec))
+  {
+    rv.Push(rec);
+  }
+  return rv;
+}
+
 
 void DistrListManager::addMember(string dlName, const Address& member)
     throw(smsc::core::buffers::FileException, ListNotExistsException,
@@ -1412,6 +1461,9 @@ void DistrListManager::grantPosting(string dlName, const Address& submitter)
     if(!lstPtr)throw ListNotExistsException("%s",dlName.c_str());
     DistrListRecord& lst=**lstPtr;
     SubmitterRecord sbmRec(lst,submitter);
+    if(lst.submitters.find(sbmRec)!=lst.submitters.end())throw SubmitterAlreadyExistsException();
+    sbmRec.offset=sbmFile.Append(sbmRec);
+    lst.submitters.insert(sbmRec);
 
     /*
     const char* dlNameStr = dlName.c_str();
@@ -1508,10 +1560,54 @@ void DistrListManager::grantPosting(string dlName, const Address& submitter)
     */
 }
 
+void DistrListManager::grantPosting(const string& dlName, const Address& owner,const Address& submitter)
+    throw(smsc::core::buffers::FileException, ListNotExistsException,
+          PrincipalNotExistsException, SubmitterAlreadyExistsException)
+{
+    MutexGuard mg(mtx);
+    DistrListRecord** lstPtr=lists.GetPtr(dlName.c_str());
+    if(!lstPtr)throw ListNotExistsException("%s",dlName.c_str());
+    DistrListRecord& lst=**lstPtr;
+    if(lst.owner!=owner)throw PrincipalNotExistsException();
+
+    SubmitterRecord sbmRec(lst,submitter);
+    if(lst.submitters.find(sbmRec)!=lst.submitters.end())throw SubmitterAlreadyExistsException();
+    sbmRec.offset=sbmFile.Append(sbmRec);
+    lst.submitters.insert(sbmRec);
+}
+
+void DistrListManager::revokePosting(string dlName, const Address& owner,const Address& submitter)
+    throw(smsc::core::buffers::FileException, ListNotExistsException,
+          SubmitterNotExistsException, IllegalSubmitterException)
+{
+    MutexGuard mg(mtx);
+    DistrListRecord** lstPtr=lists.GetPtr(dlName.c_str());
+    if(!lstPtr)throw ListNotExistsException("%s",dlName.c_str());
+    DistrListRecord& lst=**lstPtr;
+    if(lst.owner!=owner)throw PrincipalNotExistsException();
+
+    SubmitterRecord sbmRec(lst,submitter);
+    DistrListRecord::SubmittersContainer::iterator it=lst.submitters.find(sbmRec);
+    if(it==lst.submitters.end())throw SubmitterNotExistsException();
+    sbmFile.Delete(it->offset);
+    lst.submitters.erase(it);
+}
+
+
 void DistrListManager::revokePosting(string dlName, const Address& submitter)
     throw(smsc::core::buffers::FileException, ListNotExistsException,
           SubmitterNotExistsException, IllegalSubmitterException)
 {
+    MutexGuard mg(mtx);
+    DistrListRecord** lstPtr=lists.GetPtr(dlName.c_str());
+    if(!lstPtr)throw ListNotExistsException("%s",dlName.c_str());
+    DistrListRecord& lst=**lstPtr;
+
+    SubmitterRecord sbmRec(lst,submitter);
+    DistrListRecord::SubmittersContainer::iterator it=lst.submitters.find(sbmRec);
+    if(it==lst.submitters.end())throw SubmitterNotExistsException();
+    sbmFile.Delete(it->offset);
+    lst.submitters.erase(it);
     /*
     const char* dlNameStr = dlName.c_str();
     string submitterStdStr = submitter.toString();
@@ -1582,6 +1678,20 @@ void DistrListManager::revokePosting(string dlName, const Address& submitter)
 
     if (connection) ds.freeConnection(connection);
     */
+}
+
+
+void DistrListManager::getSubmitters(const string& dlName,Array<Address>& sbm)
+          throw(smsc::core::buffers::FileException,ListNotExistsException)
+{
+    MutexGuard mg(mtx);
+    DistrListRecord** lstPtr=lists.GetPtr(dlName.c_str());
+    if(!lstPtr)throw ListNotExistsException("%s",dlName.c_str());
+    DistrListRecord& lst=**lstPtr;
+    for(DistrListRecord::SubmittersContainer::iterator it=lst.submitters.begin();it!=lst.submitters.end();it++)
+    {
+      sbm.Push(it->addr);
+    }
 }
 
 }}
