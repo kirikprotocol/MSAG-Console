@@ -88,18 +88,12 @@ public class Proxy
     }
     catch (IOException e)
     {
-      try {
-        reconnect();
-        writer.write(command);
-        return reader.read();
-      } catch (IOException e1) {
-        disconnect();
-        throw new AdminException(e1.getMessage());
-      }
+       disconnect();
+       throw new AdminException(e.getMessage());
     }
     catch (Exception e)
     {
-     throw new AdminException(e.getMessage());        
+     throw new AdminException(e.getMessage());
     }
   }
 

@@ -287,7 +287,19 @@ public class Index extends SmscBean
     }
     return result;
   }
-
+    public Set getConnectionsLimitsForIps()
+  {
+    Set result = new HashSet();
+    final String prefix = "smpp.connectionsLimitsForIps.";
+    for (Iterator i = params.keySet().iterator(); i.hasNext();) {
+      String name = (String) i.next();
+      if (name.startsWith(prefix)) {
+        String s = name.substring(prefix.length());
+        result.add(s.substring(0, s.indexOf('.')));
+      }
+    }
+    return result;
+  }
   public String getMbSave()
   {
     return mbSave;

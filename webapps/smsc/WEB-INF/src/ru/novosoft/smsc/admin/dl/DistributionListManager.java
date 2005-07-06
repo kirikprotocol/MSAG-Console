@@ -336,6 +336,7 @@ public class DistributionListManager extends Service implements DistributionList
     if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
       throw new AdminException("SMSC is not running.");
     final Map args = new HashMap();
+    args.put("names", new LinkedList()); args.put("owners", new LinkedList());
     if (filter!=null) {
       if (!filter.isNamesContainsRegexp() && !filter.isOwnersContainsRegexp()) {
         List names=Arrays.asList(filter.getNames());

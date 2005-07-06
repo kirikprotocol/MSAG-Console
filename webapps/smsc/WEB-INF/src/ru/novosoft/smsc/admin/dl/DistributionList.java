@@ -38,7 +38,7 @@ public class DistributionList extends AbstractDataItem
 
   public String getOwner()
   {
-    return values.get("owner") != null ? ((Mask)values.get("owner")).getMask() : null;
+    return values.get("owner") != null ? ((Mask)values.get("owner")).getMask() : "";
   }
 
   public String getNormalizedOwner()

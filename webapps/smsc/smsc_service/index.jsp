@@ -111,10 +111,12 @@ refreshStartStopButtonsStatus();
     startParams(out);
       param(out, "smsc.trControl.maxSmsPerSecond",         "trafficControl.maxSmsPerSecond",         bean.getIntParam("trafficControl.maxSmsPerSecond"));
       param(out, "smsc.trControl.shapeTimeFrame",          "trafficControl.shapeTimeFrame",          bean.getIntParam("trafficControl.shapeTimeFrame"));
+      param(out, "smsc.trControl.startTimeFrame",          "trafficControl.startTimeFrame",          bean.getIntParam("trafficControl.startTimeFrame"));
       param(out, "smsc.trControl.protectTimeFrame",        "trafficControl.protectTimeFrame",        bean.getIntParam("trafficControl.protectTimeFrame"));
       param(out, "smsc.trControl.protectThreshold",        "trafficControl.protectThreshold",        bean.getIntParam("trafficControl.protectThreshold"));
       param(out, "smsc.trControl.allowedDeliveryFailures", "trafficControl.allowedDeliveryFailures", bean.getIntParam("trafficControl.allowedDeliveryFailures"));
       param(out, "smsc.trControl.lookAheadTime",           "trafficControl.lookAheadTime",           bean.getIntParam("trafficControl.lookAheadTime"));
+
     finishParams(out);
   finishSection(out);
   //################################## MessageStore #############################
@@ -187,12 +189,25 @@ refreshStartStopButtonsStatus();
   //################################## smpp #############################
   startSection(out, "smpp", "smsc.smpp", false);
     startParams(out);
-      param(out, "common.util.host",            "smpp.host",              bean.getStringParam("smpp.host"));
-      param(out, "common.util.port",            "smpp.port",              bean.getIntParam("smpp.port"));
-      param(out, "smsc.smpp.readTimeout",       "smpp.readTimeout",       bean.getIntParam("smpp.readTimeout"));
-      param(out, "smsc.smpp.inactivityTime",    "smpp.inactivityTime",    bean.getIntParam("smpp.inactivityTime"));
-      param(out, "smsc.smpp.inactivityTimeOut", "smpp.inactivityTimeOut", bean.getIntParam("smpp.inactivityTimeOut"));
-    finishParams(out);
+      param(out, "common.util.host",                  "smpp.host",                          bean.getStringParam("smpp.host"));
+      param(out, "common.util.port",                  "smpp.port",                          bean.getIntParam("smpp.port"));
+      param(out, "smsc.smpp.readTimeout",             "smpp.readTimeout",                   bean.getIntParam("smpp.readTimeout"));
+      param(out, "smsc.smpp.inactivityTime",          "smpp.inactivityTime",                bean.getIntParam("smpp.inactivityTime"));
+      param(out, "smsc.smpp.inactivityTimeOut",       "smpp.inactivityTimeOut",             bean.getIntParam("smpp.inactivityTimeOut"));
+      param(out, "smsc.smpp.defaultConnectionsLimit", "smpp.defaultConnectionsLimit",       bean.getIntParam("smpp.defaultConnectionsLimit"));
+      finishParams(out);
+      startSection(out, "connectionsLimitsForIps",    "smsc.smpp.connectionsLimitsForIps", false);
+      if ( bean.getConnectionsLimitsForIps().size()>0)
+      { startParams(out);
+    //---------------------------------- smpp.connectionsLimitsForIps.%name% -----------------------------
+      for (Iterator i = bean.getConnectionsLimitsForIps().iterator(); i.hasNext();)
+      {
+            String name = (String) i.next();
+            param(out, "smsc.smpp.connectionsLimitsForIps.Ip",   "smpp.connectionsLimitsForIps.Ip" ,   bean.getStringParam("smpp.connectionsLimitsForIps." + name ));
+      }
+        finishParams(out);
+      }
+      finishSection(out);
   finishSection(out);
   //################################## profiler #############################
   List profilerReportOptions = new LinkedList();
@@ -269,13 +284,28 @@ refreshStartStopButtonsStatus();
       param(out, "smsc.abonentInfo.smppAccessAddr",   "abonentinfo.smpp_access_address",   bean.getStringParam("abonentinfo.smpp_access_address"));
     finishParams(out);
   finishSection(out);
-  //################################## MscManager #############################
-  startSection(out, "MscManager", "smsc.mscman", false);
+   //################################## distrList #############################
+  startSection(out, "distrList", "smsc.distrList", false);
     startParams(out);
-      param(out, "smsc.mscman.autoReg",      "MscManager.automaticRegistration", bean.getBoolParam("MscManager.automaticRegistration"));
-      param(out, "smsc.mscman.failureLimit", "MscManager.failureLimit",          bean.getIntParam( "MscManager.failureLimit"));
+      param(out, "smsc.distrList.storeDir",      "distrList.storeDir", bean.getStringParam("distrList.storeDir"));
     finishParams(out);
   finishSection(out);
+   //################################## Acl #############################
+  startSection(out, "acl", "smsc.acl", false);
+    startParams(out);
+      param(out, "smsc.acl.preCreateSize", "acl.preCreateSize", bean.getIntParam("acl.preCreateSize"));
+      param(out, "smsc.acl.storeDir",      "acl.storeDir",      bean.getStringParam("acl.storeDir"));
+    finishParams(out);
+  finishSection(out);
+    //################################## MscManager #############################
+  startSection(out, "MscManager", "smsc.MscManager", false);
+    startParams(out);
+      param(out, "smsc.MscManager.automaticRegistration", "MscManager.automaticRegistration", bean.getBoolParam("MscManager.automaticRegistration"));
+      param(out, "smsc.MscManager.failureLimit", "MscManager.failureLimit", bean.getIntParam("MscManager.failureLimit"));
+      param(out, "smsc.MscManager.storeFile",      "MscManager.storeFile",    bean.getStringParam("MscManager.storeFile"));
+    finishParams(out);
+  finishSection(out);
+
 %></div><%
 page_menu_begin(out);
 page_menu_button(session, out, "mbSave",  "common.buttons.save",  "common.buttons.saveConfig");

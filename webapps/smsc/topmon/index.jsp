@@ -19,7 +19,7 @@
 	}
 	HashMap topmonPrefs = prefs.getTopmonPrefs();
 %>
-	<applet code="ru.novosoft.smsc.topmon.applet.TopMon.class" width=100% height=100% archive="topmon.jar">
+	<applet code="ru.novosoft.smsc.topmon.applet.TopMon.class" width=100% height=100% archive="topmon.jar" > <%--CODEBASE="../WEB-INF/classes"--%>
 		<param name="locale.country" value=<%=prefs.getLocale().getLanguage()%>>
 		<param name="locale.language" value=<%=prefs.getLocale().getLanguage()%>>
 		<param name="graph.scale" value=<%=topmonPrefs.get("topmon.graph.scale")%>>
@@ -27,6 +27,14 @@
 		<param name="graph.higrid" value=<%=topmonPrefs.get("topmon.graph.higrid")%>>
 		<param name="graph.head" value=<%=topmonPrefs.get("topmon.graph.head")%>>
 		<param name="max.speed" value=<%=topmonPrefs.get("topmon.max.speed")%>>
+<%--		<param name="locale.country" value="us">
+		<param name="locale.language" value="en">
+		<param name="graph.scale" value="3">
+		<param name="graph.grid" value="2">
+		<param name="graph.higrid" value="10">
+		<param name="graph.head" value="20">
+		<param name="max.speed" value="50">
+--%>
 		<param name="port" value="<%=port%>">
 		<param name="host" value="<%=request.getServerName()%>">
 	</applet>

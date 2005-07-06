@@ -90,7 +90,7 @@ public class dlAdd extends dlBody
     int result = RESULT_DONE;
     DistributionListAdmin admin = appContext.getSmsc().getDistributionListAdmin();
     try {
-      final DistributionList dl = new DistributionList(name, system ? null : owner, maxElements);
+      final DistributionList dl = new DistributionList(name, system ? "" : owner, maxElements);
       admin.addDistributionList(dl);
       MaskList newSubmitters = new MaskList(fullSubmittersList);
       boolean ownerAdded = false;

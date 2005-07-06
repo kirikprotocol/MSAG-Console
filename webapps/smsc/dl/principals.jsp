@@ -116,6 +116,17 @@ for (Iterator i = bean.getPrincipals().iterator(); i.hasNext(); )
     page_menu_space(out);
     page_menu_end(out);
   }
+  else
+  { %>
+     <table>
+       <tr><td>&nbsp</td></tr>
+     </table>
+    <%
+    page_menu_begin(out);
+    page_menu_button(session, out, "mbAdd",  "dl.addPrincipal",  "dl.addPrincipalHint");
+    page_menu_space(out);
+    page_menu_end(out);
+  }
 %>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

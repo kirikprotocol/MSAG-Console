@@ -68,7 +68,7 @@ public class DistributionListAdminFormBean extends IndexBean
 
       dls = admin.list(preferences.getDlFilter());
     } catch (AdminException e) {
-      return error(SMSCErrors.error.dl.CouldntListDistributionLists);
+      return error(SMSCErrors.error.dl.CouldntListDistributionLists+": "+e.getMessage());
     }
 
     totalSize = dls.size();
