@@ -99,6 +99,27 @@ protected:
   Variant aclAddAddresses(const Arguments & args) throw (AdminException);
 
 
+  Variant dlListPrincipals(const Arguments & args) throw (AdminException);
+  Variant dlAddPrincipal(const Arguments & args) throw (AdminException);
+  Variant dlDelPrincipal(const Arguments & args) throw (AdminException);
+  Variant dlGetPrincipal(const Arguments & args) throw (AdminException);
+  Variant dlAlterPrincipal(const Arguments & args) throw (AdminException);
+
+  Variant dlAddMember(const Arguments & args) throw (AdminException);
+  Variant dlDeleteMember(const Arguments & args) throw (AdminException);
+  Variant dlGetMembers(const Arguments & args) throw (AdminException);
+
+  Variant dlAddSubmitter(const Arguments & args) throw (AdminException);
+  Variant dlDeleteSubmitter(const Arguments & args) throw (AdminException);
+  Variant dlListSubmitters(const Arguments & args) throw (AdminException);
+
+  Variant dlAddList(const Arguments & args) throw (AdminException);
+  Variant dlDeleteList(const Arguments & args) throw (AdminException);
+  Variant dlGetList(const Arguments & args) throw (AdminException);
+  Variant dlListLists(const Arguments & args) throw (AdminException);
+  Variant dlAlterList(const Arguments & args) throw (AdminException);
+
+
   SmscConfigs &configs;
   Methods methods;
   enum
@@ -115,7 +136,7 @@ protected:
       aclLookupAddressesMethod, aclRemoveAddressesMethod, aclAddAddressesMethod,
     prcListPrincipalsMethod, prcAddPrincipalMethod, prcDeletePrincipalMethod, prcGetPrincipalMethod, prcAlterPrincipalMethod,
     memAddMemberMethod, memDeleteMemberMethod, memGetMemberMethod, sbmAddSubmiterMethod,
-    sbmDeleteSubmiterMethod, sbmListSubmitersMethod, 
+    sbmDeleteSubmiterMethod, sbmListSubmitersMethod,
     dlAddMethod, dlDeleteMethod, dlGetMethod, dlListMethod, dlAlterMethod
   };
 

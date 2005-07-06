@@ -10,6 +10,7 @@
 #include <mscman/MscManager.h>
 #include <resourcemanager/ResourceManager.hpp>
 #include "acls/interfaces.h"
+#include <algorithm>
 
 namespace smsc {
 namespace admin {
@@ -96,19 +97,19 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 
   /*---------------------loomox---------------*/
 
- 
+
 
   Parameters prc_list_params;
-  //prc_list_params[""] = Parameter("", BooleanType);
-  
+  prc_list_params["address"] = Parameter("address", StringType);
+
   Parameters prc_add_params;
-  prc_add_params["address"] = Parameter("address", StringListType);
+  prc_add_params["address"] = Parameter("address", StringType);
   prc_add_params["maxLists"] = Parameter("maxLists", LongType);
   prc_add_params["maxElements"] = Parameter("maxElements", LongType);
-  
+
   Parameters prc_delete_params;
   prc_delete_params["address"] = Parameter("address", StringType);
-  
+
   Parameters  prc_get_params;
   prc_get_params["address"] = Parameter("address", StringType);
 
@@ -125,43 +126,43 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
 
 
   Parameters mem_delete_params;
-  mem_delete_params[""] = Parameter("dlname", StringType);
-  mem_delete_params[""] = Parameter("address", StringType);
+  mem_delete_params["dlname"] = Parameter("dlname", StringType);
+  mem_delete_params["address"] = Parameter("address", StringType);
 
   Parameters mem_get_params;
-  mem_get_params[""] = Parameter("dlname", StringType);
+  mem_get_params["dlname"] = Parameter("dlname", StringType);
 
   Parameters sbm_add_params;
-  sbm_add_params[""] = Parameter("dlname", StringType);
-  sbm_add_params[""] = Parameter("submitter", StringType);
+  sbm_add_params["dlname"] = Parameter("dlname", StringType);
+  sbm_add_params["address"] = Parameter("address", StringType);
 
   Parameters sbm_delete_params;
-  sbm_delete_params[""] = Parameter("dlname", StringType);
-  sbm_delete_params[""] = Parameter("submitter", StringType);
+  sbm_delete_params["dlname"] = Parameter("dlname", StringType);
+  sbm_delete_params["address"] = Parameter("address", StringType);
 
   Parameters sbm_list_params;
-  sbm_list_params[""] = Parameter("dlname", StringType);
+  sbm_list_params["dlname"] = Parameter("dlname", StringType);
 
   Parameters dl_add_params;
-  dl_add_params[""] = Parameter("name", StringType);
-  dl_add_params[""] = Parameter("owner", StringType);
-  dl_add_params[""] = Parameter("maxElements", LongType);
+  dl_add_params["dlname"] = Parameter("dlname", StringType);
+  dl_add_params["owner"] = Parameter("owner", StringType);
+  dl_add_params["maxElements"] = Parameter("maxElements", LongType);
 
   Parameters dl_delete_params;
-  dl_delete_params[""] = Parameter("dlname", StringType);
+  dl_delete_params["dlname"] = Parameter("dlname", StringType);
 
   Parameters dl_get_params;
-  dl_get_params[""] = Parameter("dlname", StringType);
+  dl_get_params["dlname"] = Parameter("dlname", StringType);
 
   Parameters dl_list_params;
-  dl_list_params[""] = Parameter("names", StringListType);
-  dl_list_params[""] = Parameter("owners", StringListType);
-  
-  Parameters dl_alter_params;
-  dl_alter_params[""] = Parameter("dlname", StringType);
-  dl_alter_params[""] = Parameter("maxElements", LongType);
+  dl_list_params["names"] = Parameter("names", StringListType);
+  dl_list_params["owners"] = Parameter("owners", StringListType);
 
- 
+  Parameters dl_alter_params;
+  dl_alter_params["dlname"] = Parameter("dlname", StringType);
+  dl_alter_params["maxElements"] = Parameter("maxElements", LongType);
+
+
 
   /**************************** method declarations *************************/
   Method apply_routes          ((unsigned)applyRoutesMethod,         "apply_routes",          empty_params, StringType);
@@ -212,25 +213,25 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
   Method acl_add_addresses    ((unsigned)aclAddAddressesMethod,    "acl_add_addresses",     acl_addresses_params,        BooleanType);
 
   /*-------------loomox-----------*/
-  Method prc_list        ((unsigned)prcListPrincipalsMethod,   "prc_list",           prc_list_params,              BooleanType);
-  Method prc_add         ((unsigned)prcAddPrincipalMethod,     "prc_add",            prc_add_params,               StringListType);
+  Method prc_list        ((unsigned)prcListPrincipalsMethod,   "prc_list",           prc_list_params,              StringListType);
+  Method prc_add         ((unsigned)prcAddPrincipalMethod,     "prc_add",            prc_add_params,               StringType);
   Method prc_delete      ((unsigned)prcDeletePrincipalMethod,  "prc_delete",         prc_delete_params,            StringType);
   Method prc_get         ((unsigned)prcGetPrincipalMethod,     "prc_get",            prc_get_params,               StringListType);
-  Method prc_alter       ((unsigned)prcAlterPrincipalMethod,   "prc_alter",          prc_alter_params,             StringListType);
+  Method prc_alter       ((unsigned)prcAlterPrincipalMethod,   "prc_alter",          prc_alter_params,             StringType);
 
-  Method mem_add         ((unsigned)memAddMemberMethod,        "mem_add",            mem_add_params,               StringListType);
-  Method mem_delete      ((unsigned)memDeleteMemberMethod,     "mem_delete",         mem_delete_params,            StringListType);
-  Method mem_get         ((unsigned)memGetMemberMethod,        "mem_get",            mem_get_params,               StringType);
+  Method mem_add         ((unsigned)memAddMemberMethod,        "mem_add",            mem_add_params,               StringType);
+  Method mem_delete      ((unsigned)memDeleteMemberMethod,     "mem_delete",         mem_delete_params,            StringType);
+  Method mem_get         ((unsigned)memGetMemberMethod,        "mem_get",            mem_get_params,               StringListType);
 
-  Method sbm_add         ((unsigned)sbmAddSubmiterMethod,      "sbm_add",            sbm_add_params,               StringListType);
-  Method sbm_delete      ((unsigned)sbmDeleteSubmiterMethod,   "sbm_delete",         sbm_delete_params,            StringListType);
+  Method sbm_add         ((unsigned)sbmAddSubmiterMethod,      "sbm_add",            sbm_add_params,               StringType);
+  Method sbm_delete      ((unsigned)sbmDeleteSubmiterMethod,   "sbm_delete",         sbm_delete_params,            StringType);
   Method sbm_list        ((unsigned)sbmListSubmitersMethod,    "sbm_list",           sbm_list_params,              StringListType);
 
-  Method dl_add          ((unsigned)dlAddMethod,               "dl_add",             dl_add_params,                StringListType);
+  Method dl_add          ((unsigned)dlAddMethod,               "dl_add",             dl_add_params,                StringType);
   Method dl_delete       ((unsigned)dlDeleteMethod,            "dl_delete",          dl_delete_params,             StringType);
   Method dl_get          ((unsigned)dlGetMethod,               "dl_get",             dl_get_params,                StringListType);
   Method dl_list         ((unsigned)dlListMethod,              "dl_list",            dl_list_params,               StringListType);
-  Method dl_alter        ((unsigned)dlAlterMethod,             "dl_alter",           dl_alter_params,              StringListType);
+  Method dl_alter        ((unsigned)dlAlterMethod,             "dl_alter",           dl_alter_params,              StringType);
 
   /***************************** method assigns *****************************/
   methods[apply_routes         .getName()] = apply_routes;
@@ -385,13 +386,13 @@ throw (AdminException)
       case smeDisconnectMethod:
         smeDisconnect(args);
         return Variant(true);
-        
+
       case logGetCategoriesMethod:
         return logGetCategories();
       case logSetCategoriesMethod:
         logSetCategories(args);
         return Variant(true);
-        
+
       case loadRoutesMethod:
         return loadRoutes();
       case traceRouteMethod:
@@ -417,57 +418,41 @@ throw (AdminException)
 
 /*------loomox-----------*/
       case prcListPrincipalsMethod:
-        smsc_log_debug(logger, "list principals...");
-        return Variant("");
+        return dlListPrincipals(args);
       case prcAddPrincipalMethod:
-        smsc_log_debug(logger, "add principals...");
-        return Variant("");
+        return dlAddPrincipal(args);
       case prcDeletePrincipalMethod:
-        smsc_log_debug(logger, "delete principals...");
-        return Variant("");
+        return dlDelPrincipal(args);
       case prcGetPrincipalMethod:
-        smsc_log_debug(logger, "get principals...");
-        return Variant("");
+        return dlGetPrincipal(args);
       case prcAlterPrincipalMethod:
-        smsc_log_debug(logger, "alter principals...");
-        return Variant("");
+        return dlAlterPrincipal(args);
 
 
       case memAddMemberMethod:
-        smsc_log_debug(logger, "add member...");
-        return Variant("");
+        return dlAddMember(args);
       case memDeleteMemberMethod:
-        smsc_log_debug(logger, "delete member...");
-        return Variant("");
+        return dlDeleteMember(args);
       case memGetMemberMethod:
-        smsc_log_debug(logger, "get member...");
-        return Variant("");
+        return dlGetMembers(args);
 
       case sbmAddSubmiterMethod:
-        smsc_log_debug(logger, "add submiter...");
-        return Variant("");
+        return dlAddSubmitter(args);
       case sbmDeleteSubmiterMethod:
-        smsc_log_debug(logger, "delete submiter...");
-        return Variant("");
+        return dlDeleteSubmitter(args);
       case sbmListSubmitersMethod:
-        smsc_log_debug(logger, "list submiters...");
-        return Variant("");
+        return dlListSubmitters(args);
 
       case dlAddMethod:
-        smsc_log_debug(logger, "add dl...");
-        return Variant("");
+        return dlAddList(args);
       case dlDeleteMethod:
-        smsc_log_debug(logger, "delete dl...");
-        return Variant("");
+        return dlDeleteList(args);
       case dlGetMethod:
-        smsc_log_debug(logger, "get dl...");
-        return Variant("");
+        return dlGetList(args);
       case dlListMethod:
-        smsc_log_debug(logger, "list dl...");
-        return Variant("");
+        return dlListLists(args);
       case dlAlterMethod:
-        smsc_log_debug(logger, "alter dl...");
-        return Variant("");
+        return dlAlterList(args);
 
 
 
@@ -1621,7 +1606,7 @@ Variant SmscComponent::aclRemove(const Arguments & args) throw (AdminException)
     Variant result("removed");
     return result;
   } catch (HashInvalidKeyException &e) {
-    throw new AdminException("Parameter id not found");
+    throw AdminException("Parameter id not found");
   }
 }
 
@@ -1659,7 +1644,7 @@ Variant SmscComponent::aclCreate(const Arguments & args) throw (AdminException)
       throw AdminException("Could not create ACL, nested: Unknown exception");
     }
   } catch (HashInvalidKeyException &e) {
-    throw new AdminException("Parameter id or name or description or adressess not found");
+    throw AdminException("Parameter id or name or description or adressess not found");
   }
 }
 
@@ -1689,7 +1674,7 @@ Variant SmscComponent::aclUpdateInfo(const Arguments & args) throw (AdminExcepti
     Variant result("updated");
     return result;
   } catch (HashInvalidKeyException &e) {
-    throw new AdminException("Parameter id or name or description not found");
+    throw AdminException("Parameter id or name or description not found");
   }
 }
 
@@ -1719,7 +1704,7 @@ Variant SmscComponent::aclLookupAddresses(const Arguments & args) throw (AdminEx
     }
     return result;
   } catch (HashInvalidKeyException &e) {
-    throw new AdminException("Parameter id or prefix not found");
+    throw AdminException("Parameter id or prefix not found");
   }
 }
 
@@ -1746,7 +1731,7 @@ Variant SmscComponent::aclRemoveAddresses(const Arguments & args) throw (AdminEx
     Variant result("removed addresses");
     return result;
   } catch (HashInvalidKeyException &e) {
-    throw new AdminException("Parameter id or adressess not found");
+    throw AdminException("Parameter id or adressess not found");
   }
 }
 
@@ -1773,10 +1758,339 @@ Variant SmscComponent::aclAddAddresses(const Arguments & args) throw (AdminExcep
     Variant result("added addresses");
     return result;
   } catch (HashInvalidKeyException &e) {
-    throw new AdminException("Parameter id or adressess not found");
+    throw AdminException("Parameter id or adressess not found");
   }
 }
 
+using namespace smsc::distrlist;
+
+#define PROLOGUE \
+  info2(logger,"dladmin call %s",__func__); \
+  DistrListAdmin* dladmin=smsc_app_runner->getApp()->getDlAdmin();\
+  const char* lastArg=0; \
+  try{
+
+#define BEGINMETHOD\
+  try
+
+#define INTARG(name) lastArg=#name;int name=args.Get(#name).getLongValue();
+#define STRARG(name) lastArg=#name;const char* name=args.Get(#name).getStringValue();
+#define LSTARG(name) lastArg=#name;const StringList& name=args.Get(#name).getStringListValue();
+
+#define  ENDMETHOD \
+  catch(std::exception& e) \
+  { \
+    throw AdminException("%s failed:\"%s\"",__func__,e.what());\
+  } \
+  catch(const char* e) \
+  { \
+    throw AdminException("%s failed:\"%s\"",__func__,e);\
+  } \
+  catch(...) \
+  { \
+    throw AdminException("%s failed: Unknown exception",__func__);\
+  }
+#define EPILOGUE \
+  }catch(HashInvalidKeyException& e) \
+  { \
+    throw AdminException("Parameter %s not found in args",lastArg?lastArg:"unknown"); \
+  }
+
+
+Variant SmscComponent::dlListPrincipals(const Arguments & args) throw (AdminException)
+{
+  PROLOGUE
+    STRARG(address);
+    Variant result(service::StringListType);
+  BEGINMETHOD
+  {
+    Array<Principal> prcs=dladmin->getPrincipals();
+    char buf[32];
+    int addrLen=address?strlen(address):0;
+    for(int i=0;i<prcs.Count();i++)
+    {
+      Principal& prc=prcs[i];
+      int bl=prc.address.toString(buf,sizeof(buf));
+      if(addrLen && strncmp(address,buf,std::min(addrLen,bl))!=0)continue;
+      prc.address.toString(buf,sizeof(buf));
+      result.appendValueToStringList(buf);
+      sprintf(buf,"%d",prc.maxLst);
+      result.appendValueToStringList(buf);
+      sprintf(buf,"%d",prc.maxEl);
+      result.appendValueToStringList(buf);
+    }
+  }
+  ENDMETHOD
+    return result;
+  EPILOGUE
+}
+
+
+Variant SmscComponent::dlAddPrincipal(const Arguments & args) throw (AdminException)
+{
+  PROLOGUE
+    STRARG(address);
+    INTARG(maxLists);
+    INTARG(maxElements);
+  BEGINMETHOD
+  {
+    dladmin->addPrincipal(Principal(address,maxLists,maxElements));
+  }
+  ENDMETHOD
+    return Variant("Principal added");
+  EPILOGUE
+}
+
+
+Variant SmscComponent::dlDelPrincipal(const Arguments & args) throw (AdminException)
+{
+  PROLOGUE
+    STRARG(address);
+  BEGINMETHOD
+  {
+    dladmin->deletePrincipal(address);
+  }
+  ENDMETHOD
+    return Variant("Principal deleted");
+  EPILOGUE
+}
+
+
+Variant SmscComponent::dlGetPrincipal(const Arguments & args) throw (AdminException)
+{
+  PROLOGUE
+    STRARG(address);
+    Variant result(service::StringListType);
+  BEGINMETHOD
+  {
+    Principal prc=dladmin->getPrincipal(address);
+    result.appendValueToStringList(prc.address.toString());
+    char buf[32];
+    sprintf(buf,"%d",prc.maxLst);
+    result.appendValueToStringList(buf);
+    sprintf(buf,"%d",prc.maxEl);
+    result.appendValueToStringList(buf);
+  }
+  ENDMETHOD
+    return result;
+  EPILOGUE
+}
+
+
+Variant SmscComponent::dlAlterPrincipal(const Arguments & args) throw (AdminException)
+{
+  PROLOGUE
+    STRARG(address);
+    INTARG(maxLists);
+    INTARG(maxElements);
+  BEGINMETHOD
+  {
+    dladmin->changePrincipal(Principal(address,maxLists,maxElements));
+  }
+  ENDMETHOD
+    return Variant("Principal altered");
+  EPILOGUE
+}
+
+
+
+Variant SmscComponent::dlAddMember(const Arguments & args) throw (AdminException)
+{
+  PROLOGUE
+    STRARG(dlname);
+    STRARG(address);
+  BEGINMETHOD
+  {
+    dladmin->addMember(dlname,address);
+  }
+  ENDMETHOD
+    return Variant("Member added");
+
+  EPILOGUE
+}
+
+
+Variant SmscComponent::dlDeleteMember(const Arguments & args) throw (AdminException)
+{
+  PROLOGUE
+    STRARG(dlname);
+    STRARG(address);
+  BEGINMETHOD
+  {
+    dladmin->deleteMember(dlname,address);
+  }
+  ENDMETHOD
+    return Variant("Member deleted");
+
+  EPILOGUE
+}
+
+
+Variant SmscComponent::dlGetMembers(const Arguments & args) throw (AdminException)
+{
+  PROLOGUE
+    STRARG(dlname);
+    Variant result(service::StringListType);
+  BEGINMETHOD
+  {
+    Array<Address> members=dladmin->members(dlname);
+    for(int i=0;i<members.Count();i++)
+    {
+      result.appendValueToStringList(members[i].toString());
+    }
+  }
+  ENDMETHOD
+    return result;
+  EPILOGUE
+}
+
+
+
+Variant SmscComponent::dlAddSubmitter(const Arguments & args) throw (AdminException)
+{
+  PROLOGUE
+    STRARG(dlname);
+    STRARG(submitter);
+  BEGINMETHOD
+  {
+    dladmin->grantPosting(dlname,submitter);
+  }
+  ENDMETHOD
+    return Variant("Submitter added");
+
+  EPILOGUE
+}
+
+
+Variant SmscComponent::dlDeleteSubmitter(const Arguments & args) throw (AdminException)
+{
+  PROLOGUE
+    STRARG(dlname);
+    STRARG(submitter);
+  BEGINMETHOD
+  {
+    dladmin->revokePosting(dlname,submitter);
+  }
+  ENDMETHOD
+    return Variant("Submitter deleted");
+
+  EPILOGUE
+}
+
+
+Variant SmscComponent::dlListSubmitters(const Arguments & args) throw (AdminException)
+{
+  PROLOGUE
+    STRARG(dlname);
+    Variant result(service::StringListType);
+  BEGINMETHOD
+  {
+    Array<Address> sbm;
+    dladmin->getSubmitters(dlname,sbm);
+    char buf[32];
+    for(int i=0;i<sbm.Count();i++)
+    {
+      sbm[i].toString(buf,sizeof(buf));
+      result.appendValueToStringList(buf);
+      result.appendValueToStringList("0");
+      result.appendValueToStringList("0");
+    }
+  }
+  ENDMETHOD
+    return result;
+  EPILOGUE
+}
+
+
+
+Variant SmscComponent::dlAddList(const Arguments & args) throw (AdminException)
+{
+  PROLOGUE
+    STRARG(dlname);
+    STRARG(owner);
+    INTARG(maxElements);
+  BEGINMETHOD
+  {
+    dladmin->addDistrList(dlname,!owner || !*owner,owner && *owner?owner:"",maxElements);
+  }
+  ENDMETHOD
+    return Variant("list added");
+  EPILOGUE
+}
+
+
+Variant SmscComponent::dlDeleteList(const Arguments & args) throw (AdminException)
+{
+  PROLOGUE
+    STRARG(dlname);
+  BEGINMETHOD
+  {
+    dladmin->deleteDistrList(dlname);
+  }
+  ENDMETHOD
+    return Variant("list deleted");
+
+  EPILOGUE
+}
+
+
+Variant SmscComponent::dlGetList(const Arguments & args) throw (AdminException)
+{
+  PROLOGUE
+    STRARG(dlname);
+    Variant result(service::StringListType);
+  BEGINMETHOD
+  {
+    smsc::distrlist::DistrList lst=dladmin->getDistrList(dlname);
+    result.appendValueToStringList(lst.name);
+    result.appendValueToStringList(lst.system?"":lst.owner.toString().c_str());
+    char buf[32];
+    sprintf(buf,"%d",lst.maxEl);
+    result.appendValueToStringList(buf);
+  }
+  ENDMETHOD
+    return result;
+
+  EPILOGUE
+}
+
+
+Variant SmscComponent::dlListLists(const Arguments & args) throw (AdminException)
+{
+  PROLOGUE
+    Variant result(service::StringListType);
+  BEGINMETHOD
+  {
+    Array<smsc::distrlist::DistrList> lst=dladmin->list();
+    char buf[32];
+    for(int i=0;i<lst.Count();i++)
+    {
+      smsc::distrlist::DistrList& dl=lst[i];
+      result.appendValueToStringList(dl.name);
+      result.appendValueToStringList(dl.system?"":dl.owner.toString().c_str());
+      sprintf(buf,"%d",dl.maxEl);
+      result.appendValueToStringList(buf);
+    }
+  }
+  ENDMETHOD
+    return result;
+  EPILOGUE
+}
+
+
+Variant SmscComponent::dlAlterList(const Arguments & args) throw (AdminException)
+{
+  PROLOGUE
+    STRARG(dlname);
+    INTARG(maxElements);
+  BEGINMETHOD
+  {
+    dladmin->changeDistrList(dlname,maxElements);
+  }
+  ENDMETHOD
+    return Variant("list altered");
+  EPILOGUE
+}
 
 }
 }
