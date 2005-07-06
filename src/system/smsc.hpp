@@ -427,6 +427,11 @@ public:
     return aclmgr;
   }
 
+  smsc::distrlist::DistrListAdmin* getDlAdmin()
+  {
+    return distlstman;
+  }
+
   enum{smsWeight=10000};
 
   typedef smsc::util::TimeSlotCounter<> IntTimeSlotCounter;
