@@ -56,7 +56,7 @@
     <antcall target="copy_libs">
       <param name="LIBS_OUT_DIR" value="${exploded}/bin"/>
     </antcall>
-    <copy todir="${exploded}/conf">
+    <copy todir="${exploded}/conf" encoding="${CONF_ENCODING}">
       <fileset dir="${TEMPL_DIR}/${esme_name}" includes="*.properties"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
