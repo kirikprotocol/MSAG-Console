@@ -1,0 +1,22 @@
+#! /bin/bash
+if [ -d logs ]; then 
+  rm -rf logs
+fi
+
+if [ -d log ]; then 
+  rm -rf log
+fi
+
+if [ ! -L logs ]; then
+  ln -s ../../logs logs
+fi
+
+echo $$ >pid
+if [ -f logs/mcistats.err ]; then
+  mv logs/mcistats.err logs/mcistats.err.old
+fi
+
+cls=conf
+for i in bin/*.jar ; do cls=$cls:$i ; done
+
+$JAVA_HOME/bin/java -Dsmsc_mcistats -Xmx64M -classpath $cls ru.sibinco.smpp.appgw.ApplicationsGateWay appgw.properties 1>/dev/null 2>>logs/mcistats.err&
