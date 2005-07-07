@@ -35,28 +35,33 @@ public abstract class Gate extends Thread
 
     public void run()
     {
-        logger.debug("Starting listening on port "+port);
-        while(!isStopping)
-        {
-            Socket socket = null;
-            try {
-                socket = serverSocket.accept();
-                socket.setSoLinger(true, 0);
-                logger.debug("Client "+socket.getInetAddress().getHostAddress()+" connected");
-                Session session = newSession(owner, socket);
-                owner.addSession(session);
-                session.start();
-            } catch (SocketException e) {
-                logger.debug("Server socket closed.");
-            } catch (IOException ex) {
-                logger.error("Error accepting connection", ex );
-                break;
+        try {
+            logger.debug("Starting listening on port "+port);
+            while(!isStopping)
+            {
+                Socket socket = null;
+                try {
+                  socket = serverSocket.accept();
+                  socket.setSoLinger(true, 0);
+                  logger.debug("Client "+socket.getInetAddress().getHostAddress()+" connected");
+                  Session session = newSession(owner, socket);
+                  owner.addSession(session);
+                  session.start();
+                } catch (SocketException e) {
+                  logger.debug("Server socket closed.");
+                } catch (IOException ex) {
+                  logger.error("Error accepting connection", ex );
+                  break;
+                }
             }
-        }
-        synchronized(closeSemaphore) {
+        } catch(Throwable th) {
+          logger.error("Unexpected error occured", th);
+        } finally {
+          synchronized(closeSemaphore) {
             closeSemaphore.notifyAll();
+          }
+          logger.debug("Console closed");
         }
-        logger.debug("Console closed");
     }
 
     public void close()
@@ -65,13 +70,14 @@ public abstract class Gate extends Thread
         synchronized(closeSemaphore) {
             isStopping = true;
             try {
-                serverSocket.close();
+              serverSocket.close();
             } catch (Exception e) {
-                logger.error("Can't close server socket", e);
+              logger.error("Can't close server socket", e);
+            } catch(Throwable th) {
+              logger.error("Unexpected error occured", th);
+            } finally {
+                try { closeSemaphore.wait(); } catch (InterruptedException e) {}
             }
-            try {
-               closeSemaphore.wait();
-            } catch (InterruptedException e) { }
         }
     }
 

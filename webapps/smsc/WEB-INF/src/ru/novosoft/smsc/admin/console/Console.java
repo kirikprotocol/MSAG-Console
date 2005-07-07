@@ -91,27 +91,33 @@ public class Console extends Thread
 
   public void run()
   {
-    while (!isStopping)
+    try
     {
-      synchronized(sessionMonitor)
-      {
-        try { sessionMonitor.wait(inactivityTimeout/2); }
-        catch (InterruptedException e) { break; }
-
-        for (int i=0; i<sessions.size(); i++)
+        while (!isStopping)
         {
-          Session session = (Session) sessions.get(i);
-          if (session.isTimedOut(inactivityTimeout)) {
-            logger.warn("Console session is timed out");
-            try { session.farewell(" Session is timed out."); sleep(500); } catch (Exception e) { }
-            sessions.remove(session);
-            session.close(false);
+          synchronized(sessionMonitor)
+          {
+            try { sessionMonitor.wait(inactivityTimeout/2); }
+            catch (InterruptedException e) { break; }
+
+            for (int i=0; i<sessions.size(); i++)
+            {
+              Session session = (Session) sessions.get(i);
+              if (session.isTimedOut(inactivityTimeout)) {
+                logger.warn("Console session is timed out");
+                try { session.farewell(" Session is timed out."); sleep(500); } catch (Exception e) { }
+                sessions.remove(session);
+                session.close(false);
+              }
+            }
           }
         }
+    } catch(Throwable th) {
+      logger.error("Unexpected error occured", th);
+    } finally {
+      synchronized(closeSemaphore) {
+        closeSemaphore.notifyAll();
       }
-    }
-    synchronized(closeSemaphore) {
-      closeSemaphore.notifyAll();
     }
   }
 

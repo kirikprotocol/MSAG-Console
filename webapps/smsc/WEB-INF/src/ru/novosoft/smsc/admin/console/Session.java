@@ -232,26 +232,25 @@ public abstract class Session extends Thread
     public void run()
     {
         try {
-            is = socket.getInputStream();
-            os = socket.getOutputStream();
-            process();
+          is = socket.getInputStream();
+          os = socket.getOutputStream();
+          process();
         }
         catch (SocketException e) {
-            logger.debug("Client "+socket.getInetAddress().getHostAddress()+" disconnected");
+          logger.debug("Client "+socket.getInetAddress().getHostAddress()+" disconnected");
         } catch (IOException e) {
-            logger.warn("I/O error occured for "+socket.getInetAddress().getHostAddress(), e);
-        } catch (Exception e) {
-            logger.error("Unexpected error occured for "+socket.getInetAddress().getHostAddress(), e);
+          logger.warn("I/O error occured for "+socket.getInetAddress().getHostAddress(), e);
+        } catch (Throwable th) {
+          logger.error("Unexpected error occured for "+socket.getInetAddress().getHostAddress(), th);
         } finally {
-            if( is != null ) try { is.close();} catch (Exception ee){};
-            if( os != null ) try { os.close();} catch (Exception ee){};
-            if( socket != null ) try { socket.close();} catch (Exception ee){};
-        }
-
-        synchronized(closeSemaphore) {
+          if( is != null ) try { is.close();} catch (Exception ee){};
+          if( os != null ) try { os.close();} catch (Exception ee){};
+          if( socket != null ) try { socket.close();} catch (Exception ee){};
+          synchronized(closeSemaphore) {
             closed = true; closeSemaphore.notifyAll();
+          }
+          if (needRemove) owner.removeSession(this);
         }
-        if (needRemove) owner.removeSession(this);
     }
 
 
