@@ -1950,10 +1950,10 @@ Variant SmscComponent::dlAddSubmitter(const Arguments & args) throw (AdminExcept
 {
   PROLOGUE
     STRARG(dlname);
-    STRARG(submitter);
+    STRARG(address);
   BEGINMETHOD
   {
-    dladmin->grantPosting(dlname,submitter);
+    dladmin->grantPosting(dlname,address);
   }
   ENDMETHOD
     return Variant("Submitter added");
@@ -1966,10 +1966,10 @@ Variant SmscComponent::dlDeleteSubmitter(const Arguments & args) throw (AdminExc
 {
   PROLOGUE
     STRARG(dlname);
-    STRARG(submitter);
+    STRARG(address);
   BEGINMETHOD
   {
-    dladmin->revokePosting(dlname,submitter);
+    dladmin->revokePosting(dlname,address);
   }
   ENDMETHOD
     return Variant("Submitter deleted");
@@ -2011,7 +2011,7 @@ Variant SmscComponent::dlAddList(const Arguments & args) throw (AdminException)
     INTARG(maxElements);
   BEGINMETHOD
   {
-    dladmin->addDistrList(dlname,!owner || !*owner,owner && *owner?owner:"",maxElements);
+    dladmin->addDistrList(dlname,!owner || !*owner,owner && *owner?owner:"0",maxElements);
   }
   ENDMETHOD
     return Variant("list added");
@@ -2058,16 +2058,44 @@ Variant SmscComponent::dlGetList(const Arguments & args) throw (AdminException)
 Variant SmscComponent::dlListLists(const Arguments & args) throw (AdminException)
 {
   PROLOGUE
+    LSTARG(names);
+    LSTARG(owners);
     Variant result(service::StringListType);
   BEGINMETHOD
   {
     Array<smsc::distrlist::DistrList> lst=dladmin->list();
+    Hash<int> nmflt;
+    Hash<int> ownflt;
+    bool haveNmFlt=false;
+    bool haveOwnFlt=false;
+    if(!names.empty())
+    {
+      for(StringList::const_iterator it=names.begin();it!=names.end();it++)
+      {
+        if(!**it)continue;
+        nmflt.Insert(*it,1);
+        haveNmFlt=true;
+      }
+
+    }
+    if(!owners.empty())
+    {
+      for(StringList::const_iterator it=owners.begin();it!=owners.end();it++)
+      {
+        if(!**it)continue;
+        ownflt.Insert(*it,1);
+        haveOwnFlt=true;
+      }
+    }
     char buf[32];
     for(int i=0;i<lst.Count();i++)
     {
       smsc::distrlist::DistrList& dl=lst[i];
+      if(haveNmFlt && !nmflt.Exists(dl.name))continue;
+      dl.owner.getText(buf,sizeof(buf));
+      if(haveOwnFlt && (dl.system || !ownflt.Exists(buf)))continue;
       result.appendValueToStringList(dl.name);
-      result.appendValueToStringList(dl.system?"":dl.owner.toString().c_str());
+      result.appendValueToStringList(dl.system?"":buf);
       sprintf(buf,"%d",dl.maxEl);
       result.appendValueToStringList(buf);
     }
