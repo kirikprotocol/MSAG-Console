@@ -76,11 +76,11 @@ public class dlAdd extends dlBody
   {
     if (mask.getQuestionsCount() > 0)
       return error(SMSCErrors.error.dl.wildcardsNotAllowedInAddress);
-    try {
+ /*   try {
       admin.addPrincipal(new Principal(mask.getNormalizedMask(), 0, 0));
     } catch (PrincipalAlreadyExistsException e) {
       // do nothing
-    }
+    } */
     admin.grantPosting(name, mask.getNormalizedMask());
     return RESULT_DONE;
   }
