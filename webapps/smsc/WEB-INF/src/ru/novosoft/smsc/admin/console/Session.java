@@ -182,8 +182,7 @@ public abstract class Session extends Thread
         return sb.toString();
     }
 
-    private void process()
-            throws Exception
+    private void process() throws Exception
     {
         if (!authorize()) return;
 
@@ -267,7 +266,7 @@ public abstract class Session extends Thread
                     closeSemaphore.wait();
                 }
                 catch (InterruptedException e) {}
-                catch (Exception e) {}
+                catch (Throwable th) {}
             }
         }
     }
