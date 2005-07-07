@@ -17,7 +17,7 @@ switch (bean.process(request))
 %><%--DESING PARAMETERS~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%><%
 %><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="dlBody.jsp"%>
-<%
+<%                 
 page_menu_begin(out);
 page_menu_button(session, out, "mbSave",  "common.buttons.save",  "dl.saveHint");
 page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "common.buttons.cancel", "clickCancel()");

@@ -31,24 +31,60 @@
 
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Submitters ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <div class=page_subtitle><%=getLocString("dl.submittersTitle")%></div>
-<table class=list cellspacing=0 cellpadding=1 width="100%">
+
+<script>
+function removeSubmitters(rowId)
+{
+    var t = opForm.all.SubmittersTable;
+  var r = t.rows(rowId);
+  if (r != null)
+    t.deleteRow(r.rowIndex);
+}
+
+var rowCounter = 0;
+
+function addSubmitters()
+{
+  var fme = opForm.all.newSubmitters;
+  var fm = fme.value;
+  if (fm == null || fm == "")
+    return false;
+
+  var t = opForm.all.SubmittersTable;
+  var r = t.insertRow(t.rows.length -1);
+  r.id = "row_Submitters_" + rowCounter++;
+  var c1 = r.insertCell();
+  c1.innerHTML = "<input class=txt name=submitters value=\"" + fm + "\" validation=\"address\" onkeyup=\"resetValidation(this)\">";
+  var c2 = r.insertCell();
+  c2.innerHTML = "<img src=\"/images/but_del.gif\" onclick=\"removeSubmitters('" + r.id + "')\" style=\"cursor:hand;\">";
+
+  fme.value = "";
+  fme.focus();
+}
+
+</script>
+<table id=SubmittersTable class=list cellspacing=0 cellpadding=1 width="100%">
 <thead>
 <col width="15%">
-<col width="85%">
+<col width="84%">
 </thead>
 <%
 for (int i = 0; i<bean.getSubmitters().length; i++)
-{
-	%><tr class=row0>
-		<td colspan=2><input class=txt name=submitters value="<%=StringEncoderDecoder.encode(bean.getSubmitters()[i])%>" validation="address" onkeyup="resetValidation(this)"
+{ final String Submitters = bean.getSubmitters()[i];
+  final String SubmittersHex = StringEncoderDecoder.encodeHEX(Submitters);
+ 	%>
+<tr <tr id=SubmittersRow_<%=SubmittersHex%> class=row0>
+		<td colspan=1><input class=txt name=submitters value="<%=StringEncoderDecoder.encode(bean.getSubmitters()[i])%>" validation="address" onkeyup="resetValidation(this)"
         <%=isEditing && !bean.isSystem() && bean.getOwner().equals(bean.getSubmitters()[i]) ? "readonly" : ""%>></td>
-	</tr>
+      <%-- <td><img src="/images/but_del.gif" onclick="removeSubmitters('SubmittersRow_<%=SubmittersHex%>')" style="cursor:hand;"></td>  --%>
+        <td><%delButton(out, "mbDel", "Del", "dl.delSubmitterHint","removeSubmitters('SubmittersRow_"+SubmittersHex+"');return false;" );%></td>
+      </tr>
 	<%
 }
 %>
 <tr class=row0>
-	<td><input class=txt name=submitters validation="address" onkeyup="resetValidation(this)"></td>
-	<td><%addButton(out, "mbAdd", "Add", "dl.addSubmitterHint");%></td>
+	<td><input class=txt name=submitters validation="address" id=newSubmitters onkeyup="resetValidation(this)"></td>
+	<td><%addButton(out, "mbAdd", "Add", "dl.addSubmitterHint","addSubmitters();return false;");%></td>
 </tr>
 </table>
 
@@ -68,7 +104,38 @@ function setSort(sorting)
 }
 </script>
 <div class=page_subtitle><%=getLocString("dl.membersTitle")%></div>
-<table class=list cellspacing=0 cellpadding=1 width="100%">
+<script>
+function removeMembers(rowId)
+{
+    var t = opForm.all.MembersTable;
+  var r = t.rows(rowId);
+  if (r != null)
+    t.deleteRow(r.rowIndex);
+}
+
+var rowCounter = 0;
+
+function addMembers()
+{
+  var fme = opForm.all.newMembers;
+  var fm = fme.value;
+  if (fm == null || fm == "")
+    return false;
+
+  var t = opForm.all.MembersTable;
+  var r = t.insertRow(t.rows.length -1);
+  r.id = "row_Members_" + rowCounter++;
+  var c1 = r.insertCell();
+  c1.innerHTML = "<input class=txt name=members value=\"" + fm + "\" validation=\"address\" onkeyup=\"resetValidation(this)\">";
+  var c2 = r.insertCell();
+  c2.innerHTML = "<img src=\"/images/but_del.gif\" onclick=\"removeMembers('" + r.id + "')\" style=\"cursor:hand;\">";
+
+  fme.value = "";
+  fme.focus();
+}
+
+</script>
+<table id=MembersTable class=list cellspacing=0 cellpadding=1 width="100%">
 <col width="15%">
 <col width="85%">
 <thead>
@@ -81,10 +148,12 @@ function setSort(sorting)
 </thead>
 <%
 for (int i = 0; i<bean.getMembers().length; i++)
-{
-	%><tr class=row0>
-		<td colspan=2><input class=txt name=members value="<%=StringEncoderDecoder.encode(bean.getMembers()[i])%>" validation="address" onkeyup="resetValidation(this)"></td>
-	</tr>
+{ final String Members = bean.getMembers()[i];
+  final String MembersHex = StringEncoderDecoder.encodeHEX(Members);
+	%><tr id=MembersRow_<%=MembersHex%> class=row0>
+		<td colspan=1><input class=txt name=members value="<%=StringEncoderDecoder.encode(bean.getMembers()[i])%>" validation="address" onkeyup="resetValidation(this)"></td>
+	  <td><%delButton(out, "mbDel", "Del", "dl.delMemberHint","removeMembers('MembersRow_"+MembersHex+"');return false;" );%></td>
+   </tr>
 	<%
 }
 %>
@@ -96,8 +165,8 @@ for (int i = 0; i<bean.getMembers().length; i++)
 <col width="85%">
 </thead>
 <tr class=row0>
-	<td><input class=txt name=members validation="address" onkeyup="resetValidation(this)"></td>
-	<td><%addButton(out, "mbAdd", "Add", "dl.addMemberHint");%></td>
+	<td><input class=txt name=members validation="address" id=newMembers onkeyup="resetValidation(this)"></td>
+	<td><%addButton(out, "mbAdd", "Add", "dl.addMemberHint","addMembers();return false;");%></td>
 </tr>
 </table>
 </div>
