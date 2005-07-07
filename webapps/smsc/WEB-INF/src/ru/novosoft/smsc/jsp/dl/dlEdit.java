@@ -209,11 +209,11 @@ public class dlEdit extends dlBody
     for (Iterator i = addresses.iterator(); i.hasNext();) {
       String addr = (String) i.next();
       if (!oldSubmitters.contains(addr)) {
-        try {
+    /*    try {
           admin.addPrincipal(new Principal(addr, 0, 0));
         } catch (PrincipalAlreadyExistsException e) {
           // do nothing
-        }
+        }  */
         admin.grantPosting(name, addr);
       }
     }
