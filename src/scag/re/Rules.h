@@ -67,6 +67,11 @@ namespace scag { namespace re
      */
     class Rule
     {
+    private:
+
+        Mutex ruleLock;
+        int useCounter;
+
     protected:
 
         // TODO: add more rule attributes (traffic control etc.)
@@ -76,9 +81,23 @@ namespace scag { namespace re
         
     public:
 
-        Rule() {};
+        Rule() : useCounter(1) {};
         virtual ~Rule() {};
 
+        void ref() {
+            MutexGuard mg(ruleLock);
+            useCounter++;
+        }
+        void unref() 
+        {
+            bool del = false;
+            {
+                MutexGuard mg(ruleLock);
+                del = (--useCounter == 0);
+            }
+            if (del) delete this;
+        }
+        
         /**
          * Creates & configure rule attributes and
          * handlers from sub-section (via HandlersFactory ?)
