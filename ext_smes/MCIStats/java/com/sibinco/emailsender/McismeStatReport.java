@@ -295,9 +295,10 @@ public class McismeStatReport {
 
         List list = new ArrayList();
         ResultSet rset = null;
-        try {
+        PreparedStatement pstmt = null;
 
-            PreparedStatement pstmt = connection.prepareStatement(SELECT_QUERY);
+        try {
+            pstmt = connection.prepareStatement(SELECT_QUERY);
             pstmt.setInt(1, period1);
             pstmt.setInt(2, period2);
             // Execute the query
@@ -316,8 +317,15 @@ public class McismeStatReport {
             rset.close();
             pstmt.close();   // Close the connection object
 
-        } catch (SQLException ex) { // Trap SQL errors
-            logger.error(" Error selecting records from database table: " + '\n' + ex.toString());
+        } catch (SQLException sqlEx) {
+            logger.error(" Error selecting records from database table: " + sqlEx.toString());
+        } finally {
+            try {
+                if (rset != null) rset.close();
+                if (pstmt != null) pstmt.close();
+            } catch (SQLException ex) {
+                logger.error(ex.getMessage());
+            }
         }
         return (McismeStat[]) list.toArray(new McismeStat[list.size()]);
     }
@@ -330,7 +338,7 @@ public class McismeStatReport {
             try {
                 connection.close();   // close the connection when exit
             } catch (SQLException ex) {
-                ex.printStackTrace();
+                logger.error(ex.getMessage());
             }
         }
     }
@@ -340,10 +348,11 @@ public class McismeStatReport {
      * This method creates the table  in the database
      */
     private static void createTableMCISME_STAT() {
+        Statement stmt = null;
         try {
 
             // Statement object for executing the query
-            Statement stmt = connection.createStatement();
+            stmt = connection.createStatement();
             String createTableMCISME_STAT = "CREATE TABLE MCISME_STAT ( " +
                     " PERIOD NUMBER(22) NOT NULL,  " +
                     " MISSED NUMBER(22) NOT NULL,  " +
@@ -360,19 +369,25 @@ public class McismeStatReport {
             // Closing the Statement
             stmt.close();
         } catch (SQLException ex) {
-            ex.printStackTrace();
             logger.error("Error creating the table. " + ex.toString());
+        } finally {
+            try {
+                if (stmt != null) stmt.close();
+            } catch (SQLException ex) {
+            }
         }
+
     }
 
     /**
      * This method creates the table  in the database
      */
     private static void createTableMCISME_ABONENTS() {
+        Statement stmt = null;
         try {
 
             // Statement object for executing the query
-            Statement stmt = connection.createStatement();
+           stmt = connection.createStatement();
 
             String createTableMCISME_ABONENTS = "CREATE TABLE MCISME_ABONENTS( " +
                     " ABONENT VARCHAR2(30) NOT NULL CONSTRAINT MCISME_ABONENTS_ABONENT_PK PRIMARY KEY," +
@@ -390,6 +405,12 @@ public class McismeStatReport {
         } catch (SQLException ex) {
             ex.printStackTrace();
             logger.error("Error creating the table. " + ex.toString());
+        } finally {
+            try {
+                if (stmt != null) stmt.close();
+            } catch (SQLException ex) {
+                logger.error(ex.getMessage());
+            }
         }
     }
 
@@ -398,10 +419,12 @@ public class McismeStatReport {
      */
     private static long countMcismeAbonents() {
         long result = 0;
+        ResultSet rset = null;
+        Statement stmt =  null;
         try {
-            ResultSet rset = null;
+
             // Statement object for executing the query
-            Statement stmt = connection.createStatement();
+            stmt = connection.createStatement();
 
             // Execute the statement
             rset = stmt.executeQuery(SELECT_QUERY_MCISME_ABONENTS);
@@ -412,9 +435,15 @@ public class McismeStatReport {
             rset.close();
             // Closing the Statement
             stmt.close();
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            logger.error("Error creating the table. " + ex.toString());
+        } catch (SQLException sqlEx) {
+            logger.error(" Error selecting records from database table: " + sqlEx.toString());
+        } finally {
+            try {
+                if (rset != null) rset.close();
+                if (stmt != null) stmt.close();
+            } catch (SQLException ex) {
+                logger.error(ex.getMessage());
+            }
         }
         return result;
     }
@@ -459,6 +488,7 @@ public class McismeStatReport {
                 if (rset != null) rset.close();
                 if (stmt != null) stmt.close();
             } catch (SQLException ex) {
+                logger.error(ex.getMessage());
             }
         }
     }
@@ -535,20 +565,31 @@ public class McismeStatReport {
      */
     public static void insertDataToMCISME_ABONENTS(String abonent, char inform, char notify,
                                                    int inform_id, int notify_id, int event_mask) throws Exception {
-
+         PreparedStatement pstmt = null;
         // Prepare the statement for inserting a row into the MCISME_STAT
-        PreparedStatement pstmt = connection.prepareStatement(INSERT_MCISME_ABONENTS);
+        try {
+            pstmt = connection.prepareStatement(INSERT_MCISME_ABONENTS);
 
-        // Bind the parameter values for the above statement
-        pstmt.setString(1, abonent);
-        pstmt.setString(2, String.valueOf(inform));
-        pstmt.setString(3, String.valueOf(notify));
-        pstmt.setInt(4, inform_id);
-        pstmt.setInt(5, notify_id);
-        pstmt.setInt(6, event_mask);
+            // Bind the parameter values for the above statement
+            pstmt.setString(1, abonent);
+            pstmt.setString(2, String.valueOf(inform));
+            pstmt.setString(3, String.valueOf(notify));
+            pstmt.setInt(4, inform_id);
+            pstmt.setInt(5, notify_id);
+            pstmt.setInt(6, event_mask);
 
-        // Execute the statement
-        pstmt.execute();
+            // Execute the statement
+            pstmt.execute();
+            pstmt.close();
+        } catch (SQLException sqlEx) {
+            logger.error("Could not insert data into table MCISME_ABONENTS : " + sqlEx.toString());
+        } finally {
+            try {
+                if (pstmt != null) pstmt.close();
+            } catch (SQLException ex) {
+                logger.error(ex.getMessage());
+            }
+        }
     }
 
     /**
@@ -556,21 +597,32 @@ public class McismeStatReport {
      */
     public static void insertData(int period, int missed, int delivered,
                                   int failed, int notified) throws Exception {
-
+        PreparedStatement pstmt = null;
         // Prepare the statement for inserting a row into the MCISME_STAT
-        PreparedStatement pstmt = connection.prepareStatement(" INSERT INTO " +
-                "MCISME_STAT( PERIOD, MISSED, DELIVERED, FAILED, NOTIFIED)" +
-                " VALUES(?, ?, ?, ?, ?)");
+        try {
+            pstmt = connection.prepareStatement(" INSERT INTO " +
+                    "MCISME_STAT( PERIOD, MISSED, DELIVERED, FAILED, NOTIFIED)" +
+                    " VALUES(?, ?, ?, ?, ?)");
 
-        // Bind the parameter values for the above statement
-        pstmt.setInt(1, period);
-        pstmt.setInt(2, missed);
-        pstmt.setInt(3, delivered);
-        pstmt.setInt(4, failed);
-        pstmt.setInt(5, notified);
+            // Bind the parameter values for the above statement
+            pstmt.setInt(1, period);
+            pstmt.setInt(2, missed);
+            pstmt.setInt(3, delivered);
+            pstmt.setInt(4, failed);
+            pstmt.setInt(5, notified);
 
-        // Execute the statement
-        pstmt.execute();
+            // Execute the statement
+            pstmt.execute();
+            pstmt.close();
+        } catch (SQLException sqlEx) {
+            logger.error("Could not insert data into table MCISME_STAT : " + sqlEx.toString());
+        } finally {
+            try {
+                if (pstmt != null) pstmt.close();
+            } catch (SQLException ex) {
+                logger.error(ex.getMessage());
+            }
+        }
     }
 
 
