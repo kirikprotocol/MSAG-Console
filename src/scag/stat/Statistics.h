@@ -49,6 +49,13 @@ using scag::transport::smpp::MmsCommand;
         virtual void registerCommand(MmsCommand cmd) = 0;
         virtual bool checkTraffic(string routeId, int period) = 0;
 
+        enum CheckTrafficPeriod{
+            checkMinPeriod,
+            checkHourPeriod,
+            checkDayPeriod,
+            checkMonthPeriod
+        };
+
         virtual ~Statistics() {};
 
     protected:

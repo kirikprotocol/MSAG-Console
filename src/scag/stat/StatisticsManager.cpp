@@ -56,8 +56,7 @@ StatisticsManager::StatisticsManager(Config config)
     if (!createStorageDir(traffloc)) 
         throw Exception("Can't open traffic directory: '%s'", traffloc.c_str());
 
-    // Opens traffic file and initializes traffic hash
-    tfopen();
+    // Initializes traffic hash
     initTraffic();
 }
 
@@ -308,9 +307,75 @@ void StatisticsManager::registerCommand(MmsCommand cmd)
   }
 }
 
-bool StatisticsManager::checkTraffic(string routeId, int period)
+bool StatisticsManager::checkTraffic(string routeId, Statistics::CheckTrafficPeriod period, int64_t value)
 {
-        return true;
+        switch(period){
+        case Statistics::checkMinPeriod:
+            TrafficRecord *tr = 0;
+            tr = trafficByRouteId.GetPtr(routeId);
+            if(tr){
+                time_t now = time(0);
+                tm tmnow;   localtime_r(&now, &tmnow);
+                tr.reset(tmnow;)
+
+                long mincnt_, hourcnt_, daycnt_, monthcnt_;
+                uint8_t year_, month_, day_, hour_, min_;
+                tr.getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                                    year_, month_, day_, hour_, min_);
+                if(mincnt_ <= value)
+                    return true;
+            }
+            break;
+        case Statistics::checkHourPeriod:
+            TrafficRecord *tr = 0;
+            tr = trafficByRouteId.GetPtr(routeId);
+            if(tr){
+                time_t now = time(0);
+                tm tmnow;   localtime_r(&now, &tmnow);
+                tr.reset(tmnow;)
+
+                long mincnt_, hourcnt_, daycnt_, monthcnt_;
+                uint8_t year_, month_, day_, hour_, min_;
+                tr.getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                                    year_, month_, day_, hour_, min_);
+                if(hourcnt_ <= value)
+                    return true;
+            }
+            break;
+        case Statistics::checkDayPeriod:
+            TrafficRecord *tr = 0;
+            tr = trafficByRouteId.GetPtr(routeId);
+            if(tr){
+                time_t now = time(0);
+                tm tmnow;   localtime_r(&now, &tmnow);
+                tr.reset(tmnow;)
+
+                long mincnt_, hourcnt_, daycnt_, monthcnt_;
+                uint8_t year_, month_, day_, hour_, min_;
+                tr.getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                                    year_, month_, day_, hour_, min_);
+                if(daycnt_ <= value)
+                    return true;
+            }
+            break;
+        case Statistics::checkMonthPeriod:
+            TrafficRecord *tr = 0;
+            tr = trafficByRouteId.GetPtr(routeId);
+            if(tr){
+                time_t now = time(0);
+                tm tmnow;   localtime_r(&now, &tmnow);
+                tr.reset(tmnow;)
+
+                long mincnt_, hourcnt_, daycnt_, monthcnt_;
+                uint8_t year_, month_, day_, hour_, min_;
+                tr.getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                                    year_, month_, day_, hour_, min_);
+                if(monthcnt_ <= value)
+                    return true;
+            }
+            break;
+        }
+        return false;
 }
 
 int StatisticsManager::Execute()
@@ -527,46 +592,56 @@ void StatisticsManager::write(const void* data, size_t size)
     }
 }
 
-void StatisticsManager::tfseek(long offset, int whence)
+void StatisticsManager::Fseek(long offset, int whence, FILE &*cfPtr)
 {
-    if (tfile && fseek(tfile, offset, whence)) {
-        int error = ferror(tfile);
-        Exception exc("Failed to seek traffic file. Details: %s", strerror(error));
-        tfclose(); throw exc;
+    if (cfPtr && fseek(cfPtr, offset, whence)) {
+        int error = ferror(cfPtr);
+        Exception exc("Failed to seek file. Details: %s", strerror(error));
+        Flose(cfPtr); throw exc;
     }
 }
 
-void StatisticsManager::tfclose()
+void StatisticsManager::Fclose(FILE &*cfPtr)
 {
-    if (tfile) { 
-        fclose(tfile); tfile = 0;
+    if (cfPtr) { 
+        fclose(cfPtr); cfPtr = 0;
     }
 }
 
-void StatisticsManager::tfopen()
+void StatisticsManager::Fopen(FILE &*cfPtr, const std::string loc)
 {
-    std::string loc = traffloc + std::string('/') + "traffic.dat";
-    tfile = fopen(loc.c_str(), "rb+"); // open or create for update
-    if (!tfile)
-        throw Exception("Failed to create/open traffic file '%s'. Details: %s", 
+    cfPtr = fopen(loc.c_str(), "rb+"); // open or create for update
+    if (!cfPtr)
+        throw Exception("Failed to create/open file '%s'. Details: %s", 
                             loc.c_str(), strerror(errno));
 }
 
-void StatisticsManager::tfflush()
+void StatisticsManager::Fflush(FILE &*cfPtr)
 {
-    if (tfile && fflush(tfile)) {
-        int error = ferror(file);
-        Exception exc("Failed to flush traffic file. Details: %s", strerror(error));
-        tfclose(); throw exc;
+    if (cfPtr && fflush(cfPtr)) {
+        int error = ferror(cfPtr);
+        Exception exc("Failed to flush file. Details: %s", strerror(error));
+        Fclose(cfPtr); throw exc;
     }
 }
 
-void StatisticsManager::tfwrite(const void* data, size_t size)
+void StatisticsManager::Fread(FILE &*cfPtr, void* data, size_t size)
 {
-    if (tfile && fwrite(data, size, 1, tffile) != 1) {
-        int error = ferror(file);
-        Exception exc("Failed to write traffic file. Details: %s", strerror(error));
-        tfclose(); throw exc;
+    int read_size = fread(data, size, 1, cfPtr);
+
+    if( (read_size != 1) && (read_size != 0)){
+        int err = ferror(cfPtr);
+        Fclose(cfPtr);
+        throw Exception("Can't read route from file. Details: %s", strerror(err));
+    }
+}
+
+void StatisticsManager::Fwrite(const void* data, size_t size, FILE *cfPtr)
+{
+    if (cfPtr && fwrite(data, size, 1, cfPtr) != 1) {
+        int error = ferror(cfPtr);
+        Exception exc("Failed to write file. Details: %s", strerror(error));
+        Fclose(cfPtr); throw exc;
     }
 }
 
@@ -720,7 +795,7 @@ void StatisticsManager::flushTraffic()
 
 void StatisticsManager::dumpTraffic(const IntHash<TrafficRecord>& traff)
 {
-    char buff[25];
+    char buff[25]; tmpBuff<uint8_t, 25600> fbuff(25600);
     long mincnt_, hourcnt_, daycnt_, monthcnt_; 
     uint8_t year_, month_, day_, hour_, min_;
 
@@ -757,28 +832,39 @@ void StatisticsManager::dumpTraffic(const IntHash<TrafficRecord>& traff)
         memcpy((void*)(buff + 23), (const void*)(&hour_), 1);
         memcpy((void*)(buff + 24), (const void*)(&min_), 1);
 
-        int offset = 0;
-        tfseek(offset, SEEK_SET);
-        tfwrite((const void*)buff, 25);
-        tfflush();
+        fbuff.Append((uint8_t *)buff, 25);
     }
+
+    std::string loc = traffloc + std::string('/') + "traffic.tmp";
+    FILE *cfPtr;
+    Fopen(cfPtr, loc.c_str()); // open or create for update
+    Fwrite(fbuff, fbuff.GetPos(), cfPtr);
+    Fclose(cfPtr);
+
+    std::string traffpath = traffloc + std::string('/') + "traffic.dat";
+    rename(loc, traffpath);
+    
+
 }
 
 void initTraffic()
 {
-    if(!tfile)
-        return;
 
-    tfseek(0, SEEK_SET);
+    const std::string loc = traffloc + std::string('/') + "traffic.dat";
+    FILE *cfPtr;
+    Fopen(cfPtr, loc);
+    Fseek(0, SEEK_SET, cfPtr);
 
     char buff[25];
     uint32_t val;
     uint8_t year, month, day, hour, min;
     int id;
     long mincnt, hourcnt, daycnt, monthcnt;
+    time_t now = time(0);
+    tm tmnow;  localtime_r(&now, &tmnow);
 
     int read_size = -1;
-    while( (read_size = fread(buff, 25, 1, tfile)) == 1){
+    while( (read_size = Fread(buff, 25, cfPtr)) == 1){
 
         // Copies routeId
         memcpy((void*)&val, (const void*)buff, 4);
@@ -804,14 +890,17 @@ void initTraffic()
         TrafficRecord tr(mincnt, hourcnt, daycnt, monthcnt, 
                          year, month, day, hour, min);
 
+        if(tmnow.tm_year != year_)
+            continue;
+        if(tmnow.tm_month != month_)
+            continue;
+
+        tr.inc(tmnow);
         trafficByRouteId.Insert(id, tr);
 
     }
 
-    if(read_size != 0){
-        int err = ferror(tfile);
-        throw Exception("Can't read route data from traffic file. Details: %s", strerror(err));
-    }
+    Fclose(cfPtr);
 }
 
 void incTraffc(const tm& tmDate)

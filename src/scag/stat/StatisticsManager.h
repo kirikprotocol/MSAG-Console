@@ -134,11 +134,12 @@ namespace stat {
         void write(const void* data, size_t size);
 
         std::string traffloc;
-        void tfopen();
-        void tfseek(long offset, int whence);
-        void tfclose();
-        void tfflush();
-        void tfwrite(const void* data, size_t size);
+        void Fopen(FILE &*cfPtr, const std::string loc);
+        void Fseek(long offset, int whence, FILE &*cfPtr);
+        void Fclose(FILE &*cfPtr);
+        void Fflush(FILE &*cfPtr);
+        void Fwrite(const void* data, size_t size, FILE &*cfPtr);
+        void Fread(FILE &*cfPtr, void* data, size_t size)
         void initTraffic();
 
         static bool createDir(const std::string& dir);

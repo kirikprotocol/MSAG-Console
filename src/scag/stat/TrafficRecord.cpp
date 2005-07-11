@@ -63,6 +63,56 @@ void TrafficRecord::inc(const tm& tmDate)
 	
 }
 
+void TrafficRecord::reset(const tm& tmDate)
+{
+	bool update = false;
+	if(year != tmDate.tm_year){
+		mincnt = 0;
+		hourcnt = 0;
+		daycnt = 0;
+		monthcnt = 0;
+		update = true;
+	}else if(month != tmDate.tm_month){
+		mincnt = 0;
+		hourcnt = 0;
+		daycnt = 0;
+		monthcnt = 0;
+		update = true;
+	}else if(day != tmDate.tm_mday){
+		mincnt = 0;
+		hourcnt = 0;
+		daycnt = 0;
+		monthcnt++;
+		update = true;
+	}else if(hour != tmDate.tm_hour){
+		hourcnt = 0;
+		mincnt = 0;
+		daycnt++;
+		monthcnt++;
+		update = true;
+	}else if(min != tmDate.tm_min){
+		mincnt = 0;
+		hourcnt++;
+		daycnt++;
+		monthcnt++;
+		update = true;
+	}else{
+		mincnt++;
+		hourcnt++;
+		daycnt++;
+		monthcnt++;
+	}
+	
+	if(update){
+		year = tmDate.tm_year;
+		month = tmDate.tm_month;
+		day = tmDate.tm_day;
+		hour = tmDate.tm_hour;
+		min = tmDate.tm_min;
+	}
+	
+}
+
 void TrafficRecord::getRouteData(long& mincnt_, long& hourcnt_, long& daycnt_, long& monthcnt_, uint8_t& year_, uint8_t& month_, uint8_t& day_, uint8_t& hour_, uint8_t& min_)
 {
     mincnt_ = mincnt;
