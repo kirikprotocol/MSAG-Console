@@ -42,7 +42,7 @@ public class McismeStatReport {
             "sum(notified) FROM MCISME_STAT where period>=? AND period <? GROUP BY period\n" +
             " ORDER BY period ASC";
 
-    public static final String SELECT_QUERY_MCISME_ABONENTS = "select count(*) from MCISME_ABONENTS where " +
+    public static final String SELECT_QUERY_MCISME_ABONENTS = "select count(*) CNT from MCISME_ABONENTS where " +
             "(bitand(event_mask,16)=0 AND " +
             "inform='Y') OR (bitand(event_mask,16)=16 AND inform='N')";
     public static final String INSERT_MCISME_ABONENTS = " INSERT INTO " +
@@ -406,7 +406,7 @@ public class McismeStatReport {
             // Execute the statement
             rset = stmt.executeQuery(SELECT_QUERY_MCISME_ABONENTS);
             while (rset.next()) {
-                result++;
+                return rset.getInt("CNT");
             }
             // Closing the ResultSet
             rset.close();
