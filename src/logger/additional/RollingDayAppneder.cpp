@@ -37,7 +37,7 @@ void RollingDayAppender::clearLogDir(time_t dat)
 
   DIR *dirp;
   dirent *dp;
-  dirp = opendir(filename.c_str());
+  dirp = opendir(pathname.c_str());
 
   std::vector<std::string> fnames(0);
 
@@ -46,7 +46,7 @@ void RollingDayAppender::clearLogDir(time_t dat)
       if ((dp = readdir(dirp)) != NULL) {
           int year = 0, month = 0, day = 0, res = 0;
           std::string fname_ = fname + ".%04d-%02d-%02d";
-            if((res = sscanf(fname_.c_str(), dp->d_name, &year, &month, &day)) == 3){
+            if((res = sscanf(dp->d_name, fname_.c_str(), &year, &month, &day)) == 3){
 
                     // Saves old files
                     time_t fdate;
@@ -64,9 +64,9 @@ void RollingDayAppender::clearLogDir(time_t dat)
 				    //printf("delay: %d\n", delay);
 				    if(delay >= maxBackupIndex){
                         if(pathname.length() == 0)
-                            fnames.push_back(pathname + std::string("/") + std::string(dp->d_name));
-                        else
                             fnames.push_back(std::string(dp->d_name));
+                        else
+                            fnames.push_back(pathname + std::string("/") + std::string(dp->d_name));
                     }
 			    
 		    }
