@@ -15,6 +15,7 @@
 
 #include <util/timeslotcounter.hpp>
 #include "util/config/Config.h"
+#include "routemap.h"
 
 namespace scag {
 
@@ -39,8 +40,12 @@ namespace stat {
       int accepted;
       int rejected;
       int delivered;
-      int temperror;
-      int permerror;
+      int gw_rejected;
+      int failed;
+      int billingOk;
+      int billingFailed;
+      int recieptOk;
+      int recieptFailed;
 
       IntHash<int> errors;
 
@@ -54,14 +59,14 @@ namespace stat {
         accepted=0;
         rejected=0;
         delivered=0;
-        temperror=0;
-        permerror=0;
+        gw_rejected=0;
+        failed=0;
         providerId=-1;
         errors.Empty();
       }
     };
 
-    struct ServiceStat
+    /*struct ServiceStat
     {
       int DeniedByBilling;
       int SmsTrOk;
@@ -81,7 +86,7 @@ namespace stat {
       {
         memset(this,0,sizeof(*this));
       }
-    };
+    };*/
 
     class StatisticsManager : public Statistics, public ThreadedTask
     {
@@ -94,9 +99,10 @@ namespace stat {
           ServiceStat service;
         };
 
-        Hash<TotalStat>    totalStatBySmeId[2];
-        Hash<CommonStat>   commonStatByRoute[2];
-        Hash<TrafficRecord> trafficByRouteId;
+        Hash<CommonStat>    statBySmeId[2];
+        Hash<CommonStat>   statByRoute[2];
+        Hash<CommonStat>   srvStatBySme[2];
+        IntHash<TrafficRecord> trafficByRouteId;
 
         int     currentIndex;
         bool    bExternalFlush;
@@ -147,6 +153,7 @@ namespace stat {
 
     public:
 
+        static RouteMap routeMap;
         virtual const char* taskName() { return "StatisticsTask"; };
         virtual int Execute();
         virtual void stop();
