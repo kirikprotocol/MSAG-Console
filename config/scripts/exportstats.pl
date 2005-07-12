@@ -27,9 +27,11 @@ $sck->write("quit");
 exit(0);
 
 sub getline{
+  my ($s,$to)=@_;
+  $to||=60;
   my $sel=IO::Select->new();
-  $sel->add($_[0]);
-  die "Read timed out" unless $sel->can_read($_[1]);
+  $sel->add($s);
+  die "Read timed out" unless $sel->can_read($to);
   my $l=readline($_[0]);
   die "$!" unless defined($l);
   die "Error response:$l" unless $l=~/^\+/;
