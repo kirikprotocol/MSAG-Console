@@ -22,16 +22,23 @@ import java.util.*;
 public class Gateway extends Proxy
 {
   private final String id;
-  private static final String SCAG_COMPONENT_ID = "SCAG";
+  private static final String SCAG_COMPONENT_ID = "scag";
   private static final String LOAD_ROUTES_METHOD_ID = "loadRoutes";
   private static final String TRACE_ROUTE_METHOD_ID = "traceRoute";
   private static final String SME_STATUS_ID = "statusSme";
   private long serviceRefreshTimeStamp = 0;
   private Map smeStatuses = new HashMap();
+
   public Gateway(final ServiceInfo gwServiceInfo, final int port)
   {
     super(gwServiceInfo.getHost(), port);
     id = gwServiceInfo.getId();
+  }
+
+  public Gateway(final String host, final int port)
+  {
+    super(host, port);
+    id = SCAG_COMPONENT_ID;     
   }
 
   public String getId()
