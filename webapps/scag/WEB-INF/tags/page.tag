@@ -72,9 +72,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
   <script src="/scripts/scripts.js" type="text/javascript"></script>
   <script src="/scripts/calendar.js" type="text/javascript"></script>
 </head>
-<%--<body onload="${onLoad}">--%>
-<body onload="initjsDOMenu()">
-
+<body onload="initjsDOMenu(); ${onLoad}">
   <!--calendar-->
   <iframe id=calendarIFrame class=calendarHiddenLayer2 src="/images/blank.html"></iframe>
   <div id=calendarPanel class=calendarHiddenLayer
@@ -271,7 +269,7 @@ request.setAttribute(ru.sibinco.scag.Constants.SCAG_ERROR_MESSAGES_ATTRIBUTE_NAM
             <sm:content menu="${menu}" menu2="${menu2}">
               <jsp:doBody/>
             </sm:content>
-            <script>tableTag_checkChecks();</script>
+<%--            <script>tableTag_checkChecks();</script>--%>
           </c:otherwise>
         </c:choose>
       </form>
