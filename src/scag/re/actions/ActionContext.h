@@ -10,7 +10,7 @@
 
 namespace scag { namespace re { namespace actions 
 {
-    using core::buffers::Hash;
+    using smsc::core::buffers::Hash;
     using scag::re::RuleStatus;
 
     using namespace scag::util::properties;
