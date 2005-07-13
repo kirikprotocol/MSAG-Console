@@ -28,7 +28,6 @@ public class Index extends SCAGBean
   private String[] subj;
   private boolean gwRunning;
   private boolean gwStopped;
-
   public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException
   {
     super.process(request, response);
@@ -37,10 +36,10 @@ public class Index extends SCAGBean
       gwDaemon.refreshServices(appContext.getGwSmeManager());
     } catch (SibincoException e) {
       logger.error("Could not refresh services", e);
-      throw new SCAGJspException(Constants.errors.status.COULDNT_REFRESH_SERVICES);
+   //   throw new SCAGJspException(Constants.errors.status.COULDNT_REFRESH_SERVICES);
     } catch (NullPointerException e) {
       logger.error("Could not get GW daemon");
-      throw new SCAGJspException(Constants.errors.status.COULDNT_GET_DAEMON);
+     // throw new SCAGJspException(Constants.errors.status.COULDNT_GET_DAEMON);
     }
     final ServiceInfo info = gwDaemon.getServiceInfo(appContext.getGateway().getId());
     if (null != info) {
