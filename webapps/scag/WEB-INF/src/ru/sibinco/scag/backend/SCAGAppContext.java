@@ -72,17 +72,11 @@ public class SCAGAppContext
       smscsManager = new SmscsManager(gwConfig,gwSmeManager);
       resourceManager = new ResourceManager(new File(gwConfigFolder));
       scag = new SCAG(gwDaemonHost, (int)config.getInt("gw daemon.port"),gwConfigFolder, this);
-     // smeHostsManager = new SmeHostsManager(config.getString("sme_file"), scag);
       billingManager = new BillingManager(new File(gwConfigFolder, "billing-rules.xml"));
       gwRoutingManager = new GwRoutingManager(new File(gwConfigFolder), gwSmeManager, providerManager, billingManager);
       gwRoutingManager.init();
       gwDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), gwSmeManager, config.getString("gw daemon.folder"));
-      final ServiceInfo gwServiceInfo = (ServiceInfo) gwDaemon.getServices().get(config.getString("gw name"));
-      gateway = new Gateway(gwServiceInfo, (int) gwConfig.getInt("admin.port"));
-      //DaemonManager daemonManager = new DaemonManager(smeManager, config);
-     // ServiceManager serviceManager = new ServiceManager();
-     // serviceManager.add(scag);
-      //hostsManager = new HostsManager(daemonManager, serviceManager, smeManager, gwRoutingManager);
+      gateway = new Gateway(gwDaemonHost, (int) gwConfig.getInt("admin.port"));
       statuses = new Statuses();
       perfServer = new PerfServer(config);
       perfServer.start();
