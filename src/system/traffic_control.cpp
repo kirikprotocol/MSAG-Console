@@ -1,7 +1,7 @@
 #include "util/debug.h"
 #include "system/traffic_control.hpp"
 #include "system/smsc.hpp"
-#include "store/StoreManager.h"
+//#include "store/StoreManager.h"
 
 namespace smsc{
 namespace system{

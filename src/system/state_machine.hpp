@@ -3,7 +3,7 @@
 
 #include "system/smsc.hpp"
 #include "core/threads/ThreadedTask.hpp"
-#include "store/StoreManager.h"
+//#include "store/StoreManager.h"
 #include "system/event_queue.h"
 #include "util/templates/Formatters.h"
 #include <string>

@@ -2,7 +2,7 @@
 #include "system/smppio/SmppAcceptor.hpp"
 #include <memory>
 #include "util/debug.h"
-#include "store/StoreManager.h"
+//#include "store/StoreManager.h"
 #include "system/state_machine.hpp"
 #include "core/synchronization/Event.hpp"
 #include "util/Exception.hpp"
@@ -359,7 +359,7 @@ void Smsc::init(const SmscConfigs& cfg)
   scheduler=new Scheduler();
 
 
-  smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance(),0);
+  //smsc::store::StoreManager::startup(smsc::util::config::Manager::getInstance(),0);
   //store=smsc::store::StoreManager::getMessageStore();
   store=scheduler;
   smsc_log_info(log, "Initializing scheduler" );
@@ -453,6 +453,7 @@ void Smsc::init(const SmscConfigs& cfg)
     tp.startTask(sm);
     smsc_log_info(log, "Speedmonitor started" );
   }
+  /*
   {
     using namespace smsc::db;
     using smsc::util::config::ConfigView;
@@ -468,6 +469,7 @@ void Smsc::init(const SmscConfigs& cfg)
     dataSource->init(config.get());
     smsc_log_info(log, "Datasource configured" );
   }
+  */
   {
     smsc_log_info(log, "Statistics manager starting..." );
     using smsc::util::config::ConfigView;
@@ -934,8 +936,8 @@ void Smsc::shutdown()
 
   smsc::mscman::MscManager::shutdown();
 
-  smsc::store::StoreManager::shutdown();
-  if(dataSource)delete dataSource;
+  //smsc::store::StoreManager::shutdown();
+  //if(dataSource)delete dataSource;
   __trace__("shutdown completed");
   smeman.Dump();
 }
