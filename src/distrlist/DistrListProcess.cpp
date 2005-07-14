@@ -342,7 +342,8 @@ int DistrListProcess::Execute()
           admin->addPrincipal(p);
         }
 #endif //DLSMSADMIN
-      }catch(SQLException& e)
+
+      }catch(smsc::core::buffers::FileException& e)
       {
         reason="database error";
       }catch(ListNotExistsException& e)
