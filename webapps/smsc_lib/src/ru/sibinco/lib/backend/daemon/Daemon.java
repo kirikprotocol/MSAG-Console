@@ -29,8 +29,12 @@ public class Daemon extends Proxy
   {
     super(host, port);
     this.daemonServicesFolder = daemonServicesFolder;
-    connect(host, port);
-    refreshServices(smeManager);
+      try {
+          connect(host, port);
+          refreshServices(smeManager);
+      } catch (SibincoException e) {
+        logger.warn("Couldn't connect to \"" + host + ':' + port + "\", nested: " + e.getMessage());
+      }
   }
 
   public Map refreshServices(final SmeManager smeManager) throws SibincoException

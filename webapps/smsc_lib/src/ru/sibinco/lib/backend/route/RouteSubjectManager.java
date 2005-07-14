@@ -93,8 +93,8 @@ public abstract class RouteSubjectManager
       logger.error("Couldn't parse", e);
       throw new SibincoException("Couldn't parse", e);
     } catch (IOException e) {
-      logger.error("Couldn't perform IO operation", e);
-      throw new SibincoException("Couldn't perform IO operation", e);
+      logger.error("Couldn't perfmon IO operation", e);
+      throw new SibincoException("Couldn't perfmon IO operation", e);
     } catch (NullPointerException e) {
       logger.error("Couldn't parse", e);
       throw new SibincoException("Couldn't parse", e);
