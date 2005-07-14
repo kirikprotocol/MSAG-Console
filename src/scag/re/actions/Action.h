@@ -10,14 +10,24 @@
 using smsc::core::buffers::IntHash;
 using namespace std;
 
+
 namespace scag { namespace re { namespace actions 
 {
     /**
      * Abstract action interface to run on ActionContext
      */
+
+typedef struct _SingleParam
+{
+    std::string Variable;
+    std::string Value;
+    std::string Operation;
+    _SingleParam() {Variable = ""; Value = ""; Operation = "";}
+} SingleParam;
+
 class Action : public IParserHandler
 {
-    //virtual void run(ActionContext& context) = 0;
+    virtual void run(ActionContext& context) {};
 protected:
 };
 
@@ -27,6 +37,7 @@ protected:
 
 class ActionReturn : public Action
 {
+    std::string ReturnValue;
     ActionReturn(const ActionReturn &);
 public:
     ActionReturn(const SectionParams& params);
@@ -48,12 +59,10 @@ class ActionIf : public Action
 {
     ActionIf(const ActionIf &);
 
-    std::string Variable;
-    std::string Value;
-    std::string Operation;
+    SingleParam singleparam;
 
-    bool ActivateThenSection;
-    bool ActivateElseSection;
+    bool FillThenSection;
+    bool FillElseSection;
     IntHash<Action *> ThenActions;
     IntHash<Action *> ElseActions;
 protected:

@@ -8,7 +8,10 @@ namespace scag { namespace re { namespace actions {
 /////////////////////////////  ACTION RETURN  /////////////////////////////////////
 ActionReturn::ActionReturn(const SectionParams& params)
 {
-    cout << "<return> action created" << endl;
+    ReturnValue = "";
+    if (params.Exists("result")) ReturnValue = params["result"];
+
+    cout << "<return> action created " << ReturnValue << endl;
 }
 
 ActionReturn::~ActionReturn()
@@ -43,23 +46,19 @@ ActionSet::~ActionSet()
 
 ActionIf::ActionIf(const SectionParams& params)
 {
-    ActivateThenSection = false;
-    ActivateThenSection = false;
+    FillThenSection = false;
+    FillThenSection = false;
 
-    Variable = "";
-    Operation = "";
-    Value = "";
-
-    Variable = params["test"];
+    if params.Exists("test") singleparam.Variable = params["test"];
 
     if ((params.Exists("op"))&&(params.Exists("value"))) 
     {
-        Operation = params["op"];
-        Value = params["value"];
+        singleparam.Operation = params["op"];
+        singleparam.Value = params["value"];
     }
 
 
-    cout << "<if> action created " << Variable << " " << Operation << " " << Value << endl;
+    cout << "<if> action created " << singleparam.Variable << " " << singleparam.Operation << " " << singleparam.Value << endl;
 }
 
 ActionIf::~ActionIf()
@@ -82,14 +81,14 @@ ActionIf::~ActionIf()
 
 void ActionIf::StartXMLSubSection(const std::string& name,const SectionParams& params)
 {
-    if (name == "then") ActivateThenSection = true;
-    if (name == "else") ActivateElseSection = true;
+    if (name == "then") FillThenSection = true;
+    if (name == "else") FillElseSection = true;
 }
 
 void ActionIf::FinishXMLSubSection(const std::string& name)
 {
-    if (name == "then") ActivateThenSection = false;
-    if (name == "else") ActivateElseSection = false;
+    if (name == "then") FillThenSection = false;
+    if (name == "else") FillElseSection = false;
 }
 
 bool ActionIf::SetChildObject(const IParserHandler * child)
@@ -100,13 +99,15 @@ bool ActionIf::SetChildObject(const IParserHandler * child)
     IParserHandler * _child = const_cast<IParserHandler *> (child);
     Action * action = dynamic_cast<Action *>(_child);
 
-    if (ActivateThenSection) 
+    if (!action) return false;
+
+    if (FillThenSection) 
     {
         ThenActions.Insert(ThenActions.Count(),action);
         cout << "<if>: child to <then> setted" << endl;
         return true;
     } else 
-    if (ActivateElseSection) 
+    if (FillElseSection) 
     {
         ElseActions.Insert(ThenActions.Count(),action);
         cout << "<if>: child to <else> setted" << endl;

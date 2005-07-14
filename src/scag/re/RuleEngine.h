@@ -145,19 +145,13 @@ private:
         return newRules;
     }
 
+    int ParseFile(const std::string& xmlFile);
+
 
 public:
 
-        //TODO: Implement
-
-        /**
-         * Creates RuleEngine by config subsection
-         * @param   config      RuleEngine config subsection
-         */
-    RuleEngine(ConfigView* config); // TODO: new Rules();
+    RuleEngine(const std::string& dir); 
     ~RuleEngine();
-
-    int ParseFile(const std::string& xmlFile);
 
         /**
          * Processes specified command on rule difined by id (obtained in RouteInfo).
@@ -176,7 +170,7 @@ public:
 	return rs;
     }
 
-    void updateRule(int ruleId, ConfigView* config) // add or modify
+    void updateRule(int ruleId) // add or modify
     {
         MutexGuard mg(changeLock);
 

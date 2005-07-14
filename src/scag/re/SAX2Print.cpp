@@ -22,18 +22,16 @@ static bool                     namespacePrefixes = false;
 
 int main(int argC, char* argV[])
 {
-//    SmeConfig cfg;
-//    smsc::smppgw::GatewaySme * a = new GatewaySme(cfg,0,"bla-bla",0); 
 
     std::string xmlFile = "rules.xml";
     int errorCount;
     int errorCode;
     RuleEngine * engine = 0;
 
-    engine = new RuleEngine(0);
+    engine = new RuleEngine("/rules");
 
     engine->ParseFile(xmlFile);
-//    delete a;
+
     return 0;
 }
 

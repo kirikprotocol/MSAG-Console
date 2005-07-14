@@ -42,7 +42,7 @@ XMLRuleHandler::XMLRuleHandler(const std::string SectionName)
 
 
 
-RuleEngine::RuleEngine(ConfigView* config)
+RuleEngine::RuleEngine(const std::string& dir)
 {
     /* TODO: Implement
              1) Configure global params (if any)
@@ -58,7 +58,9 @@ RuleEngine::RuleEngine(ConfigView* config)
     {
         StrX msg(toCatch.getMessage());
         std::cout << "Error during initialization! :\n" << msg.localForm() << std::endl;
+        return;
     }
+
 
 }
   

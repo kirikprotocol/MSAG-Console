@@ -31,6 +31,7 @@ bool EventHandler::SetChildObject(const IParserHandler * child)
 
     IParserHandler * _child = const_cast<IParserHandler *> (child);
     Action * action = dynamic_cast<Action *>(_child);
+    if (!action) return false;
 
     cout << "<handler>: child setted" << endl;
     actions.Insert(actions.Count(),action);

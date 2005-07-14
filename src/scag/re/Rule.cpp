@@ -13,7 +13,7 @@ Action * ActionFactory::CreateAction(const std::string& name,const SectionParams
 {
     if (name=="set") return new ActionSet(params);
     if (name=="if")  return new ActionIf(params);
-    if (name=="choose")  return new ActionChoose(params);
+    //if (name=="choose")  return new ActionChoose(params);
     if (name=="return")  return new ActionReturn(params);
 
     return 0;
@@ -23,7 +23,7 @@ void ActionFactory::FillTagHash(smsc::core::buffers::Hash<int>& TagHash) const
 {
     TagHash["set"] = tgActionSection;
     TagHash["if"] = tgActionSection;
-    TagHash["choose"] = tgActionSection;
+    //TagHash["choose"] = tgActionSection;
     TagHash["return"] = tgActionSection;
 }
 
@@ -58,6 +58,8 @@ bool Rule::SetChildObject(const IParserHandler * child)
 
     IParserHandler * _child = const_cast<IParserHandler *>(child);
     EventHandler * eh = dynamic_cast<EventHandler *>(_child);
+    if (!eh) return false;
+
     Handlers.Insert(Handlers.Count(),eh);
     return true;
 }
