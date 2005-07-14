@@ -8,7 +8,7 @@
 #include "core/synchronization/EventMonitor.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "system/sched_timer.hpp"
-#include "store/StoreManager.h"
+//#include "store/StoreManager.h"
 #include "logger/Logger.h"
 #include <map>
 #include <list>
