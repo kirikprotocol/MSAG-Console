@@ -140,6 +140,7 @@ void MscManager::shutdown()
     if (instance)
     {
         ((MscManagerImpl *)instance)->Stop();
+        ((MscManagerImpl *)instance)->WaitFor();
         delete instance;
         instance = 0;
     }
