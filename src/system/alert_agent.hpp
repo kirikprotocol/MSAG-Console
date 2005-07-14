@@ -1,7 +1,7 @@
 #ifndef __SMSC_SYSTEM_ALERTAGENT_HPP__
 #define __SMSC_SYSTEM_ALERTAGENT_HPP__
 
-#include "store/StoreManager.h"
+//#include "store/StoreManager.h"
 #include "system/event_queue.h"
 #include "core/threads/ThreadedTask.hpp"
 #include "core/buffers/Array.hpp"
