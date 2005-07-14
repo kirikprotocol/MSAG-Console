@@ -6,9 +6,9 @@
 
 PACKAGE := system
 
-CXXFLAGS := $(CXXFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public
+#CXXFLAGS := $(CXXFLAGS) -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public
 
-__LIBRARIES := $(ORACLE_LIB)/libclntsh.so -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc
+__LIBRARIES :=
 
 
 ifndef SMSC_SRCDIR
