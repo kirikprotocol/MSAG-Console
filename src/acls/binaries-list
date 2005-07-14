@@ -4,3 +4,4 @@
 # binary name        source name  libraries
 #acls/acls acls 
 acls/test0 test0 -lacls -lcore-network -lutil $(SOCKETLIB) -ldb -lcore-threads -lthread -lrt -lutil-recoder-recode_dll -lutil-config -L$(ORACLE_LIB) -lutil-xml $(__LIBRARIES) $(XERCES_LIB) -ldb -lnsl -ldl
+migration/acl_ora2bin ImportFromOracle -L$(SMSC_BUILDDIR)/bin -ldb -llogger -L$(ORACLE_LIB) -lutil-config -lutil-xml $(ORACLE_LIB)/libclntsh.so -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc $(XERCES_LIB) -lcore-threads -lutil -lpthread -ldl -lrt
