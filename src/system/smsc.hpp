@@ -21,8 +21,8 @@
 #include "system/alert_agent.hpp"
 #include "system/performance.hpp"
 #include "system/mapio/MapIoTask.h"
-#include "db/DataSource.h"
-#include "db/DataSourceLoader.h"
+//#include "db/DataSource.h"
+//#include "db/DataSourceLoader.h"
 #include "snmp/SnmpAgent.hpp"
 #include "acls/interfaces.h"
 
@@ -478,7 +478,7 @@ protected:
   AlertAgent *alertAgent;
   performance::PerformanceDataDispatcher perfDataDisp;
   performance::PerformanceDataDispatcher perfSmeDataDisp;
-  smsc::db::DataSource *dataSource;
+  //smsc::db::DataSource *dataSource;
 
   //TrafficControl *tcontrol;
 
