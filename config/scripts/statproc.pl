@@ -5,9 +5,11 @@ use Time::Local;
 
 my @findDirs=qw(. ./conf ../conf);
 
-if($9=~/(.*)[\\\/][^\\\/]+/)
+if($0=~/(.*)[\\\/][^\\\/]+/)
 {
   push @findDirs,$1;
+  push @findDirs,$1.'/conf';
+  push @findDirs,$1.'../conf';
 }
 
 my $cfgFileName='statproc.conf';
