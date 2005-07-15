@@ -9,6 +9,6 @@
     </sm-pm:menu>
   </jsp:attribute>
   <jsp:body>
-  
+    Place your content here
  </jsp:body>
 </sm:page>
