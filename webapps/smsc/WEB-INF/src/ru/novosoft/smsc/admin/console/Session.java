@@ -196,9 +196,7 @@ public abstract class Session extends Thread
             if (input.equalsIgnoreCase(COMMAND_QUIT)) {
                 farewell(null); sleep(1000); break;
             }
-            CommandContext ctx = new CommandContext(owner.getSmsc(), owner.getSmeManager(),
-                                 owner.getRouteSubjectManager(), owner.getCategoryManager(),
-                                 owner.getProviderManager(), owner.getWebappConfig());
+            CommandContext ctx = new CommandContext(owner);
             try
             {
                 CommandLexer lexer = new CommandLexer(new StringReader(input));
@@ -207,6 +205,8 @@ public abstract class Session extends Thread
                 if (commandAllowed(cmd.getId())) {
                     stopTimer();
                     cmd.process(ctx);
+					if (ctx.getStatus() == CommandContext.CMD_OK)
+						cmd.updateJournalAndStatuses(ctx, getUserName());
                 } else {
                     ctx.setMessage("Not enough rights to execute specified command");
                     ctx.setStatus(CommandContext.CMD_AUTH_ERROR);
@@ -287,4 +287,8 @@ public abstract class Session extends Thread
     protected void printlnString(String str) throws IOException {
         printString(str+"\r\n");
     }
+
+	public String getUserName() {
+		return user.getName();
+	}
 }
