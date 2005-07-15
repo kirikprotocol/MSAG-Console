@@ -988,6 +988,11 @@ Array<std::string> Task::finalizeMessage(const char* smsc_id, bool delivered,
     smsc_log_debug(logger, "Task: finalizing message #%lld smscId=%s delivered=%d",
                    msg_id, (smsc_id) ? smsc_id:"-", (int)delivered);
     
+    if (statistics) {
+        if (!delivered) statistics->incDelivered(abonent.c_str());
+        else statistics->incFailed(abonent.c_str());
+    }
+    
     __require__(ds);
 
     Array<std::string> callers;
@@ -1045,11 +1050,6 @@ Array<std::string> Task::finalizeMessage(const char* smsc_id, bool delivered,
 
         connection->commit();
         ds->freeConnection(connection);
-
-        if (statistics) {
-            if (!delivered) statistics->incDelivered(abonent.c_str());
-            else statistics->incFailed(abonent.c_str());
-        }
     } 
     catch (Exception& exc)
     {
