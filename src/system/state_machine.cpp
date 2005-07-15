@@ -3260,6 +3260,8 @@ StateType StateMachine::deliveryResp(Tuple& t)
     }
   }
 
+  sms.setLastResult(Status::OK);
+
   // concatenated message with conditional divert.
   // first part delivered ok.
   // other parts MUST be delivered to the same address.
@@ -4243,6 +4245,7 @@ StateType StateMachine::cancel(Tuple& t)
         return t.state;
       }
     }
+    smsc->registerStatisticalEvent(StatEvents::etRescheduled,&sms);
     smsc->registerStatisticalEvent(StatEvents::etUndeliverable,&sms);
   }catch(std::exception& e)
   {
