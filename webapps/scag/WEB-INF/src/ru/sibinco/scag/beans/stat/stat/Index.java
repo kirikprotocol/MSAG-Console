@@ -1,4 +1,4 @@
-package ru.sibinco.scagw.beans.stat.stat;
+package ru.sibinco.scag.beans.stat.stat;
 
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.SCAGBean;
