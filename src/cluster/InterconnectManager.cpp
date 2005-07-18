@@ -39,6 +39,7 @@ void InterconnectManager::sendCommand(const Command& command)
 }
 void InterconnectManager::addListener(CommandType type, CommandListener* listener)
 {
+
 }
 void InterconnectManager::activate()
 {
