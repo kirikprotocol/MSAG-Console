@@ -1197,7 +1197,7 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
                                 EINSS7_I97_ORIGINALNUMB_T *original,
                                 EINSS7_I97_USERINFORMATION_T *userInformation_sp,
                                 EINSS7_I97_USERSERVICE_T *userService_sp,
-                                EINSS7_I97_OPTPARAMS_T *extraOpts_sp)
+                                EINSS7_I97_OPTPARAMS_T *extraOpts)
 {
   smsc_log_debug(missedCallProcessorLogger,
                  "IsupSetupInd %s RG=%d %s %s %s %s %s",
@@ -1207,7 +1207,8 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
                  getCallingNumberDescription(calling).c_str(),
                  getRedirectionInfoDescription(redirinfo).c_str(),
                  getRedirectingNumberDescription(redirecting).c_str(),
-                 getOriginalNumberDescription(original).c_str()
+                 getOriginalNumberDescription(original).c_str(),
+                 getExtraOptionsDescription(extraOpts).c_str()
                 );
   strategy(isupHead_sp,calling,called,original,redirinfo,redirecting);
   return EINSS7_I97_REQUEST_OK;
