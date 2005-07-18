@@ -1,0 +1,96 @@
+ 
+╘юЁьрЄ Їрщыют ёЄрЄшёЄшъш ухэхЁшЁєхь√ї SMSC
+
+<File>
+	<FileHeader>
+		<char[9] id_mark>SMSC.STAT</char[9]>
+		<int16 version>01</int16>
+	</FileHeader>
+
+	<StatRecords (0..EOF)>
+
+		<uint32 recordSize1/>
+
+		<uint8 hour/>
+		<uint8 minute/>
+
+		// Route statistics for period
+		<int32 route_counter/>
+		<0..route_counter>
+			<uint8 route_id_len 	/>
+			<char[n] route_id   	/>
+		  	<int32 providerId   	/> 
+			<int32 accepted   	/>
+			<int32 rejected  	/>
+			<int32 delivered    	/>
+			<int32 gw_rejected	/>
+			<int32 failed  		/>
+			<int32 billingOk     	/>
+			<int32 billingFailed    />
+			<int32 recieptOk     	/>
+			<int32 recieptFailed  	/>
+
+			// Error statistics for sme
+			<int32 route_err_counter/>
+			<0..route_err_counter>
+				<int32 errcode/>
+				<int32 counter/>
+			</0..route_err_counter>
+		</0..route_counter>
+
+		// Sme statistics for period
+		<int32 sme_counter/>
+		<0..sme_counter>
+			<uint8 sme_id_len 	/>
+			<char[n] sme_id   	/>
+		  	<int32 providerId   	/> 
+			<int32 accepted   	/>
+			<int32 rejected  	/>
+			<int32 delivered    	/>
+			<int32 gw_rejected	/>
+			<int32 failed  		/>
+			<int32 billingOk     	/>
+			<int32 billingFailed    />
+			<int32 recieptOk     	/>
+			<int32 recieptFailed  	/>
+
+			// Error statistics for sme
+			<int32 sme_err_counter/>
+			<0..sme_err_counter>
+				<int32 errcode/>
+				<int32 counter/>
+			</0..sme_err_counter>
+		</0..sme_counter>
+
+		// Smsc statistics for period
+		<int32 smsc_counter/>
+		<0..smsc_counter>
+			<uint8 sme_id_len 	/>
+			<char[n] sme_id   	/>
+		  	<int32 providerId   	/> 
+			<int32 accepted   	/>
+			<int32 rejected  	/>
+			<int32 delivered    	/>
+			<int32 gw_rejected	/>
+			<int32 failed  		/>
+			<int32 billingOk     	/>
+			<int32 billingFailed    />
+			<int32 recieptOk     	/>
+			<int32 recieptFailed  	/>
+
+			// Error statistics for sme
+			<int32 smsc_err_counter/>
+			<0..smsc_err_counter>
+				<int32 errcode/>
+				<int32 counter/>
+			</0..smsc_err_counter>
+		</0..smsc_counter>
+
+				
+		<uint32 recordSize2/>
+
+	</StatRecords (0..EOF)>
+</File>
+
+1. Статистика делится по директориям по месецам. Имя директории: YYYY-MM
+2. Внутри директории за месяц статистика разделена на файлы по дням с имненем: DD.rts
