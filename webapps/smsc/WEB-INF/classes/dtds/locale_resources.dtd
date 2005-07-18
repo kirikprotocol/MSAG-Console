@@ -1,4 +1,4 @@
-<?xml encoding="ISO-8859-1"?>
+<?xml encoding="windows-1251"?>
 
 <!ELEMENT locale_resources (settings*, resources*)>
 
