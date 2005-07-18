@@ -8,6 +8,34 @@ namespace util{
 
 using smsc::logger::Logger;
 using namespace std;
+
+std::string getExtraOptionsDescription(EINSS7_I97_OPTPARAMS_T *ext)
+{
+  if(!ext) return "";
+
+  string res = "ExtOptions=(";
+
+  for(int i = 0; i < ext->noOfParams; i++)
+  {
+    UCHAR_T* param = ext->params[i];
+    if (param)
+    {
+      char buf[4]; int k;
+      int len = param[1] + 2;
+
+      for (int j = 0; j < len; j++)
+      {
+        k = sprintf(buf,"%02X ",param[j]);
+        buf[k] = 0;
+        res +=buf;
+      }
+      if(ext->noOfParams-i-1 > 0) res +=",";
+    }
+  }
+  res +=")";
+  return res;
+}
+
 void pack_addr(UCHAR_T* dst, const char* src, int len)
 {
   for( int i = 0; i < len; i++ )
@@ -135,7 +163,7 @@ std::string getRedirectionInfoDescription(EINSS7_I97_REDIRECTIONINFO_T* redirect
   res += " OrigReason=";
   switch(redirectionInfo->origReason)
   {
-    case EINSS7_I97_REASON_UNKNOWN : res +=  "Unknown/not available";break;
+    case EINSS7_I97_REASON_UNKNOWN : res += "Unknown/not available";break;
     case EINSS7_I97_USER_BUSY      : res += "User busy";break;
     case EINSS7_I97_NO_REPLY       : res += "No reply";break;
     case EINSS7_I97_UNCOND         : res += "Unconditional";break;
@@ -149,7 +177,7 @@ std::string getRedirectionInfoDescription(EINSS7_I97_REDIRECTIONINFO_T* redirect
   res += " LastReason=";
   switch(redirectionInfo->lastReason)
   {
-    case EINSS7_I97_REASON_UNKNOWN  : res +=  "Unknown/not available";break;
+    case EINSS7_I97_REASON_UNKNOWN  : res += "Unknown/not available";break;
     case EINSS7_I97_USER_BUSY       : res += "User busy";break;
     case EINSS7_I97_NO_REPLY        : res += "No reply";break;
     case EINSS7_I97_UNCOND          : res += "Unconditional";break;
