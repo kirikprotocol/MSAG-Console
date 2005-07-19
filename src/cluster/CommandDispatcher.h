@@ -24,9 +24,8 @@ namespace smsc { namespace cluster
         EventMonitor        commandsMonitor;
         Array<Command*>     commands;
 
-        Mutex                   listenersLock;
-        IntHash<int>            listenersByType; // index in allListeners
-        Array<CommandListener*> listeners;
+        Mutex                               listenersLock;
+        IntHash<Array<CommandListener*>>    listeners;
         
     public:
 

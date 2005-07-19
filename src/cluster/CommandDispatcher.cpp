@@ -22,7 +22,7 @@ void CommandDispatcher::addCommand(Command* command)
 void CommandDispatcher::addListener(CommandType type, CommandListener* listener)
 {
     MutexGuard guard(listenersLock);
-    // TODO: Add listener to listeners & index to listenersByType
+    // TODO: Add listener to listeners hash
 }
 
 void CommandDispatcher::Start()
