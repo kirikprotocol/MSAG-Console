@@ -40,7 +40,7 @@ ET96MAP_SM_RP_UI_T* mkDeliverPDU(SMS* sms,ET96MAP_SM_RP_UI_T* pdu,bool mms=false
   int isrcpt=(esm&0x3c)==4 || (esm&0x3c)==0x20;
   SMS_DELIVERY_FORMAT_HEADER* header = (SMS_DELIVERY_FORMAT_HEADER*)pdu->signalInfo;
   header->uu.s.mg_type_ind = isrcpt?2:0;
-  header->uu.s.mms = mms;
+  header->uu.s.mms = !mms;
   header->uu.s.reply_path = (esm&0x80)?1:0;;
   header->uu.s.srri = 0;
   header->uu.s.udhi = (esm&0x40)?1:0;
