@@ -446,7 +446,7 @@ this.ds = ds;
              int route_id_len = readUInt8(is);
              String routeId = readString(is, route_id_len);
 
-             long providerId = readUInt32(is);
+             int providerId = (int)readUInt32(is);
            //  long categoryId = readInt64(is);
 
              RouteIdCountersSet set = (RouteIdCountersSet) map.get(routeId);

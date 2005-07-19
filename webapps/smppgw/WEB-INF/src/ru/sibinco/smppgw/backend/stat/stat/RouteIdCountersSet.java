@@ -10,7 +10,7 @@ package ru.sibinco.smppgw.backend.stat.stat;
 public class RouteIdCountersSet extends ExtendedCountersSet implements Comparable
 {
   protected String routeid;
-
+ public int providerId = -1;
   public RouteIdCountersSet(String routeid)
    {
      this.routeid = routeid;
@@ -43,5 +43,15 @@ public class RouteIdCountersSet extends ExtendedCountersSet implements Comparabl
 
   public String getRouteid() {
     return routeid;
+  }
+
+  public int getProviderId()
+  {
+    return providerId;
+  }
+
+  public void setProviderId(int providerId)
+  {
+    this.providerId = providerId;
   }
 }
