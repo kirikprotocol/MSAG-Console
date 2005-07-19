@@ -246,7 +246,7 @@ this.ds = ds;
             InputStream input = null;
             try {
                 input = new BufferedInputStream(new FileInputStream(path));
-                String fileStamp = readString(input, 10);
+                String fileStamp = readString(input, 11);
                 if (fileStamp == null || !fileStamp.equals("SMPPGW.STAT"))
                     throw new MessageException("unsupported header of file (support only SMPPGW.STAT file )");
                 readUInt16(input); // read version for support reasons
@@ -358,7 +358,8 @@ this.ds = ds;
         if (countersSme != null) stat.addSmeIdCollection(countersSme);
         Collection countersRoute = countersForRoute.values();
         if (countersRoute != null) stat.addRouteIdCollection(countersRoute);
-
+        System.out.println("ok");
+        System.out.println("ok");
         return stat;
 
 
@@ -445,7 +446,7 @@ this.ds = ds;
              int route_id_len = readUInt8(is);
              String routeId = readString(is, route_id_len);
 
-           //  long providerId = readInt64(is);
+             long providerId = readUInt32(is);
            //  long categoryId = readInt64(is);
 
              RouteIdCountersSet set = (RouteIdCountersSet) map.get(routeId);
@@ -453,7 +454,7 @@ this.ds = ds;
                  set = new RouteIdCountersSet(routeId);
                  map.put(routeId, set);
              }
-            // set.setProviderId(providerId);
+             set.setProviderId(providerId);
             // set.setCategoryId(categoryId);
 
              scanCounters(set, is);
