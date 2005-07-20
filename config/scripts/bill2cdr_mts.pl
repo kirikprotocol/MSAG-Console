@@ -282,6 +282,9 @@ sub outrow{
       }
     }
     return unless $ok;
+  }else
+  {
+    $fields->{MSC_ID}=$fields->{PAYER_MSC};
   }
 
   my $outf;
