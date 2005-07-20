@@ -113,5 +113,5 @@ USHORT_T Dialog::invoke(const Operation* op)
 }
 
 } // namespace inap
-} // namespace inmgr
+} // namespace inman
 } // namespace smsc

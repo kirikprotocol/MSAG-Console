@@ -38,56 +38,57 @@ class InitialDP : public Operation
 {
     public:
     COMP_T* get() const;
-}
+};
 
 class RequestReportBCSMEvent : public Operation
 {
     public:
     COMP_T* get() const;
-}
+};
 
 class EventReportBCSM : public Operation
 {
     public:
     COMP_T* get() const;
-}
+};
 
 class Cancel : public Operation
 {
     public:
     COMP_T* get() const;
-}
+};
 
 class Connect : public Operation
 {
     public:
     COMP_T* get() const;
-}
+};
 
 class Continue : public Operation
 {
     public:
     COMP_T* get() const;
-}
+};
 
 class ReleaseCall : public Operation
 {
     public:
     COMP_T* get() const;
-}
+};
 
 class ApplyCharging : public Operation
 {
     public:
     COMP_T* get() const;
-}
+};
 
 class ApplyChargingReport : public Operation
 {
     public:
     COMP_T* get() const;
-}
+};
 
+}
 }
 }
 }
