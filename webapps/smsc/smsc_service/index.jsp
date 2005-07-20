@@ -194,6 +194,7 @@ refreshStartStopButtonsStatus();
       param(out, "smsc.smpp.readTimeout",             "smpp.readTimeout",                   bean.getIntParam("smpp.readTimeout"));
       param(out, "smsc.smpp.inactivityTime",          "smpp.inactivityTime",                bean.getIntParam("smpp.inactivityTime"));
       param(out, "smsc.smpp.inactivityTimeOut",       "smpp.inactivityTimeOut",             bean.getIntParam("smpp.inactivityTimeOut"));
+      param(out, "smsc.smpp.bindTimeout",             "smpp.bindTimeout",                   bean.getIntParam("smpp.bindTimeout"));
       param(out, "smsc.smpp.defaultConnectionsLimit", "smpp.defaultConnectionsLimit",       bean.getIntParam("smpp.defaultConnectionsLimit"));
       finishParams(out);
       startSection(out, "connectionsLimitsForIps",    "smsc.smpp.connectionsLimitsForIps", false);
