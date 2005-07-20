@@ -1,0 +1,5 @@
+#
+# $Id$
+#
+inman inman $(SOCKETLIB) -linman -linman-inap -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -linman-inap $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -llogger -lnsl
+
