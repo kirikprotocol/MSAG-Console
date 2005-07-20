@@ -1200,7 +1200,7 @@ USHORT_T EINSS7_I97IsupSetupInd(EINSS7_I97_ISUPHEAD_T *isupHead_sp,
                                 EINSS7_I97_OPTPARAMS_T *extraOpts)
 {
   smsc_log_debug(missedCallProcessorLogger,
-                 "IsupSetupInd %s RG=%d %s %s %s %s %s",
+                 "IsupSetupInd %s RG=%d %s %s %s %s %s %s",
                  getHeadDescription(isupHead_sp).c_str(),
                  resourceGroup,
                  getCalledNumberDescription(called).c_str(),
