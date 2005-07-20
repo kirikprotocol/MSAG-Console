@@ -2,6 +2,9 @@
 use strict;
 use Net::FTP;
 use Time::Local;
+use locale;
+use POSIX;
+setlocale(LC_NUMERIC,"ru.koi8-r");
 
 my @findDirs=qw(. ./conf ../conf);
 
