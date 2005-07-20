@@ -1,7 +1,7 @@
 #include "ss7cp.h"
 #include "et94inapcs1plusapi.h"
 
-extern "C" 
+extern "C"
 {
 
 USHORT_T E94InapAbortInd(       UCHAR_T         ssn,
@@ -28,7 +28,7 @@ USHORT_T E94InapBeginInd(       UCHAR_T         ssn,
                                 USHORT_T        noOfComponents,
                                 COMP_T          *comp_p );
 
-USHORT_T E94InapBindConf(       UCHAR_T         ssn, 
+USHORT_T E94InapBindConf(       UCHAR_T         ssn,
                                 UCHAR_T         bindResult );
 
 USHORT_T E94InapDataInd(        UCHAR_T         ssn,

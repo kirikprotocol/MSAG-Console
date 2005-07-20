@@ -680,7 +680,7 @@ const char* getBindErrorMessage(USHORT_T errcode)
     static char error[80];
     switch( errcode )
     {
-        case BIND_RES_SUCCESS: 
+        case BIND_RES_SUCCESS:
             return "Success";
         case BIND_RES_SSN_ALREADY_IN_USE:
             return "A user with the same SSN is already bound.";

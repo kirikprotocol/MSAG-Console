@@ -37,8 +37,8 @@ USHORT_T Dialog::beginReq()
 
     USHORT_T result = E94InapBeginReq(
        session->getSSN(),
-       id, 
-       qSrvc, 
+       id,
+       qSrvc,
        priority,
        &destAddress,
        &origAddress,
@@ -46,7 +46,7 @@ USHORT_T Dialog::beginReq()
        0, NULL,
        0, NULL );
 
-    if (result != 0) 
+    if (result != 0)
     {
         smsc_log_error(inapLogger, "E94InapBeginReq failed with code %d(%s)", result,getReturnCodeDescription(result));
     }
@@ -68,7 +68,7 @@ USHORT_T Dialog::dataReq()
         0,    //USHORT_T noOfComponents
         NULL); //COMP_T *comp_p
 
-    if (result != 0) 
+    if (result != 0)
     {
         smsc_log_error(inapLogger, "E94InapDataReq failed with code %d(%s)", result,getReturnCodeDescription(result));
     }
@@ -79,9 +79,9 @@ USHORT_T Dialog::dataReq()
 USHORT_T Dialog::endReq()
 {
     USHORT_T result = E94InapEndReq(
-        session->getSSN(), 
-        id, 
-        qSrvc, 
+        session->getSSN(),
+        id,
+        qSrvc,
         priority,
         acShort,
         IN_E_BASIC_TERM, //UCHAR_T termination,
@@ -91,7 +91,7 @@ USHORT_T Dialog::endReq()
         NULL//COMP_T *comp_p);
     );
 
-    if (result != 0) 
+    if (result != 0)
     {
         smsc_log_error(inapLogger, "E94InapEndReq failed with code %d(%s)", result,getReturnCodeDescription(result));
     }

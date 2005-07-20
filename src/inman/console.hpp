@@ -28,7 +28,7 @@ public:
 
     typedef void (*console_function)(Console&, const std::vector<std::string> &);
 
-    typedef struct 
+    typedef struct
     {
         std::string         name;
         console_item_type_t type;

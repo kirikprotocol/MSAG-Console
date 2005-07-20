@@ -17,7 +17,7 @@ namespace inap  {
 // IN session
 /////////////////////////////////////////////////////////////////////////////////////
 
-Session::Session(UCHAR_T ssn) 
+Session::Session(UCHAR_T ssn)
     : Thread()
     , SSN( ssn )
     , state( IDLE )
@@ -87,7 +87,7 @@ void Session::closeAllDialogs()
         MutexGuard guard( lock );
         snapshot = dialogs;
     }
-    
+
     for( DialogsMap_T::iterator it = snapshot.begin(); it != snapshot.end(); it++ )
     {
         closeDialog( (*it).second );
@@ -101,7 +101,7 @@ int Session::Execute()
     smsc_log_debug(inapLogger,"Session (%d) is started", SSN );
 
     USHORT_T  result = E94InapBindReq(SSN, MSG_USER_ID, TRUE);
-    if (result != 0) 
+    if (result != 0)
     {
         smsc_log_error(inapLogger, "E94InapBindReq failed with code %d(%s)", result,getReturnCodeDescription(result));
         goto stop;
@@ -118,14 +118,14 @@ int Session::Execute()
         }
 
         msg.receiver = MSG_USER_ID;
-        
+
         result = EINSS7CpMsgRecv_r( &msg,  MSG_RECV_TIMEOUT );
 
-        if( result == MSG_TIMEOUT ) 
+        if( result == MSG_TIMEOUT )
         {
             continue;
         }
-        if (result != RETURN_OK ) 
+        if (result != RETURN_OK )
         {
             smsc_log_error(inapLogger, "MsgRecv failed with code %d(%s)",  result,getReturnCodeDescription(result));
             running = FALSE;
@@ -141,7 +141,7 @@ int Session::Execute()
     }
 
     result = E94InapUnBindReq( SSN );
-    if (result != 0) 
+    if (result != 0)
     {
         smsc_log_error(inapLogger, "E94InapUnBindReq failed with code %d(%s)", result,getReturnCodeDescription(result));
         goto stop;

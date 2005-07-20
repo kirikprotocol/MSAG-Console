@@ -45,7 +45,7 @@ void Factory::openConnection()
       {
         case IDLE:
             result = MsgInit(MSG_INIT_MAX_ENTRIES);
-            if (result != 0) 
+            if (result != 0)
             {
                 smsc_log_error(inapLogger, "MsgInit Failed with code %d(%s)", result, getReturnCodeDescription(result));
                 return;
@@ -53,10 +53,10 @@ void Factory::openConnection()
             state = INITED;
             smsc_log_debug(inapLogger,"MsgInit done.");
             break;
-        
+
         case INITED:
             result = MsgOpen(MSG_USER_ID);
-            if (result != 0) 
+            if (result != 0)
             {
                 smsc_log_error(inapLogger, "MsgOpen failed with code %d(%s)", result, getReturnCodeDescription(result));
                 return;
@@ -64,10 +64,10 @@ void Factory::openConnection()
             state = OPENED;
             smsc_log_debug(inapLogger,"MsgOpen done.");
             break;
-       
+
        case OPENED:
             result = MsgConn(MSG_USER_ID, INAP_ID);
-            if (result != 0) 
+            if (result != 0)
             {
                 smsc_log_error(inapLogger, "MsgConn failed with code %d(%s)", result, getReturnCodeDescription(result));
                 return;
@@ -100,7 +100,7 @@ void Factory::closeConnection()
             }
             state = OPENED;
             break;
-        } 
+        }
         case OPENED:
         {
             result = MsgClose(MSG_USER_ID);
@@ -136,7 +136,7 @@ Factory* Factory::getInstance()
 Session* Factory::openSession(UCHAR_T SSN)
 {
     MutexGuard guard( sessionsLock );
-    
+
     if( state != CONNECTED ) openConnection();
 
     if( state != CONNECTED ) return NULL;
@@ -187,7 +187,7 @@ void Factory::closeSession(Session* pSession)
     {
         smsc_log_warn(inapLogger,"IN session with SSN=%d not exists", pSession->SSN );
     }
-    
+
     pSession->running = FALSE;
 
     if( pSession->stopped.Wait( MSG_RECV_TIMEOUT * 3 ) )
@@ -209,7 +209,7 @@ void Factory::closeAllSessions()
         MutexGuard guard( sessionsLock );
         snapshot = sessions;
     }
-    
+
     for( SessionsMap_T::iterator it = snapshot.begin(); it != snapshot.end(); it++ )
     {
         closeSession( (*it).second );

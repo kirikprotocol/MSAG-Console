@@ -21,7 +21,7 @@ void console_help(Console& console, const std::vector<std::string> &)
    std::cout << std::endl;
 }
 
-Console::Console() 
+Console::Console()
 {
     addItem("exit", &console_exit);
     addItem("help", &console_help);
@@ -207,7 +207,7 @@ void Console::addItem(const std::string & strName, void *pointer, console_item_t
 void Console::deleteItem(const std::string & strName)
 {
     ITEM_DB::iterator iter;
-    
+
     // find item
     for (iter = m_itemList.begin(); iter != m_itemList.end(); ++iter)
     {
