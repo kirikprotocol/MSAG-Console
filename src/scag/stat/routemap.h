@@ -4,6 +4,7 @@
 #include <string>
 #include <core/buffers/IntHash.hpp>
 #include <core/buffers/Hash.hpp>
+#include <core/synchronization/Mutex.hpp>
 
 namespace scag {
 namespace stat {
@@ -17,8 +18,8 @@ public:
 	RouteMap();
 	virtual ~RouteMap();
 	int regRoute(const char *routeId, int &newRouteId);
-	char *lookup(int routeId);
-    int lookup(const char * routeId);
+	const char    *getStrRouteId(int routeId);
+    int     getIntRouteId(const char * routeId);
 protected:
 	Mutex mutex;
 	IntHash<std::string> strByInt;

@@ -2,19 +2,14 @@
 #define SMSC_SCAG_STAT_STATISTICS
 
 #include "smeman/smeproxy.h"
+#include "smeman/smeman.h"
 #include "router/route_types.h"
 #include "sms/sms.h"
-
-#include "scag/transport/smpp/SmppCommand.h"
-#include "scag/transport/smpp/WapCommand.h"
-#include "scag/transport/smpp/MmsCommand.h"
 
 namespace scag {
 namespace stat {
 
-using scag::transport::smpp::SmppCommand;
-using scag::transport::smpp::WapCommand;
-using scag::transport::smpp::MmsCommand;
+using smsc::smeman::SmeRecord;
 
     namespace Counters{
         enum SmppStatCounter{
@@ -25,7 +20,7 @@ using scag::transport::smpp::MmsCommand;
           cntFailed,
 
           cntBillingOk = 0x1000,
-          cntBillingFailed
+          cntBillingFailed,
           cntRecieptOk,
           cntRecieptFailed,
 
@@ -50,7 +45,7 @@ using scag::transport::smpp::MmsCommand;
         errCode = -1;
         internal = false;
       }
-      SmppStatEevnt(smsc::smeman::SmeProxy* proxy, int cnt, int errcode)
+      SmppStatEvent(smsc::smeman::SmeProxy* proxy, int cnt, int errcode)
       {
         strncpy(smeId,proxy->getSystemId(),sizeof(smeId));
         smeProviderId=proxy->getProviderId();
@@ -78,8 +73,15 @@ using scag::transport::smpp::MmsCommand;
         routeProviderId=src.routeProviderId;
         counter = src.counter;
         errCode = src.errCode;
-        internal = (  (SmeRecord*)proxy  )->info.internal;
+        internal = src.internal;
       }
+    };
+
+    enum CheckTrafficPeriod{
+        checkMinPeriod,
+        checkHourPeriod,
+        checkDayPeriod,
+        checkMonthPeriod
     };
 
 
@@ -88,14 +90,7 @@ using scag::transport::smpp::MmsCommand;
     public:
 
         virtual void registerEvent(const SmppStatEvent& si) = 0;
-        virtual bool checkTraffic(string routeId, Statistics::CheckTrafficPeriod period, int64_t value) = 0;
-
-        enum CheckTrafficPeriod{
-            checkMinPeriod,
-            checkHourPeriod,
-            checkDayPeriod,
-            checkMonthPeriod
-        };
+        virtual bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value) = 0;
 
         virtual ~Statistics() {};
 

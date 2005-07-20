@@ -24,12 +24,14 @@
 namespace scag {
 namespace stat {
 
+    using smsc::core::buffers::TmpBuf;
+
 const uint16_t SMSC_STAT_DUMP_INTERVAL = 60; // in seconds
 const uint16_t SMSC_STAT_VERSION_INFO  = 0x0001;
 const char*    SMSC_STAT_HEADER_TEXT   = "SCAG.STAT";
 const char*    SMSC_STAT_DIR_NAME_FORMAT  = "%04d-%02d";
 const char*    SMSC_STAT_FILE_NAME_FORMAT = "%02d.rts";
-StatisticsManager::routeMap;
+RouteMap StatisticsManager::routeMap;
 
 StatisticsManager::StatisticsManager(Config config)
     :  logger(Logger::getInstance("scag.stat.StatisticsManager")),
@@ -45,7 +47,7 @@ StatisticsManager::StatisticsManager(Config config)
 
     try
     {
-        location = config.getString("MessageStorage.trafficDir");
+        traffloc = config.getString("MessageStorage.trafficDir");
     }catch(...)
     {
         throw Exception("Can't find parameter in config: 'MessageStorage.trafficDir'");
@@ -59,6 +61,8 @@ StatisticsManager::StatisticsManager(Config config)
 
     // Initializes traffic hash
     initTraffic();
+
+    logger = Logger::getInstance("statman");
 }
 
 StatisticsManager::~StatisticsManager()
@@ -82,48 +86,59 @@ void StatisticsManager::registerEvent(const SmppStatEvent& si)
   CommonStat* routeSt=0;
   CommonStat* srvSt=0;
 
+  using namespace Counters;
+
   if (si.smeId && si.smeId[0])
   {
-    CommonStat *smeSt = statBySmeId[currentIndex].GetPtr(si.smeId);
-    if(!smeSt)
-    {
-      CommonStat newStat;
-      statBySmeId[currentIndex].Insert(si.smeId, newStat);
-      smeSt=statBySmeId[currentIndex].GetPtr(si.smeId);
-    }
+    if(si.counter < cntBillingOk){
+        smeSt = statBySmeId[currentIndex].GetPtr(si.smeId);
 
-    if(si.internal){
-        CommonStat newStat;
-        srvStatBySmeId[currentIndex].Insert(si.smeId, newStat);
-        srvStat=srvStatBySmeId[currentIndex].GetPtr(si.smeId);
+        /*int cnt = si.counter < 0x1000 ? si.counter : si.counter - 0x1000 + 5;
+        smsc_log_debug(logger, "\nsmeId: '%s', %s\n", si.smeId, cnt_[cnt]);*/
+
+        if(!smeSt)
+        {
+            CommonStat newStat;
+            statBySmeId[currentIndex].Insert(si.smeId, newStat);
+            smeSt=statBySmeId[currentIndex].GetPtr(si.smeId);
+        }
+
+        if(si.internal){
+            srvSt = srvStatBySmeId[currentIndex].GetPtr(si.smeId);
+            if(!srvSt){
+                CommonStat newStat;
+                srvStatBySmeId[currentIndex].Insert(si.smeId, newStat);
+                srvSt=srvStatBySmeId[currentIndex].GetPtr(si.smeId);
+            }
+        }
     }
   }
 
   if (si.routeId && si.routeId[0])
   {
-    routeSt = statByRoute[currentIndex].GetPtr(si.routeId);
+    //smsc_log_debug(logger, "routeId: '%s'", si.routeId);
+    routeSt = statByRouteId[currentIndex].GetPtr(si.routeId);
     if(!routeSt)
     {
       CommonStat newStat;
-      statByRoute[currentIndex].Insert(si.routeId, newStat);
-      routeSt=statByRoute[currentIndex].GetPtr(si.routeId);
+      statByRouteId[currentIndex].Insert(si.routeId, newStat);
+      routeSt=statByRouteId[currentIndex].GetPtr(si.routeId);
     }
   }
 
-  using namespace Counters;
-
-  if(errcode < cntBillingOk)
+  if(si.counter < cntBillingOk)
   {
-    if(smeSt) incError(smeSt->errors, errcode);
-    if(srvSt) incError(srvSt->errors, errcode);
-    if(routeSt) incError(routeSt->errors, errcode);
+    if(smeSt) incError(smeSt->errors, si.errCode);
+    if(srvSt) incError(srvSt->errors, si.errCode);
+    if(routeSt) incError(routeSt->errors, si.errCode);
   }
 
   if(smeSt && si.smeProviderId!=-1)smeSt->providerId=si.smeProviderId;
   if(srvSt && si.smeProviderId!=-1)srvSt->providerId=si.smeProviderId;
   if(routeSt && si.routeProviderId!=-1)routeSt->providerId=si.routeProviderId;
 
-  switch(counter)
+  int c;
+  switch(si.counter)
   {
 #define INC_STAT(cnt,field) case cnt:{\
       if(smeSt)smeSt->field++; \
@@ -136,100 +151,105 @@ void StatisticsManager::registerEvent(const SmppStatEvent& si)
     INC_STAT(cntDelivered,delivered)
     INC_STAT(cntGw_Rejected,gw_rejected)
     INC_STAT(cntFailed,failed)
-
+    INC_STAT(cntBillingOk,billingOk)
+    INC_STAT(cntBillingFailed,billingFailed)
+    INC_STAT(cntRecieptOk,recieptOk)
+    INC_STAT(cntRecieptFailed,recieptFailed)
+                    
 #undef INC_STAT
 
   }
 
   if (si.routeId && si.routeId[0])
   {
-      int id, newRouteId;
-      if(  (id = routeMap.regRoute(si.routeId, newRouteId)) == -1)
-          id = newRouteId;
+      if( si.counter == cntAccepted){
+          int id, newRouteId;
+          if(  (id = routeMap.regRoute(si.routeId, newRouteId)) == -1)
+              id = newRouteId;
 
-      time_t now = time(0);
-      tm tmnow;   localtime_r(&now, &tmnow);
-      TrafficRecord *tr = 0;
-      tr = trafficByRouteId.GetPtr(id);
-      if(tr){
-          tr.inc(tmnow;)
-      }else{
-          TrafficRecord tr(1, 1, 1, 1, 
-                         tmnow.tm_year, tmnow.tm_month, tmnow.tm_mday, tmnow.tm_hour, tmnow.tm_min);
-          trafficByRouteId.Insert(id, tr);
+          time_t now = time(0);
+          tm tmnow;   localtime_r(&now, &tmnow);
+          TrafficRecord *tr = 0;
+          tr = trafficByRouteId.GetPtr(id);
+          if(tr){
+                tr->inc(tmnow);
+          }else{
+              TrafficRecord tr(1, 1, 1, 1, 
+                               tmnow.tm_year, tmnow.tm_mon, tmnow.tm_mday, tmnow.tm_hour, tmnow.tm_min);
+              trafficByRouteId.Insert(id, tr);
+          }
       }
   }
 }
 
-bool StatisticsManager::checkTraffic(string routeId, Statistics::CheckTrafficPeriod period, int64_t value)
+bool StatisticsManager::checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value)
 {
-        MutexGuard mg(switchLook);
+        MutexGuard mg(switchLock);
 
         int id;
-        if(  (id = routeMap.lookup(routeId.c_str())) == -1)
+        if(  (id = routeMap.getIntRouteId(routeId.c_str())) == -1)
             return false;
 
+        TrafficRecord *tr = 0;
+
         switch(period){
-        case Statistics::checkMinPeriod:
-            TrafficRecord *tr = 0;
+        case checkMinPeriod:
             tr = trafficByRouteId.GetPtr(id);
             if(tr){
                 time_t now = time(0);
                 tm tmnow;   localtime_r(&now, &tmnow);
-                tr.reset(tmnow;)
+                tr->reset(tmnow);
 
                 long mincnt_, hourcnt_, daycnt_, monthcnt_;
                 uint8_t year_, month_, day_, hour_, min_;
-                tr.getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                tr->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
                                     year_, month_, day_, hour_, min_);
                 if(mincnt_ <= value)
                     return true;
             }
             break;
-        case Statistics::checkHourPeriod:
-            TrafficRecord *tr = 0;
+        case checkHourPeriod:
             tr = trafficByRouteId.GetPtr(id);
             if(tr){
                 time_t now = time(0);
                 tm tmnow;   localtime_r(&now, &tmnow);
-                tr.reset(tmnow;)
+                tr->reset(tmnow);
 
                 long mincnt_, hourcnt_, daycnt_, monthcnt_;
                 uint8_t year_, month_, day_, hour_, min_;
-                tr.getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                tr->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
                                     year_, month_, day_, hour_, min_);
                 if(hourcnt_ <= value)
                     return true;
             }
             break;
-        case Statistics::checkDayPeriod:
-            TrafficRecord *tr = 0;
+        case checkDayPeriod:
             tr = trafficByRouteId.GetPtr(id);
             if(tr){
                 time_t now = time(0);
                 tm tmnow;   localtime_r(&now, &tmnow);
-                tr.reset(tmnow;)
+                tr->reset(tmnow);
 
                 long mincnt_, hourcnt_, daycnt_, monthcnt_;
                 uint8_t year_, month_, day_, hour_, min_;
-                tr.getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                tr->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
                                     year_, month_, day_, hour_, min_);
                 if(daycnt_ <= value)
                     return true;
             }
             break;
-        case Statistics::checkMonthPeriod:
-            TrafficRecord *tr = 0;
+        case checkMonthPeriod:
             tr = trafficByRouteId.GetPtr(id);
             if(tr){
                 time_t now = time(0);
                 tm tmnow;   localtime_r(&now, &tmnow);
-                tr.reset(tmnow;)
+                tr->reset(tmnow);
 
                 long mincnt_, hourcnt_, daycnt_, monthcnt_;
                 uint8_t year_, month_, day_, hour_, min_;
-                tr.getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                tr->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
                                     year_, month_, day_, hour_, min_);
+                //printf("%04d-%02d-%02d %02d:%02d (m, h, d, M): %d, %d, %d, %d\n", year_ + 1900, month_ + 1, day_, hour_, min_, mincnt_, hourcnt_, daycnt_, monthcnt_);
                 if(monthcnt_ <= value)
                     return true;
             }
@@ -286,7 +306,7 @@ int StatisticsManager::switchCounters()
     tm tmDate;
     time_t date = time(0);
     localtime_r(&date, &tmDate);
-    incTraffic(tmDate);
+    resetTraffic(tmDate);
 
     int flushIndex = currentIndex;
     currentIndex ^= 1; //switch between 0 and 1
@@ -329,15 +349,16 @@ void StatisticsManager::flushCounters(int index)
 
         // Route statistic
         int32_t value32 = 0;
-        value32 = statByRoute[index].GetCount(); 
+        value32 = statByRouteId[index].GetCount(); 
         value32 = htonl(value32); buff.Append((uint8_t *)&value32, sizeof(value32));
 
-        statByRoute[index].First();
+        statByRouteId[index].First();
         char* routeId = 0;
         CommonStat* routeStat = 0;
-        while (statByRoute[index].Next(routeId, routeStat))
+        while (statByRouteId[index].Next(routeId, routeStat))
         {
             if (!routeStat || !routeId || routeId[0] == '\0') continue;
+          
             __trace2__("routeid=%s",routeId);
             // Writes length of routeId and routId
             uint8_t routIdLen = (uint8_t)strlen(routeId);
@@ -354,6 +375,9 @@ void StatisticsManager::flushCounters(int index)
             value32 = htonl(routeStat->billingFailed);      buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(routeStat->recieptOk);          buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(routeStat->recieptFailed);      buff.Append((uint8_t *)&value32, sizeof(value32));
+            /*printf("p: %d, a: %d, r: %d, d: %d, gw_r: %d, f: %d, bo: %d, bf:%d, ro: %d, rf: %d\n", routeStat->providerId,
+                   routeStat->accepted, routeStat->rejected, routeStat->delivered, routeStat->gw_rejected, routeStat->failed,
+                   routeStat->billingOk, routeStat->billingFailed, routeStat->recieptOk, routeStat->recieptFailed);*/
 
             // Writes route errors count.
             value32 = routeStat->errors.Count(); 
@@ -365,6 +389,7 @@ void StatisticsManager::flushCounters(int index)
                 // Statistics for this errors
                 value32 = htonl(recError);  buff.Append((uint8_t *)&value32, sizeof(value32));
                 value32 = htonl(reCounter); buff.Append((uint8_t *)&value32, sizeof(value32));
+                //printf("e: %d, c: %d\n", recError, reCounter);
             }
             routeStat = 0;
         }
@@ -379,6 +404,7 @@ void StatisticsManager::flushCounters(int index)
         while (statBySmeId[index].Next(smeId, smeStat))
         {
             if (!smeStat || !smeId || smeId[0] == '\0') continue;
+            
             int cnt=2;
             // Writes length of smeId and smeId
             uint8_t smeIdLen = (uint8_t)strlen(smeId);
@@ -391,10 +417,6 @@ void StatisticsManager::flushCounters(int index)
             value32 = htonl(smeStat->delivered);            buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(smeStat->gw_rejected);          buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(smeStat->failed);               buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(smeStat->billingOk);            buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(smeStat->billingFailed);        buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(smeStat->recieptOk);            buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(smeStat->recieptFailed);        buff.Append((uint8_t *)&value32, sizeof(value32));
 
             // Writes sme common errors count.
             value32 = smeStat->errors.Count(); 
@@ -421,6 +443,7 @@ void StatisticsManager::flushCounters(int index)
         while (srvStatBySmeId[index].Next(smeId, srvStat))
         {
             if (!srvStat || !smeId || smeId[0] == '\0') continue;
+            
             int cnt=2;
             // Writes length of smeId and smeId
             uint8_t smeIdLen = (uint8_t)strlen(smeId);
@@ -433,10 +456,6 @@ void StatisticsManager::flushCounters(int index)
             value32 = htonl(srvStat->delivered);            buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(srvStat->gw_rejected);          buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(srvStat->failed);               buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(srvStat->billingOk);            buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(srvStat->billingFailed);        buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(srvStat->recieptOk);            buff.Append((uint8_t *)&value32, sizeof(value32));
-            value32 = htonl(srvStat->recieptFailed);        buff.Append((uint8_t *)&value32, sizeof(value32));
 
             // Writes sme common errors count.
             value32 = srvStat->errors.Count(); 
@@ -467,8 +486,9 @@ void StatisticsManager::flushCounters(int index)
 
 void StatisticsManager::resetCounters(int index)
 {
-  totalStatBySmeId[index].Empty();
-  commonStatByRoute[index].Empty();
+  statBySmeId[index].Empty();
+  statByRouteId[index].Empty();
+  srvStatBySmeId[index].Empty();
 }
 
 void StatisticsManager::close()
@@ -495,31 +515,31 @@ void StatisticsManager::write(const void* data, size_t size)
     }
 }
 
-void StatisticsManager::Fseek(long offset, int whence, FILE &*cfPtr)
+void StatisticsManager::Fseek(long offset, int whence, FILE* &cfPtr)
 {
     if (cfPtr && fseek(cfPtr, offset, whence)) {
         int error = ferror(cfPtr);
         Exception exc("Failed to seek file. Details: %s", strerror(error));
-        Flose(cfPtr); throw exc;
+        Fclose(cfPtr); throw exc;
     }
 }
 
-void StatisticsManager::Fclose(FILE &*cfPtr)
+void StatisticsManager::Fclose(FILE* &cfPtr)
 {
     if (cfPtr) { 
         fclose(cfPtr); cfPtr = 0;
     }
 }
 
-void StatisticsManager::Fopen(FILE &*cfPtr, const std::string loc)
+void StatisticsManager::Fopen(FILE* &cfPtr, const std::string loc)
 {
-    cfPtr = fopen(loc.c_str(), "rb+"); // open or create for update
+    cfPtr = fopen(loc.c_str(), "ab+"); // open or create for update
     if (!cfPtr)
         throw Exception("Failed to create/open file '%s'. Details: %s", 
                             loc.c_str(), strerror(errno));
 }
 
-void StatisticsManager::Fflush(FILE &*cfPtr)
+void StatisticsManager::Fflush(FILE* &cfPtr)
 {
     if (cfPtr && fflush(cfPtr)) {
         int error = ferror(cfPtr);
@@ -528,7 +548,7 @@ void StatisticsManager::Fflush(FILE &*cfPtr)
     }
 }
 
-void StatisticsManager::Fread(FILE &*cfPtr, void* data, size_t size)
+size_t StatisticsManager::Fread(FILE* &cfPtr, void* data, size_t size)
 {
     int read_size = fread(data, size, 1, cfPtr);
 
@@ -537,9 +557,11 @@ void StatisticsManager::Fread(FILE &*cfPtr, void* data, size_t size)
         Fclose(cfPtr);
         throw Exception("Can't read route from file. Details: %s", strerror(err));
     }
+
+    return read_size;
 }
 
-void StatisticsManager::Fwrite(const void* data, size_t size, FILE *cfPtr)
+void StatisticsManager::Fwrite(const void* data, size_t size, FILE* &cfPtr)
 {
     if (cfPtr && fwrite(data, size, 1, cfPtr) != 1) {
         int error = ferror(cfPtr);
@@ -687,10 +709,10 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
 
 void StatisticsManager::flushTraffic()
 {
+    IntHash<TrafficRecord> traff;
     {
         MutexGuard mg(switchLock);
-        Hash<TrafficRecord> traff;
-        traff = trafficByRoutedId;
+        traff = trafficByRouteId;
     }
 
     dumpTraffic(traff);
@@ -698,9 +720,10 @@ void StatisticsManager::flushTraffic()
 
 void StatisticsManager::dumpTraffic(const IntHash<TrafficRecord>& traff)
 {
-    int pos = smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH + 1;
+    const int pos = smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH + 1;
     const int sz = pos + 21;
-    char buff[sz]; tmpBuff<uint8_t, 27648> fbuff(27648);
+    char buff[sz];
+    TmpBuf<uint8_t, 27648> fbuff(27648);
     long mincnt_, hourcnt_, daycnt_, monthcnt_; 
     uint8_t year_, month_, day_, hour_, min_;
 
@@ -710,15 +733,14 @@ void StatisticsManager::dumpTraffic(const IntHash<TrafficRecord>& traff)
     while (traffit.Next(routeId, routeTraff))
     {
         // Copies routeId
-        char * id = routeMap.lookup(routeId);
+        const char * id = routeMap.getStrRouteId(routeId);
         memcpy((void*)buff, (const void*)(id), pos);
-
         routeTraff.getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
                                     year_, month_, day_, hour_, min_);
 
         // Copies counters
         uint32_t lval = mincnt_;
-        val = htonl(lval);
+        uint32_t val = htonl(lval);
         memcpy((void*)(buff + pos), (const void*)(&val), 4);
         lval = hourcnt_;
         val = htonl(lval);
@@ -740,23 +762,28 @@ void StatisticsManager::dumpTraffic(const IntHash<TrafficRecord>& traff)
         fbuff.Append((uint8_t *)buff, sz);
     }
 
-    std::string loc = traffloc + std::string('/') + "traffic.tmp";
-    FILE *cfPtr;
-    Fopen(cfPtr, loc.c_str()); // open or create for update
-    Fwrite(fbuff, fbuff.GetPos(), cfPtr);
-    Fclose(cfPtr);
+    if(fbuff.GetPos() > 0){
+        std::string loc = traffloc + std::string("/") + "traffic.tmp";
+        FILE *cfPtr = 0;
+        Fopen(cfPtr, loc.c_str()); // open or create for update
+        Fwrite(fbuff, fbuff.GetPos(), cfPtr);
+        Fclose(cfPtr);
 
-    std::string traffpath = traffloc + std::string('/') + "traffic.dat";
-    rename(loc, traffpath);
+        std::string traffpath = traffloc + std::string("/") + "traffic.dat";
+        rename(loc.c_str(), traffpath.c_str());
+    }else{
+        std::string traffpath = traffloc + std::string("/") + "traffic.dat";
+        remove(traffpath.c_str());
+    }
     
 
 }
 
-void initTraffic()
+void StatisticsManager::initTraffic()
 {
 
-    const std::string loc = traffloc + std::string('/') + "traffic.dat";
-    FILE *cfPtr;
+    const std::string loc = traffloc + std::string("/") + "traffic.dat";
+    FILE *cfPtr = 0;
     Fopen(cfPtr, loc);
     Fseek(0, SEEK_SET, cfPtr);
 
@@ -772,11 +799,11 @@ void initTraffic()
     tm tmnow;  localtime_r(&now, &tmnow);
 
     int read_size = -1;
-    while( (read_size = Fread(buff, 25, cfPtr)) == 1){
+    while( (read_size = Fread(cfPtr, buff, sz)) == 1){
 
         // Copies routeId
         memcpy((void*)routeId, (const void*)buff, pos);
-        if(routeMap.lookup(routeId, id) == -1)
+        if(routeMap.regRoute(routeId, id) != -1)
             continue;
 
         // Coies counters
@@ -799,12 +826,24 @@ void initTraffic()
         TrafficRecord tr(mincnt, hourcnt, daycnt, monthcnt, 
                          year, month, day, hour, min);
 
-        if(tmnow.tm_year != year_)
+        if(tmnow.tm_year != year)
             continue;
-        if(tmnow.tm_month != month_)
+        if(tmnow.tm_mon != month)
             continue;
 
-        tr.inc(tmnow);
+        /*long mincnt_, hourcnt_, daycnt_, monthcnt_; 
+        uint8_t year_, month_, day_, hour_, min_;
+
+        tr.getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                                    year_, month_, day_, hour_, min_);
+        printf("%04d-%02d-%02d %02d:%02d (m, h, d, M): %d, %d, %d, %d\n", year_ + 1900, month_ + 1, day_, hour_, min_, mincnt_, hourcnt_, daycnt_, monthcnt_);*/
+
+        tr.reset(tmnow);
+
+        /*tr.getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                                    year_, month_, day_, hour_, min_);
+        printf("%04d-%02d-%02d %02d:%02d (m, h, d, M): %d, %d, %d, %d\n\n", year_ + 1900, month_ + 1, day_, hour_, min_, mincnt_, hourcnt_, daycnt_, monthcnt_);*/
+
         trafficByRouteId.Insert(id, tr);
 
     }
@@ -812,18 +851,30 @@ void initTraffic()
     Fclose(cfPtr);
 }
 
-void incTraffc(const tm& tmDate)
+void StatisticsManager::resetTraffic(const tm& tmDate)
 {
-    IntHash<TrafficRecord>::Iterator traffit = traff.First();
+    IntHash<TrafficRecord>::Iterator traffit = trafficByRouteId.First();
     int routeId = 0;
-    TrafficRecord routeTraff;
+    TrafficRecord *routeTraff;
     while (traffit.Next(routeId, routeTraff))
     {
-        routeTraff.inc(tmDate);
+        /*long mincnt_, hourcnt_, daycnt_, monthcnt_; 
+        uint8_t year_, month_, day_, hour_, min_;
+        printf("\nresetTraffic routeId: %d\n", routeId);
+        printf("%04d-%02d-%02d %02d:%02d\n", tmDate.tm_year + 1900, tmDate.tm_mon + 1, tmDate.tm_mday, tmDate.tm_hour, tmDate.tm_min);
+        routeTraff->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                                    year_, month_, day_, hour_, min_);
+        printf("%04d-%02d-%02d %02d:%02d (m, h, d, M): %d, %d, %d, %d\n", year_ + 1900, month_ + 1, day_, hour_, min_, mincnt_, hourcnt_, daycnt_, monthcnt_);*/
+
+        routeTraff->reset(tmDate);
+
+        /*routeTraff->getRouteData(mincnt_, hourcnt_, daycnt_, monthcnt_, 
+                                    year_, month_, day_, hour_, min_);
+        printf("%04d-%02d-%02d %02d:%02d (m, h, d, M): %d, %d, %d, %d\n\n", year_ + 1900, month_ + 1, day_, hour_, min_, mincnt_, hourcnt_, daycnt_, monthcnt_);*/
     }
 }
 
-void incRouteTraffic(const int routeId, const tm& tmDate)
+void StatisticsManager::incRouteTraffic(const int routeId, const tm& tmDate)
 {
     TrafficRecord *tr = 0;
     tr = trafficByRouteId.GetPtr(routeId);

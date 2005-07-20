@@ -22,7 +22,7 @@ void TrafficRecord::inc(const tm& tmDate)
 		daycnt = 1;
 		monthcnt = 1;
 		update = true;
-	}else if(month != tmDate.tm_month){
+	}else if(month != tmDate.tm_mon){
 		mincnt = 1;
 		hourcnt = 1;
 		daycnt = 1;
@@ -55,8 +55,8 @@ void TrafficRecord::inc(const tm& tmDate)
 	
 	if(update){
 		year = tmDate.tm_year;
-		month = tmDate.tm_month;
-		day = tmDate.tm_day;
+		month = tmDate.tm_mon;
+		day = tmDate.tm_mday;
 		hour = tmDate.tm_hour;
 		min = tmDate.tm_min;
 	}
@@ -72,7 +72,7 @@ void TrafficRecord::reset(const tm& tmDate)
 		daycnt = 0;
 		monthcnt = 0;
 		update = true;
-	}else if(month != tmDate.tm_month){
+	}else if(month != tmDate.tm_mon){
 		mincnt = 0;
 		hourcnt = 0;
 		daycnt = 0;
@@ -87,26 +87,16 @@ void TrafficRecord::reset(const tm& tmDate)
 	}else if(hour != tmDate.tm_hour){
 		hourcnt = 0;
 		mincnt = 0;
-		daycnt++;
-		monthcnt++;
 		update = true;
 	}else if(min != tmDate.tm_min){
 		mincnt = 0;
-		hourcnt++;
-		daycnt++;
-		monthcnt++;
 		update = true;
-	}else{
-		mincnt++;
-		hourcnt++;
-		daycnt++;
-		monthcnt++;
 	}
 	
 	if(update){
 		year = tmDate.tm_year;
-		month = tmDate.tm_month;
-		day = tmDate.tm_day;
+		month = tmDate.tm_mon;
+		day = tmDate.tm_mday;
 		hour = tmDate.tm_hour;
 		min = tmDate.tm_min;
 	}

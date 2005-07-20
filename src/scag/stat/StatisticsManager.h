@@ -16,6 +16,7 @@
 #include <util/timeslotcounter.hpp>
 #include "util/config/Config.h"
 #include "routemap.h"
+#include "TrafficRecord.h"
 
 namespace scag {
 
@@ -33,6 +34,8 @@ namespace stat {
     //using smsc::util::TimeSlotCounter;
 
     using smsc::util::config::Config;
+
+    using scag::stat::SmppStatEvent;
 
     struct CommonStat
     {
@@ -61,6 +64,10 @@ namespace stat {
         delivered=0;
         gw_rejected=0;
         failed=0;
+        billingOk = 0;
+        billingFailed = 0;
+        recieptOk = 0;
+        recieptFailed = 0;
         providerId=-1;
         errors.Empty();
       }
@@ -94,14 +101,9 @@ namespace stat {
 
         smsc::logger::Logger    *logger;
 
-        struct TotalStat{
-          CommonStat common;
-          ServiceStat service;
-        };
-
         Hash<CommonStat>    statBySmeId[2];
-        Hash<CommonStat>   statByRoute[2];
-        Hash<CommonStat>   srvStatBySme[2];
+        Hash<CommonStat>   statByRouteId[2];
+        Hash<CommonStat>   srvStatBySmeId[2];
         IntHash<TrafficRecord> trafficByRouteId;
 
         int     currentIndex;
@@ -118,7 +120,7 @@ namespace stat {
 
         void flushTraffic();
         void dumpTraffic(const IntHash<TrafficRecord>& traff);
-        void incTraffic(const tm& tmDate);
+        void resetTraffic(const tm& tmDate);
         void incRouteTraffic(const int routeId, const tm& tmDate);
 
         void  calculateTime(tm& flushTM);
@@ -136,20 +138,20 @@ namespace stat {
         FILE*           tfile;
     
         void close();
-        void fflush()
+        void flush();
         void write(const void* data, size_t size);
 
         std::string traffloc;
-        void Fopen(FILE &*cfPtr, const std::string loc);
-        void Fseek(long offset, int whence, FILE &*cfPtr);
-        void Fclose(FILE &*cfPtr);
-        void Fflush(FILE &*cfPtr);
-        void Fwrite(const void* data, size_t size, FILE &*cfPtr);
-        void Fread(FILE &*cfPtr, void* data, size_t size)
+        void Fopen(FILE* &cfPtr, const std::string loc);
+        void Fseek(long offset, int whence, FILE* &cfPtr);
+        void Fclose(FILE* &cfPtr);
+        void Fflush(FILE* &cfPtr);
+        void Fwrite(const void* data, size_t size, FILE* &cfPtr);
+        size_t Fread(FILE* &cfPtr, void* data, size_t size);
         void initTraffic();
 
         static bool createDir(const std::string& dir);
-        bool createStorageDir(const string loc);
+        bool createStorageDir(const std::string loc);
 
     public:
 
@@ -158,10 +160,8 @@ namespace stat {
         virtual int Execute();
         virtual void stop();
 
-        virtual void registerCommand(SmppCommand cmd);
-        virtual void registerCommand(WapCommand cmd);
-        virtual void registerCommand(MmsCommand cmd);
-        bool checkTraffic(string routeId, int period);
+        virtual void registerEvent(const SmppStatEvent& si);
+        bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
 
         StatisticsManager(Config config);
         virtual ~StatisticsManager();
