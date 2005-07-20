@@ -17,7 +17,7 @@ void CommandDispatcher::addCommand(Command* command)
 {
     MutexGuard guard(commandsMonitor);
     // TODO: Put command into commands queue
-    if (isStarted()) commandsMonitor.notify();
+    //if (isStarted()) commandsMonitor.notify();
 }
 void CommandDispatcher::addListener(CommandType type, CommandListener* listener)
 {

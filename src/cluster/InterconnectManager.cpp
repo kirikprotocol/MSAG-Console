@@ -4,7 +4,7 @@
 namespace smsc { namespace cluster 
 {
 
-static InterconnectManager::InterconnectManager* instance = 0;
+InterconnectManager::InterconnectManager* instance = 0;
 
 InterconnectManager::InterconnectManager(Role _role, const std::string& m_ip, 
                                          const std::string& s_ip, int _port)
@@ -12,19 +12,19 @@ InterconnectManager::InterconnectManager(Role _role, const std::string& m_ip,
 {
 
 }
-virtual ~InterconnectManager::InterconnectManager()
+InterconnectManager::~InterconnectManager()
 {
 
 }
 
-static void InterconnectManager::init(Role _role, const std::string& m_ip, 
-                                      const std::string& s_ip, int _port)
+void InterconnectManager::init(Role _role, const std::string& m_ip, 
+                               const std::string& s_ip, int _port)
 {
     if (!InterconnectManager::instance) {
-        InterconnectManager::instance = new InterconnectManager();
+        InterconnectManager::instance = new InterconnectManager(_role, m_ip, s_ip, _port);
     }
 }
-static void InterconnectManager::shutdown()
+void InterconnectManager::shutdown()
 {
     if (InterconnectManager::instance) {
         delete InterconnectManager::instance;
@@ -35,7 +35,7 @@ void InterconnectManager::sendCommand(const Command& command)
 {
     MutexGuard guard(commandsMonitor);
     // TODO: add command to queue 
-    if (isStarted()) commandsMonitor.notify();
+    //if (isStarted()) commandsMonitor.notify();
 }
 void InterconnectManager::addListener(CommandType type, CommandListener* listener)
 {

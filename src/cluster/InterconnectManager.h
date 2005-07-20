@@ -9,9 +9,9 @@
 namespace smsc { namespace cluster 
 {
     typedef enum {
-        SINGLE = 0;
-        MASTER = 1;
-        SLAVE  = 2;
+        SINGLE = 0,
+        MASTER = 1,
+        SLAVE  = 2
     } Role;
 
     class InterconnectManager : public Interconnect, public Thread
@@ -28,7 +28,7 @@ namespace smsc { namespace cluster
         EventMonitor    commandsMonitor;
         Array<Command>  commands;
 
-        CommandsDispatcher* dispatcher;
+        CommandDispatcher* dispatcher;
 
     protected:
         
@@ -41,7 +41,6 @@ namespace smsc { namespace cluster
         static void shutdown();
 
         static Interconnect* getInstance() {
-            __require__(instance);
             return instance;
         };
         

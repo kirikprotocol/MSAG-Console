@@ -17,7 +17,7 @@ namespace smsc { namespace cluster
     
     public:
         
-        handle(const Command& command) = 0;
+        virtual void handle(const Command& command) = 0;
     };
 
     /**
@@ -42,3 +42,4 @@ namespace smsc { namespace cluster
 }}
 
 #endif // __SMSC_CLUSTER_INTERCONNECT__
+

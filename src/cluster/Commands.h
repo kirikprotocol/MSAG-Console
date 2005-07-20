@@ -13,7 +13,8 @@
 namespace smsc { namespace cluster 
 {
     typedef enum {
-        SAMPLE_CMD = 1;
+        SAMPLE_CMD = 1,
+        SSS
         // TODO: Add other command types...
     } CommandType;
 
@@ -70,7 +71,18 @@ namespace smsc { namespace cluster
         virtual bool deserialize(void *buffer, uint32_t len);
     };
 
+    class SSSCommand : public Command
+    {
+    public:
+        
+        SSSCommand() : Command(SSS) {};
+        virtual ~SSSCommand() {};
+
+        virtual void* serialize(uint32_t &len);
+        virtual bool deserialize(void *buffer, uint32_t len);
+    };
     // TODO: Add more commands ...
 }}
 
 #endif // __SMSC_CLUSTER_COMMANDS__
+

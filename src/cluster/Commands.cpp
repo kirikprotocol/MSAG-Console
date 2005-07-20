@@ -1,10 +1,12 @@
 
-#include "Commands.h"
-
+#include "core/synchronization/Mutex.hpp"
 #include "core/buffers/IntHash.hpp"
+
+#include "Commands.h"
 
 namespace smsc { namespace cluster 
 {
+    using namespace smsc::core::synchronization;
     using smsc::core::buffers::IntHash;
     
     class CommandFactory
@@ -23,8 +25,8 @@ namespace smsc { namespace cluster
             operator IntHash<CommandFactory *> () { 
                 return getInstance(); 
             }
-            int Exists(int type) { 
-                return getInstance().Exists(type); 
+            int Exist(int type) { 
+                return getInstance().Exist(type); 
             }
             int Insert(int type, CommandFactory* factory) {
                 return getInstance().Insert(type, factory);
@@ -34,15 +36,15 @@ namespace smsc { namespace cluster
             }
         };
         static FakeRegistry factories;
-        static factoriesInited;
+        static bool factoriesInited;
         
         static void registerFactory(int type, CommandFactory* factory) {
-            if (type && factory && !factories.Exists(type)) {
+            if (type && factory && !factories.Exist(type)) {
                 factories.Insert(type, factory);
             }
         };
         static CommandFactory* getFactory(int type) {
-            return (factories.Exists(type) ? factories.Get(type):0);
+            return (factories.Exist(type) ? factories.Get(type):0);
         };
 
     protected:
@@ -72,18 +74,26 @@ namespace smsc { namespace cluster
         virtual ~CommandFactory() {};
     };
     
+    bool CommandFactory::factoriesInited = false;
     CommandFactory::FakeRegistry CommandFactory::factories;
-    CommandFactory::factoriesInited = false;
 
 /* ################# Particular commands factories ################ */
 
-    class SampleCommand1Factory : public CommandFactory
+    class SampleCommandFactory : public CommandFactory
     {
     protected:
-        virtual Command* create() { return new SampleCommand1(); };
+        virtual Command* create() { return new SampleCommand(); };
     public:
-        SampleCommand1Factory() : CommandFactory(SAMPLE_CMD1_T);
-        virtual ~SampleCommand1Factory() {};
+        SampleCommandFactory() : CommandFactory(SAMPLE_CMD) {};
+        virtual ~SampleCommandFactory() {};
+    };
+    class SSSCommandFactory : public CommandFactory
+    {
+    protected:
+        virtual Command* create() { return new SSSCommand(); };
+    public:
+        SSSCommandFactory() : CommandFactory(SSS) {};
+        virtual ~SSSCommandFactory() {};
     };
     // TODO: Add more actual factories for particular commands
 
@@ -97,7 +107,8 @@ void CommandFactory::initFactories()
     
     if (!CommandFactory::factoriesInited) 
     {
-        static SampleCommand1Factory    _sampleCommand1Factory;
+        static SampleCommandFactory     _sampleCommandFactory;
+        static SSSCommandFactory        _sssCommandFactory;
 
         // TODO: Create more actual factories for particular commands
 
@@ -113,7 +124,8 @@ Command* Command::create(void* buffer, uint32_t len) // static
     int16_t type = ntohs(*((int16_t *)buffer));
     
     Command* command = CommandFactory::createCommand(type);
-    if (command && !command->deserialize(buffer+sizeof(int16_t), len-sizeof(int16_t))) 
+    void* buff = ((int16_t*)buffer)+1;
+    if (command && !command->deserialize(buff, len-sizeof(int16_t))) 
     {
         delete command;
         return 0;
@@ -128,6 +140,15 @@ void* SampleCommand::serialize(uint32_t &len)
     // TODO: Implement
 }
 bool SampleCommand::deserialize(void *buffer, uint32_t len)
+{
+    // TODO: Implement
+}
+
+void* SSSCommand::serialize(uint32_t &len)
+{
+    // TODO: Implement
+}
+bool SSSCommand::deserialize(void *buffer, uint32_t len)
 {
     // TODO: Implement
 }

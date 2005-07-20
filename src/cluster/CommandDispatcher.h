@@ -5,6 +5,8 @@
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 
+#include "core/threads/Thread.hpp"
+
 #include "core/buffers/IntHash.hpp"
 #include "core/buffers/Array.hpp"
 
@@ -14,7 +16,7 @@ namespace smsc { namespace cluster
 {
     using namespace smsc::core::synchronization;
     using namespace smsc::core::buffers;
-
+    
     using smsc::core::threads::Thread;
     
     class CommandDispatcher : public Thread
@@ -22,10 +24,10 @@ namespace smsc { namespace cluster
     private:
 
         EventMonitor        commandsMonitor;
-        Array<Command*>     commands;
+        Array<Command *>    commands;
 
         Mutex                               listenersLock;
-        IntHash<Array<CommandListener*>>    listeners;
+        IntHash< Array<CommandListener *> > listeners;
         
     public:
 
