@@ -36,6 +36,7 @@ void CommandDispatcher::Stop()
 int CommandDispatcher::Execute()
 {
     // TODO: Implement commands dispatching from queue (on monitor) to listeners
+    return 0;
 }
 
 }}

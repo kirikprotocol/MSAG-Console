@@ -223,7 +223,8 @@ void GWStatisticsManager::flushCounters(int index)
 
     try
     {
-        TmpBuf<uint8_t, 4096> buff(4096);
+        const int size = 64*1024;
+        TmpBuf<uint8_t, size> buff(size);
 
         // Head of record
         uint8_t value8 = 0;

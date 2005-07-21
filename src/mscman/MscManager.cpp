@@ -247,6 +247,7 @@ void MscManagerImpl::init(Manager& config)
         throw InitException(exc.what());
     }
     */
+
   const char sig[]="SMSCMSCM";
   uint32_t ver=0x00010000;
   string fileName=config.getString("MscManager.storeFile");

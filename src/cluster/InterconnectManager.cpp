@@ -49,6 +49,7 @@ void InterconnectManager::activate()
 int InterconnectManager::Execute()
 {
     // TODO: Send commands from commands queue (on commandsMonitor)
+    return 0;
 }
 
 
