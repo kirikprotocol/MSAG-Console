@@ -22,6 +22,7 @@ protected:
     virtual void FinishXMLSubSection(const std::string& name) = 0;
     virtual void SetChildObject(IParserHandler * child) {throw Exception("IParserHandler object must have no children");};
 public:
+    virtual void init(const SectionParams& params) = 0;
     virtual ~IParserHandler() {};
 };
 

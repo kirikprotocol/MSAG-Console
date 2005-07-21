@@ -68,24 +68,35 @@ void SemanticAnalyser::StartCreateObject(const std::string& name,const SectionPa
 
     switch (ValidSimpleTags[name.c_str()])  
     {
-    case tgRuleSection: CurrentObject = new Rule(params); break;
-    case tgEventHandlerSection: CurrentObject = new EventHandler(params); break;
+    case tgRuleSection: 
+        CurrentObject = new Rule();
+        break;
+    case tgEventHandlerSection: 
+        CurrentObject = new EventHandler(); 
+        break;
     case tgActionSection: 
-
-        Action * action = factory->CreateAction(name);
-        try
+        CurrentObject = factory->CreateAction(name);
+        if (!CurrentObject) 
         {
-            action->init(params);
-        } catch (Exception& e)
-        {
-            delete action;
-            throw e;
+            std::string msg("Semantic Analyser: Invalid action '");
+            msg.append(name);
+            msg.append("' to create");
+            throw Exception(msg.c_str()); 
         }
-        CurrentObject = action;
         break;
     }
-    if (!CurrentObject) throw Exception("Semantic Analyser: Invalid object to create"); 
 
+    if (!CurrentObject) throw Exception("Semantic Analyser: Invalid object to initialize"); 
+
+    try
+    {
+        CurrentObject->init(params);
+    } catch (Exception& e)
+    {
+        delete CurrentObject;
+        CurrentObject = 0;
+        throw e;
+    }
 }
                                                          
 void SemanticAnalyser::FinishCreateObject(const std::string& name)

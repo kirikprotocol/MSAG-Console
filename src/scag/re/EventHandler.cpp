@@ -4,14 +4,6 @@
 namespace scag { namespace re {
 
 
-//////////////IParserHandler Interfase///////////////////////
-
-
-
-EventHandler::EventHandler(const SectionParams& params)
-{
-
-}
 
 EventHandler::~EventHandler()
 {
@@ -23,17 +15,6 @@ EventHandler::~EventHandler()
         delete value;
     }
     smsc_log_debug(logger, "EventHandler released");
-}
-
-void EventHandler::SetChildObject(IParserHandler * child)
-{
-    if (!child) return;
-
-    Action * action = dynamic_cast<Action *>(child);
-    if (!action) return throw Exception("Event Handler: unrecognized child object");
-
-    smsc_log_debug(logger, "Set child object to EventHandler");
-    actions.Insert(actions.Count(),action);
 }
 
 RuleStatus EventHandler::process(SCAGCommand command)
@@ -54,6 +35,48 @@ RuleStatus EventHandler::process(SCAGCommand command)
     RuleStatus rs;
     rs = context.getStatus();
     return rs;
+}
+
+HandlerType EventHandler::StrToHandlerType(const std::string& str)
+{
+    HandlerType result = htUnknown;
+
+    if (str.compare("DELIVER")==0) result = htDeliver;
+    if (str.compare("SUBMIT")==0)  result = htSubmit;
+
+
+
+    return result;
+}
+
+
+//////////////IParserHandler Interfase///////////////////////
+void EventHandler::init(const SectionParams& params)
+{
+    if (!params.Exists("type")) throw Exception("EventHandler: missing 'type' parameter");
+
+    std::string sHandlerType = params["type"];
+    handlerType = StrToHandlerType(sHandlerType);
+    if (handlerType==htUnknown) 
+    {
+        std::string msg("EventHandler: invalid value '") ;
+        msg.append(sHandlerType);
+        msg.append("' for 'type' parameter");
+        throw Exception(msg.c_str());
+    }
+}
+
+
+
+void EventHandler::SetChildObject(IParserHandler * child)
+{
+    if (!child) return;
+
+    Action * action = dynamic_cast<Action *>(child);
+    if (!action) return throw Exception("Event Handler: unrecognized child object");
+
+    smsc_log_debug(logger, "Set child object to EventHandler");
+    actions.Insert(actions.Count(),action);
 }
 
 

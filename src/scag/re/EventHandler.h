@@ -22,12 +22,19 @@ using namespace smsc::core::buffers;
 using namespace scag::re::actions;
 using namespace scag::util::properties;
 
-typedef smsc::core::buffers::Hash<std::string> SectionParams;
+enum HandlerType
+{
+    htUnknown,
+    htDeliver,
+    htSubmit
+};
 
 class EventHandler : public IParserHandler
 {
     EventHandler(const EventHandler &);
     IntHash<Action *> actions;
+    HandlerType handlerType;
+    HandlerType StrToHandlerType(const std::string& str);
 protected:
 //////////////IParserHandler Interfase///////////////////////
     virtual void SetChildObject(IParserHandler * child);
@@ -35,16 +42,13 @@ protected:
     virtual void FinishXMLSubSection(const std::string& name) {};
 //////////////IParserHandler Interfase///////////////////////
 public:
-    EventHandler(const SectionParams& params);
+    EventHandler() : handlerType(htUnknown) {};
+
     virtual ~EventHandler();
+    virtual void init(const SectionParams& params);
+    inline HandlerType GetHandlerType() const {return handlerType;};
 
-    /**
-     * Creates & configure action(s) from sub-section (via ActionsFactory)
-     * @param   config      config sub-section for handler
-     */
-//    virtual void init(ConfigView* config) = 0;
-
-    /** 
+     /** 
      * Processes action (or actions set).
      * Creates ActionContext with transport specific CommandAdapter.
      * Returns RuleStatus from context after action(s) execution.

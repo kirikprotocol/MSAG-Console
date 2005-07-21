@@ -17,9 +17,9 @@ namespace scag { namespace re
 
 using smsc::core::buffers::IntHash;
 using namespace scag::re::actions;
-using scag::transport::SCAGCommand;
+using namespace scag::transport;
 
-
+enum HandlerType;
 class EventHandler;
  
 class ActionFactory
@@ -31,10 +31,13 @@ public:
 
 class Rule : public IParserHandler
 {
+    HandlerType ExtractHandlerType(SCAGCommand& command);
+
     Rule(const Rule &);
     IntHash <EventHandler *> Handlers;
     Mutex ruleLock;
     int useCounter;
+    TransportType transportType;
 
 protected:
     std::string billing_id;
@@ -45,6 +48,8 @@ protected:
     virtual void FinishXMLSubSection(const std::string& name) {};
 //////////////IParserHandler Interfase///////////////////////
 public:
+    TransportType getTransportType() const {return transportType;};
+
     void ref() {
         MutexGuard mg(ruleLock);
         useCounter++;
@@ -59,12 +64,7 @@ public:
         if (del) delete this;
     }
 
-    /**
-     * Creates & configure rule attributes and
-     * handlers from sub-section (via HandlersFactory ?)
-     * @param   config      config sub-section for rule
-     */
-//    virtual void init(ConfigView* config) = 0;
+    virtual void init(const SectionParams& params);
 
 
     /** 
@@ -77,7 +77,7 @@ public:
     virtual RuleStatus process(SCAGCommand command);
 
 
-    Rule(const SectionParams& params): useCounter(1) {};
+    Rule(): useCounter(1),transportType(SMPP) {};
     virtual ~Rule();
 };
 
