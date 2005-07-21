@@ -1,37 +1,91 @@
-#ifndef SCAG_TRANSPORT_SMPP_CONNECTOR
-#define SCAG_TRANSPORT_SMPP_CONNECTOR
+#ifndef __SCAG_TRANSPORT_SMPP_SMSCCONNECTOR_H__
+#define __SCAG_TRANSPORT_SMPP_SMSCCONNECTOR_H__
 
-#include "SmppProxy.h"
+#include "core/threads/ThreadPool.hpp"
+#include "SmppSMInterface.h"
+#include "SmscSocket.h"
+#include <utility>
+#include <string>
 
-namespace scag { namespace transport { namespace smpp 
-{
-    
-    class SmscConnector : public Thread, public SmppProxyOwner
+namespace scag{
+namespace transport{
+namespace smpp{
+
+namespace thr=smsc::core::threads;
+
+struct SmscConnectInfo{
+  std::string sysId;
+  std::string pass;
+  std::string hosts[2];
+  int ports[2];
+  int lastIdx;
+  SmscConnectInfo()
+  {
+    lastIdx=0;
+  }
+  const char* host()const
+  {
+    return hosts[lastIdx].c_str();
+  }
+  int port()const
+  {
+    return ports[lastIdx];
+  }
+  void reportFailure()
+  {
+    lastIdx=(lastIdx+1)&1;
+  }
+};
+
+class SmscConnector{
+public:
+  SmscConnector(SmppSMInterface* argSm):sm(argSm){}
+  void init();
+  void reportSmscDisconnect(const char* sysId);
+  void registerSocket(SmscSocket* sock)
+  {
+    sm->registerSocket(sock);
+  }
+protected:
+  thr::ThreadPool tp;
+  SmppSMInterface* sm;
+  buf::Hash<SmscConnectInfo> smscConnections;
+  sync::Mutex mtx;
+};
+
+struct SmscConnectTask:thr::ThreadedTask{
+  SmscConnectTask(SmscConnector* argConn,const SmscConnectInfo& info):conn(argConn)
+  {
+    sysId=info.sysId;
+    pass=info.pass;
+    host=info.host();
+    port=info.port();
+  }
+  const char* taskName(){return "SmscConnectTask";}
+  int Execute()
+  {
+    std::auto_ptr<SmscSocket> sock(new SmscSocket(host.c_str(),port));
+    if(!sock->connect())
     {
-    private:
+      conn->reportSmscDisconnect(sysId.c_str());
+      return 0;
+    }
+    sock->bind(sysId.c_str(),pass.c_str());
+    conn->registerSocket(sock.release());
+    return 0;
+  }
+protected:
+  SmscConnector* conn;
+  std::string sysId;
+  std::string pass;
+  std::string host;
+  int port;
+};
 
-        std::string     host;
-        int             port;
 
-        SmppProxyOwner& owner;
+}//smpp
+}//transport
+}//scag
 
-    public:
-    
-        SmscConnector(const std::string& _host, int _port, SmppProxyOwner& _owner) 
-            : Thread(), SmppProxyOwner(), owner(_owner), host(_host), port(_port) {};
-        ~SmscConnector();
 
-        /**
-         * Used internally to reconnect proxy
-         */
-        virtual void reportError(const SmppProxy &proxy);
-        
-        virtual void reportCommand(const SmppProxy &proxy) {
-            owner.reportCommand(proxy);
-        };
-    };
-
-}}}
-
-#endif // SCAG_TRANSPORT_SMPP_CONNECTOR
-
+#endif
