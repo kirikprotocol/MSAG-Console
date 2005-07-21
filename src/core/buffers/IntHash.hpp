@@ -4,6 +4,7 @@
 #define INTHASH_MAX_CHAIN_LENGTH 16
 
 #include <string.h>
+#include <string>
 #include <stdexcept>
 
 namespace smsc{
