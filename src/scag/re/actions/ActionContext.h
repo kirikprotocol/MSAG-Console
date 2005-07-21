@@ -6,7 +6,8 @@
 #include <core/buffers/Hash.hpp>
 
 #include <scag/re/RuleStatus.h>
-#include <scag/util/properties/Properties.h>
+//#include <scag/util/properties/Properties.h>
+#include <scag/re/properties/Properties.h>
 
 namespace scag { namespace re { namespace actions 
 {
@@ -14,6 +15,15 @@ namespace scag { namespace re { namespace actions
     using scag::re::RuleStatus;
 
     using namespace scag::util::properties;
+
+    enum FieldType
+    {
+        ftUnknown,
+        ftLocal =   '%',
+        ftConst =   '@',
+        ftSession = '$',
+        ftField =   '#'
+    };
 
     class ActionContext
     {
@@ -38,11 +48,11 @@ namespace scag { namespace re { namespace actions
         inline RuleStatus& getStatus() {
             return status;
         }
-        
-        /** TODO: Implement access to command, session, local variables & constants
-         *        define scope by var name prefix: #, $, %, @ 
-         */
 
+        void SetRuleStatus(RuleStatus rs) {status = rs;};
+
+        //Comment: 'name' is valid until 'var' is valid
+        static FieldType Separate(const std::string& var, const char *& name);
         Property* getProperty(const std::string& var);
     };
 

@@ -8,7 +8,6 @@
 //#include <scag/admin/SCAGCommand.h>
 
 #include "scag/re/actions/Action.h"
-#include "scag/re/actions/ActionChoose.h"
 #include "scag/re/Rule.h"
 
 namespace scag { namespace re 
@@ -24,9 +23,6 @@ class ConfigView
 {
 }; */
         
-class SCAGCommand
-{
-};    
 
     /**
      * Should be instantiated from SCAG Core on startup
@@ -45,6 +41,7 @@ class RuleEngine
 
 private:
     ActionFactory factory;
+    std::string RulesDir;
 
     friend struct RulesReference; 
     struct Rules
@@ -145,8 +142,9 @@ private:
         return newRules;
     }
 
-    int ParseFile(const std::string& xmlFile);
-
+    Rule * ParseFile(const std::string& xmlFile);
+    bool isValidFileName(std::string fname,int& ruleId);
+    std::string CreateRuleFileName(const std::string& dir,const int ruleId) const;
 
 public:
 
@@ -162,29 +160,48 @@ public:
     RuleStatus process(int ruleId, SCAGCommand command)
     {
         RulesReference rulesRef = getRules();
+        RuleStatus rs;
+
+        char buff[128];
+        sprintf(buff,"%s%d","Process RuleEngine with ruleId: ",ruleId);
+        smsc_log_debug(logger,buff);
+
         if (rulesRef.rules->rules.Exist(ruleId)) 
         {
-                // TODO: Implement ...
+            Rule * rule = rulesRef.rules->rules.Get(ruleId);
+            rs = rule->process(command);
+        } 
+        else
+        {
+            char buff[128];
+            sprintf(buff,"%s%d%s","Cannot process Rule with ID = ",ruleId," : Rule not found");
+            //smsc_log_error(logger,buff);
+            throw Exception(buff);
         }
-	RuleStatus rs;
-	return rs;
+
+        
+        return rs;
     }
 
     void updateRule(int ruleId) // add or modify
     {
         MutexGuard mg(changeLock);
+        
+        Rule* newRule = ParseFile(CreateRuleFileName(RulesDir,ruleId));
+        if (!newRule) return;
 
-        Rule* newRule = 0; // to create
 
         Rules *newRules = copyReference();
         Rule** rulePtr = newRules->rules.GetPtr(ruleId);
+        
         if (rulePtr) 
         {
             (*rulePtr)->unref();
             newRules->rules.Delete(ruleId);
         }
+        
         newRules->rules.Insert(ruleId, newRule);
-        changeRules(newRules);
+        changeRules(newRules);      
     }
 
     bool removeRule(int ruleId)

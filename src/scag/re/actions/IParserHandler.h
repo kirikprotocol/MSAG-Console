@@ -2,10 +2,12 @@
 #define _IPARSER_HANDLER_H_
 
 #include <core/buffers/Hash.hpp>
-//#include <scag/re/XMLHandlers.h>
+#include <util/Exception.hpp>
 
 
 namespace scag { namespace re { 
+
+using smsc::util::Exception;
 
 typedef smsc::core::buffers::Hash<std::string> SectionParams;
 
@@ -16,9 +18,9 @@ class IParserHandler
 friend class SemanticAnalyser;
 
 protected:
-    virtual void StartXMLSubSection(const std::string& name,const SectionParams& params)  {}
-    virtual void FinishXMLSubSection(const std::string& name) {}
-    virtual bool SetChildObject(const IParserHandler * child) { return false;}
+    virtual void StartXMLSubSection(const std::string& name,const SectionParams& params) = 0;
+    virtual void FinishXMLSubSection(const std::string& name) = 0;
+    virtual void SetChildObject(IParserHandler * child) {throw Exception("IParserHandler object must have no children");};
 public:
     virtual ~IParserHandler() {};
 };

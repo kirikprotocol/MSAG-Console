@@ -55,7 +55,7 @@ class SemanticAnalyser
     void StartFillObject(const std::string& name,const SectionParams& params);
     void FinishFillObject(const std::string& name);
 
-    bool isValidSimpleTag(const std::string& name) {return ValidSimpleTags.Exists(name.data());}
+    bool isValidSimpleTag(const std::string& name) {return ValidSimpleTags.Exists(name.c_str());}
     
 public:
     void DeliverBeginTag(const std::string& name,const SectionParams& params);

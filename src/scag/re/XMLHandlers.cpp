@@ -30,11 +30,6 @@ SemanticAnalyser::SemanticAnalyser(const ActionFactory& obj)
 
     factory->FillTagHash(ValidSimpleTags);
 
-/*    
-    ValidSimpleTags["set"] = tgActionSection;
-    ValidSimpleTags["if"] = tgActionSection;
-    ValidSimpleTags["choose"] = tgActionSection;
-    */
 }
 
 SemanticAnalyser::~SemanticAnalyser()
@@ -69,13 +64,28 @@ void SemanticAnalyser::DeliverEndTag(const std::string& name)
 void SemanticAnalyser::StartCreateObject(const std::string& name,const SectionParams& params)
 {
     if (CurrentObject) HistoryObjectStack.push_back(CurrentObject);
+    CurrentObject = 0;
 
-    switch (ValidSimpleTags[name.data()])  
+    switch (ValidSimpleTags[name.c_str()])  
     {
     case tgRuleSection: CurrentObject = new Rule(params); break;
     case tgEventHandlerSection: CurrentObject = new EventHandler(params); break;
-    case tgActionSection: CurrentObject = factory->CreateAction(name,params); break;
+    case tgActionSection: 
+
+        Action * action = factory->CreateAction(name);
+        try
+        {
+            action->init(params);
+        } catch (Exception& e)
+        {
+            delete action;
+            throw e;
+        }
+        CurrentObject = action;
+        break;
     }
+    if (!CurrentObject) throw Exception("Semantic Analyser: Invalid object to create"); 
+
 }
                                                          
 void SemanticAnalyser::FinishCreateObject(const std::string& name)
@@ -86,7 +96,15 @@ void SemanticAnalyser::FinishCreateObject(const std::string& name)
     if (ParentObject) 
     {
         HistoryObjectStack.pop_back();
-        if (!ParentObject->SetChildObject(CurrentObject)) delete CurrentObject;
+        try
+        {
+            ParentObject->SetChildObject(CurrentObject);
+        } catch (Exception &e)
+        {
+            delete CurrentObject;
+            CurrentObject = ParentObject;
+            throw e;
+        }
         CurrentObject = ParentObject;
     }
 }
@@ -104,10 +122,8 @@ void SemanticAnalyser::FinishFillObject(const std::string& name)
 
 /////////////////////////////////////////////XMLBasicHandler/////////////////////////////
 
-XMLBasicHandler::XMLBasicHandler(const ActionFactory& obj) : analyser(obj)
+XMLBasicHandler::XMLBasicHandler(const ActionFactory& obj) : analyser(obj),CanReturnFinalObject(false)
 {
-    std::cout << "Constructor HANDLER " << endl;
-    CanReturnFinalObject = false;
 }
 
 XMLBasicHandler::~XMLBasicHandler()
@@ -152,7 +168,6 @@ void XMLBasicHandler::endElement(const XMLCh* const qname)
 
 void XMLBasicHandler::endDocument()
 {
-    cout << "end document" << endl;
     CanReturnFinalObject = true;
 }
 
@@ -164,21 +179,42 @@ void XMLBasicHandler::error(const SAXParseException& e)
 {
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
-    cout << "\nError at file " << fname.localForm()
-		 << ", line " << e.getLineNumber()
-		 << ", char " << e.getColumnNumber()
-         << "\n  Message: " << msg.localForm() << XERCES_STD_QUALIFIER endl;
+    std::string str("Error at file ");
+    char buff[128];
+    str.append(fname.localForm());
+    str.append(", line ");
+
+    sprintf(buff,"%d",e.getLineNumber());
+    str.append(buff);
+    str.append(", char ");
+
+    sprintf(buff,"%d",e.getColumnNumber());
+    str.append(buff);
+    str.append("  Message: ");
+    str.append(msg.localForm());
+    smsc_log_error(logger, str);
 }
 
 void XMLBasicHandler::fatalError(const SAXParseException& e)
 {
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
+    std::string str("Fatal Error at file ");
+    char buff[128];
 
-    cout << "\nFatal Error at file " << fname.localForm()
-		 << ", line " << e.getLineNumber()
-		 << ", char " << e.getColumnNumber()
-         << "\n  Message: " << msg.localForm() << XERCES_STD_QUALIFIER endl;
+    str.append(fname.localForm());
+    str.append(", line ");
+
+    sprintf(buff,"%d",e.getLineNumber());
+    str.append(buff);
+    str.append(", char ");
+
+    sprintf(buff,"%d",e.getColumnNumber());
+    str.append(buff);
+
+    str.append("  Message: ");
+    str.append(msg.localForm());
+    smsc_log_error(logger,str);
 }
 
 void XMLBasicHandler::warning(const SAXParseException& e)
@@ -186,10 +222,22 @@ void XMLBasicHandler::warning(const SAXParseException& e)
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
 
-    cout << "\nWarning at file " << fname.localForm()
-		 << ", line " << e.getLineNumber()
-		 << ", char " << e.getColumnNumber()
-         << "\n  Message: " << msg.localForm() << XERCES_STD_QUALIFIER endl;
+    std::string str("Warning at file ");
+    char buff[128];
+
+    str.append(fname.localForm());
+    str.append(", line ");
+
+    sprintf(buff,"%d",e.getLineNumber());
+    str.append(buff);
+    str.append(", char ");
+
+    sprintf(buff,"%d",e.getColumnNumber());
+    str.append(buff);
+    str.append(" Message: ");
+    str.append(msg.localForm());
+
+    smsc_log_warn(logger,str);
 }
 
 }}

@@ -38,9 +38,9 @@ void ActionChoose::FinishXMLSubSection(const std::string& name)
     if (name == "otherwise") ActivateOtherwiseSection = false;
 }
 
-bool ActionChoose::SetChildObject(const IParserHandler * child)
+void ActionChoose::SetChildObject(IParserHandler * child)
 {
-    if (!child) return false;
+    if (!child) return;
 
     IParserHandler * _child = const_cast<IParserHandler *> (child);
     Action * action = dynamic_cast<Action *>(_child);
@@ -49,15 +49,12 @@ bool ActionChoose::SetChildObject(const IParserHandler * child)
     {
         WhenActions.Insert(WhenActions.Count(),action);
         cout << "<choose>: child to <when> setted" << endl;
-        return true;
     } else 
     if (ActivateOtherwiseSection) 
     {
         OtherwiseActions.Insert(OtherwiseActions.Count(),action);
         cout << "<choose>: child to <otherwise> setted" << endl;
-        return true;
     }
-    return false;
 }
 
 //////////////IParserHandler Interfase///////////////////////

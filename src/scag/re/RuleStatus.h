@@ -5,6 +5,8 @@ namespace scag { namespace re {
 
 struct RuleStatus
 {
+    bool result;
+    RuleStatus() : result(false) {};
 };
 
 }}

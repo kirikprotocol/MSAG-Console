@@ -19,7 +19,7 @@ protected:
 //////////////IParserHandler Interfase///////////////////////
     virtual void StartXMLSubSection(const std::string& name,const SectionParams& params);
     virtual void FinishXMLSubSection(const std::string& name);
-    virtual bool SetChildObject(const IParserHandler * child);
+    virtual void SetChildObject(IParserHandler * child);
 //////////////IParserHandler Interfase///////////////////////
 public:
     ActionChoose(const SectionParams& params);

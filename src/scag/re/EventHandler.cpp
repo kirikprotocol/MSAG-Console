@@ -22,21 +22,40 @@ EventHandler::~EventHandler()
     {
         delete value;
     }
-    cout << "EventHandler released" << endl;
+    smsc_log_debug(logger, "EventHandler released");
 }
 
-bool EventHandler::SetChildObject(const IParserHandler * child)
+void EventHandler::SetChildObject(IParserHandler * child)
 {
-    if (!child) return false;
+    if (!child) return;
 
-    IParserHandler * _child = const_cast<IParserHandler *> (child);
-    Action * action = dynamic_cast<Action *>(_child);
-    if (!action) return false;
+    Action * action = dynamic_cast<Action *>(child);
+    if (!action) return throw Exception("Event Handler: unrecognized child object");
 
-    cout << "<handler>: child setted" << endl;
+    smsc_log_debug(logger, "Set child object to EventHandler");
     actions.Insert(actions.Count(),action);
-    return true;
 }
+
+RuleStatus EventHandler::process(SCAGCommand command)
+{
+    int key;
+    Action * action;
+    Hash<Property> _constants;
+    PropertyManager _session;
+    PropertyManager _command;
+
+    ActionContext context(_constants, _session, _command);
+
+    smsc_log_debug(logger, "Process EventHandler...");
+    for (IntHash<Action *>::Iterator it = actions.First(); it.Next(key, action);)
+    {
+        if (!action->run(context)) break;
+    }
+    RuleStatus rs;
+    rs = context.getStatus();
+    return rs;
+}
+
 
 
 }}
