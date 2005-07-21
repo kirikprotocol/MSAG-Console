@@ -89,7 +89,7 @@ namespace smsc { namespace mcisme
 
         bool canAdd(const MissedCallEvent& event);
         void addEvent(const MissedCallEvent& event);
-        void formatMessage(Message& message);
+        void formatMessage(Message& message, int timeOffset=0);
     };
 
     void keyIsNotSupported(const char* type) throw(AdapterException);

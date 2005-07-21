@@ -83,7 +83,7 @@ bool MessageFormatter::isLastFromCaller(int index)
     }
     return true;
 }
-void MessageFormatter::formatMessage(Message& message)
+void MessageFormatter::formatMessage(Message& message, int timeOffset/*=0*/)
 {
     message.message = ""; message.rowsCount = 0; message.eventsCount = 0;
     if (events.Count() <= 0) return;
@@ -104,15 +104,16 @@ void MessageFormatter::formatMessage(Message& message)
         if (fromStr == UNKNOWN_CALLER || (strcmp(fromStr, UNKNOWN_CALLER) == 0))
             fromStr = unknownCaller.c_str();
         
+        time_t convertedTime = event.time + timeOffset*3600;
         if (!formatter->isGroupping() || !recPtr || (recPtr && (*recPtr) <= 1))
         {
-            InformGetAdapter adapter(event.to, fromStr, 1, event.time);
+            InformGetAdapter adapter(event.to, fromStr, 1, convertedTime);
             singleFormatter->format(rows, adapter, ctx);
             message.rowsCount++;
         }
         else if (isLastFromCaller(i)) // if event is last from this caller => add it
         {
-            InformGetAdapter adapter(event.to, fromStr, (*recPtr), event.time);
+            InformGetAdapter adapter(event.to, fromStr, (*recPtr), convertedTime);
             multiFormatter->format(rows, adapter, ctx);
             message.rowsCount++;
         }

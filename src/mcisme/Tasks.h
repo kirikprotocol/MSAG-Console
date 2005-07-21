@@ -17,6 +17,9 @@
 #include <core/synchronization/Event.hpp>
 #include <core/synchronization/EventMonitor.hpp>
 
+#include <util/config/ConfigView.h>
+#include <util/config/ConfigException.h>
+
 #include <db/DataSource.h>
 
 #include "Messages.h"
@@ -33,6 +36,9 @@ namespace smsc { namespace mcisme
     using namespace smsc::db;
 
     using smsc::logger::Logger;
+
+    using smsc::util::config::ConfigView;
+    using smsc::util::config::ConfigException;
 
     static const uint8_t MESSAGE_UNKNOWNST  =  0; // Неизвестное состояние
     static const uint8_t MESSAGE_WAIT_RESP  = 10; // Ожидает submit responce или готова к отправке
@@ -61,8 +67,21 @@ namespace smsc { namespace mcisme
             : id(_id), msg_id(_msg_id) { from = _from; to = _to; time = _time; cause = _cause; };
     };
 
+    class TimeOffsetManager
+    {
+    private:
+
+        static bool             inited;
+
+    public:
+
+        static void init(ConfigView* config);
+        static int getOffset(const char* abonent);
+    };
+
     class Task
     {
+    friend class TimeOffsetManager;
     private:
         
         static DataSource*  ds;

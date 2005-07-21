@@ -1,8 +1,14 @@
 
+#include <vector>
+#include "util/regexp/RegExp.hpp"
+
 #include "Tasks.h"
 
 namespace smsc { namespace mcisme 
 {
+
+using smsc::util::regexp::RegExp;
+using smsc::util::regexp::SMatch;
 
 DataSource* Task::ds     = 0;
 Logger*     Task::logger = 0;
@@ -15,6 +21,74 @@ bool        Task::bNotifyAll   = false;
 time_t      Task::validityTime = 0;
 int         Task::maxCallersCount  = -1; // Disable distinct callers count check
 int         Task::maxMessagesCount = -1; // Disable messages count for abonent check
+
+bool        TimeOffsetManager::inited = false;
+
+struct TimeRule
+{
+    RegExp exp;
+    vector<SMatch> m;
+    int n, offset;
+
+    TimeRule(const char* name, const char* rx, int off, Logger* logger) : offset(off)
+    {
+      if (!exp.Compile(rx))
+        smsc_log_error(logger, "Time: rule='%s' rx='%s' compiling failed", name, rx);
+      m.resize(exp.GetBracketsCount());
+      n = m.size();
+    }
+    int match(const char* abonent, int& off)
+    {
+        int res = exp.Match(abonent, &m[0], n);
+        if (res) off = offset;
+        return res;
+    }
+};
+static vector<TimeRule *> timeRules;
+
+void TimeOffsetManager::init(ConfigView* config)
+{
+    smsc::util::regexp::RegExp::InitLocale();
+
+    if (config && !TimeOffsetManager::inited)
+    {
+        std::auto_ptr< std::set<std::string> > rulesSetGuard(config->getShortSectionNames());
+        std::set<std::string>* rulesSet = rulesSetGuard.get();
+        for (std::set<std::string>::iterator i=rulesSet->begin();i!=rulesSet->end();i++)
+        {
+            const char* ruleName = (const char *)i->c_str();
+            if (!ruleName || !ruleName[0]) continue;
+
+            std::auto_ptr<ConfigView> ruleCfgGuard(config->getSubConfig(ruleName));
+            ConfigView* ruleCfg = ruleCfgGuard.get();
+
+            const char* rx = ruleCfg->getString("regexp");
+            int offset     = ruleCfg->getInt("offset");
+            TimeRule* rule = new TimeRule(ruleName, rx, offset, Task::logger);
+            timeRules.push_back(rule);
+        }
+        
+        TimeOffsetManager::inited = true;
+    }
+}
+int TimeOffsetManager::getOffset(const char* abonent)
+{
+    int offset = 0;
+    if (TimeOffsetManager::inited)
+    {
+        vector<TimeRule *>::iterator it = timeRules.begin(), end = timeRules.end();
+        for(;it != end;++it)
+        {
+            TimeRule* rule = *it; 
+            if (rule->match(abonent, offset))
+            {
+              smsc_log_debug(Task::logger, "Time: matched abonent '%s' offset=%d", abonent, offset);
+              break;
+            }
+        }
+    }
+    return offset;
+}
 
 /* ----------------------- Access to message ids generation (MCI_MSG_SEQ) -------------------- */
 
@@ -751,7 +825,13 @@ bool Task::formatMessage(Message& message)
             if (bWasNew && newEventsCount > 0) newEventsCount--; 
         }
 
-        formatter.formatMessage(message); // TODO: catch exception here ???
+        /*
+        int timeOffset = TimeOffsetManager::getOffset(abonent.c_str());
+        formatter.formatMessage(message, timeOffset); 
+        smsc_log_debug(logger, "Message for '%s' off=%d: %s", 
+                       abonent.c_str(), timeOffset, message.message.c_str());*/
+        formatter.formatMessage(message, TimeOffsetManager::getOffset(abonent.c_str()); 
+
         if (message.eventsCount > 0) connection->commit();
         else { 
             currentMessageId = oldCurrentMessageId; 
