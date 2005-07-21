@@ -41,6 +41,7 @@ public class MCISmeContext
     private boolean changedDrivers = false;
     private boolean changedTemplates = false;
     private boolean changedRules     = false;
+    private boolean changedOffsets   = false;
 
     private DataSource dataSource = null;
     private String smeId = "MCISme";
@@ -125,6 +126,13 @@ public class MCISmeContext
     }
     public void setChangedRules(boolean changedRules) {
         this.changedRules = changedRules;
+    }
+
+    public boolean isChangedOffsets() {
+        return changedOffsets;
+    }
+    public void setChangedOffsets(boolean changedOffsets) {
+        this.changedOffsets = changedOffsets;
     }
 
     public DataSource getDataSource() {

@@ -29,6 +29,9 @@
     case MCISmeBean.RESULT_RULES:
       response.sendRedirect("rules.jsp");
       return;
+    case MCISmeBean.RESULT_OFFSETS:
+      response.sendRedirect("offsets.jsp");
+      return;
     case MCISmeBean.RESULT_DRIVERS:
       response.sendRedirect("drivers.jsp");
       return;

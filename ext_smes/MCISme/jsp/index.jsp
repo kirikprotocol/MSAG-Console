@@ -101,6 +101,10 @@ function checkApplyResetButtons()
       <th>Rules definitions</th>
       <td><%= configStatus(bean.isRulesChanged())%></td>
     </tr>
+    <tr class=row0>
+      <th>TimeZone Offsets</th>
+      <td><%= configStatus(bean.isOffsetsChanged())%></td>
+    </tr>
     </table>
   </td>
 </tr>

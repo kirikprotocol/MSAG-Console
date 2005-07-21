@@ -88,6 +88,7 @@ public abstract class IndexProperties extends MCISmeBean
     return getMCISmeContext().isChangedOptions() ||
            getMCISmeContext().isChangedDrivers() ||
            getMCISmeContext().isChangedRules()   ||
+           getMCISmeContext().isChangedOffsets() ||
            getMCISmeContext().isChangedTemplates();
   }
   public boolean isOptionsChanged() {
@@ -101,6 +102,9 @@ public abstract class IndexProperties extends MCISmeBean
   }
   public boolean isRulesChanged() {
     return getMCISmeContext().isChangedRules();
+  }
+  public boolean isOffsetsChanged() {
+    return getMCISmeContext().isChangedOffsets();
   }
 
   public byte getStatus() {

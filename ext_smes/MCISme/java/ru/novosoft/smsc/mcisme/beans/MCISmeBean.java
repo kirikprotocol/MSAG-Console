@@ -30,13 +30,17 @@ public class MCISmeBean extends PageBean
   public final static int RESULT_RULES       = PageBean.PRIVATE_RESULT + 7;
   public final static int RESULT_RULE_ADD    = PageBean.PRIVATE_RESULT + 8;
   public final static int RESULT_RULE_EDIT   = PageBean.PRIVATE_RESULT + 9;
-  public final static int RESULT_INFORM_ADD  = PageBean.PRIVATE_RESULT + 10;
-  public final static int RESULT_INFORM_EDIT = PageBean.PRIVATE_RESULT + 11;
-  public final static int RESULT_NOTIFY_ADD  = PageBean.PRIVATE_RESULT + 12;
-  public final static int RESULT_NOTIFY_EDIT = PageBean.PRIVATE_RESULT + 13;
-  protected final static int PRIVATE_RESULT  = PageBean.PRIVATE_RESULT + 14;
+  public final static int RESULT_OFFSETS     = PageBean.PRIVATE_RESULT + 10;
+  public final static int RESULT_OFFSET_ADD  = PageBean.PRIVATE_RESULT + 11;
+  public final static int RESULT_OFFSET_EDIT = PageBean.PRIVATE_RESULT + 12;
+  public final static int RESULT_INFORM_ADD  = PageBean.PRIVATE_RESULT + 13;
+  public final static int RESULT_INFORM_EDIT = PageBean.PRIVATE_RESULT + 14;
+  public final static int RESULT_NOTIFY_ADD  = PageBean.PRIVATE_RESULT + 15;
+  public final static int RESULT_NOTIFY_EDIT = PageBean.PRIVATE_RESULT + 16;
+  protected final static int PRIVATE_RESULT  = PageBean.PRIVATE_RESULT + 17;
 
-  public final static String RULES_SECTION_NAME     = "MCISme.Rules"; 
+  public final static String RULES_SECTION_NAME     = "MCISme.Rules";
+  public final static String OFFSETS_SECTION_NAME   = "MCISme.TimeOffsets";
   public final static String TEMPLATES_SECTION_NAME = "MCISme.Templates";
   public final static String INFORM_TEMPLATES_SECTION_NAME = TEMPLATES_SECTION_NAME+".Inform";
   public final static String NOTIFY_TEMPLATES_SECTION_NAME = TEMPLATES_SECTION_NAME+".Notify";
@@ -102,6 +106,7 @@ public class MCISmeBean extends PageBean
     else if ("circuits".equals(mbMenu))  return RESULT_CIRCUITS;
     else if ("templates".equals(mbMenu)) return RESULT_TEMPLATES;
     else if ("rules".equals(mbMenu))     return RESULT_RULES;
+    else if ("offsets".equals(mbMenu))   return RESULT_OFFSETS;
     else if ("drivers".equals(mbMenu))   return RESULT_DRIVERS;
     else return result;
   }
