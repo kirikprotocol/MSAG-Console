@@ -2669,7 +2669,8 @@ StateType StateMachine::forward(Tuple& t)
       sms.setIntProperty(Tag::SMSC_UDH_CONCAT,df&DF_UDHCONCAT);
       int olddc=sms.getIntProperty(Tag::SMSC_DSTCODEPAGE);
       int newdc=(df>>DF_DCSHIFT)&0xFF;
-      sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,newdc);
+      sms.setIntProperty(Tag::SMSC_DSTCODEPAGE,newdc&(~smsc::profiler::ProfileCharsetOptions::UssdIn7Bit));
+      debug2(smsLog,"FWD: set dstdc to %x for diverted msg (was %x)",newdc,olddc);
       if(olddc!=newdc && sms.hasBinProperty(Tag::SMSC_CONCATINFO) && !sms.hasIntProperty(Tag::SMSC_MERGE_CONCAT))
       {
         doRepartition=true;
