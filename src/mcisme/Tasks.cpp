@@ -830,7 +830,7 @@ bool Task::formatMessage(Message& message)
         formatter.formatMessage(message, timeOffset); 
         smsc_log_debug(logger, "Message for '%s' off=%d: %s", 
                        abonent.c_str(), timeOffset, message.message.c_str());*/
-        formatter.formatMessage(message, TimeOffsetManager::getOffset(abonent.c_str()); 
+        formatter.formatMessage(message, TimeOffsetManager::getOffset(abonent.c_str())); 
 
         if (message.eventsCount > 0) connection->commit();
         else { 
