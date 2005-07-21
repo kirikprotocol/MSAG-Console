@@ -11,4 +11,6 @@ public interface Constants
   static final String SECTION_NAME_SMSC_CONNECTIONS = "smsc-connections";
   static final String SECTION_NAME_SME_PROVIDERS = "sme-providers";
   public static final long ServicesRefreshTimeoutMillis = 1000;
+  public static final long Day = 86400000;
+  public static final long Hour = 3600000;
 }
