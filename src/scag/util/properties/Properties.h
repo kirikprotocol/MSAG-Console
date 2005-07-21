@@ -5,7 +5,7 @@
 #include <stdint.h>
 #else
 #include <inttypes.h>
-#endif
+#endif    
 
 #include <string>
 
@@ -13,12 +13,15 @@
 
 namespace scag { namespace util { namespace properties 
 {
-    const int PTYPE_INT     = 0;
-    const int PTYPE_STR     = 1;
-    const int PTYPE_BOOL    = 2;
-    const int PTYPE_DATE    = 3;
-
     using smsc::util::Exception;
+
+    enum PropertyType
+    {
+        pt_int,
+        pt_str,
+        pt_bool,
+        pt_date
+    };
 
     class PropertyException : public Exception
     {
@@ -36,9 +39,20 @@ namespace scag { namespace util { namespace properties
     public:
         
         ConvertException(const char* val, const char* type) 
-            : PropertyException(message, val, type) { SMSC_UTIL_EX_FILL(fmt); };
+            : PropertyException(message, val, type) { /*SMSC_UTIL_EX_FILL(fmt);*/ };
         virtual ~ConvertException() throw() {};
     };
+
+    class CompareException : public PropertyException
+    {
+    static const char* message;
+    public:
+
+        CompareException(const char * _message) 
+            : PropertyException(_message) { /*SMSC_UTIL_EX_FILL(fmt);*/ };
+        virtual ~CompareException() throw() {};
+    };
+
     class ConstantSetException : public PropertyException
     {
     static const char* message;
@@ -55,8 +69,8 @@ namespace scag { namespace util { namespace properties
     {
     protected:
 
-        int     type;
-        bool    sync, constant;
+        PropertyType  type;
+        bool       sync, constant;
 
         int64_t     i_val;
         std::string s_val;
@@ -68,11 +82,8 @@ namespace scag { namespace util { namespace properties
     
     public:
 
-        Property() 
-            : type(PTYPE_INT), sync(false), constant(false), i_val(0), s_val("") {};
-        Property(const Property& p) 
-            : type(p.type), sync(p.sync), constant(p.constant), i_val(p.i_val), s_val(p.s_val) {};
-        ~Property(_type) {};
+        Property(): type(pt_str), sync(true), constant(false),i_val(0) {};
+        ~Property() {};
 
         const std::string& getStr();
         int64_t getInt ();
@@ -83,6 +94,12 @@ namespace scag { namespace util { namespace properties
         void setInt(int64_t val);
         void setBool(bool val);
         void setDate(time_t val);
+
+        int Compare(const std::string& val);
+        int Compare(bool val);
+        int Compare(int val);
+        int Compare(Property& val,PropertyType pt);
+        int Compare(Property& val,bool reqcast);
     };
     
     class NamedProperty : public Property
@@ -116,7 +133,7 @@ namespace scag { namespace util { namespace properties
          * 
          * @param   property    changed property
          */
-        virtual void changed(const NamedProperty& property) = 0;
+        virtual void changed(const NamedProperty& property);
         virtual ~Changeable() {};
         
     protected:
@@ -133,10 +150,10 @@ namespace scag { namespace util { namespace properties
          * @param   name        property name
          * @return  property    existed property, new property or null
          */
-        virtual NamedProperty* getProperty(const std::string& name) = 0;
+        virtual NamedProperty* getProperty(const std::string& name) {return 0;};
         virtual ~PropertyManager() {};
 
-    protected:
+    public:
         PropertyManager() {};
     };
 
