@@ -30,7 +30,7 @@ my @OUT_FIELDS;
 {value=>'0',width=>1},                          # pos=269
 {value=>'0',width=>10},                         # pos=270
 {value=>'0.000000',width=>20,align=>'R'},       # pos=280
-{field=>'MSC_ID',width=>20},                    # pos=300
+{field=>'PAYER_MSC',width=>20},                 # pos=300
 {value=>'0',width=>10},                         # pos=320
 {value=>'0',width=>10},                         # pos=330
 );
