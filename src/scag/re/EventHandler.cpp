@@ -28,6 +28,7 @@ RuleStatus EventHandler::process(SCAGCommand command)
     Property p;
     p.setStr("5");
     _constants["const"] = p;
+
     //////////////////////
 
     ActionContext context(_constants, _session, _command);
