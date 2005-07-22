@@ -12,6 +12,7 @@ struct SmeSocket:SmppSocket{
   SmeSocket(net::Socket* s):SmppSocket(s)
   {
     sockType=etService;
+    connected=true;
   }
 
   bool processPdu(PduGuard& pdu)

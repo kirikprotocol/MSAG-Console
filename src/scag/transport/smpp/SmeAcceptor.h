@@ -6,6 +6,7 @@
 #include <string>
 #include "util/Exception.hpp"
 #include "SmppSMInterface.h"
+#include "logger/Logger.h"
 
 namespace scag {
 namespace transport {
@@ -13,7 +14,10 @@ namespace smpp {
 
 class SmeAcceptor:public thr::ThreadedTask{
 public:
-  SmeAcceptor(SmppSMInterface* argSm):sm(argSm){}
+  SmeAcceptor(SmppSMInterface* argSm):sm(argSm)
+  {
+    log=smsc::logger::Logger::getInstance("smpp.acc");
+  }
   const char* taskName(){return "SmeAcceptor";}
   void Init(const char* host,int port)
   {
@@ -32,6 +36,9 @@ public:
     {
       net::Socket* s=sock.Accept();
       if(!s)break;
+      char buf[32];
+      s->GetPeer(buf);
+      info2(log,"connection accepted from %s",buf);
       sm->registerSocket(new SmeSocket(s));
     }
     return 0;
@@ -44,6 +51,7 @@ public:
 protected:
   net::Socket sock;
   SmppSMInterface* sm;
+  smsc::logger::Logger* log;
 };
 
 

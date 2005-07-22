@@ -7,6 +7,9 @@
 #include "SmppWriter.h"
 #include "core/threads/ThreadPool.hpp"
 #include "SmppSMInterface.h"
+#include "logger/Logger.h"
+#include "SmppCommandQueue.h"
+#include "SmppChannelRegistrator.h"
 
 namespace scag{
 namespace transport{
@@ -14,11 +17,18 @@ namespace smpp{
 
 class SmppSocketManager:public SmppSMInterface{
 public:
-  SmppSocketManager()
+  SmppSocketManager(SmppChannelRegistrator* argReg,SmppCommandQueue* argQueue):
+    reg(argReg),queue(argQueue)
   {
     acc=new SmeAcceptor(this);
+    acc->Init("0.0.0.0",8001);
     conn=new SmscConnector(this);
     tp.startTask(acc);
+    log=smsc::logger::Logger::getInstance("smpp.sm");
+  }
+  SmscConnectorAdmin* getSmscConnectorAdmin()
+  {
+    return conn;
   }
   void registerSocket(SmppSocket* sock);
   void unregisterSocket(SmppSocket* sock);
@@ -32,6 +42,10 @@ protected:
   SmeAcceptor* acc;
   SmscConnector* conn;
 
+  SmppChannelRegistrator* reg;
+  SmppCommandQueue* queue;
+
+  smsc::logger::Logger* log;
 
   thr::ThreadPool tp;
 };

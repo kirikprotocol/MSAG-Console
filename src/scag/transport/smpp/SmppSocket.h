@@ -40,7 +40,7 @@ struct PduGuard{
   template <class T>
   T& as()
   {
-    return (T*)pdu;
+    return *(T*)pdu;
   }
   bool isNull(){return pdu==0;}
 protected:
@@ -77,6 +77,7 @@ struct SmppSocket:SmppChannel{
   {
     MutexGuard mg(mtx);
     refCount++;
+    info2(log,"acquire:%p(%s)/%d",this,systemId.c_str(),refCount);
   }
 
   void release()
@@ -85,9 +86,17 @@ struct SmppSocket:SmppChannel{
     {
       MutexGuard mg(mtx);
       cnt=--refCount;
+      info2(log,"release:%p(%s)/%d",this,systemId.c_str(),refCount);
     }
     if(!cnt)
     {
+      info2(log,"Deleting socket for %s",systemId.c_str());
+      if(bindType!=btNone)
+      {
+        info2(log,"unregisterChannel(bt=%d)",bindType);
+        chReg->unregisterChannel(this);
+        bindType=btNone;
+      }
       sm->unregisterSocket(this);
       delete this;
     }

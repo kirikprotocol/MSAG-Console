@@ -7,6 +7,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "core/synchronization/EventMonitor.hpp"
 #include "SmppSocket.h"
+#include "logger/Logger.h"
 
 namespace scag{
 namespace transport{
@@ -19,6 +20,19 @@ namespace thr=smsc::core::threads;
 
 class SmppIOBase:public thr::ThreadedTask{
 public:
+  SmppIOBase()
+  {
+    log=smsc::logger::Logger::getInstance("smpp.io");
+  }
+
+  ~SmppIOBase()
+  {
+    for(int i=sockets.Count()-1;i>=0;i--)
+    {
+      deleteSocketUnsync(i);
+    }
+  }
+
   int getSocketsCount()
   {
     MutexGuard mg(mon);
@@ -33,6 +47,7 @@ public:
   void addSocket(SmppSocket* sock)
   {
     MutexGuard mg(mon);
+    info2(log,"add socket %p",sock);
     sock->acquire();
     sock->setMonitor(&mon);
     sockets.Push(sock);
@@ -42,14 +57,31 @@ public:
   void deleteSocket(int index)
   {
     MutexGuard mg(mon);
+    deleteSocketUnsync(index);
+  }
+protected:
+  void deleteDisconnected()
+  {
+    for(int i=sockets.Count()-1;i>=0;i--)
+    {
+      if(!sockets[i]->isConnected())
+      {
+        deleteSocketUnsync(i);
+      }
+    }
+  }
+
+  void deleteSocketUnsync(int index)
+  {
+    info2(log,"delete socket %p",sockets[index]);
     onDeleteSocket(sockets[index]);
     sockets[index]->release();
     sockets.Delete(index);
   }
-protected:
   sync::EventMonitor mon;
   buf::Array<SmppSocket*> sockets;
   net::Multiplexer mul;
+  smsc::logger::Logger* log;
 };
 
 }//smpp

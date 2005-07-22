@@ -1,11 +1,12 @@
 #ifndef __SCAG_TRANSPORT_SMPP_SMSCCONNECTOR_H__
 #define __SCAG_TRANSPORT_SMPP_SMSCCONNECTOR_H__
 
+#include <utility>
+#include <string>
 #include "core/threads/ThreadPool.hpp"
 #include "SmppSMInterface.h"
 #include "SmscSocket.h"
-#include <utility>
-#include <string>
+#include "SmscConnectorAdmin.h"
 
 namespace scag{
 namespace transport{
@@ -13,44 +14,30 @@ namespace smpp{
 
 namespace thr=smsc::core::threads;
 
-struct SmscConnectInfo{
-  std::string sysId;
-  std::string pass;
-  std::string hosts[2];
-  int ports[2];
-  int lastIdx;
-  SmscConnectInfo()
-  {
-    lastIdx=0;
-  }
-  const char* host()const
-  {
-    return hosts[lastIdx].c_str();
-  }
-  int port()const
-  {
-    return ports[lastIdx];
-  }
-  void reportFailure()
-  {
-    lastIdx=(lastIdx+1)&1;
-  }
-};
 
-class SmscConnector{
+class SmscConnector:public SmscConnectorAdmin{
 public:
-  SmscConnector(SmppSMInterface* argSm):sm(argSm){}
-  void init();
+  SmscConnector(SmppSMInterface* argSm):sm(argSm),active(true){}
+
+  void addSmscConnect(const SmscConnectInfo& info);
+  void deleteSmscConnect(const char* sysId);
+  void updateSmscConnect(const SmscConnectInfo& info);
+
   void reportSmscDisconnect(const char* sysId);
   void registerSocket(SmscSocket* sock)
   {
     sm->registerSocket(sock);
+  }
+  void shutdown()
+  {
+    active=false;
   }
 protected:
   thr::ThreadPool tp;
   SmppSMInterface* sm;
   buf::Hash<SmscConnectInfo> smscConnections;
   sync::Mutex mtx;
+  bool active;
 };
 
 struct SmscConnectTask:thr::ThreadedTask{

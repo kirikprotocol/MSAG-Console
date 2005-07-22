@@ -18,7 +18,7 @@ void SmppSocket::processInput()
       MutexGuard mg(mtx);
       res=sock->Read(rdBuffer,4);
     }
-    if(res==-1)
+    if(res<=0)
     {
       connected=false;
       return;
@@ -50,7 +50,7 @@ void SmppSocket::processInput()
     MutexGuard mg(mtx);
     res=sock->Read(rdBuffer+rdBufUsed,rdToRead-rdBufUsed);
   }
-  if(res==-1)
+  if(res<=0)
   {
     connected=false;
     return;
@@ -93,7 +93,14 @@ void SmppSocket::processInput()
 
     case SmppCommandSet::UNBIND:
     {
-      info2(log,"uninmplemented %x",pdu->get_commandId());
+      info2(log,"unbind %s",systemId.c_str());
+      putCommand(SmppCommand::makeUnbindResp(pdu->get_sequenceNumber(),0,0));
+      if(bindType!=btNone)
+      {
+        info2(log,"unregisterChannel(bt=%d)",bindType);
+        chReg->unregisterChannel(this);
+      }
+      bindType=btNone;
     }break;
     case SmppCommandSet::UNBIND_RESP:
     {
@@ -144,6 +151,7 @@ void SmppSocket::processInput()
 
 void SmppSocket::sendData()
 {
+  info2(log,"sendData: %d/%d",wrBufSent,wrBufUsed);
   if(wrBufUsed && wrBufSent<wrBufUsed)
   {
     int res;
@@ -151,7 +159,7 @@ void SmppSocket::sendData()
       MutexGuard mg(mtx);
       res=sock->Write(wrBuffer,wrBufUsed-wrBufSent);
     }
-    if(res==-1)
+    if(res<=0)
     {
       connected=false;
       return;
@@ -187,6 +195,7 @@ void SmppSocket::sendData()
   fillSmppPdu(&st,pdu);
   wrBufSent=0;
   wrBufUsed=sz;
+  debug2(log,"new buffer %d",wrBufUsed);
 }
 
 }//smpp

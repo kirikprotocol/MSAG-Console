@@ -31,6 +31,7 @@ int SmppWriter::Execute()
       if(!haveData)
       {
         mon.wait(500);
+        deleteDisconnected();
         continue;
       }
     }
@@ -38,6 +39,7 @@ int SmppWriter::Execute()
     {
       for(int i=0;i<error.Count();i++)
       {
+        debug2(log,"error on socket %p",error[i]);
         getSmppSocket(error[i])->disconnect();
       }
       for(int i=0;i<ready.Count();i++)
@@ -45,15 +47,10 @@ int SmppWriter::Execute()
         getSmppSocket(ready[i])->sendData();
       }
       MutexGuard mg(mon);
-      for(int i=sockets.Count()-1;i>=0;i--)
-      {
-        if(!sockets[i]->isConnected())
-        {
-          deleteSocket(i);
-        }
-      }
+      deleteDisconnected();
     }
   }
+  deleteDisconnected();
   return 0;
 }
 

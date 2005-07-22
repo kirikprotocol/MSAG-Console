@@ -435,6 +435,8 @@ struct _SmppCommand
 
   SmppHeader* get_smppPdu(){return (SmppHeader*)dta;}
 
+  BindCommand& get_bindCommand(){return *((BindCommand*)dta);}
+
   int get_smeIndex(){return (int)dta;}
 
   void set_status(int st){status=st;}
@@ -1104,6 +1106,42 @@ public:
         pdu->header.set_commandStatus(makeSmppStatus((uint32_t)c.status));
         return reinterpret_cast<SmppHeader*>(pdu.release());
       }
+    case BIND_TRANSCEIVER:
+      {
+        auto_ptr<PduBindTRX> pdu(new PduBindTRX);
+        pdu->header.set_commandId(SmppCommandSet::BIND_TRANCIEVER);
+        pdu->header.set_sequenceNumber(c.get_dialogId());
+        pdu->header.set_commandStatus(makeSmppStatus((uint32_t)c.status));
+        BindCommand& bnd=c.get_bindCommand();
+        pdu->set_systemId(bnd.sysId.c_str());
+        pdu->set_password(bnd.pass.c_str());
+        return reinterpret_cast<SmppHeader*>(pdu.release());
+      }
+    case BIND_RECIEVER_RESP:
+      {
+        auto_ptr<PduBindTRXResp> pdu(new PduBindTRXResp);
+        pdu->header.set_commandId(SmppCommandSet::BIND_RECIEVER_RESP);
+        pdu->header.set_sequenceNumber(c.get_dialogId());
+        pdu->header.set_commandStatus(c.status);
+        return reinterpret_cast<SmppHeader*>(pdu.release());
+      }
+    case BIND_TRANSMITTER_RESP:
+      {
+        auto_ptr<PduBindTRXResp> pdu(new PduBindTRXResp);
+        pdu->header.set_commandId(SmppCommandSet::BIND_TRANSMITTER_RESP);
+        pdu->header.set_sequenceNumber(c.get_dialogId());
+        pdu->header.set_commandStatus(c.status);
+        return reinterpret_cast<SmppHeader*>(pdu.release());
+      }
+    case BIND_TRANCIEVER_RESP:
+      {
+        auto_ptr<PduBindTRXResp> pdu(new PduBindTRXResp);
+        pdu->header.set_commandId(SmppCommandSet::BIND_TRANCIEVER_RESP);
+        pdu->header.set_sequenceNumber(c.get_dialogId());
+        pdu->header.set_commandStatus(c.status);
+        return reinterpret_cast<SmppHeader*>(pdu.release());
+      }
+
     default:
       throw runtime_error("unknown commandid");
     }

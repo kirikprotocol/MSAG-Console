@@ -13,6 +13,7 @@ struct SmscSocket:SmppSocket{
   {
     sockType=etSmsc;
     sock=new net::Socket();
+    sock->setData(0,this);
   }
   bool connect()
   {
@@ -26,6 +27,7 @@ struct SmscSocket:SmppSocket{
       info2(log,"Failed to connect to %s:%d",host.c_str(),port);
       return false;
     }
+    connected=true;
     return true;
   }
   void bind(const char* sysId,const char* pass)

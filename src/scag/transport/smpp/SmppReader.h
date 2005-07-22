@@ -14,13 +14,16 @@ public:
   int Execute();
   void onAddSocket(SmppSocket* sock)
   {
+    MutexGuard mg(mulMtx);
     mul.add(sock->getSocket());
   }
   void onDeleteSocket(SmppSocket* sock)
   {
+    MutexGuard mg(mulMtx);
     mul.remove(sock->getSocket());
   }
 protected:
+  sync::Mutex mulMtx;
 };
 
 
