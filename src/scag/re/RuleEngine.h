@@ -16,18 +16,6 @@ namespace scag { namespace re
     using smsc::core::buffers::IntHash;
     using namespace scag::re::actions;
     using smsc::util::config::ConfigView;
-//    using smsc::scag::admin::SCAGCommand;
-
-/*
-class ConfigView 
-{
-}; */
-        
-
-    /**
-     * Should be instantiated from SCAG Core on startup
-     * Allows to manage rules in runtime (add/remove/modify)
-     */
 
 struct RulesReference;
 struct Rules;
@@ -42,6 +30,7 @@ class RuleEngine
 private:
     ActionFactory factory;
     std::string RulesDir;
+    int GetRuleId(SCAGCommand& command);
 
     friend struct RulesReference; 
     struct Rules
@@ -157,10 +146,13 @@ public:
          * @param   command     command to process
          * @return  status      command processing status
          */
-    RuleStatus process(int ruleId, SCAGCommand command)
+    RuleStatus process(SCAGCommand& command)
     {
         RulesReference rulesRef = getRules();
         RuleStatus rs;
+
+        int ruleId = 0;
+        ruleId = GetRuleId(command);
 
         char buff[128];
         sprintf(buff,"%s%d","Process RuleEngine with ruleId: ",ruleId);
@@ -175,7 +167,6 @@ public:
         {
             char buff[128];
             sprintf(buff,"%s%d%s","Cannot process Rule with ID = ",ruleId," : Rule not found");
-            //smsc_log_error(logger,buff);
             throw Exception(buff);
         }
 

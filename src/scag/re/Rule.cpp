@@ -43,12 +43,12 @@ Rule::~Rule()
 }
 
 
-RuleStatus Rule::process(SCAGCommand command)
+RuleStatus Rule::process(SCAGCommand& command)
 {
     RuleStatus rs;
     EventHandler * eh;
 
-    if (command.getType()!=transportType) 
+    if (command.getType() != transportType) 
         throw Exception("Rule: command transport type and rule transport type are different");
 
     smsc_log_debug(logger,"Process Rule...");
@@ -73,7 +73,16 @@ RuleStatus Rule::process(SCAGCommand command)
 
 HandlerType Rule::ExtractHandlerType(SCAGCommand& command)
 {
-    return htSubmit;
+    SmppCommand * smpp = dynamic_cast<SmppCommand*>(&command);
+    if (smpp) 
+    {
+        return htSubmit;
+        /*
+        
+        */
+    }
+
+    return htUnknown;
 }
 
 

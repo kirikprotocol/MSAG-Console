@@ -11,25 +11,9 @@ using scag::re::RuleEngine;
 using scag::re::RuleStatus;
 using scag::transport::smpp::SmppCommand;
 
-//using smsc::smppgw::GatewaySme;
-
-/*
-static const char*              encodingName    = "LATIN1";
-static XMLFormatter::UnRepFlags unRepFlags      = XMLFormatter::UnRep_CharRef;
-static SAX2XMLReader::ValSchemes valScheme      = SAX2XMLReader::Val_Auto;
-static bool					        expandNamespaces= false ;
-static bool                     doNamespaces    = true;
-static bool                     doSchema        = true;
-static bool                     schemaFullChecking = false;
-static bool                     namespacePrefixes = false;
-
-*/
-
-
 
 int main(int argC, char* argV[])
 {
-    //smsc::logger::_trace_cat = 0;
 
     std::string xmlFile = "rules.xml";
     int errorCount;
@@ -48,14 +32,15 @@ int main(int argC, char* argV[])
 
     try
     {
-        rs = engine->process(1,command);
+        rs = engine->process(command);
         char buff[128];
         sprintf(buff,"%s%d","result = ",rs.result);
         smsc_log_debug(logger,buff);
     }
     catch (Exception& e)
     {
-        smsc_log_error(logger,e.what());
+        smsc_log_error(logger,"");
+        smsc_log_error(logger,std::string("Process aborted: ") + e.what());
         //TODO: Disable route
     }
     

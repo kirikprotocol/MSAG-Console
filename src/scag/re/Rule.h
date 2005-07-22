@@ -10,6 +10,7 @@
 //#include "scag/re/actions/ActionChoose.h"
 #include "SAX2Print.hpp"
 #include "scag/transport/SCAGCommand.h"
+#include "scag/transport/smpp/SmppCommand.h"
 
 
 namespace scag { namespace re 
@@ -18,6 +19,7 @@ namespace scag { namespace re
 using smsc::core::buffers::IntHash;
 using namespace scag::re::actions;
 using namespace scag::transport;
+using namespace scag::transport::smpp;
 
 enum HandlerType;
 class EventHandler;
@@ -74,7 +76,7 @@ public:
      * @param   command     command to process
      * @return  status      rule's handler execution status
      */
-    virtual RuleStatus process(SCAGCommand command);
+    virtual RuleStatus process(SCAGCommand& command);
 
 
     Rule(): useCounter(1),transportType(SMPP) {};

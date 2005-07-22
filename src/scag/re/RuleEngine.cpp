@@ -37,32 +37,6 @@ XMLRuleHandler::XMLRuleHandler(const std::string SectionName)
   
 */
 
-bool RuleEngine::isValidFileName(std::string fname, int& ruleId)
-{
-    if (fname.substr(0,5).compare("rule_")) return false;
-    if (fname.substr(fname.size()-4,4).compare(".xml")) return false;
-
-    ruleId = atoi(fname.substr(5,fname.size()-5-4).c_str());
-
-    return (ruleId>0);
-}
-
-std::string RuleEngine::CreateRuleFileName(const std::string& dir,const int ruleId) const
-{
-    char buff[100];
-    sprintf(buff,"%d",ruleId);
-    std::string result = dir;
-
-    result.append("/rule_");
-    result.append(buff);
-    result.append(".xml");
-
-    return result;   
-}
-
-
-
-
 
 RuleEngine::RuleEngine(const std::string& dir)
 {
@@ -185,6 +159,33 @@ Rule * RuleEngine::ParseFile(const std::string& xmlFile)
     return rule;
 }
 
+bool RuleEngine::isValidFileName(std::string fname, int& ruleId)
+{
+    if (fname.substr(0,5).compare("rule_")) return false;
+    if (fname.substr(fname.size()-4,4).compare(".xml")) return false;
+
+    ruleId = atoi(fname.substr(5,fname.size()-5-4).c_str());
+
+    return (ruleId>0);
+}
+
+std::string RuleEngine::CreateRuleFileName(const std::string& dir,const int ruleId) const
+{
+    char buff[100];
+    sprintf(buff,"%d",ruleId);
+    std::string result = dir;
+
+    result.append("/rule_");
+    result.append(buff);
+    result.append(".xml");
+
+    return result;   
+}
+
+int RuleEngine::GetRuleId(SCAGCommand& command)
+{
+    return 1;
+}
 
 
 }}
