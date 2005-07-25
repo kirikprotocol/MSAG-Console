@@ -7,8 +7,6 @@
 #include <scag/re/actions/IParserHandler.h>
 #include <core/buffers/IntHash.hpp>
 
-#include <iostream>
-
 using smsc::core::buffers::IntHash;
 using namespace std;
 
@@ -76,9 +74,8 @@ class ActionIf : public Action
     IntHash<Action *> ElseActions;
 protected:
 //////////////IParserHandler Interfase///////////////////////
-    virtual void StartXMLSubSection(const std::string& name,const SectionParams& params);
-    virtual void FinishXMLSubSection(const std::string& name);
-    virtual void SetChildObject(IParserHandler * child);
+    virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
+    virtual bool FinishXMLSubSection(const std::string& name);
 //////////////IParserHandler Interfase///////////////////////
 public:
     ActionIf();

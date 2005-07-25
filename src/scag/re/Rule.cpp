@@ -1,32 +1,12 @@
 #include "Rule.h"
+#include "scag/transport/smpp/SmppCommand.h"
+#include "SAX2Print.hpp"
 
 namespace scag { namespace re 
 {
 
-using smsc::core::buffers::IntHash;
 using namespace scag::re::actions;
-
-
-/////////////////////////////ActionFactory/////////////////////////
-
-Action * ActionFactory::CreateAction(const std::string& name) const
-{
-    if (name=="set") return new ActionSet();
-    if (name=="if")  return new ActionIf();
-    if (name=="return") return new ActionReturn();
-
-    return 0;
-}
-
-void ActionFactory::FillTagHash(smsc::core::buffers::Hash<int>& TagHash) const
-{
-    TagHash["set"] = tgActionSection;
-    TagHash["if"] = tgActionSection;
-    TagHash["return"] = tgActionSection;
-}
-
-
-/////////////////////////////Rule///////////////////////////////////
+using namespace scag::transport::smpp;
 
 
 Rule::~Rule()
@@ -88,16 +68,45 @@ HandlerType Rule::ExtractHandlerType(SCAGCommand& command)
 
 //////////////IParserHandler Interfase///////////////////////
 
-void Rule::SetChildObject(IParserHandler * child)
+IParserHandler * Rule::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)
 {
-    if (!child) return;
+    EventHandler * eh = 0;
 
-    EventHandler * eh = dynamic_cast<EventHandler *>(child);
-    if (!eh) return throw Exception("Rule: unrecognized child object");
+    if (name.compare("handler") == 0) 
+    {
+        try
+        {
+            eh = new EventHandler();
+            eh->init(params);
+        } catch (Exception& e)
+        {
+            if (eh) delete eh;
+            throw e;
+        }
 
-    if (Handlers.Exist(eh->GetHandlerType())) throw Exception("Rule: EventHandler with the same type already exists");
-    Handlers.Insert(eh->GetHandlerType(),eh);
+        if (Handlers.Exist(eh->GetHandlerType())) 
+        {
+            delete eh;
+            throw Exception("Rule: EventHandler with the same type already exists");
+        }
+
+        Handlers.Insert(eh->GetHandlerType(),eh);
+        return eh;
+    }
+    else
+    {
+        std::string msg("Rule: unrecognized child object '");
+        msg.append(name);
+        msg.append("' to create");
+        throw Exception(msg.c_str());
+    }
 }
+
+bool Rule::FinishXMLSubSection(const std::string& name)
+{
+    return (name.compare("rule") == 0);
+}
+
 
 void Rule::init(const SectionParams& params)
 {
@@ -116,6 +125,9 @@ void Rule::init(const SectionParams& params)
                   msg.append("' for 'transport' parameter");
                   throw Exception(msg.c_str());
               }
+
+    smsc_log_debug(logger,"Rule::Init");
+
 }
 
 

@@ -1,8 +1,12 @@
-#include "scag/re/EventHandler.h"
+#include "EventHandler.h"
+#include "MainActionFactory.h"
+#include <util/Exception.hpp>
+#include "SAX2Print.hpp"
 
 
 namespace scag { namespace re {
 
+using namespace scag::util::properties;
 
 
 EventHandler::~EventHandler()
@@ -26,8 +30,8 @@ RuleStatus EventHandler::process(SCAGCommand command)
     PropertyManager _command;
     ////////////////////
     Property p;
-    p.setStr("5");
-    _constants["const"] = p;
+    p.setStr("25");
+    _constants.Insert("const",p);
 
     //////////////////////
 
@@ -57,6 +61,41 @@ HandlerType EventHandler::StrToHandlerType(const std::string& str)
 
 
 //////////////IParserHandler Interfase///////////////////////
+
+IParserHandler * EventHandler::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)
+{
+
+    Action * action = 0;
+    action = factory.CreateAction(name);
+    if (!action) 
+    {
+        std::string msg("EventHandler: unrecognized child object '");
+        msg.append(name);
+        msg.append("' to create");
+        throw Exception(msg.c_str());
+    }
+
+    smsc_log_debug(logger,std::string("HandlerEvent::StartXMLSubSection - <")+name+std::string(">"));
+
+    try
+    {
+        action->init(params);
+    } catch (Exception& e)
+    {
+        delete action;
+        throw e;
+    }
+
+    actions.Insert(actions.Count(),action);
+    return action;
+}
+
+bool EventHandler::FinishXMLSubSection(const std::string& name)
+{
+    return (name.compare("handler")==0);
+}
+
+
 void EventHandler::init(const SectionParams& params)
 {
     if (!params.Exists("type")) throw Exception("EventHandler: missing 'type' parameter");
@@ -70,19 +109,7 @@ void EventHandler::init(const SectionParams& params)
         msg.append("' for 'type' parameter");
         throw Exception(msg.c_str());
     }
-}
-
-
-
-void EventHandler::SetChildObject(IParserHandler * child)
-{
-    if (!child) return;
-
-    Action * action = dynamic_cast<Action *>(child);
-    if (!action) return throw Exception("Event Handler: unrecognized child object");
-
-    smsc_log_debug(logger, "Set child object to EventHandler");
-    actions.Insert(actions.Count(),action);
+    smsc_log_debug(logger,"HandlerEvent::Init");
 }
 
 

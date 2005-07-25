@@ -11,7 +11,6 @@
 
 #include <core/buffers/Array.hpp>
 #include <acls/interfaces.h>
-//#include "scag/re/RuleEngine.h"
 #include "scag/re/actions/IParserHandler.h"
 #include "scag/re/Rule.h"
 
@@ -42,26 +41,19 @@ enum TagsID
 
 
 class XMLBasicHandler;
+class Rule;
 
 class SemanticAnalyser
 {
-    smsc::core::buffers::Hash<int> ValidSimpleTags;
     vector <IParserHandler *> HistoryObjectStack;
     IParserHandler * CurrentObject;
     const ActionFactory * factory;
-
-    void StartCreateObject(const std::string& name,const SectionParams& params);
-    void FinishCreateObject(const std::string& name);
-    void StartFillObject(const std::string& name,const SectionParams& params);
-    void FinishFillObject(const std::string& name);
-
-    bool isValidSimpleTag(const std::string& name) {return ValidSimpleTags.Exists(name.c_str());}
-    
+    Rule * RootObject;
 public:
     void DeliverBeginTag(const std::string& name,const SectionParams& params);
     void DeliverEndTag(const std::string& name);
 
-    IParserHandler * ReturnCurrentObject(); //return object and deligate ownership
+    Rule * ReturnRuleObject(); 
 
     SemanticAnalyser(const ActionFactory& obj);
     ~SemanticAnalyser();
@@ -74,7 +66,7 @@ class XMLBasicHandler : public HandlerBase
     bool CanReturnFinalObject;
 protected:
 public:
-    IParserHandler * ReturnFinalObject();
+    Rule * ReturnFinalObject();
 
     // -----------------------------------------------------------------------
     //  Constructors

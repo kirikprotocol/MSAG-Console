@@ -1,12 +1,10 @@
 #include <scag/re/XMLHandlers.h>
-#include <iostream.h>
-
-
 
 #include <xercesc/util/XMLUniDefs.hpp>
 #include <xercesc/sax/AttributeList.hpp>
 #include <xercesc/sax/SAXParseException.hpp>
 #include <xercesc/sax/SAXException.hpp>
+#include "SAX2Print.hpp"
 
 namespace scag { namespace re { 
 
@@ -24,111 +22,89 @@ SemanticAnalyser::SemanticAnalyser(const ActionFactory& obj)
 {
     factory = &obj;
     CurrentObject = 0;
-
-    ValidSimpleTags["rule"] = tgRuleSection;
-    ValidSimpleTags["handler"] = tgEventHandlerSection;
-
-    factory->FillTagHash(ValidSimpleTags);
-
+    RootObject = 0;
 }
 
 SemanticAnalyser::~SemanticAnalyser()
 {
-    for (vector <IParserHandler *>::iterator it = HistoryObjectStack.begin();it!=HistoryObjectStack.end();it++)
-    {
-        delete (*it);
-    }
-    if (CurrentObject) delete CurrentObject;
+    if (RootObject) delete RootObject;
 }
 
-IParserHandler * SemanticAnalyser::ReturnCurrentObject()
+Rule * SemanticAnalyser::ReturnRuleObject()
 {
-    IParserHandler * RObj = CurrentObject;
-    CurrentObject = 0;
-    return RObj;
+    Rule * result = RootObject;
+    RootObject = 0;
+    return result;
 }
 
 void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionParams& params)
 {
-    if (isValidSimpleTag(name)) StartCreateObject(name,params);
-    else StartFillObject(name,params);
+    IParserHandler * NewObj = 0;
+
+    if (CurrentObject) 
+    {
+        try
+        {
+            NewObj = CurrentObject->StartXMLSubSection(name,params,*factory);
+        } catch (Exception& e)
+        {
+            std::string msg("Semantic Analyser: Invalid object '");
+            msg.append(name);
+            msg.append("' to create");
+
+            if (NewObj) delete NewObj;
+            throw Exception(msg.c_str()); 
+        }
+
+        if (NewObj) 
+        {
+            HistoryObjectStack.push_back(CurrentObject);
+            CurrentObject = NewObj;
+        }
+    }
+    else
+    {
+        if (RootObject) 
+        {
+            throw Exception("Semantic Analyser: Structure cannot has 2 rule objects");
+        }
+
+
+        Rule * rule = new Rule();
+        try
+        {
+            rule->init(params);
+        } catch(Exception& e)
+        {
+            std::string msg("Semantic Analyser: Invalid object '");
+            msg.append(name);
+            msg.append("' to create");
+            if (NewObj) delete NewObj;
+            throw Exception(msg.c_str()); 
+        }
+        CurrentObject = rule;
+        RootObject = rule;
+    }
 }
 
 void SemanticAnalyser::DeliverEndTag(const std::string& name)
 {
-    if (isValidSimpleTag(name)) FinishCreateObject(name);
-    else FinishFillObject(name);
-}
-
-
-void SemanticAnalyser::StartCreateObject(const std::string& name,const SectionParams& params)
-{
-    if (CurrentObject) HistoryObjectStack.push_back(CurrentObject);
-    CurrentObject = 0;
-
-    switch (ValidSimpleTags[name.c_str()])  
+    if (CurrentObject) 
     {
-    case tgRuleSection: 
-        CurrentObject = new Rule();
-        break;
-    case tgEventHandlerSection: 
-        CurrentObject = new EventHandler(); 
-        break;
-    case tgActionSection: 
-        CurrentObject = factory->CreateAction(name);
-        if (!CurrentObject) 
+        if (CurrentObject->FinishXMLSubSection(name))
         {
-            std::string msg("Semantic Analyser: Invalid action '");
-            msg.append(name);
-            msg.append("' to create");
-            throw Exception(msg.c_str()); 
+            CurrentObject = 0;
+            if (HistoryObjectStack.size() > 0) 
+            {
+                CurrentObject = HistoryObjectStack.back();
+                HistoryObjectStack.pop_back();
+            }
         }
-        break;
-    }
-
-    if (!CurrentObject) throw Exception("Semantic Analyser: Invalid object to initialize"); 
-
-    try
-    {
-        CurrentObject->init(params);
-    } catch (Exception& e)
-    {
-        delete CurrentObject;
-        CurrentObject = 0;
-        throw e;
-    }
-}
-                                                         
-void SemanticAnalyser::FinishCreateObject(const std::string& name)
-{
-    IParserHandler * ParentObject = 0;
-    if (HistoryObjectStack.size() > 0) ParentObject = HistoryObjectStack.back();
-
-    if (ParentObject) 
-    {
-        HistoryObjectStack.pop_back();
-        try
-        {
-            ParentObject->SetChildObject(CurrentObject);
-        } catch (Exception &e)
-        {
-            delete CurrentObject;
-            CurrentObject = ParentObject;
-            throw e;
-        }
-        CurrentObject = ParentObject;
     }
 }
 
-void SemanticAnalyser::StartFillObject(const std::string& name,const SectionParams& params)
-{
-    if (CurrentObject) CurrentObject->StartXMLSubSection(name,params);
-}
 
-void SemanticAnalyser::FinishFillObject(const std::string& name)
-{
-    if (CurrentObject) CurrentObject->FinishXMLSubSection(name);
-}
+
 
 
 /////////////////////////////////////////////XMLBasicHandler/////////////////////////////
@@ -141,12 +117,12 @@ XMLBasicHandler::~XMLBasicHandler()
 {
 }
 
-IParserHandler * XMLBasicHandler::ReturnFinalObject()
+Rule * XMLBasicHandler::ReturnFinalObject()
 {
-    IParserHandler * RObj = 0;
+    Rule * rule = 0;
 
-    if (CanReturnFinalObject) RObj = analyser.ReturnCurrentObject();
-    return RObj;
+    if (CanReturnFinalObject) rule = analyser.ReturnRuleObject();
+    return rule;
 }
 
 

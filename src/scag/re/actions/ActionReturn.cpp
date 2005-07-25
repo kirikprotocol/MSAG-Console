@@ -45,5 +45,16 @@ bool ActionReturn::run(ActionContext& context)
 }
 
 
+IParserHandler * ActionReturn::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)
+{
+    throw Exception("Action 'return' cannot include child objects");
+}
+
+bool ActionReturn::FinishXMLSubSection(const std::string& name)
+{
+    return true;
+}
+
+
 }}}
 

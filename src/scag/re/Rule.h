@@ -2,34 +2,18 @@
 #define __SCAG_RULE_H__
 
 #include "EventHandler.h"
-#include "scag/re/actions/Action.h"
-#include "scag/re/actions/ActionIf.h"
-#include "scag/re/actions/ActionSet.h"
-#include "scag/re/actions/ActionReturn.h"
-
-//#include "scag/re/actions/ActionChoose.h"
-#include "SAX2Print.hpp"
 #include "scag/transport/SCAGCommand.h"
-#include "scag/transport/smpp/SmppCommand.h"
+#include "RuleStatus.h"
 
 
 namespace scag { namespace re 
 {
 
 using smsc::core::buffers::IntHash;
-using namespace scag::re::actions;
 using namespace scag::transport;
-using namespace scag::transport::smpp;
 
 enum HandlerType;
 class EventHandler;
- 
-class ActionFactory
-{
-public: 
-    Action * CreateAction(const std::string& name) const;
-    void FillTagHash(smsc::core::buffers::Hash<int>& TagHash) const;
-};
 
 class Rule : public IParserHandler
 {
@@ -45,9 +29,8 @@ protected:
     std::string billing_id;
 
 //////////////IParserHandler Interfase///////////////////////
-    virtual void SetChildObject(IParserHandler * child);
-    virtual void StartXMLSubSection(const std::string& name,const SectionParams& params) {};
-    virtual void FinishXMLSubSection(const std::string& name) {};
+    virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
+    virtual bool FinishXMLSubSection(const std::string& name);
 //////////////IParserHandler Interfase///////////////////////
 public:
     TransportType getTransportType() const {return transportType;};

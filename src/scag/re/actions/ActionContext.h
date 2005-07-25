@@ -2,11 +2,8 @@
 #define SCAG_RULE_ENGINE_ACTION_CONTEXT
 
 #include <string>
-
 #include <core/buffers/Hash.hpp>
-
 #include <scag/re/RuleStatus.h>
-//#include <scag/util/properties/Properties.h>
 #include <scag/re/properties/Properties.h>
 
 namespace scag { namespace re { namespace actions 

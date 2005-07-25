@@ -21,8 +21,8 @@ class ActionSet : public Action
     std::string Variable;
     std::string Value;
 protected:
-    virtual void StartXMLSubSection(const std::string& name,const SectionParams& params) {};
-    virtual void FinishXMLSubSection(const std::string& name) {};
+    virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
+    virtual bool FinishXMLSubSection(const std::string& name);
 public:
     virtual bool run(ActionContext& context);
 

@@ -153,9 +153,7 @@ Rule * RuleEngine::ParseFile(const std::string& xmlFile)
         return 0;
     }
 
-    IParserHandler * obj = handler.ReturnFinalObject();
-
-    Rule * rule = dynamic_cast<Rule *>(obj);
+    Rule * rule = handler.ReturnFinalObject();
     return rule;
 }
 

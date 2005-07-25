@@ -1,7 +1,8 @@
 #include "ActionIf.h"
 #include "scag/re/SAX2Print.hpp"
 
-#include <iostream>
+#include "scag/re/Rule.h"
+#include "scag/re/ActionFactory.h"
 
 namespace scag { namespace re { namespace actions {
 
@@ -56,44 +57,72 @@ ActionIf::~ActionIf()
 }
 
 
-void ActionIf::StartXMLSubSection(const std::string& name,const SectionParams& params)
+IParserHandler * ActionIf::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)
 {
     if (name == "then")
     {
         FillThenSection = true;
         FillElseSection = false;
-    }
-    if (name == "else") 
+        return 0;
+    } else if (name == "else") 
     {
         FillThenSection = false;
         FillElseSection = true;
+        return 0;
+    } 
+    else
+    {
+        Action * action = 0;
+        action = factory.CreateAction(name);
+        if (!action) 
+        {
+            std::string msg("EventHandler: unrecognized child object '");
+            msg.append(name);
+            msg.append("' to create");
+            throw Exception(msg.c_str());
+        }
+
+        try
+        {
+            action->init(params);
+        } catch (Exception& e)
+        {
+            delete action;
+            throw e;
+        }
+
+        if (FillThenSection) 
+        {
+            ThenActions.Insert(ThenActions.Count(),action);
+            smsc_log_debug(logger,"Action 'if': child object set to 'then'");
+        }
+        else if (FillElseSection) 
+        {
+            ElseActions.Insert(ElseActions.Count(),action);
+            smsc_log_debug(logger,"Action 'if': child object set to 'else'");
+        }
+
+        return action;
     }
 }
 
-void ActionIf::FinishXMLSubSection(const std::string& name)
+bool ActionIf::FinishXMLSubSection(const std::string& name)
 {
-    if (name == "then") FillThenSection = false;
-    if (name == "else") FillElseSection = false;
-}
-
-void ActionIf::SetChildObject(IParserHandler * child)
-{
-    if (!child) return;
-
-    Action * action = dynamic_cast<Action *>(child);
-             
-    if (!action) throw Exception("Action 'if': cannot recognize child object");
-
-    if (FillThenSection) 
+    if (name == "then") 
     {
-        ThenActions.Insert(ThenActions.Count(),action);
-        smsc_log_debug(logger,"Action 'if': child object set to 'then'");
-    }
-    else if (FillElseSection) 
+        FillThenSection = false;
+        return false;
+    } else if (name == "else") 
     {
-        ElseActions.Insert(ThenActions.Count(),action);
-        smsc_log_debug(logger,"Action 'if': child object set to 'else'");
+        FillElseSection = false;
+        return false;
     }
+    else
+    {
+        if (name=="if") return true;
+        else throw Exception("Action 'if': unrecognized final tag");
+    }
+    
 }
 
 

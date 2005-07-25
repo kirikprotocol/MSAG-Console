@@ -9,6 +9,9 @@
 
 #include "scag/re/actions/Action.h"
 #include "scag/re/Rule.h"
+#include "SAX2Print.hpp"
+#include "MainActionFactory.h"
+
 
 namespace scag { namespace re 
 {
@@ -28,7 +31,7 @@ class RuleEngine
 
 
 private:
-    ActionFactory factory;
+    MainActionFactory factory;
     std::string RulesDir;
     int GetRuleId(SCAGCommand& command);
 

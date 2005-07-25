@@ -20,8 +20,8 @@ class ActionReturn : public Action
     std::string ReturnValue;
     ActionReturn(const ActionReturn &);
 protected:
-    virtual void StartXMLSubSection(const std::string& name,const SectionParams& params) {};
-    virtual void FinishXMLSubSection(const std::string& name) {};
+    virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
+    virtual bool FinishXMLSubSection(const std::string& name);
 public:
     virtual void init(const SectionParams& params);
     virtual bool run(ActionContext& context);

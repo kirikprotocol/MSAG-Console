@@ -12,14 +12,15 @@ using smsc::util::Exception;
 typedef smsc::core::buffers::Hash<std::string> SectionParams;
 
 class SemanticAnalyser;
+class ActionFactory;
 
 class IParserHandler
 {
 friend class SemanticAnalyser;
 
 protected:
-    virtual void StartXMLSubSection(const std::string& name,const SectionParams& params) = 0;
-    virtual void FinishXMLSubSection(const std::string& name) = 0;
+    virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory) = 0;
+    virtual bool FinishXMLSubSection(const std::string& name) = 0;
     virtual void SetChildObject(IParserHandler * child) {throw Exception("IParserHandler object must have no children");};
 public:
     virtual void init(const SectionParams& params) = 0;
