@@ -2,7 +2,7 @@
 #include "scag/transport/smpp/SmppCommand.h"
 #include "SAX2Print.hpp"
 
-#include "SmppEventHandler.h"
+#include "scag/re/smpp/SmppEventHandler.h"
 
 namespace scag { namespace re 
 {

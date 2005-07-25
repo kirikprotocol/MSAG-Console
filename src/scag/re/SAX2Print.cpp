@@ -1,10 +1,11 @@
+#include "SAX2Print.hpp"
+
 #include <scag/re/RuleEngine.h>
 //#include <sme/SmppBase.hpp>
 //#include "smppgw/gwsme.hpp"
 //#include <fstream>
 #include "logger/Logger.h"
 #include "RuleStatus.h"
-#include "SAX2Print.hpp"
 #include "scag/transport/smpp/SmppCommand.h"
 
 using scag::re::RuleEngine;
