@@ -24,31 +24,24 @@ enum HandlerType
 class EventHandler : public IParserHandler
 {
     EventHandler(const EventHandler &);
+protected:
     IntHash<Action *> actions;
     HandlerType handlerType;
-    HandlerType StrToHandlerType(const std::string& str);
-protected:
+
 //////////////IParserHandler Interfase///////////////////////
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
 //////////////IParserHandler Interfase///////////////////////
 public:
     EventHandler() : handlerType(htUnknown) {};
-
     virtual ~EventHandler();
-    virtual void init(const SectionParams& params);
+
+    virtual void init(const SectionParams& params) = 0;
+    virtual RuleStatus process(SCAGCommand command) = 0;
+
     inline HandlerType GetHandlerType() const {return handlerType;};
-
-     /** 
-     * Processes action (or actions set).
-     * Creates ActionContext with transport specific CommandAdapter.
-     * Returns RuleStatus from context after action(s) execution.
-     * @param   command     command to process
-     * @return  status      action(s) execution status
-     */
-    virtual RuleStatus process(SCAGCommand command);
-
-
+    HandlerType StrToHandlerType(const std::string& str);
 };
+
 }}
 #endif

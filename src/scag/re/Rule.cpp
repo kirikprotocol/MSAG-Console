@@ -2,6 +2,8 @@
 #include "scag/transport/smpp/SmppCommand.h"
 #include "SAX2Print.hpp"
 
+#include "SmppEventHandler.h"
+
 namespace scag { namespace re 
 {
 
@@ -39,15 +41,6 @@ RuleStatus Rule::process(SCAGCommand& command)
     eh = Handlers.Get(handlerType);
     rs = eh->process(command);
 
-    /*
-    int key;
-    for (IntHash<EventHandler *>::Iterator it = Handlers.First(); it.Next(key, eh);)
-    {
-        
-        rs = eh->process(command);
-        break;
-    } */
-
     return rs;
 }
 
@@ -66,6 +59,21 @@ HandlerType Rule::ExtractHandlerType(SCAGCommand& command)
 }
 
 
+EventHandler * Rule::CreateEventHandler()
+{
+    switch (transportType) 
+    {
+    case SMPP:
+        return new SmppEventHandler();
+        break;
+
+    default:
+        return 0;
+        break;
+    }
+}
+
+
 //////////////IParserHandler Interfase///////////////////////
 
 IParserHandler * Rule::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)
@@ -76,7 +84,9 @@ IParserHandler * Rule::StartXMLSubSection(const std::string& name,const SectionP
     {
         try
         {
-            eh = new EventHandler();
+            eh = CreateEventHandler();
+            if (!eh) throw Exception("Rule: unknown RuleTransport to create EventHandler");
+
             eh->init(params);
         } catch (Exception& e)
         {

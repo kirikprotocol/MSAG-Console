@@ -21,43 +21,6 @@ EventHandler::~EventHandler()
     smsc_log_debug(logger, "EventHandler released");
 }
 
-RuleStatus EventHandler::process(SCAGCommand command)
-{
-    int key;
-    Action * action;
-    Hash<Property> _constants;
-    PropertyManager _session;
-    PropertyManager _command;
-    ////////////////////
-    Property p;
-    p.setStr("25");
-    _constants.Insert("const",p);
-
-    //////////////////////
-
-    ActionContext context(_constants, _session, _command);
-
-    smsc_log_debug(logger, "Process EventHandler...");
-    for (IntHash<Action *>::Iterator it = actions.First(); it.Next(key, action);)
-    {
-        if (!action->run(context)) break;
-    }
-    RuleStatus rs;
-    rs = context.getStatus();
-    return rs;
-}
-
-HandlerType EventHandler::StrToHandlerType(const std::string& str)
-{
-    HandlerType result = htUnknown;
-
-    if (str.compare("DELIVER")==0) result = htDeliver;
-    if (str.compare("SUBMIT")==0)  result = htSubmit;
-
-
-
-    return result;
-}
 
 
 //////////////IParserHandler Interfase///////////////////////
@@ -96,20 +59,14 @@ bool EventHandler::FinishXMLSubSection(const std::string& name)
 }
 
 
-void EventHandler::init(const SectionParams& params)
+HandlerType EventHandler::StrToHandlerType(const std::string& str)
 {
-    if (!params.Exists("type")) throw Exception("EventHandler: missing 'type' parameter");
+    HandlerType result = htUnknown;
 
-    std::string sHandlerType = params["type"];
-    handlerType = StrToHandlerType(sHandlerType);
-    if (handlerType==htUnknown) 
-    {
-        std::string msg("EventHandler: invalid value '") ;
-        msg.append(sHandlerType);
-        msg.append("' for 'type' parameter");
-        throw Exception(msg.c_str());
-    }
-    smsc_log_debug(logger,"HandlerEvent::Init");
+    if (str.compare("DELIVER")==0) result = htDeliver;
+    if (str.compare("SUBMIT")==0)  result = htSubmit;
+
+    return result;
 }
 
 

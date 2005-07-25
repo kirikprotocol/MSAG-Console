@@ -24,10 +24,9 @@ class Rule : public IParserHandler
     Mutex ruleLock;
     int useCounter;
     TransportType transportType;
-
 protected:
     std::string billing_id;
-
+    EventHandler * CreateEventHandler();
 //////////////IParserHandler Interfase///////////////////////
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
