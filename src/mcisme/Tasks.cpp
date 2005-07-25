@@ -23,6 +23,7 @@ int         Task::maxCallersCount  = -1; // Disable distinct callers count check
 int         Task::maxMessagesCount = -1; // Disable messages count for abonent check
 
 bool        TimeOffsetManager::inited = false;
+Mutex       TimeOffsetManager::timeOffsetsLock;
 
 struct TimeRule
 {
@@ -32,8 +33,8 @@ struct TimeRule
 
     TimeRule(const char* name, const char* rx, int off, Logger* logger) : offset(off)
     {
-      if (!exp.Compile(rx))
-        smsc_log_error(logger, "Time: rule='%s' rx='%s' compiling failed", name, rx);
+      if (!exp.Compile(rx)) smsc_log_error(logger, "Time: rule='%s' rx='%s' compiling failed", name, rx);
+      else smsc_log_debug(logger, "Time: rule='%s' rx='%s' compiled ok", name, rx);
       m.resize(exp.GetBracketsCount());
       n = m.size();
     }
@@ -48,6 +49,8 @@ static vector<TimeRule *> timeRules;
 
 void TimeOffsetManager::init(ConfigView* config)
 {
+    MutexGuard guard(TimeOffsetManager::timeOffsetsLock);
+
     smsc::util::regexp::RegExp::InitLocale();
 
     if (config && !TimeOffsetManager::inited)
@@ -73,6 +76,8 @@ void TimeOffsetManager::init(ConfigView* config)
 }
 int TimeOffsetManager::getOffset(const char* abonent)
 {
+    MutexGuard guard(TimeOffsetManager::timeOffsetsLock);
+
     int offset = 0;
     if (TimeOffsetManager::inited)
     {

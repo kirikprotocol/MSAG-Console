@@ -71,7 +71,8 @@ namespace smsc { namespace mcisme
     {
     private:
 
-        static bool             inited;
+        static bool     inited;
+        static Mutex    timeOffsetsLock;
 
     public:
 
