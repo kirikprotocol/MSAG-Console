@@ -12,48 +12,55 @@ public class CountersSet
   protected long accepted = 0;
   protected long rejected = 0;
   protected long delivered = 0;
-  protected long tempError = 0;
-  protected long permError = 0;
-
-  protected long smsTrOk = 0;
-  protected long smsTrFailed = 0;
-  protected long smsTrBilled = 0;
-  protected long ussdTrFromScOk = 0;
-  protected long ussdTrFromScFailed = 0;
-  protected long ussdTrFromScBilled = 0;
-  protected long ussdTrFromSmeOk = 0;
-  protected long ussdTrFromSmeFailed = 0;
-  protected long ussdTrFromSmeBilled = 0;
+  protected long gw_rejected = 0;
+  protected long failed = 0;
+  protected long billingOk = 0;
+  protected long billingFailed = 0;
+  protected long recieptOk = 0;
+  protected long recieptFailed = 0; 
 
   public CountersSet() {}
+
   public CountersSet(long accepted, long rejected, long delivered,
-                     long tempError, long permError)
+                     long gw_rejected, long failed)
   {
     this.accepted = accepted;  this.rejected = rejected; this.delivered = delivered;
-    this.tempError = tempError; this.permError = permError;
+    this.gw_rejected = gw_rejected; this.failed = failed;
   }
 
-  public CountersSet(long accepted, long rejected, long delivered, long tempError, long permError,
-                     long smsTrOk, long smsTrFailed, long smsTrBilled,
-                     long ussdTrFromScOk, long ussdTrFromScFailed, long ussdTrFromScBilled,
-                     long ussdTrFromSmeOk, long ussdTrFromSmeFailed, long ussdTrFromSmeBilled)
+  public CountersSet(long accepted, long rejected, long delivered,
+                     long gw_rejected, long failed, long billingOk,
+                     long billingFailed, long recieptOk, long recieptFailed)
   {
-    this.accepted = accepted; this.rejected = rejected; this.delivered = delivered;
-    this.tempError = tempError; this.permError = permError;
-    this.smsTrOk = smsTrOk; this.smsTrFailed = smsTrFailed; this.smsTrBilled = smsTrBilled;
-    this.ussdTrFromScOk = ussdTrFromScOk; this.ussdTrFromScFailed = ussdTrFromScFailed;
-    this.ussdTrFromScBilled = ussdTrFromScBilled; this.ussdTrFromSmeOk = ussdTrFromSmeOk;
-    this.ussdTrFromSmeFailed = ussdTrFromSmeFailed; this.ussdTrFromSmeBilled = ussdTrFromSmeBilled;
+    this.accepted = accepted;  this.rejected = rejected; this.delivered = delivered;
+    this.gw_rejected = gw_rejected; this.failed = failed; this.billingOk = billingOk;
+    this.billingFailed = billingFailed; this.recieptOk = recieptOk; this.recieptFailed = recieptFailed;
   }
 
-  protected void increment(CountersSet set)
+ protected void increment(long accepted, long rejected, long delivered,
+                     long gw_rejected, long failed)
+    {
+        this.accepted += accepted; this.rejected += rejected;
+        this.delivered += delivered; this.gw_rejected += gw_rejected;
+        this.failed += failed;
+    }
+
+  protected void incrementFull(long accepted, long rejected, long delivered,
+                     long gw_rejected, long failed, long billingOk,
+                     long billingFailed, long recieptOk, long recieptFailed)
+    {
+        this.accepted += accepted; this.rejected += rejected;
+        this.delivered += delivered; this.gw_rejected += gw_rejected;
+        this.failed += failed; this.billingOk += billingOk; this.billingFailed += billingFailed;
+        this.recieptOk += recieptOk; this.recieptFailed += recieptFailed;
+    }
+
+  protected void incrementFull(CountersSet set)
   {
-    this.accepted += set.accepted; this.rejected += set.rejected; this.delivered += set.delivered;
-    this.tempError += set.tempError; this.permError += set.permError;
-    this.smsTrOk += set.smsTrOk; this.smsTrFailed += set.smsTrFailed; this.smsTrBilled += set.smsTrBilled;
-    this.ussdTrFromScOk += set.ussdTrFromScOk; this.ussdTrFromScFailed += set.ussdTrFromScFailed;
-    this.ussdTrFromScBilled += set.ussdTrFromScBilled; this.ussdTrFromSmeOk += set.ussdTrFromSmeOk;
-    this.ussdTrFromSmeFailed += set.ussdTrFromSmeFailed; this.ussdTrFromSmeBilled += set.ussdTrFromSmeBilled;
+      this.accepted += set.accepted; this.rejected += set.rejected;
+      this.delivered += set.delivered; this.gw_rejected += set.gw_rejected;
+      this.failed += set.failed; this.billingOk += set.billingOk; this.billingFailed += set.billingFailed;
+      this.recieptOk += set.recieptOk; this.recieptFailed += set.recieptFailed;
   }
 
   public long getAccepted() {
@@ -65,38 +72,28 @@ public class CountersSet
   public long getDelivered() {
     return delivered;
   }
-  public long getTempError() {
-    return tempError;
-  }
-  public long getPermError() {
-    return permError;
-  }
-  public long getSmsTrOk() {
-    return smsTrOk;
-  }
-  public long getSmsTrFailed() {
-    return smsTrFailed;
-  }
-  public long getSmsTrBilled() {
-    return smsTrOk;
-  }
-  public long getUssdTrFromScOk() {
-    return ussdTrFromScOk;
-  }
-  public long getUssdTrFromScFailed() {
-    return ussdTrFromScFailed;
-  }
-  public long getUssdTrFromScBilled() {
-    return ussdTrFromScBilled;
-  }
-  public long getUssdTrFromSmeOk() {
-    return ussdTrFromSmeOk;
-  }
-  public long getUssdTrFromSmeFailed() {
-    return ussdTrFromSmeFailed;
-  }
-  public long getUssdTrFromSmeBilled() {
-    return ussdTrFromSmeBilled;
-  }
 
+    public long getGw_rejected() {
+        return gw_rejected;
+    }
+
+    public long getFailed() {
+        return failed;
+    }
+
+    public long getBillingOk() {
+        return billingOk;
+    }
+
+    public long getBillingFailed() {
+        return billingFailed;
+    }
+
+    public long getRecieptOk() {
+        return recieptOk;
+    }
+
+    public long getRecieptFailed() {
+        return recieptFailed;
+    }
 }

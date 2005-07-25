@@ -13,6 +13,8 @@ import ru.sibinco.scag.backend.routing.GwRoutingManager;
 import ru.sibinco.scag.backend.sme.*;
 import ru.sibinco.scag.backend.users.UserManager;
 import ru.sibinco.scag.backend.protocol.journal.Journal;
+import ru.sibinco.scag.backend.endpoints.centers.CenterManager;
+import ru.sibinco.scag.backend.endpoints.services.ServicesManager;
 import ru.sibinco.scag.perfmon.PerfServer;
 import ru.sibinco.tomcat_auth.XmlAuthenticator;
 
@@ -37,6 +39,8 @@ public class SCAGAppContext
   private final Config gwConfig;
   private final UserManager userManager;
   private final GwSmeManager gwSmeManager;
+  private final CenterManager centerManager;
+  private final ServicesManager servicesManager;
  // private final SmeHostsManager smeHostsManager;
  // private final HostsManager hostsManager ;
   private final ProviderManager providerManager;
@@ -51,6 +55,7 @@ public class SCAGAppContext
   private final BillingManager billingManager;
   private Journal journal = new Journal();
   private SCAG scag = null;
+  protected static File gwConfFolder = null;
 
   private SCAGAppContext(final String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException,
                                                                 Config.ParamNotFoundException, SibincoException
@@ -63,12 +68,19 @@ public class SCAGAppContext
       gwConfig = new Config(new File(config.getString("gw_config")));
       String gwDaemonHost=config.getString("gw daemon.host");
       String gwConfigFolder=config.getString("gw_config_folder");
+      gwConfFolder=new File(gwConfigFolder);
       connectionPool = null;
       //connectionPool = createConnectionPool(config);
       userManager = new UserManager(config.getString("users_config_file"));
       providerManager = new ProviderManager(gwConfig);
       gwSmeManager = new GwSmeManager(config.getString("sme_file"), gwConfig, providerManager);
       gwSmeManager.init();
+      //centerManager = new CenterManager(config.getString("centers_file")); //ToDo
+      centerManager = new CenterManager(); //ToDo
+      centerManager.init();
+      //servicesManager = new ServicesManager(config.getString("services_file"));
+      servicesManager = new ServicesManager();
+      servicesManager.init();  
       smscsManager = new SmscsManager(gwConfig,gwSmeManager);
       resourceManager = new ResourceManager(new File(gwConfigFolder));
       scag = new SCAG(gwDaemonHost, (int)config.getInt("gw daemon.port"),gwConfigFolder, this);
@@ -189,6 +201,18 @@ public class SCAGAppContext
   {
     return scag;
   }
+
+    public CenterManager getCenterManager() {
+        return centerManager;
+    }
+
+    public ServicesManager getServicesManager() {
+        return servicesManager;
+    }
+
+    public static File getGwConfFolder() {
+        return gwConfFolder;
+    }
 /*
   public SmeHostsManager getSmeHostsManager()
   {

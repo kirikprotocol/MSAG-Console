@@ -19,6 +19,11 @@ public class ErrorCounterSet
   public int getErrcode() {
     return errcode;
   }
+
+   protected void increment(long count)
+  {
+    this.counter += count;
+  }
   public long getCounter() {
     return counter;
   }

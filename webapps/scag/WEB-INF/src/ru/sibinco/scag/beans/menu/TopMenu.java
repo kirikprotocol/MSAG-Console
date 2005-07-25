@@ -31,8 +31,10 @@ public class TopMenu  extends ArrayList {
             add(new MenuItem("menu.scag", "", scagItems));
 
             Collection endpointItems = new ArrayList();
-//            endpointItems.add(new MenuItem("menu.stat.monitor","", "/stat/monitor/index.jsp','perfmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');"));
-//            endpointItems.add(new MenuItem("menu.stat.stat","", "/stat/stat/index.jsp', 'topmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640');"));
+            endpointItems.add(new MenuItem("menu.endpoint.services","/endpoints/services/index.jsp"));
+            endpointItems.add(new MenuItem("menu.endpoint.services.monitor","/endpoints/services/monitor/index.jsp"));
+            endpointItems.add(new MenuItem("menu.endpoint.centers","/endpoints/centers/index.jsp"));
+            endpointItems.add(new MenuItem("menu.endpoint.centers.monitor","/endpoints/centers/monitor/index.jsp"));
             add(new MenuItem("menu.endpoint", "", endpointItems));
 
             Collection routingItems = new ArrayList();
@@ -53,7 +55,7 @@ public class TopMenu  extends ArrayList {
 
             Collection statisticItems = new ArrayList();
             statisticItems.add(new MenuItem("menu.stat.monitor","", "/stat/monitor/index.jsp','perfmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');"));
-            statisticItems.add(new MenuItem("menu.stat.stat","", "/stat/stat/index.jsp', 'topmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640');"));
+            statisticItems.add(new MenuItem("menu.stat.stat","/stat/stat/index.jsp"));//", "/stat/stat/index.jsp', 'topmon', 'channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=640');"));
             add(new MenuItem("menu.stat", "", statisticItems));
 
         } catch (Exception e) {

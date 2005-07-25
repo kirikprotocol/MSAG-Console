@@ -17,6 +17,7 @@ public class Statistics
   private ArrayList byDates   = new ArrayList(100); // contains DateCountersSet
   private ArrayList bySmeId   = new ArrayList(100); // contains SmeIdCountersSet
   private ArrayList byRouteId = new ArrayList(100); // contains RouteIdCountersSet
+  private ArrayList bySmscId  = new ArrayList(100); // contains SmscIdCountersSet
 
   public CountersSet getTotal() {
     return total;
@@ -24,7 +25,7 @@ public class Statistics
 
   public void addDateStat(DateCountersSet set) {
     byDates.add(set);
-    total.increment(set);
+    total.incrementFull(set);
   }
   public Collection getDateStat() {
     return byDates;
@@ -50,6 +51,17 @@ public class Statistics
   public Collection getRouteIdStat() {
     Collections.sort(byRouteId);
     return byRouteId;
+  }
+
+  public void addSmscIdStat(RouteIdCountersSet set) {
+    bySmscId.add(set);
+  }
+  public void addSmscIdCollection(Collection col) {
+    bySmscId.addAll(col);
+  }
+  public Collection getSmscIdStat() {
+    Collections.sort(bySmscId);
+    return bySmscId;
   }
 
 }

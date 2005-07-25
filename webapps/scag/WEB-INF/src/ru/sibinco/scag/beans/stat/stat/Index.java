@@ -32,7 +32,7 @@ public class Index extends SCAGBean
 
   private String mbQuery = null;
 
-  private Stat stat = new Stat();
+  //private Stat stat = new Stat();
   private StatQuery query = new StatQuery();
   private Statistics statistics = null;
 
@@ -42,11 +42,14 @@ public class Index extends SCAGBean
   private String providerName = null;
   private String[] providerIds = null;
   private String[] providerNames = null;
+  private String[] transportIds = null;
+  private String[] transportNames = null;
+  private String transportName = null;
 
   private void init() throws SCAGJspException
   {
     SCAGAppContext context = getAppContext();
-    stat.setDataSource(context.getDataSource());
+    //stat.setDataSource(context.getDataSource());
     Principal userPrincipal = super.getLoginedPrincipal();
     if (userPrincipal == null)
       throw new SCAGJspException(
@@ -99,6 +102,7 @@ public class Index extends SCAGBean
         if (userProviderId != StatQuery.ALL_PROVIDERS && userProviderId != query.getProviderId())
           throw new Exception("Permission denied for user '"+providerName+
                               "' to access other providers's statistics");
+        Stat stat=Stat.getInstance(appContext.getGwConfig());  
         statistics = stat.getStatistics(query);
       } catch (Exception exc) {
         statistics = null; mbQuery = null;
@@ -131,6 +135,18 @@ public class Index extends SCAGBean
   public String getProviderName() {
     return providerName;
   }
+
+    public String[] getTransportIds() {
+        return transportIds;
+    }
+
+    public String[] getTransportNames() {
+        return transportNames;
+    }
+
+    public String getTransportName() {
+        return transportName;
+    }
 
   private Date convertStringToDate(String date)
   {

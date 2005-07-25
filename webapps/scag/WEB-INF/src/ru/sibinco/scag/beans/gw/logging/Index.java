@@ -17,18 +17,12 @@ import java.util.HashMap;
  */
 public class Index extends EditBean {
 
-    private Map params = new HashMap();
-    private Map requestParams = null;
-    private static final String COLLAPSING_TREE_PARAM_PREFIX = "collapsing_tree_param.";
-
-
     public String getId() {
         return null;
     }
 
     public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException {
         super.process(request, response);
-        requestParams = request.getParameterMap();
     }
 
     protected void load(String loadId) throws SCAGJspException {
@@ -38,13 +32,4 @@ public class Index extends EditBean {
     protected void save() throws SCAGJspException {
         //To change body of implemented methods use File | Settings | File Templates.
     }
-
-    public Map getParams() {
-        return params;
-    }
-
-    public void setParams(Map params) {
-        this.params = params;
-    }
-
 }

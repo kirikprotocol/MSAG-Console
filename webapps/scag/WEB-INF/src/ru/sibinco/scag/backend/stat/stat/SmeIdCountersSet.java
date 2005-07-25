@@ -10,23 +10,17 @@ package ru.sibinco.scag.backend.stat.stat;
 public class SmeIdCountersSet extends ExtendedCountersSet implements Comparable
 {
   protected String smeid;
+  public int providerId = -1;
 
-  public SmeIdCountersSet(long accepted, long rejected, long delivered, long tempError, long permError, String smeid)
-  {
-    super(accepted, rejected, delivered, tempError, permError);
-    this.smeid = smeid;
+  public SmeIdCountersSet(String smeid) {
+      this.smeid = smeid;
   }
 
-  public SmeIdCountersSet(long accepted, long rejected, long delivered, long tempError, long permError,
-                          long smsTrOk, long smsTrFailed, long smsTrBilled,
-                          long ussdTrFromScOk, long ussdTrFromScFailed, long ussdTrFromScBilled,
-                          long ussdTrFromSmeOk, long ussdTrFromSmeFailed, long ussdTrFromSmeBilled,
-                          String smeid)
+
+  public SmeIdCountersSet(long accepted, long rejected, long delivered,
+                     long gw_rejected, long failed, String smeid)
   {
-    super(accepted, rejected, delivered, tempError, permError,
-          smsTrOk, smsTrFailed, smsTrBilled,
-          ussdTrFromScOk, ussdTrFromScFailed, ussdTrFromScBilled,
-          ussdTrFromSmeOk, ussdTrFromSmeFailed, ussdTrFromSmeBilled);
+    super(accepted, rejected, delivered, gw_rejected, failed);
     this.smeid = smeid;
   }
 
@@ -39,4 +33,11 @@ public class SmeIdCountersSet extends ExtendedCountersSet implements Comparable
     return smeid;
   }
 
+    public int getProviderId() {
+        return providerId;
+    }
+
+    public void setProviderId(int providerId) {
+        this.providerId = providerId;
+    }
 }

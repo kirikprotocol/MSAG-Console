@@ -16,20 +16,10 @@ public class HourCountersSet extends CountersSet
     this.hour = hour;
   }
   public HourCountersSet(long accepted, long rejected, long delivered,
-                         long tempError, long permError, int hour)
+                     long gw_rejected, long failed, long billingOk,
+                     long billingFailed, long recieptOk, long recieptFailed, int hour)
   {
-    super(accepted, rejected, delivered, tempError, permError);
-    this.hour = hour;
-  }
-  public HourCountersSet(long accepted, long rejected, long delivered, long tempError, long permError,
-                         long smsTrOk, long smsTrFailed, long smsTrBilled,
-                         long ussdTrFromScOk, long ussdTrFromScFailed, long ussdTrFromScBilled,
-                         long ussdTrFromSmeOk, long ussdTrFromSmeFailed, long ussdTrFromSmeBilled, int hour)
-  {
-    super(accepted, rejected, delivered, tempError, permError,
-          smsTrOk, smsTrFailed, smsTrBilled, 
-          ussdTrFromScOk, ussdTrFromScFailed, ussdTrFromScBilled,
-          ussdTrFromSmeOk, ussdTrFromSmeFailed, ussdTrFromSmeBilled);
+    super(accepted, rejected, delivered, gw_rejected, failed, billingOk, billingFailed, recieptOk, recieptFailed);
     this.hour = hour;
   }
 

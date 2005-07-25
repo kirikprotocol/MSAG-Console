@@ -10,24 +10,18 @@ package ru.sibinco.scag.backend.stat.stat;
 public class RouteIdCountersSet extends ExtendedCountersSet implements Comparable
 {
   protected String routeid;
+  public int providerId = -1;
+
+  public RouteIdCountersSet(String routeid)
+   {
+     this.routeid = routeid;
+   }
 
   public RouteIdCountersSet(long accepted, long rejected, long delivered,
-                            long tempError, long permError, String routeid)
+                     long gw_rejected, long failed, long billingOk,
+                     long billingFailed, long recieptOk, long recieptFailed, String routeid)
   {
-    super(accepted, rejected, delivered, tempError, permError);
-    this.routeid = routeid;
-  }
-
-  public RouteIdCountersSet(long accepted, long rejected, long delivered, long tempError, long permError,
-                            long smsTrOk, long smsTrFailed, long smsTrBilled,
-                            long ussdTrFromScOk, long ussdTrFromScFailed, long ussdTrFromScBilled,
-                            long ussdTrFromSmeOk, long ussdTrFromSmeFailed, long ussdTrFromSmeBilled,
-                            String routeid)
-  {
-    super(accepted, rejected, delivered, tempError, permError,
-          smsTrOk, smsTrFailed, smsTrBilled,
-          ussdTrFromScOk, ussdTrFromScFailed, ussdTrFromScBilled,
-          ussdTrFromSmeOk, ussdTrFromSmeFailed, ussdTrFromSmeBilled);
+    super(accepted, rejected, delivered, gw_rejected, failed, billingOk, billingFailed, recieptOk, recieptFailed);
     this.routeid = routeid;
   }
 
@@ -39,4 +33,12 @@ public class RouteIdCountersSet extends ExtendedCountersSet implements Comparabl
   public String getRouteid() {
     return routeid;
   }
+
+    public int getProviderId() {
+        return providerId;
+    }
+
+    public void setProviderId(int providerId) {
+        this.providerId = providerId;
+    }
 }
