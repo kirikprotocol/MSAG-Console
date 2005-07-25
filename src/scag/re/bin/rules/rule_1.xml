@@ -1,0 +1,30 @@
+<!DOCTYPE rule SYSTEM "../rules.dtd">
+
+<rule name = "rule1" transport = "SMPP">
+  <handler type = "SUBMIT">
+    <set var="%a" value="@const" />
+    <set var="%res" value="1"/>
+	
+    <if test="%a" op="==" value="50">
+      <then>
+        <set var="%b" value="Int is equal" />
+      </then>
+      <else>
+        <set var="%d" value="Is it working?"/>
+	<return result="%res"/>
+      </else>
+    </if>
+    <if test = "%a" op="ne" value="50">
+        <set var="%b" value="String is equal"/>
+	<return result="0"/>
+    </if>
+    
+    <set var="%a" value="1"/>
+    <return result="%a" />
+  </handler>
+  
+  <handler type = "DELIVER">
+  </handler>
+  
+</rule>
+
