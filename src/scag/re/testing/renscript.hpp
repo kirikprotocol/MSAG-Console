@@ -176,16 +176,43 @@ static JSBool _createrule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 									    
  return JS_TRUE;
 }
+
 static JSBool _updaterule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+     int ruleId=JSVAL_TO_INT(argv[0]);
+     updateRule(ruleId);
+ 
  return JS_TRUE;
 }  
+
 static JSBool _deleterule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+    int ruleId=JSVAL_TO_INT(argv[0]);
+     *rval=BOOLEAN_TO_JSVAL(removeRule(ruleId));
+ 
  return JS_TRUE;
 }
+
 static JSBool _rulerun(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
+//??? chto delat s ruleId;
+
+int ruleId=JSVAL_TO_INT(argv[0]);
+
+    try
+      {
+              rs = engine->process(command);
+              char buff[128];
+              sprintf(buff,"%s%d","result = ",rs.result);
+              smsc_log_debug(logger,buff);
+      }
+      catch (Exception& e)
+      {
+              smsc_log_error(logger,"");
+              smsc_log_error(logger,std::string("Process aborted: ") + e.what());
+	      
+	      return JS_FALSE;
+      }
  return JS_TRUE;
 }  
 /**********************************************/  
