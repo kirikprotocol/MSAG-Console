@@ -50,7 +50,7 @@ my $mscarr=[];
   {
     s/[\x0d\x0a]//g;
     next if length($_)==0 || /^#/;
-    if(/\[(.*)\]/)
+    if(/^\[([^\[\]]*)\]$/)
     {
       $cursect=$1;
       next;
@@ -176,9 +176,9 @@ if($regions[-1]->{rx} ne qr(.*))
 }
 
 
-if(@ARGV!=4)
+if(@ARGV<5)
 {
-  print STDERR "usage: bill2cdr indir outdir tmpdir arcdir\n";
+  print STDERR "usage: bill2cdr indir outdir tmpdir arcdir nobillarcdir [forisdir]\n";
   exit;
 }
 
@@ -186,17 +186,28 @@ my $indir=$ARGV[0];
 my $outdir=$ARGV[1];
 my $tmpdir=$ARGV[2];
 my $arcdir=$ARGV[3];
-for($indir,$outdir,$tmpdir,$arcdir)
+my $nbarcdir=$ARGV[4];
+
+my $forisdir=$ARGV[5];
+
+for($indir,$outdir,$tmpdir,$arcdir,$nbarcdir,$forisdir || '.')
 {
   if(! -d $_)
   {
     die "error: $_ doesn't exists\n";
   }
 }
-for($indir,$outdir,$tmpdir,$arcdir)
+for($indir,$outdir,$tmpdir,$arcdir,$nbarcdir,$forisdir)
 {
+  next unless $_;
   $_.='/' unless $_=~m!/$!;
 }
+
+if($forisdir)
+{
+mkdir $tmpdir.'foris' || die "Failed to create ${tmpdir}foris:$!" unless -d $tmpdir.'foris';
+}
+
 opendir(D,$indir) or die "failed to read $indir";
 my @dir=readdir(D);
 closedir(D);
@@ -208,6 +219,7 @@ for(@dir)
   next unless $_=~/\.csv$/;
   my $infile=$indir.$_;
   my $ofn=$_;
+  my $nbfile=$_;
   $ofn=~s/\.csv$/\.001/;
   $ofn=~s/_//;
   $ofn=~/(\d+)/;
@@ -227,20 +239,51 @@ for(@dir)
 
   $header="90$timestamp".(' 'x81).'0'.(' 'x7).'90'.(' 'x17).'0'.(' 'x385);
   $footer="90$timestamp".(' 'x81)."0\x0d\x0a$crc";
-  process($infile,$tmpfile);
-  for my $tmp(@$tmpfile)
+
+
+  my $nbarcout=sprintf("%s/%04d-%s",$nbarcdir,$year,$curmon);
+  unless(-d $nbarcout)
   {
+    mkdir $nbarcout,0755;
+  }
+  $nbarcout.=sprintf("/%02d",$mday);
+  unless(-d $nbarcout)
+  {
+    mkdir $nbarcout,0755;
+  }
+
+  $nbfile=$nbarcout.'/'.$nbfile;
+
+  process($infile,$tmpfile,$nbfile);
+  for my $ref(@$tmpfile)
+  {
+    my $tmp=$ref->{name};
     if(-f $tmp)
     {
       `chown smscdr:smsbill $tmp`;
       `chmod 664 $tmp`;
       $tmp=~/.*[\\\/]([^\\\/]+)$/;
-      my $outfile=$outdir.$1;
-      print "$outfile\n";
-      if(!move($tmp,$outfile))
+      if($ref->{type} eq 'std')
       {
-        unlink $tmp;
-        die "failed to move $tmp to $outfile";
+        my $outfile=$outdir.$1;
+        print "$outfile\n";
+        if(!move($tmp,$outfile))
+        {
+          unlink $tmp;
+          die "failed to move $tmp to $outfile";
+        }
+      }elsif($ref->{type} eq 'foris')
+      {
+        my $outfile=$forisdir.$1;
+        print "$outfile\n";
+        if(!move($tmp,$outfile))
+        {
+          unlink $tmp;
+          die "failed to move $tmp to $outfile";
+        }
+      }else
+      {
+        die "Unknown file type :".$ref->{type};
       }
     }
   }
@@ -285,6 +328,7 @@ sub outrow{
   }
 
   my $outf;
+  my $outforis;
   my $outpack;
   for my $r(@regions)
   {
@@ -298,6 +342,7 @@ sub outrow{
     {
 #      print "Match\n";
       $outf=$out->{$r->{prefix}};
+      $outforis=$out->{'foris'.$r->{prefix}};
       $outpack=$r->{outpack};
       last;
     }
@@ -312,8 +357,8 @@ sub outrow{
     no strict 'refs';
     "${outpack}::outrow"->($outf,$fields);
   }
-  # TODO!!
-
+  FixedWidth::outrow($outforis,$fields) if $outforis;
+  return 1;
 }
 
 sub conv_addr_other{
@@ -352,7 +397,7 @@ sub conv_addr_payer{
 
 #  print substr($addr, 1);
 
-  $addr = substr($addr, 1) if $addr=~/^(?:7913|83832|73832|838822|738822)/;
+  $addr = substr($addr, 1) if $addr=~/^(?:7913|83832|73832|838822|738822|7902|83812|73812|7904)/;
   if( $addr=~/913985(\d+)/ ) {
     $addr = "383213".$1;
   } elsif( $addr=~/913912(\d+)/ ) {
@@ -389,10 +434,12 @@ sub datetotimestamp{
 };
 
 sub process{
-  my ($inf,$outarr)=@_;
+  my ($inf,$outarr,$nbfile)=@_;
   my $in=IO::File->new;
-  if(!$in->open('<'.$inf)){die "Faield to open input file $inf"};
+  if(!$in->open('<'.$inf)){die "Faield to open input file $inf:$!"};
   my $out={};
+
+  open(my $nbf,'>'.$nbfile) || die "Failed to open not billed archive $nbfile:$!";
 
   my $outtemplate=pop @$outarr;
 
@@ -400,20 +447,51 @@ sub process{
   {
     my $newfn=$outtemplate;
     $newfn=~s/(.*[\\\/])([^\\\/]+)$/$1.$r->{prefix}.$2/e;
-    push @$outarr,$newfn;
+    push @$outarr,{type=>'std',name=>$newfn};
     my $f=DelayedFile->new('>'.$newfn);
     $f->{header}=$header.$eoln;
     $f->{footer}=$footer.$eoln;
     $out->{$r->{prefix}}=$f;
+    if($forisdir)
+    {
+      my $newfn=$outtemplate;
+      $newfn=~s/(.*[\\\/])([^\\\/]+)$/$1."foris\/".$r->{prefix}.$2/e;
+      push @$outarr,{type=>'foris',name=>$newfn};
+      my $f=DelayedFile->new('>'.$newfn);
+      $f->{header}=$header.$eoln;
+      $f->{footer}=$footer.$eoln;
+      $out->{'foris'.$r->{prefix}}=$f;
+    }
 #    print "Set file for prefix ".$r->{prefix}."\n";
   }
+
+
+
   my $csv=Text::CSV_XS->new({'binary'=>1});
   my $hdr=$csv->getline($in);
+
+  $csv->combine(@$hdr);
+  print $nbf $csv->string()."\n";
+
   die "Input file parsing failed" unless $hdr;
   my $row;
+
+  my $billed;
+  my $oldrow;
+
   while($row=$csv->getline($in))
   {
+    unless($billed)
+    {
+      if($oldrow)
+      {
+        $csv->combine(@$oldrow);
+        print $nbf $csv->string()."\n";
+      }
+    }
     last if @$row!=@$hdr;
+    $billed=undef;
+    $oldrow=$row;
     my $infields={};
     $infields->{$hdr->[$_]}=$row->[$_]for(0..$#{$row});
     next if $infields->{STATUS}!=0;
@@ -467,7 +545,7 @@ sub process{
     }
 
     $outfields->{FINAL_DATE}=datetotimestamp($infields->{SUBMIT});
-    outrow($out,$outfields);
+    $billed|=outrow($out,$outfields);
     if($infields->{RECORD_TYPE}==1) # diverted sms
     {
       $outfields->{RECORD_TYPE}=20;
@@ -478,9 +556,9 @@ sub process{
       $outfields->{OTHER_ADDR}=conv_addr_other($infields->{SRC_ADDR});
       $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
       $outfields->{INV_SERVICE_ID}=21;
-      outrow($out,$outfields);
+      $billed|=outrow($out,$outfields);
       $outfields->{RECORD_TYPE}=30;
-      outrow($out,$outfields);
+      $billed|=outrow($out,$outfields);
     }else
     {
       $outfields->{RECORD_TYPE}=20;
@@ -491,7 +569,15 @@ sub process{
       $outfields->{OTHER_ADDR}=conv_addr_other($infields->{SRC_ADDR});
       $outfields->{FINAL_DATE}=datetotimestamp($infields->{FINALIZED});
       $outfields->{INV_SERVICE_ID}=21;
-      outrow($out,$outfields);
+      $billed|=outrow($out,$outfields);
+    }
+  }
+  unless($billed)
+  {
+    if($oldrow)
+    {
+      $csv->combine(@$oldrow);
+      print $nbf $csv->string()."\n";
     }
   }
 }
