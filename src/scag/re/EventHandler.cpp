@@ -59,16 +59,6 @@ bool EventHandler::FinishXMLSubSection(const std::string& name)
 }
 
 
-HandlerType EventHandler::StrToHandlerType(const std::string& str)
-{
-    HandlerType result = htUnknown;
-
-    if (str.compare("DELIVER")==0) result = htDeliver;
-    if (str.compare("SUBMIT")==0)  result = htSubmit;
-
-    return result;
-}
-
 
 
 }}

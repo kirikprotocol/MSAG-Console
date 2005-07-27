@@ -1,7 +1,7 @@
 <!DOCTYPE rule SYSTEM "../rules.dtd">
 
 <rule name = "rule1" transport = "SMPP">
-  <handler type = "SUBMIT">
+  <handler type = "DELIVERY">
     <set var="%a" value="@const" />
     <set var="%res" value="1"/>
 	
@@ -10,7 +10,8 @@
         <set var="%b" value="Int is equal" />
       </then>
       <else>
-        <set var="%d" value="Is it working?"/>
+        <set var="%d" value="#DIALOG_ID"/>
+        <set var="%qd" value="#DIALOG_ID"/>
 	<return result="%res"/>
       </else>
     </if>
@@ -23,7 +24,7 @@
     <return result="%a" />
   </handler>
   
-  <handler type = "DELIVER">
+  <handler type = "SUBMIT">
   </handler>
   
 </rule>

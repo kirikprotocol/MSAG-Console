@@ -101,7 +101,7 @@ public:
     status = st;
   }
 
-  const char* get_messageId()
+  const char* get_messageId()const
   {
     return messageId;
   }
@@ -115,7 +115,7 @@ public:
   {
     dataSm=true;
   }
-  bool get_dataSm()
+  bool get_dataSm() const
   {
     return dataSm;
   }
@@ -124,7 +124,7 @@ public:
   {
     sms=s;
   }
-  SMS* get_sms()
+  SMS* get_sms() const
   {
     return sms;
   }
@@ -330,7 +330,7 @@ public:
     strcpy(messageId,msgid);
   }
   void set_status(uint32_t st) { status = st; }
-  const char* get_messageId() {return messageId;}
+  const char* get_messageId() const {return messageId;}
   UnsuccessElement* get_unsuccess() { return unsuccess; }
   void set_unsuccessCount(unsigned c) { no_unsuccess = c; }
   uint32_t get_status() { return status; }
@@ -717,8 +717,8 @@ public:
      dispose();
   }
 
-  SmppCommand() : cmd (0) {}
-  SmppCommand(SmppHeader* pdu,bool forceDC=false) : cmd (0)
+  SmppCommand() : cmd (0), SCAGCommand(SMPP) {}
+  SmppCommand(SmppHeader* pdu,bool forceDC=false) : cmd (0), SCAGCommand(SMPP)
   {
     __require__ ( pdu != NULL );
     auto_ptr<_SmppCommand> _cmd(ref(new _SmppCommand()));
@@ -1148,7 +1148,7 @@ public:
     return 0; // for compiler
   }
 
-  SmppCommand(const SmppCommand& _cmd)
+  SmppCommand(const SmppCommand& _cmd) : SCAGCommand(SMPP)
   {
     cmd = ref(_cmd.cmd);
   }
@@ -1168,7 +1168,7 @@ public:
 
   TransportType getType()const
   {
-    return T_TYPE_SMPP;
+    return SMPP;
   }
 };
 

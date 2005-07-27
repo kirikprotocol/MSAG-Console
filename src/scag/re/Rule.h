@@ -12,18 +12,19 @@ namespace scag { namespace re
 using smsc::core::buffers::IntHash;
 using namespace scag::transport;
 
-enum HandlerType;
 class EventHandler;
 
 class Rule : public IParserHandler
 {
-    HandlerType ExtractHandlerType(SCAGCommand& command);
+    int ExtractHandlerType(SCAGCommand& command);
 
     Rule(const Rule &);
     IntHash <EventHandler *> Handlers;
     Mutex ruleLock;
     int useCounter;
     TransportType transportType;
+    int HandlerTypeToInt(const std::string& str);
+
 protected:
     std::string billing_id;
     EventHandler * CreateEventHandler();

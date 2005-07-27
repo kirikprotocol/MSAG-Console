@@ -7,11 +7,12 @@
 #include "logger/Logger.h"
 #include "RuleStatus.h"
 #include "scag/transport/smpp/SmppCommand.h"
+#include <sms/sms.h>
 
 using scag::re::RuleEngine;
 using scag::re::RuleStatus;
 using scag::transport::smpp::SmppCommand;
-
+using namespace smsc::sms;
 
 int main(int argC, char* argV[])
 {
@@ -19,7 +20,9 @@ int main(int argC, char* argV[])
     std::string xmlFile = "rules.xml";
     int errorCount;
     int errorCode;
-    SmppCommand command;
+    SMS sms;
+    SmppCommand command = SmppCommand::makeDeliverySm(sms,51);
+    
 
     RuleEngine * engine = 0;
     smsc::logger::Logger::Init();

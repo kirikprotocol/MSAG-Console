@@ -35,7 +35,7 @@ RuleStatus Rule::process(SCAGCommand& command)
 
     smsc_log_debug(logger,"Process Rule...");
 
-    HandlerType handlerType = ExtractHandlerType(command);
+    int handlerType = ExtractHandlerType(command);
     if (!Handlers.Exist(handlerType))  throw Exception("Rule: cannot find EventHandler for command");
 
     eh = Handlers.Get(handlerType);
@@ -44,18 +44,17 @@ RuleStatus Rule::process(SCAGCommand& command)
     return rs;
 }
 
-HandlerType Rule::ExtractHandlerType(SCAGCommand& command)
+int Rule::ExtractHandlerType(SCAGCommand& command)
 {
     SmppCommand * smpp = dynamic_cast<SmppCommand*>(&command);
     if (smpp) 
     {
-        return htSubmit;
-        /*
-        
-        */
+        _SmppCommand * cmd = smpp->operator ->();
+        if (!cmd) return UNKNOWN;
+        return cmd->get_commandId();
     }
 
-    return htUnknown;
+    return UNKNOWN;
 }
 
 
@@ -72,7 +71,6 @@ EventHandler * Rule::CreateEventHandler()
         break;
     }
 }
-
 
 //////////////IParserHandler Interfase///////////////////////
 
@@ -94,13 +92,9 @@ IParserHandler * Rule::StartXMLSubSection(const std::string& name,const SectionP
             throw e;
         }
 
-        if (Handlers.Exist(eh->GetHandlerType())) 
-        {
-            delete eh;
-            throw Exception("Rule: EventHandler with the same type already exists");
-        }
+        if (Handlers.Exist(eh->GetHandlerId())) throw Exception("Rule: EventHandler with same ID already exists");
 
-        Handlers.Insert(eh->GetHandlerType(),eh);
+        Handlers.Insert(eh->GetHandlerId(),eh);
         return eh;
     }
     else

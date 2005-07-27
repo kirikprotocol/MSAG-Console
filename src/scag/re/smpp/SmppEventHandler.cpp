@@ -1,15 +1,24 @@
 #include "SmppEventHandler.h"
 #include "scag/re/SAX2Print.hpp"
+#include "scag/re/smpp/SmppAdapter.h"
 
 namespace scag { namespace re {
 
-RuleStatus SmppEventHandler::process(SCAGCommand command)
+using namespace scag::re::smpp;
+
+RuleStatus SmppEventHandler::process(SCAGCommand& command)
 {
     int key;
     Action * action;
     Hash<Property> _constants;
-    PropertyManager _session;
-    PropertyManager _command;
+    RuleStatus rs;
+
+    SmppCommand * smppcommand = dynamic_cast<SmppCommand *>(&command);
+    if (!smppcommand) throw Exception("SmppEventHandler: command is not 'smpp-type'");
+
+    SmppCommandAdapter _command(*smppcommand);
+    SmppCommandAdapter _session(*smppcommand);
+
     ////////////////////
     Property p;
     p.setStr("25");
@@ -24,7 +33,6 @@ RuleStatus SmppEventHandler::process(SCAGCommand command)
     {
         if (!action->run(context)) break;
     }
-    RuleStatus rs;
     rs = context.getStatus();
     return rs;
 }
@@ -34,8 +42,10 @@ void SmppEventHandler::init(const SectionParams& params)
     if (!params.Exists("type")) throw Exception("EventHandler: missing 'type' parameter");
 
     std::string sHandlerType = params["type"];
-    handlerType = StrToHandlerType(sHandlerType);
-    if (handlerType==htUnknown) 
+
+    handlerId = StrToHandlerId(sHandlerType);
+
+    if (handlerId == UNKNOWN) 
     {
         std::string msg("EventHandler: invalid value '") ;
         msg.append(sHandlerType);
@@ -44,6 +54,35 @@ void SmppEventHandler::init(const SectionParams& params)
     }
     smsc_log_debug(logger,"HandlerEvent::Init");
 }
+
+
+int SmppEventHandler::StrToHandlerId(const std::string& str)
+{
+    if (str == "DELIVERY")              return DELIVERY;
+    if (str == "DELIVERY_RESP")         return DELIVERY_RESP;
+    if (str == "SUBMIT")                return SUBMIT;
+    if (str == "SUBMIT_RESP")           return SUBMIT_RESP;
+    if (str == "FORWARD")               return FORWARD;
+    if (str == "GENERIC_NACK")          return GENERIC_NACK;
+    if (str == "QUERY")                 return QUERY;
+    if (str == "QUERY_RESP")            return QUERY_RESP;
+    if (str == "UNBIND")                return UNBIND;
+    if (str == "UNBIND_RESP")           return UNBIND_RESP;
+    if (str == "REPLACE")               return REPLACE;
+    if (str == "REPLACE_RESP")          return REPLACE_RESP;
+    if (str == "CANCEL")                return CANCEL;
+    if (str == "CANCEL_RESP")           return CANCEL_RESP;
+    if (str == "ENQUIRELINK")           return ENQUIRELINK;
+    if (str == "ENQUIRELINK_RESP")      return ENQUIRELINK_RESP;
+    if (str == "SUBMIT_MULTI_SM")       return SUBMIT_MULTI_SM;
+    if (str == "SUBMIT_MULTI_SM_RESP")  return SUBMIT_MULTI_SM_RESP;
+    if (str == "BIND_TRANSCEIVER")      return BIND_TRANSCEIVER;
+    if (str == "BIND_RECIEVER_RESP")    return BIND_RECIEVER_RESP;
+    if (str == "BIND_TRANSMITTER_RESP") return BIND_TRANSMITTER_RESP;
+    if (str == "BIND_TRANCIEVER_RESP")  return BIND_TRANCIEVER_RESP;
+
+    return UNKNOWN; 
+}   
 
 
 }}

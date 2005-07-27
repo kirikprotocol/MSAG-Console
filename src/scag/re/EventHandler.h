@@ -14,33 +14,25 @@ using scag::transport::SCAGCommand;
 using namespace smsc::core::buffers;
 using namespace scag::re::actions;
 
-enum HandlerType
-{
-    htUnknown,
-    htDeliver,
-    htSubmit
-};
-
 class EventHandler : public IParserHandler
 {
     EventHandler(const EventHandler &);
 protected:
+    int handlerId;
     IntHash<Action *> actions;
-    HandlerType handlerType;
-
 //////////////IParserHandler Interfase///////////////////////
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
 //////////////IParserHandler Interfase///////////////////////
+    virtual int StrToHandlerId(const std::string& str) = 0;
 public:
-    EventHandler() : handlerType(htUnknown) {};
+    EventHandler() : handlerId(0) {};
     virtual ~EventHandler();
 
     virtual void init(const SectionParams& params) = 0;
-    virtual RuleStatus process(SCAGCommand command) = 0;
+    virtual RuleStatus process(SCAGCommand& command) = 0;
 
-    inline HandlerType GetHandlerType() const {return handlerType;};
-    HandlerType StrToHandlerType(const std::string& str);
+    int GetHandlerId() {return handlerId;};
 };
 
 }}
