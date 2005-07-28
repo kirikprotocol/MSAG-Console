@@ -3,12 +3,19 @@
 
 #include <sys/types.h>
 #include <netinet/in.h>
+#include <string>
+#include "smeman/smeinfo.h"
+#include "sms/sms_const.h"
+#include <vector>
+#include "acls/interfaces.h"
 
 #ifdef _WIN32
 #include <stdint.h>
 #else
 #include <inttypes.h>
 #endif
+
+const int SMEID_LENGTH = smsc::sms::MAX_SMESYSID_TYPE_LENGTH + 1;
 
 namespace smsc { namespace cluster 
 {
@@ -150,7 +157,33 @@ namespace smsc { namespace cluster
 
     class ProfileUpdateCommand : public Command
     {
+    private:
+        uint8_t plan;
+        uint8_t type;
+        char address[21];
+        int codePage;
+        int reportOption;
+        int hideOption;
+
+        bool hideModifaible;
+        bool divertModifaible;
+        bool udhContact;
+        bool translit;
+
+        bool divertActive;
+        bool divertActiveAbsent;
+        bool divertActiveBlocked;
+        bool divertActiveBarred;
+        bool divertActiveCapacity;
+
+        std::string local;
+        std::string divert;
+
     public:
+        ProfileUpdateCommand(uint8_t plan_, uint8_t type_, char *address_, int codePage_, int reportOption_,
+                                int hideOption_, bool hideModifaible_, bool divertModifaible_, bool udhContact_,
+                                bool translit_, bool divertActive_, bool divertActiveAbsent_, bool divertActiveBlocked_,
+                                bool divertActiveBarred_, bool divertActiveCapacity_, std::string local_, std::string divert_);
         ProfileUpdateCommand() : Command(PROFILEUPDATE_CMD) {};
 
         virtual ~ProfileUpdateCommand() {};
@@ -161,7 +194,13 @@ namespace smsc { namespace cluster
     
     class ProfileDeleteCommand : public Command
     {
+    private:
+        uint8_t plan;
+        uint8_t type;
+        char address[21];
+
     public:
+        ProfileDeleteCommand(uint8_t plan_, uint8_t type_, const char *address_);
         ProfileDeleteCommand() : Command(PROFILEDELETE_CMD) {};
 
         virtual ~ProfileDeleteCommand() {};
@@ -174,7 +213,10 @@ namespace smsc { namespace cluster
 
     class MscRegistrateCommand : public Command
     {
+    private:
+        char mscNum[22];
     public:
+        MscRegistrateCommand(const char *mscNum_);
         MscRegistrateCommand() : Command(MSCREGISTRATE_CMD) {};
 
         virtual ~MscRegistrateCommand() {};
@@ -185,7 +227,10 @@ namespace smsc { namespace cluster
 
     class MscUnregisterCommand : public Command
     {
+    private:
+        char mscNum[22];
     public:
+        MscUnregisterCommand(const char *mscNum_);
         MscUnregisterCommand() : Command(MSCUNREGISTER_CMD) {};
 
         virtual ~MscUnregisterCommand() {};
@@ -196,7 +241,10 @@ namespace smsc { namespace cluster
 
     class MscBlockCommand : public Command
     {
+    private:
+        char mscNum[22];
     public:
+        MscBlockCommand(const char *mscNum_);
         MscBlockCommand() : Command(MSCBLOCK_CMD) {};
 
         virtual ~MscBlockCommand() {};
@@ -207,7 +255,10 @@ namespace smsc { namespace cluster
 
     class MscClearCommand : public Command
     {
+    private:
+        char mscNum[22];
     public:
+        MscClearCommand(const char *mscNum_);
         MscClearCommand() : Command(MSCCLEAR_CMD) {};
 
         virtual ~MscClearCommand() {};
@@ -220,7 +271,10 @@ namespace smsc { namespace cluster
 
     class SmeAddCommand : public Command
     {
+    private:
+        smsc::smeman::SmeInfo si;
     public:
+        SmeAddCommand(smsc::smeman::SmeInfo si_);
         SmeAddCommand() : Command(SMEADD_CMD) {};
 
         virtual ~SmeAddCommand() {};
@@ -231,7 +285,10 @@ namespace smsc { namespace cluster
 
     class SmeRemoveCommand : public Command
     {
+    private:
+        char smeId[SMEID_LENGTH];
     public:
+        SmeRemoveCommand(const char *smeId_);
         SmeRemoveCommand() : Command(SMEREMOVE_CMD) {};
 
         virtual ~SmeRemoveCommand() {};
@@ -242,7 +299,10 @@ namespace smsc { namespace cluster
 
     class SmeUpdateCommand : public Command
     {
+    private:
+        smsc::smeman::SmeInfo si;
     public:
+        SmeUpdateCommand(smsc::smeman::SmeInfo si_);
         SmeUpdateCommand() : Command(SMEUPDATE_CMD) {};
 
         virtual ~SmeUpdateCommand() {};
@@ -255,7 +315,10 @@ namespace smsc { namespace cluster
 
     class AclRemoveCommand : public Command
     {
+    private:
+        smsc::acls::AclIdent aclId;
     public:
+        AclRemoveCommand(smsc::acls::AclIdent id);
         AclRemoveCommand() : Command(ACLREMOVE_CMD) {};
 
         virtual ~AclRemoveCommand() {};
@@ -266,8 +329,16 @@ namespace smsc { namespace cluster
 
     class AclCreateCommand : public Command
     {
+    private:
+        std::string name;
+        std::string description;
+        std::string cache_type;
+        bool cache_type_present;
+        std::vector<std::string> phones;
     public:
         AclCreateCommand() : Command(ACLCREATE_CMD) {};
+        AclCreateCommand(std::string name_, std::string desc_,
+                            std::string type_, std::vector<std::string> phones_);
 
         virtual ~AclCreateCommand() {};
 
@@ -277,7 +348,14 @@ namespace smsc { namespace cluster
 
     class AclUpdateInfoCommand : public Command
     {
+    private:
+        smsc::acls::AclIdent aclId;
+        std::string name;
+        std::string description;
+        std::string cache_type;
     public:
+        AclUpdateInfoCommand(smsc::acls::AclIdent id, std::string name_, std::string desc_,
+                                    std::string type_);
         AclUpdateInfoCommand() : Command(ACLUPDATEINFO_CMD) {};
 
         virtual ~AclUpdateInfoCommand() {};
@@ -288,7 +366,11 @@ namespace smsc { namespace cluster
 
     class AclRemoveAddressesCommand : public Command
     {
+    private:
+        smsc::acls::AclIdent aclId;
+        std::vector<std::string> addresses;
     public:
+        AclRemoveAddressesCommand(smsc::acls::AclIdent id, std::vector<std::string> addresses_);
         AclRemoveAddressesCommand() : Command(ACLREMOVEADDRESSES_CMD) {};
 
         virtual ~AclRemoveAddressesCommand() {};
@@ -299,8 +381,12 @@ namespace smsc { namespace cluster
 
     class AclAddAddressesCommand : public Command
     {
+    private:
+        smsc::acls::AclIdent aclId;
+        std::vector<std::string> addresses;
     public:
         AclAddAddressesCommand() : Command(ACLADDADDRESSES_CMD) {};
+        AclAddAddressesCommand(smsc::acls::AclIdent id, std::vector<std::string> addr);
 
         virtual ~AclAddAddressesCommand() {};
 
@@ -312,7 +398,12 @@ namespace smsc { namespace cluster
 
     class PrcAddPrincipalCommand : public Command
     {
+    private:
+        int maxLists;
+        int maxElements;
+        std::string address;
     public:
+        PrcAddPrincipalCommand(int maxLists_, int maxElements_, std::string address_);
         PrcAddPrincipalCommand() : Command(PRCADDPRINCIPAL_CMD) {};
 
         virtual ~PrcAddPrincipalCommand() {};
@@ -323,7 +414,10 @@ namespace smsc { namespace cluster
 
     class PrcDeletePrincipalCommand : public Command
     {
+    private:
+        std::string address;
     public:
+        PrcDeletePrincipalCommand(std::string address_);
         PrcDeletePrincipalCommand() : Command(PRCDELETEPRINCIPAL_CMD) {};
 
         virtual ~PrcDeletePrincipalCommand() {};
@@ -334,7 +428,12 @@ namespace smsc { namespace cluster
 
     class PrcAlterPrincipalCommand : public Command
     {
+    private:
+        int maxLists;
+        int maxElements;
+        std::string addresses;
     public:
+        PrcAlterPrincipalCommand(int maxLists_, int maxElements_, std::string addresses_);
         PrcAlterPrincipalCommand() : Command(PRCALTERPRINCIPAL_CMD) {};
 
         virtual ~PrcAlterPrincipalCommand() {};
@@ -347,7 +446,11 @@ namespace smsc { namespace cluster
 
     class MemAddMemberCommand : public Command
     {
+    private:
+        std::string dlname;
+        std::string address;
     public:
+        MemAddMemberCommand(std::string dlname_, std::string address_);
         MemAddMemberCommand() : Command(MEMADDMEMBER_CMD) {};
 
         virtual ~MemAddMemberCommand() {};
@@ -358,7 +461,11 @@ namespace smsc { namespace cluster
 
     class MemDeleteMemberCommand : public Command
     {
+    private:
+        std::string dlname;
+        std::string address;
     public:
+        MemDeleteMemberCommand(std::string dlname_, std::string address_);
         MemDeleteMemberCommand() : Command(MEMDELETEMEMBER_CMD) {};
 
         virtual ~MemDeleteMemberCommand() {};
@@ -371,7 +478,11 @@ namespace smsc { namespace cluster
 
     class SbmAddSubmiterCommand : public Command
     {
+    private:
+        std::string dlname;
+        std::string address;
     public:
+        SbmAddSubmiterCommand(std::string dlname_, std::string address_);
         SbmAddSubmiterCommand() : Command(SBMADDSUBMITER_CMD) {};
 
         virtual ~SbmAddSubmiterCommand() {};
@@ -382,7 +493,11 @@ namespace smsc { namespace cluster
 
     class SbmDeleteSubmiterCommand : public Command
     {
+    private:
+        std::string dlname;
+        std::string address;
     public:
+        SbmDeleteSubmiterCommand(std::string dlname_, std::string address_);
         SbmDeleteSubmiterCommand() : Command(SBMDELETESUBMITER_CMD) {};
 
         virtual ~SbmDeleteSubmiterCommand() {};
@@ -395,7 +510,12 @@ namespace smsc { namespace cluster
 
     class DlAddCommand : public Command
     {
+    private:
+        int maxElements;
+        std::string dlname;
+        std::string owner;
     public:
+        DlAddCommand(int maxElements_, std::string dlname_, std::string owner_);
         DlAddCommand() : Command(DLADD_CMD) {};
 
         virtual ~DlAddCommand() {};
@@ -406,7 +526,10 @@ namespace smsc { namespace cluster
 
     class DlDeleteCommand : public Command
     {
+    private:
+        std::string dlname;
     public:
+        DlDeleteCommand(std::string dlname_);
         DlDeleteCommand() : Command(DLDELETE_CMD) {};
 
         virtual ~DlDeleteCommand() {};
@@ -417,7 +540,11 @@ namespace smsc { namespace cluster
 
     class DlAlterCommand : public Command
     {
+    private:
+        int maxElements;
+        std::string dlname;
     public:
+        DlAlterCommand(int maxElements_, std::string dlname_);
         DlAlterCommand() : Command(DLALTER_CMD) {};
 
         virtual ~DlAlterCommand() {};
