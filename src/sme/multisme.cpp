@@ -23,19 +23,8 @@ using namespace smsc::logger;
 
 using namespace std;
 
-const int MAX_UNRESPONDED_HIGH=5000;
-const int MAX_UNRESPONDED_LOW=2000;
-
 
 int stopped=0;
-
-Mutex cntMutex;
-
-int sokcnt=0;
-int serrcnt=0;
-int reccnt=0;
-
-TimeSlotCounter<> sok_time_cnt(30,100);
 
 class MyListener:public SmppPduEventListener{
 public:
@@ -43,32 +32,12 @@ public:
   {
     if(pdu->get_commandId()==SmppCommandSet::DELIVERY_SM)
     {
-      //char buf[256];
       PduDeliverySmResp resp;
       resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
       resp.set_messageId("");
       resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
       resp.get_header().set_commandStatus(SmppStatusSet::ESME_ROK);
       trans->sendDeliverySmResp(resp);
-      {
-        MutexGuard g(cntMutex);
-        reccnt++;
-      }
-    }else
-    if(pdu->get_commandId()==SmppCommandSet::SUBMIT_SM_RESP)
-    {
-      __trace2__("received submit sm resp:%x, seq=%d\n",pdu->get_commandStatus(),pdu->get_sequenceNumber());
-      //printf("\nReceived async submit sm resp:%d\n",pdu->get_commandStatus());
-      MutexGuard g(cntMutex);
-
-      if(pdu->get_commandStatus()==SmppStatusSet::ESME_ROK)
-      {
-        sokcnt++;
-        sok_time_cnt.Inc();
-      }else
-      {
-        serrcnt++;
-      }
     }
     disposePdu(pdu);
   }
