@@ -17,6 +17,7 @@
 #include <thread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "commandgen.h"
 
 using scag::re::RuleEngine;
 using scag::re::RuleStatus;
@@ -29,6 +30,7 @@ static FILE*pFile;
 RuleEngine * engine;
 RuleStatus rs;
 SmppCommand command;
+
     
 JSClass globalClass = 
 {
@@ -51,6 +53,8 @@ static JSBool _puts(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
  return JS_TRUE;
 }
 
+
+
 static JSBool write_file(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
 
@@ -62,15 +66,17 @@ static JSBool write_file(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
  std::string text=JS_GetStringBytes(JS_ValueToString(cx, argv[1]));
 
  pFile = fopen(filename.c_str(),"a+");
+ 
  if(pFile)
  {
-  fprintf(pFile,"%s",text.c_str());
+	fprintf(pFile,"%s",text.c_str());
 
-  fclose(pFile);
-  return JS_TRUE;
+	fclose(pFile);
+  
+	return JS_TRUE;
  }
  else
-  return JS_FALSE;
+	return JS_FALSE;
 
 }
 
@@ -157,23 +163,26 @@ static JSBool a_Yield(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
  return JS_TRUE;
 }
 
-/* routines for RuleEngine interface working*/
+/*********************************************/
+/* routines for RuleEngine interface working */
+/*					     */
+/*                                           */
+/*                                           */
+/*********************************************/
+
+/**Create rules from directory */
 
 static JSBool _createrule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    try
-    {
-	rs = engine->process(command);
-	char buff[128];
-	sprintf(buff,"%s%d","result = ",rs.result);
-	smsc_log_debug(logger,buff);
-    }
-    catch (Exception& e)
-    {
-        smsc_log_error(logger,"");
-        smsc_log_error(logger,std::string("Process aborted: ") + e.what());
-    }
-									    
+ std::string dirname=JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
+ 
+ engine = new RuleEngine(dirname.c_str());
+ 
+ if(engine)
+	*rval=BOOLEAN_TO_JSVAL(true); 
+ else
+	*rval=BOOLEAN_TO_JSVAL(false);	   
+ 
  return JS_TRUE;
 }
 
@@ -193,9 +202,13 @@ static JSBool _deleterule(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
  return JS_TRUE;
 }
 
+/*
+    RuleRun(String strTransport,String strSCAGCommandID)
+    generate SCAG command by ID?
+    
+*/
 static JSBool _rulerun(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-//??? chto delat s ruleId;
 
 int ruleId=JSVAL_TO_INT(argv[0]);
 
@@ -220,6 +233,7 @@ int ruleId=JSVAL_TO_INT(argv[0]);
 static JSFunctionSpec Global_functions[] = {
  /*    name          native          nargs    */
  {"puts",_puts,1},
+ 
  {"DelayUs",delayMs,1},
  {"Sleep",_sleep,1},
  {"Nanosleep",_sleep_ms,1},
@@ -227,6 +241,7 @@ static JSFunctionSpec Global_functions[] = {
  {"isStop",_is_stop_process,1},
  {"yield",a_Yield,1},
  {"Clock",getClock,1},
+ 
  {"fputs",write_file,1},
  
  {"CreateRule",_createrule,1},
