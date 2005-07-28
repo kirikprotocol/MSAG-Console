@@ -21,6 +21,7 @@ const int USSD_USSN_CONF  = 19;
 
 const int MAX_ESERVICE_TYPE_LENGTH = 5;
 const int MAX_SMESYSID_TYPE_LENGTH = 15;
+const int MAX_SMEPASSWD_TYPE_LENGTH = 7;
 const int MAX_ROUTE_ID_TYPE_LENGTH = 32;
 const int MAX_ADDRESS_VALUE_LENGTH = 20;
 const int MAX_SHORT_MESSAGE_LENGTH = 255; // Deprecated !!!
