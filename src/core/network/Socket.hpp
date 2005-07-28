@@ -11,6 +11,7 @@ typedef int socklen_t;
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <netdb.h>
 #include <unistd.h>
 #include <arpa/inet.h>
@@ -122,6 +123,12 @@ public:
     unsigned char *a=(unsigned char*)&addr.sin_addr.S_un.S_addr;
 #endif
     sprintf(buf,"%d.%d.%d.%d:%d",(int)a[0],(int)a[1],(int)a[2],(int)a[3],addr.sin_port);
+  }
+
+  void SetNoDelay(bool nd)
+  {
+    char b=nd?1:0;
+    setsockopt(sock,IPPROTO_TCP,TCP_NODELAY,&b,1);
   }
 
 
