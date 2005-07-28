@@ -116,22 +116,6 @@ void Smsc::mainLoop()
     //perSlot+=perSlot/4;
 
 
-    now = time(NULL);
-    if(now-lastTimeStatCheck>60)
-    {
-      tm nowtm;
-      localtime_r(&now,&nowtm);
-      if(nowtm.tm_hour!=lastUpdateHour)
-      {
-        lastUpdateHour=nowtm.tm_hour;
-        info2(tslog,"maxTotalCounter=%d, maxStatCounter=%d",maxTotalCounter,maxStatCounter);
-        maxTotalCounter=0;
-        maxStatCounter=0;
-      }
-      lastTimeStatCheck=now;
-      warn2(log,"sbmcnt=%d",sbmcnt);
-    }
-
 
     do
     {
@@ -141,6 +125,20 @@ void Smsc::mainLoop()
       if(frame.size()>0)debug2(log,"getFrame time:%lld",gfEnd-gfStart);
       now = time(NULL);
 
+      if(now-lastTimeStatCheck>60)
+      {
+        tm nowtm;
+        localtime_r(&now,&nowtm);
+        if(nowtm.tm_hour!=lastUpdateHour)
+        {
+          lastUpdateHour=nowtm.tm_hour;
+          info2(tslog,"maxTotalCounter=%d, maxStatCounter=%d",maxTotalCounter,maxStatCounter);
+          maxTotalCounter=0;
+          maxStatCounter=0;
+        }
+        lastTimeStatCheck=now;
+        warn2(log,"sbmcnt=%d",sbmcnt);
+      }
 
 
       if ( stopFlag ) return;
