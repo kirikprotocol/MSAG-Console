@@ -1,4 +1,4 @@
-// $Id$
+static char const ident[] = "$Id$";
 #include <assert.h>
 
 #include "session.hpp"
@@ -8,6 +8,8 @@
 
 using std::map;
 using std::pair;
+using smsc::inman::inap::fillAddress;
+
 
 namespace smsc  {
 namespace inman {
@@ -23,6 +25,24 @@ Session::Session(UCHAR_T ssn)
     , state( IDLE )
     , lastDialogId( TCAP_DIALOG_MIN_ID )
 {
+}
+
+static void fillAppContext(AC_NAMEREQ_T* p_ac)
+{
+  AC_NAMEREQ_T& ac = *p_ac;
+  ac.knownAc = FALSE;
+  ac.u.unknownAc.acNameLen = 3;
+  ac.u.unknownAc.acName[0] = 56;
+}
+Session::Session(UCHAR_T ssn, const char* scfNum, const char* inmanNum)
+    : Thread()
+    , SSN( ssn )
+    , state( IDLE )
+    , lastDialogId( TCAP_DIALOG_MIN_ID )
+{
+  fillAddress(&scfAddr,scfNum, ssn);
+  fillAddress(&inmanAddr,inmanNum,ssn);
+  fillAppContext(&ac);
 }
 
 Session::~Session()
@@ -96,56 +116,57 @@ void Session::closeAllDialogs()
 
 int Session::Execute()
 {
-    running = TRUE;
-    started.SignalAll();
-    smsc_log_debug(inapLogger,"Session (%d) is started", SSN );
+  running = TRUE;
+  started.SignalAll();
+  smsc_log_debug(inapLogger,"Session (%d) is started", SSN );
 
-    USHORT_T  result = E94InapBindReq(SSN, MSG_USER_ID, TRUE);
-    if (result != 0)
-    {
-        smsc_log_error(inapLogger, "E94InapBindReq failed with code %d(%s)", result,getReturnCodeDescription(result));
-        goto stop;
-    }
+  USHORT_T  result = EINSS7_I97TBindReq( SSN, MSG_USER_ID, 0, EINSS7_I97TCAP_WHITE_USER );
 
-    MSG_T msg;
-    while(running)
-    {
-        if( ERROR == state )
-        {
-            smsc_log_debug(inapLogger, "Exit because ERROR state");
-            running = FALSE;
-            break;
-        }
+  if (result != 0)
+  {
+    smsc_log_error(inapLogger, "EINSS7_I97TBindReq failed with code %d(%s)", result,getInapReturnCodeDescription(result));
+    goto stop;
+  }
 
-        msg.receiver = MSG_USER_ID;
+  MSG_T msg;
+  while(running)
+  {
+      if( ERROR == state )
+      {
+          smsc_log_debug(inapLogger, "Exit because ERROR state");
+          running = FALSE;
+          break;
+      }
 
-        result = EINSS7CpMsgRecv_r( &msg,  MSG_RECV_TIMEOUT );
+      msg.receiver = MSG_USER_ID;
 
-        if( result == MSG_TIMEOUT )
-        {
-            continue;
-        }
-        if (result != RETURN_OK )
-        {
-            smsc_log_error(inapLogger, "MsgRecv failed with code %d(%s)",  result,getReturnCodeDescription(result));
-            running = FALSE;
-            break;
-        }
-        else
-        {
-            smsc_log_debug(inapLogger, "MSG: sender 0x%X, receiver 0x%X, Primitive 0x%X",  msg.sender, msg.receiver, msg.primitive );
-            E94InapHandleInd(&msg);
-        }
+      result = EINSS7CpMsgRecv_r( &msg,  MSG_RECV_TIMEOUT );
 
-        EINSS7CpReleaseMsgBuffer(&msg);
-    }
+      if( result == MSG_TIMEOUT )
+      {
+          continue;
+      }
+      if (result != RETURN_OK )
+      {
+          smsc_log_error(inapLogger, "MsgRecv failed with code %d(%s)",  result,getReturnCodeDescription(result));
+          running = FALSE;
+          break;
+      }
+      else
+      {
+          //smsc_log_debug(inapLogger, "MSG: sender 0x%X, receiver 0x%X, Primitive 0x%X",  msg.sender, msg.receiver, msg.primitive );
+          E94InapHandleInd(&msg);
+      }
 
-    result = E94InapUnBindReq( SSN );
-    if (result != 0)
-    {
-        smsc_log_error(inapLogger, "E94InapUnBindReq failed with code %d(%s)", result,getReturnCodeDescription(result));
-        goto stop;
-    }
+      EINSS7CpReleaseMsgBuffer(&msg);
+  }
+
+  result = E94InapUnBindReq( SSN );
+  if (result != 0)
+  {
+      smsc_log_error(inapLogger, "E94InapUnBindReq failed with code %d(%s)", result,getInapReturnCodeDescription(result));
+      goto stop;
+  }
 
 stop:
   smsc_log_debug(inapLogger,"Session (%d) is stopped", SSN);
