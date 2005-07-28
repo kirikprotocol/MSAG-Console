@@ -44,6 +44,7 @@ int SmppAcceptor::Execute()
       if(isStopping)break;
       continue;
     }
+    clnt->SetNoDelay(1);
     char buf[32];
     clnt->GetPeer(buf);
     info2(log,"Connection accepted:%p/%s",clnt,buf);
