@@ -481,6 +481,10 @@ protected:
       {
         session.listener->handleError(errorCode);
       }
+      if(errorCode==smppErrorNetwork)
+      {
+        session.abortWaits();
+      }
     }
     void handleEvent(SmppHeader* pdu)
     {
@@ -794,6 +798,22 @@ protected:
     lock.Delete(seq);
     return retval;
   }
+
+  void abortWaits()
+  {
+    MutexGuard g(lockMutex);
+    Lock l;
+    int key;
+    IntHash<Lock>::Iterator i=lock.First();
+    while(i.Next(key,l))
+    {
+      if(l.event)
+      {
+        l.event->Signal();
+      }
+    }
+  }
+
   /*bool checkIncomingValidity(SmppHeader* pdu)
   {
     using namespace SmppCommandSet;
