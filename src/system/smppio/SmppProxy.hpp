@@ -348,13 +348,18 @@ public:
 
         if((cmdid==ENQUIRELINK || cmdid==ENQUIRELINK_RESP || cmdid==UNBIND_RESP) &&
            ((int)cmd->dta)!=ctReceiver)return false;
-        return !(
+        bool rv=!(
                  cmdid==SUBMIT_RESP ||
                  cmdid==SUBMIT_MULTI_SM_RESP ||
                  cmdid==CANCEL_RESP ||
                  cmdid==QUERY_RESP ||
                  cmdid==REPLACE_RESP
                );
+        if(rv && !smppReceiverSocket)
+        {
+          outqueue.Pop(cmd);
+          return false;
+        }
       }
     }else if(ct==ctTransmitter)
     {
@@ -372,7 +377,7 @@ public:
 
         if((cmdid==ENQUIRELINK || cmdid==ENQUIRELINK_RESP || cmdid==UNBIND_RESP) &&
            ((int)cmd->dta)!=ctTransmitter)return false;
-        return (
+        bool rv=(
                  cmdid==SUBMIT_RESP ||
                  cmdid==SUBMIT_MULTI_SM_RESP ||
                  cmdid==CANCEL_RESP ||
@@ -385,6 +390,11 @@ public:
                  cmdid==GENERIC_NACK ||
                  cmdid==SMPP_PDU
                );
+        if(rv && !smppTransmitterSocket)
+        {
+          outqueue.Pop(cmd);
+          return false;
+        }
       }
     }
     return outqueue.Count()!=0;
