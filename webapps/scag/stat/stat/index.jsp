@@ -25,14 +25,24 @@
       </sm-ep:properties>
     </td>
     <td align="left">
+    <table cellspacing=0 cellspadding=0 border=0>
+    <tr><td>
     <sm-ep:properties title="SCAG Transport" noEdit="true">
-    <sm-ep:check title="SMPP" name="transportName" />
-    <sm-ep:check title="WAP" name="transportName" />
-    <sm-ep:check title="MMS" name="transportName" />
-     </sm-ep:properties>
+    </td></tr>
+    <tr><td>
+    <sm-ep:check title="SMPP" indent="true" name="transportName" />
+    </td></tr>
+    <tr><td>
+    <sm-ep:check title="WAP" indent="true" name="transportName" />
+    </td></tr>
+    <tr><td>
+    <sm-ep:check title="MMS" indent="true" name="transportName" />
+    </td></tr>
+    <tr><td>
+    </sm-ep:properties>
+    </table>
     </td>
     </tr>
-
     </table>
     <sm:break>
       <sm-pm:menu>
@@ -42,8 +52,7 @@
     </sm:break>
 
     <script language="JavaScript">
-    function toggleVisible(p, c)
-    {
+    function toggleVisible(p, c){
       var o = p.className == "collapsing_list_opened";
       p.className = o ? "collapsing_list_closed"  : "collapsing_list_opened";
       c.runtimeStyle.display = o ? "none" : "block";
@@ -52,19 +61,22 @@
 
     <c:set var="statistics" value="${bean.statistics}"/>
     <c:if test="${!(empty statistics)}">
+    <table class=properties_list cellspacing=0 cellspadding=0 border=0>
+    <tr><td colspan="9">&nbsp;</td></tr>
+    <tr><td style="cursor:hand;text-align:right"
+                onClick="toggleVisible(psmpp,csmpp);">
+              <div align=left id="psmpp" class="collapsing_list_closed"><div class=page_subtitle>SMPP</div></div>
+      <tr id="csmpp" style="display:none"><td>
       <table class=properties_list cellspacing=0 cellspadding=0 border=0>
         <c:set var="disNo" value="${1}"/>
         <c:set var="total" value="${statistics.total}"/>
         <c:set var="byDates" value="${statistics.dateStat}"/>
-        <tr><td colspan="9"><div class=page_subtitle>General statistics</div></td></tr>
-        <tr>
-            <th width="20%">&nbsp;</th><th width="7%">&nbsp;</th>
-            <th width="7%">&nbsp;</th><th width="7%">&nbsp;</th>
-            <th width="7%">&nbsp;</th><th width="7%">&nbsp;</th>
-            <th width="15%" style="text-align:right">&nbsp;</th>
-            <th width="15%" style="text-align:right">&nbsp;</th>
-            <th width="15%" style="text-align:right">&nbsp;</th>
-        </tr>
+        <tr><td colspan="9">&nbsp;</td></tr>
+        <tr><td style="cursor:hand;text-align:right"
+                onClick="toggleVisible(pgs,cgs);">
+                <div align="left" id="pgs" class="collapsing_list_closed"><div class="page_subtitle">General statistics</div></div></td>
+        <tr id="cgs" style="display:none"><td colspan="9" width="100%">
+        <table>
         <tr>
             <th width="20%" style="text-align:right">&nbsp;</th>
             <th width="7%"  style="text-align:right">Accepted</th>
@@ -72,7 +84,7 @@
             <th width="7%"  style="text-align:right">Delivered</th>
             <th width="7%"  style="text-align:right">GW Rejected</th>
             <th width="7%"  style="text-align:right">Failed</th>
-            <th width="7%" style="text-align:right">&nbsp;</th>
+            <th width="7%"  style="text-align:right">&nbsp;</th>
             <th width="15%" style="text-align:left">Bill OK/Fail</th>
             <th width="15%" style="text-align:right">Reciept OK/Failed</th>
         </tr>
@@ -82,10 +94,10 @@
             <th width="7%"  style="text-align:right">${total.rejected}</th>
             <th width="7%"  style="text-align:right">${total.delivered}</th>
             <th width="7%"  style="text-align:right">${total.gw_rejected}</th>
-            <th width="7%"  style="text-align:right">${total.failed}</td>
+            <th width="7%"  style="text-align:right">${total.failed}</th>
             <th width="7%"  style="text-align:right">&nbsp;</th>
-            <td width="15%"  style="text-align:left">${total.billingOk}/${total.billingFailed}</td>
-            <th width="15%"  style="text-align:right">${total.recieptOk}/${total.recieptFailed}</th>
+            <th width="15%" style="text-align:left">${total.billingOk}/${total.billingFailed}</th>
+            <th width="15%" style="text-align:right">${total.recieptOk}/${total.recieptFailed}</th>
         </tr>
         <c:forEach var="dayStat" items="${byDates}" varStatus="i">
           <tr class=row0>
@@ -100,8 +112,8 @@
             <td style="text-align:right">${dayStat.failed}</td>
             <th style="text-align:right">&nbsp;</th>
             <td style="text-align:left">${dayStat.billingOk}/${dayStat.billingFailed}</td>
-            <th style="text-align:right">${dayStat.recieptOk}/${dayStat.recieptFailed}</th>
-            <th style="text-align:right">&nbsp;</th>
+            <td style="text-align:right">${dayStat.recieptOk}/${dayStat.recieptFailed}</td>
+            <td style="text-align:right">&nbsp;</td>
           </tr>
           <tr id="c${disNo}" style="display:none">
             <td colspan="9" width="100%">
@@ -115,19 +127,27 @@
                   <td width="7%"  style="text-align:right">${hourStat.gw_rejected}</td>
                   <td width="7%"  style="text-align:right">${hourStat.failed}</td>
                   <th width="7%"  style="text-align:right">&nbsp;</th>
-                  <td width="15%"  style="text-align:left">${hourStat.billingOk}/${hourStat.billingFailed}</td>
-                  <th width="15%"  style="text-align:right">${hourStat.recieptOk}/${hourStat.recieptFailed}</th>
+                  <td width="15%" style="text-align:left">${hourStat.billingOk}/${hourStat.billingFailed}</td>
+                  <th width="15%" style="text-align:right">${hourStat.recieptOk}/${hourStat.recieptFailed}</th>
                 </tr>
               </c:forEach>
             </table></td>
           </tr>
           <c:set var="disNo" value="${disNo+1}"/>
         </c:forEach>
-
+        </table>
+        </td></tr>
+        </tr>
+        </table>
+        <table class=properties_list cellspacing=0 cellspadding=0 border=0>
         <c:set var="byRoute" value="${statistics.routeIdStat}"/>
         <c:if test="${!(empty byRoute)}">
-          <tr><td colspan="9">&nbsp;</td></tr>
-          <tr><td colspan="9"><div class=page_subtitle>Traffic by routes</div></td></tr>
+        <tr><td colspan="9">&nbsp;</td></tr>
+        <tr><td style="cursor:hand;text-align:right"
+                onClick="toggleVisible(prout,crout);">
+                <div align="left" id="prout" class="collapsing_list_closed"><div class="page_subtitle">Traffic by routes</div></div></td>
+        <tr id="crout" style="display:none"><td colspan="9">
+        <table>
           <tr>
               <th width="20%" style="text-align:right">Route Id</th>
               <th width="7%"  style="text-align:right">Accepted</th>
@@ -135,7 +155,7 @@
               <th width="7%"  style="text-align:right">Delivered</th>
               <th width="7%"  style="text-align:right">GW Rejected</th>
               <th width="7%"  style="text-align:right">Failed</th>
-              <th width="7%" style="text-align:right">&nbsp;</th>
+              <th width="7%"  style="text-align:right">&nbsp;</th>
               <th width="15%" style="text-align:left"> Bill OK/Fail</th>
               <th width="15%" style="text-align:right">Reciept OK/Failed</th>
          </tr>
@@ -175,19 +195,19 @@
             <c:set var="disNo" value="${disNo+1}"/>
           </c:forEach>
         </c:if>
-
+        </table>
+        </td></tr>
+        </tr>
+        </table>
+        <table class=properties_list cellspacing=0 cellspadding=0 border=0>
         <c:set var="bySme" value="${statistics.smeIdStat}"/>
         <c:if test="${!(empty bySme)}">
           <tr><td colspan="9">&nbsp;</td></tr>
-          <tr><td colspan="9"><div class=page_subtitle>SME activity</div></td></tr>
-          <tr>
-              <th width="20%">&nbsp;</th><th width="7%">&nbsp;</th>
-              <th width="7%">&nbsp;</th><th width="7%">&nbsp;</th>
-              <th width="7%">&nbsp;</th><th width="7%">&nbsp;</th>
-              <th width="15%" style="text-align:right">&nbsp;</th>
-              <th width="15%" style="text-align:right">&nbsp;</th>
-              <th width="15%" style="text-align:right">&nbsp;</th>
-          </tr>
+          <tr><td style="cursor:hand;text-align:right"
+                onClick="toggleVisible(psme,csme);">
+                <div align="left" id="psme" class="collapsing_list_closed"><div class="page_subtitle">SME activity</div></div></td>
+        <tr id="csme" style="display:none"><td colspan="9">
+        <table>
           <tr>
             <th width="20%" style="text-align:right">SME Id</th>
             <th width="7%"  style="text-align:right">Accepted</th>
@@ -235,20 +255,19 @@
             <c:set var="disNo" value="${disNo+1}"/>
           </c:forEach>
         </c:if>
-
+        </table>
+        </td></tr>
+        </tr>
+        </table>
+        <table class=properties_list cellspacing=0 cellspadding=0 border=0>
         <c:set var="bySmsc" value="${statistics.smscIdStat}"/>
         <c:if test="${!(empty bySmsc)}">
           <tr><td colspan=9>&nbsp;</td></tr>
-          <tr><td colspan=9><div class=page_subtitle>SMSC activity</div></td></tr>
-          <tr>
-              <th width="20%">&nbsp;</th>
-              <th width="7%">&nbsp;</th><th width="7%">&nbsp;</th>
-              <th width="7%">&nbsp;</th><th width="7%">&nbsp;</th>
-              <th width="7%">&nbsp;</th>
-              <th width="15%" style="text-align:right">&nbsp;</th>
-              <th width="15%" style="text-align:right">&nbsp;</th>
-              <th width="15%" style="text-align:right">&nbsp;</th>
-          </tr>
+          <tr><td style="cursor:hand;text-align:right"
+                onClick="toggleVisible(psmsc,csmsc);">
+                <div align="left" id="psmsc" class="collapsing_list_closed"><div class="page_subtitle">SMSC activity</div></div></td>
+        <tr id="csmsc" style="display:none"><td colspan="9" width="100%">
+        <table>
           <tr>
               <th width="20%" style="text-align:right">SMSC Id</th>
               <th width="7%"  style="text-align:right">Accepted</th>
@@ -296,7 +315,14 @@
             <c:set var="disNo" value="${disNo+1}"/>
           </c:forEach>
         </c:if>
+        </table>
+        </td></tr>
+        </tr>
       </table>
+      </td>
+    </tr>
+    </td></tr>
+    </table>
     </c:if>
   </jsp:body>
 </sm:page>
