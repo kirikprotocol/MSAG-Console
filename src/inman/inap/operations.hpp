@@ -1,9 +1,8 @@
-// $Id$
+#ident "$Id$"
 #ifndef __SMSC_INMAN_INAP_OPERATIONS__
 #define __SMSC_INMAN_INAP_OPERATIONS__
 
 #include "ss7cp.h"
-#include "et94inapcs1plusapi.h"
 
 namespace smsc {
 namespace inman {
