@@ -14,7 +14,7 @@ import ru.sibinco.scag.backend.sme.*;
 import ru.sibinco.scag.backend.users.UserManager;
 import ru.sibinco.scag.backend.protocol.journal.Journal;
 import ru.sibinco.scag.backend.endpoints.centers.CenterManager;
-import ru.sibinco.scag.backend.endpoints.services.ServicesManager;
+import ru.sibinco.scag.backend.endpoints.svc.SvcManager;
 import ru.sibinco.scag.perfmon.PerfServer;
 import ru.sibinco.tomcat_auth.XmlAuthenticator;
 
@@ -40,7 +40,7 @@ public class SCAGAppContext
   private final UserManager userManager;
   private final GwSmeManager gwSmeManager;
   private final CenterManager centerManager;
-  private final ServicesManager servicesManager;
+  private final SvcManager svcManager;
  // private final SmeHostsManager smeHostsManager;
  // private final HostsManager hostsManager ;
   private final ProviderManager providerManager;
@@ -78,9 +78,9 @@ public class SCAGAppContext
       //centerManager = new CenterManager(config.getString("centers_file")); //ToDo
       centerManager = new CenterManager(); //ToDo
       centerManager.init();
-      //servicesManager = new ServicesManager(config.getString("services_file"));
-      servicesManager = new ServicesManager();
-      servicesManager.init();  
+      //svcManager = new SvcManager(config.getString("services_file"));
+      svcManager = new SvcManager();
+      svcManager.init();
       smscsManager = new SmscsManager(gwConfig,gwSmeManager);
       resourceManager = new ResourceManager(new File(gwConfigFolder));
       scag = new SCAG(gwDaemonHost, (int)config.getInt("gw daemon.port"),gwConfigFolder, this);
@@ -206,8 +206,8 @@ public class SCAGAppContext
         return centerManager;
     }
 
-    public ServicesManager getServicesManager() {
-        return servicesManager;
+    public SvcManager getServicesManager() {
+        return svcManager;
     }
 
     public static File getGwConfFolder() {

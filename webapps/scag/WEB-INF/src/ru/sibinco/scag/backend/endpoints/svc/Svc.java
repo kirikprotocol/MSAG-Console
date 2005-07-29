@@ -1,35 +1,37 @@
 /*
  * Copyright (c) 2005 SibInco Inc. All Rights Reserved.
  */
-package ru.sibinco.scag.backend.endpoints.services;
+package ru.sibinco.scag.backend.endpoints.svc;
 
 import org.w3c.dom.Element;
 
 import java.io.PrintWriter;
 
 /**
- * The <code>Services</code> class represents
+ * The <code>Svc</code> class represents
  * <p><p/>
  * Date: 15.07.2005
  * Time: 15:27:00
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class Services {
+public class Svc {
 
-    public static final byte SMPP = 0;
-    public static final byte SS7 = 1;
+    public static final byte SMPP  = 0;
+    public static final byte SS7   = 1;
+     public static final byte WAP  = 2;
+     public static final byte MMS  = 3;
 
     private String id = null;
     private byte type = SMPP;
 
 
-    public Services(final Element serviceElement) throws NullPointerException {
+    public Svc(final Element serviceElement) throws NullPointerException {
         this.id = serviceElement.getAttribute("uid").trim();
         this.type = "smpp".equals(serviceElement.getAttribute("type")) ? SMPP : SS7;
     }
 
-    public Services(final Services service) {
+    public Svc(final Svc service) {
         this.id = service.getId();
         this.type = service.getType();
     }
@@ -63,6 +65,10 @@ public class Services {
                 return "smpp";
             case SS7:
                 return "ss7";
+            case WAP:
+                return "wap";
+            case MMS:
+                return "mms";
             default:
                 return "unknown";
         }
@@ -70,8 +76,8 @@ public class Services {
 
     public boolean equals
             (final Object obj) {
-        if (obj instanceof Services)
-            return ((Services) obj).id.equals(id);
+        if (obj instanceof Svc)
+            return ((Svc) obj).id.equals(id);
         else
             return super.equals(obj);
     }

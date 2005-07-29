@@ -1,7 +1,7 @@
 /*
  * Copyright (c) 2005 SibInco Inc. All Rights Reserved.
  */
-package ru.sibinco.scag.backend.endpoints.services;
+package ru.sibinco.scag.backend.endpoints.svc;
 
 import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
@@ -27,25 +27,25 @@ import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.lib.SibincoException;
 
 /**
- * The <code>ServicesManager</code> class represents
+ * The <code>SvcManager</code> class represents
  * <p><p/>
  * Date: 15.07.2005
  * Time: 15:28:24
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class ServicesManager {
+public class SvcManager {
 
     private Logger logger = Logger.getLogger(this.getClass());
 
     private final Map services = Collections.synchronizedMap(new HashMap());
     private final String configFilename;
 
-    public ServicesManager() {
+    public SvcManager() {
         configFilename = null; //ToDo
     }
 
-    public ServicesManager(String configFilename) {
+    public SvcManager(String configFilename) {
         this.configFilename = configFilename;
     }
 
@@ -53,31 +53,31 @@ public synchronized void init() throws IOException, ParserConfigurationException
         services.clear();
         if (configFilename != null) {   //ToDo
             final Document document = Utils.parse(configFilename);
-            final NodeList records = document.getDocumentElement().getElementsByTagName("services"); //ToDo: if need chenge this element tag
+            final NodeList records = document.getDocumentElement().getElementsByTagName("svc"); //ToDo: if need chenge this element tag
             for (int i = 0; i < records.getLength(); i++) {
                 final Element servicesRecords = (Element) records.item(i);
-                final Services service = createServices(servicesRecords);
+                final Svc service = createServices(servicesRecords);
                 services.put(service.getId(), service);
             }
         }
     }
 
-    protected Services createServices(Element servicesRecords) {
-        return new Services(servicesRecords);
+    protected Svc createServices(Element servicesRecords) {
+        return new Svc(servicesRecords);
     }
 
     public synchronized PrintWriter store(final PrintWriter out) {
         final List values = new LinkedList(services.values());
         Collections.sort(values, new Comparator() {
             public int compare(final Object o1, final Object o2) {
-                final Services c1 = (Services) o1;
-                final Services c2 = (Services) o2;
+                final Svc c1 = (Svc) o1;
+                final Svc c2 = (Svc) o2;
                 return c1.getId().compareTo(c2.getId());
             }
         });
         Functions.storeConfigHeader(out, "records", "ServicessRecords.tdt");//ToDo
         for (Iterator iterator = values.iterator(); iterator.hasNext();)
-            ((Services) iterator.next()).store(out);
+            ((Svc) iterator.next()).store(out);
         Functions.storeConfigFooter(out, "records"); //ToDo
         return out;
     }
@@ -94,8 +94,8 @@ public synchronized void init() throws IOException, ParserConfigurationException
         try {
             store(new PrintWriter(new FileWriter(configFilename))).close();
         } catch (IOException e) {
-            logger.error("Couldn't save Services's config", e);
-            throw new SibincoException("Couldn't save Services's config", e);
+            logger.error("Couldn't save Svc's config", e);
+            throw new SibincoException("Couldn't save Svc's config", e);
         }
     }
 }
