@@ -4,21 +4,20 @@
 #include <core/synchronization/Mutex.hpp>
 #include <core/buffers/IntHash.hpp>
 
-#include <util/config/ConfigView.h>
-//#include <scag/admin/SCAGCommand.h>
+#include <util/debug.h>
+
 
 #include "scag/re/actions/Action.h"
 #include "scag/re/Rule.h"
-#include "SAX2Print.hpp"
 #include "MainActionFactory.h"
 
+#include "SAX2Print.hpp"
 
 namespace scag { namespace re 
 {
     using smsc::core::synchronization::Mutex;
     using smsc::core::buffers::IntHash;
     using namespace scag::re::actions;
-    using smsc::util::config::ConfigView;
 
 struct RulesReference;
 struct Rules;
@@ -149,33 +148,7 @@ public:
          * @param   command     command to process
          * @return  status      command processing status
          */
-    RuleStatus process(SCAGCommand& command)
-    {
-        RulesReference rulesRef = getRules();
-        RuleStatus rs;
-
-        int ruleId = 0;
-        ruleId = GetRuleId(command);
-
-        char buff[128];
-        sprintf(buff,"%s%d","Process RuleEngine with ruleId: ",ruleId);
-        smsc_log_debug(logger,buff);
-
-        if (rulesRef.rules->rules.Exist(ruleId)) 
-        {
-            Rule * rule = rulesRef.rules->rules.Get(ruleId);
-            rs = rule->process(command);
-        } 
-        else
-        {
-            char buff[128];
-            sprintf(buff,"%s%d%s","Cannot process Rule with ID = ",ruleId," : Rule not found");
-            throw Exception(buff);
-        }
-
-        
-        return rs;
-    }
+    RuleStatus process(SCAGCommand& command);
 
     void updateRule(int ruleId) // add or modify
     {

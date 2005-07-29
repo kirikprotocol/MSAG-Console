@@ -18,11 +18,8 @@ using namespace smsc::util;
 /////////////////////////////////////////////SemanticAnalyser/////////////////////////////
 
 
-SemanticAnalyser::SemanticAnalyser(const ActionFactory& obj)
+SemanticAnalyser::SemanticAnalyser(const ActionFactory& obj) : factory(&obj),CurrentObject(0),RootObject(0)
 {
-    factory = &obj;
-    CurrentObject = 0;
-    RootObject = 0;
 }
 
 SemanticAnalyser::~SemanticAnalyser()
@@ -58,7 +55,7 @@ void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionPara
 
         if (NewObj) 
         {
-            HistoryObjectStack.push_back(CurrentObject);
+            HistoryObjectStack.push(CurrentObject);
             CurrentObject = NewObj;
         }
     }
@@ -96,8 +93,8 @@ void SemanticAnalyser::DeliverEndTag(const std::string& name)
             CurrentObject = 0;
             if (HistoryObjectStack.size() > 0) 
             {
-                CurrentObject = HistoryObjectStack.back();
-                HistoryObjectStack.pop_back();
+                CurrentObject = HistoryObjectStack.top();
+                HistoryObjectStack.pop();
             }
         }
     }

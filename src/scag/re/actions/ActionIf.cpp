@@ -44,15 +44,18 @@ ActionIf::~ActionIf()
     int key;
     Action * value;
 
-    for (IntHash<Action *>::Iterator it = ThenActions.First(); it.Next(key, value);)
+    std::list<Action *>::const_iterator it;
+
+    for (it = ThenActions.begin(); it!=ThenActions.end(); ++it)
     {
-        delete value;
+        delete (*it);
     }
 
-    for (IntHash<Action *>::Iterator it = ElseActions.First(); it.Next(key, value);)
+    for (it = ElseActions.begin(); it!=ElseActions.end(); ++it)
     {
-        delete value;
+        delete (*it);
     }
+
     smsc_log_debug(logger, "'if' action released");
 }
 
@@ -93,12 +96,12 @@ IParserHandler * ActionIf::StartXMLSubSection(const std::string& name,const Sect
 
         if (FillThenSection) 
         {
-            ThenActions.Insert(ThenActions.Count(),action);
+            ThenActions.push_back(action);
             smsc_log_debug(logger,"Action 'if': child object set to 'then'");
         }
         else if (FillElseSection) 
         {
-            ElseActions.Insert(ElseActions.Count(),action);
+            ElseActions.push_back(action);
             smsc_log_debug(logger,"Action 'if': child object set to 'else'");
         }
 
@@ -112,17 +115,17 @@ bool ActionIf::FinishXMLSubSection(const std::string& name)
     {
         FillThenSection = false;
         return false;
-    } else if (name == "else") 
+    }
+    else if (name == "else") 
     {
         FillElseSection = false;
         return false;
     }
-    else
-    {
-        if (name=="if") return true;
-        else throw Exception("Action 'if': unrecognized final tag");
-    }
-    
+#ifndef NDEBUG
+    else if (name != "if") throw Exception("Action 'if': unrecognized final tag");
+#endif
+
+    return true;
 }
 
 
@@ -193,22 +196,24 @@ bool ActionIf::run(ActionContext& context)
         isValidCondition = CompareResultToBool(singleparam.Operation,result);
     }
 
-    int key = 0;
-    Action * value = 0;
+
+    std::list<Action *>::const_iterator it;
 
     if (isValidCondition) 
     {
         smsc_log_debug(logger,"Action 'if': run 'then' section");
-        for (IntHash<Action *>::Iterator it = ThenActions.First(); it.Next(key, value);)
+
+        for (it = ThenActions.begin(); it!=ThenActions.end(); ++it)
         {
-            if (!value->run(context)) return false;
+            if (!(*it)->run(context)) return false;
         }
     } else
     {
         smsc_log_debug(logger,"Action 'if': run 'else' section");
-        for (IntHash<Action *>::Iterator it = ElseActions.First(); it.Next(key, value);)
+
+        for (it = ElseActions.begin(); it!=ElseActions.end(); ++it)
         {
-            if (!value->run(context)) return false;
+            if (!(*it)->run(context)) return false;
         }
     }
     return true;

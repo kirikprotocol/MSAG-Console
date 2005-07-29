@@ -14,9 +14,11 @@ EventHandler::~EventHandler()
     int key;
     Action * value;
 
-    for (IntHash<Action *>::Iterator it = actions.First(); it.Next(key, value);)
+    std::list<Action *>::const_iterator it;
+
+    for (it = actions.begin(); it!=actions.end(); ++it)
     {
-        delete value;
+        delete (*it);
     }
     smsc_log_debug(logger, "EventHandler released");
 }
@@ -49,7 +51,7 @@ IParserHandler * EventHandler::StartXMLSubSection(const std::string& name,const 
         throw e;
     }
 
-    actions.Insert(actions.Count(),action);
+    actions.push_back(action);
     return action;
 }
 

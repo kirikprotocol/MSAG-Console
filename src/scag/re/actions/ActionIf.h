@@ -1,14 +1,12 @@
 #ifndef __SCAG_RULE_ENGINE_ACTION_IF__
 #define __SCAG_RULE_ENGINE_ACTION_IF__
 
+#include <list>
+
 #include "ActionContext.h"
 #include "Action.h"
 
 #include <scag/re/actions/IParserHandler.h>
-#include <core/buffers/IntHash.hpp>
-
-using smsc::core::buffers::IntHash;
-using namespace std;
 
 
 namespace scag { namespace re { namespace actions 
@@ -70,8 +68,8 @@ class ActionIf : public Action
 
     bool FillThenSection;
     bool FillElseSection;
-    IntHash<Action *> ThenActions;
-    IntHash<Action *> ElseActions;
+    std::list<Action *> ThenActions;
+    std::list<Action *> ElseActions;
 protected:
 //////////////IParserHandler Interfase///////////////////////
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);

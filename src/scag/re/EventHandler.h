@@ -1,7 +1,7 @@
 #ifndef _EVENT_HANDLER_H_
 #define _EVENT_HANDLER_H_
 
-#include <core/buffers/IntHash.hpp>
+#include <list>
 
 #include "XMLHandlers.h"
 #include <scag/re/actions/IParserHandler.h>
@@ -11,7 +11,6 @@
 namespace scag { namespace re
 {
 using scag::transport::SCAGCommand;
-using namespace smsc::core::buffers;
 using namespace scag::re::actions;
 
 class EventHandler : public IParserHandler
@@ -19,7 +18,7 @@ class EventHandler : public IParserHandler
     EventHandler(const EventHandler &);
 protected:
     int handlerId;
-    IntHash<Action *> actions;
+    std::list<Action *> actions;
 //////////////IParserHandler Interfase///////////////////////
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);

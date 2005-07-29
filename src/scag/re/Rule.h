@@ -4,7 +4,7 @@
 #include "EventHandler.h"
 #include "scag/transport/SCAGCommand.h"
 #include "RuleStatus.h"
-
+#include <core/buffers/IntHash.hpp>
 
 namespace scag { namespace re 
 {
@@ -25,8 +25,6 @@ class Rule : public IParserHandler
     TransportType transportType;
     int HandlerTypeToInt(const std::string& str);
 
-protected:
-    std::string billing_id;
     EventHandler * CreateEventHandler();
 //////////////IParserHandler Interfase///////////////////////
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
@@ -62,7 +60,7 @@ public:
     virtual RuleStatus process(SCAGCommand& command);
 
 
-    Rule(): useCounter(1),transportType(SMPP) {};
+    Rule(): useCounter(1), transportType(SMPP) {};
     virtual ~Rule();
 };
 

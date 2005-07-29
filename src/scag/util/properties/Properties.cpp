@@ -144,25 +144,30 @@ void Property::setInt(int64_t val)
 
     sync = false;
     i_val = val;
+    type = pt_int;
 }
 void Property::setStr(const std::string& val)
 {
     if (constant) throw ConstantSetException();
-
     sync = false;
     s_val = val;
+    type = pt_str;
+
 }
 void Property::setBool(bool val)
 {
     if (constant) throw ConstantSetException();
     sync = false; 
     i_val = val;
+    type = pt_bool;
+
 }
 void Property::setDate(time_t val) 
 {
     if (constant) throw ConstantSetException();
     sync = false; 
     i_val = val;
+    type = pt_date;
 }
 
 
@@ -215,31 +220,33 @@ int Property::Compare(Property& val,PropertyType pt)
 
 // NamedProperty wraps Property's set methods to notify patron (if defined)
 
-void NamedProperty::setStr(const std::string& val)
+void AdapterProperty::setStr(const std::string& val)
 {
     Property::setStr(val);
     if (patron) patron->changed(*this);
 }
-void NamedProperty::setInt(int64_t val)
+void AdapterProperty::setInt(int64_t val)
 {
     Property::setInt(val);
     if (patron) patron->changed(*this);
 }
-void NamedProperty::setBool(bool val)
+void AdapterProperty::setBool(bool val)
 {
     Property::setBool(val);
     if (patron) patron->changed(*this);
 }
-void NamedProperty::setDate(time_t val)
+void AdapterProperty::setDate(time_t val)
 {
     Property::setDate(val);
     if (patron) patron->changed(*this);
 }
 
 
-void Changeable::changed(const NamedProperty& property)
-{
-}
 
+////////////////////////////////////PROPERTY MANAGER/////////////////////////
+/*NamedProperty* PropertyManager::getProperty(const std::string& name)
+{
+    return 0;
+} */
 
 }}}

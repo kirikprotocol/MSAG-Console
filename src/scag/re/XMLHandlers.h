@@ -1,11 +1,11 @@
 #ifndef __XMLHANDLERS_H__
 #define __XMLHANDLERS_H__
 
-#include <stdio.h>
 #include <string>
+#include <stack>
+
 
 #include <xercesc/sax/HandlerBase.hpp>
-#include <core/buffers/Hash.hpp>
 #include <util/Exception.hpp>
 
 
@@ -14,11 +14,11 @@
 #include "scag/re/actions/IParserHandler.h"
 #include "scag/re/Rule.h"
 
+
 namespace scag { namespace re { 
 
 using namespace smsc::util;
 using smsc::core::buffers::Hash;
-using namespace std;
 
 class IParserHandler;
 class ActionFactory;
@@ -45,7 +45,7 @@ class Rule;
 
 class SemanticAnalyser
 {
-    vector <IParserHandler *> HistoryObjectStack;
+    std::stack <IParserHandler *> HistoryObjectStack;
     IParserHandler * CurrentObject;
     const ActionFactory * factory;
     Rule * RootObject;

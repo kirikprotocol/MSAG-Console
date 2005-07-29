@@ -90,10 +90,10 @@ namespace scag { namespace util { namespace properties
         bool    getBool();
         time_t  getDate();
 
-        void setStr(const std::string& val);
-        void setInt(int64_t val);
-        void setBool(bool val);
-        void setDate(time_t val);
+        virtual void setStr(const std::string& val);
+        virtual void setInt(int64_t val);
+        virtual void setBool(bool val);
+        virtual void setDate(time_t val);
 
         int Compare(const std::string& val);
         int Compare(bool val);
@@ -102,28 +102,26 @@ namespace scag { namespace util { namespace properties
         int Compare(Property& val,bool reqcast);
     };
     
-    class NamedProperty : public Property
+    class AdapterProperty : public Property
     {
     private:
     
-        std::string name;
         Changeable* patron;
+        std::string name;
 
     public:
 
-        NamedProperty(const std::string& _name, Changeable* _patron) 
-            : Property(), name(_name), patron(_patron) {};
-        NamedProperty(const NamedProperty& p) 
-            : Property(p), name(p.name), patron(p.patron) {};
+        AdapterProperty(const std::string& _name,Changeable* _patron,int InitValue) 
+            : patron(_patron), name(_name) { i_val = InitValue; type = pt_int;};
 
-        const std::string& getName() {
-            return name;
-        }
+        AdapterProperty(const std::string& _name,Changeable* _patron,const std::string& InitValue) 
+            : patron(_patron), name(_name) {s_val = InitValue; type = pt_str;};
 
-        void setStr(const std::string& val);
-        void setInt(int64_t val);
-        void setBool(bool val);
-        void setDate(time_t val);
+        virtual void setStr(const std::string& val);
+        virtual void setInt(int64_t val);
+        virtual void setBool(bool val);
+        virtual void setDate(time_t val);
+        const std::string& GetName() const {return name;}
     };
 
     struct Changeable
@@ -133,7 +131,7 @@ namespace scag { namespace util { namespace properties
          * 
          * @param   property    changed property
          */
-        virtual void changed(const NamedProperty& property);
+        virtual void changed(AdapterProperty& property) = 0;
         virtual ~Changeable() {};
         
     protected:
@@ -150,7 +148,7 @@ namespace scag { namespace util { namespace properties
          * @param   name        property name
          * @return  property    existed property, new property or null
          */
-        virtual NamedProperty* getProperty(const std::string& name) {return 0;};
+        virtual Property* getProperty(const std::string& name) = 0;
         virtual ~PropertyManager() {};
 
     public:

@@ -164,7 +164,7 @@ bool RuleEngine::isValidFileName(std::string fname, int& ruleId)
 
     ruleId = atoi(fname.substr(5,fname.size()-5-4).c_str());
 
-    return (ruleId>0);
+    return (ruleId > 0);
 }
 
 std::string RuleEngine::CreateRuleFileName(const std::string& dir,const int ruleId) const
@@ -183,6 +183,35 @@ std::string RuleEngine::CreateRuleFileName(const std::string& dir,const int rule
 int RuleEngine::GetRuleId(SCAGCommand& command)
 {
     return 1;
+}
+
+
+RuleStatus RuleEngine::process(SCAGCommand& command)
+{
+    RulesReference rulesRef = getRules();
+    RuleStatus rs;
+
+    int ruleId = 0;
+    ruleId = GetRuleId(command);
+
+    char buff[128];
+    sprintf(buff,"%s%d","Process RuleEngine with ruleId: ",ruleId);
+    smsc_log_debug(logger,buff);
+
+    if (rulesRef.rules->rules.Exist(ruleId)) 
+    {
+        Rule * rule = rulesRef.rules->rules.Get(ruleId);
+        rs = rule->process(command);
+    } 
+    else
+    {
+        char buff[128];
+        sprintf(buff,"%s%d%s","Cannot process Rule with ID = ",ruleId," : Rule not found");
+        throw Exception(buff);
+    }
+
+        
+    return rs;
 }
 
 

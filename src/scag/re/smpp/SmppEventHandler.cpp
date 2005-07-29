@@ -8,8 +8,6 @@ using namespace scag::re::smpp;
 
 RuleStatus SmppEventHandler::process(SCAGCommand& command)
 {
-    int key;
-    Action * action;
     Hash<Property> _constants;
     RuleStatus rs;
 
@@ -29,10 +27,14 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command)
     ActionContext context(_constants, _session, _command);
 
     smsc_log_debug(logger, "Process EventHandler...");
-    for (IntHash<Action *>::Iterator it = actions.First(); it.Next(key, action);)
+
+    std::list<Action *>::const_iterator it;
+
+    for (it = actions.begin(); it!=actions.end(); ++it)
     {
-        if (!action->run(context)) break;
+        if (!(*it)->run(context)) break;
     }
+
     rs = context.getStatus();
     return rs;
 }

@@ -6,7 +6,8 @@ namespace scag { namespace re {
 struct RuleStatus
 {
     bool result;
-    RuleStatus() : result(false) {};
+    bool hasErrors;
+    RuleStatus() : result(false),hasErrors(false) {};
 };
 
 }}

@@ -1,8 +1,8 @@
 #include "Rule.h"
 #include "scag/transport/smpp/SmppCommand.h"
-#include "SAX2Print.hpp"
-
 #include "scag/re/smpp/SmppEventHandler.h"
+
+#include "SAX2Print.hpp"
 
 namespace scag { namespace re 
 {
@@ -28,19 +28,36 @@ Rule::~Rule()
 RuleStatus Rule::process(SCAGCommand& command)
 {
     RuleStatus rs;
-    EventHandler * eh;
-
-    if (command.getType() != transportType) 
-        throw Exception("Rule: command transport type and rule transport type are different");
+    if (command.getType() != transportType)
+    {
+        rs.result = false;
+        rs.hasErrors = true;
+        smsc_log_debug(logger,"Rule: command transport type and rule transport type are different");
+        return rs;
+    }
 
     smsc_log_debug(logger,"Process Rule...");
 
     int handlerType = ExtractHandlerType(command);
-    if (!Handlers.Exist(handlerType))  throw Exception("Rule: cannot find EventHandler for command");
+    if (!Handlers.Exist(handlerType)) 
+    {
+        rs.result = false;
+        rs.hasErrors = true;
+        smsc_log_debug(logger,"Rule: cannot find EventHandler for command");
+        return rs;
+    }
 
-    eh = Handlers.Get(handlerType);
-    rs = eh->process(command);
-
+    EventHandler * eh = Handlers.Get(handlerType);
+    try
+    {
+        rs = eh->process(command);
+    } catch (Exception& e)
+    {
+        rs.result = false;
+        rs.hasErrors = true;
+        smsc_log_debug(logger,e.what());
+        return rs;
+    }
     return rs;
 }
 
@@ -50,11 +67,11 @@ int Rule::ExtractHandlerType(SCAGCommand& command)
     if (smpp) 
     {
         _SmppCommand * cmd = smpp->operator ->();
-        if (!cmd) return UNKNOWN;
+        if (!cmd) return 0;
         return cmd->get_commandId();
     }
 
-    return UNKNOWN;
+    return 0;
 }
 
 
@@ -64,11 +81,9 @@ EventHandler * Rule::CreateEventHandler()
     {
     case SMPP:
         return new SmppEventHandler();
-        break;
 
     default:
         return 0;
-        break;
     }
 }
 
@@ -119,16 +134,16 @@ void Rule::init(const SectionParams& params)
 
     std::string sTransport = params["transport"];
 
-    if (sTransport.compare("SMPP")==0) transportType = SMPP;
-    else if (sTransport.compare("WAP")==0) transportType = WAP;
-         else if (sTransport.compare("MMS")==0) transportType = MMS;
-              else 
-              {
-                  std::string msg("Rule: invalid value '");
-                  msg.append(sTransport);
-                  msg.append("' for 'transport' parameter");
-                  throw Exception(msg.c_str());
-              }
+    if (sTransport == "SMPP") transportType = SMPP;
+    else if (sTransport == "WAP") transportType = WAP;
+    else if (sTransport == "MMS") transportType = MMS;
+    else 
+    {
+        std::string msg("Rule: invalid value '");
+        msg.append(sTransport);
+        msg.append("' for 'transport' parameter");
+        throw Exception(msg.c_str());
+    }
 
     smsc_log_debug(logger,"Rule::Init");
 
