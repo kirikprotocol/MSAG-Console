@@ -1,11 +1,12 @@
-// $Id$
+#ident "$Id$"
+
 #ifndef __SMSC_INMAN_INAP_FACTORY__
 #define __SMSC_INMAN_INAP_FACTORY__
 
 #include <map>
 
 #include "ss7cp.h"
-#include "et94inapcs1plusapi.h"
+#include "i97tcapapi.h"
 
 #include "logger/Logger.h"
 #include "core/synchronization/Mutex.hpp"
@@ -18,7 +19,7 @@ namespace smsc {
 namespace inman {
 namespace inap {
 
-static const USHORT_T MSG_USER_ID = INAPUP_ID;
+static const USHORT_T MSG_USER_ID = USER03_ID;
 
 class Session;
 
