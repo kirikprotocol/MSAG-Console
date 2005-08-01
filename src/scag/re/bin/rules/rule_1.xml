@@ -16,7 +16,7 @@
 	<return result="%res"/>
       </else>
     </if>
-    <if test = "%a" op="ne" value="50">
+    <if test = "%a" op=">=" value="50">
         <set var="%b" value="String is equal"/>
 	<return result="0"/>
     </if>

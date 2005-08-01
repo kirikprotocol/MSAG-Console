@@ -5,12 +5,6 @@
 #include "Action.h"
 
 #include <scag/re/actions/IParserHandler.h>
-#include <core/buffers/IntHash.hpp>
-
-#include <iostream>
-
-using smsc::core::buffers::IntHash;
-using namespace std;
 
 
 namespace scag { namespace re { namespace actions {

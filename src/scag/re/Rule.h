@@ -23,7 +23,6 @@ class Rule : public IParserHandler
     Mutex ruleLock;
     int useCounter;
     TransportType transportType;
-    int HandlerTypeToInt(const std::string& str);
 
     EventHandler * CreateEventHandler();
 //////////////IParserHandler Interfase///////////////////////

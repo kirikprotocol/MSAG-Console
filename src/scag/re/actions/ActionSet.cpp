@@ -1,8 +1,6 @@
 #include "ActionSet.h"
 #include "scag/re/SAX2Print.hpp"
 
-#include <iostream>
-
 namespace scag { namespace re { namespace actions {
 
 ActionSet::ActionSet()

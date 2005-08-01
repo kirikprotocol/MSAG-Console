@@ -79,7 +79,7 @@ IParserHandler * ActionIf::StartXMLSubSection(const std::string& name,const Sect
         action = factory.CreateAction(name);
         if (!action) 
         {
-            std::string msg("EventHandler: unrecognized child object '");
+            std::string msg("Action 'if': unrecognized child object '");
             msg.append(name);
             msg.append("' to create");
             throw Exception(msg.c_str());

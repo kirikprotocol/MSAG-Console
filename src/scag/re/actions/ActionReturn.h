@@ -2,16 +2,7 @@
 #define __SCAG_RULE_ENGINE_ACTION_RETURN__
 
 #include "ActionContext.h"
-#include "ActionIf.h"
-
-#include <scag/re/actions/IParserHandler.h>
-#include <core/buffers/IntHash.hpp>
-
-#include <iostream>
-
-using smsc::core::buffers::IntHash;
-using namespace std;
-
+#include "Action.h"
 
 namespace scag { namespace re { namespace actions {
 
