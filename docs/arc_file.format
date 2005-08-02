@@ -1,0 +1,80 @@
+ 
+Формат SMS-архивных файлов генерируемых SMSC
+
+<File>
+	<FileHeader>
+		<char[8] id_mark>SMSC.ARC</char[8]>
+		<int16 version>01</int16>
+	</FileHeader>
+
+	<SmsRecords (0..EOF)>
+
+		<uint32 recordSize1/> // recordSize1 == recordSize2
+
+		<uint64 id/>
+		<uint8  smsState/>
+
+		<time_t submitTime/>
+		<time_t validTime/>
+		<time_t lastTime/>
+		<time_t nextTime/>
+		
+		<uint32 attempts/>
+		<uint32 lastResult/>
+
+		<int8          oaSize/>
+		<char[oaSize]  oa/>   
+		<int8          daSize/>
+		<char[daSize]  da/>   
+		<int8          ddaSize/>
+		<char[ddaSize] dda/>  
+
+		<uin16 messageReference/>
+
+		<int8          svcSize/>
+		<char[svcSize] eServiceType/>
+		
+		<uint8 deliveryReport/>
+		<uint8 billingRecord/>
+
+		<int8   	  odMscSize/>
+		<char[odMscSize]  origDescriptorMsc/>
+		<int8   	  odImsiSize/>
+		<char[odImsiSize] origDescriptorImsi/>
+		<uin32		  origDescriptorSme/>
+		<int8   	  ddMscSize/>
+		<char[ddMscSize]  destDescriptorMsc/>
+		<int8   	  ddImsiSize/>
+		<char[ddImsiSize] destDescriptorImsi/>
+		<uin32		  destDescriptorSme/>
+
+		<int8            routeSize/>
+		<char[routeSize] route/>
+
+		<int32 svcId/>
+		<int32 priority/>
+
+		<int8             srcSmeSize/>
+		<char[srcSmeSize] srcSmeId/>
+		<int8             dstSmeSize/>
+		<char[srcSmeSize] dstSmeId/>
+
+		<int32         bodyLen/>
+		<char[bodyLen] body/>
+
+		<uint32 recordSize2/> // recordSize1 == recordSize2
+
+	</SmsRecords (0..EOF)>
+</File>
+
+
+Примечания:
+
+1) Для конструкция вида:
+
+	<int8          xxxSize/>
+	<char[xxxSize] xxx/>   
+  
+   если xxxSize <= 0, то последующая строка (char[0]) не пишется 
+   и далее идёт следующее поле
+
