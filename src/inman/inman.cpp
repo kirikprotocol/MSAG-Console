@@ -15,7 +15,7 @@ using smsc::inman::Console;
 using std::cout;
 using std::endl;
 
-static const UCHAR_T  DEFAULT_SSN = 201;
+static const UCHAR_T  DEFAULT_SSN = 146;
 
 static Session* g_pSession = 0;
 
@@ -58,12 +58,35 @@ void select(Console&, const std::vector<std::string>& args)
     }
 }
 
+void mosms(Console&, const std::vector<std::string>& args)
+{
+  Dialog* pDialog = 0;
+  if( !g_pSession )
+  {
+      cout << "Session not active." << endl;
+  }
+  else
+  {
+      pDialog = g_pSession->openDialog();
+  }
+  if ( !pDialog )
+  {
+    cout << "Can't open dialog" << endl;
+  }
+  else
+  {
+    cout << "Dialog is running." << endl;
+    pDialog->start();
+  }
+}
+
 int main(int argc, char** argv)
 {
   Console console;
   console.addItem("open", &open);
   console.addItem("close", &close);
   console.addItem("select", &select);
+  console.addItem("mosms", &mosms);
   console.run("inman>");
   return(0);
 }
