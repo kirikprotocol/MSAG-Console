@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema targetNamespace="http://www.sibinco.com/SCAG/SESSIONS" 
+    xmlns="http://www.w3.org/2001/XMLSchema"
+    xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"
+    elementFormDefault="qualified">
+
+    <group name="Actions">
+        <choice>
+            <element name="close">
+                <complexType>
+                    <attribute name="commit" type="boolean" default="true" use="optional"/>
+                </complexType>
+            </element>
+        </choice>    
+    </group>
+    
+</schema>

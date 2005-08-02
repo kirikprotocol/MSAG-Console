@@ -3,12 +3,16 @@
 <scag:rule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                     xsi:schemaLocation="http://www.sibinco.com/SCAG smpp_rules.xsd"
                     xmlns:scag="http://www.sibinco.com/SCAG"
+                    xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"    
                     transport="SMPP">
                         
     <deliver_sm>
         <set var="$e777" value="20"/>
         <set var="#aaa" value="89"/>
         <set value="10" var="%a10"/>
+        
+        <session:close commit="false"/>
+        <session:close/>
         
         <if op="eqi" test="%dfdhggd">
             <return result="20"/>
