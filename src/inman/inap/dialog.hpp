@@ -1,4 +1,4 @@
-// $Id$
+#ident "$Id$"
 // Диалог (транзакция) IN
 
 #ifndef __SMSC_INMAN_INAP_DIALOG__
@@ -7,7 +7,6 @@
 #include <map>
 
 #include "ss7cp.h"
-#include "et94inapcs1plusapi.h"
 
 namespace smsc {
 namespace inman {
@@ -18,28 +17,32 @@ class Session;
 
 class Dialog
 {
-        friend class Session;
+  friend class Session;
 
-    public:
-        Dialog(Session* session, USHORT_T id);
-        virtual ~Dialog();
+  typedef enum {
+    IDLE,ERROR
+  } DialogState_T;
 
-        USHORT_T invoke(const Operation* op);
+  public:
+    Dialog(Session* session, USHORT_T id);
+    virtual ~Dialog();
 
-        USHORT_T beginReq();
-        USHORT_T endReq();
-        USHORT_T dataReq();
+    USHORT_T invoke(const Operation* op);
 
-    protected:
-        Session*     session;
+    USHORT_T start();
 
-        USHORT_T      id;
-        UCHAR_T       qSrvc;
-        UCHAR_T       priority;
-        UCHAR_T       acShort;
-        SS7_ADDRESS_T destAddress;
-        SS7_ADDRESS_T origAddress;
-        AC_NAMEREQ_T  name;
+    USHORT_T beginReq();
+    USHORT_T endReq();
+    USHORT_T dataReq();
+
+  protected:
+    Session*     session;
+
+    USHORT_T      did;
+    UCHAR_T       qSrvc;
+    UCHAR_T       priority;
+    UCHAR_T       acShort;
+    DialogState_T state;
 };
 
 }

@@ -1,6 +1,9 @@
+static char const ident[] = "$Id$";
+
 #include "logger/Logger.h"
 #include "util.hpp"
 #include <vector>
+#include <alloca.h>
 
 namespace smsc {
 namespace inman{
@@ -544,6 +547,36 @@ const char* getModuleName(USHORT_T moduleId)
   }
 }
 
+const char* getTcapReasonDescription(USHORT_T code)
+{
+  switch(code)
+  {
+    case EINSS7_I97TCAP_INV_INVOKE_ID_USED: return "Invalid Invoke Id Used";
+    case EINSS7_I97TCAP_INV_DIALOGUE_ID: return "Invalid Dialogue Id" ;
+    case EINSS7_I97TCAP_INV_QLT_OF_SERVICE: return "Invalid Quality Of Service" ;
+    case EINSS7_I97TCAP_INV_DEST_ADR_LENGTH: return "Invalid Destination Address Length" ;
+    case EINSS7_I97TCAP_INV_ORG_ADR_LENGTH: return "Invalid Originating Address Length" ;
+    case EINSS7_I97TCAP_INV_TERMINATION: return "Invalid Termination" ;
+    case EINSS7_I97TCAP_INV_LINKED_ID_USED: return "Invalid Linked Id Used" ;
+    case EINSS7_I97TCAP_INV_CLASS: return "Invalid Operation Class" ;
+    case EINSS7_I97TCAP_INV_TIMEOUT: return "Invalid Timeout" ;
+    case EINSS7_I97TCAP_INV_OP_TAG: return "Invalid Operation Tag" ;
+    case EINSS7_I97TCAP_INV_OP_LENGTH: return "Invalid Operation Length" ;
+    case EINSS7_I97TCAP_INV_ERR_TAG: return "Invalid Error Code Tag" ;
+    case EINSS7_I97TCAP_INV_ERR_LENGTH: return "Invalid Error Length" ;
+    case EINSS7_I97TCAP_INV_PROBLEM_TAG: return "Invalid Problem Code Tag" ;
+    case EINSS7_I97TCAP_INV_PROBLEM_CODE: return "Invalid Problem Code" ;
+    case EINSS7_I97TCAP_INV_ABORTINFO_LENGTH: return "Invalid Abort Info Length" ;
+    case EINSS7_I97TCAP_INV_PRIORITY_LEVEL: return "Invalid Priority Level" ;
+    case EINSS7_I97TCAP_INV_USER_VERSION: return "Invalid TC-user Version" ;
+    case EINSS7_I97TCAP_INV_AC_LENGTH: return "Invalid Application Context Length" ;
+    case EINSS7_I97TCAP_INV_UI_LENGTH: return "Invalid UI Length" ;
+    case EINSS7_I97TCAP_INV_USER_ID: return "Invalid UserId" ;
+    case EINSS7_I97TCAP_IND_UNKNOWN_CODE: return "Unknown Code" ;
+    case EINSS7_I97TCAP_IND_LENGTH_ERROR: return "Length Error" ;
+    default: return "UNKNOWN CODE";
+  }
+}
 const char* getReturnCodeDescription(USHORT_T code)
 {
   switch(code)
@@ -675,30 +708,54 @@ const char* getReturnCodeDescription(USHORT_T code)
   }
 }
 
-const char* getBindErrorMessage(USHORT_T errcode)
+const char* getTcapBindErrorMessage(UCHAR_T bindResult)
 {
-    static char error[80];
-    switch( errcode )
-    {
-        case BIND_RES_SUCCESS:
-            return "Success";
-        case BIND_RES_SSN_ALREADY_IN_USE:
-            return "A user with the same SSN is already bound.";
-        case BIND_RES_PRTCL_ERROR:
-            return "Some primitives have not been received in the correct order.";
-        case BIND_RES_RSRCS_UNVLBL:
-            return "There are not enough resources available.";
-        case BIND_RES_SSN_NT_ALLWD:
-            return "This SSN is not allowed.";
-        case BIND_RES_SCCP_NT_RDY:
-            return "The SCCP has not been started properly before the INAP_BIND_req was sent.";
-        case BIND_RES_USER_IN_USE:
-            return "This User is with this Ssn is already bound at TCAP";
-        case BIND_RES_USERID_ERROR:
-            return "This userId was not in portss7.h";
-        default:
-            sprintf(error, "Bind error code: 0x%X", errcode );
-     }
+  switch(bindResult)
+  {
+    case EINSS7_I97TCAP_BIND_OK: return "Bind successful";
+    case EINSS7_I97TCAP_BIND_SSN_IN_USE: return "Subsystem already in use";
+    case EINSS7_I97TCAP_BIND_PROTOCOL_ERR: return "Protocol error";
+    case EINSS7_I97TCAP_BIND_NO_RESOURCES: return "Resources unavailable";
+    case EINSS7_I97TCAP_BIND_INVALID_SSN: return "Invalid subsystem number";
+    case EINSS7_I97TCAP_BIND_SCCP_NOT_READY: return "SCCP not ready";
+    case EINSS7_I97TCAP_BIND_USER_ID_ERR: return "The userId is invalid or the TC-user is already bound";
+    default:   return "UNKNOWN BIND RESULT";
+  }
+}
+
+void fillAddress(SCCP_ADDRESS_T* dst, const char *saddr, UCHAR_T ssn)
+{
+  unsigned len = strlen(saddr);
+  dst->addrLen = 5 + (len + 1)/2;             // length in octets
+  dst->addr[0] = 0x12;                        // SSN & GT indicator
+  dst->addr[1] = ssn;                         // SSN
+  dst->addr[2] = 0;                           // Translation Type
+  dst->addr[3] = 0x10 | (len%2==0?0x02:0x01); // NP & GT coding
+  dst->addr[4] = 0x04;                        // Nature of address
+
+  for( int i = 0; i < len; i++ )
+  {
+    if( i & 1 ) {
+      dst->addr[i/2+5] |= ((saddr[i]-'0')<<4);// fill high semioctet
+    } else {
+      dst->addr[i/2+5] = (saddr[i]-'0')&0x0F; // fill low semioctet
+    }
+  }
+
+  if( len & 1 ) {
+    dst->addr[(len+1)/2-1+5] &= 0x0F;
+  }
+}
+
+std::string dump(USHORT_T len, UCHAR_T* udp) {
+  //char *text = new char[len*3+1];
+  char* text = (char*)alloca(len*3+1);
+  int k = 0;
+  for ( int i=0; i<len; i++){
+    k+=sprintf(text+k,"%02X ",udp[i]);
+  }
+  text[k]=0;
+  return string(text);
 }
 
 }//namespace inap

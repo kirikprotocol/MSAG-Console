@@ -1,4 +1,4 @@
-// $Id$
+static char const ident[] = "$Id$";
 #include <assert.h>
 
 #include "session.hpp"
@@ -17,6 +17,7 @@ namespace inap  {
 /////////////////////////////////////////////////////////////////////////////////////
 
 Logger* inapLogger = 0;
+Logger* tcapLogger = 0;
 Mutex Factory::instanceLock;
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -26,8 +27,10 @@ Mutex Factory::instanceLock;
 Factory::Factory() : state( IDLE )
 {
     Logger::Init();
-    inapLogger = Logger::getInstance("smsc.inman");
+    inapLogger = Logger::getInstance("smsc.in");
+    tcapLogger = Logger::getInstance("smsc.in.tcap");
     assert( inapLogger );
+    assert( tcapLogger );
 }
 
 Factory::~Factory()
@@ -66,7 +69,7 @@ void Factory::openConnection()
             break;
 
        case OPENED:
-            result = MsgConn(MSG_USER_ID, INAP_ID);
+            result = MsgConn(MSG_USER_ID, TCAP_ID);
             if (result != 0)
             {
                 smsc_log_error(inapLogger, "MsgConn failed with code %d(%s)", result, getReturnCodeDescription(result));
@@ -89,10 +92,10 @@ void Factory::closeConnection()
       {
         case CONNECTED:
         {
-            result = MsgRel(MSG_USER_ID,INAP_ID);
+            result = MsgRel(MSG_USER_ID,TCAP_ID);
             if( result != 0 )
             {
-                smsc_log_error(inapLogger, "MsgRel(%d,%d) failed with code %d(%s)", MSG_USER_ID, INAP_ID, result, getReturnCodeDescription(result));
+                smsc_log_error(inapLogger, "MsgRel(%d,%d) failed with code %d(%s)", MSG_USER_ID, TCAP_ID, result, getReturnCodeDescription(result));
             }
             else
             {
@@ -149,7 +152,7 @@ Session* Factory::openSession(UCHAR_T SSN)
         return NULL;
     }
 
-    Session* pSession = new Session( SSN );
+    Session* pSession = new Session( SSN , "79139860005", "79139869999");
 
     pSession->Start();
 

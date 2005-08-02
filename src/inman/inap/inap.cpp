@@ -17,9 +17,9 @@ using smsc::logger::Logger;
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::Session;
 using smsc::inman::inap::Factory;
-using smsc::inman::inap::getInapReturnCodeDescription;
-using smsc::inman::inap::getDisconnectIndicatorDescription;
-using smsc::inman::inap::getEinReasonDescription;
+using smsc::inman::inap::getTcapBindErrorMessage;
+using smsc::inman::inap::dump;
+using smsc::inman::inap::tcapLogger;
 using smsc::inman::inap::inapLogger;
 
 USHORT_T EINSS7_I97TBindConf(   UCHAR_T          ssn,
@@ -27,18 +27,18 @@ USHORT_T EINSS7_I97TBindConf(   UCHAR_T          ssn,
                                 EINSS7INSTANCE_T tcapInstanceId,
                                 UCHAR_T          bindResult)
 {
-    smsc_log_debug(inapLogger,
-                   "EINSS7_I97TBindConf(ssn=%d,userId=%d,tcapInstanceId=%d,bindResult=0x%02X)",
-                   ssn,userId,tcapInstanceId,bindResult);
+    smsc_log_debug(tcapLogger,
+                   "EINSS7_I97TBindConf(ssn=%d,userId=%d,tcapInstanceId=%d,bindResult=%d(%s) )",
+                   ssn,userId,tcapInstanceId,bindResult,getTcapBindErrorMessage(bindResult));
     Session* pSession = Factory::getInstance()->findSession( ssn );
     assert( pSession );
-    if( BIND_RES_SUCCESS == bindResult )
+    if( EINSS7_I97TCAP_BIND_OK == bindResult )
     {
         pSession->setState( Session::BOUNDED );
     }
     else
     {
-        smsc_log_error(inapLogger, "INAP_BIND request failed. Error code 0x%X", bindResult);
+        smsc_log_error(inapLogger, "TCAP BIND request failed. Error code 0x%X", bindResult);
         pSession->setState( Session::ERROR );
     }
     return MSG_OK;
@@ -86,11 +86,7 @@ USHORT_T EINSS7_I97TBeginInd(   UCHAR_T          ssn,
     assert( pSession );
 //    assert( !pSession->findDialog( dialogueId ) );
     Dialog* pDlg = new Dialog( pSession, dialogueId );
-    return INAP_OK;
-
-  printf("%s: ssn=%d, userId=%d, iId=%d, dlg=%X04F\n", __func__,
-         (int)ssn, (int)userId, (int)tcapInstanceId, dialogueId );
-  return MSG_OK;
+    return MSG_OK;
 }
 
 USHORT_T EINSS7_I97TContinueInd(UCHAR_T          ssn,
@@ -100,13 +96,19 @@ USHORT_T EINSS7_I97TContinueInd(UCHAR_T          ssn,
                                 UCHAR_T          priOrder,
                                 UCHAR_T          qualityOfService,
                                 UCHAR_T          compPresent,
-                                UCHAR_T          appContextLength,
-                                UCHAR_T          *appContext_p,
-                                USHORT_T         userInfoLength,
-                                UCHAR_T          *userInfo_p)
+                                UCHAR_T          aclen,
+                                UCHAR_T          *ac,
+                                USHORT_T         uilen,
+                                UCHAR_T          *ui)
 {
-  printf("%s: ssn=%d, userId=%d, iId=%d, dlg=%X04F\n", __func__,
-         (int)ssn, (int)userId, (int)tcapInstanceId, dialogueId );
+  smsc_log_debug(tcapLogger,
+                 "EINSS7_I97TContinueInd(ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
+                 "priOrder=%d, qualityOfService=%d, compPresent=\"%s\", "
+                 "ac[%d]={%s}, ui[%d]={%s})",
+                 ssn, userId, tcapInstanceId,
+                 dialogueId, priOrder, qualityOfService,
+                 compPresent?"TRUE":"FALSE",
+                 aclen, dump(aclen,ac).c_str(), uilen, dump(uilen,ui).c_str());
   return MSG_OK;
 }
 
@@ -197,13 +199,20 @@ USHORT_T EINSS7_I97TInvokeInd(  UCHAR_T          ssn,
                                 UCHAR_T          linkedIdUsed,
                                 UCHAR_T          linkedId,
                                 UCHAR_T          operationTag,
-                                USHORT_T         operationLength,
-                                UCHAR_T          *operationCode_p,
-                                USHORT_T         paramLength,
-                                UCHAR_T          *parameters_p)
+                                USHORT_T         oplen,
+                                UCHAR_T          *op,
+                                USHORT_T         pmlen,
+                                UCHAR_T          *pm)
 {
-  printf("%s: ssn=%d, userId=%d, iId=%d, dlg=%X04F\n", __func__,
-         (int)ssn, (int)userId, (int)tcapInstanceId, dialogueId );
+  smsc_log_debug(tcapLogger,
+                 "EINSS7_I97TInvokeInd(ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
+                 "invokeId=%d, lastComponent=\"%s\", linkedIdUsed=\"%s\", linkedId=%d, "
+                 "operationTag=\"%s\", "
+                 "op[%d]={%s}, pm[%d]={%s})",
+                 ssn, userId, tcapInstanceId, dialogueId,
+                 invokeId, lastComponent?"YES":"NO", linkedIdUsed?"USED":"NOT USED", linkedId,
+                 operationTag==0x02?"LOCAL":"GLOBAL",
+                 oplen, dump(oplen,op).c_str(), pmlen, dump(pmlen,pm).c_str());
   return MSG_OK;
 }
 
@@ -322,10 +331,12 @@ USHORT_T EINSS7_I97TStateInd(   UCHAR_T          ssn,
                                 ULONG_T          localSpc,
                                 UCHAR_T          subsysMultiplicityInd)
 {
-  printf("%s: ssn=%d, userId=%d, iId=%d, userState=%d, affectedSsn=%d, affectedSpc=%d, localSpc=%d, subsysMultiplicityInd=%d\n", __func__,
-         (int)ssn, (int)userId, (int)tcapInstanceId,
-         (int)userState, (int)affectedSsn, affectedSpc,
-         localSpc, (int)subsysMultiplicityInd);
+  smsc_log_debug(tcapLogger,
+                 "EINSS7_I97TStateInd(ssn=%d, userId=%d, iId=%d, userState=%d, "
+                 "affectedSsn=%d, affectedSpc=%d, localSpc=%d, subsysMultiplicityInd=%d",
+                 ssn, userId, tcapInstanceId,
+                 userState, affectedSsn, affectedSpc,
+                 localSpc, subsysMultiplicityInd);
   return MSG_OK;
 }
 

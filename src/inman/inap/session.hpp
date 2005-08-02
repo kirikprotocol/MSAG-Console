@@ -8,6 +8,7 @@
 
 #include "ss7cp.h"
 
+#include "inman/inap/types.hpp"
 #include "core/threads/Thread.hpp"
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
@@ -38,9 +39,9 @@ class Session : public Thread
         void        setState(State_T newState);
         UCHAR_T     getSSN() const;
 
-        SS7_ADDRESS_T scfAddr;
-        SS7_ADDRESS_T inmanAddr;
-        AC_NAMEREQ_T  ac;
+        SCCP_ADDRESS_T scfAddr;
+        SCCP_ADDRESS_T inmanAddr;
+        APP_CONTEXT_T  ac;
 
         virtual     Dialog*  openDialog();
         virtual     Dialog*  findDialog(USHORT_T id);

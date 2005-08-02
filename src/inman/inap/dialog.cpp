@@ -1,4 +1,4 @@
-// $Id$
+static char const ident[] = "$Id$";
 // Реализация INAP интерфейса на платформе ETSI
 
 #include "operations.hpp"
@@ -21,7 +21,9 @@ namespace inap  {
 /////////////////////////////////////////////////////////////////////////////////////
 
 
-Dialog::Dialog(Session* pSession, USHORT_T dlgId) : id( dlgId ), session( pSession )
+Dialog::Dialog(Session* pSession, USHORT_T dlgId) :
+               did( dlgId ), session( pSession ), state(IDLE), qSrvc(EINSS7_I97TCAP_QLT_BOTH),
+               priority(EINSS7_I97TCAP_PRI_HIGH_0)
 {
 }
 
@@ -29,10 +31,65 @@ Dialog::~Dialog()
 {
 }
 
+USHORT_T Dialog::start()
+{
+  assert( session );
+  assert( state == IDLE );
+
+  USHORT_T result;
+  result = EINSS7_I97TInvokeReq(
+    session->getSSN(),
+    MSG_USER_ID,
+    TCAP_INSTANCE_ID,
+    did,
+    1, //invokeId
+    0, //linkedIdUsed,
+    0, //linkedId,
+    EINSS7_I97TCAP_OP_CLASS_1, //opClass,
+    30, //timeOut,
+    EINSS7_I97TCAP_OPERATION_TAG_LOCAL, //operationTag,
+    0, //operationLength,
+    NULL, //*operationCode_p,
+    0, //paramLength,
+    NULL); //*parameters_p
+
+  if (result != 0)
+  {
+      smsc_log_error(inapLogger, "EINSS7_I97TInvokeReq failed with code %d(%s)", result,getTcapReasonDescription(result));
+      state = ERROR;
+      session->closeDialog(this);
+  }
+
+  result = EINSS7_I97TBeginReq(
+    session->getSSN(),
+    MSG_USER_ID,
+    TCAP_INSTANCE_ID,
+    did,
+    priority,
+    qSrvc,
+    session->scfAddr.addrLen,
+    session->scfAddr.addr,
+    session->inmanAddr.addrLen,
+    session->inmanAddr.addr,
+    session->ac.acLen,
+    session->ac.ac,
+    0,
+    NULL);
+
+  if (result != 0)
+  {
+      smsc_log_error(inapLogger, "EINSS7_I97TBeginReq failed with code %d(%s)", result,getTcapReasonDescription(result));
+      state = ERROR;
+      session->closeDialog(this);
+  }
+  return result;
+}
+
 // Begin dialog
 
 USHORT_T Dialog::beginReq()
 {
+/*
     assert( session );
 
     USHORT_T result = E94InapBeginReq(
@@ -40,29 +97,32 @@ USHORT_T Dialog::beginReq()
        id,
        qSrvc,
        priority,
-       &destAddress,
-       &origAddress,
-       &name,
+       &session->scfAddr,
+       &session->inmanAddr,
+       &session->ac,
        0, NULL,
        0, NULL );
 
     if (result != 0)
     {
-        smsc_log_error(inapLogger, "E94InapBeginReq failed with code %d(%s)", result,getReturnCodeDescription(result));
+        smsc_log_error(inapLogger, "E94InapBeginReq failed with code %d(%s)", result,getInapReturnCodeDescription(result));
     }
 
     return result;
+*/
+    return 0;
 }
 
 USHORT_T Dialog::dataReq()
 {
+/*
     USHORT_T result = E94InapDataReq(
         session->getSSN(),
         id,
         qSrvc,
         priority,
         acShort,
-        &origAddress,
+        &session->inmanAddr,
         0, //uInfoLen,
         NULL, //uInfo_p,
         0,    //USHORT_T noOfComponents
@@ -70,14 +130,17 @@ USHORT_T Dialog::dataReq()
 
     if (result != 0)
     {
-        smsc_log_error(inapLogger, "E94InapDataReq failed with code %d(%s)", result,getReturnCodeDescription(result));
+        smsc_log_error(inapLogger, "E94InapDataReq failed with code %d(%s)", result,getInapReturnCodeDescription(result));
     }
 
     return result;
+*/
+    return 0;
 }
 
 USHORT_T Dialog::endReq()
 {
+/*
     USHORT_T result = E94InapEndReq(
         session->getSSN(),
         id,
@@ -93,10 +156,12 @@ USHORT_T Dialog::endReq()
 
     if (result != 0)
     {
-        smsc_log_error(inapLogger, "E94InapEndReq failed with code %d(%s)", result,getReturnCodeDescription(result));
+        smsc_log_error(inapLogger, "E94InapEndReq failed with code %d(%s)", result,getInapReturnCodeDescription(result));
     }
 
     return result;
+*/
+    return 0;
 }
 
 USHORT_T Dialog::invoke(const Operation* op)

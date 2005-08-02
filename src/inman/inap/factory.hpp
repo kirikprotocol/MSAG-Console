@@ -20,6 +20,7 @@ namespace inman {
 namespace inap {
 
 static const USHORT_T MSG_USER_ID = USER03_ID;
+static const UCHAR_T TCAP_INSTANCE_ID = 0;
 
 class Session;
 
@@ -53,6 +54,7 @@ protected:
 };
 
 extern Logger* inapLogger;
+extern Logger* tcapLogger;
 
 }
 }

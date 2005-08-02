@@ -27,13 +27,21 @@ Session::Session(UCHAR_T ssn)
 {
 }
 
-static void fillAppContext(AC_NAMEREQ_T* p_ac)
+static void fillAppContext(APP_CONTEXT_T* p_ac)
 {
-  AC_NAMEREQ_T& ac = *p_ac;
-  ac.knownAc = FALSE;
-  ac.u.unknownAc.acNameLen = 3;
-  ac.u.unknownAc.acName[0] = 56;
+  APP_CONTEXT_T& ac = *p_ac;
+  ac.acLen=9;
+  ac.ac[0] = 0x06; //|00000110 |Tag                    |(UNIV P Obj Identifier)
+  ac.ac[0] = 0x07; //|00000111 |Length                 |7
+  ac.ac[0] = 0x04; //|00000100 |Authority,Organization |ITU-T, Identified-organization
+  ac.ac[0] = 0x00; //|00000000 |                       |ETSI
+  ac.ac[0] = 0x00; //|00000000 |Domain                 |Mobile Domain
+  ac.ac[0] = 0x01; //|00000001 |Mobile Subdomain       |GSM / UMTS Network
+  ac.ac[0] = 0x15; //|00010101 |Common Component ID    |CAP 3 OE
+  ac.ac[0] = 0x03; //|00000011 |CAP3 OE ID             |ACE
+  ac.ac[0] = 0x3D; //|00111101 |Application Context    |CAP3-SMS
 }
+
 Session::Session(UCHAR_T ssn, const char* scfNum, const char* inmanNum)
     : Thread()
     , SSN( ssn )
@@ -92,8 +100,8 @@ void Session::closeDialog(Dialog* pDlg)
 {
     MutexGuard guard( lock );
     if( !pDlg ) return;
-    smsc_log_debug(inapLogger,"Close dialog (SSN=%d, Dialog id=%d)", SSN, pDlg->id );
-    dialogs.erase( pDlg->id );
+    smsc_log_debug(inapLogger,"Close dialog (SSN=%d, Dialog id=%d)", SSN, pDlg->did );
+    dialogs.erase( pDlg->did );
     delete pDlg;
 }
 
@@ -120,11 +128,11 @@ int Session::Execute()
   started.SignalAll();
   smsc_log_debug(inapLogger,"Session (%d) is started", SSN );
 
-  USHORT_T  result = EINSS7_I97TBindReq( SSN, MSG_USER_ID, 0, EINSS7_I97TCAP_WHITE_USER );
+  USHORT_T  result = EINSS7_I97TBindReq( SSN, MSG_USER_ID, TCAP_INSTANCE_ID, EINSS7_I97TCAP_WHITE_USER );
 
   if (result != 0)
   {
-    smsc_log_error(inapLogger, "EINSS7_I97TBindReq failed with code %d(%s)", result,getInapReturnCodeDescription(result));
+    smsc_log_error(inapLogger, "EINSS7_I97TBindReq() failed with code %d(%s)", result,getTcapReasonDescription(result));
     goto stop;
   }
 
@@ -155,16 +163,16 @@ int Session::Execute()
       else
       {
           //smsc_log_debug(inapLogger, "MSG: sender 0x%X, receiver 0x%X, Primitive 0x%X",  msg.sender, msg.receiver, msg.primitive );
-          E94InapHandleInd(&msg);
+          EINSS7_I97THandleInd(&msg);
       }
 
       EINSS7CpReleaseMsgBuffer(&msg);
   }
 
-  result = E94InapUnBindReq( SSN );
+  result = EINSS7_I97TUnBindReq( SSN, MSG_USER_ID, TCAP_INSTANCE_ID );
   if (result != 0)
   {
-      smsc_log_error(inapLogger, "E94InapUnBindReq failed with code %d(%s)", result,getInapReturnCodeDescription(result));
+      smsc_log_error(inapLogger, "EINSS7_I97TUnBindReq() failed with code %d(%s)", result,getTcapReasonDescription(result));
       goto stop;
   }
 
