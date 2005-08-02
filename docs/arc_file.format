@@ -60,7 +60,7 @@
 		<char[srcSmeSize] dstSmeId/>
 
 		<int32         bodyLen/>
-		<char[bodyLen] body/>
+		<byte[bodyLen] body/>
 
 		<uint32 recordSize2/> // recordSize1 == recordSize2
 
@@ -68,7 +68,7 @@
 </File>
 
 
-Примечания:
+Пояснения и gримечания:
 
 1) Для конструкция вида:
 
@@ -78,3 +78,86 @@
    если xxxSize <= 0, то последующая строка (char[0]) не пишется 
    и далее идёт следующее поле
 
+2) Тело сообщения сохраняется в бинарном виде, 
+   как набор параметров в TTLV формате (Type+Tag+Len+Value):
+   
+	(<uint16 type&tag>[<uint32 len>][<char[len] value>])*
+
+   Наборы TTLV следуют в произвольном порядке.
+   В первых двух байтах TTLV закодированы тип(type) и тэг(tag) 
+   (в старшем и младшем байтах соответственно).
+
+   Типами тэгов являются:
+	a) INT = 0 (далее I)
+	b) STR = 1 (далее S)
+	c) BIN = 2 (далее B)
+   Для типа INT параметр len отсутствует (подразумевается равным 4).
+	
+   Типы и коды тэгов:
+
+        I SMPP_SCHEDULE_DELIVERY_TIME		0
+        I SMPP_REPLACE_IF_PRESENT_FLAG	        1
+        I SMPP_ESM_CLASS			2
+        I SMPP_DATA_CODING			3
+        I SMPP_SM_LENGTH			4
+        I SMPP_REGISTRED_DELIVERY		5
+        I SMPP_PROTOCOL_ID			6
+        B SMPP_SHORT_MESSAGE			7
+        I SMPP_PRIORITY			        8
+        I SMPP_USER_MESSAGE_REFERENCE		9
+        I SMPP_USSD_SERVICE_OP		        10
+        I SMPP_DEST_ADDR_SUBUNIT		11
+        I SMPP_PAYLOAD_TYPE			12
+        S SMPP_RECEIPTED_MESSAGE_ID		13
+        I SMPP_MS_MSG_WAIT_FACILITIES		14
+        I SMPP_USER_RESPONSE_CODE		15
+        I SMPP_SAR_MSG_REF_NUM		        16
+        I SMPP_LANGUAGE_INDICATOR		17
+        I SMPP_SAR_TOTAL_SEGMENTS		18
+        I SMPP_NUMBER_OF_MESSAGES		19
+        B SMPP_MESSAGE_PAYLOAD		        20
+        I SMPP_DATA_SM			        21
+        I SMPP_MS_VALIDITY			22
+        I SMPP_MSG_STATE			23
+        I SMSC_DISCHARGE_TIME			24
+        S SMSC_RECIPIENTADDRESS		        25
+        I SMSC_STATUS_REPORT_REQUEST		26
+        B SMSC_RAW_SHORTMESSAGE		        28
+        B SMSC_RAW_PAYLOAD			29
+        I SMPP_SOURCE_PORT			30
+        I SMPP_DESTINATION_PORT		        31
+        I SMPP_SAR_SEGMENT_SEQNUM		32
+        I SMPP_MORE_MESSAGES_TO_SEND		33
+        I SMPP_DEST_NETWORK_TYPE		34
+        I SMPP_DEST_BEARER_TYPE		        35
+        I SMPP_QOS_TIME_TO_LIVE		        36
+        I SMPP_SET_DPF			        37
+        I SMPP_SOURCE_NETWORK_TYPE		38
+        I SMPP_SOURCE_BEARER_TYPE		39
+        B SMSC_CONCATINFO			40
+        I SMSC_DSTCODEPAGE			41
+        I SMSC_ORIGINAL_DC			42
+        I SMSC_FORCE_DC			        43
+        I SMSC_SUPPRESS_REPORTS		        44
+        I SMSC_MERGE_CONCAT			45
+        I SMSC_HIDE				46
+        B SMSC_MO_PDU				47
+        S SMSC_FORWARD_MO_TO			48
+        S SMSC_DIVERTED_TO			49
+        I SMSC_NODIVERT			        50
+        B SMSC_UMR_LIST			        51
+        B SMSC_DC_LIST			        52
+        I SMSC_RECEIPTED_MSG_SUBMIT_TIME	53
+        I SMSC_UDH_CONCAT			54
+        I SMSC_DIVERTFLAGS			55
+        S SMSC_SUPPORTED_LOCALE		        56
+        I SMSC_SUPPORTED_CODESET		57
+        S SMSC_IMSI_ADDRESS			58
+        S SMSC_MSC_ADDRESS			59
+        I SMSC_RECEIPT_MR			60
+        B SMSC_UMR_LIST_MASK			61
+        S SMSC_DESCRIPTORS			62
+        I SMSC_TRANSLIT			        63
+        I SMSC_PROVIDERID			64
+        I SMSC_CATEGORYID			65
+	
