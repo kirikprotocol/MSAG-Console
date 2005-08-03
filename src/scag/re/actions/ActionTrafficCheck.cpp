@@ -2,6 +2,10 @@
 #include "scag/re/ActionFactory.h"
 #include "scag/re/SAX2Print.hpp"
 
+#include "scag/stat/Statistics.h"
+
+
+
 namespace scag { namespace re { namespace actions {
 
 
@@ -50,6 +54,12 @@ bool ActionTrafficCheck::run(ActionContext& context)
     Action * value;
 
     std::list<Action *>::const_iterator it;
+
+    
+
+
+
+    if (!context.checkTraffic(routeId,sMax,value)) return true;
 
     for (it = Actions.begin(); it!=Actions.end(); ++it)
     {

@@ -115,9 +115,9 @@ Rule * RuleEngine::ParseFile(const std::string& xmlFile)
     {
         parser->setValidationScheme(SAXParser::Val_Always);
         parser->setDoSchema(true);
-
         parser->setValidationSchemaFullChecking(true);
-        parser->setDoNamespaces(false);
+        parser->setDoNamespaces(true);
+
         parser->setValidateAnnotations(false);   
 
         parser->setValidationConstraintFatal(true);

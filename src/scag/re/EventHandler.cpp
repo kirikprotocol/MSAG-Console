@@ -57,7 +57,7 @@ IParserHandler * EventHandler::StartXMLSubSection(const std::string& name,const 
 
 bool EventHandler::FinishXMLSubSection(const std::string& name)
 {
-    return (name.compare("handler")==0);
+    return true;
 }
 
 

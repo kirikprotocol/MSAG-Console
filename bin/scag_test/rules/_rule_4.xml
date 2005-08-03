@@ -1,0 +1,19 @@
+<!DOCTYPE rule SYSTEM "../rules.dtd">
+
+<rule name="rule1">
+  <handler name = "handler1">
+    <set var="%a" value="050" />
+	
+    <if test="%a" op="==" value="40">
+      <then>
+        <set var="%b" value="2" />
+      </then>
+      <else>
+      </else>
+    </if>
+  </handler>
+  
+  <handler name = "handler2">
+  </handler>
+</rule>
+

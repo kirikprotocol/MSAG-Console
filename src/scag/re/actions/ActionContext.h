@@ -5,11 +5,14 @@
 #include <core/buffers/Hash.hpp>
 #include <scag/re/RuleStatus.h>
 #include <scag/re/properties/Properties.h>
+#include "scag/re/stat/Statistics.h"
+
 
 namespace scag { namespace re { namespace actions 
 {
     using smsc::core::buffers::Hash;
     using scag::re::RuleStatus;
+    using namespace scag::stat;
 
     using namespace scag::util::properties;
 
@@ -29,17 +32,17 @@ namespace scag { namespace re { namespace actions
         RuleStatus              status;
 
         Hash<Property>          variables;
-        const Hash<Property>&   constants;
+        Hash<Property>&         constants;
 
         PropertyManager&        session;
         PropertyManager&        command;
-    
+        Statistics&             statistics;
     public:
 
         // TODO: implement, set commandAdapter & session
-        ActionContext(const Hash<Property>& _constants,
-                      PropertyManager& _session, PropertyManager& _command)
-            : constants(_constants), session(_session), command(_command) {};
+        ActionContext(Hash<Property>& _constants,
+                      PropertyManager& _session, PropertyManager& _command,Statistics& _statistics)
+            : constants(_constants), session(_session), command(_command), statistics(_statistics) {};
         ~ActionContext() {};
         
         inline RuleStatus& getStatus() {
@@ -50,7 +53,12 @@ namespace scag { namespace re { namespace actions
 
         //Comment: 'name' is valid until 'var' is valid
         static FieldType Separate(const std::string& var, const char *& name);
+        static bool ActionContext::StrToPeriod(CheckTrafficPeriod& period, std::string& str);
+
+
         Property* getProperty(const std::string& var);
+        void closeSession(bool Commit);
+        bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
     };
 
 }}}

@@ -1,0 +1,8 @@
+<!DOCTYPE rule SYSTEM "../rules.dtd">
+
+<rule name="rule2">
+  <handler name = "handler1">
+    <set var="a" value="5" />
+  </handler>
+</rule>
+

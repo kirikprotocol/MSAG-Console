@@ -9,11 +9,10 @@ namespace scag { namespace re {
 
 class SmppEventHandler : public EventHandler
 {
-protected: 
-    virtual int StrToHandlerId(const std::string& str);
 public:
     virtual void init(const SectionParams& params); 
     virtual RuleStatus process(SCAGCommand& command); 
+    virtual StrToHandlerId(const std::string& str);
 };
 
 }}

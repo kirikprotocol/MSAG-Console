@@ -17,21 +17,19 @@ class EventHandler : public IParserHandler
 {
     EventHandler(const EventHandler &);
 protected:
-    int handlerId;
     std::list<Action *> actions;
 //////////////IParserHandler Interfase///////////////////////
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory);
     virtual bool FinishXMLSubSection(const std::string& name);
 //////////////IParserHandler Interfase///////////////////////
-    virtual int StrToHandlerId(const std::string& str) = 0;
 public:
-    EventHandler() : handlerId(0) {};
+    EventHandler()  {};
     virtual ~EventHandler();
 
     virtual void init(const SectionParams& params) = 0;
     virtual RuleStatus process(SCAGCommand& command) = 0;
+    virtual StrToHandlerId(const std::string& str) = 0;
 
-    int GetHandlerId() {return handlerId;};
 };
 
 }}

@@ -4,6 +4,7 @@
 #include "scag/re/Rule.h"
 #include "scag/re/ActionFactory.h"
 
+
 namespace scag { namespace re { namespace actions {
 
 
@@ -142,6 +143,7 @@ bool ActionIf::CompareResultToBool(IfOperations op,int result)
 
 bool ActionIf::run(ActionContext& context)
 {
+
     smsc_log_debug(logger,"Run Action 'if'...");
 
     bool isValidCondition = true;
@@ -149,7 +151,7 @@ bool ActionIf::run(ActionContext& context)
     Property * property = context.getProperty(singleparam.Operand1);
     if (!property) return true;
 
-    smsc_log_debug(logger,"Testing "+property->getStr()+" vs "+singleparam.Operand2);
+    smsc_log_debug(logger,"Testing "+singleparam.Operand1+" '"+property->getStr()+"'"+" vs "+singleparam.Operand2);
 
 
     if ((singleparam.Operation == opUnknown) && singleparam.Operand2.empty()) 

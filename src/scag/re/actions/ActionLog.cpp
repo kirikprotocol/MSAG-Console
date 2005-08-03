@@ -27,31 +27,59 @@ void ActionLog::init(const SectionParams& params)
     else if (sLevel == "warn") level = lgWarning;
     else if (sLevel == "info") level = lgInfo;
     else if (sLevel == "debug") level = lgDebug;
-    else throw Exception("Action 'session:close': invalid value for 'level' parameter");
+    else throw Exception("Action 'log': invalid value for 'level' parameter");
 
+
+    const char * name = 0;
 
     sCategory = params["category"];
     msg = params["message"];
 
+    FieldType ft;
+    ft = ActionContext::Separate(sCategory,name); 
+    if (ft == ftUnknown) throw Exception("Action 'log': unknown value for 'category' parameter");
+
+    ft = ActionContext::Separate(msg,name); 
+    if (ft == ftUnknown) throw Exception("Action 'log': unknown value for 'message' parameter");
+
+    smsc_log_debug(logger,"Action 'log':: init...");
 }
 
 bool ActionLog::run(ActionContext& context)
 {
+    Property * p1 = context.getProperty(sCategory);
+    Property * p2 = context.getProperty(msg);
+
+    if (!p1) 
+    {
+        smsc_log_warn(logger,"Action 'log': invalid property '" + sCategory + "' to log ");
+        return true;
+    }
+
+    if (!p2) 
+    {
+        smsc_log_warn(logger,"Action 'log': invalid property '" + msg + "' to log ");
+        return true;
+    }
+
+
+    std::string logstr = p1->getStr() + ": " + p2->getStr();
+
 
     switch (level) 
     {
     case lgError: 
-        smsc_log_error(logger,msg);
+        smsc_log_error(logger,logstr);
         break;
     case lgWarning:
-        smsc_log_warn(logger,msg);
+        smsc_log_warn(logger,logstr);
         break;
 
     case lgInfo:
-        smsc_log_info(logger,msg);
+        smsc_log_info(logger,logstr);
         break;
     case lgDebug:
-        smsc_log_debug(logger,msg);
+        smsc_log_debug(logger,logstr);
         break;
     }
 

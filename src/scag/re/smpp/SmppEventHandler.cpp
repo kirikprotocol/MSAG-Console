@@ -2,6 +2,19 @@
 #include "scag/re/SAX2Print.hpp"
 #include "scag/re/smpp/SmppAdapter.h"
 
+#include "scag/re/actions/ActionContext.h"
+
+class st : public scag::stat::Statistics
+{
+public:
+    virtual bool checkTraffic(std::string routeId, scag::stat::CheckTrafficPeriod period, int64_t value) 
+    {
+        return true;
+    }
+    virtual void registerEvent(const scag::stat::SmppStatEvent &si) {}
+};
+
+
 namespace scag { namespace re {
 
 using namespace scag::re::smpp;
@@ -10,6 +23,9 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command)
 {
     Hash<Property> _constants;
     RuleStatus rs;
+
+    smsc::util::config::Config config;
+    st _statistics;
 
     SmppCommand * smppcommand = dynamic_cast<SmppCommand *>(&command);
     if (!smppcommand) throw Exception("SmppEventHandler: command is not 'smpp-type'");
@@ -24,7 +40,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command)
 
     //////////////////////
 
-    ActionContext context(_constants, _session, _command);
+    ActionContext context(_constants, _session, _command,_statistics);
 
     smsc_log_debug(logger, "Process EventHandler...");
 
@@ -41,29 +57,16 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command)
 
 void SmppEventHandler::init(const SectionParams& params)
 {
-    if (!params.Exists("type")) throw Exception("EventHandler: missing 'type' parameter");
-
-    std::string sHandlerType = params["type"];
-
-    handlerId = StrToHandlerId(sHandlerType);
-
-    if (handlerId == UNKNOWN) 
-    {
-        std::string msg("EventHandler: invalid value '") ;
-        msg.append(sHandlerType);
-        msg.append("' for 'type' parameter");
-        throw Exception(msg.c_str());
-    }
     smsc_log_debug(logger,"HandlerEvent::Init");
 }
 
-
 int SmppEventHandler::StrToHandlerId(const std::string& str)
 {
-    if (str == "DELIVERY")              return DELIVERY;
-    if (str == "DELIVERY_RESP")         return DELIVERY_RESP;
-    if (str == "SUBMIT")                return SUBMIT;
-    if (str == "SUBMIT_RESP")           return SUBMIT_RESP;
+    if (str == "submit_sm")             return SUBMIT;
+    if (str == "submit_sm_resp")        return SUBMIT_RESP;
+    if (str == "deliver_sm")            return DELIVERY;
+    if (str == "deliver_sm_resp")       return DELIVERY_RESP;
+/*
     if (str == "FORWARD")               return FORWARD;
     if (str == "GENERIC_NACK")          return GENERIC_NACK;
     if (str == "QUERY")                 return QUERY;
@@ -82,9 +85,8 @@ int SmppEventHandler::StrToHandlerId(const std::string& str)
     if (str == "BIND_RECIEVER_RESP")    return BIND_RECIEVER_RESP;
     if (str == "BIND_TRANSMITTER_RESP") return BIND_TRANSMITTER_RESP;
     if (str == "BIND_TRANCIEVER_RESP")  return BIND_TRANCIEVER_RESP;
-
+*/
     return UNKNOWN; 
-}   
-
+}
 
 }}

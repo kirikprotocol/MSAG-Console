@@ -1,7 +1,4 @@
 #include "ActionContext.h"
-#include <iostream>
-
-using namespace std;
 
 namespace scag { namespace re { namespace actions 
 {
@@ -47,8 +44,8 @@ Property* ActionContext::getProperty(const std::string& var)
 
     case ftConst:
         //TODO: how to return a value without const_cast?
-        p = const_cast<Property *>(constants.GetPtr(name));
-        return p;
+        //p = const_cast<Property *>(constants.GetPtr(name));
+        return constants.GetPtr(name);
         break;
 
     case ftField: return command.getProperty(name);
@@ -59,6 +56,22 @@ Property* ActionContext::getProperty(const std::string& var)
     }
 
 }
+
+void ActionContext::closeSession(bool Commit)
+{
+
+}
+
+bool ActionContext::StrToPeriod(CheckTrafficPeriod& period, std::string& str)
+{
+    return true;
+}
+
+bool ActionContext::checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value)
+{
+    return statistics.checkTraffic(routeId, period, value);
+}
+
 
 }}}
 

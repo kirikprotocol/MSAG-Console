@@ -47,7 +47,8 @@ void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionPara
         {
             std::string msg("Semantic Analyser: Invalid object '");
             msg.append(name);
-            msg.append("' to create");
+            msg.append("' to create: ");
+            msg.append(e.what());
 
             if (NewObj) delete NewObj;
             throw Exception(msg.c_str()); 

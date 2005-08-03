@@ -6,8 +6,6 @@
 #include "ActionContext.h"
 #include "Action.h"
 
-#include <scag/re/actions/IParserHandler.h>
-
 
 namespace scag { namespace re { namespace actions 
 {
@@ -55,12 +53,12 @@ class ActionIf : public Action
         if (str == "lt") return opLT;
         if (str == "le") return opLE;
 
-        if (str == "==") return opEQ_I;
-        if (str == ">=") return opGE_I;
-        if (str == "<=") return opLE_I;
-        if (str == "!=") return opNE_I;
-        if (str == ">") return opGT_I;
-        if (str == "<") return opLT_I;
+        if (str == "eqi") return opEQ_I;
+        if (str == "gei") return opGE_I;
+        if (str == "lei") return opLE_I;
+        if (str == "nei") return opNE_I;
+        if (str == "gti") return opGT_I;
+        if (str == "lti") return opLT_I;
 
         return opUnknown;
     };

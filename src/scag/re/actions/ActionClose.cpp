@@ -1,7 +1,9 @@
 #include "ActionClose.h"
-//#include <string>
+#include "scag/re/SAX2Print.hpp"
+
 
 namespace scag { namespace re { namespace actions {
+
 
 IParserHandler * ActionClose::StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory)
 {
@@ -18,11 +20,26 @@ void ActionClose::init(const SectionParams& params)
     if (!params.Exists("commit")) throw Exception("Action 'session:close' missing 'commit' parameter");
 
     propertyName = params["commit"];
+
+
+
+    const char * name;
+    FieldType ft;
+    ft = ActionContext::Separate(propertyName,name); 
+    if (ft == ftUnknown) throw Exception("Action 'session:close': unknown value for 'commit' parameter");
+
 }
 
 bool ActionClose::run(ActionContext& context)
 {
-    
+    Property * p = context.getProperty(propertyName);
+
+    bool Commit = false;
+    if (!p) smsc_log_warn(logger,"Action 'session:close': invalid property '" + propertyName);
+    else Commit = p->getBool();
+
+    context.closeSession(Commit);
+
     return true;
 }
 

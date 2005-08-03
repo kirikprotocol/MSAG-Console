@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<scag:rule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://www.sibinco.com/SCAG smpp_rules.xsd"
+                    xmlns:scag="http://www.sibinco.com/SCAG"
+                    xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"    
+                    transport="SMPP">
+                        
+    <deliver_sm>
+        <set var="$e777" value="20"/>
+        <set var="#aaa" value="89"/>
+        <set value="10" var="%a10"/>
+        
+        <session:close commit="@false"/>
+        
+        <if value="10" op="eqi" test="%dfdhggd">
+            <return result="20"/>
+        </if>
+        
+        <if test="%dfdhggd" op="ge" value="$gfdhgdf">
+            <set var="#ccc" value="@asss"/>
+            <if test="@TRUE">
+                <then>
+                    <set var="%sss" value="10"/>
+                </then>
+                <else>
+                    <return result="10"/>
+                </else>
+            </if>
+        </if>
+    </deliver_sm>
+    
+    <deliver_sm_resp>
+        <set var="$rrr" value="30"/>
+        <return result="13"/>
+     </deliver_sm_resp>
+        
+    <submit_sm>
+        <set var="#ddd" value="20"/>
+        <return result="11"/>
+    </submit_sm>
+    
+    <submit_sm_resp>
+        <set var="%rrr" value="30"/>
+        <return result="13"/>
+    </submit_sm_resp>
+    
+</scag:rule>

@@ -4,9 +4,6 @@
 #include "ActionContext.h"
 #include "Action.h"
 
-#include <scag/re/actions/IParserHandler.h>
-
-
 namespace scag { namespace re { namespace actions {
 
 class ActionSet : public Action
