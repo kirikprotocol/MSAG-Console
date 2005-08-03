@@ -5,9 +5,15 @@
 
 #include "Interconnect.h"
 #include "CommandDispatcher.h"
+#include "core/synchronization/Mutex.hpp"
+//#include "core/network/Socket.hpp"
 
-namespace smsc { namespace cluster 
-{
+namespace smsc { namespace cluster {
+
+//using smsc::core::network::Socket;
+
+using smsc::core::synchronization::Mutex;
+
     typedef enum {
         SINGLE = 0,
         MASTER = 1,
@@ -26,7 +32,7 @@ namespace smsc { namespace cluster
         static InterconnectManager* instance;
 
         EventMonitor    commandsMonitor;
-        Array<Command>  commands;
+        Array<Command*>  commands;
 
         CommandDispatcher* dispatcher;
 
@@ -34,17 +40,24 @@ namespace smsc { namespace cluster
         
         InterconnectManager(Role _role, const std::string& m_ip, const std::string& s_ip, int _port); 
         virtual ~InterconnectManager();
+        bool isStopping;
+        Mutex stopLock;
+        Mutex dispatcherLock;
+        bool isStoped();
+
+        void send(Command *command);
+        //Socket socket;
 
     public:
 
         static void init(Role _role, const std::string& m_ip, const std::string& s_ip, int _port);
         static void shutdown();
 
-        static Interconnect* getInstance() {
+        static Interconnect* getInstance(){
             return instance;
         };
         
-        virtual void sendCommand(const Command& command);
+        virtual void sendCommand(Command* command);
         virtual void addListener(CommandType type, CommandListener* listener);
         virtual void activate();
 

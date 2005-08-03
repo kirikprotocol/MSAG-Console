@@ -27,7 +27,11 @@ namespace smsc { namespace cluster
         Array<Command *>    commands;
 
         Mutex                               listenersLock;
+        Mutex                               stopLock;
         IntHash< Array<CommandListener *> > listeners;
+        bool isStoped();
+
+        bool isStopping;
         
     public:
 

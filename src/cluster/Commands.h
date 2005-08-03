@@ -20,36 +20,33 @@ const int SMEID_LENGTH = smsc::sms::MAX_SMESYSID_TYPE_LENGTH + 1;
 namespace smsc { namespace cluster 
 {
     typedef enum {
-        APPLYROUTES_CMD,
-        APPLYALIASES_CMD,
-        APPLYRESCHEDULE_CMD,
-        APPLYSMSCCONFIG_CMD,
-        APPLYSERVICES_CMD,
-        APPLYLOCALRESOURCE_CMD,
-        PROFILEUPDATE_CMD,
-        PROFILEDELETE_CMD,
-        MSCREGISTRATE_CMD,
-        MSCUNREGISTER_CMD,
-        MSCBLOCK_CMD,
-        MSCCLEAR_CMD,
-        SMEADD_CMD,
-        SMEREMOVE_CMD,
-        SMEUPDATE_CMD,
-        ACLREMOVE_CMD,
-        ACLCREATE_CMD,
-        ACLUPDATEINFO_CMD,
-        ACLREMOVEADDRESSES_CMD,
-        ACLADDADDRESSES_CMD,
-        PRCADDPRINCIPAL_CMD,
-        PRCDELETEPRINCIPAL_CMD,
-        PRCALTERPRINCIPAL_CMD,
-        MEMADDMEMBER_CMD,
-        MEMDELETEMEMBER_CMD,
-        SBMADDSUBMITER_CMD,
-        SBMDELETESUBMITER_CMD,
-        DLADD_CMD,
-        DLDELETE_CMD,
-        DLALTER_CMD
+        APPLYROUTES_CMD =           0x00000000,
+        APPLYALIASES_CMD =          0x00000001,
+        APPLYRESCHEDULE_CMD =       0x00000002,
+        PROFILEUPDATE_CMD =         0x00010000,
+        PROFILEDELETE_CMD =         0x00010001,
+        MSCREGISTRATE_CMD =         0x00020000,
+        MSCUNREGISTER_CMD =         0x00020001,
+        MSCBLOCK_CMD =              0x00020002,
+        MSCCLEAR_CMD =              0x00020003,
+        SMEADD_CMD =                0x00030000,
+        SMEREMOVE_CMD =             0x00030001,
+        SMEUPDATE_CMD =             0x00030002,
+        ACLREMOVE_CMD =             0x00040000,
+        ACLCREATE_CMD =             0x00040001,
+        ACLUPDATEINFO_CMD =         0x00040002,
+        ACLREMOVEADDRESSES_CMD =    0x00040003,
+        ACLADDADDRESSES_CMD =       0x00040004,
+        PRCADDPRINCIPAL_CMD =       0x00050000,
+        PRCDELETEPRINCIPAL_CMD =    0x00050001,
+        PRCALTERPRINCIPAL_CMD =     0x00050002,
+        MEMADDMEMBER_CMD =          0x00060000,
+        MEMDELETEMEMBER_CMD =       0x00060001,
+        SBMADDSUBMITER_CMD =        0x00070000,
+        SBMDELETESUBMITER_CMD =     0x00070001,
+        DLADD_CMD =                 0x00080000,
+        DLDELETE_CMD =              0x00080001,
+        DLALTER_CMD =               0x00080002
         // TODO: Add other command types...
     } CommandType;
 
@@ -71,7 +68,7 @@ namespace smsc { namespace cluster
         
         virtual ~Command() {}
         
-        inline CommandType getType() {
+        inline CommandType getType() const {
             return type;
         }
 
@@ -120,39 +117,6 @@ namespace smsc { namespace cluster
         virtual bool deserialize(void *buffer, uint32_t len);
     };
 
-    class ApplySmscConfigCommand : public Command
-    {
-    public:
-        ApplySmscConfigCommand() : Command(APPLYSMSCCONFIG_CMD) {};
-
-        virtual ~ApplySmscConfigCommand() {};
-
-        virtual void* serialize(uint32_t &len);
-        virtual bool deserialize(void *buffer, uint32_t len);
-    };
-
-    class ApplyServicesCommand : public Command
-    {
-    public:
-        ApplyServicesCommand() : Command(APPLYSERVICES_CMD) {};
-
-        virtual ~ApplyServicesCommand() {};
-
-        virtual void* serialize(uint32_t &len);
-        virtual bool deserialize(void *buffer, uint32_t len);
-    };
-
-    class ApplyLocaleResourceCommand : public Command
-    {
-    public:
-        ApplyLocaleResourceCommand() : Command(APPLYLOCALRESOURCE_CMD) {};
-
-        virtual ~ApplyLocaleResourceCommand() {};
-
-        virtual void* serialize(uint32_t &len);
-        virtual bool deserialize(void *buffer, uint32_t len);
-    };
-
     //=========== Profile commans ===========
 
     class ProfileUpdateCommand : public Command
@@ -188,6 +152,10 @@ namespace smsc { namespace cluster
 
         virtual ~ProfileUpdateCommand() {};
 
+        void getArgs(uint8_t &plan_, uint8_t &type_, char *address_, int &codePage_, int &reportOption_,
+                                int &hideOption_, bool &hideModifaible_, bool &divertModifaible_, bool &udhContact_,
+                                bool &translit_, bool &divertActive_, bool &divertActiveAbsent_, bool &divertActiveBlocked_,
+                                bool &divertActiveBarred_, bool &divertActiveCapacity_, std::string &local_, std::string &divert_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -207,6 +175,7 @@ namespace smsc { namespace cluster
 
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
+        void getArgs(uint8_t &plan_, uint8_t &type_, char * addr_) const;
     };
 
     //=========== Msc Commands ==============
@@ -221,6 +190,7 @@ namespace smsc { namespace cluster
 
         virtual ~MscRegistrateCommand() {};
 
+        void MscRegistrateCommand::getArgs(char *mscNum_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -235,6 +205,7 @@ namespace smsc { namespace cluster
 
         virtual ~MscUnregisterCommand() {};
 
+        void MscUnregisterCommand::getArgs(char *mscNum_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -249,6 +220,7 @@ namespace smsc { namespace cluster
 
         virtual ~MscBlockCommand() {};
 
+        void MscBlockCommand::getArgs(char *mscNum_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -263,6 +235,7 @@ namespace smsc { namespace cluster
 
         virtual ~MscClearCommand() {};
 
+        void MscClearCommand::getArgs(char *mscNum_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -279,6 +252,7 @@ namespace smsc { namespace cluster
 
         virtual ~SmeAddCommand() {};
 
+        void SmeAddCommand::getArgs(smsc::smeman::SmeInfo &si_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -293,6 +267,7 @@ namespace smsc { namespace cluster
 
         virtual ~SmeRemoveCommand() {};
 
+        void SmeRemoveCommand::getArgs(char *smeId__) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -307,6 +282,7 @@ namespace smsc { namespace cluster
 
         virtual ~SmeUpdateCommand() {};
 
+        void SmeUpdateCommand::getArgs(smsc::smeman::SmeInfo &si_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -323,6 +299,7 @@ namespace smsc { namespace cluster
 
         virtual ~AclRemoveCommand() {};
 
+        void AclRemoveCommand::getArgs(smsc::acls::AclIdent& id) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -342,6 +319,8 @@ namespace smsc { namespace cluster
 
         virtual ~AclCreateCommand() {};
 
+        void AclCreateCommand::getArgs(std::string& name_, std::string& desc_,
+                            std::string& type_, bool &type_present, std::vector<std::string>& phones_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -360,6 +339,8 @@ namespace smsc { namespace cluster
 
         virtual ~AclUpdateInfoCommand() {};
 
+        void AclUpdateInfoCommand::getArgs(smsc::acls::AclIdent& id, std::string& name_, std::string& desc_,
+                                    std::string& type_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -375,6 +356,7 @@ namespace smsc { namespace cluster
 
         virtual ~AclRemoveAddressesCommand() {};
 
+        void AclRemoveAddressesCommand::getArgs(smsc::acls::AclIdent& id, std::vector<std::string>& addresses_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -390,6 +372,7 @@ namespace smsc { namespace cluster
 
         virtual ~AclAddAddressesCommand() {};
 
+        void AclAddAddressesCommand::getArgs(smsc::acls::AclIdent& id, std::vector<std::string>& addr) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -408,6 +391,7 @@ namespace smsc { namespace cluster
 
         virtual ~PrcAddPrincipalCommand() {};
 
+        void PrcAddPrincipalCommand::getArgs(int& maxLists_, int& maxElements_, std::string& address_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -422,6 +406,7 @@ namespace smsc { namespace cluster
 
         virtual ~PrcDeletePrincipalCommand() {};
 
+        void PrcDeletePrincipalCommand::getArgs(std::string& address_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -438,6 +423,7 @@ namespace smsc { namespace cluster
 
         virtual ~PrcAlterPrincipalCommand() {};
 
+        void PrcAlterPrincipalCommand::getArgs(int &maxLists_, int &maxElements_, std::string &addresses_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -455,6 +441,7 @@ namespace smsc { namespace cluster
 
         virtual ~MemAddMemberCommand() {};
 
+        void MemAddMemberCommand::getArgs(std::string &dlname_, std::string &address_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -470,6 +457,7 @@ namespace smsc { namespace cluster
 
         virtual ~MemDeleteMemberCommand() {};
 
+        void MemDeleteMemberCommand::getArgs(std::string &dlname_, std::string &address_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -487,6 +475,7 @@ namespace smsc { namespace cluster
 
         virtual ~SbmAddSubmiterCommand() {};
 
+        void SbmAddSubmiterCommand::getArgs(std::string &dlname_, std::string &address_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -502,6 +491,7 @@ namespace smsc { namespace cluster
 
         virtual ~SbmDeleteSubmiterCommand() {};
 
+        void SbmDeleteSubmiterCommand::getArgs(std::string &dlname_, std::string &address_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -520,6 +510,7 @@ namespace smsc { namespace cluster
 
         virtual ~DlAddCommand() {};
 
+        void DlAddCommand::getArgs(int &maxElements_, std::string &dlname_, std::string &owner_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -534,6 +525,7 @@ namespace smsc { namespace cluster
 
         virtual ~DlDeleteCommand() {};
 
+        void DlDeleteCommand::getArgs(std::string &dlname_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -549,6 +541,7 @@ namespace smsc { namespace cluster
 
         virtual ~DlAlterCommand() {};
 
+        void DlAlterCommand::getArgs(int &maxElements_, std::string &dlname_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };

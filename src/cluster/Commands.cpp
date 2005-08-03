@@ -114,39 +114,6 @@ namespace smsc { namespace cluster
         virtual ~ApplyRescheduleCommandFactory() {};
     };
 
-    //========== applySmscConfig =======================
-
-    class ApplySmscConfigCommandFactory : public CommandFactory
-    {
-    protected:
-        virtual Command* create() { return new ApplySmscConfigCommand(); };
-    public:
-        ApplySmscConfigCommandFactory() : CommandFactory(APPLYSMSCCONFIG_CMD) {};
-        virtual ~ApplySmscConfigCommandFactory() {};
-    };
-
-    //========== applyServices =======================
-
-    class ApplyServicesCommandFactory : public CommandFactory
-    {
-    protected:
-        virtual Command* create() { return new ApplyServicesCommand(); };
-    public:
-        ApplyServicesCommandFactory() : CommandFactory(APPLYSERVICES_CMD) {};
-        virtual ~ApplyServicesCommandFactory() {};
-    };
-
-    //========== applyLocalResource =======================
-
-    class ApplyLocaleResourceCommandFactory : public CommandFactory
-    {
-    protected:
-        virtual Command* create() { return new ApplyLocaleResourceCommand(); };
-    public:
-        ApplyLocaleResourceCommandFactory() : CommandFactory(APPLYLOCALRESOURCE_CMD) {};
-        virtual ~ApplyLocaleResourceCommandFactory() {};
-    };
-
     //========== profileUpdate =======================
 
     class ProfileUpdateCommandFactory : public CommandFactory
@@ -425,9 +392,6 @@ void CommandFactory::initFactories()
         static ApplyRoutesCommandFactory            _applyRoutesCommandFactory;
         static ApplyAliasesCommandFactory           _applyAliasesCommandFactory;
         static ApplyRescheduleCommandFactory        _applyRescheduleCommandFactory;
-        static ApplySmscConfigCommandFactory        _applySmscConfigCommandFactory;
-        static ApplyServicesCommandFactory          _applyServicesCommandFactory;
-        static ApplyLocaleResourceCommandFactory    _applyLocalResourceCommandFactory;
 
         static ProfileUpdateCommandFactory      _profileUpdateCommandFactory;
         static ProfileDeleteCommandFactory      _profileDeleteCommandFactory;
@@ -526,51 +490,6 @@ bool ApplyRescheduleCommand::deserialize(void *buffer, uint32_t len)
     return true;
 }
 
-//========== applySmscConfig =======================
-
-void* ApplySmscConfigCommand::serialize(uint32_t &len)
-{
-    len = 0;
-    return 0;
-}
-bool ApplySmscConfigCommand::deserialize(void *buffer, uint32_t len)
-{
-    if(len || buffer)
-        return false;
-    
-    return true;
-}
-
-//========== applyServices =======================
-
-void* ApplyServicesCommand::serialize(uint32_t &len)
-{
-    len = 0;
-    return 0;
-}
-bool ApplyServicesCommand::deserialize(void *buffer, uint32_t len)
-{
-    if(len || buffer)
-        return false;
-    
-    return true;
-}
-
-//========== applyLocalRoutes =======================
-
-void* ApplyLocaleResourceCommand::serialize(uint32_t &len)
-{
-    len = 0;
-    return 0;
-}
-bool ApplyLocaleResourceCommand::deserialize(void *buffer, uint32_t len)
-{
-    if(len || buffer)
-        return false;
-    
-    return true;
-}
-
 //========== profileUpdate ==========================
 
 ProfileUpdateCommand::ProfileUpdateCommand(uint8_t plan_, uint8_t type_, char *address_, int codePage_, int reportOption_,
@@ -596,6 +515,30 @@ ProfileUpdateCommand::ProfileUpdateCommand(uint8_t plan_, uint8_t type_, char *a
     divert(divert_)
 {
     strcpy(address, address_);
+}
+
+void ProfileUpdateCommand::getArgs(uint8_t &plan_, uint8_t &type_, char *address_, int &codePage_, int &reportOption_,
+                                int &hideOption_, bool &hideModifaible_, bool &divertModifaible_, bool &udhContact_,
+                                bool &translit_, bool &divertActive_, bool &divertActiveAbsent_, bool &divertActiveBlocked_,
+                                bool &divertActiveBarred_, bool &divertActiveCapacity_, std::string &local_, std::string &divert_) const
+{
+    plan_ = plan;
+    type_ = type;
+    codePage_ = codePage;
+    reportOption_ = reportOption;
+    hideOption_ = hideOption;
+    hideModifaible_ = hideModifaible;
+    divertModifaible_ = divertModifaible;
+    udhContact_ = udhContact;
+    translit_ = translit;
+    divertActive_ = divertActive;
+    divertActiveAbsent_ = divertActiveAbsent;
+    divertActiveBlocked_ = divertActiveBlocked;
+    divertActiveBarred_ = divertActiveBarred;
+    divertActiveCapacity_ = divertActiveCapacity;
+    local_ = local;
+    divert_ = divert;
+    strcpy(address_, address);
 }
 
 void* ProfileUpdateCommand::serialize(uint32_t &len)
@@ -979,6 +922,13 @@ ProfileDeleteCommand::ProfileDeleteCommand(uint8_t plan_, uint8_t type_, const c
     strcpy(address, address_);
 }
 
+void ProfileDeleteCommand::getArgs(uint8_t &plan_, uint8_t &type_, char * addr_) const
+{
+    plan_ = plan;
+    type_ = type;
+    strcpy(addr_, address);
+}
+
 void* ProfileDeleteCommand::serialize(uint32_t &len)
 {
 
@@ -1040,6 +990,11 @@ MscRegistrateCommand::MscRegistrateCommand(const char *mscNum_)
     strcpy(mscNum, mscNum_);
 }
 
+void MscRegistrateCommand::getArgs(char *mscNum_) const
+{
+    strcpy(mscNum_, mscNum);
+}
+
 void* MscRegistrateCommand::serialize(uint32_t &len)
 {
     uint8_t* buffer = 0;
@@ -1081,6 +1036,11 @@ MscUnregisterCommand::MscUnregisterCommand(const char *mscNum_)
     : Command(MSCUNREGISTER_CMD)
 {
     strcpy(mscNum, mscNum_);
+}
+
+void MscUnregisterCommand::getArgs(char *mscNum_) const
+{
+    strcpy(mscNum_, mscNum);
 }
 
 void* MscUnregisterCommand::serialize(uint32_t &len)
@@ -1127,6 +1087,11 @@ MscBlockCommand::MscBlockCommand(const char *mscNum_)
     strcpy(mscNum, mscNum_);
 }
 
+void MscBlockCommand::getArgs(char *mscNum_) const
+{
+    strcpy(mscNum_, mscNum);
+}
+
 void* MscBlockCommand::serialize(uint32_t &len)
 {
 
@@ -1171,6 +1136,11 @@ MscClearCommand::MscClearCommand(const char *mscNum_)
     strcpy(mscNum, mscNum_);
 }
 
+void MscClearCommand::getArgs(char *mscNum_) const
+{
+    strcpy(mscNum_, mscNum);
+}
+
 void* MscClearCommand::serialize(uint32_t &len)
 {
 
@@ -1213,6 +1183,11 @@ SmeAddCommand::SmeAddCommand(smsc::smeman::SmeInfo si_)
     : Command(SMEADD_CMD),
     si(si_)
 {
+}
+
+void SmeAddCommand::getArgs(smsc::smeman::SmeInfo &si_) const
+{
+    si_ = si;
 }
 
 void* SmeAddCommand::serialize(uint32_t &len)
@@ -1426,6 +1401,11 @@ SmeRemoveCommand::SmeRemoveCommand(const char *smeId_)
     strcpy(smeId, smeId_);
 }
 
+void SmeRemoveCommand::getArgs(char *smeId_) const
+{
+    strcpy(smeId_, smeId);
+}
+
 void* SmeRemoveCommand::serialize(uint32_t &len)
 {   
     uint8_t *buffer = 0;
@@ -1468,6 +1448,11 @@ SmeUpdateCommand::SmeUpdateCommand(smsc::smeman::SmeInfo si_)
     : Command(SMEUPDATE_CMD),
     si(si_)
 {
+}
+
+void SmeUpdateCommand::getArgs(smsc::smeman::SmeInfo &si_) const
+{
+    si_ = si;
 }
 
 void* SmeUpdateCommand::serialize(uint32_t &len)
@@ -1678,6 +1663,11 @@ AclRemoveCommand::AclRemoveCommand(smsc::acls::AclIdent id)
 {
 }
 
+void AclRemoveCommand::getArgs(smsc::acls::AclIdent &id) const
+{
+    id = aclId;
+}
+
 void* AclRemoveCommand::serialize(uint32_t &len)
 {
 
@@ -1734,6 +1724,20 @@ AclCreateCommand::AclCreateCommand(std::string name_, std::string desc_,
     phones.empty();
     for(std::vector<std::string>::iterator it = phones_.begin(); it != phones_.end(); ++it){
         phones.push_back(*it);
+    }
+}
+
+void AclCreateCommand::getArgs(std::string &name_, std::string &desc_,
+                            std::string &type_, bool &type_present_, std::vector<std::string> &phones_) const
+{
+    name_ = name;
+    desc_ = description;
+    type_ = cache_type;
+    type_present_ = cache_type_present;
+
+    phones_.empty();
+    for(std::vector<std::string>::const_iterator it = phones.begin(); it != phones.end(); ++it){
+        phones_.push_back(*it);
     }
 }
 
@@ -1824,6 +1828,15 @@ AclUpdateInfoCommand::AclUpdateInfoCommand(smsc::acls::AclIdent id, std::string 
 {
 }
 
+void AclUpdateInfoCommand::getArgs(smsc::acls::AclIdent &id, std::string &name_, std::string &desc_,
+                                    std::string &type_) const
+{
+    id = aclId;
+    name_ = name;
+    desc_ = description;
+    type_ = cache_type;
+}
+
 void* AclUpdateInfoCommand::serialize(uint32_t &len)
 {
 
@@ -1896,6 +1909,12 @@ AclRemoveAddressesCommand::AclRemoveAddressesCommand(smsc::acls::AclIdent id, st
     aclId(id),
     addresses(addresses_)
 {
+}
+
+void AclRemoveAddressesCommand::getArgs(smsc::acls::AclIdent &id, std::vector<std::string> &addresses_) const
+{
+    id = aclId;
+    addresses_ = addresses;
 }
 
 void* AclRemoveAddressesCommand::serialize(uint32_t &len)
@@ -1974,6 +1993,15 @@ AclAddAddressesCommand::AclAddAddressesCommand(smsc::acls::AclIdent id, std::vec
     }
 }
 
+void AclAddAddressesCommand::getArgs(smsc::acls::AclIdent &id, std::vector<std::string> &addr) const
+{
+    id = aclId;
+    addr.empty();
+    for(std::vector<std::string>::const_iterator it = addresses.begin(); it != addresses.end(); ++it){
+        addr.push_back(*it);
+    }
+}
+
 void* AclAddAddressesCommand::serialize(uint32_t &len)
 {
 
@@ -2045,6 +2073,13 @@ PrcAddPrincipalCommand::PrcAddPrincipalCommand(int maxLists_, int maxElements_, 
 {
 }
 
+void PrcAddPrincipalCommand::getArgs(int &maxLists_, int &maxElements_, std::string &address_) const
+{
+    maxLists_ = maxLists;
+    maxElements_ = maxElements;
+    address_ = address;
+}
+
 void* PrcAddPrincipalCommand::serialize(uint32_t &len)
 {
 
@@ -2106,6 +2141,11 @@ PrcDeletePrincipalCommand::PrcDeletePrincipalCommand(std::string address_)
 {
 }
 
+void PrcDeletePrincipalCommand::getArgs(std::string &address_) const
+{
+    address_ = address;
+}
+
 void* PrcDeletePrincipalCommand::serialize(uint32_t &len)
 {
 
@@ -2153,6 +2193,13 @@ PrcAlterPrincipalCommand::PrcAlterPrincipalCommand(int maxLists_, int maxElement
     maxElements(maxElements_),
     addresses(addresses_)
 {
+}
+
+void PrcAlterPrincipalCommand::getArgs(int &maxLists_, int &maxElements_, std::string &addresses_) const
+{
+    maxLists_ = maxLists;
+    maxElements_ = maxElements;
+    addresses_ = addresses;
 }
 
 void* PrcAlterPrincipalCommand::serialize(uint32_t &len)
@@ -2217,6 +2264,12 @@ MemAddMemberCommand::MemAddMemberCommand(std::string dlname_, std::string addres
 {
 }
 
+void MemAddMemberCommand::getArgs(std::string &dlname_, std::string &address_) const
+{
+    dlname_ = dlname;
+    address_ = address;
+}
+
 void* MemAddMemberCommand::serialize(uint32_t &len)
 {
 
@@ -2268,6 +2321,12 @@ MemDeleteMemberCommand::MemDeleteMemberCommand(std::string dlname_, std::string 
     dlname(dlname_),
     address(address_)
 {
+}
+
+void MemDeleteMemberCommand::getArgs(std::string &dlname_, std::string &address_) const
+{
+    dlname_ = dlname;
+    address_ = address;
 }
 
 void* MemDeleteMemberCommand::serialize(uint32_t &len)
@@ -2323,6 +2382,12 @@ SbmAddSubmiterCommand::SbmAddSubmiterCommand(std::string dlname_, std::string ad
 {
 }
 
+void SbmAddSubmiterCommand::getArgs(std::string &dlname_, std::string &address_) const
+{
+    dlname_ = dlname;
+    address_ = address;
+}
+
 void* SbmAddSubmiterCommand::serialize(uint32_t &len)
 {
 
@@ -2374,6 +2439,12 @@ SbmDeleteSubmiterCommand::SbmDeleteSubmiterCommand(std::string dlname_, std::str
     dlname(dlname_),
     address(address_)
 {
+}
+
+void SbmDeleteSubmiterCommand::getArgs(std::string &dlname_, std::string &address_) const
+{
+    dlname_ = dlname;
+    address_ = address;
 }
 
 void* SbmDeleteSubmiterCommand::serialize(uint32_t &len)
@@ -2428,6 +2499,13 @@ DlAddCommand::DlAddCommand(int maxElements_, std::string dlname_, std::string ow
     dlname(dlname_),
     owner(owner_)
 {
+}
+
+void DlAddCommand::getArgs(int &maxElements_, std::string &dlname_, std::string &owner_) const
+{
+    maxElements_ = maxElements;
+    dlname_ = dlname;
+    owner_ = owner;
 }
 
 void* DlAddCommand::serialize(uint32_t &len)
@@ -2492,6 +2570,11 @@ DlDeleteCommand::DlDeleteCommand(std::string dlname_)
 {
 }
 
+void DlDeleteCommand::getArgs(std::string &dlname_) const
+{
+    dlname_ = dlname;
+}
+
 void* DlDeleteCommand::serialize(uint32_t &len)
 {
 
@@ -2536,6 +2619,12 @@ DlAlterCommand::DlAlterCommand(int maxElements_, std::string dlname_)
     maxElements(maxElements_),
     dlname(dlname_)
 {
+}
+
+void DlAlterCommand::getArgs(int &maxElements_, std::string &dlname_) const
+{
+    maxElements_ = maxElements;
+    dlname_ = dlname;
 }
 
 void* DlAlterCommand::serialize(uint32_t &len)
