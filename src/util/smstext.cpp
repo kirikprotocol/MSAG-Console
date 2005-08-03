@@ -251,18 +251,18 @@ static bool FillUd(SMS* sms)
 {
   unsigned char userdata[256];
   unsigned int len;
-  unsigned int udhilen=0;
+  unsigned int udhlen=0;
   const char* msg=sms->getBinProperty(Tag::SMPP_SHORT_MESSAGE,&len);
   if(len==0 && sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
   {
     msg=sms->getBinProperty(Tag::SMPP_MESSAGE_PAYLOAD,&len);
   }
   unsigned int off=1;
+  unsigned int oldUdh = 0;
   if(sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x40)
   {
-    udhilen=1+*((unsigned char*)msg);
-    off=udhilen;
-    memcpy(userdata,msg,off);
+    udhlen=*((unsigned char*)msg);
+    oldUdh = 1;
   }
   bool processed=false;
   if(sms->hasIntProperty(Tag::SMPP_SOURCE_PORT))
@@ -270,9 +270,9 @@ static bool FillUd(SMS* sms)
     if(sms->getIntProperty(Tag::SMPP_SOURCE_PORT)<256 &&
        sms->getIntProperty(Tag::SMPP_DESTINATION_PORT)<256)
     {
-      if(off>255-4)
+      if(len+5-oldUdh > 255)
       {
-        trace("udh length>255");
+        trace("fillUd: estimated length>255");
         return false;
       }
       userdata[off++]=4;
@@ -281,9 +281,9 @@ static bool FillUd(SMS* sms)
       userdata[off++]=sms->getIntProperty(Tag::SMPP_SOURCE_PORT);
     }else
     {
-      if(off>255-6)
+      if(len+7-oldUdh>255)
       {
-        trace("udh length>255");
+        trace("fillUd: estimated length>255");
         return false;
       }
       userdata[off++]=5;
@@ -300,12 +300,11 @@ static bool FillUd(SMS* sms)
   if(processed)
   {
     if(len==0)return false;
-    userdata[0]=off-1;
+    userdata[0]=udhlen+off-1;
     char buf[256];
     memcpy(buf,userdata,off);
-    memcpy(buf+off,msg+udhilen,len-udhilen);
-    len-=udhilen;
-    len+=off;
+    memcpy(buf+off,msg+oldUdh,len-oldUdh);
+    len+=off-oldUdh;
     sms->setIntProperty(Tag::SMPP_ESM_CLASS,sms->getIntProperty(Tag::SMPP_ESM_CLASS)|0x40);
     if(sms->hasBinProperty(Tag::SMPP_MESSAGE_PAYLOAD))
     {
