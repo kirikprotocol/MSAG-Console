@@ -59,8 +59,10 @@ USHORT_T EINSS7_I97TUniInd(     UCHAR_T          ssn,
                                 USHORT_T         userInfoLength,
                                 UCHAR_T          *userInfo_p)
 {
-  printf("%s: ssn=%d, userId=%d, iId=%d\n", __func__,
-         (int)ssn, (int)userId, (int)tcapInstanceId );
+  smsc_log_debug(tcapLogger,
+                 "EINSS7_I97TUniInd("
+                 "ssn=%d, userId=%d,tcapInstanceId=%d,...)",
+                 ssn, userId, tcapInstanceId );
   return MSG_OK;
 }
 
@@ -80,13 +82,14 @@ USHORT_T EINSS7_I97TBeginInd(   UCHAR_T          ssn,
                                 USHORT_T         userInfoLength,
                                 UCHAR_T          *userInfo_p)
 {
-
-    smsc_log_debug(inapLogger, "E94InapBeginInd(%d,%d,..)", ssn, dialogueId);
-    Session* pSession = Factory::getInstance()->findSession( ssn );
-    assert( pSession );
-//    assert( !pSession->findDialog( dialogueId ) );
-    Dialog* pDlg = new Dialog( pSession, dialogueId );
-    return MSG_OK;
+  smsc_log_debug(tcapLogger,
+                 "EINSS7_I97TBeginInd("
+                 "ssn=%d,userId=%d,tcapInstanceId=%d,dialogueId=%d,...)",
+                 ssn, userId, tcapInstanceId, dialogueId );
+  Session* pSession = Factory::getInstance()->findSession( ssn );
+  assert( pSession );
+  Dialog* pDlg = new Dialog( pSession, dialogueId );
+  return MSG_OK;
 }
 
 USHORT_T EINSS7_I97TContinueInd(UCHAR_T          ssn,
@@ -124,8 +127,10 @@ USHORT_T EINSS7_I97TEndInd(     UCHAR_T          ssn,
                                 USHORT_T         userInfoLength,
                                 UCHAR_T          *userInfo_p)
 {
-  printf("%s: ssn=%d, userId=%d, iId=%d, dlg=%X04F\n", __func__,
-         (int)ssn, (int)userId, (int)tcapInstanceId, dialogueId );
+  smsc_log_debug(tcapLogger,
+                 "EINSS7_I97TEndInd("
+                 "ssn=%d, userId=%d,tcapInstanceId=%d,...)",
+                 ssn, userId, tcapInstanceId );
   return MSG_OK;
 }
 
