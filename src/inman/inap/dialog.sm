@@ -1,0 +1,55 @@
+/////////////////////////////////////////////////////////////////////
+//
+//	 $Id$
+//	 To compile this file use State Machine Compiler (SMC)
+//	 http://smc.sourceforge.net/
+//
+/////////////////////////////////////////////////////////////////////
+%header dialog.hpp
+%package smsc::inman::inap
+%class Dialog
+
+%start TCAP_FSM::Idle
+%map TCAP_FSM
+%%
+
+Idle
+{
+	error	Error	{}
+}
+
+Error
+{
+	error	Error	{}
+}
+
+%%
+
+%map INAP_FSM
+%%
+
+Idle
+{
+	deliveryRequest	Idle 					{}
+	failure			Idle 					{}
+	collectInfo		WaitingForInstructions	{	initialDPSMS();	}
+}
+
+WaitingForInstructions
+{
+	resetTimer					WaitingForInstructions	{}
+	furnishChargingInformation	WaitingForInstructions	{}
+	timerExpired				Idle					{}
+	failure						Idle					{}
+	continueSMS					Monitoring				{}
+	releaseSMS					Idle					{}
+	connectSMS					Monitoring				{ eventReportSMS();	}
+	requestReportSMSEvent		WaitingForInstructions	{}
+}
+
+Monitoring
+{
+	done						Idle					{	eventReportSMS();	}
+}
+
+%%

@@ -8,6 +8,8 @@
 
 #include "ss7cp.h"
 
+#include "dialog_sm.h"
+
 namespace smsc {
 namespace inman {
 namespace inap {
@@ -19,15 +21,15 @@ class Dialog
 {
   friend class Session;
 
-  typedef enum {
-    IDLE,ERROR
-  } DialogState_T;
-
   public:
     Dialog(Session* session, USHORT_T id);
     virtual ~Dialog();
 
     USHORT_T invoke(const Operation* op);
+
+	USHORT_T initialDPSMS();
+	USHORT_T eventReportSMS();
+	USHORT_T applicationEnd();
 
     USHORT_T start();
 
@@ -42,7 +44,7 @@ class Dialog
     UCHAR_T       qSrvc;
     UCHAR_T       priority;
     UCHAR_T       acShort;
-    DialogState_T state;
+  	DialogContext context;
 };
 
 }

@@ -21,9 +21,12 @@ namespace inap  {
 /////////////////////////////////////////////////////////////////////////////////////
 
 
-Dialog::Dialog(Session* pSession, USHORT_T dlgId) :
-               did( dlgId ), session( pSession ), state(IDLE), qSrvc(EINSS7_I97TCAP_QLT_BOTH),
-               priority(EINSS7_I97TCAP_PRI_HIGH_0)
+Dialog::Dialog(Session* pSession, USHORT_T dlgId) 
+	: context( *this )
+	, did( dlgId )
+	, session( pSession )
+	, qSrvc(EINSS7_I97TCAP_QLT_BOTH)
+	, priority(EINSS7_I97TCAP_PRI_HIGH_0)
 {
 }
 
@@ -34,7 +37,6 @@ Dialog::~Dialog()
 USHORT_T Dialog::start()
 {
   assert( session );
-  assert( state == IDLE );
 
   USHORT_T result;
   result = EINSS7_I97TInvokeReq(
@@ -56,7 +58,7 @@ USHORT_T Dialog::start()
   if (result != 0)
   {
       smsc_log_error(inapLogger, "EINSS7_I97TInvokeReq failed with code %d(%s)", result,getTcapReasonDescription(result));
-      state = ERROR;
+      context.error();
       session->closeDialog(this);
   }
 
@@ -79,7 +81,7 @@ USHORT_T Dialog::start()
   if (result != 0)
   {
       smsc_log_error(inapLogger, "EINSS7_I97TBeginReq failed with code %d(%s)", result,getTcapReasonDescription(result));
-      state = ERROR;
+      context.error();
       session->closeDialog(this);
   }
   return result;
@@ -164,17 +166,19 @@ USHORT_T Dialog::endReq()
     return 0;
 }
 
-USHORT_T Dialog::invoke(const Operation* op)
+USHORT_T Dialog::initialDPSMS()
 {
-/*    UCHAR_T opcode = IN_OP_INITIAL_DP;
-    COMP_T comp;
-    comp.compType = INVOKE;
-    comp.invoke.invokeId = opcode;
-    comp.invoke.linkedIdUsed = FALSE;
-    comp.op.operation = opcode;
-    comp.op.initialDPArg;
- */
-    return 0;
+	return 0;
+}
+
+USHORT_T Dialog::eventReportSMS()
+{
+	return 0;
+}
+
+USHORT_T Dialog::applicationEnd()
+{
+	return 0;
 }
 
 } // namespace inap
