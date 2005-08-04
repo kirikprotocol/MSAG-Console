@@ -4,13 +4,8 @@
 #
 #
 
-CXXFLAGS := $(CXXFLAGS) -I$(SMSC_SRCDIR)/sms -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public
+CXXFLAGS := $(CXXFLAGS) -I$(SMSC_SRCDIR) -I$(SMSC_SRCDIR)/sms -I$(SMSC_SRCDIR)/scag/util/cluster -I$(ORACLE_HOME)/rdbms/demo -I$(ORACLE_HOME)/network/public
 PACKAGE := scag.stat
-
-#__LIBRARIES := $(SMSC_BUILDDIR)/bin/db/exceptions/libdb_exc.so
-
-__LIBRARIES := -L$(SMSC_BUILDDIR)/bin/db/exceptions/ -ldb_exc
-__OCI_LIB_SO__ :=  $(ORACLE_LIB)/libclntsh.so
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)

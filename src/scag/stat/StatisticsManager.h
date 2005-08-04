@@ -1,20 +1,19 @@
 #ifndef SMSC_SCAG_STAT_STATISTICS_MANAGER
 #define SMSC_SCAG_STAT_STATISTICS_MANAGER
 
-#include "scag/stat/Statistics.h"
-
 #include <core/synchronization/Mutex.hpp>
 #include <core/synchronization/Event.hpp>
 #include <core/buffers/IntHash.hpp>
 #include <core/buffers/Hash.hpp>
 #include <core/buffers/TmpBuf.hpp>
-#include <core/threads/ThreadedTask.hpp>
+#include <core/threads/Thread.hpp>
 
-#include <db/DataSource.h>
 #include <logger/Logger.h>
 
 #include <util/timeslotcounter.hpp>
-#include "util/config/Config.h"
+#include <util/config/Config.h>
+
+#include "Statistics.h"
 #include "routemap.h"
 #include "TrafficRecord.h"
 
@@ -22,19 +21,14 @@ namespace scag {
 
 namespace stat {
 
-    //using namespace smsc::db;
     using namespace smsc::core::threads;
     using namespace smsc::core::synchronization;
 
     using smsc::core::buffers::IntHash;
-    //using core::buffers::TmpBuf;
     using smsc::core::buffers::Hash;
 
     using smsc::logger::Logger;
-    //using smsc::util::TimeSlotCounter;
-
     using smsc::util::config::Config;
-
     using scag::stat::SmppStatEvent;
 
     struct CommonStat
@@ -73,31 +67,17 @@ namespace stat {
       }
     };
 
-    /*struct ServiceStat
+    class StatisticsManager : public Statistics, public Thread
     {
-      int DeniedByBilling;
-      int SmsTrOk;
-      int SmsTrFailed;
-      int SmsTrBilled;
-      int UssdTrFromScOk;
-      int UssdTrFromScFailed;
-      int UssdTrFromScBilled;
-      int UssdTrFromSmeOk;
-      int UssdTrFromSmeFailed;
-      int UssdTrFromSmeBilled;
-      ServiceStat()
-      {
-        Reset();
-      }
-      void Reset()
-      {
-        memset(this,0,sizeof(*this));
-      }
-    };*/
+    friend class Statistics;
+    private:
 
-    class StatisticsManager : public Statistics, public ThreadedTask
-    {
-      protected:
+        static bool  inited;
+        static Mutex initLock;
+
+        void configure(Config config);
+
+    protected:
 
         smsc::logger::Logger    *logger;
 
@@ -156,14 +136,16 @@ namespace stat {
     public:
 
         static RouteMap routeMap;
-        virtual const char* taskName() { return "StatisticsTask"; };
+
+        static void init(Config config);    
+        
         virtual int Execute();
         virtual void stop();
 
         virtual void registerEvent(const SmppStatEvent& si);
         bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
 
-        StatisticsManager(Config config);
+        StatisticsManager();
         virtual ~StatisticsManager();
     };
 

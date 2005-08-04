@@ -12,19 +12,21 @@
 #include <unistd.h>
 #include <errno.h>  
 
-#include "StatisticsManager.h"
 #include <memory>
-
-#include <sys/types.h>
-#include <dirent.h>
 #include <vector>
 #include <string>
 
+#include <scag/util/singleton/Singleton.h>
+#include "StatisticsManager.h"
 
-namespace scag {
+namespace scag { 
 namespace stat {
 
-    using smsc::core::buffers::TmpBuf;
+bool  StatisticsManager::inited = false;
+Mutex StatisticsManager::initLock;
+
+using smsc::core::buffers::TmpBuf;
+using namespace scag::util::singleton;
 
 const uint16_t SMSC_STAT_DUMP_INTERVAL = 60; // in seconds
 const uint16_t SMSC_STAT_VERSION_INFO  = 0x0001;
@@ -33,23 +35,42 @@ const char*    SMSC_STAT_DIR_NAME_FORMAT  = "%04d-%02d";
 const char*    SMSC_STAT_FILE_NAME_FORMAT = "%02d.rts";
 RouteMap StatisticsManager::routeMap;
 
-StatisticsManager::StatisticsManager(Config config)
-    :  logger(Logger::getInstance("scag.stat.StatisticsManager")),
-       currentIndex(0), bExternalFlush(false), isStarted(false)
+inline unsigned GetLongevity(StatisticsManager*) { return 5; }
+typedef SingletonHolder<StatisticsManager, CreateUsingNew, SingletonWithLongevity> SingleSM;
+
+Statistics& Statistics::Instance()
 {
-    try
+    if (!StatisticsManager::inited) 
     {
-        location = config.getString("MessageStorage.statisticsDir");
-    }catch(...)
+        MutexGuard guard(StatisticsManager::initLock);
+        if (!StatisticsManager::inited) 
+            throw std::runtime_error("Statistics not inited!");
+    }
+    return SingleSM::Instance();
+}
+void StatisticsManager::init(Config config)
+{
+    if (!StatisticsManager::inited)
     {
+        MutexGuard guard(StatisticsManager::initLock);
+        if (!StatisticsManager::inited) {
+            StatisticsManager& sm = SingleSM::Instance();
+            sm.configure(config);
+            sm.Start();
+            StatisticsManager::inited = true;
+        }
+    }
+}
+
+void StatisticsManager::configure(Config config)
+{
+    try { location = config.getString("MessageStorage.statisticsDir"); } 
+    catch(...) {
         throw Exception("Can't find parameter in config: 'MessageStorage.statisticsDir'");
     }
 
-    try
-    {
-        traffloc = config.getString("MessageStorage.trafficDir");
-    }catch(...)
-    {
+    try { traffloc = config.getString("MessageStorage.trafficDir"); }
+    catch(...) {
         throw Exception("Can't find parameter in config: 'MessageStorage.trafficDir'");
     }
 
@@ -59,12 +80,17 @@ StatisticsManager::StatisticsManager(Config config)
     if (!createStorageDir(traffloc)) 
         throw Exception("Can't open traffic directory: '%s'", traffloc.c_str());
 
-    // Initializes traffic hash
-    initTraffic();
-
+    initTraffic(); // Initializes traffic hash
     logger = Logger::getInstance("statman");
 }
 
+
+StatisticsManager::StatisticsManager()
+    : Statistics(), Thread(), 
+      logger(Logger::getInstance("scag.stat.StatisticsManager")),
+      currentIndex(0), bExternalFlush(false), isStarted(false) 
+{
+}
 StatisticsManager::~StatisticsManager()
 {
   MutexGuard guard(stopLock);
@@ -260,10 +286,10 @@ bool StatisticsManager::checkTraffic(std::string routeId, CheckTrafficPeriod per
 
 int StatisticsManager::Execute()
 {
-    smsc_log_debug(logger, "Execute() started (%d)", isStopping);
+    //smsc_log_debug(logger, "Execute() started (%d)", isStopping);
     isStarted = true; bExternalFlush = false;
-    while (!isStopping)
-    {
+    //while (!isStopping)
+    //{
         int toSleep = calculateToSleep();
         smsc_log_debug(logger, "Execute() >> Start wait %d", toSleep);
         awakeEvent.Wait(toSleep); // Wait for next hour begins ...
@@ -276,7 +302,7 @@ int StatisticsManager::Execute()
         bExternalFlush = false;
         doneEvent.Signal();
         smsc_log_debug(logger, "Execute() >> Flushed");
-    }
+    //}
     isStarted = false;
     exitEvent.Signal();
     smsc_log_debug(logger, "Execute() exited");
@@ -288,7 +314,7 @@ void StatisticsManager::stop()
     MutexGuard guard(stopLock);
 
     smsc_log_debug(logger, "stop() called, started=%d", isStarted);
-    ThreadedTask::stop();
+    //ThreadedTask::stop();
     if (isStarted)
     {
         bExternalFlush = true;

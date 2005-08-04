@@ -1,10 +1,10 @@
 #ifndef SMSC_SCAG_STAT_STATISTICS
 #define SMSC_SCAG_STAT_STATISTICS
 
-#include "smeman/smeproxy.h"
-#include "smeman/smeman.h"
-#include "router/route_types.h"
-#include "sms/sms.h"
+#include <smeman/smeproxy.h>
+#include <smeman/smeman.h>
+#include <router/route_types.h>
+#include <sms/sms.h>
 
 namespace scag {
 namespace stat {
@@ -89,13 +89,16 @@ using smsc::smeman::SmeRecord;
     {
     public:
 
+        static Statistics& Instance();
+
         virtual void registerEvent(const SmppStatEvent& si) = 0;
         virtual bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value) = 0;
 
-        virtual ~Statistics() {};
-
     protected:
+
         Statistics() {};
+        Statistics(const Statistics& statistics) {};
+        virtual ~Statistics() {};
     };
 
 }//namespace stat
