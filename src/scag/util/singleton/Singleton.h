@@ -357,7 +357,7 @@ namespace scag { namespace util { namespace singleton
     >
     void SingletonHolder<T, CreationPolicy, LifetimePolicy>::MakeInstance()
     {
-        MutexGuard guard(singletonHolderLock_)
+        MutexGuard guard(singletonHolderLock_);
         
         if (!pInstance_)
         {
