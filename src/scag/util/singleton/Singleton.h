@@ -17,7 +17,7 @@
 
 namespace scag { namespace util { namespace singleton
 {
-    using smsc::core::synchronization::Mutex;
+    using namespace smsc::core::synchronization;
 
     typedef void (C_CALLING_CONVENTION_QUALIFIER *atexit_pfn_t)();
 
@@ -357,7 +357,7 @@ namespace scag { namespace util { namespace singleton
     >
     void SingletonHolder<T, CreationPolicy, LifetimePolicy>::MakeInstance()
     {
-        //MutexGuard guard(singletonHolderLock_)
+        MutexGuard guard(singletonHolderLock_)
         
         if (!pInstance_)
         {
