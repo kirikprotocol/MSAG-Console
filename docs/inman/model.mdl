@@ -1,7 +1,7 @@
 
 (object Petal
-    version    	46
-    _written   	"Rose 7.7.0204.3001"
+    version    	45
+    _written   	"Rose 7.6.0109.2314"
     charSet    	204)
 
 (object Design "Logical View"
@@ -326,24 +326,6 @@
 				icon_style 	"Icon"
 				line_color 	3342489
 				quidu      	"42A7CA4801F0"
-				compartment 	(object Compartment
-				    Parent_View 	@1
-				    location   	(836, 1077)
-				    font       	(object Font
-					size       	10
-					face       	"Arial"
-					charSet    	204
-					bold       	FALSE
-					italics    	FALSE
-					underline  	FALSE
-					strike     	FALSE
-					color      	0
-					default_color 	TRUE)
-				    icon_style 	"Icon"
-				    anchor     	2
-				    nlines     	3
-				    max_width  	372
-				    justify    	0)
 				width      	230
 				height     	154
 				annotation 	8
@@ -396,24 +378,6 @@
 				icon_style 	"Icon"
 				line_color 	3342489
 				quidu      	"42A7D28002F8"
-				compartment 	(object Compartment
-				    Parent_View 	@3
-				    location   	(242, 1077)
-				    font       	(object Font
-					size       	10
-					face       	"Arial"
-					charSet    	204
-					bold       	FALSE
-					italics    	FALSE
-					underline  	FALSE
-					strike     	FALSE
-					color      	0
-					default_color 	TRUE)
-				    icon_style 	"Icon"
-				    anchor     	2
-				    nlines     	3
-				    max_width  	472
-				    justify    	0)
 				width      	230
 				height     	154
 				annotation 	8
@@ -520,23 +484,6 @@
 				icon_style 	"Icon"
 				line_color 	3342489
 				quidu      	"42A6B3880150"
-				compartment 	(object Compartment
-				    Parent_View 	@9
-				    location   	(841, 1536)
-				    font       	(object Font
-					size       	10
-					face       	"Arial"
-					charSet    	204
-					bold       	FALSE
-					italics    	FALSE
-					underline  	FALSE
-					strike     	FALSE
-					color      	0
-					default_color 	TRUE)
-				    icon_style 	"Icon"
-				    anchor     	2
-				    nlines     	4
-				    max_width  	371)
 				width      	384
 				height     	342
 				annotation 	8
@@ -637,24 +584,6 @@
 				icon_style 	"Icon"
 				line_color 	3342489
 				quidu      	"42A6B3D502D8"
-				compartment 	(object Compartment
-				    Parent_View 	@16
-				    location   	(1580, 1733)
-				    font       	(object Font
-					size       	10
-					face       	"Arial"
-					charSet    	204
-					bold       	FALSE
-					italics    	FALSE
-					underline  	FALSE
-					strike     	FALSE
-					color      	0
-					default_color 	TRUE)
-				    icon_style 	"Icon"
-				    anchor     	2
-				    nlines     	2
-				    max_width  	225
-				    justify    	0)
 				width      	58
 				height     	58
 				annotation 	8
@@ -1045,24 +974,6 @@
 					icon_style 	"Icon"
 					line_color 	3342489
 					quidu      	"42A6B52002F3"
-					compartment 	(object Compartment
-					    Parent_View 	@20
-					    location   	(1239, 357)
-					    font       	(object Font
-						size       	10
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    anchor     	2
-					    nlines     	2
-					    max_width  	237
-					    justify    	0)
 					width      	58
 					height     	58
 					annotation 	8
@@ -1094,24 +1005,6 @@
 					icon_style 	"Icon"
 					line_color 	3342489
 					quidu      	"42A6B3A10199"
-					compartment 	(object Compartment
-					    Parent_View 	@21
-					    location   	(2151, 405)
-					    font       	(object Font
-						size       	10
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    anchor     	2
-					    nlines     	4
-					    max_width  	462
-					    justify    	0)
 					width      	230
 					height     	154
 					annotation 	8
@@ -1150,24 +1043,6 @@
 					icon_style 	"Icon"
 					line_color 	3342489
 					quidu      	"42A7D41B01BF"
-					compartment 	(object Compartment
-					    Parent_View 	@23
-					    location   	(268, 357)
-					    font       	(object Font
-						size       	10
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    anchor     	2
-					    nlines     	4
-					    max_width  	643
-					    justify    	0)
 					width      	58
 					height     	58
 					annotation 	8
@@ -1309,24 +1184,6 @@
 					icon_style 	"Icon"
 					line_color 	3342489
 					quidu      	"42A6BBB00206"
-					compartment 	(object Compartment
-					    Parent_View 	@30
-					    location   	(1745, 1189)
-					    font       	(object Font
-						size       	10
-						face       	"Arial"
-						charSet    	204
-						bold       	FALSE
-						italics    	FALSE
-						underline  	FALSE
-						strike     	FALSE
-						color      	0
-						default_color 	TRUE)
-					    icon_style 	"Icon"
-					    anchor     	2
-					    nlines     	2
-					    max_width  	409
-					    justify    	0)
 					width      	58
 					height     	58
 					annotation 	8
@@ -2239,23 +2096,6 @@
 				icon_style 	"Icon"
 				line_color 	3342489
 				quidu      	"42A92A1D02F7"
-				compartment 	(object Compartment
-				    Parent_View 	@69
-				    location   	(720, 1981)
-				    font       	(object Font
-					size       	10
-					face       	"Arial"
-					charSet    	204
-					bold       	FALSE
-					italics    	FALSE
-					underline  	FALSE
-					strike     	FALSE
-					color      	0
-					default_color 	TRUE)
-				    icon_style 	"Icon"
-				    anchor     	2
-				    nlines     	4
-				    max_width  	315)
 				width      	594
 				height     	344
 				annotation 	8
@@ -2285,23 +2125,6 @@
 				icon_style 	"Icon"
 				line_color 	3342489
 				quidu      	"42A92A5A02A8"
-				compartment 	(object Compartment
-				    Parent_View 	@70
-				    location   	(1713, 1991)
-				    font       	(object Font
-					size       	10
-					face       	"Arial"
-					charSet    	204
-					bold       	FALSE
-					italics    	FALSE
-					underline  	FALSE
-					strike     	FALSE
-					color      	0
-					default_color 	TRUE)
-				    icon_style 	"Icon"
-				    anchor     	2
-				    nlines     	4
-				    max_width  	375)
 				width      	688
 				height     	325
 				annotation 	8
@@ -2360,23 +2183,6 @@
 				icon_style 	"Icon"
 				line_color 	3342489
 				quidu      	"42A92A060058"
-				compartment 	(object Compartment
-				    Parent_View 	@72
-				    location   	(1247, 1204)
-				    font       	(object Font
-					size       	10
-					face       	"Arial"
-					charSet    	204
-					bold       	FALSE
-					italics    	FALSE
-					underline  	FALSE
-					strike     	FALSE
-					color      	0
-					default_color 	TRUE)
-				    icon_style 	"Icon"
-				    anchor     	2
-				    nlines     	9
-				    max_width  	553)
 				width      	564
 				height     	586
 				annotation 	8
@@ -2520,24 +2326,6 @@
 				icon_style 	"Icon"
 				line_color 	3342489
 				quidu      	"42A6B3D502D8"
-				compartment 	(object Compartment
-				    Parent_View 	@80
-				    location   	(108, 993)
-				    font       	(object Font
-					size       	10
-					face       	"Arial"
-					charSet    	204
-					bold       	FALSE
-					italics    	FALSE
-					underline  	FALSE
-					strike     	FALSE
-					color      	0
-					default_color 	TRUE)
-				    icon_style 	"Icon"
-				    anchor     	2
-				    nlines     	2
-				    max_width  	225
-				    justify    	0)
 				width      	58
 				height     	58
 				annotation 	8
@@ -2569,24 +2357,6 @@
 				icon_style 	"Icon"
 				line_color 	3342489
 				quidu      	"42A6BBB00206"
-				compartment 	(object Compartment
-				    Parent_View 	@81
-				    location   	(1313, 993)
-				    font       	(object Font
-					size       	10
-					face       	"Arial"
-					charSet    	204
-					bold       	FALSE
-					italics    	FALSE
-					underline  	FALSE
-					strike     	FALSE
-					color      	0
-					default_color 	TRUE)
-				    icon_style 	"Icon"
-				    anchor     	2
-				    nlines     	2
-				    max_width  	409
-				    justify    	0)
 				width      	58
 				height     	58
 				annotation 	8
@@ -2623,23 +2393,6 @@
 				icon_style 	"Icon"
 				line_color 	3342489
 				quidu      	"42A6B678019C"
-				compartment 	(object Compartment
-				    Parent_View 	@83
-				    location   	(553, 780)
-				    font       	(object Font
-					size       	10
-					face       	"Arial"
-					charSet    	204
-					bold       	FALSE
-					italics    	FALSE
-					underline  	FALSE
-					strike     	FALSE
-					color      	0
-					default_color 	TRUE)
-				    icon_style 	"Icon"
-				    anchor     	2
-				    nlines     	2
-				    max_width  	437)
 				width      	448
 				height     	186
 				annotation 	8
@@ -2790,24 +2543,6 @@
 				icon_style 	"Icon"
 				line_color 	3342489
 				quidu      	"42A6B3A10199"
-				compartment 	(object Compartment
-				    Parent_View 	@91
-				    location   	(534, 1553)
-				    font       	(object Font
-					size       	10
-					face       	"Arial"
-					charSet    	204
-					bold       	FALSE
-					italics    	FALSE
-					underline  	FALSE
-					strike     	FALSE
-					color      	0
-					default_color 	TRUE)
-				    icon_style 	"Icon"
-				    anchor     	2
-				    nlines     	4
-				    max_width  	463
-				    justify    	0)
 				width      	230
 				height     	154
 				annotation 	8
@@ -3023,7 +2758,7 @@
 				line_color 	3342489
 				quidu      	"42A91F2702E4"
 				width      	460
-				height     	2620
+				height     	2650
 				icon_height 	57
 				icon_width 	57
 				icon_y_offset 	0
@@ -3538,7 +3273,7 @@
 				ordinal    	10)
 			    (object Destruction_Marker @138
 				Parent_View 	@103
-				location   	(1552, 2944)
+				location   	(1552, 2974)
 				line_color 	3342489)
 			    (object InterMessView "" @139
 				location   	(1360, 2336)
@@ -3978,6 +3713,655 @@
 				origin     	(1103, 2464)
 				terminus   	(2048, 2464)
 				ordinal    	12))))))
+	statemachine 	(object State_Machine "State/Activity Model2"
+	    quid       	"42F03DBC00AE"
+	    states     	(list States
+		(object State "IDLE"
+		    quid       	"42F03DE60276"
+		    transitions 	(list transition_list
+			(object State_Transition
+			    quid       	"42F03F0002E1"
+			    supplier   	"DP_SMS_Delivery_Request"
+			    quidu      	"42F03EE40375"
+			    sendEvent  	(object sendEvent
+				quid       	"42F03F0002E4"))
+			(object State_Transition
+			    quid       	"42F03FA40212"
+			    label      	""
+			    supplier   	"IDLE"
+			    quidu      	"42F03DE60276"
+			    Event      	(object Event "Int_SMS_Failure"
+				quid       	"42F03FA40213")
+			    sendEvent  	(object sendEvent
+				quid       	"42F03FA40215"))
+			(object State_Transition
+			    quid       	"42F0414E02F8"
+			    label      	""
+			    supplier   	"Wait_For_Request"
+			    quidu      	"42F04137016E"
+			    Event      	(object Event "Invoke"
+				quid       	"42F0414E02F9")
+			    sendEvent  	(object sendEvent
+				quid       	"42F0414E02FB")))
+		    type       	"Normal")
+		(object State "$UNNAMED$28"
+		    quid       	"42F03DEE0012"
+		    transitions 	(list transition_list
+			(object State_Transition
+			    quid       	"42F03DF10058"
+			    supplier   	"IDLE"
+			    quidu      	"42F03DE60276"
+			    sendEvent  	(object sendEvent
+				quid       	"42F03DF1005B")))
+		    type       	"StartState")
+		(object State "DP_SMS_Delivery_Request"
+		    quid       	"42F03EE40375"
+		    transitions 	(list transition_list
+			(object State_Transition
+			    quid       	"42F040640071"
+			    supplier   	"IDLE"
+			    quidu      	"42F03DE60276"
+			    sendEvent  	(object sendEvent
+				quid       	"42F040640074")))
+		    type       	"Normal")
+		(object State "Wait_For_Request"
+		    quid       	"42F04137016E"
+		    transitions 	(list transition_list
+			(object State_Transition
+			    quid       	"42F0423C0123"
+			    label      	""
+			    supplier   	"IDLE"
+			    quidu      	"42F03DE60276"
+			    Event      	(object Event "Delivery_Request, Failure"
+				quid       	"42F0423C0124")
+			    sendEvent  	(object sendEvent
+				quid       	"42F0423C0126"))
+			(object State_Transition
+			    quid       	"42F0427F0118"
+			    label      	""
+			    supplier   	"Waiting_For_Instructions"
+			    quidu      	"42F041EF0260"
+			    Event      	(object Event "Collected_Info"
+				quid       	"42F0427F0119")
+			    sendEvent  	(object sendEvent
+				quid       	"42F0427F011B")))
+		    type       	"Normal")
+		(object State "Waiting_For_Instructions"
+		    quid       	"42F041EF0260"
+		    transitions 	(list transition_list
+			(object State_Transition
+			    quid       	"42F043C80014"
+			    label      	""
+			    supplier   	"Waiting_For_Instructions"
+			    quidu      	"42F041EF0260"
+			    Event      	(object Event "Reset_Timer"
+				quid       	"42F043C80015")
+			    sendEvent  	(object sendEvent
+				quid       	"42F043C80017"))
+			(object State_Transition
+			    quid       	"42F0440B0140"
+			    label      	""
+			    supplier   	"IDLE"
+			    quidu      	"42F03DE60276"
+			    Event      	(object Event "Timer_Expired, Release_SMS, Failure"
+				quid       	"42F0440B0141")
+			    sendEvent  	(object sendEvent
+				quid       	"42F0440B0143"))
+			(object State_Transition
+			    quid       	"42F0451501D2"
+			    label      	""
+			    supplier   	"Monitoring"
+			    quidu      	"42F043B7031A"
+			    Event      	(object Event "Continue_SMS, Connect_SMS"
+				quid       	"42F0451501D3")
+			    sendEvent  	(object sendEvent
+				quid       	"42F0451501D5"))
+			(object State_Transition
+			    quid       	"42F0453D0066"
+			    label      	""
+			    supplier   	"Monitoring"
+			    quidu      	"42F043B7031A"
+			    Event      	(object Event "Connect_SMS"
+				quid       	"42F0453D0067")
+			    sendEvent  	(object sendEvent
+				quid       	"42F0453D0069"))
+			(object State_Transition
+			    quid       	"42F045680048"
+			    label      	""
+			    supplier   	"Monitoring"
+			    quidu      	"42F043B7031A"
+			    Event      	(object Event "Request_Report_SMS_Events"
+				quid       	"42F045680049")
+			    sendEvent  	(object sendEvent
+				quid       	"42F04568004B"))
+			(object State_Transition
+			    quid       	"42F046880271"
+			    label      	""
+			    supplier   	"Waiting_For_Instructions"
+			    quidu      	"42F041EF0260"
+			    Event      	(object Event "Reset_Timer, Furnish_Charging_Information"
+				quid       	"42F046880272")
+			    sendEvent  	(object sendEvent
+				quid       	"42F046880274"))
+			(object State_Transition
+			    quid       	"42F0469100A9"
+			    supplier   	"Waiting_For_Instructions"
+			    quidu      	"42F041EF0260"
+			    sendEvent  	(object sendEvent
+				quid       	"42F0469100AC")))
+		    type       	"Normal")
+		(object State "Monitoring"
+		    quid       	"42F043B7031A"
+		    transitions 	(list transition_list
+			(object State_Transition
+			    quid       	"42F045C40348"
+			    label      	""
+			    supplier   	"IDLE"
+			    quidu      	"42F03DE60276"
+			    Event      	(object Event "All"
+				quid       	"42F045C40349")
+			    condition  	"DP not armed"
+			    sendEvent  	(object sendEvent
+				quid       	"42F045C4034B"))
+			(object State_Transition
+			    quid       	"42F0466F0020"
+			    supplier   	"IDLE"
+			    quidu      	"42F03DE60276"
+			    sendEvent  	(object sendEvent
+				quid       	"42F0466F0023"))
+			(object State_Transition
+			    quid       	"42F04A1302DE"
+			    label      	""
+			    supplier   	"Waiting_For_Instructions"
+			    quidu      	"42F041EF0260"
+			    Event      	(object Event "All"
+				quid       	"42F04A1302DF")
+			    condition  	"DP armed"
+			    sendEvent  	(object sendEvent
+				quid       	"42F04A1302E1"))
+			(object State_Transition
+			    quid       	"42F04A780223"
+			    supplier   	"Monitoring"
+			    quidu      	"42F043B7031A"
+			    sendEvent  	(object sendEvent
+				quid       	"42F04A780226")))
+		    type       	"Normal"))
+	    partitions 	(list Partitions)
+	    objects    	(list Objects)
+	    statediagrams 	(list StateDiagrams
+		(object State_Diagram "Processing SMS"
+		    quid       	"42F03DBC00AF"
+		    title      	"Processing SMS"
+		    zoom       	100
+		    max_height 	28350
+		    max_width  	21600
+		    origin_x   	0
+		    origin_y   	371
+		    items      	(list diagram_item_list
+			(object StateView "Normal" "IDLE" @162
+			    location   	(880, 208)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@162
+				location   	(880, 197)
+				anchor_loc 	1
+				nlines     	2
+				max_width  	204
+				justify    	0
+				label      	"IDLE")
+			    icon_style 	"Icon"
+			    line_color 	3342489
+			    quidu      	"42F03DE60276"
+			    autoResize 	TRUE)
+			(object StateView "Normal" "Wait_For_Request" @163
+			    location   	(1616, 768)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@163
+				location   	(1616, 757)
+				anchor_loc 	1
+				nlines     	2
+				max_width  	204
+				justify    	0
+				label      	"Wait_For_Request")
+			    icon_style 	"Icon"
+			    line_color 	3342489
+			    quidu      	"42F04137016E"
+			    autoResize 	TRUE)
+			(object StateView "Normal" "Waiting_For_Instructions" @164
+			    location   	(880, 944)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@164
+				location   	(880, 924)
+				anchor_loc 	1
+				nlines     	2
+				max_width  	246
+				justify    	0
+				label      	"Waiting_For_Instructions")
+			    icon_style 	"Icon"
+			    line_color 	3342489
+			    quidu      	"42F041EF0260"
+			    width      	342
+			    height     	152
+			    autoResize 	TRUE)
+			(object StateView "Normal" "Monitoring" @165
+			    location   	(880, 1696)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@165
+				location   	(880, 1685)
+				anchor_loc 	1
+				nlines     	2
+				max_width  	204
+				justify    	0
+				label      	"Monitoring")
+			    icon_style 	"Icon"
+			    line_color 	3342489
+			    quidu      	"42F043B7031A"
+			    autoResize 	TRUE)
+			(object TransView "" @166
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object SegLabel @167
+				Parent_View 	@166
+				location   	(1567, 161)
+				font       	(object Font
+				    size       	10
+				    face       	"Arial"
+				    charSet    	204
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				anchor_loc 	1
+				nlines     	1
+				max_width  	114
+				justify    	0
+				label      	"Invoke"
+				pctDist    	0.189534
+				height     	45
+				orientation 	0)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"42F0414E02F8"
+			    client     	@162
+			    supplier   	@163
+			    vertices   	(list Points
+				(1030, 207)
+				(1616, 205)
+				(1616, 701))
+			    line_style 	0
+			    x_offset   	FALSE)
+			(object SelfTransView "" @168
+			    location   	(880, 718)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object SegLabel @169
+				Parent_View 	@168
+				location   	(878, 646)
+				font       	(object Font
+				    size       	10
+				    face       	"Arial"
+				    charSet    	204
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				anchor_loc 	1
+				nlines     	2
+				max_width  	569
+				justify    	0
+				label      	"Reset_Timer, Furnish_Charging_Information"
+				pctDist    	0.508425
+				height     	223
+				orientation 	0)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"42F046880271"
+			    client     	@164
+			    supplier   	@164
+			    line_style 	4)
+			(object TransView "" @170
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object SegLabel @171
+				Parent_View 	@170
+				location   	(309, 475)
+				font       	(object Font
+				    size       	10
+				    face       	"Arial"
+				    charSet    	204
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				anchor_loc 	1
+				nlines     	3
+				max_width  	294
+				justify    	0
+				label      	"Timer_Expired, Release_SMS, Failure"
+				pctDist    	0.117610
+				height     	90
+				orientation 	0)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"42F0440B0140"
+			    client     	@164
+			    supplier   	@162
+			    vertices   	(list Points
+				(709, 943)
+				(302, 943)
+				(302, 205)
+				(730, 207))
+			    line_style 	0
+			    x_offset   	FALSE)
+			(object TransView "" @172
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object SegLabel @173
+				Parent_View 	@172
+				location   	(889, 1142)
+				font       	(object Font
+				    size       	10
+				    face       	"Arial"
+				    charSet    	204
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				anchor_loc 	1
+				nlines     	2
+				max_width  	362
+				justify    	0
+				label      	"Continue_SMS, Connect_SMS"
+				pctDist    	0.155993
+				height     	183
+				orientation 	0)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"42F0451501D2"
+			    client     	@164
+			    supplier   	@165
+			    line_style 	0
+			    x_offset   	FALSE)
+			(object TransView "" @174
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object SegLabel @175
+				Parent_View 	@174
+				location   	(1279, 292)
+				font       	(object Font
+				    size       	10
+				    face       	"Arial"
+				    charSet    	204
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				anchor_loc 	1
+				nlines     	2
+				max_width  	382
+				justify    	0
+				label      	"Delivery_Request, Failure"
+				pctDist    	0.541969
+				height     	196
+				orientation 	0)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"42F0423C0123"
+			    client     	@163
+			    supplier   	@162
+			    line_style 	0
+			    x_offset   	FALSE)
+			(object TransView "" @176
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object SegLabel @177
+				Parent_View 	@176
+				location   	(1411, 882)
+				font       	(object Font
+				    size       	10
+				    face       	"Arial"
+				    charSet    	204
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				anchor_loc 	1
+				nlines     	1
+				max_width  	250
+				justify    	0
+				label      	"Collected_Info"
+				pctDist    	0.421991
+				height     	60
+				orientation 	0)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"42F0427F0118"
+			    client     	@163
+			    supplier   	@164
+			    vertices   	(list Points
+				(1615, 834)
+				(1615, 940)
+				(1051, 943))
+			    line_style 	0
+			    x_offset   	FALSE)
+			(object TransView "" @178
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object SegLabel @179
+				Parent_View 	@178
+				location   	(322, 1164)
+				font       	(object Font
+				    size       	10
+				    face       	"Arial"
+				    charSet    	204
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				anchor_loc 	1
+				nlines     	1
+				max_width  	450
+				justify    	0
+				label      	"All[ DP not armed ]"
+				pctDist    	0.342991
+				height     	213
+				orientation 	1)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"42F045C40348"
+			    client     	@165
+			    supplier   	@162
+			    vertices   	(list Points
+				(730, 1696)
+				(302, 1696)
+				(302, 205)
+				(730, 207))
+			    line_style 	0
+			    x_offset   	FALSE)
+			(object TransView "" @180
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object SegLabel @181
+				Parent_View 	@180
+				location   	(1644, 1540)
+				font       	(object Font
+				    size       	10
+				    face       	"Arial"
+				    charSet    	204
+				    bold       	FALSE
+				    italics    	FALSE
+				    underline  	FALSE
+				    strike     	FALSE
+				    color      	0
+				    default_color 	TRUE)
+				anchor_loc 	1
+				nlines     	1
+				max_width  	450
+				justify    	0
+				label      	"All[ DP armed ]"
+				pctDist    	0.491588
+				height     	213
+				orientation 	1)
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    quidu      	"42F04A1302DE"
+			    client     	@165
+			    supplier   	@164
+			    vertices   	(list Points
+				(1030, 1695)
+				(1615, 1693)
+				(1615, 940)
+				(1051, 943))
+			    line_style 	0
+			    x_offset   	FALSE)
+			(object NoteView @182
+			    location   	(2192, 320)
+			    font       	(object Font
+				size       	10
+				face       	"Arial"
+				charSet    	204
+				bold       	FALSE
+				italics    	FALSE
+				underline  	FALSE
+				strike     	FALSE
+				color      	0
+				default_color 	TRUE)
+			    label      	(object ItemLabel
+				Parent_View 	@182
+				location   	(1786, 211)
+				nlines     	4
+				max_width  	777
+				label      	
+|ArmDetectionPoint
+|DeliveryRequest для MT 
+|CollectedInfo для MO
+				)
+			    line_color 	3342489
+			    width      	837
+			    height     	231)
+			(object AttachView "" @183
+			    stereotype 	TRUE
+			    line_color 	3342489
+			    client     	@182
+			    supplier   	@166
+			    line_style 	0)))))
 	logical_presentations 	(list unit_reference_list
 	    (object ClassDiagram "Overview"
 		quid       	"42A6B0AC00FB"
@@ -3988,7 +4372,7 @@
 		origin_x   	0
 		origin_y   	943
 		items      	(list diagram_item_list
-		    (object ClassView "Class" "Logical View::SMSC::SMSListener" @162
+		    (object ClassView "Class" "Logical View::SMSC::SMSListener" @184
 			ShowCompartmentStereotypes 	TRUE
 			IncludeAttribute 	TRUE
 			IncludeOperation 	TRUE
@@ -4004,7 +4388,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@162
+			    Parent_View 	@184
 			    location   	(1023, 492)
 			    anchor_loc 	1
 			    nlines     	2
@@ -4016,7 +4400,7 @@
 			line_color 	3342489
 			quidu      	"42A6B3D502D8"
 			compartment 	(object Compartment
-			    Parent_View 	@162
+			    Parent_View 	@184
 			    location   	(908, 577)
 			    font       	(object Font
 				size       	10
@@ -4037,7 +4421,7 @@
 			height     	58
 			annotation 	8
 			autoResize 	TRUE)
-		    (object NoteView @163
+		    (object NoteView @185
 			location   	(1024, 144)
 			font       	(object Font
 			    size       	10
@@ -4050,7 +4434,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@163
+			    Parent_View 	@185
 			    location   	(774, 50)
 			    nlines     	3
 			    max_width  	465
@@ -4058,7 +4442,7 @@
 			line_color 	3342489
 			width      	525
 			height     	200)
-		    (object NoteView @164
+		    (object NoteView @186
 			location   	(1728, 288)
 			font       	(object Font
 			    size       	10
@@ -4071,7 +4455,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@164
+			    Parent_View 	@186
 			    location   	(1375, 88)
 			    nlines     	8
 			    max_width  	671
@@ -4084,7 +4468,7 @@
 			line_color 	3342489
 			width      	731
 			height     	412)
-		    (object ClassView "Class" "Logical View::SSF::IN::INFacade" @165
+		    (object ClassView "Class" "Logical View::SSF::IN::INFacade" @187
 			ShowCompartmentStereotypes 	TRUE
 			IncludeAttribute 	TRUE
 			IncludeOperation 	TRUE
@@ -4100,7 +4484,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@165
+			    Parent_View 	@187
 			    location   	(2191, 1068)
 			    anchor_loc 	1
 			    nlines     	2
@@ -4112,7 +4496,7 @@
 			line_color 	3342489
 			quidu      	"42A6B3A10199"
 			compartment 	(object Compartment
-			    Parent_View 	@165
+			    Parent_View 	@187
 			    location   	(1958, 1153)
 			    font       	(object Font
 				size       	10
@@ -4127,19 +4511,19 @@
 			    icon_style 	"Icon"
 			    anchor     	2
 			    nlines     	4
-			    max_width  	463
+			    max_width  	462
 			    justify    	0)
 			width      	230
 			height     	154
 			annotation 	8
 			autoResize 	TRUE)
-		    (object AttachView "" @166
+		    (object AttachView "" @188
 			stereotype 	TRUE
 			line_color 	3342489
-			client     	@163
-			supplier   	@162
+			client     	@185
+			supplier   	@184
 			line_style 	0)
-		    (object NoteView @167
+		    (object NoteView @189
 			location   	(400, 896)
 			font       	(object Font
 			    size       	10
@@ -4152,7 +4536,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@167
+			    Parent_View 	@189
 			    location   	(50, 687)
 			    nlines     	8
 			    max_width  	665
@@ -4164,7 +4548,7 @@
 			line_color 	3342489
 			width      	725
 			height     	431)
-		    (object ClassView "Class" "Logical View::SSF::IN::INFactory" @168
+		    (object ClassView "Class" "Logical View::SSF::IN::INFactory" @190
 			ShowCompartmentStereotypes 	TRUE
 			IncludeAttribute 	TRUE
 			IncludeOperation 	TRUE
@@ -4180,7 +4564,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@168
+			    Parent_View 	@190
 			    location   	(415, 1724)
 			    anchor_loc 	1
 			    nlines     	2
@@ -4192,7 +4576,7 @@
 			line_color 	3342489
 			quidu      	"42A7D41B01BF"
 			compartment 	(object Compartment
-			    Parent_View 	@168
+			    Parent_View 	@190
 			    location   	(92, 1809)
 			    font       	(object Font
 				size       	10
@@ -4213,7 +4597,7 @@
 			height     	58
 			annotation 	8
 			autoResize 	TRUE)
-		    (object NoteView @169
+		    (object NoteView @191
 			location   	(416, 1376)
 			font       	(object Font
 			    size       	10
@@ -4226,7 +4610,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@169
+			    Parent_View 	@191
 			    location   	(119, 1276)
 			    nlines     	4
 			    max_width  	559
@@ -4234,7 +4618,7 @@
 			line_color 	3342489
 			width      	619
 			height     	212)
-		    (object ClassView "Class" "Logical View::SSF::IN::INSubscriber" @170
+		    (object ClassView "Class" "Logical View::SSF::IN::INSubscriber" @192
 			ShowCompartmentStereotypes 	TRUE
 			IncludeAttribute 	TRUE
 			IncludeOperation 	TRUE
@@ -4250,7 +4634,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@170
+			    Parent_View 	@192
 			    location   	(1615, 1020)
 			    anchor_loc 	1
 			    nlines     	2
@@ -4262,7 +4646,7 @@
 			line_color 	3342489
 			quidu      	"42A6BBB00206"
 			compartment 	(object Compartment
-			    Parent_View 	@170
+			    Parent_View 	@192
 			    location   	(1409, 1105)
 			    font       	(object Font
 				size       	10
@@ -4283,13 +4667,13 @@
 			height     	58
 			annotation 	8
 			autoResize 	TRUE)
-		    (object AttachView "" @171
+		    (object AttachView "" @193
 			stereotype 	TRUE
 			line_color 	3342489
-			client     	@170
-			supplier   	@164
+			client     	@192
+			supplier   	@186
 			line_style 	0)
-		    (object ClassView "Class" "Logical View::SSF::SSFEmulator" @172
+		    (object ClassView "Class" "Logical View::SSF::SSFEmulator" @194
 			ShowCompartmentStereotypes 	TRUE
 			IncludeAttribute 	TRUE
 			IncludeOperation 	TRUE
@@ -4305,7 +4689,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@172
+			    Parent_View 	@194
 			    location   	(809, 792)
 			    nlines     	1
 			    max_width  	430
@@ -4315,7 +4699,7 @@
 			line_color 	3342489
 			quidu      	"42A6B678019C"
 			compartment 	(object Compartment
-			    Parent_View 	@172
+			    Parent_View 	@194
 			    location   	(809, 897)
 			    font       	(object Font
 				size       	10
@@ -4335,14 +4719,14 @@
 			height     	232
 			annotation 	8
 			autoResize 	TRUE)
-		    (object RealizeView "" @173
+		    (object RealizeView "" @195
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"42A6B76903CC"
-			client     	@172
-			supplier   	@162
+			client     	@194
+			supplier   	@184
 			line_style 	0)
-		    (object AssociationViewNew "$UNNAMED$6" @174
+		    (object AssociationViewNew "$UNNAMED$6" @196
 			location   	(1417, 904)
 			font       	(object Font
 			    size       	10
@@ -4358,8 +4742,8 @@
 			line_color 	3342489
 			quidu      	"42A6BC1A01D6"
 			roleview_list 	(list RoleViews
-			    (object RoleView "$UNNAMED$7" @175
-				Parent_View 	@174
+			    (object RoleView "$UNNAMED$7" @197
+				Parent_View 	@196
 				location   	(217, 56)
 				font       	(object Font
 				    size       	10
@@ -4374,11 +4758,11 @@
 				stereotype 	TRUE
 				line_color 	3342489
 				quidu      	"42A6BC1A02FF"
-				client     	@174
-				supplier   	@170
+				client     	@196
+				supplier   	@192
 				line_style 	0
-				label      	(object SegLabel @176
-				    Parent_View 	@175
+				label      	(object SegLabel @198
+				    Parent_View 	@197
 				    location   	(1465, 939)
 				    font       	(object Font
 					size       	10
@@ -4399,8 +4783,8 @@
 				    pctDist    	0.284916
 				    height     	34
 				    orientation 	1))
-			    (object RoleView "$UNNAMED$8" @177
-				Parent_View 	@174
+			    (object RoleView "$UNNAMED$8" @199
+				Parent_View 	@196
 				location   	(217, 56)
 				font       	(object Font
 				    size       	10
@@ -4415,22 +4799,22 @@
 				stereotype 	TRUE
 				line_color 	3342489
 				quidu      	"42A6BC1A0310"
-				client     	@174
-				supplier   	@172
+				client     	@196
+				supplier   	@194
 				line_style 	0)))
-		    (object AttachView "" @178
+		    (object AttachView "" @200
 			stereotype 	TRUE
 			line_color 	3342489
-			client     	@172
-			supplier   	@167
+			client     	@194
+			supplier   	@189
 			line_style 	0)
-		    (object AttachView "" @179
+		    (object AttachView "" @201
 			stereotype 	TRUE
 			line_color 	3342489
-			client     	@168
-			supplier   	@169
+			client     	@190
+			supplier   	@191
 			line_style 	0)
-		    (object CategoryView "Logical View::SMSC" @180
+		    (object CategoryView "Logical View::SMSC" @202
 			location   	(256, 384)
 			font       	(object Font
 			    size       	10
@@ -4443,7 +4827,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@180
+			    Parent_View 	@202
 			    location   	(112, 300)
 			    nlines     	2
 			    max_width  	288
@@ -4454,14 +4838,14 @@
 			quidu      	"42A9178F0352"
 			width      	300
 			height     	180)
-		    (object DependencyView "" @181
+		    (object DependencyView "" @203
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"42A9196800CC"
-			client     	@180
-			supplier   	@162
+			client     	@202
+			supplier   	@184
 			line_style 	0)
-		    (object CategoryView "Logical View::SSF" @182
+		    (object CategoryView "Logical View::SSF" @204
 			location   	(2192, 1712)
 			font       	(object Font
 			    size       	10
@@ -4474,7 +4858,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@182
+			    Parent_View 	@204
 			    location   	(2048, 1628)
 			    nlines     	2
 			    max_width  	288
@@ -4485,14 +4869,14 @@
 			quidu      	"42A91A3C02BD"
 			width      	300
 			height     	180)
-		    (object RealizeView "" @183
+		    (object RealizeView "" @205
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"42A91B6A014E"
-			client     	@182
-			supplier   	@165
+			client     	@204
+			supplier   	@187
 			line_style 	0)
-		    (object CategoryView "Logical View::SSF::IN" @184
+		    (object CategoryView "Logical View::SSF::IN" @206
 			location   	(400, 2272)
 			font       	(object Font
 			    size       	10
@@ -4505,7 +4889,7 @@
 			    color      	0
 			    default_color 	TRUE)
 			label      	(object ItemLabel
-			    Parent_View 	@184
+			    Parent_View 	@206
 			    location   	(256, 2188)
 			    nlines     	2
 			    max_width  	288
@@ -4516,19 +4900,19 @@
 			quidu      	"42A6C61D0143"
 			width      	300
 			height     	180)
-		    (object RealizeView "" @185
+		    (object RealizeView "" @207
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"42A91DA601F0"
-			client     	@184
-			supplier   	@168
+			client     	@206
+			supplier   	@190
 			line_style 	0)
-		    (object DependencyView "" @186
+		    (object DependencyView "" @208
 			stereotype 	TRUE
 			line_color 	3342489
 			quidu      	"42A92B5C01B8"
-			client     	@182
-			supplier   	@170
+			client     	@204
+			supplier   	@192
 			vertices   	(list Points
 			    (2041, 1710)
 			    (1618, 1709)
@@ -7764,7 +8148,7 @@
 		    (object Attribute
 			tool       	"Java"
 			name       	"ClassPath"
-			value      	"C:\\jdk1.4\\jre\\lib\\charsets.jar;C:\\jdk1.4\\jre\\lib\\ext\\dnsns.jar;C:\\jdk1.4\\jre\\lib\\ext\\ldapsec.jar;C:\\jdk1.4\\jre\\lib\\ext\\localedata.jar;C:\\jdk1.4\\jre\\lib\\ext\\sunjce_provider.jar;C:\\jdk1.4\\jre\\lib\\jce.jar;C:\\jdk1.4\\jre\\lib\\jsse.jar;C:\\jdk1.4\\jre\\lib\\rt.jar;C:\\jdk1.4\\jre\\lib\\security\\local_policy.jar;C:\\jdk1.4\\jre\\lib\\security\\US_export_policy.jar;C:\\jdk1.4\\jre\\lib\\sunrsasign.jar;C:\\jdk1.4\\lib\\dt.jar;C:\\jdk1.4\\lib\\htmlconverter.jar;C:\\jdk1.4\\lib\\tools.jar;C:\\home\\vic\\projects\\jsmppapi\\src;C:\\home\\vic\\projects\\jsmppapi\\lib\\log4j.jar;C:\\home\\vic\\projects\\sme\\src;C:\\jdk1.3\\src.jar;C:\\jdk1.3\\jre\\lib\\i18n.jar;C:\\jdk1.3\\jre\\lib\\jaws.jar;C:\\jdk1.3\\jre\\lib\\rt.jar;C:\\jdk1.3\\jre\\lib\\sunrsasign.jar;C:\\jdk1.3\\lib\\dt.jar;C:\\jdk1.3\\lib\\htmlconverter.jar;C:\\jdk1.3\\lib\\tools.jar;C:\\jdk1.5\\jre\\lib\\charsets.jar;C:\\jdk1.5\\jre\\lib\\jce.jar;C:\\jdk1.5\\jre\\lib\\jsse.jar;C:\\jdk1.5\\jre\\lib\\rt.jar;C:\\jdk1.5\\jre\\lib\\ext\\dnsns.jar;C:\\jdk1.5\\jre\\lib\\ext\\localedata.jar;C:\\jdk1.5\\jre\\lib\\ext\\sunjce_provider.jar;C:\\jdk1.5\\jre\\lib\\security\\local_policy.jar;C:\\jdk1.5\\jre\\lib\\security\\US_export_policy.jar;C:\\jdk1.5\\lib\\dt.jar;C:\\jdk1.5\\lib\\htmlconverter.jar;C:\\jdk1.5\\lib\\tools.jar")
+			value      	"")
 		    (object Attribute
 			tool       	"Java"
 			name       	"ReferenceClasspath"
