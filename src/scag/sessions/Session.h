@@ -1,31 +1,46 @@
-#ifndef SCAG_SESSIONS
-#define SCAG_SESSIONS
+#ifndef SCAG_SESSIONS_SESSION
+#define SCAG_SESSIONS_SESSION
 
-#include <core/buffers/Hash.hpp>
+#include <inttypes.h>
+
+#include <scag/bill/Bill.h>
 #include <scag/util/properties/Properties.h>
 
 namespace scag { namespace sessions 
 {
-    using core::buffers::Hash;
+    using scag::bill::Bill;
 
     using namespace scag::util::properties;
 
     class Session : public PropertyManager
     {
     private:
-
-        Hash<NamedProperty>     properties;
-
-        // TODO: Add session content & functionality
+        
+        uint16_t abSessionId;
+        time_t   lastAccessTime;
+        bool     bChanged;
 
     public:
 
-        virtual ~Session() {};
+        Session();
+        virtual ~Session();
+        
+        inline time_t getLastAccessTime() {
+            return lastAccessTime;
+        }
+        inline bool isChanged() {
+            return bChanged;
+        }
+
+        // TODO: Implement billing transactions reg/unreg
+        void attachBill(const Bill& bill);
+        void detachBill(const Bill& bill);
         
         // TODO: Implement PropertyManager interface
-        virtual void changed(const NamedProperty& property);
-        virtual NamedProperty* getProperty(const std::string& name);
+        virtual void changed(const AdapterProperty& property);
+        virtual Property* getProperty(const std::string& name);
+
     };
 }}
 
-#endif // SCAG_SESSIONS
+#endif // SCAG_SESSIONS_SESSION
