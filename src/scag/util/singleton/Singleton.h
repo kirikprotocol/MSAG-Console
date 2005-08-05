@@ -7,19 +7,13 @@
 #include <cstdlib>
 #include <new>
 
-#ifdef _MSC_VER
-#define C_CALLING_CONVENTION_QUALIFIER __cdecl 
-#else
-#define C_CALLING_CONVENTION_QUALIFIER 
-#endif
-
 #include <core/synchronization/Mutex.hpp>
 
 namespace scag { namespace util { namespace singleton
 {
     using namespace smsc::core::synchronization;
 
-    typedef void (C_CALLING_CONVENTION_QUALIFIER *atexit_pfn_t)();
+    typedef void (*atexit_pfn_t)();
 
     namespace Private
     {
@@ -75,7 +69,7 @@ namespace scag { namespace util { namespace singleton
             Destroyer destroyer_;
         };
 
-        void C_CALLING_CONVENTION_QUALIFIER AtExitFn(); // declaration needed below    
+        extern "C" void AtExitFn(); // declaration needed below    
     } // namespace Private
 
     
@@ -279,7 +273,7 @@ namespace scag { namespace util { namespace singleton
         static void OnDeadReference() {}
     };
 
-    template<class T>
+    template <class T>
     class Volatile {
     public:
         typedef volatile T VolatileType;
@@ -292,21 +286,40 @@ namespace scag { namespace util { namespace singleton
     // To protect that type from spurious instantiations, you have to protect it
     // yourself.
     ////////////////////////////////////////////////////////////////////////////////
-    template
-    <
-        typename T,
-        template <class> class CreationPolicy = CreateUsingNew,
-        template <class> class LifetimePolicy = DefaultLifetime
-    >
+    template <typename T>
     class SingletonHolder
     {
     public:
-        static T& Instance();
+        
+        static T& Instance() {
+            if (!pInstance_) MakeInstance();
+            return *pInstance_;
+        }
         
     private:
         // Helpers
-        static void MakeInstance();
-        static void C_CALLING_CONVENTION_QUALIFIER DestroySingleton();
+        static void MakeInstance()
+        {
+            MutexGuard guard(singletonHolderLock_);
+
+            if (!pInstance_)
+            {
+                if (destroyed_)
+                {
+                    SingletonWithLongevity<T>::OnDeadReference();
+                    destroyed_ = false;
+                }
+                pInstance_ = CreateUsingNew<T>::Create();
+                SingletonWithLongevity<T>::ScheduleDestruction(pInstance_, &DestroySingleton);
+            }
+        }
+        static void DestroySingleton()
+        {
+            assert(!destroyed_);
+            CreateUsingNew<T>::Destroy(pInstance_);
+            pInstance_ = 0;
+            destroyed_ = true;
+        }
         
         // Protection
         SingletonHolder();
@@ -321,70 +334,16 @@ namespace scag { namespace util { namespace singleton
     ////////////////////////////////////////////////////////////////////////////////
     // SingletonHolder's data
     ////////////////////////////////////////////////////////////////////////////////
-    template <class T, template <class> class C, template <class> class L>
-    Mutex SingletonHolder<T, C, L>::singletonHolderLock_;
+    template <class T>
+    Mutex SingletonHolder<T>::singletonHolderLock_;
 
-    template <class T, template <class> class C, template <class> class L>
-    typename SingletonHolder<T, C, L>::PtrInstanceType
-             SingletonHolder<T, C, L>::pInstance_;
+    template <class T>
+    typename SingletonHolder<T>::PtrInstanceType 
+             SingletonHolder<T>::pInstance_;
 
-    template <class T, template <class> class C, template <class> class L>
-    bool SingletonHolder<T, C, L>::destroyed_;
+    template <class T>
+    bool SingletonHolder<T>::destroyed_;
     
-    ////////////////////////////////////////////////////////////////////////////////
-    // SingletonHolder::Instance
-    ////////////////////////////////////////////////////////////////////////////////
-    template
-    <
-        class T,
-        template <class> class CreationPolicy,
-        template <class> class LifetimePolicy
-    >
-    inline T& SingletonHolder<T, CreationPolicy, LifetimePolicy>::Instance()
-    {
-        if (!pInstance_) MakeInstance();
-        return *pInstance_;
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////
-    // SingletonHolder::MakeInstance (helper for Instance)
-    ////////////////////////////////////////////////////////////////////////////////
-    template
-    <
-        class T,
-        template <class> class CreationPolicy,
-        template <class> class LifetimePolicy
-    >
-    void SingletonHolder<T, CreationPolicy, LifetimePolicy>::MakeInstance()
-    {
-        MutexGuard guard(singletonHolderLock_);
-        
-        if (!pInstance_)
-        {
-            if (destroyed_)
-            {
-                LifetimePolicy<T>::OnDeadReference();
-                destroyed_ = false;
-            }
-            pInstance_ = CreationPolicy<T>::Create();
-            LifetimePolicy<T>::ScheduleDestruction(pInstance_, &DestroySingleton);
-        }
-    }
-
-    template
-    <
-        class T,
-        template <class> class CreationPolicy,
-        template <class> class LifetimePolicy
-    >
-    void C_CALLING_CONVENTION_QUALIFIER SingletonHolder<T, CreationPolicy, LifetimePolicy>::DestroySingleton()
-    {
-        assert(!destroyed_);
-        CreationPolicy<T>::Destroy(pInstance_);
-        pInstance_ = 0;
-        destroyed_ = true;
-    }
-
 }}}
 
 #endif // SCAG_UTIL_SINGLETON

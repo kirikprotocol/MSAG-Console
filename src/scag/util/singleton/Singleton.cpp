@@ -13,7 +13,7 @@ unsigned int scag::util::singleton::Private::elements = 0;
 // function AtExitFn
 // Ensures proper destruction of objects with longevity
 ////////////////////////////////////////////////////////////////////////////////
-void C_CALLING_CONVENTION_QUALIFIER scag::util::singleton::Private::AtExitFn()
+extern "C" void scag::util::singleton::Private::AtExitFn()
 {
     assert(elements > 0 && pTrackerArray != 0);
     
@@ -59,7 +59,6 @@ inline unsigned GetLongevity(C*) { return 3; }
 inline unsigned GetLongevity(D*) { return 2; }
 
 
-
 // In Statistics.h file
 struct Statistics
 {
@@ -96,7 +95,8 @@ public:
 
 // In StatisticsManager.cpp file
 inline unsigned GetLongevity(StatisticsManager*) { return 1; }
-typedef SingletonHolder<StatisticsManager, CreateUsingNew, SingletonWithLongevity> SingleSM;
+//typedef SingletonHolder<StatisticsManager, CreateUsingNew, SingletonWithLongevity> SingleSM;
+typedef SingletonHolder<StatisticsManager> SingleSM;
 
 bool  StatisticsManager::inited = false;
 //Mutex StatisticsManager::initLock;
