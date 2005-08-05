@@ -1,4 +1,4 @@
-static char const ident[] = "$Id";
+static char const ident[] = "$Id$";
 #include "console.hpp"
 
 /////////////////////////// INAP API ///////////////////////////////
