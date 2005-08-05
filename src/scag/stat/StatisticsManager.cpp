@@ -36,7 +36,8 @@ const char*    SMSC_STAT_FILE_NAME_FORMAT = "%02d.rts";
 RouteMap StatisticsManager::routeMap;
 
 inline unsigned GetLongevity(StatisticsManager*) { return 5; }
-typedef SingletonHolder<StatisticsManager, CreateUsingNew, SingletonWithLongevity> SingleSM;
+//typedef SingletonHolder<StatisticsManager, CreateUsingNew, SingletonWithLongevity> SingleSM;
+typedef SingletonHolder<StatisticsManager> SingleSM;
 
 Statistics& Statistics::Instance()
 {
@@ -48,31 +49,27 @@ Statistics& Statistics::Instance()
     }
     return SingleSM::Instance();
 }
-void StatisticsManager::init(Config config)
+void StatisticsManager::init(const std::string& dir)
 {
     if (!StatisticsManager::inited)
     {
         MutexGuard guard(StatisticsManager::initLock);
         if (!StatisticsManager::inited) {
             StatisticsManager& sm = SingleSM::Instance();
-            sm.configure(config);
+            sm.configure(dir);
             sm.Start();
             StatisticsManager::inited = true;
         }
     }
 }
 
-void StatisticsManager::configure(Config config)
+void StatisticsManager::configure(const std::string& dir)
 {
-    try { location = config.getString("MessageStorage.statisticsDir"); } 
-    catch(...) {
-        throw Exception("Can't find parameter in config: 'MessageStorage.statisticsDir'");
-    }
+    if( !dir.length() )
+        throw Exception("StatisticsManager, configure: Dirrectory has zero length.");
 
-    try { traffloc = config.getString("MessageStorage.trafficDir"); }
-    catch(...) {
-        throw Exception("Can't find parameter in config: 'MessageStorage.trafficDir'");
-    }
+    location = dir;
+    traffloc = dir;
 
     if (!createStorageDir(location)) 
         throw Exception("Can't open statistics directory: '%s'", location.c_str());
@@ -93,8 +90,12 @@ StatisticsManager::StatisticsManager()
 }
 StatisticsManager::~StatisticsManager()
 {
-  MutexGuard guard(stopLock);
+  Logger::Init();
+  logger = Logger::getInstance("scag.stat.StatisticsManager");
+
   close();
+  Stop();
+  WaitFor();
 }
 
 void StatisticsManager::incError(IntHash<int>& hash, int errcode)
@@ -287,9 +288,15 @@ bool StatisticsManager::checkTraffic(std::string routeId, CheckTrafficPeriod per
 int StatisticsManager::Execute()
 {
     //smsc_log_debug(logger, "Execute() started (%d)", isStopping);
-    isStarted = true; bExternalFlush = false;
-    //while (!isStopping)
-    //{
+    {
+        MutexGuard mg(stopLock);
+        isStarted = true; 
+    }
+
+    bExternalFlush = false;
+
+    while (started())
+    {
         int toSleep = calculateToSleep();
         smsc_log_debug(logger, "Execute() >> Start wait %d", toSleep);
         awakeEvent.Wait(toSleep); // Wait for next hour begins ...
@@ -302,27 +309,42 @@ int StatisticsManager::Execute()
         bExternalFlush = false;
         doneEvent.Signal();
         smsc_log_debug(logger, "Execute() >> Flushed");
-    //}
-    isStarted = false;
-    exitEvent.Signal();
+    }
+
+    {
+        MutexGuard guard(stopLock);
+        isStarted = false;
+    }
+
+    //exitEvent.Signal();
     smsc_log_debug(logger, "Execute() exited");
     return 0;
 }
 
-void StatisticsManager::stop()
+void StatisticsManager::Stop()
 {
     MutexGuard guard(stopLock);
 
-    smsc_log_debug(logger, "stop() called, started=%d", isStarted);
-    //ThreadedTask::stop();
+    //smsc_log_debug(logger, "stop() called, started=%d", isStarted);
     if (isStarted)
     {
+        isStarted = false;
         bExternalFlush = true;
         awakeEvent.Signal();
-        smsc_log_debug(logger, "stop() waiting finish ...");
-        exitEvent.Wait();
+        //smsc_log_debug(logger, "stop() waiting finish ...");
+        //exitEvent.Wait();
     }
-    smsc_log_debug(logger, "stop() exited");
+    //smsc_log_debug(logger, "stop() exited");
+}
+
+bool StatisticsManager::started()
+{
+    bool isStart = false;
+    {
+        MutexGuard guard(stopLock);
+        isStart = isStarted;
+    }
+    return isStart;
 }
 
 int StatisticsManager::switchCounters()
@@ -401,9 +423,9 @@ void StatisticsManager::flushCounters(int index)
             value32 = htonl(routeStat->billingFailed);      buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(routeStat->recieptOk);          buff.Append((uint8_t *)&value32, sizeof(value32));
             value32 = htonl(routeStat->recieptFailed);      buff.Append((uint8_t *)&value32, sizeof(value32));
-            /*printf("p: %d, a: %d, r: %d, d: %d, gw_r: %d, f: %d, bo: %d, bf:%d, ro: %d, rf: %d\n", routeStat->providerId,
+            printf("p: %d, a: %d, r: %d, d: %d, gw_r: %d, f: %d, bo: %d, bf:%d, ro: %d, rf: %d\n", routeStat->providerId,
                    routeStat->accepted, routeStat->rejected, routeStat->delivered, routeStat->gw_rejected, routeStat->failed,
-                   routeStat->billingOk, routeStat->billingFailed, routeStat->recieptOk, routeStat->recieptFailed);*/
+                   routeStat->billingOk, routeStat->billingFailed, routeStat->recieptOk, routeStat->recieptFailed);
 
             // Writes route errors count.
             value32 = routeStat->errors.Count(); 

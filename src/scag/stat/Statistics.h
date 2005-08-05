@@ -22,7 +22,7 @@ using smsc::smeman::SmeRecord;
           cntBillingOk = 0x1000,
           cntBillingFailed,
           cntRecieptOk,
-          cntRecieptFailed,
+          cntRecieptFailed
 
         };
     }

@@ -75,7 +75,7 @@ namespace stat {
         static bool  inited;
         static Mutex initLock;
 
-        void configure(Config config);
+        void configure(const std::string& dir);
 
     protected:
 
@@ -132,15 +132,16 @@ namespace stat {
 
         static bool createDir(const std::string& dir);
         bool createStorageDir(const std::string loc);
+        bool started();
+        void Stop();
 
     public:
 
         static RouteMap routeMap;
 
-        static void init(Config config);    
+        static void init(const std::string& dir);    
         
         virtual int Execute();
-        virtual void stop();
 
         virtual void registerEvent(const SmppStatEvent& si);
         bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
