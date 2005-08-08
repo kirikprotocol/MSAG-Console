@@ -19,7 +19,7 @@
     </simpleType>
     <simpleType name="Command">
         <restriction base="string">
-            <pattern value="#\p{L}+\w*"/>
+            <pattern value="#\p{L}+[\w_]*"/>
         </restriction>
     </simpleType>
     <simpleType name="Session">
@@ -66,7 +66,6 @@
     <!-- General actions elements group definition  -->
     <group name="Actions">
         <choice>
-            
             <group ref="session:Actions"/>
             
             <element name="set">

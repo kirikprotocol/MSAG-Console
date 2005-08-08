@@ -8,7 +8,7 @@
         <choice>
             <element name="close">
                 <complexType>
-                    <attribute name="commit" type="boolean" default="true" use="optional"/>
+                    <attribute name="commit" type="string" default="true" use="optional"/>
                 </complexType>
             </element>
         </choice>    
