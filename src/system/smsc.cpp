@@ -22,6 +22,15 @@
 #include <util/findConfigFile.h>
 
 #include "profiler/profile-notifier.hpp"
+#include "cluster/InterconnectManager.h"
+#include "cluster/listeners/ApplyCommandListener.h"
+#include "cluster/listeners/MscCommandListener.h"
+#include "cluster/listeners/DlCommandListener.h"
+#include "cluster/listeners/MemCommandListener.h"
+#include "cluster/listeners/PrcCommandListener.h"
+#include "cluster/listeners/ProfileCommandListener.h"
+#include "cluster/listeners/SbmCommandListener.h"
+#include "cluster/listeners/SmeCommandListener.h"
 
 //#define ENABLE_MAP_SYM
 
@@ -42,6 +51,18 @@ using namespace smsc::snmp;
 using namespace smsc::core::synchronization;
 using util::Exception;
 using smsc::acls::AclAbstractMgr;
+
+using smsc::cluster::InterconnectManager;
+using smsc::cluster::Interconnect;
+using smsc::cluster::ApplyCommandListener;
+using smsc::cluster::MscCommandListener;
+using smsc::cluster::DlCommandListener;
+using smsc::cluster::MemCommandListener;
+using smsc::cluster::PrcCommandListener;
+using smsc::cluster::ProfileCommandListener;
+using smsc::cluster::SbmCommandListener;
+using smsc::cluster::SmeCommandListener;
+
 
 Smsc::~Smsc()
 {
@@ -206,6 +227,16 @@ void Smsc::init(const SmscConfigs& cfg)
   tp.preCreateThreads(15);
   //smsc::util::config::Manager::init("config.xml");
   //cfgman=&cfgman->getInstance();
+
+  Interconnect *icon = 0;
+  try {
+      smsc_log_info(log, "InterconnectManager initialization ..." );
+      InterconnectManager::init(smsc::cluster::MASTER, "m_ip", "s_ip", 0);
+      icon = InterconnectManager::getInstance();
+      smsc_log_info(log, "InterconnectManager is initialized" );
+  }catch(...){
+      throw Exception("InterconnectManager initialization exception.");
+  }
 
 #ifdef SNMP
   {
@@ -809,6 +840,29 @@ void Smsc::init(const SmscConfigs& cfg)
     smsc_log_warn(log, "core.mergeTimeout not found, using default(%d)",mergeConcatTimeout);
   }
 
+  try {
+    // Initializes command handlers and registers its;
+    smsc_log_info(log, "The command listeners initialization and registration ..." );
+    MscCommandListener *mscCommandListener = new MscCommandListener();
+    DlCommandListener *dlCommandListener = new DlCommandListener(distlstman);
+    MemCommandListener *memCommandListener = new MemCommandListener(distlstman);
+    PrcCommandListener *prcCommandListener = new PrcCommandListener(distlstman);
+    SbmCommandListener *sbmCommandListener = new SbmCommandListener(distlstman);
+    SmeCommandListener *smeCommandListener = new SmeCommandListener(&smeman);
+    ProfileCommandListener *proCommandListener = new ProfileCommandListener(profiler);
+
+    icon->addListener(smsc::cluster::MSCREGISTRATE_CMD,      mscCommandListener);
+    icon->addListener(smsc::cluster::DLADD_CMD,              dlCommandListener);
+    icon->addListener(smsc::cluster::MEMADDMEMBER_CMD,       memCommandListener);
+    icon->addListener(smsc::cluster::PRCADDPRINCIPAL_CMD,    prcCommandListener);
+    icon->addListener(smsc::cluster::SBMADDSUBMITER_CMD,     sbmCommandListener);
+    icon->addListener(smsc::cluster::SMEADD_CMD,             smeCommandListener);
+    icon->addListener(smsc::cluster::PROFILEUPDATE_CMD,      proCommandListener);
+    smsc_log_info(log, "The command listeners initialization and registration is completed successful" );
+  }catch(...){
+      throw Exception("Command listeners initialization exception.");
+  }
+
   smsc_log_info(log, "SMSC init complete" );
   }catch(exception& e)
   {
@@ -829,6 +883,13 @@ void Smsc::run()
 {
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.run");
   //smsc::logger::Logger::getInstance("sms.snmp.alarm").debug("sample alarm");
+
+  try {
+      Interconnect *icon = InterconnectManager::getInstance();
+      icon->activate();
+  }catch(...){
+      throw Exception("InterconnectManager activating exception.");
+  }
 
   __trace__("Smsc::run");
 
