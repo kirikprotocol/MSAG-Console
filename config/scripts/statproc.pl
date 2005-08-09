@@ -150,7 +150,7 @@ for my $h(0..23)
   next unless exists $hst{$h};
             #date           h   y   m   wd  wk  tot max usage%
   printf F "%02d.%02d.%02d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%.2f%%\n",$mday,$mon,$year%100,$h,
-    $year+1900,$mon,$wday,$dt->week_number,$hst{$h}->{mxsc},$cfg->{maxSmsSec},$hst{$h}->{mxsc}/$cfg->{maxSmsSec}*100.0;
+    $year+1900,$mon,$dt->day_of_week,$dt->week_number,$hst{$h}->{mxsc},$cfg->{maxSmsSec},$hst{$h}->{mxsc}/$cfg->{maxSmsSec}*100.0;
 }
 
 close F;
