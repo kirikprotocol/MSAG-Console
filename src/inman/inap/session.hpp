@@ -43,10 +43,10 @@ class Session : public Thread
         SCCP_ADDRESS_T inmanAddr;
         APP_CONTEXT_T  ac;
 
-        virtual     Dialog*  openDialog();
+        virtual     Dialog*  openDialog(USHORT_T id);
         virtual     Dialog*  findDialog(USHORT_T id);
-        virtual     void       closeDialog(Dialog* pDlg);
-        virtual     void       closeAllDialogs();
+        virtual     void     closeDialog(Dialog* pDlg);
+        virtual     void     closeAllDialogs();
 
     protected:
         typedef      std::map<USHORT_T, Dialog*> DialogsMap_T;
@@ -58,6 +58,7 @@ class Session : public Thread
         virtual     ~Session();
         virtual int  Execute();
 
+        USHORT_T      nextDialogId();
         State_T       state;
         UCHAR_T       SSN;
         USHORT_T      lastDialogId;

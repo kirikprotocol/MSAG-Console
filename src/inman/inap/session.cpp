@@ -74,13 +74,23 @@ void Session::setState(State_T newState)
     state = newState;
 }
 
-Dialog* Session::openDialog()
+USHORT_T Session::nextDialogId()
+{
+	USHORT_T id = lastDialogId;
+    if( ++lastDialogId  > TCAP_DIALOG_MAX_ID )  
+    {
+    	lastDialogId = TCAP_DIALOG_MIN_ID;
+    }
+    return id;
+}
+
+Dialog* Session::openDialog(USHORT_T id)
 {
     MutexGuard guard( lock );
-    smsc_log_debug(inapLogger,"Open dialog (SSN=%d, Dialog id=%d)", SSN, lastDialogId );
-    Dialog* pDlg = new Dialog( this, lastDialogId );
-    dialogs.insert( DialogsMap_T::value_type( lastDialogId, pDlg ) );
-    if( ++lastDialogId  > TCAP_DIALOG_MAX_ID )  lastDialogId = TCAP_DIALOG_MIN_ID;
+    if(id == 0) id = nextDialogId();
+    smsc_log_debug(inapLogger,"Open dialog (SSN=%d, Dialog id=%d)", SSN, id );
+    Dialog* pDlg = new Dialog( this, id );
+    dialogs.insert( DialogsMap_T::value_type( id, pDlg ) );
     return pDlg;
 }
 

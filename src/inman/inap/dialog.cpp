@@ -16,14 +16,40 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
+
+template <typename listener_t, typename source_t>
+void notifyListeners(std::list<listener_t*>& listeners, source_t source, void (listener_t::*method)(source_t))
+{
+		for( typename std::list<listener_t*>::iterator it = listeners.begin();
+		it != listeners.end(); it++)
+	 	{
+			 listener_t* ptr = *it;
+			 (*ptr.*method)( source );
+		}
+}
+
+TcapOperation::TcapOperation() : tag( EINSS7_I97TCAP_OPERATION_TAG_LOCAL )
+{
+}
+
+TcapOperation::TcapOperation(USHORT_T opTag, USHORT_T opLen, UCHAR_T* op, USHORT_T parLen, UCHAR_T* par ) 
+		: tag( opTag )
+		, operation( op, op + opLen )
+		, params( par, par + parLen )
+{
+}
+
+TcapOperation::~TcapOperation()
+{
+}
+
 /////////////////////////////////////////////////////////////////////////////////////
 // Dialog class
 /////////////////////////////////////////////////////////////////////////////////////
 
 
 Dialog::Dialog(Session* pSession, USHORT_T dlgId) 
-	: context( *this )
-	, did( dlgId )
+	: did( dlgId )
 	, session( pSession )
 	, qSrvc(EINSS7_I97TCAP_QLT_BOTH)
 	, priority(EINSS7_I97TCAP_PRI_HIGH_0)
@@ -32,37 +58,22 @@ Dialog::Dialog(Session* pSession, USHORT_T dlgId)
 
 Dialog::~Dialog()
 {
+	listeners.clear();
 }
 
-USHORT_T Dialog::start()
+void Dialog::addDialogListener(DialogListener* l)
 {
-  assert( session );
+	listeners.push_back( l );
+}
 
-  USHORT_T result;
-  result = EINSS7_I97TInvokeReq(
-    session->getSSN(),
-    MSG_USER_ID,
-    TCAP_INSTANCE_ID,
-    did,
-    1, //invokeId
-    0, //linkedIdUsed,
-    0, //linkedId,
-    EINSS7_I97TCAP_OP_CLASS_1, //opClass,
-    30, //timeOut,
-    EINSS7_I97TCAP_OPERATION_TAG_LOCAL, //operationTag,
-    0, //operationLength,
-    NULL, //*operationCode_p,
-    0, //paramLength,
-    NULL); //*parameters_p
+void Dialog::removeDialogListener(DialogListener* l)
+{
+	listeners.remove( l );
+}
 
-  if (result != 0)
-  {
-      smsc_log_error(inapLogger, "EINSS7_I97TInvokeReq failed with code %d(%s)", result,getTcapReasonDescription(result));
-      context.error();
-      session->closeDialog(this);
-  }
-
-  result = EINSS7_I97TBeginReq(
+USHORT_T Dialog::beginDialog()
+{
+ USHORT_T result = EINSS7_I97TBeginReq(
     session->getSSN(),
     MSG_USER_ID,
     TCAP_INSTANCE_ID,
@@ -78,107 +89,151 @@ USHORT_T Dialog::start()
     0,
     NULL);
 
-  if (result != 0)
+  if(result != 0)
   {
-      smsc_log_error(inapLogger, "EINSS7_I97TBeginReq failed with code %d(%s)", result,getTcapReasonDescription(result));
-      context.error();
-      session->closeDialog(this);
+  	smsc_log_error(tcapLogger, "EINSS7_I97TBeginReq failed with code %d(%s)", result,getTcapReasonDescription(result));
+  }
+
+  return result;
+}
+
+USHORT_T Dialog::continueDialog()
+{
+  USHORT_T result = EINSS7_I97TContinueReq(
+    session->getSSN(),
+    MSG_USER_ID,
+    TCAP_INSTANCE_ID,
+    did,
+    priority,
+    qSrvc,
+    session->inmanAddr.addrLen,
+    session->inmanAddr.addr,
+    session->ac.acLen,
+    session->ac.ac,
+    0,
+    NULL);
+
+  if(result != 0)
+  {
+  	smsc_log_error(tcapLogger, "EINSS7_I97TContinueReq failed with code %d(%s)", result,getTcapReasonDescription(result));
   }
   return result;
 }
 
-// Begin dialog
-
-USHORT_T Dialog::beginReq()
+USHORT_T Dialog::endDialog(USHORT_T termination)
 {
-/*
-    assert( session );
+  USHORT_T result = EINSS7_I97TEndReq(
+    session->getSSN(),
+    MSG_USER_ID,
+    TCAP_INSTANCE_ID,
+    did,
+    priority,
+    qSrvc,
+    termination,
+    session->ac.acLen,
+    session->ac.ac,
+    0,
+    NULL);
 
-    USHORT_T result = E94InapBeginReq(
-       session->getSSN(),
-       id,
-       qSrvc,
-       priority,
-       &session->scfAddr,
-       &session->inmanAddr,
-       &session->ac,
-       0, NULL,
-       0, NULL );
+  if(result != 0)
+  {
+  	smsc_log_error(tcapLogger, "EINSS7_I97TEndReq failed with code %d(%s)", result,getTcapReasonDescription(result));
+  }
 
-    if (result != 0)
-    {
-        smsc_log_error(inapLogger, "E94InapBeginReq failed with code %d(%s)", result,getInapReturnCodeDescription(result));
-    }
-
-    return result;
-*/
-    return 0;
+  return result;
 }
 
-USHORT_T Dialog::dataReq()
+
+USHORT_T Dialog::invoke(const TcapOperation& op)
 {
-/*
-    USHORT_T result = E94InapDataReq(
-        session->getSSN(),
-        id,
-        qSrvc,
-        priority,
-        acShort,
-        &session->inmanAddr,
-        0, //uInfoLen,
-        NULL, //uInfo_p,
-        0,    //USHORT_T noOfComponents
-        NULL); //COMP_T *comp_p
+  assert( session );
 
-    if (result != 0)
-    {
-        smsc_log_error(inapLogger, "E94InapDataReq failed with code %d(%s)", result,getInapReturnCodeDescription(result));
-    }
+  USHORT_T result = EINSS7_I97TInvokeReq(
+    session->getSSN(),
+    MSG_USER_ID,
+    TCAP_INSTANCE_ID,
+    did,
+    1, //invokeId
+    0, //linkedIdUsed,
+    0, //linkedId,
+    EINSS7_I97TCAP_OP_CLASS_1, //opClass,
+    30, //timeOut,
+    op.getTag(), //operationTag,
+    op.getOperation().size(), //operationLength,
+    const_cast<UCHAR_T*>(op.getOperation().begin()), //*operationCode_p,
+    op.getParams().size(), //paramLength,
+    const_cast<UCHAR_T*>(op.getParams().begin()) //*parameters_p
+    ); 
 
-    return result;
-*/
-    return 0;
+  if (result != 0)
+  {
+  	smsc_log_error(tcapLogger, "EINSS7_I97TInvokeReq failed with code %d(%s)", result,getTcapReasonDescription(result));
+  }
+
+  return result;
 }
 
-USHORT_T Dialog::endReq()
+USHORT_T Dialog::invokeSuccessed(const TcapOperation& res)
 {
-/*
-    USHORT_T result = E94InapEndReq(
-        session->getSSN(),
-        id,
-        qSrvc,
-        priority,
-        acShort,
-        IN_E_BASIC_TERM, //UCHAR_T termination,
-        0, //USHORT_T uInfoLen,
-        NULL, //UCHAR_T *uInfo_p,
-        0, //USHORT_T noOfComponents,
-        NULL//COMP_T *comp_p);
-    );
+  assert( session );
 
-    if (result != 0)
-    {
-        smsc_log_error(inapLogger, "E94InapEndReq failed with code %d(%s)", result,getInapReturnCodeDescription(result));
-    }
+	USHORT_T result = EINSS7_I97TResultLReq(
+    	session->getSSN(),
+    	MSG_USER_ID,
+    	TCAP_INSTANCE_ID,
+    	did,
+    	1, //invokeId
+		res.getTag(),
+    	res.getOperation().size(), //operationLength,
+    	const_cast<UCHAR_T*>(res.getOperation().begin()), //*operationCode_p,
+    	res.getParams().size(), //paramLength,
+    	const_cast<UCHAR_T*>(res.getParams().begin()) //*parameters_p
+    	);
 
-    return result;
-*/
-    return 0;
+  if (result != 0)
+  {
+  	smsc_log_error(tcapLogger, "EINSS7_I97TResultLReq failed with code %d(%s)", result,getTcapReasonDescription(result));
+  }
+
+  return result;
 }
 
-USHORT_T Dialog::initialDPSMS()
+USHORT_T Dialog::invokeFailed(const TcapOperation& err)
 {
-	return 0;
+ 	USHORT_T result = EINSS7_I97TUErrorReq
+	(
+    	session->getSSN(),
+    	MSG_USER_ID,
+    	TCAP_INSTANCE_ID,
+    	did,
+    	1,
+		err.getTag(),
+   		err.getOperation().size(), //operationLength,
+   		const_cast<UCHAR_T*>(err.getOperation().begin()), //*operationCode_p,
+   		err.getParams().size(), //paramLength,
+   		const_cast<UCHAR_T*>(err.getParams().begin()) //*parameters_p
+	);
+
+  if (result != 0)
+  {
+  	smsc_log_error(tcapLogger, "EINSS7_I97TResultLReq failed with code %d(%s)", result,getTcapReasonDescription(result));
+  }
+  return result;
 }
 
-USHORT_T Dialog::eventReportSMS()
+void Dialog::fireInvoke(const TcapOperation& op)
 {
-	return 0;
+	notifyListeners<DialogListener,const TcapOperation&>(listeners, op, &DialogListener::invoke);
 }
 
-USHORT_T Dialog::applicationEnd()
+void Dialog::fireInvokeSuccessed(const TcapOperation& op)
 {
-	return 0;
+	notifyListeners<DialogListener,const TcapOperation&>(listeners, op, &DialogListener::invokeSuccessed);
+}
+
+void Dialog::fireInvokeFailed(const TcapOperation& op)
+{
+	notifyListeners<DialogListener,const TcapOperation&>(listeners, op, &DialogListener::invokeFailed);
 }
 
 } // namespace inap
