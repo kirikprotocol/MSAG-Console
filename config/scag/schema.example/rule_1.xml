@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <scag:rule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                    xsi:schemaLocation="http://www.sibinco.com/SCAG smpp_rules.xsd"
-                    xmlns:scag="http://www.sibinco.com/SCAG"
-                    xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"    
-                    transport="SMPP">
+                 xsi:schemaLocation="http://www.sibinco.com/SCAG/smpp_rules.xsd"
+                 xmlns:scag="http://www.sibinco.com/SCAG"
+                 xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"
+                 transport="SMPP">
                         
     <deliver_sm>
         <set var="$e777" value="20"/>
