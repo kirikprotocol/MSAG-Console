@@ -2,7 +2,6 @@
 #define ApplyCommandListner_dot_h
 
 #include "cluster/Interconnect.h"
-#include "system/smsc.hpp"
 #include "smeman/smeman.h"
 #include "router/route_manager.h"
 #include "core/synchronization/Mutex.hpp"
@@ -22,12 +21,12 @@ using smsc::alias::AliasManager;
 class ApplyCommandListener : public CommandListener
 {
 public:
-    ApplyCommandListener(smsc::system::SmscConfigs &configs_, smsc::smeman::SmeManager *smeman_);
+    ApplyCommandListener(const smsc::system::SmscConfigs *configs_, smsc::smeman::SmeManager *smeman_);
 protected:
 	void applyRoutes();
     void applyAliases();
     void applyReschedule();
-    smsc::system::SmscConfigs &configs;
+    const smsc::system::SmscConfigs *configs;
     smsc::smeman::SmeManager *smeman;
 
     void ResetRouteManager(RouteManager* manager)

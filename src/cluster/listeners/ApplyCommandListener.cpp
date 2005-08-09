@@ -3,13 +3,21 @@
 #include "system/common/rescheduler.hpp"
 #include "util/findConfigFile.h"
 #include "resourcemanager/ResourceManager.hpp"
+#include "router/route_manager.h"
+#include "util/config/route/RouteConfig.h"
+
+namespace smsc {
+namespace system{
+    extern void loadRoutes(smsc::router::RouteManager* rm,const smsc::util::config::route::RouteConfig& rc,bool traceit=false);
+}
+}
 
 namespace smsc {
 namespace cluster {
 
-extern void loadRoutes(RouteManager* rm,const smsc::util::config::route::RouteConfig& rc,bool traceit=false);
+using smsc::system::loadRoutes;
 
-ApplyCommandListener::ApplyCommandListener(smsc::system::SmscConfigs &configs_, smsc::smeman::SmeManager *smeman_)
+ApplyCommandListener::ApplyCommandListener(const smsc::system::SmscConfigs *configs_, smsc::smeman::SmeManager *smeman_)
     : configs(configs_),
     smeman(smeman_)
 {
@@ -32,13 +40,13 @@ void ApplyCommandListener::handle(const Command& command)
 
 void ApplyCommandListener::applyRoutes()
 {
-    configs.routesconfig->reload();
-    configs.smemanconfig->reload();
+    configs->routesconfig->reload();
+    configs->smemanconfig->reload();
 
     auto_ptr<RouteManager> router(new RouteManager());
     router->assign(smeman);
     try{
-        loadRoutes(router.get(),*configs.routesconfig);
+        loadRoutes(router.get(),*(configs->routesconfig));
     }catch(...)
     {
         __warning__("Failed to load routes");
@@ -48,12 +56,12 @@ void ApplyCommandListener::applyRoutes()
 
 void ApplyCommandListener::applyAliases()
 {
-    configs.aliasconfig->reload();
+    configs->aliasconfig->reload();
 
     auto_ptr<AliasManager> aliaser(new AliasManager());
     {
         smsc::util::config::alias::AliasConfig::RecordIterator i =
-                                configs.aliasconfig->getRecordIterator();
+                                configs->aliasconfig->getRecordIterator();
         while(i.hasRecord())
         {
             smsc::util::config::alias::AliasRecord *rec;
