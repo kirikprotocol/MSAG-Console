@@ -4,15 +4,17 @@ use Net::FTP;
 use Time::Local;
 use locale;
 use POSIX;
+use IO::Handle;
+use DateTime;
+
 setlocale(LC_NUMERIC,"ru.koi8-r");
+setlocale(LC_TIME,"ru.koi8-r");
 
 my @findDirs=qw(. ./conf ../conf);
 
 if($0=~/(.*)[\\\/][^\\\/]+/)
 {
   push @findDirs,$1;
-  push @findDirs,$1.'/conf';
-  push @findDirs,$1.'../conf';
 }
 
 my $cfgFileName='statproc.conf';
@@ -74,7 +76,8 @@ while(<$cfgFile>)
   $cfg->{$1}=$2;
 }
 
-open(my $inFile,$cfg->{inputFile}) || die "Failed to open input file '".$cfg->{inputFile}."':$!";
+my $inFile=IO::Handle->new;
+open($inFile,$cfg->{inputFile}) || die "Failed to open input file '".$cfg->{inputFile}."':$!";
 
 my ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($date);
 $mon+=1;
@@ -86,6 +89,10 @@ my $cd=sprintf("%02d-%02d",$mday,$mon);
 $mon+=1;
 
 my $pd=sprintf("%02d-%02d",$mday,$mon);
+
+my $pyear=$year+1900;
+my $pmon=$mon;
+my $pmday=$mday;
 
 my $drx;
 if($pd ne $cd)
@@ -124,18 +131,26 @@ while(<$inFile>)
 
 my $outFileName=$cfg->{outputFile};
 
-$outFileName=~s/\./-$pd./;
+#$outFileName=~s/\./-$pd./;
+$outFileName=~s/\%YYYY/$pyear/i;
+$outFileName=~s/\%YY/sprintf'%02d',$pyear%100/ei;
+$outFileName=~s/\%MM/sprintf'%02d',$pmon/ie;
+$outFileName=~s/\%DD/sprintf'%02d',$pmday/ie;
+
+
 
 #print "outFN=$outFileName\n";
 
 open(F,'>'.$outFileName) || die "Faield to open file '".$outFileName."':$!";
+
+my $dt=DateTime->new(year=>$year+1900,month=>$mon,day=>$mday);
 
 for my $h(0..23)
 {
   next unless exists $hst{$h};
             #date           h   y   m   wd  wk  tot max usage%
   printf F "%02d.%02d.%02d\t%s\t%d\t%d\t%d\t%d\t%d\t%d\t%.2f%%\n",$mday,$mon,$year%100,$h,
-    $year+1900,$mon,$wday,$yday/7,$hst{$h}->{mxsc},$cfg->{maxSmsSec},$hst{$h}->{mxsc}/$cfg->{maxSmsSec}*100.0;
+    $year+1900,$mon,$wday,$dt->week_number,$hst{$h}->{mxsc},$cfg->{maxSmsSec},$hst{$h}->{mxsc}/$cfg->{maxSmsSec}*100.0;
 }
 
 close F;
@@ -153,7 +168,8 @@ sub openfile{
   my ($fn,@dirs)=@_;
   for(@dirs)
   {
-    if(-f $_.'/'.$fn  && open(my $f,$_.'/'.$fn))
+    my $f=IO::Handle->new;
+    if(-f $_.'/'.$fn  && open($f,$_.'/'.$fn))
     {
       return $f;
     }
