@@ -153,16 +153,16 @@ o.put("SMEs", "5");
     attributes="<%= as %>" options="<%= o %>"  /></td></tr> --%>
 
 <tr>
-<td align="left" with="10%">    <%=getLocString("common.util.Name")%>: &nbsp;</td><td with="40%" align="left"><input:text name="queryName"  default="<%=bean.getQueryName()%>"/> </td>
-<td align="left" with="10%">    <%=getLocString("common.util.Subj")%>: &nbsp;</td><td with="40%" align="left"><input:text name="querySubj"  default="<%=bean.getQuerySubj()%>"/> </td>
+<td align="left" width="10%">    <%=getLocString("common.util.Name")%>: &nbsp;</td><td width="40%" align="left"><input:text name="queryName"  default="<%=bean.getQueryName()%>"/> </td>
+<td align="left" width="10%">    <%=getLocString("common.util.Subj")%>: &nbsp;</td><td width="40%" align="left"><input:text name="querySubj"  default="<%=bean.getQuerySubj()%>"/> </td>
 </tr>
 <tr>
-<td align="left" with="10%">    <%=getLocString("common.util.SMEs")%>: &nbsp;</td><td with="40%" align="left"><input:text name="querySMEs" default="<%=bean.getQuerySMEs()%>"/>  </td>
-<td align="left" with="10%">    <%=getLocString("common.util.Mask")%>: &nbsp;</td><td with="40%" align="left"><input:text name="queryMask" default="<%=bean.getQueryMask()%>"/>  </td>
+<td align="left" width="10%">    <%=getLocString("common.util.SMEs")%>: &nbsp;</td><td width="40%" align="left"><input:text name="querySMEs" default="<%=bean.getQuerySMEs()%>"/>  </td>
+<td align="left" width="10%">    <%=getLocString("common.util.Mask")%>: &nbsp;</td><td width="40%" align="left"><input:text name="queryMask" default="<%=bean.getQueryMask()%>"/>  </td>
 </tr>
 <tr>
-<td align="left" with="10%">    <%=getLocString("common.util.Providers")%>: &nbsp;</td><td with="40%" align="left"><input:text name="queryProvider" default="<%=bean.getQueryProvider()%>"/>  </td>
-<td align="left" with="10%">    <%=getLocString("common.util.Categories")%>: &nbsp;</td><td with="40%" align="left"><input:text name="queryCategory" default="<%=bean.getQueryCategory()%>"/>  </td>
+<td align="left" width="10%">    <%=getLocString("common.util.Providers")%>: &nbsp;</td><td width="40%" align="left"><input:text name="queryProvider" default="<%=bean.getQueryProvider()%>"/>  </td>
+<td align="left" width="10%">    <%=getLocString("common.util.Categories")%>: &nbsp;</td><td width="40%" align="left"><input:text name="queryCategory" default="<%=bean.getQueryCategory()%>"/>  </td>
 </tr>
 <tr><td colspan="2">  &nbsp;&nbsp;
 
