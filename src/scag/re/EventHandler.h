@@ -16,6 +16,7 @@ using namespace scag::re::actions;
 class EventHandler : public IParserHandler
 {
     EventHandler(const EventHandler &);
+    PropertyObject propertyObject;
 protected:
     std::list<Action *> actions;
 //////////////IParserHandler Interfase///////////////////////
@@ -26,7 +27,7 @@ public:
     EventHandler()  {};
     virtual ~EventHandler();
 
-    virtual void init(const SectionParams& params) = 0;
+    virtual void init(const SectionParams& params,PropertyObject _propertyObject) {propertyObject = _propertyObject;}
     virtual RuleStatus process(SCAGCommand& command) = 0;
     virtual StrToHandlerId(const std::string& str) = 0;
 

@@ -55,11 +55,6 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command)
     return rs;
 }
 
-void SmppEventHandler::init(const SectionParams& params)
-{
-    smsc_log_debug(logger,"HandlerEvent::Init");
-}
-
 int SmppEventHandler::StrToHandlerId(const std::string& str)
 {
     if (str == "submit_sm")             return SUBMIT;

@@ -46,7 +46,7 @@ public:
         if (del) delete this;
     }
 
-    virtual void init(const SectionParams& params);
+    virtual void init(const SectionParams& params, PropertyObject propertyObject);
 
 
     /** 

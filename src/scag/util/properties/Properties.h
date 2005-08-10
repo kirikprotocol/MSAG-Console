@@ -122,6 +122,12 @@ namespace scag { namespace util { namespace properties
         virtual void setBool(bool val);
         virtual void setDate(time_t val);
         const std::string& GetName() const {return name;}
+
+        virtual void setPureStr(const std::string& val);
+        virtual void setPureInt(int64_t val);
+        virtual void setPureBool(bool val);
+        virtual void setPureDate(time_t val);
+
     };
 
     struct Changeable

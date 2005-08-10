@@ -1,4 +1,6 @@
 #include "ActionLog.h"
+#include "scag/re/CommandAdapter.h"
+
 #include "scag/re/SAX2Print.hpp"
 
 
@@ -14,7 +16,7 @@ bool ActionLog::FinishXMLSubSection(const std::string& name)
     return true;
 }
 
-void ActionLog::init(const SectionParams& params)
+void ActionLog::init(const SectionParams& params,PropertyObject propertyObject)
 {
     if (!params.Exists("level")) throw Exception("Action 'session:close': missing 'level' parameter");
     if (!params.Exists("category")) throw Exception("Action 'session:close': missing 'category' parameter");
@@ -36,11 +38,37 @@ void ActionLog::init(const SectionParams& params)
     msg = params["message"];
 
     FieldType ft;
+    AccessType at;
+
     ft = ActionContext::Separate(sCategory,name); 
     if (ft == ftUnknown) throw Exception("Action 'log': unknown value for 'category' parameter");
 
+    if (ft == ftField) 
+    {
+        at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
+        if (!(at&atRead)) 
+        {
+            std::string message = "Action 'log': cannot read property '";
+            message.append(msg);
+            message.append("' - no access");
+            throw Exception(message.c_str());
+        }
+    }
+
     ft = ActionContext::Separate(msg,name); 
     if (ft == ftUnknown) throw Exception("Action 'log': unknown value for 'message' parameter");
+
+    if (ft == ftField) 
+    {
+        at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
+        if (!(at&atRead)) 
+        {
+            std::string message = "Action 'log': cannot read property '";
+            message.append(sCategory);
+            message.append("' - no access");
+            throw Exception(message.c_str());
+        }
+    }
 
     smsc_log_debug(logger,"Action 'log':: init...");
 }

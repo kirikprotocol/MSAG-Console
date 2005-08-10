@@ -3,7 +3,6 @@
 #include <util/Exception.hpp>
 #include "SAX2Print.hpp"
 
-
 namespace scag { namespace re {
 
 using namespace scag::util::properties;
@@ -44,7 +43,7 @@ IParserHandler * EventHandler::StartXMLSubSection(const std::string& name,const 
 
     try
     {
-        action->init(params);
+        action->init(params,propertyObject);
     } catch (Exception& e)
     {
         delete action;

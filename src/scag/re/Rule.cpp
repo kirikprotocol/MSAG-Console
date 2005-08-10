@@ -96,19 +96,24 @@ EventHandler * Rule::CreateEventHandler()
 IParserHandler * Rule::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)
 {
     EventHandler * eh = 0;
+    int nHId = 0;
+
     try
     {
         eh = CreateEventHandler();
         if (!eh) throw Exception("Rule: unknown RuleTransport to create EventHandler");
 
+        nHId = eh->StrToHandlerId(name);
+        PropertyObject propertyObject;
+        propertyObject.HandlerId = nHId;
+        propertyObject.transport = transportType;
 
-        eh->init(params);
+        eh->init(params,propertyObject);
     } catch (Exception& e)
     {
         if (eh) delete eh;
         throw e;
     }
-    int nHId = eh->StrToHandlerId(name);
     if (Handlers.Exist(nHId)) 
     {
         delete eh;
@@ -125,7 +130,7 @@ bool Rule::FinishXMLSubSection(const std::string& name)
 }
 
 
-void Rule::init(const SectionParams& params)
+void Rule::init(const SectionParams& params, PropertyObject propertyObject)
 {
     //if (!params.Exists("name")) throw Exception("Rule: missing 'name' parameter");
     if (!params.Exists("transport")) throw Exception("Rule: missing 'transport' parameter");

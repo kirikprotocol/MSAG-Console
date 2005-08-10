@@ -62,10 +62,6 @@ void ActionContext::closeSession(bool Commit)
 
 }
 
-bool ActionContext::StrToPeriod(CheckTrafficPeriod& period, std::string& str)
-{
-    return true;
-}
 
 bool ActionContext::checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value)
 {

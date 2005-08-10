@@ -1,4 +1,6 @@
 #include "ActionReturn.h"
+#include "scag/re/CommandAdapter.h"
+
 #include "scag/re/SAX2Print.hpp"
 
 
@@ -9,7 +11,7 @@ ActionReturn::~ActionReturn()
     smsc_log_debug(logger,"Action 'return' released");
 }
 
-void ActionReturn::init(const SectionParams& params)
+void ActionReturn::init(const SectionParams& params,PropertyObject propertyObject)
 {
     if (params.Exists("result")) 
     {
@@ -18,7 +20,24 @@ void ActionReturn::init(const SectionParams& params)
     }
     else 
         throw Exception("Action 'return': missing 'result' parameter");
-   
+
+    FieldType ft;
+
+    const char * name = 0;
+    ft = ActionContext::Separate(ReturnValue,name); 
+    if (ft == ftField) 
+    {
+        AccessType at;
+        at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
+        if (!(at&atRead)) 
+        {
+            std::string msg = "Action 'return': cannot read property '";
+            msg.append(ReturnValue);
+            msg.append("' - no acces");
+            throw Exception(msg.c_str());
+        }
+    }
+
 }
 
 bool ActionReturn::run(ActionContext& context)

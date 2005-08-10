@@ -71,7 +71,8 @@ void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionPara
         Rule * rule = new Rule();
         try
         {
-            rule->init(params);
+            PropertyObject propertyObject;
+            rule->init(params,propertyObject);
         } catch(Exception& e)
         {
             std::string msg("Semantic Analyser: Invalid object '");

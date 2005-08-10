@@ -18,7 +18,7 @@ public:
     virtual bool run(ActionContext& context);
 
     ActionSet();
-    virtual void init(const SectionParams& params);
+    virtual void init(const SectionParams& params,PropertyObject propertyObject);
     virtual ~ActionSet();
 
 };

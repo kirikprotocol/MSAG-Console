@@ -32,13 +32,6 @@ XERCES_CPP_NAMESPACE_END
 
 typedef smsc::core::buffers::Hash<std::string> SectionParams;
 
-enum TagsID
-{
-    tgRuleSection,
-    tgEventHandlerSection,
-    tgActionSection
-};
-
 
 class XMLBasicHandler;
 class Rule;

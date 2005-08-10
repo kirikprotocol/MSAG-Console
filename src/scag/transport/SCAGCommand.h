@@ -1,7 +1,7 @@
 #ifndef SCAG_TRANSPORT_COMMAND
 #define SCAG_TRANSPORT_COMMAND
 
-//#include <scag/transport/SCAGCommand.h>
+#include "util/int.h"
 
 namespace scag { namespace transport
 {

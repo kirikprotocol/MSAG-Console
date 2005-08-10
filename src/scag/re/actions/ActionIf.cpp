@@ -3,6 +3,7 @@
 
 #include "scag/re/Rule.h"
 #include "scag/re/ActionFactory.h"
+#include "scag/re/CommandAdapter.h"
 
 
 namespace scag { namespace re { namespace actions {
@@ -12,25 +13,57 @@ ActionIf::ActionIf() : FillThenSection(true), FillElseSection(false)
 {
 }
 
-void ActionIf::init(const SectionParams& params)
+void ActionIf::init(const SectionParams& params,PropertyObject _propertyObject)
 {
     if (!params.Exists("test")) throw Exception("Action 'if': missing 'test' parameter");
 
+    propertyObject = _propertyObject;
     singleparam.Operand1 = params["test"];
 
     const char * name = 0;
 
     FieldType ft;
+    AccessType at;
+
     ft = ActionContext::Separate(singleparam.Operand1,name); 
     if (ft==ftUnknown) throw Exception("Action 'if': unrecognized variable prefix ");
 
+    if (ft == ftField) 
+    {
+        at = CommandAdapter::CheckAccess(propertyObject.HandlerId, name,propertyObject.transport);
+        if (!(at&atRead)) 
+        {
+            std::string msg = "Action 'if': cannot read property '";
+            msg.append(singleparam.Operand1);
+            msg.append("' - no access");
+            throw Exception(msg.c_str());
+        }
+    }
+
+
     bool hasOP = params.Exists("op");
     bool hasValue = params.Exists("value");
+
 
     if (hasOP&&hasValue) 
     {
         singleparam.Operation = GetOperationFromSTR(params["op"]);
         singleparam.Operand2 = params["value"];
+
+        ft = ActionContext::Separate(singleparam.Operand2,name); 
+
+        if (ft == ftField) 
+        {
+            at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
+            if (!(at&atRead)) 
+            {
+                std::string msg = "Action 'if': cannot read property '";
+                msg.append(singleparam.Operand2);
+                msg.append("' - no access");
+                throw Exception(msg.c_str());
+            }
+        }
+
         if (singleparam.Operation == opUnknown) throw Exception("Action 'if': unrecognized operation");
         if (singleparam.Operand2.size()==0) throw Exception("Action 'if': invalid 'value' parameter");
     } else 
@@ -38,6 +71,8 @@ void ActionIf::init(const SectionParams& params)
         if (hasOP&&(!hasValue)) throw Exception("Action 'if': missing 'value' parameter"); 
         if ((!hasOP)&&hasValue) throw Exception("Action 'if': missing 'op' parameter"); 
     }
+
+
 }
 
 ActionIf::~ActionIf()
@@ -88,7 +123,7 @@ IParserHandler * ActionIf::StartXMLSubSection(const std::string& name,const Sect
 
         try
         {
-            action->init(params);
+            action->init(params,propertyObject);
         } catch (Exception& e)
         {
             delete action;

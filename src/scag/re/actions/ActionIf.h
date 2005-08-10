@@ -41,6 +41,7 @@ class ActionIf : public Action
 
     ActionIf(const ActionIf &);
 
+    PropertyObject propertyObject;
     SingleParam singleparam;
     bool CompareResultToBool(IfOperations op,int result);
 
@@ -75,7 +76,7 @@ protected:
 //////////////IParserHandler Interfase///////////////////////
 public:
     ActionIf();
-    virtual void init(const SectionParams& params);
+    virtual void init(const SectionParams& params,PropertyObject _propertyObject);
     virtual ~ActionIf();
     virtual bool run(ActionContext& context);
 

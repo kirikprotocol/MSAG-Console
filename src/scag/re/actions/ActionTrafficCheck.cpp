@@ -8,6 +8,30 @@
 
 namespace scag { namespace re { namespace actions {
 
+bool ActionTrafficCheck::StrToPeriod(CheckTrafficPeriod& _period, std::string& str)
+{
+    if (str == "min") 
+    {
+        _period = checkMinPeriod;
+        return true;
+    } else if (str == "hour") 
+    {
+        _period = checkHourPeriod;
+        return true;
+    } else if (str == "day") 
+    {
+        _period = checkDayPeriod;
+        return true;
+    } else if (str == "month") 
+    {
+        _period = checkMonthPeriod;
+        return true;
+    }
+
+    return false;
+}
+
+
 
 IParserHandler * ActionTrafficCheck::StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory)
 {
@@ -23,7 +47,7 @@ IParserHandler * ActionTrafficCheck::StartXMLSubSection(const std::string& name,
 
     try
     {
-        action->init(params);
+        action->init(params,propertyObject);
     } catch (Exception& e)
     {
         delete action;
@@ -39,13 +63,16 @@ bool ActionTrafficCheck::FinishXMLSubSection(const std::string& name)
     return (name == "traffic:check");
 }
 
-void ActionTrafficCheck::init(const SectionParams& params)
+void ActionTrafficCheck::init(const SectionParams& params, PropertyObject _propertyObject)
 {
     if (!params.Exists("max")) throw Exception("Action 'traffic:check': missing 'max' parameter");
     if (!params.Exists("period")) throw Exception("Action 'traffic:check': missing 'period' parameter");
 
-    sPeriod = params["period"];
     sMax = params["max"];
+
+    std::string sPeriod = params["period"];
+    if (!StrToPeriod(period,sPeriod)) Exception("Action 'traffic:check': invalid 'period' parameter");
+    propertyObject = _propertyObject;
 }
 
 bool ActionTrafficCheck::run(ActionContext& context)
@@ -56,10 +83,27 @@ bool ActionTrafficCheck::run(ActionContext& context)
     std::list<Action *>::const_iterator it;
 
     
+    std::string routeId;
+    int nMaxValue = 0;
+    const char * name;
+    
+    FieldType ft;
+    ft = ActionContext::Separate(sMax,name);
+
+    if (ft == ftUnknown) 
+        nMaxValue = atoi(sMax.c_str());
+    else
+    {
+        Property * p = context.getProperty(sMax);
+
+        if (p) 
+            nMaxValue = p->getInt();
+        else 
+            smsc_log_warn(logger,"Action 'traffic:check': invalid property");
+    }
 
 
-
-    if (!context.checkTraffic(routeId,sMax,value)) return true;
+    if (!context.checkTraffic(routeId,period,nMaxValue)) return true;
 
     for (it = Actions.begin(); it!=Actions.end(); ++it)
     {

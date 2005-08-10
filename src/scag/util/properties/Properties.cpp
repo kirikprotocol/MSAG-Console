@@ -1,10 +1,6 @@
 #include <string.h>
-
 #include "Properties.h"
 #include <stdlib.h>
-#include <stdio.h>
-#include <iostream>
-
 
 namespace scag { namespace util { namespace properties 
 {
@@ -241,6 +237,22 @@ void AdapterProperty::setDate(time_t val)
     if (patron) patron->changed(*this);
 }
 
+void AdapterProperty::setPureStr(const std::string& val)
+{
+    Property::setStr(val);
+}
+void AdapterProperty::setPureInt(int64_t val)
+{
+    Property::setInt(val);
+}
+void AdapterProperty::setPureBool(bool val)
+{
+    Property::setBool(val);
+}
+void AdapterProperty::setPureDate(time_t val)
+{
+    Property::setDate(val);
+}
 
 
 ////////////////////////////////////PROPERTY MANAGER/////////////////////////

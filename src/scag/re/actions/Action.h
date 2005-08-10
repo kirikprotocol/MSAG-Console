@@ -13,7 +13,7 @@ class Action : public IParserHandler
 {
 public:
     virtual bool run(ActionContext& context) = 0;
-    virtual void init(const SectionParams& params) = 0;
+    virtual void init(const SectionParams& params,PropertyObject propertyObject) = 0;
 };
 
 }}}
