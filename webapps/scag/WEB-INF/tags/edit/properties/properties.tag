@@ -12,7 +12,7 @@
 <input type="hidden" name="add" value="${fn:escapeXml(bean.add)}">
 </c:if>
 <div class=page_subtitle>${fn:escapeXml(title)}</div>
-<table class=properties_list cellspacing=0 cellspadding=0>
+<table class=properties_list cellspacing=0 cellpadding=0>
 <c:if test="${!SCAG_EDIT_PROPERTIES_noHeaders}">
   <col width="15%"> 
   <col width="100%">
