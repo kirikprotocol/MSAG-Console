@@ -6,6 +6,12 @@
 namespace smsc { namespace cluster 
 {
 
+    typedef enum {
+        SINGLE = 0,
+        MASTER = 1,
+        SLAVE  = 2
+    } Role;
+
     /**
      * Listener interface to handle ohter-side commands by internal subsystems.
      * Listeners should be registered via Interconnect interface.
@@ -39,6 +45,7 @@ namespace smsc { namespace cluster
         virtual void sendCommand(Command* command) = 0;
         virtual void addListener(CommandType type, CommandListener* listener) = 0;
         virtual void activate() = 0;
+        virtual Role getRole() = 0; 
     };
 
 }}

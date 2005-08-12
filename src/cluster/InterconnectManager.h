@@ -14,12 +14,6 @@ namespace smsc { namespace cluster {
 
 using smsc::core::synchronization::Mutex;
 
-    typedef enum {
-        SINGLE = 0,
-        MASTER = 1,
-        SLAVE  = 2
-    } Role;
-
     class InterconnectManager : public Interconnect, public Thread
     {
     private:
@@ -65,6 +59,7 @@ using smsc::core::synchronization::Mutex;
         void Stop();
 
         virtual int Execute();
+        virtual Role getRole(){return role;};
     };
 
 }}
