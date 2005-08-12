@@ -50,7 +50,7 @@ public class TopMenu  extends ArrayList {
 //            add(new MenuItem("menu.services", "", serviceItems));
 
             Collection rulesItems = new ArrayList();
-            rulesItems.add(new MenuItem("menu.rules.rules", "/rules/rules/index.jsp"));
+            rulesItems.add(new MenuItem("menu.rules.rules","", "/rules/rules/index.jsp','xmledit','channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');"));
             add(new MenuItem("menu.rules", "", rulesItems));
 
             Collection statisticItems = new ArrayList();
