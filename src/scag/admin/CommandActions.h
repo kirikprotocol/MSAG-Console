@@ -11,7 +11,6 @@
 
 #include "admin/protocol/Command.h"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 namespace Actions {
@@ -24,7 +23,6 @@ struct CommandActions
 };
 
 
-}
 }
 }
 }

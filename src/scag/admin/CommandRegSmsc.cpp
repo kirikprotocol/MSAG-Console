@@ -13,13 +13,12 @@
 #include "scag/gwsme.hpp"
 #include "util/Exception.hpp"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
 using namespace smsc::util::xml;
 
-Response * CommandRegSmsc::CreateResponse(smsc::scag::Smsc * SmscApp)
+Response * CommandRegSmsc::CreateResponse(scag::Smsc * SmscApp)
 {
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("CommandRegSmsc");
   try {      
@@ -47,6 +46,5 @@ Response * CommandRegSmsc::CreateResponse(smsc::scag::Smsc * SmscApp)
 }
 
 
-}
 }
 }

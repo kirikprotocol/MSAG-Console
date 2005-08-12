@@ -7,7 +7,6 @@
 #include "Abstract_CommandSmeInfo.h"
 #include "CommandIds.h"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
@@ -18,10 +17,9 @@ public:
     : Abstract_CommandSmeInfo((Command::Id)CommandIds::statusSme, document)
   {
   }
-    virtual Response * CreateResponse(smsc::scag::Smsc * SmscApp);
+    virtual Response * CreateResponse(scag::Smsc * SmscApp);
 };
 
-}
 }
 }
 #endif	/* _CommandStatusSme_H */

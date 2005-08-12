@@ -11,13 +11,12 @@
 #include "admin/service/Variant.h"
 #include "admin/service/Type.h"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
 using namespace smsc::util::xml;
 
-Response * CommandStatusSme::CreateResponse(smsc::scag::Smsc * SmscApp)
+Response * CommandStatusSme::CreateResponse(scag::Smsc * SmscApp)
 {
   Variant result(smsc::admin::service::StringListType);
   ((SmeManager*)(SmscApp->getSmeAdmin()))->statusSme(result);
@@ -26,6 +25,5 @@ Response * CommandStatusSme::CreateResponse(smsc::scag::Smsc * SmscApp)
 }
 
 
-}
 }
 }

@@ -18,7 +18,6 @@
 #include "CommandLoadRoutes.h"
 #include "CommandModifySmsc.h"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
@@ -75,6 +74,5 @@ Command * SCAGCommandReader::createCommand(int id, const DOMDocument *data)
 }
 
 
-}
 }
 }

@@ -17,7 +17,6 @@
 
 
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
@@ -35,7 +34,7 @@ CommandLoadRoutes::CommandLoadRoutes(const xercesc::DOMDocument * doc)
 }
 
 
-Response * CommandLoadRoutes::CreateResponse(smsc::scag::Smsc * SmscApp)
+Response * CommandLoadRoutes::CreateResponse(scag::Smsc * SmscApp)
 {
   try
   {
@@ -83,7 +82,6 @@ CommandLoadRoutes::~CommandLoadRoutes()
 
 
 
-}
 }
 }
 

@@ -7,11 +7,10 @@
 
 #include "CommandUnregSme.h"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
-Response * CommandUnregSme::CreateResponse(smsc::scag::Smsc * SmscApp)
+Response * CommandUnregSme::CreateResponse(scag::Smsc * SmscApp)
 { 
   SmscApp->unregisterSmeProxy(systemId);
   return new Response(Response::Ok, "none");
@@ -19,6 +18,5 @@ Response * CommandUnregSme::CreateResponse(smsc::scag::Smsc * SmscApp)
 }
 
 
-}
 }
 }

@@ -13,7 +13,6 @@
 #include "scag/smsc.hpp"
 #include "admin/service/Variant.h"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
@@ -24,7 +23,7 @@ public:
   
   CommandTraceRoute(const xercesc::DOMDocument * doc);
   virtual ~CommandTraceRoute();
-  virtual Response * CreateResponse(smsc::scag::Smsc * SmscApp);
+  virtual Response * CreateResponse(scag::Smsc * SmscApp);
 
 protected:
   std::string dstAddr;
@@ -32,7 +31,6 @@ protected:
   std::string srcSysId;
 };
 
-}
 }
 }
 

@@ -17,7 +17,6 @@
 
 
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
@@ -35,7 +34,7 @@ SCAGCommand::~SCAGCommand()
 {
 }
 
-Response * SCAGCommand::CreateResponse(smsc::scag::Smsc * SmscApp)
+Response * SCAGCommand::CreateResponse(scag::Smsc * SmscApp)
 {
   return new Response(Response::Ok, "none");
 }
@@ -46,7 +45,6 @@ Actions::CommandActions SCAGCommand::GetActions()
   return result;
 }
 
-}
 }
 }
 

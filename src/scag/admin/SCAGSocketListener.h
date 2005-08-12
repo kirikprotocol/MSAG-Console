@@ -11,7 +11,6 @@
 #include <admin/util/SocketListener.h>
 #include <scag/admin/SCAGCommandDispatcher.h>
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
@@ -19,7 +18,6 @@ using smsc::admin::util::SocketListener;
 
 typedef SocketListener<SCAGCommandDispatcher> SCAGSocketListener;
 
-}
 }
 }
 

@@ -8,7 +8,6 @@
 
 #include "CommandActions.h"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 namespace Actions {
@@ -19,7 +18,6 @@ CommandActions::CommandActions()
   reloadconfig = false;
 }
 
-}
 }
 }
 }

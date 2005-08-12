@@ -11,7 +11,6 @@
 #include "Abstract_CommandSmeInfo.h"
 #include "CommandIds.h"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
@@ -22,11 +21,10 @@ public:
     : Abstract_CommandSmeInfo((Command::Id)CommandIds::addSme, document)
   {
   }
-  virtual Response * CreateResponse(smsc::scag::Smsc * SmscApp);
+  virtual Response * CreateResponse(scag::Smsc * SmscApp);
 
 };
 
-}
 }
 }
 #endif	/* _CommandAddSme_H */

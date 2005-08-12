@@ -10,7 +10,6 @@
 
 #include "Abstract_CommandSmeInfo.h"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
@@ -18,10 +17,9 @@ class CommandUpdateSmeInfo : public Abstract_CommandSmeInfo
 {
 public:
 	CommandUpdateSmeInfo(const xercesc::DOMDocument * const document);
-    virtual Response * CreateResponse(smsc::scag::Smsc * SmscApp);
+    virtual Response * CreateResponse(scag::Smsc * SmscApp);
 };
 
-}
 }
 }
 #endif	/* _CommandUpdateSmeInfo_H */

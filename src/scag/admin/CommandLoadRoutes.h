@@ -15,21 +15,19 @@
 #include "admin/service/Variant.h"
 #include "SCAGCommand.h"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
 
-class CommandLoadRoutes : public smsc::scag::admin::SCAGCommand 
+class CommandLoadRoutes : public scag::admin::SCAGCommand 
 {
 public:
   
   CommandLoadRoutes(const xercesc::DOMDocument * document);
   virtual ~CommandLoadRoutes();
-  virtual Response * CreateResponse(smsc::scag::Smsc * SmscApp);
+  virtual Response * CreateResponse(scag::Smsc * SmscApp);
 };
 
-}
 }
 }
 

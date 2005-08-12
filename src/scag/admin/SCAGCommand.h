@@ -15,12 +15,11 @@
 #include "admin/protocol/ResponseWriter.h"
 #include "CommandActions.h"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
 using namespace smsc::admin::protocol;
-using namespace smsc::scag;
+using namespace scag;
 using namespace smsc::admin::protocol;
 
 class SCAGCommand : public Command
@@ -28,11 +27,10 @@ class SCAGCommand : public Command
 public:
   SCAGCommand(Command::Id id);
   virtual ~SCAGCommand();
-  virtual Response * CreateResponse(smsc::scag::Smsc * SmscApp);
-  virtual smsc::scag::admin::Actions::CommandActions GetActions();
+  virtual Response * CreateResponse(scag::Smsc * SmscApp);
+  virtual scag::admin::Actions::CommandActions GetActions();
 };
 
-}
 }
 }
 

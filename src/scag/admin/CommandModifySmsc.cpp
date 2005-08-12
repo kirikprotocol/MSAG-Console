@@ -9,13 +9,12 @@
 #include "util/xml/utilFunctions.h"
 #include "util/Exception.hpp"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
 using namespace smsc::util::xml;
 
-Response * CommandModifySmsc::CreateResponse(smsc::scag::Smsc * SmscApp)
+Response * CommandModifySmsc::CreateResponse(scag::Smsc * SmscApp)
 {
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("CommandModifySmsc");
   try {
@@ -35,6 +34,5 @@ Response * CommandModifySmsc::CreateResponse(smsc::scag::Smsc * SmscApp)
 }
 
 
-}
 }
 }

@@ -8,7 +8,6 @@
 #include "CommandUpdateSmeInfo.h"
 #include "CommandIds.h"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
@@ -21,13 +20,12 @@ CommandUpdateSmeInfo::CommandUpdateSmeInfo(const xercesc::DOMDocument * const do
   smsc_log_debug(logger, "UpdateSmeInfo command");
 }
 
-Response * CommandUpdateSmeInfo::CreateResponse(smsc::scag::Smsc * SmscApp)
+Response * CommandUpdateSmeInfo::CreateResponse(scag::Smsc * SmscApp)
 {
   SmscApp->getSmeAdmin()->updateSmeInfo(getSmeInfo().systemId, getSmeInfo());  
   return new Response(Response::Ok, "none");
 }
 
-}
 }
 }
 

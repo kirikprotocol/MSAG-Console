@@ -12,11 +12,10 @@
 #include "SCAGCommand.h"
 #include "CommandActions.h"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
-class CommandApply : public smsc::scag::admin::SCAGCommand 
+class CommandApply : public scag::admin::SCAGCommand 
 {
 public:
   enum subjects {
@@ -29,8 +28,8 @@ public:
   
   CommandApply(const xercesc::DOMDocument * document);
   virtual ~CommandApply();
-  virtual Response * CreateResponse(smsc::scag::Smsc * SmscApp);
-  virtual smsc::scag::admin::Actions::CommandActions GetActions();
+  virtual Response * CreateResponse(scag::Smsc * SmscApp);
+  virtual scag::admin::Actions::CommandActions GetActions();
   
   //subjects getSubject();
 
@@ -38,7 +37,6 @@ private:
   subjects subj;
 };
 
-}
 }
 }
 

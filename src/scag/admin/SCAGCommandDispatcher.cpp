@@ -11,18 +11,17 @@
 #include "scag/smsc.hpp"
 #include "core/synchronization/Mutex.hpp"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
 using namespace smsc::core::synchronization;
-using namespace smsc::scag;
+using namespace scag;
 
 class GwRunner : public smsc::core::threads::Thread
 {
   public:
     GwRunner(const SmscConfigs& cfgs)
-    : _app(new smsc::scag::Smsc), running(false), configs(cfgs)
+    : _app(new scag::Smsc), running(false), configs(cfgs)
     {}
 
     virtual ~GwRunner() {
@@ -81,7 +80,7 @@ class GwRunner : public smsc::core::threads::Thread
       return running;
     }
 
-    smsc::scag::Smsc* const getApp()
+    scag::Smsc* const getApp()
     {
       MutexGuard guard(mutex);
       return _app;
@@ -189,6 +188,5 @@ void SCAGCommandDispatcher::DoActions(Actions::CommandActions actions)
     }
 }
 
-}
 }
 }

@@ -9,7 +9,6 @@
 #include "CommandIds.h"
 #include "util/xml/utilFunctions.h"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
@@ -54,7 +53,7 @@ CommandApply::~CommandApply()
   subj = CommandApply::unknown;
 }
 
-Response * CommandApply::CreateResponse(smsc::scag::Smsc * SmscApp)
+Response * CommandApply::CreateResponse(scag::Smsc * SmscApp)
 {
   return new Response(Response::Ok, "none");
 }
@@ -79,6 +78,5 @@ Actions::CommandActions CommandApply::GetActions()
   return result;
 }
 
-}
 }
 }

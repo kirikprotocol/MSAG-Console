@@ -17,7 +17,6 @@
 
 
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
@@ -90,7 +89,7 @@ CommandTraceRoute::~CommandTraceRoute()
   id = undefined;
 }
 
-Response * CommandTraceRoute::CreateResponse(smsc::scag::Smsc * SmscApp)
+Response * CommandTraceRoute::CreateResponse(scag::Smsc * SmscApp)
 {
   const char* _srcAddr  = srcAddr.data();
   const char* _dstAddr  = dstAddr.data();
@@ -219,6 +218,5 @@ Response * CommandTraceRoute::CreateResponse(smsc::scag::Smsc * SmscApp)
   
 }
 
-}
 }
 }

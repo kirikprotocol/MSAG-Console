@@ -12,7 +12,6 @@
 #include "admin/protocol/CommandReader.h"
 #include "core/network/Socket.hpp"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
@@ -31,7 +30,6 @@ protected:
   Hash<int> commandlist;  
 };
 
-}
 }
 }
 

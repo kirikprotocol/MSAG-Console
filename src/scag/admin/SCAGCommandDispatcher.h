@@ -27,7 +27,6 @@
 #include "CommandTraceRoute.h"
 #include "CommandLoadRoutes.h"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
@@ -36,7 +35,7 @@ using namespace smsc::admin::util;
 using namespace smsc::scag;
 using smsc::admin::AdminException;
 using smsc::core::network::Socket;
-using namespace smsc::scag::admin::Actions;
+using namespace scag::admin::Actions;
 
 class SCAGCommandDispatcher : public CommandDispatcherTempl<SCAGCommandReader, ResponseWriter>
 {
@@ -57,7 +56,6 @@ private:
   static const SmscConfigs* configs;
 };
 
-}
 }
 }
 

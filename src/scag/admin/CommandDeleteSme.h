@@ -15,23 +15,21 @@
 
 using smsc::smeman::SmeSystemId;
   
-namespace smsc {
 namespace scag {
 namespace admin {
 
-class CommandDeleteSme : public smsc::scag::admin::SCAGCommand 
+class CommandDeleteSme : public scag::admin::SCAGCommand 
 {
 public:
   CommandDeleteSme(const xercesc::DOMDocument * const document);
 
   const SmeSystemId& getSmeSystemId() const {return systemid;}
-  virtual Response * CreateResponse(smsc::scag::Smsc * SmscApp);
+  virtual Response * CreateResponse(scag::Smsc * SmscApp);
 
 private:
   SmeSystemId systemid;
 };
 
-}
 }
 }
 #endif	/* _CommandDeleteSme_H */
