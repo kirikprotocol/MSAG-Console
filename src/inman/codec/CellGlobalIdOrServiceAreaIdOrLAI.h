@@ -1,5 +1,5 @@
-#ifndef	_CellGlobalIdOrServiceAreaIdOrLAI_H_
-#define	_CellGlobalIdOrServiceAreaIdOrLAI_H_
+#ifndef _CellGlobalIdOrServiceAreaIdOrLAI_H_
+#define _CellGlobalIdOrServiceAreaIdOrLAI_H_
 
 
 #include <asn_application.h>
@@ -15,21 +15,21 @@ extern "C" {
 
 /* Dependencies */
 typedef enum CellGlobalIdOrServiceAreaIdOrLAI_PR {
-	CellGlobalIdOrServiceAreaIdOrLAI_PR_NOTHING,	/* No components present */
-	CellGlobalIdOrServiceAreaIdOrLAI_PR_cellGlobalIdOrServiceAreaIdFixedLength,
-	CellGlobalIdOrServiceAreaIdOrLAI_PR_laiFixedLength,
+  CellGlobalIdOrServiceAreaIdOrLAI_PR_NOTHING,  /* No components present */
+  CellGlobalIdOrServiceAreaIdOrLAI_PR_cellGlobalIdOrServiceAreaIdFixedLength,
+  CellGlobalIdOrServiceAreaIdOrLAI_PR_laiFixedLength
 } CellGlobalIdOrServiceAreaIdOrLAI_PR;
 
 /* CellGlobalIdOrServiceAreaIdOrLAI */
 typedef struct CellGlobalIdOrServiceAreaIdOrLAI {
-	CellGlobalIdOrServiceAreaIdOrLAI_PR present;
-	union {
-		CellGlobalIdOrServiceAreaIdFixedLength_t	 cellGlobalIdOrServiceAreaIdFixedLength;
-		LAIFixedLength_t	 laiFixedLength;
-	} choice;
-	
-	/* Context for parsing across buffer boundaries */
-	asn_struct_ctx_t _asn_ctx;
+  CellGlobalIdOrServiceAreaIdOrLAI_PR present;
+  union {
+    CellGlobalIdOrServiceAreaIdFixedLength_t   cellGlobalIdOrServiceAreaIdFixedLength;
+    LAIFixedLength_t   laiFixedLength;
+  } choice;
+
+  /* Context for parsing across buffer boundaries */
+  asn_struct_ctx_t _asn_ctx;
 } CellGlobalIdOrServiceAreaIdOrLAI_t;
 
 /* Implementation */
@@ -39,4 +39,4 @@ extern asn_TYPE_descriptor_t asn_DEF_CellGlobalIdOrServiceAreaIdOrLAI;
 }
 #endif
 
-#endif	/* _CellGlobalIdOrServiceAreaIdOrLAI_H_ */
+#endif  /* _CellGlobalIdOrServiceAreaIdOrLAI_H_ */
