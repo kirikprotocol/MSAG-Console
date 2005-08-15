@@ -44,10 +44,10 @@ public class TopMenu  extends ArrayList {
             routingItems.add(new MenuItem("menu.routing.tracer", "/routing/tracer/index.jsp"));
             add(new MenuItem("menu.routing", "", routingItems));
 
-//            Collection serviceItems = new ArrayList();
-//            serviceItems.add(new MenuItem("menu.services.sme", "/services/sme/index.jsp"));
-//            serviceItems.add(new MenuItem("menu.services.services", "/services/services/index.jsp"));
-//            add(new MenuItem("menu.services", "", serviceItems));
+            Collection serviceItems = new ArrayList();
+            serviceItems.add(new MenuItem("menu.services.sme", "/services/sme/index.jsp"));
+            serviceItems.add(new MenuItem("menu.services.services", "/services/services/index.jsp"));
+            add(new MenuItem("menu.services", "", serviceItems));
 
             Collection rulesItems = new ArrayList();
             rulesItems.add(new MenuItem("menu.rules.rules","", "/rules/rules/index.jsp','xmledit','channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');"));
