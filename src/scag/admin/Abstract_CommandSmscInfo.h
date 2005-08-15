@@ -16,11 +16,10 @@
 
 using namespace xercesc;
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
-class Abstract_CommandSmscInfo : public smsc::scag::admin::SCAGCommand
+class Abstract_CommandSmscInfo : public scag::admin::SCAGCommand
 {
 public:
 	Abstract_CommandSmscInfo(const Command::Id id, const xercesc::DOMDocument * const document);
@@ -36,7 +35,6 @@ protected:
   uint8_t uid;
 };
 
-}
 }
 }
 

@@ -16,8 +16,9 @@
 #include "core/threads/Thread.hpp"
 #include "core/buffers/Hash.hpp"
 
+// Its during for a test only
+//#include "scag/smsc.hpp"
 
-#include "scag/smsc.hpp"
 #include "scag/admin/SCAGCommandReader.h"
 #include "scag/admin/CommandApply.h"
 #include "CommandUpdateSmeInfo.h"
@@ -32,7 +33,7 @@ namespace admin {
 
 using namespace smsc::admin::protocol;
 using namespace smsc::admin::util;
-using namespace smsc::scag;
+using namespace scag;
 using smsc::admin::AdminException;
 using smsc::core::network::Socket;
 using namespace scag::admin::Actions;

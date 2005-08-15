@@ -38,7 +38,7 @@ CommandDeleteSme::CommandDeleteSme(const xercesc::DOMDocument * const document)
 
 Response * CommandDeleteSme::CreateResponse(scag::Smsc * SmscApp)
 {
-  SmscApp->getSmeAdmin()->deleteSme(getSmeSystemId());
+  //SmscApp->getSmeAdmin()->deleteSme(getSmeSystemId());
   return new Response(Response::Ok, "none");
 }
 

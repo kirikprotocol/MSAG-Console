@@ -120,7 +120,7 @@ Response * CommandTraceRoute::CreateResponse(scag::Smsc * SmscApp)
       char addrBuf[MAX_ADDRESS_VALUE_LENGTH+5];
       string dealiasText="There are no aliases for this address";
 
-      if(SmscApp->AliasToAddress(Address(_dstAddr),dealiased))
+      /*if(SmscApp->AliasToAddress(Address(_dstAddr),dealiased))
       {
         dealiasText="Address "+Address(_dstAddr).toString()+" was dealiased to "+dealiased.toString();
         dealiased.toString(addrBuf,sizeof(addrBuf));
@@ -198,7 +198,7 @@ Response * CommandTraceRoute::CreateResponse(scag::Smsc * SmscApp)
         result.appendValueToStringList("");
       }
       for (int i=0; i<traceBuff.size(); i++)
-          result.appendValueToStringList(traceBuff[i].c_str());
+          result.appendValueToStringList(traceBuff[i].c_str());*/
 
       return new Response(Response::Ok, result);
   }

@@ -8,7 +8,10 @@
 #include "SCAGCommandDispatcher.h"
 #include "CommandIds.h"
 #include "core/threads/Thread.hpp"
-#include "scag/smsc.hpp"
+
+// Its during for a test only
+//#include "scag/smsc.hpp"
+
 #include "core/synchronization/Mutex.hpp"
 
 namespace scag {
@@ -17,7 +20,7 @@ namespace admin {
 using namespace smsc::core::synchronization;
 using namespace scag;
 
-class GwRunner : public smsc::core::threads::Thread
+/*class GwRunner : public smsc::core::threads::Thread
 {
   public:
     GwRunner(const SmscConfigs& cfgs)
@@ -87,57 +90,57 @@ class GwRunner : public smsc::core::threads::Thread
     }
 
 protected:
-  smsc::scag::Smsc* _app;
+  scag::Smsc* _app;
   Mutex mutex;
   bool running;
   const SmscConfigs& configs;
-};
+};*/
 
 
-GwRunner * runner = 0;
-Mutex runnerMutex;
+//GwRunner * runner = 0;
+//Mutex runnerMutex;
 const SmscConfigs* SCAGCommandDispatcher::configs = 0;
 
 void SCAGCommandDispatcher::startGw()
 {
-  MutexGuard guard(runnerMutex);
+  /*MutexGuard guard(runnerMutex);
   if (runner == 0) {
     runner = new GwRunner(*configs);
     runner->Start();
-  }
+  }*/
 }
 
 void SCAGCommandDispatcher::stopGw()
 {
-  MutexGuard guard(runnerMutex);
+  /*MutexGuard guard(runnerMutex);
   if (runner != 0 && runner->isRunning()) {
     runner->Stop();
     runner->WaitFor();
     delete runner;
     runner = 0;
-  }
+  }*/
 }
 
 void SCAGCommandDispatcher::abortGw()
 {
-  MutexGuard guard(runnerMutex);
+  /*MutexGuard guard(runnerMutex);
   if (runner != 0 && runner->isRunning()) {
     runner->Abort();
     runner->WaitFor();
     delete runner;
     runner = 0;
-  }
+  }*/
 }
 
 void SCAGCommandDispatcher::dumpGw()
 {
-  MutexGuard guard(runnerMutex);
+  /*MutexGuard guard(runnerMutex);
   if (runner != 0 && runner->isRunning()) {
     runner->Dump();
     runner->WaitFor();
     delete runner;
     runner = 0;
-  }
+  }*/
 }
 
 SCAGCommandDispatcher::SCAGCommandDispatcher(Socket * admSocket)
@@ -157,7 +160,7 @@ Response * SCAGCommandDispatcher::handle(const Command * const command) throw (A
     scagcommand = (SCAGCommand *)command;
     
 
-    Response * result = scagcommand->CreateResponse(runner->getApp());
+    Response * result = scagcommand->CreateResponse(0/*runner->getApp()*/);
     DoActions(scagcommand->GetActions());
     return result;
   } catch (AdminException &e) {
@@ -179,7 +182,7 @@ void SCAGCommandDispatcher::DoActions(Actions::CommandActions actions)
     if (actions.reloadconfig) {
       configs->routesconfig->reload();
       configs->smemanconfig->reload();
-      runner->getApp()->reloadRoutes(*configs);
+      //runner->getApp()->reloadRoutes(*configs);
     }
 
     if (actions.restart) {

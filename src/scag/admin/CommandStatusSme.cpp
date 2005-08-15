@@ -19,7 +19,7 @@ using namespace smsc::util::xml;
 Response * CommandStatusSme::CreateResponse(scag::Smsc * SmscApp)
 {
   Variant result(smsc::admin::service::StringListType);
-  ((SmeManager*)(SmscApp->getSmeAdmin()))->statusSme(result);
+  //((SmeManager*)(SmscApp->getSmeAdmin()))->statusSme(result);
 
     return new Response(Response::Ok, result);
 }

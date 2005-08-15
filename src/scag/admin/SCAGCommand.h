@@ -10,10 +10,47 @@
 
 #include <xercesc/dom/DOM.hpp>
 #include "admin/protocol/Command.h"
-#include "scag/smsc.hpp"
+
+// Its during for a test only
+//#include "scag/smsc.hpp"
+
 #include "admin/service/Variant.h"
 #include "admin/protocol/ResponseWriter.h"
 #include "CommandActions.h"
+
+#include "util/config/Manager.h"
+#include "util/config/route/RouteConfig.h"
+#include "alias/aliasman.h"
+#include "util/config/alias/aliasconf.h"
+#include "util/config/route/RouteConfig.h"
+#include "router/route_manager.h"
+#include "util/config/smeman/SmeManConfig.h"
+
+
+// Its during for a test only
+namespace scag {
+
+using namespace smsc::smeman;
+using smsc::alias::AliasManager;
+using smsc::router::RouteManager;
+using smsc::router::RouteInfo;
+using smsc::util::config::route::RouteConfig;
+
+class Smsc
+{
+};
+
+struct SmscConfigs{
+  smsc::util::config::Manager* cfgman;
+  smsc::util::config::smeman::SmeManConfig* smemanconfig;
+  smsc::util::config::alias::AliasConfig* aliasconfig;
+  smsc::util::config::route::RouteConfig* routesconfig;
+  Hash<string> *licconfig;
+};
+
+}
+
+
 
 namespace scag {
 namespace admin {

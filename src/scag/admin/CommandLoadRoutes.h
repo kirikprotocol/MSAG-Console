@@ -11,7 +11,11 @@
 
 #include <xercesc/dom/DOM.hpp>
 #include "admin/protocol/Command.h"
-#include "scag/smsc.hpp"
+
+// Its during for a test only
+// #include "scag/smsc.hpp"
+
+
 #include "admin/service/Variant.h"
 #include "SCAGCommand.h"
 

@@ -9,6 +9,9 @@
 #include "util/xml/utilFunctions.h"
 #include "util/Exception.hpp"
 
+
+#include <exception.h>
+
 namespace scag {
 namespace admin {
 
@@ -18,8 +21,8 @@ Response * CommandModifySmsc::CreateResponse(scag::Smsc * SmscApp)
 {
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("CommandModifySmsc");
   try {
-      if(!SmscApp->modifySmsc(smscConfig, altHost, altPort, systemId, uid))
-         throw Exception("Parameters modify exception.");
+      //if(!SmscApp->modifySmsc(smscConfig, altHost, altPort, systemId, uid))
+       //  throw Exception("Parameters modify exception.");
       
       return new Response(Response::Ok, "none");
   }catch(exception& e){

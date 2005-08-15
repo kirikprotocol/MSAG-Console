@@ -10,14 +10,17 @@
 
 #include <xercesc/dom/DOM.hpp>
 #include "SCAGCommand.h"
-#include "scag/smsc.hpp"
+
+// Its during for a test only
+//#include "scag/smsc.hpp"
+
 #include "admin/service/Variant.h"
 
 namespace scag {
 namespace admin {
 
 
-class CommandTraceRoute : public smsc::scag::admin::SCAGCommand 
+class CommandTraceRoute : public scag::admin::SCAGCommand 
 {
 public:
   

@@ -16,7 +16,7 @@ using namespace smsc::util::xml;
 
 Response * CommandAddSme::CreateResponse(scag::Smsc * SmscApp)
 {
-  SmscApp->getSmeAdmin()->addSme(getSmeInfo());
+  //SmscApp->getSmeAdmin()->addSme(getSmeInfo());
   return new Response(Response::Ok, "none");
 }
 

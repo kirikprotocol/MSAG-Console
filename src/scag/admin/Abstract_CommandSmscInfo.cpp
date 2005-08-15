@@ -10,7 +10,6 @@
 #include "util/xml/utilFunctions.h"
 #include "CommandIds.h"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
@@ -60,6 +59,5 @@ Abstract_CommandSmscInfo::~Abstract_CommandSmscInfo()
 {
 }
 
-}
 }
 }

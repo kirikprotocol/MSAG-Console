@@ -38,7 +38,7 @@ Response * CommandLoadRoutes::CreateResponse(scag::Smsc * SmscApp)
 {
   try
   {
-      RouteConfig cfg;
+      /*RouteConfig cfg;
       if (cfg.load("conf/routes__.xml") == RouteConfig::fail)
           throw AdminException("Load routes config file failed.");
 
@@ -46,7 +46,7 @@ Response * CommandLoadRoutes::CreateResponse(scag::Smsc * SmscApp)
 
       SmscApp->reloadTestRoutes(cfg);
       SmscApp->getTestRouterInstance()->enableTrace(true);
-      SmscApp->getTestRouterInstance()->getTrace(traceBuff);
+      SmscApp->getTestRouterInstance()->getTrace(traceBuff);*/
 
       // 0:   Message (Routes successfully loaded)
       // 1..: Trace (if any)
@@ -54,8 +54,8 @@ Response * CommandLoadRoutes::CreateResponse(scag::Smsc * SmscApp)
       smsc::admin::service::Variant result(smsc::admin::service::StringListType);
       result.appendValueToStringList("Routes configuration successfully loaded");
 
-      for (int i=0; i<traceBuff.size(); i++)
-          result.appendValueToStringList(traceBuff[i].c_str());
+      //for (int i=0; i<traceBuff.size(); i++)
+      //    result.appendValueToStringList(traceBuff[i].c_str());
 
       return new Response(Response::Ok, result);
   }

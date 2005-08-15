@@ -9,9 +9,14 @@
 #include "CommandIds.h"
 #include "util/xml/utilFunctions.h"
 #include "core/threads/ThreadPool.hpp"
-#include "scag/smsc.hpp"
+
+// Its during for a test only
+//#include "scag/smsc.hpp"
+
 #include "scag/gwsme.hpp"
 #include "util/Exception.hpp"
+
+#include <exception.h>
 
 namespace scag {
 namespace admin {
@@ -30,8 +35,8 @@ Response * CommandRegSmsc::CreateResponse(scag::Smsc * SmscApp)
       gwcfg.password = smscConfig.password;
       gwcfg.smppTimeOut = smscConfig.smppTimeOut;
 
-      if(!SmscApp->regSmsc(gwcfg, altHost, altPort, systemId, uid))
-         throw Exception("Duplicate gwsmeid %d!",(int)uid);
+      //if(!SmscApp->regSmsc(gwcfg, altHost, altPort, systemId, uid))
+      //   throw Exception("Duplicate gwsmeid %d!",(int)uid);
       
       return new Response(Response::Ok, "none");
   }catch(exception& e){

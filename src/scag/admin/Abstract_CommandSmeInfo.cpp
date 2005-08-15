@@ -11,7 +11,6 @@
 #include "util/xml/utilFunctions.h"
 #include "CommandIds.h"
 
-namespace smsc {
 namespace scag {
 namespace admin {
 
@@ -29,8 +28,10 @@ Abstract_CommandSmeInfo::Abstract_CommandSmeInfo(const Command::Id id, const xer
       DOMElement *paramElem = (DOMElement*) list->item(i);
       XmlStr name(paramElem->getAttribute(XmlStr("name")));
       std::auto_ptr<char> value(getNodeText(*paramElem));
-      if (::strcmp("id", name) == 0)
+      if (::strcmp("id", name) == 0){
         smeInfo.systemId = value.get();
+        printf("systemId: %s\n", smeInfo.systemId.c_str());
+      }
       if (::strcmp("priority", name) == 0)
         smeInfo.priority = atoi(value.get());
       if (::strcmp("type", name) == 0) {
@@ -84,6 +85,5 @@ Abstract_CommandSmeInfo::~Abstract_CommandSmeInfo()
 {
 }
 
-}
 }
 }
