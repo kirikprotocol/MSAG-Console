@@ -1,19 +1,14 @@
 package ru.sibinco.scag.beans.rules.applet;
 
-import org.apache.coyote.tomcat5.CoyoteInputStream;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.ServletException;
-import javax.servlet.ServletInputStream;
 import javax.swing.filechooser.FileSystemView;
 import java.io.*;
-import java.util.List;
 import java.util.LinkedList;
 import java.util.zip.GZIPOutputStream;
-import java.util.zip.GZIPInputStream;
 
 /**
  * Created by IntelliJ IDEA.
