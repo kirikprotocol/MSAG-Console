@@ -3,15 +3,17 @@ static char const ident[] = "$Id$";
 
 /////////////////////////// INAP API ///////////////////////////////
 
-#include "inap/factory.hpp"
-#include "inap/session.hpp"
-#include "inap/dialog.hpp"
+#include "inman/inap/factory.hpp"
+#include "inman/inap/session.hpp"
+#include "inman/inap/dialog.hpp"
+#include "inman/inap/inap.hpp"
 
 ////////////////////////////////////////////////////////////////////
 
 using smsc::inman::inap::Factory;
 using smsc::inman::inap::Session;
 using smsc::inman::inap::Dialog;
+using smsc::inman::inap::INAP;
 using smsc::inman::Console;
 using std::cout;
 using std::endl;
@@ -68,7 +70,7 @@ void mosms(Console&, const std::vector<std::string>& args)
   }
   else
   {
-      pDialog = g_pSession->openDialog();
+      pDialog = g_pSession->openDialog(0);
   }
   if ( !pDialog )
   {
@@ -77,7 +79,8 @@ void mosms(Console&, const std::vector<std::string>& args)
   else
   {
     cout << "Dialog is running." << endl;
-    pDialog->start();
+    INAP *modlg = new INAP(pDialog);
+    modlg->start();
   }
 }
 

@@ -160,9 +160,9 @@ USHORT_T Dialog::invoke(const TcapOperation& op)
     30, //timeOut,
     op.getTag(), //operationTag,
     op.getOperation().size(), //operationLength,
-    const_cast<UCHAR_T*>(op.getOperation().begin()), //*operationCode_p,
+    const_cast<UCHAR_T*>(&op.getOperation().front()), //*operationCode_p,
     op.getParams().size(), //paramLength,
-    const_cast<UCHAR_T*>(op.getParams().begin()) //*parameters_p
+    const_cast<UCHAR_T*>(&op.getParams().front()) //*parameters_p
     ); 
 
   if (result != 0)
@@ -185,9 +185,9 @@ USHORT_T Dialog::invokeSuccessed(const TcapOperation& res)
     	1, //invokeId
 		res.getTag(),
     	res.getOperation().size(), //operationLength,
-    	const_cast<UCHAR_T*>(res.getOperation().begin()), //*operationCode_p,
+    	const_cast<UCHAR_T*>(&res.getOperation().front()), //*operationCode_p,
     	res.getParams().size(), //paramLength,
-    	const_cast<UCHAR_T*>(res.getParams().begin()) //*parameters_p
+    	const_cast<UCHAR_T*>(&res.getParams().front()) //*parameters_p
     	);
 
   if (result != 0)
@@ -209,9 +209,9 @@ USHORT_T Dialog::invokeFailed(const TcapOperation& err)
     	1,
 		err.getTag(),
    		err.getOperation().size(), //operationLength,
-   		const_cast<UCHAR_T*>(err.getOperation().begin()), //*operationCode_p,
+   		const_cast<UCHAR_T*>(&err.getOperation().front()), //*operationCode_p,
    		err.getParams().size(), //paramLength,
-   		const_cast<UCHAR_T*>(err.getParams().begin()) //*parameters_p
+   		const_cast<UCHAR_T*>(&err.getParams().front()) //*parameters_p
 	);
 
   if (result != 0)
