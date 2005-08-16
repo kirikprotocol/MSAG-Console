@@ -495,7 +495,7 @@ bool ApplyRescheduleCommand::deserialize(void *buffer, uint32_t len)
 ProfileUpdateCommand::ProfileUpdateCommand(uint8_t plan_, uint8_t type_, char *address_, int codePage_, int reportOption_,
                                 int hideOption_, bool hideModifaible_, bool divertModifaible_, bool udhContact_,
                                 bool translit_, bool divertActive_, bool divertActiveAbsent_, bool divertActiveBlocked_,
-                                bool divertActiveBarred_, bool divertActiveCapacity_, std::string local_, std::string divert_)
+                                bool divertActiveBarred_, bool divertActiveCapacity_, File::offset_type offset_, std::string local_, std::string divert_)
     : Command(PROFILEUPDATE_CMD),
     plan(plan_),
     type(type_),
@@ -511,6 +511,7 @@ ProfileUpdateCommand::ProfileUpdateCommand(uint8_t plan_, uint8_t type_, char *a
     divertActiveBlocked(divertActiveBlocked_),
     divertActiveBarred(divertActiveBarred_),
     divertActiveCapacity(divertActiveCapacity_),
+    offset(offset_),
     local(local_),
     divert(divert_)
 {
@@ -520,7 +521,7 @@ ProfileUpdateCommand::ProfileUpdateCommand(uint8_t plan_, uint8_t type_, char *a
 void ProfileUpdateCommand::getArgs(uint8_t &plan_, uint8_t &type_, char *address_, int &codePage_, int &reportOption_,
                                 int &hideOption_, bool &hideModifaible_, bool &divertModifaible_, bool &udhContact_,
                                 bool &translit_, bool &divertActive_, bool &divertActiveAbsent_, bool &divertActiveBlocked_,
-                                bool &divertActiveBarred_, bool &divertActiveCapacity_, std::string &local_, std::string &divert_) const
+                                bool &divertActiveBarred_, bool &divertActiveCapacity_, File::offset_type &offset_, std::string &local_, std::string &divert_) const
 {
     plan_ = plan;
     type_ = type;
@@ -536,6 +537,7 @@ void ProfileUpdateCommand::getArgs(uint8_t &plan_, uint8_t &type_, char *address
     divertActiveBlocked_ = divertActiveBlocked;
     divertActiveBarred_ = divertActiveBarred;
     divertActiveCapacity_ = divertActiveCapacity;
+    offset_ = offset;
     local_ = local;
     divert_ = divert;
     strcpy(address_, address);
@@ -1750,11 +1752,12 @@ bool AclRemoveCommand::deserialize(void *buffer, uint32_t len)
 //========== aclCreate ==========================
 
 AclCreateCommand::AclCreateCommand(std::string name_, std::string desc_,
-                            std::string type_, std::vector<std::string> phones_)
+                            std::string type_, File::offset_type offset_, std::vector<std::string> phones_)
     : Command(ACLCREATE_CMD),
     name(name_),
     description(desc_),
-    cache_type(type_)
+    cache_type(type_),
+    offset(offset_)
 {
     phones.empty();
     for(std::vector<std::string>::iterator it = phones_.begin(); it != phones_.end(); ++it){
@@ -1763,12 +1766,13 @@ AclCreateCommand::AclCreateCommand(std::string name_, std::string desc_,
 }
 
 void AclCreateCommand::getArgs(std::string &name_, std::string &desc_,
-                            std::string &type_, bool &type_present_, std::vector<std::string> &phones_) const
+                            std::string &type_, bool &type_present_, File::offset_type &offset_, std::vector<std::string> &phones_) const
 {
     name_ = name;
     desc_ = description;
     type_ = cache_type;
     type_present_ = cache_type_present;
+    offset_ = offset;
 
     phones_.empty();
     for(std::vector<std::string>::const_iterator it = phones.begin(); it != phones.end(); ++it){
@@ -1783,7 +1787,7 @@ void* AclCreateCommand::serialize(uint32_t &len)
 
     try {
 
-    len = name.length() + description.length() +
+    len = 8 + name.length() + description.length() +
             cache_type.length() + 3;
 
     for(std::vector<std::string>::iterator it = phones.begin(); it != phones.end(); ++it){
@@ -1803,6 +1807,26 @@ void* AclCreateCommand::serialize(uint32_t &len)
     printf("cache_type: '%s', len: %d\n", cache_type.c_str(), cache_type.length());
     sz += cache_type.length() + 1;
 
+    //================== Puts offset in biffer =================
+
+    uint64_t tmp = offset;
+    uint64_t val64;
+
+    unsigned char *ptr=(unsigned char *)&val64;
+    ptr[0]=(unsigned char)(tmp>>56);
+    ptr[1]=(unsigned char)(tmp>>48)&0xFF;
+    ptr[2]=(unsigned char)(tmp>>40)&0xFF;
+    ptr[3]=(unsigned char)(tmp>>32)&0xFF;
+    ptr[4]=(unsigned char)(tmp>>24)&0xFF;
+    ptr[5]=(unsigned char)(tmp>>16)&0xFF;
+    ptr[6]=(unsigned char)(tmp>>8)&0xFF;
+    ptr[7]=(unsigned char)(tmp&0xFF);
+
+    memcpy((void*)((char*)buffer + sz),         (const void*)&val64,        8);
+    sz += 8;
+
+    //================== Puts phones in buffer =================
+
     for(std::vector<std::string>::iterator it = phones.begin(); it != phones.end(); ++it){
         memcpy((void*)((char*)buffer + sz),     (const void*)it->c_str(),       it->length() + 1);
         sz += it->length() + 1;
@@ -1817,7 +1841,7 @@ void* AclCreateCommand::serialize(uint32_t &len)
 }
 bool AclCreateCommand::deserialize(void *buffer, uint32_t len)
 {
-    if(len < 3 || !buffer)
+    if(len < 11 || !buffer)
         return false;
 
     try {
@@ -1832,7 +1856,27 @@ bool AclCreateCommand::deserialize(void *buffer, uint32_t len)
 
     cache_type_present = cache_type.length();
 
-    phones.empty();
+    //================== Gets offset from buffer ======================
+
+    uint64_t val64;
+    memcpy((void*)&val64,       (const void*)( (uint8_t*)buffer + sz ), 8 );
+    sz += 8;
+
+    uint64_t tmp=0;
+    memset(&tmp, 0, 8);
+    unsigned char *ptr=(unsigned char *)&val64;
+    tmp = ptr[0] << 56;
+    tmp += ptr[1] << 48;
+    tmp += ptr[2] << 40;
+    tmp += ptr[3] << 32;
+    tmp += ptr[4] << 24;
+    tmp += ptr[5] << 16;
+    tmp += ptr[6] << 8;
+    tmp += ptr[7];
+
+    offset = tmp;
+
+    phones.swap( std::vector<std::string>() );
 
     while(sz < len){
         std::string phone = (char*)buffer + sz;

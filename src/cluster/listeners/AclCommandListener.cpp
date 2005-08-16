@@ -62,11 +62,12 @@ void AclCommandListener::aclCreate(const Command& command)
     std::string description;
     std::string cache_type;
     bool cache_type_present;
+    File::offset_type offset;
     std::vector<std::string> phones;
 
     const AclCreateCommand* cmd = dynamic_cast<const AclCreateCommand*>(&command);
 
-    cmd->getArgs(name, description, cache_type, cache_type_present, phones);
+    cmd->getArgs(name, description, cache_type, cache_type_present, offset, phones);
 
     
     cache_type_present = cache_type.length() > 0;

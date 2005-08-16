@@ -150,7 +150,7 @@ namespace smsc { namespace cluster
         ProfileUpdateCommand(uint8_t plan_, uint8_t type_, char *address_, int codePage_, int reportOption_,
                                 int hideOption_, bool hideModifaible_, bool divertModifaible_, bool udhContact_,
                                 bool translit_, bool divertActive_, bool divertActiveAbsent_, bool divertActiveBlocked_,
-                                bool divertActiveBarred_, bool divertActiveCapacity_, File::offset_type offset, std::string local_, std::string divert_);
+                                bool divertActiveBarred_, bool divertActiveCapacity_, File::offset_type offset_, std::string local_, std::string divert_);
         ProfileUpdateCommand() : Command(PROFILEUPDATE_CMD) {};
 
         virtual ~ProfileUpdateCommand() {};
@@ -158,7 +158,7 @@ namespace smsc { namespace cluster
         void getArgs(uint8_t &plan_, uint8_t &type_, char *address_, int &codePage_, int &reportOption_,
                                 int &hideOption_, bool &hideModifaible_, bool &divertModifaible_, bool &udhContact_,
                                 bool &translit_, bool &divertActive_, bool &divertActiveAbsent_, bool &divertActiveBlocked_,
-                                bool &divertActiveBarred_, bool &divertActiveCapacity_, File::offset_type& offset, std::string &local_, std::string &divert_) const;
+                                bool &divertActiveBarred_, bool &divertActiveCapacity_, File::offset_type& offset_, std::string &local_, std::string &divert_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -314,16 +314,17 @@ namespace smsc { namespace cluster
         std::string description;
         std::string cache_type;
         bool cache_type_present;
+        File::offset_type offset;
         std::vector<std::string> phones;
     public:
         AclCreateCommand() : Command(ACLCREATE_CMD) {};
         AclCreateCommand(std::string name_, std::string desc_,
-                            std::string type_, std::vector<std::string> phones_);
+                            std::string type_, File::offset_type offset_, std::vector<std::string> phones_);
 
         virtual ~AclCreateCommand() {};
 
         void AclCreateCommand::getArgs(std::string& name_, std::string& desc_,
-                            std::string& type_, bool &type_present, std::vector<std::string>& phones_) const;
+                            std::string& type_, bool &type_present, File::offset_type &offset_, std::vector<std::string>& phones_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };

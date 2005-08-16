@@ -60,6 +60,8 @@ void ProfileCommandListener::profileUpdate(const Command& command)
     bool divertActiveBarred;
     bool divertActiveCapacity;
 
+    File::offset_type offset;
+
     std::string local;
     std::string divert;
 
@@ -67,7 +69,7 @@ void ProfileCommandListener::profileUpdate(const Command& command)
 
     cmd->getArgs(plan, type, address, codePage, reportOption, hideOption, hideModifaible, divertModifaible,
                         udhContact, translit, divertActive, divertActiveAbsent, divertActiveBlocked,
-                        divertActiveBarred, divertActiveCapacity, local, divert);
+                        divertActiveBarred, divertActiveCapacity, offset, local, divert);
 
 
     try {
