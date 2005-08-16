@@ -9,6 +9,7 @@
 #include <vector>
 #include "acls/interfaces.h"
 #include "core/buffers/File.hpp"
+#include "profiler/profiler-types.hpp"
 
 #ifdef _WIN32
 #include <stdint.h>
@@ -18,7 +19,7 @@
 
 const int SMEID_LENGTH = smsc::sms::MAX_SMESYSID_TYPE_LENGTH + 1;
 
-namespace smsc { namespace cluster 
+namespace smsc { namespace cluster
 {
     typedef enum {
         APPLYROUTES_CMD =           0x00000000,
@@ -126,39 +127,15 @@ namespace smsc { namespace cluster
         uint8_t plan;
         uint8_t type;
         char address[21];
-        int codePage;
-        int reportOption;
-        int hideOption;
-
-        bool hideModifaible;
-        bool divertModifaible;
-        bool udhContact;
-        bool translit;
-
-        bool divertActive;
-        bool divertActiveAbsent;
-        bool divertActiveBlocked;
-        bool divertActiveBarred;
-        bool divertActiveCapacity;
-
-        std::string local;
-        std::string divert;
-
-        File::offset_type offset;
+        smsc::profiler::Profile profile;
 
     public:
-        ProfileUpdateCommand(uint8_t plan_, uint8_t type_, char *address_, int codePage_, int reportOption_,
-                                int hideOption_, bool hideModifaible_, bool divertModifaible_, bool udhContact_,
-                                bool translit_, bool divertActive_, bool divertActiveAbsent_, bool divertActiveBlocked_,
-                                bool divertActiveBarred_, bool divertActiveCapacity_, File::offset_type offset_, std::string local_, std::string divert_);
+        ProfileUpdateCommand(smsc::profiler::Profile profile_);
         ProfileUpdateCommand() : Command(PROFILEUPDATE_CMD) {};
 
         virtual ~ProfileUpdateCommand() {};
 
-        void getArgs(uint8_t &plan_, uint8_t &type_, char *address_, int &codePage_, int &reportOption_,
-                                int &hideOption_, bool &hideModifaible_, bool &divertModifaible_, bool &udhContact_,
-                                bool &translit_, bool &divertActive_, bool &divertActiveAbsent_, bool &divertActiveBlocked_,
-                                bool &divertActiveBarred_, bool &divertActiveCapacity_, File::offset_type& offset_, std::string &local_, std::string &divert_) const;
+        void getArgs(smsc::profiler::Profile &profile) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };

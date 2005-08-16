@@ -2,6 +2,7 @@
 #include "cluster/Commands.h"
 #include "sms/sms.h"
 #include "util/Exception.hpp"
+#include "profiler/profiler-types.hpp"
 
 namespace smsc {
 namespace cluster {
@@ -45,54 +46,16 @@ void ProfileCommandListener::profileUpdate(const Command& command)
     uint8_t plan;
     uint8_t type;
     char address[21];
-    int codePage;
-    int reportOption;
-    int hideOption;
-
-    bool hideModifaible;
-    bool divertModifaible;
-    bool udhContact;
-    bool translit;
-
-    bool divertActive;
-    bool divertActiveAbsent;
-    bool divertActiveBlocked;
-    bool divertActiveBarred;
-    bool divertActiveCapacity;
-
-    File::offset_type offset;
-
-    std::string local;
-    std::string divert;
+    smsc::profiler::Profile profile;
 
     const ProfileUpdateCommand* cmd = dynamic_cast<const ProfileUpdateCommand*>(&command);
 
-    cmd->getArgs(plan, type, address, codePage, reportOption, hideOption, hideModifaible, divertModifaible,
-                        udhContact, translit, divertActive, divertActiveAbsent, divertActiveBlocked,
-                        divertActiveBarred, divertActiveCapacity, offset, local, divert);
+    cmd->getArgs(profile);
 
 
     try {
     
       Address addr(strlen(address), plan, type, address);
-      Profile profile;
-
-      profile.codepage = codePage;
-      profile.reportoptions = reportOption;
-      profile.hide = hideOption;
-      profile.locale = local;
-      profile.hideModifiable = hideModifaible;
-      profile.divert = divert;
-      
-      profile.divertActive         =  divertActive;
-      profile.divertActiveAbsent   =  divertActiveAbsent;
-      profile.divertActiveBlocked  =  divertActiveBlocked;
-      profile.divertActiveBarred   =  divertActiveBarred;
-      profile.divertActiveCapacity =  divertActiveCapacity;
-
-      profile.divertModifiable = divertModifaible;
-      profile.udhconcat = udhContact;
-      profile.translit = translit;
 
 #ifdef SMSC_DEBUG
       char addr_str[smsc::sms::MAX_ADDRESS_VALUE_LENGTH+9];
