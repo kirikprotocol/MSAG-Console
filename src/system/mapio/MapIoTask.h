@@ -48,6 +48,8 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::core::threads::ThreadedTask;
 using smsc::core::synchronization::Event;
 
+#ifdef USEMAP
+
 extern "C" {
 #include <ss7cp.h>
 #include <portss7.h>
@@ -65,6 +67,8 @@ extern "C" {
 #define USSD_SSN (MapDialogContainer::GetUSSDSSN())
 #define HLR_SSN 6
 #define MAX_MT_LOCK_TIME 600
+
+#endif
 
 extern Mutex mapMutex;
 
