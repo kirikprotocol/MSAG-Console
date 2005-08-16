@@ -98,7 +98,11 @@ public:
                )
             )
             {
+#ifdef linux
+              timespec tv={0,10000000};
+#else
               timestruc_t tv={0,10000000};
+#endif
               nanosleep(&tv,0);
             }
           }
