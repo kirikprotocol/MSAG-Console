@@ -30,7 +30,7 @@ using smsc::core::network::Socket;
 using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
 using smsc::logger::Logger;
-using smsc::util::config;
+using namespace smsc::util::config;
 using smsc::core::threads::Thread;
 
 class DaemonCommandDispatcher : public CommandDispatcher
