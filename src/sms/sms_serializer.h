@@ -152,7 +152,9 @@ namespace BufOps{
 
   inline SmsBuffer& operator>>(SmsBuffer& buf,Descriptor& val)
   {
-    buf>>SmallCharBuf(val.msc,sizeof(val.msc))>>SmallCharBuf(val.imsi,sizeof(val.imsi))>>val.sme;
+    SmallCharBuf scbMsc(val.msc,sizeof(val.msc));
+    SmallCharBuf scbImsi(val.imsi,sizeof(val.imsi));
+    buf>>scbMsc>>scbImsi>>val.sme;
     return buf;
   }
 
@@ -185,18 +187,22 @@ inline void Deserialize(BufOps::SmsBuffer& src,SMS& sms,int ver)
   using namespace BufOps;
 
   uint8_t smsState;
+  SmallCharBuf scbServiceType(sms.eServiceType,sizeof(sms.eServiceType));
+  SmallCharBuf scbRouteId(sms.routeId,sizeof(sms.routeId));
+  SmallCharBuf scbSrcSmeId(sms.srcSmeId,sizeof(sms.srcSmeId));
+  SmallCharBuf scbDstSmeId(sms.dstSmeId,sizeof(sms.dstSmeId));
 
   src>>smsState>>sms.submitTime>>sms.validTime>>sms.lastTime
      >>sms.nextTime>>sms.attempts>>sms.lastResult
      >>sms.getOriginatingAddress()>>sms.getDestinationAddress()
      >>sms.getDealiasedDestinationAddress()>>sms.messageReference
-     >>SmallCharBuf(sms.eServiceType,sizeof(sms.eServiceType))
+     >>scbServiceType
      >>sms.deliveryReport>>sms.billingRecord
      >>sms.originatingDescriptor>>sms.destinationDescriptor
-     >>SmallCharBuf(sms.routeId,sizeof(sms.routeId))
+     >>scbRouteId
      >>sms.serviceId>>sms.priority
-     >>SmallCharBuf(sms.srcSmeId,sizeof(sms.srcSmeId))
-     >>SmallCharBuf(sms.dstSmeId,sizeof(sms.dstSmeId))
+     >>scbSrcSmeId
+     >>scbDstSmeId
      >>sms.concatMsgRef>>sms.concatSeqNum;
 
   if(ver>0x010000)
