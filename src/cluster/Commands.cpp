@@ -548,7 +548,7 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
 
     try {
 
-    len = 30 + local.length() + divert.length();
+    len = 38 + local.length() + divert.length();
     buffer = new uint8_t[len];
 
     uint8_t val;
@@ -689,11 +689,27 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
 
     memcpy((void*)(buffer + 27),        (const void*)&val, 1);
 
+    //============= Puts offset =================================
+
+    uint64_t val64 = offset;
+    uint64_t tmp = val64;;
+    unsigned char *ptr=(unsigned char *)&val64;
+    ptr[0]=(unsigned char)(tmp>>56);
+    ptr[1]=(unsigned char)(tmp>>48)&0xFF;
+    ptr[2]=(unsigned char)(tmp>>40)&0xFF;
+    ptr[3]=(unsigned char)(tmp>>32)&0xFF;
+    ptr[4]=(unsigned char)(tmp>>24)&0xFF;
+    ptr[5]=(unsigned char)(tmp>>16)&0xFF;
+    ptr[6]=(unsigned char)(tmp>>8)&0xFF;
+    ptr[7]=(unsigned char)(tmp&0xFF);
+
+    memcpy((void*)(buffer + 28),        (const void*)&val64, 8);
+
     //============= Puts local and divert in buffer =============
 
-    memcpy((void*)(buffer + 28),                  (const void*)local.c_str(), local.length() + 1);
+    memcpy((void*)(buffer + 36),                  (const void*)local.c_str(), local.length() + 1);
     printf("local: '%s', len: %d\n", local.c_str(), local.length());
-    memcpy((void*)(buffer + 29 + local.length()), (const void*)divert.c_str(), divert.length() + 1);
+    memcpy((void*)(buffer + 37 + local.length()), (const void*)divert.c_str(), divert.length() + 1);
     printf("divert: '%s', len: %d\n", divert.c_str(), divert.length());
 
     }catch(...){
@@ -704,7 +720,7 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
 }
 bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
 {
-    if(len < 30|| !buffer)
+    if(len < 38|| !buffer)
         return false;
 
     /*
@@ -713,7 +729,7 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
 
         <AddressInfo> := <plan : 1> <type : 1> <Address : 21>
 
-        <ProfileInfo> := <codePage : 1> <reportOption : 1> <hideOption : 1> <divertActive : 1> <flags : 1>
+        <ProfileInfo> := <codePage : 1> <reportOption : 1> <hideOption : 1> <divertActive : 1> <flags : 1> <offset : 8>
                             <local : string> <divert : string>
 
         <codePage : 1>
@@ -888,18 +904,37 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
 
 #undef BIT
 
+    //============= Gets offset ======================
+
+    uint64_t val64;
+    memcpy((void*)&val64,       (const void*)( (uint8_t*)buffer + 28 ), 8);
+
+    uint64_t tmp=0;
+    memset(&tmp, 0, 8);
+    unsigned char *ptr=(unsigned char *)&val64;
+    tmp = ptr[0] << 56;
+    tmp += ptr[1] << 48;
+    tmp += ptr[2] << 40;
+    tmp += ptr[3] << 32;
+    tmp += ptr[4] << 24;
+    tmp += ptr[5] << 16;
+    tmp += ptr[6] << 8;
+    tmp += ptr[7];
+
+    offset = tmp;
+
     //============= Gets local and divert ============
 
-    local = (const char*)((uint8_t*)buffer + 28);
+    local = (const char*)((uint8_t*)buffer + 36);
 
-    printf("local: '%s', len: %d\n", local.c_str(), local.length());
+    //printf("local: '%s', len: %d\n", local.c_str(), local.length());
 
     if(29 + local.length() >= len)
         return false;
 
-    divert = (const char*)((uint8_t*)buffer + 29 + local.length());
+    divert = (const char*)((uint8_t*)buffer + 37 + local.length());
 
-    printf("divert: '%s', len: %d", divert.c_str(), divert.length());
+    //printf("divert: '%s', len: %d", divert.c_str(), divert.length());
 
     if(30 + local.length() + divert.length() != len)
         return false;

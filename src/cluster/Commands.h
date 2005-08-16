@@ -8,6 +8,7 @@
 #include "sms/sms_const.h"
 #include <vector>
 #include "acls/interfaces.h"
+#include "core/buffers/File.hpp"
 
 #ifdef _WIN32
 #include <stdint.h>
@@ -143,11 +144,13 @@ namespace smsc { namespace cluster
         std::string local;
         std::string divert;
 
+        File::offset_type offset;
+
     public:
         ProfileUpdateCommand(uint8_t plan_, uint8_t type_, char *address_, int codePage_, int reportOption_,
                                 int hideOption_, bool hideModifaible_, bool divertModifaible_, bool udhContact_,
                                 bool translit_, bool divertActive_, bool divertActiveAbsent_, bool divertActiveBlocked_,
-                                bool divertActiveBarred_, bool divertActiveCapacity_, std::string local_, std::string divert_);
+                                bool divertActiveBarred_, bool divertActiveCapacity_, File::offset_type offset, std::string local_, std::string divert_);
         ProfileUpdateCommand() : Command(PROFILEUPDATE_CMD) {};
 
         virtual ~ProfileUpdateCommand() {};
@@ -155,7 +158,7 @@ namespace smsc { namespace cluster
         void getArgs(uint8_t &plan_, uint8_t &type_, char *address_, int &codePage_, int &reportOption_,
                                 int &hideOption_, bool &hideModifaible_, bool &divertModifaible_, bool &udhContact_,
                                 bool &translit_, bool &divertActive_, bool &divertActiveAbsent_, bool &divertActiveBlocked_,
-                                bool &divertActiveBarred_, bool &divertActiveCapacity_, std::string &local_, std::string &divert_) const;
+                                bool &divertActiveBarred_, bool &divertActiveCapacity_, File::offset_type& offset, std::string &local_, std::string &divert_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
