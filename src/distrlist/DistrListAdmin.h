@@ -79,7 +79,9 @@ namespace smsc { namespace distrlist
         virtual ~DistrListAdmin() {};
 
         virtual void addDistrList(string dlName,
-             bool system,const Address& dlOwner,int maxEl)
+             bool system,const Address& dlOwner,int maxEl,
+               smsc::core::buffers::File::offset_type offset1=0,
+               smsc::core::buffers::File::offset_type offset2=0)
             throw(smsc::core::buffers::FileException, ListAlreadyExistsException,
                   PrincipalNotExistsException, ListCountExceededException) = 0;
         virtual void deleteDistrList(string dlName)
@@ -97,7 +99,7 @@ namespace smsc { namespace distrlist
         virtual void getSubmitters(const string& dlName,Array<Address>& sbm)
           throw(smsc::core::buffers::FileException,ListNotExistsException)=0;
 
-        virtual void addPrincipal(const Principal& prc)
+        virtual void addPrincipal(const Principal& prc,smsc::core::buffers::File::offset_type offset=0)
             throw(smsc::core::buffers::FileException, PrincipalAlreadyExistsException) = 0;
         virtual void deletePrincipal(const Address& address)
             throw(smsc::core::buffers::FileException, PrincipalNotExistsException, PrincipalInUseException) = 0;
@@ -109,7 +111,7 @@ namespace smsc { namespace distrlist
         virtual Array<Principal> getPrincipals()
             throw(smsc::core::buffers::FileException)=0;
 
-        virtual void addMember(string dlName, const Address& member)
+        virtual void addMember(string dlName, const Address& member,smsc::core::buffers::File::offset_type offset=0)
             throw(smsc::core::buffers::FileException, ListNotExistsException,
                   MemberAlreadyExistsException, MemberCountExceededException) = 0;
         virtual void deleteMember(string dlName, const Address& member)
@@ -122,11 +124,11 @@ namespace smsc { namespace distrlist
         virtual Array<Address> members(string dlName)
             throw(smsc::core::buffers::FileException, ListNotExistsException) = 0;
 
-        virtual void grantPosting(string dlName, const Address& submitter)
+        virtual void grantPosting(string dlName, const Address& submitter,smsc::core::buffers::File::offset_type offset=0)
             throw(smsc::core::buffers::FileException, ListNotExistsException,
                   PrincipalNotExistsException, SubmitterAlreadyExistsException) = 0;
 
-        virtual void grantPosting(const string& dlName, const Address& owner,const Address& submitter)
+        virtual void grantPosting(const string& dlName, const Address& owner,const Address& submitter,smsc::core::buffers::File::offset_type offset=0)
             throw(smsc::core::buffers::FileException, ListNotExistsException,
                   PrincipalNotExistsException, SubmitterAlreadyExistsException) = 0;
 
