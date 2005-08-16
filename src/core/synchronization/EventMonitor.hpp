@@ -7,6 +7,7 @@
 #include <pthread.h>
 #endif
 #include "Mutex.hpp"
+#include <sys/time.h>
 
 namespace smsc{
 namespace core{
