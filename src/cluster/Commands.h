@@ -388,14 +388,15 @@ namespace smsc { namespace cluster
     private:
         int maxLists;
         int maxElements;
+        File::offset_type offset;
         std::string address;
     public:
-        PrcAddPrincipalCommand(int maxLists_, int maxElements_, std::string address_);
+        PrcAddPrincipalCommand(int maxLists_, int maxElements_, File::offset_type offset_, std::string address_);
         PrcAddPrincipalCommand() : Command(PRCADDPRINCIPAL_CMD) {};
 
         virtual ~PrcAddPrincipalCommand() {};
 
-        void PrcAddPrincipalCommand::getArgs(int& maxLists_, int& maxElements_, std::string& address_) const;
+        void PrcAddPrincipalCommand::getArgs(int& maxLists_, int& maxElements_, File::offset_type &offset_, std::string& address_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -439,13 +440,14 @@ namespace smsc { namespace cluster
     private:
         std::string dlname;
         std::string address;
+        File::offset_type offset;
     public:
-        MemAddMemberCommand(std::string dlname_, std::string address_);
+        MemAddMemberCommand(File::offset_type offset_, std::string dlname_, std::string address_);
         MemAddMemberCommand() : Command(MEMADDMEMBER_CMD) {};
 
         virtual ~MemAddMemberCommand() {};
 
-        void MemAddMemberCommand::getArgs(std::string &dlname_, std::string &address_) const;
+        void MemAddMemberCommand::getArgs(File::offset_type &offset_, std::string &dlname_, std::string &address_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -473,13 +475,14 @@ namespace smsc { namespace cluster
     private:
         std::string dlname;
         std::string address;
+        File::offset_type offset;
     public:
-        SbmAddSubmiterCommand(std::string dlname_, std::string address_);
+        SbmAddSubmiterCommand(File::offset_type offset_, std::string dlname_, std::string address_);
         SbmAddSubmiterCommand() : Command(SBMADDSUBMITER_CMD) {};
 
         virtual ~SbmAddSubmiterCommand() {};
 
-        void SbmAddSubmiterCommand::getArgs(std::string &dlname_, std::string &address_) const;
+        void SbmAddSubmiterCommand::getArgs(File::offset_type &offset_, std::string &dlname_, std::string &address_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -508,13 +511,15 @@ namespace smsc { namespace cluster
         int maxElements;
         std::string dlname;
         std::string owner;
+        File::offset_type offset1;
+        File::offset_type offset2;
     public:
-        DlAddCommand(int maxElements_, std::string dlname_, std::string owner_);
+        DlAddCommand(int maxElements_, std::string dlname_, std::string owner_, File::offset_type offset1_, File::offset_type offset2_);
         DlAddCommand() : Command(DLADD_CMD) {};
 
         virtual ~DlAddCommand() {};
 
-        void DlAddCommand::getArgs(int &maxElements_, std::string &dlname_, std::string &owner_) const;
+        void DlAddCommand::getArgs(int &maxElements_, File::offset_type &offset1_, File::offset_type &offset2_, std::string &dlname_, std::string &owner_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };

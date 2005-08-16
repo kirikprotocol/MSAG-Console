@@ -41,10 +41,11 @@ void SbmCommandListener::sbmAddSubmiter(const Command& command)
 {
     std::string dlname;
     std::string address;
+    File::offset_type offset;
 
     const SbmAddSubmiterCommand* cmd = dynamic_cast<const SbmAddSubmiterCommand*>(&command);
 
-    cmd->getArgs(dlname, address);
+    cmd->getArgs(offset, dlname, address);
 
     BEGINMETHOD
     {

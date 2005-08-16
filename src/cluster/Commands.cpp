@@ -2144,19 +2144,21 @@ bool AclAddAddressesCommand::deserialize(void *buffer, uint32_t len)
 
 //========== prcAddPrincipal ==========================
 
-PrcAddPrincipalCommand::PrcAddPrincipalCommand(int maxLists_, int maxElements_, std::string address_)
+PrcAddPrincipalCommand::PrcAddPrincipalCommand(int maxLists_, int maxElements_, File::offset_type offset_, std::string address_)
     : Command(PRCADDPRINCIPAL_CMD),
     maxLists(maxLists_),
     maxElements(maxElements_),
-    address(address_)
+    address(address_),
+    offset(offset_)
 {
 }
 
-void PrcAddPrincipalCommand::getArgs(int &maxLists_, int &maxElements_, std::string &address_) const
+void PrcAddPrincipalCommand::getArgs(int &maxLists_, int &maxElements_, File::offset_type &offset_, std::string &address_) const
 {
     maxLists_ = maxLists;
     maxElements_ = maxElements;
     address_ = address;
+    offset_ = offset;
 }
 
 void* PrcAddPrincipalCommand::serialize(uint32_t &len)
@@ -2166,7 +2168,7 @@ void* PrcAddPrincipalCommand::serialize(uint32_t &len)
 
     try {
 
-    len = 9 + address.length();
+    len = 17 + address.length();
 
     buffer = new uint8_t[len];
 
@@ -2178,8 +2180,27 @@ void* PrcAddPrincipalCommand::serialize(uint32_t &len)
     printf("maxElements: %d\n", maxElements);
     value32 = htonl(maxElements);
     memcpy((void*)( (uint8_t*)buffer + 4), (const void*)&value32, 4);
+
+    //============= Puts offset =================================
+
+    uint64_t val64 = offset;
+    uint64_t tmp = val64;;
+    unsigned char *ptr=(unsigned char *)&val64;
+    ptr[0]=(unsigned char)(tmp>>56);
+    ptr[1]=(unsigned char)(tmp>>48)&0xFF;
+    ptr[2]=(unsigned char)(tmp>>40)&0xFF;
+    ptr[3]=(unsigned char)(tmp>>32)&0xFF;
+    ptr[4]=(unsigned char)(tmp>>24)&0xFF;
+    ptr[5]=(unsigned char)(tmp>>16)&0xFF;
+    ptr[6]=(unsigned char)(tmp>>8)&0xFF;
+    ptr[7]=(unsigned char)(tmp&0xFF);
+
+    memcpy((void*)(buffer + 8),        (const void*)&val64, 8);
+
+    //================= Puts strings params =======================
+
     printf("address: '%s', len: %d\n", address.c_str(), address.length());
-    memcpy((void*)( (uint8_t*)buffer + 8), (const void*)address.c_str(), address.length() + 1);
+    memcpy((void*)( (uint8_t*)buffer + 16), (const void*)address.c_str(), address.length() + 1);
 
     }catch(...){
         return 0;
@@ -2189,7 +2210,7 @@ void* PrcAddPrincipalCommand::serialize(uint32_t &len)
 }
 bool PrcAddPrincipalCommand::deserialize(void *buffer, uint32_t len)
 {
-    if(len < 9 || !buffer)
+    if(len < 17 || !buffer)
         return false;
 
     try {
@@ -2202,7 +2223,29 @@ bool PrcAddPrincipalCommand::deserialize(void *buffer, uint32_t len)
     memcpy((void*)&value32, (const void*)( (uint8_t*)buffer + 4 ),  4);
     maxElements = ntohl(value32);
     printf("maxElements: %d\n", maxElements);
-    address = (char*)buffer + 8;
+
+    //============= Gets offset ======================
+
+    uint64_t val64;
+    memcpy((void*)&val64,       (const void*)( (uint8_t*)   buffer + 8 ), 8);
+
+    uint64_t tmp=0;
+    memset(&tmp, 0, 8);
+    unsigned char *ptr=(unsigned char *)&val64;
+    tmp = (uint64_t)( ptr[0] ) << 56;
+    tmp += (uint64_t)( ptr[1] ) << 48;
+    tmp += (uint64_t)( ptr[2] ) << 40;
+    tmp += (uint64_t)( ptr[3] ) << 32;
+    tmp += (uint64_t)( ptr[4] ) << 24;
+    tmp += (uint64_t)( ptr[5] ) << 16;
+    tmp += (uint64_t)( ptr[6] ) << 8;
+    tmp += (uint64_t)( ptr[7] );
+
+    offset = tmp;
+
+    //=============== Gets strings params =================
+
+    address = (char*)buffer + 16;
     printf("address: '%s', len: %d\n", address.c_str(), address.length());
 
     }catch(...){
@@ -2336,17 +2379,19 @@ bool PrcAlterPrincipalCommand::deserialize(void *buffer, uint32_t len)
 
 //========== memAddMember ==========================
 
-MemAddMemberCommand::MemAddMemberCommand(std::string dlname_, std::string address_)
+MemAddMemberCommand::MemAddMemberCommand(File::offset_type offset_, std::string dlname_, std::string address_)
     : Command(MEMADDMEMBER_CMD),
     dlname(dlname_),
-    address(address_)
+    address(address_),
+    offset(offset_)
 {
 }
 
-void MemAddMemberCommand::getArgs(std::string &dlname_, std::string &address_) const
+void MemAddMemberCommand::getArgs(File::offset_type &offset_, std::string &dlname_, std::string &address_) const
 {
     dlname_ = dlname;
     address_ = address;
+    offset_ = offset;
 }
 
 void* MemAddMemberCommand::serialize(uint32_t &len)
@@ -2356,11 +2401,29 @@ void* MemAddMemberCommand::serialize(uint32_t &len)
 
     try {
 
-    len = 2 + dlname.length() + address.length();
+    len = 10 + dlname.length() + address.length();
 
     buffer = new uint8_t[len];
 
-    int sz = 0;
+    //============= Puts offset =================================
+
+    uint64_t val64 = offset;
+    uint64_t tmp = val64;;
+    unsigned char *ptr=(unsigned char *)&val64;
+    ptr[0]=(unsigned char)(tmp>>56);
+    ptr[1]=(unsigned char)(tmp>>48)&0xFF;
+    ptr[2]=(unsigned char)(tmp>>40)&0xFF;
+    ptr[3]=(unsigned char)(tmp>>32)&0xFF;
+    ptr[4]=(unsigned char)(tmp>>24)&0xFF;
+    ptr[5]=(unsigned char)(tmp>>16)&0xFF;
+    ptr[6]=(unsigned char)(tmp>>8)&0xFF;
+    ptr[7]=(unsigned char)(tmp&0xFF);
+
+    memcpy((void*)(buffer),        (const void*)&val64, 8);
+
+    //============== Puts strings params ========================
+
+    int sz = 8;
     memcpy((void*)buffer,                       (const void*)dlname.c_str(),    dlname.length() + 1);
     sz += dlname.length() + 1;
     printf("dlname: '%s', len: %d, sz: %d\n", dlname.c_str(), dlname.length(), sz);
@@ -2375,12 +2438,33 @@ void* MemAddMemberCommand::serialize(uint32_t &len)
 }
 bool MemAddMemberCommand::deserialize(void *buffer, uint32_t len)
 {
-    if(len < 2 || !buffer)
+    if(len < 10 || !buffer)
         return false;
 
     try {
 
-    int sz = 0;
+    //============= Gets offset ======================
+
+    uint64_t val64;
+    memcpy((void*)&val64,       (const void*)(buffer), 8);
+
+    uint64_t tmp=0;
+    memset(&tmp, 0, 8);
+    unsigned char *ptr=(unsigned char *)&val64;
+    tmp = (uint64_t)( ptr[0] ) << 56;
+    tmp += (uint64_t)( ptr[1] ) << 48;
+    tmp += (uint64_t)( ptr[2] ) << 40;
+    tmp += (uint64_t)( ptr[3] ) << 32;
+    tmp += (uint64_t)( ptr[4] ) << 24;
+    tmp += (uint64_t)( ptr[5] ) << 16;
+    tmp += (uint64_t)( ptr[6] ) << 8;
+    tmp += (uint64_t)( ptr[7] );
+
+    offset = tmp;
+
+    //=============== Gets strings params ===============
+
+    int sz = 8;
     dlname =    (char*)buffer;          sz += dlname.length() + 1;      if (sz >= len) return false;
     printf("dlname: '%s', len: %d, sz: %d\n", dlname.c_str(), dlname.length(), sz);
     address =   (char*)buffer + sz;
@@ -2454,17 +2538,19 @@ bool MemDeleteMemberCommand::deserialize(void *buffer, uint32_t len)
 
 //========== sbmAddSubmiter ==========================
 
-SbmAddSubmiterCommand::SbmAddSubmiterCommand(std::string dlname_, std::string address_)
+SbmAddSubmiterCommand::SbmAddSubmiterCommand(File::offset_type offset_, std::string dlname_, std::string address_)
     : Command(SBMADDSUBMITER_CMD),
     dlname(dlname_),
-    address(address_)
+    address(address_),
+    offset(offset_)
 {
 }
 
-void SbmAddSubmiterCommand::getArgs(std::string &dlname_, std::string &address_) const
+void SbmAddSubmiterCommand::getArgs(File::offset_type &offset_, std::string &dlname_, std::string &address_) const
 {
     dlname_ = dlname;
     address_ = address;
+    offset_ = offset;
 }
 
 void* SbmAddSubmiterCommand::serialize(uint32_t &len)
@@ -2474,11 +2560,29 @@ void* SbmAddSubmiterCommand::serialize(uint32_t &len)
 
     try {
 
-    len = 2 + dlname.length() + address.length();
+    len = 10 + dlname.length() + address.length();
 
     buffer = new uint8_t[len];
 
-    int sz = 0;
+    //============= Puts offset =================================
+
+    uint64_t val64 = offset;
+    uint64_t tmp = val64;;
+    unsigned char *ptr=(unsigned char *)&val64;
+    ptr[0]=(unsigned char)(tmp>>56);
+    ptr[1]=(unsigned char)(tmp>>48)&0xFF;
+    ptr[2]=(unsigned char)(tmp>>40)&0xFF;
+    ptr[3]=(unsigned char)(tmp>>32)&0xFF;
+    ptr[4]=(unsigned char)(tmp>>24)&0xFF;
+    ptr[5]=(unsigned char)(tmp>>16)&0xFF;
+    ptr[6]=(unsigned char)(tmp>>8)&0xFF;
+    ptr[7]=(unsigned char)(tmp&0xFF);
+
+    memcpy((void*)(buffer),        (const void*)&val64, 8);
+
+    //============== Puts strings params ========================
+
+    int sz = 8;
     memcpy((void*)buffer,                       (const void*)dlname.c_str(),    dlname.length() + 1);
     sz += dlname.length() + 1;
     printf("dlname: '%s', len: %d, sz: %d\n", dlname.c_str(), dlname.length(), sz);
@@ -2493,12 +2597,33 @@ void* SbmAddSubmiterCommand::serialize(uint32_t &len)
 }
 bool SbmAddSubmiterCommand::deserialize(void *buffer, uint32_t len)
 {
-    if(len < 2 || !buffer)
+    if(len < 10 || !buffer)
         return false;
 
     try {
 
-    int sz = 0;
+    //============= Gets offset ======================
+
+    uint64_t val64;
+    memcpy((void*)&val64,       (const void*)(buffer), 8);
+
+    uint64_t tmp=0;
+    memset(&tmp, 0, 8);
+    unsigned char *ptr=(unsigned char *)&val64;
+    tmp = (uint64_t)( ptr[0] ) << 56;
+    tmp += (uint64_t)( ptr[1] ) << 48;
+    tmp += (uint64_t)( ptr[2] ) << 40;
+    tmp += (uint64_t)( ptr[3] ) << 32;
+    tmp += (uint64_t)( ptr[4] ) << 24;
+    tmp += (uint64_t)( ptr[5] ) << 16;
+    tmp += (uint64_t)( ptr[6] ) << 8;
+    tmp += (uint64_t)( ptr[7] );
+
+    offset = tmp;
+
+    //=============== Gets strings params =================
+
+    int sz = 8;
     dlname =    (char*)buffer;          sz += dlname.length() + 1;      if (sz >= len) return false;
     printf("dlname: '%s', len: %d, sz: %d\n", dlname.c_str(), dlname.length(), sz);
     address =   (char*)buffer + sz;
@@ -2572,19 +2697,23 @@ bool SbmDeleteSubmiterCommand::deserialize(void *buffer, uint32_t len)
 
 //========== dlAdd ==========================
 
-DlAddCommand::DlAddCommand(int maxElements_, std::string dlname_, std::string owner_)
+DlAddCommand::DlAddCommand(int maxElements_, std::string dlname_, std::string owner_, File::offset_type offset1_, File::offset_type offset2_)
     : Command(DLADD_CMD),
     maxElements(maxElements_),
     dlname(dlname_),
-    owner(owner_)
+    owner(owner_),
+    offset1(offset1_),
+    offset2(offset2_)
 {
 }
 
-void DlAddCommand::getArgs(int &maxElements_, std::string &dlname_, std::string &owner_) const
+void DlAddCommand::getArgs(int &maxElements_, File::offset_type &offset1_, File::offset_type &offset2_, std::string &dlname_, std::string &owner_) const
 {
     maxElements_ = maxElements;
     dlname_ = dlname;
     owner_ = owner;
+    offset1_ = offset1;
+    offset2_ = offset2;
 }
 
 void* DlAddCommand::serialize(uint32_t &len)
@@ -2594,7 +2723,7 @@ void* DlAddCommand::serialize(uint32_t &len)
 
     try {
 
-    len = 6 + dlname.length() + owner.length();
+    len = 22 + dlname.length() + owner.length();
 
     buffer = new uint8_t[len];
 
@@ -2604,6 +2733,41 @@ void* DlAddCommand::serialize(uint32_t &len)
     value32 = htonl(maxElements);
     memcpy((void*)buffer, (const void*)&value32, 4);
     int sz = 4;
+
+    //============= Puts offset =================================
+
+    uint64_t val64 = offset1;
+    uint64_t tmp = val64;
+    unsigned char *ptr=(unsigned char *)&val64;
+    ptr[0]=(unsigned char)(tmp>>56);
+    ptr[1]=(unsigned char)(tmp>>48)&0xFF;
+    ptr[2]=(unsigned char)(tmp>>40)&0xFF;
+    ptr[3]=(unsigned char)(tmp>>32)&0xFF;
+    ptr[4]=(unsigned char)(tmp>>24)&0xFF;
+    ptr[5]=(unsigned char)(tmp>>16)&0xFF;
+    ptr[6]=(unsigned char)(tmp>>8)&0xFF;
+    ptr[7]=(unsigned char)(tmp&0xFF);
+
+    memcpy((void*)(buffer + sz),        (const void*)&val64, 8);
+    sz += 8;
+
+    val64 = offset2;
+    tmp = val64;
+    ptr=(unsigned char *)&val64;
+    ptr[0]=(unsigned char)(tmp>>56);
+    ptr[1]=(unsigned char)(tmp>>48)&0xFF;
+    ptr[2]=(unsigned char)(tmp>>40)&0xFF;
+    ptr[3]=(unsigned char)(tmp>>32)&0xFF;
+    ptr[4]=(unsigned char)(tmp>>24)&0xFF;
+    ptr[5]=(unsigned char)(tmp>>16)&0xFF;
+    ptr[6]=(unsigned char)(tmp>>8)&0xFF;
+    ptr[7]=(unsigned char)(tmp&0xFF);
+
+    memcpy((void*)(buffer + sz),        (const void*)&val64, 8);
+    sz += 8;
+
+    //============= Puts strings params ===========================
+
     memcpy((void*)( (uint8_t*)buffer + sz ), (const void*)dlname.c_str(), dlname.length() +1);
     sz += dlname.length() + 1;
     printf("dlname: '%s', len: %d, sz: %d\n", dlname.c_str(), dlname.length(), sz);
@@ -2618,7 +2782,7 @@ void* DlAddCommand::serialize(uint32_t &len)
 }
 bool DlAddCommand::deserialize(void *buffer, uint32_t len)
 {
-    if(len < 6 || !buffer)
+    if(len < 22 || !buffer)
         return false;
 
     try {
@@ -2628,7 +2792,48 @@ bool DlAddCommand::deserialize(void *buffer, uint32_t len)
     printf("maxElements: %d\n", maxElements);
     memcpy((void*)&value32, (const void*)buffer, 4);
     maxElements = ntohl(value32);
+
     int sz = 4;
+
+    //================= Gtes offset ========================
+
+    uint64_t val64;
+    memcpy((void*)&val64,       (const void*)( (uint8_t*)buffer + sz ), 8);
+    sz += 8;
+
+    uint64_t tmp=0;
+    memset(&tmp, 0, 8);
+    unsigned char *ptr=(unsigned char *)&val64;
+    tmp = (uint64_t)( ptr[0] ) << 56;
+    tmp += (uint64_t)( ptr[1] ) << 48;
+    tmp += (uint64_t)( ptr[2] ) << 40;
+    tmp += (uint64_t)( ptr[3] ) << 32;
+    tmp += (uint64_t)( ptr[4] ) << 24;
+    tmp += (uint64_t)( ptr[5] ) << 16;
+    tmp += (uint64_t)( ptr[6] ) << 8;
+    tmp += (uint64_t)( ptr[7] );
+
+    offset1 = tmp;
+
+    memcpy((void*)&val64,       (const void*)( (uint8_t*)buffer + sz ), 8);
+    sz += 8;
+
+    tmp=0;
+    memset(&tmp, 0, 8);
+    ptr=(unsigned char *)&val64;
+    tmp = (uint64_t)( ptr[0] ) << 56;
+    tmp += (uint64_t)( ptr[1] ) << 48;
+    tmp += (uint64_t)( ptr[2] ) << 40;
+    tmp += (uint64_t)( ptr[3] ) << 32;
+    tmp += (uint64_t)( ptr[4] ) << 24;
+    tmp += (uint64_t)( ptr[5] ) << 16;
+    tmp += (uint64_t)( ptr[6] ) << 8;
+    tmp += (uint64_t)( ptr[7] );
+
+    offset2 = tmp;
+
+    //================= Gtes strings params ================
+
     dlname =    (char*)buffer + sz;     sz += dlname.length() + 1;
     printf("dlname: '%s', len: %d, sz: %d\n", dlname.c_str(), dlname.length(), sz);
     owner =     (char*)buffer + sz;

@@ -47,10 +47,11 @@ void PrcCommandListener::prcAddPrincipal(const Command& command)
     int maxLists;
     int maxElements;
     std::string address;
+    File::offset_type offset;
 
     const PrcAddPrincipalCommand* cmd = dynamic_cast<const PrcAddPrincipalCommand*>(&command);
 
-    cmd->getArgs(maxLists, maxElements, address);
+    cmd->getArgs(maxLists, maxElements, offset, address);
 
     BEGINMETHOD
     {

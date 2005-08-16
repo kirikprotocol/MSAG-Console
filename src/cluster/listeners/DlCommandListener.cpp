@@ -45,10 +45,12 @@ void DlCommandListener::dlAdd(const Command& command)
     int maxElements;
     std::string dlname;
     std::string owner;
+    File::offset_type offset1;
+    File::offset_type offset2;
 
     const DlAddCommand* cmd = dynamic_cast<const DlAddCommand*>(&command);
 
-    cmd->getArgs(maxElements, dlname, owner);
+    cmd->getArgs(maxElements, offset1, offset2, dlname, owner);
 
     printf("\n============== dlAdd ==============\n");
     printf("type: %d\n", cmd->getType());

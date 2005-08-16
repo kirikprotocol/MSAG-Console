@@ -41,10 +41,11 @@ void MemCommandListener::memAddMember(const Command& command)
 {
     std::string dlname;
     std::string address;
+    File::offset_type offset;
 
     const MemAddMemberCommand* cmd = dynamic_cast<const MemAddMemberCommand*>(&command);
 
-    cmd->getArgs(dlname, address);
+    cmd->getArgs(offset, dlname, address);
 
     BEGINMETHOD
     {
