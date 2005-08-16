@@ -914,14 +914,14 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
     uint64_t tmp=0;
     memset(&tmp, 0, 8);
     unsigned char *ptr=(unsigned char *)&val64;
-    tmp = ptr[0] << 56;
-    tmp += ptr[1] << 48;
-    tmp += ptr[2] << 40;
-    tmp += ptr[3] << 32;
-    tmp += ptr[4] << 24;
-    tmp += ptr[5] << 16;
-    tmp += ptr[6] << 8;
-    tmp += ptr[7];
+    tmp = (uint64_t)( ptr[0] ) << 56;
+    tmp += (uint64_t)( ptr[1] ) << 48;
+    tmp += (uint64_t)( ptr[2] ) << 40;
+    tmp += (uint64_t)( ptr[3] ) << 32;
+    tmp += (uint64_t)( ptr[4] ) << 24;
+    tmp += (uint64_t)( ptr[5] ) << 16;
+    tmp += (uint64_t)( ptr[6] ) << 8;
+    tmp += (uint64_t)( ptr[7] );
 
     offset = tmp;
 
@@ -1865,14 +1865,14 @@ bool AclCreateCommand::deserialize(void *buffer, uint32_t len)
     uint64_t tmp=0;
     memset(&tmp, 0, 8);
     unsigned char *ptr=(unsigned char *)&val64;
-    tmp = ptr[0] << 56;
-    tmp += ptr[1] << 48;
-    tmp += ptr[2] << 40;
-    tmp += ptr[3] << 32;
-    tmp += ptr[4] << 24;
-    tmp += ptr[5] << 16;
-    tmp += ptr[6] << 8;
-    tmp += ptr[7];
+    tmp = (uint64_t)( ptr[0] ) << 56;
+    tmp += (uint64_t)( ptr[1] ) << 48;
+    tmp += (uint64_t)( ptr[2] ) << 40;
+    tmp += (uint64_t)( ptr[3] ) << 32;
+    tmp += (uint64_t)( ptr[4] ) << 24;
+    tmp += (uint64_t)( ptr[5] ) << 16;
+    tmp += (uint64_t)( ptr[6] ) << 8;
+    tmp += (uint64_t)( ptr[7] );
 
     offset = tmp;
 
