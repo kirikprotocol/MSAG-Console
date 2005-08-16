@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "ss7cp.h"
+#include "inman/comp/comps.hpp"
 
 namespace smsc {
 namespace inman {
@@ -15,6 +16,7 @@ namespace inap {
 
 class Operation;
 class Session;
+using smsc::inman::comp::Component;
 
 class TcapOperation
 {
@@ -28,6 +30,7 @@ public:
   virtual const UCHAR_T getTag() const            { return tag; }
   virtual const std::vector<UCHAR_T>& getOperation() const  { return operation; }
   virtual const std::vector<UCHAR_T>& getParams()  const    { return params; }
+  virtual void write(Component* comp) {if(comp)comp->encode(operation);}
 };
 
 class DialogListener

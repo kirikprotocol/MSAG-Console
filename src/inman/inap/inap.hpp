@@ -39,7 +39,7 @@ class SCF
     virtual void initialDPSMS(InitialDPSMSArg* arg) = 0;
 };
 
-class INAP : public DialogListener
+class INAP : public DialogListener,SCF
 {
 
   public:
@@ -55,6 +55,9 @@ class INAP : public DialogListener
   public: // Called from FSM
     virtual void sendInitialDP();
     virtual void sendEventReport();
+  public:
+    void eventReportSMS(EventReportSMSArg* arg);
+    void initialDPSMS(InitialDPSMSArg* arg);
 
   protected:
     Dialog*     dialog;

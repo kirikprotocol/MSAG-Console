@@ -42,6 +42,18 @@ void INAP::sendEventReport()
 {
 }
 
+void INAP::eventReportSMS(EventReportSMSArg* arg)
+{
+}
+void INAP::initialDPSMS(InitialDPSMSArg* arg)
+{
+  TcapOperation* out = new TcapOperation();// may be allocate via dialogue
+  //TcapOperation out = _request ("sayHello");
+  out->write(arg);
+  //TcapOperation in = _invoke (out);
+  //result = in.read ();
+}
+
 }
 }
 }

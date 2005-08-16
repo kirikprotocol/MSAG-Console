@@ -168,6 +168,11 @@ InitialDPSMSArg::~InitialDPSMSArg()
 //deallocate internal
   delete(internal);
 }
+int InitialDPSMSArg::decode(vector<unsigned char>& buf)
+{
+
+  return -1; //not implemented yet
+}
 int InitialDPSMSArg::encode(vector<unsigned char>& buf)
 {
   asn_enc_rval_t er;
