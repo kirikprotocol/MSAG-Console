@@ -57,6 +57,12 @@ Required environment: ORACLE_HOME
     </ant>
   </target>
 
+  <target name="ssdaemon" depends="logger" >
+    <ant antfile="${SRC_DIR}/conf/make.xml">
+      <property name="targets" value="admin.daemon"/>
+    </ant>
+  </target>
+
   <target name="smppgw" depends="logger, db" >
     <ant antfile="${SRC_DIR}/conf/make.xml">
       <property name="targets" value="smppgw"/>
