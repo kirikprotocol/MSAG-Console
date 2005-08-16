@@ -41,8 +41,13 @@ Targets:
 
   <target name="makegw">
     <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="smppgw"/>
-    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="admin"/>
+    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="ssdaemon"/>
   </target>
+
+  <target name="makemod">
+    <ant antfile="${SRC_DIR}/build.xml" dir="${SRC_DIR}" target="mod"/>
+  </target>
+
 
   <target name="makeweb">
     <untar compression="gzip" src="${SMSC_DIR}/config/tomcat/tomcat5.tar.gz" dest="${DISTR_DIR}/tomcat"/>
