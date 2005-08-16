@@ -4,6 +4,23 @@
   xmlns="http://java.sun.com/xml/ns/j2ee"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+  <servlet>
+        <servlet-name>applet</servlet-name>
+        <servlet-class>ru.sibinco.scag.beans.rules.applet.myServlet</servlet-class>
+        <init-param>
+          <param-name>clientInputTimeout</param-name>
+          <param-value>100</param-value>
+        </init-param>
+        <init-param>
+          <param-name>debug</param-name>
+          <param-value>5</param-value>
+        </init-param>
+       <init-param>
+          <param-name>readonly</param-name>
+          <param-value>false</param-value>
+        </init-param>
+         <load-on-startup>5</load-on-startup>
+    </servlet>
   <filter>
     <filter-name>SCAG</filter-name>
     <filter-class>ru.sibinco.scag.beans.SCAGFilter</filter-class>
@@ -107,9 +124,45 @@
       <include-coda>/WEB-INF/inc/coda.jspf</include-coda>
     </jsp-property-group-->
   </jsp-config>
-
+  <servlet-mapping>
+       <servlet-name>applet</servlet-name>
+       <url-pattern>/applet/*</url-pattern>
+    </servlet-mapping>
+ 
   <filter-mapping>
     <filter-name>SCAG</filter-name>
     <url-pattern>/*</url-pattern>
   </filter-mapping>
+  <!-- Define a Security Constraint on this Application  -->
+ <!--   <security-constraint>
+      <web-resource-collection>
+        <web-resource-name>myServlet command</web-resource-name>
+        <url-pattern>/applet/*</url-pattern>
+        <http-method>DELETE</http-method>
+        <http-method>GET</http-method>
+        <http-method>POST</http-method>
+        <http-method>PUT</http-method>
+      </web-resource-collection>
+      <auth-constraint>
+    -->     <!-- NOTE:  This role is not present in the default users file -->
+ <!--        <role-name>manager</role-name>
+         <role-name>tomcat</role-name>
+	       <role-name>role1</role-name>
+      </auth-constraint>
+    </security-constraint>
+ -->
+    <!-- Security roles referenced by this web application -->
+  <!--  <security-role>
+      <description>
+        The role that is required to log in to the Manager Application
+      </description>
+      <role-name>manager</role-name>
+    </security-role>
+  <security-role>
+      <role-name>role1</role-name>
+    </security-role>
+    <security-role>
+      <role-name>tomcat</role-name>
+    </security-role>
+    -->
 </web-app>
