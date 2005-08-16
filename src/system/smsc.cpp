@@ -13,7 +13,9 @@
 #include "system/smscsme.hpp"
 #include "util/regexp/RegExp.hpp"
 #include "util/config/ConfigView.h"
+#ifdef USE_MAP
 #include "system/mapio/MapIoTask.h"
+#endif
 #include "system/abonentinfo/AbonentInfo.hpp"
 #include "mscman/MscManager.h"
 #include "resourcemanager/ResourceManager.hpp"
@@ -911,12 +913,16 @@ void Smsc::run()
     __trace__("Waiting SMPPIO started");
     accstarted.Wait();
     __trace__("SMPPIO started");
+#ifdef USE_MAP
     Event mapiostarted;
     MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,busyMTDelay,lockedByMODelay,MOLockTimeout,allowCallBarred);
     tp.startTask(mapio);
     mapiostarted.Wait();
     __trace__("MAPIO started");
     if(!acc->isStarted()||!mapio->isStarted())
+#else
+    if(!acc->isStarted())
+#endif
     {
       throw Exception("Failed to start SMPP or MAP acceptor");
     }
@@ -924,10 +930,12 @@ void Smsc::run()
 #ifndef NOMAPPROXY
     MapDialogContainer::getInstance()->registerSelf(&smeman);
 #endif
+#ifdef USE_MAP
     mapProxy=MapDialogContainer::getInstance()->getProxy();
     SmeInfo si=smeman.getSmeInfo(smeman.lookup("MAP_PROXY"));
     mapProxy->updateSmeInfo( si );
     MapDialogContainer::getInstance()->getProxy()->setId("MAP_PROXY");
+#endif
   }
 
 

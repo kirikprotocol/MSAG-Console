@@ -20,7 +20,9 @@
 #include "system/cancel_agent.hpp"
 #include "system/alert_agent.hpp"
 #include "system/performance.hpp"
+#ifdef USE_MAP
 #include "system/mapio/MapIoTask.h"
+#endif
 //#include "db/DataSource.h"
 //#include "db/DataSourceLoader.h"
 #include "snmp/SnmpAgent.hpp"
