@@ -113,18 +113,18 @@ void InitialDPSMSArg::setTPValidityPeriod()
 InternalInitialDPSMSArg::InternalInitialDPSMSArg()
 {
   idp.serviceKey = 11;
-  idp.destinationSubscriberNumber = NULL;
-  idp.callingPartyNumber = NULL;
-  idp.eventTypeSMS = NULL;
-  idp.iMSI = NULL;
+  idp.destinationSubscriberNumber = NULL; //Address
+  idp.callingPartyNumber = NULL; //Address
+  idp.eventTypeSMS = NULL; //enum
+  idp.iMSI = NULL; //Address
   idp.locationInformationMSC = NULL;
   idp.locationInformationGPRS = NULL;
-  idp.sMSCAddress = NULL;
-  idp.timeAndTimezone = NULL;
-  idp.tPShortMessageSpecificInfo = NULL;
-  idp.tPProtocolIdentifier = NULL;
-  idp.tPDataCodingScheme = NULL;
-  idp.tPValidityPeriod = NULL;
+  idp.sMSCAddress = NULL; //Address
+  idp.timeAndTimezone = NULL; //time_t
+  idp.tPShortMessageSpecificInfo = NULL;//int
+  idp.tPProtocolIdentifier = NULL; //int
+  idp.tPDataCodingScheme = NULL;// int
+  idp.tPValidityPeriod = NULL; //time_t
   idp.extensions =NULL;
   idp.smsReferenceNumber = NULL;
   idp.mscAddress = NULL;
