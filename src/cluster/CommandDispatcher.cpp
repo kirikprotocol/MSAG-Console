@@ -27,6 +27,8 @@ CommandDispatcher::~CommandDispatcher()
 
 void CommandDispatcher::addCommand(Command* command)
 {
+    if(isStoped())
+        return;
     MutexGuard guard(commandsMonitor);
 
     // TODO: Put command into commands queue

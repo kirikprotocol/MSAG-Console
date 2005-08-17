@@ -38,9 +38,35 @@ using smsc::core::synchronization::Mutex;
         Mutex stopLock;
         Mutex dispatcherLock;
         bool isStoped();
+        bool isMaster();
+        bool isSlave();
+        bool isSingle();
 
         void send(Command *command);
         //Socket socket;
+
+        class ArgHandler{
+        public:
+            ArgHandler()
+                : arg(0),
+                  fun(0)
+            {
+            };
+            ArgHandler(ChangeRoleHandler * fun_, void* arg_)
+                : arg(arg_),
+                  fun(fun_)
+            {                     
+            };
+            void run(Role role)
+            {
+                fun(role, arg);
+            };
+        protected:
+            void* arg;
+            ChangeRoleHandler *fun;
+        };
+
+        Array<ArgHandler> handlers;
 
     public:
 
@@ -54,6 +80,8 @@ using smsc::core::synchronization::Mutex;
         virtual void sendCommand(Command* command);
         virtual void addListener(CommandType type, CommandListener* listener);
         virtual void activate();
+        virtual void changeRole(Role role_);
+        virtual void addChangeRoleHandler(ChangeRoleHandler * fun, void* arg);
 
         void Start();
         void Stop();

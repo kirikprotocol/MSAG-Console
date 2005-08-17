@@ -53,9 +53,12 @@ void InterconnectManager::shutdown()
     
 void InterconnectManager::sendCommand(Command* command)
 {
-    
+
     MutexGuard guard(commandsMonitor);
     // TODO: add command to queue
+
+    if(!isMaster())
+        return;
     
     commands.Push(command);
     if (!isStoped()){
@@ -70,6 +73,9 @@ void InterconnectManager::addListener(CommandType type, CommandListener* listene
 }
 void InterconnectManager::activate()
 {
+    if(!isSlave())
+        return;
+
     MutexGuard mg(dispatcherLock);
     if(dispatcher){
         dispatcher->Start();
@@ -86,26 +92,31 @@ int InterconnectManager::Execute()
         if( !commandsMonitor.wait(30) )
         {
 
-            printf("\nCommand\n");
+            //Sends commands if role - master only
+            if(isMaster()){
+            
+                    //printf("\nCommand\n");
 
-            // Sends command to socket.
-            Command *command;
-            int count = commands.Count();
-            for(int i=0; i<=count-1; i++){
+                    // Sends command to socket.
+                    Command *command;
+                    int count = commands.Count();
+                    for(int i=0; i<=count-1; i++){
 
                 
-                commands.Shift(command);
+                            commands.Shift(command);
 
-                // Sends command to socket
-                send(command);
-                printf("\n");
+                            // Sends command to socket
+                            send(command);
+                            //printf("\n");
 
-                if(command)
-                    delete command;
-            }
+                            if(command)
+                                delete command;
+                    }
 
             
-            commands.Clean();
+                    commands.Clean();
+
+            }
             
         }
         //printf("Signal or timeout\n");
@@ -141,6 +152,93 @@ bool InterconnectManager::isStoped()
 {
     MutexGuard mg(stopLock);
     return isStopping;
+}
+
+bool InterconnectManager::isMaster()
+{
+    bool ismaster = ( role == MASTER );
+    return ismaster; 
+}
+
+bool InterconnectManager::isSlave()
+{
+    bool ismaster = ( role == SLAVE );
+    return ismaster; 
+}
+
+bool InterconnectManager::isSingle()
+{
+    bool ismaster = ( role == SINGLE );
+    return ismaster; 
+}
+
+void InterconnectManager::changeRole(Role role_)
+{
+    MutexGuard mg(dispatcherLock);
+    if(role == role_)
+        return;
+
+    switch(role_){
+    case MASTER:
+        role = MASTER;
+        if(role == SLAVE){
+            if(dispatcher){
+                dispatcher->Stop();
+                dispatcher->WaitFor();
+            }
+        }
+        
+        break;
+    case SLAVE:
+
+        if(role == MASTER){
+            MutexGuard guard(commandsMonitor);
+
+            Command *command;
+            int count = commands.Count();
+            for(int i=0; i<=count-1; i++){
+
+                
+                commands.Shift(command);
+
+                // Sends command to socket
+                send(command);
+                //printf("\n");
+
+                if(command)
+                    delete command;
+            }
+
+            
+            commands.Clean();
+
+            role = SLAVE;
+        }
+
+        if(dispatcher)
+            dispatcher->Start();
+
+        break;
+    case SINGLE:
+        if(role == SLAVE){
+            if(dispatcher){
+                dispatcher->Stop();
+                dispatcher->WaitFor();
+            }
+        }
+        role = SINGLE;
+        break;
+    };
+
+    for(int i=0; i<= handlers.Count() - 1; i++){
+            handlers[i].run(role);
+    }
+}
+
+void InterconnectManager::addChangeRoleHandler(ChangeRoleHandler * fun, void *arg)
+{
+    MutexGuard mg(dispatcherLock);
+    handlers.Push(ArgHandler(fun, arg));
 }
 
 void InterconnectManager::send(Command* command)

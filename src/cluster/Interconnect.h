@@ -12,6 +12,8 @@ namespace smsc { namespace cluster
         SLAVE  = 2
     } Role;
 
+    typedef void ChangeRoleHandler(Role, void*);
+
     /**
      * Listener interface to handle ohter-side commands by internal subsystems.
      * Listeners should be registered via Interconnect interface.
@@ -46,6 +48,8 @@ namespace smsc { namespace cluster
         virtual void addListener(CommandType type, CommandListener* listener) = 0;
         virtual void activate() = 0;
         virtual Role getRole() = 0; 
+        virtual void changeRole(Role role_) = 0;
+        virtual void  addChangeRoleHandler(ChangeRoleHandler*, void*) = 0;
     };
 
 }}
