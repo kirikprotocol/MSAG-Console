@@ -1,9 +1,8 @@
 #
 # $Id$
 #
-
-CXXFLAGS := -I$(SS7_STACK_HOME)/src -I../util $(CXXFLAGS)
-PACKAGE := inman.inap
+CXXFLAGS := -I../inap -I../util $(CXXFLAGS)
+PACKAGE := inman.interaction
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)

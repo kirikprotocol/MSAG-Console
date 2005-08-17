@@ -4,7 +4,7 @@ static char const ident[] = "$Id$";
 #include "session.hpp"
 #include "dialog.hpp"
 #include "factory.hpp"
-#include "util.hpp"
+#include "inman/common/util.hpp"
 
 using std::map;
 using std::pair;
@@ -84,17 +84,20 @@ USHORT_T Session::nextDialogId()
     return id;
 }
 
-Dialog* Session::openDialog(USHORT_T id)
+TcapDialog* Session::openDialog(USHORT_T id)
 {
     MutexGuard guard( lock );
     if(id == 0) id = nextDialogId();
-    smsc_log_debug(inapLogger,"Open dialog (SSN=%d, Dialog id=%d)", SSN, id );
-    Dialog* pDlg = new Dialog( this, id );
+    smsc_log_debug(inapLogger,"Open dialog (SSN=%d, TcapDialog id=%d)", SSN, id );
+    TcapDialog* pDlg = new TcapDialog( this, id );
     dialogs.insert( DialogsMap_T::value_type( id, pDlg ) );
+
+    notify1<TcapDialog*>( &SessionListener::onDialogBegin, pDlg );
+
     return pDlg;
 }
 
-Dialog* Session::findDialog(USHORT_T id)
+TcapDialog* Session::findDialog(USHORT_T id)
 {
     MutexGuard guard( lock );
     DialogsMap_T::const_iterator it = dialogs.find( id );
@@ -106,12 +109,15 @@ Dialog* Session::findDialog(USHORT_T id)
 
 }
 
-void Session::closeDialog(Dialog* pDlg)
+void Session::closeDialog(TcapDialog* pDlg)
 {
     MutexGuard guard( lock );
     if( !pDlg ) return;
-    smsc_log_debug(inapLogger,"Close dialog (SSN=%d, Dialog id=%d)", SSN, pDlg->did );
+    smsc_log_debug(inapLogger,"Close dialog (SSN=%d, TcapDialog id=%d)", SSN, pDlg->did );
     dialogs.erase( pDlg->did );
+
+    notify1<TcapDialog*>( &SessionListener::onDialogEnd, pDlg );
+
     delete pDlg;
 }
 

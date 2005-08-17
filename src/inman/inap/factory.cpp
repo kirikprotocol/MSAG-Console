@@ -3,7 +3,7 @@ static char const ident[] = "$Id$";
 
 #include "session.hpp"
 #include "factory.hpp"
-#include "util.hpp"
+#include "inman/common/util.hpp"
 
 using std::map;
 using std::pair;

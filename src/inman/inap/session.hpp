@@ -8,11 +8,13 @@
 
 #include "ss7cp.h"
 
-#include "inman/inap/types.hpp"
+#include "inman/common/types.hpp"
 #include "core/threads/Thread.hpp"
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
+#include "inman/common/observable.hpp"
 
+using smsc::inman::common::ObservableT;
 using smsc::core::threads::Thread;
 using smsc::core::synchronization::Event;
 using smsc::core::synchronization::Mutex;
@@ -26,9 +28,16 @@ static const USHORT_T MSG_INIT_MAX_ENTRIES = 512;
 static const USHORT_T TCAP_DIALOG_MIN_ID   = 1;
 static const USHORT_T TCAP_DIALOG_MAX_ID   = 1000;
 
-class Dialog;
+class TcapDialog;
 
-class Session : public Thread
+class SessionListener
+{
+public:
+	virtual void onDialogBegin(TcapDialog*) = 0;
+	virtual void onDialogEnd(TcapDialog*)   = 0;
+};
+
+class Session : public Thread, public ObservableT< SessionListener >
 {
         friend class Factory;
 
@@ -43,13 +52,13 @@ class Session : public Thread
         SCCP_ADDRESS_T inmanAddr;
         APP_CONTEXT_T  ac;
 
-        virtual     Dialog*  openDialog(USHORT_T id);
-        virtual     Dialog*  findDialog(USHORT_T id);
-        virtual     void     closeDialog(Dialog* pDlg);
+        virtual     TcapDialog*  openDialog(USHORT_T id);
+        virtual     TcapDialog*  findDialog(USHORT_T id);
+        virtual     void     closeDialog(TcapDialog* pDlg);
         virtual     void     closeAllDialogs();
 
     protected:
-        typedef      std::map<USHORT_T, Dialog*> DialogsMap_T;
+        typedef      std::map<USHORT_T, TcapDialog*> DialogsMap_T;
 
         Session(UCHAR_T SSN);
         Session(UCHAR_T ssn, const char* scfNum, const char* inmanNum);

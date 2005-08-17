@@ -11,11 +11,11 @@ static char const ident[] = "$Id$";
 #include "factory.hpp"
 #include "session.hpp"
 #include "dialog.hpp"
-#include "util.hpp"
+#include "inman/common/util.hpp"
 
 using smsc::logger::Logger;
 using smsc::inman::inap::TcapOperation;
-using smsc::inman::inap::Dialog;
+using smsc::inman::inap::TcapDialog;
 using smsc::inman::inap::Session;
 using smsc::inman::inap::Factory;
 using smsc::inman::inap::getTcapBindErrorMessage;
@@ -23,15 +23,20 @@ using smsc::inman::inap::dump;
 using smsc::inman::inap::tcapLogger;
 using smsc::inman::inap::inapLogger;
 
-static Dialog* findDialog(UCHAR_T ssn, USHORT_T dialogueId)
+//-------------------------------- Util functions --------------------------------
+
+static TcapDialog* findDialog(UCHAR_T ssn, USHORT_T dialogueId)
 {
 	Session* pSession = Factory::getInstance()->findSession( ssn );
   	assert( pSession );
-  	Dialog* pDlg = pSession->findDialog( dialogueId );
+  	TcapDialog* pDlg = pSession->findDialog( dialogueId );
   	assert( pDlg );
   	return pDlg;
 }
 
+//----------------------------------- T_BIND_conf -----------------------------------
+// Меняем состояние обьекта сессии на BOUNDED
+//-----------------------------------------------------------------------------------
 USHORT_T EINSS7_I97TBindConf(   UCHAR_T          ssn,
                                 USHORT_T         userId,
                                 EINSS7INSTANCE_T tcapInstanceId,
@@ -54,6 +59,218 @@ USHORT_T EINSS7_I97TBindConf(   UCHAR_T          ssn,
     return MSG_OK;
 }
 
+/////////////////////////////////// Transaction part ///////////////////////////////////////
+
+//----------------------------------- T_BEGIN_ind ------------------------------------------
+// Создаем новый экземпляр диалога в сессии и делегируем вызов TcapDialog::handleBeginDialog
+//------------------------------------------------------------------------------------------
+USHORT_T EINSS7_I97TBeginInd(   UCHAR_T          ssn,
+                                USHORT_T         userId,
+                                EINSS7INSTANCE_T tcapInstanceId,
+                                USHORT_T         dialogueId,
+                                UCHAR_T          priOrder,
+                                UCHAR_T          qualityOfService,
+                                UCHAR_T          destAdrLength,
+                                UCHAR_T          *destAdr_p,
+                                UCHAR_T          orgAdrLength,
+                                UCHAR_T          *orgAdr_p,
+                                UCHAR_T          compPresent,
+                                UCHAR_T          appContextLength,
+                                UCHAR_T          *appContext_p,
+                                USHORT_T         userInfoLength,
+                                UCHAR_T          *userInfo_p)
+{
+    smsc_log_debug(tcapLogger,
+                 "EINSS7_I97TBeginInd("
+                 "ssn=%d,userId=%d,tcapInstanceId=%d,dialogueId=%d,...)",
+                 ssn, userId, tcapInstanceId, dialogueId );
+
+	Session* pSession = Factory::getInstance()->findSession( ssn );
+  	assert( pSession );
+  	TcapDialog* pDlg = pSession->openDialog( dialogueId );
+  	assert( pDlg );
+    return pDlg->handleBeginDialog();
+}
+
+//----------------------------------- T_CONTINUE_ind ----------------------------------
+// Делегируем вызов TcapDialog::handleContinueDialog
+//-------------------------------------------------------------------------------------
+USHORT_T EINSS7_I97TContinueInd(UCHAR_T          ssn,
+                                USHORT_T         userId,
+                                EINSS7INSTANCE_T tcapInstanceId,
+                                USHORT_T         dialogueId,
+                                UCHAR_T          priOrder,
+                                UCHAR_T          qualityOfService,
+                                UCHAR_T          compPresent,
+                                UCHAR_T          aclen,
+                                UCHAR_T          *ac,
+                                USHORT_T         uilen,
+                                UCHAR_T          *ui)
+{
+  smsc_log_debug(tcapLogger,
+                 "EINSS7_I97TContinueInd(ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
+                 "priOrder=%d, qualityOfService=%d, compPresent=\"%s\", "
+                 "ac[%d]={%s}, ui[%d]={%s})",
+                 ssn, userId, tcapInstanceId,
+                 dialogueId, priOrder, qualityOfService,
+                 compPresent?"TRUE":"FALSE",
+                 aclen, dump(aclen,ac).c_str(), uilen, dump(uilen,ui).c_str());
+
+  TcapDialog* dlg = findDialog( ssn, dialogueId );
+  assert( dlg );
+  return dlg->handleContinueDialog();
+}
+
+//--------------------------------------- T_END_ind ---------------------------------
+// Вызываем TcapDialog::handleEndDialog и уничтожаем (!) обьект диалога
+//-----------------------------------------------------------------------------------
+USHORT_T EINSS7_I97TEndInd(     UCHAR_T          ssn,
+                                USHORT_T         userId,
+                                EINSS7INSTANCE_T tcapInstanceId,
+                                USHORT_T         dialogueId,
+                                UCHAR_T          priOrder,
+                                UCHAR_T          qualityOfService,
+                                UCHAR_T          compPresent,
+                                UCHAR_T          appContextLength,
+                                UCHAR_T          *appContext_p,
+                                USHORT_T         userInfoLength,
+                                UCHAR_T          *userInfo_p)
+{
+  smsc_log_debug(tcapLogger,
+                 "EINSS7_I97TEndInd("
+                 "ssn=%d, userId=%d,tcapInstanceId=%d,...)",
+                 ssn, userId, tcapInstanceId );
+
+	Session* pSession = Factory::getInstance()->findSession( ssn );
+  	assert( pSession );
+  	TcapDialog* dlg = findDialog( ssn, dialogueId );
+  	assert( dlg );
+	USHORT_T res = dlg->handleEndDialog();
+	pSession->closeDialog( dlg ); // удаляет обьект
+    return res;
+}
+
+/////////////////////////////////// Interaction part ///////////////////////////////////////
+
+
+//------------------------------------ T_INVOKE_ind ---------------------------------
+// Конструируем TcapOperation и передаем ее TcapDialog::handleInvoke
+//-----------------------------------------------------------------------------------
+
+USHORT_T EINSS7_I97TInvokeInd(  UCHAR_T          ssn,
+                                USHORT_T         userId,
+                                EINSS7INSTANCE_T tcapInstanceId,
+                                USHORT_T         dialogueId,
+                                UCHAR_T          invokeId,
+                                UCHAR_T          lastComponent,
+                                UCHAR_T          linkedIdUsed,
+                                UCHAR_T          linkedId,
+                                UCHAR_T          operationTag,
+                                USHORT_T         oplen,
+                                UCHAR_T          *op,
+                                USHORT_T         pmlen,
+                                UCHAR_T          *pm)
+{
+  smsc_log_debug(tcapLogger,
+                 "EINSS7_I97TInvokeInd(ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
+                 "invokeId=%d, lastComponent=\"%s\", linkedIdUsed=\"%s\", linkedId=%d, "
+                 "operationTag=\"%s\", "
+                 "op[%d]={%s}, pm[%d]={%s})",
+                 ssn, userId, tcapInstanceId, dialogueId,
+                 invokeId, lastComponent?"YES":"NO", linkedIdUsed?"USED":"NOT USED", linkedId,
+                 operationTag==0x02?"LOCAL":"GLOBAL",
+                 oplen, dump(oplen,op).c_str(), pmlen, dump(pmlen,pm).c_str());
+
+  TcapDialog* dlg = findDialog( ssn, dialogueId );
+  assert( dlg );
+  TcapOperation* pOp = dlg->createOperation();
+  pOp->decode( operationTag, oplen, op, pmlen, pm );
+  return dlg->handleInvoke( pOp );
+}
+
+//------------------------------------ T_RESULT_NL_ind ----------------------------------
+// Конструируем TcapOperation и передаем ее TcapDialog::handleResultNotLast
+//---------------------------------------------------------------------------------------
+USHORT_T EINSS7_I97TResultNLInd(UCHAR_T          ssn,
+                                USHORT_T         userId,
+                                EINSS7INSTANCE_T tcapInstanceId,
+                                USHORT_T         dialogueId,
+                                UCHAR_T          invokeId,
+                                UCHAR_T          lastComponent,
+                                UCHAR_T          operationTag,
+                                USHORT_T         oplen,
+                                UCHAR_T          *op,
+                                USHORT_T         pmlen,
+                                UCHAR_T          *pm)
+{
+  smsc_log_debug(tcapLogger, "EINSS7_I97TResultNLInd( ssn=%d, userId=%d, tcapInstanceId==%d, dialogueId=%d,...)",
+         ssn, userId, tcapInstanceId, dialogueId );
+  TcapDialog* dlg = findDialog( ssn, dialogueId );
+  assert( dlg );
+  TcapOperation* pop = dlg->createOperation();
+  assert( pop );
+  pop->decode( operationTag, oplen, op, pmlen, pm );
+  dlg->handleResultNotLast( pop );
+  return MSG_OK;
+}
+
+//------------------------------------ T_RESULT_L_ind ----------------------------------
+// Конструируем TcapOperation и передаем ее TcapDialog::handleResultLast
+//---------------------------------------------------------------------------------------
+
+USHORT_T EINSS7_I97TResultLInd( UCHAR_T          ssn,
+                                USHORT_T         userId,
+                                EINSS7INSTANCE_T tcapInstanceId,
+                                USHORT_T         dialogueId,
+                                UCHAR_T          invokeId,
+                                UCHAR_T          lastComponent,
+                                UCHAR_T          operationTag,
+                                USHORT_T         oplen,
+                                UCHAR_T          *op,
+                                USHORT_T         pmlen,
+                                UCHAR_T          *pm)
+{
+  smsc_log_debug(tcapLogger, "EINSS7_I97TResultLInd( ssn=%d, userId=%d, tcapInstanceId==%d, dialogueId=%d,...)",
+         ssn, userId, tcapInstanceId, dialogueId );
+  TcapDialog* dlg = findDialog( ssn, dialogueId );
+  assert( dlg );
+  TcapOperation* pop = dlg->createOperation();
+  assert( pop );
+  pop->decode( operationTag, oplen, op, pmlen, pm );
+  dlg->handleResultLast( pop );
+  return MSG_OK;
+}
+
+//------------------------------------ T_U_ERROR_ind-- ----------------------------------
+// Конструируем TcapOperation и передаем ее TcapDialog::handleUserError
+//---------------------------------------------------------------------------------------
+USHORT_T EINSS7_I97TUErrorInd(  UCHAR_T          ssn,
+                                USHORT_T         userId,
+                                EINSS7INSTANCE_T tcapInstanceId,
+                                USHORT_T         dialogueId,
+                                UCHAR_T          invokeId,
+                                UCHAR_T          lastComponent,
+                                UCHAR_T          errorCodeTag,
+                                USHORT_T         errorCodeLength,
+                                UCHAR_T          *errorCode_p,
+                                USHORT_T         pmlen,
+                                UCHAR_T          *pm)
+{
+  smsc_log_debug(tcapLogger, "EINSS7_I97TUErrorInd( ssn=%d, userId=%d, tcapInstanceId==%d, dialogueId=%d,...)",
+         ssn, userId, tcapInstanceId, dialogueId );
+  TcapDialog* dlg = findDialog( ssn, dialogueId );
+  assert( dlg );
+  TcapOperation* op = dlg->createOperation();
+  op->decode( errorCodeTag, errorCodeLength, errorCode_p, pmlen, pm );
+  dlg->handleUserError( op );
+  return MSG_OK;
+}
+
+
+
+//----------------------------------- UNI_ind (todo) ----------------------------------
+// TODO: Implement
+//-------------------------------------------------------------------------------------
 USHORT_T EINSS7_I97TUniInd(     UCHAR_T          ssn,
                                 USHORT_T         userId,
                                 EINSS7INSTANCE_T tcapInstanceId,
@@ -76,76 +293,9 @@ USHORT_T EINSS7_I97TUniInd(     UCHAR_T          ssn,
   return MSG_OK;
 }
 
-
-USHORT_T EINSS7_I97TBeginInd(   UCHAR_T          ssn,
-                                USHORT_T         userId,
-                                EINSS7INSTANCE_T tcapInstanceId,
-                                USHORT_T         dialogueId,
-                                UCHAR_T          priOrder,
-                                UCHAR_T          qualityOfService,
-                                UCHAR_T          destAdrLength,
-                                UCHAR_T          *destAdr_p,
-                                UCHAR_T          orgAdrLength,
-                                UCHAR_T          *orgAdr_p,
-                                UCHAR_T          compPresent,
-                                UCHAR_T          appContextLength,
-                                UCHAR_T          *appContext_p,
-                                USHORT_T         userInfoLength,
-                                UCHAR_T          *userInfo_p)
-{
-  smsc_log_debug(tcapLogger,
-                 "EINSS7_I97TBeginInd("
-                 "ssn=%d,userId=%d,tcapInstanceId=%d,dialogueId=%d,...)",
-                 ssn, userId, tcapInstanceId, dialogueId );
-
-  return MSG_OK;
-}
-
-USHORT_T EINSS7_I97TContinueInd(UCHAR_T          ssn,
-                                USHORT_T         userId,
-                                EINSS7INSTANCE_T tcapInstanceId,
-                                USHORT_T         dialogueId,
-                                UCHAR_T          priOrder,
-                                UCHAR_T          qualityOfService,
-                                UCHAR_T          compPresent,
-                                UCHAR_T          aclen,
-                                UCHAR_T          *ac,
-                                USHORT_T         uilen,
-                                UCHAR_T          *ui)
-{
-  smsc_log_debug(tcapLogger,
-                 "EINSS7_I97TContinueInd(ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
-                 "priOrder=%d, qualityOfService=%d, compPresent=\"%s\", "
-                 "ac[%d]={%s}, ui[%d]={%s})",
-                 ssn, userId, tcapInstanceId,
-                 dialogueId, priOrder, qualityOfService,
-                 compPresent?"TRUE":"FALSE",
-                 aclen, dump(aclen,ac).c_str(), uilen, dump(uilen,ui).c_str());
-
-
-  return MSG_OK;
-}
-
-USHORT_T EINSS7_I97TEndInd(     UCHAR_T          ssn,
-                                USHORT_T         userId,
-                                EINSS7INSTANCE_T tcapInstanceId,
-                                USHORT_T         dialogueId,
-                                UCHAR_T          priOrder,
-                                UCHAR_T          qualityOfService,
-                                UCHAR_T          compPresent,
-                                UCHAR_T          appContextLength,
-                                UCHAR_T          *appContext_p,
-                                USHORT_T         userInfoLength,
-                                UCHAR_T          *userInfo_p)
-{
-  smsc_log_debug(tcapLogger,
-                 "EINSS7_I97TEndInd("
-                 "ssn=%d, userId=%d,tcapInstanceId=%d,...)",
-                 ssn, userId, tcapInstanceId );
-
-  return MSG_OK;
-}
-
+//----------------------------------- U_ABORT_ind ----------------------------------
+// TODO: Implement
+//-------------------------------------------------------------------------------------
 USHORT_T EINSS7_I97TUAbortInd(  UCHAR_T          ssn,
                                 USHORT_T         userId,
                                 EINSS7INSTANCE_T tcapInstanceId,
@@ -173,10 +323,12 @@ USHORT_T EINSS7_I97TUAbortInd(  UCHAR_T          ssn,
     free( bb );
   }
 */
-
-  return MSG_OK;
+  	return MSG_OK;
 }
 
+//----------------------------------- T_P_ABORT_ind ----------------------------------
+// TODO: Implement
+//-------------------------------------------------------------------------------------
 USHORT_T EINSS7_I97TPAbortInd(  UCHAR_T          ssn,
                                 USHORT_T         userId,
                                 EINSS7INSTANCE_T tcapInstanceId,
@@ -191,6 +343,9 @@ USHORT_T EINSS7_I97TPAbortInd(  UCHAR_T          ssn,
   return MSG_OK;
 }
 
+//----------------------------------- T_NOTICE_ind ----------------------------------
+// TODO: Implement
+//-------------------------------------------------------------------------------------
 USHORT_T EINSS7_I97TNoticeInd(  UCHAR_T          ssn,
                                 USHORT_T         userId,
                                 EINSS7INSTANCE_T tcapInstanceId,
@@ -210,98 +365,9 @@ USHORT_T EINSS7_I97TNoticeInd(  UCHAR_T          ssn,
   return MSG_OK;
 }
 
-USHORT_T EINSS7_I97TInvokeInd(  UCHAR_T          ssn,
-                                USHORT_T         userId,
-                                EINSS7INSTANCE_T tcapInstanceId,
-                                USHORT_T         dialogueId,
-                                UCHAR_T          invokeId,
-                                UCHAR_T          lastComponent,
-                                UCHAR_T          linkedIdUsed,
-                                UCHAR_T          linkedId,
-                                UCHAR_T          operationTag,
-                                USHORT_T         oplen,
-                                UCHAR_T          *op,
-                                USHORT_T         pmlen,
-                                UCHAR_T          *pm)
-{
-  smsc_log_debug(tcapLogger,
-                 "EINSS7_I97TInvokeInd(ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
-                 "invokeId=%d, lastComponent=\"%s\", linkedIdUsed=\"%s\", linkedId=%d, "
-                 "operationTag=\"%s\", "
-                 "op[%d]={%s}, pm[%d]={%s})",
-                 ssn, userId, tcapInstanceId, dialogueId,
-                 invokeId, lastComponent?"YES":"NO", linkedIdUsed?"USED":"NOT USED", linkedId,
-                 operationTag==0x02?"LOCAL":"GLOBAL",
-                 oplen, dump(oplen,op).c_str(), pmlen, dump(pmlen,pm).c_str());
-
-  Dialog* dlg = findDialog( ssn, dialogueId );
-  assert( dlg );
-  TcapOperation operation( operationTag, oplen, op, pmlen, pm );
-  dlg->fireInvoke( operation );
-  return MSG_OK;
-}
-
-USHORT_T EINSS7_I97TResultNLInd(UCHAR_T          ssn,
-                                USHORT_T         userId,
-                                EINSS7INSTANCE_T tcapInstanceId,
-                                USHORT_T         dialogueId,
-                                UCHAR_T          invokeId,
-                                UCHAR_T          lastComponent,
-                                UCHAR_T          operationTag,
-                                USHORT_T         operationLength,
-                                UCHAR_T          *operationCode_p,
-                                USHORT_T         paramLength,
-                                UCHAR_T          *parameters_p)
-{
-  smsc_log_debug(tcapLogger, "EINSS7_I97TResultNLInd( ssn=%d, userId=%d, tcapInstanceId==%d, dialogueId=%d,...)",
-         ssn, userId, tcapInstanceId, dialogueId );
-  Dialog* dlg = findDialog( ssn, dialogueId );
-  assert( dlg );
-  return MSG_OK;
-}
-
-USHORT_T EINSS7_I97TResultLInd( UCHAR_T          ssn,
-                                USHORT_T         userId,
-                                EINSS7INSTANCE_T tcapInstanceId,
-                                USHORT_T         dialogueId,
-                                UCHAR_T          invokeId,
-                                UCHAR_T          lastComponent,
-                                UCHAR_T          operationTag,
-                                USHORT_T         operationLength,
-                                UCHAR_T          *operationCode_p,
-                                USHORT_T         paramLength,
-                                UCHAR_T          *parameters_p)
-{
-  smsc_log_debug(tcapLogger, "EINSS7_I97TResultLInd( ssn=%d, userId=%d, tcapInstanceId==%d, dialogueId=%d,...)",
-         ssn, userId, tcapInstanceId, dialogueId );
-  Dialog* dlg = findDialog( ssn, dialogueId );
-  assert( dlg );
-  TcapOperation op( operationTag, operationLength, operationCode_p, paramLength, parameters_p );
-  dlg->fireInvokeSuccessed( op );
-  return MSG_OK;
-}
-
-USHORT_T EINSS7_I97TUErrorInd(  UCHAR_T          ssn,
-                                USHORT_T         userId,
-                                EINSS7INSTANCE_T tcapInstanceId,
-                                USHORT_T         dialogueId,
-                                UCHAR_T          invokeId,
-                                UCHAR_T          lastComponent,
-                                UCHAR_T          errorCodeTag,
-                                USHORT_T         errorCodeLength,
-                                UCHAR_T          *errorCode_p,
-                                USHORT_T         paramLength,
-                                UCHAR_T          *parameters_p)
-{
-  smsc_log_debug(tcapLogger, "EINSS7_I97TUErrorInd( ssn=%d, userId=%d, tcapInstanceId==%d, dialogueId=%d,...)",
-         ssn, userId, tcapInstanceId, dialogueId );
-  Dialog* dlg = findDialog( ssn, dialogueId );
-  assert( dlg );
-  TcapOperation operation( errorCodeTag, errorCodeLength, errorCode_p, paramLength, parameters_p );
-  dlg->fireInvokeFailed( operation );
-  return MSG_OK;
-}
-
+//----------------------------------- T_U_REJECT_ind ----------------------------------
+// TODO: Implement
+//-------------------------------------------------------------------------------------
 USHORT_T EINSS7_I97TURejectInd( UCHAR_T          ssn,
                                 USHORT_T         userId,
                                 EINSS7INSTANCE_T tcapInstanceId,
@@ -314,11 +380,14 @@ USHORT_T EINSS7_I97TURejectInd( UCHAR_T          ssn,
 {
   smsc_log_debug(tcapLogger, "EINSS7_I97TURejectInd( ssn=%d, userId=%d, tcapInstanceId==%d, dialogueId=%d,...)",
          ssn, userId, tcapInstanceId, dialogueId );
-  Dialog* dlg = findDialog( ssn, dialogueId );
+  TcapDialog* dlg = findDialog( ssn, dialogueId );
   assert( dlg );
   return MSG_OK;
 }
 
+//----------------------------------- T_L_REJECT_ind ----------------------------------
+// TODO: Implement
+//-------------------------------------------------------------------------------------
 USHORT_T EINSS7_I97TLRejectInd( UCHAR_T          ssn,
                                 USHORT_T         userId,
                                 EINSS7INSTANCE_T tcapInstanceId,
@@ -330,11 +399,14 @@ USHORT_T EINSS7_I97TLRejectInd( UCHAR_T          ssn,
 {
   smsc_log_debug(tcapLogger, "EINSS7_I97TLRejectInd( ssn=%d, userId=%d, tcapInstanceId==%d, dialogueId=%d,...)",
          ssn, userId, tcapInstanceId, dialogueId );
-  Dialog* dlg = findDialog( ssn, dialogueId );
+  TcapDialog* dlg = findDialog( ssn, dialogueId );
   assert( dlg );
   return MSG_OK;
 }
 
+//----------------------------------- T_R_REJECT_ind ----------------------------------
+// TODO: Implement
+//-------------------------------------------------------------------------------------
 USHORT_T EINSS7_I97TRRejectInd( UCHAR_T          ssn,
                                 USHORT_T         userId,
                                 EINSS7INSTANCE_T tcapInstanceId,
@@ -347,11 +419,14 @@ USHORT_T EINSS7_I97TRRejectInd( UCHAR_T          ssn,
 {
   smsc_log_debug(tcapLogger, "EINSS7_I97TRRejectInd( ssn=%d, userId=%d, tcapInstanceId==%d, dialogueId=%d,...)",
          ssn, userId, tcapInstanceId, dialogueId );
-  Dialog* dlg = findDialog( ssn, dialogueId );
+  TcapDialog* dlg = findDialog( ssn, dialogueId );
   assert( dlg );
   return MSG_OK;
 }
 
+//----------------------------------- T_L_CANCEL_ind ----------------------------------
+// TODO: Implement
+//-------------------------------------------------------------------------------------
 USHORT_T EINSS7_I97TLCancelInd( UCHAR_T          ssn,
                                 USHORT_T         userId,
                                 EINSS7INSTANCE_T tcapInstanceId,
@@ -360,11 +435,14 @@ USHORT_T EINSS7_I97TLCancelInd( UCHAR_T          ssn,
 {
   smsc_log_debug(tcapLogger, "EINSS7_I97TLCancelInd( ssn=%d, userId=%d, tcapInstanceId==%d, dialogueId=%d,...)",
          ssn, userId, tcapInstanceId, dialogueId );
-  Dialog* dlg = findDialog( ssn, dialogueId );
+  TcapDialog* dlg = findDialog( ssn, dialogueId );
   assert( dlg );
   return MSG_OK;
 }
 
+//------------------------------------- T_STATE_ind -----------------------------------
+// TODO: Implement
+//-------------------------------------------------------------------------------------
 USHORT_T EINSS7_I97TStateInd(   UCHAR_T          ssn,
                                 USHORT_T         userId,
                                 EINSS7INSTANCE_T tcapInstanceId,
@@ -382,6 +460,8 @@ USHORT_T EINSS7_I97TStateInd(   UCHAR_T          ssn,
                  localSpc, subsysMultiplicityInd);
   return MSG_OK;
 }
+
+//-------------------------------------------------------------------------------------
 
 USHORT_T EINSS7_I97TIndError(   USHORT_T         errorCode,
                                 MSG_T            *msg_sp)

@@ -3,7 +3,7 @@
 #define __SMSC_INMAN_INAP_OPERATIONS__
 
 #include "ss7cp.h"
-#include "inman/inap/types.hpp"
+#include "inman/common/types.hpp"
 
 namespace smsc {
 namespace inman {

@@ -1,0 +1,27 @@
+/////////////////////////////////////////////////////////////////////
+//
+//	 $Id$
+//	 To compile this file use State Machine Compiler (SMC)
+//	 http://smc.sourceforge.net/
+//
+/////////////////////////////////////////////////////////////////////
+%header  billing.hpp
+%package smsc::inman::interaction
+%class   BillingInteraction
+%start   BILLING::IDLE
+%map     BILLING
+%%
+
+IDLE
+{
+}
+
+WAIT_FOR_INSTRUCTIONS
+{
+}
+
+MONITORING
+{
+}
+
+%%

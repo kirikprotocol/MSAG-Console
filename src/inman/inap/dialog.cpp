@@ -5,7 +5,7 @@ static char const ident[] = "$Id$";
 #include "dialog.hpp"
 #include "session.hpp"
 #include "factory.hpp"
-#include "util.hpp"
+#include "inman/common/util.hpp"
 
 #include <assert.h>
 
@@ -16,39 +16,45 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
-
-template <typename listener_t, typename source_t>
-void notifyListeners(std::list<listener_t*>& listeners, source_t source, void (listener_t::*method)(source_t))
-{
-		for( typename std::list<listener_t*>::iterator it = listeners.begin();
-		it != listeners.end(); it++)
-	 	{
-			 listener_t* ptr = *it;
-			 (*ptr.*method)( source );
-		}
-}
-
-TcapOperation::TcapOperation() : tag( EINSS7_I97TCAP_OPERATION_TAG_LOCAL )
-{
-}
-
-TcapOperation::TcapOperation(USHORT_T opTag, USHORT_T opLen, UCHAR_T* op, USHORT_T parLen, UCHAR_T* par ) 
-		: tag( opTag )
-		, operation( op, op + opLen )
-		, params( par, par + parLen )
+TcapOperation::TcapOperation(TcapDialog* dlg) 
+	: dialog( dlg )
+	, tag( EINSS7_I97TCAP_OPERATION_TAG_LOCAL )
+	, operation( NULL )
+	, parameters( NULL )
 {
 }
 
 TcapOperation::~TcapOperation()
 {
+	delete operation;
+	delete parameters;
+}
+
+void TcapOperation::decode(USHORT_T opTag, USHORT_T opLen, UCHAR_T* op, USHORT_T parLen, UCHAR_T* par)
+{
+	tag =  opTag;
+	operation  = dialog->getComponentFactory()->createComponent( vector<unsigned char>( op, op + opLen ) );
+	parameters = dialog->getComponentFactory()->createComponent( vector<unsigned char>( par, par + parLen ) );
+}
+
+void TcapOperation::encode(USHORT_T& opTag, vector<unsigned char>& op, vector<unsigned char>& par)
+{
+	opTag = tag;
+	if( operation ) operation->encode( op );
+	if( parameters ) parameters->encode( par );
+}
+
+void TcapOperation::invoke()
+{
+	dialog->invoke( this );
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-// Dialog class
+// TcapDialog class
 /////////////////////////////////////////////////////////////////////////////////////
 
 
-Dialog::Dialog(Session* pSession, USHORT_T dlgId) 
+TcapDialog::TcapDialog(Session* pSession, USHORT_T dlgId) 
 	: did( dlgId )
 	, session( pSession )
 	, qSrvc(EINSS7_I97TCAP_QLT_BOTH)
@@ -56,22 +62,24 @@ Dialog::Dialog(Session* pSession, USHORT_T dlgId)
 {
 }
 
-Dialog::~Dialog()
+TcapDialog::~TcapDialog()
 {
-	listeners.clear();
 }
 
-void Dialog::addDialogListener(DialogListener* l)
+
+void TcapDialog::setProtocolFactory( ProtocolFactory* pf )
 {
-	listeners.push_back( l );
+	protFactory = pf;
+	if( protocol ) delete protocol;
+	protocol = protFactory->createProtocol( this );
 }
 
-void Dialog::removeDialogListener(DialogListener* l)
+TcapOperation* TcapDialog::createOperation()
 {
-	listeners.remove( l );
+	return new TcapOperation( this );
 }
 
-USHORT_T Dialog::beginDialog()
+USHORT_T TcapDialog::beginDialog()
 {
  USHORT_T result = EINSS7_I97TBeginReq(
     session->getSSN(),
@@ -97,7 +105,7 @@ USHORT_T Dialog::beginDialog()
   return result;
 }
 
-USHORT_T Dialog::continueDialog()
+USHORT_T TcapDialog::continueDialog()
 {
   USHORT_T result = EINSS7_I97TContinueReq(
     session->getSSN(),
@@ -120,7 +128,7 @@ USHORT_T Dialog::continueDialog()
   return result;
 }
 
-USHORT_T Dialog::endDialog(USHORT_T termination)
+USHORT_T TcapDialog::endDialog(USHORT_T termination)
 {
   USHORT_T result = EINSS7_I97TEndReq(
     session->getSSN(),
@@ -144,9 +152,15 @@ USHORT_T Dialog::endDialog(USHORT_T termination)
 }
 
 
-USHORT_T Dialog::invoke(const TcapOperation& op)
+USHORT_T TcapDialog::invoke(TcapOperation* pop)
 {
   assert( session );
+  assert( pop );
+
+  USHORT_T		  tag;
+  vector<UCHAR_T> op;
+  vector<UCHAR_T> params;
+  pop->encode( tag, op, params );
 
   USHORT_T result = EINSS7_I97TInvokeReq(
     session->getSSN(),
@@ -158,24 +172,29 @@ USHORT_T Dialog::invoke(const TcapOperation& op)
     0, //linkedId,
     EINSS7_I97TCAP_OP_CLASS_1, //opClass,
     30, //timeOut,
-    op.getTag(), //operationTag,
-    op.getOperation().size(), //operationLength,
-    const_cast<UCHAR_T*>(&op.getOperation().front()), //*operationCode_p,
-    op.getParams().size(), //paramLength,
-    const_cast<UCHAR_T*>(&op.getParams().front()) //*parameters_p
+    tag, //operationTag,
+    op.size(), //operationLength,
+    const_cast<UCHAR_T*>(&op.front()), //*operationCode_p,
+    params.size(), //paramLength,
+    const_cast<UCHAR_T*>(&params.front()) //*parameters_p
     ); 
 
   if (result != 0)
   {
   	smsc_log_error(tcapLogger, "EINSS7_I97TInvokeReq failed with code %d(%s)", result,getTcapReasonDescription(result));
   }
-
   return result;
 }
 
-USHORT_T Dialog::invokeSuccessed(const TcapOperation& res)
+USHORT_T TcapDialog::resultLast(TcapOperation* res)
 {
   assert( session );
+  assert( res );
+
+  USHORT_T		  tag;
+  vector<UCHAR_T> op;
+  vector<UCHAR_T> params;
+  res->encode( tag, op, params );
 
 	USHORT_T result = EINSS7_I97TResultLReq(
     	session->getSSN(),
@@ -183,11 +202,11 @@ USHORT_T Dialog::invokeSuccessed(const TcapOperation& res)
     	TCAP_INSTANCE_ID,
     	did,
     	1, //invokeId
-		res.getTag(),
-    	res.getOperation().size(), //operationLength,
-    	const_cast<UCHAR_T*>(&res.getOperation().front()), //*operationCode_p,
-    	res.getParams().size(), //paramLength,
-    	const_cast<UCHAR_T*>(&res.getParams().front()) //*parameters_p
+		tag,
+		op.size(), //operationLength,
+    	const_cast<UCHAR_T*>(&op.front()), //*operationCode_p,
+		params.size(), //paramLength,
+    	const_cast<UCHAR_T*>(&params.front()) //*parameters_p
     	);
 
   if (result != 0)
@@ -198,8 +217,47 @@ USHORT_T Dialog::invokeSuccessed(const TcapOperation& res)
   return result;
 }
 
-USHORT_T Dialog::invokeFailed(const TcapOperation& err)
+USHORT_T TcapDialog::resultNotLast(TcapOperation* res)
 {
+  assert( session );
+  assert( res );
+
+  USHORT_T		  tag;
+  vector<UCHAR_T> op;
+  vector<UCHAR_T> params;
+  res->encode( tag, op, params );
+
+	USHORT_T result = EINSS7_I97TResultNLReq(
+    	session->getSSN(),
+    	MSG_USER_ID,
+    	TCAP_INSTANCE_ID,
+    	did,
+    	1, //invokeId
+		tag,
+		op.size(), //operationLength,
+    	const_cast<UCHAR_T*>(&op.front()), //*operationCode_p,
+    	params.size(), //paramLength,
+    	const_cast<UCHAR_T*>(&params.front()) //*parameters_p
+    	);
+
+  if (result != 0)
+  {
+  	smsc_log_error(tcapLogger, "EINSS7_I97TResultLReq failed with code %d(%s)", result,getTcapReasonDescription(result));
+  }
+
+  return result;
+}
+
+USHORT_T TcapDialog::userError(TcapOperation* err)
+{
+  assert( session );
+  assert( err );
+
+  USHORT_T		  tag;
+  vector<UCHAR_T> op;
+  vector<UCHAR_T> params;
+  err->encode( tag, op, params );
+
  	USHORT_T result = EINSS7_I97TUErrorReq
 	(
     	session->getSSN(),
@@ -207,11 +265,11 @@ USHORT_T Dialog::invokeFailed(const TcapOperation& err)
     	TCAP_INSTANCE_ID,
     	did,
     	1,
-		err.getTag(),
-   		err.getOperation().size(), //operationLength,
-   		const_cast<UCHAR_T*>(&err.getOperation().front()), //*operationCode_p,
-   		err.getParams().size(), //paramLength,
-   		const_cast<UCHAR_T*>(&err.getParams().front()) //*parameters_p
+		tag,
+		op.size(), //operationLength,
+   		const_cast<UCHAR_T*>(&op.front()), //*operationCode_p,
+		params.size(), //paramLength,
+   		const_cast<UCHAR_T*>(&params.front()) //*parameters_p
 	);
 
   if (result != 0)
@@ -221,19 +279,59 @@ USHORT_T Dialog::invokeFailed(const TcapOperation& err)
   return result;
 }
 
-void Dialog::fireInvoke(const TcapOperation& op)
+USHORT_T TcapDialog::timerReset()
 {
-	notifyListeners<DialogListener,const TcapOperation&>(listeners, op, &DialogListener::invoke);
+ 	USHORT_T result = EINSS7_I97TTimerResetReq
+ 	(
+    	session->getSSN(),
+    	MSG_USER_ID,
+    	TCAP_INSTANCE_ID,
+    	did,
+    	1
+    );
+
+   if (result != 0)
+   {
+  	 smsc_log_error(tcapLogger, "EINSS7_I97TTimerResetReq failed with code %d(%s)", result,getTcapReasonDescription(result));
+   }
+   return result;
 }
 
-void Dialog::fireInvokeSuccessed(const TcapOperation& op)
+//--------------------------------------- Callbacks ----------------------------------
+
+USHORT_T TcapDialog::handleBeginDialog()
 {
-	notifyListeners<DialogListener,const TcapOperation&>(listeners, op, &DialogListener::invokeSuccessed);
+	return MSG_OK;
 }
 
-void Dialog::fireInvokeFailed(const TcapOperation& op)
+USHORT_T TcapDialog::handleContinueDialog()
 {
-	notifyListeners<DialogListener,const TcapOperation&>(listeners, op, &DialogListener::invokeFailed);
+	return MSG_OK;
+}
+
+USHORT_T TcapDialog::handleEndDialog()
+{
+	return MSG_OK;
+}
+
+USHORT_T TcapDialog::handleInvoke(TcapOperation* op)
+{
+	return MSG_OK;
+}
+
+USHORT_T TcapDialog::handleResultLast(TcapOperation* op)
+{
+	return MSG_OK;
+}
+
+USHORT_T TcapDialog::handleResultNotLast(TcapOperation* op)
+{
+	return MSG_OK;
+}
+
+USHORT_T TcapDialog::handleUserError(TcapOperation* op)
+{
+	return MSG_OK;
 }
 
 } // namespace inap

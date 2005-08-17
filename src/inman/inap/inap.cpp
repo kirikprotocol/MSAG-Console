@@ -5,53 +5,26 @@ namespace smsc {
 namespace inman {
 namespace inap {
 
-INAP::INAP(Dialog* dlg) : dialog( dlg )
-{
-  context = new INAPContext( *this );
-  dialog->addDialogListener( this );
-}
-
-INAP::~INAP()
-{
-  dialog->removeDialogListener( this );
-  delete context;
-}
-
-void INAP::invoke(const TcapOperation&)
+InapProtocol::InapProtocol(TcapDialog* dialog) : Protocol( dialog )
 {
 }
 
-void INAP::invokeSuccessed(const TcapOperation& result)
-{
-  context->successed( result );
-}
-
-void INAP::invokeFailed(const TcapOperation& error)
-{
-  context->failed( error );
-}
-void INAP::start()
-{
-  context->start();
-}
-void INAP::sendInitialDP()
+InapProtocol::~InapProtocol()
 {
 }
 
-void INAP::sendEventReport()
+void InapProtocol::initialDPSMS(InitialDPSMSArg* arg)
 {
+  TcapOperation* op = dialog->createOperation();
+  op->setOperation( arg );
+  op->invoke();
 }
 
-void INAP::eventReportSMS(EventReportSMSArg* arg)
+void InapProtocol::eventReportSMS(EventReportSMSArg* arg)
 {
-}
-void INAP::initialDPSMS(InitialDPSMSArg* arg)
-{
-  TcapOperation* out = new TcapOperation();// may be allocate via dialogue
-  //TcapOperation out = _request ("sayHello");
-  out->write(arg);
-  //TcapOperation in = _invoke (out);
-  //result = in.read ();
+  TcapOperation* op = dialog->createOperation();
+  op->setOperation( arg );
+  op->invoke();
 }
 
 }

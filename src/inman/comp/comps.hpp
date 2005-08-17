@@ -16,6 +16,15 @@ class Component
     virtual int decode(vector<unsigned char>& buf);
 };
 
+
+class ComponentFactory
+{
+public:
+	ComponentFactory();
+	virtual ~ComponentFactory();
+	Component* createComponent(const vector<unsigned char>& opcode);
+};
+
 class InternalInitialDPSMSArg;
 class InitialDPSMSArg: public Component
 {

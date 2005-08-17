@@ -10,71 +10,107 @@
 #include "ss7cp.h"
 #include "inman/comp/comps.hpp"
 
+#include "protocol.hpp"
+
 namespace smsc {
 namespace inman {
 namespace inap {
 
-class Operation;
 class Session;
 using smsc::inman::comp::Component;
+using smsc::inman::comp::ComponentFactory;
+using std::vector;
 
 class TcapOperation
 {
-  UCHAR_T        tag;
-  std::vector<UCHAR_T> operation;
-  std::vector<UCHAR_T> params;
+  friend class TcapDialog;
+
+  TcapOperation(TcapDialog*);
+
 public:
-  TcapOperation();
-  TcapOperation(USHORT_T opTag, USHORT_T opLen, UCHAR_T* op, USHORT_T parLen, UCHAR_T* par );
   virtual ~TcapOperation();
-  virtual const UCHAR_T getTag() const            { return tag; }
-  virtual const std::vector<UCHAR_T>& getOperation() const  { return operation; }
-  virtual const std::vector<UCHAR_T>& getParams()  const    { return params; }
-  virtual void write(Component* comp) {if(comp)comp->encode(operation);}
+
+  virtual void decode(USHORT_T opTag, USHORT_T opLen, UCHAR_T* op, USHORT_T parLen, UCHAR_T* par);
+  virtual void encode(USHORT_T& opTag, vector<UCHAR_T>& op, vector<UCHAR_T>& par);
+
+  virtual UCHAR_T getTag() const 
+  { 
+  	return tag; 
+  }
+
+  virtual Component* getOperation() const
+  {
+  	return operation;
+  }
+
+  virtual void setOperation(Component* op)
+  {
+		operation = op;
+  }
+
+  virtual Component* getParameters() const
+  {
+  	return parameters;
+  }
+
+  virtual void invoke();
+
+protected:
+  TcapDialog* 		   dialog;
+  UCHAR_T  			   tag;
+  Component*		   operation;
+  Component*		   parameters;
 };
 
-class DialogListener
-{
-public:
-
-  virtual void invoke(const TcapOperation&)       = 0;//INVOKE_IND
-  virtual void invokeSuccessed(const TcapOperation&) = 0;//RESULT_L
-  virtual void invokeFailed(const TcapOperation&)   = 0;//U_ERROR
-};
-
-typedef std::list<DialogListener*> DialogListenerList;
-
-class Dialog
+class TcapDialog
 {
     friend class Session;
 
   public:
-    Dialog(Session* session, USHORT_T id);
-    virtual ~Dialog();
 
-    virtual void addDialogListener(DialogListener* l);
-    virtual void removeDialogListener(DialogListener* l);
+    TcapDialog(Session* session, USHORT_T id);
+    virtual ~TcapDialog();
 
+    void setProtocolFactory( ProtocolFactory* pf );
+
+    ComponentFactory* getComponentFactory()  { return &compFactory; }
+    ProtocolFactory*  getProtocolFactory()  { return protFactory;   }
+
+    virtual TcapOperation* createOperation();
+
+    // Transaction layer
     virtual USHORT_T beginDialog();//called by client of this dialog instance
     virtual USHORT_T continueDialog();
     virtual USHORT_T endDialog(USHORT_T termination);
 
-    virtual USHORT_T invoke(const TcapOperation& op);//called by client of this dialog instance
-    virtual USHORT_T invokeSuccessed(const TcapOperation& result);
-    virtual USHORT_T invokeFailed(const TcapOperation& result);
+    // Interaction level
+    virtual USHORT_T invoke(TcapOperation* op);//called by client of this dialog instance
+    virtual USHORT_T resultLast(TcapOperation* result);
+    virtual USHORT_T resultNotLast(TcapOperation* result);
+    virtual USHORT_T userError(TcapOperation* result);
+    virtual USHORT_T timerReset();
 
-  void fireInvoke(const TcapOperation& op);//INVOKE_IND
-  void fireInvokeSuccessed(const TcapOperation& op);//RESULT_L
-  void fireInvokeFailed(const TcapOperation& op);//U_ERROR
-  protected:
+    // Transaction level callbacks
+	virtual USHORT_T handleBeginDialog();
+	virtual USHORT_T handleContinueDialog();
+	virtual USHORT_T handleEndDialog();
 
-    DialogListenerList   listeners;
-    Session*         session;
-    USHORT_T         opid;
-    USHORT_T           did;
-    UCHAR_T            qSrvc;
-    UCHAR_T            priority;
-    UCHAR_T            acShort;
+    // Interaction level callbacks
+    virtual USHORT_T handleInvoke(TcapOperation* op);
+    virtual USHORT_T handleResultLast(TcapOperation* op);
+    virtual USHORT_T handleResultNotLast(TcapOperation* op);
+    virtual USHORT_T handleUserError(TcapOperation* op);
+
+   protected:
+	ComponentFactory  compFactory;
+    ProtocolFactory*  protFactory;
+    Protocol*		  protocol;
+    Session*          session;
+    USHORT_T          opid;
+    USHORT_T          did;
+    UCHAR_T           qSrvc;
+    UCHAR_T           priority;
+    UCHAR_T           acShort;
 };
 
 }

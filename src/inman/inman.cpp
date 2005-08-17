@@ -7,14 +7,22 @@ static char const ident[] = "$Id$";
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
 #include "inman/inap/inap.hpp"
+#include "inman/interaction/billing.hpp"
 
 ////////////////////////////////////////////////////////////////////
 
 using smsc::inman::inap::Factory;
 using smsc::inman::inap::Session;
-using smsc::inman::inap::Dialog;
-using smsc::inman::inap::INAP;
+using smsc::inman::inap::TcapDialog;
+using smsc::inman::inap::InapFactory;
+using smsc::inman::inap::InapProtocol;
+
+using smsc::inman::interaction::Interaction;
+using smsc::inman::interaction::InteractionListener;
+using smsc::inman::interaction::BillingInteraction; // todo: remove this dependency
+
 using smsc::inman::Console;
+
 using std::cout;
 using std::endl;
 
@@ -61,27 +69,70 @@ void select(Console&, const std::vector<std::string>& args)
     }
 }
 
+//////////////////////////////////////////////////////////////////////
+// This class start interaction in ctor and kill self when it finished
+
+class BillSMS : public InteractionListener
+{
+	BillingInteraction* billing;
+
+	// Preventing creating objects of this class in stack...
+	BillSMS( InapProtocol* prot )
+	{
+		billing = new BillingInteraction( prot );
+		billing->addListener( this );
+		billing->start();
+	}
+
+public:
+
+	// ...but allow in heap
+	static BillSMS* create(InapProtocol* pro)
+	{
+		return new BillSMS( pro );
+	}
+
+	~BillSMS()
+	{
+		billing->removeListener( this );
+		delete billing;
+	}
+
+	virtual void finished(const Interaction*, unsigned short status)
+	{
+		cout << "Complete with status: " << status << endl;
+		delete this;
+	}
+};
+
 void mosms(Console&, const std::vector<std::string>& args)
 {
-  Dialog* pDialog = 0;
+  ;
   if( !g_pSession )
   {
-      cout << "Session not active." << endl;
+      cout << "Session not active. Open session first." << endl;
+      return;
   }
-  else
-  {
-      pDialog = g_pSession->openDialog(0);
-  }
+
+  TcapDialog* pDialog = g_pSession->openDialog(0);
+
   if ( !pDialog )
   {
     cout << "Can't open dialog" << endl;
+    return;
   }
-  else
+
+  InapProtocol* pProtocol = 0;
+
+  if ( !pProtocol )
   {
-    cout << "Dialog is running." << endl;
-    INAP *modlg = new INAP(pDialog);
-    modlg->start();
+    cout << "Can't create protocol" << endl;
+    return;
   }
+
+  BillSMS* interact = BillSMS::create( pProtocol );
+
+  cout << "Done. Interaction started." << endl;
 }
 
 int main(int argc, char** argv)

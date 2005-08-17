@@ -64,6 +64,8 @@
 #include <stdio.h>
 #endif
 
+#include <string.h>
+
 namespace statemap
 {
 #ifndef SMC_NO_EXCEPTIONS
@@ -695,6 +697,9 @@ namespace statemap
 //
 // CHANGE LOG
 // $Log$
+// Revision 1.1  2005/08/04 08:59:16  ermak
+// *** empty log message ***
+//
 // Revision 1.7  2005/06/08 11:09:14  cwrapp
 // + Updated Python code generator to place "pass" in methods with empty
 //   bodies.

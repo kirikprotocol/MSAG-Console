@@ -8,7 +8,7 @@
 #include "ss7tmc.h"
 #include "i97isup_api.h"
 #include "i97tcapapi.h"
-#include "inman/inap/types.hpp"
+#include "types.hpp"
 
 using smsc::core::synchronization::MutexGuard;
 
