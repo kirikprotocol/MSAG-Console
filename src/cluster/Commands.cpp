@@ -180,6 +180,17 @@ namespace smsc { namespace cluster
         virtual ~MscClearCommandFactory() {};
     };
 
+    //========== mscClear =======================
+
+    class MscReportCommandFactory : public CommandFactory
+    {
+    protected:
+        virtual Command* create() { return new MscReportCommand(); };
+    public:
+        MscReportCommandFactory() : CommandFactory(MSCREPORT_CMD) {};
+        virtual ~MscReportCommandFactory() {};
+    };
+
     //========== smeAdd =======================
 
     class SmeAddCommandFactory : public CommandFactory
@@ -400,6 +411,7 @@ void CommandFactory::initFactories()
         static MscUnregisterCommandFactory      _mscUnregisterCommandFactory;
         static MscBlockCommandFactory           _mscBlockCommandFactory;
         static MscClearCommandFactory           _mscClearCommandFactory;
+        static MscReportCommandFactory          _mscReportCommandFactory;
 
         static SmeAddCommandFactory             _smeAddCommandFactory;
         static SmeRemoveCommandFactory          _smeRemoveCommandFactory;
@@ -498,9 +510,12 @@ ProfileUpdateCommand::ProfileUpdateCommand(smsc::profiler::Profile profile_)
 {
 }
 
-void ProfileUpdateCommand::getArgs(smsc::profiler::Profile &profile_) const
+void ProfileUpdateCommand::getArgs(smsc::profiler::Profile &profile_, uint8_t &plan_, uint8_t &type_, char *address_) const
 {
     profile_ = profile;
+    plan_ = plan;
+    type_ = type;
+    strcpy(address_, address);
 }
 
 void* ProfileUpdateCommand::serialize(uint32_t &len)
@@ -1165,6 +1180,97 @@ bool MscClearCommand::deserialize(void *buffer, uint32_t len)
     try {
 
     memcpy((void*)mscNum, (const void*)buffer, 22);
+    printf("mscNum: '%s', len: %d\n", mscNum, strlen(mscNum));
+
+    }catch(...){
+        return false;
+    }
+    
+    return true;
+}
+
+//========== MscReport ==========================
+
+MscReportCommand::MscReportCommand(const char *mscNum_, bool status_, File::offset_type offset_)
+    : Command(MSCREPORT_CMD),
+      status(status_),
+      offset(offset_)
+{
+    strcpy(mscNum, mscNum_);
+}
+
+void MscReportCommand::getArgs(char *mscNum_, bool &status_, File::offset_type &offset_) const
+{
+    strcpy(mscNum_, mscNum);
+    status_ = status;
+    offset_ = offset;
+}
+
+void* MscReportCommand::serialize(uint32_t &len)
+{
+
+    uint8_t* buffer = 0;
+
+    try {
+
+    len = 31;
+
+    uint8_t val = status ? 1 : 0;
+    memcpy((void*)buffer, (const void*)&val, 1);
+
+    uint64_t val64 = offset;
+    uint64_t tmp = val64;;
+    unsigned char *ptr=(unsigned char *)&val64;
+    ptr[0]=(unsigned char)(tmp>>56);
+    ptr[1]=(unsigned char)(tmp>>48)&0xFF;
+    ptr[2]=(unsigned char)(tmp>>40)&0xFF;
+    ptr[3]=(unsigned char)(tmp>>32)&0xFF;
+    ptr[4]=(unsigned char)(tmp>>24)&0xFF;
+    ptr[5]=(unsigned char)(tmp>>16)&0xFF;
+    ptr[6]=(unsigned char)(tmp>>8)&0xFF;
+    ptr[7]=(unsigned char)(tmp&0xFF);
+
+    memcpy((void*)(buffer + 1),        (const void*)&val64, 8);
+
+    printf("mscNum: '%s', len: %d\n", mscNum, strlen(mscNum));
+    buffer = new uint8_t[len];
+    memcpy((void*)(buffer + 9), (const void*)mscNum, 22);
+
+    }catch(...){
+        return 0;
+    }
+
+    return (void*)buffer;
+}
+bool MscReportCommand::deserialize(void *buffer, uint32_t len)
+{
+    if(len != 22 || !buffer)
+        return false;
+
+    try {
+
+    uint8_t val;
+    memcpy((void*)&val, (const void*)buffer, 1);
+    status = val;
+
+    uint64_t val64;
+    memcpy((void*)&val64,       (const void*)( (uint8_t*)buffer + 1 ), 8);
+
+    uint64_t tmp=0;
+    memset(&tmp, 0, 8);
+    unsigned char *ptr=(unsigned char *)&val64;
+    tmp = (uint64_t)( ptr[0] ) << 56;
+    tmp += (uint64_t)( ptr[1] ) << 48;
+    tmp += (uint64_t)( ptr[2] ) << 40;
+    tmp += (uint64_t)( ptr[3] ) << 32;
+    tmp += (uint64_t)( ptr[4] ) << 24;
+    tmp += (uint64_t)( ptr[5] ) << 16;
+    tmp += (uint64_t)( ptr[6] ) << 8;
+    tmp += (uint64_t)( ptr[7] );
+
+    offset = tmp;
+
+    memcpy((void*)mscNum, (const void*)( (char*)buffer + 1), 22);
     printf("mscNum: '%s', len: %d\n", mscNum, strlen(mscNum));
 
     }catch(...){

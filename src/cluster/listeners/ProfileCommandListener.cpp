@@ -50,7 +50,7 @@ void ProfileCommandListener::profileUpdate(const Command& command)
 
     const ProfileUpdateCommand* cmd = dynamic_cast<const ProfileUpdateCommand*>(&command);
 
-    cmd->getArgs(profile);
+    cmd->getArgs(profile, plan, type, address);
 
 
     try {

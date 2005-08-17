@@ -13,6 +13,7 @@ protected:
 	void mscUnregistrate(const Command& command);
 	void mscBlock(const Command& command);
 	void mscClear(const Command& command);
+    void mscReport(const Command& command);
 		
 public:
 	virtual void handle(const Command& command);

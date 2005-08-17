@@ -31,6 +31,7 @@ namespace smsc { namespace cluster
         MSCUNREGISTER_CMD =         0x00020001,
         MSCBLOCK_CMD =              0x00020002,
         MSCCLEAR_CMD =              0x00020003,
+        MSCREPORT_CMD =             0x00020004,
         SMEADD_CMD =                0x00030000,
         SMEREMOVE_CMD =             0x00030001,
         SMEUPDATE_CMD =             0x00030002,
@@ -135,7 +136,7 @@ namespace smsc { namespace cluster
 
         virtual ~ProfileUpdateCommand() {};
 
-        void getArgs(smsc::profiler::Profile &profile) const;
+        void getArgs(smsc::profiler::Profile &profile, uint8_t &plan_, uint8_t &type_, char* address_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -216,6 +217,23 @@ namespace smsc { namespace cluster
         virtual ~MscClearCommand() {};
 
         void MscClearCommand::getArgs(char *mscNum_) const;
+        virtual void* serialize(uint32_t &len);
+        virtual bool deserialize(void *buffer, uint32_t len);
+    };
+
+    class MscReportCommand : public Command
+    {
+    private:
+        char mscNum[22];
+        bool status;
+        File::offset_type offset;
+    public:
+        MscReportCommand(const char *mscNum_, bool status_, File::offset_type offset_);
+        MscReportCommand() : Command(MSCCLEAR_CMD) {};
+
+        virtual ~MscReportCommand() {};
+
+        void MscReportCommand::getArgs(char *mscNum_, bool &status_, File::offset_type &offset) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };

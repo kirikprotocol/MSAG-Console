@@ -21,6 +21,9 @@ void MscCommandListener::handle(const Command& command)
      case MSCCLEAR_CMD:
         mscClear(command);
 		break;
+     case MSCREPORT_CMD:
+        mscReport(command);
+		break;
 	}
 }
 
@@ -66,6 +69,19 @@ void MscCommandListener::mscClear(const Command& command)
     cmd->getArgs(mscNum);
 
     MscManager::getMscAdmin().clear(mscNum);
+}
+
+void MscCommandListener::mscReport(const Command& command)
+{
+    char mscNum[22];
+    bool status;
+    File::offset_type offset;
+
+    const MscReportCommand* cmd = dynamic_cast<const MscReportCommand*>(&command);
+
+    cmd->getArgs(mscNum, status, offset);
+
+    MscManager::getMscStatus().report(mscNum, status);
 }
 
 }
