@@ -48,7 +48,7 @@ using smsc::core::synchronization::MutexGuard;
 using smsc::core::threads::ThreadedTask;
 using smsc::core::synchronization::Event;
 
-#ifdef USEMAP
+#ifdef USE_MAP
 
 extern "C" {
 #include <ss7cp.h>
