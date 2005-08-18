@@ -15,6 +15,8 @@ import java.util.*;
  */
 public class Edit extends EditBean
 {
+
+  private static final String ALL_PROVIDERS = "ALL PROVIDERS";
   protected String login = null;
   protected String password = null;
   protected String confirmPassword = null;
@@ -44,7 +46,7 @@ public class Edit extends EditBean
     final List ids = new ArrayList(providers.size());
     final List names = new ArrayList(providers.size());
     ids.add("-1");
-    names.add("*");
+    names.add(ALL_PROVIDERS);
     for (Iterator i = providers.iterator(); i.hasNext();) {
       final Provider provider = (Provider) i.next();
       ids.add(String.valueOf(provider.getId()));
