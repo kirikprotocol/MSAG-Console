@@ -7,7 +7,7 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
-Protocol::Protocol(TcapDialog*)
+Protocol::Protocol(TcapDialog*dlg) : dialog(dlg)
 {
 }
 

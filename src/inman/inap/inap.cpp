@@ -1,6 +1,7 @@
 static char const ident[] = "$Id$";
 #include "inap.hpp"
 #include "inman/comp/comps.hpp"
+#include "operations.hpp"
 
 namespace smsc {
 namespace inman {

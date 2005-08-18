@@ -16,24 +16,6 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
-TcapOperation::TcapOperation(TcapDialog* dlg, UCHAR_T tg, UCHAR_T op)
-	: dialog( dlg )
-	, opcode( op )
-	, tag( tg )
-	, param( NULL )
-{
-}
-
-TcapOperation::~TcapOperation()
-{
-	delete param;
-}
-
-void TcapOperation::invoke()
-{
-	dialog->invoke( this );
-}
-
 /////////////////////////////////////////////////////////////////////////////////////
 // TcapDialog class
 /////////////////////////////////////////////////////////////////////////////////////
@@ -152,7 +134,7 @@ USHORT_T TcapDialog::endDialog(USHORT_T termination)
 }
 
 
-USHORT_T TcapDialog::invoke(TcapOperation* pop)
+USHORT_T TcapDialog::invoke(TcapEntity* pop)
 {
   assert( session );
   assert( pop );
@@ -188,7 +170,7 @@ USHORT_T TcapDialog::invoke(TcapOperation* pop)
   return result;
 }
 
-USHORT_T TcapDialog::resultLast(TcapOperation* pop)
+USHORT_T TcapDialog::resultLast(TcapEntity* pop)
 {
   assert( session );
   assert( pop );
@@ -221,7 +203,7 @@ USHORT_T TcapDialog::resultLast(TcapOperation* pop)
   return result;
 }
 
-USHORT_T TcapDialog::resultNotLast(TcapOperation* pop)
+USHORT_T TcapDialog::resultNotLast(TcapEntity* pop)
 {
   assert( session );
   assert( pop );
@@ -253,7 +235,7 @@ USHORT_T TcapDialog::resultNotLast(TcapOperation* pop)
   return result;
 }
 
-USHORT_T TcapDialog::userError(TcapOperation* pop)
+USHORT_T TcapDialog::userError(TcapEntity* pop)
 {
   assert( session );
   assert( pop );
@@ -320,22 +302,22 @@ USHORT_T TcapDialog::handleEndDialog()
 	return MSG_OK;
 }
 
-USHORT_T TcapDialog::handleInvoke(TcapOperation* op)
+USHORT_T TcapDialog::handleInvoke(TcapEntity* op)
 {
 	return MSG_OK;
 }
 
-USHORT_T TcapDialog::handleResultLast(TcapOperation* op)
+USHORT_T TcapDialog::handleResultLast(TcapEntity* op)
 {
 	return MSG_OK;
 }
 
-USHORT_T TcapDialog::handleResultNotLast(TcapOperation* op)
+USHORT_T TcapDialog::handleResultNotLast(TcapEntity* op)
 {
 	return MSG_OK;
 }
 
-USHORT_T TcapDialog::handleUserError(TcapOperation* op)
+USHORT_T TcapDialog::handleUserError(TcapEntity* op)
 {
 	return MSG_OK;
 }

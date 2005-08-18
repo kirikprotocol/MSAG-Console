@@ -4,93 +4,91 @@
 
 #include "ss7cp.h"
 #include "inman/common/types.hpp"
+#include "inman/common/observable.hpp"
+#include "inman/comp/comps.hpp"
+
+using smsc::inman::common::ObservableT;
+using smsc::inman::comp::Component;
 
 namespace smsc {
 namespace inman {
 namespace inap {
 
-class Operation
+class TcapDialog;
+class TcapEntity
 {
-    protected:
-        OPER_T op;
-    public:
-        virtual COMP_T* get() const = 0;
+
+public:
+
+  TcapEntity(TcapDialog* dlg, UCHAR_T tg, UCHAR_T op)
+	: dialog( dlg )
+	, tag( tg )
+	, opcode( op )
+	, param( NULL )
+  {
+  }
+ 
+  virtual ~TcapEntity();
+
+  virtual UCHAR_T getTag() const 
+  { 
+  		return tag; 
+  }
+
+  virtual UCHAR_T getOpcode() const
+  {
+  		return opcode;
+  }
+
+  virtual Component* getParam() const
+  {
+		return param;
+  }
+
+  virtual void setParam(Component* p)
+  {
+		param = p;
+  }
+
+
+protected:
+  TcapDialog* 	dialog;
+  UCHAR_T		opcode;
+  UCHAR_T  		tag;
+  Component*	param;
 };
 
-namespace op
+class TcapError : public TcapEntity
 {
-
-/*
-ACTIVITYTESTARG_T activityTestArg;
-CAMELAPPLYCHARGINGARG_T capApplyChargingArg;
-CAMELAPPLYCHARGINGREPORTARG_TcapApplyChargingReport-
-Arg;
-CANCELARG_T cancelArg;
-CONNECTARG_T connectArg;
-CONTINUEARG_T continueArg;
-EVENTREPORTBCSMARG_T eventReportBCSMArg;
-INITIALDPARG_T initialDPArg;
-RELEASECALLARG_T releaseCallArg;
-REQUESTREPORTBCSMEVENTARG_T requestReportBCSMEventArg;
-*/
-
-class InitialDP : public Operation
-{
-    public:
-    COMP_T* get() const;
+public:
+	TcapError(TcapDialog* dialog, UCHAR_T tag, UCHAR_T opcode) 
+		: TcapEntity( dialog, tag, opcode ) {}
 };
 
-class RequestReportBCSMEvent : public Operation
+class TcapResult : public TcapEntity
 {
-    public:
-    COMP_T* get() const;
+public:
+	TcapResult(TcapDialog* dialog, UCHAR_T tag, UCHAR_T opcode) : TcapEntity( dialog, tag, opcode ) {}
 };
 
-class EventReportBCSM : public Operation
+class TcapOperationListener
 {
-    public:
-    COMP_T* get() const;
+public:
+	virtual void sucessed(TcapResult*) = 0;
+	virtual void failed(TcapError*)    = 0;
 };
 
-class Cancel : public Operation
+class TcapOperation : public TcapEntity, ObservableT< TcapOperationListener >
 {
-    public:
-    COMP_T* get() const;
+public:
+	TcapOperation(TcapDialog* dialog, UCHAR_T tag, UCHAR_T opcode) : TcapEntity( dialog, tag, opcode ) {}
+  	virtual void invoke();
+  	virtual void notifySuccessed(TcapResult*) const;
+  	virtual void notifyFailed(TcapError*) const;
 };
 
-class Connect : public Operation
-{
-    public:
-    COMP_T* get() const;
-};
-
-class Continue : public Operation
-{
-    public:
-    COMP_T* get() const;
-};
-
-class ReleaseCall : public Operation
-{
-    public:
-    COMP_T* get() const;
-};
-
-class ApplyCharging : public Operation
-{
-    public:
-    COMP_T* get() const;
-};
-
-class ApplyChargingReport : public Operation
-{
-    public:
-    COMP_T* get() const;
-};
 
 }
 }
 }
-}
-
 #endif

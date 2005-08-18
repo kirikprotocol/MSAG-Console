@@ -12,42 +12,30 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
+class TcapOperation;
 class TcapDialog;
 class Protocol;
-class ProtocolEvent;
-class ProtocolListener;
 
 class ProtocolFactory
 {
 public:
-	virtual Protocol*  		createProtocol(TcapDialog*) = 0;
-	virtual ProtocolEvent* 	createEvent(TcapDialog*) 	= 0;
-};
-
-class ProtocolEvent
-{
-public:
-	virtual void apply(Protocol*) = 0;
+	virtual Protocol* createProtocol(TcapDialog*) = 0;
 };
 
 class ProtocolListener
 {
 public:
-	virtual void dispatchEvent(ProtocolEvent* event) = 0;
+		virtual void invoke(TcapOperation*) = 0;
 };
 
 class Protocol : ObservableT< ProtocolListener >
 {
-	public:
-
-		Protocol(TcapDialog*);
-		virtual ~Protocol();
-
-	protected:
-
-		TcapDialog* dialog;
-
-		virtual void handleEvent(ProtocolEvent*) = 0;
+public:
+	Protocol(TcapDialog* dlg);
+	virtual ~Protocol();
+	virtual void invoke(TcapOperation*) = 0;
+protected:
+	TcapDialog* dialog;
 };
 
 }

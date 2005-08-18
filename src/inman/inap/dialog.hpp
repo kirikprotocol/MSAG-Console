@@ -8,57 +8,19 @@
 #include <vector>
 
 #include "ss7cp.h"
-#include "inman/comp/comps.hpp"
-#include "inman/comp/comfactory.hpp"
 
 #include "protocol.hpp"
+#include "inman/comp/comps.hpp"
+#include "inman/comp/comfactory.hpp"
 
 namespace smsc {
 namespace inman {
 namespace inap {
 
+class TcapEntity;
 class Session;
-using smsc::inman::comp::Component;
 using smsc::inman::comp::ComponentFactory;
 using std::vector;
-
-class TcapOperation
-{
-  friend class TcapDialog;
-
-  TcapOperation(TcapDialog*, UCHAR_T tag, UCHAR_T opcode);
-
-public:
-  virtual ~TcapOperation();
-
-  virtual UCHAR_T getTag() const 
-  { 
-  		return tag; 
-  }
-
-  virtual UCHAR_T getOpcode() const
-  {
-  		return opcode;
-  }
-
-  virtual Component* getParam() const
-  {
-		return param;
-  }
-
-  virtual void setParam(Component* p)
-  {
-		param = p;
-  }
-
-  virtual void invoke();
-
-protected:
-  TcapDialog* 	dialog;
-  UCHAR_T		opcode;
-  UCHAR_T  		tag;
-  Component*	param;
-};
 
 class TcapDialog
 {
@@ -83,10 +45,10 @@ class TcapDialog
     virtual USHORT_T endDialog(USHORT_T termination);
 
     // Interaction level
-    virtual USHORT_T invoke(TcapOperation* op);//called by client of this dialog instance
-    virtual USHORT_T resultLast(TcapOperation* result);
-    virtual USHORT_T resultNotLast(TcapOperation* result);
-    virtual USHORT_T userError(TcapOperation* result);
+    virtual USHORT_T invoke(TcapEntity* op);//called by client of this dialog instance
+    virtual USHORT_T resultLast(TcapEntity* result);
+    virtual USHORT_T resultNotLast(TcapEntity* result);
+    virtual USHORT_T userError(TcapEntity* result);
     virtual USHORT_T timerReset();
 
     // Transaction level callbacks
@@ -95,10 +57,10 @@ class TcapDialog
 	virtual USHORT_T handleEndDialog();
 
     // Interaction level callbacks
-    virtual USHORT_T handleInvoke(TcapOperation* op);
-    virtual USHORT_T handleResultLast(TcapOperation* op);
-    virtual USHORT_T handleResultNotLast(TcapOperation* op);
-    virtual USHORT_T handleUserError(TcapOperation* op);
+    virtual USHORT_T handleInvoke(TcapEntity* op);
+    virtual USHORT_T handleResultLast(TcapEntity* op);
+    virtual USHORT_T handleResultNotLast(TcapEntity* op);
+    virtual USHORT_T handleUserError(TcapEntity* op);
 
    protected:
 	ComponentFactory  compFactory;

@@ -11,6 +11,7 @@ static char const ident[] = "$Id$";
 #include "factory.hpp"
 #include "session.hpp"
 #include "dialog.hpp"
+#include "operations.hpp"
 #include "inman/common/util.hpp"
 
 using smsc::logger::Logger;
