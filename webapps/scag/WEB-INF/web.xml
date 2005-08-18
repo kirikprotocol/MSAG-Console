@@ -78,6 +78,19 @@
     </user-data-constraint>
   </security-constraint>
 
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name>gateway endpoints</web-resource-name>
+      <url-pattern>/endpoints/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>gw</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
   <login-config>
     <auth-method>FORM</auth-method>
     <realm-name>SMSC.SmscRealm</realm-name>

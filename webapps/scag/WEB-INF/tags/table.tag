@@ -6,6 +6,7 @@
  attribute name="names" required="true"%><%@
  attribute name="widths" required="true"%><%@
  attribute name="edit" required="false"%>
+<%@attribute name="filter" required="false"%>
 <c:set var="columns" value="${fn:split(columns, ',')}"/>
 <c:set var="names" value="${fn:split(names, ',')}"/>
 <c:set var="widths" value="${fn:split(widths, ',')}"/>
@@ -136,6 +137,9 @@ function edit(idToEdit)
   <option value="250" <c:if test="${bean.pageSize == 250}">selected</c:if>>250</option>
   <option value="500" <c:if test="${bean.pageSize == 500}">selected</c:if>>500</option>
 </select></td>
+<c:if test="${filter==true}">
+    <td class=filter><img src="/images/but_filter.gif" class=button jbuttonName="mbFilter" jbuttonValue="Filter" title="Filter" jbuttonOnclick="return filter()"></td>
+</c:if>
 <%--td class=filter><%button(out, "but_filter.gif", "mbFilter", "Filter", "Filter", "return clickFilter()");%></td--%>
 </tr>
 </table>

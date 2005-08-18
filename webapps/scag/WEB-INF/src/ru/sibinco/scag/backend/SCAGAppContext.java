@@ -206,7 +206,7 @@ public class SCAGAppContext
         return centerManager;
     }
 
-    public SvcManager getServicesManager() {
+    public SvcManager getSvcManager() {
         return svcManager;
     }
 

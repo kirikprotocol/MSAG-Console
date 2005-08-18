@@ -20,7 +20,7 @@ import java.util.Collection;
 public class Index extends TabledBeanImpl implements TabledBean {
 
     protected Collection getDataSource() {
-        return appContext.getServicesManager().getServicess().values();
+        return appContext.getSvcManager().getServicess().values();
     }
 
     protected void delete() throws SCAGJspException {

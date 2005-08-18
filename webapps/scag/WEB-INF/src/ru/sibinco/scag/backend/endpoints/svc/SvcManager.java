@@ -38,7 +38,7 @@ public class SvcManager {
 
     private Logger logger = Logger.getLogger(this.getClass());
 
-    private final Map services = Collections.synchronizedMap(new HashMap());
+    private final Map svcs = Collections.synchronizedMap(new HashMap());
     private final String configFilename;
 
     public SvcManager() {
@@ -50,14 +50,14 @@ public class SvcManager {
     }
 
 public synchronized void init() throws IOException, ParserConfigurationException, SAXException {
-        services.clear();
+        svcs.clear();
         if (configFilename != null) {   //ToDo
             final Document document = Utils.parse(configFilename);
             final NodeList records = document.getDocumentElement().getElementsByTagName("svc"); //ToDo: if need chenge this element tag
             for (int i = 0; i < records.getLength(); i++) {
                 final Element servicesRecords = (Element) records.item(i);
                 final Svc service = createServices(servicesRecords);
-                services.put(service.getId(), service);
+                svcs.put(service.getId(), service);
             }
         }
     }
@@ -67,7 +67,7 @@ public synchronized void init() throws IOException, ParserConfigurationException
     }
 
     public synchronized PrintWriter store(final PrintWriter out) {
-        final List values = new LinkedList(services.values());
+        final List values = new LinkedList(svcs.values());
         Collections.sort(values, new Comparator() {
             public int compare(final Object o1, final Object o2) {
                 final Svc c1 = (Svc) o1;
@@ -83,11 +83,11 @@ public synchronized void init() throws IOException, ParserConfigurationException
     }
 
     public Map getServicess() {
-        return services;
+        return svcs;
     }
 
     public synchronized List getServicesNames() {
-        return new SortedList(services.keySet());
+        return new SortedList(svcs.keySet());
     }
 
     public void store() throws SibincoException {
