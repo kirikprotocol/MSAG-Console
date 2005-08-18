@@ -289,13 +289,17 @@ public:
   {
     SaveStats();
     statMan->flushStatistics();
+#ifdef USE_MAP
     MapDialogContainer::getInstance()->abort();
+#endif
     kill(getpid(),9);
   }
 
   void dumpSmsc()
   {
+#ifdef USE_MAP
     MapDialogContainer::getInstance()->abort();
+#endif
     abort();
   }
 
