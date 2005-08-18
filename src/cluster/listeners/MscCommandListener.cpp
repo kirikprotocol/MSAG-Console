@@ -8,34 +8,36 @@ using smsc::mscman::MscManager;
 
 void MscCommandListener::handle(const Command& command)
 {
-	switch( command.getType() ){
-	case MSCREGISTRATE_CMD:
-		mscRegistrate(command);
-		break;
+  switch( command.getType() )
+  {
+    case MSCREGISTRATE_CMD:
+      mscRegistrate(command);
+      break;
     case MSCUNREGISTER_CMD:
-        mscUnregistrate(command);
-		break;
+      mscUnregistrate(command);
+      break;
     case MSCBLOCK_CMD:
-        mscBlock(command);
-		break;
-     case MSCCLEAR_CMD:
-        mscClear(command);
-		break;
-     case MSCREPORT_CMD:
-        mscReport(command);
-		break;
-	}
+      mscBlock(command);
+      break;
+    case MSCCLEAR_CMD:
+      mscClear(command);
+      break;
+    case MSCREPORT_CMD:
+      mscReport(command);
+      break;
+  }
 }
 
 void MscCommandListener::mscRegistrate(const Command& command)
 {
     char mscNum[22];
+    File::offset_type offset;
 
     const MscRegistrateCommand* cmd = dynamic_cast<const MscRegistrateCommand*>(&command);
 
-    cmd->getArgs(mscNum);
+    cmd->getArgs(mscNum,offset);
 
-    MscManager::getMscAdmin().registrate(mscNum);
+    MscManager::getMscAdmin().registrate(mscNum,offset);
 }
 
 void MscCommandListener::mscUnregistrate(const Command& command)

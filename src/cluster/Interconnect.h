@@ -3,7 +3,7 @@
 
 #include "Commands.h"
 
-namespace smsc { namespace cluster 
+namespace smsc { namespace cluster
 {
 
     typedef enum {
@@ -21,11 +21,11 @@ namespace smsc { namespace cluster
     class CommandListener
     {
     protected:
-        
+
         CommandListener() {};
-    
+
     public:
-        
+
         virtual void handle(const Command& command) = 0;
     };
 
@@ -38,16 +38,23 @@ namespace smsc { namespace cluster
     class Interconnect
     {
     protected:
-        
+
         Interconnect() {};
-        
+        static Interconnect* instance;
+
+
     public:
+
+        static Interconnect* getInstance(){
+            return instance;
+        };
+
 
         //virtual void sendCommand(const Command& command) = 0;
         virtual void sendCommand(Command* command) = 0;
         virtual void addListener(CommandType type, CommandListener* listener) = 0;
         virtual void activate() = 0;
-        virtual Role getRole() = 0; 
+        virtual Role getRole() = 0;
         virtual void changeRole(Role role_) = 0;
         virtual void  addChangeRoleHandler(ChangeRoleHandler*, void*) = 0;
     };
@@ -55,4 +62,3 @@ namespace smsc { namespace cluster
 }}
 
 #endif // __SMSC_CLUSTER_INTERCONNECT__
-

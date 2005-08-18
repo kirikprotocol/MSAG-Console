@@ -17,13 +17,11 @@ using smsc::core::synchronization::Mutex;
     class InterconnectManager : public Interconnect, public Thread
     {
     private:
-        
+
         Role            role;
         std::string     master_ip;
         std::string     slave_ip;
         int             port;
-
-        static InterconnectManager* instance;
 
         EventMonitor    commandsMonitor;
         Array<Command*>  commands;
@@ -31,8 +29,8 @@ using smsc::core::synchronization::Mutex;
         CommandDispatcher* dispatcher;
 
     protected:
-        
-        InterconnectManager(Role _role, const std::string& m_ip, const std::string& s_ip, int _port); 
+
+        InterconnectManager(Role _role, const std::string& m_ip, const std::string& s_ip, int _port);
         virtual ~InterconnectManager();
         bool isStopping;
         Mutex stopLock;
@@ -73,10 +71,6 @@ using smsc::core::synchronization::Mutex;
         static void init(Role _role, const std::string& m_ip, const std::string& s_ip, int _port);
         static void shutdown();
 
-        static Interconnect* getInstance(){
-            return instance;
-        };
-        
         virtual void sendCommand(Command* command);
         virtual void addListener(CommandType type, CommandListener* listener);
         virtual void activate();
@@ -93,4 +87,3 @@ using smsc::core::synchronization::Mutex;
 }}
 
 #endif // __SMSC_CLUSTER_INTERCONNECT_MANAGER__
-

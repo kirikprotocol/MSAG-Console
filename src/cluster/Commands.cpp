@@ -7,11 +7,11 @@
 
 #include "Commands.h"
 
-namespace smsc { namespace cluster 
+namespace smsc { namespace cluster
 {
     using namespace smsc::core::synchronization;
     using smsc::core::buffers::IntHash;
-    
+
     class CommandFactory
     {
     private:
@@ -25,11 +25,11 @@ namespace smsc { namespace cluster
 
         public:
 
-            operator IntHash<CommandFactory *> () { 
-                return getInstance(); 
+            operator IntHash<CommandFactory *> () {
+                return getInstance();
             }
-            int Exist(int type) { 
-                return getInstance().Exist(type); 
+            int Exist(int type) {
+                return getInstance().Exist(type);
             }
             int Insert(int type, CommandFactory* factory) {
                 return getInstance().Insert(type, factory);
@@ -40,7 +40,7 @@ namespace smsc { namespace cluster
         };
         static FakeRegistry factories;
         static bool factoriesInited;
-        
+
         static void registerFactory(int type, CommandFactory* factory) {
             if (type && factory && !factories.Exist(type)) {
                 factories.Insert(type, factory);
@@ -55,13 +55,13 @@ namespace smsc { namespace cluster
         CommandFactory(CommandType type) {
             CommandFactory::registerFactory((int)type, this);
         };
-        
+
         /**
          * Method creates new instance of particular command.
          * Need to be implemented in derrived factories
-         * 
+         *
          * @return command    new command instance
-         */ 
+         */
         virtual Command* create() = 0;
 
     public:
@@ -76,13 +76,13 @@ namespace smsc { namespace cluster
 
         virtual ~CommandFactory() {};
     };
-    
+
     bool CommandFactory::factoriesInited = false;
     CommandFactory::FakeRegistry CommandFactory::factories;
 
 /* ################# Particular commands factories ################ */
 
-    
+
     class ApplyRoutesCommandFactory : public CommandFactory
     {
     protected:
@@ -397,8 +397,8 @@ Mutex initFactoriesLock;
 void CommandFactory::initFactories()
 {
     MutexGuard guard(initFactoriesLock);
-    
-    if (!CommandFactory::factoriesInited) 
+
+    if (!CommandFactory::factoriesInited)
     {
         static ApplyRoutesCommandFactory            _applyRoutesCommandFactory;
         static ApplyAliasesCommandFactory           _applyAliasesCommandFactory;
@@ -447,9 +447,9 @@ void CommandFactory::initFactories()
 Command* Command::create(CommandType type, void* buffer, uint32_t len) // static
 {
     CommandFactory::initFactories();
-    
+
     Command* command = CommandFactory::createCommand(type);
-    if (command && !command->deserialize(buffer, len)) 
+    if (command && !command->deserialize(buffer, len))
     {
         delete command;
         return 0;
@@ -468,7 +468,7 @@ bool ApplyRoutesCommand::deserialize(void *buffer, uint32_t len)
 {
     if(len || buffer)
         return false;
-    
+
     return true;
 }
 
@@ -483,7 +483,7 @@ bool ApplyAliasesCommand::deserialize(void *buffer, uint32_t len)
 {
     if(len || buffer)
         return false;
-    
+
     return true;
 }
 
@@ -498,16 +498,19 @@ bool ApplyRescheduleCommand::deserialize(void *buffer, uint32_t len)
 {
     if(len || buffer)
         return false;
-    
+
     return true;
 }
 
 //========== profileUpdate ==========================
 
-ProfileUpdateCommand::ProfileUpdateCommand(smsc::profiler::Profile profile_)
+ProfileUpdateCommand::ProfileUpdateCommand(const smsc::sms::Address& addr,const smsc::profiler::Profile& profile_)
         : Command(PROFILEUPDATE_CMD),
           profile(profile_)
 {
+  plan=addr.plan;
+  type=addr.type;
+  strcpy(address,addr.value);
 }
 
 void ProfileUpdateCommand::getArgs(smsc::profiler::Profile &profile_, uint8_t &plan_, uint8_t &type_, char *address_) const
@@ -701,7 +704,7 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
         return false;
 
     /*
-        
+
         buffer := <AddressInfo> <ProfileInfo>
 
         <AddressInfo> := <plan : 1> <type : 1> <Address : 21>
@@ -714,7 +717,7 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
                 1 - Latin1
                 2 - Ucs2
                 3 - Ucs2AndLat
-        
+
 
         <reportOption : 1>      Values matchs with constants of ProfileReportOptions namespace
                 0 - ReportNone
@@ -726,7 +729,7 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
                 1 - hoEnabled
                 2 - hoSubstitute
 
-        
+
         <divertActive : 1>
                 1 bit - profile.divertActive
                 2 bit - profile.divertActiveAbsent
@@ -919,8 +922,8 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
-    
+
+
     return true;
 }
 
@@ -947,7 +950,7 @@ void* ProfileDeleteCommand::serialize(uint32_t &len)
     uint8_t* buffer = 0;
 
     try {
-    
+
     len = 23;
 
     buffer = new uint8_t[len];
@@ -973,8 +976,8 @@ bool ProfileDeleteCommand::deserialize(void *buffer, uint32_t len)
     try {
 
     /*
-        
-        buffer := <AddressInfo> 
+
+        buffer := <AddressInfo>
 
         <AddressInfo> := <plan : 1> <type : 1> <Address : 21>
 
@@ -990,34 +993,58 @@ bool ProfileDeleteCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
 //========== mscRegistrate ==========================
 
-MscRegistrateCommand::MscRegistrateCommand(const char *mscNum_)
+MscRegistrateCommand::MscRegistrateCommand(const char *mscNum_,File::offset_type argOffset)
     : Command(MSCREGISTRATE_CMD)
 {
     strcpy(mscNum, mscNum_);
+    offset=argOffset;
 }
 
-void MscRegistrateCommand::getArgs(char *mscNum_) const
+void MscRegistrateCommand::getArgs(char *mscNum_,File::offset_type& argOffset) const
 {
     strcpy(mscNum_, mscNum);
+    argOffset=offset;
 }
+
+
+static File::offset_type htonl64(File::offset_type value)
+{
+  uint32_t h=htonl((uint32_t)((value>>32)&0xFFFFFFFFUL));
+  uint32_t l=htonl((uint32_t)(value&0xFFFFFFFFUL));
+  char buf[8];
+  *((uint32_t*)buf)=h;
+  *((uint32_t*)(buf+4))=l;
+  return *((File::offset_type*)buf);
+}
+
+static File::offset_type ntohl64(File::offset_type value)
+{
+  char* buf=(char*)&value;
+  uint32_t h=ntohl(*(uint32_t*)buf);
+  uint32_t l=ntohl(*(uint32_t*)(buf+4));
+  return (((File::offset_type)h)<<32)|l;
+}
+
 
 void* MscRegistrateCommand::serialize(uint32_t &len)
 {
     uint8_t* buffer = 0;
 
     try {
-   
-    len = 22;
+
+    len = 22+8;
 
     buffer = new uint8_t[len];
     printf("mscNum: '%s', len: %d\n", mscNum, strlen(mscNum));
     memcpy((void*)buffer, (const void*)mscNum, 22);
+    File::offset_type tmp=htonl64(offset);
+    memcpy(buffer,&tmp,8);
 
     }catch(...){
         return 0;
@@ -1027,18 +1054,19 @@ void* MscRegistrateCommand::serialize(uint32_t &len)
 }
 bool MscRegistrateCommand::deserialize(void *buffer, uint32_t len)
 {
-    if(len != 22 || !buffer)
+    if(len != 22+8 || !buffer)
         return false;
 
     try {
 
     memcpy((void*)mscNum, (const void*)buffer, 22);
     printf("mscNum: '%s', len: %d\n", mscNum, strlen(mscNum));
+    offset=ntohl64(*(File::offset_type*)((char*)buffer+22));
 
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
@@ -1087,7 +1115,7 @@ bool MscUnregisterCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return 0;
     }
-    
+
     return true;
 }
 
@@ -1136,7 +1164,7 @@ bool MscBlockCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
@@ -1185,7 +1213,7 @@ bool MscClearCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
@@ -1269,14 +1297,13 @@ bool MscReportCommand::deserialize(void *buffer, uint32_t len)
     tmp += (uint64_t)( ptr[7] );
 
     offset = tmp;
-
     memcpy((void*)mscNum, (const void*)( (char*)buffer + 1), 22);
     printf("mscNum: '%s', len: %d\n", mscNum, strlen(mscNum));
 
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
@@ -1299,7 +1326,7 @@ void* SmeAddCommand::serialize(uint32_t &len)
   uint8_t *buffer = 0;
 
   try {
-  
+
   len = 38 + si.rangeOfAddress.length() + si.systemType.length() +
                 si.password.length() + si.hostname.length() + si.systemId.length() +
                 si.receiptSchemeName.length();
@@ -1476,7 +1503,7 @@ bool SmeAddCommand::deserialize(void *buffer, uint32_t len)
   }
 
   int sz = 0;
-  si.rangeOfAddress =       (char*)(   (uint8_t*)buffer + 32   );           sz += si.rangeOfAddress.length() + 1;   if (32 + sz >= len) return false; 
+  si.rangeOfAddress =       (char*)(   (uint8_t*)buffer + 32   );           sz += si.rangeOfAddress.length() + 1;   if (32 + sz >= len) return false;
   printf("rangeOfAddress: '%s', len: %d, sz: %d\n", si.rangeOfAddress.c_str(), si.rangeOfAddress.length(), sz);
   si.systemType =           (char*)(   (uint8_t*)buffer + 32 + sz   );      sz += si.systemType.length() + 1;       if (32 + sz >= len) return false;
   printf("systemType: '%s', len: %d, sz: %d\n", si.systemType.c_str(), si.systemType.length(), sz);
@@ -1510,11 +1537,11 @@ void SmeRemoveCommand::getArgs(char *smeId_) const
 }
 
 void* SmeRemoveCommand::serialize(uint32_t &len)
-{   
+{
     uint8_t *buffer = 0;
 
     try {
- 
+
     len = SMEID_LENGTH;
 
     buffer = new uint8_t[len];
@@ -1541,7 +1568,7 @@ bool SmeRemoveCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
@@ -1738,7 +1765,7 @@ bool SmeUpdateCommand::deserialize(void *buffer, uint32_t len)
   }
 
   int sz = 0;
-  si.rangeOfAddress =       (char*)(   (uint8_t*)buffer + 32   );           sz += si.rangeOfAddress.length() + 1;   if (32 + sz >= len) return false; 
+  si.rangeOfAddress =       (char*)(   (uint8_t*)buffer + 32   );           sz += si.rangeOfAddress.length() + 1;   if (32 + sz >= len) return false;
   printf("rangeOfAddress: '%s', len: %d, sz: %d\n", si.rangeOfAddress.c_str(), si.rangeOfAddress.length(), sz);
   si.systemType =           (char*)(   (uint8_t*)buffer + 32 + sz   );      sz += si.systemType.length() + 1;       if (32 + sz >= len) return false;
   printf("systemType: '%s', len: %d, sz: %d\n", si.systemType.c_str(), si.systemType.length(), sz);
@@ -1811,7 +1838,7 @@ bool AclRemoveCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
@@ -1913,11 +1940,11 @@ bool AclCreateCommand::deserialize(void *buffer, uint32_t len)
     try {
 
     int sz = 0;
-    name =          (char*)buffer;              sz += name.length() + 1;            if (sz >= len) return false; 
+    name =          (char*)buffer;              sz += name.length() + 1;            if (sz >= len) return false;
     printf("name: '%s'\n", name.c_str());
-    description =   (char*)buffer + sz;         sz += description.length() + 1;     if (sz >= len) return false; 
+    description =   (char*)buffer + sz;         sz += description.length() + 1;     if (sz >= len) return false;
     printf("description: '%s'\n", description.c_str());
-    cache_type =    (char*)buffer + sz;         sz += cache_type.length() + 1;      if (sz >= len) return false; 
+    cache_type =    (char*)buffer + sz;         sz += cache_type.length() + 1;      if (sz >= len) return false;
     printf("cache_type: '%s'\n", cache_type.c_str());
 
     cache_type_present = cache_type.length();
@@ -1957,7 +1984,7 @@ bool AclCreateCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
@@ -2001,13 +2028,13 @@ void* AclUpdateInfoCommand::serialize(uint32_t &len)
     memcpy((void*)buffer, (const void*)&value32, 4);
 
     int sz = 4;
-    memcpy((void*)( (uint8_t*)buffer + sz ), (const void*)name.c_str(),         name.length() + 1);     
+    memcpy((void*)( (uint8_t*)buffer + sz ), (const void*)name.c_str(),         name.length() + 1);
     sz += name.length() + 1;
     printf("name: '%s', len: %d, sz: %d\n", name.c_str(), name.length(), sz);
-    memcpy((void*)( (uint8_t*)buffer + sz ), (const void*)description.c_str(),  description.length() + 1);     
+    memcpy((void*)( (uint8_t*)buffer + sz ), (const void*)description.c_str(),  description.length() + 1);
     sz += description.length() + 1;
     printf("description: '%s', len: %d, sz: %d\n", description.c_str(), description.length(), sz);
-    memcpy((void*)( (uint8_t*)buffer + sz ), (const void*)cache_type.c_str(),   cache_type.length() + 1);     
+    memcpy((void*)( (uint8_t*)buffer + sz ), (const void*)cache_type.c_str(),   cache_type.length() + 1);
     sz += cache_type.length() + 1;
     printf("cache_type: '%s', len: %d, sz: %d\n", cache_type.c_str(), cache_type.length(), sz);
 
@@ -2043,7 +2070,7 @@ bool AclUpdateInfoCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
@@ -2122,13 +2149,13 @@ bool AclRemoveAddressesCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
 //========== AclAddAddresses ==========================
 
-AclAddAddressesCommand::AclAddAddressesCommand(smsc::acls::AclIdent id, std::vector<std::string> addr) 
+AclAddAddressesCommand::AclAddAddressesCommand(smsc::acls::AclIdent id, std::vector<std::string> addr)
     : Command(ACLADDADDRESSES_CMD),
     aclId(id)
 {
@@ -2204,7 +2231,7 @@ bool AclAddAddressesCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
@@ -2317,7 +2344,7 @@ bool PrcAddPrincipalCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
@@ -2369,7 +2396,7 @@ bool PrcDeletePrincipalCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
@@ -2439,7 +2466,7 @@ bool PrcAlterPrincipalCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
@@ -2539,7 +2566,7 @@ bool MemAddMemberCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
@@ -2598,7 +2625,7 @@ bool MemDeleteMemberCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
@@ -2852,7 +2879,7 @@ bool DlAddCommand::deserialize(void *buffer, uint32_t len)
         return false;
 
     try {
-  
+
     uint32_t value32;
 
     printf("maxElements: %d\n", maxElements);
@@ -2908,7 +2935,7 @@ bool DlAddCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
@@ -2958,7 +2985,7 @@ bool DlDeleteCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
 
@@ -3020,10 +3047,10 @@ bool DlAlterCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
-    
+
     return true;
 }
-    
+
 
 
 }}

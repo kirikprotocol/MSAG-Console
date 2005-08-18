@@ -5,7 +5,7 @@
 #include <netinet/in.h>
 #include <string>
 #include "smeman/smeinfo.h"
-#include "sms/sms_const.h"
+#include "sms/sms.h"
 #include <vector>
 #include "acls/interfaces.h"
 #include "core/buffers/File.hpp"
@@ -17,10 +17,13 @@
 #include <inttypes.h>
 #endif
 
-const int SMEID_LENGTH = smsc::sms::MAX_SMESYSID_TYPE_LENGTH + 1;
+
 
 namespace smsc { namespace cluster
 {
+
+    const int SMEID_LENGTH = smsc::sms::MAX_SMESYSID_TYPE_LENGTH + 1;
+
     typedef enum {
         APPLYROUTES_CMD =           0x00000000,
         APPLYALIASES_CMD =          0x00000001,
@@ -61,16 +64,16 @@ namespace smsc { namespace cluster
         Command(CommandType _type) : type(_type) {};
 
     public:
-        
+
         /**
          * Method creates command from buffer.
          * First 2 bytes defines command type.
          * To use from CommandReader
-         */ 
+         */
         static Command* create(CommandType type, void* buffer, uint32_t len);
-        
+
         virtual ~Command() {}
-        
+
         inline CommandType getType() const {
             return type;
         }
@@ -79,16 +82,16 @@ namespace smsc { namespace cluster
         virtual bool deserialize(void* buffer, uint32_t len) = 0;
     };
 
-    // #######################  Particular commands declarations #######################  
+    // #######################  Particular commands declarations #######################
 
     class ApplyRoutesCommand : public Command
     {
     private:
-        
-        
+
+
 
     public:
-        
+
         ApplyRoutesCommand() : Command(APPLYROUTES_CMD) {};
         //ApplyRoutesCommand(int sf) : Command(SAMPLE_CMD), sampleField(sf) {};
 
@@ -125,22 +128,21 @@ namespace smsc { namespace cluster
     class ProfileUpdateCommand : public Command
     {
     private:
-        uint8_t plan;
-        uint8_t type;
-        char address[21];
-        smsc::profiler::Profile profile;
+         uint8_t plan;
+         uint8_t type;
+         char address[21];
+         smsc::profiler::Profile profile;
 
     public:
-        ProfileUpdateCommand(smsc::profiler::Profile profile_);
+        ProfileUpdateCommand(const smsc::sms::Address& addr,const smsc::profiler::Profile& profile_);
         ProfileUpdateCommand() : Command(PROFILEUPDATE_CMD) {};
 
         virtual ~ProfileUpdateCommand() {};
-
         void getArgs(smsc::profiler::Profile &profile, uint8_t &plan_, uint8_t &type_, char* address_) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
-    
+
     class ProfileDeleteCommand : public Command
     {
     private:
@@ -165,13 +167,14 @@ namespace smsc { namespace cluster
     {
     private:
         char mscNum[22];
+        File::offset_type offset;
     public:
-        MscRegistrateCommand(const char *mscNum_);
+        MscRegistrateCommand(const char *mscNum_,File::offset_type argOffset);
         MscRegistrateCommand() : Command(MSCREGISTRATE_CMD) {};
 
         virtual ~MscRegistrateCommand() {};
 
-        void MscRegistrateCommand::getArgs(char *mscNum_) const;
+        void MscRegistrateCommand::getArgs(char *mscNum_,File::offset_type& argOffset) const;
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };
@@ -562,4 +565,3 @@ namespace smsc { namespace cluster
 }}
 
 #endif // __SMSC_CLUSTER_COMMANDS__
-

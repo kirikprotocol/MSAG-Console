@@ -11,9 +11,9 @@ namespace smsc { namespace cluster {
 
 using smsc::util::Exception;
 
-InterconnectManager* InterconnectManager::instance = 0;
+Interconnect* Interconnect::instance = 0;
 
-InterconnectManager::InterconnectManager(Role _role, const std::string& m_ip, 
+InterconnectManager::InterconnectManager(Role _role, const std::string& m_ip,
                                          const std::string& s_ip, int _port)
     : Interconnect(), Thread(), role(_role), master_ip(m_ip), slave_ip(s_ip), port(_port)
 {
@@ -27,7 +27,7 @@ InterconnectManager::InterconnectManager(Role _role, const std::string& m_ip,
 InterconnectManager::~InterconnectManager()
 {
     Stop();
-    
+
     pthread_join(thread, NULL);
 
     if(dispatcher){
@@ -36,7 +36,7 @@ InterconnectManager::~InterconnectManager()
     }
 }
 
-void InterconnectManager::init(Role _role, const std::string& m_ip, 
+void InterconnectManager::init(Role _role, const std::string& m_ip,
                                const std::string& s_ip, int _port)
 {
     if (!InterconnectManager::instance) {
@@ -45,12 +45,12 @@ void InterconnectManager::init(Role _role, const std::string& m_ip,
 }
 void InterconnectManager::shutdown()
 {
-    
+
     if (InterconnectManager::instance) {
         delete InterconnectManager::instance;
     }
 }
-    
+
 void InterconnectManager::sendCommand(Command* command)
 {
 
@@ -59,12 +59,12 @@ void InterconnectManager::sendCommand(Command* command)
 
     if(!isMaster())
         return;
-    
+
     commands.Push(command);
     if (!isStoped()){
         commandsMonitor.notify();
     }
-   
+
 }
 void InterconnectManager::addListener(CommandType type, CommandListener* listener)
 {
@@ -94,7 +94,7 @@ int InterconnectManager::Execute()
 
             //Sends commands if role - master only
             if(isMaster()){
-            
+
                     //printf("\nCommand\n");
 
                     // Sends command to socket.
@@ -102,7 +102,7 @@ int InterconnectManager::Execute()
                     int count = commands.Count();
                     for(int i=0; i<=count-1; i++){
 
-                
+
                             commands.Shift(command);
 
                             // Sends command to socket
@@ -113,11 +113,11 @@ int InterconnectManager::Execute()
                                 delete command;
                     }
 
-            
+
                     commands.Clean();
 
             }
-            
+
         }
         //printf("Signal or timeout\n");
 
@@ -157,19 +157,19 @@ bool InterconnectManager::isStoped()
 bool InterconnectManager::isMaster()
 {
     bool ismaster = ( role == MASTER );
-    return ismaster; 
+    return ismaster;
 }
 
 bool InterconnectManager::isSlave()
 {
     bool ismaster = ( role == SLAVE );
-    return ismaster; 
+    return ismaster;
 }
 
 bool InterconnectManager::isSingle()
 {
     bool ismaster = ( role == SINGLE );
-    return ismaster; 
+    return ismaster;
 }
 
 void InterconnectManager::changeRole(Role role_)
@@ -187,7 +187,7 @@ void InterconnectManager::changeRole(Role role_)
                 dispatcher->WaitFor();
             }
         }
-        
+
         break;
     case SLAVE:
 
@@ -198,7 +198,7 @@ void InterconnectManager::changeRole(Role role_)
             int count = commands.Count();
             for(int i=0; i<=count-1; i++){
 
-                
+
                 commands.Shift(command);
 
                 // Sends command to socket
@@ -209,7 +209,7 @@ void InterconnectManager::changeRole(Role role_)
                     delete command;
             }
 
-            
+
             commands.Clean();
 
             role = SLAVE;
