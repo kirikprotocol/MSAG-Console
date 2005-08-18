@@ -4,7 +4,7 @@
 
 #include <string>
 
-#include <core/buffers/Array.hpp>
+#include "core/buffers/Array.hpp"
 #include "core/buffers/File.hpp"
 
 #include "MscExceptions.h"
@@ -87,7 +87,7 @@ namespace smsc { namespace mscman
 
         virtual ~MscAdmin() {};
 
-        virtual void registrate(const char* msc) = 0;
+        virtual void registrate(const char* msc,File::offset_type offset=0) = 0;
         virtual void unregister(const char* msc) = 0;
         virtual void block(const char* msc) = 0;
         virtual void clear(const char* msc) = 0;

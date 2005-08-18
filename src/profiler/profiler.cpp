@@ -9,8 +9,8 @@
 
 #include "util/config/Manager.h"
 
-#include "db/DataSource.h"
-#include "db/DataSourceLoader.h"
+//#include "db/DataSource.h"
+//#include "db/DataSourceLoader.h"
 
 #include "util/recoder/recode_dll.h"
 #include "util/smstext.h"
@@ -25,6 +25,8 @@
 #include "core/buffers/TmpBuf.hpp"
 
 #include "sms/sms_util.h"
+
+#include "cluster/Interconnect.h"
 
 namespace smsc{
 namespace profiler{
@@ -192,9 +194,17 @@ void Profiler::remove(const Address& address)
   Profile& profRef=profiles->find(address,exact);
   if(exact)
   {
-    storeFile.Seek(profRef.offset-AddressSize()-1);
-    storeFile.WriteByte(0);
-    holes.push_back(profRef.offset-AddressSize()-1);
+    using namespace smsc::cluster;
+    if(Interconnect::getInstance()->getRole()!=SLAVE)
+    {
+      storeFile.Seek(profRef.offset-AddressSize()-1);
+      storeFile.WriteByte(0);
+      holes.push_back(profRef.offset-AddressSize()-1);
+      if(Interconnect::getInstance()->getRole()==MASTER)
+      {
+        Interconnect::getInstance()->sendCommand(new ProfileDeleteCommand(address.plan,address.type,address.value));
+      }
+    }
     profiles->Delete(address);
   }
 }
@@ -267,6 +277,7 @@ void Profiler::add(const Address& address,const Profile& profile)
 }
 
 
+/*
 class ConnectionGuard{
   smsc::db::DataSource *ds;
   smsc::db::Connection *conn;
@@ -289,13 +300,21 @@ public:
   }
 };
 
+*/
+
 void Profiler::fileUpdate(const Address& addr,const Profile& profile)
 {
+  using namespace smsc::cluster;
+  if(Interconnect::getInstance()->getRole()==SLAVE)return;
   __trace2__("Profiler: Update(%llx) %s=%d,%d,%s,%d,%c,%s,%c,%c",profile.offset,addr.toString().c_str(),profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.hide,profile.hideModifiable?'Y':'N',profile.divert.c_str(),profile.divertActive?'Y':'N',profile.divertModifiable?'Y':'N');
-
   storeFile.Seek(profile.offset);
   profile.Write(storeFile);
   storeFile.Flush();
+
+  if(Interconnect::getInstance()->getRole()==MASTER)
+  {
+    Interconnect::getInstance()->sendCommand(new ProfileUpdateCommand(addr,profile));
+  }
 
   /*
   using namespace smsc::db;
@@ -338,7 +357,14 @@ void Profiler::fileUpdate(const Address& addr,const Profile& profile)
 
 void Profiler::fileInsert(const Address& addr,Profile& profile)
 {
+  using namespace smsc::cluster;
+  if(Interconnect::getInstance()->getRole()==SLAVE)return;
   __trace2__("Profiler: Insert %s=%d,%d,%s,%d,%c,%s,%c,%c",addr.toString().c_str(),profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.hide,profile.hideModifiable?'Y':'N',profile.divert.c_str(),profile.divertActive?'Y':'N',profile.divertModifiable?'Y':'N');
+  if(profile.offset)
+  {
+    return;
+  }
+
   File::offset_type endOffset=0;
   if(holes.empty())
   {
@@ -365,6 +391,12 @@ void Profiler::fileInsert(const Address& addr,Profile& profile)
      }
      throw;
   }
+
+  if(Interconnect::getInstance()->getRole()==MASTER)
+  {
+    Interconnect::getInstance()->sendCommand(new ProfileUpdateCommand(addr,profile));
+  }
+
 
   /*
   using namespace smsc::db;
@@ -1193,6 +1225,7 @@ int Profiler::Execute()
   return 0;
 }
 
+/*
 static int RsAsInt(smsc::db::ResultSet* rs,int idx)
 {
   const char *r=rs->getString(idx);
@@ -1214,6 +1247,8 @@ static int RsAsHide(smsc::db::ResultSet* rs,int idx)
   return toupper(*r)=='Y'?HideOption::hoEnabled:toupper(*r)=='S'?HideOption::hoSubstitute:HideOption::hoDisabled;
 }
 
+*/
+
 
 
 void Profiler::load(const char* filename)
@@ -1225,6 +1260,8 @@ void Profiler::load(const char* filename)
 
   if(!File::Exists(filename))
   {
+    using namespace smsc::cluster;
+    if(Interconnect::getInstance()->getRole()==SLAVE)return;
     __warning2__("Profiler store file not found:%s",filename);
     storeFile.RWCreate(filename);
     storeFile.Write(sig,8);
