@@ -168,7 +168,7 @@ InitialDPSMSArg::~InitialDPSMSArg()
 //deallocate internal
   delete(internal);
 }
-int InitialDPSMSArg::decode(vector<unsigned char>& buf)
+int InitialDPSMSArg::decode(const vector<unsigned char>& buf)
 {
 
   return -1; //not implemented yet
