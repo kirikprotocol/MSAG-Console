@@ -2,7 +2,7 @@
 
 #include "comfactory.hpp"
 
-#define REG_PRODUCT( name ) products.insert( ComponentMap::value_type( opcode :: name, ProducerT< name##Arg >() ) );
+#define REG_PRODUCT( name ) products.insert( ComponentMap::value_type( InapOpCode :: name, ProducerT< name##Arg >() ) );
 
 namespace smsc {
 namespace inman {
@@ -18,8 +18,11 @@ struct ProducerT : public ComponentProducer
 ComponentFactory::ComponentFactory()
 {
 	REG_PRODUCT( InitialDPSMS );
+	/*
+	still abstract
 	REG_PRODUCT( RequestReportSMSEvent );
 	REG_PRODUCT( EventReportSMS );
+	*/
 }
 
 ComponentFactory::~ComponentFactory()

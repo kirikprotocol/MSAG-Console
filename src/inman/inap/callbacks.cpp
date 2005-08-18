@@ -165,7 +165,7 @@ USHORT_T EINSS7_I97TInvokeInd(  UCHAR_T          ssn,
                                 UCHAR_T          lastComponent,
                                 UCHAR_T          linkedIdUsed,
                                 UCHAR_T          linkedId,
-                                UCHAR_T          operationTag,
+                                UCHAR_T          tag,
                                 USHORT_T         oplen,
                                 UCHAR_T          *op,
                                 USHORT_T         pmlen,
@@ -178,14 +178,19 @@ USHORT_T EINSS7_I97TInvokeInd(  UCHAR_T          ssn,
                  "op[%d]={%s}, pm[%d]={%s})",
                  ssn, userId, tcapInstanceId, dialogueId,
                  invokeId, lastComponent?"YES":"NO", linkedIdUsed?"USED":"NOT USED", linkedId,
-                 operationTag==0x02?"LOCAL":"GLOBAL",
+                 tag==0x02?"LOCAL":"GLOBAL",
                  oplen, dump(oplen,op).c_str(), pmlen, dump(pmlen,pm).c_str());
 
   TcapDialog* dlg = findDialog( ssn, dialogueId );
+
   assert( dlg );
-  TcapOperation* pOp = dlg->createOperation();
-  pOp->decode( operationTag, oplen, op, pmlen, pm );
-  return dlg->handleInvoke( pOp );
+  assert( op );
+  assert( oplen > 0 );
+
+  UCHAR_T opcode = op[0];
+  TcapOperation* pOperation = dlg->createOperation( tag, opcode, pm, pmlen);
+  return dlg->handleInvoke( pOperation );
+  delete pOperation;
 }
 
 //------------------------------------ T_RESULT_NL_ind ----------------------------------
@@ -197,7 +202,7 @@ USHORT_T EINSS7_I97TResultNLInd(UCHAR_T          ssn,
                                 USHORT_T         dialogueId,
                                 UCHAR_T          invokeId,
                                 UCHAR_T          lastComponent,
-                                UCHAR_T          operationTag,
+                                UCHAR_T          tag,
                                 USHORT_T         oplen,
                                 UCHAR_T          *op,
                                 USHORT_T         pmlen,
@@ -205,12 +210,17 @@ USHORT_T EINSS7_I97TResultNLInd(UCHAR_T          ssn,
 {
   smsc_log_debug(tcapLogger, "EINSS7_I97TResultNLInd( ssn=%d, userId=%d, tcapInstanceId==%d, dialogueId=%d,...)",
          ssn, userId, tcapInstanceId, dialogueId );
+
   TcapDialog* dlg = findDialog( ssn, dialogueId );
+
   assert( dlg );
-  TcapOperation* pop = dlg->createOperation();
-  assert( pop );
-  pop->decode( operationTag, oplen, op, pmlen, pm );
-  dlg->handleResultNotLast( pop );
+  assert( op );
+  assert( oplen > 0 );
+
+  UCHAR_T opcode = op[0];
+  TcapOperation* pOperation = dlg->createOperation( tag, opcode, pm, pmlen);
+  dlg->handleResultNotLast( pOperation );
+  delete pOperation;
   return MSG_OK;
 }
 
@@ -224,7 +234,7 @@ USHORT_T EINSS7_I97TResultLInd( UCHAR_T          ssn,
                                 USHORT_T         dialogueId,
                                 UCHAR_T          invokeId,
                                 UCHAR_T          lastComponent,
-                                UCHAR_T          operationTag,
+                                UCHAR_T          tag,
                                 USHORT_T         oplen,
                                 UCHAR_T          *op,
                                 USHORT_T         pmlen,
@@ -234,10 +244,13 @@ USHORT_T EINSS7_I97TResultLInd( UCHAR_T          ssn,
          ssn, userId, tcapInstanceId, dialogueId );
   TcapDialog* dlg = findDialog( ssn, dialogueId );
   assert( dlg );
-  TcapOperation* pop = dlg->createOperation();
-  assert( pop );
-  pop->decode( operationTag, oplen, op, pmlen, pm );
-  dlg->handleResultLast( pop );
+  assert( op );
+  assert( oplen > 0 );
+
+  UCHAR_T opcode = op[0];
+  TcapOperation* pOperation = dlg->createOperation( tag, opcode, pm, pmlen);
+  dlg->handleResultLast( pOperation );
+  delete pOperation;
   return MSG_OK;
 }
 
@@ -250,19 +263,25 @@ USHORT_T EINSS7_I97TUErrorInd(  UCHAR_T          ssn,
                                 USHORT_T         dialogueId,
                                 UCHAR_T          invokeId,
                                 UCHAR_T          lastComponent,
-                                UCHAR_T          errorCodeTag,
-                                USHORT_T         errorCodeLength,
-                                UCHAR_T          *errorCode_p,
+                                UCHAR_T          tag,
+                                USHORT_T         oplen,
+                                UCHAR_T          *op,
                                 USHORT_T         pmlen,
                                 UCHAR_T          *pm)
 {
   smsc_log_debug(tcapLogger, "EINSS7_I97TUErrorInd( ssn=%d, userId=%d, tcapInstanceId==%d, dialogueId=%d,...)",
          ssn, userId, tcapInstanceId, dialogueId );
+  
   TcapDialog* dlg = findDialog( ssn, dialogueId );
+
   assert( dlg );
-  TcapOperation* op = dlg->createOperation();
-  op->decode( errorCodeTag, errorCodeLength, errorCode_p, pmlen, pm );
-  dlg->handleUserError( op );
+  assert( op );
+  assert( oplen > 0 );
+
+  UCHAR_T opcode = op[0];
+  TcapOperation* pOperation = dlg->createOperation( tag, opcode, pm, pmlen );
+  dlg->handleUserError( pOperation );
+  delete pOperation;
   return MSG_OK;
 }
 

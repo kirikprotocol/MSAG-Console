@@ -16,32 +16,17 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
-TcapOperation::TcapOperation(TcapDialog* dlg) 
+TcapOperation::TcapOperation(TcapDialog* dlg, UCHAR_T tg, UCHAR_T op)
 	: dialog( dlg )
-	, tag( EINSS7_I97TCAP_OPERATION_TAG_LOCAL )
-	, operation( NULL )
-	, parameters( NULL )
+	, opcode( op )
+	, tag( tg )
+	, param( NULL )
 {
 }
 
 TcapOperation::~TcapOperation()
 {
-	delete operation;
-	delete parameters;
-}
-
-void TcapOperation::decode(USHORT_T opTag, USHORT_T opLen, UCHAR_T* op, USHORT_T parLen, UCHAR_T* par)
-{
-	tag =  opTag;
-	operation  = dialog->getComponentFactory()->createComponent( vector<unsigned char>( op, op + opLen ) );
-	parameters = dialog->getComponentFactory()->createComponent( vector<unsigned char>( par, par + parLen ) );
-}
-
-void TcapOperation::encode(USHORT_T& opTag, vector<unsigned char>& op, vector<unsigned char>& par)
-{
-	opTag = tag;
-	if( operation ) operation->encode( op );
-	if( parameters ) parameters->encode( par );
+	delete param;
 }
 
 void TcapOperation::invoke()
@@ -74,9 +59,24 @@ void TcapDialog::setProtocolFactory( ProtocolFactory* pf )
 	protocol = protFactory->createProtocol( this );
 }
 
-TcapOperation* TcapDialog::createOperation()
+TcapOperation* TcapDialog::createOperation(UCHAR_T tag, UCHAR_T opcode, const UCHAR_T* paramBuf, USHORT_T paramLen )
 {
-	return new TcapOperation( this );
+	TcapOperation* op = new TcapOperation( this, tag, opcode );
+	if( paramBuf && (paramLen > 0))
+	{
+		Component* comp = compFactory.createComponent( opcode );
+		if( comp )
+		{
+			comp->decode( vector<UCHAR_T>( paramBuf, paramBuf + paramLen ) );
+			op->setParam( comp );
+		}
+	}
+	return op; 
+}
+
+TcapOperation* TcapDialog::createOperation(UCHAR_T opcode)
+{
+	return createOperation( EINSS7_I97TCAP_OPERATION_TAG_LOCAL, opcode, NULL, 0 );
 }
 
 USHORT_T TcapDialog::beginDialog()
@@ -157,10 +157,12 @@ USHORT_T TcapDialog::invoke(TcapOperation* pop)
   assert( session );
   assert( pop );
 
-  USHORT_T		  tag;
   vector<UCHAR_T> op;
+  op.push_back( pop->getOpcode() );
+
   vector<UCHAR_T> params;
-  pop->encode( tag, op, params );
+  
+  if( pop->getParam() ) pop->getParam()->encode( params );
 
   USHORT_T result = EINSS7_I97TInvokeReq(
     session->getSSN(),
@@ -172,7 +174,7 @@ USHORT_T TcapDialog::invoke(TcapOperation* pop)
     0, //linkedId,
     EINSS7_I97TCAP_OP_CLASS_1, //opClass,
     30, //timeOut,
-    tag, //operationTag,
+    pop->getTag(), //operationTag,
     op.size(), //operationLength,
     const_cast<UCHAR_T*>(&op.front()), //*operationCode_p,
     params.size(), //paramLength,
@@ -186,15 +188,17 @@ USHORT_T TcapDialog::invoke(TcapOperation* pop)
   return result;
 }
 
-USHORT_T TcapDialog::resultLast(TcapOperation* res)
+USHORT_T TcapDialog::resultLast(TcapOperation* pop)
 {
   assert( session );
-  assert( res );
+  assert( pop );
 
-  USHORT_T		  tag;
   vector<UCHAR_T> op;
+  op.push_back( pop->getOpcode() );
+
   vector<UCHAR_T> params;
-  res->encode( tag, op, params );
+
+  if( pop->getParam() ) pop->getParam()->encode( params );
 
 	USHORT_T result = EINSS7_I97TResultLReq(
     	session->getSSN(),
@@ -202,7 +206,7 @@ USHORT_T TcapDialog::resultLast(TcapOperation* res)
     	TCAP_INSTANCE_ID,
     	did,
     	1, //invokeId
-		tag,
+		pop->getTag(),
 		op.size(), //operationLength,
     	const_cast<UCHAR_T*>(&op.front()), //*operationCode_p,
 		params.size(), //paramLength,
@@ -217,15 +221,16 @@ USHORT_T TcapDialog::resultLast(TcapOperation* res)
   return result;
 }
 
-USHORT_T TcapDialog::resultNotLast(TcapOperation* res)
+USHORT_T TcapDialog::resultNotLast(TcapOperation* pop)
 {
   assert( session );
-  assert( res );
+  assert( pop );
 
-  USHORT_T		  tag;
   vector<UCHAR_T> op;
+  op.push_back( pop->getOpcode() );
+
   vector<UCHAR_T> params;
-  res->encode( tag, op, params );
+  if( pop->getParam() ) pop->getParam()->encode( params );
 
 	USHORT_T result = EINSS7_I97TResultNLReq(
     	session->getSSN(),
@@ -233,7 +238,7 @@ USHORT_T TcapDialog::resultNotLast(TcapOperation* res)
     	TCAP_INSTANCE_ID,
     	did,
     	1, //invokeId
-		tag,
+		pop->getTag(),
 		op.size(), //operationLength,
     	const_cast<UCHAR_T*>(&op.front()), //*operationCode_p,
     	params.size(), //paramLength,
@@ -248,15 +253,16 @@ USHORT_T TcapDialog::resultNotLast(TcapOperation* res)
   return result;
 }
 
-USHORT_T TcapDialog::userError(TcapOperation* err)
+USHORT_T TcapDialog::userError(TcapOperation* pop)
 {
   assert( session );
-  assert( err );
+  assert( pop );
 
-  USHORT_T		  tag;
   vector<UCHAR_T> op;
+  op.push_back( pop->getOpcode() );
+
   vector<UCHAR_T> params;
-  err->encode( tag, op, params );
+  if( pop->getParam() ) pop->getParam()->encode( params );
 
  	USHORT_T result = EINSS7_I97TUErrorReq
 	(
@@ -265,7 +271,7 @@ USHORT_T TcapDialog::userError(TcapOperation* err)
     	TCAP_INSTANCE_ID,
     	did,
     	1,
-		tag,
+		pop->getTag(),
 		op.size(), //operationLength,
    		const_cast<UCHAR_T*>(&op.front()), //*operationCode_p,
 		params.size(), //paramLength,
@@ -337,3 +343,4 @@ USHORT_T TcapDialog::handleUserError(TcapOperation* op)
 } // namespace inap
 } // namespace inman
 } // namespace smsc
+

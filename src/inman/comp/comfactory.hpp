@@ -12,24 +12,9 @@ namespace comp{
 
 using std::map;
 
-namespace opcode
-{
-	enum
-	{
-		InitialDPSMS 				  = 60,
-		FurnishChargingInformationSMS = 61,
-		ConnectSMS					  = 62,
-		RequestReportSMSEvent		  = 63,
-		EventReportSMS				  = 64,
-		ContinueSMS					  = 65,
-		ReleaseSMS					  = 66,
-		ResetTimerSMS				  = 67
-	};
-}
-
 struct ComponentProducer
 {
-	virtual Component* create() const;
+	virtual Component* create() const { return NULL; }
 };
 
 class ComponentFactory

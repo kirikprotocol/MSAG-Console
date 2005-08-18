@@ -9,14 +9,29 @@ namespace smsc {
 namespace inman {
 namespace comp{
 
+struct InapOpCode
+{
+	enum
+	{
+		InitialDPSMS 				  = 60,
+		FurnishChargingInformationSMS = 61,
+		ConnectSMS					  = 62,
+		RequestReportSMSEvent		  = 63,
+		EventReportSMS				  = 64,
+		ContinueSMS					  = 65,
+		ReleaseSMS					  = 66,
+		ResetTimerSMS				  = 67
+	};
+};
+
 using std::vector;
 using std::map;
 
 class Component
 {
   public:
-    virtual int encode(vector<unsigned char>& buf);
-    virtual int decode(const vector<unsigned char>& buf);
+    virtual int encode(vector<unsigned char>& buf) = 0;
+    virtual int decode(const vector<unsigned char>& buf) = 0;
 };
 
 class InternalInitialDPSMSArg;

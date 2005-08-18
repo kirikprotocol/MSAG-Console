@@ -9,6 +9,7 @@
 
 #include "ss7cp.h"
 #include "inman/comp/comps.hpp"
+#include "inman/comp/comfactory.hpp"
 
 #include "protocol.hpp"
 
@@ -25,41 +26,38 @@ class TcapOperation
 {
   friend class TcapDialog;
 
-  TcapOperation(TcapDialog*);
+  TcapOperation(TcapDialog*, UCHAR_T tag, UCHAR_T opcode);
 
 public:
   virtual ~TcapOperation();
 
-  virtual void decode(USHORT_T opTag, USHORT_T opLen, UCHAR_T* op, USHORT_T parLen, UCHAR_T* par);
-  virtual void encode(USHORT_T& opTag, vector<UCHAR_T>& op, vector<UCHAR_T>& par);
-
   virtual UCHAR_T getTag() const 
   { 
-  	return tag; 
+  		return tag; 
   }
 
-  virtual Component* getOperation() const
+  virtual UCHAR_T getOpcode() const
   {
-  	return operation;
+  		return opcode;
   }
 
-  virtual void setOperation(Component* op)
+  virtual Component* getParam() const
   {
-		operation = op;
+		return param;
   }
 
-  virtual Component* getParameters() const
+  virtual void setParam(Component* p)
   {
-  	return parameters;
+		param = p;
   }
 
   virtual void invoke();
 
 protected:
-  TcapDialog* 		   dialog;
-  UCHAR_T  			   tag;
-  Component*		   operation;
-  Component*		   parameters;
+  TcapDialog* 	dialog;
+  UCHAR_T		opcode;
+  UCHAR_T  		tag;
+  Component*	param;
 };
 
 class TcapDialog
@@ -76,7 +74,8 @@ class TcapDialog
     ComponentFactory* getComponentFactory()  { return &compFactory; }
     ProtocolFactory*  getProtocolFactory()  { return protFactory;   }
 
-    virtual TcapOperation* createOperation();
+    virtual TcapOperation* createOperation(UCHAR_T opcode);
+    virtual TcapOperation* createOperation(UCHAR_T tag, UCHAR_T opcode, const UCHAR_T* param, USHORT_T paramBuf );
 
     // Transaction layer
     virtual USHORT_T beginDialog();//called by client of this dialog instance
