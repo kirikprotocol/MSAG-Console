@@ -87,7 +87,11 @@ Targets:
     <mkdir dir="${DISTR_DIR}/work"/>
     <mkdir dir="${DISTR_DIR}/services/scag/conf"/>
     <mkdir dir="${DISTR_DIR}/daemon/conf"/>
-
+    <mkdir dir="${DISTR_DIR}/applet"/>
+    <copy todir="${DISTR_DIR}/applet">
+      <fileset dir="${WEBSRC_DIR}/jedit/dirs" includes="**/*">
+    </copy>
+	       
     <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/scag"/>
     <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/scag"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/command.dtd"          link="${DISTR_DIR}/services/scag/conf"/>
