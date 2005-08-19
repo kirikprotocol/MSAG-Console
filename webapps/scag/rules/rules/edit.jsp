@@ -15,7 +15,8 @@
 <body style="margin: 0px 0px 0px 0px;">
 <%
 	SCAGAppContext appContext = (SCAGAppContext) request.getAttribute("appContext");
-	long port = 6695;
+	String file=request.getParameter("editId");
+  long port = 6695;
 	if (appContext != null)
 	{
 		try {
@@ -29,7 +30,8 @@
 		<param name="noplugins" value="-noplugins">
     <param name="homedir" value="applet">
 		<param name="username" value="a">
-		<param name="servletUrl" value="/scag/applet/myServlet">
+    <param name="file" value="<%=file%>">
+    <param name="servletUrl" value="/scag/applet/myServlet">
   </applet>
 </body>
 </html>

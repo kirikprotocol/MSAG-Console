@@ -15,6 +15,8 @@ import ru.sibinco.scag.backend.users.UserManager;
 import ru.sibinco.scag.backend.protocol.journal.Journal;
 import ru.sibinco.scag.backend.endpoints.centers.CenterManager;
 import ru.sibinco.scag.backend.endpoints.svc.SvcManager;
+import ru.sibinco.scag.backend.rules.Rule;
+import ru.sibinco.scag.backend.rules.RuleManager;
 import ru.sibinco.scag.perfmon.PerfServer;
 import ru.sibinco.tomcat_auth.XmlAuthenticator;
 
@@ -24,6 +26,9 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.Map;
+import java.util.Collections;
+import java.util.HashMap;
 
 
 /**
@@ -41,7 +46,7 @@ public class SCAGAppContext
   private final GwSmeManager gwSmeManager;
   private final CenterManager centerManager;
   private final SvcManager svcManager;
- // private final SmeHostsManager smeHostsManager;
+  private final RuleManager ruleManager;
  // private final HostsManager hostsManager ;
   private final ProviderManager providerManager;
   private final SmscsManager smscsManager;
@@ -63,7 +68,8 @@ public class SCAGAppContext
     try {
       System.out.println("  **  config file:" + new File(config_filename).getAbsolutePath());
       System.out.flush();
-
+      ruleManager=new RuleManager();
+      ruleManager.init();
       config = new Config(new File(config_filename));
       gwConfig = new Config(new File(config.getString("gw_config")));
       String gwDaemonHost=config.getString("gw daemon.host");
@@ -125,6 +131,11 @@ public class SCAGAppContext
       instance = new SCAGAppContext(config_filename);
       return instance ;
     }
+  }
+
+  public RuleManager getRuleManager()
+  {
+    return ruleManager;
   }
 
   public Config getConfig()

@@ -115,7 +115,8 @@ public abstract class RouteSubjectManager
   {
     for (int i = 0; i < routeList.getLength(); i++) {
       final Element routeElem = (Element) routeList.item(i);
-      routes.put(routeElem.getAttribute("id"), createRoute(routeElem, subjects, smeManager));
+      String id=routeElem.getAttribute("id");
+      routes.put(id, createRoute(routeElem, subjects, smeManager));
     }
   }
 
