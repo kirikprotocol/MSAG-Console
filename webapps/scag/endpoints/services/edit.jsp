@@ -41,29 +41,21 @@
         <c:otherwise>
         <c:choose>
             <c:when test="${bean.administrator}">
-                <sm-ep:list  title="Svc provider" name="providerId"
+                <sm-ep:list  title="provider" name="providerId"
                        values="${fn:join(bean.providerIds, ',')}"
                        valueTitles="${fn:join(bean.providerNames, ',')}"/>
             </c:when>
         <c:otherwise>
-          <sm-ep:const title="Svc provider" name="providerName" value="${bean.providerName}"/>
+          <sm-ep:const title="provider" name="providerName" value="${bean.providerName}"/>
         </c:otherwise>
       </c:choose>
         </c:otherwise>
 
       </c:choose>
-      <sm-ep:txt title="priority" name="priority" validation="priority"/>
-      <sm-ep:txt title="system type" name="systemType" validation="nonEmpty"/>
-      <sm-ep:list title="type of number" name="typeOfNumber" values="0,1,2,3,4,5,6" valueTitles="Unknown,International,National,Network Specific,Subscriber Number,Alphanumeric,Abbreviated"/>
-      <sm-ep:list title="numbering plan" name="numberingPlan" values="0,1,3,4,6,8,9,10,14,18" valueTitles="Unknown,ISDN (E163/E164),Data (X.121),Telex (F.69),Land Mobile (E.212),National,Private,ERMES,Internet (IP),WAP Client Id (to be defined by WAP Forum)"/>
-      <sm-ep:const title="interface version" name="interfaceVersion" value=""/>
-      <sm-ep:txt title="range of addres" name="addrRange" validation="nonEmpty"/>
       <sm-ep:txt title="timeout" name="timeout" validation="unsigned"/>
       <sm-ep:txt title="password" name="password"/>
-      <sm-ep:txt title="receipt scheme name" name="receiptSchemeName"/>
-      <sm-ep:check title="disabled" name="disabled"/>
+      <sm-ep:check title="enabled" name="enabled"/>
       <sm-ep:list title="mode" name="mode" values="1,2,3" valueTitles="TX,RX,TRX"/>
-      <sm-ep:txt title="proclimit" name="proclimit" validation="unsigned"/>
     </sm-ep:properties>
     </c:when>
     <c:when test="${bean.transportId == 2}">

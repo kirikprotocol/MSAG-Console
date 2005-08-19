@@ -40,10 +40,10 @@
       <sm-ep:txt title="port" name="port" validation="port"/>
       <sm-ep:txt title="alternate host" name="altHost"/>
       <sm-ep:txt title="alternate port" name="altPort" validation="port"/>
-      <sm-ep:txt title="systemId" name="systemId" validation="nonEmpty"/>
-      <sm-ep:txt title="password" name="password"/><!--type="password"-->
-      <sm-ep:txt title="responseTimeout" name="responseTimeout" validation="positive"/>
-      <sm-ep:txt title="uniqueMsgIdPrefix" name="uniqueMsgIdPrefix" validation="nonEmpty"/>
+      <sm-ep:list title="mode" name="mode" values="1,2,3" valueTitles="TX,RX,TRX"/>
+      <sm-ep:txt title="timeout" name="timeout" validation="unsigned"/>
+      <sm-ep:check title="enabled" name="enabled"/>
+      <sm-ep:txt title="password" name="password"/>
     </sm-ep:properties>
         </c:when>
     <c:when test="${bean.transportId == 2}">

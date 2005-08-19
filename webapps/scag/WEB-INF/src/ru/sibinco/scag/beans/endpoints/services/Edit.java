@@ -30,19 +30,11 @@ public class Edit extends EditBean{
 
     public static final long ALL_PROVIDERS = -1;
     protected String id = null;
-    protected int priority = 0;
     protected byte type = Svc.SMPP;
-    protected int typeOfNumber = 0;
-    protected int numberingPlan = 0;
-    protected int interfaceVersion = 0;
-    protected String systemType = null;
     protected String password = null;
-    protected String addrRange = null;
     protected int timeout = 0;
-    protected String receiptSchemeName = null;
-    protected boolean disabled = false;
+    protected boolean enabled = false;
     protected byte mode = Svc.MODE_TRX;
-    protected int proclimit = 0;
     protected boolean smsc = false;
     protected long providerId = -1;
     protected long transportId = 1;
@@ -111,52 +103,12 @@ public class Edit extends EditBean{
         this.id = id;
     }
 
-    public int getPriority() {
-        return priority;
-    }
-
-    public void setPriority(final int priority) {
-        this.priority = priority;
-    }
-
     public byte getType() {
         return type;
     }
 
     public void setType(final byte type) {
         this.type = type;
-    }
-
-    public int getTypeOfNumber() {
-        return typeOfNumber;
-    }
-
-    public void setTypeOfNumber(final int typeOfNumber) {
-        this.typeOfNumber = typeOfNumber;
-    }
-
-    public int getNumberingPlan() {
-        return numberingPlan;
-    }
-
-    public void setNumberingPlan(final int numberingPlan) {
-        this.numberingPlan = numberingPlan;
-    }
-
-    public int getInterfaceVersion() {
-        return interfaceVersion;
-    }
-
-    public void setInterfaceVersion(final int interfaceVersion) {
-        this.interfaceVersion = interfaceVersion;
-    }
-
-    public String getSystemType() {
-        return systemType;
-    }
-
-    public void setSystemType(final String systemType) {
-        this.systemType = systemType;
     }
 
     public String getPassword() {
@@ -167,13 +119,6 @@ public class Edit extends EditBean{
         this.password = password;
     }
 
-    public String getAddrRange() {
-        return addrRange;
-    }
-
-    public void setAddrRange(final String addrRange) {
-        this.addrRange = addrRange;
-    }
 
     public int getTimeout() {
         return timeout;
@@ -183,20 +128,12 @@ public class Edit extends EditBean{
         this.timeout = timeout;
     }
 
-    public String getReceiptSchemeName() {
-        return receiptSchemeName;
+    public boolean isEnabled() {
+        return enabled;
     }
 
-    public void setReceiptSchemeName(final String receiptSchemeName) {
-        this.receiptSchemeName = receiptSchemeName;
-    }
-
-    public boolean isDisabled() {
-        return disabled;
-    }
-
-    public void setDisabled(final boolean disabled) {
-        this.disabled = disabled;
+    public void setEnabled(final boolean enabled) {
+        this.enabled = enabled;
     }
 
     public byte getMode() {
@@ -205,14 +142,6 @@ public class Edit extends EditBean{
 
     public void setMode(final byte mode) {
         this.mode = mode;
-    }
-
-    public int getProclimit() {
-        return proclimit;
-    }
-
-    public void setProclimit(final int proclimit) {
-        this.proclimit = proclimit;
     }
 
     public boolean isSmsc() {
@@ -268,6 +197,5 @@ public class Edit extends EditBean{
         };
         return transpotTitles;
     }
-
 }
 

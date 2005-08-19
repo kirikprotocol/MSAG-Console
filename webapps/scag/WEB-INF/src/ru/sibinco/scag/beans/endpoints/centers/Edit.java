@@ -5,6 +5,7 @@ package ru.sibinco.scag.beans.endpoints.centers;
 
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.lib.backend.util.SortedList;
 
 import java.util.Iterator;
@@ -17,18 +18,18 @@ import java.util.Iterator;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class Edit extends EditBean{
+public class Edit extends EditBean {
 
-  private String id;
-  private String host;
-  private int port;
-  private String systemId;
-  private String password;
-  private int responseTimeout;
-  private int uniqueMsgIdPrefix;
-  private String altHost;
-  private int altPort;
-  protected long transportId = 1;
+    private String id = null;
+    private String password = null;
+    private int timeout = 0;
+    private byte mode = Svc.MODE_TRX;
+    private String host = null;
+    private int port = 0;
+    private String altHost = null;
+    private int altPort = 0;
+    private boolean enabled = false;
+    protected long transportId = 1;
 
 
     protected void load(String loadId) throws SCAGJspException {
@@ -74,36 +75,12 @@ public class Edit extends EditBean{
         this.port = port;
     }
 
-    public String getSystemId() {
-        return systemId;
-    }
-
-    public void setSystemId(final String systemId) {
-        this.systemId = systemId;
-    }
-
     public String getPassword() {
         return password;
     }
 
     public void setPassword(final String password) {
         this.password = password;
-    }
-
-    public int getResponseTimeout() {
-        return responseTimeout;
-    }
-
-    public void setResponseTimeout(final int responseTimeout) {
-        this.responseTimeout = responseTimeout;
-    }
-
-    public int getUniqueMsgIdPrefix() {
-        return uniqueMsgIdPrefix;
-    }
-
-    public void setUniqueMsgIdPrefix(final int uniqueMsgIdPrefix) {
-        this.uniqueMsgIdPrefix = uniqueMsgIdPrefix;
     }
 
     public String getAltHost() {
@@ -122,15 +99,39 @@ public class Edit extends EditBean{
         this.altPort = altPort;
     }
 
+    public int getTimeout() {
+        return timeout;
+    }
+
+    public void setTimeout(final int timeout) {
+        this.timeout = timeout;
+    }
+
+    public byte getMode() {
+        return mode;
+    }
+
+    public void setMode(final byte mode) {
+        this.mode = mode;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(final boolean enabled) {
+        this.enabled = enabled;
+    }
+
     public String[] getTranspotIds() {  //ToDo
         return new String[]{
-            "1",  "2", "3"
+                "1", "2", "3"
         };
     }
 
     public String[] getTranspotTitles() { //ToDo
         return new String[]{
-            "SMPP",  "WAP", "MMS"
+                "SMPP", "WAP", "MMS"
         };
     }
 
