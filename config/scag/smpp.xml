@@ -1,11 +1,11 @@
 <records>
-  <smpprecord>
+  <smerecord>
     <param name="systemId"          value="smename"/><!--maxlength=15-->
     <param name="password"          value="password"/><!--maxlength=8-->
     <param name="timeout"           value="20"/><!--:8-180-->
     <param name="mode"              value="trx"/><!--:rx,tx,trx-->
     <param name="enabled"           value="true"/><!--:true,false-->
-  </smpprecord>
+  </smerecord>
   <smscrecord>
     <param name="systemId"          value="smename"/>
     <param name="password"          value="password"/>
