@@ -1,0 +1,59 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Reporting errors</title><meta name="generator" content="DocBook XSL Stylesheets V1.62.4"><link rel="home" href="index.html" title="ErrorList plugin user's guide"><link rel="up" href="ch06.html" title="The error reporting API"><link rel="previous" href="ch06s02.html" title="Creating and registering an error source"><link rel="next" href="ch06s04.html" title="Performance Considerations"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Reporting errors</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ch06s02.html">Prev</a> </td><th width="60%" align="center">Chapter 6. The error reporting API</th><td width="20%" align="right"> <a accesskey="n" href="ch06s04.html">Next</a></td></tr></table><hr></div><div class="sect1" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="api-report"></a>Reporting errors</h2></div></div><div></div></div><p>
+   A custom <tt class="classname">ErrorSource</tt> implementation would need to
+   send the appropriate EditBus message when an error arrives, and then
+   provide implementations of various "getter" methods that
+   the ErrorList plugin would later call to obtain the error.
+   Using <tt class="classname">DefaultErrorSource</tt> makes the task much easier.
+   In fact, all that is involved is calling a single method on the appropriate
+   <tt class="classname">DefaultErrorSource</tt> instance:
+  </p><div class="funcsynopsis"><table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0"><tr><td><code class="funcdef">public void <b class="fsfunc">addError</b>(</code></td><td>DefaultErrorSource.DefaultError  </td><td><var class="pdparam">error</var><code>)</code>;</td></tr></table></div><p>
+   The constructor of the <tt class="classname">DefaultErrorSource.DefaultError</tt>
+   class is as follows:
+  </p><div class="funcsynopsis"><table border="0" summary="Function synopsis" cellspacing="0" cellpadding="0"><tr><td><code class="funcdef">public <b class="fsfunc">DefaultError</b>(</code></td><td>int  </td><td><var class="pdparam">type</var>, </td></tr><tr><td> </td><td>String  </td><td><var class="pdparam">path</var>, </td></tr><tr><td> </td><td>int  </td><td><var class="pdparam">line</var>, </td></tr><tr><td> </td><td>int  </td><td><var class="pdparam">start</var>, </td></tr><tr><td> </td><td>int  </td><td><var class="pdparam">end</var>, </td></tr><tr><td> </td><td>String  </td><td><var class="pdparam">message</var><code>)</code>;</td></tr></table></div><div class="itemizedlist"><ul type="disc"><li><p><tt class="varname">type</tt> - this should be either
+   <tt class="classname">ErrorSource.ERROR</tt> or
+   <tt class="classname">ErrorSource.WARNING</tt>.</p></li><li><p><tt class="varname">path</tt> - the path name or URL of
+   the file containing the error. If this is a relative path, it will
+   be qualified relative to the current working directory
+   (<tt class="literal">user.dir</tt> system property). However, it is best to qualify
+   it beforehand, using the <tt class="function">MiscUtilities.constructPath()</tt>
+   method.</p></li><li><p><tt class="varname">line</tt> - the line number in the file
+   where the error occurred. Lines are numbered starting from zero; since most
+   tools and compilers report line numbers starting from 1, you might need to
+   subtract 1 from the number before passing it to this method.</p></li><li><p><tt class="varname">start</tt> - an offset in the line where
+   the error begins.</p></li><li><p><tt class="varname">end</tt> - an offset in the line where
+   the error ends. These two values are only used to give a more exact
+   display for error highlighting, and if both are zero, the entire line will be
+   highlighted.</p></li><li><p><tt class="varname">message</tt> - the error message itself,
+   as shown in the error list window and error highlighting tooltips.
+   </p></li></ul></div><p>
+   This method is fully thread safe; if your plugin generates errors from
+   another thread, it can call this method without having to use any of the
+   usual <tt class="function">SwingUtilities.invokeLater()</tt> tricks required
+   when calling non-thread safe methods.
+  </p><p>
+   Here are two examples of <tt class="function">addError()</tt> calls. The first
+   adds a warning, covering the entire line, the second adds an error that
+   only applies to a subset of the specified line:
+  </p><table border="0" bgcolor="#E0E0E0"><tr><td><pre class="programlisting">errorSource.addError(new ErrorSource.DefaultError(
+    ErrorSource.WARNING,path,line,0,0,
+    "Are you sure this is what you intended?"));
+errorSource.addError(new ErrorSource.DefaultError(
+    ErrorSource.WARNING,
+    MiscUtilities.constructPath(directory,"input.src"),
+    line,0,5,"First five characters of line are bad"));</pre></td></tr></table><p>
+   Multiple-line messages can be created by calling the following method
+   on the <tt class="classname">DefaultError</tt> instance before it is added
+   to the error source (the last part is important, otherwise the extra
+   messages will not be shown):
+  </p><div class="funcsynopsis"><p><code class="funcdef">public void <b class="fsfunc">addExtraMessage</b>(</code>String <var class="pdparam">extra</var><code>)</code>;</p></div><p>
+   That's basically all there is to it. There is one more method in the
+   <tt class="classname">DefaultErrorSource</tt> class that needs to be mentioned:
+  </p><div class="funcsynopsis"><p><code class="funcdef">public void <b class="fsfunc">clear</b>(</code><code>void)</code>;</p></div><p>
+   This method removes all errors from the error source. It is typically
+   called before each invocation of the operation that generates errors;
+   for example, the Console plugin clears its error source before each new
+   command is run.
+  </p><div class="funcsynopsis"><p><code class="funcdef">public void <b class="fsfunc">removeFileErrors</b>(</code><code>void)</code>;</p></div><p>
+   For more selective error removal, this method can be used to remove errors
+   associated with one file only.
+  </p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ch06s02.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="ch06.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="ch06s04.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Creating and registering an error source </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> Performance Considerations</td></tr></table></div></body></html>
