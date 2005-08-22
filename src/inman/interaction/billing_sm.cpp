@@ -26,19 +26,7 @@ namespace smsc
                 return;
             }
 
-            void BillingState::eventReportSMS(BillingContext& context)
-            {
-                Default(context);
-                return;
-            }
-
             void BillingState::furnishChargingInformationSMS(BillingContext& context)
-            {
-                Default(context);
-                return;
-            }
-
-            void BillingState::nil(BillingContext& context)
             {
                 Default(context);
                 return;
@@ -50,7 +38,7 @@ namespace smsc
                 return;
             }
 
-            void BillingState::requestReportSMSEvent(BillingContext& context)
+            void BillingState::requestReportSMSEvent(BillingContext& context, RequestReportSMSEventArg* arg)
             {
                 Default(context);
                 return;
@@ -98,21 +86,6 @@ namespace smsc
                 return;
             }
 
-            void BILLING_IDLE::nil(BillingContext& context)
-            {
-
-                if (context.getDebugFlag() == true)
-                {
-                    std::ostream& str = context.getDebugStream();
-
-                    str << "TRANSITION   : BILLING nil()"
-                        << std::endl;
-                }
-
-
-                return;
-            }
-
             void BILLING_IDLE::start(BillingContext& context)
             {
 
@@ -142,6 +115,9 @@ namespace smsc
                         << std::endl;
                 }
 
+                (context.getState()).Exit(context);
+                context.setState(BILLING::MONITORING);
+                (context.getState()).Entry(context);
 
                 return;
             }
@@ -157,21 +133,9 @@ namespace smsc
                         << std::endl;
                 }
 
-
-                return;
-            }
-
-            void BILLING_WAITING_FOR_INSTRUCTIONS::eventReportSMS(BillingContext& context)
-            {
-
-                if (context.getDebugFlag() == true)
-                {
-                    std::ostream& str = context.getDebugStream();
-
-                    str << "TRANSITION   : BILLING eventReportSMS()"
-                        << std::endl;
-                }
-
+                (context.getState()).Exit(context);
+                context.setState(BILLING::MONITORING);
+                (context.getState()).Entry(context);
 
                 return;
             }
@@ -193,6 +157,7 @@ namespace smsc
 
             void BILLING_WAITING_FOR_INSTRUCTIONS::releaseSMS(BillingContext& context)
             {
+                Billing& ctxt = context.getOwner();
 
                 if (context.getDebugFlag() == true)
                 {
@@ -202,21 +167,48 @@ namespace smsc
                         << std::endl;
                 }
 
+                (context.getState()).Exit(context);
+                context.clearState();
+                try
+                {
+                    ctxt.notifyFailure();
+                    context.setState(BILLING::IDLE);
+                }
+                catch (...)
+                {
+                    context.setState(BILLING::IDLE);
+                    throw;
+                }
+                (context.getState()).Entry(context);
 
                 return;
             }
 
-            void BILLING_WAITING_FOR_INSTRUCTIONS::requestReportSMSEvent(BillingContext& context)
+            void BILLING_WAITING_FOR_INSTRUCTIONS::requestReportSMSEvent(BillingContext& context, RequestReportSMSEventArg* arg)
             {
+                Billing& ctxt = context.getOwner();
 
                 if (context.getDebugFlag() == true)
                 {
                     std::ostream& str = context.getDebugStream();
 
-                    str << "TRANSITION   : BILLING requestReportSMSEvent()"
+                    str << "TRANSITION   : BILLING requestReportSMSEvent(RequestReportSMSEventArg* arg)"
                         << std::endl;
                 }
 
+                BillingState& EndStateName = context.getState();
+
+                context.clearState();
+                try
+                {
+                    ctxt.armDetectionPoints(arg);
+                    context.setState(EndStateName);
+                }
+                catch (...)
+                {
+                    context.setState(EndStateName);
+                    throw;
+                }
 
                 return;
             }
@@ -238,6 +230,7 @@ namespace smsc
 
             void BILLING_MONITORING::smsRejected(BillingContext& context)
             {
+                Billing& ctxt = context.getOwner();
 
                 if (context.getDebugFlag() == true)
                 {
@@ -248,7 +241,17 @@ namespace smsc
                 }
 
                 (context.getState()).Exit(context);
-                context.setState(BILLING::IDLE);
+                context.clearState();
+                try
+                {
+                    ctxt.sendReportSMSEvent();
+                    context.setState(BILLING::IDLE);
+                }
+                catch (...)
+                {
+                    context.setState(BILLING::IDLE);
+                    throw;
+                }
                 (context.getState()).Entry(context);
 
                 return;
@@ -256,6 +259,7 @@ namespace smsc
 
             void BILLING_MONITORING::smsSent(BillingContext& context)
             {
+                Billing& ctxt = context.getOwner();
 
                 if (context.getDebugFlag() == true)
                 {
@@ -266,7 +270,17 @@ namespace smsc
                 }
 
                 (context.getState()).Exit(context);
-                context.setState(BILLING::IDLE);
+                context.clearState();
+                try
+                {
+                    ctxt.sendReportSMSEvent();
+                    context.setState(BILLING::IDLE);
+                }
+                catch (...)
+                {
+                    context.setState(BILLING::IDLE);
+                    throw;
+                }
                 (context.getState()).Entry(context);
 
                 return;

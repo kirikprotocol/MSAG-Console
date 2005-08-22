@@ -35,11 +35,9 @@ namespace smsc
 
                 virtual void connectSMS(BillingContext& context);
                 virtual void continueSMS(BillingContext& context);
-                virtual void eventReportSMS(BillingContext& context);
                 virtual void furnishChargingInformationSMS(BillingContext& context);
-                virtual void nil(BillingContext& context);
                 virtual void releaseSMS(BillingContext& context);
-                virtual void requestReportSMSEvent(BillingContext& context);
+                virtual void requestReportSMSEvent(BillingContext& context, RequestReportSMSEventArg* arg);
                 virtual void resetTimerSMS(BillingContext& context);
                 virtual void smsRejected(BillingContext& context);
                 virtual void smsSent(BillingContext& context);
@@ -78,7 +76,6 @@ namespace smsc
                 : BILLING_Default(name, stateId)
                 {};
 
-                void nil(BillingContext& context);
                 void start(BillingContext& context);
             };
 
@@ -92,10 +89,9 @@ namespace smsc
 
                 void connectSMS(BillingContext& context);
                 void continueSMS(BillingContext& context);
-                void eventReportSMS(BillingContext& context);
                 void furnishChargingInformationSMS(BillingContext& context);
                 void releaseSMS(BillingContext& context);
-                void requestReportSMSEvent(BillingContext& context);
+                void requestReportSMSEvent(BillingContext& context, RequestReportSMSEventArg* arg);
                 void resetTimerSMS(BillingContext& context);
             };
 
@@ -152,24 +148,10 @@ namespace smsc
                     setTransition(NULL);
                 };
 
-                void eventReportSMS()
-                {
-                    setTransition("eventReportSMS");
-                    (getState()).eventReportSMS(*this);
-                    setTransition(NULL);
-                };
-
                 void furnishChargingInformationSMS()
                 {
                     setTransition("furnishChargingInformationSMS");
                     (getState()).furnishChargingInformationSMS(*this);
-                    setTransition(NULL);
-                };
-
-                void nil()
-                {
-                    setTransition("nil");
-                    (getState()).nil(*this);
                     setTransition(NULL);
                 };
 
@@ -180,10 +162,10 @@ namespace smsc
                     setTransition(NULL);
                 };
 
-                void requestReportSMSEvent()
+                void requestReportSMSEvent(RequestReportSMSEventArg* arg)
                 {
                     setTransition("requestReportSMSEvent");
-                    (getState()).requestReportSMSEvent(*this);
+                    (getState()).requestReportSMSEvent(*this, arg);
                     setTransition(NULL);
                 };
 

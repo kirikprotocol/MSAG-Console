@@ -41,7 +41,7 @@ class SCF
     virtual void eventReportSMS(EventReportSMSArg* arg) = 0;
 };
 
-class Inap : public TcapDialogListener, SCF, ObservableT< SSF >
+class Inap : public TcapDialogListener, public SCF, public ObservableT< SSF >
 {
   public:
     Inap(TcapDialog* dialog);

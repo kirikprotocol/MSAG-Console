@@ -15,12 +15,8 @@
 IDLE
 {
 	start WAITING_FOR_INSTRUCTIONS
-	{ 
-	}
-
-	nil nil
 	{
-	}	
+	}
 }
 
 WAITING_FOR_INSTRUCTIONS
@@ -29,40 +25,40 @@ WAITING_FOR_INSTRUCTIONS
 	{
 	}
 
-	connectSMS nil
+	requestReportSMSEvent( arg: RequestReportSMSEventArg* ) nil
+	{
+		armDetectionPoints( arg );
+	}
+
+	resetTimerSMS  nil
 	{
 	}
 
-	requestReportSMSEvent nil
-	{
-		
-	}
-
-	eventReportSMS nil
+	continueSMS MONITORING
 	{
 	}
 
-	continueSMS nil
+	connectSMS MONITORING
 	{
 	}
 
-	releaseSMS nil
+	releaseSMS IDLE
 	{
+		notifyFailure();
 	}
 
-	resetTimerSMS  nil				 
-	{
-	}
 }
 
 MONITORING
 {
 	smsSent() IDLE
 	{
+		sendReportSMSEvent();
 	}
 
 	smsRejected() IDLE
 	{
+		sendReportSMSEvent();
 	}
 
 }

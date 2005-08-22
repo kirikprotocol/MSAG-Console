@@ -3,7 +3,10 @@
 #ifndef __SMSC_INMAN_PAYMENT__
 #define __SMSC_INMAN_PAYMENT__
 
+#include "inman/comp/comps.hpp"
+using smsc::inman::comp::RequestReportSMSEventArg;
 #include "billing_sm.h"
+
 #include "inman/inap/inap.hpp"
 #include "inman/common/observable.hpp"
 
@@ -51,6 +54,12 @@ class Billing : public SSF, public ObservableT< BillingListener >
     virtual void releaseSMS(ReleaseSMSArg* arg);
     virtual void requestReportSMSEvent(RequestReportSMSEventArg* arg);
     virtual void resetTimerSMS(ResetTimerSMSArg* arg);
+
+  public:
+    void notifyFailure();
+    void notifySuccess();
+    void armDetectionPoints(RequestReportSMSEventArg* data);
+    void sendReportSMSEvent();
 
   protected:
   	BillingContext* context;

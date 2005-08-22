@@ -28,7 +28,7 @@ class TcapDialogListener
 		virtual void invoke( Invoke*     ) = 0;
 };
 
-class TcapDialog : ObservableT< TcapDialogListener > 
+class TcapDialog : public ObservableT< TcapDialogListener > 
 {
     friend class Session;
 
