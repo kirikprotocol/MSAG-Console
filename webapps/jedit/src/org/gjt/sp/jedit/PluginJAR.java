@@ -34,7 +34,6 @@ import org.gjt.sp.jedit.buffer.*;
 import org.gjt.sp.jedit.gui.DockableWindowFactory;
 import org.gjt.sp.jedit.msg.*;
 import org.gjt.sp.util.Log;
-import quicknotepad.QuickNotepad;
 import errorlist.ErrorList;
 //}}}
 
