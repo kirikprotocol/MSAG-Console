@@ -39,6 +39,12 @@ Component* ComponentFactory::createComponent(unsigned opcode)
 	return it->second.create();
 }
 
+ComponentFactory* ComponentFactory::getInstance()
+{
+	static ComponentFactory instance;
+	return &instance;
+}
+
 }
 }
 }

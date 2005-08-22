@@ -28,6 +28,8 @@ public:
 
 	Component* createComponent(unsigned opcode);
 
+	static ComponentFactory* getInstance();
+
 protected:
 	ComponentMap products;
 };

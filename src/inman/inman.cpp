@@ -14,13 +14,8 @@ static char const ident[] = "$Id$";
 using smsc::inman::inap::Factory;
 using smsc::inman::inap::Session;
 using smsc::inman::inap::TcapDialog;
-using smsc::inman::inap::InapFactory;
-using smsc::inman::inap::InapProtocol;
-
-using smsc::inman::interaction::Interaction;
-using smsc::inman::interaction::InteractionListener;
-using smsc::inman::interaction::BillingInteraction; // todo: remove this dependency
-
+using smsc::inman::inap::Inap;
+using smsc::inman::interaction::Billing;
 using smsc::inman::Console;
 
 using std::cout;
@@ -70,41 +65,6 @@ void select(Console&, const std::vector<std::string>& args)
 }
 
 //////////////////////////////////////////////////////////////////////
-// This class start interaction in ctor and kill self when it finished
-
-class BillSMS : public InteractionListener
-{
-	BillingInteraction* billing;
-
-	// Preventing creating objects of this class in stack...
-	BillSMS( InapProtocol* prot )
-	{
-		billing = new BillingInteraction( prot );
-		billing->addListener( this );
-		billing->start();
-	}
-
-public:
-
-	// ...but allow in heap
-	static BillSMS* create(InapProtocol* pro)
-	{
-		return new BillSMS( pro );
-	}
-
-	~BillSMS()
-	{
-		billing->removeListener( this );
-		delete billing;
-	}
-
-	virtual void finished(const Interaction*, unsigned short status)
-	{
-		cout << "Complete with status: " << status << endl;
-		delete this;
-	}
-};
-
 void mosms(Console&, const std::vector<std::string>& args)
 {
   ;
@@ -122,17 +82,11 @@ void mosms(Console&, const std::vector<std::string>& args)
     return;
   }
 
-  InapProtocol* pProtocol = 0;
+  Inap*    inap = new Inap( pDialog );
 
-  if ( !pProtocol )
-  {
-    cout << "Can't create protocol" << endl;
-    return;
-  }
+  Billing* bill = new Billing( inap );
 
-  BillSMS* interact = BillSMS::create( pProtocol );
-
-  cout << "Done. Interaction started." << endl;
+  cout << "Interaction started." << endl;
 }
 
 int main(int argc, char** argv)

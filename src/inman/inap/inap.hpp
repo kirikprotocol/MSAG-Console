@@ -8,13 +8,8 @@
 
 #include "ss7cp.h"
 #include "dialog.hpp"
-#include "protocol.hpp"
 
 #include "inman/comp/comps.hpp"
-
-namespace smsc {
-namespace inman {
-namespace inap {
 
 using smsc::inman::comp::ConnectSMSArg;
 using smsc::inman::comp::FurnishChargingInformationSMSArg;
@@ -23,6 +18,10 @@ using smsc::inman::comp::RequestReportSMSEventArg;
 using smsc::inman::comp::ResetTimerSMSArg;
 using smsc::inman::comp::EventReportSMSArg;
 using smsc::inman::comp::InitialDPSMSArg;
+
+namespace smsc {
+namespace inman {
+namespace inap {
 
 class SSF
 {
@@ -42,31 +41,20 @@ class SCF
     virtual void eventReportSMS(EventReportSMSArg* arg) = 0;
 };
 
-class InapProtocol : public Protocol, SCF
+class Inap : public TcapDialogListener, SCF, ObservableT< SSF >
 {
-
   public:
-    InapProtocol(TcapDialog* dialog);
-    virtual ~InapProtocol();
+    Inap(TcapDialog* dialog);
+    virtual ~Inap();
+  public:
 
     void initialDPSMS(InitialDPSMSArg* arg);
     void eventReportSMS(EventReportSMSArg* arg);
-};
 
-class InapListener : public ProtocolListener, SSF
-{
-    virtual void connectSMS(ConnectSMSArg* arg);
-    virtual void continueSMS();
-    virtual void furnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg);
-    virtual void releaseSMS(ReleaseSMSArg* arg);
-    virtual void requestReportSMSEvent(RequestReportSMSEventArg* arg);
-    virtual void resetTimerSMS(ResetTimerSMSArg* arg);
-};
+   protected:
+   	void invoke(Invoke* op); // TcapDialogListener
 
-class InapFactory : public ProtocolFactory
-{
-	public:
-		InapProtocol* createProtocol(TcapDialog*);
+  	TcapDialog* dialog;
 };
 
 }

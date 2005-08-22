@@ -3,7 +3,7 @@
 
 #define SMC_USES_IOSTREAMS
 
-#include "inman/common/statemap.h"
+#include "statemap.hpp"
 
 namespace smsc
 {
@@ -14,29 +14,40 @@ namespace smsc
             // Forward declarations.
             class BILLING;
             class BILLING_IDLE;
-            class BILLING_WAIT_FOR_INSTRUCTIONS;
+            class BILLING_WAITING_FOR_INSTRUCTIONS;
             class BILLING_MONITORING;
             class BILLING_Default;
-            class BillingInteractionState;
-            class BillingInteractionContext;
-            class BillingInteraction;
+            class BillingState;
+            class BillingContext;
+            class Billing;
 
-            class BillingInteractionState :
+            class BillingState :
                 public statemap::State
             {
             public:
 
-                BillingInteractionState(const char *name, int stateId)
+                BillingState(const char *name, int stateId)
                 : statemap::State(name, stateId)
                 {};
 
-                virtual void Entry(BillingInteractionContext&) {};
-                virtual void Exit(BillingInteractionContext&) {};
+                virtual void Entry(BillingContext&) {};
+                virtual void Exit(BillingContext&) {};
 
+                virtual void connectSMS(BillingContext& context);
+                virtual void continueSMS(BillingContext& context);
+                virtual void eventReportSMS(BillingContext& context);
+                virtual void furnishChargingInformationSMS(BillingContext& context);
+                virtual void nil(BillingContext& context);
+                virtual void releaseSMS(BillingContext& context);
+                virtual void requestReportSMSEvent(BillingContext& context);
+                virtual void resetTimerSMS(BillingContext& context);
+                virtual void smsRejected(BillingContext& context);
+                virtual void smsSent(BillingContext& context);
+                virtual void start(BillingContext& context);
 
             protected:
 
-                virtual void Default(BillingInteractionContext& context);
+                virtual void Default(BillingContext& context);
             };
 
             class BILLING
@@ -44,17 +55,17 @@ namespace smsc
             public:
 
                 static BILLING_IDLE IDLE;
-                static BILLING_WAIT_FOR_INSTRUCTIONS WAIT_FOR_INSTRUCTIONS;
+                static BILLING_WAITING_FOR_INSTRUCTIONS WAITING_FOR_INSTRUCTIONS;
                 static BILLING_MONITORING MONITORING;
             };
 
             class BILLING_Default :
-                public BillingInteractionState
+                public BillingState
             {
             public:
 
                 BILLING_Default(const char *name, int stateId)
-                : BillingInteractionState(name, stateId)
+                : BillingState(name, stateId)
                 {};
 
             };
@@ -67,16 +78,25 @@ namespace smsc
                 : BILLING_Default(name, stateId)
                 {};
 
+                void nil(BillingContext& context);
+                void start(BillingContext& context);
             };
 
-            class BILLING_WAIT_FOR_INSTRUCTIONS :
+            class BILLING_WAITING_FOR_INSTRUCTIONS :
                 public BILLING_Default
             {
             public:
-                BILLING_WAIT_FOR_INSTRUCTIONS(const char *name, int stateId)
+                BILLING_WAITING_FOR_INSTRUCTIONS(const char *name, int stateId)
                 : BILLING_Default(name, stateId)
                 {};
 
+                void connectSMS(BillingContext& context);
+                void continueSMS(BillingContext& context);
+                void eventReportSMS(BillingContext& context);
+                void furnishChargingInformationSMS(BillingContext& context);
+                void releaseSMS(BillingContext& context);
+                void requestReportSMSEvent(BillingContext& context);
+                void resetTimerSMS(BillingContext& context);
             };
 
             class BILLING_MONITORING :
@@ -87,38 +107,117 @@ namespace smsc
                 : BILLING_Default(name, stateId)
                 {};
 
+                void smsRejected(BillingContext& context);
+                void smsSent(BillingContext& context);
             };
 
-            class BillingInteractionContext :
+            class BillingContext :
                 public statemap::FSMContext
             {
             public:
 
-                BillingInteractionContext(BillingInteraction& owner)
+                BillingContext(Billing& owner)
                 : _owner(owner)
                 {
                     setState(BILLING::IDLE);
                     BILLING::IDLE.Entry(*this);
                 };
 
-                BillingInteraction& getOwner() const
+                Billing& getOwner() const
                 {
                     return (_owner);
                 };
 
-                BillingInteractionState& getState() const
+                BillingState& getState() const
                 {
                     if (_state == NULL)
                     {
                         throw statemap::StateUndefinedException();
                     }
 
-                    return (dynamic_cast<BillingInteractionState&>(*_state));
+                    return (dynamic_cast<BillingState&>(*_state));
+                };
+
+                void connectSMS()
+                {
+                    setTransition("connectSMS");
+                    (getState()).connectSMS(*this);
+                    setTransition(NULL);
+                };
+
+                void continueSMS()
+                {
+                    setTransition("continueSMS");
+                    (getState()).continueSMS(*this);
+                    setTransition(NULL);
+                };
+
+                void eventReportSMS()
+                {
+                    setTransition("eventReportSMS");
+                    (getState()).eventReportSMS(*this);
+                    setTransition(NULL);
+                };
+
+                void furnishChargingInformationSMS()
+                {
+                    setTransition("furnishChargingInformationSMS");
+                    (getState()).furnishChargingInformationSMS(*this);
+                    setTransition(NULL);
+                };
+
+                void nil()
+                {
+                    setTransition("nil");
+                    (getState()).nil(*this);
+                    setTransition(NULL);
+                };
+
+                void releaseSMS()
+                {
+                    setTransition("releaseSMS");
+                    (getState()).releaseSMS(*this);
+                    setTransition(NULL);
+                };
+
+                void requestReportSMSEvent()
+                {
+                    setTransition("requestReportSMSEvent");
+                    (getState()).requestReportSMSEvent(*this);
+                    setTransition(NULL);
+                };
+
+                void resetTimerSMS()
+                {
+                    setTransition("resetTimerSMS");
+                    (getState()).resetTimerSMS(*this);
+                    setTransition(NULL);
+                };
+
+                void smsRejected()
+                {
+                    setTransition("smsRejected");
+                    (getState()).smsRejected(*this);
+                    setTransition(NULL);
+                };
+
+                void smsSent()
+                {
+                    setTransition("smsSent");
+                    (getState()).smsSent(*this);
+                    setTransition(NULL);
+                };
+
+                void start()
+                {
+                    setTransition("start");
+                    (getState()).start(*this);
+                    setTransition(NULL);
                 };
 
             private:
 
-                BillingInteraction& _owner;
+                Billing& _owner;
             };
         };
 

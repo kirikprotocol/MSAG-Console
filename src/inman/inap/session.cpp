@@ -5,6 +5,7 @@ static char const ident[] = "$Id$";
 #include "dialog.hpp"
 #include "factory.hpp"
 #include "inman/common/util.hpp"
+#include "inman/comp/comfactory.hpp"
 
 using std::map;
 using std::pair;

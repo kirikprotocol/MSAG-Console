@@ -4,27 +4,57 @@
 #define __SMSC_INMAN_PAYMENT__
 
 #include "billing_sm.h"
-#include "interaction.hpp"
 #include "inman/inap/inap.hpp"
+#include "inman/common/observable.hpp"
 
-using smsc::inman::inap::InapProtocol;
+using smsc::inman::inap::Inap;
+using smsc::inman::inap::SSF;
 
 namespace smsc  	  {
 namespace inman 	  {
 namespace interaction {
 
+class SMS
+{
+public:
 
-class BillingInteraction : public Interaction
+	SMS()
+	{
+	}
+
+	virtual ~SMS()
+	{
+	}
+};
+
+class BillingListener
+{
+public:
+	virtual void successed() = 0;
+	virtual void failed() 	 = 0;
+};
+
+class Billing : public SSF, public ObservableT< BillingListener >
 {
   public:
-	BillingInteraction(InapProtocol*);
-	virtual ~BillingInteraction();
+	Billing(Inap*);
+	virtual ~Billing();
 
 	virtual void start();
 
+	void sendIntialDPSMS();
+
+  public: // SSF interface
+    virtual void connectSMS(ConnectSMSArg* arg);
+    virtual void continueSMS();
+    virtual void furnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg);
+    virtual void releaseSMS(ReleaseSMSArg* arg);
+    virtual void requestReportSMSEvent(RequestReportSMSEventArg* arg);
+    virtual void resetTimerSMS(ResetTimerSMSArg* arg);
+
   protected:
-  	BillingInteractionContext* context;
-  	InapProtocol* protocol;
+  	BillingContext* context;
+  	Inap* 			inap;
 };
 
 }

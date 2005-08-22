@@ -11,11 +11,11 @@ static char const ident[] = "$Id$";
 #include "factory.hpp"
 #include "session.hpp"
 #include "dialog.hpp"
-#include "operations.hpp"
+#include "invoke.hpp"
+#include "results.hpp"
 #include "inman/common/util.hpp"
 
 using smsc::logger::Logger;
-using smsc::inman::inap::TcapOperation;
 using smsc::inman::inap::TcapDialog;
 using smsc::inman::inap::Session;
 using smsc::inman::inap::Factory;
@@ -155,7 +155,7 @@ USHORT_T EINSS7_I97TEndInd(     UCHAR_T          ssn,
 
 
 //------------------------------------ T_INVOKE_ind ---------------------------------
-// Конструируем TcapOperation и передаем ее TcapDialog::handleInvoke
+// Конструируем TcapInvocation и передаем ее TcapDialog::handleInvoke
 //-----------------------------------------------------------------------------------
 
 USHORT_T EINSS7_I97TInvokeInd(  UCHAR_T          ssn,
@@ -183,19 +183,12 @@ USHORT_T EINSS7_I97TInvokeInd(  UCHAR_T          ssn,
                  oplen, dump(oplen,op).c_str(), pmlen, dump(pmlen,pm).c_str());
 
   TcapDialog* dlg = findDialog( ssn, dialogueId );
-
   assert( dlg );
-  assert( op );
-  assert( oplen > 0 );
-
-  UCHAR_T opcode = op[0];
-  TcapOperation* pOperation = dlg->createOperation( tag, opcode, pm, pmlen);
-  return dlg->handleInvoke( pOperation );
-  delete pOperation;
+  return dlg->handleInvoke( invokeId, tag, oplen, op, pmlen, pm );
 }
 
 //------------------------------------ T_RESULT_NL_ind ----------------------------------
-// Конструируем TcapOperation и передаем ее TcapDialog::handleResultNotLast
+// Конструируем TcapInvocation и передаем ее TcapDialog::handleResultNotLast
 //---------------------------------------------------------------------------------------
 USHORT_T EINSS7_I97TResultNLInd(UCHAR_T          ssn,
                                 USHORT_T         userId,
@@ -213,20 +206,12 @@ USHORT_T EINSS7_I97TResultNLInd(UCHAR_T          ssn,
          ssn, userId, tcapInstanceId, dialogueId );
 
   TcapDialog* dlg = findDialog( ssn, dialogueId );
-
   assert( dlg );
-  assert( op );
-  assert( oplen > 0 );
-
-  UCHAR_T opcode = op[0];
-  TcapOperation* pOperation = dlg->createOperation( tag, opcode, pm, pmlen);
-  dlg->handleResultNotLast( pOperation );
-  delete pOperation;
-  return MSG_OK;
+  return dlg->handleResultNotLast( invokeId, tag, oplen, op, pmlen, pm );
 }
 
 //------------------------------------ T_RESULT_L_ind ----------------------------------
-// Конструируем TcapOperation и передаем ее TcapDialog::handleResultLast
+// Конструируем TcapInvocation и передаем ее TcapDialog::handleResultLast
 //---------------------------------------------------------------------------------------
 
 USHORT_T EINSS7_I97TResultLInd( UCHAR_T          ssn,
@@ -245,18 +230,11 @@ USHORT_T EINSS7_I97TResultLInd( UCHAR_T          ssn,
          ssn, userId, tcapInstanceId, dialogueId );
   TcapDialog* dlg = findDialog( ssn, dialogueId );
   assert( dlg );
-  assert( op );
-  assert( oplen > 0 );
-
-  UCHAR_T opcode = op[0];
-  TcapOperation* pOperation = dlg->createOperation( tag, opcode, pm, pmlen);
-  dlg->handleResultLast( pOperation );
-  delete pOperation;
-  return MSG_OK;
+  return dlg->handleResultNotLast( invokeId, tag, oplen, op, pmlen, pm );
 }
 
 //------------------------------------ T_U_ERROR_ind-- ----------------------------------
-// Конструируем TcapOperation и передаем ее TcapDialog::handleUserError
+// Конструируем TcapInvocation и передаем ее TcapDialog::handleUserError
 //---------------------------------------------------------------------------------------
 USHORT_T EINSS7_I97TUErrorInd(  UCHAR_T          ssn,
                                 USHORT_T         userId,
@@ -274,16 +252,8 @@ USHORT_T EINSS7_I97TUErrorInd(  UCHAR_T          ssn,
          ssn, userId, tcapInstanceId, dialogueId );
   
   TcapDialog* dlg = findDialog( ssn, dialogueId );
-
   assert( dlg );
-  assert( op );
-  assert( oplen > 0 );
-
-  UCHAR_T opcode = op[0];
-  TcapOperation* pOperation = dlg->createOperation( tag, opcode, pm, pmlen );
-  dlg->handleUserError( pOperation );
-  delete pOperation;
-  return MSG_OK;
+  return dlg->handleUserError( invokeId, tag, oplen, op, pmlen, pm );
 }
 
 

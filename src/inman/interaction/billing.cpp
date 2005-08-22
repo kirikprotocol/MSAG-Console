@@ -4,28 +4,56 @@ static char const ident[] = "$Id$";
 #include "billing.hpp"
 #include "inman/inap/inap.hpp"
 
-using smsc::inman::inap::InapProtocol;
-
 namespace smsc  {
 namespace inman {
 namespace interaction  {
 
-BillingInteraction::BillingInteraction(InapProtocol* prot) : protocol( prot )
+Billing::Billing(Inap* prot) : inap( prot )
 {
-	context = new BillingInteractionContext( *this );
-	assert( protocol );
+	context = new BillingContext( *this );
+	assert( inap );
 }
 
-BillingInteraction::~BillingInteraction()
+Billing::~Billing()
 {
 	delete context;
 }
 
-void BillingInteraction::start()
+void Billing::start()
 {
-	//todo: delegete to context
+	context->start();
 }
 
+void Billing::sendIntialDPSMS()
+{
+	InitialDPSMSArg * pArg = new InitialDPSMSArg();
+	//TODO: Fill agrument
+	inap->initialDPSMS( pArg );
+}
+
+void Billing::connectSMS(ConnectSMSArg* arg)
+{
+}
+
+void Billing::continueSMS()
+{
+}
+
+void Billing::furnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg)
+{
+}
+
+void Billing::releaseSMS(ReleaseSMSArg* arg)
+{
+}
+
+void Billing::requestReportSMSEvent(RequestReportSMSEventArg* arg)
+{
+}
+
+void Billing::resetTimerSMS(ResetTimerSMSArg* arg)
+{
+}
 
 }
 }

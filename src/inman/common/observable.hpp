@@ -114,20 +114,6 @@ protected:
 	ListenerList listeners;
 };
 
-
-	template <typename listener_t, typename source_t>
-	void notifyListeners1(std::list<listener_t*>& listeners, source_t source, void (listener_t::*method)(source_t))
-	{
-		for( typename std::list<listener_t*>::iterator it = listeners.begin();
-		it != listeners.end(); it++)
-	 	{
-			 listener_t* ptr = *it;
-			 (*ptr.*method)( source );
-		}
-	}
-
-// Example: NotifyListeners<DialogListener,const TcapOperation&>(listeners, op, &DialogListener::invoke);
-
 }
 }
 }

@@ -1,7 +1,8 @@
 static char const ident[] = "$Id$";
 #include "inap.hpp"
 #include "inman/comp/comps.hpp"
-#include "operations.hpp"
+#include "invoke.hpp"
+#include "dialog.hpp"
 
 namespace smsc {
 namespace inman {
@@ -9,26 +10,30 @@ namespace inap {
 
 using smsc::inman::comp::InapOpCode;
 
-InapProtocol::InapProtocol(TcapDialog* dialog) : Protocol( dialog )
+Inap::Inap(TcapDialog* dlg) : dialog( dlg )
 {
 }
 
-InapProtocol::~InapProtocol()
+Inap::~Inap()
 {
 }
 
-void InapProtocol::initialDPSMS(InitialDPSMSArg* arg)
+void Inap::invoke(Invoke* op)
 {
-  TcapOperation* op = dialog->createOperation( InapOpCode::InitialDPSMS );
-  op->setParam( arg );
-  op->invoke();
 }
 
-void InapProtocol::eventReportSMS(EventReportSMSArg* arg)
+void Inap::initialDPSMS(InitialDPSMSArg* arg)
 {
-  TcapOperation* op = dialog->createOperation( InapOpCode::EventReportSMS );
-  op->setParam( arg );
-  op->invoke();
+	 Invoke* op = dialog->invoke( InapOpCode::InitialDPSMS );
+	 op->setParam( arg );
+	 op->send( dialog );
+}
+
+void Inap::eventReportSMS(EventReportSMSArg* arg)
+{
+  	Invoke* op = dialog->invoke( InapOpCode::EventReportSMS );
+	op->setParam( arg );
+	op->send( dialog );
 }
 
 }

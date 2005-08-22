@@ -7,21 +7,64 @@
 /////////////////////////////////////////////////////////////////////
 %header  billing.hpp
 %package smsc::inman::interaction
-%class   BillingInteraction
+%class   Billing
 %start   BILLING::IDLE
 %map     BILLING
 %%
 
 IDLE
 {
+	start WAITING_FOR_INSTRUCTIONS
+	{ 
+	}
+
+	nil nil
+	{
+	}	
 }
 
-WAIT_FOR_INSTRUCTIONS
+WAITING_FOR_INSTRUCTIONS
 {
+	furnishChargingInformationSMS nil 
+	{
+	}
+
+	connectSMS nil
+	{
+	}
+
+	requestReportSMSEvent nil
+	{
+		
+	}
+
+	eventReportSMS nil
+	{
+	}
+
+	continueSMS nil
+	{
+	}
+
+	releaseSMS nil
+	{
+	}
+
+	resetTimerSMS  nil				 
+	{
+	}
 }
 
 MONITORING
 {
+	smsSent() IDLE
+	{
+	}
+
+	smsRejected() IDLE
+	{
+	}
+
 }
 
 %%
