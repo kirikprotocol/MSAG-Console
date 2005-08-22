@@ -65,62 +65,62 @@ import org.apache.wml.*;
 public class WMLMetaElementImpl extends WMLElementImpl implements WMLMetaElement {
 
     public WMLMetaElementImpl (WMLDocumentImpl owner, String tagName) {
-	super( owner, tagName);
+ super( owner, tagName);
     }
 
     public void setForua(boolean newValue) {
-	setAttribute("forua", newValue);
+ setAttribute("forua", newValue);
     }
 
     public boolean getForua() {
-	return getAttribute("forua", false);
+ return getAttribute("forua", false);
     }
 
     public void setScheme(String newValue) {
-	setAttribute("scheme", newValue);
+ setAttribute("scheme", newValue);
     }
 
     public String getScheme() {
-	return getAttribute("scheme");
+ return getAttribute("scheme");
     }
 
     public void setClassName(String newValue) {
-	setAttribute("class", newValue);
+ setAttribute("class", newValue);
     }
 
     public String getClassName() {
-	return getAttribute("class");
+ return getAttribute("class");
     }
 
     public void setHttpEquiv(String newValue) {
-	setAttribute("http-equiv", newValue);
+ setAttribute("http-equiv", newValue);
     }
 
     public String getHttpEquiv() {
-	return getAttribute("http-equiv");
+ return getAttribute("http-equiv");
     }
 
     public void setId(String newValue) {
-	setAttribute("id", newValue);
+ setAttribute("id", newValue);
     }
 
     public String getId() {
-	return getAttribute("id");
+ return getAttribute("id");
     }
 
     public void setContent(String newValue) {
-	setAttribute("content", newValue);
+ setAttribute("content", newValue);
     }
 
     public String getContent() {
-	return getAttribute("content");
+ return getAttribute("content");
     }
 
     public void setName(String newValue) {
-	setAttribute("name", newValue);
+ setAttribute("name", newValue);
     }
 
     public String getName() {
-	return getAttribute("name");
+ return getAttribute("name");
     }
 }

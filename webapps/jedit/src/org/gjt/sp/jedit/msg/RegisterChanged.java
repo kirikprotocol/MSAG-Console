@@ -32,30 +32,30 @@ import org.gjt.sp.jedit.Registers;
  */
 public class RegisterChanged extends EBMessage
 {
-	 private char registerName;
+  private char registerName;
 
-	 /**
-	 * Creates a new registers changed message.
-	 * @param source The message source
-	 */
-	 public RegisterChanged(EBComponent source, char name)
-	 {
-		 super(source);
-		 registerName = name;
-	 }
-	 
-	 public char getRegisterName()
-	 {
-		 return registerName;
-	 }
-	 
-	 public String getRegisterValue()
-	 {
-		 return Registers.getRegister(registerName).toString();
-	 }
-	 
-	 public String paramString()
-	 {
-		 return "register=" + registerName + "," + super.paramString();
-	 }
+  /**
+  * Creates a new registers changed message.
+  * @param source The message source
+  */
+  public RegisterChanged(EBComponent source, char name)
+  {
+   super(source);
+   registerName = name;
+  }
+  
+  public char getRegisterName()
+  {
+   return registerName;
+  }
+  
+  public String getRegisterValue()
+  {
+   return Registers.getRegister(registerName).toString();
+  }
+  
+  public String paramString()
+  {
+   return "register=" + registerName + "," + super.paramString();
+  }
 }

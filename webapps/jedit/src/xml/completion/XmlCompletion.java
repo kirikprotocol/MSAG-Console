@@ -36,182 +36,182 @@ import xml.*;
 
 public class XmlCompletion extends SideKickCompletion
 {
-	//{{{ XmlCompletion constructor
-	public XmlCompletion(View view, List items, String word, XmlParsedData data,
-		String closingTag)
-	{
-		this.view = view;
-		textArea = view.getTextArea();
-		this.items = items;
-		this.word = word;
-		this.data = data;
-		this.closingTag = closingTag;
-	} //}}}
+ //{{{ XmlCompletion constructor
+ public XmlCompletion(View view, List items, String word, XmlParsedData data,
+  String closingTag)
+ {
+  this.view = view;
+  textArea = view.getTextArea();
+  this.items = items;
+  this.word = word;
+  this.data = data;
+  this.closingTag = closingTag;
+ } //}}}
 
-	//{{{ getRenderer() method
-	public ListCellRenderer getRenderer()
-	{
-		return XmlListCellRenderer.INSTANCE;
-	} //}}}
+ //{{{ getRenderer() method
+ public ListCellRenderer getRenderer()
+ {
+  return XmlListCellRenderer.INSTANCE;
+ } //}}}
 
-	//{{{ getTokenLength() method
-	public int getTokenLength()
-	{
-		return word.length() + 1;
-	} //}}}
+ //{{{ getTokenLength() method
+ public int getTokenLength()
+ {
+  return word.length() + 1;
+ } //}}}
 
-	//{{{ insert() method
-	public void insert(int index)
-	{
-		insert(get(index),'\n');
-	} //}}}
+ //{{{ insert() method
+ public void insert(int index)
+ {
+  insert(get(index),'\n');
+ } //}}}
 
-	//{{{ handleKeystroke() method
-	public boolean handleKeystroke(int index, char ch)
-	{
-		switch(ch)
-		{
-			case ';': case '>': case ' ': case '\t': case '\n':
-				// execute below code
-				break;
-			case '/':
-				if(jEdit.getBooleanProperty("xml.close-complete"))
-				{
-					XmlActions.completeClosingTag(view,true);
-					return false;
-				}
-			default:
-				Macros.Recorder recorder
-					= view.getMacroRecorder();
-				if(recorder != null)
-					recorder.recordInput(1,ch,false);
-				textArea.userInput(ch);
-				return true;
-		}
+ //{{{ handleKeystroke() method
+ public boolean handleKeystroke(int index, char ch)
+ {
+  switch(ch)
+  {
+   case ';': case '>': case ' ': case '\t': case '\n':
+    // execute below code
+    break;
+   case '/':
+    if(jEdit.getBooleanProperty("xml.close-complete"))
+    {
+     XmlActions.completeClosingTag(view,true);
+     return false;
+    }
+   default:
+    Macros.Recorder recorder
+     = view.getMacroRecorder();
+    if(recorder != null)
+     recorder.recordInput(1,ch,false);
+    textArea.userInput(ch);
+    return true;
+  }
 
-		if(index != -1)
-			insert(get(index),ch);
-		else if(ch == '>')
-			XmlActions.insertClosingTagKeyTyped(view);
-		else
-			textArea.userInput(ch);
+  if(index != -1)
+   insert(get(index),ch);
+  else if(ch == '>')
+   XmlActions.insertClosingTagKeyTyped(view);
+  else
+   textArea.userInput(ch);
 
-		return false;
-	} //}}}
+  return false;
+ } //}}}
 
-	//{{{ Private members
-	private View view;
-	private JEditTextArea textArea;
-	private String word;
-	private XmlParsedData data;
-	private String closingTag;
+ //{{{ Private members
+ private View view;
+ private JEditTextArea textArea;
+ private String word;
+ private XmlParsedData data;
+ private String closingTag;
 
-	//{{{ insert() method
-	private void insert(Object obj, char ch)
-	{
-		Macros.Recorder recorder = view.getMacroRecorder();
+ //{{{ insert() method
+ private void insert(Object obj, char ch)
+ {
+  Macros.Recorder recorder = view.getMacroRecorder();
 
-		String insert;
-		int caret;
+  String insert;
+  int caret;
 
-		if(obj instanceof XmlListCellRenderer.Comment)
-		{
-			insert = "!--  -->".substring(word.length());
-			caret = 4;
-		}
-		else if(obj instanceof XmlListCellRenderer.CDATA)
-		{
-			insert = "![CDATA[]]>".substring(word.length());
-			caret = 3;
-		}
-		else if(obj instanceof XmlListCellRenderer.ClosingTag)
-		{
-			insert = ("/" + closingTag + ">")
-				.substring(word.length());
-			caret = 0;
-		}
-		else if(obj instanceof ElementDecl)
-		{
-			ElementDecl element = (ElementDecl)obj;
+  if(obj instanceof XmlListCellRenderer.Comment)
+  {
+   insert = "!--  -->".substring(word.length());
+   caret = 4;
+  }
+  else if(obj instanceof XmlListCellRenderer.CDATA)
+  {
+   insert = "![CDATA[]]>".substring(word.length());
+   caret = 3;
+  }
+  else if(obj instanceof XmlListCellRenderer.ClosingTag)
+  {
+   insert = ("/" + closingTag + ">")
+    .substring(word.length());
+   caret = 0;
+  }
+  else if(obj instanceof ElementDecl)
+  {
+   ElementDecl element = (ElementDecl)obj;
 
-			StringBuffer buf = new StringBuffer();
-			buf.append(element.name.substring(word.length()));
+   StringBuffer buf = new StringBuffer();
+   buf.append(element.name.substring(word.length()));
 
-			buf.append(element.getRequiredAttributesString());
+   buf.append(element.getRequiredAttributesString());
 
-			if(ch == '\n' || ch == '>')
-			{
-				if(element.empty)
-				{
-					if(data.html)
-						buf.append(">");
-					else
-						buf.append(XmlActions.getStandaloneEnd());
+   if(ch == '\n' || ch == '>')
+   {
+    if(element.empty)
+    {
+     if(data.html)
+      buf.append(">");
+     else
+      buf.append(XmlActions.getStandaloneEnd());
 
-					caret = 0;
-				}
-				else
-				{
-					buf.append(">");
+     caret = 0;
+    }
+    else
+    {
+     buf.append(">");
 
-					int start = buf.length();
+     int start = buf.length();
 
-					if(jEdit.getBooleanProperty(
-						"xml.close-complete-open"))
-					{
-						buf.append("</");
-						buf.append(element.name);
-						buf.append(">");
-					}
+     if(jEdit.getBooleanProperty(
+      "xml.close-complete-open"))
+     {
+      buf.append("</");
+      buf.append(element.name);
+      buf.append(">");
+     }
 
-					caret = buf.length() - start;
-				}
+     caret = buf.length() - start;
+    }
 
-				if(ch == '\n' && element.attributes.size() != 0)
-				{
-					// hide the popup first, since the edit tag
-					// dialog is modal
-					SwingUtilities.invokeLater(new Runnable()
-					{
-						public void run()
-						{
-							XmlActions.showEditTagDialog(view);
-						}
-					});
-				}
-			}
-			else
-			{
-				buf.append(ch);
-				caret = 0;
-			}
+    if(ch == '\n' && element.attributes.size() != 0)
+    {
+     // hide the popup first, since the edit tag
+     // dialog is modal
+     SwingUtilities.invokeLater(new Runnable()
+     {
+      public void run()
+      {
+       XmlActions.showEditTagDialog(view);
+      }
+     });
+    }
+   }
+   else
+   {
+    buf.append(ch);
+    caret = 0;
+   }
 
-			insert = buf.toString();
-		}
-		else if(obj instanceof EntityDecl)
-		{
-			EntityDecl entity = (EntityDecl)obj;
+   insert = buf.toString();
+  }
+  else if(obj instanceof EntityDecl)
+  {
+   EntityDecl entity = (EntityDecl)obj;
 
-			insert = entity.name.substring(word.length()) + ";";
-			caret = 0;
-		}
-		else
-			throw new IllegalArgumentException("What's this? " + obj);
+   insert = entity.name.substring(word.length()) + ";";
+   caret = 0;
+  }
+  else
+   throw new IllegalArgumentException("What's this? " + obj);
 
-		if(recorder != null)
-			recorder.recordInput(insert,false);
-		textArea.setSelectedText(insert);
+  if(recorder != null)
+   recorder.recordInput(insert,false);
+  textArea.setSelectedText(insert);
 
-		if(caret != 0)
-		{
-			String code = "textArea.setCaretPosition("
-				+ "textArea.getCaretPosition() - "
-				+ caret + ");";
-			if(recorder != null)
-				recorder.record(code);
-			BeanShell.eval(view,BeanShell.getNameSpace(),code);
-		}
-	} //}}}
+  if(caret != 0)
+  {
+   String code = "textArea.setCaretPosition("
+    + "textArea.getCaretPosition() - "
+    + caret + ");";
+   if(recorder != null)
+    recorder.record(code);
+   BeanShell.eval(view,BeanShell.getNameSpace(),code);
+  }
+ } //}}}
 
-	//}}}
+ //}}}
 }

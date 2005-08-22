@@ -31,70 +31,70 @@ import org.gjt.sp.jedit.*;
 
 public class EnhancedButton extends RolloverButton
 {
-	//{{{ EnhancedButton constructor
-	public EnhancedButton(Icon icon, String toolTip, String action,
-		ActionContext context)
-	{
-		super(icon);
+ //{{{ EnhancedButton constructor
+ public EnhancedButton(Icon icon, String toolTip, String action,
+  ActionContext context)
+ {
+  super(icon);
 
-		this.action = action;
+  this.action = action;
 
-		if(action != null)
-		{
-			setEnabled(true);
-			addActionListener(new EditAction.Wrapper(context,action));
-			addMouseListener(new MouseHandler());
-		}
-		else
-			setEnabled(false);
+  if(action != null)
+  {
+   setEnabled(true);
+   addActionListener(new EditAction.Wrapper(context,action));
+   addMouseListener(new MouseHandler());
+  }
+  else
+   setEnabled(false);
 
-		setToolTipText(toolTip);
-	} //}}}
+  setToolTipText(toolTip);
+ } //}}}
 
-	//{{{ isFocusTraversable() method
-	public boolean isFocusTraversable()
-	{
-		return false;
-	} //}}}
+ //{{{ isFocusTraversable() method
+ public boolean isFocusTraversable()
+ {
+  return false;
+ } //}}}
 
-	//{{{ Private members
-	private String action;
-	//}}}
+ //{{{ Private members
+ private String action;
+ //}}}
 
-	//{{{ MouseHandler class
-	class MouseHandler extends MouseAdapter
-	{
-		boolean msgSet = false;
+ //{{{ MouseHandler class
+ class MouseHandler extends MouseAdapter
+ {
+  boolean msgSet = false;
 
-		public void mouseReleased(MouseEvent evt)
-		{
-			if(msgSet)
-			{
-				GUIUtilities.getView((Component)evt.getSource())
-					.getStatus().setMessage(null);
-				msgSet = false;
-			}
-		}
+  public void mouseReleased(MouseEvent evt)
+  {
+   if(msgSet)
+   {
+    GUIUtilities.getView((Component)evt.getSource())
+     .getStatus().setMessage(null);
+    msgSet = false;
+   }
+  }
 
-		public void mouseEntered(MouseEvent evt)
-		{
-			String msg = jEdit.getProperty(action + ".mouse-over");
-			if(msg != null)
-			{
-				GUIUtilities.getView((Component)evt.getSource())
-					.getStatus().setMessage(msg);
-				msgSet = true;
-			}
-		}
+  public void mouseEntered(MouseEvent evt)
+  {
+   String msg = jEdit.getProperty(action + ".mouse-over");
+   if(msg != null)
+   {
+    GUIUtilities.getView((Component)evt.getSource())
+     .getStatus().setMessage(msg);
+    msgSet = true;
+   }
+  }
 
-		public void mouseExited(MouseEvent evt)
-		{
-			if(msgSet)
-			{
-				GUIUtilities.getView((Component)evt.getSource())
-					.getStatus().setMessage(null);
-				msgSet = false;
-			}
-		}
-	} //}}}
+  public void mouseExited(MouseEvent evt)
+  {
+   if(msgSet)
+   {
+    GUIUtilities.getView((Component)evt.getSource())
+     .getStatus().setMessage(null);
+    msgSet = false;
+   }
+  }
+ } //}}}
 }

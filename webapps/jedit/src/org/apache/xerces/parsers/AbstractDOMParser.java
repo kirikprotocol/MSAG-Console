@@ -926,8 +926,8 @@ public class AbstractDOMParser extends AbstractXMLDocumentParser {
                 String attrValue = attributes.getValue(i);
 
                 AttributePSVI attrPSVI =(AttributePSVI) attributes.getAugmentations(i).getItem(Constants.ATTRIBUTE_PSVI);
-			    if (fStorePSVI && attrPSVI != null){
-				  ((PSVIAttrNSImpl) attr).setPSVI(attrPSVI);
+       if (fStorePSVI && attrPSVI != null){
+      ((PSVIAttrNSImpl) attr).setPSVI(attrPSVI);
                 }
             
                 
@@ -937,44 +937,44 @@ public class AbstractDOMParser extends AbstractXMLDocumentParser {
                 //       the node value because that turns the "specified"
                 //       flag to "true" which may overwrite a "false"
                 //       value from the attribute list. -Ac
-				if (fDocumentImpl != null) {
-					AttrImpl attrImpl = (AttrImpl) attr;
-					Object type = null;
-					boolean id = false;
+    if (fDocumentImpl != null) {
+     AttrImpl attrImpl = (AttrImpl) attr;
+     Object type = null;
+     boolean id = false;
 
-					// REVISIT: currently it is possible that someone turns off
-					// namespaces and turns on xml schema validation 
-					// To avoid classcast exception in AttrImpl check for namespaces
-					// however the correct solution should probably disallow setting
-					// namespaces to false when schema processing is turned on.
-					if (attrPSVI != null && fNamespaceAware) {
-						// XML Schema 
-						type = attrPSVI.getMemberTypeDefinition();
-						if (type == null) {
-							type = attrPSVI.getTypeDefinition();
-							if (type != null) {
-								id = ((XSSimpleType) type).isIDType();
-								attrImpl.setType(type);
-							}
-						}
-						else {
-							id = ((XSSimpleType) type).isIDType();
-							attrImpl.setType(type);
-						}
-					}
-					else {
-						// DTD 
+     // REVISIT: currently it is possible that someone turns off
+     // namespaces and turns on xml schema validation 
+     // To avoid classcast exception in AttrImpl check for namespaces
+     // however the correct solution should probably disallow setting
+     // namespaces to false when schema processing is turned on.
+     if (attrPSVI != null && fNamespaceAware) {
+      // XML Schema 
+      type = attrPSVI.getMemberTypeDefinition();
+      if (type == null) {
+       type = attrPSVI.getTypeDefinition();
+       if (type != null) {
+        id = ((XSSimpleType) type).isIDType();
+        attrImpl.setType(type);
+       }
+      }
+      else {
+       id = ((XSSimpleType) type).isIDType();
+       attrImpl.setType(type);
+      }
+     }
+     else {
+      // DTD 
                         type = attributes.getType(i);
-						attrImpl.setType(type);
-						id = (type.equals("ID")) ? true : false;
-					}
+      attrImpl.setType(type);
+      id = (type.equals("ID")) ? true : false;
+     }
                 
-					if (id) {
-						((ElementImpl) el).setIdAttributeNode(attr, true);
-					}
+     if (id) {
+      ((ElementImpl) el).setIdAttributeNode(attr, true);
+     }
 
-					attrImpl.setSpecified(attributes.isSpecified(i));
-					// REVISIT: Handle entities in attribute value.
+     attrImpl.setSpecified(attributes.isSpecified(i));
+     // REVISIT: Handle entities in attribute value.
                 }
             }
             setCharacterData(false);
@@ -1043,24 +1043,24 @@ public class AbstractDOMParser extends AbstractXMLDocumentParser {
                 // To avoid classcast exception in AttrImpl check for namespaces
                 // however the correct solution should probably disallow setting
                 // namespaces to false when schema processing is turned on.
-				if (attrPSVI != null && fNamespaceAware) {
-					// XML Schema 
-					type = attrPSVI.getMemberTypeDefinition();
-					if (type == null) {
-						type = attrPSVI.getTypeDefinition();
+    if (attrPSVI != null && fNamespaceAware) {
+     // XML Schema 
+     type = attrPSVI.getMemberTypeDefinition();
+     if (type == null) {
+      type = attrPSVI.getTypeDefinition();
                         if (type != null){
-						  id = ((XSSimpleType) type).isIDType();
+        id = ((XSSimpleType) type).isIDType();
                         }
-					}
-					else {
-						id = ((XSSimpleType) type).isIDType();
-					}
-				}
-				else {
-					// DTD 
-					type = attributes.getType(i);
-					id = (type.equals("ID")) ? true : false;
-				}
+     }
+     else {
+      id = ((XSSimpleType) type).isIDType();
+     }
+    }
+    else {
+     // DTD 
+     type = attributes.getType(i);
+     id = (type.equals("ID")) ? true : false;
+    }
                 
                 // create attribute
                fDeferredDocumentImpl.setDeferredAttribute(
@@ -1629,17 +1629,17 @@ public class AbstractDOMParser extends AbstractXMLDocumentParser {
                     }
                 }
             }
-			else if (nodeType == Node.PROCESSING_INSTRUCTION_NODE) {
+   else if (nodeType == Node.PROCESSING_INSTRUCTION_NODE) {
                             
                 baseURI = ((EntityReferenceImpl)fCurrentNode).getBaseURI();
-				if (baseURI !=null && fErrorHandler != null) {
-					DOMErrorImpl error = new DOMErrorImpl();
+    if (baseURI !=null && fErrorHandler != null) {
+     DOMErrorImpl error = new DOMErrorImpl();
                     error.fType = "infoset-baseURI";
                     error.fRelatedData = baseURI;
-					error.fSeverity = error.SEVERITY_WARNING;
-					fErrorHandler.getErrorHandler().handleError(error);
-				}
-			}
+     error.fSeverity = error.SEVERITY_WARNING;
+     fErrorHandler.getErrorHandler().handleError(error);
+    }
+   }
         }
     }
 
@@ -1667,25 +1667,25 @@ public class AbstractDOMParser extends AbstractXMLDocumentParser {
                                                            true);
             }
         }
-		else if (nodeType == Node.PROCESSING_INSTRUCTION_NODE) {
+  else if (nodeType == Node.PROCESSING_INSTRUCTION_NODE) {
 
 
-			// retrieve baseURI from the entity reference
-			String baseURI = fDeferredDocumentImpl.getNodeValueString(fCurrentNodeIndex, false);
+   // retrieve baseURI from the entity reference
+   String baseURI = fDeferredDocumentImpl.getNodeValueString(fCurrentNodeIndex, false);
 
-			if (baseURI == null) {
-				// try baseURI of the entity declaration
-				baseURI = fDeferredDocumentImpl.getDeferredEntityBaseURI(fDeferredEntityDecl);
-			}
+   if (baseURI == null) {
+    // try baseURI of the entity declaration
+    baseURI = fDeferredDocumentImpl.getDeferredEntityBaseURI(fDeferredEntityDecl);
+   }
 
-			if (baseURI != null && fErrorHandler != null) {
-				DOMErrorImpl error = new DOMErrorImpl();
-				error.fType = "infoset-baseURI";
-				error.fRelatedData = baseURI; 
+   if (baseURI != null && fErrorHandler != null) {
+    DOMErrorImpl error = new DOMErrorImpl();
+    error.fType = "infoset-baseURI";
+    error.fRelatedData = baseURI; 
                 error.fSeverity = error.SEVERITY_WARNING;
-				fErrorHandler.getErrorHandler().handleError(error);
-			}
-		}
+    fErrorHandler.getErrorHandler().handleError(error);
+   }
+  }
     }
 
                        
@@ -2154,21 +2154,21 @@ public class AbstractDOMParser extends AbstractXMLDocumentParser {
        String publicId = identifier.getPublicId();
        String literalSystemId = identifier.getLiteralSystemId();
        if (fInternalSubset != null && !fInDTDExternalSubset) {
-				fInternalSubset.append("<!NOTATION ");
-				fInternalSubset.append(name);
-				if (publicId != null) {
-					fInternalSubset.append(" PUBLIC '");
-					fInternalSubset.append(publicId);
-					if (literalSystemId != null) {
-						fInternalSubset.append("' '");
-						fInternalSubset.append(literalSystemId);
-					}
-				}
-				else {
-					fInternalSubset.append(" SYSTEM '");
-					fInternalSubset.append(literalSystemId);
-				}
-				fInternalSubset.append("'>\n");
+    fInternalSubset.append("<!NOTATION ");
+    fInternalSubset.append(name);
+    if (publicId != null) {
+     fInternalSubset.append(" PUBLIC '");
+     fInternalSubset.append(publicId);
+     if (literalSystemId != null) {
+      fInternalSubset.append("' '");
+      fInternalSubset.append(literalSystemId);
+     }
+    }
+    else {
+     fInternalSubset.append(" SYSTEM '");
+     fInternalSubset.append(literalSystemId);
+    }
+    fInternalSubset.append("'>\n");
        }
 
         // NOTE: We only know how to create these nodes for the Xerces

@@ -30,42 +30,42 @@ import org.gjt.sp.jedit.TextUtilities;
 
 public class OpenBracketIndentRule extends BracketIndentRule
 {
-	//{{{ OpenBracketIndentRule constructor
-	public OpenBracketIndentRule(char openBracket, boolean aligned)
-	{
-		super(openBracket,
-			TextUtilities.getComplementaryBracket(openBracket,
-			new boolean[1]));
-		this.aligned = aligned;
-	} //}}}
+ //{{{ OpenBracketIndentRule constructor
+ public OpenBracketIndentRule(char openBracket, boolean aligned)
+ {
+  super(openBracket,
+   TextUtilities.getComplementaryBracket(openBracket,
+   new boolean[1]));
+  this.aligned = aligned;
+ } //}}}
 
-	//{{{ apply() method
-	public void apply(Buffer buffer, int thisLineIndex,
-		int prevLineIndex, int prevPrevLineIndex,
-		List indentActions)
-	{
-		int prevOpenBracketCount = getOpenBracketCount(buffer,prevLineIndex);
-		if(prevOpenBracketCount != 0)
-		{
-			if(indentActions.contains(new IndentAction.Collapse()))
-				indentActions.add(new IndentAction.Reset());
-			indentActions.add(new IndentAction.Increase(prevOpenBracketCount));
-		}
-		else if(getOpenBracketCount(buffer,thisLineIndex) != 0)
-		{
-			if(indentActions.contains(new IndentAction.Collapse()))
-				indentActions.add(new IndentAction.Reset());
-		}
-	} //}}}
+ //{{{ apply() method
+ public void apply(Buffer buffer, int thisLineIndex,
+  int prevLineIndex, int prevPrevLineIndex,
+  List indentActions)
+ {
+  int prevOpenBracketCount = getOpenBracketCount(buffer,prevLineIndex);
+  if(prevOpenBracketCount != 0)
+  {
+   if(indentActions.contains(new IndentAction.Collapse()))
+    indentActions.add(new IndentAction.Reset());
+   indentActions.add(new IndentAction.Increase(prevOpenBracketCount));
+  }
+  else if(getOpenBracketCount(buffer,thisLineIndex) != 0)
+  {
+   if(indentActions.contains(new IndentAction.Collapse()))
+    indentActions.add(new IndentAction.Reset());
+  }
+ } //}}}
 
-	//{{{ getOpenBracketCount() method
-	private int getOpenBracketCount(Buffer buffer, int line)
-	{
-		if(line == -1)
-			return 0;
-		else
-			return getBrackets(buffer.getLineText(line)).openCount;
-	} //}}}
-	
-	private boolean aligned;
+ //{{{ getOpenBracketCount() method
+ private int getOpenBracketCount(Buffer buffer, int line)
+ {
+  if(line == -1)
+   return 0;
+  else
+   return getBrackets(buffer.getLineText(line)).openCount;
+ } //}}}
+ 
+ private boolean aligned;
 }

@@ -25,118 +25,118 @@ import org.gjt.sp.util.Log;
 
 class ModeCatalogHandler extends HandlerBase
 {
-	ModeCatalogHandler(String directory, boolean resource)
-	{
-		this.directory = directory;
-		this.resource = resource;
-	}
+ ModeCatalogHandler(String directory, boolean resource)
+ {
+  this.directory = directory;
+  this.resource = resource;
+ }
 
-	public Object resolveEntity(String publicId, String systemId)
-	{
-		if("catalog.dtd".equals(systemId))
-		{
-			// this will result in a slight speed up, since we
-			// don't need to read the DTD anyway, as AElfred is
-			// non-validating
-			return new StringReader("<!-- -->");
+ public Object resolveEntity(String publicId, String systemId)
+ {
+  if("catalog.dtd".equals(systemId))
+  {
+   // this will result in a slight speed up, since we
+   // don't need to read the DTD anyway, as AElfred is
+   // non-validating
+   return new StringReader("<!-- -->");
 
-			/* try
-			{
-				return new BufferedReader(new InputStreamReader(
-					getClass().getResourceAsStream("catalog.dtd")));
-			}
-			catch(Exception e)
-			{
-				Log.log(Log.ERROR,this,"Error while opening"
-					+ " catalog.dtd:");
-				Log.log(Log.ERROR,this,e);
-			} */
-		}
+   /* try
+   {
+    return new BufferedReader(new InputStreamReader(
+     getClass().getResourceAsStream("catalog.dtd")));
+   }
+   catch(Exception e)
+   {
+    Log.log(Log.ERROR,this,"Error while opening"
+     + " catalog.dtd:");
+    Log.log(Log.ERROR,this,e);
+   } */
+  }
 
-		return null;
-	}
+  return null;
+ }
 
-	public void attribute(String aname, String value, boolean isSpecified)
-	{
-		aname = (aname == null) ? null : aname.intern();
+ public void attribute(String aname, String value, boolean isSpecified)
+ {
+  aname = (aname == null) ? null : aname.intern();
 
-		if(aname == "NAME")
-			modeName = value;
-		else if(aname == "FILE")
-		{
-			if(value == null)
-			{
-				Log.log(Log.ERROR,this,directory + "catalog:"
-					+ " mode " + modeName + " doesn't have"
-					+ " a FILE attribute");
-			}
-			else
-				file = value;
-		}
-		else if(aname == "FILE_NAME_GLOB")
-			filenameGlob = value;
-		else if(aname == "FIRST_LINE_GLOB")
-			firstlineGlob = value;
-	}
+  if(aname == "NAME")
+   modeName = value;
+  else if(aname == "FILE")
+  {
+   if(value == null)
+   {
+    Log.log(Log.ERROR,this,directory + "catalog:"
+     + " mode " + modeName + " doesn't have"
+     + " a FILE attribute");
+   }
+   else
+    file = value;
+  }
+  else if(aname == "FILE_NAME_GLOB")
+   filenameGlob = value;
+  else if(aname == "FIRST_LINE_GLOB")
+   firstlineGlob = value;
+ }
 
-	public void doctypeDecl(String name, String publicId,
-		String systemId) throws Exception
-	{
-		// older jEdit versions used a DOCTYPE of CATALOG, which
-		// is incorrect since the DOCTYPE must be the name of the
-		// root element, which is MODES.
+ public void doctypeDecl(String name, String publicId,
+  String systemId) throws Exception
+ {
+  // older jEdit versions used a DOCTYPE of CATALOG, which
+  // is incorrect since the DOCTYPE must be the name of the
+  // root element, which is MODES.
 
-		// so you the avid code reader should use MODES as the
-		// DOCTYPE instead, but we still let old catalogs through
-		// to avoid annoying users.
-		if("CATALOG".equals(name) || "MODES".equals(name))
-			return;
+  // so you the avid code reader should use MODES as the
+  // DOCTYPE instead, but we still let old catalogs through
+  // to avoid annoying users.
+  if("CATALOG".equals(name) || "MODES".equals(name))
+   return;
 
-		Log.log(Log.ERROR,this,directory + "catalog: DOCTYPE must be CATALOG");
-	}
+  Log.log(Log.ERROR,this,directory + "catalog: DOCTYPE must be CATALOG");
+ }
 
-	public void endElement(String name)
-	{
-		if(name.equals("MODE"))
-		{
-			Mode mode = jEdit.getMode(modeName);
-			if(mode == null)
-			{
-				mode = new Mode(modeName);
-				jEdit.addMode(mode);
-			}
+ public void endElement(String name)
+ {
+  if(name.equals("MODE"))
+  {
+   Mode mode = jEdit.getMode(modeName);
+   if(mode == null)
+   {
+    mode = new Mode(modeName);
+    jEdit.addMode(mode);
+   }
 
-			Object path;
-			if(resource)
-				path = jEdit.class.getResource(directory + file);
-			else
-				path = MiscUtilities.constructPath(directory,file);
-			mode.setProperty("file",path);
+   Object path;
+   if(resource)
+    path = jEdit.class.getResource(directory + file);
+   else
+    path = MiscUtilities.constructPath(directory,file);
+   mode.setProperty("file",path);
 
-			if(filenameGlob != null)
-				mode.setProperty("filenameGlob",filenameGlob);
-			else
-				mode.unsetProperty("filenameGlob");
+   if(filenameGlob != null)
+    mode.setProperty("filenameGlob",filenameGlob);
+   else
+    mode.unsetProperty("filenameGlob");
 
-			if(firstlineGlob != null)
-				mode.setProperty("firstlineGlob",firstlineGlob);
-			else
-				mode.unsetProperty("firstlineGlob");
+   if(firstlineGlob != null)
+    mode.setProperty("firstlineGlob",firstlineGlob);
+   else
+    mode.unsetProperty("firstlineGlob");
 
-			mode.init();
+   mode.init();
 
-			modeName = file = filenameGlob = firstlineGlob = null;
-		}
-	}
+   modeName = file = filenameGlob = firstlineGlob = null;
+  }
+ }
 
-	// end HandlerBase implementation
+ // end HandlerBase implementation
 
-	// private members
-	private String directory;
-	private boolean resource;
+ // private members
+ private String directory;
+ private boolean resource;
 
-	private String modeName;
-	private String file;
-	private String filenameGlob;
-	private String firstlineGlob;
+ private String modeName;
+ private String file;
+ private String filenameGlob;
+ private String firstlineGlob;
 }

@@ -69,7 +69,7 @@ import org.w3c.dom.html.*;
  */
 public class HTMLLIElementImpl
     extends HTMLElementImpl
-	    implements HTMLLIElement
+     implements HTMLLIElement
 {
 
     

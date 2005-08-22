@@ -105,11 +105,11 @@ public class ASModelImpl implements ASModel {
     //
     
     public ASModelImpl() {
-    	fASModels = new Vector();
+     fASModels = new Vector();
     }
 
     public ASModelImpl(boolean isNamespaceAware) {
-    	fASModels = new Vector();
+     fASModels = new Vector();
         fNamespaceAware = isNamespaceAware;
     }
     
@@ -244,7 +244,7 @@ public class ASModelImpl implements ASModel {
      * <code>QNames</code>.
      */
     public boolean getIsNamespaceAware() {
-    	return fNamespaceAware;
+     return fNamespaceAware;
     }
 
     /**
@@ -294,7 +294,7 @@ public class ASModelImpl implements ASModel {
      * <code>ASModel</code> is simply a container of other ASModels. 
      */
     public boolean getContainer() {
-    	return (fGrammar != null);
+     return (fGrammar != null);
     }
 
     /**
@@ -363,7 +363,7 @@ public class ASModelImpl implements ASModel {
      *   the ASModels within the specified <code>ownerASModel</code>. 
      */
     public void addASModel(ASModel abstractSchema) {
-    	fASModels.addElement(abstractSchema);
+     fASModels.addElement(abstractSchema);
     }
 
     /**
@@ -381,7 +381,7 @@ public class ASModelImpl implements ASModel {
      * @param as AS to be removed.
      */
     public void removeAS(ASModel as) {
-    	fASModels.removeElement(as);
+     fASModels.removeElement(as);
     }
 
     /**

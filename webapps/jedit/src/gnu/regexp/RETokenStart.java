@@ -23,47 +23,47 @@ class RETokenStart extends REToken {
     private String newline; // matches after a newline
     
     RETokenStart(int subIndex, String newline) {
-	super(subIndex);
-	this.newline = newline;
+ super(subIndex);
+ this.newline = newline;
     }
     
     boolean match(CharIndexed input, REMatch mymatch) {
-	// charAt(index-n) may be unknown on a Reader/InputStream. FIXME
-	// Match after a newline if in multiline mode
-	
-	if (newline != null) {
-	    int len = newline.length();
-	    if (mymatch.offset >= len) {
-		boolean found = true;
-		char z;
-		int i = 0; // position in REToken.newline
-		char ch = input.charAt(mymatch.index - len);
-		do {
-		    z = newline.charAt(i);
-		    if (ch != z) {
-			found = false;
-			break;
-		    }
-		    ++i;
-		    ch = input.charAt(mymatch.index - len + i);
-		} while (i < len);
-	    
-		if (found) return next(input, mymatch);
-	    }
-	}
-	
-	// Don't match at all if REG_NOTBOL is set.
-	if ((mymatch.eflags & RE.REG_NOTBOL) > 0) return false;
-	
-	if ((mymatch.eflags & RE.REG_ANCHORINDEX) > 0)
-	    return (mymatch.anchor == mymatch.offset) ? 
-		next(input, mymatch) : false;
-	else
-	    return ((mymatch.index == 0) && (mymatch.offset == 0)) ?
-		next(input, mymatch) : false;
+ // charAt(index-n) may be unknown on a Reader/InputStream. FIXME
+ // Match after a newline if in multiline mode
+ 
+ if (newline != null) {
+     int len = newline.length();
+     if (mymatch.offset >= len) {
+  boolean found = true;
+  char z;
+  int i = 0; // position in REToken.newline
+  char ch = input.charAt(mymatch.index - len);
+  do {
+      z = newline.charAt(i);
+      if (ch != z) {
+   found = false;
+   break;
+      }
+      ++i;
+      ch = input.charAt(mymatch.index - len + i);
+  } while (i < len);
+     
+  if (found) return next(input, mymatch);
+     }
+ }
+ 
+ // Don't match at all if REG_NOTBOL is set.
+ if ((mymatch.eflags & RE.REG_NOTBOL) > 0) return false;
+ 
+ if ((mymatch.eflags & RE.REG_ANCHORINDEX) > 0)
+     return (mymatch.anchor == mymatch.offset) ? 
+  next(input, mymatch) : false;
+ else
+     return ((mymatch.index == 0) && (mymatch.offset == 0)) ?
+  next(input, mymatch) : false;
     }
     
     void dump(StringBuffer os) {
-	os.append('^');
+ os.append('^');
     }
 }

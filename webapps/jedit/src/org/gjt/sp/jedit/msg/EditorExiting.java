@@ -31,12 +31,12 @@ import org.gjt.sp.jedit.EBMessage;
  */
 public class EditorExiting extends EBMessage
 {
-	/**
-	 * Creates a new editor exiting message.
-	 * @param source The message source
-	 */
-	public EditorExiting(EBComponent source)
-	{
-		super(source);
-	}
+ /**
+  * Creates a new editor exiting message.
+  * @param source The message source
+  */
+ public EditorExiting(EBComponent source)
+ {
+  super(source);
+ }
 }

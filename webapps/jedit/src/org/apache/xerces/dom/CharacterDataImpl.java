@@ -138,12 +138,12 @@ public abstract class CharacterDataImpl
      *  type if the client simply calls setNodeValue(value).
      */
     protected void setNodeValueInternal(String value) {
-    	if (isReadOnly()) {
+     if (isReadOnly()) {
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NO_MODIFICATION_ALLOWED_ERR", null);
             throw new DOMException(DOMException.NO_MODIFICATION_ALLOWED_ERR, msg);
         }
         // revisit: may want to set the value in ownerDocument.
-    	// Default behavior, overridden in some subclasses
+     // Default behavior, overridden in some subclasses
         if (needsSyncData()) {
             synchronizeData();
         }
@@ -156,7 +156,7 @@ public abstract class CharacterDataImpl
         // notify document
         ownerDocument.modifyingCharacterData(this);
 
-    	this.data = value;
+     this.data = value;
 
         // notify document
         ownerDocument.modifiedCharacterData(this, oldvalue, value);
@@ -214,7 +214,7 @@ public abstract class CharacterDataImpl
      */
     public void appendData(String data) {
 
-    	if (isReadOnly()) {
+     if (isReadOnly()) {
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NO_MODIFICATION_ALLOWED_ERR", null);
             throw new DOMException(DOMException.NO_MODIFICATION_ALLOWED_ERR, msg);
         }
@@ -244,7 +244,7 @@ public abstract class CharacterDataImpl
     public void deleteData(int offset, int count) 
         throws DOMException {
 
-    	if (isReadOnly()) {
+     if (isReadOnly()) {
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NO_MODIFICATION_ALLOWED_ERR", null);
             throw new DOMException(DOMException.NO_MODIFICATION_ALLOWED_ERR, msg);
         }

@@ -1719,13 +1719,13 @@ public class XMLSchemaValidator
         // root element
         if (fElementDepth == -1 && fValidationManager.isGrammarFound()) {
             if (fSchemaType == null) {
-				// schemaType is not specified
+    // schemaType is not specified
                 // if a DTD grammar is found, we do the same thing as Dynamic:
                 // if a schema grammar is found, validation is performed;
                 // otherwise, skip the whole document.
                 fDynamicValidation = true;
-			}
-			else {
+   }
+   else {
                 // [1] Either schemaType is DTD, and in this case validate/schema is turned off
                 // [2] Validating against XML Schemas only
                 //   [a] dynamic validation is false: report error if SchemaGrammar is not found

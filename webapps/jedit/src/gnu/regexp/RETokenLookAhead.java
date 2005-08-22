@@ -59,10 +59,10 @@ final class RETokenLookAhead extends REToken
   }
 
     void dump(StringBuffer os) {
-	os.append("(?");
-	os.append(negative ? '!' : '=');
-	re.dumpAll(os);
-	os.append(')');
+ os.append("(?");
+ os.append(negative ? '!' : '=');
+ re.dumpAll(os);
+ os.append(')');
     }
 }
 

@@ -283,7 +283,7 @@ public class RE extends REToken {
       pattern = new char [((StringBuffer) patternObj).length()];
       ((StringBuffer) patternObj).getChars(0,pattern.length,pattern,0);
     } else {
-	pattern = patternObj.toString().toCharArray();
+ pattern = patternObj.toString().toCharArray();
     }
 
     int pLength = pattern.length;
@@ -325,17 +325,17 @@ public class RE extends REToken {
       // TODO: the '\n' literal here should be a test against REToken.newline,
       // which unfortunately may be more than a single character.
       if ( ( (unit.ch == '|' && (syntax.get(RESyntax.RE_NO_BK_VBAR) ^ unit.bk))
-	     || (syntax.get(RESyntax.RE_NEWLINE_ALT) && (unit.ch == '\n') && !unit.bk) )
-	   && !syntax.get(RESyntax.RE_LIMITED_OPS)) {
-	// make everything up to here be a branch. create vector if nec.
-	addToken(currentToken);
-	RE theBranch = new RE(firstToken, lastToken, numSubs, subIndex, minimumLength);
-	minimumLength = 0;
-	if (branches == null) {
-	    branches = new Vector();
-	}
-	branches.addElement(theBranch);
-	firstToken = lastToken = currentToken = null;
+      || (syntax.get(RESyntax.RE_NEWLINE_ALT) && (unit.ch == '\n') && !unit.bk) )
+    && !syntax.get(RESyntax.RE_LIMITED_OPS)) {
+ // make everything up to here be a branch. create vector if nec.
+ addToken(currentToken);
+ RE theBranch = new RE(firstToken, lastToken, numSubs, subIndex, minimumLength);
+ minimumLength = 0;
+ if (branches == null) {
+     branches = new Vector();
+ }
+ branches.addElement(theBranch);
+ firstToken = lastToken = currentToken = null;
       }
       
       // INTERVAL OPERATOR:
@@ -346,7 +346,7 @@ public class RE extends REToken {
       //  what is proper interpretation of '{' at start of string?
 
       else if ((unit.ch == '{') && syntax.get(RESyntax.RE_INTERVALS) && (syntax.get(RESyntax.RE_NO_BK_BRACES) ^ unit.bk)) {
-	int newIndex = getMinMax(pattern,index,minMax,syntax);
+ int newIndex = getMinMax(pattern,index,minMax,syntax);
         if (newIndex > index) {
           if (minMax.first > minMax.second)
             throw new REException(getLocalizedMessage("interval.order"),REException.REG_BADRPT,newIndex);
@@ -371,59 +371,59 @@ public class RE extends REToken {
       //  [...] | [^...]
 
       else if ((unit.ch == '[') && !unit.bk) {
-	Vector options = new Vector();
-	boolean negative = false;
-	char lastChar = 0;
-	if (index == pLength) throw new REException(getLocalizedMessage("unmatched.bracket"),REException.REG_EBRACK,index);
-	
-	// Check for initial caret, negation
-	if ((ch = pattern[index]) == '^') {
-	  negative = true;
-	  if (++index == pLength) throw new REException(getLocalizedMessage("class.no.end"),REException.REG_EBRACK,index);
-	  ch = pattern[index];
-	}
+ Vector options = new Vector();
+ boolean negative = false;
+ char lastChar = 0;
+ if (index == pLength) throw new REException(getLocalizedMessage("unmatched.bracket"),REException.REG_EBRACK,index);
+ 
+ // Check for initial caret, negation
+ if ((ch = pattern[index]) == '^') {
+   negative = true;
+   if (++index == pLength) throw new REException(getLocalizedMessage("class.no.end"),REException.REG_EBRACK,index);
+   ch = pattern[index];
+ }
 
-	// Check for leading right bracket literal
-	if (ch == ']') {
-	  lastChar = ch;
-	  if (++index == pLength) throw new REException(getLocalizedMessage("class.no.end"),REException.REG_EBRACK,index);
-	}
+ // Check for leading right bracket literal
+ if (ch == ']') {
+   lastChar = ch;
+   if (++index == pLength) throw new REException(getLocalizedMessage("class.no.end"),REException.REG_EBRACK,index);
+ }
 
-	while ((ch = pattern[index++]) != ']') {
-	  if ((ch == '-') && (lastChar != 0)) {
-	    if (index == pLength) throw new REException(getLocalizedMessage("class.no.end"),REException.REG_EBRACK,index);
-	    if ((ch = pattern[index]) == ']') {
-	      options.addElement(new RETokenChar(subIndex,lastChar,insens));
-	      lastChar = '-';
-	    } else {
-	      options.addElement(new RETokenRange(subIndex,lastChar,ch,insens));
-	      lastChar = 0;
-	      index++;
-	    }
+ while ((ch = pattern[index++]) != ']') {
+   if ((ch == '-') && (lastChar != 0)) {
+     if (index == pLength) throw new REException(getLocalizedMessage("class.no.end"),REException.REG_EBRACK,index);
+     if ((ch = pattern[index]) == ']') {
+       options.addElement(new RETokenChar(subIndex,lastChar,insens));
+       lastChar = '-';
+     } else {
+       options.addElement(new RETokenRange(subIndex,lastChar,ch,insens));
+       lastChar = 0;
+       index++;
+     }
           } else if ((ch == '\\') && syntax.get(RESyntax.RE_BACKSLASH_ESCAPE_IN_LISTS)) {
             if (index == pLength) throw new REException(getLocalizedMessage("class.no.end"),REException.REG_EBRACK,index);
-	    int posixID = -1;
-	    boolean negate = false;
+     int posixID = -1;
+     boolean negate = false;
             char asciiEsc = 0;
-	    if (("dswDSW".indexOf(pattern[index]) != -1) && syntax.get(RESyntax.RE_CHAR_CLASS_ESC_IN_LISTS)) {
-	      switch (pattern[index]) {
-	      case 'D':
-		negate = true;
-	      case 'd':
-		posixID = RETokenPOSIX.DIGIT;
-		break;
-	      case 'S':
-		negate = true;
-	      case 's':
-		posixID = RETokenPOSIX.SPACE;
-		break;
-	      case 'W':
-		negate = true;
-	      case 'w':
-		posixID = RETokenPOSIX.ALNUM;
-		break;
-	      }
-	    }
+     if (("dswDSW".indexOf(pattern[index]) != -1) && syntax.get(RESyntax.RE_CHAR_CLASS_ESC_IN_LISTS)) {
+       switch (pattern[index]) {
+       case 'D':
+  negate = true;
+       case 'd':
+  posixID = RETokenPOSIX.DIGIT;
+  break;
+       case 'S':
+  negate = true;
+       case 's':
+  posixID = RETokenPOSIX.SPACE;
+  break;
+       case 'W':
+  negate = true;
+       case 'w':
+  posixID = RETokenPOSIX.ALNUM;
+  break;
+       }
+     }
             else if ("nrt".indexOf(pattern[index]) != -1) {
               switch (pattern[index]) {
                 case 'n':
@@ -437,48 +437,48 @@ public class RE extends REToken {
                   break;
               }
             }
-	    if (lastChar != 0) options.addElement(new RETokenChar(subIndex,lastChar,insens));
-	    
-	    if (posixID != -1) {
-	      options.addElement(new RETokenPOSIX(subIndex,posixID,insens,negate));
-	    } else if (asciiEsc != 0) {
-	      lastChar = asciiEsc;
-	    } else {
-	      lastChar = pattern[index];
-	    }
-	    ++index;
-	  } else if ((ch == '[') && (syntax.get(RESyntax.RE_CHAR_CLASSES)) && (index < pLength) && (pattern[index] == ':')) {
-	    StringBuffer posixSet = new StringBuffer();
-	    index = getPosixSet(pattern,index+1,posixSet);
-	    int posixId = RETokenPOSIX.intValue(posixSet.toString());
-	    if (posixId != -1)
-	      options.addElement(new RETokenPOSIX(subIndex,posixId,insens,false));
-	  } else {
-	    if (lastChar != 0) options.addElement(new RETokenChar(subIndex,lastChar,insens));
-	    lastChar = ch;
-	  }
-	  if (index == pLength) throw new REException(getLocalizedMessage("class.no.end"),REException.REG_EBRACK,index);
-	} // while in list
-	// Out of list, index is one past ']'
-	    
-	if (lastChar != 0) options.addElement(new RETokenChar(subIndex,lastChar,insens));
-	    
-	// Create a new RETokenOneOf
-	addToken(currentToken);
-	options.trimToSize();
-	currentToken = new RETokenOneOf(subIndex,options,negative);
+     if (lastChar != 0) options.addElement(new RETokenChar(subIndex,lastChar,insens));
+     
+     if (posixID != -1) {
+       options.addElement(new RETokenPOSIX(subIndex,posixID,insens,negate));
+     } else if (asciiEsc != 0) {
+       lastChar = asciiEsc;
+     } else {
+       lastChar = pattern[index];
+     }
+     ++index;
+   } else if ((ch == '[') && (syntax.get(RESyntax.RE_CHAR_CLASSES)) && (index < pLength) && (pattern[index] == ':')) {
+     StringBuffer posixSet = new StringBuffer();
+     index = getPosixSet(pattern,index+1,posixSet);
+     int posixId = RETokenPOSIX.intValue(posixSet.toString());
+     if (posixId != -1)
+       options.addElement(new RETokenPOSIX(subIndex,posixId,insens,false));
+   } else {
+     if (lastChar != 0) options.addElement(new RETokenChar(subIndex,lastChar,insens));
+     lastChar = ch;
+   }
+   if (index == pLength) throw new REException(getLocalizedMessage("class.no.end"),REException.REG_EBRACK,index);
+ } // while in list
+ // Out of list, index is one past ']'
+     
+ if (lastChar != 0) options.addElement(new RETokenChar(subIndex,lastChar,insens));
+     
+ // Create a new RETokenOneOf
+ addToken(currentToken);
+ options.trimToSize();
+ currentToken = new RETokenOneOf(subIndex,options,negative);
       }
 
       // SUBEXPRESSIONS
       //  (...) | \(...\) depending on RE_NO_BK_PARENS
 
       else if ((unit.ch == '(') && (syntax.get(RESyntax.RE_NO_BK_PARENS) ^ unit.bk)) {
-	boolean pure = false;
-	boolean comment = false;
+ boolean pure = false;
+ boolean comment = false;
         boolean lookAhead = false;
         boolean negativelh = false;
-	if ((index+1 < pLength) && (pattern[index] == '?')) {
-	  switch (pattern[index+1]) {
+ if ((index+1 < pLength) && (pattern[index] == '?')) {
+   switch (pattern[index+1]) {
           case '!':
             if (syntax.get(RESyntax.RE_LOOKAHEAD)) {
               pure = true;
@@ -494,109 +494,109 @@ public class RE extends REToken {
               index += 2;
             }
             break;
-	  case ':':
-	    if (syntax.get(RESyntax.RE_PURE_GROUPING)) {
-	      pure = true;
-	      index += 2;
-	    }
-	    break;
-	  case '#':
-	    if (syntax.get(RESyntax.RE_COMMENTS)) {
-	      comment = true;
-	    }
-	    break;
+   case ':':
+     if (syntax.get(RESyntax.RE_PURE_GROUPING)) {
+       pure = true;
+       index += 2;
+     }
+     break;
+   case '#':
+     if (syntax.get(RESyntax.RE_COMMENTS)) {
+       comment = true;
+     }
+     break;
           default:
             throw new REException(getLocalizedMessage("repeat.no.token"), REException.REG_BADRPT, index);
-	  }
-	}
+   }
+ }
 
-	if (index >= pLength) {
-	    throw new REException(getLocalizedMessage("unmatched.paren"), REException.REG_ESUBREG,index);
-	}
+ if (index >= pLength) {
+     throw new REException(getLocalizedMessage("unmatched.paren"), REException.REG_ESUBREG,index);
+ }
 
-	// find end of subexpression
-	int endIndex = index;
-	int nextIndex = index;
-	int nested = 0;
+ // find end of subexpression
+ int endIndex = index;
+ int nextIndex = index;
+ int nested = 0;
 
-	while ( ((nextIndex = getCharUnit(pattern,endIndex,unit)) > 0)
-		&& !(nested == 0 && (unit.ch == ')') && (syntax.get(RESyntax.RE_NO_BK_PARENS) ^ unit.bk)) )
-	  if ((endIndex = nextIndex) >= pLength)
-	    throw new REException(getLocalizedMessage("subexpr.no.end"),REException.REG_ESUBREG,nextIndex);
-	  else if (unit.ch == '(' && (syntax.get(RESyntax.RE_NO_BK_PARENS) ^ unit.bk))
-	    nested++;
-	  else if (unit.ch == ')' && (syntax.get(RESyntax.RE_NO_BK_PARENS) ^ unit.bk))
-	    nested--;
+ while ( ((nextIndex = getCharUnit(pattern,endIndex,unit)) > 0)
+  && !(nested == 0 && (unit.ch == ')') && (syntax.get(RESyntax.RE_NO_BK_PARENS) ^ unit.bk)) )
+   if ((endIndex = nextIndex) >= pLength)
+     throw new REException(getLocalizedMessage("subexpr.no.end"),REException.REG_ESUBREG,nextIndex);
+   else if (unit.ch == '(' && (syntax.get(RESyntax.RE_NO_BK_PARENS) ^ unit.bk))
+     nested++;
+   else if (unit.ch == ')' && (syntax.get(RESyntax.RE_NO_BK_PARENS) ^ unit.bk))
+     nested--;
 
-	// endIndex is now position at a ')','\)' 
-	// nextIndex is end of string or position after ')' or '\)'
+ // endIndex is now position at a ')','\)' 
+ // nextIndex is end of string or position after ')' or '\)'
 
-	if (comment) index = nextIndex;
-	else { // not a comment
-	  // create RE subexpression as token.
-	  addToken(currentToken);
-	  if (!pure) {
-	    numSubs++;
-	  }
+ if (comment) index = nextIndex;
+ else { // not a comment
+   // create RE subexpression as token.
+   addToken(currentToken);
+   if (!pure) {
+     numSubs++;
+   }
 
-	  int useIndex = (pure || lookAhead) ? 0 : nextSub + numSubs;
-	  currentToken = new RE(String.valueOf(pattern,index,endIndex-index).toCharArray(),cflags,syntax,useIndex,nextSub + numSubs);
-	  numSubs += ((RE) currentToken).getNumSubs();
+   int useIndex = (pure || lookAhead) ? 0 : nextSub + numSubs;
+   currentToken = new RE(String.valueOf(pattern,index,endIndex-index).toCharArray(),cflags,syntax,useIndex,nextSub + numSubs);
+   numSubs += ((RE) currentToken).getNumSubs();
 
           if (lookAhead) {
-	      currentToken = new RETokenLookAhead(currentToken,negativelh);
-	  }
+       currentToken = new RETokenLookAhead(currentToken,negativelh);
+   }
 
-	  index = nextIndex;
-	} // not a comment
+   index = nextIndex;
+ } // not a comment
       } // subexpression
     
       // UNMATCHED RIGHT PAREN
       // ) or \) throw exception if
       // !syntax.get(RESyntax.RE_UNMATCHED_RIGHT_PAREN_ORD)
       else if (!syntax.get(RESyntax.RE_UNMATCHED_RIGHT_PAREN_ORD) && ((unit.ch == ')') && (syntax.get(RESyntax.RE_NO_BK_PARENS) ^ unit.bk))) {
-	throw new REException(getLocalizedMessage("unmatched.paren"),REException.REG_EPAREN,index);
+ throw new REException(getLocalizedMessage("unmatched.paren"),REException.REG_EPAREN,index);
       }
 
       // START OF LINE OPERATOR
       //  ^
 
       else if ((unit.ch == '^') && !unit.bk) {
-	addToken(currentToken);
-	currentToken = null;
-	addToken(new RETokenStart(subIndex,((cflags & REG_MULTILINE) > 0) ? syntax.getLineSeparator() : null));
+ addToken(currentToken);
+ currentToken = null;
+ addToken(new RETokenStart(subIndex,((cflags & REG_MULTILINE) > 0) ? syntax.getLineSeparator() : null));
       }
 
       // END OF LINE OPERATOR
       //  $
 
       else if ((unit.ch == '$') && !unit.bk) {
-	addToken(currentToken);
-	currentToken = null;
-	addToken(new RETokenEnd(subIndex,((cflags & REG_MULTILINE) > 0) ? syntax.getLineSeparator() : null));
+ addToken(currentToken);
+ currentToken = null;
+ addToken(new RETokenEnd(subIndex,((cflags & REG_MULTILINE) > 0) ? syntax.getLineSeparator() : null));
       }
 
       // MATCH-ANY-CHARACTER OPERATOR (except possibly newline and null)
       //  .
 
       else if ((unit.ch == '.') && !unit.bk) {
-	addToken(currentToken);
-	currentToken = new RETokenAny(subIndex,syntax.get(RESyntax.RE_DOT_NEWLINE) || ((cflags & REG_DOT_NEWLINE) > 0),syntax.get(RESyntax.RE_DOT_NOT_NULL));
+ addToken(currentToken);
+ currentToken = new RETokenAny(subIndex,syntax.get(RESyntax.RE_DOT_NEWLINE) || ((cflags & REG_DOT_NEWLINE) > 0),syntax.get(RESyntax.RE_DOT_NOT_NULL));
       }
 
       // ZERO-OR-MORE REPEAT OPERATOR
       //  *
 
       else if ((unit.ch == '*') && !unit.bk) {
-	if (currentToken == null)
+ if (currentToken == null)
           throw new REException(getLocalizedMessage("repeat.no.token"),REException.REG_BADRPT,index);
-	if (currentToken instanceof RETokenRepeated)
+ if (currentToken instanceof RETokenRepeated)
           throw new REException(getLocalizedMessage("repeat.chained"),REException.REG_BADRPT,index);
-	if (currentToken instanceof RETokenWordBoundary || currentToken instanceof RETokenWordBoundary)
-	  throw new REException(getLocalizedMessage("repeat.assertion"),REException.REG_BADRPT,index);
-	if (currentToken.getMinimumLength() == 0)
-	  throw new REException(getLocalizedMessage("repeat.empty.token"),REException.REG_BADRPT,index);
-	currentToken = setRepeated(currentToken,0,Integer.MAX_VALUE,index);
+ if (currentToken instanceof RETokenWordBoundary || currentToken instanceof RETokenWordBoundary)
+   throw new REException(getLocalizedMessage("repeat.assertion"),REException.REG_BADRPT,index);
+ if (currentToken.getMinimumLength() == 0)
+   throw new REException(getLocalizedMessage("repeat.empty.token"),REException.REG_BADRPT,index);
+ currentToken = setRepeated(currentToken,0,Integer.MAX_VALUE,index);
       }
 
       // ONE-OR-MORE REPEAT OPERATOR
@@ -604,15 +604,15 @@ public class RE extends REToken {
       //  not available if RE_LIMITED_OPS is set
 
       else if ((unit.ch == '+') && !syntax.get(RESyntax.RE_LIMITED_OPS) && (!syntax.get(RESyntax.RE_BK_PLUS_QM) ^ unit.bk)) {
-	if (currentToken == null)
+ if (currentToken == null)
           throw new REException(getLocalizedMessage("repeat.no.token"),REException.REG_BADRPT,index);
-	if (currentToken instanceof RETokenRepeated)
+ if (currentToken instanceof RETokenRepeated)
           throw new REException(getLocalizedMessage("repeat.chained"),REException.REG_BADRPT,index);
-	if (currentToken instanceof RETokenWordBoundary || currentToken instanceof RETokenWordBoundary)
-	  throw new REException(getLocalizedMessage("repeat.assertion"),REException.REG_BADRPT,index);
-	if (currentToken.getMinimumLength() == 0)
-	  throw new REException(getLocalizedMessage("repeat.empty.token"),REException.REG_BADRPT,index);
-	currentToken = setRepeated(currentToken,1,Integer.MAX_VALUE,index);
+ if (currentToken instanceof RETokenWordBoundary || currentToken instanceof RETokenWordBoundary)
+   throw new REException(getLocalizedMessage("repeat.assertion"),REException.REG_BADRPT,index);
+ if (currentToken.getMinimumLength() == 0)
+   throw new REException(getLocalizedMessage("repeat.empty.token"),REException.REG_BADRPT,index);
+ currentToken = setRepeated(currentToken,1,Integer.MAX_VALUE,index);
       }
 
       // ZERO-OR-ONE REPEAT OPERATOR / STINGY MATCHING OPERATOR
@@ -621,10 +621,10 @@ public class RE extends REToken {
       //  stingy matching if RE_STINGY_OPS is set and it follows a quantifier
 
       else if ((unit.ch == '?') && !syntax.get(RESyntax.RE_LIMITED_OPS) && (!syntax.get(RESyntax.RE_BK_PLUS_QM) ^ unit.bk)) {
-	if (currentToken == null) throw new REException(getLocalizedMessage("repeat.no.token"),REException.REG_BADRPT,index);
+ if (currentToken == null) throw new REException(getLocalizedMessage("repeat.no.token"),REException.REG_BADRPT,index);
 
-	// Check for stingy matching on RETokenRepeated
-	if (currentToken instanceof RETokenRepeated) {
+ // Check for stingy matching on RETokenRepeated
+ if (currentToken instanceof RETokenRepeated) {
           if (syntax.get(RESyntax.RE_STINGY_OPS) && !((RETokenRepeated)currentToken).isStingy())
             ((RETokenRepeated)currentToken).makeStingy();
           else
@@ -632,55 +632,55 @@ public class RE extends REToken {
         }
         else if (currentToken instanceof RETokenWordBoundary || currentToken instanceof RETokenWordBoundary)
           throw new REException(getLocalizedMessage("repeat.assertion"),REException.REG_BADRPT,index);
-	else
-	  currentToken = setRepeated(currentToken,0,1,index);
+ else
+   currentToken = setRepeated(currentToken,0,1,index);
       }
-	
+ 
       // BACKREFERENCE OPERATOR
       //  \1 \2 ... \9
       // not available if RE_NO_BK_REFS is set
 
       else if (unit.bk && Character.isDigit(unit.ch) && !syntax.get(RESyntax.RE_NO_BK_REFS)) {
-	addToken(currentToken);
-	currentToken = new RETokenBackRef(subIndex,Character.digit(unit.ch,10),insens);
+ addToken(currentToken);
+ currentToken = new RETokenBackRef(subIndex,Character.digit(unit.ch,10),insens);
       }
 
       // START OF STRING OPERATOR
       //  \A if RE_STRING_ANCHORS is set
       
       else if (unit.bk && (unit.ch == 'A') && syntax.get(RESyntax.RE_STRING_ANCHORS)) {
-	addToken(currentToken);
-	currentToken = new RETokenStart(subIndex,null);
+ addToken(currentToken);
+ currentToken = new RETokenStart(subIndex,null);
       }
 
       // WORD BREAK OPERATOR
       //  \b if ????
 
       else if (unit.bk && (unit.ch == 'b') && syntax.get(RESyntax.RE_STRING_ANCHORS)) {
-	  addToken(currentToken);
-	  currentToken = new RETokenWordBoundary(subIndex, RETokenWordBoundary.BEGIN | RETokenWordBoundary.END, false);
+   addToken(currentToken);
+   currentToken = new RETokenWordBoundary(subIndex, RETokenWordBoundary.BEGIN | RETokenWordBoundary.END, false);
       } 
 
       // WORD BEGIN OPERATOR 
       //  \< if ????
       else if (unit.bk && (unit.ch == '<')) {
-	  addToken(currentToken);
-	  currentToken = new RETokenWordBoundary(subIndex, RETokenWordBoundary.BEGIN, false);
+   addToken(currentToken);
+   currentToken = new RETokenWordBoundary(subIndex, RETokenWordBoundary.BEGIN, false);
       } 
 
       // WORD END OPERATOR 
       //  \> if ????
       else if (unit.bk && (unit.ch == '>')) {
-	  addToken(currentToken);
-	  currentToken = new RETokenWordBoundary(subIndex, RETokenWordBoundary.END, false);
+   addToken(currentToken);
+   currentToken = new RETokenWordBoundary(subIndex, RETokenWordBoundary.END, false);
       } 
 
       // NON-WORD BREAK OPERATOR
       // \B if ????
 
       else if (unit.bk && (unit.ch == 'B') && syntax.get(RESyntax.RE_STRING_ANCHORS)) {
-	  addToken(currentToken);
-	  currentToken = new RETokenWordBoundary(subIndex, RETokenWordBoundary.BEGIN | RETokenWordBoundary.END, true);
+   addToken(currentToken);
+   currentToken = new RETokenWordBoundary(subIndex, RETokenWordBoundary.BEGIN | RETokenWordBoundary.END, true);
       } 
 
       
@@ -688,100 +688,100 @@ public class RE extends REToken {
       //  \d if RE_CHAR_CLASS_ESCAPES is set
       
       else if (unit.bk && (unit.ch == 'd') && syntax.get(RESyntax.RE_CHAR_CLASS_ESCAPES)) {
-	addToken(currentToken);
-	currentToken = new RETokenPOSIX(subIndex,RETokenPOSIX.DIGIT,insens,false);
+ addToken(currentToken);
+ currentToken = new RETokenPOSIX(subIndex,RETokenPOSIX.DIGIT,insens,false);
       }
 
       // NON-DIGIT OPERATOR
       //  \D
 
-	else if (unit.bk && (unit.ch == 'D') && syntax.get(RESyntax.RE_CHAR_CLASS_ESCAPES)) {
-	  addToken(currentToken);
-	  currentToken = new RETokenPOSIX(subIndex,RETokenPOSIX.DIGIT,insens,true);
-	}
+ else if (unit.bk && (unit.ch == 'D') && syntax.get(RESyntax.RE_CHAR_CLASS_ESCAPES)) {
+   addToken(currentToken);
+   currentToken = new RETokenPOSIX(subIndex,RETokenPOSIX.DIGIT,insens,true);
+ }
 
-	// NEWLINE ESCAPE
+ // NEWLINE ESCAPE
         //  \n
 
-	else if (unit.bk && (unit.ch == 'n')) {
-	  addToken(currentToken);
-	  currentToken = new RETokenChar(subIndex,'\n',false);
-	}
+ else if (unit.bk && (unit.ch == 'n')) {
+   addToken(currentToken);
+   currentToken = new RETokenChar(subIndex,'\n',false);
+ }
 
-	// RETURN ESCAPE
+ // RETURN ESCAPE
         //  \r
 
-	else if (unit.bk && (unit.ch == 'r')) {
-	  addToken(currentToken);
-	  currentToken = new RETokenChar(subIndex,'\r',false);
-	}
+ else if (unit.bk && (unit.ch == 'r')) {
+   addToken(currentToken);
+   currentToken = new RETokenChar(subIndex,'\r',false);
+ }
 
-	// WHITESPACE OPERATOR
+ // WHITESPACE OPERATOR
         //  \s if RE_CHAR_CLASS_ESCAPES is set
 
-	else if (unit.bk && (unit.ch == 's') && syntax.get(RESyntax.RE_CHAR_CLASS_ESCAPES)) {
-	  addToken(currentToken);
-	  currentToken = new RETokenPOSIX(subIndex,RETokenPOSIX.SPACE,insens,false);
-	}
+ else if (unit.bk && (unit.ch == 's') && syntax.get(RESyntax.RE_CHAR_CLASS_ESCAPES)) {
+   addToken(currentToken);
+   currentToken = new RETokenPOSIX(subIndex,RETokenPOSIX.SPACE,insens,false);
+ }
 
-	// NON-WHITESPACE OPERATOR
+ // NON-WHITESPACE OPERATOR
         //  \S
 
-	else if (unit.bk && (unit.ch == 'S') && syntax.get(RESyntax.RE_CHAR_CLASS_ESCAPES)) {
-	  addToken(currentToken);
-	  currentToken = new RETokenPOSIX(subIndex,RETokenPOSIX.SPACE,insens,true);
-	}
+ else if (unit.bk && (unit.ch == 'S') && syntax.get(RESyntax.RE_CHAR_CLASS_ESCAPES)) {
+   addToken(currentToken);
+   currentToken = new RETokenPOSIX(subIndex,RETokenPOSIX.SPACE,insens,true);
+ }
 
-	// TAB ESCAPE
+ // TAB ESCAPE
         //  \t
 
-	else if (unit.bk && (unit.ch == 't')) {
-	  addToken(currentToken);
-	  currentToken = new RETokenChar(subIndex,'\t',false);
-	}
+ else if (unit.bk && (unit.ch == 't')) {
+   addToken(currentToken);
+   currentToken = new RETokenChar(subIndex,'\t',false);
+ }
 
-	// ALPHANUMERIC OPERATOR
+ // ALPHANUMERIC OPERATOR
         //  \w
 
-	else if (unit.bk && (unit.ch == 'w') && syntax.get(RESyntax.RE_CHAR_CLASS_ESCAPES)) {
-	  addToken(currentToken);
-	  currentToken = new RETokenPOSIX(subIndex,RETokenPOSIX.ALNUM,insens,false);
-	}
+ else if (unit.bk && (unit.ch == 'w') && syntax.get(RESyntax.RE_CHAR_CLASS_ESCAPES)) {
+   addToken(currentToken);
+   currentToken = new RETokenPOSIX(subIndex,RETokenPOSIX.ALNUM,insens,false);
+ }
 
-	// NON-ALPHANUMERIC OPERATOR
+ // NON-ALPHANUMERIC OPERATOR
         //  \W
 
-	else if (unit.bk && (unit.ch == 'W') && syntax.get(RESyntax.RE_CHAR_CLASS_ESCAPES)) {
-	  addToken(currentToken);
-	  currentToken = new RETokenPOSIX(subIndex,RETokenPOSIX.ALNUM,insens,true);
-	}
+ else if (unit.bk && (unit.ch == 'W') && syntax.get(RESyntax.RE_CHAR_CLASS_ESCAPES)) {
+   addToken(currentToken);
+   currentToken = new RETokenPOSIX(subIndex,RETokenPOSIX.ALNUM,insens,true);
+ }
 
-	// END OF STRING OPERATOR
+ // END OF STRING OPERATOR
         //  \Z
 
-	else if (unit.bk && (unit.ch == 'Z') && syntax.get(RESyntax.RE_STRING_ANCHORS)) {
-	  addToken(currentToken);
-	  currentToken = new RETokenEnd(subIndex,null);
-	}
+ else if (unit.bk && (unit.ch == 'Z') && syntax.get(RESyntax.RE_STRING_ANCHORS)) {
+   addToken(currentToken);
+   currentToken = new RETokenEnd(subIndex,null);
+ }
 
-	// NON-SPECIAL CHARACTER (or escape to make literal)
+ // NON-SPECIAL CHARACTER (or escape to make literal)
         //  c | \* for example
 
-	else {  // not a special character
-	  addToken(currentToken);
-	  currentToken = new RETokenChar(subIndex,unit.ch,insens);
-	} 
+ else {  // not a special character
+   addToken(currentToken);
+   currentToken = new RETokenChar(subIndex,unit.ch,insens);
+ } 
       } // end while
 
     // Add final buffered token and an EndSub marker
     addToken(currentToken);
       
     if (branches != null) {
-	branches.addElement(new RE(firstToken,lastToken,numSubs,subIndex,minimumLength));
-	branches.trimToSize(); // compact the Vector
-	minimumLength = 0;
-	firstToken = lastToken = null;
-	addToken(new RETokenOneOf(subIndex,branches,false));
+ branches.addElement(new RE(firstToken,lastToken,numSubs,subIndex,minimumLength));
+ branches.trimToSize(); // compact the Vector
+ minimumLength = 0;
+ firstToken = lastToken = null;
+ addToken(new RETokenOneOf(subIndex,branches,false));
     } 
     else addToken(new RETokenEndSub(subIndex));
 
@@ -791,7 +791,7 @@ public class RE extends REToken {
     unit.ch = input[index++];
     if (unit.bk = (unit.ch == '\\'))
       if (index < input.length)
-	unit.ch = input[index++];
+ unit.ch = input[index++];
       else throw new REException(getLocalizedMessage("ends.with.backslash"),REException.REG_ESCAPE,index);
     return index;
   }
@@ -834,12 +834,12 @@ public class RE extends REToken {
       return (input.charAt(0) == CharIndexed.OUT_OF_BOUNDS);
     REMatch m = new REMatch(numSubs, index, eflags);
     if (firstToken.match(input, m)) {
-	while (m != null) {
-	    if (input.charAt(m.index) == CharIndexed.OUT_OF_BOUNDS) {
-		return true;
-	    }
-	    m = m.next;
-	}
+ while (m != null) {
+     if (input.charAt(m.index) == CharIndexed.OUT_OF_BOUNDS) {
+  return true;
+     }
+     m = m.next;
+ }
     }
     return false;
   }
@@ -856,7 +856,7 @@ public class RE extends REToken {
   // Overrides REToken.setUncle
   void setUncle(REToken uncle) {
       if (lastToken != null) {
-	  lastToken.setUncle(uncle);
+   lastToken.setUncle(uncle);
       } else super.setUncle(uncle); // to deal with empty subexpressions
   }
 
@@ -929,10 +929,10 @@ public class RE extends REToken {
       all.addElement(m);
       index = m.getEndIndex();
       if (m.end[0] == 0) {   // handle pathological case of zero-length match
-	index++;
-	input.move(1);
+ index++;
+ input.move(1);
       } else {
-	input.move(m.end[0]);
+ input.move(m.end[0]);
       }
       if (!input.isValid()) break;
     }
@@ -943,12 +943,12 @@ public class RE extends REToken {
   
     /* Implements abstract method REToken.match() */
     boolean match(CharIndexed input, REMatch mymatch) { 
-	if (firstToken == null) return next(input, mymatch);
+ if (firstToken == null) return next(input, mymatch);
 
-	// Note the start of this subexpression
-	mymatch.start[subIndex] = mymatch.index;
+ // Note the start of this subexpression
+ mymatch.start[subIndex] = mymatch.index;
 
-	return firstToken.match(input, mymatch);
+ return firstToken.match(input, mymatch);
     }
   
   /**
@@ -1010,35 +1010,35 @@ public class RE extends REToken {
       // Create a new REMatch to hold results
       REMatch mymatch = new REMatch(numSubs, anchor, eflags);
       do {
-	  // Optimization: check if anchor + minimumLength > length
-	  if (minimumLength == 0 || input.charAt(minimumLength-1) != CharIndexed.OUT_OF_BOUNDS) {
-	      if (match(input, mymatch)) {
-		  // Find longest match of them all to observe leftmost longest
-		  REMatch longest = mymatch;
-		  while ((mymatch = mymatch.next) != null) {
-		      if (mymatch.index > longest.index) {
-			  longest = mymatch;
-		      }
-		  }
-		  
-		  longest.end[0] = longest.index;
-		  longest.finish(input);
-		  return longest;
-	      }
-	  }
-	  mymatch.clear(++anchor);
-	  // Append character to buffer if needed
-	  if (buffer != null && input.charAt(0) != CharIndexed.OUT_OF_BOUNDS) {
-	      buffer.append(input.charAt(0));
-	  }
+   // Optimization: check if anchor + minimumLength > length
+   if (minimumLength == 0 || input.charAt(minimumLength-1) != CharIndexed.OUT_OF_BOUNDS) {
+       if (match(input, mymatch)) {
+    // Find longest match of them all to observe leftmost longest
+    REMatch longest = mymatch;
+    while ((mymatch = mymatch.next) != null) {
+        if (mymatch.index > longest.index) {
+     longest = mymatch;
+        }
+    }
+    
+    longest.end[0] = longest.index;
+    longest.finish(input);
+    return longest;
+       }
+   }
+   mymatch.clear(++anchor);
+   // Append character to buffer if needed
+   if (buffer != null && input.charAt(0) != CharIndexed.OUT_OF_BOUNDS) {
+       buffer.append(input.charAt(0));
+   }
       } while (input.move(1));
       
       // Special handling at end of input for e.g. "$"
       if (minimumLength == 0) {
-	  if (match(input, mymatch)) {
-	      mymatch.finish(input);
-	      return mymatch;
-	  }
+   if (match(input, mymatch)) {
+       mymatch.finish(input);
+       return mymatch;
+   }
       }
 
       return null;
@@ -1135,10 +1135,10 @@ public class RE extends REToken {
     REMatch m = getMatchImpl(input,index,eflags,buffer);
     if (m==null) return buffer.toString();
     buffer.append( ((eflags & REG_NO_INTERPOLATE) > 0) ?
-		   replace : m.substituteInto(replace) );
+     replace : m.substituteInto(replace) );
     if (input.move(m.end[0])) {
       do {
-	buffer.append(input.charAt(0));
+ buffer.append(input.charAt(0));
       } while (input.move(1));
     }
     return buffer.toString();
@@ -1196,16 +1196,16 @@ public class RE extends REToken {
     StringBuffer buffer = new StringBuffer();
     REMatch m;
     while ((m = getMatchImpl(input,index,eflags,buffer)) != null) {
-	buffer.append( ((eflags & REG_NO_INTERPOLATE) > 0) ?
-		       replace : m.substituteInto(replace) );
+ buffer.append( ((eflags & REG_NO_INTERPOLATE) > 0) ?
+         replace : m.substituteInto(replace) );
       index = m.getEndIndex();
       if (m.end[0] == 0) {
-	char ch = input.charAt(0);
-	if (ch != CharIndexed.OUT_OF_BOUNDS) 
-	    buffer.append(ch);
-	input.move(1);
+ char ch = input.charAt(0);
+ if (ch != CharIndexed.OUT_OF_BOUNDS) 
+     buffer.append(ch);
+ input.move(1);
       } else {
-	  input.move(m.end[0]);
+   input.move(m.end[0]);
       }
 
       if (!input.isValid()) break;
@@ -1218,12 +1218,12 @@ public class RE extends REToken {
     if (next == null) return;
     minimumLength += next.getMinimumLength();
     if (firstToken == null) {
-	lastToken = firstToken = next;
+ lastToken = firstToken = next;
     } else {
       // if chain returns false, it "rejected" the token due to
       // an optimization, and next was combined with lastToken
       if (lastToken.chain(next)) {
-	  lastToken = next;
+   lastToken = next;
       }
     }
   }
@@ -1239,7 +1239,7 @@ public class RE extends REToken {
     int i;
     for (i=index; i<(pattern.length-1); i++) {
       if ((pattern[i] == ':') && (pattern[i+1] == ']'))
-	return i+2;
+ return i+2;
       buf.append(pattern[i]);
     }
     return index; // didn't match up
@@ -1277,7 +1277,7 @@ public class RE extends REToken {
     }
 
     min = Integer.parseInt(buf.toString());
-	
+ 
     if ((unit.ch == '}') && (syntax.get(RESyntax.RE_NO_BK_BRACES) ^ unit.bk))
       max = min;
     else if (index == input.length)
@@ -1289,7 +1289,7 @@ public class RE extends REToken {
       buf = new StringBuffer();
       // Read string of digits
       while (((index = getCharUnit(input,index,unit)) != input.length) && Character.isDigit(unit.ch))
-	buf.append(unit.ch);
+ buf.append(unit.ch);
 
       if (!((unit.ch == '}') && (syntax.get(RESyntax.RE_NO_BK_BRACES) ^ unit.bk)))
         if (mustMatch)
@@ -1347,10 +1347,10 @@ public class RE extends REToken {
     else if (input instanceof InputStream)
       return new CharIndexedInputStream((InputStream) input,index);
     else if (input instanceof Reader)
-	return new CharIndexedReader((Reader) input, index);
+ return new CharIndexedReader((Reader) input, index);
     else if (input instanceof CharIndexed)
-	return (CharIndexed) input; // do we lose index info?
+ return (CharIndexed) input; // do we lose index info?
     else 
-	return new CharIndexedString(input.toString(), index);
+ return new CharIndexedString(input.toString(), index);
   }
 }

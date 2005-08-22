@@ -99,7 +99,7 @@ public interface ContentHandler
      * @see #endDocument
      */
     public void startDocument ()
-	throws SAXException;
+ throws SAXException;
 
 
     /**
@@ -116,7 +116,7 @@ public interface ContentHandler
      * @see #startDocument
      */
     public void endDocument()
-	throws SAXException;
+ throws SAXException;
 
 
     /**
@@ -155,7 +155,7 @@ public interface ContentHandler
      * @see #startElement
      */
     public void startPrefixMapping (String prefix, String uri)
-	throws SAXException;
+ throws SAXException;
 
 
     /**
@@ -174,7 +174,7 @@ public interface ContentHandler
      * @see #endElement
      */
     public void endPrefixMapping (String prefix)
-	throws SAXException;
+ throws SAXException;
 
 
     /**
@@ -237,8 +237,8 @@ public interface ContentHandler
      * @see org.xml.sax.Attributes
      */
     public void startElement (String namespaceURI, String localName,
-			      String qName, Attributes atts)
-	throws SAXException;
+         String qName, Attributes atts)
+ throws SAXException;
 
 
     /**
@@ -263,8 +263,8 @@ public interface ContentHandler
      *            wrapping another exception.
      */
     public void endElement (String namespaceURI, String localName,
-			    String qName)
-	throws SAXException;
+       String qName)
+ throws SAXException;
 
 
     /**
@@ -294,7 +294,7 @@ public interface ContentHandler
      * @see org.xml.sax.Locator
      */
     public void characters (char ch[], int start, int length)
-	throws SAXException;
+ throws SAXException;
 
 
     /**
@@ -322,7 +322,7 @@ public interface ContentHandler
      * @see #characters
      */
     public void ignorableWhitespace (char ch[], int start, int length)
-	throws SAXException;
+ throws SAXException;
 
 
     /**
@@ -344,7 +344,7 @@ public interface ContentHandler
      *            wrapping another exception.
      */
     public void processingInstruction (String target, String data)
-	throws SAXException;
+ throws SAXException;
 
 
     /**
@@ -368,7 +368,7 @@ public interface ContentHandler
      *            wrapping another exception.
      */
     public void skippedEntity (String name)
-	throws SAXException;
+ throws SAXException;
 }
 
 // end of ContentHandler.java

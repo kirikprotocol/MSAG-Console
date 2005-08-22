@@ -41,118 +41,118 @@ import org.gjt.sp.util.Log;
  */
 class FastRepaintManager
 {
-	//{{{ FastRepaintManager constructor
-	FastRepaintManager(JEditTextArea textArea,
-		TextAreaPainter painter)
-	{
-		this.textArea = textArea;
-		this.painter = painter;
-	} //}}}
+ //{{{ FastRepaintManager constructor
+ FastRepaintManager(JEditTextArea textArea,
+  TextAreaPainter painter)
+ {
+  this.textArea = textArea;
+  this.painter = painter;
+ } //}}}
 
-	//{{{ updateGraphics() method
-	void updateGraphics()
-	{
-		if(gfx != null)
-			gfx.dispose();
+ //{{{ updateGraphics() method
+ void updateGraphics()
+ {
+  if(gfx != null)
+   gfx.dispose();
 
-		int width = painter.getWidth();
-		int height = painter.getHeight();
-		/* A little hack */
-		if(width == 0)
-			width = 1;
-		if(height == 0)
-			height = 1;
-		img = painter.getGraphicsConfiguration()
-			.createCompatibleImage(width,height,
-			Transparency.OPAQUE);
-		gfx = (Graphics2D)img.getGraphics();
-		gfx.clipRect(0,0,painter.getWidth(),painter.getHeight());
-		fastScroll = false;
-	} //}}}
+  int width = painter.getWidth();
+  int height = painter.getHeight();
+  /* A little hack */
+  if(width == 0)
+   width = 1;
+  if(height == 0)
+   height = 1;
+  img = painter.getGraphicsConfiguration()
+   .createCompatibleImage(width,height,
+   Transparency.OPAQUE);
+  gfx = (Graphics2D)img.getGraphics();
+  gfx.clipRect(0,0,painter.getWidth(),painter.getHeight());
+  fastScroll = false;
+ } //}}}
 
-	//{{{ getGraphics() method
-	Graphics2D getGraphics()
-	{
-		return gfx;
-	} //}}}
+ //{{{ getGraphics() method
+ Graphics2D getGraphics()
+ {
+  return gfx;
+ } //}}}
 
-	//{{{ prepareGraphics() method
-	class RepaintLines
-	{
-		int first, last;
+ //{{{ prepareGraphics() method
+ class RepaintLines
+ {
+  int first, last;
 
-		RepaintLines(int first, int last)
-		{
-			this.first = first;
-			this.last = last;
-		}
-	} //}}}
+  RepaintLines(int first, int last)
+  {
+   this.first = first;
+   this.last = last;
+  }
+ } //}}}
 
-	//{{{ prepareGraphics() method
-	RepaintLines prepareGraphics(Rectangle clipRect, int firstLine,
-		Graphics2D gfx)
-	{
-		gfx.setFont(painter.getFont());
-		gfx.setColor(painter.getBackground());
+ //{{{ prepareGraphics() method
+ RepaintLines prepareGraphics(Rectangle clipRect, int firstLine,
+  Graphics2D gfx)
+ {
+  gfx.setFont(painter.getFont());
+  gfx.setColor(painter.getBackground());
 
-		int height = gfx.getFontMetrics().getHeight();
+  int height = gfx.getFontMetrics().getHeight();
 
-		if(fastScroll)
-		{
-			int lineDelta = (this.firstLine - firstLine);
-			int yDelta = lineDelta * height;
-			int visibleLines = textArea.getVisibleLines();
+  if(fastScroll)
+  {
+   int lineDelta = (this.firstLine - firstLine);
+   int yDelta = lineDelta * height;
+   int visibleLines = textArea.getVisibleLines();
 
-			if(lineDelta > -visibleLines
-				&& lineDelta < visibleLines)
-			{
-				if(lineDelta < 0)
-				{
-					gfx.copyArea(0,-yDelta,painter.getWidth(),
-						painter.getHeight() + yDelta,0,yDelta);
-					return new RepaintLines(
-						visibleLines + this.firstLine
-						- firstLine - 1,
-						visibleLines - 1);
-				}
-				else if(lineDelta > 0)
-				{
-					gfx.copyArea(0,0,painter.getWidth(),
-						painter.getHeight() - yDelta,0,yDelta);
-					return new RepaintLines(0,
-						this.firstLine - firstLine);
-				}
-			}
-		}
+   if(lineDelta > -visibleLines
+    && lineDelta < visibleLines)
+   {
+    if(lineDelta < 0)
+    {
+     gfx.copyArea(0,-yDelta,painter.getWidth(),
+      painter.getHeight() + yDelta,0,yDelta);
+     return new RepaintLines(
+      visibleLines + this.firstLine
+      - firstLine - 1,
+      visibleLines - 1);
+    }
+    else if(lineDelta > 0)
+    {
+     gfx.copyArea(0,0,painter.getWidth(),
+      painter.getHeight() - yDelta,0,yDelta);
+     return new RepaintLines(0,
+      this.firstLine - firstLine);
+    }
+   }
+  }
 
-		// Because the clipRect's height is usually an even multiple
-		// of the font height, we subtract 1 from it, otherwise one
-		// too many lines will always be painted.
-		return new RepaintLines(
-			clipRect.y / height,
-			(clipRect.y + clipRect.height - 1) / height);
-	} //}}}
+  // Because the clipRect's height is usually an even multiple
+  // of the font height, we subtract 1 from it, otherwise one
+  // too many lines will always be painted.
+  return new RepaintLines(
+   clipRect.y / height,
+   (clipRect.y + clipRect.height - 1) / height);
+ } //}}}
 
-	//{{{ paint() method
-	void paint(Graphics g)
-	{
-		firstLine = textArea.getFirstLine();
-		g.drawImage(img,0,0,null);
-	} //}}}
+ //{{{ paint() method
+ void paint(Graphics g)
+ {
+  firstLine = textArea.getFirstLine();
+  g.drawImage(img,0,0,null);
+ } //}}}
 
-	//{{{ setFastScroll() method
-	void setFastScroll(boolean fastScroll)
-	{
-		this.fastScroll = fastScroll;
-	} //}}}
+ //{{{ setFastScroll() method
+ void setFastScroll(boolean fastScroll)
+ {
+  this.fastScroll = fastScroll;
+ } //}}}
 
-	//{{{ Private members
-	private JEditTextArea textArea;
-	private TextAreaPainter painter;
-	private Graphics2D gfx;
-	private Image img;
-	private boolean fastScroll;
-	/* Most recently rendered first line */
-	private int firstLine;
-	//}}}
+ //{{{ Private members
+ private JEditTextArea textArea;
+ private TextAreaPainter painter;
+ private Graphics2D gfx;
+ private Image img;
+ private boolean fastScroll;
+ /* Most recently rendered first line */
+ private int firstLine;
+ //}}}
 }

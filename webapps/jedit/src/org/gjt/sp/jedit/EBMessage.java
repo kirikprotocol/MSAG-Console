@@ -40,59 +40,59 @@ package org.gjt.sp.jedit;
  */
 public abstract class EBMessage
 {
-	//{{{ EBMessage constructor
-	/**
-	 * Creates a new message.
-	 * @param source The message source
-	 * @since jEdit 4.2pre1
-	 */
-	public EBMessage(Object source)
-	{
-		this.source = source;
-	} //}}}
+ //{{{ EBMessage constructor
+ /**
+  * Creates a new message.
+  * @param source The message source
+  * @since jEdit 4.2pre1
+  */
+ public EBMessage(Object source)
+ {
+  this.source = source;
+ } //}}}
 
-	//{{{ EBMessage constructor
-	/**
-	 * Creates a new message.
-	 * @param source The message source
-	 */
-	public EBMessage(EBComponent source)
-	{
-		this.source = source;
-	} //}}}
+ //{{{ EBMessage constructor
+ /**
+  * Creates a new message.
+  * @param source The message source
+  */
+ public EBMessage(EBComponent source)
+ {
+  this.source = source;
+ } //}}}
 
-	//{{{ getSource() method
-	/**
-	 * Returns the sender of this message.
-	 * @since jEdit 4.2pre1
-	 */
-	public Object getSource()
-	{
-		return source;
-	} //}}}
+ //{{{ getSource() method
+ /**
+  * Returns the sender of this message.
+  * @since jEdit 4.2pre1
+  */
+ public Object getSource()
+ {
+  return source;
+ } //}}}
 
-	//{{{ toString() method
-	/**
-	 * Returns a string representation of this message.
-	 */
-	public String toString()
-	{
-		String className = getClass().getName();
-		int index = className.lastIndexOf('.');
-		return className.substring(index + 1)
-			+ "[" + paramString() + "]";
-	} //}}}
+ //{{{ toString() method
+ /**
+  * Returns a string representation of this message.
+  */
+ public String toString()
+ {
+  String className = getClass().getName();
+  int index = className.lastIndexOf('.');
+  return className.substring(index + 1)
+   + "[" + paramString() + "]";
+ } //}}}
 
-	//{{{ paramString() method
-	/**
-	 * Returns a string representation of this message's parameters.
-	 */
-	public String paramString()
-	{
-		return "source=" + source;
-	} //}}}
+ //{{{ paramString() method
+ /**
+  * Returns a string representation of this message's parameters.
+  */
+ public String paramString()
+ {
+  return "source=" + source;
+ } //}}}
 
-	//{{{ Private members
-	private Object source;
-	//}}}
+ //{{{ Private members
+ private Object source;
+ //}}}
 }

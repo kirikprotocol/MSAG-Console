@@ -34,14 +34,14 @@ final class RETokenRange extends REToken {
   }
 
     boolean match(CharIndexed input, REMatch mymatch) {
-	char c = input.charAt(mymatch.index);
-	if (c == CharIndexed.OUT_OF_BOUNDS) return false;
-	if (insens) c = Character.toLowerCase(c);
-	if ((c >= lo) && (c <= hi)) {
-	    ++mymatch.index;
-	    return next(input, mymatch);
-	}
-	return false;
+ char c = input.charAt(mymatch.index);
+ if (c == CharIndexed.OUT_OF_BOUNDS) return false;
+ if (insens) c = Character.toLowerCase(c);
+ if ((c >= lo) && (c <= hi)) {
+     ++mymatch.index;
+     return next(input, mymatch);
+ }
+ return false;
     }
     
   void dump(StringBuffer os) {

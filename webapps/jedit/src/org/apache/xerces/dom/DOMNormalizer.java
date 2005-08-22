@@ -196,78 +196,78 @@ public class DOMNormalizer implements XMLDocumentHandler {
      * Normalizes document.
      * Note: reset() must be called before this method.
      */
-	protected void normalizeDocument(CoreDocumentImpl document, DOMConfigurationImpl config) {
+ protected void normalizeDocument(CoreDocumentImpl document, DOMConfigurationImpl config) {
 
-		fDocument = document;
-		fConfiguration = config;
+  fDocument = document;
+  fConfiguration = config;
 
-		// intialize and reset DOMNormalizer component
-		// 
-		fSymbolTable = (SymbolTable) fConfiguration.getProperty(DOMConfigurationImpl.SYMBOL_TABLE);
-		// reset namespace context
-		fNamespaceContext.reset();
-		fNamespaceContext.declarePrefix(XMLSymbols.EMPTY_STRING, XMLSymbols.EMPTY_STRING);
-		fNamespaceCounter = 1;
+  // intialize and reset DOMNormalizer component
+  // 
+  fSymbolTable = (SymbolTable) fConfiguration.getProperty(DOMConfigurationImpl.SYMBOL_TABLE);
+  // reset namespace context
+  fNamespaceContext.reset();
+  fNamespaceContext.declarePrefix(XMLSymbols.EMPTY_STRING, XMLSymbols.EMPTY_STRING);
+  fNamespaceCounter = 1;
 
-		if ((fConfiguration.features & DOMConfigurationImpl.VALIDATE) != 0) {
-			// REVISIT: currently we only support revalidation against XML Schemas
-			fValidationHandler =
-				CoreDOMImplementationImpl.singleton.getValidator(XMLGrammarDescription.XML_SCHEMA);
-			fConfiguration.setFeature(DOMConfigurationImpl.XERCES_VALIDATION, true);
-			fConfiguration.setFeature(DOMConfigurationImpl.SCHEMA, true);
-			// report fatal error on DOM Level 1 nodes
-			fNamespaceValidation = true;
+  if ((fConfiguration.features & DOMConfigurationImpl.VALIDATE) != 0) {
+   // REVISIT: currently we only support revalidation against XML Schemas
+   fValidationHandler =
+    CoreDOMImplementationImpl.singleton.getValidator(XMLGrammarDescription.XML_SCHEMA);
+   fConfiguration.setFeature(DOMConfigurationImpl.XERCES_VALIDATION, true);
+   fConfiguration.setFeature(DOMConfigurationImpl.SCHEMA, true);
+   // report fatal error on DOM Level 1 nodes
+   fNamespaceValidation = true;
             
-			// check if we need to fill in PSVI
+   // check if we need to fill in PSVI
             fPSVI = ((fConfiguration.features & DOMConfigurationImpl.PSVI) !=0)?true:false;
             
             // reset ID table           
             fDocument.clearIdentifiers();
             
             // reset schema validator
-			((XMLComponent) fValidationHandler).reset(fConfiguration);
-		}
+   ((XMLComponent) fValidationHandler).reset(fConfiguration);
+  }
 
-		fErrorHandler = (DOMErrorHandler) fConfiguration.getParameter("error-handler");
-		if (fValidationHandler != null) {
-			fValidationHandler.setBaseURI(fDocument.fDocumentURI);
-			fValidationHandler.setDocumentHandler(this);
-			fValidationHandler.startDocument(null, fDocument.encoding, fNamespaceContext, null);
+  fErrorHandler = (DOMErrorHandler) fConfiguration.getParameter("error-handler");
+  if (fValidationHandler != null) {
+   fValidationHandler.setBaseURI(fDocument.fDocumentURI);
+   fValidationHandler.setDocumentHandler(this);
+   fValidationHandler.startDocument(null, fDocument.encoding, fNamespaceContext, null);
 
-		}
-		try {
-			Node kid, next;
-			for (kid = fDocument.getFirstChild(); kid != null; kid = next) {
-				next = kid.getNextSibling();
-				kid = normalizeNode(kid);
-				if (kid != null) { // don't advance
-					next = kid;
-				}
-			}
+  }
+  try {
+   Node kid, next;
+   for (kid = fDocument.getFirstChild(); kid != null; kid = next) {
+    next = kid.getNextSibling();
+    kid = normalizeNode(kid);
+    if (kid != null) { // don't advance
+     next = kid;
+    }
+   }
 
-			// release resources
-			if (fValidationHandler != null) {
-				fValidationHandler.endDocument(null);
-				// REVISIT: only validation against XML Schema occurs
-				CoreDOMImplementationImpl.singleton.releaseValidator(
-					XMLGrammarDescription.XML_SCHEMA, fValidationHandler);
-				fValidationHandler = null;
-			}
-		}
-		catch (RuntimeException e) {
-			// fatal error occured
-			modifyDOMError(
-				"Runtime exception: " + e.getMessage(),
-				DOMError.SEVERITY_FATAL_ERROR,
-				null);
+   // release resources
+   if (fValidationHandler != null) {
+    fValidationHandler.endDocument(null);
+    // REVISIT: only validation against XML Schema occurs
+    CoreDOMImplementationImpl.singleton.releaseValidator(
+     XMLGrammarDescription.XML_SCHEMA, fValidationHandler);
+    fValidationHandler = null;
+   }
+  }
+  catch (RuntimeException e) {
+   // fatal error occured
+   modifyDOMError(
+    "Runtime exception: " + e.getMessage(),
+    DOMError.SEVERITY_FATAL_ERROR,
+    null);
 
-			this.fErrorHandler.handleError(fDOMError);
-			if (true) {
-				e.printStackTrace();
-			}
-		}
+   this.fErrorHandler.handleError(fDOMError);
+   if (true) {
+    e.printStackTrace();
+   }
+  }
 
-	}
+ }
 
 
     /**
@@ -904,8 +904,8 @@ public class DOMNormalizer implements XMLDocumentHandler {
         qname.uri =  (namespace != null)?fSymbolTable.addSymbol(namespace):null;
     }
 
-	/* REVISIT: remove this method if DOM does not change spec.
-	 * Performs partial XML 1.0 attribute value normalization and replaces
+ /* REVISIT: remove this method if DOM does not change spec.
+  * Performs partial XML 1.0 attribute value normalization and replaces
      * attribute value if the value is changed after the normalization.
      * DOM defines that normalizeDocument acts as if the document was going 
      * through a save and load cycle, given that serializer will not escape
@@ -917,11 +917,11 @@ public class DOMNormalizer implements XMLDocumentHandler {
      * references, since '&' will be escaped during serialization and during loading
      * this won't be recognized as entity reference, i.e. attribute value "&foo;" will 
      * be serialized as "&amp;foo;" and thus after loading will be "&foo;" again.
-	 * @param value current attribute value
-	 * @param attr current attribute
-	 * @return String the value (could be original if normalization did not change 
+  * @param value current attribute value
+  * @param attr current attribute
+  * @return String the value (could be original if normalization did not change 
      * the string)
-	 */
+  */
     final String normalizeAttributeValue(String value, Attr attr) {
         if (!attr.getSpecified()){
             // specified attributes should already have a normalized form
@@ -987,28 +987,28 @@ public class DOMNormalizer implements XMLDocumentHandler {
         }
 
 
-		/**
+  /**
          * This method adds default declarations
-		 * @see org.apache.xerces.xni.XMLAttributes#addAttribute(QName, String, String)
-		 */
-		public int addAttribute(QName qname, String attrType, String attrValue) {
- 			int index = fElement.getXercesAttribute(qname.uri, qname.localpart);
-			// add defaults to the tree
-			if (index < 0) {
+   * @see org.apache.xerces.xni.XMLAttributes#addAttribute(QName, String, String)
+   */
+  public int addAttribute(QName qname, String attrType, String attrValue) {
+    int index = fElement.getXercesAttribute(qname.uri, qname.localpart);
+   // add defaults to the tree
+   if (index < 0) {
                 // the default attribute was removed by a user and needed to 
                 // be added back
-				AttrImpl attr = (AttrImpl)
-					((CoreDocumentImpl) fElement.getOwnerDocument()).createAttributeNS(
-						qname.uri,
-						qname.rawname,
-						qname.localpart);
+    AttrImpl attr = (AttrImpl)
+     ((CoreDocumentImpl) fElement.getOwnerDocument()).createAttributeNS(
+      qname.uri,
+      qname.rawname,
+      qname.localpart);
                 // REVISIT: the following should also update ID table
-				index = fElement.setXercesAttributeNode(attr);
-				attr.setNodeValue(attrValue);
-				fAugmentations.insertElementAt(new AugmentationsImpl(), index);
+    index = fElement.setXercesAttributeNode(attr);
+    attr.setNodeValue(attrValue);
+    fAugmentations.insertElementAt(new AugmentationsImpl(), index);
                 attr.setSpecified(false);
-			}            
-			else {
+   }            
+   else {
                 // default attribute is in the tree
                 // we don't need to do anything since prefix was already fixed
                 // at the namespace fixup time and value must be same value, otherwise
@@ -1017,7 +1017,7 @@ public class DOMNormalizer implements XMLDocumentHandler {
                 
             }
             return index;
-		}
+  }
 
 
         public void removeAllAttributes(){
@@ -1298,26 +1298,26 @@ public class DOMNormalizer implements XMLDocumentHandler {
      * @exception XNIException
      *                   Thrown by handler to signal an error.
      */
-	public void startElement(QName element, XMLAttributes attributes, Augmentations augs)
-		throws XNIException {
-		//REVISIT: schema elements must be namespace aware.
-		//         DTD re-validation is not implemented yet.. 
-		Element currentElement = (Element) fCurrentNode;
-		int attrCount = attributes.getLength();
+ public void startElement(QName element, XMLAttributes attributes, Augmentations augs)
+  throws XNIException {
+  //REVISIT: schema elements must be namespace aware.
+  //         DTD re-validation is not implemented yet.. 
+  Element currentElement = (Element) fCurrentNode;
+  int attrCount = attributes.getLength();
         if (DEBUG_EVENTS) {
             System.out.println("==>startElement: " +element+
             " attrs.length="+attrCount);
         }
 
-		for (int i = 0; i < attrCount; i++) {
-			attributes.getName(i, fAttrQName);
-			Attr attr = null;
+  for (int i = 0; i < attrCount; i++) {
+   attributes.getName(i, fAttrQName);
+   Attr attr = null;
 
-			attr = currentElement.getAttributeNodeNS(fAttrQName.uri, fAttrQName.localpart);
+   attr = currentElement.getAttributeNodeNS(fAttrQName.uri, fAttrQName.localpart);
             AttributePSVI attrPSVI =
-				(AttributePSVI) attributes.getAugmentations(i).getItem(Constants.ATTRIBUTE_PSVI);
+    (AttributePSVI) attributes.getAugmentations(i).getItem(Constants.ATTRIBUTE_PSVI);
 
-			if (attrPSVI != null) {
+   if (attrPSVI != null) {
                 //REVISIT: instead we should be using augmentations:
                 // to set/retrieve Id attributes
                 XSTypeDefinition decl = attrPSVI.getMemberTypeDefinition();
@@ -1334,24 +1334,24 @@ public class DOMNormalizer implements XMLDocumentHandler {
                     ((ElementImpl)currentElement).setIdAttributeNode(attr, true);
                 }
                 
-				if (fPSVI) {
-					((PSVIAttrNSImpl) attr).setPSVI(attrPSVI);
-				}
-				if ((fConfiguration.features & DOMConfigurationImpl.DTNORMALIZATION) != 0) {
-					// datatype-normalization
-					// NOTE: The specified value MUST be set after we set
-					//       the node value because that turns the "specified"
-					//       flag to "true" which may overwrite a "false"
-					//       value from the attribute list.
-					boolean specified = attr.getSpecified();
-					attr.setValue(attrPSVI.getSchemaNormalizedValue());
-					if (!specified) {
-						((AttrImpl) attr).setSpecified(specified);
-					}
-				}
-			}
-		}
-	}
+    if (fPSVI) {
+     ((PSVIAttrNSImpl) attr).setPSVI(attrPSVI);
+    }
+    if ((fConfiguration.features & DOMConfigurationImpl.DTNORMALIZATION) != 0) {
+     // datatype-normalization
+     // NOTE: The specified value MUST be set after we set
+     //       the node value because that turns the "specified"
+     //       flag to "true" which may overwrite a "false"
+     //       value from the attribute list.
+     boolean specified = attr.getSpecified();
+     attr.setValue(attrPSVI.getSchemaNormalizedValue());
+     if (!specified) {
+      ((AttrImpl) attr).setSpecified(specified);
+     }
+    }
+   }
+  }
+ }
 
 
     /**
@@ -1364,15 +1364,15 @@ public class DOMNormalizer implements XMLDocumentHandler {
      * @exception XNIException
      *                   Thrown by handler to signal an error.
      */
-	public void emptyElement(QName element, XMLAttributes attributes, Augmentations augs)
-		throws XNIException {
+ public void emptyElement(QName element, XMLAttributes attributes, Augmentations augs)
+  throws XNIException {
         if (DEBUG_EVENTS) {
             System.out.println("==>emptyElement: " +element);
         }
 
-		startElement(element, attributes, augs);
+  startElement(element, attributes, augs);
         endElement(element, augs);
-	}
+ }
 
     /**
      * This method notifies the start of a general entity.
@@ -1471,35 +1471,35 @@ public class DOMNormalizer implements XMLDocumentHandler {
      * @exception XNIException
      *                   Thrown by handler to signal an error.
      */
-	public void endElement(QName element, Augmentations augs) throws XNIException {
-		if (DEBUG_EVENTS) {
-			System.out.println("==>endElement: " + element);
-		}
+ public void endElement(QName element, Augmentations augs) throws XNIException {
+  if (DEBUG_EVENTS) {
+   System.out.println("==>endElement: " + element);
+  }
 
-		ElementPSVI elementPSVI = (ElementPSVI) augs.getItem(Constants.ELEMENT_PSVI);
-		if (elementPSVI != null) {
-			ElementImpl elementNode = (ElementImpl) fCurrentNode;
-			if (fPSVI) {
-				((PSVIElementNSImpl) fCurrentNode).setPSVI(elementPSVI);
-			}
-			// include element default content (if one is available)
-			String normalizedValue = elementPSVI.getSchemaNormalizedValue();
-			if ((fConfiguration.features & DOMConfigurationImpl.DTNORMALIZATION) != 0) {
-				elementNode.setTextContent(normalizedValue);
-			}
-			else {
-				// NOTE: this is a hack: it is possible that DOM had an empty element
-				// and validator sent default value using characters(), which we don't 
-				// implement. Thus, here we attempt to add the default value.
-				String text = elementNode.getTextContent();
-				if (text.length() == 0) {
-					// default content could be provided
-					// REVISIT: should setTextConent(null) be allowed?
-					elementNode.setTextContent(normalizedValue);
-				}
-			}
-		}
-	}
+  ElementPSVI elementPSVI = (ElementPSVI) augs.getItem(Constants.ELEMENT_PSVI);
+  if (elementPSVI != null) {
+   ElementImpl elementNode = (ElementImpl) fCurrentNode;
+   if (fPSVI) {
+    ((PSVIElementNSImpl) fCurrentNode).setPSVI(elementPSVI);
+   }
+   // include element default content (if one is available)
+   String normalizedValue = elementPSVI.getSchemaNormalizedValue();
+   if ((fConfiguration.features & DOMConfigurationImpl.DTNORMALIZATION) != 0) {
+    elementNode.setTextContent(normalizedValue);
+   }
+   else {
+    // NOTE: this is a hack: it is possible that DOM had an empty element
+    // and validator sent default value using characters(), which we don't 
+    // implement. Thus, here we attempt to add the default value.
+    String text = elementNode.getTextContent();
+    if (text.length() == 0) {
+     // default content could be provided
+     // REVISIT: should setTextConent(null) be allowed?
+     elementNode.setTextContent(normalizedValue);
+    }
+   }
+  }
+ }
 
 
     /**

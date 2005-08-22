@@ -34,75 +34,75 @@ import org.gjt.sp.jedit.*;
  */
 public class DockableWindowUpdate extends EBMessage
 {
-	//{{{ Message types
-	/**
-	 * Properties changed. Fired instead of global
-	 * <code>PropertiesChanged</code> for improved performance.
-	 * @since jEdit 4.2pre1
-	 */
-	public static final Object PROPERTIES_CHANGED = "PROPERTIES_CHANGED";
+ //{{{ Message types
+ /**
+  * Properties changed. Fired instead of global
+  * <code>PropertiesChanged</code> for improved performance.
+  * @since jEdit 4.2pre1
+  */
+ public static final Object PROPERTIES_CHANGED = "PROPERTIES_CHANGED";
 
-	/**
-	 * Dockable activated. This is sent when the dockable is made visible.
-	 * @since jEdit 4.2pre1
-	 */
-	public static final Object ACTIVATED = "ACTIVATED";
+ /**
+  * Dockable activated. This is sent when the dockable is made visible.
+  * @since jEdit 4.2pre1
+  */
+ public static final Object ACTIVATED = "ACTIVATED";
 
-	/**
-	 * Dockable deactivated. This is sent when the dockable is hidden.
-	 * @since jEdit 4.2pre1
-	 */
-	public static final Object DEACTIVATED = "DEACTIVATED";
-	//}}}
+ /**
+  * Dockable deactivated. This is sent when the dockable is hidden.
+  * @since jEdit 4.2pre1
+  */
+ public static final Object DEACTIVATED = "DEACTIVATED";
+ //}}}
 
-	//{{{ DockableWindowUpdate constructor
-	/**
-	 * Creates a new dockable window update message.
-	 * @param wm The dockable window manager
-	 * @param what What happened
-	 * @param dockable The dockable window in question
-	 */
-	public DockableWindowUpdate(DockableWindowManager wm, Object what,
-		String dockable)
-	{
-		super(wm);
+ //{{{ DockableWindowUpdate constructor
+ /**
+  * Creates a new dockable window update message.
+  * @param wm The dockable window manager
+  * @param what What happened
+  * @param dockable The dockable window in question
+  */
+ public DockableWindowUpdate(DockableWindowManager wm, Object what,
+  String dockable)
+ {
+  super(wm);
 
-		if(what == null)
-			throw new NullPointerException("What must be non-null");
+  if(what == null)
+   throw new NullPointerException("What must be non-null");
 
-		this.what = what;
-		this.dockable = dockable;
-	} //}}}
+  this.what = what;
+  this.dockable = dockable;
+ } //}}}
 
-	//{{{ getWhat() method
-	/**
-	 * Returns what caused this dockable update.
-	 */
-	public Object getWhat()
-	{
-		return what;
-	} //}}}
+ //{{{ getWhat() method
+ /**
+  * Returns what caused this dockable update.
+  */
+ public Object getWhat()
+ {
+  return what;
+ } //}}}
 
-	//{{{ getDockable() method
-	/**
-	 * Returns the dockable in question, or null if the message type is
-	 * <code>PROPERTIES_CHANGED</code>.
-	 */
-	public String getDockable()
-	{
-		return dockable;
-	} //}}}
+ //{{{ getDockable() method
+ /**
+  * Returns the dockable in question, or null if the message type is
+  * <code>PROPERTIES_CHANGED</code>.
+  */
+ public String getDockable()
+ {
+  return dockable;
+ } //}}}
 
-	//{{{ paramString() method
-	public String paramString()
-	{
-		return "what=" + what
-			+ ",dockable=" + dockable
-			+ "," + super.paramString();
-	} //}}}
+ //{{{ paramString() method
+ public String paramString()
+ {
+  return "what=" + what
+   + ",dockable=" + dockable
+   + "," + super.paramString();
+ } //}}}
 
-	//{{{ Private members
-	private Object what;
-	private String dockable;
-	//}}}
+ //{{{ Private members
+ private Object what;
+ private String dockable;
+ //}}}
 }

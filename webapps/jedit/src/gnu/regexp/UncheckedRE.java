@@ -81,9 +81,9 @@ public final class UncheckedRE extends RE {
    */
   public UncheckedRE(Object pattern, int cflags, RESyntax syntax) {
       try {
-	  initialize(pattern,cflags,syntax,0,0);
+   initialize(pattern,cflags,syntax,0,0);
       } catch (REException e) { 
-	  throw new RuntimeException(e.getMessage());
+   throw new RuntimeException(e.getMessage());
       }
   }
 }

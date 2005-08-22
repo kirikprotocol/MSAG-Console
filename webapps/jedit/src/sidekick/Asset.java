@@ -33,30 +33,30 @@ import javax.swing.Icon;
  */
 public abstract class Asset
 {
-	//{{{ Instance variables
-	public String name;
-	public Position start, end;
-	//}}}
+ //{{{ Instance variables
+ public String name;
+ public Position start, end;
+ //}}}
 
-	//{{{ Asset constructor
-	public Asset(String name)
-	{
-		this.name = name;
-	} //}}}
+ //{{{ Asset constructor
+ public Asset(String name)
+ {
+  this.name = name;
+ } //}}}
 
-	/**
-	 * Returns the icon to be shown for the asset in the structure tree.
-	 */
-	public abstract Icon getIcon();
+ /**
+  * Returns the icon to be shown for the asset in the structure tree.
+  */
+ public abstract Icon getIcon();
 
-	/**
-	 * Returns a brief description of the asset to be shown in the tree.
-	 */
-	public abstract String getShortString();
+ /**
+  * Returns a brief description of the asset to be shown in the tree.
+  */
+ public abstract String getShortString();
 
-	/**
-	 * Returns a full description of the asset to be shown in the view's
-	 * status bar on when the mouse is over the asset in the tree.
-	 */
-	public abstract String getLongString();
+ /**
+  * Returns a full description of the asset to be shown in the view's
+  * status bar on when the mouse is over the asset in the tree.
+  */
+ public abstract String getLongString();
 }

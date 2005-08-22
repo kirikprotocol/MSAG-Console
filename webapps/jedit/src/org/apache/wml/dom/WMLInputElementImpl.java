@@ -66,103 +66,103 @@ import org.apache.wml.*;
 public class WMLInputElementImpl extends WMLElementImpl implements WMLInputElement {
 
     public WMLInputElementImpl (WMLDocumentImpl owner, String tagName) {
-	super( owner, tagName);
+ super( owner, tagName);
     }
 
     public void setSize(int newValue) {
-	setAttribute("size", newValue);
+ setAttribute("size", newValue);
     }
 
     public int getSize() {
-	return getAttribute("size", 0);
+ return getAttribute("size", 0);
     }
 
     public void setFormat(String newValue) {
-	setAttribute("format", newValue);
+ setAttribute("format", newValue);
     }
 
     public String getFormat() {
-	return getAttribute("format");
+ return getAttribute("format");
     }
 
     public void setValue(String newValue) {
-	setAttribute("value", newValue);
+ setAttribute("value", newValue);
     }
 
     public String getValue() {
-	return getAttribute("value");
+ return getAttribute("value");
     }
 
     public void setMaxLength(int newValue) {
-	setAttribute("maxlength", newValue);
+ setAttribute("maxlength", newValue);
     }
 
     public int getMaxLength() {
-	return getAttribute("maxlength", 0);
+ return getAttribute("maxlength", 0);
     }
 
     public void setTabIndex(int newValue) {
-	setAttribute("tabindex", newValue);
+ setAttribute("tabindex", newValue);
     }
 
     public int getTabIndex() {
-	return getAttribute("tabindex", 0);
+ return getAttribute("tabindex", 0);
     }
 
     public void setClassName(String newValue) {
-	setAttribute("class", newValue);
+ setAttribute("class", newValue);
     }
 
     public String getClassName() {
-	return getAttribute("class");
+ return getAttribute("class");
     }
 
     public void setXmlLang(String newValue) {
-	setAttribute("xml:lang", newValue);
+ setAttribute("xml:lang", newValue);
     }
 
     public String getXmlLang() {
-	return getAttribute("xml:lang");
+ return getAttribute("xml:lang");
     }
 
     public void setEmptyOk(boolean newValue) {
-	setAttribute("emptyok", newValue);
+ setAttribute("emptyok", newValue);
     }
 
     public boolean getEmptyOk() {
-	return getAttribute("emptyok", false);
+ return getAttribute("emptyok", false);
     }
 
     public void setTitle(String newValue) {
-	setAttribute("title", newValue);
+ setAttribute("title", newValue);
     }
 
     public String getTitle() {
-	return getAttribute("title");
+ return getAttribute("title");
     }
 
     public void setId(String newValue) {
-	setAttribute("id", newValue);
+ setAttribute("id", newValue);
     }
 
     public String getId() {
-	return getAttribute("id");
+ return getAttribute("id");
     }
 
     public void setType(String newValue) {
-	setAttribute("type", newValue);
+ setAttribute("type", newValue);
     }
 
     public String getType() {
-	return getAttribute("type");
+ return getAttribute("type");
     }
 
     public void setName(String newValue) {
-	setAttribute("name", newValue);
+ setAttribute("name", newValue);
     }
 
     public String getName() {
-	return getAttribute("name");
+ return getAttribute("name");
     }
 
 }

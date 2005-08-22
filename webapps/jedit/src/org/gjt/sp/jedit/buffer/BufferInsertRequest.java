@@ -44,23 +44,23 @@ import org.gjt.sp.util.*;
  */
 public class BufferInsertRequest extends BufferIORequest
 {
-	//{{{ BufferInsertRequest constructor
-	/**
-	 * Creates a new buffer I/O request.
-	 * @param view The view
-	 * @param buffer The buffer
-	 * @param session The VFS session
-	 * @param vfs The VFS
-	 * @param path The path
-	 */
-	public BufferInsertRequest(View view, Buffer buffer,
-		Object session, VFS vfs, String path)
-	{
-		super(view,buffer,session,vfs,path);
-	} //}}}
- 	public SegmentBuffer _createInputStream(Object session, String path,
-		long length) throws IOException ,FileNotFoundException
-	{
+ //{{{ BufferInsertRequest constructor
+ /**
+  * Creates a new buffer I/O request.
+  * @param view The view
+  * @param buffer The buffer
+  * @param session The VFS session
+  * @param vfs The VFS
+  * @param path The path
+  */
+ public BufferInsertRequest(View view, Buffer buffer,
+  Object session, VFS vfs, String path)
+ {
+  super(view,buffer,session,vfs,path);
+ } //}}}
+  public SegmentBuffer _createInputStream(Object session, String path,
+  long length) throws IOException ,FileNotFoundException
+ {
 
     URL url=null;
     HttpURLConnection c=null;InputStream _in=null;
@@ -75,7 +75,7 @@ public class BufferInsertRequest extends BufferIORequest
       if (!status.equals("ok")) throw new FileNotFoundException(status);
       _in=c.getInputStream();
       if(_in == null)
-					return null;
+     return null;
       seg=read(autodetect(_in),length,false);
     } catch (MalformedURLException e) {
       e.printStackTrace();
@@ -91,90 +91,90 @@ public class BufferInsertRequest extends BufferIORequest
         }
     }
     return seg;
-	} //}}}
-	//{{{ run() method
-	public void run()
-	{
-		InputStream in = null;
+ } //}}}
+ //{{{ run() method
+ public void run()
+ {
+  InputStream in = null;
 
-		try
-		{
-			try
-			{
-				String[] args = { vfs.getFileName(path) };
-				setStatus(jEdit.getProperty("vfs.status.load",args));
-				setAbortable(true);
+  try
+  {
+   try
+   {
+    String[] args = { vfs.getFileName(path) };
+    setStatus(jEdit.getProperty("vfs.status.load",args));
+    setAbortable(true);
 
-				path = vfs._canonPath(session,path,view);
+    path = vfs._canonPath(session,path,view);
 
-				VFSFile entry = vfs._getFile(
-					session,path,view);
-				long length;
-				if(entry != null)
-					length = entry.getLength();
-				else
-					length = 0L;
+    VFSFile entry = vfs._getFile(
+     session,path,view);
+    long length;
+    if(entry != null)
+     length = entry.getLength();
+    else
+     length = 0L;
 
-			//	in = vfs._createInputStream(session,path,false,view);
-		//		if(in == null)
-		//			return;
+   // in = vfs._createInputStream(session,path,false,view);
+  //  if(in == null)
+  //   return;
        final SegmentBuffer seg=_createInputStream(session,path,length);
-		//		final SegmentBuffer seg = read(
-		//			autodetect(in),length,true);
+  //  final SegmentBuffer seg = read(
+  //   autodetect(in),length,true);
 
-				/* we don't do this in Buffer.insert() so that
-				   we can insert multiple files at once */
-				VFSManager.runInAWTThread(new Runnable()
-				{
-					public void run()
-					{
-						view.getTextArea().setSelectedText(
-							seg.toString());
-					}
-				});
-			}
-			catch(IOException io)
-			{
-			//	Log.log(Log.ERROR,this,io);
-				String[] pp = { io.toString() };
-				VFSManager.error(view,path,"ioerror.read-error",pp);
+    /* we don't do this in Buffer.insert() so that
+       we can insert multiple files at once */
+    VFSManager.runInAWTThread(new Runnable()
+    {
+     public void run()
+     {
+      view.getTextArea().setSelectedText(
+       seg.toString());
+     }
+    });
+   }
+   catch(IOException io)
+   {
+   // Log.log(Log.ERROR,this,io);
+    String[] pp = { io.toString() };
+    VFSManager.error(view,path,"ioerror.read-error",pp);
 
-				buffer.setBooleanProperty(ERROR_OCCURRED,true);
-			}
-		}
-		catch(WorkThread.Abort a)
-		{
-			if(in != null)
-			{
-				try
-				{
-					in.close();
-				}
-				catch(IOException io)
-				{
-				}
-			}
+    buffer.setBooleanProperty(ERROR_OCCURRED,true);
+   }
+  }
+  catch(WorkThread.Abort a)
+  {
+   if(in != null)
+   {
+    try
+    {
+     in.close();
+    }
+    catch(IOException io)
+    {
+    }
+   }
 
-			buffer.setBooleanProperty(ERROR_OCCURRED,true);
-		}
-		finally
-		{
-			try
-			{
-				vfs._endVFSSession(session,view);
-			}
-			catch(IOException io)
-			{
-			//	Log.log(Log.ERROR,this,io);
-				String[] pp = { io.toString() };
-				VFSManager.error(view,path,"ioerror.read-error",pp);
+   buffer.setBooleanProperty(ERROR_OCCURRED,true);
+  }
+  finally
+  {
+   try
+   {
+    vfs._endVFSSession(session,view);
+   }
+   catch(IOException io)
+   {
+   // Log.log(Log.ERROR,this,io);
+    String[] pp = { io.toString() };
+    VFSManager.error(view,path,"ioerror.read-error",pp);
 
-				buffer.setBooleanProperty(ERROR_OCCURRED,true);
-			}
-			catch(WorkThread.Abort a)
-			{
-				buffer.setBooleanProperty(ERROR_OCCURRED,true);
-			}
-		}
-	} //}}}
+    buffer.setBooleanProperty(ERROR_OCCURRED,true);
+   }
+   catch(WorkThread.Abort a)
+   {
+    buffer.setBooleanProperty(ERROR_OCCURRED,true);
+   }
+  }
+ } //}}}
 }

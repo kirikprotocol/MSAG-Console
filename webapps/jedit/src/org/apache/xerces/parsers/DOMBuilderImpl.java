@@ -148,30 +148,30 @@ extends AbstractDOMParser implements DOMBuilder, DOMConfiguration {
     /**
      * Constructs a DOM Builder using the standard parser configuration.
      */
-	public DOMBuilderImpl(String configuration, String schemaType) {
-		this(
-			(XMLParserConfiguration) ObjectFactory.createObject(
-				"org.apache.xerces.xni.parser.XMLParserConfiguration",
-				configuration));
-		if (schemaType != null) {
-			if (schemaType.equals(Constants.NS_DTD)) {
-				fConfiguration.setFeature(
-					Constants.XERCES_FEATURE_PREFIX + Constants.SCHEMA_VALIDATION_FEATURE,
-					false);
-				fConfiguration.setProperty(
-					Constants.JAXP_PROPERTY_PREFIX + Constants.SCHEMA_LANGUAGE,
-					Constants.NS_DTD);
-				fSchemaType = Constants.NS_DTD;
-			}
-			else if (schemaType.equals(Constants.NS_XMLSCHEMA)) {
-				// XML Schem validation
-				fConfiguration.setProperty(
-					Constants.JAXP_PROPERTY_PREFIX + Constants.SCHEMA_LANGUAGE,
-					Constants.NS_XMLSCHEMA);
-			}
-		}
+ public DOMBuilderImpl(String configuration, String schemaType) {
+  this(
+   (XMLParserConfiguration) ObjectFactory.createObject(
+    "org.apache.xerces.xni.parser.XMLParserConfiguration",
+    configuration));
+  if (schemaType != null) {
+   if (schemaType.equals(Constants.NS_DTD)) {
+    fConfiguration.setFeature(
+     Constants.XERCES_FEATURE_PREFIX + Constants.SCHEMA_VALIDATION_FEATURE,
+     false);
+    fConfiguration.setProperty(
+     Constants.JAXP_PROPERTY_PREFIX + Constants.SCHEMA_LANGUAGE,
+     Constants.NS_DTD);
+    fSchemaType = Constants.NS_DTD;
+   }
+   else if (schemaType.equals(Constants.NS_XMLSCHEMA)) {
+    // XML Schem validation
+    fConfiguration.setProperty(
+     Constants.JAXP_PROPERTY_PREFIX + Constants.SCHEMA_LANGUAGE,
+     Constants.NS_XMLSCHEMA);
+   }
+  }
 
-	}
+ }
 
     /**
      * Constructs a DOM Builder using the specified parser configuration.
@@ -214,34 +214,34 @@ extends AbstractDOMParser implements DOMBuilder, DOMConfiguration {
     /**
      * Constructs a DOM Builder using the specified symbol table.
      */
-	public DOMBuilderImpl(SymbolTable symbolTable) {
-		this(
-			(XMLParserConfiguration) ObjectFactory.createObject(
-				"org.apache.xerces.xni.parser.XMLParserConfiguration",
-				"org.apache.xerces.parsers.IntegratedParserConfiguration"));
-		fConfiguration.setProperty(
-			Constants.XERCES_PROPERTY_PREFIX + Constants.SYMBOL_TABLE_PROPERTY,
-			symbolTable);
-	} // <init>(SymbolTable)
+ public DOMBuilderImpl(SymbolTable symbolTable) {
+  this(
+   (XMLParserConfiguration) ObjectFactory.createObject(
+    "org.apache.xerces.xni.parser.XMLParserConfiguration",
+    "org.apache.xerces.parsers.IntegratedParserConfiguration"));
+  fConfiguration.setProperty(
+   Constants.XERCES_PROPERTY_PREFIX + Constants.SYMBOL_TABLE_PROPERTY,
+   symbolTable);
+ } // <init>(SymbolTable)
 
 
     /**
      * Constructs a DOM Builder using the specified symbol table and
      * grammar pool.
      */
-	public DOMBuilderImpl(SymbolTable symbolTable, XMLGrammarPool grammarPool) {
-		this(
-			(XMLParserConfiguration) ObjectFactory.createObject(
-				"org.apache.xerces.xni.parser.XMLParserConfiguration",
-				"org.apache.xerces.parsers.StandardParserConfiguration"));
-		fConfiguration.setProperty(
-			Constants.XERCES_PROPERTY_PREFIX + Constants.SYMBOL_TABLE_PROPERTY,
-			symbolTable);
-		fConfiguration.setProperty(
-			Constants.XERCES_PROPERTY_PREFIX
-				+ Constants.XMLGRAMMAR_POOL_PROPERTY,
-			grammarPool);
-	}
+ public DOMBuilderImpl(SymbolTable symbolTable, XMLGrammarPool grammarPool) {
+  this(
+   (XMLParserConfiguration) ObjectFactory.createObject(
+    "org.apache.xerces.xni.parser.XMLParserConfiguration",
+    "org.apache.xerces.parsers.StandardParserConfiguration"));
+  fConfiguration.setProperty(
+   Constants.XERCES_PROPERTY_PREFIX + Constants.SYMBOL_TABLE_PROPERTY,
+   symbolTable);
+  fConfiguration.setProperty(
+   Constants.XERCES_PROPERTY_PREFIX
+    + Constants.XMLGRAMMAR_POOL_PROPERTY,
+   grammarPool);
+ }
 
     /**
      * Resets the parser state.
@@ -302,273 +302,273 @@ extends AbstractDOMParser implements DOMBuilder, DOMConfiguration {
     /** 
     * Set parameters and properties
     */
-	public void setParameter(String name, Object value) throws DOMException {
-		// set features           
-		if (value == Boolean.TRUE || value == Boolean.FALSE) {
-			boolean state = (value == Boolean.TRUE) ? true : false;
-			try {
-				if (name.equals(Constants.DOM_COMMENTS)) {
-					fConfiguration.setFeature(INCLUDE_COMMENTS_FEATURE, state);
-				}
-				else if (name.equals(Constants.DOM_DATATYPE_NORMALIZATION)) {
-					fConfiguration.setFeature(NORMALIZE_DATA, state);
-				}
-				else if (name.equals(Constants.DOM_ENTITIES)) {
-					fConfiguration.setFeature(CREATE_ENTITY_REF_NODES, state);
-				}
-				else if (name.equals(Constants.DOM_INFOSET)
-						|| name.equals(Constants.DOM_SUPPORTED_MEDIATYPES_ONLY)
-						|| name.equals(Constants.DOM_CANONICAL_FORM)) {
-					if (state) { // true is not supported
-						String msg =
-							DOMMessageFormatter.formatMessage(
-								DOMMessageFormatter.DOM_DOMAIN,
-								"FEATURE_NOT_SUPPORTED",
-								new Object[] { name });
-						throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
-					}
-					// setting those features to false is no-op
-				}
-				else if (name.equals(Constants.DOM_NAMESPACES)) {
-					fConfiguration.setFeature(NAMESPACES, state);
-				}
-				else if (name.equals(Constants.DOM_CDATA_SECTIONS)
-						|| name.equals(Constants.DOM_NAMESPACE_DECLARATIONS)) {
-					if (!state) { // false is not supported
-						String msg =
-							DOMMessageFormatter.formatMessage(
-								DOMMessageFormatter.DOM_DOMAIN,
-								"FEATURE_NOT_SUPPORTED",
-								new Object[] { name });
-						throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
-					}
-					// setting these features to true is no-op
-					// REVISIT: implement "namespace-declaration" feature
-				}
-				else if (name.equals(Constants.DOM_VALIDATE)) {
-					fConfiguration.setFeature(VALIDATION_FEATURE, state);
-					if (fSchemaType != Constants.NS_DTD) {
-						fConfiguration.setFeature(XMLSCHEMA, state);
-					}
+ public void setParameter(String name, Object value) throws DOMException {
+  // set features           
+  if (value == Boolean.TRUE || value == Boolean.FALSE) {
+   boolean state = (value == Boolean.TRUE) ? true : false;
+   try {
+    if (name.equals(Constants.DOM_COMMENTS)) {
+     fConfiguration.setFeature(INCLUDE_COMMENTS_FEATURE, state);
+    }
+    else if (name.equals(Constants.DOM_DATATYPE_NORMALIZATION)) {
+     fConfiguration.setFeature(NORMALIZE_DATA, state);
+    }
+    else if (name.equals(Constants.DOM_ENTITIES)) {
+     fConfiguration.setFeature(CREATE_ENTITY_REF_NODES, state);
+    }
+    else if (name.equals(Constants.DOM_INFOSET)
+      || name.equals(Constants.DOM_SUPPORTED_MEDIATYPES_ONLY)
+      || name.equals(Constants.DOM_CANONICAL_FORM)) {
+     if (state) { // true is not supported
+      String msg =
+       DOMMessageFormatter.formatMessage(
+        DOMMessageFormatter.DOM_DOMAIN,
+        "FEATURE_NOT_SUPPORTED",
+        new Object[] { name });
+      throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
+     }
+     // setting those features to false is no-op
+    }
+    else if (name.equals(Constants.DOM_NAMESPACES)) {
+     fConfiguration.setFeature(NAMESPACES, state);
+    }
+    else if (name.equals(Constants.DOM_CDATA_SECTIONS)
+      || name.equals(Constants.DOM_NAMESPACE_DECLARATIONS)) {
+     if (!state) { // false is not supported
+      String msg =
+       DOMMessageFormatter.formatMessage(
+        DOMMessageFormatter.DOM_DOMAIN,
+        "FEATURE_NOT_SUPPORTED",
+        new Object[] { name });
+      throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
+     }
+     // setting these features to true is no-op
+     // REVISIT: implement "namespace-declaration" feature
+    }
+    else if (name.equals(Constants.DOM_VALIDATE)) {
+     fConfiguration.setFeature(VALIDATION_FEATURE, state);
+     if (fSchemaType != Constants.NS_DTD) {
+      fConfiguration.setFeature(XMLSCHEMA, state);
+     }
                     if (state){
                         fConfiguration.setFeature(DYNAMIC_VALIDATION, false);
                     }
-				}
-				else if (name.equals(Constants.DOM_VALIDATE_IF_SCHEMA)) {
-					fConfiguration.setFeature(DYNAMIC_VALIDATION, state);
+    }
+    else if (name.equals(Constants.DOM_VALIDATE_IF_SCHEMA)) {
+     fConfiguration.setFeature(DYNAMIC_VALIDATION, state);
                     // Note: validation and dynamic validation are mutually exclusive
                     if (state){
                         fConfiguration.setFeature(VALIDATION_FEATURE, false);
                     }
-				}
-				else if (name.equals(Constants.DOM_WHITESPACE_IN_ELEMENT_CONTENT)) {
-					fConfiguration.setFeature(INCLUDE_IGNORABLE_WHITESPACE, state);
-				}
+    }
+    else if (name.equals(Constants.DOM_WHITESPACE_IN_ELEMENT_CONTENT)) {
+     fConfiguration.setFeature(INCLUDE_IGNORABLE_WHITESPACE, state);
+    }
                 else if (name.equals(Constants.DOM_PSVI)){
                     //XSModel - turn on PSVI augmentation
                     fConfiguration.setFeature(PSVI_AUGMENT, true);
                     fConfiguration.setProperty(DOCUMENT_CLASS_NAME, 
                     "org.apache.xerces.dom.PSVIDocumentImpl");
                 }
-				else {
-					// Constants.DOM_CHARSET_OVERRIDES_XML_ENCODING feature
-					// or any Xerces feature
-					fConfiguration.setFeature(name, state);
-				}
+    else {
+     // Constants.DOM_CHARSET_OVERRIDES_XML_ENCODING feature
+     // or any Xerces feature
+     fConfiguration.setFeature(name, state);
+    }
 
-			}
-			catch (XMLConfigurationException e) {
-				String msg =
-					DOMMessageFormatter.formatMessage(
-						DOMMessageFormatter.DOM_DOMAIN,
-						"FEATURE_NOT_FOUND",
-						new Object[] { name });
-				throw new DOMException(DOMException.NOT_FOUND_ERR, msg);
-			}
-		}
-		else { // set properties
-			if (name.equals(Constants.DOM_ERROR_HANDLER)) {
-				if (value instanceof DOMErrorHandler) {
-					try {
-						fErrorHandler = new DOMErrorHandlerWrapper((DOMErrorHandler) value);
-						fConfiguration.setProperty(ERROR_HANDLER, fErrorHandler);
-					}
-					catch (XMLConfigurationException e) {}
-				}
-				else {
-					// REVISIT: type mismatch
-					String msg =
-						DOMMessageFormatter.formatMessage(
-							DOMMessageFormatter.DOM_DOMAIN,
-							"FEATURE_NOT_SUPPORTED",
-							new Object[] { name });
-					throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
-				}
+   }
+   catch (XMLConfigurationException e) {
+    String msg =
+     DOMMessageFormatter.formatMessage(
+      DOMMessageFormatter.DOM_DOMAIN,
+      "FEATURE_NOT_FOUND",
+      new Object[] { name });
+    throw new DOMException(DOMException.NOT_FOUND_ERR, msg);
+   }
+  }
+  else { // set properties
+   if (name.equals(Constants.DOM_ERROR_HANDLER)) {
+    if (value instanceof DOMErrorHandler) {
+     try {
+      fErrorHandler = new DOMErrorHandlerWrapper((DOMErrorHandler) value);
+      fConfiguration.setProperty(ERROR_HANDLER, fErrorHandler);
+     }
+     catch (XMLConfigurationException e) {}
+    }
+    else {
+     // REVISIT: type mismatch
+     String msg =
+      DOMMessageFormatter.formatMessage(
+       DOMMessageFormatter.DOM_DOMAIN,
+       "FEATURE_NOT_SUPPORTED",
+       new Object[] { name });
+     throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
+    }
 
-			}
-			else if (name.equals(Constants.DOM_ENTITY_RESOLVER)) {
-				if (value instanceof DOMEntityResolver) {
-					try {
+   }
+   else if (name.equals(Constants.DOM_ENTITY_RESOLVER)) {
+    if (value instanceof DOMEntityResolver) {
+     try {
                         fConfiguration.setProperty(ENTITY_RESOLVER, new DOMEntityResolverWrapper((DOMEntityResolver) value));
-					}
-					catch (XMLConfigurationException e) {}
-				}
-				else {
-					// REVISIT: type mismatch
-					String msg =
-						DOMMessageFormatter.formatMessage(
-							DOMMessageFormatter.DOM_DOMAIN,
-							"FEATURE_NOT_SUPPORTED",
-							new Object[] { name });
-					throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
-				}
+     }
+     catch (XMLConfigurationException e) {}
+    }
+    else {
+     // REVISIT: type mismatch
+     String msg =
+      DOMMessageFormatter.formatMessage(
+       DOMMessageFormatter.DOM_DOMAIN,
+       "FEATURE_NOT_SUPPORTED",
+       new Object[] { name });
+     throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
+    }
 
-			}
-			else if (name.equals(Constants.DOM_SCHEMA_LOCATION)) {
-				if (value instanceof String) {
-					try {
-						if (fSchemaType == Constants.NS_XMLSCHEMA) {
-							// map DOM schema-location to JAXP schemaSource property
-							fConfiguration.setProperty(
-								Constants.JAXP_PROPERTY_PREFIX + Constants.SCHEMA_SOURCE,
-								value);
-						}
-						else {
-							// REVISIT: allow pre-parsing DTD grammars
-							String msg =
-								DOMMessageFormatter.formatMessage(
-									DOMMessageFormatter.DOM_DOMAIN,
-									"FEATURE_NOT_SUPPORTED",
-									new Object[] { name });
-							throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
-						}
+   }
+   else if (name.equals(Constants.DOM_SCHEMA_LOCATION)) {
+    if (value instanceof String) {
+     try {
+      if (fSchemaType == Constants.NS_XMLSCHEMA) {
+       // map DOM schema-location to JAXP schemaSource property
+       fConfiguration.setProperty(
+        Constants.JAXP_PROPERTY_PREFIX + Constants.SCHEMA_SOURCE,
+        value);
+      }
+      else {
+       // REVISIT: allow pre-parsing DTD grammars
+       String msg =
+        DOMMessageFormatter.formatMessage(
+         DOMMessageFormatter.DOM_DOMAIN,
+         "FEATURE_NOT_SUPPORTED",
+         new Object[] { name });
+       throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
+      }
 
-					}
-					catch (XMLConfigurationException e) {}
-				}
-				else {
-					// REVISIT: type mismatch
-					String msg =
-						DOMMessageFormatter.formatMessage(
-							DOMMessageFormatter.DOM_DOMAIN,
-							"FEATURE_NOT_SUPPORTED",
-							new Object[] { name });
-					throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
-				}
+     }
+     catch (XMLConfigurationException e) {}
+    }
+    else {
+     // REVISIT: type mismatch
+     String msg =
+      DOMMessageFormatter.formatMessage(
+       DOMMessageFormatter.DOM_DOMAIN,
+       "FEATURE_NOT_SUPPORTED",
+       new Object[] { name });
+     throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
+    }
 
-			}
-			else if (name.equals(Constants.DOM_SCHEMA_TYPE)) {
-				// REVISIT: should null value be supported?
-				if (value instanceof String) {
-					try {
-						if (value.equals(Constants.NS_XMLSCHEMA)) {
-							// turn on schema feature
-							fConfiguration.setFeature(Constants.XERCES_FEATURE_PREFIX
-									                  + Constants.SCHEMA_VALIDATION_FEATURE,
-								                      true);
+   }
+   else if (name.equals(Constants.DOM_SCHEMA_TYPE)) {
+    // REVISIT: should null value be supported?
+    if (value instanceof String) {
+     try {
+      if (value.equals(Constants.NS_XMLSCHEMA)) {
+       // turn on schema feature
+       fConfiguration.setFeature(Constants.XERCES_FEATURE_PREFIX
+                           + Constants.SCHEMA_VALIDATION_FEATURE,
+                              true);
                                 // map to JAXP schemaLanguage
-							fConfiguration.setProperty( Constants.JAXP_PROPERTY_PREFIX 
+       fConfiguration.setProperty( Constants.JAXP_PROPERTY_PREFIX 
                                                         + Constants.SCHEMA_LANGUAGE,
-								                        Constants.NS_XMLSCHEMA);
-							fSchemaType = Constants.NS_XMLSCHEMA;
-						}
-						else if (value.equals(Constants.NS_DTD)) {
-							fConfiguration.setFeature(
-								Constants.XERCES_FEATURE_PREFIX
-								+ Constants.SCHEMA_VALIDATION_FEATURE,
-								false);
+                                Constants.NS_XMLSCHEMA);
+       fSchemaType = Constants.NS_XMLSCHEMA;
+      }
+      else if (value.equals(Constants.NS_DTD)) {
+       fConfiguration.setFeature(
+        Constants.XERCES_FEATURE_PREFIX
+        + Constants.SCHEMA_VALIDATION_FEATURE,
+        false);
                             fConfiguration.setProperty( Constants.JAXP_PROPERTY_PREFIX 
                                                         + Constants.SCHEMA_LANGUAGE,
                                                         Constants.NS_DTD);
-							fSchemaType = Constants.NS_DTD;
-						}
-					}
-					catch (XMLConfigurationException e) {}
-				}
-				else {
-					String msg =
-						DOMMessageFormatter.formatMessage(
-							DOMMessageFormatter.DOM_DOMAIN,
-							"FEATURE_NOT_SUPPORTED",
-							new Object[] { name });
-					throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
-				}
+       fSchemaType = Constants.NS_DTD;
+      }
+     }
+     catch (XMLConfigurationException e) {}
+    }
+    else {
+     String msg =
+      DOMMessageFormatter.formatMessage(
+       DOMMessageFormatter.DOM_DOMAIN,
+       "FEATURE_NOT_SUPPORTED",
+       new Object[] { name });
+     throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
+    }
 
-			}
+   }
             else if (name.equals(DOCUMENT_CLASS_NAME)) {
                 fConfiguration.setProperty(DOCUMENT_CLASS_NAME, value);
             }
-			else {
-				// REVISIT: check if this is a boolean parameter -- type mismatch should be thrown.       
-				//parameter is not recognized
-				String msg =
-					DOMMessageFormatter.formatMessage(
-						DOMMessageFormatter.DOM_DOMAIN,
-						"FEATURE_NOT_FOUND",
-						new Object[] { name });
-				throw new DOMException(DOMException.NOT_FOUND_ERR, msg);
-			}
-		}
-	}
+   else {
+    // REVISIT: check if this is a boolean parameter -- type mismatch should be thrown.       
+    //parameter is not recognized
+    String msg =
+     DOMMessageFormatter.formatMessage(
+      DOMMessageFormatter.DOM_DOMAIN,
+      "FEATURE_NOT_FOUND",
+      new Object[] { name });
+    throw new DOMException(DOMException.NOT_FOUND_ERR, msg);
+   }
+  }
+ }
 
-	/**
-	  * Look up the value of a feature or a property.
-	  */
-	public Object getParameter(String name) throws DOMException {
-		if (name.equals(Constants.DOM_COMMENTS)) {
-			return (fConfiguration.getFeature(INCLUDE_COMMENTS_FEATURE))
-				? Boolean.TRUE
-				: Boolean.FALSE;
-		}
-		else if (name.equals(Constants.DOM_DATATYPE_NORMALIZATION)) {
-			return (fConfiguration.getFeature(NORMALIZE_DATA))
-				? Boolean.TRUE
-				: Boolean.FALSE;
-		}
-		else if (name.equals(Constants.DOM_ENTITIES)) {
-			return (fConfiguration.getFeature(CREATE_ENTITY_REF_NODES))
-				? Boolean.TRUE
-				: Boolean.FALSE;
-		}
-		else if (name.equals(Constants.DOM_NAMESPACES)) {
-			return (fConfiguration.getFeature(NAMESPACES))
-				? Boolean.TRUE
-				: Boolean.FALSE;
-		}
-		else if (name.equals(Constants.DOM_VALIDATE)) {
-			return (fConfiguration.getFeature(VALIDATION_FEATURE))
-				? Boolean.TRUE
-				: Boolean.FALSE;
-		}
-		else if (name.equals(Constants.DOM_VALIDATE_IF_SCHEMA)) {
-			return (fConfiguration.getFeature(DYNAMIC_VALIDATION))
-				? Boolean.TRUE
-				: Boolean.FALSE;
-		}
-		else if (name.equals(Constants.DOM_WHITESPACE_IN_ELEMENT_CONTENT)) {
-			return (fConfiguration.getFeature(INCLUDE_IGNORABLE_WHITESPACE))
-				? Boolean.TRUE
-				: Boolean.FALSE;
-		}
-		else if (
-			name.equals(Constants.DOM_NAMESPACE_DECLARATIONS)
-				|| name.equals(Constants.DOM_CDATA_SECTIONS)
-				|| name.equals(Constants.DOM_CANONICAL_FORM)
-				|| name.equals(Constants.DOM_SUPPORTED_MEDIATYPES_ONLY)
-				|| name.equals(Constants.DOM_INFOSET)
-				|| name.equals(Constants.DOM_CHARSET_OVERRIDES_XML_ENCODING)) {
-			return (fConfiguration.getFeature(name))
-				? Boolean.TRUE
-				: Boolean.FALSE;
-		}
-		else if (name.equals(Constants.DOM_ERROR_HANDLER)) {
-			if (fErrorHandler != null) {
-				return fErrorHandler.getErrorHandler();
-			}
-			return null;
-		}
-		else if (name.equals(Constants.DOM_ENTITY_RESOLVER)) {
-			try {               
+ /**
+   * Look up the value of a feature or a property.
+   */
+ public Object getParameter(String name) throws DOMException {
+  if (name.equals(Constants.DOM_COMMENTS)) {
+   return (fConfiguration.getFeature(INCLUDE_COMMENTS_FEATURE))
+    ? Boolean.TRUE
+    : Boolean.FALSE;
+  }
+  else if (name.equals(Constants.DOM_DATATYPE_NORMALIZATION)) {
+   return (fConfiguration.getFeature(NORMALIZE_DATA))
+    ? Boolean.TRUE
+    : Boolean.FALSE;
+  }
+  else if (name.equals(Constants.DOM_ENTITIES)) {
+   return (fConfiguration.getFeature(CREATE_ENTITY_REF_NODES))
+    ? Boolean.TRUE
+    : Boolean.FALSE;
+  }
+  else if (name.equals(Constants.DOM_NAMESPACES)) {
+   return (fConfiguration.getFeature(NAMESPACES))
+    ? Boolean.TRUE
+    : Boolean.FALSE;
+  }
+  else if (name.equals(Constants.DOM_VALIDATE)) {
+   return (fConfiguration.getFeature(VALIDATION_FEATURE))
+    ? Boolean.TRUE
+    : Boolean.FALSE;
+  }
+  else if (name.equals(Constants.DOM_VALIDATE_IF_SCHEMA)) {
+   return (fConfiguration.getFeature(DYNAMIC_VALIDATION))
+    ? Boolean.TRUE
+    : Boolean.FALSE;
+  }
+  else if (name.equals(Constants.DOM_WHITESPACE_IN_ELEMENT_CONTENT)) {
+   return (fConfiguration.getFeature(INCLUDE_IGNORABLE_WHITESPACE))
+    ? Boolean.TRUE
+    : Boolean.FALSE;
+  }
+  else if (
+   name.equals(Constants.DOM_NAMESPACE_DECLARATIONS)
+    || name.equals(Constants.DOM_CDATA_SECTIONS)
+    || name.equals(Constants.DOM_CANONICAL_FORM)
+    || name.equals(Constants.DOM_SUPPORTED_MEDIATYPES_ONLY)
+    || name.equals(Constants.DOM_INFOSET)
+    || name.equals(Constants.DOM_CHARSET_OVERRIDES_XML_ENCODING)) {
+   return (fConfiguration.getFeature(name))
+    ? Boolean.TRUE
+    : Boolean.FALSE;
+  }
+  else if (name.equals(Constants.DOM_ERROR_HANDLER)) {
+   if (fErrorHandler != null) {
+    return fErrorHandler.getErrorHandler();
+   }
+   return null;
+  }
+  else if (name.equals(Constants.DOM_ENTITY_RESOLVER)) {
+   try {               
                 XMLEntityResolver entityResolver = 
                (XMLEntityResolver) fConfiguration.getProperty(ENTITY_RESOLVER);
                 if (entityResolver != null
@@ -576,102 +576,102 @@ extends AbstractDOMParser implements DOMBuilder, DOMConfiguration {
                     return ((DOMEntityResolverWrapper) entityResolver).getEntityResolver();
                     }
                     return null;
-			}
-			catch (XMLConfigurationException e) {}
-		}
-		else if (name.equals(Constants.DOM_SCHEMA_TYPE)) {
-			return fConfiguration.getProperty(
-				Constants.JAXP_PROPERTY_PREFIX + Constants.SCHEMA_LANGUAGE);
-		}
-		else if (name.equals(Constants.DOM_SCHEMA_LOCATION)) {
-			return fConfiguration.getProperty(
-				Constants.JAXP_PROPERTY_PREFIX + Constants.SCHEMA_SOURCE);
-		}
+   }
+   catch (XMLConfigurationException e) {}
+  }
+  else if (name.equals(Constants.DOM_SCHEMA_TYPE)) {
+   return fConfiguration.getProperty(
+    Constants.JAXP_PROPERTY_PREFIX + Constants.SCHEMA_LANGUAGE);
+  }
+  else if (name.equals(Constants.DOM_SCHEMA_LOCATION)) {
+   return fConfiguration.getProperty(
+    Constants.JAXP_PROPERTY_PREFIX + Constants.SCHEMA_SOURCE);
+  }
         else if (name.equals(SYMBOL_TABLE)){
             return fConfiguration.getProperty(SYMBOL_TABLE);
         }
         else if (name.equals(DOCUMENT_CLASS_NAME)) {
              return fConfiguration.getProperty(DOCUMENT_CLASS_NAME);
         }
-		else {
-			String msg =
-				DOMMessageFormatter.formatMessage(
-					DOMMessageFormatter.DOM_DOMAIN,
-					"FEATURE_NOT_FOUND",
-					new Object[] { name });
-			throw new DOMException(DOMException.NOT_FOUND_ERR, msg);
-		}
-		return null;
-	}
+  else {
+   String msg =
+    DOMMessageFormatter.formatMessage(
+     DOMMessageFormatter.DOM_DOMAIN,
+     "FEATURE_NOT_FOUND",
+     new Object[] { name });
+   throw new DOMException(DOMException.NOT_FOUND_ERR, msg);
+  }
+  return null;
+ }
 
-	public boolean canSetParameter(String name, Object value) {
-		if (value == Boolean.TRUE || value == Boolean.FALSE) {
-			boolean state = (value == Boolean.TRUE) ? true : false;
-			if (name.equals(Constants.DOM_INFOSET)
-				|| name.equals(Constants.DOM_SUPPORTED_MEDIATYPES_ONLY)
-				|| name.equals(Constants.DOM_CANONICAL_FORM)) {
-				// true is not supported
-				return (state) ? false : true;
-			}
-			else if (
-				name.equals(Constants.DOM_CDATA_SECTIONS)
-					|| name.equals(Constants.DOM_NAMESPACE_DECLARATIONS)) {
-				// false is not supported
-				return (state) ? true : false;
-			}
-			else if (
-				name.equals(Constants.DOM_CHARSET_OVERRIDES_XML_ENCODING)
-					|| name.equals(Constants.DOM_COMMENTS)
-					|| name.equals(Constants.DOM_DATATYPE_NORMALIZATION)
-					|| name.equals(Constants.DOM_ENTITIES)
-					|| name.equals(Constants.DOM_NAMESPACES)
-					|| name.equals(Constants.DOM_VALIDATE)
-					|| name.equals(Constants.DOM_VALIDATE_IF_SCHEMA)
-					|| name.equals(Constants.DOM_WHITESPACE_IN_ELEMENT_CONTENT)) {
-				return true;
-			}
+ public boolean canSetParameter(String name, Object value) {
+  if (value == Boolean.TRUE || value == Boolean.FALSE) {
+   boolean state = (value == Boolean.TRUE) ? true : false;
+   if (name.equals(Constants.DOM_INFOSET)
+    || name.equals(Constants.DOM_SUPPORTED_MEDIATYPES_ONLY)
+    || name.equals(Constants.DOM_CANONICAL_FORM)) {
+    // true is not supported
+    return (state) ? false : true;
+   }
+   else if (
+    name.equals(Constants.DOM_CDATA_SECTIONS)
+     || name.equals(Constants.DOM_NAMESPACE_DECLARATIONS)) {
+    // false is not supported
+    return (state) ? true : false;
+   }
+   else if (
+    name.equals(Constants.DOM_CHARSET_OVERRIDES_XML_ENCODING)
+     || name.equals(Constants.DOM_COMMENTS)
+     || name.equals(Constants.DOM_DATATYPE_NORMALIZATION)
+     || name.equals(Constants.DOM_ENTITIES)
+     || name.equals(Constants.DOM_NAMESPACES)
+     || name.equals(Constants.DOM_VALIDATE)
+     || name.equals(Constants.DOM_VALIDATE_IF_SCHEMA)
+     || name.equals(Constants.DOM_WHITESPACE_IN_ELEMENT_CONTENT)) {
+    return true;
+   }
 
-			// Recognize Xerces features.
-			try {
-				fConfiguration.getFeature(name);
-				return true;
-			}
-			catch (XMLConfigurationException e) {
-				return false;
-			}
-		}
-		else { // check properties
-			if (name.equals(Constants.DOM_ERROR_HANDLER)) {
-				if (value instanceof DOMErrorHandler) {
-					return true;
-				}
-				return false;
-			}
-			else if (name.equals(Constants.DOM_ENTITY_RESOLVER)) {
-				if (value instanceof DOMEntityResolver) {
-					return true;
-				}
-				return false;
-			}
-			else if (name.equals(Constants.DOM_SCHEMA_TYPE)) {
-				if (value instanceof String
-					&& (value.equals(Constants.NS_XMLSCHEMA)
-						|| value.equals(Constants.NS_DTD))) {
-					return true;
-				}
-				return false;
-			}
-			else if (name.equals(Constants.DOM_SCHEMA_LOCATION)) {
-				if (value instanceof String)
-					return true;
-				return false;
-			}
+   // Recognize Xerces features.
+   try {
+    fConfiguration.getFeature(name);
+    return true;
+   }
+   catch (XMLConfigurationException e) {
+    return false;
+   }
+  }
+  else { // check properties
+   if (name.equals(Constants.DOM_ERROR_HANDLER)) {
+    if (value instanceof DOMErrorHandler) {
+     return true;
+    }
+    return false;
+   }
+   else if (name.equals(Constants.DOM_ENTITY_RESOLVER)) {
+    if (value instanceof DOMEntityResolver) {
+     return true;
+    }
+    return false;
+   }
+   else if (name.equals(Constants.DOM_SCHEMA_TYPE)) {
+    if (value instanceof String
+     && (value.equals(Constants.NS_XMLSCHEMA)
+      || value.equals(Constants.NS_DTD))) {
+     return true;
+    }
+    return false;
+   }
+   else if (name.equals(Constants.DOM_SCHEMA_LOCATION)) {
+    if (value instanceof String)
+     return true;
+    return false;
+   }
             else if (name.equals(DOCUMENT_CLASS_NAME)){
                 return true;
             }
-			return false;
-		}
-	}
+   return false;
+  }
+ }
 
 
     /**

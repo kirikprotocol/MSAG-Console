@@ -30,68 +30,68 @@ import java.awt.*;
 
 class ErrorListCellRenderer extends JComponent implements ListCellRenderer
 {
-	//{{{ ErrorListCellRenderer constructor
-	ErrorListCellRenderer()
-	{
-		// fucking GTK look and feel!
-		plainFont = new JLabel().getFont();
-		//UIManager.getFont("Label.font");
-		boldFont = new Font(plainFont.getName(),Font.BOLD,plainFont.getSize());
-		plainFM = getFontMetrics(plainFont);
-		boldFM = getFontMetrics(boldFont);
+ //{{{ ErrorListCellRenderer constructor
+ ErrorListCellRenderer()
+ {
+  // fucking GTK look and feel!
+  plainFont = new JLabel().getFont();
+  //UIManager.getFont("Label.font");
+  boldFont = new Font(plainFont.getName(),Font.BOLD,plainFont.getSize());
+  plainFM = getFontMetrics(plainFont);
+  boldFM = getFontMetrics(boldFont);
 
-		setBorder(new EmptyBorder(2,2,2,2));
-	} //}}}
+  setBorder(new EmptyBorder(2,2,2,2));
+ } //}}}
 
-	//{{{ getListCellRendererComponent() method
-	public Component getListCellRendererComponent(JList list, Object value,
-		int index, boolean isSelected, boolean cellHasFocus)
-	{
-		ErrorListDialog.ErrorEntry entry = (ErrorListDialog.ErrorEntry)value;
-		this.path = entry.path + ":";
-		this.messages = entry.messages;
-		return this;
-	} //}}}
+ //{{{ getListCellRendererComponent() method
+ public Component getListCellRendererComponent(JList list, Object value,
+  int index, boolean isSelected, boolean cellHasFocus)
+ {
+  ErrorListDialog.ErrorEntry entry = (ErrorListDialog.ErrorEntry)value;
+  this.path = entry.path + ":";
+  this.messages = entry.messages;
+  return this;
+ } //}}}
 
-	//{{{ getPreferredSize() method
-	public Dimension getPreferredSize()
-	{
-		int width = boldFM.stringWidth(path);
-		int height = boldFM.getHeight();
-		for(int i = 0; i < messages.length; i++)
-		{
-			width = Math.max(plainFM.stringWidth(messages[i]),width);
-			height += plainFM.getHeight();
-		}
+ //{{{ getPreferredSize() method
+ public Dimension getPreferredSize()
+ {
+  int width = boldFM.stringWidth(path);
+  int height = boldFM.getHeight();
+  for(int i = 0; i < messages.length; i++)
+  {
+   width = Math.max(plainFM.stringWidth(messages[i]),width);
+   height += plainFM.getHeight();
+  }
 
-		Insets insets = getBorder().getBorderInsets(this);
-		width += insets.left + insets.right;
-		height += insets.top + insets.bottom;
+  Insets insets = getBorder().getBorderInsets(this);
+  width += insets.left + insets.right;
+  height += insets.top + insets.bottom;
 
-		return new Dimension(width,height);
-	} //}}}
+  return new Dimension(width,height);
+ } //}}}
 
-	//{{{ paintComponent() method
-	public void paintComponent(Graphics g)
-	{
-		Insets insets = getBorder().getBorderInsets(this);
-		g.setFont(boldFont);
-		g.drawString(path,insets.left,insets.top + boldFM.getAscent());
-		int y = insets.top + boldFM.getHeight() + 2;
-		g.setFont(plainFont);
-		for(int i = 0; i < messages.length; i++)
-		{
-			g.drawString(messages[i],insets.left,y + plainFM.getAscent());
-			y += plainFM.getHeight();
-		}
-	} //}}}
+ //{{{ paintComponent() method
+ public void paintComponent(Graphics g)
+ {
+  Insets insets = getBorder().getBorderInsets(this);
+  g.setFont(boldFont);
+  g.drawString(path,insets.left,insets.top + boldFM.getAscent());
+  int y = insets.top + boldFM.getHeight() + 2;
+  g.setFont(plainFont);
+  for(int i = 0; i < messages.length; i++)
+  {
+   g.drawString(messages[i],insets.left,y + plainFM.getAscent());
+   y += plainFM.getHeight();
+  }
+ } //}}}
 
-	//{{{ Instance variables
-	private String path;
-	private String[] messages;
-	private Font plainFont;
-	private Font boldFont;
-	private FontMetrics plainFM;
-	private FontMetrics boldFM;
-	//}}}
+ //{{{ Instance variables
+ private String path;
+ private String[] messages;
+ private Font plainFont;
+ private Font boldFont;
+ private FontMetrics plainFM;
+ private FontMetrics boldFM;
+ //}}}
 }

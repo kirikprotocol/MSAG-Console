@@ -29,161 +29,161 @@ import org.gjt.sp.util.Log;
 
 public class PluginsProvider implements DynamicMenuProvider
 {
-	//{{{ updateEveryTime() method
-	public boolean updateEveryTime()
-	{
-		return false;
-	} //}}}
+ //{{{ updateEveryTime() method
+ public boolean updateEveryTime()
+ {
+  return false;
+ } //}}}
 
-	//{{{ update() method
-	public void update(JMenu menu)
-	{
-		// We build a set of lists, each list contains plugin menu
-		// items that begin with a given letter.
-		int count = 0;
+ //{{{ update() method
+ public void update(JMenu menu)
+ {
+  // We build a set of lists, each list contains plugin menu
+  // items that begin with a given letter.
+  int count = 0;
 
-		List[] letters = new List[26];
-		for(int i = 0; i < letters.length; i++)
-		{
-			letters[i] = new ArrayList();
-		}
+  List[] letters = new List[26];
+  for(int i = 0; i < letters.length; i++)
+  {
+   letters[i] = new ArrayList();
+  }
 
-		Vector pluginMenuItems = new Vector();
+  Vector pluginMenuItems = new Vector();
 
-		PluginJAR[] pluginArray = jEdit.getPluginJARs();
-		for(int i = 0; i < pluginArray.length; i++)
-		{
-			PluginJAR jar = pluginArray[i];
-			EditPlugin plugin = jar.getPlugin();
-			if(plugin == null)
-				continue;
+  PluginJAR[] pluginArray = jEdit.getPluginJARs();
+  for(int i = 0; i < pluginArray.length; i++)
+  {
+   PluginJAR jar = pluginArray[i];
+   EditPlugin plugin = jar.getPlugin();
+   if(plugin == null)
+    continue;
 
-			JMenuItem menuItem = plugin.createMenuItems();
-			if(menuItem != null)
-			{
-				addToLetterMap(letters,menuItem);
-				count++;
-			}
-			//{{{ old API
-			else if(jEdit.getProperty("plugin."
-				+ plugin.getClassName()
-				+ ".activate") == null)
-			{
-				try
-				{
-					pluginMenuItems.clear();
-					plugin.createMenuItems(pluginMenuItems);
+   JMenuItem menuItem = plugin.createMenuItems();
+   if(menuItem != null)
+   {
+    addToLetterMap(letters,menuItem);
+    count++;
+   }
+   //{{{ old API
+   else if(jEdit.getProperty("plugin."
+    + plugin.getClassName()
+    + ".activate") == null)
+   {
+    try
+    {
+     pluginMenuItems.clear();
+     plugin.createMenuItems(pluginMenuItems);
 
-					Iterator iter = pluginMenuItems.iterator();
-					while(iter.hasNext())
-					{
-						addToLetterMap(letters,
-							(JMenuItem)iter.next());
-						count++;
-					}
-				}
-				catch(Throwable t)
-				{
-					Log.log(Log.ERROR,this,
-						"Error creating menu items"
-						+ " for plugin");
-					Log.log(Log.ERROR,this,t);
-				}
-			} //}}}
-		}
+     Iterator iter = pluginMenuItems.iterator();
+     while(iter.hasNext())
+     {
+      addToLetterMap(letters,
+       (JMenuItem)iter.next());
+      count++;
+     }
+    }
+    catch(Throwable t)
+    {
+     Log.log(Log.ERROR,this,
+      "Error creating menu items"
+      + " for plugin");
+     Log.log(Log.ERROR,this,t);
+    }
+   } //}}}
+  }
 
-		if(count == 0)
-		{
-			JMenuItem menuItem = new JMenuItem(
-				jEdit.getProperty("no-plugins.label"));
-			menuItem.setEnabled(false);
-			menu.add(menuItem);
-			return;
-		}
+  if(count == 0)
+  {
+   JMenuItem menuItem = new JMenuItem(
+    jEdit.getProperty("no-plugins.label"));
+   menuItem.setEnabled(false);
+   menu.add(menuItem);
+   return;
+  }
 
-		// Sort each letter
-		for(int i = 0; i < letters.length; i++)
-		{
-			List list = letters[i];
-			Collections.sort(list,new MiscUtilities
-				.MenuItemCompare());
-		}
+  // Sort each letter
+  for(int i = 0; i < letters.length; i++)
+  {
+   List list = letters[i];
+   Collections.sort(list,new MiscUtilities
+    .MenuItemCompare());
+  }
 
-		int maxItems = jEdit.getIntegerProperty("menu.spillover",20);
+  int maxItems = jEdit.getIntegerProperty("menu.spillover",20);
 
-		// if less than 20 items, put them directly in the menu
-		if(count <= maxItems)
-		{
-			for(int i = 0; i < letters.length; i++)
-			{
-				Iterator iter = letters[i].iterator();
-				while(iter.hasNext())
-				{
-					menu.add((JMenuItem)iter.next());
-				}
-			}
+  // if less than 20 items, put them directly in the menu
+  if(count <= maxItems)
+  {
+   for(int i = 0; i < letters.length; i++)
+   {
+    Iterator iter = letters[i].iterator();
+    while(iter.hasNext())
+    {
+     menu.add((JMenuItem)iter.next());
+    }
+   }
 
-			return;
-		}
+   return;
+  }
 
-		// Collect blocks of up to maxItems of consecutive letters
-		count = 0;
-		char first = 'A';
-		JMenu submenu = new JMenu();
-		menu.add(submenu);
+  // Collect blocks of up to maxItems of consecutive letters
+  count = 0;
+  char first = 'A';
+  JMenu submenu = new JMenu();
+  menu.add(submenu);
 
-		for(int i = 0; i < letters.length; i++)
-		{
-			List letter = letters[i];
+  for(int i = 0; i < letters.length; i++)
+  {
+   List letter = letters[i];
 
-			if(count + letter.size() > maxItems && count != 0)
-			{
-				char last = (char)(i + 'A' - 1);
-				if(last == first)
-					submenu.setText(String.valueOf(first));
-				else
-					submenu.setText(first + " - " + last);
-				first = (char)(char)(i + 'A');
-				count = 0;
-				submenu = null;
-			}
+   if(count + letter.size() > maxItems && count != 0)
+   {
+    char last = (char)(i + 'A' - 1);
+    if(last == first)
+     submenu.setText(String.valueOf(first));
+    else
+     submenu.setText(first + " - " + last);
+    first = (char)(char)(i + 'A');
+    count = 0;
+    submenu = null;
+   }
 
-			Iterator iter = letter.iterator();
-			while(iter.hasNext())
-			{
-				if(submenu == null)
-				{
-					submenu = new JMenu();
-					menu.add(submenu);
-				}
-				submenu.add((JMenuItem)iter.next());
-			}
+   Iterator iter = letter.iterator();
+   while(iter.hasNext())
+   {
+    if(submenu == null)
+    {
+     submenu = new JMenu();
+     menu.add(submenu);
+    }
+    submenu.add((JMenuItem)iter.next());
+   }
 
-			count += letter.size();
-		}
+   count += letter.size();
+  }
 
-		if(submenu != null)
-		{
-			char last = 'Z';
-			if(last == first)
-				submenu.setText(String.valueOf(first));
-			else
-				submenu.setText(first + " - " + last);
-		}
-	} //}}}
+  if(submenu != null)
+  {
+   char last = 'Z';
+   if(last == first)
+    submenu.setText(String.valueOf(first));
+   else
+    submenu.setText(first + " - " + last);
+  }
+ } //}}}
 
-	//{{{ addToLetterMap() method
-	private void addToLetterMap(List[] letters, JMenuItem item)
-	{
-		char ch = item.getText().charAt(0);
-		ch = Character.toUpperCase(ch);
-		if(ch < 'A' || ch > 'Z')
-		{
-			Log.log(Log.ERROR,this,"Plugin menu item label must "
-				+ "begin with A - Z, or a - z: "
-				+ item.getText());
-		}
-		else
-			letters[ch - 'A'].add(item);
-	} //}}}
+ //{{{ addToLetterMap() method
+ private void addToLetterMap(List[] letters, JMenuItem item)
+ {
+  char ch = item.getText().charAt(0);
+  ch = Character.toUpperCase(ch);
+  if(ch < 'A' || ch > 'Z')
+  {
+   Log.log(Log.ERROR,this,"Plugin menu item label must "
+    + "begin with A - Z, or a - z: "
+    + item.getText());
+  }
+  else
+   letters[ch - 'A'].add(item);
+ } //}}}
 }

@@ -91,7 +91,7 @@ public class AttributeListImpl implements AttributeList
      */
     public AttributeListImpl (AttributeList atts)
     {
-	setAttributeList(atts);
+ setAttributeList(atts);
     }
     
     
@@ -111,13 +111,13 @@ public class AttributeListImpl implements AttributeList
      */
     public void setAttributeList (AttributeList atts)
     {
-	int count = atts.getLength();
-	
-	clear();
-	
-	for (int i = 0; i < count; i++) {
-	    addAttribute(atts.getName(i), atts.getType(i), atts.getValue(i));
-	}
+ int count = atts.getLength();
+ 
+ clear();
+ 
+ for (int i = 0; i < count; i++) {
+     addAttribute(atts.getName(i), atts.getType(i), atts.getValue(i));
+ }
     }
     
     
@@ -136,9 +136,9 @@ public class AttributeListImpl implements AttributeList
      */
     public void addAttribute (String name, String type, String value)
     {
-	names.addElement(name);
-	types.addElement(type);
-	values.addElement(value);
+ names.addElement(name);
+ types.addElement(type);
+ values.addElement(value);
     }
     
     
@@ -158,13 +158,13 @@ public class AttributeListImpl implements AttributeList
      */
     public void removeAttribute (String name)
     {
-	int i = names.indexOf(name);
-	
-	if (i >= 0) {
-	    names.removeElementAt(i);
-	    types.removeElementAt(i);
-	    values.removeElementAt(i);
-	}
+ int i = names.indexOf(name);
+ 
+ if (i >= 0) {
+     names.removeElementAt(i);
+     types.removeElementAt(i);
+     values.removeElementAt(i);
+ }
     }
     
     
@@ -180,9 +180,9 @@ public class AttributeListImpl implements AttributeList
      */
     public void clear ()
     {
-	names.removeAllElements();
-	types.removeAllElements();
-	values.removeAllElements();
+ names.removeAllElements();
+ types.removeAllElements();
+ values.removeAllElements();
     }
     
     
@@ -200,7 +200,7 @@ public class AttributeListImpl implements AttributeList
      */
     public int getLength ()
     {
-	return names.size();
+ return names.size();
     }
     
     
@@ -214,14 +214,14 @@ public class AttributeListImpl implements AttributeList
      */
     public String getName (int i)
     {
-	if (i < 0) {
-	    return null;
-	}
-	try {
-	    return (String)names.elementAt(i);
-	} catch (ArrayIndexOutOfBoundsException e) {
-	    return null;
-	}
+ if (i < 0) {
+     return null;
+ }
+ try {
+     return (String)names.elementAt(i);
+ } catch (ArrayIndexOutOfBoundsException e) {
+     return null;
+ }
     }
     
     
@@ -237,14 +237,14 @@ public class AttributeListImpl implements AttributeList
      */
     public String getType (int i)
     {
-	if (i < 0) {
-	    return null;
-	}
-	try {
-	    return (String)types.elementAt(i);
-	} catch (ArrayIndexOutOfBoundsException e) {
-	    return null;
-	}
+ if (i < 0) {
+     return null;
+ }
+ try {
+     return (String)types.elementAt(i);
+ } catch (ArrayIndexOutOfBoundsException e) {
+     return null;
+ }
     }
     
     
@@ -258,14 +258,14 @@ public class AttributeListImpl implements AttributeList
      */
     public String getValue (int i)
     {
-	if (i < 0) {
-	    return null;
-	}
-	try {
-	    return (String)values.elementAt(i);
-	} catch (ArrayIndexOutOfBoundsException e) {
-	    return null;
-	}
+ if (i < 0) {
+     return null;
+ }
+ try {
+     return (String)values.elementAt(i);
+ } catch (ArrayIndexOutOfBoundsException e) {
+     return null;
+ }
     }
     
     
@@ -280,7 +280,7 @@ public class AttributeListImpl implements AttributeList
      */
     public String getType (String name)
     {
-	return getType(names.indexOf(name));
+ return getType(names.indexOf(name));
     }
     
     
@@ -292,7 +292,7 @@ public class AttributeListImpl implements AttributeList
      */
     public String getValue (String name)
     {
-	return getValue(names.indexOf(name));
+ return getValue(names.indexOf(name));
     }
     
     

@@ -38,315 +38,315 @@ import org.gjt.sp.jedit.*;
  */
 public class HistoryText
 {
-	//{{{ HistoryText constructor
-	public HistoryText(JTextComponent text, String name)
-	{
-		this.text = text;
-		setModel(name);
-		index = -1;
-	} //}}}
+ //{{{ HistoryText constructor
+ public HistoryText(JTextComponent text, String name)
+ {
+  this.text = text;
+  setModel(name);
+  index = -1;
+ } //}}}
 
-	//{{{ fireActionPerformed() method
-	public void fireActionPerformed()
-	{
-	} //}}}
+ //{{{ fireActionPerformed() method
+ public void fireActionPerformed()
+ {
+ } //}}}
 
-	//{{{ getIndex() mehtod
-	public int getIndex()
-	{
-		return index;
-	} //}}}
+ //{{{ getIndex() mehtod
+ public int getIndex()
+ {
+  return index;
+ } //}}}
 
-	//{{{ setIndex() mehtod
-	public void setIndex(int index)
-	{
-		this.index = index;
-	} //}}}
+ //{{{ setIndex() mehtod
+ public void setIndex(int index)
+ {
+  this.index = index;
+ } //}}}
 
-	//{{{ getModel() method
-	/**
-	 * Returns the underlying history controller.
-	 * @since jEdit 4.3pre1
-	 */
-	public HistoryModel getModel()
-	{
-		return historyModel;
-	} //}}}
+ //{{{ getModel() method
+ /**
+  * Returns the underlying history controller.
+  * @since jEdit 4.3pre1
+  */
+ public HistoryModel getModel()
+ {
+  return historyModel;
+ } //}}}
 
-	//{{{ setModel() method
-	/**
-	 * Sets the history list controller.
-	 * @param name The model name
-	 * @since jEdit 4.3pre1
-	 */
-	public void setModel(String name)
-	{
-		if(name == null)
-			historyModel = null;
-		else
-			historyModel = HistoryModel.getModel(name);
-		index = -1;
-	} //}}}
+ //{{{ setModel() method
+ /**
+  * Sets the history list controller.
+  * @param name The model name
+  * @since jEdit 4.3pre1
+  */
+ public void setModel(String name)
+ {
+  if(name == null)
+   historyModel = null;
+  else
+   historyModel = HistoryModel.getModel(name);
+  index = -1;
+ } //}}}
 
-	//{{{ setInstantPopups() method
-	/**
-	 * Sets if selecting a value from the popup should immediately fire
-	 * an ActionEvent.
-	 */
-	public void setInstantPopups(boolean instantPopups)
-	{
-		this.instantPopups = instantPopups;
-	} //}}}
+ //{{{ setInstantPopups() method
+ /**
+  * Sets if selecting a value from the popup should immediately fire
+  * an ActionEvent.
+  */
+ public void setInstantPopups(boolean instantPopups)
+ {
+  this.instantPopups = instantPopups;
+ } //}}}
 
-	//{{{ getInstantPopups() method
-	/**
-	 * Returns if selecting a value from the popup should immediately fire
-	 * an ActionEvent.
-	 */
-	public boolean getInstantPopups()
-	{
-		return instantPopups;
-	} //}}}
+ //{{{ getInstantPopups() method
+ /**
+  * Returns if selecting a value from the popup should immediately fire
+  * an ActionEvent.
+  */
+ public boolean getInstantPopups()
+ {
+  return instantPopups;
+ } //}}}
 
-	//{{{ addCurrentToHistory() method
-	/**
-	 * Adds the currently entered item to the history.
-	 */
-	public void addCurrentToHistory()
-	{
-		if(historyModel != null)
-			historyModel.addItem(getText());
-		index = 0;
-	} //}}}
+ //{{{ addCurrentToHistory() method
+ /**
+  * Adds the currently entered item to the history.
+  */
+ public void addCurrentToHistory()
+ {
+  if(historyModel != null)
+   historyModel.addItem(getText());
+  index = 0;
+ } //}}}
 
-	//{{{ doBackwardSearch() method
-	public void doBackwardSearch()
-	{
-		if(historyModel == null)
-			return;
+ //{{{ doBackwardSearch() method
+ public void doBackwardSearch()
+ {
+  if(historyModel == null)
+   return;
 
-		if(text.getSelectionEnd() != getDocument().getLength())
-		{
-			text.setCaretPosition(getDocument().getLength());
-		}
+  if(text.getSelectionEnd() != getDocument().getLength())
+  {
+   text.setCaretPosition(getDocument().getLength());
+  }
 
-		int start = getInputStart();
-		String t = getText().substring(0,
-			text.getSelectionStart() - start);
-		if(t == null)
-		{
-			historyPrevious();
-			return;
-		}
+  int start = getInputStart();
+  String t = getText().substring(0,
+   text.getSelectionStart() - start);
+  if(t == null)
+  {
+   historyPrevious();
+   return;
+  }
 
-		for(int i = index + 1; i < historyModel.getSize(); i++)
-		{
-			String item = historyModel.getItem(i);
-			if(item.startsWith(t))
-			{
-				text.replaceSelection(item.substring(t.length()));
-				text.select(getInputStart() + t.length(),
-					getDocument().getLength());
-				index = i;
-				return;
-			}
-		}
+  for(int i = index + 1; i < historyModel.getSize(); i++)
+  {
+   String item = historyModel.getItem(i);
+   if(item.startsWith(t))
+   {
+    text.replaceSelection(item.substring(t.length()));
+    text.select(getInputStart() + t.length(),
+     getDocument().getLength());
+    index = i;
+    return;
+   }
+  }
 
-		text.getToolkit().beep();
-	} //}}}
+  text.getToolkit().beep();
+ } //}}}
 
-	//{{{ doForwardSearch() method
-	public void doForwardSearch()
-	{
-		if(historyModel == null)
-			return;
+ //{{{ doForwardSearch() method
+ public void doForwardSearch()
+ {
+  if(historyModel == null)
+   return;
 
-		if(text.getSelectionEnd() != getDocument().getLength())
-		{
-			text.setCaretPosition(getDocument().getLength());
-		}
+  if(text.getSelectionEnd() != getDocument().getLength())
+  {
+   text.setCaretPosition(getDocument().getLength());
+  }
 
-		int start = getInputStart();
-		String t = getText().substring(0,
-			text.getSelectionStart() - start);
-		if(t == null)
-		{
-			historyNext();
-			return;
-		}
+  int start = getInputStart();
+  String t = getText().substring(0,
+   text.getSelectionStart() - start);
+  if(t == null)
+  {
+   historyNext();
+   return;
+  }
 
-		for(int i = index - 1; i >= 0; i--)
-		{
-			String item = historyModel.getItem(i);
-			if(item.startsWith(t))
-			{
-				text.replaceSelection(item.substring(t.length()));
-				text.select(getInputStart() + t.length(),
-					getDocument().getLength());
-				index = i;
-				return;
-			}
-		}
+  for(int i = index - 1; i >= 0; i--)
+  {
+   String item = historyModel.getItem(i);
+   if(item.startsWith(t))
+   {
+    text.replaceSelection(item.substring(t.length()));
+    text.select(getInputStart() + t.length(),
+     getDocument().getLength());
+    index = i;
+    return;
+   }
+  }
 
-		text.getToolkit().beep();
-	} //}}}
+  text.getToolkit().beep();
+ } //}}}
 
-	//{{{ historyPrevious() method
-	public void historyPrevious()
-	{
-		if(historyModel == null)
-			return;
+ //{{{ historyPrevious() method
+ public void historyPrevious()
+ {
+  if(historyModel == null)
+   return;
 
-		if(index == historyModel.getSize() - 1)
-			text.getToolkit().beep();
-		else if(index == -1)
-		{
-			current = getText();
-			setText(historyModel.getItem(0));
-			index = 0;
-		}
-		else
-		{
-			// have to do this because setText() sets index to -1
-			int newIndex = index + 1;
-			setText(historyModel.getItem(newIndex));
-			index = newIndex;
-		}
-	} //}}}
+  if(index == historyModel.getSize() - 1)
+   text.getToolkit().beep();
+  else if(index == -1)
+  {
+   current = getText();
+   setText(historyModel.getItem(0));
+   index = 0;
+  }
+  else
+  {
+   // have to do this because setText() sets index to -1
+   int newIndex = index + 1;
+   setText(historyModel.getItem(newIndex));
+   index = newIndex;
+  }
+ } //}}}
 
-	//{{{ historyNext() method
-	public void historyNext()
-	{
-		if(historyModel == null)
-			return;
+ //{{{ historyNext() method
+ public void historyNext()
+ {
+  if(historyModel == null)
+   return;
 
-		if(index == -1)
-			text.getToolkit().beep();
-		else if(index == 0)
-			setText(current);
-		else
-		{
-			// have to do this because setText() sets index to -1
-			int newIndex = index - 1;
-			setText(historyModel.getItem(newIndex));
-			index = newIndex;
-		}
-	} //}}}
-	
-	//{{{ getDocument() method
-	public Document getDocument()
-	{
-		return text.getDocument();
-	} //}}}
-	
-	//{{{ getText() method
-	/**
-	 * Subclasses can override this to provide funky history behavior,
-	 * for JTextPanes and such.
-	 */
-	public String getText()
-	{
-		return text.getText();
-	} //}}}
-	
-	//{{{ setText() method
-	/**
-	 * Subclasses can override this to provide funky history behavior,
-	 * for JTextPanes and such.
-	 */
-	public void setText(String text)
-	{
-		this.index = -1;
-		this.text.setText(text);
-	} //}}}
+  if(index == -1)
+   text.getToolkit().beep();
+  else if(index == 0)
+   setText(current);
+  else
+  {
+   // have to do this because setText() sets index to -1
+   int newIndex = index - 1;
+   setText(historyModel.getItem(newIndex));
+   index = newIndex;
+  }
+ } //}}}
+ 
+ //{{{ getDocument() method
+ public Document getDocument()
+ {
+  return text.getDocument();
+ } //}}}
+ 
+ //{{{ getText() method
+ /**
+  * Subclasses can override this to provide funky history behavior,
+  * for JTextPanes and such.
+  */
+ public String getText()
+ {
+  return text.getText();
+ } //}}}
+ 
+ //{{{ setText() method
+ /**
+  * Subclasses can override this to provide funky history behavior,
+  * for JTextPanes and such.
+  */
+ public void setText(String text)
+ {
+  this.index = -1;
+  this.text.setText(text);
+ } //}}}
 
-	//{{{ getInputStart() method
-	/**
-	 * Subclasses can override this to provide funky history behavior,
-	 * for JTextPanes and such.
-	 */
-	public int getInputStart()
-	{
-		return 0;
-	} //}}}
+ //{{{ getInputStart() method
+ /**
+  * Subclasses can override this to provide funky history behavior,
+  * for JTextPanes and such.
+  */
+ public int getInputStart()
+ {
+  return 0;
+ } //}}}
 
-	//{{{ showPopupMenu() method
-	public void showPopupMenu(String t, int x, int y)
-	{
-		if(historyModel == null)
-			return;
+ //{{{ showPopupMenu() method
+ public void showPopupMenu(String t, int x, int y)
+ {
+  if(historyModel == null)
+   return;
 
-		text.requestFocus();
+  text.requestFocus();
 
-		if(popup != null && popup.isVisible())
-		{
-			popup.setVisible(false);
-			return;
-		}
+  if(popup != null && popup.isVisible())
+  {
+   popup.setVisible(false);
+   return;
+  }
 
-		popup = new JPopupMenu();
-		JMenuItem caption = new JMenuItem(jEdit.getProperty(
-			"history.caption"));
-		caption.getModel().setEnabled(false);
- 		popup.add(caption);
- 		popup.addSeparator();
+  popup = new JPopupMenu();
+  JMenuItem caption = new JMenuItem(jEdit.getProperty(
+   "history.caption"));
+  caption.getModel().setEnabled(false);
+   popup.add(caption);
+   popup.addSeparator();
 
-		for(int i = 0; i < historyModel.getSize(); i++)
-		{
-			String item = historyModel.getItem(i);
-			if(item.startsWith(t))
-			{
-				JMenuItem menuItem = new JMenuItem(item);
-				menuItem.setActionCommand(String.valueOf(i));
-				menuItem.addActionListener(
-					new ActionHandler());
-				popup.add(menuItem);
-			}
-		}
+  for(int i = 0; i < historyModel.getSize(); i++)
+  {
+   String item = historyModel.getItem(i);
+   if(item.startsWith(t))
+   {
+    JMenuItem menuItem = new JMenuItem(item);
+    menuItem.setActionCommand(String.valueOf(i));
+    menuItem.addActionListener(
+     new ActionHandler());
+    popup.add(menuItem);
+   }
+  }
 
-		GUIUtilities.showPopupMenu(popup,text,x,y,false);
-	} //}}}
+  GUIUtilities.showPopupMenu(popup,text,x,y,false);
+ } //}}}
 
-	//{{{ showPopupMenu() method
-	public void showPopupMenu(boolean search)
-	{
-		if(search)
-			showPopupMenu(getText().substring(getInputStart(),
-				text.getSelectionStart()),0,text.getHeight());
-		else
-			showPopupMenu("",0,text.getHeight());
-	} //}}}
+ //{{{ showPopupMenu() method
+ public void showPopupMenu(boolean search)
+ {
+  if(search)
+   showPopupMenu(getText().substring(getInputStart(),
+    text.getSelectionStart()),0,text.getHeight());
+  else
+   showPopupMenu("",0,text.getHeight());
+ } //}}}
 
-	//{{{ Private members
-	private JTextComponent text;
-	private HistoryModel historyModel;
-	private int index;
-	private String current;
-	private JPopupMenu popup;
-	private boolean instantPopups;
-	//}}}
+ //{{{ Private members
+ private JTextComponent text;
+ private HistoryModel historyModel;
+ private int index;
+ private String current;
+ private JPopupMenu popup;
+ private boolean instantPopups;
+ //}}}
 
-	//{{{ ActionHandler class
-	class ActionHandler implements ActionListener
-	{
-		public void actionPerformed(ActionEvent evt)
-		{
-			int ind = Integer.parseInt(evt.getActionCommand());
-			if(ind == -1)
-			{
-				if(index != -1)
-					setText(current);
-			}
-			else
-			{
-				setText(historyModel.getItem(ind));
-				index = ind;
-			}
-			if(instantPopups)
-			{
-				addCurrentToHistory();
-				fireActionPerformed();
-			}
-		}
-	} //}}}
+ //{{{ ActionHandler class
+ class ActionHandler implements ActionListener
+ {
+  public void actionPerformed(ActionEvent evt)
+  {
+   int ind = Integer.parseInt(evt.getActionCommand());
+   if(ind == -1)
+   {
+    if(index != -1)
+     setText(current);
+   }
+   else
+   {
+    setText(historyModel.getItem(ind));
+    index = ind;
+   }
+   if(instantPopups)
+   {
+    addCurrentToHistory();
+    fireActionPerformed();
+   }
+  }
+ } //}}}
 }

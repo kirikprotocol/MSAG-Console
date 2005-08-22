@@ -46,24 +46,24 @@ import org.gjt.sp.util.*;
  */
 public class BufferLoadRequest extends BufferIORequest
 {
-	//{{{ BufferLoadRequest constructor
-	/**
-	 * Creates a new buffer I/O request.
-	 * @param view The view
-	 * @param buffer The buffer
-	 * @param session The VFS session
-	 * @param vfs The VFS
-	 * @param path The path
-	 */
-	public BufferLoadRequest(View view, Buffer buffer,
-		Object session, VFS vfs, String path)
-	{
-		super(view,buffer,session,vfs,path);
-	} //}}}
+ //{{{ BufferLoadRequest constructor
+ /**
+  * Creates a new buffer I/O request.
+  * @param view The view
+  * @param buffer The buffer
+  * @param session The VFS session
+  * @param vfs The VFS
+  * @param path The path
+  */
+ public BufferLoadRequest(View view, Buffer buffer,
+  Object session, VFS vfs, String path)
+ {
+  super(view,buffer,session,vfs,path);
+ } //}}}
 
- 	public void _createInputStream(Object session, String path,
-	Buffer buffer,	long length) throws IOException ,FileNotFoundException
-	{
+  public void _createInputStream(Object session, String path,
+ Buffer buffer, long length) throws IOException ,FileNotFoundException
+ {
 
     URL url=null;
     HttpURLConnection c=null;InputStream _in=null;
@@ -77,7 +77,7 @@ public class BufferLoadRequest extends BufferIORequest
       if (!status.equals("ok")) throw new FileNotFoundException(status);
       _in=c.getInputStream();
       if(_in == null)
-					return;
+     return;
      if (buffer==null) read(autodetect(_in),length,false);
      else readMarkers(buffer,_in);
     } catch (MalformedURLException e) {
@@ -93,166 +93,166 @@ public class BufferLoadRequest extends BufferIORequest
           e.printStackTrace();
         }
     }
-	} //}}}
+ } //}}}
 
-	//{{{ run() method
-	public void run()
-	{
-		InputStream in = null;
+ //{{{ run() method
+ public void run()
+ {
+  InputStream in = null;
 
-		try
-		{
-			try
-			{
-				String[] args = { vfs.getFileName(path) };
-				setAbortable(true);
-				if(!buffer.isTemporary())
-				{
-					setStatus(jEdit.getProperty("vfs.status.load",args));
-					setProgressValue(0);
-				}
+  try
+  {
+   try
+   {
+    String[] args = { vfs.getFileName(path) };
+    setAbortable(true);
+    if(!buffer.isTemporary())
+    {
+     setStatus(jEdit.getProperty("vfs.status.load",args));
+     setProgressValue(0);
+    }
 
-				path = vfs._canonPath(session,path,view);
+    path = vfs._canonPath(session,path,view);
 
-				VFSFile entry = vfs._getFile(
-					session,path,view);
-				long length;
-				if(entry != null)
-					length = entry.getLength();
-				else
-					length = 0L;
+    VFSFile entry = vfs._getFile(
+     session,path,view);
+    long length;
+    if(entry != null)
+     length = entry.getLength();
+    else
+     length = 0L;
 
-		/*		in = vfs._createInputStream(session,path,
-					false,view);
-				if(in == null)
-					return;
+  /*  in = vfs._createInputStream(session,path,
+     false,view);
+    if(in == null)
+     return;
       */
         _createInputStream(session,path,null,length);
-				//read(autodetect(in),length,false);
-				buffer.setNewFile(false);
-			}
-			catch(CharConversionException ch)
-			{
-		//		Log.log(Log.ERROR,this,ch);
-				Object[] pp = { buffer.getProperty(Buffer.ENCODING),
-					ch.toString() };
-				VFSManager.error(view,path,"ioerror.encoding-error",pp);
+    //read(autodetect(in),length,false);
+    buffer.setNewFile(false);
+   }
+   catch(CharConversionException ch)
+   {
+  //  Log.log(Log.ERROR,this,ch);
+    Object[] pp = { buffer.getProperty(Buffer.ENCODING),
+     ch.toString() };
+    VFSManager.error(view,path,"ioerror.encoding-error",pp);
        ch.printStackTrace();
-				buffer.setBooleanProperty(ERROR_OCCURRED,true);
-			}
-			catch(UnsupportedEncodingException uu)
-			{
-		//		Log.log(Log.ERROR,this,uu);
-				Object[] pp = { buffer.getProperty(Buffer.ENCODING),
-					uu.toString() };
-				VFSManager.error(view,path,"ioerror.encoding-error",pp);
+    buffer.setBooleanProperty(ERROR_OCCURRED,true);
+   }
+   catch(UnsupportedEncodingException uu)
+   {
+  //  Log.log(Log.ERROR,this,uu);
+    Object[] pp = { buffer.getProperty(Buffer.ENCODING),
+     uu.toString() };
+    VFSManager.error(view,path,"ioerror.encoding-error",pp);
        uu.printStackTrace();
-				buffer.setBooleanProperty(ERROR_OCCURRED,true);
-			}
-			catch(IOException io)
-			{
-			//	Log.log(Log.ERROR,this,io);
-				Object[] pp = { io.toString() };
-				VFSManager.error(view,path,"ioerror.read-error",pp);
+    buffer.setBooleanProperty(ERROR_OCCURRED,true);
+   }
+   catch(IOException io)
+   {
+   // Log.log(Log.ERROR,this,io);
+    Object[] pp = { io.toString() };
+    VFSManager.error(view,path,"ioerror.read-error",pp);
         io.printStackTrace();
-				buffer.setBooleanProperty(ERROR_OCCURRED,true);
-			}
-			catch(OutOfMemoryError oom)
-			{
-			//	Log.log(Log.ERROR,this,oom);
-				VFSManager.error(view,path,"out-of-memory-error",null);
+    buffer.setBooleanProperty(ERROR_OCCURRED,true);
+   }
+   catch(OutOfMemoryError oom)
+   {
+   // Log.log(Log.ERROR,this,oom);
+    VFSManager.error(view,path,"out-of-memory-error",null);
         oom.printStackTrace();
-				buffer.setBooleanProperty(ERROR_OCCURRED,true);
-			}
+    buffer.setBooleanProperty(ERROR_OCCURRED,true);
+   }
 
-			if(jEdit.getBooleanProperty("persistentMarkers"))
-			{
-				try
-				{
-					String[] args = { vfs.getFileName(path) };
-					if(!buffer.isTemporary())
-						setStatus(jEdit.getProperty("vfs.status.load-markers",args));
-					setAbortable(true);
+   if(jEdit.getBooleanProperty("persistentMarkers"))
+   {
+    try
+    {
+     String[] args = { vfs.getFileName(path) };
+     if(!buffer.isTemporary())
+      setStatus(jEdit.getProperty("vfs.status.load-markers",args));
+     setAbortable(true);
 
-				//	in = vfs._createInputStream(session,markersPath,true,view);
-					 _createInputStream(session,markersPath,buffer,0);
+    // in = vfs._createInputStream(session,markersPath,true,view);
+      _createInputStream(session,markersPath,buffer,0);
          // if(in != null)
-					//	readMarkers(buffer,in);
-				}
-				catch(IOException io)
-				{
-					// ignore
-				}
-			}
-		}
-		catch(WorkThread.Abort a)
-		{
-			if(in != null)
-			{
-				try
-				{
-					in.close();
-				}
-				catch(IOException io)
-				{
-				}
-			}
+     // readMarkers(buffer,in);
+    }
+    catch(IOException io)
+    {
+     // ignore
+    }
+   }
+  }
+  catch(WorkThread.Abort a)
+  {
+   if(in != null)
+   {
+    try
+    {
+     in.close();
+    }
+    catch(IOException io)
+    {
+    }
+   }
 
-			buffer.setBooleanProperty(ERROR_OCCURRED,true);
-		}
-		finally
-		{
-			try
-			{
-				vfs._endVFSSession(session,view);
-			}
-			catch(IOException io)
-			{
-			//	Log.log(Log.ERROR,this,io);
-				String[] pp = { io.toString() };
-				VFSManager.error(view,path,"ioerror.read-error",pp);
+   buffer.setBooleanProperty(ERROR_OCCURRED,true);
+  }
+  finally
+  {
+   try
+   {
+    vfs._endVFSSession(session,view);
+   }
+   catch(IOException io)
+   {
+   // Log.log(Log.ERROR,this,io);
+    String[] pp = { io.toString() };
+    VFSManager.error(view,path,"ioerror.read-error",pp);
 
-				buffer.setBooleanProperty(ERROR_OCCURRED,true);
-			}
-			catch(WorkThread.Abort a)
-			{
-				buffer.setBooleanProperty(ERROR_OCCURRED,true);
-			}
-		}
-	} //}}}
+    buffer.setBooleanProperty(ERROR_OCCURRED,true);
+   }
+   catch(WorkThread.Abort a)
+   {
+    buffer.setBooleanProperty(ERROR_OCCURRED,true);
+   }
+  }
+ } //}}}
 
-	//{{{ readMarkers() method
-	private void readMarkers(Buffer buffer, InputStream _in)
-		throws IOException
-	{
+ //{{{ readMarkers() method
+ private void readMarkers(Buffer buffer, InputStream _in)
+  throws IOException
+ {
     // For `reload' command
-		buffer.removeAllMarkers();
+  buffer.removeAllMarkers();
 
-		BufferedReader in = new BufferedReader(new InputStreamReader(_in));
+  BufferedReader in = new BufferedReader(new InputStreamReader(_in));
 
-		try
-		{
-			String line;
-     	while((line = in.readLine()) != null)
-			{
-				// compatibility kludge for jEdit 3.1 and earlier
-				if(!line.startsWith("!"))
-					continue;
+  try
+  {
+   String line;
+      while((line = in.readLine()) != null)
+   {
+    // compatibility kludge for jEdit 3.1 and earlier
+    if(!line.startsWith("!"))
+     continue;
 
-				// malformed marks file?
-				if(line.length() == 0)
-					continue;
-				
-				char shortcut = line.charAt(1);
-				int start = line.indexOf(';');
-				int end = line.indexOf(';',start + 1);
-				int position = Integer.parseInt(line.substring(start + 1,end));
-				buffer.addMarker(shortcut,position);
-			}
-		}
-		finally
-		{
-			in.close();
-		}
-	} //}}}
+    // malformed marks file?
+    if(line.length() == 0)
+     continue;
+    
+    char shortcut = line.charAt(1);
+    int start = line.indexOf(';');
+    int end = line.indexOf(';',start + 1);
+    int position = Integer.parseInt(line.substring(start + 1,end));
+    buffer.addMarker(shortcut,position);
+   }
+  }
+  finally
+  {
+   in.close();
+  }
+ } //}}}
 }

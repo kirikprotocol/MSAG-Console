@@ -614,14 +614,14 @@ public class UTF8Reader
      * @exception  IOException  If an I/O error occurs
      */
     public boolean ready() throws IOException {
-	    return false;
+     return false;
     } // ready()
 
     /**
      * Tell whether this stream supports the mark() operation.
      */
     public boolean markSupported() {
-	    return false;
+     return false;
     } // markSupported()
 
     /**
@@ -638,7 +638,7 @@ public class UTF8Reader
      *                          or if some other I/O error occurs
      */
     public void mark(int readAheadLimit) throws IOException {
-	    throw new IOException(fFormatter.formatMessage(fLocale, "OperationNotSupported", new Object[]{"mark()", "UTF-8"}));
+     throw new IOException(fFormatter.formatMessage(fLocale, "OperationNotSupported", new Object[]{"mark()", "UTF-8"}));
     } // mark(int)
 
     /**

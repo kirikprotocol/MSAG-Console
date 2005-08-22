@@ -26,167 +26,167 @@ import org.gjt.sp.jedit.*;
 
 public interface IndentAction
 {
-	/**
-	 * @param buffer The buffer
-	 * @param line The line number that matched the rule; not necessarily
-	 * the line being indented.
-	 * @param oldIndent Original indent.
-	 * @param newIndent The new indent -- ie, indent returned by previous
-	 * indent action.
-	 */
-	public int calculateIndent(Buffer buffer, int line, int oldIndent,
-		int newIndent);
+ /**
+  * @param buffer The buffer
+  * @param line The line number that matched the rule; not necessarily
+  * the line being indented.
+  * @param oldIndent Original indent.
+  * @param newIndent The new indent -- ie, indent returned by previous
+  * indent action.
+  */
+ public int calculateIndent(Buffer buffer, int line, int oldIndent,
+  int newIndent);
 
-	/**
-	 * @return true if the indent engine should keep processing after
-	 * this rule.
-	 */
-	public boolean keepChecking();
+ /**
+  * @return true if the indent engine should keep processing after
+  * this rule.
+  */
+ public boolean keepChecking();
 
-	/**
-	 * This handles the following Java code:
-	 * if(something)
-	 * { // no indentation on this line, even though previous matches a rule
-	 */
-	public class Collapse implements IndentAction
-	{
-		/**
-		 * This does nothing; it is merely a sentinel for the
-		 * <code>OpenBracketIndentRule</code>.
-		 */
-		public int calculateIndent(Buffer buffer, int line, int oldIndent,
-			int newIndent)
-		{
-			return newIndent;
-		}
-		
-		public boolean keepChecking()
-		{
-			return true;
-		}
-		
-		public boolean equals(Object o)
-		{
-			return (o instanceof Collapse);
-		}
-	}
+ /**
+  * This handles the following Java code:
+  * if(something)
+  * { // no indentation on this line, even though previous matches a rule
+  */
+ public class Collapse implements IndentAction
+ {
+  /**
+   * This does nothing; it is merely a sentinel for the
+   * <code>OpenBracketIndentRule</code>.
+   */
+  public int calculateIndent(Buffer buffer, int line, int oldIndent,
+   int newIndent)
+  {
+   return newIndent;
+  }
+  
+  public boolean keepChecking()
+  {
+   return true;
+  }
+  
+  public boolean equals(Object o)
+  {
+   return (o instanceof Collapse);
+  }
+ }
 
-	public class Reset implements IndentAction
-	{
-		public int calculateIndent(Buffer buffer, int line, int oldIndent,
-			int newIndent)
-		{
-			return oldIndent;
-		}
-		
-		public boolean keepChecking()
-		{
-			return true;
-		}
-	}
+ public class Reset implements IndentAction
+ {
+  public int calculateIndent(Buffer buffer, int line, int oldIndent,
+   int newIndent)
+  {
+   return oldIndent;
+  }
+  
+  public boolean keepChecking()
+  {
+   return true;
+  }
+ }
 
-	public class Increase implements IndentAction
-	{
-		private int amount;
-		
-		public Increase()
-		{
-			amount = 1;
-		}
-		
-		public Increase(int amount)
-		{
-			this.amount = amount;
-		}
-		
-		public int calculateIndent(Buffer buffer, int line, int oldIndent,
-			int newIndent)
-		{
-			return newIndent + buffer.getIndentSize() * amount;
-		}
-		
-		public boolean keepChecking()
-		{
-			return true;
-		}
-	}
+ public class Increase implements IndentAction
+ {
+  private int amount;
+  
+  public Increase()
+  {
+   amount = 1;
+  }
+  
+  public Increase(int amount)
+  {
+   this.amount = amount;
+  }
+  
+  public int calculateIndent(Buffer buffer, int line, int oldIndent,
+   int newIndent)
+  {
+   return newIndent + buffer.getIndentSize() * amount;
+  }
+  
+  public boolean keepChecking()
+  {
+   return true;
+  }
+ }
 
-	public class Decrease implements IndentAction
-	{
-		public int calculateIndent(Buffer buffer, int line, int oldIndent,
-			int newIndent)
-		{
-			return newIndent - buffer.getIndentSize();
-		}
-		
-		public boolean keepChecking()
-		{
-			return true;
-		}
-	}
+ public class Decrease implements IndentAction
+ {
+  public int calculateIndent(Buffer buffer, int line, int oldIndent,
+   int newIndent)
+  {
+   return newIndent - buffer.getIndentSize();
+  }
+  
+  public boolean keepChecking()
+  {
+   return true;
+  }
+ }
 
-	public class AlignBracket implements IndentAction
-	{
-		private int line, offset;
-		private int openBracketLine;
-		private int openBracketColumn;
-		private String openBracketLineText;
-		private int extraIndent;
+ public class AlignBracket implements IndentAction
+ {
+  private int line, offset;
+  private int openBracketLine;
+  private int openBracketColumn;
+  private String openBracketLineText;
+  private int extraIndent;
 
-		public AlignBracket(Buffer buffer, int line, int offset)
-		{
-			this.line = line;
-			this.offset = offset;
-			
-			int openBracketIndex = TextUtilities.findMatchingBracket(
-				buffer,this.line,this.offset);
-			if(openBracketIndex == -1)
-				openBracketLine = -1;
-			else
-			{
-				openBracketLine = buffer.getLineOfOffset(openBracketIndex);
-				openBracketColumn = openBracketIndex -
-					buffer.getLineStartOffset(openBracketLine);
-				openBracketLineText = buffer.getLineText(openBracketLine);
-			}
-		}
+  public AlignBracket(Buffer buffer, int line, int offset)
+  {
+   this.line = line;
+   this.offset = offset;
+   
+   int openBracketIndex = TextUtilities.findMatchingBracket(
+    buffer,this.line,this.offset);
+   if(openBracketIndex == -1)
+    openBracketLine = -1;
+   else
+   {
+    openBracketLine = buffer.getLineOfOffset(openBracketIndex);
+    openBracketColumn = openBracketIndex -
+     buffer.getLineStartOffset(openBracketLine);
+    openBracketLineText = buffer.getLineText(openBracketLine);
+   }
+  }
 
-		public int getExtraIndent()
-		{
-			return extraIndent;
-		}
-		
-		public void setExtraIndent(int extraIndent)
-		{
-			this.extraIndent = extraIndent;
-		}
-		
-		public int getOpenBracketColumn()
-		{
-			return openBracketColumn;
-		}
-		
-		public String getOpenBracketLine()
-		{
-			return openBracketLineText;
-		}
+  public int getExtraIndent()
+  {
+   return extraIndent;
+  }
+  
+  public void setExtraIndent(int extraIndent)
+  {
+   this.extraIndent = extraIndent;
+  }
+  
+  public int getOpenBracketColumn()
+  {
+   return openBracketColumn;
+  }
+  
+  public String getOpenBracketLine()
+  {
+   return openBracketLineText;
+  }
 
-		public int calculateIndent(Buffer buffer, int line, int oldIndent,
-			int newIndent)
-		{
-			if(openBracketLineText == null)
-				return newIndent;
-			else
-			{
-				return MiscUtilities.getLeadingWhiteSpaceWidth(
-					openBracketLineText,buffer.getTabSize())
-					+ (extraIndent * buffer.getIndentSize());
-			}
-		}
-		
-		public boolean keepChecking()
-		{
-			return false;
-		}
-	}
+  public int calculateIndent(Buffer buffer, int line, int oldIndent,
+   int newIndent)
+  {
+   if(openBracketLineText == null)
+    return newIndent;
+   else
+   {
+    return MiscUtilities.getLeadingWhiteSpaceWidth(
+     openBracketLineText,buffer.getTabSize())
+     + (extraIndent * buffer.getIndentSize());
+   }
+  }
+  
+  public boolean keepChecking()
+  {
+   return false;
+  }
+ }
 }

@@ -3,7 +3,7 @@
 <!DOCTYPE DOCKABLES SYSTEM "dockables.dtd">
 
 <DOCKABLES>
-	<DOCKABLE NAME="highlighter-panel">
-		new gatchan.highlight.HighlightList();
-	</DOCKABLE>
+ <DOCKABLE NAME="highlighter-panel">
+  new gatchan.highlight.HighlightList();
+ </DOCKABLE>
 </DOCKABLES>

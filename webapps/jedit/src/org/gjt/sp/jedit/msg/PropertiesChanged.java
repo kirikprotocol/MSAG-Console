@@ -32,12 +32,12 @@ import org.gjt.sp.jedit.EBMessage;
  */
 public class PropertiesChanged extends EBMessage
 {
-	/**
-	 * Creates a new properties changed message.
-	 * @param source The message source
-	 */
-	public PropertiesChanged(EBComponent source)
-	{
-		super(source);
-	}
+ /**
+  * Creates a new properties changed message.
+  * @param source The message source
+  */
+ public PropertiesChanged(EBComponent source)
+ {
+  super(source);
+ }
 }

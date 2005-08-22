@@ -36,239 +36,239 @@ import org.gjt.sp.jedit.*;
 //{{{ DockingOptionPane class
 public class DockingOptionPane extends AbstractOptionPane
 {
-	//{{{ DockingOptionPane constructor
-	public DockingOptionPane()
-	{
-		super("docking");
-	} //}}}
+ //{{{ DockingOptionPane constructor
+ public DockingOptionPane()
+ {
+  super("docking");
+ } //}}}
 
-	//{{{ _init() method
-	public void _init()
-	{
-		setLayout(new BorderLayout());
-		add(BorderLayout.CENTER,createWindowTableScroller());
-	} //}}}
+ //{{{ _init() method
+ public void _init()
+ {
+  setLayout(new BorderLayout());
+  add(BorderLayout.CENTER,createWindowTableScroller());
+ } //}}}
 
-	//{{{ _save() method
-	public void _save()
-	{
-		windowModel.save();
-	} //}}}
+ //{{{ _save() method
+ public void _save()
+ {
+  windowModel.save();
+ } //}}}
 
-	//{{{ Private members
+ //{{{ Private members
 
-	//{{{ Instance variables
-	private JTable windowTable;
-	private WindowTableModel windowModel;
-	//}}}
+ //{{{ Instance variables
+ private JTable windowTable;
+ private WindowTableModel windowModel;
+ //}}}
 
-	//{{{ createWindowTableScroller() method
-	private JScrollPane createWindowTableScroller()
-	{
-		windowModel = createWindowModel();
-		windowTable = new JTable(windowModel);
-		windowTable.getTableHeader().setReorderingAllowed(false);
-		windowTable.setColumnSelectionAllowed(false);
-		windowTable.setRowSelectionAllowed(false);
-		windowTable.setCellSelectionEnabled(false);
+ //{{{ createWindowTableScroller() method
+ private JScrollPane createWindowTableScroller()
+ {
+  windowModel = createWindowModel();
+  windowTable = new JTable(windowModel);
+  windowTable.getTableHeader().setReorderingAllowed(false);
+  windowTable.setColumnSelectionAllowed(false);
+  windowTable.setRowSelectionAllowed(false);
+  windowTable.setCellSelectionEnabled(false);
 
-		DockPositionCellRenderer comboBox = new DockPositionCellRenderer();
-		windowTable.setRowHeight(comboBox.getPreferredSize().height);
-		TableColumn column = windowTable.getColumnModel().getColumn(1);
-		column.setCellRenderer(comboBox);
-		column.setCellEditor(new DefaultCellEditor(new DockPositionCellRenderer()));
+  DockPositionCellRenderer comboBox = new DockPositionCellRenderer();
+  windowTable.setRowHeight(comboBox.getPreferredSize().height);
+  TableColumn column = windowTable.getColumnModel().getColumn(1);
+  column.setCellRenderer(comboBox);
+  column.setCellEditor(new DefaultCellEditor(new DockPositionCellRenderer()));
 
-		Dimension d = windowTable.getPreferredSize();
-		d.height = Math.min(d.height,50);
-		JScrollPane scroller = new JScrollPane(windowTable);
-		scroller.setPreferredSize(d);
-		return scroller;
-	} //}}}
+  Dimension d = windowTable.getPreferredSize();
+  d.height = Math.min(d.height,50);
+  JScrollPane scroller = new JScrollPane(windowTable);
+  scroller.setPreferredSize(d);
+  return scroller;
+ } //}}}
 
-	//{{{ createWindowModel() method
-	private WindowTableModel createWindowModel()
-	{
-		return new WindowTableModel();
-	} //}}}
+ //{{{ createWindowModel() method
+ private WindowTableModel createWindowModel()
+ {
+  return new WindowTableModel();
+ } //}}}
 
-	//}}}
+ //}}}
 
-	//{{{ DockPositionCellRenderer class
-	class DockPositionCellRenderer extends JComboBox
-		implements TableCellRenderer
-	{
-		DockPositionCellRenderer()
-		{
-			super(new String[] {
-				DockableWindowManager.FLOATING,
-				DockableWindowManager.TOP,
-				DockableWindowManager.LEFT,
-				DockableWindowManager.BOTTOM,
-				DockableWindowManager.RIGHT
-			});
-			DockPositionCellRenderer.this.setRequestFocusEnabled(false);
-		}
+ //{{{ DockPositionCellRenderer class
+ class DockPositionCellRenderer extends JComboBox
+  implements TableCellRenderer
+ {
+  DockPositionCellRenderer()
+  {
+   super(new String[] {
+    DockableWindowManager.FLOATING,
+    DockableWindowManager.TOP,
+    DockableWindowManager.LEFT,
+    DockableWindowManager.BOTTOM,
+    DockableWindowManager.RIGHT
+   });
+   DockPositionCellRenderer.this.setRequestFocusEnabled(false);
+  }
 
-		public Component getTableCellRendererComponent(JTable table,
-			Object value, boolean isSelected, boolean hasFocus,
-			int row, int column)
-		{
-			setSelectedItem(value);
-			return this;
-		}
-	} //}}}
+  public Component getTableCellRendererComponent(JTable table,
+   Object value, boolean isSelected, boolean hasFocus,
+   int row, int column)
+  {
+   setSelectedItem(value);
+   return this;
+  }
+ } //}}}
 } //}}}
 
 //{{{ WindowTableModel class
 class WindowTableModel extends AbstractTableModel
 {
-	private Vector windows;
+ private Vector windows;
 
-	//{{{ WindowTableModel constructor
-	WindowTableModel()
-	{
-		windows = new Vector();
+ //{{{ WindowTableModel constructor
+ WindowTableModel()
+ {
+  windows = new Vector();
 
-		String[] dockables = DockableWindowManager
-			.getRegisteredDockableWindows();
-		for(int i = 0; i < dockables.length; i++)
-		{
-			windows.addElement(new Entry(dockables[i]));
-		}
+  String[] dockables = DockableWindowManager
+   .getRegisteredDockableWindows();
+  for(int i = 0; i < dockables.length; i++)
+  {
+   windows.addElement(new Entry(dockables[i]));
+  }
 
-		sort();
-	} //}}}
+  sort();
+ } //}}}
 
-	//{{{ sort() method
-	public void sort()
-	{
-		MiscUtilities.quicksort(windows,new WindowCompare());
-		fireTableDataChanged();
-	} //}}}
+ //{{{ sort() method
+ public void sort()
+ {
+  MiscUtilities.quicksort(windows,new WindowCompare());
+  fireTableDataChanged();
+ } //}}}
 
-	//{{{ getColumnCount() method
-	public int getColumnCount()
-	{
-		return 2;
-	} //}}}
+ //{{{ getColumnCount() method
+ public int getColumnCount()
+ {
+  return 2;
+ } //}}}
 
-	//{{{ getRowCount() method
-	public int getRowCount()
-	{
-		return windows.size();
-	} //}}}
+ //{{{ getRowCount() method
+ public int getRowCount()
+ {
+  return windows.size();
+ } //}}}
 
-	//{{{ getColumnClass() method
-	public Class getColumnClass(int col)
-	{
-		switch(col)
-		{
-		case 0:
-		case 1:
-			return String.class;
-		default:
-			throw new InternalError();
-		}
-	} //}}}
+ //{{{ getColumnClass() method
+ public Class getColumnClass(int col)
+ {
+  switch(col)
+  {
+  case 0:
+  case 1:
+   return String.class;
+  default:
+   throw new InternalError();
+  }
+ } //}}}
 
-	//{{{ getValueAt() method
-	public Object getValueAt(int row, int col)
-	{
-		Entry window = (Entry)windows.elementAt(row);
-		switch(col)
-		{
-		case 0:
-			return window.title;
-		case 1:
-			return window.dockPosition;
-		default:
-			throw new InternalError();
-		}
-	} //}}}
+ //{{{ getValueAt() method
+ public Object getValueAt(int row, int col)
+ {
+  Entry window = (Entry)windows.elementAt(row);
+  switch(col)
+  {
+  case 0:
+   return window.title;
+  case 1:
+   return window.dockPosition;
+  default:
+   throw new InternalError();
+  }
+ } //}}}
 
-	//{{{ isCellEditable() method
-	public boolean isCellEditable(int row, int col)
-	{
-		return (col != 0);
-	} //}}}
+ //{{{ isCellEditable() method
+ public boolean isCellEditable(int row, int col)
+ {
+  return (col != 0);
+ } //}}}
 
-	//{{{ setValueAt() method
-	public void setValueAt(Object value, int row, int col)
-	{
-		if(col == 0)
-			return;
+ //{{{ setValueAt() method
+ public void setValueAt(Object value, int row, int col)
+ {
+  if(col == 0)
+   return;
 
-		Entry window = (Entry)windows.elementAt(row);
-		switch(col)
-		{
-		case 1:
-			window.dockPosition = (String)value;
-			break;
-		default:
-			throw new InternalError();
-		}
+  Entry window = (Entry)windows.elementAt(row);
+  switch(col)
+  {
+  case 1:
+   window.dockPosition = (String)value;
+   break;
+  default:
+   throw new InternalError();
+  }
 
-		fireTableRowsUpdated(row,row);
-	} //}}}
+  fireTableRowsUpdated(row,row);
+ } //}}}
 
-	//{{{ getColumnName() method
-	public String getColumnName(int index)
-	{
-		switch(index)
-		{
-		case 0:
-			return jEdit.getProperty("options.docking.title");
-		case 1:
-			return jEdit.getProperty("options.docking.dockPosition");
-		default:
-			throw new InternalError();
-		}
-	} //}}}
+ //{{{ getColumnName() method
+ public String getColumnName(int index)
+ {
+  switch(index)
+  {
+  case 0:
+   return jEdit.getProperty("options.docking.title");
+  case 1:
+   return jEdit.getProperty("options.docking.dockPosition");
+  default:
+   throw new InternalError();
+  }
+ } //}}}
 
-	//{{{ save() method
-	public void save()
-	{
-		for(int i = 0; i < windows.size(); i++)
-		{
-			((Entry)windows.elementAt(i)).save();
-		}
-	} //}}}
+ //{{{ save() method
+ public void save()
+ {
+  for(int i = 0; i < windows.size(); i++)
+  {
+   ((Entry)windows.elementAt(i)).save();
+  }
+ } //}}}
 
-	//{{{ Entry class
-	class Entry
-	{
-		String name;
-		String title;
-		String dockPosition;
+ //{{{ Entry class
+ class Entry
+ {
+  String name;
+  String title;
+  String dockPosition;
 
-		Entry(String name)
-		{
-			this.name = name;
-			title = jEdit.getProperty(name + ".title");
-			if(title == null)
-				title = name;
+  Entry(String name)
+  {
+   this.name = name;
+   title = jEdit.getProperty(name + ".title");
+   if(title == null)
+    title = name;
 
-			dockPosition = jEdit.getProperty(name + ".dock-position");
-			if(dockPosition == null)
-				dockPosition = DockableWindowManager.FLOATING;
-		}
+   dockPosition = jEdit.getProperty(name + ".dock-position");
+   if(dockPosition == null)
+    dockPosition = DockableWindowManager.FLOATING;
+  }
 
-		void save()
-		{
-			jEdit.setProperty(name + ".dock-position",dockPosition);
-		}
-	} //}}}
+  void save()
+  {
+   jEdit.setProperty(name + ".dock-position",dockPosition);
+  }
+ } //}}}
 
-	//{{{ WindowCompare class
-	class WindowCompare implements MiscUtilities.Compare
-	{
-		public int compare(Object obj1, Object obj2)
-		{
-			Entry e1 = (Entry)obj1;
-			Entry e2 = (Entry)obj2;
+ //{{{ WindowCompare class
+ class WindowCompare implements MiscUtilities.Compare
+ {
+  public int compare(Object obj1, Object obj2)
+  {
+   Entry e1 = (Entry)obj1;
+   Entry e2 = (Entry)obj2;
 
-			return MiscUtilities.compareStrings(
-				e1.title,e2.title,true);
-		}
-	} //}}}
+   return MiscUtilities.compareStrings(
+    e1.title,e2.title,true);
+  }
+ } //}}}
 } //}}}

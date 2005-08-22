@@ -131,7 +131,7 @@ public class SchemaGrammar implements Grammar, XSGrammar, XSNamespaceItem {
      *
      * @param targetNamespace
      * @param grammarDesc the XMLGrammarDescription corresponding to this objec
-     * 		at the least a systemId should always be known.
+     *   at the least a systemId should always be known.
      */
     public SchemaGrammar(String targetNamespace, XSDDescription grammarDesc) {
         fTargetNamespace = targetNamespace;
@@ -869,12 +869,12 @@ public class SchemaGrammar implements Grammar, XSGrammar, XSNamespaceItem {
         return new XSModelImpl(new SchemaGrammar[]{this});
     }
 
-	/**
-	 * @see org.apache.xerces.impl.xs.psvi.XSNamespaceItem#getAnnotations()
-	 */
-	public XSObjectList getAnnotations() {
+ /**
+  * @see org.apache.xerces.impl.xs.psvi.XSNamespaceItem#getAnnotations()
+  */
+ public XSObjectList getAnnotations() {
         // REVISIT: implement
-		return null;
-	}
+  return null;
+ }
 
 } // class SchemaGrammar

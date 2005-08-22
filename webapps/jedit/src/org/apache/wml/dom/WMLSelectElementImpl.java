@@ -66,86 +66,86 @@ import org.apache.wml.*;
 public class WMLSelectElementImpl extends WMLElementImpl implements WMLSelectElement {
 
     public WMLSelectElementImpl (WMLDocumentImpl owner, String tagName) {
-	super( owner, tagName);
+ super( owner, tagName);
     }
 
     public void setMultiple(boolean newValue) {
-	setAttribute("multiple", newValue);
+ setAttribute("multiple", newValue);
     }
 
     public boolean getMultiple() {
-	return getAttribute("multiple", false);
+ return getAttribute("multiple", false);
     }
 
     public void setValue(String newValue) {
-	setAttribute("value", newValue);
+ setAttribute("value", newValue);
     }
 
     public String getValue() {
-	return getAttribute("value");
+ return getAttribute("value");
     }
 
     public void setTabIndex(int newValue) {
-	setAttribute("tabindex", newValue);
+ setAttribute("tabindex", newValue);
     }
 
     public int getTabIndex() {
-	return getAttribute("tabindex", 0);
+ return getAttribute("tabindex", 0);
     }
 
     public void setClassName(String newValue) {
-	setAttribute("class", newValue);
+ setAttribute("class", newValue);
     }
 
     public String getClassName() {
-	return getAttribute("class");
+ return getAttribute("class");
     }
 
     public void setXmlLang(String newValue) {
-	setAttribute("xml:lang", newValue);
+ setAttribute("xml:lang", newValue);
     }
 
     public String getXmlLang() {
-	return getAttribute("xml:lang");
+ return getAttribute("xml:lang");
     }
 
     public void setTitle(String newValue) {
-	setAttribute("title", newValue);
+ setAttribute("title", newValue);
     }
 
     public String getTitle() {
-	return getAttribute("title");
+ return getAttribute("title");
     }
 
     public void setIValue(String newValue) {
-	setAttribute("ivalue", newValue);
+ setAttribute("ivalue", newValue);
     }
 
     public String getIValue() {
-	return getAttribute("ivalue");
+ return getAttribute("ivalue");
     }
 
     public void setId(String newValue) {
-	setAttribute("id", newValue);
+ setAttribute("id", newValue);
     }
 
     public String getId() {
-	return getAttribute("id");
+ return getAttribute("id");
     }
 
     public void setIName(String newValue) {
-	setAttribute("iname", newValue);
+ setAttribute("iname", newValue);
     }
 
     public String getIName() {
-	return getAttribute("iname");
+ return getAttribute("iname");
     }
 
     public void setName(String newValue) {
-	setAttribute("name", newValue);
+ setAttribute("name", newValue);
     }
 
     public String getName() {
-	return getAttribute("name");
+ return getAttribute("name");
     }
 }

@@ -38,119 +38,119 @@ import org.gjt.sp.util.Log;
  */
 public class DirectoryListSet extends BufferListSet
 {
-	//{{{ DirectoryListSet constructor
-	public DirectoryListSet(String directory, String glob, boolean recurse)
-	{
-		this.directory = directory;
-		this.glob = glob;
-		this.recurse = recurse;
-	} //}}}
+ //{{{ DirectoryListSet constructor
+ public DirectoryListSet(String directory, String glob, boolean recurse)
+ {
+  this.directory = directory;
+  this.glob = glob;
+  this.recurse = recurse;
+ } //}}}
 
-	//{{{ getDirectory() method
-	public String getDirectory()
-	{
-		return directory;
-	} //}}}
+ //{{{ getDirectory() method
+ public String getDirectory()
+ {
+  return directory;
+ } //}}}
 
-	//{{{ setDirectory() method
-	/**
-	 * @since jEdit 4.2pre1
-	 */
-	public void setDirectory(String directory)
-	{
-		this.directory = directory;
-		invalidateCachedList();
-	} //}}}
+ //{{{ setDirectory() method
+ /**
+  * @since jEdit 4.2pre1
+  */
+ public void setDirectory(String directory)
+ {
+  this.directory = directory;
+  invalidateCachedList();
+ } //}}}
 
-	//{{{ getFileFilter() method
-	public String getFileFilter()
-	{
-		return glob;
-	} //}}}
+ //{{{ getFileFilter() method
+ public String getFileFilter()
+ {
+  return glob;
+ } //}}}
 
-	//{{{ setFileFilter() method
-	/**
-	 * @since jEdit 4.2pre1
-	 */
-	public void setFileFilter(String glob)
-	{
-		this.glob = glob;
-		invalidateCachedList();
-	} //}}}
+ //{{{ setFileFilter() method
+ /**
+  * @since jEdit 4.2pre1
+  */
+ public void setFileFilter(String glob)
+ {
+  this.glob = glob;
+  invalidateCachedList();
+ } //}}}
 
-	//{{{ isRecursive() method
-	public boolean isRecursive()
-	{
-		return recurse;
-	} //}}}
+ //{{{ isRecursive() method
+ public boolean isRecursive()
+ {
+  return recurse;
+ } //}}}
 
-	//{{{ setRecursive() method
-	/**
-	 * @since jEdit 4.2pre1
-	 */
-	public void setRecursive(boolean recurse)
-	{
-		this.recurse = recurse;
-		invalidateCachedList();
-	} //}}}
+ //{{{ setRecursive() method
+ /**
+  * @since jEdit 4.2pre1
+  */
+ public void setRecursive(boolean recurse)
+ {
+  this.recurse = recurse;
+  invalidateCachedList();
+ } //}}}
 
-	//{{{ getCode() method
-	public String getCode()
-	{
-		return "new DirectoryListSet(\"" + MiscUtilities.charsToEscapes(directory)
-			+ "\",\"" + MiscUtilities.charsToEscapes(glob) + "\","
-			+ recurse + ")";
-	} //}}}
+ //{{{ getCode() method
+ public String getCode()
+ {
+  return "new DirectoryListSet(\"" + MiscUtilities.charsToEscapes(directory)
+   + "\",\"" + MiscUtilities.charsToEscapes(glob) + "\","
+   + recurse + ")";
+ } //}}}
 
-	//{{{ _getFiles() method
-	protected String[] _getFiles(final Component comp)
-	{
-		final VFS vfs = VFSManager.getVFSForPath(directory);
-		Object session;
-		if(SwingUtilities.isEventDispatchThread())
-		{
-			session = vfs.createVFSSession(directory,comp);
-		}
-		else
-		{
-			final Object[] returnValue = new Object[1];
+ //{{{ _getFiles() method
+ protected String[] _getFiles(final Component comp)
+ {
+  final VFS vfs = VFSManager.getVFSForPath(directory);
+  Object session;
+  if(SwingUtilities.isEventDispatchThread())
+  {
+   session = vfs.createVFSSession(directory,comp);
+  }
+  else
+  {
+   final Object[] returnValue = new Object[1];
 
-			try
-			{
-				SwingUtilities.invokeAndWait(new Runnable()
-				{
-					public void run()
-					{
-						returnValue[0] = vfs.createVFSSession(directory,comp);
-					}
-				});
-			}
-			catch(Exception e)
-			{
-				Log.log(Log.ERROR,this,e);
-			}
+   try
+   {
+    SwingUtilities.invokeAndWait(new Runnable()
+    {
+     public void run()
+     {
+      returnValue[0] = vfs.createVFSSession(directory,comp);
+     }
+    });
+   }
+   catch(Exception e)
+   {
+    Log.log(Log.ERROR,this,e);
+   }
 
-			session = returnValue[0];
-		}
+   session = returnValue[0];
+  }
 
-		if(session == null)
-			return null;
+  if(session == null)
+   return null;
 
-		try
-		{
-			return vfs._listDirectory(session,directory,glob,recurse,comp);
-		}
-		catch(IOException io)
-		{
-			VFSManager.error(comp,directory,"ioerror",new String[]
-				{ io.toString() });
-			return null;
-		}
-	} //}}}
+  try
+  {
+   return vfs._listDirectory(session,directory,glob,recurse,comp);
+  }
+  catch(IOException io)
+  {
+   VFSManager.error(comp,directory,"ioerror",new String[]
+    { io.toString() });
+   return null;
+  }
+ } //}}}
 
-	//{{{ Private members
-	private String directory;
-	private String glob;
-	private boolean recurse;
-	//}}}
+ //{{{ Private members
+ private String directory;
+ private String glob;
+ private boolean recurse;
+ //}}}
 }

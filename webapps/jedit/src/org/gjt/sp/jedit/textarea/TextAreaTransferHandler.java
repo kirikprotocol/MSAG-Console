@@ -39,258 +39,258 @@ import org.gjt.sp.util.Log;
 
 class TextAreaTransferHandler extends TransferHandler
 {
-	/* I assume that there can be only one drag operation at the time */
-	private static JEditTextArea dragSource;
-	private static boolean compoundEdit;
-	private static boolean sameTextArea;
-	private static int insertPos;
+ /* I assume that there can be only one drag operation at the time */
+ private static JEditTextArea dragSource;
+ private static boolean compoundEdit;
+ private static boolean sameTextArea;
+ private static int insertPos;
 
-	//{{{ createTransferable
-	protected Transferable createTransferable(JComponent c)
-	{
-		Log.log(Log.DEBUG,this,"createTransferable()");
-		JEditTextArea textArea = (JEditTextArea)c;
-		if(textArea.getSelectionCount() == 0)
-			return null;
-		else
-		{
-			dragSource = textArea;
-			return new TextAreaSelection(textArea);
-		}
-	} //}}}
+ //{{{ createTransferable
+ protected Transferable createTransferable(JComponent c)
+ {
+  Log.log(Log.DEBUG,this,"createTransferable()");
+  JEditTextArea textArea = (JEditTextArea)c;
+  if(textArea.getSelectionCount() == 0)
+   return null;
+  else
+  {
+   dragSource = textArea;
+   return new TextAreaSelection(textArea);
+  }
+ } //}}}
 
-	//{{{ getSourceActions
-	public int getSourceActions(JComponent c)
-	{
-		return COPY_OR_MOVE;
-	} //}}}
+ //{{{ getSourceActions
+ public int getSourceActions(JComponent c)
+ {
+  return COPY_OR_MOVE;
+ } //}}}
 
-	//{{{ importData
-	public boolean importData(JComponent c, Transferable t)
-	{
-		Log.log(Log.DEBUG,this,"Import data");
-		if(!canImport(c,t.getTransferDataFlavors()))
-			return false;
+ //{{{ importData
+ public boolean importData(JComponent c, Transferable t)
+ {
+  Log.log(Log.DEBUG,this,"Import data");
+  if(!canImport(c,t.getTransferDataFlavors()))
+   return false;
 
-		boolean returnValue;
+  boolean returnValue;
 
-		try
-		{
-			if(t.isDataFlavorSupported(
-				DataFlavor.javaFileListFlavor))
-			{
-				returnValue = importFile(c,t);
-			}
-			else
-			{
-				returnValue = importText(c,t);
-			}
-		}
-		catch(Exception e)
-		{
-			Log.log(Log.ERROR,this,e);
-			returnValue = false;
-		}
+  try
+  {
+   if(t.isDataFlavorSupported(
+    DataFlavor.javaFileListFlavor))
+   {
+    returnValue = importFile(c,t);
+   }
+   else
+   {
+    returnValue = importText(c,t);
+   }
+  }
+  catch(Exception e)
+  {
+   Log.log(Log.ERROR,this,e);
+   returnValue = false;
+  }
 
-		GUIUtilities.getView(c).toFront();
-		GUIUtilities.getView(c).requestFocus();
-		c.requestFocus();
+  GUIUtilities.getView(c).toFront();
+  GUIUtilities.getView(c).requestFocus();
+  c.requestFocus();
 
-		return returnValue;
-	} //}}}
+  return returnValue;
+ } //}}}
 
-	//{{{ importFile
-	private boolean importFile(JComponent c, Transferable t)
-		throws Exception
-	{
-		Log.log(Log.DEBUG,this,"=> File list");
-		EditPane editPane = (EditPane)
-			GUIUtilities.getComponentParent(
-			c,EditPane.class);
+ //{{{ importFile
+ private boolean importFile(JComponent c, Transferable t)
+  throws Exception
+ {
+  Log.log(Log.DEBUG,this,"=> File list");
+  EditPane editPane = (EditPane)
+   GUIUtilities.getComponentParent(
+   c,EditPane.class);
 
-		Buffer buffer = null;
+  Buffer buffer = null;
 
-		Object data = t.getTransferData(
-			DataFlavor.javaFileListFlavor);
+  Object data = t.getTransferData(
+   DataFlavor.javaFileListFlavor);
 
-		Iterator iterator = ((List)data)
-			.iterator();
+  Iterator iterator = ((List)data)
+   .iterator();
 
-		while(iterator.hasNext())
-		{
-			File file = (File)iterator.next();
+  while(iterator.hasNext())
+  {
+   File file = (File)iterator.next();
       String path = file.getPath();
-	    if (File.separatorChar!=jEdit.separatorChar)
+     if (File.separatorChar!=jEdit.separatorChar)
         path= path.replace(File.separatorChar,jEdit.separatorChar);
       Buffer _buffer = jEdit.openFile(null,path);
-			if(_buffer != null)
-				buffer = _buffer;
-		}
+   if(_buffer != null)
+    buffer = _buffer;
+  }
 
-		if(buffer != null)
-			editPane.setBuffer(buffer);
-		editPane.getView().toFront();
-		editPane.getView().requestFocus();
-		editPane.requestFocus();
+  if(buffer != null)
+   editPane.setBuffer(buffer);
+  editPane.getView().toFront();
+  editPane.getView().requestFocus();
+  editPane.requestFocus();
 
-		return true;
-	} //}}}
+  return true;
+ } //}}}
 
-	//{{{ importText
-	private boolean importText(JComponent c, Transferable t)
-		throws Exception
-	{
-		Log.log(Log.DEBUG,this,"=> String");
-		String str = (String)t.getTransferData(
-			DataFlavor.stringFlavor);
+ //{{{ importText
+ private boolean importText(JComponent c, Transferable t)
+  throws Exception
+ {
+  Log.log(Log.DEBUG,this,"=> String");
+  String str = (String)t.getTransferData(
+   DataFlavor.stringFlavor);
 
-		JEditTextArea textArea = (JEditTextArea)c;
+  JEditTextArea textArea = (JEditTextArea)c;
 
-		if(dragSource != null
-			&& textArea.getBuffer()
-			== dragSource.getBuffer())
-		{
-			compoundEdit = true;
-			textArea.getBuffer().beginCompoundEdit();
-		}
+  if(dragSource != null
+   && textArea.getBuffer()
+   == dragSource.getBuffer())
+  {
+   compoundEdit = true;
+   textArea.getBuffer().beginCompoundEdit();
+  }
 
-		sameTextArea = (textArea == dragSource);
+  sameTextArea = (textArea == dragSource);
 
-		int caret = textArea.getCaretPosition();
-		Selection s = textArea.getSelectionAtOffset(caret);
+  int caret = textArea.getCaretPosition();
+  Selection s = textArea.getSelectionAtOffset(caret);
 
-		/* if user drops into the same
-		selection where they started, do
-		nothing. */
-		if(s != null)
-		{
-			if(sameTextArea)
-				return false;
-			/* if user drops into a selection,
-			replace selection */
-			int startPos = s.start;
-			textArea.setSelectedText(s,str);
-			textArea.setSelection(new Selection.Range(startPos,startPos+str.length()));
-		}
-		/* otherwise just insert the text */
-		else
-		{
-			if (sameTextArea)
-			{
-				insertPos = caret;
-				Selection[] selections = textArea.getSelection();
-				for (int i=0;i<selections.length;i++)
-				{
-					if (selections[i].end<insertPos)
-						insertPos-=(selections[i].end-selections[i].start);
-				}
-			}
-			else
-			{
-				textArea.getBuffer().insert(caret,str);
-				textArea.setSelection(new Selection.Range(caret,caret+str.length()));
-			}
-		}
-		textArea.scrollToCaret(true);
+  /* if user drops into the same
+  selection where they started, do
+  nothing. */
+  if(s != null)
+  {
+   if(sameTextArea)
+    return false;
+   /* if user drops into a selection,
+   replace selection */
+   int startPos = s.start;
+   textArea.setSelectedText(s,str);
+   textArea.setSelection(new Selection.Range(startPos,startPos+str.length()));
+  }
+  /* otherwise just insert the text */
+  else
+  {
+   if (sameTextArea)
+   {
+    insertPos = caret;
+    Selection[] selections = textArea.getSelection();
+    for (int i=0;i<selections.length;i++)
+    {
+     if (selections[i].end<insertPos)
+      insertPos-=(selections[i].end-selections[i].start);
+    }
+   }
+   else
+   {
+    textArea.getBuffer().insert(caret,str);
+    textArea.setSelection(new Selection.Range(caret,caret+str.length()));
+   }
+  }
+  textArea.scrollToCaret(true);
 
-		return true;
-	} //}}}
+  return true;
+ } //}}}
 
-	//{{{ exportDone
-	protected void exportDone(JComponent c, Transferable t,
-		int action)
-	{
-		Log.log(Log.DEBUG,this,"Export done");
+ //{{{ exportDone
+ protected void exportDone(JComponent c, Transferable t,
+  int action)
+ {
+  Log.log(Log.DEBUG,this,"Export done");
 
-		JEditTextArea textArea = (JEditTextArea)c;
+  JEditTextArea textArea = (JEditTextArea)c;
 
-		try
-		{
-			if(t == null)
-			{
-				Log.log(Log.DEBUG,this,"=> Null transferrable");
-				textArea.selectNone();
-			}
-			else if(t.isDataFlavorSupported(
-				DataFlavor.stringFlavor))
-			{
-				Log.log(Log.DEBUG,this,"=> String");
-				if (sameTextArea)
-				{
-					if(action == MOVE)
-						textArea.setSelectedText(null,false);
+  try
+  {
+   if(t == null)
+   {
+    Log.log(Log.DEBUG,this,"=> Null transferrable");
+    textArea.selectNone();
+   }
+   else if(t.isDataFlavorSupported(
+    DataFlavor.stringFlavor))
+   {
+    Log.log(Log.DEBUG,this,"=> String");
+    if (sameTextArea)
+    {
+     if(action == MOVE)
+      textArea.setSelectedText(null,false);
 
-					try
-					{
-						String str = (String)t.getTransferData(DataFlavor.stringFlavor);
-						textArea.getBuffer().insert(insertPos,str);
-						textArea.setSelection(new Selection.Range(insertPos,insertPos+str.length()));
-					}
-					catch(Exception e)
-					{
-						Log.log(Log.DEBUG,this,"exportDone in sameTextArea");
-						Log.log(Log.DEBUG,this,e);
-					}
-				}
-				else
-				{
-					if(action == MOVE)
-						textArea.setSelectedText(null,false);
-					else
-						textArea.selectNone();
-				}
-			}
-		}
-		finally
-		{
-			if(compoundEdit)
-			{
-				compoundEdit = false;
-				textArea.getBuffer().endCompoundEdit();
-			}
-		}
+     try
+     {
+      String str = (String)t.getTransferData(DataFlavor.stringFlavor);
+      textArea.getBuffer().insert(insertPos,str);
+      textArea.setSelection(new Selection.Range(insertPos,insertPos+str.length()));
+     }
+     catch(Exception e)
+     {
+      Log.log(Log.DEBUG,this,"exportDone in sameTextArea");
+      Log.log(Log.DEBUG,this,e);
+     }
+    }
+    else
+    {
+     if(action == MOVE)
+      textArea.setSelectedText(null,false);
+     else
+      textArea.selectNone();
+    }
+   }
+  }
+  finally
+  {
+   if(compoundEdit)
+   {
+    compoundEdit = false;
+    textArea.getBuffer().endCompoundEdit();
+   }
+  }
 
-		dragSource = null;
-	} //}}}
+  dragSource = null;
+ } //}}}
 
-	//{{{ canImport
-	public boolean canImport(JComponent c, DataFlavor[] flavors)
-	{
-		JEditTextArea textArea = (JEditTextArea)c;
+ //{{{ canImport
+ public boolean canImport(JComponent c, DataFlavor[] flavors)
+ {
+  JEditTextArea textArea = (JEditTextArea)c;
 
-		// correctly handle text flavor + file list flavor
-		// + text area read only, do an or of all flags
-		boolean returnValue = false;
+  // correctly handle text flavor + file list flavor
+  // + text area read only, do an or of all flags
+  boolean returnValue = false;
 
-		for(int i = 0; i < flavors.length; i++)
-		{
-			if(flavors[i].equals(
-				DataFlavor.javaFileListFlavor))
-			{
-				returnValue = true;
-			}
-			else if(flavors[i].equals(
-				DataFlavor.stringFlavor))
-			{
-				if(textArea.isEditable())
-					returnValue = true;
-			}
-		}
+  for(int i = 0; i < flavors.length; i++)
+  {
+   if(flavors[i].equals(
+    DataFlavor.javaFileListFlavor))
+   {
+    returnValue = true;
+   }
+   else if(flavors[i].equals(
+    DataFlavor.stringFlavor))
+   {
+    if(textArea.isEditable())
+     returnValue = true;
+   }
+  }
 
-		Log.log(Log.DEBUG,this,"canImport() returning "
-			+ returnValue);
-		return returnValue;
-	} //}}}
+  Log.log(Log.DEBUG,this,"canImport() returning "
+   + returnValue);
+  return returnValue;
+ } //}}}
 
-	//{{{ TextAreaSelection class
-	static class TextAreaSelection extends StringSelection
-	{
-		JEditTextArea textArea;
+ //{{{ TextAreaSelection class
+ static class TextAreaSelection extends StringSelection
+ {
+  JEditTextArea textArea;
 
-		TextAreaSelection(JEditTextArea textArea)
-		{
-			super(textArea.getSelectedText());
-			this.textArea = textArea;
-		}
-	} //}}}
+  TextAreaSelection(JEditTextArea textArea)
+  {
+   super(textArea.getSelectedText());
+   this.textArea = textArea;
+  }
+ } //}}}
 }

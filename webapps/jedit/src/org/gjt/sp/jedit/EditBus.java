@@ -69,98 +69,98 @@ import org.gjt.sp.util.Log;
  */
 public class EditBus
 {
-	//{{{ addToBus() method
-	/**
-	 * Adds a component to the bus. It will receive all messages sent
-	 * on the bus.
-	 *
-	 * @param comp The component to add
-	 */
-	public static void addToBus(EBComponent comp)
-	{
-		synchronized(components)
-		{
-			components.add(comp);
-			copyComponents = null;
-		}
-	} //}}}
+ //{{{ addToBus() method
+ /**
+  * Adds a component to the bus. It will receive all messages sent
+  * on the bus.
+  *
+  * @param comp The component to add
+  */
+ public static void addToBus(EBComponent comp)
+ {
+  synchronized(components)
+  {
+   components.add(comp);
+   copyComponents = null;
+  }
+ } //}}}
 
-	//{{{ removeFromBus() method
-	/**
-	 * Removes a component from the bus.
-	 * @param comp The component to remove
-	 */
-	public static void removeFromBus(EBComponent comp)
-	{
-		synchronized(components)
-		{
-			components.remove(comp);
-			copyComponents = null;
-		}
-	} //}}}
+ //{{{ removeFromBus() method
+ /**
+  * Removes a component from the bus.
+  * @param comp The component to remove
+  */
+ public static void removeFromBus(EBComponent comp)
+ {
+  synchronized(components)
+  {
+   components.remove(comp);
+   copyComponents = null;
+  }
+ } //}}}
 
-	//{{{ getComponents() method
-	/**
-	 * Returns an array of all components connected to the bus.
-	 */
-	public static EBComponent[] getComponents()
-	{
-		synchronized(components)
-		{
-			if (copyComponents == null)
-			{
-				copyComponents = (EBComponent[])components.toArray(
-					new EBComponent[components.size()]);
-			}
-			return copyComponents;
-		}
-	} //}}}
+ //{{{ getComponents() method
+ /**
+  * Returns an array of all components connected to the bus.
+  */
+ public static EBComponent[] getComponents()
+ {
+  synchronized(components)
+  {
+   if (copyComponents == null)
+   {
+    copyComponents = (EBComponent[])components.toArray(
+     new EBComponent[components.size()]);
+   }
+   return copyComponents;
+  }
+ } //}}}
 
-	//{{{ send() method
-	/**
-	 * Sends a message to all components on the bus in turn.
-	 * @param message The message
-	 */
-	public static void send(EBMessage message)
-	{
-		Log.log(Log.DEBUG,EditBus.class,message.toString());
+ //{{{ send() method
+ /**
+  * Sends a message to all components on the bus in turn.
+  * @param message The message
+  */
+ public static void send(EBMessage message)
+ {
+  Log.log(Log.DEBUG,EditBus.class,message.toString());
 
-		// To avoid any problems if components are added or removed
-		// while the message is being sent
-		EBComponent[] comps = getComponents();
+  // To avoid any problems if components are added or removed
+  // while the message is being sent
+  EBComponent[] comps = getComponents();
 
-		for(int i = 0; i < comps.length; i++)
-		{
-			try
-			{
-				EBComponent comp = comps[i];
-				if(Debug.EB_TIMER)
-				{
-					long start = System.currentTimeMillis();
-					comp.handleMessage(message);
-					long time = (System.currentTimeMillis() - start);
-					if(time != 0)
-					{
-						Log.log(Log.DEBUG,EditBus.class,comp + ": " + time + " ms");
-					}
-				}
-				else
-					comps[i].handleMessage(message);
-			}
-			catch(Throwable t)
-			{
-				Log.log(Log.ERROR,EditBus.class,"Exception"
-					+ " while sending message on EditBus:");
-				Log.log(Log.ERROR,EditBus.class,t);
-			}
-		}
-	} //}}}
+  for(int i = 0; i < comps.length; i++)
+  {
+   try
+   {
+    EBComponent comp = comps[i];
+    if(Debug.EB_TIMER)
+    {
+     long start = System.currentTimeMillis();
+     comp.handleMessage(message);
+     long time = (System.currentTimeMillis() - start);
+     if(time != 0)
+     {
+      Log.log(Log.DEBUG,EditBus.class,comp + ": " + time + " ms");
+     }
+    }
+    else
+     comps[i].handleMessage(message);
+   }
+   catch(Throwable t)
+   {
+    Log.log(Log.ERROR,EditBus.class,"Exception"
+     + " while sending message on EditBus:");
+    Log.log(Log.ERROR,EditBus.class,t);
+   }
+  }
+ } //}}}
 
-	//{{{ Private members
-	private static ArrayList components = new ArrayList();
-	private static EBComponent[] copyComponents;
+ //{{{ Private members
+ private static ArrayList components = new ArrayList();
+ private static EBComponent[] copyComponents;
 
-	// can't create new instances
-	private EditBus() {}
-	//}}}
+ // can't create new instances
+ private EditBus() {}
+ //}}}
 }

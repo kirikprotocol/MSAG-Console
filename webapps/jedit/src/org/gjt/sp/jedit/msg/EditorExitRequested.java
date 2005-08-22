@@ -36,20 +36,20 @@ import org.gjt.sp.jedit.View;
  */
 public class EditorExitRequested extends EBMessage
 {
-	/**
-	 * Creates a new editor exiting started message.
-	 * @param view The view from which this exit was called
-	 */
-	public EditorExitRequested(View view)
-	{
-		super(view);
-	}
+ /**
+  * Creates a new editor exiting started message.
+  * @param view The view from which this exit was called
+  */
+ public EditorExitRequested(View view)
+ {
+  super(view);
+ }
 
-	/**
-	 * Returns the view involved.
-	 */
-	public View getView()
-	{
-		return (View)getSource();
-	}
+ /**
+  * Returns the view involved.
+  */
+ public View getView()
+ {
+  return (View)getSource();
+ }
 }

@@ -28,60 +28,60 @@ import org.gjt.sp.jedit.Buffer;
 
 public abstract class BracketIndentRule implements IndentRule
 {
-	//{{{ BracketIndentRule constructor
-	public BracketIndentRule(char openBracket, char closeBracket)
-	{
-		this.openBracket = openBracket;
-		this.closeBracket = closeBracket;
-	} //}}}
+ //{{{ BracketIndentRule constructor
+ public BracketIndentRule(char openBracket, char closeBracket)
+ {
+  this.openBracket = openBracket;
+  this.closeBracket = closeBracket;
+ } //}}}
 
-	//{{{ Brackets class
-	public static class Brackets
-	{
-		int openCount;
-		int closeCount;
-	} //}}}
+ //{{{ Brackets class
+ public static class Brackets
+ {
+  int openCount;
+  int closeCount;
+ } //}}}
 
-	//{{{ getBrackets() method
-	public Brackets getBrackets(String line)
-	{
-		Brackets brackets = new Brackets();
+ //{{{ getBrackets() method
+ public Brackets getBrackets(String line)
+ {
+  Brackets brackets = new Brackets();
 
-		for(int i = 0; i < line.length(); i++)
-		{
-			char ch = line.charAt(i);
-			if(ch == openBracket)
-			{
-				/* Don't increase indent when we see
-				an explicit fold. */
-				if(line.length() - i >= 3)
-				{
-					if(line.substring(i,i+3).equals("{{{"))
-					{
-						i += 2;
-						continue;
-					}
-				}
-				brackets.openCount++;
-			}
-			else if(ch == closeBracket)
-			{
-				if(brackets.openCount != 0)
-					brackets.openCount--;
-				else
-					brackets.closeCount++;
-			}
-		}
+  for(int i = 0; i < line.length(); i++)
+  {
+   char ch = line.charAt(i);
+   if(ch == openBracket)
+   {
+    /* Don't increase indent when we see
+    an explicit fold. */
+    if(line.length() - i >= 3)
+    {
+     if(line.substring(i,i+3).equals("{{{"))
+     {
+      i += 2;
+      continue;
+     }
+    }
+    brackets.openCount++;
+   }
+   else if(ch == closeBracket)
+   {
+    if(brackets.openCount != 0)
+     brackets.openCount--;
+    else
+     brackets.closeCount++;
+   }
+  }
 
-		return brackets;
-	} //}}}
+  return brackets;
+ } //}}}
 
-	//{{{ toString() method
-	public String toString()
-	{
-		return getClass().getName() + "[" + openBracket + ","
-			+ closeBracket + "]";
-	} //}}}
+ //{{{ toString() method
+ public String toString()
+ {
+  return getClass().getName() + "[" + openBracket + ","
+   + closeBracket + "]";
+ } //}}}
 
-	protected char openBracket, closeBracket;
+ protected char openBracket, closeBracket;
 }

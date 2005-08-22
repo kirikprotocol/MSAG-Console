@@ -30,33 +30,33 @@ import org.gjt.sp.jedit.*;
  */
 public class VFSUpdate extends EBMessage
 {
-	/**
-	 * Creates a VFS update message.
-	 * @param path The path in question
-	 */
-	public VFSUpdate(String path)
-	{
-		super(null);
+ /**
+  * Creates a VFS update message.
+  * @param path The path in question
+  */
+ public VFSUpdate(String path)
+ {
+  super(null);
 
-		if(path == null)
-			throw new NullPointerException("Path must be non-null");
+  if(path == null)
+   throw new NullPointerException("Path must be non-null");
 
-		this.path = path;
-	}
+  this.path = path;
+ }
 
-	/**
-	 * Returns the path that changed.
-	 */
-	public String getPath()
-	{
-		return path;
-	}
+ /**
+  * Returns the path that changed.
+  */
+ public String getPath()
+ {
+  return path;
+ }
 
-	public String paramString()
-	{
-		return "path=" + path + "," + super.paramString();
-	}
+ public String paramString()
+ {
+  return "path=" + path + "," + super.paramString();
+ }
 
-	// private members
-	private String path;
+ // private members
+ private String path;
 }

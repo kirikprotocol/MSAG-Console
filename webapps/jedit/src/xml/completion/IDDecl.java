@@ -22,39 +22,39 @@ import org.gjt.sp.jedit.MiscUtilities;
 
 public class IDDecl
 {
-	public String uri;
-	public String id;
-	public String element;
-	public int line;
-	public int column;
+ public String uri;
+ public String id;
+ public String element;
+ public int line;
+ public int column;
 
-	//{{{ IDDecl constructor
-	public IDDecl(String uri, String id, String element, int line, int column)
-	{
-		this.uri = uri;
-		this.id = id;
-		this.element = element;
-		this.line = line;
-		this.column = column;
-	} //}}}
+ //{{{ IDDecl constructor
+ public IDDecl(String uri, String id, String element, int line, int column)
+ {
+  this.uri = uri;
+  this.id = id;
+  this.element = element;
+  this.line = line;
+  this.column = column;
+ } //}}}
 
-	//{{{ toString() method
-	public String toString()
-	{
-		return id + " [element: <" + element + ">]";
-	} //}}}
+ //{{{ toString() method
+ public String toString()
+ {
+  return id + " [element: <" + element + ">]";
+ } //}}}
 
-	//{{{ Compare class
-	public static class Compare implements MiscUtilities.Compare
-	{
-		public int compare(Object obj1, Object obj2)
-		{
-			IDDecl id1 = (IDDecl)obj1;
-			IDDecl id2 = (IDDecl)obj2;
+ //{{{ Compare class
+ public static class Compare implements MiscUtilities.Compare
+ {
+  public int compare(Object obj1, Object obj2)
+  {
+   IDDecl id1 = (IDDecl)obj1;
+   IDDecl id2 = (IDDecl)obj2;
 
-			return MiscUtilities.compareStrings(
-				id1.id,
-				id2.id,true);
-		}
-	} //}}}
+   return MiscUtilities.compareStrings(
+    id1.id,
+    id2.id,true);
+  }
+ } //}}}
 }

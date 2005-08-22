@@ -39,172 +39,172 @@ import org.gjt.sp.util.Log;
  */
 public class PositionManager
 {
-	//{{{ PositionManager constructor
-	public PositionManager(Buffer buffer)
-	{
-		this.buffer = buffer;
-	} //}}}
-	
-	//{{{ createPosition() method
-	public synchronized Position createPosition(int offset)
-	{
-		PosBottomHalf bh = new PosBottomHalf(offset);
-		PosBottomHalf existing = (PosBottomHalf)positions.get(bh);
-		if(existing == null)
-		{
-			positions.put(bh,bh);
-			existing = bh;
-		}
+ //{{{ PositionManager constructor
+ public PositionManager(Buffer buffer)
+ {
+  this.buffer = buffer;
+ } //}}}
+ 
+ //{{{ createPosition() method
+ public synchronized Position createPosition(int offset)
+ {
+  PosBottomHalf bh = new PosBottomHalf(offset);
+  PosBottomHalf existing = (PosBottomHalf)positions.get(bh);
+  if(existing == null)
+  {
+   positions.put(bh,bh);
+   existing = bh;
+  }
 
-		return new PosTopHalf(existing);
-	} //}}}
+  return new PosTopHalf(existing);
+ } //}}}
 
-	//{{{ contentInserted() method
-	public synchronized void contentInserted(int offset, int length)
-	{
-		if(positions.size() == 0)
-			return;
+ //{{{ contentInserted() method
+ public synchronized void contentInserted(int offset, int length)
+ {
+  if(positions.size() == 0)
+   return;
 
-		/* get all positions from offset to the end, inclusive */
-		Iterator iter = positions.tailMap(new PosBottomHalf(offset))
-			.keySet().iterator();
+  /* get all positions from offset to the end, inclusive */
+  Iterator iter = positions.tailMap(new PosBottomHalf(offset))
+   .keySet().iterator();
 
-		iteration = true;
-		while(iter.hasNext())
-		{
-			((PosBottomHalf)iter.next())
-				.contentInserted(offset,length);
-		}
-		iteration = false;
-	} //}}}
+  iteration = true;
+  while(iter.hasNext())
+  {
+   ((PosBottomHalf)iter.next())
+    .contentInserted(offset,length);
+  }
+  iteration = false;
+ } //}}}
 
-	//{{{ contentRemoved() method
-	public synchronized void contentRemoved(int offset, int length)
-	{
-		if(positions.size() == 0)
-			return;
+ //{{{ contentRemoved() method
+ public synchronized void contentRemoved(int offset, int length)
+ {
+  if(positions.size() == 0)
+   return;
 
-		/* get all positions from offset to the end, inclusive */
-		Iterator iter = positions.tailMap(new PosBottomHalf(offset))
-			.keySet().iterator();
+  /* get all positions from offset to the end, inclusive */
+  Iterator iter = positions.tailMap(new PosBottomHalf(offset))
+   .keySet().iterator();
 
-		iteration = true;
-		while(iter.hasNext())
-		{
-			((PosBottomHalf)iter.next())
-				.contentRemoved(offset,length);
-		}
-		iteration = false;
+  iteration = true;
+  while(iter.hasNext())
+  {
+   ((PosBottomHalf)iter.next())
+    .contentRemoved(offset,length);
+  }
+  iteration = false;
 
-	} //}}}
+ } //}}}
 
-	boolean iteration;
+ boolean iteration;
 
-	//{{{ Private members
-	private Buffer buffer;
-	private SortedMap positions = new TreeMap();
-	//}}}
+ //{{{ Private members
+ private Buffer buffer;
+ private SortedMap positions = new TreeMap();
+ //}}}
 
-	//{{{ Inner classes
+ //{{{ Inner classes
 
-	//{{{ PosTopHalf class
-	class PosTopHalf implements Position
-	{
-		PosBottomHalf bh;
+ //{{{ PosTopHalf class
+ class PosTopHalf implements Position
+ {
+  PosBottomHalf bh;
 
-		//{{{ PosTopHalf constructor
-		PosTopHalf(PosBottomHalf bh)
-		{
-			this.bh = bh;
-			bh.ref();
-		} //}}}
+  //{{{ PosTopHalf constructor
+  PosTopHalf(PosBottomHalf bh)
+  {
+   this.bh = bh;
+   bh.ref();
+  } //}}}
 
-		//{{{ getOffset() method
-		public int getOffset()
-		{
-			return bh.offset;
-		} //}}}
+  //{{{ getOffset() method
+  public int getOffset()
+  {
+   return bh.offset;
+  } //}}}
 
-		//{{{ finalize() method
-		protected void finalize()
-		{
-			synchronized(PositionManager.this)
-			{
-				bh.unref();
-			}
-		} //}}}
-	} //}}}
+  //{{{ finalize() method
+  protected void finalize()
+  {
+   synchronized(PositionManager.this)
+   {
+    bh.unref();
+   }
+  } //}}}
+ } //}}}
 
-	//{{{ PosBottomHalf class
-	class PosBottomHalf implements Comparable
-	{
-		int offset;
-		int ref;
+ //{{{ PosBottomHalf class
+ class PosBottomHalf implements Comparable
+ {
+  int offset;
+  int ref;
 
-		//{{{ PosBottomHalf constructor
-		PosBottomHalf(int offset)
-		{
-			this.offset = offset;
-		} //}}}
+  //{{{ PosBottomHalf constructor
+  PosBottomHalf(int offset)
+  {
+   this.offset = offset;
+  } //}}}
 
-		//{{{ ref() method
-		void ref()
-		{
-			ref++;
-		} //}}}
+  //{{{ ref() method
+  void ref()
+  {
+   ref++;
+  } //}}}
 
-		//{{{ unref() method
-		void unref()
-		{
-			if(--ref == 0)
-				positions.remove(this);
-		} //}}}
+  //{{{ unref() method
+  void unref()
+  {
+   if(--ref == 0)
+    positions.remove(this);
+  } //}}}
 
-		//{{{ contentInserted() method
-		void contentInserted(int offset, int length)
-		{
-			if(offset > this.offset)
-				throw new ArrayIndexOutOfBoundsException();
-			this.offset += length;
-			checkInvariants();
-		} //}}}
+  //{{{ contentInserted() method
+  void contentInserted(int offset, int length)
+  {
+   if(offset > this.offset)
+    throw new ArrayIndexOutOfBoundsException();
+   this.offset += length;
+   checkInvariants();
+  } //}}}
 
-		//{{{ contentRemoved() method
-		void contentRemoved(int offset, int length)
-		{
-			if(offset > this.offset)
-				throw new ArrayIndexOutOfBoundsException();
-			if(this.offset <= offset + length)
-				this.offset = offset;
-			else
-				this.offset -= length;
-			checkInvariants();
-		} //}}}
+  //{{{ contentRemoved() method
+  void contentRemoved(int offset, int length)
+  {
+   if(offset > this.offset)
+    throw new ArrayIndexOutOfBoundsException();
+   if(this.offset <= offset + length)
+    this.offset = offset;
+   else
+    this.offset -= length;
+   checkInvariants();
+  } //}}}
 
-		//{{{ equals() method
-		public boolean equals(Object o)
-		{
-			if(!(o instanceof PosBottomHalf))
-				return false;
+  //{{{ equals() method
+  public boolean equals(Object o)
+  {
+   if(!(o instanceof PosBottomHalf))
+    return false;
 
-			return ((PosBottomHalf)o).offset == offset;
-		} //}}}
+   return ((PosBottomHalf)o).offset == offset;
+  } //}}}
 
-		//{{{ compareTo() method
-		public int compareTo(Object o)
-		{
-			if(iteration)
-				Log.log(Log.ERROR,this,"Consistency failure");
-			return offset - ((PosBottomHalf)o).offset;
-		} //}}}
-		
-		//{{{ checkInvariants() method
-		private void checkInvariants()
-		{
-			if(offset < 0 || offset > buffer.getLength())
-				throw new ArrayIndexOutOfBoundsException();
-		} //}}}
-	} //}}}
+  //{{{ compareTo() method
+  public int compareTo(Object o)
+  {
+   if(iteration)
+    Log.log(Log.ERROR,this,"Consistency failure");
+   return offset - ((PosBottomHalf)o).offset;
+  } //}}}
+  
+  //{{{ checkInvariants() method
+  private void checkInvariants()
+  {
+   if(offset < 0 || offset > buffer.getLength())
+    throw new ArrayIndexOutOfBoundsException();
+  } //}}}
+ } //}}}
 
-	//}}}
+ //}}}
 }

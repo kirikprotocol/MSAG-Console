@@ -39,116 +39,116 @@ import java.util.*;
  */
 public abstract class ActionContext
 {
-	//{{{ invokeAction() method
-	/**
-	 * Invokes the given action in response to a user-generated event.
-	 * @param evt The event
-	 * @param action The action
-	 * @since jEdit 4.2pre1
-	 */
-	public abstract void invokeAction(EventObject evt, EditAction action);
-	//}}}
+ //{{{ invokeAction() method
+ /**
+  * Invokes the given action in response to a user-generated event.
+  * @param evt The event
+  * @param action The action
+  * @since jEdit 4.2pre1
+  */
+ public abstract void invokeAction(EventObject evt, EditAction action);
+ //}}}
 
-	//{{{ addActionSet() method
-	/**
-	 * Adds a new action set to the context.
-	 * @since jEdit 4.2pre1
-	 */
-	public void addActionSet(ActionSet actionSet)
-	{
-		actionNames = null;
-		actionSets.addElement(actionSet);
-		actionSet.context = this;
-		String[] actions = actionSet.getActionNames();
-		for(int i = 0; i < actions.length; i++)
-		{
-			actionHash.put(actions[i],actionSet);
-		}
-	} //}}}
+ //{{{ addActionSet() method
+ /**
+  * Adds a new action set to the context.
+  * @since jEdit 4.2pre1
+  */
+ public void addActionSet(ActionSet actionSet)
+ {
+  actionNames = null;
+  actionSets.addElement(actionSet);
+  actionSet.context = this;
+  String[] actions = actionSet.getActionNames();
+  for(int i = 0; i < actions.length; i++)
+  {
+   actionHash.put(actions[i],actionSet);
+  }
+ } //}}}
 
-	//{{{ removeActionSet() method
-	/**
-	 * Removes an action set from the context.
-	 * @since jEdit 4.2pre1
-	 */
-	public void removeActionSet(ActionSet actionSet)
-	{
-		actionNames = null;
-		actionSets.removeElement(actionSet);
-		actionSet.context = null;
-		String[] actions = actionSet.getActionNames();
-		for(int i = 0; i < actions.length; i++)
-		{
-			actionHash.remove(actions[i]);
-		}
-	} //}}}
+ //{{{ removeActionSet() method
+ /**
+  * Removes an action set from the context.
+  * @since jEdit 4.2pre1
+  */
+ public void removeActionSet(ActionSet actionSet)
+ {
+  actionNames = null;
+  actionSets.removeElement(actionSet);
+  actionSet.context = null;
+  String[] actions = actionSet.getActionNames();
+  for(int i = 0; i < actions.length; i++)
+  {
+   actionHash.remove(actions[i]);
+  }
+ } //}}}
 
-	//{{{ getActionSets() method
-	/**
-	 * Returns all registered action sets.
-	 * @since jEdit 4.2pre1
-	 */
-	public ActionSet[] getActionSets()
-	{
-		ActionSet[] retVal = new ActionSet[actionSets.size()];
-		actionSets.copyInto(retVal);
-		return retVal;
-	} //}}}
+ //{{{ getActionSets() method
+ /**
+  * Returns all registered action sets.
+  * @since jEdit 4.2pre1
+  */
+ public ActionSet[] getActionSets()
+ {
+  ActionSet[] retVal = new ActionSet[actionSets.size()];
+  actionSets.copyInto(retVal);
+  return retVal;
+ } //}}}
 
-	//{{{ getAction() method
-	/**
-	 * Returns the specified action.
-	 * @param name The action name
-	 * @since jEdit 4.2pre1
-	 */
-	public EditAction getAction(String name)
-	{
-		ActionSet set = (ActionSet)actionHash.get(name);
-		if(set == null)
-			return null;
-		else
-			return set.getAction(name);
-	} //}}}
+ //{{{ getAction() method
+ /**
+  * Returns the specified action.
+  * @param name The action name
+  * @since jEdit 4.2pre1
+  */
+ public EditAction getAction(String name)
+ {
+  ActionSet set = (ActionSet)actionHash.get(name);
+  if(set == null)
+   return null;
+  else
+   return set.getAction(name);
+ } //}}}
 
-	//{{{ getActionSetForAction() method
-	/**
-	 * Returns the action set that contains the specified action.
-	 *
-	 * @param action The action
-	 * @since jEdit 4.2pre1
-	 */
-	public ActionSet getActionSetForAction(String action)
-	{
-		return (ActionSet)actionHash.get(action);
-	} //}}}
+ //{{{ getActionSetForAction() method
+ /**
+  * Returns the action set that contains the specified action.
+  *
+  * @param action The action
+  * @since jEdit 4.2pre1
+  */
+ public ActionSet getActionSetForAction(String action)
+ {
+  return (ActionSet)actionHash.get(action);
+ } //}}}
 
-	//{{{ getActionNames() method
-	/**
-	 * Returns all registered action names.
-	 */
-	public String[] getActionNames()
-	{
-		if(actionNames == null)
-		{
-			List vec = new LinkedList();
-			for(int i = 0; i < actionSets.size(); i++)
-				((ActionSet)actionSets.elementAt(i)).getActionNames(vec);
+ //{{{ getActionNames() method
+ /**
+  * Returns all registered action names.
+  */
+ public String[] getActionNames()
+ {
+  if(actionNames == null)
+  {
+   List vec = new LinkedList();
+   for(int i = 0; i < actionSets.size(); i++)
+    ((ActionSet)actionSets.elementAt(i)).getActionNames(vec);
 
-			actionNames = (String[])vec.toArray(
-				new String[vec.size()]);
-			Arrays.sort(actionNames,
-				new MiscUtilities.StringICaseCompare());
-		}
+   actionNames = (String[])vec.toArray(
+    new String[vec.size()]);
+   Arrays.sort(actionNames,
+    new MiscUtilities.StringICaseCompare());
+  }
 
-		return actionNames;
-	} //}}}
+  return actionNames;
+ } //}}}
 
-	//{{{ Package-private members
-	String[] actionNames;
-	Hashtable actionHash = new Hashtable();
-	//}}}
+ //{{{ Package-private members
+ String[] actionNames;
+ Hashtable actionHash = new Hashtable();
+ //}}}
 
-	//{{{ Private members
-	private Vector actionSets = new Vector();
-	//}}}
+ //{{{ Private members
+ private Vector actionSets = new Vector();
+ //}}}
 }

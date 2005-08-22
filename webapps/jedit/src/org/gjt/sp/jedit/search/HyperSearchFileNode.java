@@ -29,36 +29,36 @@ import org.gjt.sp.jedit.jEdit;
 
 public class HyperSearchFileNode implements HyperSearchNode
 {
-	public String path;
-	public Buffer buffer;
+ public String path;
+ public Buffer buffer;
 
-	//{{{ HyperSearchFileNode constructor
-	public HyperSearchFileNode(String path)
-	{
-		this.path = path;
-	} //}}}
+ //{{{ HyperSearchFileNode constructor
+ public HyperSearchFileNode(String path)
+ {
+  this.path = path;
+ } //}}}
 
-	//{{{ getBuffer() method
-	public Buffer getBuffer()
-	{
-		if(buffer == null)
-			buffer = jEdit.openFile(null,path);
-		return buffer;
-	} //}}}
+ //{{{ getBuffer() method
+ public Buffer getBuffer()
+ {
+  if(buffer == null)
+   buffer = jEdit.openFile(null,path);
+  return buffer;
+ } //}}}
 
-	//{{{ goTo() method
-	public void goTo(final EditPane editPane)
-	{
-		Buffer buffer = getBuffer();
-		if(buffer == null)
-			return;
+ //{{{ goTo() method
+ public void goTo(final EditPane editPane)
+ {
+  Buffer buffer = getBuffer();
+  if(buffer == null)
+   return;
 
-		editPane.setBuffer(buffer);
-	} //}}}
-	
-	//{{{ toString() method
-	public String toString()
-	{
-		return path;
-	} //}}}
+  editPane.setBuffer(buffer);
+ } //}}}
+ 
+ //{{{ toString() method
+ public String toString()
+ {
+  return path;
+ } //}}}
 }

@@ -41,131 +41,131 @@ import org.gjt.sp.jedit.textarea.JEditTextArea;
  */
 public abstract class SideKickCompletion
 {
-	//{{{ SideKickCompletion constructor
-	/**
-	 * @deprecated Use the other constructor instead.
-	 */
-	public SideKickCompletion() {}
-	//}}}
+ //{{{ SideKickCompletion constructor
+ /**
+  * @deprecated Use the other constructor instead.
+  */
+ public SideKickCompletion() {}
+ //}}}
 
-	//{{{ SideKickCompletion constructor
-	/**
-	 * @since SideKick 0.3.2
-	 */
-	public SideKickCompletion(View view, String text)
-	{
-		this.view = view;
-		textArea = view.getTextArea();
-		this.text = text;
-	} //}}}
+ //{{{ SideKickCompletion constructor
+ /**
+  * @since SideKick 0.3.2
+  */
+ public SideKickCompletion(View view, String text)
+ {
+  this.view = view;
+  textArea = view.getTextArea();
+  this.text = text;
+ } //}}}
 
-	//{{{ SideKickCompletion constructor
-	/**
-	 * @since SideKick 0.3.2
-	 */
-	public SideKickCompletion(View view, String text, List items)
-	{
-		this(view,text);
-		this.items = items;
-	} //}}}
+ //{{{ SideKickCompletion constructor
+ /**
+  * @since SideKick 0.3.2
+  */
+ public SideKickCompletion(View view, String text, List items)
+ {
+  this(view,text);
+  this.items = items;
+ } //}}}
 
-	//{{{ SideKickCompletion constructor
-	/**
-	 * @since SideKick 0.3.2
-	 */
-	public SideKickCompletion(View view, String text, Object[] items)
-	{
-		this(view,text);
-		this.items = Arrays.asList(items);
-	} //}}}
+ //{{{ SideKickCompletion constructor
+ /**
+  * @since SideKick 0.3.2
+  */
+ public SideKickCompletion(View view, String text, Object[] items)
+ {
+  this(view,text);
+  this.items = Arrays.asList(items);
+ } //}}}
 
-	//{{{ size() method
-	public int size()
-	{
-		return items.size();
-	} //}}}
+ //{{{ size() method
+ public int size()
+ {
+  return items.size();
+ } //}}}
 
-	//{{{ get() method
-	public Object get(int index)
-	{
-		return items.get(index);
-	} //}}}
+ //{{{ get() method
+ public Object get(int index)
+ {
+  return items.get(index);
+ } //}}}
 
-	//{{{ getCompletionDescription() method
-	public String getCompletionDescription(int index)
-	{
-		return null;
-	} //}}}
+ //{{{ getCompletionDescription() method
+ public String getCompletionDescription(int index)
+ {
+  return null;
+ } //}}}
 
-	//{{{ isCompletionSelectable() method
-	public boolean isCompletionSelectable(int index)
-	{
-		return true;
-	} //}}}
+ //{{{ isCompletionSelectable() method
+ public boolean isCompletionSelectable(int index)
+ {
+  return true;
+ } //}}}
 
-	//{{{ updateInPlace() method
-	/**
-	 * @return If this returns false, then we create a new completion
-	 * object after user input.
-	 */
-	public boolean updateInPlace(EditPane editPane, int caret)
-	{
-		return false;
-	} //}}}
-	
-	//{{{ getRenderer() method
-	public ListCellRenderer getRenderer()
-	{
-		return new DefaultListCellRenderer();
-	} //}}}
+ //{{{ updateInPlace() method
+ /**
+  * @return If this returns false, then we create a new completion
+  * object after user input.
+  */
+ public boolean updateInPlace(EditPane editPane, int caret)
+ {
+  return false;
+ } //}}}
+ 
+ //{{{ getRenderer() method
+ public ListCellRenderer getRenderer()
+ {
+  return new DefaultListCellRenderer();
+ } //}}}
 
-	//{{{ insert() method
-	public void insert(int index)
-	{
-		String selected = String.valueOf(get(index));
-		String insert = selected.substring(text.length());
-		textArea.setSelectedText(insert);
-	} //}}}
+ //{{{ insert() method
+ public void insert(int index)
+ {
+  String selected = String.valueOf(get(index));
+  String insert = selected.substring(text.length());
+  textArea.setSelectedText(insert);
+ } //}}}
 
-	//{{{ getTokenLength() method
-	/**
-	 * The length of the text being completed (popup will be positioned there).
-	 */
-	public int getTokenLength()
-	{
-		return text.length();
-	} //}}}
+ //{{{ getTokenLength() method
+ /**
+  * The length of the text being completed (popup will be positioned there).
+  */
+ public int getTokenLength()
+ {
+  return text.length();
+ } //}}}
 
-	//{{{ handleKeystroke() method
-	/**
-	 * @param selectedIndex -1 if the popup is empty, otherwise the index of
-	 * the selected completion.
-	 * @param keyChar the character typed by the user.
-	 * @return True if completion should continue, false otherwise.
-	 * @since SideKick 0.3.2
-	 */
-	public boolean handleKeystroke(int selectedIndex, char keyChar)
-	{
-		if(keyChar == '\t' || keyChar == '\n')
-		{
-			insert(selectedIndex);
-			return false;
-		}
-		else if(keyChar == ' ')
-		{
-			insert(selectedIndex);
-			textArea.userInput(' ');
-			return false;
-		}
-		else
-		{
-			textArea.userInput(keyChar);
-			return true;
-		}
-	} //}}}
+ //{{{ handleKeystroke() method
+ /**
+  * @param selectedIndex -1 if the popup is empty, otherwise the index of
+  * the selected completion.
+  * @param keyChar the character typed by the user.
+  * @return True if completion should continue, false otherwise.
+  * @since SideKick 0.3.2
+  */
+ public boolean handleKeystroke(int selectedIndex, char keyChar)
+ {
+  if(keyChar == '\t' || keyChar == '\n')
+  {
+   insert(selectedIndex);
+   return false;
+  }
+  else if(keyChar == ' ')
+  {
+   insert(selectedIndex);
+   textArea.userInput(' ');
+   return false;
+  }
+  else
+  {
+   textArea.userInput(keyChar);
+   return true;
+  }
+ } //}}}
 
-	protected View view;
-	protected JEditTextArea textArea;
-	protected String text;
-	protected List items = new ArrayList();
+ protected View view;
+ protected JEditTextArea textArea;
+ protected String text;
+ protected List items = new ArrayList();
 }

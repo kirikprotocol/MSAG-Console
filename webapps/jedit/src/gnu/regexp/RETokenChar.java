@@ -34,17 +34,17 @@ final class RETokenChar extends REToken {
   }
   
     boolean match(CharIndexed input, REMatch mymatch) {
-	int z = ch.length;
-	char c;
-	for (int i=0; i<z; i++) {
-	    c = input.charAt(mymatch.index+i);
-	    if (( (insens) ? Character.toLowerCase(c) : c ) != ch[i]) {
-		return false;
-	    }
-	}
-	mymatch.index += z;
+ int z = ch.length;
+ char c;
+ for (int i=0; i<z; i++) {
+     c = input.charAt(mymatch.index+i);
+     if (( (insens) ? Character.toLowerCase(c) : c ) != ch[i]) {
+  return false;
+     }
+ }
+ mymatch.index += z;
 
-	return next(input, mymatch);
+ return next(input, mymatch);
     }
 
   // Overrides REToken.chain() to optimize for strings

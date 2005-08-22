@@ -45,14 +45,14 @@ public class PropertyListWriter {
       mOut = new PrintWriter(new BufferedWriter(new FileWriter(fileName)));
     } catch (IOException ex) {
       throw new BuildException("Unable to open " + fileName
-			       + " for writing.");
+          + " for writing.");
     }
 
     try {
       // Begin Plist
       mOut.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
       mOut.println("<!DOCTYPE plist SYSTEM " +
-		   "\"file://localhost/System/Library/DTDs/PropertyList.dtd\">");
+     "\"file://localhost/System/Library/DTDs/PropertyList.dtd\">");
       mOut.println("<plist version=\"1.0\">");
 
       // Begin contents
@@ -72,8 +72,8 @@ public class PropertyListWriter {
 
       // Optional key
       if (mProps.getCFBundleGetInfoString() != null) {
-	writeKey(1, "CFBundleGetInfoString");
-	writeString(1, mProps.getCFBundleGetInfoString());
+ writeKey(1, "CFBundleGetInfoString");
+ writeString(1, mProps.getCFBundleGetInfoString());
       }
 
       writeKey(1, "CFBundleInfoDictionaryVersion");
@@ -81,8 +81,8 @@ public class PropertyListWriter {
 
       // Optional key
       if (mProps.getCFBundleIdentifier() != null) {
-	writeKey(1, "CFBundleIdentifier");
-	writeString(1, mProps.getCFBundleIdentifier());
+ writeKey(1, "CFBundleIdentifier");
+ writeString(1, mProps.getCFBundleIdentifier());
       }
 
       // Required key
@@ -103,8 +103,8 @@ public class PropertyListWriter {
 
       // Optional key
       if (mProps.getCFBundleIconFile() != null) {
-	writeKey(1, "CFBundleIconFile");
-	writeString(1, mProps.getCFBundleIconFile());
+ writeKey(1, "CFBundleIconFile");
+ writeString(1, mProps.getCFBundleIconFile());
       }
 
       // Required key
@@ -119,8 +119,8 @@ public class PropertyListWriter {
 
       // Recommended key
       if (mProps.getJVMVersion() != null) {
-	writeKey(2, "JVMVersion");
-	writeString(2, mProps.getJVMVersion());
+ writeKey(2, "JVMVersion");
+ writeString(2, mProps.getJVMVersion());
       }
 
       // Classpath is composed of two types.
@@ -129,42 +129,42 @@ public class PropertyListWriter {
       List classPath = mProps.getClassPath();
       List extraClassPath = mProps.getExtraClassPath();
       if (classPath.size() > 0 || extraClassPath.size() > 0) {
-	writeKey(2, "ClassPath");
-	openArray(2);
-	writeArray(3, classPath);
-	writeArray(3, extraClassPath);
-	closeArray(2);
+ writeKey(2, "ClassPath");
+ openArray(2);
+ writeArray(3, classPath);
+ writeArray(3, extraClassPath);
+ closeArray(2);
       }
 
       // Optional key
       if (mProps.getVMOptions() != null) {
-	writeKey(2, "VMOptions");
-	writeString(2, mProps.getVMOptions());
+ writeKey(2, "VMOptions");
+ writeString(2, mProps.getVMOptions());
       }
 
       // Optional key
       if (mProps.getWorkingDirectory() != null) {
-	writeKey(2, "WorkingDirectory");
-	writeString(2, mProps.getWorkingDirectory());
+ writeKey(2, "WorkingDirectory");
+ writeString(2, mProps.getWorkingDirectory());
       }
 
       // Optional key
       if (mProps.getArguments() != null) {
-	writeKey(2, "Arguments");
-	writeString(2, mProps.getArguments());
+ writeKey(2, "Arguments");
+ writeString(2, mProps.getArguments());
       }
 
       // Write out user Java properties (optional)
       Hashtable javaProperties = mProps.getJavaProperties();
       if (javaProperties != null) {
-	writeKey(2, "Properties");
-	openDict(2);
-	for (Iterator i = javaProperties.keySet().iterator(); i.hasNext(); ) {
-	  String key = (String)i.next();
-	  writeKey(3, key);
-	  writeString(3, (String)javaProperties.get(key));
-	}
-	closeDict(2);
+ writeKey(2, "Properties");
+ openDict(2);
+ for (Iterator i = javaProperties.keySet().iterator(); i.hasNext(); ) {
+   String key = (String)i.next();
+   writeKey(3, key);
+   writeString(3, (String)javaProperties.get(key));
+ }
+ closeDict(2);
       }
 
       // Close the "Java" dictionary
@@ -212,11 +212,11 @@ public class PropertyListWriter {
   private void writeArray(int lvl, List stringList) {
     for (Iterator it = stringList.iterator(); it.hasNext(); ) {
       try {
-	writeString(lvl, (String)it.next());
+ writeString(lvl, (String)it.next());
       } catch (ClassCastException ex) {
-	// Poorly handled exception, but at least we
-	// won't exit.
-	continue;
+ // Poorly handled exception, but at least we
+ // won't exit.
+ continue;
       }
     }
   }

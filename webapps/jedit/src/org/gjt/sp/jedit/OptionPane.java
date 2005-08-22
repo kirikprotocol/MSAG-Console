@@ -35,28 +35,28 @@ import java.awt.Component;
  */
 public interface OptionPane
 {
-	/**
-	 * Returns the internal name of this option pane. The option pane's label
-	 * is set to the value of the property named
-	 * <code>options.<i>name</i>.label</code>.
-	 * @see jEdit#getProperty(String)
-	 */
-	String getName();
+ /**
+  * Returns the internal name of this option pane. The option pane's label
+  * is set to the value of the property named
+  * <code>options.<i>name</i>.label</code>.
+  * @see jEdit#getProperty(String)
+  */
+ String getName();
 
-	/**
-	 * Returns the component that should be displayed for this option pane.
-	 */
-	Component getComponent();
+ /**
+  * Returns the component that should be displayed for this option pane.
+  */
+ Component getComponent();
 
-	/**
-	 * This method is called every time the option pane is displayed.
-	 */
-	void init();
+ /**
+  * This method is called every time the option pane is displayed.
+  */
+ void init();
 
-	/**
-	 * Called when the options dialog's "ok" button is clicked.
-	 * This should save any properties being edited in this option
-	 * pane.
-	 */
-	void save();
+ /**
+  * Called when the options dialog's "ok" button is clicked.
+  * This should save any properties being edited in this option
+  * pane.
+  */
+ void save();
 }

@@ -822,65 +822,65 @@ public class CoreDocumentImpl
                            String name)
                            throws DOMException{
 
-	if (n.getOwnerDocument() != this) {
+ if (n.getOwnerDocument() != this) {
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "WRONG_DOCUMENT_ERR", null);
             throw new DOMException(DOMException.WRONG_DOCUMENT_ERR, msg);
-	}
+ }
         switch (n.getNodeType()) {
             case ELEMENT_NODE: {
                 ElementImpl el = (ElementImpl) n;
-		if (el instanceof ElementNSImpl) {
+  if (el instanceof ElementNSImpl) {
                     ((ElementNSImpl) el).rename(namespaceURI, name);
-		}
-		else {
-		    if (namespaceURI == null) {
+  }
+  else {
+      if (namespaceURI == null) {
                         el.rename(name);
-		    }
-		    else {
-			// we need to create a new object
-			ElementNSImpl nel =
-			    new ElementNSImpl(this, namespaceURI, name);
+      }
+      else {
+   // we need to create a new object
+   ElementNSImpl nel =
+       new ElementNSImpl(this, namespaceURI, name);
 
-			// register event listeners on new node
-			copyEventListeners(el, nel);
+   // register event listeners on new node
+   copyEventListeners(el, nel);
 
-			// remove user data from old node
-			Hashtable data = removeUserDataTable(el);
+   // remove user data from old node
+   Hashtable data = removeUserDataTable(el);
 
-			// remove old node from parent if any
-			Node parent = el.getParentNode();
-			Node nextSib = el.getNextSibling();
-			if (parent != null) {
-			    parent.removeChild(el);
-			}
-			// move children to new node
-			Node child = el.getFirstChild();
-			while (child != null) {
-			    el.removeChild(child);
-			    nel.appendChild(child);
-			    child = el.getFirstChild();
-			}
-			// move specified attributes to new node
-			nel.moveSpecifiedAttributes(el);
-		    
-			// attach user data to new node
-			setUserDataTable(nel, data);
+   // remove old node from parent if any
+   Node parent = el.getParentNode();
+   Node nextSib = el.getNextSibling();
+   if (parent != null) {
+       parent.removeChild(el);
+   }
+   // move children to new node
+   Node child = el.getFirstChild();
+   while (child != null) {
+       el.removeChild(child);
+       nel.appendChild(child);
+       child = el.getFirstChild();
+   }
+   // move specified attributes to new node
+   nel.moveSpecifiedAttributes(el);
+      
+   // attach user data to new node
+   setUserDataTable(nel, data);
 
-			// and fire user data NODE_RENAMED event
-			callUserDataHandlers(el, nel,
-					     UserDataHandler.NODE_RENAMED);
+   // and fire user data NODE_RENAMED event
+   callUserDataHandlers(el, nel,
+          UserDataHandler.NODE_RENAMED);
 
-			// insert new node where old one was
-			if (parent != null) {
-			    parent.insertBefore(nel, nextSib);
-			}
-			el = nel;
-		    }
-		}
-		// fire ElementNameChanged event
-		renamedElement((Element) n, el);
-		return el;
-	    }
+   // insert new node where old one was
+   if (parent != null) {
+       parent.insertBefore(nel, nextSib);
+   }
+   el = nel;
+      }
+  }
+  // fire ElementNameChanged event
+  renamedElement((Element) n, el);
+  return el;
+     }
             case ATTRIBUTE_NODE: {
                 AttrImpl at = (AttrImpl) n;
 
@@ -889,64 +889,64 @@ public class CoreDocumentImpl
                 if (el != null) {
                     el.removeAttributeNode(at);
                 }
-		if (n instanceof AttrNSImpl) {
-		    ((AttrNSImpl) at).rename(namespaceURI, name);
+  if (n instanceof AttrNSImpl) {
+      ((AttrNSImpl) at).rename(namespaceURI, name);
                     // reattach attr to element
                     if (el != null) {
                         el.setAttributeNodeNS(at);
                     }
-		}
-		else {
-		    if (namespaceURI == null) {
-			at.rename(name);
-			// reattach attr to element
+  }
+  else {
+      if (namespaceURI == null) {
+   at.rename(name);
+   // reattach attr to element
                         if (el != null) {
                             el.setAttributeNode(at);
                         }
-		    }
-		    else {
-			// we need to create a new object
-			AttrNSImpl nat =
-			    new AttrNSImpl(this, namespaceURI, name);
+      }
+      else {
+   // we need to create a new object
+   AttrNSImpl nat =
+       new AttrNSImpl(this, namespaceURI, name);
 
-			// register event listeners on new node
-			copyEventListeners(at, nat);
+   // register event listeners on new node
+   copyEventListeners(at, nat);
 
-			// remove user data from old node
-			Hashtable data = removeUserDataTable(at);
+   // remove user data from old node
+   Hashtable data = removeUserDataTable(at);
 
-			// move children to new node
-			Node child = at.getFirstChild();
-			while (child != null) {
-			    at.removeChild(child);
-			    nat.appendChild(child);
-			    child = at.getFirstChild();
-			}
-		    
-			// attach user data to new node
-			setUserDataTable(nat, data);
+   // move children to new node
+   Node child = at.getFirstChild();
+   while (child != null) {
+       at.removeChild(child);
+       nat.appendChild(child);
+       child = at.getFirstChild();
+   }
+      
+   // attach user data to new node
+   setUserDataTable(nat, data);
 
-			// and fire user data NODE_RENAMED event
-			callUserDataHandlers(at, nat,
-					     UserDataHandler.NODE_RENAMED);
+   // and fire user data NODE_RENAMED event
+   callUserDataHandlers(at, nat,
+          UserDataHandler.NODE_RENAMED);
 
-			// reattach attr to element
-			if (el != null) {
-			    el.setAttributeNode(nat);
-			}
-			at = nat;
-		    }
-		}
-		// fire AttributeNameChanged event
-		renamedAttrNode((Attr) n, at);
-		
-		return at;
-	    }
-	    default: { 
+   // reattach attr to element
+   if (el != null) {
+       el.setAttributeNode(nat);
+   }
+   at = nat;
+      }
+  }
+  // fire AttributeNameChanged event
+  renamedAttrNode((Attr) n, at);
+  
+  return at;
+     }
+     default: { 
                 String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NOT_SUPPORTED_ERR", null);
                 throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
-	    }
-	}
+     }
+ }
 
     }
 
@@ -1596,9 +1596,9 @@ public class CoreDocumentImpl
         return getIdentifier(elementId);
     }
 
-	/**
-	 * Remove all identifiers from the ID table
-	 */
+ /**
+  * Remove all identifiers from the ID table
+  */
     protected final void clearIdentifiers (){
         if (identifiers != null){
             identifiers.clear();
@@ -1640,28 +1640,28 @@ public class CoreDocumentImpl
      * @see #putIdentifier
      * @see #removeIdentifier
      */
-	public Element getIdentifier(String idName) {
+ public Element getIdentifier(String idName) {
 
-		if (needsSyncData()) {
-			synchronizeData();
-		}
+  if (needsSyncData()) {
+   synchronizeData();
+  }
 
-		if (identifiers == null) {
-			return null;
-		}
-		Element elem = (Element) identifiers.get(idName);
-		if (elem != null) {
-			// check that the element is in the tree
-			Node parent = elem.getParentNode();
-			while (parent != null) {
-				if (parent == this) {
-					return elem;
-				}
-				parent = parent.getParentNode();
-			}
-		}
-		return null;
-	} // getIdentifier(String):Element
+  if (identifiers == null) {
+   return null;
+  }
+  Element elem = (Element) identifiers.get(idName);
+  if (elem != null) {
+   // check that the element is in the tree
+   Node parent = elem.getParentNode();
+   while (parent != null) {
+    if (parent == this) {
+     return elem;
+    }
+    parent = parent.getParentNode();
+   }
+  }
+  return null;
+ } // getIdentifier(String):Element
 
     /**
      * Removes a previously registered element with the specified
@@ -2030,8 +2030,8 @@ public class CoreDocumentImpl
      */
     void setUserDataTable(Node n, Hashtable data) {
         if (data != null) {
-	    userData.put(n, data);
-	}
+     userData.put(n, data);
+ }
     }
 
     /**
@@ -2095,56 +2095,56 @@ public class CoreDocumentImpl
     }*/
     
     protected final void checkNamespaceWF( String qname, int colon1,
-		                                             int colon2) {
+                                               int colon2) {
                                                         
-		if (!errorChecking) {
-			return;
-		}
-		// it is an error for NCName to have more than one ':'
-		// check if it is valid QName [Namespace in XML production 6]
-		if (colon1 == 0 || colon1 == qname.length() - 1 || colon2 != colon1) {
-			String msg =
-				DOMMessageFormatter.formatMessage(
-					DOMMessageFormatter.DOM_DOMAIN,
-					"NAMESPACE_ERR",
-					null);
-			throw new DOMException(DOMException.NAMESPACE_ERR, msg);
-		}
-	}
- 	protected final void checkDOMNSErr(String prefix,
-		                                 String namespace) {
-		if (errorChecking) {
-			if (namespace == null) {
-				String msg =
-					DOMMessageFormatter.formatMessage(
-						DOMMessageFormatter.DOM_DOMAIN,
-						"NAMESPACE_ERR",
-						null);
-				throw new DOMException(DOMException.NAMESPACE_ERR, msg);
-			}
-			else if (prefix.equals("xml")
-					&& !namespace.equals(NamespaceContext.XML_URI)) {
-				String msg =
-					DOMMessageFormatter.formatMessage(
-						DOMMessageFormatter.DOM_DOMAIN,
-						"NAMESPACE_ERR",
-						null);
-				throw new DOMException(DOMException.NAMESPACE_ERR, msg);
-			}
-			else if (
-				prefix.equals("xmlns")
-					&& !namespace.equals(NamespaceContext.XMLNS_URI)
-					|| (!prefix.equals("xmlns")
-						&& namespace.equals(NamespaceContext.XMLNS_URI))) {
-				String msg =
-					DOMMessageFormatter.formatMessage(
-						DOMMessageFormatter.DOM_DOMAIN,
-						"NAMESPACE_ERR",
-						null);
-				throw new DOMException(DOMException.NAMESPACE_ERR, msg);
-			}
-		}
-	}
+  if (!errorChecking) {
+   return;
+  }
+  // it is an error for NCName to have more than one ':'
+  // check if it is valid QName [Namespace in XML production 6]
+  if (colon1 == 0 || colon1 == qname.length() - 1 || colon2 != colon1) {
+   String msg =
+    DOMMessageFormatter.formatMessage(
+     DOMMessageFormatter.DOM_DOMAIN,
+     "NAMESPACE_ERR",
+     null);
+   throw new DOMException(DOMException.NAMESPACE_ERR, msg);
+  }
+ }
+  protected final void checkDOMNSErr(String prefix,
+                                   String namespace) {
+  if (errorChecking) {
+   if (namespace == null) {
+    String msg =
+     DOMMessageFormatter.formatMessage(
+      DOMMessageFormatter.DOM_DOMAIN,
+      "NAMESPACE_ERR",
+      null);
+    throw new DOMException(DOMException.NAMESPACE_ERR, msg);
+   }
+   else if (prefix.equals("xml")
+     && !namespace.equals(NamespaceContext.XML_URI)) {
+    String msg =
+     DOMMessageFormatter.formatMessage(
+      DOMMessageFormatter.DOM_DOMAIN,
+      "NAMESPACE_ERR",
+      null);
+    throw new DOMException(DOMException.NAMESPACE_ERR, msg);
+   }
+   else if (
+    prefix.equals("xmlns")
+     && !namespace.equals(NamespaceContext.XMLNS_URI)
+     || (!prefix.equals("xmlns")
+      && namespace.equals(NamespaceContext.XMLNS_URI))) {
+    String msg =
+     DOMMessageFormatter.formatMessage(
+      DOMMessageFormatter.DOM_DOMAIN,
+      "NAMESPACE_ERR",
+      null);
+    throw new DOMException(DOMException.NAMESPACE_ERR, msg);
+   }
+  }
+ }
 
     /**
      * 
@@ -2159,7 +2159,7 @@ public class CoreDocumentImpl
         int length;
         if (prefix != null) {
             length=prefix.length();
-			// check that prefix is NCName
+   // check that prefix is NCName
             if (!XMLChar.isNCNameStart(prefix.charAt(0))) {
                 String msg =
                     DOMMessageFormatter.formatMessage(
@@ -2181,7 +2181,7 @@ public class CoreDocumentImpl
                 }
             }            
 
-		} 
+  } 
         length = local.length();
         // check local part 
         if (!XMLChar.isNCNameStart(local.charAt(0))) {

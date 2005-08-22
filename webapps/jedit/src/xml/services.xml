@@ -3,10 +3,10 @@
 <!DOCTYPE SERVICES SYSTEM "services.dtd">
 
 <SERVICES>
-	<SERVICE CLASS="sidekick.SideKickParser" NAME="xml">
-		new xml.parser.SAXParserImpl();
-	</SERVICE>
-	<SERVICE CLASS="sidekick.SideKickParser" NAME="html">
-		new xml.parser.HTMLParserImpl();
-	</SERVICE>
+ <SERVICE CLASS="sidekick.SideKickParser" NAME="xml">
+  new xml.parser.SAXParserImpl();
+ </SERVICE>
+ <SERVICE CLASS="sidekick.SideKickParser" NAME="html">
+  new xml.parser.HTMLParserImpl();
+ </SERVICE>
 </SERVICES>

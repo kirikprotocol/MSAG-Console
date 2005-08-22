@@ -184,245 +184,245 @@ import org.gjt.sp.jedit.menu.EnhancedMenu;
  */
 public abstract class EditPlugin
 {
-	//{{{ start() method
-	/**
-	 * jEdit calls this method when the plugin is being activated, either
-	 * during startup or at any other time. A plugin can get activated for
-	 * a number of reasons:
-	 *
-	 * <ul>
-	 * <li>The plugin is written for jEdit 4.1 or older, in which case it
-	 * will always be loaded at startup.</li>
-	 * <li>The plugin has its <code>activate</code> property set to
-	 * <code>startup</code>, in which case it will always be loaded at
-	 * startup.</li>
-	 * <li>One of the properties listed in the plugin's
-	 * <code>activate</code> property is set to <code>true</code>,
-	 * in which case it will always be loaded at startup.</li>
-	 * <li>One of the plugin's classes is being accessed by another plugin,
-	 * a macro, or a BeanShell snippet in a plugin API XML file.</li>
-	 * </ul>
-	 *
-	 * Note that this method is always called from the event dispatch
-	 * thread, even if the activation resulted from a class being loaded
-	 * from another thread. A side effect of this is that some of your
-	 * plugin's code might get executed before this method finishes
-	 * running.<p>
-	 *
-	 * When this method is being called for plugins written for jEdit 4.1
-	 * and below, no views or buffers are open. However, this is not the
-	 * case for plugins using the new API. For example, if your plugin adds
-	 * tool bars to views, make sure you correctly handle the case where
-	 * views are already open when the plugin is loaded.<p>
-	 *
-	 * If your plugin must be loaded on startup, take care to have this
-	 * method return as quickly as possible.<p>
-	 *
-	 * The default implementation of this method does nothing.
-	 *
-	 * @since jEdit 2.1pre1
-	 */
-	public void start() {}
-	//}}}
+ //{{{ start() method
+ /**
+  * jEdit calls this method when the plugin is being activated, either
+  * during startup or at any other time. A plugin can get activated for
+  * a number of reasons:
+  *
+  * <ul>
+  * <li>The plugin is written for jEdit 4.1 or older, in which case it
+  * will always be loaded at startup.</li>
+  * <li>The plugin has its <code>activate</code> property set to
+  * <code>startup</code>, in which case it will always be loaded at
+  * startup.</li>
+  * <li>One of the properties listed in the plugin's
+  * <code>activate</code> property is set to <code>true</code>,
+  * in which case it will always be loaded at startup.</li>
+  * <li>One of the plugin's classes is being accessed by another plugin,
+  * a macro, or a BeanShell snippet in a plugin API XML file.</li>
+  * </ul>
+  *
+  * Note that this method is always called from the event dispatch
+  * thread, even if the activation resulted from a class being loaded
+  * from another thread. A side effect of this is that some of your
+  * plugin's code might get executed before this method finishes
+  * running.<p>
+  *
+  * When this method is being called for plugins written for jEdit 4.1
+  * and below, no views or buffers are open. However, this is not the
+  * case for plugins using the new API. For example, if your plugin adds
+  * tool bars to views, make sure you correctly handle the case where
+  * views are already open when the plugin is loaded.<p>
+  *
+  * If your plugin must be loaded on startup, take care to have this
+  * method return as quickly as possible.<p>
+  *
+  * The default implementation of this method does nothing.
+  *
+  * @since jEdit 2.1pre1
+  */
+ public void start() {}
+ //}}}
 
-	//{{{ stop() method
-	/**
-	 * jEdit calls this method when the plugin is being unloaded. This can
-	 * be when the program is exiting, or at any other time.<p>
-	 *
-	 * If a plugin uses state information or other persistent data
-	 * that should be stored in a special format, this would be a good place
-	 * to write the data to storage.  If the plugin uses jEdit's properties
-	 * API to hold settings, no special processing is needed for them on
-	 * exit, since they will be saved automatically.<p>
-	 *
-	 * With plugins written for jEdit 4.1 and below, this method is only
-	 * called when the program is exiting. However, this is not the case
-	 * for plugins using the new API. For example, if your plugin adds
-	 * tool bars to views, make sure you correctly handle the case where
-	 * views are still open when the plugin is unloaded.<p>
-	 *
-	 * To avoid memory leaks, this method should ensure that no references
-	 * to any objects created by this plugin remain in the heap. In the
-	 * case of actions, dockable windows and services, jEdit ensures this
-	 * automatically. For other objects, your plugin must clean up maually.
-	 * <p>
-	 *
-	 * The default implementation of this method does nothing.
-	 *
-	 * @since jEdit 2.1pre1
-	 */
-	public void stop() {} //}}}
+ //{{{ stop() method
+ /**
+  * jEdit calls this method when the plugin is being unloaded. This can
+  * be when the program is exiting, or at any other time.<p>
+  *
+  * If a plugin uses state information or other persistent data
+  * that should be stored in a special format, this would be a good place
+  * to write the data to storage.  If the plugin uses jEdit's properties
+  * API to hold settings, no special processing is needed for them on
+  * exit, since they will be saved automatically.<p>
+  *
+  * With plugins written for jEdit 4.1 and below, this method is only
+  * called when the program is exiting. However, this is not the case
+  * for plugins using the new API. For example, if your plugin adds
+  * tool bars to views, make sure you correctly handle the case where
+  * views are still open when the plugin is unloaded.<p>
+  *
+  * To avoid memory leaks, this method should ensure that no references
+  * to any objects created by this plugin remain in the heap. In the
+  * case of actions, dockable windows and services, jEdit ensures this
+  * automatically. For other objects, your plugin must clean up maually.
+  * <p>
+  *
+  * The default implementation of this method does nothing.
+  *
+  * @since jEdit 2.1pre1
+  */
+ public void stop() {} //}}}
 
-	//{{{ getClassName() method
-	/**
-	 * Returns the plugin's class name. This might not be the same as
-	 * the class of the actual <code>EditPlugin</code> instance, for
-	 * example if the plugin is not loaded yet.
-	 *
-	 * @since jEdit 2.5pre3
-	 */
-	public String getClassName()
-	{
-		return getClass().getName();
-	} //}}}
+ //{{{ getClassName() method
+ /**
+  * Returns the plugin's class name. This might not be the same as
+  * the class of the actual <code>EditPlugin</code> instance, for
+  * example if the plugin is not loaded yet.
+  *
+  * @since jEdit 2.5pre3
+  */
+ public String getClassName()
+ {
+  return getClass().getName();
+ } //}}}
 
-	//{{{ getPluginJAR() method
-	/**
-	 * Returns the JAR file containing this plugin.
-	 * @since jEdit 4.2pre1
-	 */
-	public PluginJAR getPluginJAR()
-	{
-		return jar;
-	} //}}}
+ //{{{ getPluginJAR() method
+ /**
+  * Returns the JAR file containing this plugin.
+  * @since jEdit 4.2pre1
+  */
+ public PluginJAR getPluginJAR()
+ {
+  return jar;
+ } //}}}
 
-	//{{{ createMenuItems() method
-	/**
-	 * Called by the view when constructing its <b>Plugins</b> menu.
-	 * See the description of this class for details about how the
-	 * menu items are constructed from plugin properties.
-	 *
-	 * @since jEdit 4.2pre1
-	 */
-	public final JMenuItem createMenuItems()
-	{
-		if(this instanceof Broken)
-			return null;
+ //{{{ createMenuItems() method
+ /**
+  * Called by the view when constructing its <b>Plugins</b> menu.
+  * See the description of this class for details about how the
+  * menu items are constructed from plugin properties.
+  *
+  * @since jEdit 4.2pre1
+  */
+ public final JMenuItem createMenuItems()
+ {
+  if(this instanceof Broken)
+   return null;
 
-		String menuItemName = jEdit.getProperty("plugin." +
-			getClassName() + ".menu-item");
-		if(menuItemName != null)
-			return GUIUtilities.loadMenuItem(menuItemName);
+  String menuItemName = jEdit.getProperty("plugin." +
+   getClassName() + ".menu-item");
+  if(menuItemName != null)
+   return GUIUtilities.loadMenuItem(menuItemName);
 
-		String menuProperty = "plugin." + getClassName() + ".menu";
-		String codeProperty = "plugin." + getClassName() + ".menu.code";
-		if(jEdit.getProperty(menuProperty) != null
-			|| jEdit.getProperty(codeProperty) != null)
-		{
-			String pluginName = jEdit.getProperty("plugin." +
-				getClassName() + ".name");
-			return new EnhancedMenu(menuProperty,pluginName);
-		}
+  String menuProperty = "plugin." + getClassName() + ".menu";
+  String codeProperty = "plugin." + getClassName() + ".menu.code";
+  if(jEdit.getProperty(menuProperty) != null
+   || jEdit.getProperty(codeProperty) != null)
+  {
+   String pluginName = jEdit.getProperty("plugin." +
+    getClassName() + ".name");
+   return new EnhancedMenu(menuProperty,pluginName);
+  }
 
-		return null;
-	} //}}}
+  return null;
+ } //}}}
 
-	//{{{ createBrowserMenuItems() method
-	/**
-	 * Called by the filesystem browser when constructing its
-	 * <b>Plugins</b> menu.
-	 * See the description of this class for details about how the
-	 * menu items are constructed from plugin properties.
-	 *
-	 * @since jEdit 4.2pre1
-	 */
-	public final JMenuItem createBrowserMenuItems()
-	{
-		if(this instanceof Broken)
-			return null;
+ //{{{ createBrowserMenuItems() method
+ /**
+  * Called by the filesystem browser when constructing its
+  * <b>Plugins</b> menu.
+  * See the description of this class for details about how the
+  * menu items are constructed from plugin properties.
+  *
+  * @since jEdit 4.2pre1
+  */
+ public final JMenuItem createBrowserMenuItems()
+ {
+  if(this instanceof Broken)
+   return null;
 
-		String menuItemName = jEdit.getProperty("plugin." +
-			getClassName() + ".browser-menu-item");
-		if(menuItemName != null)
-		{
-			return GUIUtilities.loadMenuItem(
-				VFSBrowser.getActionContext(),
-				menuItemName,
-				false);
-		}
+  String menuItemName = jEdit.getProperty("plugin." +
+   getClassName() + ".browser-menu-item");
+  if(menuItemName != null)
+  {
+   return GUIUtilities.loadMenuItem(
+    VFSBrowser.getActionContext(),
+    menuItemName,
+    false);
+  }
 
-		String menuProperty = "plugin." + getClassName() + ".browser-menu";
-		if(jEdit.getProperty(menuProperty) != null)
-		{
-			String pluginName = jEdit.getProperty("plugin." +
-				getClassName() + ".name");
-			return new EnhancedMenu(menuProperty,pluginName,
-				VFSBrowser.getActionContext());
-		}
+  String menuProperty = "plugin." + getClassName() + ".browser-menu";
+  if(jEdit.getProperty(menuProperty) != null)
+  {
+   String pluginName = jEdit.getProperty("plugin." +
+    getClassName() + ".name");
+   return new EnhancedMenu(menuProperty,pluginName,
+    VFSBrowser.getActionContext());
+  }
 
-		return null;
-	} //}}}
+  return null;
+ } //}}}
 
-	//{{{ Deprecated methods
+ //{{{ Deprecated methods
 
-	//{{{ createMenuItems() method
-	/**
-	 * @deprecated Instead of overriding this method, define properties
-	 * as specified in the description of this class.
-	 */
-	public void createMenuItems(Vector menuItems) {} //}}}
+ //{{{ createMenuItems() method
+ /**
+  * @deprecated Instead of overriding this method, define properties
+  * as specified in the description of this class.
+  */
+ public void createMenuItems(Vector menuItems) {} //}}}
 
-	//{{{ createOptionPanes() method
-	/**
-	 * @deprecated Instead of overriding this method, define properties
-	 * as specified in the description of this class.
-	 */
-	public void createOptionPanes(OptionsDialog optionsDialog) {} //}}}
+ //{{{ createOptionPanes() method
+ /**
+  * @deprecated Instead of overriding this method, define properties
+  * as specified in the description of this class.
+  */
+ public void createOptionPanes(OptionsDialog optionsDialog) {} //}}}
 
-	//}}}
+ //}}}
 
-	//{{{ Package-private members
-	PluginJAR jar;
-	//}}}
+ //{{{ Package-private members
+ PluginJAR jar;
+ //}}}
 
-	//{{{ Broken class
-	/**
-	 * A placeholder for a plugin that didn't load.
-	 * @see jEdit#getPlugin(String)
-	 * @see PluginJAR#getPlugin()
-	 * @see PluginJAR#activatePlugin()
-	 */
-	public static class Broken extends EditPlugin
-	{
-		public String getClassName()
-		{
-			return clazz;
-		}
+ //{{{ Broken class
+ /**
+  * A placeholder for a plugin that didn't load.
+  * @see jEdit#getPlugin(String)
+  * @see PluginJAR#getPlugin()
+  * @see PluginJAR#activatePlugin()
+  */
+ public static class Broken extends EditPlugin
+ {
+  public String getClassName()
+  {
+   return clazz;
+  }
 
-		// package-private members
-		Broken(PluginJAR jar, String clazz)
-		{
-			this.jar = jar;
-			this.clazz = clazz;
-		}
+  // package-private members
+  Broken(PluginJAR jar, String clazz)
+  {
+   this.jar = jar;
+   this.clazz = clazz;
+  }
 
-		// private members
-		private String clazz;
-	} //}}}
+  // private members
+  private String clazz;
+ } //}}}
 
-	//{{{ Deferred class
-	/**
-	 * A placeholder for a plugin that hasn't been loaded yet.
-	 * @see jEdit#getPlugin(String)
-	 * @see PluginJAR#getPlugin()
-	 * @see PluginJAR#activatePlugin()
-	 */
-	public static class Deferred extends EditPlugin
-	{
-		public String getClassName()
-		{
-			return clazz;
-		}
+ //{{{ Deferred class
+ /**
+  * A placeholder for a plugin that hasn't been loaded yet.
+  * @see jEdit#getPlugin(String)
+  * @see PluginJAR#getPlugin()
+  * @see PluginJAR#activatePlugin()
+  */
+ public static class Deferred extends EditPlugin
+ {
+  public String getClassName()
+  {
+   return clazz;
+  }
 
-		// package-private members
-		Deferred(PluginJAR jar, String clazz)
-		{
-			this.jar = jar;
-			this.clazz = clazz;
-		}
+  // package-private members
+  Deferred(PluginJAR jar, String clazz)
+  {
+   this.jar = jar;
+   this.clazz = clazz;
+  }
 
-		EditPlugin loadPluginClass()
-		{
-			return null;
-		}
+  EditPlugin loadPluginClass()
+  {
+   return null;
+  }
 
-		public String toString()
-		{
-			return "Deferred[" + clazz + "]";
-		}
+  public String toString()
+  {
+   return "Deferred[" + clazz + "]";
+  }
 
-		// private members
-		private String clazz;
-	} //}}}
+  // private members
+  private String clazz;
+ } //}}}
 }

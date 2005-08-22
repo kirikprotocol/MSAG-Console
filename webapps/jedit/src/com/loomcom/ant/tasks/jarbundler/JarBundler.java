@@ -192,15 +192,15 @@ public class JarBundler extends MatchingTask {
 
     if (mJarAttrs.isEmpty() && mJarFileSets.isEmpty() && mJarFileLists.isEmpty()) {
       throw new BuildException("Either the attribute \"jars\" must " +
-			       "be set, or one or more jarfilelists or " +
-			       "jarfilesets must be added.");
+          "be set, or one or more jarfilelists or " +
+          "jarfilesets must be added.");
     }
 
     if (!mJarAttrs.isEmpty() && (!mJarFileSets.isEmpty() || !mJarFileLists.isEmpty())) {
       throw new BuildException("Cannot set both the attribute " +
-			       "\"jars\" and use jar " +
-			       "filesets/filelists.  Use " +
-			       "only one or the other.");
+          "\"jars\" and use jar " +
+          "filesets/filelists.  Use " +
+          "only one or the other.");
     }
 
     if (mProps.getCFBundleName() == null) {
@@ -209,7 +209,7 @@ public class JarBundler extends MatchingTask {
 
     if (mProps.getMainClass() == null) {
       throw new BuildException("Required attribute \"mainclass\" is " +
-			       "not set.");
+          "not set.");
     }
 
     // Set up some Java properties
@@ -219,11 +219,11 @@ public class JarBundler extends MatchingTask {
 
     // About Menu
     mProps.addJavaProperty("com.apple.mrj.application.apple.menu.about.name",
-			   mAboutMenuName);
+      mAboutMenuName);
 
     // Small Tabs
     mProps.addJavaProperty("com.apple.smallTabs",
-			   new Boolean(mSmallTabs).toString());
+      new Boolean(mSmallTabs).toString());
 
     // Anti Aliased Graphics
     String antiAliasedProperty = useOldPropertyNames() ?
@@ -231,7 +231,7 @@ public class JarBundler extends MatchingTask {
       "apple.awt.antialiasing";
 
     mProps.addJavaProperty(antiAliasedProperty,
-			   new Boolean(mAntiAliasedGraphics).toString().toString());
+      new Boolean(mAntiAliasedGraphics).toString().toString());
 
     // Anti Aliased Text
     String antiAliasedTextProperty = useOldPropertyNames() ?
@@ -239,11 +239,11 @@ public class JarBundler extends MatchingTask {
       "apple.awt.textantialiasing";
 
     mProps.addJavaProperty(antiAliasedTextProperty,
-			   new Boolean(mAntiAliasedText).toString());
+      new Boolean(mAntiAliasedText).toString());
 
     // Live Resize
     mProps.addJavaProperty("com.apple.mrj.application.live-resize",
-			   new Boolean(mLiveResize).toString());
+      new Boolean(mLiveResize).toString());
 
     // Screen Menu Bar
     String screenMenuBarProperty = useOldPropertyNames() ?
@@ -251,30 +251,30 @@ public class JarBundler extends MatchingTask {
       "apple.laf.useScreenMenuBar";
 
     mProps.addJavaProperty(screenMenuBarProperty,
-			   new Boolean(mScreenMenuBar).toString());
+      new Boolean(mScreenMenuBar).toString());
 
     // Growbox (only used if the Java VM is 1.4 or higher)
     if (!useOldPropertyNames()) {
       mProps.addJavaProperty("apple.awt.showGrowBox",
-			     new Boolean(mGrowbox).toString());
+        new Boolean(mGrowbox).toString());
     }
 
     // Growbox Intrudes (only used if the Java VM is 1.3 or lower)
     if (useOldPropertyNames()) {
       mProps.addJavaProperty("com.apple.mrj.application.growbox.intrudes",
-			     new Boolean(mGrowboxIntrudes).toString());
+        new Boolean(mGrowboxIntrudes).toString());
     }
 
     if (!mRootDir.exists() || (mRootDir.exists() && !mRootDir.isDirectory())) {
       throw new BuildException("Destination directory specified by \"dir\" " +
-			       "attribute must already exist.");
+          "attribute must already exist.");
     }
 
     File bundleDir = new File(mRootDir, mProps.getCFBundleName() + ".app");
 
     if (bundleDir.exists()) {
       throw new BuildException("The App Bundle " + bundleDir.getName() +
-			       " already exists, cannot continue.");
+          " already exists, cannot continue.");
     }
 
     // Status
@@ -282,45 +282,45 @@ public class JarBundler extends MatchingTask {
 
     if (!bundleDir.mkdir()) {
       throw new BuildException("Unable to create bundle: "
-			       + bundleDir);
+          + bundleDir);
     }
 
     // Make the Contents directory
     mContentsDir = new File(bundleDir, "Contents");
     if (!mContentsDir.mkdir()) {
       throw new BuildException("Unable to create directory "
-			       + mContentsDir);
+          + mContentsDir);
     }
 
     // Make the "MacOS" directory
     mMacOsDir = new File(mContentsDir, "MacOS");
     if (!mMacOsDir.mkdir()) {
       throw new BuildException("Unable to create directory "
-			       + mMacOsDir);
+          + mMacOsDir);
     }
 
     // Make the Resources directory
     File resourceDir = new File(mContentsDir, "Resources");
     if (!resourceDir.mkdir()) {
       throw new BuildException("Unable to create directory "
-			       + resourceDir);
+          + resourceDir);
     }
 
     // Make the Resources/Java directory
     mJavaDir = new File(resourceDir, "Java");
     if (!mJavaDir.mkdir()) {
       throw new BuildException("Unable to create directory "
-			       + mJavaDir);
+          + mJavaDir);
     }
 
     // Copy icon file to resource dir.  If no icon parameter
     // is supplied, the default icon will be used.
     if (mAppIcon != null) {
       try {
-	mFileUtils.copyFile(mAppIcon, new File(resourceDir,
-					       mAppIcon.getName()));
+ mFileUtils.copyFile(mAppIcon, new File(resourceDir,
+            mAppIcon.getName()));
       } catch (IOException ex) {
-	throw new BuildException("Cannot copy icon file: " + ex);
+ throw new BuildException("Cannot copy icon file: " + ex);
       }
     }
 
@@ -657,11 +657,11 @@ public class JarBundler extends MatchingTask {
       int len = 0;
 
       while ((len = is.read(buf)) != -1) {
-	System.out.write(buf, 0, len);
+ System.out.write(buf, 0, len);
       }
 
       while ((len = es.read(buf)) != -1) {
-	System.out.write(buf, 0, len);
+ System.out.write(buf, 0, len);
       }
 
     } finally {
@@ -687,13 +687,13 @@ public class JarBundler extends MatchingTask {
   private void processJarAttrs() throws BuildException {
     try {
       for (Iterator jarIter = mJarAttrs.iterator(); jarIter.hasNext(); ) {
-	File src = (File)jarIter.next();
-	File dest = new File(mJavaDir, src.getName());
-	if (mVerbose) {
-	  System.out.println("Copying from " + src + " to " + dest);
-	}
-	mFileUtils.copyFile(src, dest);
-	mProps.addToClassPath(dest.getName());
+ File src = (File)jarIter.next();
+ File dest = new File(mJavaDir, src.getName());
+ if (mVerbose) {
+   System.out.println("Copying from " + src + " to " + dest);
+ }
+ mFileUtils.copyFile(src, dest);
+ mProps.addToClassPath(dest.getName());
       }
     } catch (IOException ex) {
       throw new BuildException("Cannot copy jar file: " + ex);
@@ -710,19 +710,19 @@ public class JarBundler extends MatchingTask {
       ds.scan();
       String[] files = ds.getIncludedFiles();
       try {
-	for (int i = 0; i < files.length; i++) {
-	  String fileName = files[i];
-	  File src = new File(srcDir, fileName);
-	  File dest = new File(mJavaDir, fileName);
-	  if (mVerbose) {
-	    System.out.println("Copying from " + src + " to " + dest);
-	  }
-	  mFileUtils.copyFile(src, dest);
-	  mProps.addToClassPath(fileName);
-	}
+ for (int i = 0; i < files.length; i++) {
+   String fileName = files[i];
+   File src = new File(srcDir, fileName);
+   File dest = new File(mJavaDir, fileName);
+   if (mVerbose) {
+     System.out.println("Copying from " + src + " to " + dest);
+   }
+   mFileUtils.copyFile(src, dest);
+   mProps.addToClassPath(fileName);
+ }
 
       } catch (IOException ex) {
-	throw new BuildException("Cannot copy jar file: " + ex);
+ throw new BuildException("Cannot copy jar file: " + ex);
       }
     }
   }
@@ -734,18 +734,18 @@ public class JarBundler extends MatchingTask {
       File srcDir = fl.getDir(p);
       String[] files = fl.getFiles(p);
       try {
-	for (int i = 0; i < files.length; i++) {
-	  String fileName = files[i];
-	  File src = new File(srcDir, fileName);
-	  File dest = new File(mJavaDir, fileName);
-	  if (mVerbose) {
-	    System.out.println("Copying from " + src + " to " + dest);
-	  }
-	  mFileUtils.copyFile(src, dest);
-	  mProps.addToClassPath(fileName);
-	}
+ for (int i = 0; i < files.length; i++) {
+   String fileName = files[i];
+   File src = new File(srcDir, fileName);
+   File dest = new File(mJavaDir, fileName);
+   if (mVerbose) {
+     System.out.println("Copying from " + src + " to " + dest);
+   }
+   mFileUtils.copyFile(src, dest);
+   mProps.addToClassPath(fileName);
+ }
       } catch (IOException ex) {
-	throw new BuildException("Cannot copy jar file: " + ex);
+ throw new BuildException("Cannot copy jar file: " + ex);
       }
     }
   }
@@ -767,8 +767,8 @@ public class JarBundler extends MatchingTask {
       ds.scan();
       String[] files = ds.getIncludedFiles();
       for (int i = 0; i < files.length; i++) {
-	File f = new File(srcDir, files[i]);
-	mProps.addToExtraClassPath(f.getPath());
+ File f = new File(srcDir, files[i]);
+ mProps.addToExtraClassPath(f.getPath());
       }
     }
   }
@@ -780,8 +780,8 @@ public class JarBundler extends MatchingTask {
       File srcDir = fl.getDir(p);
       String[] files = fl.getFiles(p);
       for (int i = 0; i < files.length; i++) {
-	File f = new File(srcDir, files[i]);
-	mProps.addToExtraClassPath(f.getPath());
+ File f = new File(srcDir, files[i]);
+ mProps.addToExtraClassPath(f.getPath());
       }
     }
   }
@@ -789,13 +789,13 @@ public class JarBundler extends MatchingTask {
   private void processExecAttrs() throws BuildException {
     try {
       for (Iterator execIter = mExecAttrs.iterator(); execIter.hasNext();) {
-	File src = (File)execIter.next();
-	File dest = new File(mMacOsDir, src.getName());
-	if (mVerbose) {
-	  System.out.println("Copying from " + src + " to " + dest);
-	}
-	mFileUtils.copyFile(src, dest);
-	setExecutable(dest);
+ File src = (File)execIter.next();
+ File dest = new File(mMacOsDir, src.getName());
+ if (mVerbose) {
+   System.out.println("Copying from " + src + " to " + dest);
+ }
+ mFileUtils.copyFile(src, dest);
+ setExecutable(dest);
       }
     } catch (IOException ex) {
       throw new BuildException("Cannot copy exec file: " + ex);
@@ -812,18 +812,18 @@ public class JarBundler extends MatchingTask {
       ds.scan();
       String[] files = ds.getIncludedFiles();
       try {
-	for (int i = 0; i < files.length; i++) {
-	  String fileName = files[i];
-	  File src = new File(srcDir, fileName);
-	  File dest = new File(mMacOsDir, fileName);
-	  if (mVerbose) {
-	    System.out.println("Copying from " + src + " to " + dest);
-	  }
-	  mFileUtils.copyFile(src, dest);
-	  setExecutable(dest);
-	}
+ for (int i = 0; i < files.length; i++) {
+   String fileName = files[i];
+   File src = new File(srcDir, fileName);
+   File dest = new File(mMacOsDir, fileName);
+   if (mVerbose) {
+     System.out.println("Copying from " + src + " to " + dest);
+   }
+   mFileUtils.copyFile(src, dest);
+   setExecutable(dest);
+ }
       } catch (IOException ex) {
-	throw new BuildException("Cannot copy exec file: " + ex);
+ throw new BuildException("Cannot copy exec file: " + ex);
       }
     }
   }
@@ -835,18 +835,18 @@ public class JarBundler extends MatchingTask {
       File srcDir = fl.getDir(p);
       String[] files = fl.getFiles(p);
       try {
-	for (int i = 0; i < files.length; i++) {
-	  String fileName = files[i];
-	  File src = new File(srcDir, fileName);
-	  File dest = new File(mMacOsDir, fileName);
-	  if (mVerbose) {
-	    System.out.println("Copying from " + src + " to " + dest);
-	  }
-	  mFileUtils.copyFile(src, dest);
-	  setExecutable(dest);
-	}
+ for (int i = 0; i < files.length; i++) {
+   String fileName = files[i];
+   File src = new File(srcDir, fileName);
+   File dest = new File(mMacOsDir, fileName);
+   if (mVerbose) {
+     System.out.println("Copying from " + src + " to " + dest);
+   }
+   mFileUtils.copyFile(src, dest);
+   setExecutable(dest);
+ }
       } catch (IOException ex) {
-	throw new BuildException("Cannot copy jar file: " + ex);
+ throw new BuildException("Cannot copy jar file: " + ex);
       }
     }
   }
@@ -883,9 +883,9 @@ public class JarBundler extends MatchingTask {
     PrintWriter pkgWriter = null;
     try {
       pkgWriter =
-	new PrintWriter(new BufferedWriter(new FileWriter(pkgInfo)));
+ new PrintWriter(new BufferedWriter(new FileWriter(pkgInfo)));
       pkgWriter.println(mProps.getCFBundlePackageType()
-			+ mProps.getCFBundleSignature());
+   + mProps.getCFBundleSignature());
       pkgWriter.flush();
     } catch (IOException ex) {
       throw new BuildException("Cannot create PkgInfo file: " + ex);

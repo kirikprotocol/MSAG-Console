@@ -29,28 +29,28 @@ import org.gjt.sp.jedit.jEdit;
 
 public class MouseActions
 {
-	//{{{ MouseActions constructor
-	MouseActions(String name)
-	{
-		this.name = name;
-	} //}}}
+ //{{{ MouseActions constructor
+ MouseActions(String name)
+ {
+  this.name = name;
+ } //}}}
 
-	//{{{ getActionForEvent() method
-	String getActionForEvent(MouseEvent evt, String variant)
-	{
-		String modStr = DefaultInputHandler.getModifierString(evt);
-		if(modStr == null)
-		{
-			return jEdit.getProperty("view." + name + "."
-				+ variant + "Click");
-		}
-		else
-		{
-			return jEdit.getProperty("view." + name + "."
-				+ DefaultInputHandler.getModifierString(evt)
-				+ variant + "Click");
-		}
-	} //}}}
+ //{{{ getActionForEvent() method
+ String getActionForEvent(MouseEvent evt, String variant)
+ {
+  String modStr = DefaultInputHandler.getModifierString(evt);
+  if(modStr == null)
+  {
+   return jEdit.getProperty("view." + name + "."
+    + variant + "Click");
+  }
+  else
+  {
+   return jEdit.getProperty("view." + name + "."
+    + DefaultInputHandler.getModifierString(evt)
+    + variant + "Click");
+  }
+ } //}}}
 
-	private String name;
+ private String name;
 }

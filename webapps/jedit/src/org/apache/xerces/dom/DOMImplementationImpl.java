@@ -125,24 +125,24 @@ public class DOMImplementationImpl extends CoreDOMImplementationImpl
         return 
             (feature.equalsIgnoreCase("Core") 
             && (anyVersion
-		|| version.equals("1.0")
-		|| version.equals("2.0")))
+  || version.equals("1.0")
+  || version.equals("2.0")))
          || (feature.equalsIgnoreCase("XML") 
             && (anyVersion
-		|| version.equals("1.0")
-		|| version.equals("2.0")))
+  || version.equals("1.0")
+  || version.equals("2.0")))
          || (feature.equalsIgnoreCase("Events") 
-	     && (anyVersion
-		 || version.equals("2.0")))
+      && (anyVersion
+   || version.equals("2.0")))
          || (feature.equalsIgnoreCase("MutationEvents") 
-	     && (anyVersion
-		 || version.equals("2.0")))
+      && (anyVersion
+   || version.equals("2.0")))
          || (feature.equalsIgnoreCase("Traversal") 
-	     && (anyVersion
-		 || version.equals("2.0")))
+      && (anyVersion
+   || version.equals("2.0")))
          || (feature.equalsIgnoreCase("Range") 
-	     && (anyVersion
-		 || version.equals("2.0")))
+      && (anyVersion
+   || version.equals("2.0")))
             ;
 
     } // hasFeature(String,String):boolean
@@ -174,7 +174,7 @@ public class DOMImplementationImpl extends CoreDOMImplementationImpl
                                              DocumentType doctype)
                                              throws DOMException
     {
-    	if (doctype != null && doctype.getOwnerDocument() != null) {
+     if (doctype != null && doctype.getOwnerDocument() != null) {
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "WRONG_DOCUMENT_ERR", null);
             throw new DOMException(DOMException.WRONG_DOCUMENT_ERR, msg);
         }

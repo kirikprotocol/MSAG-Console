@@ -291,122 +291,122 @@ public final class RESyntax implements Serializable {
       RE_SYNTAX_EMACS = new RESyntax().makeFinal();
       
       RESyntax RE_SYNTAX_POSIX_COMMON = new RESyntax()
-	  .set(RE_CHAR_CLASSES)
-	  .set(RE_DOT_NEWLINE)
-	  .set(RE_DOT_NOT_NULL)
-	  .set(RE_INTERVALS)
-	  .set(RE_NO_EMPTY_RANGES)
-	  .makeFinal();
+   .set(RE_CHAR_CLASSES)
+   .set(RE_DOT_NEWLINE)
+   .set(RE_DOT_NOT_NULL)
+   .set(RE_INTERVALS)
+   .set(RE_NO_EMPTY_RANGES)
+   .makeFinal();
       
       RE_SYNTAX_POSIX_BASIC = new RESyntax(RE_SYNTAX_POSIX_COMMON)
-	  .set(RE_BK_PLUS_QM)
-	  .makeFinal();
+   .set(RE_BK_PLUS_QM)
+   .makeFinal();
       
       RE_SYNTAX_POSIX_EXTENDED = new RESyntax(RE_SYNTAX_POSIX_COMMON)
-	  .set(RE_CONTEXT_INDEP_ANCHORS)
-	  .set(RE_CONTEXT_INDEP_OPS)
-	  .set(RE_NO_BK_BRACES)
-	  .set(RE_NO_BK_PARENS)
-	  .set(RE_NO_BK_VBAR)
-	  .set(RE_UNMATCHED_RIGHT_PAREN_ORD)
-	  .makeFinal();
+   .set(RE_CONTEXT_INDEP_ANCHORS)
+   .set(RE_CONTEXT_INDEP_OPS)
+   .set(RE_NO_BK_BRACES)
+   .set(RE_NO_BK_PARENS)
+   .set(RE_NO_BK_VBAR)
+   .set(RE_UNMATCHED_RIGHT_PAREN_ORD)
+   .makeFinal();
 
       RE_SYNTAX_AWK = new RESyntax()
-	  .set(RE_BACKSLASH_ESCAPE_IN_LISTS)
-	  .set(RE_DOT_NOT_NULL)
-	  .set(RE_NO_BK_PARENS)
-	  .set(RE_NO_BK_REFS)
-	  .set(RE_NO_BK_VBAR)
-	  .set(RE_NO_EMPTY_RANGES)
-	  .set(RE_UNMATCHED_RIGHT_PAREN_ORD)
-	  .makeFinal();
+   .set(RE_BACKSLASH_ESCAPE_IN_LISTS)
+   .set(RE_DOT_NOT_NULL)
+   .set(RE_NO_BK_PARENS)
+   .set(RE_NO_BK_REFS)
+   .set(RE_NO_BK_VBAR)
+   .set(RE_NO_EMPTY_RANGES)
+   .set(RE_UNMATCHED_RIGHT_PAREN_ORD)
+   .makeFinal();
       
       RE_SYNTAX_POSIX_AWK = new RESyntax(RE_SYNTAX_POSIX_EXTENDED)
-	  .set(RE_BACKSLASH_ESCAPE_IN_LISTS)
-	  .makeFinal();
+   .set(RE_BACKSLASH_ESCAPE_IN_LISTS)
+   .makeFinal();
       
       RE_SYNTAX_GREP = new RESyntax()
-	  .set(RE_BK_PLUS_QM)
-	  .set(RE_CHAR_CLASSES)
-	  .set(RE_HAT_LISTS_NOT_NEWLINE)
-	  .set(RE_INTERVALS)
-	  .set(RE_NEWLINE_ALT)
-	  .makeFinal();
+   .set(RE_BK_PLUS_QM)
+   .set(RE_CHAR_CLASSES)
+   .set(RE_HAT_LISTS_NOT_NEWLINE)
+   .set(RE_INTERVALS)
+   .set(RE_NEWLINE_ALT)
+   .makeFinal();
       
       RE_SYNTAX_EGREP = new RESyntax()
-	  .set(RE_CHAR_CLASSES)
-	  .set(RE_CONTEXT_INDEP_ANCHORS)
-	  .set(RE_CONTEXT_INDEP_OPS)
-	  .set(RE_HAT_LISTS_NOT_NEWLINE)
-	  .set(RE_NEWLINE_ALT)
-	  .set(RE_NO_BK_PARENS)
-	  .set(RE_NO_BK_VBAR)
-	  .makeFinal();
+   .set(RE_CHAR_CLASSES)
+   .set(RE_CONTEXT_INDEP_ANCHORS)
+   .set(RE_CONTEXT_INDEP_OPS)
+   .set(RE_HAT_LISTS_NOT_NEWLINE)
+   .set(RE_NEWLINE_ALT)
+   .set(RE_NO_BK_PARENS)
+   .set(RE_NO_BK_VBAR)
+   .makeFinal();
     
       RE_SYNTAX_POSIX_EGREP = new RESyntax(RE_SYNTAX_EGREP)
-	  .set(RE_INTERVALS)
-	  .set(RE_NO_BK_BRACES)
-	  .makeFinal();
+   .set(RE_INTERVALS)
+   .set(RE_NO_BK_BRACES)
+   .makeFinal();
     
       /* P1003.2/D11.2, section 4.20.7.1, lines 5078ff.  */
     
       RE_SYNTAX_ED = new RESyntax(RE_SYNTAX_POSIX_BASIC)
-	  .makeFinal();
+   .makeFinal();
     
       RE_SYNTAX_SED = new RESyntax(RE_SYNTAX_POSIX_BASIC)
-	  .makeFinal();
+   .makeFinal();
       
       RE_SYNTAX_POSIX_MINIMAL_BASIC = new RESyntax(RE_SYNTAX_POSIX_COMMON)
-	  .set(RE_LIMITED_OPS)
-	  .makeFinal();
+   .set(RE_LIMITED_OPS)
+   .makeFinal();
       
       /* Differs from RE_SYNTAX_POSIX_EXTENDED in that RE_CONTEXT_INVALID_OPS
-	 replaces RE_CONTEXT_INDEP_OPS and RE_NO_BK_REFS is added. */
+  replaces RE_CONTEXT_INDEP_OPS and RE_NO_BK_REFS is added. */
       
       RE_SYNTAX_POSIX_MINIMAL_EXTENDED = new RESyntax(RE_SYNTAX_POSIX_COMMON)
-	  .set(RE_CONTEXT_INDEP_ANCHORS)
-	  .set(RE_CONTEXT_INVALID_OPS)
-	  .set(RE_NO_BK_BRACES)
-	  .set(RE_NO_BK_PARENS)
-	  .set(RE_NO_BK_REFS)
-	  .set(RE_NO_BK_VBAR)
-	  .set(RE_UNMATCHED_RIGHT_PAREN_ORD)
-	  .makeFinal();
+   .set(RE_CONTEXT_INDEP_ANCHORS)
+   .set(RE_CONTEXT_INVALID_OPS)
+   .set(RE_NO_BK_BRACES)
+   .set(RE_NO_BK_PARENS)
+   .set(RE_NO_BK_REFS)
+   .set(RE_NO_BK_VBAR)
+   .set(RE_UNMATCHED_RIGHT_PAREN_ORD)
+   .makeFinal();
       
       /* There is no official Perl spec, but here's a "best guess" */
       
       RE_SYNTAX_PERL4 = new RESyntax()
-	  .set(RE_BACKSLASH_ESCAPE_IN_LISTS)
-	  .set(RE_CONTEXT_INDEP_ANCHORS)
-	  .set(RE_CONTEXT_INDEP_OPS)          // except for '{', apparently
-	  .set(RE_INTERVALS)
-	  .set(RE_NO_BK_BRACES)
-	  .set(RE_NO_BK_PARENS)
-	  .set(RE_NO_BK_VBAR)
-	  .set(RE_NO_EMPTY_RANGES)
-	  .set(RE_CHAR_CLASS_ESCAPES)    // \d,\D,\w,\W,\s,\S
-	  .makeFinal();
+   .set(RE_BACKSLASH_ESCAPE_IN_LISTS)
+   .set(RE_CONTEXT_INDEP_ANCHORS)
+   .set(RE_CONTEXT_INDEP_OPS)          // except for '{', apparently
+   .set(RE_INTERVALS)
+   .set(RE_NO_BK_BRACES)
+   .set(RE_NO_BK_PARENS)
+   .set(RE_NO_BK_VBAR)
+   .set(RE_NO_EMPTY_RANGES)
+   .set(RE_CHAR_CLASS_ESCAPES)    // \d,\D,\w,\W,\s,\S
+   .makeFinal();
       
       RE_SYNTAX_PERL4_S = new RESyntax(RE_SYNTAX_PERL4)
-	  .set(RE_DOT_NEWLINE)
-	  .makeFinal();
+   .set(RE_DOT_NEWLINE)
+   .makeFinal();
       
       RE_SYNTAX_PERL5 = new RESyntax(RE_SYNTAX_PERL4)
-	  .set(RE_PURE_GROUPING)          // (?:)
-	  .set(RE_STINGY_OPS)             // *?,??,+?,{}?
-	  .set(RE_LOOKAHEAD)              // (?=)(?!)
-	  .set(RE_STRING_ANCHORS)         // \A,\Z
-	  .set(RE_CHAR_CLASS_ESC_IN_LISTS)// \d,\D,\w,\W,\s,\S within []
-	  .set(RE_COMMENTS)              // (?#)
-	  .makeFinal();
+   .set(RE_PURE_GROUPING)          // (?:)
+   .set(RE_STINGY_OPS)             // *?,??,+?,{}?
+   .set(RE_LOOKAHEAD)              // (?=)(?!)
+   .set(RE_STRING_ANCHORS)         // \A,\Z
+   .set(RE_CHAR_CLASS_ESC_IN_LISTS)// \d,\D,\w,\W,\s,\S within []
+   .set(RE_COMMENTS)              // (?#)
+   .makeFinal();
       
       RE_SYNTAX_PERL5_S = new RESyntax(RE_SYNTAX_PERL5)
-	  .set(RE_DOT_NEWLINE)
-	  .makeFinal();
+   .set(RE_DOT_NEWLINE)
+   .makeFinal();
 
       RE_SYNTAX_JAVA_1_4 = new RESyntax(RE_SYNTAX_PERL5)
-	  // XXX
-	  .makeFinal();
+   // XXX
+   .makeFinal();
   }
 
   /**
@@ -426,8 +426,8 @@ public final class RESyntax implements Serializable {
      * @return this object for convenient chaining
      */
     public RESyntax makeFinal() {
-	isFinal = true;
-	return this;
+ isFinal = true;
+ return this;
     }
 
   /**
@@ -487,9 +487,9 @@ public final class RESyntax implements Serializable {
      * @return this object for convenient chaining 
      */
     public RESyntax setLineSeparator(String aSeparator) {
-	if (isFinal) throw new IllegalAccessError(SYNTAX_IS_FINAL);
-	lineSeparator = aSeparator;
-	return this;
+ if (isFinal) throw new IllegalAccessError(SYNTAX_IS_FINAL);
+ lineSeparator = aSeparator;
+ return this;
     }
 
     /**
@@ -497,6 +497,6 @@ public final class RESyntax implements Serializable {
      * is the platform-dependent system property "line.separator".
      */
     public String getLineSeparator() {
-	return lineSeparator;
+ return lineSeparator;
     }
 }

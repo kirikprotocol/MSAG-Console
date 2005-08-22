@@ -774,43 +774,43 @@ public class DOMConfigurationImpl extends ParserConfigurationSettings
      * DOM Level 3 WD - Experimental.
      * getParameter
      */
-	public Object getParameter(String name) throws DOMException {
+ public Object getParameter(String name) throws DOMException {
 
-		// REVISIT: Recognizes DOM L3 default features only.
-		//          Does not yet recognize Xerces features.
+  // REVISIT: Recognizes DOM L3 default features only.
+  //          Does not yet recognize Xerces features.
 
-		if (name.equals(Constants.DOM_COMMENTS)) {
-			return ((features & COMMENTS) != 0) ? Boolean.TRUE : Boolean.FALSE;
+  if (name.equals(Constants.DOM_COMMENTS)) {
+   return ((features & COMMENTS) != 0) ? Boolean.TRUE : Boolean.FALSE;
 
-		}
-		else if (name.equals(Constants.DOM_NAMESPACES)) {
-			return (features & NAMESPACES) != 0 ? Boolean.TRUE : Boolean.FALSE;
+  }
+  else if (name.equals(Constants.DOM_NAMESPACES)) {
+   return (features & NAMESPACES) != 0 ? Boolean.TRUE : Boolean.FALSE;
 
-		}
-		else if (name.equals(Constants.DOM_DATATYPE_NORMALIZATION)) {
-			// REVISIT: datatype-normalization only takes effect if validation is on
-			return (features & DTNORMALIZATION) != 0 ? Boolean.TRUE : Boolean.FALSE;
+  }
+  else if (name.equals(Constants.DOM_DATATYPE_NORMALIZATION)) {
+   // REVISIT: datatype-normalization only takes effect if validation is on
+   return (features & DTNORMALIZATION) != 0 ? Boolean.TRUE : Boolean.FALSE;
 
-		}
-		else if (name.equals(Constants.DOM_CDATA_SECTIONS)) {
-			return (features & CDATA) != 0 ? Boolean.TRUE : Boolean.FALSE;
+  }
+  else if (name.equals(Constants.DOM_CDATA_SECTIONS)) {
+   return (features & CDATA) != 0 ? Boolean.TRUE : Boolean.FALSE;
 
-		}
-		else if (name.equals(Constants.DOM_ENTITIES)) {
-			return (features & ENTITIES) != 0 ? Boolean.TRUE : Boolean.FALSE;
-		}
-		else if (name.equals(Constants.DOM_SPLIT_CDATA)) {
-			return (features & SPLITCDATA) != 0 ? Boolean.TRUE : Boolean.FALSE;
-		}
-		else if (name.equals(Constants.DOM_VALIDATE)) {
-			return (features & VALIDATE) != 0 ? Boolean.TRUE : Boolean.FALSE;
-		}
-		else if (name.equals(Constants.DOM_INFOSET)
-				|| name.equals(Constants.DOM_NORMALIZE_CHARACTERS)
-				|| name.equals(Constants.DOM_CANONICAL_FORM)
-				|| name.equals(Constants.DOM_VALIDATE_IF_SCHEMA)) {
-			return Boolean.FALSE;
-		}
+  }
+  else if (name.equals(Constants.DOM_ENTITIES)) {
+   return (features & ENTITIES) != 0 ? Boolean.TRUE : Boolean.FALSE;
+  }
+  else if (name.equals(Constants.DOM_SPLIT_CDATA)) {
+   return (features & SPLITCDATA) != 0 ? Boolean.TRUE : Boolean.FALSE;
+  }
+  else if (name.equals(Constants.DOM_VALIDATE)) {
+   return (features & VALIDATE) != 0 ? Boolean.TRUE : Boolean.FALSE;
+  }
+  else if (name.equals(Constants.DOM_INFOSET)
+    || name.equals(Constants.DOM_NORMALIZE_CHARACTERS)
+    || name.equals(Constants.DOM_CANONICAL_FORM)
+    || name.equals(Constants.DOM_VALIDATE_IF_SCHEMA)) {
+   return Boolean.FALSE;
+  }
         else if (name.equals(SEND_PSVI)) {
             return Boolean.TRUE;
 
@@ -818,84 +818,84 @@ public class DOMConfigurationImpl extends ParserConfigurationSettings
         else if (name.equals(Constants.DOM_PSVI)) {
             return (features & PSVI) != 0 ? Boolean.TRUE : Boolean.FALSE;
         }
-		else if (
-			name.equals(Constants.DOM_NAMESPACE_DECLARATIONS)
-				|| name.equals(Constants.DOM_WHITESPACE_IN_ELEMENT_CONTENT)) {
-			return Boolean.TRUE;
+  else if (
+   name.equals(Constants.DOM_NAMESPACE_DECLARATIONS)
+    || name.equals(Constants.DOM_WHITESPACE_IN_ELEMENT_CONTENT)) {
+   return Boolean.TRUE;
 
-		}
-		else if (name.equals(Constants.DOM_ERROR_HANDLER)) {
+  }
+  else if (name.equals(Constants.DOM_ERROR_HANDLER)) {
             return fErrorHandlerWrapper.getErrorHandler();
-		}
-		else if (name.equals(Constants.DOM_ENTITY_RESOLVER)) {
-			XMLEntityResolver entityResolver = getEntityResolver();
-			if (entityResolver != null && entityResolver instanceof DOMEntityResolverWrapper) {
-				return ((DOMEntityResolverWrapper) entityResolver).getEntityResolver();
-			}
-			return null;
-		}
-		else if (name.equals(Constants.DOM_SCHEMA_TYPE)) {
-			return getProperty(Constants.JAXP_PROPERTY_PREFIX + Constants.SCHEMA_LANGUAGE);
-		}
-		else if (name.equals(Constants.DOM_SCHEMA_LOCATION)) {
-			return getProperty(Constants.JAXP_PROPERTY_PREFIX + Constants.SCHEMA_SOURCE);
-		}
+  }
+  else if (name.equals(Constants.DOM_ENTITY_RESOLVER)) {
+   XMLEntityResolver entityResolver = getEntityResolver();
+   if (entityResolver != null && entityResolver instanceof DOMEntityResolverWrapper) {
+    return ((DOMEntityResolverWrapper) entityResolver).getEntityResolver();
+   }
+   return null;
+  }
+  else if (name.equals(Constants.DOM_SCHEMA_TYPE)) {
+   return getProperty(Constants.JAXP_PROPERTY_PREFIX + Constants.SCHEMA_LANGUAGE);
+  }
+  else if (name.equals(Constants.DOM_SCHEMA_LOCATION)) {
+   return getProperty(Constants.JAXP_PROPERTY_PREFIX + Constants.SCHEMA_SOURCE);
+  }
         else if (name.equals(SYMBOL_TABLE)){
             return getProperty(SYMBOL_TABLE);
         }
         else if (name.equals(GRAMMAR_POOL)){
             return getProperty(GRAMMAR_POOL);
         }
-		else {
-			String msg =
-				DOMMessageFormatter.formatMessage(
-					DOMMessageFormatter.DOM_DOMAIN,
-					"FEATURE_NOT_FOUND",
-					new Object[] { name });
-			throw new DOMException(DOMException.NOT_FOUND_ERR, msg);
-		}
+  else {
+   String msg =
+    DOMMessageFormatter.formatMessage(
+     DOMMessageFormatter.DOM_DOMAIN,
+     "FEATURE_NOT_FOUND",
+     new Object[] { name });
+   throw new DOMException(DOMException.NOT_FOUND_ERR, msg);
+  }
 
-	}
+ }
 
     /**
      * DOM Level 3 WD - Experimental.
      * canSetParameter
      */
-	public boolean canSetParameter(String name, Object state) {
-		if (name.equals(Constants.DOM_COMMENTS)
-			|| name.equals(Constants.DOM_DATATYPE_NORMALIZATION)
-			|| name.equals(Constants.DOM_CDATA_SECTIONS)
-			|| name.equals(Constants.DOM_ENTITIES)
-			|| name.equals(Constants.DOM_SPLIT_CDATA)
-			|| name.equals(Constants.DOM_NAMESPACES)
-			|| name.equals(Constants.DOM_VALIDATE)) {
-			return (state instanceof Boolean) ? true : false;
-		}
-		else if (
-			name.equals(Constants.DOM_INFOSET)
-				|| name.equals(Constants.DOM_NORMALIZE_CHARACTERS)
-				|| name.equals(Constants.DOM_CANONICAL_FORM)
-				|| name.equals(Constants.DOM_VALIDATE_IF_SCHEMA)) {
-			if (state instanceof Boolean) {
-				return (state == Boolean.TRUE) ? false : true;
-			}
-			return false;
-		}
-		else if ( name.equals(Constants.DOM_NAMESPACE_DECLARATIONS)
-				|| name.equals(Constants.DOM_WHITESPACE_IN_ELEMENT_CONTENT)
+ public boolean canSetParameter(String name, Object state) {
+  if (name.equals(Constants.DOM_COMMENTS)
+   || name.equals(Constants.DOM_DATATYPE_NORMALIZATION)
+   || name.equals(Constants.DOM_CDATA_SECTIONS)
+   || name.equals(Constants.DOM_ENTITIES)
+   || name.equals(Constants.DOM_SPLIT_CDATA)
+   || name.equals(Constants.DOM_NAMESPACES)
+   || name.equals(Constants.DOM_VALIDATE)) {
+   return (state instanceof Boolean) ? true : false;
+  }
+  else if (
+   name.equals(Constants.DOM_INFOSET)
+    || name.equals(Constants.DOM_NORMALIZE_CHARACTERS)
+    || name.equals(Constants.DOM_CANONICAL_FORM)
+    || name.equals(Constants.DOM_VALIDATE_IF_SCHEMA)) {
+   if (state instanceof Boolean) {
+    return (state == Boolean.TRUE) ? false : true;
+   }
+   return false;
+  }
+  else if ( name.equals(Constants.DOM_NAMESPACE_DECLARATIONS)
+    || name.equals(Constants.DOM_WHITESPACE_IN_ELEMENT_CONTENT)
                 || name.equals(SEND_PSVI)) {
-			return (state == Boolean.TRUE) ? true : false;
+   return (state == Boolean.TRUE) ? true : false;
 
-		}
-		else {
-			String msg =
-				DOMMessageFormatter.formatMessage(
-					DOMMessageFormatter.DOM_DOMAIN,
-					"FEATURE_NOT_FOUND",
-					new Object[] { name });
-			throw new DOMException(DOMException.NOT_FOUND_ERR, msg);
-		}
-	}
+  }
+  else {
+   String msg =
+    DOMMessageFormatter.formatMessage(
+     DOMMessageFormatter.DOM_DOMAIN,
+     "FEATURE_NOT_FOUND",
+     new Object[] { name });
+   throw new DOMException(DOMException.NOT_FOUND_ERR, msg);
+  }
+ }
 
     //
     // Protected methods

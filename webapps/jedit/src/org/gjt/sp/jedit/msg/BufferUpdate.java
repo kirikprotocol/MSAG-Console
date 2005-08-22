@@ -33,110 +33,110 @@ import org.gjt.sp.jedit.*;
  */
 public class BufferUpdate extends EBMessage
 {
-	//{{{ Message types
-	/**
-	 * Buffer created.
-	 */
-	public static final Object CREATED = "CREATED";
+ //{{{ Message types
+ /**
+  * Buffer created.
+  */
+ public static final Object CREATED = "CREATED";
 
-	/**
-	 * Buffer load started.
-	 * @since jEdit 2.6pre1
-	 */
-	public static final Object LOAD_STARTED = "LOAD_STARTED";
+ /**
+  * Buffer load started.
+  * @since jEdit 2.6pre1
+  */
+ public static final Object LOAD_STARTED = "LOAD_STARTED";
 
-	/**
-	 * Buffer loaded.
-	 */
-	public static final Object LOADED = "LOADED";
+ /**
+  * Buffer loaded.
+  */
+ public static final Object LOADED = "LOADED";
 
-	/**
-	 * Buffer closed.
-	 */
-	public static final Object CLOSED = "CLOSED";
+ /**
+  * Buffer closed.
+  */
+ public static final Object CLOSED = "CLOSED";
 
-	/**
-	 * Buffer dirty changed.
-	 */
-	public static final Object DIRTY_CHANGED = "DIRTY_CHANGED";
+ /**
+  * Buffer dirty changed.
+  */
+ public static final Object DIRTY_CHANGED = "DIRTY_CHANGED";
 
-	/**
-	 * Buffer markers changed.
-	 */
-	public static final Object MARKERS_CHANGED = "MARKERS_CHANGED";
+ /**
+  * Buffer markers changed.
+  */
+ public static final Object MARKERS_CHANGED = "MARKERS_CHANGED";
 
-	/**
-	 * Buffer saving.
-	 */
-	public static final Object SAVING = "SAVING";
+ /**
+  * Buffer saving.
+  */
+ public static final Object SAVING = "SAVING";
 
-	/**
-	 * Buffer saved.
-	 * @since jEdit 4.0pre4
-	 */
-	public static final Object SAVED = "SAVED";
+ /**
+  * Buffer saved.
+  * @since jEdit 4.0pre4
+  */
+ public static final Object SAVED = "SAVED";
 
-	/**
-	 * Properties changed.
-	 * @since jEdit 4.1pre1
-	 */
-	public static final Object PROPERTIES_CHANGED = "PROPERTIES_CHANGED";
-	//}}}
+ /**
+  * Properties changed.
+  * @since jEdit 4.1pre1
+  */
+ public static final Object PROPERTIES_CHANGED = "PROPERTIES_CHANGED";
+ //}}}
 
-	//{{{ BufferUpdate constructor
-	/**
-	 * Creates a new buffer update message.
-	 * @param buffer The buffer
-	 * @param what What happened
-	 */
-	public BufferUpdate(Buffer buffer, View view, Object what)
-	{
-		super(buffer);
+ //{{{ BufferUpdate constructor
+ /**
+  * Creates a new buffer update message.
+  * @param buffer The buffer
+  * @param what What happened
+  */
+ public BufferUpdate(Buffer buffer, View view, Object what)
+ {
+  super(buffer);
 
-		this.view = view;
+  this.view = view;
 
-		if(what == null)
-			throw new NullPointerException("What must be non-null");
+  if(what == null)
+   throw new NullPointerException("What must be non-null");
 
-		this.what = what;
-	} //}}}
+  this.what = what;
+ } //}}}
 
-	//{{{ getWhat() method
-	/**
-	 * Returns what caused this buffer update.
-	 */
-	public Object getWhat()
-	{
-		return what;
-	} //}}}
+ //{{{ getWhat() method
+ /**
+  * Returns what caused this buffer update.
+  */
+ public Object getWhat()
+ {
+  return what;
+ } //}}}
 
-	//{{{ getBuffer() method
-	/**
-	 * Returns the buffer involved.
-	 */
-	public Buffer getBuffer()
-	{
-		return (Buffer)getSource();
-	} //}}}
+ //{{{ getBuffer() method
+ /**
+  * Returns the buffer involved.
+  */
+ public Buffer getBuffer()
+ {
+  return (Buffer)getSource();
+ } //}}}
 
-	//{{{ getView() method
-	/**
-	 * Returns the view involved, which may be null.
-	 */
-	public View getView()
-	{
-		return view;
-	} //}}}
+ //{{{ getView() method
+ /**
+  * Returns the view involved, which may be null.
+  */
+ public View getView()
+ {
+  return view;
+ } //}}}
 
-	//{{{ paramString() method
-	public String paramString()
-	{
-		return "what=" + what + ",view=" + view + ","
-			+ super.paramString();
-	} //}}}
+ //{{{ paramString() method
+ public String paramString()
+ {
+  return "what=" + what + ",view=" + view + ","
+   + super.paramString();
+ } //}}}
 
-	//{{{ Private members
-	private Object what;
-	private View view;
-	//}}}
+ //{{{ Private members
+ private Object what;
+ private View view;
+ //}}}
 }

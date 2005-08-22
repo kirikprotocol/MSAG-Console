@@ -16,7 +16,7 @@ SYSTEM "killring.dtd" "jedit/killring.dtd"
 -- OASIS XML catalog DTD --
 
 PUBLIC "-//OASIS//DTD Entity Resolution XML Catalog V1.0//EN"
-	"oasis-catalog.dtd"
+ "oasis-catalog.dtd"
 
 -- XHTML 1.0 DTDs --
 

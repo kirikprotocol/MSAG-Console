@@ -34,105 +34,105 @@ import org.gjt.sp.util.Log;
 
 public class MouseOptionPane extends AbstractOptionPane
 {
-	//{{{ MouseOptionPane constructor
-	public MouseOptionPane()
-	{
-		super("mouse");
-	} //}}}
+ //{{{ MouseOptionPane constructor
+ public MouseOptionPane()
+ {
+  super("mouse");
+ } //}}}
 
-	//{{{ _init() method
-	protected void _init()
-	{
-		/* Text drag and drop */
-		dragAndDrop = new JCheckBox(jEdit.getProperty(
-			"options.mouse.dragAndDrop"));
-		dragAndDrop.setSelected(jEdit.getBooleanProperty(
-			"view.dragAndDrop"));
-		addComponent(dragAndDrop);
+ //{{{ _init() method
+ protected void _init()
+ {
+  /* Text drag and drop */
+  dragAndDrop = new JCheckBox(jEdit.getProperty(
+   "options.mouse.dragAndDrop"));
+  dragAndDrop.setSelected(jEdit.getBooleanProperty(
+   "view.dragAndDrop"));
+  addComponent(dragAndDrop);
 
-		/* Non word character selection behavior */
-		joinNonWordChars = new JCheckBox(jEdit.getProperty(
-			"options.mouse.joinNonWordChars"));
-		joinNonWordChars.setSelected(jEdit.getBooleanProperty(
-			"view.joinNonWordChars"));
-		addComponent(joinNonWordChars);
+  /* Non word character selection behavior */
+  joinNonWordChars = new JCheckBox(jEdit.getProperty(
+   "options.mouse.joinNonWordChars"));
+  joinNonWordChars.setSelected(jEdit.getBooleanProperty(
+   "view.joinNonWordChars"));
+  addComponent(joinNonWordChars);
 
-		/* Middle mouse button click pastes % register */
-		middleMousePaste = new JCheckBox(jEdit.getProperty("options.mouse"
-			+ ".middleMousePaste"));
-		middleMousePaste.setSelected(jEdit.getBooleanProperty(
-			"view.middleMousePaste"));
-		addComponent(middleMousePaste);
+  /* Middle mouse button click pastes % register */
+  middleMousePaste = new JCheckBox(jEdit.getProperty("options.mouse"
+   + ".middleMousePaste"));
+  middleMousePaste.setSelected(jEdit.getBooleanProperty(
+   "view.middleMousePaste"));
+  addComponent(middleMousePaste);
 
-		/* Gutter mouse actions */
-		int c = clickActionKeys.length;
-		String[] clickActionNames = new String[c];
-		for(int i = 0; i < c; i++)
-		{
-			clickActionNames[i] = jEdit.getProperty(
-				"options.mouse.gutter."+clickActionKeys[i]);
-		}
+  /* Gutter mouse actions */
+  int c = clickActionKeys.length;
+  String[] clickActionNames = new String[c];
+  for(int i = 0; i < c; i++)
+  {
+   clickActionNames[i] = jEdit.getProperty(
+    "options.mouse.gutter."+clickActionKeys[i]);
+  }
 
-		c = clickModifierKeys.length;
-		String[] clickModifierNames = new String[c];
-		for(int i = 0; i < c; i++)
-		{
-			clickModifierNames[i] = jEdit.getProperty(
-				"options.mouse.gutter."+clickModifierKeys[i]);
-		}
+  c = clickModifierKeys.length;
+  String[] clickModifierNames = new String[c];
+  for(int i = 0; i < c; i++)
+  {
+   clickModifierNames[i] = jEdit.getProperty(
+    "options.mouse.gutter."+clickModifierKeys[i]);
+  }
 
-		gutterClickActions = new JComboBox[c];
+  gutterClickActions = new JComboBox[c];
 
-		for(int i = 0; i < c; i++)
-		{
-			JComboBox cb = new JComboBox(clickActionNames);
-			gutterClickActions[i] = cb;
+  for(int i = 0; i < c; i++)
+  {
+   JComboBox cb = new JComboBox(clickActionNames);
+   gutterClickActions[i] = cb;
 
-			String val = jEdit.getProperty("view.gutter."+clickModifierKeys[i]);
-			for(int j = 0; j < clickActionKeys.length; j++)
-			{
-				if(val.equals(clickActionKeys[j]))
-				{
-					cb.setSelectedIndex(j);
-				}
-			}
+   String val = jEdit.getProperty("view.gutter."+clickModifierKeys[i]);
+   for(int j = 0; j < clickActionKeys.length; j++)
+   {
+    if(val.equals(clickActionKeys[j]))
+    {
+     cb.setSelectedIndex(j);
+    }
+   }
 
-			addComponent(clickModifierNames[i],cb);
-		}
-	} //}}}
+   addComponent(clickModifierNames[i],cb);
+  }
+ } //}}}
 
-	//{{{ _save() method
-	public void _save()
-	{
-		jEdit.setBooleanProperty("view.dragAndDrop",dragAndDrop.isSelected());
-		jEdit.setBooleanProperty("view.joinNonWordChars",joinNonWordChars.isSelected());
-		jEdit.setBooleanProperty("view.middleMousePaste",
-			middleMousePaste.isSelected());
+ //{{{ _save() method
+ public void _save()
+ {
+  jEdit.setBooleanProperty("view.dragAndDrop",dragAndDrop.isSelected());
+  jEdit.setBooleanProperty("view.joinNonWordChars",joinNonWordChars.isSelected());
+  jEdit.setBooleanProperty("view.middleMousePaste",
+   middleMousePaste.isSelected());
 
-		int c = clickModifierKeys.length;
-		for(int i = 0; i < c; i++)
-		{
-			int idx = gutterClickActions[i].getSelectedIndex();
-			jEdit.setProperty("view.gutter."+clickModifierKeys[i],
-				clickActionKeys[idx]);
-		}
-	} //}}}
+  int c = clickModifierKeys.length;
+  for(int i = 0; i < c; i++)
+  {
+   int idx = gutterClickActions[i].getSelectedIndex();
+   jEdit.setProperty("view.gutter."+clickModifierKeys[i],
+    clickActionKeys[idx]);
+  }
+ } //}}}
 
-	//{{{ Private members
-	private JCheckBox dragAndDrop;
-	private JCheckBox middleMousePaste;
-	private JCheckBox joinNonWordChars;
+ //{{{ Private members
+ private JCheckBox dragAndDrop;
+ private JCheckBox middleMousePaste;
+ private JCheckBox joinNonWordChars;
 
-	private JComboBox[] gutterClickActions;
+ private JComboBox[] gutterClickActions;
 
-	// simplified these settings a little...
-	private static final String[] clickActionKeys = new String[] {
-		"toggle-fold",
-		"toggle-fold-fully"
-	};
-	
-	private static final String[] clickModifierKeys = new String[] {
-		"foldClick",
-		"SfoldClick"
-	}; //}}}
+ // simplified these settings a little...
+ private static final String[] clickActionKeys = new String[] {
+  "toggle-fold",
+  "toggle-fold-fully"
+ };
+ 
+ private static final String[] clickModifierKeys = new String[] {
+  "foldClick",
+  "SfoldClick"
+ }; //}}}
 }

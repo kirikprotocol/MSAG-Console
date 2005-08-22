@@ -99,26 +99,26 @@ and Save Specification</a>.
 
 public class DOMInputSourceImpl implements DOMInputSource {
 
-	//
-	// Data
-	//
+ //
+ // Data
+ //
 
-	protected String fPublicId = null;
-	protected String fSystemId = null;
-	protected String fBaseSystemId = null;
-	
-	protected InputStream fByteStream = null;
-	protected Reader fCharStream	= null;
-	protected String fData = null;
-	
-	protected String fEncoding = null;
+ protected String fPublicId = null;
+ protected String fSystemId = null;
+ protected String fBaseSystemId = null;
+ 
+ protected InputStream fByteStream = null;
+ protected Reader fCharStream = null;
+ protected String fData = null;
+ 
+ protected String fEncoding = null;
 
    /** 
      * Default Constructor, constructs an input source 
      *
      *
      */
-     public DOMInputSourceImpl() {} 	
+     public DOMInputSourceImpl() {}  
 
    /** 
      * Constructs an input source from just the public and system
@@ -138,10 +138,10 @@ public class DOMInputSourceImpl implements DOMInputSource {
  
     public DOMInputSourceImpl(String publicId, String systemId,  
                           String baseSystemId) {
-		
-		fPublicId = publicId;
-		fSystemId = systemId;
-		fBaseSystemId = baseSystemId;
+  
+  fPublicId = publicId;
+  fSystemId = systemId;
+  fBaseSystemId = baseSystemId;
 
     } // DOMInputSourceImpl(String,String,String)
 
@@ -164,12 +164,12 @@ public class DOMInputSourceImpl implements DOMInputSource {
     public DOMInputSourceImpl(String publicId, String systemId,  
                           String baseSystemId, InputStream byteStream,
                           String encoding) {
-		
-		fPublicId = publicId;
-		fSystemId = systemId;
-		fBaseSystemId = baseSystemId;
-		fByteStream = byteStream;
-		fEncoding = encoding;
+  
+  fPublicId = publicId;
+  fSystemId = systemId;
+  fBaseSystemId = baseSystemId;
+  fByteStream = byteStream;
+  fEncoding = encoding;
 
     } // DOMInputSourceImpl(String,String,String,InputStream,String)
 
@@ -193,12 +193,12 @@ public class DOMInputSourceImpl implements DOMInputSource {
      public DOMInputSourceImpl(String publicId, String systemId,  
                           String baseSystemId, Reader charStream,
                           String encoding) {
-		
-		fPublicId = publicId;
-		fSystemId = systemId;
-		fBaseSystemId = baseSystemId;
-		fCharStream = charStream;
-		fEncoding = encoding;
+  
+  fPublicId = publicId;
+  fSystemId = systemId;
+  fBaseSystemId = baseSystemId;
+  fCharStream = charStream;
+  fEncoding = encoding;
 
      } // DOMInputSourceImpl(String,String,String,Reader,String)
 
@@ -214,7 +214,7 @@ public class DOMInputSourceImpl implements DOMInputSource {
      * @param baseSystemId The base system identifier. This value should
      *                     always be set to the fully expanded URI of the
      *                     base system identifier, if possible.
-     * @param data		   The String Data.
+     * @param data     The String Data.
      * @param encoding     The original encoding of the byte stream
      *                     used by the reader, if known.
      */
@@ -223,10 +223,10 @@ public class DOMInputSourceImpl implements DOMInputSource {
                           String baseSystemId, String data,
                           String encoding) {
                 fPublicId = publicId;
-		fSystemId = systemId;
-		fBaseSystemId = baseSystemId;
-		fData = data;
-		fEncoding = encoding;
+  fSystemId = systemId;
+  fBaseSystemId = baseSystemId;
+  fData = data;
+  fEncoding = encoding;
      } // DOMInputSourceImpl(String,String,String,String,String)
 
    /**
@@ -241,7 +241,7 @@ public class DOMInputSourceImpl implements DOMInputSource {
      */
 
     public InputStream getByteStream(){ 
-	return fByteStream;
+ return fByteStream;
     } 
 
     /**
@@ -256,7 +256,7 @@ public class DOMInputSourceImpl implements DOMInputSource {
      */
 
      public void setByteStream(InputStream byteStream){
- 	fByteStream = byteStream;
+  fByteStream = byteStream;
      }
 
     /**
@@ -268,7 +268,7 @@ public class DOMInputSourceImpl implements DOMInputSource {
      * identifier.
      */
     public Reader getCharacterStream(){
-	return fCharStream;
+ return fCharStream;
     }
     /**
      *  An attribute of a language-binding dependent type that represents a 
@@ -280,7 +280,7 @@ public class DOMInputSourceImpl implements DOMInputSource {
      */
 
      public void setCharacterStream(Reader characterStream){
-	fCharStream = characterStream;
+ fCharStream = characterStream;
      }
 
     /**
@@ -291,7 +291,7 @@ public class DOMInputSourceImpl implements DOMInputSource {
      * to open a URI connection to the system identifier.
      */
     public String getStringData(){
-	return fData;
+ return fData;
     }
 
    /**
@@ -303,7 +303,7 @@ public class DOMInputSourceImpl implements DOMInputSource {
      */
     
      public void setStringData(String stringData){
-		fData = stringData;
+  fData = stringData;
      }
 
     /**
@@ -318,7 +318,7 @@ public class DOMInputSourceImpl implements DOMInputSource {
      */
 
     public String getEncoding(){
-	return fEncoding;
+ return fEncoding;
     }
 
     /**
@@ -332,7 +332,7 @@ public class DOMInputSourceImpl implements DOMInputSource {
      * from a higher level protocol, such as HTTP .
      */
     public void setEncoding(String encoding){
-	fEncoding = encoding;
+ fEncoding = encoding;
     }
 
     /**
@@ -341,7 +341,7 @@ public class DOMInputSourceImpl implements DOMInputSource {
      * provided as part of the location information.
      */
     public String getPublicId(){
-	return fPublicId;
+ return fPublicId;
     }
     /**
      * The public identifier for this input source. The public identifier is 
@@ -349,7 +349,7 @@ public class DOMInputSourceImpl implements DOMInputSource {
      * provided as part of the location information.
      */
     public void setPublicId(String publicId){
-	fPublicId = publicId;
+ fPublicId = publicId;
     }
 
     /**
@@ -367,7 +367,7 @@ public class DOMInputSourceImpl implements DOMInputSource {
      * the behavior is implementation dependent.
      */
     public String getSystemId(){
-	return fSystemId;
+ return fSystemId;
     }
     /**
      * The system identifier, a URI reference , for this input source. The 
@@ -384,7 +384,7 @@ public class DOMInputSourceImpl implements DOMInputSource {
      * the behavior is implementation dependent.
      */
     public void setSystemId(String systemId){
-	fSystemId = systemId;
+ fSystemId = systemId;
     }
 
     /**
@@ -393,7 +393,7 @@ public class DOMInputSourceImpl implements DOMInputSource {
      * behavior is implementation dependent. 
      */
     public String getBaseURI(){
-	return fBaseSystemId;	
+ return fBaseSystemId; 
     }
     /**
      *  The base URI to be used (see section 5.1.4 in ) for resolving relative 
@@ -401,7 +401,7 @@ public class DOMInputSourceImpl implements DOMInputSource {
      * behavior is implementation dependent. 
      */
     public void setBaseURI(String baseURI){
-	fBaseSystemId = baseURI;
+ fBaseSystemId = baseURI;
     }
 
 }// class DOMInputSourceImpl

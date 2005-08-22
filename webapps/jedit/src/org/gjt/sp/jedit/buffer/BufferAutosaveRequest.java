@@ -47,78 +47,78 @@ import org.gjt.sp.util.*;
  */
 public class BufferAutosaveRequest extends BufferIORequest
 {
-	//{{{ BufferAutosaveRequest constructor
-	/**
-	 * Creates a new buffer I/O request.
-	 * @param view The view
-	 * @param buffer The buffer
-	 * @param session The VFS session
-	 * @param vfs The VFS
-	 * @param path The path
-	 */
-	public BufferAutosaveRequest(View view, Buffer buffer,
-		Object session, VFS vfs, String path)
-	{
-		super(view,buffer,session,vfs,path);
-	} //}}}
+ //{{{ BufferAutosaveRequest constructor
+ /**
+  * Creates a new buffer I/O request.
+  * @param view The view
+  * @param buffer The buffer
+  * @param session The VFS session
+  * @param vfs The VFS
+  * @param path The path
+  */
+ public BufferAutosaveRequest(View view, Buffer buffer,
+  Object session, VFS vfs, String path)
+ {
+  super(view,buffer,session,vfs,path);
+ } //}}}
 
-	//{{{ run() method
-	public void run()
-	{
-		OutputStream out = null;
+ //{{{ run() method
+ public void run()
+ {
+  OutputStream out = null;
 
-		try
-		{
-			String[] args = { vfs.getFileName(path) };
-			setStatus(jEdit.getProperty("vfs.status.autosave",args));
+  try
+  {
+   String[] args = { vfs.getFileName(path) };
+   setStatus(jEdit.getProperty("vfs.status.autosave",args));
 
-			// the entire save operation can be aborted...
-			setAbortable(true);
+   // the entire save operation can be aborted...
+   setAbortable(true);
 
-			try
-			{
-				//buffer.readLock();
+   try
+   {
+    //buffer.readLock();
 
-				if(!buffer.isDirty())
-				{
-					// buffer has been saved while we
-					// were waiting.
-					return;
-				}
+    if(!buffer.isDirty())
+    {
+     // buffer has been saved while we
+     // were waiting.
+     return;
+    }
 
-				//out = vfs._createOutputStream(session,path,view);
-				 _createOutputStream(session,path,view,buffer);
+    //out = vfs._createOutputStream(session,path,view);
+     _createOutputStream(session,path,view,buffer);
        // System.out.println("BufferAutosaveRequest after createOutputStream out= "+out);
       //  if(out == null)
-			//		return;
+   //  return;
 
-			//	write(buffer,out);
-			}
-			catch(Exception e)
-			{
-			}
-			finally
-			{
-				//buffer.readUnlock();
-			}
-		}
-		catch(WorkThread.Abort a)
-		{
-			if(out != null)
-			{
-				try
-				{
-					out.close();
-				}
-				catch(IOException io)
-				{
-				}
-			}
-		}
-	} //}}}
-  	public void _createOutputStream(Object session, String path,
-		Component comp,Buffer buffer) throws IOException
-	{
+   // write(buffer,out);
+   }
+   catch(Exception e)
+   {
+   }
+   finally
+   {
+    //buffer.readUnlock();
+   }
+  }
+  catch(WorkThread.Abort a)
+  {
+   if(out != null)
+   {
+    try
+    {
+     out.close();
+    }
+    catch(IOException io)
+    {
+    }
+   }
+  }
+ } //}}}
+   public void _createOutputStream(Object session, String path,
+  Component comp,Buffer buffer) throws IOException
+ {
 
     URL url=null;
     HttpURLConnection c=null;
@@ -135,7 +135,7 @@ public class BufferAutosaveRequest extends BufferIORequest
       c.connect();
       OutputStream _out=c.getOutputStream();
       if(_out == null)
-					return;
+     return;
       write(buffer,_out);
       _out.close();
       in = new BufferedReader( new InputStreamReader(c.getInputStream()));
@@ -156,5 +156,5 @@ public class BufferAutosaveRequest extends BufferIORequest
           e.printStackTrace();
         }
     }
-	} //}}}
+ } //}}}
 }

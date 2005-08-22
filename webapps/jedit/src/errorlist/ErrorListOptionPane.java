@@ -30,51 +30,51 @@ import org.gjt.sp.jedit.*;
 
 public class ErrorListOptionPane extends AbstractOptionPane
 {
-	//{{{ ErrorListOptionPane constructor
-	public ErrorListOptionPane()
-	{
-		super("error-list");
-	} //}}}
+ //{{{ ErrorListOptionPane constructor
+ public ErrorListOptionPane()
+ {
+  super("error-list");
+ } //}}}
 
-	//{{{ _init() method
-	protected void _init()
-	{
-		addComponent(showOnError = new JCheckBox(jEdit.getProperty(
-			"options.error-list.showOnError")));
-		showOnError.getModel().setSelected(jEdit.getBooleanProperty(
-			"error-list.showOnError"));
+ //{{{ _init() method
+ protected void _init()
+ {
+  addComponent(showOnError = new JCheckBox(jEdit.getProperty(
+   "options.error-list.showOnError")));
+  showOnError.getModel().setSelected(jEdit.getBooleanProperty(
+   "error-list.showOnError"));
 
-		addComponent(showErrorOverview = new JCheckBox(jEdit.getProperty(
-			"options.error-list.showErrorOverview")));
-		showErrorOverview.getModel().setSelected(jEdit.getBooleanProperty(
-			"error-list.showErrorOverview"));
+  addComponent(showErrorOverview = new JCheckBox(jEdit.getProperty(
+   "options.error-list.showErrorOverview")));
+  showErrorOverview.getModel().setSelected(jEdit.getBooleanProperty(
+   "error-list.showErrorOverview"));
 
-		addComponent(jEdit.getProperty("options.error-list.warningColor"),
-			warningColor = new ColorWellButton(jEdit.getColorProperty(
-			"error-list.warningColor")));
+  addComponent(jEdit.getProperty("options.error-list.warningColor"),
+   warningColor = new ColorWellButton(jEdit.getColorProperty(
+   "error-list.warningColor")));
 
-		addComponent(jEdit.getProperty("options.error-list.errorColor"),
-			errorColor = new ColorWellButton(jEdit.getColorProperty(
-			"error-list.errorColor")));
-	} //}}}
+  addComponent(jEdit.getProperty("options.error-list.errorColor"),
+   errorColor = new ColorWellButton(jEdit.getColorProperty(
+   "error-list.errorColor")));
+ } //}}}
 
-	//{{{ _save() method
-	protected void _save()
-	{
-		jEdit.setBooleanProperty("error-list.showOnError",showOnError
-			.getModel().isSelected());
-		jEdit.setBooleanProperty("error-list.showErrorOverview",
-			showErrorOverview.getModel().isSelected());
-		jEdit.setColorProperty("error-list.warningColor",
-			warningColor.getSelectedColor());
-		jEdit.setColorProperty("error-list.errorColor",
-			errorColor.getSelectedColor());
-	} //}}}
+ //{{{ _save() method
+ protected void _save()
+ {
+  jEdit.setBooleanProperty("error-list.showOnError",showOnError
+   .getModel().isSelected());
+  jEdit.setBooleanProperty("error-list.showErrorOverview",
+   showErrorOverview.getModel().isSelected());
+  jEdit.setColorProperty("error-list.warningColor",
+   warningColor.getSelectedColor());
+  jEdit.setColorProperty("error-list.errorColor",
+   errorColor.getSelectedColor());
+ } //}}}
 
-	//{{{ Private members
-	private JCheckBox showOnError;
-	private JCheckBox showErrorOverview;
-	private ColorWellButton warningColor;
-	private ColorWellButton errorColor;
-	//}}}
+ //{{{ Private members
+ private JCheckBox showOnError;
+ private JCheckBox showErrorOverview;
+ private ColorWellButton warningColor;
+ private ColorWellButton errorColor;
+ //}}}
 }

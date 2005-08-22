@@ -1093,7 +1093,7 @@ public class XMLDTDValidator
                (fDTDValidation || fSeenDoctypeDecl);
     }
     
-			//REVISIT:we can convert into functions.. adding default attribute values.. and one validating.
+   //REVISIT:we can convert into functions.. adding default attribute values.. and one validating.
 
     /** Add default attributes and validate. */
     protected void addDTDDefaultAttrsAndValidate(QName elementName, int elementIndex, 
@@ -1834,34 +1834,34 @@ public class XMLDTDValidator
 
         // VC: Root Element Type
         // see if the root element's name matches the one in DoctypeDecl 
-		if (!fSeenRootElement) {
-			// REVISIT: Here are current assumptions about validation features
-			//          given that XMLSchema validator is in the pipeline
-			//
-			// http://xml.org/sax/features/validation = true
-			// http://apache.org/xml/features/validation/schema = true
-			//
-			// [1] XML instance document only has reference to a DTD 
-			//  Outcome: report validation errors only against dtd.
-			//
-			// [2] XML instance document has only XML Schema grammars:
-			//  Outcome: report validation errors only against schemas (no errors produced from DTD validator)
-			//
-			// [3] XML instance document has DTD and XML schemas:
-			// [a] if schema language is not set outcome - validation errors reported against both grammars: DTD and schemas.
-			// [b] if schema language is set to XML Schema - do not report validation errors
-			//         
-			// if dynamic validation is on
-			//            validate only against grammar we've found (depending on settings
-			//            for schema feature)
-			// 
-			// 
-			fPerformValidation = validate();
-			fSeenRootElement = true;
-			fValidationManager.setEntityState(fDTDGrammar);
-			fValidationManager.setGrammarFound(fSeenDoctypeDecl);
-			rootElementSpecified(element);
-		}
+  if (!fSeenRootElement) {
+   // REVISIT: Here are current assumptions about validation features
+   //          given that XMLSchema validator is in the pipeline
+   //
+   // http://xml.org/sax/features/validation = true
+   // http://apache.org/xml/features/validation/schema = true
+   //
+   // [1] XML instance document only has reference to a DTD 
+   //  Outcome: report validation errors only against dtd.
+   //
+   // [2] XML instance document has only XML Schema grammars:
+   //  Outcome: report validation errors only against schemas (no errors produced from DTD validator)
+   //
+   // [3] XML instance document has DTD and XML schemas:
+   // [a] if schema language is not set outcome - validation errors reported against both grammars: DTD and schemas.
+   // [b] if schema language is set to XML Schema - do not report validation errors
+   //         
+   // if dynamic validation is on
+   //            validate only against grammar we've found (depending on settings
+   //            for schema feature)
+   // 
+   // 
+   fPerformValidation = validate();
+   fSeenRootElement = true;
+   fValidationManager.setEntityState(fDTDGrammar);
+   fValidationManager.setGrammarFound(fSeenDoctypeDecl);
+   rootElementSpecified(element);
+  }
         if (fDTDGrammar == null) {
 
             if (!fPerformValidation) {
@@ -1886,7 +1886,7 @@ public class XMLDTDValidator
         else {
             //  resolve the element
             fCurrentElementIndex = fDTDGrammar.getElementDeclIndex(element);
-									//changed here.. new function for getContentSpecType
+         //changed here.. new function for getContentSpecType
             fCurrentContentSpecType = fDTDGrammar.getContentSpecType(fCurrentElementIndex);
             if (fCurrentContentSpecType == -1 && fPerformValidation) {
                 fErrorReporter.reportError(XMLMessageFormatter.XML_DOMAIN, 
@@ -1899,7 +1899,7 @@ public class XMLDTDValidator
                 //  1. normalize the attributes
                 //  2. validate the attrivute list.
                 // TO DO: 
-												//changed here.. also pass element name,
+            //changed here.. also pass element name,
                 addDTDDefaultAttrsAndValidate(element, fCurrentElementIndex, attributes);
             }
         }

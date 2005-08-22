@@ -78,8 +78,8 @@ public class WMLDOMImplementationImpl extends DOMImplementationImpl implements W
      * @see org.w3c.dom.DOMImplementation
      */
     public Document createDocument(String namespaceURI, 
-				   String qualifiedName, 
-				   DocumentType doctype) throws DOMException {
+       String qualifiedName, 
+       DocumentType doctype) throws DOMException {
         DocumentImpl doc = new WMLDocumentImpl(doctype);
         //((DocumentTypeImpl)doctype).ownerDocument = doc;
         Element e = doc.createElementNS( namespaceURI, qualifiedName);

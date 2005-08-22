@@ -124,7 +124,7 @@ public class DOMEntityResolverWrapper
      * Resolves an external parsed entity. If the entity cannot be
      * resolved, this method should return null.
      *
-     * @param resourceIdentifier	description of the resource to be revsoved
+     * @param resourceIdentifier description of the resource to be revsoved
      * @throws XNIException Thrown on general error.
      * @throws IOException  Thrown if resolved entity stream cannot be
      *                      opened or some other i/o error occurs.
@@ -136,7 +136,7 @@ public class DOMEntityResolverWrapper
         if (fEntityResolver != null) {
             try {
                 DOMInputSource inputSource = 
-		    resourceIdentifier == null ?
+      resourceIdentifier == null ?
                     fEntityResolver.resolveEntity(null, null, null) : 
                     fEntityResolver.resolveEntity(resourceIdentifier.getPublicId(), resourceIdentifier.getLiteralSystemId(), resourceIdentifier.getBaseSystemId());
                 if (inputSource != null) {

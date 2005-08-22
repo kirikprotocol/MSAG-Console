@@ -33,9 +33,9 @@ package org.gjt.sp.jedit.gui;
  */
 public interface DefaultFocusComponent
 {
-	/**
-	 * Sets focus on the default component.
-	 * @since jEdit 4.2pre1
-	 */
-	void focusOnDefaultComponent();
+ /**
+  * Sets focus on the default component.
+  * @since jEdit 4.2pre1
+  */
+ void focusOnDefaultComponent();
 }

@@ -149,7 +149,7 @@ public class EventImpl implements Event
     }
 
     public long getTimeStamp() {
-	return timeStamp;
+ return timeStamp;
     }
 
     /** Causes exit from in-progress event dispatch before the next

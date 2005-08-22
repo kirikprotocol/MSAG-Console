@@ -325,10 +325,10 @@ public class SchemaParsingConfig extends BasicParserConfiguration
             VALIDATION_MANAGER
         };
         addRecognizedProperties(recognizedProperties);
-	
+ 
         fGrammarPool = grammarPool;
         if(fGrammarPool != null){
-        	setProperty(XMLGRAMMAR_POOL, fGrammarPool);
+         setProperty(XMLGRAMMAR_POOL, fGrammarPool);
         }
 
         fEntityManager = createEntityManager();

@@ -127,9 +127,9 @@ public class HTMLBuilder
         throws SAXException
     {
         if ( ! _done )
-	    throw new SAXException( "HTM001 State error: startDocument fired twice on one builder." );
-	_document = null;
-	_done = false;
+     throw new SAXException( "HTM001 State error: startDocument fired twice on one builder." );
+ _document = null;
+ _done = false;
     }
 
 
@@ -138,10 +138,10 @@ public class HTMLBuilder
     {
         if ( _document == null )
             throw new SAXException( "HTM002 State error: document never started or missing document element." );
-	if ( _current != null )
-	    throw new SAXException( "HTM003 State error: document ended before end of document element." );
+ if ( _current != null )
+     throw new SAXException( "HTM003 State error: document ended before end of document element." );
         _current = null;
-	_done = true;
+ _done = true;
     }
 
 
@@ -151,41 +151,41 @@ public class HTMLBuilder
         ElementImpl elem;
         int         i;
         
-	if ( tagName == null )
-	    throw new SAXException( "HTM004 Argument 'tagName' is null." );
+ if ( tagName == null )
+     throw new SAXException( "HTM004 Argument 'tagName' is null." );
 
-	// If this is the root element, this is the time to create a new document,
-	// because only know we know the document element name and namespace URI.
-	if ( _document == null )
-	{
-	    // No need to create the element explicitly.
-	    _document = new HTMLDocumentImpl();
-	    elem = (ElementImpl) _document.getDocumentElement();
-	    _current = elem;
-	    if ( _current == null )
-		throw new SAXException( "HTM005 State error: Document.getDocumentElement returns null." );
+ // If this is the root element, this is the time to create a new document,
+ // because only know we know the document element name and namespace URI.
+ if ( _document == null )
+ {
+     // No need to create the element explicitly.
+     _document = new HTMLDocumentImpl();
+     elem = (ElementImpl) _document.getDocumentElement();
+     _current = elem;
+     if ( _current == null )
+  throw new SAXException( "HTM005 State error: Document.getDocumentElement returns null." );
 
-	    // Insert nodes (comment and PI) that appear before the root element.
-	    if ( _preRootNodes != null )
-	    {
-		for ( i = _preRootNodes.size() ; i-- > 0 ; )
-		    _document.insertBefore( (Node) _preRootNodes.elementAt( i ), elem );
-		_preRootNodes = null;
-	    }
-	     
-	}
-	else
-	{
-	    // This is a state error, indicates that document has been parsed in full,
-	    // or that there are two root elements.
-	    if ( _current == null )
-		throw new SAXException( "HTM006 State error: startElement called after end of document element." );
-	    elem = (ElementImpl) _document.createElement( tagName );
-	    _current.appendChild( elem );
-	    _current = elem;
-	}
+     // Insert nodes (comment and PI) that appear before the root element.
+     if ( _preRootNodes != null )
+     {
+  for ( i = _preRootNodes.size() ; i-- > 0 ; )
+      _document.insertBefore( (Node) _preRootNodes.elementAt( i ), elem );
+  _preRootNodes = null;
+     }
+      
+ }
+ else
+ {
+     // This is a state error, indicates that document has been parsed in full,
+     // or that there are two root elements.
+     if ( _current == null )
+  throw new SAXException( "HTM006 State error: startElement called after end of document element." );
+     elem = (ElementImpl) _document.createElement( tagName );
+     _current.appendChild( elem );
+     _current = elem;
+ }
 
-	// Add the attributes (specified and not-specified) to this element.
+ // Add the attributes (specified and not-specified) to this element.
         if ( attrList != null )
         {
             for ( i = 0 ; i < attrList.getLength() ; ++ i )
@@ -199,33 +199,33 @@ public class HTMLBuilder
     {
         if ( _current == null )
             throw new SAXException( "HTM007 State error: endElement called with no current node." );
-	if ( ! _current.getNodeName().equalsIgnoreCase( tagName ))
-	    throw new SAXException( "HTM008 State error: mismatch in closing tag name " + tagName + "\n" + tagName);
+ if ( ! _current.getNodeName().equalsIgnoreCase( tagName ))
+     throw new SAXException( "HTM008 State error: mismatch in closing tag name " + tagName + "\n" + tagName);
 
-	// Move up to the parent element. When you reach the top (closing the root element).
-	// the parent is document and current is null.
-	if ( _current.getParentNode() == _current.getOwnerDocument() )
-	    _current = null;
-	else
-	    _current = (ElementImpl) _current.getParentNode();
+ // Move up to the parent element. When you reach the top (closing the root element).
+ // the parent is document and current is null.
+ if ( _current.getParentNode() == _current.getOwnerDocument() )
+     _current = null;
+ else
+     _current = (ElementImpl) _current.getParentNode();
     }
 
 
     public void characters( String text )
         throws SAXException
     {
-	if ( _current == null )
+ if ( _current == null )
             throw new SAXException( "HTM009 State error: character data found outside of root element." );
-	_current.appendChild( new TextImpl( _document, text ) );
+ _current.appendChild( new TextImpl( _document, text ) );
     }
 
     
     public void characters( char[] text, int start, int length )
         throws SAXException
     {
-	if ( _current == null )
+ if ( _current == null )
             throw new SAXException( "HTM010 State error: character data found outside of root element." );
-	_current.appendChild( new TextImpl( _document, new String( text, start, length ) ) );
+ _current.appendChild( new TextImpl( _document, new String( text, start, length ) ) );
     }
     
     
@@ -235,7 +235,7 @@ public class HTMLBuilder
         Node    node;
         
         if ( ! _ignoreWhitespace )
-	    _current.appendChild( new TextImpl( _document, new String( text, start, length ) ) );
+     _current.appendChild( new TextImpl( _document, new String( text, start, length ) ) );
      }
     
     
@@ -244,19 +244,19 @@ public class HTMLBuilder
     {
         Node    node;
         
-	// Processing instruction may appear before the document element (in fact, before the
-	// document has been created, or after the document element has been closed.
+ // Processing instruction may appear before the document element (in fact, before the
+ // document has been created, or after the document element has been closed.
         if ( _current == null && _document == null )
-	{
-	    if ( _preRootNodes == null )
-		_preRootNodes = new Vector();
-	    _preRootNodes.addElement( new ProcessingInstructionImpl( null, target, instruction ) );
-	}
-	else
+ {
+     if ( _preRootNodes == null )
+  _preRootNodes = new Vector();
+     _preRootNodes.addElement( new ProcessingInstructionImpl( null, target, instruction ) );
+ }
+ else
         if ( _current == null && _document != null )
-	    _document.appendChild( new ProcessingInstructionImpl( _document, target, instruction ) );
-	else
-	    _current.appendChild( new ProcessingInstructionImpl( _document, target, instruction ) );
+     _document.appendChild( new ProcessingInstructionImpl( _document, target, instruction ) );
+ else
+     _current.appendChild( new ProcessingInstructionImpl( _document, target, instruction ) );
     }
     
     

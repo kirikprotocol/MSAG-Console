@@ -252,11 +252,11 @@ public class XSParticleDecl implements XSParticle {
         return fValue;
     }
 
-	/**
-	 * @see org.apache.xerces.impl.xs.psvi.XSObject#getNamespaceItem()
-	 */
-	public XSNamespaceItem getNamespaceItem() {
-		return null;
-	}
+ /**
+  * @see org.apache.xerces.impl.xs.psvi.XSObject#getNamespaceItem()
+  */
+ public XSNamespaceItem getNamespaceItem() {
+  return null;
+ }
 
 } // class XSParticle

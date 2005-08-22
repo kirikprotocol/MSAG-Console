@@ -76,7 +76,7 @@ public class WMLDocumentImpl extends DocumentImpl implements WMLDocument {
 
     private static Hashtable        _elementTypesWML;
     private static final Class[]    _elemClassSigWML =
-	new Class[] { WMLDocumentImpl.class, String.class };
+ new Class[] { WMLDocumentImpl.class, String.class };
 
     public Element createElement( String tagName ) throws DOMException
     {
@@ -85,7 +85,7 @@ public class WMLDocumentImpl extends DocumentImpl implements WMLDocument {
 
         elemClass = (Class) _elementTypesWML.get( tagName );
         if ( elemClass != null ) {
-            try	{
+            try {
                 cnst = elemClass.getConstructor( _elemClassSigWML );
                 return (Element) cnst.newInstance( new Object[] { this, tagName } );
             } catch ( Exception except ) {
@@ -106,42 +106,42 @@ public class WMLDocumentImpl extends DocumentImpl implements WMLDocument {
     }
 
     static {
-	_elementTypesWML = new Hashtable();
-	_elementTypesWML.put("b", WMLBElementImpl.class);
-	_elementTypesWML.put("noop", WMLNoopElementImpl.class);
-	_elementTypesWML.put("a", WMLAElementImpl.class);
-	_elementTypesWML.put("setvar", WMLSetvarElementImpl.class);
-	_elementTypesWML.put("access", WMLAccessElementImpl.class);
-	_elementTypesWML.put("strong", WMLStrongElementImpl.class);
-	_elementTypesWML.put("postfield", WMLPostfieldElementImpl.class);
-	_elementTypesWML.put("do", WMLDoElementImpl.class);
-	_elementTypesWML.put("wml", WMLWmlElementImpl.class);
-	_elementTypesWML.put("tr", WMLTrElementImpl.class);
-	_elementTypesWML.put("go", WMLGoElementImpl.class);
-	_elementTypesWML.put("big", WMLBigElementImpl.class);
-	_elementTypesWML.put("anchor", WMLAnchorElementImpl.class);
-	_elementTypesWML.put("timer", WMLTimerElementImpl.class);
-	_elementTypesWML.put("small", WMLSmallElementImpl.class);
-	_elementTypesWML.put("optgroup", WMLOptgroupElementImpl.class);
-	_elementTypesWML.put("head", WMLHeadElementImpl.class);
-	_elementTypesWML.put("td", WMLTdElementImpl.class);
-	_elementTypesWML.put("fieldset", WMLFieldsetElementImpl.class);
-	_elementTypesWML.put("img", WMLImgElementImpl.class);
-	_elementTypesWML.put("refresh", WMLRefreshElementImpl.class);
-	_elementTypesWML.put("onevent", WMLOneventElementImpl.class);
-	_elementTypesWML.put("input", WMLInputElementImpl.class);
-	_elementTypesWML.put("prev", WMLPrevElementImpl.class);
-	_elementTypesWML.put("table", WMLTableElementImpl.class);
-	_elementTypesWML.put("meta", WMLMetaElementImpl.class);
-	_elementTypesWML.put("template", WMLTemplateElementImpl.class);
-	_elementTypesWML.put("br", WMLBrElementImpl.class);
-	_elementTypesWML.put("option", WMLOptionElementImpl.class);
-	_elementTypesWML.put("u", WMLUElementImpl.class);
-	_elementTypesWML.put("p", WMLPElementImpl.class);
-	_elementTypesWML.put("select", WMLSelectElementImpl.class);
-	_elementTypesWML.put("em", WMLEmElementImpl.class);
-	_elementTypesWML.put("i", WMLIElementImpl.class);
-	_elementTypesWML.put("card", WMLCardElementImpl.class);       
+ _elementTypesWML = new Hashtable();
+ _elementTypesWML.put("b", WMLBElementImpl.class);
+ _elementTypesWML.put("noop", WMLNoopElementImpl.class);
+ _elementTypesWML.put("a", WMLAElementImpl.class);
+ _elementTypesWML.put("setvar", WMLSetvarElementImpl.class);
+ _elementTypesWML.put("access", WMLAccessElementImpl.class);
+ _elementTypesWML.put("strong", WMLStrongElementImpl.class);
+ _elementTypesWML.put("postfield", WMLPostfieldElementImpl.class);
+ _elementTypesWML.put("do", WMLDoElementImpl.class);
+ _elementTypesWML.put("wml", WMLWmlElementImpl.class);
+ _elementTypesWML.put("tr", WMLTrElementImpl.class);
+ _elementTypesWML.put("go", WMLGoElementImpl.class);
+ _elementTypesWML.put("big", WMLBigElementImpl.class);
+ _elementTypesWML.put("anchor", WMLAnchorElementImpl.class);
+ _elementTypesWML.put("timer", WMLTimerElementImpl.class);
+ _elementTypesWML.put("small", WMLSmallElementImpl.class);
+ _elementTypesWML.put("optgroup", WMLOptgroupElementImpl.class);
+ _elementTypesWML.put("head", WMLHeadElementImpl.class);
+ _elementTypesWML.put("td", WMLTdElementImpl.class);
+ _elementTypesWML.put("fieldset", WMLFieldsetElementImpl.class);
+ _elementTypesWML.put("img", WMLImgElementImpl.class);
+ _elementTypesWML.put("refresh", WMLRefreshElementImpl.class);
+ _elementTypesWML.put("onevent", WMLOneventElementImpl.class);
+ _elementTypesWML.put("input", WMLInputElementImpl.class);
+ _elementTypesWML.put("prev", WMLPrevElementImpl.class);
+ _elementTypesWML.put("table", WMLTableElementImpl.class);
+ _elementTypesWML.put("meta", WMLMetaElementImpl.class);
+ _elementTypesWML.put("template", WMLTemplateElementImpl.class);
+ _elementTypesWML.put("br", WMLBrElementImpl.class);
+ _elementTypesWML.put("option", WMLOptionElementImpl.class);
+ _elementTypesWML.put("u", WMLUElementImpl.class);
+ _elementTypesWML.put("p", WMLPElementImpl.class);
+ _elementTypesWML.put("select", WMLSelectElementImpl.class);
+ _elementTypesWML.put("em", WMLEmElementImpl.class);
+ _elementTypesWML.put("i", WMLIElementImpl.class);
+ _elementTypesWML.put("card", WMLCardElementImpl.class);       
     }
 
     

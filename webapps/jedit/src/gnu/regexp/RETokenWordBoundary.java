@@ -29,57 +29,57 @@ final class RETokenWordBoundary extends REToken {
     static final int END = 2;
 
     RETokenWordBoundary(int subIndex, int where, boolean negated) {
-	super(subIndex);
-	this.where = where;
-	this.negated = negated;
+ super(subIndex);
+ this.where = where;
+ this.negated = negated;
     }
     
     boolean match(CharIndexed input, REMatch mymatch) {
-	// Word boundary means input[index-1] was a word character
-	// and input[index] is not, or input[index] is a word character
-	// and input[index-1] was not
-	//  In the string "one two three", these positions match:
-	//  |o|n|e| |t|w|o| |t|h|r|e|e|
-	//  ^     ^ ^     ^ ^         ^
-	boolean after = false;  // is current character a letter or digit?
-	boolean before = false; // is previous character a letter or digit?
-	char ch;
+ // Word boundary means input[index-1] was a word character
+ // and input[index] is not, or input[index] is a word character
+ // and input[index-1] was not
+ //  In the string "one two three", these positions match:
+ //  |o|n|e| |t|w|o| |t|h|r|e|e|
+ //  ^     ^ ^     ^ ^         ^
+ boolean after = false;  // is current character a letter or digit?
+ boolean before = false; // is previous character a letter or digit?
+ char ch;
 
-	// TODO: Also check REG_ANCHORINDEX vs. anchor
-	if (((mymatch.eflags & RE.REG_ANCHORINDEX) != RE.REG_ANCHORINDEX) 
-	    || (mymatch.offset + mymatch.index > mymatch.anchor)) {
-	    if ((ch = input.charAt(mymatch.index - 1)) != CharIndexed.OUT_OF_BOUNDS) {
-		before = Character.isLetterOrDigit(ch) || (ch == '_');
-	    }
-	}
+ // TODO: Also check REG_ANCHORINDEX vs. anchor
+ if (((mymatch.eflags & RE.REG_ANCHORINDEX) != RE.REG_ANCHORINDEX) 
+     || (mymatch.offset + mymatch.index > mymatch.anchor)) {
+     if ((ch = input.charAt(mymatch.index - 1)) != CharIndexed.OUT_OF_BOUNDS) {
+  before = Character.isLetterOrDigit(ch) || (ch == '_');
+     }
+ }
 
-	if ((ch = input.charAt(mymatch.index)) != CharIndexed.OUT_OF_BOUNDS) {
-	    after = Character.isLetterOrDigit(ch) || (ch == '_');
-	}
+ if ((ch = input.charAt(mymatch.index)) != CharIndexed.OUT_OF_BOUNDS) {
+     after = Character.isLetterOrDigit(ch) || (ch == '_');
+ }
 
-	// if (before) and (!after), we're at end (\>)
-	// if (after) and (!before), we're at beginning (\<)
-	boolean doNext = false;
+ // if (before) and (!after), we're at end (\>)
+ // if (after) and (!before), we're at beginning (\<)
+ boolean doNext = false;
 
-	if ((where & BEGIN) == BEGIN) {
-	    doNext = after && !before;
-	}
-	if ((where & END) == END) {
-	    doNext ^= before && !after;
-	}
+ if ((where & BEGIN) == BEGIN) {
+     doNext = after && !before;
+ }
+ if ((where & END) == END) {
+     doNext ^= before && !after;
+ }
 
-	if (negated) doNext = !doNext;
+ if (negated) doNext = !doNext;
 
-	return (doNext ? next(input, mymatch) : false);
+ return (doNext ? next(input, mymatch) : false);
     }
     
     void dump(StringBuffer os) {
-	if (where == (BEGIN | END)) {
-	    os.append( negated ? "\\B" : "\\b" );
-	} else if (where == BEGIN) {
-	    os.append("\\<");
-	} else {
-	    os.append("\\>");
-	}
+ if (where == (BEGIN | END)) {
+     os.append( negated ? "\\B" : "\\b" );
+ } else if (where == BEGIN) {
+     os.append("\\<");
+ } else {
+     os.append("\\>");
+ }
     }
 }

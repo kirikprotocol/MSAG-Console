@@ -311,7 +311,7 @@ public class Buffer
           EditBus.send(new BufferUpdate(Buffer.this,
                   view,BufferUpdate.LOADED));
           //EditBus.send(new BufferUpdate(Buffer.this,
-          //	view,BufferUpdate.MARKERS_CHANGED));
+          // view,BufferUpdate.MARKERS_CHANGED));
         }
       }
     }; //}}}
@@ -1353,7 +1353,7 @@ public class Buffer
   {
     // Why?
     //if(getFlag(TEMPORARY))
-    //	return;
+    // return;
 
     try
     {
@@ -1378,7 +1378,7 @@ public class Buffer
   {
     // Why?
     //if(getFlag(TEMPORARY))
-    //	return;
+    // return;
 
     try
     {
@@ -2291,7 +2291,7 @@ public class Buffer
 
         // silly usability hack
         //if(lines.length != 1 && whiteSpace == 0)
-        //	continue;
+        // continue;
 
         int whiteSpaceWidth = MiscUtilities
                 .getLeadingWhiteSpaceWidth(
@@ -2414,7 +2414,7 @@ public class Buffer
     int tabSize = getTabSize();
 
     int currentIndent = 0;
-    loop:		for(int i = 0; i < seg.count; i++)
+    loop:  for(int i = 0; i < seg.count; i++)
     {
       char c = seg.array[seg.offset + i];
       switch(c)
@@ -3433,8 +3433,8 @@ public class Buffer
   //{{{ recoverAutosave() method
   private boolean recoverAutosave(final View view)
   {
-    if(!jEdit.BoolGet(autosaveName,jEdit.CanRead)) //autosaveFile.canRead())//	if(!autosaveFile.canRead())  //move to servlet
-    		return false;
+    if(!jEdit.BoolGet(autosaveName,jEdit.CanRead)) //autosaveFile.canRead())// if(!autosaveFile.canRead())  //move to servlet
+      return false;
 
     // this method might get called at startup
     GUIUtilities.hideSplashScreen();
@@ -3766,13 +3766,13 @@ public class Buffer
           break;
         case 'n':
           if(escape)
-          {	buf.append('\n');
+          { buf.append('\n');
             escape = false;
             break;
           }
         case 'r':
           if(escape)
-          {	buf.append('\r');
+          { buf.append('\r');
             escape = false;
             break;
           }

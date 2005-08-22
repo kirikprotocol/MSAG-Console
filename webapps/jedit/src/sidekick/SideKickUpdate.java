@@ -29,16 +29,16 @@ import org.gjt.sp.jedit.View;
 
 public class SideKickUpdate extends EBMessage
 {
-	public SideKickUpdate(View view)
-	{
-		super(null);
-		this.view = view;
-	}
+ public SideKickUpdate(View view)
+ {
+  super(null);
+  this.view = view;
+ }
 
-	public View getView()
-	{
-		return view;
-	}
+ public View getView()
+ {
+  return view;
+ }
 
-	private View view;
+ private View view;
 }

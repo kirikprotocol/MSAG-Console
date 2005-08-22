@@ -32,50 +32,50 @@ import java.awt.Color;
  */
 public class SyntaxStyle
 {
-	//{{{ SyntaxStyle constructor
-	/**
-	 * Creates a new SyntaxStyle.
-	 * @param fgColor The text color
-	 * @param bgColor The background color
-	 * @param font The text font
-	 */
-	public SyntaxStyle(Color fgColor, Color bgColor, Font font)
-	{
-		this.fgColor = fgColor;
-		this.bgColor = bgColor;
-		this.font = font;
-	} //}}}
+ //{{{ SyntaxStyle constructor
+ /**
+  * Creates a new SyntaxStyle.
+  * @param fgColor The text color
+  * @param bgColor The background color
+  * @param font The text font
+  */
+ public SyntaxStyle(Color fgColor, Color bgColor, Font font)
+ {
+  this.fgColor = fgColor;
+  this.bgColor = bgColor;
+  this.font = font;
+ } //}}}
 
-	//{{{ getForegroundColor() method
-	/**
-	 * Returns the text color.
-	 */
-	public Color getForegroundColor()
-	{
-		return fgColor;
-	} //}}}
+ //{{{ getForegroundColor() method
+ /**
+  * Returns the text color.
+  */
+ public Color getForegroundColor()
+ {
+  return fgColor;
+ } //}}}
 
-	//{{{ getBackgroundColor() method
-	/**
-	 * Returns the background color.
-	 */
-	public Color getBackgroundColor()
-	{
-		return bgColor;
-	} //}}}
+ //{{{ getBackgroundColor() method
+ /**
+  * Returns the background color.
+  */
+ public Color getBackgroundColor()
+ {
+  return bgColor;
+ } //}}}
 
-	//{{{ getFont() method
-	/**
-	 * Returns the style font.
-	 */
-	public Font getFont()
-	{
-		return font;
-	} //}}}
+ //{{{ getFont() method
+ /**
+  * Returns the style font.
+  */
+ public Font getFont()
+ {
+  return font;
+ } //}}}
 
-	//{{{ Private members
-	private Color fgColor;
-	private Color bgColor;
-	private Font font;
-	//}}}
+ //{{{ Private members
+ private Color fgColor;
+ private Color bgColor;
+ private Font font;
+ //}}}
 }

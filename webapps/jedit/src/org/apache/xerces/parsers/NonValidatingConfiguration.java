@@ -310,7 +310,7 @@ public class NonValidatingConfiguration
             CONTINUE_AFTER_FATAL_ERROR,
             //LOAD_EXTERNAL_DTD,    // from XMLDTDScannerImpl
             //NOTIFY_BUILTIN_REFS,  // from XMLDocumentFragmentScannerImpl
-            //NOTIFY_CHAR_REFS,		// from XMLDocumentFragmentScannerImpl
+            //NOTIFY_CHAR_REFS,  // from XMLDocumentFragmentScannerImpl
             //WARN_ON_DUPLICATE_ENTITYDEF   // from XMLEntityManager
         };
         addRecognizedFeatures(recognizedFeatures);
@@ -338,10 +338,10 @@ public class NonValidatingConfiguration
             VALIDATION_MANAGER
         };
         addRecognizedProperties(recognizedProperties);
-	
+ 
         fGrammarPool = grammarPool;
         if(fGrammarPool != null){
-        	setProperty(XMLGRAMMAR_POOL, fGrammarPool);
+         setProperty(XMLGRAMMAR_POOL, fGrammarPool);
         }
 
         fEntityManager = createEntityManager();

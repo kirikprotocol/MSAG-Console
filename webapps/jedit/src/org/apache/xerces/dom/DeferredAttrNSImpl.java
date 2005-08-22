@@ -128,7 +128,7 @@ public final class DeferredAttrNSImpl
 
         // fluff data
         DeferredDocumentImpl ownerDocument =
-	    (DeferredDocumentImpl) ownerDocument();
+     (DeferredDocumentImpl) ownerDocument();
         name = ownerDocument.getNodeName(fNodeIndex);
 
         // extract prefix and local part from QName

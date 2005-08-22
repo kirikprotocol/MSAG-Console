@@ -2183,22 +2183,22 @@ public class XSSimpleTypeDecl implements XSSimpleType {
 
         // REVISIT: reset for fundamental facets
     }
-	/**
-	 * @see org.apache.xerces.impl.xs.psvi.XSObject#getNamespaceItem()
-	 */
-	public XSNamespaceItem getNamespaceItem() {
+ /**
+  * @see org.apache.xerces.impl.xs.psvi.XSObject#getNamespaceItem()
+  */
+ public XSNamespaceItem getNamespaceItem() {
         // REVISIT: implement
-		return null;
-	}
+  return null;
+ }
     
     
 
-	/**
-	 * @see java.lang.Object#toString()
-	 */
-	public String toString() {
+ /**
+  * @see java.lang.Object#toString()
+  */
+ public String toString() {
         
-		return this.fTargetNamespace+"," +this.fTypeName;
-	}
+  return this.fTargetNamespace+"," +this.fTypeName;
+ }
 
 } // class XSSimpleTypeDecl

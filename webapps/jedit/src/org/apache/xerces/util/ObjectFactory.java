@@ -220,13 +220,13 @@ public class ObjectFactory {
                         FileInputStream fis = ss.getFileInputStream(propertiesFile);
                         fXercesProperties.load(fis);
                         fis.close();
-	                } catch (Exception x) {
-	                    fXercesProperties = null;
-	                    fLastModified = -1;
-	                    // assert(x instanceof FileNotFoundException
-	                    //        || x instanceof SecurityException)
-	                    // In both cases, ignore and continue w/ next location
-	                }
+                 } catch (Exception x) {
+                     fXercesProperties = null;
+                     fLastModified = -1;
+                     // assert(x instanceof FileNotFoundException
+                     //        || x instanceof SecurityException)
+                     // In both cases, ignore and continue w/ next location
+                 }
                 }     */
             }
             if(fXercesProperties != null) {

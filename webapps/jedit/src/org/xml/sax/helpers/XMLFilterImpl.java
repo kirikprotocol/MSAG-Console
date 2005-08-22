@@ -71,7 +71,7 @@ public class XMLFilterImpl
      */
     public XMLFilterImpl ()
     {
-	super();
+ super();
     }
 
 
@@ -84,7 +84,7 @@ public class XMLFilterImpl
     public XMLFilterImpl (XMLReader parent)
     {
         super();
-	setParent(parent);
+ setParent(parent);
     }
 
 
@@ -110,10 +110,10 @@ public class XMLFilterImpl
      */
     public void setParent (XMLReader parent)
     {
-	if (parent == null) {
-	    throw new NullPointerException("Null parent");
-	}
-	this.parent = parent;
+ if (parent == null) {
+     throw new NullPointerException("Null parent");
+ }
+ this.parent = parent;
     }
 
 
@@ -125,7 +125,7 @@ public class XMLFilterImpl
      */
     public XMLReader getParent ()
     {
-	return parent;
+ return parent;
     }
 
 
@@ -150,13 +150,13 @@ public class XMLFilterImpl
      * @see org.xml.sax.XMLReader#setFeature
      */
     public void setFeature (String name, boolean state)
-	throws SAXNotRecognizedException, SAXNotSupportedException
+ throws SAXNotRecognizedException, SAXNotSupportedException
     {
-	if (parent != null) {
-	    parent.setFeature(name, state);
-	} else {
-	    throw new SAXNotRecognizedException("Feature: " + name);
-	}
+ if (parent != null) {
+     parent.setFeature(name, state);
+ } else {
+     throw new SAXNotRecognizedException("Feature: " + name);
+ }
     }
 
 
@@ -175,13 +175,13 @@ public class XMLFilterImpl
      * @see org.xml.sax.XMLReader#getFeature
      */
     public boolean getFeature (String name)
-	throws SAXNotRecognizedException, SAXNotSupportedException
+ throws SAXNotRecognizedException, SAXNotSupportedException
     {
-	if (parent != null) {
-	    return parent.getFeature(name);
-	} else {
-	    throw new SAXNotRecognizedException("Feature: " + name);
-	}
+ if (parent != null) {
+     return parent.getFeature(name);
+ } else {
+     throw new SAXNotRecognizedException("Feature: " + name);
+ }
     }
 
 
@@ -200,13 +200,13 @@ public class XMLFilterImpl
      * @see org.xml.sax.XMLReader#setProperty
      */
     public void setProperty (String name, Object value)
-	throws SAXNotRecognizedException, SAXNotSupportedException
+ throws SAXNotRecognizedException, SAXNotSupportedException
     {
-	if (parent != null) {
-	    parent.setProperty(name, value);
-	} else {
-	    throw new SAXNotRecognizedException("Property: " + name);
-	}
+ if (parent != null) {
+     parent.setProperty(name, value);
+ } else {
+     throw new SAXNotRecognizedException("Property: " + name);
+ }
     }
 
 
@@ -223,13 +223,13 @@ public class XMLFilterImpl
      * @see org.xml.sax.XMLReader#setFeature
      */
     public Object getProperty (String name)
-	throws SAXNotRecognizedException, SAXNotSupportedException
+ throws SAXNotRecognizedException, SAXNotSupportedException
     {
-	if (parent != null) {
-	    return parent.getProperty(name);
-	} else {
-	    throw new SAXNotRecognizedException("Property: " + name);
-	}
+ if (parent != null) {
+     return parent.getProperty(name);
+ } else {
+     throw new SAXNotRecognizedException("Property: " + name);
+ }
     }
 
 
@@ -243,11 +243,11 @@ public class XMLFilterImpl
      */
     public void setEntityResolver (EntityResolver resolver)
     {
-	if (resolver == null) {
-	    throw new NullPointerException("Null entity resolver");
-	} else {
-	    entityResolver = resolver;
-	}
+ if (resolver == null) {
+     throw new NullPointerException("Null entity resolver");
+ } else {
+     entityResolver = resolver;
+ }
     }
 
 
@@ -259,7 +259,7 @@ public class XMLFilterImpl
      */
     public EntityResolver getEntityResolver ()
     {
-	return entityResolver;
+ return entityResolver;
     }
 
 
@@ -273,11 +273,11 @@ public class XMLFilterImpl
      */
     public void setDTDHandler (DTDHandler handler)
     {
-	if (handler == null) {
-	    throw new NullPointerException("Null DTD handler");
-	} else {
-	    dtdHandler = handler;
-	}
+ if (handler == null) {
+     throw new NullPointerException("Null DTD handler");
+ } else {
+     dtdHandler = handler;
+ }
     }
 
 
@@ -289,7 +289,7 @@ public class XMLFilterImpl
      */
     public DTDHandler getDTDHandler ()
     {
-	return dtdHandler;
+ return dtdHandler;
     }
 
 
@@ -303,11 +303,11 @@ public class XMLFilterImpl
      */
     public void setContentHandler (ContentHandler handler)
     {
-	if (handler == null) {
-	    throw new NullPointerException("Null content handler");
-	} else {
-	    contentHandler = handler;
-	}
+ if (handler == null) {
+     throw new NullPointerException("Null content handler");
+ } else {
+     contentHandler = handler;
+ }
     }
 
 
@@ -319,7 +319,7 @@ public class XMLFilterImpl
      */
     public ContentHandler getContentHandler ()
     {
-	return contentHandler;
+ return contentHandler;
     }
 
 
@@ -333,11 +333,11 @@ public class XMLFilterImpl
      */
     public void setErrorHandler (ErrorHandler handler)
     {
-	if (handler == null) {
-	    throw new NullPointerException("Null error handler");
-	} else {
-	    errorHandler = handler;
-	}
+ if (handler == null) {
+     throw new NullPointerException("Null error handler");
+ } else {
+     errorHandler = handler;
+ }
     }
 
 
@@ -349,7 +349,7 @@ public class XMLFilterImpl
      */
     public ErrorHandler getErrorHandler ()
     {
-	return errorHandler;
+ return errorHandler;
     }
 
 
@@ -365,10 +365,10 @@ public class XMLFilterImpl
      * @see org.xml.sax.XMLReader#parse(org.xml.sax.InputSource)
      */
     public void parse (InputSource input)
-	throws SAXException, IOException
+ throws SAXException, IOException
     {
-	setupParse();
-	parent.parse(input);
+ setupParse();
+ parent.parse(input);
     }
 
 
@@ -384,9 +384,9 @@ public class XMLFilterImpl
      * @see org.xml.sax.XMLReader#parse(java.lang.String)
      */
     public void parse (String systemId)
-	throws SAXException, IOException
+ throws SAXException, IOException
     {
-	parse(new InputSource(systemId));
+ parse(new InputSource(systemId));
     }
 
 
@@ -410,13 +410,13 @@ public class XMLFilterImpl
      * @see org.xml.sax.EntityResolver#resolveEntity
      */
     public InputSource resolveEntity (String publicId, String systemId)
-	throws SAXException, IOException
+ throws SAXException, IOException
     {
-	if (entityResolver != null) {
-	    return entityResolver.resolveEntity(publicId, systemId);
-	} else {
-	    return null;
-	}
+ if (entityResolver != null) {
+     return entityResolver.resolveEntity(publicId, systemId);
+ } else {
+     return null;
+ }
     }
 
 
@@ -437,11 +437,11 @@ public class XMLFilterImpl
      * @see org.xml.sax.DTDHandler#notationDecl
      */
     public void notationDecl (String name, String publicId, String systemId)
-	throws SAXException
+ throws SAXException
     {
-	if (dtdHandler != null) {
-	    dtdHandler.notationDecl(name, publicId, systemId);
-	}
+ if (dtdHandler != null) {
+     dtdHandler.notationDecl(name, publicId, systemId);
+ }
     }
 
     
@@ -457,13 +457,13 @@ public class XMLFilterImpl
      * @see org.xml.sax.DTDHandler#unparsedEntityDecl
      */
     public void unparsedEntityDecl (String name, String publicId,
-				    String systemId, String notationName)
-	throws SAXException
+        String systemId, String notationName)
+ throws SAXException
     {
-	if (dtdHandler != null) {
-	    dtdHandler.unparsedEntityDecl(name, publicId, systemId,
-					  notationName);
-	}
+ if (dtdHandler != null) {
+     dtdHandler.unparsedEntityDecl(name, publicId, systemId,
+       notationName);
+ }
     }
 
 
@@ -481,10 +481,10 @@ public class XMLFilterImpl
      */
     public void setDocumentLocator (Locator locator)
     {
-	this.locator = locator;
-	if (contentHandler != null) {
-	    contentHandler.setDocumentLocator(locator);
-	}
+ this.locator = locator;
+ if (contentHandler != null) {
+     contentHandler.setDocumentLocator(locator);
+ }
     }
 
 
@@ -496,11 +496,11 @@ public class XMLFilterImpl
      * @see org.xml.sax.ContentHandler#startDocument
      */
     public void startDocument ()
-	throws SAXException
+ throws SAXException
     {
-	if (contentHandler != null) {
-	    contentHandler.startDocument();
-	}
+ if (contentHandler != null) {
+     contentHandler.startDocument();
+ }
     }
 
 
@@ -512,11 +512,11 @@ public class XMLFilterImpl
      * @see org.xml.sax.ContentHandler#endDocument
      */
     public void endDocument ()
-	throws SAXException
+ throws SAXException
     {
-	if (contentHandler != null) {
-	    contentHandler.endDocument();
-	}
+ if (contentHandler != null) {
+     contentHandler.endDocument();
+ }
     }
 
 
@@ -530,11 +530,11 @@ public class XMLFilterImpl
      * @see org.xml.sax.ContentHandler#startPrefixMapping
      */
     public void startPrefixMapping (String prefix, String uri)
-	throws SAXException
+ throws SAXException
     {
-	if (contentHandler != null) {
-	    contentHandler.startPrefixMapping(prefix, uri);
-	}
+ if (contentHandler != null) {
+     contentHandler.startPrefixMapping(prefix, uri);
+ }
     }
 
 
@@ -547,11 +547,11 @@ public class XMLFilterImpl
      * @see org.xml.sax.ContentHandler#endPrefixMapping
      */
     public void endPrefixMapping (String prefix)
-	throws SAXException
+ throws SAXException
     {
-	if (contentHandler != null) {
-	    contentHandler.endPrefixMapping(prefix);
-	}
+ if (contentHandler != null) {
+     contentHandler.endPrefixMapping(prefix);
+ }
     }
 
 
@@ -568,12 +568,12 @@ public class XMLFilterImpl
      * @see org.xml.sax.ContentHandler#startElement
      */
     public void startElement (String uri, String localName, String qName,
-			      Attributes atts)
-	throws SAXException
+         Attributes atts)
+ throws SAXException
     {
-	if (contentHandler != null) {
-	    contentHandler.startElement(uri, localName, qName, atts);
-	}
+ if (contentHandler != null) {
+     contentHandler.startElement(uri, localName, qName, atts);
+ }
     }
 
 
@@ -589,11 +589,11 @@ public class XMLFilterImpl
      * @see org.xml.sax.ContentHandler#endElement
      */
     public void endElement (String uri, String localName, String qName)
-	throws SAXException
+ throws SAXException
     {
-	if (contentHandler != null) {
-	    contentHandler.endElement(uri, localName, qName);
-	}
+ if (contentHandler != null) {
+     contentHandler.endElement(uri, localName, qName);
+ }
     }
 
 
@@ -608,11 +608,11 @@ public class XMLFilterImpl
      * @see org.xml.sax.ContentHandler#characters
      */
     public void characters (char ch[], int start, int length)
-	throws SAXException
+ throws SAXException
     {
-	if (contentHandler != null) {
-	    contentHandler.characters(ch, start, length);
-	}
+ if (contentHandler != null) {
+     contentHandler.characters(ch, start, length);
+ }
     }
 
 
@@ -627,11 +627,11 @@ public class XMLFilterImpl
      * @see org.xml.sax.ContentHandler#ignorableWhitespace
      */
     public void ignorableWhitespace (char ch[], int start, int length)
-	throws SAXException
+ throws SAXException
     {
-	if (contentHandler != null) {
-	    contentHandler.ignorableWhitespace(ch, start, length);
-	}
+ if (contentHandler != null) {
+     contentHandler.ignorableWhitespace(ch, start, length);
+ }
     }
 
 
@@ -645,11 +645,11 @@ public class XMLFilterImpl
      * @see org.xml.sax.ContentHandler#processingInstruction
      */
     public void processingInstruction (String target, String data)
-	throws SAXException
+ throws SAXException
     {
-	if (contentHandler != null) {
-	    contentHandler.processingInstruction(target, data);
-	}
+ if (contentHandler != null) {
+     contentHandler.processingInstruction(target, data);
+ }
     }
 
 
@@ -662,11 +662,11 @@ public class XMLFilterImpl
      * @see org.xml.sax.ContentHandler#skippedEntity
      */
     public void skippedEntity (String name)
-	throws SAXException
+ throws SAXException
     {
-	if (contentHandler != null) {
-	    contentHandler.skippedEntity(name);
-	}
+ if (contentHandler != null) {
+     contentHandler.skippedEntity(name);
+ }
     }
 
 
@@ -685,11 +685,11 @@ public class XMLFilterImpl
      * @see org.xml.sax.ErrorHandler#warning
      */
     public void warning (SAXParseException e)
-	throws SAXException
+ throws SAXException
     {
-	if (errorHandler != null) {
-	    errorHandler.warning(e);
-	}
+ if (errorHandler != null) {
+     errorHandler.warning(e);
+ }
     }
 
 
@@ -702,11 +702,11 @@ public class XMLFilterImpl
      * @see org.xml.sax.ErrorHandler#error
      */
     public void error (SAXParseException e)
-	throws SAXException
+ throws SAXException
     {
-	if (errorHandler != null) {
-	    errorHandler.error(e);
-	}
+ if (errorHandler != null) {
+     errorHandler.error(e);
+ }
     }
 
 
@@ -719,11 +719,11 @@ public class XMLFilterImpl
      * @see org.xml.sax.ErrorHandler#fatalError
      */
     public void fatalError (SAXParseException e)
-	throws SAXException
+ throws SAXException
     {
-	if (errorHandler != null) {
-	    errorHandler.fatalError(e);
-	}
+ if (errorHandler != null) {
+     errorHandler.fatalError(e);
+ }
     }
 
 
@@ -742,13 +742,13 @@ public class XMLFilterImpl
      */
     private void setupParse ()
     {
-	if (parent == null) {
-	    throw new NullPointerException("No parent for filter");
-	}
-	parent.setEntityResolver(this);
-	parent.setDTDHandler(this);
-	parent.setContentHandler(this);
-	parent.setErrorHandler(this);
+ if (parent == null) {
+     throw new NullPointerException("No parent for filter");
+ }
+ parent.setEntityResolver(this);
+ parent.setDTDHandler(this);
+ parent.setContentHandler(this);
+ parent.setErrorHandler(this);
     }
 
 

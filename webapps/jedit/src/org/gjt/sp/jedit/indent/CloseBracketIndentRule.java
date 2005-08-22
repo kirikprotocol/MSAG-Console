@@ -30,71 +30,71 @@ import org.gjt.sp.jedit.TextUtilities;
 
 public class CloseBracketIndentRule extends BracketIndentRule
 {
-	//{{{ CloseBracketIndentRule constructor
-	public CloseBracketIndentRule(char closeBracket, boolean aligned)
-	{
-		super(TextUtilities.getComplementaryBracket(closeBracket,
-			new boolean[1]),closeBracket);
-		this.aligned = aligned;
-	} //}}}
+ //{{{ CloseBracketIndentRule constructor
+ public CloseBracketIndentRule(char closeBracket, boolean aligned)
+ {
+  super(TextUtilities.getComplementaryBracket(closeBracket,
+   new boolean[1]),closeBracket);
+  this.aligned = aligned;
+ } //}}}
 
-	//{{{ apply() method
-	public void apply(Buffer buffer, int thisLineIndex,
-		int prevLineIndex, int prevPrevLineIndex,
-		List indentActions)
-	{
-		int index;
-		if(aligned)
-			index = thisLineIndex;
-		else
-			index = prevLineIndex;
+ //{{{ apply() method
+ public void apply(Buffer buffer, int thisLineIndex,
+  int prevLineIndex, int prevPrevLineIndex,
+  List indentActions)
+ {
+  int index;
+  if(aligned)
+   index = thisLineIndex;
+  else
+   index = prevLineIndex;
 
-		if(index == -1)
-			return;
+  if(index == -1)
+   return;
 
-		String line = buffer.getLineText(index);
+  String line = buffer.getLineText(index);
 
-		int offset = line.lastIndexOf(closeBracket);
-		if(offset == -1)
-			return;
+  int offset = line.lastIndexOf(closeBracket);
+  if(offset == -1)
+   return;
 
-		int closeCount = getBrackets(line).closeCount;
-		if(closeCount != 0)
-		{
-			IndentAction.AlignBracket alignBracket
-				= new IndentAction.AlignBracket(
-				buffer,index,offset);
-			/*
-			Consider the following Common Lisp code:
-			
-			(defun emit-push-long (arg)
-			  (cond ((eql arg 0)
-			      (emit 'lconst_0))
-			    ((eql arg 1)
-			      (emit 'lconst_1)))
-			
-			even though we have a closing bracket match on line 3,
-			the next line must be indented relative to the
-			corresponding opening bracket from line 1.
-			*/
-			String openLine = alignBracket.getOpenBracketLine();
-			int column = alignBracket.getOpenBracketColumn();
-			if(openLine != null)
-			{
-				String leadingBrackets = openLine.substring(0,column);
-				alignBracket.setExtraIndent(getBrackets(leadingBrackets)
-					.openCount);
-			}
-			
-			indentActions.add(alignBracket);
-		}
-	} //}}}
-	
-	//{{{ isMatch() method
-	public boolean isMatch(String line)
-	{
-		return getBrackets(line).closeCount != 0;
-	} //}}}
-	
-	private boolean aligned;
+  int closeCount = getBrackets(line).closeCount;
+  if(closeCount != 0)
+  {
+   IndentAction.AlignBracket alignBracket
+    = new IndentAction.AlignBracket(
+    buffer,index,offset);
+   /*
+   Consider the following Common Lisp code:
+   
+   (defun emit-push-long (arg)
+     (cond ((eql arg 0)
+         (emit 'lconst_0))
+       ((eql arg 1)
+         (emit 'lconst_1)))
+   
+   even though we have a closing bracket match on line 3,
+   the next line must be indented relative to the
+   corresponding opening bracket from line 1.
+   */
+   String openLine = alignBracket.getOpenBracketLine();
+   int column = alignBracket.getOpenBracketColumn();
+   if(openLine != null)
+   {
+    String leadingBrackets = openLine.substring(0,column);
+    alignBracket.setExtraIndent(getBrackets(leadingBrackets)
+     .openCount);
+   }
+   
+   indentActions.add(alignBracket);
+  }
+ } //}}}
+ 
+ //{{{ isMatch() method
+ public boolean isMatch(String line)
+ {
+  return getBrackets(line).closeCount != 0;
+ } //}}}
+ 
+ private boolean aligned;
 }

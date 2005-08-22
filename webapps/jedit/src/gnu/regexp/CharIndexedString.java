@@ -25,21 +25,21 @@ class CharIndexedString implements CharIndexed, Serializable {
     private int len;
     
     CharIndexedString(String str, int index) {
-	s = str;
-	len = s.length();
-	anchor = index;
+ s = str;
+ len = s.length();
+ anchor = index;
     }
 
     public char charAt(int index) {
-	int pos = anchor + index;
-	return ((pos < len) && (pos >= 0)) ? s.charAt(pos) : OUT_OF_BOUNDS;
+ int pos = anchor + index;
+ return ((pos < len) && (pos >= 0)) ? s.charAt(pos) : OUT_OF_BOUNDS;
     }
     
     public boolean isValid() {
-	return (anchor < len);
+ return (anchor < len);
     }
     
     public boolean move(int index) {
-	return ((anchor += index) < len);
+ return ((anchor += index) < len);
     }
 }

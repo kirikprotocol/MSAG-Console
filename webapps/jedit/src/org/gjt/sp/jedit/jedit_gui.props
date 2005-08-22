@@ -8,14 +8,14 @@
 
 #{{{ Default user catalog file
 defaultCatalog=<?xml version="1.0"?>\n\
-	<!DOCTYPE MODES SYSTEM "catalog.dtd">\n\
-	\n\
-	<MODES>\n\
-	\n\
-	<!-- Add lines like the following, one for each edit mode you add: -->\n\
-	<!-- <MODE NAME="foo" FILE="foo.xml" FILE_NAME_GLOB="*.foo" /> -->\n\
-	\n\
-	</MODES>
+ <!DOCTYPE MODES SYSTEM "catalog.dtd">\n\
+ \n\
+ <MODES>\n\
+ \n\
+ <!-- Add lines like the following, one for each edit mode you add: -->\n\
+ <!-- <MODE NAME="foo" FILE="foo.xml" FILE_NAME_GLOB="*.foo" /> -->\n\
+ \n\
+ </MODES>
 #}}}
 
 #{{{ Common strings
@@ -39,7 +39,7 @@ lineSep.mac=MacOS (\\r)
 
 #{{{ Miscellaneous
 encodings=ASCII Cp850 Cp1251 Cp1252 ISO8859_1 ISO8859_2 ISO8859_15 \
-	MacRoman Big5 GBK KOI8_R SJIS UTF-16 UTF-8 UTF-8Y
+ MacRoman Big5 GBK KOI8_R SJIS UTF-16 UTF-8 UTF-8Y
 
 history.caption=Previously entered strings:
 
@@ -59,8 +59,8 @@ startup=true
 
 #{{{ Context menu
 view.context=cut copy paste paste-previous paste-deleted - \
-	select-block to-upper to-lower - hypersearch-word - \
-	add-marker - collapse-fold expand-fold narrow-to-fold
+ select-block to-upper to-lower - hypersearch-word - \
+ add-marker - collapse-fold expand-fold narrow-to-fold
 view.context.customize=Customize This Menu...
 #}}}
 
@@ -147,21 +147,21 @@ goto-line.label=$Go to Line...
 
 #{{{ More Clipboard menu
 clipboard=cut-append \
-	  copy-append \
-	  vertical-paste \
-	  - \
-	  paste-previous \
-	  paste-deleted \
-	  - \
-	  cut-string-register \
+   copy-append \
+   vertical-paste \
+   - \
+   paste-previous \
+   paste-deleted \
+   - \
+   cut-string-register \
           copy-string-register \
-	  paste-string-register \
-	  - \
-	  cut-append-string-register \
-	  copy-append-string-register \
-	  vertical-paste-string-register \
-	  - \
-	  view-registers
+   paste-string-register \
+   - \
+   cut-append-string-register \
+   copy-append-string-register \
+   vertical-paste-string-register \
+   - \
+   view-registers
 
 clipboard.label=More Clip$board
 cut-append.label=$Cut Append
@@ -180,14 +180,14 @@ view-registers.label=Vie$w Registers
 
 #{{{ More Selection menu
 selection=select-none \
-	  select-word \
-	  select-line \
-	  select-paragraph \
-	  - \
-	  invert-selection \
-	  toggle-multi-select \
-	  toggle-rect-select \
-	  - \
+   select-word \
+   select-line \
+   select-paragraph \
+   - \
+   invert-selection \
+   toggle-multi-select \
+   toggle-rect-select \
+   - \
           select-line-range
 selection.label=More $Selection
 select-none.label=Select $None
@@ -339,8 +339,8 @@ jedit-directory.code=new DirectoryProvider(jEdit.getJEditHome())
 #{{{ Settings Directory menu
 settings-directory.label=$Settings Directory
 settings-directory.code=settings = jEdit.getSettingsDirectory(); \
-	if(settings == null) settings = jEdit.getJEditHome(); \
-	new DirectoryProvider(settings);
+ if(settings == null) settings = jEdit.getJEditHome(); \
+ new DirectoryProvider(settings);
 #}}}
 
 #{{{ BeanShell menu
@@ -355,12 +355,12 @@ eval-selection.label=Evaluate $Selection
 
 #{{{ Troubleshooting menu
 troubleshooting=log-viewer \
-		update-log \
-		- \
-		io-progress-monitor \
-		keyboard-tester \
-		memory-status \
-		reload-modes
+  update-log \
+  - \
+  io-progress-monitor \
+  keyboard-tester \
+  memory-status \
+  reload-modes
 troubleshooting.label=$Troubleshooting
 log-viewer.label=$Activity Log
 update-log.label=$Update Activity Log on Disk
@@ -374,18 +374,18 @@ reload-modes.label=$Reload Edit Modes
 #{{{ XML menu
 # Menu bar stuff
 xml=xml-match-tag \
-	- \
-	xml-insert \
-	xml-edit-tag \
-	xml-close-tag \
-	xml-remove-tags \
-	xml-split-tag \
-	- \
-	xml-chars-to-entities \
-	xml-entities-to-chars \
-	- \
-	xml-clear-cache \
-	xml-reload-catalogs
+ - \
+ xml-insert \
+ xml-edit-tag \
+ xml-close-tag \
+ xml-remove-tags \
+ xml-split-tag \
+ - \
+ xml-chars-to-entities \
+ xml-entities-to-chars \
+ - \
+ xml-clear-cache \
+ xml-reload-catalogs
 xml.label=$XML
 xml-match-tag.label=Go to Matching Tag
 xml-insert.label=XML Insert
@@ -560,9 +560,9 @@ view.status.replace-all=Replaced {0} occurrence(s) in {1} file(s)
 view.status.search-not-found=Search string not found!
 view.status.select-marker=Shortcut of marker to select to? [{0}]
 view.status.swap-marker=Shortcut of marker to swap caret position with? \
-	[{0}]
+ [{0}]
 view.status.vertical-paste-string-register=Register to vertical paste \
-	from? [{0}]
+ from? [{0}]
 view.status.wrap-changed=Word wrap mode is now "{0}"
 view.status.wrap-tooltip=Word wrap mode (click to change)
 #}}}
@@ -588,7 +588,7 @@ print.footerText={0} :: page {1}
 
 print-error.title=Print Error
 print-error.message=An error occurred while trying to print:\n\
-	{0}
+ {0}
 #}}}
 
 #{{{ Various dialog boxes
@@ -601,169 +601,169 @@ about.version=jEditApplet version {0}
 # Hack: Since StringTokenizer treats two consequent \n as one token, we
 # insert a space by itself in the text to create blank lines.
 about.text=jEditApplet is brought to you by\n\
-	\ \n\
-	Slava Pestov\n\
-	Andrey Chernov\n\
-	Aaron Bell\n\
-	Adrian Baker\n\
-	Alessandro Falappa\n\
-	Alex Levin\n\
-	Alexander Maryanovsky\n\
-	Alfonso Garcia\n\
-	Alwyn Barry\n\
-	Amedeo Farello\n\
-	Andre Kaplan\n\
-	Anthony Roy\n\
-	Artur Biesiadowski\n\
-	Aziz Sharif\n\
-	Barry Carr\n\
-	Beau Tateyama\n\
-	Ben Glazer\n\
-	Ben Sarsgard\n\
-	Ben Williams\n\
-	Bertalan Fodor\n\
-	Bill McMilleon\n\
-	Brad Mace\n\
-	Brant Langer Gurganus\n\
-	Brett Smith\n\
-	Bruno Tatibouet\n\
-	Calvin Yu\n\
-	Carlos Quiroz\n\
-	Carmine Lucarelli\n\
-	Chris Kent\n\
-	Chris Scott\n\
-	Christoph Daniel Schulze\n\
-	Claude Eisenhut\n\
-	Cullen Linn\n\
-	Dale Anson\n\
-	Danny Dig\n\
-	Dante Fabrizio\n\
-	David Askew\n\
-	David Moss\n\
-	David Taylor\n\
-	Denis Lambot\n\
-	Dirk Moebius\n\
-	Dominic Stolerman\n\
-	Dusty Phillips\n\
-	Ed Stewart\n\
-	Eric Benoit\n\
-	Eric Ladner\n\
-	Fan Ho Yin\n\
-	Francesc Roses\n\
-	George Hovey\n\
-	George Latkiewicz\n\
-	Gerd Knops\n\
-	Gili Tzabari\n\
-	Giulio Piancastelli\n\
-	Greg Cooper\n\
-	Greg Merrill\n\
-	Ian Maclean\n\
-	Igor Lesik\n\
-	Israel Olalla\n\
-	Jamie LaScolea\n\
-	Jason Ginchereau\n\
-	Jerry McBride\n\
-	Jiger Patel\n\
-	Jim Lawton\n\
-	Jim Wissner\n\
-	John Gellene\n\
-	John Perry\n\
-	Jonathan Revusky\n\
-	Jorg Winter\n\
-	Joseph Schroer\n\
-	Juha Lindfors\n\
-	Justin Dieters\n\
-	Justin Hagstrom\n\
-	Kasper Graversen\n\
-	Kenrick Drew\n\
-	Kevin Burton\n\
-	Kevin McWhirter\n\
-	Ken Gentry\n\
-	Ken Turner\n\
-	Klaus Hartlage\n\
-	Konstantin Pribluda\n\
-	Kris Kopicki\n\
-	Kristian Ovaska\n\
-	Krzysztof Krzyzaniak\n\
-	Lionel Fiol\n\
-	Magnus Henriksson\n\
-	Maik Schreiber\n\
-	Marc Rummel\n\
-	Marcelo Vanzin\n\
-	Marcio Marchini\n\
-	Marco Hunsicker\n\
-	Marco Gotze\n\
-	Marcus Jonason\n\
-	Matija Kejzar\n\
-	Matt Albrecht\n\
-	Matt Price\n\
-	Matthew Flower\n\
-	Matthew Payne\n\
-	Matthew Price\n\
-	Matthias Schneider\n\
-	Michael Jacobson\n\
-	Michael Taft\n\
-	Mike Dillon\n\
-	Mike Hansen\n\
-	Mirco Bova\n\
-	Nahuel Foronda\n\
-	Nicholas O'Leary\n\
-	Nils Krahnstoever\n\
-	Nitsan Vardi\n\
-	Ollie Rutherfurd\n\
-	Patrick Tingen\n\
-	Paul Libbrecht\n\
-	Peter Cox\n\
-	Peter Graves\n\
-	Philipp Janda\n\
-	Phillip Mateescu\n\
-	Ralf Engels\n\
-	Randolf Mock\n\
-	Randy Hudson\n\
-	Rex Young\n\
-	Richard Ashwell\n\
-	Richard Beton\n\
-	Rick Gibbs\n\
-	Rick Owen\n\
-	Rob Watson\n\
-	Robert McKinnon\n\
-	Robert Swarr\n\
-	Romain Guy\n\
-	Rudolf Widmann\n\
-	Ryan Fowler\n\
-	Ryan Grove\n\
-	Saimon Moore\n\
-	Satguru Srivastava\n\
-	Scott Allen\n\
-	Scott Willy\n\
-	Scott Wyatt\n\
-	Sebastien Pierre\n\
-	Sergey Udaltsov\n\
-	Silas Smith\n\
-	Stefan Kost\n\
-	Stefano Maestri\n\
-	Stephen Bartlett\n\
-	Steve Jakob\n\
-	Stuart Barlow\n\
-	Tal Davidson\n\
-	Thomas Alspaugh\n\
-	Thomas Bock\n\
-	Thomas Dilts\n\
-	Thomas Galvin\n\
-	Todd Papaioannou\n\
-	Tom Copeland\n\
-	Tom Locke\n\
-	Trevor Harmon\n\
-	Vicente Salvador\n\
-	Vinod Kiran\n\
-	Will Sargent\n\
-	Will Varfar\n\
-	Wiktor Adamski\n\
-	Wojciech Stryjewski\n\
-	Wolfgang Chico-Töpfer\n\
-	\ \n\
-	I'd also like to thank the users for their\n\
-	comments, feedback and bug reports.
+ \ \n\
+ Slava Pestov\n\
+ Andrey Chernov\n\
+ Aaron Bell\n\
+ Adrian Baker\n\
+ Alessandro Falappa\n\
+ Alex Levin\n\
+ Alexander Maryanovsky\n\
+ Alfonso Garcia\n\
+ Alwyn Barry\n\
+ Amedeo Farello\n\
+ Andre Kaplan\n\
+ Anthony Roy\n\
+ Artur Biesiadowski\n\
+ Aziz Sharif\n\
+ Barry Carr\n\
+ Beau Tateyama\n\
+ Ben Glazer\n\
+ Ben Sarsgard\n\
+ Ben Williams\n\
+ Bertalan Fodor\n\
+ Bill McMilleon\n\
+ Brad Mace\n\
+ Brant Langer Gurganus\n\
+ Brett Smith\n\
+ Bruno Tatibouet\n\
+ Calvin Yu\n\
+ Carlos Quiroz\n\
+ Carmine Lucarelli\n\
+ Chris Kent\n\
+ Chris Scott\n\
+ Christoph Daniel Schulze\n\
+ Claude Eisenhut\n\
+ Cullen Linn\n\
+ Dale Anson\n\
+ Danny Dig\n\
+ Dante Fabrizio\n\
+ David Askew\n\
+ David Moss\n\
+ David Taylor\n\
+ Denis Lambot\n\
+ Dirk Moebius\n\
+ Dominic Stolerman\n\
+ Dusty Phillips\n\
+ Ed Stewart\n\
+ Eric Benoit\n\
+ Eric Ladner\n\
+ Fan Ho Yin\n\
+ Francesc Roses\n\
+ George Hovey\n\
+ George Latkiewicz\n\
+ Gerd Knops\n\
+ Gili Tzabari\n\
+ Giulio Piancastelli\n\
+ Greg Cooper\n\
+ Greg Merrill\n\
+ Ian Maclean\n\
+ Igor Lesik\n\
+ Israel Olalla\n\
+ Jamie LaScolea\n\
+ Jason Ginchereau\n\
+ Jerry McBride\n\
+ Jiger Patel\n\
+ Jim Lawton\n\
+ Jim Wissner\n\
+ John Gellene\n\
+ John Perry\n\
+ Jonathan Revusky\n\
+ Jorg Winter\n\
+ Joseph Schroer\n\
+ Juha Lindfors\n\
+ Justin Dieters\n\
+ Justin Hagstrom\n\
+ Kasper Graversen\n\
+ Kenrick Drew\n\
+ Kevin Burton\n\
+ Kevin McWhirter\n\
+ Ken Gentry\n\
+ Ken Turner\n\
+ Klaus Hartlage\n\
+ Konstantin Pribluda\n\
+ Kris Kopicki\n\
+ Kristian Ovaska\n\
+ Krzysztof Krzyzaniak\n\
+ Lionel Fiol\n\
+ Magnus Henriksson\n\
+ Maik Schreiber\n\
+ Marc Rummel\n\
+ Marcelo Vanzin\n\
+ Marcio Marchini\n\
+ Marco Hunsicker\n\
+ Marco Gotze\n\
+ Marcus Jonason\n\
+ Matija Kejzar\n\
+ Matt Albrecht\n\
+ Matt Price\n\
+ Matthew Flower\n\
+ Matthew Payne\n\
+ Matthew Price\n\
+ Matthias Schneider\n\
+ Michael Jacobson\n\
+ Michael Taft\n\
+ Mike Dillon\n\
+ Mike Hansen\n\
+ Mirco Bova\n\
+ Nahuel Foronda\n\
+ Nicholas O'Leary\n\
+ Nils Krahnstoever\n\
+ Nitsan Vardi\n\
+ Ollie Rutherfurd\n\
+ Patrick Tingen\n\
+ Paul Libbrecht\n\
+ Peter Cox\n\
+ Peter Graves\n\
+ Philipp Janda\n\
+ Phillip Mateescu\n\
+ Ralf Engels\n\
+ Randolf Mock\n\
+ Randy Hudson\n\
+ Rex Young\n\
+ Richard Ashwell\n\
+ Richard Beton\n\
+ Rick Gibbs\n\
+ Rick Owen\n\
+ Rob Watson\n\
+ Robert McKinnon\n\
+ Robert Swarr\n\
+ Romain Guy\n\
+ Rudolf Widmann\n\
+ Ryan Fowler\n\
+ Ryan Grove\n\
+ Saimon Moore\n\
+ Satguru Srivastava\n\
+ Scott Allen\n\
+ Scott Willy\n\
+ Scott Wyatt\n\
+ Sebastien Pierre\n\
+ Sergey Udaltsov\n\
+ Silas Smith\n\
+ Stefan Kost\n\
+ Stefano Maestri\n\
+ Stephen Bartlett\n\
+ Steve Jakob\n\
+ Stuart Barlow\n\
+ Tal Davidson\n\
+ Thomas Alspaugh\n\
+ Thomas Bock\n\
+ Thomas Dilts\n\
+ Thomas Galvin\n\
+ Todd Papaioannou\n\
+ Tom Copeland\n\
+ Tom Locke\n\
+ Trevor Harmon\n\
+ Vicente Salvador\n\
+ Vinod Kiran\n\
+ Will Sargent\n\
+ Will Varfar\n\
+ Wiktor Adamski\n\
+ Wojciech Stryjewski\n\
+ Wolfgang Chico-Töpfer\n\
+ \ \n\
+ I'd also like to thank the users for their\n\
+ comments, feedback and bug reports.
 #}}}
 
 #{{{ Error list dialog, used to report I/O and plugin load errors
@@ -779,10 +779,10 @@ ioerror={0}
 ioerror.directory-error=Cannot list directory: {0}
 ioerror.directory-error-nomsg=Cannot list directory.
 ioerror.encoding-error=Cannot load with "{0}" encoding.\n\
-	({1})\n\
-	Try disabling selecting a different encoding and\n\
-	disabling auto-detection in the Commands menu\n\
-	of the file system browser.
+ ({1})\n\
+ Try disabling selecting a different encoding and\n\
+ disabling auto-detection in the Commands menu\n\
+ of the file system browser.
 ioerror.read-error=Cannot load: {0}
 ioerror.write-error=Cannot save: {0}
 ioerror.open-directory=Cannot open directory as a buffer.
@@ -800,11 +800,11 @@ vfs.not-supported.load=Files on the "{0}" filesystem cannot be opened.
 vfs.not-supported.save=Files cannot be saved to the "{0}" filesystem.
 
 out-of-memory-error=There was insufficent Java heap memory to complete\n\
-	this request. Try increasing the maximum heap size.\n\
-	\n\
-	Documentation on changing the Java heap size can be found in\n\
-	the "Buffers" section of the "jEdit Basics" chapter of the\n\
-	user guide.
+ this request. Try increasing the maximum heap size.\n\
+ \n\
+ Documentation on changing the Java heap size can be found in\n\
+ the "Buffers" section of the "jEdit Basics" chapter of the\n\
+ user guide.
 #}}}
 
 #{{{ Old I/O error dialog boxes
@@ -813,58 +813,58 @@ ioerror.message=An I/O error occurred ({0})
 read-error.title=Read Error
 # {0} - the path name {1} - the error message
 read-error.message=The file {0}\n\
-	could not be loaded due to an I/O error.\n\
-	({1})
+ could not be loaded due to an I/O error.\n\
+ ({1})
 
 write-error.title=Write Error
 # {0} - the path name {1} - the error message
 write-error.message=The file {0}\n\
-	could not be saved due to an I/O error.\n\
-	({1})
+ could not be saved due to an I/O error.\n\
+ ({1})
 
 directory-error.title=Directory Error
 # {0} - the path name {1} - the error message
 directory-error.message=The directory {0}\n\
-	could not be listed due to an I/O error.\n\
-	({1})
+ could not be listed due to an I/O error.\n\
+ ({1})
 
 directory-error-nomsg.title=Directory Error
 # {0} - the path name
 directory-error-nomsg.message=The directory {0}\n\
-	could not be listed due to an I/O error.
+ could not be listed due to an I/O error.
 
 encoding-error.title=Incompatible Encoding
 encoding-error.message=The file {0}\n\
-	could not be loaded with the "{1}" encoding.\n\
-	({2})\n\
-	\n\
-	To use a different encoding, try the commands in the\n\
-	File->Open With Encoding menu.\n\
-	\n\
-	If you are really stuck and do not know which encoding\n\
-	to use, try "ASCII" or "8859_1".
+ could not be loaded with the "{1}" encoding.\n\
+ ({2})\n\
+ \n\
+ To use a different encoding, try the commands in the\n\
+ File->Open With Encoding menu.\n\
+ \n\
+ If you are really stuck and do not know which encoding\n\
+ to use, try "ASCII" or "8859_1".
 
 open-directory.title=Cannot Open Directory
 open-directory.message={0} is a directory.\n\
-	Directories cannot be opened for editing.
+ Directories cannot be opened for editing.
 
 save-directory.title=Cannot Save Directory
 save-directory.message={0} is a directory.\n\
-	Buffers cannot be saved over directories.
+ Buffers cannot be saved over directories.
 
 no-read.title=Cannot Open File
 no-read.message=Cannot read from {0}.\n\
-	This probably means you have insufficent permissions.
+ This probably means you have insufficent permissions.
 
 no-write.title=Cannot Save File
 no-write.message=Cannot save to {0}.\n\
-	This probably means you have insufficent permissions.
+ This probably means you have insufficent permissions.
 
 badurl.title=Invalid URL
 # {0} - the URL
 # {1} - the error
 badurl.message=The following URL is invalid: {0}\n
-	({1})
+ ({1})
 #}}}
 
 #{{{ Go to line dialog
@@ -894,22 +894,22 @@ notsaved.message=Save changes to {0}?
 #{{{ File changed, still reload dialog
 changedreload.title=File Modified
 changedreload.message=The file {0}\n\
-	has been modified since last save; if you reload,\n\
-	the changes will be lost. Continue?
+ has been modified since last save; if you reload,\n\
+ the changes will be lost. Continue?
 #}}}
 
 #{{{ Autosave file exists dialog
 autosave-found.title=Autosave File Found
 # {0} - autosave file name
 autosave-found.message=An autosave file {0}\n\
-	was found! This probably means that jEdit crashed before you could\n\
-	save. Would you like to open the autosave file?
+ was found! This probably means that jEdit crashed before you could\n\
+ save. Would you like to open the autosave file?
 
 autosave-loaded.title=Autosave File Loaded
 autosave-loaded.message=The autosave file {0}\n\
-	has been loaded. You should now check if it contains your unsaved\n\
-	data. If you would like to keep the autosaved changes, save the file.\n\
-	If you would like to discard them, select File->Reload.
+ has been loaded. You should now check if it contains your unsaved\n\
+ data. If you would like to keep the autosaved changes, save the file.\n\
+ If you would like to discard them, select File->Reload.
 #}}}
 
 #{{{ Save all confirm dialog
@@ -920,7 +920,7 @@ saveall.message=Are you sure you want to save all modified buffers?
 #{{{ Reload all confirm dialog
 reload-all.title=Reload All Buffers
 reload-all.message=Are you sure you want to reload all buffers from disk?\n\
-	Unsaved changes in any open buffers WILL BE LOST!
+ Unsaved changes in any open buffers WILL BE LOST!
 #}}}
 
 #{{{ Encoding prompt
@@ -946,13 +946,13 @@ record.message=Macro name:
 #{{{ Some features don't work with -nosettings dialog
 no-settings.title=Feature Disabled
 no-settings.message=jEdit was started with the -nosettings switch.\n\
-	To use this feature, you must start jEdit without that switch.
+ To use this feature, you must start jEdit without that switch.
 #}}}
 
 #{{{ Some features don't work with the web start version
 no-webstart.title=Feature Disabled
 no-webstart.message=This feature is not available in the WebStart version\n\
-	of jEdit.
+ of jEdit.
 #}}}
 
 #{{{ Search and replace dialog
@@ -1017,7 +1017,7 @@ search.beepOnSearchAutoWrap=false
 #{{{ Keep searching dialog
 keepsearching.title=No More Matches Found
 keepsearching.message=No more matches were found. Continue search from\n\
-	{0,choice,0#beginning|1#end}?
+ {0,choice,0#beginning|1#end}?
 #}}}
 
 #{{{ HyperSearch results dialog
@@ -1051,35 +1051,35 @@ searcherror.message=An error occurred while performing this operation.
 searcherror-bsh.title=Search and Replace Error
 # {0} - error message
 searcherror-bsh.message=An error occurred while performing this operation.\n\
-	\n\
-	Make sure the replace mode is set to "Text" if you did not intend\n\
-	the replace string to be interpreted as a BeanShell expression.
+ \n\
+ Make sure the replace mode is set to "Text" if you did not intend\n\
+ the replace string to be interpreted as a BeanShell expression.
 #}}}
 
 #{{{ Empty fileset error dialog
 empty-fileset.title=Empty File Set
 empty-fileset.message=The specified search file set contains no files.\n\
-	Please ensure that the file name filter and directory to search\n\
-	(if applicable) are set correctly.
+ Please ensure that the file name filter and directory to search\n\
+ (if applicable) are set correctly.
 #}}}
 
 #{{{ Reverse regular expression search not supported dialog
 regexp-reverse.title=Not Supported
 regexp-reverse.message=Cannot search backwards for a regular expression.\n\
-	Either search forwards or disable regular expressions.
+ Either search forwards or disable regular expressions.
 #}}}
 
 #{{{ Can only search local directories dialog
 remote-dir-search.title=Non-Local Directory Chosen
 remote-dir-search.message=You have elected to search a non-local directory.\n\
-	This can be very slow due to network latency and so on.\n\
-	Are you sure you want to continue?
+ This can be very slow due to network latency and so on.\n\
+ Are you sure you want to continue?
 #}}}
 
 #{{{ "Search in selection" active but nothing selected in text area
 search-no-selection.title=Nothing Selected
 search-no-selection.message=Please select some text or deactivate the\n\
-	"search in selection" option first.
+ "search in selection" option first.
 #}}}
 
 #{{{ Paste previous and paste deleted dialogs
@@ -1093,14 +1093,14 @@ paste-deleted.caption=Recently deleted text:
 #{{{ File changed on disk dialog
 filechanged-save.title=File Changed on Disk
 filechanged-save.message=The file {0}\n\
-	has been modified on disk by another program. Are you sure\n\
-	you want to continue saving it?
+ has been modified on disk by another program. Are you sure\n\
+ you want to continue saving it?
 #}}}
 
 #{{{ File exists dialog
 fileexists.title=File Exists
 fileexists.message=The file {0} already exists. Are you sure you want\n\
-	to overwrite it?
+ to overwrite it?
 #}}}
 
 #{{{ Select line range dialog
@@ -1154,9 +1154,9 @@ edit-abbrev.title=Edit Abbreviation
 
 edit-abbrev.duplicate.title=Duplicate Abbreviation
 edit-abbrev.duplicate.message=\
-	Another expansion already exists with this abbreviation.\n\
-	\n\
-	Do you want to override the existing expansion?
+ Another expansion already exists with this abbreviation.\n\
+ \n\
+ Do you want to override the existing expansion?
 
 abbrev-editor.abbrev=Abbreviation:
 abbrev-editor.before=Text to insert before caret:
@@ -1167,7 +1167,7 @@ abbrev-editor.after=Text to insert after caret:
 xmode-error.title=XML Parse Error
 # {2} is the column number, but it's not too useful so we don't show it
 xmode-error.message=An error occurred while parsing {0}, line {1}:\n\
-	{3}
+ {3}
 
 xmode-error.dtd=The DTD could not be loaded\n({0})
 xmode-error.termchar-invalid=The value of the AT_CHAR attribute is invalid ({0})
@@ -1186,31 +1186,31 @@ plugin-error.caption=The following plugins could not be loaded:
 plugin-error.caption-1=The following plugin could not be loaded:
 
 plugin-error.load-error=Cannot load: {0}\n\
-	The most likely reason is that the JAR file is corrupt; try\n\
-	reinstalling it. See Utilities->Troubleshooting->Activity Log\n\
-	for a full stack trace.
+ The most likely reason is that the JAR file is corrupt; try\n\
+ reinstalling it. See Utilities->Troubleshooting->Activity Log\n\
+ for a full stack trace.
 plugin-error.start-error=Cannot start: {0}\n\
-	Try updating to a newer version of the plugin.
+ Try updating to a newer version of the plugin.
 plugin-error.already-loaded=Two copies installed. Please remove one of the \
-	two copies.
+ two copies.
 plugin-error.dep-jdk=Requires Java {0} or later, but you only have version {1}.
 plugin-error.dep-jedit=Requires jEdit {0} or later, but you only have version {1}.\n\
-	Download new jEdit versions from <http://www.jedit.org>.
+ Download new jEdit versions from <http://www.jedit.org>.
 plugin-error.dep-plugin.no-version=Requires version {0} \
-	or later of {1},\n\
-	but {1} is not installed.
+ or later of {1},\n\
+ but {1} is not installed.
 plugin-error.dep-plugin.broken=Requires {0}, but {0}\n\
-	could not be loaded.
+ could not be loaded.
 plugin-error.dep-plugin=Requires version {0} or later of {1}, \
-	but you only have {1} version {2}.
+ but you only have {1} version {2}.
 plugin-error.dep-class=Requires the class {0}.\n\
-	Try installing the appropriate plugin or class library.
+ Try installing the appropriate plugin or class library.
 plugin-error.missing-jar=Requires JAR file {0}.\n\
-	This JAR file is part of this plugin, but it cannot be found.\n\
-	Try reinstalling this plugin.
+ This JAR file is part of this plugin, but it cannot be found.\n\
+ Try reinstalling this plugin.
 plugin-error.obsolete=This plugin is obsolete. Please remove it.
 plugin-error.not-42=This plugin does not support dynamic loading.\n\
-	You must restart jEdit after removing or installing this plugin.
+ You must restart jEdit after removing or installing this plugin.
 #}}}
 
 #{{{ Macro dialogs
@@ -1226,28 +1226,28 @@ beanshell-error.message=A BeanShell error occurred.
 
 beanshell-eval-input.title=Evaluate BeanShell Expression
 beanshell-eval-input.message=BeanShell expression:\n\
-	\n\
-	Variables:\n\
-	view - The current view instance\n\
-	editPane - The current edit pane instance\n\
-	textArea - The current text area instance\n\
-	buffer - The current buffer
+ \n\
+ Variables:\n\
+ view - The current view instance\n\
+ editPane - The current edit pane instance\n\
+ textArea - The current text area instance\n\
+ buffer - The current buffer
 
 beanshell-eval.title=BeanShell Evaluation
 beanshell-eval.message={0}
 
 beanshell-eval-line.title=Evaluate BeanShell Expression
 beanshell-eval-line.message=BeanShell expression to evaluate for each \
-	selected line:\n\
-	\n\
-	Variables:\n\
-	line - The index of the line, from the start of the buffer\n\
-	index - The index of the line, from the start of the selection\n\
-	text - The text of the line\n\
-	view - The current view instance\n\
-	editPane - The current edit pane instance\n\
-	textArea - The current text area instance\n\
-	buffer - The current buffer
+ selected line:\n\
+ \n\
+ Variables:\n\
+ line - The index of the line, from the start of the buffer\n\
+ index - The index of the line, from the start of the selection\n\
+ text - The text of the line\n\
+ view - The current view instance\n\
+ editPane - The current edit pane instance\n\
+ textArea - The current text area instance\n\
+ buffer - The current buffer
 #}}}
 
 #{{{ Macro not recording dialog
@@ -1261,7 +1261,7 @@ large-repeat-count.message=Are you sure you want to invoke "{0}" {1} times?
 
 large-repeat-count.user-input.title=Large Repeat Count
 large-repeat-count.user-input.message=Are you sure you want to insert "{0}" \
-	{1} times?
+ {1} times?
 #}}}
 
 #{{{ Wrong fold mode dialog
@@ -1278,21 +1278,21 @@ memory-status.use={0} Kb used, {1} Kb total
 #{{{ Multiple I/O request errors
 buffer-multiple-io.title=I/O Error
 buffer-multiple-io.message=Each buffer can only execute one input/output\n\
-	operation at a time. Please wait until the current\n\
-	operation finishes (or abort it in the I/O progress monitor)\n\
-	before starting another one.
+ operation at a time. Please wait until the current\n\
+ operation finishes (or abort it in the I/O progress monitor)\n\
+ before starting another one.
 
 browser-multiple-io.title=I/O Error
 browser-multiple-io.message=Each file system browser can only execute one input/output\n\
-	operation at a time. Please wait until the current operation\n\
-	finishes (or abort it in the I/O progress monitor) before starting\n\
-	another one.
+ operation at a time. Please wait until the current operation\n\
+ finishes (or abort it in the I/O progress monitor) before starting\n\
+ another one.
 #}}}
 
 #{{{ maxLineLen=0 warning
 format-maxlinelen.title=Wrap Margin
 format-maxlinelen.message=The wrap margin must be set to a non-zero value\n\
-	for this command to work.
+ for this command to work.
 #}}}
 
 #}}}
@@ -1300,8 +1300,8 @@ format-maxlinelen.message=The wrap margin must be set to a non-zero value\n\
 #{{{ Buffer options dialog
 buffer-options.title=Buffer Options
 buffer-options.caption=This dialog box changes settings for the current buffer\n\
-	only. To change settings on an editor-wide basis, see\n\
-	the Utilities->Global Options dialog box.
+ only. To change settings on an editor-wide basis, see\n\
+ the Utilities->Global Options dialog box.
 buffer-options.loading-saving=Loading and Saving
 buffer-options.lineSeparator=Line separator:
 buffer-options.encoding=Character encoding:
@@ -1344,11 +1344,11 @@ options.appearance.showSplash=Show splash screen on startup
 options.appearance.showTips=Show tips on startup
 options.appearance.experimental.label=Experimental options
 options.appearance.experimental.caption=The below three options might not work \
-	correctly with some\n\
-	Java versions. If you experience problems, switch them off.
+ correctly with some\n\
+ Java versions. If you experience problems, switch them off.
 
 options.appearance.textColors=Use jEdit text area colors in all text \
-	components
+ components
 options.appearance.decorateFrames=Draw window borders using Swing look & feel
 options.appearance.decorateDialogs=Draw dialog box borders using Swing look & feel
 #}}}
@@ -1380,13 +1380,13 @@ options.editing.code=new EditingOptionPane();
 options.editing.defaultMode=Default edit mode:
 options.editing.undoCount=Number of undos:
 options.editing.caption-0=\
-	To customize mode-specific settings, select an edit mode\n\
-	from the below menu. Currently, global defaults are being\n\
-	shown.
+ To customize mode-specific settings, select an edit mode\n\
+ from the below menu. Currently, global defaults are being\n\
+ shown.
 options.editing.caption-1=\
-	Uncheck "use default settings" to customize mode-specific\n\
-	settings. Otherwise, settings from the <global defaults>\n\
-	section will be used.
+ Uncheck "use default settings" to customize mode-specific\n\
+ settings. Otherwise, settings from the <global defaults>\n\
+ section will be used.
 options.editing.mode=Change settings for mode:
 options.editing.global=<global defaults>
 options.editing.useDefaults=Use default settings
@@ -1419,7 +1419,7 @@ options.general.saveCaret=Save caret positions in recent file list
 options.general.persistentMarkers=Save marker positions
 options.general.restore=Restore previously open files on startup
 options.general.restore.cli=... even if file names were specified on the \
-	command line
+ command line
 options.general.sortBuffers=Sort buffer list (takes effect after restart)
 options.general.sortByName=Sort buffer list by file name, instead of path name
 #}}}
@@ -1448,7 +1448,7 @@ options.mouse.label=Mouse
 options.mouse.code=new MouseOptionPane();
 options.mouse.dragAndDrop=Drag and drop in text area
 options.mouse.joinNonWordChars=Double-click drag joins non-alphanumeric \
-	characters
+ characters
 options.mouse.middleMousePaste=Quick copy using middle mouse button
 options.mouse.gutter.foldClick=Click in gutter:
 options.mouse.gutter.SfoldClick=Shift-click in gutter:
@@ -1462,7 +1462,7 @@ options.plugin-manager.code=new PluginManagerOptionPane();
 options.plugin-manager.updateMirrors=Update mirror list
 options.plugin-manager.downloadSource=Download plugin source code
 options.plugin-manager.deleteDownloads=Delete archives from download \
-	directory after install
+ directory after install
 options.plugin-manager.mirror=Preferred download mirror:
 options.plugin-manager.location=Install plugins in:
 options.plugin-manager.settings-dir=jEdit settings directory
@@ -1484,7 +1484,7 @@ options.print.tabSize=Tab width when printing:
 options.print.workarounds=Workarounds for Java bugs
 options.print.glyphVector=Print spacing workaround (increases spool file size)
 options.print.force13=Use old printing API (enable this if jEdit hangs when \
-	printing)
+ printing)
 #}}}
 
 #{{{ Proxy pane
@@ -1533,26 +1533,26 @@ grab-key.remove=Remove Current
 
 grab-key.remove-ask.title=Remove Shortcut?
 grab-key.remove-ask.message=\
-	You didn't specify a new shortcut.\n\
-	Do you want to remove the current shortcut?
+ You didn't specify a new shortcut.\n\
+ Do you want to remove the current shortcut?
 
 grab-key.duplicate-alt-shortcut.title=Duplicate Shortcut
 grab-key.duplicate-alt-shortcut.message=\
-	The shortcut you selected duplicates the other\n\
-	shortcut for this item. Please choose another.
+ The shortcut you selected duplicates the other\n\
+ shortcut for this item. Please choose another.
 
 grab-key.duplicate-shortcut.title=Duplicate Shortcut
 grab-key.duplicate-shortcut.message=\
-	This shortcut is already assigned to\n\
-	"{0}".\n\
-	\n\
-	Do you want to override this assignment?
+ This shortcut is already assigned to\n\
+ "{0}".\n\
+ \n\
+ Do you want to override this assignment?
 
 grab-key.prefix-shortcut.title=Invalid Shortcut
 grab-key.prefix-shortcut.message=\
-	You cannot use this shortcut, because\n\
-	it is a prefix to other shortcuts.\n\
-	Please choose another.
+ You cannot use this shortcut, because\n\
+ it is a prefix to other shortcuts.\n\
+ Please choose another.
 #}}}
 
 #{{{ Status bar pane
@@ -1606,7 +1606,7 @@ options.textarea.electricBorders=Electric (auto scroll) borders
 options.textarea.stdNextPrevWord=Go to next/previous word commands eat whitespace
 options.textarea.antiAlias=Smooth text (slow on some systems)
 options.textarea.fracFontMetrics=Fractional font metrics (for better smooth \
-	text display)
+ text display)
 options.textArea.stripTrailingEOL=Hide final end of line (if any)
 #}}}
 
@@ -1669,7 +1669,7 @@ options.browser.general.sortIgnoreCase=Ignore case when sorting
 options.browser.general.sortMixFilesAndDirs=Mix files and directories
 options.browser.general.doubleClickClose=Double-clicking an open file closes it
 options.browser.general.currentBufferFilter=Filter in file dialogs is \
-	current buffer extension
+ current buffer extension
 #}}}
 
 #{{{ Font selector
@@ -1763,8 +1763,8 @@ io-progress-monitor.abort=Abort
 #{{{ I/O abort dialog box
 abort.title=Abort I/O
 abort.message=Are you sure you want to abort the currently executing\n\
-	input/output request? If you are aborting a file save, this may\n\
-	result in data loss.
+ input/output request? If you are aborting a file save, this may\n\
+ result in data loss.
 #}}}
 
 #}}}
@@ -1823,19 +1823,19 @@ vfs.browser.up.label=Parent Directory
 
 #{{{ Tool bar
 vfs.browser.toolbar-browser=vfs.browser.up \
-			    vfs.browser.reload \
-			    vfs.browser.roots \
-			    vfs.browser.home \
-			    vfs.browser.synchronize \
-			    vfs.browser.new-file \
-			    vfs.browser.new-directory \
-			    vfs.browser.search-directory
+       vfs.browser.reload \
+       vfs.browser.roots \
+       vfs.browser.home \
+       vfs.browser.synchronize \
+       vfs.browser.new-file \
+       vfs.browser.new-directory \
+       vfs.browser.search-directory
 vfs.browser.toolbar-dialog=vfs.browser.up \
-			   vfs.browser.reload \
-			   vfs.browser.roots \
-			   vfs.browser.home \
-			   vfs.browser.synchronize \
-			   vfs.browser.new-directory
+      vfs.browser.reload \
+      vfs.browser.roots \
+      vfs.browser.home \
+      vfs.browser.synchronize \
+      vfs.browser.new-directory
 #}}}
 
 #{{{ Commands menu
@@ -1881,12 +1881,12 @@ vfs.browser.recurse-favorites.message=The favorites list cannot be added to itse
 
 vfs.browser.delete-confirm.title=Delete File Confirmation
 vfs.browser.delete-confirm.message=Are you sure you want to delete the following files?\n\n\
-	{0}
+ {0}
 
 vfs.browser.delete-favorites.title=Delete From Favorites
 vfs.browser.delete-favorites.message=Are you sure you want to remove the following files \
-	from the favorites?\n\n\
-	{0}
+ from the favorites?\n\n\
+ {0}
 
 vfs.browser.rename.title=Rename File
 vfs.browser.rename.message=Enter a new name for {0}:
@@ -1923,16 +1923,16 @@ plugin-manager.done=Close
 
 plugin-manager.remove-confirm.title=Remove Plugins
 plugin-manager.remove-confirm.message=Are you sure you want to remove the \
-	following plugins?
+ following plugins?
 
 plugin-manager.dependency.title=Plugin Dependency
 plugin-manager.dependency.message={0} is required by the following plugins.\n\
-	Deselecting {0} will also deselect the below plugins:
+ Deselecting {0} will also deselect the below plugins:
 
 install-plugins.depend.title=Dependency Required
 install-plugins.depend.message=One or more of the plugins you are installing\n\
-	require additional plugins. They will be automatically\n\
-	installed if you continue.
+ require additional plugins. They will be automatically\n\
+ installed if you continue.
 
 plugin-manager.status.loaded=Loaded
 plugin-manager.status.not-loaded=Not loaded
@@ -1943,16 +1943,16 @@ plugin-manager.list-download=Downloading plugin list from plugins.jedit.org
 #{{{ Error while loading plugin list
 plugin-list.ioerror.title=I/O Error
 plugin-list.ioerror.message=Could not download the plugin list.\n\
-	({0})\n\
-	\n\
-	If you are behind an HTTP or SOCKS proxy, click\n\
-	"Proxy Servers" to configure proxy server settings\n\
-	and try again.
+ ({0})\n\
+ \n\
+ If you are behind an HTTP or SOCKS proxy, click\n\
+ "Proxy Servers" to configure proxy server settings\n\
+ and try again.
 plugin-list.ioerror.proxy-servers=Proxy Servers...
 
 plugin-list.xmlerror.title=XML Parser Error
 plugin-list.xmlerror.message=An error occurred while parsing {0}, line {1}:\n\
-	{2}
+ {2}
 #}}}
 
 #{{{ Plugin management
@@ -1980,8 +1980,8 @@ install-plugins.install=Install
 install-plugins.show-updates=Show Updates
 
 install-plugins.info=Author: {0}\n\
-	Released: {1}\n\
-	{2}
+ Released: {1}\n\
+ {2}
 
 update-plugins.title=Update
 
@@ -1992,7 +1992,7 @@ plugin-manager.progress.stop=Stop
 #{{{ Plugin remove error
 plugin-manager.remove-failed.title=Remove Failed
 plugin-manager.remove-failed.message=The plugin {0}\n\
-	could not be removed.
+ could not be removed.
 #}}}
 
 #}}}

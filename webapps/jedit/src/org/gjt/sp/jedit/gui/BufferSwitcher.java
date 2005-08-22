@@ -27,77 +27,77 @@ import org.gjt.sp.jedit.*;
 
 public class BufferSwitcher extends JComboBox
 {
-	public BufferSwitcher(final EditPane editPane)
-	{
-		this.editPane = editPane;
+ public BufferSwitcher(final EditPane editPane)
+ {
+  this.editPane = editPane;
 
-		//setFont(new Font("Dialog",Font.BOLD,10));
-		setRenderer(new BufferCellRenderer());
-		setMaximumRowCount(jEdit.getIntegerProperty("bufferSwitcher.maxRowCount",10));
-		addActionListener(new ActionHandler());
-		addPopupMenuListener(new PopupMenuListener()
-		{
-			public void popupMenuWillBecomeVisible(
-				PopupMenuEvent e) {}
+  //setFont(new Font("Dialog",Font.BOLD,10));
+  setRenderer(new BufferCellRenderer());
+  setMaximumRowCount(jEdit.getIntegerProperty("bufferSwitcher.maxRowCount",10));
+  addActionListener(new ActionHandler());
+  addPopupMenuListener(new PopupMenuListener()
+  {
+   public void popupMenuWillBecomeVisible(
+    PopupMenuEvent e) {}
 
-			public void popupMenuWillBecomeInvisible(
-				PopupMenuEvent e)
-			{
-				editPane.getTextArea().requestFocus();
-			}
+   public void popupMenuWillBecomeInvisible(
+    PopupMenuEvent e)
+   {
+    editPane.getTextArea().requestFocus();
+   }
 
-			public void popupMenuCanceled(PopupMenuEvent e)
-			{
-				editPane.getTextArea().requestFocus();
-			}
-		});
-	}
+   public void popupMenuCanceled(PopupMenuEvent e)
+   {
+    editPane.getTextArea().requestFocus();
+   }
+  });
+ }
 
-	public void updateBufferList()
-	{
-		// if the buffer count becomes 0, then it is guaranteed to
-		// become 1 very soon, so don't do anything in that case.
-		if(jEdit.getBufferCount() == 0)
-			return;
+ public void updateBufferList()
+ {
+  // if the buffer count becomes 0, then it is guaranteed to
+  // become 1 very soon, so don't do anything in that case.
+  if(jEdit.getBufferCount() == 0)
+   return;
 
-		updating = true;
-		setMaximumRowCount(jEdit.getIntegerProperty("bufferSwitcher.maxRowCount",10));
-		setModel(new DefaultComboBoxModel(jEdit.getBuffers()));
-		setSelectedItem(editPane.getBuffer());
-		updating = false;
-	}
+  updating = true;
+  setMaximumRowCount(jEdit.getIntegerProperty("bufferSwitcher.maxRowCount",10));
+  setModel(new DefaultComboBoxModel(jEdit.getBuffers()));
+  setSelectedItem(editPane.getBuffer());
+  updating = false;
+ }
 
-	// private members
-	private EditPane editPane;
-	private boolean updating;
+ // private members
+ private EditPane editPane;
+ private boolean updating;
 
-	class ActionHandler implements ActionListener
-	{
-		public void actionPerformed(ActionEvent evt)
-		{
-			if(!updating)
-			{
-				Buffer buffer = (Buffer)getSelectedItem();
-				if(buffer != null)
-					editPane.setBuffer(buffer);
-			}
-		}
-	}
+ class ActionHandler implements ActionListener
+ {
+  public void actionPerformed(ActionEvent evt)
+  {
+   if(!updating)
+   {
+    Buffer buffer = (Buffer)getSelectedItem();
+    if(buffer != null)
+     editPane.setBuffer(buffer);
+   }
+  }
+ }
 
-	class BufferCellRenderer extends DefaultListCellRenderer
-	{
-		public Component getListCellRendererComponent(
-			JList list, Object value, int index,
-			boolean isSelected, boolean cellHasFocus)
-		{
-			super.getListCellRendererComponent(list,value,index,
-				isSelected,cellHasFocus);
-			Buffer buffer = (Buffer)value;
-			if(buffer == null)
-				setIcon(null);
-			else
-				setIcon(buffer.getIcon());
-			return this;
-		}
-	}
+ class BufferCellRenderer extends DefaultListCellRenderer
+ {
+  public Component getListCellRendererComponent(
+   JList list, Object value, int index,
+   boolean isSelected, boolean cellHasFocus)
+  {
+   super.getListCellRendererComponent(list,value,index,
+    isSelected,cellHasFocus);
+   Buffer buffer = (Buffer)value;
+   if(buffer == null)
+    setIcon(null);
+   else
+    setIcon(buffer.getIcon());
+   return this;
+  }
+ }
 }

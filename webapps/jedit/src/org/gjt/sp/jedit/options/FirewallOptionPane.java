@@ -31,100 +31,100 @@ import org.gjt.sp.jedit.*;
 
 public class FirewallOptionPane extends AbstractOptionPane {
 
-	//{{{ FirewallOptionPane constructor
-	public FirewallOptionPane()
-	{
-		super("firewall");
-	} //}}}
+ //{{{ FirewallOptionPane constructor
+ public FirewallOptionPane()
+ {
+  super("firewall");
+ } //}}}
 
-	//{{{ _init() method
-	public void _init()
-	{
-		// checkbox
-		addComponent(httpEnabled = new JCheckBox(jEdit.getProperty(
-			"options.firewall.http.enabled")));
-		// proxy host
-		addComponent(jEdit.getProperty("options.firewall.http.host"),
-			httpHost = new JTextField(jEdit.getProperty("firewall.host"), 15));
-		// proxy port
-		addComponent(jEdit.getProperty("options.firewall.http.port"),
-			httpPort = new JTextField(jEdit.getProperty("firewall.port"), 15));
-		// proxy username
-		addComponent(jEdit.getProperty("options.firewall.http.user"),
-			httpUser = new JTextField(jEdit.getProperty("firewall.user"), 15));
-		// proxy password
-		addComponent(jEdit.getProperty("options.firewall.http.password"),
-			httpPass = new JPasswordField(jEdit.getProperty("firewall.password"), 15));
-		// no proxy for
-		addComponent(jEdit.getProperty("options.firewall.http.nonProxy"),
-			httpNonProxy = new JTextField(jEdit.getProperty("firewall.nonProxyHosts"), 15));
+ //{{{ _init() method
+ public void _init()
+ {
+  // checkbox
+  addComponent(httpEnabled = new JCheckBox(jEdit.getProperty(
+   "options.firewall.http.enabled")));
+  // proxy host
+  addComponent(jEdit.getProperty("options.firewall.http.host"),
+   httpHost = new JTextField(jEdit.getProperty("firewall.host"), 15));
+  // proxy port
+  addComponent(jEdit.getProperty("options.firewall.http.port"),
+   httpPort = new JTextField(jEdit.getProperty("firewall.port"), 15));
+  // proxy username
+  addComponent(jEdit.getProperty("options.firewall.http.user"),
+   httpUser = new JTextField(jEdit.getProperty("firewall.user"), 15));
+  // proxy password
+  addComponent(jEdit.getProperty("options.firewall.http.password"),
+   httpPass = new JPasswordField(jEdit.getProperty("firewall.password"), 15));
+  // no proxy for
+  addComponent(jEdit.getProperty("options.firewall.http.nonProxy"),
+   httpNonProxy = new JTextField(jEdit.getProperty("firewall.nonProxyHosts"), 15));
 
-		boolean enabled = jEdit.getBooleanProperty("firewall.enabled");
-		httpEnabled.setSelected(enabled);
-		httpHost.setEnabled(enabled);
-		httpPort.setEnabled(enabled);
-		httpUser.setEnabled(enabled);
-		httpPass.setEnabled(enabled);
-		httpNonProxy.setEnabled(enabled);
+  boolean enabled = jEdit.getBooleanProperty("firewall.enabled");
+  httpEnabled.setSelected(enabled);
+  httpHost.setEnabled(enabled);
+  httpPort.setEnabled(enabled);
+  httpUser.setEnabled(enabled);
+  httpPass.setEnabled(enabled);
+  httpNonProxy.setEnabled(enabled);
 
-		httpEnabled.addActionListener(new ActionHandler());
+  httpEnabled.addActionListener(new ActionHandler());
 
-		// checkbox
-		addComponent(socksEnabled = new JCheckBox(jEdit.getProperty(
-			"options.firewall.socks.enabled")));
-		// proxy host
-		addComponent(jEdit.getProperty("options.firewall.socks.host"),
-			socksHost = new JTextField(jEdit.getProperty("firewall.socks.host"), 15));
-		// proxy port
-		addComponent(jEdit.getProperty("options.firewall.socks.port"),
-			socksPort = new JTextField(jEdit.getProperty("firewall.socks.port"), 15));
+  // checkbox
+  addComponent(socksEnabled = new JCheckBox(jEdit.getProperty(
+   "options.firewall.socks.enabled")));
+  // proxy host
+  addComponent(jEdit.getProperty("options.firewall.socks.host"),
+   socksHost = new JTextField(jEdit.getProperty("firewall.socks.host"), 15));
+  // proxy port
+  addComponent(jEdit.getProperty("options.firewall.socks.port"),
+   socksPort = new JTextField(jEdit.getProperty("firewall.socks.port"), 15));
 
-		enabled = jEdit.getBooleanProperty("firewall.socks.enabled");
-		socksEnabled.setSelected(enabled);
-		socksHost.setEnabled(enabled);
-		socksPort.setEnabled(enabled);
+  enabled = jEdit.getBooleanProperty("firewall.socks.enabled");
+  socksEnabled.setSelected(enabled);
+  socksHost.setEnabled(enabled);
+  socksPort.setEnabled(enabled);
 
-		socksEnabled.addActionListener(new ActionHandler());
-	} //}}}
+  socksEnabled.addActionListener(new ActionHandler());
+ } //}}}
 
-	//{{{ _save() method
-	public void _save() {
-		jEdit.setBooleanProperty("firewall.enabled", httpEnabled.isSelected());
-		jEdit.setProperty("firewall.host", httpHost.getText());
-		jEdit.setProperty("firewall.port", httpPort.getText());
-		jEdit.setProperty("firewall.user", httpUser.getText());
-		jEdit.setProperty("firewall.password", new String(httpPass.getPassword()));
-		jEdit.setProperty("firewall.nonProxyHosts", httpNonProxy.getText());
+ //{{{ _save() method
+ public void _save() {
+  jEdit.setBooleanProperty("firewall.enabled", httpEnabled.isSelected());
+  jEdit.setProperty("firewall.host", httpHost.getText());
+  jEdit.setProperty("firewall.port", httpPort.getText());
+  jEdit.setProperty("firewall.user", httpUser.getText());
+  jEdit.setProperty("firewall.password", new String(httpPass.getPassword()));
+  jEdit.setProperty("firewall.nonProxyHosts", httpNonProxy.getText());
 
-		jEdit.setBooleanProperty("firewall.socks.enabled", socksEnabled.isSelected());
-		jEdit.setProperty("firewall.socks.host", socksHost.getText());
-		jEdit.setProperty("firewall.socks.port", socksPort.getText());
-	} //}}}
+  jEdit.setBooleanProperty("firewall.socks.enabled", socksEnabled.isSelected());
+  jEdit.setProperty("firewall.socks.host", socksHost.getText());
+  jEdit.setProperty("firewall.socks.port", socksPort.getText());
+ } //}}}
 
-	//{{{ Private members
-	private JCheckBox httpEnabled;
-	private JTextField httpHost;
-	private JTextField httpPort;
-	private JTextField httpUser;
-	private JPasswordField httpPass;
-	private JTextField httpNonProxy;
-	private JCheckBox socksEnabled;
-	private JTextField socksHost;
-	private JTextField socksPort;
-	//}}}
+ //{{{ Private members
+ private JCheckBox httpEnabled;
+ private JTextField httpHost;
+ private JTextField httpPort;
+ private JTextField httpUser;
+ private JPasswordField httpPass;
+ private JTextField httpNonProxy;
+ private JCheckBox socksEnabled;
+ private JTextField socksHost;
+ private JTextField socksPort;
+ //}}}
 
-	//{{{ ActionHandler class
-	class ActionHandler implements ActionListener
-	{
-		public void actionPerformed(ActionEvent evt)
-		{
-			httpHost.setEnabled(httpEnabled.isSelected());
-			httpPort.setEnabled(httpEnabled.isSelected());
-			httpUser.setEnabled(httpEnabled.isSelected());
-			httpPass.setEnabled(httpEnabled.isSelected());
-			httpNonProxy.setEnabled(httpEnabled.isSelected());
-			socksHost.setEnabled(socksEnabled.isSelected());
-			socksPort.setEnabled(socksEnabled.isSelected());
-		}
-	}
+ //{{{ ActionHandler class
+ class ActionHandler implements ActionListener
+ {
+  public void actionPerformed(ActionEvent evt)
+  {
+   httpHost.setEnabled(httpEnabled.isSelected());
+   httpPort.setEnabled(httpEnabled.isSelected());
+   httpUser.setEnabled(httpEnabled.isSelected());
+   httpPass.setEnabled(httpEnabled.isSelected());
+   httpNonProxy.setEnabled(httpEnabled.isSelected());
+   socksHost.setEnabled(socksEnabled.isSelected());
+   socksPort.setEnabled(socksEnabled.isSelected());
+  }
+ }
 }

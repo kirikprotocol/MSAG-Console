@@ -332,7 +332,7 @@ public class DTDConfiguration
             CONTINUE_AFTER_FATAL_ERROR,
             LOAD_EXTERNAL_DTD,    // from XMLDTDScannerImpl
             //NOTIFY_BUILTIN_REFS,  // from XMLDocumentFragmentScannerImpl
-            //NOTIFY_CHAR_REFS,		// from XMLDocumentFragmentScannerImpl
+            //NOTIFY_CHAR_REFS,  // from XMLDocumentFragmentScannerImpl
             //WARN_ON_DUPLICATE_ENTITYDEF,  // from XMLEntityManager
         };
         addRecognizedFeatures(recognizedFeatures);

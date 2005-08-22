@@ -30,86 +30,86 @@ import org.gjt.sp.jedit.*;
 
 public class PrintOptionPane extends AbstractOptionPane
 {
-	//{{{ PrintOptionPane constructor
-	public PrintOptionPane()
-	{
-		super("print");
-	} //}}}
+ //{{{ PrintOptionPane constructor
+ public PrintOptionPane()
+ {
+  super("print");
+ } //}}}
 
-	//{{{ _init() method
-	protected void _init()
-	{
-		/* Font */
-		font = new FontSelector(jEdit.getFontProperty("print.font"));
-		addComponent(jEdit.getProperty("options.print.font"),font);
+ //{{{ _init() method
+ protected void _init()
+ {
+  /* Font */
+  font = new FontSelector(jEdit.getFontProperty("print.font"));
+  addComponent(jEdit.getProperty("options.print.font"),font);
 
-		/* Header */
-		printHeader = new JCheckBox(jEdit.getProperty("options.print"
-			+ ".header"));
-		printHeader.setSelected(jEdit.getBooleanProperty("print.header"));
-		addComponent(printHeader);
+  /* Header */
+  printHeader = new JCheckBox(jEdit.getProperty("options.print"
+   + ".header"));
+  printHeader.setSelected(jEdit.getBooleanProperty("print.header"));
+  addComponent(printHeader);
 
-		/* Footer */
-		printFooter = new JCheckBox(jEdit.getProperty("options.print"
-			+ ".footer"));
-		printFooter.setSelected(jEdit.getBooleanProperty("print.footer"));
-		addComponent(printFooter);
+  /* Footer */
+  printFooter = new JCheckBox(jEdit.getProperty("options.print"
+   + ".footer"));
+  printFooter.setSelected(jEdit.getBooleanProperty("print.footer"));
+  addComponent(printFooter);
 
-		/* Line numbering */
-		printLineNumbers = new JCheckBox(jEdit.getProperty("options.print"
-			+ ".lineNumbers"));
-		printLineNumbers.setSelected(jEdit.getBooleanProperty("print.lineNumbers"));
-		addComponent(printLineNumbers);
+  /* Line numbering */
+  printLineNumbers = new JCheckBox(jEdit.getProperty("options.print"
+   + ".lineNumbers"));
+  printLineNumbers.setSelected(jEdit.getBooleanProperty("print.lineNumbers"));
+  addComponent(printLineNumbers);
 
-		/* Color */
-		color = new JCheckBox(jEdit.getProperty("options.print"
-			+ ".color"));
-		color.setSelected(jEdit.getBooleanProperty("print.color"));
-		addComponent(color);
+  /* Color */
+  color = new JCheckBox(jEdit.getProperty("options.print"
+   + ".color"));
+  color.setSelected(jEdit.getBooleanProperty("print.color"));
+  addComponent(color);
 
-		/* Tab size */
-		String[] tabSizes = { "2", "4", "8" };
-		tabSize = new JComboBox(tabSizes);
-		tabSize.setEditable(true);
-		tabSize.setSelectedItem(jEdit.getProperty("print.tabSize"));
-		addComponent(jEdit.getProperty("options.print.tabSize"),tabSize);
+  /* Tab size */
+  String[] tabSizes = { "2", "4", "8" };
+  tabSize = new JComboBox(tabSizes);
+  tabSize.setEditable(true);
+  tabSize.setSelectedItem(jEdit.getProperty("print.tabSize"));
+  addComponent(jEdit.getProperty("options.print.tabSize"),tabSize);
 
-		addSeparator("options.print.workarounds");
+  addSeparator("options.print.workarounds");
 
-		/* Spacing workaround */
-		glyphVector = new JCheckBox(jEdit.getProperty(
-			"options.print.glyphVector"));
-		glyphVector.setSelected(jEdit.getBooleanProperty("print.glyphVector"));
-		addComponent(glyphVector);
+  /* Spacing workaround */
+  glyphVector = new JCheckBox(jEdit.getProperty(
+   "options.print.glyphVector"));
+  glyphVector.setSelected(jEdit.getBooleanProperty("print.glyphVector"));
+  addComponent(glyphVector);
 
-		/* Force 1.3 print dialog */
-		force13 = new JCheckBox(jEdit.getProperty(
-			"options.print.force13"));
-		force13.setSelected(jEdit.getBooleanProperty("print.force13"));
-		addComponent(force13);
-	} //}}}
+  /* Force 1.3 print dialog */
+  force13 = new JCheckBox(jEdit.getProperty(
+   "options.print.force13"));
+  force13.setSelected(jEdit.getBooleanProperty("print.force13"));
+  addComponent(force13);
+ } //}}}
 
-	//{{{ _save() method
-	protected void _save()
-	{
-		jEdit.setFontProperty("print.font",font.getFont());
-		jEdit.setBooleanProperty("print.header",printHeader.isSelected());
-		jEdit.setBooleanProperty("print.footer",printFooter.isSelected());
-		jEdit.setBooleanProperty("print.lineNumbers",printLineNumbers.isSelected());
-		jEdit.setBooleanProperty("print.color",color.isSelected());
-		jEdit.setProperty("print.tabSize",(String)tabSize.getSelectedItem());
-		jEdit.setBooleanProperty("print.glyphVector",glyphVector.isSelected());
-		jEdit.setBooleanProperty("print.force13",force13.isSelected());
-	} //}}}
+ //{{{ _save() method
+ protected void _save()
+ {
+  jEdit.setFontProperty("print.font",font.getFont());
+  jEdit.setBooleanProperty("print.header",printHeader.isSelected());
+  jEdit.setBooleanProperty("print.footer",printFooter.isSelected());
+  jEdit.setBooleanProperty("print.lineNumbers",printLineNumbers.isSelected());
+  jEdit.setBooleanProperty("print.color",color.isSelected());
+  jEdit.setProperty("print.tabSize",(String)tabSize.getSelectedItem());
+  jEdit.setBooleanProperty("print.glyphVector",glyphVector.isSelected());
+  jEdit.setBooleanProperty("print.force13",force13.isSelected());
+ } //}}}
 
-	//{{{ Private members
-	private FontSelector font;
-	private JCheckBox printHeader;
-	private JCheckBox printFooter;
-	private JCheckBox printLineNumbers;
-	private JCheckBox color;
-	private JComboBox tabSize;
-	private JCheckBox glyphVector;
-	private JCheckBox force13;
-	//}}}
+ //{{{ Private members
+ private FontSelector font;
+ private JCheckBox printHeader;
+ private JCheckBox printFooter;
+ private JCheckBox printLineNumbers;
+ private JCheckBox color;
+ private JComboBox tabSize;
+ private JCheckBox glyphVector;
+ private JCheckBox force13;
+ //}}}
 }

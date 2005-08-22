@@ -95,7 +95,7 @@ public class ElementDefinitionImpl
 
     /** Factory constructor. */
     public ElementDefinitionImpl(CoreDocumentImpl ownerDocument, String name) {
-    	super(ownerDocument);
+     super(ownerDocument);
         this.name = name;
         attributes = new NamedNodeMapImpl(ownerDocument);
     }
@@ -127,11 +127,11 @@ public class ElementDefinitionImpl
      */
     public Node cloneNode(boolean deep) {
 
-    	ElementDefinitionImpl newnode =
+     ElementDefinitionImpl newnode =
             (ElementDefinitionImpl) super.cloneNode(deep);
-    	// NamedNodeMap must be explicitly replicated to avoid sharing
-    	newnode.attributes = attributes.cloneMap(newnode);
-    	return newnode;
+     // NamedNodeMap must be explicitly replicated to avoid sharing
+     newnode.attributes = attributes.cloneMap(newnode);
+     return newnode;
 
     } // cloneNode(boolean):Node
 
@@ -150,7 +150,7 @@ public class ElementDefinitionImpl
         if (needsSyncChildren()) {
             synchronizeChildren();
         }
-    	return attributes;
+     return attributes;
 
     } // getAttributes():NamedNodeMap
 

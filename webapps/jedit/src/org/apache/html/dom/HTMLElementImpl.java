@@ -213,49 +213,49 @@ public class HTMLElementImpl
 
     public Attr getAttributeNode( String attrName )
     {
-	return super.getAttributeNode( attrName.toLowerCase(Locale.ENGLISH) );
+ return super.getAttributeNode( attrName.toLowerCase(Locale.ENGLISH) );
     }
 
 
     public Attr getAttributeNodeNS( String namespaceURI,
-				    String localName )
+        String localName )
     {
-	if ( namespaceURI != null && namespaceURI.length() > 0 )
-	    return super.getAttributeNodeNS( namespaceURI, localName );
-	else
-	    return super.getAttributeNode( localName.toLowerCase(Locale.ENGLISH) );
+ if ( namespaceURI != null && namespaceURI.length() > 0 )
+     return super.getAttributeNodeNS( namespaceURI, localName );
+ else
+     return super.getAttributeNode( localName.toLowerCase(Locale.ENGLISH) );
     }
     
     
     public String getAttribute( String attrName )
     {
-	return super.getAttribute( attrName.toLowerCase(Locale.ENGLISH) );
+ return super.getAttribute( attrName.toLowerCase(Locale.ENGLISH) );
     }
 
 
     public String getAttributeNS( String namespaceURI,
-				  String localName )
+      String localName )
     {
-	if ( namespaceURI != null && namespaceURI.length() > 0 )
-	    return super.getAttributeNS( namespaceURI, localName );
-	else
-	    return super.getAttribute( localName.toLowerCase(Locale.ENGLISH) );
+ if ( namespaceURI != null && namespaceURI.length() > 0 )
+     return super.getAttributeNS( namespaceURI, localName );
+ else
+     return super.getAttribute( localName.toLowerCase(Locale.ENGLISH) );
     }
 
 
     public final NodeList getElementsByTagName( String tagName )
     {
-	return super.getElementsByTagName( tagName.toUpperCase(Locale.ENGLISH) );
+ return super.getElementsByTagName( tagName.toUpperCase(Locale.ENGLISH) );
     }
 
 
     public final NodeList getElementsByTagNameNS( String namespaceURI,
-					          String localName )
+               String localName )
     {
-	if ( namespaceURI != null && namespaceURI.length() > 0 )
-	    return super.getElementsByTagNameNS( namespaceURI, localName.toUpperCase(Locale.ENGLISH) );
-	else
-	    return super.getElementsByTagName( localName.toUpperCase(Locale.ENGLISH) );
+ if ( namespaceURI != null && namespaceURI.length() > 0 )
+     return super.getElementsByTagNameNS( namespaceURI, localName.toUpperCase(Locale.ENGLISH) );
+ else
+     return super.getElementsByTagName( localName.toUpperCase(Locale.ENGLISH) );
     } 
 
 

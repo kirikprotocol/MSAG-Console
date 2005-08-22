@@ -244,7 +244,7 @@ public class StandardParserConfiguration
             SCHEMA_NONS_LOCATION,       
             };
 
-			addRecognizedProperties(recognizedProperties);
+   addRecognizedProperties(recognizedProperties);
 
     } // <init>(SymbolTable,XMLGrammarPool)
 

@@ -33,93 +33,93 @@ import org.gjt.sp.jedit.*;
  */
 public class PluginUpdate extends EBMessage
 {
-	//{{{ Message types
-	/**
-	 * Plugin loaded. This is sent after a JAR file is added to the
-	 * list and scanned.
-	 * @since jEdit 4.2pre1
-	 */
-	public static final Object LOADED = "LOADED";
+ //{{{ Message types
+ /**
+  * Plugin loaded. This is sent after a JAR file is added to the
+  * list and scanned.
+  * @since jEdit 4.2pre1
+  */
+ public static final Object LOADED = "LOADED";
 
-	/**
-	 * Plugin activated. This is sent after the plugin core class
-	 * is loaded and its <code>start()</code> method is called.
-	 * @since jEdit 4.2pre1
-	 */
-	public static final Object ACTIVATED = "ACTIVATED";
+ /**
+  * Plugin activated. This is sent after the plugin core class
+  * is loaded and its <code>start()</code> method is called.
+  * @since jEdit 4.2pre1
+  */
+ public static final Object ACTIVATED = "ACTIVATED";
 
-	/**
-	 * Plugin activated. This is sent after the plugin core class
-	 * <code>stop()</code> method is called.
-	 * @since jEdit 4.2pre2
-	 */
-	public static final Object DEACTIVATED = "DEACTIVATED";
+ /**
+  * Plugin activated. This is sent after the plugin core class
+  * <code>stop()</code> method is called.
+  * @since jEdit 4.2pre2
+  */
+ public static final Object DEACTIVATED = "DEACTIVATED";
 
-	/**
-	 * Plugin unloaded.
-	 * @since jEdit 4.2pre1
-	 */
-	public static final Object UNLOADED = "UNLOADED";
-	//}}}
+ /**
+  * Plugin unloaded.
+  * @since jEdit 4.2pre1
+  */
+ public static final Object UNLOADED = "UNLOADED";
+ //}}}
 
-	//{{{ PluginUpdate constructor
-	/**
-	 * Creates a new plugin update message.
-	 * @param jar The plugin
-	 * @param what What happened
-	 * @param exit Is the editor exiting?
-	 * @since jEdit 4.2pre3
-	 */
-	public PluginUpdate(PluginJAR jar, Object what, boolean exit)
-	{
-		super(jar);
+ //{{{ PluginUpdate constructor
+ /**
+  * Creates a new plugin update message.
+  * @param jar The plugin
+  * @param what What happened
+  * @param exit Is the editor exiting?
+  * @since jEdit 4.2pre3
+  */
+ public PluginUpdate(PluginJAR jar, Object what, boolean exit)
+ {
+  super(jar);
 
-		if(what == null)
-			throw new NullPointerException("What must be non-null");
+  if(what == null)
+   throw new NullPointerException("What must be non-null");
 
-		this.what = what;
-		this.exit = exit;
-	} //}}}
+  this.what = what;
+  this.exit = exit;
+ } //}}}
 
-	//{{{ getWhat() method
-	/**
-	 * Returns what caused this plugin update.
-	 */
-	public Object getWhat()
-	{
-		return what;
-	} //}}}
+ //{{{ getWhat() method
+ /**
+  * Returns what caused this plugin update.
+  */
+ public Object getWhat()
+ {
+  return what;
+ } //}}}
 
-	//{{{ isExiting() method
-	/**
-	 * Returns true if this plugin is being unloaded as part of the
-	 * shutdown process, in which case some components like the help
-	 * viewer and plugin manager ignore the event.
-	 * @since jEdit 4.2pre3
-	 */
-	public boolean isExiting()
-	{
-		return exit;
-	} //}}}
+ //{{{ isExiting() method
+ /**
+  * Returns true if this plugin is being unloaded as part of the
+  * shutdown process, in which case some components like the help
+  * viewer and plugin manager ignore the event.
+  * @since jEdit 4.2pre3
+  */
+ public boolean isExiting()
+ {
+  return exit;
+ } //}}}
 
-	//{{{ getPluginJAR() method
-	/**
-	 * Returns the plugin involved.
-	 */
-	public PluginJAR getPluginJAR()
-	{
-		return (PluginJAR)getSource();
-	} //}}}
+ //{{{ getPluginJAR() method
+ /**
+  * Returns the plugin involved.
+  */
+ public PluginJAR getPluginJAR()
+ {
+  return (PluginJAR)getSource();
+ } //}}}
 
-	//{{{ paramString() method
-	public String paramString()
-	{
-		return "what=" + what + ",exit=" + exit + ","
-			+ super.paramString();
-	} //}}}
+ //{{{ paramString() method
+ public String paramString()
+ {
+  return "what=" + what + ",exit=" + exit + ","
+   + super.paramString();
+ } //}}}
 
-	//{{{ Private members
-	private Object what;
-	private boolean exit;
-	//}}}
+ //{{{ Private members
+ private Object what;
+ private boolean exit;
+ //}}}
 }

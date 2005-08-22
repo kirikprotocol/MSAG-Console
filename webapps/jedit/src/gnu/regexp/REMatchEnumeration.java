@@ -84,13 +84,13 @@ public class REMatchEnumeration implements Enumeration, Serializable {
    */
   public boolean hasMoreMatches(StringBuffer buffer) {
     if (more == MAYBE) {
-	match = expr.getMatchImpl(input,index,eflags,buffer);
-	if (match != null) {
-	    input.move((match.end[0] > 0) ? match.end[0] : 1);
-	    
-	    index = (match.end[0] > 0) ? match.end[0] + match.offset : index + 1;
-	    more = YES;
-	} else more = NO;
+ match = expr.getMatchImpl(input,index,eflags,buffer);
+ if (match != null) {
+     input.move((match.end[0] > 0) ? match.end[0] : 1);
+     
+     index = (match.end[0] > 0) ? match.end[0] + match.offset : index + 1;
+     more = YES;
+ } else more = NO;
     }
     return (more == YES);
   }
@@ -107,8 +107,8 @@ public class REMatchEnumeration implements Enumeration, Serializable {
    */
   public REMatch nextMatch() throws NoSuchElementException {
     if (hasMoreElements()) {
-	more = (input.isValid()) ? MAYBE : NO;
-	return match;
+ more = (input.isValid()) ? MAYBE : NO;
+ return match;
     }
     throw new NoSuchElementException();
   }

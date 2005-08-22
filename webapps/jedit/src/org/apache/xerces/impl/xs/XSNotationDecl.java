@@ -127,11 +127,11 @@ public class XSNotationDecl implements XSNotationDeclaration {
         return null;
     }
 
-	/**
-	 * @see org.apache.xerces.impl.xs.psvi.XSObject#getNamespaceItem()
-	 */
-	public XSNamespaceItem getNamespaceItem() {
-		return null;
-	}
+ /**
+  * @see org.apache.xerces.impl.xs.psvi.XSObject#getNamespaceItem()
+  */
+ public XSNamespaceItem getNamespaceItem() {
+  return null;
+ }
 
 } // class XSNotationDecl

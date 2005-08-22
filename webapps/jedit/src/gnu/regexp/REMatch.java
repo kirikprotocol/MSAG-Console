@@ -50,61 +50,61 @@ public final class REMatch implements Serializable, Cloneable {
     REMatch next; // other possibility (to avoid having to use arrays)
 
     public Object clone() {
-	try {
-	    REMatch copy = (REMatch) super.clone();
-	    copy.next = null;
+ try {
+     REMatch copy = (REMatch) super.clone();
+     copy.next = null;
 
-	    copy.start = (int[]) start.clone();
-	    copy.end = (int[]) end.clone();
+     copy.start = (int[]) start.clone();
+     copy.end = (int[]) end.clone();
 
-	    return copy;
-	} catch (CloneNotSupportedException e) {
-	    throw new Error(); // doesn't happen
-	}
+     return copy;
+ } catch (CloneNotSupportedException e) {
+     throw new Error(); // doesn't happen
+ }
     }
 
     void assignFrom(REMatch other) {
-	start = other.start;
-	end = other.end;
-	index = other.index;
-	// need to deep clone?
-	next = other.next;
+ start = other.start;
+ end = other.end;
+ index = other.index;
+ // need to deep clone?
+ next = other.next;
     }
 
     REMatch(int subs, int anchor, int eflags) {
-	start = new int[subs+1];
-	end = new int[subs+1];
-	this.anchor = anchor;
-	this.eflags = eflags;
-	clear(anchor);
+ start = new int[subs+1];
+ end = new int[subs+1];
+ this.anchor = anchor;
+ this.eflags = eflags;
+ clear(anchor);
     }
 
     void finish(CharIndexed text) {
-	start[0] = 0;
-	StringBuffer sb = new StringBuffer();
-	int i;
-	for (i = 0; i < end[0]; i++)
-	    sb.append(text.charAt(i));
-	matchedText = sb.toString();
-	for (i = 0; i < start.length; i++) {
-	    // If any subexpressions didn't terminate, they don't count
-	    // TODO check if this code ever gets hit
-	    if ((start[i] == -1) ^ (end[i] == -1)) {
-		start[i] = -1;
-		end[i] = -1;
-	    }
-	}
-	next = null; // cut off alternates
+ start[0] = 0;
+ StringBuffer sb = new StringBuffer();
+ int i;
+ for (i = 0; i < end[0]; i++)
+     sb.append(text.charAt(i));
+ matchedText = sb.toString();
+ for (i = 0; i < start.length; i++) {
+     // If any subexpressions didn't terminate, they don't count
+     // TODO check if this code ever gets hit
+     if ((start[i] == -1) ^ (end[i] == -1)) {
+  start[i] = -1;
+  end[i] = -1;
+     }
+ }
+ next = null; // cut off alternates
     }
     
     /** Clears the current match and moves the offset to the new index. */
     void clear(int index) {
-	offset = index;
-	this.index = 0;
-	for (int i = 0; i < start.length; i++) {
-	    start[i] = end[i] = -1;
-	}
-	next = null; // cut off alternates
+ offset = index;
+ this.index = 0;
+ for (int i = 0; i < start.length; i++) {
+     start[i] = end[i] = -1;
+ }
+ next = null; // cut off alternates
     }
     
     /**
@@ -117,7 +117,7 @@ public final class REMatch implements Serializable, Cloneable {
      * </code>
      */
     public String toString() {
-	return matchedText;
+ return matchedText;
     }
     
     /**
@@ -125,7 +125,7 @@ public final class REMatch implements Serializable, Cloneable {
      * began.
      */
     public int getStartIndex() {
-	return offset + start[0];
+ return offset + start[0];
     }
     
     /**
@@ -146,7 +146,7 @@ public final class REMatch implements Serializable, Cloneable {
      * method (above) does exactly that for you.  
      */
     public int getEndIndex() {
-	return offset + end[0];
+ return offset + end[0];
     }
   
     /**
@@ -158,8 +158,8 @@ public final class REMatch implements Serializable, Cloneable {
      * @param sub Index of the subexpression.
      */
     public String toString(int sub) {
-	if ((sub >= start.length) || (start[sub] == -1)) return "";
-	return (matchedText.substring(start[sub],end[sub]));
+ if ((sub >= start.length) || (start[sub] == -1)) return "";
+ return (matchedText.substring(start[sub],end[sub]));
     }
 
     /** 
@@ -171,9 +171,9 @@ public final class REMatch implements Serializable, Cloneable {
      * @deprecated Use getStartIndex(int) instead.
      */
     public int getSubStartIndex(int sub) {
-	if (sub >= start.length) return -1;
-	int x = start[sub];
-	return (x == -1) ? x : offset + x;
+ if (sub >= start.length) return -1;
+ int x = start[sub];
+ return (x == -1) ? x : offset + x;
     }
     
     /** 
@@ -185,9 +185,9 @@ public final class REMatch implements Serializable, Cloneable {
      * @since gnu.regexp 1.1.0
      */
     public int getStartIndex(int sub) {
-	if (sub >= start.length) return -1;
-	int x = start[sub];
-	return (x == -1) ? x : offset + x;
+ if (sub >= start.length) return -1;
+ int x = start[sub];
+ return (x == -1) ? x : offset + x;
     }
   
     /** 
@@ -199,9 +199,9 @@ public final class REMatch implements Serializable, Cloneable {
      * @deprecated Use getEndIndex(int) instead
      */
     public int getSubEndIndex(int sub) {
-	if (sub >= start.length) return -1;
-	int x = end[sub];
-	return (x == -1) ? x : offset + x;
+ if (sub >= start.length) return -1;
+ int x = end[sub];
+ return (x == -1) ? x : offset + x;
     }
     
     /** 
@@ -212,9 +212,9 @@ public final class REMatch implements Serializable, Cloneable {
      * @param sub Subexpression index
      */
     public int getEndIndex(int sub) {
-	if (sub >= start.length) return -1;
-	int x = end[sub];
-	return (x == -1) ? x : offset + x;
+ if (sub >= start.length) return -1;
+ int x = end[sub];
+ return (x == -1) ? x : offset + x;
     }
     
     /**
@@ -227,18 +227,18 @@ public final class REMatch implements Serializable, Cloneable {
      * @param input A string consisting of literals and <code>$<i>n</i></code> tokens.
      */
     public String substituteInto(String input) {
-	// a la Perl, $0 is whole thing, $1 - $9 are subexpressions
-	StringBuffer output = new StringBuffer();
-	int pos;
-	for (pos = 0; pos < input.length()-1; pos++) {
-	    if ((input.charAt(pos) == '$') && (Character.isDigit(input.charAt(pos+1)))) {
-		int val = Character.digit(input.charAt(++pos),10);
-		if (val < start.length) {
-		    output.append(toString(val));
-		} 
-	    } else output.append(input.charAt(pos));
-	}
-	if (pos < input.length()) output.append(input.charAt(pos));
-	return output.toString();
+ // a la Perl, $0 is whole thing, $1 - $9 are subexpressions
+ StringBuffer output = new StringBuffer();
+ int pos;
+ for (pos = 0; pos < input.length()-1; pos++) {
+     if ((input.charAt(pos) == '$') && (Character.isDigit(input.charAt(pos+1)))) {
+  int val = Character.digit(input.charAt(++pos),10);
+  if (val < start.length) {
+      output.append(toString(val));
+  } 
+     } else output.append(input.charAt(pos));
+ }
+ if (pos < input.length()) output.append(input.charAt(pos));
+ return output.toString();
     }
 }

@@ -35,70 +35,70 @@ import org.gjt.sp.util.Log;
  */
 class Autosave implements ActionListener
 {
-	//{{{ setInterval() method
-	public static void setInterval(int interval)
-	{
-		if(interval == 0)
-		{
-			if(timer != null)
-			{
-				timer.stop();
-				timer = null;
-			}
+ //{{{ setInterval() method
+ public static void setInterval(int interval)
+ {
+  if(interval == 0)
+  {
+   if(timer != null)
+   {
+    timer.stop();
+    timer = null;
+   }
 
-			return;
-		}
+   return;
+  }
 
-		interval *= 1000;
+  interval *= 1000;
 
-		if(timer == null)
-		{
-			timer = new Timer(interval,new Autosave());
-			timer.start();
-		}
-		else
-			timer.setDelay(interval);
-	} //}}}
+  if(timer == null)
+  {
+   timer = new Timer(interval,new Autosave());
+   timer.start();
+  }
+  else
+   timer.setDelay(interval);
+ } //}}}
 
-	//{{{ stop() method
-	public static void stop()
-	{
-		if(timer != null)
-			timer.stop();
-	} //}}}
+ //{{{ stop() method
+ public static void stop()
+ {
+  if(timer != null)
+   timer.stop();
+ } //}}}
 
-	//{{{ actionPerformed() method
-	public void actionPerformed(ActionEvent evt)
-	{
-		// might come in handy useful some time
-		/* Runtime runtime = Runtime.getRuntime();
-		int freeMemory = (int)(runtime.freeMemory() / 1024);
-		int totalMemory = (int)(runtime.totalMemory() / 1024);
-		int usedMemory = (totalMemory - freeMemory);
+ //{{{ actionPerformed() method
+ public void actionPerformed(ActionEvent evt)
+ {
+  // might come in handy useful some time
+  /* Runtime runtime = Runtime.getRuntime();
+  int freeMemory = (int)(runtime.freeMemory() / 1024);
+  int totalMemory = (int)(runtime.totalMemory() / 1024);
+  int usedMemory = (totalMemory - freeMemory);
 
-		Log.log(Log.DEBUG,this,"Java heap: " + usedMemory + "Kb / "
-			+ totalMemory + "Kb, " + (usedMemory * 100 / totalMemory)
-			+ "%"); */
+  Log.log(Log.DEBUG,this,"Java heap: " + usedMemory + "Kb / "
+   + totalMemory + "Kb, " + (usedMemory * 100 / totalMemory)
+   + "%"); */
 
-		// save list of open files
-		if(jEdit.getViewCount() != 0
-			&& PerspectiveManager.isPerspectiveDirty())
-		{
-			PerspectiveManager.setPerspectiveDirty(false);
-			PerspectiveManager.savePerspective(true);
-		}
+  // save list of open files
+  if(jEdit.getViewCount() != 0
+   && PerspectiveManager.isPerspectiveDirty())
+  {
+   PerspectiveManager.setPerspectiveDirty(false);
+   PerspectiveManager.savePerspective(true);
+  }
 
-		Buffer[] bufferArray = jEdit.getBuffers();
-		for(int i = 0; i < bufferArray.length; i++)
-			bufferArray[i].autosave();
+  Buffer[] bufferArray = jEdit.getBuffers();
+  for(int i = 0; i < bufferArray.length; i++)
+   bufferArray[i].autosave();
 
-		// flush log
-		Log.flushStream();
-	} //}}}
+  // flush log
+  Log.flushStream();
+ } //}}}
 
-	//{{{ Private members
-	private static Timer timer;
+ //{{{ Private members
+ private static Timer timer;
 
-	private Autosave() {}
-	//}}}
+ private Autosave() {}
+ //}}}
 }

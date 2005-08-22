@@ -47,99 +47,99 @@ import org.gjt.sp.util.Log;
  */
 public abstract class FoldHandler
 {
-	/**
-	 * The service type. See {@link org.gjt.sp.jedit.ServiceManager}.
-	 * @since jEdit 4.2pre1
-	 */
-	public static final String SERVICE = "org.gjt.sp.jedit.buffer.FoldHandler";
+ /**
+  * The service type. See {@link org.gjt.sp.jedit.ServiceManager}.
+  * @since jEdit 4.2pre1
+  */
+ public static final String SERVICE = "org.gjt.sp.jedit.buffer.FoldHandler";
 
-	//{{{ getName() method
-	/**
-	 * Returns the internal name of this FoldHandler
-	 * @return The internal name of this FoldHandler
-	 * @since jEdit 4.0pre6
-	 */
-	public String getName()
-	{
-		return name;
-	}
-	//}}}
+ //{{{ getName() method
+ /**
+  * Returns the internal name of this FoldHandler
+  * @return The internal name of this FoldHandler
+  * @since jEdit 4.0pre6
+  */
+ public String getName()
+ {
+  return name;
+ }
+ //}}}
 
-	//{{{ getFoldLevel() method
-	/**
-	 * Returns the fold level of the specified line.
-	 * @param buffer The buffer in question
-	 * @param lineIndex The line index
-	 * @param seg A segment the fold handler can use to obtain any
-	 * text from the buffer, if necessary
-	 * @return The fold level of the specified line
-	 * @since jEdit 4.0pre1
-	 */
-	public abstract int getFoldLevel(Buffer buffer, int lineIndex, Segment seg);
-	//}}}
+ //{{{ getFoldLevel() method
+ /**
+  * Returns the fold level of the specified line.
+  * @param buffer The buffer in question
+  * @param lineIndex The line index
+  * @param seg A segment the fold handler can use to obtain any
+  * text from the buffer, if necessary
+  * @return The fold level of the specified line
+  * @since jEdit 4.0pre1
+  */
+ public abstract int getFoldLevel(Buffer buffer, int lineIndex, Segment seg);
+ //}}}
 
-	//{{{ equals() method
-	/**
-	 * Returns if the specified fold handler is equal to this one.
-	 * @param o The object
-	 */
-	public boolean equals(Object o)
-	{
-		// Default implementation... subclasses can extend this.
-		if(o == null)
-			return false;
-		else
-			return getClass() == o.getClass();
-	} //}}}
+ //{{{ equals() method
+ /**
+  * Returns if the specified fold handler is equal to this one.
+  * @param o The object
+  */
+ public boolean equals(Object o)
+ {
+  // Default implementation... subclasses can extend this.
+  if(o == null)
+   return false;
+  else
+   return getClass() == o.getClass();
+ } //}}}
 
-	//{{{ hashCode() method
-	public int hashCode()
-	{
-		return getClass().hashCode();
-	} //}}}
+ //{{{ hashCode() method
+ public int hashCode()
+ {
+  return getClass().hashCode();
+ } //}}}
 
-	//{{{ getFoldHandler() method
-	/**
-	 * Returns the fold handler with the specified name, or null if
-	 * there is no registered handler with that name.
-	 * @param name The name of the desired fold handler
-	 * @since jEdit 4.0pre6
-	 */
-	public static FoldHandler getFoldHandler(String name)
-	{
-		FoldHandler handler = (FoldHandler)ServiceManager
-			.getService(SERVICE,name);
-		return handler;
-	}
-	//}}}
+ //{{{ getFoldHandler() method
+ /**
+  * Returns the fold handler with the specified name, or null if
+  * there is no registered handler with that name.
+  * @param name The name of the desired fold handler
+  * @since jEdit 4.0pre6
+  */
+ public static FoldHandler getFoldHandler(String name)
+ {
+  FoldHandler handler = (FoldHandler)ServiceManager
+   .getService(SERVICE,name);
+  return handler;
+ }
+ //}}}
 
-	//{{{ getFoldModes() method
-	/**
-	 * Returns an array containing the names of all registered fold
-	 * handlers.
-	 *
-	 * @since jEdit 4.0pre6
-	 */
-	public static String[] getFoldModes()
-	{
-		String[] handlers = ServiceManager.getServiceNames(SERVICE);
-		Arrays.sort(handlers,new MiscUtilities.StringCompare());
-		return handlers;
-	}
-	//}}}
+ //{{{ getFoldModes() method
+ /**
+  * Returns an array containing the names of all registered fold
+  * handlers.
+  *
+  * @since jEdit 4.0pre6
+  */
+ public static String[] getFoldModes()
+ {
+  String[] handlers = ServiceManager.getServiceNames(SERVICE);
+  Arrays.sort(handlers,new MiscUtilities.StringCompare());
+  return handlers;
+ }
+ //}}}
 
-	//{{{ FoldHandler() constructor
-	protected FoldHandler(String name)
-	{
-		this.name = name;
-	}
-	//}}}
+ //{{{ FoldHandler() constructor
+ protected FoldHandler(String name)
+ {
+  this.name = name;
+ }
+ //}}}
 
-	//{{{ toString() method
-	public String toString()
-	{
-		return name;
-	} //}}}
+ //{{{ toString() method
+ public String toString()
+ {
+  return name;
+ } //}}}
 
-	private String name;
+ private String name;
 }

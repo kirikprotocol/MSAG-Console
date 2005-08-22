@@ -30,91 +30,91 @@ import org.gjt.sp.jedit.*;
 
 public class ToolBarManager
 {
-	//{{{ ToolBarManager constructor
-	public ToolBarManager(Container top, Container bottom)
-	{
-		this.top = top;
-		this.bottom = bottom;
-	} //}}}
+ //{{{ ToolBarManager constructor
+ public ToolBarManager(Container top, Container bottom)
+ {
+  this.top = top;
+  this.bottom = bottom;
+ } //}}}
 
-	//{{{ addToolBar() method
-	public void addToolBar(int group, int layer, Component toolbar)
-	{
-		Entry entry = new Entry(layer, toolbar);
+ //{{{ addToolBar() method
+ public void addToolBar(int group, int layer, Component toolbar)
+ {
+  Entry entry = new Entry(layer, toolbar);
 
-		if (group == View.TOP_GROUP)
-			addToolBar(top, topToolBars, entry);
-		else if (group == View.BOTTOM_GROUP)
-			addToolBar(bottom, bottomToolBars, entry);
-		else
-			throw new InternalError("Invalid tool bar group");
-	} //}}}
+  if (group == View.TOP_GROUP)
+   addToolBar(top, topToolBars, entry);
+  else if (group == View.BOTTOM_GROUP)
+   addToolBar(bottom, bottomToolBars, entry);
+  else
+   throw new InternalError("Invalid tool bar group");
+ } //}}}
 
-	//{{{ removeToolBar() method
-	public void removeToolBar(Component toolbar)
-	{
-		removeToolBar(top, topToolBars, toolbar);
-		removeToolBar(bottom, bottomToolBars, toolbar);
-	} //}}}
+ //{{{ removeToolBar() method
+ public void removeToolBar(Component toolbar)
+ {
+  removeToolBar(top, topToolBars, toolbar);
+  removeToolBar(bottom, bottomToolBars, toolbar);
+ } //}}}
 
-	//{{{ Private members
+ //{{{ Private members
 
-	//{{{ Instance variables
-	private Container top;
-	private Container bottom;
+ //{{{ Instance variables
+ private Container top;
+ private Container bottom;
 
-	private ArrayList topToolBars = new ArrayList();
-	private ArrayList bottomToolBars = new ArrayList();
-	//}}}
+ private ArrayList topToolBars = new ArrayList();
+ private ArrayList bottomToolBars = new ArrayList();
+ //}}}
 
-	//{{{ addToolBar() method
-	private void addToolBar(Container group, ArrayList toolbars,
-		Entry entry)
-	{
-		// See if we should place this toolbar before any others
-		for(int i = 0; i < toolbars.size(); i++)
-		{
-			if(entry.layer > ((Entry)toolbars.get(i)).layer)
-			{
-				toolbars.add(i,entry);
-				group.add(entry.toolbar,i);
-				return;
-			}
-		}
+ //{{{ addToolBar() method
+ private void addToolBar(Container group, ArrayList toolbars,
+  Entry entry)
+ {
+  // See if we should place this toolbar before any others
+  for(int i = 0; i < toolbars.size(); i++)
+  {
+   if(entry.layer > ((Entry)toolbars.get(i)).layer)
+   {
+    toolbars.add(i,entry);
+    group.add(entry.toolbar,i);
+    return;
+   }
+  }
 
-		// Place the toolbar at the bottom of the group
-		toolbars.add(entry);
-		group.add(entry.toolbar);
-	} //}}}
+  // Place the toolbar at the bottom of the group
+  toolbars.add(entry);
+  group.add(entry.toolbar);
+ } //}}}
 
-	//{{{ removeToolBar() method
-	private void removeToolBar(Container group, ArrayList toolbars,
-		Component toolbar)
-	{
-		for(int i = 0; i < toolbars.size(); i++)
-		{
-			if(toolbar == ((Entry)toolbars.get(i)).toolbar)
-			{
-				group.remove(toolbar);
-				toolbars.remove(i);
+ //{{{ removeToolBar() method
+ private void removeToolBar(Container group, ArrayList toolbars,
+  Component toolbar)
+ {
+  for(int i = 0; i < toolbars.size(); i++)
+  {
+   if(toolbar == ((Entry)toolbars.get(i)).toolbar)
+   {
+    group.remove(toolbar);
+    toolbars.remove(i);
 
-				return;
-			}
-		}
-	} //}}}
+    return;
+   }
+  }
+ } //}}}
 
-	//}}}
+ //}}}
 
-	//{{{ Entry class
-	static class Entry
-	{
-		int layer;
-		Component toolbar;
+ //{{{ Entry class
+ static class Entry
+ {
+  int layer;
+  Component toolbar;
 
-		Entry(int layer, Component toolbar)
-		{
-			this.layer = layer;
-			this.toolbar = toolbar;
-		}
-	} //}}}
+  Entry(int layer, Component toolbar)
+  {
+   this.layer = layer;
+   this.toolbar = toolbar;
+  }
+ } //}}}
 }

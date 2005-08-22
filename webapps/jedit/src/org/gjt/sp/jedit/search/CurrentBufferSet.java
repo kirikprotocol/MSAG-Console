@@ -31,36 +31,36 @@ import org.gjt.sp.jedit.*;
  */
 public class CurrentBufferSet implements SearchFileSet
 {
-	//{{{ getFirstFile() method
-	public String getFirstFile(View view)
-	{
-		return view.getBuffer().getPath();
-	} //}}}
+ //{{{ getFirstFile() method
+ public String getFirstFile(View view)
+ {
+  return view.getBuffer().getPath();
+ } //}}}
 
-	//{{{ getNextFile() method
-	public String getNextFile(View view, String file)
-	{
-		if(file == null)
-			return view.getBuffer().getPath();
-		else
-			return null;
-	} //}}}
+ //{{{ getNextFile() method
+ public String getNextFile(View view, String file)
+ {
+  if(file == null)
+   return view.getBuffer().getPath();
+  else
+   return null;
+ } //}}}
 
-	//{{{ getFiles() method
-	public String[] getFiles(View view)
-	{
-		return new String[] { view.getBuffer().getPath() };
-	} //}}}
+ //{{{ getFiles() method
+ public String[] getFiles(View view)
+ {
+  return new String[] { view.getBuffer().getPath() };
+ } //}}}
 
-	//{{{ getFileCount() method
-	public int getFileCount(View view)
-	{
-		return 1;
-	} //}}}
+ //{{{ getFileCount() method
+ public int getFileCount(View view)
+ {
+  return 1;
+ } //}}}
 
-	//{{{ getCode() method
-	public String getCode()
-	{
-		return "new CurrentBufferSet()";
-	} //}}}
+ //{{{ getCode() method
+ public String getCode()
+ {
+  return "new CurrentBufferSet()";
+ } //}}}
 }

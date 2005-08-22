@@ -83,7 +83,7 @@ public class REFilterInputStream extends FilterInputStream {
 
       // This is prone to infinite loops if replace string turns out empty.
       if (buffer.length() > 0) {
-	  return buffer.charAt(0);
+   return buffer.charAt(0);
       }
     }
     char ch = stream.charAt(0);

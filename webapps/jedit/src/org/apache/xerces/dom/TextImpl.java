@@ -237,7 +237,7 @@ public class TextImpl
             }
         }
         Text currentNode = null;
-    	if (isReadOnly()){
+     if (isReadOnly()){
             Text newNode = this.ownerDocument().createTextNode(content);
             if (parent !=null) { // check if node in the tree                
                 parent.insertBefore(newNode, this);
@@ -323,32 +323,32 @@ public class TextImpl
     public Text splitText(int offset) 
         throws DOMException {
 
-    	if (isReadOnly()) {
+     if (isReadOnly()) {
             throw new DOMException(
-    		DOMException.NO_MODIFICATION_ALLOWED_ERR, 
+      DOMException.NO_MODIFICATION_ALLOWED_ERR, 
                 DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NO_MODIFICATION_ALLOWED_ERR", null));
         }
 
         if (needsSyncData()) {
             synchronizeData();
         }
-    	if (offset < 0 || offset > data.length() ) {
+     if (offset < 0 || offset > data.length() ) {
             throw new DOMException(DOMException.INDEX_SIZE_ERR, 
                 DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "INDEX_SIZE_ERR", null));
         }
-    		
+      
         // split text into two separate nodes
-    	Text newText =
+     Text newText =
             getOwnerDocument().createTextNode(data.substring(offset));
-    	setNodeValue(data.substring(0, offset));
+     setNodeValue(data.substring(0, offset));
 
         // insert new text node
         Node parentNode = getParentNode();
-    	if (parentNode != null) {
-    		parentNode.insertBefore(newText, nextSibling);
+     if (parentNode != null) {
+      parentNode.insertBefore(newText, nextSibling);
         }
 
-    	return newText;
+     return newText;
 
     } // splitText(int):Text
 

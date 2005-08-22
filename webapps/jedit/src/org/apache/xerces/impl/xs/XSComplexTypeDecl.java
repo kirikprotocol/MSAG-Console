@@ -420,12 +420,12 @@ public class XSComplexTypeDecl implements XSComplexTypeDefinition {
         return null;
     }
     
-	/**
-	 * @see org.apache.xerces.impl.xs.psvi.XSObject#getNamespaceItem()
-	 */
-	public XSNamespaceItem getNamespaceItem() {
+ /**
+  * @see org.apache.xerces.impl.xs.psvi.XSObject#getNamespaceItem()
+  */
+ public XSNamespaceItem getNamespaceItem() {
         // REVISIT: implement
-		return null;
-	}
+  return null;
+ }
 
 } // class XSComplexTypeDecl

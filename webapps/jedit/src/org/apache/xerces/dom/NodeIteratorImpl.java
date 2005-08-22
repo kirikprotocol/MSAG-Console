@@ -138,7 +138,7 @@ public class NodeIteratorImpl implements NodeIterator {
     }
     
     public Node getRoot() {
-	return fRoot;
+ return fRoot;
     }
 
     // Implementation Note: Note that the iterator looks at whatToShow
@@ -166,9 +166,9 @@ public class NodeIteratorImpl implements NodeIterator {
      */
     public Node               nextNode() {
         
-    	if( fDetach) {
-    		throw new DOMException(
-    		DOMException.INVALID_STATE_ERR, 
+     if( fDetach) {
+      throw new DOMException(
+      DOMException.INVALID_STATE_ERR, 
                 DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "INVALID_STATE_ERR", null));
         }
         
@@ -222,9 +222,9 @@ public class NodeIteratorImpl implements NodeIterator {
      */
     public Node               previousNode() {
         
-    	if( fDetach) {
-    		throw new DOMException(
-    		DOMException.INVALID_STATE_ERR, 
+     if( fDetach) {
+      throw new DOMException(
+      DOMException.INVALID_STATE_ERR, 
                 DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "INVALID_STATE_ERR", null));
         }
  

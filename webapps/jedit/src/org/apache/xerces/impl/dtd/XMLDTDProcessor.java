@@ -857,7 +857,7 @@ public class XMLDTDProcessor
 
         if (fValidation) {
         
-                boolean	duplicateAttributeDef = false ;
+                boolean duplicateAttributeDef = false ;
                                         
                 //Get Grammar index to grammar array
                 DTDGrammar grammar = (fDTDGrammar != null? fDTDGrammar:fGrammarBucket.getActiveGrammar());

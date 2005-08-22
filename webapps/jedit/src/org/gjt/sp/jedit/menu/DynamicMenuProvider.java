@@ -36,17 +36,17 @@ import javax.swing.JMenu;
  */
 public interface DynamicMenuProvider
 {
-	/**
-	 * Returns true if the menu should be updated each time it is shown.
-	 * Otherwise, it will only be updated when the menu is first created,
-	 * and if the menu receives a {@link
-	 * org.gjt.sp.jedit.msg.DynamicMenuChanged} message.
-	 */
-	boolean updateEveryTime();
+ /**
+  * Returns true if the menu should be updated each time it is shown.
+  * Otherwise, it will only be updated when the menu is first created,
+  * and if the menu receives a {@link
+  * org.gjt.sp.jedit.msg.DynamicMenuChanged} message.
+  */
+ boolean updateEveryTime();
 
-	/**
-	 * Adds the menu items to the given menu.
-	 * @param menu The menu
-	 */
-	void update(JMenu menu);
+ /**
+  * Adds the menu items to the given menu.
+  * @param menu The menu
+  */
+ void update(JMenu menu);
 }

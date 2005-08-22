@@ -31,12 +31,12 @@ import org.gjt.sp.jedit.EBMessage;
  */
 public class SearchSettingsChanged extends EBMessage
 {
-	/**
-	 * Creates a new search and replace settings changed message.
-	 * @param source The message source
-	 */
-	public SearchSettingsChanged(EBComponent source)
-	{
-		super(source);
-	}
+ /**
+  * Creates a new search and replace settings changed message.
+  * @param source The message source
+  */
+ public SearchSettingsChanged(EBComponent source)
+ {
+  super(source);
+ }
 }

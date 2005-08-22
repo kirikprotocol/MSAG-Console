@@ -116,17 +116,17 @@ public class DOMLocatorImpl implements DOMLocator {
    }
 
    public DOMLocatorImpl (int lineNumber, int columnNumber, String uri ){
-	fLineNumber = lineNumber ;
-	fColumnNumber = columnNumber ;
-	fUri = uri;
+ fLineNumber = lineNumber ;
+ fColumnNumber = columnNumber ;
+ fUri = uri;
    } // DOMLocatorImpl (int lineNumber, int columnNumber, String uri )
 
    public DOMLocatorImpl (int lineNumber, int columnNumber, int offset, Node errorNode, String uri ){
-	fLineNumber = lineNumber ;
-	fColumnNumber = columnNumber ;
-	fOffset = offset ;
-	fErrorNode = errorNode ;
-	fUri = uri;
+ fLineNumber = lineNumber ;
+ fColumnNumber = columnNumber ;
+ fOffset = offset ;
+ fErrorNode = errorNode ;
+ fUri = uri;
    } // DOMLocatorImpl (int lineNumber, int columnNumber, int offset, Node errorNode, String uri )
 
   /**
@@ -134,7 +134,7 @@ public class DOMLocatorImpl implements DOMLocator {
    * number available.
    */
    public int getLineNumber(){
- 	return fLineNumber;
+  return fLineNumber;
    }
 
   /**
@@ -142,7 +142,7 @@ public class DOMLocatorImpl implements DOMLocator {
    * number available.
    */
   public int getColumnNumber(){
-	return fColumnNumber;
+ return fColumnNumber;
   }
 
   /**
@@ -152,21 +152,21 @@ public class DOMLocatorImpl implements DOMLocator {
    * the character offset.
    */
   public int getOffset(){
-	return fOffset;
+ return fOffset;
   }
   /**
    * The DOM Node where the error occured, or null if there is no Node 
    * available.
    */
   public Node getErrorNode(){
-	return fErrorNode;
+ return fErrorNode;
   }
 
   /**
    * The URI where the error occured, or null if there is no URI available.
    */
   public String getUri(){
-	return fUri;
+ return fUri;
   }
 
   

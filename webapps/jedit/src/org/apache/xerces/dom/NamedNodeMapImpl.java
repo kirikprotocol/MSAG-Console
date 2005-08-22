@@ -134,7 +134,7 @@ public class NamedNodeMapImpl
      * item(getLength()-1).
      */
     public int getLength() {
-    	return (nodes != null) ? nodes.size() : 0;
+     return (nodes != null) ? nodes.size() : 0;
     }
 
     /**
@@ -152,7 +152,7 @@ public class NamedNodeMapImpl
      * is greater than or equal to getLength().
      */
     public Node item(int index) {
-    	return (nodes != null && index < nodes.size()) ?
+     return (nodes != null && index < nodes.size()) ?
                     (Node)(nodes.elementAt(index)) : null;
     }
 
@@ -165,7 +165,7 @@ public class NamedNodeMapImpl
      */
     public Node getNamedItem(String name) {
 
-    	int i = findNamePoint(name,0);
+     int i = findNamePoint(name,0);
         return (i < 0) ? null : (Node)(nodes.elementAt(i));
 
     } // getNamedItem(String):Node
@@ -183,7 +183,7 @@ public class NamedNodeMapImpl
      */
     public Node getNamedItemNS(String namespaceURI, String localName) {
 
-    	int i = findNamePoint(namespaceURI, localName);
+     int i = findNamePoint(namespaceURI, localName);
         return (i < 0) ? null : (Node)(nodes.elementAt(i));
 
     } // getNamedItemNS(String,String):Node
@@ -208,28 +208,28 @@ public class NamedNodeMapImpl
     public Node setNamedItem(Node arg)
         throws DOMException {
 
-    	if (isReadOnly()) {
+     if (isReadOnly()) {
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NO_MODIFICATION_ALLOWED_ERR", null);
             throw new DOMException(DOMException.NO_MODIFICATION_ALLOWED_ERR, msg);
         }
-    	if (arg.getOwnerDocument() != ownerNode.ownerDocument()) {
+     if (arg.getOwnerDocument() != ownerNode.ownerDocument()) {
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "WRONG_DOCUMENT_ERR", null);
             throw new DOMException(DOMException.WRONG_DOCUMENT_ERR, msg);
         }
 
-   	int i = findNamePoint(arg.getNodeName(),0);
-    	NodeImpl previous = null;
-    	if (i >= 0) {
+    int i = findNamePoint(arg.getNodeName(),0);
+     NodeImpl previous = null;
+     if (i >= 0) {
             previous = (NodeImpl) nodes.elementAt(i);
             nodes.setElementAt(arg,i);
-    	} else {
+     } else {
             i = -1 - i; // Insert point (may be end of list)
             if (null == nodes) {
                 nodes = new Vector(5, 10);
             }
             nodes.insertElementAt(arg, i);
         }
-    	return previous;
+     return previous;
 
     } // setNamedItem(Node):Node
 
@@ -247,25 +247,25 @@ public class NamedNodeMapImpl
     public Node setNamedItemNS(Node arg)
         throws DOMException {
 
-    	if (isReadOnly()) {
+     if (isReadOnly()) {
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NO_MODIFICATION_ALLOWED_ERR", null);
             throw new DOMException(DOMException.NO_MODIFICATION_ALLOWED_ERR, msg);
         }
     
-    	if(arg.getOwnerDocument() != ownerNode.ownerDocument()) {
+     if(arg.getOwnerDocument() != ownerNode.ownerDocument()) {
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "WRONG_DOCUMENT_ERR", null);
             throw new DOMException(DOMException.WRONG_DOCUMENT_ERR, msg);
         }
 
-    	int i = findNamePoint(arg.getNamespaceURI(), arg.getLocalName());
-    	NodeImpl previous = null;
-    	if (i >= 0) {
+     int i = findNamePoint(arg.getNamespaceURI(), arg.getLocalName());
+     NodeImpl previous = null;
+     if (i >= 0) {
             previous = (NodeImpl) nodes.elementAt(i);
             nodes.setElementAt(arg,i);
-    	} else {
-    	    // If we can't find by namespaceURI, localName, then we find by
-    	    // nodeName so we know where to insert.
-    	    i = findNamePoint(arg.getNodeName(),0);
+     } else {
+         // If we can't find by namespaceURI, localName, then we find by
+         // nodeName so we know where to insert.
+         i = findNamePoint(arg.getNodeName(),0);
             if (i >=0) {
                 previous = (NodeImpl) nodes.elementAt(i);
                 nodes.insertElementAt(arg,i);
@@ -277,7 +277,7 @@ public class NamedNodeMapImpl
                 nodes.insertElementAt(arg, i);
             }
         }
-    	return previous;
+     return previous;
 
     } // setNamedItem(Node):Node
    
@@ -290,14 +290,14 @@ public class NamedNodeMapImpl
     public Node removeNamedItem(String name)
         throws DOMException {
 
-    	if (isReadOnly()) {
+     if (isReadOnly()) {
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NO_MODIFICATION_ALLOWED_ERR", null);
             throw
                 new DOMException(DOMException.NO_MODIFICATION_ALLOWED_ERR,
                 msg);
         }
-    	int i = findNamePoint(name,0);
-    	if (i < 0) {
+     int i = findNamePoint(name,0);
+     if (i < 0) {
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NOT_FOUND_ERR", null);
             throw new DOMException(DOMException.NOT_FOUND_ERR, msg);
         }
@@ -326,14 +326,14 @@ public class NamedNodeMapImpl
      public Node removeNamedItemNS(String namespaceURI, String name)
         throws DOMException {
 
-    	if (isReadOnly()) {
+     if (isReadOnly()) {
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NO_MODIFICATION_ALLOWED_ERR", null);
             throw
                 new DOMException(DOMException.NO_MODIFICATION_ALLOWED_ERR,
                 msg);
         }
-    	int i = findNamePoint(namespaceURI, name);
-    	if (i < 0) {
+     int i = findNamePoint(namespaceURI, name);
+     if (i < 0) {
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NOT_FOUND_ERR", null);
             throw new DOMException(DOMException.NOT_FOUND_ERR, msg);
         }
@@ -355,9 +355,9 @@ public class NamedNodeMapImpl
      */
      
     public NamedNodeMapImpl cloneMap(NodeImpl ownerNode) {
-    	NamedNodeMapImpl newmap = new NamedNodeMapImpl(ownerNode);
+     NamedNodeMapImpl newmap = new NamedNodeMapImpl(ownerNode);
         newmap.cloneContent(this);
-    	return newmap;
+     return newmap;
     }
 
     protected void cloneContent(NamedNodeMapImpl srcmap) {
@@ -396,11 +396,11 @@ public class NamedNodeMapImpl
      */
     void setReadOnly(boolean readOnly, boolean deep) {
         isReadOnly(readOnly);
-    	if (deep && nodes != null) {
+     if (deep && nodes != null) {
             for (int i = nodes.size() - 1; i >= 0; i--) {
                 ((NodeImpl) nodes.elementAt(i)).setReadOnly(readOnly,deep);
             }
-    	}
+     }
     } // setReadOnly(boolean,boolean)
     
     /**
@@ -408,7 +408,7 @@ public class NamedNodeMapImpl
      *
      */
     boolean getReadOnly() {
-    	return isReadOnly();
+     return isReadOnly();
     } // getReadOnly()
     
 
@@ -470,9 +470,9 @@ public class NamedNodeMapImpl
      */
     protected int findNamePoint(String name, int start) {
 
-    	// Binary search
-    	int i = 0;
-    	if (nodes != null) {
+     // Binary search
+     int i = 0;
+     if (nodes != null) {
             int first = start;
             int last  = nodes.size() - 1;
 
@@ -493,9 +493,9 @@ public class NamedNodeMapImpl
             if (first > i) {
                 i = first;
             }
-    	}
+     }
 
-    	return -1 - i; // not-found has to be encoded.
+     return -1 - i; // not-found has to be encoded.
 
     } // findNamePoint(String):int
 
@@ -569,15 +569,15 @@ public class NamedNodeMapImpl
     }
 
     protected int addItem (Node arg) {
-    	int i = findNamePoint(arg.getNamespaceURI(), arg.getLocalName());
-    	NodeImpl previous = null;
-    	if (i >= 0) {
+     int i = findNamePoint(arg.getNamespaceURI(), arg.getLocalName());
+     NodeImpl previous = null;
+     if (i >= 0) {
             previous = (NodeImpl) nodes.elementAt(i);
             nodes.setElementAt(arg,i);
-    	} else {
-    	    // If we can't find by namespaceURI, localName, then we find by
-    	    // nodeName so we know where to insert.
-    	    i = findNamePoint(arg.getNodeName(),0);
+     } else {
+         // If we can't find by namespaceURI, localName, then we find by
+         // nodeName so we know where to insert.
+         i = findNamePoint(arg.getNodeName(),0);
             if (i >=0) {
                 previous = (NodeImpl) nodes.elementAt(i);
                 nodes.insertElementAt(arg,i);

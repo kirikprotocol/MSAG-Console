@@ -39,230 +39,230 @@ import org.gjt.sp.util.*;
  */
 public class SideKickPlugin extends EBPlugin
 {
-	//{{{ Some constants
-	public static final String PARSER_PROPERTY = "sidekick.parser";
-	public static final String PARSED_DATA_PROPERTY = "sidekick.parsed-data";
-	public static final String PARSE_COUNT = "sidekick.parse-count";
-	//}}}
+ //{{{ Some constants
+ public static final String PARSER_PROPERTY = "sidekick.parser";
+ public static final String PARSED_DATA_PROPERTY = "sidekick.parsed-data";
+ public static final String PARSE_COUNT = "sidekick.parse-count";
+ //}}}
 
-	//{{{ start() method
-	public void start()
-	{
-		View view = jEdit.getFirstView();
-		while(view != null)
-		{
-			initView(view);
-			EditPane[] panes = view.getEditPanes();
-			for(int i = 0; i < panes.length; i++)
-				initTextArea(panes[i].getTextArea());
-			view = view.getNext();
-		}
-		SideKickActions.propertiesChanged();
-	} //}}}
+ //{{{ start() method
+ public void start()
+ {
+  View view = jEdit.getFirstView();
+  while(view != null)
+  {
+   initView(view);
+   EditPane[] panes = view.getEditPanes();
+   for(int i = 0; i < panes.length; i++)
+    initTextArea(panes[i].getTextArea());
+   view = view.getNext();
+  }
+  SideKickActions.propertiesChanged();
+ } //}}}
 
-	//{{{ stop() method
-	public void stop()
-	{
-		View view = jEdit.getFirstView();
-		while(view != null)
-		{
-			uninitView(view);
-			SideKickParsedData.setParsedData(view,null);
+ //{{{ stop() method
+ public void stop()
+ {
+  View view = jEdit.getFirstView();
+  while(view != null)
+  {
+   uninitView(view);
+   SideKickParsedData.setParsedData(view,null);
 
-			EditPane[] panes = view.getEditPanes();
-			for(int i = 0; i < panes.length; i++)
-				uninitTextArea(panes[i].getTextArea());
-			view = view.getNext();
-		}
-		
-		Buffer buffer = jEdit.getFirstBuffer();
-		while(buffer != null)
-		{
-			buffer.setProperty(PARSED_DATA_PROPERTY,null);
-			buffer = buffer.getNext();
-		}
-	} //}}}
+   EditPane[] panes = view.getEditPanes();
+   for(int i = 0; i < panes.length; i++)
+    uninitTextArea(panes[i].getTextArea());
+   view = view.getNext();
+  }
+  
+  Buffer buffer = jEdit.getFirstBuffer();
+  while(buffer != null)
+  {
+   buffer.setProperty(PARSED_DATA_PROPERTY,null);
+   buffer = buffer.getNext();
+  }
+ } //}}}
 
-	//{{{ handleMessage() method
-	public void handleMessage(EBMessage msg)
-	{
-		if(msg instanceof ViewUpdate)
-		{
-			ViewUpdate vu = (ViewUpdate)msg;
-			View view = vu.getView();
+ //{{{ handleMessage() method
+ public void handleMessage(EBMessage msg)
+ {
+  if(msg instanceof ViewUpdate)
+  {
+   ViewUpdate vu = (ViewUpdate)msg;
+   View view = vu.getView();
 
-			if(vu.getWhat() == ViewUpdate.CREATED)
-				initView(view);
-			else if(vu.getWhat() == ViewUpdate.CLOSED)
-				uninitView(view);
-		}
-		else if(msg instanceof EditPaneUpdate)
-		{
-			EditPaneUpdate epu = (EditPaneUpdate)msg;
-			EditPane editPane = epu.getEditPane();
+   if(vu.getWhat() == ViewUpdate.CREATED)
+    initView(view);
+   else if(vu.getWhat() == ViewUpdate.CLOSED)
+    uninitView(view);
+  }
+  else if(msg instanceof EditPaneUpdate)
+  {
+   EditPaneUpdate epu = (EditPaneUpdate)msg;
+   EditPane editPane = epu.getEditPane();
 
-			if(epu.getWhat() == EditPaneUpdate.CREATED)
-				initTextArea(editPane.getTextArea());
-			else if(epu.getWhat() == EditPaneUpdate.DESTROYED)
-				uninitTextArea(editPane.getTextArea());
-		}
-		else if(msg instanceof BufferUpdate)
-		{
-			BufferUpdate bu = (BufferUpdate)msg;
-			if(bu.getWhat() == BufferUpdate.CLOSED)
-				finishParsingBuffer(bu.getBuffer());
-		}
-		else if(msg instanceof PropertiesChanged)
-			SideKickActions.propertiesChanged();
-	} //}}}
+   if(epu.getWhat() == EditPaneUpdate.CREATED)
+    initTextArea(editPane.getTextArea());
+   else if(epu.getWhat() == EditPaneUpdate.DESTROYED)
+    uninitTextArea(editPane.getTextArea());
+  }
+  else if(msg instanceof BufferUpdate)
+  {
+   BufferUpdate bu = (BufferUpdate)msg;
+   if(bu.getWhat() == BufferUpdate.CLOSED)
+    finishParsingBuffer(bu.getBuffer());
+  }
+  else if(msg instanceof PropertiesChanged)
+   SideKickActions.propertiesChanged();
+ } //}}}
 
-	//{{{ registerParser() method
-	/**
-	 * @deprecated Write a <code>services.xml</code> file instead.
-	 * @see SideKickParser
-	 */
-	public static void registerParser(SideKickParser parser)
-	{
-		parsers.put(parser.getName(),parser);
-	} //}}}
+ //{{{ registerParser() method
+ /**
+  * @deprecated Write a <code>services.xml</code> file instead.
+  * @see SideKickParser
+  */
+ public static void registerParser(SideKickParser parser)
+ {
+  parsers.put(parser.getName(),parser);
+ } //}}}
 
-	//{{{ unregisterParser() method
-	/**
-	 * @deprecated Write a <code>services.xml</code> file instead.
-	 * @see SideKickParser
-	 */
-	public static void unregisterParser(SideKickParser parser)
-	{
-		parsers.remove(parser.getName());
-	} //}}}
+ //{{{ unregisterParser() method
+ /**
+  * @deprecated Write a <code>services.xml</code> file instead.
+  * @see SideKickParser
+  */
+ public static void unregisterParser(SideKickParser parser)
+ {
+  parsers.remove(parser.getName());
+ } //}}}
 
-	//{{{ getParser() method
-	public static SideKickParser getParser(String name)
-	{
-		SideKickParser parser = (SideKickParser)ServiceManager
-			.getService(SideKickParser.SERVICE,name);
-		if(parser != null)
-			return parser;
-		else
-			return (SideKickParser)parsers.get(name);
-	} //}}}
+ //{{{ getParser() method
+ public static SideKickParser getParser(String name)
+ {
+  SideKickParser parser = (SideKickParser)ServiceManager
+   .getService(SideKickParser.SERVICE,name);
+  if(parser != null)
+   return parser;
+  else
+   return (SideKickParser)parsers.get(name);
+ } //}}}
 
-	//{{{ getParserForView() method
-	public static SideKickParser getParserForView(View view)
-	{
-		SideKick sidekick = (SideKick)sidekicks.get(view);
-		if(sidekick == null)
-			return null;
-		else
-			return sidekick.getParser();
-	} //}}}
+ //{{{ getParserForView() method
+ public static SideKickParser getParserForView(View view)
+ {
+  SideKick sidekick = (SideKick)sidekicks.get(view);
+  if(sidekick == null)
+   return null;
+  else
+   return sidekick.getParser();
+ } //}}}
 
-	//{{{ getParserForBuffer() method
-	public static SideKickParser getParserForBuffer(Buffer buffer)
-	{
-		String parserName = buffer.getStringProperty(PARSER_PROPERTY);
-		if(parserName == null)
-			return null;
-		else
-			return getParser(parserName);
-	} //}}}
+ //{{{ getParserForBuffer() method
+ public static SideKickParser getParserForBuffer(Buffer buffer)
+ {
+  String parserName = buffer.getStringProperty(PARSER_PROPERTY);
+  if(parserName == null)
+   return null;
+  else
+   return getParser(parserName);
+ } //}}}
 
-	//{{{ parse() method
-	/**
-	 * Immediately begins parsing the current buffer in a background thread.
-	 * @param view The view
-	 * @param showParsingMessage Clear the tree and show a status message
-	 * there?
-	 */
-	public static void parse(View view, boolean showParsingMessage)
-	{
-		SideKick sidekick = (SideKick)sidekicks.get(view);
-		sidekick.setParser();
+ //{{{ parse() method
+ /**
+  * Immediately begins parsing the current buffer in a background thread.
+  * @param view The view
+  * @param showParsingMessage Clear the tree and show a status message
+  * there?
+  */
+ public static void parse(View view, boolean showParsingMessage)
+ {
+  SideKick sidekick = (SideKick)sidekicks.get(view);
+  sidekick.setParser();
     System.out.println("sidekick.SideKick parse line 181");
-		sidekick.parse(showParsingMessage);
-	} //}}}
+  sidekick.parse(showParsingMessage);
+ } //}}}
 
-	//{{{ getErrorSource() method
-	/**
-	 * Returns the error source used by the given view.
-	 * @param view The view
-	 * @since SideKick 0.3
-	 */
-	/* public static DefaultErrorSource getErrorSource(View view)
-	{
-		return ((SideKick)sidekicks.get(view)).getErrorSource();
-	} */ //}}}
+ //{{{ getErrorSource() method
+ /**
+  * Returns the error source used by the given view.
+  * @param view The view
+  * @since SideKick 0.3
+  */
+ /* public static DefaultErrorSource getErrorSource(View view)
+ {
+  return ((SideKick)sidekicks.get(view)).getErrorSource();
+ } */ //}}}
 
-	//{{{ addWorkRequest() method
-	public static void addWorkRequest(Runnable run, boolean inAWT)
-	{
-		if(worker == null)
-		{
-			worker = new WorkThreadPool("SideKick",1);
-			worker.start();
-		}
-		worker.addWorkRequest(run,inAWT);
-	} //}}}
+ //{{{ addWorkRequest() method
+ public static void addWorkRequest(Runnable run, boolean inAWT)
+ {
+  if(worker == null)
+  {
+   worker = new WorkThreadPool("SideKick",1);
+   worker.start();
+  }
+  worker.addWorkRequest(run,inAWT);
+ } //}}}
 
-	//{{{ isParsingBuffer()
-	public static boolean isParsingBuffer(Buffer buffer)
-	{
-		return parsedBufferSet.contains(buffer);
-	} //}}}
+ //{{{ isParsingBuffer()
+ public static boolean isParsingBuffer(Buffer buffer)
+ {
+  return parsedBufferSet.contains(buffer);
+ } //}}}
 
-	//{{{ Package-private members
+ //{{{ Package-private members
 
-	//{{{ startParsingBuffer()
-	static void startParsingBuffer(Buffer buffer)
-	{
-		parsedBufferSet.add(buffer);
-	} //}}}
+ //{{{ startParsingBuffer()
+ static void startParsingBuffer(Buffer buffer)
+ {
+  parsedBufferSet.add(buffer);
+ } //}}}
 
-	//{{{ finishParsingBuffer()
-	static void finishParsingBuffer(Buffer buffer)
-	{
-		parsedBufferSet.remove(buffer);
-	} //}}}
+ //{{{ finishParsingBuffer()
+ static void finishParsingBuffer(Buffer buffer)
+ {
+  parsedBufferSet.remove(buffer);
+ } //}}}
 
-	//}}}
+ //}}}
 
-	//{{{ Private members
-	private static HashMap sidekicks = new HashMap();
-	private static HashMap parsers = new HashMap();
-	private static WorkThreadPool worker;
-	private static HashSet parsedBufferSet = new HashSet();
+ //{{{ Private members
+ private static HashMap sidekicks = new HashMap();
+ private static HashMap parsers = new HashMap();
+ private static WorkThreadPool worker;
+ private static HashSet parsedBufferSet = new HashSet();
 
-	//{{{ initView() method
-	private void initView(View view)
-	{
-		sidekicks.put(view,new SideKick(view));
-	} //}}}
+ //{{{ initView() method
+ private void initView(View view)
+ {
+  sidekicks.put(view,new SideKick(view));
+ } //}}}
 
-	//{{{ uninitView() method
-	private void uninitView(View view)
-	{
-		SideKick sidekick = (SideKick)sidekicks.get(view);
-		sidekick.dispose();
-		sidekicks.remove(view);
-	} //}}}
+ //{{{ uninitView() method
+ private void uninitView(View view)
+ {
+  SideKick sidekick = (SideKick)sidekicks.get(view);
+  sidekick.dispose();
+  sidekicks.remove(view);
+ } //}}}
 
-	//{{{ initTextArea() method
-	private void initTextArea(JEditTextArea textArea)
-	{
-		SideKickBindings b = new SideKickBindings();
-		textArea.putClientProperty(SideKickBindings.class,b);
-		textArea.addKeyListener(b);
-	} //}}}
+ //{{{ initTextArea() method
+ private void initTextArea(JEditTextArea textArea)
+ {
+  SideKickBindings b = new SideKickBindings();
+  textArea.putClientProperty(SideKickBindings.class,b);
+  textArea.addKeyListener(b);
+ } //}}}
 
-	//{{{ uninitTextArea() method
-	private void uninitTextArea(JEditTextArea textArea)
-	{
-		SideKickBindings b = (SideKickBindings)
-			textArea.getClientProperty(
-			SideKickBindings.class);
-		textArea.putClientProperty(SideKickBindings.class,null);
-		textArea.removeKeyListener(b);
-	} //}}}
+ //{{{ uninitTextArea() method
+ private void uninitTextArea(JEditTextArea textArea)
+ {
+  SideKickBindings b = (SideKickBindings)
+   textArea.getClientProperty(
+   SideKickBindings.class);
+  textArea.putClientProperty(SideKickBindings.class,null);
+  textArea.removeKeyListener(b);
+ } //}}}
 
-	//}}}
+ //}}}
 }

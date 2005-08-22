@@ -38,280 +38,280 @@ import org.gjt.sp.util.Log;
  */
 public class VFSDirectoryEntryTableModel extends AbstractTableModel
 {
-	//{{{ VFSDirectoryEntryTableModel constructor
-	public VFSDirectoryEntryTableModel()
-	{
-		extAttrs = new ArrayList();
-	} //}}}
+ //{{{ VFSDirectoryEntryTableModel constructor
+ public VFSDirectoryEntryTableModel()
+ {
+  extAttrs = new ArrayList();
+ } //}}}
 
-	//{{{ setRoot() method
-	public void setRoot(VFS vfs, ArrayList list)
-	{
-		extAttrs.clear();
-		addExtendedAttributes(vfs);
+ //{{{ setRoot() method
+ public void setRoot(VFS vfs, ArrayList list)
+ {
+  extAttrs.clear();
+  addExtendedAttributes(vfs);
 
-		/* if(files != null && files.length != 0)
-			fireTableRowsDeleted(0,files.length - 1); */
+  /* if(files != null && files.length != 0)
+   fireTableRowsDeleted(0,files.length - 1); */
 
-		files = new Entry[list.size()];
-		for(int i = 0; i < files.length; i++)
-		{
-			files[i] = new Entry((VFSFile)list.get(i),0);
-		}
+  files = new Entry[list.size()];
+  for(int i = 0; i < files.length; i++)
+  {
+   files[i] = new Entry((VFSFile)list.get(i),0);
+  }
 
-		/* if(files.length != 0)
-			fireTableRowsInserted(0,files.length - 1); */
+  /* if(files.length != 0)
+   fireTableRowsInserted(0,files.length - 1); */
 
-		fireTableStructureChanged();
-	} //}}}
+  fireTableStructureChanged();
+ } //}}}
 
-	//{{{ expand() method
-	public int expand(VFS vfs, Entry entry, ArrayList list)
-	{
-		int startIndex = -1;
-		for(int i = 0; i < files.length; i++)
-		{
-			if(files[i] == entry)
-				startIndex = i;
-		}
+ //{{{ expand() method
+ public int expand(VFS vfs, Entry entry, ArrayList list)
+ {
+  int startIndex = -1;
+  for(int i = 0; i < files.length; i++)
+  {
+   if(files[i] == entry)
+    startIndex = i;
+  }
 
-		collapse(vfs,startIndex);
+  collapse(vfs,startIndex);
 
-		addExtendedAttributes(vfs);
-		entry.expanded = true;
+  addExtendedAttributes(vfs);
+  entry.expanded = true;
 
-		if(list != null)
-		{
-			Entry[] newFiles = new Entry[files.length + list.size()];
-			System.arraycopy(files,0,newFiles,0,startIndex + 1);
-			for(int i = 0; i < list.size(); i++)
-			{
-				newFiles[startIndex + i + 1] = new Entry(
-					(VFSFile)list.get(i),
-					entry.level + 1);
-			}
-			System.arraycopy(files,startIndex + 1,
-				newFiles,startIndex + list.size() + 1,
-				files.length - startIndex - 1);
-			this.files = newFiles;
+  if(list != null)
+  {
+   Entry[] newFiles = new Entry[files.length + list.size()];
+   System.arraycopy(files,0,newFiles,0,startIndex + 1);
+   for(int i = 0; i < list.size(); i++)
+   {
+    newFiles[startIndex + i + 1] = new Entry(
+     (VFSFile)list.get(i),
+     entry.level + 1);
+   }
+   System.arraycopy(files,startIndex + 1,
+    newFiles,startIndex + list.size() + 1,
+    files.length - startIndex - 1);
+   this.files = newFiles;
 
-			/* fireTableRowsInserted(startIndex + 1,
-				startIndex + list.size() + 1); */
-		}
+   /* fireTableRowsInserted(startIndex + 1,
+    startIndex + list.size() + 1); */
+  }
 
-		/* fireTableRowsUpdated(startIndex,startIndex); */
+  /* fireTableRowsUpdated(startIndex,startIndex); */
 
-		fireTableStructureChanged();
+  fireTableStructureChanged();
 
-		return startIndex;
-	} //}}}
+  return startIndex;
+ } //}}}
 
-	//{{{ collapse() method
-	public void collapse(VFS vfs, int index)
-	{
-		Entry entry = files[index];
-		if(!entry.expanded)
-			return;
+ //{{{ collapse() method
+ public void collapse(VFS vfs, int index)
+ {
+  Entry entry = files[index];
+  if(!entry.expanded)
+   return;
 
-		entry.expanded = false;
+  entry.expanded = false;
 
-		int lastIndex = index + 1;
-		while(lastIndex < files.length)
-		{
-			Entry e = files[lastIndex];
+  int lastIndex = index + 1;
+  while(lastIndex < files.length)
+  {
+   Entry e = files[lastIndex];
 
-			if(e.level <= entry.level)
-				break;
-			else
-				lastIndex++;
+   if(e.level <= entry.level)
+    break;
+   else
+    lastIndex++;
 
-			if(e.expanded)
-			{
-				removeExtendedAttributes(VFSManager.getVFSForPath(
-					e.dirEntry.getPath()));
-			}
-		}
+   if(e.expanded)
+   {
+    removeExtendedAttributes(VFSManager.getVFSForPath(
+     e.dirEntry.getPath()));
+   }
+  }
 
-		removeExtendedAttributes(vfs);
+  removeExtendedAttributes(vfs);
 
-		Entry[] newFiles = new Entry[files.length - lastIndex + index + 1];
-		System.arraycopy(files,0,newFiles,0,index + 1);
-		System.arraycopy(files,lastIndex,newFiles,index + 1,
-			files.length - lastIndex);
+  Entry[] newFiles = new Entry[files.length - lastIndex + index + 1];
+  System.arraycopy(files,0,newFiles,0,index + 1);
+  System.arraycopy(files,lastIndex,newFiles,index + 1,
+   files.length - lastIndex);
 
-		files = newFiles;
+  files = newFiles;
 
-		/* fireTableRowsUpdated(index,index);
-		fireTableRowsDeleted(index + 1,lastIndex); */
+  /* fireTableRowsUpdated(index,index);
+  fireTableRowsDeleted(index + 1,lastIndex); */
 
-		fireTableStructureChanged();
-	} //}}}
+  fireTableStructureChanged();
+ } //}}}
 
-	//{{{ getColumnCount() method
-	public int getColumnCount()
-	{
-		return 1 + extAttrs.size();
-	} //}}}
+ //{{{ getColumnCount() method
+ public int getColumnCount()
+ {
+  return 1 + extAttrs.size();
+ } //}}}
 
-	//{{{ getRowCount() method
-	public int getRowCount()
-	{
-		if(files == null)
-			return 0;
-		else
-			return files.length;
-	} //}}}
+ //{{{ getRowCount() method
+ public int getRowCount()
+ {
+  if(files == null)
+   return 0;
+  else
+   return files.length;
+ } //}}}
 
-	//{{{ getColumnName() method
-	public String getColumnName(int col)
-	{
-		if(col == 0)
-			return jEdit.getProperty("vfs.browser.name");
-		else
-			return jEdit.getProperty("vfs.browser." + getExtendedAttribute(col));
-	} //}}}
+ //{{{ getColumnName() method
+ public String getColumnName(int col)
+ {
+  if(col == 0)
+   return jEdit.getProperty("vfs.browser.name");
+  else
+   return jEdit.getProperty("vfs.browser." + getExtendedAttribute(col));
+ } //}}}
 
-	//{{{ getColumnClass() method
-	public Class getColumnClass(int col)
-	{
-		return Entry.class;
-	} //}}}
+ //{{{ getColumnClass() method
+ public Class getColumnClass(int col)
+ {
+  return Entry.class;
+ } //}}}
 
-	//{{{ getValueAt() method
-	public Object getValueAt(int row, int col)
-	{
-		if(files == null)
-			return null;
-		else
-			return files[row];
-	} //}}}
+ //{{{ getValueAt() method
+ public Object getValueAt(int row, int col)
+ {
+  if(files == null)
+   return null;
+  else
+   return files[row];
+ } //}}}
 
-	//{{{ getExtendedAttribute() method
-	public String getExtendedAttribute(int index)
-	{
-		return ((ExtendedAttribute)extAttrs.get(index - 1)).name;
-	} //}}}
+ //{{{ getExtendedAttribute() method
+ public String getExtendedAttribute(int index)
+ {
+  return ((ExtendedAttribute)extAttrs.get(index - 1)).name;
+ } //}}}
 
-	//{{{ getColumnWidth() method
-	/**
-	 * @param i The column index
-	 * @return A saved column width
-	 * @since jEdit 4.3pre2
-	 */
-	public int getColumnWidth(int i)
-	{
-		String extAttr = getExtendedAttribute(i);
-		return jEdit.getIntegerProperty("vfs.browser."
-			+ extAttr + ".width",100);
-	} //}}}
-	
-	//{{{ setColumnWidth() method
-	/**
-	 * @param i The column index
-	 * @param w The column width
-	 * @since jEdit 4.3pre2
-	 */
-	public void setColumnWidth(int i, int w)
-	{
-		String extAttr = getExtendedAttribute(i);
-		jEdit.setIntegerProperty("vfs.browser."
-			+ extAttr + ".width",w);
-	} //}}}
-	
-	//{{{ Package-private members
-	Entry[] files;
-	//}}}
+ //{{{ getColumnWidth() method
+ /**
+  * @param i The column index
+  * @return A saved column width
+  * @since jEdit 4.3pre2
+  */
+ public int getColumnWidth(int i)
+ {
+  String extAttr = getExtendedAttribute(i);
+  return jEdit.getIntegerProperty("vfs.browser."
+   + extAttr + ".width",100);
+ } //}}}
+ 
+ //{{{ setColumnWidth() method
+ /**
+  * @param i The column index
+  * @param w The column width
+  * @since jEdit 4.3pre2
+  */
+ public void setColumnWidth(int i, int w)
+ {
+  String extAttr = getExtendedAttribute(i);
+  jEdit.setIntegerProperty("vfs.browser."
+   + extAttr + ".width",w);
+ } //}}}
+ 
+ //{{{ Package-private members
+ Entry[] files;
+ //}}}
 
-	//{{{ Private members
-	private List extAttrs;
+ //{{{ Private members
+ private List extAttrs;
 
-	//{{{ addExtendedAttributes() method
-	private void addExtendedAttributes(VFS vfs)
-	{
-		String[] attrs = vfs.getExtendedAttributes();
-vfs_attr_loop:	for(int i = 0; i < attrs.length; i++)
-		{
-			Iterator iter = extAttrs.iterator();
-			while(iter.hasNext())
-			{
-				ExtendedAttribute attr = (ExtendedAttribute)
-					iter.next();
-				if(attrs[i].equals(attr.name))
-				{
-					attr.ref++;
-					continue vfs_attr_loop;
-				}
-			}
+ //{{{ addExtendedAttributes() method
+ private void addExtendedAttributes(VFS vfs)
+ {
+  String[] attrs = vfs.getExtendedAttributes();
+vfs_attr_loop: for(int i = 0; i < attrs.length; i++)
+  {
+   Iterator iter = extAttrs.iterator();
+   while(iter.hasNext())
+   {
+    ExtendedAttribute attr = (ExtendedAttribute)
+     iter.next();
+    if(attrs[i].equals(attr.name))
+    {
+     attr.ref++;
+     continue vfs_attr_loop;
+    }
+   }
 
-			// this vfs has an extended attribute which is not
-			// in the list. add it to the end with a ref count
-			// of 1
-			extAttrs.add(new ExtendedAttribute(attrs[i]));
-		}
-	} //}}}
+   // this vfs has an extended attribute which is not
+   // in the list. add it to the end with a ref count
+   // of 1
+   extAttrs.add(new ExtendedAttribute(attrs[i]));
+  }
+ } //}}}
 
-	//{{{ removeExtendedAttributes() method
-	private void removeExtendedAttributes(VFS vfs)
-	{
-		String[] attrs = vfs.getExtendedAttributes();
-vfs_attr_loop:	for(int i = 0; i < attrs.length; i++)
-		{
-			Iterator iter = extAttrs.iterator();
-			while(iter.hasNext())
-			{
-				ExtendedAttribute attr = (ExtendedAttribute)
-					iter.next();
-				if(attrs[i].equals(attr.name))
-				{
-					if(--attr.ref == 0)
-					{
-						// we no longer have any
-						// dirs using this extended
-						// attribute
-						iter.remove();
-					}
+ //{{{ removeExtendedAttributes() method
+ private void removeExtendedAttributes(VFS vfs)
+ {
+  String[] attrs = vfs.getExtendedAttributes();
+vfs_attr_loop: for(int i = 0; i < attrs.length; i++)
+  {
+   Iterator iter = extAttrs.iterator();
+   while(iter.hasNext())
+   {
+    ExtendedAttribute attr = (ExtendedAttribute)
+     iter.next();
+    if(attrs[i].equals(attr.name))
+    {
+     if(--attr.ref == 0)
+     {
+      // we no longer have any
+      // dirs using this extended
+      // attribute
+      iter.remove();
+     }
 
-					continue vfs_attr_loop;
-				}
-			}
+     continue vfs_attr_loop;
+    }
+   }
 
-			// this vfs has an extended attribute which is not
-			// in the list ???
-			Log.log(Log.WARNING,this,"We forgot about " + attrs[i]);
-		}
-	} //}}}
+   // this vfs has an extended attribute which is not
+   // in the list ???
+   Log.log(Log.WARNING,this,"We forgot about " + attrs[i]);
+  }
+ } //}}}
 
-	//}}}
+ //}}}
 
-	//{{{ Entry class
-	static class Entry
-	{
-		VFSFile dirEntry;
-		boolean expanded;
-		// how deeply we are nested
-		int level;
+ //{{{ Entry class
+ static class Entry
+ {
+  VFSFile dirEntry;
+  boolean expanded;
+  // how deeply we are nested
+  int level;
 
-		Entry(VFSFile dirEntry, int level)
-		{
-			this.dirEntry = dirEntry;
-			this.level = level;
-		}
-	} //}}}
+  Entry(VFSFile dirEntry, int level)
+  {
+   this.dirEntry = dirEntry;
+   this.level = level;
+  }
+ } //}}}
 
-	//{{{ ExtendedAttribute class
-	static class ExtendedAttribute
-	{
-		/* reference counter allows us to remove a column from
-		 * the table when no directory using this column is
-		 * visible */
-		int ref;
+ //{{{ ExtendedAttribute class
+ static class ExtendedAttribute
+ {
+  /* reference counter allows us to remove a column from
+   * the table when no directory using this column is
+   * visible */
+  int ref;
 
-		String name;
+  String name;
 
-		ExtendedAttribute(String name)
-		{
-			this.name = name;
-			ref = 1;
-		}
-	} //}}}
+  ExtendedAttribute(String name)
+  {
+   this.name = name;
+   ref = 1;
+  }
+ } //}}}
 }

@@ -134,7 +134,7 @@ public class NameNodeListImpl
     
     /** Constructor. */
     public NameNodeListImpl(NodeImpl rootNode, String tagName) {
-	super( rootNode, tagName );
+ super( rootNode, tagName );
     }  
     
 

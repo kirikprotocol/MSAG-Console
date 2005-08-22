@@ -34,27 +34,27 @@ import org.gjt.sp.jedit.Buffer;
  */
 public class SideKickFoldHandler extends FoldHandler
 {
-	//{{{ SideKickFoldHandler constructor
-	public SideKickFoldHandler()
-	{
-		super("sidekick");
-	} //}}}
+ //{{{ SideKickFoldHandler constructor
+ public SideKickFoldHandler()
+ {
+  super("sidekick");
+ } //}}}
 
-	//{{{ getFoldLevel() method
-	public int getFoldLevel(Buffer buffer, int lineIndex, Segment seg)
-	{
-		if(lineIndex == 0)
-			return 0;
+ //{{{ getFoldLevel() method
+ public int getFoldLevel(Buffer buffer, int lineIndex, Segment seg)
+ {
+  if(lineIndex == 0)
+   return 0;
 
-		SideKickParsedData data = (SideKickParsedData)buffer.getProperty(
-			SideKickPlugin.PARSED_DATA_PROPERTY);
-		if(data == null)
-			return 0;
-		TreePath path = data.getTreePathForPosition(
-			buffer.getLineStartOffset(lineIndex) - 1);
-		if(path == null)
-			return 0;
-		else
-			return path.getPathCount();
-	} //}}}
+  SideKickParsedData data = (SideKickParsedData)buffer.getProperty(
+   SideKickPlugin.PARSED_DATA_PROPERTY);
+  if(data == null)
+   return 0;
+  TreePath path = data.getTreePathForPosition(
+   buffer.getLineStartOffset(lineIndex) - 1);
+  if(path == null)
+   return 0;
+  else
+   return path.getPathCount();
+ } //}}}
 }

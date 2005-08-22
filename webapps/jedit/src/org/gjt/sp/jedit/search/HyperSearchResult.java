@@ -34,173 +34,173 @@ import org.gjt.sp.jedit.*;
  */
 public class HyperSearchResult implements HyperSearchNode
 {
-	public String path;
-	public Buffer buffer;
-	public int line;
-	public String str; // cached for speed
-	public Occur occur;
-	public int occurCount;
+ public String path;
+ public Buffer buffer;
+ public int line;
+ public String str; // cached for speed
+ public Occur occur;
+ public int occurCount;
 
-	//{{{ getBuffer() method
-	public Buffer getBuffer()
-	{
-		if(buffer == null)
-			buffer = jEdit.openFile(null,path);
-		return buffer;
-	} //}}}
+ //{{{ getBuffer() method
+ public Buffer getBuffer()
+ {
+  if(buffer == null)
+   buffer = jEdit.openFile(null,path);
+  return buffer;
+ } //}}}
 
-	//{{{ getSelection() method
-	/**
-	 * Returns an array of selection objects pointing to the occurrences
-	 * of the search term on the current line. The buffer must be opened
-	 * first.
-	 * @since jEdit 4.2pre5
-	 */
-	public Selection[] getSelection()
-	{
-		if(buffer == null)
-			return null;
+ //{{{ getSelection() method
+ /**
+  * Returns an array of selection objects pointing to the occurrences
+  * of the search term on the current line. The buffer must be opened
+  * first.
+  * @since jEdit 4.2pre5
+  */
+ public Selection[] getSelection()
+ {
+  if(buffer == null)
+   return null;
 
-		Selection[] returnValue = new Selection[occurCount];
-		Occur o = occur;
-		int i = 0;
-		while(o != null)
-		{
-			Selection.Range s = new Selection.Range(
-				o.startPos.getOffset(),
-				o.endPos.getOffset()
-			);
-			returnValue[i++] = s;
-			o = o.next;
-		}
-		return returnValue;
-	} //}}}
+  Selection[] returnValue = new Selection[occurCount];
+  Occur o = occur;
+  int i = 0;
+  while(o != null)
+  {
+   Selection.Range s = new Selection.Range(
+    o.startPos.getOffset(),
+    o.endPos.getOffset()
+   );
+   returnValue[i++] = s;
+   o = o.next;
+  }
+  return returnValue;
+ } //}}}
 
-	//{{{ goTo() method
-	public void goTo(final EditPane editPane)
-	{
-		final Buffer buffer = getBuffer();
-		if(buffer == null)
-			return;
-		editPane.setBuffer(buffer);
+ //{{{ goTo() method
+ public void goTo(final EditPane editPane)
+ {
+  final Buffer buffer = getBuffer();
+  if(buffer == null)
+   return;
+  editPane.setBuffer(buffer);
 
-		VFSManager.runInAWTThread(new Runnable()
-		{
-			public void run()
-			{
-				Selection[] s = getSelection();
-				if(s == null)
-					return;
+  VFSManager.runInAWTThread(new Runnable()
+  {
+   public void run()
+   {
+    Selection[] s = getSelection();
+    if(s == null)
+     return;
 
-				JEditTextArea textArea = editPane.getTextArea();
-				if(textArea.isMultipleSelectionEnabled())
-					textArea.addToSelection(s);
-				else
-					textArea.setSelection(s);
+    JEditTextArea textArea = editPane.getTextArea();
+    if(textArea.isMultipleSelectionEnabled())
+     textArea.addToSelection(s);
+    else
+     textArea.setSelection(s);
                 
-				textArea.moveCaretPosition(occur.endPos.getOffset());
-			}
-		});
-	} //}}}
+    textArea.moveCaretPosition(occur.endPos.getOffset());
+   }
+  });
+ } //}}}
 
-	//{{{ toString() method
-	public String toString()
-	{
-		return str;
-	} //}}}
+ //{{{ toString() method
+ public String toString()
+ {
+  return str;
+ } //}}}
 
-	//{{{ Package-private members
+ //{{{ Package-private members
 
-	//{{{ HyperSearchResult constructor
-	HyperSearchResult(Buffer buffer, int line)
-	{
-		path = buffer.getPath();
+ //{{{ HyperSearchResult constructor
+ HyperSearchResult(Buffer buffer, int line)
+ {
+  path = buffer.getPath();
 
-		if(!buffer.isTemporary())
-			bufferOpened(buffer);
+  if(!buffer.isTemporary())
+   bufferOpened(buffer);
 
-		this.line = line;
+  this.line = line;
 
-		str = (line + 1) + ": " + buffer.getLineText(line)
-			.replace('\t',' ').trim();
-	} //}}}
+  str = (line + 1) + ": " + buffer.getLineText(line)
+   .replace('\t',' ').trim();
+ } //}}}
 
-	//{{{ bufferOpened() method
-	void bufferOpened(Buffer buffer)
-	{
-		this.buffer = buffer;
-		Occur o = occur;
-		while(o != null)
-		{
-			o.bufferOpened();
-			o = o.next;
-		}
-	} //}}}
+ //{{{ bufferOpened() method
+ void bufferOpened(Buffer buffer)
+ {
+  this.buffer = buffer;
+  Occur o = occur;
+  while(o != null)
+  {
+   o.bufferOpened();
+   o = o.next;
+  }
+ } //}}}
 
-	//{{{ bufferClosed() method
-	void bufferClosed()
-	{
-		buffer = null;
-		Occur o = occur;
-		while(o != null)
-		{
-			o.bufferClosed();
-			o = o.next;
-		}
-	} //}}}
+ //{{{ bufferClosed() method
+ void bufferClosed()
+ {
+  buffer = null;
+  Occur o = occur;
+  while(o != null)
+  {
+   o.bufferClosed();
+   o = o.next;
+  }
+ } //}}}
 
-	//{{{ addOccur() method
-	void addOccur(int start, int end)
-	{
-		Occur o = new Occur(start,end);
-		o.next = occur;
-		occur = o;
-		occurCount++;
-	} //}}}
+ //{{{ addOccur() method
+ void addOccur(int start, int end)
+ {
+  Occur o = new Occur(start,end);
+  o.next = occur;
+  occur = o;
+  occurCount++;
+ } //}}}
 
-	//{{{ pathEquals() method
-	/**
-	 * @param path A canonical path
-	 */
-	boolean pathEquals(String path)
-	{
-		return path.equals(MiscUtilities.resolveSymlinks(this.path));
-	} //}}}
+ //{{{ pathEquals() method
+ /**
+  * @param path A canonical path
+  */
+ boolean pathEquals(String path)
+ {
+  return path.equals(MiscUtilities.resolveSymlinks(this.path));
+ } //}}}
 
-	//}}}
+ //}}}
 
-	//{{{ Occur class
-	public class Occur
-	{
-		public int start, end;
-		public Position startPos, endPos;
-		public Occur next;
+ //{{{ Occur class
+ public class Occur
+ {
+  public int start, end;
+  public Position startPos, endPos;
+  public Occur next;
 
-		//{{{ Occur constructor
-		Occur(int start, int end)
-		{
-			this.start = start;
-			this.end = end;
+  //{{{ Occur constructor
+  Occur(int start, int end)
+  {
+   this.start = start;
+   this.end = end;
 
-			if(buffer != null && !buffer.isTemporary())
-				bufferOpened();
-		} //}}}
+   if(buffer != null && !buffer.isTemporary())
+    bufferOpened();
+  } //}}}
 
-		//{{{ bufferOpened() method
-		void bufferOpened()
-		{
-			startPos = buffer.createPosition(Math.min(
-				buffer.getLength(),start));
-			endPos = buffer.createPosition(Math.min(
-				buffer.getLength(),end));
-		} //}}}
+  //{{{ bufferOpened() method
+  void bufferOpened()
+  {
+   startPos = buffer.createPosition(Math.min(
+    buffer.getLength(),start));
+   endPos = buffer.createPosition(Math.min(
+    buffer.getLength(),end));
+  } //}}}
 
-		//{{{ bufferClosed() method
-		void bufferClosed()
-		{
-			start = startPos.getOffset();
-			end = endPos.getOffset();
-			startPos = endPos = null;
-		} //}}}
-	} //}}}
+  //{{{ bufferClosed() method
+  void bufferClosed()
+  {
+   start = startPos.getOffset();
+   end = endPos.getOffset();
+   startPos = endPos = null;
+  } //}}}
+ } //}}}
 }

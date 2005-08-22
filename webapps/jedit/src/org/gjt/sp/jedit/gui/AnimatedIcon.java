@@ -33,104 +33,104 @@ import javax.swing.*;
  */
 public class AnimatedIcon extends ImageIcon
 {
-	//{{{ AnimatedIcon constructor
-	/**
-	 * @param frames The frames to be used in the animation
-	 * @param rate The frame rate of the animation, in frames per second
-	 * @param host The container that the animation is used in
-	 */
-	public AnimatedIcon(Image icon, Image[] frames, int rate, Component host)
-	{
-		super(icon);
-		this.icon = icon;
-		this.frames = frames;
-		delay = 1000/rate;
-		this.host = host;
-	} //}}}
+ //{{{ AnimatedIcon constructor
+ /**
+  * @param frames The frames to be used in the animation
+  * @param rate The frame rate of the animation, in frames per second
+  * @param host The container that the animation is used in
+  */
+ public AnimatedIcon(Image icon, Image[] frames, int rate, Component host)
+ {
+  super(icon);
+  this.icon = icon;
+  this.frames = frames;
+  delay = 1000/rate;
+  this.host = host;
+ } //}}}
 
-	//{{{ getFrames() method
-	public Image[] getFrames()
-	{
-		return frames;
-	} //}}}
+ //{{{ getFrames() method
+ public Image[] getFrames()
+ {
+  return frames;
+ } //}}}
 
-	//{{{ getIcon() method
-	public Image getIcon()
-	{
-		return icon;
-	} //}}}
+ //{{{ getIcon() method
+ public Image getIcon()
+ {
+  return icon;
+ } //}}}
 
-	//{{{ getRate() method
-	public int getRate()
-	{
-		return 1000/delay;
-	} //}}}
+ //{{{ getRate() method
+ public int getRate()
+ {
+  return 1000/delay;
+ } //}}}
 
-	//{{{ setFrames() method
-	public void setFrames(Image[] frames)
-	{
-		this.frames = frames;
-	} //}}}
+ //{{{ setFrames() method
+ public void setFrames(Image[] frames)
+ {
+  this.frames = frames;
+ } //}}}
 
-	//{{{ setIcon() method
-	public void setIcon(Image icon)
-	{
-		this.icon = icon;
-	} //}}}
+ //{{{ setIcon() method
+ public void setIcon(Image icon)
+ {
+  this.icon = icon;
+ } //}}}
 
-	//{{{ setRate() method
-	public void setRate(int rate)
-	{
-		delay = 1000/rate;
-	} //}}}
+ //{{{ setRate() method
+ public void setRate(int rate)
+ {
+  delay = 1000/rate;
+ } //}}}
 
-	//{{{ start() method
-	/**
-	 * Starts the animation rolling
-	 */
-	public void start()
-	{
-		if(timer != null)
-			return;
+ //{{{ start() method
+ /**
+  * Starts the animation rolling
+  */
+ public void start()
+ {
+  if(timer != null)
+   return;
 
-		timer = new Timer(delay,new Animator());
-		timer.start();
-	} //}}}
+  timer = new Timer(delay,new Animator());
+  timer.start();
+ } //}}}
 
-	//{{{ stop() method
-	/**
-	 * Stops the animation, and resets to frame 0
-	 */
-	public void stop()
-	{
-		current = 0;
-		if(timer != null)
-		{
-			timer.stop();
-			timer = null;
-		}
+ //{{{ stop() method
+ /**
+  * Stops the animation, and resets to frame 0
+  */
+ public void stop()
+ {
+  current = 0;
+  if(timer != null)
+  {
+   timer.stop();
+   timer = null;
+  }
 
-		setImage(icon);
-		host.repaint();
-	} //}}}
+  setImage(icon);
+  host.repaint();
+ } //}}}
 
-	//{{{ Private members
-	private Image[] frames;
-	private int current;
-	private int delay;
-	private Timer timer;
-	private Component host;
-	private Image icon;
-	//}}}
+ //{{{ Private members
+ private Image[] frames;
+ private int current;
+ private int delay;
+ private Timer timer;
+ private Component host;
+ private Image icon;
+ //}}}
 
-	//{{{ Animator class
-	class Animator implements ActionListener
-	{
-		public void actionPerformed(ActionEvent evt)
-		{
-			current = (current + 1) % frames.length;
-			setImage(frames[current]);
-			host.repaint();
-		}
-	} //}}}
+ //{{{ Animator class
+ class Animator implements ActionListener
+ {
+  public void actionPerformed(ActionEvent evt)
+  {
+   current = (current + 1) % frames.length;
+   setImage(frames[current]);
+   host.repaint();
+  }
+ } //}}}
 }

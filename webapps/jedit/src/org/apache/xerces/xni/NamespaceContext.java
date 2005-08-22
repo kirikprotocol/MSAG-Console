@@ -192,12 +192,12 @@ public interface NamespaceContext {
      */
     public String getDeclaredPrefixAt(int index);
 
-	/**
-	 * Return an enumeration of all prefixes whose declarations are active 
+ /**
+  * Return an enumeration of all prefixes whose declarations are active 
      * in the current context. This includes declarations from parent contexts 
      * that have not been overridden.
-	 * @return Enumeration
-	 */
+  * @return Enumeration
+  */
     public Enumeration getAllPrefixes();
     
     /**

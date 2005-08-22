@@ -60,7 +60,7 @@ public class DOMImplementationRegistry {
      * must call this method before using the class.
      * @return  an initialized instance of DOMImplementationRegistry
      */ 
-    public static DOMImplementationRegistry newInstance() 		
+    public static DOMImplementationRegistry newInstance()   
             throws ClassNotFoundException, InstantiationException, 
             IllegalAccessException
 

@@ -57,36 +57,36 @@
 <!-- ...................................................................... -->
 <!-- Entities for module inclusions ....................................... -->
 
-<!ENTITY % dbhier.redecl.module		"IGNORE">
-<!ENTITY % dbhier.redecl2.module	"IGNORE">
+<!ENTITY % dbhier.redecl.module  "IGNORE">
+<!ENTITY % dbhier.redecl2.module "IGNORE">
 
 <!-- ...................................................................... -->
 <!-- Entities for element classes ......................................... -->
 
 <!ENTITY % local.appendix.class "">
-<!ENTITY % appendix.class	"appendix %local.appendix.class;">
+<!ENTITY % appendix.class "appendix %local.appendix.class;">
 
 <!ENTITY % local.article.class "">
-<!ENTITY % article.class	"article %local.article.class;">
+<!ENTITY % article.class "article %local.article.class;">
 
 <!ENTITY % local.book.class "">
-<!ENTITY % book.class		"book %local.book.class;">
+<!ENTITY % book.class  "book %local.book.class;">
 
 <!ENTITY % local.chapter.class "">
-<!ENTITY % chapter.class	"chapter %local.chapter.class;">
+<!ENTITY % chapter.class "chapter %local.chapter.class;">
 
 <!ENTITY % local.index.class "">
-<!ENTITY % index.class		"index|setindex %local.index.class;">
+<!ENTITY % index.class  "index|setindex %local.index.class;">
 
 <!ENTITY % local.refentry.class "">
-<!ENTITY % refentry.class	"refentry %local.refentry.class;">
+<!ENTITY % refentry.class "refentry %local.refentry.class;">
 
 <!ENTITY % local.section.class "">
-<!ENTITY % section.class	"section %local.section.class;">
+<!ENTITY % section.class "section %local.section.class;">
 
 <!ENTITY % local.nav.class "">
-<!ENTITY % nav.class		"toc|lot|index|glossary|bibliography
-				%local.nav.class;">
+<!ENTITY % nav.class  "toc|lot|index|glossary|bibliography
+    %local.nav.class;">
 
 <!-- Redeclaration placeholder ............................................ -->
 
@@ -109,61 +109,61 @@
 
 <!ENTITY % local.divcomponent.mix "">
 <!ENTITY % divcomponent.mix
-		"%list.class;		|%admon.class;
-		|%linespecific.class;	|%synop.class;
-		|%para.class;		|%informal.class;
-		|%formal.class;		|%compound.class;
-		|%genobj.class;		|%descobj.class;
-		|%ndxterm.class;        |beginpage
+  "%list.class;  |%admon.class;
+  |%linespecific.class; |%synop.class;
+  |%para.class;  |%informal.class;
+  |%formal.class;  |%compound.class;
+  |%genobj.class;  |%descobj.class;
+  |%ndxterm.class;        |beginpage
                 %forms.hook;
-		%local.divcomponent.mix;">
+  %local.divcomponent.mix;">
 
 <!ENTITY % local.refcomponent.mix "">
 <!ENTITY % refcomponent.mix
-		"%list.class;		|%admon.class;
-		|%linespecific.class;	|%synop.class;
-		|%para.class;		|%informal.class;
-		|%formal.class;		|%compound.class;
-		|%genobj.class;		|%descobj.class;
-		|%ndxterm.class;        |beginpage
-		%local.refcomponent.mix;">
+  "%list.class;  |%admon.class;
+  |%linespecific.class; |%synop.class;
+  |%para.class;  |%informal.class;
+  |%formal.class;  |%compound.class;
+  |%genobj.class;  |%descobj.class;
+  |%ndxterm.class;        |beginpage
+  %local.refcomponent.mix;">
 
 <!ENTITY % local.indexdivcomponent.mix "">
 <!ENTITY % indexdivcomponent.mix
-		"itemizedlist|orderedlist|variablelist|simplelist
-		|%linespecific.class;	|%synop.class;
-		|%para.class;		|%informal.class;
-		|anchor|remark
-		|%link.char.class;
- 		                        |beginpage
-		%local.indexdivcomponent.mix;">
+  "itemizedlist|orderedlist|variablelist|simplelist
+  |%linespecific.class; |%synop.class;
+  |%para.class;  |%informal.class;
+  |anchor|remark
+  |%link.char.class;
+                           |beginpage
+  %local.indexdivcomponent.mix;">
 
 <!ENTITY % local.refname.char.mix "">
 <!ENTITY % refname.char.mix
-		"#PCDATA
-		|%tech.char.class;
-		%local.refname.char.mix;">
+  "#PCDATA
+  |%tech.char.class;
+  %local.refname.char.mix;">
 
 <!ENTITY % local.partcontent.mix "">
 <!ENTITY % partcontent.mix
-		"%appendix.class;|%chapter.class;|%nav.class;|%article.class;
-		|preface|%refentry.class;|reference %local.partcontent.mix;">
+  "%appendix.class;|%chapter.class;|%nav.class;|%article.class;
+  |preface|%refentry.class;|reference %local.partcontent.mix;">
 
 <!ENTITY % local.refinline.char.mix "">
 <!ENTITY % refinline.char.mix
-		"#PCDATA
-		|%xref.char.class;	|%gen.char.class;
-		|%link.char.class;	|%tech.char.class;
-		|%base.char.class;	|%docinfo.char.class;
-		|%other.char.class;
-		|%ndxterm.class;        |beginpage
-		%local.refinline.char.mix;">
+  "#PCDATA
+  |%xref.char.class; |%gen.char.class;
+  |%link.char.class; |%tech.char.class;
+  |%base.char.class; |%docinfo.char.class;
+  |%other.char.class;
+  |%ndxterm.class;        |beginpage
+  %local.refinline.char.mix;">
 
 <!ENTITY % local.refclass.char.mix "">
 <!ENTITY % refclass.char.mix
-		"#PCDATA
-		|application
-		%local.refclass.char.mix;">
+  "#PCDATA
+  |application
+  %local.refclass.char.mix;">
 
 <!-- Redeclaration placeholder 2 .......................................... -->
 
@@ -181,21 +181,21 @@
 <!-- Entities for content models .......................................... -->
 
 <!ENTITY % div.title.content
-	"title, subtitle?, titleabbrev?">
+ "title, subtitle?, titleabbrev?">
 
 <!ENTITY % bookcomponent.title.content
-	"title, subtitle?, titleabbrev?">
+ "title, subtitle?, titleabbrev?">
 
 <!ENTITY % sect.title.content
-	"title, subtitle?, titleabbrev?">
+ "title, subtitle?, titleabbrev?">
 
 <!ENTITY % refsect.title.content
-	"title, subtitle?, titleabbrev?">
+ "title, subtitle?, titleabbrev?">
 
 <!ENTITY % bookcomponent.content
-	"((%divcomponent.mix;)+,
-	(sect1*|(%refentry.class;)*|simplesect*|(%section.class;)*))
-	| (sect1+|(%refentry.class;)+|simplesect+|(%section.class;)+)">
+ "((%divcomponent.mix;)+,
+ (sect1*|(%refentry.class;)*|simplesect*|(%section.class;)*))
+ | (sect1+|(%refentry.class;)+|simplesect+|(%section.class;)+)">
 
 <!-- ...................................................................... -->
 <!-- Set and SetInfo ...................................................... -->
@@ -210,8 +210,8 @@
 <!ENTITY % set.element "INCLUDE">
 <![%set.element;[
 <!ELEMENT set %ho; ((%div.title.content;)?, setinfo?, toc?, (%book.class;)+,
-		setindex?)
-		%ubiq.inclusion;>
+  setindex?)
+  %ubiq.inclusion;>
 <!--end of set.element-->]]>
 
 <!-- FPI: SGML formal public identifier -->
@@ -220,11 +220,11 @@
 <!ENTITY % set.attlist "INCLUDE">
 <![%set.attlist;[
 <!ATTLIST set
-		fpi		CDATA		#IMPLIED
-		%status.attrib;
-		%common.attrib;
-		%set.role.attrib;
-		%local.set.attrib;
+  fpi  CDATA  #IMPLIED
+  %status.attrib;
+  %common.attrib;
+  %set.role.attrib;
+  %local.set.attrib;
 >
 <!--end of set.attlist-->]]>
 <!--end of set.module-->]]>
@@ -237,20 +237,20 @@
 <!ENTITY % setinfo.element "INCLUDE">
 <![%setinfo.element;[
 <!ELEMENT setinfo %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of setinfo.element-->]]>
 
 <!-- Contents: IDs of the ToC, Books, and SetIndex that comprise
-		the set, in the order of their appearance -->
+  the set, in the order of their appearance -->
 
 
 <!ENTITY % setinfo.attlist "INCLUDE">
 <![%setinfo.attlist;[
 <!ATTLIST setinfo
-		contents	IDREFS		#IMPLIED
-		%common.attrib;
-		%setinfo.role.attrib;
-		%local.setinfo.attrib;
+  contents IDREFS  #IMPLIED
+  %common.attrib;
+  %setinfo.role.attrib;
+  %local.setinfo.attrib;
 >
 <!--end of setinfo.attlist-->]]>
 <!--end of setinfo.module-->]]>
@@ -270,14 +270,14 @@
 <!ENTITY % book.element "INCLUDE">
 <![%book.element;[
 <!ELEMENT book %ho; ((%div.title.content;)?, bookinfo?,
- 		(dedication | toc | lot
- 		| glossary | bibliography | preface
-		| %chapter.class; | reference | part
-		| %article.class;
- 		| %appendix.class;
-		| %index.class;
-		| colophon)*)
-		%ubiq.inclusion;>
+   (dedication | toc | lot
+   | glossary | bibliography | preface
+  | %chapter.class; | reference | part
+  | %article.class;
+   | %appendix.class;
+  | %index.class;
+  | colophon)*)
+  %ubiq.inclusion;>
 <!--end of book.element-->]]>
 
 <!-- FPI: SGML formal public identifier -->
@@ -285,12 +285,12 @@
 
 <!ENTITY % book.attlist "INCLUDE">
 <![%book.attlist;[
-<!ATTLIST book		fpi		CDATA		#IMPLIED
-		%label.attrib;
-		%status.attrib;
-		%common.attrib;
-		%book.role.attrib;
-		%local.book.attrib;
+<!ATTLIST book  fpi  CDATA  #IMPLIED
+  %label.attrib;
+  %status.attrib;
+  %common.attrib;
+  %book.role.attrib;
+  %local.book.attrib;
 >
 <!--end of book.attlist-->]]>
 <!--end of book.module-->]]>
@@ -303,21 +303,21 @@
 <!ENTITY % bookinfo.element "INCLUDE">
 <![%bookinfo.element;[
 <!ELEMENT bookinfo %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of bookinfo.element-->]]>
 
 <!-- Contents: IDs of the ToC, LoTs, Prefaces, Parts, Chapters,
-		Appendixes, References, GLossary, Bibliography, and indexes
-		comprising the Book, in the order of their appearance -->
+  Appendixes, References, GLossary, Bibliography, and indexes
+  comprising the Book, in the order of their appearance -->
 
 
 <!ENTITY % bookinfo.attlist "INCLUDE">
 <![%bookinfo.attlist;[
 <!ATTLIST bookinfo
-		contents	IDREFS		#IMPLIED
-		%common.attrib;
-		%bookinfo.role.attrib;
-		%local.bookinfo.attrib;
+  contents IDREFS  #IMPLIED
+  %common.attrib;
+  %bookinfo.role.attrib;
+  %local.bookinfo.attrib;
 >
 <!--end of bookinfo.attlist-->]]>
 <!--end of bookinfo.module-->]]>
@@ -339,10 +339,10 @@
 <!ENTITY % dedication.attlist "INCLUDE">
 <![%dedication.attlist;[
 <!ATTLIST dedication
-		%status.attrib;
-		%common.attrib;
-		%dedication.role.attrib;
-		%local.dedication.attrib;
+  %status.attrib;
+  %common.attrib;
+  %dedication.role.attrib;
+  %local.dedication.attrib;
 >
 <!--end of dedication.attlist-->]]>
 <!--end of dedication.module-->]]>
@@ -360,10 +360,10 @@
 <!ENTITY % colophon.attlist "INCLUDE">
 <![ %colophon.attlist; [
 <!ATTLIST colophon
-		%status.attrib;
-		%common.attrib;
-		%colophon.role.attrib;
-		%local.colophon.attrib;>
+  %status.attrib;
+  %common.attrib;
+  %colophon.role.attrib;
+  %local.colophon.attrib;>
 <!--end of colophon.attlist-->]]>
 <!--end of colophon.module-->]]>
 
@@ -377,18 +377,18 @@
 <!ENTITY % toc.element "INCLUDE">
 <![%toc.element;[
 <!ELEMENT toc %ho; (beginpage?,
-		(%bookcomponent.title.content;)?,
-		tocfront*,
-		(tocpart | tocchap)*, tocback*)>
+  (%bookcomponent.title.content;)?,
+  tocfront*,
+  (tocpart | tocchap)*, tocback*)>
 <!--end of toc.element-->]]>
 
 <!ENTITY % toc.attlist "INCLUDE">
 <![%toc.attlist;[
 <!ATTLIST toc
-		%pagenum.attrib;
-		%common.attrib;
-		%toc.role.attrib;
-		%local.toc.attrib;
+  %pagenum.attrib;
+  %common.attrib;
+  %toc.role.attrib;
+  %local.toc.attrib;
 >
 <!--end of toc.attlist-->]]>
 <!--end of toc.module-->]]>
@@ -409,11 +409,11 @@
 <!ENTITY % tocfront.attlist "INCLUDE">
 <![%tocfront.attlist;[
 <!ATTLIST tocfront
-		%label.attrib;
-		%linkend.attrib;		%pagenum.attrib;
-		%common.attrib;
-		%tocfront.role.attrib;
-		%local.tocfront.attrib;
+  %label.attrib;
+  %linkend.attrib;  %pagenum.attrib;
+  %common.attrib;
+  %tocfront.role.attrib;
+  %local.tocfront.attrib;
 >
 <!--end of tocfront.attlist-->]]>
 <!--end of tocfront.module-->]]>
@@ -434,10 +434,10 @@
 <!ENTITY % tocentry.attlist "INCLUDE">
 <![%tocentry.attlist;[
 <!ATTLIST tocentry
-		%linkend.attrib;		%pagenum.attrib;
-		%common.attrib;
-		%tocentry.role.attrib;
-		%local.tocentry.attrib;
+  %linkend.attrib;  %pagenum.attrib;
+  %common.attrib;
+  %tocentry.role.attrib;
+  %local.tocentry.attrib;
 >
 <!--end of tocentry.attlist-->]]>
 <!--end of tocentry.module-->]]>
@@ -455,9 +455,9 @@
 <!ENTITY % tocpart.attlist "INCLUDE">
 <![%tocpart.attlist;[
 <!ATTLIST tocpart
-		%common.attrib;
-		%tocpart.role.attrib;
-		%local.tocpart.attrib;
+  %common.attrib;
+  %tocpart.role.attrib;
+  %local.tocpart.attrib;
 >
 <!--end of tocpart.attlist-->]]>
 <!--end of tocpart.module-->]]>
@@ -475,10 +475,10 @@
 <!ENTITY % tocchap.attlist "INCLUDE">
 <![%tocchap.attlist;[
 <!ATTLIST tocchap
-		%label.attrib;
-		%common.attrib;
-		%tocchap.role.attrib;
-		%local.tocchap.attrib;
+  %label.attrib;
+  %common.attrib;
+  %tocchap.role.attrib;
+  %local.tocchap.attrib;
 >
 <!--end of tocchap.attlist-->]]>
 <!--end of tocchap.module-->]]>
@@ -496,9 +496,9 @@
 <!ENTITY % toclevel1.attlist "INCLUDE">
 <![%toclevel1.attlist;[
 <!ATTLIST toclevel1
-		%common.attrib;
-		%toclevel1.role.attrib;
-		%local.toclevel1.attrib;
+  %common.attrib;
+  %toclevel1.role.attrib;
+  %local.toclevel1.attrib;
 >
 <!--end of toclevel1.attlist-->]]>
 <!--end of toclevel1.module-->]]>
@@ -516,9 +516,9 @@
 <!ENTITY % toclevel2.attlist "INCLUDE">
 <![%toclevel2.attlist;[
 <!ATTLIST toclevel2
-		%common.attrib;
-		%toclevel2.role.attrib;
-		%local.toclevel2.attrib;
+  %common.attrib;
+  %toclevel2.role.attrib;
+  %local.toclevel2.attrib;
 >
 <!--end of toclevel2.attlist-->]]>
 <!--end of toclevel2.module-->]]>
@@ -536,9 +536,9 @@
 <!ENTITY % toclevel3.attlist "INCLUDE">
 <![%toclevel3.attlist;[
 <!ATTLIST toclevel3
-		%common.attrib;
-		%toclevel3.role.attrib;
-		%local.toclevel3.attrib;
+  %common.attrib;
+  %toclevel3.role.attrib;
+  %local.toclevel3.attrib;
 >
 <!--end of toclevel3.attlist-->]]>
 <!--end of toclevel3.module-->]]>
@@ -556,9 +556,9 @@
 <!ENTITY % toclevel4.attlist "INCLUDE">
 <![%toclevel4.attlist;[
 <!ATTLIST toclevel4
-		%common.attrib;
-		%toclevel4.role.attrib;
-		%local.toclevel4.attrib;
+  %common.attrib;
+  %toclevel4.role.attrib;
+  %local.toclevel4.attrib;
 >
 <!--end of toclevel4.attlist-->]]>
 <!--end of toclevel4.module-->]]>
@@ -576,9 +576,9 @@
 <!ENTITY % toclevel5.attlist "INCLUDE">
 <![%toclevel5.attlist;[
 <!ATTLIST toclevel5
-		%common.attrib;
-		%toclevel5.role.attrib;
-		%local.toclevel5.attrib;
+  %common.attrib;
+  %toclevel5.role.attrib;
+  %local.toclevel5.attrib;
 >
 <!--end of toclevel5.attlist-->]]>
 <!--end of toclevel5.module-->]]>
@@ -599,11 +599,11 @@
 <!ENTITY % tocback.attlist "INCLUDE">
 <![%tocback.attlist;[
 <!ATTLIST tocback
-		%label.attrib;
-		%linkend.attrib;		%pagenum.attrib;
-		%common.attrib;
-		%tocback.role.attrib;
-		%local.tocback.attrib;
+  %label.attrib;
+  %linkend.attrib;  %pagenum.attrib;
+  %common.attrib;
+  %tocback.role.attrib;
+  %local.tocback.attrib;
 >
 <!--end of tocback.attlist-->]]>
 <!--end of tocback.module-->]]>
@@ -624,10 +624,10 @@
 <!ENTITY % lot.attlist "INCLUDE">
 <![%lot.attlist;[
 <!ATTLIST lot
-		%label.attrib;
-		%common.attrib;
-		%lot.role.attrib;
-		%local.lot.attrib;
+  %label.attrib;
+  %common.attrib;
+  %lot.role.attrib;
+  %local.lot.attrib;
 >
 <!--end of lot.attlist-->]]>
 <!--end of lot.module-->]]>
@@ -643,17 +643,17 @@
 <!--end of lotentry.element-->]]>
 
 <!-- SrcCredit: Information about the source of the entry,
-		as for a list of illustrations -->
+  as for a list of illustrations -->
 <!-- linkend: to element that this entry represents-->
 <!ENTITY % lotentry.attlist "INCLUDE">
 <![%lotentry.attlist;[
 <!ATTLIST lotentry
-		%linkend.attrib;
-		%pagenum.attrib;
-		srccredit	CDATA		#IMPLIED
-		%common.attrib;
-		%lotentry.role.attrib;
-		%local.lotentry.attrib;
+  %linkend.attrib;
+  %pagenum.attrib;
+  srccredit CDATA  #IMPLIED
+  %common.attrib;
+  %lotentry.role.attrib;
+  %local.lotentry.attrib;
 >
 <!--end of lotentry.attlist-->]]>
 <!--end of lotentry.module-->]]>
@@ -676,17 +676,17 @@
                      tocchap?,
                      (%bookcomponent.content;),
                      (%nav.class;)*)
-		%ubiq.inclusion;>
+  %ubiq.inclusion;>
 <!--end of appendix.element-->]]>
 
 <!ENTITY % appendix.attlist "INCLUDE">
 <![%appendix.attlist;[
 <!ATTLIST appendix
-		%label.attrib;
-		%status.attrib;
-		%common.attrib;
-		%appendix.role.attrib;
-		%local.appendix.attrib;
+  %label.attrib;
+  %status.attrib;
+  %common.attrib;
+  %appendix.role.attrib;
+  %local.appendix.attrib;
 >
 <!--end of appendix.attlist-->]]>
 <!--end of appendix.module-->]]>
@@ -705,17 +705,17 @@
                     tocchap?,
                     (%bookcomponent.content;),
                     (%nav.class;)*)
-		%ubiq.inclusion;>
+  %ubiq.inclusion;>
 <!--end of chapter.element-->]]>
 
 <!ENTITY % chapter.attlist "INCLUDE">
 <![%chapter.attlist;[
 <!ATTLIST chapter
-		%label.attrib;
-		%status.attrib;
-		%common.attrib;
-		%chapter.role.attrib;
-		%local.chapter.attrib;
+  %label.attrib;
+  %status.attrib;
+  %common.attrib;
+  %chapter.role.attrib;
+  %local.chapter.attrib;
 >
 <!--end of chapter.attlist-->]]>
 <!--end of chapter.module-->]]>
@@ -733,18 +733,18 @@ change will not be made after all. -->
 <![%part.element;[
 <!ELEMENT part %ho; (beginpage?,
                 partinfo?, (%bookcomponent.title.content;), partintro?,
-		(%partcontent.mix;)+)
-		%ubiq.inclusion;>
+  (%partcontent.mix;)+)
+  %ubiq.inclusion;>
 <!--end of part.element-->]]>
 
 <!ENTITY % part.attlist "INCLUDE">
 <![%part.attlist;[
 <!ATTLIST part
-		%label.attrib;
-		%status.attrib;
-		%common.attrib;
-		%part.role.attrib;
-		%local.part.attrib;
+  %label.attrib;
+  %status.attrib;
+  %common.attrib;
+  %part.role.attrib;
+  %local.part.attrib;
 >
 <!--end of part.attlist-->]]>
 <!--ELEMENT PartIntro (defined below)-->
@@ -764,16 +764,16 @@ change will not be made after all. -->
                     tocchap?,
                     (%bookcomponent.content;),
                     (%nav.class;)*)
-		%ubiq.inclusion;>
+  %ubiq.inclusion;>
 <!--end of preface.element-->]]>
 
 <!ENTITY % preface.attlist "INCLUDE">
 <![%preface.attlist;[
 <!ATTLIST preface
-		%status.attrib;
-		%common.attrib;
-		%preface.role.attrib;
-		%local.preface.attrib;
+  %status.attrib;
+  %common.attrib;
+  %preface.role.attrib;
+  %local.preface.attrib;
 >
 <!--end of preface.attlist-->]]>
 <!--end of preface.module-->]]>
@@ -789,17 +789,17 @@ change will not be made after all. -->
                      referenceinfo?,
                      (%bookcomponent.title.content;), partintro?,
                      (%refentry.class;)+)
-		%ubiq.inclusion;>
+  %ubiq.inclusion;>
 <!--end of reference.element-->]]>
 
 <!ENTITY % reference.attlist "INCLUDE">
 <![%reference.attlist;[
 <!ATTLIST reference
-		%label.attrib;
-		%status.attrib;
-		%common.attrib;
-		%reference.role.attrib;
-		%local.reference.attrib;
+  %label.attrib;
+  %status.attrib;
+  %common.attrib;
+  %reference.role.attrib;
+  %local.reference.attrib;
 >
 <!--end of reference.attlist-->]]>
 <!--ELEMENT PartIntro (defined below)-->
@@ -813,16 +813,16 @@ change will not be made after all. -->
 <!ENTITY % partintro.element "INCLUDE">
 <![%partintro.element;[
 <!ELEMENT partintro %ho; ((%div.title.content;)?, (%bookcomponent.content;))
-		%ubiq.inclusion;>
+  %ubiq.inclusion;>
 <!--end of partintro.element-->]]>
 
 <!ENTITY % partintro.attlist "INCLUDE">
 <![%partintro.attlist;[
 <!ATTLIST partintro
-		%label.attrib;
-		%common.attrib;
-		%partintro.role.attrib;
-		%local.partintro.attrib;
+  %label.attrib;
+  %common.attrib;
+  %partintro.role.attrib;
+  %local.partintro.attrib;
 >
 <!--end of partintro.attlist-->]]>
 <!--end of partintro.module-->]]>
@@ -838,15 +838,15 @@ change will not be made after all. -->
 <!ENTITY % appendixinfo.element "INCLUDE">
 <![ %appendixinfo.element; [
 <!ELEMENT appendixinfo %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of appendixinfo.element-->]]>
 
 <!ENTITY % appendixinfo.attlist "INCLUDE">
 <![ %appendixinfo.attlist; [
 <!ATTLIST appendixinfo
-		%common.attrib;
-		%appendixinfo.role.attrib;
-		%local.appendixinfo.attrib;
+  %common.attrib;
+  %appendixinfo.role.attrib;
+  %local.appendixinfo.attrib;
 >
 <!--end of appendixinfo.attlist-->]]>
 <!--end of appendixinfo.module-->]]>
@@ -859,15 +859,15 @@ change will not be made after all. -->
 <!ENTITY % bibliographyinfo.element "INCLUDE">
 <![ %bibliographyinfo.element; [
 <!ELEMENT bibliographyinfo %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of bibliographyinfo.element-->]]>
 
 <!ENTITY % bibliographyinfo.attlist "INCLUDE">
 <![ %bibliographyinfo.attlist; [
 <!ATTLIST bibliographyinfo
-		%common.attrib;
-		%bibliographyinfo.role.attrib;
-		%local.bibliographyinfo.attrib;
+  %common.attrib;
+  %bibliographyinfo.role.attrib;
+  %local.bibliographyinfo.attrib;
 >
 <!--end of bibliographyinfo.attlist-->]]>
 <!--end of bibliographyinfo.module-->]]>
@@ -880,15 +880,15 @@ change will not be made after all. -->
 <!ENTITY % chapterinfo.element "INCLUDE">
 <![ %chapterinfo.element; [
 <!ELEMENT chapterinfo %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of chapterinfo.element-->]]>
 
 <!ENTITY % chapterinfo.attlist "INCLUDE">
 <![ %chapterinfo.attlist; [
 <!ATTLIST chapterinfo
-		%common.attrib;
-		%chapterinfo.role.attrib;
-		%local.chapterinfo.attrib;
+  %common.attrib;
+  %chapterinfo.role.attrib;
+  %local.chapterinfo.attrib;
 >
 <!--end of chapterinfo.attlist-->]]>
 <!--end of chapterinfo.module-->]]>
@@ -901,15 +901,15 @@ change will not be made after all. -->
 <!ENTITY % glossaryinfo.element "INCLUDE">
 <![ %glossaryinfo.element; [
 <!ELEMENT glossaryinfo %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of glossaryinfo.element-->]]>
 
 <!ENTITY % glossaryinfo.attlist "INCLUDE">
 <![ %glossaryinfo.attlist; [
 <!ATTLIST glossaryinfo
-		%common.attrib;
-		%glossaryinfo.role.attrib;
-		%local.glossaryinfo.attrib;
+  %common.attrib;
+  %glossaryinfo.role.attrib;
+  %local.glossaryinfo.attrib;
 >
 <!--end of glossaryinfo.attlist-->]]>
 <!--end of glossaryinfo.module-->]]>
@@ -927,9 +927,9 @@ change will not be made after all. -->
 <!ENTITY % indexinfo.attlist "INCLUDE">
 <![ %indexinfo.attlist; [
 <!ATTLIST indexinfo
-		%common.attrib;
-		%indexinfo.role.attrib;
-		%local.indexinfo.attrib;
+  %common.attrib;
+  %indexinfo.role.attrib;
+  %local.indexinfo.attrib;
 >
 <!--end of indexinfo.attlist-->]]>
 <!--end of indexinfo.module-->]]>
@@ -942,15 +942,15 @@ change will not be made after all. -->
 <!ENTITY % setindexinfo.element "INCLUDE">
 <![ %setindexinfo.element; [
 <!ELEMENT setindexinfo %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of setindexinfo.element-->]]>
 
 <!ENTITY % setindexinfo.attlist "INCLUDE">
 <![ %setindexinfo.attlist; [
 <!ATTLIST setindexinfo
-		%common.attrib;
-		%setindexinfo.role.attrib;
-		%local.setindexinfo.attrib;
+  %common.attrib;
+  %setindexinfo.role.attrib;
+  %local.setindexinfo.attrib;
 >
 <!--end of setindexinfo.attlist-->]]>
 <!--end of setindexinfo.module-->]]>
@@ -963,15 +963,15 @@ change will not be made after all. -->
 <!ENTITY % partinfo.element "INCLUDE">
 <![ %partinfo.element; [
 <!ELEMENT partinfo %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of partinfo.element-->]]>
 
 <!ENTITY % partinfo.attlist "INCLUDE">
 <![ %partinfo.attlist; [
 <!ATTLIST partinfo
-		%common.attrib;
-		%partinfo.role.attrib;
-		%local.partinfo.attrib;
+  %common.attrib;
+  %partinfo.role.attrib;
+  %local.partinfo.attrib;
 >
 <!--end of partinfo.attlist-->]]>
 <!--end of partinfo.module-->]]>
@@ -984,15 +984,15 @@ change will not be made after all. -->
 <!ENTITY % prefaceinfo.element "INCLUDE">
 <![ %prefaceinfo.element; [
 <!ELEMENT prefaceinfo %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of prefaceinfo.element-->]]>
 
 <!ENTITY % prefaceinfo.attlist "INCLUDE">
 <![ %prefaceinfo.attlist; [
 <!ATTLIST prefaceinfo
-		%common.attrib;
-		%prefaceinfo.role.attrib;
-		%local.prefaceinfo.attrib;
+  %common.attrib;
+  %prefaceinfo.role.attrib;
+  %local.prefaceinfo.attrib;
 >
 <!--end of prefaceinfo.attlist-->]]>
 <!--end of prefaceinfo.module-->]]>
@@ -1005,15 +1005,15 @@ change will not be made after all. -->
 <!ENTITY % refentryinfo.element "INCLUDE">
 <![ %refentryinfo.element; [
 <!ELEMENT refentryinfo %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of refentryinfo.element-->]]>
 
 <!ENTITY % refentryinfo.attlist "INCLUDE">
 <![ %refentryinfo.attlist; [
 <!ATTLIST refentryinfo
-		%common.attrib;
-		%refentryinfo.role.attrib;
-		%local.refentryinfo.attrib;
+  %common.attrib;
+  %refentryinfo.role.attrib;
+  %local.refentryinfo.attrib;
 >
 <!--end of refentryinfo.attlist-->]]>
 <!--end of refentryinfo.module-->]]>
@@ -1026,15 +1026,15 @@ change will not be made after all. -->
 <!ENTITY % refsectioninfo.element "INCLUDE">
 <![ %refsectioninfo.element; [
 <!ELEMENT refsectioninfo %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of refsectioninfo.element-->]]>
 
 <!ENTITY % refsectioninfo.attlist "INCLUDE">
 <![ %refsectioninfo.attlist; [
 <!ATTLIST refsectioninfo
-		%common.attrib;
-		%refsectioninfo.role.attrib;
-		%local.refsectioninfo.attrib;
+  %common.attrib;
+  %refsectioninfo.role.attrib;
+  %local.refsectioninfo.attrib;
 >
 <!--end of refsectioninfo.attlist-->]]>
 <!--end of refsectioninfo.module-->]]>
@@ -1047,15 +1047,15 @@ change will not be made after all. -->
 <!ENTITY % refsect1info.element "INCLUDE">
 <![ %refsect1info.element; [
 <!ELEMENT refsect1info %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of refsect1info.element-->]]>
 
 <!ENTITY % refsect1info.attlist "INCLUDE">
 <![ %refsect1info.attlist; [
 <!ATTLIST refsect1info
-		%common.attrib;
-		%refsect1info.role.attrib;
-		%local.refsect1info.attrib;
+  %common.attrib;
+  %refsect1info.role.attrib;
+  %local.refsect1info.attrib;
 >
 <!--end of refsect1info.attlist-->]]>
 <!--end of refsect1info.module-->]]>
@@ -1068,15 +1068,15 @@ change will not be made after all. -->
 <!ENTITY % refsect2info.element "INCLUDE">
 <![ %refsect2info.element; [
 <!ELEMENT refsect2info %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of refsect2info.element-->]]>
 
 <!ENTITY % refsect2info.attlist "INCLUDE">
 <![ %refsect2info.attlist; [
 <!ATTLIST refsect2info
-		%common.attrib;
-		%refsect2info.role.attrib;
-		%local.refsect2info.attrib;
+  %common.attrib;
+  %refsect2info.role.attrib;
+  %local.refsect2info.attrib;
 >
 <!--end of refsect2info.attlist-->]]>
 <!--end of refsect2info.module-->]]>
@@ -1089,15 +1089,15 @@ change will not be made after all. -->
 <!ENTITY % refsect3info.element "INCLUDE">
 <![ %refsect3info.element; [
 <!ELEMENT refsect3info %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of refsect3info.element-->]]>
 
 <!ENTITY % refsect3info.attlist "INCLUDE">
 <![ %refsect3info.attlist; [
 <!ATTLIST refsect3info
-		%common.attrib;
-		%refsect3info.role.attrib;
-		%local.refsect3info.attrib;
+  %common.attrib;
+  %refsect3info.role.attrib;
+  %local.refsect3info.attrib;
 >
 <!--end of refsect3info.attlist-->]]>
 <!--end of refsect3info.module-->]]>
@@ -1110,15 +1110,15 @@ change will not be made after all. -->
 <!ENTITY % refsynopsisdivinfo.element "INCLUDE">
 <![ %refsynopsisdivinfo.element; [
 <!ELEMENT refsynopsisdivinfo %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of refsynopsisdivinfo.element-->]]>
 
 <!ENTITY % refsynopsisdivinfo.attlist "INCLUDE">
 <![ %refsynopsisdivinfo.attlist; [
 <!ATTLIST refsynopsisdivinfo
-		%common.attrib;
-		%refsynopsisdivinfo.role.attrib;
-		%local.refsynopsisdivinfo.attrib;
+  %common.attrib;
+  %refsynopsisdivinfo.role.attrib;
+  %local.refsynopsisdivinfo.attrib;
 >
 <!--end of refsynopsisdivinfo.attlist-->]]>
 <!--end of refsynopsisdivinfo.module-->]]>
@@ -1131,15 +1131,15 @@ change will not be made after all. -->
 <!ENTITY % referenceinfo.element "INCLUDE">
 <![ %referenceinfo.element; [
 <!ELEMENT referenceinfo %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of referenceinfo.element-->]]>
 
 <!ENTITY % referenceinfo.attlist "INCLUDE">
 <![ %referenceinfo.attlist; [
 <!ATTLIST referenceinfo
-		%common.attrib;
-		%referenceinfo.role.attrib;
-		%local.referenceinfo.attrib;
+  %common.attrib;
+  %referenceinfo.role.attrib;
+  %local.referenceinfo.attrib;
 >
 <!--end of referenceinfo.attlist-->]]>
 <!--end of referenceinfo.module-->]]>
@@ -1150,15 +1150,15 @@ change will not be made after all. -->
 <!ENTITY % sect1info.element "INCLUDE">
 <![%sect1info.element;[
 <!ELEMENT sect1info %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of sect1info.element-->]]>
 
 <!ENTITY % sect1info.attlist "INCLUDE">
 <![%sect1info.attlist;[
 <!ATTLIST sect1info
-		%common.attrib;
-		%sect1info.role.attrib;
-		%local.sect1info.attrib;
+  %common.attrib;
+  %sect1info.role.attrib;
+  %local.sect1info.attrib;
 >
 <!--end of sect1info.attlist-->]]>
 
@@ -1168,15 +1168,15 @@ change will not be made after all. -->
 <!ENTITY % sect2info.element "INCLUDE">
 <![%sect2info.element;[
 <!ELEMENT sect2info %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of sect2info.element-->]]>
 
 <!ENTITY % sect2info.attlist "INCLUDE">
 <![%sect2info.attlist;[
 <!ATTLIST sect2info
-		%common.attrib;
-		%sect2info.role.attrib;
-		%local.sect2info.attrib;
+  %common.attrib;
+  %sect2info.role.attrib;
+  %local.sect2info.attrib;
 >
 <!--end of sect2info.attlist-->]]>
 
@@ -1186,15 +1186,15 @@ change will not be made after all. -->
 <!ENTITY % sect3info.element "INCLUDE">
 <![%sect3info.element;[
 <!ELEMENT sect3info %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of sect3info.element-->]]>
 
 <!ENTITY % sect3info.attlist "INCLUDE">
 <![%sect3info.attlist;[
 <!ATTLIST sect3info
-		%common.attrib;
-		%sect3info.role.attrib;
-		%local.sect3info.attrib;
+  %common.attrib;
+  %sect3info.role.attrib;
+  %local.sect3info.attrib;
 >
 <!--end of sect3info.attlist-->]]>
 
@@ -1204,15 +1204,15 @@ change will not be made after all. -->
 <!ENTITY % sect4info.element "INCLUDE">
 <![%sect4info.element;[
 <!ELEMENT sect4info %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of sect4info.element-->]]>
 
 <!ENTITY % sect4info.attlist "INCLUDE">
 <![%sect4info.attlist;[
 <!ATTLIST sect4info
-		%common.attrib;
-		%sect4info.role.attrib;
-		%local.sect4info.attrib;
+  %common.attrib;
+  %sect4info.role.attrib;
+  %local.sect4info.attrib;
 >
 <!--end of sect4info.attlist-->]]>
 
@@ -1222,15 +1222,15 @@ change will not be made after all. -->
 <!ENTITY % sect5info.element "INCLUDE">
 <![%sect5info.element;[
 <!ELEMENT sect5info %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of sect5info.element-->]]>
 
 <!ENTITY % sect5info.attlist "INCLUDE">
 <![%sect5info.attlist;[
 <!ATTLIST sect5info
-		%common.attrib;
-		%sect5info.role.attrib;
-		%local.sect5info.attrib;
+  %common.attrib;
+  %sect5info.role.attrib;
+  %local.sect5info.attrib;
 >
 <!--end of sect5info.attlist-->]]>
 
@@ -1247,23 +1247,23 @@ change will not be made after all. -->
 <!ENTITY % section.element "INCLUDE">
 <![ %section.element; [
 <!ELEMENT section %ho; (sectioninfo?,
-			(%sect.title.content;),
-			(%nav.class;)*,
-			(((%divcomponent.mix;)+,
- 			  ((%refentry.class;)*|(%section.class;)*|simplesect*))
-			 | (%refentry.class;)+|(%section.class;)+|simplesect+),
-			(%nav.class;)*)
-		%ubiq.inclusion;>
+   (%sect.title.content;),
+   (%nav.class;)*,
+   (((%divcomponent.mix;)+,
+      ((%refentry.class;)*|(%section.class;)*|simplesect*))
+    | (%refentry.class;)+|(%section.class;)+|simplesect+),
+   (%nav.class;)*)
+  %ubiq.inclusion;>
 <!--end of section.element-->]]>
 
 <!ENTITY % section.attlist "INCLUDE">
 <![ %section.attlist; [
 <!ATTLIST section
-		%label.attrib;
-		%status.attrib;
-		%common.attrib;
-		%section.role.attrib;
-		%local.section.attrib;
+  %label.attrib;
+  %status.attrib;
+  %common.attrib;
+  %section.role.attrib;
+  %local.section.attrib;
 >
 <!--end of section.attlist-->]]>
 <!--end of section.module-->]]>
@@ -1276,15 +1276,15 @@ change will not be made after all. -->
 <!ENTITY % sectioninfo.element "INCLUDE">
 <![ %sectioninfo.element; [
 <!ELEMENT sectioninfo %ho; ((%info.class;)+)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of sectioninfo.element-->]]>
 
 <!ENTITY % sectioninfo.attlist "INCLUDE">
 <![ %sectioninfo.attlist; [
 <!ATTLIST sectioninfo
-		%common.attrib;
-		%sectioninfo.role.attrib;
-		%local.sectioninfo.attrib;
+  %common.attrib;
+  %sectioninfo.role.attrib;
+  %local.sectioninfo.attrib;
 >
 <!--end of sectioninfo.attlist-->]]>
 <!--end of sectioninfo.module-->]]>
@@ -1301,28 +1301,28 @@ change will not be made after all. -->
 <!ENTITY % sect1.element "INCLUDE">
 <![%sect1.element;[
 <!ELEMENT sect1 %ho; (sect1info?, (%sect.title.content;), (%nav.class;)*,
-		(((%divcomponent.mix;)+,
-		((%refentry.class;)* | sect2* | simplesect*))
-		| (%refentry.class;)+ | sect2+ | simplesect+), (%nav.class;)*)
-		%ubiq.inclusion;>
+  (((%divcomponent.mix;)+,
+  ((%refentry.class;)* | sect2* | simplesect*))
+  | (%refentry.class;)+ | sect2+ | simplesect+), (%nav.class;)*)
+  %ubiq.inclusion;>
 <!--end of sect1.element-->]]>
 
 <!-- Renderas: Indicates the format in which the heading should
-		appear -->
+  appear -->
 
 
 <!ENTITY % sect1.attlist "INCLUDE">
 <![%sect1.attlist;[
 <!ATTLIST sect1
-		renderas	(sect2
-				|sect3
-				|sect4
-				|sect5)		#IMPLIED
-		%label.attrib;
-		%status.attrib;
-		%common.attrib;
-		%sect1.role.attrib;
-		%local.sect1.attrib;
+  renderas (sect2
+    |sect3
+    |sect4
+    |sect5)  #IMPLIED
+  %label.attrib;
+  %status.attrib;
+  %common.attrib;
+  %sect1.role.attrib;
+  %local.sect1.attrib;
 >
 <!--end of sect1.attlist-->]]>
 <!--end of sect1.module-->]]>
@@ -1335,27 +1335,27 @@ change will not be made after all. -->
 <!ENTITY % sect2.element "INCLUDE">
 <![%sect2.element;[
 <!ELEMENT sect2 %ho; (sect2info?, (%sect.title.content;), (%nav.class;)*,
-		(((%divcomponent.mix;)+,
-		((%refentry.class;)* | sect3* | simplesect*))
-		| (%refentry.class;)+ | sect3+ | simplesect+), (%nav.class;)*)>
+  (((%divcomponent.mix;)+,
+  ((%refentry.class;)* | sect3* | simplesect*))
+  | (%refentry.class;)+ | sect3+ | simplesect+), (%nav.class;)*)>
 <!--end of sect2.element-->]]>
 
 <!-- Renderas: Indicates the format in which the heading should
-		appear -->
+  appear -->
 
 
 <!ENTITY % sect2.attlist "INCLUDE">
 <![%sect2.attlist;[
 <!ATTLIST sect2
-		renderas	(sect1
-				|sect3
-				|sect4
-				|sect5)		#IMPLIED
-		%label.attrib;
-		%status.attrib;
-		%common.attrib;
-		%sect2.role.attrib;
-		%local.sect2.attrib;
+  renderas (sect1
+    |sect3
+    |sect4
+    |sect5)  #IMPLIED
+  %label.attrib;
+  %status.attrib;
+  %common.attrib;
+  %sect2.role.attrib;
+  %local.sect2.attrib;
 >
 <!--end of sect2.attlist-->]]>
 <!--end of sect2.module-->]]>
@@ -1368,27 +1368,27 @@ change will not be made after all. -->
 <!ENTITY % sect3.element "INCLUDE">
 <![%sect3.element;[
 <!ELEMENT sect3 %ho; (sect3info?, (%sect.title.content;), (%nav.class;)*,
-		(((%divcomponent.mix;)+,
-		((%refentry.class;)* | sect4* | simplesect*))
-		| (%refentry.class;)+ | sect4+ | simplesect+), (%nav.class;)*)>
+  (((%divcomponent.mix;)+,
+  ((%refentry.class;)* | sect4* | simplesect*))
+  | (%refentry.class;)+ | sect4+ | simplesect+), (%nav.class;)*)>
 <!--end of sect3.element-->]]>
 
 <!-- Renderas: Indicates the format in which the heading should
-		appear -->
+  appear -->
 
 
 <!ENTITY % sect3.attlist "INCLUDE">
 <![%sect3.attlist;[
 <!ATTLIST sect3
-		renderas	(sect1
-				|sect2
-				|sect4
-				|sect5)		#IMPLIED
-		%label.attrib;
-		%status.attrib;
-		%common.attrib;
-		%sect3.role.attrib;
-		%local.sect3.attrib;
+  renderas (sect1
+    |sect2
+    |sect4
+    |sect5)  #IMPLIED
+  %label.attrib;
+  %status.attrib;
+  %common.attrib;
+  %sect3.role.attrib;
+  %local.sect3.attrib;
 >
 <!--end of sect3.attlist-->]]>
 <!--end of sect3.module-->]]>
@@ -1401,27 +1401,27 @@ change will not be made after all. -->
 <!ENTITY % sect4.element "INCLUDE">
 <![%sect4.element;[
 <!ELEMENT sect4 %ho; (sect4info?, (%sect.title.content;), (%nav.class;)*,
-		(((%divcomponent.mix;)+,
-		((%refentry.class;)* | sect5* | simplesect*))
-		| (%refentry.class;)+ | sect5+ | simplesect+), (%nav.class;)*)>
+  (((%divcomponent.mix;)+,
+  ((%refentry.class;)* | sect5* | simplesect*))
+  | (%refentry.class;)+ | sect5+ | simplesect+), (%nav.class;)*)>
 <!--end of sect4.element-->]]>
 
 <!-- Renderas: Indicates the format in which the heading should
-		appear -->
+  appear -->
 
 
 <!ENTITY % sect4.attlist "INCLUDE">
 <![%sect4.attlist;[
 <!ATTLIST sect4
-		renderas	(sect1
-				|sect2
-				|sect3
-				|sect5)		#IMPLIED
-		%label.attrib;
-		%status.attrib;
-		%common.attrib;
-		%sect4.role.attrib;
-		%local.sect4.attrib;
+  renderas (sect1
+    |sect2
+    |sect3
+    |sect5)  #IMPLIED
+  %label.attrib;
+  %status.attrib;
+  %common.attrib;
+  %sect4.role.attrib;
+  %local.sect4.attrib;
 >
 <!--end of sect4.attlist-->]]>
 <!--end of sect4.module-->]]>
@@ -1434,26 +1434,26 @@ change will not be made after all. -->
 <!ENTITY % sect5.element "INCLUDE">
 <![%sect5.element;[
 <!ELEMENT sect5 %ho; (sect5info?, (%sect.title.content;), (%nav.class;)*,
-		(((%divcomponent.mix;)+, ((%refentry.class;)* | simplesect*))
-		| (%refentry.class;)+ | simplesect+), (%nav.class;)*)>
+  (((%divcomponent.mix;)+, ((%refentry.class;)* | simplesect*))
+  | (%refentry.class;)+ | simplesect+), (%nav.class;)*)>
 <!--end of sect5.element-->]]>
 
 <!-- Renderas: Indicates the format in which the heading should
-		appear -->
+  appear -->
 
 
 <!ENTITY % sect5.attlist "INCLUDE">
 <![%sect5.attlist;[
 <!ATTLIST sect5
-		renderas	(sect1
-				|sect2
-				|sect3
-				|sect4)		#IMPLIED
-		%label.attrib;
-		%status.attrib;
-		%common.attrib;
-		%sect5.role.attrib;
-		%local.sect5.attrib;
+  renderas (sect1
+    |sect2
+    |sect3
+    |sect4)  #IMPLIED
+  %label.attrib;
+  %status.attrib;
+  %common.attrib;
+  %sect5.role.attrib;
+  %local.sect5.attrib;
 >
 <!--end of sect5.attlist-->]]>
 <!--end of sect5.module-->]]>
@@ -1466,15 +1466,15 @@ change will not be made after all. -->
 <!ENTITY % simplesect.element "INCLUDE">
 <![%simplesect.element;[
 <!ELEMENT simplesect %ho; ((%sect.title.content;), (%divcomponent.mix;)+)
-		%ubiq.inclusion;>
+  %ubiq.inclusion;>
 <!--end of simplesect.element-->]]>
 
 <!ENTITY % simplesect.attlist "INCLUDE">
 <![%simplesect.attlist;[
 <!ATTLIST simplesect
-		%common.attrib;
-		%simplesect.role.attrib;
-		%local.simplesect.attrib;
+  %common.attrib;
+  %simplesect.role.attrib;
+  %local.simplesect.attrib;
 >
 <!--end of simplesect.attlist-->]]>
 <!--end of simplesect.module-->]]>
@@ -1500,10 +1500,10 @@ change will not be made after all. -->
 <!ENTITY % bibliography.attlist "INCLUDE">
 <![%bibliography.attlist;[
 <!ATTLIST bibliography
-		%status.attrib;
-		%common.attrib;
-		%bibliography.role.attrib;
-		%local.bibliography.attrib;
+  %status.attrib;
+  %common.attrib;
+  %bibliography.role.attrib;
+  %local.bibliography.attrib;
 >
 <!--end of bibliography.attlist-->]]>
 <!--end of bibliography.module-->]]>
@@ -1516,16 +1516,16 @@ change will not be made after all. -->
 <!ENTITY % bibliodiv.element "INCLUDE">
 <![%bibliodiv.element;[
 <!ELEMENT bibliodiv %ho; ((%sect.title.content;)?, (%component.mix;)*,
-		(biblioentry|bibliomixed)+)>
+  (biblioentry|bibliomixed)+)>
 <!--end of bibliodiv.element-->]]>
 
 <!ENTITY % bibliodiv.attlist "INCLUDE">
 <![%bibliodiv.attlist;[
 <!ATTLIST bibliodiv
-		%status.attrib;
-		%common.attrib;
-		%bibliodiv.role.attrib;
-		%local.bibliodiv.attrib;
+  %status.attrib;
+  %common.attrib;
+  %bibliodiv.role.attrib;
+  %local.bibliodiv.attrib;
 >
 <!--end of bibliodiv.attlist-->]]>
 <!--end of bibliodiv.module-->]]>
@@ -1552,10 +1552,10 @@ change will not be made after all. -->
 <!ENTITY % glossary.attlist "INCLUDE">
 <![%glossary.attlist;[
 <!ATTLIST glossary
-		%status.attrib;
-		%common.attrib;
-		%glossary.role.attrib;
-		%local.glossary.attrib;
+  %status.attrib;
+  %common.attrib;
+  %glossary.role.attrib;
+  %local.glossary.attrib;
 >
 <!--end of glossary.attlist-->]]>
 <!--end of glossary.module-->]]>
@@ -1568,16 +1568,16 @@ change will not be made after all. -->
 <!ENTITY % glossdiv.element "INCLUDE">
 <![%glossdiv.element;[
 <!ELEMENT glossdiv %ho; ((%sect.title.content;), (%component.mix;)*,
-		glossentry+)>
+  glossentry+)>
 <!--end of glossdiv.element-->]]>
 
 <!ENTITY % glossdiv.attlist "INCLUDE">
 <![%glossdiv.attlist;[
 <!ATTLIST glossdiv
-		%status.attrib;
-		%common.attrib;
-		%glossdiv.role.attrib;
-		%local.glossdiv.attrib;
+  %status.attrib;
+  %common.attrib;
+  %glossdiv.role.attrib;
+  %local.glossdiv.attrib;
 >
 <!--end of glossdiv.attlist-->]]>
 <!--end of glossdiv.module-->]]>
@@ -1599,15 +1599,15 @@ change will not be made after all. -->
                  (%bookcomponent.title.content;)?,
                  (%component.mix;)*,
                  (indexdiv* | indexentry*))
-		%ndxterm.exclusion;>
+  %ndxterm.exclusion;>
 <!--end of index.element-->]]>
 
 <!ENTITY % index.attlist "INCLUDE">
 <![%index.attlist;[
 <!ATTLIST index
-		%common.attrib;
-		%indexes.role.attrib;
-		%local.indexes.attrib;
+  %common.attrib;
+  %indexes.role.attrib;
+  %local.indexes.attrib;
 >
 <!--end of index.attlist-->]]>
 
@@ -1617,15 +1617,15 @@ change will not be made after all. -->
                     (%bookcomponent.title.content;)?,
                     (%component.mix;)*,
                     (indexdiv* | indexentry*))
-		%ndxterm.exclusion;>
+  %ndxterm.exclusion;>
 <!--end of setindex.element-->]]>
 
 <!ENTITY % setindex.attlist "INCLUDE">
 <![%setindex.attlist;[
 <!ATTLIST setindex
-		%common.attrib;
-		%indexes.role.attrib;
-		%local.indexes.attrib;
+  %common.attrib;
+  %indexes.role.attrib;
+  %local.indexes.attrib;
 >
 <!--end of setindex.attlist-->]]>
 <!--end of indexes.module-->]]>
@@ -1642,15 +1642,15 @@ change will not be made after all. -->
 <!ENTITY % indexdiv.element "INCLUDE">
 <![%indexdiv.element;[
 <!ELEMENT indexdiv %ho; ((%sect.title.content;)?, ((%indexdivcomponent.mix;)*,
-		(indexentry+ | segmentedlist)))>
+  (indexentry+ | segmentedlist)))>
 <!--end of indexdiv.element-->]]>
 
 <!ENTITY % indexdiv.attlist "INCLUDE">
 <![%indexdiv.attlist;[
 <!ATTLIST indexdiv
-		%common.attrib;
-		%indexdiv.role.attrib;
-		%local.indexdiv.attrib;
+  %common.attrib;
+  %indexdiv.role.attrib;
+  %local.indexdiv.attrib;
 >
 <!--end of indexdiv.attlist-->]]>
 <!--end of indexdiv.module-->]]>
@@ -1665,15 +1665,15 @@ change will not be made after all. -->
 <!ENTITY % indexentry.element "INCLUDE">
 <![%indexentry.element;[
 <!ELEMENT indexentry %ho; (primaryie, (seeie|seealsoie)*,
-		(secondaryie, (seeie|seealsoie|tertiaryie)*)*)>
+  (secondaryie, (seeie|seealsoie|tertiaryie)*)*)>
 <!--end of indexentry.element-->]]>
 
 <!ENTITY % indexentry.attlist "INCLUDE">
 <![%indexentry.attlist;[
 <!ATTLIST indexentry
-		%common.attrib;
-		%indexentry.role.attrib;
-		%local.indexentry.attrib;
+  %common.attrib;
+  %indexentry.role.attrib;
+  %local.indexentry.attrib;
 >
 <!--end of indexentry.attlist-->]]>
 <!--end of indexentry.module-->]]>
@@ -1693,9 +1693,9 @@ change will not be made after all. -->
 <!ENTITY % primaryie.attlist "INCLUDE">
 <![%primaryie.attlist;[
 <!ATTLIST primaryie
-		%linkends.attrib;		%common.attrib;
-		%primsecterie.role.attrib;
-		%local.primsecterie.attrib;
+  %linkends.attrib;  %common.attrib;
+  %primsecterie.role.attrib;
+  %local.primsecterie.attrib;
 >
 <!--end of primaryie.attlist-->]]>
 
@@ -1709,9 +1709,9 @@ change will not be made after all. -->
 <!ENTITY % secondaryie.attlist "INCLUDE">
 <![%secondaryie.attlist;[
 <!ATTLIST secondaryie
-		%linkends.attrib;		%common.attrib;
-		%primsecterie.role.attrib;
-		%local.primsecterie.attrib;
+  %linkends.attrib;  %common.attrib;
+  %primsecterie.role.attrib;
+  %local.primsecterie.attrib;
 >
 <!--end of secondaryie.attlist-->]]>
 
@@ -1725,9 +1725,9 @@ change will not be made after all. -->
 <!ENTITY % tertiaryie.attlist "INCLUDE">
 <![%tertiaryie.attlist;[
 <!ATTLIST tertiaryie
-		%linkends.attrib;		%common.attrib;
-		%primsecterie.role.attrib;
-		%local.primsecterie.attrib;
+  %linkends.attrib;  %common.attrib;
+  %primsecterie.role.attrib;
+  %local.primsecterie.attrib;
 >
 <!--end of tertiaryie.attlist-->]]>
 
@@ -1749,9 +1749,9 @@ change will not be made after all. -->
 <!ENTITY % seeie.attlist "INCLUDE">
 <![%seeie.attlist;[
 <!ATTLIST seeie
-		%linkend.attrib;		%common.attrib;
-		%seeie.role.attrib;
-		%local.seeie.attrib;
+  %linkend.attrib;  %common.attrib;
+  %seeie.role.attrib;
+  %local.seeie.attrib;
 >
 <!--end of seeie.attlist-->]]>
 <!--end of seeie.module-->]]>
@@ -1772,9 +1772,9 @@ change will not be made after all. -->
 <!ENTITY % seealsoie.attlist "INCLUDE">
 <![%seealsoie.attlist;[
 <!ATTLIST seealsoie
-		%linkends.attrib;		%common.attrib;
-		%seealsoie.role.attrib;
-		%local.seealsoie.attrib;
+  %linkends.attrib;  %common.attrib;
+  %seealsoie.role.attrib;
+  %local.seealsoie.attrib;
 >
 <!--end of seealsoie.attlist-->]]>
 <!--end of seealsoie.module-->]]>
@@ -1796,16 +1796,16 @@ change will not be made after all. -->
                     (%ndxterm.class;)*,
                     refentryinfo?, refmeta?, (remark|%link.char.class;)*,
                     refnamediv, refsynopsisdiv?, (refsect1+|refsection+))
-		%ubiq.inclusion;>
+  %ubiq.inclusion;>
 <!--end of refentry.element-->]]>
 
 <!ENTITY % refentry.attlist "INCLUDE">
 <![%refentry.attlist;[
 <!ATTLIST refentry
-		%status.attrib;
-		%common.attrib;
-		%refentry.role.attrib;
-		%local.refentry.attrib;
+  %status.attrib;
+  %common.attrib;
+  %refentry.role.attrib;
+  %local.refentry.attrib;
 >
 <!--end of refentry.attlist-->]]>
 <!--end of refentry.module-->]]>
@@ -1820,15 +1820,15 @@ change will not be made after all. -->
 <!ELEMENT refmeta %ho; ((%ndxterm.class;)*,
                    refentrytitle, manvolnum?, refmiscinfo*,
                    (%ndxterm.class;)*)
-		%beginpage.exclusion;>
+  %beginpage.exclusion;>
 <!--end of refmeta.element-->]]>
 
 <!ENTITY % refmeta.attlist "INCLUDE">
 <![%refmeta.attlist;[
 <!ATTLIST refmeta
-		%common.attrib;
-		%refmeta.role.attrib;
-		%local.refmeta.attrib;
+  %common.attrib;
+  %refmeta.role.attrib;
+  %local.refmeta.attrib;
 >
 <!--end of refmeta.attlist-->]]>
 <!--end of refmeta.module-->]]>
@@ -1849,10 +1849,10 @@ change will not be made after all. -->
 <!ENTITY % refmiscinfo.attlist "INCLUDE">
 <![%refmiscinfo.attlist;[
 <!ATTLIST refmiscinfo
-		class		CDATA		#IMPLIED
-		%common.attrib;
-		%refmiscinfo.role.attrib;
-		%local.refmiscinfo.attrib;
+  class  CDATA  #IMPLIED
+  %common.attrib;
+  %refmiscinfo.role.attrib;
+  %local.refmiscinfo.attrib;
 >
 <!--end of refmiscinfo.attlist-->]]>
 <!--end of refmiscinfo.module-->]]>
@@ -1865,15 +1865,15 @@ change will not be made after all. -->
 <!ENTITY % refnamediv.element "INCLUDE">
 <![%refnamediv.element;[
 <!ELEMENT refnamediv %ho; (refdescriptor?, refname+, refpurpose, refclass*,
-		(remark|%link.char.class;)*)>
+  (remark|%link.char.class;)*)>
 <!--end of refnamediv.element-->]]>
 
 <!ENTITY % refnamediv.attlist "INCLUDE">
 <![%refnamediv.attlist;[
 <!ATTLIST refnamediv
-		%common.attrib;
-		%refnamediv.role.attrib;
-		%local.refnamediv.attrib;
+  %common.attrib;
+  %refnamediv.role.attrib;
+  %local.refnamediv.attrib;
 >
 <!--end of refnamediv.attlist-->]]>
 <!--end of refnamediv.module-->]]>
@@ -1891,9 +1891,9 @@ change will not be made after all. -->
 <!ENTITY % refdescriptor.attlist "INCLUDE">
 <![%refdescriptor.attlist;[
 <!ATTLIST refdescriptor
-		%common.attrib;
-		%refdescriptor.role.attrib;
-		%local.refdescriptor.attrib;
+  %common.attrib;
+  %refdescriptor.role.attrib;
+  %local.refdescriptor.attrib;
 >
 <!--end of refdescriptor.attlist-->]]>
 <!--end of refdescriptor.module-->]]>
@@ -1911,9 +1911,9 @@ change will not be made after all. -->
 <!ENTITY % refname.attlist "INCLUDE">
 <![%refname.attlist;[
 <!ATTLIST refname
-		%common.attrib;
-		%refname.role.attrib;
-		%local.refname.attrib;
+  %common.attrib;
+  %refname.role.attrib;
+  %local.refname.attrib;
 >
 <!--end of refname.attlist-->]]>
 <!--end of refname.module-->]]>
@@ -1931,9 +1931,9 @@ change will not be made after all. -->
 <!ENTITY % refpurpose.attlist "INCLUDE">
 <![%refpurpose.attlist;[
 <!ATTLIST refpurpose
-		%common.attrib;
-		%refpurpose.role.attrib;
-		%local.refpurpose.attrib;
+  %common.attrib;
+  %refpurpose.role.attrib;
+  %local.refpurpose.attrib;
 >
 <!--end of refpurpose.attlist-->]]>
 <!--end of refpurpose.module-->]]>
@@ -1951,9 +1951,9 @@ change will not be made after all. -->
 <!ENTITY % refclass.attlist "INCLUDE">
 <![%refclass.attlist;[
 <!ATTLIST refclass
-		%common.attrib;
-		%refclass.role.attrib;
-		%local.refclass.attrib;
+  %common.attrib;
+  %refclass.role.attrib;
+  %local.refclass.attrib;
 >
 <!--end of refclass.attlist-->]]>
 <!--end of refclass.module-->]]>
@@ -1966,15 +1966,15 @@ change will not be made after all. -->
 <!ENTITY % refsynopsisdiv.element "INCLUDE">
 <![%refsynopsisdiv.element;[
 <!ELEMENT refsynopsisdiv %ho; (refsynopsisdivinfo?, (%refsect.title.content;)?,
-		(((%refcomponent.mix;)+, refsect2*) | (refsect2+)))>
+  (((%refcomponent.mix;)+, refsect2*) | (refsect2+)))>
 <!--end of refsynopsisdiv.element-->]]>
 
 <!ENTITY % refsynopsisdiv.attlist "INCLUDE">
 <![%refsynopsisdiv.attlist;[
 <!ATTLIST refsynopsisdiv
-		%common.attrib;
-		%refsynopsisdiv.role.attrib;
-		%local.refsynopsisdiv.attrib;
+  %common.attrib;
+  %refsynopsisdiv.role.attrib;
+  %local.refsynopsisdiv.attrib;
 >
 <!--end of refsynopsisdiv.attlist-->]]>
 <!--end of refsynopsisdiv.module-->]]>
@@ -1987,16 +1987,16 @@ change will not be made after all. -->
 <!ENTITY % refsection.element "INCLUDE">
 <![%refsection.element;[
 <!ELEMENT refsection %ho; (refsectioninfo?, (%refsect.title.content;),
-		(((%refcomponent.mix;)+, refsection*) | refsection+))>
+  (((%refcomponent.mix;)+, refsection*) | refsection+))>
 <!--end of refsection.element-->]]>
 
 <!ENTITY % refsection.attlist "INCLUDE">
 <![%refsection.attlist;[
 <!ATTLIST refsection
-		%status.attrib;
-		%common.attrib;
-		%refsection.role.attrib;
-		%local.refsection.attrib;
+  %status.attrib;
+  %common.attrib;
+  %refsection.role.attrib;
+  %local.refsection.attrib;
 >
 <!--end of refsection.attlist-->]]>
 <!--end of refsection.module-->]]>
@@ -2009,16 +2009,16 @@ change will not be made after all. -->
 <!ENTITY % refsect1.element "INCLUDE">
 <![%refsect1.element;[
 <!ELEMENT refsect1 %ho; (refsect1info?, (%refsect.title.content;),
-		(((%refcomponent.mix;)+, refsect2*) | refsect2+))>
+  (((%refcomponent.mix;)+, refsect2*) | refsect2+))>
 <!--end of refsect1.element-->]]>
 
 <!ENTITY % refsect1.attlist "INCLUDE">
 <![%refsect1.attlist;[
 <!ATTLIST refsect1
-		%status.attrib;
-		%common.attrib;
-		%refsect1.role.attrib;
-		%local.refsect1.attrib;
+  %status.attrib;
+  %common.attrib;
+  %refsect1.role.attrib;
+  %local.refsect1.attrib;
 >
 <!--end of refsect1.attlist-->]]>
 <!--end of refsect1.module-->]]>
@@ -2031,16 +2031,16 @@ change will not be made after all. -->
 <!ENTITY % refsect2.element "INCLUDE">
 <![%refsect2.element;[
 <!ELEMENT refsect2 %ho; (refsect2info?, (%refsect.title.content;),
-	(((%refcomponent.mix;)+, refsect3*) | refsect3+))>
+ (((%refcomponent.mix;)+, refsect3*) | refsect3+))>
 <!--end of refsect2.element-->]]>
 
 <!ENTITY % refsect2.attlist "INCLUDE">
 <![%refsect2.attlist;[
 <!ATTLIST refsect2
-		%status.attrib;
-		%common.attrib;
-		%refsect2.role.attrib;
-		%local.refsect2.attrib;
+  %status.attrib;
+  %common.attrib;
+  %refsect2.role.attrib;
+  %local.refsect2.attrib;
 >
 <!--end of refsect2.attlist-->]]>
 <!--end of refsect2.module-->]]>
@@ -2053,16 +2053,16 @@ change will not be made after all. -->
 <!ENTITY % refsect3.element "INCLUDE">
 <![%refsect3.element;[
 <!ELEMENT refsect3 %ho; (refsect3info?, (%refsect.title.content;),
-	(%refcomponent.mix;)+)>
+ (%refcomponent.mix;)+)>
 <!--end of refsect3.element-->]]>
 
 <!ENTITY % refsect3.attlist "INCLUDE">
 <![%refsect3.attlist;[
 <!ATTLIST refsect3
-		%status.attrib;
-		%common.attrib;
-		%refsect3.role.attrib;
-		%local.refsect3.attrib;
+  %status.attrib;
+  %common.attrib;
+  %refsect3.role.attrib;
+  %local.refsect3.attrib;
 >
 <!--end of refsect3.attlist-->]]>
 <!--end of refsect3.module-->]]>
@@ -2082,31 +2082,31 @@ change will not be made after all. -->
 <!ENTITY % article.element "INCLUDE">
 <![%article.element;[
 <!ELEMENT article %ho; ((%div.title.content;)?, articleinfo?, tocchap?, lot*,
-			(%bookcomponent.content;),
-			((%nav.class;) | (%appendix.class;) | ackno)*)
-		%ubiq.inclusion;>
+   (%bookcomponent.content;),
+   ((%nav.class;) | (%appendix.class;) | ackno)*)
+  %ubiq.inclusion;>
 <!--end of article.element-->]]>
 
 <!-- Class: Indicates the type of a particular article;
-		all articles have the same structure and general purpose.
-		No default. -->
+  all articles have the same structure and general purpose.
+  No default. -->
 <!-- ParentBook: ID of the enclosing Book -->
 
 
 <!ENTITY % article.attlist "INCLUDE">
 <![%article.attlist;[
 <!ATTLIST article
-		class		(journalarticle
-				|productsheet
-				|whitepaper
-				|techreport
+  class  (journalarticle
+    |productsheet
+    |whitepaper
+    |techreport
                                 |specification
-				|faq)		#IMPLIED
-		parentbook	IDREF		#IMPLIED
-		%status.attrib;
-		%common.attrib;
-		%article.role.attrib;
-		%local.article.attrib;
+    |faq)  #IMPLIED
+  parentbook IDREF  #IMPLIED
+  %status.attrib;
+  %common.attrib;
+  %article.role.attrib;
+  %local.article.attrib;
 >
 <!--end of article.attlist-->]]>
 <!--end of article.module-->]]>

@@ -450,11 +450,11 @@ import java.io.Serializable;
   */
   private void initialize(URI p_base, String p_uriSpec)
                          throws MalformedURIException {
-	  
-	String uriSpec = (p_uriSpec != null) ? p_uriSpec.trim() : null;
-	int uriSpecLen = (uriSpec != null) ? uriSpec.length() : 0;
-	
-	if (p_base == null && uriSpecLen == 0) {
+   
+ String uriSpec = (p_uriSpec != null) ? p_uriSpec.trim() : null;
+ int uriSpecLen = (uriSpec != null) ? uriSpec.length() : 0;
+ 
+ if (p_base == null && uriSpecLen == 0) {
       throw new MalformedURIException(
                   "Cannot initialize URI with empty parameters.");
     }
@@ -678,7 +678,7 @@ import java.io.Serializable;
   private void initializeAuthority(String p_uriSpec, int p_nStartIndex, int p_nEndIndex)
                  throws MalformedURIException {
     
-	int index = p_nStartIndex;
+ int index = p_nStartIndex;
     int start = p_nStartIndex;
     int end = p_nEndIndex;
     char testChar = '\0';

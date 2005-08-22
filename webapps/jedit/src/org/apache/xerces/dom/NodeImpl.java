@@ -273,7 +273,7 @@ public abstract class NodeImpl
      * read-only.
      */
     public Node appendChild(Node newChild) throws DOMException {
-    	return insertBefore(newChild, null);
+     return insertBefore(newChild, null);
     }
 
     /**
@@ -303,20 +303,20 @@ public abstract class NodeImpl
 
         if (needsSyncData()) {
             synchronizeData();
-	}
-    	
-    	NodeImpl newnode;
-    	try {
+ }
+     
+     NodeImpl newnode;
+     try {
             newnode = (NodeImpl)clone();
-    	}
-    	catch (CloneNotSupportedException e) {
+     }
+     catch (CloneNotSupportedException e) {
             // if we get here we have an error in our program we may as well
             // be vocal about it, so that people can take appropriate action.
             throw new RuntimeException("**Internal Error**" + e);
-    	}
-    	
+     }
+     
         // Need to break the association w/ original kids
-    	newnode.ownerNode      = ownerDocument();
+     newnode.ownerNode      = ownerDocument();
         newnode.isOwned(false);
 
         // By default we make all clones readwrite,
@@ -326,7 +326,7 @@ public abstract class NodeImpl
         ownerDocument().callUserDataHandlers(this, newnode,
                                              UserDataHandler.NODE_CLONED);
 
-    	return newnode;
+     return newnode;
 
     } // cloneNode(boolean):Node
 
@@ -369,7 +369,7 @@ public abstract class NodeImpl
         }
         // if we have an owner we rely on it to have it right
         // otherwise ownerNode is our ownerDocument
-	if (!isOwned()) {
+ if (!isOwned()) {
             ownerNode = doc;
         }
     }
@@ -413,7 +413,7 @@ public abstract class NodeImpl
      * @see ElementImpl
      */
     public NamedNodeMap getAttributes() {
-    	return null; // overridden in ElementImpl
+     return null; // overridden in ElementImpl
     }
 
     /**
@@ -461,7 +461,7 @@ public abstract class NodeImpl
      * @see ParentNode
      */
     public Node getFirstChild() {
-    	return null;
+     return null;
     }
 
     /** The first child of this Node, or null if none.
@@ -470,7 +470,7 @@ public abstract class NodeImpl
      * @see ParentNode
      */
     public Node getLastChild() {
-	return null;
+ return null;
     }
 
     /**
@@ -505,8 +505,8 @@ public abstract class NodeImpl
      * read-only.
      */
     public Node insertBefore(Node newChild, Node refChild) 
-	throws DOMException {
-	throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, 
+ throws DOMException {
+ throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, 
               DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN,
                  "HIERARCHY_REQUEST_ERR", null));
     }
@@ -527,8 +527,8 @@ public abstract class NodeImpl
      * read-only.
      */
     public Node removeChild(Node oldChild) 
-		throws DOMException {
-	throw new DOMException(DOMException.NOT_FOUND_ERR, 
+  throws DOMException {
+ throw new DOMException(DOMException.NOT_FOUND_ERR, 
               DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN,
                  "NOT_FOUND_ERR", null));
     }
@@ -559,7 +559,7 @@ public abstract class NodeImpl
      */
     public Node replaceChild(Node newChild, Node oldChild)
         throws DOMException {
-	throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, 
+ throw new DOMException(DOMException.HIERARCHY_REQUEST_ERR, 
               DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN,
                  "HIERARCHY_REQUEST_ERR", null));
     }
@@ -577,7 +577,7 @@ public abstract class NodeImpl
      * @return int
      */
     public int getLength() {
-	return 0;
+ return 0;
     }
 
     /**
@@ -591,7 +591,7 @@ public abstract class NodeImpl
      * @param Index int
      */
     public Node item(int index) {
-	return null;
+ return null;
     }
 
     //
@@ -617,8 +617,8 @@ public abstract class NodeImpl
      * to take action.
      */
     public void normalize() {
-	/* by default we do not have any children,
-	   ParentNode overrides this behavior */
+ /* by default we do not have any children,
+    ParentNode overrides this behavior */
     }
 
     /**
@@ -707,7 +707,7 @@ public abstract class NodeImpl
     public void setPrefix(String prefix)
         throws DOMException
     {
-	throw new DOMException(DOMException.NAMESPACE_ERR, 
+ throw new DOMException(DOMException.NAMESPACE_ERR, 
               DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN,
                  "NAMESPACE_ERR", null));
     }
@@ -1822,7 +1822,7 @@ public abstract class NodeImpl
      *
      * @param readOnly True or false as desired.
      * @param deep If true, children are also toggled. Note that this will
-     *	not change the state of an EntityReference or its children,
+     * not change the state of an EntityReference or its children,
      *  which are always read-only.
      */
     public void setReadOnly(boolean readOnly, boolean deep) {
@@ -1830,7 +1830,7 @@ public abstract class NodeImpl
         if (needsSyncData()) {
             synchronizeData();
         }
-    	isReadOnly(readOnly);
+     isReadOnly(readOnly);
 
     } // setReadOnly(boolean,boolean)
 

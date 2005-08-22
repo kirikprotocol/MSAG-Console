@@ -79,19 +79,19 @@ public class ParserFactory {
      * @see org.xml.sax.Parser
      */
     public static Parser makeParser ()
-	throws ClassNotFoundException,
-	IllegalAccessException, 
-	InstantiationException,
-	NullPointerException,
-	ClassCastException
+ throws ClassNotFoundException,
+ IllegalAccessException, 
+ InstantiationException,
+ NullPointerException,
+ ClassCastException
     {
     SecuritySupport ss = SecuritySupport.getInstance();
-	String className = ss.getSystemProperty("org.xml.sax.parser");
-	if (className == null) {
-	    throw new NullPointerException("No value for sax.parser property");
-	} else {
-	    return makeParser(className);
-	}
+ String className = ss.getSystemProperty("org.xml.sax.parser");
+ if (className == null) {
+     throw new NullPointerException("No value for sax.parser property");
+ } else {
+     return makeParser(className);
+ }
     }
     
     
@@ -117,13 +117,13 @@ public class ParserFactory {
      * @see org.xml.sax.Parser
      */
     public static Parser makeParser (String className)
-	throws ClassNotFoundException,
-	IllegalAccessException, 
-	InstantiationException,
-	ClassCastException
+ throws ClassNotFoundException,
+ IllegalAccessException, 
+ InstantiationException,
+ ClassCastException
     {
-	return (Parser) NewInstance.newInstance (
-		NewInstance.getClassLoader (), className);
+ return (Parser) NewInstance.newInstance (
+  NewInstance.getClassLoader (), className);
     }
     
 }

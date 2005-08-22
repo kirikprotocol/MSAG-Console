@@ -30,57 +30,57 @@ import org.gjt.sp.jedit.*;
  */
 public class EditPaneUpdate extends EBMessage
 {
-	/**
-	 * Edit pane created.
-	 */
-	public static final Object CREATED = "CREATED";
+ /**
+  * Edit pane created.
+  */
+ public static final Object CREATED = "CREATED";
 
-	/**
-	 * Edit pane destroyed.
-	 */
-	public static final Object DESTROYED = "DESTROYED";
+ /**
+  * Edit pane destroyed.
+  */
+ public static final Object DESTROYED = "DESTROYED";
 
-	/**
-	 * Edit pane buffer changed.
-	 */
-	public static final Object BUFFER_CHANGED = "BUFFER_CHANGED";
+ /**
+  * Edit pane buffer changed.
+  */
+ public static final Object BUFFER_CHANGED = "BUFFER_CHANGED";
 
-	/**
-	 * Creates a new edit pane update message.
-	 * @param editPane The edit pane
-	 * @param what What happened
-	 */
-	public EditPaneUpdate(EditPane editPane, Object what)
-	{
-		super(editPane);
+ /**
+  * Creates a new edit pane update message.
+  * @param editPane The edit pane
+  * @param what What happened
+  */
+ public EditPaneUpdate(EditPane editPane, Object what)
+ {
+  super(editPane);
 
-		if(what == null)
-			throw new NullPointerException("What must be non-null");
+  if(what == null)
+   throw new NullPointerException("What must be non-null");
 
-		this.what = what;
-	}
+  this.what = what;
+ }
 
-	/**
-	 * Returns what caused this edit pane update.
-	 */
-	public Object getWhat()
-	{
-		return what;
-	}
+ /**
+  * Returns what caused this edit pane update.
+  */
+ public Object getWhat()
+ {
+  return what;
+ }
 
-	/**
-	 * Returns the edit pane involved.
-	 */
-	public EditPane getEditPane()
-	{
-		return (EditPane)getSource();
-	}
+ /**
+  * Returns the edit pane involved.
+  */
+ public EditPane getEditPane()
+ {
+  return (EditPane)getSource();
+ }
 
-	public String paramString()
-	{
-		return "what=" + what + "," + super.paramString();
-	}
+ public String paramString()
+ {
+  return "what=" + what + "," + super.paramString();
+ }
 
-	// private members
-	private Object what;
+ // private members
+ private Object what;
 }

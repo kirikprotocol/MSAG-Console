@@ -45,354 +45,354 @@ import org.gjt.sp.util.Log;
  */
 class BufferChangeHandler extends BufferChangeAdapter
 {
-	private DisplayManager displayManager;
-	private JEditTextArea textArea;
-	private Buffer buffer;
+ private DisplayManager displayManager;
+ private JEditTextArea textArea;
+ private Buffer buffer;
 
-	boolean delayedUpdate;
-	boolean delayedMultilineUpdate;
-	int delayedUpdateStart;
-	int delayedUpdateEnd;
+ boolean delayedUpdate;
+ boolean delayedMultilineUpdate;
+ int delayedUpdateStart;
+ int delayedUpdateEnd;
 
-	//{{{ BufferChangeHandler constructor
-	BufferChangeHandler(DisplayManager displayManager,
-		JEditTextArea textArea,
-		Buffer buffer)
-	{
-		this.displayManager = displayManager;
-		this.textArea = textArea;
-		this.buffer = buffer;
-	} //}}}
+ //{{{ BufferChangeHandler constructor
+ BufferChangeHandler(DisplayManager displayManager,
+  JEditTextArea textArea,
+  Buffer buffer)
+ {
+  this.displayManager = displayManager;
+  this.textArea = textArea;
+  this.buffer = buffer;
+ } //}}}
 
-	//{{{ bufferLoaded() method
-	public void bufferLoaded(Buffer buffer)
-	{
-		displayManager.bufferLoaded();
-	} //}}}
+ //{{{ bufferLoaded() method
+ public void bufferLoaded(Buffer buffer)
+ {
+  displayManager.bufferLoaded();
+ } //}}}
 
-	//{{{ foldHandlerChanged() method
-	public void foldHandlerChanged(Buffer buffer)
-	{
-		displayManager.foldHandlerChanged();
-	} //}}}
+ //{{{ foldHandlerChanged() method
+ public void foldHandlerChanged(Buffer buffer)
+ {
+  displayManager.foldHandlerChanged();
+ } //}}}
 
-	//{{{ foldLevelChanged() method
-	public void foldLevelChanged(Buffer buffer, int start, int end)
-	{
-		//System.err.println("foldLevelChanged " + (start-1) + " to " + textArea.getLastPhysicalLine() + "," + end);
+ //{{{ foldLevelChanged() method
+ public void foldLevelChanged(Buffer buffer, int start, int end)
+ {
+  //System.err.println("foldLevelChanged " + (start-1) + " to " + textArea.getLastPhysicalLine() + "," + end);
 
-		if(textArea.getDisplayManager() == displayManager
-			&& end != 0 && buffer.isLoaded())
-		{
-			textArea.invalidateLineRange(start - 1,
-				textArea.getLastPhysicalLine());
-		}
-	} //}}}
+  if(textArea.getDisplayManager() == displayManager
+   && end != 0 && buffer.isLoaded())
+  {
+   textArea.invalidateLineRange(start - 1,
+    textArea.getLastPhysicalLine());
+  }
+ } //}}}
 
-	//{{{ contentInserted() method
-	public void contentInserted(Buffer buffer, int startLine,
-		int offset, int numLines, int length)
-	{
-		if(!buffer.isLoaded())
-			return;
+ //{{{ contentInserted() method
+ public void contentInserted(Buffer buffer, int startLine,
+  int offset, int numLines, int length)
+ {
+  if(!buffer.isLoaded())
+   return;
 
-		displayManager.screenLineMgr.contentInserted(startLine,numLines);
+  displayManager.screenLineMgr.contentInserted(startLine,numLines);
 
-		int endLine = startLine + numLines;
+  int endLine = startLine + numLines;
 
-		if(numLines != 0)
-			delayedMultilineUpdate = true;
+  if(numLines != 0)
+   delayedMultilineUpdate = true;
 
-		displayManager.folds.contentInserted(startLine,numLines);
+  displayManager.folds.contentInserted(startLine,numLines);
 
-		FirstLine firstLine = displayManager.firstLine;
-		ScrollLineCount scrollLineCount = displayManager.scrollLineCount;
+  FirstLine firstLine = displayManager.firstLine;
+  ScrollLineCount scrollLineCount = displayManager.scrollLineCount;
 
-		if(textArea.getDisplayManager() == displayManager)
-		{
-			if(numLines != 0)
-			{
-				firstLine.contentInserted(startLine,numLines);
-				scrollLineCount.contentInserted(startLine,numLines);
-			}
+  if(textArea.getDisplayManager() == displayManager)
+  {
+   if(numLines != 0)
+   {
+    firstLine.contentInserted(startLine,numLines);
+    scrollLineCount.contentInserted(startLine,numLines);
+   }
 
-			if(delayedUpdateEnd >= startLine)
-				delayedUpdateEnd += numLines;
-			delayUpdate(startLine,endLine);
+   if(delayedUpdateEnd >= startLine)
+    delayedUpdateEnd += numLines;
+   delayUpdate(startLine,endLine);
 
-			//{{{ resize selections if necessary
-			Iterator iter = textArea.getSelectionIterator();
-			while(iter.hasNext())
-			{
-				Selection s = (Selection)iter.next();
+   //{{{ resize selections if necessary
+   Iterator iter = textArea.getSelectionIterator();
+   while(iter.hasNext())
+   {
+    Selection s = (Selection)iter.next();
 
-				if(s.contentInserted(buffer,startLine,offset,
-					numLines,length))
-				{
-					delayUpdate(s.startLine,s.endLine);
-				}
-			} //}}}
+    if(s.contentInserted(buffer,startLine,offset,
+     numLines,length))
+    {
+     delayUpdate(s.startLine,s.endLine);
+    }
+   } //}}}
 
-			int caret = textArea.getCaretPosition();
-			if(caret >= offset)
-			{
-				int scrollMode = (textArea.caretAutoScroll()
-					? JEditTextArea.ELECTRIC_SCROLL
-					: JEditTextArea.NO_SCROLL);
-				textArea.moveCaretPosition(
-					caret + length,scrollMode);
-			}
-			else
-			{
-				int scrollMode = (textArea.caretAutoScroll()
-					? JEditTextArea.NORMAL_SCROLL
-					: JEditTextArea.NO_SCROLL);
-				textArea.moveCaretPosition(
-					caret,scrollMode);
-			}
-		}
-		else
-		{
-			firstLine.callReset = true;
-			scrollLineCount.callReset = true;
-		}
-	} //}}}
+   int caret = textArea.getCaretPosition();
+   if(caret >= offset)
+   {
+    int scrollMode = (textArea.caretAutoScroll()
+     ? JEditTextArea.ELECTRIC_SCROLL
+     : JEditTextArea.NO_SCROLL);
+    textArea.moveCaretPosition(
+     caret + length,scrollMode);
+   }
+   else
+   {
+    int scrollMode = (textArea.caretAutoScroll()
+     ? JEditTextArea.NORMAL_SCROLL
+     : JEditTextArea.NO_SCROLL);
+    textArea.moveCaretPosition(
+     caret,scrollMode);
+   }
+  }
+  else
+  {
+   firstLine.callReset = true;
+   scrollLineCount.callReset = true;
+  }
+ } //}}}
 
-	//{{{ preContentRemoved() method
-	public void preContentRemoved(Buffer buffer, int startLine,
-		int offset, int numLines, int length)
-	{
-		if(!buffer.isLoaded())
-			return;
+ //{{{ preContentRemoved() method
+ public void preContentRemoved(Buffer buffer, int startLine,
+  int offset, int numLines, int length)
+ {
+  if(!buffer.isLoaded())
+   return;
 
-		FirstLine firstLine = displayManager.firstLine;
-		ScrollLineCount scrollLineCount = displayManager.scrollLineCount;
+  FirstLine firstLine = displayManager.firstLine;
+  ScrollLineCount scrollLineCount = displayManager.scrollLineCount;
 
-		if(textArea.getDisplayManager() == displayManager)
-		{
-			if(numLines != 0)
-			{
-				firstLine.preContentRemoved(startLine,numLines);
-				scrollLineCount.preContentRemoved(startLine,numLines);
-			}
+  if(textArea.getDisplayManager() == displayManager)
+  {
+   if(numLines != 0)
+   {
+    firstLine.preContentRemoved(startLine,numLines);
+    scrollLineCount.preContentRemoved(startLine,numLines);
+   }
 
-			if(delayedUpdateEnd >= startLine)
-				delayedUpdateEnd -= numLines;
-			delayUpdate(startLine,startLine);
-		}
-		else
-		{
-			firstLine.callReset = true;
-			scrollLineCount.callReset = true;
-		}
+   if(delayedUpdateEnd >= startLine)
+    delayedUpdateEnd -= numLines;
+   delayUpdate(startLine,startLine);
+  }
+  else
+  {
+   firstLine.callReset = true;
+   scrollLineCount.callReset = true;
+  }
 
-		displayManager.screenLineMgr.contentRemoved(startLine,numLines);
+  displayManager.screenLineMgr.contentRemoved(startLine,numLines);
 
-		if(numLines == 0)
-			return;
+  if(numLines == 0)
+   return;
 
-		delayedMultilineUpdate = true;
+  delayedMultilineUpdate = true;
 
-		if(displayManager.folds.preContentRemoved(startLine,numLines))
-		{
-			displayManager.folds.reset(buffer.getLineCount());
-			firstLine.callReset = true;
-			scrollLineCount.callReset = true;
-		}
+  if(displayManager.folds.preContentRemoved(startLine,numLines))
+  {
+   displayManager.folds.reset(buffer.getLineCount());
+   firstLine.callReset = true;
+   scrollLineCount.callReset = true;
+  }
 
-		if(firstLine.physicalLine
-			> displayManager.getLastVisibleLine()
-			|| firstLine.physicalLine
-			< displayManager.getFirstVisibleLine())
-		{
-			// will be handled later.
-			// see comments at the end of
-			// transactionComplete().
-		}
-		// very subtle... if we leave this for
-		// ensurePhysicalLineIsVisible(), an
-		// extra line will be added to the
-		// scroll line count.
-		else if(!displayManager.isLineVisible(
-			firstLine.physicalLine))
-		{
-			firstLine.physicalLine =
-				displayManager.getNextVisibleLine(
-				firstLine.physicalLine);
-		}
-	} //}}}
+  if(firstLine.physicalLine
+   > displayManager.getLastVisibleLine()
+   || firstLine.physicalLine
+   < displayManager.getFirstVisibleLine())
+  {
+   // will be handled later.
+   // see comments at the end of
+   // transactionComplete().
+  }
+  // very subtle... if we leave this for
+  // ensurePhysicalLineIsVisible(), an
+  // extra line will be added to the
+  // scroll line count.
+  else if(!displayManager.isLineVisible(
+   firstLine.physicalLine))
+  {
+   firstLine.physicalLine =
+    displayManager.getNextVisibleLine(
+    firstLine.physicalLine);
+  }
+ } //}}}
 
-	//{{{ contentRemoved() method
-	public void contentRemoved(Buffer buffer, int startLine,
-		int start, int numLines, int length)
-	{
-		if(!buffer.isLoaded())
-			return;
+ //{{{ contentRemoved() method
+ public void contentRemoved(Buffer buffer, int startLine,
+  int start, int numLines, int length)
+ {
+  if(!buffer.isLoaded())
+   return;
 
-		if(textArea.getDisplayManager() == displayManager)
-		{
-			//{{{ resize selections if necessary
-			Iterator iter = textArea.getSelectionIterator();
-			while(iter.hasNext())
-			{
-				Selection s = (Selection)iter.next();
+  if(textArea.getDisplayManager() == displayManager)
+  {
+   //{{{ resize selections if necessary
+   Iterator iter = textArea.getSelectionIterator();
+   while(iter.hasNext())
+   {
+    Selection s = (Selection)iter.next();
 
-				if(s.contentRemoved(buffer,startLine,
-					start,numLines,length))
-				{
-					delayUpdate(s.startLine,s.endLine);
-					if(s.start == s.end)
-						iter.remove();
-				}
-			} //}}}
+    if(s.contentRemoved(buffer,startLine,
+     start,numLines,length))
+    {
+     delayUpdate(s.startLine,s.endLine);
+     if(s.start == s.end)
+      iter.remove();
+    }
+   } //}}}
 
-			int caret = textArea.getCaretPosition();
+   int caret = textArea.getCaretPosition();
 
-			if(caret >= start + length)
-			{
-				int scrollMode = (textArea.caretAutoScroll()
-					? JEditTextArea.ELECTRIC_SCROLL
-					: JEditTextArea.NO_SCROLL);
-				textArea.moveCaretPosition(
-					caret - length,
-					scrollMode);
-			}
-			else if(caret >= start)
-			{
-				int scrollMode = (textArea.caretAutoScroll()
-					? JEditTextArea.ELECTRIC_SCROLL
-					: JEditTextArea.NO_SCROLL);
-				textArea.moveCaretPosition(
-					start,scrollMode);
-			}
-			else
-			{
-				int scrollMode = (textArea.caretAutoScroll()
-					? JEditTextArea.NORMAL_SCROLL
-					: JEditTextArea.NO_SCROLL);
-				textArea.moveCaretPosition(caret,scrollMode);
-			}
-		}
-	}
-	//}}}
+   if(caret >= start + length)
+   {
+    int scrollMode = (textArea.caretAutoScroll()
+     ? JEditTextArea.ELECTRIC_SCROLL
+     : JEditTextArea.NO_SCROLL);
+    textArea.moveCaretPosition(
+     caret - length,
+     scrollMode);
+   }
+   else if(caret >= start)
+   {
+    int scrollMode = (textArea.caretAutoScroll()
+     ? JEditTextArea.ELECTRIC_SCROLL
+     : JEditTextArea.NO_SCROLL);
+    textArea.moveCaretPosition(
+     start,scrollMode);
+   }
+   else
+   {
+    int scrollMode = (textArea.caretAutoScroll()
+     ? JEditTextArea.NORMAL_SCROLL
+     : JEditTextArea.NO_SCROLL);
+    textArea.moveCaretPosition(caret,scrollMode);
+   }
+  }
+ }
+ //}}}
 
-	//{{{ transactionComplete() method
-	public void transactionComplete(Buffer buffer)
-	{
-		if(textArea.getDisplayManager() != displayManager)
-		{
-			delayedUpdate = false;
-			return;
-		}
+ //{{{ transactionComplete() method
+ public void transactionComplete(Buffer buffer)
+ {
+  if(textArea.getDisplayManager() != displayManager)
+  {
+   delayedUpdate = false;
+   return;
+  }
 
-		if(delayedUpdate)
-			doDelayedUpdate();
+  if(delayedUpdate)
+   doDelayedUpdate();
 
-		textArea._finishCaretUpdate();
+  textArea._finishCaretUpdate();
 
-		delayedUpdate = false;
+  delayedUpdate = false;
 
-		//{{{ Debug code
-		if(Debug.SCROLL_VERIFY)
-		{
-			int scrollLineCount = 0;
-			int line = delayedUpdateStart;
-			if(!displayManager.isLineVisible(line))
-				line = displayManager.getNextVisibleLine(line);
-			System.err.println(delayedUpdateStart + ":" + delayedUpdateEnd + ":" + textArea.getLineCount());
-			while(line != -1 && line <= delayedUpdateEnd)
-			{
-				scrollLineCount += displayManager.getScreenLineCount(line);
-				line = displayManager.getNextVisibleLine(line);
-			}
+  //{{{ Debug code
+  if(Debug.SCROLL_VERIFY)
+  {
+   int scrollLineCount = 0;
+   int line = delayedUpdateStart;
+   if(!displayManager.isLineVisible(line))
+    line = displayManager.getNextVisibleLine(line);
+   System.err.println(delayedUpdateStart + ":" + delayedUpdateEnd + ":" + textArea.getLineCount());
+   while(line != -1 && line <= delayedUpdateEnd)
+   {
+    scrollLineCount += displayManager.getScreenLineCount(line);
+    line = displayManager.getNextVisibleLine(line);
+   }
 
-			if(scrollLineCount != displayManager.getScrollLineCount())
-			{
-				throw new InternalError(scrollLineCount
-					+ " != "
-					+ displayManager.getScrollLineCount());
-			}
-		} //}}}
-	} //}}}
+   if(scrollLineCount != displayManager.getScrollLineCount())
+   {
+    throw new InternalError(scrollLineCount
+     + " != "
+     + displayManager.getScrollLineCount());
+   }
+  } //}}}
+ } //}}}
 
-	//{{{ doDelayedUpdate() method
-	private void doDelayedUpdate()
-	{
-		// must update screen line counts before we call
-		// notifyScreenLineChanges() since that calls
-		// updateScrollBar() which needs valid info
-		int line = delayedUpdateStart;
-		if(!displayManager.isLineVisible(line))
-			line = displayManager.getNextVisibleLine(line);
-		while(line != -1 && line <= delayedUpdateEnd)
-		{
-			displayManager.updateScreenLineCount(line);
-			line = displayManager.getNextVisibleLine(line);
-		}
+ //{{{ doDelayedUpdate() method
+ private void doDelayedUpdate()
+ {
+  // must update screen line counts before we call
+  // notifyScreenLineChanges() since that calls
+  // updateScrollBar() which needs valid info
+  int line = delayedUpdateStart;
+  if(!displayManager.isLineVisible(line))
+   line = displayManager.getNextVisibleLine(line);
+  while(line != -1 && line <= delayedUpdateEnd)
+  {
+   displayManager.updateScreenLineCount(line);
+   line = displayManager.getNextVisibleLine(line);
+  }
 
-		// must be before the below call
-		// so that the chunk cache is not
-		// updated with an invisible first
-		// line (see above)
-		displayManager.notifyScreenLineChanges();
+  // must be before the below call
+  // so that the chunk cache is not
+  // updated with an invisible first
+  // line (see above)
+  displayManager.notifyScreenLineChanges();
 
-		if(delayedMultilineUpdate)
-		{
-			textArea.invalidateScreenLineRange(
-				textArea.chunkCache
-				.getScreenLineOfOffset(
-				delayedUpdateStart,0),
-				textArea.getVisibleLines());
-			delayedMultilineUpdate = false;
-		}
-		else
-		{
-			textArea.invalidateLineRange(
-				delayedUpdateStart,
-				delayedUpdateEnd);
-		}
+  if(delayedMultilineUpdate)
+  {
+   textArea.invalidateScreenLineRange(
+    textArea.chunkCache
+    .getScreenLineOfOffset(
+    delayedUpdateStart,0),
+    textArea.getVisibleLines());
+   delayedMultilineUpdate = false;
+  }
+  else
+  {
+   textArea.invalidateLineRange(
+    delayedUpdateStart,
+    delayedUpdateEnd);
+  }
 
-		// update visible lines
-		int visibleLines = textArea.getVisibleLines();
-		if(visibleLines != 0)
-		{
-			textArea.chunkCache.getLineInfo(
-				visibleLines - 1);
-		}
+  // update visible lines
+  int visibleLines = textArea.getVisibleLines();
+  if(visibleLines != 0)
+  {
+   textArea.chunkCache.getLineInfo(
+    visibleLines - 1);
+  }
 
-		// force the fold levels to be
-		// updated.
+  // force the fold levels to be
+  // updated.
 
-		// when painting the last line of
-		// a buffer, Buffer.isFoldStart()
-		// doesn't call getFoldLevel(),
-		// hence the foldLevelChanged()
-		// event might not be sent for the
-		// previous line.
+  // when painting the last line of
+  // a buffer, Buffer.isFoldStart()
+  // doesn't call getFoldLevel(),
+  // hence the foldLevelChanged()
+  // event might not be sent for the
+  // previous line.
 
-		buffer.getFoldLevel(delayedUpdateEnd);
-	} //}}}
+  buffer.getFoldLevel(delayedUpdateEnd);
+ } //}}}
 
-	//{{{ delayUpdate() method
-	private void delayUpdate(int startLine, int endLine)
-	{
-		textArea.chunkCache.invalidateChunksFromPhys(startLine);
-		textArea.repaintMgr.setFastScroll(false);
+ //{{{ delayUpdate() method
+ private void delayUpdate(int startLine, int endLine)
+ {
+  textArea.chunkCache.invalidateChunksFromPhys(startLine);
+  textArea.repaintMgr.setFastScroll(false);
 
-		if(!delayedUpdate)
-		{
-			delayedUpdateStart = startLine;
-			delayedUpdateEnd = endLine;
-			delayedUpdate = true;
-		}
-		else
-		{
-			delayedUpdateStart = Math.min(
-				delayedUpdateStart,
-				startLine);
-			delayedUpdateEnd = Math.max(
-				delayedUpdateEnd,
-				endLine);
-		}
-	} //}}}
+  if(!delayedUpdate)
+  {
+   delayedUpdateStart = startLine;
+   delayedUpdateEnd = endLine;
+   delayedUpdate = true;
+  }
+  else
+  {
+   delayedUpdateStart = Math.min(
+    delayedUpdateStart,
+    startLine);
+   delayedUpdateEnd = Math.max(
+    delayedUpdateEnd,
+    endLine);
+  }
+ } //}}}
 }

@@ -37,163 +37,163 @@ import org.gjt.sp.util.Log;
  */
 class ServiceListHandler extends HandlerBase
 {
-	//{{{ ServiceListHandler constructor
-	ServiceListHandler(PluginJAR plugin, URL uri)
-	{
-		this.plugin = plugin;
-		this.uri = uri;
-		stateStack = new Stack();
-		cachedServices = new LinkedList();
-	} //}}}
+ //{{{ ServiceListHandler constructor
+ ServiceListHandler(PluginJAR plugin, URL uri)
+ {
+  this.plugin = plugin;
+  this.uri = uri;
+  stateStack = new Stack();
+  cachedServices = new LinkedList();
+ } //}}}
 
-	//{{{ resolveEntity() method
-	public Object resolveEntity(String publicId, String systemId)
-	{
-		if("services.dtd".equals(systemId))
-		{
-			// this will result in a slight speed up, since we
-			// don't need to read the DTD anyway, as AElfred is
-			// non-validating
-			return new StringReader("<!-- -->");
+ //{{{ resolveEntity() method
+ public Object resolveEntity(String publicId, String systemId)
+ {
+  if("services.dtd".equals(systemId))
+  {
+   // this will result in a slight speed up, since we
+   // don't need to read the DTD anyway, as AElfred is
+   // non-validating
+   return new StringReader("<!-- -->");
 
-			/* try
-			{
-				return new BufferedReader(new InputStreamReader(
-					getClass().getResourceAsStream
-					("/org/gjt/sp/jedit/services.dtd")));
-			}
-			catch(Exception e)
-			{
-				Log.log(Log.ERROR,this,"Error while opening"
-					+ " dockables.dtd:");
-				Log.log(Log.ERROR,this,e);
-			} */
-		}
+   /* try
+   {
+    return new BufferedReader(new InputStreamReader(
+     getClass().getResourceAsStream
+     ("/org/gjt/sp/jedit/services.dtd")));
+   }
+   catch(Exception e)
+   {
+    Log.log(Log.ERROR,this,"Error while opening"
+     + " dockables.dtd:");
+    Log.log(Log.ERROR,this,e);
+   } */
+  }
 
-		return null;
-	} //}}}
+  return null;
+ } //}}}
 
-	//{{{ attribute() method
-	public void attribute(String aname, String value, boolean isSpecified)
-	{
-		if(aname.equals("NAME"))
-			serviceName = value;
-		else if(aname.equals("CLASS"))
-			serviceClass = value;
-	} //}}}
+ //{{{ attribute() method
+ public void attribute(String aname, String value, boolean isSpecified)
+ {
+  if(aname.equals("NAME"))
+   serviceName = value;
+  else if(aname.equals("CLASS"))
+   serviceClass = value;
+ } //}}}
 
-	//{{{ doctypeDecl() method
-	public void doctypeDecl(String name, String publicId,
-		String systemId) throws Exception
-	{
-		if("SERVICES".equals(name))
-			return;
+ //{{{ doctypeDecl() method
+ public void doctypeDecl(String name, String publicId,
+  String systemId) throws Exception
+ {
+  if("SERVICES".equals(name))
+   return;
 
-		Log.log(Log.ERROR,this,uri + ": DOCTYPE must be SERVICES");
-	} //}}}
+  Log.log(Log.ERROR,this,uri + ": DOCTYPE must be SERVICES");
+ } //}}}
 
-	//{{{ charData() method
-	public void charData(char[] c, int off, int len)
-	{
-		String tag = peekElement();
-		String text = new String(c, off, len);
+ //{{{ charData() method
+ public void charData(char[] c, int off, int len)
+ {
+  String tag = peekElement();
+  String text = new String(c, off, len);
 
-		if (tag == "SERVICE")
-		{
-			code = text;
-		}
-	} //}}}
+  if (tag == "SERVICE")
+  {
+   code = text;
+  }
+ } //}}}
 
-	//{{{ startElement() method
-	public void startElement(String tag)
-	{
-		tag = pushElement(tag);
-	} //}}}
+ //{{{ startElement() method
+ public void startElement(String tag)
+ {
+  tag = pushElement(tag);
+ } //}}}
 
-	//{{{ endElement() method
-	public void endElement(String name)
-	{
-		if(name == null)
-			return;
+ //{{{ endElement() method
+ public void endElement(String name)
+ {
+  if(name == null)
+   return;
 
-		String tag = peekElement();
+  String tag = peekElement();
 
-		if(name.equals(tag))
-		{
-			if(tag == "SERVICE")
-			{
-				ServiceManager.Descriptor d =
-					new ServiceManager.Descriptor(
-					serviceClass,serviceName,code,plugin);
-				ServiceManager.registerService(d);
-				cachedServices.add(d);
-			}
+  if(name.equals(tag))
+  {
+   if(tag == "SERVICE")
+   {
+    ServiceManager.Descriptor d =
+     new ServiceManager.Descriptor(
+     serviceClass,serviceName,code,plugin);
+    ServiceManager.registerService(d);
+    cachedServices.add(d);
+   }
 
-			popElement();
-		}
-		else
-		{
-			// can't happen
-			throw new InternalError();
-		}
-	} //}}}
+   popElement();
+  }
+  else
+  {
+   // can't happen
+   throw new InternalError();
+  }
+ } //}}}
 
-	//{{{ startDocument() method
-	public void startDocument()
-	{
-		try
-		{
-			pushElement(null);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-	} //}}}
+ //{{{ startDocument() method
+ public void startDocument()
+ {
+  try
+  {
+   pushElement(null);
+  }
+  catch (Exception e)
+  {
+   e.printStackTrace();
+  }
+ } //}}}
 
-	//{{{ getCachedServices() method
-	public ServiceManager.Descriptor[] getCachedServices()
-	{
-		return (ServiceManager.Descriptor[])cachedServices.toArray(
-			new ServiceManager.Descriptor[cachedServices.size()]);
-	} //}}}
+ //{{{ getCachedServices() method
+ public ServiceManager.Descriptor[] getCachedServices()
+ {
+  return (ServiceManager.Descriptor[])cachedServices.toArray(
+   new ServiceManager.Descriptor[cachedServices.size()]);
+ } //}}}
 
-	//{{{ Private members
+ //{{{ Private members
 
-	//{{{ Instance variables
-	private PluginJAR plugin;
-	private URL uri;
+ //{{{ Instance variables
+ private PluginJAR plugin;
+ private URL uri;
 
-	private String serviceName;
-	private String serviceClass;
-	private String code;
+ private String serviceName;
+ private String serviceClass;
+ private String code;
 
-	private Stack stateStack;
+ private Stack stateStack;
 
-	private List cachedServices;
-	//}}}
+ private List cachedServices;
+ //}}}
 
-	//{{{ pushElement() method
-	private String pushElement(String name)
-	{
-		name = (name == null) ? null : name.intern();
+ //{{{ pushElement() method
+ private String pushElement(String name)
+ {
+  name = (name == null) ? null : name.intern();
 
-		stateStack.push(name);
+  stateStack.push(name);
 
-		return name;
-	} //}}}
+  return name;
+ } //}}}
 
-	//{{{ peekElement() method
-	private String peekElement()
-	{
-		return (String) stateStack.peek();
-	} //}}}
+ //{{{ peekElement() method
+ private String peekElement()
+ {
+  return (String) stateStack.peek();
+ } //}}}
 
-	//{{{ popElement() method
-	private String popElement()
-	{
-		return (String) stateStack.pop();
-	} //}}}
+ //{{{ popElement() method
+ private String popElement()
+ {
+  return (String) stateStack.pop();
+ } //}}}
 
-	//}}}
+ //}}}
 }

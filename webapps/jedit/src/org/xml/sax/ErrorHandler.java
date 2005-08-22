@@ -63,7 +63,7 @@ public interface ErrorHandler {
      * @see org.xml.sax.SAXParseException 
      */
     public abstract void warning (SAXParseException exception)
-	throws SAXException;
+ throws SAXException;
     
     
     /**
@@ -92,7 +92,7 @@ public interface ErrorHandler {
      * @see org.xml.sax.SAXParseException 
      */
     public abstract void error (SAXParseException exception)
-	throws SAXException;
+ throws SAXException;
     
     
     /**
@@ -116,7 +116,7 @@ public interface ErrorHandler {
      * @see org.xml.sax.SAXParseException
      */
     public abstract void fatalError (SAXParseException exception)
-	throws SAXException;
+ throws SAXException;
     
 }
 

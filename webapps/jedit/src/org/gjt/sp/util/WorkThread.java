@@ -26,201 +26,201 @@ package org.gjt.sp.util;
  */
 public class WorkThread extends Thread
 {
-	public WorkThread(WorkThreadPool pool, ThreadGroup group, String name)
-	{
-		super(group, name);
-		// so that jEdit doesn't exit with no views open automatically
-		//setDaemon(true);
-		setPriority(Thread.MIN_PRIORITY);
+ public WorkThread(WorkThreadPool pool, ThreadGroup group, String name)
+ {
+  super(group, name);
+  // so that jEdit doesn't exit with no views open automatically
+  //setDaemon(true);
+  setPriority(Thread.MIN_PRIORITY);
 
-		this.pool = pool;
-	}
+  this.pool = pool;
+ }
 
-	/**
-	 * Sets if the current request can be aborted.
-	 * @since jEdit 2.6pre1
-	 */
-	public void setAbortable(boolean abortable)
-	{
-		synchronized(abortLock)
-		{
-			this.abortable = abortable;
-			if(aborted)
-				stop(new Abort());
-		}
-	}
+ /**
+  * Sets if the current request can be aborted.
+  * @since jEdit 2.6pre1
+  */
+ public void setAbortable(boolean abortable)
+ {
+  synchronized(abortLock)
+  {
+   this.abortable = abortable;
+   if(aborted)
+    stop(new Abort());
+  }
+ }
 
-	/**
-	 * Returns if the work thread is currently running a request.
-	 */
-	public boolean isRequestRunning()
-	{
-		return requestRunning;
-	}
+ /**
+  * Returns if the work thread is currently running a request.
+  */
+ public boolean isRequestRunning()
+ {
+  return requestRunning;
+ }
 
-	/**
-	 * Returns the status text.
-	 */
-	public String getStatus()
-	{
-		return status;
-	}
+ /**
+  * Returns the status text.
+  */
+ public String getStatus()
+ {
+  return status;
+ }
 
-	/**
-	 * Sets the status text.
-	 * @since jEdit 2.6pre1
-	 */
-	public void setStatus(String status)
-	{
-		this.status = status;
-		pool.fireProgressChanged(this);
-	}
+ /**
+  * Sets the status text.
+  * @since jEdit 2.6pre1
+  */
+ public void setStatus(String status)
+ {
+  this.status = status;
+  pool.fireProgressChanged(this);
+ }
 
-	/**
-	 * Returns the progress value.
-	 */
-	public int getProgressValue()
-	{
-		return progressValue;
-	}
+ /**
+  * Returns the progress value.
+  */
+ public int getProgressValue()
+ {
+  return progressValue;
+ }
 
-	/**
-	 * Sets the progress value.
-	 * @since jEdit 2.6pre1
-	 */
-	public void setProgressValue(int progressValue)
-	{
-		this.progressValue = progressValue;
-		pool.fireProgressChanged(this);
-	}
+ /**
+  * Sets the progress value.
+  * @since jEdit 2.6pre1
+  */
+ public void setProgressValue(int progressValue)
+ {
+  this.progressValue = progressValue;
+  pool.fireProgressChanged(this);
+ }
 
-	/**
-	 * Returns the progress maximum.
-	 */
-	public int getProgressMaximum()
-	{
-		return progressMaximum;
-	}
+ /**
+  * Returns the progress maximum.
+  */
+ public int getProgressMaximum()
+ {
+  return progressMaximum;
+ }
 
-	/**
-	 * Sets the maximum progress value.
-	 * @since jEdit 2.6pre1
-	 */
-	public void setProgressMaximum(int progressMaximum)
-	{
-		this.progressMaximum = progressMaximum;
-		pool.fireProgressChanged(this);
-	}
+ /**
+  * Sets the maximum progress value.
+  * @since jEdit 2.6pre1
+  */
+ public void setProgressMaximum(int progressMaximum)
+ {
+  this.progressMaximum = progressMaximum;
+  pool.fireProgressChanged(this);
+ }
 
-	/**
-	 * Aborts the currently running request, if allowed.
-	 * @since jEdit 2.6pre1
-	 */
-	public void abortCurrentRequest()
-	{
-		synchronized(abortLock)
-		{
-			if(abortable && !aborted)
-				stop(new Abort());
-			aborted = true;
-		}
-	}
+ /**
+  * Aborts the currently running request, if allowed.
+  * @since jEdit 2.6pre1
+  */
+ public void abortCurrentRequest()
+ {
+  synchronized(abortLock)
+  {
+   if(abortable && !aborted)
+    stop(new Abort());
+   aborted = true;
+  }
+ }
 
-	public void run()
-	{
-		Log.log(Log.DEBUG,this,"Work request thread starting [" + getName() + "]");
+ public void run()
+ {
+  Log.log(Log.DEBUG,this,"Work request thread starting [" + getName() + "]");
 
-		for(;;)
-		{
-			doRequests();
-		}
-	}
+  for(;;)
+  {
+   doRequests();
+  }
+ }
 
-	// private members
-	private WorkThreadPool pool;
-	private Object abortLock = new Object();
-	private boolean requestRunning;
-	private boolean abortable;
-	private boolean aborted;
-	private String status;
-	private int progressValue;
-	private int progressMaximum;
+ // private members
+ private WorkThreadPool pool;
+ private Object abortLock = new Object();
+ private boolean requestRunning;
+ private boolean abortable;
+ private boolean aborted;
+ private String status;
+ private int progressValue;
+ private int progressMaximum;
 
-	private void doRequests()
-	{
-		WorkThreadPool.Request request;
-		for(;;)
-		{
-			request = pool.getNextRequest();
-			if(request == null)
-				break;
-			else
-			{
-				requestRunning = true;
-				pool.fireStatusChanged(this);
-				doRequest(request);
-				requestRunning = false;
-			}
-		}
+ private void doRequests()
+ {
+  WorkThreadPool.Request request;
+  for(;;)
+  {
+   request = pool.getNextRequest();
+   if(request == null)
+    break;
+   else
+   {
+    requestRunning = true;
+    pool.fireStatusChanged(this);
+    doRequest(request);
+    requestRunning = false;
+   }
+  }
 
-		pool.fireStatusChanged(this);
+  pool.fireStatusChanged(this);
 
-		synchronized(pool.waitForAllLock)
-		{
-			// notify a running waitForRequests() method
-			pool.waitForAllLock.notifyAll();
-		}
+  synchronized(pool.waitForAllLock)
+  {
+   // notify a running waitForRequests() method
+   pool.waitForAllLock.notifyAll();
+  }
 
-		synchronized(pool.lock)
-		{
-			// wait for more requests
-			try
-			{
-				pool.lock.wait();
-			}
-			catch(InterruptedException ie)
-			{
-				Log.log(Log.ERROR,this,ie);
-			}
-		}
-	}
+  synchronized(pool.lock)
+  {
+   // wait for more requests
+   try
+   {
+    pool.lock.wait();
+   }
+   catch(InterruptedException ie)
+   {
+    Log.log(Log.ERROR,this,ie);
+   }
+  }
+ }
 
-	private void doRequest(WorkThreadPool.Request request)
-	{
-		Log.log(Log.DEBUG,WorkThread.class,"Running in work thread: " + request);
+ private void doRequest(WorkThreadPool.Request request)
+ {
+  Log.log(Log.DEBUG,WorkThread.class,"Running in work thread: " + request);
 
-		try
-		{
-			request.run.run();
-		}
-		catch(Abort a)
-		{
-			Log.log(Log.ERROR,WorkThread.class,"Unhandled abort");
-		}
-		catch(Throwable t)
-		{
-			Log.log(Log.ERROR,WorkThread.class,"Exception "
-				+ "in work thread:");
-			Log.log(Log.ERROR,WorkThread.class,t);
-		}
-		finally
-		{
-			synchronized(abortLock)
-			{
-				aborted = abortable = false;
-			}
-			status = null;
-			progressValue = progressMaximum = 0;
-			pool.requestDone();
-			pool.fireStatusChanged(this);
-		}
-	}
+  try
+  {
+   request.run.run();
+  }
+  catch(Abort a)
+  {
+   Log.log(Log.ERROR,WorkThread.class,"Unhandled abort");
+  }
+  catch(Throwable t)
+  {
+   Log.log(Log.ERROR,WorkThread.class,"Exception "
+    + "in work thread:");
+   Log.log(Log.ERROR,WorkThread.class,t);
+  }
+  finally
+  {
+   synchronized(abortLock)
+   {
+    aborted = abortable = false;
+   }
+   status = null;
+   progressValue = progressMaximum = 0;
+   pool.requestDone();
+   pool.fireStatusChanged(this);
+  }
+ }
 
-	public static class Abort extends Error
-	{
-		public Abort()
-		{
-			super("Work request aborted");
-		}
-	}
+ public static class Abort extends Error
+ {
+  public Abort()
+  {
+   super("Work request aborted");
+  }
+ }
 }

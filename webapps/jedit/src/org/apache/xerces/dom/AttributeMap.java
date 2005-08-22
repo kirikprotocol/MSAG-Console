@@ -227,7 +227,7 @@ public class AttributeMap extends NamedNodeMapImpl {
                 nodes.insertElementAt(arg, i);
             }
         }
-        //    	changed(true);
+        //     changed(true);
 
         // notify document
         ownerNode.ownerDocument().setAttrNode(argn, previous);

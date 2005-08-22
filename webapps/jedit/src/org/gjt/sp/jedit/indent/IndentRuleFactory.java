@@ -27,65 +27,65 @@ import org.gjt.sp.jedit.Buffer;
 
 public class IndentRuleFactory
 {
-	public static IndentRule indentNextLines(String regexp)
-		throws REException
-	{
-		return new RegexpIndentRule(regexp,
-			null,
-			new IndentAction.Increase(),
-			null,false);
-	}
+ public static IndentRule indentNextLines(String regexp)
+  throws REException
+ {
+  return new RegexpIndentRule(regexp,
+   null,
+   new IndentAction.Increase(),
+   null,false);
+ }
 
-	public static IndentRule indentNextLine(String regexp)
-		throws REException
-	{
-		return new RegexpIndentRule(regexp,
-			new IndentAction.Decrease(),
-			new IndentAction.Increase(),
-			null,true);
-	}
+ public static IndentRule indentNextLine(String regexp)
+  throws REException
+ {
+  return new RegexpIndentRule(regexp,
+   new IndentAction.Decrease(),
+   new IndentAction.Increase(),
+   null,true);
+ }
 
-	public static IndentRule unindentThisLine(String regexp)
-		throws REException
-	{
-		return new RegexpIndentRule(regexp,
-			null,
-			new IndentAction.Increase(),
-			new IndentAction.Decrease(),
-			false);
-	}
+ public static IndentRule unindentThisLine(String regexp)
+  throws REException
+ {
+  return new RegexpIndentRule(regexp,
+   null,
+   new IndentAction.Increase(),
+   new IndentAction.Decrease(),
+   false);
+ }
 
-	public static IndentRule unindentNextLines(String regexp)
-		throws REException
-	{
-		return new RegexpIndentRule(regexp,
-			null,
-			new IndentAction.Decrease(),
-			null,
-			false);
-	}
+ public static IndentRule unindentNextLines(String regexp)
+  throws REException
+ {
+  return new RegexpIndentRule(regexp,
+   null,
+   new IndentAction.Decrease(),
+   null,
+   false);
+ }
 
-	public static IndentRule indentOpenBracket(char bracket)
-		throws REException
-	{
-		return new OpenBracketIndentRule(bracket,true);
-	}
+ public static IndentRule indentOpenBracket(char bracket)
+  throws REException
+ {
+  return new OpenBracketIndentRule(bracket,true);
+ }
 
-	public static IndentRule indentCloseBracket(char bracket)
-		throws REException
-	{
-		return new CloseBracketIndentRule(bracket,true);
-	}
+ public static IndentRule indentCloseBracket(char bracket)
+  throws REException
+ {
+  return new CloseBracketIndentRule(bracket,true);
+ }
 
-	public static IndentRule unalignedOpenBracket(char bracket)
-		throws REException
-	{
-		return new OpenBracketIndentRule(bracket,false);
-	}
+ public static IndentRule unalignedOpenBracket(char bracket)
+  throws REException
+ {
+  return new OpenBracketIndentRule(bracket,false);
+ }
 
-	public static IndentRule unalignedCloseBracket(char bracket)
-		throws REException
-	{
-		return new CloseBracketIndentRule(bracket,false);
-	}
+ public static IndentRule unalignedCloseBracket(char bracket)
+  throws REException
+ {
+  return new CloseBracketIndentRule(bracket,false);
+ }
 }

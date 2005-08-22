@@ -34,36 +34,36 @@ import org.gjt.sp.jedit.View;
  */
 class SideKickBindings extends KeyAdapter
 {
-	//{{{ keyTyped() method
-	public void keyTyped(KeyEvent evt)
-	{
+ //{{{ keyTyped() method
+ public void keyTyped(KeyEvent evt)
+ {
     System.out.println("sidekick.SideKickBinding keyTyped before parse line 40");
-		evt = KeyEventWorkaround.processKeyEvent(evt);
-		if(evt == null)
-			return;
+  evt = KeyEventWorkaround.processKeyEvent(evt);
+  if(evt == null)
+   return;
 
-		char ch = evt.getKeyChar();
-		if(ch == '\b')
-			return;
+  char ch = evt.getKeyChar();
+  if(ch == '\b')
+   return;
     System.out.println("sidekick.SideKickBinding keyTyped before parse line 48 key= "+evt.getKeyChar());
-		View view = GUIUtilities.getView((Component)evt.getSource());
-		SideKickParser parser = SideKickPlugin.getParserForView(view);
+  View view = GUIUtilities.getView((Component)evt.getSource());
+  SideKickParser parser = SideKickPlugin.getParserForView(view);
 
-		if(parser != null && parser.supportsCompletion())
-		{
-			System.out.println("sidekick.SideKickBinding keyTyped before parse line 54");
+  if(parser != null && parser.supportsCompletion())
+  {
+   System.out.println("sidekick.SideKickBinding keyTyped before parse line 54");
       String parseKeys = parser.getParseTriggers();
-			if(parseKeys != null && parseKeys.indexOf(ch) != -1)
+   if(parseKeys != null && parseKeys.indexOf(ch) != -1)
       { System.out.println("sidekick.SideKickBinding keyTyped before parse line 57");
         SideKickPlugin.parse(view,false);
       }
       System.out.println("sidekick.SideKickBinding keyTyped before parse line 61");
-			String instantKeys = parser.getInstantCompletionTriggers();
-			if(instantKeys != null && instantKeys.indexOf(ch) != -1)
-				SideKickActions.keyComplete(view);
-			else if(parser.canCompleteAnywhere()) {
+   String instantKeys = parser.getInstantCompletionTriggers();
+   if(instantKeys != null && instantKeys.indexOf(ch) != -1)
+    SideKickActions.keyComplete(view);
+   else if(parser.canCompleteAnywhere()) {
         System.out.println("sidekick.SideKickBinding keyTyped before parse line 65");
-				SideKickActions.keyCompleteWithDelay(view); }
-		}
-	} //}}}
+    SideKickActions.keyCompleteWithDelay(view); }
+  }
+ } //}}}
 }

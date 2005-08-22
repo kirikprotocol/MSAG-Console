@@ -377,7 +377,7 @@ public class XPath {
                             if (i == tokenCount - 1) {
                                 throw new XPathException("c-general-xpath");
                             }
-                            if (i+1<tokenCount)	{
+                            if (i+1<tokenCount) {
                                 token=xtokens.getToken(i+1);
                                 if (token==XPath.Tokens.EXPRTOKEN_OPERATOR_SLASH)
                                     throw new XPathException("c-general-xpath");
@@ -483,7 +483,7 @@ public class XPath {
         public String toString() {
             StringBuffer str = new StringBuffer();
             for (int i = 0; i < steps.length; i++) {
-                if (i > 0	&& (steps[i-1].axis.type!=Axis.DESCENDANT
+                if (i > 0 && (steps[i-1].axis.type!=Axis.DESCENDANT
                     && steps[i].axis.type!=Axis.DESCENDANT) ){
                     str.append('/');
                 }

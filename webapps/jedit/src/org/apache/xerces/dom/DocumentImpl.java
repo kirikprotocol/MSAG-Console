@@ -207,7 +207,7 @@ public class DocumentImpl
         // experimental
         newdoc.mutationEvents = mutationEvents;
 
-    	return newdoc;
+     return newdoc;
 
     } // cloneNode(boolean):Node
 
@@ -304,7 +304,7 @@ public class DocumentImpl
                                        NodeFilter filter,
                                        boolean entityReferenceExpansion)
     {
-    	if (root == null) {
+     if (root == null) {
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NOT_SUPPORTED_ERR", null);
             throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
         }
@@ -444,17 +444,17 @@ public class DocumentImpl
      * @since WD-DOM-Level-2-19990923
      */
     public Event createEvent(String type)
-	throws DOMException {
-	    if (type.equalsIgnoreCase("Events") || "Event".equals(type))
-	        return new EventImpl();
-	    if (type.equalsIgnoreCase("MutationEvents") ||
+ throws DOMException {
+     if (type.equalsIgnoreCase("Events") || "Event".equals(type))
+         return new EventImpl();
+     if (type.equalsIgnoreCase("MutationEvents") ||
                 "MutationEvent".equals(type))
-	        return new MutationEventImpl();
-	    else {
+         return new MutationEventImpl();
+     else {
             String msg = DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NOT_SUPPORTED_ERR", null);
-	        throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
+         throw new DOMException(DOMException.NOT_SUPPORTED_ERR, msg);
         }
-	}
+ }
 
     /**
      * Sets whether the DOM implementation generates mutation events
@@ -527,7 +527,7 @@ public class DocumentImpl
         String type;
         EventListener listener;
         boolean useCapture;
-	    
+     
         /** NON-DOM INTERNAL: Constructor for Listener list Entry 
          * @param type Event name (NOT event group!) to listen for.
          * @param listener Who gets called when event is dispatched
@@ -542,7 +542,7 @@ public class DocumentImpl
         }
 
     } // LEntry
-	
+ 
     /**
      * Introduced in DOM Level 2. <p> Register an event listener with this
      * Node. A listener may be independently registered as both Capturing and
@@ -565,14 +565,14 @@ public class DocumentImpl
         // Each listener may be registered only once per type per phase.
         // Simplest way to code that is to zap the previous entry, if any.
         removeEventListener(node, type, listener, useCapture);
-	    
+     
         Vector nodeListeners = getEventListeners(node);
         if(nodeListeners == null) {
             nodeListeners = new Vector();
             setEventListeners(node, nodeListeners);
         }
         nodeListeners.addElement(new LEntry(type, listener, useCapture));
-	    
+     
         // Record active listener
         LCount lc = LCount.lookup(type);
         if (useCapture)
@@ -581,7 +581,7 @@ public class DocumentImpl
             ++lc.bubbles;
 
     } // addEventListener(NodeImpl,String,EventListener,boolean) :void
-	
+ 
     /**
      * Introduced in DOM Level 2. <p> Deregister an event listener previously
      * registered with this Node.  A listener must be independently removed
@@ -630,10 +630,10 @@ public class DocumentImpl
 
     protected void copyEventListeners(NodeImpl src, NodeImpl tgt) {
         Vector nodeListeners = getEventListeners(src);
-	if (nodeListeners == null) {
-	    return;
-	}
-	setEventListeners(tgt, (Vector) nodeListeners.clone());
+ if (nodeListeners == null) {
+     return;
+ }
+ setEventListeners(tgt, (Vector) nodeListeners.clone());
     }
 
     /**
@@ -893,7 +893,7 @@ public class DocumentImpl
                                     MutationEvent.MODIFICATION);
         else
             dispatchAggregateEvents(node, null, null, (short) 0);
-	        
+         
     } // dispatchAggregateEvents(NodeImpl,EnclosingAttr) :void
 
     /**
@@ -1237,7 +1237,7 @@ public class DocumentImpl
         // that the Attr is still attached to an owner. This code is
         // similar but dispatches to the previous owner, "element".
         if (mutationEvents) {
-    	    // If we have to send DOMAttrModified (determined earlier),
+         // If we have to send DOMAttrModified (determined earlier),
             // do so.
             LCount lc = LCount.lookup(MutationEventImpl.DOM_ATTR_MODIFIED);
             if (lc.captures + lc.bubbles + lc.defaults > 0) {
@@ -1261,14 +1261,14 @@ public class DocumentImpl
      * A method to be called when an attribute node has been renamed
      */
     void renamedAttrNode(Attr oldAt, Attr newAt) {
-	// REVISIT: To be implemented!!!
+ // REVISIT: To be implemented!!!
     }
 
     /**
      * A method to be called when an element has been renamed
      */
     void renamedElement(Element oldEl, Element newEl) {
-	// REVISIT: To be implemented!!!
+ // REVISIT: To be implemented!!!
     }
 
 } // class DocumentImpl

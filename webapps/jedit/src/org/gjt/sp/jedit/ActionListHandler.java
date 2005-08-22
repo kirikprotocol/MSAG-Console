@@ -32,172 +32,172 @@ import org.gjt.sp.util.Log;
 
 class ActionListHandler extends HandlerBase
 {
-	//{{{ ActionListHandler constructor
-	ActionListHandler(String path, ActionSet actionSet)
-	{
-		this.path = path;
-		this.actionSet = actionSet;
-		stateStack = new Stack();
-	} //}}}
+ //{{{ ActionListHandler constructor
+ ActionListHandler(String path, ActionSet actionSet)
+ {
+  this.path = path;
+  this.actionSet = actionSet;
+  stateStack = new Stack();
+ } //}}}
 
-	//{{{ resolveEntity() method
-	public Object resolveEntity(String publicId, String systemId)
-	{
-		if("actions.dtd".equals(systemId))
-		{
-			// this will result in a slight speed up, since we
-			// don't need to read the DTD anyway, as AElfred is
-			// non-validating
-			return new StringReader("<!-- -->");
+ //{{{ resolveEntity() method
+ public Object resolveEntity(String publicId, String systemId)
+ {
+  if("actions.dtd".equals(systemId))
+  {
+   // this will result in a slight speed up, since we
+   // don't need to read the DTD anyway, as AElfred is
+   // non-validating
+   return new StringReader("<!-- -->");
 
-			/* try
-			{
-				return new BufferedReader(new InputStreamReader(
-					getClass().getResourceAsStream("actions.dtd")));
-			}
-			catch(Exception e)
-			{
-				Log.log(Log.ERROR,this,"Error while opening"
-					+ " actions.dtd:");
-				Log.log(Log.ERROR,this,e);
-			} */
-		}
+   /* try
+   {
+    return new BufferedReader(new InputStreamReader(
+     getClass().getResourceAsStream("actions.dtd")));
+   }
+   catch(Exception e)
+   {
+    Log.log(Log.ERROR,this,"Error while opening"
+     + " actions.dtd:");
+    Log.log(Log.ERROR,this,e);
+   } */
+  }
 
-		return null;
-	} //}}}
+  return null;
+ } //}}}
 
-	//{{{ attribute() method
-	public void attribute(String aname, String value, boolean isSpecified)
-	{
-		aname = (aname == null) ? null : aname.intern();
-		value = (value == null) ? null : value.intern();
+ //{{{ attribute() method
+ public void attribute(String aname, String value, boolean isSpecified)
+ {
+  aname = (aname == null) ? null : aname.intern();
+  value = (value == null) ? null : value.intern();
 
-		if(aname == "NAME")
-			actionName = value;
-		else if(aname == "NO_REPEAT")
-			noRepeat = (value == "TRUE");
-		else if(aname == "NO_RECORD")
-			noRecord = (value == "TRUE");
-		else if(aname == "NO_REMEMBER_LAST")
-			noRememberLast = (value == "TRUE");
-	} //}}}
+  if(aname == "NAME")
+   actionName = value;
+  else if(aname == "NO_REPEAT")
+   noRepeat = (value == "TRUE");
+  else if(aname == "NO_RECORD")
+   noRecord = (value == "TRUE");
+  else if(aname == "NO_REMEMBER_LAST")
+   noRememberLast = (value == "TRUE");
+ } //}}}
 
-	//{{{ doctypeDecl() method
-	public void doctypeDecl(String name, String publicId,
-		String systemId) throws Exception
-	{
-		if("ACTIONS".equals(name))
-			return;
+ //{{{ doctypeDecl() method
+ public void doctypeDecl(String name, String publicId,
+  String systemId) throws Exception
+ {
+  if("ACTIONS".equals(name))
+   return;
 
-		Log.log(Log.ERROR,this,path + ": DOCTYPE must be ACTIONS");
-	} //}}}
+  Log.log(Log.ERROR,this,path + ": DOCTYPE must be ACTIONS");
+ } //}}}
 
-	//{{{ charData() method
-	public void charData(char[] c, int off, int len)
-	{
-		String tag = peekElement();
-		String text = new String(c, off, len);
+ //{{{ charData() method
+ public void charData(char[] c, int off, int len)
+ {
+  String tag = peekElement();
+  String text = new String(c, off, len);
 
-		if (tag == "CODE")
-		{
-			code = text;
-		}
-		else if (tag == "IS_SELECTED")
-		{
-			isSelected = text;
-		}
-	} //}}}
+  if (tag == "CODE")
+  {
+   code = text;
+  }
+  else if (tag == "IS_SELECTED")
+  {
+   isSelected = text;
+  }
+ } //}}}
 
-	//{{{ startElement() method
-	public void startElement(String tag)
-	{
-		tag = pushElement(tag);
+ //{{{ startElement() method
+ public void startElement(String tag)
+ {
+  tag = pushElement(tag);
 
-		if (tag == "ACTION")
-		{
-			code = null;
-			isSelected = null;
-		}
-	} //}}}
+  if (tag == "ACTION")
+  {
+   code = null;
+   isSelected = null;
+  }
+ } //}}}
 
-	//{{{ endElement() method
-	public void endElement(String name)
-	{
-		if(name == null)
-			return;
+ //{{{ endElement() method
+ public void endElement(String name)
+ {
+  if(name == null)
+   return;
 
-		String tag = peekElement();
+  String tag = peekElement();
 
-		if(name.equals(tag))
-		{
-			if(tag == "ACTION")
-			{
-				actionSet.addAction(new BeanShellAction(actionName,
-					code,isSelected,noRepeat,noRecord,
-					noRememberLast));
-				noRepeat = noRecord = noRememberLast = false;
-			}
+  if(name.equals(tag))
+  {
+   if(tag == "ACTION")
+   {
+    actionSet.addAction(new BeanShellAction(actionName,
+     code,isSelected,noRepeat,noRecord,
+     noRememberLast));
+    noRepeat = noRecord = noRememberLast = false;
+   }
 
-			popElement();
-		}
-		else
-		{
-			// can't happen
-			throw new InternalError();
-		}
-	} //}}}
+   popElement();
+  }
+  else
+  {
+   // can't happen
+   throw new InternalError();
+  }
+ } //}}}
 
-	//{{{ startDocument() method
-	public void startDocument()
-	{
-		try
-		{
-			pushElement(null);
-		}
-		catch (Exception e)
-		{
-			e.printStackTrace();
-		}
-	} //}}}
+ //{{{ startDocument() method
+ public void startDocument()
+ {
+  try
+  {
+   pushElement(null);
+  }
+  catch (Exception e)
+  {
+   e.printStackTrace();
+  }
+ } //}}}
 
-	//{{{ Private members
+ //{{{ Private members
 
-	//{{{ Instance variables
-	private String path;
-	private ActionSet actionSet;
+ //{{{ Instance variables
+ private String path;
+ private ActionSet actionSet;
 
-	private String actionName;
-	private String code;
-	private String isSelected;
+ private String actionName;
+ private String code;
+ private String isSelected;
 
-	private boolean noRepeat;
-	private boolean noRecord;
-	private boolean noRememberLast;
+ private boolean noRepeat;
+ private boolean noRecord;
+ private boolean noRememberLast;
 
-	private Stack stateStack;
-	//}}}
+ private Stack stateStack;
+ //}}}
 
-	//{{{ pushElement() method
-	private String pushElement(String name)
-	{
-		name = (name == null) ? null : name.intern();
+ //{{{ pushElement() method
+ private String pushElement(String name)
+ {
+  name = (name == null) ? null : name.intern();
 
-		stateStack.push(name);
+  stateStack.push(name);
 
-		return name;
-	} //}}}
+  return name;
+ } //}}}
 
-	//{{{ peekElement() method
-	private String peekElement()
-	{
-		return (String) stateStack.peek();
-	} //}}}
+ //{{{ peekElement() method
+ private String peekElement()
+ {
+  return (String) stateStack.peek();
+ } //}}}
 
-	//{{{ popElement() method
-	private String popElement()
-	{
-		return (String) stateStack.pop();
-	} //}}}
+ //{{{ popElement() method
+ private String popElement()
+ {
+  return (String) stateStack.pop();
+ } //}}}
 
-	//}}}
+ //}}}
 }

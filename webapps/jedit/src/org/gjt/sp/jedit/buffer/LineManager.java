@@ -43,321 +43,321 @@ import org.gjt.sp.util.Log;
  */
 public class LineManager
 {
-	//{{{ LineManager constructor
-	public LineManager()
-	{
-		endOffsets = new int[1];
-		endOffsets[0] = 1;
-		foldLevels = new short[1];
-		lineContext = new TokenMarker.LineContext[1];
-		lineCount = 1;
-	} //}}}
+ //{{{ LineManager constructor
+ public LineManager()
+ {
+  endOffsets = new int[1];
+  endOffsets[0] = 1;
+  foldLevels = new short[1];
+  lineContext = new TokenMarker.LineContext[1];
+  lineCount = 1;
+ } //}}}
 
-	//{{{ getLineCount() method
-	public final int getLineCount()
-	{
-		return lineCount;
-	} //}}}
+ //{{{ getLineCount() method
+ public final int getLineCount()
+ {
+  return lineCount;
+ } //}}}
 
-	//{{{ getLineOfOffset() method
-	public int getLineOfOffset(int offset)
-	{
-		int start = 0;
-		int end = lineCount - 1;
+ //{{{ getLineOfOffset() method
+ public int getLineOfOffset(int offset)
+ {
+  int start = 0;
+  int end = lineCount - 1;
 
-		for(;;)
-		{
-			switch(end - start)
-			{
-			case 0:
-				if(getLineEndOffset(start) <= offset)
-					return start + 1;
-				else
-					return start;
-			case 1:
-				if(getLineEndOffset(start) <= offset)
-				{
-					if(getLineEndOffset(end) <= offset)
-						return end + 1;
-					else
-						return end;
-				}
-				else
-					return start;
-			default:
-				int pivot = (end + start) / 2;
-				int value = getLineEndOffset(pivot);
-				if(value == offset)
-					return pivot + 1;
-				else if(value < offset)
-					start = pivot + 1;
-				else
-					end = pivot - 1;
-				break;
-			}
-		}
-	} //}}}
+  for(;;)
+  {
+   switch(end - start)
+   {
+   case 0:
+    if(getLineEndOffset(start) <= offset)
+     return start + 1;
+    else
+     return start;
+   case 1:
+    if(getLineEndOffset(start) <= offset)
+    {
+     if(getLineEndOffset(end) <= offset)
+      return end + 1;
+     else
+      return end;
+    }
+    else
+     return start;
+   default:
+    int pivot = (end + start) / 2;
+    int value = getLineEndOffset(pivot);
+    if(value == offset)
+     return pivot + 1;
+    else if(value < offset)
+     start = pivot + 1;
+    else
+     end = pivot - 1;
+    break;
+   }
+  }
+ } //}}}
 
-	//{{{ getLineEndOffset() method
-	public final int getLineEndOffset(int line)
-	{
-		if(gapLine != -1 && line >= gapLine)
-			return endOffsets[line] + gapWidth;
-		else
-			return endOffsets[line];
-	} //}}}
+ //{{{ getLineEndOffset() method
+ public final int getLineEndOffset(int line)
+ {
+  if(gapLine != -1 && line >= gapLine)
+   return endOffsets[line] + gapWidth;
+  else
+   return endOffsets[line];
+ } //}}}
 
-	//{{{ getFoldLevel() method
-	public final int getFoldLevel(int line)
-	{
-		return foldLevels[line];
-	} //}}}
+ //{{{ getFoldLevel() method
+ public final int getFoldLevel(int line)
+ {
+  return foldLevels[line];
+ } //}}}
 
-	//{{{ setFoldLevel() method
-	// Also sets 'fold level valid' flag
-	public final void setFoldLevel(int line, int level)
-	{
-		if(level > 0xffff)
-		{
-			// limitations...
-			level = 0xffff;
-		}
+ //{{{ setFoldLevel() method
+ // Also sets 'fold level valid' flag
+ public final void setFoldLevel(int line, int level)
+ {
+  if(level > 0xffff)
+  {
+   // limitations...
+   level = 0xffff;
+  }
 
-		foldLevels[line] = (short)level;
-	} //}}}
+  foldLevels[line] = (short)level;
+ } //}}}
 
-	//{{{ setFirstInvalidFoldLevel() method
-	public void setFirstInvalidFoldLevel(int firstInvalidFoldLevel)
-	{
-		this.firstInvalidFoldLevel = firstInvalidFoldLevel;
-	} //}}}
+ //{{{ setFirstInvalidFoldLevel() method
+ public void setFirstInvalidFoldLevel(int firstInvalidFoldLevel)
+ {
+  this.firstInvalidFoldLevel = firstInvalidFoldLevel;
+ } //}}}
 
-	//{{{ getFirstInvalidFoldLevel() method
-	public int getFirstInvalidFoldLevel()
-	{
-		return firstInvalidFoldLevel;
-	} //}}}
+ //{{{ getFirstInvalidFoldLevel() method
+ public int getFirstInvalidFoldLevel()
+ {
+  return firstInvalidFoldLevel;
+ } //}}}
 
-	//{{{ getLineContext() method
-	public final TokenMarker.LineContext getLineContext(int line)
-	{
-		return lineContext[line];
-	} //}}}
+ //{{{ getLineContext() method
+ public final TokenMarker.LineContext getLineContext(int line)
+ {
+  return lineContext[line];
+ } //}}}
 
-	//{{{ setLineContext() method
-	public final void setLineContext(int line, TokenMarker.LineContext context)
-	{
-		lineContext[line] = context;
-	} //}}}
+ //{{{ setLineContext() method
+ public final void setLineContext(int line, TokenMarker.LineContext context)
+ {
+  lineContext[line] = context;
+ } //}}}
 
-	//{{{ setFirstInvalidLineContext() method
-	public void setFirstInvalidLineContext(int firstInvalidLineContext)
-	{
-		this.firstInvalidLineContext = firstInvalidLineContext;
-	} //}}}
+ //{{{ setFirstInvalidLineContext() method
+ public void setFirstInvalidLineContext(int firstInvalidLineContext)
+ {
+  this.firstInvalidLineContext = firstInvalidLineContext;
+ } //}}}
 
-	//{{{ getFirstInvalidLineContext() method
-	public int getFirstInvalidLineContext()
-	{
-		return firstInvalidLineContext;
-	} //}}}
+ //{{{ getFirstInvalidLineContext() method
+ public int getFirstInvalidLineContext()
+ {
+  return firstInvalidLineContext;
+ } //}}}
 
-	//{{{ _contentInserted() method
-	public void _contentInserted(IntegerArray endOffsets)
-	{
-		gapLine = -1;
-		gapWidth = 0;
-		firstInvalidLineContext = firstInvalidFoldLevel = 0;
-		lineCount = endOffsets.getSize();
-		this.endOffsets = endOffsets.getArray();
-		foldLevels = new short[lineCount];
+ //{{{ _contentInserted() method
+ public void _contentInserted(IntegerArray endOffsets)
+ {
+  gapLine = -1;
+  gapWidth = 0;
+  firstInvalidLineContext = firstInvalidFoldLevel = 0;
+  lineCount = endOffsets.getSize();
+  this.endOffsets = endOffsets.getArray();
+  foldLevels = new short[lineCount];
 
-		lineContext = new TokenMarker.LineContext[lineCount];
-	} //}}}
+  lineContext = new TokenMarker.LineContext[lineCount];
+ } //}}}
 
-	//{{{ contentInserted() method
-	public void contentInserted(int startLine, int offset,
-		int numLines, int length, IntegerArray endOffsets)
-	{
-		int endLine = startLine + numLines;
+ //{{{ contentInserted() method
+ public void contentInserted(int startLine, int offset,
+  int numLines, int length, IntegerArray endOffsets)
+ {
+  int endLine = startLine + numLines;
 
-		//{{{ Update line info and line context arrays
-		if(numLines > 0)
-		{
-			//moveGap(-1,0,"contentInserted");
+  //{{{ Update line info and line context arrays
+  if(numLines > 0)
+  {
+   //moveGap(-1,0,"contentInserted");
 
-			lineCount += numLines;
+   lineCount += numLines;
 
-			if(this.endOffsets.length <= lineCount)
-			{
-				int[] endOffsetsN = new int[(lineCount + 1) * 2];
-				System.arraycopy(this.endOffsets,0,endOffsetsN,0,
-						 this.endOffsets.length);
-				this.endOffsets = endOffsetsN;
-			}
+   if(this.endOffsets.length <= lineCount)
+   {
+    int[] endOffsetsN = new int[(lineCount + 1) * 2];
+    System.arraycopy(this.endOffsets,0,endOffsetsN,0,
+       this.endOffsets.length);
+    this.endOffsets = endOffsetsN;
+   }
 
-			if(foldLevels.length <= lineCount)
-			{
-				short[] foldLevelsN = new short[(lineCount + 1) * 2];
-				System.arraycopy(foldLevels,0,foldLevelsN,0,
-						 foldLevels.length);
-				foldLevels = foldLevelsN;
-			}
+   if(foldLevels.length <= lineCount)
+   {
+    short[] foldLevelsN = new short[(lineCount + 1) * 2];
+    System.arraycopy(foldLevels,0,foldLevelsN,0,
+       foldLevels.length);
+    foldLevels = foldLevelsN;
+   }
 
-			if(lineContext.length <= lineCount)
-			{
-				TokenMarker.LineContext[] lineContextN
-					= new TokenMarker.LineContext[(lineCount + 1) * 2];
-				System.arraycopy(lineContext,0,lineContextN,0,
-						 lineContext.length);
-				lineContext = lineContextN;
-			}
+   if(lineContext.length <= lineCount)
+   {
+    TokenMarker.LineContext[] lineContextN
+     = new TokenMarker.LineContext[(lineCount + 1) * 2];
+    System.arraycopy(lineContext,0,lineContextN,0,
+       lineContext.length);
+    lineContext = lineContextN;
+   }
 
-			System.arraycopy(this.endOffsets,startLine,
-				this.endOffsets,endLine,lineCount - endLine);
-			System.arraycopy(foldLevels,startLine,foldLevels,
-				endLine,lineCount - endLine);
-			System.arraycopy(lineContext,startLine,lineContext,
-				endLine,lineCount - endLine);
+   System.arraycopy(this.endOffsets,startLine,
+    this.endOffsets,endLine,lineCount - endLine);
+   System.arraycopy(foldLevels,startLine,foldLevels,
+    endLine,lineCount - endLine);
+   System.arraycopy(lineContext,startLine,lineContext,
+    endLine,lineCount - endLine);
 
-			if(startLine <= gapLine)
-				gapLine += numLines;
-			else if(gapLine != -1)
-				offset -= gapWidth;
+   if(startLine <= gapLine)
+    gapLine += numLines;
+   else if(gapLine != -1)
+    offset -= gapWidth;
 
-			if(startLine < firstInvalidLineContext)
-				firstInvalidLineContext += numLines;
+   if(startLine < firstInvalidLineContext)
+    firstInvalidLineContext += numLines;
 
-			for(int i = 0; i < numLines; i++)
-			{
-				this.endOffsets[startLine + i] = (offset + endOffsets.get(i));
-				foldLevels[startLine + i] = 0;
-			}
-		} //}}}
+   for(int i = 0; i < numLines; i++)
+   {
+    this.endOffsets[startLine + i] = (offset + endOffsets.get(i));
+    foldLevels[startLine + i] = 0;
+   }
+  } //}}}
 
-		if(firstInvalidFoldLevel == -1 || firstInvalidFoldLevel > startLine)
-			firstInvalidFoldLevel = startLine;
-		moveGap(endLine,length,"contentInserted");
-	} //}}}
+  if(firstInvalidFoldLevel == -1 || firstInvalidFoldLevel > startLine)
+   firstInvalidFoldLevel = startLine;
+  moveGap(endLine,length,"contentInserted");
+ } //}}}
 
-	//{{{ contentRemoved() method
-	public void contentRemoved(int startLine, int offset,
-		int numLines, int length)
-	{
-		int endLine = startLine + numLines;
+ //{{{ contentRemoved() method
+ public void contentRemoved(int startLine, int offset,
+  int numLines, int length)
+ {
+  int endLine = startLine + numLines;
 
-		//{{{ Update line info and line context arrays
-		if(numLines > 0)
-		{
-			//moveGap(-1,0,"contentRemoved");
+  //{{{ Update line info and line context arrays
+  if(numLines > 0)
+  {
+   //moveGap(-1,0,"contentRemoved");
 
-			if(startLine + numLines < gapLine)
-				gapLine -= numLines;
-			else if(startLine < gapLine)
-				gapLine = startLine;
+   if(startLine + numLines < gapLine)
+    gapLine -= numLines;
+   else if(startLine < gapLine)
+    gapLine = startLine;
 
-			if(startLine + numLines < firstInvalidLineContext)
-				firstInvalidLineContext -= numLines;
-			else if(startLine < firstInvalidLineContext)
-				firstInvalidLineContext = startLine - 1;
+   if(startLine + numLines < firstInvalidLineContext)
+    firstInvalidLineContext -= numLines;
+   else if(startLine < firstInvalidLineContext)
+    firstInvalidLineContext = startLine - 1;
 
-			lineCount -= numLines;
+   lineCount -= numLines;
 
-			System.arraycopy(endOffsets,endLine,endOffsets,
-				startLine,lineCount - startLine);
-			System.arraycopy(foldLevels,endLine,foldLevels,
-				startLine,lineCount - startLine);
-			System.arraycopy(lineContext,endLine,lineContext,
-				startLine,lineCount - startLine);
-		} //}}}
+   System.arraycopy(endOffsets,endLine,endOffsets,
+    startLine,lineCount - startLine);
+   System.arraycopy(foldLevels,endLine,foldLevels,
+    startLine,lineCount - startLine);
+   System.arraycopy(lineContext,endLine,lineContext,
+    startLine,lineCount - startLine);
+  } //}}}
 
-		if(firstInvalidFoldLevel == -1 || firstInvalidFoldLevel > startLine)
-			firstInvalidFoldLevel = startLine;
-		moveGap(startLine,-length,"contentRemoved");
-	} //}}}
+  if(firstInvalidFoldLevel == -1 || firstInvalidFoldLevel > startLine)
+   firstInvalidFoldLevel = startLine;
+  moveGap(startLine,-length,"contentRemoved");
+ } //}}}
 
-	//{{{ Private members
+ //{{{ Private members
 
-	//{{{ Instance variables
-	private int[] endOffsets;
-	private short[] foldLevels;
-	private TokenMarker.LineContext[] lineContext;
+ //{{{ Instance variables
+ private int[] endOffsets;
+ private short[] foldLevels;
+ private TokenMarker.LineContext[] lineContext;
 
-	private int lineCount;
+ private int lineCount;
 
-	/**
-	 * If -1, then there is no gap.
-	 * Otherwise, all lines from this line onwards need to have gapWidth
-	 * added to their end offsets.
-	 */
-	private int gapLine;
-	private int gapWidth;
+ /**
+  * If -1, then there is no gap.
+  * Otherwise, all lines from this line onwards need to have gapWidth
+  * added to their end offsets.
+  */
+ private int gapLine;
+ private int gapWidth;
 
-	/**
-	 * If -1, all contexts are valid. Otherwise, all lines after this have
-	 * an invalid context.
-	 */
-	private int firstInvalidLineContext;
+ /**
+  * If -1, all contexts are valid. Otherwise, all lines after this have
+  * an invalid context.
+  */
+ private int firstInvalidLineContext;
 
-	/**
-	 * If -1, all fold levels are valid. Otherwise, all lines after this
-	 * have an invalid fold level.
-	 */
-	private int firstInvalidFoldLevel;
-	//}}}
+ /**
+  * If -1, all fold levels are valid. Otherwise, all lines after this
+  * have an invalid fold level.
+  */
+ private int firstInvalidFoldLevel;
+ //}}}
 
-	//{{{ setLineEndOffset() method
-	private final void setLineEndOffset(int line, int end)
-	{
-		endOffsets[line] = end;
-	} //}}}
+ //{{{ setLineEndOffset() method
+ private final void setLineEndOffset(int line, int end)
+ {
+  endOffsets[line] = end;
+ } //}}}
 
-	//{{{ moveGap() method
-	private final void moveGap(int newGapLine, int newGapWidth, String method)
-	{
-		if(gapLine == -1)
-			gapWidth = newGapWidth;
-		else if(newGapLine == -1)
-		{
-			if(gapWidth != 0)
-			{
-				if(Debug.OFFSET_DEBUG && gapLine != lineCount)
-					Log.log(Log.DEBUG,this,method + ": update from " + gapLine + " to " + lineCount + " width " + gapWidth);
-				for(int i = gapLine; i < lineCount; i++)
-					setLineEndOffset(i,getLineEndOffset(i));
-			}
+ //{{{ moveGap() method
+ private final void moveGap(int newGapLine, int newGapWidth, String method)
+ {
+  if(gapLine == -1)
+   gapWidth = newGapWidth;
+  else if(newGapLine == -1)
+  {
+   if(gapWidth != 0)
+   {
+    if(Debug.OFFSET_DEBUG && gapLine != lineCount)
+     Log.log(Log.DEBUG,this,method + ": update from " + gapLine + " to " + lineCount + " width " + gapWidth);
+    for(int i = gapLine; i < lineCount; i++)
+     setLineEndOffset(i,getLineEndOffset(i));
+   }
 
-			gapWidth = newGapWidth;
-		}
-		else if(newGapLine < gapLine)
-		{
-			if(gapWidth != 0)
-			{
-				if(Debug.OFFSET_DEBUG && newGapLine != gapLine)
-					Log.log(Log.DEBUG,this,method + ": update from " + newGapLine + " to " + gapLine + " width " + gapWidth);
-				for(int i = newGapLine; i < gapLine; i++)
-					setLineEndOffset(i,getLineEndOffset(i) - gapWidth);
-			}
-			gapWidth += newGapWidth;
-		}
-		else //if(newGapLine >= gapLine)
-		{
-			if(gapWidth != 0)
-			{
-				if(Debug.OFFSET_DEBUG && gapLine != newGapLine)
-					Log.log(Log.DEBUG,this,method + ": update from " + gapLine + " to " + newGapLine + " width " + gapWidth);
-				for(int i = gapLine; i < newGapLine; i++)
-					setLineEndOffset(i,getLineEndOffset(i));
-			}
+   gapWidth = newGapWidth;
+  }
+  else if(newGapLine < gapLine)
+  {
+   if(gapWidth != 0)
+   {
+    if(Debug.OFFSET_DEBUG && newGapLine != gapLine)
+     Log.log(Log.DEBUG,this,method + ": update from " + newGapLine + " to " + gapLine + " width " + gapWidth);
+    for(int i = newGapLine; i < gapLine; i++)
+     setLineEndOffset(i,getLineEndOffset(i) - gapWidth);
+   }
+   gapWidth += newGapWidth;
+  }
+  else //if(newGapLine >= gapLine)
+  {
+   if(gapWidth != 0)
+   {
+    if(Debug.OFFSET_DEBUG && gapLine != newGapLine)
+     Log.log(Log.DEBUG,this,method + ": update from " + gapLine + " to " + newGapLine + " width " + gapWidth);
+    for(int i = gapLine; i < newGapLine; i++)
+     setLineEndOffset(i,getLineEndOffset(i));
+   }
 
-			gapWidth += newGapWidth;
-		}
+   gapWidth += newGapWidth;
+  }
 
-		if(newGapLine == lineCount)
-			gapLine = -1;
-		else
-			gapLine = newGapLine;
-	} //}}}
+  if(newGapLine == lineCount)
+   gapLine = -1;
+  else
+   gapLine = newGapLine;
+ } //}}}
 
-	//}}}
+ //}}}
 }

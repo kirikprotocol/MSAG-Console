@@ -28,32 +28,32 @@ import org.gjt.sp.jedit.*;
  */
 public interface SearchFileSet
 {
-	/**
-	 * Returns the first file to search.
-	 * @param view The view performing the search
-	 */
-	String getFirstFile(View view);
+ /**
+  * Returns the first file to search.
+  * @param view The view performing the search
+  */
+ String getFirstFile(View view);
 
-	/**
-	 * Returns the next file to search.
-	 * @param view The view performing the search
-	 * @param path The last file searched
-	 */
-	String getNextFile(View view, String path);
+ /**
+  * Returns the next file to search.
+  * @param view The view performing the search
+  * @param path The last file searched
+  */
+ String getNextFile(View view, String path);
 
-	/**
-	 * Returns all path names in this file set.
-	 * @param view The view performing the search
-	 */
-	String[] getFiles(View view);
+ /**
+  * Returns all path names in this file set.
+  * @param view The view performing the search
+  */
+ String[] getFiles(View view);
 
-	/**
-	 * Returns the number of files in this file set.
-	 */
-	int getFileCount(View view);
+ /**
+  * Returns the number of files in this file set.
+  */
+ int getFileCount(View view);
 
-	/**
-	 * Returns the BeanShell code that will recreate this file set.
-	 */
-	String getCode();
+ /**
+  * Returns the BeanShell code that will recreate this file set.
+  */
+ String getCode();
 }

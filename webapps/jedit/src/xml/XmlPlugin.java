@@ -32,169 +32,169 @@ import xml.parser.*;
 
 public class XmlPlugin extends EBPlugin
 {
-	//{{{ start() method
-	public void start()
-	{
-		System.setProperty("javax.xml.parsers.SAXParserFactory",
-			"org.apache.xerces.jaxp.SAXParserFactoryImpl");
-		System.setProperty("javax.xml.parsers.DocumentBuilderFactory",
-			"org.apache.xerces.jaxp.DocumentBuilderFactoryImpl");
+ //{{{ start() method
+ public void start()
+ {
+  System.setProperty("javax.xml.parsers.SAXParserFactory",
+   "org.apache.xerces.jaxp.SAXParserFactoryImpl");
+  System.setProperty("javax.xml.parsers.DocumentBuilderFactory",
+   "org.apache.xerces.jaxp.DocumentBuilderFactoryImpl");
 
-		CatalogManager.init();
+  CatalogManager.init();
 
-		XmlActions.propertiesChanged();
-		CatalogManager.propertiesChanged();
+  XmlActions.propertiesChanged();
+  CatalogManager.propertiesChanged();
 
-		tagMouseHandler = new TagMouseHandler();
+  tagMouseHandler = new TagMouseHandler();
 
-		View view = jEdit.getFirstView();
-		while(view != null)
-		{
-			EditPane[] panes = view.getEditPanes();
-			for(int i = 0; i < panes.length; i++)
-			{
-				panes[i].getTextArea().getPainter()
-					.addMouseListener(
-					tagMouseHandler);
-			}
-			view = view.getNext();
-		}
-	} //}}}
+  View view = jEdit.getFirstView();
+  while(view != null)
+  {
+   EditPane[] panes = view.getEditPanes();
+   for(int i = 0; i < panes.length; i++)
+   {
+    panes[i].getTextArea().getPainter()
+     .addMouseListener(
+     tagMouseHandler);
+   }
+   view = view.getNext();
+  }
+ } //}}}
 
-	//{{{ stop() method
-	public void stop()
-	{
-		View view = jEdit.getFirstView();
-		while(view != null)
-		{
-			EditPane[] panes = view.getEditPanes();
-			for(int i = 0; i < panes.length; i++)
-			{
-				panes[i].getTextArea().getPainter()
-					.removeMouseListener(
-					tagMouseHandler);
-			}
-			view = view.getNext();
-		}
+ //{{{ stop() method
+ public void stop()
+ {
+  View view = jEdit.getFirstView();
+  while(view != null)
+  {
+   EditPane[] panes = view.getEditPanes();
+   for(int i = 0; i < panes.length; i++)
+   {
+    panes[i].getTextArea().getPainter()
+     .removeMouseListener(
+     tagMouseHandler);
+   }
+   view = view.getNext();
+  }
 
-		CatalogManager.save();
+  CatalogManager.save();
 
-		CatalogManager.uninit();
-	} //}}}
+  CatalogManager.uninit();
+ } //}}}
 
-	//{{{ handleMessage() method
-	public void handleMessage(EBMessage msg)
-	{
-		//{{{ EditPaneUpdate
-		if(msg instanceof EditPaneUpdate)
-		{
-			EditPaneUpdate epu = (EditPaneUpdate)msg;
-			EditPane editPane = epu.getEditPane();
+ //{{{ handleMessage() method
+ public void handleMessage(EBMessage msg)
+ {
+  //{{{ EditPaneUpdate
+  if(msg instanceof EditPaneUpdate)
+  {
+   EditPaneUpdate epu = (EditPaneUpdate)msg;
+   EditPane editPane = epu.getEditPane();
 
-			if(epu.getWhat() == EditPaneUpdate.CREATED)
-			{
-				editPane.getTextArea().getPainter().addMouseListener(
-					tagMouseHandler);
-			}
-			else if(epu.getWhat() == EditPaneUpdate.DESTROYED)
-			{
-				editPane.getTextArea().getPainter().removeMouseListener(
-					tagMouseHandler);
-			}
-		} //}}}
-		//{{{ PropertiesChanged
-		else if(msg instanceof PropertiesChanged)
-		{
-			XmlActions.propertiesChanged();
-			CatalogManager.propertiesChanged();
-		} //}}}
-	} //}}}
+   if(epu.getWhat() == EditPaneUpdate.CREATED)
+   {
+    editPane.getTextArea().getPainter().addMouseListener(
+     tagMouseHandler);
+   }
+   else if(epu.getWhat() == EditPaneUpdate.DESTROYED)
+   {
+    editPane.getTextArea().getPainter().removeMouseListener(
+     tagMouseHandler);
+   }
+  } //}}}
+  //{{{ PropertiesChanged
+  else if(msg instanceof PropertiesChanged)
+  {
+   XmlActions.propertiesChanged();
+   CatalogManager.propertiesChanged();
+  } //}}}
+ } //}}}
 
-	//{{{ isDelegated() method
-	/**
-	 * Returns if the caret is inside a delegated region in the
-	 * specified text area. This is used in a few places.
-	 */
-	public static boolean isDelegated(JEditTextArea textArea)
-	{
-		Buffer buffer = textArea.getBuffer();
-		ParserRuleSet rules = buffer.getRuleSetAtOffset(
-			textArea.getCaretPosition());
+ //{{{ isDelegated() method
+ /**
+  * Returns if the caret is inside a delegated region in the
+  * specified text area. This is used in a few places.
+  */
+ public static boolean isDelegated(JEditTextArea textArea)
+ {
+  Buffer buffer = textArea.getBuffer();
+  ParserRuleSet rules = buffer.getRuleSetAtOffset(
+   textArea.getCaretPosition());
 
-		String rulesetName = rules.getSetName();
-		String modeName = rules.getModeName();
+  String rulesetName = rules.getSetName();
+  String modeName = rules.getModeName();
 
-		// Am I an idiot?
-		if(rulesetName != null && (rulesetName.startsWith("PHP")
-			|| rulesetName.equals("CDATA")))
-			return true;
+  // Am I an idiot?
+  if(rulesetName != null && (rulesetName.startsWith("PHP")
+   || rulesetName.equals("CDATA")))
+   return true;
 
-		return jEdit.getProperty("mode." + modeName + "."
-			+ SideKickPlugin.PARSER_PROPERTY) == null;
-	} //}}}
+  return jEdit.getProperty("mode." + modeName + "."
+   + SideKickPlugin.PARSER_PROPERTY) == null;
+ } //}}}
 
-	//{{{ uriToFile() method
-	public static String uriToFile(String uri)
-	{
-		if(uri.startsWith("file:/"))
-		{
-			int start;
-			if(uri.startsWith("file:///") && OperatingSystem.isDOSDerived())
-				start = 8;
-			else if(uri.startsWith("file://"))
-				start = 7;
-			else
-				start = 5;
+ //{{{ uriToFile() method
+ public static String uriToFile(String uri)
+ {
+  if(uri.startsWith("file:/"))
+  {
+   int start;
+   if(uri.startsWith("file:///") && OperatingSystem.isDOSDerived())
+    start = 8;
+   else if(uri.startsWith("file://"))
+    start = 7;
+   else
+    start = 5;
 
-			StringBuffer buf = new StringBuffer();
-			for(int i = start; i < uri.length(); i++)
-			{
-				char ch = uri.charAt(i);
-				if(ch == '/')
-					buf.append(jEdit.separatorChar);
-				else if(ch == '%')
-				{
-					String str = uri.substring(i + 1,i + 3);
-					buf.append((char)Integer.parseInt(str,16));
-					i += 2;
-				}
-				else
-					buf.append(ch);
-			}
-			uri = buf.toString();
-		}
-		return uri;
-	} //}}}
+   StringBuffer buf = new StringBuffer();
+   for(int i = start; i < uri.length(); i++)
+   {
+    char ch = uri.charAt(i);
+    if(ch == '/')
+     buf.append(jEdit.separatorChar);
+    else if(ch == '%')
+    {
+     String str = uri.substring(i + 1,i + 3);
+     buf.append((char)Integer.parseInt(str,16));
+     i += 2;
+    }
+    else
+     buf.append(ch);
+   }
+   uri = buf.toString();
+  }
+  return uri;
+ } //}}}
 
-	private TagMouseHandler tagMouseHandler;
+ private TagMouseHandler tagMouseHandler;
 
-	//{{{ TagMouseHandler class
-	static class TagMouseHandler extends MouseAdapter
-	{
-		public void mousePressed(MouseEvent evt)
-		{
-			if(evt.getClickCount() == 2
-				&& ((OperatingSystem.isMacOS() && evt.isMetaDown())
-				|| (!OperatingSystem.isMacOS() && evt.isControlDown())))
-			{
-				final View view = GUIUtilities.getView(
-					(Component)evt.getSource());
-				if(!(SideKickPlugin.getParserForBuffer(view.getBuffer())
-					instanceof XmlParser))
-					return;
+ //{{{ TagMouseHandler class
+ static class TagMouseHandler extends MouseAdapter
+ {
+  public void mousePressed(MouseEvent evt)
+  {
+   if(evt.getClickCount() == 2
+    && ((OperatingSystem.isMacOS() && evt.isMetaDown())
+    || (!OperatingSystem.isMacOS() && evt.isControlDown())))
+   {
+    final View view = GUIUtilities.getView(
+     (Component)evt.getSource());
+    if(!(SideKickPlugin.getParserForBuffer(view.getBuffer())
+     instanceof XmlParser))
+     return;
 
-				JEditTextArea textArea = view.getTextArea();
-				textArea.setCaretPosition(textArea.xyToOffset(
-					evt.getX(),evt.getY()));
+    JEditTextArea textArea = view.getTextArea();
+    textArea.setCaretPosition(textArea.xyToOffset(
+     evt.getX(),evt.getY()));
 
-				SwingUtilities.invokeLater(new Runnable()
-				{
-					public void run()
-					{
-						XmlActions.showEditTagDialog(view);
-					}
-				});
-			}
-		}
-	} //}}}
+    SwingUtilities.invokeLater(new Runnable()
+    {
+     public void run()
+     {
+      XmlActions.showEditTagDialog(view);
+     }
+    });
+   }
+  }
+ } //}}}
 }

@@ -37,66 +37,66 @@ import org.gjt.sp.util.Log;
  */
 public class AllBufferSet extends BufferListSet
 {
-	//{{{ AllBufferSet constructor
-	/**
-	 * Creates a new all buffer set.
-	 * @param glob The filename glob
-	 * @since jEdit 2.7pre3
-	 */
-	public AllBufferSet(String glob)
-	{
-		this.glob = glob;
-	} //}}}
+ //{{{ AllBufferSet constructor
+ /**
+  * Creates a new all buffer set.
+  * @param glob The filename glob
+  * @since jEdit 2.7pre3
+  */
+ public AllBufferSet(String glob)
+ {
+  this.glob = glob;
+ } //}}}
 
-	//{{{ getFileFilter() method
-	/**
-	 * Returns the filename filter.
-	 * @since jEdit 2.7pre3
-	 */
-	public String getFileFilter()
-	{
-		return glob;
-	} //}}}
+ //{{{ getFileFilter() method
+ /**
+  * Returns the filename filter.
+  * @since jEdit 2.7pre3
+  */
+ public String getFileFilter()
+ {
+  return glob;
+ } //}}}
 
-	//{{{ getCode() method
-	/**
-	 * Returns the BeanShell code that will recreate this file set.
-	 * @since jEdit 2.7pre3
-	 */
-	public String getCode()
-	{
-		return "new AllBufferSet(\"" + MiscUtilities.charsToEscapes(glob)
-			+ "\")";
-	} //}}}
+ //{{{ getCode() method
+ /**
+  * Returns the BeanShell code that will recreate this file set.
+  * @since jEdit 2.7pre3
+  */
+ public String getCode()
+ {
+  return "new AllBufferSet(\"" + MiscUtilities.charsToEscapes(glob)
+   + "\")";
+ } //}}}
 
-	//{{{ Instance variables
-	private String glob;
-	//}}}
+ //{{{ Instance variables
+ private String glob;
+ //}}}
 
-	//{{{ _getFiles() method
-	protected String[] _getFiles(Component comp)
-	{
-		Buffer[] buffers = jEdit.getBuffers();
-		ArrayList returnValue = new ArrayList(buffers.length);
+ //{{{ _getFiles() method
+ protected String[] _getFiles(Component comp)
+ {
+  Buffer[] buffers = jEdit.getBuffers();
+  ArrayList returnValue = new ArrayList(buffers.length);
 
-		RE filter;
-		try
-		{
-			filter = new RE(MiscUtilities.globToRE(glob));
-		}
-		catch(Exception e)
-		{
-			Log.log(Log.ERROR,this,e);
-			return null;
-		}
+  RE filter;
+  try
+  {
+   filter = new RE(MiscUtilities.globToRE(glob));
+  }
+  catch(Exception e)
+  {
+   Log.log(Log.ERROR,this,e);
+   return null;
+  }
 
-		for(int i = 0; i < buffers.length; i++)
-		{
-			Buffer buffer = buffers[i];
-			if(filter.isMatch(buffer.getName()))
-				returnValue.add(buffer.getPath());
-		}
+  for(int i = 0; i < buffers.length; i++)
+  {
+   Buffer buffer = buffers[i];
+   if(filter.isMatch(buffer.getName()))
+    returnValue.add(buffer.getPath());
+  }
 
-		return (String[])returnValue.toArray(new String[returnValue.size()]);
-	} //}}}
+  return (String[])returnValue.toArray(new String[returnValue.size()]);
+ } //}}}
 }

@@ -47,471 +47,471 @@ import org.gjt.sp.util.Log;
  */
 public class VFSDirectoryEntryTable extends JTable
 {
-	//{{{ VFSDirectoryEntryTable constructor
-	public VFSDirectoryEntryTable(BrowserView browserView)
-	{
-		super(new VFSDirectoryEntryTableModel());
-		this.browserView = browserView;
-		setShowGrid(false);
+ //{{{ VFSDirectoryEntryTable constructor
+ public VFSDirectoryEntryTable(BrowserView browserView)
+ {
+  super(new VFSDirectoryEntryTableModel());
+  this.browserView = browserView;
+  setShowGrid(false);
 
-		setIntercellSpacing(new Dimension(0,0));
+  setIntercellSpacing(new Dimension(0,0));
 
-		setDefaultRenderer(VFSDirectoryEntryTableModel.Entry.class,
-			renderer = new FileCellRenderer());
+  setDefaultRenderer(VFSDirectoryEntryTableModel.Entry.class,
+   renderer = new FileCellRenderer());
 
-		JTableHeader header = getTableHeader();
-		header.setReorderingAllowed(false);
+  JTableHeader header = getTableHeader();
+  header.setReorderingAllowed(false);
 
-		setRowSelectionAllowed(true);
+  setRowSelectionAllowed(true);
 
-		getColumnModel().addColumnModelListener(new ColumnHandler());
-		
-		setAutoResizeMode(AUTO_RESIZE_OFF);
-	} //}}}
+  getColumnModel().addColumnModelListener(new ColumnHandler());
+  
+  setAutoResizeMode(AUTO_RESIZE_OFF);
+ } //}}}
 
-	//{{{ selectFile() method
-	public boolean selectFile(String path)
-	{
-		for(int i = 0; i < getRowCount(); i++)
-		{
-			VFSDirectoryEntryTableModel.Entry entry =
-				(VFSDirectoryEntryTableModel.Entry)
-				getValueAt(i,1);
-			if(entry.dirEntry.getPath().equals(path))
-			{
-				setSelectedRow(i);
-				return true;
-			}
-		}
+ //{{{ selectFile() method
+ public boolean selectFile(String path)
+ {
+  for(int i = 0; i < getRowCount(); i++)
+  {
+   VFSDirectoryEntryTableModel.Entry entry =
+    (VFSDirectoryEntryTableModel.Entry)
+    getValueAt(i,1);
+   if(entry.dirEntry.getPath().equals(path))
+   {
+    setSelectedRow(i);
+    return true;
+   }
+  }
 
-		return false;
-	} //}}}
+  return false;
+ } //}}}
 
-	//{{{ doTypeSelect() method
-	public void doTypeSelect(String str, boolean dirsOnly)
-	{
-		if(str.length() == 0)
-			clearSelection();
-		else if(getSelectedRow() == -1)
-			doTypeSelect(str,0,getRowCount(),dirsOnly);
-		else
-		{
-			int start = getSelectionModel().getMaxSelectionIndex();
-			boolean retVal = doTypeSelect(str,start,getRowCount(),
-				dirsOnly);
+ //{{{ doTypeSelect() method
+ public void doTypeSelect(String str, boolean dirsOnly)
+ {
+  if(str.length() == 0)
+   clearSelection();
+  else if(getSelectedRow() == -1)
+   doTypeSelect(str,0,getRowCount(),dirsOnly);
+  else
+  {
+   int start = getSelectionModel().getMaxSelectionIndex();
+   boolean retVal = doTypeSelect(str,start,getRowCount(),
+    dirsOnly);
 
-			if(!retVal)
-			{
-				// scan from selection to end failed, so
-				// scan from start to selection
-				doTypeSelect(str,0,start,dirsOnly);
-			}
-		}
-	} //}}}
+   if(!retVal)
+   {
+    // scan from selection to end failed, so
+    // scan from start to selection
+    doTypeSelect(str,0,start,dirsOnly);
+   }
+  }
+ } //}}}
 
-	//{{{ getSelectedFiles() method
-	public VFSFile[] getSelectedFiles()
-	{
-		VFSDirectoryEntryTableModel model
-			= (VFSDirectoryEntryTableModel)getModel();
+ //{{{ getSelectedFiles() method
+ public VFSFile[] getSelectedFiles()
+ {
+  VFSDirectoryEntryTableModel model
+   = (VFSDirectoryEntryTableModel)getModel();
 
-		LinkedList returnValue = new LinkedList();
-		int[] selectedRows = getSelectedRows();
-		for(int i = 0; i < selectedRows.length; i++)
-		{
-			returnValue.add(model.files[selectedRows[i]].dirEntry);
-		}
-		return (VFSFile[])returnValue.toArray(new
-		VFSFile[returnValue.size()]);
-	} //}}}
+  LinkedList returnValue = new LinkedList();
+  int[] selectedRows = getSelectedRows();
+  for(int i = 0; i < selectedRows.length; i++)
+  {
+   returnValue.add(model.files[selectedRows[i]].dirEntry);
+  }
+  return (VFSFile[])returnValue.toArray(new
+  VFSFile[returnValue.size()]);
+ } //}}}
 
-	//{{{ getExpandedDirectories() method
-	public void getExpandedDirectories(Set set)
-	{
-		VFSDirectoryEntryTableModel model
-			= (VFSDirectoryEntryTableModel)getModel();
+ //{{{ getExpandedDirectories() method
+ public void getExpandedDirectories(Set set)
+ {
+  VFSDirectoryEntryTableModel model
+   = (VFSDirectoryEntryTableModel)getModel();
 
-		if(model.files != null)
-		{
-			for(int i = 0; i < model.files.length; i++)
-			{
-				if(model.files[i].expanded)
-					set.add(model.files[i].dirEntry.getPath());
-			}
-		}
-	} //}}}
+  if(model.files != null)
+  {
+   for(int i = 0; i < model.files.length; i++)
+   {
+    if(model.files[i].expanded)
+     set.add(model.files[i].dirEntry.getPath());
+   }
+  }
+ } //}}}
 
-	//{{{ toggleExpanded() method
-	public void toggleExpanded(final int row)
-	{
-		VFSDirectoryEntryTableModel model
-		= (VFSDirectoryEntryTableModel)getModel();
+ //{{{ toggleExpanded() method
+ public void toggleExpanded(final int row)
+ {
+  VFSDirectoryEntryTableModel model
+  = (VFSDirectoryEntryTableModel)getModel();
 
-		VFSDirectoryEntryTableModel.Entry entry = model.files[row];
-		if(entry.dirEntry.getType() == VFSFile.FILE)
-			return;
+  VFSDirectoryEntryTableModel.Entry entry = model.files[row];
+  if(entry.dirEntry.getType() == VFSFile.FILE)
+   return;
 
-		if(entry.expanded)
-		{
-			model.collapse(VFSManager.getVFSForPath(
-				entry.dirEntry.getPath()),row);
-			resizeColumns();
-		}
-		else
-		{
-			browserView.clearExpansionState();
-			browserView.loadDirectory(entry,entry.dirEntry.getPath(),
-				false);
-		}
+  if(entry.expanded)
+  {
+   model.collapse(VFSManager.getVFSForPath(
+    entry.dirEntry.getPath()),row);
+   resizeColumns();
+  }
+  else
+  {
+   browserView.clearExpansionState();
+   browserView.loadDirectory(entry,entry.dirEntry.getPath(),
+    false);
+  }
 
-		VFSManager.runInAWTThread(new Runnable()
-		{
-			public void run()
-			{
-				setSelectedRow(row);
-			}
-		});
-	} //}}}
+  VFSManager.runInAWTThread(new Runnable()
+  {
+   public void run()
+   {
+    setSelectedRow(row);
+   }
+  });
+ } //}}}
 
-	//{{{ setDirectory() method
-	public void setDirectory(VFS vfs, Object node, ArrayList list,
-		Set tmpExpanded)
-	{
-		timer.stop();
-		typeSelectBuffer.setLength(0);
+ //{{{ setDirectory() method
+ public void setDirectory(VFS vfs, Object node, ArrayList list,
+  Set tmpExpanded)
+ {
+  timer.stop();
+  typeSelectBuffer.setLength(0);
 
-		VFSDirectoryEntryTableModel model = ((VFSDirectoryEntryTableModel)getModel());
-		int startIndex;
-		if(node == null)
-		{
-			startIndex = 0;
-			model.setRoot(vfs,list);
-		}
-		else
-		{
-			startIndex =
-				model.expand(
-				vfs,
-				(VFSDirectoryEntryTableModel.Entry)node,
-				list);
-			startIndex++;
-		}
+  VFSDirectoryEntryTableModel model = ((VFSDirectoryEntryTableModel)getModel());
+  int startIndex;
+  if(node == null)
+  {
+   startIndex = 0;
+   model.setRoot(vfs,list);
+  }
+  else
+  {
+   startIndex =
+    model.expand(
+    vfs,
+    (VFSDirectoryEntryTableModel.Entry)node,
+    list);
+   startIndex++;
+  }
 
-		for(int i = 0; i < list.size(); i++)
-		{
-			VFSDirectoryEntryTableModel.Entry e
-				= model.files[startIndex + i];
-			String path = e.dirEntry.getPath();
-			if(tmpExpanded.contains(path))
-			{
-				browserView.loadDirectory(e,path,false);
-				tmpExpanded.remove(path);
-			}
-		}
+  for(int i = 0; i < list.size(); i++)
+  {
+   VFSDirectoryEntryTableModel.Entry e
+    = model.files[startIndex + i];
+   String path = e.dirEntry.getPath();
+   if(tmpExpanded.contains(path))
+   {
+    browserView.loadDirectory(e,path,false);
+    tmpExpanded.remove(path);
+   }
+  }
 
-		resizeColumns();
-	} //}}}
+  resizeColumns();
+ } //}}}
 
-	//{{{ maybeReloadDirectory() method
-	public void maybeReloadDirectory(String path)
-	{
-		VFSDirectoryEntryTableModel model
-		= (VFSDirectoryEntryTableModel)getModel();
+ //{{{ maybeReloadDirectory() method
+ public void maybeReloadDirectory(String path)
+ {
+  VFSDirectoryEntryTableModel model
+  = (VFSDirectoryEntryTableModel)getModel();
 
-		for(int i = 0; i < model.files.length; i++)
-		{
-			VFSDirectoryEntryTableModel.Entry e = model.files[i];
-			if(!e.expanded || e.dirEntry.getType() == VFSFile.FILE)
-				continue;
+  for(int i = 0; i < model.files.length; i++)
+  {
+   VFSDirectoryEntryTableModel.Entry e = model.files[i];
+   if(!e.expanded || e.dirEntry.getType() == VFSFile.FILE)
+    continue;
 
-			VFSFile dirEntry = e.dirEntry;
-			// work around for broken FTP plugin!
-			String otherPath;
-			if(dirEntry.getSymlinkPath() == null)
-				otherPath = dirEntry.getPath();
-			else
-				otherPath = dirEntry.getSymlinkPath();
-			if(MiscUtilities.pathsEqual(path,otherPath))
-			{
-				browserView.saveExpansionState();
-				browserView.loadDirectory(e,path,false);
-				return;
-			}
-		}
-	} //}}}
+   VFSFile dirEntry = e.dirEntry;
+   // work around for broken FTP plugin!
+   String otherPath;
+   if(dirEntry.getSymlinkPath() == null)
+    otherPath = dirEntry.getPath();
+   else
+    otherPath = dirEntry.getSymlinkPath();
+   if(MiscUtilities.pathsEqual(path,otherPath))
+   {
+    browserView.saveExpansionState();
+    browserView.loadDirectory(e,path,false);
+    return;
+   }
+  }
+ } //}}}
 
-	//{{{ propertiesChanged() method
-	public void propertiesChanged()
-	{
-		renderer.propertiesChanged();
+ //{{{ propertiesChanged() method
+ public void propertiesChanged()
+ {
+  renderer.propertiesChanged();
 
-		VFS.DirectoryEntry template = new VFS.DirectoryEntry(
-			"foo","foo","foo",VFSFile.FILE,0L,false);
-		setRowHeight(renderer.getTableCellRendererComponent(
-			this,new VFSDirectoryEntryTableModel.Entry(template,0),
-			false,false,0,0).getPreferredSize().height);
-		Dimension prefSize = getPreferredSize();
-		setPreferredScrollableViewportSize(new Dimension(prefSize.width,
-			getRowHeight() * 12));
-	} //}}}
+  VFS.DirectoryEntry template = new VFS.DirectoryEntry(
+   "foo","foo","foo",VFSFile.FILE,0L,false);
+  setRowHeight(renderer.getTableCellRendererComponent(
+   this,new VFSDirectoryEntryTableModel.Entry(template,0),
+   false,false,0,0).getPreferredSize().height);
+  Dimension prefSize = getPreferredSize();
+  setPreferredScrollableViewportSize(new Dimension(prefSize.width,
+   getRowHeight() * 12));
+ } //}}}
 
-	//{{{ scrollRectToVisible() method
-	public void scrollRectToVisible(Rectangle rect)
-	{
-		// avoid scrolling to the right
-		rect.width = 0;
-		super.scrollRectToVisible(rect);
-	} //}}}
+ //{{{ scrollRectToVisible() method
+ public void scrollRectToVisible(Rectangle rect)
+ {
+  // avoid scrolling to the right
+  rect.width = 0;
+  super.scrollRectToVisible(rect);
+ } //}}}
 
-	//{{{ processKeyEvent() method
-	public void processKeyEvent(KeyEvent evt)
-	{
-		if(evt.getID() == KeyEvent.KEY_PRESSED)
-		{
-			VFSDirectoryEntryTableModel model =
-				(VFSDirectoryEntryTableModel)getModel();
-			int row = getSelectedRow();
+ //{{{ processKeyEvent() method
+ public void processKeyEvent(KeyEvent evt)
+ {
+  if(evt.getID() == KeyEvent.KEY_PRESSED)
+  {
+   VFSDirectoryEntryTableModel model =
+    (VFSDirectoryEntryTableModel)getModel();
+   int row = getSelectedRow();
 
-			switch(evt.getKeyCode())
-			{
-			case KeyEvent.VK_LEFT:
-				evt.consume();
-				if(row != -1)
-				{
-					if(model.files[row].expanded)
-					{
-						model.collapse(
-							VFSManager.getVFSForPath(
-							model.files[row].dirEntry.getPath()),
-							row);
-						break;
-					}
+   switch(evt.getKeyCode())
+   {
+   case KeyEvent.VK_LEFT:
+    evt.consume();
+    if(row != -1)
+    {
+     if(model.files[row].expanded)
+     {
+      model.collapse(
+       VFSManager.getVFSForPath(
+       model.files[row].dirEntry.getPath()),
+       row);
+      break;
+     }
 
-					for(int i = row - 1; i >= 0; i--)
-					{
-						if(model.files[i].expanded)
-						{
-							setSelectedRow(i);
-							break;
-						}
-					}
-				}
+     for(int i = row - 1; i >= 0; i--)
+     {
+      if(model.files[i].expanded)
+      {
+       setSelectedRow(i);
+       break;
+      }
+     }
+    }
 
-				String dir = browserView.getBrowser()
-					.getDirectory();
-				dir = MiscUtilities.getParentOfPath(dir);
-				browserView.getBrowser().setDirectory(dir);
-				break;
-			case KeyEvent.VK_RIGHT:
-				if(row != -1)
-				{
-					if(!model.files[row].expanded)
-						toggleExpanded(row);
-				}
-				evt.consume();
-				break;
-			case KeyEvent.VK_DOWN:
-				// stupid Swing
-				if(row == -1 && getModel().getRowCount() != 0)
-				{
-					setSelectedRow(0);
-					evt.consume();
-				}
-				break;
-			case KeyEvent.VK_ENTER:
-				browserView.getBrowser().filesActivated(
-					(evt.isShiftDown()
-					? VFSBrowser.M_OPEN_NEW_VIEW
-					: VFSBrowser.M_OPEN),false);
-				evt.consume();
-				break;
-			}
-		}
-		else if(evt.getID() == KeyEvent.KEY_TYPED)
-		{
-			if(evt.isControlDown() || evt.isAltDown()
-				|| evt.isMetaDown())
-			{
-				return;
-			}
+    String dir = browserView.getBrowser()
+     .getDirectory();
+    dir = MiscUtilities.getParentOfPath(dir);
+    browserView.getBrowser().setDirectory(dir);
+    break;
+   case KeyEvent.VK_RIGHT:
+    if(row != -1)
+    {
+     if(!model.files[row].expanded)
+      toggleExpanded(row);
+    }
+    evt.consume();
+    break;
+   case KeyEvent.VK_DOWN:
+    // stupid Swing
+    if(row == -1 && getModel().getRowCount() != 0)
+    {
+     setSelectedRow(0);
+     evt.consume();
+    }
+    break;
+   case KeyEvent.VK_ENTER:
+    browserView.getBrowser().filesActivated(
+     (evt.isShiftDown()
+     ? VFSBrowser.M_OPEN_NEW_VIEW
+     : VFSBrowser.M_OPEN),false);
+    evt.consume();
+    break;
+   }
+  }
+  else if(evt.getID() == KeyEvent.KEY_TYPED)
+  {
+   if(evt.isControlDown() || evt.isAltDown()
+    || evt.isMetaDown())
+   {
+    return;
+   }
 
-			// hack...
-			if(evt.isShiftDown() && evt.getKeyChar() == '\n')
-				return;
+   // hack...
+   if(evt.isShiftDown() && evt.getKeyChar() == '\n')
+    return;
 
-			VFSBrowser browser = browserView.getBrowser();
+   VFSBrowser browser = browserView.getBrowser();
 
-			switch(evt.getKeyChar())
-			{
-			case '~':
-				if(browser.getMode() == VFSBrowser.BROWSER)
-					browser.setDirectory(System.getProperty(
-						"user.home"));
-				break;
-			case '/':
-				if(browser.getMode() == VFSBrowser.BROWSER)
-					browser.rootDirectory();
-				break;
-			case '-':
-				if(browser.getMode() == VFSBrowser.BROWSER)
-				{
-					browser.setDirectory(
-						browser.getView().getBuffer()
-						.getDirectory());
-				}
-				break;
-			default:
-				typeSelectBuffer.append(evt.getKeyChar());
-				doTypeSelect(typeSelectBuffer.toString(),
-					browser.getMode() == VFSBrowser
-					.CHOOSE_DIRECTORY_DIALOG);
+   switch(evt.getKeyChar())
+   {
+   case '~':
+    if(browser.getMode() == VFSBrowser.BROWSER)
+     browser.setDirectory(System.getProperty(
+      "user.home"));
+    break;
+   case '/':
+    if(browser.getMode() == VFSBrowser.BROWSER)
+     browser.rootDirectory();
+    break;
+   case '-':
+    if(browser.getMode() == VFSBrowser.BROWSER)
+    {
+     browser.setDirectory(
+      browser.getView().getBuffer()
+      .getDirectory());
+    }
+    break;
+   default:
+    typeSelectBuffer.append(evt.getKeyChar());
+    doTypeSelect(typeSelectBuffer.toString(),
+     browser.getMode() == VFSBrowser
+     .CHOOSE_DIRECTORY_DIALOG);
 
-				timer.stop();
-				timer.setInitialDelay(750);
-				timer.setRepeats(false);
-				timer.start();
-				return;
-			}
-		}
+    timer.stop();
+    timer.setInitialDelay(750);
+    timer.setRepeats(false);
+    timer.start();
+    return;
+   }
+  }
 
-		if(!evt.isConsumed())
-			super.processKeyEvent(evt);
-	} //}}}
+  if(!evt.isConsumed())
+   super.processKeyEvent(evt);
+ } //}}}
 
-	//{{{ setSelectedRow() method
-	public void setSelectedRow(int row)
-	{
-		getSelectionModel().setSelectionInterval(row,row);
-		scrollRectToVisible(getCellRect(row,0,true));
-	} //}}}
+ //{{{ setSelectedRow() method
+ public void setSelectedRow(int row)
+ {
+  getSelectionModel().setSelectionInterval(row,row);
+  scrollRectToVisible(getCellRect(row,0,true));
+ } //}}}
 
-	//{{{ Private members
-	private BrowserView browserView;
-	private FileCellRenderer renderer;
-	private StringBuffer typeSelectBuffer = new StringBuffer();
-	private Timer timer = new Timer(0,new ClearTypeSelect());
-	private boolean resizingColumns;
+ //{{{ Private members
+ private BrowserView browserView;
+ private FileCellRenderer renderer;
+ private StringBuffer typeSelectBuffer = new StringBuffer();
+ private Timer timer = new Timer(0,new ClearTypeSelect());
+ private boolean resizingColumns;
 
-	//{{{ doTypeSelect() method
-	private boolean doTypeSelect(String str, int start, int end,
-		boolean dirsOnly)
-	{
-		for(int i = start; i < end; i++)
-		{
-			VFSDirectoryEntryTableModel.Entry entry =
-				(VFSDirectoryEntryTableModel.Entry)getValueAt(i,1);
-			if(dirsOnly && entry.dirEntry.getType()
-				== VFSFile.FILE)
-			{
-				continue;
-			}
+ //{{{ doTypeSelect() method
+ private boolean doTypeSelect(String str, int start, int end,
+  boolean dirsOnly)
+ {
+  for(int i = start; i < end; i++)
+  {
+   VFSDirectoryEntryTableModel.Entry entry =
+    (VFSDirectoryEntryTableModel.Entry)getValueAt(i,1);
+   if(dirsOnly && entry.dirEntry.getType()
+    == VFSFile.FILE)
+   {
+    continue;
+   }
 
-			String matchAgainst = (MiscUtilities.isAbsolutePath(str)
-				? entry.dirEntry.getPath() : entry.dirEntry.getName());
-			if(matchAgainst.regionMatches(true,
-				0,str,0,str.length()))
-			{
-				setSelectedRow(i);
-				return true;
-			}
-		}
+   String matchAgainst = (MiscUtilities.isAbsolutePath(str)
+    ? entry.dirEntry.getPath() : entry.dirEntry.getName());
+   if(matchAgainst.regionMatches(true,
+    0,str,0,str.length()))
+   {
+    setSelectedRow(i);
+    return true;
+   }
+  }
 
-		return false;
-	} //}}}
+  return false;
+ } //}}}
 
-	//{{{ resizeColumns() method
-	private void resizeColumns()
-	{
-		VFSDirectoryEntryTableModel model = (VFSDirectoryEntryTableModel)getModel();
+ //{{{ resizeColumns() method
+ private void resizeColumns()
+ {
+  VFSDirectoryEntryTableModel model = (VFSDirectoryEntryTableModel)getModel();
 
-		FontRenderContext fontRenderContext = new FontRenderContext(
-			null,false,false);
-		int[] widths = new int[model.getColumnCount()];
-		for(int i = 0; i < widths.length; i++)
-		{
-			String columnName = model.getColumnName(i);
-			if(columnName != null)
-			{
-				widths[i] = (int)renderer.plainFont
-					.getStringBounds(columnName,
-					fontRenderContext).getWidth();
-			}
-		}
+  FontRenderContext fontRenderContext = new FontRenderContext(
+   null,false,false);
+  int[] widths = new int[model.getColumnCount()];
+  for(int i = 0; i < widths.length; i++)
+  {
+   String columnName = model.getColumnName(i);
+   if(columnName != null)
+   {
+    widths[i] = (int)renderer.plainFont
+     .getStringBounds(columnName,
+     fontRenderContext).getWidth();
+   }
+  }
 
-		for(int i = 1; i < widths.length; i++)
-		{
-			String extAttr = model.getExtendedAttribute(i);
-			widths[i] = Math.max(widths[i],model.getColumnWidth(i));
-		}
+  for(int i = 1; i < widths.length; i++)
+  {
+   String extAttr = model.getExtendedAttribute(i);
+   widths[i] = Math.max(widths[i],model.getColumnWidth(i));
+  }
 
-		for(int i = 0; i < model.files.length; i++)
-		{
-			VFSDirectoryEntryTableModel.Entry entry
-				= model.files[i];
-			Font font = (entry.dirEntry.getType()
-				== VFSFile.FILE
-				? renderer.plainFont : renderer.boldFont);
+  for(int i = 0; i < model.files.length; i++)
+  {
+   VFSDirectoryEntryTableModel.Entry entry
+    = model.files[i];
+   Font font = (entry.dirEntry.getType()
+    == VFSFile.FILE
+    ? renderer.plainFont : renderer.boldFont);
 
-			widths[0] = Math.max(widths[0],renderer.getEntryWidth(
-				entry,font,fontRenderContext));
-		}
+   widths[0] = Math.max(widths[0],renderer.getEntryWidth(
+    entry,font,fontRenderContext));
+  }
 
-		widths[0] += 10;
+  widths[0] += 10;
 
-		TableColumnModel columns = getColumnModel();
+  TableColumnModel columns = getColumnModel();
 
-		try
-		{
-			resizingColumns = true;
-			for(int i = 0; i < widths.length; i++)
-			{
-				columns.getColumn(i).setPreferredWidth(widths[i]);
-				columns.getColumn(i).setWidth(widths[i]);
-			}
-		}
-		finally
-		{
-			resizingColumns = false;
-		}
+  try
+  {
+   resizingColumns = true;
+   for(int i = 0; i < widths.length; i++)
+   {
+    columns.getColumn(i).setPreferredWidth(widths[i]);
+    columns.getColumn(i).setWidth(widths[i]);
+   }
+  }
+  finally
+  {
+   resizingColumns = false;
+  }
 
-		doLayout();
-	} //}}}
+  doLayout();
+ } //}}}
 
-	//{{{ saveWidths() method
-	private void saveWidths()
-	{
-		if(resizingColumns)
-			return;
-		
-		VFSDirectoryEntryTableModel model = (VFSDirectoryEntryTableModel)getModel();
-		TableColumnModel columns = getColumnModel();
+ //{{{ saveWidths() method
+ private void saveWidths()
+ {
+  if(resizingColumns)
+   return;
+  
+  VFSDirectoryEntryTableModel model = (VFSDirectoryEntryTableModel)getModel();
+  TableColumnModel columns = getColumnModel();
 
-		for(int i = 1; i < model.getColumnCount(); i++)
-			model.setColumnWidth(i,columns.getColumn(i).getWidth());
-	} //}}}
-	
-	//}}}
+  for(int i = 1; i < model.getColumnCount(); i++)
+   model.setColumnWidth(i,columns.getColumn(i).getWidth());
+ } //}}}
+ 
+ //}}}
 
-	//{{{ ClearTypeSelect class
-	class ClearTypeSelect implements ActionListener
-	{
-		public void actionPerformed(ActionEvent evt)
-		{
-			typeSelectBuffer.setLength(0);
-		}
-	} //}}}
-	
-	//{{{ ColumnHandler class
-	class ColumnHandler implements TableColumnModelListener
-	{
-		public void columnAdded(TableColumnModelEvent e) {}
-		public void columnRemoved(TableColumnModelEvent e) {}
-		public void columnMoved(TableColumnModelEvent e) {}
-		public void columnSelectionChanged(ListSelectionEvent e) {}
-		
-		public void columnMarginChanged(ChangeEvent e)
-		{
-			saveWidths();
-		}
-	} //}}}
+ //{{{ ClearTypeSelect class
+ class ClearTypeSelect implements ActionListener
+ {
+  public void actionPerformed(ActionEvent evt)
+  {
+   typeSelectBuffer.setLength(0);
+  }
+ } //}}}
+ 
+ //{{{ ColumnHandler class
+ class ColumnHandler implements TableColumnModelListener
+ {
+  public void columnAdded(TableColumnModelEvent e) {}
+  public void columnRemoved(TableColumnModelEvent e) {}
+  public void columnMoved(TableColumnModelEvent e) {}
+  public void columnSelectionChanged(ListSelectionEvent e) {}
+  
+  public void columnMarginChanged(ChangeEvent e)
+  {
+   saveWidths();
+  }
+ } //}}}
 }

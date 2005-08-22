@@ -75,365 +75,365 @@ import javax.swing.tree.DefaultMutableTreeNode;
  */
 public class HTMLParserImpl extends XmlParser
 {
-	protected static String[] sEmptyTags = 
-	{
-		"HR", "META", "BR", "INPUT",
-		
+ protected static String[] sEmptyTags = 
+ {
+  "HR", "META", "BR", "INPUT",
+  
 
-		// JHTML specific tags.
-		"IMPORTBEAN", "PARAM", "SETVALUE", "DECLAREPARAM",
-	};
+  // JHTML specific tags.
+  "IMPORTBEAN", "PARAM", "SETVALUE", "DECLAREPARAM",
+ };
 
-	/**
-	 * DOCUMENT ME!
-	 */
-	public HTMLParserImpl()
-	{
-		super("html");
-	}
+ /**
+  * DOCUMENT ME!
+  */
+ public HTMLParserImpl()
+ {
+  super("html");
+ }
 
-	//{{{ parse() method
-	public SideKickParsedData parse(Buffer buffer,
-		DefaultErrorSource errorSource)
-	{ System.out.println("xml.parser.HTMLParserImpl parse line 98");
-		if ((buffer.getLength() >= 5) && buffer.getText(0, 5).equals("<?xml"))
-		{    System.out.println("xml.parser.HTMLParserImpl parse line 100");
-			SideKickParser xml = (SideKickParser) ServiceManager.getService(SideKickParser.SERVICE,
-					"xml");
+ //{{{ parse() method
+ public SideKickParsedData parse(Buffer buffer,
+  DefaultErrorSource errorSource)
+ { System.out.println("xml.parser.HTMLParserImpl parse line 98");
+  if ((buffer.getLength() >= 5) && buffer.getText(0, 5).equals("<?xml"))
+  {    System.out.println("xml.parser.HTMLParserImpl parse line 100");
+   SideKickParser xml = (SideKickParser) ServiceManager.getService(SideKickParser.SERVICE,
+     "xml");
 
-			return xml.parse(buffer, errorSource);
-		}
+   return xml.parse(buffer, errorSource);
+  }
 
-		// Get the first line of text.
-		String text;
+  // Get the first line of text.
+  String text;
 
-		try
-		{
-			buffer.readLock();
-			text = buffer.getText(0, buffer.getLength());
-		}
-		finally
-		{
-			buffer.readUnlock();
-		}
+  try
+  {
+   buffer.readLock();
+   text = buffer.getText(0, buffer.getLength());
+  }
+  finally
+  {
+   buffer.readUnlock();
+  }
 
-		XmlParsedData data = new XmlParsedData(buffer.getName(), true);
+  XmlParsedData data = new XmlParsedData(buffer.getName(), true);
 
-		CompletionInfo info = CompletionInfo.getCompletionInfoForBuffer(buffer);
+  CompletionInfo info = CompletionInfo.getCompletionInfoForBuffer(buffer);
 
-		if (info != null)
-		{ System.out.println("xml.parser.HTMLParserData parse mappings.put for empty string line 125 info= "+info);
-			data.mappings.put("", info);
-		}
+  if (info != null)
+  { System.out.println("xml.parser.HTMLParserData parse mappings.put for empty string line 125 info= "+info);
+   data.mappings.put("", info);
+  }
 
-		// Buffer size has to be more than 0, even though we're buffering from a 
-		// String.  Yeah, it's dumb.
-		int bufferSize = 8192;
+  // Buffer size has to be more than 0, even though we're buffering from a 
+  // String.  Yeah, it's dumb.
+  int bufferSize = 8192;
 
-		StringReader reader = new StringReader(text);
-		ExtendedNodeReader nodeReader = new ExtendedNodeReader(reader,
-				bufferSize);
+  StringReader reader = new StringReader(text);
+  ExtendedNodeReader nodeReader = new ExtendedNodeReader(reader,
+    bufferSize);
 
-		try
-		{
-			Parser parser = new Parser(nodeReader, new LogParserFeedback());
-			Handler handler = new Handler(buffer, data, nodeReader);
-			parser.visitAllNodesWith(handler);
-		}
-		catch (ParserException e)
-		{
-			Log.log(Log.ERROR, this, e);
-			errorSource.addError(ErrorSource.ERROR, buffer.getPath(), 0, 0, 0,
-				e.toString());
-		}
+  try
+  {
+   Parser parser = new Parser(nodeReader, new LogParserFeedback());
+   Handler handler = new Handler(buffer, data, nodeReader);
+   parser.visitAllNodesWith(handler);
+  }
+  catch (ParserException e)
+  {
+   Log.log(Log.ERROR, this, e);
+   errorSource.addError(ErrorSource.ERROR, buffer.getPath(), 0, 0, 0,
+    e.toString());
+  }
 
-		Collections.sort(data.ids, new IDDecl.Compare());
+  Collections.sort(data.ids, new IDDecl.Compare());
 
-		return data;
-	}
+  return data;
+ }
 
-	//}}}
-	//{{{ Handler class
-	class Handler extends NodeVisitor
-	{
-		Buffer buffer;
-		ExtendedNodeReader reader;
-		Stack currentNodeStack;
-		XmlParsedData data;
+ //}}}
+ //{{{ Handler class
+ class Handler extends NodeVisitor
+ {
+  Buffer buffer;
+  ExtendedNodeReader reader;
+  Stack currentNodeStack;
+  XmlParsedData data;
 
-		//{{{ Handler constructor
-		Handler(Buffer buffer, XmlParsedData data, ExtendedNodeReader reader)
-		{
-			this.buffer = buffer;
-			this.data = data;
-			this.reader = reader;
-			this.currentNodeStack = new Stack();
-		}
+  //{{{ Handler constructor
+  Handler(Buffer buffer, XmlParsedData data, ExtendedNodeReader reader)
+  {
+   this.buffer = buffer;
+   this.data = data;
+   this.reader = reader;
+   this.currentNodeStack = new Stack();
+  }
 
-		//}}}
-		//{{{ attributesToSAX() method
-		private Attributes attributesToSAX(Hashtable a, String element,
-			int line, int column)
-		{
-			ElementDecl elementDecl = data.getElementDecl(element);
+  //}}}
+  //{{{ attributesToSAX() method
+  private Attributes attributesToSAX(Hashtable a, String element,
+   int line, int column)
+  {
+   ElementDecl elementDecl = data.getElementDecl(element);
 
-			AttributesImpl attrs = new AttributesImpl();
-			Enumeration enum = a.keys();
+   AttributesImpl attrs = new AttributesImpl();
+   Enumeration enum = a.keys();
 
-			while (enum.hasMoreElements())
-			{
-				Object attr = enum.nextElement();
-				String name = attr.toString().toLowerCase();
+   while (enum.hasMoreElements())
+   {
+    Object attr = enum.nextElement();
+    String name = attr.toString().toLowerCase();
 
-				if (name.startsWith("$"))
-				{
-					// Skip this key/value pair -- the parser likes to put
-					// $<TAGNAME>$ as a key for some reason.
-					continue;
-				}
+    if (name.startsWith("$"))
+    {
+     // Skip this key/value pair -- the parser likes to put
+     // $<TAGNAME>$ as a key for some reason.
+     continue;
+    }
 
-				String value = a.get(attr).toString();
+    String value = a.get(attr).toString();
 
-				String type = "CDATA";
+    String type = "CDATA";
 
-				if (elementDecl != null)
-				{
-					ElementDecl.AttributeDecl attrDecl = (ElementDecl.AttributeDecl) elementDecl.attributeHash.get(name.toLowerCase());
+    if (elementDecl != null)
+    {
+     ElementDecl.AttributeDecl attrDecl = (ElementDecl.AttributeDecl) elementDecl.attributeHash.get(name.toLowerCase());
 
-					if (attrDecl != null)
-					{
-						type = attrDecl.type;
+     if (attrDecl != null)
+     {
+      type = attrDecl.type;
 
-						if (type.equals("ID"))
-						{
-							if (! data.ids.contains(value))
-							{
-								data.ids.add(new IDDecl(buffer.getPath(),
-										value, element, line, column));
-							}
-						}
-					}
-				}
+      if (type.equals("ID"))
+      {
+       if (! data.ids.contains(value))
+       {
+        data.ids.add(new IDDecl(buffer.getPath(),
+          value, element, line, column));
+       }
+      }
+     }
+    }
 
-				attrs.addAttribute(null, name, name, type, value);
-			}
+    attrs.addAttribute(null, name, name, type, value);
+   }
 
-			return attrs;
-		}
+   return attrs;
+  }
 
-		//}}}
+  //}}}
 
-		/* (non-Javadoc)
-		 * @see org.htmlparser.visitors.NodeVisitor#visitTag(org.htmlparser.tags.Tag)
-		 */
-		public void visitTag(Tag tag)
-		{
-			boolean isEmptyTag = tag.isEmptyXmlTag();
-			String tagName = tag.getTagName().toLowerCase();
+  /* (non-Javadoc)
+   * @see org.htmlparser.visitors.NodeVisitor#visitTag(org.htmlparser.tags.Tag)
+   */
+  public void visitTag(Tag tag)
+  {
+   boolean isEmptyTag = tag.isEmptyXmlTag();
+   String tagName = tag.getTagName().toLowerCase();
 
-			// hack to get around the most commonly abused empty end tags.
-			if (isEmptyTag(tagName))
-			{
-				isEmptyTag = true;
-			}
+   // hack to get around the most commonly abused empty end tags.
+   if (isEmptyTag(tagName))
+   {
+    isEmptyTag = true;
+   }
 
-			String line = tag.getTagLine();
-			int lineOffset = line.length() - tag.elementBegin();
+   String line = tag.getTagLine();
+   int lineOffset = line.length() - tag.elementBegin();
 
-			//Log.log(Log.DEBUG, this, line);
-			//String msg = "lineOffset = " + lineOffset + ", line " + line.length();
-			//Log.log(Log.DEBUG, this, msg);
-			int offset = reader.getOffset() - lineOffset;
+   //Log.log(Log.DEBUG, this, line);
+   //String msg = "lineOffset = " + lineOffset + ", line " + line.length();
+   //Log.log(Log.DEBUG, this, msg);
+   int offset = reader.getOffset() - lineOffset;
 
-			try
-			{
-				buffer.readLock();
+   try
+   {
+    buffer.readLock();
 
-				if (offset > buffer.getLength())
-				{
-					offset = buffer.getLength();
-				}
+    if (offset > buffer.getLength())
+    {
+     offset = buffer.getLength();
+    }
 
-				Hashtable attrsHash = tag.getAttributes();
+    Hashtable attrsHash = tag.getAttributes();
 
-				Position pos = buffer.createPosition(offset);
-				int lineNumber = tag.getTagStartLine();
-				int colNumber = tag.getTagBegin();
+    Position pos = buffer.createPosition(offset);
+    int lineNumber = tag.getTagStartLine();
+    int colNumber = tag.getTagBegin();
 
-				Attributes attrs = attributesToSAX(attrsHash, tagName,
-						lineNumber, colNumber);
-				XmlTag xmlTag = new XmlTag(tagName, pos, attrs);
-				DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(xmlTag);
+    Attributes attrs = attributesToSAX(attrsHash, tagName,
+      lineNumber, colNumber);
+    XmlTag xmlTag = new XmlTag(tagName, pos, attrs);
+    DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(xmlTag);
 
-				if (! isEmptyTag)
-				{
-					if (! currentNodeStack.isEmpty())
-					{
-						DefaultMutableTreeNode node = (DefaultMutableTreeNode) currentNodeStack.peek();
+    if (! isEmptyTag)
+    {
+     if (! currentNodeStack.isEmpty())
+     {
+      DefaultMutableTreeNode node = (DefaultMutableTreeNode) currentNodeStack.peek();
 
-						node.insert(newNode, node.getChildCount());
-					}
-					else
-					{
-						data.root.insert(newNode, 0);
-					}
+      node.insert(newNode, node.getChildCount());
+     }
+     else
+     {
+      data.root.insert(newNode, 0);
+     }
 
-					currentNodeStack.push(newNode);
-				}
-				else
-				{
-					if (! currentNodeStack.isEmpty())
-					{
-						DefaultMutableTreeNode node = (DefaultMutableTreeNode) currentNodeStack.peek();
+     currentNodeStack.push(newNode);
+    }
+    else
+    {
+     if (! currentNodeStack.isEmpty())
+     {
+      DefaultMutableTreeNode node = (DefaultMutableTreeNode) currentNodeStack.peek();
 
-						node.add(newNode);
-					}
-					else
-					{
-						data.root.add(newNode);
-					}
-				}
-			}
-			finally
-			{
-				buffer.readUnlock();
-			}
-		}
+      node.add(newNode);
+     }
+     else
+     {
+      data.root.add(newNode);
+     }
+    }
+   }
+   finally
+   {
+    buffer.readUnlock();
+   }
+  }
 
-		/**
-		 * See if the tag is one which cannot have any elements.
-		 *
-		 * @param tagName
-		 *
-		 * @return
-		 */
-		private boolean isEmptyTag(String tagName)
-		{
-			if (tagName == null)
-			{
-				return true;
-			}
+  /**
+   * See if the tag is one which cannot have any elements.
+   *
+   * @param tagName
+   *
+   * @return
+   */
+  private boolean isEmptyTag(String tagName)
+  {
+   if (tagName == null)
+   {
+    return true;
+   }
 
-			for (int i = 0; i < sEmptyTags.length; i++)
-			{
-				String emptyTag = sEmptyTags[i];
+   for (int i = 0; i < sEmptyTags.length; i++)
+   {
+    String emptyTag = sEmptyTags[i];
 
-				if (tagName.equalsIgnoreCase(emptyTag))
-				{
-					return true;
-				}
-			}
+    if (tagName.equalsIgnoreCase(emptyTag))
+    {
+     return true;
+    }
+   }
 
-			return false;
-		}
+   return false;
+  }
 
-		/* (non-Javadoc)
-		 * @see org.htmlparser.visitors.NodeVisitor#visitEndTag(org.htmlparser.tags.EndTag)
-		 */
-		public void visitEndTag(EndTag endTag)
-		{
-			//Log.log(Log.DEBUG, this, "endTag = " + endTag.getTagName());
-			int offset = reader.getOffset();
+  /* (non-Javadoc)
+   * @see org.htmlparser.visitors.NodeVisitor#visitEndTag(org.htmlparser.tags.EndTag)
+   */
+  public void visitEndTag(EndTag endTag)
+  {
+   //Log.log(Log.DEBUG, this, "endTag = " + endTag.getTagName());
+   int offset = reader.getOffset();
 
-			try
-			{
-				buffer.readLock();
+   try
+   {
+    buffer.readLock();
 
-				if (! currentNodeStack.isEmpty())
-				{
-					DefaultMutableTreeNode node = (DefaultMutableTreeNode) currentNodeStack.pop();
-					XmlTag tag = (XmlTag) node.getUserObject();
+    if (! currentNodeStack.isEmpty())
+    {
+     DefaultMutableTreeNode node = (DefaultMutableTreeNode) currentNodeStack.pop();
+     XmlTag tag = (XmlTag) node.getUserObject();
 
-					if (offset > buffer.getLength())
-					{
-						offset = buffer.getLength();
-					}
+     if (offset > buffer.getLength())
+     {
+      offset = buffer.getLength();
+     }
 
-					tag.end = buffer.createPosition(offset);
-				}
-				else
-				{
-					Log.log(Log.ERROR, this,
-						"visitEndTag: current node stack is empty.");
-				}
-			}
-			finally
-			{
-				buffer.readUnlock();
-			}
-		}
-	}
+     tag.end = buffer.createPosition(offset);
+    }
+    else
+    {
+     Log.log(Log.ERROR, this,
+      "visitEndTag: current node stack is empty.");
+    }
+   }
+   finally
+   {
+    buffer.readUnlock();
+   }
+  }
+ }
 
-	//}}}
-	class LogParserFeedback implements ParserFeedback
-	{
-		/**
-		 * Logs an info message to the jEdit activity log.
-		 *
-		 * @param message the message to log.
-		 */
-		public void info(String message)
-		{
-			Log.log(Log.NOTICE, this, message);
-		}
+ //}}}
+ class LogParserFeedback implements ParserFeedback
+ {
+  /**
+   * Logs an info message to the jEdit activity log.
+   *
+   * @param message the message to log.
+   */
+  public void info(String message)
+  {
+   Log.log(Log.NOTICE, this, message);
+  }
 
-		/**
-		 * Logs a warning message to the jEdit activity log.
-		 *
-		 * @param message the message to log.
-		 */
-		public void warning(String message)
-		{
-			Log.log(Log.WARNING, this, message);
-		}
+  /**
+   * Logs a warning message to the jEdit activity log.
+   *
+   * @param message the message to log.
+   */
+  public void warning(String message)
+  {
+   Log.log(Log.WARNING, this, message);
+  }
 
-		/**
-		 * Logs an error message to the jEdit activity log.
-		 *
-		 * @param message the message to log.
-		 * @param e the exception (if any) to log.
-		 */
-		public void error(String message, ParserException e)
-		{
-			Log.log(Log.ERROR, this, message);
-		}
-	}
+  /**
+   * Logs an error message to the jEdit activity log.
+   *
+   * @param message the message to log.
+   * @param e the exception (if any) to log.
+   */
+  public void error(String message, ParserException e)
+  {
+   Log.log(Log.ERROR, this, message);
+  }
+ }
 
-	class ExtendedNodeReader extends NodeReader
-	{
-		int mOffset;
+ class ExtendedNodeReader extends NodeReader
+ {
+  int mOffset;
 
-		public ExtendedNodeReader(Reader pReader, int bufferSize)
-		{
-			super(pReader, bufferSize);
-		}
+  public ExtendedNodeReader(Reader pReader, int bufferSize)
+  {
+   super(pReader, bufferSize);
+  }
 
-		/**
-		 * Returns the offset returned as the sum of the bytes in each line
-		 * read.  Note that this does not give the exact offset to a specific
-		 * tag.
-		 *
-		 * @return the byte offset of the previous lines read.
-		 */
-		public int getOffset()
-		{
-			return mOffset;
-		}
+  /**
+   * Returns the offset returned as the sum of the bytes in each line
+   * read.  Note that this does not give the exact offset to a specific
+   * tag.
+   *
+   * @return the byte offset of the previous lines read.
+   */
+  public int getOffset()
+  {
+   return mOffset;
+  }
 
-		public String getNextLine()
-		{
-			String nextLine = super.getNextLine();
+  public String getNextLine()
+  {
+   String nextLine = super.getNextLine();
 
-			if (nextLine != null)
-			{
-				// XXX how do we deal with the line terminator?
-				// Adding one byte for the terminator seems to work for
-				// both \r\n and \n.  I haven't looked at why it works.
-				mOffset += nextLine.length();
-				mOffset += 1;
-			}
+   if (nextLine != null)
+   {
+    // XXX how do we deal with the line terminator?
+    // Adding one byte for the terminator seems to work for
+    // both \r\n and \n.  I haven't looked at why it works.
+    mOffset += nextLine.length();
+    mOffset += 1;
+   }
 
-			return nextLine;
-		}
-	}
+   return nextLine;
+  }
+ }
 }

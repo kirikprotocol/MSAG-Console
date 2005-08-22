@@ -31,83 +31,83 @@ import org.gjt.sp.jedit.*;
 
 public class BufferPrinter1_3
 {
-	//{{{ getPrintJob() method
-	private static PrinterJob getPrintJob()
-	{
-		job = PrinterJob.getPrinterJob();
+ //{{{ getPrintJob() method
+ private static PrinterJob getPrintJob()
+ {
+  job = PrinterJob.getPrinterJob();
 
-		int orientation = jEdit.getIntegerProperty("print.orientation",PageFormat.PORTRAIT);
-		double width = jEdit.getDoubleProperty("print.width",0);
-		double height = jEdit.getDoubleProperty("print.height",0);
-		double x = jEdit.getDoubleProperty("print.x",0);
-		double y = jEdit.getDoubleProperty("print.y",0);
-		double pagewidth = jEdit.getDoubleProperty("print.pagewidth",0);
-		double pageheight = jEdit.getDoubleProperty("print.pageheight",0);
+  int orientation = jEdit.getIntegerProperty("print.orientation",PageFormat.PORTRAIT);
+  double width = jEdit.getDoubleProperty("print.width",0);
+  double height = jEdit.getDoubleProperty("print.height",0);
+  double x = jEdit.getDoubleProperty("print.x",0);
+  double y = jEdit.getDoubleProperty("print.y",0);
+  double pagewidth = jEdit.getDoubleProperty("print.pagewidth",0);
+  double pageheight = jEdit.getDoubleProperty("print.pageheight",0);
 
-		format = job.defaultPage();
-		//format.setOrientation(PageFormat.PORTRAIT);
-		if(width!=0 && height!=0 )
-		{
-			Paper pap = format.getPaper();
-			pap.setImageableArea(x,y,width,height);
-			pap.setSize(pagewidth,pageheight);
-			format.setPaper(pap);
-		}
-		format.setOrientation(orientation);
-		return job;
+  format = job.defaultPage();
+  //format.setOrientation(PageFormat.PORTRAIT);
+  if(width!=0 && height!=0 )
+  {
+   Paper pap = format.getPaper();
+   pap.setImageableArea(x,y,width,height);
+   pap.setSize(pagewidth,pageheight);
+   format.setPaper(pap);
+  }
+  format.setOrientation(orientation);
+  return job;
 
-	}//}}}
+ }//}}}
 
-	//{{{ pageSetup() method
-	public static void pageSetup(View view)
-	{
-		job = getPrintJob();
+ //{{{ pageSetup() method
+ public static void pageSetup(View view)
+ {
+  job = getPrintJob();
 
-		PageFormat newFormat = job.pageDialog(format);
-		if(newFormat != null)
-		{
-			format = newFormat;
-			jEdit.setIntegerProperty("print.orientation",format.getOrientation());
-			Paper paper=format.getPaper();
+  PageFormat newFormat = job.pageDialog(format);
+  if(newFormat != null)
+  {
+   format = newFormat;
+   jEdit.setIntegerProperty("print.orientation",format.getOrientation());
+   Paper paper=format.getPaper();
 
-			jEdit.setDoubleProperty("print.width",paper.getImageableWidth());
-			jEdit.setDoubleProperty("print.height",paper.getImageableHeight());
-			jEdit.setDoubleProperty("print.x",paper.getImageableX());
-			jEdit.setDoubleProperty("print.y",paper.getImageableY());
-			jEdit.setDoubleProperty("print.pagewidth",paper.getWidth());
-			jEdit.setDoubleProperty("print.pageheight",paper.getHeight());
-		}
-	} //}}}
+   jEdit.setDoubleProperty("print.width",paper.getImageableWidth());
+   jEdit.setDoubleProperty("print.height",paper.getImageableHeight());
+   jEdit.setDoubleProperty("print.x",paper.getImageableX());
+   jEdit.setDoubleProperty("print.y",paper.getImageableY());
+   jEdit.setDoubleProperty("print.pagewidth",paper.getWidth());
+   jEdit.setDoubleProperty("print.pageheight",paper.getHeight());
+  }
+ } //}}}
 
-	//{{{ print() method
-	public static void print(final View view, final Buffer buffer, boolean selection)
-	{
-		job = getPrintJob();
-		job.setJobName(buffer.getPath());
-		boolean header = jEdit.getBooleanProperty("print.header");
-		boolean footer = jEdit.getBooleanProperty("print.footer");
-		boolean lineNumbers = jEdit.getBooleanProperty("print.lineNumbers");
-		boolean color = jEdit.getBooleanProperty("print.color");
-		Font font = jEdit.getFontProperty("print.font");
+ //{{{ print() method
+ public static void print(final View view, final Buffer buffer, boolean selection)
+ {
+  job = getPrintJob();
+  job.setJobName(buffer.getPath());
+  boolean header = jEdit.getBooleanProperty("print.header");
+  boolean footer = jEdit.getBooleanProperty("print.footer");
+  boolean lineNumbers = jEdit.getBooleanProperty("print.lineNumbers");
+  boolean color = jEdit.getBooleanProperty("print.color");
+  Font font = jEdit.getFontProperty("print.font");
 
-		BufferPrintable printable = new BufferPrintable(job,null,view,
-			buffer,font,header,footer,lineNumbers,color);
-		job.setPrintable(printable,format);
+  BufferPrintable printable = new BufferPrintable(job,null,view,
+   buffer,font,header,footer,lineNumbers,color);
+  job.setPrintable(printable,format);
 
-		if(!job.printDialog())
-			return;
+  if(!job.printDialog())
+   return;
 
-		printable.print();
-	} //}}}
+  printable.print();
+ } //}}}
 
-	//{{{ getPageFormat() method
-	public static PageFormat getPageFormat()
-	{
-		return format;
-	} //}}}
+ //{{{ getPageFormat() method
+ public static PageFormat getPageFormat()
+ {
+  return format;
+ } //}}}
 
-	//{{{ Private members
-	private static PageFormat format;
-	private static PrinterJob job;
-	//}}}
+ //{{{ Private members
+ private static PageFormat format;
+ private static PrinterJob job;
+ //}}}
 }

@@ -36,251 +36,251 @@ import org.gjt.sp.jedit.*;
 
 class DockablePanel extends JPanel
 {
-	private PanelWindowContainer panel;
-	private DockableWindowManager wm;
+ private PanelWindowContainer panel;
+ private DockableWindowManager wm;
 
-	//{{{ DockablePanel constructor
-	DockablePanel(PanelWindowContainer panel)
-	{
-		super(new CardLayout());
+ //{{{ DockablePanel constructor
+ DockablePanel(PanelWindowContainer panel)
+ {
+  super(new CardLayout());
 
-		this.panel = panel;
-		this.wm = panel.getDockableWindowManager();
+  this.panel = panel;
+  this.wm = panel.getDockableWindowManager();
 
-		ResizeMouseHandler resizeMouseHandler = new ResizeMouseHandler();
-		addMouseListener(resizeMouseHandler);
-		addMouseMotionListener(resizeMouseHandler);
-	} //}}}
+  ResizeMouseHandler resizeMouseHandler = new ResizeMouseHandler();
+  addMouseListener(resizeMouseHandler);
+  addMouseMotionListener(resizeMouseHandler);
+ } //}}}
 
-	//{{{ getWindowContainer() method
-	PanelWindowContainer getWindowContainer()
-	{
-		return panel;
-	} //}}}
+ //{{{ getWindowContainer() method
+ PanelWindowContainer getWindowContainer()
+ {
+  return panel;
+ } //}}}
 
-	//{{{ showDockable() method
-	void showDockable(String name)
-	{
-		((CardLayout)getLayout()).show(this,name);
-	} //}}}
+ //{{{ showDockable() method
+ void showDockable(String name)
+ {
+  ((CardLayout)getLayout()).show(this,name);
+ } //}}}
 
-	//{{{ getMinimumSize() method
-	public Dimension getMinimumSize()
-	{
-		return new Dimension(0,0);
-	} //}}}
+ //{{{ getMinimumSize() method
+ public Dimension getMinimumSize()
+ {
+  return new Dimension(0,0);
+ } //}}}
 
-	//{{{ getPreferredSize() method
-	public Dimension getPreferredSize()
-	{
-		final String position = panel.getPosition();
-		final int dimension = panel.getDimension();
+ //{{{ getPreferredSize() method
+ public Dimension getPreferredSize()
+ {
+  final String position = panel.getPosition();
+  final int dimension = panel.getDimension();
 
-		if(panel.getCurrent() == null)
-			return new Dimension(0,0);
-		else
-		{
-			if(position.equals(DockableWindowManager.TOP)
-				|| position.equals(DockableWindowManager.BOTTOM))
-			{
-				if(dimension <= 0)
-				{
-					int height = super.getPreferredSize().height;
-					panel.setDimension(height);
-				}
-				return new Dimension(0,
-					dimension + PanelWindowContainer
-					.SPLITTER_WIDTH);
-			}
-			else
-			{
-				if(dimension <= 0)
-				{
-					int width = super.getPreferredSize().width;
-					panel.setDimension(width);
-				}
-				return new Dimension(dimension +
-					PanelWindowContainer.SPLITTER_WIDTH,
-					0);
-			}
-		}
-	} //}}}
+  if(panel.getCurrent() == null)
+   return new Dimension(0,0);
+  else
+  {
+   if(position.equals(DockableWindowManager.TOP)
+    || position.equals(DockableWindowManager.BOTTOM))
+   {
+    if(dimension <= 0)
+    {
+     int height = super.getPreferredSize().height;
+     panel.setDimension(height);
+    }
+    return new Dimension(0,
+     dimension + PanelWindowContainer
+     .SPLITTER_WIDTH);
+   }
+   else
+   {
+    if(dimension <= 0)
+    {
+     int width = super.getPreferredSize().width;
+     panel.setDimension(width);
+    }
+    return new Dimension(dimension +
+     PanelWindowContainer.SPLITTER_WIDTH,
+     0);
+   }
+  }
+ } //}}}
 
-	//{{{ setBounds() method
-	public void setBounds(int x, int y, int width, int height)
-	{
-		final String position = panel.getPosition();
-		final int dimension = panel.getDimension();
+ //{{{ setBounds() method
+ public void setBounds(int x, int y, int width, int height)
+ {
+  final String position = panel.getPosition();
+  final int dimension = panel.getDimension();
 
-		if(position.equals(DockableWindowManager.TOP) ||
-			position.equals(DockableWindowManager.BOTTOM))
-		{
-			if(dimension != 0 && height <= PanelWindowContainer.SPLITTER_WIDTH)
-				panel.show(null);
-			else
-				panel.setDimension(height);
-		}
-		else
-		{
-			if(dimension != 0 && width <= PanelWindowContainer.SPLITTER_WIDTH)
-				panel.show(null);
-			else
-				panel.setDimension(width);
-		}
+  if(position.equals(DockableWindowManager.TOP) ||
+   position.equals(DockableWindowManager.BOTTOM))
+  {
+   if(dimension != 0 && height <= PanelWindowContainer.SPLITTER_WIDTH)
+    panel.show(null);
+   else
+    panel.setDimension(height);
+  }
+  else
+  {
+   if(dimension != 0 && width <= PanelWindowContainer.SPLITTER_WIDTH)
+    panel.show(null);
+   else
+    panel.setDimension(width);
+  }
 
-		super.setBounds(x,y,width,height);
-	} //}}}
+  super.setBounds(x,y,width,height);
+ } //}}}
 
-	//{{{ ResizeMouseHandler class
-	class ResizeMouseHandler extends MouseAdapter implements MouseMotionListener
-	{
-		boolean canDrag;
-		Point dragStart;
+ //{{{ ResizeMouseHandler class
+ class ResizeMouseHandler extends MouseAdapter implements MouseMotionListener
+ {
+  boolean canDrag;
+  Point dragStart;
 
-		//{{{ mousePressed() method
-		public void mousePressed(MouseEvent evt)
-		{
-			if(canDrag)
-			{
-				wm.setResizePos(panel.getDimension(),panel);
-				dragStart = evt.getPoint();
-			}
-		} //}}}
+  //{{{ mousePressed() method
+  public void mousePressed(MouseEvent evt)
+  {
+   if(canDrag)
+   {
+    wm.setResizePos(panel.getDimension(),panel);
+    dragStart = evt.getPoint();
+   }
+  } //}}}
 
-		//{{{ mouseReleased() method
-		public void mouseReleased(MouseEvent evt)
-		{
-			if(canDrag)
-			{
-				panel.setDimension(wm.resizePos
-					+ PanelWindowContainer
-					.SPLITTER_WIDTH);
-				wm.finishResizing();
-				dragStart = null;
-				wm.revalidate();
-			}
-		} //}}}
+  //{{{ mouseReleased() method
+  public void mouseReleased(MouseEvent evt)
+  {
+   if(canDrag)
+   {
+    panel.setDimension(wm.resizePos
+     + PanelWindowContainer
+     .SPLITTER_WIDTH);
+    wm.finishResizing();
+    dragStart = null;
+    wm.revalidate();
+   }
+  } //}}}
 
-		//{{{ mouseMoved() method
-		public void mouseMoved(MouseEvent evt)
-		{
-			Border border = getBorder();
-			if(border == null)
-			{
-				// collapsed
-				return;
-			}
+  //{{{ mouseMoved() method
+  public void mouseMoved(MouseEvent evt)
+  {
+   Border border = getBorder();
+   if(border == null)
+   {
+    // collapsed
+    return;
+   }
 
-			String position = panel.getPosition();
+   String position = panel.getPosition();
 
-			Insets insets = border.getBorderInsets(DockablePanel.this);
-			canDrag = false;
-			//{{{ Top...
-			if(position.equals(DockableWindowManager.TOP))
-			{
-				if(evt.getY() >= getHeight() - insets.bottom)
-					canDrag = true;
-			} //}}}
-			//{{{ Left...
-			else if(position.equals(DockableWindowManager.LEFT))
-			{
-				if(evt.getX() >= getWidth() - insets.right)
-					canDrag = true;
-			} //}}}
-			//{{{ Bottom...
-			else if(position.equals(DockableWindowManager.BOTTOM))
-			{
-				if(evt.getY() <= insets.top)
-					canDrag = true;
-			} //}}}
-			//{{{ Right...
-			else if(position.equals(DockableWindowManager.RIGHT))
-			{
-				if(evt.getX() <= insets.left)
-					canDrag = true;
-			} //}}}
+   Insets insets = border.getBorderInsets(DockablePanel.this);
+   canDrag = false;
+   //{{{ Top...
+   if(position.equals(DockableWindowManager.TOP))
+   {
+    if(evt.getY() >= getHeight() - insets.bottom)
+     canDrag = true;
+   } //}}}
+   //{{{ Left...
+   else if(position.equals(DockableWindowManager.LEFT))
+   {
+    if(evt.getX() >= getWidth() - insets.right)
+     canDrag = true;
+   } //}}}
+   //{{{ Bottom...
+   else if(position.equals(DockableWindowManager.BOTTOM))
+   {
+    if(evt.getY() <= insets.top)
+     canDrag = true;
+   } //}}}
+   //{{{ Right...
+   else if(position.equals(DockableWindowManager.RIGHT))
+   {
+    if(evt.getX() <= insets.left)
+     canDrag = true;
+   } //}}}
 
-			if(canDrag)
-			{
-				wm.setCursor(Cursor.getPredefinedCursor(
-					getAppropriateCursor()));
-			}
-			else
-			{
-				wm.setCursor(Cursor.getPredefinedCursor(
-					Cursor.DEFAULT_CURSOR));
-			}
-		} //}}}
+   if(canDrag)
+   {
+    wm.setCursor(Cursor.getPredefinedCursor(
+     getAppropriateCursor()));
+   }
+   else
+   {
+    wm.setCursor(Cursor.getPredefinedCursor(
+     Cursor.DEFAULT_CURSOR));
+   }
+  } //}}}
 
-		//{{{ mouseDragged() method
-		public void mouseDragged(MouseEvent evt)
-		{
-			if(!canDrag)
-				return;
+  //{{{ mouseDragged() method
+  public void mouseDragged(MouseEvent evt)
+  {
+   if(!canDrag)
+    return;
 
-			if(dragStart == null) // can't happen?
-				return;
+   if(dragStart == null) // can't happen?
+    return;
 
-			wm.setCursor(Cursor.getPredefinedCursor(
-				getAppropriateCursor()));
+   wm.setCursor(Cursor.getPredefinedCursor(
+    getAppropriateCursor()));
 
-			int dimension = panel.getDimension();
+   int dimension = panel.getDimension();
 
-			String position = panel.getPosition();
+   String position = panel.getPosition();
 
-			//{{{ Top...
-			if(position.equals(DockableWindowManager.TOP))
-			{
-				wm.setResizePos(
-					evt.getY() - dragStart.y
-					+ dimension,
-					panel);
-			} //}}}
-			//{{{ Left...
-			else if(position.equals(DockableWindowManager.LEFT))
-			{
-				wm.setResizePos(evt.getX() - dragStart.x
-					+ dimension,
-					panel);
-			} //}}}
-			//{{{ Bottom...
-			else if(position.equals(DockableWindowManager.BOTTOM))
-			{
-				wm.setResizePos(dimension - evt.getY()
-					+ dragStart.y,
-					panel);
-			} //}}}
-			//{{{ Right...
-			else if(position.equals(DockableWindowManager.RIGHT))
-			{
-				wm.setResizePos(dimension - evt.getX()
-					+ dragStart.x,
-					panel);
-			} //}}}
-		} //}}}
+   //{{{ Top...
+   if(position.equals(DockableWindowManager.TOP))
+   {
+    wm.setResizePos(
+     evt.getY() - dragStart.y
+     + dimension,
+     panel);
+   } //}}}
+   //{{{ Left...
+   else if(position.equals(DockableWindowManager.LEFT))
+   {
+    wm.setResizePos(evt.getX() - dragStart.x
+     + dimension,
+     panel);
+   } //}}}
+   //{{{ Bottom...
+   else if(position.equals(DockableWindowManager.BOTTOM))
+   {
+    wm.setResizePos(dimension - evt.getY()
+     + dragStart.y,
+     panel);
+   } //}}}
+   //{{{ Right...
+   else if(position.equals(DockableWindowManager.RIGHT))
+   {
+    wm.setResizePos(dimension - evt.getX()
+     + dragStart.x,
+     panel);
+   } //}}}
+  } //}}}
 
-		//{{{ mouseExited() method
-		public void mouseExited(MouseEvent evt)
-		{
-			wm.setCursor(Cursor.getPredefinedCursor(
-				Cursor.DEFAULT_CURSOR));
-		} //}}}
+  //{{{ mouseExited() method
+  public void mouseExited(MouseEvent evt)
+  {
+   wm.setCursor(Cursor.getPredefinedCursor(
+    Cursor.DEFAULT_CURSOR));
+  } //}}}
 
-		//{{{ getCursor() method
-		private int getAppropriateCursor()
-		{
-			String position = panel.getPosition();
+  //{{{ getCursor() method
+  private int getAppropriateCursor()
+  {
+   String position = panel.getPosition();
 
-			if(position.equals(DockableWindowManager.TOP))
-				return Cursor.N_RESIZE_CURSOR;
-			else if(position.equals(DockableWindowManager.LEFT))
-				return Cursor.W_RESIZE_CURSOR;
-			else if(position.equals(DockableWindowManager.BOTTOM))
-				return Cursor.S_RESIZE_CURSOR;
-			else if(position.equals(DockableWindowManager.RIGHT))
-				return Cursor.E_RESIZE_CURSOR;
-			else
-				throw new InternalError();
-		} //}}}
-	} //}}}
+   if(position.equals(DockableWindowManager.TOP))
+    return Cursor.N_RESIZE_CURSOR;
+   else if(position.equals(DockableWindowManager.LEFT))
+    return Cursor.W_RESIZE_CURSOR;
+   else if(position.equals(DockableWindowManager.BOTTOM))
+    return Cursor.S_RESIZE_CURSOR;
+   else if(position.equals(DockableWindowManager.RIGHT))
+    return Cursor.E_RESIZE_CURSOR;
+   else
+    throw new InternalError();
+  } //}}}
+ } //}}}
 }

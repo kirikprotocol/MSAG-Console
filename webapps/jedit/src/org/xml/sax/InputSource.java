@@ -80,7 +80,7 @@ public class InputSource {
      */
     public InputSource (String systemId)
     {
-	setSystemId(systemId);
+ setSystemId(systemId);
     }
     
     
@@ -101,7 +101,7 @@ public class InputSource {
      */
     public InputSource (InputStream byteStream)
     {
-	setByteStream(byteStream);
+ setByteStream(byteStream);
     }
     
     
@@ -121,7 +121,7 @@ public class InputSource {
      */
     public InputSource (Reader characterStream)
     {
-	setCharacterStream(characterStream);
+ setCharacterStream(characterStream);
     }
     
     
@@ -139,7 +139,7 @@ public class InputSource {
      */
     public void setPublicId (String publicId)
     {
-	this.publicId = publicId;
+ this.publicId = publicId;
     }
     
     
@@ -151,7 +151,7 @@ public class InputSource {
      */
     public String getPublicId ()
     {
-	return publicId;
+ return publicId;
     }
     
     
@@ -179,7 +179,7 @@ public class InputSource {
      */
     public void setSystemId (String systemId)
     {
-	this.systemId = systemId;
+ this.systemId = systemId;
     }
     
     
@@ -197,7 +197,7 @@ public class InputSource {
      */
     public String getSystemId ()
     {
-	return systemId;
+ return systemId;
     }
     
     
@@ -220,7 +220,7 @@ public class InputSource {
      */
     public void setByteStream (InputStream byteStream)
     {
-	this.byteStream = byteStream;
+ this.byteStream = byteStream;
     }
     
     
@@ -236,7 +236,7 @@ public class InputSource {
      */
     public InputStream getByteStream ()
     {
-	return byteStream;
+ return byteStream;
     }
     
     
@@ -257,7 +257,7 @@ public class InputSource {
      */
     public void setEncoding (String encoding)
     {
-	this.encoding = encoding;
+ this.encoding = encoding;
     }
     
     
@@ -271,7 +271,7 @@ public class InputSource {
      */
     public String getEncoding ()
     {
-	return encoding;
+ return encoding;
     }
     
     
@@ -289,7 +289,7 @@ public class InputSource {
      */
     public void setCharacterStream (Reader characterStream)
     {
-	this.characterStream = characterStream;
+ this.characterStream = characterStream;
     }
     
     
@@ -301,7 +301,7 @@ public class InputSource {
      */
     public Reader getCharacterStream ()
     {
-	return characterStream;
+ return characterStream;
     }
     
     

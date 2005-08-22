@@ -42,165 +42,165 @@ import org.gjt.sp.jedit.*;
  */
 public class HistoryTextArea extends JTextArea
 {
-	//{{{ HistoryTextArea constructor
-	public HistoryTextArea(String name)
-	{
-		super(3,15);
-		controller = new HistoryText(this,name);
-		Set focusForwardTraversalKeys = new TreeSet();
-		focusForwardTraversalKeys.add(
-			KeyStroke.getKeyStroke(KeyEvent.VK_TAB,0));
-		Set focusBackwardTraversalKeys = new TreeSet();
-		focusBackwardTraversalKeys.add(
-			KeyStroke.getKeyStroke(KeyEvent.VK_TAB,
-			InputEvent.SHIFT_MASK));
-		setFocusTraversalKeys(
-			KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,
-			focusForwardTraversalKeys);
-		setFocusTraversalKeys(
-			KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS,
-			focusBackwardTraversalKeys);
-	} //}}}
+ //{{{ HistoryTextArea constructor
+ public HistoryTextArea(String name)
+ {
+  super(3,15);
+  controller = new HistoryText(this,name);
+  Set focusForwardTraversalKeys = new TreeSet();
+  focusForwardTraversalKeys.add(
+   KeyStroke.getKeyStroke(KeyEvent.VK_TAB,0));
+  Set focusBackwardTraversalKeys = new TreeSet();
+  focusBackwardTraversalKeys.add(
+   KeyStroke.getKeyStroke(KeyEvent.VK_TAB,
+   InputEvent.SHIFT_MASK));
+  setFocusTraversalKeys(
+   KeyboardFocusManager.FORWARD_TRAVERSAL_KEYS,
+   focusForwardTraversalKeys);
+  setFocusTraversalKeys(
+   KeyboardFocusManager.BACKWARD_TRAVERSAL_KEYS,
+   focusBackwardTraversalKeys);
+ } //}}}
 
-	//{{{ getModel() method
-	/**
-	 * Returns the underlying history controller.
-	 * @since jEdit 4.3pre1
-	 */
-	public HistoryModel getModel()
-	{
-		return controller.getModel();
-	} //}}}
+ //{{{ getModel() method
+ /**
+  * Returns the underlying history controller.
+  * @since jEdit 4.3pre1
+  */
+ public HistoryModel getModel()
+ {
+  return controller.getModel();
+ } //}}}
 
-	//{{{ setModel() method
-	/**
-	 * Sets the history list controller.
-	 * @param name The model name
-	 * @since jEdit 4.3pre1
-	 */
-	public void setModel(String name)
-	{
-		controller.setModel(name);
-	} //}}}
+ //{{{ setModel() method
+ /**
+  * Sets the history list controller.
+  * @param name The model name
+  * @since jEdit 4.3pre1
+  */
+ public void setModel(String name)
+ {
+  controller.setModel(name);
+ } //}}}
 
-	//{{{ setInstantPopups() method
-	/**
-	 * Sets if selecting a value from the popup should immediately fire
-	 * an ActionEvent.
-	 */
-	public void setInstantPopups(boolean instantPopups)
-	{
-		controller.setInstantPopups(instantPopups);
-	} //}}}
+ //{{{ setInstantPopups() method
+ /**
+  * Sets if selecting a value from the popup should immediately fire
+  * an ActionEvent.
+  */
+ public void setInstantPopups(boolean instantPopups)
+ {
+  controller.setInstantPopups(instantPopups);
+ } //}}}
 
-	//{{{ getInstantPopups() method
-	/**
-	 * Returns if selecting a value from the popup should immediately fire
-	 * an ActionEvent.
-	 */
-	public boolean getInstantPopups()
-	{
-		return controller.getInstantPopups();
-	} //}}}
+ //{{{ getInstantPopups() method
+ /**
+  * Returns if selecting a value from the popup should immediately fire
+  * an ActionEvent.
+  */
+ public boolean getInstantPopups()
+ {
+  return controller.getInstantPopups();
+ } //}}}
 
-	//{{{ addCurrentToHistory() method
-	/**
-	 * Adds the currently entered item to the history.
-	 */
-	public void addCurrentToHistory()
-	{
-		controller.addCurrentToHistory();
-	} //}}}
+ //{{{ addCurrentToHistory() method
+ /**
+  * Adds the currently entered item to the history.
+  */
+ public void addCurrentToHistory()
+ {
+  controller.addCurrentToHistory();
+ } //}}}
 
-	//{{{ setText() method
-	/**
-	 * Sets the displayed text.
-	 */
-	public void setText(String text)
-	{
-		super.setText(text);
-		controller.setIndex(-1);
-	} //}}}
+ //{{{ setText() method
+ /**
+  * Sets the displayed text.
+  */
+ public void setText(String text)
+ {
+  super.setText(text);
+  controller.setIndex(-1);
+ } //}}}
 
-	//{{{ Protected members
+ //{{{ Protected members
 
-	//{{{ processKeyEvent() method
-	protected void processKeyEvent(KeyEvent evt)
-	{
-		if(!isEnabled())
-			return;
+ //{{{ processKeyEvent() method
+ protected void processKeyEvent(KeyEvent evt)
+ {
+  if(!isEnabled())
+   return;
 
-		if(evt.getID() == KeyEvent.KEY_PRESSED)
-		{
-			switch(evt.getKeyCode())
-			{
-			case KeyEvent.VK_ENTER:
-				if(evt.isControlDown())
-				{
-					replaceSelection("\n");
-					evt.consume();
-				}
-				break;
-			case KeyEvent.VK_TAB:
-				if(evt.isControlDown())
-				{
-					replaceSelection("\t");
-					evt.consume();
-				}
-				break;
-			case KeyEvent.VK_PAGE_UP:
-				if(evt.isShiftDown())
-					controller.doBackwardSearch();
-				else
-					controller.historyPrevious();
-				evt.consume();
-				break;
-			case KeyEvent.VK_PAGE_DOWN:
-				if(evt.isShiftDown())
-					controller.doForwardSearch();
-				else
-					controller.historyNext();
-				evt.consume();
-				break;
-			case KeyEvent.VK_UP:
-				if(evt.isAltDown())
-				{
-					controller.showPopupMenu(
-						evt.isShiftDown());
-					evt.consume();
-				}
-				break;
-			}
-		}
+  if(evt.getID() == KeyEvent.KEY_PRESSED)
+  {
+   switch(evt.getKeyCode())
+   {
+   case KeyEvent.VK_ENTER:
+    if(evt.isControlDown())
+    {
+     replaceSelection("\n");
+     evt.consume();
+    }
+    break;
+   case KeyEvent.VK_TAB:
+    if(evt.isControlDown())
+    {
+     replaceSelection("\t");
+     evt.consume();
+    }
+    break;
+   case KeyEvent.VK_PAGE_UP:
+    if(evt.isShiftDown())
+     controller.doBackwardSearch();
+    else
+     controller.historyPrevious();
+    evt.consume();
+    break;
+   case KeyEvent.VK_PAGE_DOWN:
+    if(evt.isShiftDown())
+     controller.doForwardSearch();
+    else
+     controller.historyNext();
+    evt.consume();
+    break;
+   case KeyEvent.VK_UP:
+    if(evt.isAltDown())
+    {
+     controller.showPopupMenu(
+      evt.isShiftDown());
+     evt.consume();
+    }
+    break;
+   }
+  }
 
-		if(!evt.isConsumed())
-			super.processKeyEvent(evt);
-	} //}}}
+  if(!evt.isConsumed())
+   super.processKeyEvent(evt);
+ } //}}}
 
-	//{{{ processMouseEvent() method
-	protected void processMouseEvent(MouseEvent evt)
-	{
-		if(!isEnabled())
-			return;
+ //{{{ processMouseEvent() method
+ protected void processMouseEvent(MouseEvent evt)
+ {
+  if(!isEnabled())
+   return;
 
-		switch(evt.getID())
-		{
-		case MouseEvent.MOUSE_PRESSED:
-			if(GUIUtilities.isPopupTrigger(evt))
-				controller.showPopupMenu(evt.isShiftDown());
-			else
-				super.processMouseEvent(evt);
+  switch(evt.getID())
+  {
+  case MouseEvent.MOUSE_PRESSED:
+   if(GUIUtilities.isPopupTrigger(evt))
+    controller.showPopupMenu(evt.isShiftDown());
+   else
+    super.processMouseEvent(evt);
 
-			break;
-		default:
-			super.processMouseEvent(evt);
-			break;
-		}
-	} //}}}
-	
-	//}}}
+   break;
+  default:
+   super.processMouseEvent(evt);
+   break;
+  }
+ } //}}}
+ 
+ //}}}
 
-	//{{{ Private variables
-	private HistoryText controller;
-	//}}}
+ //{{{ Private variables
+ private HistoryText controller;
+ //}}}
 }

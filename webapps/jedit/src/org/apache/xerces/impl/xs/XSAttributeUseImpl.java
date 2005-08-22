@@ -147,11 +147,11 @@ public class XSAttributeUseImpl implements XSAttributeUse {
                fDefault.actualValue.toString();
     }
 
-	/**
-	 * @see org.apache.xerces.impl.xs.psvi.XSObject#getNamespaceItem()
-	 */
-	public XSNamespaceItem getNamespaceItem() {
-		return null;
-	}
+ /**
+  * @see org.apache.xerces.impl.xs.psvi.XSObject#getNamespaceItem()
+  */
+ public XSNamespaceItem getNamespaceItem() {
+  return null;
+ }
 
 } // class XSAttributeUseImpl

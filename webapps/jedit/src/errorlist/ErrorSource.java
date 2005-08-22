@@ -33,216 +33,216 @@ import java.util.Vector;
  */
 public abstract class ErrorSource implements EBComponent
 {
-	//{{{ Static part
+ //{{{ Static part
 
-	//{{{ registerErrorSource() method
-	/**
-	 * Registers an error source.
-	 * @param errorSource The error source
-	 */
-	public static void registerErrorSource(ErrorSource errorSource)
-	{
-		if(errorSource.registered)
-			return;
+ //{{{ registerErrorSource() method
+ /**
+  * Registers an error source.
+  * @param errorSource The error source
+  */
+ public static void registerErrorSource(ErrorSource errorSource)
+ {
+  if(errorSource.registered)
+   return;
 
-		synchronized(errorSources)
-		{
-			errorSources.addElement(errorSource);
-			errorSource.registered = true;
-			cachedErrorSources = null;
-			EditBus.send(new ErrorSourceUpdate(errorSource,
-				ErrorSourceUpdate.ERROR_SOURCE_ADDED,null));
-		}
-	} //}}}
+  synchronized(errorSources)
+  {
+   errorSources.addElement(errorSource);
+   errorSource.registered = true;
+   cachedErrorSources = null;
+   EditBus.send(new ErrorSourceUpdate(errorSource,
+    ErrorSourceUpdate.ERROR_SOURCE_ADDED,null));
+  }
+ } //}}}
 
-	//{{{ unregisterErrorSource() method
-	/**
-	 * Unregisters an error source.
-	 * @param errorSource The error source
-	 */
-	public static void unregisterErrorSource(ErrorSource errorSource)
-	{
-		if(!errorSource.registered)
-			return;
+ //{{{ unregisterErrorSource() method
+ /**
+  * Unregisters an error source.
+  * @param errorSource The error source
+  */
+ public static void unregisterErrorSource(ErrorSource errorSource)
+ {
+  if(!errorSource.registered)
+   return;
 
-		EditBus.removeFromBus(errorSource);
+  EditBus.removeFromBus(errorSource);
 
-		synchronized(errorSources)
-		{
-			errorSources.removeElement(errorSource);
-			errorSource.registered = false;
-			cachedErrorSources = null;
-			EditBus.send(new ErrorSourceUpdate(errorSource,
-				ErrorSourceUpdate.ERROR_SOURCE_REMOVED,null));
-		}
-	} //}}}
+  synchronized(errorSources)
+  {
+   errorSources.removeElement(errorSource);
+   errorSource.registered = false;
+   cachedErrorSources = null;
+   EditBus.send(new ErrorSourceUpdate(errorSource,
+    ErrorSourceUpdate.ERROR_SOURCE_REMOVED,null));
+  }
+ } //}}}
 
-	//{{{ getErrorSources() method
-	/**
-	 * Returns an array of registered error sources.
-	 */
-	public static ErrorSource[] getErrorSources()
-	{
-		synchronized(errorSources)
-		{
-			if(cachedErrorSources == null)
-			{
-				cachedErrorSources = new ErrorSource[
-					errorSources.size()];
-				errorSources.copyInto(cachedErrorSources);
-			}
-			return cachedErrorSources;
-		}
-	} //}}}
+ //{{{ getErrorSources() method
+ /**
+  * Returns an array of registered error sources.
+  */
+ public static ErrorSource[] getErrorSources()
+ {
+  synchronized(errorSources)
+  {
+   if(cachedErrorSources == null)
+   {
+    cachedErrorSources = new ErrorSource[
+     errorSources.size()];
+    errorSources.copyInto(cachedErrorSources);
+   }
+   return cachedErrorSources;
+  }
+ } //}}}
 
-	//}}}
+ //}}}
 
-	//{{{ Constants
-	/**
-	 * An error.
-	 */
-	public static final int ERROR = 0;
+ //{{{ Constants
+ /**
+  * An error.
+  */
+ public static final int ERROR = 0;
 
-	/**
-	 * A warning.
-	 */
-	public static final int WARNING = 1;
-	//}}}
+ /**
+  * A warning.
+  */
+ public static final int WARNING = 1;
+ //}}}
 
-	//{{{ getName() method
-	/**
-	 * Returns a string description of this error source.
-	 */
-	public abstract String getName();
-	//}}}
+ //{{{ getName() method
+ /**
+  * Returns a string description of this error source.
+  */
+ public abstract String getName();
+ //}}}
 
-	//{{{ getErrorCount() method
-	/**
-	 * Returns the number of errors in this source.
-	 */
-	public abstract int getErrorCount();
-	//}}}
+ //{{{ getErrorCount() method
+ /**
+  * Returns the number of errors in this source.
+  */
+ public abstract int getErrorCount();
+ //}}}
 
-	//{{{ getAllErrors() method
-	/**
-	 * Returns an array of all errors in this error source.
-	 */
-	public abstract Error[] getAllErrors();
-	//}}}
+ //{{{ getAllErrors() method
+ /**
+  * Returns an array of all errors in this error source.
+  */
+ public abstract Error[] getAllErrors();
+ //}}}
 
-	//{{{ getFileErrorCount() method
-	/**
-	 * Returns the number of errors in the specified file.
-	 * @param path Full path name
-	 */
-	public abstract int getFileErrorCount(String path);
-	//}}}
+ //{{{ getFileErrorCount() method
+ /**
+  * Returns the number of errors in the specified file.
+  * @param path Full path name
+  */
+ public abstract int getFileErrorCount(String path);
+ //}}}
 
-	//{{{ getFileErrors() method
-	/**
-	 * Returns all errors in the specified file.
-	 * @param path Full path name
-	 */
-	public abstract Error[] getFileErrors(String path);
-	//}}}
+ //{{{ getFileErrors() method
+ /**
+  * Returns all errors in the specified file.
+  * @param path Full path name
+  */
+ public abstract Error[] getFileErrors(String path);
+ //}}}
 
-	//{{{ getLineErrors() method
-	/**
-	 * Returns all errors in the specified line range.
-	 * @param path The file path
-	 * @param startLineIndex The line number
-	 * @param endLineIndex The line number
-	 * @since ErrorList 1.3
-	 */
-	public abstract ErrorSource.Error[] getLineErrors(String path,
-		int startLineIndex, int endLineIndex);
-	//}}}
+ //{{{ getLineErrors() method
+ /**
+  * Returns all errors in the specified line range.
+  * @param path The file path
+  * @param startLineIndex The line number
+  * @param endLineIndex The line number
+  * @since ErrorList 1.3
+  */
+ public abstract ErrorSource.Error[] getLineErrors(String path,
+  int startLineIndex, int endLineIndex);
+ //}}}
 
-	//{{{ Private members
+ //{{{ Private members
 
-	// unregistered error sources do not fire events.
-	// the console uses this fact to 'batch' multiple errors together
-	// for improved performance
-	protected boolean registered;
+ // unregistered error sources do not fire events.
+ // the console uses this fact to 'batch' multiple errors together
+ // for improved performance
+ protected boolean registered;
 
-	private static Vector errorSources = new Vector();
-	private static ErrorSource[] cachedErrorSources;
-	//}}}
+ private static Vector errorSources = new Vector();
+ private static ErrorSource[] cachedErrorSources;
+ //}}}
 
-	//{{{ Error interface
-	/**
-	 * An error.
-	 */
-	public interface Error
-	{
-		//{{{ getErrorType() method
-		/**
-		 * Returns the error type (error or warning)
-		 */
-		int getErrorType();
-		//}}}
+ //{{{ Error interface
+ /**
+  * An error.
+  */
+ public interface Error
+ {
+  //{{{ getErrorType() method
+  /**
+   * Returns the error type (error or warning)
+   */
+  int getErrorType();
+  //}}}
 
-		//{{{ getErrorSource() method
-		/**
-		 * Returns the source of this error.
-		 */
-		ErrorSource getErrorSource();
-		//}}}
+  //{{{ getErrorSource() method
+  /**
+   * Returns the source of this error.
+   */
+  ErrorSource getErrorSource();
+  //}}}
 
-		//{{{ getBuffer() method
-		/**
-		 * Returns the buffer involved, or null if it is not open.
-		 */
-		Buffer getBuffer();
-		//}}}
+  //{{{ getBuffer() method
+  /**
+   * Returns the buffer involved, or null if it is not open.
+   */
+  Buffer getBuffer();
+  //}}}
 
-		//{{{ getFilePath() method
-		/**
-		 * Returns the file path name involved.
-		 */
-		String getFilePath();
-		//}}}
+  //{{{ getFilePath() method
+  /**
+   * Returns the file path name involved.
+   */
+  String getFilePath();
+  //}}}
 
-		//{{{ getFileName() method
-		/**
-		 * Returns just the name portion of the file involved.
-		 */
-		String getFileName();
-		//}}}
+  //{{{ getFileName() method
+  /**
+   * Returns just the name portion of the file involved.
+   */
+  String getFileName();
+  //}}}
 
-		//{{{ getLineNumber() method
-		/**
-		 * Returns the line number.
-		 */
-		int getLineNumber();
-		//}}}
+  //{{{ getLineNumber() method
+  /**
+   * Returns the line number.
+   */
+  int getLineNumber();
+  //}}}
 
-		//{{{ getStartOffset() method
-		/**
-		 * Returns the start offset.
-		 */
-		int getStartOffset();
-		//}}}
+  //{{{ getStartOffset() method
+  /**
+   * Returns the start offset.
+   */
+  int getStartOffset();
+  //}}}
 
-		//{{{ getEndOffset() method
-		/**
-		 * Returns the end offset.
-		 */
-		int getEndOffset();
-		//}}}
+  //{{{ getEndOffset() method
+  /**
+   * Returns the end offset.
+   */
+  int getEndOffset();
+  //}}}
 
-		//{{{ getErrorMessage() method
-		/**
-		 * Returns the error message.
-		 */
-		String getErrorMessage();
-		//}}}
+  //{{{ getErrorMessage() method
+  /**
+   * Returns the error message.
+   */
+  String getErrorMessage();
+  //}}}
 
-		//{{{ getExtraMessages() method
-		/**
-		 * Returns the extra error messages.
-		 */
-		String[] getExtraMessages();
-		//}}}
-	} //}}}
+  //{{{ getExtraMessages() method
+  /**
+   * Returns the extra error messages.
+   */
+  String[] getExtraMessages();
+  //}}}
+ } //}}}
 }

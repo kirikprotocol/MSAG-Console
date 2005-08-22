@@ -31,21 +31,21 @@
                      |%delegatePublic;|%delegateSystem;|%delegateURI;
                      |%nextCatalog;|%group; %local.catalog.mix;)+>
 <!ATTLIST %catalog;
-	%nsdecl;	%uriReference;		#FIXED
-		'urn:oasis:names:tc:entity:xmlns:xml:catalog'
-	prefer		%systemOrPublic;	#IMPLIED
-	xml:base	%uriReference;		#IMPLIED
-	%local.catalog.attribs;
+ %nsdecl; %uriReference;  #FIXED
+  'urn:oasis:names:tc:entity:xmlns:xml:catalog'
+ prefer  %systemOrPublic; #IMPLIED
+ xml:base %uriReference;  #IMPLIED
+ %local.catalog.attribs;
 >
 
 <!ENTITY % local.public.attribs "">
 
 <!ELEMENT %public; EMPTY>
 <!ATTLIST %public;
-	id		ID			#IMPLIED
-	publicId	%publicIdentifier;	#REQUIRED
-	uri		%uriReference;		#REQUIRED
-	xml:base	%uriReference;		#IMPLIED
+ id  ID   #IMPLIED
+ publicId %publicIdentifier; #REQUIRED
+ uri  %uriReference;  #REQUIRED
+ xml:base %uriReference;  #IMPLIED
         %local.public.attribs;
 >
 
@@ -53,10 +53,10 @@
 
 <!ELEMENT %system; EMPTY>
 <!ATTLIST %system;
-	id		ID			#IMPLIED
-	systemId	%string;		#REQUIRED
-	uri		%uriReference;		#REQUIRED
-	xml:base	%uriReference;		#IMPLIED
+ id  ID   #IMPLIED
+ systemId %string;  #REQUIRED
+ uri  %uriReference;  #REQUIRED
+ xml:base %uriReference;  #IMPLIED
         %local.system.attribs;
 >
 
@@ -64,10 +64,10 @@
 
 <!ELEMENT %uri; EMPTY>
 <!ATTLIST %uri;
-	id		ID			#IMPLIED
-	name		%string;		#REQUIRED
-	uri		%uriReference;		#REQUIRED
-	xml:base	%uriReference;		#IMPLIED
+ id  ID   #IMPLIED
+ name  %string;  #REQUIRED
+ uri  %uriReference;  #REQUIRED
+ xml:base %uriReference;  #IMPLIED
         %local.uri.attribs;
 >
 
@@ -75,9 +75,9 @@
 
 <!ELEMENT %rewriteSystem; EMPTY>
 <!ATTLIST %rewriteSystem;
-	id		ID			#IMPLIED
-	systemIdStartString	%string;	#REQUIRED
-	rewritePrefix		%string;		#REQUIRED
+ id  ID   #IMPLIED
+ systemIdStartString %string; #REQUIRED
+ rewritePrefix  %string;  #REQUIRED
         %local.rewriteSystem.attribs;
 >
 
@@ -85,9 +85,9 @@
 
 <!ELEMENT %rewriteURI; EMPTY>
 <!ATTLIST %rewriteURI;
-	id		ID			#IMPLIED
-	uriStartString	%string;		#REQUIRED
-	rewritePrefix	%string;		#REQUIRED
+ id  ID   #IMPLIED
+ uriStartString %string;  #REQUIRED
+ rewritePrefix %string;  #REQUIRED
         %local.rewriteURI.attribs;
 >
 
@@ -95,10 +95,10 @@
 
 <!ELEMENT %delegatePublic; EMPTY>
 <!ATTLIST %delegatePublic;
-	id		ID			#IMPLIED
-	publicIdStartString	%partialPublicIdentifier;	#REQUIRED
-	catalog		%uriReference;		#REQUIRED
-	xml:base	%uriReference;		#IMPLIED
+ id  ID   #IMPLIED
+ publicIdStartString %partialPublicIdentifier; #REQUIRED
+ catalog  %uriReference;  #REQUIRED
+ xml:base %uriReference;  #IMPLIED
         %local.delegatePublic.attribs;
 >
 
@@ -106,10 +106,10 @@
 
 <!ELEMENT %delegateSystem; EMPTY>
 <!ATTLIST %delegateSystem;
-	id		ID			#IMPLIED
-	systemIdStartString	%string;	#REQUIRED
-	catalog		%uriReference;		#REQUIRED
-	xml:base	%uriReference;		#IMPLIED
+ id  ID   #IMPLIED
+ systemIdStartString %string; #REQUIRED
+ catalog  %uriReference;  #REQUIRED
+ xml:base %uriReference;  #IMPLIED
         %local.delegateSystem.attribs;
 >
 
@@ -117,10 +117,10 @@
 
 <!ELEMENT %delegateURI; EMPTY>
 <!ATTLIST %delegateURI;
-	id		ID			#IMPLIED
-	uriStartString	%string;		#REQUIRED
-	catalog		%uriReference;		#REQUIRED
-	xml:base	%uriReference;		#IMPLIED
+ id  ID   #IMPLIED
+ uriStartString %string;  #REQUIRED
+ catalog  %uriReference;  #REQUIRED
+ xml:base %uriReference;  #IMPLIED
         %local.delegateURI.attribs;
 >
 
@@ -128,9 +128,9 @@
 
 <!ELEMENT %nextCatalog; EMPTY>
 <!ATTLIST %nextCatalog;
-	id		ID			#IMPLIED
-	catalog		%uriReference;		#REQUIRED
-	xml:base	%uriReference;		#IMPLIED
+ id  ID   #IMPLIED
+ catalog  %uriReference;  #REQUIRED
+ xml:base %uriReference;  #IMPLIED
         %local.nextCatalog.attribs;
 >
 
@@ -142,8 +142,8 @@
                    |%delegatePublic;|%delegateSystem;|%delegateURI;
                    |%nextCatalog; %local.group.mix;)+>
 <!ATTLIST %group;
-	id		ID			#IMPLIED
-	prefer		%systemOrPublic;	#IMPLIED
-	xml:base	%uriReference;		#IMPLIED
+ id  ID   #IMPLIED
+ prefer  %systemOrPublic; #IMPLIED
+ xml:base %uriReference;  #IMPLIED
         %local.group.attribs;
 >

@@ -35,107 +35,107 @@ import org.gjt.sp.jedit.io.*;
  */
 public abstract class BufferListSet implements SearchFileSet
 {
-	//{{{ getFirstFile() method
-	public synchronized String getFirstFile(View view)
-	{
-		if(files == null)
-			files = _getFiles(view);
+ //{{{ getFirstFile() method
+ public synchronized String getFirstFile(View view)
+ {
+  if(files == null)
+   files = _getFiles(view);
 
-		if(files == null || files.length == 0)
-			return null;
-		else
-			return files[0];
-	} //}}}
+  if(files == null || files.length == 0)
+   return null;
+  else
+   return files[0];
+ } //}}}
 
-	//{{{ getNextFile() method
-	public synchronized String getNextFile(View view, String file)
-	{
-		if(files == null)
-			files = _getFiles(view);
+ //{{{ getNextFile() method
+ public synchronized String getNextFile(View view, String file)
+ {
+  if(files == null)
+   files = _getFiles(view);
 
-		if(files == null || files.length == 0)
-			return null;
+  if(files == null || files.length == 0)
+   return null;
 
-		if(file == null)
-		{
-			file = view.getBuffer().getSymlinkPath();
-			VFS vfs = VFSManager.getVFSForPath(file);
-			boolean ignoreCase = ((vfs.getCapabilities()
-				& VFS.CASE_INSENSITIVE_CAP) != 0);
+  if(file == null)
+  {
+   file = view.getBuffer().getSymlinkPath();
+   VFS vfs = VFSManager.getVFSForPath(file);
+   boolean ignoreCase = ((vfs.getCapabilities()
+    & VFS.CASE_INSENSITIVE_CAP) != 0);
 
-			for(int i = 0; i < files.length; i++)
-			{
-				if(MiscUtilities.compareStrings(
-					files[i],file,ignoreCase) == 0)
-				{
-					return file;
-				}
-			}
+   for(int i = 0; i < files.length; i++)
+   {
+    if(MiscUtilities.compareStrings(
+     files[i],file,ignoreCase) == 0)
+    {
+     return file;
+    }
+   }
 
-			return getFirstFile(view);
-		}
-		else
-		{
-			// -1 so that the last isn't checked
-			VFS vfs = VFSManager.getVFSForPath(file);
-			boolean ignoreCase = ((vfs.getCapabilities()
-				& VFS.CASE_INSENSITIVE_CAP) != 0);
+   return getFirstFile(view);
+  }
+  else
+  {
+   // -1 so that the last isn't checked
+   VFS vfs = VFSManager.getVFSForPath(file);
+   boolean ignoreCase = ((vfs.getCapabilities()
+    & VFS.CASE_INSENSITIVE_CAP) != 0);
 
-			for(int i = 0; i < files.length - 1; i++)
-			{
-				if(MiscUtilities.compareStrings(
-					files[i],file,ignoreCase) == 0)
-				{
-					return files[i+1];
-				}
-			}
+   for(int i = 0; i < files.length - 1; i++)
+   {
+    if(MiscUtilities.compareStrings(
+     files[i],file,ignoreCase) == 0)
+    {
+     return files[i+1];
+    }
+   }
 
-			return null;
-		}
-	} //}}}
+   return null;
+  }
+ } //}}}
 
-	//{{{ getFiles() method
-	public synchronized String[] getFiles(View view)
-	{
-		if(files == null)
-			files = _getFiles(view);
+ //{{{ getFiles() method
+ public synchronized String[] getFiles(View view)
+ {
+  if(files == null)
+   files = _getFiles(view);
 
-		if(files == null || files.length == 0)
-			return null;
-		else
-			return files;
-	} //}}}
+  if(files == null || files.length == 0)
+   return null;
+  else
+   return files;
+ } //}}}
 
-	//{{{ getFileCount() method
-	public synchronized int getFileCount(View view)
-	{
-		if(files == null)
-			files = _getFiles(view);
+ //{{{ getFileCount() method
+ public synchronized int getFileCount(View view)
+ {
+  if(files == null)
+   files = _getFiles(view);
 
-		if(files == null)
-			return 0;
-		else
-			return files.length;
-	} //}}}
+  if(files == null)
+   return 0;
+  else
+   return files.length;
+ } //}}}
 
-	//{{{ getCode() method
-	public String getCode()
-	{
-		// not supported for arbitriary filesets
-		return null;
-	} //}}}
+ //{{{ getCode() method
+ public String getCode()
+ {
+  // not supported for arbitriary filesets
+  return null;
+ } //}}}
 
-	//{{{ invalidateCachedList() method
-	public synchronized void invalidateCachedList()
-	{
-		files = null;
-	} //}}}
+ //{{{ invalidateCachedList() method
+ public synchronized void invalidateCachedList()
+ {
+  files = null;
+ } //}}}
 
-	/**
-	 * Note that the paths in the returned list must be
-	 * fully canonicalized.
-	 */
-	protected abstract String[] _getFiles(Component comp);
+ /**
+  * Note that the paths in the returned list must be
+  * fully canonicalized.
+  */
+ protected abstract String[] _getFiles(Component comp);
 
-	private String[] files;
+ private String[] files;
 }

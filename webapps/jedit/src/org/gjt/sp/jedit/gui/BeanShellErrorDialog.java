@@ -37,14 +37,14 @@ import org.gjt.sp.jedit.*;
  */
 public class BeanShellErrorDialog extends TextAreaDialog
 {
-	public BeanShellErrorDialog(Frame frame, Throwable t)
-	{
-		super(frame,"beanshell-error",t);
-	}
+ public BeanShellErrorDialog(Frame frame, Throwable t)
+ {
+  super(frame,"beanshell-error",t);
+ }
 
-	// for ABI compatibility
-	public BeanShellErrorDialog(View view, Throwable t)
-	{
-		this((Frame)view,t);
-	}
+ // for ABI compatibility
+ public BeanShellErrorDialog(View view, Throwable t)
+ {
+  this((Frame)view,t);
+ }
 }

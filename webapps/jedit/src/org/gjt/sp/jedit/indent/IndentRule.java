@@ -27,10 +27,10 @@ import org.gjt.sp.jedit.Buffer;
 
 public interface IndentRule
 {
-	/**
-	 * Apply the indent rule to this line, and return an indent action.
-	 */
-	public void apply(Buffer buffer, int thisLineIndex,
-		int prevLineIndex, int prevPrevLineIndex,
-		List indentActions);
+ /**
+  * Apply the indent rule to this line, and return an indent action.
+  */
+ public void apply(Buffer buffer, int thisLineIndex,
+  int prevLineIndex, int prevPrevLineIndex,
+  List indentActions);
 }

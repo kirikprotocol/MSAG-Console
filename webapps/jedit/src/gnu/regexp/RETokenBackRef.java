@@ -32,21 +32,21 @@ final class RETokenBackRef extends REToken {
   // should implement getMinimumLength() -- any ideas?
 
     boolean match(CharIndexed input, REMatch mymatch) {
-	int b,e;
-	b = mymatch.start[num];
-	e = mymatch.end[num];
-	if ((b==-1)||(e==-1)) return false; // this shouldn't happen, but...
-	for (int i=b; i<e; i++) {
-	    if (input.charAt(mymatch.index+i-b) != input.charAt(i)) {
-		return false;
-	    }
-	}
-	mymatch.index += e-b;
-	return next(input, mymatch);
+ int b,e;
+ b = mymatch.start[num];
+ e = mymatch.end[num];
+ if ((b==-1)||(e==-1)) return false; // this shouldn't happen, but...
+ for (int i=b; i<e; i++) {
+     if (input.charAt(mymatch.index+i-b) != input.charAt(i)) {
+  return false;
+     }
+ }
+ mymatch.index += e-b;
+ return next(input, mymatch);
     }
     
     void dump(StringBuffer os) {
-	os.append('\\').append(num);
+ os.append('\\').append(num);
     }
 }
 

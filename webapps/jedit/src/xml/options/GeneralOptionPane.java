@@ -26,85 +26,85 @@ import org.gjt.sp.jedit.*;
 
 public class GeneralOptionPane extends AbstractOptionPane
 {
-	//{{{ GeneralOptionPane constructor
-	public GeneralOptionPane()
-	{
-		super("xml.general");
-	} //}}}
+ //{{{ GeneralOptionPane constructor
+ public GeneralOptionPane()
+ {
+  super("xml.general");
+ } //}}}
 
-	//{{{ _init() method
-	protected void _init()
-	{
-		addComponent(validate = new JCheckBox(jEdit.getProperty(
-			"options.xml.general.validate")));
-		validate.setSelected(jEdit.getBooleanProperty("buffer.xml.validate"));
+ //{{{ _init() method
+ protected void _init()
+ {
+  addComponent(validate = new JCheckBox(jEdit.getProperty(
+   "options.xml.general.validate")));
+  validate.setSelected(jEdit.getBooleanProperty("buffer.xml.validate"));
 
-		String[] networkValues = {
-			jEdit.getProperty("options.xml.general.network-off"),
-			jEdit.getProperty("options.xml.general.network-cache"),
-			jEdit.getProperty("options.xml.general.network-always")
-		};
-		addComponent(jEdit.getProperty("options.xml.general.network-mode"),
-			network = new JComboBox(networkValues));
-		if(jEdit.getBooleanProperty("xml.network"))
-		{
-			if(jEdit.getBooleanProperty("xml.cache"))
-				network.setSelectedIndex(1);
-			else
-				network.setSelectedIndex(2);
-		}
-		else
-			network.setSelectedIndex(0);
+  String[] networkValues = {
+   jEdit.getProperty("options.xml.general.network-off"),
+   jEdit.getProperty("options.xml.general.network-cache"),
+   jEdit.getProperty("options.xml.general.network-always")
+  };
+  addComponent(jEdit.getProperty("options.xml.general.network-mode"),
+   network = new JComboBox(networkValues));
+  if(jEdit.getBooleanProperty("xml.network"))
+  {
+   if(jEdit.getBooleanProperty("xml.cache"))
+    network.setSelectedIndex(1);
+   else
+    network.setSelectedIndex(2);
+  }
+  else
+   network.setSelectedIndex(0);
 
-		String[] showAttributeValues = {
-			jEdit.getProperty("options.xml.general.show-attributes.none"),
-			jEdit.getProperty("options.xml.general.show-attributes.id-only"),
-			jEdit.getProperty("options.xml.general.show-attributes.all")
-		};
+  String[] showAttributeValues = {
+   jEdit.getProperty("options.xml.general.show-attributes.none"),
+   jEdit.getProperty("options.xml.general.show-attributes.id-only"),
+   jEdit.getProperty("options.xml.general.show-attributes.all")
+  };
 
-		addComponent(jEdit.getProperty("options.xml.general.show-attributes"),
-			showAttributes = new JComboBox(showAttributeValues));
-		showAttributes.setSelectedIndex(jEdit.getIntegerProperty(
-			"xml.show-attributes",0));
+  addComponent(jEdit.getProperty("options.xml.general.show-attributes"),
+   showAttributes = new JComboBox(showAttributeValues));
+  showAttributes.setSelectedIndex(jEdit.getIntegerProperty(
+   "xml.show-attributes",0));
 
-		addComponent(closeComplete = new JCheckBox(jEdit.getProperty(
-			"options.xml.general.close-complete")));
-		closeComplete.setSelected(jEdit.getBooleanProperty(
-			"xml.close-complete"));
+  addComponent(closeComplete = new JCheckBox(jEdit.getProperty(
+   "options.xml.general.close-complete")));
+  closeComplete.setSelected(jEdit.getBooleanProperty(
+   "xml.close-complete"));
 
-		addComponent(closeCompleteOpen = new JCheckBox(jEdit.getProperty(
-			"options.xml.general.close-complete-open")));
-		closeCompleteOpen.setSelected(jEdit.getBooleanProperty(
-			"xml.close-complete-open"));
+  addComponent(closeCompleteOpen = new JCheckBox(jEdit.getProperty(
+   "options.xml.general.close-complete-open")));
+  closeCompleteOpen.setSelected(jEdit.getBooleanProperty(
+   "xml.close-complete-open"));
 
-		addComponent(standaloneExtraSpace = new JCheckBox(jEdit.getProperty(
-			"options.xml.general.standalone-extra-space")));
-		standaloneExtraSpace.setSelected(jEdit.getBooleanProperty(
-			"xml.standalone-extra-space"));
-	} //}}}
+  addComponent(standaloneExtraSpace = new JCheckBox(jEdit.getProperty(
+   "options.xml.general.standalone-extra-space")));
+  standaloneExtraSpace.setSelected(jEdit.getBooleanProperty(
+   "xml.standalone-extra-space"));
+ } //}}}
 
-	//{{{ _save() method
-	protected void _save()
-	{
-		jEdit.setBooleanProperty("buffer.xml.validate",validate.isSelected());
-		jEdit.setBooleanProperty("xml.cache",network.getSelectedIndex() == 1);
-		jEdit.setBooleanProperty("xml.network",network.getSelectedIndex() >= 1);
-		jEdit.setIntegerProperty("xml.show-attributes",
-			showAttributes.getSelectedIndex());
-		jEdit.setBooleanProperty("xml.close-complete",
-			closeComplete.isSelected());
-		jEdit.setBooleanProperty("xml.close-complete-open",
-			closeCompleteOpen.isSelected());
-		jEdit.setBooleanProperty("xml.standalone-extra-space",
-			standaloneExtraSpace.isSelected());
-	} //}}}
+ //{{{ _save() method
+ protected void _save()
+ {
+  jEdit.setBooleanProperty("buffer.xml.validate",validate.isSelected());
+  jEdit.setBooleanProperty("xml.cache",network.getSelectedIndex() == 1);
+  jEdit.setBooleanProperty("xml.network",network.getSelectedIndex() >= 1);
+  jEdit.setIntegerProperty("xml.show-attributes",
+   showAttributes.getSelectedIndex());
+  jEdit.setBooleanProperty("xml.close-complete",
+   closeComplete.isSelected());
+  jEdit.setBooleanProperty("xml.close-complete-open",
+   closeCompleteOpen.isSelected());
+  jEdit.setBooleanProperty("xml.standalone-extra-space",
+   standaloneExtraSpace.isSelected());
+ } //}}}
 
-	//{{{ Private members
-	private JCheckBox validate;
-	private JComboBox network;
-	private JComboBox showAttributes;
-	private JCheckBox closeCompleteOpen;
-	private JCheckBox closeComplete;
-	private JCheckBox standaloneExtraSpace;
-	//}}}
+ //{{{ Private members
+ private JCheckBox validate;
+ private JComboBox network;
+ private JComboBox showAttributes;
+ private JCheckBox closeCompleteOpen;
+ private JCheckBox closeComplete;
+ private JCheckBox standaloneExtraSpace;
+ //}}}
 }

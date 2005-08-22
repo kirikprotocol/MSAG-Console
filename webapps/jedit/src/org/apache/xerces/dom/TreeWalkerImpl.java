@@ -107,7 +107,7 @@ public class TreeWalkerImpl implements TreeWalker {
     }
     
     public Node getRoot() {
-	return fRoot;
+ return fRoot;
     }
 
     /** Return the whatToShow value */
@@ -327,8 +327,8 @@ public class TreeWalkerImpl implements TreeWalker {
      *  The current node is not consulted or set.
      */
     Node getNextSibling(Node node) {
-		return getNextSibling(node, fRoot);
-	}
+  return getNextSibling(node, fRoot);
+ }
 
     /** Internal function.
      *  Return the nextSibling Node, from the input node
@@ -382,13 +382,13 @@ public class TreeWalkerImpl implements TreeWalker {
      *  The current node is not consulted or set.
      */
     Node getPreviousSibling(Node node) {
-		return getPreviousSibling(node, fRoot);
-	}
+  return getPreviousSibling(node, fRoot);
+ }
 
     /** Internal function.
      *  Return the previousSibling Node, from the input node
      *  after applying filter, whatToshow.
-	 *  NEVER TRAVERSES ABOVE THE SPECIFIED ROOT NODE. 
+  *  NEVER TRAVERSES ABOVE THE SPECIFIED ROOT NODE. 
      *  The current node is not consulted or set.
      */
     Node getPreviousSibling(Node node, Node root) {

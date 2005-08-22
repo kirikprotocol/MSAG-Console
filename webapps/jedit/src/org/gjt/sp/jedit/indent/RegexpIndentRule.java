@@ -29,69 +29,69 @@ import org.gjt.sp.jedit.Buffer;
 
 public class RegexpIndentRule implements IndentRule
 {
-	//{{{ RegexpIndentRule constructor
-	/**
-	 * @param collapse If true, then if the next indent rule is
-	 * an opening bracket, this rule will not increase indent.
-	 */
-	public RegexpIndentRule(String regexp, IndentAction prevPrev,
-		IndentAction prev, IndentAction thisLine, boolean collapse)
-		throws REException
-	{
-		this.prevPrevAction = prevPrev;
-		this.prevAction = prev;
-		this.thisAction = thisLine;
-		this.regexp = new RE(regexp,RE.REG_ICASE,
-			RESearchMatcher.RE_SYNTAX_JEDIT);
-		this.collapse = collapse;
-	} //}}}
+ //{{{ RegexpIndentRule constructor
+ /**
+  * @param collapse If true, then if the next indent rule is
+  * an opening bracket, this rule will not increase indent.
+  */
+ public RegexpIndentRule(String regexp, IndentAction prevPrev,
+  IndentAction prev, IndentAction thisLine, boolean collapse)
+  throws REException
+ {
+  this.prevPrevAction = prevPrev;
+  this.prevAction = prev;
+  this.thisAction = thisLine;
+  this.regexp = new RE(regexp,RE.REG_ICASE,
+   RESearchMatcher.RE_SYNTAX_JEDIT);
+  this.collapse = collapse;
+ } //}}}
 
-	//{{{ apply() method
-	public void apply(Buffer buffer, int thisLineIndex,
-		int prevLineIndex, int prevPrevLineIndex,
-		List indentActions)
-	{
-		boolean match = false;
-		
-		if(thisAction != null
-			&& isMatch(buffer.getLineText(thisLineIndex)))
-		{
-			indentActions.add(thisAction);
-			match = true;
-		}
-		if(prevAction != null
-			&& prevLineIndex != -1
-			&& isMatch(buffer.getLineText(prevLineIndex)))
-		{
-			indentActions.add(prevAction);
-			match = true;
-		}
-		if(prevPrevAction != null
-			&& prevPrevLineIndex != -1
-			&& isMatch(buffer.getLineText(prevPrevLineIndex)))
-		{
-			indentActions.add(prevPrevAction);
-			match = true;
-		}
-		
-		if(match && collapse)
-			indentActions.add(new IndentAction.Collapse());
+ //{{{ apply() method
+ public void apply(Buffer buffer, int thisLineIndex,
+  int prevLineIndex, int prevPrevLineIndex,
+  List indentActions)
+ {
+  boolean match = false;
+  
+  if(thisAction != null
+   && isMatch(buffer.getLineText(thisLineIndex)))
+  {
+   indentActions.add(thisAction);
+   match = true;
+  }
+  if(prevAction != null
+   && prevLineIndex != -1
+   && isMatch(buffer.getLineText(prevLineIndex)))
+  {
+   indentActions.add(prevAction);
+   match = true;
+  }
+  if(prevPrevAction != null
+   && prevPrevLineIndex != -1
+   && isMatch(buffer.getLineText(prevPrevLineIndex)))
+  {
+   indentActions.add(prevPrevAction);
+   match = true;
+  }
+  
+  if(match && collapse)
+   indentActions.add(new IndentAction.Collapse());
 
-	} //}}}
+ } //}}}
 
-	//{{{ isMatch() method
-	public boolean isMatch(String line)
-	{
-		return regexp.isMatch(line);
-	} //}}}
+ //{{{ isMatch() method
+ public boolean isMatch(String line)
+ {
+  return regexp.isMatch(line);
+ } //}}}
 
-	//{{{ toString() method
-	public String toString()
-	{
-		return getClass().getName() + "[" + regexp + "]";
-	} //}}}
+ //{{{ toString() method
+ public String toString()
+ {
+  return getClass().getName() + "[" + regexp + "]";
+ } //}}}
 
-	private IndentAction prevPrevAction, prevAction, thisAction;
-	private RE regexp;
-	private boolean collapse;
+ private IndentAction prevPrevAction, prevAction, thisAction;
+ private RE regexp;
+ private boolean collapse;
 }

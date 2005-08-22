@@ -27,44 +27,44 @@ import java.util.*;
 
 class PropertyManager
 {
-	//{{{ getProperties() method
-	Properties getProperties()
-	{
-		Properties total = new Properties();
-		total.putAll(system);
-		Iterator iter = plugins.iterator();
-		while(iter.hasNext())
-			total.putAll((Properties)iter.next());
-		total.putAll(site);
-		total.putAll(user);
-		return total;
-	} //}}}
+ //{{{ getProperties() method
+ Properties getProperties()
+ {
+  Properties total = new Properties();
+  total.putAll(system);
+  Iterator iter = plugins.iterator();
+  while(iter.hasNext())
+   total.putAll((Properties)iter.next());
+  total.putAll(site);
+  total.putAll(user);
+  return total;
+ } //}}}
 
-	//{{{ loadSystemProps() method
-	void loadSystemProps(InputStream in)
-		throws IOException
-	{
-		loadProps(system,in);
-	} //}}}
+ //{{{ loadSystemProps() method
+ void loadSystemProps(InputStream in)
+  throws IOException
+ {
+  loadProps(system,in);
+ } //}}}
 
-	//{{{ loadSiteProps() method
-	void loadSiteProps(InputStream in)
-		throws IOException
-	{
-		loadProps(site,in);
-	} //}}}
+ //{{{ loadSiteProps() method
+ void loadSiteProps(InputStream in)
+  throws IOException
+ {
+  loadProps(site,in);
+ } //}}}
   //{{{ loadSitePropsA() method
   void loadSitePropsA(LinkedList list)
   {
     loadPropsA(site,list);
   } //}}}
 
-	//{{{ loadUserProps() method
-	void loadUserProps(InputStream in)
-		throws IOException
-	{
-		loadProps(user,in);
-	} //}}}
+ //{{{ loadUserProps() method
+ void loadUserProps(InputStream in)
+  throws IOException
+ {
+  loadProps(user,in);
+ } //}}}
 
   //{{{ loadUserPropsA() method
   void loadUserPropsA(LinkedList list)
@@ -73,140 +73,140 @@ class PropertyManager
   } //}}}
 
   //{{{ saveUserProps() method
-	void saveUserProps(OutputStream out)
-		throws IOException
-	{
-		user.store(out,"jEdit properties");
-		out.close();
-	} //}}}
+ void saveUserProps(OutputStream out)
+  throws IOException
+ {
+  user.store(out,"jEdit properties");
+  out.close();
+ } //}}}
 
-	//{{{ loadPluginProps() method
-	Properties loadPluginProps(InputStream in)
-		throws IOException
-	{
-		Properties plugin = new Properties();
-		loadProps(plugin,in);
-		plugins.add(plugin);
-		return plugin;
-	} //}}}
+ //{{{ loadPluginProps() method
+ Properties loadPluginProps(InputStream in)
+  throws IOException
+ {
+  Properties plugin = new Properties();
+  loadProps(plugin,in);
+  plugins.add(plugin);
+  return plugin;
+ } //}}}
 
-	//{{{ addPluginProps() method
-	void addPluginProps(Properties props)
-	{
-		plugins.add(props);
-	} //}}}
+ //{{{ addPluginProps() method
+ void addPluginProps(Properties props)
+ {
+  plugins.add(props);
+ } //}}}
 
-	//{{{ removePluginProps() method
-	void removePluginProps(Properties props)
-	{
-		plugins.remove(props);
-	} //}}}
+ //{{{ removePluginProps() method
+ void removePluginProps(Properties props)
+ {
+  plugins.remove(props);
+ } //}}}
 
-	//{{{ getProperty() method
-	String getProperty(String name)
-	{
-		String value = user.getProperty(name);
-		if(value != null)
-			return value;
-		else
-			return getDefaultProperty(name);
-	} //}}}
+ //{{{ getProperty() method
+ String getProperty(String name)
+ {
+  String value = user.getProperty(name);
+  if(value != null)
+   return value;
+  else
+   return getDefaultProperty(name);
+ } //}}}
 
-	//{{{ setProperty() method
-	void setProperty(String name, String value)
-	{
-		String prop = getDefaultProperty(name);
+ //{{{ setProperty() method
+ void setProperty(String name, String value)
+ {
+  String prop = getDefaultProperty(name);
 
-		/* if value is null:
-		 * - if default is null, unset user prop
-		 * - else set user prop to ""
-		 * else
-		 * - if default equals value, ignore
-		 * - if default doesn't equal value, set user
-		 */
-		if(value == null)
-		{
-			if(prop == null || prop.length() == 0)
-				user.remove(name);
-			else
-				user.put(name,"");
-		}
-		else
-		{
-			if(value.equals(prop))
-				user.remove(name);
-			else
-				user.put(name,value);
-		}
-	} //}}}
+  /* if value is null:
+   * - if default is null, unset user prop
+   * - else set user prop to ""
+   * else
+   * - if default equals value, ignore
+   * - if default doesn't equal value, set user
+   */
+  if(value == null)
+  {
+   if(prop == null || prop.length() == 0)
+    user.remove(name);
+   else
+    user.put(name,"");
+  }
+  else
+  {
+   if(value.equals(prop))
+    user.remove(name);
+   else
+    user.put(name,value);
+  }
+ } //}}}
 
-	//{{{ setTemporaryProperty() method
-	public void setTemporaryProperty(String name, String value)
-	{
-		user.remove(name);
-		system.put(name,value);
-	} //}}}
+ //{{{ setTemporaryProperty() method
+ public void setTemporaryProperty(String name, String value)
+ {
+  user.remove(name);
+  system.put(name,value);
+ } //}}}
 
-	//{{{ unsetProperty() method
-	void unsetProperty(String name)
-	{
-		if(getDefaultProperty(name) != null)
-			user.put(name,"");
-		else
-			user.remove(name);
-	} //}}}
+ //{{{ unsetProperty() method
+ void unsetProperty(String name)
+ {
+  if(getDefaultProperty(name) != null)
+   user.put(name,"");
+  else
+   user.remove(name);
+ } //}}}
 
-	//{{{ resetProperty() method
-	public void resetProperty(String name)
-	{
-		user.remove(name);
-	} //}}}
+ //{{{ resetProperty() method
+ public void resetProperty(String name)
+ {
+  user.remove(name);
+ } //}}}
 
-	//{{{ Private members
-	private Properties system = new Properties();
-	private List plugins = new LinkedList();
-	private Properties site = new Properties();
-	private Properties user = new Properties();
+ //{{{ Private members
+ private Properties system = new Properties();
+ private List plugins = new LinkedList();
+ private Properties site = new Properties();
+ private Properties user = new Properties();
 
-	//{{{ getDefaultProperty() method
-	private String getDefaultProperty(String name)
-	{
-		String value = site.getProperty(name);
-		if(value != null)
-			return value;
+ //{{{ getDefaultProperty() method
+ private String getDefaultProperty(String name)
+ {
+  String value = site.getProperty(name);
+  if(value != null)
+   return value;
 
-		Iterator iter = plugins.iterator();
-		while(iter.hasNext())
-		{
-			value = ((Properties)iter.next()).getProperty(name);
-			if(value != null)
-				return value;
-		}
+  Iterator iter = plugins.iterator();
+  while(iter.hasNext())
+  {
+   value = ((Properties)iter.next()).getProperty(name);
+   if(value != null)
+    return value;
+  }
 
-		return system.getProperty(name);
-	} //}}}
+  return system.getProperty(name);
+ } //}}}
 
-	//{{{ loadProps() method
-	private void loadProps(Properties into, InputStream in)
-		throws IOException
-	{
-		try
-		{
-			into.load(in);
-		}
-		finally
-		{
-			in.close();
-		}
-	} //}}}
+ //{{{ loadProps() method
+ private void loadProps(Properties into, InputStream in)
+  throws IOException
+ {
+  try
+  {
+   into.load(in);
+  }
+  finally
+  {
+   in.close();
+  }
+ } //}}}
 
-  	//{{{ loadProps() method
-	private void loadPropsA(Properties into, LinkedList list)
+   //{{{ loadProps() method
+ private void loadPropsA(Properties into, LinkedList list)
 
-	{
-			load(into,list);
+ {
+   load(into,list);
 
-	} //}}}
+ } //}}}
      /*
      * Returns true if the given line is a line that must
      * be appended to the next line
@@ -231,7 +231,7 @@ class PropertyManager
   public synchronized void load(Properties into ,LinkedList list) {
 
       int i=0;
-	while (true) {
+ while (true) {
             // Get next line
            if (i>list.size()-1) return;
             String line = (String) list.get(i); i=i+1;
@@ -305,7 +305,7 @@ class PropertyManager
                     into.setProperty(key, value);
                 }
             }
-	}
+ }
     }
   /*
    * Converts encoded &#92;uxxxx to unicode chars

@@ -58,311 +58,311 @@ import org.gjt.sp.util.Log;
  */
 public class EditServer extends Thread
 {
-	//{{{ EditServer constructor
-	EditServer(String portFile)
-	{
-		super("jEdit server daemon [" + portFile + "]");
-		setDaemon(true);
-		this.portFile = portFile;
+ //{{{ EditServer constructor
+ EditServer(String portFile)
+ {
+  super("jEdit server daemon [" + portFile + "]");
+  setDaemon(true);
+  this.portFile = portFile;
 
-		try
-		{
-			// On Unix, set permissions of port file to rw-------,
-			// so that on broken Unices which give everyone read
-			// access to user home dirs, people can't see your
-			// port file (and hence send arbitriary BeanShell code
-			// your way. Nasty.)
-			if(OperatingSystem.isUnix())
-			{
-				new File(portFile).createNewFile();
-				FileVFS.setPermissions(portFile,0600);
-			}
+  try
+  {
+   // On Unix, set permissions of port file to rw-------,
+   // so that on broken Unices which give everyone read
+   // access to user home dirs, people can't see your
+   // port file (and hence send arbitriary BeanShell code
+   // your way. Nasty.)
+   if(OperatingSystem.isUnix())
+   {
+    new File(portFile).createNewFile();
+    FileVFS.setPermissions(portFile,0600);
+   }
 
-			// Bind to any port on localhost; accept 2 simultaneous
-			// connection attempts before rejecting connections
-			socket = new ServerSocket(0, 2,
-				InetAddress.getByName("127.0.0.1"));
-			authKey = Math.abs(new Random().nextInt());
-			int port = socket.getLocalPort();
+   // Bind to any port on localhost; accept 2 simultaneous
+   // connection attempts before rejecting connections
+   socket = new ServerSocket(0, 2,
+    InetAddress.getByName("127.0.0.1"));
+   authKey = Math.abs(new Random().nextInt());
+   int port = socket.getLocalPort();
 
-			FileWriter out = new FileWriter(portFile);
+   FileWriter out = new FileWriter(portFile);
 
-			try
-			{
-				out.write("b\n");
-				out.write(String.valueOf(port));
-				out.write("\n");
-				out.write(String.valueOf(authKey));
-				out.write("\n");
-			}
-			finally
-			{
-				out.close();
-			}
+   try
+   {
+    out.write("b\n");
+    out.write(String.valueOf(port));
+    out.write("\n");
+    out.write(String.valueOf(authKey));
+    out.write("\n");
+   }
+   finally
+   {
+    out.close();
+   }
 
-			ok = true;
+   ok = true;
 
-			Log.log(Log.DEBUG,this,"jEdit server started on port "
-				+ socket.getLocalPort());
-			Log.log(Log.DEBUG,this,"Authorization key is "
-				+ authKey);
-		}
-		catch(IOException io)
-		{
-			/* on some Windows versions, connections to localhost
-			 * fail if the network is not running. To avoid
-			 * confusing newbies with weird error messages, log
-			 * errors that occur while starting the server
-			 * as NOTICE, not ERROR */
-			Log.log(Log.NOTICE,this,io);
-		}
-	} //}}}
+   Log.log(Log.DEBUG,this,"jEdit server started on port "
+    + socket.getLocalPort());
+   Log.log(Log.DEBUG,this,"Authorization key is "
+    + authKey);
+  }
+  catch(IOException io)
+  {
+   /* on some Windows versions, connections to localhost
+    * fail if the network is not running. To avoid
+    * confusing newbies with weird error messages, log
+    * errors that occur while starting the server
+    * as NOTICE, not ERROR */
+   Log.log(Log.NOTICE,this,io);
+  }
+ } //}}}
 
-	//{{{ run() method
-	public void run()
-	{
-		for(;;)
-		{
-			if(abort)
-				return;
+ //{{{ run() method
+ public void run()
+ {
+  for(;;)
+  {
+   if(abort)
+    return;
 
-			Socket client = null;
-			try
-			{
-				client = socket.accept();
+   Socket client = null;
+   try
+   {
+    client = socket.accept();
 
-				// Stop script kiddies from opening the edit
-				// server port and just leaving it open, as a
-				// DoS
-				client.setSoTimeout(1000);
+    // Stop script kiddies from opening the edit
+    // server port and just leaving it open, as a
+    // DoS
+    client.setSoTimeout(1000);
 
-				Log.log(Log.MESSAGE,this,client + ": connected");
+    Log.log(Log.MESSAGE,this,client + ": connected");
 
-				DataInputStream in = new DataInputStream(
-					client.getInputStream());
+    DataInputStream in = new DataInputStream(
+     client.getInputStream());
 
-				if(!handleClient(client,in))
-					abort = true;
-			}
-			catch(Exception e)
-			{
-				if(!abort)
-					Log.log(Log.ERROR,this,e);
-				abort = true;
-			}
-			finally
-			{
-				/* if(client != null)
-				{
-					try
-					{
-						client.close();
-					}
-					catch(Exception e)
-					{
-						Log.log(Log.ERROR,this,e);
-					}
+    if(!handleClient(client,in))
+     abort = true;
+   }
+   catch(Exception e)
+   {
+    if(!abort)
+     Log.log(Log.ERROR,this,e);
+    abort = true;
+   }
+   finally
+   {
+    /* if(client != null)
+    {
+     try
+     {
+      client.close();
+     }
+     catch(Exception e)
+     {
+      Log.log(Log.ERROR,this,e);
+     }
 
-					client = null;
-				} */
-			}
-		}
-	} //}}}
+     client = null;
+    } */
+   }
+  }
+ } //}}}
 
-	//{{{ handleClient() method
-	/**
-	 * @param restore Ignored unless no views are open
-	 * @param parent The client's parent directory
-	 * @param args A list of files. Null entries are ignored, for convinience
-	 * @since jEdit 3.2pre7
-	 */
-	public static void handleClient(boolean restore, String parent,
-		String[] args)
-	{
-		handleClient(restore,false,false,parent,args);
-	} //}}}
+ //{{{ handleClient() method
+ /**
+  * @param restore Ignored unless no views are open
+  * @param parent The client's parent directory
+  * @param args A list of files. Null entries are ignored, for convinience
+  * @since jEdit 3.2pre7
+  */
+ public static void handleClient(boolean restore, String parent,
+  String[] args)
+ {
+  handleClient(restore,false,false,parent,args);
+ } //}}}
 
-	//{{{ handleClient() method
-	/**
-	 * @param restore Ignored unless no views are open
-	 * @param newView Open a new view?
-	 * @param newPlainView Open a new plain view?
-	 * @param parent The client's parent directory
-	 * @param args A list of files. Null entries are ignored, for convinience
-	 * @since jEdit 4.2pre1
-	 */
-	public static Buffer handleClient(boolean restore,
-		boolean newView, boolean newPlainView, String parent,
-		String[] args)
-	{
-		// we have to deal with a huge range of possible border cases here.
-		if(jEdit.getFirstView() == null)
-		{
-			// coming out of background mode.
-			// no views open.
-			// no buffers open if args empty.
+ //{{{ handleClient() method
+ /**
+  * @param restore Ignored unless no views are open
+  * @param newView Open a new view?
+  * @param newPlainView Open a new plain view?
+  * @param parent The client's parent directory
+  * @param args A list of files. Null entries are ignored, for convinience
+  * @since jEdit 4.2pre1
+  */
+ public static Buffer handleClient(boolean restore,
+  boolean newView, boolean newPlainView, String parent,
+  String[] args)
+ {
+  // we have to deal with a huge range of possible border cases here.
+  if(jEdit.getFirstView() == null)
+  {
+   // coming out of background mode.
+   // no views open.
+   // no buffers open if args empty.
 
-			Buffer buffer = jEdit.openFiles(null,parent,args);
+   Buffer buffer = jEdit.openFiles(null,parent,args);
 
-			if(jEdit.getBufferCount() == 0)
-				jEdit.newFile(null);
+   if(jEdit.getBufferCount() == 0)
+    jEdit.newFile(null);
 
-			boolean restoreFiles = restore
-				&& jEdit.getBooleanProperty("restore")
-				&& (buffer == null
-				|| jEdit.getBooleanProperty("restore.cli"));
+   boolean restoreFiles = restore
+    && jEdit.getBooleanProperty("restore")
+    && (buffer == null
+    || jEdit.getBooleanProperty("restore.cli"));
 
-			View view = PerspectiveManager.loadPerspective(
-				restoreFiles);
+   View view = PerspectiveManager.loadPerspective(
+    restoreFiles);
 
-			if(view == null)
-			{
-				if(buffer == null)
-					buffer = jEdit.getFirstBuffer();
-				view = jEdit.newView(null,buffer);
-			}
-			else if(buffer != null)
-				view.setBuffer(buffer);
+   if(view == null)
+   {
+    if(buffer == null)
+     buffer = jEdit.getFirstBuffer();
+    view = jEdit.newView(null,buffer);
+   }
+   else if(buffer != null)
+    view.setBuffer(buffer);
 
-			return buffer;
-		}
-		else if(newPlainView)
-		{
-			// no background mode, and opening a new view
-			Buffer buffer = jEdit.openFiles(null,parent,args);
-			if(buffer == null)
-				buffer = jEdit.getFirstBuffer();
-			jEdit.newView(null,buffer,true);
-			return buffer;
-		}
-		else if(newView)
-		{
-			// no background mode, and opening a new view
-			Buffer buffer = jEdit.openFiles(null,parent,args);
-			if(buffer == null)
-				buffer = jEdit.getFirstBuffer();
-			jEdit.newView(jEdit.getActiveView(),buffer,false);
-			return buffer;
-		}
-		else
-		{
-			// no background mode, and reusing existing view
-			View view = jEdit.getActiveView();
+   return buffer;
+  }
+  else if(newPlainView)
+  {
+   // no background mode, and opening a new view
+   Buffer buffer = jEdit.openFiles(null,parent,args);
+   if(buffer == null)
+    buffer = jEdit.getFirstBuffer();
+   jEdit.newView(null,buffer,true);
+   return buffer;
+  }
+  else if(newView)
+  {
+   // no background mode, and opening a new view
+   Buffer buffer = jEdit.openFiles(null,parent,args);
+   if(buffer == null)
+    buffer = jEdit.getFirstBuffer();
+   jEdit.newView(jEdit.getActiveView(),buffer,false);
+   return buffer;
+  }
+  else
+  {
+   // no background mode, and reusing existing view
+   View view = jEdit.getActiveView();
 
-			Buffer buffer = jEdit.openFiles(view,parent,args);
+   Buffer buffer = jEdit.openFiles(view,parent,args);
 
-			// Hack done to fix bringing the window to the front.
-			// At least on windows, Frame.toFront() doesn't cut it.
-			// Remove the isWindows check if it's broken under other
-			// OSes too.
-			if (jEdit.getBooleanProperty("server.brokenToFront"))
-				view.setState(java.awt.Frame.ICONIFIED);
+   // Hack done to fix bringing the window to the front.
+   // At least on windows, Frame.toFront() doesn't cut it.
+   // Remove the isWindows check if it's broken under other
+   // OSes too.
+   if (jEdit.getBooleanProperty("server.brokenToFront"))
+    view.setState(java.awt.Frame.ICONIFIED);
 
-			// un-iconify using JDK 1.3 API
-			view.setState(java.awt.Frame.NORMAL);
-			view.requestFocus();
-			view.toFront();
+   // un-iconify using JDK 1.3 API
+   view.setState(java.awt.Frame.NORMAL);
+   view.requestFocus();
+   view.toFront();
 
-			return buffer;
-		}
-	} //}}}
+   return buffer;
+  }
+ } //}}}
 
-	//{{{ isOK() method
-	boolean isOK()
-	{
-		return ok;
-	} //}}}
+ //{{{ isOK() method
+ boolean isOK()
+ {
+  return ok;
+ } //}}}
 
-	//{{{ getPort method
-	public int getPort()
-	{
-		return socket.getLocalPort();
-	} //}}}
+ //{{{ getPort method
+ public int getPort()
+ {
+  return socket.getLocalPort();
+ } //}}}
 
-	//{{{ stopServer() method
-	void stopServer()
-	{
-		abort = true;
-		try
-		{
-			socket.close();
-		}
-		catch(IOException io)
-		{
-		}
+ //{{{ stopServer() method
+ void stopServer()
+ {
+  abort = true;
+  try
+  {
+   socket.close();
+  }
+  catch(IOException io)
+  {
+  }
 
-		new File(portFile).delete();
-	} //}}}
+  new File(portFile).delete();
+ } //}}}
 
-	//{{{ Private members
+ //{{{ Private members
 
-	//{{{ Instance variables
-	private String portFile;
-	private ServerSocket socket;
-	private int authKey;
-	private boolean ok;
-	private boolean abort;
-	//}}}
+ //{{{ Instance variables
+ private String portFile;
+ private ServerSocket socket;
+ private int authKey;
+ private boolean ok;
+ private boolean abort;
+ //}}}
 
-	//{{{ handleClient() method
-	private boolean handleClient(final Socket client, DataInputStream in)
-		throws Exception
-	{
-		int key = in.readInt();
-		if(key != authKey)
-		{
-			Log.log(Log.ERROR,this,client + ": wrong"
-				+ " authorization key (got " + key
-				+ ", expected " + authKey + ")");
-			in.close();
-			client.close();
+ //{{{ handleClient() method
+ private boolean handleClient(final Socket client, DataInputStream in)
+  throws Exception
+ {
+  int key = in.readInt();
+  if(key != authKey)
+  {
+   Log.log(Log.ERROR,this,client + ": wrong"
+    + " authorization key (got " + key
+    + ", expected " + authKey + ")");
+   in.close();
+   client.close();
 
-			return false;
-		}
-		else
-		{
-			// Reset the timeout
-			client.setSoTimeout(0);
+   return false;
+  }
+  else
+  {
+   // Reset the timeout
+   client.setSoTimeout(0);
 
-			Log.log(Log.DEBUG,this,client + ": authenticated"
-				+ " successfully");
+   Log.log(Log.DEBUG,this,client + ": authenticated"
+    + " successfully");
 
-			final String script = in.readUTF();
-			Log.log(Log.DEBUG,this,script);
+   final String script = in.readUTF();
+   Log.log(Log.DEBUG,this,script);
 
-			SwingUtilities.invokeLater(new Runnable()
-			{
-				public void run()
-				{
-					try
-					{
-						NameSpace ns = new NameSpace(
-							BeanShell.getNameSpace(),
-							"EditServer namespace");
-						ns.setVariable("socket",client);
-						BeanShell.eval(null,ns,script);
-					}
-					catch(bsh.UtilEvalError e)
-					{
-						Log.log(Log.ERROR,this,e);
-					}
-					finally
-					{
-						try
-						{
-							BeanShell.getNameSpace().setVariable("socket",null);
-						}
-						catch(bsh.UtilEvalError e)
-						{
-							Log.log(Log.ERROR,this,e);
-						}
-					}
-				}
-			});
+   SwingUtilities.invokeLater(new Runnable()
+   {
+    public void run()
+    {
+     try
+     {
+      NameSpace ns = new NameSpace(
+       BeanShell.getNameSpace(),
+       "EditServer namespace");
+      ns.setVariable("socket",client);
+      BeanShell.eval(null,ns,script);
+     }
+     catch(bsh.UtilEvalError e)
+     {
+      Log.log(Log.ERROR,this,e);
+     }
+     finally
+     {
+      try
+      {
+       BeanShell.getNameSpace().setVariable("socket",null);
+      }
+      catch(bsh.UtilEvalError e)
+      {
+       Log.log(Log.ERROR,this,e);
+      }
+     }
+    }
+   });
 
-			return true;
-		}
-	} //}}}
+   return true;
+  }
+ } //}}}
 
-	//}}}
+ //}}}
 }

@@ -33,58 +33,58 @@ import org.gjt.sp.jedit.Buffer;
  */
 public class IndentFoldHandler extends FoldHandler
 {
-	public IndentFoldHandler()
-	{
-		super("indent");
-	}
+ public IndentFoldHandler()
+ {
+  super("indent");
+ }
 
-	//{{{ getFoldLevel() method
-	/**
-	 * Returns the fold level of the specified line.
-	 * @param buffer The buffer in question
-	 * @param lineIndex The line index
-	 * @param seg A segment the fold handler can use to obtain any
-	 * text from the buffer, if necessary
-	 * @return The fold level of the specified line
-	 * @since jEdit 4.0pre1
-	 */
-	public int getFoldLevel(Buffer buffer, int lineIndex, Segment seg)
-	{
-		int tabSize = buffer.getTabSize();
+ //{{{ getFoldLevel() method
+ /**
+  * Returns the fold level of the specified line.
+  * @param buffer The buffer in question
+  * @param lineIndex The line index
+  * @param seg A segment the fold handler can use to obtain any
+  * text from the buffer, if necessary
+  * @return The fold level of the specified line
+  * @since jEdit 4.0pre1
+  */
+ public int getFoldLevel(Buffer buffer, int lineIndex, Segment seg)
+ {
+  int tabSize = buffer.getTabSize();
 
-		buffer.getLineText(lineIndex,seg);
+  buffer.getLineText(lineIndex,seg);
 
-		int offset = seg.offset;
-		int count = seg.count;
+  int offset = seg.offset;
+  int count = seg.count;
 
-		int whitespace = 0;
+  int whitespace = 0;
 
-		boolean seenNonWhiteSpace = false;
+  boolean seenNonWhiteSpace = false;
 
-loop:		for(int i = 0; i < count; i++)
-		{
-			switch(seg.array[offset + i])
-			{
-			case ' ':
-				whitespace++;
-				break;
-			case '\t':
-				whitespace += (tabSize - whitespace % tabSize);
-				break;
-			default:
-				seenNonWhiteSpace = true;
-				break loop;
-			}
-		}
+loop:  for(int i = 0; i < count; i++)
+  {
+   switch(seg.array[offset + i])
+   {
+   case ' ':
+    whitespace++;
+    break;
+   case '\t':
+    whitespace += (tabSize - whitespace % tabSize);
+    break;
+   default:
+    seenNonWhiteSpace = true;
+    break loop;
+   }
+  }
 
-		if(!seenNonWhiteSpace)
-		{
-			// empty line. inherit previous line's fold level
-			if(lineIndex != 0)
-				return buffer.getFoldLevel(lineIndex - 1);
-			else
-				return 0;
-		}
-			return whitespace;
-	} //}}}
+  if(!seenNonWhiteSpace)
+  {
+   // empty line. inherit previous line's fold level
+   if(lineIndex != 0)
+    return buffer.getFoldLevel(lineIndex - 1);
+   else
+    return 0;
+  }
+   return whitespace;
+ } //}}}
 }

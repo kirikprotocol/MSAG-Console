@@ -866,7 +866,7 @@ public class XMLDocumentScannerImpl
             fEntityManager.setEntityHandler(null);
             try {
                 boolean again;
-		        XMLResourceIdentifierImpl resourceIdentifier = new XMLResourceIdentifierImpl();
+          XMLResourceIdentifierImpl resourceIdentifier = new XMLResourceIdentifierImpl();
                 do {
                     again = false;
                     switch (fScannerState) {
@@ -905,7 +905,7 @@ public class XMLDocumentScannerImpl
                             break;
                         }
                         case SCANNER_STATE_DTD_EXTERNAL: {
-			                resourceIdentifier.setValues(fDoctypePublicId, fDoctypeSystemId, null, null);
+                   resourceIdentifier.setValues(fDoctypePublicId, fDoctypeSystemId, null, null);
                             XMLInputSource xmlInputSource =
                                 fEntityManager.resolveEntity(resourceIdentifier);
                             fDTDScanner.setInputSource(xmlInputSource);

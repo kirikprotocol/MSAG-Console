@@ -109,7 +109,7 @@ public class PluginJAR
   /**
    * Returns the full path name of this plugin's JAR file.
    */
-/*	public String getPath()
+/* public String getPath()
 {
 return path;
 } //}}}
@@ -133,7 +133,7 @@ return path;
    * jEdit 4.2 plugin API, no extra effort is required to take advantage
    * of the summary cache.
    */
-/*	public String getCachePath()
+/* public String getCachePath()
 {
 return cachePath;
 } //}}}
@@ -142,7 +142,7 @@ return cachePath;
   /**
    * Returns a file pointing to the plugin JAR.
    */
-/*	public File getFile()
+/* public File getFile()
 {
 return file;
 } //}}}
@@ -161,7 +161,7 @@ return file;
    * Returns the plugin's JAR file, opening it if necessary.
    * @since jEdit 4.2pre1
    */
-/*	public synchronized ZipFile getZipFile() throws IOException
+/* public synchronized ZipFile getZipFile() throws IOException
 {
 if(zipFile == null)
 {
@@ -658,8 +658,8 @@ return zipFile;
   //{{{ getPluginCache() method
   static PluginCacheEntry getPluginCache(PluginJAR plugin)
   {
-    //	String jarCachePath = plugin.getCachePath();
-    //		if(jarCachePath == null)
+    // String jarCachePath = plugin.getCachePath();
+    //  if(jarCachePath == null)
     return null;
     /*
     DataInputStream din = null;
@@ -705,13 +705,13 @@ return zipFile;
   //{{{ setPluginCache() method
   static void setPluginCache(PluginJAR plugin, PluginCacheEntry cache)
   {
-    //	String jarCachePath = plugin.getCachePath();
-    //	if(jarCachePath == null)
+    // String jarCachePath = plugin.getCachePath();
+    // if(jarCachePath == null)
     return;
 
-    //	Log.log(Log.DEBUG,PluginJAR.class,"Writing " + jarCachePath);
+    // Log.log(Log.DEBUG,PluginJAR.class,"Writing " + jarCachePath);
 
-/*		DataOutputStream dout = null;
+/*  DataOutputStream dout = null;
 try
 {
 dout = new DataOutputStream(
@@ -741,14 +741,14 @@ new File(jarCachePath).delete();
   //{{{ PluginJAR constructor
   PluginJAR(Class clas)
   {
-    //	this.path = file.getPath();
-/*		String jarCacheDir = jEdit.getJARCacheDirectory();
+    // this.path = file.getPath();
+/*  String jarCacheDir = jEdit.getJARCacheDirectory();
 if(jarCacheDir != null)
 {
 cachePath = MiscUtilities.constructPath(
 jarCacheDir,file.getName() + ".summary");
 }
-*/	//	this.file = file;
+*/ // this.file = file;
     this.clas=clas;
     classLoader = new JARClassLoader(this);
     actions = new ActionSet();
@@ -848,9 +848,9 @@ jarCacheDir,file.getName() + ".summary");
   //{{{ Private members
 
   //{{{ Instance variables
-//	private String path;
-//	private String cachePath;
-//	private File file;
+// private String path;
+// private String cachePath;
+// private File file;
   private Class clas;
 
   private JARClassLoader classLoader;
@@ -974,7 +974,7 @@ jarCacheDir,file.getName() + ".summary");
 
     LinkedList classes = new LinkedList();
 
-    //	ZipFile zipFile = getZipFile();
+    // ZipFile zipFile = getZipFile();
 
     List plugins = new LinkedList();
     PluginCacheEntry cache = new PluginCacheEntry();

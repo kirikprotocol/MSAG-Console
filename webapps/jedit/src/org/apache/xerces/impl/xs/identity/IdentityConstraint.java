@@ -251,12 +251,12 @@ public abstract class IdentityConstraint implements XSIDCDefinition {
         return null;
     }
     
-	/**
-	 * @see org.apache.xerces.impl.xs.psvi.XSObject#getNamespaceItem()
-	 */
-	public XSNamespaceItem getNamespaceItem() {
+ /**
+  * @see org.apache.xerces.impl.xs.psvi.XSObject#getNamespaceItem()
+  */
+ public XSNamespaceItem getNamespaceItem() {
         // REVISIT: implement
-		return null;
-	}
+  return null;
+ }
 
 } // class IdentityConstraint

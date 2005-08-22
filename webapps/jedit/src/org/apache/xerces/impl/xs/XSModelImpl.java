@@ -429,9 +429,9 @@ public class XSModelImpl implements XSModel {
     }
 
 
-	/**
-	 * @see org.apache.xerces.impl.xs.psvi.XSModel#getNotationDeclaration(String, String)
-	 */
+ /**
+  * @see org.apache.xerces.impl.xs.psvi.XSModel#getNotationDeclaration(String, String)
+  */
     public XSNotationDeclaration getNotationDeclaration(String name,
                                                  String namespace) {
         SchemaGrammar sg = (SchemaGrammar)fGrammarMap.get(null2EmptyString(namespace));

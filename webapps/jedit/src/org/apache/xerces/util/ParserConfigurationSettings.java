@@ -222,7 +222,7 @@ public class ParserConfigurationSettings
      * Returns the state of a feature.
      * 
      * @param featureId The feature identifier.
-		 * @return true if the feature is supported
+   * @return true if the feature is supported
      * 
      * @throws XMLConfigurationException Thrown for configuration error.
      *                                   In general, components should
@@ -247,7 +247,7 @@ public class ParserConfigurationSettings
      * Returns the value of a property.
      * 
      * @param propertyId The property identifier.
-		 * @return the value of the property
+   * @return the value of the property
      * 
      * @throws XMLConfigurationException Thrown for configuration error.
      *                                   In general, components should

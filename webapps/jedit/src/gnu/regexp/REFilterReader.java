@@ -79,7 +79,7 @@ public class REFilterReader extends FilterReader {
       bufpos = 1;
 
       if (buffer.length() > 0) {
-	  return buffer.charAt(0);
+   return buffer.charAt(0);
       }
     }
     char ch = stream.charAt(0);

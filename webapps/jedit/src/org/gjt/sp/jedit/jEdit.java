@@ -170,7 +170,7 @@ public class jEdit extends Applet
   public void main(String[] args)
   {
     //{{{ Check for Java 1.4 or later
-    /*	String javaVersion = System.getProperty("java.version");
+    /* String javaVersion = System.getProperty("java.version");
       if(javaVersion.compareTo("1.4") < 0)
       {
         System.err.println("You are running Java version "
@@ -193,7 +193,7 @@ public class jEdit extends Applet
     //{{{ Parse command line
     boolean endOpts = false;
     int level = Log.WARNING;
-    //	String portFile = null;
+    // String portFile = null;
     boolean restore = true;
     boolean newView = true;
     boolean newPlainView = false;
@@ -240,12 +240,12 @@ public class jEdit extends Applet
           settingsDirectory = null;
         else if (arg.startsWith("-settings="))
           settingsDirectory = arg.substring(10);
-        //	else if(arg.startsWith("-noserver"))
-        //		portFile = null;
-        //		else if(arg.equals("-server"))
-        //			portFile = "server";
-        //		else if(arg.startsWith("-server="))
-        //			portFile = arg.substring(8);
+        // else if(arg.startsWith("-noserver"))
+        //  portFile = null;
+        //  else if(arg.equals("-server"))
+        //   portFile = "server";
+        //  else if(arg.startsWith("-server="))
+        //   portFile = arg.substring(8);
         else if (arg.startsWith("-background"))
           background = true;
         else if (arg.startsWith("-nobackground"))
@@ -292,9 +292,9 @@ public class jEdit extends Applet
     if (settingsDirectory != null) {
       settingsDirectory = jEditHome + settingsDirectory;
 /*     settingsDirectory = MiscUtilities.constructPath(
-				System.getProperty("user.home"),
-				settingsDirectory);
-		*/	settingsDirectory = MiscUtilities.resolveSymlinks(settingsDirectory);
+    System.getProperty("user.home"),
+    settingsDirectory);
+  */ settingsDirectory = MiscUtilities.resolveSymlinks(settingsDirectory);
     }
 
     if (quit) {
@@ -305,8 +305,8 @@ public class jEdit extends Applet
 
     // don't show splash screen if there is a file named
     // 'nosplash' in the settings directory
-    //	if(!new File(settingsDirectory,"nosplash").exists())
-    //		GUIUtilities.showSplashScreen();
+    // if(!new File(settingsDirectory,"nosplash").exists())
+    //  GUIUtilities.showSplashScreen();
 
     //{{{ Initialize settings directory
     String username = getParameter("username");
@@ -330,20 +330,20 @@ public class jEdit extends Applet
     //}}}
 
     //{{{ Initialize server
-/*		if(portFile != null)
-		{
-			server = new EditServer(portFile);
-			if(!server.isOK())
-				server = null;
-		}
-		else
-		{
-	*/		if (background) {
-    background = false;
-    //	Log.log(Log.WARNING,jEdit.class,"You cannot specify both the"
-    //		+ " -background and -noserver switches");
+/*  if(portFile != null)
+  {
+   server = new EditServer(portFile);
+   if(!server.isOK())
+    server = null;
   }
-    //	} //}}}
+  else
+  {
+ */  if (background) {
+    background = false;
+    // Log.log(Log.WARNING,jEdit.class,"You cannot specify both the"
+    //  + " -background and -noserver switches");
+  }
+    // } //}}}
 
     //{{{ Do more stuff
     initPLAF();
@@ -384,7 +384,7 @@ public class jEdit extends Applet
     if (runStartupScripts && jEditHome != null) {
       String path = MiscUtilities.constructPath(jEditHome, "startup");
       System.out.println("jEdit line 531 path= " + path);
-      if (BoolGet(path, Exists))//	if(file.exists())
+      if (BoolGet(path, Exists))// if(file.exists())
         runStartupScripts(path);
     }
     if (runStartupScripts && settingsDirectory != null) {
@@ -790,7 +790,7 @@ public class jEdit extends Applet
     // Enable/Disable tooltips
     ToolTipManager.sharedInstance().setEnabled(jEdit.getBooleanProperty("showTooltips"));
 
-    //	initProxy();
+    // initProxy();
 
     // we do this here instead of adding buffers to the bus.
     Buffer buffer = buffersFirst;
@@ -816,36 +816,36 @@ public class jEdit extends Applet
    * by examining the user and system plugin directories.
    * @since jEdit 3.2pre1
    */
-/*	public static String[] getNotLoadedPluginJARs()
-	{
-		Vector returnValue = new Vector();
+/* public static String[] getNotLoadedPluginJARs()
+ {
+  Vector returnValue = new Vector();
 
-		if(jEditHome != null)
-		{
-			String systemPluginDir = MiscUtilities
-				.constructPath(jEditHome,"jars");
+  if(jEditHome != null)
+  {
+   String systemPluginDir = MiscUtilities
+    .constructPath(jEditHome,"jars");
 
-			String[] list = new File(systemPluginDir).list();
-			if(list != null)
-				getNotLoadedPluginJARs(returnValue,systemPluginDir,list);
-		}
+   String[] list = new File(systemPluginDir).list();
+   if(list != null)
+    getNotLoadedPluginJARs(returnValue,systemPluginDir,list);
+  }
 
-		if(settingsDirectory != null)
-		{
-			String userPluginDir = MiscUtilities
-				.constructPath(settingsDirectory,"jars");
-			String[] list = new File(userPluginDir).list();
-			if(list != null)
-			{
-				getNotLoadedPluginJARs(returnValue,
-					userPluginDir,list);
-			}
-		}
+  if(settingsDirectory != null)
+  {
+   String userPluginDir = MiscUtilities
+    .constructPath(settingsDirectory,"jars");
+   String[] list = new File(userPluginDir).list();
+   if(list != null)
+   {
+    getNotLoadedPluginJARs(returnValue,
+     userPluginDir,list);
+   }
+  }
 
-		String[] _returnValue = new String[returnValue.size()];
-		returnValue.copyInto(_returnValue);
-		return _returnValue;
-	} //}}}
+  String[] _returnValue = new String[returnValue.size()];
+  returnValue.copyInto(_returnValue);
+  return _returnValue;
+ } //}}}
   */
   //{{{ getPlugin() method
   /**
@@ -1017,7 +1017,7 @@ public class jEdit extends Applet
         continue;
       }
       System.out.println("addPluginJARsFromDirectory line 1028");
-      //	addPluginJAR(path);
+      // addPluginJAR(path);
     }
   } //}}}
 
@@ -2459,7 +2459,7 @@ public class jEdit extends Applet
   public static void addMode(Mode mode)
   {
     //Log.log(Log.DEBUG,jEdit.class,"Adding edit mode "
-    //	+ mode.getName());
+    // + mode.getName());
 
     modes.addElement(mode);
   } //}}}
@@ -2534,7 +2534,7 @@ public class jEdit extends Applet
         throw new FileNotFoundException(status);
       mode.setProperties(xmh.getModeProperties());
     } catch (Throwable e) {
-      //	Log.log(Log.ERROR, jEdit.class, e);
+      // Log.log(Log.ERROR, jEdit.class, e);
       e.printStackTrace();
       if (e instanceof XmlException) {
         XmlException xe = (XmlException) e;
@@ -2658,37 +2658,37 @@ public class jEdit extends Applet
   {
     System.out.println("Usage: jedit [<options>] [<files>]");
 
-    System.out.println("	<file> +marker:<marker>: Positions caret"
+    System.out.println(" <file> +marker:<marker>: Positions caret"
             + " at marker <marker>");
-    System.out.println("	<file> +line:<line>: Positions caret"
+    System.out.println(" <file> +line:<line>: Positions caret"
             + " at line number <line>");
-    System.out.println("	--: End of options");
-    System.out.println("	-background: Run in background mode");
-    System.out.println("	-nobackground: Disable background mode (default)");
-    System.out.println("	-gui: Only if running in background mode; open initial view (default)");
-    System.out.println("	-nogui: Only if running in background mode; don't open initial view");
-    System.out.println("	-log=<level>: Log messages with level equal to or higher than this to");
-    System.out.println("	 standard error. <level> must be between 1 and 9. Default is 7.");
-    System.out.println("	-newplainview: Client instance opens a new plain view");
-    System.out.println("	-newview: Client instance opens a new view (default)");
-    System.out.println("	-plugins: Load plugins (default)");
-    System.out.println("	-noplugins: Don't load any plugins");
-    System.out.println("	-restore: Restore previously open files (default)");
-    System.out.println("	-norestore: Don't restore previously open files");
-    System.out.println("	-reuseview: Client instance reuses existing view");
-    System.out.println("	-quit: Quit a running instance");
-    System.out.println("	-run=<script>: Run the specified BeanShell script");
-    System.out.println("	-server: Read/write server info from/to $HOME/.jedit/server (default)");
-    System.out.println("	-server=<name>: Read/write server info from/to $HOME/.jedit/<name>");
-    System.out.println("	-noserver: Don't start edit server");
-    System.out.println("	-settings=<path>: Load user-specific settings from <path>");
-    System.out.println("	-nosettings: Don't load user-specific settings");
-    System.out.println("	-startupscripts: Run startup scripts (default)");
-    System.out.println("	-nostartupscripts: Don't run startup scripts");
-    System.out.println("	-usage: Print this message and exit");
-    System.out.println("	-version: Print jEdit version and exit");
-    System.out.println("	-wait: Wait until the user closes the specified buffer in the server");
-    System.out.println("	 instance. Does nothing if passed to the initial jEdit instance.");
+    System.out.println(" --: End of options");
+    System.out.println(" -background: Run in background mode");
+    System.out.println(" -nobackground: Disable background mode (default)");
+    System.out.println(" -gui: Only if running in background mode; open initial view (default)");
+    System.out.println(" -nogui: Only if running in background mode; don't open initial view");
+    System.out.println(" -log=<level>: Log messages with level equal to or higher than this to");
+    System.out.println("  standard error. <level> must be between 1 and 9. Default is 7.");
+    System.out.println(" -newplainview: Client instance opens a new plain view");
+    System.out.println(" -newview: Client instance opens a new view (default)");
+    System.out.println(" -plugins: Load plugins (default)");
+    System.out.println(" -noplugins: Don't load any plugins");
+    System.out.println(" -restore: Restore previously open files (default)");
+    System.out.println(" -norestore: Don't restore previously open files");
+    System.out.println(" -reuseview: Client instance reuses existing view");
+    System.out.println(" -quit: Quit a running instance");
+    System.out.println(" -run=<script>: Run the specified BeanShell script");
+    System.out.println(" -server: Read/write server info from/to $HOME/.jedit/server (default)");
+    System.out.println(" -server=<name>: Read/write server info from/to $HOME/.jedit/<name>");
+    System.out.println(" -noserver: Don't start edit server");
+    System.out.println(" -settings=<path>: Load user-specific settings from <path>");
+    System.out.println(" -nosettings: Don't load user-specific settings");
+    System.out.println(" -startupscripts: Run startup scripts (default)");
+    System.out.println(" -nostartupscripts: Don't run startup scripts");
+    System.out.println(" -usage: Print this message and exit");
+    System.out.println(" -version: Print jEdit version and exit");
+    System.out.println(" -wait: Wait until the user closes the specified buffer in the server");
+    System.out.println("  instance. Does nothing if passed to the initial jEdit instance.");
     System.out.println();
     System.out.println("Report bugs to Slava Pestov <slava@jedit.org>.");
   } //}}}
@@ -2800,23 +2800,23 @@ public class jEdit extends Applet
     inputHandler = new DefaultInputHandler(null);
 
     // Add our protocols to java.net.URL's list
-/*		System.getProperties().put("java.protocol.handler.pkgs",
-			"org.gjt.sp.jedit.proto|" +
-			System.getProperty("java.protocol.handler.pkgs",""));
+/*  System.getProperties().put("java.protocol.handler.pkgs",
+   "org.gjt.sp.jedit.proto|" +
+   System.getProperty("java.protocol.handler.pkgs",""));
 
-		// Set the User-Agent string used by the java.net HTTP handler
-		String userAgent = "jEdit/" + getVersion()
-			+ " (Java " + System.getProperty("java.version")
-			+ ". " + System.getProperty("java.vendor")
-			+ "; " + System.getProperty("os.arch") + ")";
-		System.getProperties().put("http.agent",userAgent);
+  // Set the User-Agent string used by the java.net HTTP handler
+  String userAgent = "jEdit/" + getVersion()
+   + " (Java " + System.getProperty("java.version")
+   + ". " + System.getProperty("java.vendor")
+   + "; " + System.getProperty("os.arch") + ")";
+  System.getProperties().put("http.agent",userAgent);
   */
     /* Determine installation directory.
      * If the jedit.home property is set, use that.
      * Then, look for jedit.jar in the classpath.
      * If that fails, assume this is the web start version. */
-    //		jEditHome = System.getProperty("jedit.home");
-    /*	if(jEditHome == null)
+    //  jEditHome = System.getProperty("jedit.home");
+    /* if(jEditHome == null)
       {
         String classpath = System
           .getProperty("java.class.path");
@@ -2837,12 +2837,12 @@ public class jEdit extends Applet
         else
         {
           // check if web start
-      ////////		 if(jEdit.class.getResource("/modes/catalog") != null)
-  ////				{
-      /////			// modes bundled in; hence web start
-      /////			jEditHome = null;
-      ////		}
-      ////		else
+      ////////   if(jEdit.class.getResource("/modes/catalog") != null)
+  ////    {
+      /////   // modes bundled in; hence web start
+      /////   jEditHome = null;
+      ////  }
+      ////  else
           {
             // use user.dir as last resort
             jEditHome = System.getProperty("user.dir");
@@ -2858,17 +2858,17 @@ public class jEdit extends Applet
      System.out.println("jEdit  initMisc line 2867 jEditHome= "+jEditHome+" userfile= "+userfile);
     jEditHome = MiscUtilities.resolveSymlinks(jEditHome);
      System.out.println("jEdit  initMisc line 2869 jEditHome= "+jEditHome+" userfile= "+userfile);
-    //	Log.log(Log.MESSAGE,jEdit.class,"jEdit home directory is " + jEditHome);
+    // Log.log(Log.MESSAGE,jEdit.class,"jEdit home directory is " + jEditHome);
 
-/*		if(settingsDirectory != null)
-		{
-			jarCacheDirectory = MiscUtilities.constructPath(
-				settingsDirectory,"jars-cache");
-			new File(jarCacheDirectory).mkdirs();
-		}
+/*  if(settingsDirectory != null)
+  {
+   jarCacheDirectory = MiscUtilities.constructPath(
+    settingsDirectory,"jars-cache");
+   new File(jarCacheDirectory).mkdirs();
+  }
  */
     //if(jEditHome == null)
-    //	Log.log(Log.DEBUG,jEdit.class,"Web start mode");
+    // Log.log(Log.DEBUG,jEdit.class,"Web start mode");
 
     // Add an EditBus component that will reload edit modes and
     // macros if they are changed from within the editor
@@ -2876,7 +2876,7 @@ public class jEdit extends Applet
 
     // Perhaps if Xerces wasn't slightly brain-damaged, we would
     // not need this
-    /*	SwingUtilities.invokeLater(new Runnable()
+    /* SwingUtilities.invokeLater(new Runnable()
       {
         public void run()
         {
@@ -2979,13 +2979,13 @@ public class jEdit extends Applet
       addPluginJARPackages();
     }
 
-/*		if(settingsDirectory != null)
-		{
-			File jarsDirectory = new File(settingsDirectory,"jars");
-			if(!jarsDirectory.exists())
-				jarsDirectory.mkdir();
-			addPluginJARPackagesFromDirectory(jarsDirectory.getPath());
-		}
+/*  if(settingsDirectory != null)
+  {
+   File jarsDirectory = new File(settingsDirectory,"jars");
+   if(!jarsDirectory.exists())
+    jarsDirectory.mkdir();
+   addPluginJARPackagesFromDirectory(jarsDirectory.getPath());
+  }
   */
     PluginJAR[] jars = getPluginJARs();
     for (int i = 0; i < jars.length; i++) {
@@ -3053,7 +3053,7 @@ public class jEdit extends Applet
 
       systemProperties.put("swing.plaf.metal.controlFont", primaryFontString);
       systemProperties.put("swing.plaf.metal.menuFont", primaryFontString);
-      /*			System.getProperties().put(
+      /*   System.getProperties().put(
           "swing.plaf.metal.controlFont",
           primaryFontString);
         System.getProperties().put(
@@ -3069,13 +3069,13 @@ public class jEdit extends Applet
       systemProperties.put("swing.plaf.metal.systemFont", secondaryFontString);
       systemProperties.put("swing.plaf.metal.userFont", secondaryFontString);
 
-/*			System.getProperties().put(
-				"swing.plaf.metal.systemFont",
-				secondaryFontString);
-			System.getProperties().put(
-				"swing.plaf.metal.userFont",
-				secondaryFontString);
-	*/
+/*   System.getProperties().put(
+    "swing.plaf.metal.systemFont",
+    secondaryFontString);
+   System.getProperties().put(
+    "swing.plaf.metal.userFont",
+    secondaryFontString);
+ */
     }
 
     try {
@@ -3130,8 +3130,8 @@ public class jEdit extends Applet
     JFrame.setDefaultLookAndFeelDecorated(getBooleanProperty("decorate.frames"));
     JDialog.setDefaultLookAndFeelDecorated(getBooleanProperty("decorate.dialogs"));
 //below code access denided in applet
-    //	KeyboardFocusManager.setCurrentKeyboardFocusManager(
-    //		new MyFocusManager());
+    // KeyboardFocusManager.setCurrentKeyboardFocusManager(
+    //  new MyFocusManager());
   } //}}}
 
   protected static final int Delete = 1;
@@ -3461,7 +3461,7 @@ public class jEdit extends Applet
    */
   private static void runStartupScripts(String directoryName)
   {
-    if (!BoolGet(directoryName, IsDirectory)) //	if (!directory.isDirectory())
+    if (!BoolGet(directoryName, IsDirectory)) // if (!directory.isDirectory())
       return;
     File directory = new File(directoryName);
     File[] snippets = FilesGet(directoryName, ListFiles);//directory.listFiles();
@@ -3493,7 +3493,7 @@ public class jEdit extends Applet
   {
     boolean socksEnabled = jEdit.getBooleanProperty("socks.enabled");
     if (!socksEnabled) {
-      //	Log.log(Log.DEBUG,jEdit.class,"SOCKS proxy disabled");
+      // Log.log(Log.DEBUG,jEdit.class,"SOCKS proxy disabled");
       systemProperties.remove("socksProxyHost");
       systemProperties.remove("socksProxyPort");
 // System.getProperties().remove("socksProxyHost");
@@ -3504,8 +3504,8 @@ public class jEdit extends Applet
       if (socksHost != null) {
         systemProperties.put("socksProxyHost", socksHost);
 //  System.setProperty("socksProxyHost", socksHost);
-        //		Log.log(Log.DEBUG, jEdit.class,
-        //			"SOCKS proxy enabled: " + socksHost);
+        //  Log.log(Log.DEBUG, jEdit.class,
+        //   "SOCKS proxy enabled: " + socksHost);
       }
 
       String socksPort = jEdit.getProperty("firewall.socks.port");
@@ -3515,7 +3515,7 @@ public class jEdit extends Applet
 
     boolean httpEnabled = jEdit.getBooleanProperty("firewall.enabled");
     if (!httpEnabled) {
-      //	Log.log(Log.DEBUG, jEdit.class, "HTTP proxy disabled");
+      // Log.log(Log.DEBUG, jEdit.class, "HTTP proxy disabled");
       systemProperties.remove("proxySet");
       systemProperties.remove("proxyHost");
       systemProperties.remove("proxyPort");
@@ -3523,12 +3523,12 @@ public class jEdit extends Applet
       systemProperties.remove("http.proxyPort");
       systemProperties.remove("http.nonProxyHosts");
 /*  System.getProperties().remove("proxySet");
-			System.getProperties().remove("proxyHost");
-			System.getProperties().remove("proxyPort");
-			System.getProperties().remove("http.proxyHost");
-			System.getProperties().remove("http.proxyPort");
-			System.getProperties().remove("http.nonProxyHosts");
-		*/	Authenticator.setDefault(null);
+   System.getProperties().remove("proxyHost");
+   System.getProperties().remove("proxyPort");
+   System.getProperties().remove("http.proxyHost");
+   System.getProperties().remove("http.proxyPort");
+   System.getProperties().remove("http.nonProxyHosts");
+  */ Authenticator.setDefault(null);
     }
     else {
       // set proxy host
@@ -3537,16 +3537,16 @@ public class jEdit extends Applet
         return;
 
       systemProperties.put("http.proxyHost", host); //System.setProperty("http.proxyHost", host);
-      //	Log.log(Log.DEBUG, jEdit.class, "HTTP proxy enabled: " + host);
+      // Log.log(Log.DEBUG, jEdit.class, "HTTP proxy enabled: " + host);
       // set proxy port
       String port = jEdit.getProperty("firewall.port");
       if (port != null)
-        systemProperties.put("http.proxyPort", port);//	System.setProperty("http.proxyPort", port);
+        systemProperties.put("http.proxyPort", port);// System.setProperty("http.proxyPort", port);
 
       // set non proxy hosts list
       String nonProxyHosts = jEdit.getProperty("firewall.nonProxyHosts");
       if (nonProxyHosts != null)
-        systemProperties.put("http.nonProxyHosts", nonProxyHosts);//	System.setProperty("http.nonProxyHosts", nonProxyHosts);
+        systemProperties.put("http.nonProxyHosts", nonProxyHosts);// System.setProperty("http.nonProxyHosts", nonProxyHosts);
 
       // set proxy authentication
       String username = jEdit.getProperty("firewall.user");
@@ -3557,11 +3557,11 @@ public class jEdit extends Applet
         password = "";
 
       if (username == null || username.length() == 0) {
-        //	Log.log(Log.DEBUG, jEdit.class, "HTTP proxy without user");
+        // Log.log(Log.DEBUG, jEdit.class, "HTTP proxy without user");
         Authenticator.setDefault(new FirewallAuthenticator(null));
       }
       else {
-        //	Log.log(Log.DEBUG, jEdit.class, "HTTP proxy user: " + username);
+        // Log.log(Log.DEBUG, jEdit.class, "HTTP proxy user: " + username);
         PasswordAuthentication pw = new PasswordAuthentication(username, password.toCharArray());
         Authenticator.setDefault(new FirewallAuthenticator(pw));
       }
@@ -3667,34 +3667,34 @@ public class jEdit extends Applet
   } //}}}
 
   //{{{ getNotLoadedPluginJARs() method
-/*	private static void getNotLoadedPluginJARs(Vector returnValue,
-		String dir, String[] list)
-	{
-loop:		for(int i = 0; i < list.length; i++)
-		{
-			String name = list[i];
-			if(!name.toLowerCase().endsWith(".jar"))
-				continue loop;
+/* private static void getNotLoadedPluginJARs(Vector returnValue,
+  String dir, String[] list)
+ {
+loop:  for(int i = 0; i < list.length; i++)
+  {
+   String name = list[i];
+   if(!name.toLowerCase().endsWith(".jar"))
+    continue loop;
 
-			String path = MiscUtilities.constructPath(dir,name);
+   String path = MiscUtilities.constructPath(dir,name);
 
-			for(int j = 0; j < jars.size(); j++)
-			{
-				PluginJAR jar = (PluginJAR)
-					jars.elementAt(j);
-				String jarPath = jar.getPath();
-				String jarName = MiscUtilities.getFileName(jarPath);
+   for(int j = 0; j < jars.size(); j++)
+   {
+    PluginJAR jar = (PluginJAR)
+     jars.elementAt(j);
+    String jarPath = jar.getPath();
+    String jarName = MiscUtilities.getFileName(jarPath);
 
-				if(path.equals(jarPath))
-					continue loop;
-				else if(!new File(jarPath).exists()
-					&& name.equals(jarName))
-					continue loop;
-			}
+    if(path.equals(jarPath))
+     continue loop;
+    else if(!new File(jarPath).exists()
+     && name.equals(jarName))
+     continue loop;
+   }
 
-			returnValue.addElement(path);
-		}
-	} //}}}
+   returnValue.addElement(path);
+  }
+ } //}}}
   */
   //{{{ gotoMarker() method
   private static void gotoMarker(final View view, final Buffer buffer,

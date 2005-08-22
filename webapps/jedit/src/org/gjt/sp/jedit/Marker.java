@@ -40,80 +40,80 @@ import javax.swing.text.Position;
  */
 public class Marker
 {
-	//{{{ getShortcut() method
-	/**
-	 * Returns the marker's shortcut character.
-	 * @since jEdit 3.2pre1
-	 */
-	public char getShortcut()
-	{
-		return shortcut;
-	} //}}}
+ //{{{ getShortcut() method
+ /**
+  * Returns the marker's shortcut character.
+  * @since jEdit 3.2pre1
+  */
+ public char getShortcut()
+ {
+  return shortcut;
+ } //}}}
 
-	//{{{ getPosition() method
-	/**
-	 * Returns the position of this marker.
-	 * @since jEdit 3.2pre1
-	 */
-	public int getPosition()
-	{
-		return (position == null ? pos : position.getOffset());
-	} //}}}
+ //{{{ getPosition() method
+ /**
+  * Returns the position of this marker.
+  * @since jEdit 3.2pre1
+  */
+ public int getPosition()
+ {
+  return (position == null ? pos : position.getOffset());
+ } //}}}
 
-	//{{{ Package-private members
+ //{{{ Package-private members
 
-	//{{{ Marker constructor
-	Marker(Buffer buffer, char shortcut, int position)
-	{
-		this.buffer = buffer;
-		this.shortcut = shortcut;
-		this.pos = position;
-	} //}}}
+ //{{{ Marker constructor
+ Marker(Buffer buffer, char shortcut, int position)
+ {
+  this.buffer = buffer;
+  this.shortcut = shortcut;
+  this.pos = position;
+ } //}}}
 
-	//{{{ setShortcut() method
-	/**
-	 * Sets the marker's shortcut.
-	 * @param shortcut The new shortcut
-	 * @since jEdit 3.2pre1
-	 */
-	void setShortcut(char shortcut)
-	{
-		this.shortcut = shortcut;
-	} //}}}
+ //{{{ setShortcut() method
+ /**
+  * Sets the marker's shortcut.
+  * @param shortcut The new shortcut
+  * @since jEdit 3.2pre1
+  */
+ void setShortcut(char shortcut)
+ {
+  this.shortcut = shortcut;
+ } //}}}
 
-	//{{{ createPosition() method
-	void createPosition()
-	{
-		position = buffer.createPosition(pos);
-	} //}}}
+ //{{{ createPosition() method
+ void createPosition()
+ {
+  position = buffer.createPosition(pos);
+ } //}}}
 
-	//{{{ removePosition() method
-	void removePosition()
-	{
-		// forget the cached Position instance
-		if(position != null)
-		{
-			pos = position.getOffset();
-			position = null;
-		}
-	} //}}}
+ //{{{ removePosition() method
+ void removePosition()
+ {
+  // forget the cached Position instance
+  if(position != null)
+  {
+   pos = position.getOffset();
+   position = null;
+  }
+ } //}}}
 
-	//{{{ setPosition() method
-	/**
-	 * Sets the position of this marker.
-	 * @since jEdit 4.0pre5
-	 */
-	void setPosition(int pos)
-	{
-		this.pos = pos;
-	} //}}}
+ //{{{ setPosition() method
+ /**
+  * Sets the position of this marker.
+  * @since jEdit 4.0pre5
+  */
+ void setPosition(int pos)
+ {
+  this.pos = pos;
+ } //}}}
 
-	//}}}
+ //}}}
 
-	//{{{ Private members
-	private Buffer buffer;
-	private char shortcut;
-	private int pos;
-	private Position position;
-	//}}}
+ //{{{ Private members
+ private Buffer buffer;
+ private char shortcut;
+ private int pos;
+ private Position position;
+ //}}}
 }

@@ -32,157 +32,157 @@ import org.gjt.sp.jedit.*;
 
 public class EnhancedMenu extends JMenu implements MenuListener
 {
-	//{{{ EnhancedMenu constructor
-	public EnhancedMenu(String name)
-	{
-		this(name,jEdit.getProperty(name.concat(".label")),
-			jEdit.getActionContext());
-	} //}}}
+ //{{{ EnhancedMenu constructor
+ public EnhancedMenu(String name)
+ {
+  this(name,jEdit.getProperty(name.concat(".label")),
+   jEdit.getActionContext());
+ } //}}}
 
-	//{{{ EnhancedMenu constructor
-	public EnhancedMenu(String name, String label)
-	{
-		this(name,label,jEdit.getActionContext());
-	} //}}}
+ //{{{ EnhancedMenu constructor
+ public EnhancedMenu(String name, String label)
+ {
+  this(name,label,jEdit.getActionContext());
+ } //}}}
 
-	//{{{ EnhancedMenu constructor
-	public EnhancedMenu(String name, String label, ActionContext context)
-	{
-		this.context = context;
-		if(label == null)
-			label = name;
+ //{{{ EnhancedMenu constructor
+ public EnhancedMenu(String name, String label, ActionContext context)
+ {
+  this.context = context;
+  if(label == null)
+   label = name;
 
-		char mnemonic;
-		int index = label.indexOf('$');
-		if(index != -1 && label.length() - index > 1)
-		{
-			mnemonic = Character.toLowerCase(label.charAt(index + 1));
-			label = label.substring(0,index).concat(label.substring(++index));
-		}
-		else
-			mnemonic = '\0';
+  char mnemonic;
+  int index = label.indexOf('$');
+  if(index != -1 && label.length() - index > 1)
+  {
+   mnemonic = Character.toLowerCase(label.charAt(index + 1));
+   label = label.substring(0,index).concat(label.substring(++index));
+  }
+  else
+   mnemonic = '\0';
 
-		setText(label);
-		if(!OperatingSystem.isMacOS())
-			setMnemonic(mnemonic);
+  setText(label);
+  if(!OperatingSystem.isMacOS())
+   setMnemonic(mnemonic);
 
-		String menuItems = jEdit.getProperty(name);
-		if(menuItems != null)
-		{
-			StringTokenizer st = new StringTokenizer(menuItems);
-			while(st.hasMoreTokens())
-			{
-				String menuItemName = st.nextToken();
-				if(menuItemName.equals("-"))
-					addSeparator();
-				else
-					add(GUIUtilities.loadMenuItem(context,menuItemName,true));
-			}
-		}
+  String menuItems = jEdit.getProperty(name);
+  if(menuItems != null)
+  {
+   StringTokenizer st = new StringTokenizer(menuItems);
+   while(st.hasMoreTokens())
+   {
+    String menuItemName = st.nextToken();
+    if(menuItemName.equals("-"))
+     addSeparator();
+    else
+     add(GUIUtilities.loadMenuItem(context,menuItemName,true));
+   }
+  }
 
-		initialComponentCount = getMenuComponentCount();
+  initialComponentCount = getMenuComponentCount();
 
-		providerCode = jEdit.getProperty(name + ".code");
+  providerCode = jEdit.getProperty(name + ".code");
 
-		ebStub = new EditBusStub(name);
-		ebStub.menuOutOfDate = true;
+  ebStub = new EditBusStub(name);
+  ebStub.menuOutOfDate = true;
 
-		addMenuListener(this);
+  addMenuListener(this);
 
-		if(providerCode != null)
-			EditBus.addToBus(ebStub);
-	} //}}}
+  if(providerCode != null)
+   EditBus.addToBus(ebStub);
+ } //}}}
 
-	//{{{ menuSelected() method
-	public void menuSelected(MenuEvent evt)
-	{
-		init();
-	} //}}}
+ //{{{ menuSelected() method
+ public void menuSelected(MenuEvent evt)
+ {
+  init();
+ } //}}}
 
-	public void menuDeselected(MenuEvent e) {}
+ public void menuDeselected(MenuEvent e) {}
 
-	public void menuCanceled(MenuEvent e) {}
+ public void menuCanceled(MenuEvent e) {}
 
-	//{{{ init() method
-	public void init()
-	{
-		if(providerCode == null)
-			return;
+ //{{{ init() method
+ public void init()
+ {
+  if(providerCode == null)
+   return;
 
-		if(provider == null)
-		{
-			Object obj = BeanShell.eval(null,
-				BeanShell.getNameSpace(),
-				providerCode);
-			provider = (DynamicMenuProvider)obj;
-		}
+  if(provider == null)
+  {
+   Object obj = BeanShell.eval(null,
+    BeanShell.getNameSpace(),
+    providerCode);
+   provider = (DynamicMenuProvider)obj;
+  }
 
-		if(provider == null)
-		{
-			// error
-			providerCode = null;
-			return;
-		}
+  if(provider == null)
+  {
+   // error
+   providerCode = null;
+   return;
+  }
 
-		if(ebStub.menuOutOfDate || provider.updateEveryTime())
-		{
-			ebStub.menuOutOfDate = false;
+  if(ebStub.menuOutOfDate || provider.updateEveryTime())
+  {
+   ebStub.menuOutOfDate = false;
 
-			while(getMenuComponentCount() != initialComponentCount)
-				remove(getMenuComponentCount() - 1);
+   while(getMenuComponentCount() != initialComponentCount)
+    remove(getMenuComponentCount() - 1);
 
-			if(provider != null)
-				provider.update(this);
-		}
-	} //}}}
+   if(provider != null)
+    provider.update(this);
+  }
+ } //}}}
 
-	//{{{ Protected members
-	protected int initialComponentCount;
-	protected ActionContext context;
+ //{{{ Protected members
+ protected int initialComponentCount;
+ protected ActionContext context;
 
-	protected String providerCode;
-	protected DynamicMenuProvider provider;
+ protected String providerCode;
+ protected DynamicMenuProvider provider;
 
-	protected EditBusStub ebStub;
+ protected EditBusStub ebStub;
 
-	//{{{ finalize() method
-	protected void finalize() throws Exception
-	{
-		if(ebStub != null)
-			EditBus.removeFromBus(ebStub);
-	} //}}}
+ //{{{ finalize() method
+ protected void finalize() throws Exception
+ {
+  if(ebStub != null)
+   EditBus.removeFromBus(ebStub);
+ } //}}}
 
-	//}}}
+ //}}}
 
-	//{{{ EditBusStub class
-	/* EnhancedMenu has a reference to EditBusStub, but not the other
-	 * way around. So when the EnhancedMenu is being garbage collected
-	 * its finalize() method removes the EditBusStub from the edit bus. */
-	static class EditBusStub implements EBComponent
-	{
-		String name;
-		boolean menuOutOfDate;
+ //{{{ EditBusStub class
+ /* EnhancedMenu has a reference to EditBusStub, but not the other
+  * way around. So when the EnhancedMenu is being garbage collected
+  * its finalize() method removes the EditBusStub from the edit bus. */
+ static class EditBusStub implements EBComponent
+ {
+  String name;
+  boolean menuOutOfDate;
 
-		EditBusStub(String name)
-		{
-			this.name = name;
-			menuOutOfDate = true;
-		}
+  EditBusStub(String name)
+  {
+   this.name = name;
+   menuOutOfDate = true;
+  }
 
-		public void handleMessage(EBMessage msg)
-		{
-			if(msg instanceof DynamicMenuChanged
-				&& name.equals(((DynamicMenuChanged)msg)
-				.getMenuName()))
-			{
-				menuOutOfDate = true;
-			}
-			else if(msg instanceof PropertiesChanged)
-			{
-				// while this might be questionable, some
-				// menus depend on properties
-				menuOutOfDate = true;
-			}
-		}
-	} //}}}
+  public void handleMessage(EBMessage msg)
+  {
+   if(msg instanceof DynamicMenuChanged
+    && name.equals(((DynamicMenuChanged)msg)
+    .getMenuName()))
+   {
+    menuOutOfDate = true;
+   }
+   else if(msg instanceof PropertiesChanged)
+   {
+    // while this might be questionable, some
+    // menus depend on properties
+    menuOutOfDate = true;
+   }
+  }
+ } //}}}
 }

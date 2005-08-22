@@ -24,42 +24,42 @@ import xml.parser.*;
 
 public class TagHighlight implements StructureMatcher
 {
-	//{{{ getMatch() method
-	public StructureMatcher.Match getMatch(JEditTextArea textArea)
-	{
-		if(XmlPlugin.isDelegated(textArea))
-			return null;
+ //{{{ getMatch() method
+ public StructureMatcher.Match getMatch(JEditTextArea textArea)
+ {
+  if(XmlPlugin.isDelegated(textArea))
+   return null;
 
-		int caret = textArea.getCaretPosition();
-		String text = textArea.getText();
-		TagParser.Tag current = TagParser.getTagAtOffset(text,caret);
+  int caret = textArea.getCaretPosition();
+  String text = textArea.getText();
+  TagParser.Tag current = TagParser.getTagAtOffset(text,caret);
 
-		if(current == null)
-			return null;
-		else
-		{
-			TagParser.Tag tag = TagParser
-				.getMatchingTag(text,current);
-			if(tag != null)
-			{
-				tag.startLine = textArea.getLineOfOffset(
-					tag.start);
-				tag.endLine = textArea.getLineOfOffset(
-					tag.end);
-				tag.matcher = this;
-			}
-			return tag;
-		}
-	} //}}}
+  if(current == null)
+   return null;
+  else
+  {
+   TagParser.Tag tag = TagParser
+    .getMatchingTag(text,current);
+   if(tag != null)
+   {
+    tag.startLine = textArea.getLineOfOffset(
+     tag.start);
+    tag.endLine = textArea.getLineOfOffset(
+     tag.end);
+    tag.matcher = this;
+   }
+   return tag;
+  }
+ } //}}}
 
-	//{{{ selectMatch() method
-	/**
-	 * Selects from the caret to the matching structure element (if there is
-	 * one, otherwise the behavior of this method is undefined).
-	 * @since jEdit 4.2pre3
-	 */
-	public void selectMatch(JEditTextArea textArea)
-	{
-		SideKickActions.selectAsset(GUIUtilities.getView(textArea));
-	} //}}}
+ //{{{ selectMatch() method
+ /**
+  * Selects from the caret to the matching structure element (if there is
+  * one, otherwise the behavior of this method is undefined).
+  * @since jEdit 4.2pre3
+  */
+ public void selectMatch(JEditTextArea textArea)
+ {
+  SideKickActions.selectAsset(GUIUtilities.getView(textArea));
+ } //}}}
 }

@@ -129,7 +129,7 @@ public class XSDDescription extends XMLResourceIdentifierImpl
      */
     public final static short CONTEXT_XSITYPE   = 7;
 
-    // REVISIT: write description of these fields	
+    // REVISIT: write description of these fields 
     protected short fContextType;
     protected String fTargetNamespace;
     protected String [] fLocationHints ;

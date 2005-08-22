@@ -42,165 +42,165 @@ import org.gjt.sp.jedit.jEdit;
  */
 public class ColorWellButton extends JButton
 {
-	//{{{ ColorWellButton constructor
-	public ColorWellButton(Color color)
-	{
-		setIcon(new ColorWell(color));
-		setMargin(new Insets(2,2,2,2));
-		addActionListener(new ActionHandler());
+ //{{{ ColorWellButton constructor
+ public ColorWellButton(Color color)
+ {
+  setIcon(new ColorWell(color));
+  setMargin(new Insets(2,2,2,2));
+  addActionListener(new ActionHandler());
 
-		// according to krisk this looks better on OS X...
-		if(OperatingSystem.isMacOSLF())
-			putClientProperty("JButton.buttonType","toolbar");
-	} //}}}
+  // according to krisk this looks better on OS X...
+  if(OperatingSystem.isMacOSLF())
+   putClientProperty("JButton.buttonType","toolbar");
+ } //}}}
 
-	//{{{ getSelectedColor() method
-	public Color getSelectedColor()
-	{
-		return ((ColorWell)getIcon()).color;
-	} //}}}
+ //{{{ getSelectedColor() method
+ public Color getSelectedColor()
+ {
+  return ((ColorWell)getIcon()).color;
+ } //}}}
 
-	//{{{ setSelectedColor() method
-	public void setSelectedColor(Color color)
-	{
-		((ColorWell)getIcon()).color = color;
-		repaint();
-	} //}}}
+ //{{{ setSelectedColor() method
+ public void setSelectedColor(Color color)
+ {
+  ((ColorWell)getIcon()).color = color;
+  repaint();
+ } //}}}
 
-	//{{{ ColorWell class
-	static class ColorWell implements Icon
-	{
-		Color color;
+ //{{{ ColorWell class
+ static class ColorWell implements Icon
+ {
+  Color color;
 
-		ColorWell(Color color)
-		{
-			this.color = color;
-		}
+  ColorWell(Color color)
+  {
+   this.color = color;
+  }
 
-		public int getIconWidth()
-		{
-			return 35;
-		}
+  public int getIconWidth()
+  {
+   return 35;
+  }
 
-		public int getIconHeight()
-		{
-			return 10;
-		}
+  public int getIconHeight()
+  {
+   return 10;
+  }
 
-		public void paintIcon(Component c, Graphics g, int x, int y)
-		{
-			if(color == null)
-				return;
+  public void paintIcon(Component c, Graphics g, int x, int y)
+  {
+   if(color == null)
+    return;
 
-			g.setColor(color);
-			g.fillRect(x,y,getIconWidth(),getIconHeight());
-			g.setColor(color.darker());
-			g.drawRect(x,y,getIconWidth()-1,getIconHeight()-1);
-		}
-	} //}}}
+   g.setColor(color);
+   g.fillRect(x,y,getIconWidth(),getIconHeight());
+   g.setColor(color.darker());
+   g.drawRect(x,y,getIconWidth()-1,getIconHeight()-1);
+  }
+ } //}}}
 
-	//{{{ ActionHandler class
-	class ActionHandler implements ActionListener
-	{
-		public void actionPerformed(ActionEvent evt)
-		{
-			JDialog parent = GUIUtilities.getParentDialog(ColorWellButton.this);
-			JDialog dialog;
-			if (parent != null)
-			{
-				dialog = new ColorPickerDialog(parent,
-					jEdit.getProperty("colorChooser.title"),
-					true);
-			}
-			else
-			{
-				dialog = new ColorPickerDialog(
-					JOptionPane.getFrameForComponent(
-					ColorWellButton.this),
-					jEdit.getProperty("colorChooser.title"),
-					true);
-			}
-			dialog.pack();
-			dialog.setVisible(true);
-		}
-	} //}}}
+ //{{{ ActionHandler class
+ class ActionHandler implements ActionListener
+ {
+  public void actionPerformed(ActionEvent evt)
+  {
+   JDialog parent = GUIUtilities.getParentDialog(ColorWellButton.this);
+   JDialog dialog;
+   if (parent != null)
+   {
+    dialog = new ColorPickerDialog(parent,
+     jEdit.getProperty("colorChooser.title"),
+     true);
+   }
+   else
+   {
+    dialog = new ColorPickerDialog(
+     JOptionPane.getFrameForComponent(
+     ColorWellButton.this),
+     jEdit.getProperty("colorChooser.title"),
+     true);
+   }
+   dialog.pack();
+   dialog.setVisible(true);
+  }
+ } //}}}
 
-	//{{{ ColorPickerDialog class
-	/**
-	 * Replacement for the color picker dialog provided with Swing. This version
-	 * supports dialog as well as frame parents.
-	 * @since jEdit 4.1pre7
-	 */
-	private class ColorPickerDialog extends EnhancedDialog implements ActionListener
-	{
-		public ColorPickerDialog(Frame parent, String title, boolean modal)
-		{
-			super(parent,title,modal);
+ //{{{ ColorPickerDialog class
+ /**
+  * Replacement for the color picker dialog provided with Swing. This version
+  * supports dialog as well as frame parents.
+  * @since jEdit 4.1pre7
+  */
+ private class ColorPickerDialog extends EnhancedDialog implements ActionListener
+ {
+  public ColorPickerDialog(Frame parent, String title, boolean modal)
+  {
+   super(parent,title,modal);
 
-			init();
-		}
+   init();
+  }
 
-		public ColorPickerDialog(Dialog parent, String title, boolean modal)
-		{
-			super(parent,title,modal);
+  public ColorPickerDialog(Dialog parent, String title, boolean modal)
+  {
+   super(parent,title,modal);
 
-			getContentPane().setLayout(new BorderLayout());
+   getContentPane().setLayout(new BorderLayout());
 
-			init();
-		}
+   init();
+  }
 
-		public void ok()
-		{
-			Color c = chooser.getColor();
-			if (c != null)
-				setSelectedColor(c);
-			setVisible(false);
-		}
+  public void ok()
+  {
+   Color c = chooser.getColor();
+   if (c != null)
+    setSelectedColor(c);
+   setVisible(false);
+  }
 
-		public void cancel()
-		{
-			setVisible(false);
-		}
+  public void cancel()
+  {
+   setVisible(false);
+  }
 
-		public void actionPerformed(ActionEvent evt)
-		{
-			if (evt.getSource() == ok)
-				ok();
-			else
-				cancel();
-		}
+  public void actionPerformed(ActionEvent evt)
+  {
+   if (evt.getSource() == ok)
+    ok();
+   else
+    cancel();
+  }
 
-		//{{{ Private members
-		private JColorChooser chooser;
-		private JButton ok;
-		private JButton cancel;
+  //{{{ Private members
+  private JColorChooser chooser;
+  private JButton ok;
+  private JButton cancel;
 
-		private void init()
-		{
-			Color c = getSelectedColor();
-			if(c == null)
-				chooser = new JColorChooser();
-			else
-				chooser = new JColorChooser(c);
+  private void init()
+  {
+   Color c = getSelectedColor();
+   if(c == null)
+    chooser = new JColorChooser();
+   else
+    chooser = new JColorChooser(c);
 
-			getContentPane().add(BorderLayout.CENTER, chooser);
+   getContentPane().add(BorderLayout.CENTER, chooser);
 
-			Box buttons = new Box(BoxLayout.X_AXIS);
-			buttons.add(Box.createGlue());
+   Box buttons = new Box(BoxLayout.X_AXIS);
+   buttons.add(Box.createGlue());
 
-			ok = new JButton(jEdit.getProperty("common.ok"));
-			ok.addActionListener(this);
-			buttons.add(ok);
-			buttons.add(Box.createHorizontalStrut(6));
-			getRootPane().setDefaultButton(ok);
-			cancel = new JButton(jEdit.getProperty("common.cancel"));
-			cancel.addActionListener(this);
-			buttons.add(cancel);
-			buttons.add(Box.createGlue());
+   ok = new JButton(jEdit.getProperty("common.ok"));
+   ok.addActionListener(this);
+   buttons.add(ok);
+   buttons.add(Box.createHorizontalStrut(6));
+   getRootPane().setDefaultButton(ok);
+   cancel = new JButton(jEdit.getProperty("common.cancel"));
+   cancel.addActionListener(this);
+   buttons.add(cancel);
+   buttons.add(Box.createGlue());
 
-			getContentPane().add(BorderLayout.SOUTH, buttons);
-			pack();
-			setLocationRelativeTo(getParent());
-		} //}}}
-	} //}}}
+   getContentPane().add(BorderLayout.SOUTH, buttons);
+   pack();
+   setLocationRelativeTo(getParent());
+  } //}}}
+ } //}}}
 }

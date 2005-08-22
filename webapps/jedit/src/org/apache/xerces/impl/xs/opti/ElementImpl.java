@@ -102,8 +102,8 @@ public class ElementImpl extends DefaultElement {
     
     public ElementImpl(String prefix, String localpart, String rawname,
                        String uri, int line, int column) {
-    	super(prefix, localpart, rawname, uri, Node.ELEMENT_NODE);
-    	row = -1;
+     super(prefix, localpart, rawname, uri, Node.ELEMENT_NODE);
+     row = -1;
         col = -1;
         parentRow = -1;
 

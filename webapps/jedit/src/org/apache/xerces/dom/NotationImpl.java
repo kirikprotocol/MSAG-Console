@@ -115,7 +115,7 @@ public class NotationImpl
 
     /** Factory constructor. */
     public NotationImpl(CoreDocumentImpl ownerDoc, String name) {
-    	super(ownerDoc);
+     super(ownerDoc);
         this.name = name;
     }
     
@@ -154,7 +154,7 @@ public class NotationImpl
         if (needsSyncData()) {
             synchronizeData();
         }
-    	return publicId;
+     return publicId;
 
     } // getPublicId():String
 
@@ -167,7 +167,7 @@ public class NotationImpl
         if (needsSyncData()) {
             synchronizeData();
         }
-    	return systemId;
+     return systemId;
 
     } // getSystemId():String
 
@@ -181,9 +181,9 @@ public class NotationImpl
      */
     public void setPublicId(String id) {
 
-    	if (isReadOnly()) {
-    		throw new DOMException(
-    		DOMException.NO_MODIFICATION_ALLOWED_ERR,
+     if (isReadOnly()) {
+      throw new DOMException(
+      DOMException.NO_MODIFICATION_ALLOWED_ERR,
                 DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NO_MODIFICATION_ALLOWED_ERR", null));
         }
         if (needsSyncData()) {
@@ -199,15 +199,15 @@ public class NotationImpl
      */
     public void setSystemId(String id) {
 
-    	if(isReadOnly()) {
-    		throw new DOMException(
-    		DOMException.NO_MODIFICATION_ALLOWED_ERR,
+     if(isReadOnly()) {
+      throw new DOMException(
+      DOMException.NO_MODIFICATION_ALLOWED_ERR,
                 DOMMessageFormatter.formatMessage(DOMMessageFormatter.DOM_DOMAIN, "NO_MODIFICATION_ALLOWED_ERR", null));
         }
         if (needsSyncData()) {
             synchronizeData();
         }
-    	systemId = id;
+     systemId = id;
 
     } // setSystemId(String)
     

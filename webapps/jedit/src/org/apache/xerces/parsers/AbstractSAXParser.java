@@ -1839,33 +1839,33 @@ public abstract class AbstractSAXParser
         return fLexicalHandler;
     } // getLexicalHandler():LexicalHandler
 
-	/**
-	 * Send startPrefixMapping events
-	 */
-	protected final void startNamespaceMapping() throws SAXException{
-		int count = fNamespaceContext.getDeclaredPrefixCount();
-		if (count > 0) {
-			String prefix = null;
+ /**
+  * Send startPrefixMapping events
+  */
+ protected final void startNamespaceMapping() throws SAXException{
+  int count = fNamespaceContext.getDeclaredPrefixCount();
+  if (count > 0) {
+   String prefix = null;
             String uri = null;
-			for (int i = 0; i < count; i++) {
-				prefix = fNamespaceContext.getDeclaredPrefixAt(i);
+   for (int i = 0; i < count; i++) {
+    prefix = fNamespaceContext.getDeclaredPrefixAt(i);
                 uri = fNamespaceContext.getURI(prefix);
-				fContentHandler.startPrefixMapping(prefix, 
+    fContentHandler.startPrefixMapping(prefix, 
                 (uri == null)?"":uri);
-			}
-		}
-	}
+   }
+  }
+ }
     /**
      * Send endPrefixMapping events
      */
-	protected final void endNamespaceMapping() throws SAXException {
-		int count = fNamespaceContext.getDeclaredPrefixCount();
-		if (count > 0) {
-			for (int i = 0; i < count; i++) {
-		        fContentHandler.endPrefixMapping(fNamespaceContext.getDeclaredPrefixAt(i));
-			}
-		}
-	}
+ protected final void endNamespaceMapping() throws SAXException {
+  int count = fNamespaceContext.getDeclaredPrefixCount();
+  if (count > 0) {
+   for (int i = 0; i < count; i++) {
+          fContentHandler.endPrefixMapping(fNamespaceContext.getDeclaredPrefixAt(i));
+   }
+  }
+ }
     //
     // XMLDocumentParser methods
     //

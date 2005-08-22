@@ -47,7 +47,7 @@ final class RETokenOneOf extends REToken {
     int x;
     for (int i=0; i < options.size(); i++) {
       if ((x = ((REToken) options.elementAt(i)).getMinimumLength()) < min)
-	min = x;
+ min = x;
     }
     return min;
   }
@@ -61,41 +61,41 @@ final class RETokenOneOf extends REToken {
     REToken tk;
     boolean isMatch;
     for (int i=0; i < options.size(); i++) {
-	tk = (REToken) options.elementAt(i);
-	REMatch tryMatch = (REMatch) mymatch.clone();
-	if (tk.match(input, tryMatch)) { // match was successful
-	    if (negative) return false;
+ tk = (REToken) options.elementAt(i);
+ REMatch tryMatch = (REMatch) mymatch.clone();
+ if (tk.match(input, tryMatch)) { // match was successful
+     if (negative) return false;
 
-	    if (next(input, tryMatch)) {
-		// Add tryMatch to list of possibilities.
-		if (last == null) {
-		    newMatch = tryMatch;
-		    last = tryMatch;
-		} else {
-		    last.next = tryMatch;
-		    last = tryMatch;
-		}
-	    } // next succeeds
-	} // is a match
+     if (next(input, tryMatch)) {
+  // Add tryMatch to list of possibilities.
+  if (last == null) {
+      newMatch = tryMatch;
+      last = tryMatch;
+  } else {
+      last.next = tryMatch;
+      last = tryMatch;
+  }
+     } // next succeeds
+ } // is a match
     } // try next option
 
     if (newMatch != null) {
-	if (negative) {
-	    return false;
-	} else {
-	    // set contents of mymatch equal to newMatch
+ if (negative) {
+     return false;
+ } else {
+     // set contents of mymatch equal to newMatch
 
-	    // try each one that matched
-	    mymatch.assignFrom(newMatch);
-	    return true;
-	}
+     // try each one that matched
+     mymatch.assignFrom(newMatch);
+     return true;
+ }
     } else {
-	if (negative) {
-	    ++mymatch.index;
-	    return next(input, mymatch);
-	} else {
-	    return false;
-	}
+ if (negative) {
+     ++mymatch.index;
+     return next(input, mymatch);
+ } else {
+     return false;
+ }
     }
 
     // index+1 works for [^abc] lists, not for generic lookahead (--> index)

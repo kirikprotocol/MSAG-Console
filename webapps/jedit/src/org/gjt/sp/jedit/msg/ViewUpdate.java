@@ -33,63 +33,63 @@ import org.gjt.sp.jedit.*;
  */
 public class ViewUpdate extends EBMessage
 {
-	/**
-	 * View created.
-	 */
-	public static final Object CREATED = "CREATED";
+ /**
+  * View created.
+  */
+ public static final Object CREATED = "CREATED";
 
-	/**
-	 * View closed.
-	 */
-	public static final Object CLOSED = "CLOSED";
+ /**
+  * View closed.
+  */
+ public static final Object CLOSED = "CLOSED";
 
-	/**
-	 * Active edit pane changed.
-	 * @since jEdit 4.1pre1
-	 */
-	public static final Object EDIT_PANE_CHANGED = "EDIT_PANE_CHANGED";
+ /**
+  * Active edit pane changed.
+  * @since jEdit 4.1pre1
+  */
+ public static final Object EDIT_PANE_CHANGED = "EDIT_PANE_CHANGED";
 
-	//{{{ ViewUpdate constructor
-	/**
-	 * Creates a new view update message.
-	 * @param view The view
-	 * @param what What happened
-	 */
-	public ViewUpdate(View view, Object what)
-	{
-		super(view);
+ //{{{ ViewUpdate constructor
+ /**
+  * Creates a new view update message.
+  * @param view The view
+  * @param what What happened
+  */
+ public ViewUpdate(View view, Object what)
+ {
+  super(view);
 
-		if(what == null)
-			throw new NullPointerException("What must be non-null");
+  if(what == null)
+   throw new NullPointerException("What must be non-null");
 
-		this.what = what;
-	} //}}}
+  this.what = what;
+ } //}}}
 
-	//{{{ getWhat() method
-	/**
-	 * Returns what caused this view update.
-	 */
-	public Object getWhat()
-	{
-		return what;
-	} //}}}
+ //{{{ getWhat() method
+ /**
+  * Returns what caused this view update.
+  */
+ public Object getWhat()
+ {
+  return what;
+ } //}}}
 
-	//{{{ getView() method
-	/**
-	 * Returns the view involved.
-	 */
-	public View getView()
-	{
-		return (View)getSource();
-	} //}}}
+ //{{{ getView() method
+ /**
+  * Returns the view involved.
+  */
+ public View getView()
+ {
+  return (View)getSource();
+ } //}}}
 
-	//{{{ paramString() method
-	public String paramString()
-	{
-		return "what=" + what + "," + super.paramString();
-	} //}}}
+ //{{{ paramString() method
+ public String paramString()
+ {
+  return "what=" + what + "," + super.paramString();
+ } //}}}
 
-	//{{{ Private members
-	private Object what;
-	//}}}
+ //{{{ Private members
+ private Object what;
+ //}}}
 }

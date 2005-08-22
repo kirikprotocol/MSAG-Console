@@ -46,120 +46,120 @@ import org.gjt.sp.util.Log;
  */
 public class RolloverButton extends JButton
 {
-	//{{{ RolloverButton constructor
-	/**
-	 * Setup the border (invisible initially)
-	 */
-	public RolloverButton()
-	{
-		if(OperatingSystem.hasJava15())
-			setContentAreaFilled(false);
+ //{{{ RolloverButton constructor
+ /**
+  * Setup the border (invisible initially)
+  */
+ public RolloverButton()
+ {
+  if(OperatingSystem.hasJava15())
+   setContentAreaFilled(false);
 
-		addMouseListener(new MouseOverHandler());
-	} //}}}
+  addMouseListener(new MouseOverHandler());
+ } //}}}
 
-	//{{{ RolloverButton constructor
-	/**
-	 * Setup the border (invisible initially)
-	 */
-	public RolloverButton(Icon icon)
-	{
-		this();
+ //{{{ RolloverButton constructor
+ /**
+  * Setup the border (invisible initially)
+  */
+ public RolloverButton(Icon icon)
+ {
+  this();
 
-		setIcon(icon);
-	} //}}}
+  setIcon(icon);
+ } //}}}
 
-	//{{{ updateUI() method
-	public void updateUI()
-	{
-		if(OperatingSystem.isWindows())
-		{
-			/* Workaround for uncooperative Windows L&F */
-			setUI(new BasicButtonUI());
-		}
-		else
-			super.updateUI();
+ //{{{ updateUI() method
+ public void updateUI()
+ {
+  if(OperatingSystem.isWindows())
+  {
+   /* Workaround for uncooperative Windows L&F */
+   setUI(new BasicButtonUI());
+  }
+  else
+   super.updateUI();
 
-		setBorder(new EtchedBorder());
-		setBorderPainted(false);
-		setMargin(new Insets(1,1,1,1));
+  setBorder(new EtchedBorder());
+  setBorderPainted(false);
+  setMargin(new Insets(1,1,1,1));
 
-		setRequestFocusEnabled(false);
-	} //}}}
+  setRequestFocusEnabled(false);
+ } //}}}
 
-	//{{{ isOpaque() method
-	public boolean isOpaque()
-	{
-		return false;
-	} //}}}
+ //{{{ isOpaque() method
+ public boolean isOpaque()
+ {
+  return false;
+ } //}}}
 
-	//{{{ setEnabled() method
-	public void setEnabled(boolean b)
-	{
-		super.setEnabled(b);
-		setBorderPainted(false);
-		repaint();
-	} //}}}
+ //{{{ setEnabled() method
+ public void setEnabled(boolean b)
+ {
+  super.setEnabled(b);
+  setBorderPainted(false);
+  repaint();
+ } //}}}
 
-	//{{{ setBorderPainted() method
-	public void setBorderPainted(boolean b)
-	{
-		try
-		{
-			revalidateBlocked = true;
-			super.setBorderPainted(b);
-		}
-		finally
-		{
-			revalidateBlocked = false;
-		}
-	} //}}}
+ //{{{ setBorderPainted() method
+ public void setBorderPainted(boolean b)
+ {
+  try
+  {
+   revalidateBlocked = true;
+   super.setBorderPainted(b);
+  }
+  finally
+  {
+   revalidateBlocked = false;
+  }
+ } //}}}
 
-	//{{{ revalidate() method
-	/**
-	 * We block calls to revalidate() from a setBorderPainted(), for
-	 * performance reasons.
-	 */
-	public void revalidate()
-	{
-		if(!revalidateBlocked)
-			super.revalidate();
-	} //}}}
+ //{{{ revalidate() method
+ /**
+  * We block calls to revalidate() from a setBorderPainted(), for
+  * performance reasons.
+  */
+ public void revalidate()
+ {
+  if(!revalidateBlocked)
+   super.revalidate();
+ } //}}}
 
-	//{{{ paint() method
-	public void paint(Graphics g)
-	{
-		if(isEnabled())
-			super.paint(g);
-		else
-		{
-			Graphics2D g2 = (Graphics2D)g;
-			g2.setComposite(c);
-			super.paint(g2);
-		}
-	} //}}}
+ //{{{ paint() method
+ public void paint(Graphics g)
+ {
+  if(isEnabled())
+   super.paint(g);
+  else
+  {
+   Graphics2D g2 = (Graphics2D)g;
+   g2.setComposite(c);
+   super.paint(g2);
+  }
+ } //}}}
 
-	//{{{ Private members
-	private static AlphaComposite c = AlphaComposite.getInstance(
-		AlphaComposite.SRC_OVER, 0.5f);
+ //{{{ Private members
+ private static AlphaComposite c = AlphaComposite.getInstance(
+  AlphaComposite.SRC_OVER, 0.5f);
 
-	private boolean revalidateBlocked;
+ private boolean revalidateBlocked;
 
-	//{{{ MouseHandler class
-	/**
-	 * Make the border visible/invisible on rollovers
-	 */
-	class MouseOverHandler extends MouseAdapter
-	{
-		public void mouseEntered(MouseEvent e)
-		{
-			if (isEnabled())
-				setBorderPainted(true);
-		}
+ //{{{ MouseHandler class
+ /**
+  * Make the border visible/invisible on rollovers
+  */
+ class MouseOverHandler extends MouseAdapter
+ {
+  public void mouseEntered(MouseEvent e)
+  {
+   if (isEnabled())
+    setBorderPainted(true);
+  }
 
-		public void mouseExited(MouseEvent e)
-		{
-			setBorderPainted(false);
-		}
-	} //}}}
+  public void mouseExited(MouseEvent e)
+  {
+   setBorderPainted(false);
+  }
+ } //}}}
 }

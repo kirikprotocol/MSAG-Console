@@ -40,173 +40,173 @@ import org.gjt.sp.jedit.*;
  */
 public class FavoritesVFS extends VFS
 {
-	public static final String PROTOCOL = "favorites";
+ public static final String PROTOCOL = "favorites";
 
-	//{{{ FavoritesVFS constructor
-	public FavoritesVFS()
-	{
-		super("favorites",DELETE_CAP | LOW_LATENCY_CAP,
-			new String[] { EA_TYPE });
+ //{{{ FavoritesVFS constructor
+ public FavoritesVFS()
+ {
+  super("favorites",DELETE_CAP | LOW_LATENCY_CAP,
+   new String[] { EA_TYPE });
 
-		/* addToFavorites(), which is a static method
-		 * (for convinience) needs an instance of the
-		 * VFS to pass to VFSManager.sendVFSUpdate(),
-		 * hence this hack. */
-		instance = this;
-	} //}}}
+  /* addToFavorites(), which is a static method
+   * (for convinience) needs an instance of the
+   * VFS to pass to VFSManager.sendVFSUpdate(),
+   * hence this hack. */
+  instance = this;
+ } //}}}
 
-	//{{{ getParentOfPath() method
-	public String getParentOfPath(String path)
-	{
-		return PROTOCOL + ":";
-	} //}}}
+ //{{{ getParentOfPath() method
+ public String getParentOfPath(String path)
+ {
+  return PROTOCOL + ":";
+ } //}}}
 
-	//{{{ _listFiles() method
-	public VFSFile[] _listFiles(Object session, String url,
-		Component comp)
-	{
-		return getFavorites();
-	} //}}}
+ //{{{ _listFiles() method
+ public VFSFile[] _listFiles(Object session, String url,
+  Component comp)
+ {
+  return getFavorites();
+ } //}}}
 
-	//{{{ _getFile() method
-	public VFSFile _getFile(Object session, String path,
-		Component comp)
-	{
-		// does it matter that this doesn't set the type correctly?
-		return new Favorite(path,VFSFile.DIRECTORY);
-	} //}}}
+ //{{{ _getFile() method
+ public VFSFile _getFile(Object session, String path,
+  Component comp)
+ {
+  // does it matter that this doesn't set the type correctly?
+  return new Favorite(path,VFSFile.DIRECTORY);
+ } //}}}
 
-	//{{{ _delete() method
-	public boolean _delete(Object session, String path, Component comp)
-	{
-		synchronized(lock)
-		{
-			path = path.substring(PROTOCOL.length() + 1);
+ //{{{ _delete() method
+ public boolean _delete(Object session, String path, Component comp)
+ {
+  synchronized(lock)
+  {
+   path = path.substring(PROTOCOL.length() + 1);
 
-			Iterator iter = favorites.iterator();
-			while(iter.hasNext())
-			{
-				if(((Favorite)iter.next()).getPath()
-					.equals(path))
-				{
-					iter.remove();
-					VFSManager.sendVFSUpdate(this,PROTOCOL
-						+ ":",false);
-					EditBus.send(new DynamicMenuChanged(
-						"favorites"));
-					return true;
-				}
-			}
-		}
+   Iterator iter = favorites.iterator();
+   while(iter.hasNext())
+   {
+    if(((Favorite)iter.next()).getPath()
+     .equals(path))
+    {
+     iter.remove();
+     VFSManager.sendVFSUpdate(this,PROTOCOL
+      + ":",false);
+     EditBus.send(new DynamicMenuChanged(
+      "favorites"));
+     return true;
+    }
+   }
+  }
 
-		return false;
-	} //}}}
+  return false;
+ } //}}}
 
-	//{{{ loadFavorites() method
-	public static void loadFavorites()
-	{
-		synchronized(lock)
-		{
-			favorites = new LinkedList();
+ //{{{ loadFavorites() method
+ public static void loadFavorites()
+ {
+  synchronized(lock)
+  {
+   favorites = new LinkedList();
 
-			String favorite;
-			int i = 0;
-			while((favorite = jEdit.getProperty("vfs.favorite." + i)) != null)
-			{
-				favorites.add(new Favorite(favorite,
-					jEdit.getIntegerProperty("vfs.favorite."
-					+ i + ".type",
-					VFSFile.DIRECTORY)));
-				i++;
-			}
-		}
-	} //}}}
+   String favorite;
+   int i = 0;
+   while((favorite = jEdit.getProperty("vfs.favorite." + i)) != null)
+   {
+    favorites.add(new Favorite(favorite,
+     jEdit.getIntegerProperty("vfs.favorite."
+     + i + ".type",
+     VFSFile.DIRECTORY)));
+    i++;
+   }
+  }
+ } //}}}
 
-	//{{{ addToFavorites() method
-	public static void addToFavorites(String path, int type)
-	{
-		synchronized(lock)
-		{
-			if(favorites == null)
-				loadFavorites();
+ //{{{ addToFavorites() method
+ public static void addToFavorites(String path, int type)
+ {
+  synchronized(lock)
+  {
+   if(favorites == null)
+    loadFavorites();
 
-			Iterator iter = favorites.iterator();
-			while(iter.hasNext())
-			{
-				if(((Favorite)iter.next()).getPath().equals(path))
-					return;
-			}
+   Iterator iter = favorites.iterator();
+   while(iter.hasNext())
+   {
+    if(((Favorite)iter.next()).getPath().equals(path))
+     return;
+   }
 
-			favorites.add(new Favorite(path,type));
+   favorites.add(new Favorite(path,type));
 
-			VFSManager.sendVFSUpdate(instance,PROTOCOL + ":",false);
-			EditBus.send(new DynamicMenuChanged("favorites"));
-		}
-	} //}}}
+   VFSManager.sendVFSUpdate(instance,PROTOCOL + ":",false);
+   EditBus.send(new DynamicMenuChanged("favorites"));
+  }
+ } //}}}
 
-	//{{{ saveFavorites() method
-	public static void saveFavorites()
-	{
-		synchronized(lock)
-		{
-			if(favorites == null)
-				return;
+ //{{{ saveFavorites() method
+ public static void saveFavorites()
+ {
+  synchronized(lock)
+  {
+   if(favorites == null)
+    return;
 
-			int i = 0;
-			Iterator iter = favorites.iterator();
-			while(iter.hasNext())
-			{
-				Favorite e = ((Favorite)iter.next());
-				jEdit.setProperty("vfs.favorite." + i,
-					e.getPath());
-				jEdit.setIntegerProperty("vfs.favorite." + i
-					+ ".type",e.getType());
+   int i = 0;
+   Iterator iter = favorites.iterator();
+   while(iter.hasNext())
+   {
+    Favorite e = ((Favorite)iter.next());
+    jEdit.setProperty("vfs.favorite." + i,
+     e.getPath());
+    jEdit.setIntegerProperty("vfs.favorite." + i
+     + ".type",e.getType());
 
-				i++;
-			}
-			jEdit.unsetProperty("vfs.favorite." + favorites.size());
-			jEdit.unsetProperty("vfs.favorite." + favorites.size()
-				+ ".type");
-		}
-	} //}}}
+    i++;
+   }
+   jEdit.unsetProperty("vfs.favorite." + favorites.size());
+   jEdit.unsetProperty("vfs.favorite." + favorites.size()
+    + ".type");
+  }
+ } //}}}
 
-	//{{{ getFavorites() method
-	public static VFSFile[] getFavorites()
-	{
-		synchronized(lock)
-		{
-			if(favorites == null)
-				loadFavorites();
+ //{{{ getFavorites() method
+ public static VFSFile[] getFavorites()
+ {
+  synchronized(lock)
+  {
+   if(favorites == null)
+    loadFavorites();
 
-			return (VFSFile[])favorites.toArray(
-				new VFSFile[favorites.size()]);
-		}
-	} //}}}
+   return (VFSFile[])favorites.toArray(
+    new VFSFile[favorites.size()]);
+  }
+ } //}}}
 
-	//{{{ Private members
-	private static FavoritesVFS instance;
-	private static Object lock = new Object();
-	private static List favorites;
-	//}}}
+ //{{{ Private members
+ private static FavoritesVFS instance;
+ private static Object lock = new Object();
+ private static List favorites;
+ //}}}
 
-	//{{{ Favorite class
-	static class Favorite extends VFSFile
-	{
-		Favorite(String path, int type)
-		{
-			super(path,path,PROTOCOL + ":" + path,type,0,false);
-		}
+ //{{{ Favorite class
+ static class Favorite extends VFSFile
+ {
+  Favorite(String path, int type)
+  {
+   super(path,path,PROTOCOL + ":" + path,type,0,false);
+  }
 
-		public String getExtendedAttribute(String name)
-		{
-			if(name.equals(EA_TYPE))
-				return super.getExtendedAttribute(name);
-			else
-			{
-				// don't want it to show "0 bytes" for size,
-				// etc.
-				return null;
-			}
-		}
-	} //}}}
+  public String getExtendedAttribute(String name)
+  {
+   if(name.equals(EA_TYPE))
+    return super.getExtendedAttribute(name);
+   else
+   {
+    // don't want it to show "0 bytes" for size,
+    // etc.
+    return null;
+   }
+  }
+ } //}}}
 }

@@ -53,162 +53,162 @@ import org.gjt.sp.util.Log;
  */
 public abstract class SideKickParser
 {
-	public static final String SERVICE = "sidekick.SideKickParser";
+ public static final String SERVICE = "sidekick.SideKickParser";
 
-	//{{{ SideKickParser constructor
-	/**
-	 * The parser constructor.
-	 *
-	 */
-	public SideKickParser(String name)
-	{
-		this.name = name;
-	} //}}}
+ //{{{ SideKickParser constructor
+ /**
+  * The parser constructor.
+  *
+  */
+ public SideKickParser(String name)
+ {
+  this.name = name;
+ } //}}}
 
-	//{{{ getName() method
-	/**
-	 * Returns the parser's name.
-	 */
-	public final String getName()
-	{
-		return name;
-	} //}}}
+ //{{{ getName() method
+ /**
+  * Returns the parser's name.
+  */
+ public final String getName()
+ {
+  return name;
+ } //}}}
 
-	//{{{ stop() method
-	/**
-	 * Stops the parse request currently in progress. It is up to the
-	 * parser to implement this.
-	 * @since SideKick 0.3
-	 */
-	public void stop()
-	{
-	} //}}}
+ //{{{ stop() method
+ /**
+  * Stops the parse request currently in progress. It is up to the
+  * parser to implement this.
+  * @since SideKick 0.3
+  */
+ public void stop()
+ {
+ } //}}}
 
-	//{{{ activate() method
-	/**
-	 * This method is called when a buffer using this parser is selected
-	 * in the specified view.
-	 * @param view The view
-	 * @since SideKick 0.2
-	 * @deprecated Use the form taking an <code>EditPane</code> instead.
-	 */
-	public void activate(View view)
-	{
-	} //}}}
+ //{{{ activate() method
+ /**
+  * This method is called when a buffer using this parser is selected
+  * in the specified view.
+  * @param view The view
+  * @since SideKick 0.2
+  * @deprecated Use the form taking an <code>EditPane</code> instead.
+  */
+ public void activate(View view)
+ {
+ } //}}}
 
-	//{{{ deactivate() method
-	/**
-	 * This method is called when a buffer using this parser is no longer
-	 * selected in the specified view.
-	 * @param view The view
-	 * @since SideKick 0.2
-	 * @deprecated Use the form taking an <code>EditPane</code> instead.
-	 */
-	public void deactivate(View view)
-	{
-	} //}}}
+ //{{{ deactivate() method
+ /**
+  * This method is called when a buffer using this parser is no longer
+  * selected in the specified view.
+  * @param view The view
+  * @since SideKick 0.2
+  * @deprecated Use the form taking an <code>EditPane</code> instead.
+  */
+ public void deactivate(View view)
+ {
+ } //}}}
 
-	//{{{ activate() method
-	/**
-	 * This method is called when a buffer using this parser is selected
-	 * in the specified view.
-	 * @param editPane The edit pane
-	 * @since SideKick 0.3.1
-	 */
-	public void activate(EditPane editPane)
-	{
-		activate(editPane.getView());
-		Log.log(Log.DEBUG,this,getName() + ": activated for " + editPane.getBuffer());
-	} //}}}
+ //{{{ activate() method
+ /**
+  * This method is called when a buffer using this parser is selected
+  * in the specified view.
+  * @param editPane The edit pane
+  * @since SideKick 0.3.1
+  */
+ public void activate(EditPane editPane)
+ {
+  activate(editPane.getView());
+  Log.log(Log.DEBUG,this,getName() + ": activated for " + editPane.getBuffer());
+ } //}}}
 
-	//{{{ deactivate() method
-	/**
-	 * This method is called when a buffer using this parser is no longer
-	 * selected in the specified view.
-	 * @param editPane The edit pane
-	 * @since SideKick 0.3.1
-	 */
-	public void deactivate(EditPane editPane)
-	{
-		deactivate(editPane.getView());
-		Log.log(Log.DEBUG,this,getName() + ": deactivated");
-	} //}}}
+ //{{{ deactivate() method
+ /**
+  * This method is called when a buffer using this parser is no longer
+  * selected in the specified view.
+  * @param editPane The edit pane
+  * @since SideKick 0.3.1
+  */
+ public void deactivate(EditPane editPane)
+ {
+  deactivate(editPane.getView());
+  Log.log(Log.DEBUG,this,getName() + ": deactivated");
+ } //}}}
 
-	//{{{ parse() method
-	/**
-	 * Parses the given text and returns a tree model.
-	 *
-	 * @param buffer The buffer to parse.
-	 * @param errorSource An error source to add errors to.
-	 *
-	 * @return A new instance of the <code>SideKickParsedData</code> class.
-	 */
-	public abstract SideKickParsedData parse(Buffer buffer,
-		DefaultErrorSource errorSource);
-	//}}}
+ //{{{ parse() method
+ /**
+  * Parses the given text and returns a tree model.
+  *
+  * @param buffer The buffer to parse.
+  * @param errorSource An error source to add errors to.
+  *
+  * @return A new instance of the <code>SideKickParsedData</code> class.
+  */
+ public abstract SideKickParsedData parse(Buffer buffer,
+  DefaultErrorSource errorSource);
+ //}}}
 
-	//{{{ supportsCompletion() method
-	/**
-	 * Returns if the parser supports code completion.
-	 *
-	 * Returns false by default.
-	 */
-	public boolean supportsCompletion()
-	{
-		return false;
-	} //}}}
+ //{{{ supportsCompletion() method
+ /**
+  * Returns if the parser supports code completion.
+  *
+  * Returns false by default.
+  */
+ public boolean supportsCompletion()
+ {
+  return false;
+ } //}}}
 
-	//{{{ canCompleteAnywhere() method
-	/**
-	 * Returns if completion popups should be shown after any period of
-	 * inactivity. Otherwise, they are only shown if explicitly requested
-	 * by the user.
-	 *
-	 * Returns true by default.
-	 */
-	public boolean canCompleteAnywhere()
-	{
-		return true;
-	} //}}}
+ //{{{ canCompleteAnywhere() method
+ /**
+  * Returns if completion popups should be shown after any period of
+  * inactivity. Otherwise, they are only shown if explicitly requested
+  * by the user.
+  *
+  * Returns true by default.
+  */
+ public boolean canCompleteAnywhere()
+ {
+  return true;
+ } //}}}
 
-	//{{{ getInstantCompletionTriggers() method
-	/**
-	 * Returns a list of characters which trigger completion immediately.
-	 *
-	 * Returns null by default.
-	 *
-	 */
-	public String getInstantCompletionTriggers()
-	{
-		return null;
-	} //}}}
+ //{{{ getInstantCompletionTriggers() method
+ /**
+  * Returns a list of characters which trigger completion immediately.
+  *
+  * Returns null by default.
+  *
+  */
+ public String getInstantCompletionTriggers()
+ {
+  return null;
+ } //}}}
 
-	//{{{ getParseTriggers() method
-	/**
-	 * Returns a list of characters which trigger a buffer re-parse.
-	 *
-	 * Returns null by default.
-	 * @since SideKick 0.3
-	 *
-	 */
-	public String getParseTriggers()
-	{
-		return null;
-	} //}}}
+ //{{{ getParseTriggers() method
+ /**
+  * Returns a list of characters which trigger a buffer re-parse.
+  *
+  * Returns null by default.
+  * @since SideKick 0.3
+  *
+  */
+ public String getParseTriggers()
+ {
+  return null;
+ } //}}}
 
-	//{{{ complete() method
-	/**
-	 * Returns completions suitable for insertion at the specified position.
-	 *
-	 * Returns null by default.
-	 *
-	 * @param editPane The edit pane involved.
-	 * @param caret The caret position.
-	 */
-	public SideKickCompletion complete(EditPane editPane, int caret)
-	{
-		return null;
-	} //}}}
-	
-	private String name;
+ //{{{ complete() method
+ /**
+  * Returns completions suitable for insertion at the specified position.
+  *
+  * Returns null by default.
+  *
+  * @param editPane The edit pane involved.
+  * @param caret The caret position.
+  */
+ public SideKickCompletion complete(EditPane editPane, int caret)
+ {
+  return null;
+ } //}}}
+ 
+ private String name;
 }

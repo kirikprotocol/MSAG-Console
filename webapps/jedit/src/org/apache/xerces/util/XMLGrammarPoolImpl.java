@@ -106,14 +106,14 @@ public class XMLGrammarPoolImpl implements XMLGrammarPool {
     protected int fGrammarCount = 0;
 
     private static final boolean DEBUG = false ;
-	
+ 
     //
     // Constructors
     //
 
     /** Constructs a grammar pool with a default number of buckets. */
     public XMLGrammarPoolImpl() {
-    	fGrammars = new Entry[TABLE_SIZE];
+     fGrammars = new Entry[TABLE_SIZE];
         fPoolIsLocked = false;
     } // <init>()
     
@@ -133,9 +133,9 @@ public class XMLGrammarPoolImpl implements XMLGrammarPool {
      * validation attempt. </p>
      * 
      * @param grammarType The type of the grammar, from the
-     *  		  <code>org.apache.xerces.xni.grammars.XMLGrammarDescription</code> 
-     *  		  interface.
-     * @return 		  The set of grammars the validator may put in its "bucket"
+     *      <code>org.apache.xerces.xni.grammars.XMLGrammarDescription</code> 
+     *      interface.
+     * @return     The set of grammars the validator may put in its "bucket"
      */
     public Grammar [] retrieveInitialGrammarSet (String grammarType) {
         synchronized (fGrammars) {
@@ -163,20 +163,20 @@ public class XMLGrammarPoolImpl implements XMLGrammarPool {
      * us not to accept any new grammars.</p>
      *
      * @param grammarType The type of the grammars being returned;
-     * @param grammars 	  An array containing the set of grammars being
-     *  		  returned; order is not significant.
+     * @param grammars    An array containing the set of grammars being
+     *      returned; order is not significant.
      */
     public void cacheGrammars(String grammarType, Grammar[] grammars) {
         if(!fPoolIsLocked) {
-    	    for (int i = 0; i < grammars.length; i++) {
+         for (int i = 0; i < grammars.length; i++) {
                 if(DEBUG) {
-    	            System.out.println("CACHED GRAMMAR " + (i+1) ) ;
-    	            Grammar temp = grammars[i] ;
-    	            //print(temp.getGrammarDescription());
+                 System.out.println("CACHED GRAMMAR " + (i+1) ) ;
+                 Grammar temp = grammars[i] ;
+                 //print(temp.getGrammarDescription());
                 }
-    	        putGrammar(grammars[i]);
+             putGrammar(grammars[i]);
             }
-    	}
+     }
     } // cacheGrammars(String, Grammar[]);
     
     /* <p> This method requests that the application retrieve a grammar
@@ -191,7 +191,7 @@ public class XMLGrammarPoolImpl implements XMLGrammarPool {
      * 
      * @param desc The description of the Grammar being requested.
      * @return     The Grammar corresponding to this description or null if
-     *  	   no such Grammar is known.
+     *      no such Grammar is known.
      */
     public Grammar retrieveGrammar(XMLGrammarDescription desc) {
         if(DEBUG){
@@ -241,14 +241,14 @@ public class XMLGrammarPoolImpl implements XMLGrammarPool {
     public Grammar getGrammar(XMLGrammarDescription desc) {
         synchronized (fGrammars) {
             int hash = hashCode(desc);
-	    int index = (hash & 0x7FFFFFFF) % fGrammars.length;
-	    for (Entry entry = fGrammars[index] ; entry != null ; entry = entry.next) {
-	        if ((entry.hash == hash) && equals(entry.desc, desc)) {
-	            return entry.grammar;
-	        }
-	    }
-	    return null;
-	}
+     int index = (hash & 0x7FFFFFFF) % fGrammars.length;
+     for (Entry entry = fGrammars[index] ; entry != null ; entry = entry.next) {
+         if ((entry.hash == hash) && equals(entry.desc, desc)) {
+             return entry.grammar;
+         }
+     }
+     return null;
+ }
     } // getGrammar(XMLGrammarDescription):Grammar
 
     /**
@@ -262,23 +262,23 @@ public class XMLGrammarPoolImpl implements XMLGrammarPool {
      */
     public Grammar removeGrammar(XMLGrammarDescription desc) {
         synchronized (fGrammars) {
-    	    int hash = hashCode(desc);
-	    int index = (hash & 0x7FFFFFFF) % fGrammars.length;
-	    for (Entry entry = fGrammars[index], prev = null ; entry != null ; prev = entry, entry = entry.next) {
-	        if ((entry.hash == hash) && equals(entry.desc, desc)) {
-	            if (prev != null) {
+         int hash = hashCode(desc);
+     int index = (hash & 0x7FFFFFFF) % fGrammars.length;
+     for (Entry entry = fGrammars[index], prev = null ; entry != null ; prev = entry, entry = entry.next) {
+         if ((entry.hash == hash) && equals(entry.desc, desc)) {
+             if (prev != null) {
                         prev.next = entry.next;
-		    } 
-		    else {
-		        fGrammars[index] = entry.next;
-		    }
-	    	    Grammar tempGrammar = entry.grammar;
-	    	    entry.grammar = null;
+      } 
+      else {
+          fGrammars[index] = entry.next;
+      }
+          Grammar tempGrammar = entry.grammar;
+          entry.grammar = null;
                 fGrammarCount--;
-	            return tempGrammar;
-	        }
-	    }
-	    return null;
+             return tempGrammar;
+         }
+     }
+     return null;
         }
     } // removeGrammar(XMLGrammarDescription):Grammar
 
@@ -292,15 +292,15 @@ public class XMLGrammarPoolImpl implements XMLGrammarPool {
      */
     public boolean containsGrammar(XMLGrammarDescription desc) {
         synchronized (fGrammars) {
-    	    int hash = hashCode(desc);
-	    int index = (hash & 0x7FFFFFFF) % fGrammars.length;
-	    for (Entry entry = fGrammars[index] ; entry != null ; entry = entry.next) {
-	        if ((entry.hash == hash) && equals(entry.desc, desc)) {
-	            return true;
-	        }
-	    }
-	    return false;
-	}
+         int hash = hashCode(desc);
+     int index = (hash & 0x7FFFFFFF) % fGrammars.length;
+     for (Entry entry = fGrammars[index] ; entry != null ; entry = entry.next) {
+         if ((entry.hash == hash) && equals(entry.desc, desc)) {
+             return true;
+         }
+     }
+     return false;
+ }
     } // containsGrammar(XMLGrammarDescription):boolean
 
     /* <p> Sets this grammar pool to a "locked" state--i.e.,
@@ -364,7 +364,7 @@ public class XMLGrammarPoolImpl implements XMLGrammarPool {
         public XMLGrammarDescription desc;
         public Grammar grammar;
         public Entry next;
-	
+ 
         protected Entry(int hash, XMLGrammarDescription desc, Grammar grammar, Entry next) {
             this.hash = hash;
             this.desc = desc;
@@ -386,23 +386,23 @@ public class XMLGrammarPoolImpl implements XMLGrammarPool {
     
     /* For DTD build we can't import here XSDDescription. Thus, this method is commented out.. */
     /* public void print(XMLGrammarDescription description){
-    	if(description.getGrammarType().equals(XMLGrammarDescription.XML_DTD)){
-    	
-    	}
-    	else if(description.getGrammarType().equals(XMLGrammarDescription.XML_SCHEMA)){
-    		XSDDescription schema = (XSDDescription)description ;
-    		System.out.println("Context = " + schema.getContextType());
-    		System.out.println("TargetNamespace = " + schema.getTargetNamespace());
-    		String [] temp = schema.getLocationHints();
-    		
-    		for (int i = 0 ; (temp != null && i < temp.length) ; i++){
-    			System.out.println("LocationHint " + i + " = "+ temp[i]);
-    		}
-    		    		
-    		System.out.println("Triggering Component = " + schema.getTriggeringComponent());
-    		System.out.println("EnclosingElementName =" + schema.getEnclosingElementName());
-    	
-    	}
+     if(description.getGrammarType().equals(XMLGrammarDescription.XML_DTD)){
+     
+     }
+     else if(description.getGrammarType().equals(XMLGrammarDescription.XML_SCHEMA)){
+      XSDDescription schema = (XSDDescription)description ;
+      System.out.println("Context = " + schema.getContextType());
+      System.out.println("TargetNamespace = " + schema.getTargetNamespace());
+      String [] temp = schema.getLocationHints();
+      
+      for (int i = 0 ; (temp != null && i < temp.length) ; i++){
+       System.out.println("LocationHint " + i + " = "+ temp[i]);
+      }
+            
+      System.out.println("Triggering Component = " + schema.getTriggeringComponent());
+      System.out.println("EnclosingElementName =" + schema.getEnclosingElementName());
+     
+     }
     
     }//print
     */

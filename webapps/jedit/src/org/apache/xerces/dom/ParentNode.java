@@ -160,23 +160,23 @@ public abstract class ParentNode
      * editable copies of locked portions of the tree.
      */
     public Node cloneNode(boolean deep) {
-    	
+     
         if (needsSyncChildren()) {
             synchronizeChildren();
         }
-    	ParentNode newnode = (ParentNode) super.cloneNode(deep);
+     ParentNode newnode = (ParentNode) super.cloneNode(deep);
 
         // set owner document
         newnode.ownerDocument = ownerDocument;
 
-    	// Need to break the association w/ original kids
-    	newnode.firstChild      = null;
+     // Need to break the association w/ original kids
+     newnode.firstChild      = null;
 
         // invalidate cache for children NodeList
         newnode.fNodeListCache = null;
 
         // Then, if deep, clone the kids too.
-    	if (deep) {
+     if (deep) {
             for (ChildNode child = firstChild;
                  child != null;
                  child = child.nextSibling) {
@@ -184,7 +184,7 @@ public abstract class ParentNode
             }
         }
 
-    	return newnode;
+     return newnode;
 
     } // cloneNode(boolean):Node
 
@@ -215,10 +215,10 @@ public abstract class ParentNode
         }
         super.setOwnerDocument(doc);
         ownerDocument = doc;
-	for (ChildNode child = firstChild;
-	     child != null; child = child.nextSibling) {
-	    child.setOwnerDocument(doc);
-	}
+ for (ChildNode child = firstChild;
+      child != null; child = child.nextSibling) {
+     child.setOwnerDocument(doc);
+ }
     }
 
     /**
@@ -260,7 +260,7 @@ public abstract class ParentNode
         if (needsSyncChildren()) {
             synchronizeChildren();
         }
-    	return firstChild;
+     return firstChild;
 
     }   // getFirstChild():Node
 

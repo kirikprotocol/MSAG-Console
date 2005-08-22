@@ -141,8 +141,8 @@ public class SchemaDOMParser extends DefaultXMLDocumentHandler {
      * @throws XNIException Thrown by handler to signal an error.
      */
     public void endDocument(Augmentations augs) throws XNIException {
-	// To debug the DOM created uncomment the line below
-	// schemaDOM.printDOM();
+ // To debug the DOM created uncomment the line below
+ // schemaDOM.printDOM();
     } // endDocument()
 
 
@@ -259,7 +259,7 @@ public class SchemaDOMParser extends DefaultXMLDocumentHandler {
      */
     public void endElement(QName element, Augmentations augs) throws XNIException {
 
-	schemaDOM.endElement(element,  augs);
+ schemaDOM.endElement(element,  augs);
     // when we reach the endElement of xs:appinfo or xs:documentation,
     // change fAnnotationDepth to -1
     if (fAnnotationDepth == fDepth)

@@ -141,7 +141,7 @@ implements EntityReference {
     protected String baseURI;
 
     /** Entity changes. */
-    //protected int entityChanges = -1;	
+    //protected int entityChanges = -1; 
 
     /** Enable synchronize. */
     //protected boolean fEnableSynchronize = false;

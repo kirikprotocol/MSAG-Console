@@ -43,15 +43,15 @@ abstract class REToken implements Serializable {
   
     /** Returns true if the rest of the tokens match, false if they fail. */
     protected boolean next(CharIndexed input, REMatch mymatch) {
-	if (next == null) {
-	    if (uncle == null) {
-		return true;
-	    } else {
-		return uncle.match(input, mymatch);
-	    }
-	} else {
-	    return next.match(input, mymatch);
-	}
+ if (next == null) {
+     if (uncle == null) {
+  return true;
+     } else {
+  return uncle.match(input, mymatch);
+     }
+ } else {
+     return next.match(input, mymatch);
+ }
     }
   
   boolean chain(REToken token) {

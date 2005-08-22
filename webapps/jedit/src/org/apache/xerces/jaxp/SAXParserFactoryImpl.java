@@ -97,7 +97,7 @@ public class SAXParserFactoryImpl extends SAXParserFactory {
             // Translate to ParserConfigurationException
             throw new ParserConfigurationException(se.getMessage());
         }
-	return saxParserImpl;
+ return saxParserImpl;
     }
 
     /**
@@ -126,7 +126,7 @@ public class SAXParserFactoryImpl extends SAXParserFactory {
      */
     public void setFeature(String name, boolean value)
         throws ParserConfigurationException, SAXNotRecognizedException, 
-		SAXNotSupportedException
+  SAXNotSupportedException
     {
         // XXX This is ugly.  We have to collect the features and then
         // later create an XMLReader to verify the features.
@@ -153,7 +153,7 @@ public class SAXParserFactoryImpl extends SAXParserFactory {
      */
     public boolean getFeature(String name)
         throws ParserConfigurationException, SAXNotRecognizedException,
-		SAXNotSupportedException
+  SAXNotSupportedException
     {
         // Check for valid name by creating a dummy XMLReader to get
         // feature value

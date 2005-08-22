@@ -25,46 +25,46 @@ package org.gjt.sp.util;
  */
 public abstract class WorkRequest implements Runnable
 {
-	/**
-	 * Sets if the request can be aborted.
-	 */
-	public void setAbortable(boolean abortable)
-	{
-		Thread thread = Thread.currentThread();
-		if(thread instanceof WorkThread)
-			((WorkThread)thread).setAbortable(abortable);
-	}
+ /**
+  * Sets if the request can be aborted.
+  */
+ public void setAbortable(boolean abortable)
+ {
+  Thread thread = Thread.currentThread();
+  if(thread instanceof WorkThread)
+   ((WorkThread)thread).setAbortable(abortable);
+ }
 
-	/**
-	 * Sets the status text.
-	 * @param status The status text
-	 */
-	public void setStatus(String status)
-	{
-		Thread thread = Thread.currentThread();
-		if(thread instanceof WorkThread)
-			((WorkThread)thread).setStatus(status);
-	}
+ /**
+  * Sets the status text.
+  * @param status The status text
+  */
+ public void setStatus(String status)
+ {
+  Thread thread = Thread.currentThread();
+  if(thread instanceof WorkThread)
+   ((WorkThread)thread).setStatus(status);
+ }
 
-	/**
-	 * Sets the progress value.
-	 * @param value The progress value.
-	 */
-	public void setProgressValue(int value)
-	{
-		Thread thread = Thread.currentThread();
-		if(thread instanceof WorkThread)
-			((WorkThread)thread).setProgressValue(value);
-	}
+ /**
+  * Sets the progress value.
+  * @param value The progress value.
+  */
+ public void setProgressValue(int value)
+ {
+  Thread thread = Thread.currentThread();
+  if(thread instanceof WorkThread)
+   ((WorkThread)thread).setProgressValue(value);
+ }
 
-	/**
-	 * Sets the maximum progress value.
-	 * @param value The progress value.
-	 */
-	public void setProgressMaximum(int value)
-	{
-		Thread thread = Thread.currentThread();
-		if(thread instanceof WorkThread)
-			((WorkThread)thread).setProgressMaximum(value);
-	}
+ /**
+  * Sets the maximum progress value.
+  * @param value The progress value.
+  */
+ public void setProgressMaximum(int value)
+ {
+  Thread thread = Thread.currentThread();
+  if(thread instanceof WorkThread)
+   ((WorkThread)thread).setProgressMaximum(value);
+ }
 }

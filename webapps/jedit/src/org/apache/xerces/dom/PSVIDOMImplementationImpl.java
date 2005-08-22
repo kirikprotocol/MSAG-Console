@@ -144,7 +144,7 @@ public class PSVIDOMImplementationImpl extends CoreDOMImplementationImpl {
                                              DocumentType doctype)
                                              throws DOMException
     {
-    	if (doctype != null && doctype.getOwnerDocument() != null) {
+     if (doctype != null && doctype.getOwnerDocument() != null) {
             throw new DOMException(DOMException.WRONG_DOCUMENT_ERR, 
                                    "DOM005 Wrong document");
         }

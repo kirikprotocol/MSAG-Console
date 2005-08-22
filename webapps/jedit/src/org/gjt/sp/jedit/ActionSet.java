@@ -142,377 +142,377 @@ import org.gjt.sp.util.Log;
  */
 public class ActionSet
 {
-	//{{{ ActionSet constructor
-	/**
-	 * Creates a new action set.
-	 * @since jEdit 4.0pre1
-	 */
-	public ActionSet()
-	{
-		actions = new Hashtable();
-		loaded = true;
-		label = "<no label set; plugin bug>";
-	} //}}}
+ //{{{ ActionSet constructor
+ /**
+  * Creates a new action set.
+  * @since jEdit 4.0pre1
+  */
+ public ActionSet()
+ {
+  actions = new Hashtable();
+  loaded = true;
+  label = "<no label set; plugin bug>";
+ } //}}}
 
-	//{{{ ActionSet constructor
-	/**
-	 * Creates a new action set.
-	 * @param plugin The plugin
-	 * @param cachedActionNames The list of cached action names
-	 * @param cachedActionToggleFlags The list of cached action toggle flags
-	 * @param uri The actions.xml URI
-	 * @since jEdit 4.2pre2
-	 */
-	public ActionSet(PluginJAR plugin, String[] cachedActionNames,
-		boolean[] cachedActionToggleFlags, URL uri)
-	{
-		this();
-		this.plugin = plugin;
-		this.uri = uri;
-		if(cachedActionNames != null)
-		{
-			for(int i = 0; i < cachedActionNames.length; i++)
-			{
-				actions.put(cachedActionNames[i],placeholder);
-				jEdit.setTemporaryProperty(cachedActionNames[i]
-					+ ".toggle",cachedActionToggleFlags[i]
-					? "true" : "false");
-			}
-		}
-		loaded = false;
-	} //}}}
+ //{{{ ActionSet constructor
+ /**
+  * Creates a new action set.
+  * @param plugin The plugin
+  * @param cachedActionNames The list of cached action names
+  * @param cachedActionToggleFlags The list of cached action toggle flags
+  * @param uri The actions.xml URI
+  * @since jEdit 4.2pre2
+  */
+ public ActionSet(PluginJAR plugin, String[] cachedActionNames,
+  boolean[] cachedActionToggleFlags, URL uri)
+ {
+  this();
+  this.plugin = plugin;
+  this.uri = uri;
+  if(cachedActionNames != null)
+  {
+   for(int i = 0; i < cachedActionNames.length; i++)
+   {
+    actions.put(cachedActionNames[i],placeholder);
+    jEdit.setTemporaryProperty(cachedActionNames[i]
+     + ".toggle",cachedActionToggleFlags[i]
+     ? "true" : "false");
+   }
+  }
+  loaded = false;
+ } //}}}
 
-	//{{{ ActionSet constructor
-	/**
-	 * Creates a new action set.
-	 * @param label The label, shown in the shortcuts option pane
-	 * @since jEdit 4.0pre1
-	 */
-	public ActionSet(String label)
-	{
-		this();
-		setLabel(label);
-	} //}}}
+ //{{{ ActionSet constructor
+ /**
+  * Creates a new action set.
+  * @param label The label, shown in the shortcuts option pane
+  * @since jEdit 4.0pre1
+  */
+ public ActionSet(String label)
+ {
+  this();
+  setLabel(label);
+ } //}}}
 
-	//{{{ getLabel() method
-	/**
-	 * Return the action source label.
-	 * @since jEdit 4.0pre1
-	 */
-	public String getLabel()
-	{
-		return label;
-	} //}}}
+ //{{{ getLabel() method
+ /**
+  * Return the action source label.
+  * @since jEdit 4.0pre1
+  */
+ public String getLabel()
+ {
+  return label;
+ } //}}}
 
-	//{{{ setLabel() method
-	/**
-	 * Sets the action source label.
-	 * @param label The label
-	 * @since jEdit 4.0pre1
-	 */
-	public void setLabel(String label)
-	{
-		if(label == null)
-			throw new NullPointerException();
-		this.label = label;
-	} //}}}
+ //{{{ setLabel() method
+ /**
+  * Sets the action source label.
+  * @param label The label
+  * @since jEdit 4.0pre1
+  */
+ public void setLabel(String label)
+ {
+  if(label == null)
+   throw new NullPointerException();
+  this.label = label;
+ } //}}}
 
-	//{{{ getPluginJAR() method
-	/**
-	 * Return the plugin this action set was loaded from, or null.
-	 * @since jEdit 4.2pre13
-	 */
-	public PluginJAR getPluginJAR()
-	{
-		return plugin;
-	} //}}}
+ //{{{ getPluginJAR() method
+ /**
+  * Return the plugin this action set was loaded from, or null.
+  * @since jEdit 4.2pre13
+  */
+ public PluginJAR getPluginJAR()
+ {
+  return plugin;
+ } //}}}
 
-	//{{{ addAction() method
-	/**
-	 * Adds an action to the action set.
-	 * @param action The action
-	 * @since jEdit 4.0pre1
-	 */
-	public void addAction(EditAction action)
-	{
-		actions.put(action.getName(),action);
-		if(context != null)
-		{
-			context.actionNames = null;
-			context.actionHash.put(action.getName(),this);
-		}
-	} //}}}
+ //{{{ addAction() method
+ /**
+  * Adds an action to the action set.
+  * @param action The action
+  * @since jEdit 4.0pre1
+  */
+ public void addAction(EditAction action)
+ {
+  actions.put(action.getName(),action);
+  if(context != null)
+  {
+   context.actionNames = null;
+   context.actionHash.put(action.getName(),this);
+  }
+ } //}}}
 
-	//{{{ removeAction() method
-	/**
-	 * Removes an action from the action set.
-	 * @param name The action name
-	 * @since jEdit 4.0pre1
-	 */
-	public void removeAction(String name)
-	{
-		actions.remove(name);
-		if(context != null)
-		{
-			context.actionNames = null;
-			context.actionHash.remove(name);
-		}
-	} //}}}
+ //{{{ removeAction() method
+ /**
+  * Removes an action from the action set.
+  * @param name The action name
+  * @since jEdit 4.0pre1
+  */
+ public void removeAction(String name)
+ {
+  actions.remove(name);
+  if(context != null)
+  {
+   context.actionNames = null;
+   context.actionHash.remove(name);
+  }
+ } //}}}
 
-	//{{{ removeAllActions() method
-	/**
-	 * Removes all actions from the action set.
-	 * @since jEdit 4.0pre1
-	 */
-	public void removeAllActions()
-	{
-		if(context != null)
-		{
-			context.actionNames = null;
-			String[] actions = getActionNames();
-			for(int i = 0; i < actions.length; i++)
-			{
-				context.actionHash.remove(actions[i]);
-			}
-		}
-		this.actions.clear();
-	} //}}}
+ //{{{ removeAllActions() method
+ /**
+  * Removes all actions from the action set.
+  * @since jEdit 4.0pre1
+  */
+ public void removeAllActions()
+ {
+  if(context != null)
+  {
+   context.actionNames = null;
+   String[] actions = getActionNames();
+   for(int i = 0; i < actions.length; i++)
+   {
+    context.actionHash.remove(actions[i]);
+   }
+  }
+  this.actions.clear();
+ } //}}}
 
-	//{{{ getAction() method
-	/**
-	 * Returns an action with the specified name.<p>
-	 *
-	 * <b>Deferred loading:</b> this will load the action set if necessary.
-	 *
-	 * @param name The action name
-	 * @since jEdit 4.0pre1
-	 */
-	public EditAction getAction(String name)
-	{
-		Object obj = actions.get(name);
-		if(obj == placeholder)
-		{
-			load();
-			obj = actions.get(name);
-			if(obj == placeholder)
-			{
-				Log.log(Log.WARNING,this,"Outdated cache");
-				obj = null;
-			}
-		}
+ //{{{ getAction() method
+ /**
+  * Returns an action with the specified name.<p>
+  *
+  * <b>Deferred loading:</b> this will load the action set if necessary.
+  *
+  * @param name The action name
+  * @since jEdit 4.0pre1
+  */
+ public EditAction getAction(String name)
+ {
+  Object obj = actions.get(name);
+  if(obj == placeholder)
+  {
+   load();
+   obj = actions.get(name);
+   if(obj == placeholder)
+   {
+    Log.log(Log.WARNING,this,"Outdated cache");
+    obj = null;
+   }
+  }
 
-		return (EditAction)obj;
-	} //}}}
+  return (EditAction)obj;
+ } //}}}
 
-	//{{{ getActionCount() method
-	/**
-	 * Returns the number of actions in the set.
-	 * @since jEdit 4.0pre1
-	 */
-	public int getActionCount()
-	{
-		return actions.size();
-	} //}}}
+ //{{{ getActionCount() method
+ /**
+  * Returns the number of actions in the set.
+  * @since jEdit 4.0pre1
+  */
+ public int getActionCount()
+ {
+  return actions.size();
+ } //}}}
 
-	//{{{ getActionNames() method
-	/**
-	 * Returns an array of all action names in this action set.
-	 * @since jEdit 4.2pre1
-	 */
-	public String[] getActionNames()
-	{
-		String[] retVal = new String[actions.size()];
-		Enumeration e = actions.keys();
-		int i = 0;
-		while(e.hasMoreElements())
-		{
-			retVal[i++] = (String)e.nextElement();
-		}
-		return retVal;
-	} //}}}
+ //{{{ getActionNames() method
+ /**
+  * Returns an array of all action names in this action set.
+  * @since jEdit 4.2pre1
+  */
+ public String[] getActionNames()
+ {
+  String[] retVal = new String[actions.size()];
+  Enumeration e = actions.keys();
+  int i = 0;
+  while(e.hasMoreElements())
+  {
+   retVal[i++] = (String)e.nextElement();
+  }
+  return retVal;
+ } //}}}
 
-	//{{{ getCacheableActionNames() method
-	/**
-	 * Returns an array of all action names in this action set that should
-	 * be cached; namely, <code>BeanShellAction</code>s.
-	 * @since jEdit 4.2pre1
-	 */
-	public String[] getCacheableActionNames()
-	{
-		LinkedList retVal = new LinkedList();
-		Enumeration e = actions.elements();
-		while(e.hasMoreElements())
-		{
-			Object obj = e.nextElement();
-			if(obj == placeholder)
-			{
-				// ??? this should only be called with
-				// fully loaded action set
-				Log.log(Log.WARNING,this,"Action set not up "
-					+ "to date");
-			}
-			else if(obj instanceof BeanShellAction)
-				retVal.add(((BeanShellAction)obj).getName());
-		}
-		return (String[])retVal.toArray(new String[retVal.size()]);
-	} //}}}
+ //{{{ getCacheableActionNames() method
+ /**
+  * Returns an array of all action names in this action set that should
+  * be cached; namely, <code>BeanShellAction</code>s.
+  * @since jEdit 4.2pre1
+  */
+ public String[] getCacheableActionNames()
+ {
+  LinkedList retVal = new LinkedList();
+  Enumeration e = actions.elements();
+  while(e.hasMoreElements())
+  {
+   Object obj = e.nextElement();
+   if(obj == placeholder)
+   {
+    // ??? this should only be called with
+    // fully loaded action set
+    Log.log(Log.WARNING,this,"Action set not up "
+     + "to date");
+   }
+   else if(obj instanceof BeanShellAction)
+    retVal.add(((BeanShellAction)obj).getName());
+  }
+  return (String[])retVal.toArray(new String[retVal.size()]);
+ } //}}}
 
-	//{{{ getActions() method
-	/**
-	 * Returns an array of all actions in this action set.<p>
-	 *
-	 * <b>Deferred loading:</b> this will load the action set if necessary.
-	 *
-	 * @since jEdit 4.0pre1
-	 */
-	public EditAction[] getActions()
-	{
-		load();
+ //{{{ getActions() method
+ /**
+  * Returns an array of all actions in this action set.<p>
+  *
+  * <b>Deferred loading:</b> this will load the action set if necessary.
+  *
+  * @since jEdit 4.0pre1
+  */
+ public EditAction[] getActions()
+ {
+  load();
 
-		EditAction[] retVal = new EditAction[actions.size()];
-		Enumeration e = actions.elements();
-		int i = 0;
-		while(e.hasMoreElements())
-		{
-			retVal[i++] = (EditAction)e.nextElement();
-		}
-		return retVal;
-	} //}}}
+  EditAction[] retVal = new EditAction[actions.size()];
+  Enumeration e = actions.elements();
+  int i = 0;
+  while(e.hasMoreElements())
+  {
+   retVal[i++] = (EditAction)e.nextElement();
+  }
+  return retVal;
+ } //}}}
 
-	//{{{ contains() method
-	/**
-	 * Returns if this action set contains the specified action.
-	 * @param action The action
-	 * @since jEdit 4.2pre1
-	 */
-	public boolean contains(String action)
-	{
-		return actions.containsKey(action);
-	} //}}}
+ //{{{ contains() method
+ /**
+  * Returns if this action set contains the specified action.
+  * @param action The action
+  * @since jEdit 4.2pre1
+  */
+ public boolean contains(String action)
+ {
+  return actions.containsKey(action);
+ } //}}}
 
-	//{{{ size() method
-	/**
-	 * Returns the number of actions in this action set.
-	 * @since jEdit 4.2pre2
-	 */
-	public int size()
-	{
-		return actions.size();
-	} //}}}
+ //{{{ size() method
+ /**
+  * Returns the number of actions in this action set.
+  * @since jEdit 4.2pre2
+  */
+ public int size()
+ {
+  return actions.size();
+ } //}}}
 
-	//{{{ toString() method
-	public String toString()
-	{
-		return label;
-	} //}}}
+ //{{{ toString() method
+ public String toString()
+ {
+  return label;
+ } //}}}
 
-	//{{{ initKeyBindings() method
-	/**
-	 * Initializes the action set's key bindings.
-	 * jEdit calls this method for all registered action sets when the
-	 * user changes key bindings in the <b>Global Options</b> dialog box.<p>
-	 *
-	 * Note if your plugin adds a custom action set to jEdit's collection,
-	 * it must also call this method on the action set after adding it.
-	 *
-	 * @since jEdit 4.2pre1
-	 */
-	public void initKeyBindings()
-	{
-		InputHandler inputHandler = jEdit.getInputHandler();
+ //{{{ initKeyBindings() method
+ /**
+  * Initializes the action set's key bindings.
+  * jEdit calls this method for all registered action sets when the
+  * user changes key bindings in the <b>Global Options</b> dialog box.<p>
+  *
+  * Note if your plugin adds a custom action set to jEdit's collection,
+  * it must also call this method on the action set after adding it.
+  *
+  * @since jEdit 4.2pre1
+  */
+ public void initKeyBindings()
+ {
+  InputHandler inputHandler = jEdit.getInputHandler();
 
-		Iterator iter = actions.entrySet().iterator();
-		while(iter.hasNext())
-		{
-			Map.Entry entry = (Map.Entry)iter.next();
-			String name = (String)entry.getKey();
+  Iterator iter = actions.entrySet().iterator();
+  while(iter.hasNext())
+  {
+   Map.Entry entry = (Map.Entry)iter.next();
+   String name = (String)entry.getKey();
 
-			String shortcut1 = jEdit.getProperty(name + ".shortcut");
-			if(shortcut1 != null)
-				inputHandler.addKeyBinding(shortcut1,name);
+   String shortcut1 = jEdit.getProperty(name + ".shortcut");
+   if(shortcut1 != null)
+    inputHandler.addKeyBinding(shortcut1,name);
 
-			String shortcut2 = jEdit.getProperty(name + ".shortcut2");
-			if(shortcut2 != null)
-				inputHandler.addKeyBinding(shortcut2,name);
-		}
-	} //}}}
+   String shortcut2 = jEdit.getProperty(name + ".shortcut2");
+   if(shortcut2 != null)
+    inputHandler.addKeyBinding(shortcut2,name);
+  }
+ } //}}}
 
-	//{{{ load() method
-	/**
-	 * Forces the action set to be loaded. Plugins and macros should not
-	 * call this method.
-	 * @since jEdit 4.2pre1
-	 */
-	public void load()
-	{
-		if(loaded)
-			return;
+ //{{{ load() method
+ /**
+  * Forces the action set to be loaded. Plugins and macros should not
+  * call this method.
+  * @since jEdit 4.2pre1
+  */
+ public void load()
+ {
+  if(loaded)
+   return;
 
-		loaded = true;
-		//actions.clear();
+  loaded = true;
+  //actions.clear();
 
-		Reader stream = null;
+  Reader stream = null;
 
-		try
-		{
-			Log.log(Log.DEBUG,this,"Loading actions from " + uri);
+  try
+  {
+   Log.log(Log.DEBUG,this,"Loading actions from " + uri);
       System.out.println("Loading actions from " + uri);
-			ActionListHandler ah = new ActionListHandler(uri.toString(),this);
-			stream = new BufferedReader(new InputStreamReader(
-				uri.openStream()));
-			XmlParser parser = new XmlParser();
-			parser.setHandler(ah);
-			parser.parse(null, null, stream);
-		}
-		catch(XmlException xe)
-		{
-			xe.printStackTrace();
+   ActionListHandler ah = new ActionListHandler(uri.toString(),this);
+   stream = new BufferedReader(new InputStreamReader(
+    uri.openStream()));
+   XmlParser parser = new XmlParser();
+   parser.setHandler(ah);
+   parser.parse(null, null, stream);
+  }
+  catch(XmlException xe)
+  {
+   xe.printStackTrace();
       int line = xe.getLine();
-			String message = xe.getMessage();
-			Log.log(Log.ERROR,this,uri + ":" + line
-				+ ": " + message);
-		}
-		catch(Exception e)
-		{
-			e.printStackTrace();
+   String message = xe.getMessage();
+   Log.log(Log.ERROR,this,uri + ":" + line
+    + ": " + message);
+  }
+  catch(Exception e)
+  {
+   e.printStackTrace();
       Log.log(Log.ERROR,uri,e);
-		}
-		finally
-		{
-			try
-			{
-				if(stream != null)
-					stream.close();
-			}
-			catch(IOException io)
-			{
-				io.printStackTrace();
+  }
+  finally
+  {
+   try
+   {
+    if(stream != null)
+     stream.close();
+   }
+   catch(IOException io)
+   {
+    io.printStackTrace();
         Log.log(Log.ERROR,this,io);
-			}
-		}
-	} //}}}
+   }
+  }
+ } //}}}
 
-	//{{{ Package-private members
-	ActionContext context;
+ //{{{ Package-private members
+ ActionContext context;
 
-	//{{{ getActionNames() method
-	void getActionNames(List vec)
-	{
-		Enumeration e = actions.keys();
-		while(e.hasMoreElements())
-			vec.add(e.nextElement());
-	} //}}}
+ //{{{ getActionNames() method
+ void getActionNames(List vec)
+ {
+  Enumeration e = actions.keys();
+  while(e.hasMoreElements())
+   vec.add(e.nextElement());
+ } //}}}
 
-	//}}}
+ //}}}
 
-	//{{{ Private members
-	private String label;
-	private Hashtable actions;
-	private PluginJAR plugin;
-	private URL uri;
-	private boolean loaded;
+ //{{{ Private members
+ private String label;
+ private Hashtable actions;
+ private PluginJAR plugin;
+ private URL uri;
+ private boolean loaded;
 
-	private static final Object placeholder = new Object();
+ private static final Object placeholder = new Object();
 
-	//}}}
+ //}}}
 }

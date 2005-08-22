@@ -33,75 +33,75 @@ import org.gjt.sp.util.Log;
 
 public class GlobalOptions extends OptionsDialog
 {
-	//{{{ GlobalOptions constructor
-	public GlobalOptions(Frame frame)
-	{
-		super(frame,"options",jEdit.getProperty("options.last"));
-	} //}}}
+ //{{{ GlobalOptions constructor
+ public GlobalOptions(Frame frame)
+ {
+  super(frame,"options",jEdit.getProperty("options.last"));
+ } //}}}
 
-	//{{{ GlobalOptions constructor
-	public GlobalOptions(Frame frame, String pane)
-	{
-		super(frame,"options",pane);
-	} //}}}
+ //{{{ GlobalOptions constructor
+ public GlobalOptions(Frame frame, String pane)
+ {
+  super(frame,"options",pane);
+ } //}}}
 
-	//{{{ GlobalOptions constructor
-	public GlobalOptions(Dialog dialog)
-	{
-		super(dialog,"options",jEdit.getProperty("options.last"));
-	} //}}}
+ //{{{ GlobalOptions constructor
+ public GlobalOptions(Dialog dialog)
+ {
+  super(dialog,"options",jEdit.getProperty("options.last"));
+ } //}}}
 
-	//{{{ GlobalOptions constructor
-	public GlobalOptions(Dialog dialog, String pane)
-	{
-		super(dialog,"options",pane);
-	} //}}}
+ //{{{ GlobalOptions constructor
+ public GlobalOptions(Dialog dialog, String pane)
+ {
+  super(dialog,"options",pane);
+ } //}}}
 
-	//{{{ createOptionTreeModel() method
-	protected OptionTreeModel createOptionTreeModel()
-	{
-		OptionTreeModel paneTreeModel = new OptionTreeModel();
-		OptionGroup rootGroup = (OptionGroup) paneTreeModel.getRoot();
+ //{{{ createOptionTreeModel() method
+ protected OptionTreeModel createOptionTreeModel()
+ {
+  OptionTreeModel paneTreeModel = new OptionTreeModel();
+  OptionGroup rootGroup = (OptionGroup) paneTreeModel.getRoot();
 
-		// initialize the jEdit branch of the options tree
-		jEditGroup = new OptionGroup("jedit");
+  // initialize the jEdit branch of the options tree
+  jEditGroup = new OptionGroup("jedit");
 
-		jEditGroup.addOptionPane("abbrevs");
-		jEditGroup.addOptionPane("appearance");
-		jEditGroup.addOptionPane("context");
-		jEditGroup.addOptionPane("docking");
-		jEditGroup.addOptionPane("editing");
-		jEditGroup.addOptionPane("general");
-		jEditGroup.addOptionPane("gutter");
-		jEditGroup.addOptionPane("mouse");
-		jEditGroup.addOptionPane("print");
-		jEditGroup.addOptionPane("plugin-manager");
-		jEditGroup.addOptionPane("firewall");
-		jEditGroup.addOptionPane("save-back");
-		jEditGroup.addOptionPane("shortcuts");
-		jEditGroup.addOptionPane("status");
-		jEditGroup.addOptionPane("syntax");
-		jEditGroup.addOptionPane("textarea");
-		jEditGroup.addOptionPane("toolbar");
-		jEditGroup.addOptionPane("view");
-		rootGroup.addOptionGroup(jEditGroup);
+  jEditGroup.addOptionPane("abbrevs");
+  jEditGroup.addOptionPane("appearance");
+  jEditGroup.addOptionPane("context");
+  jEditGroup.addOptionPane("docking");
+  jEditGroup.addOptionPane("editing");
+  jEditGroup.addOptionPane("general");
+  jEditGroup.addOptionPane("gutter");
+  jEditGroup.addOptionPane("mouse");
+  jEditGroup.addOptionPane("print");
+  jEditGroup.addOptionPane("plugin-manager");
+  jEditGroup.addOptionPane("firewall");
+  jEditGroup.addOptionPane("save-back");
+  jEditGroup.addOptionPane("shortcuts");
+  jEditGroup.addOptionPane("status");
+  jEditGroup.addOptionPane("syntax");
+  jEditGroup.addOptionPane("textarea");
+  jEditGroup.addOptionPane("toolbar");
+  jEditGroup.addOptionPane("view");
+  rootGroup.addOptionGroup(jEditGroup);
 
-		browserGroup = new OptionGroup("browser");
-		browserGroup.addOptionPane("browser.general");
-		browserGroup.addOptionPane("browser.colors");
-		rootGroup.addOptionGroup(browserGroup);
+  browserGroup = new OptionGroup("browser");
+  browserGroup.addOptionPane("browser.general");
+  browserGroup.addOptionPane("browser.colors");
+  rootGroup.addOptionGroup(browserGroup);
 
-		return paneTreeModel;
-	} //}}}
+  return paneTreeModel;
+ } //}}}
 
-	//{{{ getDefaultGroup() method
-	protected OptionGroup getDefaultGroup()
-	{
-		return null;
-	} //}}}
+ //{{{ getDefaultGroup() method
+ protected OptionGroup getDefaultGroup()
+ {
+  return null;
+ } //}}}
 
-	//{{{ Private members
-	private OptionGroup jEditGroup;
-	private OptionGroup browserGroup;
-	//}}}
+ //{{{ Private members
+ private OptionGroup jEditGroup;
+ private OptionGroup browserGroup;
+ //}}}
 }
