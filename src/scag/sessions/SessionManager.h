@@ -20,7 +20,7 @@ namespace scag { namespace sessions
         static void Init(const std::string& dir);
         static SessionManager& Instance();
 
-        virtual Session* getSession(SCAGCommand* command)   = 0;
+        virtual Session* getSession(const SCAGCommand& command)   = 0;
         virtual void releaseSession(const Session* session) = 0;
         virtual void closeSession  (const Session* session) = 0;
 
