@@ -7,6 +7,7 @@
 #include <scag/re/actions/IParserHandler.h>
 #include <scag/re/actions/Action.h>
 #include "scag/transport/SCAGCommand.h"
+#include "scag/re/actions/ActionFactory.h"
 
 namespace scag { namespace re
 {

@@ -1,5 +1,4 @@
 #include "EventHandler.h"
-#include "MainActionFactory.h"
 #include <util/Exception.hpp>
 #include "SAX2Print.hpp"
 

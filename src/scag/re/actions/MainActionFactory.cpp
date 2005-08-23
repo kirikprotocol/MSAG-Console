@@ -27,7 +27,7 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     Action * action = 0;
 
     
-    for (list<const ActionFactory *>::const_iterator it = ChildFactories.begin(); it!=ChildFactories.end();++it)
+    for (std::list<const ActionFactory *>::const_iterator it = ChildFactories.begin(); it!=ChildFactories.end();++it)
     {
         action = (*it)->CreateAction(name);
         if (action) break;

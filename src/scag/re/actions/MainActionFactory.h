@@ -12,7 +12,7 @@ class MainActionFactory : public ActionFactory
 public:
     Action * CreateAction(const std::string& name) const;
     void registerChild(const ActionFactory& af);
-}
+};
 
 
 }}}

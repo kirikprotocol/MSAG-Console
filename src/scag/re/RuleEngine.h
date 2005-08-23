@@ -9,7 +9,7 @@
 
 #include "scag/re/actions/Action.h"
 #include "scag/re/Rule.h"
-#include "MainActionFactory.h"
+#include "scag/re/actions/MainActionFactory.h"
 
 #include "SAX2Print.hpp"
 

@@ -1,5 +1,5 @@
 #include "ActionTrafficCheck.h"
-#include "scag/re/ActionFactory.h"
+#include "ActionFactory.h"
 #include "scag/re/SAX2Print.hpp"
 
 #include "scag/stat/Statistics.h"

@@ -2,7 +2,7 @@
 #include "scag/re/SAX2Print.hpp"
 
 #include "scag/re/Rule.h"
-#include "scag/re/ActionFactory.h"
+#include "ActionFactory.h"
 #include "scag/re/CommandAdapter.h"
 
 

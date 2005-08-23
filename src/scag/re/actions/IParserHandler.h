@@ -5,15 +5,20 @@
 #include <util/Exception.hpp>
 #include "scag/transport/SCAGCommand.h"
 
+
+namespace scag { namespace re { namespace actions {
+    class ActionFactory;
+}}}
+
+
 namespace scag { namespace re { 
 
 using smsc::util::Exception;
 using scag::transport::TransportType;
-
+using scag::re::actions::ActionFactory;
 
 typedef smsc::core::buffers::Hash<std::string> SectionParams;
 
-class ActionFactory;
 
 struct PropertyObject
 {
