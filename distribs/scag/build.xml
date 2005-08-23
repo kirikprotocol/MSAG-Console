@@ -23,7 +23,11 @@
   <property name="BUILD_BIN" value="${BUILD_DIR}/bin"/>
   <property name="TEMPL_DIR" value="${SMSC_DIR}/config/templates"/>
   <property name="WEBSRC_DIR" value="${SMSC_DIR}/webapps"/>
+  <property name="JEDIT_DIR" value="${SMSC_DIR}/webapps/jedit"/>
   <property name="WEBINF_DIR" value="${DISTR_DIR}/webapps/scag/WEB-INF"/>
+  <property name="EXPLODED_DIR" location="${BUILD_DIR}/exploded/scag"/>
+  <property name="xmlcommon_lib" location="${JEDIT_DIR}/lib/xml-commons-resolver.jar"/>
+  <property name="htmlparser_lib" location="${JEDIT_DIR}/lib/htmlparser.jar"/>
   <property name="SERVICE2HOME_PATH" value="../.."/>
   <property name="DAEMON2HOME_PATH" value=".."/>
 
@@ -88,10 +92,8 @@ Targets:
     <mkdir dir="${DISTR_DIR}/services/scag/conf"/>
     <mkdir dir="${DISTR_DIR}/daemon/conf"/>
     <mkdir dir="${DISTR_DIR}/applet"/>
-    <copy todir="${DISTR_DIR}/applet">
-      <fileset dir="${WEBSRC_DIR}/jedit/dirs" includes="**/*"/>
-    </copy>
-	       
+
+           
     <symlink resource="${SERVICE2HOME_PATH}/lib"  link="${DISTR_DIR}/services/scag"/>
     <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/scag"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/command.dtd"          link="${DISTR_DIR}/services/scag/conf"/>
@@ -211,8 +213,108 @@ Targets:
       <fileset dir="${DISTR_DIR}/lib" includes="*"/>
     </chmod>
   </target>
+ <target name="compile" >
+     <copy todir="${DISTR_DIR}/applet">
+       <fileset dir="${WEBSRC_DIR}/jedit/dirs" includes="**/*"/>
+     </copy>
+   <mkdir dir="${JEDIT_DIR}/build"/>
+		    
+    <javac
+             srcdir="${JEDIT_DIR}/src"
+             destdir="${JEDIT_DIR}/build"
+             deprecation="on"
+             includeJavaRuntime="no"
+             debug="yes"
+             encoding="UTF8"
+             source="1.4"
+             target="1.4"
+             classpath="${JEDIT_DIR}/build"
+	     
+             >
+             <include name="bsh/**/*.java"/>
+             <include name="com/microstar/xml/*.java"/>
+             <include name="errorlist/*.java"/>
+             <include name="gatchan/highlight/*.java"/>
+             <include name="gnu/regexp/*.java"/>
+             <include name="org/**/*.java"/>
+             <include name="sidekick/*.java"/>
+             <include name="xml/**/*.java"/>
+     </javac>
+ </target>
 
-  <target name="create_distr" depends="create_distr_tree, create_update">
+<target name="distjedit" depends="compile" description="Compile and package jEdit.">
+    <jar
+    jarfile="${JEDIT_DIR}/build/jedit.jar"
+    manifest="${JEDIT_DIR}/src/org/gjt/sp/jedit/jedit.manifest"
+    compress="true">
+        <fileset dir="${JEDIT_DIR}/build">
+            <include name="bsh/**/*.class"/>
+            <include name="com/**/*.class"/>
+            <include name="errorlist/*.class"/>
+            <include name="gatchan/highlight/*.class"/>
+            <include name="gnu/**/*.class"/>
+            <include name="javax/**/*.class"/>
+	    <include name="org/**/*.class"/>
+            <include name="sidekick/*.class"/>
+            <include name="xml/**/*.class"/>
+            <exclude name="com/loomcom/**/*.class"/>
+        </fileset>
+
+        <fileset dir="${JEDIT_DIR}/src">
+            <include name="bsh/commands/*.bsh"/>
+            <include name="gnu/regexp/MessagesBundle.properties"/>
+
+            <include name="errorlist/actions.xml"/>
+            <include name="errorlist/*.props"/>
+            <include name="errorlist/dockables.xml"/>
+            <include name="errorlist/*.png"/>
+																																																																														
+            <include name="gatchan/highlight/actions.xml"/>
+            <include name="gatchan/highlight/*.props"/>
+            <include name="gatchan/highlight/dockables.xml"/>
+
+            <include name="org/apache/xerces/impl/msg/*.properties"/>
+            <include name="org/apache/xerces/impl/xpath/regex/*.properties"/>
+            <include name="org/apache/xerces/jaxp/*.SAXParserFactory"/>
+            <include name="org/apache/xerces/jaxp/*.DocumentBuilderFactory"/>
+            <include name="org/apache/xerces/parsers/*.driver"/>
+            <include name="org/apache/xml/serialize/*.res"/>
+
+
+            <include name="org/gjt/sp/jedit/**/*.dtd"/>
+            <include name="org/gjt/sp/jedit/icons/*.gif"/>
+            <include name="org/gjt/sp/jedit/icons/*.jpg"/>
+            <include name="org/gjt/sp/jedit/icons/*.png"/>
+            <include name="org/gjt/sp/jedit/*.props"/>
+            <include name="org/gjt/sp/jedit/actions.xml"/>
+            <include name="org/gjt/sp/jedit/browser.actions.xml"/>
+            <include name="org/gjt/sp/jedit/dockables.xml"/>
+            <include name="org/gjt/sp/jedit/services.xml"/>
+
+            <include name="org/gjt/sp/jedit/default.abbrevs"/>
+
+            <include name="sidekick/actions.xml"/>
+            <include name="sidekick/*.props"/>
+            <include name="sidekick/dockables.xml"/>
+            <include name="sidekick/services.xml"/>
+
+            <include name="xml/actions.xml"/>
+            <include name="xml/*.props"/>
+            <include name="xml/dockables.xml"/>
+            <include name="xml/services.xml"/>
+            <include name="xml/*.png"/>
+            <include name="xml/completion/*.xml"/>
+            <include name="xml/dtds/*.*"/>
+            <include name="xml/ent/*.ent"/>
+            <include name="xml/jedit/*.dtd"/>
+
+        </fileset>
+    </jar>
+	     
+</target>
+																																																																																																		
+
+  <target  name="create_distr" depends="create_distr_tree, create_update, distjedit">
   </target>
 
   <target name="distr" depends="create_distr, extra_libs, configure">
