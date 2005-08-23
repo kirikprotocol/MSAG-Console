@@ -913,7 +913,7 @@ void Smsc::run()
     __trace__("Waiting SMPPIO started");
     accstarted.Wait();
     __trace__("SMPPIO started");
-#ifdef USE_MAP
+#if defined(USE_MAP) && !defined(NOMAPPROXY)
     Event mapiostarted;
     MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,busyMTDelay,lockedByMODelay,MOLockTimeout,allowCallBarred);
     tp.startTask(mapio);
@@ -929,12 +929,12 @@ void Smsc::run()
 //    tp.startTask(new MapTracker());
 #ifndef NOMAPPROXY
     MapDialogContainer::getInstance()->registerSelf(&smeman);
-#endif
 #ifdef USE_MAP
     mapProxy=MapDialogContainer::getInstance()->getProxy();
     SmeInfo si=smeman.getSmeInfo(smeman.lookup("MAP_PROXY"));
     mapProxy->updateSmeInfo( si );
     MapDialogContainer::getInstance()->getProxy()->setId("MAP_PROXY");
+#endif
 #endif
   }
 
