@@ -47,12 +47,13 @@
       </fileset>
     </jar>
     <delete dir="${exploded}/unjar_tmp"/>
-    <copy todir="${exploded}" preservelastmodified="yes">
-      <fileset dir="." includes="**/*.jsp **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc **/*.xsd"/>
-    </copy>
      <copy todir="${exploded}/rules/rules" preservelastmodified="yes">
-      <fileset dir="${basedir}/rules/rules" includes="jedit.jar" />
+       <fileset dir="${JEDIT_DIR}/build" includes="jedit.jar" />
      </copy>
+    <copy todir="${exploded}" preservelastmodified="yes">
+       <fileset dir="." includes="**/*.jsp **/*.jspf **/*.tld **/*.tag **/*.xml **/*.css **/*.htc **/*.xsd"/>
+    </copy>
+     
 			   
     <copy todir="${exploded}/WEB-INF/lib" preservelastmodified="yes">
       <fileset dir="${basedir}/WEB-INF/lib"  includes="*.jar"/>
