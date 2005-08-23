@@ -2,6 +2,7 @@
 #define SCAG_BILLING_MANAGER
 
 #include <inttypes.h>
+#include "Bill.h"
 #include <string>
 
 namespace scag { namespace bill

@@ -489,6 +489,47 @@ class SmppCommand:public SCAGCommand
 public:
 
 
+  virtual Address getAbonentAddr() const
+  {
+      Address resultAddr;
+      if (!cmd) return resultAddr;
+
+      CommandId cmdid = cmd->get_commandId();
+      void * dta = cmd->dta;
+      SMS * sms = 0;
+
+      if (!dta) return resultAddr;
+
+      int FieldId = -1;
+
+      switch (cmdid) 
+      {
+      case DELIVERY:
+          sms = (SMS*)dta;
+          resultAddr = sms->originatingAddress;
+          break;
+      case SUBMIT:
+          sms = (SMS*)dta;
+          resultAddr = sms->destinationAddress;
+          break;
+      case DELIVERY_RESP:
+          sms = ((SmsResp*)dta)->get_sms();
+          resultAddr = sms->destinationAddress;
+          break;
+      case SUBMIT_RESP:
+          sms = ((SmsResp*)dta)->get_sms();
+          resultAddr = sms->originatingAddress;
+          break;
+      }
+
+      return resultAddr;
+  }
+
+  virtual int16_t getUMR() const
+  {
+    return getUMR();
+  }
+
 
   SmppChannel* getChannel()const{return cmd->channel;}
   void setChannel(SmppChannel* newchan){cmd->channel=newchan;}

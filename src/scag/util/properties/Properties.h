@@ -8,12 +8,11 @@
 #endif    
 
 #include <string>
-
-#include <util/Exception.hpp>
+#include "scag/re/exc/RuleEngineExceptions.h"
 
 namespace scag { namespace util { namespace properties 
 {
-    using smsc::util::Exception;
+    using namespace scag::re::exceptions;
 
     enum PropertyType
     {
@@ -23,47 +22,6 @@ namespace scag { namespace util { namespace properties
         pt_date
     };
 
-    class PropertyException : public Exception
-    {
-    public:
-
-        PropertyException() : Exception() {};
-        PropertyException(const char* fmt,...) 
-            : Exception() { SMSC_UTIL_EX_FILL(fmt); };
-        virtual ~PropertyException() throw() {};
-
-    };
-    class ConvertException : public PropertyException
-    {
-    static const char* message;
-    public:
-        
-        ConvertException(const char* val, const char* type) 
-            : PropertyException(message, val, type) { /*SMSC_UTIL_EX_FILL(fmt);*/ };
-        virtual ~ConvertException() throw() {};
-    };
-
-    class CompareException : public PropertyException
-    {
-    static const char* message;
-    public:
-
-        CompareException(const char * _message) 
-            : PropertyException(_message) { /*SMSC_UTIL_EX_FILL(fmt);*/ };
-        virtual ~CompareException() throw() {};
-    };
-
-    class ConstantSetException : public PropertyException
-    {
-    static const char* message;
-    public:
-        
-        ConstantSetException() : PropertyException(message) {};
-        ConstantSetException(const char* fmt,...) 
-            : PropertyException() { SMSC_UTIL_EX_FILL(fmt); };
-        virtual ~ConstantSetException() throw() {};
-    };
-    
     struct Changeable;
     class Property
     {

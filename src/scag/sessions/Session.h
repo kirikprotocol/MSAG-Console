@@ -32,7 +32,6 @@ namespace scag { namespace sessions
         bool     bChanged;
         Hash<AdapterProperty *> PropertyHash;
     public:
-        friend class SessionManagerImpl;
 
         Session();
         virtual ~Session();

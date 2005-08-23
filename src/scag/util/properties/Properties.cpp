@@ -5,10 +5,6 @@
 namespace scag { namespace util { namespace properties 
 {
 
-using namespace std;
-
-const char* ConvertException::message     = "Failed to convert '%s' to type %s";
-const char* ConstantSetException::message = "Failed to assign value to constant";
 const char* TimeFormat = "%A, %d - %B - %Y.\n";
 
 // TODO: Implement get/set methods (check const in set methods!)

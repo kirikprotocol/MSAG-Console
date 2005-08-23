@@ -40,14 +40,14 @@ static Mutex initBillingManagerLock;
 inline unsigned GetLongevity(BillingManager*) { return 7; } 
 typedef SingletonHolder<BillingManagerImpl> SingleBM;
 
-void BillingManager::Init(const std::string& dir)
+void BillingManager::Init(const std::string& cfg_dir, const std::string& so_dir)
 {
     if (!bBillingManagerInited)
     {
         MutexGuard guard(initBillingManagerLock);
         if (!bBillingManagerInited) {
             BillingManagerImpl& bm = SingleBM::Instance();
-            bm.init(dir);
+            bm.init(cfg_dir,so_dir);
             bBillingManagerInited = true;
         }
     }
@@ -63,15 +63,6 @@ BillingManager& BillingManager::Instance()
     return SingleBM::Instance();
 }
 
-BillingManager::BillingManager(const BillingManager& bm)
-{
-    throw std::runtime_error("BillingManager couldn't be copied");
-}
-BillingManager& BillingManager::operator=(const BillingManager& bm)
-{
-    throw std::runtime_error("BillingManager couldn't be copied");
-}
-
 // ################ TODO: Actual BillingManager Implementation follows ################ 
 
 void BillingManagerImpl::init(const std::string& cfg_dir, const std::string& so_dir) // possible throws exceptions
@@ -80,7 +71,7 @@ void BillingManagerImpl::init(const std::string& cfg_dir, const std::string& so_
     //       add to machines & register action factory in MainActionFactory in RuleEngine
 }
 
-void BillingManagerImpl::roolback(const Bill& bill) // possible throws exceptions
+void BillingManagerImpl::rollback(const Bill& bill) // possible throws exceptions
 {
     // TODO: dispath call to billing machine by bill.machine_id
 }

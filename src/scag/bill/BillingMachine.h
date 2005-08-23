@@ -33,7 +33,7 @@ namespace scag { namespace bill
         /**
          * Function should return pointer to user's billing actions factory
          */ 
-        virtual ActionFactory* getActionFactory() = 0;
+        virtual const ActionFactory& getActionFactory() const  = 0;
         
         inline void setMachineId(uint8_t id) { // ???
             machine_id = id;
