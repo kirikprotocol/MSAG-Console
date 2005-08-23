@@ -342,7 +342,7 @@ sub outrow{
     {
 #      print "Match\n";
       $outf=$out->{$r->{prefix}};
-      $outforis=$out->{'foris'.$r->{prefix}};
+      $outforis=$out->{'foris'.$r->{prefix}} if $r->{prefix} ne 'ns';
       $outpack=$r->{outpack};
       last;
     }
