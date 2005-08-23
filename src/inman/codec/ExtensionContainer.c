@@ -22,8 +22,8 @@ static ber_tlv_tag_t asn_DEF_ExtensionContainer_1_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_ExtensionContainer_1_tag2el[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* privateExtensionList at 418 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* pcs-Extensions at 419 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* privateExtensionList at 435 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* pcs-Extensions at 436 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_ExtensionContainer_1_specs = {
 	sizeof(struct ExtensionContainer),

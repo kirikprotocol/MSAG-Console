@@ -127,7 +127,7 @@ static ber_tlv_tag_t asn_DEF_MiscCallInfo_1_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_MiscCallInfo_1_tag2el[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 } /* messageType at 150 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 } /* messageType at 166 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_MiscCallInfo_1_specs = {
 	sizeof(struct MiscCallInfo),

@@ -1,7 +1,16 @@
-
+/* $Id$ */
+/* ************************************************************************** *
+ * This file contains ASN.1 definitions for PDUs (components from cap4SMS     *
+ * CONTRACT) utilized by IN-Manager					      *
+ * ************************************************************************** *
+ * Author: R.V. Gerasimov						      *
+ * ************************************************************************** */
 IN-Maneger-OIDs
 -- OIDs of modules used by IN-Manager
 DEFINITIONS ::=
+-- GVRoman's NOTE: This module is for informative purposes only. 
+-- SourceForge's asn1c unable to parse ASN.1 module references by named OID.
+-- So, actually, these OIDs are never used in below notations.
 BEGIN
 
 ros-InformationObjects OBJECT IDENTIFIER ::=
@@ -61,6 +70,9 @@ cap-smsSSF-gsmSCF-Protocol OBJECT IDENTIFIER ::=
 
 END -- IN-Maneger-OIDs
 
+-- ******************************************************************* --
+-- ROS modules follow
+-- ******************************************************************* --
 
 -- Module Remote-Operations-Information-Objects (X.880:07/1994)
 Remote-Operations-Information-Objects {joint-iso-itu-t remote-operations(4)
@@ -120,6 +132,10 @@ Priority ::= INTEGER(0..MAX)
 
 END -- end of Information Object specifications
 
+
+-- ******************************************************************* --
+-- INAP modules follow
+-- ******************************************************************* --
 
 CS1-DataTypes {itu-t(0) identified-organization(4) etsi(0) inDomain(1)
   in-network(1) modules(0) cs1-datatypes(2) version1(0)}
@@ -369,6 +385,7 @@ CellGlobalIdOrServiceAreaIdOrLAI ::= CHOICE {
 
 CellGlobalIdOrServiceAreaIdFixedLength ::= OCTET STRING(SIZE (7))
 
+
 -- Refers to Location Area Identification defined in TS 3GPP TS 23.003 [17].
 -- The internal structure is defined as follows:
 -- octet 1 bits 4321	Mobile Country Code 1st digit
@@ -461,6 +478,9 @@ BEGIN
 IMPORTS
   cap-classes, in-CS2-datatypes, map-CommonDataTypes
     FROM IN-Maneger-OIDs
+  Integer4
+    FROM CS1-DataTypes {itu-t(0) identified-organization(4) etsi(0) inDomain(1)
+      in-network(1) modules(0) cs1-datatypes(2) version1(0)}
   CriticalityType
     FROM IN-CS2-datatypes {itu-t(0) identified-organization(4) etsi(0) inDomain(1)
       in-network(1) cs2(20) modules(0) in-cs2-datatypes(0) version1(0)}
@@ -525,6 +545,14 @@ MO-SMSCause ::= ENUMERATED {
 -- or time-out from the MS, then MT-SMSCause shall be set to 'Protocol error,
 -- unspecified', as defined in 3G TS 24.011 [10].
 MT-SMSCause ::= OCTET STRING(SIZE (1))
+
+-- RP cause according to 3GPP TS 24.011 [10] or 3GPP TS 29.002 [11].
+-- GsmSCF shall send this cause in the ReleaseSMS operation.
+-- For a MO-SMS service, the MSC or SGSN shall send the RP Cause to the originating MS.
+-- It shall be used to overwrite the RP-Cause element in the RP-ERROR RPDU.
+-- For a MT-SMS service, the MSC or SGSN shall send the RP Cause to the sending SMS-GMSC.
+-- It shall be used to overwrite the RP-Cause element in the RP-ERROR RPDU.
+RPCause ::= OCTET STRING (SIZE (1))
 
 -- Indicates the Called Party Number, including service selection information.
 -- Refer to 3GPP TS 24.008 [9] for encoding.
@@ -651,6 +679,36 @@ TPShortMessageSpecificInfo ::= OCTET STRING(SIZE (1))
 -- the length of ValidityPeriod is either 1 octet or 7 octets
 TPValidityPeriod ::= OCTET STRING(SIZE (1..7))
 
+-- This parameter indicates the SMS billing and/or charging characteristics.
+-- The violation of the UserDefinedConstraint shall be handled as an ASN.1 syntax error.
+FCISMSBillingChargingCharacteristics ::= OCTET STRING (SIZE
+					(capMinFCIBillingChargingLength ..
+					    capMaxFCIBillingChargingLength))
+	(CONSTRAINED BY {-- shall be the result of the BER-encoded value of type -
+	    CAMEL-FCISMSBillingChargingCharacteristics})
+
+capMinFCIBillingChargingLength INTEGER ::= 5
+capMaxFCIBillingChargingLength INTEGER ::= 225
+
+CAMEL-FCISMSBillingChargingCharacteristics ::= CHOICE {
+    fCIBCCCAMELsequence1	[0] SEQUENCE {
+	freeFormatData			[0] OCTET STRING (SIZE
+					    (capMinFCIBillingChargingDataLength ..
+						capMaxFCIBillingChargingDataLength)),
+	appendFreeFormatData		[1] AppendFreeFormatData DEFAULT overwrite
+    }
+}
+capMinFCIBillingChargingDataLength INTEGER ::= 1
+capMaxFCIBillingChargingDataLength INTEGER ::= 160
+
+AppendFreeFormatData ::= ENUMERATED { overwrite (0), append (1) }
+
+-- Indicates the timer to be reset.
+TimerID ::= ENUMERATED { tssf (0) }
+
+-- Indicates the timer value (in seconds).
+TimerValue ::= Integer4
+
 END -- CAP-datatypes
 
 
@@ -728,7 +786,6 @@ END -- CAP-classes
 -- IN-Manager modules follow
 -- ******************************************************************* --
 
-
 IN-Manager-CAP-errors
 -- CAP errors utilized by IN-Manager,
 -- taken from CAP-errortypes cap-errortypes;
@@ -744,20 +801,24 @@ IMPORTS
     -- ros-InformationObjects
     ;
 
+-- Basic errors for SMS operations
+IN-SMSErrors ERROR ::= {
+    missingParameter | taskRefused | unexpectedComponentSequence |
+    unexpectedDataValue | unexpectedParameter
+}
 -- Errors for RequestReportSMSEvent operation
 IN-SMSEventErrors ERROR ::= {
-	missingParameter | parameterOutOfRange | systemFailure | taskRefused |
-	unexpectedComponentSequence | unexpectedDataValue | unexpectedParameter
+	parameterOutOfRange | systemFailure | IN-SMSErrors
 }
 
 -- Errors for InitialDPSMS operation
 IN-IniDPSMSEventErrors ERROR ::= {
 	missingCustomerRecord | IN-SMSEventErrors
-/*	
-	missingParameter | parameterOutOfRange |
-	systemFailure | taskRefused | unexpectedComponentSequence |
-	unexpectedDataValue | unexpectedParameter
-*/
+}
+
+-- Errors for ResetTimerSMS operation
+IN-SMSTimerErrors ERROR ::= {
+    parameterOutOfRange | IN-SMSErrors
 }
 
 -- The caller response was not as expected.
@@ -821,11 +882,14 @@ END -- IN-Manager-CAP-errors
 
 
 IN-Manager-Operations
--- This is a mofified variant of operations and argumnets from
+-- This is a mofified variant of operations and arguments from cap4SMS CONTRACT
+-- (dialogue initiated by gprsSSF or gsmSSF with InitialDPSMS Operation)
 -- 7	SMS Control
 -- 7.1	SMS operations and arguments
 -- CAP-SMS-ops-args {itu-t(0) identified-organization(4) etsi(0) mobileDomain(0) umts-network(1) modules(3) cap-SMS-ops-args(105) version5(4)}
 DEFINITIONS IMPLICIT TAGS ::=
+-- GVRoman's NOTE: This module is for informative purposes only. 
+-- SourceForge's asn1c doesn't produce something usefull from these definitions.
 BEGIN
 
 IMPORTS
@@ -835,30 +899,46 @@ IMPORTS
     FROM Remote-Operations-Information-Objects
     { joint-iso-itu-t remote-operations(4) informationObjects(5) version1(0) }
     -- ros-InformationObjects
-  IN-IniDPSMSEventErrors, IN-SMSEventErrors
+  IN-IniDPSMSEventErrors, IN-SMSErrors, IN-SMSEventErrors, IN-SMSTimerErrors
     FROM IN-Manager-CAP-errors
-  InitialDPSMSArg, RequestReportSMSEventArg, EventReportSMSArg
+  InitialDPSMSArg, ConnectSMSArg, ReleaseSMSArg, RequestReportSMSEventArg,
+  EventReportSMSArg, ResetTimerSMSArg, FurnishChargingInformationSMSArg
     FROM IN-Manager-Operations-Args;
 
 -- Sms Activation Package
-opcode-initialDPSMS		Code ::= local:60
+opcode-initialDPSMS			Code ::= local:60
+-- Sms Billing Package
+opcode-furnishChargingInformationSMS	Code ::= local: 61
+-- Sms Connect Package
+opcode-connectSMS			Code ::= local: 62
 -- Sms Event Handling Package
-opcode-requestReportSMSEvent	Code ::= local:63
-opcode-eventReportSMS		Code ::= local:64
+opcode-requestReportSMSEvent		Code ::= local:63
+opcode-eventReportSMS			Code ::= local:64
 -- Sms Processing Package
-opcode-continueSMS		Code ::= local:65
+opcode-continueSMS			Code ::= local:65
+-- Sms Release Package	
+opcode-releaseSMS			Code ::= local: 66
+-- Sms Timer Package
+opcode-resetTimerSMS			Code ::= local: 67
 
-
--- SmsInvokable operations
+-- ************************************************************ --
+-- cap3SMS and cap4SMS CONTRACTs conclude following operations: --
+-- ************************************************************ --
+--	SmsInvokable operations:
 SmsInvokable OPERATION ::= {
-    initialDPSMS | requestReportSMSEvent | eventReportSMS
+    initialDPSMS | connectSMS |
+    requestReportSMSEvent | eventReportSMS |
+    furnishChargingInformationSMS | resetTimerSMS
 }
-
--- SmsReturnable operations
+--	SmsReturnable operations:
 SmsReturnable OPERATION ::= {
-    initialDPSMS | requestReportSMSEvent | continueSMS
+    initialDPSMS | connectSMS | continueSMS | releaseSMS |
+    requestReportSMSEvent |
+    furnishChargingInformationSMS | resetTimerSMS
 }
 
+--  Direction: gsmSSF or gprsSSF -> gsmSCF, Timer: Tidpsms
+--  This operation is used after a TDP to indicate request for service.
 initialDPSMS OPERATION ::= {
     ARGUMENT		InitialDPSMSArg
     RETURN RESULT	FALSE
@@ -866,7 +946,41 @@ initialDPSMS OPERATION ::= {
     CODE		opcode-initialDPSMS
 }
 
+--  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Tconsms
+--  This operation is used to request the smsSSF to perform the SMS processing
+--  actions to route or forward a short message to a specified destination.
+connectSMS OPERATION ::= {
+    ARGUMENT		ConnectSMSArg
+    RETURN RESULT	FALSE
+    ERRORS		{ IN-SMSEventErrors }
+    CODE		opcode-connectSMS
+}
 
+-- Direction: gsmSCF -> smsSSF, Timer: Tcuesms 
+-- This operation is used to request the smsSSF to proceed with
+-- Short Message processing at the DP at which it previously suspended
+-- Short Message processing to await gsmSCF instructions (i.e. proceed
+-- to the next Point in Association in the SMS FSM). The smsSSF
+-- continues SMS processing without substituting new data from the gsmSCF.
+continueSMS OPERATION ::= {
+    RETURN RESULT	FALSE
+    ALWAYS RESPONDS	FALSE
+    CODE		opcode-continueSMS
+}
+
+--  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Trelsms
+--  This operation is used to prevent an attempt to submit or deliver a short message. 
+releaseSMS OPERATION ::= {
+    ARGUMENT		ReleaseSMSArg
+    RETURN RESULT	FALSE
+    ALWAYS RESPONDS	FALSE
+    CODE		opcode-releaseSMS
+}
+
+--  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Trrbsms
+--  This operation is used to request the gsmSSF or gprsSSF to monitor for a
+--  Short Message related event (FSM events such as submission, delivery or failure)
+--  and to send a notification to the gsmSCF when the event is detected.
 requestReportSMSEvent OPERATION ::= {
     ARGUMENT		RequestReportSMSEventArg
     RETURN RESULT	FALSE
@@ -887,11 +1001,25 @@ eventReportSMS OPERATION ::= {
   CODE			opcode-eventReportSMS
 }
 
-
-continueSMS OPERATION ::= {
+--  Direction: gsmSCF ?? gsmSSF or gprsSSF, Timer: Tfcisms 
+--  This operation is used to request the smsSSF to generate, register a charging record
+--  or to include some information in the default SM record. The registered charging record is
+--  intended for off line charging of the Short Message.
+furnishChargingInformationSMS OPERATION ::= {
+    ARGUMENT		FurnishChargingInformationSMSArg
     RETURN RESULT	FALSE
-    ALWAYS RESPONDS	FALSE
-    CODE		opcode-continueSMS
+    ERRORS		{ IN-SMSErrors }
+    CODE		opcode-furnishChargingInformationSMS
+}
+
+-- Direction: gsmSCF -> smsSSF, Timer: Trtsms 
+-- This operation is used to request the smsSSF to refresh an application
+-- timer in the smsSSF.
+resetTimerSMS OPERATION ::= {
+    ARGUMENT		ResetTimerSMSArg
+    RETURN RESULT	FALSE
+    ERRORS		{ IN-SMSTimerErrors }
+    CODE		opcode-resetTimerSMS
 }
 
 END -- IN-Manager-Operations
@@ -899,6 +1027,8 @@ END -- IN-Manager-Operations
 
 IN-Manager-Operations-Args
 DEFINITIONS IMPLICIT TAGS ::=
+-- GVRoman's NOTE: This module is the main one. It contains definitions for
+-- types transferred as components in component portion of TCAP message.
 BEGIN
 
 IMPORTS
@@ -917,12 +1047,12 @@ IMPORTS
     FROM MAP-MS-DataTypes -- map-MS-DataTypes
   ExtensionContainer
     FROM MAP-ExtensionDataTypes -- map-Ext-DataTypes
-  CalledPartyBCDNumber, Extensions, EventSpecificInformationSMS, EventTypeSMS,
-  SMSEvent, SMS-AddressString, TimeAndTimezone, TPValidityPeriod, TPDataCodingScheme,
+  CalledPartyBCDNumber, Extensions, EventSpecificInformationSMS, EventTypeSMS, 
+  FCISMSBillingChargingCharacteristics, RPCause, SMSEvent, SMS-AddressString,
+  TimeAndTimezone, TimerID, TimerValue, TPValidityPeriod, TPDataCodingScheme,
   TPProtocolIdentifier, TPShortMessageSpecificInfo
     FROM CAP-datatypes -- cap-datatypes
     ;
-
 
 --  Direction: gsmSSF or gprsSSF -> gsmSCF, Timer: Tidpsms
 --  This operation is used after a TDP to indicate request for service.
@@ -951,6 +1081,20 @@ InitialDPSMSArg ::= SEQUENCE {
   calledPartyNumber            [20]  ISDN-AddressString OPTIONAL
 }
 
+--  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Tconsms
+--  This operation is used to request the smsSSF to perform the SMS processing
+--  actions to route or forward a short message to a specified destination.
+ConnectSMSArg ::= SEQUENCE {
+    callingPartysNumber			[0]  SMS-AddressString		OPTIONAL,
+    destinationSubscriberNumber		[1]  CalledPartyBCDNumber	OPTIONAL,
+    sMSCAddress				[2]  ISDN-AddressString		OPTIONAL,
+    extensions				[10] Extensions			OPTIONAL,
+    ...
+}
+
+--  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Trelsms
+--  This operation is used to prevent an attempt to submit or deliver a short message. 
+ReleaseSMSArg ::= RPCause
 
 --  Direction: gsmSSF or gprsSSF -> gsmSCF, Timer: Terbsms
 --  This operation is used to notify the gsmSCF of a Short Message related event (FSM events
@@ -964,7 +1108,6 @@ EventReportSMSArg ::= SEQUENCE {
     ...
 }
 
-
 --  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Trrbsms
 --  This operation is used to request the gsmSSF or gprsSSF to monitor for a
 --  Short Message related event (FSM events such as submission, delivery or failure)
@@ -976,5 +1119,72 @@ RequestReportSMSEventArg ::= SEQUENCE {
 }
 capNumOfSMSEvents INTEGER ::= 10
 
+--  Direction: gsmSCF ?? gsmSSF or gprsSSF, Timer: Tfcisms 
+--  This operation is used to request the smsSSF to generate, register a charging record
+--  or to include some information in the default SM record. The registered charging record is
+--  intended for off line charging of the Short Message.
+FurnishChargingInformationSMSArg ::= FCISMSBillingChargingCharacteristics
+
+-- Direction: gsmSCF -> smsSSF, Timer: Trtsms 
+-- This operation is used to request the smsSSF to refresh an application
+-- timer in the smsSSF.
+ResetTimerSMSArg ::= SEQUENCE {
+    timerID		[0] TimerID	DEFAULT tssf,
+    timervalue		[1] TimerValue,
+    extensions		[2] Extensions	OPTIONAL,
+    ...
+}
+
+
 END -- IN-Manager-Operations-Args
 
+/*
+-- Sample values for arguments of some operations
+IN-Manager-Operations-Values
+DEFINITIONS IMPLICIT TAGS ::=
+BEGIN
+
+IMPORTS
+  InitialDPSMSArg, EventReportSMSArg, RequestReportSMSEventArg
+    FROM IN-Manager-Operations-Args;
+
+
+cmd1-InitialDPSMS InitialDPSMSArg ::= {
+  serviceKey			11,
+  destinationSubscriberNumber	'91131133'H
+  callingPartyNumber		'9179139163393f'H,
+  eventTypeSMS			sms-CollectedInfo, -- 1 --
+  iMSI				'250013901388780f'H,
+  locationInformationMSC	{
+    vlr-number			'9179139860001f'H,
+    locationNumber		'810179139860001f'H,
+    cellGlobalIdOrServiceAreaIdOrLAI cellGlobalIdOrServiceAreaIdFixedLength :
+				'250f1097FE1389'H,
+  },
+  sMSCAddress			'9179029869990f'H,
+  timeAndTimezone		'2005042215032642'H,
+  tPShortMessageSpecificInfo	'11'H,
+  tPProtocolIdentifier		'00'H,
+  tPDataCodingScheme		'08'H,
+  tPValidityPeriod		'da'H
+}
+
+
+cmd2-RequestReportSMSEvent RequestReportSMSEventArg ::= {
+    sMSEvents	{
+	{ eventTypeSMS	o-smsFailure -- 2 --,
+	  monitorMode	notifyAndContinue -- 1--  
+	},
+	{ eventTypeSMS	o-smsSubmission -- 3 --,
+	  monitorMode	notifyAndContinue -- 1--  
+	}
+    }
+}
+
+cmd4-EventReportSMS EventReportSMSArg ::= { 
+    eventTypeSMS	o-smsSubmission -- 3 --,
+    miscCallInfo	notification -- 1 --
+}
+END    
+
+*/

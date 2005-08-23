@@ -19,8 +19,8 @@ static asn_TYPE_member_t asn_MBR_CellGlobalIdOrServiceAreaIdOrLAI_1[] = {
 		},
 };
 static asn_TYPE_tag2member_t asn_MAP_CellGlobalIdOrServiceAreaIdOrLAI_1_tag2el[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* cellGlobalIdOrServiceAreaIdFixedLength at 366 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* laiFixedLength at 368 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* cellGlobalIdOrServiceAreaIdFixedLength at 382 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* laiFixedLength at 384 */
 };
 static asn_CHOICE_specifics_t asn_SPC_CellGlobalIdOrServiceAreaIdOrLAI_1_specs = {
 	sizeof(struct CellGlobalIdOrServiceAreaIdOrLAI),

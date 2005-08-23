@@ -19,8 +19,8 @@ static asn_TYPE_member_t asn_MBR_Code_1[] = {
 		},
 };
 static asn_TYPE_tag2member_t asn_MAP_Code_1_tag2el[] = {
-    { (ASN_TAG_CLASS_UNIVERSAL | (2 << 2)), 0, 0, 0 }, /* local at 115 */
-    { (ASN_TAG_CLASS_UNIVERSAL | (6 << 2)), 1, 0, 0 } /* global at 116 */
+    { (ASN_TAG_CLASS_UNIVERSAL | (2 << 2)), 0, 0, 0 }, /* local at 127 */
+    { (ASN_TAG_CLASS_UNIVERSAL | (6 << 2)), 1, 0, 0 } /* global at 128 */
 };
 static asn_CHOICE_specifics_t asn_SPC_Code_1_specs = {
 	sizeof(struct Code),

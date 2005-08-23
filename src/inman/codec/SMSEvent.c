@@ -22,8 +22,8 @@ static ber_tlv_tag_t asn_DEF_SMSEvent_1_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_SMSEvent_1_tag2el[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* eventTypeSMS at 495 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* monitorMode at 497 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* eventTypeSMS at 515 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* monitorMode at 517 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_SMSEvent_1_specs = {
 	sizeof(struct SMSEvent),

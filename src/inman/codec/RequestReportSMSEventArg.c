@@ -29,7 +29,7 @@ memb_sMSEvents_1_constraint(asn_TYPE_descriptor_t *td, const void *sptr,
 }
 
 static asn_TYPE_member_t asn_MBR_sMSEvents_2[] = {
-	{ ATF_NOFLAGS, 0, 0,
+	{ ATF_POINTER, 0, 0,
 		(ASN_TAG_CLASS_UNIVERSAL | (16 << 2)),
 		0,
 		(void *)&asn_DEF_SMSEvent,
@@ -89,8 +89,8 @@ static ber_tlv_tag_t asn_DEF_RequestReportSMSEventArg_1_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_RequestReportSMSEventArg_1_tag2el[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* sMSEvents at 973 */
-    { (ASN_TAG_CLASS_CONTEXT | (10 << 2)), 1, 0, 0 } /* extensions at 974 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* sMSEvents at 1116 */
+    { (ASN_TAG_CLASS_CONTEXT | (10 << 2)), 1, 0, 0 } /* extensions at 1117 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_RequestReportSMSEventArg_1_specs = {
 	sizeof(struct RequestReportSMSEventArg),

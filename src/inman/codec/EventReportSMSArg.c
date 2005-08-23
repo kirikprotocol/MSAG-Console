@@ -36,10 +36,10 @@ static ber_tlv_tag_t asn_DEF_EventReportSMSArg_1_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_EventReportSMSArg_1_tag2el[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* eventTypeSMS at 960 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* eventSpecificInformationSMS at 961 */
-    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 }, /* miscCallInfo at 962 */
-    { (ASN_TAG_CLASS_CONTEXT | (10 << 2)), 3, 0, 0 } /* extensions at 963 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* eventTypeSMS at 1104 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* eventSpecificInformationSMS at 1105 */
+    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 }, /* miscCallInfo at 1106 */
+    { (ASN_TAG_CLASS_CONTEXT | (10 << 2)), 3, 0, 0 } /* extensions at 1107 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_EventReportSMSArg_1_specs = {
 	sizeof(struct EventReportSMSArg),

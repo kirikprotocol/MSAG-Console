@@ -1,0 +1,155 @@
+ASN_MODULE_SOURCES=	\
+	Code.c	\
+	Priority.c	\
+	ServiceKey.c	\
+	Integer4.c	\
+	CriticalityType.c	\
+	MiscCallInfo.c	\
+	LocationInformation.c	\
+	LocationInformationGPRS.c	\
+	LSAIdentity.c	\
+	RAIdentity.c	\
+	GeographicalInformation.c	\
+	GeodeticInformation.c	\
+	LocationNumber.c	\
+	MS-Classmark2.c	\
+	GPRSMSClass.c	\
+	MSNetworkCapability.c	\
+	MSRadioAccessCapability.c	\
+	CallReferenceNumber.c	\
+	TBCD-STRING.c	\
+	IMSI.c	\
+	AgeOfLocationInformation.c	\
+	AddressString.c	\
+	ISDN-AddressString.c	\
+	CellGlobalIdOrServiceAreaIdOrLAI.c	\
+	CellGlobalIdOrServiceAreaIdFixedLength.c	\
+	LAIFixedLength.c	\
+	IMEI.c	\
+	ExtensionContainer.c	\
+	PrivateExtensionList.c	\
+	PrivateExtension.c	\
+	PCS-Extensions.c	\
+	SMS-AddressString.c	\
+	SMSEvent.c	\
+	EventTypeSMS.c	\
+	MonitorMode.c	\
+	MO-SMSCause.c	\
+	MT-SMSCause.c	\
+	RPCause.c	\
+	CalledPartyBCDNumber.c	\
+	TimeAndTimezone.c	\
+	Extensions.c	\
+	ExtensionField.c	\
+	EventSpecificInformationSMS.c	\
+	TPDataCodingScheme.c	\
+	TPProtocolIdentifier.c	\
+	TPShortMessageSpecificInfo.c	\
+	TPValidityPeriod.c	\
+	FCISMSBillingChargingCharacteristics.c	\
+	CAMEL-FCISMSBillingChargingCharacteristics.c	\
+	AppendFreeFormatData.c	\
+	TimerID.c	\
+	TimerValue.c	\
+	UnavailableNetworkResource.c	\
+	InitialDPSMSArg.c	\
+	ConnectSMSArg.c	\
+	ReleaseSMSArg.c	\
+	EventReportSMSArg.c	\
+	RequestReportSMSEventArg.c	\
+	FurnishChargingInformationSMSArg.c	\
+	ResetTimerSMSArg.c
+
+ASN_MODULE_HEADERS=	\
+	Code.h	\
+	Priority.h	\
+	ServiceKey.h	\
+	Integer4.h	\
+	CriticalityType.h	\
+	MiscCallInfo.h	\
+	LocationInformation.h	\
+	LocationInformationGPRS.h	\
+	LSAIdentity.h	\
+	RAIdentity.h	\
+	GeographicalInformation.h	\
+	GeodeticInformation.h	\
+	LocationNumber.h	\
+	MS-Classmark2.h	\
+	GPRSMSClass.h	\
+	MSNetworkCapability.h	\
+	MSRadioAccessCapability.h	\
+	CallReferenceNumber.h	\
+	TBCD-STRING.h	\
+	IMSI.h	\
+	AgeOfLocationInformation.h	\
+	AddressString.h	\
+	ISDN-AddressString.h	\
+	CellGlobalIdOrServiceAreaIdOrLAI.h	\
+	CellGlobalIdOrServiceAreaIdFixedLength.h	\
+	LAIFixedLength.h	\
+	IMEI.h	\
+	ExtensionContainer.h	\
+	PrivateExtensionList.h	\
+	PrivateExtension.h	\
+	PCS-Extensions.h	\
+	SMS-AddressString.h	\
+	SMSEvent.h	\
+	EventTypeSMS.h	\
+	MonitorMode.h	\
+	MO-SMSCause.h	\
+	MT-SMSCause.h	\
+	RPCause.h	\
+	CalledPartyBCDNumber.h	\
+	TimeAndTimezone.h	\
+	Extensions.h	\
+	ExtensionField.h	\
+	EventSpecificInformationSMS.h	\
+	TPDataCodingScheme.h	\
+	TPProtocolIdentifier.h	\
+	TPShortMessageSpecificInfo.h	\
+	TPValidityPeriod.h	\
+	FCISMSBillingChargingCharacteristics.h	\
+	CAMEL-FCISMSBillingChargingCharacteristics.h	\
+	AppendFreeFormatData.h	\
+	TimerID.h	\
+	TimerValue.h	\
+	UnavailableNetworkResource.h	\
+	InitialDPSMSArg.h	\
+	ConnectSMSArg.h	\
+	ReleaseSMSArg.h	\
+	EventReportSMSArg.h	\
+	RequestReportSMSEventArg.h	\
+	FurnishChargingInformationSMSArg.h	\
+	ResetTimerSMSArg.h
+
+
+
+lib_LTLIBRARIES=libsomething.la
+libsomething_la_SOURCES=$(ASN_MODULE_SOURCES) $(ASN_MODULE_HEADERS)
+
+# This file may be used as an input for make(3)
+# Remove the lines below to convert it into a pure .am file
+TARGET = progname
+CFLAGS += -I.
+OBJS=${ASN_MODULE_SOURCES:.c=.o} $(TARGET).o
+
+all: $(TARGET)
+
+$(TARGET): ${OBJS}
+	$(CC) $(CFLAGS) -o $(TARGET) ${OBJS} $(LDFLAGS) $(LIBS)
+
+.SUFFIXES:
+.SUFFIXES: .c .o
+
+.c.o:
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+clean:
+	rm -f $(TARGET)
+	rm -f $(OBJS)
+
+regen: regenerate-from-asn1-source
+
+regenerate-from-asn1-source:
+	/home/gvroman/work.gsm/asn1c-0.9.19.pre/asn1c/asn1c -fnative-types /home/gvroman/work.gsm/inmgr/asns/inman.asn
+

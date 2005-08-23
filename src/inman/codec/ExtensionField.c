@@ -29,10 +29,10 @@ static ber_tlv_tag_t asn_DEF_ExtensionField_1_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_ExtensionField_1_tag2el[] = {
-    { (ASN_TAG_CLASS_UNIVERSAL | (2 << 2)), 0, 0, 0 }, /* local at 115 */
-    { (ASN_TAG_CLASS_UNIVERSAL | (6 << 2)), 0, 0, 0 }, /* global at 116 */
-    { (ASN_TAG_CLASS_UNIVERSAL | (10 << 2)), 1, 0, 0 }, /* criticality at 615 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 2, 0, 0 } /* value at 617 */
+    { (ASN_TAG_CLASS_UNIVERSAL | (2 << 2)), 0, 0, 0 }, /* local at 127 */
+    { (ASN_TAG_CLASS_UNIVERSAL | (6 << 2)), 0, 0, 0 }, /* global at 128 */
+    { (ASN_TAG_CLASS_UNIVERSAL | (10 << 2)), 1, 0, 0 }, /* criticality at 643 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 2, 0, 0 } /* value at 645 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_ExtensionField_1_specs = {
 	sizeof(struct ExtensionField),

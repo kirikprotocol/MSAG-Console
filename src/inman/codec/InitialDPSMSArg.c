@@ -155,27 +155,27 @@ static ber_tlv_tag_t asn_DEF_InitialDPSMSArg_1_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_InitialDPSMSArg_1_tag2el[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* serviceKey at 930 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* destinationSubscriberNumber at 931 */
-    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 }, /* callingPartyNumber at 932 */
-    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 3, 0, 0 }, /* eventTypeSMS at 933 */
-    { (ASN_TAG_CLASS_CONTEXT | (4 << 2)), 4, 0, 0 }, /* iMSI at 934 */
-    { (ASN_TAG_CLASS_CONTEXT | (5 << 2)), 5, 0, 0 }, /* locationInformationMSC at 935 */
-    { (ASN_TAG_CLASS_CONTEXT | (6 << 2)), 6, 0, 0 }, /* locationInformationGPRS at 936 */
-    { (ASN_TAG_CLASS_CONTEXT | (7 << 2)), 7, 0, 0 }, /* sMSCAddress at 937 */
-    { (ASN_TAG_CLASS_CONTEXT | (8 << 2)), 8, 0, 0 }, /* timeAndTimezone at 938 */
-    { (ASN_TAG_CLASS_CONTEXT | (9 << 2)), 9, 0, 0 }, /* tPShortMessageSpecificInfo at 939 */
-    { (ASN_TAG_CLASS_CONTEXT | (10 << 2)), 10, 0, 0 }, /* tPProtocolIdentifier at 940 */
-    { (ASN_TAG_CLASS_CONTEXT | (11 << 2)), 11, 0, 0 }, /* tPDataCodingScheme at 941 */
-    { (ASN_TAG_CLASS_CONTEXT | (12 << 2)), 12, 0, 0 }, /* tPValidityPeriod at 942 */
-    { (ASN_TAG_CLASS_CONTEXT | (13 << 2)), 13, 0, 0 }, /* extensions at 943 */
-    { (ASN_TAG_CLASS_CONTEXT | (14 << 2)), 14, 0, 0 }, /* smsReferenceNumber at 945 */
-    { (ASN_TAG_CLASS_CONTEXT | (15 << 2)), 15, 0, 0 }, /* mscAddress at 946 */
-    { (ASN_TAG_CLASS_CONTEXT | (16 << 2)), 16, 0, 0 }, /* sgsn-Number at 947 */
-    { (ASN_TAG_CLASS_CONTEXT | (17 << 2)), 17, 0, 0 }, /* ms-Classmark2 at 948 */
-    { (ASN_TAG_CLASS_CONTEXT | (18 << 2)), 18, 0, 0 }, /* gPRSMSClass at 949 */
-    { (ASN_TAG_CLASS_CONTEXT | (19 << 2)), 19, 0, 0 }, /* iMEI at 950 */
-    { (ASN_TAG_CLASS_CONTEXT | (20 << 2)), 20, 0, 0 } /* calledPartyNumber at 951 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* serviceKey at 1060 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* destinationSubscriberNumber at 1061 */
+    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 }, /* callingPartyNumber at 1062 */
+    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 3, 0, 0 }, /* eventTypeSMS at 1063 */
+    { (ASN_TAG_CLASS_CONTEXT | (4 << 2)), 4, 0, 0 }, /* iMSI at 1064 */
+    { (ASN_TAG_CLASS_CONTEXT | (5 << 2)), 5, 0, 0 }, /* locationInformationMSC at 1065 */
+    { (ASN_TAG_CLASS_CONTEXT | (6 << 2)), 6, 0, 0 }, /* locationInformationGPRS at 1066 */
+    { (ASN_TAG_CLASS_CONTEXT | (7 << 2)), 7, 0, 0 }, /* sMSCAddress at 1067 */
+    { (ASN_TAG_CLASS_CONTEXT | (8 << 2)), 8, 0, 0 }, /* timeAndTimezone at 1068 */
+    { (ASN_TAG_CLASS_CONTEXT | (9 << 2)), 9, 0, 0 }, /* tPShortMessageSpecificInfo at 1069 */
+    { (ASN_TAG_CLASS_CONTEXT | (10 << 2)), 10, 0, 0 }, /* tPProtocolIdentifier at 1070 */
+    { (ASN_TAG_CLASS_CONTEXT | (11 << 2)), 11, 0, 0 }, /* tPDataCodingScheme at 1071 */
+    { (ASN_TAG_CLASS_CONTEXT | (12 << 2)), 12, 0, 0 }, /* tPValidityPeriod at 1072 */
+    { (ASN_TAG_CLASS_CONTEXT | (13 << 2)), 13, 0, 0 }, /* extensions at 1073 */
+    { (ASN_TAG_CLASS_CONTEXT | (14 << 2)), 14, 0, 0 }, /* smsReferenceNumber at 1075 */
+    { (ASN_TAG_CLASS_CONTEXT | (15 << 2)), 15, 0, 0 }, /* mscAddress at 1076 */
+    { (ASN_TAG_CLASS_CONTEXT | (16 << 2)), 16, 0, 0 }, /* sgsn-Number at 1077 */
+    { (ASN_TAG_CLASS_CONTEXT | (17 << 2)), 17, 0, 0 }, /* ms-Classmark2 at 1078 */
+    { (ASN_TAG_CLASS_CONTEXT | (18 << 2)), 18, 0, 0 }, /* gPRSMSClass at 1079 */
+    { (ASN_TAG_CLASS_CONTEXT | (19 << 2)), 19, 0, 0 }, /* iMEI at 1080 */
+    { (ASN_TAG_CLASS_CONTEXT | (20 << 2)), 20, 0, 0 } /* calledPartyNumber at 1081 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_InitialDPSMSArg_1_specs = {
 	sizeof(struct InitialDPSMSArg),

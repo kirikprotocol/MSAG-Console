@@ -16,7 +16,7 @@ static ber_tlv_tag_t asn_DEF_o_smsFailureSpecificInfo_2_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_o_smsFailureSpecificInfo_2_tag2el[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 } /* failureCause at 624 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 } /* failureCause at 652 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_o_smsFailureSpecificInfo_2_specs = {
 	sizeof(struct o_smsFailureSpecificInfo),
@@ -97,7 +97,7 @@ static ber_tlv_tag_t asn_DEF_t_smsFailureSpecificInfo_7_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_t_smsFailureSpecificInfo_7_tag2el[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 } /* failureCause at 631 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 } /* failureCause at 659 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_t_smsFailureSpecificInfo_7_specs = {
 	sizeof(struct t_smsFailureSpecificInfo),
@@ -195,10 +195,10 @@ static asn_TYPE_member_t asn_MBR_EventSpecificInformationSMS_1[] = {
 		},
 };
 static asn_TYPE_tag2member_t asn_MAP_EventSpecificInformationSMS_1_tag2el[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* o-smsFailureSpecificInfo at 624 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* o-smsSubmissionSpecificInfo at 629 */
-    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 }, /* t-smsFailureSpecificInfo at 631 */
-    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 3, 0, 0 } /* t-smsDeliverySpecificInfo at 636 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* o-smsFailureSpecificInfo at 652 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 }, /* o-smsSubmissionSpecificInfo at 657 */
+    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 2, 0, 0 }, /* t-smsFailureSpecificInfo at 659 */
+    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 3, 0, 0 } /* t-smsDeliverySpecificInfo at 664 */
 };
 static asn_CHOICE_specifics_t asn_SPC_EventSpecificInformationSMS_1_specs = {
 	sizeof(struct EventSpecificInformationSMS),

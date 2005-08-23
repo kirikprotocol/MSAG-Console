@@ -85,17 +85,17 @@ static ber_tlv_tag_t asn_DEF_LocationInformation_1_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_LocationInformation_1_tag2el[] = {
-    { (ASN_TAG_CLASS_UNIVERSAL | (2 << 2)), 0, 0, 0 }, /* ageOfLocationInformation at 180 */
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 1, 0, 0 }, /* geographicalInformation at 181 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 2, 0, 0 }, /* vlr-number at 182 */
-    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 3, 0, 0 }, /* locationNumber at 183 */
-    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 4, 0, 0 }, /* cellGlobalIdOrServiceAreaIdOrLAI at 185 */
-    { (ASN_TAG_CLASS_CONTEXT | (4 << 2)), 5, 0, 0 }, /* extensionContainer at 186 */
-    { (ASN_TAG_CLASS_CONTEXT | (5 << 2)), 6, 0, 0 }, /* selectedLSA-Id at 188 */
-    { (ASN_TAG_CLASS_CONTEXT | (6 << 2)), 7, 0, 0 }, /* msc-Number at 189 */
-    { (ASN_TAG_CLASS_CONTEXT | (7 << 2)), 8, 0, 0 }, /* geodeticInformation at 190 */
-    { (ASN_TAG_CLASS_CONTEXT | (8 << 2)), 9, 0, 0 }, /* currentLocationRetrieved at 191 */
-    { (ASN_TAG_CLASS_CONTEXT | (9 << 2)), 10, 0, 0 } /* sai-Present at 192 */
+    { (ASN_TAG_CLASS_UNIVERSAL | (2 << 2)), 0, 0, 0 }, /* ageOfLocationInformation at 196 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 1, 0, 0 }, /* geographicalInformation at 197 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 2, 0, 0 }, /* vlr-number at 198 */
+    { (ASN_TAG_CLASS_CONTEXT | (2 << 2)), 3, 0, 0 }, /* locationNumber at 199 */
+    { (ASN_TAG_CLASS_CONTEXT | (3 << 2)), 4, 0, 0 }, /* cellGlobalIdOrServiceAreaIdOrLAI at 201 */
+    { (ASN_TAG_CLASS_CONTEXT | (4 << 2)), 5, 0, 0 }, /* extensionContainer at 202 */
+    { (ASN_TAG_CLASS_CONTEXT | (5 << 2)), 6, 0, 0 }, /* selectedLSA-Id at 204 */
+    { (ASN_TAG_CLASS_CONTEXT | (6 << 2)), 7, 0, 0 }, /* msc-Number at 205 */
+    { (ASN_TAG_CLASS_CONTEXT | (7 << 2)), 8, 0, 0 }, /* geodeticInformation at 206 */
+    { (ASN_TAG_CLASS_CONTEXT | (8 << 2)), 9, 0, 0 }, /* currentLocationRetrieved at 207 */
+    { (ASN_TAG_CLASS_CONTEXT | (9 << 2)), 10, 0, 0 } /* sai-Present at 208 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_LocationInformation_1_specs = {
 	sizeof(struct LocationInformation),

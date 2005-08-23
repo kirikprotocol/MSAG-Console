@@ -15,7 +15,7 @@ static ber_tlv_tag_t asn_DEF_PrivateExtension_1_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_PrivateExtension_1_tag2el[] = {
-    { (ASN_TAG_CLASS_UNIVERSAL | (6 << 2)), 0, 0, 0 } /* extId at 431 */
+    { (ASN_TAG_CLASS_UNIVERSAL | (6 << 2)), 0, 0, 0 } /* extId at 448 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_PrivateExtension_1_specs = {
 	sizeof(struct PrivateExtension),

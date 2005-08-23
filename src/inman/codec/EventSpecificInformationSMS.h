@@ -26,7 +26,7 @@ typedef enum EventSpecificInformationSMS_PR {
 /* EventSpecificInformationSMS */
 typedef struct EventSpecificInformationSMS {
 	EventSpecificInformationSMS_PR present;
-	union {
+	union EventSpecificInformationSMS_u {
 		struct o_smsFailureSpecificInfo {
 			MO_SMSCause_t	*failureCause	/* OPTIONAL */;
 			/*

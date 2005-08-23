@@ -3,7 +3,7 @@
 #include "PrivateExtensionList.h"
 
 static asn_TYPE_member_t asn_MBR_PrivateExtensionList_1[] = {
-	{ ATF_NOFLAGS, 0, 0,
+	{ ATF_POINTER, 0, 0,
 		(ASN_TAG_CLASS_UNIVERSAL | (16 << 2)),
 		0,
 		(void *)&asn_DEF_PrivateExtension,

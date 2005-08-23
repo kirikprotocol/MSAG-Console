@@ -22,8 +22,8 @@ static ber_tlv_tag_t asn_DEF_GPRSMSClass_1_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (16 << 2))
 };
 static asn_TYPE_tag2member_t asn_MAP_GPRSMSClass_1_tag2el[] = {
-    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* mSNetworkCapability at 254 */
-    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* mSRadioAccessCapability at 255 */
+    { (ASN_TAG_CLASS_CONTEXT | (0 << 2)), 0, 0, 0 }, /* mSNetworkCapability at 270 */
+    { (ASN_TAG_CLASS_CONTEXT | (1 << 2)), 1, 0, 0 } /* mSRadioAccessCapability at 271 */
 };
 static asn_SEQUENCE_specifics_t asn_SPC_GPRSMSClass_1_specs = {
 	sizeof(struct GPRSMSClass),
