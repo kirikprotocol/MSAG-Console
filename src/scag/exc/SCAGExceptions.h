@@ -1,5 +1,5 @@
-#ifndef _RULE_ENGINE_EXCEPTIONS_
-#define _RULE_ENGINE_EXCEPTIONS_
+#ifndef _SCAG_EXCEPTIONS_
+#define _SCAG_EXCEPTIONS_
 
 
 #include <util/Exception.hpp>

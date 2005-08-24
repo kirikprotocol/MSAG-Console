@@ -3,7 +3,7 @@
 # $Id$
 #
 #
-PACKAGE := scag.re.exc
+PACKAGE := scag.exc
 
 
 ifndef SMSC_SRCDIR
