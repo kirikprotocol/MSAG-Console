@@ -4,8 +4,8 @@
 #include <string>
 #include <core/buffers/Hash.hpp>
 #include <scag/re/RuleStatus.h>
-#include <scag/re/properties/Properties.h>
-#include "scag/re/stat/Statistics.h"
+#include <scag/util/properties/Properties.h>
+#include "scag/stat/Statistics.h"
 
 
 namespace scag { namespace re { namespace actions 

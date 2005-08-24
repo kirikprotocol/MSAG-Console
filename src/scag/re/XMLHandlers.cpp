@@ -43,10 +43,10 @@ void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionPara
         try
         {
             NewObj = CurrentObject->StartXMLSubSection(name,params,*factory);
-        } catch (Exception& e)
+        } catch (SCAGException& e)
         {
             if (NewObj) delete NewObj;
-            throw RuleEngineException("Semantic Analyser: Invalid object '",name.c_str(),"' to create: ",e.what()); 
+            throw SCAGException("Semantic Analyser: Invalid object '",name.c_str(),"' to create: ",e.what()); 
         }
 
         if (NewObj) 
@@ -59,7 +59,7 @@ void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionPara
     {
         if (RootObject) 
         {
-            throw RuleEngineException("Semantic Analyser: Structure cannot has 2 rule objects");
+            throw SCAGException("Semantic Analyser: Structure cannot has 2 rule objects");
         }
 
 
@@ -68,10 +68,10 @@ void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionPara
         {
             PropertyObject propertyObject;
             rule->init(params,propertyObject);
-        } catch(Exception& e)
+        } catch(SCAGException& e)
         {
             if (NewObj) delete NewObj;
-            throw RuleEngineException("Semantic Analyser: Invalid object '",name.c_str(),"' to create: ",e.what()); 
+            throw SCAGException("Semantic Analyser: Invalid object '",name.c_str(),"' to create: ",e.what()); 
         }
         CurrentObject = rule;
         RootObject = rule;

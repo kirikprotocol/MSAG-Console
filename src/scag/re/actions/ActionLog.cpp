@@ -8,7 +8,7 @@ namespace scag { namespace re { namespace actions {
 
 IParserHandler * ActionLog::StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory)
 {
-    throw RuleEngineException("Action 'session:close': cannot have a child object");
+    throw SCAGException("Action 'session:close': cannot have a child object");
 }
 
 bool ActionLog::FinishXMLSubSection(const std::string& name)
@@ -18,9 +18,9 @@ bool ActionLog::FinishXMLSubSection(const std::string& name)
 
 void ActionLog::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    if (!params.Exists("level")) throw RuleEngineException("Action 'session:close': missing 'level' parameter");
-    if (!params.Exists("category")) throw RuleEngineException("Action 'session:close': missing 'category' parameter");
-    if (!params.Exists("message")) throw RuleEngineException("Action 'session:close': missing 'message' parameter");
+    if (!params.Exists("level")) throw SCAGException("Action 'session:close': missing 'level' parameter");
+    if (!params.Exists("category")) throw SCAGException("Action 'session:close': missing 'category' parameter");
+    if (!params.Exists("message")) throw SCAGException("Action 'session:close': missing 'message' parameter");
 
 
     std::string sLevel = params["level"];
@@ -29,7 +29,7 @@ void ActionLog::init(const SectionParams& params,PropertyObject propertyObject)
     else if (sLevel == "warn") level = lgWarning;
     else if (sLevel == "info") level = lgInfo;
     else if (sLevel == "debug") level = lgDebug;
-    else throw RuleEngineException("Action 'log': invalid value for 'level' parameter");
+    else throw SCAGException("Action 'log': invalid value for 'level' parameter");
 
 
     const char * name = 0;

@@ -2,7 +2,7 @@
 #define _IPARSER_HANDLER_H_
 
 #include <core/buffers/Hash.hpp>
-#include "scag/re/exc/RuleEngineExceptions.h"
+#include "scag/exc/SCAGExceptions.h"
 #include "scag/transport/SCAGCommand.h"
 
 
@@ -13,7 +13,7 @@ namespace scag { namespace re { namespace actions {
 
 namespace scag { namespace re { 
 
-using namespace scag::re::exceptions;
+using namespace scag::exceptions;
 using scag::transport::TransportType;
 using scag::re::actions::ActionFactory;
 
@@ -31,7 +31,7 @@ class IParserHandler
 public:
     virtual IParserHandler * StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory) = 0;
     virtual bool FinishXMLSubSection(const std::string& name) = 0;
-    virtual void SetChildObject(IParserHandler * child) {throw RuleEngineException("IParserHandler object must have no children");}
+    virtual void SetChildObject(IParserHandler * child) {throw SCAGException("IParserHandler object must have no children");}
 
     virtual void init(const SectionParams& params,PropertyObject propertyObject) = 0;
     virtual ~IParserHandler() {};

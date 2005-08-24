@@ -28,7 +28,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command)
     st _statistics;
 
     SmppCommand * smppcommand = dynamic_cast<SmppCommand *>(&command);
-    if (!smppcommand) throw RuleEngineException("SmppEventHandler: command is not 'smpp-type'");
+    if (!smppcommand) throw SCAGException("SmppEventHandler: command is not 'smpp-type'");
 
     SmppCommandAdapter _command(*smppcommand);
     SmppCommandAdapter _session(*smppcommand);

@@ -8,7 +8,7 @@ namespace scag { namespace re { namespace actions {
 
 IParserHandler * ActionClose::StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory)
 {
-    throw RuleEngineException("Action 'session:close': cannot have a child object");
+    throw SCAGException("Action 'session:close': cannot have a child object");
 }
 
 bool ActionClose::FinishXMLSubSection(const std::string& name)
@@ -18,7 +18,7 @@ bool ActionClose::FinishXMLSubSection(const std::string& name)
 
 void ActionClose::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    if (!params.Exists("commit")) throw RuleEngineException("Action 'session:close' missing 'commit' parameter");
+    if (!params.Exists("commit")) throw SCAGException("Action 'session:close' missing 'commit' parameter");
 
     propertyName = params["commit"];
 

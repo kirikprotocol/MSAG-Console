@@ -38,12 +38,12 @@ IParserHandler * ActionTrafficCheck::StartXMLSubSection(const std::string& name,
     Action * action = 0;
     action = factory.CreateAction(name);
     if (!action) 
-        throw RuleEngineException("Action 'traffic:check': unrecognized child object '",name.c_str(),"' to create");
+        throw SCAGException("Action 'traffic:check': unrecognized child object '",name.c_str(),"' to create");
 
     try
     {
         action->init(params,propertyObject);
-    } catch (Exception& e)
+    } catch (SCAGException& e)
     {
         delete action;
         throw e;
@@ -60,13 +60,13 @@ bool ActionTrafficCheck::FinishXMLSubSection(const std::string& name)
 
 void ActionTrafficCheck::init(const SectionParams& params, PropertyObject _propertyObject)
 {
-    if (!params.Exists("max")) throw RuleEngineException("Action 'traffic:check': missing 'max' parameter");
-    if (!params.Exists("period")) throw RuleEngineException("Action 'traffic:check': missing 'period' parameter");
+    if (!params.Exists("max")) throw SCAGException("Action 'traffic:check': missing 'max' parameter");
+    if (!params.Exists("period")) throw SCAGException("Action 'traffic:check': missing 'period' parameter");
 
     sMax = params["max"];
 
     std::string sPeriod = params["period"];
-    if (!StrToPeriod(period,sPeriod)) RuleEngineException("Action 'traffic:check': invalid value '",sPeriod.c_str(),"' for 'period' parameter");
+    if (!StrToPeriod(period,sPeriod)) SCAGException("Action 'traffic:check': invalid value '",sPeriod.c_str(),"' for 'period' parameter");
     propertyObject = _propertyObject;
 }
 

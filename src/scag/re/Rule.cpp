@@ -101,7 +101,7 @@ IParserHandler * Rule::StartXMLSubSection(const std::string& name,const SectionP
     try
     {
         eh = CreateEventHandler();
-        if (!eh) throw RuleEngineException("Rule: unknown RuleTransport to create EventHandler");
+        if (!eh) throw SCAGException("Rule: unknown RuleTransport to create EventHandler");
 
         nHId = eh->StrToHandlerId(name);
         PropertyObject propertyObject;
@@ -109,7 +109,7 @@ IParserHandler * Rule::StartXMLSubSection(const std::string& name,const SectionP
         propertyObject.transport = transportType;
 
         eh->init(params,propertyObject);
-    } catch (RuleEngineException& e)
+    } catch (SCAGException& e)
     {
         if (eh) delete eh;
         throw e;
@@ -117,7 +117,7 @@ IParserHandler * Rule::StartXMLSubSection(const std::string& name,const SectionP
     if (Handlers.Exist(nHId)) 
     {
         delete eh;
-        throw RuleEngineException("Rule: EventHandler with the same ID already exists");
+        throw SCAGException("Rule: EventHandler with the same ID already exists");
     }
 
     Handlers.Insert(nHId,eh);
@@ -132,7 +132,7 @@ bool Rule::FinishXMLSubSection(const std::string& name)
 
 void Rule::init(const SectionParams& params, PropertyObject propertyObject)
 {
-    if (!params.Exists("transport")) throw RuleEngineException("Rule: missing 'transport' parameter");
+    if (!params.Exists("transport")) throw SCAGException("Rule: missing 'transport' parameter");
 
     std::string sTransport = params["transport"];
 
@@ -140,12 +140,7 @@ void Rule::init(const SectionParams& params, PropertyObject propertyObject)
     else if (sTransport == "WAP") transportType = WAP;
     else if (sTransport == "MMS") transportType = MMS;
     else 
-    {
-        std::string msg("Rule: invalid value '");
-        msg.append(sTransport);
-        msg.append("' for 'transport' parameter");
-        throw RuleEngineException(msg.c_str());
-    }
+        throw SCAGException("Rule: invalid value '",sTransport.c_str(), "' for 'transport' parameter");
 
     smsc_log_debug(logger,"Rule::Init");
 

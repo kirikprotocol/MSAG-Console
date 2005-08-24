@@ -15,7 +15,7 @@ ActionSet::~ActionSet()
 
 void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    if ((!params.Exists("var"))|| (!params.Exists("value"))) throw RuleEngineException("Action 'set': missing 'var' and 'value' parameters");
+    if ((!params.Exists("var"))|| (!params.Exists("value"))) throw SCAGException("Action 'set': missing 'var' and 'value' parameters");
 
     Variable = params["var"];
     Value = params["value"];
@@ -85,7 +85,7 @@ bool ActionSet::run(ActionContext& context)
 
 IParserHandler * ActionSet::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)
 {
-    throw RuleEngineException("Action 'return' cannot include child objects");
+    throw SCAGException("Action 'return' cannot include child objects");
 }
 
 bool ActionSet::FinishXMLSubSection(const std::string& name)

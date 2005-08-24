@@ -31,14 +31,14 @@ IParserHandler * EventHandler::StartXMLSubSection(const std::string& name,const 
     Action * action = 0;
     action = factory.CreateAction(name);
     if (!action) 
-        throw RuleEngineException("EventHandler: unrecognized child object '",name.c_str(),"' to create");
+        throw SCAGException("EventHandler: unrecognized child object '",name.c_str(),"' to create");
 
     smsc_log_debug(logger,std::string("HandlerEvent::StartXMLSubSection - <")+name+std::string(">"));
 
     try
     {
         action->init(params,propertyObject);
-    } catch (Exception& e)
+    } catch (SCAGException& e)
     {
         delete action;
         throw e;

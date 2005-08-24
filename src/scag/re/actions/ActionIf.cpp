@@ -15,7 +15,7 @@ ActionIf::ActionIf() : FillThenSection(true), FillElseSection(false)
 
 void ActionIf::init(const SectionParams& params,PropertyObject _propertyObject)
 {
-    if (!params.Exists("test")) throw RuleEngineException("Action 'if': missing 'test' parameter");
+    if (!params.Exists("test")) throw SCAGException("Action 'if': missing 'test' parameter");
 
     propertyObject = _propertyObject;
     singleparam.Operand1 = params["test"];
@@ -55,11 +55,11 @@ void ActionIf::init(const SectionParams& params,PropertyObject _propertyObject)
         }
 
         if (singleparam.Operation == opUnknown) throw InvalidPropertyException("Action 'if': unrecognized operation '",params["op"].c_str(),"'");
-        if (singleparam.Operand2.size()==0) throw RuleEngineException("Action 'if': invalid 'value' parameter");
+        if (singleparam.Operand2.size()==0) throw SCAGException("Action 'if': invalid 'value' parameter");
     } else 
     {
-        if (hasOP&&(!hasValue)) throw RuleEngineException("Action 'if': missing 'value' parameter"); 
-        if ((!hasOP)&&hasValue) throw RuleEngineException("Action 'if': missing 'op' parameter"); 
+        if (hasOP&&(!hasValue)) throw SCAGException("Action 'if': missing 'value' parameter"); 
+        if ((!hasOP)&&hasValue) throw SCAGException("Action 'if': missing 'op' parameter"); 
     }
 
 
@@ -104,12 +104,12 @@ IParserHandler * ActionIf::StartXMLSubSection(const std::string& name,const Sect
         Action * action = 0;
         action = factory.CreateAction(name);
         if (!action) 
-            throw RuleEngineException("Action 'if': unrecognized child object '",name.c_str(),"' to create");
+            throw SCAGException("Action 'if': unrecognized child object '",name.c_str(),"' to create");
 
         try
         {
             action->init(params,propertyObject);
-        } catch (Exception& e)
+        } catch (SCAGException& e)
         {
             delete action;
             throw e;
@@ -143,7 +143,7 @@ bool ActionIf::FinishXMLSubSection(const std::string& name)
         return false;
     }
 #ifndef NDEBUG
-    else if (name != "if") throw RuleEngineException("Action 'if': unrecognized final tag");
+    else if (name != "if") throw SCAGException("Action 'if': unrecognized final tag");
 #endif
 
     return true;

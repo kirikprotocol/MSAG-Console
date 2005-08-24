@@ -16,10 +16,10 @@ void ActionReturn::init(const SectionParams& params,PropertyObject propertyObjec
     if (params.Exists("result")) 
     {
         ReturnValue = params["result"];
-        if (ReturnValue.empty()) throw RuleEngineException("Action 'return': missing variable to return");
+        if (ReturnValue.empty()) throw SCAGException("Action 'return': missing variable to return");
     }
     else 
-        throw RuleEngineException("Action 'return': missing 'result' parameter");
+        throw SCAGException("Action 'return': missing 'result' parameter");
 
     FieldType ft;
 
@@ -60,7 +60,7 @@ bool ActionReturn::run(ActionContext& context)
 
 IParserHandler * ActionReturn::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)
 {
-    throw RuleEngineException("Action 'return' cannot include child objects");
+    throw SCAGException("Action 'return' cannot include child objects");
 }
 
 bool ActionReturn::FinishXMLSubSection(const std::string& name)
