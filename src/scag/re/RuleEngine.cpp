@@ -139,10 +139,15 @@ Rule * RuleEngine::ParseFile(const std::string& xmlFile)
 
         smsc_log_error(logger,std::string("An error occurred. Error: ") + msg.localForm());
     }
-    catch (Exception& e)
+    catch (RuleEngineException& e)
     {
         smsc_log_error(logger,std::string("Terminate parsing Rule: ")+e.what());
     }
+    catch (...)
+    {
+        smsc_log_error(logger,std::string("Terminate parsing Rule: unknown fatal error"));
+    }
+
 
 
     delete parser;
@@ -207,7 +212,7 @@ RuleStatus RuleEngine::process(SCAGCommand& command)
     {
         char buff[128];
         sprintf(buff,"%s%d%s","Cannot process Rule with ID = ",ruleId," : Rule not found");
-        throw Exception(buff);
+        throw RuleEngineException(buff);
     }
 
         

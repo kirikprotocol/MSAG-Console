@@ -16,10 +16,10 @@ void ActionReturn::init(const SectionParams& params,PropertyObject propertyObjec
     if (params.Exists("result")) 
     {
         ReturnValue = params["result"];
-        if (ReturnValue.empty()) throw Exception("Action 'return': missing variable to return");
+        if (ReturnValue.empty()) throw RuleEngineException("Action 'return': missing variable to return");
     }
     else 
-        throw Exception("Action 'return': missing 'result' parameter");
+        throw RuleEngineException("Action 'return': missing 'result' parameter");
 
     FieldType ft;
 
@@ -30,12 +30,7 @@ void ActionReturn::init(const SectionParams& params,PropertyObject propertyObjec
         AccessType at;
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atRead)) 
-        {
-            std::string msg = "Action 'return': cannot read property '";
-            msg.append(ReturnValue);
-            msg.append("' - no acces");
-            throw Exception(msg.c_str());
-        }
+            throw InvalidPropertyException("Action 'return': cannot read property '",ReturnValue.c_str(),"' - no acces");
     }
 
 }
@@ -65,7 +60,7 @@ bool ActionReturn::run(ActionContext& context)
 
 IParserHandler * ActionReturn::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)
 {
-    throw Exception("Action 'return' cannot include child objects");
+    throw RuleEngineException("Action 'return' cannot include child objects");
 }
 
 bool ActionReturn::FinishXMLSubSection(const std::string& name)

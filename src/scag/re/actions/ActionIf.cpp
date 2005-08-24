@@ -15,7 +15,7 @@ ActionIf::ActionIf() : FillThenSection(true), FillElseSection(false)
 
 void ActionIf::init(const SectionParams& params,PropertyObject _propertyObject)
 {
-    if (!params.Exists("test")) throw Exception("Action 'if': missing 'test' parameter");
+    if (!params.Exists("test")) throw RuleEngineException("Action 'if': missing 'test' parameter");
 
     propertyObject = _propertyObject;
     singleparam.Operand1 = params["test"];
@@ -26,18 +26,13 @@ void ActionIf::init(const SectionParams& params,PropertyObject _propertyObject)
     AccessType at;
 
     ft = ActionContext::Separate(singleparam.Operand1,name); 
-    if (ft==ftUnknown) throw Exception("Action 'if': unrecognized variable prefix ");
+    if (ft==ftUnknown) throw InvalidPropertyException("Action 'if': unrecognized variable prefix '",singleparam.Operand1.c_str(),"' for 'test' parameter");
 
     if (ft == ftField) 
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId, name,propertyObject.transport);
         if (!(at&atRead)) 
-        {
-            std::string msg = "Action 'if': cannot read property '";
-            msg.append(singleparam.Operand1);
-            msg.append("' - no access");
-            throw Exception(msg.c_str());
-        }
+            throw InvalidPropertyException("Action 'if': cannot read property '",singleparam.Operand1.c_str(),"' - no access");
     }
 
 
@@ -56,20 +51,15 @@ void ActionIf::init(const SectionParams& params,PropertyObject _propertyObject)
         {
             at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
             if (!(at&atRead)) 
-            {
-                std::string msg = "Action 'if': cannot read property '";
-                msg.append(singleparam.Operand2);
-                msg.append("' - no access");
-                throw Exception(msg.c_str());
-            }
+                throw InvalidPropertyException("Action 'if': cannot read property '",singleparam.Operand2.c_str(),"' - no access");
         }
 
-        if (singleparam.Operation == opUnknown) throw Exception("Action 'if': unrecognized operation");
-        if (singleparam.Operand2.size()==0) throw Exception("Action 'if': invalid 'value' parameter");
+        if (singleparam.Operation == opUnknown) throw InvalidPropertyException("Action 'if': unrecognized operation '",params["op"].c_str(),"'");
+        if (singleparam.Operand2.size()==0) throw RuleEngineException("Action 'if': invalid 'value' parameter");
     } else 
     {
-        if (hasOP&&(!hasValue)) throw Exception("Action 'if': missing 'value' parameter"); 
-        if ((!hasOP)&&hasValue) throw Exception("Action 'if': missing 'op' parameter"); 
+        if (hasOP&&(!hasValue)) throw RuleEngineException("Action 'if': missing 'value' parameter"); 
+        if ((!hasOP)&&hasValue) throw RuleEngineException("Action 'if': missing 'op' parameter"); 
     }
 
 
@@ -114,12 +104,7 @@ IParserHandler * ActionIf::StartXMLSubSection(const std::string& name,const Sect
         Action * action = 0;
         action = factory.CreateAction(name);
         if (!action) 
-        {
-            std::string msg("Action 'if': unrecognized child object '");
-            msg.append(name);
-            msg.append("' to create");
-            throw Exception(msg.c_str());
-        }
+            throw RuleEngineException("Action 'if': unrecognized child object '",name.c_str(),"' to create");
 
         try
         {
@@ -158,7 +143,7 @@ bool ActionIf::FinishXMLSubSection(const std::string& name)
         return false;
     }
 #ifndef NDEBUG
-    else if (name != "if") throw Exception("Action 'if': unrecognized final tag");
+    else if (name != "if") throw RuleEngineException("Action 'if': unrecognized final tag");
 #endif
 
     return true;

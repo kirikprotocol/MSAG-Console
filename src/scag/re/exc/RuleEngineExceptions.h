@@ -8,17 +8,25 @@ namespace scag { namespace re { namespace exceptions {
 
 using smsc::util::Exception;
 
-
-class PropertyException : public Exception
+class RuleEngineException : public Exception
 {
 public:
 
-    PropertyException() : Exception() {};
-    PropertyException(const char* fmt,...);
-    virtual ~PropertyException() throw() {};
+    RuleEngineException() : Exception() {};
+    RuleEngineException(const char* fmt,...);
+    virtual ~RuleEngineException() throw() {};
 
 };
-class ConvertException : public PropertyException
+
+
+class InvalidPropertyException : public RuleEngineException
+{
+public:
+    InvalidPropertyException(const char* fmt,...);
+};
+
+
+class ConvertException : public RuleEngineException
 {
     static const char* message;
 public:
@@ -26,7 +34,7 @@ public:
     virtual ~ConvertException() throw() {};
 };
 
-class CompareException : public PropertyException
+class CompareException : public RuleEngineException
 {
     static const char* message;
 public:
@@ -34,11 +42,11 @@ public:
     virtual ~CompareException() throw() {};
 };
 
-class ConstantSetException : public PropertyException
+class ConstantSetException : public RuleEngineException
 {
     static const char* message;
 public:
-    ConstantSetException() : PropertyException(message) {};
+    ConstantSetException() : RuleEngineException(message) {};
     ConstantSetException(const char* fmt,...);
     virtual ~ConstantSetException() throw() {};
 };

@@ -15,7 +15,7 @@ ActionSet::~ActionSet()
 
 void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    if ((!params.Exists("var"))|| (!params.Exists("value"))) throw Exception("Action 'set': missing 'var' and 'value' parameters");
+    if ((!params.Exists("var"))|| (!params.Exists("value"))) throw RuleEngineException("Action 'set': missing 'var' and 'value' parameters");
 
     Variable = params["var"];
     Value = params["value"];
@@ -24,7 +24,8 @@ void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
     const char * name = 0;
 
     ft = ActionContext::Separate(Variable,name); 
-    if (ft==ftUnknown) throw Exception("Action 'set': unrecognized variable prefix");
+    if (ft==ftUnknown) 
+        throw InvalidPropertyException("Action 'set': unrecognized variable prefix '",Variable.c_str(),"' for 'var' parameter");
 
     AccessType at;
     std::string msg = "Action 'set': cannot set property '";
@@ -33,11 +34,7 @@ void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atWrite)) 
-        {
-            msg.append(Variable);
-            msg.append("' - no access to write");
-            throw Exception(msg.c_str());
-        }
+            throw InvalidPropertyException("Action 'set': cannot set property '",Variable.c_str(),"' - no access to write");
     }
 
     ft = ActionContext::Separate(Value,name);
@@ -45,11 +42,7 @@ void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atRead)) 
-        {
-            msg.append(Value);
-            msg.append("' - no access to read");
-            throw Exception(msg.c_str());
-        }
+            throw InvalidPropertyException("Action 'set': cannot read property '",Value.c_str(),"' - no access");
     }
 
 
@@ -92,7 +85,7 @@ bool ActionSet::run(ActionContext& context)
 
 IParserHandler * ActionSet::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)
 {
-    throw Exception("Action 'return' cannot include child objects");
+    throw RuleEngineException("Action 'return' cannot include child objects");
 }
 
 bool ActionSet::FinishXMLSubSection(const std::string& name)

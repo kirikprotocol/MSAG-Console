@@ -8,7 +8,7 @@ namespace scag { namespace re { namespace actions {
 
 IParserHandler * ActionClose::StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory)
 {
-    throw Exception("Action 'session:close': cannot have a child object");
+    throw RuleEngineException("Action 'session:close': cannot have a child object");
 }
 
 bool ActionClose::FinishXMLSubSection(const std::string& name)
@@ -18,7 +18,7 @@ bool ActionClose::FinishXMLSubSection(const std::string& name)
 
 void ActionClose::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    if (!params.Exists("commit")) throw Exception("Action 'session:close' missing 'commit' parameter");
+    if (!params.Exists("commit")) throw RuleEngineException("Action 'session:close' missing 'commit' parameter");
 
     propertyName = params["commit"];
 
@@ -27,13 +27,13 @@ void ActionClose::init(const SectionParams& params,PropertyObject propertyObject
     const char * name;
     FieldType ft;
     ft = ActionContext::Separate(propertyName,name); 
-    if (ft == ftUnknown) throw Exception("Action 'session:close': unknown value for 'commit' parameter");
+    if (ft == ftUnknown) throw InvalidPropertyException("Action 'session:close': unrecognized variable prefix '",propertyName.c_str(),"' for 'commit' parameter");
 
     if (ft == ftField) 
     {
         AccessType at;
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-        if (!(at&atRead)) throw Exception("Action 'session:close': cannot read property - no access");
+        if (!(at&atRead)) throw InvalidPropertyException("Action 'session:close': cannot read property '",propertyName.c_str(),"' - no access");
     }
 
 }
