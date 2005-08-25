@@ -180,5 +180,12 @@
     <param name="preCreateSize" type="int">10000</param>
     <param name="storeDir" type="string">store/acl</param>
   </section>
+  
+  <section name="cluster">
+    <param name="host1" type="string">sunfire</param>
+    <param name="host2" type="string">sunfire</param>
+    <param name="port1" type="int">25850</param>
+    <param name="port2" type="int">25851</param>
+  </section>
 
 </config>
