@@ -18,7 +18,7 @@ namespace smsc { namespace cluster
 
         class FakeRegistry
         {
-            IntHash<CommandFactory *> getInstance() {
+            IntHash<CommandFactory *>& getInstance() {
                 static IntHash<CommandFactory *>  _factories;
                 return _factories;
             }
@@ -165,7 +165,7 @@ namespace smsc { namespace cluster
     protected:
         virtual Command* create() { return new MscBlockCommand(); };
     public:
-        MscBlockCommandFactory() : CommandFactory(MSCUNREGISTER_CMD) {};
+        MscBlockCommandFactory() : CommandFactory(MSCBLOCK_CMD) {};
         virtual ~MscBlockCommandFactory() {};
     };
 
@@ -317,7 +317,7 @@ namespace smsc { namespace cluster
     class MemAddMemberCommandFactory : public CommandFactory
     {
     protected:
-        virtual Command* create() { return new PrcAlterPrincipalCommand(); };
+        virtual Command* create() { return new MemAddMemberCommand(); };
     public:
         MemAddMemberCommandFactory() : CommandFactory(MEMADDMEMBER_CMD) {};
         virtual ~MemAddMemberCommandFactory() {};
@@ -448,6 +448,7 @@ Command* Command::create(CommandType type, void* buffer, uint32_t len) // static
 {
     CommandFactory::initFactories();
 
+    printf("\nCommand, create, type: %02X\n\n", type);
     Command* command = CommandFactory::createCommand(type);
     if (command && !command->deserialize(buffer, len))
     {
@@ -909,14 +910,14 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
 
     //printf("local: '%s', len: %d\n", local.c_str(), local.length());
 
-    if(29 + profile.locale.length() >= len)
+    if(37 + profile.locale.length() >= len)
         return false;
 
     profile.divert = (const char*)((uint8_t*)buffer + 37 + profile.locale.length());
 
     //printf("divert: '%s', len: %d", divert.c_str(), divert.length());
 
-    if(30 + profile.locale.length() + profile.divert.length() != len)
+    if(38 + profile.locale.length() + profile.divert.length() != len)
         return false;
 
     }catch(...){
@@ -1044,7 +1045,7 @@ void* MscRegistrateCommand::serialize(uint32_t &len)
     printf("mscNum: '%s', len: %d\n", mscNum, strlen(mscNum));
     memcpy((void*)buffer, (const void*)mscNum, 22);
     File::offset_type tmp=htonl64(offset);
-    memcpy(buffer,&tmp,8);
+    memcpy((void*)( buffer + 22 ) , &tmp,8);
 
     }catch(...){
         return 0;
@@ -1153,6 +1154,7 @@ void* MscBlockCommand::serialize(uint32_t &len)
 }
 bool MscBlockCommand::deserialize(void *buffer, uint32_t len)
 {
+
     if(len != 22 || !buffer)
         return false;
 
@@ -1243,6 +1245,8 @@ void* MscReportCommand::serialize(uint32_t &len)
 
     len = 31;
 
+    buffer = new uint8_t[len];
+
     uint8_t val = status ? 1 : 0;
     memcpy((void*)buffer, (const void*)&val, 1);
 
@@ -1272,7 +1276,7 @@ void* MscReportCommand::serialize(uint32_t &len)
 }
 bool MscReportCommand::deserialize(void *buffer, uint32_t len)
 {
-    if(len != 22 || !buffer)
+    if(len != 31 || !buffer)
         return false;
 
     try {
@@ -1297,7 +1301,7 @@ bool MscReportCommand::deserialize(void *buffer, uint32_t len)
     tmp += (uint64_t)( ptr[7] );
 
     offset = tmp;
-    memcpy((void*)mscNum, (const void*)( (char*)buffer + 1), 22);
+    memcpy((void*)mscNum, (const void*)( (char*)buffer + 9), 22);
     printf("mscNum: '%s', len: %d\n", mscNum, strlen(mscNum));
 
     }catch(...){
@@ -2244,6 +2248,7 @@ PrcAddPrincipalCommand::PrcAddPrincipalCommand(int maxLists_, int maxElements_, 
     address(address_),
     offset(offset_)
 {
+    printf("constructor, offset: %lld\n", offset);
 }
 
 void PrcAddPrincipalCommand::getArgs(int &maxLists_, int &maxElements_, File::offset_type &offset_, std::string &address_) const
@@ -2275,6 +2280,8 @@ void* PrcAddPrincipalCommand::serialize(uint32_t &len)
     memcpy((void*)( (uint8_t*)buffer + 4), (const void*)&value32, 4);
 
     //============= Puts offset =================================
+
+    printf("offset: %lld\n", offset);
 
     uint64_t val64 = offset;
     uint64_t tmp = val64;;
@@ -2335,6 +2342,8 @@ bool PrcAddPrincipalCommand::deserialize(void *buffer, uint32_t len)
     tmp += (uint64_t)( ptr[7] );
 
     offset = tmp;
+
+    printf("offset: %lld\n", offset);
 
     //=============== Gets strings params =================
 
@@ -2882,9 +2891,9 @@ bool DlAddCommand::deserialize(void *buffer, uint32_t len)
 
     uint32_t value32;
 
-    printf("maxElements: %d\n", maxElements);
     memcpy((void*)&value32, (const void*)buffer, 4);
     maxElements = ntohl(value32);
+    printf("maxElements: %d\n", maxElements);
 
     int sz = 4;
 
@@ -3047,6 +3056,33 @@ bool DlAlterCommand::deserialize(void *buffer, uint32_t len)
     }catch(...){
         return false;
     }
+
+    return true;
+}
+
+//========== GetRole =======================
+
+void* GetRoleCommand::serialize(uint32_t &len)
+{
+    len = 4;
+
+    uint8_t *buffer = new uint8_t[4];
+
+    uint32_t val;
+    val = htonl(role);
+    memcpy((void*)buffer, (const void*)&val, 4);
+
+    return buffer;
+}
+bool GetRoleCommand::deserialize(void *buffer, uint32_t len)
+{
+    if(len != 4 || !buffer)
+        return false;
+
+    uint32_t val;
+    memcpy((void*)&val, (const void*)buffer, 4);
+
+    role = ntohl(val);
 
     return true;
 }

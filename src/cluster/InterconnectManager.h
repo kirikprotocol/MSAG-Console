@@ -6,11 +6,12 @@
 #include "Interconnect.h"
 #include "CommandDispatcher.h"
 #include "core/synchronization/Mutex.hpp"
-//#include "core/network/Socket.hpp"
+#include "core/network/Socket.hpp"
+#include "CommandReader.h"
 
 namespace smsc { namespace cluster {
 
-//using smsc::core::network::Socket;
+using smsc::core::network::Socket;
 
 using smsc::core::synchronization::Mutex;
 
@@ -19,9 +20,10 @@ using smsc::core::synchronization::Mutex;
     private:
 
         Role            role;
-        std::string     master_ip;
-        std::string     slave_ip;
+        std::string     inAddr;
+        std::string     attachedInAddr;
         int             port;
+        int             attachedPort;
 
         EventMonitor    commandsMonitor;
         Array<Command*>  commands;
@@ -30,18 +32,21 @@ using smsc::core::synchronization::Mutex;
 
     protected:
 
-        InterconnectManager(Role _role, const std::string& m_ip, const std::string& s_ip, int _port);
+        InterconnectManager(const std::string& inAddr_, const std::string& attachedInAddr_, int _port, int _attachedPort);
         virtual ~InterconnectManager();
         bool isStopping;
         Mutex stopLock;
-        Mutex dispatcherLock;
         bool isStoped();
         bool isMaster();
         bool isSlave();
         bool isSingle();
+        void flushCommands();
 
         void send(Command *command);
-        //Socket socket;
+        uint32_t readRole();
+
+        Socket socket;
+        Socket attachedSocket;
 
         class ArgHandler{
         public:
@@ -64,11 +69,13 @@ using smsc::core::synchronization::Mutex;
             ChangeRoleHandler *fun;
         };
 
+        Mutex handlersLock;
         Array<ArgHandler> handlers;
+        CommandReader reader;
 
     public:
 
-        static void init(Role _role, const std::string& m_ip, const std::string& s_ip, int _port);
+        static void init(const std::string& inAddr_, const std::string& attachedInAddr_, int _port, int _attachedPort);
         static void shutdown();
 
         virtual void sendCommand(Command* command);

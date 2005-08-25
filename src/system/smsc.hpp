@@ -143,7 +143,7 @@ public:
     maxStatCounter=0;
   };
   ~Smsc();
-  void init(const SmscConfigs& cfg);
+  void init(const SmscConfigs& cfg, const char * node);
   void run();
   void stop(){stopFlag=true;}
   void mainLoop();
@@ -289,17 +289,13 @@ public:
   {
     SaveStats();
     statMan->flushStatistics();
-#ifdef USE_MAP
     MapDialogContainer::getInstance()->abort();
-#endif
     kill(getpid(),9);
   }
 
   void dumpSmsc()
   {
-#ifdef USE_MAP
     MapDialogContainer::getInstance()->abort();
-#endif
     abort();
   }
 

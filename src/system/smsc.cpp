@@ -220,7 +220,7 @@ Smsc* SpeedMonitor::smsc=NULL;
 
 extern void loadRoutes(RouteManager* rm,const smsc::util::config::route::RouteConfig& rc,bool traceit=false);
 
-void Smsc::init(const SmscConfigs& cfg)
+void Smsc::init(const SmscConfigs& cfg, const char * node)
 {
   smsc::util::regexp::RegExp::InitLocale();
   smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.init");
@@ -233,7 +233,32 @@ void Smsc::init(const SmscConfigs& cfg)
   Interconnect *icon = 0;
   try {
       smsc_log_info(log, "InterconnectManager initialization ..." );
-      InterconnectManager::init(smsc::cluster::MASTER, "m_ip", "s_ip", 0);
+
+      using smsc::util::config::ConfigView;
+      std::auto_ptr<ConfigView> imConfig(new smsc::util::config::ConfigView(*cfg.cfgman, "cluster"));
+      const char* nodes[] = { imConfig.get()->getString("host1"), imConfig.get()->getString("host2")};
+      smsc_log_info(log, "host1: %s, host2: %s", nodes[0], nodes[1] );
+      int port[] = { imConfig.get()->getInt("port1"), imConfig.get()->getInt("port2") };
+      smsc_log_info(log, "port1: %d, port2: %d", port[0], port[1] );
+
+      const char * p = strchr(node, '=');
+
+      int num1 = 0;
+      try {
+          smsc_log_info(log, "node: %s, num: %s", node, p+ 1 );
+          num1 = atoi(p + 1);
+      }catch(...){
+      }
+
+      --num1;
+      if(num1 < 0 || num1 > 1)
+          num1 = 0;
+
+      int num2 = num1 == 0 ? 1 : 0;
+
+      smsc_log_info(log, "num1: %d, num2: %d", num1, num2 );
+
+      InterconnectManager::init(nodes[num1], nodes[num2], port[num1], port[num2]);
       icon = InterconnectManager::getInstance();
       smsc_log_info(log, "InterconnectManager is initialized" );
   }catch(...){
@@ -913,7 +938,7 @@ void Smsc::run()
     __trace__("Waiting SMPPIO started");
     accstarted.Wait();
     __trace__("SMPPIO started");
-#if defined(USE_MAP) && !defined(NOMAPPROXY)
+#if defined(USE_MAP) && !defined(NOMAPPROXY) 
     Event mapiostarted;
     MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,busyMTDelay,lockedByMODelay,MOLockTimeout,allowCallBarred);
     tp.startTask(mapio);
@@ -929,6 +954,7 @@ void Smsc::run()
 //    tp.startTask(new MapTracker());
 #ifndef NOMAPPROXY
     MapDialogContainer::getInstance()->registerSelf(&smeman);
+//#endif
 #ifdef USE_MAP
     mapProxy=MapDialogContainer::getInstance()->getProxy();
     SmeInfo si=smeman.getSmeInfo(smeman.lookup("MAP_PROXY"));
@@ -937,6 +963,8 @@ void Smsc::run()
 #endif
 #endif
   }
+
+  printf("Smsc, run 2\n");
 
 
   // start rescheduler created in init

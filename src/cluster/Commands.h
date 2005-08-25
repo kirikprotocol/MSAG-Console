@@ -52,7 +52,8 @@ namespace smsc { namespace cluster
         SBMDELETESUBMITER_CMD =     0x00070001,
         DLADD_CMD =                 0x00080000,
         DLDELETE_CMD =              0x00080001,
-        DLALTER_CMD =               0x00080002
+        DLALTER_CMD =               0x00080002,
+        GETROLE_CMD =               0x00090001
         // TODO: Add other command types...
     } CommandType;
 
@@ -232,7 +233,7 @@ namespace smsc { namespace cluster
         File::offset_type offset;
     public:
         MscReportCommand(const char *mscNum_, bool status_, File::offset_type offset_);
-        MscReportCommand() : Command(MSCCLEAR_CMD) {};
+        MscReportCommand() : Command(MSCREPORT_CMD) {};
 
         virtual ~MscReportCommand() {};
 
@@ -549,6 +550,22 @@ namespace smsc { namespace cluster
         virtual ~DlAlterCommand() {};
 
         void DlAlterCommand::getArgs(int &maxElements_, std::string &dlname_) const;
+        virtual void* serialize(uint32_t &len);
+        virtual bool deserialize(void *buffer, uint32_t len);
+    };
+
+    //=========== GetRole command ===============
+
+    class GetRoleCommand : public Command
+    {
+    protected:
+        uint32_t role;
+    public:
+        GetRoleCommand() : Command(GETROLE_CMD), role(0) {};
+        GetRoleCommand(int role_) : Command(GETROLE_CMD), role(role_) {};
+
+        virtual ~GetRoleCommand() {};
+
         virtual void* serialize(uint32_t &len);
         virtual bool deserialize(void *buffer, uint32_t len);
     };

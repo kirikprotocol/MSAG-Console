@@ -49,14 +49,14 @@ namespace smsc { namespace cluster
             return instance;
         };
 
-
+        
         //virtual void sendCommand(const Command& command) = 0;
         virtual void sendCommand(Command* command) = 0;
         virtual void addListener(CommandType type, CommandListener* listener) = 0;
         virtual void activate() = 0;
         virtual Role getRole() = 0;
         virtual void changeRole(Role role_) = 0;
-        virtual void  addChangeRoleHandler(ChangeRoleHandler*, void*) = 0;
+        virtual void addChangeRoleHandler(ChangeRoleHandler*, void*) = 0;
     };
 
 }}

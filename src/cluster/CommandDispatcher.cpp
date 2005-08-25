@@ -27,8 +27,7 @@ CommandDispatcher::~CommandDispatcher()
 
 void CommandDispatcher::addCommand(Command* command)
 {
-    if(isStoped())
-        return;
+    
     MutexGuard guard(commandsMonitor);
 
     // TODO: Put command into commands queue
@@ -60,6 +59,8 @@ void CommandDispatcher::addListener(CommandType type, CommandListener* listener)
         arr.Push(listener);
         listeners.Insert(key, arr);
     }
+
+    printf("Dispatcher::addListener, type: %d, key: %d ok\n", type, key);
         
 }
 
@@ -80,15 +81,9 @@ void CommandDispatcher::Stop()
 }
 int CommandDispatcher::Execute()
 {
-    
-    while (!isStopping)
+    // Flushs commands thats are put befor start
+    printf("CommandDispatcher, Execute 1\n");
     {
-        
-
-        printf("Dispatcher wait for command...\n");
-        if( commandsMonitor.wait(30) ) // Wait for command passes to queue ...
-
-        {
             MutexGuard listguard(listenersLock);
 
             Command *command;
@@ -118,8 +113,47 @@ int CommandDispatcher::Execute()
 
             }
             commands.Clean();
+    }
+    
+    while (!isStopping)
+    {
+        
+
+        //printf("Dispatcher wait for command...\n");
+        if( commandsMonitor.wait(30) ) // Wait for command passes to queue ...
+
+        {
+            MutexGuard listguard(listenersLock);
+
+            Command *command;
+            int count = commands.Count();
+            for(int i=0; i<=count-1; i++){
+                
+                commands.Shift(command);
+
+                int type = command->getType();
+                //printf("\nDispatcher, type: %d\n", type);
+                type >>= 16;
+                //printf("Dispatcher, key: %d\n", type);
+
+                Array<CommandListener*> *arr = listeners.GetPtr(type);
+                if(arr){
+                    for(int i=0; i<= arr->Count() - 1; i++){
+                        CommandListener *listener = (*arr)[i];
+                        if(listener){
+                            listener->handle(*command);
+                        }
+                    }
+                }
+
+                if(command)
+                    delete command;
+
+
+            }
+            commands.Clean();
         }
-        printf("Dispatecher: command or timeout.\n");
+        //printf("Dispatecher: command or timeout.\n");
     }
 
     printf("Dispatcher: Execute out...\n");

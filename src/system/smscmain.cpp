@@ -127,7 +127,10 @@ int main(int argc,char* argv[])
       smsc::system::Smsc *app=new smsc::system::Smsc;
 
       smsc::system::registerSmscSignalHandlers(app);
-      app->init(cfgs);
+
+      const char * node = argc < 2 ? "node=1" : argv[1];
+
+      app->init(cfgs, node);
       app->run();
 //      SmscRunner runner(app);
 //      runner.Start();
@@ -140,8 +143,10 @@ int main(int argc,char* argv[])
       using namespace smsc::admin::smsc_service;
       using smsc::util::config::Manager;
 
+      const char * node = argc < 2 ? "node=1" : argv[1];
+
       // init Admin part
-      SmscComponent smsc_component(cfgs);
+      SmscComponent smsc_component(cfgs, node);
       ComponentManager::registerComponent(&smsc_component);
 
       smsc::admin::service::ServiceSocketListener listener;
@@ -151,7 +156,9 @@ int main(int argc,char* argv[])
       listener.Start();
 
       // start
+      printf("runSmsc\n");
       smsc_component.runSmsc();
+      printf("Smsc started\n");
 
 
       //fprintf(stderr,"smsc started\n");

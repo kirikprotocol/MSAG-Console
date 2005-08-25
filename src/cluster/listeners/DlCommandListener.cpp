@@ -52,12 +52,12 @@ void DlCommandListener::dlAdd(const Command& command)
 
     cmd->getArgs(maxElements, offset1, offset2, dlname, owner);
 
-    printf("\n============== dlAdd ==============\n");
+    /*printf("\n============== dlAdd ==============\n");
     printf("type: %d\n", cmd->getType());
     printf("maxElements: %d\n", maxElements);
-    printf("dlname: %d\n", dlname.c_str());
-    printf("owner: %d\n\n", owner.c_str());
-    return;
+    printf("dlname: %s\n", dlname.c_str());
+    printf("owner: %s\n\n", owner.c_str());
+    return;*/
 
     BEGINMETHOD
     {
@@ -75,6 +75,10 @@ void DlCommandListener::dlDelete(const Command& command)
 
     cmd->getArgs(dlname);
 
+    /*printf("\n============== dlDelete ==============\n");
+    printf("dlname: %s\n", dlname.c_str());
+    return;*/
+    
     BEGINMETHOD
     {
         dladmin->deleteDistrList(dlname.c_str());
@@ -92,6 +96,10 @@ void DlCommandListener::dlAlter(const Command& command)
     const DlAlterCommand* cmd = dynamic_cast<const DlAlterCommand*>(&command);
 
     cmd->getArgs(maxElements, dlname);
+
+    /*printf("\n============== dlAlter ==============\n");
+    printf("dlname: %s\n", dlname.c_str());
+    return;*/
 
     BEGINMETHOD
     {
