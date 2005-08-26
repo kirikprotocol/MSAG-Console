@@ -225,8 +225,7 @@ public class SmsFileImport  extends Message
                 dDestMask.getMask(),mr,sctype,dreport,
                 billr,odMsc,odImsi,odSme,ddMsc,
                 ddImsi,ddSme,routeId,serviceId,priority,
-               srcSmeId,dstSmeId,concatMsgRef,concatSeqNum,bodyLen);
-      sqlsms.setArc(arc);
+               srcSmeId,dstSmeId,concatMsgRef,concatSeqNum,arc,bodyLen);
       if (bodyLen > 0) {
        // byte body[] = new byte[bodyLen];
         int pos = 0;

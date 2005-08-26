@@ -47,14 +47,14 @@ public class SqlSms implements SQLData
   public int bodyLen;
   public byte arc=-1;
 
-   public SqlSms()
+  public SqlSms()
   {
   }
 
   public SqlSms(String sql_type, long id, int st ,Date submitTime ,Date validTime ,int attempts ,int lastResult,
          Date lastTryTime, Date nextTryTime , String OA ,String DA , String DDA , int MR ,String SVC_TYPE , short DR,
          short BR ,String SRC_MSC ,String SRC_IMSI ,long SRC_SME_N  ,String DST_MSC ,String DST_IMSI,long DST_SME_N ,
-         String routeId,long SVC_ID ,long PRTY ,String srcSmeId ,String dstSmeId ,short concatMsgRef,short concatSeqNum,
+         String routeId,long SVC_ID ,long PRTY ,String srcSmeId ,String dstSmeId ,short concatMsgRef,short concatSeqNum,byte arc,
          int bodyLen)
     {
       this.sql_type = sql_type;
@@ -86,6 +86,7 @@ public class SqlSms implements SQLData
       this.dstSmeId = dstSmeId;
       this.concatMsgRef = concatMsgRef;
       this.concatSeqNum = concatSeqNum;
+      this.arc = arc;
       this.bodyLen = bodyLen;
     }
 
@@ -133,8 +134,8 @@ public class SqlSms implements SQLData
    dstSmeId = stream.readString();
    concatMsgRef = stream.readShort();
    concatSeqNum = stream.readShort();
-   bodyLen = stream.readInt();
    arc=stream.readByte();
+   bodyLen = stream.readInt();
  }
 
  public void writeSQL(SQLOutput stream)
@@ -168,17 +169,8 @@ public class SqlSms implements SQLData
    stream.writeString(dstSmeId);
    stream.writeShort(concatMsgRef);
    stream.writeShort(concatSeqNum);
-   stream.writeInt(bodyLen);
    stream.writeByte(arc);
+   stream.writeInt(bodyLen);
  }
 
-  public byte getArc()
-  {
-    return arc;
-  }
-
-  public void setArc(byte arc)
-  {
-    this.arc = arc;
-  }
 }
