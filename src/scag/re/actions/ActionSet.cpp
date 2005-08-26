@@ -1,5 +1,5 @@
 #include "ActionSet.h"
-#include "scag/re/SAX2Print.hpp"
+#include "scag/SAX2Print.hpp"
 #include "scag/re/CommandAdapter.h"
 
 namespace scag { namespace re { namespace actions {
@@ -25,7 +25,7 @@ void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
 
     ft = ActionContext::Separate(Variable,name); 
     if (ft==ftUnknown) 
-        throw InvalidPropertyException("Action 'set': unrecognized variable prefix '",Variable.c_str(),"' for 'var' parameter");
+        throw InvalidPropertyException("Action 'set': unrecognized variable prefix '%s' for 'var' parameter",Variable.c_str());
 
     AccessType at;
     std::string msg = "Action 'set': cannot set property '";
@@ -34,7 +34,7 @@ void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atWrite)) 
-            throw InvalidPropertyException("Action 'set': cannot set property '",Variable.c_str(),"' - no access to write");
+            throw InvalidPropertyException("Action 'set': cannot set property '%s' - no access to write",Variable.c_str());
     }
 
     ft = ActionContext::Separate(Value,name);
@@ -42,7 +42,7 @@ void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atRead)) 
-            throw InvalidPropertyException("Action 'set': cannot read property '",Value.c_str(),"' - no access");
+            throw InvalidPropertyException("Action 'set': cannot read property '%s' - no access",Value.c_str());
     }
 
 

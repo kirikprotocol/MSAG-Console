@@ -1,1 +1,5 @@
-scag/scag gwmain -lrt -L$(SMSC_BUILDDIR)/bin $(__LIBRARIES) -llogger -llicense-check -lutil-templates -lscag -lscag-billing-rules -lsystem-common -ldb -lutil-config-alias -lalias -lrouter -lutil-config-route -lrouter -lalias -lcore-threads $(SOCKETLIB) -lcore-buffers -lcore-network -lutil-config -lutil -lutil-xml -lsmeman -lutil-config-smeman  -lsms -lscag-admin -ladmin-util -ladmin-protocol -ladmin-service -ladmin -lutil-recoder-recode_dll -lutil-regexp -lscag-stat -lscag-billing $(SSL_LIB) $(SNMP_LIBS) -lnsl -lrt -lpthread -ldl $(XERCES_LIB)
+# $Id$
+# this file contains binaries definitions
+
+# binary name        source name	libraries         
+scag/SAX2Print       SAX2Print           -lscag-re  -lscag-bill -lscag-sessions -lscag-stat -lscag-re-actions -lscag-util-properties -lscag-util-singleton  -lscag-re-smpp -L$(SMSC_BUILDDIR)/bin -llogger -llicense-check -lutil-templates -lsystem-common -lutil-config-alias  -lalias -lalias -lcore-threads -lcore-buffers -lutil-config -lutil -ldl -lutil-xml $(XERCES_LIB) -L$(SMSC_BUILDDIR)/bin/scag/exc -lscag_exc

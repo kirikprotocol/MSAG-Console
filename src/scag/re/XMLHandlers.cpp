@@ -4,7 +4,7 @@
 #include <xercesc/sax/AttributeList.hpp>
 #include <xercesc/sax/SAXParseException.hpp>
 #include <xercesc/sax/SAXException.hpp>
-#include "SAX2Print.hpp"
+#include "scag/SAX2Print.hpp"
 
 namespace scag { namespace re { 
 
@@ -46,7 +46,7 @@ void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionPara
         } catch (SCAGException& e)
         {
             if (NewObj) delete NewObj;
-            throw SCAGException("Semantic Analyser: Invalid object '",name.c_str(),"' to create: ",e.what()); 
+            throw SCAGException("Semantic Analyser: Invalid object '%s' to create: %s",name.c_str(),e.what()); 
         }
 
         if (NewObj) 
@@ -71,7 +71,7 @@ void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionPara
         } catch(SCAGException& e)
         {
             if (NewObj) delete NewObj;
-            throw SCAGException("Semantic Analyser: Invalid object '",name.c_str(),"' to create: ",e.what()); 
+            throw SCAGException("Semantic Analyser: Invalid object '%s' to create: %s",name.c_str(),e.what()); 
         }
         CurrentObject = rule;
         RootObject = rule;

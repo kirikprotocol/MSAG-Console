@@ -1,5 +1,5 @@
 #include "ActionIf.h"
-#include "scag/re/SAX2Print.hpp"
+#include "scag/SAX2Print.hpp"
 
 #include "scag/re/Rule.h"
 #include "ActionFactory.h"
@@ -26,13 +26,13 @@ void ActionIf::init(const SectionParams& params,PropertyObject _propertyObject)
     AccessType at;
 
     ft = ActionContext::Separate(singleparam.Operand1,name); 
-    if (ft==ftUnknown) throw InvalidPropertyException("Action 'if': unrecognized variable prefix '",singleparam.Operand1.c_str(),"' for 'test' parameter");
+    if (ft==ftUnknown) throw InvalidPropertyException("Action 'if': unrecognized variable prefix '%s' for 'test' parameter",singleparam.Operand1.c_str());
 
     if (ft == ftField) 
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId, name,propertyObject.transport);
         if (!(at&atRead)) 
-            throw InvalidPropertyException("Action 'if': cannot read property '",singleparam.Operand1.c_str(),"' - no access");
+            throw InvalidPropertyException("Action 'if': cannot read property '%s' - no access",singleparam.Operand1.c_str());
     }
 
 
@@ -51,10 +51,10 @@ void ActionIf::init(const SectionParams& params,PropertyObject _propertyObject)
         {
             at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
             if (!(at&atRead)) 
-                throw InvalidPropertyException("Action 'if': cannot read property '",singleparam.Operand2.c_str(),"' - no access");
+                throw InvalidPropertyException("Action 'if': cannot read property '%s' - no access",singleparam.Operand2.c_str());
         }
 
-        if (singleparam.Operation == opUnknown) throw InvalidPropertyException("Action 'if': unrecognized operation '",params["op"].c_str(),"'");
+        if (singleparam.Operation == opUnknown) throw InvalidPropertyException("Action 'if': unrecognized operation '%s'",params["op"].c_str());
         if (singleparam.Operand2.size()==0) throw SCAGException("Action 'if': invalid 'value' parameter");
     } else 
     {
@@ -104,7 +104,7 @@ IParserHandler * ActionIf::StartXMLSubSection(const std::string& name,const Sect
         Action * action = 0;
         action = factory.CreateAction(name);
         if (!action) 
-            throw SCAGException("Action 'if': unrecognized child object '",name.c_str(),"' to create");
+            throw SCAGException("Action 'if': unrecognized child object '%s' to create",name.c_str());
 
         try
         {

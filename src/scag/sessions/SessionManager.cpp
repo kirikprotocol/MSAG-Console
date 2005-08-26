@@ -14,6 +14,8 @@
 
 #include "Session.h"
 #include "SessionManager.h"
+#include "scag/exc/SCAGExceptions.h"
+
 
 namespace scag { namespace sessions 
 {
@@ -21,6 +23,7 @@ namespace scag { namespace sessions
     using namespace smsc::core::synchronization;
     using namespace scag::util::singleton;
     using namespace smsc::core::buffers;
+    using namespace scag::exceptions;
 
     class SessionManagerImpl : public SessionManager, public Thread
     {
@@ -37,7 +40,12 @@ namespace scag { namespace sessions
         public:
           template <class T> static inline unsigned int CalcHash(T key)
           {
-            return key.UMR;
+              uint32_t retval=key.abonentAddr.type^key.abonentAddr.plan;
+              for(int i=0;i<key.abonentAddr.length;i++)
+              {
+                  retval=retval*10+(key.abonentAddr.value[i]-'0');
+              }
+              return retval;
           }
         };
 
@@ -200,12 +208,12 @@ Session* SessionManagerImpl::getSession(const SCAGCommand& command)
     }
     while (data.bOpened); 
         
-
-    Session * session = GetSessionFromStorage(SessionKey);
+    //TODO : GetSessionFromStorage(SessionKey);
+    Session * session;
     if (!session) 
     {
         Lock.Unlock();
-        throw Exception("SessionManager: Invalid session returned from sorage");
+        throw SCAGException("SessionManager: Invalid session returned from sorage");
     }
 
     if (bSessionExists == true) 

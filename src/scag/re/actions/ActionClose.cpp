@@ -1,7 +1,7 @@
 #include "ActionClose.h"
 #include "scag/re/CommandAdapter.h"
 
-#include "scag/re/SAX2Print.hpp"
+#include "scag/SAX2Print.hpp"
 
 namespace scag { namespace re { namespace actions {
 
@@ -33,7 +33,7 @@ void ActionClose::init(const SectionParams& params,PropertyObject propertyObject
     {
         AccessType at;
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
-        if (!(at&atRead)) throw InvalidPropertyException("Action 'session:close': cannot read property '",propertyName.c_str(),"' - no access");
+        if (!(at&atRead)) throw InvalidPropertyException("Action 'session:close': cannot read property '%s' - no access",propertyName.c_str());
     }
 
 }
@@ -43,7 +43,7 @@ bool ActionClose::run(ActionContext& context)
     Property * p = context.getProperty(propertyName);
 
     bool Commit = false;
-    if (!p) smsc_log_warn(logger,"Action 'session:close': invalid property '" + propertyName+"'");
+    if (!p) smsc_log_warn(logger,"Action 'session:close': invalid property '%s'",propertyName.c_str());
     else Commit = p->getBool();
 
     context.closeSession(Commit);

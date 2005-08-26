@@ -1,9 +1,12 @@
 #include <string.h>
 #include "Properties.h"
 #include <stdlib.h>
+#include "scag/exc/SCAGExceptions.h"
 
 namespace scag { namespace util { namespace properties 
 {
+
+using namespace scag::exceptions;
 
 const char* TimeFormat = "%A, %d - %B - %Y.\n";
 

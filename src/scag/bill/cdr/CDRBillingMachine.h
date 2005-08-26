@@ -5,6 +5,7 @@
 #include "CDRActionFactory.h"
 
 extern "C" scag::bill::BillingMachine* initBillingMachine(uint8_t machine_id, const std::string& cfg_dir);
+//extern "C" initBillingMachineFn initBillingMachine;
 
 namespace scag { namespace bill {
 

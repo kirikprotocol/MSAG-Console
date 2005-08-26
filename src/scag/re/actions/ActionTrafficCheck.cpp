@@ -1,6 +1,6 @@
 #include "ActionTrafficCheck.h"
 #include "ActionFactory.h"
-#include "scag/re/SAX2Print.hpp"
+#include "scag/SAX2Print.hpp"
 
 #include "scag/stat/Statistics.h"
 
@@ -38,7 +38,7 @@ IParserHandler * ActionTrafficCheck::StartXMLSubSection(const std::string& name,
     Action * action = 0;
     action = factory.CreateAction(name);
     if (!action) 
-        throw SCAGException("Action 'traffic:check': unrecognized child object '",name.c_str(),"' to create");
+        throw SCAGException("Action 'traffic:check': unrecognized child object '%s' to create",name.c_str());
 
     try
     {
@@ -66,7 +66,7 @@ void ActionTrafficCheck::init(const SectionParams& params, PropertyObject _prope
     sMax = params["max"];
 
     std::string sPeriod = params["period"];
-    if (!StrToPeriod(period,sPeriod)) SCAGException("Action 'traffic:check': invalid value '",sPeriod.c_str(),"' for 'period' parameter");
+    if (!StrToPeriod(period,sPeriod)) SCAGException("Action 'traffic:check': invalid value '%s' for 'period' parameter",sPeriod.c_str());
     propertyObject = _propertyObject;
 }
 

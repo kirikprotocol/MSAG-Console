@@ -1,5 +1,0 @@
-# $Id$
-# this file contains binaries definitions
-
-# binary name        source name	libraries         
-scag/re/SAX2Print   SAX2Print           -lscag-re  -lscag-sessions -lscag-stat -lscag-re-actions -lscag-util-properties -lscag-re-smpp -L$(SMSC_BUILDDIR)/bin -llogger -llicense-check -lutil-templates -lsystem-common -lutil-config-alias  -lalias -lalias -lcore-threads -lcore-buffers -lutil-config -lutil -lutil-xml $(XERCES_LIB) -L$(SMSC_BUILDDIR)/bin/scag/exc -lscag_exc

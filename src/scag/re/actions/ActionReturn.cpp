@@ -1,7 +1,7 @@
 #include "ActionReturn.h"
 #include "scag/re/CommandAdapter.h"
 
-#include "scag/re/SAX2Print.hpp"
+#include "scag/SAX2Print.hpp"
 
 
 namespace scag { namespace re { namespace actions {
@@ -30,7 +30,7 @@ void ActionReturn::init(const SectionParams& params,PropertyObject propertyObjec
         AccessType at;
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atRead)) 
-            throw InvalidPropertyException("Action 'return': cannot read property '",ReturnValue.c_str(),"' - no acces");
+            throw InvalidPropertyException("Action 'return': cannot read property '%s' - no acces",ReturnValue.c_str());
     }
 
 }

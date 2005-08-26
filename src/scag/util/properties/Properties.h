@@ -8,12 +8,9 @@
 #endif    
 
 #include <string>
-#include "scag/re/exc/RuleEngineExceptions.h"
 
 namespace scag { namespace util { namespace properties 
 {
-    using namespace scag::re::exceptions;
-
     enum PropertyType
     {
         pt_int,

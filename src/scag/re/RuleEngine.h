@@ -11,7 +11,7 @@
 #include "scag/re/Rule.h"
 #include "scag/re/actions/MainActionFactory.h"
 
-#include "SAX2Print.hpp"
+#include "scag/SAX2Print.hpp"
 
 namespace scag { namespace re 
 {

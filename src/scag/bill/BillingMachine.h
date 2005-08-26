@@ -5,6 +5,7 @@
 
 #include "Bill.h"
 
+             
 namespace scag { namespace bill
 {
     using scag::re::actions::ActionFactory;
@@ -48,6 +49,8 @@ namespace scag { namespace bill
      */
 
 }}
+
+typedef scag::bill::BillingMachine* (*initBillingMachineFn)(uint8_t machine_id, const std::string& cfg_dir);
 
 #endif // SCAG_BILLING_MACHINE
 

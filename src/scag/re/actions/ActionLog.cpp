@@ -1,7 +1,7 @@
 #include "ActionLog.h"
 #include "scag/re/CommandAdapter.h"
 
-#include "scag/re/SAX2Print.hpp"
+#include "scag/SAX2Print.hpp"
 
 
 namespace scag { namespace re { namespace actions {
@@ -41,23 +41,23 @@ void ActionLog::init(const SectionParams& params,PropertyObject propertyObject)
     AccessType at;
 
     ft = ActionContext::Separate(sCategory,name); 
-    if (ft == ftUnknown) throw InvalidPropertyException("Action 'log': unrecognized variable prefix '",sCategory.c_str(),"' for 'category' parameter");
+    if (ft == ftUnknown) throw InvalidPropertyException("Action 'log': unrecognized variable prefix '%s' for 'category' parameter",sCategory.c_str());
 
     if (ft == ftField) 
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atRead)) 
-            throw InvalidPropertyException("Action 'log': cannot read property '",msg.c_str(),"' - no access");
+            throw InvalidPropertyException("Action 'log': cannot read property '%s' - no access",msg.c_str());
     }
 
     ft = ActionContext::Separate(msg,name); 
-    if (ft == ftUnknown) throw InvalidPropertyException("Action 'log': unrecognized variable prefix '",msg.c_str(),"' for 'message' parameter");
+    if (ft == ftUnknown) throw InvalidPropertyException("Action 'log': unrecognized variable prefix '%s' for 'message' parameter",msg.c_str());
 
     if (ft == ftField) 
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atRead)) 
-            throw InvalidPropertyException("Action 'log': cannot read property '",sCategory.c_str(),"' - no access");
+            throw InvalidPropertyException("Action 'log': cannot read property '%s' - no access",sCategory.c_str());
     }
 
     smsc_log_debug(logger,"Action 'log':: init...");

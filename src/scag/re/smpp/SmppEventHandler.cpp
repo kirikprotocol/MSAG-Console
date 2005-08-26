@@ -1,5 +1,5 @@
 #include "SmppEventHandler.h"
-#include "scag/re/SAX2Print.hpp"
+#include "scag/SAX2Print.hpp"
 #include "scag/re/smpp/SmppAdapter.h"
 
 #include "scag/re/actions/ActionContext.h"

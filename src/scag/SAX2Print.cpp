@@ -5,7 +5,7 @@
 //#include "smppgw/gwsme.hpp"
 //#include <fstream>
 #include "logger/Logger.h"
-#include "RuleStatus.h"
+#include "scag/re/RuleStatus.h"
 #include "scag/transport/smpp/SmppCommand.h"
 #include <sms/sms.h>
 

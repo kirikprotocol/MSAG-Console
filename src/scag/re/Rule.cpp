@@ -2,7 +2,7 @@
 #include "scag/transport/smpp/SmppCommand.h"
 #include "scag/re/smpp/SmppEventHandler.h"
 
-#include "SAX2Print.hpp"
+#include "scag/SAX2Print.hpp"
 
 namespace scag { namespace re 
 {
@@ -140,7 +140,7 @@ void Rule::init(const SectionParams& params, PropertyObject propertyObject)
     else if (sTransport == "WAP") transportType = WAP;
     else if (sTransport == "MMS") transportType = MMS;
     else 
-        throw SCAGException("Rule: invalid value '",sTransport.c_str(), "' for 'transport' parameter");
+        throw SCAGException("Rule: invalid value '%s' for 'transport' parameter",sTransport.c_str());
 
     smsc_log_debug(logger,"Rule::Init");
 

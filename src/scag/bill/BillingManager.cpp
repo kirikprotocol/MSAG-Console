@@ -7,30 +7,54 @@
 #include "BillingManager.h"
 #include "BillingMachine.h"
 
+
+#include <sys/types.h>
+#include <dirent.h>
+
+#include <dlfcn.h>
+#include <string>
+#include <errno.h>
+#include <unistd.h>
+#include <logger/Logger.h>
+#include <scag/exc/SCAGExceptions.h>
+#include <core/buffers/Array.hpp>
+
 namespace scag { namespace bill
 {
+    using namespace scag::exceptions;
     using namespace smsc::core::synchronization;
     using namespace scag::util::singleton;
+    using smsc::logger::Logger;
 
     using smsc::core::buffers::IntHash;
+    using smsc::core::buffers::Array;
+
 
     class BillingManagerImpl : public BillingManager
     {
-    private:
+        IntHash<BillingMachine *> machines; // User's billing machines by their ids
+        bool isValidFileName(const std::string& fname);
+        void LoadBillingMachine(const char * dlpath,const std::string& cfg_dir);
 
         static const char* MACHINE_INIT_FUNCTION;
-        IntHash<BillingMachine *> machines; // User's billing machines by their ids
+        static smsc::logger::Logger *logger;
+        static Array<void *>        handles;
+        static Mutex                loadupLock;
 
     public:
 
         BillingManagerImpl() {};
-        virtual ~BillingManagerImpl() {};
+        virtual ~BillingManagerImpl();
 
         void init(const std::string& cfg_dir, const std::string& so_dir);
         virtual void rollback(const Bill& bill);
     };
 
 const char* BillingManagerImpl::MACHINE_INIT_FUNCTION = "initBillingMachine";
+smsc::logger::Logger * BillingManagerImpl::logger = 0;
+Array<void *>         BillingManagerImpl::handles;
+Mutex                 BillingManagerImpl::loadupLock;
+
 
 // ################## Singleton related issues ##################
 
@@ -45,6 +69,7 @@ void BillingManager::Init(const std::string& cfg_dir, const std::string& so_dir)
     if (!bBillingManagerInited)
     {
         MutexGuard guard(initBillingManagerLock);
+
         if (!bBillingManagerInited) {
             BillingManagerImpl& bm = SingleBM::Instance();
             bm.init(cfg_dir,so_dir);
@@ -65,16 +90,140 @@ BillingManager& BillingManager::Instance()
 
 // ################ TODO: Actual BillingManager Implementation follows ################ 
 
+bool BillingManagerImpl::isValidFileName(const std::string& fname)
+{
+    if (fname.size() < 4) return false;
+    return (fname.substr(fname.size() - 3,3) == ".so");
+}
+
+
+
+void BillingManagerImpl::LoadBillingMachine(const char * dlpath,const std::string& cfg_dir)
+{
+    MutexGuard guard(loadupLock);
+
+    smsc_log_info(logger, "Loading '%s' library", dlpath);
+    void* dlhandle = dlopen(dlpath, RTLD_LAZY);
+    if (dlhandle)
+    {
+        initBillingMachineFn fnhandle =
+            (initBillingMachineFn)dlsym(dlhandle, MACHINE_INIT_FUNCTION);
+        if (fnhandle)
+        {
+            int id = machines.Count();
+            BillingMachine* billingMachine = (*fnhandle)(id,cfg_dir);
+            if (billingMachine)
+            {
+                machines.Insert(id,billingMachine);
+                //DataSourceFactory::registerFactory(dsf, identity);
+            }
+            else
+            {
+                smsc_log_error(logger, "Load of '%s' library. Call to initBillingMachine failed ! ", dlpath);
+                dlclose(dlhandle);
+                throw SCAGException("Cannot load billing machine '%s'",dlpath);
+            }
+        }
+        else
+        {
+            smsc_log_error(logger, "Load of '%s' library. Call to dlsym() failed ! ", dlpath);
+            dlclose(dlhandle);
+            throw SCAGException("Cannot load billing machine '%s'",dlpath);
+        }
+    }
+    else
+    {
+        char buf[256];
+        smsc_log_error(logger, "Load of '%s' at '%s' library. Call to dlopen() failed:%s ! ", dlpath,getcwd(buf,sizeof(buf)),dlerror());
+        throw SCAGException("Cannot load billing machine '%s'",dlpath);
+    }
+
+    (void)handles.Push(dlhandle);
+    smsc_log_info(logger, "Loading '%s' library done.", dlpath);
+}
+
+
 void BillingManagerImpl::init(const std::string& cfg_dir, const std::string& so_dir) // possible throws exceptions
 {
     // TODO: loadup all so modules from so_dir, call MACHINE_INIT_FUNCTION,
     //       add to machines & register action factory in MainActionFactory in RuleEngine
+
+    if (!logger)
+      logger = Logger::getInstance("scag.bill.BillingManager");
+
+    DIR * pDir = 0;
+    dirent * pDirEnt = 0;
+    int ruleId = 0;
+
+    pDir = opendir(so_dir.c_str());
+    if (!pDir) 
+    {
+        smsc_log_error(logger, "Invalid directory '%s'", so_dir.c_str());
+        return;
+    }
+
+    while (pDir)
+    {
+         pDirEnt = readdir(pDir);
+         if (pDirEnt)
+         {
+             if (isValidFileName(pDirEnt->d_name))
+             {
+                 std::string fileName = so_dir;
+                 fileName.append("/");
+                 fileName.append(pDirEnt->d_name);
+                 try
+                 {
+                     LoadBillingMachine(fileName.c_str(),cfg_dir);
+                 } 
+                 catch (SCAGException& e)
+                 {
+                     smsc_log_error(logger,e.what());
+                 }
+             }
+             else if ((strcmp(pDirEnt->d_name,".")!=0)&&(strcmp(pDirEnt->d_name,"..")!=0))
+             {
+                 smsc_log_error(logger, "Invalid file name '%s'", pDirEnt->d_name);
+             }
+         }
+         else
+         {
+             closedir(pDir);
+             return;
+         }
+    }
+
+    closedir(pDir);
+
 }
 
 void BillingManagerImpl::rollback(const Bill& bill) // possible throws exceptions
 {
     // TODO: dispath call to billing machine by bill.machine_id
 }
+
+BillingManagerImpl::~BillingManagerImpl()
+{
+   MutexGuard guard(loadupLock);
+
+   //TODO : chick if we must free billingmachines
+
+
+
+
+   if (!handles.Count()) return;
+
+   smsc_log_info(logger, "Unloading BillingMachines ...");
+   while (handles.Count())
+   {
+       void* handle=0L;
+       (void) handles.Pop(handle);
+       if (handle) dlclose(handle);
+   }
+   smsc_log_info(logger, "BillingMachines unloaded");
+
+}
+
 
 }}
 
