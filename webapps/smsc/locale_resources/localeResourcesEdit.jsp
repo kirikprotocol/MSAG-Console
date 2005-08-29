@@ -90,10 +90,10 @@ function addParam(sectionName)
 	newRow = tableElem.insertRow(tableElem.rows.length-1);
 	newRow.className = "row" + (tableElem.rows.length & 1);
 	newRow.id = "paramRow_" + sectionName + "<%=Section.NAME_DELIMETER%>" + paramNameElem.value;
-	newCell = document.createElement("th");
-	newCell.className = "label";
-	newCell.innerText = paramNameElem.value;
-	newRow.appendChild(newCell);
+	labelElement = document.createElement("label");
+	labelElement.innerText = paramNameElem.value;
+	newCell = newRow.insertCell();
+	newCell.appendChild(labelElement);
 
 	inputElement = document.createElement("input");
 	inputElement.name = sectionName + "<%=Section.NAME_DELIMETER%>" + paramNameElem.value;
