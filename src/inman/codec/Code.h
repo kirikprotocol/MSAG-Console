@@ -1,5 +1,5 @@
-#ifndef	_Code_H_
-#define	_Code_H_
+#ifndef _Code_H_
+#define _Code_H_
 
 
 #include <asn_application.h>
@@ -15,21 +15,21 @@ extern "C" {
 
 /* Dependencies */
 typedef enum Code_PR {
-	Code_PR_NOTHING,	/* No components present */
-	Code_PR_local,
-	Code_PR_global,
+  Code_PR_NOTHING,  /* No components present */
+  Code_PR_local,
+  Code_PR_global
 } Code_PR;
 
 /* Code */
 typedef struct Code {
-	Code_PR present;
-	union Code_u {
-		long	 local;
-		OBJECT_IDENTIFIER_t	 global;
-	} choice;
-	
-	/* Context for parsing across buffer boundaries */
-	asn_struct_ctx_t _asn_ctx;
+  Code_PR present;
+  union Code_u {
+    long   local;
+    OBJECT_IDENTIFIER_t  global;
+  } choice;
+
+  /* Context for parsing across buffer boundaries */
+  asn_struct_ctx_t _asn_ctx;
 } Code_t;
 
 /* Implementation */
@@ -39,4 +39,4 @@ extern asn_TYPE_descriptor_t asn_DEF_Code;
 }
 #endif
 
-#endif	/* _Code_H_ */
+#endif  /* _Code_H_ */
