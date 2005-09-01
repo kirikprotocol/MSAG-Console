@@ -1,0 +1,63 @@
+DialoguePDUs
+{
+ itu-t recommendation q 773 modules(2) dialoguePDUs(2) version1(1)
+}
+DEFINITIONS ::=
+
+BEGIN
+
+dialogue-as-id OBJECT IDENTIFIER ::=
+  {itu-t recommendation q 773 as(1) dialogue-as(1) version1(1)}
+
+DialoguePDU ::= CHOICE {
+  dialogueRequest   AARQ-apdu,
+  dialogueResponse  AARE-apdu,
+  dialogueAbort     ABRT-apdu
+}
+
+
+MEXT ::= [UNIVERSAL 8] IMPLICIT SEQUENCE {
+direct-reference OBJECT IDENTIFIER OPTIONAL,
+indirect-reference INTEGER OPTIONAL,
+data-value-descriptor ObjectDescriptor OPTIONAL,
+mencoding CHOICE {
+single-ASN1-type [0] ANY, --
+octet-aligned [1] IMPLICIT OCTET STRING,
+arbitrary [2] IMPLICIT BIT STRING }}
+
+
+AARQ-apdu ::= [APPLICATION 0] IMPLICIT SEQUENCE {
+  protocol-version
+    [0] IMPLICIT BIT STRING {version1(1)} DEFAULT {version1},
+  application-context-name  [1]  OBJECT IDENTIFIER,
+  aarq-user-information          [30] IMPLICIT SEQUENCE OF MEXT OPTIONAL
+}
+
+AARE-apdu ::= [APPLICATION 1] IMPLICIT SEQUENCE {
+  protocol-version
+    [0] IMPLICIT BIT STRING {version1(1)} DEFAULT {version1},
+  application-context-name  [1]  OBJECT IDENTIFIER,
+  result                    [2]  Associate-result,
+  result-source-diagnostic  [3]  Associate-source-diagnostic,
+  aare-user-information          [30] IMPLICIT SEQUENCE OF MEXT OPTIONAL
+}
+
+ABRT-apdu ::= [APPLICATION 4] IMPLICIT SEQUENCE {
+  abort-source      [0] IMPLICIT ABRT-source,
+  abrt-user-information  [30] IMPLICIT SEQUENCE OF MEXT OPTIONAL
+}
+
+ABRT-source ::= INTEGER {dialogue-service-user(0), dialogue-service-provider(1)
+}
+
+Associate-result ::= INTEGER {accepted(0), reject-permanent(1)}
+
+Associate-source-diagnostic ::= CHOICE {
+  dialogue-service-user
+    [1]  INTEGER {null(0), no-reason-given(1),
+                  application-context-name-not-supported(2)},
+  dialogue-service-provider
+    [2]  INTEGER {null(0), no-reason-given(1), no-common-dialogue-portion(2)}
+}
+
+END
