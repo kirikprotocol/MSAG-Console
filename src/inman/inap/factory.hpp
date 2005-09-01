@@ -32,7 +32,9 @@ public:
 public:
     virtual   ~Factory();
 
-    virtual    Session* openSession(UCHAR_T ssn);
+    virtual    Session* openSession(UCHAR_T ssn, const char* szSCFNumber, const char* szINmanNumber,
+    											 const char* szSMSCHost, int nSMSCPort);
+
     virtual    Session* findSession(UCHAR_T ssn);
     virtual    void     closeSession(Session*);
     virtual    void     closeAllSessions();

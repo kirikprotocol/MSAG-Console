@@ -19,8 +19,8 @@ using smsc::logger::Logger;
 using smsc::inman::inap::TcapDialog;
 using smsc::inman::inap::Session;
 using smsc::inman::inap::Factory;
-using smsc::inman::inap::getTcapBindErrorMessage;
-using smsc::inman::inap::dump;
+using smsc::inman::common::getTcapBindErrorMessage;
+using smsc::inman::common::dump;
 using smsc::inman::inap::tcapLogger;
 using smsc::inman::inap::inapLogger;
 

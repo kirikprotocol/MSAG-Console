@@ -1,5 +1,7 @@
 #
 # $Id$
 #
-inman/inman inman $(SOCKETLIB) -linman -linman-inap -linman-comp -linman-codec -linman-interaction -linman-common -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -linman-inap $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lnsl
+inman/inman_test inman_test $(SOCKETLIB) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl
+inman/inman inman $(SOCKETLIB) -linman -linman-inap -linman-comp -linman-codec -linman-interaction -linman-common -L$(SS7_STACK_HOME)/lib -l$(SS7_LIBRARY_NAME) -linman-inap $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -lcore-threads -lthread -llogger -lcore-network -lnsl
+
 

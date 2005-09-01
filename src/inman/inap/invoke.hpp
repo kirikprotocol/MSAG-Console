@@ -24,7 +24,7 @@ class InvokeListener
 class Invoke : public TcapEntity, public ObservableT< InvokeListener >
 {
     public:
-    	virtual UCHAR_T send(TcapDialog* dialog);
+    	virtual void send(TcapDialog* dialog);
 };
 
 }

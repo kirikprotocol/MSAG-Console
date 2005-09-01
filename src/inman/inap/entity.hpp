@@ -72,7 +72,7 @@ public:
 		param = p;
   }
 
-  virtual UCHAR_T send(TcapDialog*) = 0;
+  virtual void send(TcapDialog*) = 0;
 
 protected:
 

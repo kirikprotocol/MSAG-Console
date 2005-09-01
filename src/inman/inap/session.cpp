@@ -1,5 +1,12 @@
 static char const ident[] = "$Id$";
+
+#include "ss7tmc.h"
+
+#include <errno.h>
+#include <string.h> //for strerrno()
 #include <assert.h>
+#include <stdexcept>
+#include <algorithm>
 
 #include "session.hpp"
 #include "dialog.hpp"
@@ -7,10 +14,16 @@ static char const ident[] = "$Id$";
 #include "inman/common/util.hpp"
 #include "inman/comp/comfactory.hpp"
 
+using std::max;
 using std::map;
 using std::pair;
-using smsc::inman::inap::fillAddress;
+using std::runtime_error;
 
+using smsc::inman::common::getReturnCodeDescription;
+using smsc::inman::common::getTcapReasonDescription;
+using smsc::inman::common::fillAddress;
+using smsc::inman::common::format;
+using smsc::inman::common::dump;
 
 namespace smsc  {
 namespace inman {
@@ -20,13 +33,7 @@ namespace inap  {
 // IN session
 /////////////////////////////////////////////////////////////////////////////////////
 
-Session::Session(UCHAR_T ssn)
-    : Thread()
-    , SSN( ssn )
-    , state( IDLE )
-    , lastDialogId( TCAP_DIALOG_MIN_ID )
-{
-}
+static const int SOCKET_TIMEOUT = 1000;
 
 static void fillAppContext(APP_CONTEXT_T* p_ac)
 {
@@ -43,20 +50,25 @@ static void fillAppContext(APP_CONTEXT_T* p_ac)
   ac.ac[0] = 0x3D; //|00111101 |Application Context    |CAP3-SMS
 }
 
-Session::Session(UCHAR_T ssn, const char* scfNum, const char* inmanNum)
+Session::Session(UCHAR_T ssn, const char* scfNum, const char* inmanNum, const char* host, int port)
     : Thread()
     , SSN( ssn )
     , state( IDLE )
     , lastDialogId( TCAP_DIALOG_MIN_ID )
 {
-  fillAddress(&scfAddr,scfNum, ssn);
-  fillAddress(&inmanAddr,inmanNum,ssn);
-  fillAppContext(&ac);
+  	fillAddress(&scfAddr,scfNum, ssn);
+  	fillAddress(&inmanAddr,inmanNum, ssn);
+  	fillAppContext(&ac);
+
+  	if( socket.Init( host, port, SOCKET_TIMEOUT ) != 0 )
+  		throw runtime_error( format("Can't init socket. Host: %s:%d (error: %d, '%s')", 
+  								host, port, errno, strerror( errno) ) );
 }
 
 Session::~Session()
 {
     closeAllDialogs();
+    socket.Close();
 }
 
 UCHAR_T Session::getSSN() const
@@ -85,6 +97,7 @@ USHORT_T Session::nextDialogId()
     return id;
 }
 
+
 TcapDialog* Session::openDialog(USHORT_T id)
 {
     MutexGuard guard( lock );
@@ -92,9 +105,7 @@ TcapDialog* Session::openDialog(USHORT_T id)
     smsc_log_debug(inapLogger,"Open dialog (SSN=%d, TcapDialog id=%d)", SSN, id );
     TcapDialog* pDlg = new TcapDialog( this, id );
     dialogs.insert( DialogsMap_T::value_type( id, pDlg ) );
-
     notify1<TcapDialog*>( &SessionListener::onDialogBegin, pDlg );
-
     return pDlg;
 }
 
@@ -116,9 +127,7 @@ void Session::closeDialog(TcapDialog* pDlg)
     if( !pDlg ) return;
     smsc_log_debug(inapLogger,"Close dialog (SSN=%d, TcapDialog id=%d)", SSN, pDlg->did );
     dialogs.erase( pDlg->did );
-
     notify1<TcapDialog*>( &SessionListener::onDialogEnd, pDlg );
-
     delete pDlg;
 }
 
@@ -139,21 +148,36 @@ void Session::closeAllDialogs()
     }
 }
 
-int Session::Execute()
+void Session::run()
 {
-  running = TRUE;
-  started.SignalAll();
   smsc_log_debug(inapLogger,"Session (%d) is started", SSN );
+
+  if( socket.Connect() != 0 )
+  		throw runtime_error( format("Can't connect to SMSC (error: %d, '%s')", errno, strerror( errno ) ) );
+
 
   USHORT_T  result = EINSS7_I97TBindReq( SSN, MSG_USER_ID, TCAP_INSTANCE_ID, EINSS7_I97TCAP_WHITE_USER );
 
-  if (result != 0)
-  {
-    smsc_log_error(inapLogger, "EINSS7_I97TBindReq() failed with code %d(%s)", result,getTcapReasonDescription(result));
-    goto stop;
-  }
+  if (result != 0 )
+	throw runtime_error( format( "BindReq() failed with code %d (%s)", result,getTcapReasonDescription(result)));
 
   MSG_T msg;
+
+  fd_set activeDescriptors;
+  FD_ZERO(&activeDescriptors);
+
+  SOCKET ss7socket  = EINSS7CpMsgObtainSocket(MSG_USER_ID, TCAP_ID);
+  SOCKET smscsocket = socket.getSocket();
+
+  FD_SET(ss7socket,  &activeDescriptors); /* Add ss7socket to the empty set*/
+  FD_SET(smscsocket, &activeDescriptors); /* Add SMSC socket */
+
+  struct timeval tv;
+  tv.tv_sec 	= 0;
+  tv.tv_usec 	= SOCKET_TIMEOUT * 1000;
+
+  running = TRUE;
+
   while(running)
   {
       if( ERROR == state )
@@ -163,42 +187,69 @@ int Session::Execute()
           break;
       }
 
-      msg.receiver = MSG_USER_ID;
+		/* Use select to wait for input on any of the sockets */
+		if( select( max( ss7socket, smscsocket) +1, &activeDescriptors, 0, 0, &tv ) > 0 )
+		{
+			if(FD_ISSET(ss7socket, &activeDescriptors)) /* Take care of SS7 message */
+			{
+				msg.receiver = MSG_USER_ID;
 
-      result = EINSS7CpMsgRecv_r( &msg,  MSG_RECV_TIMEOUT );
+				result = EINSS7CpMsgRecv_r(&msg, SOCKET_TIMEOUT);
 
-      if( result == MSG_TIMEOUT )
-      {
-          continue;
-      }
-      if (result != RETURN_OK )
-      {
-          smsc_log_error(inapLogger, "MsgRecv failed with code %d(%s)",  result,getReturnCodeDescription(result));
-          running = FALSE;
-          break;
-      }
-      else
-      {
-          //smsc_log_debug(inapLogger, "MSG: sender 0x%X, receiver 0x%X, Primitive 0x%X",  msg.sender, msg.receiver, msg.primitive );
-          EINSS7_I97THandleInd(&msg);
-      }
+    			if (result != 0 )
+    			{
+	    			EINSS7CpReleaseMsgBuffer(&msg);
+          			throw runtime_error( format( "MsgRecv failed with code %d (%s)", result, getReturnCodeDescription(result)) );
+          		}
 
-      EINSS7CpReleaseMsgBuffer(&msg);
+          		EINSS7_I97THandleInd(&msg);
+      			EINSS7CpReleaseMsgBuffer(&msg);
+			}
+			else
+			if(FD_ISSET(socket.getSocket(), &activeDescriptors)) /* read from SMSC socket */
+			{
+			unsigned char buffer[1024];
+			int n = socket.Read( (char*)buffer, sizeof( buffer ) );
+			if( n < 0 )
+				throw runtime_error( format("Socket::Read failed with code %d (%s)", errno, strerror( errno )));
+
+			smsc_log_debug(inapLogger, "Socket::Read( %s )", dump( n, buffer, true ).c_str() );
+		}
+		else 
+        {
+        	smsc_log_error(inapLogger, "Unknown select event");
+        }
+  	}
+  	else
+  	{
+  		smsc_log_debug(inapLogger, "Select timeout...");
+  	}
   }
 
   result = EINSS7_I97TUnBindReq( SSN, MSG_USER_ID, TCAP_INSTANCE_ID );
-  if (result != 0)
-  {
-      smsc_log_error(inapLogger, "EINSS7_I97TUnBindReq() failed with code %d(%s)", result,getTcapReasonDescription(result));
-      goto stop;
-  }
 
-stop:
-  smsc_log_debug(inapLogger,"Session (%d) is stopped", SSN);
-  stopped.SignalAll();
-  return result;
+  if (result != 0)
+      throw runtime_error( format("UnBindReq() failed with code %d (%s)", result, getTcapReasonDescription(result)));
 }
 
+int Session::Execute()
+{
+	int result = 0;
+  	started.SignalAll();
+	try
+	{
+      	smsc_log_debug(tcapLogger, "Session thread started");
+		run();
+	}
+	catch(const std::exception& error)
+	{
+      	smsc_log_error(tcapLogger, "Error in session thread: %s", error.what() );
+      	result = 1;
+	}
+	smsc_log_debug(tcapLogger, "Session thread finished");
+  	stopped.SignalAll();
+  	return result;
+}
 
 } // namespace inap
 } // namespace inmgr

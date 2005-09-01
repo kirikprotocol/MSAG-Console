@@ -10,11 +10,9 @@
 #include "i97tcapapi.h"
 #include "types.hpp"
 
-using smsc::core::synchronization::MutexGuard;
-
 namespace smsc {
 namespace inman{
-namespace inap {
+namespace common {
 
 extern        void pack_addr(UCHAR_T* dst, const char* src, int len);
 extern        void unpack_addr(char* dst, UCHAR_T* src, int len);
@@ -33,13 +31,16 @@ extern std::string getResponseIndicatorDescription(UCHAR_T responseInd);
 extern std::string getSourceIndicatorDescription(UCHAR_T sourceInd);
 extern std::string getRedirectionNumberDescription(EINSS7_I97_REDIRECTIONNUMB_T* redirectionNumb_sp);
 extern std::string getAutoCongLevelDescription(UCHAR_T* autoCongestLevel);
-extern std::string dump(USHORT_T len, UCHAR_T* udp);
+extern std::string dump(USHORT_T len, UCHAR_T* udp, bool ascii = false);
 extern const char* getResultDescription(UCHAR_T result);
 extern const char* getStackStatusDescription(UCHAR_T mmState);
 extern const char* getCongLevelDescription(UCHAR_T congLevel);
 extern const char* getIsupBindStatusDescription(UCHAR_T result);
 extern const char* getModuleName(USHORT_T moduleId);
 extern const char* getReturnCodeDescription(USHORT_T code);
+extern std::string getBufferDump(const char* pBuffer, int nLength);
+extern std::string format(const char* szFormat, ... );
+
 }//namespace inap
 }//namespace inman
 }//namespace smsc

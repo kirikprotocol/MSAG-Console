@@ -1,12 +1,17 @@
 static char const ident[] = "$Id$";
 #include <assert.h>
+#include <string>
+#include <stdexcept>
 
 #include "session.hpp"
 #include "factory.hpp"
 #include "inman/common/util.hpp"
 
 using std::map;
+using std::runtime_error;
 using std::pair;
+using smsc::inman::common::format;
+using smsc::inman::common::getReturnCodeDescription;
 
 namespace smsc  {
 namespace inman {
@@ -16,8 +21,6 @@ namespace inap  {
 // Static variables
 /////////////////////////////////////////////////////////////////////////////////////
 
-Logger* inapLogger = 0;
-Logger* tcapLogger = 0;
 Mutex Factory::instanceLock;
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -26,11 +29,6 @@ Mutex Factory::instanceLock;
 
 Factory::Factory() : state( IDLE )
 {
-    Logger::Init();
-    inapLogger = Logger::getInstance("smsc.in");
-    tcapLogger = Logger::getInstance("smsc.in.tcap");
-    assert( inapLogger );
-    assert( tcapLogger );
 }
 
 Factory::~Factory()
@@ -50,8 +48,7 @@ void Factory::openConnection()
             result = MsgInit(MSG_INIT_MAX_ENTRIES);
             if (result != 0)
             {
-                smsc_log_error(inapLogger, "MsgInit Failed with code %d(%s)", result, getReturnCodeDescription(result));
-                return;
+                throw runtime_error( format("MsgInit Failed with code %d (%s)", result, getReturnCodeDescription(result)));
             }
             state = INITED;
             smsc_log_debug(inapLogger,"MsgInit done.");
@@ -61,8 +58,7 @@ void Factory::openConnection()
             result = MsgOpen(MSG_USER_ID);
             if (result != 0)
             {
-                smsc_log_error(inapLogger, "MsgOpen failed with code %d(%s)", result, getReturnCodeDescription(result));
-                return;
+				throw runtime_error( format("MsgOpen failed with code %d (%s)", result, getReturnCodeDescription(result)));
             }
             state = OPENED;
             smsc_log_debug(inapLogger,"MsgOpen done.");
@@ -72,8 +68,7 @@ void Factory::openConnection()
             result = MsgConn(MSG_USER_ID, TCAP_ID);
             if (result != 0)
             {
-                smsc_log_error(inapLogger, "MsgConn failed with code %d(%s)", result, getReturnCodeDescription(result));
-                return;
+				throw runtime_error( format("MsgConn failed with code %d (%s)", result, getReturnCodeDescription(result)) );
             }
             state = CONNECTED;
             smsc_log_debug(inapLogger,"MsgConn done.");
@@ -95,7 +90,7 @@ void Factory::closeConnection()
             result = MsgRel(MSG_USER_ID,TCAP_ID);
             if( result != 0 )
             {
-                smsc_log_error(inapLogger, "MsgRel(%d,%d) failed with code %d(%s)", MSG_USER_ID, TCAP_ID, result, getReturnCodeDescription(result));
+                smsc_log_error(inapLogger, "MsgRel(%d,%d) failed with code %d (%s)", MSG_USER_ID, TCAP_ID, result, getReturnCodeDescription(result));
             }
             else
             {
@@ -109,7 +104,7 @@ void Factory::closeConnection()
             result = MsgClose(MSG_USER_ID);
             if( result != 0 )
             {
-                smsc_log_error(inapLogger, "MsgClose(%d) failed with code %d(%s)", MSG_USER_ID, result ,getReturnCodeDescription(result));
+                smsc_log_error(inapLogger, "MsgClose(%d) failed with code %d (%s)", MSG_USER_ID, result ,getReturnCodeDescription(result));
             }
             else
             {
@@ -136,7 +131,8 @@ Factory* Factory::getInstance()
     return &instance;
 }
 
-Session* Factory::openSession(UCHAR_T SSN)
+Session* Factory::openSession(UCHAR_T SSN, const char* szSCFNumber, const char* szINmanNumber,
+    											 const char* szSMSCHost, int nSMSCPort)
 {
     MutexGuard guard( sessionsLock );
 
@@ -144,23 +140,24 @@ Session* Factory::openSession(UCHAR_T SSN)
 
     if( state != CONNECTED ) return NULL;
 
-    smsc_log_debug(inapLogger,"Open IN session (SSN=%d)", SSN );
+    smsc_log_debug(inapLogger,"Open IN session (SSN=%d, SCF=%s, IN=%s, SMSC=%s:%d)", 
+    		SSN, szSCFNumber, szINmanNumber, szSMSCHost, nSMSCPort );
+
+	Session* pSession;
 
     if( sessions.find( SSN ) != sessions.end() )
     {
-        smsc_log_error(inapLogger,"IN session with SSN=%d already opened", SSN );
-        return NULL;
+        throw runtime_error( format("IN session with SSN=%d already opened", SSN) );
     }
 
-    Session* pSession = new Session( SSN , "79139860005", "79139869999");
+	pSession = new Session( SSN, szSCFNumber, szINmanNumber, szSMSCHost, nSMSCPort );
 
     pSession->Start();
 
     if( pSession->started.Wait( 1000 ) )
     {
         delete pSession;
-        smsc_log_error(inapLogger,"Can't start session (SSN=%d)", SSN );
-        return NULL;
+        throw runtime_error( format( "Can't start session (SSN=%d)", SSN ) );
     }
 
     sessions.insert( SessionsMap_T::value_type( SSN, pSession ) );
@@ -188,14 +185,14 @@ void Factory::closeSession(Session* pSession)
 
     if( sessions.find( pSession->SSN ) == sessions.end() )
     {
-        smsc_log_warn(inapLogger,"IN session with SSN=%d not exists", pSession->SSN );
+        smsc_log_error(inapLogger,"IN session with SSN=%d not exists", pSession->SSN );
     }
 
     pSession->running = FALSE;
 
     if( pSession->stopped.Wait( MSG_RECV_TIMEOUT * 3 ) )
     {
-        smsc_log_warn(inapLogger,"Can't stop IN session (SSN=%d)", pSession->SSN );
+        smsc_log_error(inapLogger,"Can't stop IN session (SSN=%d)", pSession->SSN );
     }
     sessions.erase( pSession->SSN );
     delete pSession;

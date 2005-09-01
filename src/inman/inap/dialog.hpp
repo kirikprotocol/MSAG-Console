@@ -40,10 +40,10 @@ class TcapDialog : public ObservableT< TcapDialogListener >
     virtual Invoke* invoke(UCHAR_T opcode);
 
     // Transaction layer
-    virtual USHORT_T beginDialog();//called by client of this dialog instance
-    virtual USHORT_T continueDialog();
-    virtual USHORT_T endDialog(USHORT_T termination);
-    virtual USHORT_T timerReset();
+    virtual void beginDialog();//called by client of this dialog instance
+    virtual void continueDialog();
+    virtual void endDialog(USHORT_T termination);
+    virtual void timerReset();
 
     // Transaction level callbacks
 	virtual USHORT_T handleBeginDialog();

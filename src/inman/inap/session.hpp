@@ -10,10 +10,12 @@
 
 #include "inman/common/types.hpp"
 #include "core/threads/Thread.hpp"
+#include "core/network/Socket.hpp"
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "inman/common/observable.hpp"
 
+using smsc::core::network::Socket;
 using smsc::inman::common::ObservableT;
 using smsc::core::threads::Thread;
 using smsc::core::synchronization::Event;
@@ -54,15 +56,17 @@ class Session : public Thread, public ObservableT< SessionListener >
 
         virtual     TcapDialog*  openDialog(USHORT_T id);
         virtual     TcapDialog*  findDialog(USHORT_T id);
-        virtual     void     closeDialog(TcapDialog* pDlg);
-        virtual     void     closeAllDialogs();
+        virtual     void    	 closeDialog(TcapDialog* pDlg);
+        virtual     void    	 closeAllDialogs();
+        virtual 	void		 run();
 
     protected:
         typedef      std::map<USHORT_T, TcapDialog*> DialogsMap_T;
 
-        Session(UCHAR_T SSN);
-        Session(UCHAR_T ssn, const char* scfNum, const char* inmanNum);
+        Session(UCHAR_T ssn, const char* scfNum, const char* inmanNum, const char* host, int port);
+
         DialogsMap_T dialogs;
+        Socket		 socket;
 
         virtual     ~Session();
         virtual int  Execute();

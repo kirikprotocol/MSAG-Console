@@ -1,15 +1,21 @@
 static char const ident[] = "$Id$";
 
+#include <assert.h>
+#include <string>
+#include <stdexcept>
+
 #include "invoke.hpp"
 #include "results.hpp"
 #include "dialog.hpp"
 #include "session.hpp"
 #include "factory.hpp"
+
 #include "inman/common/util.hpp"
 #include "inman/comp/comfactory.hpp"
 
-#include <assert.h>
-
+using std::runtime_error;
+using smsc::inman::common::format;
+using smsc::inman::common::getTcapReasonDescription;
 using smsc::inman::comp::ComponentFactory;
 
 namespace smsc  {
@@ -34,9 +40,9 @@ TcapDialog::~TcapDialog()
 {
 }
 
-USHORT_T TcapDialog::beginDialog()
+void TcapDialog::beginDialog()
 {
- USHORT_T result = EINSS7_I97TBeginReq(
+ 	USHORT_T result = EINSS7_I97TBeginReq(
     session->getSSN(),
     MSG_USER_ID,
     TCAP_INSTANCE_ID,
@@ -53,14 +59,10 @@ USHORT_T TcapDialog::beginDialog()
     NULL);
 
   if(result != 0)
-  {
-  	smsc_log_error(tcapLogger, "EINSS7_I97TBeginReq failed with code %d(%s)", result,getTcapReasonDescription(result));
-  }
-
-  return result;
+  	throw runtime_error( format("BeginReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
 }
 
-USHORT_T TcapDialog::continueDialog()
+void TcapDialog::continueDialog()
 {
   USHORT_T result = EINSS7_I97TContinueReq(
     session->getSSN(),
@@ -77,13 +79,10 @@ USHORT_T TcapDialog::continueDialog()
     NULL);
 
   if(result != 0)
-  {
-  	smsc_log_error(tcapLogger, "EINSS7_I97TContinueReq failed with code %d(%s)", result,getTcapReasonDescription(result));
-  }
-  return result;
+  	throw runtime_error( format("ContinueReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
 }
 
-USHORT_T TcapDialog::endDialog(USHORT_T termination)
+void TcapDialog::endDialog(USHORT_T termination)
 {
   USHORT_T result = EINSS7_I97TEndReq(
     session->getSSN(),
@@ -99,15 +98,11 @@ USHORT_T TcapDialog::endDialog(USHORT_T termination)
     NULL);
 
   if(result != 0)
-  {
-  	smsc_log_error(tcapLogger, "EINSS7_I97TEndReq failed with code %d(%s)", result,getTcapReasonDescription(result));
-  }
-
-  return result;
+  	throw runtime_error( format("EndReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
 }
 
 
-USHORT_T TcapDialog::timerReset()
+void TcapDialog::timerReset()
 {
  	USHORT_T result = EINSS7_I97TTimerResetReq
  	(
@@ -118,13 +113,10 @@ USHORT_T TcapDialog::timerReset()
     	1
     );
 
-   if (result != 0)
-   {
-  	 smsc_log_error(tcapLogger, "EINSS7_I97TTimerResetReq failed with code %d(%s)", result,getTcapReasonDescription(result));
-   }
-   return result;
-}
+  if(result != 0)
+  	throw runtime_error( format("TimerResetReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
 
+}
 
 Invoke* TcapDialog::invoke(UCHAR_T opcode)
 {
