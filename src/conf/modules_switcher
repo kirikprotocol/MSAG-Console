@@ -18,11 +18,12 @@ $(MODULES) $(foreach x,$(MODULES),$(x).%): __.empty.__
 override _modules = $(subst ., ,$@)
 override _module = $(firstword $(_modules))
 override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@), build )
-	@if [ -d $(_module) ]; then \
+	@if [ ! -f "$@" ]; then \
+	if [ -d $(_module) ]; then \
 	    cd $(_module); $(MAKE) $(_subtarget); \
 	else \
 	    echo "'$(_module)' is not module"; exit 1;\
+	fi; \
 	fi
-
 endif
 
