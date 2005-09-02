@@ -14,6 +14,7 @@
 
 #include "SessionStore.h"
 #include "SessionManager.h"
+#include "Session.h"
 
 namespace scag { namespace sessions 
 {
@@ -22,12 +23,12 @@ namespace scag { namespace sessions
     using namespace scag::util::singleton;
     using namespace smsc::core::buffers;
 
-    class SessionManagerImpl : public SessionManager, public Thread
+    class SessionManagerImpl : public SessionManager, public Thread, public SessionOwner
     {
         struct CSessionAccessData
         {
             CSessionKey SessionKey;
-            time_t lastAccess;
+            time_t nextWakeTime;
             bool bOpened;
 
             CSessionAccessData() : lastAccess(0), bOpened(false) {}
@@ -75,6 +76,8 @@ namespace scag { namespace sessions
 
         virtual int Execute();
         virtual void Start();
+
+        virtual void startTimer(CSessionKey key,time_t deadLine);
     };
 
 
@@ -154,11 +157,12 @@ int SessionManagerImpl::Execute()
     return 0;
 }
 
-/*
+
 int SessionManagerImpl::processExpire()
 {
-    MutexGuard guard(Lock);
-    
+    MutexGuard guard(inUseMonitor);
+    //inUseMonitor.NotifyAll();
+
     while (1) 
     {
         if (SessionExpirePool.empty()) return m_uiExpirationTime;
@@ -167,22 +171,30 @@ int SessionManagerImpl::processExpire()
         for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
             if (!it->bOpened) break;
 
-        if (it == SessionExpirePool.end()) return m_uiExpirationTime;
-
         time_t now;
         time(&now);
-        
-        int iPeriod = it->lastAccess + m_uiExpirationTime - now;
+        int iPeriod;
+
+        if (it == SessionExpirePool.end())
+        {
+            it == SessionExpirePool.begin();
+            iPeriod = (it->nextWakeTime - now);
+            if (iPeriod <= 0) return 1;
+            else return iPeriod;
+        }
+
+        int iPeriod = it->lastAccess - now;
         if (iPeriod > 0) return iPeriod;
 
         // Session expired
         SessionHash.Delete(it->SessionKey);
         SessionExpirePool.erase(it);
-        // TODO: Remove from storage
+        store.deleteSesion(sessionKey);
     }
 }
-*/
 
+
+/*
 time_t SessionManagerImpl::processExpire()
 {
     if (SessionExpirePool.empty()) return config.expireInterval;
@@ -193,7 +205,11 @@ time_t SessionManagerImpl::processExpire()
     for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
     {
         // TODO: calculate next session's expiration time
-        if (it->isInUse()) continue;
+        
+        if (it->isInUse()) 
+            {
+            continue;
+        }
         CSessionKey sessionKey = it->getSessionKey();
 
         MutexGuard guard(inUseMonitor);
@@ -208,22 +224,69 @@ time_t SessionManagerImpl::processExpire()
     return timeToNextExpire;    
 }
 
+  */
+
+Session * SessionManagerImpl::NewSession(sessionKey)
+{
+    session = store.newSesion(sessionKey);
+    time_t time = session->getWakeUpTime();
+
+    CSessionAccessData accessData;
+    accessData.nextWakeTime = session->getWakeUpTime();
+    if (session->getWakeUpTime() == 0) return 0;
+
+    CSLIterator it;
+    for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it) 
+    {
+        if (time < it->lastAccess)
+        {
+            if (it == SessionExpirePool.begin()) 
+            {
+                SessionExpirePool.push_front(SessionKey);
+                it = SessionExpirePool.begin();
+                SessionHash.Insert(sessionKey,it);
+                return session;
+            }
+
+            --it;
+
+            SessionExpirePool.insert(it,accessData);
+            ++it;
+            SessionHash.Insert(sessionKey,it);
+            return session;
+        }
+    }
+    SessionExpirePool.push_back(accessData);
+    it = SessionExpirePool.end();
+    --it;
+    SessionHash.Insert(sessionKey,it);
+
+    return session;
+}
+
 Session* SessionManagerImpl::getSession(const SCAGCommand& command)
 {
     Session*    session = 0;
     CSessionKey sessionKey; // TODO: obtain from SCAGCommand somehow
 
     MutexGuard guard(inUseMonitor);
-    while (inUse.Exists(sessionKey)) inUseMonitor.Wait();
-    
-    session = store.getSession(sessionKey);
-    if (session) {
-        // TODO: add session to expire pool & sessionsHash
-        inUse.Insert(sessionKey, session);
+
+    CSLIterator it;
+
+    if (!SessionHash.Exists(sessionKey)) return NewSession(sessionKey);
+
+    it = SessionHash.Get(sessionKey);
+    while (it->bOpened)
+    {
+        inUseMonitor.Wait();
+        if (!SessionHash.Exists()) return NewSession(sessionKey);
+        it = SessionHash.Get(sessionKey);
     }
 
-    return session; // TODO: possible SessionGuard
+    return store.getSession(sessionKey);
 }
+
+
 void SessionManagerImpl::releaseSession(const Session* session)
 {
     if (!session) return;
@@ -231,19 +294,50 @@ void SessionManagerImpl::releaseSession(const Session* session)
 
     MutexGuard guard(inUseMonitor);
     if (session->isChanged) store.updateSesion(session);
-    inUse.Delete(sessionKey);
+
+    CSLIterator it;
+
+    if (!SessionHash.Exists(sessionKey)) throw SCAGException("SessionManager: Fatal error");
+    it = SessionHash.Get(sessionKey);
+    it->bOpened = false;
+
     inUseMonitor.NotifyAll();
 }
+
+
 void SessionManagerImpl::closeSession(const Session* session)
 {
     if (!session) return;
     CSessionKey sessionKey = session->getSessionKey();
 
     MutexGuard guard(inUseMonitor);
-    // TODO: remove session from expire pool & sessionsHash
     store.deleteSesion(sessionKey);
-    inUse.Delete(sessionKey);
+
+    CSLIterator it;
+
+    if (!SessionHash.Exists(sessionKey)) throw SCAGException("SessionManager: Fatal error 1");
+    it = SessionHash.Get(sessionKey);
+
+    SessionExpirePool.erase(it);
+    SessionHash.Delete(sessionKey);
+
     inUseMonitor.NotifyAll();
+}
+
+void SessionManagerImpl::startTimer(CSessionKey key,time_t deadLine)
+{
+    MutexGuard guard(inUseMonitor);
+
+    if (!SessionHash.Exists(key)) throw SCAGException("SessionManager: Fatal error 2");
+    CSLIterator it;
+    it = SessionHash.Get(SessionKey);
+    while (it->bOpened) 
+    {
+        inUseMonitor.Wait();
+        if (!SessionHash.Exists(key)) return;
+        it = SessionHash.Get(key);
+    }
+    it->wakeUpTime = deadLine;
 }
 
 /*

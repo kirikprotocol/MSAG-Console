@@ -18,8 +18,11 @@ namespace scag { namespace sessions
         void init(const std::string& dir);
 
         SessionGuard getSession(const CSessionKey& sessionKey);
+
+        void newSesion(const CSessionKey& sessionKey);
         void deleteSesion(const CSessionKey& sessionKey);
         void updateSesion(Session* session);
+        void loadExpireList(COperationsList& opList);
     };
 }}
 

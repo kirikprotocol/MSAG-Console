@@ -25,9 +25,37 @@ namespace scag { namespace sessions
         }
     };    
 
+    class SessionOwner
+    {
+    public:
+        virtual void startTimer(CSessionKey key,time_t deadLine) = 0;
+        //virtual void stopTimer(CSessionKey key);
+    };
+
+
+    class PendingOperation
+    {
+    public:
+        uint8_t type;
+        time_t validityTime;
+    };
+
+    class Operation : public PendingOperation
+    {
+        Operation(const Operation& operation);
+    public:
+        void attachBill(const Bill& bill);
+        void detachBill(const Bill& bill);
+        void close(bool commit);
+    };
+
+
+
     class Session : public PropertyManager
     {
-    protected:
+        std::list<PendingOperation> PendingOperationList;
+        std::list<Operation*> OperationList;
+        SessionOwner * Owner;
 
         CSessionKey             m_SessionKey;
         time_t                  lastAccessTime;
@@ -38,76 +66,47 @@ namespace scag { namespace sessions
         Hash<AdapterProperty *> PropertyHash;
         
         virtual ~Session();
-    
-        friend class SessionGuard;
-        bool Aquire();
-        void Release();
-        void Destroy();
-
+     
     public:
 
         Session();
+        ~Session();
         
         CSessionKey getSessionKey() const {
             return m_SessionKey;
         }
-        inline time_t getLastAccessTime() {
+        inline time_t getLastAccessTime() const {
             return lastAccessTime;
         }
-        inline bool isChanged() {
+        inline bool isChanged() const {
             return bChanged;
-        }
-        inline bool isInUse() {
-            MutexGuard guard(accessMonitor);
-            return (accessCount > 0);
         }
         
         void Expire();
 
-        void attachBill(const Bill& bill);
-        void detachBill(const Bill& bill);
-        
+       
         virtual void changed(AdapterProperty& property);
         virtual Property* getProperty(const std::string& name);
+
+        void setOwner(SessionOwner& _Owner) {Owner = &_Owner;}
+        bool hasOperations() const;
+        void expireOperation(time_t currentTime);
+        bool startOperation(cmd& SCAGCommand);
+        void releaseOperation();
+
+        void addPendingOperation(PendingOperation pendingOperation);
+        Operation GetCurrentOperation();
+        time_t Session::getWakeUpTime();
     };
 
-    class SessionGuard
-    {
-        Session* session;
-        bool     bAquire, bDestroy;
-
-    public:
-
-        SessionGuard(Session* _session) 
-            : session(_session), bAquire(false), bDestroy(false) 
-        {
-            //bAquire = session->Aquire();
-        }
-        SessionGuard(const SessionGuard& sg)
-        {
-            // TODO: copy
-            bAquire = session->Aquire();
-        }
-        ~SessionGuard() 
-        {
-            if (!session) return;
-            if (bDestroy || !bAquire) session->Destroy();
-            else session->Release();
-        }
-        
-        Session* getSession() {
-            return (bAquire ? session:0); 
-        }
-        inline void DestroySession() {
-            bDestroy = true;
-        }
-    };
 }}
 
 #endif // SCAG_SESSIONS_SESSION
 
+/*
 SessionGuard sg = store.GetSession(key);
 Session* s = sg.getSession();
 if (!s) {
 
 }
+*/

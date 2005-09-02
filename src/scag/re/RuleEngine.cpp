@@ -73,17 +73,12 @@ RuleEngine::RuleEngine(const std::string& dir)
          {
              if (isValidFileName(pDirEnt->d_name,ruleId)) 
              {
-                 char buff[128];
-                 sprintf(buff,"%s %d","Rule ID is ",ruleId);
-                 smsc_log_debug(logger,buff);
+                 smsc_log_debug(logger,"Rule ID is %d",ruleId);
                  updateRule(ruleId);
              }
              else if ((strcmp(pDirEnt->d_name,".")!=0)&&(strcmp(pDirEnt->d_name,"..")!=0)) 
              {
-                 std::string str("Skipped '");
-                 str.append(pDirEnt->d_name);
-                 str.append("' file: Invalid file name");
-                 smsc_log_error(logger,str);
+                 smsc_log_error(logger,"Skipped '%s' file: Invalid file name",pDirEnt->d_name);
              }
          } 
          else 
@@ -199,9 +194,7 @@ RuleStatus RuleEngine::process(SCAGCommand& command)
     int ruleId = 0;
     ruleId = GetRuleId(command);
 
-    char buff[128];
-    sprintf(buff,"%s%d","Process RuleEngine with ruleId: ",ruleId);
-    smsc_log_debug(logger,buff);
+    smsc_log_debug(logger,"Process RuleEngine with ruleId: %d",ruleId);
 
     if (rulesRef.rules->rules.Exist(ruleId)) 
     {
@@ -209,11 +202,7 @@ RuleStatus RuleEngine::process(SCAGCommand& command)
         rs = rule->process(command);
     } 
     else
-    {
-        char buff[128];
-        sprintf(buff,"%s%d%s","Cannot process Rule with ID = ",ruleId," : Rule not found");
-        throw SCAGException(buff);
-    }
+        throw SCAGException("Cannot process Rule with ID = %d%s",ruleId," : Rule not found");
 
         
     return rs;
