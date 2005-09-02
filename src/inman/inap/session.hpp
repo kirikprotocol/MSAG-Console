@@ -9,17 +9,11 @@
 #include "ss7cp.h"
 
 #include "inman/common/types.hpp"
-#include "core/threads/Thread.hpp"
-#include "core/network/Socket.hpp"
-#include "core/synchronization/Event.hpp"
-#include "core/synchronization/Mutex.hpp"
 #include "inman/common/observable.hpp"
 
-using smsc::core::network::Socket;
+#include "dispatcher.hpp"
+
 using smsc::inman::common::ObservableT;
-using smsc::core::threads::Thread;
-using smsc::core::synchronization::Event;
-using smsc::core::synchronization::Mutex;
 
 namespace smsc {
 namespace inman {
@@ -39,46 +33,40 @@ public:
 	virtual void onDialogEnd(TcapDialog*)   = 0;
 };
 
-class Session : public Thread, public ObservableT< SessionListener >
+class Session : public ObservableT< SessionListener >
 {
         friend class Factory;
+        friend class TcapDialog;
 
     public:
-        typedef enum { IDLE, BOUNDED, ERROR } State_T;
+        typedef enum { IDLE, BOUNDED, ERROR } SessionState;
 
-        State_T     getState() const;
-        void        setState(State_T newState);
-        UCHAR_T     getSSN() const;
+        SessionState getState() const;
+        void         setState(SessionState newState);
 
-        SCCP_ADDRESS_T scfAddr;
-        SCCP_ADDRESS_T inmanAddr;
-        APP_CONTEXT_T  ac;
+        UCHAR_T      getSSN() const;
+
 
         virtual     TcapDialog*  openDialog(USHORT_T id);
         virtual     TcapDialog*  findDialog(USHORT_T id);
         virtual     void    	 closeDialog(TcapDialog* pDlg);
         virtual     void    	 closeAllDialogs();
-        virtual 	void		 run();
 
     protected:
-        typedef      std::map<USHORT_T, TcapDialog*> DialogsMap_T;
+        typedef     std::map<USHORT_T, TcapDialog*> DialogsMap_T;
 
-        Session(UCHAR_T ssn, const char* scfNum, const char* inmanNum, const char* host, int port);
+        Session(UCHAR_T ssn, const char* scfNum, const char* inmanNum);
+        virtual     	~Session();
+        USHORT_T      	nextDialogId();
 
-        DialogsMap_T dialogs;
-        Socket		 socket;
-
-        virtual     ~Session();
-        virtual int  Execute();
-
-        USHORT_T      nextDialogId();
-        State_T       state;
-        UCHAR_T       SSN;
-        USHORT_T      lastDialogId;
-        Event         started;
-        Event         stopped;
-        Mutex         lock;
-        volatile BOOLEAN_T running;
+        SCCP_ADDRESS_T 	scfAddr;
+        SCCP_ADDRESS_T 	inmanAddr;
+        APP_CONTEXT_T  	ac;
+        DialogsMap_T   	dialogs;
+        SessionState   	state;
+        UCHAR_T        	SSN;
+        USHORT_T       	lastDialogId;
+        Logger*		   	logger;
 };
 
 }

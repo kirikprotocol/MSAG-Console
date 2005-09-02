@@ -9,6 +9,7 @@ using smsc::core::network::Socket;
 
 static const int SOCKET_TIMEOUT = 1000;
 
+
 int main(char* argv[], int argc)
 {
 	if( argc != 3 )

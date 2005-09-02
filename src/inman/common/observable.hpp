@@ -1,7 +1,7 @@
 #ident "$Id$"
 
-#ifndef __SMSC_INMAN_INTER_OBSERVABLE__
-#define __SMSC_INMAN_INTER_OBSERVABLE__
+#ifndef __SMSC_INMAN_COMMON_OBSERVABLE__
+#define __SMSC_INMAN_COMMON_OBSERVABLE__
 
 #include <list>
 #include <algorithm>

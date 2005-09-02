@@ -21,14 +21,25 @@ using smsc::inman::inap::Session;
 using smsc::inman::inap::Factory;
 using smsc::inman::common::getTcapBindErrorMessage;
 using smsc::inman::common::dump;
+
+namespace smsc {
+namespace inman{
+namespace inap {
+extern Logger* inapLogger;
+extern Logger* tcapLogger;
+}
+}
+}
+
 using smsc::inman::inap::tcapLogger;
 using smsc::inman::inap::inapLogger;
 
 //-------------------------------- Util functions --------------------------------
+extern Factory* getFactory();
 
 static TcapDialog* findDialog(UCHAR_T ssn, USHORT_T dialogueId)
 {
-	Session* pSession = Factory::getInstance()->findSession( ssn );
+	Session* pSession = getFactory()->findSession( ssn );
   	assert( pSession );
   	TcapDialog* pDlg = pSession->findDialog( dialogueId );
   	assert( pDlg );
@@ -46,7 +57,7 @@ USHORT_T EINSS7_I97TBindConf(   UCHAR_T          ssn,
     smsc_log_debug(tcapLogger,
                    "EINSS7_I97TBindConf(ssn=%d,userId=%d,tcapInstanceId=%d,bindResult=%d(%s) )",
                    ssn,userId,tcapInstanceId,bindResult,getTcapBindErrorMessage(bindResult));
-    Session* pSession = Factory::getInstance()->findSession( ssn );
+    Session* pSession = getFactory()->findSession( ssn );
     assert( pSession );
     if( EINSS7_I97TCAP_BIND_OK == bindResult )
     {
@@ -86,7 +97,7 @@ USHORT_T EINSS7_I97TBeginInd(   UCHAR_T          ssn,
                  "ssn=%d,userId=%d,tcapInstanceId=%d,dialogueId=%d,...)",
                  ssn, userId, tcapInstanceId, dialogueId );
 
-	Session* pSession = Factory::getInstance()->findSession( ssn );
+	Session* pSession = getFactory()->findSession( ssn );
   	assert( pSession );
   	TcapDialog* pDlg = pSession->openDialog( dialogueId );
   	assert( pDlg );
@@ -142,7 +153,7 @@ USHORT_T EINSS7_I97TEndInd(     UCHAR_T          ssn,
                  "ssn=%d, userId=%d,tcapInstanceId=%d,...)",
                  ssn, userId, tcapInstanceId );
 
-	Session* pSession = Factory::getInstance()->findSession( ssn );
+	Session* pSession = getFactory()->findSession( ssn );
   	assert( pSession );
   	TcapDialog* dlg = findDialog( ssn, dialogueId );
   	assert( dlg );

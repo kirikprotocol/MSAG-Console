@@ -1,6 +1,6 @@
 #ident "$Id$"
-#ifndef __SMSC_INMAN_INAP_HPP__
-#define __SMSC_INMAN_INAP_HPP__
+#ifndef __SMSC_INMAN_COMMON_UTIL_HPP__
+#define __SMSC_INMAN_COMMON_UTIL_HPP__
 #include <string>
 
 #include "ss7cp.h"

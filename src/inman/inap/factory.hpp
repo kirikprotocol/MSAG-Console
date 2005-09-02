@@ -8,6 +8,7 @@
 #include "ss7cp.h"
 #include "i97tcapapi.h"
 
+#include "dispatcher.hpp"
 #include "logger/Logger.h"
 #include "core/synchronization/Mutex.hpp"
 
@@ -24,7 +25,7 @@ static const UCHAR_T TCAP_INSTANCE_ID = 0;
 
 class Session;
 
-class Factory
+class Factory : public SocketListener
 {
 public:
     typedef enum { IDLE, INITED, OPENED, CONNECTED } State_T;
@@ -32,14 +33,13 @@ public:
 public:
     virtual   ~Factory();
 
-    virtual    Session* openSession(UCHAR_T ssn, const char* szSCFNumber, const char* szINmanNumber,
-    											 const char* szSMSCHost, int nSMSCPort);
-
+    virtual    Session* openSession(UCHAR_T ssn, const char* szSCFNumber, const char* szINmanNumber);
     virtual    Session* findSession(UCHAR_T ssn);
     virtual    void     closeSession(Session*);
     virtual    void     closeAllSessions();
 
-    static     Factory* getInstance();
+    SOCKET	   getHandle();
+    void	   process(Dispatcher*);
 
 protected:
 
@@ -48,15 +48,12 @@ protected:
     Factory();
     void              openConnection();
     void              closeConnection();
-    static Mutex      instanceLock;
-    Mutex             sessionsLock;
+
     SessionsMap_T     sessions;
     State_T           state;
+    Logger*			  logger;
 
 };
-
-extern Logger* inapLogger;
-extern Logger* tcapLogger;
 
 }
 }

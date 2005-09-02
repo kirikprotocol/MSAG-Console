@@ -76,9 +76,9 @@ int main(int argc, char** argv)
 
 	try
 	{
-		Session* pSession = Factory::getInstance()->openSession( SSN, smc_addr, inman_addr, host, port );
+		//Session* pSession = Factory::getInstance()->openSession( SSN, smc_addr, inman_addr, host, port );
 		run_console();
-		Factory::getInstance()->closeSession( pSession );
+		//Factory::getInstance()->closeSession( pSession );
 	}
 	catch(const std::exception& error)
 	{

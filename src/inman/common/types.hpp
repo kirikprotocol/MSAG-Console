@@ -1,7 +1,7 @@
 #ident "$Id$"
 
-#ifndef __SMSC_INMAN_INAP_TYPES__
-#define __SMSC_INMAN_INAP_TYPES__
+#ifndef __SMSC_INMAN_COMMON_TYPES__
+#define __SMSC_INMAN_COMMON_TYPES__
 
 #define MAX_SCCP_ADDRESS_LEN 32
 #define MAX_APP_CONTEXT_LEN 32
