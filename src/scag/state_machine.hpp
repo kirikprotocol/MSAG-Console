@@ -1,7 +1,8 @@
 #ifndef __SMSC_SYSTEM_STATE_MACHINE_HPP__
 #define __SMSC_SYSTEM_STATE_MACHINE_HPP__
 
-#include "scag/smsc.hpp"
+#include "scag/scag.h"
+
 #include "core/threads/ThreadedTask.hpp"
 #include "scag/event_queue.h"
 #include "util/templates/Formatters.h"
@@ -11,8 +12,8 @@
 #include <list>
 #include <exception>
 
-namespace smsc{
-namespace scag{
+namespace scag
+{
 
 class smsc::scag::Smsc;
 using smsc::profiler::Profile;
@@ -57,7 +58,6 @@ protected:
 
 };
 
-}//scagw
-}//smsc
+} //scag
 
 #endif

@@ -13,7 +13,7 @@
 #include "admin/protocol/Command.h"
 
 // Its during for a test only
-// #include "scag/smsc.hpp"
+// #include "scag/scag.hpp"
 
 
 #include "admin/service/Variant.h"

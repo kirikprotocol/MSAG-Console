@@ -17,7 +17,7 @@
 #include "core/buffers/Hash.hpp"
 
 // Its during for a test only
-//#include "scag/smsc.hpp"
+//#include "scag/scag.h"
 
 #include "scag/admin/SCAGCommandReader.h"
 #include "scag/admin/CommandApply.h"

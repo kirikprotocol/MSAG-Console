@@ -12,7 +12,7 @@
 #include "SCAGCommand.h"
 
 // Its during for a test only
-//#include "scag/smsc.hpp"
+//#include "scag/scag.h"
 
 #include "admin/service/Variant.h"
 

@@ -11,7 +11,7 @@
 #include "core/threads/ThreadPool.hpp"
 
 // Its during for a test only
-//#include "scag/smsc.hpp"
+//#include "scag/scag.h"
 
 #include "scag/gwsme.hpp"
 #include "util/Exception.hpp"

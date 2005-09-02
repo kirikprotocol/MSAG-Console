@@ -1,5 +1,5 @@
 #include "util/debug.h"
-#include "scag/smsc.hpp"
+#include "scag/scag.h"
 #include "scag/state_machine.hpp"
 #include <exception>
 #include "system/common/rescheduler.hpp"
@@ -23,8 +23,8 @@
 
 // строчка по русски, что б сработал autodetect :)
 
-namespace smsc{
-namespace scag{
+namespace scag
+{
 
 using namespace smsc::smeman;
 using namespace smsc::sms;
@@ -1597,6 +1597,4 @@ void StateMachine::cancelResp(SmscCommand& cmd)
   }
 }
 
-
-}//system
-}//smsc
+} //scag

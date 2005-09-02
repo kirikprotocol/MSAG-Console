@@ -2,7 +2,8 @@
   $Id$
 */
 
-#include "smsc.hpp"
+#include "scag.h"
+
 #include <memory>
 #include <vector>
 #ifndef linux
@@ -13,8 +14,8 @@
 
 #include "util/udh.hpp"
 
-namespace smsc{
-namespace scag{
+namespace scag
+{
 
 #define WAIT_DATA_TIMEOUT 100 /* ms */
 using smsc::smeman::CommandId;
@@ -274,6 +275,4 @@ void Smsc::processCommand(SmscCommand& cmd)
   eventqueue.enqueue(cmd);
 }
 
-
-}
 }

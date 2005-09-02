@@ -10,7 +10,7 @@
 #include "core/threads/Thread.hpp"
 
 // Its during for a test only
-//#include "scag/smsc.hpp"
+//#include "scag/scag.h"
 
 #include "core/synchronization/Mutex.hpp"
 

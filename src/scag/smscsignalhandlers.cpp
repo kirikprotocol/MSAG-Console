@@ -1,13 +1,12 @@
 #include "scag/smscsignalhandlers.h"
 
-#include "scag/smsc.hpp"
-//#include "admin/smsc_service/SmscComponent.h"
+#include "scag/scag.h"
 #include "admin/service/ServiceSocketListener.h"
 
 #include <pthread.h>
 
-namespace smsc {
-namespace scag {
+namespace scag 
+{
 
 using smsc::scag::Smsc;
 using namespace smsc::scag::admin;
@@ -109,5 +108,4 @@ void registerSmscSignalHandlers(SCAGSocketListener * socketListener)
   registerSignalHandlers_internal();
 }
 
-}
 }
