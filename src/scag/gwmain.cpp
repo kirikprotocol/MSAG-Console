@@ -2,18 +2,20 @@
 #include <stdlib.h>
 #include <exception>
 #include <sys/stat.h>
-#include "scag/smsc.hpp"
+
+#include "scag/scag.h"
+
 #include "alias/aliasman.h"
 #include "util/config/alias/aliasconf.h"
 #include "util/config/route/RouteConfig.h"
 #include <admin/service/ComponentManager.h>
 #include <admin/service/ServiceSocketListener.h>
-//#include <admin/smsc_service/SmscComponent.h>
 #include <util/signal.hpp>
 #include <util/xml/init.h>
 #include <util/findConfigFile.h>
 #include <scag/smscsignalhandlers.h>
 #include <core/threads/Thread.hpp>
+
 #include "license/check/license.hpp"
 #include "scag/admin/SCAGCommandDispatcher.h"
 #include "scag/admin/SCAGSocketListener.h"
@@ -21,11 +23,10 @@
 
 #include "scag/version.inc"
 
-
 extern "C" void atExitHandler(void)
 {
     smsc::util::xml::TerminateXerces();
-  smsc::logger::Logger::Shutdown();
+    smsc::logger::Logger::Shutdown();
 }
 
 int main(int argc,char* argv[])

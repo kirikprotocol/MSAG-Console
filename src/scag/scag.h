@@ -1,5 +1,7 @@
-#ifndef __SYSTEM_SMSC_HPP__
-#define __SYSTEM_SMSC_HPP__
+#ifndef __SCAG_SYSTEM_CORE__
+#define __SCAG_SYSTEM_CORE__
+
+#include <sys/types.h>
 
 #include "core/threads/ThreadPool.hpp"
 #include "core/threads/ThreadedTask.hpp"
@@ -14,8 +16,6 @@
 #include "util/config/alias/aliasconf.h"
 #include "util/config/route/RouteConfig.h"
 #include "scag/performance.hpp"
-#include "db/DataSource.h"
-#include "db/DataSourceLoader.h"
 #include "sme/SmppBase.hpp"
 
 #include "scag/stat/StatisticsManager.h"
@@ -23,15 +23,11 @@
 #include "scag/mrcache.hpp"
 #include "scag/gwsme.hpp"
 
-#include <sys/types.h>
-
 #include "core/buffers/XHash.hpp"
-
 #include "logger/Logger.h"
 
-
-namespace smsc{
-namespace scag{
+namespace scag 
+{
 
 using smsc::sms::SMS;
 using namespace smsc::smeman;
@@ -44,8 +40,8 @@ using smsc::sme::SmeConfig;
 using smsc::smeman::SmeManager;
 using smsc::scag::GatewaySme;
 using namespace smsc::logger;
-//class smsc::store::MessageStore;
 
+// TODO: move to util
 template<class T>
 class Reffer
 {
@@ -96,8 +92,10 @@ public:
 private:
   RefferGuard& operator = (const RefferGuard&);
 };
+// TODO: move to util
 
-namespace StatEvents{
+namespace StatEvents
+{
   const int etSubmitOk     =1;
   const int etSubmitErr    =2;
   const int etDeliveredOk  =3;
@@ -106,11 +104,12 @@ namespace StatEvents{
   const int etRescheduled  =6;
 }
 
-struct SmscConfigs{
-  smsc::util::config::Manager* cfgman;
+struct SmscConfigs
+{
+  smsc::util::config::Manager*              cfgman;
   smsc::util::config::smeman::SmeManConfig* smemanconfig;
-  smsc::util::config::alias::AliasConfig* aliasconfig;
-  smsc::util::config::route::RouteConfig* routesconfig;
+  smsc::util::config::alias::AliasConfig*   aliasconfig;
+  smsc::util::config::route::RouteConfig*   routesconfig;
   Hash<string> *licconfig;
 };
 
@@ -380,7 +379,6 @@ protected:
   int smscPort;
 
   smsc::scag::performance::PerformanceDataDispatcher perfDataDisp;
-  smsc::db::DataSource *dataSource;
 
   SmeProxy* abonentInfoProxy;
 
@@ -426,8 +424,7 @@ protected:
 
 };
 
-}//system
-}//smsc
+}//scag
 
 
-#endif
+#endif // __SCAG_SYSTEM_CORE__

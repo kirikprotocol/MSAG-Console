@@ -1,4 +1,5 @@
-#include "scag/smsc.hpp"
+#include "scag/scag.h"
+
 #include "system/smppio/SmppAcceptor.hpp"
 #include <memory>
 #include "util/debug.h"
@@ -16,13 +17,13 @@
 #include "scag/billing/rules/BillingRules.hpp"
 #include "util/findConfigFile.h"
 
-namespace smsc{
-namespace system{
-using namespace smsc::router;
-extern void loadRoutes(RouteManager* rm,const smsc::util::config::route::RouteConfig& rc,bool traceit=false);
+namespace system {
+    using namespace smsc::router;
+    extern void loadRoutes(RouteManager* rm,const smsc::util::config::route::RouteConfig& rc,bool traceit=false);
 }
 
-namespace scag{
+namespace scag 
+{
 
 using std::auto_ptr;
 using std::string;
@@ -32,7 +33,6 @@ using namespace smsc::smeman;
 using namespace smsc::router;
 using namespace smsc::core::synchronization;
 using util::Exception;
-
 
 Smsc::~Smsc()
 {
@@ -267,112 +267,26 @@ void Smsc::init(const SmscConfigs& cfg)
     smsc_log_info(log, "SME registration done" );
   }
   // initialize aliases
-  /*{
-    smsc::util::config::alias::AliasConfig::RecordIterator i =
-                                cfg.aliasconfig->getRecordIterator();
-    while(i.hasRecord())
-    {
-      smsc::util::config::alias::AliasRecord *rec;
-      i.fetchNext(rec);
-      __trace2__("adding %20s %20s",rec->addrValue,rec->aliasValue);
-      smsc::alias::AliasInfo ai;
-      ai.addr = smsc::sms::Address(
-        strlen(rec->addrValue),
-        rec->addrTni,
-        rec->addrNpi,
-        rec->addrValue);
-      ai.alias = smsc::sms::Address(
-        strlen(rec->aliasValue),
-        rec->aliasTni,
-        rec->aliasNpi,
-        rec->aliasValue);
-      ai.hide = rec->hide;
-      aliaser.addAlias(ai);
-    }
-    aliaser.commit();
-  }*/
 
   reloadAliases(cfg);
   smsc_log_info(log, "Aliases loaded" );
   reloadRoutes(cfg);
   smsc_log_info(log, "Routes loaded" );
 
-  /*auto_ptr<RouteManager> router(new RouteManager());
-
-  // initialize router (all->all)
-  router->assign(&smeman);*/
-  /*
-  auto_ptr<SmeIterator> it(smeman.iterator());
-  while (it->next())
-  {
-    SmeInfo info1 = it->getSmeInfo();
-    Address src_addr(info1.rangeOfAddress.length(),
-                     info1.typeOfNumber,
-                     info1.numberingPlan,
-                     info1.rangeOfAddress.c_str());
-    auto_ptr<SmeIterator> it2(smeman.iterator());
-    while ( it2->next() )
-    {
-      SmeInfo info2 = it2->getSmeInfo();
-      Address dest_addr(info2.rangeOfAddress.length(),
-                       info2.typeOfNumber,
-                       info2.numberingPlan,
-                       info2.rangeOfAddress.c_str());
-      RouteInfo rinfo;
-      rinfo.smeSystemId = info2.systemId;
-      rinfo.source = src_addr;
-      rinfo.dest = dest_addr;
-      router.addRoute(rinfo);
-    }
-  }
-  //
-  try{
-    loadRoutes(router.get(),*cfg.routesconfig);
-  }catch(...)
-  {
-    __warning__("Failed to load routes");
-  }
-
-  ResetRouteManager(router.release());
-  */
-
   // create scheduler here, and start later in run
 
   smsc_log_info(log, "Scheduler initialized" );
   smsc_log_info(log, "Initializing MR cache" );
-  //mrCache.assignStore(store);
   smsc_log_info(log, "MR cache inited" );
-
-  {
-    using namespace smsc::db;
-    using smsc::util::config::ConfigView;
-    const char* OCI_DS_FACTORY_IDENTITY = "OCI";
-
-
-    std::auto_ptr<ConfigView> dsConfig(new smsc::util::config::ConfigView(*cfg.cfgman, "StartupLoader"));
-    DataSourceLoader::loadup(dsConfig.get());
-
-    dataSource = DataSourceFactory::getDataSource(OCI_DS_FACTORY_IDENTITY);
-    if (!dataSource) throw Exception("Failed to get DataSource");
-    std::auto_ptr<ConfigView> config(new ConfigView(*cfg.cfgman,"DataSource"));
-
-    dataSource->init(config.get());
-    smsc_log_info(log, "Datasource configured" );
-  }
-
-
-  StateMachine::dataSource=dataSource;
 
   {
     billing::InitBillingInterface(cfg.cfgman->getString("billing.module"));
   }
 
-  try{
-    ussdTransactionTimeout=cfg.cfgman->getInt("core.ussdTransactionTimeout");
-  }catch(...)
-  {
+  try{ ussdTransactionTimeout=cfg.cfgman->getInt("core.ussdTransactionTimeout"); } 
+  catch(...) {
     __warning__("ussdTransactionTimeout set to default(10min)");
-    ussdTransactionTimeout=10*60;
+    ussdTransactionTimeout = 10*60;
   }
 
 
@@ -495,22 +409,16 @@ void Smsc::init(const SmscConfigs& cfg)
     billing::rules::BillingRulesManager::Init(findConfigFile("billing-rules.xml"));
   }
 
-  /*
-  try{
-    scheduler->setRescheduleLimit(cfg.cfgman->getInt("core.reschedule_limit"));
-  }catch(...)
-  {
-    __warning__("reschedule_limit not found in config, using default");
-  }
-  */
-
   smsc_log_info(log, "SMSC init complete" );
-  }catch(exception& e)
+  
+  }
+  catch(exception& e)
   {
     __trace2__("Smsc::init exception:%s",e.what());
     smsc_log_warn(log, "Smsc::init exception:%s",e.what());
     throw;
-  }catch(...)
+  }
+  catch(...)
   {
     __trace__("Smsc::init exception:unknown");
     smsc_log_warn(log, "Smsc::init exception:unknown");
@@ -583,8 +491,6 @@ bool Smsc::modifySmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t alt
 void Smsc::run()
 {
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.run");
-  //smsc::logger::Logger::getInstance("sms.snmp.alarm").debug("sample alarm");
-
   __trace__("Smsc::run");
 
   try{
@@ -617,13 +523,15 @@ void Smsc::run()
 
   // и после него
   //shutdown();
-  }catch(exception& e)
+  }
+  catch(exception& e)
   {
 
     __trace2__("Smsc::run exception:(%s)%s",typeid(e).name(),e.what());
     smsc_log_warn(log, "Smsc::run exception:%s",e.what());
     throw;
-  }catch(...)
+  }
+  catch(...)
   {
     __trace__("Smsc::run exception:unknown");
     smsc_log_warn(log, "Smsc::run exception:unknown");
@@ -637,21 +545,16 @@ void Smsc::shutdown()
   __trace__("shutting down");
 
   tp.shutdown();
-
   tp2.shutdown();
-
-  if(dataSource)delete dataSource;
 }
 
 void Smsc::reloadRoutes(const SmscConfigs& cfg)
 {
   auto_ptr<RouteManager> router(new RouteManager());
   router->assign(&smeman);
-  try{
-    smsc::system::loadRoutes(router.get(),*cfg.routesconfig);
-  }catch(...)
-  {
-    __warning__("Failed to load routes");
+  try { smsc::system::loadRoutes(router.get(),*cfg.routesconfig); }
+  catch(...) { 
+      __warning__("Failed to load routes");
   }
   ResetRouteManager(router.release());
 }
@@ -695,5 +598,5 @@ void Smsc::reloadAliases(const SmscConfigs& cfg)
   ResetAliases(aliaser.release());
 }
 
-}//scag
-}//smsc
+} //scag
+
