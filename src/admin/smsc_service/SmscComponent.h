@@ -28,7 +28,7 @@ using smsc::smeman::SmeAdministrator;
 class SmscComponent : public Component
 {
 public:
-  SmscComponent(SmscConfigs &all_configs);
+  SmscComponent(SmscConfigs &all_configs, const char * node);
   virtual ~SmscComponent();
 
   virtual const char * const getName() const
@@ -119,6 +119,9 @@ protected:
   Variant dlListLists(const Arguments & args) throw (AdminException);
   Variant dlAlterList(const Arguments & args) throw (AdminException);
 
+  Variant setRole(const Arguments & args) throw (AdminException);
+  Variant getRole() throw (AdminException);
+
 
   SmscConfigs &configs;
   Methods methods;
@@ -137,7 +140,7 @@ protected:
     prcListPrincipalsMethod, prcAddPrincipalMethod, prcDeletePrincipalMethod, prcGetPrincipalMethod, prcAlterPrincipalMethod,
     memAddMemberMethod, memDeleteMemberMethod, memGetMemberMethod, sbmAddSubmiterMethod,
     sbmDeleteSubmiterMethod, sbmListSubmitersMethod,
-    dlAddMethod, dlDeleteMethod, dlGetMethod, dlListMethod, dlAlterMethod
+    dlAddMethod, dlDeleteMethod, dlGetMethod, dlListMethod, dlAlterMethod, setRoleMethod, getRoleMethod
   };
 
   smsc::core::synchronization::Mutex mutex;
@@ -149,11 +152,11 @@ private:
   class SmscAppRunner : public Thread
   {
   public:
-    SmscAppRunner(SmscConfigs &configs)
+    SmscAppRunner(SmscConfigs &configs, const char * node)
     : _app(new Smsc()),
           runner_logger(Logger::getInstance("smsc.admin.smsc_service.SmscComponent.SmscAppRunner"))
     {
-      _app->init(configs);
+      _app->init(configs, node);
     }
     virtual ~SmscAppRunner()
     {
@@ -211,6 +214,7 @@ private:
 protected:
   std::auto_ptr<SmscAppRunner> smsc_app_runner;
   smsc::logger::Logger *logger;
+  std::string node;
 };
 
 }

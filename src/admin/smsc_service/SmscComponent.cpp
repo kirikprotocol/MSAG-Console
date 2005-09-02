@@ -11,6 +11,7 @@
 #include <resourcemanager/ResourceManager.hpp>
 #include "acls/interfaces.h"
 #include <algorithm>
+#include "cluster/Interconnect.h"
 
 namespace smsc {
 namespace admin {
@@ -27,10 +28,13 @@ using namespace smsc::acls;
 using smsc::mscman::MscManager;
 using smsc::mscman::MscInfo;
 
+using smsc::cluster::Interconnect;
 
-SmscComponent::SmscComponent(SmscConfigs &all_configs)
+
+SmscComponent::SmscComponent(SmscConfigs &all_configs, const char * node_)
 : configs(all_configs),isStopping(false),
-      logger(Logger::getInstance("smsc.admin.smsc_service.SmscComponent"))
+      logger(Logger::getInstance("smsc.admin.smsc_service.SmscComponent")),
+    node(node_)
 {
   /*********************** parameters ***************************************/
   Parameters empty_params;
@@ -94,6 +98,11 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
   Parameters acl_addresses_params;
   acl_addresses_params["id"] = Parameter("id", LongType);
   acl_addresses_params["addresses"] = Parameter("addresses", StringListType);
+
+  // Interconnect manager params
+
+  Parameters setRole_params;
+  setRole_params["role"] = Parameter("role", StringType);
 
   /*---------------------loomox---------------*/
 
@@ -233,6 +242,11 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
   Method dl_list         ((unsigned)dlListMethod,              "dl_list",            dl_list_params,               StringListType);
   Method dl_alter        ((unsigned)dlAlterMethod,             "dl_alter",           dl_alter_params,              StringType);
 
+  // Interconnect manager methods
+
+  Method set_role        ((unsigned)setRoleMethod,             "set_role",           setRole_params,               StringType);
+  Method get_role        ((unsigned)getRoleMethod,             "get_role",           empty_params,                 StringType);
+
   /***************************** method assigns *****************************/
   methods[apply_routes         .getName()] = apply_routes;
   methods[apply_aliases        .getName()] = apply_aliases;
@@ -275,6 +289,11 @@ SmscComponent::SmscComponent(SmscConfigs &all_configs)
   methods[acl_lookup_addresses.getName()] = acl_lookup_addresses;
   methods[acl_remove_addresses.getName()] = acl_remove_addresses;
   methods[acl_add_addresses.getName()] = acl_add_addresses;
+
+  // Interconnect manager methods
+
+  methods[set_role.getName()] = set_role;
+  methods[get_role.getName()] = get_role;
 
   /*--------loomox------------*/
 
@@ -414,6 +433,11 @@ throw (AdminException)
         return aclRemoveAddresses(args);
       case aclAddAddressesMethod:
         return aclAddAddresses(args);
+
+      case getRoleMethod:
+        return getRole();
+      case setRoleMethod:
+        return setRole(args);
 
 
 /*------loomox-----------*/
@@ -679,7 +703,7 @@ throw (AdminException)
   {
     try
     {
-      smsc_app_runner.reset(new SmscAppRunner(configs));
+      smsc_app_runner.reset(new SmscAppRunner(configs, node.c_str()));
       smsc::resourcemanager::ResourceManager::reload(configs.cfgman->getString("core.locales"), configs.cfgman->getString("core.default_locale"));
       smsc_app_runner->Start();
     }
@@ -2118,6 +2142,63 @@ Variant SmscComponent::dlAlterList(const Arguments & args) throw (AdminException
   ENDMETHOD
     return Variant("list altered");
   EPILOGUE
+}
+
+Variant SmscComponent::setRole(const Arguments & args) throw (AdminException)
+{
+
+    Interconnect *icon = 0;
+
+    try {
+  
+        icon = Interconnect::getInstance();
+
+        const char * const role = args.Get("role").getStringValue();
+
+        if(strcmp(role, "MASTER") == 0){
+            icon->changeRole(smsc::cluster::MASTER);
+        }else if(strcmp(role, "SLAVE") == 0){
+            icon->changeRole(smsc::cluster::SLAVE);
+        }else if(strcmp(role, "SINGLE") == 0){
+            icon->changeRole(smsc::cluster::SINGLE);
+        }
+      
+    }catch(...){
+        throw Exception("Exception during setRole method");
+    }
+
+    return Variant("");
+
+}
+
+Variant SmscComponent::getRole() throw (AdminException)
+{
+
+    Interconnect *icon = 0;
+
+    try {
+  
+        icon = Interconnect::getInstance();
+
+        smsc::cluster::Role role = icon->getRole();
+
+        switch(role){
+        case smsc::cluster::MASTER:
+            return Variant("MASTER");
+        case smsc::cluster::SLAVE:
+            return Variant("SLAVE");
+        case smsc::cluster::SINGLE:
+            return Variant("SINGLE");
+        default:
+            return Variant("UNKNOWN");
+        }
+      
+    }catch(...){
+        throw Exception("Exception during getRole method");
+    }
+
+    return Variant("UNKNOWN");
+
 }
 
 }
