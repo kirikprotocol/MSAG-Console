@@ -1,5 +1,5 @@
-#ifndef __SMSC_SYSTEM_VERSION__
-#define __SMSC_SYSTEM_VERSION__
+#ifndef __SCAG_SYSTEM_VERSION__
+#define __SCAG_SYSTEM_VERSION__
 
 #ifdef __cplusplus
 extern "C" {
