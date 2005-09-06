@@ -186,7 +186,7 @@ int RuleEngine::GetRuleId(SCAGCommand& command)
 }
 
 
-RuleStatus RuleEngine::process(SCAGCommand& command)
+RuleStatus RuleEngine::process(SCAGCommand& command, Session& session)
 {
     RulesReference rulesRef = getRules();
     RuleStatus rs;
@@ -199,7 +199,7 @@ RuleStatus RuleEngine::process(SCAGCommand& command)
     if (rulesRef.rules->rules.Exist(ruleId)) 
     {
         Rule * rule = rulesRef.rules->rules.Get(ruleId);
-        rs = rule->process(command);
+        rs = rule->process(command, session);
     } 
     else
         throw SCAGException("Cannot process Rule with ID = %d%s",ruleId," : Rule not found");

@@ -7,6 +7,7 @@
 #include "scag/re/actions/ActionLog.h"
 #include "scag/re/actions/ActionClose.h"
 #include "scag/re/actions/ActionTrafficCheck.h"
+#include "scag/re/actions/ActionOperationWait.h"
 
 
 namespace scag { namespace re { namespace actions {
@@ -22,7 +23,7 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="traffic:check") return new ActionTrafficCheck();
     if (name=="session:close") return new ActionClose();
     if (name=="log") return new ActionLog();
-
+    if (name=="operation:wait") return new ActionOperationWait();
 
     Action * action = 0;
 

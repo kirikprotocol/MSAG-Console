@@ -64,6 +64,7 @@ bool ActionSet::run(ActionContext& context)
     FieldType ft;
     const char * name = 0;
     ft = ActionContext::Separate(Value,name);
+
     if (ft == ftUnknown) 
     {
         property->setStr(Value);

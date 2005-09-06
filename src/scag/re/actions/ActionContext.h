@@ -6,6 +6,7 @@
 #include <scag/re/RuleStatus.h>
 #include <scag/util/properties/Properties.h>
 #include "scag/stat/Statistics.h"
+#include "scag/sessions/Session.h"
 
 
 namespace scag { namespace re { namespace actions 
@@ -13,6 +14,7 @@ namespace scag { namespace re { namespace actions
     using smsc::core::buffers::Hash;
     using scag::re::RuleStatus;
     using namespace scag::stat;
+    using namespace scag::sessions;
 
     using namespace scag::util::properties;
 
@@ -34,14 +36,14 @@ namespace scag { namespace re { namespace actions
         Hash<Property>          variables;
         Hash<Property>&         constants;
 
-        PropertyManager&        session;
+        Session&                session;
         PropertyManager&        command;
         Statistics&             statistics;
     public:
 
         // TODO: implement, set commandAdapter & session
         ActionContext(Hash<Property>& _constants,
-                      PropertyManager& _session, PropertyManager& _command,Statistics& _statistics)
+                      Session& _session, PropertyManager& _command,Statistics& _statistics)
             : constants(_constants), session(_session), command(_command), statistics(_statistics) {};
         ~ActionContext() {};
         
@@ -59,6 +61,7 @@ namespace scag { namespace re { namespace actions
         bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
         Property* getProperty(const std::string& var);
         void closeSession(bool Commit);
+        void AddPendingOperation(uint8_t type, time_t pendingTime);
     };
 
 }}}

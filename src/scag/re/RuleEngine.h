@@ -148,7 +148,7 @@ public:
          * @param   command     command to process
          * @return  status      command processing status
          */
-    RuleStatus process(SCAGCommand& command);
+    RuleStatus process(SCAGCommand& command,Session& session);
 
     void updateRule(int ruleId) // add or modify
     {

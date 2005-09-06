@@ -1,11 +1,12 @@
 #include "Session.h"
+#include <iostream>
 
 namespace scag { namespace sessions {
 
 void Session::changed(AdapterProperty& property)
 {
     AdapterProperty * oldProperty = PropertyHash.Get(property.GetName().c_str());
-    oldProperty->setStr(property.getStr());
+    oldProperty->setPureStr(property.getStr());
 }
 
 Property* Session::getProperty(const std::string& name)
@@ -22,7 +23,7 @@ Property* Session::getProperty(const std::string& name)
 
 Session::Session() 
     : PropertyManager(), lastAccessTime(-1), 
-        bChanged(false), bDestroy(false), accessCount(0), Owner(0)
+        bChanged(false), bDestroy(false), accessCount(0), Owner(0),currentOperation(0)
 {
     // TODO: ???
 }
@@ -36,9 +37,6 @@ Session::~Session()
     for (Hash <AdapterProperty *>::Iterator it = PropertyHash.getIterator(); it.Next(key, value);)
         if (value) delete value;
 
-
-    int key;
-    Operation * value;
 
     std::list<Operation *>::const_iterator it;
 
@@ -64,13 +62,14 @@ void Session::expireOperation(time_t currentTime)
 
 }
 
-bool Session::startOperation(cmd& SCAGCommand)
+bool Session::startOperation(SCAGCommand& cmd)
 {
     if (!Owner) return false;
 
     //TODO: add Operation
-
-    Owner->startTimer(this->getWakeUpTime());
+    //currentOperation = 
+    
+    Owner->startTimer(this->getSessionKey(), this->getWakeUpTime());
     return true;
 }
 
@@ -82,30 +81,22 @@ void Session::releaseOperation()
 void Session::addPendingOperation(PendingOperation pendingOperation)
 {
 
-    std::list<PendingOperationList>
-
-    std::list<PendingOperation>::const_iterator it;
+    std::list<PendingOperation>::iterator it;
 
     for (it = PendingOperationList.begin(); it!=PendingOperationList.end(); ++it)
     {
         if (it->validityTime > pendingOperation.validityTime) 
         {
-            if (it == PendingOperationList.begin()) 
-            {
-                PendingOperationList.push_front(pendingOperation);
-                return;
-            }
-            --it;
             PendingOperationList.insert(it,pendingOperation);
             return;
         }
     }
-    PendingOperationList.push_back(pendingOperation);
+    PendingOperationList.insert(PendingOperationList.end(),pendingOperation);
 }
 
-Operation Session::GetCurrentOperation()
+Operation * Session::GetCurrentOperation() const
 {
-    
+    return currentOperation;
 }
 
 time_t Session::getWakeUpTime()
@@ -113,13 +104,18 @@ time_t Session::getWakeUpTime()
     time_t time1 = 0;
     time_t time2 = 0;
 
+    Operation * operation = 0;
     if (!PendingOperationList.empty()) time1 = (PendingOperationList.begin())->validityTime;
-    if (!OperationList.empty()) time2 = (OperationList.begin())->validityTime;
+    if (!OperationList.empty()) 
+    {
+        operation = *(OperationList.begin());
+        time2 = operation->validityTime;
+    }
 
     if (time1 == 0) return time2;
     if (time2 == 0) return time1;
 
-    if (time1 > time2) return time2
+    if (time1 > time2) return time2;
     else return time1;
 }
 

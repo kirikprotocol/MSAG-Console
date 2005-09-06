@@ -5,12 +5,14 @@
 #include "scag/transport/SCAGCommand.h"
 #include "RuleStatus.h"
 #include <core/buffers/IntHash.hpp>
+#include "scag/sessions/Session.h"
 
 namespace scag { namespace re 
 {
 
 using smsc::core::buffers::IntHash;
 using namespace scag::transport;
+using scag::sessions::Session;
 
 class EventHandler;
 
@@ -56,7 +58,7 @@ public:
      * @param   command     command to process
      * @return  status      rule's handler execution status
      */
-    virtual RuleStatus process(SCAGCommand& command);
+    virtual RuleStatus process(SCAGCommand& command, Session& session);
 
 
     Rule(): useCounter(1), transportType(SMPP) {};

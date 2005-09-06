@@ -5,7 +5,10 @@
 
 #include <scag/bill/Bill.h>
 #include <scag/util/properties/Properties.h>
+#include <list>
+#include <core/synchronization/EventMonitor.hpp>
 #include "sms/sms.h"
+#include "scag/transport/SCAGCommand.h"
 
 namespace scag { namespace sessions 
 {
@@ -13,6 +16,10 @@ namespace scag { namespace sessions
 
     using namespace scag::util::properties;
     using namespace smsc::sms;
+    using smsc::core::synchronization::EventMonitor;
+    using scag::transport::SCAGCommand;
+
+
 
     struct CSessionKey
     {
@@ -50,12 +57,15 @@ namespace scag { namespace sessions
     };
 
 
+    typedef std::list<Operation*> COperationsList;
+
 
     class Session : public PropertyManager
     {
         std::list<PendingOperation> PendingOperationList;
-        std::list<Operation*> OperationList;
+        COperationsList OperationList;
         SessionOwner * Owner;
+        Operation * currentOperation;
 
         CSessionKey             m_SessionKey;
         time_t                  lastAccessTime;
@@ -65,12 +75,10 @@ namespace scag { namespace sessions
 
         Hash<AdapterProperty *> PropertyHash;
         
-        virtual ~Session();
-     
     public:
 
         Session();
-        ~Session();
+        virtual ~Session();
         
         CSessionKey getSessionKey() const {
             return m_SessionKey;
@@ -91,11 +99,11 @@ namespace scag { namespace sessions
         void setOwner(SessionOwner& _Owner) {Owner = &_Owner;}
         bool hasOperations() const;
         void expireOperation(time_t currentTime);
-        bool startOperation(cmd& SCAGCommand);
+        bool startOperation(SCAGCommand& cmd);
         void releaseOperation();
 
         void addPendingOperation(PendingOperation pendingOperation);
-        Operation GetCurrentOperation();
+        Operation * GetCurrentOperation() const;
         time_t Session::getWakeUpTime();
     };
 

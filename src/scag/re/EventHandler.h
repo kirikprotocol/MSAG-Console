@@ -29,7 +29,7 @@ public:
     virtual ~EventHandler();
 
     virtual void init(const SectionParams& params,PropertyObject _propertyObject) {propertyObject = _propertyObject;}
-    virtual RuleStatus process(SCAGCommand& command) = 0;
+    virtual RuleStatus process(SCAGCommand& command,Session& session) = 0;
     virtual StrToHandlerId(const std::string& str) = 0;
 
 };

@@ -4,8 +4,17 @@ namespace scag { namespace re { namespace actions
 {
     using smsc::core::buffers::Hash;
     using scag::re::RuleStatus;
-
     using namespace scag::util::properties;
+
+
+void ActionContext::AddPendingOperation(uint8_t type, time_t pendingTime)
+{
+    PendingOperation pendingOperation;
+    pendingOperation.validityTime = pendingTime;
+    pendingOperation.type = type;
+    
+    session.addPendingOperation(pendingOperation);
+}
 
 
 FieldType ActionContext::Separate(const std::string& var,const char *& name)

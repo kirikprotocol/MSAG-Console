@@ -25,6 +25,7 @@ namespace scag { namespace sessions
         SessionManagerConfig(const std::string& _dir, 
                              time_t ei = DEFAULT_EXPIRE_INTERVAL) 
             : dir(_dir), expireInterval(ei) {};
+        SessionManagerConfig() {};
     };
 
     class SessionManager
@@ -35,14 +36,12 @@ namespace scag { namespace sessions
         static SessionManager& Instance();
 
         virtual Session* getSession(const SCAGCommand& command) = 0;
-        virtual void releaseSession(const Session* session)     = 0;
+        virtual void releaseSession(Session* session)     = 0;
         virtual void closeSession  (const Session* session)     = 0;
 
     protected:
-    
+        virtual ~SessionManager() {};
         SessionManager() {};
-        virtual ~SessionManager() = 0;
-
     private:
         
         SessionManager(const SessionManager& sm);

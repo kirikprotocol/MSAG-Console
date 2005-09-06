@@ -1,29 +1,15 @@
-#ifndef __SCAG_RULE_ENGINE_ACTION_LOG__
-#define __SCAG_RULE_ENGINE_ACTION_LOG__
+#ifndef __SCAG_RULE_ENGINE_ACTION_WAIT__
+#define __SCAG_RULE_ENGINE_ACTION_WAIT__
 
-#include "ActionContext.h"
+#include <string>
 #include "Action.h"
-
 
 namespace scag { namespace re { namespace actions {
 
-class ActionLog : public Action
+class ActionOperationWait : public Action
 {
-    ActionLog(const ActionLog&);
-
-    std::string sCategory;
-    std::string msg;
-
-
-    enum LogLevel
-    {
-        lgWarning,
-        lgError,
-        lgDebug,
-        lgInfo
-    };
-
-    LogLevel level;
+    ActionOperationWait(const ActionOperationWait&);
+    std::string sTime;
 
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory);
@@ -31,15 +17,13 @@ protected:
 public:
     virtual void init(const SectionParams& params,PropertyObject propertyObject);
     virtual bool run(ActionContext& context);
-    ActionLog (){};
+    ActionOperationWait (){};
 
-    virtual ~ActionLog();
+    virtual ~ActionOperationWait();
 
 };
-
 
 }}}
 
 
 #endif
-

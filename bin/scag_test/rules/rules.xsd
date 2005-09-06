@@ -2,7 +2,8 @@
 <schema targetNamespace="http://www.sibinco.com/SCAG" 
    xmlns="http://www.w3.org/2001/XMLSchema"
    xmlns:scag="http://www.sibinco.com/SCAG"
-   xmlns:session="http://www.sibinco.com/SCAG/SESSIONS">
+   xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"
+   xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS">
     
     <annotation>
         <documentation xml:lang="en">
@@ -12,6 +13,8 @@
     </annotation>
    
     <import schemaLocation="sessions.xsd" namespace="http://www.sibinco.com/SCAG/SESSIONS"/>
+    <import schemaLocation="operations.xsd" namespace="http://www.sibinco.com/SCAG/OPERATIONS"/>
+    
     
    <!-- General values types definition  -->
     <simpleType name="Value">
@@ -19,7 +22,7 @@
     </simpleType>
     <simpleType name="Command">
         <restriction base="string">
-            <pattern value="#\p{L}+\w*"/>
+            <pattern value="#\p{L}+[\w_]*"/>
         </restriction>
     </simpleType>
     <simpleType name="Session">
@@ -67,6 +70,7 @@
     <group name="Actions">
         <choice>
             <group ref="session:Actions"/>
+	    <group ref="operation:Actions" />
             
             <element name="set">
                 <complexType>

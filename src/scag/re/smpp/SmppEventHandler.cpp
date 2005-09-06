@@ -19,7 +19,7 @@ namespace scag { namespace re {
 
 using namespace scag::re::smpp;
 
-RuleStatus SmppEventHandler::process(SCAGCommand& command)
+RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 {
     Hash<Property> _constants;
     RuleStatus rs;
@@ -31,7 +31,6 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command)
     if (!smppcommand) throw SCAGException("SmppEventHandler: command is not 'smpp-type'");
 
     SmppCommandAdapter _command(*smppcommand);
-    SmppCommandAdapter _session(*smppcommand);
 
     ////////////////////
     Property p;
@@ -40,7 +39,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command)
 
     //////////////////////
 
-    ActionContext context(_constants, _session, _command,_statistics);
+    ActionContext context(_constants, session, _command,_statistics);
 
     smsc_log_debug(logger, "Process EventHandler...");
 

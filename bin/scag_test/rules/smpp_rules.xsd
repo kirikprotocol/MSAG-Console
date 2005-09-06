@@ -20,10 +20,96 @@
         
         <simpleType name="Command">
             <restriction base="scag:Command">
-                <enumeration value="#aaa"/>
-                <enumeration value="#bbb"/>
-                <enumeration value="#ccc"/>
-                <enumeration value="#ddd"/>
+                <enumeration value="#svc_type"/>
+                <enumeration value="#OA"/>
+                <enumeration value="#DA"/>
+
+                <enumeration value="#esm_mm_smsc_default"/>
+                <enumeration value="#esm_mm_datagram"/>
+                <enumeration value="#esm_mm_forward"/>
+                <enumeration value="#esm_mm_s_and_f"/>
+                <enumeration value="#esm_mt_default"/>
+                <enumeration value="#esm_mt_delivery_ack"/>
+                <enumeration value="#esm_mt_manual_ack"/>
+                <enumeration value="#esm_nsf_none"/>
+                <enumeration value="#esm_nsf_udhi"/>
+                <enumeration value="#esm_nsf_srp"/>
+                <enumeration value="#esm_nsf_both"/>
+
+                <enumeration value="#protocol_id"/>
+                <enumeration value="#priority_flag"/>
+                <enumeration value="#Schedule_delivery_time"/>
+                <enumeration value="#validity_period"/>
+
+                <enumeration value="#rd_receipt_off"/>
+                <enumeration value="#rd_receipt_on"/>
+                <enumeration value="#rd_receipt_failure"/>
+                <enumeration value="#rd_ack_off"/>
+                <enumeration value="#rd_ack_on"/>
+                <enumeration value="#rd_ack_man_on"/>
+                <enumeration value="#rd_ack_both_on"/>
+                <enumeration value="#rd_i_notification"/>
+
+                <enumeration value="#replace_if_present_flag"/>
+
+                <enumeration value="#dc_binary"/>
+                <enumeration value="#dc_text"/>
+                <enumeration value="#dc_smsc_default"/>
+                <enumeration value="#dc_ascii_x34"/>
+                <enumeration value="#dc_latin1"/>
+                <enumeration value="#dc_jis"/>
+                <enumeration value="#dc_cyrilic"/>
+                <enumeration value="#dc_latin_hebrew"/>
+                <enumeration value="#dc_ucs2"/>
+                <enumeration value="#dc_pictogram_enc"/>
+                <enumeration value="#dc_iso_music_codes"/>
+                <enumeration value="#dc_e_kanji_jis"/>
+                <enumeration value="#dc_ks_c_5601"/>
+                <enumeration value="#dc_gsm_mwi"/>
+                <enumeration value="#dc_gsm_msg_cc"/>
+                <enumeration value="#sm_default_msg_id"/>
+
+                <enumeration value="#sm_length"/>
+                <enumeration value="#short_message"/>
+                <enumeration value="#user_message_reference"/>
+                <enumeration value="#source_port"/>
+                <enumeration value="#source_addr_subunit"/>
+                <enumeration value="#destination_port"/>
+                <enumeration value="#dest_addr_subunit"/>
+                <enumeration value="#sar_msg_ref_num"/>
+                <enumeration value="#sar_total_segments"/>
+                <enumeration value="#sar_segment_seqnum"/>
+                <enumeration value="#more_messages_to_send"/>
+                <enumeration value="#pt_default"/>
+                <enumeration value="#pt_wcmp"/>
+                <enumeration value="#message_payload"/>
+                <enumeration value="#privacy_indicator"/>
+                <enumeration value="#callback_num"/>
+                <enumeration value="#callback_num_pres_ind"/>
+                <enumeration value="#callback_num_atag"/>
+                <enumeration value="#source_subaddress"/>
+                <enumeration value="#dest_subaddress"/>
+                <enumeration value="#user_response_code"/>
+                <enumeration value="#display_time"/>
+                <enumeration value="#sms_signal"/>
+                <enumeration value="#ms_validity"/>
+                <enumeration value="#ms_msg_wait_facilities"/>
+                <enumeration value="#number_of_messages"/>
+                <enumeration value="#alert_on_msg_delivery"/>
+                <enumeration value="#language_indicator"/>
+                <enumeration value="#its_reply_type"/>
+                <enumeration value="#its_session_info"/>
+                <enumeration value="#ussd_pssd_ind"/>
+                <enumeration value="#ussd_pssr_ind"/>
+                <enumeration value="#ussd_pssr_req"/>
+                <enumeration value="#ussd_ussn_req"/>
+                <enumeration value="#ussd_pssd_resp"/>
+                <enumeration value="#ussd_pssr_resp"/>
+                <enumeration value="#ussd_ussr_conf"/>
+                <enumeration value="#ussd_ussn_conf"/>
+                <enumeration value="#status"/>
+		
+
             </restriction>    
         </simpleType>
         

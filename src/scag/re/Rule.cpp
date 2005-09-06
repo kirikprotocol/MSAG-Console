@@ -25,7 +25,7 @@ Rule::~Rule()
 }
 
 
-RuleStatus Rule::process(SCAGCommand& command)
+RuleStatus Rule::process(SCAGCommand& command,Session& session)
 {
     RuleStatus rs;
     if (command.getType() != transportType)
@@ -50,7 +50,7 @@ RuleStatus Rule::process(SCAGCommand& command)
     EventHandler * eh = Handlers.Get(handlerType);
     try
     {
-        rs = eh->process(command);
+        rs = eh->process(command, session);
     } catch (Exception& e)
     {
         rs.result = false;

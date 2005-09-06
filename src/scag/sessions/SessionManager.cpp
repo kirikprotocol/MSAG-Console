@@ -15,6 +15,9 @@
 #include "SessionStore.h"
 #include "SessionManager.h"
 #include "Session.h"
+#include "scag/exc/SCAGExceptions.h"
+
+#include <iostream>
 
 namespace scag { namespace sessions 
 {
@@ -22,6 +25,7 @@ namespace scag { namespace sessions
     using namespace smsc::core::synchronization;
     using namespace scag::util::singleton;
     using namespace smsc::core::buffers;
+    using namespace scag::exceptions;
 
     class SessionManagerImpl : public SessionManager, public Thread, public SessionOwner
     {
@@ -31,7 +35,7 @@ namespace scag { namespace sessions
             time_t nextWakeTime;
             bool bOpened;
 
-            CSessionAccessData() : lastAccess(0), bOpened(false) {}
+            CSessionAccessData() : nextWakeTime(0), bOpened(false) {}
         };
 
         class XHashFunc{
@@ -42,12 +46,12 @@ namespace scag { namespace sessions
           }
         };
 
-
+        
         typedef std::list<CSessionAccessData> CSessionList;
         typedef std::list<CSessionAccessData>::iterator CSLIterator;
         typedef XHash<CSessionKey,CSLIterator,XHashFunc> CSessionHash;
 
-        Mutex           Lock;
+        EventMonitor    inUseMonitor;
         CSessionList    SessionExpirePool;
         CSessionHash    SessionHash;
         
@@ -59,7 +63,7 @@ namespace scag { namespace sessions
         SessionManagerConfig config;
         
         void Stop();
-        bool isStarted()
+        bool isStarted();
         int  processExpire();
 
     public:
@@ -71,17 +75,19 @@ namespace scag { namespace sessions
         
         // SessionManager interface
         virtual Session* getSession(const SCAGCommand& command);
-        virtual void releaseSession(const Session* session);
+        virtual void releaseSession(Session* session);
         virtual void closeSession(const Session* session);
 
         virtual int Execute();
         virtual void Start();
 
         virtual void startTimer(CSessionKey key,time_t deadLine);
+        Session * NewSession(CSessionKey sessionKey);
+
     };
 
 
-const time_t SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL = 3600;
+const time_t SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL = 60;
 
 // ################## Singleton related issues ##################
 
@@ -124,7 +130,7 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
 
 bool SessionManagerImpl::isStarted()
 {
-    MutexGuard guard(stopLock);
+    //MutexGuard guard(stopLock);
     return bStarted;
 }
 void SessionManagerImpl::Start()
@@ -138,6 +144,8 @@ void SessionManagerImpl::Start()
 }
 void SessionManagerImpl::Stop()
 {
+    std::cout<<"SessionManager::stopping " << bStarted << std::endl;
+
     MutexGuard guard(stopLock);
     if (bStarted) 
     {
@@ -145,15 +153,19 @@ void SessionManagerImpl::Stop()
         awakeEvent.Signal();
         exitEvent.Wait(); 
     }
+    std::cout<<"SessionManager::stop" << std::endl;
 }
 int SessionManagerImpl::Execute()
 {
+    std::cout<<"SessionManager::start executing" << std::endl;
+
     while (isStarted())
     {
         int secs = processExpire();
         awakeEvent.Wait(secs*1000);
     }
     exitEvent.Signal();
+    std::cout<<"SessionManager::stop executing" << std::endl;
     return 0;
 }
 
@@ -165,7 +177,7 @@ int SessionManagerImpl::processExpire()
 
     while (1) 
     {
-        if (SessionExpirePool.empty()) return m_uiExpirationTime;
+        if (SessionExpirePool.empty()) return SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL;
 
         CSLIterator it;
         for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
@@ -183,13 +195,13 @@ int SessionManagerImpl::processExpire()
             else return iPeriod;
         }
 
-        int iPeriod = it->lastAccess - now;
+        iPeriod = it->nextWakeTime - now;
         if (iPeriod > 0) return iPeriod;
 
         // Session expired
         SessionHash.Delete(it->SessionKey);
         SessionExpirePool.erase(it);
-        store.deleteSesion(sessionKey);
+        store.deleteSesion(it->SessionKey);
     }
 }
 
@@ -226,9 +238,12 @@ time_t SessionManagerImpl::processExpire()
 
   */
 
-Session * SessionManagerImpl::NewSession(sessionKey)
+Session * SessionManagerImpl::NewSession(CSessionKey sessionKey)
 {
-    session = store.newSesion(sessionKey);
+    Session * session = 0;
+    store.newSesion(sessionKey);
+
+    session = store.getSession(sessionKey);
     time_t time = session->getWakeUpTime();
 
     CSessionAccessData accessData;
@@ -238,25 +253,14 @@ Session * SessionManagerImpl::NewSession(sessionKey)
     CSLIterator it;
     for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it) 
     {
-        if (time < it->lastAccess)
+        if (time < it->nextWakeTime)
         {
-            if (it == SessionExpirePool.begin()) 
-            {
-                SessionExpirePool.push_front(SessionKey);
-                it = SessionExpirePool.begin();
-                SessionHash.Insert(sessionKey,it);
-                return session;
-            }
-
-            --it;
-
             SessionExpirePool.insert(it,accessData);
-            ++it;
             SessionHash.Insert(sessionKey,it);
             return session;
         }
     }
-    SessionExpirePool.push_back(accessData);
+    SessionExpirePool.insert(it,accessData);
     it = SessionExpirePool.end();
     --it;
     SessionHash.Insert(sessionKey,it);
@@ -267,7 +271,10 @@ Session * SessionManagerImpl::NewSession(sessionKey)
 Session* SessionManagerImpl::getSession(const SCAGCommand& command)
 {
     Session*    session = 0;
-    CSessionKey sessionKey; // TODO: obtain from SCAGCommand somehow
+    CSessionKey sessionKey; 
+/*    // TODO: obtain from SCAGCommand somehow
+    sessionKey.abonentAddr = command.getAbonentAddr();
+    sessionKey.USR = command.getUMR();
 
     MutexGuard guard(inUseMonitor);
 
@@ -278,22 +285,22 @@ Session* SessionManagerImpl::getSession(const SCAGCommand& command)
     it = SessionHash.Get(sessionKey);
     while (it->bOpened)
     {
-        inUseMonitor.Wait();
-        if (!SessionHash.Exists()) return NewSession(sessionKey);
+        inUseMonitor.wait();
+        if (!SessionHash.Exists(sessionKey)) return NewSession(sessionKey);
         it = SessionHash.Get(sessionKey);
-    }
+    }                                    */  
 
     return store.getSession(sessionKey);
 }
 
 
-void SessionManagerImpl::releaseSession(const Session* session)
+void SessionManagerImpl::releaseSession(Session* session)
 {
     if (!session) return;
     CSessionKey sessionKey = session->getSessionKey();
 
     MutexGuard guard(inUseMonitor);
-    if (session->isChanged) store.updateSesion(session);
+    if (session->isChanged()) store.updateSesion(session);
 
     CSLIterator it;
 
@@ -301,7 +308,7 @@ void SessionManagerImpl::releaseSession(const Session* session)
     it = SessionHash.Get(sessionKey);
     it->bOpened = false;
 
-    inUseMonitor.NotifyAll();
+    inUseMonitor.notifyAll();
 }
 
 
@@ -321,7 +328,7 @@ void SessionManagerImpl::closeSession(const Session* session)
     SessionExpirePool.erase(it);
     SessionHash.Delete(sessionKey);
 
-    inUseMonitor.NotifyAll();
+    inUseMonitor.notifyAll();
 }
 
 void SessionManagerImpl::startTimer(CSessionKey key,time_t deadLine)
@@ -330,14 +337,20 @@ void SessionManagerImpl::startTimer(CSessionKey key,time_t deadLine)
 
     if (!SessionHash.Exists(key)) throw SCAGException("SessionManager: Fatal error 2");
     CSLIterator it;
-    it = SessionHash.Get(SessionKey);
+    it = SessionHash.Get(key);
     while (it->bOpened) 
     {
-        inUseMonitor.Wait();
+        inUseMonitor.wait();
         if (!SessionHash.Exists(key)) return;
         it = SessionHash.Get(key);
     }
-    it->wakeUpTime = deadLine;
+    if (deadLine == 0) 
+    {
+        time_t now;
+        time(&now);
+        deadLine = SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL + now;
+    }
+    it->nextWakeTime = deadLine;
 }
 
 /*
