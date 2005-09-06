@@ -3,6 +3,8 @@ static char const ident[] = "$Id$";
 #include <sys/select.h> 
 #include <vector>
 
+#include <poll.h>
+
 #include "dispatcher.hpp"
 #include "inman/common/util.hpp"
 #include "inman/common/errors.hpp"
@@ -50,34 +52,37 @@ void Dispatcher::removeListener(SocketListener* listener)
 
 void Dispatcher::run()
 {
-	APP_EVENT_T eventList[10];
-
-	int i = 0;
-	for( SocketListenersMap::iterator it = listeners.begin(); it != listeners.end(); it++ )
-	{
-		eventList[i].descriptor = (*it).first;
-		eventList[i].events     = 3; /*POLLSEL_EVENT_SOCKET | POLLSEL_EVENT_ACCEPT*/
-		eventList[i].callback   = &Dispatcher_Callback;
-		eventList[i].uref 	    = this;
-		i++;
-	}
-
-	smsc_log_debug(logger,"Dispatcher started: %d listener(s)", i);
+	vector< APP_EVENT_T > eventList;
 
 	running = true;
 	while( running )
 	{
+		eventList.resize( listeners.size() );
+
+		int i = 0;
+
+		for( SocketListenersMap::iterator it = listeners.begin(); it != listeners.end(); it++ )
+		{
+			eventList[i].descriptor = (*it).first;
+			eventList[i].events     = 0x3F;//all poll conditions;
+			eventList[i].callback   = &Dispatcher_Callback;
+			eventList[i].uref 	    = this;
+			i++;
+		}
+
 		MSG_T msg;
 
-		msg.receiver = MSG_USER_ID;
+		msg.receiver = ANY_ID;//MSG_USER_ID;
 
-		int len = i;//eventList.size();
-		USHORT_T result = MsgRecvEvent(&msg, &eventList[0], &len, MSG_INFTIM);
+		int len = eventList.size();
+		USHORT_T result = MsgRecvEvent(&msg, &eventList[0], &len, 1000/*MSG_INFTIM*/);
+		
+		smsc_log_debug(logger,"MsgRecv result: 0x%X", result);
 
 		if( MSG_TIMEOUT == result)
 		{
-			smsc_log_debug(logger,"MsgRecv_r timeout");
-			return;
+			smsc_log_debug(logger,"MsgRecv timeout");
+			continue;
 		}
 
 		if (result != 0 )
