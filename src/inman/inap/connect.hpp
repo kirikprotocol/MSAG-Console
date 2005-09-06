@@ -21,7 +21,7 @@ class Connect : public SocketListener
 
     protected:
     	Socket* socket;
-   	
+        Logger*	logger;   	
 };
 
 }

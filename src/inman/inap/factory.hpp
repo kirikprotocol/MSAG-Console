@@ -31,7 +31,11 @@ public:
     typedef enum { IDLE, INITED, OPENED, CONNECTED } State_T;
 
 public:
+    Factory();
     virtual   ~Factory();
+
+    void       connect();
+    void       disconnect();
 
     virtual    Session* openSession(UCHAR_T ssn, const char* szSCFNumber, const char* szINmanNumber);
     virtual    Session* findSession(UCHAR_T ssn);
@@ -41,13 +45,11 @@ public:
     SOCKET	   getHandle();
     void	   process(Dispatcher*);
 
+    static	   Factory*	getInstance();
 protected:
 
     typedef std::map<UCHAR_T, Session*> SessionsMap_T;
 
-    Factory();
-    void              openConnection();
-    void              closeConnection();
 
     SessionsMap_T     sessions;
     State_T           state;

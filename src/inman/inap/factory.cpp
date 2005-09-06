@@ -10,6 +10,7 @@ static char const ident[] = "$Id$";
 using std::map;
 using std::runtime_error;
 using std::pair;
+using smsc::inman::common::dump;
 using smsc::inman::common::format;
 using smsc::inman::common::getReturnCodeDescription;
 
@@ -25,15 +26,16 @@ Factory::Factory()
 	: logger(Logger::getInstance("smsc.inman.inap.Factory"))
 	, state( IDLE )
 {
+	connect();
 }
 
 Factory::~Factory()
 {
     closeAllSessions();
-    closeConnection();
+    disconnect();
 }
 
-void Factory::openConnection()
+void Factory::connect()
 {
     USHORT_T result;
     while( state != CONNECTED )
@@ -73,7 +75,7 @@ void Factory::openConnection()
    }
 }
 
-void Factory::closeConnection()
+void Factory::disconnect()
 {
     USHORT_T result;
 
@@ -130,14 +132,39 @@ void	Factory::process(Dispatcher*)
 {
 		MSG_T msg;
 
-		msg.receiver = MSG_USER_ID;
+		memset( &msg, 0, sizeof( MSG_T ));
 
-		UCHAR_T result = EINSS7CpMsgRecv_r(&msg, 0);
+		//msg.receiver = MSG_USER_ID;
+		msg.receiver = ANY_ID;
+
+		USHORT_T result = EINSS7CpMsgRecv_r(&msg, 1000 /*MSG_INFTIM*/);
+
+		char buf[1024];
+		smsc_log_debug(logger,"See data at handle 0x%X", getHandle() );
+  		int n = recv( getHandle(), buf, sizeof(buf) - 1, MSG_PEEK );
+		smsc_log_debug(logger,"Data size=%d", n );
+		if( n > 0 )
+		{
+			smsc_log_debug(logger, "SS7 Socket: %s", dump( n, (unsigned char*)buf, true ).c_str() );
+		}
+
+		if( MSG_TIMEOUT == result)
+		{
+			smsc_log_debug(logger,"MsgRecv_r timeout (1 sec)");
+			return;
+		}
 
 		if (result != 0 )
 		{
-	    		EINSS7CpReleaseMsgBuffer(&msg);
-          		throw runtime_error( format( "MsgRecv failed with code %d (%s)", result, getReturnCodeDescription(result)) );
+          	throw runtime_error( format( "MsgRecv failed with code %d (%s)", result, getReturnCodeDescription(result)) );
+        }
+        else
+        {
+			smsc_log_debug(logger,"Message received:");
+			smsc_log_debug(logger," sender=0x%X", msg.sender);
+			smsc_log_debug(logger," receiver=0x%X", msg.receiver);
+			smsc_log_debug(logger," primitive=0x%X", msg.primitive);
+			smsc_log_debug(logger," data=%s", dump(msg.size,msg.msg_p).c_str());
         }
 
         EINSS7_I97THandleInd(&msg);
@@ -146,8 +173,6 @@ void	Factory::process(Dispatcher*)
 
 Session* Factory::openSession(UCHAR_T SSN, const char* szSCFNumber, const char* szINmanNumber)
 {
-    if( state != CONNECTED ) openConnection();
-
     if( state != CONNECTED ) return NULL;
 
     smsc_log_debug(logger,"Open IN session (SSN=%d, SCF=%s, IN=%s)", SSN, szSCFNumber, szINmanNumber);
@@ -198,6 +223,12 @@ void Factory::closeAllSessions()
     {
         closeSession( (*it).second );
     }
+}
+
+Factory* Factory::getInstance()
+{
+	static Factory instance;
+	return &instance;
 }
 
 }

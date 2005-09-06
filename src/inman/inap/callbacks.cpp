@@ -35,7 +35,12 @@ using smsc::inman::inap::tcapLogger;
 using smsc::inman::inap::inapLogger;
 
 //-------------------------------- Util functions --------------------------------
-extern Factory* getFactory();
+
+static Factory* getFactory()
+{
+	return Factory::getInstance();
+}
+
 
 static TcapDialog* findDialog(UCHAR_T ssn, USHORT_T dialogueId)
 {

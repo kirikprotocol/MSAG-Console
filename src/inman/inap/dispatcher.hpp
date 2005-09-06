@@ -44,9 +44,15 @@ class Dispatcher : public Thread
 
 		virtual void run();
 
-		virtual int Execute();
+		virtual void Stop();
+
+		virtual int  Execute();
+
+		virtual void fireEvent(int handle, int event);
 
 	protected:
+		
+
 		SocketListenersMap listeners;
 		
 		Event			   started;

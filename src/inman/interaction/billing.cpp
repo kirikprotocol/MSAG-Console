@@ -22,7 +22,7 @@ Billing::~Billing()
 void Billing::start()
 {
 	InitialDPSMSArg * pArg = new InitialDPSMSArg();
-
+/*
 	pArg->setDestinationSubscriberNumber();
 	pArg->setCallingPartyNumber();
 	pArg->setMode();
@@ -34,9 +34,8 @@ void Billing::start()
 	pArg->setTPProtocolIdentifier();
 	pArg->setTPDataCodingScheme();
 	pArg->setTPValidityPeriod();
-
+*/
 	inap->initialDPSMS( pArg );
-
 	context->start();
 }
 
