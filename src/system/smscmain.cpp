@@ -156,10 +156,8 @@ int main(int argc,char* argv[])
       listener.Start();
 
       // start
-      printf("runSmsc\n");
+      //fprintf(stderr,"runSmsc\n");
       smsc_component.runSmsc();
-      printf("Smsc started\n");
-
 
       //fprintf(stderr,"smsc started\n");
       //running

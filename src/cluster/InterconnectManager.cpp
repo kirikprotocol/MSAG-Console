@@ -29,7 +29,10 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
 
     attachedSocket.Init(attachedInAddr.c_str(), attachedPort, 10);
 
-    if( attachedSocket.Connect() ){
+    // At a start role is SLAVE allways
+    role = SLAVE;
+
+    /*if( attachedSocket.Connect() ){
 
         // Connect failed. Me is master.        
         role = MASTER;
@@ -40,6 +43,7 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
         uint32_t role_;
 
         try {
+            printf("wait for a role...\n");
             send(&cmd);
             role_ = readRole();
 
@@ -62,12 +66,16 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
                 break;
             }
 
+            printf("response is recived: %d\n", role_);
+
         }catch(...){
             // Send role query failed. I'm master.
             role = MASTER;
         }
 
-    }
+    }*/
+
+    printf("role: %d\n", role);
 
     reader = CommandReader(&role, &socket, dispatcher, &attachedSocket);
     //printf("reader starting...\n");

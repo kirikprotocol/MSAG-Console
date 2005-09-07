@@ -236,31 +236,50 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 
       using smsc::util::config::ConfigView;
       std::auto_ptr<ConfigView> imConfig(new smsc::util::config::ConfigView(*cfg.cfgman, "cluster"));
-      const char* nodes[] = { imConfig.get()->getString("host1"), imConfig.get()->getString("host2")};
-      smsc_log_info(log, "host1: %s, host2: %s", nodes[0], nodes[1] );
-      int port[] = { imConfig.get()->getInt("port1"), imConfig.get()->getInt("port2") };
-      smsc_log_info(log, "port1: %d, port2: %d", port[0], port[1] );
 
-      const char * p = strchr(node, '=');
+      char * mode = imConfig.get()->getString("mode");
 
-      int num1 = 0;
-      try {
-          smsc_log_info(log, "node: %s, num: %s", node, p+ 1 );
-          num1 = atoi(p + 1);
-      }catch(...){
+      if(strcmp(mode, "hs") == 0){
+
+          ishs = true;
+
+          const char* nodes[] = { imConfig.get()->getString("host1"), imConfig.get()->getString("host2")};
+          smsc_log_info(log, "host1: %s, host2: %s", nodes[0], nodes[1] );
+          int port[] = { imConfig.get()->getInt("port1"), imConfig.get()->getInt("port2") };
+          smsc_log_info(log, "port1: %d, port2: %d", port[0], port[1] );
+
+          const char * p = strchr(node, '=');
+
+          int num1 = 0;
+          try {
+              smsc_log_info(log, "node: %s, num: %s", node, p+ 1 );
+              num1 = atoi(p + 1);
+          }catch(...){
+          }
+
+          --num1;
+          if(num1 < 0 || num1 > 1)
+              num1 = 0;
+
+          int num2 = num1 == 0 ? 1 : 0;
+
+          smsc_log_info(log, "num1: %d, num2: %d", num1, num2 );
+
+          InterconnectManager::init(nodes[num1], nodes[num2], port[num1], port[num2]);
+          icon = InterconnectManager::getInstance();
+          smsc_log_info(log, "InterconnectManager is initialized" );
+
+          if(nodes[0])
+              delete [] nodes[0];
+
+          if(nodes[1])
+              delete [] nodes[1];
+
       }
 
-      --num1;
-      if(num1 < 0 || num1 > 1)
-          num1 = 0;
+      if(mode)
+              delete [] mode;
 
-      int num2 = num1 == 0 ? 1 : 0;
-
-      smsc_log_info(log, "num1: %d, num2: %d", num1, num2 );
-
-      InterconnectManager::init(nodes[num1], nodes[num2], port[num1], port[num2]);
-      icon = InterconnectManager::getInstance();
-      smsc_log_info(log, "InterconnectManager is initialized" );
   }catch(...){
       throw Exception("InterconnectManager initialization exception.");
   }
@@ -868,28 +887,53 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   }
 
   try {
-    // Initializes command handlers and registers its;
-    smsc_log_info(log, "The command listeners initialization and registration ..." );
-    MscCommandListener *mscCommandListener = new MscCommandListener();
-    DlCommandListener *dlCommandListener = new DlCommandListener(distlstman);
-    MemCommandListener *memCommandListener = new MemCommandListener(distlstman);
-    PrcCommandListener *prcCommandListener = new PrcCommandListener(distlstman);
-    SbmCommandListener *sbmCommandListener = new SbmCommandListener(distlstman);
-    SmeCommandListener *smeCommandListener = new SmeCommandListener(&smeman);
-    ProfileCommandListener *proCommandListener = new ProfileCommandListener(profiler);
-    ApplyCommandListener *appCommandListener = new ApplyCommandListener(&cfg, &smeman);
 
-    icon->addListener(smsc::cluster::MSCREGISTRATE_CMD,     mscCommandListener);
-    icon->addListener(smsc::cluster::DLADD_CMD,             dlCommandListener);
-    icon->addListener(smsc::cluster::MEMADDMEMBER_CMD,      memCommandListener);
-    icon->addListener(smsc::cluster::PRCADDPRINCIPAL_CMD,   prcCommandListener);
-    icon->addListener(smsc::cluster::SBMADDSUBMITER_CMD,    sbmCommandListener);
-    icon->addListener(smsc::cluster::SMEADD_CMD,            smeCommandListener);
-    icon->addListener(smsc::cluster::PROFILEUPDATE_CMD,     proCommandListener);
-    icon->addListener(smsc::cluster::APPLYROUTES_CMD,       appCommandListener);
-    smsc_log_info(log, "The command listeners initialization and registration is completed successful" );
+     if(ishs){
+         // Initializes command handlers and registers its;
+         smsc_log_info(log, "The command listeners initialization and registration ..." );
+         MscCommandListener *mscCommandListener = new MscCommandListener();
+         DlCommandListener *dlCommandListener = new DlCommandListener(distlstman);
+         MemCommandListener *memCommandListener = new MemCommandListener(distlstman);
+         PrcCommandListener *prcCommandListener = new PrcCommandListener(distlstman);
+         SbmCommandListener *sbmCommandListener = new SbmCommandListener(distlstman);
+         SmeCommandListener *smeCommandListener = new SmeCommandListener(&smeman);
+         ProfileCommandListener *proCommandListener = new ProfileCommandListener(profiler);
+         ApplyCommandListener *appCommandListener = new ApplyCommandListener(&cfg, &smeman);
+
+         icon->addListener(smsc::cluster::MSCREGISTRATE_CMD,     mscCommandListener);
+         icon->addListener(smsc::cluster::DLADD_CMD,             dlCommandListener);
+         icon->addListener(smsc::cluster::MEMADDMEMBER_CMD,      memCommandListener);
+         icon->addListener(smsc::cluster::PRCADDPRINCIPAL_CMD,   prcCommandListener);
+         icon->addListener(smsc::cluster::SBMADDSUBMITER_CMD,    sbmCommandListener);
+         icon->addListener(smsc::cluster::SMEADD_CMD,            smeCommandListener);
+         icon->addListener(smsc::cluster::PROFILEUPDATE_CMD,     proCommandListener);
+         icon->addListener(smsc::cluster::APPLYROUTES_CMD,       appCommandListener);
+         smsc_log_info(log, "The command listeners initialization and registration is completed successful" );
+     }
   }catch(...){
       throw Exception("Command listeners initialization exception.");
+  }
+
+  try{
+
+      if(icon){
+          smsc_log_info(log, "Agent listener is starting..." );
+
+          using smsc::util::config::ConfigView;
+          std::auto_ptr<ConfigView> imConfig(new smsc::util::config::ConfigView(*cfg.cfgman, "cluster"));
+
+          auto_ptr<char> host ( imConfig.get()->getString("agentHost") );
+          int port = imConfig.get()->getInt("agentPort");
+
+          agentListener.init(host.get(), port);
+          agentListener.Start();
+
+          smsc_log_info(log, "Agent listener is started" );
+      }
+
+  }catch(...)
+  {
+      throw Exception("Agent listener initialization exception.");
   }
 
   smsc_log_info(log, "SMSC init complete" );
@@ -914,8 +958,10 @@ void Smsc::run()
   //smsc::logger::Logger::getInstance("sms.snmp.alarm").debug("sample alarm");
 
   try {
-      Interconnect *icon = InterconnectManager::getInstance();
-      icon->activate();
+      if(ishs){
+          Interconnect *icon = InterconnectManager::getInstance();
+          icon->activate();
+      }
   }catch(...){
       throw Exception("InterconnectManager activating exception.");
   }

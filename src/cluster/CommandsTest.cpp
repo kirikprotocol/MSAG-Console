@@ -200,7 +200,7 @@ int main(int argc, char* argv[])
 {
 
     // applyRoutesCmd
-    ApplyRoutesCommand applyRoutesCmd;
+    /*ApplyRoutesCommand applyRoutesCmd;
 
     uint32_t len;
     uint8_t *buffer = (uint8_t*)applyRoutesCmd.serialize(len);
@@ -327,9 +327,9 @@ int main(int argc, char* argv[])
             delete buffer;
         }
 
-    }
+    }*/
 
-    printf("\nDlAddCommand:\n");
+    /*printf("\nDlAddCommand:\n");
     checkCommand<DlAddCommand>(52550, std::string("name"), std::string("owner"),0,0);
 
     printf("\nDlAlterCommand:\n");
@@ -366,9 +366,9 @@ int main(int argc, char* argv[])
     checkCommand<PrcDeletePrincipalCommand>("address");
 
     printf("\nProfileDeleteCommand:\n");
-    checkCommand<ProfileDeleteCommand>(1, 50, "address");
+    checkCommand<ProfileDeleteCommand>(1, 50, "address");*/
 
-    {
+    /*{
         uint8_t plan = 50;
         uint8_t type = 55;
         char address[] = "address";
@@ -466,7 +466,7 @@ int main(int argc, char* argv[])
     Array<int> arr;
     for(int i=0; i<=20; i++){
         arr.Push(i);
-    }
+    }*/
 
     /*int j;
     int res;
@@ -479,7 +479,7 @@ int main(int argc, char* argv[])
     arr.Clean();*/
 
     // Starts Interconnect manager
-    printf("Interconnect manager starting...\n");
+    /*printf("Interconnect manager starting...\n");
     InterconnectManager::init(MASTER, "m_ip", "s_ip", 1000);
     printf("Interconnect manager is started\n");
 
@@ -508,7 +508,7 @@ int main(int argc, char* argv[])
     std::auto_ptr<SbmCommandListener> sbmCl ( new SbmCommandListener(0) );
     master->addListener(SBMADDSUBMITER_CMD, (CommandListener*)sbmCl.get() );
 
-    sleep(1);
+    sleep(1);*/
 
     // Sends commands
 
@@ -677,7 +677,7 @@ int main(int argc, char* argv[])
         sendCommand<SmeUpdateCommand>(si, master);
     }*/
 
-    printf("Active\n");
+    /*printf("Active\n");
     master->activate();
 
     sleep(3);
@@ -685,7 +685,7 @@ int main(int argc, char* argv[])
     InterconnectManager::shutdown();
     printf("Interconnect manager is stoped\n");
 
-    printf("Okkey\n");
+    printf("Okkey\n");*/
 
     return 0;
 }

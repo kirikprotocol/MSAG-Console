@@ -40,6 +40,8 @@
 
 #include "core/buffers/XHash.hpp"
 
+#include "cluster/AgentListener.h"
+
 namespace smsc{
 namespace system{
 
@@ -125,7 +127,7 @@ struct SmscConfigs{
 class Smsc
 {
 public:
-  Smsc():ssockman(&tp,&smeman),stopFlag(false),router_(0),aliaser_(0),testRouter_(0),mergeCacheTimeouts(4096)
+  Smsc():ssockman(&tp,&smeman),stopFlag(false),router_(0),aliaser_(0),testRouter_(0),mergeCacheTimeouts(4096), ishs(false)
   {
     submitOkCounter=0;
     submitErrCounter=0;
@@ -577,6 +579,9 @@ protected:
   smsc::core::buffers::XHash<SMSId,MergeCacheItem,SMSIdHashFunc> reverseMergeCache;
   smsc::core::buffers::CyclicQueue<std::pair<time_t,SMSId> > mergeCacheTimeouts;
   time_t mergeConcatTimeout;
+
+  smsc::cluster::AgentListener agentListener;
+  bool ishs;
 
   friend class StatusSme;
 

@@ -182,6 +182,9 @@
   </section>
   
   <section name="cluster">
+    <param name="mode" type="string">hs</param>
+    <param name="agentHost" type="string">sunfire</param>
+    <param name="agentPort" type="int">25860</param>
     <param name="host1" type="string">sunfire</param>
     <param name="host2" type="string">sunfire</param>
     <param name="port1" type="int">25850</param>
