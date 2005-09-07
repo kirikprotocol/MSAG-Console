@@ -24,15 +24,15 @@ void BillAction::init(const SectionParams& params,PropertyObject propertyObject)
     const char * name = 0;
     ft = ActionContext::Separate(m_sServiceName,name);
     if (ft==ftUnknown) 
-        throw SCAGException("BillAction '",m_sName.c_str(),"' : unrecognized variable prefix '",m_sServiceName.c_str(),"' for 'service' parameter");
+        throw SCAGException("BillAction '%s' : unrecognized variable prefix '%s' for 'service' parameter",m_sName.c_str(),m_sServiceName.c_str());
 
     ft = ActionContext::Separate(m_sStatus,name);
     if (ft==ftUnknown) 
-        throw SCAGException("BillAction '",m_sName.c_str(),"' : unrecognized variable prefix '",m_sStatus.c_str(),"' for 'status' parameter");
+        throw SCAGException("BillAction '%s' : unrecognized variable prefix '%s' for 'status' parameter",m_sName.c_str(),m_sStatus.c_str());
 
     ft = ActionContext::Separate(m_sMessage,name);
     if (ft==ftUnknown) 
-        throw SCAGException("BillAction '",m_sName.c_str(),"' : unrecognized variable prefix '",m_sMessage.c_str(),"' for 'msg' parameter");
+        throw SCAGException("BillAction '%s' : unrecognized variable prefix '%s' for 'msg' parameter",m_sName.c_str(),m_sMessage.c_str());
 
 
 }
@@ -40,10 +40,7 @@ void BillAction::init(const SectionParams& params,PropertyObject propertyObject)
 
 IParserHandler * BillAction::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)
 {
-    std::string msg = "BillAction '";
-    msg.append(m_sName);
-    msg.append("' cannot include child objects");
-    throw SCAGException(msg.c_str());
+    throw SCAGException("BillAction '%s' cannot include child objects",m_sName);
 }
 
 bool BillAction::FinishXMLSubSection(const std::string& name)

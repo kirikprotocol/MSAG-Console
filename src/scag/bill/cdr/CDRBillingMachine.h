@@ -12,10 +12,16 @@ namespace scag { namespace bill {
 
 class CDRBillingMachine : public BillingMachine
 {
+    IntHash<Transaction> TransactionHash;
+
     CDRActionFactory actionFactory;
+    unsigned int m_key;
 public:
     virtual void rollback(const Bill &bill);
     virtual const ActionFactory& getActionFactory() const { return actionFactory;}
+    static CDRBillingMachine * Instance();
+    Bill OpenTransaction();
+    CDRBillingMachine() : m_key(0) {}
 };
 
 

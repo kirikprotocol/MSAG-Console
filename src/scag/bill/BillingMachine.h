@@ -14,6 +14,13 @@ namespace scag { namespace bill
      * Abstract class for user's BillingMachine implementation.
      * Concrete implementation should be placed in dynamic module (*.so) 
      */
+
+    class Transaction
+    {
+
+    };
+
+
     class BillingMachine
     {
     protected:

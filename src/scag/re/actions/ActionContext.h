@@ -62,6 +62,7 @@ namespace scag { namespace re { namespace actions
         Property* getProperty(const std::string& var);
         void closeSession(bool Commit);
         void AddPendingOperation(uint8_t type, time_t pendingTime);
+        Operation * GetCurrentOperation() {return session.GetCurrentOperation();}
     };
 
 }}}
