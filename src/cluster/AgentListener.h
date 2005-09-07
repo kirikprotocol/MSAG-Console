@@ -5,6 +5,7 @@
 #include "core/threads/Thread.hpp"
 #include <string>
 #include "logger/Logger.h"
+#include <unistd.h>
 
 namespace smsc {
 namespace cluster {
@@ -17,7 +18,7 @@ class AgentListener : public Thread
 {
 public:
     AgentListener()
-        : stop(true), logger(Logger::getInstance("AgentListner"))
+        : logger(Logger::getInstance("AgentListner")), stop(true), stopSmsc(false)
     {
 	};
 	virtual ~AgentListener()
@@ -26,15 +27,17 @@ public:
         Stop();
 	};
 
-    void init(std::string host, int port);
+    void init(std::string host, int port, pid_t pid_);
 	void Start();
     virtual int Execute();
     
 protected:
+    Logger *logger;
 	Socket sock;
     bool stop;
+    bool stopSmsc;
     void Stop();
-    Logger *logger;
+    pid_t pid;
 
     int readCommand(Socket * socket);
     void read(Socket * socket, void* buffer, int size);

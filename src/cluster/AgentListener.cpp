@@ -48,9 +48,8 @@ int AgentListener::Execute()
 
                 }else if(res == 1){
 
-                    smsc_log_info(logger, "Shutdown smsc..." );
-                    shutdownSmsc();
-                    smsc_log_info(logger, "Smsc shutdowned" );
+                    stopSmsc = true;
+                    stop = true;
 
                 }
                    
@@ -63,11 +62,14 @@ int AgentListener::Execute()
         }
     }
 
+    if(stopSmsc)
+        kill(pid, SIGTERM);
     return 0;
 }
 
-void AgentListener::init(std::string host, int port)
+void AgentListener::init(std::string host, int port, pid_t pid_)
 {
+    pid = pid_;
     sock.InitServer(host.c_str(), port, 10);
 };
 

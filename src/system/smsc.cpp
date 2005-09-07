@@ -34,6 +34,8 @@
 #include "cluster/listeners/SbmCommandListener.h"
 #include "cluster/listeners/SmeCommandListener.h"
 
+#include <unistd.h>
+
 //#define ENABLE_MAP_SYM
 
 #ifdef ENABLE_MAP_SYM
@@ -925,7 +927,8 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
           auto_ptr<char> host ( imConfig.get()->getString("agentHost") );
           int port = imConfig.get()->getInt("agentPort");
 
-          agentListener.init(host.get(), port);
+          smsc_log_info(log, "pid: %ld", (long)getpid() );
+          agentListener.init(host.get(), port, getpid());
           agentListener.Start();
 
           smsc_log_info(log, "Agent listener is started" );
