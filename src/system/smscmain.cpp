@@ -156,21 +156,21 @@ int main(int argc,char* argv[])
       listener.Start();
 
       // start
-      fprintf(stderr,"runSmsc\n");
+      //fprintf(stderr,"runSmsc\n");
       smsc_component.runSmsc();
 
-      fprintf(stderr,"smsc started\n");
+      //fprintf(stderr,"smsc started\n");
       //running
       listener.WaitFor();
 
-      fprintf(stderr,"smsc stopped, finishing\n");
+      //fprintf(stderr,"smsc stopped, finishing\n");
       // stopped
       if (smsc_component.isSmscRunning() && !smsc_component.isSmscStopping())
       smsc_component.stopSmsc();
 
       Manager::deinit();
 
-      fprintf(stderr,"smsc finished\n");
+      //fprintf(stderr,"smsc finished\n");
     }
 
   }
