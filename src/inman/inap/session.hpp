@@ -59,8 +59,8 @@ class Session : public ObservableT< SessionListener >
         virtual     	~Session();
         USHORT_T      	nextDialogId();
 
+        SCCP_ADDRESS_T 	ssfAddr;
         SCCP_ADDRESS_T 	scfAddr;
-        SCCP_ADDRESS_T 	inmanAddr;
         APP_CONTEXT_T  	ac;
         DialogsMap_T   	dialogs;
         SessionState   	state;

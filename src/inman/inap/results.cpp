@@ -36,9 +36,9 @@ void InvokeResultLast::send(TcapDialog* dialog)
     	id,
 		tag,
 		op.size(), 	//operationLength,
-    	const_cast<UCHAR_T*>(&op.front()), //*operationCode_p,
+		&op[0], //*operationCode_p,
 		params.size(), //paramLength,
-    	const_cast<UCHAR_T*>(&params.front()) //*parameters_p
+		&params[0] //*parameters_p
    );
 
   if(result != 0)
@@ -64,9 +64,9 @@ void InvokeResultNotLast::send(TcapDialog* dialog)
     	id,
 		tag,
 		op.size(), 	//operationLength,
-    	const_cast<UCHAR_T*>(&op.front()), //*operationCode_p,
+		&op[0], //*operationCode_p,
 		params.size(), //paramLength,
-    	const_cast<UCHAR_T*>(&params.front()) //*parameters_p
+		&params[0] //*parameters_p
    );
 
   if(result != 0)
@@ -92,9 +92,9 @@ void InvokeResultError::send(TcapDialog* dialog)
     	id,
 		tag,
 		op.size(), 	//operationLength,
-   		const_cast<UCHAR_T*>(&op.front()), //*operationCode_p,
+		&op[0], //*operationCode_p,
 		params.size(), //paramLength,
-   		const_cast<UCHAR_T*>(&params.front()) //*parameters_p
+		&params[0] //*parameters_p
   );
 
   if(result != 0)

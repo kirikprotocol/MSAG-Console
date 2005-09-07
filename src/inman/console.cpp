@@ -39,7 +39,14 @@ void Console::run(const std::string& prompt)
     char line[128];
     std::cout << prompt.c_str();
     std::cin.getline( line, sizeof(line) );
-    parse( line );
+    try
+    {
+    	parse( line );
+    }
+    catch(const std::exception& ex)
+    {
+    	std::cout << "ERROR: " << ex.what() << std::endl;
+    }
   }
 }
 

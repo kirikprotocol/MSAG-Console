@@ -34,6 +34,7 @@ TcapDialog::TcapDialog(Session* pSession, USHORT_T dlgId)
 	, qSrvc(EINSS7_I97TCAP_QLT_BOTH)
 	, priority(EINSS7_I97TCAP_PRI_HIGH_0)
 	, timeout( 30 )
+	, invokeId( 0 )
 {
 }
 
@@ -44,6 +45,7 @@ TcapDialog::~TcapDialog()
 void TcapDialog::beginDialog()
 {
 	smsc_log_debug(logger, "BEGIN_REQ");
+
  	USHORT_T result = EINSS7_I97TBeginReq(
     session->getSSN(),
     MSG_USER_ID,
@@ -53,8 +55,8 @@ void TcapDialog::beginDialog()
     qSrvc,
     session->scfAddr.addrLen,
     session->scfAddr.addr,
-    session->inmanAddr.addrLen,
-    session->inmanAddr.addr,
+    session->ssfAddr.addrLen,
+    session->ssfAddr.addr,
     session->ac.acLen,
     session->ac.ac,
     0,
@@ -74,8 +76,8 @@ void TcapDialog::continueDialog()
     did,
     priority,
     qSrvc,
-    session->inmanAddr.addrLen,
-    session->inmanAddr.addr,
+    session->ssfAddr.addrLen,
+    session->ssfAddr.addr,
     session->ac.acLen,
     session->ac.ac,
     0,

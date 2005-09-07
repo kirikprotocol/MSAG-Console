@@ -12,6 +12,7 @@ static char const ident[] = "$Id$";
 using std::runtime_error;
 using smsc::inman::common::format;
 using smsc::inman::common::getTcapReasonDescription;
+using smsc::inman::common::dump;
 
 namespace smsc  {
 namespace inman {
@@ -40,12 +41,17 @@ void Invoke::send(TcapDialog* dialog)
     dialog->getTimeout(),
     tag, //operationTag,
     op.size(), //operationLength,
-    const_cast<UCHAR_T*>(&op.front()), //*operationCode_p,
+    &op[0], //*operationCode_p,
     params.size(), //paramLength,
-    const_cast<UCHAR_T*>(&params.front()) //*parameters_p
+    &params[0] //*parameters_p
     );
 
   smsc_log_debug( tcapLogger, "INVOKE_REQ" );
+  smsc_log_debug( tcapLogger, " id=%d", id );
+  smsc_log_debug( tcapLogger, " tag=%d", tag );
+  smsc_log_debug( tcapLogger, " op=%s", dump( op.size(), &op[0]).c_str() );
+  smsc_log_debug( tcapLogger, " params=%s", dump( params.size(), &params[0]).c_str());
+
   if(result != 0)
   	throw runtime_error( format("InvokeReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
 }

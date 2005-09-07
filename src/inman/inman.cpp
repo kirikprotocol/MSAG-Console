@@ -29,6 +29,7 @@ using smsc::inman::Console;
 using smsc::logger::Logger;
 
 using std::auto_ptr;
+using std::runtime_error;
 
 namespace smsc
 {
@@ -45,7 +46,8 @@ namespace smsc
 using smsc::inman::inap::inapLogger;
 using smsc::inman::inap::tcapLogger;
 
-static Session* g_pSession = 0;
+static Session* g_pSession   = 0;
+static TcapDialog* g_pDialog = 0;
 
 static void init_logger()
 {
@@ -54,37 +56,51 @@ static void init_logger()
     tcapLogger = Logger::getInstance("smsc.in.tcap");
 }
 
-void init_dp(Console&, const std::vector<std::string> &args)
+void begin(Console&, const std::vector<std::string> &args)
 {
 	assert( g_pSession );
 	
-	TcapDialog* pDialog = g_pSession->openDialog( 0 ); // 0 = new dialog id
-	assert( pDialog );
-
-	auto_ptr<Inap> inap( new Inap( pDialog ) );
-
-	try
+	if( g_pDialog )
 	{
-		pDialog->beginDialog();
-
-		auto_ptr<InitialDPSMSArg> arg( new InitialDPSMSArg() );
-
-		inap->initialDPSMS( arg.get() );
-
+		throw runtime_error("Dialog begin already");
 	}
-	catch(...)
+
+	g_pDialog = g_pSession->openDialog( 0 ); // 0 = new dialog id
+
+	assert( g_pDialog );
+
+	auto_ptr<Inap> inap( new Inap( g_pDialog ) );
+
+	auto_ptr<InitialDPSMSArg> arg( new InitialDPSMSArg() );
+
+	inap->initialDPSMS( arg.get() );
+
+	g_pDialog->beginDialog();
+
+	fprintf( stdout, "OK.\n" );
+
+}
+
+void end(Console&, const std::vector<std::string> &args)
+{
+	assert( g_pSession );
+	
+	if( !g_pDialog )
 	{
-		g_pSession->closeDialog( pDialog );
-		throw;
+		throw runtime_error("No current dialog");
 	}
-	g_pSession->closeDialog( pDialog );
 
+	g_pSession->closeDialog( g_pDialog );
+	g_pDialog = 0;
+
+	fprintf( stdout, "OK.\n" );
 }
 
 static void run_console()
 {
   	Console console;
-  	console.addItem( "init_dp", init_dp );
+  	console.addItem( "begin", begin );
+  	console.addItem( "end",   end );
   	console.run("inman>");
 }
 
@@ -93,21 +109,21 @@ int main(int argc, char** argv)
 	if(( argc < 5 ) || ( argc > 6 ))
 	{
 		fprintf( stderr, "IN manager version %d.%d\n", VER_HIGH, VER_LOW );
-		fprintf( stderr, "Usage: %s <scf address> <inman address> <smsc host> <smsc port> [SSN]\n", argv[0] );
+		fprintf( stderr, "Usage: %s <inman/ssf address> <scf address> <smsc host> <smsc port> [SSN]\n", argv[0] );
 		exit(1);
 	}
 
 	init_logger();
 
-	const char* scf_addr   = argv[1];
-	const char* inman_addr = argv[2];
+	const char* ssf_addr   = argv[1];
+	const char* scf_addr   = argv[2];
 	const char* host 	   = argv[3];
 	int 		port 	   = atoi( argv[4]);
 	int			SSN		   = (argc == 6) ? atoi( argv[5] ) : DEFAULT_SSN;
 
 	smsc_log_info( inapLogger, "Starting IN manager..." );
+	smsc_log_info( inapLogger, "SSF address: %s", ssf_addr );
 	smsc_log_info( inapLogger, "SCF address: %s", scf_addr );
-	smsc_log_info( inapLogger, "INman address: %s", inman_addr );
 	smsc_log_info( inapLogger, "SMSC host: %s:%d", host, port );
 	smsc_log_info( inapLogger, "SSN: %d", SSN );
 
@@ -125,7 +141,7 @@ int main(int argc, char** argv)
 
 		pDisp->Start();
 
-		g_pSession = Factory::getInstance()->openSession(SSN, scf_addr, inman_addr );
+		g_pSession = Factory::getInstance()->openSession(SSN, ssf_addr, scf_addr );
 		assert( g_pSession );
 
 		run_console();

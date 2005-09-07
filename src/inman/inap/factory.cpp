@@ -165,21 +165,21 @@ void	Factory::process(Dispatcher*)
       	EINSS7CpReleaseMsgBuffer(&msg);
 }
 */
-Session* Factory::openSession(UCHAR_T SSN, const char* szSCFNumber, const char* szINmanNumber)
+Session* Factory::openSession(UCHAR_T SSN, const char* szSSF, const char* szSCF)
 {
     if( state != CONNECTED )
     {
     	throw runtime_error( format("Invalid factory state (%d)", state) );
 	}
 
-    smsc_log_debug(logger,"Open IN session (SSN=%d, SCF=%s, IN=%s)", SSN, szSCFNumber, szINmanNumber);
+    smsc_log_debug(logger,"Open IN session (SSN=%d, SCF=%s, IN=%s)", SSN, szSSF, szSCF);
 
     if( sessions.find( SSN ) != sessions.end() )
     {
         throw runtime_error( format("IN session with SSN=%d already opened", SSN) );
     }
 
-	Session* pSession = new Session( SSN, szSCFNumber, szINmanNumber );
+	Session* pSession = new Session( SSN, szSSF, szSCF );
 
     sessions.insert( SessionsMap_T::value_type( SSN, pSession ) );
 

@@ -38,26 +38,26 @@ static const int SOCKET_TIMEOUT = 1000;
 static void fillAppContext(APP_CONTEXT_T* p_ac)
 {
   APP_CONTEXT_T& ac = *p_ac;
-  ac.acLen=9;
-  ac.ac[0] = 0x06; //|00000110 |Tag                    |(UNIV P Obj Identifier)
-  ac.ac[0] = 0x07; //|00000111 |Length                 |7
+  ac.acLen=7;
+//  ac.ac[0] = 0x06; //|00000110 |Tag                    |(UNIV P Obj Identifier)
+//  ac.ac[1] = 0x07; //|00000111 |Length                 |7
   ac.ac[0] = 0x04; //|00000100 |Authority,Organization |ITU-T, Identified-organization
-  ac.ac[0] = 0x00; //|00000000 |                       |ETSI
-  ac.ac[0] = 0x00; //|00000000 |Domain                 |Mobile Domain
-  ac.ac[0] = 0x01; //|00000001 |Mobile Subdomain       |GSM / UMTS Network
-  ac.ac[0] = 0x15; //|00010101 |Common Component ID    |CAP 3 OE
-  ac.ac[0] = 0x03; //|00000011 |CAP3 OE ID             |ACE
-  ac.ac[0] = 0x3D; //|00111101 |Application Context    |CAP3-SMS
+  ac.ac[1] = 0x00; //|00000000 |                       |ETSI
+  ac.ac[2] = 0x00; //|00000000 |Domain                 |Mobile Domain
+  ac.ac[3] = 0x01; //|00000001 |Mobile Subdomain       |GSM / UMTS Network
+  ac.ac[4] = 0x15; //|00010101 |Common Component ID    |CAP 3 OE
+  ac.ac[5] = 0x03; //|00000011 |CAP3 OE ID             |ACE
+  ac.ac[6] = 0x3D; //|00111101 |Application Context    |CAP3-SMS
 }
 
-Session::Session(UCHAR_T ssn, const char* scfNum, const char* inmanNum)
+Session::Session(UCHAR_T ssn, const char* ssf, const char* scf)
     : logger(Logger::getInstance("smsc.inman.inap.Session"))
     , SSN( ssn )
     , state( IDLE )
     , lastDialogId( TCAP_DIALOG_MIN_ID )
 {
-  	fillAddress(&scfAddr,scfNum, ssn);
-  	fillAddress(&inmanAddr,inmanNum, ssn);
+  	fillAddress(&ssfAddr,ssf, ssn);
+  	fillAddress(&scfAddr,scf, ssn);
   	fillAppContext(&ac);
 
   	USHORT_T  result = EINSS7_I97TBindReq( SSN, MSG_USER_ID, TCAP_INSTANCE_ID, EINSS7_I97TCAP_WHITE_USER );
