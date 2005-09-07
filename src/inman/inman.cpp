@@ -73,6 +73,18 @@ void begin(Console&, const std::vector<std::string> &args)
 
 	auto_ptr<InitialDPSMSArg> arg( new InitialDPSMSArg() );
 
+	arg->setDestinationSubscriberNumber();
+	arg->setCallingPartyNumber();
+	arg->setMode();
+	arg->setIMSI();
+	arg->setlocationInformationMSC();
+	arg->setSMSCAddress();
+	arg->setTimeAndTimezone();
+	arg->setTPShortMessageSpecificInfo();
+	arg->setTPProtocolIdentifier();
+	arg->setTPDataCodingScheme();
+	arg->setTPValidityPeriod();
+
 	inap->initialDPSMS( arg.get() );
 
 	g_pDialog->beginDialog();
