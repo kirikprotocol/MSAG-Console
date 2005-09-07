@@ -1,9 +1,8 @@
 static char const ident[] = "$Id$";
 #include <assert.h>
 #include <sys/select.h> 
-#include <vector>
 
-#include <poll.h>
+#include "ss7tmc.h"
 
 #include "dispatcher.hpp"
 #include "inman/common/util.hpp"
@@ -18,11 +17,18 @@ using std::vector;
 using std::runtime_error;
 using smsc::inman::inap::Dispatcher;
 
-extern "C" void Dispatcher_Callback(int descriptor, void* uref, int event);
-
 namespace smsc  {
 namespace inman {
 namespace inap  {
+
+extern Logger* inapLogger;
+
+extern "C" void Dispatcher_Callback(int descriptor, void* uref, int event)
+{
+	smsc_log_debug(inapLogger,"Dispatcher_Callback called. Handle: 0x%X", descriptor);
+	Dispatcher* disp = static_cast<Dispatcher*>(uref);
+	disp->fireEvent( descriptor, event );
+}
 
 Dispatcher::Dispatcher() 
 	: logger(Logger::getInstance("smsc.inman.inap.Dispatcher"))
@@ -39,7 +45,19 @@ void Dispatcher::addListener(SocketListener* listener)
 	assert( listener );
 	SOCKET handle = listener->getHandle();
 	assert( handle > 0 );
+
 	listeners.insert( SocketListenersMap::value_type( handle, listener ) );
+
+	USHORT_T result = EINSS7CpMsgSetEventsExt( handle, MSG_EVENT_READ, Dispatcher_Callback, this  );
+
+	if (result != 0 )
+	{
+          throw runtime_error( format( "MsgSetEventsExt failed with code %d (%s)", result, getReturnCodeDescription(result)) );
+    }
+    else
+    {
+    	smsc_log_debug(logger,"SocketListener registered. Handle: 0x%X", handle);
+    }
 }
 
 void Dispatcher::removeListener(SocketListener* listener)
@@ -47,41 +65,67 @@ void Dispatcher::removeListener(SocketListener* listener)
 	assert( listener );
 	SOCKET handle = listener->getHandle();
 	assert( handle > 0 );
+
+	USHORT_T result = EINSS7CpMsgRemoveEventsExt( handle );
+	if (result != 0 )
+	{
+          smsc_log_error( logger, "MsgRemoveEventsExt failed with code %d (%s)", result, getReturnCodeDescription(result) );
+    }
+    else
+    {
+    	smsc_log_debug(logger,"SocketListener unregistered. Handle: 0x%X", handle);
+    }
 	listeners.erase( handle );
+}
+
+void Dispatcher::updateAppEvents()
+{
+	int i = 0;
+	appEvents.resize( listeners.size() );
+	for( SocketListenersMap::iterator it = listeners.begin(); it != listeners.end(); it++ )
+	{
+		APP_EVENT_T& appEvent = appEvents[i++];
+		appEvent.descriptor = (*it).first;
+		appEvent.events     = MSG_EVENT_READ;
+		appEvent.callback   = Dispatcher_Callback;
+		appEvent.uref 	    = this;
+	}
 }
 
 void Dispatcher::run()
 {
-	vector< APP_EVENT_T > eventList;
-
 	running = true;
 	while( running )
 	{
-		eventList.resize( listeners.size() );
-
-		int i = 0;
-
-		for( SocketListenersMap::iterator it = listeners.begin(); it != listeners.end(); it++ )
-		{
-			eventList[i].descriptor = (*it).first;
-			eventList[i].events     = 0x3F;//all poll conditions;
-			eventList[i].callback   = &Dispatcher_Callback;
-			eventList[i].uref 	    = this;
-			i++;
-		}
-
 		MSG_T msg;
+		memset( &msg, 0, sizeof( MSG_T ));
+		msg.receiver = MSG_USER_ID;
 
-		msg.receiver = ANY_ID;//MSG_USER_ID;
-
-		int len = eventList.size();
-		USHORT_T result = MsgRecvEvent(&msg, &eventList[0], &len, 1000/*MSG_INFTIM*/);
+		updateAppEvents();
+		int len = appEvents.size();
+		USHORT_T result = MsgRecvEvent(&msg, &appEvents[0], &len, MSG_INFTIM);
 		
-		smsc_log_debug(logger,"MsgRecv result: 0x%X", result);
-
 		if( MSG_TIMEOUT == result)
 		{
 			smsc_log_debug(logger,"MsgRecv timeout");
+			continue;
+		}
+
+		if( MSG_APPL_EVENT == result )
+		{
+			smsc_log_debug(logger,"Occured %d application even(s)", len);
+			for( int i = 0; i < len; i++ )
+			{
+				APP_EVENT_T& appEvent = appEvents[i];
+				appEvent.callback( appEvent.descriptor, appEvent.uref, appEvent.events );
+				//fireEvent( appEvent.descriptor, appEvent.events );
+			}
+			continue;
+		}
+
+		if(( MSG_QUEUE_NOT_OPEN == result ) && !running)
+		{
+			smsc_log_debug(logger,"Dispatcher stopped.");
 			continue;
 		}
 
@@ -142,6 +186,7 @@ void Dispatcher::run()
 void Dispatcher::Stop() 
 {
 	running = false;
+	close( EINSS7CpMsgObtainSocket(MSG_USER_ID, TCAP_ID) ); // UGLY !
 }
 
 // Thread entry point
@@ -177,12 +222,3 @@ void Dispatcher::fireEvent(int handle, int event)
 } // namespace inap
 } // namespace inmgr
 } // namespace smsc
-
-extern "C"
-{
-	void Dispatcher_Callback(int descriptor, void* uref, int event)
-	{
-		Dispatcher* disp = static_cast<Dispatcher*>(uref);
-		disp->fireEvent( descriptor, event );
-	}
-}

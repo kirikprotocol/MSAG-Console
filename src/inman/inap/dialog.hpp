@@ -10,9 +10,12 @@
 
 #include "ss7cp.h"
 
+#include "logger/Logger.h"
 #include "inman/comp/comps.hpp"
 #include "invoke.hpp"
 #include "results.hpp"
+
+using smsc::logger::Logger;
 
 namespace smsc {
 namespace inman {
@@ -75,6 +78,7 @@ class TcapDialog : public ObservableT< TcapDialogListener >
     UCHAR_T           priority;
     UCHAR_T           acShort;
     UCHAR_T			  invokeId;
+    Logger*			  logger;
 };
 
 }

@@ -49,7 +49,7 @@ void Factory::connect()
                 throw runtime_error( format("MsgInit Failed with code %d (%s)", result, getReturnCodeDescription(result)));
             }
             state = INITED;
-            smsc_log_debug(logger,"MsgInit done.");
+            smsc_log_debug(logger,"state: INITED");
             break;
 
         case INITED:
@@ -59,7 +59,7 @@ void Factory::connect()
 				throw runtime_error( format("MsgOpen failed with code %d (%s)", result, getReturnCodeDescription(result)));
             }
             state = OPENED;
-            smsc_log_debug(logger,"MsgOpen done.");
+            smsc_log_debug(logger,"state: OPENED");
             break;
 
        case OPENED:
@@ -69,7 +69,7 @@ void Factory::connect()
 				throw runtime_error( format("MsgConn failed with code %d (%s)", result, getReturnCodeDescription(result)) );
             }
             state = CONNECTED;
-            smsc_log_debug(logger,"MsgConn done.");
+            smsc_log_debug(logger,"state: CONNECTED");
             break;
       }
    }
@@ -90,10 +90,7 @@ void Factory::disconnect()
             {
                 smsc_log_error(logger, "MsgRel(%d,%d) failed with code %d (%s)", MSG_USER_ID, TCAP_ID, result, getReturnCodeDescription(result));
             }
-            else
-            {
-                smsc_log_debug(logger,"MsgRel done.");
-            }
+            smsc_log_debug(logger,"state: OPENED");
             state = OPENED;
             break;
         }
@@ -104,17 +101,14 @@ void Factory::disconnect()
             {
                 smsc_log_error(logger, "MsgClose(%d) failed with code %d (%s)", MSG_USER_ID, result ,getReturnCodeDescription(result));
             }
-            else
-            {
-                smsc_log_debug(logger,"MsgClose done.");
-            }
+            smsc_log_debug(logger,"state: INITED");
             state = INITED;
             break;
         }
         case INITED:
         {
             MsgExit();
-            smsc_log_debug(logger,"MsgExit done.");
+            smsc_log_debug(logger,"state: IDLE");
             state = IDLE;
             break;
         }
@@ -122,7 +116,7 @@ void Factory::disconnect()
    }
 }
 
-
+/*
 SOCKET	Factory::getHandle()
 {
 	return EINSS7CpMsgObtainSocket(MSG_USER_ID, TCAP_ID);
@@ -137,7 +131,7 @@ void	Factory::process(Dispatcher*)
 		//msg.receiver = MSG_USER_ID;
 		msg.receiver = ANY_ID;
 
-		USHORT_T result = EINSS7CpMsgRecv_r(&msg, 1000 /*MSG_INFTIM*/);
+		USHORT_T result = EINSS7CpMsgRecv_r(&msg, 1000 );
 
 		char buf[1024];
 		smsc_log_debug(logger,"See data at handle 0x%X", getHandle() );
@@ -170,21 +164,22 @@ void	Factory::process(Dispatcher*)
         EINSS7_I97THandleInd(&msg);
       	EINSS7CpReleaseMsgBuffer(&msg);
 }
-
+*/
 Session* Factory::openSession(UCHAR_T SSN, const char* szSCFNumber, const char* szINmanNumber)
 {
-    if( state != CONNECTED ) return NULL;
+    if( state != CONNECTED )
+    {
+    	throw runtime_error( format("Invalid factory state (%d)", state) );
+	}
 
     smsc_log_debug(logger,"Open IN session (SSN=%d, SCF=%s, IN=%s)", SSN, szSCFNumber, szINmanNumber);
-
-	Session* pSession;
 
     if( sessions.find( SSN ) != sessions.end() )
     {
         throw runtime_error( format("IN session with SSN=%d already opened", SSN) );
     }
 
-	pSession = new Session( SSN, szSCFNumber, szINmanNumber );
+	Session* pSession = new Session( SSN, szSCFNumber, szINmanNumber );
 
     sessions.insert( SessionsMap_T::value_type( SSN, pSession ) );
 
@@ -203,7 +198,8 @@ Session* Factory::findSession(UCHAR_T SSN)
 
 void Factory::closeSession(Session* pSession)
 {
-    if( !pSession ) return;
+    assert( pSession );
+
     smsc_log_debug(logger,"Close IN session (SSN=%d)", pSession->SSN );
 
     if( sessions.find( pSession->SSN ) == sessions.end() )

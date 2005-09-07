@@ -25,7 +25,7 @@ static const UCHAR_T TCAP_INSTANCE_ID = 0;
 
 class Session;
 
-class Factory : public SocketListener
+class Factory
 {
 public:
     typedef enum { IDLE, INITED, OPENED, CONNECTED } State_T;
@@ -41,10 +41,10 @@ public:
     virtual    Session* findSession(UCHAR_T ssn);
     virtual    void     closeSession(Session*);
     virtual    void     closeAllSessions();
-
+/*
     SOCKET	   getHandle();
     void	   process(Dispatcher*);
-
+*/
     static	   Factory*	getInstance();
 protected:
 

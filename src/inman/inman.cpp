@@ -45,6 +45,8 @@ namespace smsc
 using smsc::inman::inap::inapLogger;
 using smsc::inman::inap::tcapLogger;
 
+static Session* g_pSession = 0;
+
 static void init_logger()
 {
 	Logger::Init();
@@ -52,9 +54,37 @@ static void init_logger()
     tcapLogger = Logger::getInstance("smsc.in.tcap");
 }
 
-static void run_console(Session* pSess)
+void init_dp(Console&, const std::vector<std::string> &args)
+{
+	assert( g_pSession );
+	
+	TcapDialog* pDialog = g_pSession->openDialog( 0 ); // 0 = new dialog id
+	assert( pDialog );
+
+	auto_ptr<Inap> inap( new Inap( pDialog ) );
+
+	try
+	{
+		pDialog->beginDialog();
+
+		auto_ptr<InitialDPSMSArg> arg( new InitialDPSMSArg() );
+
+		inap->initialDPSMS( arg.get() );
+
+	}
+	catch(...)
+	{
+		g_pSession->closeDialog( pDialog );
+		throw;
+	}
+	g_pSession->closeDialog( pDialog );
+
+}
+
+static void run_console()
 {
   	Console console;
+  	console.addItem( "init_dp", init_dp );
   	console.run("inman>");
 }
 
@@ -83,22 +113,27 @@ int main(int argc, char** argv)
 
 	try
 	{
-		auto_ptr< Server > 	   pServer( new Server( host, port ) );
+		Factory::getInstance();
+
+		Dispatcher*  pDisp = new Dispatcher();
+
+		Server*	   pServer = new Server( host, port );
 
 		smsc_log_info( inapLogger, "Server socket: 0x%X", pServer->getHandle() );
-		smsc_log_info( inapLogger, "Factory socket: 0x%X", Factory::getInstance()->getHandle() );
 
-		auto_ptr< Dispatcher > pDisp( new Dispatcher() );
-
-		pDisp->addListener( Factory::getInstance() );
-
-		Session* pSess = Factory::getInstance()->openSession(SSN, scf_addr, inman_addr );
+		pDisp->addListener( pServer );
 
 		pDisp->Start();
 
-		run_console( pSess );
+		g_pSession = Factory::getInstance()->openSession(SSN, scf_addr, inman_addr );
+		assert( g_pSession );
+
+		run_console();
+
+		Factory::getInstance()->closeSession( g_pSession );
 
 		pDisp->Stop();
+
 		
 	}
 	catch(const std::exception& error)

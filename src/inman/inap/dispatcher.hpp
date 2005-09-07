@@ -4,6 +4,9 @@
 #define __SMSC_INMAN_INAP_DISPATCHER__
 
 #include <map>
+#include <vector>
+
+#include "ss7cp.h"
 
 #include "logger/Logger.h"
 #include "core/threads/Thread.hpp"
@@ -33,6 +36,7 @@ public:
 class Dispatcher : public Thread
 {
 		typedef std::map<SOCKET, SocketListener*> SocketListenersMap;
+		typedef std::vector< APP_EVENT_T > 		  AppEventVector;
 
 	public:
 
@@ -51,10 +55,11 @@ class Dispatcher : public Thread
 		virtual void fireEvent(int handle, int event);
 
 	protected:
-		
+
+		virtual void updateAppEvents();
 
 		SocketListenersMap listeners;
-		
+		AppEventVector	   appEvents;
 		Event			   started;
 		Event			   stopped;
 		volatile bool	   running;

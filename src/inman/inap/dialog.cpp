@@ -28,7 +28,8 @@ namespace inap  {
 
 
 TcapDialog::TcapDialog(Session* pSession, USHORT_T dlgId) 
-	: did( dlgId )
+    : logger(Logger::getInstance("smsc.inman.inap.TcapDialog"))
+	, did( dlgId )
 	, session( pSession )
 	, qSrvc(EINSS7_I97TCAP_QLT_BOTH)
 	, priority(EINSS7_I97TCAP_PRI_HIGH_0)
@@ -42,6 +43,7 @@ TcapDialog::~TcapDialog()
 
 void TcapDialog::beginDialog()
 {
+	smsc_log_debug(logger, "BEGIN_REQ");
  	USHORT_T result = EINSS7_I97TBeginReq(
     session->getSSN(),
     MSG_USER_ID,
@@ -64,6 +66,7 @@ void TcapDialog::beginDialog()
 
 void TcapDialog::continueDialog()
 {
+  smsc_log_debug(logger, "CONTINUE_REQ");
   USHORT_T result = EINSS7_I97TContinueReq(
     session->getSSN(),
     MSG_USER_ID,
@@ -84,6 +87,7 @@ void TcapDialog::continueDialog()
 
 void TcapDialog::endDialog(USHORT_T termination)
 {
+  smsc_log_debug(logger, "END_REQ");
   USHORT_T result = EINSS7_I97TEndReq(
     session->getSSN(),
     MSG_USER_ID,
@@ -104,6 +108,7 @@ void TcapDialog::endDialog(USHORT_T termination)
 
 void TcapDialog::timerReset()
 {
+	smsc_log_debug(logger, "TIMER_RESET_REQ");
  	USHORT_T result = EINSS7_I97TTimerResetReq
  	(
     	session->getSSN(),
@@ -120,12 +125,13 @@ void TcapDialog::timerReset()
 
 Invoke* TcapDialog::invoke(UCHAR_T opcode)
 {
+	smsc_log_debug(logger, "Invoke (opcode=0x%X)", opcode);
 	Invoke* invoke = new Invoke();
 	invoke->setId( getNextInvokeId() );
 	invoke->setTag( EINSS7_I97TCAP_OPERATION_TAG_LOCAL );
 	invoke->setOpcode( opcode );
 	originating.insert( InvokeMap::value_type(	invoke->getId(), invoke ) );
-	return MSG_OK;
+	return invoke;
 }
 
 //--------------------------------------- Callbacks ----------------------------------

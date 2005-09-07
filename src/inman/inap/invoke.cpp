@@ -17,6 +17,8 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
+extern Logger* tcapLogger;
+
 void Invoke::send(TcapDialog* dialog)
 {
   assert( dialog );
@@ -41,8 +43,9 @@ void Invoke::send(TcapDialog* dialog)
     const_cast<UCHAR_T*>(&op.front()), //*operationCode_p,
     params.size(), //paramLength,
     const_cast<UCHAR_T*>(&params.front()) //*parameters_p
-    ); 
+    );
 
+  smsc_log_debug( tcapLogger, "INVOKE_REQ" );
   if(result != 0)
   	throw runtime_error( format("InvokeReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
 }
