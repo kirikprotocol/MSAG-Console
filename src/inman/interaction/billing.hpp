@@ -1,7 +1,7 @@
 #ident "$Id$"
 
-#ifndef __SMSC_INMAN_PAYMENT__
-#define __SMSC_INMAN_PAYMENT__
+#ifndef __SMSC_INMAN_INTERACTION_BILLING__
+#define __SMSC_INMAN_INTERACTION_BILLING__
 
 #include "inman/comp/comps.hpp"
 using smsc::inman::comp::RequestReportSMSEventArg;

@@ -22,14 +22,16 @@ class InternalInitialDPSMSArg
 #define ZERO_asn_struct_ctx_t   { 0, 0, 0, NULL, 0}
 #define OCTET_STRING_OBJ(buf)   { buf, sizeof(buf), ZERO_asn_struct_ctx_t }
 
-static uint8_t _dsn1_buf[] = { 0x91, 0x13, 0x11, 0x33 };
+//static uint8_t _dsn1_buf[] = { 0x91, 0x13, 0x11, 0x33 };
+static uint8_t _dsn1_buf[] = { 0x91, 0x31, 0x11, 0x33 };
 static OCTET_STRING_t _dSN1 = OCTET_STRING_OBJ(_dsn1_buf);
 void InitialDPSMSArg::setDestinationSubscriberNumber()
 {
   internal->idp.destinationSubscriberNumber = &_dSN1;
 }
 
-static uint8_t _cpn1_buf[] = { 0x91, 0x79, 0x13, 0x91, 0x63, 0x39, 0x3f };
+//static uint8_t _cpn1_buf[] = { 0x91, 0x79, 0x13, 0x91, 0x63, 0x39, 0x3f };
+static uint8_t _cpn1_buf[] = { 0x91, 0x97, 0x31, 0x19, 0x36, 0x93, 0xf3 };
 static OCTET_STRING_t _cPN1 = OCTET_STRING_OBJ(_cpn1_buf);
 void InitialDPSMSArg::setCallingPartyNumber()
 {
@@ -42,18 +44,28 @@ void InitialDPSMSArg::setMode()
   internal->idp.eventTypeSMS = &_etSMS1;
 }
 
-static uint8_t _imsi1_buf[] = { 0x25, 0x00, 0x13, 0x90, 0x13, 0x88, 0x78, 0x0f };
+
+
+//static uint8_t _imsi1_buf[] = { 0x25, 0x00, 0x13, 0x90, 0x13, 0x88, 0x78, 0x0f };
+static uint8_t _imsi1_buf[] = { 0x52, 0x00, 0x31, 0x09, 0x31, 0x88, 0x87, 0xF0 };
+
 static OCTET_STRING_t _iMSI1 = OCTET_STRING_OBJ(_imsi1_buf);
 void InitialDPSMSArg::setIMSI()
 {
   internal->idp.iMSI = &_iMSI1;
 }
 
-static uint8_t _vlrn1_buf[] = { 0x91, 0x79, 0x13, 0x98, 0x60, 0x00, 0x1f };
+//static uint8_t _vlrn1_buf[] = { 0x91, 0x79, 0x13, 0x98, 0x60, 0x00, 0x1f };
+static uint8_t _vlrn1_buf[] = { 0x91, 0x97, 0x31, 0x89, 0x06, 0x00, 0xf1 };
 static OCTET_STRING_t _vLRN1 = OCTET_STRING_OBJ(_vlrn1_buf);
-static uint8_t _locn1_buf[] = { 0x81, 0x01, 0x79, 0x13, 0x98, 0x60, 0x00, 0x1f };
+
+//static uint8_t _locn1_buf[] = { 0x81, 0x01, 0x79, 0x13, 0x98, 0x60, 0x00, 0x1f };
+static uint8_t _locn1_buf[] = { 0x81, 0x01, 0x97, 0x31, 0x89, 0x06, 0x00, 0xf1 };
 static OCTET_STRING_t _locN1 = OCTET_STRING_OBJ(_locn1_buf);
-static uint8_t _cgidorsaifl1_buf[] = { 0x25, 0x0f, 0x10, 0x97, 0xFE, 0x13, 0x89 };
+
+//static uint8_t _cgidorsaifl1_buf[] = { 0x25, 0x0f, 0x10, 0x97, 0xFE, 0x13, 0x89 };
+static uint8_t _cgidorsaifl1_buf[] = { 0x52, 0xf0, 0x10, 0x97, 0xFE, 0x13, 0x89 };
+
 static OCTET_STRING_t _cGidOrSAIFL1 = OCTET_STRING_OBJ(_cgidorsaifl1_buf);
 static CellGlobalIdOrServiceAreaIdOrLAI _cGidOrSAIorLAI1 = {CellGlobalIdOrServiceAreaIdOrLAI_PR_cellGlobalIdOrServiceAreaIdFixedLength
 ,OCTET_STRING_OBJ(_cgidorsaifl1_buf),ZERO_asn_struct_ctx_t};
@@ -66,8 +78,9 @@ void InitialDPSMSArg::setlocationInformationMSC()
   internal->li.cellGlobalIdOrServiceAreaIdOrLAI = &_cGidOrSAIorLAI1;
   internal->idp.locationInformationMSC = &internal->li;
 }
+//static uint8_t _sMSCAdr1_buf[] = { 0x91, 0x79, 0x02, 0x98, 0x69, 0x99, 0x0f };
 
-static uint8_t _sMSCAdr1_buf[] = { 0x91, 0x79, 0x02, 0x98, 0x69, 0x99, 0x0f };
+static uint8_t _sMSCAdr1_buf[] = { 0x91, 0x97, 0x20, 0x89, 0x96, 0x99, 0xf0 };
 static OCTET_STRING_t _sMSCAdr1 = OCTET_STRING_OBJ(_sMSCAdr1_buf);
 void InitialDPSMSArg::setSMSCAddress()
 {
