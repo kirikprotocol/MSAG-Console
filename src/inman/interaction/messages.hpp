@@ -20,6 +20,12 @@ class StartMessage : public SerializableObject
 {
 public:
 	enum { OBJECT_ID = 1 };
+
+    virtual void run()
+    {
+    	fprintf( stderr, "Start event received!\n");
+    }
+
 protected:
     virtual void load(ObjectBuffer& in)
     {
@@ -28,11 +34,6 @@ protected:
     virtual void save(ObjectBuffer& out)
     {
     	out << (USHORT_T) OBJECT_ID;
-    }
-
-    virtual void run()
-    {
-    	fprintf( stderr, "Start event received!\n");
     }
 };
 

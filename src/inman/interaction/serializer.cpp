@@ -13,7 +13,7 @@ namespace interaction  {
 
 Serializer::Serializer()
 {
-	registerProduct( StartMessage::OBJECT_ID, ProducerT< StartMessage >() );
+	registerProduct( StartMessage::OBJECT_ID, new ProducerT< StartMessage >() );
 }
 
 Serializer::~Serializer()

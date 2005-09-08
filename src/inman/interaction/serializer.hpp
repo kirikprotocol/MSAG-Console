@@ -120,12 +120,11 @@ class SerializableObject
 {
 	friend class Serializer;
     public:
-
+    	virtual void run() = 0;
     protected:
 
     	virtual void load(ObjectBuffer& in)  = 0;
     	virtual void save(ObjectBuffer& out) = 0;
-    	virtual void run() = 0;
 };
 
 class Serializer : public FactoryT< USHORT_T, SerializableObject >
