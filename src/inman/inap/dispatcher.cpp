@@ -66,6 +66,7 @@ void Dispatcher::removeListener(SocketListener* listener)
 	SOCKET handle = listener->getHandle();
 	assert( handle > 0 );
 
+	/* Following function return "unimplemented" error in current ss7 stack impl.
 	USHORT_T result = EINSS7CpMsgRemoveEventsExt( handle );
 	if (result != 0 )
 	{
@@ -75,6 +76,8 @@ void Dispatcher::removeListener(SocketListener* listener)
     {
     	smsc_log_debug(logger,"SocketListener unregistered. Handle: 0x%X", handle);
     }
+    */
+    
 	listeners.erase( handle );
 }
 
