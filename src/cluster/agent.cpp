@@ -121,9 +121,24 @@ int main(int argc, char **argv)
           ishs = true;
       }
 
-      //if(ishs)
-      //    if(socket.Connect())
-      //        atExit();
+      if(ishs)
+          if(socket.Connect())
+              atExit();
+
+      // Send command smsc to amke it MASTER
+      try {
+          smsc_log_info(logger, "Agent is sending command to smsc");
+          uint16_t val = 0;
+          send(socket, val);
+          smsc_log_info(logger, "Command is sent");
+      }catch(Exception e)
+      {
+          smsc_log_info(logger, "Send failed. %s", e.what());
+      }
+      catch(...)
+      {
+          smsc_log_info(logger, "Send failed. Unknown exception");
+      }
 
       smsc_log_info(logger, "Agent has connected to smsc.");
 
