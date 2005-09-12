@@ -14,26 +14,13 @@
 
 IDLE
 {
-	start WAITING_FOR_INSTRUCTIONS
+	initialDPSMS WAITING_FOR_INSTRUCTIONS
 	{
 	}
 }
 
 WAITING_FOR_INSTRUCTIONS
 {
-	furnishChargingInformationSMS nil 
-	{
-	}
-
-	requestReportSMSEvent( arg: RequestReportSMSEventArg* ) nil
-	{
-		armDetectionPoints( arg );
-	}
-
-	resetTimerSMS  nil
-	{
-	}
-
 	continueSMS MONITORING
 	{
 	}
@@ -44,23 +31,12 @@ WAITING_FOR_INSTRUCTIONS
 
 	releaseSMS IDLE
 	{
-		notifyFailure();
 	}
 
 }
 
 MONITORING
 {
-	smsSent() IDLE
-	{
-		sendReportSMSEvent();
-	}
-
-	smsRejected() IDLE
-	{
-		sendReportSMSEvent();
-	}
-
 }
 
 %%

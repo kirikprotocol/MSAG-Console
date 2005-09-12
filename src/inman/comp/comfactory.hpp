@@ -6,6 +6,10 @@
 
 #include "comps.hpp"
 
+#include "logger/Logger.h"
+
+using smsc::logger::Logger;
+
 namespace smsc {
 namespace inman {
 namespace comp{
@@ -32,6 +36,7 @@ public:
 
 protected:
 	ComponentMap products;
+	Logger* 	 logger;
 };
 
 }

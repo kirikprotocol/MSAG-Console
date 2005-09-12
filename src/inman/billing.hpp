@@ -8,46 +8,27 @@ using smsc::inman::comp::RequestReportSMSEventArg;
 #include "billing_sm.h"
 
 #include "inman/inap/inap.hpp"
+#include "inman/inap/session.hpp"
+#include "inman/inap/connect.hpp"
 #include "inman/common/observable.hpp"
 
 using smsc::inman::inap::Inap;
+using smsc::inman::inap::Session;
+using smsc::inman::inap::TcapDialog;
 using smsc::inman::inap::SSF;
 
 namespace smsc  	  {
 namespace inman 	  {
-namespace interaction {
 
-class SMS
+class Billing : public SSF
 {
 public:
 
-	SMS()
-	{
-	}
-
-	virtual ~SMS()
-	{
-	}
-};
-
-class BillingListener
-{
-public:
-	virtual void successed() = 0;
-	virtual void failed() 	 = 0;
-};
-
-class Billing : public SSF, public ObservableT< BillingListener >
-{
-  public:
-	Billing(Inap*);
+	Billing(Session* pSession);
 	virtual ~Billing();
 
-	virtual void start();
+	virtual void initialDPSMS();
 
-	void sendIntialDPSMS();
-
-  public: // SSF interface
     virtual void connectSMS(ConnectSMSArg* arg);
     virtual void continueSMS();
     virtual void furnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg);
@@ -55,20 +36,17 @@ class Billing : public SSF, public ObservableT< BillingListener >
     virtual void requestReportSMSEvent(RequestReportSMSEventArg* arg);
     virtual void resetTimerSMS(ResetTimerSMSArg* arg);
 
-  public:
-    void notifyFailure();
-    void notifySuccess();
-    void armDetectionPoints(RequestReportSMSEventArg* data);
-    void sendReportSMSEvent();
+protected:	
+	Session* 	session;
+	TcapDialog*	dialog;
+	Inap*	 	inap;
+    Logger*	 	logger;   	
 
-  protected:
-  	BillingContext* context;
-  	Inap* 			inap;
 };
 
 }
 }
-}
+
 
 
 #endif

@@ -16,13 +16,10 @@ struct ProducerT : public ComponentProducer
 };
 
 ComponentFactory::ComponentFactory()
+    : logger(Logger::getInstance("smsc.inman.comp.ComponentFactory"))
 {
 	REG_PRODUCT( InitialDPSMS );
-	/*
-	still abstract
 	REG_PRODUCT( RequestReportSMSEvent );
-	REG_PRODUCT( EventReportSMS );
-	*/
 }
 
 ComponentFactory::~ComponentFactory()

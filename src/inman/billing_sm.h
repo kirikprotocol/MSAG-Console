@@ -3,7 +3,7 @@
 
 #define SMC_USES_IOSTREAMS
 
-#include "statemap.hpp"
+#include "inman/common/statemap.h"
 
 namespace smsc
 {
@@ -35,13 +35,8 @@ namespace smsc
 
                 virtual void connectSMS(BillingContext& context);
                 virtual void continueSMS(BillingContext& context);
-                virtual void furnishChargingInformationSMS(BillingContext& context);
+                virtual void initialDPSMS(BillingContext& context);
                 virtual void releaseSMS(BillingContext& context);
-                virtual void requestReportSMSEvent(BillingContext& context, RequestReportSMSEventArg* arg);
-                virtual void resetTimerSMS(BillingContext& context);
-                virtual void smsRejected(BillingContext& context);
-                virtual void smsSent(BillingContext& context);
-                virtual void start(BillingContext& context);
 
             protected:
 
@@ -76,7 +71,7 @@ namespace smsc
                 : BILLING_Default(name, stateId)
                 {};
 
-                void start(BillingContext& context);
+                void initialDPSMS(BillingContext& context);
             };
 
             class BILLING_WAITING_FOR_INSTRUCTIONS :
@@ -89,10 +84,7 @@ namespace smsc
 
                 void connectSMS(BillingContext& context);
                 void continueSMS(BillingContext& context);
-                void furnishChargingInformationSMS(BillingContext& context);
                 void releaseSMS(BillingContext& context);
-                void requestReportSMSEvent(BillingContext& context, RequestReportSMSEventArg* arg);
-                void resetTimerSMS(BillingContext& context);
             };
 
             class BILLING_MONITORING :
@@ -103,8 +95,6 @@ namespace smsc
                 : BILLING_Default(name, stateId)
                 {};
 
-                void smsRejected(BillingContext& context);
-                void smsSent(BillingContext& context);
             };
 
             class BillingContext :
@@ -148,10 +138,10 @@ namespace smsc
                     setTransition(NULL);
                 };
 
-                void furnishChargingInformationSMS()
+                void initialDPSMS()
                 {
-                    setTransition("furnishChargingInformationSMS");
-                    (getState()).furnishChargingInformationSMS(*this);
+                    setTransition("initialDPSMS");
+                    (getState()).initialDPSMS(*this);
                     setTransition(NULL);
                 };
 
@@ -159,41 +149,6 @@ namespace smsc
                 {
                     setTransition("releaseSMS");
                     (getState()).releaseSMS(*this);
-                    setTransition(NULL);
-                };
-
-                void requestReportSMSEvent(RequestReportSMSEventArg* arg)
-                {
-                    setTransition("requestReportSMSEvent");
-                    (getState()).requestReportSMSEvent(*this, arg);
-                    setTransition(NULL);
-                };
-
-                void resetTimerSMS()
-                {
-                    setTransition("resetTimerSMS");
-                    (getState()).resetTimerSMS(*this);
-                    setTransition(NULL);
-                };
-
-                void smsRejected()
-                {
-                    setTransition("smsRejected");
-                    (getState()).smsRejected(*this);
-                    setTransition(NULL);
-                };
-
-                void smsSent()
-                {
-                    setTransition("smsSent");
-                    (getState()).smsSent(*this);
-                    setTransition(NULL);
-                };
-
-                void start()
-                {
-                    setTransition("start");
-                    (getState()).start(*this);
                     setTransition(NULL);
                 };
 

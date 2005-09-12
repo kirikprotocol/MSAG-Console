@@ -12,7 +12,7 @@ static char const ident[] = "$Id$";
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
 #include "inman/inap/inap.hpp"
-#include "inman/interaction/billing.hpp"
+#include "billing.hpp"
 
 static const UCHAR_T VER_HIGH 	 = 0;
 static const UCHAR_T VER_LOW  	 = 0;
@@ -24,7 +24,7 @@ using smsc::inman::inap::Factory;
 using smsc::inman::inap::Session;
 using smsc::inman::inap::TcapDialog;
 using smsc::inman::inap::Inap;
-using smsc::inman::interaction::Billing;
+using smsc::inman::Billing;
 using smsc::inman::Console;
 using smsc::logger::Logger;
 
@@ -46,8 +46,7 @@ namespace smsc
 using smsc::inman::inap::inapLogger;
 using smsc::inman::inap::tcapLogger;
 
-static Session* g_pSession   = 0;
-static TcapDialog* g_pDialog = 0;
+static Billing* g_pBilling   = 0;
 
 static void init_logger()
 {
@@ -56,63 +55,16 @@ static void init_logger()
     tcapLogger = Logger::getInstance("smsc.in.tcap");
 }
 
-void begin(Console&, const std::vector<std::string> &args)
+void initdp(Console&, const std::vector<std::string> &args)
 {
-	assert( g_pSession );
-	
-	if( g_pDialog )
-	{
-		throw runtime_error("Dialog begin already");
-	}
-
-	g_pDialog = g_pSession->openDialog( 0 ); // 0 = new dialog id
-
-	assert( g_pDialog );
-
-	auto_ptr<Inap> inap( new Inap( g_pDialog ) );
-
-	auto_ptr<InitialDPSMSArg> arg( new InitialDPSMSArg() );
-
-	arg->setDestinationSubscriberNumber();
-	arg->setCallingPartyNumber();
-	arg->setMode();
-	arg->setIMSI();
-	arg->setlocationInformationMSC();
-	arg->setSMSCAddress();
-	arg->setTimeAndTimezone();
-	arg->setTPShortMessageSpecificInfo();
-	arg->setTPProtocolIdentifier();
-	arg->setTPDataCodingScheme();
-	arg->setTPValidityPeriod();
-
-	inap->initialDPSMS( arg.get() );
-
-	g_pDialog->beginDialog();
-
-	fprintf( stdout, "OK.\n" );
-
-}
-
-void end(Console&, const std::vector<std::string> &args)
-{
-	assert( g_pSession );
-	
-	if( !g_pDialog )
-	{
-		throw runtime_error("No current dialog");
-	}
-
-	g_pSession->closeDialog( g_pDialog );
-	g_pDialog = 0;
-
+	g_pBilling->initialDPSMS();
 	fprintf( stdout, "OK.\n" );
 }
 
 static void run_console()
 {
   	Console console;
-  	console.addItem( "begin", begin );
-  	console.addItem( "end",   end );
+  	console.addItem( "initdp", initdp );
   	console.run("inman>");
 }
 
@@ -149,12 +101,17 @@ int main(int argc, char** argv)
 		disp.Start();
 		server.Start();
 
-		g_pSession = Factory::getInstance()->openSession(SSN, ssf_addr, scf_addr );
-		assert( g_pSession );
+		Session* pSession = Factory::getInstance()->openSession(SSN, ssf_addr, scf_addr );
+		assert( pSession );
+
+		g_pBilling = new Billing( pSession );
+		assert( g_pBilling );
 
 		run_console();
 
-		Factory::getInstance()->closeSession( g_pSession );
+		delete g_pBilling;
+
+		Factory::getInstance()->closeSession( pSession );
 
 		server.Stop();
 		disp.Stop();

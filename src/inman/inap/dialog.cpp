@@ -3,6 +3,7 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 #include <string>
 #include <stdexcept>
+#include <memory>
 
 #include "invoke.hpp"
 #include "results.hpp"
@@ -14,6 +15,7 @@ static char const ident[] = "$Id$";
 #include "inman/comp/comfactory.hpp"
 
 using std::runtime_error;
+using std::auto_ptr;
 using smsc::inman::common::format;
 using smsc::inman::common::getTcapReasonDescription;
 using smsc::inman::comp::ComponentFactory;
@@ -161,15 +163,13 @@ USHORT_T TcapDialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
 
   UCHAR_T opcode = op[0];
 
-  Invoke* invoke = new Invoke();
+  auto_ptr<Invoke> invoke( new Invoke() );
   invoke->setId( invId );
   invoke->setTag( tag );
   invoke->setOpcode( opcode );
   invoke->setParam( ComponentFactory::getInstance()->createComponent( opcode ) );
 
-  terminating.insert( InvokeMap::value_type( invoke->getId(), invoke ) );
-
-  notify1( &TcapDialogListener::invoke, invoke );
+  notify2( &TcapDialogListener::onDialogInvoke, this, invoke.get() );
 
   return MSG_OK;
 }
