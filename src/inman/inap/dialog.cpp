@@ -167,7 +167,16 @@ USHORT_T TcapDialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
   invoke->setId( invId );
   invoke->setTag( tag );
   invoke->setOpcode( opcode );
-  invoke->setParam( ComponentFactory::getInstance()->create( opcode ) );
+
+  Component* comp = ComponentFactory::getInstance()->create( opcode );
+
+  if( comp )
+  {
+  	std::vector<unsigned char> code( pm, pm + pmlen );
+  	if( comp->decode( code ) )
+  		throw runtime_error( format("decode failed for opcode 0x%X", opcode ) );
+  	invoke->setParam( comp );
+  }
 
   notify1( &TcapDialogListener::onDialogInvoke, invoke.get() );
 

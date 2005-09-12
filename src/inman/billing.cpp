@@ -71,9 +71,11 @@ void Billing::releaseSMS(ReleaseSMSArg* arg)
 
 void Billing::requestReportSMSEvent(RequestReportSMSEventArg* arg)
 {
-	smsc_log_debug( logger, "RequestReportSMSEvent" );
 	assert( arg );
 	const RequestReportSMSEventArg::SMSEventVector& dps = arg->getSMSEvents();
+
+	smsc_log_debug( logger, "RequestReportSMSEvent: Number of DP: %d", dps.size() );
+
 	RequestReportSMSEventArg::SMSEventVector::const_iterator it;
 	for( it = dps.begin(); it != dps.end(); it++ )
 	{
