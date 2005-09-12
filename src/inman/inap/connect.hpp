@@ -9,15 +9,16 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
+class Server;
 
-class Connect : public SocketListener
+class Connect
 {
     public:
 		Connect(Socket* socket);
 		virtual ~Connect();
 
-		SOCKET getHandle();
-		void   process(Dispatcher*);
+		Socket* getSocket();
+		void   process(Server*);
 
     protected:
     	Socket* socket;

@@ -2,6 +2,7 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 
 #include "connect.hpp"
+#include "server.hpp"
 
 #include "inman/common/util.hpp"
 #include "inman/interaction/serializer.hpp"
@@ -28,22 +29,26 @@ Connect::~Connect()
 	delete socket;
 }
 
-SOCKET Connect::getHandle()
+
+Socket* Connect::getSocket()
 {
-	return socket->getSocket();
+	return socket;
 }
 
-void   Connect::process(Dispatcher* pDisp)
+void   Connect::process(Server* pServer)
 {
 	char buf[1024]; //todo: read all data, that may be more then 1024
 
   	int n = socket->Read(buf, sizeof(buf) - 1);
   	if( n < 1 )
   	{
-  		smsc_log_debug(logger, "Socket closed - killing connection");
-  		pDisp->removeListener( this );
+  		smsc_log_debug(logger, "Socket error!");
+  		return;
+/*  		
+  		pServer->closeConnect( this );
   		delete this; // shit! 
   		return;
+  		*/
   	}
 
   	ObjectBuffer buffer( n );
@@ -55,7 +60,6 @@ void   Connect::process(Dispatcher* pDisp)
 	SerializableObject* obj = Serializer::getInstance()->deserialize( buffer );
 	assert( obj );
 	obj->run();
-
 }
 
 } // namespace inap

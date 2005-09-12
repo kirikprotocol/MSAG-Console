@@ -41,10 +41,7 @@ public:
     virtual    Session* findSession(UCHAR_T ssn);
     virtual    void     closeSession(Session*);
     virtual    void     closeAllSessions();
-/*
-    SOCKET	   getHandle();
-    void	   process(Dispatcher*);
-*/
+
     static	   Factory*	getInstance();
 protected:
 

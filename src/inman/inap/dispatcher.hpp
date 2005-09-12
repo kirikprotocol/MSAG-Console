@@ -5,6 +5,7 @@
 
 #include <map>
 #include <vector>
+#include <queue>
 
 #include "ss7cp.h"
 
@@ -24,42 +25,19 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
-class Dispatcher;
-
-class SocketListener
-{
-public:
-	virtual SOCKET getHandle()  = 0;
-	virtual void   process(Dispatcher*)  = 0;
-};
-
 class Dispatcher : public Thread
 {
-		typedef std::map<SOCKET, SocketListener*> SocketListenersMap;
-		typedef std::vector< APP_EVENT_T > 		  AppEventVector;
-
 	public:
 
 		Dispatcher();
 		virtual ~Dispatcher();
 
-		virtual void addListener(SocketListener*);
-		virtual void removeListener(SocketListener*);
-
-		virtual void run();
-
+		virtual void Run();
 		virtual void Stop();
-
 		virtual int  Execute();
 
-		virtual void fireEvent(int handle, int event);
 
 	protected:
-
-		virtual void updateAppEvents();
-
-		SocketListenersMap listeners;
-		AppEventVector	   appEvents;
 		Event			   started;
 		Event			   stopped;
 		volatile bool	   running;

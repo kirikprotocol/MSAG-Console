@@ -143,15 +143,11 @@ int main(int argc, char** argv)
 	{
 		Factory::getInstance();
 
-		Dispatcher*  pDisp = new Dispatcher();
+		Dispatcher disp;
+		Server	   server(host, port);
 
-		Server*	   pServer = new Server( host, port );
-
-		smsc_log_info( inapLogger, "Server socket: 0x%X", pServer->getHandle() );
-
-		pDisp->addListener( pServer );
-
-		pDisp->Start();
+		disp.Start();
+		server.Start();
 
 		g_pSession = Factory::getInstance()->openSession(SSN, ssf_addr, scf_addr );
 		assert( g_pSession );
@@ -160,9 +156,8 @@ int main(int argc, char** argv)
 
 		Factory::getInstance()->closeSession( g_pSession );
 
-		pDisp->Stop();
-
-		
+		server.Stop();
+		disp.Stop();
 	}
 	catch(const std::exception& error)
 	{
