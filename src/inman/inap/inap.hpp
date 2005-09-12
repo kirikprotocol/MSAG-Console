@@ -51,7 +51,7 @@ class Inap : public TcapDialogListener, public SCF, public ObservableT< SSF >
     void initialDPSMS(InitialDPSMSArg* arg);
     void eventReportSMS(EventReportSMSArg* arg);
 
-   	void onDialogInvoke(TcapDialog* dialog, Invoke* op); // TcapDialogListener
+   	virtual void onDialogInvoke( Invoke* op ); // TcapDialogListener
 
    protected:
 

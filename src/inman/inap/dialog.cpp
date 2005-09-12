@@ -169,7 +169,7 @@ USHORT_T TcapDialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
   invoke->setOpcode( opcode );
   invoke->setParam( ComponentFactory::getInstance()->createComponent( opcode ) );
 
-  notify2( &TcapDialogListener::onDialogInvoke, this, invoke.get() );
+  notify1( &TcapDialogListener::onDialogInvoke, invoke.get() );
 
   return MSG_OK;
 }

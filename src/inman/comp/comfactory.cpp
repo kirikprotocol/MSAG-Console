@@ -28,9 +28,12 @@ ComponentFactory::~ComponentFactory()
 
 Component* ComponentFactory::createComponent(unsigned opcode)
 {
+    smsc_log_debug(logger,"Create component for opcode 0x%X", opcode);
+	
 	ComponentMap::const_iterator it = products.find( opcode );
     if( it == products.end() )
     {
+    	smsc_log_debug(logger,"Component for opcode 0x%X not registered", opcode);
         return NULL;
     }
 	return it->second.create();

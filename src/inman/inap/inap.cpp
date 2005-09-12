@@ -22,7 +22,7 @@ Inap::~Inap()
 	dialog->removeListener( this );
 }
 
-void Inap::onDialogInvoke(TcapDialog* dialog, Invoke* op)
+void Inap::onDialogInvoke( Invoke* op )
 {
 	assert( op );
 	switch(op->getOpcode())

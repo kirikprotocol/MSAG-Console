@@ -30,7 +30,7 @@ class TcapDialog;
 class TcapDialogListener
 {
 	public:
-		virtual void onDialogInvoke( TcapDialog*, Invoke*  ) = 0;
+		virtual void onDialogInvoke(  Invoke*  ) = 0;
 };
 
 class TcapDialog : public ObservableT< TcapDialogListener > 
