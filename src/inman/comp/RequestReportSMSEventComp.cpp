@@ -68,6 +68,11 @@ int RequestReportSMSEventArg::encode(vector<unsigned char>& buf)
   return -1; //not implemented yet
 }
 
+const RequestReportSMSEventArg::SMSEventVector& RequestReportSMSEventArg::getSMSEvents()
+{
+	return internal->events;
+}
+
 }//namespace comps
 }//namespace inman
 }//namespace smsc

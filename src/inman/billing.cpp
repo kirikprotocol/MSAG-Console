@@ -70,9 +70,18 @@ void Billing::releaseSMS(ReleaseSMSArg* arg)
     }
 
 void Billing::requestReportSMSEvent(RequestReportSMSEventArg* arg)
-    {
-		smsc_log_debug( logger, "RequestReportSMSEvent" );
-    }
+{
+	smsc_log_debug( logger, "RequestReportSMSEvent" );
+	assert( arg );
+	const RequestReportSMSEventArg::SMSEventVector& dps = arg->getSMSEvents();
+	RequestReportSMSEventArg::SMSEventVector::const_iterator it;
+	for( it = dps.begin(); it != dps.end(); it++ )
+	{
+		RequestReportSMSEventArg::SMSEvent dp = *it;
+		smsc_log_debug( logger, "Event type: 0x%X, Monitor type: 0x%X", dp.event, dp.monitorType );
+	}
+	
+}
 
 void Billing::resetTimerSMS(ResetTimerSMSArg* arg)
     {
