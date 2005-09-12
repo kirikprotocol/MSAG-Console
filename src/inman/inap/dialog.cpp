@@ -167,7 +167,7 @@ USHORT_T TcapDialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
   invoke->setId( invId );
   invoke->setTag( tag );
   invoke->setOpcode( opcode );
-  invoke->setParam( ComponentFactory::getInstance()->createComponent( opcode ) );
+  invoke->setParam( ComponentFactory::getInstance()->create( opcode ) );
 
   notify1( &TcapDialogListener::onDialogInvoke, invoke.get() );
 
@@ -186,7 +186,7 @@ USHORT_T TcapDialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen
   result->setId( invId );
   result->setTag( tag );
   result->setOpcode( opcode );
-  result->setParam( ComponentFactory::getInstance()->createComponent( opcode ) );
+  result->setParam( ComponentFactory::getInstance()->create( opcode ) );
 
   InvokeMap::const_iterator it = originating.find( invId );
   if( it != originating.end() )

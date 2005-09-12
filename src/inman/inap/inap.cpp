@@ -28,14 +28,17 @@ void Inap::onDialogInvoke( Invoke* op )
 	switch(op->getOpcode())
 	{
 		case InapOpCode::FurnishChargingInformationSMS:
+			assert( op->getParam() );
 			notify1( &SSF::furnishChargingInformationSMS, 
-					static_cast<FurnishChargingInformationSMSArg*>(op->getParam()) );
+								static_cast<FurnishChargingInformationSMSArg*>(op->getParam()) );
 			break;
 		case InapOpCode::ConnectSMS:
+			assert( op->getParam() );
 			notify1( &SSF::connectSMS,
 					static_cast<ConnectSMSArg*>(op->getParam()) );
 			break;
 		case InapOpCode::RequestReportSMSEvent:
+			assert( op->getParam() );
 			notify1( &SSF::requestReportSMSEvent, 
 					static_cast<RequestReportSMSEventArg*>(op->getParam()) );
 			break;
@@ -43,10 +46,12 @@ void Inap::onDialogInvoke( Invoke* op )
 			notify0( &SSF::continueSMS );
 			break;
 		case InapOpCode::ReleaseSMS:
+			assert( op->getParam() );
 			notify1( &SSF::releaseSMS,
 			static_cast<ReleaseSMSArg*>(op->getParam())  );
 			break;
 		case InapOpCode::ResetTimerSMS:
+			assert( op->getParam() );
 			notify1( &SSF::resetTimerSMS,
 			static_cast<ResetTimerSMSArg*>(op->getParam())  );
 			break;

@@ -5,10 +5,11 @@
 #include <map>
 
 #include "comps.hpp"
-
+#include "inman/common/factory.hpp"
 #include "logger/Logger.h"
 
 using smsc::logger::Logger;
+using smsc::inman::common::FactoryT;
 
 namespace smsc {
 namespace inman {
@@ -16,26 +17,15 @@ namespace comp{
 
 using std::map;
 
-struct ComponentProducer
+class ComponentFactory : public FactoryT< unsigned, Component >
 {
-	virtual Component* create() const { return NULL; }
-};
-
-class ComponentFactory
-{
-
-	typedef map<unsigned, ComponentProducer> ComponentMap;
-
 public:
 	ComponentFactory();
 	virtual ~ComponentFactory();
 
-	Component* createComponent(unsigned opcode);
-
 	static ComponentFactory* getInstance();
 
 protected:
-	ComponentMap products;
 	Logger* 	 logger;
 };
 
