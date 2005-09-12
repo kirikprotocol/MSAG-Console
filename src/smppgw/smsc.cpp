@@ -190,7 +190,7 @@ void Smsc::init(const SmscConfigs& cfg)
   smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.init");
 
   try{
-  InitLicense(*cfg.licconfig);  
+  InitLicense(*cfg.licconfig);
   tp.preCreateThreads(15);
   //smsc::util::config::Manager::init("config.xml");
   //cfgman=&cfgman->getInstance();
@@ -453,6 +453,8 @@ void Smsc::init(const SmscConfigs& cfg)
   ssockman.setSmppSocketTimeout(cfg.cfgman->getInt("smpp.readTimeout"));
   ssockman.setInactivityTime(cfg.cfgman->getInt("smpp.inactivityTime"));
   ssockman.setInactivityTimeOut(cfg.cfgman->getInt("smpp.inactivityTimeOut"));
+  ssockman.setDefaultConnectionsLimit(cfg.cfgman->getInt("smpp.defaultConnectionsLimit"));
+
 
   {
     smsc::smppgw::performance::PerformanceServer *perfSrv=new smsc::smppgw::performance::PerformanceServer
@@ -567,7 +569,7 @@ bool Smsc::modifySmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t alt
     GatewaySme* gwsme = dynamic_cast<GatewaySme*>(p->proxy);
 
     if(gwsme){
-        
+
         uint8_t olduid = gwsme->getPrefix();
         if(uid != olduid){
             if(gwSmeMap[uid])
@@ -577,21 +579,21 @@ bool Smsc::modifySmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t alt
                 return false;
         }
 
-        gwsme->setSesscfg(cfg);        
-        gwsme->setConnParam(cfg.host.c_str(), cfg.port, altHost, altPort);        
-        gwsme->setCfgIdx(1);        
-        gwsme->disconnect();       
+        gwsme->setSesscfg(cfg);
+        gwsme->setConnParam(cfg.host.c_str(), cfg.port, altHost, altPort);
+        gwsme->setCfgIdx(1);
+        gwsme->disconnect();
         gwsme->setPrefix(uid);
-        
+
 
         if(olduid != uid){
             gwSmeMap[uid] = gwSmeMap[olduid];
             gwSmeMap[olduid] = 0;
         }
-        
+
         return true;
     }
-    
+
     return false;
 }
 
