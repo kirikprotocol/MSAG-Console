@@ -47,10 +47,9 @@ void Server::closeConnect(Connect* connect)
 
 void Server::Run()
 {
+	running = true;
 	while( running )
 	{
-			int max = 0;
-
 			fd_set read;
 			fd_set error;
 			
@@ -60,6 +59,8 @@ void Server::Run()
 			FD_SET( serverSocket.getSocket(), &read );
 			FD_SET( serverSocket.getSocket(), &error );
 
+			int max = serverSocket.getSocket();
+
 			for( Connects::iterator i = connects.begin(); i != connects.end(); i++ )
 			{
 				SOCKET socket = (*i)->getSocket()->getSocket();
@@ -68,9 +69,17 @@ void Server::Run()
 				if( socket > max ) max = socket;
 			}
 
-  			int n  = select(  max, &read, 0, &error, 0 );
+  			int n  = select(  max+1, &read, 0, &error, 0 );
 
-  			if( n < 0 )	throw SystemError("select failed");
+  			if( n < 0 )
+  			{
+  				if( !running )
+  				{
+  					smsc_log_debug(logger, "Server stopped");
+  					continue;
+  				}
+  				throw SystemError("select failed");
+  			}
 
 			if( FD_ISSET( serverSocket.getSocket(), &read ) )
 			{
@@ -104,13 +113,18 @@ void Server::Run()
 
 				if( FD_ISSET( socket, &read ) )
 				{
-					smsc_log_debug(logger, "Data on socket 0x%X", socket );
-					conn->process( this );
+					smsc_log_debug(logger, "Event on socket 0x%X", socket );
+
+					if( !conn->process( this ) )
+					{
+						smsc_log_debug(logger, "Close socket 0x%X", socket );
+						closeConnect( conn );
+					}
 				}
 
 				if( FD_ISSET( socket, &error ) )
 				{
-					smsc_log_debug(logger, "Close socket (0x%X)", socket );
+					smsc_log_debug(logger, "Error - close socket (0x%X)", socket );
 					closeConnect( conn );
 				}
 			}

@@ -23,7 +23,7 @@ class InternalInitialDPSMSArg
 #define OCTET_STRING_OBJ(buf)   { buf, sizeof(buf), ZERO_asn_struct_ctx_t }
 
 //static uint8_t _dsn1_buf[] = { 0x91, 0x13, 0x11, 0x33 };
-static uint8_t _dsn1_buf[] = { 0x91, 0x31, 0x11, 0x33 };
+static uint8_t _dsn1_buf[] = { 0x81, 0x31, 0x11, 0x33 };
 static OCTET_STRING_t _dSN1 = OCTET_STRING_OBJ(_dsn1_buf);
 void InitialDPSMSArg::setDestinationSubscriberNumber()
 {
@@ -87,7 +87,7 @@ void InitialDPSMSArg::setSMSCAddress()
   internal->idp.sMSCAddress = &_sMSCAdr1;
 }
 
-static uint8_t _tImeZone1_buf[] = { 0x20, 0x05, 0x04, 0x22, 0x15, 0x03, 0x26, 0x42 };
+static uint8_t _tImeZone1_buf[] = { 0x02, 0x50, 0x40, 0x22, 0x51, 0x30, 0x62, 0x42 };
 static OCTET_STRING_t _tImeZone1 = OCTET_STRING_OBJ(_tImeZone1_buf);
 void InitialDPSMSArg::setTimeAndTimezone()
 {
@@ -115,7 +115,7 @@ void InitialDPSMSArg::setTPDataCodingScheme()
   internal->idp.tPDataCodingScheme = &_tPDCSch1;
 }
 
-static uint8_t _tPVP1_buf[] = { 0xda };
+static uint8_t _tPVP1_buf[] = { 0xad };
 static OCTET_STRING_t _tPVP1 = OCTET_STRING_OBJ(_tPVP1_buf);
 void InitialDPSMSArg::setTPValidityPeriod()
 {

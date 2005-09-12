@@ -35,21 +35,12 @@ Socket* Connect::getSocket()
 	return socket;
 }
 
-void   Connect::process(Server* pServer)
+bool Connect::process(Server* pServer)
 {
 	char buf[1024]; //todo: read all data, that may be more then 1024
 
   	int n = socket->Read(buf, sizeof(buf) - 1);
-  	if( n < 1 )
-  	{
-  		smsc_log_debug(logger, "Socket error!");
-  		return;
-/*  		
-  		pServer->closeConnect( this );
-  		delete this; // shit! 
-  		return;
-  		*/
-  	}
+  	if( n < 1 ) return false;
 
   	ObjectBuffer buffer( n );
   	buffer.Append( buf, n );
@@ -60,6 +51,7 @@ void   Connect::process(Server* pServer)
 	SerializableObject* obj = Serializer::getInstance()->deserialize( buffer );
 	assert( obj );
 	obj->run();
+	return true;
 }
 
 } // namespace inap

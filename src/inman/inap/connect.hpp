@@ -18,7 +18,7 @@ class Connect
 		virtual ~Connect();
 
 		Socket* getSocket();
-		void   process(Server*);
+		bool    process(Server*);
 
     protected:
     	Socket* socket;

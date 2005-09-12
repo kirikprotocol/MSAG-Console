@@ -40,17 +40,10 @@ void Dispatcher::Run()
 		memset( &msg, 0, sizeof( MSG_T ));
 		msg.receiver = MSG_USER_ID;
 
-		USHORT_T result = MsgRecvEvent(&msg, NULL, NULL, MSG_INFTIM);
+		USHORT_T result = MsgRecvEvent(&msg, NULL, NULL, /*MSG_INFTIM*/ 100 );
 		
 		if( MSG_TIMEOUT == result)
 		{
-			smsc_log_debug(logger,"MsgRecv timeout");
-			continue;
-		}
-
-		if(( MSG_QUEUE_NOT_OPEN == result ) && !running)
-		{
-			smsc_log_debug(logger,"SS7 stack stopped");
 			continue;
 		}
 
@@ -70,12 +63,12 @@ void Dispatcher::Run()
 		EINSS7_I97THandleInd(&msg);
 		EINSS7CpReleaseMsgBuffer(&msg);
 	}
+	smsc_log_debug(logger,"SS7 stack stopped");
 }
 
 void Dispatcher::Stop() 
 {
 	running = false;
-	close( EINSS7CpMsgObtainSocket(MSG_USER_ID, TCAP_ID) ); // UGLY !
 }
 
 // Thread entry point
