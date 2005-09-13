@@ -2,6 +2,7 @@
 #ifndef __SMSC_INMAN_INAP_ENTITY__
 #define __SMSC_INMAN_INAP_ENTITY__
 
+
 #include "ss7cp.h"
 #include "inman/common/types.hpp"
 #include "inman/comp/comps.hpp"

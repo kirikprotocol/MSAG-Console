@@ -28,6 +28,7 @@ public:
 	virtual ~Billing();
 
 	virtual void initialDPSMS();
+	virtual void eventReportSMS();
 
     virtual void connectSMS(ConnectSMSArg* arg);
     virtual void continueSMS();
@@ -35,6 +36,7 @@ public:
     virtual void releaseSMS(ReleaseSMSArg* arg);
     virtual void requestReportSMSEvent(RequestReportSMSEventArg* arg);
     virtual void resetTimerSMS(ResetTimerSMSArg* arg);
+	virtual void endDialog();
 
 protected:	
 	Session* 	session;

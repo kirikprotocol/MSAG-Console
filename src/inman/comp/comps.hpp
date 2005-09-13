@@ -4,10 +4,19 @@
 
 #include <vector>
 #include <map>
+#include <stdexcept>
+#include "inman/common/util.hpp"
+
+using std::runtime_error;
+using smsc::inman::common::format;
 
 namespace smsc {
 namespace inman {
 namespace comp{
+
+
+typedef std::runtime_error EncodeError;
+typedef std::runtime_error DecodeError;
 
 struct InapOpCode
 {
@@ -30,15 +39,8 @@ using std::map;
 class Component
 {
   public:
-    virtual int encode(vector<unsigned char>& buf) 
-    { 
-    	return -1;
-    }
-
-    virtual int decode(const vector<unsigned char>& buf)
-    { 
-    	return -1;
-    }
+    virtual void encode(vector<unsigned char>& buf) = 0;
+    virtual void decode(const vector<unsigned char>& buf) = 0;
 };
 
 class InternalInitialDPSMSArg;
@@ -58,20 +60,15 @@ class InitialDPSMSArg: public Component
       void setTPProtocolIdentifier();
       void setTPDataCodingScheme();
       void setTPValidityPeriod();
-    int encode(vector<unsigned char>& buf);
-    int decode(const vector<unsigned char>& buf);
+    public:
+      void encode(vector<unsigned char>& buf);
+      void decode(const vector<unsigned char>& buf);
     private:
       InternalInitialDPSMSArg* internal;
 };
 
-class InternalRequestReportSMSEventArg;
-
-class RequestReportSMSEventArg: public Component
+typedef enum EventTypeSMS 
 {
- public:
-
-   typedef enum EventTypeSMS 
-   {
      EventTypeSMS_sms_CollectedInfo  = 1,
      EventTypeSMS_o_smsFailure = 2,
      EventTypeSMS_o_smsSubmission  = 3,
@@ -79,14 +76,25 @@ class RequestReportSMSEventArg: public Component
      EventTypeSMS_t_smsFailure = 12,
      EventTypeSMS_t_smsDelivery  = 13,
      EventTypeSMS_t_NONE = 66
-   } EventTypeSMS_e;
+} EventTypeSMS_e;
 
-   typedef enum MonitorMode 
-   {
+typedef enum MonitorMode 
+{
      MonitorMode_interrupted = 0,
      MonitorMode_notifyAndContinue = 1,
      MonitorMode_transparent = 2
-   } MonitorMode_e;
+} MonitorMode_e;
+
+typedef enum MessageType 
+{
+	MessageType_request	= 0,
+	MessageType_notification	= 1
+} MessageType_e;
+
+class InternalRequestReportSMSEventArg;
+class RequestReportSMSEventArg: public Component
+{
+ public:
 
    struct SMSEvent 
    {
@@ -100,17 +108,30 @@ class RequestReportSMSEventArg: public Component
       RequestReportSMSEventArg();
       ~RequestReportSMSEventArg();
       const SMSEventVector& getSMSEvents();
-    int encode(vector<unsigned char>& buf);
-    int decode(const vector<unsigned char>& buf);
+
+      void encode(vector<unsigned char>& buf);
+      void decode(const vector<unsigned char>& buf);
   private:
     InternalRequestReportSMSEventArg* internal;
+};
+
+class EventReportSMSArg: public Component
+{
+public:
+
+	EventTypeSMS_e 	 eventType;
+	MessageType_e messageType;
+public:
+	EventReportSMSArg(EventTypeSMS_e eventType, MessageType_e messageType);
+	~EventReportSMSArg();
+    void encode(vector<unsigned char>& buf);
+    void decode(const vector<unsigned char>& buf);
 };
 
 class ConnectSMSArg: public Component{};
 class FurnishChargingInformationSMSArg: public Component{};
 class ReleaseSMSArg: public Component{};
 class ResetTimerSMSArg: public Component{};
-class EventReportSMSArg: public Component{};
 
 }
 }

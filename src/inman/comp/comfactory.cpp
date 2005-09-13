@@ -9,7 +9,6 @@ namespace comp{
 ComponentFactory::ComponentFactory()
     : logger(Logger::getInstance("smsc.inman.comp.ComponentFactory"))
 {
-	registerProduct( InapOpCode::InitialDPSMS, new ProducerT< InitialDPSMSArg >() );
 	registerProduct( InapOpCode::RequestReportSMSEvent, new ProducerT< RequestReportSMSEventArg >() );
 }
 

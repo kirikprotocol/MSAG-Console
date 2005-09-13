@@ -25,14 +25,19 @@ RequestReportSMSEventArg::~RequestReportSMSEventArg()
   delete(internal);
 }
 
-int RequestReportSMSEventArg::decode(const vector<unsigned char>& buf)
+void RequestReportSMSEventArg::decode(const vector<unsigned char>& buf)
 {
   RequestReportSMSEventArg_t *req = 0;
   asn_dec_rval_t rval;
 
   rval = ber_decode(0, &asn_DEF_RequestReportSMSEventArg,(void **)&req, &buf[0], buf.size());
 
-  if( rval.code ) return rval.code;
+  if( rval.code ) 
+  {
+    throw DecodeError( 
+    	format( "Cannot decode %s: (error 0x%X on byte %d)",
+    				"RequestReportSMSEventArg", rval.code, rval.consumed ) );
+  }
 
   assert( req );
 
@@ -50,22 +55,20 @@ int RequestReportSMSEventArg::decode(const vector<unsigned char>& buf)
       RequestReportSMSEventArg::SMSEvent smsEvent;
 
       smsEvent.event 	   = 
-      	static_cast< RequestReportSMSEventArg::EventTypeSMS_e >( elem->eventTypeSMS );
+      	static_cast< EventTypeSMS_e >( elem->eventTypeSMS );
 
       smsEvent.monitorType = 
-      	static_cast< RequestReportSMSEventArg::MonitorMode_e >( elem->monitorMode );
+      	static_cast< MonitorMode_e >( elem->monitorMode );
 
       internal->events.push_back( smsEvent );
   }
 
   asn_DEF_RequestReportSMSEventArg.free_struct(&asn_DEF_RequestReportSMSEventArg,req, 0);
-
-  return 0;
 }
 
-int RequestReportSMSEventArg::encode(vector<unsigned char>& buf)
+void RequestReportSMSEventArg::encode(vector<unsigned char>& buf)
 {
-  return -1; //not implemented yet
+  	throw EncodeError("Not implemented");
 }
 
 const RequestReportSMSEventArg::SMSEventVector& RequestReportSMSEventArg::getSMSEvents()

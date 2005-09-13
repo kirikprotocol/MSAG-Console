@@ -58,6 +58,11 @@ void Inap::onDialogInvoke( Invoke* op )
 	}
 }
 
+void Inap::onDialogEnd()
+{
+	notify0( &SSF::endDialog );
+}
+
 void Inap::initialDPSMS(InitialDPSMSArg* arg)
 {
 	 Invoke* op = dialog->invoke( InapOpCode::InitialDPSMS );

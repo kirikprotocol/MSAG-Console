@@ -181,22 +181,20 @@ InitialDPSMSArg::~InitialDPSMSArg()
 //deallocate internal
   delete(internal);
 }
-int InitialDPSMSArg::decode(const vector<unsigned char>& buf)
+void InitialDPSMSArg::decode(const vector<unsigned char>& buf)
 {
-
-  return -1; //not implemented yet
+  throw DecodeError("Not implemented");
 }
-int InitialDPSMSArg::encode(vector<unsigned char>& buf)
+
+void InitialDPSMSArg::encode(vector<unsigned char>& buf)
 {
   asn_enc_rval_t er;
   er = der_encode(&asn_DEF_InitialDPSMSArg, &internal->idp,print2vec, &buf);
 
-/*  if(er.encoded == -1) {
-    smsc_log_error(MtSmsProcessorLogger,
-                   "Cannot encode %s",
-                   er.failed_type->name);
-  }*/
-  return (er.encoded == -1);
+  if(er.encoded != RC_OK) 
+  {
+    throw EncodeError( format( "Cannot encode type %s", er.failed_type->name ) );
+  }
 }
 
 static int print2vec(const void *buffer, size_t size, void *app_key) {

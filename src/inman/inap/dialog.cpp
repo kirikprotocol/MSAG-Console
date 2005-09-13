@@ -134,7 +134,7 @@ Invoke* TcapDialog::invoke(UCHAR_T opcode)
 	invoke->setId( getNextInvokeId() );
 	invoke->setTag( EINSS7_I97TCAP_OPERATION_TAG_LOCAL );
 	invoke->setOpcode( opcode );
-	originating.insert( InvokeMap::value_type(	invoke->getId(), invoke ) );
+//	originating.insert( InvokeMap::value_type(	invoke->getId(), invoke ) );
 	return invoke;
 }
 
@@ -152,6 +152,7 @@ USHORT_T TcapDialog::handleContinueDialog()
 
 USHORT_T TcapDialog::handleEndDialog()
 {
+  	notify0( &TcapDialogListener::onDialogEnd );
 	return MSG_OK;
 }
 
@@ -173,8 +174,7 @@ USHORT_T TcapDialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
   if( comp )
   {
   	std::vector<unsigned char> code( pm, pm + pmlen );
-  	if( comp->decode( code ) )
-  		throw runtime_error( format("decode failed for opcode 0x%X", opcode ) );
+  	comp->decode( code );
   	invoke->setParam( comp );
   }
 
