@@ -11,7 +11,7 @@ namespace inap {
 
 using smsc::inman::comp::InapOpCode;
 
-Inap::Inap(TcapDialog* dlg) : dialog( dlg )
+Inap::Inap(TcapDialog* dlg) : dialog( dlg ), logger(Logger::getInstance("smsc.inman.inap.Inap"))
 {
 	assert( dialog );
 	dialog->addListener( this );
@@ -25,6 +25,7 @@ Inap::~Inap()
 void Inap::onDialogInvoke( Invoke* op )
 {
 	assert( op );
+    smsc_log_debug(logger,"Dispatch invoke ( opcode 0x%X )", op->getOpcode() );
 	switch(op->getOpcode())
 	{
 		case InapOpCode::FurnishChargingInformationSMS:
@@ -65,8 +66,10 @@ void Inap::onDialogEnd()
 
 void Inap::initialDPSMS(InitialDPSMSArg* arg)
 {
+     smsc_log_debug(logger,"Inap::initialDPSMS");
 	 Invoke* op = dialog->invoke( InapOpCode::InitialDPSMS );
 	 assert( op );
+	 assert( arg );
 	 op->setParam( arg );
 	 op->send( dialog );
 }

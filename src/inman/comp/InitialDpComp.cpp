@@ -3,6 +3,13 @@ static char const ident[] = "$Id$";
 #include <vector>
 #include <InitialDPSMSArg.h>
 
+/*
+#include "logger/Logger.h"
+#include "inman/common/util.hpp"
+using smsc::logger::Logger;
+using smsc::inman::common::dump;
+*/
+
 namespace smsc {
 namespace inman {
 namespace comp{
@@ -189,15 +196,16 @@ void InitialDPSMSArg::decode(const vector<unsigned char>& buf)
 void InitialDPSMSArg::encode(vector<unsigned char>& buf)
 {
   asn_enc_rval_t er;
-  er = der_encode(&asn_DEF_InitialDPSMSArg, &internal->idp,print2vec, &buf);
+  er = der_encode(&asn_DEF_InitialDPSMSArg, &internal->idp, print2vec, &buf);
 
-  if(er.encoded != RC_OK) 
+  if(er.encoded == -1) 
   {
     throw EncodeError( format( "Cannot encode type %s", er.failed_type->name ) );
   }
 }
 
-static int print2vec(const void *buffer, size_t size, void *app_key) {
+static int print2vec(const void *buffer, size_t size, void *app_key) 
+{
   std::vector<unsigned char> *stream = (std::vector<unsigned char> *)app_key;
   unsigned char *buf = (unsigned char *)buffer;
 

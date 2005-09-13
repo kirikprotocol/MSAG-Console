@@ -58,6 +58,7 @@ class Inap : public TcapDialogListener, public SCF, public ObservableT< SSF >
    protected:
 
   	TcapDialog* dialog;
+  	Logger*		logger;
 };
 
 }

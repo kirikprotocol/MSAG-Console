@@ -28,6 +28,9 @@ void Invoke::send(TcapDialog* dialog)
   RawBuffer op;
   RawBuffer params;
   encode( op, params );
+
+  smsc_log_debug( tcapLogger, "Invoke::send" );
+
   UCHAR_T result = EINSS7_I97TInvokeReq
   (
     dialog->getSession()->getSSN(),

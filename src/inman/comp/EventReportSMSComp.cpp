@@ -39,7 +39,7 @@ void EventReportSMSArg::encode(vector<unsigned char>& buf)
 
   asn_enc_rval_t er = der_encode(&asn_DEF_EventReportSMSArg, &eventReport, print2vec, &buf);
 
-  if(er.encoded != RC_OK) 
+  if(er.encoded == -1) 
   {
     throw EncodeError( format( "Cannot encode type %s", er.failed_type->name ) );
   }
