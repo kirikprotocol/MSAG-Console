@@ -37,20 +37,8 @@ void Billing::initialDPSMS()
 	if( !inap ) throw runtime_error("Dialog closed");
 
 	smsc_log_debug( logger, "--> InitialDPSMS" );
-	auto_ptr<InitialDPSMSArg> arg( new InitialDPSMSArg() );
-	arg->setDestinationSubscriberNumber();
-	arg->setCallingPartyNumber();
-	arg->setMode( mode );
-	arg->setIMSI();
-	arg->setlocationInformationMSC();
-	arg->setSMSCAddress();
-	arg->setTimeAndTimezone();
-	arg->setTPShortMessageSpecificInfo();
-	arg->setTPProtocolIdentifier();
-	arg->setTPDataCodingScheme();
-	arg->setTPValidityPeriod();
-
-	inap->initialDPSMS( arg.get() );
+	InitialDPSMSArg arg( mode );
+	inap->initialDPSMS( &arg );
 	dialog->beginDialog();
 }
 

@@ -54,9 +54,10 @@ class InitialDPSMSArg: public Component
 {
     public:
 
-      InitialDPSMSArg();
+      InitialDPSMSArg(DeliveryMode_e mode);
       ~InitialDPSMSArg();
       void setDestinationSubscriberNumber();
+      void setCalledPartyNumber();
       void setCallingPartyNumber();
       void setMode(DeliveryMode_e mode);
       void setIMSI();

@@ -37,6 +37,11 @@ void InitialDPSMSArg::setDestinationSubscriberNumber()
   internal->idp.destinationSubscriberNumber = &_dSN1;
 }
 
+void InitialDPSMSArg::setCalledPartyNumber()
+{
+  internal->idp.calledPartyNumber = &_dSN1;
+}
+
 //static uint8_t _cpn1_buf[] = { 0x91, 0x79, 0x13, 0x91, 0x63, 0x39, 0x3f };
 static uint8_t _cpn1_buf[] = { 0x91, 0x97, 0x31, 0x19, 0x36, 0x93, 0xf3 };
 static OCTET_STRING_t _cPN1 = OCTET_STRING_OBJ(_cpn1_buf);
@@ -136,6 +141,7 @@ InternalInitialDPSMSArg::InternalInitialDPSMSArg()
 {
   idp.serviceKey = 11;
   idp.destinationSubscriberNumber = NULL; //Address
+  idp.calledPartyNumber = NULL; //Address
   idp.callingPartyNumber = NULL; //Address
   idp.eventTypeSMS = NULL; //enum
   idp.iMSI = NULL; //Address
@@ -169,11 +175,19 @@ InternalInitialDPSMSArg::InternalInitialDPSMSArg()
   li.sai_Present = NULL;
 }
 
-InitialDPSMSArg::InitialDPSMSArg()
+InitialDPSMSArg::InitialDPSMSArg(DeliveryMode_e mode)
 {
 //allocate internal
   internal = new InternalInitialDPSMSArg();
-  this->setDestinationSubscriberNumber();
+  this->setMode( mode );
+  if(mode == DeliveryMode_Terminating)
+  {
+  	this->setCalledPartyNumber();
+  }
+  else
+  {
+  	this->setDestinationSubscriberNumber();
+  }
   this->setCallingPartyNumber();
   this->setMode( DeliveryMode_Originating );
   this->setIMSI();

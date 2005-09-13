@@ -46,7 +46,6 @@ void Inap::onDialogInvoke( Invoke* op )
 			notify0( &SSF::continueSMS );
 			break;
 		case InapOpCode::ReleaseSMS:
-			assert( op->getParam() );
 			notify1( &SSF::releaseSMS,
 			static_cast<ReleaseSMSArg*>(op->getParam())  );
 			break;
