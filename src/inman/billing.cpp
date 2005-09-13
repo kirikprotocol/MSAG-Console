@@ -15,13 +15,11 @@ using smsc::inman::comp::MessageType_e;
 namespace smsc  {
 namespace inman {
 
-Billing::Billing(Session* pSession, DeliveryMode_e md)
+Billing::Billing(TcapDialog* pDialog, DeliveryMode_e md)
 		: logger(Logger::getInstance("smsc.inman.inap.Billing"))
-		, session( pSession )
+		, dialog( pDialog )
 		, mode( md )
 {
-	assert( session );
-	dialog = session->openDialog( 0 ); // 0 = new dialog id
 	assert( dialog );
 	inap   = new Inap( dialog );
 	assert( inap );
@@ -30,6 +28,8 @@ Billing::Billing(Session* pSession, DeliveryMode_e md)
 
 Billing::~Billing()
 {
+	inap->removeListener( this );
+	delete inap;
 }
 
 void Billing::initialDPSMS()
@@ -125,17 +125,7 @@ void Billing::resetTimerSMS(ResetTimerSMSArg* arg)
 
 void Billing::endDialog()
 {
-	smsc_log_debug( logger, "!!! End dialog" );
-
-	if( inap )
-	{
-		inap->removeListener( this );
-		delete inap;
-		inap = 0;
-	}
-
-	dialog = 0;
-
+	smsc_log_debug( logger, "--> Dialog end" );
 	notify1( &BillingListener::onBillingFinished, this );
 }
 

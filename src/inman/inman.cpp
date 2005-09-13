@@ -48,26 +48,32 @@ namespace smsc
 using smsc::inman::inap::inapLogger;
 using smsc::inman::inap::tcapLogger;
 
-class Manager : public BillingListener
+class Manager : public SessionListener
 {
-		std::list<Billing*> workers;
-		Logger*	 logger;
-		Session* session;
+		typedef std::list<Billing*> WorkersList;
+		WorkersList workers;
+		Logger*	 	logger;
+		Session* 	session;
 
 	public:
 
 		Manager(Session* sess) : session( sess ), logger( Logger::getInstance("smsc.in.Manager") )
 		{
+			assert( session );
+			session->addListener( this );
 		}
 
 		~Manager()
 		{
+			session->removeListener( this );
 		}
 
 		virtual void startOriginating()
 		{
-			smsc_log_info( logger, "Start originating" );			
-			Billing* billing = new Billing( session, smsc::inman::comp::DeliveryMode_Originating );
+			smsc_log_info( logger, "Start originating" );
+			TcapDialog*  dialog  = session->openDialog( 0 );
+			assert( dialog );
+			Billing* billing = new Billing( dialog, smsc::inman::comp::DeliveryMode_Originating );
 			assert( billing );
 			add( billing );
 			billing->initialDPSMS();
@@ -76,7 +82,9 @@ class Manager : public BillingListener
 		virtual void startTerminating()
 		{
 			smsc_log_info( logger, "Start terminating" );
-			Billing* billing = new Billing( session, smsc::inman::comp::DeliveryMode_Terminating );
+			TcapDialog*  dialog  = session->openDialog( 0 );
+			assert( dialog );
+			Billing* billing = new Billing( dialog, smsc::inman::comp::DeliveryMode_Terminating );
 			assert( billing );
 			add( billing );
 			billing->initialDPSMS();
@@ -85,18 +93,31 @@ class Manager : public BillingListener
 		virtual void add(Billing* worker)
 		{
 			assert( worker );
-			worker->addListener( this );
 			workers.push_back( worker );
 		}
 
-		virtual void onBillingFinished(Billing* worker)
+		virtual void onDialogBegin(TcapDialog* dlg)
 		{
-			smsc_log_info( logger, "Worker finished" );
-			assert( worker );
-			worker->removeListener( this );
-			workers.remove( worker );
-			delete worker;
-		}
+			assert( dlg );
+			smsc_log_info( logger, "Dialog 0x%X created", dlg->getId() );
+		};
+
+		virtual void onDialogEnd(TcapDialog* dlg)
+		{
+			assert( dlg );
+			for( WorkersList::iterator i = workers.begin(); i != workers.end(); i++ )
+			{
+				Billing* billing = (*i);
+				assert( billing );
+				if( billing->getDialog() == dlg )
+				{
+					workers.erase( i );
+					delete billing;
+					smsc_log_info( logger, "Dialog 0x%X killed", dlg->getId() );
+					break;
+				}
+			}
+		};
 };
 
 static Manager* g_pManager = 0;

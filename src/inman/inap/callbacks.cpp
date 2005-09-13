@@ -163,7 +163,7 @@ USHORT_T EINSS7_I97TEndInd(     UCHAR_T          ssn,
   	TcapDialog* dlg = findDialog( ssn, dialogueId );
   	assert( dlg );
 	USHORT_T res = dlg->handleEndDialog();
-	pSession->closeDialog( dlg ); // удаляет обьект
+	pSession->closeDialog( dlg );
     return res;
 }
 

@@ -33,8 +33,14 @@ class Billing : public SSF, public ObservableT< BillingListener >
 {
 public:
 
-	Billing(Session* pSession, DeliveryMode_e mode);
+	Billing(TcapDialog*, DeliveryMode_e mode);
+
 	virtual ~Billing();
+
+	TcapDialog*  getDialog() const
+	{
+		return dialog;
+	}
 
 	virtual void initialDPSMS();
 	virtual void eventReportSMS();
@@ -48,7 +54,6 @@ public:
 	virtual void endDialog();
 
 protected:	
-	Session* 		session;
 	DeliveryMode_e 	mode;
 	TcapDialog*		dialog;
 	Inap*	 		inap;
