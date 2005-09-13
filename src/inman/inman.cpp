@@ -111,9 +111,9 @@ class Manager : public SessionListener
 				assert( billing );
 				if( billing->getDialog() == dlg )
 				{
-					workers.erase( i );
-					delete billing;
-					smsc_log_info( logger, "Dialog 0x%X killed", dlg->getId() );
+					//workers.erase( i );
+					//delete billing;
+					smsc_log_info( logger, "Dialog 0x%X released", dlg->getId() );
 					break;
 				}
 			}

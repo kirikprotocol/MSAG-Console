@@ -266,8 +266,15 @@ USHORT_T EINSS7_I97TUErrorInd(  UCHAR_T          ssn,
                                 USHORT_T         pmlen,
                                 UCHAR_T          *pm)
 {
-  smsc_log_debug(tcapLogger, "U_ERROR_IND( ssn=%d, userId=%d, tcapInstanceId==%d, dialogueId=%d,...)",
-         ssn, userId, tcapInstanceId, dialogueId );
+
+  smsc_log_debug(tcapLogger, 
+                 "U_ERROR_IND(ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
+                 "invokeId=%d, lastComponent=%s, tag=%d, "
+                 "op=%s, pm=%s)",
+                 ssn, userId, tcapInstanceId,
+                 dialogueId, invokeId, lastComponent?"TRUE":"FALSE", tag,
+                 dump(oplen,op).c_str(), dump(pmlen,pm).c_str());
+
   
   TcapDialog* dlg = findDialog( ssn, dialogueId );
   assert( dlg );

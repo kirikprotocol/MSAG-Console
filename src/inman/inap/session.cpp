@@ -127,9 +127,9 @@ void Session::closeDialog(TcapDialog* pDlg)
 {
     if( !pDlg ) return;
     smsc_log_debug(logger,"Close dialog (SSN=%d, TcapDialog id=%d)", SSN, pDlg->did );
-    dialogs.erase( pDlg->did );
+//    dialogs.erase( pDlg->did );
     notify1<TcapDialog*>( &SessionListener::onDialogEnd, pDlg );
-    delete pDlg;
+//    delete pDlg;
 }
 
 void Session::closeAllDialogs()
