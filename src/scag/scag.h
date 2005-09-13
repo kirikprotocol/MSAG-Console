@@ -115,7 +115,7 @@ struct SmscConfigs
 
 class GatewaySme;
 
-class Smsc
+class Scag
 {
 public:
   Smsc():ssockman(&tp,&smeman),stopFlag(false),router_(0),testRouter_(0),aliaser_(0)
@@ -132,7 +132,7 @@ public:
     license.expdate=0;
     memset(gwSmeMap,0,sizeof(gwSmeMap));
   };
-  ~Smsc();
+  ~Scag();
   void init(const SmscConfigs& cfg);
   void run();
   void stop(){stopFlag=true;}
@@ -238,7 +238,7 @@ public:
       fclose(f);
     }
   }
-  void abortSmsc()
+  void abortScag()
   {
     SaveStats();
     statMan->flushStatistics();
@@ -246,7 +246,7 @@ public:
     kill(getpid(),9);
   }
 
-  void dumpSmsc()
+  void dumpScag()
   {
     //MapDialogContainer::getInstance()->abort();
     abort();
@@ -311,10 +311,11 @@ public:
   void reloadTestRoutes(const RouteConfig& rcfg);
   void reloadAliases(const SmscConfigs& cfg);
 
-  void flushStatistics()
+  //threre is not such method in statistic interface
+  /*void flushStatistics()
   {
     statMan->flushStatistics();
-  }
+  }*/
 
   uint8_t getNextMR(const Address& addr)
   {

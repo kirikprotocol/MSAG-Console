@@ -17,6 +17,8 @@
 #include "scag/billing/rules/BillingRules.hpp"
 #include "util/findConfigFile.h"
 
+#include "scag/ConfigManager.h"
+
 namespace system {
     using namespace smsc::router;
     extern void loadRoutes(RouteManager* rm,const smsc::util::config::route::RouteConfig& rc,bool traceit=false);
@@ -34,7 +36,9 @@ using namespace smsc::router;
 using namespace smsc::core::synchronization;
 using util::Exception;
 
-Smsc::~Smsc()
+using scag::config::ConfigManager;
+
+Scag::~Scag()
 {
   SaveStats();
 }
@@ -182,28 +186,22 @@ protected:
   static Smsc* smsc;
 };
 
-Smsc* SpeedMonitor::smsc=NULL;
+Scag* SpeedMonitor::scag=NULL;
 
-void Smsc::init(const SmscConfigs& cfg)
+void Scag::init()
 {
+  ConfigManager * cfg = ConfigManager::Instance();
+
   smsc::util::regexp::RegExp::InitLocale();
   smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.init");
 
   try{
-  InitLicense(*cfg.licconfig);  
+  InitLicense(cfg.getLicConfig());  
   tp.preCreateThreads(15);
-  //smsc::util::config::Manager::init("config.xml");
-  //cfgman=&cfgman->getInstance();
-
-
-  /*
-    register SME's
-  */
-  //smsc::util::config::smeman::SmeManConfig smemancfg;
-  //smemancfg.load("sme.xml");
+  
   {
     smsc_log_info(log, "Registering SMEs" );
-    smsc::util::config::smeman::SmeManConfig::RecordIterator i=cfg.smemanconfig->getRecordIterator();
+    scag::config::SmppManConfig::RecordIterator i=cfg->getSmppManConfig()->getRecordIterator();
     using namespace smsc::util::regexp;
     RegExp re;
     while(i.hasRecord())
@@ -427,7 +425,7 @@ void Smsc::init(const SmscConfigs& cfg)
   __trace__("Smsc::init completed");
 }
 
-bool Smsc::regSmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid)
+bool Scag::regSmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid)
 {
     MutexGuard mg(gatewaySwitchMutex);
 
@@ -452,7 +450,7 @@ bool Smsc::regSmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPor
     return true;
 }
 
-bool Smsc::modifySmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid)
+bool Scag::modifySmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid)
 {
     MutexGuard mg(gatewaySwitchMutex);
     SmeRecord* p = (SmeRecord*)getSmeProxy(systemId);
@@ -488,7 +486,7 @@ bool Smsc::modifySmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t alt
 }
 
 
-void Smsc::run()
+void Scag::run()
 {
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.run");
   __trace__("Smsc::run");
@@ -540,7 +538,7 @@ void Smsc::run()
   __trace__("Smsc::run completed");
 }
 
-void Smsc::shutdown()
+void Scag::shutdown()
 {
   __trace__("shutting down");
 
@@ -548,7 +546,7 @@ void Smsc::shutdown()
   tp2.shutdown();
 }
 
-void Smsc::reloadRoutes(const SmscConfigs& cfg)
+void Scag::reloadRoutes(const SmscConfigs& cfg)
 {
   auto_ptr<RouteManager> router(new RouteManager());
   router->assign(&smeman);
@@ -559,7 +557,7 @@ void Smsc::reloadRoutes(const SmscConfigs& cfg)
   ResetRouteManager(router.release());
 }
 
-void Smsc::reloadTestRoutes(const RouteConfig& rcfg)
+void Scag::reloadTestRoutes(const RouteConfig& rcfg)
 {
   auto_ptr<RouteManager> router(new RouteManager());
   router->assign(&smeman);
@@ -567,7 +565,7 @@ void Smsc::reloadTestRoutes(const RouteConfig& rcfg)
   ResetTestRouteManager(router.release());
 }
 
-void Smsc::reloadAliases(const SmscConfigs& cfg)
+void Scag::reloadAliases(const SmscConfigs& cfg)
 {
   auto_ptr<AliasManager> aliaser(new AliasManager());
   {

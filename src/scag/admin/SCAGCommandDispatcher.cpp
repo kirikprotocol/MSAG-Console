@@ -13,12 +13,14 @@
 //#include "scag/scag.h"
 
 #include "core/synchronization/Mutex.hpp"
+#include "scag/config/ConfigManager.h"
 
 namespace scag {
 namespace admin {
 
 using namespace smsc::core::synchronization;
 using namespace scag;
+using scag::config::ConfigManager;
 
 /*class GwRunner : public smsc::core::threads::Thread
 {
@@ -99,7 +101,6 @@ protected:
 
 //GwRunner * runner = 0;
 //Mutex runnerMutex;
-const SmscConfigs* SCAGCommandDispatcher::configs = 0;
 
 void SCAGCommandDispatcher::startGw()
 {
@@ -180,9 +181,9 @@ void SCAGCommandDispatcher::shutdown()
 void SCAGCommandDispatcher::DoActions(Actions::CommandActions actions)
 {
     if (actions.reloadconfig) {
-      configs->routesconfig->reload();
-      configs->smemanconfig->reload();
-      //runner->getApp()->reloadRoutes(*configs);
+        ConfigManager * cfg = ConfigManager::Instance();
+        cfg->reloadConfig(ROUTE_CFG);
+        cfg->reloadConfig(SMPPMAN_CFG);
     }
 
     if (actions.restart) {

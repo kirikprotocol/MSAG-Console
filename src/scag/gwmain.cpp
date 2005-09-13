@@ -37,9 +37,10 @@ int main(int argc,char* argv[])
   smsc::scag::clearThreadSignalMask();
 
   try{
-    smsc::scag::SmscConfigs cfgs;
-    smsc::util::config::Manager::init(findConfigFile("config.xml"));
-    cfgs.cfgman=&cfgs.cfgman->getInstance();
+    smsc_log_info(logger,  "SCAG configuration loading..." );
+    scag::config::ConfigManager * cfgs = ConfigManager::Instance();
+    smsc_log_info(logger,  "SCAG configuration is loaded" );
+
     smsc::logger::Logger *logger = Logger::getInstance("smscmain");
 
     Hash<string> lic;
@@ -53,25 +54,12 @@ int main(int argc,char* argv[])
       }
     }
 
-    cfgs.licconfig=&lic;
+    cfgs->getLicConfig() = &lic;
     smsc_log_info(logger,  "Starting up %s", getStrVersion());
-    smsc::util::config::smeman::SmeManConfig smemancfg;
-    smemancfg.load(findConfigFile("sme.xml"));
-    cfgs.smemanconfig=&smemancfg;
-    smsc_log_info(logger,  "SME configuration loaded" );
-    smsc::util::config::alias::AliasConfig aliascfg;
-    //aliascfg.load(findConfigFile("aliases.xml"));
-    cfgs.aliasconfig=&aliascfg;
-    //smsc_log_info(logger,  "Alias configuration loaded" );
-    smsc::util::config::route::RouteConfig rc;
-    rc.load(findConfigFile("routes.xml"));
-    cfgs.routesconfig=&rc;
-    smsc_log_info(logger,  "Route configuration loaded" );
-
 
     in_port_t servicePort = 0;
     try {
-      servicePort = cfgs.cfgman->getInt("admin.port");
+      servicePort = cfgs->getConfig()->getInt("admin.port");
     } catch (std::exception e)
     {
     }
@@ -79,9 +67,9 @@ int main(int argc,char* argv[])
     char * admin_host = 0;
     try
     {
-      admin_host = cfgs.cfgman->getString("admin.host");
+      admin_host = cfgs->getConfig()->getString("admin.host");
     }
-    catch (smsc::util::config::ConfigException &c)
+    catch (scag::config::ConfigException &c)
     {}
 
     // For instance control
@@ -98,9 +86,9 @@ int main(int argc,char* argv[])
     if (servicePort == 0 || admin_host == 0) {
       fprintf(stderr,"WARNING: admin port not specified, admin module disabled - smsc is not administrable\n");
 
-      smsc::scag::Smsc *app=new smsc::scag::Smsc;
+      scag::Scag *app=new scag::Smsc;
 
-      smsc::scag::registerSmscSignalHandlers(app);
+      scag::registerSmscSignalHandlers(app);
       app->init(cfgs);
       app->run();
 //      SmscRunner runner(app);
@@ -116,16 +104,15 @@ int main(int argc,char* argv[])
 
       //using namespace smsc::scag::admin;
 
-      smsc::scag::admin::SCAGCommandDispatcher::setGwConfigs(cfgs);
-      smsc::scag::admin::SCAGCommandDispatcher::startGw();
+      scag::admin::SCAGCommandDispatcher::startGw();
       fprintf(stderr,"SMPP GW started\n");
 
 
-      smsc::scag::admin::SCAGSocketListener listener;
+      scag::admin::SCAGSocketListener listener;
       listener.init(admin_host, servicePort);
 
 
-      smsc::scag::registerSmscSignalHandlers(&listener);
+      scag::registerSmscSignalHandlers(&listener);
       listener.Start();
 
       fprintf(stderr,"SMPP GW admin listener started\n");
@@ -137,10 +124,10 @@ int main(int argc,char* argv[])
       listener.WaitFor();
 
       fprintf(stderr,"SCAG shutdown...\n");
-      smsc::scag::admin::SCAGCommandDispatcher::stopGw();
+      scag::admin::SCAGCommandDispatcher::stopGw();
       fprintf(stderr,"SCAG stopped\n");
 
-      smsc::util::config::Manager::deinit();
+      //smsc::util::config::Manager::deinit();
 
       fprintf(stderr,"all finished\n");
 

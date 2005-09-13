@@ -47,14 +47,10 @@ public:
   virtual void DoActions(Actions::CommandActions actions);
 
   static void shutdown();
-  static void setGwConfigs(const SmscConfigs& cfg) { configs = &cfg; }
   static void startGw();
   static void stopGw();
   static void abortGw();
   static void dumpGw();
-
-private:
-  static const SmscConfigs* configs;
 };
 
 }
