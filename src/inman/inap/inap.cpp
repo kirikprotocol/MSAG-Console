@@ -25,7 +25,6 @@ Inap::~Inap()
 void Inap::onDialogInvoke( Invoke* op )
 {
 	assert( op );
-    smsc_log_debug(logger,"Dispatch invoke ( opcode 0x%X )", op->getOpcode() );
 	switch(op->getOpcode())
 	{
 		case InapOpCode::FurnishChargingInformationSMS:
@@ -66,7 +65,6 @@ void Inap::onDialogEnd()
 
 void Inap::initialDPSMS(InitialDPSMSArg* arg)
 {
-     smsc_log_debug(logger,"Inap::initialDPSMS");
 	 Invoke* op = dialog->invoke( InapOpCode::InitialDPSMS );
 	 assert( op );
 	 assert( arg );

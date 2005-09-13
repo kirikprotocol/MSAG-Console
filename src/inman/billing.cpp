@@ -57,7 +57,10 @@ void Billing::eventReportSMS()
 {
 	if( !inap ) throw runtime_error("Dialog closed");
 
-	smsc_log_debug( logger, "--> EventReportSMS" );
+	smsc_log_debug( logger, "--> EventReportSMS( EventType: 0x%X, MessageType: 0x%X )", 
+			smsc::inman::comp::EventTypeSMS_o_smsSubmission,
+			smsc::inman::comp::MessageType_notification	 );
+
 	EventReportSMSArg report( smsc::inman::comp::EventTypeSMS_o_smsSubmission,
 							  smsc::inman::comp::MessageType_notification	);
 	inap->eventReportSMS( &report );

@@ -29,7 +29,8 @@ void Invoke::send(TcapDialog* dialog)
   RawBuffer params;
   encode( op, params );
 
-  smsc_log_debug( tcapLogger, "Invoke::send" );
+  smsc_log_debug( tcapLogger, "INVOKE_REQ(id=%d,tag=%d,op=%s,param=%s)", 
+  		id, tag, dump( op.size(), &op[0]).c_str(), dump( params.size(), &params[0]).c_str() );
 
   UCHAR_T result = EINSS7_I97TInvokeReq
   (
@@ -49,11 +50,6 @@ void Invoke::send(TcapDialog* dialog)
     &params[0] //*parameters_p
     );
 
-  smsc_log_debug( tcapLogger, "INVOKE_REQ" );
-  smsc_log_debug( tcapLogger, " id=%d", id );
-  smsc_log_debug( tcapLogger, " tag=%d", tag );
-  smsc_log_debug( tcapLogger, " op=%s", dump( op.size(), &op[0]).c_str() );
-  smsc_log_debug( tcapLogger, " params=%s", dump( params.size(), &params[0]).c_str());
 
   if(result != 0)
   	throw runtime_error( format("InvokeReq failed with code %d (%s)", result,getTcapReasonDescription(result)));

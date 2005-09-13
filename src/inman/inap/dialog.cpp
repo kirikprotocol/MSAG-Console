@@ -46,7 +46,7 @@ TcapDialog::~TcapDialog()
 
 void TcapDialog::beginDialog()
 {
-	smsc_log_debug(logger, "BEGIN_REQ");
+	smsc_log_debug(logger, "BEGIN_REQ(dialogId=%d)", did);
 
  	USHORT_T result = EINSS7_I97TBeginReq(
     session->getSSN(),
@@ -70,7 +70,7 @@ void TcapDialog::beginDialog()
 
 void TcapDialog::continueDialog()
 {
-  smsc_log_debug(logger, "CONTINUE_REQ");
+  smsc_log_debug(logger, "CONTINUE_REQ(dialogId=%d)", did);
   USHORT_T result = EINSS7_I97TContinueReq(
     session->getSSN(),
     MSG_USER_ID,

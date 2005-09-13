@@ -53,11 +53,12 @@ void Dispatcher::Run()
         }
         else
         {
-			smsc_log_debug(logger,"Message received:");
+/*			smsc_log_debug(logger,"Message received:");
 			smsc_log_debug(logger," sender=0x%X", msg.sender);
 			smsc_log_debug(logger," receiver=0x%X", msg.receiver);
 			smsc_log_debug(logger," primitive=0x%X", msg.primitive);
 			smsc_log_debug(logger," data=%s", dump(msg.size,msg.msg_p).c_str());
+*/
         }
 
 		EINSS7_I97THandleInd(&msg);
