@@ -43,15 +43,22 @@ class Component
     virtual void decode(const vector<unsigned char>& buf) = 0;
 };
 
+typedef enum DeliveryMode
+{
+	DeliveryMode_Originating,
+	DeliveryMode_Terminating
+} DeliveryMode_e;
+
 class InternalInitialDPSMSArg;
 class InitialDPSMSArg: public Component
 {
     public:
+
       InitialDPSMSArg();
       ~InitialDPSMSArg();
       void setDestinationSubscriberNumber();
       void setCallingPartyNumber();
-      void setMode();
+      void setMode(DeliveryMode_e mode);
       void setIMSI();
       void setlocationInformationMSC();
       void setSMSCAddress();

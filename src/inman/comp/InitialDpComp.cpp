@@ -45,10 +45,12 @@ void InitialDPSMSArg::setCallingPartyNumber()
   internal->idp.callingPartyNumber = &_cPN1;
 }
 
-static EventTypeSMS_t   _etSMS1 = EventTypeSMS_sms_CollectedInfo;
-void InitialDPSMSArg::setMode()
+static EventTypeSMS_t _etSMSMO = EventTypeSMS_sms_CollectedInfo;
+static EventTypeSMS_t _etSMSMT = EventTypeSMS_sms_DeliveryRequested;
+
+void InitialDPSMSArg::setMode(DeliveryMode_e mode)
 {
-  internal->idp.eventTypeSMS = &_etSMS1;
+  internal->idp.eventTypeSMS = (mode == DeliveryMode_Terminating) ? &_etSMSMT : &_etSMSMO;
 }
 
 
@@ -173,7 +175,7 @@ InitialDPSMSArg::InitialDPSMSArg()
   internal = new InternalInitialDPSMSArg();
   this->setDestinationSubscriberNumber();
   this->setCallingPartyNumber();
-  this->setMode();
+  this->setMode( DeliveryMode_Originating );
   this->setIMSI();
   //
   this->setSMSCAddress();

@@ -22,9 +22,11 @@ using smsc::inman::inap::Dispatcher;
 using smsc::inman::inap::Server;
 using smsc::inman::inap::Factory;
 using smsc::inman::inap::Session;
+using smsc::inman::inap::SessionListener;
 using smsc::inman::inap::TcapDialog;
 using smsc::inman::inap::Inap;
 using smsc::inman::Billing;
+using smsc::inman::BillingListener;
 using smsc::inman::Console;
 using smsc::logger::Logger;
 
@@ -46,7 +48,58 @@ namespace smsc
 using smsc::inman::inap::inapLogger;
 using smsc::inman::inap::tcapLogger;
 
-static Billing* g_pBilling   = 0;
+class Manager : public BillingListener
+{
+		std::list<Billing*> workers;
+		Logger*	 logger;
+		Session* session;
+
+	public:
+
+		Manager(Session* sess) : session( sess ), logger( Logger::getInstance("smsc.in.Manager") )
+		{
+		}
+
+		~Manager()
+		{
+		}
+
+		virtual void startOriginating()
+		{
+			smsc_log_info( logger, "Start originating" );			
+			Billing* billing = new Billing( session, smsc::inman::comp::DeliveryMode_Originating );
+			assert( billing );
+			add( billing );
+			billing->initialDPSMS();
+		}
+
+		virtual void startTerminating()
+		{
+			smsc_log_info( logger, "Start terminating" );
+			Billing* billing = new Billing( session, smsc::inman::comp::DeliveryMode_Terminating );
+			assert( billing );
+			add( billing );
+			billing->initialDPSMS();
+		}
+
+		virtual void add(Billing* worker)
+		{
+			assert( worker );
+			worker->addListener( this );
+			workers.push_back( worker );
+		}
+
+		virtual void onBillingFinished(Billing* worker)
+		{
+			smsc_log_info( logger, "Worker finished" );
+			assert( worker );
+			worker->removeListener( this );
+			workers.remove( worker );
+			delete worker;
+		}
+};
+
+static Manager* g_pManager = 0;
 
 static void init_logger()
 {
@@ -55,16 +108,23 @@ static void init_logger()
     tcapLogger = Logger::getInstance("smsc.in.tcap");
 }
 
-void initdp(Console&, const std::vector<std::string> &args)
+void mo(Console&, const std::vector<std::string> &args)
 {
-	g_pBilling->initialDPSMS();
-	fprintf( stdout, "OK.\n" );
+	assert( g_pManager );
+	g_pManager->startOriginating();
+}
+
+void mt(Console&, const std::vector<std::string> &args)
+{
+	assert( g_pManager );
+	g_pManager->startTerminating();
 }
 
 static void run_console()
 {
   	Console console;
-  	console.addItem( "initdp", initdp );
+  	console.addItem( "mo", mo );
+  	console.addItem( "mt", mt );
   	console.run("inman>");
 }
 
@@ -104,12 +164,11 @@ int main(int argc, char** argv)
 		Session* pSession = Factory::getInstance()->openSession(SSN, ssf_addr, scf_addr );
 		assert( pSession );
 
-		g_pBilling = new Billing( pSession );
-		assert( g_pBilling );
+		g_pManager = new Manager( pSession );
 
 		run_console();
 
-		delete g_pBilling;
+		delete g_pManager;
 
 		Factory::getInstance()->closeSession( pSession );
 

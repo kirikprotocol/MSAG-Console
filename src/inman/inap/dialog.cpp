@@ -36,7 +36,7 @@ TcapDialog::TcapDialog(Session* pSession, USHORT_T dlgId)
 	, qSrvc(EINSS7_I97TCAP_QLT_BOTH)
 	, priority(EINSS7_I97TCAP_PRI_HIGH_0)
 	, timeout( 30 )
-	, invokeId( 0 )
+	, invokeId( 1 )
 {
 }
 

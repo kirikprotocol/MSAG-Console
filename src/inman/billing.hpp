@@ -4,13 +4,14 @@
 #define __SMSC_INMAN_INTERACTION_BILLING__
 
 #include "inman/comp/comps.hpp"
-using smsc::inman::comp::RequestReportSMSEventArg;
 #include "billing_sm.h"
 
 #include "inman/inap/inap.hpp"
 #include "inman/inap/session.hpp"
 #include "inman/inap/connect.hpp"
 #include "inman/common/observable.hpp"
+
+using smsc::inman::comp::DeliveryMode_e;
 
 using smsc::inman::inap::Inap;
 using smsc::inman::inap::Session;
@@ -20,11 +21,19 @@ using smsc::inman::inap::SSF;
 namespace smsc  	  {
 namespace inman 	  {
 
-class Billing : public SSF
+class Billing;
+
+class BillingListener
+{
+public:
+	virtual void onBillingFinished(Billing*) = 0;
+};
+
+class Billing : public SSF, public ObservableT< BillingListener >
 {
 public:
 
-	Billing(Session* pSession);
+	Billing(Session* pSession, DeliveryMode_e mode);
 	virtual ~Billing();
 
 	virtual void initialDPSMS();
@@ -39,10 +48,11 @@ public:
 	virtual void endDialog();
 
 protected:	
-	Session* 	session;
-	TcapDialog*	dialog;
-	Inap*	 	inap;
-    Logger*	 	logger;   	
+	Session* 		session;
+	DeliveryMode_e 	mode;
+	TcapDialog*		dialog;
+	Inap*	 		inap;
+    Logger*	 		logger;   	
 
 };
 

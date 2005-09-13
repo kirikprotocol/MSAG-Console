@@ -9,14 +9,16 @@ static char const ident[] = "$Id$";
 
 using std::auto_ptr;
 using std::runtime_error;
-using smsc::inman::comp;
+using smsc::inman::comp::EventTypeSMS_e;
+using smsc::inman::comp::MessageType_e;
 
 namespace smsc  {
 namespace inman {
 
-Billing::Billing(Session* pSession)
+Billing::Billing(Session* pSession, DeliveryMode_e md)
 		: logger(Logger::getInstance("smsc.inman.inap.Billing"))
 		, session( pSession )
+		, mode( md )
 {
 	assert( session );
 	dialog = session->openDialog( 0 ); // 0 = new dialog id
@@ -28,7 +30,6 @@ Billing::Billing(Session* pSession)
 
 Billing::~Billing()
 {
-	endDialog();
 }
 
 void Billing::initialDPSMS()
@@ -39,7 +40,7 @@ void Billing::initialDPSMS()
 	auto_ptr<InitialDPSMSArg> arg( new InitialDPSMSArg() );
 	arg->setDestinationSubscriberNumber();
 	arg->setCallingPartyNumber();
-	arg->setMode();
+	arg->setMode( mode );
 	arg->setIMSI();
 	arg->setlocationInformationMSC();
 	arg->setSMSCAddress();
@@ -57,12 +58,23 @@ void Billing::eventReportSMS()
 {
 	if( !inap ) throw runtime_error("Dialog closed");
 
-	smsc_log_debug( logger, "--> EventReportSMS( EventType: 0x%X, MessageType: 0x%X )", 
-			smsc::inman::comp::EventTypeSMS_o_smsSubmission,
-			smsc::inman::comp::MessageType_notification	 );
+	EventTypeSMS_e eventType;
+	MessageType_e  messageType = smsc::inman::comp::MessageType_notification;
 
-	EventReportSMSArg report( smsc::inman::comp::EventTypeSMS_o_smsSubmission,
-							  smsc::inman::comp::MessageType_notification	);
+	if( mode == smsc::inman::comp::DeliveryMode_Originating )
+	{
+		eventType = smsc::inman::comp::EventTypeSMS_o_smsSubmission;
+	}
+	else // DeliveryMode_Terminating
+	{
+		eventType = smsc::inman::comp::EventTypeSMS_t_smsDelivery;
+	}
+
+	smsc_log_debug( logger, "--> EventReportSMS( EventType: 0x%X, MessageType: 0x%X )", 
+								eventType, messageType );
+
+	EventReportSMSArg report( eventType, messageType );
+
 	inap->eventReportSMS( &report );
 	dialog->continueDialog();
 }
@@ -123,6 +135,8 @@ void Billing::endDialog()
 	}
 
 	dialog = 0;
+
+	notify1( &BillingListener::onBillingFinished, this );
 }
 
 }
