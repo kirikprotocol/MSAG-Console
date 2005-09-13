@@ -218,7 +218,7 @@ Targets:
        <fileset dir="${WEBSRC_DIR}/jedit/dirs" includes="**/*"/>
      </copy>
    <mkdir dir="${JEDIT_DIR}/build"/>
-		    
+    <unjar src="${htmlparser_lib}" dest="${JEDIT_DIR}/build"/>		    
     <javac
              srcdir="${JEDIT_DIR}/src"
              destdir="${JEDIT_DIR}/build"
@@ -304,8 +304,9 @@ Targets:
             <include name="xml/services.xml"/>
             <include name="xml/*.png"/>
             <include name="xml/completion/*.xml"/>
-            <include name="xml/dtds/*.*"/>
-            <include name="xml/ent/*.ent"/>
+            <include name="xml/dtds/*"/>
+            <include name="xml/dtds/**/*.*"/>
+	    <include name="xml/ent/*.ent"/>
             <include name="xml/jedit/*.dtd"/>
 
         </fileset>
