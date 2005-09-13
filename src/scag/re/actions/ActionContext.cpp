@@ -1,11 +1,12 @@
 #include "ActionContext.h"
+#include "scag/exc/SCAGExceptions.h"
 
 namespace scag { namespace re { namespace actions 
 {
     using smsc::core::buffers::Hash;
     using scag::re::RuleStatus;
     using namespace scag::util::properties;
-
+    using namespace scag::exceptions;
 
 void ActionContext::AddPendingOperation(uint8_t type, time_t pendingTime)
 {
@@ -76,6 +77,23 @@ bool ActionContext::checkTraffic(std::string routeId, CheckTrafficPeriod period,
 {
     return statistics.checkTraffic(routeId, period, value);
 }
+
+BillKey ActionContext::CreateBillKey()
+{
+    BillKey billKey;
+    Property * property1 = 0;
+    Property * property2 = 0;
+
+    property1 = command.getProperty("OA");
+    property2 = command.getProperty("DA");
+
+    if ((!property1)||(property2)) throw SCAGException("ActionContext error : cannto create BillKey");
+
+    billKey.DA = property2->getStr();
+    billKey.OA = property1->getStr();
+    return billKey;
+}
+
 
 
 }}}
