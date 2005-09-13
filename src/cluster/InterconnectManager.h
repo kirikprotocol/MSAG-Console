@@ -91,6 +91,23 @@ using smsc::core::synchronization::Mutex;
         virtual Role getRole(){return role;};
     };
 
+    class FakeInterconnect : public Interconnect
+    {
+    public:
+        virtual void sendCommand(Command* command){};
+        virtual void addListener(CommandType type, CommandListener* listener){};
+        virtual void activate(){};
+        virtual Role getRole(){return SINGLE;};
+        virtual void changeRole(Role role_){};
+        virtual void addChangeRoleHandler(ChangeRoleHandler*, void*){};
+        static void init()
+        {
+            if (!FakeInterconnect::instance) {
+                FakeInterconnect::instance = new FakeInterconnect();
+            }
+        };
+    };
+
 }}
 
 #endif // __SMSC_CLUSTER_INTERCONNECT_MANAGER__

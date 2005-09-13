@@ -35,6 +35,7 @@ namespace smsc { namespace cluster
      * 2) register listeners to handle ohter-side commands
      * 3) activate ohter-side commands dispatching process
      */
+
     class Interconnect
     {
     protected:

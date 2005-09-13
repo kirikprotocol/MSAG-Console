@@ -67,6 +67,8 @@ using smsc::cluster::ProfileCommandListener;
 using smsc::cluster::SbmCommandListener;
 using smsc::cluster::SmeCommandListener;
 
+using smsc::cluster::FakeInterconnect;
+
 
 Smsc::~Smsc()
 {
@@ -277,6 +279,9 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
           if(nodes[1])
               delete [] nodes[1];
 
+      }else if(strcmp(mode, "single") == 0)
+      {
+          FakeInterconnect::init();
       }
 
       if(mode)
