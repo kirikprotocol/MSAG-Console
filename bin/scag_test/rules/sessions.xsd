@@ -6,10 +6,7 @@
 
     <group name="Actions">
         <choice>
-            <element name="close">
-                <complexType>
-                    <attribute name="commit" type="string" default="true" use="optional"/>
-                </complexType>
+            <element name="abort">
             </element>
         </choice>    
     </group>

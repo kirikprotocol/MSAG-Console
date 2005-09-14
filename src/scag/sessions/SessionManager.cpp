@@ -16,6 +16,7 @@
 #include "SessionManager.h"
 #include "Session.h"
 #include "scag/exc/SCAGExceptions.h"
+#include "scag/util/sms/HashUtil.h"
 
 #include <iostream>
 
@@ -24,8 +25,9 @@ namespace scag { namespace sessions
     using namespace smsc::core::threads;
     using namespace smsc::core::synchronization;
     using namespace scag::util::singleton;
-    using namespace smsc::core::buffers;
     using namespace scag::exceptions;
+    using namespace smsc::core::buffers;
+    using namespace scag::util::sms;
 
     class SessionManagerImpl : public SessionManager, public Thread, public SessionOwner
     {
@@ -38,18 +40,18 @@ namespace scag { namespace sessions
             CSessionAccessData() : nextWakeTime(0), bOpened(false) {}
         };
 
-        class XHashFunc{
+
+        class XSessionHashFunc {
         public:
-          template <class T> static inline unsigned int CalcHash(T key)
-          {
-            return key.USR;
-          }
+            static uint32_t CalcHash(const CSessionKey& key)
+            {
+                return XAddrHashFunc::CalcHash(key.abonentAddr);
+            }
         };
 
-        
         typedef std::list<CSessionAccessData> CSessionList;
         typedef std::list<CSessionAccessData>::iterator CSLIterator;
-        typedef XHash<CSessionKey,CSLIterator,XHashFunc> CSessionHash;
+        typedef XHash<CSessionKey,CSLIterator,XSessionHashFunc> CSessionHash;
 
         EventMonitor    inUseMonitor;
         CSessionList    SessionExpirePool;
@@ -144,8 +146,6 @@ void SessionManagerImpl::Start()
 }
 void SessionManagerImpl::Stop()
 {
-    std::cout<<"SessionManager::stopping " << bStarted << std::endl;
-
     MutexGuard guard(stopLock);
     if (bStarted) 
     {
@@ -173,7 +173,6 @@ int SessionManagerImpl::Execute()
 int SessionManagerImpl::processExpire()
 {
     MutexGuard guard(inUseMonitor);
-    //inUseMonitor.NotifyAll();
 
     while (1) 
     {
@@ -244,6 +243,7 @@ Session * SessionManagerImpl::NewSession(CSessionKey sessionKey)
     store.newSesion(sessionKey);
 
     session = store.getSession(sessionKey);
+
     time_t time = session->getWakeUpTime();
 
     CSessionAccessData accessData;
@@ -272,7 +272,7 @@ Session* SessionManagerImpl::getSession(const SCAGCommand& command)
 {
     Session*    session = 0;
     CSessionKey sessionKey; 
-/*    // TODO: obtain from SCAGCommand somehow
+
     sessionKey.abonentAddr = command.getAbonentAddr();
     sessionKey.USR = command.getUMR();
 
@@ -288,8 +288,8 @@ Session* SessionManagerImpl::getSession(const SCAGCommand& command)
         inUseMonitor.wait();
         if (!SessionHash.Exists(sessionKey)) return NewSession(sessionKey);
         it = SessionHash.Get(sessionKey);
-    }                                    */  
-
+    }                                      
+               
     return store.getSession(sessionKey);
 }
 
@@ -301,10 +301,11 @@ void SessionManagerImpl::releaseSession(Session* session)
 
     MutexGuard guard(inUseMonitor);
     if (session->isChanged()) store.updateSesion(session);
+    session->releaseOperation();
 
     CSLIterator it;
 
-    if (!SessionHash.Exists(sessionKey)) throw SCAGException("SessionManager: Fatal error");
+    if (!SessionHash.Exists(sessionKey)) throw SCAGException("SessionManager: Fatal error 0");
     it = SessionHash.Get(sessionKey);
     it->bOpened = false;
 
@@ -336,6 +337,7 @@ void SessionManagerImpl::startTimer(CSessionKey key,time_t deadLine)
     MutexGuard guard(inUseMonitor);
 
     if (!SessionHash.Exists(key)) throw SCAGException("SessionManager: Fatal error 2");
+
     CSLIterator it;
     it = SessionHash.Get(key);
     while (it->bOpened) 

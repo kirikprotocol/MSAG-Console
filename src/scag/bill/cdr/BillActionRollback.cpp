@@ -1,4 +1,5 @@
 #include "BillActionRollback.h"
+#include "CDRBillingMachine.h"
 
 
 namespace scag { namespace bill {

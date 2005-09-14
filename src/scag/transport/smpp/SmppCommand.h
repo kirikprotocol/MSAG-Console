@@ -527,7 +527,7 @@ public:
 
   virtual int16_t getUMR() const
   {
-    return getUMR();
+      return 0;
   }
 
 

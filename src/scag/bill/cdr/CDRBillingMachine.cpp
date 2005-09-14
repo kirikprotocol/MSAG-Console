@@ -1,4 +1,5 @@
 #include "CDRBillingMachine.h"
+#include "scag/exc/SCAGExceptions.h"
 
 std::auto_ptr<scag::bill::CDRBillingMachine> billingMachine;
 bool bHasInstance = false;
@@ -17,6 +18,8 @@ extern "C" scag::bill::BillingMachine* initBillingMachine(uint8_t machine_id, co
 
 namespace scag { namespace bill {
 
+using namespace scag::exceptions;
+
 CDRBillingMachine * CDRBillingMachine::Instance()
 {
     if (!bHasInstance) return 0;
@@ -24,9 +27,17 @@ CDRBillingMachine * CDRBillingMachine::Instance()
 }
 
 
+void CDRBillingMachine::commit(const Bill& bill)
+{
+
+}
+
+
 void CDRBillingMachine::rollback(const Bill &bill)
 {
+
 }
+
 
 Bill CDRBillingMachine::OpenTransaction()
 {
@@ -36,7 +47,17 @@ Bill CDRBillingMachine::OpenTransaction()
     bill.machine_id = machine_id;
     bill.bill_id = ++m_Key;
 
-    TransactionHash.Insert(key,transaction);
+    TransactionHash.Insert(m_Key,transaction);
+    return bill;
+}
+
+Bill CDRBillingMachine::GetBill(BillKey& billKey)
+{
+    if (!BillMap.Exists(billKey)) throw SCAGException("Billing machine: cannot find bill '%d'",billKey.key);
+    Bill bill;
+
+    bill.bill_id = BillMap.Get(billKey);
+    bill.machine_id = machine_id;
     return bill;
 }
 

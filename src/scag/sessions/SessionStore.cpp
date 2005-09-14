@@ -25,7 +25,7 @@ namespace scag { namespace sessions
     {
     }
     
-    void SessionStore::loadExpireList(COperationsList& opList)
+    void SessionStore::loadExpireList(COperationsHash& opList)
     {
     }
     

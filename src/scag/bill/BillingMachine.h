@@ -6,8 +6,8 @@
 #include "Bill.h"
 
              
-namespace scag { namespace bill
-{
+namespace scag { namespace bill {
+
     using scag::re::actions::ActionFactory;
 
     /**
@@ -17,7 +17,7 @@ namespace scag { namespace bill
 
     class Transaction
     {
-
+       
     };
 
 
@@ -37,6 +37,7 @@ namespace scag { namespace bill
          * Function should rollback user's billing transaction
          */
         virtual void rollback(const Bill& bill) = 0;
+        virtual void commit(const Bill& bill) = 0;
         
         /**
          * Function should return pointer to user's billing actions factory

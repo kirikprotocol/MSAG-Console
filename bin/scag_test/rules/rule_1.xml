@@ -13,7 +13,7 @@
         <set var="#sm_length" value="$e777"/>
         <set value="10" var="%a10"/>
         
-        <session:close commit="@false"/>
+        <session:abort />
         
         <if value="10" op="eqi" test="%dfdhggd">
             <return result="20"/>

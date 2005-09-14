@@ -48,7 +48,8 @@ namespace scag { namespace bill
 
         void init(const std::string& cfg_dir, const std::string& so_dir);
         virtual void rollback(const Bill& bill);
-    };
+        virtual void commit(const Bill& bill);
+     };
 
 const char* BillingManagerImpl::MACHINE_INIT_FUNCTION = "initBillingMachine";
 smsc::logger::Logger * BillingManagerImpl::logger = 0;
@@ -77,6 +78,7 @@ void BillingManager::Init(const std::string& cfg_dir, const std::string& so_dir)
         }
     }
 }
+
 BillingManager& BillingManager::Instance()
 {
     if (!bBillingManagerInited) 
@@ -200,7 +202,16 @@ void BillingManagerImpl::init(const std::string& cfg_dir, const std::string& so_
 void BillingManagerImpl::rollback(const Bill& bill) // possible throws exceptions
 {
     // TODO: dispath call to billing machine by bill.machine_id
+    if (!machines.Exist(bill.machine_id)) return;
+    BillingMachine * bm = machines.Get(bill.bill_id);
+    bm->rollback(bill);
 }
+
+void BillingManagerImpl::commit(const Bill& bill)
+{
+
+}
+
 
 BillingManagerImpl::~BillingManagerImpl()
 {

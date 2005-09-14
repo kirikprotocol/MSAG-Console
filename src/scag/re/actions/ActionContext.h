@@ -60,7 +60,7 @@ namespace scag { namespace re { namespace actions
 
         bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
         Property* getProperty(const std::string& var);
-        void closeSession(bool Commit);
+        void abortSession();
         void AddPendingOperation(uint8_t type, time_t pendingTime);
         Operation * GetCurrentOperation() {return session.GetCurrentOperation();}
         BillKey CreateBillKey();

@@ -1,4 +1,5 @@
 #include "BillActionOpen.h"
+#include "CDRBillingMachine.h"
 
 
 namespace scag { namespace bill {

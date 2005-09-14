@@ -40,7 +40,7 @@ void BillAction::init(const SectionParams& params,PropertyObject propertyObject)
 
 IParserHandler * BillAction::StartXMLSubSection(const std::string& name,const SectionParams& params,const ActionFactory& factory)
 {
-    throw SCAGException("BillAction '%s' cannot include child objects",m_sName);
+    throw SCAGException("BillAction '%s' cannot include child objects",m_sName.c_str());
 }
 
 bool BillAction::FinishXMLSubSection(const std::string& name)

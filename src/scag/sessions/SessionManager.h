@@ -30,6 +30,11 @@ namespace scag { namespace sessions
 
     class SessionManager
     {
+        SessionManager(const SessionManager& sm);
+        SessionManager& operator=(const SessionManager& sm);
+    protected:
+        virtual ~SessionManager() {};
+        SessionManager() {};
     public:
 
         static void Init(const SessionManagerConfig& config);
@@ -38,14 +43,7 @@ namespace scag { namespace sessions
         virtual Session* getSession(const SCAGCommand& command) = 0;
         virtual void releaseSession(Session* session)     = 0;
         virtual void closeSession  (const Session* session)     = 0;
-
-    protected:
-        virtual ~SessionManager() {};
-        SessionManager() {};
-    private:
         
-        SessionManager(const SessionManager& sm);
-        SessionManager& operator=(const SessionManager& sm);
     };
 }}
 

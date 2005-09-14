@@ -21,6 +21,7 @@ namespace scag { namespace bill
         static BillingManager& Instance();
 
         virtual void rollback(const Bill& bill) = 0;
+
     };
 }}
 

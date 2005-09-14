@@ -22,7 +22,7 @@ namespace scag { namespace sessions
         void newSesion(const CSessionKey& sessionKey);
         void deleteSesion(const CSessionKey& sessionKey);
         void updateSesion(Session* session);
-        void loadExpireList(COperationsList& opList);
+        void loadExpireList(COperationsHash& opList);
     };
 }}
 

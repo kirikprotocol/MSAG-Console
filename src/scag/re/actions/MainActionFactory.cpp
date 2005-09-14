@@ -5,7 +5,7 @@
 #include "scag/re/actions/ActionReturn.h"
 #include "scag/re/actions/Action.h"
 #include "scag/re/actions/ActionLog.h"
-#include "scag/re/actions/ActionClose.h"
+#include "scag/re/actions/ActionAbort.h"
 #include "scag/re/actions/ActionTrafficCheck.h"
 #include "scag/re/actions/ActionOperationWait.h"
 
@@ -21,7 +21,7 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="if")  return new ActionIf();
     if (name=="return") return new ActionReturn();
     if (name=="traffic:check") return new ActionTrafficCheck();
-    if (name=="session:close") return new ActionClose();
+    if (name=="session:abort") return new ActionAbort();
     if (name=="log") return new ActionLog();
     if (name=="operation:wait") return new ActionOperationWait();
 

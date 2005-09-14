@@ -67,9 +67,9 @@ Property* ActionContext::getProperty(const std::string& var)
 
 }
 
-void ActionContext::closeSession(bool Commit)
+void ActionContext::abortSession()
 {
-
+    session.abort();
 }
 
 

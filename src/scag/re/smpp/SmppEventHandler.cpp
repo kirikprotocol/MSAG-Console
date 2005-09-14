@@ -32,12 +32,6 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 
     SmppCommandAdapter _command(*smppcommand);
 
-    ////////////////////
-    Property p;
-    p.setStr("25");
-    _constants.Insert("const",p);
-
-    //////////////////////
 
     ActionContext context(_constants, session, _command,_statistics);
 

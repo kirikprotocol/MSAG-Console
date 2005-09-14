@@ -1,5 +1,8 @@
 #include "Session.h"
+#include "scag/SAX2Print.hpp"
+
 #include <iostream>
+
 
 namespace scag { namespace sessions {
 
@@ -23,13 +26,28 @@ Property* Session::getProperty(const std::string& name)
 
 Session::Session() 
     : PropertyManager(), lastAccessTime(-1), 
-        bChanged(false), bDestroy(false), accessCount(0), Owner(0),currentOperation(0)
+        bChanged(false), bDestroy(false), accessCount(0), Owner(0),currentOperation(0),needReleaseCurrentOperation(false)
 {
     // TODO: ???
+
+    //Временная херота, для того, чтобы SessionManager выдавал валидную сессию
+    PendingOperation operation;
+    time_t now;
+
+    time(&now);
+
+    operation.type = 1;
+    operation.validityTime = now + 10;
+
+    addPendingOperation(operation);
+    //Временная херота, для того, чтобы SessionManager выдавал валидную сессию
 }
 
 Session::~Session()
 {
+    // TODO: rollback all pending billing transactions & destroy session
+
+
     char * key;
     AdapterProperty * value = 0;
 
@@ -38,23 +56,39 @@ Session::~Session()
         if (value) delete value;
 
 
-    std::list<Operation *>::const_iterator it;
+    abort();
+}
 
-    for (it = OperationList.begin(); it!=OperationList.end(); ++it)
+
+void Session::abort()
+{
+    COperationKey key;
+    Operation * value;
+    //OperationHash.getIterator()
+
+    OperationHash.First();
+    XHash <COperationKey,Operation *,XOperationHashFunc>::Iterator it = OperationHash.getIterator();
+
+    for (;it.Next(key, value);)
     {
-        delete (*it);
+        delete value;
     }
+   /*
+    for (std::list<Operation *>::iterator it = OperationList.begin();it!=OperationList.end(); ++it)
+    {
+       //Operation * operation = (*it);
+       //operation->abort();
+       delete (*it);
+    }
+     */
+    OperationHash.Empty();
+    PendingOperationList.clear();
+    smsc_log_error(logger,"session aborted");
 }
 
-void Session::Expire()
+bool Session::hasOperations() 
 {
-    // TODO: rollback all pending billing transactions & destroy session
-}
-
-
-bool Session::hasOperations() const
-{
-    return !(PendingOperationList.empty() && OperationList.empty());
+    return !(PendingOperationList.empty() && OperationHash.Count() == 0);
 }
 
 void Session::expireOperation(time_t currentTime)
@@ -66,8 +100,11 @@ bool Session::startOperation(SCAGCommand& cmd)
 {
     if (!Owner) return false;
 
+    
     //TODO: add Operation
-    //currentOperation = 
+    //Creating OperationKey
+
+    //set needReleaseCurrentOperation flag
     
     Owner->startTimer(this->getSessionKey(), this->getWakeUpTime());
     return true;
@@ -75,7 +112,15 @@ bool Session::startOperation(SCAGCommand& cmd)
 
 void Session::releaseOperation()
 {
-
+    if (currentOperation)
+    {
+        if (needReleaseCurrentOperation) 
+        {
+            OperationHash.Delete(currentOperationKey);
+            currentOperation = 0;
+            Owner->startTimer(m_SessionKey,this->getWakeUpTime());
+        }
+    }
 }
 
 void Session::addPendingOperation(PendingOperation pendingOperation)
@@ -106,10 +151,28 @@ time_t Session::getWakeUpTime()
 
     Operation * operation = 0;
     if (!PendingOperationList.empty()) time1 = (PendingOperationList.begin())->validityTime;
-    if (!OperationList.empty()) 
+
+    if (!OperationHash.Count()) 
     {
-        operation = *(OperationList.begin());
-        time2 = operation->validityTime;
+
+        COperationKey key;
+        Operation * value;
+        time_t minTime;
+
+        OperationHash.First();
+        XHash <COperationKey,Operation *,XOperationHashFunc>::Iterator it = OperationHash.getIterator();
+
+        OperationHash.Next(key,value);
+        time2 = value->validityTime;
+
+        for (;it.Next(key, value);)
+        {
+            if (minTime > value->validityTime) 
+            {
+                time2 = value->validityTime;
+            }
+        }
+        
     }
 
     if (time1 == 0) return time2;
