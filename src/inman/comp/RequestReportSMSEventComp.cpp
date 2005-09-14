@@ -1,8 +1,11 @@
 static char const ident[] = "$Id$";
-#include "comps.hpp"
 #include <vector>
 #include <assert.h>
-#include <RequestReportSMSEventArg.h>
+#include "RequestReportSMSEventArg.h"
+#include "comps.hpp"
+#include "compsutl.hpp"
+
+
 namespace smsc {
 namespace inman {
 namespace comp{
@@ -17,12 +20,12 @@ class InternalRequestReportSMSEventArg
 
 RequestReportSMSEventArg::RequestReportSMSEventArg()
 {
-  internal = new InternalRequestReportSMSEventArg();
+  comp = new InternalRequestReportSMSEventArg();
 }
 
 RequestReportSMSEventArg::~RequestReportSMSEventArg()
 {
-  delete(internal);
+  delete(comp);
 }
 
 void RequestReportSMSEventArg::decode(const vector<unsigned char>& buf)
@@ -31,13 +34,7 @@ void RequestReportSMSEventArg::decode(const vector<unsigned char>& buf)
   asn_dec_rval_t rval;
 
   rval = ber_decode(0, &asn_DEF_RequestReportSMSEventArg,(void **)&req, &buf[0], buf.size());
-
-  if( rval.code ) 
-  {
-    throw DecodeError( 
-    	format( "Cannot decode %s: (error 0x%X on byte %d)",
-    				"RequestReportSMSEventArg", rval.code, rval.consumed ) );
-  }
+  INMAN_LOG_DEC(rval, asn_DEF_RequestReportSMSEventArg);
 
   assert( req );
 
@@ -60,22 +57,21 @@ void RequestReportSMSEventArg::decode(const vector<unsigned char>& buf)
       smsEvent.monitorType = 
       	static_cast< MonitorMode_e >( elem->monitorMode );
 
-      internal->events.push_back( smsEvent );
+      comp->events.push_back( smsEvent );
   }
 
   asn_DEF_RequestReportSMSEventArg.free_struct(&asn_DEF_RequestReportSMSEventArg,req, 0);
 }
 
-void RequestReportSMSEventArg::encode(vector<unsigned char>& buf)
-{
-  	throw EncodeError("Not implemented");
-}
+//void RequestReportSMSEventArg::encode(vector<unsigned char>& buf)
+//{ throw EncodeError("Not implemented"); }
 
 const RequestReportSMSEventArg::SMSEventVector& RequestReportSMSEventArg::getSMSEvents()
 {
-	return internal->events;
+	return comp->events;
 }
 
 }//namespace comps
 }//namespace inman
 }//namespace smsc
+

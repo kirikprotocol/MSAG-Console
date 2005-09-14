@@ -10,7 +10,7 @@ static char const ident[] = "$Id$";
 using std::auto_ptr;
 using std::runtime_error;
 using smsc::inman::comp::EventTypeSMS_e;
-using smsc::inman::comp::MessageType_e;
+using smsc::inman::comp::messageType_e;
 
 namespace smsc  {
 namespace inman {
@@ -37,7 +37,48 @@ void Billing::initialDPSMS()
 	if( !inap ) throw runtime_error("Dialog closed");
 
 	smsc_log_debug( logger, "--> InitialDPSMS" );
+
 	InitialDPSMSArg arg( mode );
+
+	if( mode == smsc::inman::comp::DeliveryMode_Originating )
+	{
+		arg.setDestinationSubscriberNumber(".0.1.131133"); // missing for MT
+	}
+	else
+	{
+		arg.setCalledPartyNumber(".0.1.131133"); // missing for MO
+	}
+
+	arg.setCallingPartyNumber(".1.1.79139163393");
+
+	const char imsi[] = { 0x52, 0x00, 0x31, 0x09, 0x31, 0x88, 0x87, 0xF0, 0x00 };
+	arg.setIMSI( imsi );
+
+	arg.setSMSCAddress(".1.1.79029869990");
+
+/*	struct tm timeValue;
+	timeValue.tm_sec  =   26;
+	timeValue.tm_min  =   03;
+	timeValue.tm_hour =   15;
+	timeValue.tm_mday =   22;
+	timeValue.tm_mon  =   04   - 1;
+	timeValue.tm_year =   2005 - 1900;
+	timeValue.tm_wday = 0;
+	timeValue.tm_yday = 0;
+	timeValue.tm_isdst= -1;
+	time_t tm = mktime( &timeValue );
+	assert( tm > 0 );
+	*/
+	time_t tm = time( &tm );
+
+	arg.setTimeAndTimezone( tm );
+
+	arg.setTPShortMessageSpecificInfo( 0x11 );
+	arg.setTPProtocolIdentifier( 0x00 );
+	arg.setTPDataCodingScheme( 0x08 );
+//	arg.setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt);
+//	arg.setlocationInformationMSC(const Address& addr);
+
 	inap->initialDPSMS( &arg );
 	dialog->beginDialog();
 }
@@ -47,7 +88,7 @@ void Billing::eventReportSMS()
 	if( !inap ) throw runtime_error("Dialog closed");
 
 	EventTypeSMS_e eventType;
-	MessageType_e  messageType = smsc::inman::comp::MessageType_notification;
+	messageType_e  messageType = smsc::inman::comp::MessageType_notification;
 
 	if( mode == smsc::inman::comp::DeliveryMode_Originating )
 	{
