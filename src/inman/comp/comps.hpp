@@ -25,17 +25,10 @@ typedef std::runtime_error DecodeError;
 class Component
 {
   public:
-    virtual ~Component()
-    {
-    }
     virtual void encode(vector<unsigned char>& buf)
-    { 
-    	throw EncodeError("Not implemented"); 
-    }
+    { throw EncodeError("Not implemented"); }
     virtual void decode(const vector<unsigned char>& buf)
-    { 
-    	throw DecodeError("Not implemented"); 
-    }
+    { throw DecodeError("Not implemented"); }
 };
 
 struct InapOpCode {
@@ -142,10 +135,8 @@ class EventReportSMSArg: public Component //SSF -> SCF
     public:
 	EventTypeSMS_e	eventType;
 	messageType_e	messageType;
-	
-	EventReportSMSArg(EventTypeSMS_e evType, messageType_e msgType)
-		    : eventType(evType), messageType(msgType) {}
 
+	EventReportSMSArg(EventTypeSMS_e eventType, messageType_e messageType);
 	~EventReportSMSArg() {}
 
 	void encode(vector<unsigned char>& buf);
@@ -195,6 +186,8 @@ class ConnectSMSArg: public Component //SCF -> SSF
 
 //	void encode(vector<unsigned char>& buf);
 	void decode(const vector<unsigned char>& buf);
+    protected:
+	Address		dstSN, clngPN, sMSCAdr;
 };
 
 //  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Tfcisms 
