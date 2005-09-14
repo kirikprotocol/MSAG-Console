@@ -1,10 +1,9 @@
 #include "ActionIf.h"
-#include "scag/SAX2Print.hpp"
 
-#include "scag/re/Rule.h"
 #include "ActionFactory.h"
 #include "scag/re/CommandAdapter.h"
 
+#include "scag/SAX2Print.hpp"
 
 namespace scag { namespace re { namespace actions {
 

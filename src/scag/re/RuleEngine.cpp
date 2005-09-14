@@ -9,6 +9,7 @@
 
 #include <sys/types.h>
 #include <dirent.h>
+#include "XMLHandlers.h"
 
 namespace scag { namespace re {
 
@@ -16,26 +17,6 @@ using smsc::core::synchronization::MutexGuard;
 using namespace std;
 using namespace smsc::util;
 using namespace scag::re::actions;
-
-
-
-/*
-#ifndef MEMPARSE_ENCODING
-   #if defined(OS390)
-      #define MEMPARSE_ENCODING "ibm-1047-s390"
-   #elif defined(OS400)
-      #define MEMPARSE_ENCODING "ibm037"
-   #else
-      #define MEMPARSE_ENCODING "ascii"
-   #endif
-#endif  ifndef MEMPARSE_ENCODING */
-/*
-XMLRuleHandler::XMLRuleHandler(const std::string SectionName)
-{
-
-}
-  
-*/
 
 
 RuleEngine::RuleEngine(const std::string& dir)
@@ -55,7 +36,7 @@ RuleEngine::RuleEngine(const std::string& dir)
     catch (const XMLException& toCatch)
     {
         StrX msg(toCatch.getMessage());
-        smsc_log_error(logger,std::string("Error during initialization XMLPlatform:") + msg.localForm());
+        smsc_log_error(logger,"Error during initialization XMLPlatform: %s", msg.localForm());
         return;
     }
 
@@ -132,15 +113,15 @@ Rule * RuleEngine::ParseFile(const std::string& xmlFile)
     {
         StrX msg(toCatch.getMessage());
 
-        smsc_log_error(logger,std::string("An error occurred. Error: ") + msg.localForm());
+        smsc_log_error(logger,"An error occurred. Error: %s", msg.localForm());
     }
     catch (SCAGException& e)
     {
-        smsc_log_error(logger,std::string("Terminate parsing Rule: ")+e.what());
+        smsc_log_error(logger,"Terminate parsing Rule: %s",e.what());
     }
     catch (...)
     {
-        smsc_log_error(logger,std::string("Terminate parsing Rule: unknown fatal error"));
+        smsc_log_error(logger,"Terminate parsing Rule: unknown fatal error");
     }
 
 
@@ -202,7 +183,7 @@ RuleStatus RuleEngine::process(SCAGCommand& command, Session& session)
         rs = rule->process(command, session);
     } 
     else
-        throw SCAGException("Cannot process Rule with ID = %d%s",ruleId," : Rule not found");
+        throw SCAGException("Cannot process Rule with ID = %d : Rule not fond%s",ruleId);
 
         
     return rs;

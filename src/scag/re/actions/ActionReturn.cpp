@@ -51,7 +51,7 @@ bool ActionReturn::run(ActionContext& context)
     {
         Property * property = context.getProperty(ReturnValue);
         if (property) rs.result = property->getBool();
-        else smsc_log_warn(logger,"Action 'return': invalid property '" + ReturnValue + "' to return ");
+        else smsc_log_warn(logger,"Action 'return': invalid property '%s' to return", ReturnValue.c_str());
     }
     context.SetRuleStatus(rs);
     return false;

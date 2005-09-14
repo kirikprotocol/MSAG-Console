@@ -7,7 +7,6 @@
 #include <util/debug.h>
 
 
-#include "scag/re/actions/Action.h"
 #include "scag/re/Rule.h"
 #include "scag/re/actions/MainActionFactory.h"
 

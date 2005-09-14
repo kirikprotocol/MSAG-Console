@@ -2,10 +2,7 @@
 #define SCAG_SESSIONS_MANAGER
 
 #include <string>
-
 #include <core/threads/Thread.hpp>
-#include <scag/transport/SCAGCommand.h>
-
 #include "Session.h"
 
 namespace scag { namespace sessions 

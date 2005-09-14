@@ -33,28 +33,11 @@ namespace scag { namespace bill {
         
         virtual ~BillingMachine() {};
         
-        /**
-         * Function should rollback user's billing transaction
-         */
         virtual void rollback(const Bill& bill) = 0;
-        virtual void commit(const Bill& bill) = 0;
-        
-        /**
-         * Function should return pointer to user's billing actions factory
-         */ 
         virtual const ActionFactory& getActionFactory() const  = 0;
         
-        inline void setMachineId(uint8_t id) { // ???
-            machine_id = id;
-        }
+        inline void setMachineId(uint8_t id) { machine_id = id;}
     };
-
-    /** TODO: Place this definition to dynamic module (*.so) header file.
-     *  Implement initialization function in dynamic module (*.so).
-     *  Function should init user's billing machine & return pointer to it.
-     *
-    extern "C" BillingMachine* initBillingMachine(uint8_t machine_id, const std::string& cfg_dir);
-     */
 
 }}
 

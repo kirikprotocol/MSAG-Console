@@ -1,5 +1,6 @@
 #include "EventHandler.h"
 #include <util/Exception.hpp>
+
 #include "scag/SAX2Print.hpp"
 
 namespace scag { namespace re {
@@ -33,7 +34,7 @@ IParserHandler * EventHandler::StartXMLSubSection(const std::string& name,const 
     if (!action) 
         throw SCAGException("EventHandler: unrecognized child object '%s' to create",name.c_str());
 
-    smsc_log_debug(logger,std::string("HandlerEvent::StartXMLSubSection - <")+name+std::string(">"));
+    smsc_log_debug(logger,"HandlerEvent::StartXMLSubSection - <%s>",name.c_str());
 
     try
     {

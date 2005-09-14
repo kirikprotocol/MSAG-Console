@@ -18,7 +18,7 @@ bool ActionAbort::FinishXMLSubSection(const std::string& name)
 
 void ActionAbort::init(const SectionParams& params,PropertyObject propertyObject)
 {
-    //if (!params.GetCount()) throw SCAGException("Action 'session:close' must have no parameters");
+    //if (params.GetCount()) throw SCAGException("Action 'session:abort' must have no parameters");
 }
 
 bool ActionAbort::run(ActionContext& context)
@@ -30,6 +30,7 @@ bool ActionAbort::run(ActionContext& context)
 
 ActionAbort::~ActionAbort()
 {
+
 }
 
 }}}

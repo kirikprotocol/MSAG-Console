@@ -3,11 +3,10 @@
 
 #include <inttypes.h>
 
-#include <scag/bill/Bill.h>
 #include <scag/util/properties/Properties.h>
 #include <list>
 #include <core/synchronization/EventMonitor.hpp>
-#include "sms/sms.h"
+
 #include "scag/transport/SCAGCommand.h"
 #include <scag/bill/BillingManager.h>
 #include <core/buffers/XHash.hpp>

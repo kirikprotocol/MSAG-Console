@@ -1,7 +1,6 @@
 #include "Session.h"
-#include "scag/SAX2Print.hpp"
 
-#include <iostream>
+#include "scag/SAX2Print.hpp"
 
 
 namespace scag { namespace sessions {
@@ -28,9 +27,7 @@ Session::Session()
     : PropertyManager(), lastAccessTime(-1), 
         bChanged(false), bDestroy(false), accessCount(0), Owner(0),currentOperation(0),needReleaseCurrentOperation(false)
 {
-    // TODO: ???
-
-    //Временная херота, для того, чтобы SessionManager выдавал валидную сессию
+    //!!! Временная херота, для того, чтобы SessionManager выдавал валидную сессию
     PendingOperation operation;
     time_t now;
 
@@ -40,12 +37,12 @@ Session::Session()
     operation.validityTime = now + 100;
 
     addPendingOperation(operation);
-    //Временная херота, для того, чтобы SessionManager выдавал валидную сессию
+    //!!! Временная херота, для того, чтобы SessionManager выдавал валидную сессию
 }
 
 Session::~Session()
 {
-    // TODO: rollback all pending billing transactions & destroy session
+    // rollback all pending billing transactions & destroy session
 
 
     char * key;
@@ -66,8 +63,7 @@ void Session::abort()
 
     COperationKey key;
     Operation * value;
-    //OperationHash.getIterator()
-
+    
     OperationHash.First();
     XHash <COperationKey,Operation *,XOperationHashFunc>::Iterator it = OperationHash.getIterator();
 
@@ -75,25 +71,17 @@ void Session::abort()
     {
         delete value;
     }
-   /*
-    for (std::list<Operation *>::iterator it = OperationList.begin();it!=OperationList.end(); ++it)
-    {
-       //Operation * operation = (*it);
-       //operation->abort();
-       delete (*it);
-    }
-     */
 
     OperationHash.Empty();
     PendingOperationList.clear();
 
     Owner->startTimer(m_SessionKey,0);
-    smsc_log_error(logger,"session aborted");
+    smsc_log_error(logger,"Session: session aborted");
 }
 
 bool Session::hasOperations() 
 {
-    return !(PendingOperationList.empty() && OperationHash.Count() == 0);
+    return !(PendingOperationList.empty() && (OperationHash.Count() == 0));
 }
 
 void Session::expireOperation(time_t currentTime)

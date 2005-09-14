@@ -14,7 +14,6 @@
 
 #include "SessionStore.h"
 #include "SessionManager.h"
-#include "Session.h"
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/util/sms/HashUtil.h"
 
@@ -206,37 +205,6 @@ int SessionManagerImpl::processExpire()
 }
 
 
-/*
-time_t SessionManagerImpl::processExpire()
-{
-    if (SessionExpirePool.empty()) return config.expireInterval;
-
-    time_t timeToNextExpire = 0; // TODO: get current session's expiration time ?
-
-    CSLIterator it;
-    for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it)
-    {
-        // TODO: calculate next session's expiration time
-        
-        if (it->isInUse()) 
-            {
-            continue;
-        }
-        CSessionKey sessionKey = it->getSessionKey();
-
-        MutexGuard guard(inUseMonitor);
-        if (inUse.Exists(sessionKey)) {
-            session->Expire();
-            store.deleteSesion(sessionKey);
-            inUseMonitor.NotifyAll();
-        }
-    }
-    if (it == SessionExpirePool.end()) return config.expireInterval;
-    
-    return timeToNextExpire;    
-}
-
-  */
 
 Session * SessionManagerImpl::NewSession(CSessionKey sessionKey)
 {
@@ -361,10 +329,8 @@ void SessionManagerImpl::startTimer(CSessionKey key,time_t deadLine)
 
     if (deadLine == 0) 
     {
-     /*   time_t now;
-        time(&now);
-        deadLine = SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL + now;
-        */
+        //TODO: check if we must erase session
+        // what to do, if session free in rule engine?
 
         SessionExpirePool.erase(it);
         SessionHash.Delete(key);
@@ -374,110 +340,6 @@ void SessionManagerImpl::startTimer(CSessionKey key,time_t deadLine)
     }
     it->nextWakeTime = deadLine;
 }
-
-/*
-Session* SessionManagerImpl::getSession(const SCAGCommand& command)
-{
-    CSessionKey SessionKey; 
-    
-    SessionKey.abonentAddr = command.getAbonentAddr();
-    SessionKey.USR = command.getUMR(); // TODO: MMS & WAP commands has no UMR field !!!
-
-    CSessionAccessData data;
-    CSLIterator it;
-    bool bSessionExists;
-
-    do
-    {
-        Lock.Lock();
-
-        data.bOpened = false;
-        bSessionExists = false;
-
-        if (SessionHash.Exists(SessionKey)) 
-        {
-            it = SessionHash.Get(SessionKey);
-            data = *it;
-            bSessionExists = true;
-        }
-
-        if (!data.bOpened) break;
-
-        Lock.Unlock();
-        timespec tt;
-        tt.tv_sec = 0;
-        tt.tv_nsec = 1000;
-        nanosleep(&tt,0);
-    }
-    while (data.bOpened); 
-        
-
-    Session * session = GetSessionFromStorage(SessionKey);
-    if (!session) 
-    {
-        Lock.Unlock();
-        throw Exception("SessionManager: Invalid session returned from sorage");
-    }
-
-    if (bSessionExists == true) 
-    {
-        data = *it;
-        data.bOpened = true;
-        (*it) = data;
-    } 
-    else
-    {
-        time(&data.lastAccess);
-        data.SessionKey = SessionKey;
-        data.bOpened = true;
-
-        SessionExpirePool.push_back(data);
-        it = SessionExpirePool.end();
-        SessionHash.Insert(SessionKey,--it);
-    }
-
-    Lock.Unlock();
-    return session;
-}
-
-void SessionManagerImpl::releaseSession(const Session* session)
-{
-    MutexGuard guard(Lock);
-    if (!session) return;
-
-    if (SessionHash.Exists(session->getSessionKey()))
-    {
-
-        CSLIterator it = SessionHash.Get(session->getSessionKey());
-
-        CSessionAccessData data = *it;
-
-        time(&data.lastAccess);
-        data.bOpened = false;
-
-        //TODO: change session lastAccessTime
-        SessionExpirePool.erase(it);
-        SessionExpirePool.push_back(data);
-
-        it = SessionExpirePool.end();
-        SessionHash.Insert(session->getSessionKey(),--it);
-    }
-}
-
-void SessionManagerImpl::closeSession(const Session* session)
-{
-    MutexGuard guard(Lock);
-    if (!session) return;
-
-    if (SessionHash.Exists(session->getSessionKey()))
-    {
-        CSLIterator it = SessionHash.Get(session->getSessionKey());
-        SessionExpirePool.erase(it);
-        SessionHash.Delete(session->getSessionKey());
-        //TODO: close session
-    }
-}*/
-
 
 }}
 

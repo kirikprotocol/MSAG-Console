@@ -1,6 +1,5 @@
 #include "SmppAdapter.h"
 #include "scag/re/CommandAdapter.h"
-#include <iostream>
 
 namespace scag { namespace re { namespace smpp 
 {

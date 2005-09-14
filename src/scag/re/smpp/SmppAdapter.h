@@ -4,12 +4,7 @@
 #include <scag/transport/smpp/SmppCommand.h> 
 #include <scag/util/properties/Properties.h>
 #include <core/buffers/IntHash.hpp>
-//#include "scag/re/CommandAdapter.h"
-/*
-namespace scag { namespace re {
-    enum AccessType;
-}};
-  */                             
+
 
 namespace scag { namespace re {
     enum AccessType 

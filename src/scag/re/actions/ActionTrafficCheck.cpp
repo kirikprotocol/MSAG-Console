@@ -1,9 +1,8 @@
 #include "ActionTrafficCheck.h"
 #include "ActionFactory.h"
-#include "scag/SAX2Print.hpp"
-
 #include "scag/stat/Statistics.h"
 
+#include "scag/SAX2Print.hpp"
 
 
 namespace scag { namespace re { namespace actions {

@@ -1,6 +1,7 @@
 #include "ActionSet.h"
-#include "scag/SAX2Print.hpp"
 #include "scag/re/CommandAdapter.h"
+
+#include "scag/SAX2Print.hpp"
 
 namespace scag { namespace re { namespace actions {
 
@@ -57,7 +58,7 @@ bool ActionSet::run(ActionContext& context)
 
     if (!property) 
     {
-        smsc_log_warn(logger,std::string("Action 'set':: invalid property '")+Variable+std::string("'"));
+        smsc_log_warn(logger,"Action 'set':: invalid property '%s'",Variable.c_str());
         return true;
     }
 
@@ -77,10 +78,10 @@ bool ActionSet::run(ActionContext& context)
             property->setStr(val->getStr());
         }
         else 
-            smsc_log_warn(logger,"Action 'set': cannot initialize '"+Variable+"' with '"+Value+"' - no such property");
+            smsc_log_warn(logger,"Action 'set': cannot initialize '%s' with '%s' value - no such property",Variable.c_str(),Value.c_str());
     }
 
-    smsc_log_debug(logger,"Action 'set': property '"+Variable+"' set to '"+property->getStr()+"'");
+    smsc_log_debug(logger,"Action 'set': property '%s' set to '%s'",Variable.c_str(),property->getStr().c_str());
     return true;
 }
 

@@ -11,7 +11,6 @@
 
 #include <core/buffers/Array.hpp>
 #include <acls/interfaces.h>
-#include "scag/re/actions/IParserHandler.h"
 #include "scag/re/Rule.h"
 
 

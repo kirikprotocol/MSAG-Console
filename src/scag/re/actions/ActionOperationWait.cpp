@@ -52,7 +52,7 @@ bool ActionOperationWait::run(ActionContext& context)
 
     if (!property) 
     {
-        smsc_log_warn(logger,"Action 'operation:wait': invalid property '" + sTime + "' to set time");
+        smsc_log_warn(logger,"Action 'operation:wait': invalid property '%s' to set time", sTime.c_str());
         return true;
     }
 

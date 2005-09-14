@@ -41,7 +41,6 @@ namespace scag { namespace re { namespace actions
         Statistics&             statistics;
     public:
 
-        // TODO: implement, set commandAdapter & session
         ActionContext(Hash<Property>& _constants,
                       Session& _session, PropertyManager& _command,Statistics& _statistics)
             : constants(_constants), session(_session), command(_command), statistics(_statistics) {};

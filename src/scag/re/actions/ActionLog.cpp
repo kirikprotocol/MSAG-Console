@@ -70,13 +70,13 @@ bool ActionLog::run(ActionContext& context)
 
     if (!p1) 
     {
-        smsc_log_warn(logger,"Action 'log': invalid property '" + sCategory + "' to log ");
+        smsc_log_warn(logger,"Action 'log': invalid property '%s' to log",sCategory.c_str());
         return true;
     }
 
     if (!p2) 
     {
-        smsc_log_warn(logger,"Action 'log': invalid property '" + msg + "' to log ");
+        smsc_log_warn(logger,"Action 'log': invalid property '%s' to log", msg.c_str());
         return true;
     }
 
