@@ -91,6 +91,19 @@
     </user-data-constraint>
   </security-constraint>
 
+  <security-constraint>
+      <web-resource-collection>
+        <web-resource-name>gateway rules</web-resource-name>
+        <url-pattern>/rules/*</url-pattern>
+      </web-resource-collection>
+      <auth-constraint>
+        <role-name>rule</role-name>
+      </auth-constraint>
+      <user-data-constraint>
+        <transport-guarantee>NONE</transport-guarantee>
+      </user-data-constraint>
+    </security-constraint>
+
   <login-config>
     <auth-method>FORM</auth-method>
     <realm-name>SMSC.SmscRealm</realm-name>
@@ -112,6 +125,10 @@
   <security-role>
     <role-name>stat</role-name>
   </security-role>
+  <security-role>
+    <role-name>rule</role-name>
+  </security-role>
+
 
   <display-name>SCA Gateway</display-name>
   <description>SCA GatewayAdministrationApplication</description>
