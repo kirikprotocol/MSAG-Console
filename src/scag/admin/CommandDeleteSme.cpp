@@ -9,6 +9,7 @@
 
 #include "util/xml/utilFunctions.h"
 #include "CommandIds.h"
+#include "scag/scag.h"
 
 namespace scag {
 namespace admin {
@@ -36,7 +37,7 @@ CommandDeleteSme::CommandDeleteSme(const xercesc::DOMDocument * const document)
   }
 }
 
-Response * CommandDeleteSme::CreateResponse(scag::Smsc * SmscApp)
+Response * CommandDeleteSme::CreateResponse(scag::Scag * SmscApp)
 {
   //SmscApp->getSmeAdmin()->deleteSme(getSmeSystemId());
   return new Response(Response::Ok, "none");

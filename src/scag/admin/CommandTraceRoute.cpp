@@ -89,7 +89,7 @@ CommandTraceRoute::~CommandTraceRoute()
   id = undefined;
 }
 
-Response * CommandTraceRoute::CreateResponse(scag::Smsc * SmscApp)
+Response * CommandTraceRoute::CreateResponse(scag::Scag * ScagApp)
 {
   const char* _srcAddr  = srcAddr.data();
   const char* _dstAddr  = dstAddr.data();

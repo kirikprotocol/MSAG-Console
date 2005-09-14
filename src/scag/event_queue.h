@@ -3,8 +3,8 @@
 */
 
 
-#if !defined (__Cxx_Header__EventQueue_h__)
-#define __Cxx_Header__EventQueue_h__
+#if !defined (__Cxx_SCAG_Header__EventQueue_h__)
+#define __Cxx_SCAG_Header__EventQueue_h__
 
 #include "core/buffers/PriorityQueue.hpp"
 #include "core/buffers/CyclicQueue.hpp"
@@ -20,7 +20,6 @@
 
 #define DISABLE_LIST_DUMP
 
-namespace smsc {
 namespace scag {
 
 using namespace smsc::smeman;
@@ -95,7 +94,6 @@ public:
 
 
 } // namespace system
-} // namespace cmsc
 
 
 #endif

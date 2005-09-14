@@ -29,7 +29,7 @@ public:
   
   CommandLoadRoutes(const xercesc::DOMDocument * document);
   virtual ~CommandLoadRoutes();
-  virtual Response * CreateResponse(scag::Smsc * SmscApp);
+  virtual Response * CreateResponse(scag::Scag * SmscApp);
 };
 
 }

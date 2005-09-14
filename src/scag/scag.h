@@ -5,16 +5,12 @@
 
 #include "core/threads/ThreadPool.hpp"
 #include "core/threads/ThreadedTask.hpp"
-#include "util/config/Manager.h"
-#include "util/config/route/RouteConfig.h"
 #include "system/smppio/SmppSocketsManager.hpp"
 #include "smeman/smeman.h"
 #include "router/route_manager.h"
 #include "scag/event_queue.h"
 #include "util/config/smeman/SmeManConfig.h"
 #include "alias/aliasman.h"
-#include "util/config/alias/aliasconf.h"
-#include "util/config/route/RouteConfig.h"
 #include "scag/performance.hpp"
 #include "sme/SmppBase.hpp"
 
@@ -25,6 +21,9 @@
 
 #include "core/buffers/XHash.hpp"
 #include "logger/Logger.h"
+#include "scag/config/route/RouteConfig.h"
+#include "scag/stat/Statistics.h"
+#include "scag/stat/StatisticsManager.h"
 
 namespace scag 
 {
@@ -34,14 +33,18 @@ using namespace smsc::smeman;
 using smsc::alias::AliasManager;
 using smsc::router::RouteManager;
 using smsc::router::RouteInfo;
-using smsc::util::config::route::RouteConfig;
+using scag::config::RouteConfig;
 using smsc::core::threads::ThreadedTask;
 using smsc::sme::SmeConfig;
 using smsc::smeman::SmeManager;
-using smsc::scag::GatewaySme;
+using scag::GatewaySme;
 using namespace smsc::logger;
 
-// TODO: move to util
+using scag::config::RouteConfig;
+using scag::stat::SmppStatEvent;
+using scag::stat::StatisticsManager;
+
+// TODO: move to uti    l
 template<class T>
 class Reffer
 {
@@ -104,21 +107,12 @@ namespace StatEvents
   const int etRescheduled  =6;
 }
 
-struct SmscConfigs
-{
-  smsc::util::config::Manager*              cfgman;
-  smsc::util::config::smeman::SmeManConfig* smemanconfig;
-  smsc::util::config::alias::AliasConfig*   aliasconfig;
-  smsc::util::config::route::RouteConfig*   routesconfig;
-  Hash<string> *licconfig;
-};
-
 class GatewaySme;
 
 class Scag
 {
 public:
-  Smsc():ssockman(&tp,&smeman),stopFlag(false),router_(0),testRouter_(0),aliaser_(0)
+  Scag():ssockman(&tp,&smeman),stopFlag(false),router_(0),testRouter_(0),aliaser_(0)
   {
     acceptedCounter=0;
     rejectedCounter=0;
@@ -133,13 +127,13 @@ public:
     memset(gwSmeMap,0,sizeof(gwSmeMap));
   };
   ~Scag();
-  void init(const SmscConfigs& cfg);
+  void init();
   void run();
   void stop(){stopFlag=true;}
   void mainLoop();
   void shutdown();
 
-  bool Smsc::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy,smsc::router::RouteInfo* ri,SmeIndex idx=-1);
+  bool Scag::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy,smsc::router::RouteInfo* ri,SmeIndex idx=-1);
 
   bool AliasToAddress(const Address& alias,Address& addr)
   {
@@ -179,7 +173,8 @@ public:
 
   void unregisterSmeProxy(const string& sysid)
   {
-    MutexGuard mg(gatewaySwitchMutex);
+    // Wait for SmppManager will be ready
+    /*MutexGuard mg(gatewaySwitchMutex);
 
     uint8_t uid = 0;
 
@@ -196,7 +191,7 @@ public:
             gwSmeMap[uid]->Release();            
             gwSmeMap[uid] = 0;
         }
-    }
+    }*/
   }
 
   SmeAdministrator* getSmeAdmin(){return &smeman;}
@@ -205,7 +200,7 @@ public:
   void updatePerformance(int counter)
   {
     MutexGuard g(perfMutex);
-    using namespace smsc::scag::performance::Counters;
+    using namespace scag::performance::Counters;
     switch(counter)
     {
       case cntAccepted:    acceptedCounter++;break;
@@ -217,9 +212,9 @@ public:
     }
   }
 
-  void updateCounter(int counter,const smsc::scag::stat::StatInfo& si,int errorCode=0)
+  void updateCounter(const SmppStatEvent& si)
   {
-    statMan->updateCounter(counter, si,errorCode);
+    statMan->registerEvent(si);
   }
 
   void SaveStats()
@@ -241,7 +236,6 @@ public:
   void abortScag()
   {
     SaveStats();
-    statMan->flushStatistics();
     //MapDialogContainer::getInstance()->abort();
     kill(getpid(),9);
   }
@@ -307,15 +301,9 @@ public:
     aliaser_ = new Reffer<AliasManager>(manager);
   }
 
-  void reloadRoutes(const SmscConfigs& cfg);
+  void reloadRoutes();
   void reloadTestRoutes(const RouteConfig& rcfg);
-  void reloadAliases(const SmscConfigs& cfg);
-
-  //threre is not such method in statistic interface
-  /*void flushStatistics()
-  {
-    statMan->flushStatistics();
-  }*/
+  void reloadAliases();
 
   uint8_t getNextMR(const Address& addr)
   {
@@ -340,23 +328,27 @@ public:
     }
   }
 
-  GatewaySme* getGwSme(uint8_t uid)
+  // Wait for SmppManager will be ready
+  /*GatewaySme* getGwSme(uint8_t uid)
   {
     MutexGuard mg(gatewaySwitchMutex);
     return gwSmeMap[uid];
   }
+  
   void setGwSme(uint8_t uid, GatewaySme* gwSme)
   {
     MutexGuard mg(gatewaySwitchMutex);
     gwSmeMap[uid] = gwSme;
-  }
+  }*/
+
   void startTpTask(ThreadedTask *tsk)
   {
     tp.startTask(tsk);
   }
 
-  bool regSmsc(SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid);
-  bool modifySmsc(SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid);
+  // wait for SmppManager will be ready
+  //bool regSmsc(SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid);
+  //bool modifySmsc(SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid);
 
   int ussdTransactionTimeout;
 
@@ -376,14 +368,14 @@ protected:
   Reffer<AliasManager>* aliaser_;
   EventQueue eventqueue;
   bool stopFlag;
-  std::string smscHost;
-  int smscPort;
+  std::string scagHost;
+  int scagPort;
 
-  smsc::scag::performance::PerformanceDataDispatcher perfDataDisp;
+  scag::performance::PerformanceDataDispatcher perfDataDisp;
 
   SmeProxy* abonentInfoProxy;
 
-  smsc::scag::stat::GWStatisticsManager *statMan;
+  scag::stat::StatisticsManager *statMan;
 
   struct LicenseInfo{
     int maxsms;

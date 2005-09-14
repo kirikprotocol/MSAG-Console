@@ -28,7 +28,7 @@ public:
   
   CommandApply(const xercesc::DOMDocument * document);
   virtual ~CommandApply();
-  virtual Response * CreateResponse(scag::Smsc * SmscApp);
+  virtual Response * CreateResponse(scag::Scag * ScagApp);
   virtual scag::admin::Actions::CommandActions GetActions();
   
   //subjects getSubject();

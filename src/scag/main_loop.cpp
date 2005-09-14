@@ -27,7 +27,7 @@ using std::auto_ptr;
 
 #define __CMD__(x) smsc::smeman::x
 
-bool Smsc::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy,
+bool Scag::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy,
   smsc::router::RouteInfo* ri,SmeIndex idx)
 {
   proxy = 0;
@@ -43,7 +43,7 @@ bool Smsc::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProx
 }
 
 
-void Smsc::mainLoop()
+void Scag::mainLoop()
 {
   typedef std::vector<SmscCommand> CmdVector;
   CmdVector frame;
@@ -173,13 +173,13 @@ void Smsc::mainLoop()
 }
 
 
-void Smsc::generateAlert(SMS* sms)
+void Scag::generateAlert(SMS* sms)
 {
   eventqueue.enqueue(SmscCommand::makeAlert(sms));
 }
 
 
-void Smsc::processCommand(SmscCommand& cmd)
+void Scag::processCommand(SmscCommand& cmd)
 {
   switch(cmd->get_commandId())
   {

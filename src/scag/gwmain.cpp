@@ -19,6 +19,7 @@
 #include "license/check/license.hpp"
 #include "scag/admin/SCAGCommandDispatcher.h"
 #include "scag/admin/SCAGSocketListener.h"
+#include "scag/config/ConfigManager.h"
 #include "Inst.h"
 
 #include "scag/version.inc"
@@ -34,14 +35,15 @@ int main(int argc,char* argv[])
   Logger::Init();
 
   atexit(atExitHandler);
-  smsc::scag::clearThreadSignalMask();
+  scag::clearThreadSignalMask();
 
   try{
-    smsc_log_info(logger,  "SCAG configuration loading..." );
-    scag::config::ConfigManager * cfgs = ConfigManager::Instance();
-    smsc_log_info(logger,  "SCAG configuration is loaded" );
+    smsc::logger::Logger *logger = Logger::getInstance("scagmain");
 
-    smsc::logger::Logger *logger = Logger::getInstance("smscmain");
+    smsc_log_info(logger,  "SCAG configuration loading..." );
+    scag::config::ConfigManager::Init();
+    scag::config::ConfigManager& cfgs = scag::config::ConfigManager::Instance();
+    smsc_log_info(logger,  "SCAG configuration is loaded" );
 
     Hash<string> lic;
     {
@@ -54,12 +56,12 @@ int main(int argc,char* argv[])
       }
     }
 
-    cfgs->getLicConfig() = &lic;
+    cfgs.getLicConfig() = &lic;
     smsc_log_info(logger,  "Starting up %s", getStrVersion());
 
     in_port_t servicePort = 0;
     try {
-      servicePort = cfgs->getConfig()->getInt("admin.port");
+      servicePort = cfgs.getConfig()->getInt("admin.port");
     } catch (std::exception e)
     {
     }
@@ -67,7 +69,7 @@ int main(int argc,char* argv[])
     char * admin_host = 0;
     try
     {
-      admin_host = cfgs->getConfig()->getString("admin.host");
+      admin_host = cfgs.getConfig()->getString("admin.host");
     }
     catch (scag::config::ConfigException &c)
     {}
@@ -86,10 +88,10 @@ int main(int argc,char* argv[])
     if (servicePort == 0 || admin_host == 0) {
       fprintf(stderr,"WARNING: admin port not specified, admin module disabled - smsc is not administrable\n");
 
-      scag::Scag *app=new scag::Smsc;
+      scag::Scag *app=new scag::Scag;
 
-      scag::registerSmscSignalHandlers(app);
-      app->init(cfgs);
+      scag::registerScagSignalHandlers(app);
+      app->init();
       app->run();
 //      SmscRunner runner(app);
 //      runner.Start();
@@ -112,7 +114,7 @@ int main(int argc,char* argv[])
       listener.init(admin_host, servicePort);
 
 
-      scag::registerSmscSignalHandlers(&listener);
+      scag::registerScagSignalHandlers(&listener);
       listener.Start();
 
       fprintf(stderr,"SMPP GW admin listener started\n");

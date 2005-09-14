@@ -26,7 +26,7 @@ public:
   
   CommandTraceRoute(const xercesc::DOMDocument * doc);
   virtual ~CommandTraceRoute();
-  virtual Response * CreateResponse(scag::Smsc * SmscApp);
+  virtual Response * CreateResponse(scag::Scag * SmscApp);
 
 protected:
   std::string dstAddr;

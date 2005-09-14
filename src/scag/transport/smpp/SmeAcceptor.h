@@ -12,7 +12,7 @@ namespace scag {
 namespace transport {
 namespace smpp {
 
-class SmeAcceptor:public thr::ThreadedTask{
+class SmeAcceptor:public smsc::core::threads::ThreadedTask{
 public:
   SmeAcceptor(SmppSMInterface* argSm):sm(argSm)
   {

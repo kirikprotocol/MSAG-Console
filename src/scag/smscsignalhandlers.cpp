@@ -1,4 +1,4 @@
-#include "scag/scagsignalhandlers.h"
+#include "scag/smscsignalhandlers.h"
 
 #include "scag/scag.h"
 #include "admin/service/ServiceSocketListener.h"
@@ -30,7 +30,7 @@ extern "C" void sigAbortDispatcher(int sig)
   fprintf(stderr, "Signal %i received, abort\n", sig);
   if (_scag != 0)
   {
-    _scag->abortSmsc();
+    _scag->abortScag();
   }
   else
   {
@@ -44,7 +44,7 @@ extern "C" void sigDumpDispatcher(int sig)
 {
   fprintf(stderr, "Signal %i received, dump & shutdown\n", sig);
   if (_scag != 0)
-    _scag->dumpSmsc();
+    _scag->dumpScag();
   else
   {
     if (_socketListener != 0)
@@ -77,7 +77,7 @@ void registerSignalHandlers_internal()
   sigaddset(&set, SIGSEGV);
     sigaddset(&set, SIGALRM);
     sigaddset(&set, SIGABRT);
-  sigaddset(&set, smsc::scag::SHUTDOWN_SIGNAL);
+  sigaddset(&set, SHUTDOWN_SIGNAL);
 //#ifndef SPARC
 //  sigaddset(&set,SIGQUIT);
 //#endif
@@ -93,7 +93,7 @@ void registerSignalHandlers_internal()
   sigset(SIGSEGV, sigDumpDispatcher);
   signal(SIGABRT, sigDumpDispatcher);
   sigset(SIGALRM, sigDumpDispatcher);
-  sigset(smsc::scag::SHUTDOWN_SIGNAL,  sigShutdownHandler);
+  sigset(SHUTDOWN_SIGNAL,  sigShutdownHandler);
 }
 
 void registerScagSignalHandlers(Scag * scag)

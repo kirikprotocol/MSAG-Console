@@ -1,5 +1,5 @@
-#ifndef __SMSC__SCAG_GWSME_HPP__
-#define __SMSC__SCAG_GWSME_HPP__
+#ifndef __SCAG_GWSME_HPP__
+#define __SCAG_GWSME_HPP__
 
 #include "smeman/smeproxy.h"
 #include "sme/SmppBase.hpp"
@@ -14,7 +14,6 @@
 #include <fstream>
 #include <iostream>
 
-namespace smsc{
 namespace scag{
 
 using smsc::smeman::SmeProxy;
@@ -320,6 +319,5 @@ protected:
 
 
 }//namespace scag
-}//namespace smsc
 
 #endif

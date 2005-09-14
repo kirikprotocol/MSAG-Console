@@ -1,5 +1,5 @@
-#ifndef __SMSC_SYSTEM_PERFORMANCE_HPP__
-#define __SMSC_SYSTEM_PERFORMANCE_HPP__
+#ifndef __SCAG_SYSTEM_PERFORMANCE_HPP__
+#define __SCAG_SYSTEM_PERFORMANCE_HPP__
 
 #include <inttypes.h>
 #include <time.h>
@@ -13,7 +13,6 @@
 #include "core/buffers/IntHash.hpp"
 #include "util/timeslotcounter.hpp"
 
-namespace smsc{
 namespace scag{
 namespace performance{
 
@@ -197,6 +196,5 @@ protected:
 
 }//performance
 }//system
-}//smsc
 
 #endif

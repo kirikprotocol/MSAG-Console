@@ -17,7 +17,7 @@ public:
     : Abstract_CommandSmscInfo((Command::Id)CommandIds::unregSme, document)
   {
   }
-    virtual Response * CreateResponse(scag::Smsc * SmscApp);
+    virtual Response * CreateResponse(scag::Scag * SmscApp);
 };
 
 }

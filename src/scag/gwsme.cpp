@@ -2,7 +2,6 @@
 #include "util/sleep.h"
 #include "util/debug.h"
 
-namespace smsc{
 namespace scag{
 
 int GatewaySme::Execute()
@@ -90,4 +89,3 @@ int GatewaySme::Execute()
 
 
 }//namespace scag
-}//namespace smsc

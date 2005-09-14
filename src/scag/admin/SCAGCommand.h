@@ -25,16 +25,17 @@
 #include "util/config/route/RouteConfig.h"
 #include "router/route_manager.h"
 #include "util/config/smeman/SmeManConfig.h"
+#include "scag/scag.h"
 
 
 // Its during for a test only
-namespace scag {
+/*namespace scag {
 
 using namespace smsc::smeman;
 using smsc::alias::AliasManager;
 using smsc::router::RouteManager;
 using smsc::router::RouteInfo;
-using smsc::util::config::route::RouteConfig;
+using scag::config::RouteConfig;
 
 class Smsc
 {
@@ -48,7 +49,7 @@ struct SmscConfigs{
   Hash<string> *licconfig;
 };
 
-}
+}*/
 
 
 
@@ -57,14 +58,13 @@ namespace admin {
 
 using namespace smsc::admin::protocol;
 using namespace scag;
-using namespace smsc::admin::protocol;
 
 class SCAGCommand : public Command
 {
 public:
   SCAGCommand(Command::Id id);
   virtual ~SCAGCommand();
-  virtual Response * CreateResponse(scag::Smsc * SmscApp);
+  virtual Response * CreateResponse(scag::Scag * SmscApp);
   virtual scag::admin::Actions::CommandActions GetActions();
 };
 

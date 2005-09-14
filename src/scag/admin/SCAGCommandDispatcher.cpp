@@ -181,9 +181,9 @@ void SCAGCommandDispatcher::shutdown()
 void SCAGCommandDispatcher::DoActions(Actions::CommandActions actions)
 {
     if (actions.reloadconfig) {
-        ConfigManager * cfg = ConfigManager::Instance();
-        cfg->reloadConfig(ROUTE_CFG);
-        cfg->reloadConfig(SMPPMAN_CFG);
+        ConfigManager & cfg = ConfigManager::Instance();
+        cfg.reloadConfig(scag::config::ROUTE_CFG);
+        cfg.reloadConfig(scag::config::SMPPMAN_CFG);
     }
 
     if (actions.restart) {

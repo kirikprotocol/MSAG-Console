@@ -20,7 +20,7 @@ CommandUpdateSmeInfo::CommandUpdateSmeInfo(const xercesc::DOMDocument * const do
   smsc_log_debug(logger, "UpdateSmeInfo command");
 }
 
-Response * CommandUpdateSmeInfo::CreateResponse(scag::Smsc * SmscApp)
+Response * CommandUpdateSmeInfo::CreateResponse(scag::Scag * SmscApp)
 {
   //SmscApp->getSmeAdmin()->updateSmeInfo(getSmeInfo().systemId, getSmeInfo());  
   return new Response(Response::Ok, "none");

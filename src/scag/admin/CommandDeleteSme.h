@@ -24,7 +24,7 @@ public:
   CommandDeleteSme(const xercesc::DOMDocument * const document);
 
   const SmeSystemId& getSmeSystemId() const {return systemid;}
-  virtual Response * CreateResponse(scag::Smsc * SmscApp);
+  virtual Response * CreateResponse(scag::Scag * SmscApp);
 
 private:
   SmeSystemId systemid;

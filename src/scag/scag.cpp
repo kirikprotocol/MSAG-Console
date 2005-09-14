@@ -3,11 +3,10 @@
 #include "system/smppio/SmppAcceptor.hpp"
 #include <memory>
 #include "util/debug.h"
-#include "scag/state_machine.hpp"
 #include "core/synchronization/Event.hpp"
 #include "util/Exception.hpp"
 #include "system/common/rescheduler.hpp"
-#include "util/config/route/RouteConfig.h"
+#include "scag/config/route/RouteConfig.h"
 #include "logger/Logger.h"
 #include "util/regexp/RegExp.hpp"
 #include "util/config/ConfigView.h"
@@ -17,15 +16,123 @@
 #include "scag/billing/rules/BillingRules.hpp"
 #include "util/findConfigFile.h"
 
-#include "scag/ConfigManager.h"
-
-namespace system {
-    using namespace smsc::router;
-    extern void loadRoutes(RouteManager* rm,const smsc::util::config::route::RouteConfig& rc,bool traceit=false);
-}
+#include "scag/config/ConfigManager.h"
+#include "scag/config/route/RouteConfig.h"
+#include "scag/config/route/RouteStructures.h"
+//#include "scag/bill/BillingManager.h"
+#include "scag/stat/StatisticsManager.h"
+#include "scag/config/alias/aliasconf.h"
 
 namespace scag 
 {
+
+    using namespace smsc::router;
+    using scag::config::RouteConfig;
+    using scag::config::Route;
+    using scag::config::Source;
+    using scag::config::Destination;
+    using scag::config::DestinationHash;
+    using scag::config::SourceHash;
+    using scag::config::Mask;
+    using scag::config::MaskVector;
+    extern void loadRoutes(RouteManager* rm, const scag::config::RouteConfig& rc,bool traceit=false);
+
+static inline void makeAddress_(Address& addr,const string& mask)
+{
+  addr=Address(mask.c_str());
+}
+
+void loadRoutes(RouteManager* rm,const scag::config::RouteConfig& rc,bool traceit)
+{
+  try
+  {
+    Route *route;
+    for (RouteConfig::RouteIterator ri = rc.getRouteIterator();
+         ri.fetchNext(route) == RouteConfig::success;)
+    {
+      char * dest_key;
+      char* src_key;
+      Source src;
+      Destination dest;
+      RouteInfo rinfo;
+      for (DestinationHash::Iterator dest_it = route->getDestinations().getIterator();
+           dest_it.Next(dest_key, dest);)
+      {
+        for (SourceHash::Iterator src_it = route->getSources().getIterator();
+             src_it.Next(src_key, src);)
+        {
+          // masks
+          if(dest.isSubject())
+          {
+            rinfo.dstSubj="subj:"+dest.getIdString();
+          }
+          const MaskVector& dest_masks = dest.getMasks();
+          for (MaskVector::const_iterator dest_mask_it = dest_masks.begin();
+               dest_mask_it != dest_masks.end();
+               ++dest_mask_it)
+          {
+            makeAddress_(rinfo.dest,*dest_mask_it);
+            if(!dest.isSubject())
+            {
+              rinfo.dstSubj="mask:"+*dest_mask_it;
+            }
+            const MaskVector& src_masks = src.getMasks();
+            if(src.isSubject())
+            {
+              rinfo.srcSubj="subj:"+src.getIdString();
+            }
+            for(MaskVector::const_iterator src_mask_it = src_masks.begin();
+                src_mask_it != src_masks.end();
+                ++src_mask_it)
+            {
+              if(!src.isSubject())
+              {
+                rinfo.srcSubj="mask:"+*src_mask_it;
+              }
+              makeAddress_(rinfo.source,*src_mask_it);
+              rinfo.smeSystemId = dest.getSmeIdString();//dest.smeId;
+              rinfo.srcSmeSystemId = route->getSrcSmeSystemId();
+//              __trace2__("sme sysid: %s",rinfo.smeSystemId.c_str());
+              rinfo.billing = route->isBilling();
+              //rinfo.paid =
+              rinfo.archived=route->isArchiving();
+              rinfo.enabling = route->isEnabling();
+              rinfo.routeId=route->getId();
+              rinfo.serviceId=route->getServiceId();
+              rinfo.priority=route->getPriority();
+              rinfo.suppressDeliveryReports=route->isSuppressDeliveryReports();
+              rinfo.hide=route->isHide();
+              rinfo.replyPath=route->getReplyPath();
+              rinfo.deliveryMode = route->getDeliveryMode();
+              rinfo.forwardTo = route->getForwardTo();
+              rinfo.trafRules=TrafficRules(route->getTrafRules());
+              rinfo.forceDelivery=route->isForceDelivery();
+              rinfo.aclId=route->getAclId();
+              rinfo.allowBlocked=route->isAllowBlocked();
+              rinfo.providerId=route->getProviderId();
+              rinfo.billingId=route->getBillingRuleId();
+              rinfo.categoryId=route->getCategoryId();
+              rinfo.transit=route->isTransit();
+              try{
+                rm->addRoute(rinfo);
+              }
+              catch(exception& e)
+              {
+                __warning2__("[route skiped] : %s",e.what());
+              }
+            }
+          }
+        }
+      }
+    }
+    rm->commit(traceit);
+  }
+  catch(...)
+  {
+    rm->cancel();
+    throw;
+  }
+}
 
 using std::auto_ptr;
 using std::string;
@@ -34,9 +141,13 @@ using namespace smsc::sms;
 using namespace smsc::smeman;
 using namespace smsc::router;
 using namespace smsc::core::synchronization;
-using util::Exception;
+using smsc::util::Exception;
 
 using scag::config::ConfigManager;
+//using scag::bill::BillingManager;
+using scag::stat::StatisticsManager;
+using scag::config::AliasConfig;
+using scag::config::AliasRecord;
 
 Scag::~Scag()
 {
@@ -45,12 +156,12 @@ Scag::~Scag()
 
 class SpeedMonitor:public smsc::core::threads::ThreadedTask{
 public:
-  SpeedMonitor(EventQueue& eq,smsc::scag::performance::PerformanceListener* pl,Smsc* psmsc):
+  SpeedMonitor(EventQueue& eq, scag::performance::PerformanceListener* pl, Scag* pscag):
     queue(eq),perfListener(pl)
   {
     start.tv_sec=0;
     start.tv_nsec=0;
-    smsc=psmsc;
+    scag = pscag;
   }
   int Execute()
   {
@@ -66,7 +177,7 @@ public:
     for(int i=0;i<60;i++)times[i]=start.tv_sec;
     int lastscnt=0;
     memset(perfCnt,0,sizeof(perfCnt));
-    uint64_t lastPerfCnt[smsc::scag::performance::performanceCounters]={0,};
+    uint64_t lastPerfCnt[scag::performance::performanceCounters]={0,};
     //now.tv_sec=0;
     int i;
     for(;;)
@@ -92,12 +203,12 @@ public:
       last=cnt;
       lasttime=now;
       if(isStopping)break;
-      uint64_t perf[smsc::scag::performance::performanceCounters];
+      uint64_t perf[scag::performance::performanceCounters];
       // success, error, reschedule
-      smsc->getPerfData(perf);
-      smsc::scag::performance::PerformanceData d;
-      d.countersNumber=smsc::scag::performance::performanceCounters;
-      for(i=0;i<smsc::scag::performance::performanceCounters;i++)
+      scag->getPerfData(perf);
+      scag::performance::PerformanceData d;
+      d.countersNumber=scag::performance::performanceCounters;
+      for(i=0;i<scag::performance::performanceCounters;i++)
       {
         d.counters[i].lastSecond=(int)(perf[i]-lastPerfCnt[i]);
         d.counters[i].total=perf[i];
@@ -116,14 +227,14 @@ public:
         int idx=timeshift-1;
         if(idx<0)idx=59;
         times[idx]=now.tv_sec;
-        for(i=0;i<smsc::scag::performance::performanceCounters;i++)perfCnt[i][idx]=0;
+        for(i=0;i<scag::performance::performanceCounters;i++)perfCnt[i][idx]=0;
       }
       if(scnt!=lastscnt)
       {
         times[scnt]=now.tv_sec;
         lastscnt=scnt;
       }
-      for(int j=0;j<smsc::scag::performance::performanceCounters;j++)
+      for(int j=0;j<scag::performance::performanceCounters;j++)
       {
         d.counters[j].average=0;
       }
@@ -133,12 +244,12 @@ public:
         if(idx>=60)idx=0;
         if(i==scnt)
         {
-          for(int j=0;j<smsc::scag::performance::performanceCounters;j++)
+          for(int j=0;j<scag::performance::performanceCounters;j++)
           {
             perfCnt[j][idx]+=d.counters[j].lastSecond;
           }
         }
-        for(int j=0;j<smsc::scag::performance::performanceCounters;j++)
+        for(int j=0;j<scag::performance::performanceCounters;j++)
         {
           d.counters[j].average+=perfCnt[j][idx];
         }
@@ -148,7 +259,7 @@ public:
       //__trace2__("ca=%d,ea=%d,ra=%d, time diff=%u",
       //  d.success.average,d.error.average,d.rescheduled.average,diff);
 
-      for(i=0;i<smsc::scag::performance::performanceCounters;i++)
+      for(i=0;i<scag::performance::performanceCounters;i++)
       {
         d.counters[i].average/=diff;
       }
@@ -160,7 +271,7 @@ public:
 
       perfListener->reportGenPerformance(&d);
 
-      for(i=0;i<smsc::scag::performance::performanceCounters;i++)
+      for(i=0;i<scag::performance::performanceCounters;i++)
       {
         lastPerfCnt[i]=perf[i];
       }
@@ -178,50 +289,44 @@ public:
   }
 protected:
   EventQueue& queue;
-  int perfCnt[smsc::scag::performance::performanceCounters][60];
+  int perfCnt[scag::performance::performanceCounters][60];
   int timeshift;
   time_t times[60];
   timespec start;
-  smsc::scag::performance::PerformanceListener* perfListener;
-  static Smsc* smsc;
+  scag::performance::PerformanceListener* perfListener;
+  static Scag* scag;
 };
 
 Scag* SpeedMonitor::scag=NULL;
 
 void Scag::init()
 {
-  ConfigManager * cfg = ConfigManager::Instance();
+  ConfigManager & cfg = ConfigManager::Instance();
 
   smsc::util::regexp::RegExp::InitLocale();
   smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.init");
 
   try{
-  InitLicense(cfg.getLicConfig());  
+  InitLicense(*cfg.getLicConfig());  
   tp.preCreateThreads(15);
   
   {
     smsc_log_info(log, "Registering SMEs" );
-    scag::config::SmppManConfig::RecordIterator i=cfg->getSmppManConfig()->getRecordIterator();
+    scag::config::SmppManConfig::RecordIterator i=cfg.getSmppManConfig().getRecordIterator();
     using namespace smsc::util::regexp;
     RegExp re;
     while(i.hasRecord())
     {
-      smsc::util::config::smeman::SmeRecord *rec;
+      scag::config::SmeRecord *rec;
       i.fetchNext(rec);
-      SmeInfo si;
-      /*
-      uint8_t typeOfNumber;
-      uint8_t numberingPlan;
-      uint8_t interfaceVersion;
-      std::string rangeOfAddress;
-      std::string systemType;
-      std::string password;
-      std::string hostname;
-      int port;
-      SmeSystemId systemId;
-      SmeNType SME_N;
-      bool  disabled;
-      */
+
+      //*****************************************************
+      // Its shuld be SME registration here
+      // That is registration of SmppEntity
+      //*****************************************************
+
+      /*SmeInfo si;
+      
       if(rec->rectype==smsc::util::config::smeman::SMPP_SME)
       {
         si.typeOfNumber=rec->recdata.smppSme.typeOfNumber;
@@ -244,7 +349,7 @@ void Scag::init()
           smsc_log_error(log, "Failed to compile rangeOfAddress for sme %s",si.systemId.c_str());
         }
         __trace2__("INIT: addSme %s(to=%d,wa=%s)",si.systemId.c_str(),si.timeout,si.wantAlias?"true":"false");
-        //si.hostname=rec->recdata->smppSme.
+        
         si.disabled=rec->recdata.smppSme.disabled;
         using namespace smsc::util::config::smeman;
         switch(rec->recdata.smppSme.mode)
@@ -260,16 +365,33 @@ void Scag::init()
         {
           smsc_log_warn(log, "UNABLE TO REGISTER SME:%s",si.systemId.c_str());
         }
-      }
+
+      }*/
+
+      //************************************************
+      // Make when SmppManager is ready
+      //************************************************
+
     }
     smsc_log_info(log, "SME registration done" );
   }
   // initialize aliases
 
-  reloadAliases(cfg);
-  smsc_log_info(log, "Aliases loaded" );
-  reloadRoutes(cfg);
-  smsc_log_info(log, "Routes loaded" );
+
+  //*****************************************************
+  // Its not needed now, becouse of all configs are
+  // loading at call of Instance method of ConfigManager.
+  // Its called at begin of this method
+  //*****************************************************
+  //
+  //reloadAliases(cfg);
+  //smsc_log_info(log, "Aliases loaded" );
+  //reloadRoutes(cfg);
+  //smsc_log_info(log, "Routes loaded" );
+  //
+  //*****************************************************
+  //*****************************************************
+
 
   // create scheduler here, and start later in run
 
@@ -278,26 +400,30 @@ void Scag::init()
   smsc_log_info(log, "MR cache inited" );
 
   {
-    billing::InitBillingInterface(cfg.cfgman->getString("billing.module"));
+      // Initialization of the billing manager
+      // Its neccessary to put ConfigView object
+      // as argument in future in tmethod Init
+      // Untill put some strings
+      //BillingManager::Init("", "");
   }
 
-  try{ ussdTransactionTimeout=cfg.cfgman->getInt("core.ussdTransactionTimeout"); } 
+  try{ ussdTransactionTimeout=cfg.getConfig()->getInt("core.ussdTransactionTimeout"); } 
   catch(...) {
     __warning__("ussdTransactionTimeout set to default(10min)");
     ussdTransactionTimeout = 10*60;
   }
 
 
-  {
+  /*{
     smsc_log_info(log, "Starting statemachines" );
-    int cnt=cfg.cfgman->getInt("core.state_machines_count");
+    int cnt=cfg.getConfig()->getInt("core.state_machines_count");
     for(int i=0;i<cnt;i++)
     {
       StateMachine *m=new StateMachine(eventqueue,this);
       tp.startTask(m);
     }
     smsc_log_info(log, "Statemachines started" );
-  }
+  }*/
 
   {
     SpeedMonitor *sm=new SpeedMonitor(eventqueue,&perfDataDisp,this);
@@ -324,17 +450,16 @@ void Scag::init()
   }
 
   try{
-      using smsc::util::config::ConfigView;
-      std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.cfgman,"MessageStorage"));
+      using scag::config::ConfigView;
+      std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.getConfig(),"MessageStorage"));
 
-      auto_ptr <char> loc(cv->getString("statisticsDir"));
+      auto_ptr <char> loc(cv->getString("statisticsDir", 0, false));
       if(!loc.get())
           throw Exception("MessageStorage.statisticsDir not found");
 
       std::string location = loc.get();
-      statMan=new smsc::scag::stat::GWStatisticsManager(location);
+      StatisticsManager::init(location);
 
-      tp2.startTask(statMan);
       smsc_log_info(log, "Statistics manager started" );
   }catch(exception& e){
       smsc_log_warn(log, "Smsc.init exception: %s", e.what());
@@ -344,17 +469,28 @@ void Scag::init()
   }
 
 
-  smscHost=cfg.cfgman->getString("smpp.host");
-  smscPort=cfg.cfgman->getInt("smpp.port");
-  ssockman.setSmppSocketTimeout(cfg.cfgman->getInt("smpp.readTimeout"));
-  ssockman.setInactivityTime(cfg.cfgman->getInt("smpp.inactivityTime"));
-  ssockman.setInactivityTimeOut(cfg.cfgman->getInt("smpp.inactivityTimeOut"));
+  scagHost=cfg.getConfig()->getString("smpp.host");
+  scagPort=cfg.getConfig()->getInt("smpp.port");
 
+  //*****************************************************
+  // How will be set this parameters now?
+  //*****************************************************
+  //
+  ssockman.setSmppSocketTimeout(cfg.getConfig()->getInt("smpp.readTimeout"));
+  ssockman.setInactivityTime(cfg.getConfig()->getInt("smpp.inactivityTime"));
+  ssockman.setInactivityTimeOut(cfg.getConfig()->getInt("smpp.inactivityTimeOut"));
+  //
+  //*****************************************************
+  //*****************************************************
+
+  //*****************************************************
+  // Its will be not such class Performance server
+  //*****************************************************
   {
-    smsc::scag::performance::PerformanceServer *perfSrv=new smsc::scag::performance::PerformanceServer
+    scag::performance::PerformanceServer *perfSrv=new scag::performance::PerformanceServer
     (
-      cfg.cfgman->getString("core.performance.host"),
-      cfg.cfgman->getInt("core.performance.port"),
+      cfg.getConfig()->getString("core.performance.host"),
+      cfg.getConfig()->getInt("core.performance.port"),
       &perfDataDisp
     );
     tp2.startTask(perfSrv);
@@ -363,17 +499,22 @@ void Scag::init()
 
   eventQueueLimit=1000;
   try{
-    eventQueueLimit=cfg.cfgman->getInt("core.eventQueueLimit");
+    eventQueueLimit=cfg.getConfig()->getInt("core.eventQueueLimit");
   }catch(...)
   {
     __warning__("eventQueueLimit not found, using default(1000)");
   }
 
-  {
+  //*****************************************************************
+  // Its shuld be smsc-connections registration here
+  // in SmppManager. Wait for SmppManager realization
+  //*****************************************************************
+  //
+  /*{
     //MutexGuard mg(gatewaySwitchMutex);
-    using smsc::util::config::ConfigView;
+    using scag::config::ConfigView;
     using smsc::util::config::CStrSet;
-    std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.cfgman,"smsc-connections"));
+    std::auto_ptr<ConfigView> cv(new ConfigView(*cfg->getConfig(),"smsc-connections"));
 
     std::auto_ptr<CStrSet> conn(cv->getShortSectionNames());
 
@@ -399,13 +540,13 @@ void Scag::init()
       smeman.registerInternallSmeProxy(*it,gwsme);
       tp.startTask(gwsme);
     }
-  }
+  }*/
+  //
+  //********************************************************************
+  //********************************************************************
+
 
   smsc_log_info(log, "Smsc connections done.");
-
-  {
-    billing::rules::BillingRulesManager::Init(findConfigFile("billing-rules.xml"));
-  }
 
   smsc_log_info(log, "SMSC init complete" );
   
@@ -425,7 +566,8 @@ void Scag::init()
   __trace__("Smsc::init completed");
 }
 
-bool Scag::regSmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid)
+// Wait for SmppManager will be ready
+/*bool Scag::regSmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid)
 {
     MutexGuard mg(gatewaySwitchMutex);
 
@@ -447,12 +589,14 @@ bool Scag::regSmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPor
     gwsme->setPrefix(newuid);
     smeman.registerInternallSmeProxy(systemId, gwsme);
     tp.startTask(gwsme);
-    return true;
-}
 
-bool Scag::modifySmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid)
+    return true;
+}*/
+
+// Wait for SmppManager will be ready
+/*bool Scag::modifySmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid)
 {
-    MutexGuard mg(gatewaySwitchMutex);
+        MutexGuard mg(gatewaySwitchMutex);
     SmeRecord* p = (SmeRecord*)getSmeProxy(systemId);
     GatewaySme* gwsme = dynamic_cast<GatewaySme*>(p->proxy);
 
@@ -483,7 +627,7 @@ bool Scag::modifySmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t alt
     }
     
     return false;
-}
+}*/
 
 
 void Scag::run()
@@ -498,8 +642,8 @@ void Scag::run()
     Event accstarted;
     smsc::system::smppio::SmppAcceptor *acc=new
       smsc::system::smppio::SmppAcceptor(
-        smscHost.c_str(),
-        smscPort,
+        scagHost.c_str(),
+        scagPort,
         &ssockman,
         &accstarted
       );
@@ -546,11 +690,12 @@ void Scag::shutdown()
   tp2.shutdown();
 }
 
-void Scag::reloadRoutes(const SmscConfigs& cfg)
+void Scag::reloadRoutes()
 {
+  ConfigManager & cfg = ConfigManager::Instance();
   auto_ptr<RouteManager> router(new RouteManager());
   router->assign(&smeman);
-  try { smsc::system::loadRoutes(router.get(),*cfg.routesconfig); }
+  try { loadRoutes(router.get(),cfg.getRouteConfig()); }
   catch(...) { 
       __warning__("Failed to load routes");
   }
@@ -561,19 +706,21 @@ void Scag::reloadTestRoutes(const RouteConfig& rcfg)
 {
   auto_ptr<RouteManager> router(new RouteManager());
   router->assign(&smeman);
-  smsc::system::loadRoutes(router.get(),rcfg,true);
+  loadRoutes(router.get(),rcfg,true);
   ResetTestRouteManager(router.release());
 }
 
-void Scag::reloadAliases(const SmscConfigs& cfg)
+void Scag::reloadAliases()
 {
+  ConfigManager & cfg = ConfigManager::Instance();
   auto_ptr<AliasManager> aliaser(new AliasManager());
   {
-    smsc::util::config::alias::AliasConfig::RecordIterator i =
-                                cfg.aliasconfig->getRecordIterator();
+    AliasConfig acfg = cfg.getAliasConfig();
+    scag::config::AliasConfig::RecordIterator i =
+                                acfg.getRecordIterator();
     while(i.hasRecord())
     {
-      smsc::util::config::alias::AliasRecord *rec;
+      scag::config::AliasRecord *rec;
       i.fetchNext(rec);
       __trace2__("adding %20s %20s",rec->addrValue,rec->aliasValue);
       smsc::alias::AliasInfo ai;

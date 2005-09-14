@@ -1,5 +1,5 @@
-#ifndef __SMSC_SYSTEM_MRCACHE_HPP__
-#define __SMSC_SYSTEM_MRCACHE_HPP__
+#ifndef __SCAG_SYSTEM_MRCACHE_HPP__
+#define __SCAG_SYSTEM_MRCACHE_HPP__
 
 #include "core/synchronization/Mutex.hpp"
 #include "core/buffers/Hash.hpp"
@@ -14,7 +14,6 @@
 #endif
 
 
-namespace smsc{
 namespace scag{
 
 using smsc::core::buffers::Hash;
@@ -52,6 +51,5 @@ protected:
 };
 
 }//scag
-}//smsc
 
 #endif

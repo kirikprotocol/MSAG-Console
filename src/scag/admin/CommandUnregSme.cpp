@@ -10,7 +10,7 @@
 namespace scag {
 namespace admin {
 
-Response * CommandUnregSme::CreateResponse(scag::Smsc * SmscApp)
+Response * CommandUnregSme::CreateResponse(scag::Scag * SmscApp)
 { 
   //SmscApp->unregisterSmeProxy(systemId);
   return new Response(Response::Ok, "none");

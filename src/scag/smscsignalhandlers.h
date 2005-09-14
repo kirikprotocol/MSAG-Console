@@ -1,5 +1,5 @@
-#ifndef SMSC_SYSTEM_SMSCSIGNALHANDLERS
-#define SMSC_SYSTEM_SMSCSIGNALHANDLERS
+#ifndef SCAG_SYSTEM_SMSCSIGNALHANDLERS
+#define SCAG_SYSTEM_SMSCSIGNALHANDLERS
 
 #include <signal.h>
 
@@ -8,21 +8,19 @@
 #include "scag/admin/SCAGCommandDispatcher.h"
 #include "scag/admin/SCAGSocketListener.h"
 
-namespace smsc {
 namespace scag {
 
-using namespace smsc::scag::admin;
+using namespace scag::admin;
 
-class Smsc;
+class Scag;
 
 static const int SHUTDOWN_SIGNAL = SIGTERM;
 
 
-void registerSmscSignalHandlers(Smsc * smsc);
-void registerSmscSignalHandlers(SCAGSocketListener * socketListener);
+void registerScagSignalHandlers(Scag * scag);
+void registerScagSignalHandlers(SCAGSocketListener * socketListener);
 void clearThreadSignalMask();
 
-}
 }
 
 #endif //#ifndef SMSC_SYSTEM_SMSCSIGNALHANDLERS

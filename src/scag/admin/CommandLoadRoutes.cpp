@@ -34,7 +34,7 @@ CommandLoadRoutes::CommandLoadRoutes(const xercesc::DOMDocument * doc)
 }
 
 
-Response * CommandLoadRoutes::CreateResponse(scag::Smsc * SmscApp)
+Response * CommandLoadRoutes::CreateResponse(scag::Scag * SmscApp)
 {
   try
   {

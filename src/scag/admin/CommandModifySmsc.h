@@ -6,6 +6,7 @@
 
 #include "Abstract_CommandSmscInfo.h"
 #include "CommandIds.h"
+#include "scag/scag.h"
 
 namespace scag {
 namespace admin {
@@ -17,7 +18,7 @@ public:
     : Abstract_CommandSmscInfo((Command::Id)CommandIds::modifySmsc, document)
   {
   }
-    virtual Response * CreateResponse(scag::Smsc * SmscApp);
+    virtual Response * CreateResponse(scag::Scag * SmscApp);
 };
 
 }

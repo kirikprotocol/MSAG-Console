@@ -1,10 +1,9 @@
-#ifndef __SMSC_SYSTEM_STATE_CHECKER_HPP__
-#define __SMSC_SYSTEM_STATE_CHECKER_HPP__
+#ifndef __SCAG_SYSTEM_STATE_CHECKER_HPP__
+#define __SCAG_SYSTEM_STATE_CHECKER_HPP__
 
 #include "smeman/smsccmd.h"
 #include "sms/sms.h"
 
-namespace smsc{
 namespace scag{
 
 using namespace  smsc::smeman;
@@ -91,6 +90,5 @@ public:
 };
 
 }//scag
-}//smsc
 
 #endif

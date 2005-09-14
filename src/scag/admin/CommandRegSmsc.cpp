@@ -23,7 +23,7 @@ namespace admin {
 
 using namespace smsc::util::xml;
 
-Response * CommandRegSmsc::CreateResponse(scag::Smsc * SmscApp)
+Response * CommandRegSmsc::CreateResponse(scag::Scag * SmscApp)
 {
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("CommandRegSmsc");
   try {      

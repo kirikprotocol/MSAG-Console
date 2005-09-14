@@ -34,7 +34,7 @@ SCAGCommand::~SCAGCommand()
 {
 }
 
-Response * SCAGCommand::CreateResponse(scag::Smsc * SmscApp)
+Response * SCAGCommand::CreateResponse(scag::Scag * ScagApp)
 {
   return new Response(Response::Ok, "none");
 }
