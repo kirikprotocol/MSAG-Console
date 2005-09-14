@@ -789,6 +789,34 @@ std::string dump(USHORT_T size, UCHAR_T* buff, bool ascii)
 	return reply;
 }
 
+void dumpToLog(Logger* logger, int len, const unsigned char* buffer )
+{
+	if( !buffer )
+	{
+		smsc_log_debug( logger, "%s", "Buffer is NULL" );		
+		return;
+	}
+
+	std::string row;
+	char tmp[32];
+	for(int addr = 0; addr < len; addr++ )
+	{
+		if(( addr & 0x0F ) == 0 )
+		{
+			if( !row.empty() ) smsc_log_debug( logger, "%s", row.c_str() );
+			sprintf( tmp, "%04X: ", addr );
+			row = tmp;
+		}
+		sprintf( tmp, " %02X", buffer[addr] );
+		row += tmp;
+	}
+	if( len & 0x0F )
+	{
+		smsc_log_debug( logger, "%s", row.c_str() );
+	}
+	smsc_log_debug( logger, "Total: %s byte(s)", len );
+}
+
 }//namespace inap
 }//namespace inman
 }//namespace smsc
