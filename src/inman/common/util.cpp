@@ -794,6 +794,7 @@ void dumpToLog(Logger* logger, int len, const unsigned char* buffer )
 	if( !buffer )
 	{
 		smsc_log_debug( logger, "%s", "Buffer is NULL" );		
+		smsc_log_debug( logger, "" );
 		return;
 	}
 
@@ -815,6 +816,7 @@ void dumpToLog(Logger* logger, int len, const unsigned char* buffer )
 		smsc_log_debug( logger, "%s", row.c_str() );
 	}
 	smsc_log_debug( logger, "Total: %d byte(s)", len );
+	smsc_log_debug( logger, "" );
 }
 
 }//namespace inap
