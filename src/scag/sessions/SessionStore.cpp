@@ -13,15 +13,15 @@ namespace scag { namespace sessions
         return new Session();
     }
 
-    void SessionStore::newSesion(const CSessionKey& sessionKey)
+    void SessionStore::newSession(const CSessionKey& sessionKey)
     {
     }
     
-    void SessionStore::deleteSesion(const CSessionKey& sessionKey)
+    void SessionStore::deleteSession(const CSessionKey& sessionKey)
     {
     }
     
-    void SessionStore::updateSesion(Session* session)
+    void SessionStore::updateSession(Session* session)
     {
     }
     

@@ -157,65 +157,22 @@ void XMLBasicHandler::error(const SAXParseException& e)
 {
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
-    std::string str("Error at file ");
-    char buff[128];
-    str.append(fname.localForm());
-    str.append(", line ");
-
-    sprintf(buff,"%d",e.getLineNumber());
-    str.append(buff);
-    str.append(", char ");
-
-    sprintf(buff,"%d",e.getColumnNumber());
-    str.append(buff);
-    str.append("  Message: ");
-    str.append(msg.localForm());
-    smsc_log_error(logger, str);
+    smsc_log_error(logger,"Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
 }
 
 void XMLBasicHandler::fatalError(const SAXParseException& e)
 {
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
-    std::string str("Fatal Error at file ");
-    char buff[128];
+    smsc_log_error(logger,"Fatal Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
 
-    str.append(fname.localForm());
-    str.append(", line ");
-
-    sprintf(buff,"%d",e.getLineNumber());
-    str.append(buff);
-    str.append(", char ");
-
-    sprintf(buff,"%d",e.getColumnNumber());
-    str.append(buff);
-
-    str.append("  Message: ");
-    str.append(msg.localForm());
-    smsc_log_error(logger,str);
 }
 
 void XMLBasicHandler::warning(const SAXParseException& e)
 {
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
-
-    std::string str("Warning at file ");
-    char buff[128];
-
-    str.append(fname.localForm());
-    str.append(", line ");
-
-    sprintf(buff,"%d",e.getLineNumber());
-    str.append(buff);
-    str.append(", char ");
-
-    sprintf(buff,"%d",e.getColumnNumber());
-    str.append(buff);
-    str.append(" Message: ");
-    str.append(msg.localForm());
-
-    smsc_log_warn(logger,str);
+    smsc_log_error(logger,"Warning at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
 }
 
 }}

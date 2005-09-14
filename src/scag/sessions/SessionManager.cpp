@@ -29,6 +29,7 @@ namespace scag { namespace sessions
     using namespace smsc::core::buffers;
     using namespace scag::util::sms;
 
+
     class SessionManagerImpl : public SessionManager, public Thread, public SessionOwner
     {
         struct CSessionAccessData
@@ -200,7 +201,7 @@ int SessionManagerImpl::processExpire()
         // Session expired
         SessionHash.Delete(it->SessionKey);
         SessionExpirePool.erase(it);
-        store.deleteSesion(it->SessionKey);
+        store.deleteSession(it->SessionKey);
     }
 }
 
@@ -240,36 +241,34 @@ time_t SessionManagerImpl::processExpire()
 Session * SessionManagerImpl::NewSession(CSessionKey sessionKey)
 {
     Session * session = 0;
-    store.newSesion(sessionKey);
+    store.newSession(sessionKey);
 
     session = store.getSession(sessionKey);
 
     time_t time = session->getWakeUpTime();
 
     CSessionAccessData accessData;
-    accessData.nextWakeTime = session->getWakeUpTime();
-    if (session->getWakeUpTime() == 0) return 0;
+    accessData.nextWakeTime = time;
+    if (time == 0) return 0;
 
     CSLIterator it;
     for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it) 
     {
         if (time < it->nextWakeTime)
         {
-            SessionExpirePool.insert(it,accessData);
-            SessionHash.Insert(sessionKey,it);
+            CSLIterator _it = SessionExpirePool.insert(it,accessData);
+            SessionHash.Insert(sessionKey,_it);
             return session;
         }
     }
-    SessionExpirePool.insert(it,accessData);
-    it = SessionExpirePool.end();
-    --it;
+    it = SessionExpirePool.insert(SessionExpirePool.end(),accessData);
     SessionHash.Insert(sessionKey,it);
-
     return session;
 }
 
 Session* SessionManagerImpl::getSession(const SCAGCommand& command)
 {
+
     Session*    session = 0;
     CSessionKey sessionKey; 
 
@@ -280,17 +279,29 @@ Session* SessionManagerImpl::getSession(const SCAGCommand& command)
 
     CSLIterator it;
 
-    if (!SessionHash.Exists(sessionKey)) return NewSession(sessionKey);
+    if (!SessionHash.Exists(sessionKey)) 
+    {
+        session = NewSession(sessionKey);
+        session->setOwner(this);
+        return session;
+    }
 
     it = SessionHash.Get(sessionKey);
     while (it->bOpened)
     {
         inUseMonitor.wait();
-        if (!SessionHash.Exists(sessionKey)) return NewSession(sessionKey);
+        if (!SessionHash.Exists(sessionKey)) 
+        {
+            session = NewSession(sessionKey);
+            session->setOwner(this);
+            return session;
+        }
         it = SessionHash.Get(sessionKey);
     }                                      
-               
-    return store.getSession(sessionKey);
+
+    session = store.getSession(sessionKey);
+    session->setOwner(this);
+    return session;
 }
 
 
@@ -300,7 +311,7 @@ void SessionManagerImpl::releaseSession(Session* session)
     CSessionKey sessionKey = session->getSessionKey();
 
     MutexGuard guard(inUseMonitor);
-    if (session->isChanged()) store.updateSesion(session);
+    if (session->isChanged()) store.updateSession(session);
     session->releaseOperation();
 
     CSLIterator it;
@@ -319,7 +330,7 @@ void SessionManagerImpl::closeSession(const Session* session)
     CSessionKey sessionKey = session->getSessionKey();
 
     MutexGuard guard(inUseMonitor);
-    store.deleteSesion(sessionKey);
+    store.deleteSession(sessionKey);
 
     CSLIterator it;
 
@@ -340,17 +351,26 @@ void SessionManagerImpl::startTimer(CSessionKey key,time_t deadLine)
 
     CSLIterator it;
     it = SessionHash.Get(key);
+
     while (it->bOpened) 
     {
         inUseMonitor.wait();
         if (!SessionHash.Exists(key)) return;
         it = SessionHash.Get(key);
     }
+
     if (deadLine == 0) 
     {
-        time_t now;
+     /*   time_t now;
         time(&now);
         deadLine = SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL + now;
+        */
+
+        SessionExpirePool.erase(it);
+        SessionHash.Delete(key);
+        store.deleteSession(key);
+
+        return;
     }
     it->nextWakeTime = deadLine;
 }

@@ -23,6 +23,7 @@ void ActionAbort::init(const SectionParams& params,PropertyObject propertyObject
 
 bool ActionAbort::run(ActionContext& context)
 {
+    smsc_log_debug(logger,"Run Action 'abort'...");
     context.abortSession();
     return true;
 }

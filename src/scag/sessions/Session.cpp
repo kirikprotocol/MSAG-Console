@@ -37,7 +37,7 @@ Session::Session()
     time(&now);
 
     operation.type = 1;
-    operation.validityTime = now + 10;
+    operation.validityTime = now + 100;
 
     addPendingOperation(operation);
     //Временная херота, для того, чтобы SessionManager выдавал валидную сессию
@@ -62,6 +62,8 @@ Session::~Session()
 
 void Session::abort()
 {
+    if (!Owner) return;
+
     COperationKey key;
     Operation * value;
     //OperationHash.getIterator()
@@ -81,8 +83,11 @@ void Session::abort()
        delete (*it);
     }
      */
+
     OperationHash.Empty();
     PendingOperationList.clear();
+
+    Owner->startTimer(m_SessionKey,0);
     smsc_log_error(logger,"session aborted");
 }
 
@@ -152,7 +157,7 @@ time_t Session::getWakeUpTime()
     Operation * operation = 0;
     if (!PendingOperationList.empty()) time1 = (PendingOperationList.begin())->validityTime;
 
-    if (!OperationHash.Count()) 
+    if (OperationHash.Count()) 
     {
 
         COperationKey key;

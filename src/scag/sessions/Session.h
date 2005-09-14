@@ -150,7 +150,7 @@ namespace scag { namespace sessions
         virtual void changed(AdapterProperty& property);
         virtual Property* getProperty(const std::string& name);
 
-        void setOwner(SessionOwner& _Owner) {Owner = &_Owner;}
+        void setOwner(SessionOwner * _Owner) { Owner = _Owner;}
         bool hasOperations();
         void expireOperation(time_t currentTime);
         bool startOperation(SCAGCommand& cmd);

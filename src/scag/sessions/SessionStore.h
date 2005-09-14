@@ -19,9 +19,9 @@ namespace scag { namespace sessions
 
         Session * getSession(const CSessionKey& sessionKey);
 
-        void newSesion(const CSessionKey& sessionKey);
-        void deleteSesion(const CSessionKey& sessionKey);
-        void updateSesion(Session* session);
+        void newSession(const CSessionKey& sessionKey);
+        void deleteSession(const CSessionKey& sessionKey);
+        void updateSession(Session* session);
         void loadExpireList(COperationsHash& opList);
     };
 }}

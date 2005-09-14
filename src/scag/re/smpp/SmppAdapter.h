@@ -5,11 +5,22 @@
 #include <scag/util/properties/Properties.h>
 #include <core/buffers/IntHash.hpp>
 //#include "scag/re/CommandAdapter.h"
-
+/*
 namespace scag { namespace re {
     enum AccessType;
 }};
-                               
+  */                             
+
+namespace scag { namespace re {
+    enum AccessType 
+    {
+        atNoAccess = 0,
+        atRead  = 1,
+        atWrite = 2,
+        atReadWrite = 3
+    };
+}};
+  
 namespace scag { namespace re { namespace smpp 
 {
     using namespace scag::util::properties;
