@@ -41,12 +41,14 @@ namespace smsc
 		{
     		Logger* inapLogger;
     		Logger* tcapLogger;
+    		Logger* dumpLogger;
     	}
 	}
 };
 
 using smsc::inman::inap::inapLogger;
 using smsc::inman::inap::tcapLogger;
+using smsc::inman::inap::dumpLogger;
 
 class Manager : public SessionListener
 {
@@ -57,7 +59,7 @@ class Manager : public SessionListener
 
 	public:
 
-		Manager(Session* sess) : session( sess ), logger( Logger::getInstance("smsc.in.Manager") )
+		Manager(Session* sess) : session( sess ), logger( Logger::getInstance("smsc.inman.Manager") )
 		{
 			assert( session );
 			session->addListener( this );
@@ -125,8 +127,9 @@ static Manager* g_pManager = 0;
 static void init_logger()
 {
 	Logger::Init();
-    inapLogger = Logger::getInstance("smsc.in");
-    tcapLogger = Logger::getInstance("smsc.in.tcap");
+    inapLogger = Logger::getInstance("smsc.inman");
+    tcapLogger = Logger::getInstance("smsc.inman.tcap");
+    dumpLogger = Logger::getInstance("smsc.inman.inap.dump");
 }
 
 void mo(Console&, const std::vector<std::string> &args)

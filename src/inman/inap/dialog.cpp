@@ -18,6 +18,7 @@ using std::runtime_error;
 using std::auto_ptr;
 using smsc::inman::common::format;
 using smsc::inman::common::getTcapReasonDescription;
+using smsc::inman::common::dumpToLog;
 using smsc::inman::comp::ComponentFactory;
 
 namespace smsc  {
@@ -28,6 +29,7 @@ namespace inap  {
 // TcapDialog class
 /////////////////////////////////////////////////////////////////////////////////////
 
+extern Logger* dumpLogger;
 
 TcapDialog::TcapDialog(Session* pSession, USHORT_T dlgId) 
     : logger(Logger::getInstance("smsc.inman.inap.TcapDialog"))
@@ -164,6 +166,9 @@ USHORT_T TcapDialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
 
   UCHAR_T opcode = op[0];
 
+  smsc_log_debug( dumpLogger, "INVOKE_IND( opcode=0x%X )", op[0] );
+  dumpToLog( dumpLogger, pmlen, pm );
+
   auto_ptr<Invoke> invoke( new Invoke() );
   invoke->setId( invId );
   invoke->setTag( tag );
@@ -216,7 +221,11 @@ USHORT_T TcapDialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T op
 
 USHORT_T TcapDialog::handleUserError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
 {
-  return MSG_OK;
+	assert( op );
+	assert( oplen > 0 );
+  	smsc_log_debug( dumpLogger, "U_ERROR_IND( opcode=0x%X )", op[0] );
+  	dumpToLog( dumpLogger, pmlen, pm );
+  	return MSG_OK;
 }
 
 } // namespace inap

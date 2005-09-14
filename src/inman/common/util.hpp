@@ -9,6 +9,9 @@
 #include "i97isup_api.h"
 #include "i97tcapapi.h"
 #include "types.hpp"
+#include "logger/Logger.h"
+
+using smsc::logger::Logger;
 
 namespace smsc {
 namespace inman{
@@ -40,6 +43,7 @@ extern const char* getModuleName(USHORT_T moduleId);
 extern const char* getReturnCodeDescription(USHORT_T code);
 extern std::string getBufferDump(const char* pBuffer, int nLength);
 extern std::string format(const char* szFormat, ... );
+extern void dumpToLog(Logger* logger, int len, const unsigned char* buffer );
 
 }//namespace inap
 }//namespace inman

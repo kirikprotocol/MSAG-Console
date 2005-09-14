@@ -13,12 +13,14 @@ using std::runtime_error;
 using smsc::inman::common::format;
 using smsc::inman::common::getTcapReasonDescription;
 using smsc::inman::common::dump;
+using smsc::inman::common::dumpToLog;
 
 namespace smsc  {
 namespace inman {
 namespace inap  {
 
 extern Logger* tcapLogger;
+extern Logger* dumpLogger;
 
 void Invoke::send(TcapDialog* dialog)
 {
@@ -31,6 +33,9 @@ void Invoke::send(TcapDialog* dialog)
 
   smsc_log_debug( tcapLogger, "INVOKE_REQ(id=%d,tag=%d,op=%s,param=%s)", 
   		id, tag, dump( op.size(), &op[0]).c_str(), dump( params.size(), &params[0]).c_str() );
+
+  smsc_log_debug( dumpLogger, "INVOKE_REQ( opcode=0x%X )", op[0] );
+  dumpToLog( dumpLogger, params.size(), &params[0] );
 
   UCHAR_T result = EINSS7_I97TInvokeReq
   (
