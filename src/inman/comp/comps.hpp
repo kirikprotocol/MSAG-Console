@@ -105,8 +105,8 @@ class InitialDPSMSArg: public Component	//SSF -> SCF
 	void setCallingPartyNumber(const Address& addr);
 	void setCallingPartyNumber(const char * text);
 
-	void setIMSI(const std::string& imsi);
-	void setIMSI(const AddressValue& imsi);
+	void setIMSI(const std::string& imsi); //imsi contains sequence of ASCII digits
+//	void setIMSI(const AddressValue& imsi);
 
 	void setSMSCAddress(const Address& addr);
 	void setSMSCAddress(const char * text);

@@ -74,26 +74,16 @@ void InitialDPSMSArg::setCallingPartyNumber(const char * text)
     InitialDPSMSArg::setCallingPartyNumber((const Address&)sadr);
 }
 
-
+//imsi contains sequence of ASCII digits
 void InitialDPSMSArg::setIMSI(const std::string& imsi)
 {
     OCTET_STRING_t *	iMSI = (OCTET_STRING_t *)CALLOC(1, sizeof(OCTET_STRING_t)); // reset _asn_ctx
-    uint8_t *		str = (uint8_t *)MALLOC(imsi.length() + 1);
+    uint8_t *		str = (uint8_t *)MALLOC((imsi.length() + 1)/2);
 
-    strcpy((char*)(iMSI->buf = str), imsi.c_str());
-    iMSI->size = (int)imsi.length();
+    iMSI->size = smsc::cvtutil::packNumString2BCD(iMSI->buf, imsi.c_str(), imsi.length());
     comp->idp.iMSI = iMSI;
 }
 
-void InitialDPSMSArg::setIMSI(const AddressValue& imsi)
-{
-    OCTET_STRING_t *	iMSI = (OCTET_STRING_t *)CALLOC(1, sizeof(OCTET_STRING_t)); // reset _asn_ctx
-    uint8_t *		str = (uint8_t *)MALLOC(strlen(imsi) + 1);
-
-    strcpy((char*)(iMSI->buf = str), imsi);
-    iMSI->size = (int)strlen(imsi);
-    comp->idp.iMSI = iMSI;
-}
 
 void InitialDPSMSArg::setSMSCAddress(const Address& addr)
 {
