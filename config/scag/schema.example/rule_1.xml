@@ -1,27 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <scag:rule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                 xsi:schemaLocation="http://www.sibinco.com/SCAG smpp_rules.xsd"
-                 xmlns:scag="http://www.sibinco.com/SCAG"
-                 xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"
-                 transport="SMPP">
+                    xsi:schemaLocation="http://www.sibinco.com/SCAG smpp_rules.xsd"
+                    xmlns:scag="http://www.sibinco.com/SCAG"
+                    xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"    
+		    xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS"
+                    transport="SMPP">
                         
     <deliver_sm>
         <set var="$e777" value="20"/>
-        <set var="#aaa" value="89"/>
+        <set var="#sm_length" value="$e777"/>
         <set value="10" var="%a10"/>
         
-        <session:close commit="false"/>
-        <session:close/>
-        
-        <if op="eqi" test="%dfdhggd">
+        <session:abort />
+        <set var="$e777" value="22"/>
+	        
+        <if value="10" op="eqi" test="%dfdhggd">
             <return result="20"/>
         </if>
         
         <if test="%dfdhggd" op="ge" value="$gfdhgdf">
-            <set var="#ccc" value="@asss"/>
+            <set var="#user_response_code" value="#sm_length"/>
             <if test="@TRUE">
                 <then>
-                    <set var="%sss" value="10"/>
+                    <set var="%sss" value="#sm_length"/>
                 </then>
                 <else>
                     <return result="10"/>
@@ -36,7 +37,7 @@
      </deliver_sm_resp>
         
     <submit_sm>
-        <set var="#ddd" value="20"/>
+        <set var="#user_response_code" value="20"/>
         <return result="11"/>
     </submit_sm>
     
