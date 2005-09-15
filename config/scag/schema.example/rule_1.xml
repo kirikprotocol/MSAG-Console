@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <scag:rule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                     xsi:schemaLocation="http://www.sibinco.com/SCAG smpp_rules.xsd"
                     xmlns:scag="http://www.sibinco.com/SCAG"
@@ -7,6 +8,7 @@
                     transport="SMPP">
                         
     <deliver_sm>
+        <!--operation:wait type="1" time="%a10" /-->
         <set var="$e777" value="20"/>
         <set var="#sm_length" value="$e777"/>
         <set value="10" var="%a10"/>

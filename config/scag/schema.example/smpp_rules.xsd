@@ -107,6 +107,8 @@
                 <enumeration value="#ussd_pssr_resp"/>
                 <enumeration value="#ussd_ussr_conf"/>
                 <enumeration value="#ussd_ussn_conf"/>
+                <enumeration value="#status"/>
+		
 
             </restriction>    
         </simpleType>
