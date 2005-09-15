@@ -86,7 +86,6 @@ namespace smsc { namespace infosme
         
         WeekDaysSet activeWeekDays; // Mon, Tue ...
 
-        std::string dsId;
         std::string tablePrefix;
         std::string querySql;
         std::string msgTemplate;
@@ -102,7 +101,7 @@ namespace smsc { namespace infosme
               trackIntegrity(false), transactionMode(false), keepHistory(false),
               endDate(-1), retryTime(-1), validityPeriod(-1), validityDate(-1),
               activePeriodStart(-1), activePeriodEnd(-1), activeWeekDays(0),
-              dsId(""), tablePrefix(""), querySql(""), msgTemplate(""), svcType(""), address(""),
+              tablePrefix(""), querySql(""), msgTemplate(""), svcType(""), address(""),
               dsTimeout(0), dsUncommitedInProcess(1), dsUncommitedInGeneration(1), 
               messagesCacheSize(100), messagesCacheSleep(0) {};
         TaskInfo(const TaskInfo& info) 
@@ -113,7 +112,7 @@ namespace smsc { namespace infosme
               validityPeriod(info.validityPeriod), validityDate(info.validityDate),
               activePeriodStart(info.activePeriodStart), activePeriodEnd(info.activePeriodEnd),
               activeWeekDays(info.activeWeekDays),
-              dsId(info.dsId), tablePrefix(info.tablePrefix), querySql(info.querySql), 
+              tablePrefix(info.tablePrefix), querySql(info.querySql), 
               msgTemplate(info.msgTemplate), svcType(info.svcType), address(info.address),
               dsTimeout(info.dsTimeout),
               dsUncommitedInProcess(info.dsUncommitedInProcess),
@@ -133,7 +132,7 @@ namespace smsc { namespace infosme
             activePeriodStart = info.activePeriodStart; 
             activePeriodEnd = info.activePeriodEnd;
             activeWeekDays = info.activeWeekDays;
-            dsId = info.dsId; tablePrefix = info.tablePrefix; querySql = info.querySql;
+            tablePrefix = info.tablePrefix; querySql = info.querySql;
             msgTemplate = info.msgTemplate; svcType = info.svcType; address = info.address;
             dsTimeout = info.dsTimeout;
             dsUncommitedInProcess = info.dsUncommitedInProcess;
@@ -194,7 +193,6 @@ namespace smsc { namespace infosme
         
         int         currentPriorityFrameCounter;
 
-        /*Task(TaskInfo& info, DataSource* dsOwn, DataSource* dsInt);*/
         Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
              DataSource* dsOwn, DataSource* dsInt);
         
@@ -205,6 +203,9 @@ namespace smsc { namespace infosme
         bool shutdown(); // Wait usages, cleanup waiting & delete task
         bool destroy();  // Wait usages, drop entire table & delete task
 
+        inline bool canGenerateMessages() {
+            return (dsOwn != 0);
+        }
         inline bool isFinalizing() {
             MutexGuard guard(finalizingLock);
             return bFinalizing;

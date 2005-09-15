@@ -6,6 +6,7 @@ import ru.novosoft.smsc.infosme.backend.TasksStat;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
+import ru.novosoft.smsc.util.Functions;
 
 import javax.servlet.http.HttpServletRequest;
 import java.text.ParseException;
@@ -22,147 +23,160 @@ import java.util.*;
 
 public class TasksStatistics extends InfoSmeBean
 {
-  public final static String ALL_TASKS_MARKER = "-- ALL TASKS --";
-  private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
+    public final static String ALL_TASKS_MARKER = "-- ALL TASKS --";
+    private static final String DATE_FORMAT = "dd.MM.yyyy HH:mm:ss";
 
-  private Statistics statistics = null;
-  private StatQuery query = new StatQuery();
-  private TasksStat stat = new TasksStat();
+    private Statistics statistics = null;
+    private TasksStat  stat  = new TasksStat();
+    private StatQuery  query = new StatQuery();
 
-  private String mbQuery = null;
+    private String mbQuery = null;
+    private String mbCancel = null;
 
-  protected int init(List errors)
-  {
-    int result = super.init(errors);
-    if (result != RESULT_OK)
-      return result;
+    private boolean initialized = false;
 
-    if (getInfoSmeContext().getDataSource() != null)
-      stat.setDataSource(getInfoSmeContext().getDataSource());
+    protected int init(List errors)
+    {
+        int result = super.init(errors);
+        if (result != RESULT_OK)
+            return result;
 
-    stat.setInfoSme(getInfoSmeContext().getInfoSme());
-
-    return RESULT_OK;
-  }
-
-  public int process(HttpServletRequest request)
-  {
-    int result = super.process(request);
-    if (result != RESULT_OK)
-      return result;
-
-    if (getInfoSmeContext().getDataSource() == null)
-      warning("DataSource not initialized");
-
-    if (mbQuery != null) {
-      try {
-        statistics = null;
         if (getInfoSmeContext().getDataSource() != null)
-          statistics = stat.getStatistics(query);
-        else
-          return error("DataSource not initialized");
-      } catch (Throwable e) {
-        logger.debug("Couldn't get statisctics", e);
-        return error("Couldn't get statisctics", e);
-      }
-      mbQuery = null;
+            stat.setDataSource(getInfoSmeContext().getDataSource());
+        stat.setInfoSme(getInfoSmeContext().getInfoSme());
+
+        if (!initialized) {
+            query.setFromDate(Functions.truncateTime(new Date()));
+            query.setFromDateEnabled(true);
+        }
+
+        return RESULT_OK;
     }
 
-    return RESULT_OK;
-  }
+    public int process(HttpServletRequest request)
+    {
+        int result = super.process(request);
+        if (result != RESULT_OK)
+            return result;
 
-  public Statistics getStatistics()
-  {
-    return statistics;
-  }
+        if (getInfoSmeContext().getDataSource() == null)
+            warning("DataSource not initialized");
 
-  public String getMbQuery()
-  {
-    return mbQuery;
-  }
+        if (mbCancel != null) {
+            mbCancel = null;
+            return RESULT_DONE;
+        }
+        if (mbQuery != null) {
+            try {
+                statistics = null;
+                if (getInfoSmeContext().getDataSource() != null)
+                    statistics = stat.getStatistics(query);
+                else
+                    return error("DataSource not initialized");
+            } catch (Throwable e) {
+                logger.debug("Couldn't get statisctics", e);
+                return error("Couldn't get statisctics", e);
+            }
+            mbQuery = null;
+        }
 
-  public void setMbQuery(String mbQuery)
-  {
-    this.mbQuery = mbQuery;
-  }
-
-  private Date convertStringToDate(String date)
-  {
-    Date converted = new Date();
-    try {
-      SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-      converted = formatter.parse(date);
-    } catch (ParseException e) {
-      e.printStackTrace();
+        return RESULT_OK;
     }
-    return converted;
-  }
 
-  private String convertDateToString(Date date)
-  {
-    SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
-    return formatter.format(date);
-  }
-
-  /* -------------------------- StatQuery delegates -------------------------- */
-  public void setFromDate(String fromDate)
-  {
-    if (fromDate != null && fromDate.trim().length() > 0) {
-      query.setFromDate(convertStringToDate(fromDate));
-      query.setFromDateEnabled(true);
-    } else {
-      query.setFromDateEnabled(false);
+    public Statistics getStatistics() {
+        return statistics;
     }
-  }
 
-  public String getFromDate()
-  {
-    return (query.isFromDateEnabled()) ?
-            convertDateToString(query.getFromDate()) : "";
-  }
-
-  public void setTillDate(String tillDate)
-  {
-    if (tillDate != null && tillDate.trim().length() > 0) {
-      query.setTillDate(convertStringToDate(tillDate));
-      query.setTillDateEnabled(true);
-    } else {
-      query.setTillDateEnabled(false);
+    public String getMbQuery() {
+        return mbQuery;
     }
-  }
-
-  public String getTillDate()
-  {
-    return (query.isTillDateEnabled()) ?
-            convertDateToString(query.getTillDate()) : "";
-  }
-
-  public String getTaskId()
-  {
-    String id = query.getTaskId();
-    return (id == null) ? "" : id;
-  }
-
-  public void setTaskId(String taskId)
-  {
-    query.setTaskId((taskId == null || taskId.length() <= 0 ||
-                     taskId.equals(ALL_TASKS_MARKER)) ? null : taskId);
-  }
-
-  public String getTaskName(String taskId)
-  {
-    try {
-      return getConfig().getString(TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(taskId) + ".name");
-    } catch (Throwable e) {
-      logger.error("Could not get name for task \"" + taskId + "\"", e);
-      error("Could not get name for task \"" + taskId + "\"", e);
-      return "";
+    public void setMbQuery(String mbQuery) {
+        this.mbQuery = mbQuery;
     }
-  }
 
-  public Collection getAllTasks()
-  {
-    return new SortedList(getConfig().getSectionChildShortSectionNames(TaskDataSource.TASKS_PREFIX));
-  }
+    public String getMbCancel() {
+        return mbCancel;
+    }
+    public void setMbCancel(String mbCancel) {
+        this.mbCancel = mbCancel;
+    }
+
+    private Date convertStringToDate(String date)
+    {
+        Date converted = new Date();
+        try {
+            SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
+            converted = formatter.parse(date);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return converted;
+    }
+    private String convertDateToString(Date date)
+    {
+        SimpleDateFormat formatter = new SimpleDateFormat(DATE_FORMAT);
+        return formatter.format(date);
+    }
+
+    /* -------------------------- StatQuery delegates -------------------------- */
+    public void setFromDate(String fromDate)
+    {
+        if (fromDate != null && fromDate.trim().length() > 0) {
+            query.setFromDate(convertStringToDate(fromDate));
+            query.setFromDateEnabled(true);
+        } else {
+            query.setFromDateEnabled(false);
+        }
+    }
+    public String getFromDate()
+    {
+        return (query.isFromDateEnabled()) ?
+                convertDateToString(query.getFromDate()) : "";
+    }
+
+    public void setTillDate(String tillDate)
+    {
+        if (tillDate != null && tillDate.trim().length() > 0) {
+            query.setTillDate(convertStringToDate(tillDate));
+            query.setTillDateEnabled(true);
+        } else {
+            query.setTillDateEnabled(false);
+        }
+    }
+    public String getTillDate()
+    {
+        return (query.isTillDateEnabled()) ?
+                convertDateToString(query.getTillDate()) : "";
+    }
+
+    public String getTaskId() {
+        String id = query.getTaskId();
+        return (id == null) ? "" : id;
+    }
+    public void setTaskId(String taskId) {
+        query.setTaskId((taskId == null || taskId.length() <= 0 ||
+                taskId.equals(ALL_TASKS_MARKER)) ? null : taskId);
+    }
+
+    public String getTaskName(String taskId)
+    {
+        try {
+            return getConfig().getString(TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(taskId) + ".name");
+        } catch (Throwable e) {
+            logger.error("Could not get name for task \"" + taskId + "\"", e);
+            error("Could not get name for task \"" + taskId + "\"", e);
+            return "";
+        }
+    }
+    public Collection getAllTasks() {
+        return new SortedList(getConfig().getSectionChildShortSectionNames(TaskDataSource.TASKS_PREFIX));
+    }
+
+    public boolean isInitialized() {
+        return initialized;
+    }
+    public void setInitialized(boolean initialized) {
+        this.initialized = initialized;
+    }
 }
 

@@ -49,33 +49,22 @@ public class Tasks extends TasksListBean
     return RESULT_DONE;
   }
 
-  public String getMbAdd()
-  {
+  public String getMbAdd() {
     return mbAdd;
   }
-
-  public void setMbAdd(String mbAdd)
-  {
+  public void setMbAdd(String mbAdd) {
     this.mbAdd = mbAdd;
   }
-
-  public String getMbEdit()
-  {
+  public String getMbEdit() {
     return mbEdit;
   }
-
-  public void setMbEdit(String mbEdit)
-  {
+  public void setMbEdit(String mbEdit) {
     this.mbEdit = mbEdit;
   }
-
-  public String getMbDelete()
-  {
+  public String getMbDelete() {
     return mbDelete;
   }
-
-  public void setMbDelete(String mbDelete)
-  {
+  public void setMbDelete(String mbDelete) {
     this.mbDelete = mbDelete;
   }
 

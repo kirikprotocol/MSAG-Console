@@ -1,21 +1,24 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.admin.Constants,
-					  ru.novosoft.smsc.infosme.beans.Index,
-					  ru.novosoft.smsc.jsp.SMSCJspException,
-					  ru.novosoft.smsc.jsp.SMSCErrors,
+				 ru.novosoft.smsc.infosme.beans.Index,
+				 ru.novosoft.smsc.jsp.SMSCJspException,
+				 ru.novosoft.smsc.jsp.SMSCErrors,
                  ru.novosoft.smsc.jsp.util.tables.QueryResultSet,
-                 java.util.*,
+                 java.util.*, ru.novosoft.smsc.util.Functions,
                  ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataItem,
                  ru.novosoft.smsc.util.StringEncoderDecoder,
-                 ru.novosoft.smsc.util.Functions"%>
+                 ru.novosoft.smsc.infosme.beans.InfoSmeBean"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.Index" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-  ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
+    ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
 	TITLE="Informer SME Administration";
 	MENU0_SELECTION = "MENU0_SERVICES";
-	//MENU1_SELECTION = "WSME_INDEX";
-	int beanResult = bean.process(request);
+    if (!request.isUserInRole(InfoSmeBean.INFOSME_ADMIN_ROLE)) {
+        response.sendRedirect("deliveries.jsp");
+        return;
+    }
+    int beanResult = bean.process(request);
 %><%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
@@ -204,10 +207,10 @@ function setSort(sorting)
 
       %><tr class=row<%=rowN++&1%>>
         <td><input class=check type=checkbox name=checked id=checked<%=idHex%> value="<%=idEnc%>" <%=bean.isTaskChecked(id) ? "checked" : ""%> onclick="checkTasks();"></td>
-        <td><%if (enabled       ){%><img src="/images/ic_checked.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></td>
+        <td><%if (enabled){%><img src="/images/ic_checked.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></td>
         <td><label for=checked<%=idHex%>><%=nameEnc%></label></td>
-        <td><span datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="gen<%=idHex%>"><%if (generating    ){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
-        <td><span datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="prc<%=idHex%>"><%if (processing    ){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
+        <td><span datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="gen<%=idHex%>"><%if (generating){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
+        <td><span datasrc=#tdcTasksStatuses DATAFORMATAS=html datafld="prc<%=idHex%>"><%if (processing){%><img src="/images/ic_running.gif"><%}else{%><img src="/images/ic_stopped.gif"><%}%></span></td>
         <td><%=priority%></td>
         <td><%if (trackIntegrity){%><img src="/images/ic_checked.gif"><%}else{%>&nbsp;<%}%></td>
       </tr><%

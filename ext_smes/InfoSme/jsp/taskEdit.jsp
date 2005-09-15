@@ -3,7 +3,7 @@
                  ru.novosoft.smsc.jsp.SMSCJspException,
                  ru.novosoft.smsc.jsp.SMSCErrors,
                  ru.novosoft.smsc.util.StringEncoderDecoder,
-                 java.util.Iterator"%>
+                 java.util.Iterator, ru.novosoft.smsc.infosme.backend.Task"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.TaskEdit" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -31,6 +31,7 @@
 <div class=content>
 <input type=hidden name=initialized value=true>
 <input type=hidden name=create value=<%=bean.isCreate()%>>
+<input type=hidden name=delivery value=<%=bean.isDelivery()%>>
 <input type=hidden name=oldTask value="<%=bean.getOldTask()%>">
 <table class=properties_list>
 <col width="10%">
@@ -63,17 +64,20 @@
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th>Provider</th>
-  <td><%if (bean.isSmeRunning()) {
-    %><select name=provider><%
+  <td><%
+    if (bean.isDelivery()) {
+      %><input type=hidden name=provider value=<%= Task.INFOSME_EXT_PROVIDER%>><%= Task.INFOSME_EXT_PROVIDER%><%
+    } else if (bean.isSmeRunning()) {
+      %><select name=provider><%
       for (Iterator i = bean.getAllProviders().iterator(); i.hasNext();) {
         String providerName = (String) i.next();
         String providerNameEnc = StringEncoderDecoder.encode(providerName);
         %><option value="<%=providerNameEnc%>"<%=providerName.equals(bean.getProvider()) ? " selected" : ""%>><%=providerNameEnc%></option><%
-      }
-    %></select><%
-  } else {
-    %><%=StringEncoderDecoder.encode(bean.getProvider())%><%
-  }%></td>
+      }%></select><%
+    } else {
+      %><%=StringEncoderDecoder.encode(bean.getProvider())%><%
+    }%>
+  </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
   <th><label for=enabled>Enabled</label></th>
@@ -171,6 +175,7 @@
   }%>
   </td>
 </tr>
+<%if (!bean.isDelivery()) {%>
 <tr class=row<%=rowN++&1%>>
   <th>Query</th>
   <td><%if (bean.isSmeRunning()) {
@@ -194,7 +199,7 @@
   <th>transliterate template</th>
   <td><input class=check type=checkbox id=transliterate name=transliterate value=true <%=bean.isTransliterate() ? "checked" : ""%>></td>
 </tr>
-<%}%>
+<%}}%>
 <tr class=row<%=rowN++&1%>>
   <th><label for=retryOnFail>Retry on fail (time)</label></th>
   <td><%if (bean.isSmeRunning()) {%>
@@ -225,6 +230,7 @@
   }%>
   </td>
 </tr>
+<%if (!bean.isDelivery()) {%>
 <tr class=row<%=rowN++&1%>>
   <th><label for=trackIntegrity>track integrity</label></th>
   <td><%if (bean.isSmeRunning()) {
@@ -234,6 +240,7 @@
   }%>
   </td>
 </tr>
+<%}%>
 <tr class=row<%=rowN++&1%>>
   <th><label for=keepHistory>keep messages history</label></th>
   <td><%if (bean.isSmeRunning()) {
@@ -270,6 +277,7 @@
   }%>
   </td>
 </tr>
+<%if (!bean.isDelivery()) {%>
 <tr class=row<%=rowN++&1%>>
   <th>uncommited in generation</th>
   <td><%if (bean.isSmeRunning()) {
@@ -279,6 +287,7 @@
   }%>
   </td>
 </tr>
+<%}%>
 <tr class=row<%=rowN++&1%>>
   <th>uncommited in process</th>
   <td><%if (bean.isSmeRunning()) {

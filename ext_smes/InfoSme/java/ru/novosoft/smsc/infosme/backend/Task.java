@@ -18,6 +18,7 @@ import java.util.HashSet;
 public class Task
 {
   private final static String DEFAULT_ACTIVE_WEEK_DAYS = "Mon,Tue,Wed,Thu,Fri";
+  public static final String INFOSME_EXT_PROVIDER = "EXTERNAL";
 
   private String id = "";
   private String name = "";
@@ -38,6 +39,7 @@ public class Task
   private Collection activeWeekDaysSet = new HashSet();
   private String query = "";
   private String template = "";
+  private String text = "";
   private int dsTimeout = 0;
   private int messagesCacheSize = 0;
   private int messagesCacheSleep = 0;
@@ -46,50 +48,14 @@ public class Task
   private int uncommitedInGeneration = 0;
   private int uncommitedInProcess = 0;
   private boolean trackIntegrity;
+  private boolean delivery = false;
 
   public Task()
   {
     activeWeekDays = new ArrayList();
     Functions.addValuesToCollection(this.activeWeekDays, DEFAULT_ACTIVE_WEEK_DAYS, ",", true);
     activeWeekDaysSet = new HashSet(activeWeekDays);
-  }
-
-  public Task(String id, String name, String address, String provider,
-              boolean enabled, int priority, boolean retryOnFail, boolean replaceMessage,
-              String svcType, String endDate, String retryTime, String validityPeriod, String validityDate,
-              String activePeriodStart, String activePeriodEnd, Collection activeWeekDays,
-              String query, String template, int dsTimeout,
-              int messagesCacheSize, int messagesCacheSleep, boolean transactionMode,
-              int uncommitedInGeneration, int uncommitedInProcess, boolean trackIntegrity, boolean keepHistory)
-  {
-    this();
-    this.id = id;
-    this.name = name;
-    this.address = address;
-    this.provider = provider;
-    this.enabled = enabled;
-    this.priority = priority;
-    this.retryOnFail = retryOnFail;
-    this.replaceMessage = replaceMessage;
-    this.svcType = svcType;
-    this.endDate = endDate;
-    this.retryTime = retryTime;
-    this.validityPeriod = validityPeriod;
-    this.validityDate = validityDate;
-    this.activePeriodStart = activePeriodStart;
-    this.activePeriodEnd = activePeriodEnd;
-    this.query = query;
-    this.template = template;
-    this.dsTimeout = dsTimeout;
-    this.messagesCacheSize = messagesCacheSize;
-    this.messagesCacheSleep = messagesCacheSleep;
-    this.transactionMode = transactionMode;
-    this.uncommitedInGeneration = uncommitedInGeneration;
-    this.uncommitedInProcess = uncommitedInProcess;
-    this.trackIntegrity = trackIntegrity;
-    this.keepHistory = keepHistory;
-    this.activeWeekDays = activeWeekDays;
-    this.activeWeekDaysSet = new HashSet(activeWeekDays);
+    if (delivery) provider = Task.INFOSME_EXT_PROVIDER;
   }
 
   public Task(Config config, String id) throws Config.WrongParamTypeException, Config.ParamNotFoundException
@@ -123,11 +89,14 @@ public class Task
     trackIntegrity = config.getBool(prefix + ".trackIntegrity");
     keepHistory = config.getBool(prefix + ".keepHistory");
     String activeWeekDaysStr = null;
-    try {  activeWeekDaysStr = config.getString(prefix + ".activeWeekDays"); }
+    try { activeWeekDaysStr = config.getString(prefix + ".activeWeekDays"); }
     catch (Throwable th) { activeWeekDaysStr = DEFAULT_ACTIVE_WEEK_DAYS; }
     activeWeekDays = new ArrayList();
     Functions.addValuesToCollection(this.activeWeekDays, activeWeekDaysStr, ",", true);
     activeWeekDaysSet = new HashSet(this.activeWeekDays);
+    try { delivery = config.getBool(prefix + ".delivery"); }
+    catch (Throwable th) { delivery = false; }
+    if (delivery) provider = Task.INFOSME_EXT_PROVIDER;
   }
 
   public void storeToConfig(Config config)
@@ -139,6 +108,7 @@ public class Task
     }
     config.setString(prefix + ".dsId", provider);
     config.setBool(prefix + ".enabled", enabled);
+    config.setBool(prefix + ".delivery", delivery);
     config.setInt(prefix + ".priority", priority);
     config.setBool(prefix + ".retryOnFail", retryOnFail);
     config.setBool(prefix + ".replaceMessage", replaceMessage);
@@ -248,6 +218,13 @@ public class Task
     this.enabled = enabled;
   }
 
+  public boolean isDelivery() {
+    return delivery;
+  }
+  public void setDelivery(boolean delivery) {
+    this.delivery = delivery;
+  }
+
   public int getPriority() {
     return priority;
   }
@@ -324,12 +301,17 @@ public class Task
   public void setQuery(String query) {
     this.query = query;
   }
-
   public String getTemplate() {
     return template;
   }
   public void setTemplate(String template) {
     this.template = template;
+  }
+  public String getText() {
+    return text;
+  }
+  public void setText(String text) {
+    this.text = text;
   }
 
   public int getDsTimeout() {

@@ -48,18 +48,6 @@ const char* SELECT_MESSAGES_STATEMENT_SQL     = "SELECT ID, ABONENT, MESSAGE FRO
                                                 "STATE=:STATE AND SEND_DATE<=:SEND_DATE ORDER BY SEND_DATE ASC";
 
 
-/*
-Task::Task(TaskInfo& _info, DataSource* _dsOwn, DataSource* _dsInt) 
-    : logger(Logger::getInstance("smsc.infosme.Task")), formatter(0),
-        usersCount(0), bFinalizing(false), bSelectedAll(false), dsOwn(dsOwn), dsInt(dsInt), 
-            bInProcess(false), bInGeneration(false), bGenerationSuccess(true),
-                lastMessagesCacheEmpty(0), currentPriorityFrameCounter(0)
-{
-    __require__(_dsOwn && _dsInt);
-    this->info = _info; this->dsOwn = _dsOwn; this->dsInt = _dsInt;
-    formatter = new OutputFormatter(info.msgTemplate.c_str());
-    trackIntegrity(true, true); // delete flag & generated messages
-}*/
 Task::Task(ConfigView* config, std::string taskId, std::string tablePrefix, 
            DataSource* _dsOwn, DataSource* _dsInt)
     : logger(Logger::getInstance("smsc.infosme.Task")), formatter(0),
@@ -162,14 +150,17 @@ void Task::init(ConfigView* config, std::string taskId, std::string tablePrefix)
     }
     else info.activeWeekDays.weekDays = 0;
 
-    const char* query_sql = config->getString("query");
-    if (!query_sql || query_sql[0] == '\0')
-        throw ConfigException("Sql query for task empty or wasn't specified.");
-    info.querySql = query_sql;
-    const char* msg_template = config->getString("template");
-    if (!msg_template || msg_template[0] == '\0')
-        throw ConfigException("Message template for task empty or wasn't specified.");
-    info.msgTemplate = msg_template;
+    if (dsOwn != 0)
+    {
+        const char* query_sql = config->getString("query");
+        if (!query_sql || query_sql[0] == '\0')
+            throw ConfigException("Sql query for task empty or wasn't specified.");
+        info.querySql = query_sql;
+        const char* msg_template = config->getString("template");
+        if (!msg_template || msg_template[0] == '\0')
+            throw ConfigException("Message template for task empty or wasn't specified.");
+        info.msgTemplate = msg_template;
+    }
     info.svcType = "";
     if (info.replaceIfPresent) {
         try         { info.svcType = config->getString("svcType"); } 

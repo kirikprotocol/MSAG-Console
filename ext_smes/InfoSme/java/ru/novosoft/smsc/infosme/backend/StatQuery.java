@@ -8,71 +8,54 @@ package ru.novosoft.smsc.infosme.backend;
  * To change this template use Options | File Templates.
  */
 
-import ru.novosoft.smsc.util.Functions;
-
 import java.util.Date;
 
 public class StatQuery
 {
-  private Date fromDate = new Date();
-  private Date tillDate = new Date();
   private String taskId = null;
 
-  private boolean fromDateEnabled = true;
+  private Date fromDate = new Date();
+  private Date tillDate = new Date();
+
+  private boolean fromDateEnabled = false;
   private boolean tillDateEnabled = false;
 
-  public StatQuery()
-  {
-    fromDate = Functions.truncateTime(fromDate);
+  public StatQuery() {
   }
 
-  public Date getFromDate()
-  {
-    return fromDate;
-  }
-
-  public void setFromDate(Date fromDate)
-  {
-    this.fromDate = fromDate;
-  }
-
-  public Date getTillDate()
-  {
-    return tillDate;
-  }
-
-  public void setTillDate(Date tillDate)
-  {
-    this.tillDate = tillDate;
-  }
-
-  public String getTaskId()
-  {
+  public String getTaskId() {
     return taskId;
   }
-
-  public void setTaskId(String taskId)
-  {
+  public void setTaskId(String taskId) {
     this.taskId = taskId;
   }
 
-  public void setFromDateEnabled(boolean fromDateEnabled)
-  {
-    this.fromDateEnabled = fromDateEnabled;
+  public Date getFromDate() {
+    return fromDate;
+  }
+  public void setFromDate(Date fromDate) {
+    this.fromDate = fromDate;
   }
 
-  public void setTillDateEnabled(boolean tillDateEnabled)
-  {
+  public Date getTillDate() {
+    return tillDate;
+  }
+  public void setTillDate(Date tillDate) {
+    this.tillDate = tillDate;
+  }
+
+  public void setFromDateEnabled(boolean fromDateEnabled) {
+    this.fromDateEnabled = fromDateEnabled;
+  }
+  public void setTillDateEnabled(boolean tillDateEnabled) {
     this.tillDateEnabled = tillDateEnabled;
   }
 
-  public boolean isFromDateEnabled()
-  {
+  public boolean isFromDateEnabled() {
     return fromDateEnabled;
   }
-
-  public boolean isTillDateEnabled()
-  {
+  public boolean isTillDateEnabled() {
     return tillDateEnabled;
   }
+
 }

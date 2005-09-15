@@ -73,14 +73,23 @@ TaskProcessor::TaskProcessor(ConfigView* config)
             
             std::auto_ptr<ConfigView> taskConfigGuard(tasksCfg->getSubConfig(taskId));
             ConfigView* taskConfig = taskConfigGuard.get();
-            const char* dsId = taskConfig->getString("dsId");
-            if (!dsId || dsId[0] == '\0')
-                throw ConfigException("DataSource id for task '%s' empty or wasn't specified",
-                                      taskId);
-            DataSource* taskDs = provider.getDataSource(dsId);
-            if (!taskDs)
-                throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
-                                      dsId, taskId);
+
+            bool delivery = false;
+            try { delivery = taskConfig->getBool("delivery"); }
+            catch (ConfigException& ce) { delivery = false; }
+            
+            DataSource* taskDs = 0;
+            if (!delivery)
+            {
+                const char* dsId = taskConfig->getString("dsId");
+                if (!dsId || dsId[0] == '\0')
+                    throw ConfigException("DataSource id for task '%s' empty or wasn't specified",
+                                          taskId);
+                taskDs = provider.getDataSource(dsId);
+                if (!taskDs)
+                    throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
+                                          dsId, taskId);
+            }
             
             Task* task = new Task(taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal);
             if (task && !putTask(task)) {
@@ -148,7 +157,7 @@ bool TaskProcessor::addTask(Task* task)
     __require__(task);
     
     if (hasTask(task->getId())) return false;
-    task->createTable(); // throws Exception
+    if (task->canGenerateMessages()) task->createTable(); // throws Exception
     return putTask(task);
 }
 bool TaskProcessor::remTask(std::string taskId)
@@ -733,7 +742,7 @@ void TaskProcessor::addTask(std::string taskId)
     const char* task_id = taskId.c_str();
     if (!task_id || task_id[0] == '\0') throw Exception("Task id is empty");
 
-    Task* task = 0;
+    Task* task = 0; bool delivery = false;
     try
     {
         Manager::reinit();
@@ -742,14 +751,22 @@ void TaskProcessor::addTask(std::string taskId)
         sprintf(taskSection, "InfoSme.Tasks.%s", task_id);
         ConfigView taskConfig(config, taskSection);
         
-        const char* ds_id = taskConfig.getString("dsId");
-        if (!ds_id || ds_id[0] == '\0')
-            throw ConfigException("DataSource id for task '%s' empty or wasn't specified",
-                                  task_id);
-        DataSource* taskDs = provider.getDataSource(ds_id);
-        if (!taskDs)
-            throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
-                                  ds_id, task_id);
+        try { delivery = taskConfig.getBool("delivery"); }
+        catch (ConfigException& ce) { delivery = false; }
+
+        DataSource* taskDs = 0;
+        if (!delivery)
+        {
+            const char* ds_id = taskConfig.getString("dsId");
+            if (!ds_id || ds_id[0] == '\0')
+                throw ConfigException("DataSource id for task '%s' empty or wasn't specified",
+                                      task_id);
+            taskDs = provider.getDataSource(ds_id);
+            if (!taskDs)
+                throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
+                                      ds_id, task_id);
+        }
+
         task = new Task(&taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal);
         if (!task) 
             throw Exception("New task create failed");
@@ -758,15 +775,15 @@ void TaskProcessor::addTask(std::string taskId)
                                   task_id);
        
     } catch (Exception& exc) {
-        if (task) task->destroy();
+        if (task && !delivery) task->destroy();
         smsc_log_error(logger, "Failed to add task '%s'. Details: %s", task_id, exc.what());
         throw;
     } catch (std::exception& exc) {
-        if (task) task->destroy();
+        if (task && !delivery) task->destroy();
         smsc_log_error(logger, "Failed to add task '%s'. Details: %s", task_id, exc.what());
         throw Exception("%s", exc.what());
     } catch (...) {
-        if (task) task->destroy();
+        if (task && !delivery) task->destroy();
         smsc_log_error(logger, "Failed to add task '%s'. Cause is unknown", task_id);
         throw Exception("Cause is unknown");
     }
@@ -798,7 +815,7 @@ void TaskProcessor::changeTask(std::string taskId)
     const char* task_id = taskId.c_str();
     if (!task_id || task_id[0] == '\0') throw Exception("Task id is empty");
     
-    Task* task = 0;
+    Task* task = 0; bool delivery = false;
     try
     {
         Manager::reinit();
@@ -807,14 +824,22 @@ void TaskProcessor::changeTask(std::string taskId)
         sprintf(taskSection, "InfoSme.Tasks.%s", task_id);
         ConfigView taskConfig(config, taskSection);
         
-        const char* ds_id = taskConfig.getString("dsId");
-        if (!ds_id || ds_id[0] == '\0')
-            throw ConfigException("DataSource id for task '%s' empty or wasn't specified",
-                                  task_id);
-        DataSource* taskDs = provider.getDataSource(ds_id);
-        if (!taskDs)
-            throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
-                                  ds_id, task_id);
+        try { delivery = taskConfig.getBool("delivery"); }
+        catch (ConfigException& ce) { delivery = false; }
+
+        DataSource* taskDs = 0;
+        if (!delivery)
+        {
+            const char* ds_id = taskConfig.getString("dsId");
+            if (!ds_id || ds_id[0] == '\0')
+                throw ConfigException("DataSource id for task '%s' empty or wasn't specified",
+                                      task_id);
+            taskDs = provider.getDataSource(ds_id);
+            if (!taskDs)
+                throw ConfigException("Failed to obtail DataSource driver '%s' for task '%s'", 
+                                      ds_id, task_id);
+        }
+        
         if (!remTask(taskId))
             smsc_log_warn(logger, "Failed to change task. Task with id '%s' wasn't registered.", task_id);
         task = new Task(&taskConfig, taskId, taskTablesPrefix, taskDs, dsInternal);
@@ -822,19 +847,19 @@ void TaskProcessor::changeTask(std::string taskId)
             throw Exception("New task create failed");
         if (!putTask(task)) {
             smsc_log_warn(logger, "Failed to change task with id '%s'. Task was re-registered", task_id);
-            task->destroy();
+            if (!delivery) task->destroy();
         }
     
     } catch (Exception& exc) {
-        if (task) task->destroy();
+        if (task && !delivery) task->destroy();
         smsc_log_error(logger, "Failed to change task '%s'. Details: %s", task_id, exc.what());
         throw;
     } catch (std::exception& exc) {
-        if (task) task->destroy();
+        if (task && !delivery) task->destroy();
         smsc_log_error(logger, "Failed to change task '%s'. Details: %s", task_id, exc.what());
         throw Exception("%s", exc.what());
     } catch (...) {
-        if (task) task->destroy();
+        if (task && !delivery) task->destroy();
         smsc_log_error(logger, "Failed to change task '%s'. Cause is unknown", task_id);
         throw Exception("Cause is unknown");
     }
@@ -843,14 +868,16 @@ bool TaskProcessor::startTask(std::string taskId)
 {
     TaskGuard taskGuard = getTask(taskId);
     Task* task = taskGuard.get();
-    if (!task) return false; 
-    return  (task->isInGeneration()) ? true:invokeBeginGeneration(task);
+    if (!task) return false;
+    if (!task->canGenerateMessages()) return true;
+    return (task->isInGeneration()) ? true:invokeBeginGeneration(task);
 }
 bool TaskProcessor::stopTask(std::string taskId)
 {
     TaskGuard taskGuard = getTask(taskId);
     Task* task = taskGuard.get();
     if (!task) return false; 
+    if (!task->canGenerateMessages()) return true;
     return (task->isInGeneration()) ? invokeEndGeneration(task):true;
 }
 Array<std::string> TaskProcessor::getGeneratingTasks()

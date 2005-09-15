@@ -2,7 +2,6 @@ package ru.novosoft.smsc.infosme.beans;
 
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.infosme.backend.Task;
 import ru.novosoft.smsc.infosme.backend.schedules.Schedule;

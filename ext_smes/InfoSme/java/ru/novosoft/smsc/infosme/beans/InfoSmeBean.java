@@ -1,12 +1,10 @@
 package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.infosme.backend.InfoSme;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.util.config.Config;
-import ru.novosoft.smsc.util.Functions;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
@@ -18,19 +16,21 @@ import java.util.*;
  */
 public class InfoSmeBean extends PageBean
 {
-  public static final int RESULT_APPLY = PageBean.PRIVATE_RESULT + 0;
-  public static final int RESULT_STAT = PageBean.PRIVATE_RESULT + 1;
-  public static final int RESULT_STATUSES = PageBean.PRIVATE_RESULT + 2;
-  public static final int RESULT_OPTIONS = PageBean.PRIVATE_RESULT + 3;
-  public static final int RESULT_DRIVERS = PageBean.PRIVATE_RESULT + 4;
-  public static final int RESULT_PROVIDERS = PageBean.PRIVATE_RESULT + 5;
-  public static final int RESULT_TASKS = PageBean.PRIVATE_RESULT + 6;
-  public static final int RESULT_SHEDULES = PageBean.PRIVATE_RESULT + 7;
-  public static final int RESULT_MESSAGES = PageBean.PRIVATE_RESULT + 8;
-  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 9;
-
+  public static final int RESULT_APPLY      = PageBean.PRIVATE_RESULT + 0;
+  public static final int RESULT_STAT       = PageBean.PRIVATE_RESULT + 1;
+  public static final int RESULT_STATUSES   = PageBean.PRIVATE_RESULT + 2;
+  public static final int RESULT_OPTIONS    = PageBean.PRIVATE_RESULT + 3;
+  public static final int RESULT_DRIVERS    = PageBean.PRIVATE_RESULT + 4;
+  public static final int RESULT_PROVIDERS  = PageBean.PRIVATE_RESULT + 5;
+  public static final int RESULT_TASKS      = PageBean.PRIVATE_RESULT + 6;
+  public static final int RESULT_SHEDULES   = PageBean.PRIVATE_RESULT + 7;
+  public static final int RESULT_MESSAGES   = PageBean.PRIVATE_RESULT + 8;
+  public static final int RESULT_DELIVERIES = PageBean.PRIVATE_RESULT + 9;
+  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 10;
 
   private String mbMenu = null;
+
+  public static final String INFOSME_ADMIN_ROLE = "infosme-admin";
 
   private String smeId = "InfoSme";
   private Config config = null;
@@ -59,12 +59,12 @@ public class InfoSmeBean extends PageBean
 
   public int process(HttpServletRequest request)
   {
-    try {
+    /* try {
       smeId = Functions.getServiceId(request.getServletPath());
     } catch (AdminException e) {
       logger.error("Could not discover sme id", e);
       error("Could not discover sme id, \"" + smeId + "\" assumed", e);
-    }
+    }*/
 
     int result = super.process(request);
     if (result != RESULT_OK)

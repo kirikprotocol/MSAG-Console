@@ -137,6 +137,12 @@ public class TaskEdit extends InfoSmeBean
   public void setEnabled(boolean enabled) {
     this.task.setEnabled(enabled);
   }
+  public boolean isDelivery() {
+    return task.isDelivery();
+  }
+  public void setDelivery(boolean delivery) {
+    this.task.setDelivery(delivery);
+  }
 
   public int getPriorityInt() {
     return task.getPriority();

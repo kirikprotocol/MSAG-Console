@@ -120,6 +120,7 @@ int TaskScheduler::Execute()
                         smsc_log_warn(logger, "Task '%s' not found.", task_id);
                         continue;
                     }
+                    if (!task->canGenerateMessages()) continue;
                     
                     if (task->isReady(currentTime, false) && !task->isInGeneration())
                         processor->invokeBeginGeneration(task);
