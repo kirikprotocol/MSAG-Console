@@ -81,6 +81,7 @@ public class jEdit extends Applet
   public static URL baseUrl = null;
   public static URL servletUrl = null;
   public static String userfile = null;
+  public static String userDir = null;
   // public static String osname=null;
   public static String username = null;
   public static String password = null;
@@ -152,6 +153,7 @@ public class jEdit extends Applet
   {
     System.out.println("Stoping...");
     isStopping = true;
+    super.stop();
   }
 
   public void destroy()
@@ -397,7 +399,7 @@ public class jEdit extends Applet
 
     //{{{ Run script specified with -run= parameter
     //todo userDir changed
-    String userDir = MiscUtilities.constructPath(jEditHome, jEdit.username);//jEditHome+"\\"+jEdit.username;//null;
+    userDir = MiscUtilities.constructPath(jEditHome, jEdit.username);//jEditHome+"\\"+jEdit.username;//null;
     if (!BoolGet(userDir, Exists)) BoolGet(userDir, MkDir);
     if (scriptFile != null) {
       scriptFile = MiscUtilities.constructPath(userDir, scriptFile);
@@ -411,6 +413,7 @@ public class jEdit extends Applet
 
     GUIUtilities.advanceSplashProgress();
     userfile=userfile+".xml";
+    //VFSManager.start();
     // Open files, create the view and hide the splash screen.
     finishStartup(gui, restore, userDir, args);
   } //}}}
@@ -3646,6 +3649,68 @@ public class jEdit extends Applet
       }
     });
   } //}}}
+
+  //{{{ finishStartup() method
+   public static void openRule(final String userfile)
+   {
+     SwingUtilities.invokeLater(new Runnable()
+     {
+       public void run()
+       {
+
+         Buffer buffer =null;// openFiles(null, userDir, args);
+         int count = getBufferCount();
+       //todo this changed for cutting FileBrowser dialog
+       /*  if (count == 0)
+           newFile(null, userDir);    */
+         buffer=openFile(null, userDir, userfile , false, null);
+       //  todo end
+         View view = null;
+
+     /*      boolean restoreFiles = restore
+                 && jEdit.getBooleanProperty("restore")
+                 && (getBufferCount() == 0 ||
+                 jEdit.getBooleanProperty("restore.cli"));
+
+       if (gui || count != 0) {
+           view = PerspectiveManager
+                   .loadPerspective(restoreFiles);
+
+           if (view == null)
+         */    view = newView(null, buffer);
+          // else if (buffer != null) view.setBuffer(buffer);
+       //  }
+
+         // Start I/O threads
+         EditBus.send(new EditorStarted(null));
+
+         VFSManager.start();
+
+         // Start edit server
+     //    if (server != null)
+       //    server.start();
+
+         GUIUtilities.hideSplashScreen();
+
+         Log.log(Log.MESSAGE, jEdit.class, "Startup "
+                 + "complete");
+
+         //{{{ Report any plugin errors
+         if (pluginErrors != null) {
+           showPluginErrorDialog();
+         } //}}}
+
+         startupDone = true;
+
+         // in one case not a single AWT class will
+         // have been touched (splash screen off +
+         // -nogui -nobackground switches on command
+         // line)
+         Toolkit.getDefaultToolkit();
+       }
+     });
+   } //}}}
+
 
   //{{{ showPluginErrorDialog() method
   private static void showPluginErrorDialog()

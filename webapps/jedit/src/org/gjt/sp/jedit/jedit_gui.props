@@ -68,41 +68,14 @@ view.context.customize=Customize This Menu...
 view.mbar=file edit search utils xml plugins help-menu
 
 #{{{ File menu
-file=new-file \
-     open-file \
-     %recent-files \
+file=save \
      - \
-     reload \
-     reload-all \
-     - \
-     close-buffer \
-     close-all \
-     - \
-     save \
-     save-as \
-     save-a-copy-as \
-     save-all \
-     - \
-     print \
-     page-setup \
-     - \
-     exit
+     print
 file.label=$File
-new-file.label=$New
-open-file.label=$Open...
-reload.label=$Reload
-reload-all.label=Reloa$d All...
-close-buffer.label=$Close
-close-all.label=Clos$e All
 save.label=$Save
-save-as.label=S$ave As...
-save-a-copy-as.label=Save a Cop$y As...
-save-all.label=Save A$ll...
 print.label=$Print...
-page-setup.label=Pa$ge Setup...
 # Print selection not yet implemented
 #print-selection.label=Prin$t Selection...
-exit.label=E$xit
 
 #{{{ Recent Files menu
 recent-files.code=new RecentFilesProvider();
@@ -400,22 +373,17 @@ xml-reload-catalogs.label=Reload Catalogs
 #}}}
 
 #{{{ Plugins menu
-plugins=plugin-manager plugin-options -
+plugins=plugin-options -
 plugins.label=$Plugins
 plugins.code=new PluginsProvider();
-plugin-manager.label=Plugin $Manager...
 plugin-options.label=Plugin $Options...
 no-plugins.label=No Plugins Installed
 #}}}
 
 #{{{ Help menu
-help-menu=about \
-     help \
-     tip-of-the-day
+help-menu=about
 help-menu.label=$Help
 about.label=$About jEditApplet...
-help.label=jEditApplet $Help
-tip-of-the-day.label=$Tip of the Day
 #}}}
 
 #}}}
@@ -1739,7 +1707,7 @@ tip.next-tip=Next Tip
 
 tip.not-found=doc/tips directory not found
 # Show on startup?
-tip.show=true
+tip.show=false
 #}}}
 
 #{{{ Activity log

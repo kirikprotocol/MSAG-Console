@@ -99,6 +99,7 @@ public class SideKickActions
    && data != null && parser != null
    && parser.supportsCompletion())
   {
+    System.out.println("SideKickActions complete before XmlParser.complete line 102");
    complete = parser.complete(editPane,
     textArea.getCaretPosition());
   }
@@ -128,7 +129,7 @@ public class SideKickActions
    // key, so we insert it
    if(mode == COMPLETE_COMMAND
     || mode == COMPLETE_INSTANT_KEY)
-   {
+   { System.out.println("SideKickActions complete before complete.insert line 132");
     complete.insert(0);
     return;
    }

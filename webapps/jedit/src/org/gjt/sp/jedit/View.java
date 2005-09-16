@@ -33,6 +33,8 @@ import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.net.Socket;
 import java.util.*;
+import java.util.List;
+
 import org.gjt.sp.jedit.msg.*;
 import org.gjt.sp.jedit.gui.*;
 import org.gjt.sp.jedit.search.*;
@@ -1113,8 +1115,36 @@ public class View extends JFrame implements EBComponent
  {
   return closed;
  } //}}}
+   //{{{ isEdittag() method
+ /**
+  * Returns true if this view has been editing tag state in xml action with
+  * {@link xml.XmlActions#showEditTagDialog(View)}.
+  */
+ public boolean isEdittag()
+ {
+  return edittag;
+ } //}}}
 
- //{{{ isPlainView() method
+  //{{{ setEdittag() method
+/**
+ * set true if this view has been editing tag state in xml action with
+ * {@link xml.XmlActions#showEditTagDialog(View)}.
+ */
+public void setEdittag(boolean edit)
+{
+  edittag=edit;
+} //}}}
+
+  public List getNames()
+  {
+    return names;
+  }
+
+  public void setNames(List names)
+  {
+    this.names = names;
+  }
+  //{{{ isPlainView() method
  /**
   * Returns true if this is an auxilliary view with no dockable windows.
   * @since jEdit 4.1pre2
@@ -1335,6 +1365,8 @@ public class View extends JFrame implements EBComponent
  //{{{ Instance variables
  private boolean closed;
 
+ private boolean edittag;
+ private List names;
  private DockableWindowManager dockableWindowManager;
 
  private JPanel topToolBars;
