@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <string>
 #include <sstream>
+#include <map>
 
 #define __synchronized__
 
@@ -410,7 +411,7 @@ void dump(RouteTreeNode* node,int step)
 }
 
 static
-int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<string>* trace_)
+int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<string>* trace_,int& dup)
 {
   __trace__("addRouteIntoSrcTreeRecurse");
   print(node->record,"\tnode->record");
@@ -424,7 +425,8 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
       bool conflicted = false;
       for ( RouteRecord* r0 = node->record; r0 != 0 ; r0 = r0->alternate_pair ) {
         if ( r0->srcProxyIdx == rec->srcProxyIdx ) {
-          __warning2__("duplicate route %s, is not added",rec->info.routeId.c_str());
+          //__warning2__("duplicate route %s, is not added",rec->info.routeId.c_str());
+          dup++;
           if ( trace_ ) {
             {
               ostringstream ost;
@@ -467,7 +469,7 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
       if ( right > 0 ) for(;right>=left;)
       {
         int ptr = (right+left) >> 1;
-        int cmp = addRouteIntoSrcTreeRecurse(node->child[ptr-1],rec,trace_);
+        int cmp = addRouteIntoSrcTreeRecurse(node->child[ptr-1],rec,trace_,dup);
         if ( cmp == 0 ) return 0;
         //if ( right > left )
         //{
@@ -487,7 +489,7 @@ int addRouteIntoSrcTreeRecurse(RouteSrcTreeNode* node,RouteRecord* rec,vector<st
 }
 
 static
-int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec,vector<string>* trace_)
+int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec,vector<string>* trace_,int& dup)
 {
   __require__(node != 0);
   __trace__("addRouteIntoTreeRecurse");
@@ -513,7 +515,7 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec,vector<string>*
       {
         int ptr = (right+left) >> 1;
         __require__(ptr > 0);
-        int cmp = addRouteIntoSrcTreeRecurse(node->sources[ptr-1],rec,trace_);
+        int cmp = addRouteIntoSrcTreeRecurse(node->sources[ptr-1],rec,trace_,dup);
         if ( cmp == 0 ) return 0;
         //if ( right > left )
         //{
@@ -542,7 +544,7 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec,vector<string>*
     if ( right > 0 ) for(;right>=left;)
     {
       int ptr = (right+left) >> 1;
-      int cmp = addRouteIntoTreeRecurse(node->child[ptr-1],rec,trace_);
+      int cmp = addRouteIntoTreeRecurse(node->child[ptr-1],rec,trace_,dup);
       if ( cmp == 0 ) return 0;
       //if ( right > left )
       //{
@@ -573,9 +575,9 @@ int addRouteIntoTreeRecurse(RouteTreeNode* node,RouteRecord* rec,vector<string>*
 }
 
 static
-int addRouteIntoTree(RouteTreeNode* node,RouteRecord* rec,vector<string>* trace_)
+int addRouteIntoTree(RouteTreeNode* node,RouteRecord* rec,vector<string>* trace_,int& dup)
 {
-  return addRouteIntoTreeRecurse(node,rec,trace_);
+  return addRouteIntoTreeRecurse(node,rec,trace_,dup);
 }
 
 void RouteManager::commit(bool traceit)
@@ -603,9 +605,31 @@ void RouteManager::commit(bool traceit)
       print(table.get()[i],"@@@");
     }
 
+    typedef std::map<std::string,int> DupsMap;
+    DupsMap dups;
+
     for ( int i=0; i < count; ++i )
     {
-      if ( table.get()[i] != 0 ) addRouteIntoTree(&root,table.get()[i],traceit?&trace_:0);
+      if ( table.get()[i] != 0 )
+      {
+        int dup=0;
+        addRouteIntoTree(&root,table.get()[i],traceit?&trace_:0,dup);
+        if(dup)
+        {
+          DupsMap::iterator it=dups.find(table.get()[i]->info.routeId);
+          if(it!=dups.end())
+          {
+            it->second+=dup;
+          }else
+          {
+            dups.insert(DupsMap::value_type(table.get()[i]->info.routeId,dup));
+          }
+        }
+      }
+    }
+    for(DupsMap::iterator it=dups.begin();it!=dups.end();it++)
+    {
+      __warning2__("%d duplicates found in route %s",it->second,it->first.c_str());
     }
     while ( first_record )
     {
@@ -616,7 +640,9 @@ void RouteManager::commit(bool traceit)
     first_record = new_first_record;
     new_first_record = 0;
   }
+#ifndef DISABLE_TRACING
   dump(&root,0);
+#endif
   //delete table;
 }
 
