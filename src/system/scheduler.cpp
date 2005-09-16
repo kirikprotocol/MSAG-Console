@@ -52,7 +52,13 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
   if(File::Exists((mainFileName+".bak").c_str()) ||
      File::Exists((rolFileName+".bak").c_str()))
   {
-    __warning__("store .bak file found! Previous startup attempt failed! Rename bak files and try again");
+    __warning2__
+    (
+      "store %s file found! Previous startup attempt failed! Rename bak files and try again",
+      File::Exists((mainFileName+".bak").c_str())?
+         (mainFileName+".bak").c_str():
+         (rolFileName+".bak").c_str()
+    );
     abort();
   }
 
