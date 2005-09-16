@@ -12,7 +12,7 @@ class SmppCommand;
 class SmppCommandQueue{
 public:
   virtual void putCommand(SmppBindType ct,const SmppCommand& cmd)=0;
-  virtual void getCommand(SmppCommand& cmd)=0;
+  virtual bool getCommand(SmppCommand& cmd)=0;
 };
 
 }//smpp

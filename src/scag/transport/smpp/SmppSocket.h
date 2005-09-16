@@ -231,7 +231,7 @@ protected:
   void operator=(const SmppSocket&);
 };
 
-SmppSocket* getSmppSocket(net::Socket* sock)
+inline SmppSocket* getSmppSocket(net::Socket* sock)
 {
   return (SmppSocket*)sock->getData(0);
 }

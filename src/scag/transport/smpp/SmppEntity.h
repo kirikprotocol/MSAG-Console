@@ -4,6 +4,7 @@
 #include "scag/transport/smpp/SmppChannel.h"
 #include "scag/transport/smpp/SmppTypes.h"
 #include "core/synchronization/Mutex.hpp"
+#include "SmppManagerAdmin.h"
 
 namespace scag{
 namespace transport{
@@ -11,14 +12,28 @@ namespace smpp{
 
 
 struct SmppEntity{
-  char systemId[32];
-  int priority;
-  SmppEntityType et;
+  SmppEntityInfo info;
   SmppBindType bt;
   smsc::core::synchronization::Mutex mtx;
   SmppChannel* channel;
   SmppChannel* recvChannel;
   SmppChannel* transChannel;
+
+  SmppEntity()
+  {
+    bt=btNone;
+    channel=0;
+    recvChannel=0;
+    transChannel=0;
+  }
+  SmppEntity(const SmppEntityInfo& argInfo)
+  {
+    info=argInfo;
+    bt=btNone;
+    channel=0;
+    recvChannel=0;
+    transChannel=0;
+  }
 };
 
 }//smpp

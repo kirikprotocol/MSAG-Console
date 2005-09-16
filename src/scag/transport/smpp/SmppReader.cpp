@@ -11,7 +11,6 @@ int SmppReader::Execute()
   net::Multiplexer::SockArray error;
   while(!isStopping)
   {
-    debug1(log,"rdtick");
     {
       MutexGuard mg(mon);
       while(sockets.Count()==0)
@@ -29,7 +28,6 @@ int SmppReader::Execute()
     if(haveEvents)
     {
       MutexGuard mg(mon);
-      debug2(log,"err=%d, ready=%d",error.Count(),ready.Count());
       for(int i=0;i<error.Count();i++)
       {
         debug2(log,"error on socket %p",error[i]);
