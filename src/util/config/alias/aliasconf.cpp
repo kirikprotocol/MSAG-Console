@@ -14,8 +14,10 @@
 #include "sms/sms.h"
 #include "util/xml/DOMTreeReader.h"
 
-namespace scag {
+namespace smsc {
+namespace util {
 namespace config {
+namespace alias{
 
 using namespace std;
 using namespace xercesc;
@@ -185,5 +187,7 @@ AliasConfig::RecordIterator AliasConfig::getRecordIterator() const
   return RecordIterator(records);
 }
 
+}
+}
 }
 }
