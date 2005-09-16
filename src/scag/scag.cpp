@@ -26,7 +26,7 @@
 namespace scag 
 {
 
-    using namespace smsc::router;
+    using namespace scag::transport::smpp::router;
     using scag::config::RouteConfig;
     using scag::config::Route;
     using scag::config::Source;
@@ -35,6 +35,7 @@ namespace scag
     using scag::config::SourceHash;
     using scag::config::Mask;
     using scag::config::MaskVector;
+
     extern void loadRoutes(RouteManager* rm, const scag::config::RouteConfig& rc,bool traceit=false);
 
 static inline void makeAddress_(Address& addr,const string& mask)
@@ -92,27 +93,14 @@ void loadRoutes(RouteManager* rm,const scag::config::RouteConfig& rc,bool tracei
               makeAddress_(rinfo.source,*src_mask_it);
               rinfo.smeSystemId = dest.getSmeIdString();//dest.smeId;
               rinfo.srcSmeSystemId = route->getSrcSmeSystemId();
-//              __trace2__("sme sysid: %s",rinfo.smeSystemId.c_str());
-              rinfo.billing = route->isBilling();
-              //rinfo.paid =
+//              __trace2__("sme sysid: %s",rinfo.smeSystemId.c_str());              
               rinfo.archived=route->isArchiving();
-              rinfo.enabling = route->isEnabling();
-              rinfo.routeId=route->getId();
-              rinfo.serviceId=route->getServiceId();
-              rinfo.priority=route->getPriority();
-              rinfo.suppressDeliveryReports=route->isSuppressDeliveryReports();
-              rinfo.hide=route->isHide();
-              rinfo.replyPath=route->getReplyPath();
-              rinfo.deliveryMode = route->getDeliveryMode();
-              rinfo.forwardTo = route->getForwardTo();
-              rinfo.trafRules=TrafficRules(route->getTrafRules());
-              rinfo.forceDelivery=route->isForceDelivery();
-              rinfo.aclId=route->getAclId();
-              rinfo.allowBlocked=route->isAllowBlocked();
+              rinfo.enabled = route->isEnabling();
+              rinfo.routeId=route->getId();              
               rinfo.providerId=route->getProviderId();
-              rinfo.billingId=route->getBillingRuleId();
+              rinfo.ruleId=route->getRuleId();
               rinfo.categoryId=route->getCategoryId();
-              rinfo.transit=route->isTransit();
+              
               try{
                 rm->addRoute(rinfo);
               }

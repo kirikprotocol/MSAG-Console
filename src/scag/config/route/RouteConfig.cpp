@@ -173,32 +173,28 @@ const char * const replyPathToStr(const smsc::router::ReplyPath replyPath)
   }
 }
 
+bool RouteConfig::getAttribBool(const DOMElement &elem, const char * name)
+{
+    XmlStr attrib(elem.getAttribute(XmlStr(name)));
+    return (strcmp(attrib, name) == 0);
+}
+
+int RouteConfig::getAttribInt(const DOMElement &elem, const char * name)
+{
+    XmlStr attrib(elem.getAttribute(XmlStr(name)));
+    return atoi(attrib);
+}
+
+std::string RouteConfig::getAttribStr(const DOMElement &elem, const char * name)
+{
+    XmlStr attrib(elem.getAttribute(XmlStr(name)));
+    return std::string(attrib);
+}
+
 Route * RouteConfig::createRoute(const DOMElement &elem, const SubjectPHash &subjects)
 throw (SubjectNotFoundException)
 {
-  XmlStr id(elem.getAttribute(XmlStr("id")));
-  XmlStr billing(elem.getAttribute(XmlStr("billing")));
-  XmlStr archiving(elem.getAttribute(XmlStr("archiving")));
-  XmlStr enabling(elem.getAttribute(XmlStr("enabling")));
-  XmlStr suppressDeliveryReports(elem.getAttribute(XmlStr("suppressDeliveryReports")));
-  XmlStr active(elem.getAttribute(XmlStr("active")));
-  XmlStr hide(elem.getAttribute(XmlStr("hide")));
-  XmlStr forceRP(elem.getAttribute(XmlStr("replyPath")));
-  //XmlStr priorityStr(elem.getAttribute(XmlStr("priority")));
-  //XmlStr serviceIdStr(elem.getAttribute(XmlStr("serviceId")));
-  const unsigned int priority = atoi(XmlStr(elem.getAttribute(XmlStr("priority"))));
-  const unsigned int serviceId = atoi(XmlStr(elem.getAttribute(XmlStr("serviceId"))));
-  XmlStr srcSmeSystemId(elem.getAttribute(XmlStr("srcSmeId")));
-  XmlStr deliveryModeStr(elem.getAttribute(XmlStr("deliveryMode")));
-  XmlStr forwardToStr(elem.getAttribute(XmlStr("forwardTo")));
-  XmlStr trafRulesStr(elem.getAttribute(XmlStr("trafficRules")));
-  const AclIdent aclId(atol(XmlStr(elem.getAttribute(XmlStr("aclId")))));
-  XmlStr forceDelivery(elem.getAttribute(XmlStr("forceDelivery")));
-  XmlStr allowBlocked(elem.getAttribute(XmlStr("allowBlocked")));
-  const signed long providerId = atol(XmlStr(elem.getAttribute(XmlStr("providerId"))));
-  XmlStr billingRuleId(elem.getAttribute(XmlStr("billingId")));
-  const signed long categoryId = atol(XmlStr(elem.getAttribute(XmlStr("categoryId"))));
-  XmlStr transit(elem.getAttribute(XmlStr("transit")));
+  
 
   std::string routeid(id);
   if(routeid.length()>32)
@@ -207,27 +203,14 @@ throw (SubjectNotFoundException)
     routeid.erase(32);
   }
 
-  std::auto_ptr<Route> r(new Route(routeid,
-                                   priority,
-                                   strcmp("true", billing) == 0,
-                                   strcmp("true", archiving) == 0,
-                                   strcmp("true", enabling) == 0,
-                                   strcmp("true", suppressDeliveryReports) == 0,
-                                   strcmp("true", active) == 0,
-                                   strcmp("false", hide) != 0,
-                                   strToReplyPath(forceRP),
-                                   serviceId,
-                                   std::string(srcSmeSystemId),
-                                   strToDeliveryMode(deliveryModeStr),
-                                   std::string(forwardToStr),
-                                   std::string(trafRulesStr),
-                                   aclId,
-                                   strcmp("true", forceDelivery) == 0,
-                                   strcmp("true", allowBlocked) == 0,
-                                   providerId,
-                                   (const char * const)billingRuleId,
-                                   categoryId,
-                                   strcmp("true",transit)==0)
+  std::auto_ptr<Route> r(new Route( getAttribStr(elem, "id"),                                   
+                                    getAttribBool(elem, "archiving"),
+                                    getAttribBool(elem, "enabling"),
+                                    getAttribBool(elem, "active"),
+                                    getAttribStr(elem, "srcSmeId"),                                   
+                                    getAttribInt(elem, "providerId"),
+                                    getAttribInt(elem, "ruleId"),
+                                    getAttribInt(elem, "categoryId")
                          );
 
   DOMNodeList *srcs = elem.getElementsByTagName(XmlStr("source"));

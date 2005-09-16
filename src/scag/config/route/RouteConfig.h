@@ -48,6 +48,9 @@ protected:
   scag::config::SubjectPHash subjects;
   std::auto_ptr<char> config_filename;
 
+  static bool getAttribBool(const DOMElement &elem, const char * name);
+  static int  getAttribInt(const DOMElement &elem, const char * name);
+  static std::string getAttribStr(const DOMElement &elem, const char * name);
   static scag::config::Subject * createSubjectDef(const DOMElement &elem);
   static void createRouteSource(const DOMElement &srcElem, const scag::config::SubjectPHash &subjects, scag::config::Route * r) throw (SubjectNotFoundException);
   static void createRouteDestination(const DOMElement &dstElem, const scag::config::SubjectPHash &subjects, scag::config::Route * r) throw (SubjectNotFoundException);
