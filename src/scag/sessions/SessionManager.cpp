@@ -56,7 +56,8 @@ namespace scag { namespace sessions
         EventMonitor    inUseMonitor;
         CSessionList    SessionExpirePool;
         CSessionHash    SessionHash;
-        
+
+        int16_t         m_nLastUSR;
         Mutex           stopLock;
         Event           awakeEvent, exitEvent;
         bool            bStarted;
@@ -67,12 +68,12 @@ namespace scag { namespace sessions
         void Stop();
         bool isStarted();
         int  processExpire();
-
+        int16_t getNewUSR() {return ++m_nLastUSR; }
     public:
 
         void init(const SessionManagerConfig& config);
 
-        SessionManagerImpl() : bStarted(false) {};
+        SessionManagerImpl() : bStarted(false) , m_nLastUSR(0) {};
         virtual ~SessionManagerImpl() { Stop(); }
         
         // SessionManager interface
@@ -84,7 +85,7 @@ namespace scag { namespace sessions
         virtual void Start();
 
         virtual void startTimer(CSessionKey key,time_t deadLine);
-        Session * NewSession(CSessionKey sessionKey);
+        virtual Session * newSession(CSessionKey& sessionKey);
 
     };
 
@@ -205,35 +206,6 @@ int SessionManagerImpl::processExpire()
 }
 
 
-
-Session * SessionManagerImpl::NewSession(CSessionKey sessionKey)
-{
-    Session * session = 0;
-    store.newSession(sessionKey);
-
-    session = store.getSession(sessionKey);
-
-    time_t time = session->getWakeUpTime();
-
-    CSessionAccessData accessData;
-    accessData.nextWakeTime = time;
-    if (time == 0) return 0;
-
-    CSLIterator it;
-    for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it) 
-    {
-        if (time < it->nextWakeTime)
-        {
-            CSLIterator _it = SessionExpirePool.insert(it,accessData);
-            SessionHash.Insert(sessionKey,_it);
-            return session;
-        }
-    }
-    it = SessionExpirePool.insert(SessionExpirePool.end(),accessData);
-    SessionHash.Insert(sessionKey,it);
-    return session;
-}
-
 Session* SessionManagerImpl::getSession(const SCAGCommand& command)
 {
 
@@ -247,30 +219,54 @@ Session* SessionManagerImpl::getSession(const SCAGCommand& command)
 
     CSLIterator it;
 
-    if (!SessionHash.Exists(sessionKey)) 
-    {
-        session = NewSession(sessionKey);
-        session->setOwner(this);
-        return session;
-    }
+    if (!SessionHash.Exists(sessionKey)) return 0; 
 
     it = SessionHash.Get(sessionKey);
+
     while (it->bOpened)
     {
         inUseMonitor.wait();
-        if (!SessionHash.Exists(sessionKey)) 
-        {
-            session = NewSession(sessionKey);
-            session->setOwner(this);
-            return session;
-        }
-        it = SessionHash.Get(sessionKey);
+        if (!SessionHash.Exists(sessionKey)) return 0;
     }                                      
 
+    it->bOpened = true;
+    return store.getSession(sessionKey);
+}
+
+
+Session * SessionManagerImpl::newSession(CSessionKey& sessionKey)
+{
+    Session * session;
+    CSessionAccessData accessData;
+
+    MutexGuard guard(inUseMonitor);
+
+    sessionKey.USR = getNewUSR();
+
+    store.newSession(sessionKey);
     session = store.getSession(sessionKey);
-    session->setOwner(this);
+
+    time_t time = session->getWakeUpTime();
+
+    accessData.bOpened = true;
+    accessData.nextWakeTime = time;
+
+    CSLIterator it;
+    for (it = SessionExpirePool.begin();it!=SessionExpirePool.end();++it) 
+    {
+        if (time < it->nextWakeTime)
+        {
+            CSLIterator _it = SessionExpirePool.insert(it,accessData);
+            SessionHash.Insert(sessionKey,_it);
+            return session;
+        }
+    }
+    it = SessionExpirePool.insert(SessionExpirePool.end(),accessData);
+    SessionHash.Insert(sessionKey,it);
+
     return session;
 }
+
 
 
 void SessionManagerImpl::releaseSession(Session* session)
@@ -315,6 +311,7 @@ void SessionManagerImpl::startTimer(CSessionKey key,time_t deadLine)
 {
     MutexGuard guard(inUseMonitor);
 
+
     if (!SessionHash.Exists(key)) throw SCAGException("SessionManager: Fatal error 2");
 
     CSLIterator it;
@@ -327,17 +324,6 @@ void SessionManagerImpl::startTimer(CSessionKey key,time_t deadLine)
         it = SessionHash.Get(key);
     }
 
-    if (deadLine == 0) 
-    {
-        //TODO: check if we must erase session
-        // what to do, if session free in rule engine?
-
-        SessionExpirePool.erase(it);
-        SessionHash.Delete(key);
-        store.deleteSession(key);
-
-        return;
-    }
     it->nextWakeTime = deadLine;
 }
 

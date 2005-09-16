@@ -15,14 +15,14 @@
 
 namespace scag { namespace sessions 
 {
-    using namespace scag::bill;
-
     using namespace scag::util::properties;
     using namespace smsc::sms;
     using smsc::core::synchronization::EventMonitor;
-    using scag::transport::SCAGCommand;
+
+    using namespace scag::transport;
     using namespace smsc::core::buffers;
     using namespace scag::util::sms;
+    using namespace scag::bill;
 
 
 
@@ -37,15 +37,13 @@ namespace scag { namespace sessions
         }
     };    
 
-    
-
     struct COperationKey
     {
         smsc::sms::Address destAddress;
         int key;
 
         bool operator == (const COperationKey& operationKey) const
-        {
+        { 
             return ((this->destAddress == operationKey.destAddress)&&(this->key == operationKey.key));
         }
     };
@@ -53,10 +51,7 @@ namespace scag { namespace sessions
 
     class XOperationHashFunc {
     public:
-        static uint32_t CalcHash(const COperationKey& key)
-        {
-            return XAddrHashFunc::CalcHash(key.destAddress);
-        }
+        static uint32_t CalcHash(const COperationKey& key) { return XAddrHashFunc::CalcHash(key.destAddress);}
     };
 
 
@@ -64,7 +59,6 @@ namespace scag { namespace sessions
     {
     public:
         virtual void startTimer(CSessionKey key,time_t deadLine) = 0;
-        //virtual void stopTimer(CSessionKey key);
     };
 
 
@@ -80,34 +74,10 @@ namespace scag { namespace sessions
         Operation(const Operation& operation);
         std::list <Bill> BillList;
     public:
-        void attachBill(const Bill& bill)
-        {
-            BillList.push_front(bill);
-        }
-
-        void detachBill(const Bill& bill)
-        {
-            for (std::list<Bill>::iterator it = BillList.begin();it!=BillList.end(); ++it)
-            {
-                if ((*it)==bill) 
-                {
-                    BillList.erase(it);
-                    return;
-                }
-            }
-        }
-
-        void abort()
-        {
-            BillingManager& bm = BillingManager::Instance();
-            for (std::list<Bill>::iterator it = BillList.begin();it!=BillList.end(); ++it)
-            {
-                BillList.erase(it);
-                bm.rollback(*it);
-            }
-        }
-
-        ~Operation() {abort();}
+        void attachBill(const Bill& bill); 
+        void detachBill(const Bill& bill);
+        void rollbackAll();
+        ~Operation() {rollbackAll();}
     };
 
 
@@ -130,21 +100,15 @@ namespace scag { namespace sessions
         int                     accessCount;
 
         Hash<AdapterProperty *> PropertyHash;
-        
+
     public:
 
-        Session();
+        Session(const CSessionKey& key);
         virtual ~Session();
         
-        CSessionKey getSessionKey() const {
-            return m_SessionKey;
-        }
-        inline time_t getLastAccessTime() const {
-            return lastAccessTime;
-        }
-        inline bool isChanged() const {
-            return bChanged;
-        }
+        CSessionKey getSessionKey() const  { return m_SessionKey; }
+        inline time_t getLastAccessTime() const { return lastAccessTime; }
+        inline bool isChanged() const { return bChanged; }
         
         virtual void changed(AdapterProperty& property);
         virtual Property* getProperty(const std::string& name);

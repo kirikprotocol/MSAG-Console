@@ -10,7 +10,8 @@ namespace scag { namespace sessions
     
     Session * SessionStore::getSession(const CSessionKey& sessionKey)
     {
-        return new Session();
+        Session * session = new Session(sessionKey);
+        return session;
     }
 
     void SessionStore::newSession(const CSessionKey& sessionKey)

@@ -6,12 +6,15 @@
 #include "scag/transport/smpp/SmppCommand.h"
 #include <sms/sms.h>
 #include "scag/sessions/SessionManager.h"
+#include "scag/bill/BillingManager.h"
 
 using scag::re::RuleEngine;
 using scag::re::RuleStatus;
 using scag::transport::smpp::SmppCommand;
 using namespace smsc::sms;
 using namespace scag::sessions;
+using namespace scag::bill;
+
 
 int main(int argC, char* argV[])
 {
@@ -45,7 +48,8 @@ int main(int argC, char* argV[])
         std::cout<<"error creating session manager" << std::endl;
         return 2;
     }
-    session = sm1->getSession(command);
+    CSessionKey key;
+    session = sm1->newSession(key);
 
     std::cout<<"session manager get session" << std::endl;
 
@@ -61,6 +65,16 @@ int main(int argC, char* argV[])
 
     engine = new RuleEngine("./rules");
     RuleStatus rs;
+
+    BillingManager& billManager = BillingManager::Instance();
+    BillingManagerConfig billingManagerConfig;
+
+    billingManagerConfig.so_dir = "./cdr";
+    billingManagerConfig.cfg_dir = "";
+    billingManagerConfig.mainActionFactory = &engine->getActionFactory();
+
+    billManager.Init(billingManagerConfig);
+
 
     try
     {

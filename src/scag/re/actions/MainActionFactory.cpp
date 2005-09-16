@@ -9,7 +9,6 @@
 #include "scag/re/actions/ActionTrafficCheck.h"
 #include "scag/re/actions/ActionOperationWait.h"
 
-
 namespace scag { namespace re { namespace actions {
 
 using namespace scag::re::actions;
@@ -27,7 +26,7 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
 
     Action * action = 0;
 
-    
+
     for (std::list<const ActionFactory *>::const_iterator it = ChildFactories.begin(); it!=ChildFactories.end();++it)
     {
         action = (*it)->CreateAction(name);

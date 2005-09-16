@@ -37,6 +37,8 @@ namespace scag { namespace sessions
         static void Init(const SessionManagerConfig& config);
         static SessionManager& Instance();
 
+
+        virtual Session* newSession(CSessionKey& key) = 0;
         virtual Session* getSession(const SCAGCommand& command) = 0;
         virtual void releaseSession(Session* session)     = 0;
         virtual void closeSession  (const Session* session)     = 0;

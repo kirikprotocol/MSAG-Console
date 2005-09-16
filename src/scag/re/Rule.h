@@ -1,17 +1,17 @@
 #ifndef __SCAG_RULE_H__
 #define __SCAG_RULE_H__
 
-#include "EventHandler.h"
-#include "RuleStatus.h"
 #include <core/buffers/IntHash.hpp>
 #include "scag/sessions/Session.h"
+#include "EventHandler.h"
+#include "RuleStatus.h"
 
 namespace scag { namespace re 
 {
 
 using smsc::core::buffers::IntHash;
-using namespace scag::transport;
 using scag::sessions::Session;
+using namespace scag::transport;
 
 class EventHandler;
 

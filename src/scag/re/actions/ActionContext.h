@@ -4,19 +4,18 @@
 #include <string>
 #include <core/buffers/Hash.hpp>
 #include <scag/re/RuleStatus.h>
-#include <scag/util/properties/Properties.h>
+//#include <scag/util/properties/Properties.h>
 #include "scag/stat/Statistics.h"
 #include "scag/sessions/Session.h"
 
 
 namespace scag { namespace re { namespace actions 
 {
+    using namespace scag::util::properties;
     using smsc::core::buffers::Hash;
     using scag::re::RuleStatus;
     using namespace scag::stat;
     using namespace scag::sessions;
-
-    using namespace scag::util::properties;
 
     enum FieldType
     {

@@ -19,6 +19,46 @@ using namespace smsc::util;
 using namespace scag::re::actions;
 
 
+void RuleEngine::updateRule(int ruleId)
+{
+    MutexGuard mg(changeLock);
+
+    Rule* newRule = ParseFile(CreateRuleFileName(RulesDir,ruleId));
+    if (!newRule) return;
+
+
+    Rules *newRules = copyReference();
+    Rule** rulePtr = newRules->rules.GetPtr(ruleId);
+
+    if (rulePtr) 
+    {
+        (*rulePtr)->unref();
+        newRules->rules.Delete(ruleId);
+    }
+
+    newRules->rules.Insert(ruleId, newRule);
+    changeRules(newRules);      
+}
+
+
+bool RuleEngine::removeRule(int ruleId)
+{
+    MutexGuard mg(changeLock);
+
+    Rule** rulePtr = rules->rules.GetPtr(ruleId);  // Can we do such direct access? TODO: Ensure
+    if (!rulePtr) return false;
+            
+    Rules *newRules = copyReference();
+    rulePtr = newRules->rules.GetPtr(ruleId);
+    (*rulePtr)->unref();
+    newRules->rules.Delete(ruleId);
+    changeRules(newRules);
+    return true;
+}
+
+
+
+
 RuleEngine::RuleEngine(const std::string& dir)
 {
     /* TODO: Implement

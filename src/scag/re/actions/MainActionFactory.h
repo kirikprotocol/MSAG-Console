@@ -8,10 +8,10 @@ namespace scag { namespace re { namespace actions {
 
 class MainActionFactory : public ActionFactory
 {
-    std::list<const ActionFactory*> ChildFactories; 
+    mutable std::list<const ActionFactory*> ChildFactories; 
 public:
     Action * CreateAction(const std::string& name) const;
-    void registerChild(const ActionFactory& af);
+    void registerChild(const ActionFactory& af) const;
 };
 
 

@@ -19,11 +19,15 @@
 #include <scag/exc/SCAGExceptions.h>
 #include <core/buffers/Array.hpp>
 
+#include "scag/re/actions/ActionFactory.h"
+
 namespace scag { namespace bill
 {
     using namespace scag::exceptions;
     using namespace smsc::core::synchronization;
     using namespace scag::util::singleton;
+    using namespace scag::re::actions;
+
     using smsc::logger::Logger;
 
     using smsc::core::buffers::IntHash;
@@ -34,7 +38,7 @@ namespace scag { namespace bill
     {
         IntHash<BillingMachine *> machines; // User's billing machines by their ids
         bool isValidFileName(const std::string& fname);
-        void LoadBillingMachine(const char * dlpath,const std::string& cfg_dir);
+        void LoadBillingMachine(const char * dlpath,const std::string& cfg_dir, const ActionFactory * mainActionFactory);
 
         static const char* MACHINE_INIT_FUNCTION;
         static smsc::logger::Logger *logger;
@@ -46,7 +50,7 @@ namespace scag { namespace bill
         BillingManagerImpl() {};
         virtual ~BillingManagerImpl();
 
-        void init(const std::string& cfg_dir, const std::string& so_dir);
+        void init(const BillingManagerConfig& config);
         virtual void rollback(const Bill& bill);
         virtual void commit(const Bill& bill);
      };
@@ -65,7 +69,7 @@ static Mutex initBillingManagerLock;
 inline unsigned GetLongevity(BillingManager*) { return 7; } 
 typedef SingletonHolder<BillingManagerImpl> SingleBM;
 
-void BillingManager::Init(const std::string& cfg_dir, const std::string& so_dir)
+void BillingManager::Init(const BillingManagerConfig& config)
 {
     if (!bBillingManagerInited)
     {
@@ -73,7 +77,7 @@ void BillingManager::Init(const std::string& cfg_dir, const std::string& so_dir)
 
         if (!bBillingManagerInited) {
             BillingManagerImpl& bm = SingleBM::Instance();
-            bm.init(cfg_dir,so_dir);
+            bm.init(config);
             bBillingManagerInited = true;
         }
     }
@@ -100,8 +104,9 @@ bool BillingManagerImpl::isValidFileName(const std::string& fname)
 
 
 
-void BillingManagerImpl::LoadBillingMachine(const char * dlpath,const std::string& cfg_dir)
+void BillingManagerImpl::LoadBillingMachine(const char * dlpath,const std::string& cfg_dir, const ActionFactory * mainActionFactory)
 {
+    if (!mainActionFactory) return;
     MutexGuard guard(loadupLock);
 
     smsc_log_info(logger, "Loading '%s' library", dlpath);
@@ -117,6 +122,7 @@ void BillingManagerImpl::LoadBillingMachine(const char * dlpath,const std::strin
             if (billingMachine)
             {
                 machines.Insert(id,billingMachine);
+                mainActionFactory->registerChild(billingMachine->getActionFactory());
                 //DataSourceFactory::registerFactory(dsf, identity);
             }
             else
@@ -145,7 +151,7 @@ void BillingManagerImpl::LoadBillingMachine(const char * dlpath,const std::strin
 }
 
 
-void BillingManagerImpl::init(const std::string& cfg_dir, const std::string& so_dir) // possible throws exceptions
+void BillingManagerImpl::init(const BillingManagerConfig& config) // possible throws exceptions
 {
     // TODO: loadup all so modules from so_dir, call MACHINE_INIT_FUNCTION,
     //       add to machines & register action factory in MainActionFactory in RuleEngine
@@ -157,12 +163,20 @@ void BillingManagerImpl::init(const std::string& cfg_dir, const std::string& so_
     dirent * pDirEnt = 0;
     int ruleId = 0;
 
-    pDir = opendir(so_dir.c_str());
-    if (!pDir) 
+    pDir = opendir(config.so_dir.c_str());
+    if (!config.mainActionFactory) 
     {
-        smsc_log_error(logger, "Invalid directory '%s'", so_dir.c_str());
+        smsc_log_error(logger, "Fatal Error: Main Action Factory is invalid");
         return;
     }
+
+    if (!pDir) 
+    {
+        smsc_log_error(logger, "Invalid directory '%s'", config.so_dir.c_str());
+        return;
+    }
+
+
 
     while (pDir)
     {
@@ -171,12 +185,14 @@ void BillingManagerImpl::init(const std::string& cfg_dir, const std::string& so_
          {
              if (isValidFileName(pDirEnt->d_name))
              {
-                 std::string fileName = so_dir;
+                 std::string fileName = config.so_dir;
                  fileName.append("/");
                  fileName.append(pDirEnt->d_name);
                  try
                  {
-                     LoadBillingMachine(fileName.c_str(),cfg_dir);
+                     LoadBillingMachine(fileName.c_str(),config.cfg_dir,config.mainActionFactory);
+
+                     
                  } 
                  catch (SCAGException& e)
                  {

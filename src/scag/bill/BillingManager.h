@@ -5,8 +5,23 @@
 #include "Bill.h"
 #include <string>
 
+namespace scag { namespace re { namespace actions {
+     class ActionFactory;
+}}}
+
+
 namespace scag { namespace bill
 {
+
+    struct BillingManagerConfig
+    {
+        std::string cfg_dir;
+        std::string so_dir;
+        const scag::re::actions::ActionFactory * mainActionFactory;
+
+        BillingManagerConfig() : mainActionFactory(0) {}
+    };
+
     class BillingManager
     {
         BillingManager(const BillingManager& bm);
@@ -17,7 +32,7 @@ namespace scag { namespace bill
         virtual ~BillingManager() {};
     public:
 
-        static void Init(const std::string& cfg_dir, const std::string& so_dir);
+        static void Init(const BillingManagerConfig& config);
         static BillingManager& Instance();
 
         virtual void rollback(const Bill& bill) = 0;

@@ -5,6 +5,40 @@
 
 namespace scag { namespace sessions {
 
+void Operation::detachBill(const Bill& bill)
+{
+    for (std::list<Bill>::iterator it = BillList.begin();it!=BillList.end(); ++it)
+    {
+        if ((*it)==bill) 
+        {
+            BillList.erase(it);
+            
+            smsc_log_debug(logger,"Operation: Bill %d detached",bill.bill_id);
+            return;
+        }
+    }
+}
+
+void Operation::attachBill(const Bill& bill)
+{ 
+    BillList.push_front(bill);             
+    smsc_log_debug(logger,"Operation: Bill %d attached",bill.bill_id);
+}
+
+
+void Operation::rollbackAll()
+{
+    BillingManager& bm = BillingManager::Instance();
+    for (std::list<Bill>::iterator it = BillList.begin();it!=BillList.end(); ++it)
+    {
+        BillList.erase(it);
+        bm.rollback(*it);
+    }
+}
+
+
+
+
 void Session::changed(AdapterProperty& property)
 {
     AdapterProperty * oldProperty = PropertyHash.Get(property.GetName().c_str());
@@ -23,10 +57,12 @@ Property* Session::getProperty(const std::string& name)
     return PropertyHash.Get(name.c_str());
 }
 
-Session::Session() 
+Session::Session(const CSessionKey& key) 
     : PropertyManager(), lastAccessTime(-1), 
         bChanged(false), bDestroy(false), accessCount(0), Owner(0),currentOperation(0),needReleaseCurrentOperation(false)
 {
+    m_SessionKey = key;
+
     //!!! Временная херота, для того, чтобы SessionManager выдавал валидную сессию
     PendingOperation operation;
     time_t now;
