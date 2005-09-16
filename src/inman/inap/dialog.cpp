@@ -18,7 +18,7 @@ using std::runtime_error;
 using std::auto_ptr;
 using smsc::inman::common::format;
 using smsc::inman::common::getTcapReasonDescription;
-using smsc::inman::common::dumpToLog;
+using smsc::inman::common::dump;
 using smsc::inman::comp::ComponentFactory;
 
 namespace smsc  {
@@ -29,7 +29,7 @@ namespace inap  {
 // TcapDialog class
 /////////////////////////////////////////////////////////////////////////////////////
 
-extern Logger* dumpLogger;
+extern Logger* tcapLogger;
 
 TcapDialog::TcapDialog(Session* pSession, USHORT_T dlgId) 
     : logger(Logger::getInstance("smsc.inman.inap.TcapDialog"))
@@ -48,7 +48,16 @@ TcapDialog::~TcapDialog()
 
 void TcapDialog::beginDialog()
 {
-	smsc_log_debug(logger, "BEGIN_REQ(dialogId=%d)", did);
+  smsc_log_debug(tcapLogger,"BEGIN_REQ");
+  smsc_log_debug(tcapLogger," SSN: 0x%X", session->getSSN());
+  smsc_log_debug(tcapLogger," UserID: 0x%X", MSG_USER_ID );
+  smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
+  smsc_log_debug(tcapLogger," DialogID: 0x%X", did );
+  smsc_log_debug(tcapLogger," PriOrder: 0x%X", priority );
+  smsc_log_debug(tcapLogger," QoS: 0x%X", qSrvc );
+  smsc_log_debug(tcapLogger," Dest. address: %s", dump(session->scfAddr.addrLen ,session->scfAddr.addr  ).c_str() );
+  smsc_log_debug(tcapLogger," Org. address: %s" , dump(session->ssfAddr.addrLen ,session->ssfAddr.addr  ).c_str() );
+  smsc_log_debug(tcapLogger," App. context: %s" , dump(session->ac.acLen ,session->ac.ac ).c_str() );
 
  	USHORT_T result = EINSS7_I97TBeginReq(
     session->getSSN(),
@@ -66,13 +75,23 @@ void TcapDialog::beginDialog()
     0,
     NULL);
 
+
   if(result != 0)
   	throw runtime_error( format("BeginReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
 }
 
 void TcapDialog::continueDialog()
 {
-  smsc_log_debug(logger, "CONTINUE_REQ(dialogId=%d)", did);
+  smsc_log_debug(tcapLogger,"CONTINUE_REQ");
+  smsc_log_debug(tcapLogger," SSN: 0x%X", session->getSSN());
+  smsc_log_debug(tcapLogger," UserID: 0x%X", MSG_USER_ID );
+  smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
+  smsc_log_debug(tcapLogger," DialogID: 0x%X", did );
+  smsc_log_debug(tcapLogger," PriOrder: 0x%X", priority );
+  smsc_log_debug(tcapLogger," QoS: 0x%X", qSrvc );
+  smsc_log_debug(tcapLogger," Org. address: %s" , dump(session->ssfAddr.addrLen ,session->ssfAddr.addr  ).c_str() );
+  smsc_log_debug(tcapLogger," App. context: %s" , dump(session->ac.acLen ,session->ac.ac ).c_str() );
+
   USHORT_T result = EINSS7_I97TContinueReq(
     session->getSSN(),
     MSG_USER_ID,
@@ -93,7 +112,16 @@ void TcapDialog::continueDialog()
 
 void TcapDialog::endDialog(USHORT_T termination)
 {
-  smsc_log_debug(logger, "END_REQ");
+  smsc_log_debug(tcapLogger,"END_REQ");
+  smsc_log_debug(tcapLogger," SSN: 0x%X", session->getSSN());
+  smsc_log_debug(tcapLogger," UserID: 0x%X", MSG_USER_ID );
+  smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
+  smsc_log_debug(tcapLogger," DialogID: 0x%X", did );
+  smsc_log_debug(tcapLogger," PriOrder: 0x%X", priority );
+  smsc_log_debug(tcapLogger," QoS: 0x%X", qSrvc );
+  smsc_log_debug(tcapLogger," Termination: 0x%X", termination );
+  smsc_log_debug(tcapLogger," App. context: %s" , dump(session->ac.acLen ,session->ac.ac ).c_str() );
+
   USHORT_T result = EINSS7_I97TEndReq(
     session->getSSN(),
     MSG_USER_ID,
@@ -114,8 +142,13 @@ void TcapDialog::endDialog(USHORT_T termination)
 
 void TcapDialog::timerReset()
 {
-	smsc_log_debug(logger, "TIMER_RESET_REQ");
- 	USHORT_T result = EINSS7_I97TTimerResetReq
+  smsc_log_debug(tcapLogger,"TIME_RESET_REQ");
+  smsc_log_debug(tcapLogger," SSN: 0x%X", session->getSSN());
+  smsc_log_debug(tcapLogger," UserID: 0x%X", MSG_USER_ID );
+  smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
+  smsc_log_debug(tcapLogger," DialogID: 0x%X", did );
+
+	USHORT_T result = EINSS7_I97TTimerResetReq
  	(
     	session->getSSN(),
     	MSG_USER_ID,
@@ -218,10 +251,6 @@ USHORT_T TcapDialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T op
 
 USHORT_T TcapDialog::handleUserError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
 {
-	assert( op );
-	assert( oplen > 0 );
-  	smsc_log_debug( dumpLogger, "U_ERROR_IND( opcode=0x%X )", op[0] );
-  	dumpToLog( dumpLogger, pmlen, pm );
   	return MSG_OK;
 }
 

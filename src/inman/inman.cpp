@@ -128,7 +128,7 @@ static void init_logger()
 {
 	Logger::Init();
     inapLogger = Logger::getInstance("smsc.inman");
-    tcapLogger = Logger::getInstance("smsc.inman.tcap");
+    tcapLogger = Logger::getInstance("smsc.inman.inap.dump");
     dumpLogger = Logger::getInstance("smsc.inman.inap.dump");
 }
 
