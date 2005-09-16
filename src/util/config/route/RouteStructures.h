@@ -1,5 +1,5 @@
-#ifndef SMSC_UTIL_CONFIG_ROUTE_ROUTESTRUCTURES
-#define SMSC_UTIL_CONFIG_ROUTE_ROUTESTRUCTURES
+#ifndef SCAG_CONFIG_ROUTESTRUCTURES
+#define SCAG_CONFIG_ROUTESTRUCTURES
 
 #include <vector>
 #include <util/cstrings.h>
@@ -8,10 +8,8 @@
 #include <acls/interfaces.h>
 #include "router/route_types.h"
 
-namespace smsc {
-namespace util {
+namespace scag {
 namespace config {
-namespace route {
 
 using smsc::util::cStringCopy;
 using smsc::core::buffers::Hash;
@@ -131,7 +129,7 @@ private:
   bool transit;
 
 
-  friend class smsc::util::config::route::RouteConfig;
+  friend class scag::config::RouteConfig;
 
 public:
   Route()
@@ -184,8 +182,6 @@ public:
 typedef std::vector<Route*> RoutePVector;
 
 
-}
-}
 }
 }
 

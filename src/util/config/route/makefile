@@ -5,7 +5,7 @@
 #
 
 #CXXFLAGS := $(CXXFLAGS)
-PACKAGE := util.config.route
+PACKAGE := scag.config.route
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)

@@ -9,10 +9,8 @@
 #include "sms/sms_const.h"
 #include "util/xml/DOMTreeReader.h"
 
-namespace smsc {
-namespace util {
+namespace scag {
 namespace config {
-namespace route {
 
 using smsc::util::encode;
 using namespace xercesc;
@@ -39,7 +37,7 @@ RouteConfig::status RouteConfig::RouteIterator::fetchNext(Route *&record)
 }
 
 RouteConfig::RouteConfig()
-: logger(smsc::logger::Logger::getInstance("smsc.util.config.route.RouteConfig"))
+    : logger(smsc::logger::Logger::getInstance("smsc.util.config.route.RouteConfig"))
 {
 }
 
@@ -383,7 +381,5 @@ RouteConfig::RouteIterator RouteConfig::getRouteIterator() const
   return RouteIterator(routes);
 }
 
-}
-}
 }
 }

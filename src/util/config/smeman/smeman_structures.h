@@ -42,18 +42,16 @@ if ( success )
 }
 
 */
-#ifndef SMSC_UTIL_CONFIG_SMEMAN_SMEMAN_STRUCTURES
-#define SMSC_UTIL_CONFIG_SMEMAN_SMEMAN_STRUCTURES
+#ifndef SCAG_CONFIG_SMPPMAN_STRUCTURES
+#define SCAG_CONFIG_SMPPMAN_STRUCTURES
 
 #include <inttypes.h>
 #include <util/cstrings.h>
 #include <logger/Logger.h>
 #include <string>
 
-namespace smsc {
-namespace util {
+namespace scag {
 namespace config {
-namespace smeman {
 
 using smsc::util::cStringCopy;
 using smsc::logger::Logger;
@@ -135,8 +133,6 @@ struct SmeRecord
 };
 
 
-}
-}
 }
 }
 
