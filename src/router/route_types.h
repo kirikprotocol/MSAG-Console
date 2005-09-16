@@ -57,7 +57,7 @@ struct TrafficRules{
     using std::string;
     string::size_type oldpos=0,pos=0,argpos;
     string opt,arg;
-    __trace2__("parsing trafic rules: %s",str.c_str());
+    //__trace2__("parsing trafic rules: %s",str.c_str());
     do{
       oldpos=pos==0?pos:pos+1;
       pos=str.find(',',oldpos);
@@ -120,6 +120,7 @@ struct TrafficRules{
         __warning2__("Unknown route traffic rule: %s",opt.c_str());
       }
     }while(pos!=string::npos);
+    /*
     __trace2__("result: "
                "allowIncom:%s"
                ",allowAnswer:%s"
@@ -140,7 +141,7 @@ struct TrafficRules{
                allowInitiateUssdSession?"Y":"N",
                siUssdSessionLimit
               );
-
+    */
   }
 };
 
