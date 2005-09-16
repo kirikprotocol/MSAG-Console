@@ -313,11 +313,6 @@ class EditTag
      break;
    case KeyEvent.VK_BACK_SPACE:
    case KeyEvent.VK_DELETE:
-     caret=textArea.getCaretPosition();
-     textArea.setCaretPosition(caret-1);
-     textArea.setText(" ");
-     caret=textArea.getCaretPosition();
-     textArea.setCaretPosition(caret-1);
      view.processKeyEvent(evt,true);
     break;
    default:

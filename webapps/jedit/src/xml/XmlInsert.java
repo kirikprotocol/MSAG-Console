@@ -430,7 +430,7 @@ public class XmlInsert extends JPanel implements EBComponent
      textArea.requestFocus();
     } //}}}
     else
-    {
+    { System.out.println("xml.XmlInsert mouseClicked before showEditTagDialog(view,element) line 433");
      // show edit tag dialog box
      XmlActions.showEditTagDialog(view,element);
     }

@@ -52,7 +52,6 @@ public class XmlParsedData extends SideKickParsedData
   if(info == null)
   {
    info = new CompletionInfo();
-   System.out.println("xml.parser.XmlParserData getNoNamespaceCompletionInfo() mappings.put for empty string line 54 info= "+info);
       mappings.put("",info);
   }
 
@@ -90,8 +89,6 @@ public class XmlParsedData extends SideKickParsedData
  //{{{ getAllowedElements() method
  public List getAllowedElements(Buffer buffer, int pos)
  {
-  System.out.println("xml.parser.XmlParserData getAllowedElements in complete line 131");
-    Log.log(Log.ERROR,this,"xml.parser.XmlParserData parse line 131" );
     TagParser.Tag parentTag = TagParser.findLastOpenTag(
    buffer.getText(0,pos),pos,this);
 
@@ -105,19 +102,14 @@ public class XmlParsedData extends SideKickParsedData
    {
     String prefix = (String)iter.next();
     CompletionInfo info = (CompletionInfo)mappings.get(prefix);
-        System.out.println("xml.parser.XmlParserData getAllowedElements if(parentTag == null) line 105 info= "+info);
     info.getAllElements(prefix,returnValue);
    }
   }
   else
   {
-   System.out.println("xml.parser.XmlParserData getAllowedElements if(parentTag != null) line 111");
       String parentPrefix = getElementNamePrefix(parentTag.tag);
    ElementDecl parentDecl = getElementDecl(parentTag.tag);
-   if(parentDecl != null) {
-     System.out.println("xml.parser.XmlParserData getAllowedElements if(parentTag != null) line 115 ");
-     returnValue.addAll(parentDecl.getChildElements(parentPrefix));
-      }
+   if(parentDecl != null) returnValue.addAll(parentDecl.getChildElements(parentPrefix));
    // add everything but the parent's prefix now
    Iterator iter = mappings.keySet().iterator();
    while(iter.hasNext())
@@ -126,14 +118,12 @@ public class XmlParsedData extends SideKickParsedData
     if(!prefix.equals(parentPrefix))
     {
      CompletionInfo info = (CompletionInfo)mappings.get(prefix);
-     System.out.println("xml.parser.XmlParserData getAllowedElements if(parentTag != null) line 126 info= "+info);
           info.getAllElements(prefix,returnValue);
     }
    }
   }
 
   Collections.sort(returnValue,new ElementDecl.Compare());
-  System.out.println("xml.parser.XmlParserData getAllowedElements in complete line 131 returnValue= "+returnValue.toString());
     return returnValue;
  } //}}}
 

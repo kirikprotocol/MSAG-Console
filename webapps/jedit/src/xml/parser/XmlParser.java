@@ -77,15 +77,14 @@ public abstract class XmlParser extends SideKickParser
  //{{{ complete() method
  public SideKickCompletion complete(EditPane editPane, int caret)
  {
-  System.out.println("xml.parser.XmlParser complete start line 79");
-    Log.log(Log.ERROR,this,"xml.parser.XMLParser parse line 79");
+  System.out.println("xml.parser.XmlParser complete start line 80");
     SideKickParsedData _data = SideKickParsedData
    .getParsedData(editPane.getView());
   if(!(_data instanceof XmlParsedData))
    return null;
   if(XmlPlugin.isDelegated(editPane.getTextArea()))
    return null;
-
+  System.out.println("xml.parser.XmlParser complete start line 87");
   XmlParsedData data = (XmlParsedData)_data;
 
   Buffer buffer = editPane.getBuffer();

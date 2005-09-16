@@ -110,7 +110,7 @@ public class XmlCompletion extends SideKickCompletion
  private void insert(Object obj, char ch)
  {
   Macros.Recorder recorder = view.getMacroRecorder();
-
+   System.out.println("XmlCompletion insert(Object obj, char ch) obj= "+obj.getClass().getName());
   String insert;
   int caret;
 
@@ -138,7 +138,7 @@ public class XmlCompletion extends SideKickCompletion
    buf.append(element.name.substring(word.length()));
 
    buf.append(element.getRequiredAttributesString());
-
+    System.out.println("xml.XmlCompletion insert(Object obj, char ch) line 141 buf="+buf.toString());
    if(ch == '\n' || ch == '>')
    {
     if(element.empty)
@@ -166,7 +166,7 @@ public class XmlCompletion extends SideKickCompletion
 
      caret = buf.length() - start;
     }
-
+    System.out.println("xml.XmlCompletion insert(Object obj, char ch) line 169 buf="+buf.toString());
     if(ch == '\n' && element.attributes.size() != 0)
     {
      // hide the popup first, since the edit tag
@@ -175,6 +175,7 @@ public class XmlCompletion extends SideKickCompletion
      {
       public void run()
       {
+        System.out.println("xml.XmlCompletion insert run before showEditTagDialog(view) line 178");
        XmlActions.showEditTagDialog(view);
       }
      });
@@ -182,11 +183,13 @@ public class XmlCompletion extends SideKickCompletion
    }
    else
    {
-    buf.append(ch);
+     System.out.println("XmlCompletion line 186 I am here");
+     buf.append(ch);
     caret = 0;
    }
 
    insert = buf.toString();
+    System.out.println("XmlCompletion insert after run XmlActions.showEditTagDialog(view); insert= "+insert);
   }
   else if(obj instanceof EntityDecl)
   {

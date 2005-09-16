@@ -19,12 +19,10 @@
 package xml;
 
 //{{{ Imports
-import java.awt.event.*;
 import java.awt.Toolkit;
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
-import javax.swing.*;
 import javax.swing.text.Segment;
 import org.gjt.sp.jedit.*;
 import org.gjt.sp.jedit.textarea.*;
@@ -159,14 +157,42 @@ loop:   for(;;)
    GUIUtilities.error(view,"xml-edit-tag.undefined-element",pp);
    return;
   }
+  view.setEdittag(true);
+  System.out.println("xml.XmlActions ShowEditTagDialog(View) before new EditTagDialog line 162");
 
-  EditTagDialog dialog = new EditTagDialog(view,tag.tag,
-   elementDecl,attributes,empty,
-   elementDecl.completionInfo.entityHash,
-   data.ids,data.html);
+   EditTag dialog = new EditTag(view,tag.tag, elementDecl,attributes,
+      elementDecl.completionInfo.entityHash,data.ids,data.html);
+
+  dialog.updateTag();
+       // show the popup if
+   // - complete has one element and user invoked with delay key
+   // - or complete has multiple elements
+   // and popup is not already shown because of explicit invocation
+   // of the complete action during the trigger delay
+ /*  if(popup != null)
+    return;
+   SideKickCompletion complete=new XmlAttributeCompletion(view,"",dialog.getNames());
+
+   popup = new XmlAttributeCompletionPopup(view,
+           textArea.getCaretPosition(),complete )  //complete
+   {
+    /** forget reference to this popup when it is disposed */
+ /*   public void dispose()
+    {
+     super.dispose();
+     popup = null;
+    }
+   };
+    */
+   /*EditTagDialog dialog = new EditTagDialog(view,tag.tag,
+  elementDecl,attributes,empty,
+  elementDecl.completionInfo.entityHash,
+  data.ids,data.html);
+   */
 
   String newTag = dialog.getNewTag();
-
+  //newTag=newTag+">";
+  System.out.println("newTag= "+newTag);
   if(newTag != null)
   {
    try
@@ -182,7 +208,7 @@ loop:   for(;;)
    }
   }
  } //}}}
-
+  private static XmlAttributeCompletionPopup popup;
  //{{{ showEditTagDialog() method
  public static void showEditTagDialog(View view, ElementDecl elementDecl)
  {

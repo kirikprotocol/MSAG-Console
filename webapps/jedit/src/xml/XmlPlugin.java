@@ -191,6 +191,7 @@ public class XmlPlugin extends EBPlugin
     {
      public void run()
      {
+      System.out.println("xml.XmlPlugin mousePressed run before showEditTagDialog(View) line 194");
       XmlActions.showEditTagDialog(view);
      }
     });
