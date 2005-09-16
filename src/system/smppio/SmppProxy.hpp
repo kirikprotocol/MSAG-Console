@@ -321,84 +321,80 @@ public:
     }
     if(managerMonitor)managerMonitor->Signal();
   }
-  SmscCommand getOutgoingCommand()
-  {
-    MutexGuard g(mutexout);
-    SmscCommand cmd;
-    outqueue.Pop(cmd);
-    return cmd;
-  }
-
-  bool hasOutput(int ct)
+  bool getOutgoingCommand(int ct,SmscCommand& cmd)
   {
     MutexGuard g(mutexout);
     if(outqueue.Count()==0)return false;
-    if(ct==ctReceiver)
+    if(!outqueue.Peek(cmd))return false;
+    if(ct==-1)
     {
-      SmscCommand cmd;
-      if(outqueue.Peek(cmd))
+    }
+    int cmdMode=-1;
+    int cmdid=cmd->get_commandId();
+
+    if(cmdid==UNBIND)
+    {
+      if(cmd->get_mode()==1)
       {
-        int cmdid=cmd->get_commandId();
-        __trace2__("check output for receiver:cmdid=%d",cmdid);
+        cmdMode=1;
+      }else if(cmd->get_mode()==2)
+      {
+        cmdMode=2;
+      }
+    }
+    else
+    if((cmdid==ENQUIRELINK || cmdid==ENQUIRELINK_RESP || cmdid==UNBIND_RESP))
+    {
+      if(((int)cmd->dta)==ctReceiver)
+      {
+        cmdMode=1;
+      }else if(((int)cmd->dta)==ctTransmitter)
+      {
+        cmdMode=2;
+      }
 
-        if(cmdid==UNBIND)
-        {
-          return cmd->get_mode()==1;
-        }
-
-        if((cmdid==ENQUIRELINK || cmdid==ENQUIRELINK_RESP || cmdid==UNBIND_RESP) &&
-           ((int)cmd->dta)!=ctReceiver)return false;
-        bool rv=!(
+    }else
+    {
+      if(!(
                  cmdid==SUBMIT_RESP ||
                  cmdid==SUBMIT_MULTI_SM_RESP ||
                  cmdid==CANCEL_RESP ||
                  cmdid==QUERY_RESP ||
                  cmdid==REPLACE_RESP
-               );
-        if(rv && !smppReceiverSocket)
-        {
-          outqueue.Pop(cmd);
-          return false;
-        }
-      }
-    }else if(ct==ctTransmitter)
-    {
-      SmscCommand cmd;
-      if(outqueue.Peek(cmd))
+        ))
       {
-        //outqueue.Peek(cmd);
-        int cmdid=cmd->get_commandId();
-        __trace2__("check output for transmitter:cmdid=%d",cmdid);
-
-        if(cmdid==UNBIND)
-        {
-          return cmd->get_mode()==2;
-        }
-
-        if((cmdid==ENQUIRELINK || cmdid==ENQUIRELINK_RESP || cmdid==UNBIND_RESP) &&
-           ((int)cmd->dta)!=ctTransmitter)return false;
-        bool rv=(
-                 cmdid==SUBMIT_RESP ||
-                 cmdid==SUBMIT_MULTI_SM_RESP ||
-                 cmdid==CANCEL_RESP ||
-                 cmdid==QUERY_RESP ||
-                 cmdid==REPLACE_RESP ||
-                 cmdid==ENQUIRELINK ||
-                 cmdid==ENQUIRELINK_RESP ||
-                 cmdid==UNBIND ||
-                 cmdid==UNBIND_RESP ||
-                 cmdid==GENERIC_NACK ||
-                 cmdid==SMPP_PDU
-               );
-        if(rv && !smppTransmitterSocket)
-        {
-          outqueue.Pop(cmd);
-          return false;
-        }
+        cmdMode=1;
+      }
+      if(
+                   cmdid==SUBMIT_RESP ||
+                   cmdid==SUBMIT_MULTI_SM_RESP ||
+                   cmdid==CANCEL_RESP ||
+                   cmdid==QUERY_RESP ||
+                   cmdid==REPLACE_RESP ||
+                   cmdid==ENQUIRELINK ||
+                   cmdid==ENQUIRELINK_RESP ||
+                   cmdid==UNBIND ||
+                   cmdid==UNBIND_RESP ||
+                   cmdid==GENERIC_NACK ||
+                   cmdid==SMPP_PDU
+        )
+      {
+        cmdMode=2;
       }
     }
-    return outqueue.Count()!=0;
+
+    if((cmdMode==1 && ct==ctReceiver) || (cmdMode==2 && ct==ctTransmitter) || ct==ctTransceiver)
+    {
+      outqueue.Pop(cmd);
+      return true;
+    }
+    if((cmdMode==1 && !smppReceiverSocket) || (cmdMode==2 && !smppTransmitterSocket))
+    {
+      outqueue.Pop(cmd);
+    }
+    return false;
   }
+
 
   virtual SmeProxyState getState()const
   {

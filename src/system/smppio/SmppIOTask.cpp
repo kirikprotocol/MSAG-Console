@@ -671,6 +671,7 @@ int SmppInputThread::Execute()
                 SmppProxy* proxy=ss->getProxy();
                 if(proxy && proxy->isDisconnecting())
                 {
+                  __trace__("UNBIND_RESP received, disconnecting");
                   ss->getSocket()->Close();
                   proxy->close();
                 }
@@ -1017,9 +1018,9 @@ int SmppOutputThread::Execute()
           i--;
           continue;
         }
-        if(!ss->hasData() && ss->getProxy() && ss->hasOutput())
+        SmscCommand cmd;
+        if(!ss->hasData() && ss->getProxy() && ss->getOutgoingCommand(cmd))
         {
-          SmscCommand cmd=ss->getProxy()->getOutgoingCommand();
 
           SmppHeader *pdu=0;
           try{

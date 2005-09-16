@@ -5,6 +5,7 @@
 #include "system/smppio/SmppSocket.hpp"
 #include "system/smppio/SmppProxy.hpp"
 #include <string.h>
+#include "smeman/smsccmd.h"
 
 namespace smsc{
 namespace system{
@@ -136,9 +137,9 @@ void SmppSocket::notifyOutThread()volatile
   if(outThread)outThread->notify();
 }
 
-bool SmppSocket::hasOutput()
+bool SmppSocket::getOutgoingCommand(smsc::smeman::SmscCommand& cmd)
 {
-  return proxy->hasOutput(channelType);
+  return proxy->getOutgoingCommand(channelType,cmd);
 }
 
 

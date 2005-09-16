@@ -9,6 +9,11 @@
 //#include "system/smppio/SmppProxy.hpp"
 
 namespace smsc{
+
+namespace smeman{
+  class SmscCommand;
+}
+
 namespace system{
 namespace smppio{
 
@@ -115,7 +120,7 @@ public:
 
   int getChannelType(){return channelType;}
 
-  bool hasOutput();
+  bool getOutgoingCommand(smsc::smeman::SmscCommand& cmd);
 
   time_t getConnectTime()
   {
