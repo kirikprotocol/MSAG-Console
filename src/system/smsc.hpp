@@ -143,6 +143,7 @@ public:
     statCounter=0;
     maxTotalCounter=0;
     maxStatCounter=0;
+    mapProxy=0;
   };
   ~Smsc();
   void init(const SmscConfigs& cfg, const char * node);
