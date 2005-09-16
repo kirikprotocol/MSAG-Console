@@ -1,18 +1,20 @@
-#ifndef SCAG_CONFIG_ROUTE_ROUTECONFIG
-#define SCAG_CONFIG_ROUTE_ROUTECONFIG
+#ifndef SMSC_UTIL_CONFIG_ROUTE_ROUTECONFIG
+#define SMSC_UTIL_CONFIG_ROUTE_ROUTECONFIG
 
 #include <xercesc/dom/DOM.hpp>
-#include "scag/config/route/RouteStructures.h"
+#include "util/config/route/RouteStructures.h"
 #include "logger/Logger.h"
 
-namespace scag {
+namespace smsc {
+namespace util {
 namespace config {
+namespace route {
 
 using namespace xercesc;
 
 class SubjectNotFoundException {};
 
-class RouteConfig{
+class RouteConfig {
 public:
   enum status {success, fail};
 
@@ -20,11 +22,11 @@ public:
   {
   public:
     bool hasRecord() {return iter != end;}
-    status fetchNext(scag::config::Route *&record);
-    RouteIterator(scag::config::RoutePVector const &routs_vector);
+    status fetchNext(Route *&record);
+    RouteIterator(RoutePVector const &routs_vector);
   protected:
-    scag::config::RoutePVector::const_iterator iter;
-    scag::config::RoutePVector::const_iterator end;
+    RoutePVector::const_iterator iter;
+    RoutePVector::const_iterator end;
   };
 
   RouteConfig();
@@ -44,17 +46,19 @@ public:
 
 protected:
   smsc::logger::Logger *logger;
-  scag::config::RoutePVector routes;
-  scag::config::SubjectPHash subjects;
+  RoutePVector routes;
+  SubjectPHash subjects;
   std::auto_ptr<char> config_filename;
 
-  static scag::config::Subject * createSubjectDef(const DOMElement &elem);
-  static void createRouteSource(const DOMElement &srcElem, const scag::config::SubjectPHash &subjects, scag::config::Route * r) throw (SubjectNotFoundException);
-  static void createRouteDestination(const DOMElement &dstElem, const scag::config::SubjectPHash &subjects, scag::config::Route * r) throw (SubjectNotFoundException);
-  static scag::config::Route * createRoute(const DOMElement &elem, const scag::config::SubjectPHash &subjects) throw (SubjectNotFoundException);
+  static Subject * createSubjectDef(const DOMElement &elem);
+  static void createRouteSource(const DOMElement &srcElem, const SubjectPHash &subjects, Route * r) throw (SubjectNotFoundException);
+  static void createRouteDestination(const DOMElement &dstElem, const SubjectPHash &subjects, Route * r) throw (SubjectNotFoundException);
+  static Route * createRoute(const DOMElement &elem, const SubjectPHash &subjects) throw (SubjectNotFoundException);
 private:
 };
 
+}
+}
 }
 }
 #endif // ifndef SMSC_UTIL_CONFIG_ROUTE_ROUTECONFIG

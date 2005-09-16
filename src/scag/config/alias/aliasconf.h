@@ -7,13 +7,11 @@
 #include <vector>
 #include "logger/Logger.h"
 
-#ifndef SMSC_UTIL_CONFIG_ALIAS_ALIASCONFIG
-#define SMSC_UTIL_CONFIG_ALIAS_ALIASCONFIG
+#ifndef SCAG_CONFIG_ALIASCONFIG
+#define SCAG_CONFIG_ALIASCONFIG
 
-namespace smsc {
-namespace util {
+namespace scag {
 namespace config {
-namespace alias {
 
 struct AliasRecord
 {
@@ -87,8 +85,6 @@ protected:
 private:
 };
 
-}
-}
 }
 }
 

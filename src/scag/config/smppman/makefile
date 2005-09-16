@@ -5,7 +5,7 @@
 #
 
 #CXXFLAGS := $(CXXFLAGS)
-PACKAGE := util.config.alias
+PACKAGE := scag.config.smppman
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)
