@@ -1,7 +1,5 @@
 /*
-	$Id$
+  $Id$
 */
 
-#include "smpp.h"
-
-
+//#include "smpp.h"
