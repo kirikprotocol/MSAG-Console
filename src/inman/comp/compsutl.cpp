@@ -71,7 +71,8 @@ unsigned packMAPAddress2LocationOCTS(const Address& addr, LOCATION_ADDRESS_OCTS 
 
     /* just fill in predefined values for indicators */
     oa->b1.inds = 0;
-    oa->b1.st.INNid = 0x01;
+    oa->b1.st.INNid    = 0x00;
+    oa->b1.st.screenId = 0x01;
 
     return oa_length + 2;
 }

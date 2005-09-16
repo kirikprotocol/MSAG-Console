@@ -20,6 +20,7 @@ Billing::Billing(TcapDialog* pDialog, DeliveryMode_e md)
 		, dialog( pDialog )
 		, mode( md )
 {
+			
 	assert( dialog );
 	inap   = new Inap( dialog );
 	assert( inap );
@@ -43,6 +44,7 @@ void Billing::initialDPSMS()
 	if( mode == smsc::inman::comp::DeliveryMode_Originating )
 	{
 		arg.setDestinationSubscriberNumber(".0.1.131133"); // missing for MT
+		arg.setTPValidityPeriod( 120 , smsc::inman::comp::tp_vp_relative );
 	}
 	else
 	{
@@ -50,34 +52,20 @@ void Billing::initialDPSMS()
 	}
 
 	arg.setCallingPartyNumber(".1.1.79139163393");
-
-	const char imsi[] = { 0x52, 0x00, 0x31, 0x09, 0x31, 0x88, 0x87, 0xF0, 0x00 };
-	arg.setIMSI( imsi );
+	arg.setIMSI( "250013901388780" );
+	Address vlr( ".1.1.79139860001" );
+	arg.setlocationInformationMSC( vlr );
 
 	arg.setSMSCAddress(".1.1.79029869990");
 
-/*	struct tm timeValue;
-	timeValue.tm_sec  =   26;
-	timeValue.tm_min  =   03;
-	timeValue.tm_hour =   15;
-	timeValue.tm_mday =   22;
-	timeValue.tm_mon  =   04   - 1;
-	timeValue.tm_year =   2005 - 1900;
-	timeValue.tm_wday = 0;
-	timeValue.tm_yday = 0;
-	timeValue.tm_isdst= -1;
-	time_t tm = mktime( &timeValue );
-	assert( tm > 0 );
-	*/
-	time_t tm = time( &tm );
+	time_t tm;
+	time( &tm );
 
 	arg.setTimeAndTimezone( tm );
 
 	arg.setTPShortMessageSpecificInfo( 0x11 );
 	arg.setTPProtocolIdentifier( 0x00 );
 	arg.setTPDataCodingScheme( 0x08 );
-//	arg.setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt);
-//	arg.setlocationInformationMSC(const Address& addr);
 
 	inap->initialDPSMS( &arg );
 	dialog->beginDialog();

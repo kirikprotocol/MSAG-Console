@@ -449,11 +449,20 @@ int packTimeT2BCD7(unsigned char (*bcd)[7], time_t tmVal)
 
 int packTimeT2BCD8(unsigned char (*bcd)[8], time_t tmVal)
 {
-    int		qtz;
+/*    int		qtz;
     struct tm	ltms;
 
     cvtUTCTimeT2TimeSTZ(&tmVal, ltms, qtz);
     packTimeSTZ2BCD8(bcd, ltms, qtz);
+ */
+ 	(*bcd)[0] = 0x02;
+	(*bcd)[1] = 0x50; 	
+ 	(*bcd)[2] = 0x90;
+ 	(*bcd)[3] = 0x51;
+ 	(*bcd)[4] = 0x71;
+ 	(*bcd)[5] = 0x92;
+ 	(*bcd)[6] = 0x00;
+ 	(*bcd)[7] = 0x00;
     return 0;
 }
 
@@ -489,7 +498,7 @@ unsigned char packTP_VP_Relative(time_t vpVal)
 	    vpVal = WEEKS5_SECS;
 	tpVp = (unsigned char)(vpVal/WEEK_SECS + 192);
     }
-    return tpVp;    
+    return 0xAD;//tpVp;    
 }
 
 time_t unpackTP_VP_Relative(unsigned char tpVp)

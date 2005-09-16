@@ -166,9 +166,6 @@ USHORT_T TcapDialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
 
   UCHAR_T opcode = op[0];
 
-  smsc_log_debug( dumpLogger, "INVOKE_IND( opcode=0x%X )", op[0] );
-  dumpToLog( dumpLogger, pmlen, pm );
-
   auto_ptr<Invoke> invoke( new Invoke() );
   invoke->setId( invId );
   invoke->setTag( tag );

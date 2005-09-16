@@ -7,6 +7,9 @@
 #include <stdexcept>
 #include "sms/sms.h"
 #include "inman/common/util.hpp"
+#include "logger/Logger.h"
+
+using smsc::logger::Logger;
 
 using std::runtime_error;
 using std::vector;
@@ -122,7 +125,8 @@ class InitialDPSMSArg: public Component	//SSF -> SCF
 
 	void encode(vector<unsigned char>& buf);
 //	void decode(const vector<unsigned char>& buf);
-    private:
+	private:
+	  Logger*  logger;
       PrivateInitialDPSMSArg* comp;
 };
       
@@ -136,7 +140,8 @@ class EventReportSMSArg: public Component //SSF -> SCF
 	EventTypeSMS_e	eventType;
 	messageType_e	messageType;
 
-	EventReportSMSArg(EventTypeSMS_e eventType, messageType_e messageType);
+	EventReportSMSArg(EventTypeSMS_e et, messageType_e mt)
+	 : eventType( et ), messageType( mt ) {}
 	~EventReportSMSArg() {}
 
 	void encode(vector<unsigned char>& buf);
