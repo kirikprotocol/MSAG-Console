@@ -9,8 +9,6 @@ static char const ident[] = "$Id$";
 
 using std::auto_ptr;
 using std::runtime_error;
-using smsc::inman::comp::EventTypeSMS_e;
-using smsc::inman::comp::messageType_e;
 
 namespace smsc  {
 namespace inman {
@@ -76,15 +74,15 @@ void Billing::eventReportSMS()
 	if( !inap ) throw runtime_error("Dialog closed");
 
 	EventTypeSMS_e eventType;
-	messageType_e  messageType = smsc::inman::comp::MessageType_notification;
+	messageType_e  messageType = MessageType_notification;
 
 	if( mode == smsc::inman::comp::DeliveryMode_Originating )
 	{
-		eventType = smsc::inman::comp::EventTypeSMS_o_smsSubmission;
+		eventType = EventTypeSMS_o_smsSubmission;
 	}
 	else // DeliveryMode_Terminating
 	{
-		eventType = smsc::inman::comp::EventTypeSMS_t_smsDelivery;
+		eventType = EventTypeSMS_t_smsDelivery;
 	}
 
 	smsc_log_debug( logger, "--> EventReportSMS( EventType: 0x%X, MessageType: 0x%X )", 

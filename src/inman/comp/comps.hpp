@@ -18,6 +18,41 @@ using smsc::inman::common::format;
 using smsc::sms::Address;
 using smsc::sms::AddressValue;
 
+/* GVR NOTE: while linking the below enums are taken from generated
+ * asn1/c codec, so they should not have namespace prefix.
+ */
+
+#ifndef	_MonitorMode_H_
+//this is the clone of MonitorMode.h::MonitorMode_e
+typedef enum MonitorMode {
+    MonitorMode_interrupted =		0,
+    MonitorMode_notifyAndContinue =	1,
+    MonitorMode_transparent =		2
+} MonitorMode_e;
+#endif /* _MonitorMode_H_ */
+
+#ifndef	_MiscCallInfo_H_
+//this is the clone of MiscCallInfo.h::MessageType_e
+typedef enum messageType {
+    MessageType_request		= 0,
+    MessageType_notification	= 1
+} messageType_e;
+#endif /* _MiscCallInfo_H_ */
+
+#ifndef	_EventTypeSMS_H_
+//this is the clone of EventTypeSMS.h::EventTypeSMS_e
+typedef enum EventTypeSMS {
+    EventTypeSMS_sms_CollectedInfo =	1,
+    EventTypeSMS_o_smsFailure =		2,
+    EventTypeSMS_o_smsSubmission =	3,
+    EventTypeSMS_sms_DeliveryRequested = 11,
+    EventTypeSMS_t_smsFailure =		12,
+    EventTypeSMS_t_smsDelivery =	13,
+    EventTypeSMS_t_NONE =		66
+} EventTypeSMS_e;
+#endif /* _EventTypeSMS_H_ */
+
+
 namespace smsc {
 namespace inman {
 namespace comp{
@@ -53,37 +88,6 @@ enum TP_VP_format {
     tp_vp_relative, // '10' 
     tp_vp_absolute  // '11'
 };
-
-#ifndef	_EventTypeSMS_H_
-//this is the clone of EventTypeSMS.h::EventTypeSMS_e
-typedef enum EventTypeSMS {
-    EventTypeSMS_sms_CollectedInfo =	1,
-    EventTypeSMS_o_smsFailure =		2,
-    EventTypeSMS_o_smsSubmission =	3,
-    EventTypeSMS_sms_DeliveryRequested = 11,
-    EventTypeSMS_t_smsFailure =		12,
-    EventTypeSMS_t_smsDelivery =	13,
-    EventTypeSMS_t_NONE =		66
-} EventTypeSMS_e;
-#endif /* _EventTypeSMS_H_ */
-
-#ifndef	_MonitorMode_H_
-//this is the clone of MonitorMode.h::MonitorMode_e
-typedef enum MonitorMode {
-    MonitorMode_interrupted =		0,
-    MonitorMode_notifyAndContinue =	1,
-    MonitorMode_transparent =		2
-} MonitorMode_e;
-#endif /* _MonitorMode_H_ */
-
-#ifndef	_MiscCallInfo_H_
-//this is the clone of MiscCallInfo.h::MessageType_e
-typedef enum messageType {
-    MessageType_request		= 0,
-    MessageType_notification	= 1
-} messageType_e;
-#endif /* _MiscCallInfo_H_ */
-
 
 typedef enum DeliveryMode {
     DeliveryMode_Originating = 1, //EventTypeSMS_sms_CollectedInfo
