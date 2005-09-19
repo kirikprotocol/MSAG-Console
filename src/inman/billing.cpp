@@ -42,7 +42,7 @@ void Billing::initialDPSMS()
 	if( mode == smsc::inman::comp::DeliveryMode_Originating )
 	{
 		arg.setDestinationSubscriberNumber(".0.1.131133"); // missing for MT
-		arg.setTPValidityPeriod( 120 , smsc::inman::comp::tp_vp_relative );
+
 	}
 	else
 	{
@@ -53,15 +53,14 @@ void Billing::initialDPSMS()
 	arg.setIMSI( "250013901388780" );
 	Address vlr( ".1.1.79139860001" );
 	arg.setlocationInformationMSC( vlr );
-
 	arg.setSMSCAddress(".1.1.79029869990");
 
 	time_t tm;
 	time( &tm );
 
 	arg.setTimeAndTimezone( tm );
-
 	arg.setTPShortMessageSpecificInfo( 0x11 );
+	arg.setTPValidityPeriod( 120 , smsc::inman::comp::tp_vp_relative );
 	arg.setTPProtocolIdentifier( 0x00 );
 	arg.setTPDataCodingScheme( 0x08 );
 
@@ -88,10 +87,10 @@ void Billing::eventReportSMS()
 	smsc_log_debug( logger, "--> EventReportSMS( EventType: 0x%X, MessageType: 0x%X )", 
 								eventType, messageType );
 
-	EventReportSMSArg report( eventType, messageType );
+	//smsc::inman::comp::EventReportSMSArg report( eventType, messageType );
 
-	inap->eventReportSMS( &report );
-	dialog->continueDialog();
+	//inap->eventReportSMS( &report );
+	//dialog->continueDialog();
 }
 
 void Billing::connectSMS(ConnectSMSArg* arg)

@@ -119,8 +119,6 @@ typedef smsc::core::buffers::TmpBuf<char,2048> ObjectBuffer;
 class SerializableObject
 {
 	friend class Serializer;
-    public:
-    	virtual void run() = 0;
     protected:
 
     	virtual void load(ObjectBuffer& in)  = 0;

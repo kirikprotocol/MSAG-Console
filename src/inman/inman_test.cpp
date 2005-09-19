@@ -13,17 +13,18 @@
 using smsc::core::network::Socket;
 //using smsc::inman::Console;
 using smsc::inman::interaction::Serializer;
-using smsc::inman::interaction::StartMessage;
+//using smsc::inman::interaction::StartMessage;
 
 static const int SOCKET_TIMEOUT = 1000;
 static Socket 	 g_socket;
 
 void start()
 {
-	StartMessage startMessage;
+/*	StartMessage startMessage;
 	ObjectBuffer buffer(16);
 	Serializer::getInstance()->serialize( &startMessage, buffer );
 	g_socket.Write( buffer.get(), buffer.GetPos() );
+	*/
 }
 
 

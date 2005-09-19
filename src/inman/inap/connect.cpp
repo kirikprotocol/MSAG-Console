@@ -50,7 +50,6 @@ bool Connect::process(Server* pServer)
 
 	SerializableObject* obj = Serializer::getInstance()->deserialize( buffer );
 	assert( obj );
-	obj->run();
 	return true;
 }
 

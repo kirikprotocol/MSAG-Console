@@ -13,7 +13,9 @@ namespace interaction  {
 
 Serializer::Serializer()
 {
-	registerProduct( StartMessage::OBJECT_ID, new ProducerT< StartMessage >() );
+	registerProduct( cmd::CHARGE_SMS_TAG, new ProducerT< cmd::ChargeSms >() );
+	registerProduct( cmd::CHARGE_SMS_RESULT_TAG, new ProducerT< cmd::ChargeSmsResult>() );
+	registerProduct( cmd::DELIVERY_SMS_RESULT_TAG, new ProducerT< cmd::DeliverySmsResult>() );
 }
 
 Serializer::~Serializer()
