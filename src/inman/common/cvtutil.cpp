@@ -382,6 +382,7 @@ int unpack7BCD2TimeSTZ(unsigned char (*bcd)[7], struct tm &tms, int &qtz)
     return 0;
 }
 
+//GMT = LocalTime + TZSeconds; TZSeconds = (-QTZ)*15*60
 time_t cvtTimeSTZ2UTCTimeT(struct tm &tms, int &qtz)
 {
 /*  NOTE: mktime() adjust time_t for local timezone and DST */
@@ -428,14 +429,14 @@ void packTimeSTZ2BCD8(unsigned char (*bcd)[8], struct tm &tms, int &qtz)
     unsigned unum = (tms.tm_year + 1900)/100;
     (*bcd)[0] = packTinyNum2BCDOct(unum);
     /* pack other parts */
-    packTimeSTZ2BCD7((unsigned char (*)[7])(bcd + 1), tms, qtz);
+    packTimeSTZ2BCD7((unsigned char (*)[7])((&(*bcd))[1]), tms, qtz);
 }
 
 
-/* TZ for Nsk is GMT-6, timezone is -21600 => gtz is -24 */
+/* TZ for Nsk is GMT-6, timezone is -21600 => gtz is 24 */
 #define cvtUTCTimeT2TimeSTZ(tmVal, ltms, qtz) \
 {   if (!localtime_r(tmVal, &ltms)) return _SMSC_CVT_BAD_TIME; \
-    qtz = timezone/(15*60) - (ltms.tm_isdst ? 4 : 0); }
+    qtz = -timezone/(15*60); }
 
 int packTimeT2BCD7(unsigned char (*bcd)[7], time_t tmVal)
 {
@@ -449,20 +450,18 @@ int packTimeT2BCD7(unsigned char (*bcd)[7], time_t tmVal)
 
 int packTimeT2BCD8(unsigned char (*bcd)[8], time_t tmVal)
 {
-/*    int		qtz;
+    int		qtz;
     struct tm	ltms;
 
     cvtUTCTimeT2TimeSTZ(&tmVal, ltms, qtz);
     packTimeSTZ2BCD8(bcd, ltms, qtz);
- */
- 	(*bcd)[0] = 0x02;
-	(*bcd)[1] = 0x50; 	
- 	(*bcd)[2] = 0x90;
- 	(*bcd)[3] = 0x51;
- 	(*bcd)[4] = 0x71;
- 	(*bcd)[5] = 0x92;
- 	(*bcd)[6] = 0x00;
- 	(*bcd)[7] = 0x00;
+
+/* for debug:
+ 	(*bcd)[0] = 0x02; (*bcd)[1] = 0x50; 	
+ 	(*bcd)[2] = 0x90; (*bcd)[3] = 0x51;
+ 	(*bcd)[4] = 0x71; (*bcd)[5] = 0x92;
+ 	(*bcd)[6] = 0x00; (*bcd)[7] = 0x00;
+*/
     return 0;
 }
 
@@ -486,6 +485,8 @@ unsigned char packTP_VP_Relative(time_t vpVal)
     unsigned char tpVp;
 
     if (vpVal <= HALF_DAY_SECS) {
+	if (vpVal < MIN5_SECS) /* round up to lesser unit */
+	    vpVal = MIN5_SECS;
 	tpVp = (unsigned char)(vpVal/MIN5_SECS - 1);
     } else if (vpVal <= DAY_SECS) {
 	tpVp = (unsigned char)((vpVal - HALF_DAY_SECS)/HALF_HOUR_SECS + 143);
@@ -498,7 +499,7 @@ unsigned char packTP_VP_Relative(time_t vpVal)
 	    vpVal = WEEKS5_SECS;
 	tpVp = (unsigned char)(vpVal/WEEK_SECS + 192);
     }
-    return 0xAD;//tpVp;    
+    return tpVp;
 }
 
 time_t unpackTP_VP_Relative(unsigned char tpVp)
