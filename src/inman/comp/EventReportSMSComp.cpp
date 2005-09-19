@@ -12,8 +12,11 @@ namespace comp {
 
 using std::vector;
 
-//EventReportSMSArg::EventReportSMSArg(EventTypeSMS_e evType, messageType_e msgType)
-//		    : eventType(evType), messageType(msgType) {}
+EventReportSMSArg::EventReportSMSArg(EventTypeSMS_e et, messageType_e mt)
+		: eventType( et ), messageType( mt )
+{
+    compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.EventReportSMSArg");
+}
 
 //EventReportSMSArg::~EventReportSMSArg() {}
 

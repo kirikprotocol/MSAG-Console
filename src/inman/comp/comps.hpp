@@ -125,9 +125,9 @@ class InitialDPSMSArg: public Component	//SSF -> SCF
 
 	void encode(vector<unsigned char>& buf);
 //	void decode(const vector<unsigned char>& buf);
-	private:
-	  Logger*  logger;
-      PrivateInitialDPSMSArg* comp;
+    private:
+	Logger*  compLogger;
+	PrivateInitialDPSMSArg* comp;
 };
       
 //  Direction: gsmSSF or gprsSSF -> gsmSCF, Timer: Terbsms
@@ -140,12 +140,13 @@ class EventReportSMSArg: public Component //SSF -> SCF
 	EventTypeSMS_e	eventType;
 	messageType_e	messageType;
 
-	EventReportSMSArg(EventTypeSMS_e et, messageType_e mt)
-	 : eventType( et ), messageType( mt ) {}
+	EventReportSMSArg(EventTypeSMS_e et, messageType_e mt);
 	~EventReportSMSArg() {}
 
 	void encode(vector<unsigned char>& buf);
 //	void decode(const vector<unsigned char>& buf);
+    private:
+	Logger*  compLogger;
 };
 
 //  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Trrbsms
@@ -174,6 +175,7 @@ class RequestReportSMSEventArg: public Component //SSF -> SCF, SCF -> SSF
 	void  decode(const vector<unsigned char>& buf);
     private:
 	InternalRequestReportSMSEventArg* comp;
+	Logger*  compLogger;
 };
 
 //  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Tconsms
@@ -192,7 +194,9 @@ class ConnectSMSArg: public Component //SCF -> SSF
 //	void encode(vector<unsigned char>& buf);
 	void decode(const vector<unsigned char>& buf);
     protected:
-	Address		dstSN, clngPN, sMSCAdr;
+	Address	dstSN, clngPN, sMSCAdr;
+    private:
+	Logger* compLogger;
 };
 
 //  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Tfcisms 
@@ -211,6 +215,7 @@ class FurnishChargingInformationSMSArg: public Component //SCF -> SSF
 	void decode(const vector<unsigned char>& buf);
     private:
 	PrivateFurnishChargingInformationSMSArg* comp;
+	Logger* compLogger;
 };
 
 //  Direction: gsmSCF -> gsmSSF or gprsSSF, Timer: Trelsms
@@ -225,6 +230,8 @@ class ReleaseSMSArg: public Component //SCF -> SSF
 
 //	void encode(vector<unsigned char>& buf);
 	void decode(const vector<unsigned char>& buf);
+    private:
+	Logger* compLogger;
 };
 
 // Direction: gsmSCF -> smsSSF, Timer: Trtsms 
@@ -240,6 +247,8 @@ class ResetTimerSMSArg: public Component //SCF -> SSF
 
 //	void encode(vector<unsigned char>& buf);
 	void decode(const vector<unsigned char>& buf);
+    private:
+	Logger* compLogger;
 };
 
 }//namespace comp

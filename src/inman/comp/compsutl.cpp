@@ -77,35 +77,6 @@ unsigned packMAPAddress2LocationOCTS(const Address& addr, LOCATION_ADDRESS_OCTS 
     return oa_length + 2;
 }
 
-/*
- * NOTE: returned object should be freed only by 
- *	OCTET_STRING_free(&asn_DEF_OCTET_STRING, sptr, 0);
- */
-OCTET_STRING_t * OCTET_STRING_OBJ(size_t slen)
-{
-    OCTET_STRING_t *	sptr = (OCTET_STRING_t *)CALLOC(1, sizeof(OCTET_STRING_t)); // reset _asn_ctx
-    uint8_t *		oadr = (uint8_t *)MALLOC(slen);
-
-    if (!sptr || !oadr) 
-	throw std::runtime_error(":INMAN: out of memory");
-
-    sptr->size = slen;
-    sptr->buf = oadr;
-    return sptr;
-}
-
-/*
- * NOTE: returned object should be freed only by 
- *	OCTET_STRING_free(&asn_DEF_OCTET_STRING, sptr, 0);
- */
-OCTET_STRING_t * OCTET_STRING_FromAddress(const Address& addr)
-{
-    OCTET_STRING_t *	sptr = OCTET_STRING_OBJ(sizeof(TONNPI_ADDRESS_OCTS));
-    /* pack Address into OCTET STRING */
-    sptr->size = packMAPAddress2OCTS(addr, (TONNPI_ADDRESS_OCTS *)(sptr->buf));
-    return sptr;
-}
-
 
 Address	OCTET_STRING_2_Addres(OCTET_STRING_t * octs)
 {

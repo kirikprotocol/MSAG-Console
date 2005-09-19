@@ -20,12 +20,12 @@ extern "C" int print2vec(const void *buffer, size_t size, void *app_key);
 #else  /* INMAN_LOG_ON */
 #include "logger/Logger.h"
 #define INMAN_LOG_ENC(er, asnDef)	if (er.encoded == -1) { \
-	smsc_log_error(smsc::logger::Logger::getInstance("smsc.inman.codec"), \
+	smsc_log_error(compLogger, \
 	"Encoding of %s failed at %s", asnDef.name, er.failed_type->name); \
 	throw EncodeError(format(":InMan: Encoding of %s failed at %s", asnDef.name, er.failed_type->name)); }
 
 #define INMAN_LOG_DEC(drc, asnDef)	if (drc.code != RC_OK) { \
-	smsc_log_error(smsc::logger::Logger::getInstance("smsc.inman.codec"), \
+	smsc_log_error(compLogger, \
 	"Decoding of %s failed with code %s at byte: %d\n", asnDef.name, \
 	drc.code == RC_FAIL ? "RC_FAIL" : "RC_WMORE", drc.consumed); \
 	throw DecodeError(format(":InMan: Decoding of %s failed with code %s at byte: %d\n", \
@@ -36,17 +36,13 @@ extern "C" int print2vec(const void *buffer, size_t size, void *app_key);
 #define CAP_MAX_SMS_AddressStringLength	10 //CAP-datatypes.maxSMS-AddressStringLength - 1
 #define CAP_MAX_LocationNumber_Length	8
 #define CAP_MAX_TimeAndTimezoneLength	8
+#define CAP_MAX_IMSILength		8
 
 
 namespace smsc {
 namespace inman {
 namespace comp {
 
-/* Allocates OCTET_STRING buffer length of 'slen'
- * NOTE: returned object should be freed only by 
- *	OCTET_STRING_free(&asn_DEF_OCTET_STRING, sptr, 0);
- */
-extern OCTET_STRING_t * OCTET_STRING_OBJ(size_t slen);
 
 typedef union TONPI_OCT_u {
     unsigned char tonpi;
@@ -90,12 +86,6 @@ extern unsigned packMAPAddress2LocationOCTS(const Address& addr,
 						LOCATION_ADDRESS_OCTS * oa);
 extern unsigned unpackOCTS2MAPAddress(Address& addr, TONNPI_ADDRESS_OCTS * oa,
 							    unsigned valLen);
-
-/* Allocates OCTET_STRING and initializes its buffer with packed Address
- * NOTE: returned object should be freed only by 
- *	OCTET_STRING_free(&asn_DEF_OCTET_STRING, sptr, 0);
- */
-extern OCTET_STRING_t * OCTET_STRING_FromAddress(const Address& addr);
 
 extern Address	OCTET_STRING_2_Addres(OCTET_STRING_t * octs);
 

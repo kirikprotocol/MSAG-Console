@@ -12,7 +12,11 @@ namespace comp {
 using std::vector;
 
 
-ReleaseSMSArg::ReleaseSMSArg() { rPCause = 0; }
+ReleaseSMSArg::ReleaseSMSArg()
+{
+    rPCause = 0;
+    compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.ReleaseSMSArg");
+}
 ReleaseSMSArg::~ReleaseSMSArg() { }
 
 void ReleaseSMSArg::decode(const vector<unsigned char>& buf)

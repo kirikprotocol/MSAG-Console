@@ -21,6 +21,7 @@ class InternalRequestReportSMSEventArg
 RequestReportSMSEventArg::RequestReportSMSEventArg()
 {
   comp = new InternalRequestReportSMSEventArg();
+  compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.RequestReportSMSEventArg");
 }
 
 RequestReportSMSEventArg::~RequestReportSMSEventArg()

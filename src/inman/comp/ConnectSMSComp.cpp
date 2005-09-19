@@ -11,7 +11,10 @@ namespace inman {
 namespace comp {
 using std::vector;
 
-ConnectSMSArg::ConnectSMSArg() { }
+ConnectSMSArg::ConnectSMSArg()
+{
+    compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.ConnectSMSArg");
+}
 ConnectSMSArg::~ConnectSMSArg() { }
 
 void ConnectSMSArg::decode(const vector<unsigned char>& buf)

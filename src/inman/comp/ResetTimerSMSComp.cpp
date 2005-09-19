@@ -11,7 +11,11 @@ namespace comp {
 using std::vector;
 
 
-ResetTimerSMSArg::ResetTimerSMSArg() { timerValue = 0; }
+ResetTimerSMSArg::ResetTimerSMSArg()
+{
+    timerValue = 0; 
+    compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.ResetTimerSMSArg");
+}
 ResetTimerSMSArg::~ResetTimerSMSArg() { }
 
 void ResetTimerSMSArg::decode(const vector<unsigned char>& buf)
