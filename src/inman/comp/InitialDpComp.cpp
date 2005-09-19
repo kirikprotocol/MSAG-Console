@@ -105,7 +105,9 @@ void InitialDPSMSArg::setCallingPartyNumber(const char * text)
 //imsi contains sequence of ASCII digits
 void InitialDPSMSArg::setIMSI(const std::string& imsi)
 {
-    assert(((imsi.length() + 1)/2) > CAP_MAX_IMSILength);
+	
+	smsc_log_debug( compLogger, "IMSI: %s (%d)", imsi.c_str(), imsi.length());
+    assert(((imsi.length() + 1)/2) <= CAP_MAX_IMSILength);
     ZERO_OCTET_STRING(comp->_iMSI);
     comp->_iMSI.size = smsc::cvtutil::packNumString2BCD(comp->_iMSI.buf,
 						imsi.c_str(), imsi.length());
