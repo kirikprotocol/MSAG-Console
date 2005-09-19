@@ -163,21 +163,27 @@ void InitialDPSMSArg::setTPShortMessageSpecificInfo(unsigned char tPSMSI)
 {
     ZERO_OCTET_STRING(comp->_tPSMSI);
     comp->_tPSMSI.buf[0] = tPSMSI;
+    comp->_tPSMSI.size = 1;
     comp->idp.tPShortMessageSpecificInfo = &(comp->_tPSMSI);
+    smsc_log_debug( compLogger, "TPSMSInfo: %x", (unsigned)(comp->idp.tPShortMessageSpecificInfo->buf[0]));
 }
 
 void InitialDPSMSArg::setTPProtocolIdentifier(unsigned char tPPid)
 {
     ZERO_OCTET_STRING(comp->_tPPid);
     comp->_tPPid.buf[0] = tPPid;
+    comp->_tPPid.size = 1;
     comp->idp.tPProtocolIdentifier = &(comp->_tPPid);
+    smsc_log_debug( compLogger, "TPProtoId: %x", (unsigned)(comp->idp.tPProtocolIdentifier->buf[0]));
 }
 
 void InitialDPSMSArg::setTPDataCodingScheme(unsigned char tPDCSch)
 {
     ZERO_OCTET_STRING(comp->_tPDCSch);
     comp->_tPDCSch.buf[0] = tPDCSch;
+    comp->_tPDCSch.size = 1;
     comp->idp.tPDataCodingScheme = &(comp->_tPDCSch);
+    smsc_log_debug( compLogger, "TPDCS: %x", (unsigned)(comp->idp.tPDataCodingScheme->buf[0]));
 }
 
 void InitialDPSMSArg::setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt)
@@ -186,6 +192,7 @@ void InitialDPSMSArg::setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt)
     case tp_vp_relative: {
 	comp->_tPVP.size = 1;
 	comp->_tPVP.buf[0] = smsc::cvtutil::packTP_VP_Relative(vpVal);
+	smsc_log_debug( compLogger, "TP-VP: %x", (unsigned)(comp->_tPVP.buf[0]));
     }   break;
     case tp_vp_absolute: {
 	comp->_tPVP.size = 7;
@@ -196,6 +203,7 @@ void InitialDPSMSArg::setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt)
 	throw runtime_error(":INMAN: unsupported TP-VP format");
     }
     comp->idp.tPValidityPeriod = &(comp->_tPVP);
+    
 }
 
 /* Sets VLR number and LocationNumber (duplicates it from VLR) */
