@@ -13,7 +13,7 @@ class CDRActionFactory : public ActionFactory
 {
 public:
     virtual Action * CreateAction(const std::string& name) const;
-    virtual void registerChild(const ActionFactory& af) {}
+    virtual void registerChild(const ActionFactory * af) {}
 
 };
 

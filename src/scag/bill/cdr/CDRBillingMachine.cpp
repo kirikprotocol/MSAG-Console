@@ -3,6 +3,8 @@
 
 std::auto_ptr<scag::bill::CDRBillingMachine> billingMachine;
 bool bHasInstance = false;
+#include <iostream>
+
 
 extern "C" scag::bill::BillingMachine* initBillingMachine(uint8_t machine_id, const std::string& cfg_dir)
 {
@@ -20,10 +22,21 @@ namespace scag { namespace bill {
 
 using namespace scag::exceptions;
 
+CDRBillingMachine::CDRBillingMachine() : m_Key(0) 
+{ 
+    actionFactory = new CDRActionFactory();
+}
+
 CDRBillingMachine * CDRBillingMachine::Instance()
 {
     if (!bHasInstance) return 0;
     return billingMachine.get();
+}
+
+
+ActionFactory * CDRBillingMachine::getActionFactory() const 
+{ 
+    return actionFactory;
 }
 
 

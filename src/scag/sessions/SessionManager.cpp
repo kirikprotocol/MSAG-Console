@@ -165,8 +165,8 @@ int SessionManagerImpl::Execute()
         int secs = processExpire();
         awakeEvent.Wait(secs*1000);
     }
-    exitEvent.Signal();
     std::cout<<"SessionManager::stop executing" << std::endl;
+    exitEvent.Signal();
     return 0;
 }
 

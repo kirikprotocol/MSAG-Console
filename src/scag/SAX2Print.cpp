@@ -56,44 +56,41 @@ int main(int argC, char* argV[])
     if (!session) 
     {
         std::cout<<"session is not valid" << std::endl;
-        smsc::logger::Logger::Shutdown();
+        //smsc::logger::Logger::Shutdown();
         std::cout<<"system shutdown" << std::endl;
         return 3;
     }
 
 
 
-    engine = new RuleEngine("./rules");
+    engine = new RuleEngine();
     RuleStatus rs;
 
-    BillingManager& billManager = BillingManager::Instance();
     BillingManagerConfig billingManagerConfig;
 
-    billingManagerConfig.so_dir = "./cdr";
+    billingManagerConfig.so_dir = "./bill";
     billingManagerConfig.cfg_dir = "";
-    billingManagerConfig.mainActionFactory = &engine->getActionFactory();
+    billingManagerConfig.mainActionFactory = engine->getActionFactory();
 
-    billManager.Init(billingManagerConfig);
-
+    BillingManager::Init(billingManagerConfig);
+    engine->Init("./rules");
 
     try
     {
         rs = engine->process(command, *session);
-        char buff[128];
-        sprintf(buff,"%s%d","result = ",rs.result);
-        smsc_log_debug(logger,buff);
+        smsc_log_debug(logger,"result = %d",rs.result);
     }
     catch (Exception& e)
     {
         smsc_log_error(logger,"");
-        smsc_log_error(logger,std::string("Process aborted: ") + e.what());
+        smsc_log_error(logger,"Process aborted: %s",e.what());
         //TODO: Disable route
     }
     
 
 
     delete engine;
-    smsc::logger::Logger::Shutdown();
+    //smsc::logger::Logger::Shutdown();
     return 0;
 }
 

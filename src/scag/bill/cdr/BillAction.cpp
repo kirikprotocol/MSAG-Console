@@ -13,7 +13,7 @@ void BillAction::init(const SectionParams& params,PropertyObject propertyObject)
     FieldType ft;
     const char * name = 0;
 
-
+/*
     if (params.Exists("service")) 
     {
         m_sServiceName = params["service"];
@@ -37,7 +37,7 @@ void BillAction::init(const SectionParams& params,PropertyObject propertyObject)
         if (ft==ftUnknown) 
             throw SCAGException("BillAction '%s' : unrecognized variable prefix '%s' for 'msg' parameter",m_sName.c_str(),m_sMessage.c_str());
     }
-    
+*/    
 }
 
 

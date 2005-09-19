@@ -57,28 +57,9 @@ bool RuleEngine::removeRule(int ruleId)
 }
 
 
-
-
-RuleEngine::RuleEngine(const std::string& dir)
+void RuleEngine::Init(const std::string& dir)
 {
-    /* TODO: Implement
-             1) Configure global params (if any)
-             2) Scan all sub-sections & create rules for it (via RulesFactory)
-    */
     RulesDir = dir;
-    rules = new Rules();
-
-    try
-    {
-        XMLPlatformUtils::Initialize();
-    }
-
-    catch (const XMLException& toCatch)
-    {
-        StrX msg(toCatch.getMessage());
-        smsc_log_error(logger,"Error during initialization XMLPlatform: %s", msg.localForm());
-        return;
-    }
 
     DIR * pDir = 0;
     dirent * pDirEnt = 0;
@@ -111,12 +92,36 @@ RuleEngine::RuleEngine(const std::string& dir)
 
     closedir(pDir);
 }
+
+
+RuleEngine::RuleEngine()
+{
+    /* TODO: Implement
+             1) Configure global params (if any)
+             2) Scan all sub-sections & create rules for it (via RulesFactory)
+    */
+    factory = new MainActionFactory;
+    rules = new Rules();
+
+
+    try
+    {
+        XMLPlatformUtils::Initialize();
+    }
+    catch (const XMLException& toCatch)
+    {
+        StrX msg(toCatch.getMessage());
+        smsc_log_error(logger,"Error during initialization XMLPlatform: %s", msg.localForm());
+        return;
+    }
+}
   
 RuleEngine::~RuleEngine()
 {
     XMLPlatformUtils::Terminate();
     if (rules) rules->unref();
     delete rules;
+    delete factory;
 }
  
 Rule * RuleEngine::ParseFile(const std::string& xmlFile)
@@ -125,7 +130,7 @@ Rule * RuleEngine::ParseFile(const std::string& xmlFile)
     int errorCode = 0;
 
     SAXParser* parser = new SAXParser;
-    XMLBasicHandler handler(factory);
+    XMLBasicHandler handler(*factory);
 
     try
     {

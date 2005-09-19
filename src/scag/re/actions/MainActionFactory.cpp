@@ -9,6 +9,8 @@
 #include "scag/re/actions/ActionTrafficCheck.h"
 #include "scag/re/actions/ActionOperationWait.h"
 
+#include "scag/SAX2Print.hpp"
+                 
 namespace scag { namespace re { namespace actions {
 
 using namespace scag::re::actions;
@@ -26,7 +28,6 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
 
     Action * action = 0;
 
-
     for (std::list<const ActionFactory *>::const_iterator it = ChildFactories.begin(); it!=ChildFactories.end();++it)
     {
         action = (*it)->CreateAction(name);
@@ -36,9 +37,11 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     return action;
 }
 
-void MainActionFactory::registerChild(const ActionFactory& af)
+void MainActionFactory::registerChild(const ActionFactory * af) 
 {
-    ChildFactories.push_back(&af);
+    if (!af) return;
+    ChildFactories.push_back(af);
+    smsc_log_info(logger,"Action factory registered");
 }
 
 

@@ -38,7 +38,7 @@ namespace scag { namespace bill
     {
         IntHash<BillingMachine *> machines; // User's billing machines by their ids
         bool isValidFileName(const std::string& fname);
-        void LoadBillingMachine(const char * dlpath,const std::string& cfg_dir, const ActionFactory * mainActionFactory);
+        void LoadBillingMachine(const char * dlpath,const std::string& cfg_dir, ActionFactory * mainActionFactory);
 
         static const char* MACHINE_INIT_FUNCTION;
         static smsc::logger::Logger *logger;
@@ -50,7 +50,7 @@ namespace scag { namespace bill
         BillingManagerImpl() {};
         virtual ~BillingManagerImpl();
 
-        void init(const BillingManagerConfig& config);
+        void init(BillingManagerConfig& config);
         virtual void rollback(const Bill& bill);
         virtual void commit(const Bill& bill);
      };
@@ -69,7 +69,7 @@ static Mutex initBillingManagerLock;
 inline unsigned GetLongevity(BillingManager*) { return 7; } 
 typedef SingletonHolder<BillingManagerImpl> SingleBM;
 
-void BillingManager::Init(const BillingManagerConfig& config)
+void BillingManager::Init(BillingManagerConfig& config)
 {
     if (!bBillingManagerInited)
     {
@@ -104,7 +104,7 @@ bool BillingManagerImpl::isValidFileName(const std::string& fname)
 
 
 
-void BillingManagerImpl::LoadBillingMachine(const char * dlpath,const std::string& cfg_dir, const ActionFactory * mainActionFactory)
+void BillingManagerImpl::LoadBillingMachine(const char * dlpath,const std::string& cfg_dir, ActionFactory * mainActionFactory)
 {
     if (!mainActionFactory) return;
     MutexGuard guard(loadupLock);
@@ -123,7 +123,6 @@ void BillingManagerImpl::LoadBillingMachine(const char * dlpath,const std::strin
             {
                 machines.Insert(id,billingMachine);
                 mainActionFactory->registerChild(billingMachine->getActionFactory());
-                //DataSourceFactory::registerFactory(dsf, identity);
             }
             else
             {
@@ -151,10 +150,11 @@ void BillingManagerImpl::LoadBillingMachine(const char * dlpath,const std::strin
 }
 
 
-void BillingManagerImpl::init(const BillingManagerConfig& config) // possible throws exceptions
+void BillingManagerImpl::init(BillingManagerConfig& config) // possible throws exceptions
 {
     // TODO: loadup all so modules from so_dir, call MACHINE_INIT_FUNCTION,
     //       add to machines & register action factory in MainActionFactory in RuleEngine
+
 
     if (!logger)
       logger = Logger::getInstance("scag.bill.BillingManager");
@@ -191,8 +191,6 @@ void BillingManagerImpl::init(const BillingManagerConfig& config) // possible th
                  try
                  {
                      LoadBillingMachine(fileName.c_str(),config.cfg_dir,config.mainActionFactory);
-
-                     
                  } 
                  catch (SCAGException& e)
                  {
@@ -207,12 +205,13 @@ void BillingManagerImpl::init(const BillingManagerConfig& config) // possible th
          else
          {
              closedir(pDir);
+             smsc_log_info(logger,"Billing manager inited");
              return;
          }
     }
 
     closedir(pDir);
-
+    smsc_log_info(logger,"Billing manager inited");
 }
 
 void BillingManagerImpl::rollback(const Bill& bill) // possible throws exceptions

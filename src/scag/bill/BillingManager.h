@@ -17,7 +17,7 @@ namespace scag { namespace bill
     {
         std::string cfg_dir;
         std::string so_dir;
-        const scag::re::actions::ActionFactory * mainActionFactory;
+        scag::re::actions::ActionFactory * mainActionFactory;
 
         BillingManagerConfig() : mainActionFactory(0) {}
     };
@@ -32,7 +32,7 @@ namespace scag { namespace bill
         virtual ~BillingManager() {};
     public:
 
-        static void Init(const BillingManagerConfig& config);
+        static void Init(BillingManagerConfig& config);
         static BillingManager& Instance();
 
         virtual void rollback(const Bill& bill) = 0;

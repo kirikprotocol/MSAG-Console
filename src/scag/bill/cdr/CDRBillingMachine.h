@@ -33,16 +33,18 @@ class CDRBillingMachine : public BillingMachine
     IntHash<Transaction> TransactionHash;
     XHash<BillKey,int,XBillKeyHashFunc> BillMap;
 
-    CDRActionFactory actionFactory;
+    CDRActionFactory * actionFactory;
     unsigned int m_Key;
 public:
     virtual void rollback(const Bill& bill);
     void commit(const Bill& bill);
 
-    virtual const ActionFactory& getActionFactory() const { return actionFactory;}
+    virtual ActionFactory * getActionFactory() const; 
     static CDRBillingMachine * Instance();
     Bill OpenTransaction();
-    CDRBillingMachine() : m_Key(0) {}
+    CDRBillingMachine();  
+    ~CDRBillingMachine() { delete actionFactory;}
+
     Bill GetBill(BillKey& billKey);
 };
 

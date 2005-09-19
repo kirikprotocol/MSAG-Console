@@ -34,7 +34,7 @@ namespace scag { namespace bill {
         virtual ~BillingMachine() {};
         
         virtual void rollback(const Bill& bill) = 0;
-        virtual const ActionFactory& getActionFactory() const  = 0;
+        virtual ActionFactory * getActionFactory() const  = 0;
         
         inline void setMachineId(uint8_t id) { machine_id = id;}
     };
