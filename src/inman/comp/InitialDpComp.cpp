@@ -188,6 +188,7 @@ void InitialDPSMSArg::setTPDataCodingScheme(unsigned char tPDCSch)
 
 void InitialDPSMSArg::setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt)
 {
+    ZERO_OCTET_STRING(comp->_tPVP);
     switch (fmt) {
     case tp_vp_relative: {
 	comp->_tPVP.size = 1;
