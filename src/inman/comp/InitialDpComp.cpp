@@ -245,6 +245,10 @@ InitialDPSMSArg::~InitialDPSMSArg() { delete(comp); }
 void InitialDPSMSArg::encode(vector<unsigned char>& buf)
 {
     asn_enc_rval_t er;
+
+    //for debug only:
+    asn_fprint(stdout, &asn_DEF_InitialDPSMSArg, &comp->idp);
+
     er = der_encode(&asn_DEF_InitialDPSMSArg, &comp->idp, print2vec, &buf);
 
     INMAN_LOG_ENC(er, asn_DEF_InitialDPSMSArg);
