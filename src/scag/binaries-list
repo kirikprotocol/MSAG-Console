@@ -2,4 +2,4 @@
 # this file contains binaries definitions
 
 # binary name        source name	libraries         
-scag/SAX2Print       SAX2Print           -lscag-re  -lscag-sessions -lscag-bill -lscag-stat -lscag-re-actions -lscag-util-properties -lscag-util-singleton  -lscag-re-smpp -L$(SMSC_BUILDDIR)/bin -llogger -llicense-check -lutil-templates -lsystem-common -lutil-config-alias  -lalias -lalias -lcore-threads -lcore-buffers -lutil-config -lutil -lrt -ldl -lutil-xml $(XERCES_LIB) -L$(SMSC_BUILDDIR)/bin/scag/exc -lscag_exc
+scag/scag       scag           -lscag  -lscag-admin $(SOCKETLIB) -lcore-network -lscag-config -lscag-config-alias -lscag-config-smppman -lscag-config-statman -lscag-config-route -lsmeman -lsms -lrouter -ladmin-protocol -ladmin-service -ladmin-util -lscag-stat -lscag-util-properties -lscag-util-singleton -L$(SMSC_BUILDDIR)/bin -llogger -llicense-check -lutil-templates -lutil-regexp -lsystem-common -lsystem-smppio -lutil-config-alias  -lalias -lalias -lcore-threads -lcore-buffers -lutil-config -lutil -lrt -ldl -lutil-xml $(XERCES_LIB) -L$(SMSC_BUILDDIR)/bin/scag/exc -lsms $(SOCKETLIB) -lcore-network -lnsl $(SSL_LIB)
