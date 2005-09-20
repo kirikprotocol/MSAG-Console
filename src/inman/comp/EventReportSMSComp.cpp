@@ -16,6 +16,7 @@ EventReportSMSArg::EventReportSMSArg(EventTypeSMS_e et, messageType_e mt)
 		: eventType( et ), messageType( mt )
 {
     compLogger = smsc::logger::Logger::getInstance("smsc.inman.comp.EventReportSMSArg");
+    smsc_log_debug( compLogger, "EventReportSMSArg(%d,%d)", et, mt );
 }
 
 //EventReportSMSArg::~EventReportSMSArg() {}
@@ -26,6 +27,7 @@ EventReportSMSArg::EventReportSMSArg(EventTypeSMS_e et, messageType_e mt)
 
 void EventReportSMSArg::encode(vector<unsigned char>& buf)
 {
+	smsc_log_debug( compLogger, "EventReportSMSArg enter");
     asn_enc_rval_t	er;
     /* construct EventReportSMSArg */
     EventReportSMSArg_t	erp;
@@ -40,6 +42,7 @@ void EventReportSMSArg::encode(vector<unsigned char>& buf)
 
     er = der_encode(&asn_DEF_EventReportSMSArg, &erp, print2vec, &buf);
     INMAN_LOG_ENC(er, asn_DEF_EventReportSMSArg);
+    smsc_log_debug( compLogger, "EventReportSMSArg exit");
 }
 
 }//namespace comp

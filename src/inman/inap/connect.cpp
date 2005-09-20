@@ -6,10 +6,15 @@ static char const ident[] = "$Id$";
 
 #include "inman/common/util.hpp"
 #include "inman/interaction/serializer.hpp"
+#include "inman/interaction/messages.hpp"
 
 using smsc::inman::interaction::Serializer;
 using smsc::inman::interaction::ObjectBuffer;
 using smsc::inman::interaction::SerializableObject;
+using smsc::inman::interaction::InmanCommand;
+
+using smsc::inman::interaction::ChargeSms;
+using smsc::inman::interaction::DeliverySmsResult;
 
 using smsc::inman::common::dump;
 
@@ -48,9 +53,21 @@ bool Connect::process(Server* pServer)
 
 	smsc_log_debug(logger, "Received: %s", dump( n, (unsigned char*)buf ).c_str() );
 
-	SerializableObject* obj = Serializer::getInstance()->deserialize( buffer );
+	InmanCommand* obj = static_cast<InmanCommand*>(Serializer::getInstance()->deserialize( buffer ));
 	assert( obj );
+	obj->handle( this );
 	return true;
+}
+
+void Connect::onChargeSms(ChargeSms* sms)
+{
+	assert( sms );
+	smsc_log_debug(logger, "ChargeSms received");
+}
+
+void Connect::onDeliverySmsResult(DeliverySmsResult* sms)
+{
+	smsc_log_debug(logger, "DeliverySmsResult received");
 }
 
 } // namespace inap

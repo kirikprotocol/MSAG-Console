@@ -5,28 +5,40 @@
 #include <stdexcept>
 #include <string>
 
-//#include "console.hpp"
+#include "logger/Logger.h"
 #include "core/network/Socket.hpp"
+#include "inman/common/console.hpp"
 #include "inman/interaction/serializer.hpp"
 #include "inman/interaction/messages.hpp"
 
 using smsc::core::network::Socket;
-//using smsc::inman::Console;
+using smsc::logger::Logger;
+using smsc::inman::Console;
 using smsc::inman::interaction::Serializer;
-//using smsc::inman::interaction::StartMessage;
+using smsc::inman::interaction::ChargeSms;
+using smsc::inman::interaction::DeliverySmsResult;
+
 
 static const int SOCKET_TIMEOUT = 1000;
-static Socket 	 g_socket;
+static Socket 	g_socket;
+static Logger*  logger = NULL;
 
-void start()
+
+void cmd_charge(Console&, const std::vector<std::string> &args)
 {
-/*	StartMessage startMessage;
+	ChargeSms charge;
 	ObjectBuffer buffer(16);
-	Serializer::getInstance()->serialize( &startMessage, buffer );
+	Serializer::getInstance()->serialize( &charge, buffer );
 	g_socket.Write( buffer.get(), buffer.GetPos() );
-	*/
 }
 
+void cmd_delivery(Console&, const std::vector<std::string> &args)
+{
+	DeliverySmsResult delivery;
+	ObjectBuffer buffer(16);
+	Serializer::getInstance()->serialize( &delivery, buffer );
+	g_socket.Write( buffer.get(), buffer.GetPos() );
+}
 
 int main(int argc, char** argv)
 {
@@ -41,6 +53,8 @@ int main(int argc, char** argv)
 
 	fprintf( stdout, "Connecting to IN manager at %s:%d...\n", host, port );
 	
+	Logger::Init();
+    logger = Logger::getInstance("smsc.inman");
 
 	try
 	{
@@ -56,11 +70,10 @@ int main(int argc, char** argv)
 			throw std::runtime_error("Can't connect socket");
 		}
 
-		start();
-
-//  		Console console;
-  //		console.addItem( "start", start );
-  	//	console.run("inman>");
+ 		Console console;
+  		console.addItem( "charge", cmd_charge );
+  		console.addItem( "delivery", cmd_delivery );
+  		console.run("inman>");
 
 	}
 	catch(const std::exception& error)

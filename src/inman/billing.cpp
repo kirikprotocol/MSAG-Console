@@ -41,16 +41,22 @@ void Billing::initialDPSMS()
 
 	if( mode == smsc::inman::comp::DeliveryMode_Originating )
 	{
-		arg.setDestinationSubscriberNumber(".0.1.131133"); // missing for MT
-
+		arg.setDestinationSubscriberNumber( ".1.1.79139859489" ); // missing for MT
 	}
 	else
 	{
-		arg.setCalledPartyNumber(".0.1.131133"); // missing for MO
+		arg.setCalledPartyNumber(".1.1.79139859489"); // missing for MO
 	}
 
-	arg.setCallingPartyNumber(".1.1.79139163393");
-	arg.setIMSI( "250013901388780" );
+	//arg.setCallingPartyNumber(".1.1.79139163393");
+	//arg.setIMSI( "250013901388780" );
+
+	arg.setCallingPartyNumber( ".1.1.79139343290" );
+	
+
+
+	arg.setIMSI( "250013900405871" );
+
 	Address vlr( ".1.1.79139860001" );
 	arg.setlocationInformationMSC( vlr );
 	arg.setSMSCAddress(".1.1.79029869990");
@@ -60,7 +66,7 @@ void Billing::initialDPSMS()
 
 	arg.setTimeAndTimezone( tm );
 	arg.setTPShortMessageSpecificInfo( 0x11 );
-	arg.setTPValidityPeriod( 120 , smsc::inman::comp::tp_vp_relative );
+	arg.setTPValidityPeriod( 60*5 , smsc::inman::comp::tp_vp_relative );
 	arg.setTPProtocolIdentifier( 0x00 );
 	arg.setTPDataCodingScheme( 0x08 );
 
@@ -87,10 +93,10 @@ void Billing::eventReportSMS()
 	smsc_log_debug( logger, "--> EventReportSMS( EventType: 0x%X, MessageType: 0x%X )", 
 								eventType, messageType );
 
-	//smsc::inman::comp::EventReportSMSArg report( eventType, messageType );
+	smsc::inman::comp::EventReportSMSArg report( eventType, messageType );
 
-	//inap->eventReportSMS( &report );
-	//dialog->continueDialog();
+	inap->eventReportSMS( &report );
+	dialog->continueDialog();
 }
 
 void Billing::connectSMS(ConnectSMSArg* arg)
@@ -139,7 +145,7 @@ void Billing::resetTimerSMS(ResetTimerSMSArg* arg)
 
 void Billing::endDialog()
 {
-	smsc_log_debug( logger, "--> Dialog end" );
+	smsc_log_debug( logger, "<-- Dialog end" );
 	notify1( &BillingListener::onBillingFinished, this );
 }
 

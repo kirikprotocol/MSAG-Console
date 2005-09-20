@@ -75,6 +75,7 @@ void Inap::eventReportSMS(EventReportSMSArg* arg)
 {
   	Invoke* op = dialog->invoke( InapOpCode::EventReportSMS );
 	assert( op );
+	assert( arg );
 	op->setParam( arg );
 	op->send( dialog );
 }

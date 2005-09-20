@@ -131,16 +131,16 @@ class Serializer : public FactoryT< USHORT_T, SerializableObject >
 	public:
 		enum { FORMAT_VERSION = 0x0001 };
 
+		virtual ~Serializer();
+
 		SerializableObject* deserialize(ObjectBuffer&);
 		void				serialize(SerializableObject*, ObjectBuffer& out);
-
-		virtual ~Serializer();
 
 		static Serializer* getInstance();
 
 	protected:
-
 		Serializer();
+
 
 };
 

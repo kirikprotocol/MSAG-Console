@@ -4,8 +4,8 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 #include <memory>
 
-#include "console.hpp"
 #include "logger/Logger.h"
+#include "inman/common/console.hpp"
 #include "inman/inap/dispatcher.hpp"
 #include "inman/inap/server.hpp"
 #include "inman/inap/factory.hpp"

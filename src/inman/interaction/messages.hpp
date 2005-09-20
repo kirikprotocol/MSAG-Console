@@ -12,11 +12,26 @@ using smsc::inman::interaction::SerializableObject;
 namespace smsc  {
 namespace inman {
 namespace interaction {
-namespace cmd		  {
 
 // 1. ChargeSms   	  	( SMSC --> INMAN )
 // 2. ChargeSmsResult  ( SMSC <-- INMAN )
 // 3. CommitResult  ( SMSC --> INMAN )
+
+
+// Use 'visitor' pattern
+class InmanHandler;
+class InmanCommand : public SerializableObject
+{
+	public:
+		virtual void handle( InmanHandler* ) = 0;
+};
+
+class SmscHandler;
+class SmscCommand : public SerializableObject
+{
+	public:
+		virtual void handle( SmscHandler* ) = 0;
+};
 
 enum
 {
@@ -40,9 +55,7 @@ typedef enum
 DeliverySmsResult_t;
 
 
-class CommandHandler;
-
-class ChargeSms : public SerializableObject
+class ChargeSms : public InmanCommand
 {
 public:
 	void setDestinationSubscriberNumber(const std::string& imsi);
@@ -59,24 +72,21 @@ public:
 	ChargeSms();
 	virtual ~ChargeSms();
 
+	virtual void handle(InmanHandler*);
+
 protected:
     virtual void load(ObjectBuffer& in);
     virtual void save(ObjectBuffer& out);
 };
 
-class ChargeSmsResult : public SerializableObject
+class ChargeSmsResult : public SmscCommand
 {
 public:
-
-
 	ChargeSmsResult();
-
 	ChargeSmsResult(ChargeSmsResult_t value);
-
 	virtual ~ChargeSmsResult();
-
 	ChargeSmsResult_t GetValue() const;
-
+	virtual void handle(SmscHandler*);
 protected:
     virtual void load(ObjectBuffer& in);
     virtual void save(ObjectBuffer& out);
@@ -84,37 +94,34 @@ protected:
 	ChargeSmsResult_t value;
 };
 
-class DeliverySmsResult : public SerializableObject
+class DeliverySmsResult : public InmanCommand
 {
 public:
 	
 	DeliverySmsResult();
 	DeliverySmsResult(DeliverySmsResult_t);
 	virtual ~DeliverySmsResult();
-
 	DeliverySmsResult_t GetValue() const;
-
+	virtual void handle(InmanHandler*);
 protected:
     virtual void load(ObjectBuffer& in);
     virtual void save(ObjectBuffer& out);
-
 	DeliverySmsResult_t value;
 };
 
-class ClientHandler
+class InmanHandler
 {
 	public:
-		virtual void handle(ChargeSmsResult* sms) = 0;
+		virtual void onChargeSms(ChargeSms* sms) = 0;
+		virtual void onDeliverySmsResult(DeliverySmsResult* sms) = 0;
 };
 
-class ServerHandler
+class SmscHandler
 {
 	public:
-		virtual void handle(ChargeSms* sms) = 0;
-		virtual void handle(DeliverySmsResult* sms) = 0;
+		virtual void onChargeSmsResult(ChargeSmsResult* sms) = 0;
 };
 
-}
 }
 }
 }
