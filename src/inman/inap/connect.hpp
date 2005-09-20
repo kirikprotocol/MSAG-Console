@@ -3,11 +3,13 @@
 #ifndef __SMSC_INMAN_INAP_CONNECT__
 #define __SMSC_INMAN_INAP_CONNECT__
 
-#include "dispatcher.hpp"
+#include "dispatcher.hpp"                 
 #include "inman/interaction/messages.hpp"
+#include "inman/interaction/serializer.hpp"
 
 using smsc::inman::interaction::InmanHandler;
 using smsc::inman::interaction::ChargeSms;
+using smsc::inman::interaction::ObjectPipe;
 using smsc::inman::interaction::DeliverySmsResult;
 
 namespace smsc  {
@@ -29,8 +31,9 @@ class Connect : public InmanHandler
 		virtual void onDeliverySmsResult(DeliverySmsResult* sms);
 
     protected:
-    	Socket* socket;
-        Logger*	logger;   	
+    	Socket* 	socket;
+    	ObjectPipe* pipe;
+        Logger*		logger;   	
 };
 
 }

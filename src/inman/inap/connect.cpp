@@ -25,15 +25,17 @@ namespace inap  {
 Connect::Connect(Socket* sock) 
 	: logger(Logger::getInstance("smsc.inman.inap.Connect"))
 	, socket( sock )
+	, pipe( new ObjectPipe( sock ) )
 {
+		
 	assert( socket );
 }
 
 Connect::~Connect()
 {
+	delete pipe;
 	delete socket;
 }
-
 
 Socket* Connect::getSocket()
 {
@@ -42,18 +44,7 @@ Socket* Connect::getSocket()
 
 bool Connect::process(Server* pServer)
 {
-	char buf[1024];
-
-  	int n = socket->Read(buf, sizeof(buf) - 1);
-  	if( n < 1 ) return false;
-
-  	ObjectBuffer buffer( n );
-  	buffer.Append( buf, n );
-  	buffer.SetPos( 0 );
-
-	smsc_log_debug(logger, "Received: %s", dump( n, (unsigned char*)buf ).c_str() );
-
-	InmanCommand* obj = static_cast<InmanCommand*>(Serializer::getInstance()->deserialize( buffer ));
+	InmanCommand* obj = static_cast<InmanCommand*>(pipe->receive());
 	assert( obj );
 	obj->handle( this );
 	return true;

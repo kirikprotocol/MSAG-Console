@@ -26,7 +26,6 @@ using smsc::inman::inap::SessionListener;
 using smsc::inman::inap::TcapDialog;
 using smsc::inman::inap::Inap;
 using smsc::inman::Billing;
-using smsc::inman::BillingListener;
 using smsc::inman::Console;
 using smsc::logger::Logger;
 
