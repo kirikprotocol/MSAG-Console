@@ -25,7 +25,7 @@
 #include "scag/stat/Statistics.h"
 #include "scag/stat/StatisticsManager.h"
 
-namespace scag 
+namespace scag
 {
 
 using smsc::sms::SMS;
@@ -185,9 +185,9 @@ public:
         uid = gwsme->getPrefix();
 
         gwsme->Release();
-        
+
         if(uid){
-            gwSmeMap[uid]->Release();            
+            gwSmeMap[uid]->Release();
             gwSmeMap[uid] = 0;
         }
     }*/
@@ -333,7 +333,7 @@ public:
     MutexGuard mg(gatewaySwitchMutex);
     return gwSmeMap[uid];
   }
-  
+
   void setGwSme(uint8_t uid, GatewaySme* gwSme)
   {
     MutexGuard mg(gatewaySwitchMutex);
