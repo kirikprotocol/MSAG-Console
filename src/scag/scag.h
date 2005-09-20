@@ -10,7 +10,6 @@
 #include "scag/transport/smpp/router/route_manager.h"
 #include "scag/event_queue.h"
 #include "util/config/smeman/SmeManConfig.h"
-#include "alias/aliasman.h"
 #include "scag/performance.hpp"
 #include "sme/SmppBase.hpp"
 
@@ -30,7 +29,6 @@ namespace scag
 
 using smsc::sms::SMS;
 using namespace smsc::smeman;
-using smsc::alias::AliasManager;
 using smsc::core::threads::ThreadedTask;
 using smsc::sme::SmeConfig;
 using smsc::smeman::SmeManager;
@@ -111,7 +109,7 @@ class GatewaySme;
 class Scag
 {
 public:
-  Scag():ssockman(&tp,&smeman),stopFlag(false),router_(0),testRouter_(0),aliaser_(0)
+  Scag():ssockman(&tp,&smeman),stopFlag(false),router_(0),testRouter_(0)
   {
     acceptedCounter=0;
     rejectedCounter=0;
@@ -133,15 +131,6 @@ public:
   void shutdown();
 
   bool Scag::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy,smsc::router::RouteInfo* ri,SmeIndex idx=-1);
-
-  bool AliasToAddress(const Address& alias,Address& addr)
-  {
-    return getAliaserInstance()->AliasToAddress(alias,addr);
-  }
-  bool AddressToAlias(const Address& addr,Address& alias)
-  {
-    return getAliaserInstance()->AddressToAlias(addr,alias);
-  }
 
   void cancelSms(SMSId id,const Address& oa,const Address& da)
   {
@@ -273,12 +262,6 @@ public:
     return RefferGuard<RouteManager>(testRouter_);
   }
 
-  RefferGuard<AliasManager> getAliaserInstance()
-  {
-    MutexGuard g(aliasesSwitchMutex);
-    return RefferGuard<AliasManager>(aliaser_);
-  }
-
   void ResetRouteManager(RouteManager* manager)
   {
     MutexGuard g(routerSwitchMutex);
@@ -293,16 +276,8 @@ public:
     testRouter_ = new Reffer<RouteManager>(manager);
   }
 
-  void ResetAliases(AliasManager* manager)
-  {
-    MutexGuard g(aliasesSwitchMutex);
-    if ( aliaser_ ) aliaser_->Release();
-    aliaser_ = new Reffer<AliasManager>(manager);
-  }
-
   void reloadRoutes();
   void reloadTestRoutes(const RouteConfig& rcfg);
-  void reloadAliases();
 
   uint8_t getNextMR(const Address& addr)
   {
@@ -360,11 +335,9 @@ protected:
   smsc::system::smppio::SmppSocketsManager ssockman;
   smsc::smeman::SmeManager smeman;
   Mutex routerSwitchMutex;
-  Mutex aliasesSwitchMutex;
   Mutex gatewaySwitchMutex;
   Reffer<RouteManager>* router_;
   Reffer<RouteManager>* testRouter_;
-  Reffer<AliasManager>* aliaser_;
   EventQueue eventqueue;
   bool stopFlag;
   std::string scagHost;

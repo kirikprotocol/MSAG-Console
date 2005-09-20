@@ -23,7 +23,7 @@
 #include "scag/stat/StatisticsManager.h"
 #include "scag/config/alias/aliasconf.h"
 
-namespace scag 
+namespace scag
 {
 
     using namespace scag::transport::smpp::router;
@@ -93,14 +93,14 @@ void loadRoutes(RouteManager* rm,const scag::config::RouteConfig& rc,bool tracei
               makeAddress_(rinfo.source,*src_mask_it);
               rinfo.smeSystemId = dest.getSmeIdString().c_str();//dest.smeId;
               rinfo.srcSmeSystemId = route->getSrcSmeSystemId().c_str();
-//              __trace2__("sme sysid: %s",rinfo.smeSystemId.c_str());              
+//              __trace2__("sme sysid: %s",rinfo.smeSystemId.c_str());
               rinfo.archived=route->isArchiving();
               rinfo.enabled = route->isEnabling();
-              rinfo.routeId=route->getId();              
+              rinfo.routeId=route->getId();
               rinfo.providerId=route->getProviderId();
               rinfo.ruleId=route->getRuleId();
               rinfo.categoryId=route->getCategoryId();
-              
+
               try{
                 rm->addRoute(rinfo);
               }
@@ -295,9 +295,9 @@ void Scag::init()
   smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.init");
 
   try{
-  InitLicense(*cfg.getLicConfig());  
+  InitLicense(*cfg.getLicConfig());
   tp.preCreateThreads(15);
-  
+
   {
     smsc_log_info(log, "Registering SMEs" );
     scag::config::SmppManConfig::RecordIterator i=cfg.getSmppManConfig().getRecordIterator();
@@ -314,7 +314,7 @@ void Scag::init()
       //*****************************************************
 
       /*SmeInfo si;
-      
+
       if(rec->rectype==smsc::util::config::smeman::SMPP_SME)
       {
         si.typeOfNumber=rec->recdata.smppSme.typeOfNumber;
@@ -337,7 +337,7 @@ void Scag::init()
           smsc_log_error(log, "Failed to compile rangeOfAddress for sme %s",si.systemId.c_str());
         }
         __trace2__("INIT: addSme %s(to=%d,wa=%s)",si.systemId.c_str(),si.timeout,si.wantAlias?"true":"false");
-        
+
         si.disabled=rec->recdata.smppSme.disabled;
         using namespace smsc::util::config::smeman;
         switch(rec->recdata.smppSme.mode)
@@ -395,7 +395,7 @@ void Scag::init()
       //BillingManager::Init("", "");
   }
 
-  try{ ussdTransactionTimeout=cfg.getConfig()->getInt("core.ussdTransactionTimeout"); } 
+  try{ ussdTransactionTimeout=cfg.getConfig()->getInt("core.ussdTransactionTimeout"); }
   catch(...) {
     __warning__("ussdTransactionTimeout set to default(10min)");
     ussdTransactionTimeout = 10*60;
@@ -537,7 +537,7 @@ void Scag::init()
   smsc_log_info(log, "Smsc connections done.");
 
   smsc_log_info(log, "SMSC init complete" );
-  
+
   }
   catch(exception& e)
   {
@@ -589,7 +589,7 @@ void Scag::init()
     GatewaySme* gwsme = dynamic_cast<GatewaySme*>(p->proxy);
 
     if(gwsme){
-        
+
         uint8_t olduid = gwsme->getPrefix();
         if(uid != olduid){
             if(gwSmeMap[uid])
@@ -599,21 +599,21 @@ void Scag::init()
                 return false;
         }
 
-        gwsme->setSesscfg(cfg);        
-        gwsme->setConnParam(cfg.host.c_str(), cfg.port, altHost, altPort);        
-        gwsme->setCfgIdx(1);        
-        gwsme->disconnect();       
+        gwsme->setSesscfg(cfg);
+        gwsme->setConnParam(cfg.host.c_str(), cfg.port, altHost, altPort);
+        gwsme->setCfgIdx(1);
+        gwsme->disconnect();
         gwsme->setPrefix(uid);
-        
+
 
         if(olduid != uid){
             gwSmeMap[uid] = gwSmeMap[olduid];
             gwSmeMap[olduid] = 0;
         }
-        
+
         return true;
     }
-    
+
     return false;
 }*/
 
@@ -688,7 +688,7 @@ void Scag::reloadRoutes()
   //router->assign(&smeman);
 
   try { loadRoutes(router.get(),cfg.getRouteConfig()); }
-  catch(...) { 
+  catch(...) {
       __warning__("Failed to load routes");
   }
   ResetRouteManager(router.release());
@@ -706,6 +706,7 @@ void Scag::reloadTestRoutes(const RouteConfig& rcfg)
   ResetTestRouteManager(router.release());
 }
 
+/*
 void Scag::reloadAliases()
 {
   ConfigManager & cfg = ConfigManager::Instance();
@@ -738,6 +739,6 @@ void Scag::reloadAliases()
 
   ResetAliases(aliaser.release());
 }
+*/
 
 } //scag
-
