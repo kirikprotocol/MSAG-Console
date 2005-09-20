@@ -162,8 +162,9 @@ loop:   for(;;)
 
    EditTag dialog = new EditTag(view,tag.tag, elementDecl,attributes,
       elementDecl.completionInfo.entityHash,data.ids,data.html);
-
+  view.setEditTag(dialog);
   dialog.updateTag();
+
        // show the popup if
    // - complete has one element and user invoked with delay key
    // - or complete has multiple elements

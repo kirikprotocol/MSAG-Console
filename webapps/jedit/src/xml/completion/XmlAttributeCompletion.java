@@ -141,8 +141,12 @@ public class XmlAttributeCompletion  extends SideKickCompletion
       else insert=insert+" =\"\">";
      textArea.setSelectedText(insert);
     int caret=textArea.getCaretPosition();
+    if (names.size()==0) {
+      caret=caret-1; view.setEdittag(false);
+      view.setEditTag(null);
+      view.setKeyEventInterceptor(null);
+    }
     textArea.setCaretPosition(caret-1);
-
    } //}}}
 
    //{{{ getTokenLength() method

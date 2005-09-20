@@ -40,6 +40,7 @@ import org.gjt.sp.jedit.gui.*;
 import org.gjt.sp.jedit.search.*;
 import org.gjt.sp.jedit.textarea.*;
 import org.gjt.sp.util.Log;
+import xml.EditTag;
 //}}}
 
 /**
@@ -1144,6 +1145,16 @@ public void setEdittag(boolean edit)
   {
     this.names = names;
   }
+
+  public EditTag getEditTag()
+  {
+    return editTag;
+  }
+
+  public void setEditTag(EditTag editTag)
+  {
+    this.editTag = editTag;
+  }
   //{{{ isPlainView() method
  /**
   * Returns true if this is an auxilliary view with no dockable windows.
@@ -1367,6 +1378,7 @@ public void setEdittag(boolean edit)
 
  private boolean edittag;
  private List names;
+ private xml.EditTag editTag;
  private DockableWindowManager dockableWindowManager;
 
  private JPanel topToolBars;

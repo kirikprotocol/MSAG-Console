@@ -32,7 +32,7 @@ import sidekick.SideKickCompletion;
 
 
 
-class EditTag
+public class EditTag
 {
  //{{{ EditTagDialog constructor
  /**
@@ -313,6 +313,7 @@ class EditTag
      break;
    case KeyEvent.VK_BACK_SPACE:
    case KeyEvent.VK_DELETE:
+     view.setKeyEventInterceptor(null);
      view.processKeyEvent(evt,true);
     break;
    default:

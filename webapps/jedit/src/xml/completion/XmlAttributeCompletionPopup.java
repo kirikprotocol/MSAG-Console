@@ -203,7 +203,7 @@ public class XmlAttributeCompletionPopup extends JWindow
     evt.consume();
     break;
    case KeyEvent.VK_TAB:
-    keyTyped('\t');
+    //keyTyped('\t');
     evt.consume();
     break;
    case KeyEvent.VK_ESCAPE:
@@ -275,7 +275,7 @@ public class XmlAttributeCompletionPopup extends JWindow
    char ch = evt.getKeyChar();
    if(ch == '\b')
     return;
-
+    System.out.println("XmlAttributeCompletionPopup.keyTyped(KeyEvent evt) ona tut !!!!");
    keyTyped(ch);
 
    evt.consume();
