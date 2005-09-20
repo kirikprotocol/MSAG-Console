@@ -2,8 +2,8 @@
         $Id$
 */
 
-#if !defined __Cpp_Header__route_manager_h__
-#define __Cpp_Header__route_manager_h__
+#if !defined __SCAG_Cpp_Header__route_manager_h__
+#define __SCAG_Cpp_Header__route_manager_h__
 
 #include "route_types.h"
 #include "sms/sms.h"

@@ -127,10 +127,10 @@ public:
   {}
   Route(const Route &r)
     : id(r.id), sources(r.sources), destinations(r.destinations),
-    archiving(r.archiving), enabling(r.enabling), active(r.active)
+    archiving(r.archiving), enabling(r.enabling), active(r.active),
     srcSmeSystemId(r.srcSmeSystemId), providerId(r.providerId), ruleId(r.ruleId),categoryId(r.categoryId)
   {}
-  Route(std::string routeId, bool archiving_, bool enabling_, bool active_, std::string srcSmeSystemId_, int32_t providerId, int32_t ruleId_, int32_t categoryId_)
+  Route(std::string routeId, bool archiving_, bool enabling_, bool active_, std::string srcSmeSystemId_, int32_t providerId_, int32_t ruleId_, int32_t categoryId_)
     : id(routeId), sources(), destinations(),
     archiving(archiving_), enabling(enabling_), active(active_), srcSmeSystemId(srcSmeSystemId_), providerId(providerId_), ruleId(ruleId_), categoryId(categoryId_)
   {}
@@ -145,14 +145,15 @@ public:
   const DestinationHash &getDestinations() const {return destinations;}
   const bool isArchiving() const {return archiving;}
   const bool isEnabling() const {return enabling;}
+  const bool isActive() const {return active;}
   const char * const getId() const {return id.c_str();}
-  int getPriority() {return priority;}
+  //int getPriority() {return priority;}
   const std::string & getIdString() const {return id;}  
   const std::string & getSrcSmeSystemId() const { return srcSmeSystemId; }  
   const signed long getProviderId() const {return this->providerId;}
-  const std::string getRuleId() const {return this->ruleId;}
+  const int getRuleId() const {return this->ruleId;}
   const signed long getCategoryId()const{return this->categoryId;}
-  const bool isTransit(){return this->transit;}
+  //const bool isTransit(){return this->transit;}
 };
 //typedef std::vector<Route> RouteVector;
 typedef std::vector<Route*> RoutePVector;

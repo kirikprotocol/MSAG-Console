@@ -65,7 +65,7 @@ void loadRoutes(RouteManager* rm,const scag::config::RouteConfig& rc,bool tracei
           // masks
           if(dest.isSubject())
           {
-            rinfo.dstSubj="subj:"+dest.getIdString();
+            rinfo.dstSubj=( std::string("subj:")+dest.getIdString() ).c_str();
           }
           const MaskVector& dest_masks = dest.getMasks();
           for (MaskVector::const_iterator dest_mask_it = dest_masks.begin();
@@ -75,12 +75,12 @@ void loadRoutes(RouteManager* rm,const scag::config::RouteConfig& rc,bool tracei
             makeAddress_(rinfo.dest,*dest_mask_it);
             if(!dest.isSubject())
             {
-              rinfo.dstSubj="mask:"+*dest_mask_it;
+              rinfo.dstSubj=( std::string("mask:")+*dest_mask_it ).c_str();
             }
             const MaskVector& src_masks = src.getMasks();
             if(src.isSubject())
             {
-              rinfo.srcSubj="subj:"+src.getIdString();
+              rinfo.srcSubj=( std::string("subj:")+src.getIdString() ).c_str();
             }
             for(MaskVector::const_iterator src_mask_it = src_masks.begin();
                 src_mask_it != src_masks.end();
@@ -88,11 +88,11 @@ void loadRoutes(RouteManager* rm,const scag::config::RouteConfig& rc,bool tracei
             {
               if(!src.isSubject())
               {
-                rinfo.srcSubj="mask:"+*src_mask_it;
+                rinfo.srcSubj=( std::string("mask:")+*src_mask_it ).c_str();
               }
               makeAddress_(rinfo.source,*src_mask_it);
-              rinfo.smeSystemId = dest.getSmeIdString();//dest.smeId;
-              rinfo.srcSmeSystemId = route->getSrcSmeSystemId();
+              rinfo.smeSystemId = dest.getSmeIdString().c_str();//dest.smeId;
+              rinfo.srcSmeSystemId = route->getSrcSmeSystemId().c_str();
 //              __trace2__("sme sysid: %s",rinfo.smeSystemId.c_str());              
               rinfo.archived=route->isArchiving();
               rinfo.enabled = route->isEnabling();
@@ -682,7 +682,11 @@ void Scag::reloadRoutes()
 {
   ConfigManager & cfg = ConfigManager::Instance();
   auto_ptr<RouteManager> router(new RouteManager());
-  router->assign(&smeman);
+
+  //******************************************
+  //make when transport will  be ready
+  //router->assign(&smeman);
+
   try { loadRoutes(router.get(),cfg.getRouteConfig()); }
   catch(...) { 
       __warning__("Failed to load routes");
@@ -693,7 +697,11 @@ void Scag::reloadRoutes()
 void Scag::reloadTestRoutes(const RouteConfig& rcfg)
 {
   auto_ptr<RouteManager> router(new RouteManager());
-  router->assign(&smeman);
+
+  //*******************************************
+  // make when transport will be ready
+  //router->assign(&smeman);
+
   loadRoutes(router.get(),rcfg,true);
   ResetTestRouteManager(router.release());
 }

@@ -34,10 +34,14 @@ bool Scag::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProx
   bool ok ;
   if(idx==-1)
   {
-    ok=getRouterInstance()->lookup(org,dst,proxy,&dest_idx,ri);
+    //***********************************************************
+    // make when transport will be ready
+    //ok=getRouterInstance()->lookup(org,dst,proxy,&dest_idx,ri);
   }else
   {
-    ok=getRouterInstance()->lookup(idx,org,dst,proxy,&dest_idx,ri);
+    //***********************************************************
+    // make when transport will be ready
+    //ok=getRouterInstance()->lookup(idx,org,dst,proxy,&dest_idx,ri);
   }
   return ok;
 }

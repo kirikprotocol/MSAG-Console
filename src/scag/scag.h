@@ -7,7 +7,7 @@
 #include "core/threads/ThreadedTask.hpp"
 #include "system/smppio/SmppSocketsManager.hpp"
 #include "smeman/smeman.h"
-#include "scag/transport/router/route_manager.h"
+#include "scag/transport/smpp/router/route_manager.h"
 #include "scag/event_queue.h"
 #include "util/config/smeman/SmeManConfig.h"
 #include "alias/aliasman.h"
@@ -40,8 +40,8 @@ using namespace smsc::logger;
 using scag::config::RouteConfig;
 using scag::stat::SmppStatEvent;
 using scag::stat::StatisticsManager;
-using scag::transport::router::RouteManager;
-using scag::transport::router::RouteInfo;
+using scag::transport::smpp::router::RouteManager;
+using scag::transport::smpp::router::RouteInfo;
 
 // TODO: move to uti    l
 template<class T>

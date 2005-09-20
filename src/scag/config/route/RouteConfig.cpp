@@ -154,24 +154,24 @@ const char * const deliveryModeToStr(const uint8_t deliveryMode)
   }
 }
 
-const smsc::router::ReplyPath strToReplyPath(const char * const replyPathStr)
+/*const scag::transport::smpp::router::ReplyPath strToReplyPath(const char * const replyPathStr)
 {
-  if (::stricmp("pass", replyPathStr) == 0)     return smsc::router::ReplyPathPass;
-  if (::stricmp("force", replyPathStr) == 0)    return smsc::router::ReplyPathForce;
-  if (::stricmp("SUPPRESS", replyPathStr) == 0) return smsc::router::ReplyPathSuppress;
-  return smsc::router::ReplyPathPass;
+  if (::stricmp("pass", replyPathStr) == 0)     return scag::transport::smpp::router::ReplyPathPass;
+  if (::stricmp("force", replyPathStr) == 0)    return scag::transport::smpp::router::ReplyPathForce;
+  if (::stricmp("SUPPRESS", replyPathStr) == 0) return scag::transport::smpp::router::ReplyPathSuppress;
+  return scag::transport::smpp::router::ReplyPathPass;
 }
 
-const char * const replyPathToStr(const smsc::router::ReplyPath replyPath)
+const char * const replyPathToStr(const scag::transport::smpp::router::ReplyPath replyPath)
 {
   switch(replyPath)
   {
-    case smsc::router::ReplyPathPass:     return "pass";
-    case smsc::router::ReplyPathForce:    return "force";
-    case smsc::router::ReplyPathSuppress: return "suppress";
+    case scag::transport::smpp::router::ReplyPathPass:     return "pass";
+    case scag::transport::smpp::router::ReplyPathForce:    return "force";
+    case scag::transport::smpp::router::ReplyPathSuppress: return "suppress";
     default:                              return "pass";
   }
-}
+}*/
 
 bool RouteConfig::getAttribBool(const DOMElement &elem, const char * name)
 {
@@ -196,7 +196,7 @@ throw (SubjectNotFoundException)
 {
   
 
-  std::string routeid(id);
+  std::string routeid(getAttribStr(elem, "id"));
   if(routeid.length()>32)
   {
     __warning2__("\n\n\nROUTE ID TOO LONG=%s\n\n\n",routeid.c_str());
@@ -210,8 +210,9 @@ throw (SubjectNotFoundException)
                                     getAttribStr(elem, "srcSmeId"),                                   
                                     getAttribInt(elem, "providerId"),
                                     getAttribInt(elem, "ruleId"),
-                                    getAttribInt(elem, "categoryId")
+                                    getAttribInt(elem, "categoryId") )
                          );
+    
 
   DOMNodeList *srcs = elem.getElementsByTagName(XmlStr("source"));
   unsigned srcsLength = srcs->getLength();
@@ -316,18 +317,8 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
     {
       Route *r = *i;
       out << "  <route id=\""  << encode(r->getId())
-      << "\" billing=\""       << (r->isBilling() ? "true" : "false")
       << "\" archiving=\""     << (r->isArchiving() ? "true" : "false")
-      << "\" enabling=\""      << (r->isEnabling() ? "true" : "false")
-      << "\" priority=\""      << r->getPriority()
-      << "\" serviceId=\""     << r->getServiceId()
-      << "\" deliveryMode=\""  << deliveryModeToStr(r->getDeliveryMode())
-      << "\" forwardTo=\""     << r->getForwardTo()
-      << "\" aclId=\""         << r->getAclId()
-      << "\" forceDelivery=\"" << (r->isForceDelivery() ? "true" : "false")
-      << "\" replyPath=\""     << replyPathToStr(r->getReplyPath())
-      << "\" allowBlocked=\""  << (r->isAllowBlocked() ? "true" : "false")
-      << "\" billingId=\""     << encode(r->getBillingRuleId().c_str())
+      << "\" enabling=\""      << (r->isEnabling() ? "true" : "false")      
       << "\">" << std::endl;
 
       Source src;

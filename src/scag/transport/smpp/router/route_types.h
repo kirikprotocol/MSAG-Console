@@ -2,8 +2,8 @@
         $Id$
 */
 
-#if !defined __Cpp_Header__router_types_h__
-#define __Cpp_Header__router_types_h__
+#if !defined __SCAG_Cpp_Header__router_types_h__
+#define __SCAG_Cpp_Header__router_types_h__
 
 #include <string>
 #include "sms/sms.h"

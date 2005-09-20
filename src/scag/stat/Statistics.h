@@ -55,7 +55,7 @@ using smsc::smeman::SmeRecord;
         errCode = errcode;
         internal = (  (SmeRecord*)proxy  )->info.internal;
       }
-      SmppStatEvent(smsc::smeman::SmeProxy* proxy,const smsc::router::RouteInfo& ri, int cnt, int errcode)
+      SmppStatEvent(smsc::smeman::SmeProxy* proxy, const smsc::router::RouteInfo& ri, int cnt, int errcode)
       {
         strncpy(smeId,proxy->getSystemId(),sizeof(smeId));
         smeProviderId=proxy->getProviderId();
