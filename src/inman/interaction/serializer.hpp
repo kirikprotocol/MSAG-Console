@@ -10,10 +10,15 @@
 #include "inman/common/factory.hpp"
 #include "core/buffers/TmpBuf.hpp"
 
+#include "core/network/Socket.hpp"
+
 using std::runtime_error;
 
 using smsc::inman::common::format;
+using smsc::inman::common::dump;
 using smsc::inman::common::FactoryT;
+using smsc::logger::Logger;
+using smsc::core::network::Socket;
 
 namespace smsc  {
 namespace inman {
@@ -124,6 +129,20 @@ class SerializableObject
     	virtual void load(ObjectBuffer& in)  = 0;
     	virtual void save(ObjectBuffer& out) = 0;
 };
+
+class ObjectPipe
+{
+	public:
+		ObjectPipe(Socket* sock);
+		~ObjectPipe();
+
+		SerializableObject* receive();
+		void send(SerializableObject* obj);
+	private:
+		Socket* socket;
+		Logger* logger;
+};
+
 
 class Serializer : public FactoryT< USHORT_T, SerializableObject >
 {

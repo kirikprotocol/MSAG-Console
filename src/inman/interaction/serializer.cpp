@@ -22,6 +22,7 @@ Serializer::~Serializer()
 {
 }
 
+
 SerializableObject* Serializer::deserialize(ObjectBuffer& in)
 {
 	USHORT_T objectId, version;
@@ -47,6 +48,41 @@ void Serializer::serialize(SerializableObject* obj, ObjectBuffer& out)
 	assert( obj );
 	out << (USHORT_T) FORMAT_VERSION;
 	obj->save( out );
+}
+
+ObjectPipe::ObjectPipe(Socket* sock) 
+	: socket( sock )
+	, logger( Logger::getInstance("smsc.inman.interaction.ObjectPipe") )
+{
+	assert( socket );
+}
+
+ObjectPipe::~ObjectPipe()
+{
+}
+
+SerializableObject* ObjectPipe::receive()
+{
+	char buf[1024];
+
+  	int n = socket->Read(buf, sizeof(buf) - 1);
+  	if( n < 1 ) 
+  		throw runtime_error( format("Can't read from socket") );
+
+  	ObjectBuffer buffer( n );
+  	buffer.Append( buf, n );
+  	buffer.SetPos( 0 );
+	smsc_log_debug(logger, "Received: %s", dump( n, (unsigned char*)buf ).c_str() );
+	return Serializer::getInstance()->deserialize( buffer );
+}
+
+void ObjectPipe::send(SerializableObject* obj)
+{
+	assert( obj );
+	ObjectBuffer buffer(16);
+	Serializer::getInstance()->serialize( obj, buffer );
+	socket->Write( buffer.get(), buffer.GetPos() );
+	smsc_log_debug(logger, "Send: %s", dump( buffer.GetPos(), (unsigned char*)buffer.get() ).c_str() );
 }
 
 

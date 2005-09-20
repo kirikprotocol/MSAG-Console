@@ -18,7 +18,6 @@ Billing::Billing(TcapDialog* pDialog, DeliveryMode_e md)
 		, dialog( pDialog )
 		, mode( md )
 {
-			
 	assert( dialog );
 	inap   = new Inap( dialog );
 	assert( inap );

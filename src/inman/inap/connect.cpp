@@ -42,7 +42,7 @@ Socket* Connect::getSocket()
 
 bool Connect::process(Server* pServer)
 {
-	char buf[1024]; //todo: read all data, that may be more then 1024
+	char buf[1024];
 
   	int n = socket->Read(buf, sizeof(buf) - 1);
   	if( n < 1 ) return false;
