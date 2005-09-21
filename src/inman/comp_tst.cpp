@@ -1,11 +1,15 @@
 #include "inman/comp/comps.hpp"
-
+#include "inman/comp/compsutl.hpp"
 
 using smsc::inman::comp::DeliveryMode_e;
+using smsc::inman::comp::InitialDPSMSArg;
 
 int main (void)
 {
-    Logger	tstLogger = Logger::getInstance("smsc.inman.comp.test");
+
+    Logger::Init();
+
+    Logger	*tstLogger = Logger::getInstance("smsc.inman.comp.test");
     std::vector<unsigned char>	encBuf;
 
     /* testing initialDPSMS(): */
