@@ -26,6 +26,8 @@ void ResetTimerSMSArg::decode(const vector<unsigned char>& buf)
     INMAN_LOG_DEC(drc, asn_DEF_ResetTimerSMSArg);
 
     timerValue = dcmd->timervalue;
+
+    smsc_log_component(compLogger, &asn_DEF_ResetTimerSMSArg, dcmd);
     asn_DEF_ResetTimerSMSArg.free_struct(&asn_DEF_ResetTimerSMSArg, dcmd, 0);
 }
 

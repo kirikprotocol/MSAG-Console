@@ -28,6 +28,8 @@ void ReleaseSMSArg::decode(const vector<unsigned char>& buf)
     INMAN_LOG_DEC(drc, asn_DEF_ReleaseSMSArg);
 
     rPCause = dcmd->buf[0];
+
+    smsc_log_component(compLogger, &asn_DEF_ReleaseSMSArg, dcmd);
     asn_DEF_ReleaseSMSArg.free_struct(&asn_DEF_ReleaseSMSArg, dcmd, 0);
 }
 

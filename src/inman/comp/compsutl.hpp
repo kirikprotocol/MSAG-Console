@@ -7,8 +7,10 @@
 
 #include "sms/sms.h"
 #include "inman/common/cvtutil.hpp"
+#include "inman/codec/constr_TYPE.h"
 
 using smsc::sms::Address;
+using smsc::logger::Logger;
 
 #include "OCTET_STRING.h"
 extern "C" int print2vec(const void *buffer, size_t size, void *app_key);
@@ -42,6 +44,17 @@ extern "C" int print2vec(const void *buffer, size_t size, void *app_key);
 namespace smsc {
 namespace inman {
 namespace comp {
+
+extern std::string printType2String(asn_TYPE_descriptor_t * def, void * tStruct);
+
+inline void smsc_log_component(Logger *lgi, asn_TYPE_descriptor_t * asnDef, void * tStruct)
+{
+    if (lgi->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) {
+	std::string sdump = printType2String(asnDef, tStruct);
+	lgi->log_(smsc::logger::Logger::LEVEL_DEBUG, sdump);
+    }
+}
+
 
 
 typedef union TONPI_OCT_u {

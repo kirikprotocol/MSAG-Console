@@ -20,6 +20,22 @@ extern "C" int print2vec(const void *buffer, size_t size, void *app_key)
     return 0;
 }
 
+std::string printType2String(asn_TYPE_descriptor_t * def, void * tStruct) {
+
+  /* Invoke type-specific printer */
+  std::vector<unsigned char> stream;
+
+  if (def->print_struct(def, tStruct, 1, print2vec, &stream))
+    return "asn1/c type print error";
+
+  /* Terminate the output */
+  print2vec("\n", 1, &stream);
+
+  /* Create and return resulting string */
+  std::string result((char*)&stream[0],(char*)&stream[0]+stream.size());
+  return result;
+}
+
 
 unsigned packMAPAddress2OCTS(const Address& addr, TONNPI_ADDRESS_OCTS * oa)
 {
@@ -85,7 +101,6 @@ Address	OCTET_STRING_2_Addres(OCTET_STRING_t * octs)
 	unpackOCTS2MAPAddress(addr, (TONNPI_ADDRESS_OCTS *)(octs->buf), octs->size - 1);
     return addr;
 }
-
 
 }//namespace comp
 }//namespace inman

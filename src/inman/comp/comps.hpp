@@ -64,9 +64,9 @@ class Component
 {
   public:
     virtual void encode(vector<unsigned char>& buf)
-    { throw EncodeError("Not implemented"); }
+    { throw EncodeError("ASN.1 encoding is not implemented"); }
     virtual void decode(const vector<unsigned char>& buf)
-    { throw DecodeError("Not implemented"); }
+    { throw DecodeError("ASN.1 decoding is not implemented"); }
 };
 
 struct InapOpCode {

@@ -61,6 +61,7 @@ void RequestReportSMSEventArg::decode(const vector<unsigned char>& buf)
       comp->events.push_back( smsEvent );
   }
 
+  smsc_log_component(compLogger, &asn_DEF_RequestReportSMSEventArg, req);
   asn_DEF_RequestReportSMSEventArg.free_struct(&asn_DEF_RequestReportSMSEventArg,req, 0);
 }
 
@@ -69,7 +70,7 @@ void RequestReportSMSEventArg::decode(const vector<unsigned char>& buf)
 
 const RequestReportSMSEventArg::SMSEventVector& RequestReportSMSEventArg::getSMSEvents()
 {
-	return comp->events;
+    return comp->events;
 }
 
 }//namespace comps

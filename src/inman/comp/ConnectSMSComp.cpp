@@ -29,6 +29,7 @@ void ConnectSMSArg::decode(const vector<unsigned char>& buf)
     clngPN = OCTET_STRING_2_Addres(dcmd->callingPartysNumber);
     sMSCAdr = OCTET_STRING_2_Addres(dcmd->sMSCAddress);
 
+    smsc_log_component(compLogger, &asn_DEF_ConnectSMSArg, dcmd);
     asn_DEF_ConnectSMSArg.free_struct(&asn_DEF_ConnectSMSArg, dcmd, 0);
 }
 

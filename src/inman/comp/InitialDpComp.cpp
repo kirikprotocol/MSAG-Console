@@ -105,8 +105,7 @@ void InitialDPSMSArg::setCallingPartyNumber(const char * text)
 //imsi contains sequence of ASCII digits
 void InitialDPSMSArg::setIMSI(const std::string& imsi)
 {
-	
-	smsc_log_debug( compLogger, "IMSI: %s (%d)", imsi.c_str(), imsi.length());
+    //smsc_log_debug( compLogger, "IMSI: %s (%d)", imsi.c_str(), imsi.length());
     assert(((imsi.length() + 1)/2) <= CAP_MAX_IMSILength);
     ZERO_OCTET_STRING(comp->_iMSI);
     comp->_iMSI.size = smsc::cvtutil::packNumString2BCD(comp->_iMSI.buf,
@@ -130,32 +129,11 @@ void InitialDPSMSArg::setSMSCAddress(const char * text)
 
 void InitialDPSMSArg::setTimeAndTimezone(time_t tmVal)
 {
-	struct tm *ptime;
-
-	assert( tmVal );
-
-	tzset();
-    ptime = localtime( &tmVal );
-    assert( ptime );
-
-    char buff[32];
-
-    sprintf( buff, "%04d%02d%02d%02d%02d%02d00",
-    		ptime->tm_year + 1900,
-    		ptime->tm_mon + 1,
-    		ptime->tm_mday,
-    		ptime->tm_hour,
-    		ptime->tm_min,
-    		ptime->tm_sec );
-
-    smsc_log_debug( compLogger, "GMT time: %s", buff );
-
-
+    tzset();
     ZERO_OCTET_STRING(comp->_tmTz);
-    comp->_tmTz.size = smsc::cvtutil::packNumString2BCD(comp->_tmTz.buf, buff, strlen(buff));
-    assert(comp->_tmTz.size == CAP_MAX_TimeAndTimezoneLength);
-    comp->_tmTz.buf[comp->_tmTz.size - 1] = 0x42; // daylight saving is not counted !!!
-    smsc_log_debug( compLogger, "BCD time: %s", dump(comp->_tmTz.size, comp->_tmTz.buf).c_str() );
+    assert( !smsc::cvtutil::packTimeT2BCD8((unsigned char (*)[8])(comp->_tmTz.buf), tmVal) );
+    comp->_tmTz.size = 8;
+    //smsc_log_debug( compLogger, "BCD time: %s", dump(comp->_tmTz.size, comp->_tmTz.buf).c_str() );
     comp->idp.timeAndTimezone = &(comp->_tmTz);
 }
 
@@ -165,7 +143,7 @@ void InitialDPSMSArg::setTPShortMessageSpecificInfo(unsigned char tPSMSI)
     comp->_tPSMSI.buf[0] = tPSMSI;
     comp->_tPSMSI.size = 1;
     comp->idp.tPShortMessageSpecificInfo = &(comp->_tPSMSI);
-    smsc_log_debug( compLogger, "TPSMSInfo: %x", (unsigned)(comp->idp.tPShortMessageSpecificInfo->buf[0]));
+    //smsc_log_debug( compLogger, "TPSMSInfo: %x", (unsigned)(comp->idp.tPShortMessageSpecificInfo->buf[0]));
 }
 
 void InitialDPSMSArg::setTPProtocolIdentifier(unsigned char tPPid)
@@ -174,7 +152,7 @@ void InitialDPSMSArg::setTPProtocolIdentifier(unsigned char tPPid)
     comp->_tPPid.buf[0] = tPPid;
     comp->_tPPid.size = 1;
     comp->idp.tPProtocolIdentifier = &(comp->_tPPid);
-    smsc_log_debug( compLogger, "TPProtoId: %x", (unsigned)(comp->idp.tPProtocolIdentifier->buf[0]));
+    //smsc_log_debug( compLogger, "TPProtoId: %x", (unsigned)(comp->idp.tPProtocolIdentifier->buf[0]));
 }
 
 void InitialDPSMSArg::setTPDataCodingScheme(unsigned char tPDCSch)
@@ -183,7 +161,7 @@ void InitialDPSMSArg::setTPDataCodingScheme(unsigned char tPDCSch)
     comp->_tPDCSch.buf[0] = tPDCSch;
     comp->_tPDCSch.size = 1;
     comp->idp.tPDataCodingScheme = &(comp->_tPDCSch);
-    smsc_log_debug( compLogger, "TPDCS: %x", (unsigned)(comp->idp.tPDataCodingScheme->buf[0]));
+    //smsc_log_debug( compLogger, "TPDCS: %x", (unsigned)(comp->idp.tPDataCodingScheme->buf[0]));
 }
 
 void InitialDPSMSArg::setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt)
@@ -193,7 +171,7 @@ void InitialDPSMSArg::setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt)
     case tp_vp_relative: {
 	comp->_tPVP.size = 1;
 	comp->_tPVP.buf[0] = smsc::cvtutil::packTP_VP_Relative(vpVal);
-	smsc_log_debug( compLogger, "TP-VP: %x", (unsigned)(comp->_tPVP.buf[0]));
+	//smsc_log_debug( compLogger, "TP-VP: %x", (unsigned)(comp->_tPVP.buf[0]));
     }   break;
     case tp_vp_absolute: {
 	comp->_tPVP.size = 7;
@@ -255,11 +233,10 @@ void InitialDPSMSArg::encode(vector<unsigned char>& buf)
 {
     asn_enc_rval_t er;
 
-    //for debug only:
-    asn_fprint(stdout, &asn_DEF_InitialDPSMSArg, &comp->idp);
+    //debug: print structure content
+    smsc_log_component(compLogger, &asn_DEF_InitialDPSMSArg, &comp->idp); 
 
     er = der_encode(&asn_DEF_InitialDPSMSArg, &comp->idp, print2vec, &buf);
-
     INMAN_LOG_ENC(er, asn_DEF_InitialDPSMSArg);
 }
 
