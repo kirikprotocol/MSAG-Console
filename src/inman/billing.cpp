@@ -13,7 +13,7 @@ using std::runtime_error;
 namespace smsc  {
 namespace inman {
 
-Billing::Billing(TcapDialog* pDialog, DeliveryMode_e md)
+Billing::Billing(Dialog* pDialog, DeliveryMode_e md)
 		: logger(Logger::getInstance("smsc.inman.inap.Billing"))
 		, dialog( pDialog )
 		, mode( md )
@@ -30,6 +30,14 @@ Billing::~Billing()
 
 	inap->removeListener( this );
 	delete inap;
+}
+
+void Billing::onChargeSms(ChargeSms*)
+{
+}
+
+void Billing::onDeliverySmsResult(DeliverySmsResult*)
+{
 }
 
 void Billing::initialDPSMS()

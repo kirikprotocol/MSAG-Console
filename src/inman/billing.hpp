@@ -3,11 +3,12 @@
 #ifndef __SMSC_INMAN_INAP_BILLING__
 #define __SMSC_INMAN_INAP_BILLING__
 
-#include "inman/common/observable.hpp"
-#include "inman/comp/comps.hpp"
+#include "common/observable.hpp"
+#include "comp/comps.hpp"
 #include "inap/inap.hpp"
 #include "inap/session.hpp"
 #include "inap/connect.hpp"
+#include "interaction/messages.hpp"
 
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
@@ -19,8 +20,9 @@ using smsc::inman::comp::DeliveryMode_e;
 
 using smsc::inman::inap::Inap;
 using smsc::inman::inap::Session;
-using smsc::inman::inap::TcapDialog;
+using smsc::inman::inap::Dialog;
 using smsc::inman::inap::SSF;
+using smsc::inman::interaction::InmanHandler;
 
 namespace smsc    {
 namespace inman   {
@@ -33,15 +35,15 @@ public:
 	virtual void onBillingFinished(Billing*) = 0;
 };
 
-class Billing : public SSF, public ObservableT< BillingListener >
+class Billing : public SSF, public ObservableT< BillingListener >, public InmanHandler
 {
 public:
 
-	Billing(TcapDialog*, DeliveryMode_e mode);
+	Billing(Dialog*, DeliveryMode_e mode);
 
 	virtual ~Billing();
 
-	TcapDialog*  getDialog() const
+	Dialog*  getDialog() const
 	{
 		return dialog;
 	}
@@ -57,10 +59,13 @@ public:
     virtual void resetTimerSMS(ResetTimerSMSArg* arg);
 	virtual void endDialog();
 
+	virtual void onChargeSms(ChargeSms*);
+	virtual void onDeliverySmsResult(DeliverySmsResult*);
+
 protected:	
 	Mutex			mutex;		
 	DeliveryMode_e 	mode;
-	TcapDialog*		dialog;
+	Dialog*		dialog;
 	Inap*	 		inap;
     Logger*	 		logger;   	
 

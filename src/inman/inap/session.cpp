@@ -102,17 +102,23 @@ USHORT_T Session::nextDialogId()
 }
 
 
-TcapDialog* Session::openDialog(USHORT_T id)
+Dialog* Session::openDialog(USHORT_T id)
 {
     if(id == 0) id = nextDialogId();
-    smsc_log_debug(logger,"Open dialog (SSN=%d, TcapDialog id=%d)", SSN, id );
-    TcapDialog* pDlg = new TcapDialog( this, id );
+    smsc_log_debug(logger,"Open dialog (SSN=%d, Dialog id=%d)", SSN, id );
+    Dialog* pDlg = new Dialog( this, id );
     dialogs.insert( DialogsMap_T::value_type( id, pDlg ) );
-    notify1<TcapDialog*>( &SessionListener::onDialogBegin, pDlg );
+
+	for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
+	{
+			 SessionListener* ptr = *it;
+			 ptr->onDialogBegin( pDlg );
+	}
+
     return pDlg;
 }
 
-TcapDialog* Session::findDialog(USHORT_T id)
+Dialog* Session::findDialog(USHORT_T id)
 {
     DialogsMap_T::const_iterator it = dialogs.find( id );
     if( it == dialogs.end() )
@@ -123,13 +129,16 @@ TcapDialog* Session::findDialog(USHORT_T id)
 
 }
 
-void Session::closeDialog(TcapDialog* pDlg)
+void Session::closeDialog(Dialog* pDlg)
 {
     if( !pDlg ) return;
-    smsc_log_debug(logger,"Close dialog (SSN=%d, TcapDialog id=%d)", SSN, pDlg->did );
-//    dialogs.erase( pDlg->did );
-    notify1<TcapDialog*>( &SessionListener::onDialogEnd, pDlg );
-//    delete pDlg;
+    smsc_log_debug(logger,"Close dialog (SSN=%d, Dialog id=%d)", SSN, pDlg->did );
+
+	for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
+	{
+			 SessionListener* ptr = *it;
+			 ptr->onDialogEnd( pDlg );
+	}
 }
 
 void Session::closeAllDialogs()

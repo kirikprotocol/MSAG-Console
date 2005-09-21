@@ -16,19 +16,19 @@ namespace inap  {
 class InvokeResultLast : public TcapEntity
 {
     public:
-    	virtual void send(TcapDialog* dialog);
+    	virtual void send(Dialog* dialog);
 };
 
 class InvokeResultNotLast : public TcapEntity
 {
     public:
-    	virtual void send(TcapDialog* dialog);
+    	virtual void send(Dialog* dialog);
 };
 
 class InvokeResultError : public TcapEntity
 {
     public:
-    	virtual void send(TcapDialog* dialog);
+    	virtual void send(Dialog* dialog);
 };
 
 }

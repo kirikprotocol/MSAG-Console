@@ -25,23 +25,22 @@ class Session;
 
 typedef std::map< UCHAR_T, Invoke* > InvokeMap;
 
-class TcapDialog;
+class Dialog;
 
-class TcapDialogListener
+class DialogListener
 {
 	public:
 		virtual void onDialogInvoke(  Invoke*  ) = 0;
-		virtual void onDialogEnd() = 0;
 };
 
-class TcapDialog : public ObservableT< TcapDialogListener > 
+class Dialog : public ObservableT< DialogListener > 
 {
     friend class Session;
 
   public:
 
-    TcapDialog(Session* session, USHORT_T id);
-    virtual ~TcapDialog();
+    Dialog(Session* session, USHORT_T id);
+    virtual ~Dialog();
 
     virtual Invoke* invoke(UCHAR_T opcode);
 

@@ -10,6 +10,7 @@
 #include "core/synchronization/Event.hpp"
 #include "core/synchronization/Mutex.hpp"
 #include "core/network/Socket.hpp"
+#include "inman/common/observable.hpp"
 #include "connect.hpp"
 
 using smsc::logger::Logger;
@@ -17,13 +18,23 @@ using smsc::core::network::Socket;
 using smsc::core::threads::Thread;
 using smsc::core::synchronization::Event;
 using smsc::core::synchronization::Mutex;
+using smsc::inman::common::ObservableT;
 
 
 namespace smsc  {
 namespace inman {
 namespace inap  {
 
-class Server : public Thread
+class Server;
+
+class ServerListener
+{
+public:
+	virtual void onConnectOpened(Connect* connect) = 0;
+	virtual void onConnectClosed(Connect* connect) = 0;
+};
+
+class Server : public Thread, public ObservableT< ServerListener >
 {
 		typedef std::list<Connect*> Connects;
 
@@ -38,7 +49,7 @@ class Server : public Thread
 		void Stop();
 		void Run();
 
-    protected:
+	protected:
 		Event			   	started;
 		Event			   	stopped;
 		volatile bool	   	running;

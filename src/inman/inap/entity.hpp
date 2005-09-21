@@ -13,7 +13,7 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
-class TcapDialog;
+class Dialog;
 
 class TcapEntity
 {
@@ -73,7 +73,7 @@ public:
 		param = p;
   }
 
-  virtual void send(TcapDialog*) = 0;
+  virtual void send(Dialog*) = 0;
 
 protected:
 

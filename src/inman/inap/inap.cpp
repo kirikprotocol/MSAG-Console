@@ -11,7 +11,7 @@ namespace inap {
 
 using smsc::inman::comp::InapOpCode;
 
-Inap::Inap(TcapDialog* dlg) : dialog( dlg ), logger(Logger::getInstance("smsc.inman.inap.Inap"))
+Inap::Inap(Dialog* dlg) : dialog( dlg ), logger(Logger::getInstance("smsc.inman.inap.Inap"))
 {
 	assert( dialog );
 	dialog->addListener( this );
@@ -55,11 +55,6 @@ void Inap::onDialogInvoke( Invoke* op )
 			static_cast<ResetTimerSMSArg*>(op->getParam())  );
 			break;
 	}
-}
-
-void Inap::onDialogEnd()
-{
-	notify0( &SSF::endDialog );
 }
 
 void Inap::initialDPSMS(InitialDPSMSArg* arg)

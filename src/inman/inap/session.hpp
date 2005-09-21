@@ -24,19 +24,19 @@ static const USHORT_T MSG_INIT_MAX_ENTRIES = 512;
 static const USHORT_T TCAP_DIALOG_MIN_ID   = 1;
 static const USHORT_T TCAP_DIALOG_MAX_ID   = 1000;
 
-class TcapDialog;
+class Dialog;
 
 class SessionListener
 {
 public:
-	virtual void onDialogBegin(TcapDialog*) = 0;
-	virtual void onDialogEnd(TcapDialog*)   = 0;
+	virtual void onDialogBegin(Dialog*) = 0;
+	virtual void onDialogEnd(Dialog*)   = 0;
 };
 
 class Session : public ObservableT< SessionListener >
 {
         friend class Factory;
-        friend class TcapDialog;
+        friend class Dialog;
 
     public:
         typedef enum { IDLE, BOUNDED, ERROR } SessionState;
@@ -47,13 +47,13 @@ class Session : public ObservableT< SessionListener >
         UCHAR_T      getSSN() const;
 
 
-        virtual     TcapDialog*  openDialog(USHORT_T id);
-        virtual     TcapDialog*  findDialog(USHORT_T id);
-        virtual     void    	 closeDialog(TcapDialog* pDlg);
+        virtual     Dialog*  openDialog(USHORT_T id);
+        virtual     Dialog*  findDialog(USHORT_T id);
+        virtual     void    	 closeDialog(Dialog* pDlg);
         virtual     void    	 closeAllDialogs();
 
     protected:
-        typedef     std::map<USHORT_T, TcapDialog*> DialogsMap_T;
+        typedef     std::map<USHORT_T, Dialog*> DialogsMap_T;
 
         Session(UCHAR_T ssn, const char* scfNum, const char* inmanNum);
         virtual     	~Session();

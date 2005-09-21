@@ -22,7 +22,7 @@ namespace inap  {
 extern Logger* tcapLogger;
 extern Logger* dumpLogger;
 
-void Invoke::send(TcapDialog* dialog)
+void Invoke::send(Dialog* dialog)
 {
   assert( dialog );
   assert( dialog->getSession() );

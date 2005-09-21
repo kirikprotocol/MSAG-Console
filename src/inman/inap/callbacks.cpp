@@ -16,7 +16,7 @@ static char const ident[] = "$Id$";
 #include "inman/common/util.hpp"
 
 using smsc::logger::Logger;
-using smsc::inman::inap::TcapDialog;
+using smsc::inman::inap::Dialog;
 using smsc::inman::inap::Session;
 using smsc::inman::inap::Factory;
 using smsc::inman::common::getTcapBindErrorMessage;
@@ -45,7 +45,7 @@ static Factory* getFactory()
 }
 
 
-static TcapDialog* findDialog(UCHAR_T ssn, USHORT_T dialogueId)
+static Dialog* findDialog(UCHAR_T ssn, USHORT_T dialogueId)
 {
 	Session* pSession = getFactory()->findSession( ssn );
 	if( !pSession )
@@ -53,7 +53,7 @@ static TcapDialog* findDialog(UCHAR_T ssn, USHORT_T dialogueId)
 		smsc_log_warn( tcapLogger, "Invalid SSN: 0x%X", ssn );
 		return 0;
 	}
-  	TcapDialog* pDlg = pSession->findDialog( dialogueId );
+  	Dialog* pDlg = pSession->findDialog( dialogueId );
 	if( !pDlg )
 	{
 		smsc_log_warn( tcapLogger, "Invalid dialog ID: 0x%X", dialogueId );
@@ -149,7 +149,7 @@ USHORT_T EINSS7_I97TContinueInd(UCHAR_T          ssn,
   smsc_log_debug(tcapLogger," App. context: %s" , dump(appContextLength ,appContext_p ).c_str() );
   smsc_log_debug(tcapLogger," User info: %s"    , dump(userInfoLength   ,userInfo_p   ).c_str() );
 
-  TcapDialog* dlg = findDialog( ssn, dialogueId );
+  Dialog* dlg = findDialog( ssn, dialogueId );
   if( dlg ) dlg->handleContinueDialog();
   return MSG_OK;
 }
@@ -177,7 +177,7 @@ USHORT_T EINSS7_I97TEndInd(     UCHAR_T          ssn,
   smsc_log_debug(tcapLogger," Comp. present: %s", compPresent?"TRUE":"FALSE" );
   smsc_log_debug(tcapLogger," App. context: %s" , dump(appContextLength ,appContext_p ).c_str() );
   smsc_log_debug(tcapLogger," User info: %s"    , dump(userInfoLength   ,userInfo_p   ).c_str() );
-  TcapDialog* dlg = findDialog( ssn, dialogueId );
+  Dialog* dlg = findDialog( ssn, dialogueId );
   if( dlg ) dlg->handleEndDialog();
   return MSG_OK;
 }
@@ -208,7 +208,7 @@ USHORT_T EINSS7_I97TInvokeInd(  UCHAR_T          ssn,
   smsc_log_debug(tcapLogger," Operation: %s" , dump(opLength ,op ).c_str() );
   smsc_log_debug(tcapLogger," Params: %s", dump(paramLength,pm ).c_str() );
                                 
-  TcapDialog* dlg = findDialog( ssn, dialogueId );
+  Dialog* dlg = findDialog( ssn, dialogueId );
   if( dlg ) dlg->handleInvoke( invokeId, tag, opLength, op, paramLength, pm );
   return MSG_OK;
 }
@@ -236,7 +236,7 @@ USHORT_T EINSS7_I97TResultNLInd(UCHAR_T          ssn,
   smsc_log_debug(tcapLogger," Operation: %s" , dump(opLength ,op ).c_str() );
   smsc_log_debug(tcapLogger," Params: %s", dump(paramLength,pm ).c_str() );
 
-  TcapDialog* dlg = findDialog( ssn, dialogueId );
+  Dialog* dlg = findDialog( ssn, dialogueId );
   if( dlg ) dlg->handleResultNotLast( invokeId, tag, opLength, op, paramLength, pm );
   return MSG_OK;
 }
@@ -264,7 +264,7 @@ USHORT_T EINSS7_I97TResultLInd( UCHAR_T          ssn,
   smsc_log_debug(tcapLogger," Operation: %s" , dump(opLength ,op ).c_str() );
   smsc_log_debug(tcapLogger," Params: %s", dump(paramLength,pm ).c_str() );
 
-  TcapDialog* dlg = findDialog( ssn, dialogueId );
+  Dialog* dlg = findDialog( ssn, dialogueId );
   if( dlg ) return dlg->handleResultNotLast( invokeId, tag, opLength, op, paramLength, pm );
 
   return MSG_OK;
@@ -293,7 +293,7 @@ USHORT_T EINSS7_I97TUErrorInd(  UCHAR_T          ssn,
   smsc_log_debug(tcapLogger," Operation: %s" , dump(opLength ,op ).c_str() );
   smsc_log_debug(tcapLogger," Params: %s", dump(paramLength,pm ).c_str() );
 
-  TcapDialog* dlg = findDialog( ssn, dialogueId );
+  Dialog* dlg = findDialog( ssn, dialogueId );
   if( dlg ) dlg->handleUserError( invokeId, tag, opLength, op, paramLength, pm );
   return MSG_OK;
 }

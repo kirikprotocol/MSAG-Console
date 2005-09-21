@@ -48,10 +48,20 @@ Service::~Service()
 	delete dispatcher;
 }
 
+void Service::onConnectOpened(Connect* connect)
+{
+	smsc_log_debug( logger, "OnConnectOpened" );
+}
+
+void Service::onConnectClosed(Connect* connect)
+{
+	smsc_log_debug( logger, "OnConnectClosed" );
+}
+
 void Service::startOriginating()
 {
 	smsc_log_info( logger, "Start originating" );
-	TcapDialog*  dialog  = session->openDialog( 0 );
+	Dialog*  dialog  = session->openDialog( 0 );
 	assert( dialog );
 	Billing* billing = new Billing( dialog, smsc::inman::comp::DeliveryMode_Originating );
 	assert( billing );
@@ -62,7 +72,7 @@ void Service::startOriginating()
 void Service::startTerminating()
 {
 	smsc_log_info( logger, "Start terminating" );
-	TcapDialog*  dialog  = session->openDialog( 0 );
+	Dialog*  dialog  = session->openDialog( 0 );
 	assert( dialog );
 	Billing* billing = new Billing( dialog, smsc::inman::comp::DeliveryMode_Terminating );
 	assert( billing );
@@ -76,13 +86,13 @@ void Service::add(Billing* worker)
 	workers.push_back( worker );
 }
 
-void Service::onDialogBegin(TcapDialog* dlg)
+void Service::onDialogBegin(Dialog* dlg)
 {
 	assert( dlg );
 	smsc_log_info( logger, "Dialog 0x%X created", dlg->getId() );
 };
 
-void Service::onDialogEnd(TcapDialog* dlg)
+void Service::onDialogEnd(Dialog* dlg)
 {
 	assert( dlg );
 	for( WorkersList::iterator i = workers.begin(); i != workers.end(); i++ )

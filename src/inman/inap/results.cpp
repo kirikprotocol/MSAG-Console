@@ -18,7 +18,7 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
-void InvokeResultLast::send(TcapDialog* dialog)
+void InvokeResultLast::send(Dialog* dialog)
 {
   assert( dialog );
   assert( dialog->getSession() );
@@ -46,7 +46,7 @@ void InvokeResultLast::send(TcapDialog* dialog)
 
 }
 
-void InvokeResultNotLast::send(TcapDialog* dialog)
+void InvokeResultNotLast::send(Dialog* dialog)
 {
   assert( dialog );
   assert( dialog->getSession() );
@@ -74,7 +74,7 @@ void InvokeResultNotLast::send(TcapDialog* dialog)
 
 }
 
-void InvokeResultError::send(TcapDialog* dialog)
+void InvokeResultError::send(Dialog* dialog)
 {
   assert( dialog );
   assert( dialog->getSession() );

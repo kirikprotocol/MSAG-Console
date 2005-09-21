@@ -36,11 +36,23 @@ void Server::openConnect(Connect* connect)
 {
 	assert( connect );
 	connects.push_back( connect );
+
+	for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
+	{
+			 ServerListener* ptr = *it;
+			 ptr->onConnectOpened( connect );
+	}
+
 }
 
 void Server::closeConnect(Connect* connect)
 {
 	assert( connect );
+	for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
+	{
+			 ServerListener* ptr = *it;
+			 ptr->onConnectClosed( connect );
+	}
 	connects.remove( connect );
 	delete connect;
 }

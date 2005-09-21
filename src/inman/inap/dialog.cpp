@@ -26,13 +26,13 @@ namespace inman {
 namespace inap  {
 
 /////////////////////////////////////////////////////////////////////////////////////
-// TcapDialog class
+// Dialog class
 /////////////////////////////////////////////////////////////////////////////////////
 
 extern Logger* tcapLogger;
 
-TcapDialog::TcapDialog(Session* pSession, USHORT_T dlgId) 
-    : logger(Logger::getInstance("smsc.inman.inap.TcapDialog"))
+Dialog::Dialog(Session* pSession, USHORT_T dlgId) 
+    : logger(Logger::getInstance("smsc.inman.inap.Dialog"))
 	, did( dlgId )
 	, session( pSession )
 	, qSrvc(EINSS7_I97TCAP_QLT_BOTH)
@@ -42,11 +42,11 @@ TcapDialog::TcapDialog(Session* pSession, USHORT_T dlgId)
 {
 }
 
-TcapDialog::~TcapDialog()
+Dialog::~Dialog()
 {
 }
 
-void TcapDialog::beginDialog()
+void Dialog::beginDialog()
 {
   smsc_log_debug(tcapLogger,"BEGIN_REQ");
   smsc_log_debug(tcapLogger," SSN: 0x%X", session->getSSN());
@@ -80,7 +80,7 @@ void TcapDialog::beginDialog()
   	throw runtime_error( format("BeginReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
 }
 
-void TcapDialog::continueDialog()
+void Dialog::continueDialog()
 {
   smsc_log_debug(tcapLogger,"CONTINUE_REQ");
   smsc_log_debug(tcapLogger," SSN: 0x%X", session->getSSN());
@@ -110,7 +110,7 @@ void TcapDialog::continueDialog()
   	throw runtime_error( format("ContinueReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
 }
 
-void TcapDialog::endDialog(USHORT_T termination)
+void Dialog::endDialog(USHORT_T termination)
 {
   smsc_log_debug(tcapLogger,"END_REQ");
   smsc_log_debug(tcapLogger," SSN: 0x%X", session->getSSN());
@@ -140,7 +140,7 @@ void TcapDialog::endDialog(USHORT_T termination)
 }
 
 
-void TcapDialog::timerReset()
+void Dialog::timerReset()
 {
   smsc_log_debug(tcapLogger,"TIME_RESET_REQ");
   smsc_log_debug(tcapLogger," SSN: 0x%X", session->getSSN());
@@ -162,7 +162,7 @@ void TcapDialog::timerReset()
 
 }
 
-Invoke* TcapDialog::invoke(UCHAR_T opcode)
+Invoke* Dialog::invoke(UCHAR_T opcode)
 {
 	smsc_log_debug(logger, "Invoke (opcode=0x%X)", opcode);
 	Invoke* invoke = new Invoke();
@@ -175,23 +175,22 @@ Invoke* TcapDialog::invoke(UCHAR_T opcode)
 
 //--------------------------------------- Callbacks ----------------------------------
 
-USHORT_T TcapDialog::handleBeginDialog()
+USHORT_T Dialog::handleBeginDialog()
 {
 	return MSG_OK;
 }
 
-USHORT_T TcapDialog::handleContinueDialog()
+USHORT_T Dialog::handleContinueDialog()
 {
 	return MSG_OK;
 }
 
-USHORT_T TcapDialog::handleEndDialog()
+USHORT_T Dialog::handleEndDialog()
 {
-  	notify0( &TcapDialogListener::onDialogEnd );
 	return MSG_OK;
 }
 
-USHORT_T TcapDialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
+USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
 {
   assert( op );
   assert( oplen > 0 );
@@ -213,12 +212,16 @@ USHORT_T TcapDialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
   	invoke->setParam( comp );
   }
 
-  notify1( &TcapDialogListener::onDialogInvoke, invoke.get() );
+  for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
+  {
+	DialogListener* ptr = *it;
+	ptr->onDialogInvoke( invoke.get() );
+  }
 
   return MSG_OK;
 }
 
-USHORT_T TcapDialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
+USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
 {
   assert( op );
   assert( oplen > 0 );
@@ -236,7 +239,6 @@ USHORT_T TcapDialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen
   if( it != originating.end() )
   {
   		Invoke* inv = (*it).second;
-  		//inv->notify1( result );
   }
 
   delete result;
@@ -244,12 +246,12 @@ USHORT_T TcapDialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen
   return MSG_OK;
 }
 
-USHORT_T TcapDialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
+USHORT_T Dialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
 {
   return MSG_OK;
 }
 
-USHORT_T TcapDialog::handleUserError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
+USHORT_T Dialog::handleUserError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
 {
   	return MSG_OK;
 }

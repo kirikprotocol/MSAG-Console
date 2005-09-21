@@ -32,7 +32,6 @@ class SSF
     virtual void releaseSMS(ReleaseSMSArg* arg) = 0;
     virtual void requestReportSMSEvent(RequestReportSMSEventArg* arg) = 0;
     virtual void resetTimerSMS(ResetTimerSMSArg* arg) = 0;
-    virtual void endDialog() = 0;
 };
 
 class SCF
@@ -42,22 +41,21 @@ class SCF
     virtual void eventReportSMS(EventReportSMSArg* arg) = 0;
 };
 
-class Inap : public TcapDialogListener, public SCF, public ObservableT< SSF >
+class Inap : public DialogListener, public SCF, public ObservableT< SSF >
 {
   public:
-    Inap(TcapDialog* dialog);
+    Inap(Dialog* dialog);
     virtual ~Inap();
   public:
 
     void initialDPSMS(InitialDPSMSArg* arg);
     void eventReportSMS(EventReportSMSArg* arg);
 
-   	virtual void onDialogInvoke( Invoke* op ); // TcapDialogListener
-   	virtual void onDialogEnd(); // TcapDialogListener
+   	virtual void onDialogInvoke( Invoke* op ); // DialogListener
 
    protected:
 
-  	TcapDialog* dialog;
+  	Dialog* dialog;
   	Logger*		logger;
 };
 
