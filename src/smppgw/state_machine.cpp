@@ -765,6 +765,10 @@ public:
       return 1;
   }
 
+  int TrafficReccount(){      
+      return hourlyCounters.GetCount();          
+  }
+
 protected:
 
   struct TransactionInfo
@@ -1672,7 +1676,7 @@ void StateMachine::updateTraffic(const char* routId)
       tmon.newRoutMsg(routId, offset, delay, value, dt);
       tw.updateRec(offset, delay, value, dt);
   }else{
-      int offset = 0;
+      int offset = tmon.TrafficReccount() * 2921 + 41;
       time_t dt = time(0);
       struct TrafficWriter::routData rd(routId, dt);
       rd.offset(offset);
