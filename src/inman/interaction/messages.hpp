@@ -77,6 +77,17 @@ public:
 protected:
     virtual void load(ObjectBuffer& in);
     virtual void save(ObjectBuffer& out);
+private:
+	std::string   destinationSubscriberNumber;
+	std::string   callingPartyNumber;
+	std::string   imsi;
+	std::string   smscAddress;
+	time_t		  timeAndTimezine;
+	unsigned char tpShortMessageSpecificInfo;
+	unsigned char tpTPProtocolIdentifier;
+	unsigned char tpTPDataCodingScheme;
+	time_t 		  tpValidityPeriod;
+	std::string   locationInformationMSC;
 };
 
 class ChargeSmsResult : public SmscCommand

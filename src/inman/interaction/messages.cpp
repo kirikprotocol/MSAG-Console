@@ -23,53 +23,83 @@ ChargeSms::~ChargeSms()
 {
 }
 
-void ChargeSms::setDestinationSubscriberNumber(const std::string& imsi)
+void ChargeSms::setDestinationSubscriberNumber(const std::string& value)
 {
+	destinationSubscriberNumber = value;
 }
 
-void ChargeSms::ChargeSms::setCallingPartyNumber(const std::string& imsi)
+void ChargeSms::ChargeSms::setCallingPartyNumber(const std::string& value)
 {
+	callingPartyNumber = value;
 }
 
-void ChargeSms::setIMSI(const std::string& imsi)
+void ChargeSms::setIMSI(const std::string& value)
 {
+	imsi = value;
 }
 
-void ChargeSms::setSMSCAddress(const std::string& imsi)
+void ChargeSms::setSMSCAddress(const std::string& value)
 {
+	smscAddress = value;
 }
 
-void ChargeSms::setTimeAndTimezone(time_t tmVal)
+void ChargeSms::setTimeAndTimezone(time_t value)
 {
+	timeAndTimezine = value;
 }
 
-void ChargeSms::setTPShortMessageSpecificInfo(unsigned char )
+void ChargeSms::setTPShortMessageSpecificInfo(unsigned char value)
 {
+	tpShortMessageSpecificInfo = value;
 }
 
-void ChargeSms::setTPProtocolIdentifier(unsigned char )
+void ChargeSms::setTPProtocolIdentifier(unsigned char value)
 {
+	tpTPProtocolIdentifier = value;
 }
 
-void ChargeSms::setTPDataCodingScheme(unsigned char )
+void ChargeSms::setTPDataCodingScheme(unsigned char value)
 {
+	tpTPDataCodingScheme = value;
 }
 
-void ChargeSms::setTPValidityPeriod(time_t vpVal)
+void ChargeSms::setTPValidityPeriod(time_t value)
 {
+	tpValidityPeriod = value;
 }
 
-void ChargeSms::setlocationInformationMSC(const std::string& imsi)
+void ChargeSms::setlocationInformationMSC(const std::string& value)
 {
+	locationInformationMSC = value;
 }
 
 void ChargeSms::load(ObjectBuffer& in)
 {
+	in >> destinationSubscriberNumber;
+	in >> callingPartyNumber;
+	in >> imsi;
+	in >> smscAddress;
+	in >> timeAndTimezine;
+	in >> tpShortMessageSpecificInfo;
+	in >> tpTPProtocolIdentifier;
+	in >> tpTPDataCodingScheme;
+	in >> tpValidityPeriod;
+	in >> locationInformationMSC;
 }
 
 void ChargeSms::save(ObjectBuffer& out)
 {
     out << (USHORT_T) CHARGE_SMS_TAG;
+    out << destinationSubscriberNumber;
+    out << callingPartyNumber;
+    out << imsi;
+    out << smscAddress;
+    out << timeAndTimezine;
+    out << tpShortMessageSpecificInfo;
+    out << tpTPProtocolIdentifier;
+    out << tpTPDataCodingScheme;
+    out << tpValidityPeriod;
+    out << locationInformationMSC;
 }
 
 void ChargeSms::handle(InmanHandler* handler)
@@ -106,7 +136,7 @@ void ChargeSmsResult::load(ObjectBuffer& in)
 
 void ChargeSmsResult::save(ObjectBuffer& out)
 {
-    out << (USHORT_T) CHARGE_SMS_RESULT_TAG;
+   	out << (USHORT_T) CHARGE_SMS_RESULT_TAG;
 }
 
 void ChargeSmsResult::handle(SmscHandler* handler)

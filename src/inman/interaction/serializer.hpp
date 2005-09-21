@@ -27,11 +27,11 @@ namespace interaction {
 typedef smsc::core::buffers::TmpBuf<char,2048> ObjectBuffer;
 
 
-  inline ObjectBuffer& operator<<(ObjectBuffer& buf,const char* str)
+  inline ObjectBuffer& operator<<(ObjectBuffer& buf, const std::string& str)
   {
-    unsigned char len=strlen(str);
+    unsigned char len = str.size();
     buf.Append((char*)&len,1);
-    buf.Append(str,len);
+    buf.Append(str.c_str(),len);
     return buf;
   }
 
@@ -42,13 +42,13 @@ typedef smsc::core::buffers::TmpBuf<char,2048> ObjectBuffer;
     SmallCharBuf(char* argBuf,int argLen):buf(argBuf),len(argLen){}
   };
 
-  inline ObjectBuffer& operator>>(ObjectBuffer& buf,SmallCharBuf& scb)
+  inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::string& str )
   {
     unsigned char len;
     buf.Read((char*)&len,1);
-    if(len>scb.len) throw runtime_error( format("Attempt to read %d byte in buffer with size %d",(int)len,(int)scb.len) );
-    buf.Read(scb.buf,len);
-    scb.buf[len]=0;
+    char* strBuf = new char[len + 1];
+    buf.Read(strBuf,len);
+    str.assign( strBuf, strBuf + len );
     return buf;
   }
 
