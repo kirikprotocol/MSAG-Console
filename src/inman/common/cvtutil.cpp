@@ -429,7 +429,7 @@ void packTimeSTZ2BCD8(unsigned char (*bcd)[8], struct tm &tms, int &qtz)
     unsigned unum = (tms.tm_year + 1900)/100;
     (*bcd)[0] = packTinyNum2BCDOct(unum);
     /* pack other parts */
-    packTimeSTZ2BCD7((unsigned char (*)[7])((&(*bcd))[1]), tms, qtz);
+    packTimeSTZ2BCD7((unsigned char (*)[7])(&((*bcd)[1])), tms, qtz);
 }
 
 

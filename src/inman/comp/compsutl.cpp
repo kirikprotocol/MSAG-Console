@@ -17,12 +17,12 @@ extern "C" int print2vec(const void *buffer, size_t size, void *app_key)
     unsigned char *buf = (unsigned char *)buffer;
 
     stream->insert(stream->end(),buf, buf + size);
-    //
+    /*
     fprintf(stdout, ":print2vec: ");
     for (int i = 0; i < size; i++) {
 	fprintf(stdout, "%c", buf[i]);
     }
-    //
+    */
     return 0;
 }
 
