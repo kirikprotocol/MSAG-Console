@@ -9,6 +9,7 @@
 
 namespace smsc {
 namespace inman {
+namespace common {
 
 class Console
 {
@@ -58,6 +59,7 @@ private:
     friend void console_help(Console&, const std::vector<std::string> &);
 };
 
+} // common
 } // inman
 } // smsc
 

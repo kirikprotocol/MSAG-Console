@@ -3,7 +3,7 @@
 #ifndef __SMSC_INMAN_INAP_CONNECT__
 #define __SMSC_INMAN_INAP_CONNECT__
 
-#include "dispatcher.hpp"                 
+#include "dispatcher.hpp"
 #include "inman/interaction/messages.hpp"
 #include "inman/interaction/serializer.hpp"
 

@@ -4,6 +4,7 @@
 
 namespace smsc {
 namespace inman {
+namespace common {
 
 void console_exit(Console& console, const std::vector<std::string> &)
 {
@@ -226,5 +227,6 @@ void Console::deleteItem(const std::string & strName)
     }
 }
 
+}
 }
 }

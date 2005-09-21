@@ -11,12 +11,12 @@
 #include "inman/common/console.hpp"
 #include "inman/interaction/serializer.hpp"
 #include "inman/interaction/messages.hpp"
-#include "core/threads/Thread.hpp"
+#include "core/threads/Thread.hpp" 	
 
 using smsc::core::threads::Thread;
 using smsc::core::network::Socket;
 using smsc::logger::Logger;
-using smsc::inman::Console;
+using smsc::inman::common::Console;
 using smsc::inman::interaction::ObjectPipe;
 using smsc::inman::interaction::Serializer;
 using smsc::inman::interaction::ChargeSms;

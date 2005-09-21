@@ -59,6 +59,7 @@ void Connect::onChargeSms(ChargeSms* sms)
 void Connect::onDeliverySmsResult(DeliverySmsResult* sms)
 {
 	smsc_log_debug(logger, "DeliverySmsResult received");
+
 }
 
 } // namespace inap
