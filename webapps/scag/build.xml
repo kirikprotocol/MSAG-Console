@@ -47,6 +47,7 @@
       </fileset>
     </jar>
     <delete dir="${exploded}/unjar_tmp"/>
+     <mkdir dir="${JEDIT_DIR}/build"/>
      <copy todir="${exploded}/rules/rules" preservelastmodified="yes">
        <fileset dir="${JEDIT_DIR}/build" includes="jedit.jar" />
      </copy>
