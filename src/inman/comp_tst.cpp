@@ -1,4 +1,4 @@
-#include "comps.hpp"
+#include "inman/comp/comps.hpp"
 
 
 using smsc::inman::comp::DeliveryMode_e;
