@@ -21,6 +21,7 @@ Service::Service( const char* ssf_addr, const char* scf_addr, const char* host, 
 
 	smsc_log_debug( logger, "Start server" );
 	server = new Server(host, port);
+	server->addListener( this );
 	server->Start();
 
 	smsc_log_debug( logger, "Open session" );
@@ -40,22 +41,13 @@ Service::~Service()
 	factory->closeSession( session );
 
 	smsc_log_debug( logger, "Stop server" );
+	server->removeListener( this );
 	server->Stop();
 	delete server;
 
 	smsc_log_debug( logger, "Stop dispatcher" );
 	dispatcher->Stop();
 	delete dispatcher;
-}
-
-void Service::onConnectOpened(Connect* connect)
-{
-	smsc_log_debug( logger, "OnConnectOpened" );
-}
-
-void Service::onConnectClosed(Connect* connect)
-{
-	smsc_log_debug( logger, "OnConnectClosed" );
 }
 
 void Service::startOriginating()
@@ -84,6 +76,16 @@ void Service::add(Billing* worker)
 {
 	assert( worker );
 	workers.push_back( worker );
+}
+
+void Service::onConnectOpened(Connect* connect)
+{
+	smsc_log_debug( logger, "Connection opened" );
+}
+
+void Service::onConnectClosed(Connect* connect)
+{
+	smsc_log_debug( logger, "Connection closed" );
 }
 
 void Service::onDialogBegin(Dialog* dlg)
