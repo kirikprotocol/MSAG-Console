@@ -26,11 +26,14 @@ Serializer::~Serializer()
 SerializableObject* Serializer::deserialize(ObjectBuffer& in)
 {
 	USHORT_T objectId, version;
+	int dialogId;
 
 	in >> version;
 
 	if( version != FORMAT_VERSION ) 
 		throw runtime_error( format("Invalid version: 0x%X", version) );
+
+	in >> dialogId;
 
 	in >> objectId;
 
@@ -39,9 +42,6 @@ SerializableObject* Serializer::deserialize(ObjectBuffer& in)
 	if( !obj ) 
 		throw runtime_error( format("Invalid object ID: 0x%X", objectId) );
 
-	int dialogId;
-
-	in >> dialogId;
 
 	obj->setDialogId( dialogId );
 

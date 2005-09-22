@@ -55,12 +55,12 @@ void ChargeSms::setTPShortMessageSpecificInfo(unsigned char value)
 
 void ChargeSms::setTPProtocolIdentifier(unsigned char value)
 {
-	tpTPProtocolIdentifier = value;
+	tpProtocolIdentifier = value;
 }
 
 void ChargeSms::setTPDataCodingScheme(unsigned char value)
 {
-	tpTPDataCodingScheme = value;
+	tpDataCodingScheme = value;
 }
 
 void ChargeSms::setTPValidityPeriod(time_t value)
@@ -68,9 +68,58 @@ void ChargeSms::setTPValidityPeriod(time_t value)
 	tpValidityPeriod = value;
 }
 
-void ChargeSms::setlocationInformationMSC(const std::string& value)
+void ChargeSms::setLocationInformationMSC(const std::string& value)
 {
 	locationInformationMSC = value;
+}
+
+std::string   ChargeSms::getDestinationSubscriberNumber() const
+{
+	return destinationSubscriberNumber;
+}
+
+std::string   ChargeSms::getCallingPartyNumber() const
+{
+	return callingPartyNumber;
+}
+
+std::string   ChargeSms::getIMSI() const
+{
+	return imsi;
+}
+
+std::string   ChargeSms::getSMSCAddress() const
+{
+	return smscAddress;
+}
+
+time_t		  ChargeSms::getTimeAndTimezone() const
+{
+	return timeAndTimezine;
+}
+
+unsigned char ChargeSms::getTPShortMessageSpecificInfo() const
+{
+	return tpShortMessageSpecificInfo;	
+}
+
+unsigned char ChargeSms::getTPProtocolIdentifier() const
+{
+	return tpProtocolIdentifier;
+}
+
+unsigned char ChargeSms::getTPDataCodingScheme() const
+{
+	return tpDataCodingScheme;
+}
+time_t 		  ChargeSms::getTPValidityPeriod() const
+{
+	return tpValidityPeriod;
+}
+
+std::string   ChargeSms::getLocationInformationMSC() const
+{
+	return locationInformationMSC;	
 }
 
 void ChargeSms::load(ObjectBuffer& in)
@@ -81,8 +130,8 @@ void ChargeSms::load(ObjectBuffer& in)
 	in >> smscAddress;
 	in >> timeAndTimezine;
 	in >> tpShortMessageSpecificInfo;
-	in >> tpTPProtocolIdentifier;
-	in >> tpTPDataCodingScheme;
+	in >> tpProtocolIdentifier;
+	in >> tpDataCodingScheme;
 	in >> tpValidityPeriod;
 	in >> locationInformationMSC;
 }
@@ -96,8 +145,8 @@ void ChargeSms::save(ObjectBuffer& out)
     out << smscAddress;
     out << timeAndTimezine;
     out << tpShortMessageSpecificInfo;
-    out << tpTPProtocolIdentifier;
-    out << tpTPDataCodingScheme;
+    out << tpProtocolIdentifier;
+    out << tpDataCodingScheme;
     out << tpValidityPeriod;
     out << locationInformationMSC;
 }

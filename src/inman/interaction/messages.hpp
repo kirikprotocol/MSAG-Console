@@ -58,6 +58,9 @@ DeliverySmsResult_t;
 class ChargeSms : public InmanCommand
 {
 public:
+	ChargeSms();
+	virtual ~ChargeSms();
+		
 	void setDestinationSubscriberNumber(const std::string& imsi);
 	void setCallingPartyNumber(const std::string& imsi);
 	void setIMSI(const std::string& imsi);
@@ -67,10 +70,20 @@ public:
 	void setTPProtocolIdentifier(unsigned char );
 	void setTPDataCodingScheme(unsigned char );
 	void setTPValidityPeriod(time_t vpVal);
-	void setlocationInformationMSC(const std::string& imsi);
+	void setLocationInformationMSC(const std::string& imsi);
 
-	ChargeSms();
-	virtual ~ChargeSms();
+
+	std::string   getDestinationSubscriberNumber() const;
+	std::string   getCallingPartyNumber() const;
+	std::string   getIMSI() const;
+	std::string   getSMSCAddress() const;
+	time_t		  getTimeAndTimezone() const;
+	unsigned char getTPShortMessageSpecificInfo() const;
+	unsigned char getTPProtocolIdentifier() const;
+	unsigned char getTPDataCodingScheme() const;
+	time_t 		  getTPValidityPeriod() const;
+	std::string   getLocationInformationMSC() const;
+
 
 	virtual void handle(InmanHandler*);
 
@@ -84,8 +97,8 @@ private:
 	std::string   smscAddress;
 	time_t		  timeAndTimezine;
 	unsigned char tpShortMessageSpecificInfo;
-	unsigned char tpTPProtocolIdentifier;
-	unsigned char tpTPDataCodingScheme;
+	unsigned char tpProtocolIdentifier;
+	unsigned char tpDataCodingScheme;
 	time_t 		  tpValidityPeriod;
 	std::string   locationInformationMSC;
 };

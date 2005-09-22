@@ -28,7 +28,7 @@ int main (void)
     arg.setCallingPartyNumber(".1.1.79139163393");
     arg.setIMSI( "250013901388780" );
     Address vlr( ".1.1.79139860001" );
-    arg.setlocationInformationMSC( vlr );
+    arg.setLocationInformationMSC( vlr );
 
     arg.setSMSCAddress(".1.1.79029869990");
 

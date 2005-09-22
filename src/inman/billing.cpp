@@ -38,14 +38,12 @@ Billing::~Billing()
 void Billing::onChargeSms(ChargeSms* sms)
 {
 	assert( sms );
-	smsc_log_debug(logger, "ChargeSms command received");
-
 	assert( inap );
 
 	smsc_log_debug( logger, "--> InitialDPSMS" );
 
 	InitialDPSMSArg arg( smsc::inman::comp::DeliveryMode_Originating );
-	
+/*	
 	arg.setDestinationSubscriberNumber( ".1.1.79139859489" ); // missing for MT
 	arg.setCallingPartyNumber( ".1.1.79139343290" );
 	arg.setIMSI( "250013900405871" );
@@ -63,6 +61,17 @@ void Billing::onChargeSms(ChargeSms* sms)
 	arg.setTPValidityPeriod( 60*5 , smsc::inman::comp::tp_vp_relative );
 	arg.setTPProtocolIdentifier( 0x00 );
 	arg.setTPDataCodingScheme( 0x08 );
+*/
+	arg.setDestinationSubscriberNumber( sms->getDestinationSubscriberNumber().c_str() ); // missing for MT
+	arg.setCallingPartyNumber( sms->getCallingPartyNumber().c_str() );
+	arg.setIMSI( sms->getIMSI().c_str() );
+	arg.setLocationInformationMSC( sms->getLocationInformationMSC().c_str() );
+	arg.setSMSCAddress( sms->getSMSCAddress().c_str() );
+	arg.setTimeAndTimezone( sms->getTimeAndTimezone() );
+	arg.setTPShortMessageSpecificInfo( sms->getTPShortMessageSpecificInfo() );
+	arg.setTPValidityPeriod( sms->getTPValidityPeriod() , smsc::inman::comp::tp_vp_relative );
+	arg.setTPProtocolIdentifier( sms->getTPProtocolIdentifier() );
+	arg.setTPDataCodingScheme( sms->getTPDataCodingScheme() );
 
 	inap->initialDPSMS( &arg );
 	dialog->beginDialog();

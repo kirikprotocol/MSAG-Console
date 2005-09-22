@@ -186,7 +186,7 @@ void InitialDPSMSArg::setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt)
 }
 
 /* Sets VLR number and LocationNumber (duplicates it from VLR) */
-void InitialDPSMSArg::setlocationInformationMSC(const Address& addr)
+void InitialDPSMSArg::setLocationInformationMSC(const Address& addr)
 {
     memset(&(comp->_li), 0, sizeof(comp->_li)); //reset _asn_ctx & optionals
 
@@ -214,6 +214,12 @@ void InitialDPSMSArg::setlocationInformationMSC(const Address& addr)
     comp->_li.cellGlobalIdOrServiceAreaIdOrLAI = &(comp->_cGidOrSAIorLAI);
     /**/
     comp->idp.locationInformationMSC = &(comp->_li);
+}
+
+void InitialDPSMSArg::setLocationInformationMSC(const char* text)
+{
+    Address	sadr(text);
+    InitialDPSMSArg::setSMSCAddress((const Address&)sadr);
 }
 
 

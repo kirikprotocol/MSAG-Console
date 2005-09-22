@@ -125,7 +125,8 @@ class InitialDPSMSArg: public Component	//SSF -> SCF
 	void setTPDataCodingScheme(unsigned char );
 	void setTPValidityPeriod(time_t vpVal, enum TP_VP_format fmt);
 
-	void setlocationInformationMSC(const Address& addr);
+	void setLocationInformationMSC(const Address& addr);
+	void setLocationInformationMSC(const char* text);
 
 	void encode(vector<unsigned char>& buf);
 //	void decode(const vector<unsigned char>& buf);

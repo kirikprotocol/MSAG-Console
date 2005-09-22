@@ -29,7 +29,7 @@ using smsc::inman::interaction::SmscCommand;
 class Facade;
 
 static Facade* g_pFacade = 0;
-
+static int dialogId = 1;
 
 class Facade : public Thread, public SmscHandler
 {
@@ -90,11 +90,13 @@ class Facade : public Thread, public SmscHandler
 void cmd_charge(Console&, const std::vector<std::string> &args)
 {
 	ChargeSms op;
-	
+
+	op.setDialogId( dialogId++ );
+
 	op.setDestinationSubscriberNumber( ".1.1.79139859489" ); // missing for MT
 	op.setCallingPartyNumber( ".1.1.79139343290" );
 	op.setIMSI( "250013900405871" );
-	op.setlocationInformationMSC( ".1.1.79139860001" );
+	op.setLocationInformationMSC( ".1.1.79139860001" );
 	op.setSMSCAddress(".1.1.79029869990");
 
 	time_t tm;
