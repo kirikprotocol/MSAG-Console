@@ -3,7 +3,7 @@ static char const ident[] = "$Id$";
 #include <vector>
 #include <stdexcept>
 
-#include "inman/codec/asn_internal.h"
+#include "inman/asn1rt/asn_internal.h"
 #include "compsutl.hpp"
 
 namespace smsc {

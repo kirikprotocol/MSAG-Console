@@ -2,7 +2,7 @@ static char const ident[] = "$Id$";
 #include <vector>
 #include <time.h>
 
-#include "inman/codec/asn_internal.h"
+#include "inman/asn1rt/asn_internal.h"
 #include "inman/codec/InitialDPSMSArg.h"
 #include "comps.hpp"
 #include "compsutl.hpp"
@@ -241,6 +241,8 @@ void InitialDPSMSArg::encode(vector<unsigned char>& buf)
 
     //debug: print structure content
     smsc_log_component(compLogger, &asn_DEF_InitialDPSMSArg, &comp->idp); 
+    //asn_fprint(stdout, &asn_DEF_InitialDPSMSArg, &comp->idp);
+    
 
     er = der_encode(&asn_DEF_InitialDPSMSArg, &comp->idp, print2vec, &buf);
     INMAN_LOG_ENC(er, asn_DEF_InitialDPSMSArg);

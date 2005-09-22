@@ -12,7 +12,7 @@
 using smsc::sms::Address;
 using smsc::logger::Logger;
 
-#include "OCTET_STRING.h"
+#include "inman/asn1rt/OCTET_STRING.h"
 extern "C" int print2vec(const void *buffer, size_t size, void *app_key);
 
 
