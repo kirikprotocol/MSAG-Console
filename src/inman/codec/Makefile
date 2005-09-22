@@ -2,8 +2,8 @@
 # $Id$
 #
 
-CFLAGS := -I. $(CFLAGS)
-CXXFLAGS := $(CXXFLAGS)
+CFLAGS := -I. -I../asn1rt $(CFLAGS)
+CXXFLAGS := $(CXXFLAGS) -g
 PACKAGE := inman.codec
 
 ifndef SMSC_SRCDIR

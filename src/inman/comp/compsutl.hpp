@@ -7,7 +7,7 @@
 
 #include "sms/sms.h"
 #include "inman/common/cvtutil.hpp"
-#include "inman/codec/constr_TYPE.h"
+#include "inman/asn1rt/constr_TYPE.h"
 
 using smsc::sms::Address;
 using smsc::logger::Logger;
