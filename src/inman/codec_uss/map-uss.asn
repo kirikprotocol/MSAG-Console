@@ -1,0 +1,427 @@
+/* $Id$ */
+/* ************************************************************************** *
+ * This file contains ASN.1 definitions for PDUs utilized in Network
+ * unstructured SS handling, desribed in MAP by 
+ *
+ * networkUnstructuredSsContext-v2 APPLICATION-CONTEXT 
+ * -- Responder is HLR, Initiator is VLR
+ * -- Responder is VLR, Initiator is HLR
+ * -- Responder is gsmSCF, Initiator is HLR
+ * -- Responder is HLR, Initiator is gsmSCF
+ * -- Responder is HLR, Initiator is HLR
+ * OPERATIONS OF { unstructuredSsPackage-v2}
+ * ID {map-ac networkUnstructuredSs(19) version2(2)} }
+ *
+ * where the unstructuredSsPackage-v2 is defined as:
+ *
+ * unstructuredSsPackage-v2 OPERATION-PACKAGE ::= {
+ * -- Supplier is HLR if Consumer is VLR
+ * -- Supplier is gsmSCF or HLR if Consumer is HLR
+ * CONSUMER INVOKES { processUnstructuredSS-Request }
+ * SUPPLIER INVOKES { unstructuredSS-Request | unstructuredSS-Notify} }
+ * ************************************************************************** *
+ * Author: R.V. Gerasimov						      *
+ * ************************************************************************** */
+
+-- ******************************************************************* --
+-- MAP modules follow
+-- ******************************************************************* --
+
+
+-- 17.6.4 Supplementary service operations
+MAP-SupplementaryServiceOperations{itu-t(0) identified-organization (4) etsi (0)
+mobileDomain (0) gsm-Network (1) modules (3) map-SupplementaryServiceOperations (8)
+version9 (9) }
+DEFINITIONS IMPLICIT TAGS ::=
+-- GVRoman's NOTE: This module is for informative purposes only. 
+-- SourceForge's asn1c doesn't produce something usefull from these definitions.
+-- This is reduced version of original module containing only types required for MAP-USSCtx
+BEGIN
+IMPORTS
+  Code, OPERATION, ERROR
+    FROM Remote-Operations-Information-Objects
+    { joint-iso-itu-t remote-operations(4) informationObjects(5) version1(0) }
+
+   systemFailure, dataMissing, unexpectedDataValue,
+    unknownAlphabet, callBarred 
+    FROM MAP-Errors {itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+    gsm-Network (1) modules (3) map-Errors (10) version9 (9)}
+
+  USSD-Arg, USSD-Res
+    FROM MAP-SS-DataTypes {ccitt(0) identified-organization (4) etsi (0) mobileDomain (0)
+    gsm-Network (1) modules (3) map-SS-DataTypes (14) version7 (7)}
+  ;
+
+
+opcode-processUSS-Request Code ::= local : 59
+-- opcode-USS-Request Code ::= local : 60
+-- opcode-USS-Notify Code ::= local : 61
+
+-- Errors for RequestReportSMSEvent operation
+ProcessUSS-RequestErrors ERROR ::= {
+    systemFailure | dataMissing | unexpectedDataValue |
+    unknownAlphabet | callBarred 
+}
+
+-- This service is used between the MSC and the VLR, between the VLR and the HLR,
+-- between the HLR and gsmSCF and between the HLR and HLR to relay information in
+-- order to allow unstructured supplementary service operation.
+processUnstructuredSS-Request OPERATION ::= {
+    ARGUMENT	USSD-Arg
+    RESULT	USSD-Res
+    ERRORS	{ ProcessUSS-RequestErrors }
+    CODE	opcode-processUSS-Request
+}
+
+END -- end of MAP-SupplementaryServiceOperations
+
+-- 17.7.4 Supplementary service data types
+MAP-SS-DataTypes {ccitt(0) identified-organization (4) etsi (0) mobileDomain (0)
+gsm-Network (1) modules (3) map-SS-DataTypes (14) version7 (7)}
+DEFINITIONS IMPLICIT TAGS ::=
+-- GVRoman's NOTE: 
+-- This is reduced version of original module containing only types required for MAP-USSCtx
+BEGIN
+
+EXPORTS
+  USSD-Arg, USSD-Res, USSD-DataCodingScheme, USSD-String;
+IMPORTS
+  ISDN-AddressString, AlertingPattern
+    FROM MAP-CommonDataTypes {itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+	gsm-Network (1) modules (3) map-CommonDataTypes (18) version9 (9)}
+    ;
+
+USSD-Arg ::= SEQUENCE {
+    ussd-DataCodingScheme	USSD-DataCodingScheme,
+    ussd-String			USSD-String,
+    ... ,
+    alertingPattern		AlertingPattern OPTIONAL,
+    msisdn		 [0]	ISDN-AddressString OPTIONAL
+}
+USSD-Res ::= SEQUENCE {
+    ussd-DataCodingScheme	USSD-DataCodingScheme,
+    ussd-String			USSD-String,
+    ...
+}
+USSD-DataCodingScheme ::= OCTET STRING (SIZE (1))
+-- The structure of the USSD-DataCodingScheme is defined by
+-- the Cell Broadcast Data Coding Scheme as described in
+-- TS 3GPP TS 23.038 [25]
+USSD-String ::= OCTET STRING (SIZE (1..maxUSSD-StringLength))
+-- The structure of the contents of the USSD-String is dependent
+-- on the USSD-DataCodingScheme as described in TS 3GPP TS 23.038 [25].
+maxUSSD-StringLength INTEGER ::= 160
+
+END -- end of MAP-SS-DataTypes
+
+-- ******************************************************************* --
+-- MAP modules follow
+-- ******************************************************************* --
+
+-- 17.7.8	Common data types
+MAP-CommonDataTypes {itu-t(0) identified-organization(4) etsi(0) mobileDomain(0)
+  gsm-Network(1) modules(3) map-CommonDataTypes(18) version9(9)}
+DEFINITIONS IMPLICIT TAGS ::=
+-- GVRoman's NOTE: 
+-- this is reduced version of original module containing only types required for MAP-USSCtx
+BEGIN
+
+-- This type is used to represent a number for addressing
+-- purposes. It is composed of
+--	a)	one octet for nature of address, and numbering plan
+--		indicator.
+--	b)	digits of an address encoded as TBCD-String.
+-- a)	The first octet includes a one bit extension indicator, a
+--		3 bits nature of address indicator and a 4 bits numbering
+--		plan indicator, encoded as follows:
+-- bit 8: 1  (no extension)
+-- bits 765: nature of address indicator
+--	000  unknown
+--	001  international number
+--	010  national significant number
+--	011  network specific number
+--	100  subscriber number
+--	101  reserved
+--	110  abbreviated number
+--	111  reserved for extension
+-- bits 4321: numbering plan indicator
+--	0000  unknown
+--	0001  ISDN/Telephony Numbering Plan (Rec ITU-T E.164)
+--	0010  spare
+--	0011  data numbering plan (ITU-T Rec X.121)
+--	0100  telex numbering plan (ITU-T Rec F.69)
+--	0101  spare
+--	0110  land mobile numbering plan (ITU-T Rec E.212)
+--	0111  spare
+--	1000  national numbering plan
+--	1001  private numbering plan
+--	1111  reserved for extension
+--	all other values are reserved.
+-- b)	The following octets representing digits of an address
+--		encoded as a TBCD-STRING.
+AddressString ::= OCTET STRING(SIZE (1..maxAddressLength))
+maxAddressLength INTEGER ::= 20
+
+-- This type is used to represent ISDN numbers.
+ISDN-AddressString ::= AddressString(SIZE (1..maxISDN-AddressLength))
+maxISDN-AddressLength INTEGER ::= 9
+
+AlertingPattern ::= OCTET STRING (SIZE (1) )
+-- This type is used to represent Alerting Pattern
+-- bits 8765 : 0000 (unused)
+-- bits 43 : type of Pattern
+-- 00 level
+-- 01 category
+-- 10 category
+-- all other values are reserved.
+-- bits 21 : type of alerting
+alertingLevel-0 AlertingPattern ::= '00000000'B
+alertingLevel-1 AlertingPattern ::= '00000001'B
+alertingLevel-2 AlertingPattern ::= '00000010'B
+-- all other values of Alerting level are reserved
+-- Alerting Levels are defined in GSM 02.07
+alertingCategory-1 AlertingPattern ::= '00000100'B
+alertingCategory-2 AlertingPattern ::= '00000101'B
+alertingCategory-3 AlertingPattern ::= '00000110'B
+alertingCategory-4 AlertingPattern ::= '00000111'B
+alertingCategory-5 AlertingPattern ::= '00001000'B
+-- all other values of Alerting Category are reserved
+-- Alerting categories are defined in GSM 02.07
+-- data types for numbering and identification
+
+NetworkResource ::= ENUMERATED {
+    plmn (0), hlr (1), vlr (2), pvlr (3),
+    controllingMSC (4), vmsc (5), eir (6), rss (7)
+}
+
+AdditionalNetworkResource ::= ENUMERATED {
+    sgsn (0), ggsn (1), gmlc (2), gsmSCF (3), nplr (4), auc (5), ...
+}
+-- if unknown value is received in AdditionalNetworkResource
+-- it shall be ignored.
+
+END -- MAP-CommonDataTypes
+
+
+-- 17.7.11	Extension data types
+MAP-ExtensionDataTypes {itu-t(0) identified-organization(4) etsi(0)
+  mobileDomain(0) gsm-Network(1) modules(3) map-ExtensionDataTypes(21)
+  version9(9)} 
+DEFINITIONS IMPLICIT TAGS ::=
+-- GVRoman's NOTE: 
+-- this is reduced version of original module containing only types required for MAP-USSCtx
+BEGIN
+
+EXPORTS PrivateExtension, ExtensionContainer;
+
+-- IOC for private MAP extensions
+
+-- MAP-EXTENSION ::= CLASS {
+--    &ExtensionType	OPTIONAL,
+--    &extensionId	OBJECT IDENTIFIER
+-- }
+
+-- The length of the Object Identifier shall not exceed 16 octets and the
+-- number of components of the Object Identifier shall not exceed 16
+-- data types
+ExtensionContainer ::= SEQUENCE {
+    privateExtensionList	[0]	PrivateExtensionList OPTIONAL,
+    pcs-Extensions		[1]	PCS-Extensions OPTIONAL,
+  ...
+}
+
+PrivateExtensionList ::= SEQUENCE SIZE (1..maxNumOfPrivateExtensions)
+				OF PrivateExtension
+
+PrivateExtension ::= SEQUENCE {
+-- GVR: original definition was:
+--    extId    MAP-EXTENSION.&extensionId({ExtensionSet}),
+--    extType  MAP-EXTENSION.&ExtensionType({ExtensionSet}{@extId}) OPTIONAL
+
+    extId	OBJECT IDENTIFIER,
+    ... -- GVR: just skip the rest while decoding
+}
+
+maxNumOfPrivateExtensions INTEGER ::= 10
+
+-- ExtensionSet is the set of all defined private extensions
+-- ExtensionSet MAP-EXTENSION ::= { ... }
+
+-- Unsupported private extensions shall be discarded if received.
+PCS-Extensions ::= SEQUENCE {...}
+
+END -- MAP-ExtensionDataTypes
+
+
+-- 17.7.7 Error data types
+MAP-ER-DataTypes {itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+gsm-Network (1) modules (3) map-ER-DataTypes (17) version9 (9)}
+DEFINITIONS IMPLICIT TAGS ::=
+BEGIN
+EXPORTS
+  SystemFailureParam, DataMissingParam, UnexpectedDataParam, CallBarredParam
+    ;
+IMPORTS
+  NetworkResource, AdditionalNetworkResource
+    FROM MAP-CommonDataTypes {itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+    gsm-Network (1) modules (3) map-CommonDataTypes (18) version9 (9)}
+  ExtensionContainer
+    FROM MAP-ExtensionDataTypes {itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+    gsm-Network (1) modules (3) map-ExtensionDataTypes (21) version9 (9)}
+    ;
+
+SystemFailureParam ::= CHOICE {
+    networkResource			NetworkResource,
+    -- networkResource must not be used in version 3
+    extensibleSystemFailureParam	ExtensibleSystemFailureParam
+    -- extensibleSystemFailureParam must not be used in version <3
+}
+ExtensibleSystemFailureParam ::= SEQUENCE {
+    networkResource	NetworkResource OPTIONAL,
+    extensionContainer	ExtensionContainer OPTIONAL,
+    ...,
+    additionalNetworkResource [0] AdditionalNetworkResource OPTIONAL 
+}
+
+DataMissingParam ::= SEQUENCE {
+    extensionContainer ExtensionContainer OPTIONAL,
+    ...
+}
+UnexpectedDataParam ::= SEQUENCE {
+    extensionContainer ExtensionContainer OPTIONAL,
+    ...
+}
+
+CallBarredParam ::= CHOICE {
+    callBarringCause		CallBarringCause,
+    -- call BarringCause must not be used in version 3 and higher
+    extensibleCallBarredParam	ExtensibleCallBarredParam
+-- extensibleCallBarredParam must not be used in version <3
+}
+CallBarringCause ::= ENUMERATED { barringServiceActive (0), operatorBarring (1) }
+ExtensibleCallBarredParam ::= SEQUENCE {
+    callBarringCause	CallBarringCause OPTIONAL,
+    extensionContainer	ExtensionContainer OPTIONAL,
+    ... ,
+    unauthorisedMessageOriginator [1] NULL OPTIONAL 
+}
+
+END -- end of MAP-ER-DataTypes
+
+-- 17.6.6 Errors
+MAP-Errors {itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+gsm-Network (1) modules (3) map-Errors (10) version9 (9)}
+DEFINITIONS ::=
+BEGIN
+
+EXPORTS
+-- generic errors
+    systemFailure, dataMissing, unexpectedDataValue,
+-- call handling errors
+    callBarred,
+-- supplementary service errors
+    unknownAlphabet
+    ;
+
+IMPORTS
+  ERROR
+    FROM Remote-Operations-Information-Objects
+    { joint-iso-itu-t remote-operations(4) informationObjects(5) version1(0) }
+  SystemFailureParam, DataMissingParam, UnexpectedDataParam, CallBarredParam
+    FROM MAP-ER-DataTypes {itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
+    gsm-Network (1) modules (3) map-ER-DataTypes (17) version9 (9)}
+    ;
+    
+systemFailure ERROR ::= {
+    PARAMETER SystemFailureParam
+    -- optional
+    CODE local : 34 
+}
+
+dataMissing ERROR ::= {
+    PARAMETER DataMissingParam
+    -- optional
+    -- DataMissingParam must not be used in version <3
+    CODE local : 35
+}
+
+unexpectedDataValue ERROR ::= {
+    PARAMETER UnexpectedDataParam
+    -- optional
+    -- UnexpectedDataParam must not be used in version <3
+    CODE local : 36 
+}
+
+callBarred ERROR ::= {
+    PARAMETER CallBarredParam
+    -- optional
+    CODE local : 13 
+}
+
+unknownAlphabet ERROR ::= { CODE local:71 }
+
+END -- end of MAP-Errors
+
+-- ******************************************************************* --
+-- ROS modules follow
+-- ******************************************************************* --
+
+-- Module Remote-Operations-Information-Objects (X.880:07/1994)
+Remote-Operations-Information-Objects {joint-iso-itu-t remote-operations(4)
+  informationObjects(5) version1(0)}
+DEFINITIONS ::=
+-- GVRoman's NOTE: 
+-- this is reduced version of original module containing only types required for MAP-USSCtx
+BEGIN
+
+OPERATION ::= CLASS {
+  &ArgumentType          OPTIONAL,
+  &argumentTypeOptional  BOOLEAN OPTIONAL,
+  &returnResult          BOOLEAN DEFAULT TRUE,
+  &ResultType            OPTIONAL,
+  &resultTypeOptional    BOOLEAN OPTIONAL,
+  &Errors                ERROR OPTIONAL,
+  &Linked                OPERATION OPTIONAL,
+  &synchronous           BOOLEAN DEFAULT FALSE,
+  &alwaysReturns         BOOLEAN DEFAULT TRUE,
+  &InvokePriority        Priority OPTIONAL,
+  &ResultPriority        Priority OPTIONAL,
+  &operationCode         Code UNIQUE OPTIONAL
+}
+WITH SYNTAX {
+  [ARGUMENT &ArgumentType
+   [OPTIONAL &argumentTypeOptional]]
+  [RESULT &ResultType
+   [OPTIONAL &resultTypeOptional]]
+  [RETURN RESULT &returnResult]
+  [ERRORS &Errors]
+  [LINKED &Linked]
+  [SYNCHRONOUS &synchronous]
+  [ALWAYS RESPONDS &alwaysReturns]
+  [INVOKE PRIORITY &InvokePriority]
+  [RESULT-PRIORITY &ResultPriority]
+  [CODE &operationCode]
+}
+
+ERROR ::= CLASS {
+  &ParameterType          OPTIONAL,
+  &parameterTypeOptional  BOOLEAN OPTIONAL,
+  &ErrorPriority          Priority OPTIONAL,
+  &errorCode              Code UNIQUE OPTIONAL
+}
+WITH SYNTAX {
+  [PARAMETER &ParameterType
+   [OPTIONAL &parameterTypeOptional]]
+  [PRIORITY &ErrorPriority]
+  [CODE &errorCode]
+}
+
+Code ::= CHOICE {local   INTEGER,
+                 global  OBJECT IDENTIFIER
+}
+
+Priority ::= INTEGER(0..MAX)
+
+END -- end of Information Object specifications
+
+
