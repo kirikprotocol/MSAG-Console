@@ -72,7 +72,7 @@ void Service::onCommandReceived(Connect* conn, InmanCommand* cmd)
 	BillingMap::iterator it = workers.find( dlgId );
 	if( it == workers.end() )
 	{
-		Billing* bill = new Billing( session, conn );
+		Billing* bill = new Billing( dlgId, session, conn );
 		workers.insert( BillingMap::value_type( dlgId, bill ) );
 		cmd->handle( bill );
 	}

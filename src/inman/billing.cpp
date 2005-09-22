@@ -17,8 +17,9 @@ using std::runtime_error;
 namespace smsc  {
 namespace inman {
 
-Billing::Billing(Session* pSession, Connect* conn)
+Billing::Billing(int bid, Session* pSession, Connect* conn)
 		: logger(Logger::getInstance("smsc.inman.inap.Billing"))
+		, id( bid )
 		, session( pSession )
 		, connect( conn )
 {
@@ -43,6 +44,7 @@ void Billing::onChargeSms(ChargeSms* sms)
 {
 	assert( sms );
 	assert( inap );
+	assert( id == sms->getDialogId() );
 
 	smsc_log_debug( logger, "--> InitialDPSMS" );
 
@@ -86,6 +88,7 @@ void Billing::onChargeSms(ChargeSms* sms)
 void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
 {
 	assert( smsRes );
+	assert( id == smsRes->getDialogId() );
 
 	messageType_e  messageType = MessageType_notification;
 
@@ -125,6 +128,7 @@ void Billing::continueSMS()
 	assert( connect );
 	smsc_log_debug( logger, "<-- ContinueSMS" );
 	ChargeSmsResult res( smsc::inman::interaction::CHARGING_POSSIBLE );
+	res.setDialogId( id );
 	connect->send( &res );
 }
 
@@ -133,6 +137,7 @@ void Billing::releaseSMS(ReleaseSMSArg* arg)
 	assert( connect );
 	smsc_log_debug( logger, "<-- ReleaseSMS" );
 	ChargeSmsResult res( smsc::inman::interaction::CHARGING_NOT_POSSIBLE );
+	res.setDialogId( id );
 	connect->send( &res );
 }
 

@@ -17,6 +17,7 @@ using smsc::core::threads::Thread;
 using smsc::core::network::Socket;
 using smsc::logger::Logger;
 using smsc::inman::common::Console;
+using smsc::inman::interaction;
 using smsc::inman::interaction::ObjectPipe;
 using smsc::inman::interaction::Serializer;
 using smsc::inman::interaction::ChargeSms;
@@ -24,6 +25,7 @@ using smsc::inman::interaction::ChargeSmsResult;
 using smsc::inman::interaction::DeliverySmsResult;
 using smsc::inman::interaction::SmscHandler;
 using smsc::inman::interaction::SmscCommand;
+using smsc::inman::interaction::DeliverySmsResult_t;
 
 
 class Facade;
@@ -33,15 +35,17 @@ static int dialogId = 1;
 
 class Facade : public Thread, public SmscHandler
 {
-		Socket*		socket;
-		ObjectPipe* pipe;
-		Logger*  	logger;
+		Socket*				socket;
+		ObjectPipe* 		pipe;
+		Logger*  			logger;
+		DeliverySmsResult_t delivery;
 	public:
 
 		Facade(Socket* sock) 
 			: socket( sock )
 			, pipe( new ObjectPipe( sock ) )
 			, logger( Logger::getInstance("smsc.inman.Facade") )
+			, delivery( smsc::inman::interaction::DELIVERY_SUCCESSED )
 		{
 		}
 
@@ -61,9 +65,25 @@ class Facade : public Thread, public SmscHandler
 			pipe->send(op);
 		}
 
-		void onChargeSmsResult(ChargeSmsResult* sms)
+		void setDeliveryResult( DeliverySmsResult_t dr )
 		{
-			fprintf( stdout, "ChargeSmsResult received\n");
+			delivery = dr;
+		}
+
+		void onChargeSmsResult(ChargeSmsResult* result)
+		{
+			assert( result );
+			if( result->GetValue() == smsc::inman::interaction::CHARGING_POSSIBLE )
+			{
+				fprintf( stdout, "ChargeSmsResult( CHARGING_POSSIBLE ) received\n");
+				DeliverySmsResult op( delivery );
+				op.setDialogId( result->getDialogId() );
+				sendDeliverySmsResult( &op );
+			}
+			else
+			{
+				fprintf( stdout, "ChargeSmsResult( CHARGING_NOT_POSSIBLE ) received\n");
+			}
 		}
 
 		virtual int  Execute()
@@ -87,7 +107,7 @@ class Facade : public Thread, public SmscHandler
 };
 
 
-void cmd_charge(Console&, const std::vector<std::string> &args)
+void send()
 {
 	ChargeSms op;
 
@@ -109,13 +129,18 @@ void cmd_charge(Console&, const std::vector<std::string> &args)
 	op.setTPDataCodingScheme( 0x08 );
 
 	g_pFacade->sendChargeSms( &op );
-	
 }
 
-void cmd_delivery(Console&, const std::vector<std::string> &args)
+void cmd_charge(Console&, const std::vector<std::string> &args)
 {
-	DeliverySmsResult op;
-	g_pFacade->sendDeliverySmsResult( &op );
+	g_pFacade->setDeliveryResult( smsc::inman::interaction::DELIVERY_SUCCESSED );
+	send();
+}
+
+void cmd_check(Console&, const std::vector<std::string> &args)
+{
+	g_pFacade->setDeliveryResult( smsc::inman::interaction::DELIVERY_FAILED );
+	send();
 }
 
 int main(int argc, char** argv)
@@ -153,7 +178,7 @@ int main(int argc, char** argv)
 
  		Console console;
   		console.addItem( "charge", cmd_charge );
-  		console.addItem( "delivery", cmd_delivery );
+  		console.addItem( "check",  cmd_check );
 
 		g_pFacade->Start();
 

@@ -37,7 +37,7 @@ class Billing : public SSF, public ObservableT< BillingListener >, public InmanH
 {
 public:
 
-	Billing(Session*, Connect*);
+	Billing(int id, Session*, Connect*);
 
 	virtual ~Billing();
 
@@ -57,6 +57,7 @@ public:
     virtual void resetTimerSMS(ResetTimerSMSArg* arg);
 
 protected:	
+	int				id;
 	Session*		session;
 	Dialog*			dialog;
 	Inap*	 		inap;
