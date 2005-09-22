@@ -25,8 +25,7 @@ Serializer::~Serializer()
 
 SerializableObject* Serializer::deserialize(ObjectBuffer& in)
 {
-	USHORT_T objectId, version;
-	int dialogId;
+	USHORT_T objectId, version, dialogId;
 
 	in >> version;
 
@@ -55,7 +54,7 @@ void Serializer::serialize(SerializableObject* obj, ObjectBuffer& out)
 {
 	assert( obj );
 	out << (USHORT_T) FORMAT_VERSION;
-	out << obj->getDialogId();
+	out << (USHORT_T) obj->getDialogId();
 	obj->save( out );
 }
 

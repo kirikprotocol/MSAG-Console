@@ -181,11 +181,15 @@ ChargeSmsResult_t ChargeSmsResult::GetValue() const
 
 void ChargeSmsResult::load(ObjectBuffer& in)
 {
+	unsigned short v;
+	in >> v;
+	value = static_cast<ChargeSmsResult_t>(v);
 }
 
 void ChargeSmsResult::save(ObjectBuffer& out)
 {
    	out << (USHORT_T) CHARGE_SMS_RESULT_TAG;
+    out << (USHORT_T)value;
 }
 
 void ChargeSmsResult::handle(SmscHandler* handler)
@@ -218,11 +222,15 @@ DeliverySmsResult_t DeliverySmsResult::GetValue() const
 
 void DeliverySmsResult::load(ObjectBuffer& in)
 {
+	unsigned short v;
+	in >> v;
+	value = static_cast<DeliverySmsResult_t>(v);
 }
 
 void DeliverySmsResult::save(ObjectBuffer& out)
 {
     out << (USHORT_T) DELIVERY_SMS_RESULT_TAG;
+    out << (USHORT_T)value;
 }
 
 void DeliverySmsResult::handle(InmanHandler* handler)

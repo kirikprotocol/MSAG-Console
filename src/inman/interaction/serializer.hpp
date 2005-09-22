@@ -136,12 +136,12 @@ class SerializableObject
 		}
 		
 
-		virtual void setDialogId(int id) { dialogId = id;   }
-		virtual int  getDialogId() const { return dialogId; }
+		virtual void setDialogId(unsigned short id) { dialogId = id;   }
+		virtual unsigned short getDialogId() const { return dialogId; }
 		
 	protected:
 		
-		int	dialogId;
+		unsigned char dialogId;
 
     	virtual void load(ObjectBuffer& in)  = 0;
     	virtual void save(ObjectBuffer& out) = 0;
