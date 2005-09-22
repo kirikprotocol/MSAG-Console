@@ -10,6 +10,8 @@ static char const ident[] = "$Id$";
 using std::auto_ptr;
 using std::runtime_error;
 
+//#define DEBUG_PHONE_DATA
+
 namespace smsc  {
 namespace inman {
 
@@ -43,14 +45,14 @@ void Billing::onChargeSms(ChargeSms* sms)
 	smsc_log_debug( logger, "--> InitialDPSMS" );
 
 	InitialDPSMSArg arg( smsc::inman::comp::DeliveryMode_Originating );
-/*	
+#ifdef DEBUG_PHONE_DATA
 	arg.setDestinationSubscriberNumber( ".1.1.79139859489" ); // missing for MT
 	arg.setCallingPartyNumber( ".1.1.79139343290" );
 	arg.setIMSI( "250013900405871" );
 
-	Address vlr( ".1.1.79139860001" );
+	//Address vlr( ".1.1.79139860001" );
 
-	arg.setlocationInformationMSC( vlr );
+	arg.setLocationInformationMSC( ".1.1.79139860001" );
 	arg.setSMSCAddress(".1.1.79029869990");
 
 	time_t tm;
@@ -61,7 +63,9 @@ void Billing::onChargeSms(ChargeSms* sms)
 	arg.setTPValidityPeriod( 60*5 , smsc::inman::comp::tp_vp_relative );
 	arg.setTPProtocolIdentifier( 0x00 );
 	arg.setTPDataCodingScheme( 0x08 );
-*/
+#else
+	smsc_log_debug(logger, "DestinationSubscriberNumber %s", sms->getDestinationSubscriberNumber().c_str());
+
 	arg.setDestinationSubscriberNumber( sms->getDestinationSubscriberNumber().c_str() ); // missing for MT
 	arg.setCallingPartyNumber( sms->getCallingPartyNumber().c_str() );
 	arg.setIMSI( sms->getIMSI().c_str() );
@@ -72,14 +76,14 @@ void Billing::onChargeSms(ChargeSms* sms)
 	arg.setTPValidityPeriod( sms->getTPValidityPeriod() , smsc::inman::comp::tp_vp_relative );
 	arg.setTPProtocolIdentifier( sms->getTPProtocolIdentifier() );
 	arg.setTPDataCodingScheme( sms->getTPDataCodingScheme() );
-
+#endif
 	inap->initialDPSMS( &arg );
 	dialog->beginDialog();
 }
 
 void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
 {
-	assert( smsRes );
+//	assert( smsRes );
 	smsc_log_debug(logger, "DeliverySmsResult command received");
 
 	messageType_e  messageType = MessageType_notification;
@@ -104,6 +108,7 @@ void Billing::connectSMS(ConnectSMSArg* arg)
 void Billing::continueSMS()
 {
 	smsc_log_debug( logger, "<-- ContinueSMS" );
+	onDeliverySmsResult( 0 );
 }
 
 void Billing::furnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg)

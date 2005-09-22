@@ -45,6 +45,8 @@ SerializableObject* Serializer::deserialize(ObjectBuffer& in)
 
 	obj->setDialogId( dialogId );
 
+	obj->load( in );
+
 	return obj;
 }
 
@@ -79,7 +81,7 @@ SerializableObject* ObjectPipe::receive()
   	ObjectBuffer buffer( n );
   	buffer.Append( buf, n );
   	buffer.SetPos( 0 );
-	smsc_log_debug(logger, "Received: %s", dump( n, (unsigned char*)buf ).c_str() );
+	smsc_log_debug(logger, "Recv: %s", dump( n, (unsigned char*)buf ).c_str(), true );
 	return Serializer::getInstance()->deserialize( buffer );
 }
 
@@ -89,7 +91,7 @@ void ObjectPipe::send(SerializableObject* obj)
 	ObjectBuffer buffer(16);
 	Serializer::getInstance()->serialize( obj, buffer );
 	socket->Write( buffer.get(), buffer.GetPos() );
-	smsc_log_debug(logger, "Send: %s", dump( buffer.GetPos(), (unsigned char*)buffer.get() ).c_str() );
+	smsc_log_debug(logger, "Send: %s", dump( buffer.GetPos(), (unsigned char*)buffer.get() ).c_str(), true );
 }
 
 
