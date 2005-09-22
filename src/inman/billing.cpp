@@ -7,10 +7,12 @@ static char const ident[] = "$Id$";
 #include "inman/inap/inap.hpp"
 #include "inman/comp/comps.hpp"
 
+using smsc::inman::interaction::ChargeSmsResult;
+
 using std::auto_ptr;
 using std::runtime_error;
 
-//#define DEBUG_PHONE_DATA
+//#define TEST_DATA
 
 namespace smsc  {
 namespace inman {
@@ -45,7 +47,8 @@ void Billing::onChargeSms(ChargeSms* sms)
 	smsc_log_debug( logger, "--> InitialDPSMS" );
 
 	InitialDPSMSArg arg( smsc::inman::comp::DeliveryMode_Originating );
-#ifdef DEBUG_PHONE_DATA
+
+#ifdef TEST_DATA
 	arg.setDestinationSubscriberNumber( ".1.1.79139859489" ); // missing for MT
 	arg.setCallingPartyNumber( ".1.1.79139343290" );
 	arg.setIMSI( "250013900405871" );
@@ -64,7 +67,6 @@ void Billing::onChargeSms(ChargeSms* sms)
 	arg.setTPProtocolIdentifier( 0x00 );
 	arg.setTPDataCodingScheme( 0x08 );
 #else
-	smsc_log_debug(logger, "DestinationSubscriberNumber %s", sms->getDestinationSubscriberNumber().c_str());
 
 	arg.setDestinationSubscriberNumber( sms->getDestinationSubscriberNumber().c_str() ); // missing for MT
 	arg.setCallingPartyNumber( sms->getCallingPartyNumber().c_str() );
@@ -83,16 +85,29 @@ void Billing::onChargeSms(ChargeSms* sms)
 
 void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
 {
-//	assert( smsRes );
-	smsc_log_debug(logger, "DeliverySmsResult command received");
+	assert( smsRes );
 
 	messageType_e  messageType = MessageType_notification;
-	EventTypeSMS_e eventType   = EventTypeSMS_o_smsSubmission;
+
+	EventTypeSMS_e eventType;
+
+	const char* szType;
+
+	if( smsRes->GetValue() == smsc::inman::interaction::DELIVERY_SUCCESSED)
+	{
+		eventType = EventTypeSMS_o_smsSubmission;
+		szType = "DELIVERY_SUCCESSED";
+	}
+	else
+	{
+		eventType = EventTypeSMS_o_smsFailure;
+		szType = "DELIVERY_FAILED";
+	}
 
 	// DeliveryMode_Terminating: eventType = EventTypeSMS_t_smsDelivery;
 
-	smsc_log_debug( logger, "--> EventReportSMS( EventType: 0x%X, MessageType: 0x%X )", 
-								eventType, messageType );
+	smsc_log_debug( logger, "--> EventReportSMS( EventType: %s (0x%X), MessageType: 0x%X )", 
+								szType, eventType, messageType );
 
 	smsc::inman::comp::EventReportSMSArg report( eventType, messageType );
 
@@ -107,18 +122,23 @@ void Billing::connectSMS(ConnectSMSArg* arg)
 
 void Billing::continueSMS()
 {
+	assert( connect );
 	smsc_log_debug( logger, "<-- ContinueSMS" );
-	onDeliverySmsResult( 0 );
+	ChargeSmsResult res( smsc::inman::interaction::CHARGING_POSSIBLE );
+	connect->send( &res );
+}
+
+void Billing::releaseSMS(ReleaseSMSArg* arg)
+{
+	assert( connect );
+	smsc_log_debug( logger, "<-- ReleaseSMS" );
+	ChargeSmsResult res( smsc::inman::interaction::CHARGING_NOT_POSSIBLE );
+	connect->send( &res );
 }
 
 void Billing::furnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg)
 {
 	smsc_log_debug( logger, "<-- FurnishChargingInformationSMS" );
-}
-
-void Billing::releaseSMS(ReleaseSMSArg* arg)
-{
-	smsc_log_debug( logger, "<-- ReleaseSMS" );
 }
 
 void Billing::requestReportSMSEvent(RequestReportSMSEventArg* arg)
@@ -136,7 +156,7 @@ void Billing::requestReportSMSEvent(RequestReportSMSEventArg* arg)
 		RequestReportSMSEventArg::SMSEvent dp = *it;
 		smsc_log_debug( logger, "Detection point (Event type: 0x%X, Monitor mode: 0x%X)", dp.event, dp.monitorType );
 	}
-	
+
 }
 
 void Billing::resetTimerSMS(ResetTimerSMSArg* arg)

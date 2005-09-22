@@ -75,8 +75,11 @@ SerializableObject* ObjectPipe::receive()
 	char buf[1024];
 
   	int n = socket->Read(buf, sizeof(buf) - 1);
-  	if( n < 1 ) 
-  		throw runtime_error( format("Can't read from socket") );
+  	if( n < 1 )
+  	{
+  		smsc_log_error( logger, "Can't read from socket" );
+  		return NULL;
+  	}
 
   	ObjectBuffer buffer( n );
   	buffer.Append( buf, n );

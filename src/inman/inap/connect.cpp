@@ -62,6 +62,13 @@ bool Connect::process()
 	return true;
 }
 
+void Connect::send(SerializableObject* obj)
+{
+	assert( obj );
+	assert( pipe );
+	pipe->send( obj );	
+}
+
 } // namespace inap
 } // namespace inmgr
 } // namespace smsc

@@ -30,7 +30,8 @@ class Connect : public ObservableT< ConnectListener >
 		Connect(Socket* socket);
 		virtual ~Connect();
 
-		Socket* getSocket();
+		Socket* 	getSocket();
+		void 		send(SerializableObject* obj);
 
 		bool    process();
 
