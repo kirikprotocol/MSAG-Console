@@ -16,25 +16,28 @@ using smsc::logger::Logger;
 extern "C" int print2vec(const void *buffer, size_t size, void *app_key);
 
 
-#ifndef INMAN_LOG_ON
-#define INMAN_LOG_ENC(er, asnDef)
-#define INMAN_LOG_DEC(drc, asnDef)
-#else  /* INMAN_LOG_ON */
 #include "logger/Logger.h"
-#define INMAN_LOG_ENC(er, asnDef)	if (er.encoded == -1) { \
+
+#define ASNCODEC_LOG_ENC(er, asnDef, modName)	if (er.encoded == -1) { \
 	smsc_log_error(compLogger, \
 	"Encoding of %s failed at %s", asnDef.name, er.failed_type->name); \
-	throw EncodeError(format(":InMan: Encoding of %s failed at %s", asnDef.name, er.failed_type->name)); }
+	throw EncodeError(format(":%s: Encoding of %s failed at %s", modName, \
+					asnDef.name, er.failed_type->name)); }
 
-#define INMAN_LOG_DEC(drc, asnDef)	if (drc.code != RC_OK) { \
+#define ASNCODEC_LOG_DEC(drc, asnDef, modName)	if (drc.code != RC_OK) { \
 	smsc_log_error(compLogger, \
 	"Decoding of %s failed with code %s at byte: %d\n", asnDef.name, \
 	drc.code == RC_FAIL ? "RC_FAIL" : "RC_WMORE", drc.consumed); \
-	throw DecodeError(format(":InMan: Decoding of %s failed with code %s at byte: %d\n", \
-	    asnDef.name, drc.code == RC_FAIL ? "RC_FAIL" : "RC_WMORE", drc.consumed)); }
-#endif /* INMAN_LOG_ON */
+	throw DecodeError(format(":%s: Decoding of %s failed with code %s at byte: %d\n", \
+	modName, asnDef.name, drc.code == RC_FAIL ? "RC_FAIL" : "RC_WMORE", drc.consumed)); }
 
 
+#define INMAN_LOG_ENC(er, asnDef) ASNCODEC_LOG_ENC(er, asnDef, "InMan")
+
+#define INMAN_LOG_DEC(drc, asnDef) ASNCODEC_LOG_DEC(drc, asnDef, "InMan")
+
+
+#define MAP_MAX_ISDN_AddressLength	8
 #define CAP_MAX_SMS_AddressStringLength	10 //CAP-datatypes.maxSMS-AddressStringLength - 1
 #define CAP_MAX_LocationNumber_Length	8
 #define CAP_MAX_TimeAndTimezoneLength	8
