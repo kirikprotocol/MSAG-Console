@@ -1,7 +1,7 @@
 #
 # $Id$
 #
-CXXFLAGS := -I../codec $(CXXFLAGS)
+CXXFLAGS := -I../codec -I../codec_uss $(CXXFLAGS)
 PACKAGE := inman.comp
 
 ifndef SMSC_SRCDIR
