@@ -31,8 +31,8 @@ class Server;
 class ServerListener
 {
 public:
-	virtual void onConnectOpened(Connect* connect) = 0;
-	virtual void onConnectClosed(Connect* connect) = 0;
+	virtual void onConnectOpened(Server*, Connect*) = 0;
+	virtual void onConnectClosed(Server*, Connect*) = 0;
 };
 
 class Server : public Thread, public ObservableT< ServerListener >
@@ -57,7 +57,6 @@ class Server : public Thread, public ObservableT< ServerListener >
     	Socket 				serverSocket;
 		Connects 			connects;
         Logger*				logger;
-
 };
 
 }

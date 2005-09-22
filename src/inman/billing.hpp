@@ -16,8 +16,11 @@ using smsc::inman::comp::DeliveryMode_e;
 using smsc::inman::inap::Inap;
 using smsc::inman::inap::Session;
 using smsc::inman::inap::Dialog;
+using smsc::inman::inap::Connect;
 using smsc::inman::inap::SSF;
 using smsc::inman::interaction::InmanHandler;
+using smsc::inman::interaction::ChargeSms;
+using smsc::inman::interaction::DeliverySmsResult;
 
 namespace smsc    {
 namespace inman   {
@@ -34,7 +37,7 @@ class Billing : public SSF, public ObservableT< BillingListener >, public InmanH
 {
 public:
 
-	Billing(Dialog*, DeliveryMode_e mode);
+	Billing(Session*, Connect*);
 
 	virtual ~Billing();
 
@@ -43,8 +46,8 @@ public:
 		return dialog;
 	}
 
-	virtual void initialDPSMS();
-	virtual void eventReportSMS();
+	virtual void onChargeSms(ChargeSms*);
+	virtual void onDeliverySmsResult(DeliverySmsResult*);
 
     virtual void connectSMS(ConnectSMSArg* arg);
     virtual void continueSMS();
@@ -53,15 +56,12 @@ public:
     virtual void requestReportSMSEvent(RequestReportSMSEventArg* arg);
     virtual void resetTimerSMS(ResetTimerSMSArg* arg);
 
-	virtual void onChargeSms(ChargeSms*);
-	virtual void onDeliverySmsResult(DeliverySmsResult*);
-
 protected:	
-	DeliveryMode_e 	mode;
+	Session*		session;
 	Dialog*			dialog;
 	Inap*	 		inap;
-    Logger*	 		logger;   	
-
+    Logger*	 		logger;
+    Connect*		connect;
 };
 
 }

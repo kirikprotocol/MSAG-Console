@@ -40,7 +40,7 @@ void Server::openConnect(Connect* connect)
 	for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
 	{
 			 ServerListener* ptr = *it;
-			 ptr->onConnectOpened( connect );
+			 ptr->onConnectOpened( this, connect );
 	}
 
 }
@@ -51,7 +51,7 @@ void Server::closeConnect(Connect* connect)
 	for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
 	{
 			 ServerListener* ptr = *it;
-			 ptr->onConnectClosed( connect );
+			 ptr->onConnectClosed( this, connect );
 	}
 	connects.remove( connect );
 	delete connect;
@@ -129,7 +129,7 @@ void Server::Run()
 				{
 					smsc_log_debug(logger, "Event on socket 0x%X", socket );
 
-					if( !conn->process( this ) )
+					if( !conn->process() )
 					{
 						smsc_log_debug(logger, "Close socket 0x%X", socket );
 						closeConnect( conn );

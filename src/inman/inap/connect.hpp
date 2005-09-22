@@ -6,34 +6,38 @@
 #include "dispatcher.hpp"
 #include "inman/interaction/messages.hpp"
 #include "inman/interaction/serializer.hpp"
+#include "inman/common/observable.hpp"
 
-using smsc::inman::interaction::InmanHandler;
-using smsc::inman::interaction::ChargeSms;
+using smsc::inman::common::ObservableT;
+using smsc::inman::interaction::InmanCommand;
 using smsc::inman::interaction::ObjectPipe;
-using smsc::inman::interaction::DeliverySmsResult;
 
 namespace smsc  {
 namespace inman {
 namespace inap  {
 
-class Server;
+class Connect;
 
-class Connect : public InmanHandler
+class ConnectListener
+{
+	public:
+		virtual void onCommandReceived(Connect*, InmanCommand*) = 0;
+};
+
+class Connect : public ObservableT< ConnectListener >
 {
     public:
 		Connect(Socket* socket);
 		virtual ~Connect();
 
 		Socket* getSocket();
-		bool    process(Server*);
 
-		virtual void onChargeSms(ChargeSms* sms);	
-		virtual void onDeliverySmsResult(DeliverySmsResult* sms);
+		bool    process();
 
     protected:
     	Socket* 	socket;
     	ObjectPipe* pipe;
-        Logger*		logger;   	
+        Logger*		logger;
 };
 
 }

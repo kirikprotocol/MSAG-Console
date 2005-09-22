@@ -123,8 +123,25 @@ typedef smsc::core::buffers::TmpBuf<char,2048> ObjectBuffer;
 
 class SerializableObject
 {
-	friend class Serializer;
-    protected:
+		friend class Serializer;
+
+	public:
+		
+		SerializableObject() : dialogId( 0 )
+		{
+		}
+
+		virtual ~SerializableObject()
+		{
+		}
+		
+
+		virtual void setDialogId(int id) { dialogId = id;   }
+		virtual int  getDialogId() const { return dialogId; }
+		
+	protected:
+		
+		int	dialogId;
 
     	virtual void load(ObjectBuffer& in)  = 0;
     	virtual void save(ObjectBuffer& out) = 0;
@@ -150,12 +167,14 @@ class Serializer : public FactoryT< USHORT_T, SerializableObject >
 	public:
 		enum { FORMAT_VERSION = 0x0001 };
 
+
 		virtual ~Serializer();
 
 		SerializableObject* deserialize(ObjectBuffer&);
 		void				serialize(SerializableObject*, ObjectBuffer& out);
 
 		static Serializer* getInstance();
+
 
 	protected:
 		Serializer();

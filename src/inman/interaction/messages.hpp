@@ -13,9 +13,9 @@ namespace smsc  {
 namespace inman {
 namespace interaction {
 
-// 1. ChargeSms   	  	( SMSC --> INMAN )
-// 2. ChargeSmsResult  ( SMSC <-- INMAN )
-// 3. CommitResult  ( SMSC --> INMAN )
+// 1. ChargeSms   	    ( SMSC --> INMAN )
+// 2. ChargeSmsResult   ( SMSC <-- INMAN )
+// 3. DeliverySmsResult ( SMSC --> INMAN )
 
 
 // Use 'visitor' pattern

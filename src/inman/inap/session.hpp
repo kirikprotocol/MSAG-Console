@@ -8,11 +8,9 @@
 
 #include "ss7cp.h"
 
+#include "dispatcher.hpp"
 #include "inman/common/types.hpp"
 #include "inman/common/observable.hpp"
-
-#include "dispatcher.hpp"
-
 using smsc::inman::common::ObservableT;
 
 namespace smsc {

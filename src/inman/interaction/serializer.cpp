@@ -39,6 +39,12 @@ SerializableObject* Serializer::deserialize(ObjectBuffer& in)
 	if( !obj ) 
 		throw runtime_error( format("Invalid object ID: 0x%X", objectId) );
 
+	int dialogId;
+
+	in >> dialogId;
+
+	obj->setDialogId( dialogId );
+
 	return obj;
 }
 
@@ -47,6 +53,7 @@ void Serializer::serialize(SerializableObject* obj, ObjectBuffer& out)
 {
 	assert( obj );
 	out << (USHORT_T) FORMAT_VERSION;
+	out << obj->getDialogId();
 	obj->save( out );
 }
 

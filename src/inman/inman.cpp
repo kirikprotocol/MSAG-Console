@@ -6,8 +6,6 @@ static char const ident[] = "$Id$";
 
 #include "service.hpp"
 #include "logger/Logger.h"
-#include "inman/common/console.hpp"
-
 
 static const UCHAR_T VER_HIGH 	 = 0;
 static const UCHAR_T VER_LOW  	 = 0;
@@ -26,7 +24,6 @@ namespace smsc
 	}
 };
 
-using smsc::inman::common::Console;
 using smsc::inman::Service;
 using smsc::inman::inap::inapLogger;
 using smsc::inman::inap::tcapLogger;
@@ -42,25 +39,6 @@ static void init_logger()
     dumpLogger = Logger::getInstance("smsc.inman.inap.dump");
 }
 
-void mo(Console&, const std::vector<std::string> &args)
-{
-	assert( g_pService );
-	g_pService->startOriginating();
-}
-
-void mt(Console&, const std::vector<std::string> &args)
-{
-	assert( g_pService );
-	g_pService->startTerminating();
-}
-
-static void run_console()
-{
-  	Console console;
-  	console.addItem( "mo", mo );
-  	console.addItem( "mt", mt );
-  	console.run("inman>");
-}
 
 int main(int argc, char** argv)
 {
@@ -88,7 +66,10 @@ int main(int argc, char** argv)
 	try
 	{
 		g_pService = new Service( ssf_addr, scf_addr, host, port, SSN );
-		run_console();
+		for(;;)
+		{
+			usleep( 1000 * 1000 );
+		}
 		delete g_pService;
 	}
 	catch(const std::exception& error)

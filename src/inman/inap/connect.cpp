@@ -42,24 +42,24 @@ Socket* Connect::getSocket()
 	return socket;
 }
 
-bool Connect::process(Server* pServer)
+bool Connect::process()
 {
-	InmanCommand* obj = static_cast<InmanCommand*>(pipe->receive());
-	assert( obj );
-	obj->handle( this );
+	InmanCommand* cmd = static_cast<InmanCommand*>(pipe->receive());
+	
+	if( !cmd )
+	{
+		return false;
+	}
+
+	for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
+	{
+		ConnectListener* ptr = *it;
+		ptr->onCommandReceived( this, cmd );
+	}
+
+	delete cmd;
+
 	return true;
-}
-
-void Connect::onChargeSms(ChargeSms* sms)
-{
-	assert( sms );
-	smsc_log_debug(logger, "ChargeSms received");
-}
-
-void Connect::onDeliverySmsResult(DeliverySmsResult* sms)
-{
-	smsc_log_debug(logger, "DeliverySmsResult received");
-
 }
 
 } // namespace inap

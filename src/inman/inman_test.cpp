@@ -90,6 +90,22 @@ class Facade : public Thread, public SmscHandler
 void cmd_charge(Console&, const std::vector<std::string> &args)
 {
 	ChargeSms op;
+	
+	op.setDestinationSubscriberNumber( ".1.1.79139859489" ); // missing for MT
+	op.setCallingPartyNumber( ".1.1.79139343290" );
+	op.setIMSI( "250013900405871" );
+	op.setlocationInformationMSC( ".1.1.79139860001" );
+	op.setSMSCAddress(".1.1.79029869990");
+
+	time_t tm;
+	time( &tm );
+
+	op.setTimeAndTimezone( tm );
+	op.setTPShortMessageSpecificInfo( 0x11 );
+	op.setTPValidityPeriod( 60*5 );
+	op.setTPProtocolIdentifier( 0x00 );
+	op.setTPDataCodingScheme( 0x08 );
+
 	g_pFacade->sendChargeSms( &op );
 	
 }

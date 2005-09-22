@@ -20,7 +20,7 @@ Service::Service( const char* ssf_addr, const char* scf_addr, const char* host, 
 	dispatcher->Start();
 
 	smsc_log_debug( logger, "Start server" );
-	server = new Server(host, port);
+	server = new Server( host, port );
 	server->addListener( this );
 	server->Start();
 
@@ -28,7 +28,7 @@ Service::Service( const char* ssf_addr, const char* scf_addr, const char* host, 
 	session = factory->openSession(SSN, ssf_addr, scf_addr );
 	assert( session );
 
-	session->addListener( this );
+//	session->addListener( this );
 }
 
 Service::~Service()
@@ -37,7 +37,7 @@ Service::~Service()
 	assert( factory );
 
 	smsc_log_debug( logger, "Close session" );
-	session->removeListener( this );
+//	session->removeListener( this );
 	factory->closeSession( session );
 
 	smsc_log_debug( logger, "Stop server" );
@@ -50,50 +50,40 @@ Service::~Service()
 	delete dispatcher;
 }
 
-void Service::startOriginating()
+void Service::onConnectOpened(Server*, Connect* connect)
 {
-	smsc_log_info( logger, "Start originating" );
-	Dialog*  dialog  = session->openDialog( 0 );
-	assert( dialog );
-	Billing* billing = new Billing( dialog, smsc::inman::comp::DeliveryMode_Originating );
-	assert( billing );
-	add( billing );
-	billing->initialDPSMS();
+	assert( connect );
+	smsc_log_debug( logger, "New connection opened" );
+	connect->addListener( this );
 }
 
-void Service::startTerminating()
+void Service::onConnectClosed(Server*, Connect* connect)
 {
-	smsc_log_info( logger, "Start terminating" );
-	Dialog*  dialog  = session->openDialog( 0 );
-	assert( dialog );
-	Billing* billing = new Billing( dialog, smsc::inman::comp::DeliveryMode_Terminating );
-	assert( billing );
-	add( billing );
-	billing->initialDPSMS();
-}
-
-void Service::add(Billing* worker)
-{
-	assert( worker );
-	workers.push_back( worker );
-}
-
-void Service::onConnectOpened(Connect* connect)
-{
-	smsc_log_debug( logger, "Connection opened" );
-}
-
-void Service::onConnectClosed(Connect* connect)
-{
+	assert( connect );
 	smsc_log_debug( logger, "Connection closed" );
+	connect->removeListener( this );
 }
 
-void Service::onDialogBegin(Dialog* dlg)
+void Service::onCommandReceived(Connect* conn, InmanCommand* cmd)
 {
-	assert( dlg );
-	smsc_log_info( logger, "Dialog 0x%X created", dlg->getId() );
-};
+	assert( cmd );	
+	int dlgId = cmd->getDialogId();
+	smsc_log_debug( logger, "Command for dialog 0x%X", dlgId );
+	BillingMap::iterator it = workers.find( dlgId );
+	if( it == workers.end() )
+	{
+		Billing* bill = new Billing( session, conn );
+		workers.insert( BillingMap::value_type( dlgId, bill ) );
+		cmd->handle( bill );
+	}
+	else
+	{
+		cmd->handle( (*it).second );
+	}
+}
 
+
+/*
 void Service::onDialogEnd(Dialog* dlg)
 {
 	assert( dlg );
@@ -110,6 +100,6 @@ void Service::onDialogEnd(Dialog* dlg)
 		}
 	}
 };
-
+*/
 } // namespace inmgr
 } // namespace smsc

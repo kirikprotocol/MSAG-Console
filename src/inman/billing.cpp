@@ -13,13 +13,15 @@ using std::runtime_error;
 namespace smsc  {
 namespace inman {
 
-Billing::Billing(Dialog* pDialog, DeliveryMode_e md)
+Billing::Billing(Session* pSession, Connect* conn)
 		: logger(Logger::getInstance("smsc.inman.inap.Billing"))
-		, dialog( pDialog )
-		, mode( md )
+		, session( pSession )
+		, connect( conn )
 {
+	assert( session );
+	dialog = session->openDialog( 0 );
 	assert( dialog );
-	inap   = new Inap( dialog );
+	inap = new Inap( dialog );
 	assert( inap );
 	inap->addListener( this );
 }
@@ -28,43 +30,28 @@ Billing::~Billing()
 {
 	inap->removeListener( this );
 	delete inap;
+	assert( session );
+	session->closeDialog( dialog );
+	delete dialog;
 }
 
-void Billing::onChargeSms(ChargeSms*)
+void Billing::onChargeSms(ChargeSms* sms)
 {
-}
+	assert( sms );
+	smsc_log_debug(logger, "ChargeSms command received");
 
-void Billing::onDeliverySmsResult(DeliverySmsResult*)
-{
-}
-
-void Billing::initialDPSMS()
-{
-	if( !inap ) throw runtime_error("Dialog closed");
+	assert( inap );
 
 	smsc_log_debug( logger, "--> InitialDPSMS" );
 
-	InitialDPSMSArg arg( mode );
-
-	if( mode == smsc::inman::comp::DeliveryMode_Originating )
-	{
-		arg.setDestinationSubscriberNumber( ".1.1.79139859489" ); // missing for MT
-	}
-	else
-	{
-		arg.setCalledPartyNumber(".1.1.79139859489"); // missing for MO
-	}
-
-	//arg.setCallingPartyNumber(".1.1.79139163393");
-	//arg.setIMSI( "250013901388780" );
-
-	arg.setCallingPartyNumber( ".1.1.79139343290" );
+	InitialDPSMSArg arg( smsc::inman::comp::DeliveryMode_Originating );
 	
-
-
+	arg.setDestinationSubscriberNumber( ".1.1.79139859489" ); // missing for MT
+	arg.setCallingPartyNumber( ".1.1.79139343290" );
 	arg.setIMSI( "250013900405871" );
 
 	Address vlr( ".1.1.79139860001" );
+
 	arg.setlocationInformationMSC( vlr );
 	arg.setSMSCAddress(".1.1.79029869990");
 
@@ -81,21 +68,15 @@ void Billing::initialDPSMS()
 	dialog->beginDialog();
 }
 
-void Billing::eventReportSMS()
+void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
 {
-	if( !inap ) throw runtime_error("Dialog closed");
+	assert( smsRes );
+	smsc_log_debug(logger, "DeliverySmsResult command received");
 
-	EventTypeSMS_e eventType;
 	messageType_e  messageType = MessageType_notification;
+	EventTypeSMS_e eventType   = EventTypeSMS_o_smsSubmission;
 
-	if( mode == smsc::inman::comp::DeliveryMode_Originating )
-	{
-		eventType = EventTypeSMS_o_smsSubmission;
-	}
-	else // DeliveryMode_Terminating
-	{
-		eventType = EventTypeSMS_t_smsDelivery;
-	}
+	// DeliveryMode_Terminating: eventType = EventTypeSMS_t_smsDelivery;
 
 	smsc_log_debug( logger, "--> EventReportSMS( EventType: 0x%X, MessageType: 0x%X )", 
 								eventType, messageType );
@@ -114,7 +95,6 @@ void Billing::connectSMS(ConnectSMSArg* arg)
 void Billing::continueSMS()
 {
 	smsc_log_debug( logger, "<-- ContinueSMS" );
-	eventReportSMS();
 }
 
 void Billing::furnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg)

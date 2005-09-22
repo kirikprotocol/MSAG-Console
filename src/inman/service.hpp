@@ -8,6 +8,7 @@
 #include "logger/Logger.h"
 #include "inman/common/console.hpp"
 #include "inman/inap/dispatcher.hpp"
+#include "inman/inap/connect.hpp"
 #include "inman/inap/server.hpp"
 #include "inman/inap/factory.hpp"
 #include "inman/inap/session.hpp"
@@ -20,6 +21,7 @@ using smsc::inman::inap::Dispatcher;
 using smsc::inman::inap::Server;
 using smsc::inman::inap::ServerListener;
 using smsc::inman::inap::Connect;
+using smsc::inman::inap::ConnectListener;
 using smsc::inman::inap::Factory;
 using smsc::inman::inap::Session;
 using smsc::inman::inap::SessionListener;
@@ -31,30 +33,22 @@ using smsc::logger::Logger;
 namespace smsc  {
 namespace inman {
 
-class Service : public SessionListener, public ServerListener
+class Service : public ServerListener, ConnectListener
 {
-		typedef std::list<Billing*> WorkersList;
+		typedef std::map<int, Billing*> BillingMap;
 
 	public:
 
 		Service( const char* ssf_addr, const char* scf_addr, const char* host, int port, int SSN);
 		virtual ~Service();
 
-		virtual void startOriginating();
-		virtual void startTerminating();
-
-		virtual void onConnectOpened(Connect* connect);
-		virtual void onConnectClosed(Connect* connect);
-
-		virtual void onDialogBegin(Dialog* dlg);
-		virtual void onDialogEnd(Dialog* dlg);
-
-	protected:
-		virtual void add(Billing* worker);
+		virtual void onConnectOpened(Server*, Connect*);
+		virtual void onConnectClosed(Server*, Connect*);
+		virtual void onCommandReceived(Connect*, InmanCommand*);
 
 	private:
 
-		WorkersList workers;
+		BillingMap	workers;
 		Logger*	 	logger;
 		Session* 	session;
 		Dispatcher* dispatcher;
