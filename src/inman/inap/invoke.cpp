@@ -37,7 +37,7 @@ void Invoke::send(Dialog* dialog)
   smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
   smsc_log_debug(tcapLogger," DialogID: 0x%X", dialog->getId() );
   smsc_log_debug(tcapLogger," InvokeID: 0x%X", id );
-  smsc_log_debug(tcapLogger," Tag: 0x%X", (tag==0x02?"LOCAL":"GLOBAL") );
+  smsc_log_debug(tcapLogger," Tag: %s", (tag==0x02?"LOCAL":"GLOBAL") );
   smsc_log_debug(tcapLogger," Operation: %s" , dump(op.size() ,&op[0] ).c_str() );
   smsc_log_debug(tcapLogger," Params: %s", dump(params.size(),&params[0] ).c_str() );
 

@@ -81,7 +81,9 @@ void Server::Run()
 				if( socket > max ) max = socket;
 			}
 
+			Synch::getInstance()->Unlock();
   			int n  = select(  max+1, &read, 0, &error, 0 );
+  			Synch::getInstance()->Lock();
 
   			if( n < 0 )
   			{

@@ -40,7 +40,9 @@ void Dispatcher::Run()
 		memset( &msg, 0, sizeof( MSG_T ));
 		msg.receiver = MSG_USER_ID;
 
+		Synch::getInstance()->Unlock();
 		USHORT_T result = MsgRecvEvent(&msg, NULL, NULL, /*MSG_INFTIM*/ 100 );
+		Synch::getInstance()->Lock();
 		
 		if( MSG_TIMEOUT == result)
 		{

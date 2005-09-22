@@ -12,14 +12,14 @@
 #include "logger/Logger.h"
 #include "core/threads/Thread.hpp"
 #include "core/synchronization/Event.hpp"
-#include "core/synchronization/Mutex.hpp"
 #include "core/network/Socket.hpp"
+
+#include "synch.hpp"
 
 using smsc::logger::Logger;
 using smsc::core::network::Socket;
 using smsc::core::threads::Thread;
 using smsc::core::synchronization::Event;
-using smsc::core::synchronization::Mutex;
 
 namespace smsc  {
 namespace inman {

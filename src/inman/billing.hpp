@@ -10,11 +10,6 @@
 #include "inap/connect.hpp"
 #include "interaction/messages.hpp"
 
-#include "core/synchronization/Event.hpp"
-#include "core/synchronization/Mutex.hpp"
-
-using smsc::core::synchronization::Event;
-using smsc::core::synchronization::Mutex;
 
 using smsc::inman::comp::DeliveryMode_e;
 
@@ -57,15 +52,13 @@ public:
     virtual void releaseSMS(ReleaseSMSArg* arg);
     virtual void requestReportSMSEvent(RequestReportSMSEventArg* arg);
     virtual void resetTimerSMS(ResetTimerSMSArg* arg);
-	virtual void endDialog();
 
 	virtual void onChargeSms(ChargeSms*);
 	virtual void onDeliverySmsResult(DeliverySmsResult*);
 
 protected:	
-	Mutex			mutex;		
 	DeliveryMode_e 	mode;
-	Dialog*		dialog;
+	Dialog*			dialog;
 	Inap*	 		inap;
     Logger*	 		logger;   	
 

@@ -12,6 +12,7 @@
 #include "core/network/Socket.hpp"
 #include "inman/common/observable.hpp"
 #include "connect.hpp"
+#include "synch.hpp"
 
 using smsc::logger::Logger;
 using smsc::core::network::Socket;

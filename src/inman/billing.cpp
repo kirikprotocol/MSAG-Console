@@ -26,8 +26,6 @@ Billing::Billing(Dialog* pDialog, DeliveryMode_e md)
 
 Billing::~Billing()
 {
-	MutexGuard g(mutex);
-
 	inap->removeListener( this );
 	delete inap;
 }
@@ -42,8 +40,6 @@ void Billing::onDeliverySmsResult(DeliverySmsResult*)
 
 void Billing::initialDPSMS()
 {
-	MutexGuard g(mutex);
-	
 	if( !inap ) throw runtime_error("Dialog closed");
 
 	smsc_log_debug( logger, "--> InitialDPSMS" );
@@ -87,8 +83,6 @@ void Billing::initialDPSMS()
 
 void Billing::eventReportSMS()
 {
-	MutexGuard g(mutex);
-	
 	if( !inap ) throw runtime_error("Dialog closed");
 
 	EventTypeSMS_e eventType;
@@ -114,37 +108,27 @@ void Billing::eventReportSMS()
 
 void Billing::connectSMS(ConnectSMSArg* arg)
 {
-	MutexGuard g(mutex);
-	
 	smsc_log_debug( logger, "<-- ConnectSMS" );
 }
 
 void Billing::continueSMS()
 {
-	MutexGuard g(mutex);
-	
 	smsc_log_debug( logger, "<-- ContinueSMS" );
 	eventReportSMS();
 }
 
 void Billing::furnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg)
 {
-	MutexGuard g(mutex);
-	
 	smsc_log_debug( logger, "<-- FurnishChargingInformationSMS" );
 }
 
 void Billing::releaseSMS(ReleaseSMSArg* arg)
 {
-	MutexGuard g(mutex);
-	
 	smsc_log_debug( logger, "<-- ReleaseSMS" );
 }
 
 void Billing::requestReportSMSEvent(RequestReportSMSEventArg* arg)
 {
-	MutexGuard g(mutex);
-	
 	assert( arg );
 
 	smsc_log_debug( logger, "<-- RequestReportSMSEvent" );
@@ -163,17 +147,7 @@ void Billing::requestReportSMSEvent(RequestReportSMSEventArg* arg)
 
 void Billing::resetTimerSMS(ResetTimerSMSArg* arg)
 {
-	MutexGuard g(mutex);
-	
 	smsc_log_debug( logger, "<-- ResetTimerSMS" );
-}
-
-void Billing::endDialog()
-{
-	MutexGuard g(mutex);
-	
-	smsc_log_debug( logger, "<-- Dialog end" );
-	notify1( &BillingListener::onBillingFinished, this );
 }
 
 }
