@@ -6,6 +6,7 @@ static char const ident[] = "$Id$";
 #include "billing.hpp"
 #include "inman/inap/inap.hpp"
 #include "inman/comp/comps.hpp"
+#include "service.hpp"
 
 using smsc::inman::interaction::ChargeSmsResult;
 
@@ -17,8 +18,9 @@ using std::runtime_error;
 namespace smsc  {
 namespace inman {
 
-Billing::Billing(int bid, Session* pSession, Connect* conn)
-		: logger(Logger::getInstance("smsc.inman.inap.Billing"))
+Billing::Billing(Service* serv, int bid, Session* pSession, Connect* conn)
+		: service( serv )
+		, logger(Logger::getInstance("smsc.inman.inap.Billing"))
 		, id( bid )
 		, session( pSession )
 		, connect( conn )
@@ -46,29 +48,9 @@ void Billing::onChargeSms(ChargeSms* sms)
 	assert( inap );
 	assert( id == sms->getDialogId() );
 
-	smsc_log_debug( logger, "--> InitialDPSMS" );
+	smsc_log_debug( logger, "SSF --> SCF InitialDPSMS" );
 
 	InitialDPSMSArg arg( smsc::inman::comp::DeliveryMode_Originating );
-
-#ifdef TEST_DATA
-	arg.setDestinationSubscriberNumber( ".1.1.79139859489" ); // missing for MT
-	arg.setCallingPartyNumber( ".1.1.79139343290" );
-	arg.setIMSI( "250013900405871" );
-
-	//Address vlr( ".1.1.79139860001" );
-
-	arg.setLocationInformationMSC( ".1.1.79139860001" );
-	arg.setSMSCAddress(".1.1.79029869990");
-
-	time_t tm;
-	time( &tm );
-
-	arg.setTimeAndTimezone( tm );
-	arg.setTPShortMessageSpecificInfo( 0x11 );
-	arg.setTPValidityPeriod( 60*5 , smsc::inman::comp::tp_vp_relative );
-	arg.setTPProtocolIdentifier( 0x00 );
-	arg.setTPDataCodingScheme( 0x08 );
-#else
 
 	arg.setDestinationSubscriberNumber( sms->getDestinationSubscriberNumber().c_str() ); // missing for MT
 	arg.setCallingPartyNumber( sms->getCallingPartyNumber().c_str() );
@@ -80,7 +62,7 @@ void Billing::onChargeSms(ChargeSms* sms)
 	arg.setTPValidityPeriod( sms->getTPValidityPeriod() , smsc::inman::comp::tp_vp_relative );
 	arg.setTPProtocolIdentifier( sms->getTPProtocolIdentifier() );
 	arg.setTPDataCodingScheme( sms->getTPDataCodingScheme() );
-#endif
+
 	inap->initialDPSMS( &arg );
 	dialog->beginDialog();
 }
@@ -109,24 +91,26 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
 
 	// DeliveryMode_Terminating: eventType = EventTypeSMS_t_smsDelivery;
 
-	smsc_log_debug( logger, "--> EventReportSMS( EventType: %s (0x%X), MessageType: 0x%X )", 
+	smsc_log_debug( logger, "SSF --> SCF EventReportSMS( EventType: %s (0x%X), MessageType: 0x%X )", 
 								szType, eventType, messageType );
 
 	smsc::inman::comp::EventReportSMSArg report( eventType, messageType );
 
 	inap->eventReportSMS( &report );
 	dialog->continueDialog();
+
+	service->billingFinished( this );
 }
 
 void Billing::connectSMS(ConnectSMSArg* arg)
 {
-	smsc_log_debug( logger, "<-- ConnectSMS" );
+	smsc_log_debug( logger, "SSF <-- SCF ConnectSMS" );
 }
 
 void Billing::continueSMS()
 {
 	assert( connect );
-	smsc_log_debug( logger, "<-- ContinueSMS" );
+	smsc_log_debug( logger, "SSF <-- SCF ContinueSMS" );
 	ChargeSmsResult res( smsc::inman::interaction::CHARGING_POSSIBLE );
 	res.setDialogId( id );
 	connect->send( &res );
@@ -135,22 +119,23 @@ void Billing::continueSMS()
 void Billing::releaseSMS(ReleaseSMSArg* arg)
 {
 	assert( connect );
-	smsc_log_debug( logger, "<-- ReleaseSMS" );
+	smsc_log_debug( logger, "SSF <-- SCF ReleaseSMS" );
 	ChargeSmsResult res( smsc::inman::interaction::CHARGING_NOT_POSSIBLE );
 	res.setDialogId( id );
 	connect->send( &res );
+	service->billingFinished( this );
 }
 
 void Billing::furnishChargingInformationSMS(FurnishChargingInformationSMSArg* arg)
 {
-	smsc_log_debug( logger, "<-- FurnishChargingInformationSMS" );
+	smsc_log_debug( logger, "SSF <-- SCF FurnishChargingInformationSMS" );
 }
 
 void Billing::requestReportSMSEvent(RequestReportSMSEventArg* arg)
 {
 	assert( arg );
 
-	smsc_log_debug( logger, "<-- RequestReportSMSEvent" );
+	smsc_log_debug( logger, "SSF <-- SCF RequestReportSMSEvent" );
 
 	const RequestReportSMSEventArg::SMSEventVector& dps = arg->getSMSEvents();
 
@@ -166,7 +151,7 @@ void Billing::requestReportSMSEvent(RequestReportSMSEventArg* arg)
 
 void Billing::resetTimerSMS(ResetTimerSMSArg* arg)
 {
-	smsc_log_debug( logger, "<-- ResetTimerSMS" );
+	smsc_log_debug( logger, "SSF <-- SCF ResetTimerSMS" );
 }
 
 }

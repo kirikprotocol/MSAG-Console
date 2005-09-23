@@ -25,19 +25,12 @@ using smsc::inman::interaction::DeliverySmsResult;
 namespace smsc    {
 namespace inman   {
 
-class Billing;
-
-class BillingListener
-{
-public:
-	virtual void onBillingFinished(Billing*) = 0;
-};
-
-class Billing : public SSF, public ObservableT< BillingListener >, public InmanHandler
+class Service;
+class Billing : public SSF, public InmanHandler
 {
 public:
 
-	Billing(int id, Session*, Connect*);
+	Billing(Service* service, int id, Session*, Connect*);
 
 	virtual ~Billing();
 
@@ -46,6 +39,7 @@ public:
 		return dialog;
 	}
 
+	virtual int  getId() const { return id; }
 	virtual void onChargeSms(ChargeSms*);
 	virtual void onDeliverySmsResult(DeliverySmsResult*);
 
@@ -57,12 +51,15 @@ public:
     virtual void resetTimerSMS(ResetTimerSMSArg* arg);
 
 protected:	
+	void fireBillingFinished();
+		
 	int				id;
 	Session*		session;
 	Dialog*			dialog;
 	Inap*	 		inap;
     Logger*	 		logger;
     Connect*		connect;
+    Service*		service;
 };
 
 }

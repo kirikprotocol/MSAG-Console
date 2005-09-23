@@ -39,6 +39,14 @@ static void init_logger()
     dumpLogger = Logger::getInstance("smsc.inman.inap.dump");
 }
 
+extern "C" static void sighandler( int signal )
+{
+	assert( g_pService );
+	g_pService->stop();
+	delete g_pService;
+	g_pService = 0;
+}
+
 
 int main(int argc, char** argv)
 {
@@ -66,11 +74,15 @@ int main(int argc, char** argv)
 	try
 	{
 		g_pService = new Service( ssf_addr, scf_addr, host, port, SSN );
-		for(;;)
+		g_pService->start();
+
+  		sigset( SIGTERM, sighandler );
+
+		while( g_pService )
 		{
-			usleep( 1000 * 1000 );
+			usleep( 1000 * 100 );
 		}
-		delete g_pService;
+
 	}
 	catch(const std::exception& error)
 	{

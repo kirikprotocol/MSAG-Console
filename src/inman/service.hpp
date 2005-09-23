@@ -46,6 +46,11 @@ class Service : public ServerListener, ConnectListener
 		virtual void onConnectClosed(Server*, Connect*);
 		virtual void onCommandReceived(Connect*, InmanCommand*);
 
+		virtual void billingFinished(Billing* bill);
+
+		virtual void start();
+		virtual void stop();
+
 	private:
 
 		BillingMap	workers;
