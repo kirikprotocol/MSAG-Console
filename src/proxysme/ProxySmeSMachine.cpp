@@ -77,6 +77,17 @@ static void ConvertMsg_SMSC7BIT_to_LATIN1(PduXSm* p)
   }
 }
 
+static void ConvertMsg_SMSC7BIT_to_LATIN1(PduDataSm* p)
+{
+  if ( p->get_optional().has_messagePayload() ) {
+    const char* oldval = p->get_optional().get_messagePayload();
+    int pl_length = p->get_optional().size_messagePayload();
+    vector<char> buff(pl_length+1);
+    ConvertSMSC7BitToLatin1(oldval,pl_length,&buff[0]);
+    p->get_optional().set_messagePayload(&buff[0],pl_length);
+  }
+}
+
 static void ConvertMsg_LATIN1_to_SMSC7BIT(PduXSm* p)
 {
   int smlength = p->get_message().get_smLength();
@@ -95,10 +106,40 @@ static void ConvertMsg_LATIN1_to_SMSC7BIT(PduXSm* p)
   }
 }
 
+static void ConvertMsg_LATIN1_to_SMSC7BIT(PduDataSm* p)
+{
+  if ( p->get_optional().has_messagePayload() ) {
+    const char* oldval = p->get_optional().get_messagePayload();
+    int pl_length = p->get_optional().size_messagePayload();
+    vector<char> buff(pl_length+1);
+    ConvertLatin1ToSMSC7Bit(oldval,pl_length,&buff[0]);
+    p->get_optional().set_messagePayload(&buff[0],pl_length);
+  }
+}
+
 void SMachine::RecodeIfNeed(DIRECTION direct,SmppHeader* pdu) {
-  if ( pdu->get_commandId() == SmppCommandSet::DELIVERY_SM ) {
+  if ( pdu->get_commandId() == SmppCommandSet::DELIVERY_SM  ) {
     PduXSm* p = (PduXSm*)pdu;
     if ( p->get_message().dataCoding == 0 && config_.left_dcs != config_.right_dcs ) {
+      if ( direct == LEFT_TO_RIGHT ) {
+        if ( config_.left_dcs == DEFAULTDCS_SMSC7BIT ) {
+          ConvertMsg_SMSC7BIT_to_LATIN1(p);
+        }else if ( config_.left_dcs == DEFAULTDCS_LATIN1 ) {
+          ConvertMsg_LATIN1_to_SMSC7BIT(p);
+        }else
+          smsc_log_error(smsc::logger::Logger::getInstance("smsc.proxysme"), "invalid left default encoding value %x",config_.left_dcs);
+      } else { // RIGHT_TO_LEFT
+        if ( config_.right_dcs == DEFAULTDCS_SMSC7BIT ) {
+          ConvertMsg_SMSC7BIT_to_LATIN1(p);
+        }else if ( config_.right_dcs == DEFAULTDCS_LATIN1 ) {
+          ConvertMsg_LATIN1_to_SMSC7BIT(p);
+        }else
+          smsc_log_error(smsc::logger::Logger::getInstance("smsc.proxysme"), "invalid right default encoding value %x",config_.right_dcs);
+      }
+    }
+  } else if( pdu->get_commandId() == SmppCommandSet::DATA_SM ) {
+    PduDataSm* p = (PduDataSm*)pdu;
+    if ( p->get_data().dataCoding == 0 && config_.left_dcs != config_.right_dcs ) {
       if ( direct == LEFT_TO_RIGHT ) {
         if ( config_.left_dcs == DEFAULTDCS_SMSC7BIT ) {
           ConvertMsg_SMSC7BIT_to_LATIN1(p);
@@ -138,6 +179,12 @@ unsigned SMachine::ProcessCommands(SMachineNotifier& notifier)
       DumpCommand(qcmd->direction_,qcmd->pdu_);
       RecodeIfNeed(qcmd->direction_,qcmd->pdu_);
       switch ( qcmd->pdu_->get_commandId() ) {
+      case SmppCommandSet::DATA_SM:
+        mixer_.SendPdu(qcmd->direction_,qcmd->pdu_);
+        break;
+      case SmppCommandSet::DATA_SM_RESP:
+        mixer_.SendPdu(qcmd->direction_,qcmd->pdu_);
+        break;
       case SmppCommandSet::DELIVERY_SM:
         TranslateToSubmitAndSend(qcmd->direction_,qcmd->pdu_);
         break;
@@ -149,6 +196,7 @@ unsigned SMachine::ProcessCommands(SMachineNotifier& notifier)
         mixer_.SendPdu(qcmd->direction_,qcmd->pdu_);
         break;
       default:
+        smsc_log_warn(smsc::logger::Logger::getInstance("smsc.proxysme"), "invalid cmdid=%x in process command",qcmd->pdu_->get_commandId());
         ;// упс, скиппед
       }
     }

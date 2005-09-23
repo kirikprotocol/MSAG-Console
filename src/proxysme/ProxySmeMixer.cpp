@@ -127,12 +127,16 @@ bool Mixer::SendPdu(DIRECTION direct,SmppHeader* pdu)
     case LEFT_TO_RIGHT:
       if ( pdu->get_commandId() == SmppCommandSet::DELIVERY_SM_RESP )
         right_->getAsyncTransmitter()->sendDeliverySmResp(*(PduDeliverySmResp*)pdu);
+      else if( pdu->get_commandId() == SmppCommandSet::DATA_SM_RESP )
+        right_->getAsyncTransmitter()->sendDataSmResp(*(PduDataSmResp*)pdu);
       else
         right_->getAsyncTransmitter()->sendPdu(pdu);
       break;
     case RIGHT_TO_LEFT:
       if ( pdu->get_commandId() == SmppCommandSet::DELIVERY_SM_RESP )
         left_->getAsyncTransmitter()->sendDeliverySmResp(*(PduDeliverySmResp*)pdu);
+      else if ( pdu->get_commandId() == SmppCommandSet::DATA_SM_RESP )
+        left_->getAsyncTransmitter()->sendDataSmResp(*(PduDataSmResp*)pdu);
       else
         left_->getAsyncTransmitter()->sendPdu(pdu);
       break;
@@ -181,6 +185,14 @@ void PduListener::handleEvent(SmppHeader *pdu)
         resp.set_messageId("");
         resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
         trx_->getAsyncTransmitter()->sendDeliverySmResp(resp);
+      } else if  ( pdu->get_commandId()==SmppCommandSet::DATA_SM ) {
+        // если это был datasm, то сообщаем что отправка не удалась
+        PduDataSmResp resp;
+        resp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
+        resp.get_header().set_commandStatus(SmppStatusSet::ESME_RMSGQFUL);
+        resp.set_messageId("");
+        resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+        trx_->getAsyncTransmitter()->sendDataSmResp(resp);
       }else{
         // ’м, что это было????
         smsc_log_error(log_, "PduListener::handleEvent: %s broken on non DELIVER unqueued pdu",ToString(incom_dirct_).c_str());

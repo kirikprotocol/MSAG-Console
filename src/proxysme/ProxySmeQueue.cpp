@@ -32,10 +32,14 @@ bool Queue::PutBack(QCommand* cmd)
   MutexGuard guard(mutex_);
   assert( cmd && cmd->pdu_ ); if ( !cmd || !cmd->pdu_ ) return false;
   if ( cmd->pdu_->get_commandId() != SmppCommandSet::SUBMIT_SM_RESP 
-    && cmd->pdu_->get_commandId() != SmppCommandSet::DELIVERY_SM )
+    && cmd->pdu_->get_commandId() != SmppCommandSet::DELIVERY_SM 
+    && cmd->pdu_->get_commandId() != SmppCommandSet::DATA_SM
+    && cmd->pdu_->get_commandId() != SmppCommandSet::DATA_SM_RESP)
     return false;
   if ( queue_.size() >= unsigned(qlimit_) ) {
-    if ( cmd->pdu_->get_commandId() != SmppCommandSet::SUBMIT_SM_RESP ) 
+    if ( cmd->pdu_->get_commandId() != SmppCommandSet::SUBMIT_SM_RESP 
+      && cmd->pdu_->get_commandId() != SmppCommandSet::DATA_SM_RESP
+    ) 
     return false;
   }
   queue_.push_back(cmd);
