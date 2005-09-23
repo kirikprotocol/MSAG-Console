@@ -31,9 +31,13 @@ Service::~Service()
 	smsc_log_debug( logger, "Release service" );
 	Factory* factory = Factory::getInstance();
 	assert( factory );
+	smsc_log_debug( logger, "ReleaseSession" );
 	factory->closeSession( session );
+	smsc_log_debug( logger, "Remove lisetener" );
 	server->removeListener( this );
+	smsc_log_debug( logger, "Delete server" );
 	delete server;
+	smsc_log_debug( logger, "Delete dispatcher" );
 	delete dispatcher;
 }
 
@@ -98,10 +102,12 @@ void Service::start()
 void Service::stop()
 {
 	smsc_log_debug( logger, "Stop server" );
-	server->Start();
+	server->Stop();
+	server->WaitFor();
 
 	smsc_log_debug( logger, "Stop dispatcher" );
 	dispatcher->Stop();
+	dispatcher->WaitFor();
 }
 
 } // namespace inmgr

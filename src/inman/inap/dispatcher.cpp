@@ -42,6 +42,7 @@ void Dispatcher::Run()
 
 		Synch::getInstance()->Unlock();
 		USHORT_T result = MsgRecvEvent(&msg, NULL, NULL, /*MSG_INFTIM*/ 100 );
+		if( !running ) break;
 		Synch::getInstance()->Lock();
 		
 		if( MSG_TIMEOUT == result)
@@ -52,15 +53,6 @@ void Dispatcher::Run()
 		if (result != 0 )
 		{
          	throw runtime_error( format( "MsgRecv failed with code %d (%s)", result, getReturnCodeDescription(result)) );
-        }
-        else
-        {
-/*			smsc_log_debug(logger,"Message received:");
-			smsc_log_debug(logger," sender=0x%X", msg.sender);
-			smsc_log_debug(logger," receiver=0x%X", msg.receiver);
-			smsc_log_debug(logger," primitive=0x%X", msg.primitive);
-			smsc_log_debug(logger," data=%s", dump(msg.size,msg.msg_p).c_str());
-*/
         }
 
 		EINSS7_I97THandleInd(&msg);

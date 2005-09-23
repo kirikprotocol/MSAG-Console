@@ -83,15 +83,17 @@ void Server::Run()
 
 			Synch::getInstance()->Unlock();
   			int n  = select(  max+1, &read, 0, &error, 0 );
+  			
+  			if( !running )
+ 			{
+  				smsc_log_debug(logger, "Server stopped");
+  				break;
+  			}
+
   			Synch::getInstance()->Lock();
 
   			if( n < 0 )
   			{
-  				if( !running )
-  				{
-  					smsc_log_debug(logger, "Server stopped");
-  					continue;
-  				}
   				throw SystemError("select failed");
   			}
 

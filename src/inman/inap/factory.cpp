@@ -116,55 +116,6 @@ void Factory::disconnect()
    }
 }
 
-/*
-SOCKET	Factory::getHandle()
-{
-	return EINSS7CpMsgObtainSocket(MSG_USER_ID, TCAP_ID);
-}
-
-void	Factory::process(Dispatcher*)
-{
-		MSG_T msg;
-
-		memset( &msg, 0, sizeof( MSG_T ));
-
-		//msg.receiver = MSG_USER_ID;
-		msg.receiver = ANY_ID;
-
-		USHORT_T result = EINSS7CpMsgRecv_r(&msg, 1000 );
-
-		char buf[1024];
-		smsc_log_debug(logger,"See data at handle 0x%X", getHandle() );
-  		int n = recv( getHandle(), buf, sizeof(buf) - 1, MSG_PEEK );
-		smsc_log_debug(logger,"Data size=%d", n );
-		if( n > 0 )
-		{
-			smsc_log_debug(logger, "SS7 Socket: %s", dump( n, (unsigned char*)buf, true ).c_str() );
-		}
-
-		if( MSG_TIMEOUT == result)
-		{
-			smsc_log_debug(logger,"MsgRecv_r timeout (1 sec)");
-			return;
-		}
-
-		if (result != 0 )
-		{
-          	throw runtime_error( format( "MsgRecv failed with code %d (%s)", result, getReturnCodeDescription(result)) );
-        }
-        else
-        {
-			smsc_log_debug(logger,"Message received:");
-			smsc_log_debug(logger," sender=0x%X", msg.sender);
-			smsc_log_debug(logger," receiver=0x%X", msg.receiver);
-			smsc_log_debug(logger," primitive=0x%X", msg.primitive);
-			smsc_log_debug(logger," data=%s", dump(msg.size,msg.msg_p).c_str());
-        }
-
-        EINSS7_I97THandleInd(&msg);
-      	EINSS7CpReleaseMsgBuffer(&msg);
-}
-*/
 Session* Factory::openSession(UCHAR_T SSN, const char* szSSF, const char* szSCF)
 {
     if( state != CONNECTED )
@@ -172,11 +123,11 @@ Session* Factory::openSession(UCHAR_T SSN, const char* szSSF, const char* szSCF)
     	throw runtime_error( format("Invalid factory state (%d)", state) );
 	}
 
-    smsc_log_debug(logger,"Open IN session (SSN=%d, SCF=%s, IN=%s)", SSN, szSSF, szSCF);
+    smsc_log_debug(logger,"Open session (SSN=%d, SCF=%s, IN=%s)", SSN, szSSF, szSCF);
 
     if( sessions.find( SSN ) != sessions.end() )
     {
-        throw runtime_error( format("IN session with SSN=%d already opened", SSN) );
+        throw runtime_error( format("Session with SSN=%d already opened", SSN) );
     }
 
 	Session* pSession = new Session( SSN, szSSF, szSCF );
@@ -200,11 +151,11 @@ void Factory::closeSession(Session* pSession)
 {
     assert( pSession );
 
-    smsc_log_debug(logger,"Close IN session (SSN=%d)", pSession->SSN );
+    smsc_log_debug(logger,"Close session (SSN=%d)", pSession->SSN );
 
     if( sessions.find( pSession->SSN ) == sessions.end() )
     {
-        smsc_log_error(logger, "IN session with SSN=%d not exists", pSession->SSN );
+        smsc_log_error(logger, "Session with SSN=%d not exists", pSession->SSN );
     }
 
     sessions.erase( pSession->SSN );
@@ -213,7 +164,7 @@ void Factory::closeSession(Session* pSession)
 
 void Factory::closeAllSessions()
 {
-    smsc_log_debug(logger,"Close all IN sessions");
+    smsc_log_debug(logger,"Close all sessions");
 
     for( SessionsMap_T::iterator it = sessions.begin(); it != sessions.end(); it++ )
     {
