@@ -21,6 +21,7 @@ using smsc::inman::comp::smsc_log_component;
 ProcessUSSRequestArg::ProcessUSSRequestArg()
 {
     compLogger = smsc::logger::Logger::getInstance("smsc.mapuss.comp.ProcessUSSRequestArg");
+    _alrt = alertingNotSet;
 }
 ProcessUSSRequestArg::~ProcessUSSRequestArg() { }
 
