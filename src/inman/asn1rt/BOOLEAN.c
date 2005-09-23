@@ -20,8 +20,12 @@ asn_TYPE_descriptor_t asn_DEF_BOOLEAN = {
 	asn_generic_no_constraint,
 	BOOLEAN_decode_ber,
 	BOOLEAN_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	BOOLEAN_decode_xer,
 	BOOLEAN_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_BOOLEAN_tags,
 	sizeof(asn_DEF_BOOLEAN_tags) / sizeof(asn_DEF_BOOLEAN_tags[0]),
@@ -129,7 +133,7 @@ BOOLEAN_encode_der(asn_TYPE_descriptor_t *td, void *sptr,
 	return erval;
 }
 
-
+#ifndef ASN1_XER_NOT_USED
 /*
  * Decode the chunk of XML text encoding INTEGER.
  */
@@ -200,6 +204,7 @@ BOOLEAN_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 cb_failed:
 	_ASN_ENCODE_FAILED;
 }
+#endif /* ASN1_XER_NOT_USED */
 
 int
 BOOLEAN_print(asn_TYPE_descriptor_t *td, const void *sptr, int ilevel,

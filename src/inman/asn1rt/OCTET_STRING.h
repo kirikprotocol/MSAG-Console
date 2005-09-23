@@ -25,11 +25,13 @@ asn_struct_print_f OCTET_STRING_print;
 asn_struct_print_f OCTET_STRING_print_utf8;
 ber_type_decoder_f OCTET_STRING_decode_ber;
 der_type_encoder_f OCTET_STRING_encode_der;
+#ifndef ASN1_XER_NOT_USED
 xer_type_decoder_f OCTET_STRING_decode_xer_hex;		/* Hexadecimal */
 xer_type_decoder_f OCTET_STRING_decode_xer_binary;	/* 01010111010 */
 xer_type_decoder_f OCTET_STRING_decode_xer_utf8;	/* ASCII/UTF-8 */
 xer_type_encoder_f OCTET_STRING_encode_xer;
 xer_type_encoder_f OCTET_STRING_encode_xer_utf8;
+#endif /* ASN1_XER_NOT_USED */
 
 /******************************
  * Handy conversion routines. *

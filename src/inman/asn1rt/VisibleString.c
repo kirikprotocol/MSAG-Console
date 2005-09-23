@@ -20,8 +20,12 @@ asn_TYPE_descriptor_t asn_DEF_VisibleString = {
 	VisibleString_constraint,
 	OCTET_STRING_decode_ber,    /* Implemented in terms of OCTET STRING */
 	OCTET_STRING_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	OCTET_STRING_decode_xer_utf8,
 	OCTET_STRING_encode_xer_utf8,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_VisibleString_tags,
 	sizeof(asn_DEF_VisibleString_tags)

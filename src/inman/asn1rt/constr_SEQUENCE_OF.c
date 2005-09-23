@@ -84,6 +84,7 @@ SEQUENCE_OF_encode_der(asn_TYPE_descriptor_t *td, void *ptr,
 	return erval;
 }
 
+#ifndef ASN1_XER_NOT_USED
 asn_enc_rval_t
 SEQUENCE_OF_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 	int ilevel, enum xer_encoder_flags_e flags,
@@ -137,4 +138,4 @@ SEQUENCE_OF_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 cb_failed:
 	_ASN_ENCODE_FAILED;
 }
-
+#endif /* ASN1_XER_NOT_USED */

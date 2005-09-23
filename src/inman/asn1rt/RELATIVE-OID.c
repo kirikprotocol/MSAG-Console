@@ -23,8 +23,12 @@ asn_TYPE_descriptor_t asn_DEF_RELATIVE_OID = {
 	asn_generic_no_constraint,
 	ber_decode_primitive,
 	der_encode_primitive,
+#ifndef ASN1_XER_NOT_USED
 	RELATIVE_OID_decode_xer,
 	RELATIVE_OID_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_RELATIVE_OID_tags,
 	sizeof(asn_DEF_RELATIVE_OID_tags)
@@ -86,6 +90,7 @@ RELATIVE_OID_print(asn_TYPE_descriptor_t *td, const void *sptr, int ilevel,
 	return (cb(" }", 2, app_key) < 0) ? -1 : 0;
 }
 
+#ifndef ASN1_XER_NOT_USED
 static enum xer_pbd_rval
 RELATIVE_OID__xer_body_decode(asn_TYPE_descriptor_t *td, void *sptr, const void *chunk_buf, size_t chunk_size) {
 	RELATIVE_OID_t *st = (RELATIVE_OID_t *)sptr;
@@ -158,6 +163,7 @@ RELATIVE_OID_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 
 	return er;
 }
+#endif /* ASN1_XER_NOT_USED */
 
 int
 RELATIVE_OID_get_arcs(RELATIVE_OID_t *roid,

@@ -17,8 +17,10 @@ typedef ASN__PRIMITIVE_TYPE_t REAL_t;
 extern asn_TYPE_descriptor_t asn_DEF_REAL;
 
 asn_struct_print_f REAL_print;
+#ifndef ASN1_XER_NOT_USED
 xer_type_decoder_f REAL_decode_xer;
 xer_type_encoder_f REAL_encode_xer;
+#endif /* ASN1_XER_NOT_USED */
 
 /***********************************
  * Some handy conversion routines. *

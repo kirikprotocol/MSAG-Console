@@ -6,14 +6,14 @@ static asn_TYPE_member_t asn_MBR_Code_1[] = {
 	{ ATF_NOFLAGS, 0, offsetof(struct Code, choice.local),
 		(ASN_TAG_CLASS_UNIVERSAL | (2 << 2)),
 		0,
-		(void *)&asn_DEF_NativeInteger,
+		&asn_DEF_NativeInteger,
 		0,	/* Defer constraints checking to the member type */
 		"local"
 		},
 	{ ATF_NOFLAGS, 0, offsetof(struct Code, choice.global),
 		(ASN_TAG_CLASS_UNIVERSAL | (6 << 2)),
 		0,
-		(void *)&asn_DEF_OBJECT_IDENTIFIER,
+		&asn_DEF_OBJECT_IDENTIFIER,
 		0,	/* Defer constraints checking to the member type */
 		"global"
 		},
@@ -39,8 +39,12 @@ asn_TYPE_descriptor_t asn_DEF_Code = {
 	CHOICE_constraint,
 	CHOICE_decode_ber,
 	CHOICE_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	CHOICE_decode_xer,
 	CHOICE_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	CHOICE_outmost_tag,
 	0,	/* No effective tags (pointer) */
 	0,	/* No effective tags (count) */

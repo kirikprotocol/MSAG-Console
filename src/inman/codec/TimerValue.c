@@ -37,8 +37,13 @@ TimerValue_1_inherit_TYPE_descriptor(asn_TYPE_descriptor_t *td) {
 	td->print_struct   = asn_DEF_Integer4.print_struct;
 	td->ber_decoder    = asn_DEF_Integer4.ber_decoder;
 	td->der_encoder    = asn_DEF_Integer4.der_encoder;
+#ifndef ASN1_XER_NOT_USED
 	td->xer_decoder    = asn_DEF_Integer4.xer_decoder;
 	td->xer_encoder    = asn_DEF_Integer4.xer_encoder;
+#else /* ASN1_XER_NOT_USED */
+	td->xer_decoder    = NULL;
+	td->xer_encoder    = NULL;
+#endif /* ASN1_XER_NOT_USED */
 	td->elements       = asn_DEF_Integer4.elements;
 	td->elements_count = asn_DEF_Integer4.elements_count;
 	td->specifics      = asn_DEF_Integer4.specifics;
@@ -73,6 +78,7 @@ TimerValue_encode_der(asn_TYPE_descriptor_t *td,
 	return td->der_encoder(td, structure, tag_mode, tag, cb, app_key);
 }
 
+#ifndef ASN1_XER_NOT_USED
 asn_dec_rval_t
 TimerValue_decode_xer(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
 		void **structure, const char *opt_mname, const void *bufptr, size_t size) {
@@ -88,6 +94,7 @@ TimerValue_encode_xer(asn_TYPE_descriptor_t *td, void *structure,
 	return td->xer_encoder(td, structure, ilevel, flags, cb, app_key);
 }
 
+#endif /* ASN1_XER_NOT_USED */
 static ber_tlv_tag_t asn_DEF_TimerValue_1_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (2 << 2))
 };
@@ -99,8 +106,12 @@ asn_TYPE_descriptor_t asn_DEF_TimerValue = {
 	TimerValue_constraint,
 	TimerValue_decode_ber,
 	TimerValue_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	TimerValue_decode_xer,
 	TimerValue_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0,	/* Use generic outmost tag fetcher */
 	asn_DEF_TimerValue_1_tags,
 	sizeof(asn_DEF_TimerValue_1_tags)

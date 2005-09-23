@@ -6,21 +6,21 @@ static asn_TYPE_member_t asn_MBR_ResetTimerSMSArg_1[] = {
 	{ ATF_POINTER, 1, offsetof(struct ResetTimerSMSArg, timerID),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_TimerID,
+		&asn_DEF_TimerID,
 		0,	/* Defer constraints checking to the member type */
 		"timerID"
 		},
 	{ ATF_NOFLAGS, 0, offsetof(struct ResetTimerSMSArg, timervalue),
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_TimerValue,
+		&asn_DEF_TimerValue,
 		0,	/* Defer constraints checking to the member type */
 		"timervalue"
 		},
 	{ ATF_POINTER, 1, offsetof(struct ResetTimerSMSArg, extensions),
 		(ASN_TAG_CLASS_CONTEXT | (2 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_Extensions,
+		&asn_DEF_Extensions,
 		0,	/* Defer constraints checking to the member type */
 		"extensions"
 		},
@@ -49,8 +49,12 @@ asn_TYPE_descriptor_t asn_DEF_ResetTimerSMSArg = {
 	SEQUENCE_constraint,
 	SEQUENCE_decode_ber,
 	SEQUENCE_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	SEQUENCE_decode_xer,
 	SEQUENCE_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0,	/* Use generic outmost tag fetcher */
 	asn_DEF_ResetTimerSMSArg_1_tags,
 	sizeof(asn_DEF_ResetTimerSMSArg_1_tags)

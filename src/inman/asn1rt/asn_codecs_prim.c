@@ -141,7 +141,7 @@ ASN__PRIMITIVE_TYPE_free(asn_TYPE_descriptor_t *td, void *sptr,
 		FREEMEM(st);
 }
 
-
+#ifndef ASN1_XER_NOT_USED
 /*
  * Local internal type passed around as an argument.
  */
@@ -306,4 +306,5 @@ xer_decode_primitive(asn_codec_ctx_t *opt_codec_ctx,
 	}
 	return rc;
 }
+#endif /* ASN1_XER_NOT_USED */
 

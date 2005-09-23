@@ -25,8 +25,12 @@ asn_TYPE_descriptor_t asn_DEF_BIT_STRING = {
 	BIT_STRING_constraint,
 	OCTET_STRING_decode_ber,   /* Implemented in terms of OCTET STRING */
 	OCTET_STRING_encode_der,   /* Implemented in terms of OCTET STRING */
+#ifndef ASN1_XER_NOT_USED
 	OCTET_STRING_decode_xer_binary,
 	BIT_STRING_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_BIT_STRING_tags,
 	sizeof(asn_DEF_BIT_STRING_tags)
@@ -68,6 +72,7 @@ static char *_bit_pattern[16] = {
 	"1000", "1001", "1010", "1011", "1100", "1101", "1110", "1111"
 };
 
+#ifndef ASN1_XER_NOT_USED
 asn_enc_rval_t
 BIT_STRING_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 	int ilevel, enum xer_encoder_flags_e flags,
@@ -128,7 +133,7 @@ BIT_STRING_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 cb_failed:
 	_ASN_ENCODE_FAILED;
 }
-
+#endif /* ASN1_XER_NOT_USED */
 
 /*
  * BIT STRING specific contents printer.

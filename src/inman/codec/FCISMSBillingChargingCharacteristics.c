@@ -38,8 +38,13 @@ FCISMSBillingChargingCharacteristics_1_inherit_TYPE_descriptor(asn_TYPE_descript
 	td->print_struct   = asn_DEF_OCTET_STRING.print_struct;
 	td->ber_decoder    = asn_DEF_OCTET_STRING.ber_decoder;
 	td->der_encoder    = asn_DEF_OCTET_STRING.der_encoder;
+#ifndef ASN1_XER_NOT_USED
 	td->xer_decoder    = asn_DEF_OCTET_STRING.xer_decoder;
 	td->xer_encoder    = asn_DEF_OCTET_STRING.xer_encoder;
+#else /* ASN1_XER_NOT_USED */
+	td->xer_decoder    = NULL;
+	td->xer_encoder    = NULL;
+#endif /* ASN1_XER_NOT_USED */
 	td->elements       = asn_DEF_OCTET_STRING.elements;
 	td->elements_count = asn_DEF_OCTET_STRING.elements_count;
 	td->specifics      = asn_DEF_OCTET_STRING.specifics;
@@ -74,6 +79,7 @@ FCISMSBillingChargingCharacteristics_encode_der(asn_TYPE_descriptor_t *td,
 	return td->der_encoder(td, structure, tag_mode, tag, cb, app_key);
 }
 
+#ifndef ASN1_XER_NOT_USED
 asn_dec_rval_t
 FCISMSBillingChargingCharacteristics_decode_xer(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
 		void **structure, const char *opt_mname, const void *bufptr, size_t size) {
@@ -89,6 +95,7 @@ FCISMSBillingChargingCharacteristics_encode_xer(asn_TYPE_descriptor_t *td, void 
 	return td->xer_encoder(td, structure, ilevel, flags, cb, app_key);
 }
 
+#endif /* ASN1_XER_NOT_USED */
 static ber_tlv_tag_t asn_DEF_FCISMSBillingChargingCharacteristics_1_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (4 << 2))
 };
@@ -100,8 +107,12 @@ asn_TYPE_descriptor_t asn_DEF_FCISMSBillingChargingCharacteristics = {
 	FCISMSBillingChargingCharacteristics_constraint,
 	FCISMSBillingChargingCharacteristics_decode_ber,
 	FCISMSBillingChargingCharacteristics_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	FCISMSBillingChargingCharacteristics_decode_xer,
 	FCISMSBillingChargingCharacteristics_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0,	/* Use generic outmost tag fetcher */
 	asn_DEF_FCISMSBillingChargingCharacteristics_1_tags,
 	sizeof(asn_DEF_FCISMSBillingChargingCharacteristics_1_tags)

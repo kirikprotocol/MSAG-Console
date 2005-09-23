@@ -21,8 +21,10 @@ asn_struct_print_f Integer4_print;
 asn_constr_check_f Integer4_constraint;
 ber_type_decoder_f Integer4_decode_ber;
 der_type_encoder_f Integer4_encode_der;
+#ifndef ASN1_XER_NOT_USED
 xer_type_decoder_f Integer4_decode_xer;
 xer_type_encoder_f Integer4_encode_xer;
+#endif /* ASN1_XER_NOT_USED */
 
 #ifdef __cplusplus
 }

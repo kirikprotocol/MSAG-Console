@@ -22,8 +22,12 @@ asn_TYPE_descriptor_t asn_DEF_INTEGER = {
 	asn_generic_no_constraint,
 	ber_decode_primitive,
 	INTEGER_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	INTEGER_decode_xer,
 	INTEGER_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_INTEGER_tags,
 	sizeof(asn_DEF_INTEGER_tags) / sizeof(asn_DEF_INTEGER_tags[0]),
@@ -294,6 +298,7 @@ INTEGER_map_value2enum(asn_INTEGER_specifics_t *specs, long value) {
 		INTEGER__compar_value2enum);
 }
 
+#ifndef ASN1_XER_NOT_USED
 /*
  * Decode the chunk of XML text encoding INTEGER.
  */
@@ -432,6 +437,7 @@ INTEGER_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 
 	return er;
 }
+#endif /* ASN1_XER_NOT_USED */
 
 int
 asn_INTEGER2long(const INTEGER_t *iptr, long *lptr) {

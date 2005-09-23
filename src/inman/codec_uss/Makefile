@@ -2,7 +2,7 @@
 # $Id$
 #
 
-CFLAGS := -I. -I../asn1rt $(CFLAGS)
+CFLAGS := -I. -I../asn1rt -DASN1_XER_NOT_USED $(CFLAGS)
 CXXFLAGS := $(CXXFLAGS)
 PACKAGE := inman.codec_uss
 

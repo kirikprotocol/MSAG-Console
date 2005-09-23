@@ -21,8 +21,12 @@ asn_TYPE_descriptor_t asn_DEF_NULL = {
 	asn_generic_no_constraint,
 	BOOLEAN_decode_ber,	/* Implemented in terms of BOOLEAN */
 	NULL_encode_der,	/* Special handling of DER encoding */
+#ifndef ASN1_XER_NOT_USED
 	NULL_decode_xer,
 	NULL_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_NULL_tags,
 	sizeof(asn_DEF_NULL_tags) / sizeof(asn_DEF_NULL_tags[0]),
@@ -47,6 +51,7 @@ NULL_encode_der(asn_TYPE_descriptor_t *td, void *ptr,
 	return erval;
 }
 
+#ifndef ASN1_XER_NOT_USED
 asn_enc_rval_t
 NULL_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 	int ilevel, enum xer_encoder_flags_e flags,
@@ -87,6 +92,7 @@ NULL_decode_xer(asn_codec_ctx_t *opt_codec_ctx,
 		sptr, sizeof(NULL_t), opt_mname, buf_ptr, size,
 		NULL__xer_body_decode);
 }
+#endif /* ASN1_XER_NOT_USED */
 
 int
 NULL_print(asn_TYPE_descriptor_t *td, const void *sptr, int ilevel,

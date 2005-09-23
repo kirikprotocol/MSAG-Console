@@ -26,8 +26,12 @@ asn_TYPE_descriptor_t asn_DEF_NativeInteger = {
 	asn_generic_no_constraint,
 	NativeInteger_decode_ber,
 	NativeInteger_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	NativeInteger_decode_xer,
 	NativeInteger_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_NativeInteger_tags,
 	sizeof(asn_DEF_NativeInteger_tags) / sizeof(asn_DEF_NativeInteger_tags[0]),
@@ -168,6 +172,7 @@ NativeInteger_encode_der(asn_TYPE_descriptor_t *sd, void *ptr,
 	return erval;
 }
 
+#ifndef ASN1_XER_NOT_USED
 /*
  * Decode the chunk of XML text encoding INTEGER.
  */
@@ -242,6 +247,7 @@ NativeInteger_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 
 	return er;
 }
+#endif /* ASN1_XER_NOT_USED */
 
 /*
  * INTEGER specific human-readable output.

@@ -32,7 +32,7 @@ static asn_TYPE_member_t asn_MBR_sMSEvents_2[] = {
 	{ ATF_POINTER, 0, 0,
 		(ASN_TAG_CLASS_UNIVERSAL | (16 << 2)),
 		0,
-		(void *)&asn_DEF_SMSEvent,
+		&asn_DEF_SMSEvent,
 		0,	/* Defer constraints checking to the member type */
 		""
 		},
@@ -55,8 +55,12 @@ asn_TYPE_descriptor_t asn_DEF_sMSEvents_2 = {
 	SEQUENCE_OF_constraint,
 	SEQUENCE_OF_decode_ber,
 	SEQUENCE_OF_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	SEQUENCE_OF_decode_xer,
 	SEQUENCE_OF_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0,	/* Use generic outmost tag fetcher */
 	asn_DEF_sMSEvents_2_tags,
 	sizeof(asn_DEF_sMSEvents_2_tags)
@@ -73,14 +77,14 @@ static asn_TYPE_member_t asn_MBR_RequestReportSMSEventArg_1[] = {
 	{ ATF_NOFLAGS, 0, offsetof(struct RequestReportSMSEventArg, sMSEvents),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_sMSEvents_2,
+		&asn_DEF_sMSEvents_2,
 		memb_sMSEvents_1_constraint,
 		"sMSEvents"
 		},
 	{ ATF_POINTER, 1, offsetof(struct RequestReportSMSEventArg, extensions),
 		(ASN_TAG_CLASS_CONTEXT | (10 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_Extensions,
+		&asn_DEF_Extensions,
 		0,	/* Defer constraints checking to the member type */
 		"extensions"
 		},
@@ -108,8 +112,12 @@ asn_TYPE_descriptor_t asn_DEF_RequestReportSMSEventArg = {
 	SEQUENCE_constraint,
 	SEQUENCE_decode_ber,
 	SEQUENCE_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	SEQUENCE_decode_xer,
 	SEQUENCE_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0,	/* Use generic outmost tag fetcher */
 	asn_DEF_RequestReportSMSEventArg_1_tags,
 	sizeof(asn_DEF_RequestReportSMSEventArg_1_tags)

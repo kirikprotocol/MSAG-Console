@@ -27,8 +27,12 @@ asn_TYPE_descriptor_t asn_DEF_OCTET_STRING = {
 	asn_generic_no_constraint,
 	OCTET_STRING_decode_ber,
 	OCTET_STRING_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	OCTET_STRING_decode_xer_hex,
 	OCTET_STRING_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_OCTET_STRING_tags,
 	sizeof(asn_DEF_OCTET_STRING_tags)
@@ -577,6 +581,7 @@ cb_failed:
 	_ASN_ENCODE_FAILED;
 }
 
+#ifndef ASN1_XER_NOT_USED
 asn_enc_rval_t
 OCTET_STRING_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 	int ilevel, enum xer_encoder_flags_e flags,
@@ -1191,7 +1196,7 @@ OCTET_STRING_decode_xer_utf8(asn_codec_ctx_t *opt_codec_ctx,
 		OCTET_STRING__handle_control_chars,
 		OCTET_STRING__convert_entrefs);
 }
-
+#endif /* ASN1_XER_NOT_USED */
 
 int
 OCTET_STRING_print(asn_TYPE_descriptor_t *td, const void *sptr, int ilevel,

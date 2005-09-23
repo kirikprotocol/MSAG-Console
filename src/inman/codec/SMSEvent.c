@@ -6,14 +6,14 @@ static asn_TYPE_member_t asn_MBR_SMSEvent_1[] = {
 	{ ATF_NOFLAGS, 0, offsetof(struct SMSEvent, eventTypeSMS),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_EventTypeSMS,
+		&asn_DEF_EventTypeSMS,
 		0,	/* Defer constraints checking to the member type */
 		"eventTypeSMS"
 		},
 	{ ATF_NOFLAGS, 0, offsetof(struct SMSEvent, monitorMode),
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_MonitorMode,
+		&asn_DEF_MonitorMode,
 		0,	/* Defer constraints checking to the member type */
 		"monitorMode"
 		},
@@ -41,8 +41,12 @@ asn_TYPE_descriptor_t asn_DEF_SMSEvent = {
 	SEQUENCE_constraint,
 	SEQUENCE_decode_ber,
 	SEQUENCE_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	SEQUENCE_decode_xer,
 	SEQUENCE_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0,	/* Use generic outmost tag fetcher */
 	asn_DEF_SMSEvent_1_tags,
 	sizeof(asn_DEF_SMSEvent_1_tags)

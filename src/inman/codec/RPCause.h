@@ -21,8 +21,10 @@ asn_struct_print_f RPCause_print;
 asn_constr_check_f RPCause_constraint;
 ber_type_decoder_f RPCause_decode_ber;
 der_type_encoder_f RPCause_encode_der;
+#ifndef ASN1_XER_NOT_USED
 xer_type_decoder_f RPCause_decode_xer;
 xer_type_encoder_f RPCause_encode_xer;
+#endif /* ASN1_XER_NOT_USED */
 
 #ifdef __cplusplus
 }

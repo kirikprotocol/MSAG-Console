@@ -40,8 +40,10 @@ asn_struct_print_f CHOICE_print;
 asn_constr_check_f CHOICE_constraint;
 ber_type_decoder_f CHOICE_decode_ber;
 der_type_encoder_f CHOICE_encode_der;
+#ifndef ASN1_XER_NOT_USED
 xer_type_decoder_f CHOICE_decode_xer;
 xer_type_encoder_f CHOICE_encode_xer;
+#endif /* ASN1_XER_NOT_USED */
 asn_outmost_tag_f CHOICE_outmost_tag;
 
 #ifdef __cplusplus

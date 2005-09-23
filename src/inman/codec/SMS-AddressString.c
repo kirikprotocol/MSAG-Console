@@ -38,8 +38,13 @@ SMS_AddressString_1_inherit_TYPE_descriptor(asn_TYPE_descriptor_t *td) {
 	td->print_struct   = asn_DEF_AddressString.print_struct;
 	td->ber_decoder    = asn_DEF_AddressString.ber_decoder;
 	td->der_encoder    = asn_DEF_AddressString.der_encoder;
+#ifndef ASN1_XER_NOT_USED
 	td->xer_decoder    = asn_DEF_AddressString.xer_decoder;
 	td->xer_encoder    = asn_DEF_AddressString.xer_encoder;
+#else /* ASN1_XER_NOT_USED */
+	td->xer_decoder    = NULL;
+	td->xer_encoder    = NULL;
+#endif /* ASN1_XER_NOT_USED */
 	td->elements       = asn_DEF_AddressString.elements;
 	td->elements_count = asn_DEF_AddressString.elements_count;
 	td->specifics      = asn_DEF_AddressString.specifics;
@@ -74,6 +79,7 @@ SMS_AddressString_encode_der(asn_TYPE_descriptor_t *td,
 	return td->der_encoder(td, structure, tag_mode, tag, cb, app_key);
 }
 
+#ifndef ASN1_XER_NOT_USED
 asn_dec_rval_t
 SMS_AddressString_decode_xer(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
 		void **structure, const char *opt_mname, const void *bufptr, size_t size) {
@@ -89,6 +95,7 @@ SMS_AddressString_encode_xer(asn_TYPE_descriptor_t *td, void *structure,
 	return td->xer_encoder(td, structure, ilevel, flags, cb, app_key);
 }
 
+#endif /* ASN1_XER_NOT_USED */
 static ber_tlv_tag_t asn_DEF_SMS_AddressString_1_tags[] = {
 	(ASN_TAG_CLASS_UNIVERSAL | (4 << 2))
 };
@@ -100,8 +107,12 @@ asn_TYPE_descriptor_t asn_DEF_SMS_AddressString = {
 	SMS_AddressString_constraint,
 	SMS_AddressString_decode_ber,
 	SMS_AddressString_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	SMS_AddressString_decode_xer,
 	SMS_AddressString_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0,	/* Use generic outmost tag fetcher */
 	asn_DEF_SMS_AddressString_1_tags,
 	sizeof(asn_DEF_SMS_AddressString_1_tags)

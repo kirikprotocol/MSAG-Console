@@ -20,8 +20,12 @@ asn_TYPE_descriptor_t asn_DEF_GeneralString = {
 	asn_generic_unknown_constraint,
 	OCTET_STRING_decode_ber,    /* Implemented in terms of OCTET STRING */
 	OCTET_STRING_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	OCTET_STRING_decode_xer_hex,
 	OCTET_STRING_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_GeneralString_tags,
 	sizeof(asn_DEF_GeneralString_tags)

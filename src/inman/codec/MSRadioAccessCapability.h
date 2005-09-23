@@ -21,8 +21,10 @@ asn_struct_print_f MSRadioAccessCapability_print;
 asn_constr_check_f MSRadioAccessCapability_constraint;
 ber_type_decoder_f MSRadioAccessCapability_decode_ber;
 der_type_encoder_f MSRadioAccessCapability_encode_der;
+#ifndef ASN1_XER_NOT_USED
 xer_type_decoder_f MSRadioAccessCapability_decode_xer;
 xer_type_encoder_f MSRadioAccessCapability_encode_xer;
+#endif /* ASN1_XER_NOT_USED */
 
 #ifdef __cplusplus
 }

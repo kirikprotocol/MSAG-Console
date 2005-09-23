@@ -39,8 +39,12 @@ asn_TYPE_descriptor_t asn_DEF_SystemFailureParam = {
 	CHOICE_constraint,
 	CHOICE_decode_ber,
 	CHOICE_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	CHOICE_decode_xer,
 	CHOICE_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	CHOICE_outmost_tag,
 	0,	/* No effective tags (pointer) */
 	0,	/* No effective tags (count) */

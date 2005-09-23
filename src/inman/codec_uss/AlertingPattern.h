@@ -21,8 +21,10 @@ asn_struct_print_f AlertingPattern_print;
 asn_constr_check_f AlertingPattern_constraint;
 ber_type_decoder_f AlertingPattern_decode_ber;
 der_type_encoder_f AlertingPattern_encode_der;
+#ifndef ASN1_XER_NOT_USED
 xer_type_decoder_f AlertingPattern_decode_xer;
 xer_type_encoder_f AlertingPattern_encode_xer;
+#endif /* ASN1_XER_NOT_USED */
 
 #ifdef __cplusplus
 }

@@ -21,8 +21,12 @@ asn_TYPE_descriptor_t asn_DEF_OBJECT_IDENTIFIER = {
 	OBJECT_IDENTIFIER_constraint,
 	ber_decode_primitive,
 	der_encode_primitive,
+#ifndef ASN1_XER_NOT_USED
 	OBJECT_IDENTIFIER_decode_xer,
 	OBJECT_IDENTIFIER_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_OBJECT_IDENTIFIER_tags,
 	sizeof(asn_DEF_OBJECT_IDENTIFIER_tags)
@@ -262,6 +266,7 @@ OBJECT_IDENTIFIER__dump_body(const OBJECT_IDENTIFIER_t *st, asn_app_consume_byte
 	return wrote_len;
 }
 
+#ifndef ASN1_XER_NOT_USED
 static enum xer_pbd_rval
 OBJECT_IDENTIFIER__xer_body_decode(asn_TYPE_descriptor_t *td, void *sptr, const void *chunk_buf, size_t chunk_size) {
 	OBJECT_IDENTIFIER_t *st = (OBJECT_IDENTIFIER_t *)sptr;
@@ -334,6 +339,7 @@ OBJECT_IDENTIFIER_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 
 	return er;
 }
+#endif /* ASN1_XER_NOT_USED */
 
 int
 OBJECT_IDENTIFIER_print(asn_TYPE_descriptor_t *td, const void *sptr,

@@ -16,8 +16,10 @@ typedef OCTET_STRING_t BMPString_t;  /* Implemented via OCTET STRING */
 extern asn_TYPE_descriptor_t asn_DEF_BMPString;
 
 asn_struct_print_f BMPString_print;	/* Human-readable output */
+#ifndef ASN1_XER_NOT_USED
 xer_type_decoder_f BMPString_decode_xer;
 xer_type_encoder_f BMPString_encode_xer;
+#endif /* ASN1_XER_NOT_USED */
 
 #ifdef __cplusplus
 }

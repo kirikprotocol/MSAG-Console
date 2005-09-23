@@ -20,7 +20,9 @@ extern "C" {
 
 extern asn_TYPE_descriptor_t asn_DEF_NativeEnumerated;
 
+#ifndef ASN1_XER_NOT_USED
 xer_type_encoder_f NativeEnumerated_encode_xer;
+#endif /* ASN1_XER_NOT_USED */
 
 #ifdef __cplusplus
 }

@@ -32,14 +32,14 @@ static asn_TYPE_member_t asn_MBR_fCIBCCCAMELsequence1_2[] = {
 	{ ATF_NOFLAGS, 0, offsetof(struct fCIBCCCAMELsequence1, freeFormatData),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_OCTET_STRING,
+		&asn_DEF_OCTET_STRING,
 		memb_freeFormatData_2_constraint,
 		"freeFormatData"
 		},
 	{ ATF_POINTER, 1, offsetof(struct fCIBCCCAMELsequence1, appendFreeFormatData),
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_AppendFreeFormatData,
+		&asn_DEF_AppendFreeFormatData,
 		0,	/* Defer constraints checking to the member type */
 		"appendFreeFormatData"
 		},
@@ -69,8 +69,12 @@ asn_TYPE_descriptor_t asn_DEF_fCIBCCCAMELsequence1_2 = {
 	SEQUENCE_constraint,
 	SEQUENCE_decode_ber,
 	SEQUENCE_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	SEQUENCE_decode_xer,
 	SEQUENCE_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0,	/* Use generic outmost tag fetcher */
 	asn_DEF_fCIBCCCAMELsequence1_2_tags,
 	sizeof(asn_DEF_fCIBCCCAMELsequence1_2_tags)
@@ -87,7 +91,7 @@ static asn_TYPE_member_t asn_MBR_CAMEL_FCISMSBillingChargingCharacteristics_1[] 
 	{ ATF_NOFLAGS, 0, offsetof(struct CAMEL_FCISMSBillingChargingCharacteristics, choice.fCIBCCCAMELsequence1),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_fCIBCCCAMELsequence1_2,
+		&asn_DEF_fCIBCCCAMELsequence1_2,
 		0,	/* Defer constraints checking to the member type */
 		"fCIBCCCAMELsequence1"
 		},
@@ -112,8 +116,12 @@ asn_TYPE_descriptor_t asn_DEF_CAMEL_FCISMSBillingChargingCharacteristics = {
 	CHOICE_constraint,
 	CHOICE_decode_ber,
 	CHOICE_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	CHOICE_decode_xer,
 	CHOICE_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	CHOICE_outmost_tag,
 	0,	/* No effective tags (pointer) */
 	0,	/* No effective tags (count) */

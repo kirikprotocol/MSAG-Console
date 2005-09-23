@@ -20,6 +20,7 @@ asn_struct_free_f ASN__PRIMITIVE_TYPE_free;
 ber_type_decoder_f ber_decode_primitive;
 der_type_encoder_f der_encode_primitive;
 
+#ifndef ASN1_XER_NOT_USED
 /*
  * A callback specification for the xer_decode_primitive() function below.
  */
@@ -45,6 +46,7 @@ asn_dec_rval_t xer_decode_primitive(asn_codec_ctx_t *opt_codec_ctx,
 	const void *buf_ptr, size_t size,
 	xer_primitive_body_decoder_f *prim_body_decoder
 );
+#endif /* ASN1_XER_NOT_USED */
 
 #ifdef __cplusplus
 }

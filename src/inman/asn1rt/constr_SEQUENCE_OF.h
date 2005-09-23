@@ -22,7 +22,9 @@ extern "C" {
 #define	SEQUENCE_OF_decode_ber	SET_OF_decode_ber
 #define	SEQUENCE_OF_decode_xer	SET_OF_decode_xer
 der_type_encoder_f SEQUENCE_OF_encode_der;
+#ifndef ASN1_XER_NOT_USED
 xer_type_encoder_f SEQUENCE_OF_encode_xer;
+#endif /* ASN1_XER_NOT_USED */
 
 #ifdef __cplusplus
 }

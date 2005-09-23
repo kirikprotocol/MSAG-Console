@@ -6,14 +6,14 @@ static asn_TYPE_member_t asn_MBR_GPRSMSClass_1[] = {
 	{ ATF_NOFLAGS, 0, offsetof(struct GPRSMSClass, mSNetworkCapability),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_MSNetworkCapability,
+		&asn_DEF_MSNetworkCapability,
 		0,	/* Defer constraints checking to the member type */
 		"mSNetworkCapability"
 		},
 	{ ATF_POINTER, 1, offsetof(struct GPRSMSClass, mSRadioAccessCapability),
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_MSRadioAccessCapability,
+		&asn_DEF_MSRadioAccessCapability,
 		0,	/* Defer constraints checking to the member type */
 		"mSRadioAccessCapability"
 		},
@@ -41,8 +41,12 @@ asn_TYPE_descriptor_t asn_DEF_GPRSMSClass = {
 	SEQUENCE_constraint,
 	SEQUENCE_decode_ber,
 	SEQUENCE_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	SEQUENCE_decode_xer,
 	SEQUENCE_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0,	/* Use generic outmost tag fetcher */
 	asn_DEF_GPRSMSClass_1_tags,
 	sizeof(asn_DEF_GPRSMSClass_1_tags)

@@ -24,8 +24,10 @@ asn_struct_free_f BOOLEAN_free;
 asn_struct_print_f BOOLEAN_print;
 ber_type_decoder_f BOOLEAN_decode_ber;
 der_type_encoder_f BOOLEAN_encode_der;
+#ifndef ASN1_XER_NOT_USED
 xer_type_decoder_f BOOLEAN_decode_xer;
 xer_type_encoder_f BOOLEAN_encode_xer;
+#endif /* ASN1_XER_NOT_USED */
 
 #ifdef __cplusplus
 }

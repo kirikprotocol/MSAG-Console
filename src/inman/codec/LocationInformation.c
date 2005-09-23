@@ -6,77 +6,77 @@ static asn_TYPE_member_t asn_MBR_LocationInformation_1[] = {
 	{ ATF_POINTER, 11, offsetof(struct LocationInformation, ageOfLocationInformation),
 		(ASN_TAG_CLASS_UNIVERSAL | (2 << 2)),
 		0,
-		(void *)&asn_DEF_AgeOfLocationInformation,
+		&asn_DEF_AgeOfLocationInformation,
 		0,	/* Defer constraints checking to the member type */
 		"ageOfLocationInformation"
 		},
 	{ ATF_POINTER, 10, offsetof(struct LocationInformation, geographicalInformation),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_GeographicalInformation,
+		&asn_DEF_GeographicalInformation,
 		0,	/* Defer constraints checking to the member type */
 		"geographicalInformation"
 		},
 	{ ATF_POINTER, 9, offsetof(struct LocationInformation, vlr_number),
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_ISDN_AddressString,
+		&asn_DEF_ISDN_AddressString,
 		0,	/* Defer constraints checking to the member type */
 		"vlr-number"
 		},
 	{ ATF_POINTER, 8, offsetof(struct LocationInformation, locationNumber),
 		(ASN_TAG_CLASS_CONTEXT | (2 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_LocationNumber,
+		&asn_DEF_LocationNumber,
 		0,	/* Defer constraints checking to the member type */
 		"locationNumber"
 		},
 	{ ATF_POINTER, 7, offsetof(struct LocationInformation, cellGlobalIdOrServiceAreaIdOrLAI),
 		(ASN_TAG_CLASS_CONTEXT | (3 << 2)),
 		+1,	/* EXPLICIT tag at current level */
-		(void *)&asn_DEF_CellGlobalIdOrServiceAreaIdOrLAI,
+		&asn_DEF_CellGlobalIdOrServiceAreaIdOrLAI,
 		0,	/* Defer constraints checking to the member type */
 		"cellGlobalIdOrServiceAreaIdOrLAI"
 		},
 	{ ATF_POINTER, 6, offsetof(struct LocationInformation, extensionContainer),
 		(ASN_TAG_CLASS_CONTEXT | (4 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_ExtensionContainer,
+		&asn_DEF_ExtensionContainer,
 		0,	/* Defer constraints checking to the member type */
 		"extensionContainer"
 		},
 	{ ATF_POINTER, 5, offsetof(struct LocationInformation, selectedLSA_Id),
 		(ASN_TAG_CLASS_CONTEXT | (5 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_LSAIdentity,
+		&asn_DEF_LSAIdentity,
 		0,	/* Defer constraints checking to the member type */
 		"selectedLSA-Id"
 		},
 	{ ATF_POINTER, 4, offsetof(struct LocationInformation, msc_Number),
 		(ASN_TAG_CLASS_CONTEXT | (6 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_ISDN_AddressString,
+		&asn_DEF_ISDN_AddressString,
 		0,	/* Defer constraints checking to the member type */
 		"msc-Number"
 		},
 	{ ATF_POINTER, 3, offsetof(struct LocationInformation, geodeticInformation),
 		(ASN_TAG_CLASS_CONTEXT | (7 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_GeodeticInformation,
+		&asn_DEF_GeodeticInformation,
 		0,	/* Defer constraints checking to the member type */
 		"geodeticInformation"
 		},
 	{ ATF_POINTER, 2, offsetof(struct LocationInformation, currentLocationRetrieved),
 		(ASN_TAG_CLASS_CONTEXT | (8 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_NULL,
+		&asn_DEF_NULL,
 		0,	/* Defer constraints checking to the member type */
 		"currentLocationRetrieved"
 		},
 	{ ATF_POINTER, 1, offsetof(struct LocationInformation, sai_Present),
 		(ASN_TAG_CLASS_CONTEXT | (9 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_NULL,
+		&asn_DEF_NULL,
 		0,	/* Defer constraints checking to the member type */
 		"sai-Present"
 		},
@@ -113,8 +113,12 @@ asn_TYPE_descriptor_t asn_DEF_LocationInformation = {
 	SEQUENCE_constraint,
 	SEQUENCE_decode_ber,
 	SEQUENCE_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	SEQUENCE_decode_xer,
 	SEQUENCE_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0,	/* Use generic outmost tag fetcher */
 	asn_DEF_LocationInformation_1_tags,
 	sizeof(asn_DEF_LocationInformation_1_tags)

@@ -24,7 +24,9 @@ asn_struct_free_f ANY_free;
 asn_struct_print_f ANY_print;
 ber_type_decoder_f ANY_decode_ber;
 der_type_encoder_f ANY_encode_der;
+#ifndef ASN1_XER_NOT_USED
 xer_type_encoder_f ANY_encode_xer;
+#endif /* ASN1_XER_NOT_USED */
 
 /******************************
  * Handy conversion routines. *

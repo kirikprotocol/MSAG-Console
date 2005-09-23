@@ -6,7 +6,7 @@ static asn_TYPE_member_t asn_MBR_o_smsFailureSpecificInfo_2[] = {
 	{ ATF_POINTER, 1, offsetof(struct o_smsFailureSpecificInfo, failureCause),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_MO_SMSCause,
+		&asn_DEF_MO_SMSCause,
 		0,	/* Defer constraints checking to the member type */
 		"failureCause"
 		},
@@ -35,8 +35,12 @@ asn_TYPE_descriptor_t asn_DEF_o_smsFailureSpecificInfo_2 = {
 	SEQUENCE_constraint,
 	SEQUENCE_decode_ber,
 	SEQUENCE_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	SEQUENCE_decode_xer,
 	SEQUENCE_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0,	/* Use generic outmost tag fetcher */
 	asn_DEF_o_smsFailureSpecificInfo_2_tags,
 	sizeof(asn_DEF_o_smsFailureSpecificInfo_2_tags)
@@ -70,8 +74,12 @@ asn_TYPE_descriptor_t asn_DEF_o_smsSubmissionSpecificInfo_5 = {
 	SEQUENCE_constraint,
 	SEQUENCE_decode_ber,
 	SEQUENCE_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	SEQUENCE_decode_xer,
 	SEQUENCE_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0,	/* Use generic outmost tag fetcher */
 	asn_DEF_o_smsSubmissionSpecificInfo_5_tags,
 	sizeof(asn_DEF_o_smsSubmissionSpecificInfo_5_tags)
@@ -87,7 +95,7 @@ static asn_TYPE_member_t asn_MBR_t_smsFailureSpecificInfo_7[] = {
 	{ ATF_POINTER, 1, offsetof(struct t_smsFailureSpecificInfo, failureCause),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_MT_SMSCause,
+		&asn_DEF_MT_SMSCause,
 		0,	/* Defer constraints checking to the member type */
 		"failureCause"
 		},
@@ -116,8 +124,12 @@ asn_TYPE_descriptor_t asn_DEF_t_smsFailureSpecificInfo_7 = {
 	SEQUENCE_constraint,
 	SEQUENCE_decode_ber,
 	SEQUENCE_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	SEQUENCE_decode_xer,
 	SEQUENCE_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0,	/* Use generic outmost tag fetcher */
 	asn_DEF_t_smsFailureSpecificInfo_7_tags,
 	sizeof(asn_DEF_t_smsFailureSpecificInfo_7_tags)
@@ -151,8 +163,12 @@ asn_TYPE_descriptor_t asn_DEF_t_smsDeliverySpecificInfo_10 = {
 	SEQUENCE_constraint,
 	SEQUENCE_decode_ber,
 	SEQUENCE_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	SEQUENCE_decode_xer,
 	SEQUENCE_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0,	/* Use generic outmost tag fetcher */
 	asn_DEF_t_smsDeliverySpecificInfo_10_tags,
 	sizeof(asn_DEF_t_smsDeliverySpecificInfo_10_tags)
@@ -168,28 +184,28 @@ static asn_TYPE_member_t asn_MBR_EventSpecificInformationSMS_1[] = {
 	{ ATF_NOFLAGS, 0, offsetof(struct EventSpecificInformationSMS, choice.o_smsFailureSpecificInfo),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_o_smsFailureSpecificInfo_2,
+		&asn_DEF_o_smsFailureSpecificInfo_2,
 		0,	/* Defer constraints checking to the member type */
 		"o-smsFailureSpecificInfo"
 		},
 	{ ATF_NOFLAGS, 0, offsetof(struct EventSpecificInformationSMS, choice.o_smsSubmissionSpecificInfo),
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_o_smsSubmissionSpecificInfo_5,
+		&asn_DEF_o_smsSubmissionSpecificInfo_5,
 		0,	/* Defer constraints checking to the member type */
 		"o-smsSubmissionSpecificInfo"
 		},
 	{ ATF_NOFLAGS, 0, offsetof(struct EventSpecificInformationSMS, choice.t_smsFailureSpecificInfo),
 		(ASN_TAG_CLASS_CONTEXT | (2 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_t_smsFailureSpecificInfo_7,
+		&asn_DEF_t_smsFailureSpecificInfo_7,
 		0,	/* Defer constraints checking to the member type */
 		"t-smsFailureSpecificInfo"
 		},
 	{ ATF_NOFLAGS, 0, offsetof(struct EventSpecificInformationSMS, choice.t_smsDeliverySpecificInfo),
 		(ASN_TAG_CLASS_CONTEXT | (3 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_t_smsDeliverySpecificInfo_10,
+		&asn_DEF_t_smsDeliverySpecificInfo_10,
 		0,	/* Defer constraints checking to the member type */
 		"t-smsDeliverySpecificInfo"
 		},
@@ -217,8 +233,12 @@ asn_TYPE_descriptor_t asn_DEF_EventSpecificInformationSMS = {
 	CHOICE_constraint,
 	CHOICE_decode_ber,
 	CHOICE_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	CHOICE_decode_xer,
 	CHOICE_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	CHOICE_outmost_tag,
 	0,	/* No effective tags (pointer) */
 	0,	/* No effective tags (count) */

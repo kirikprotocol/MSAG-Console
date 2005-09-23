@@ -40,8 +40,12 @@ asn_TYPE_descriptor_t asn_DEF_REAL = {
 	asn_generic_no_constraint,
 	ber_decode_primitive,
 	der_encode_primitive,
+#ifndef ASN1_XER_NOT_USED
 	REAL_decode_xer,
 	REAL_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_REAL_tags,
 	sizeof(asn_DEF_REAL_tags) / sizeof(asn_DEF_REAL_tags[0]),
@@ -241,6 +245,7 @@ REAL_print(asn_TYPE_descriptor_t *td, const void *sptr, int ilevel,
 	return (ret < 0) ? -1 : 0;
 }
 
+#ifndef ASN1_XER_NOT_USED
 asn_enc_rval_t
 REAL_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 	int ilevel, enum xer_encoder_flags_e flags,
@@ -338,6 +343,7 @@ REAL_decode_xer(asn_codec_ctx_t *opt_codec_ctx,
 		sptr, sizeof(REAL_t), opt_mname,
 		buf_ptr, size, REAL__xer_body_decode);
 }
+#endif /* ASN1_XER_NOT_USED */
 
 
 int

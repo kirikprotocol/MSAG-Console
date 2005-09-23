@@ -26,8 +26,12 @@ asn_TYPE_descriptor_t asn_DEF_NativeEnumerated = {
 	asn_generic_no_constraint,
 	NativeInteger_decode_ber,
 	NativeInteger_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	NativeInteger_decode_xer,
 	NativeEnumerated_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_NativeEnumerated_tags,
 	sizeof(asn_DEF_NativeEnumerated_tags) / sizeof(asn_DEF_NativeEnumerated_tags[0]),
@@ -37,6 +41,7 @@ asn_TYPE_descriptor_t asn_DEF_NativeEnumerated = {
 	0	/* No specifics */
 };
 
+#ifndef ASN1_XER_NOT_USED
 asn_enc_rval_t
 NativeEnumerated_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
         int ilevel, enum xer_encoder_flags_e flags,
@@ -68,4 +73,4 @@ NativeEnumerated_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 
         return er;
 }
-
+#endif /* ASN1_XER_NOT_USED */

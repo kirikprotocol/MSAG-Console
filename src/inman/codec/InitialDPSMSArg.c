@@ -6,147 +6,147 @@ static asn_TYPE_member_t asn_MBR_InitialDPSMSArg_1[] = {
 	{ ATF_NOFLAGS, 0, offsetof(struct InitialDPSMSArg, serviceKey),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_ServiceKey,
+		&asn_DEF_ServiceKey,
 		0,	/* Defer constraints checking to the member type */
 		"serviceKey"
 		},
 	{ ATF_POINTER, 20, offsetof(struct InitialDPSMSArg, destinationSubscriberNumber),
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_CalledPartyBCDNumber,
+		&asn_DEF_CalledPartyBCDNumber,
 		0,	/* Defer constraints checking to the member type */
 		"destinationSubscriberNumber"
 		},
 	{ ATF_POINTER, 19, offsetof(struct InitialDPSMSArg, callingPartyNumber),
 		(ASN_TAG_CLASS_CONTEXT | (2 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_SMS_AddressString,
+		&asn_DEF_SMS_AddressString,
 		0,	/* Defer constraints checking to the member type */
 		"callingPartyNumber"
 		},
 	{ ATF_POINTER, 18, offsetof(struct InitialDPSMSArg, eventTypeSMS),
 		(ASN_TAG_CLASS_CONTEXT | (3 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_EventTypeSMS,
+		&asn_DEF_EventTypeSMS,
 		0,	/* Defer constraints checking to the member type */
 		"eventTypeSMS"
 		},
 	{ ATF_POINTER, 17, offsetof(struct InitialDPSMSArg, iMSI),
 		(ASN_TAG_CLASS_CONTEXT | (4 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_IMSI,
+		&asn_DEF_IMSI,
 		0,	/* Defer constraints checking to the member type */
 		"iMSI"
 		},
 	{ ATF_POINTER, 16, offsetof(struct InitialDPSMSArg, locationInformationMSC),
 		(ASN_TAG_CLASS_CONTEXT | (5 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_LocationInformation,
+		&asn_DEF_LocationInformation,
 		0,	/* Defer constraints checking to the member type */
 		"locationInformationMSC"
 		},
 	{ ATF_POINTER, 15, offsetof(struct InitialDPSMSArg, locationInformationGPRS),
 		(ASN_TAG_CLASS_CONTEXT | (6 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_LocationInformationGPRS,
+		&asn_DEF_LocationInformationGPRS,
 		0,	/* Defer constraints checking to the member type */
 		"locationInformationGPRS"
 		},
 	{ ATF_POINTER, 14, offsetof(struct InitialDPSMSArg, sMSCAddress),
 		(ASN_TAG_CLASS_CONTEXT | (7 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_ISDN_AddressString,
+		&asn_DEF_ISDN_AddressString,
 		0,	/* Defer constraints checking to the member type */
 		"sMSCAddress"
 		},
 	{ ATF_POINTER, 13, offsetof(struct InitialDPSMSArg, timeAndTimezone),
 		(ASN_TAG_CLASS_CONTEXT | (8 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_TimeAndTimezone,
+		&asn_DEF_TimeAndTimezone,
 		0,	/* Defer constraints checking to the member type */
 		"timeAndTimezone"
 		},
 	{ ATF_POINTER, 12, offsetof(struct InitialDPSMSArg, tPShortMessageSpecificInfo),
 		(ASN_TAG_CLASS_CONTEXT | (9 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_TPShortMessageSpecificInfo,
+		&asn_DEF_TPShortMessageSpecificInfo,
 		0,	/* Defer constraints checking to the member type */
 		"tPShortMessageSpecificInfo"
 		},
 	{ ATF_POINTER, 11, offsetof(struct InitialDPSMSArg, tPProtocolIdentifier),
 		(ASN_TAG_CLASS_CONTEXT | (10 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_TPProtocolIdentifier,
+		&asn_DEF_TPProtocolIdentifier,
 		0,	/* Defer constraints checking to the member type */
 		"tPProtocolIdentifier"
 		},
 	{ ATF_POINTER, 10, offsetof(struct InitialDPSMSArg, tPDataCodingScheme),
 		(ASN_TAG_CLASS_CONTEXT | (11 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_TPDataCodingScheme,
+		&asn_DEF_TPDataCodingScheme,
 		0,	/* Defer constraints checking to the member type */
 		"tPDataCodingScheme"
 		},
 	{ ATF_POINTER, 9, offsetof(struct InitialDPSMSArg, tPValidityPeriod),
 		(ASN_TAG_CLASS_CONTEXT | (12 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_TPValidityPeriod,
+		&asn_DEF_TPValidityPeriod,
 		0,	/* Defer constraints checking to the member type */
 		"tPValidityPeriod"
 		},
 	{ ATF_POINTER, 8, offsetof(struct InitialDPSMSArg, extensions),
 		(ASN_TAG_CLASS_CONTEXT | (13 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_Extensions,
+		&asn_DEF_Extensions,
 		0,	/* Defer constraints checking to the member type */
 		"extensions"
 		},
 	{ ATF_POINTER, 7, offsetof(struct InitialDPSMSArg, smsReferenceNumber),
 		(ASN_TAG_CLASS_CONTEXT | (14 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_CallReferenceNumber,
+		&asn_DEF_CallReferenceNumber,
 		0,	/* Defer constraints checking to the member type */
 		"smsReferenceNumber"
 		},
 	{ ATF_POINTER, 6, offsetof(struct InitialDPSMSArg, mscAddress),
 		(ASN_TAG_CLASS_CONTEXT | (15 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_ISDN_AddressString,
+		&asn_DEF_ISDN_AddressString,
 		0,	/* Defer constraints checking to the member type */
 		"mscAddress"
 		},
 	{ ATF_POINTER, 5, offsetof(struct InitialDPSMSArg, sgsn_Number),
 		(ASN_TAG_CLASS_CONTEXT | (16 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_ISDN_AddressString,
+		&asn_DEF_ISDN_AddressString,
 		0,	/* Defer constraints checking to the member type */
 		"sgsn-Number"
 		},
 	{ ATF_POINTER, 4, offsetof(struct InitialDPSMSArg, ms_Classmark2),
 		(ASN_TAG_CLASS_CONTEXT | (17 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_MS_Classmark2,
+		&asn_DEF_MS_Classmark2,
 		0,	/* Defer constraints checking to the member type */
 		"ms-Classmark2"
 		},
 	{ ATF_POINTER, 3, offsetof(struct InitialDPSMSArg, gPRSMSClass),
 		(ASN_TAG_CLASS_CONTEXT | (18 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_GPRSMSClass,
+		&asn_DEF_GPRSMSClass,
 		0,	/* Defer constraints checking to the member type */
 		"gPRSMSClass"
 		},
 	{ ATF_POINTER, 2, offsetof(struct InitialDPSMSArg, iMEI),
 		(ASN_TAG_CLASS_CONTEXT | (19 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_IMEI,
+		&asn_DEF_IMEI,
 		0,	/* Defer constraints checking to the member type */
 		"iMEI"
 		},
 	{ ATF_POINTER, 1, offsetof(struct InitialDPSMSArg, calledPartyNumber),
 		(ASN_TAG_CLASS_CONTEXT | (20 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_ISDN_AddressString,
+		&asn_DEF_ISDN_AddressString,
 		0,	/* Defer constraints checking to the member type */
 		"calledPartyNumber"
 		},
@@ -193,8 +193,12 @@ asn_TYPE_descriptor_t asn_DEF_InitialDPSMSArg = {
 	SEQUENCE_constraint,
 	SEQUENCE_decode_ber,
 	SEQUENCE_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	SEQUENCE_decode_xer,
 	SEQUENCE_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0,	/* Use generic outmost tag fetcher */
 	asn_DEF_InitialDPSMSArg_1_tags,
 	sizeof(asn_DEF_InitialDPSMSArg_1_tags)

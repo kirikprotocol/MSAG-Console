@@ -529,6 +529,7 @@ CHOICE_constraint(asn_TYPE_descriptor_t *td, const void *sptr,
 	}
 }
 
+#ifndef ASN1_XER_NOT_USED
 #undef	XER_ADVANCE
 #define	XER_ADVANCE(num_bytes)	do {			\
 		size_t num = num_bytes;			\
@@ -800,6 +801,7 @@ CHOICE_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 cb_failed:
 	_ASN_ENCODE_FAILED;
 }
+#endif /* ASN1_XER_NOT_USED */
 
 int
 CHOICE_print(asn_TYPE_descriptor_t *td, const void *sptr, int ilevel,

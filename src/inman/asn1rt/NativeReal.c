@@ -27,8 +27,12 @@ asn_TYPE_descriptor_t asn_DEF_NativeReal = {
 	asn_generic_no_constraint,
 	NativeReal_decode_ber,
 	NativeReal_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	NativeReal_decode_xer,
 	NativeReal_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_NativeReal_tags,
 	sizeof(asn_DEF_NativeReal_tags) / sizeof(asn_DEF_NativeReal_tags[0]),
@@ -156,7 +160,7 @@ NativeReal_encode_der(asn_TYPE_descriptor_t *td, void *ptr,
 }
 
 
-
+#ifndef ASN1_XER_NOT_USED
 /*
  * Decode the chunk of XML text encoding REAL.
  */
@@ -208,6 +212,7 @@ NativeReal_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 
 	return er;
 }
+#endif /* ASN1_XER_NOT_USED */
 
 /*
  * REAL specific human-readable output.

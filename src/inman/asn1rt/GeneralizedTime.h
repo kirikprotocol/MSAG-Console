@@ -18,7 +18,9 @@ extern asn_TYPE_descriptor_t asn_DEF_GeneralizedTime;
 asn_struct_print_f GeneralizedTime_print;
 asn_constr_check_f GeneralizedTime_constraint;
 der_type_encoder_f GeneralizedTime_encode_der;
+#ifndef ASN1_XER_NOT_USED
 xer_type_encoder_f GeneralizedTime_encode_xer;
+#endif /* ASN1_XER_NOT_USED */
 
 /***********************
  * Some handy helpers. *

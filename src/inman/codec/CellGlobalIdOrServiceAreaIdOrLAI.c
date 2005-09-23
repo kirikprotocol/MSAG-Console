@@ -6,14 +6,14 @@ static asn_TYPE_member_t asn_MBR_CellGlobalIdOrServiceAreaIdOrLAI_1[] = {
 	{ ATF_NOFLAGS, 0, offsetof(struct CellGlobalIdOrServiceAreaIdOrLAI, choice.cellGlobalIdOrServiceAreaIdFixedLength),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_CellGlobalIdOrServiceAreaIdFixedLength,
+		&asn_DEF_CellGlobalIdOrServiceAreaIdFixedLength,
 		0,	/* Defer constraints checking to the member type */
 		"cellGlobalIdOrServiceAreaIdFixedLength"
 		},
 	{ ATF_NOFLAGS, 0, offsetof(struct CellGlobalIdOrServiceAreaIdOrLAI, choice.laiFixedLength),
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_LAIFixedLength,
+		&asn_DEF_LAIFixedLength,
 		0,	/* Defer constraints checking to the member type */
 		"laiFixedLength"
 		},
@@ -39,8 +39,12 @@ asn_TYPE_descriptor_t asn_DEF_CellGlobalIdOrServiceAreaIdOrLAI = {
 	CHOICE_constraint,
 	CHOICE_decode_ber,
 	CHOICE_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	CHOICE_decode_xer,
 	CHOICE_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	CHOICE_outmost_tag,
 	0,	/* No effective tags (pointer) */
 	0,	/* No effective tags (count) */

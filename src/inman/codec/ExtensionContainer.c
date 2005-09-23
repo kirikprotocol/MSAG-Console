@@ -6,14 +6,14 @@ static asn_TYPE_member_t asn_MBR_ExtensionContainer_1[] = {
 	{ ATF_POINTER, 2, offsetof(struct ExtensionContainer, privateExtensionList),
 		(ASN_TAG_CLASS_CONTEXT | (0 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_PrivateExtensionList,
+		&asn_DEF_PrivateExtensionList,
 		0,	/* Defer constraints checking to the member type */
 		"privateExtensionList"
 		},
 	{ ATF_POINTER, 1, offsetof(struct ExtensionContainer, pcs_Extensions),
 		(ASN_TAG_CLASS_CONTEXT | (1 << 2)),
 		-1,	/* IMPLICIT tag at current level */
-		(void *)&asn_DEF_PCS_Extensions,
+		&asn_DEF_PCS_Extensions,
 		0,	/* Defer constraints checking to the member type */
 		"pcs-Extensions"
 		},
@@ -41,8 +41,12 @@ asn_TYPE_descriptor_t asn_DEF_ExtensionContainer = {
 	SEQUENCE_constraint,
 	SEQUENCE_decode_ber,
 	SEQUENCE_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	SEQUENCE_decode_xer,
 	SEQUENCE_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0,	/* Use generic outmost tag fetcher */
 	asn_DEF_ExtensionContainer_1_tags,
 	sizeof(asn_DEF_ExtensionContainer_1_tags)

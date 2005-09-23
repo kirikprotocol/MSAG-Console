@@ -126,8 +126,12 @@ asn_TYPE_descriptor_t asn_DEF_GeneralizedTime = {
 	GeneralizedTime_constraint, /* Check validity of time */
 	OCTET_STRING_decode_ber,    /* Implemented in terms of OCTET STRING */
 	GeneralizedTime_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	OCTET_STRING_decode_xer_utf8,
 	GeneralizedTime_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0, /* Use generic outmost tag fetcher */
 	asn_DEF_GeneralizedTime_tags,
 	sizeof(asn_DEF_GeneralizedTime_tags)
@@ -193,7 +197,7 @@ GeneralizedTime_encode_der(asn_TYPE_descriptor_t *td, void *sptr,
 }
 
 #ifndef	__ASN_INTERNAL_TEST_MODE__
-
+#ifndef ASN1_XER_NOT_USED
 asn_enc_rval_t
 GeneralizedTime_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 	int ilevel, enum xer_encoder_flags_e flags,
@@ -224,7 +228,7 @@ GeneralizedTime_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 			cb, app_key);
 	}
 }
-
+#endif /* ASN1_XER_NOT_USED */
 #endif	/* __ASN_INTERNAL_TEST_MODE__ */
 
 int

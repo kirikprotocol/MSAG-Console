@@ -19,15 +19,19 @@ asn_TYPE_descriptor_t asn_DEF_ANY = {
 	asn_generic_no_constraint,
 	OCTET_STRING_decode_ber,
 	OCTET_STRING_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	OCTET_STRING_decode_xer_hex,
 	ANY_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0, /* Use generic outmost tag fetcher */
 	0, 0, 0, 0,
 	0, 0,	/* No members */
 	&asn_DEF_ANY_specs,
 };
 
-
+#ifndef ASN1_XER_NOT_USED
 asn_enc_rval_t
 ANY_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 	int ilevel, enum xer_encoder_flags_e flags,
@@ -43,7 +47,7 @@ ANY_encode_xer(asn_TYPE_descriptor_t *td, void *sptr,
 	/* Dump as binary */
 	return OCTET_STRING_encode_xer(td, sptr, ilevel, flags, cb, app_key);
 }
-
+#endif /* ASN1_XER_NOT_USED */
 struct _callback_arg {
 	uint8_t *buffer;
 	size_t offset;

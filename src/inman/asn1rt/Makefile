@@ -2,8 +2,8 @@
 # $Id$
 #
 
-CFLAGS := -I. $(CFLAGS)
-CXXFLAGS := $(CXXFLAGS) -g
+CFLAGS := -I. -DASN1_XER_NOT_USED  $(CFLAGS)
+CXXFLAGS := $(CXXFLAGS) 
 PACKAGE := inman.asn1rt
 
 ifndef SMSC_SRCDIR

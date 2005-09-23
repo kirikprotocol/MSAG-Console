@@ -20,8 +20,13 @@ TimerID_1_inherit_TYPE_descriptor(asn_TYPE_descriptor_t *td) {
 	td->print_struct   = asn_DEF_NativeEnumerated.print_struct;
 	td->ber_decoder    = asn_DEF_NativeEnumerated.ber_decoder;
 	td->der_encoder    = asn_DEF_NativeEnumerated.der_encoder;
+#ifndef ASN1_XER_NOT_USED
 	td->xer_decoder    = asn_DEF_NativeEnumerated.xer_decoder;
 	td->xer_encoder    = asn_DEF_NativeEnumerated.xer_encoder;
+#else /* ASN1_XER_NOT_USED */
+	td->xer_decoder    = NULL;
+	td->xer_encoder    = NULL;
+#endif /* ASN1_XER_NOT_USED */
 	td->elements       = asn_DEF_NativeEnumerated.elements;
 	td->elements_count = asn_DEF_NativeEnumerated.elements_count;
      /* td->specifics      = asn_DEF_NativeEnumerated.specifics;	// Defined explicitly */
@@ -56,6 +61,7 @@ TimerID_encode_der(asn_TYPE_descriptor_t *td,
 	return td->der_encoder(td, structure, tag_mode, tag, cb, app_key);
 }
 
+#ifndef ASN1_XER_NOT_USED
 asn_dec_rval_t
 TimerID_decode_xer(asn_codec_ctx_t *opt_codec_ctx, asn_TYPE_descriptor_t *td,
 		void **structure, const char *opt_mname, const void *bufptr, size_t size) {
@@ -71,6 +77,7 @@ TimerID_encode_xer(asn_TYPE_descriptor_t *td, void *structure,
 	return td->xer_encoder(td, structure, ilevel, flags, cb, app_key);
 }
 
+#endif /* ASN1_XER_NOT_USED */
 static asn_INTEGER_enum_map_t asn_MAP_TimerID_1_value2enum[] = {
 	{ 0,	4,	"tssf" }
 };
@@ -95,8 +102,12 @@ asn_TYPE_descriptor_t asn_DEF_TimerID = {
 	TimerID_constraint,
 	TimerID_decode_ber,
 	TimerID_encode_der,
+#ifndef ASN1_XER_NOT_USED
 	TimerID_decode_xer,
 	TimerID_encode_xer,
+#else  /* ASN1_XER_NOT_USED */
+	0, 0,
+#endif /* ASN1_XER_NOT_USED */
 	0,	/* Use generic outmost tag fetcher */
 	asn_DEF_TimerID_1_tags,
 	sizeof(asn_DEF_TimerID_1_tags)

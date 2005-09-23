@@ -20,8 +20,10 @@ extern asn_TYPE_descriptor_t asn_DEF_OBJECT_IDENTIFIER;
 asn_struct_print_f OBJECT_IDENTIFIER_print;
 asn_constr_check_f OBJECT_IDENTIFIER_constraint;
 der_type_encoder_f OBJECT_IDENTIFIER_encode_der;
+#ifndef ASN1_XER_NOT_USED
 xer_type_decoder_f OBJECT_IDENTIFIER_decode_xer;
 xer_type_encoder_f OBJECT_IDENTIFIER_encode_xer;
+#endif /* ASN1_XER_NOT_USED */
 
 /**********************************
  * Some handy conversion routines *
