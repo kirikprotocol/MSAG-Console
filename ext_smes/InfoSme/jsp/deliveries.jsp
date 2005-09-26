@@ -21,6 +21,9 @@
     case InfoSmeBean.RESULT_STAT:
         response.sendRedirect("stat.jsp");
         return;
+    case InfoSmeBean.RESULT_DLSTAT:
+        response.sendRedirect("stat.jsp?csv=true");
+        return;
     case InfoSmeBean.RESULT_DONE:
         response.sendRedirect("deliveries.jsp");
         return;
@@ -60,7 +63,8 @@ else {
         {%>
 <div class=page_subtitle>Welcome</div><br/>
 <div class=secInfo>Click 'Create new delivery' and follow the pages to create new delivery.</div>
-<div class=secInfo>Choose 'View statistics' to perform statistics query.</div>
+<div class=secInfo>Choose 'View statistics' to perform statistics query</div>
+<div class=secInfo>or 'Download statistics' to download statistics as CSV file</div>
         <%}
         break;
 
@@ -198,6 +202,7 @@ refreshProgressStatus();
         page_menu_begin(out);
         page_menu_button(out, "mbNext", "Create new delivery", "Create new delivery");
         page_menu_button(out, "mbStat",  "View statistics", "View statistics");
+        page_menu_button(out, "mbDlstat",  "Download statistics", "Download statistics");
         page_menu_space(out);
         page_menu_end(out);
         break;

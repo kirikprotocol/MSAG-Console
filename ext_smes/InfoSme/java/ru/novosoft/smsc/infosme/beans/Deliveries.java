@@ -35,6 +35,7 @@ public class Deliveries extends InfoSmeBean
 {
     public final static String ABONENTS_FILE_PARAM = "abonentsFile";
 
+    private String mbDlstat = null;
     private String mbStat   = null;
     private String mbNext   = null;
     private String mbCancel = null;
@@ -68,6 +69,8 @@ public class Deliveries extends InfoSmeBean
         mbCancel = null; return cleanup();
       } else if (mbStat != null) {
         mbStat = null;   return InfoSmeBean.RESULT_STAT;
+      } else if (mbDlstat != null) {
+        mbDlstat = null;   return InfoSmeBean.RESULT_DLSTAT;  
       }
 
       return RESULT_OK;
@@ -663,6 +666,12 @@ public class Deliveries extends InfoSmeBean
     }
     public void setMbStat(String mbStat) {
         this.mbStat = mbStat;
+    }
+    public String getMbDlstat() {
+        return mbDlstat;
+    }
+    public void setMbDlstat(String mbDlstat) {
+        this.mbDlstat = mbDlstat;
     }
     public String getMbNext() {
         return mbNext;

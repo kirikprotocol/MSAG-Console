@@ -7,7 +7,8 @@
                  ru.novosoft.smsc.infosme.backend.DateCountersSet,
                  ru.novosoft.smsc.infosme.backend.HourCountersSet,
                  java.text.SimpleDateFormat,
-                 ru.novosoft.smsc.infosme.beans.InfoSmeBean"%>
+                 ru.novosoft.smsc.infosme.beans.InfoSmeBean,
+                 ru.novosoft.smsc.jsp.PageBean"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.TasksStatistics" />
 <jsp:setProperty name="bean" property="*"/>
 <%
@@ -17,6 +18,8 @@
 	int beanResult = bean.process(request);
 %>
 <%@ include file="inc/menu_switch.jsp"%>
+<%if ((request.getParameter("csv") != null) && (beanResult == PageBean.RESULT_OK))
+    FORM_URI=CPATH+"/esme_InfoSme/csv_download.jsp";%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%if (request.isUserInRole(InfoSmeBean.INFOSME_ADMIN_ROLE)) {%>
 <%@ include file="inc/header.jsp"%>
@@ -117,6 +120,11 @@ page_menu_end(out);
       }
     %>
     </table>
+<%--
+final String exportFile = "temp/"+bean.getExportFilePath();
+if (exportFile != null) {
+%><br/><a class=font href="<%= exportFile%>">Download as CSV file</a><%
+}--%>
     </div>
 <%}%>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

@@ -26,7 +26,8 @@ public class InfoSmeBean extends PageBean
   public static final int RESULT_SHEDULES   = PageBean.PRIVATE_RESULT + 7;
   public static final int RESULT_MESSAGES   = PageBean.PRIVATE_RESULT + 8;
   public static final int RESULT_DELIVERIES = PageBean.PRIVATE_RESULT + 9;
-  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 10;
+  public static final int RESULT_DLSTAT     = PageBean.PRIVATE_RESULT + 10;
+  protected static final int PRIVATE_RESULT = PageBean.PRIVATE_RESULT + 11;
 
   private String mbMenu = null;
 
