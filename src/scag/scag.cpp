@@ -19,7 +19,7 @@
 #include "scag/config/ConfigManager.h"
 #include "scag/config/route/RouteConfig.h"
 #include "scag/config/route/RouteStructures.h"
-//#include "scag/bill/BillingManager.h"
+#include "scag/bill/BillingManager.h"
 #include "scag/stat/StatisticsManager.h"
 #include "scag/config/alias/aliasconf.h"
 
@@ -132,10 +132,11 @@ using namespace smsc::core::synchronization;
 using smsc::util::Exception;
 
 using scag::config::ConfigManager;
-//using scag::bill::BillingManager;
+using scag::bill::BillingManager;
 using scag::stat::StatisticsManager;
 using scag::config::AliasConfig;
 using scag::config::AliasRecord;
+using scag::config::BillingManagerConfig;
 
 Scag::~Scag()
 {
@@ -392,7 +393,7 @@ void Scag::init()
       // Its neccessary to put ConfigView object
       // as argument in future in tmethod Init
       // Untill put some strings
-      //BillingManager::Init("", "");
+      BillingManager::Init(cfg.getBillManConfig());
   }
 
   try{ ussdTransactionTimeout=cfg.getConfig()->getInt("core.ussdTransactionTimeout"); }

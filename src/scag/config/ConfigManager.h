@@ -5,6 +5,7 @@
 #include "scag/config/smppman/SmppManConfig.h"
 #include "scag/config/route/RouteConfig.h"
 #include "scag/config/statman/StatManConfig.h"
+#include "scag/config/bill/BillingManagerConfig.h"
 
 #include <string>
 
@@ -16,7 +17,8 @@ enum ConfigType
 	SMPPMAN_CFG,
 	ROUTE_CFG,
 	ALIAS_CFG,
-    STATMAN_CFG
+    STATMAN_CFG,
+    BILLMAN_CFG
 };
 
 class ConfigManager
@@ -32,6 +34,7 @@ public:
     virtual SmppManConfig getSmppManConfig() = 0;
     virtual RouteConfig getRouteConfig() = 0;
     virtual StatManConfig getStatManConfig() = 0;
+    virtual BillingManagerConfig getBillManConfig() = 0;
     virtual Hash<std::string>*& getLicConfig() = 0;
     virtual Config* getConfig() = 0;
 };

@@ -4,23 +4,26 @@
 #include <inttypes.h>
 #include "Bill.h"
 #include <string>
+#include "scag/config/bill/BillingManagerConfig.h"
 
-namespace scag { namespace re { namespace actions {
+/*namespace scag { namespace re { namespace actions {
      class ActionFactory;
-}}}
+}}}*/
 
 
-namespace scag { namespace bill
+namespace scag { namespace bill 
 {
 
-    struct BillingManagerConfig
+    using scag::config::BillingManagerConfig;
+
+    /*struct BillingManagerConfig
     {
         std::string cfg_dir;
         std::string so_dir;
         scag::re::actions::ActionFactory * mainActionFactory;
 
         BillingManagerConfig() : mainActionFactory(0) {}
-    };
+    };*/
 
     class BillingManager
     {
