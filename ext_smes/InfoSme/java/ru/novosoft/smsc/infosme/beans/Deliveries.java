@@ -70,7 +70,7 @@ public class Deliveries extends InfoSmeBean
       } else if (mbStat != null) {
         mbStat = null;   return InfoSmeBean.RESULT_STAT;
       } else if (mbDlstat != null) {
-        mbDlstat = null;   return InfoSmeBean.RESULT_DLSTAT;  
+        mbDlstat = null;   return InfoSmeBean.RESULT_DLSTAT;
       }
 
       return RESULT_OK;
@@ -549,6 +549,9 @@ public class Deliveries extends InfoSmeBean
         errors.clear();
         resetTask(); stage = 0;
         status = STATUS_OK; statusStr = STATUS_STR_INIT;
+        if (incomingFile != null && incomingFile.isFile() && incomingFile.exists()) {
+            incomingFile.delete(); incomingFile = null;
+        }
         return RESULT_DONE;
     }
 
