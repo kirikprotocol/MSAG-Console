@@ -110,7 +110,12 @@ public class TasksStatistics extends InfoSmeBean
             out.println();
             out.print(TASK_STR); out.print(COL_SEP);
             String taskId = query.getTaskId();
-            out.print((taskId == null || taskId.length() <= 0) ? "All":taskId);
+            if ((taskId == null || taskId.length() <= 0)) out.print("All");
+            else {
+                String taskName = getTaskName(taskId);
+                out.print((taskName == null || taskName.length() <= 0) ? "???":taskName);
+            }
+
             out.print(COL_SEP); out.print(COL_SEP); out.println(COL_SEP);
             out.print(FROM_STR); out.print(COL_SEP);
             date = (query.isFromDateEnabled()) ? convertDateToString(query.getFromDate()):"-";
