@@ -11,9 +11,6 @@
 #include "util/regexp/RegExp.hpp"
 #include "util/config/ConfigView.h"
 #include <typeinfo>
-#include "gwsme.hpp"
-#include "scag/billing/bill.hpp"
-#include "scag/billing/rules/BillingRules.hpp"
 #include "util/findConfigFile.h"
 
 #include "scag/config/ConfigManager.h"
@@ -22,6 +19,7 @@
 #include "scag/bill/BillingManager.h"
 #include "scag/stat/StatisticsManager.h"
 #include "scag/config/alias/aliasconf.h"
+#include "scag/sessions/SessionManager.h"
 
 namespace scag
 {
@@ -137,6 +135,7 @@ using scag::stat::StatisticsManager;
 using scag::config::AliasConfig;
 using scag::config::AliasRecord;
 using scag::config::BillingManagerConfig;
+using scag::sessions::SessionManager;
 
 Scag::~Scag()
 {
@@ -145,8 +144,13 @@ Scag::~Scag()
 
 class SpeedMonitor:public smsc::core::threads::ThreadedTask{
 public:
-  SpeedMonitor(EventQueue& eq, scag::performance::PerformanceListener* pl, Scag* pscag):
-    queue(eq),perfListener(pl)
+
+  //****************************************************************************************
+  // Its nesseccary evenqueue to replace on something
+  //****************************************************************************************
+
+  SpeedMonitor(/*EventQueue& eq, */ scag::performance::PerformanceListener* pl, Scag* pscag):
+    /*queue(eq),*/perfListener(pl)
   {
     start.tv_sec=0;
     start.tv_nsec=0;
@@ -177,9 +181,17 @@ public:
       //tv.tv_usec=0;
       //select(0,0,0,0,&tv);
       while(now.tv_sec==time(NULL))ev.Wait(10);
-      cnt=queue.getCounter();
+
+      //===========================
+      // replace queue
+      //cnt=queue.getCounter();
+
       int eqhash,equnl;
-      queue.getStats(equnl);
+
+      //=======================
+      // replace queue
+      //queue.getStats(equnl);
+
       clock_gettime(CLOCK_REALTIME,&now);
       ut=((now.tv_sec*1000.0+now.tv_nsec/1000000.0)-
          (start.tv_sec*1000.0+start.tv_nsec/1000000.0))/1000.0;
@@ -277,7 +289,7 @@ public:
     return "SpeedMonitor";
   }
 protected:
-  EventQueue& queue;
+  //EventQueue& queue;
   int perfCnt[scag::performance::performanceCounters][60];
   int timeshift;
   time_t times[60];
@@ -396,6 +408,22 @@ void Scag::init()
       BillingManager::Init(cfg.getBillManConfig());
   }
 
+  //********************************************************
+  //*********** SessionManager initialization **************
+  try{
+      smsc_log_info(log, "Session Manager is starting..." );
+
+      SessionManager::Init(cfg.getSessionManConfig());
+
+      smsc_log_info(log, "Session Manager started" );
+  }catch(exception& e){
+      smsc_log_warn(log, "Scag.init exception: %s", e.what());
+      __warning__("Sessioan Manager is not started.");
+  }catch(...){
+      __warning__("Session Manager is not started.");
+  }
+  //********************************************************
+
 
   //********************************************************
   //************** RuleEngine initialization ***************
@@ -421,12 +449,6 @@ void Scag::init()
   }
   //********************************************************
 
-  try{ ussdTransactionTimeout=cfg.getConfig()->getInt("core.ussdTransactionTimeout"); }
-  catch(...) {
-    __warning__("ussdTransactionTimeout set to default(10min)");
-    ussdTransactionTimeout = 10*60;
-  }
-
 
   /*{
     smsc_log_info(log, "Starting statemachines" );
@@ -440,7 +462,7 @@ void Scag::init()
   }*/
 
   {
-    SpeedMonitor *sm=new SpeedMonitor(eventqueue,&perfDataDisp,this);
+    SpeedMonitor *sm=new SpeedMonitor(&perfDataDisp,this);
     FILE *f=fopen("stats.txt","rt");
     if(f)
     {
@@ -487,13 +509,13 @@ void Scag::init()
   scagPort=cfg.getConfig()->getInt("smpp.port");
 
   //*****************************************************
-  // How will be set this parameters now?
+  // It will be not socketman
   //*****************************************************
-  //
+  /*
   ssockman.setSmppSocketTimeout(cfg.getConfig()->getInt("smpp.readTimeout"));
   ssockman.setInactivityTime(cfg.getConfig()->getInt("smpp.inactivityTime"));
   ssockman.setInactivityTimeOut(cfg.getConfig()->getInt("smpp.inactivityTimeOut"));
-  //
+  */
   //*****************************************************
   //*****************************************************
 
@@ -647,53 +669,8 @@ void Scag::init()
 void Scag::run()
 {
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.run");
-  __trace__("Smsc::run");
 
-  try{
-  if(startTime==0)startTime=time(NULL);
-  {
-    __trace__("Starting SMPPIO");
-    Event accstarted;
-    smsc::system::smppio::SmppAcceptor *acc=new
-      smsc::system::smppio::SmppAcceptor(
-        scagHost.c_str(),
-        scagPort,
-        &ssockman,
-        &accstarted
-      );
-    tp.startTask(acc);
-    __trace__("Waiting SMPPIO started");
-    accstarted.Wait();
-    __trace__("SMPPIO started");
-    if(!acc->isStarted())
-    {
-      throw Exception("Failed to start SMPP or MAP eduler created in init");
-    }
-  }
-  // start on thread pool 2 to shutdown it after state machines
-
-
-  // некоторые действия до основного цикла
-  mainLoop();
-
-
-  // и после него
-  //shutdown();
-  }
-  catch(exception& e)
-  {
-
-    __trace2__("Smsc::run exception:(%s)%s",typeid(e).name(),e.what());
-    smsc_log_warn(log, "Smsc::run exception:%s",e.what());
-    throw;
-  }
-  catch(...)
-  {
-    __trace__("Smsc::run exception:unknown");
-    smsc_log_warn(log, "Smsc::run exception:unknown");
-    throw;
-  }
-  __trace__("Smsc::run completed");
+  //TODO: report performance on Speed Monitor
 }
 
 void Scag::shutdown()
@@ -703,68 +680,5 @@ void Scag::shutdown()
   tp.shutdown();
   tp2.shutdown();
 }
-
-void Scag::reloadRoutes()
-{
-  ConfigManager & cfg = ConfigManager::Instance();
-  auto_ptr<RouteManager> router(new RouteManager());
-
-  //******************************************
-  //make when transport will  be ready
-  //router->assign(&smeman);
-
-  try { loadRoutes(router.get(),cfg.getRouteConfig()); }
-  catch(...) {
-      __warning__("Failed to load routes");
-  }
-  ResetRouteManager(router.release());
-}
-
-void Scag::reloadTestRoutes(const RouteConfig& rcfg)
-{
-  auto_ptr<RouteManager> router(new RouteManager());
-
-  //*******************************************
-  // make when transport will be ready
-  //router->assign(&smeman);
-
-  loadRoutes(router.get(),rcfg,true);
-  ResetTestRouteManager(router.release());
-}
-
-/*
-void Scag::reloadAliases()
-{
-  ConfigManager & cfg = ConfigManager::Instance();
-  auto_ptr<AliasManager> aliaser(new AliasManager());
-  {
-    AliasConfig acfg = cfg.getAliasConfig();
-    scag::config::AliasConfig::RecordIterator i =
-                                acfg.getRecordIterator();
-    while(i.hasRecord())
-    {
-      scag::config::AliasRecord *rec;
-      i.fetchNext(rec);
-      __trace2__("adding %20s %20s",rec->addrValue,rec->aliasValue);
-      smsc::alias::AliasInfo ai;
-      ai.addr = smsc::sms::Address(
-        strlen(rec->addrValue),
-        rec->addrTni,
-        rec->addrNpi,
-        rec->addrValue);
-      ai.alias = smsc::sms::Address(
-        strlen(rec->aliasValue),
-        rec->aliasTni,
-        rec->aliasNpi,
-        rec->aliasValue);
-      ai.hide = rec->hide;
-      aliaser->addAlias(ai);
-    }
-    aliaser->commit();
-  }
-
-  ResetAliases(aliaser.release());
-}
-*/
 
 } //scag

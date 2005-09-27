@@ -190,7 +190,7 @@ public:
 protected:
   Socket srv;
   PerformanceDataDispatcher* disp;
-  string host;
+  std::string host;
   int port;
 };
 

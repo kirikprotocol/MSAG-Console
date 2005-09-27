@@ -10,10 +10,6 @@
 #include "util/xml/utilFunctions.h"
 #include "core/threads/ThreadPool.hpp"
 
-// Its during for a test only
-//#include "scag/scag.h"
-
-#include "scag/gwsme.hpp"
 #include "util/Exception.hpp"
 
 #include <exception.h>
@@ -52,4 +48,4 @@ Response * CommandRegSmsc::CreateResponse(scag::Scag * SmscApp)
 
 
 }
-}
+}                                                       

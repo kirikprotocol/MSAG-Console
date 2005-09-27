@@ -8,15 +8,11 @@
 #include "system/smppio/SmppSocketsManager.hpp"
 #include "smeman/smeman.h"
 #include "scag/transport/smpp/router/route_manager.h"
-#include "scag/event_queue.h"
 #include "util/config/smeman/SmeManConfig.h"
 #include "scag/performance.hpp"
 #include "sme/SmppBase.hpp"
 
 #include "scag/stat/StatisticsManager.h"
-
-#include "scag/mrcache.hpp"
-#include "scag/gwsme.hpp"
 
 #include "core/buffers/XHash.hpp"
 #include "logger/Logger.h"
@@ -33,7 +29,6 @@ using namespace smsc::smeman;
 using smsc::core::threads::ThreadedTask;
 using smsc::sme::SmeConfig;
 using smsc::smeman::SmeManager;
-using scag::GatewaySme;
 using namespace smsc::logger;
 
 using scag::config::RouteConfig;
@@ -110,7 +105,7 @@ class GatewaySme;
 class Scag
 {
 public:
-  Scag():ssockman(&tp,&smeman),stopFlag(false),router_(0),testRouter_(0)
+  Scag():stopFlag(false)
   {
     acceptedCounter=0;
     rejectedCounter=0;
@@ -122,43 +117,13 @@ public:
     startTime=0;
     license.maxsms=0;
     license.expdate=0;
-    memset(gwSmeMap,0,sizeof(gwSmeMap));
   };
   ~Scag();
   void init();
   void run();
   void stop(){stopFlag=true;}
-  void mainLoop();
+  //void mainLoop();
   void shutdown();
-
-  bool Scag::routeSms(const Address& org,const Address& dst, int& dest_idx,SmeProxy*& proxy,smsc::router::RouteInfo* ri,SmeIndex idx=-1);
-
-  void cancelSms(SMSId id,const Address& oa,const Address& da)
-  {
-    eventqueue.enqueue(SmscCommand::makeCancel(id,oa,da));
-  }
-
-  smsc::smeman::SmeInfo getSmeInfo(smsc::smeman::SmeIndex idx)
-  {
-    return smeman.getSmeInfo(idx);
-  }
-
-  smsc::smeman::SmeIndex getSmeIndex(const string& sid)
-  {
-    return smeman.lookup(sid);
-  }
-
-  smsc::smeman::SmeInfo getSmeInfo(const string& sid)
-  {
-    return smeman.getSmeInfo(smeman.lookup(sid));
-  }
-
-  SmeProxy* getSmeProxy(const string& sid)
-  {
-    smsc::smeman::SmeIndex idx=smeman.lookup(sid);
-    if(idx==-1)return 0;
-    return smeman.getSmeProxy(idx);
-  }
 
   void unregisterSmeProxy(const string& sysid)
   {
@@ -183,8 +148,6 @@ public:
     }*/
   }
 
-  SmeAdministrator* getSmeAdmin(){return &smeman;}
-
 
   void updatePerformance(int counter)
   {
@@ -199,11 +162,6 @@ public:
       case cntTransOk:     transOkCounter++;break;
       case cntTransFail:   transFailCounter++;break;
     }
-  }
-
-  void updateCounter(const SmppStatEvent& si)
-  {
-    statMan->registerEvent(si);
   }
 
   void SaveStats()
@@ -246,45 +204,6 @@ public:
     cnt[5]=transFailCounter;
   }
 
-  void getStatData(int& eqsize)
-  {
-    eventqueue.getStats(eqsize);
-  }
-
-  RefferGuard<RouteManager> getRouterInstance()
-  {
-    MutexGuard g(routerSwitchMutex);
-    return RefferGuard<RouteManager>(router_);
-  }
-
-  RefferGuard<RouteManager> getTestRouterInstance()
-  {
-    MutexGuard g(routerSwitchMutex);
-    return RefferGuard<RouteManager>(testRouter_);
-  }
-
-  void ResetRouteManager(RouteManager* manager)
-  {
-    MutexGuard g(routerSwitchMutex);
-    if ( router_ ) router_->Release();
-    router_ = new Reffer<RouteManager>(manager);
-  }
-
-  void ResetTestRouteManager(RouteManager* manager)
-  {
-    MutexGuard g(routerSwitchMutex);
-    if ( testRouter_ ) testRouter_->Release();
-    testRouter_ = new Reffer<RouteManager>(manager);
-  }
-
-  void reloadRoutes();
-  void reloadTestRoutes(const RouteConfig& rcfg);
-
-  uint8_t getNextMR(const Address& addr)
-  {
-    return mrCache.getNextMR(addr);
-  }
-
   void InitLicense(const Hash<string>& lic)
   {
     license.maxsms=atoi(lic["MaxSmsThroughput"].c_str());
@@ -325,21 +244,12 @@ public:
   //bool regSmsc(SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid);
   //bool modifySmsc(SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid);
 
-  int ussdTransactionTimeout;
-
 protected:
 
   void processCommand(SmscCommand& cmd);
 
   void generateAlert(SMS* sms);
 
-  smsc::system::smppio::SmppSocketsManager ssockman;
-  smsc::smeman::SmeManager smeman;
-  Mutex routerSwitchMutex;
-  Mutex gatewaySwitchMutex;
-  Reffer<RouteManager>* router_;
-  Reffer<RouteManager>* testRouter_;
-  EventQueue eventqueue;
   bool stopFlag;
   std::string scagHost;
   int scagPort;
@@ -347,16 +257,10 @@ protected:
 
   scag::performance::PerformanceDataDispatcher perfDataDisp;
 
-  SmeProxy* abonentInfoProxy;
-
-  scag::stat::StatisticsManager *statMan;
-
   struct LicenseInfo{
     int maxsms;
     time_t expdate;
   }license;
-
-  MessageReferenceCache mrCache;
 
   Mutex perfMutex;
 
@@ -371,8 +275,6 @@ protected:
   string ussdCenterAddr;
   int    ussdSSN;
   time_t startTime;
-
-  GatewaySme* gwSmeMap[256];
 
   int eventQueueLimit;
 
