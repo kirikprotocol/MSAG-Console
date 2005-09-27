@@ -2,9 +2,9 @@
 <scag:rule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://www.sibinco.com/SCAG xsd/smpp_rules.xsd"
            xmlns:scag="http://www.sibinco.com/SCAG"
-           transport="WAP">
+           transport="WAP" id="3">
   <note>this wap rule</note>
-  <provider>first provider</provider>
+  <provider>3</provider>
     <deliver_sm>
         <set var="$e777" value="20"/>
  <set var="tt" value="tt"/>

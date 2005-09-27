@@ -107,11 +107,15 @@
             <enumeration value="MMS"/>
         </restriction>
     </simpleType>
-    
     <!-- Main element definition  -->
     <complexType name="RuleType" abstract="true">
-        <attribute name="transport" type="scag:Transport" use="required"/>   
+      <sequence>
+       <element name="note" type="string" />
+       <element name="provider" type="string" maxOccurs="1"/>
+      </sequence>
+        <attribute name="transport" type="scag:Transport" use="required"/>
+        <attribute name="id" type="string" use="required"/>
     </complexType>
+
     <element name="rule" type="scag:RuleType"/>
-    
 </schema>
