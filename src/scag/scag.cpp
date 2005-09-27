@@ -33,6 +33,7 @@ namespace scag
     using scag::config::SourceHash;
     using scag::config::Mask;
     using scag::config::MaskVector;
+    using smsc::sms::Address;
 
     extern void loadRoutes(RouteManager* rm, const scag::config::RouteConfig& rc,bool traceit=false);
 

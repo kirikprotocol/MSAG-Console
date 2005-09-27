@@ -5,30 +5,29 @@
 
 #include "core/threads/ThreadPool.hpp"
 #include "core/threads/ThreadedTask.hpp"
-#include "system/smppio/SmppSocketsManager.hpp"
-#include "smeman/smeman.h"
 #include "scag/transport/smpp/router/route_manager.h"
 #include "util/config/smeman/SmeManConfig.h"
 #include "scag/performance.hpp"
 #include "sme/SmppBase.hpp"
-
+#include "smeman/smsccmd.h"
 #include "scag/stat/StatisticsManager.h"
-
 #include "core/buffers/XHash.hpp"
 #include "logger/Logger.h"
 #include "scag/config/route/RouteConfig.h"
 #include "scag/stat/Statistics.h"
 #include "scag/stat/StatisticsManager.h"
 #include "scag/re/RuleEngine.h"
+#include "sms/sms.h"
 
 namespace scag
 {
 
 using smsc::sms::SMS;
-using namespace smsc::smeman;
 using smsc::core::threads::ThreadedTask;
 using smsc::sme::SmeConfig;
-using smsc::smeman::SmeManager;
+
+using smsc::smeman::SmscCommand;
+
 using namespace smsc::logger;
 
 using scag::config::RouteConfig;
@@ -36,59 +35,7 @@ using scag::stat::SmppStatEvent;
 using scag::stat::StatisticsManager;
 using scag::transport::smpp::router::RouteManager;
 using scag::transport::smpp::router::RouteInfo;
-
-// TODO: move to uti    l
-template<class T>
-class Reffer
-{
-  Mutex sync_;
-  T* manager_;
-  unsigned refCounter_;
-public:
-  T* operator->() { return manager_;}
-  Reffer(T* manager)
-  {
-    refCounter_ = 1;
-    manager_ = manager;
-  }
-  void Release()
-  {
-    unsigned counter;
-    {
-      MutexGuard g(sync_);
-      counter = --refCounter_;
-    }
-    if ( counter == 0 )
-    {
-      delete this;
-    }
-  }
-  Reffer* AddRef(){
-    MutexGuard g(sync_);
-    ++refCounter_;
-    return this;
-  }
-  static Reffer* Create(T* t) {return new Reffer(t);}
-protected:
-  virtual ~Reffer() {delete manager_;}
-private:
-  Reffer& operator = (const Reffer&);
-  Reffer(const Reffer&);
-};
-
-template<class T>
-class RefferGuard
-{
-  mutable Reffer<T>* reffer_;
-public:
-  RefferGuard(Reffer<T>* reffer) : reffer_(reffer) { reffer_->AddRef(); }
-  RefferGuard(const RefferGuard& g) : reffer_(g.reffer_){g.reffer_=0;}
-  ~RefferGuard() { if ( reffer_ != 0 ) reffer_->Release(); reffer_ = 0; }
-  Reffer<T>& operator->() { return *reffer_; }
-private:
-  RefferGuard& operator = (const RefferGuard&);
-};
-// TODO: move to util
+using std::string;
 
 namespace StatEvents
 {
@@ -124,6 +71,7 @@ public:
   void stop(){stopFlag=true;}
   //void mainLoop();
   void shutdown();
+
 
   void unregisterSmeProxy(const string& sysid)
   {
@@ -246,6 +194,7 @@ public:
 
 protected:
 
+  // AdminCommand
   void processCommand(SmscCommand& cmd);
 
   void generateAlert(SMS* sms);
@@ -279,15 +228,6 @@ protected:
   int eventQueueLimit;
 
   smsc::core::threads::ThreadPool tp,tp2;
-
-  struct MergeCacheItem{
-    Address  oa;//originating address
-    uint16_t mr;//message reference
-    bool operator==(const MergeCacheItem& item)
-    {
-      return oa==item.oa && mr==item.mr;
-    }
-  };
 
   friend class StatusSme;
 
