@@ -42,7 +42,19 @@ public class ResourceManager
         for (int i = 0; i < resourceFiles.length; i++) {
           File resourceFile = resourceFiles[i];
           final int res_pref_len = RESOURCE_PREFIX.length();
-          Resource resource = new Resource(resourceFile, resourceFile.getName().substring(res_pref_len, res_pref_len + 5));
+          Resource resource = null;
+          try {
+            resource = new Resource(resourceFile, resourceFile.getName().substring(res_pref_len, res_pref_len + 5));
+          } catch (IOException e) {
+            e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
+           throw new IOException(e.getMessage());
+          } catch (ParserConfigurationException e) {
+            e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
+           throw new ParserConfigurationException(e.getMessage());
+          } catch (SAXException e) {
+            e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
+           throw new SAXException(e.getMessage());
+          }
           resources.put(resource.getLocaleName(), resource);
         }
       }

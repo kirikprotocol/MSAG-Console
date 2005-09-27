@@ -26,12 +26,23 @@ public class SmscsManager
     final Set smscIds = gwConfig.getSectionChildShortSectionNames(Constants.SECTION_NAME_SMSC_CONNECTIONS);
     for (Iterator i = smscIds.iterator(); i.hasNext();) {
       final String smscId = (String) i.next();
-      final SmscInfo info = new SmscInfo(gwConfig, Constants.SECTION_NAME_SMSC_CONNECTIONS + '.' + smscId);
-      smscs.put(smscId, info);
-      if (smes.containsKey(smscId)) {
+      final SmscInfo info;
+      try {
+        info = new SmscInfo(gwConfig, Constants.SECTION_NAME_SMSC_CONNECTIONS + '.' + smscId);
+        smscs.put(smscId, info);
+     if (smes.containsKey(smscId)) {
         final GwSme sme = (GwSme) smes.get(smscId);
         sme.setSmscInfo(info);
       }
+      } catch (Config.WrongParamTypeException e) {
+        e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
+         throw new Config.WrongParamTypeException(e.getMessage());
+      } catch (Config.ParamNotFoundException e) {
+        e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
+         throw new Config.ParamNotFoundException(e.getMessage());
+      }
+
+
     }
   }
 

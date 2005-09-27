@@ -32,8 +32,8 @@ public class DtdsEntityResolver implements EntityResolver
       throws SAXException, IOException
   {
     logger.debug("enter " + this.getClass().getName() + "resolveEntity(\"" + publicId + "\", \"" + systemId + "\")");
-    if (systemId.endsWith(".dtd")) {
-      String filename = "dtds/" + getDtdName(systemId);
+    if (systemId.endsWith(".dtd") || systemId.endsWith(".xsd")) {
+     String filename = "dtds/" + getDtdName(systemId);
       logger.debug("try filename " + filename);
       InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(filename);
       if (in != null) {

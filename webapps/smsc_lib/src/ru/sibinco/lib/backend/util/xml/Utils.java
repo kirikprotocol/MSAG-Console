@@ -63,7 +63,18 @@ public class Utils
     InputSource source = new InputSource(filename);
     return builder.parse(source);
   }
-
+      public static Document parseSchema(String xsdFolder,String filename)
+      throws FactoryConfigurationError, ParserConfigurationException, SAXException, IOException, NullPointerException
+  {
+    if (filename == null)
+      throw new NullPointerException("input filename is null");
+    DocumentBuilderFactory factory = getDocumentBuilderFactory();
+    DocumentBuilder builder = factory.newDocumentBuilder();
+    builder.setEntityResolver(getDtdsEntityResolver());
+    InputSource source = new InputSource(filename);
+    source.setSystemId(xsdFolder+"/xsd/smpp_rules.xsd");
+    return builder.parse(source);
+  }
   public static Element createChildElement(Document document, Element parent, String newChildTagName)
   {
     Element newChild = document.createElement(newChildTagName);

@@ -40,8 +40,14 @@ public abstract class RouteSubjectManager
   public void init()
       throws SibincoException
   {
-    load();
-    trace();
+    try {
+      load();
+      trace();
+    } catch (SibincoException e) {
+      e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
+       throw new SibincoException(e.getMessage());
+    }
+
   }
 
   public Map getRoutes()

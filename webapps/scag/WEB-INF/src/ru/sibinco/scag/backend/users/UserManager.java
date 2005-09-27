@@ -24,7 +24,19 @@ public class UserManager
   public UserManager(String config) throws IOException, ParserConfigurationException, SAXException
   {
     this.configFile = new File(config);
-    load();
+    try {
+      load();
+    } catch (IOException e) {
+      e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
+      throw new IOException(e.getMessage());
+    } catch (ParserConfigurationException e) {
+      e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
+     throw new ParserConfigurationException(e.getMessage());
+    } catch (SAXException e) {
+      e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
+      throw new SAXException(e.getMessage());
+    }
+
   }
 
   private void load() throws IOException, ParserConfigurationException, SAXException

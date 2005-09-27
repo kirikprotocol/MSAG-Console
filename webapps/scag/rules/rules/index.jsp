@@ -9,6 +9,6 @@
   </jsp:attribute>
 
   <jsp:body>
-    <sm:table columns="checkbox,name,providerName,notes" names="c,name,provider,notes" widths="1,39,39,21" edit="name" target="jedit"/>
+    <sm:table columns="checkbox,name,providerName,notes,transport" names="c,name,provider,notes,transport" widths="1,24,25,25,25" edit="name" goal="jedit"/>
   </jsp:body>
 </sm:page>

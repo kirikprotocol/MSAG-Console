@@ -9,8 +9,13 @@ package ru.sibinco.scag.backend.rules;
  */
 
 import ru.sibinco.scag.backend.sme.Provider;
-import ru.sibinco.scag.backend.routing.TrafficRules;
+import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.Constants;
+import ru.sibinco.lib.backend.util.xml.Utils;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
+import java.util.Map;
 
 
 /**
@@ -21,18 +26,35 @@ public class Rule
   private static final String BILLING_ID_ATTRIBUTE = "billingId";
   private static final String PROVIDER_ID_ATTRIBUTE = "providerId";
   private Provider provider;
-  private String billingRuleId;
+  private String transport;
   private String name;
   private String notes;
 
-  public Rule(final String ruleName, final String notes, final Provider provider, final String billingRuleId)
+  public Rule(final String ruleName, final String notes, final Provider provider, final String transport)
   {
     this.name=ruleName;
     this.notes=notes;
-    this.billingRuleId = billingRuleId;
+    this.transport = transport;
     this.provider = provider;
   }
-
+    public Rule(Element ruleElem) throws SibincoException
+  {
+    name = ruleElem.getAttribute("id");
+    if (name.length() > Constants.ROUTE_ID_MAXLENGTH) {
+      throw new SibincoException("Rule name is too long: " + name.length() + " chars \"" + name + '"');
+    }
+    transport=ruleElem.getAttribute("transport");
+    //long providerId=Long.decode(ruleElem.getAttribute("provider")).longValue();
+    NodeList providerList = ruleElem.getElementsByTagName("provider");
+    if (providerList.getLength() > 1) {
+          throw new SibincoException("Rule contains more then one provider");
+        }
+    long providerId=Long.decode(Utils.getNodeText(providerList.item(0))).longValue();
+    notes = "";
+    NodeList notesList = ruleElem.getElementsByTagName("notes");
+    for (int i = 0; i < notesList.getLength(); i++)
+      notes += Utils.getNodeText(notesList.item(i));
+  }
   public Provider getProvider()
   {
     return provider;
@@ -82,14 +104,14 @@ public class Rule
   }
 
 
-  public String getBillingRuleId()
+  public String getTransport()
   {
-    return billingRuleId;
+    return transport;
   }
 
-  public void setBillingRuleId(String billingRuleId)
+  public void setTransport(String transport)
   {
-    this.billingRuleId = billingRuleId;
+    this.transport = transport;
   }
 }
 

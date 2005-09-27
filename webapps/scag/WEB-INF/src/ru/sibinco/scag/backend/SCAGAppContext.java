@@ -68,8 +68,6 @@ public class SCAGAppContext
     try {
       System.out.println("  **  config file:" + new File(config_filename).getAbsolutePath());
       System.out.flush();
-      ruleManager=new RuleManager();
-      ruleManager.init();
       config = new Config(new File(config_filename));
       gwConfig = new Config(new File(config.getString("gw_config")));
       String gwDaemonHost=config.getString("gw daemon.host");
@@ -87,11 +85,15 @@ public class SCAGAppContext
       //svcManager = new SvcManager(config.getString("services_file"));
       svcManager = new SvcManager();
       svcManager.init();
+      String rulesFolder=config.getString("rules_folder");
+      String xsdFolder=config.getString("xsd_folder");
+      ruleManager=new RuleManager(new File(rulesFolder),new File(xsdFolder),providerManager);
+      ruleManager.init();
       smscsManager = new SmscsManager(gwConfig,gwSmeManager);
-      resourceManager = new ResourceManager(new File(gwConfigFolder));
+      resourceManager = new ResourceManager(gwConfFolder);
       scag = new SCAG(gwDaemonHost, (int)config.getInt("gw daemon.port"),gwConfigFolder, this);
       billingManager = new BillingManager(new File(gwConfigFolder, "billing-rules.xml"));
-      gwRoutingManager = new GwRoutingManager(new File(gwConfigFolder), gwSmeManager, providerManager, billingManager);
+      gwRoutingManager = new GwRoutingManager(gwConfFolder, gwSmeManager, providerManager, billingManager);
       gwRoutingManager.init();
       gwDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), gwSmeManager, config.getString("gw daemon.folder"));
       gateway = new Gateway(gwDaemonHost, (int) gwConfig.getInt("admin.port"));
@@ -101,6 +103,7 @@ public class SCAGAppContext
       XmlAuthenticator.init(new File(config.getString("users_config_file")));
     } catch (Throwable e) {
       logger.fatal("Could not initialize App Context", e);
+      e.printStackTrace();
       throw e;
     }
   }
