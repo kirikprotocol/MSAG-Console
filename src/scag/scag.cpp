@@ -396,6 +396,31 @@ void Scag::init()
       BillingManager::Init(cfg.getBillManConfig());
   }
 
+
+  //********************************************************
+  //************** RuleEngine initialization ***************
+  try{
+      smsc_log_info(log, "Rule Engine is starting..." );
+
+      using scag::config::ConfigView;
+      std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.getConfig(),"RuleEngine"));
+
+      auto_ptr <char> loc(cv->getString("location", 0, false));
+      if(!loc.get())
+          throw Exception("RuleEngine.location not found");
+
+      std::string location = loc.get();
+      ruleEngine.Init(location);
+
+      smsc_log_info(log, "Rule Engine started" );
+  }catch(exception& e){
+      smsc_log_warn(log, "Scag.init exception: %s", e.what());
+      __warning__("Rule Engine is not started.");
+  }catch(...){
+      __warning__("Rule Engine is not started.");
+  }
+  //********************************************************
+
   try{ ussdTransactionTimeout=cfg.getConfig()->getInt("core.ussdTransactionTimeout"); }
   catch(...) {
     __warning__("ussdTransactionTimeout set to default(10min)");

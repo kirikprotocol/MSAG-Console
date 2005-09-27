@@ -14,6 +14,7 @@ using scag::transport::smpp::SmppCommand;
 using namespace smsc::sms;
 using namespace scag::sessions;
 using namespace scag::bill;
+using scag::config::SessionManagerConfig;
 
 
 int main(int argC, char* argV[])

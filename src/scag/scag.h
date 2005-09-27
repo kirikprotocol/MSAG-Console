@@ -23,6 +23,7 @@
 #include "scag/config/route/RouteConfig.h"
 #include "scag/stat/Statistics.h"
 #include "scag/stat/StatisticsManager.h"
+#include "scag/re/RuleEngine.h"
 
 namespace scag
 {
@@ -342,6 +343,7 @@ protected:
   bool stopFlag;
   std::string scagHost;
   int scagPort;
+  scag::re::RuleEngine ruleEngine;
 
   scag::performance::PerformanceDataDispatcher perfDataDisp;
 

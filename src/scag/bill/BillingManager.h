@@ -8,7 +8,7 @@
 
 /*namespace scag { namespace re { namespace actions {
      class ActionFactory;
-}}}*/
+}}}*/   
 
 
 namespace scag { namespace bill 

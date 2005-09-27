@@ -27,6 +27,7 @@ namespace scag { namespace sessions
     using namespace scag::exceptions;
     using namespace smsc::core::buffers;
     using namespace scag::util::sms;
+    using scag::config::SessionManagerConfig;
 
 
     class SessionManagerImpl : public SessionManager, public Thread, public SessionOwner
@@ -90,7 +91,7 @@ namespace scag { namespace sessions
     };
 
 
-const time_t SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL = 60;
+//const time_t SessionManagerConfig::DEFAULT_EXPIRE_INTERVAL = 60;
 
 // ################## Singleton related issues ##################
 

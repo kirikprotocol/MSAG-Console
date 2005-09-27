@@ -47,6 +47,7 @@ public:
     virtual SmppManConfig getSmppManConfig(){return smppManCfg;};
     virtual StatManConfig getStatManConfig(){return statManCfg;};
     virtual BillingManagerConfig getBillManConfig(){return billManCfg;};
+    virtual SessionManagerConfig getSessionManConfig(){return sessionManCfg;};
     virtual Hash<std::string>*& getLicConfig(){return licconfig;};
     virtual Config* getConfig(){return &config;};
 
@@ -60,6 +61,7 @@ protected:
     AliasConfig aliasCfg;
     StatManConfig statManCfg;
     BillingManagerConfig billManCfg;
+    SessionManagerConfig sessionManCfg;
     Hash<std::string> *licconfig;
 
 private:
@@ -231,6 +233,7 @@ ConfigManagerImpl::ConfigManagerImpl()
     smppManCfg.load(smsc::util::findConfigFile("../conf/sme.xml"));
     routeCfg.load(smsc::util::findConfigFile("../conf/routes.xml"));
     billManCfg.init(ConfigView(config, "BillingManager"));
+    sessionManCfg.init(ConfigView(config, "SessionManager"));
     statManCfg.init(ConfigView(config, "MessageStorage"));
 
   } catch (ParseException &e) {
@@ -406,8 +409,13 @@ void ConfigManagerImpl::reload(Array<int>& changedConfigs)
     }
 
     if(  billManCfg.check(ConfigView(config, "BillingManager"))  ){
-        statManCfg.init(ConfigView(config, "BillingManager"));
+        billManCfg.init(ConfigView(config, "BillingManager"));
         changedConfigs.Push(BILLMAN_CFG);
+    }
+
+    if(  sessionManCfg.check(ConfigView(config, "SessionManager"))  ){
+        sessionManCfg.init(ConfigView(config, "SessionManager"));
+        changedConfigs.Push(SESSIONMAN_CFG);
     }
 
 

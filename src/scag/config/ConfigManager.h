@@ -6,6 +6,7 @@
 #include "scag/config/route/RouteConfig.h"
 #include "scag/config/statman/StatManConfig.h"
 #include "scag/config/bill/BillingManagerConfig.h"
+#include "scag/config/sessionman/SessionManagerConfig.h"
 
 #include <string>
 
@@ -18,7 +19,8 @@ enum ConfigType
 	ROUTE_CFG,
 	ALIAS_CFG,
     STATMAN_CFG,
-    BILLMAN_CFG
+    BILLMAN_CFG,
+    SESSIONMAN_CFG
 };
 
 class ConfigManager
@@ -35,6 +37,7 @@ public:
     virtual RouteConfig getRouteConfig() = 0;
     virtual StatManConfig getStatManConfig() = 0;
     virtual BillingManagerConfig getBillManConfig() = 0;
+    virtual SessionManagerConfig getSessionManConfig() = 0;
     virtual Hash<std::string>*& getLicConfig() = 0;
     virtual Config* getConfig() = 0;
 };

@@ -4,13 +4,15 @@
 #include <string>
 #include <core/threads/Thread.hpp>
 #include "Session.h"
+#include "scag/config/sessionman/SessionManagerConfig.h"
 
 namespace scag { namespace sessions 
 {
     using namespace smsc::core::threads;
     using scag::transport::SCAGCommand;
+    using scag::config::SessionManagerConfig;
     
-    struct SessionManagerConfig
+    /*struct SessionManagerConfig
     {
         // TODO: Add more config parameters if needed
 
@@ -23,7 +25,7 @@ namespace scag { namespace sessions
                              time_t ei = DEFAULT_EXPIRE_INTERVAL) 
             : dir(_dir), expireInterval(ei) {};
         SessionManagerConfig() {};
-    };
+    };*/
 
     class SessionManager
     {
