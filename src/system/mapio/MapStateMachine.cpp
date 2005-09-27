@@ -2364,8 +2364,15 @@ USHORT_T Et96MapPAbortInd(
       dialog->id_opened = false;
       if( dialog->isUSSD ) {
 //        MutexGuard ussd_map_guard( ussd_map_lock );
-        __map_trace2__("erase ussd lock for %lld", dialog->ussdSequence);
-        ussd_map.erase(dialog->ussdSequence);
+        USSD_MAP::iterator it=ussd_map.find(dialog->ussdSequence);
+        if(it==ussd_map.end()){
+	  __map_warn2__("MAP::%s locker not found for ussd dialog for %lld", __func__, dialog->ussdSequence );
+	}else if(*it == dialogid_map ) {
+          __map_trace2__("MAP::%s erase ussd lock for %lld", __func__, dialog->ussdSequence);
+          ussd_map.erase(it);
+	} else {
+	  __map_warn2__("MAP::%s ussd dialog already reassigned for %lld", __func__, dialog->ussdSequence );
+	}
       }
       throw MAPDIALOG_TEMP_ERROR("PABORT",Status::MAP_PROVIDER_REASON_BASE+provReason);
     }
