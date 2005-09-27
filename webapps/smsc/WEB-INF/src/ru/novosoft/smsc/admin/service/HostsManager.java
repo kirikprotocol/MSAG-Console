@@ -88,7 +88,7 @@ public class HostsManager
     }
     for (Iterator i = serviceIds.iterator(); i.hasNext();) {
       final String serviceId = (String) i.next();
-      if (routeSubjectManager.isSmeUsed(serviceId))
+      if (isSmeUsed(serviceId) != 0)
         throw new AdminException("SME \"" + serviceId + "\" is used");
     }
     daemonManager.removeAllServicesFromHost(daemon.getHost());
@@ -117,8 +117,12 @@ public class HostsManager
 
   public synchronized Service removeService(final String serviceId) throws AdminException
   {
-    if (routeSubjectManager.isSmeUsed(serviceId))
-      throw new AdminException("Service \"" + serviceId + "\" is used by routes");
+	int useFlag = isSmeUsed(serviceId);
+	if (useFlag != 0)
+	{
+		if (useFlag == 1) throw new AdminException("Service \"" + serviceId + "\" is used by routes");
+		if (useFlag == 2) throw new AdminException("Service \"" + serviceId + "\" is used by subjects");
+	}
     final Daemon daemon = daemonManager.getServiceDaemon(serviceId);
     if (null == daemon)
       throw new AdminException("Service \"" + serviceId + "\" host not found");
@@ -224,14 +228,18 @@ public class HostsManager
     if (serviceManager.contains(smeId))
       throw new AdminException("Couldn't remove sme \"" + smeId + "\" becouse it is service");
 
-    if (isSmeUsed(smeId))
-      throw new AdminException("Couldn't remove sme \"" + smeId + "\" becouse it is used by routes");
+	int useFlag = isSmeUsed(smeId);
+	if (useFlag != 0)
+	{
+		if (useFlag == 1) throw new AdminException("Couldn't remove sme \"" + smeId + "\" because it is used by routes");
+		if (useFlag == 2) throw new AdminException("Couldn't remove sme \"" + smeId + "\" because it is used by subjects");
+	}
 
     smeManager.remove(smeId);
   }
 
 
-  private boolean isSmeUsed(final String smeId)
+  private int isSmeUsed(final String smeId)
   {
     return routeSubjectManager.isSmeUsed(smeId);
   }

@@ -31,7 +31,7 @@ public interface RouteSubjectManager
 
   void trace() throws AdminException;   // save to traceable config (Traceable)
 
-  boolean isSmeUsed(String smeId);
+  int isSmeUsed(String smeId);
 
   boolean hasSavedConfiguration();
 }

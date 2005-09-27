@@ -51,14 +51,21 @@ public class RouteSubjectManagerImpl implements RouteSubjectManager
     return subjects;
   }
 
-  public boolean isSmeUsed(String smeId)
+  public int isSmeUsed(String smeId)
   {
     for (Iterator i = routes.iterator(); i.hasNext();) {
       Route route = (Route) i.next();
       if (route.getDestinations().isSmeUsed(smeId))
-        return true;
+        return 1;
     }
-    return false;
+
+	for (Iterator i = subjects.iterator(); i.hasNext();) {
+		Subject subj = (Subject) i.next();
+		if (subj.getDefaultSme().getId().equals(smeId))
+			return 2;
+	}
+
+    return 0;
   }
 
   synchronized public boolean hasSavedConfiguration()
