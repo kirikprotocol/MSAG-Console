@@ -6,7 +6,7 @@
  attribute name="names" required="true"%><%@
  attribute name="widths" required="true"%><%@
  attribute name="edit" required="false"%><%@
- attribute name="target" required="false"%>
+ attribute name="goal" required="false" %>
 <%@attribute name="filter" required="false"%>
 <c:set var="columns" value="${fn:split(columns, ',')}"/>
 <c:set var="names" value="${fn:split(names, ',')}"/>
@@ -50,16 +50,21 @@ function tableTag_checkChecks()
       elem.disabled = !buttonsEnabled;
   }
 }
-function edit(idToEdit,target)
+function edit(idToEdit,goal)
 {
   opForm.mbEdit.value = idToEdit;
   opForm.editId.value = idToEdit;
-  opForm.action="<%=request.getContextPath() + (request.getServletPath().endsWith(".jsp")
-                                                      ? request.getServletPath().substring(0, request.getServletPath().lastIndexOf('/'))
-                                                      : request.getServletPath())%>/edit.jsp";
 
-  if (target="jedit") {   opForm.target="jedit";
-     window.open('about:blank','jedit','channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');
+  if (goal="jedit") {   opForm.target="jedit";
+    opForm.action="<%=request.getContextPath() + (request.getServletPath().endsWith(".jsp")
+                                                          ? request.getServletPath().substring(0, request.getServletPath().lastIndexOf('/'))
+                                                          : request.getServletPath())%>/jedit.jsp";
+
+    window.open('about:blank','jedit','channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');
+  } else {
+    opForm.action="<%=request.getContextPath() + (request.getServletPath().endsWith(".jsp")
+                                                         ? request.getServletPath().substring(0, request.getServletPath().lastIndexOf('/'))
+                                                         : request.getServletPath())%>/edit.jsp";
   }
   opForm.submit();
   return false;
@@ -99,7 +104,7 @@ function edit(idToEdit,target)
           </c:when>
           <c:otherwise>
             <c:set var="itemValue" value="${empty user[column] ? '&nbsp;' : fn:escapeXml(user[column])}"/>
-            <td><c:if test="${edit == column}"><a href="#" onClick="return edit('${itemValue}','${target}');"></c:if>
+            <td><c:if test="${edit == column}"><a href="#" onClick="return edit('${itemValue}','${goal}');"></c:if>
               <c:choose >
                 <c:when test="${smf:isBoolean(user[column])}">
                   <c:choose>
