@@ -103,6 +103,7 @@ public class RuleManager
       for (int i = 0; i < dir.length; i++) {
         File file = dir[i];
         String fileName=file.getName();
+        if (!fileName.endsWith(".xml")) continue;
         logger.debug("enter " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
         final Document ruleDoc = Utils.parse(file.getAbsolutePath());
         Element el=ruleDoc.getDocumentElement();
@@ -116,7 +117,7 @@ public class RuleManager
          if (id.length() > Constants.ROUTE_ID_MAXLENGTH)
           throw new SibincoException("Rule id is too long: " + id.length() + " chars \"" + id + '"');
         Long providerId=Long.decode(el.getAttribute("provider"));
-        NodeList child=el.getElementsByTagName("note");
+        //NodeList child=el.getElementsByTagName("note");
         String notes="";
       /*  for (int j = 0; j < child.getLength(); j++) {
           Node node= child.item(j); notes+=Utils.getNodeText(node);
