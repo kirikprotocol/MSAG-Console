@@ -2,9 +2,7 @@
 <scag:rule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
             xsi:schemaLocation="http://www.sibinco.com/SCAG xsd/smpp_rules.xsd"
            xmlns:scag="http://www.sibinco.com/SCAG"
-           transport="MMS" id="2">
-  <note>this is mms rule</note>
-  <provider>2</provider>
+           transport="MMS" id="2" provider="2">
     <deliver_sm>
         <set var="$e777" value="20"/>
  <set var="tt" value="tt"/>
