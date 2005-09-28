@@ -42,7 +42,6 @@ public:
     virtual void reloadConfig(ConfigType type);
 	virtual void reloadAllConfigs();
 
-    virtual AliasConfig  getAliasConfig(){return aliasCfg;};
     virtual RouteConfig  getRouteConfig(){return routeCfg;};
     virtual SmppManConfig getSmppManConfig(){return smppManCfg;};
     virtual StatManConfig getStatManConfig(){return statManCfg;};
@@ -105,9 +104,6 @@ void ConfigManagerImpl::reloadConfig(ConfigType type)
     MutexGuard mg(listenerLock);
 
     switch(type){
-    case ALIAS_CFG:
-        aliasCfg.reload();
-        break;
     case ROUTE_CFG:
         routeCfg.reload();
         break;
@@ -134,7 +130,6 @@ void ConfigManagerImpl::reloadAllConfigs()
 {
     MutexGuard mg(listenerLock);
 
-    aliasCfg.reload();
     routeCfg.reload();
     smppManCfg.reload();
 
@@ -229,7 +224,6 @@ ConfigManagerImpl::ConfigManagerImpl()
 
     // Inits subsystems configs
 
-    aliasCfg.load(smsc::util::findConfigFile("../conf/aliases.xml"));
     smppManCfg.load(smsc::util::findConfigFile("../conf/sme.xml"));
     routeCfg.load(smsc::util::findConfigFile("../conf/routes.xml"));
     billManCfg.init(ConfigView(config, "BillingManager"));

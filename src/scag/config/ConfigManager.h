@@ -1,7 +1,6 @@
 #ifndef ConfigManager_dot_h
 #define ConfigManager_dot_h
 
-#include "scag/config/alias/aliasconf.h"
 #include "scag/config/smppman/SmppManConfig.h"
 #include "scag/config/route/RouteConfig.h"
 #include "scag/config/statman/StatManConfig.h"
@@ -32,7 +31,6 @@ public:
 	virtual void reloadConfig(ConfigType type) = 0;
 	virtual void reloadAllConfigs() = 0;
 
-    virtual AliasConfig getAliasConfig() = 0;
     virtual SmppManConfig getSmppManConfig() = 0;
     virtual RouteConfig getRouteConfig() = 0;
     virtual StatManConfig getStatManConfig() = 0;

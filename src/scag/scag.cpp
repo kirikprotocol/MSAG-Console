@@ -1,11 +1,9 @@
 #include "scag/scag.h"
 
-#include "system/smppio/SmppAcceptor.hpp"
 #include <memory>
 #include "util/debug.h"
 #include "core/synchronization/Event.hpp"
 #include "util/Exception.hpp"
-#include "system/common/rescheduler.hpp"
 #include "scag/config/route/RouteConfig.h"
 #include "logger/Logger.h"
 #include "util/regexp/RegExp.hpp"
@@ -18,7 +16,6 @@
 #include "scag/config/route/RouteStructures.h"
 #include "scag/bill/BillingManager.h"
 #include "scag/stat/StatisticsManager.h"
-#include "scag/config/alias/aliasconf.h"
 #include "scag/sessions/SessionManager.h"
 
 namespace scag
@@ -133,8 +130,6 @@ using smsc::util::Exception;
 using scag::config::ConfigManager;
 using scag::bill::BillingManager;
 using scag::stat::StatisticsManager;
-using scag::config::AliasConfig;
-using scag::config::AliasRecord;
 using scag::config::BillingManagerConfig;
 using scag::sessions::SessionManager;
 
@@ -588,70 +583,6 @@ void Scag::init()
   }
   __trace__("Smsc::init completed");
 }
-
-// Wait for SmppManager will be ready
-/*bool Scag::regSmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid)
-{
-    MutexGuard mg(gatewaySwitchMutex);
-
-    smsc::sme::SmeConfig gwcfg;
-    gwcfg.host=cfg.host;
-    gwcfg.port=cfg.port;
-    gwcfg.sid=cfg.sid;
-    gwcfg.password=cfg.password;
-    gwcfg.smppTimeOut=cfg.smppTimeOut;
-
-    GatewaySme *gwsme=new GatewaySme(gwcfg,&smeman, altHost.c_str(), altPort);
-    gwsme->setId(systemId, smeman.lookup(systemId));
-    uint8_t newuid=uid;
-    if(gwSmeMap[newuid])
-    {
-        return false;
-    }
-    gwSmeMap[newuid]=gwsme->AddRef();
-    gwsme->setPrefix(newuid);
-    smeman.registerInternallSmeProxy(systemId, gwsme);
-    tp.startTask(gwsme);
-
-    return true;
-}*/
-
-// Wait for SmppManager will be ready
-/*bool Scag::modifySmsc(smsc::sme::SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid)
-{
-        MutexGuard mg(gatewaySwitchMutex);
-    SmeRecord* p = (SmeRecord*)getSmeProxy(systemId);
-    GatewaySme* gwsme = dynamic_cast<GatewaySme*>(p->proxy);
-
-    if(gwsme){
-
-        uint8_t olduid = gwsme->getPrefix();
-        if(uid != olduid){
-            if(gwSmeMap[uid])
-                return false;
-        }else{
-            if(!(gwSmeMap[uid]))
-                return false;
-        }
-
-        gwsme->setSesscfg(cfg);
-        gwsme->setConnParam(cfg.host.c_str(), cfg.port, altHost, altPort);
-        gwsme->setCfgIdx(1);
-        gwsme->disconnect();
-        gwsme->setPrefix(uid);
-
-
-        if(olduid != uid){
-            gwSmeMap[uid] = gwSmeMap[olduid];
-            gwSmeMap[olduid] = 0;
-        }
-
-        return true;
-    }
-
-    return false;
-}*/
-
 
 void Scag::run()
 {
