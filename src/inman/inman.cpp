@@ -6,34 +6,38 @@ static char const ident[] = "$Id$";
 
 #include "service.hpp"
 #include "logger/Logger.h"
+#include "util/config/Manager.h"
+#include "util/config/ConfigView.h"
 
-static const UCHAR_T VER_HIGH 	 = 0;
-static const UCHAR_T VER_LOW  	 = 0;
-static const UCHAR_T DEFAULT_SSN = 146;
+static const UCHAR_T VER_HIGH    = 0;
+static const UCHAR_T VER_LOW     = 1;
 
 namespace smsc
 {
-	namespace inman
-	{
-		namespace inap
-		{
-    		Logger* inapLogger;
-    		Logger* tcapLogger;
-    		Logger* dumpLogger;
-    	}
-	}
+  namespace inman
+  {
+    namespace inap
+    {
+        Logger* inapLogger;
+        Logger* tcapLogger;
+        Logger* dumpLogger;
+      }
+  }
 };
 
 using smsc::inman::Service;
 using smsc::inman::inap::inapLogger;
 using smsc::inman::inap::tcapLogger;
 using smsc::inman::inap::dumpLogger;
+using smsc::util::config::Manager;
+using smsc::util::config::ConfigException;
+
 
 static Service* g_pService = 0;
 
 static void init_logger()
 {
-	Logger::Init();
+  Logger::Init();
     inapLogger = Logger::getInstance("smsc.inman");
     tcapLogger = Logger::getInstance("smsc.inman.inap.dump");
     dumpLogger = Logger::getInstance("smsc.inman.inap.dump");
@@ -41,56 +45,89 @@ static void init_logger()
 
 extern "C" static void sighandler( int signal )
 {
-	assert( g_pService );
-	g_pService->stop();
-	delete g_pService;
-	g_pService = 0;
+  assert( g_pService );
+  g_pService->stop();
+  delete g_pService;
+  g_pService = 0;
 }
 
+struct INBillConfig
+{
+  public:
+  INBillConfig():ssf_addr(0),scf_addr(0),host(0),port(0),ssn(0){}
+  void read(Manager& manager)
+  {
+    try {
+      ssf_addr = manager.getString("ssfAddress");
+      ssn = manager.getInt("ssn");
+      smsc_log_info( inapLogger, "SSF : GT=%s,SSN=%d", ssf_addr,ssn );
+    } catch(ConfigException& exc) {
+     ssf_addr = 0; ssn = 0;
+     throw ConfigException("ssfAddress or ssn missing");
+    }
+    try {
+      scf_addr = manager.getString("scfAddress");
+      smsc_log_info( inapLogger, "SCF : GT=%s", scf_addr );
+    } catch(ConfigException& exc) {
+      scf_addr = 0;
+     throw ConfigException("scfAddress missing");
+    }
+    try {
+      host = manager.getString("host");
+      port = manager.getInt("port");
+      smsc_log_info( inapLogger, "SMSC: %s:%d", host, port );
+    } catch(ConfigException& exc) {
+     host = 0; port = 0;
+     throw ConfigException("SMSC host or port missing");
+    }
+  }
+  char* ssf_addr;
+  char* scf_addr;
+  char* host;
+  int   port;
+  int   ssn;
+};
 
 int main(int argc, char** argv)
 {
-	if(( argc < 5 ) || ( argc > 6 ))
-	{
-		fprintf( stderr, "IN manager version %d.%d\n", VER_HIGH, VER_LOW );
-		fprintf( stderr, "Usage: %s <inman/ssf address> <scf address> <smsc host> <smsc port> [SSN]\n", argv[0] );
-		exit(1);
-	}
 
-	init_logger();
+  init_logger();
+  smsc_log_info( inapLogger,"***************************");
+  smsc_log_info( inapLogger,"* SIBINCO IN MANAGER v%d.%d *", VER_HIGH, VER_LOW);
+  smsc_log_info( inapLogger,"***************************");
 
-	const char* ssf_addr   = argv[1];
-	const char* scf_addr   = argv[2];
-	const char* host 	   = argv[3];
-	int 		port 	   = atoi( argv[4]);
-	int			SSN		   = (argc == 6) ? atoi( argv[5] ) : DEFAULT_SSN;
+  INBillConfig cfg;
+  try
+  {
+    Manager::init("config.xml");
+    Manager& manager = Manager::getInstance();
+    cfg.read(manager);
+  }
+  catch (ConfigException& exc)
+  {
+      smsc_log_error(inapLogger, "Configuration invalid: %s. Exiting", exc.what());
+      exit(-1);
+  }
+  try
+  {
+    g_pService = new Service( cfg.ssf_addr, cfg.scf_addr, cfg.host, cfg.port, cfg.ssn );
+    g_pService->start();
 
-	smsc_log_info( inapLogger, "Starting IN manager version %d.%d", VER_HIGH, VER_LOW );
-	smsc_log_info( inapLogger, "SSF address: %s", ssf_addr );
-	smsc_log_info( inapLogger, "SCF address: %s", scf_addr );
-	smsc_log_info( inapLogger, "SMSC host: %s:%d", host, port );
-	smsc_log_info( inapLogger, "SSN: %d", SSN );
+      sigset( SIGTERM, sighandler );
 
-	try
-	{
-		g_pService = new Service( ssf_addr, scf_addr, host, port, SSN );
-		g_pService->start();
+    while( g_pService )
+    {
+      usleep( 1000 * 100 );
+    }
 
-  		sigset( SIGTERM, sighandler );
+  }
+  catch(const std::exception& error)
+  {
+    smsc_log_fatal(inapLogger, "%s", error.what() );
+    fprintf( stderr, "Fatal error: %s\n", error.what() );
+    delete g_pService;
+    exit(1);
+  }
 
-		while( g_pService )
-		{
-			usleep( 1000 * 100 );
-		}
-
-	}
-	catch(const std::exception& error)
-	{
-		smsc_log_fatal(inapLogger, "%s", error.what() );
-		fprintf( stderr, "Fatal error: %s\n", error.what() );
-		delete g_pService;
-		exit(1);
-	}
-
-  	return(0);
+    return(0);
 }
