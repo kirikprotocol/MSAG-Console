@@ -50,11 +50,21 @@ function tableTag_checkChecks()
       elem.disabled = !buttonsEnabled;
   }
 }
+
+function clearForm() {
+    opForm.target="_self";
+    opForm.action="<%=request.getContextPath() + (request.getServletPath().endsWith(".jsp")
+                                                         ? request.getServletPath().substring(0, request.getServletPath().lastIndexOf('/'))
+                                                         : request.getServletPath())%>/add.jsp";
+    opForm.submit();
+    return false;
+}
+
+
 function edit(idToEdit,goal)
 {
   opForm.mbEdit.value = idToEdit;
   opForm.editId.value = idToEdit;
-
   if (goal="jedit") {   opForm.target="jedit";
     opForm.action="<%=request.getContextPath() + (request.getServletPath().endsWith(".jsp")
                                                           ? request.getServletPath().substring(0, request.getServletPath().lastIndexOf('/'))

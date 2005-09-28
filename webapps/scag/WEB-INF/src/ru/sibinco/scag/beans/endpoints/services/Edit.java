@@ -8,6 +8,7 @@ import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.backend.users.User;
 
@@ -184,18 +185,12 @@ public class Edit extends EditBean{
         return providerNames;
     }
 
-    public String[] getTranspotIds() {  //ToDo
-        String[] transpotIds = {
-            "1",  "2", "3"
-        };
-        return transpotIds;
+    public String[] getTranspotIds() {
+        return Transport.transpotIds;
     }
 
-    public String[] getTranspotTitles() { //ToDo
-        String[] transpotTitles = {
-            "SMPP",  "WAP", "MMS"
-        };
-        return transpotTitles;
+    public String[] getTranspotTitles() {
+        return Transport.transpotTitles;
     }
 }
 

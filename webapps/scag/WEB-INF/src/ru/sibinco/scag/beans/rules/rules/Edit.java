@@ -5,6 +5,7 @@ package ru.sibinco.scag.beans.rules.rules;
 
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.backend.transport.Transport;
 
 /**
  * The <code>Edit</code> class represents
@@ -17,6 +18,8 @@ import ru.sibinco.scag.beans.SCAGJspException;
 public class Edit extends EditBean {
 
     private String mbNext = null;
+
+    protected long transportId = 1;
 
     public String getId() {
         return null;
@@ -36,5 +39,21 @@ public class Edit extends EditBean {
 
     public void setMbNext(String mbNext) {
         this.mbNext = mbNext;
+    }
+
+    public long getTransportId() {
+        return transportId;
+    }
+
+    public void setTransportId(long transportId) {
+        this.transportId = transportId;
+    }
+
+    public String[] getTranspotIds() {
+        return Transport.transpotIds;
+    }
+
+    public String[] getTranspotTitles() {
+        return Transport.transpotTitles;
     }
 }

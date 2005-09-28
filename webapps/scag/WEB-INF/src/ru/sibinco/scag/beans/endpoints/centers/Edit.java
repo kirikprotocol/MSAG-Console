@@ -6,6 +6,7 @@ package ru.sibinco.scag.beans.endpoints.centers;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
+import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.lib.backend.util.SortedList;
 
 import java.util.Iterator;
@@ -123,16 +124,12 @@ public class Edit extends EditBean {
         this.enabled = enabled;
     }
 
-    public String[] getTranspotIds() {  //ToDo
-        return new String[]{
-                "1", "2", "3"
-        };
+    public String[] getTranspotIds() {  
+        return Transport.transpotIds;
     }
 
-    public String[] getTranspotTitles() { //ToDo
-        return new String[]{
-                "SMPP", "WAP", "MMS"
-        };
+    public String[] getTranspotTitles() {
+        return Transport.transpotTitles;
     }
 
     public long getTransportId() {
