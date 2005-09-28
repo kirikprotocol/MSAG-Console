@@ -174,6 +174,17 @@ public class DivertManager extends Thread
   private void writeTelnetLine(String str) throws IOException {
     writeTelnetString(str+"\r\n");
   }
+  private void skipInputData() throws IOException
+  {
+    int b = -1;
+    StringBuffer sb = new StringBuffer();
+    while (is != null && is.available() > 0 && ((b=is.read()) != -1))
+    {
+        byte bytes[] = {(byte)b};
+        sb.append(new String(bytes, System.getProperty("file.encoding")));
+    }
+    if (sb.length() > 0) logger.info("Skipped data: " + sb.toString());  
+  }
 
   private final static int ESC_SEMI   = ':';
   private final static int ESC_PROMPT = '<';
@@ -263,7 +274,7 @@ public class DivertManager extends Thread
     }
     else if (is.available() > 0)
     {
-        while (is.available() > 0 && (is.read() != -1)); // Skip TIME OUT string
+        skipInputData(); // Skip TIME OUT string
         writeTelnetLine(""); readTelnetString(ESC_PROMPT);
     }
   }
@@ -274,7 +285,7 @@ public class DivertManager extends Thread
       if (os != null && mscSocket.isConnected()) {
         try {
           if (os != null) { writeTelnetLine("EXIT;");  logger.info("Exit sent to MSC"); }
-          while (is != null && is.available() > 0 && (is.read() != -1)); // skip responce
+          skipInputData(); // skip responce
         } catch (IOException e) { logger.error("MSC exit error", e); }
       }
       try { if (is != null) is.close(); } catch (IOException e) { logger.error("MSC is close error", e); }
@@ -464,12 +475,15 @@ public class DivertManager extends Thread
 
   private void shutdown()
   {
-    synchronized(mscSocketLock)
-    {
+      try { if (mscSocket != null) mscSocket.close(); }
+      catch (IOException e) { logger.error("MSC socket shutdown error", e); }
       needExit = true;
-      mscSocketLock.notify();
-      disconnect();
-    }
+
+      synchronized(mscSocketLock)
+      {
+          mscSocketLock.notify();
+          disconnect();
+      }
   }
   /**
    * Used for MSC pinging (to avoid connection close)
@@ -485,7 +499,7 @@ public class DivertManager extends Thread
           if (needExit) break;
           connect();
           logger.info("MSC pinging ...");
-          while (is.available() > 0 && (is.read() != -1)); // skip is data
+          skipInputData(); // skip is data
           writeTelnetLine(""); // ping MSC
           readTelnetString(ESC_PROMPT);
           logger.info("MSC ping ok.");
