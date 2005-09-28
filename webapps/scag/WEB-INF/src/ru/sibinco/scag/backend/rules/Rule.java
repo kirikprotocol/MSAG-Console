@@ -37,7 +37,7 @@ public class Rule
     this.transport = transport;
     this.provider = provider;
   }
-    public Rule(Element ruleElem) throws SibincoException
+/*    public Rule(Element ruleElem) throws SibincoException
   {
     name = ruleElem.getAttribute("id");
     if (name.length() > Constants.ROUTE_ID_MAXLENGTH) {
@@ -51,10 +51,11 @@ public class Rule
         }
     long providerId=Long.decode(Utils.getNodeText(providerList.item(0))).longValue();
     notes = "";
-    NodeList notesList = ruleElem.getElementsByTagName("notes");
+    NodeList notesList = ruleElem.getElementsByTagName("note");
     for (int i = 0; i < notesList.getLength(); i++)
       notes += Utils.getNodeText(notesList.item(i));
   }
+  */
   public Provider getProvider()
   {
     return provider;

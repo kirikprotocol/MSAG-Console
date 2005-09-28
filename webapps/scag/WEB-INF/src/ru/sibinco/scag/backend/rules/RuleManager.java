@@ -104,7 +104,6 @@ public class RuleManager
         File file = dir[i];
         String fileName=file.getName();
         logger.debug("enter " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
-        System.out.println("FileName= "+fileName);
         final Document ruleDoc = Utils.parse(file.getAbsolutePath());
         Element el=ruleDoc.getDocumentElement();
         if (!el.getTagName().equals("scag:rule"))
@@ -116,11 +115,10 @@ public class RuleManager
           throw new SibincoException("FileId "+fileId+" in name of file : "+fileName+" do not math with rule id:"+id);
          if (id.length() > Constants.ROUTE_ID_MAXLENGTH)
           throw new SibincoException("Rule id is too long: " + id.length() + " chars \"" + id + '"');
-        System.out.println("el.getNodeName()= "+el.getNodeName()+" el.getTagName()= "+el.getTagName());
-
+        Long providerId=Long.decode(el.getAttribute("provider"));
         NodeList child=el.getElementsByTagName("note");
-        Long providerId=null; String notes="";
-        for (int j = 0; j < child.getLength(); j++) {
+        String notes="";
+      /*  for (int j = 0; j < child.getLength(); j++) {
           Node node= child.item(j); notes+=Utils.getNodeText(node);
         }
         child=el.getElementsByTagName("provider");
@@ -129,7 +127,7 @@ public class RuleManager
 
           Node node = child.item(0);
           providerId=Long.decode(Utils.getNodeText(node));
-        System.out.println("nl.getLength()= "+child.getLength());
+        */
         Provider provider = (Provider) providerManager.getProviders().get(providerId);
 
         rules.put(id, new Rule(id, notes,provider,transport));

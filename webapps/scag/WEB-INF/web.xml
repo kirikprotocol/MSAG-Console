@@ -91,7 +91,7 @@
     </user-data-constraint>
   </security-constraint>
 
-  <security-constraint>
+ <!-- <security-constraint>
       <web-resource-collection>
         <web-resource-name>gateway rules</web-resource-name>
         <url-pattern>/rules/*</url-pattern>
@@ -103,7 +103,7 @@
         <transport-guarantee>NONE</transport-guarantee>
       </user-data-constraint>
     </security-constraint>
-
+ -->
   <login-config>
     <auth-method>FORM</auth-method>
     <realm-name>SMSC.SmscRealm</realm-name>
