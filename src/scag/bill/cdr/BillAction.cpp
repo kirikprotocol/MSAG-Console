@@ -1,17 +1,16 @@
 #include "BillAction.h"
 
-
 namespace scag { namespace bill {
 
-bool BillAction::run(ActionContext& context)
-{
-    return true;
-}
+Logger * BillAction::logger = 0;
 
 void BillAction::init(const SectionParams& params,PropertyObject propertyObject)
 {
     FieldType ft;
     const char * name = 0;
+    if (!logger) 
+        logger = Logger::getInstance("scag.bill.actions");
+
 
 /*
     if (params.Exists("service")) 

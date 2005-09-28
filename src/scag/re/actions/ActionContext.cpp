@@ -53,8 +53,6 @@ Property* ActionContext::getProperty(const std::string& var)
         break;
 
     case ftConst:
-        //TODO: how to return a value without const_cast?
-        //p = const_cast<Property *>(constants.GetPtr(name));
         return constants.GetPtr(name);
         break;
 

@@ -28,6 +28,8 @@ void Operation::attachBill(const Bill& bill)
 
 void Operation::rollbackAll()
 {
+    smsc_log_debug(logger,"Operation: Rollback all");
+
     BillingManager& bm = BillingManager::Instance();
     for (std::list<Bill>::iterator it = BillList.begin();it!=BillList.end(); ++it)
     {
@@ -59,7 +61,7 @@ Property* Session::getProperty(const std::string& name)
 
 Session::Session(const CSessionKey& key) 
     : PropertyManager(), lastAccessTime(-1), 
-        bChanged(false), bDestroy(false), accessCount(0), Owner(0),currentOperation(0),needReleaseCurrentOperation(false)
+        bChanged(false), bDestroy(false), accessCount(0), Owner(0),m_pCurrentOperation(0),needReleaseCurrentOperation(false)
 {
     m_SessionKey = key;
 
@@ -104,13 +106,14 @@ void Session::abort()
     XHash <COperationKey,Operation *,XOperationHashFunc>::Iterator it = OperationHash.getIterator();
 
     for (;it.Next(key, value);)
-    {
+    {              
         delete value;
     }
 
     OperationHash.Empty();
     PendingOperationList.clear();
 
+    m_pCurrentOperation = 0;
     Owner->startTimer(m_SessionKey,0);
     smsc_log_error(logger,"Session: session aborted");
 }
@@ -129,24 +132,35 @@ bool Session::startOperation(SCAGCommand& cmd)
 {
     if (!Owner) return false;
 
-    
-    //TODO: add Operation
-    //Creating OperationKey
+    COperationKey operationKey;
 
-    //set needReleaseCurrentOperation flag
-    
+    operationKey.destAddress = cmd.getDestAddr();
+    operationKey.key = cmd.getKey();
+
+    needReleaseCurrentOperation = cmd.isFinalCommand();
+
+    if (!OperationHash.Exists(operationKey)) 
+    {
+        Operation * operation = new Operation();
+
+        //TODO: fill operation params
+        OperationHash.Insert(operationKey,operation);
+    }
+
+    m_pCurrentOperation = OperationHash.Get(operationKey);
+   
     Owner->startTimer(this->getSessionKey(), this->getWakeUpTime());
     return true;
 }
 
 void Session::releaseOperation()
 {
-    if (currentOperation)
+    if (m_pCurrentOperation)
     {
         if (needReleaseCurrentOperation) 
         {
             OperationHash.Delete(currentOperationKey);
-            currentOperation = 0;
+            m_pCurrentOperation = 0;
             Owner->startTimer(m_SessionKey,this->getWakeUpTime());
         }
     }
@@ -170,7 +184,7 @@ void Session::addPendingOperation(PendingOperation pendingOperation)
 
 Operation * Session::GetCurrentOperation() const
 {
-    return currentOperation;
+    return m_pCurrentOperation;
 }
 
 time_t Session::getWakeUpTime()

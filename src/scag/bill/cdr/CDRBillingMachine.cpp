@@ -3,8 +3,6 @@
 
 std::auto_ptr<scag::bill::CDRBillingMachine> billingMachine;
 bool bHasInstance = false;
-#include <iostream>
-
 
 extern "C" scag::bill::BillingMachine* initBillingMachine(uint8_t machine_id, const std::string& cfg_dir)
 {

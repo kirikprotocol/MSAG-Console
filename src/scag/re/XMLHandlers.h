@@ -42,7 +42,7 @@ class SemanticAnalyser
     const ActionFactory * factory;
     Rule * RootObject;
 public:
-    void DeliverBeginTag(const std::string& name,const SectionParams& params);
+    void DeliverBeginTag(const std::string& name,const SectionParams& params,int nLine);
     void DeliverEndTag(const std::string& name);
 
     Rule * ReturnRuleObject(); 
@@ -56,6 +56,7 @@ class XMLBasicHandler : public HandlerBase
 {
     SemanticAnalyser analyser;
     bool CanReturnFinalObject;
+    const Locator * m_pLocator;
 protected:
 public:
     Rule * ReturnFinalObject();
@@ -69,6 +70,9 @@ public:
     void startElement(const XMLCh* const qname, AttributeList& attributes);
     void endElement(const XMLCh* const qname);
     void SetIParserHandler(IParserHandler * obj);
+    virtual void setDocumentLocator(const Locator * const locator);
+
+
 
     // -----------------------------------------------------------------------
     //  Implementations of the SAX ErrorHandler interface

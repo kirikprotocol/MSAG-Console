@@ -71,13 +71,14 @@ int main(int argC, char* argV[])
 
     billingManagerConfig.so_dir = "./bill";
     billingManagerConfig.cfg_dir = "";
-    billingManagerConfig.mainActionFactory = engine->getActionFactory();
+    billingManagerConfig.mainActionFactory = &engine->getActionFactory();
 
     BillingManager::Init(billingManagerConfig);
-    engine->Init("./rules");
 
     try
     {
+        engine->Init("./rules");
+
         rs = engine->process(command, *session);
         smsc_log_debug(logger,"result = %d",rs.result);
     }

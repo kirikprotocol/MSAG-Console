@@ -4,14 +4,26 @@
 
 namespace scag { namespace bill {
 
+
 bool BillActionCommit::run(ActionContext& context)
 {
+    smsc_log_error(logger,"Run Action '[CDR]BillActionCommit'...");
+
+
     Operation * operation = context.GetCurrentOperation();
-    if (!operation) return false;
+    if (!operation) 
+    {
+        smsc_log_error(logger,"Fatal error in action: '[CDR]BillActionCommit' - operation from ActionContext is invalid");
+        return false;
+    }
 
     CDRBillingMachine * bm = CDRBillingMachine::Instance();
 
-    if (!bm) return false;
+    if (!bm) 
+    {
+        smsc_log_error(logger,"Fatal error in action: '[CDR]BillActionCommit' - BillingMachine is invalid");
+        return false;
+    }
     Bill bill; 
 
     try
@@ -21,7 +33,7 @@ bool BillActionCommit::run(ActionContext& context)
     } 
     catch (...)
     {
-        operation->detachBill(bill);
+        smsc_log_error(logger,"Action: '[CDR]BillActionCommit' - cannot build bill for billKey");
         return true;
     }
     

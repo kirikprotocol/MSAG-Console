@@ -20,7 +20,7 @@ public:
     std::string cfg_dir;
     std::string so_dir;
     scag::re::actions::ActionFactory * mainActionFactory;
-    BillingManagerConfig() : cfg_dir(""), so_dir(""), mainActionFactory(0) {};
+    BillingManagerConfig() : cfg_dir(""), so_dir(""),mainActionFactory(0) { };
     BillingManagerConfig(ConfigView& cv);
     void init(ConfigView& cv);   
     bool check(ConfigView& cv);

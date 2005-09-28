@@ -78,6 +78,7 @@ namespace scag { namespace sessions
         void detachBill(const Bill& bill);
         void rollbackAll();
         ~Operation() {rollbackAll();}
+        Operation() {};
     };
 
 
@@ -89,7 +90,7 @@ namespace scag { namespace sessions
         std::list<PendingOperation> PendingOperationList;
         COperationsHash OperationHash;
         SessionOwner * Owner;
-        Operation * currentOperation;
+        Operation * m_pCurrentOperation;
         COperationKey currentOperationKey;
         bool needReleaseCurrentOperation;
 

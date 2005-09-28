@@ -59,6 +59,18 @@ bool RuleEngine::removeRule(int ruleId)
 
 void RuleEngine::Init(const std::string& dir)
 {
+    rules = new Rules();
+
+    try
+    {
+        XMLPlatformUtils::Initialize();
+    }
+    catch (const XMLException& toCatch)
+    {
+        StrX msg(toCatch.getMessage());
+        throw SCAGException("Error during initialization XMLPlatform: %s", msg.localForm());
+    }
+
     RulesDir = dir;
 
     DIR * pDir = 0;
@@ -66,7 +78,7 @@ void RuleEngine::Init(const std::string& dir)
     int ruleId = 0;
 
     pDir = opendir(dir.c_str());
-    if (!pDir) return;
+    if (!pDir) throw SCAGException("Invalid directory %s",dir.c_str());
 
     while (pDir) 
     {
@@ -94,34 +106,17 @@ void RuleEngine::Init(const std::string& dir)
 }
 
 
-RuleEngine::RuleEngine()
+
+
+RuleEngine::RuleEngine() : rules(0)
 {
-    /* TODO: Implement
-             1) Configure global params (if any)
-             2) Scan all sub-sections & create rules for it (via RulesFactory)
-    */
-    factory = new MainActionFactory;
-    rules = new Rules();
-
-
-    try
-    {
-        XMLPlatformUtils::Initialize();
-    }
-    catch (const XMLException& toCatch)
-    {
-        StrX msg(toCatch.getMessage());
-        smsc_log_error(logger,"Error during initialization XMLPlatform: %s", msg.localForm());
-        return;
-    }
 }
   
 RuleEngine::~RuleEngine()
 {
     XMLPlatformUtils::Terminate();
     if (rules) rules->unref();
-    delete rules;
-    delete factory;
+    if (rules) delete rules;
 }
  
 Rule * RuleEngine::ParseFile(const std::string& xmlFile)
@@ -130,7 +125,7 @@ Rule * RuleEngine::ParseFile(const std::string& xmlFile)
     int errorCode = 0;
 
     SAXParser* parser = new SAXParser;
-    XMLBasicHandler handler(*factory);
+    XMLBasicHandler handler(factory);
 
     try
     {

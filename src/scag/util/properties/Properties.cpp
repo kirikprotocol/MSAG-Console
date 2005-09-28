@@ -10,7 +10,6 @@ using namespace scag::exceptions;
 
 const char* TimeFormat = "%A, %d - %B - %Y.\n";
 
-// TODO: Implement get/set methods (check const in set methods!)
 
 
 //////////////////////////////////////////////////////CONVERT////////////////////////////////

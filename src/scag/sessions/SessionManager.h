@@ -12,20 +12,6 @@ namespace scag { namespace sessions
     using scag::transport::SCAGCommand;
     using scag::config::SessionManagerConfig;
     
-    /*struct SessionManagerConfig
-    {
-        // TODO: Add more config parameters if needed
-
-        static const time_t DEFAULT_EXPIRE_INTERVAL;
-
-        std::string dir;
-        time_t      expireInterval;
-
-        SessionManagerConfig(const std::string& _dir, 
-                             time_t ei = DEFAULT_EXPIRE_INTERVAL) 
-            : dir(_dir), expireInterval(ei) {};
-        SessionManagerConfig() {};
-    };*/
 
     class SessionManager
     {

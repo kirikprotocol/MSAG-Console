@@ -4,6 +4,8 @@
 #include <xercesc/sax/AttributeList.hpp>
 #include <xercesc/sax/SAXParseException.hpp>
 #include <xercesc/sax/SAXException.hpp>
+#include <xercesc/sax/Locator.hpp>
+
 #include "scag/SAX2Print.hpp"
 
 namespace scag { namespace re { 
@@ -34,7 +36,9 @@ Rule * SemanticAnalyser::ReturnRuleObject()
     return result;
 }
 
-void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionParams& params)
+
+
+void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionParams& params,int nLine)
 {
     IParserHandler * NewObj = 0;
 
@@ -46,7 +50,7 @@ void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionPara
         } catch (SCAGException& e)
         {
             if (NewObj) delete NewObj;
-            throw SCAGException("Semantic Analyser: Invalid object '%s' to create: %s",name.c_str(),e.what()); 
+            throw SCAGException("Semantic Analyser error at line %d: Invalid object '%s' to create: %s",nLine,name.c_str(),e.what()); 
         }
 
         if (NewObj) 
@@ -71,7 +75,7 @@ void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionPara
         } catch(SCAGException& e)
         {
             if (NewObj) delete NewObj;
-            throw SCAGException("Semantic Analyser: Invalid object '%s' to create: %s",name.c_str(),e.what()); 
+            throw SCAGException("Semantic Analyser error at line %d: Invalid object '%s' to create: %s",nLine,name.c_str(),e.what()); 
         }
         CurrentObject = rule;
         RootObject = rule;
@@ -95,6 +99,13 @@ void SemanticAnalyser::DeliverEndTag(const std::string& name)
 }
 
 
+Rule * XMLBasicHandler::ReturnFinalObject()
+{
+    Rule * rule = 0;
+
+    if (CanReturnFinalObject) rule = analyser.ReturnRuleObject();
+    return rule;
+}
 
 
 
@@ -108,13 +119,6 @@ XMLBasicHandler::~XMLBasicHandler()
 {
 }
 
-Rule * XMLBasicHandler::ReturnFinalObject()
-{
-    Rule * rule = 0;
-
-    if (CanReturnFinalObject) rule = analyser.ReturnRuleObject();
-    return rule;
-}
 
 
 void XMLBasicHandler::startElement(const XMLCh* const qname, AttributeList& attributes)
@@ -134,7 +138,7 @@ void XMLBasicHandler::startElement(const XMLCh* const qname, AttributeList& attr
         delete AttrValue;
     }
 
-    analyser.DeliverBeginTag(XMLQName.localForm(),attr);
+    analyser.DeliverBeginTag(XMLQName.localForm(),attr,m_pLocator->getLineNumber());
 }
 
 
@@ -147,6 +151,11 @@ void XMLBasicHandler::endElement(const XMLCh* const qname)
 void XMLBasicHandler::endDocument()
 {
     CanReturnFinalObject = true;
+}
+
+void XMLBasicHandler::setDocumentLocator(const Locator * const locator)
+{
+    m_pLocator = locator;
 }
 
 

@@ -11,13 +11,14 @@
 
 #include <unistd.h>
 #include <time.h>
+#include <logger/Logger.h>
 
 #include "SessionStore.h"
 #include "SessionManager.h"
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/util/sms/HashUtil.h"
 
-#include <iostream>
+
 
 namespace scag { namespace sessions 
 {
@@ -29,6 +30,7 @@ namespace scag { namespace sessions
     using namespace scag::util::sms;
     using scag::config::SessionManagerConfig;
 
+    using smsc::logger::Logger;
 
     class SessionManagerImpl : public SessionManager, public Thread, public SessionOwner
     {
@@ -57,6 +59,7 @@ namespace scag { namespace sessions
         EventMonitor    inUseMonitor;
         CSessionList    SessionExpirePool;
         CSessionHash    SessionHash;
+        Logger *        logger;
 
         int16_t         m_nLastUSR;
         Mutex           stopLock;
@@ -74,7 +77,7 @@ namespace scag { namespace sessions
 
         void init(const SessionManagerConfig& config);
 
-        SessionManagerImpl() : bStarted(false) , m_nLastUSR(0) {};
+        SessionManagerImpl() : bStarted(false) , m_nLastUSR(0),logger(0) {};
         virtual ~SessionManagerImpl() { Stop(); }
         
         // SessionManager interface
@@ -130,6 +133,10 @@ void SessionManagerImpl::init(const SessionManagerConfig& _config) // possible t
 {
     this->config = _config;
     store.init(config.dir);
+
+    if (!logger)
+      logger = Logger::getInstance("scag.re.SessionManager");
+
 }
 
 bool SessionManagerImpl::isStarted()
@@ -155,18 +162,18 @@ void SessionManagerImpl::Stop()
         awakeEvent.Signal();
         exitEvent.Wait(); 
     }
-    std::cout<<"SessionManager::stop" << std::endl;
+    smsc_log_info(logger,"SessionManager::stop");
 }
 int SessionManagerImpl::Execute()
 {
-    std::cout<<"SessionManager::start executing" << std::endl;
+    smsc_log_info(logger,"SessionManager::start executing");
 
     while (isStarted())
     {
         int secs = processExpire();
         awakeEvent.Wait(secs*1000);
     }
-    std::cout<<"SessionManager::stop executing" << std::endl;
+    smsc_log_info(logger,"SessionManager::stop executing");
     exitEvent.Signal();
     return 0;
 }

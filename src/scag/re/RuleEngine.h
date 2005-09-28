@@ -29,7 +29,7 @@ class RuleEngine
 
 
 private:
-    MainActionFactory * factory;
+    MainActionFactory factory;
     std::string RulesDir;
     int GetRuleId(SCAGCommand& command);
 
@@ -151,7 +151,7 @@ public:
     RuleStatus process(SCAGCommand& command,Session& session);
     void updateRule(int ruleId);
     bool removeRule(int ruleId);
-    ActionFactory * getActionFactory() {return factory;}
+    ActionFactory& getActionFactory() {return factory;}
 
 };
 

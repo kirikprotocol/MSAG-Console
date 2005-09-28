@@ -487,6 +487,29 @@ class SmppCommand:public SCAGCommand
     }
 
 public:
+  virtual int getKey() const 
+  {
+      //TODO: return key from special field
+      return 0;
+  }
+
+
+  virtual bool isFinalCommand() const
+  {
+      CommandId cmdid = cmd->get_commandId();
+      return (SUBMIT_RESP == cmdid);
+  }
+
+  virtual Address getDestAddr() const 
+  {
+      Address resultAddr;
+      if (!cmd) return resultAddr;
+      CommandId cmdid = cmd->get_commandId();
+      void * dta = cmd->dta;
+      SMS * sms = 0;
+      sms = (SMS*)dta;
+      return sms->getDestinationAddress();
+  }
 
 
   virtual Address getAbonentAddr() const
@@ -499,8 +522,6 @@ public:
       SMS * sms = 0;
 
       if (!dta) return resultAddr;
-
-      int FieldId = -1;
 
       switch (cmdid) 
       {

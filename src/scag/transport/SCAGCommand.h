@@ -32,6 +32,9 @@ namespace scag { namespace transport
             return type;
         };
 
+        virtual bool isFinalCommand() const = 0;
+        virtual int getKey() const = 0;
+        virtual Address getDestAddr() const = 0;
         virtual Address getAbonentAddr() const = 0;
         virtual int16_t getUMR() const = 0;
     };

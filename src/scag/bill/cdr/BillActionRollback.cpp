@@ -6,13 +6,37 @@ namespace scag { namespace bill {
 
 bool BillActionRollback::run(ActionContext& context)
 {
-    CDRBillingMachine * bm = CDRBillingMachine::Instance();
-    if (!bm) return false;
+    smsc_log_error(logger,"Run Action '[CDR]BillActionRollback'...");
 
     Operation * operation = context.GetCurrentOperation();
-    if (!operation) return false;
+    if (!operation) 
+    {
+        smsc_log_error(logger,"Fatal error in action: '[CDR]BillActionRollback' - operation from ActionContext is invalid");
+        return false;
+    }
 
-    //bm->rollback(
+    CDRBillingMachine * bm = CDRBillingMachine::Instance();
+    if (!bm) 
+    {
+        smsc_log_error(logger,"Fatal error in action: '[CDR]BillActionRollback' - BillingMachine is invalid");
+        return false;
+    }
+
+    Bill bill; 
+
+    try
+    {
+        BillKey billKey = context.CreateBillKey();
+        bill = bm->GetBill(billKey);
+    } 
+    catch (...)
+    {
+        smsc_log_error(logger,"Action: '[CDR]BillActionRollback' - cannot build bill for billKey");
+        return true;
+    }
+
+    bm->rollback(bill);
+    operation->detachBill(bill);
 
     return true;
 }

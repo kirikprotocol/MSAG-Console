@@ -26,7 +26,6 @@ namespace scag { namespace re { namespace smpp
         SmppRule() : Rule() {};
         virtual ~SmppRule() {};
         
-        // TODO: implement methods
         virtual void init(ConfigView *config);
         virtual RuleStatus process(SCAGCommand command);
     };
