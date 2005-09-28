@@ -143,7 +143,7 @@ Scag::~Scag()
   SaveStats();
 }
 
-class SpeedMonitor:public smsc::core::threads::ThreadedTask{
+class SpeedMonitor{
 public:
 
   //****************************************************************************************
@@ -157,7 +157,7 @@ public:
     start.tv_nsec=0;
     scag = pscag;
   }
-  int Execute()
+  int run()
   {
     uint64_t cnt,last=0;
     timespec now={0,0},lasttime={0,0};
@@ -204,7 +204,9 @@ public:
       fflush(stdout);
       last=cnt;
       lasttime=now;
-      if(isStopping)break;
+
+      //if(isStopping)break;
+
       uint64_t perf[scag::performance::performanceCounters];
       // success, error, reschedule
       scag->getPerfData(perf);
@@ -284,10 +286,6 @@ public:
   {
     start.tv_sec=t;
     start.tv_nsec=0;
-  }
-  const char* taskName()
-  {
-    return "SpeedMonitor";
   }
 protected:
   //EventQueue& queue;
@@ -450,19 +448,7 @@ void Scag::init()
   }
   //********************************************************
 
-
   /*{
-    smsc_log_info(log, "Starting statemachines" );
-    int cnt=cfg.getConfig()->getInt("core.state_machines_count");
-    for(int i=0;i<cnt;i++)
-    {
-      StateMachine *m=new StateMachine(eventqueue,this);
-      tp.startTask(m);
-    }
-    smsc_log_info(log, "Statemachines started" );
-  }*/
-
-  {
     SpeedMonitor *sm=new SpeedMonitor(&perfDataDisp,this);
     FILE *f=fopen("stats.txt","rt");
     if(f)
@@ -484,7 +470,7 @@ void Scag::init()
     }
     tp.startTask(sm);
     smsc_log_info(log, "Speedmonitor started" );
-  }
+  }*/
 
   try{
       using scag::config::ConfigView;
@@ -672,6 +658,27 @@ void Scag::run()
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.run");
 
   //TODO: report performance on Speed Monitor
+    SpeedMonitor *sm=new SpeedMonitor(&perfDataDisp,this);
+    FILE *f=fopen("stats.txt","rt");
+    if(f)
+    {
+      time_t ut;
+      fscanf(f,"%d %lld %lld %lld %lld %lld %lld",
+        &ut,
+        &acceptedCounter,
+        &rejectedCounter,
+        &deliveredCounter,
+        &deliverErrCounter,
+        &transOkCounter,
+        &transFailCounter
+      );
+      startTime=time(NULL)-ut;
+      sm->setStartTime(startTime);
+      fclose(f);
+      remove("stats.txt");
+    }
+    sm->run();
+    smsc_log_info(log, "Speedmonitor started" );
 }
 
 void Scag::shutdown()
