@@ -4,7 +4,6 @@ namespace scag {
 namespace config {
 
 BillingManagerConfig::BillingManagerConfig(ConfigView& cv)
-    : mainActionFactory(0)
 {
   std::auto_ptr<char> cfg_dir_( cv.getString("configDir") );
   std::auto_ptr<char> so_dir_( cv.getString("soDir") );

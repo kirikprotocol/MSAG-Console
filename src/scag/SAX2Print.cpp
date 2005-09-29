@@ -26,7 +26,6 @@ int main(int argC, char* argV[])
     SMS sms;
     SmppCommand command = SmppCommand::makeDeliverySm(sms,51);
 
-    RuleEngine * engine = 0;
     smsc::logger::Logger::Init();
 
     logger = smsc::logger::Logger::getInstance("SCAG.RuleEngine");
@@ -62,24 +61,28 @@ int main(int argC, char* argV[])
         return 3;
     }
 
-
-
-    engine = new RuleEngine();
     RuleStatus rs;
 
     BillingManagerConfig billingManagerConfig;
 
     billingManagerConfig.so_dir = "./bill";
     billingManagerConfig.cfg_dir = "";
-    billingManagerConfig.mainActionFactory = &engine->getActionFactory();
+//    billingManagerConfig.mainActionFactory = &re.getActionFactory();
 
     BillingManager::Init(billingManagerConfig);
 
     try
     {
-        engine->Init("./rules");
+        RuleEngine::Init("./rules");
+    } catch (...)
+    {
 
-        rs = engine->process(command, *session);
+    }
+
+
+    try
+    {
+        rs = RuleEngine::Instance().process(command, *session);
         smsc_log_debug(logger,"result = %d",rs.result);
     }
     catch (Exception& e)
@@ -89,9 +92,6 @@ int main(int argC, char* argV[])
         //TODO: Disable route
     }
     
-
-
-    delete engine;
     //smsc::logger::Logger::Shutdown();
     return 0;
 }

@@ -11,115 +11,197 @@
 #include <dirent.h>
 #include "XMLHandlers.h"
 
+#include <core/synchronization/Mutex.hpp>
+#include <core/buffers/IntHash.hpp>
+
+#include <util/debug.h>
+
+
+#include "scag/re/actions/MainActionFactory.h"
+#include <scag/util/singleton/Singleton.h>
+
+
+#include "scag/SAX2Print.hpp"
+
 namespace scag { namespace re {
 
 using smsc::core::synchronization::MutexGuard;
 using namespace std;
 using namespace smsc::util;
 using namespace scag::re::actions;
+using namespace scag::util::singleton;
 
 
-void RuleEngine::updateRule(int ruleId)
+using smsc::core::synchronization::Mutex;
+using smsc::core::buffers::IntHash;
+using namespace scag::re::actions;
+
+struct RulesReference;
+struct Rules;
+
+
+class RuleEngineImpl : RuleEngine
 {
-    MutexGuard mg(changeLock);
+    MainActionFactory factory;
+    std::string RulesDir;
+    int GetRuleId(SCAGCommand& command);
 
-    Rule* newRule = ParseFile(CreateRuleFileName(RulesDir,ruleId));
-    if (!newRule) return;
 
-
-    Rules *newRules = copyReference();
-    Rule** rulePtr = newRules->rules.GetPtr(ruleId);
-
-    if (rulePtr) 
+    friend struct RulesReference; 
+    struct Rules
     {
-        (*rulePtr)->unref();
-        newRules->rules.Delete(ruleId);
+        Mutex           rulesLock;
+        IntHash<Rule*>  rules;
+        int             useCounter;
+
+        Rules() : useCounter(1) {}
+        ~Rules() 
+         {
+             IntHash<Rule*>::Iterator it = rules.First();
+             int ruleId; Rule* rule = 0;
+             while (it.Next(ruleId, rule))
+             {
+                 if (!rule) continue;
+                 rule->unref();
+             }
+         }
+
+         void ref() 
+         {
+             MutexGuard mg(rulesLock);
+             useCounter++;
+         }
+
+         void unref() 
+         {
+             bool del=false;
+             {
+                 MutexGuard mg(rulesLock);
+                 del = (--useCounter == 0);
+             }
+             if (del) delete this;
+         }
+    };
+
+    struct RulesReference
+    {
+        Rules*  rules;
+
+        RulesReference(Rules* _rules) : rules(_rules) 
+        {
+            __require__(rules);
+            rules->ref();
+        };
+
+        RulesReference(const RulesReference& rr) : rules(rr.rules) 
+        {
+            __require__(rules);
+            rules->ref();
+        }
+
+        ~RulesReference() 
+        {
+            __require__(rules);
+            rules->unref();
+        }
+
+        IntHash<Rule*>& operator->() 
+        {
+            __require__(rules);
+            return rules->rules;
+        }
+    };
+
+    Mutex  rulesLock;
+    Rules* rules;
+
+    RulesReference getRules() 
+    {
+    MutexGuard mg(rulesLock);
+    return RulesReference(rules);
     }
 
-    newRules->rules.Insert(ruleId, newRule);
-    changeRules(newRules);      
-}
+    void changeRules(Rules* _rules) 
+    {
+        MutexGuard mg(rulesLock);
+        __require__(_rules);
+        rules->unref();
+        rules = _rules;
+    }
+
+    Mutex   changeLock; 
+
+    Rules* copyReference()
+    {
+        Rules* newRules = new Rules();
+        IntHash<Rule*>::Iterator it = rules->rules.First();
+        int oldRuleId; Rule* rule = 0;
+        while (it.Next(oldRuleId, rule))
+        {
+            if (!rule) continue;
+            rule->ref();
+            newRules->rules.Insert(oldRuleId, rule);
+        }
+
+        return newRules;
+    }
+
+    Rule * ParseFile(const std::string& xmlFile);
+    bool isValidFileName(std::string fname,int& ruleId);
+    std::string CreateRuleFileName(const std::string& dir,const int ruleId) const;
+public:
+    RuleEngineImpl();
+    ~RuleEngineImpl();
+
+    virtual ActionFactory& getActionFactory() {return factory;}
+    void ProcessInit(const std::string& dir);
+    virtual void updateRule(int ruleId);
+    virtual bool removeRule(int ruleId);
+    virtual RuleStatus process(SCAGCommand& command, Session& session);
+
+};
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////
 
 
-bool RuleEngine::removeRule(int ruleId)
+static bool  bRuleEngineInited = false;
+static Mutex initRuleEngineLock;
+
+inline unsigned GetLongevity(RuleEngineImpl*) { return 7; } // ? Move upper ? 
+typedef SingletonHolder<RuleEngineImpl> SingleRE;
+
+RuleEngine& RuleEngine::Instance()
 {
-    MutexGuard mg(changeLock);
-
-    Rule** rulePtr = rules->rules.GetPtr(ruleId);  // Can we do such direct access? TODO: Ensure
-    if (!rulePtr) return false;
-            
-    Rules *newRules = copyReference();
-    rulePtr = newRules->rules.GetPtr(ruleId);
-    (*rulePtr)->unref();
-    newRules->rules.Delete(ruleId);
-    changeRules(newRules);
-    return true;
+    /*if (!bRuleEngineInited) 
+    {
+        MutexGuard guard(initRuleEngineLock);
+        if (!bRuleEngineInited) 
+            throw SCAGException("RuleEngine not inited!");
+    }       */
+    return SingleRE::Instance();
 }
+
 
 
 void RuleEngine::Init(const std::string& dir)
 {
-    rules = new Rules();
-
-    try
+    if (!bRuleEngineInited)
     {
-        XMLPlatformUtils::Initialize();
+        MutexGuard guard(initRuleEngineLock);
+        if (!bRuleEngineInited) {
+            RuleEngineImpl& re = SingleRE::Instance();
+            re.ProcessInit(dir); 
+            bRuleEngineInited = true;
+        }
     }
-    catch (const XMLException& toCatch)
-    {
-        StrX msg(toCatch.getMessage());
-        throw SCAGException("Error during initialization XMLPlatform: %s", msg.localForm());
-    }
-
-    RulesDir = dir;
-
-    DIR * pDir = 0;
-    dirent * pDirEnt = 0;
-    int ruleId = 0;
-
-    pDir = opendir(dir.c_str());
-    if (!pDir) throw SCAGException("Invalid directory %s",dir.c_str());
-
-    while (pDir) 
-    {
-         pDirEnt = readdir(pDir);
-         if (pDirEnt) 
-         {
-             if (isValidFileName(pDirEnt->d_name,ruleId)) 
-             {
-                 smsc_log_debug(logger,"Rule ID is %d",ruleId);
-                 updateRule(ruleId);
-             }
-             else if ((strcmp(pDirEnt->d_name,".")!=0)&&(strcmp(pDirEnt->d_name,"..")!=0)) 
-             {
-                 smsc_log_error(logger,"Skipped '%s' file: Invalid file name",pDirEnt->d_name);
-             }
-         } 
-         else 
-         {
-             closedir(pDir);
-             return;
-         }
-    }
-
-    closedir(pDir);
 }
 
 
 
-
-RuleEngine::RuleEngine() : rules(0)
-{
-}
   
-RuleEngine::~RuleEngine()
-{
-    XMLPlatformUtils::Terminate();
-    if (rules) rules->unref();
-    if (rules) delete rules;
-}
- 
-Rule * RuleEngine::ParseFile(const std::string& xmlFile)
+
+Rule * RuleEngineImpl::ParseFile(const std::string& xmlFile)
 {
     int errorCount = 0;
     int errorCode = 0;
@@ -178,7 +260,7 @@ Rule * RuleEngine::ParseFile(const std::string& xmlFile)
     return rule;
 }
 
-bool RuleEngine::isValidFileName(std::string fname, int& ruleId)
+bool RuleEngineImpl::isValidFileName(std::string fname, int& ruleId)
 {
     if (fname.substr(0,5).compare("rule_")) return false;
     if (fname.substr(fname.size()-4,4).compare(".xml")) return false;
@@ -188,7 +270,7 @@ bool RuleEngine::isValidFileName(std::string fname, int& ruleId)
     return (ruleId > 0);
 }
 
-std::string RuleEngine::CreateRuleFileName(const std::string& dir,const int ruleId) const
+std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const int ruleId) const
 {
     char buff[100];
     sprintf(buff,"%d",ruleId);
@@ -201,13 +283,13 @@ std::string RuleEngine::CreateRuleFileName(const std::string& dir,const int rule
     return result;   
 }
 
-int RuleEngine::GetRuleId(SCAGCommand& command)
+int RuleEngineImpl::GetRuleId(SCAGCommand& command)
 {
     return 1;
 }
 
 
-RuleStatus RuleEngine::process(SCAGCommand& command, Session& session)
+RuleStatus RuleEngineImpl::process(SCAGCommand& command, Session& session)
 {
     RulesReference rulesRef = getRules();
     RuleStatus rs;
@@ -227,6 +309,106 @@ RuleStatus RuleEngine::process(SCAGCommand& command, Session& session)
 
         
     return rs;
+}
+
+
+
+void RuleEngineImpl::ProcessInit(const std::string& dir)
+{
+
+    rules = new Rules();
+
+    try
+    {
+        XMLPlatformUtils::Initialize();
+    }
+    catch (const XMLException& toCatch)
+    {
+        StrX msg(toCatch.getMessage());
+        throw SCAGException("Error during initialization XMLPlatform: %s", msg.localForm());
+    }
+
+    RulesDir = dir;
+
+    DIR * pDir = 0;
+    dirent * pDirEnt = 0;
+    int ruleId = 0;
+
+    pDir = opendir(dir.c_str());
+    if (!pDir) throw SCAGException("Invalid directory %s",dir.c_str());
+
+    while (pDir) 
+    {
+         pDirEnt = readdir(pDir);
+         if (pDirEnt) 
+         {
+             if (isValidFileName(pDirEnt->d_name,ruleId)) 
+             {
+                 smsc_log_debug(logger,"Rule ID is %d",ruleId);
+                 updateRule(ruleId);
+             }
+             else if ((strcmp(pDirEnt->d_name,".")!=0)&&(strcmp(pDirEnt->d_name,"..")!=0)) 
+             {
+                 smsc_log_error(logger,"Skipped '%s' file: Invalid file name",pDirEnt->d_name);
+             }
+         } 
+         else 
+         {
+             closedir(pDir);
+             return;
+         }
+    }
+
+    closedir(pDir);
+}
+
+
+void RuleEngineImpl::updateRule(int ruleId)
+{
+    MutexGuard mg(changeLock);
+
+    Rule* newRule = ParseFile(CreateRuleFileName(RulesDir,ruleId));
+    if (!newRule) return;
+
+
+    Rules *newRules = copyReference();
+    Rule** rulePtr = newRules->rules.GetPtr(ruleId);
+
+    if (rulePtr) 
+    {
+        (*rulePtr)->unref();
+        newRules->rules.Delete(ruleId);
+    }
+
+    newRules->rules.Insert(ruleId, newRule);
+    changeRules(newRules);      
+}
+
+
+bool RuleEngineImpl::removeRule(int ruleId)
+{
+    MutexGuard mg(changeLock);
+
+    Rule** rulePtr = rules->rules.GetPtr(ruleId);  // Can we do such direct access? TODO: Ensure
+    if (!rulePtr) return false;
+            
+    Rules *newRules = copyReference();
+    rulePtr = newRules->rules.GetPtr(ruleId);
+    (*rulePtr)->unref();
+    newRules->rules.Delete(ruleId);
+    changeRules(newRules);
+    return true;
+}
+
+RuleEngineImpl::RuleEngineImpl() : rules(0)
+{
+}
+
+RuleEngineImpl::~RuleEngineImpl()
+{
+    XMLPlatformUtils::Terminate();
+    if (rules) rules->unref();
+    if (rules) delete rules;
 }
 
 

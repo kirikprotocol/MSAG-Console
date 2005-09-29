@@ -6,7 +6,7 @@
 
 #include "BillingManager.h"
 #include "BillingMachine.h"
-
+#include "scag/re/RuleEngine.h"
 
 #include <sys/types.h>
 #include <dirent.h>
@@ -27,6 +27,7 @@ namespace scag { namespace bill
     using namespace smsc::core::synchronization;
     using namespace scag::util::singleton;
     using namespace scag::re::actions;
+    using namespace scag::re;
 
     using smsc::logger::Logger;
 
@@ -38,7 +39,7 @@ namespace scag { namespace bill
     {
         IntHash<BillingMachine *> machines; // User's billing machines by their ids
         bool isValidFileName(const std::string& fname);
-        void LoadBillingMachine(const char * dlpath,const std::string& cfg_dir, ActionFactory * mainActionFactory);
+        void LoadBillingMachine(const char * dlpath,const std::string& cfg_dir, ActionFactory& mainActionFactory);
 
         static const char* MACHINE_INIT_FUNCTION;
         static smsc::logger::Logger *logger;
@@ -104,9 +105,8 @@ bool BillingManagerImpl::isValidFileName(const std::string& fname)
 
 
 
-void BillingManagerImpl::LoadBillingMachine(const char * dlpath,const std::string& cfg_dir, ActionFactory * mainActionFactory)
+void BillingManagerImpl::LoadBillingMachine(const char * dlpath,const std::string& cfg_dir, ActionFactory& mainActionFactory)
 {
-    if (!mainActionFactory) return;
     MutexGuard guard(loadupLock);
 
     smsc_log_info(logger, "Loading '%s' library", dlpath);
@@ -122,7 +122,7 @@ void BillingManagerImpl::LoadBillingMachine(const char * dlpath,const std::strin
             if (billingMachine)
             {
                 machines.Insert(id,billingMachine);
-                mainActionFactory->registerChild(billingMachine->getActionFactory());
+                mainActionFactory.registerChild(billingMachine->getActionFactory());
             }
             else
             {
@@ -164,11 +164,12 @@ void BillingManagerImpl::init(BillingManagerConfig& config) // possible throws e
     int ruleId = 0;
 
     pDir = opendir(config.so_dir.c_str());
+    /*
     if (!config.mainActionFactory) 
     {
         smsc_log_error(logger, "Fatal Error: Main Action Factory is invalid");
         return;
-    }
+    } */
 
     if (!pDir) 
     {
@@ -180,27 +181,27 @@ void BillingManagerImpl::init(BillingManagerConfig& config) // possible throws e
 
     while (pDir)
     {
-         pDirEnt = readdir(pDir);
-         if (pDirEnt)
-         {
-             if (isValidFileName(pDirEnt->d_name))
-             {
-                 std::string fileName = config.so_dir;
-                 fileName.append("/");
-                 fileName.append(pDirEnt->d_name);
-                 try
-                 {
-                     LoadBillingMachine(fileName.c_str(),config.cfg_dir,config.mainActionFactory);
-                 } 
-                 catch (SCAGException& e)
-                 {
-                     smsc_log_error(logger,e.what());
-                 }
-             }
-             else if ((strcmp(pDirEnt->d_name,".")!=0)&&(strcmp(pDirEnt->d_name,"..")!=0))
-             {
-                 smsc_log_error(logger, "Invalid file name '%s'", pDirEnt->d_name);
-             }
+        pDirEnt = readdir(pDir);
+        if (pDirEnt)
+        {
+            if (isValidFileName(pDirEnt->d_name))
+            {
+                std::string fileName = config.so_dir;
+                fileName.append("/");
+                fileName.append(pDirEnt->d_name);
+                try
+                {
+                    LoadBillingMachine(fileName.c_str(),config.cfg_dir,RuleEngine::Instance().getActionFactory());
+                } 
+                catch (SCAGException& e)
+                {
+                    smsc_log_error(logger,e.what());
+                }
+            }
+            else if ((strcmp(pDirEnt->d_name,".")!=0)&&(strcmp(pDirEnt->d_name,"..")!=0))
+            {
+                smsc_log_error(logger, "Invalid file name '%s'", pDirEnt->d_name);
+            }
          }
          else
          {
@@ -218,7 +219,7 @@ void BillingManagerImpl::rollback(const Bill& bill) // possible throws exception
 {
     // TODO: dispath call to billing machine by bill.machine_id
     if (!machines.Exist(bill.machine_id)) return;
-    BillingMachine * bm = machines.Get(bill.bill_id);
+    BillingMachine * bm = machines.Get(bill.machine_id);
     bm->rollback(bill);
 }
 

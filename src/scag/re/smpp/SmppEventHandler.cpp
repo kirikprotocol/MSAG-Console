@@ -30,6 +30,7 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
     if (!smppcommand) throw SCAGException("SmppEventHandler: command is not 'smpp-type'");
 
     SmppCommandAdapter _command(*smppcommand);
+    
     session.startOperation(command);
 
     ActionContext context(_constants, session, _command,_statistics);

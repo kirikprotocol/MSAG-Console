@@ -13,7 +13,7 @@ namespace scag { namespace sessions
     using scag::config::SessionManagerConfig;
     
 
-    class SessionManager
+    class SessionManager 
     {
         SessionManager(const SessionManager& sm);
         SessionManager& operator=(const SessionManager& sm);

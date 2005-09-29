@@ -29,13 +29,13 @@ void Operation::attachBill(const Bill& bill)
 void Operation::rollbackAll()
 {
     smsc_log_debug(logger,"Operation: Rollback all");
-
+    
     BillingManager& bm = BillingManager::Instance();
     for (std::list<Bill>::iterator it = BillList.begin();it!=BillList.end(); ++it)
     {
-        BillList.erase(it);
         bm.rollback(*it);
-    }
+    }     
+    BillList.clear();
 }
 
 
@@ -148,6 +148,7 @@ bool Session::startOperation(SCAGCommand& cmd)
     }
 
     m_pCurrentOperation = OperationHash.Get(operationKey);
+    smsc_log_error(logger,"** Session: operation started");
    
     Owner->startTimer(this->getSessionKey(), this->getWakeUpTime());
     return true;
@@ -155,12 +156,15 @@ bool Session::startOperation(SCAGCommand& cmd)
 
 void Session::releaseOperation()
 {
+    
     if (m_pCurrentOperation)
     {
         if (needReleaseCurrentOperation) 
         {
             OperationHash.Delete(currentOperationKey);
             m_pCurrentOperation = 0;
+
+            smsc_log_error(logger,"** Session: operation released");
             Owner->startTimer(m_SessionKey,this->getWakeUpTime());
         }
     }

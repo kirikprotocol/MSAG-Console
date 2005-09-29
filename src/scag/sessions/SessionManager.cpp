@@ -32,7 +32,7 @@ namespace scag { namespace sessions
 
     using smsc::logger::Logger;
 
-    class SessionManagerImpl : public SessionManager, public Thread, public SessionOwner
+    class SessionManagerImpl : public SessionManager, public Thread, public SessionOwner 
     {
         struct CSessionAccessData
         {
@@ -253,6 +253,7 @@ Session * SessionManagerImpl::newSession(CSessionKey& sessionKey)
 
     store.newSession(sessionKey);
     session = store.getSession(sessionKey);
+    session->setOwner(this);
 
     time_t time = session->getWakeUpTime();
 
@@ -324,14 +325,14 @@ void SessionManagerImpl::startTimer(CSessionKey key,time_t deadLine)
 
     CSLIterator it;
     it = SessionHash.Get(key);
-
+/*
     while (it->bOpened) 
     {
         inUseMonitor.wait();
         if (!SessionHash.Exists(key)) return;
         it = SessionHash.Get(key);
     }
-
+*/
     it->nextWakeTime = deadLine;
 }
 
