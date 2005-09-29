@@ -142,10 +142,22 @@ static string FormatText(const char* format,...)
   return string(b.get());
 }
 
+static inline void eraseUssdLock(MapDialog *dialog, const char* function) {
+  USSD_MAP::iterator it=ussd_map.find(dialog->ussdSequence);
+  if(it==ussd_map.end()){
+    __map_warn2__("%s: ussd lock not found for ussd dialog for %lld dlg 0x%x", function, dialog->ussdSequence, dialog->dialogid_map );
+  }else if(it->second == dialog->dialogid_map ) {
+    __map_trace2__("%s: erase ussd lock for %lld dlg 0x%x", function, dialog->ussdSequence, it->second);
+    ussd_map.erase(it);
+  } else {
+    __map_warn2__("%s: could not erase ussd lock, dialog for %lld already reassigned to dlg 0x%x but requested dlg 0x%x", function, dialog->ussdSequence, it->second, dialog->dialogid_map );
+  }
+}
+
 static inline
 void SetVersion(ET96MAP_APP_CNTX_T& ac,unsigned version){
   if ( version > 3 || version == 0 ) throw runtime_error(
-    FormatText("MAP::%s: Opss, version = %d, why?",__func__,version));
+    FormatText("%s: Opss, version = %d, why?",__func__,version));
   switch(version){
   case 3:
   //  ac.version = ET96MAP_APP_CNTX_T::ET96MAP_VERSION_3;
@@ -259,7 +271,7 @@ void MAPIO_QueryMscVersionInternal()
   USHORT_T result =
     Et96MapGetACVersionReq(SSN,GetScAddr(),ET96MAP_SHORT_MSG_MT_RELAY);
   if ( result != ET96MAP_E_OK ) {
-    throw runtime_error(FormatText("MAP::QueryMcsVersion: error 0x%x when GetAcVersion",result));
+    throw runtime_error(FormatText("QueryMcsVersion: error 0x%x when GetAcVersion",result));
   }
 }
 
@@ -271,14 +283,14 @@ static void CheckLockedByMO(MapDialog* dialog)
   {
     if ( it->second.startTime+GetMOLockTimeout() <= time(0) )
     {
-      __map_trace2__("UDHI:%s time expired, unlocked, dlg 0x%x recv(%d)",__func__,dialog->dialogid_map, it->second.parts);
+      __map_trace2__("%s: udhi time expired, unlocked, dlg 0x%x recv(%d)",__func__,dialog->dialogid_map, it->second.parts);
       x_momap.erase(it);
     }
     else{
       dialog->dropChain = true;
-      __map_trace2__("MAP:UDHI:%s locked, reschedule NOW! dlg 0x%x recv(%d)",__func__,dialog->dialogid_map,it->second.parts);
+      __map_trace2__("%s: udhi locked, reschedule NOW! dlg 0x%x recv(%d)",__func__,dialog->dialogid_map,it->second.parts);
       throw MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_RESCHEDULENOW,Status::LOCKEDBYMO),
-                            "MAP:: Locked by MO: reschedule NOW!");
+                            "Locked by MO: reschedule NOW!");
     }
   }
 }
@@ -295,7 +307,7 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
   dialog->id_opened = false;
   if ( !dialog->isQueryAbonentStatus ) {
     dialog->sms = auto_ptr<SMS>(cmd->get_sms_and_forget());
-    __map_trace2__("%s:DELIVERY_SM dlg 0x%x %s",__func__,dialog->dialogid_map,RouteToString(dialog).c_str());
+    __map_trace2__("%s: DELIVERY_SM dlg 0x%x %s",__func__,dialog->dialogid_map,RouteToString(dialog).c_str());
     mkMapAddress( &dialog->m_msAddr, dialog->sms->getDestinationAddress().value, dialog->sms->getDestinationAddress().length );
     mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), SC_ADDRESS().length() );
     mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, SSN );
@@ -307,7 +319,7 @@ static void StartDialogProcessing(MapDialog* dialog,const SmscCommand& cmd)
     CheckLockedByMO(dialog);
   }else{
     AbonentStatus& as = dialog->QueryAbonentCommand->get_abonentStatus();
-    __map_trace2__("%s:Abonent Status cmd dlg 0x%x (%d.%d.%s)",__func__,dialog->dialogid_map,(unsigned)as.addr.type,(unsigned)as.addr.plan,as.addr.value);
+    __map_trace2__("%s: Abonent Status cmd dlg 0x%x (%d.%d.%s)",__func__,dialog->dialogid_map,(unsigned)as.addr.type,(unsigned)as.addr.plan,as.addr.value);
     mkMapAddress( &dialog->m_msAddr, as.addr.value, as.addr.length );
     mkMapAddress( &dialog->m_scAddr, /*"79029869999"*/ SC_ADDRESS().c_str(), 11 );
     mkSS7GTAddress( &dialog->scAddr, &dialog->m_scAddr, SSN );
@@ -461,7 +473,7 @@ static void QueryHlrVersion(MapDialog* dialog)
           break;
       default:
           throw MAPDIALOG_BAD_STATE(
-                  FormatText("MAP::%s bad state %d, did 0x%x, SMSC.did 0x%x",__func__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
+                  FormatText("%s: bad state %d, did 0x%x, SMSC.did 0x%x",__func__,dialog->state,dialog->dialogid_map,dialog->dialogid_smsc));
   }
 }
 
@@ -536,27 +548,23 @@ static void SendRInfo(MapDialog* dialog)
 void ResponseMO(MapDialog* dialog,unsigned status)
 {
   ET96MAP_ERROR_FORW_SM_MO_T err ;
+
   memset(&err,0,sizeof(ET96MAP_ERROR_FORW_SM_MO_T));
   dialog->wasDelivered = true;
   switch ( status )
   {
   case Status::OK: break;
-  case Status::SYSERR:
-    err.errorCode = 34;
-    break;
-  case Status::INVSRCADR:
-  case Status::INVDSTADR:
-  case Status::NOROUTE:
-    err.errorCode = dialog->version == 3 ? 21: 5;
-    break;
   case Status::INVSCHED:
-    err.errorCode = 34;
+    err.errorCode = 32;
+    err.u.smDeliveryFailureReason_s.reason = ET96MAP_PROTOCOL_ERROR;
     break;
   default:
     if( Status::isErrorPermanent(status) ) {
-      err.errorCode = 21;
+      err.errorCode = 32;
+      err.u.smDeliveryFailureReason_s.reason = ET96MAP_INVALID_SME_ADDRESS;
     } else {
-      err.errorCode = 34;
+      err.errorCode = 32;
+      err.u.smDeliveryFailureReason_s.reason = ET96MAP_SERVICE_CENTER_CONGESTION;
     }
     break;
   };
@@ -1300,17 +1308,7 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
     throw runtime_error(
       FormatText("%s Resp return error 0x%x",__func__,result));
   CloseMapDialog(dialog->dialogid_map,dialog->ssn);
-  {
-    USSD_MAP::iterator it=ussd_map.find(dialog->ussdSequence);
-    if(it==ussd_map.end()){
-      __map_warn2__("MAP::%s locker not found for ussd dialog for %lld", __func__, dialog->ussdSequence );
-    }else if(it->second == dialog->dialogid_map ) {
-      __map_trace2__("MAP::%s erase ussd lock for %lld", __func__, dialog->ussdSequence);
-      ussd_map.erase(it);
-    } else {
-      __map_warn2__("MAP::%s ussd dialog already reassigned for %lld", __func__, dialog->ussdSequence );
-    }
-  }
+  eraseUssdLock(dialog, __func__);
   dialog->dropChain = true;
   dialog->state = MAPST_END;
   if( cmd.IsOk() && cmd->get_commandId() != SUBMIT_RESP) SendOkToSmsc(dialog);
@@ -1356,17 +1354,7 @@ static void DoUSSRUserResponce( MapDialog* dialog)
     throw runtime_error(
       FormatText("%s: Resp return error 0x%x",__func__,result));
   CloseMapDialog(dialog->dialogid_map,dialog->ssn);
-  {
-    USSD_MAP::iterator it=ussd_map.find(dialog->ussdSequence);
-    if(it==ussd_map.end()){
-      __map_warn2__("MAP::%s locker not found for ussd dialog for %lld", __func__, dialog->ussdSequence );
-    }else if(it->second == dialog->dialogid_map ) {
-      __map_trace2__("MAP::%s erase ussd lock for %lld", __func__, dialog->ussdSequence);
-      ussd_map.erase(it);
-    } else {
-      __map_warn2__("MAP::%s ussd dialog already reassigned for %lld", __func__, dialog->ussdSequence );
-    }
-  }
+  eraseUssdLock(dialog, __func__);
   dialog->state = MAPST_END;
   SendOkToSmsc(dialog);
   DropMapDialog(dialog);
@@ -1757,17 +1745,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
       }else if(dialog->state == MAPST_WaitSubmitUSSDRequestConf) {
         if ( cmd->get_resp()->get_status() != 0 )
         {
-          {
-            USSD_MAP::iterator it=ussd_map.find(dialog->ussdSequence);
-            if(it==ussd_map.end()){
-              __map_warn2__("MAP::%s locker not found for ussd dialog for %lld", __func__, dialog->ussdSequence );
-            }else if(it->second == dialog->dialogid_map ) {
-              __map_trace2__("MAP::%s erase ussd lock for %lld", __func__, dialog->ussdSequence);
-              ussd_map.erase(it);
-            } else {
-              __map_warn2__("MAP::%s ussd dialog already reassigned for %lld", __func__, dialog->ussdSequence );
-            }
-          }
+          eraseUssdLock(dialog.get(), __func__);
           dialog->dropChain = true;
           CloseMapDialog(dialog->dialogid_map,dialog->ssn);
           DropMapDialog(dialog.get());
@@ -1781,32 +1759,12 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           }
         }
       }else if(dialog->state == MAPST_WaitSubmitUSSDRequestCloseConf) {
-        {
-          USSD_MAP::iterator it=ussd_map.find(dialog->ussdSequence);
-          if(it==ussd_map.end()){
-            __map_warn2__("MAP::%s locker not found for ussd dialog for %lld", __func__, dialog->ussdSequence );
-          }else if(it->second == dialog->dialogid_map ) {
-            __map_trace2__("MAP::%s erase ussd lock for %lld", __func__, dialog->ussdSequence);
-            ussd_map.erase(it);
-          } else {
-            __map_warn2__("MAP::%s ussd dialog already reassigned for %lld", __func__, dialog->ussdSequence );
-          }
-        }
+        eraseUssdLock(dialog.get(), __func__);
         DropMapDialog(dialog.get());
       }else if(dialog->state == MAPST_WaitSubmitUSSDNotifyConf) {
         if ( cmd->get_resp()->get_status() != 0 )
         {
-          {
-            USSD_MAP::iterator it=ussd_map.find(dialog->ussdSequence);
-            if(it==ussd_map.end()){
-              __map_warn2__("MAP::%s locker not found for ussd dialog for %lld", __func__, dialog->ussdSequence );
-            }else if(it->second == dialog->dialogid_map ) {
-              __map_trace2__("MAP::%s erase ussd lock for %lld", __func__, dialog->ussdSequence);
-              ussd_map.erase(it);
-            } else {
-              __map_warn2__("MAP::%s ussd dialog already reassigned for %lld", __func__, dialog->ussdSequence );
-            }
-          }
+          eraseUssdLock(dialog.get(), __func__);
           dialog->dropChain = true;
           CloseMapDialog(dialog->dialogid_map,dialog->ssn);
           DropMapDialog(dialog.get());
@@ -1820,17 +1778,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
           }
         }
       }else if(dialog->state == MAPST_WaitSubmitUSSDNotifyCloseConf) {
-        {
-          USSD_MAP::iterator it=ussd_map.find(dialog->ussdSequence);
-          if(it==ussd_map.end()){
-            __map_warn2__("MAP::%s locker not found for ussd dialog for %lld", __func__, dialog->ussdSequence );
-          }else if(it->second == dialog->dialogid_map ) {
-            __map_trace2__("MAP::%s erase ussd lock for %lld", __func__, dialog->ussdSequence);
-            ussd_map.erase(it);
-          } else {
-            __map_warn2__("MAP::%s ussd dialog already reassigned for %lld", __func__, dialog->ussdSequence );
-          }
-        }
+        eraseUssdLock(dialog.get(), __func__);
         DropMapDialog(dialog.get());
       }else
         throw MAPDIALOG_BAD_STATE(
@@ -2394,18 +2342,9 @@ USHORT_T Et96MapPAbortInd(
       __require__(dialog->ssn==localSsn);
       dialogid_smsc = dialog->dialogid_smsc;
       dialog->id_opened = false;
-      if( dialog->isUSSD ) {
-        USSD_MAP::iterator it=ussd_map.find(dialog->ussdSequence);
-        if(it==ussd_map.end()){
-	        __map_warn2__("MAP::%s locker not found for ussd dialog for %lld", __func__, dialog->ussdSequence );
-        }else if(it->second == dialog->dialogid_map ) {
-          __map_trace2__("MAP::%s erase ussd lock for %lld", __func__, dialog->ussdSequence);
-          ussd_map.erase(it);
-        } else {
-          __map_warn2__("MAP::%s ussd dialog already reassigned for %lld", __func__, dialog->ussdSequence );
-        }
-      }
-      throw MAPDIALOG_TEMP_ERROR("PABORT",Status::MAP_PROVIDER_REASON_BASE+provReason);
+      if( dialog->isUSSD ) eraseUssdLock(dialog.get(), __func__);
+      __map_warn2__("PABORT: dlg=0x%x %s %s",dialogid_map,dialog->isUSSD?"ussd":"sms",RouteToString(dialog.get()).c_str());
+      TryDestroyDialog(dialogid_map,true,Status::MAP_PROVIDER_REASON_BASE+provReason,localSsn);
     }
   }MAP_CATCH(dialogid_map,dialogid_smsc,localSsn);
   return ET96MAP_E_OK;
@@ -2789,34 +2728,14 @@ USHORT_T Et96MapDelimiterInd(
       break;
     case MAPST_WaitUSSDReqClose:
       CloseMapDialog(dialog->dialogid_map,dialog->ssn);
-      {
-        USSD_MAP::iterator it=ussd_map.find(dialog->ussdSequence);
-        if(it==ussd_map.end()){
-          __map_warn2__("MAP::%s locker not found for ussd dialog for %lld", __func__, dialog->ussdSequence );
-        }else if(it->second == dialog->dialogid_map ) {
-          __map_trace2__("MAP::%s erase ussd lock for %lld", __func__, dialog->ussdSequence);
-          ussd_map.erase(it);
-        } else {
-          __map_warn2__("MAP::%s ussd dialog already reassigned for %lld", __func__, dialog->ussdSequence );
-        }
-      }
+      eraseUssdLock(dialog.get(), __func__);
       DropMapDialog(dialog.get());
       break;
     case MAPST_WaitUSSDNotifyClose:
       dialog->state = MAPST_WaitSubmitUSSDNotifyConf;
       SendSubmitCommand(dialog.get());
       CloseMapDialog(dialog->dialogid_map,dialog->ssn);
-      {
-        USSD_MAP::iterator it=ussd_map.find(dialog->ussdSequence);
-        if(it==ussd_map.end()){
-          __map_warn2__("MAP::%s locker not found for ussd dialog for %lld", __func__, dialog->ussdSequence );
-        }else if(it->second == dialog->dialogid_map ) {
-          __map_trace2__("MAP::%s erase ussd lock for %lld", __func__, dialog->ussdSequence);
-          ussd_map.erase(it);
-        } else {
-          __map_warn2__("MAP::%s ussd dialog already reassigned for %lld", __func__, dialog->ussdSequence );
-        }
-      }
+      eraseUssdLock(dialog.get(), __func__);
       DropMapDialog(dialog.get());
       break;
     case MAPST_MapNoticed:
