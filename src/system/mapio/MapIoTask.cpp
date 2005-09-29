@@ -67,7 +67,7 @@ void MapIoTask::connect(unsigned timeout) {
   USHORT_T result;
   result = MsgConn(MY_USER_ID,ETSIMAP_ID);
   if ( result != MSG_OK ) {
-    __map_warn2__("Error at MsgConn, code 0x%hx",err); throw runtime_error("MsgConn error");
+    __map_warn2__("Error at MsgConn, code 0x%hx",result); throw runtime_error("MsgConn error");
   }
   
   if( timeout > 0 ) {
