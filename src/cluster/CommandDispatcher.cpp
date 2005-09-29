@@ -45,7 +45,7 @@ void CommandDispatcher::addListener(CommandType type, CommandListener* listener)
 
     int key = type >> 16;
 
-    printf("Dispatcher::addListener, type: %d, key: %d\n", type, key);
+    //printf("Dispatcher::addListener, type: %d, key: %d\n", type, key);
 
     if( listeners.Exist( key ) ){
         Array<CommandListener*> *arr = listeners.GetPtr(key);
@@ -60,7 +60,7 @@ void CommandDispatcher::addListener(CommandType type, CommandListener* listener)
         listeners.Insert(key, arr);
     }
 
-    printf("Dispatcher::addListener, type: %d, key: %d ok\n", type, key);
+    //printf("Dispatcher::addListener, type: %d, key: %d ok\n", type, key);
         
 }
 
@@ -82,7 +82,7 @@ void CommandDispatcher::Stop()
 int CommandDispatcher::Execute()
 {
     // Flushs commands thats are put befor start
-    printf("CommandDispatcher, Execute 1\n");
+    //printf("CommandDispatcher, Execute 1\n");
     {
             MutexGuard listguard(listenersLock);
 
@@ -93,9 +93,9 @@ int CommandDispatcher::Execute()
                 commands.Shift(command);
 
                 int type = command->getType();
-                printf("\nDispatcher, type: %d\n", type);
+                //printf("\nDispatcher, type: %d\n", type);
                 type >>= 16;
-                printf("Dispatcher, key: %d\n", type);
+                //printf("Dispatcher, key: %d\n", type);
 
                 Array<CommandListener*> *arr = listeners.GetPtr(type);
                 if(arr){
@@ -119,7 +119,7 @@ int CommandDispatcher::Execute()
     {
         
 
-        //printf("Dispatcher wait for command...\n");
+        ////printf("Dispatcher wait for command...\n");
         if( commandsMonitor.wait(30) ) // Wait for command passes to queue ...
 
         {
@@ -156,7 +156,7 @@ int CommandDispatcher::Execute()
         //printf("Dispatecher: command or timeout.\n");
     }
 
-    printf("Dispatcher: Execute out...\n");
+    //printf("Dispatcher: Execute out...\n");
     
     return 0;
 }

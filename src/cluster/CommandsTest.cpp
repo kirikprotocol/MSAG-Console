@@ -20,7 +20,7 @@ using smsc::core::buffers::Array;
 
     template<class T>
     int fun(T t){
-        printf("%d\n", t);
+        //printf("%d\n", t);
         return 0;
     };
 
@@ -40,7 +40,7 @@ using smsc::core::buffers::Array;
 
         buffer = (uint8_t*)cmd.serialize(len);
         if(buffer){
-            printf("serialize - Ok, len: %d\n", len);
+            //printf("serialize - Ok, len: %d\n", len);
 
             if(cmd.deserialize(buffer, len))
                 printf("deserialize - Ok, len: %d\n", len);

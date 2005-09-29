@@ -101,6 +101,7 @@ Command* CommandReader::parseCommand(DOMInputSource &source)
       smsc_log_warn(logger, "Unknown command \"%s\"", command_name.get());
       throw AdminException("Unknown command");
     }
+
     return createCommand(id,data);
   }
   catch (const ParseException &e)

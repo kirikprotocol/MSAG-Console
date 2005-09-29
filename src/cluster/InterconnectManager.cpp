@@ -22,7 +22,7 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
 
     dispatcher = new CommandDispatcher();
 
-    printf("inAddr: %s, attachedInAddr: %s, port: %d, attachedPort: %d\n", inAddr.c_str(), attachedInAddr.c_str(), port, attachedPort);
+    //printf("inAddr: %s, attachedInAddr: %s, port: %d, attachedPort: %d\n", inAddr.c_str(), attachedInAddr.c_str(), port, attachedPort);
 
     socket.InitServer(inAddr.c_str(), port, 10);
     socket.StartServer();
@@ -75,7 +75,7 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
 
     }*/
 
-    printf("role: %d\n", role);
+    //printf("role: %d\n", role);
 
     reader = CommandReader(&role, &socket, dispatcher, &attachedSocket);
     //printf("reader starting...\n");
@@ -284,15 +284,15 @@ void InterconnectManager::addListener(CommandType type, CommandListener* listene
 }
 void InterconnectManager::activate()
 {
-    printf("activate\n");
+    //printf("activate\n");
     if(!isSlave())
         return;
 
-    printf("Dispatcher starting...\n");
+    //printf("Dispatcher starting...\n");
     if(dispatcher){
         dispatcher->Start();
     }
-    printf("Dispatcher started\n");
+    //printf("Dispatcher started\n");
 }
 
 int InterconnectManager::Execute()
@@ -367,7 +367,7 @@ bool InterconnectManager::isSingle()
 
 void InterconnectManager::changeRole(Role role_)
 {
-    printf("changeRole\n");
+    //printf("changeRole\n");
     if(role == role_)
         return;
 
