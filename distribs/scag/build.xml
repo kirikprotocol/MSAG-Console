@@ -30,7 +30,6 @@
   <property name="htmlparser_lib" location="${JEDIT_DIR}/lib/htmlparser.jar"/>
   <property name="SERVICE2HOME_PATH" value="../.."/>
   <property name="DAEMON2HOME_PATH" value=".."/>
-
   <target name="help">
     <echo>
 SCA Gateway build script
@@ -314,6 +313,20 @@ Targets:
 	     
 </target>
 																																																																																																		
+  <target  name="applet" depends="distjedit">
+       <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
+           <fileset dir="${SMSC_DIR}/config"
+                   includes="scag/command_gw.dtd scag/rules.xsd scag/smpp_rules.xsd" /> 
+        </copy>
+	 <copy todir="${DISTR_DIR}/webapps/scag/rules/rules" preservelastmodified="yes">
+               <fileset dir="${JEDIT_DIR}/build" includes="jedit.jar" />
+        </copy>
+         <copy todir="${WEBSRC_DIR}/scag/rules/rules" preservelastmodified="yes">
+	        <fileset dir="${JEDIT_DIR}/build" includes="jedit.jar" />
+        </copy>
+		     		     			    
+   </target>
+		       
 
   <target  name="create_distr" depends="create_distr_tree, create_update, distjedit">
   </target>
