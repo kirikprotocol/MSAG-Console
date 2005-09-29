@@ -65,11 +65,27 @@ extern "C" {
 
 void MapIoTask::connect(unsigned timeout) {
   USHORT_T result;
-  result = MsgConn(MY_USER_ID,ETSIMAP_ID);
+  result = MsgOpen(MY_USER_ID);
   if ( result != MSG_OK ) {
-    __map_warn2__("Error at MsgConn, code 0x%hx",result); throw runtime_error("MsgConn error");
+    __map_warn2__("Error at MsgOpen, code 0x%hx",result);
+    kill(getpid(),17);
   }
-  
+
+  int tries = 0;
+  while( tries < 60 ) {
+    result = MsgConn(MY_USER_ID,ETSIMAP_ID);
+    if ( result != MSG_OK ) {
+      __map_warn2__("Error at MsgConn, code 0x%hx, sleep 1 sec and retry connect",result); 
+      sleep(1);
+      tries++;
+    } else {
+      break;
+    }
+  }
+  if( tries >= 60 ) {
+    __map_warn2__("MsgConn error, %d attempts failed, aborting", tries);
+    kill(getpid(),17);
+  }
   if( timeout > 0 ) {
     __map_trace__("pause self and wait map initialization");
     sleep(timeout);
@@ -98,10 +114,6 @@ void MapIoTask::init(unsigned timeout)
   err = EINSS7CpMsgInitNoSig(MAXENTRIES);
   if ( err != MSG_OK ) {
     __map_warn2__("Error at MsgInit, code 0x%hx",err); throw runtime_error("MsgInit error");
-  }
-  err = MsgOpen(MY_USER_ID);
-  if ( err != MSG_OK ) {
-    __map_warn2__("Error at MsgOpen, code 0x%hx",err); throw runtime_error("MsgOpen error");
   }
   connect(timeout);
   {
@@ -133,6 +145,13 @@ void MapIoTask::disconnect()
 //    if ( !isStopping ) kill(getpid(),17);
 //    return;
   }
+  
+  result = MsgClose(MY_USER_ID);
+  if ( result != MSG_OK) {
+    __map_warn2__("error at MsgClose errcode 0x%hx",result);
+//    if ( !isStopping ) kill(getpid(),17);
+    return;
+  }
 }
 
 void MapIoTask::deinit( bool connected )
@@ -145,12 +164,6 @@ void MapIoTask::deinit( bool connected )
   }
   if( connected ) disconnect();
 
-  result = MsgClose(MY_USER_ID);
-  if ( result != MSG_OK) {
-    __map_warn2__("error at MsgClose errcode 0x%hx",result);
-    if ( !isStopping ) kill(getpid(),17);
-    return;
-  }
   MsgExit();
 }
 
@@ -200,11 +213,9 @@ void MapIoTask::dispatcher()
     }
     if ( result == MSG_BROKEN_CONNECTION ) {
       __map_warn2__("Broken connection %d", result);
-      if ( !isStopping ) {
-        disconnect();
-        connect();
+      disconnect();
+      connect();
 //        kill(getpid(),17);
-      }
       continue;
     }
     if ( result != MSG_OK ) {
