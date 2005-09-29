@@ -556,15 +556,15 @@ void ResponseMO(MapDialog* dialog,unsigned status)
   case Status::OK: break;
   case Status::INVSCHED:
     err.errorCode = 32;
-    err.u.smDeliveryFailureReason_s.reason = ET96MAP_PROTOCOL_ERROR;
+    err.u.smDeliveryFailureReason_s.reason = ET96MAP_SM_DELIVERY_FAILURE_REASON_MO_T::ET96MAP_PROTOCOL_ERR;
     break;
   default:
     if( Status::isErrorPermanent(status) ) {
       err.errorCode = 32;
-      err.u.smDeliveryFailureReason_s.reason = ET96MAP_INVALID_SME_ADDRESS;
+      err.u.smDeliveryFailureReason_s.reason = ET96MAP_SM_DELIVERY_FAILURE_REASON_MO_T::ET96MAP_INVALID_SME_ADDRESS;
     } else {
       err.errorCode = 32;
-      err.u.smDeliveryFailureReason_s.reason = ET96MAP_SERVICE_CENTER_CONGESTION;
+      err.u.smDeliveryFailureReason_s.reason = ET96MAP_SM_DELIVERY_FAILURE_REASON_MO_T::ET96MAP_SERVICE_CENTER_CONGESTION;
     }
     break;
   };

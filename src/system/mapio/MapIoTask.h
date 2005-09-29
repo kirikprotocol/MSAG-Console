@@ -750,7 +750,9 @@ private:
   bool is_started;
   void dispatcher();
   void init(unsigned timeout=0);
+  void connect(unsigned timeout=0);
   void deinit(bool connected);
+  void disconnect();
 };
 
 #endif // __header_MAPIO_h__
