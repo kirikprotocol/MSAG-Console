@@ -6,6 +6,7 @@
 //
 
 #include "Abstract_CommandSmscInfo.h"
+#include "scag/transport/smpp/SmppTypes.h"
 
 #include "util/xml/utilFunctions.h"
 #include "CommandIds.h"
@@ -28,25 +29,38 @@ Abstract_CommandSmscInfo::Abstract_CommandSmscInfo(const Command::Id id, const x
       DOMElement *paramElem = (DOMElement*) list->item(i);
       XmlStr name(paramElem->getAttribute(XmlStr("name")));
       std::auto_ptr<char> value(getNodeText(*paramElem));
-      if (::strcmp("id", name) == 0)
-        systemId = value.get();
-      if (::strcmp("host", name) == 0)
-        smscConfig.host = value.get();
-      if (::strcmp("port", name) == 0)
-        smscConfig.port = atoi(value.get());
-      if (::strcmp("systemId", name) == 0) 
-        smscConfig.sid = value.get();
+
+      if (::strcmp("systemId", name) == 0)
+        strcpy(smppEntityInfo.systemId, value.get());
       if (::strcmp("password", name) == 0)
-        smscConfig.password = value.get();
-      if (::strcmp("responseTimeout", name) == 0)
-        smscConfig.smppTimeOut = atoi(value.get());
+        strcpy(smppEntityInfo.password, value.get());
+
+      if (::strcmp("timeout", name) == 0)
+        smppEntityInfo.timeOut = atoi(value.get());
+            
+      if (::strcmp("mode", name) == 0) {
+        if (::strcmp("trx", value.get()) == 0)
+          smppEntityInfo.bindType = scag::transport::smpp::btTransceiver;
+        else if(::strcmp("tx", value.get()) == 0)
+          smppEntityInfo.bindType = scag::transport::smpp::btTransmitter;
+        else if(::strcmp("rx", value.get()) == 0)
+          smppEntityInfo.bindType = scag::transport::smpp::btReceiver;
+        else
+          smppEntityInfo.bindType = scag::transport::smpp::btTransceiver;
+      }
+
+      if (::strcmp("host", name) == 0)
+        strcpy(smppEntityInfo.host, value.get());
+      if (::strcmp("port", name) == 0)
+        smppEntityInfo.port = atoi(value.get());
+      
       if (::strcmp("altHost", name) == 0)
-        altHost = value.get();
+        strcpy(smppEntityInfo.altHost, value.get());
       if (::strcmp("altPort", name) == 0)
-        altPort = atoi(value.get());
-      if (::strcmp("uniqueMsgIdPrefix", name) == 0)
-        uid = atoi(value.get());
+        smppEntityInfo.altPort = atoi(value.get());
     }
+
+    smppEntityInfo.type = scag::transport::smpp::etSmsc;
   } catch (...) {
     throw AdminException("Some exception occured");
   }

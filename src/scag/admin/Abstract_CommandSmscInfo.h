@@ -12,6 +12,7 @@
 #include "admin/protocol/Command.h"
 #include "sme/SmppBase.hpp"
 #include "scag/admin/SCAGCommand.h"
+#include "scag/transport/smpp/SmppManagerAdmin.h"
 #include <string>
 
 using namespace xercesc;
@@ -25,14 +26,10 @@ public:
 	Abstract_CommandSmscInfo(const Command::Id id, const xercesc::DOMDocument * const document);
 	virtual ~Abstract_CommandSmscInfo();
   
-  //const smsc::sme::SmeConfig & getSmscInfo() const {return smscConfig;};
+  const scag::transport::smpp::SmppEntityInfo & getSmppEntityInfo() const {return smppEntityInfo;};
   
 protected:
-  smsc::sme::SmeConfig smscConfig;
-  std::string altHost;
-  std::string systemId;
-  uint8_t altPort;
-  uint8_t uid;
+  scag::transport::smpp::SmppEntityInfo smppEntityInfo;
 };
 
 }

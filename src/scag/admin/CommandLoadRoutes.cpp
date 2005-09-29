@@ -14,6 +14,7 @@
 #include <router/route_types.h>
 #include <sms/sms.h>
 #include <sms/sms_const.h>
+#include "scag/config/ConfigManager.h"
 
 
 
@@ -24,6 +25,7 @@ using namespace smsc::util::xml;
 using namespace smsc::sms;
 using namespace smsc::util::config;
 using namespace smsc::util::config::route;
+using scag::config::ConfigManager;
 
 
 
@@ -38,6 +40,10 @@ Response * CommandLoadRoutes::CreateResponse(scag::Scag * SmscApp)
 {
   try
   {
+
+      ConfigManager& cfg = ConfigManager::Instance();
+      cfg.reloadConfig(scag::config::ROUTE_CFG);
+
       /*RouteConfig cfg;
       if (cfg.load("conf/routes__.xml") == RouteConfig::fail)
           throw AdminException("Load routes config file failed.");

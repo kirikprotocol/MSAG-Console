@@ -6,7 +6,7 @@
 #include <xercesc/sax/SAXException.hpp>
 #include <xercesc/sax/Locator.hpp>
 
-#include "scag/SAX2Print.hpp"
+//#include "scag/SAX2Print.hpp"
 
 namespace scag { namespace re { 
 

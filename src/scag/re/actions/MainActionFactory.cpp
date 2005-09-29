@@ -9,7 +9,7 @@
 #include "scag/re/actions/ActionTrafficCheck.h"
 #include "scag/re/actions/ActionOperationWait.h"
 
-#include "scag/SAX2Print.hpp"
+//#include "scag/SAX2Print.hpp"
                  
 namespace scag { namespace re { namespace actions {
 

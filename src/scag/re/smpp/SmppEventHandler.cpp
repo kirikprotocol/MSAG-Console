@@ -2,7 +2,7 @@
 #include "scag/re/smpp/SmppAdapter.h"
 #include "scag/re/actions/ActionContext.h"
 
-#include "scag/SAX2Print.hpp"
+//#include "scag/SAX2Print.hpp"
 class st : public scag::stat::Statistics
 {
 public:

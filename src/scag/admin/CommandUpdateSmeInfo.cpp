@@ -22,7 +22,7 @@ CommandUpdateSmeInfo::CommandUpdateSmeInfo(const xercesc::DOMDocument * const do
 
 Response * CommandUpdateSmeInfo::CreateResponse(scag::Scag * SmscApp)
 {
-  //SmscApp->getSmeAdmin()->updateSmeInfo(getSmeInfo().systemId, getSmeInfo());  
+  SmscApp->getSmppManagerAdmin()->updateSmppEntity(getSmppEntityInfo());  
   return new Response(Response::Ok, "none");
 }
 

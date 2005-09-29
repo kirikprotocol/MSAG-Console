@@ -1,7 +1,7 @@
 #include "ActionReturn.h"
 #include "scag/re/CommandAdapter.h"
 
-#include "scag/SAX2Print.hpp"
+//#include "scag/SAX2Print.hpp"
 
 
 namespace scag { namespace re { namespace actions {

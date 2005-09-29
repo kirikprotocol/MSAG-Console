@@ -11,6 +11,7 @@
 #include "core/threads/ThreadPool.hpp"
 
 #include "util/Exception.hpp"
+#include "scag/transport/smpp/SmppManagerAdmin.h"
 
 #include <exception.h>
 
@@ -24,15 +25,8 @@ Response * CommandRegSmsc::CreateResponse(scag::Scag * SmscApp)
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("CommandRegSmsc");
   try {      
 
-      smsc::sme::SmeConfig gwcfg;
-      gwcfg.host = smscConfig.host;
-      gwcfg.port = smscConfig.port;
-      gwcfg.sid = smscConfig.sid;
-      gwcfg.password = smscConfig.password;
-      gwcfg.smppTimeOut = smscConfig.smppTimeOut;
-
-      //if(!SmscApp->regSmsc(gwcfg, altHost, altPort, systemId, uid))
-      //   throw Exception("Duplicate gwsmeid %d!",(int)uid);
+      if(!SmscApp->regSmsc(smppEntityInfo))
+         throw Exception("Duplicate gwsmeid");
       
       return new Response(Response::Ok, "none");
   }catch(exception& e){

@@ -17,7 +17,14 @@ using namespace smsc::util::xml;
 
 Response * CommandAddSme::CreateResponse(scag::Scag * SmscApp)
 {
-  //SmscApp->getSmeAdmin()->addSme(getSmeInfo());
+  try {
+      SmscApp->getSmppManagerAdmin()->addSmppEntity(getSmppEntityInfo());
+  }catch(Exception e){
+      // failed casting SmppManager to SmppManagerAdmin
+      // get description from e.what()
+  }catch(...){
+      //Unknown exception
+  }
   return new Response(Response::Ok, "none");
 }
 

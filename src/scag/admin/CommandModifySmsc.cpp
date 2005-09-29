@@ -21,8 +21,9 @@ Response * CommandModifySmsc::CreateResponse(scag::Scag * SmscApp)
 {
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("CommandModifySmsc");
   try {
-      //if(!SmscApp->modifySmsc(smscConfig, altHost, altPort, systemId, uid))
-       //  throw Exception("Parameters modify exception.");
+
+      if(!SmscApp->modifySmsc(smppEntityInfo))
+         throw Exception("Parameters modify exception.");
       
       return new Response(Response::Ok, "none");
   }catch(exception& e){

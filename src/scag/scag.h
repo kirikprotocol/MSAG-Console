@@ -16,8 +16,9 @@
 #include "scag/config/route/RouteConfig.h"
 #include "scag/stat/Statistics.h"
 #include "scag/stat/StatisticsManager.h"
-#include "scag/re/RuleEngine.h"
 #include "sms/sms.h"
+#include "scag/transport/smpp/SmppManager.h"
+#include "scag/transport/smpp/SmppManagerAdmin.h"
 
 namespace scag
 {
@@ -170,27 +171,18 @@ public:
     }
   }
 
-  // Wait for SmppManager will be ready
-  /*GatewaySme* getGwSme(uint8_t uid)
+  scag::transport::smpp::SmppManagerAdmin * getSmppManagerAdmin()
   {
-    MutexGuard mg(gatewaySwitchMutex);
-    return gwSmeMap[uid];
+      scag::transport::smpp::SmppManagerAdmin * smppManAdmin = dynamic_cast<scag::transport::smpp::SmppManagerAdmin*>(&smppMan);
+
+      if(!smppManAdmin)
+          throw Exception("Failed casting of SmppManger to SmppManagerAdmin from Scag::getSmppManagerAdmin");
+
+      return smppManAdmin;
   }
 
-  void setGwSme(uint8_t uid, GatewaySme* gwSme)
-  {
-    MutexGuard mg(gatewaySwitchMutex);
-    gwSmeMap[uid] = gwSme;
-  }*/
-
-  void startTpTask(ThreadedTask *tsk)
-  {
-    tp.startTask(tsk);
-  }
-
-  // wait for SmppManager will be ready
-  //bool regSmsc(SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid);
-  //bool modifySmsc(SmeConfig cfg, std::string altHost, uint8_t altPort, std::string systemId, uint8_t uid);
+  bool regSmsc(const scag::transport::smpp::SmppEntityInfo & smppEntityInfo);
+  bool modifySmsc(const scag::transport::smpp::SmppEntityInfo & smppEntityInfo);
 
 protected:
 
@@ -202,7 +194,7 @@ protected:
   bool stopFlag;
   std::string scagHost;
   int scagPort;
-  scag::re::RuleEngine ruleEngine;
+  scag::transport::smpp::SmppManager smppMan;
 
   scag::performance::PerformanceDataDispatcher perfDataDisp;
 

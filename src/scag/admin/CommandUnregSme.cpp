@@ -12,7 +12,7 @@ namespace admin {
 
 Response * CommandUnregSme::CreateResponse(scag::Scag * SmscApp)
 { 
-  //SmscApp->unregisterSmeProxy(systemId);
+  SmscApp->getSmppManagerAdmin()->deleteSmppEntity(smppEntityInfo.systemId);
   return new Response(Response::Ok, "none");
   
 }

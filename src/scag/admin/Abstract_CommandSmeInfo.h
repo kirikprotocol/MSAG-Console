@@ -10,7 +10,7 @@
 
 #include <xercesc/dom/DOM.hpp>
 #include "SCAGCommand.h"
-#include "smeman/smeinfo.h"
+#include "scag/transport/smpp/SmppManagerAdmin.h"
 
 using namespace xercesc;
 
@@ -23,10 +23,10 @@ public:
 	Abstract_CommandSmeInfo(const Command::Id id, const xercesc::DOMDocument * const document);
 	virtual ~Abstract_CommandSmeInfo();
   
-  const smsc::smeman::SmeInfo & getSmeInfo() const {return smeInfo;};
+  const scag::transport::smpp::SmppEntityInfo & getSmppEntityInfo() const {return smppEntityInfo;};
   
 protected:
-  smsc::smeman::SmeInfo smeInfo;
+  scag::transport::smpp::SmppEntityInfo smppEntityInfo;
 };
 
 }

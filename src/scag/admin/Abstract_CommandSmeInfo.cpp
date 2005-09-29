@@ -6,6 +6,7 @@
 //
 
 #include "Abstract_CommandSmeInfo.h"
+#include "scag/transport/smpp/SmppTypes.h"
 
 #include "smeman/smeinfo.h"
 #include "util/xml/utilFunctions.h"
@@ -28,51 +29,29 @@ Abstract_CommandSmeInfo::Abstract_CommandSmeInfo(const Command::Id id, const xer
       DOMElement *paramElem = (DOMElement*) list->item(i);
       XmlStr name(paramElem->getAttribute(XmlStr("name")));
       std::auto_ptr<char> value(getNodeText(*paramElem));
-      if (::strcmp("id", name) == 0){
-        smeInfo.systemId = value.get();
-        printf("systemId: %s\n", smeInfo.systemId.c_str());
-      }
-      if (::strcmp("priority", name) == 0)
-        smeInfo.priority = atoi(value.get());
-      if (::strcmp("type", name) == 0) {
-        //skip it, sme can be SMPP type only
-      }
-      if (::strcmp("typeOfNumber", name) == 0)
-        smeInfo.typeOfNumber = atoi(value.get());
-      if (::strcmp("numberingPlan", name) == 0)
-        smeInfo.numberingPlan = atoi(value.get());
-      if (::strcmp("interfaceVersion", name) == 0)
-        smeInfo.interfaceVersion = atoi(value.get());
-      if (::strcmp("systemType", name) == 0)
-        smeInfo.systemType = value.get();
+      if (::strcmp("systemId", name) == 0)
+        strcpy(smppEntityInfo.systemId, value.get());
+          
       if (::strcmp("password", name) == 0)
-        smeInfo.password = value.get();
-      if (::strcmp("addrRange", name) == 0)
-        smeInfo.rangeOfAddress = value.get();
+        strcpy(smppEntityInfo.password, value.get());
+      
       if (::strcmp("timeout", name) == 0)
-        smeInfo.timeout = atoi(value.get());
-      if (::strcmp("receiptSchemeName", name) == 0)
-        smeInfo.receiptSchemeName = value.get();
-      if (::strcmp("disabled", name) == 0)
-        smeInfo.disabled = ::strcmp("true", value.get()) == 0;
+        smppEntityInfo.timeOut = atoi(value.get());
+            
       if (::strcmp("mode", name) == 0) {
         if (::strcmp("trx", value.get()) == 0)
-          smeInfo.bindMode = smsc::smeman::smeTRX;
+          smppEntityInfo.bindType = scag::transport::smpp::btTransceiver;
         else if(::strcmp("tx", value.get()) == 0)
-          smeInfo.bindMode = smsc::smeman::smeTX;
+          smppEntityInfo.bindType = scag::transport::smpp::btTransmitter;
         else if(::strcmp("rx", value.get()) == 0)
-          smeInfo.bindMode = smsc::smeman::smeRX;
+          smppEntityInfo.bindType = scag::transport::smpp::btReceiver;
         else
-          smeInfo.bindMode = smsc::smeman::smeTRX;
+          smppEntityInfo.bindType = scag::transport::smpp::btTransceiver;
       }
-      if (::strcmp("proclimit", name) == 0)
-        smeInfo.proclimit = atoi(value.get());
-      if (::strcmp("smsc", name) == 0) {
-        //smeInfo.smsc = ::strcmp("true", value.get()) == 0;
-      }
-      if (::strcmp("providerId", name) == 0)
-        smeInfo.providerId = atoi(value.get());
+
     }
+
+    smppEntityInfo.type = scag::transport::smpp::etService;
   } catch (...) {
     throw AdminException("Some exception occured");
   }

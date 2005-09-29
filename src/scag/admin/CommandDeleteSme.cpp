@@ -29,7 +29,7 @@ CommandDeleteSme::CommandDeleteSme(const xercesc::DOMDocument * const document)
       DOMElement *paramElem = (DOMElement*) list->item(i);
       XmlStr name(paramElem->getAttribute(XmlStr("name")));
       std::auto_ptr<char> value(getNodeText(*paramElem));
-      if (::strcmp("id", name) == 0)
+      if (::strcmp("systemId", name) == 0)
         systemid = value.get();
     }
   } catch (...) {
