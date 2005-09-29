@@ -17,7 +17,11 @@
 #include <thread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "commandgen.h"
+
+
+#ifdef COMMAND_GEN
+    #include "commandgen.h"
+#endif
 
 using scag::re::RuleEngine;
 using scag::re::RuleStatus;
