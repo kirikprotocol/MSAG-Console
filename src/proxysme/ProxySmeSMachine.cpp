@@ -183,6 +183,7 @@ unsigned SMachine::ProcessCommands(SMachineNotifier& notifier)
         mixer_.SendPdu(qcmd->direction_,qcmd->pdu_);
         break;
       case SmppCommandSet::DATA_SM_RESP:
+        ((PduDataSmResp*)qcmd->pdu_)->set_messageId("");
         mixer_.SendPdu(qcmd->direction_,qcmd->pdu_);
         break;
       case SmppCommandSet::DELIVERY_SM:
@@ -223,6 +224,7 @@ void SMachine::TranslateToDeliverRespAndSend(DIRECTION direct,SmppHeader* pdu)
   assert(pdu->get_commandId() == SmppCommandSet::SUBMIT_SM_RESP);
   // вспоминаем что DELIVERY_SM_RESP и SUBMIT_SM_RESP реализованы через одну и тже структуру данных
   pdu->set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+  ((PduDeliverySmResp*)pdu)->set_messageId("");
   mixer_.SendPdu(direct,pdu);
 }
 

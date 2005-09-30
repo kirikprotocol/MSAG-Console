@@ -169,36 +169,56 @@ void PduListener::handleEvent(SmppHeader *pdu)
   auto_ptr<QCommand> qc(new QCommand);
   qc->direction_ = incom_dirct_;
   qc->pdu_       = pdu;
-  // пытаемся запихать команду в очередь
-  if ( que_.PutBack(qc.get()) ) {
-    // О! запихалась :)
-    qc.release();
-  }else{
-    smsc_log_error(log_, "PduListener::handleEvent: %s ,packet skipped bcause queue is full",ToString(incom_dirct_).c_str());
-    // упс, перегруз однако! Посылаем клиенту ошибку
-    try{
-      if ( pdu->get_commandId()==SmppCommandSet::DELIVERY_SM ) {
-        // если это был деливер, то сообщаем что отправка не удалась
-        PduDeliverySmResp resp;
-        resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
-        resp.get_header().set_commandStatus(SmppStatusSet::ESME_RMSGQFUL);
-        resp.set_messageId("");
-        resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-        trx_->getAsyncTransmitter()->sendDeliverySmResp(resp);
-      } else if  ( pdu->get_commandId()==SmppCommandSet::DATA_SM ) {
-        // если это был datasm, то сообщаем что отправка не удалась
-        PduDataSmResp resp;
-        resp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
-        resp.get_header().set_commandStatus(SmppStatusSet::ESME_RMSGQFUL);
-        resp.set_messageId("");
-        resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
-        trx_->getAsyncTransmitter()->sendDataSmResp(resp);
-      }else{
-        // Хм, что это было????
-        smsc_log_error(log_, "PduListener::handleEvent: %s broken on non DELIVER unqueued pdu",ToString(incom_dirct_).c_str());
+  if( pdu->get_commandId() == SmppCommandSet::DELIVERY_SM &&
+      (((PduDeliverySm*)pdu)->get_message().get_esmClass()&0x04) != 0 ) {
+    // this delivery receipt, skip it but send ok to sender
+    PduDeliverySmResp resp;
+    resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+    resp.get_header().set_commandStatus(0);
+    resp.set_messageId("");
+    resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+    trx_->getAsyncTransmitter()->sendDeliverySmResp(resp);
+  } else if( pdu->get_commandId() == SmppCommandSet::DATA_SM &&
+             (((PduDataSm*)pdu)->get_data().get_esmClass()&0x04) != 0 ) {
+    // this is delivery receipt
+    PduDataSmResp resp;
+    resp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
+    resp.get_header().set_commandStatus(0);
+    resp.set_messageId("");
+    resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+    trx_->getAsyncTransmitter()->sendDataSmResp(resp);
+  } else {
+    // пытаемся запихать команду в очередь
+    if ( que_.PutBack(qc.get()) ) {
+      // О! запихалась :)
+      qc.release();
+    }else{
+      smsc_log_error(log_, "PduListener::handleEvent: %s ,packet skipped bcause queue is full",ToString(incom_dirct_).c_str());
+      // упс, перегруз однако! Посылаем клиенту ошибку
+      try{
+        if ( pdu->get_commandId()==SmppCommandSet::DELIVERY_SM ) {
+          // если это был деливер, то сообщаем что отправка не удалась
+          PduDeliverySmResp resp;
+          resp.get_header().set_commandId(SmppCommandSet::DELIVERY_SM_RESP);
+          resp.get_header().set_commandStatus(SmppStatusSet::ESME_RMSGQFUL);
+          resp.set_messageId("");
+          resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+          trx_->getAsyncTransmitter()->sendDeliverySmResp(resp);
+        } else if  ( pdu->get_commandId()==SmppCommandSet::DATA_SM ) {
+          // если это был datasm, то сообщаем что отправка не удалась
+          PduDataSmResp resp;
+          resp.get_header().set_commandId(SmppCommandSet::DATA_SM_RESP);
+          resp.get_header().set_commandStatus(SmppStatusSet::ESME_RMSGQFUL);
+          resp.set_messageId("");
+          resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
+          trx_->getAsyncTransmitter()->sendDataSmResp(resp);
+        }else{
+          // Хм, что это было????
+          smsc_log_error(log_, "PduListener::handleEvent: %s broken on non DELIVER unqueued pdu",ToString(incom_dirct_).c_str());
+        }
+      }catch(exception& _) {
+        smsc_log_error(log_, "PduListener::handleEvent: %s <exception> : %s",ToString(incom_dirct_).c_str(),_.what());
       }
-    }catch(exception& _) {
-      smsc_log_error(log_, "PduListener::handleEvent: %s <exception> : %s",ToString(incom_dirct_).c_str(),_.what());
     }
   }
 }
