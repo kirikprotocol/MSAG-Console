@@ -6,12 +6,14 @@
 #include <stdexcept>
 #include "sms/sms.h"
 #include "logger/Logger.h"
+#include "comps.hpp"
 
 using smsc::logger::Logger;
 
 using std::runtime_error;
 using std::vector;
 using smsc::sms::Address;
+using smsc::inman::comp::Component;
 
 #define MAP_MAX_USSD_StringLength 160
 
@@ -39,7 +41,7 @@ typedef enum USS_OperationCode {
 } USS_OperationCode_e;
 
 
-class ProcessUSSRequestArg
+class ProcessUSSRequestArg : public Component
 {
 public:
     ProcessUSSRequestArg();
@@ -62,6 +64,24 @@ public:
     const vector<unsigned char>& getUSSData(void);
     //checks wether the MSisdnAdr is set or not, returns TRUE/FALSE
     int   msISDNadr_present(void); 
+
+    void encode(vector<unsigned char>& buf);
+    void decode(const vector<unsigned char>& buf);
+private:
+    Logger*		compLogger;
+};
+
+class ProcessUSSRequestRes : public Component
+{
+public:
+    ProcessUSSRequestRes();
+    ~ProcessUSSRequestRes();
+
+    unsigned char	    _dCS;	// unparsed data coding scheme
+    vector<unsigned char>   _uSSdata;	// USS data string:  GSM 7-bit or UCS2
+
+    void setUSSData(unsigned char * data, unsigned size);
+    const vector<unsigned char>& getUSSData(void);
 
     void encode(vector<unsigned char>& buf);
     void decode(const vector<unsigned char>& buf);
