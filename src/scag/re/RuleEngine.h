@@ -1,11 +1,16 @@
 #ifndef SCAG_RULE_ENGINE
 #define SCAG_RULE_ENGINE
 
-#include "scag/re/Rule.h"
+#include <scag/sessions/Session.h>
+#include <scag/re/actions/ActionFactory.h>
+#include "RuleStatus.h"
 
 namespace scag { namespace re 
 {
 
+using namespace scag::transport;
+using namespace scag::sessions;
+using namespace scag::re::actions;
 
 
 class RuleEngine
@@ -14,26 +19,19 @@ class RuleEngine
     RuleEngine& operator=(const RuleEngine& re);
 
 protected:
+
     RuleEngine() {}; 
     virtual ~RuleEngine() {};
-public:
 
+public:
 
     static void Init(const std::string& dir);
     static RuleEngine& Instance();
 
-
-        /**
-         * Processes specified command on rule difined by id (obtained in RouteInfo).
-         * @param   ruleId      rule to run
-         * @param   command     command to process
-         * @return  status      command processing status
-         */
-    virtual RuleStatus process(SCAGCommand& command,Session& session) = 0;
+    virtual RuleStatus process(SCAGCommand& command, Session& session) = 0;
     virtual void updateRule(int ruleId) = 0;
-    virtual bool removeRule(int ruleId) = 0;
+    virtual void removeRule(int ruleId) = 0;
     virtual ActionFactory& getActionFactory() = 0;
-
     
 };
 

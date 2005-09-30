@@ -2,9 +2,11 @@
 #define __SCAG_RULE_H__
 
 #include <core/buffers/IntHash.hpp>
-#include "scag/sessions/Session.h"
+#include <scag/sessions/Session.h>
+
 #include "EventHandler.h"
 #include "RuleStatus.h"
+
 
 namespace scag { namespace re 
 {
@@ -12,6 +14,7 @@ namespace scag { namespace re
 using smsc::core::buffers::IntHash;
 using scag::sessions::Session;
 using namespace scag::transport;
+using smsc::logger::Logger;
 
 class EventHandler;
 
@@ -24,6 +27,7 @@ class Rule : public IParserHandler
     Mutex ruleLock;
     int useCounter;
     TransportType transportType;
+    Logger * logger;
 
     EventHandler * CreateEventHandler();
 //////////////IParserHandler Interfase///////////////////////
@@ -60,7 +64,7 @@ public:
     virtual RuleStatus process(SCAGCommand& command, Session& session);
 
 
-    Rule(): useCounter(1), transportType(SMPP) {};
+    Rule(): useCounter(1), transportType(SMPP),logger(0) {logger = Logger::getInstance("scag.re");};
     virtual ~Rule();
 };
 

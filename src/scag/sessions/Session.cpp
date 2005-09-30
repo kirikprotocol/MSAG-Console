@@ -61,8 +61,10 @@ Property* Session::getProperty(const std::string& name)
 
 Session::Session(const CSessionKey& key) 
     : PropertyManager(), lastAccessTime(-1), 
-        bChanged(false), bDestroy(false), accessCount(0), Owner(0),m_pCurrentOperation(0),needReleaseCurrentOperation(false)
+        bChanged(false), bDestroy(false), accessCount(0), Owner(0),m_pCurrentOperation(0),
+        needReleaseCurrentOperation(false), logger(0)
 {
+    logger = Logger::getInstance("scag.re");
     m_SessionKey = key;
 
     //!!! Временная херота, для того, чтобы SessionManager выдавал валидную сессию

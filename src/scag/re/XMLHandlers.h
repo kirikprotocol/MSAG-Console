@@ -57,6 +57,7 @@ class XMLBasicHandler : public HandlerBase
     SemanticAnalyser analyser;
     bool CanReturnFinalObject;
     const Locator * m_pLocator;
+    Logger * logger;
 protected:
 public:
     Rule * ReturnFinalObject();

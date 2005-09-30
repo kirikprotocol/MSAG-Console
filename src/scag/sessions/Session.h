@@ -6,15 +6,17 @@
 #include <scag/util/properties/Properties.h>
 #include <list>
 #include <core/synchronization/EventMonitor.hpp>
-
-#include "scag/transport/SCAGCommand.h"
+#include <logger/Logger.h>
 #include <scag/bill/BillingManager.h>
 #include <core/buffers/XHash.hpp>
-#include "scag/util/sms/HashUtil.h"
+
+#include <scag/transport/SCAGCommand.h>
+#include <scag/util/sms/HashUtil.h>
 
 
 namespace scag { namespace sessions 
 {
+    using smsc::logger::Logger;
     using namespace scag::util::properties;
     using namespace smsc::sms;
     using smsc::core::synchronization::EventMonitor;
@@ -46,6 +48,7 @@ namespace scag { namespace sessions
         { 
             return ((this->destAddress == operationKey.destAddress)&&(this->key == operationKey.key));
         }
+
     };
 
 
@@ -71,6 +74,7 @@ namespace scag { namespace sessions
 
     class Operation : public PendingOperation
     {
+        Logger * logger;
         Operation(const Operation& operation);
         std::list <Bill> BillList;
     public:
@@ -78,7 +82,7 @@ namespace scag { namespace sessions
         void detachBill(const Bill& bill);
         void rollbackAll();
         ~Operation() {rollbackAll();}
-        Operation() {};
+        Operation() :logger(0) {logger = Logger::getInstance("scag.re");};
     };
 
 
@@ -87,6 +91,7 @@ namespace scag { namespace sessions
 
     class Session : public PropertyManager
     {
+        Logger * logger;
         std::list<PendingOperation> PendingOperationList;
         COperationsHash OperationHash;
         SessionOwner * Owner;

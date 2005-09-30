@@ -1,5 +1,6 @@
+#include <sys/types.h>
+#include <dirent.h>
 
-#include "scag/re/RuleEngine.h"
 #include <xercesc/util/PlatformUtils.hpp>
 #include <xercesc/util/TransService.hpp>
 #include <xercesc/sax2/SAX2XMLReader.hpp>
@@ -7,26 +8,24 @@
 #include <xercesc/util/OutOfMemoryException.hpp>
 #include <xercesc/framework/MemBufInputSource.hpp>
 
-#include <sys/types.h>
-#include <dirent.h>
-#include "XMLHandlers.h"
-
 #include <core/synchronization/Mutex.hpp>
 #include <core/buffers/IntHash.hpp>
 
 #include <util/debug.h>
-
-
-#include "scag/re/actions/MainActionFactory.h"
+#include <scag/re/actions/MainActionFactory.h>
 #include <scag/util/singleton/Singleton.h>
+#include <logger/Logger.h>
 
 
-//#include "scag/SAX2Print.hpp"
+#include "Rule.h"
+#include "RuleEngine.h"
+#include "XMLHandlers.h"
+
+
 
 namespace scag { namespace re {
 
 using smsc::core::synchronization::MutexGuard;
-using namespace std;
 using namespace smsc::util;
 using namespace scag::re::actions;
 using namespace scag::util::singleton;
@@ -35,6 +34,7 @@ using namespace scag::util::singleton;
 using smsc::core::synchronization::Mutex;
 using smsc::core::buffers::IntHash;
 using namespace scag::re::actions;
+using smsc::logger::Logger;
 
 struct RulesReference;
 struct Rules;
@@ -42,10 +42,11 @@ struct Rules;
 
 class RuleEngineImpl : RuleEngine
 {
+
     MainActionFactory factory;
     std::string RulesDir;
     int GetRuleId(SCAGCommand& command);
-
+    Logger * logger;
 
     friend struct RulesReference; 
     struct Rules
@@ -156,7 +157,7 @@ public:
     virtual ActionFactory& getActionFactory() {return factory;}
     void ProcessInit(const std::string& dir);
     virtual void updateRule(int ruleId);
-    virtual bool removeRule(int ruleId);
+    virtual void removeRule(int ruleId);
     virtual RuleStatus process(SCAGCommand& command, Session& session);
 
 };
@@ -193,6 +194,7 @@ void RuleEngine::Init(const std::string& dir)
             RuleEngineImpl& re = SingleRE::Instance();
             re.ProcessInit(dir); 
             bRuleEngineInited = true;
+
         }
     }
 }
@@ -315,6 +317,7 @@ RuleStatus RuleEngineImpl::process(SCAGCommand& command, Session& session)
 
 void RuleEngineImpl::ProcessInit(const std::string& dir)
 {
+    logger = Logger::getInstance("scag.re");
 
     rules = new Rules();
 
@@ -385,19 +388,18 @@ void RuleEngineImpl::updateRule(int ruleId)
 }
 
 
-bool RuleEngineImpl::removeRule(int ruleId)
+void RuleEngineImpl::removeRule(int ruleId)
 {
     MutexGuard mg(changeLock);
 
     Rule** rulePtr = rules->rules.GetPtr(ruleId);  // Can we do such direct access? TODO: Ensure
-    if (!rulePtr) return false;
+    if (!rulePtr) throw SCAGException("Invalid rule id to remove");
             
     Rules *newRules = copyReference();
     rulePtr = newRules->rules.GetPtr(ruleId);
     (*rulePtr)->unref();
     newRules->rules.Delete(ruleId);
     changeRules(newRules);
-    return true;
 }
 
 RuleEngineImpl::RuleEngineImpl() : rules(0)

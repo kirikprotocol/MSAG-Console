@@ -3,7 +3,6 @@
 #include "ActionFactory.h"
 #include "scag/re/CommandAdapter.h"
 
-//#include "scag/SAX2Print.hpp"
 
 namespace scag { namespace re { namespace actions {
 
@@ -14,6 +13,8 @@ ActionIf::ActionIf() : FillThenSection(true), FillElseSection(false)
 
 void ActionIf::init(const SectionParams& params,PropertyObject _propertyObject)
 {
+    logger = Logger::getInstance("scag.re");
+
     if (!params.Exists("test")) throw SCAGException("Action 'if': missing 'test' parameter");
 
     propertyObject = _propertyObject;

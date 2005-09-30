@@ -1,7 +1,6 @@
 #include "ActionOperationWait.h"
 #include "scag/re/CommandAdapter.h"
 
-//#include "scag/SAX2Print.hpp"
 
 namespace scag { namespace re { namespace actions {
 
@@ -17,6 +16,9 @@ bool ActionOperationWait::FinishXMLSubSection(const std::string& name)
 
 void ActionOperationWait::init(const SectionParams& params,PropertyObject propertyObject)
 {
+
+    logger = Logger::getInstance("scag.re");
+
     if (!params.Exists("type")) throw SCAGException("Action 'operation:wait': missing 'type' parameter");
     if (!params.Exists("time")) throw SCAGException("Action 'operation:wait': missing 'time' parameter");
 

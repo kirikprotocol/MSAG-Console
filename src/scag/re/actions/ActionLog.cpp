@@ -1,8 +1,6 @@
 #include "ActionLog.h"
 #include "scag/re/CommandAdapter.h"
 
-#include "scag/SAX2Print.hpp"
-
 
 namespace scag { namespace re { namespace actions {
 
@@ -18,6 +16,9 @@ bool ActionLog::FinishXMLSubSection(const std::string& name)
 
 void ActionLog::init(const SectionParams& params,PropertyObject propertyObject)
 {
+    logger = Logger::getInstance("scag.re");
+
+
     if (!params.Exists("level")) throw SCAGException("Action 'session:close': missing 'level' parameter");
     if (!params.Exists("category")) throw SCAGException("Action 'session:close': missing 'category' parameter");
     if (!params.Exists("message")) throw SCAGException("Action 'session:close': missing 'message' parameter");

@@ -6,9 +6,7 @@
 #include <string>
 #include "scag/config/bill/BillingManagerConfig.h"
 
-/*namespace scag { namespace re { namespace actions {
-     class ActionFactory;
-}}}*/   
+  
 
 
 namespace scag { namespace bill 

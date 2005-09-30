@@ -1,7 +1,6 @@
 #include "ActionSet.h"
 #include "scag/re/CommandAdapter.h"
 
-//#include "scag/SAX2Print.hpp"
 
 namespace scag { namespace re { namespace actions {
 
@@ -16,6 +15,9 @@ ActionSet::~ActionSet()
 
 void ActionSet::init(const SectionParams& params,PropertyObject propertyObject)
 {
+    logger = Logger::getInstance("scag.re");
+
+
     if ((!params.Exists("var"))|| (!params.Exists("value"))) throw SCAGException("Action 'set': missing 'var' and 'value' parameters");
 
     Variable = params["var"];

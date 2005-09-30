@@ -6,7 +6,6 @@
 #include <xercesc/sax/SAXException.hpp>
 #include <xercesc/sax/Locator.hpp>
 
-//#include "scag/SAX2Print.hpp"
 
 namespace scag { namespace re { 
 
@@ -50,7 +49,7 @@ void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionPara
         } catch (SCAGException& e)
         {
             if (NewObj) delete NewObj;
-            throw SCAGException("Semantic Analyser error at line %d: Invalid object '%s' to create: %s",nLine,name.c_str(),e.what()); 
+            throw RuleEngineException(nLine, "Invalid object '%s' to create: %s",name.c_str(),e.what());
         }
 
         if (NewObj) 
@@ -111,8 +110,9 @@ Rule * XMLBasicHandler::ReturnFinalObject()
 
 /////////////////////////////////////////////XMLBasicHandler/////////////////////////////
 
-XMLBasicHandler::XMLBasicHandler(const ActionFactory& obj) : analyser(obj),CanReturnFinalObject(false)
+XMLBasicHandler::XMLBasicHandler(const ActionFactory& obj) : analyser(obj),CanReturnFinalObject(false),logger(0)
 {
+    logger = Logger::getInstance("scag.re");
 }
 
 XMLBasicHandler::~XMLBasicHandler()

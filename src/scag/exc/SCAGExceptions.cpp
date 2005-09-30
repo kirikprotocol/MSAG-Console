@@ -11,6 +11,12 @@ SCAGException::SCAGException(const char* fmt,...) : Exception()
     SMSC_UTIL_EX_FILL(fmt); 
 }
 
+RuleEngineException::RuleEngineException(int nLine, const char* fmt,...) : SCAGException(),m_nLineNumber(0) 
+{ 
+    m_nLineNumber = nLine;
+    SMSC_UTIL_EX_FILL(fmt); 
+}
+
 
 InvalidPropertyException::InvalidPropertyException(const char* fmt,...) : SCAGException() 
 {

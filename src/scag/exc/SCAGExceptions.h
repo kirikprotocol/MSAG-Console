@@ -19,6 +19,15 @@ public:
 
 };
 
+class RuleEngineException : public SCAGException
+{
+    int m_nLineNumber;
+public:
+    int getLineNumber() const {return m_nLineNumber;};
+    RuleEngineException(int nLine, const char* fmt,...);
+    virtual ~RuleEngineException() throw() {};
+};
+
 
 class InvalidPropertyException : public SCAGException
 {

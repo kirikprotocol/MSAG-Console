@@ -1,7 +1,6 @@
 #include "ActionAbort.h"
 #include "scag/re/CommandAdapter.h"
 
-//#include "scag/SAX2Print.hpp"
 
 namespace scag { namespace re { namespace actions {
 
@@ -18,6 +17,8 @@ bool ActionAbort::FinishXMLSubSection(const std::string& name)
 
 void ActionAbort::init(const SectionParams& params,PropertyObject propertyObject)
 {
+    logger = Logger::getInstance("scag.re");
+
     //if (params.GetCount()) throw SCAGException("Action 'session:abort' must have no parameters");
 }
 

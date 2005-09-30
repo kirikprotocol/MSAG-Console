@@ -2,7 +2,6 @@
 #include "ActionFactory.h"
 #include "scag/stat/Statistics.h"
 
-//#include "scag/SAX2Print.hpp"
 
 
 namespace scag { namespace re { namespace actions {
@@ -59,6 +58,8 @@ bool ActionTrafficCheck::FinishXMLSubSection(const std::string& name)
 
 void ActionTrafficCheck::init(const SectionParams& params, PropertyObject _propertyObject)
 {
+    logger = Logger::getInstance("scag.re");
+
     if (!params.Exists("max")) throw SCAGException("Action 'traffic:check': missing 'max' parameter");
     if (!params.Exists("period")) throw SCAGException("Action 'traffic:check': missing 'period' parameter");
 

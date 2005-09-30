@@ -1,7 +1,6 @@
 #include "ActionReturn.h"
 #include "scag/re/CommandAdapter.h"
 
-//#include "scag/SAX2Print.hpp"
 
 
 namespace scag { namespace re { namespace actions {
@@ -13,6 +12,9 @@ ActionReturn::~ActionReturn()
 
 void ActionReturn::init(const SectionParams& params,PropertyObject propertyObject)
 {
+    logger = Logger::getInstance("scag.re");
+
+
     if (params.Exists("result")) 
     {
         ReturnValue = params["result"];
