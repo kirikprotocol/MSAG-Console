@@ -74,7 +74,7 @@ void SemanticAnalyser::DeliverBeginTag(const std::string& name,const SectionPara
         } catch(SCAGException& e)
         {
             if (NewObj) delete NewObj;
-            throw SCAGException("Semantic Analyser error at line %d: Invalid object '%s' to create: %s",nLine,name.c_str(),e.what()); 
+            throw RuleEngineException(nLine, "Invalid object '%s' to create: %s",name.c_str(),e.what());
         }
         CurrentObject = rule;
         RootObject = rule;

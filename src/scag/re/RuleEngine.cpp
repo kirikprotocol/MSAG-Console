@@ -248,8 +248,6 @@ Rule * RuleEngineImpl::ParseFile(const std::string& xmlFile)
         smsc_log_error(logger,"Terminate parsing Rule: unknown fatal error");
     }
 
-
-
     delete parser;
 
     if (errorCount > 0) 
@@ -260,6 +258,8 @@ Rule * RuleEngineImpl::ParseFile(const std::string& xmlFile)
 
     Rule * rule = handler.ReturnFinalObject();
     return rule;
+
+
 }
 
 bool RuleEngineImpl::isValidFileName(std::string fname, int& ruleId)
@@ -307,7 +307,7 @@ RuleStatus RuleEngineImpl::process(SCAGCommand& command, Session& session)
         rs = rule->process(command, session);
     } 
     else
-        throw SCAGException("Cannot process Rule with ID = %d : Rule not fond%s",ruleId);
+        throw RuleEngineException(0,"Cannot process Rule with ID = %d : Rule not fond%s",ruleId);
 
         
     return rs;
@@ -328,7 +328,7 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
     catch (const XMLException& toCatch)
     {
         StrX msg(toCatch.getMessage());
-        throw SCAGException("Error during initialization XMLPlatform: %s", msg.localForm());
+        throw RuleEngineException(0,"Error during initialization XMLPlatform: %s", msg.localForm());
     }
 
     RulesDir = dir;
@@ -338,7 +338,7 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
     int ruleId = 0;
 
     pDir = opendir(dir.c_str());
-    if (!pDir) throw SCAGException("Invalid directory %s",dir.c_str());
+    if (!pDir) throw RuleEngineException(0,"Invalid directory %s",dir.c_str());
 
     while (pDir) 
     {
@@ -393,7 +393,7 @@ void RuleEngineImpl::removeRule(int ruleId)
     MutexGuard mg(changeLock);
 
     Rule** rulePtr = rules->rules.GetPtr(ruleId);  // Can we do such direct access? TODO: Ensure
-    if (!rulePtr) throw SCAGException("Invalid rule id to remove");
+    if (!rulePtr) throw RuleEngineException(0,"Invalid rule id to remove");
             
     Rules *newRules = copyReference();
     rulePtr = newRules->rules.GetPtr(ruleId);
