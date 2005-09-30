@@ -5,9 +5,12 @@
     
 */
 
-#include "renscript.hpp"
+#include "test1.hpp"
 #include <core/threads/Thread.hpp>
-
+#include <thread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 using namespace std;
 using namespace smsc::core::threads;
@@ -18,7 +21,7 @@ int cpflag;
 bool stopProcess=false;
 smsc::logger::Logger *logger;
 
-CScriptRunner ppr;
+TestRunner ppr;
 
 class commandChecker:public Thread
 {
@@ -47,6 +50,8 @@ int Execute()
     	    return 1;
 	}
     }  
+}
+
 };
 
 commandChecker cc;
@@ -54,7 +59,7 @@ commandChecker cc;
 void init()
 {
  Logger::Init();
- logger =  Logger::getInstance("retest");
+ logger =  Logger::getInstance("scag.re.test");
   
 }
 
@@ -74,7 +79,7 @@ int main(int argc, char *argv[])
 
  if(argc>1)
  {
-  ppr.scriptfilename = argv[1];
+  ppr.dir = argv[1];
   ppr.Start();
  }
 

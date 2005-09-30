@@ -7,7 +7,7 @@
 
 #include <core/threads/Thread.hpp>
 #include <scag/re/RuleEngine.h>
-#include "logger/Logger.h"
+#include <logger/Logger.h>
 #include "../RuleStatus.h"
 #include "scag/transport/smpp/SmppCommand.h"
 
@@ -17,6 +17,7 @@
 #include <thread.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 
 #ifdef COMMAND_GEN
@@ -26,9 +27,12 @@
 using scag::re::RuleEngine;
 using scag::re::RuleStatus;
 using scag::transport::smpp::SmppCommand;
+using smsc::logger;
 
 
 extern bool stopProcess;
+//extern smsc::logger::Logger *logger;
+
 static FILE*pFile;
 
 RuleEngine * engine;
@@ -294,8 +298,9 @@ public:
     int errorCode;
     SmppCommand command;
     engine = 0;
+    
     smsc::logger::Logger::Init();
-    logger = smsc::logger::Logger::getInstance("SCAG.RuleEngine");
+    logger = smsc::logger::Logger::getInstance("scag.ruleengine.testing");
     
     if (!logger) 
     {
@@ -304,7 +309,8 @@ public:
 	return 0;
     }
     engine = new RuleEngine("./rules");
-					 
+
+    				 
     return 1;
  }
 /**/
@@ -360,7 +366,7 @@ public:
 
      // Init JSPipe
       
-     JSPipe::JSInit(cx,globalObj);
+     //JSPipe::JSInit(cx,globalObj);
 
      // Execute the script
      jsval rval;
