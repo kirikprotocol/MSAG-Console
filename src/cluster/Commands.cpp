@@ -619,7 +619,7 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
     if(profile.translit)
         val |= BIT(3);
 
-    if(profile.hideModifiable)
+    /*if(profile.hideModifiable)
         printf("hideModifaible ok\n");
     if(profile.divertModifiable)
         printf("divertModifaible ok\n");
@@ -632,7 +632,7 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
         val |= BIT(4);
 
     if(profile.codepage & 0x80)
-        printf("codePage & 0x80 ok\n");
+        printf("codePage & 0x80 ok\n");*/
 
 #undef BIT
 
@@ -655,7 +655,7 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
     if(profile.divertActiveCapacity)
         val |= BIT(4);
 
-    if(profile.divertActive)
+    /*if(profile.divertActive)
         printf("divertActive ok\n");
     if(profile.divertActiveAbsent)
         printf("divertActiveAbsent ok\n");
@@ -664,7 +664,7 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
     if(profile.divertActiveBarred)
         printf("divertActiveBarred ok\n");
     if(profile.divertActiveCapacity)
-        printf("divertActiveCapacity ok\n");
+        printf("divertActiveCapacity ok\n");*/
 
 #undef BIT
 
@@ -777,12 +777,12 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
     }
 
     //printf("codePage: ");
-    if(profile.codepage == smsc::smpp::DataCoding::SMSC7BIT)
+    /*if(profile.codepage == smsc::smpp::DataCoding::SMSC7BIT)
         printf("SMSC7BIT\n");
     if(profile.codepage & (int)smsc::smpp::DataCoding::LATIN1)
         printf("LATIN1\n");
     if(profile.codepage & (int)smsc::smpp::DataCoding::UCS2)
-        printf("UCS2\n");
+        printf("UCS2\n");*/
 
     //============= Gets reportOption ===========
 
@@ -801,12 +801,12 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
     }
 
     //printf("reportOption: ");
-    if(profile.reportoptions == smsc::profiler::ProfileReportOptions::ReportNone)
+    /*if(profile.reportoptions == smsc::profiler::ProfileReportOptions::ReportNone)
         printf("ReportNone\n");
     if(profile.reportoptions == smsc::profiler::ProfileReportOptions::ReportFull)
         printf("ReportFull\n");
     if(profile.reportoptions == smsc::profiler::ProfileReportOptions::ReportFinal)
-        printf("ReportFinal\n");
+        printf("ReportFinal\n");*/
 
     //============= Gets hideOption ===========
 
@@ -825,12 +825,12 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
     }
 
     //printf("hideOption: ");
-    if(profile.hide == smsc::profiler::HideOption::hoDisabled)
+    /*if(profile.hide == smsc::profiler::HideOption::hoDisabled)
         printf("hoDisabled\n");
     if(profile.hide == smsc::profiler::HideOption::hoEnabled)
         printf("hoEnabled\n");
     if(profile.hide == smsc::profiler::HideOption::hoSubstitute)
-        printf("hoSubstitute\n");
+        printf("hoSubstitute\n");*/
 
     //============= Gets flags ================
 
@@ -843,7 +843,7 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
     profile.udhconcat =         val & BIT(2);
     profile.translit =          val & BIT(3);
 
-    if(profile.hideModifiable)
+    /*if(profile.hideModifiable)
         printf("hideModifaible ok\n");
     if(profile.divertModifiable)
         printf("divertModifaible ok\n");
@@ -856,7 +856,7 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
         profile.codepage |= 0x80;
 
     if(profile.codepage |= 0x80)
-        printf("codePage |= 0x80 ok\n");
+        printf("codePage |= 0x80 ok\n");*/
 
 #undef BIT
 
@@ -872,7 +872,7 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
     profile.divertActiveBarred =    val & BIT(3);
     profile.divertActiveCapacity =  val & BIT(4);
 
-    if(profile.divertActive)
+    /*if(profile.divertActive)
         printf("divertActive ok\n");
     if(profile.divertActiveAbsent)
         printf("divertActiveAbsent ok\n");
@@ -881,7 +881,7 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
     if(profile.divertActiveBarred)
         printf("divertActiveBarred ok\n");
     if(profile.divertActiveCapacity)
-        printf("divertActiveCapacity ok\n");
+        printf("divertActiveCapacity ok\n");*/
 
 #undef BIT
 
@@ -1478,14 +1478,14 @@ bool SmeAddCommand::deserialize(void *buffer, uint32_t len)
   si.forceDC =      val & BIT(2);
   si.internal =     val & BIT(3);
 
-  if(si.disabled)
+  /*if(si.disabled)
       printf("disabled ok\n");
   if(si.wantAlias)
       printf("wantAlias ok\n");
   if(si.forceDC)
       printf("forceDC ok\n");
   if(si.internal)
-      printf("internal ok\n");
+      printf("internal ok\n");*/
 
 #undef BIT
 
@@ -1660,14 +1660,14 @@ void* SmeUpdateCommand::serialize(uint32_t &len)
   if(si.internal)
       val |= BIT(3);
 
-  if(si.disabled)
+  /*if(si.disabled)
       printf("disabled ok\n");
   if(si.wantAlias)
       printf("wantAlias ok\n");
   if(si.forceDC)
       printf("forceDC ok\n");
   if(si.internal)
-      printf("internal ok\n");
+      printf("internal ok\n");*/
 
 #undef BIT
 
@@ -1743,14 +1743,14 @@ bool SmeUpdateCommand::deserialize(void *buffer, uint32_t len)
   si.forceDC =      val & BIT(2);
   si.internal =     val & BIT(3);
 
-  if(si.disabled)
+  /*if(si.disabled)
       printf("disabled ok\n");
   if(si.wantAlias)
       printf("wantAlias ok\n");
   if(si.forceDC)
       printf("forceDC ok\n");
   if(si.internal)
-      printf("internal ok\n");
+      printf("internal ok\n");*/
 
 #undef BIT
 
