@@ -17,6 +17,8 @@
 #include "CommandTraceRoute.h"
 #include "CommandLoadRoutes.h"
 #include "CommandModifySmsc.h"
+#include "CommandUpdateRule.h"
+#include "CommandRemoveRule.h"
 
 namespace scag {
 namespace admin {
@@ -34,6 +36,8 @@ SCAGCommandReader::SCAGCommandReader(Socket * admSocket)
   commandlist["regSmsc"] = CommandIds::regSmsc;
   commandlist["unregSme"] = CommandIds::unregSme;
   commandlist["modifySmsc"] = CommandIds::modifySmsc;
+  commandlist["updateRule"] = CommandIds::updateRule;
+  commandlist["removeRule"] = CommandIds::removeRule;
 }
 
 SCAGCommandReader::~SCAGCommandReader()
@@ -66,6 +70,8 @@ Command * SCAGCommandReader::createCommand(int id, const DOMDocument *data)
     case CommandIds::regSmsc: return new CommandRegSmsc(data);
     case CommandIds::unregSme: return new CommandUnregSme(data);
     case CommandIds::modifySmsc: return new CommandModifySmsc(data);
+    case CommandIds::updateRule: return new CommandUpdateRule(data);
+    case CommandIds::removeRule: return new CommandRemoveRule(data);
 
     default: 
       smsc_log_warn(logger, "Unknown command id \"%i\"", id);

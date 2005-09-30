@@ -25,7 +25,9 @@ namespace CommandIds {
     loadRoutes,
     regSmsc,
     unregSme,
-    modifySmsc
+    modifySmsc,
+    updateRule,
+    removeRule
   };
 }
 

@@ -166,14 +166,14 @@ void XMLBasicHandler::error(const SAXParseException& e)
 {
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
-    smsc_log_error(logger,"Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
+    //smsc_log_error(logger,"Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
 }
 
 void XMLBasicHandler::fatalError(const SAXParseException& e)
 {
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
-    smsc_log_error(logger,"Fatal Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
+    //smsc_log_error(logger,"Fatal Error at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
 
 }
 
@@ -181,7 +181,7 @@ void XMLBasicHandler::warning(const SAXParseException& e)
 {
     StrX fname(e.getSystemId());
     StrX msg(e.getMessage());
-    smsc_log_error(logger,"Warning at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
+    //smsc_log_error(logger,"Warning at file %s, line %d, char %d   Message: %s",fname.localForm(),e.getLineNumber(),e.getColumnNumber(),msg.localForm());
 }
 
 }}
