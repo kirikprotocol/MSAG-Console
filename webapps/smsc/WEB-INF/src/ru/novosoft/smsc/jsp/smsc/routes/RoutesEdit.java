@@ -79,6 +79,7 @@ public class RoutesEdit extends RouteBody
         forceDelivery = r.isForceDelivery();
         providerId = r.getProviderId();
         categoryId = r.getCategoryId();
+        transit=r.isTransit();
       }
     }
 
