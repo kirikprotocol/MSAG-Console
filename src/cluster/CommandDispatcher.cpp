@@ -140,7 +140,7 @@ int CommandDispatcher::Execute()
 
             Command *command;
             int count = commands.Count();
-            smsc_log_info(logger, "Commands flushing, count: %d", count);
+            //smsc_log_info(logger, "Commands flushing, count: %d", count);
             for(int i=0; i<=count-1; i++){
                 
                 commands.Shift(command);
@@ -173,7 +173,7 @@ int CommandDispatcher::Execute()
 
             }
             commands.Clean();
-            smsc_log_info(logger, "Commands flushed");
+            //smsc_log_info(logger, "Commands flushed");
         }
         //printf("Dispatecher: command or timeout.\n");
     }
