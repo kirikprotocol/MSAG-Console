@@ -25,7 +25,6 @@
     }
 
 %><%@page contentType="text/csv; charset=windows-1251" %><%
-    response.setHeader("Content-Disposition", "attachment; filename=stats.csv");
     DateFormat dateFormat = new SimpleDateFormat("'stat'_yyyy-MM-dd_HH-mm-ss.'csv'");
     response.setHeader("Content-Disposition", "attachment; filename="+dateFormat.format(new Date()));
 %>
