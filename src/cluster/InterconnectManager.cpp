@@ -15,8 +15,8 @@ Interconnect* Interconnect::instance = 0;
 
 InterconnectManager::InterconnectManager(const std::string& inAddr_,
                                          const std::string& attachedInAddr_, int _port, int _attachedPort)
-    : Interconnect(), Thread(), role(MASTER), inAddr(inAddr_), attachedInAddr(attachedInAddr_), port(_port),
-      attachedPort(_attachedPort)
+    : Interconnect(), Thread(), logger(smsc::logger::Logger::getInstance("IM")), role(MASTER), inAddr(inAddr_), 
+      attachedInAddr(attachedInAddr_), port(_port), attachedPort(_attachedPort)
 {
     isStopping = true;
 
@@ -24,56 +24,17 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
 
     //printf("inAddr: %s, attachedInAddr: %s, port: %d, attachedPort: %d\n", inAddr.c_str(), attachedInAddr.c_str(), port, attachedPort);
 
-    socket.InitServer(inAddr.c_str(), port, 10);
-    socket.StartServer();
+    if( !socket.InitServer(inAddr.c_str(), port, 10))
+        throw Exception("InterconnectManager: Can't init socket server by host: %s, port: %d", inAddr.c_str(), port);
 
-    attachedSocket.Init(attachedInAddr.c_str(), attachedPort, 10);
+    if( !socket.StartServer() )
+        throw Exception("InterconnectManager: Can't start socket server");
+
+    if( !attachedSocket.Init(attachedInAddr.c_str(), attachedPort, 10) )
+        throw Exception("InterconnectManager: Can't init socket by host: %s, port: %d", attachedInAddr.c_str(), attachedPort);
 
     // At a start role is SLAVE allways
     role = SLAVE;
-
-    /*if( attachedSocket.Connect() ){
-
-        // Connect failed. Me is master.        
-        role = MASTER;
-
-    }else{
-        // who are you
-        GetRoleCommand cmd;
-        uint32_t role_;
-
-        try {
-            printf("wait for a role...\n");
-            send(&cmd);
-            role_ = readRole();
-
-            switch( role_ ){
-            case MASTER:
-                // If you are master, i'm slave
-                role = SLAVE;
-                break;
-            case SLAVE:
-                // If you are slave, i'm master
-                role = MASTER;
-                break;
-            case SINGLE:
-                // If you are single, i'm master
-                role = MASTER;
-                break;
-            default:
-                // Unknown role - i'm master
-                role = MASTER;
-                break;
-            }
-
-            printf("response is recived: %d\n", role_);
-
-        }catch(...){
-            // Send role query failed. I'm master.
-            role = MASTER;
-        }
-
-    }*/
 
     //printf("role: %d\n", role);
 
@@ -146,7 +107,9 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
 
 
         Command *cmd = new ProfileUpdateCommand(addr, profile);
+        printf("send command\n");
         sendCommand(cmd);
+        printf("command sent\n");
     }
 
     {
@@ -265,14 +228,14 @@ void InterconnectManager::shutdown()
 
 void InterconnectManager::sendCommand(Command* command)
 {
-
     MutexGuard guard(commandsMonitor);
     // TODO: add command to queue
 
     if(!isMaster())
         return;
-
+    
     commands.Push(command);
+    smsc_log_info(logger, "Command %02X added", command->getType());
     if (!isStoped()){
         commandsMonitor.notify();
     }
@@ -284,15 +247,12 @@ void InterconnectManager::addListener(CommandType type, CommandListener* listene
 }
 void InterconnectManager::activate()
 {
-    //printf("activate\n");
     if(!isSlave())
         return;
 
-    //printf("Dispatcher starting...\n");
     if(dispatcher){
         dispatcher->Start();
     }
-    //printf("Dispatcher started\n");
 }
 
 int InterconnectManager::Execute()
@@ -367,7 +327,6 @@ bool InterconnectManager::isSingle()
 
 void InterconnectManager::changeRole(Role role_)
 {
-    //printf("changeRole\n");
     if(role == role_)
         return;
 
@@ -433,18 +392,23 @@ void InterconnectManager::addChangeRoleHandler(ChangeRoleHandler * fun, void *ar
 
 void InterconnectManager::send(Command* command)
 {
+    try {
+
     uint32_t len = 0;
     std::auto_ptr<uint8_t> buff ( (uint8_t*)command->serialize(len) );
     int size = len + 8;
     std::auto_ptr<uint8_t> buffer( new uint8_t[size] );
     uint32_t type = htonl( command->getType() );
+    //printf("send, type: %02X, len: %d\n", command->getType(), len);
     memcpy((void*)buffer.get(), (const void*)&type, 4);
     uint32_t val32 = htonl(len);
     memcpy((void*)( buffer.get() + 4), (const void*)&val32, 4);
     memcpy((void*)( buffer.get() + 8), (const void*)buff.get(), len);
 
-    if(attachedSocket.Connect())
+    if(attachedSocket.Connect()){
+        //printf("Command send failed. Connect failed\n");
         throw Exception("Command send failed. Connect failed\n");
+    }
     
     int toWrite = size; const char* writeBuffer = (const char *)buffer.get();
     while (toWrite > 0) {
@@ -455,6 +419,14 @@ void InterconnectManager::send(Command* command)
             if (write > 0) { writeBuffer+=write; toWrite-=write; continue; }
         }
         throw Exception("Command send failed. Socket closed. %s", strerror(errno));
+    }
+
+    }catch(Exception & e)
+    {
+        throw Exception("%s", e.what());
+    }catch(...)
+    {
+        throw Exception("Command send failed, Unexpected error.");
     }
 }
 
@@ -502,20 +474,26 @@ void InterconnectManager::flushCommands()
 {
         Command *command;
         int count = commands.Count();
+        smsc_log_info(logger, "Commands is flushing, count: %d", count);
         for(int i=0; i<=count-1; i++){
-            commands.Shift(command);
-            try{
-                send(command);
-            }catch(Exception e)
+            commands.Shift(command);            
+            //printf("IM, flushCommands, type: %02X\n", command->getType());
+            try {
+                smsc_log_info(logger, "Command %02X is sending", command->getType());
+                send(command);           
+            }catch(Exception & e)
             {
+                smsc_log_info(logger, "%s", e.what());
             }catch(...)
             {
+                smsc_log_info(logger, "Flush commands failed, unexpeceted error");
             }
 
             if(command)
                 delete command;
         }       
         commands.Clean();
+        smsc_log_info(logger, "Commands is flushed");
 }
 
 

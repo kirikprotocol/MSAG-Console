@@ -121,6 +121,8 @@ int main(int argc, char **argv)
           ishs = true;
       }
 
+      smsc_log_info(logger, "Agent has connected to smsc.");
+
       if(ishs)
           if(socket.Connect())
               atExit();
@@ -139,8 +141,6 @@ int main(int argc, char **argv)
       {
           smsc_log_info(logger, "Send failed. Unknown exception");
       }
-
-      smsc_log_info(logger, "Agent has connected to smsc.");
 
       for( ;; ){
           smsc_log_info(logger, "Wait for a signal...");

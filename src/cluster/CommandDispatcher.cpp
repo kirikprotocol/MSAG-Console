@@ -93,7 +93,7 @@ int CommandDispatcher::Execute()
                 commands.Shift(command);
 
                 int type = command->getType();
-                //printf("\nDispatcher, type: %d\n", type);
+                //printf("\nDispatcher, type: %02X\n", type);
                 type >>= 16;
                 //printf("Dispatcher, key: %d\n", type);
 

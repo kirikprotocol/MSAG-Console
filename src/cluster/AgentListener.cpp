@@ -114,7 +114,7 @@ void AgentListener::read(Socket * socket, void* buffer, int size)
             if (read == 0) throw Exception("Command read failed. Timeout expired.");
                 else if (read > 0) {
                     read = socket->Read(readBuffer, toRead);
-                    smsc_log_info(logger, "read, read: %d, toRead", read, toRead );
+                    smsc_log_info(logger, "read, read: %d, toRead: %d", read, toRead );
                     if (read > 0) { readBuffer+=read; toRead-=read; continue; }
                 }
                 throw Exception("Command read failed. Socket closed. %s", strerror(errno));

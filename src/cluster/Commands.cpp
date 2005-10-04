@@ -1360,8 +1360,8 @@ void* SmeAddCommand::serialize(uint32_t &len)
   value32 = htonl(si.providerId);
   memcpy((void*)(buffer + 27),  (const void*)&value32, 4);
 
-  printf("port: %d, priority: %d, SME_N: %d, timeout: %d\nproclimit: %d, schedlimit: %d, providerId: %d\n", si.port,
-            si.priority, si.SME_N, si.timeout, si.proclimit, si.schedlimit, si.providerId);
+  /*intf("port: %d, priority: %d, SME_N: %d, timeout: %d\nproclimit: %d, schedlimit: %d, providerId: %d\n", si.port,
+            si.priority, si.SME_N, si.timeout, si.proclimit, si.schedlimit, si.providerId);*/
 
   uint8_t val;
 
@@ -1626,8 +1626,8 @@ void* SmeUpdateCommand::serialize(uint32_t &len)
   value32 = htonl(si.providerId);
   memcpy((void*)(buffer + 27),  (const void*)&value32, 4);
 
-  printf("port: %d, priority: %d, SME_N: %d, timeout: %d\nproclimit: %d, schedlimit: %d, providerId: %d\n", si.port,
-            si.priority, si.SME_N, si.timeout, si.proclimit, si.schedlimit, si.providerId);
+  /*printf("port: %d, priority: %d, SME_N: %d, timeout: %d\nproclimit: %d, schedlimit: %d, providerId: %d\n", si.port,
+            si.priority, si.SME_N, si.timeout, si.proclimit, si.schedlimit, si.providerId);*/
 
   uint8_t val;
 
@@ -1730,8 +1730,8 @@ bool SmeUpdateCommand::deserialize(void *buffer, uint32_t len)
   memcpy((void*)&value32,         (const void*)((uint8_t*)buffer + 27), 4);
   si.providerId = ntohl(value32);
 
-  printf("port: %d, priority: %d, SME_N: %d, timeout: %d\nproclimit: %d, schedlimit: %d, providerId: %d\n", si.port,
-            si.priority, si.SME_N, si.timeout, si.proclimit, si.schedlimit, si.providerId);
+  /*printf("port: %d, priority: %d, SME_N: %d, timeout: %d\nproclimit: %d, schedlimit: %d, providerId: %d\n", si.port,
+            si.priority, si.SME_N, si.timeout, si.proclimit, si.schedlimit, si.providerId);*/
 
   memcpy((void*)&val,                   (const void*)((uint8_t*)buffer + 31), 1);
 

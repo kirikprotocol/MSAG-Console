@@ -8,6 +8,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "core/network/Socket.hpp"
 #include "CommandReader.h"
+#include "logger/Logger.h"
 
 namespace smsc { namespace cluster {
 
@@ -18,7 +19,7 @@ using smsc::core::synchronization::Mutex;
     class InterconnectManager : public Interconnect, public Thread
     {
     private:
-
+        smsc::logger::Logger    *logger;
         Role            role;
         std::string     inAddr;
         std::string     attachedInAddr;
