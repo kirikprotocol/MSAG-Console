@@ -287,6 +287,10 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
       if(mode)
               delete [] mode;
 
+  }catch(Exception & e)
+  {
+      smsc_log_info(log, "%s", e.what() );
+      throw Exception("InterconnectManager initialization exception.");
   }catch(...){
       throw Exception("InterconnectManager initialization exception.");
   }
@@ -966,9 +970,12 @@ void Smsc::run()
   //smsc::logger::Logger::getInstance("sms.snmp.alarm").debug("sample alarm");
 
   try {
+      printf("Acrivating...\n");
       if(ishs){
           Interconnect *icon = InterconnectManager::getInstance();
+          printf("Activate 1\n");
           icon->activate();
+          printf("Activate 2\n");
       }
   }catch(...){
       throw Exception("InterconnectManager activating exception.");
@@ -1017,8 +1024,6 @@ void Smsc::run()
 #endif
 #endif
   }
-
-  printf("Smsc, run 2\n");
 
 
   // start rescheduler created in init
