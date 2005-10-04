@@ -54,25 +54,15 @@ public class Rule
     this.notes = notes;
   }
 
-  public Long getIdLong()
+  public Long getId()
    {
      return id;
    }
-  public void setIdLong(Long id)
+  public void setId(Long id)
     {
       this.id=id;
     }
-
-  public void setId(String id)
-  {
-    this.id=Long.decode(id);
-  }
-  public String getId()
-     {
-       return String.valueOf(id);
-     }
-
-  public String getName()
+   public String getName()
   {
     return name;
   }
