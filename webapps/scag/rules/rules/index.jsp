@@ -9,13 +9,6 @@
     </jsp:attribute>
 
     <jsp:body>
-      <applet code="org.gjt.sp.jedit.jEdit.class" codebase="rules/rules" width="1" height="1" archive="jedit.jar" name=jedit ID=jedit>
-            <param name="noplugins" value="-noplugins">
-            <param name="homedir" value="applet">
-            <param name="username" value="rules">
-            <param name="file" value="1">
-            <param name="servletUrl" value="/scag/applet/myServlet">
-       </applet>
         <sm:table columns="checkbox,name,providerName,notes,transport" names="c,name,provider,notes,transport"
                   widths="1,24,25,25,25" edit="name" goal="jedit"/>
 
