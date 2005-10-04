@@ -169,7 +169,8 @@ void PduListener::handleEvent(SmppHeader *pdu)
   auto_ptr<QCommand> qc(new QCommand);
   qc->direction_ = incom_dirct_;
   qc->pdu_       = pdu;
-  if( pdu->get_commandId() == SmppCommandSet::DELIVERY_SM &&
+  // don't understand how to proxy receipts...
+/*  if( pdu->get_commandId() == SmppCommandSet::DELIVERY_SM &&
       (((PduDeliverySm*)pdu)->get_message().get_esmClass()&0x04) != 0 ) {
     // this delivery receipt, skip it but send ok to sender
     PduDeliverySmResp resp;
@@ -187,7 +188,7 @@ void PduListener::handleEvent(SmppHeader *pdu)
     resp.set_messageId("");
     resp.get_header().set_sequenceNumber(pdu->get_sequenceNumber());
     trx_->getAsyncTransmitter()->sendDataSmResp(resp);
-  } else {
+  } else {*/
     // пытаемс€ запихать команду в очередь
     if ( que_.PutBack(qc.get()) ) {
       // ќ! запихалась :)
@@ -220,7 +221,7 @@ void PduListener::handleEvent(SmppHeader *pdu)
         smsc_log_error(log_, "PduListener::handleEvent: %s <exception> : %s",ToString(incom_dirct_).c_str(),_.what());
       }
     }
-  }
+  /*}*/
 }
 
 void PduListener::handleError(int errorCode)
