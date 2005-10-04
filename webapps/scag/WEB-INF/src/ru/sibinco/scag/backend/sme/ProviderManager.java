@@ -12,18 +12,20 @@ public class ProviderManager
 {
   private final Map providers = Collections.synchronizedMap(new TreeMap());
   private long lastUsedId;
-  private static final String SECTION_NAME_providers = "providers";
-  private static final String PARAM_NAME_last_used_id = "last used provider id";
+  private static final String SECTION_NAME = "providers";
+  private static final String PARAM_NAME_LAST_USED_ID = "last used provider id";
 
-  public ProviderManager(final Config gwConfig) throws Config.WrongParamTypeException, Config.ParamNotFoundException, NumberFormatException
+
+  public ProviderManager(Config idsConfig) throws Config.WrongParamTypeException, Config.ParamNotFoundException, NumberFormatException
   {
-    lastUsedId = gwConfig.getInt(SECTION_NAME_providers + '.' + PARAM_NAME_last_used_id);
-    final Collection providerIds = gwConfig.getSectionChildShortParamsNames(SECTION_NAME_providers);
+
+    lastUsedId = idsConfig.getInt(SECTION_NAME + '.' + PARAM_NAME_LAST_USED_ID);
+    final Collection providerIds = idsConfig.getSectionChildShortParamsNames(SECTION_NAME);
     for (Iterator i = providerIds.iterator(); i.hasNext();) {
       final String providerIdStr = (String) i.next();
-      if (!PARAM_NAME_last_used_id.equalsIgnoreCase(providerIdStr)) {
+      if (!PARAM_NAME_LAST_USED_ID.equalsIgnoreCase(providerIdStr)) {
         final Long providerId = Long.decode(providerIdStr);
-        final Provider provider = createProvider(providerId.longValue(), gwConfig.getString(SECTION_NAME_providers + '.' + providerIdStr));
+        final Provider provider = createProvider(providerId.longValue(), idsConfig.getString(SECTION_NAME + '.' + providerIdStr));
         providers.put(providerId, provider);
       }
     }
@@ -54,13 +56,13 @@ public class ProviderManager
     provider.setName(name);
   }
 
-  public synchronized void store(final Config gwConfig)
+  public synchronized void store(final Config idsConfig)
   {
-    gwConfig.removeSection(SECTION_NAME_providers);
-    gwConfig.setInt(SECTION_NAME_providers + '.' + PARAM_NAME_last_used_id, lastUsedId);
+    idsConfig.removeSection(SECTION_NAME);
+    idsConfig.setInt(SECTION_NAME + '.' + PARAM_NAME_LAST_USED_ID, lastUsedId);
     for (Iterator i = providers.values().iterator(); i.hasNext();) {
       final Provider provider = (Provider) i.next();
-      gwConfig.setString(SECTION_NAME_providers + "." + provider.getId(), provider.getName());
+      idsConfig.setString(SECTION_NAME + "." + provider.getId(), provider.getName());
     }
   }
 }

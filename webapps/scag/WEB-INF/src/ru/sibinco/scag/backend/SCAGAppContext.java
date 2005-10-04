@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 import org.xml.sax.SAXException;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.backend.daemon.Daemon;
-import ru.sibinco.lib.backend.service.ServiceInfo;
 import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.lib.backend.util.conpool.NSConnectionPool;
 import ru.sibinco.scag.backend.resources.ResourceManager;
@@ -15,7 +14,6 @@ import ru.sibinco.scag.backend.users.UserManager;
 import ru.sibinco.scag.backend.protocol.journal.Journal;
 import ru.sibinco.scag.backend.endpoints.centers.CenterManager;
 import ru.sibinco.scag.backend.endpoints.svc.SvcManager;
-import ru.sibinco.scag.backend.rules.Rule;
 import ru.sibinco.scag.backend.rules.RuleManager;
 import ru.sibinco.scag.perfmon.PerfServer;
 import ru.sibinco.tomcat_auth.XmlAuthenticator;
@@ -26,9 +24,6 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.Properties;
-import java.util.Map;
-import java.util.Collections;
-import java.util.HashMap;
 
 
 /**
@@ -42,12 +37,12 @@ public class SCAGAppContext
 
   private final Config config;
   private final Config gwConfig;
+  private final Config idsConfig;
   private final UserManager userManager;
   private final GwSmeManager gwSmeManager;
   private final CenterManager centerManager;
   private final SvcManager svcManager;
   private final RuleManager ruleManager;
- // private final HostsManager hostsManager ;
   private final ProviderManager providerManager;
   private final SmscsManager smscsManager;
   private final GwRoutingManager gwRoutingManager;
@@ -70,13 +65,13 @@ public class SCAGAppContext
       System.out.flush();
       config = new Config(new File(config_filename));
       gwConfig = new Config(new File(config.getString("gw_config")));
+      idsConfig = new Config(new File(config.getString("ids_file")));
       String gwDaemonHost=config.getString("gw daemon.host");
       String gwConfigFolder=config.getString("gw_config_folder");
       gwConfFolder=new File(gwConfigFolder);
       connectionPool = null;
-      //connectionPool = createConnectionPool(config);
       userManager = new UserManager(config.getString("users_config_file"));
-      providerManager = new ProviderManager(gwConfig);
+      providerManager = new ProviderManager(idsConfig);
       gwSmeManager = new GwSmeManager(config.getString("sme_file"), gwConfig, providerManager);
       gwSmeManager.init();
       //centerManager = new CenterManager(config.getString("centers_file")); //ToDo
@@ -87,7 +82,7 @@ public class SCAGAppContext
       svcManager.init();
       String rulesFolder=config.getString("rules_folder");
       String xsdFolder=config.getString("xsd_folder");
-      ruleManager=new RuleManager(new File(rulesFolder),new File(xsdFolder),providerManager);
+      ruleManager=new RuleManager(new File(rulesFolder),new File(xsdFolder),providerManager, idsConfig);
       ruleManager.init();
       smscsManager = new SmscsManager(gwConfig,gwSmeManager);
       resourceManager = new ResourceManager(gwConfFolder);
@@ -149,6 +144,11 @@ public class SCAGAppContext
   public Config getGwConfig()
   {
     return gwConfig;
+  }
+
+  public Config getIdsConfig()
+  {
+    return idsConfig;
   }
 
   public UserManager getUserManager()

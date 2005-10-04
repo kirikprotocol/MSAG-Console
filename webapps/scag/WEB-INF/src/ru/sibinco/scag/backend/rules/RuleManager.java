@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.io.*;
 
 import ru.sibinco.lib.backend.util.xml.Utils;
+import ru.sibinco.lib.backend.util.config.Config;
 import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.Constants;
 import ru.sibinco.scag.backend.sme.Provider;
@@ -37,13 +38,17 @@ public class RuleManager
   private final Logger logger = Logger.getLogger(this.getClass());
   private final File rulesFolder;
   private final File xsdFolder;
+  private long lastRuleId;
   private final ProviderManager providerManager;
+  private static final String PARAM_NAME_LAST_USED_ID = "last used rule id";
+
   //private static final String SMSC_ROUTES_PRIMARY_CONFIG = "routes.xml";
   //private static final String SMSC_ROUTES_TEMPORAL_CONFIG = "routes_.xml";
   //private static final String SMSC_ROUTES_TRACEABLE_CONFIG = "routes__.xml";
 
-  public RuleManager(final File rulesFolder,final File xsdFolder,final ProviderManager providerManager)
-  {
+  public RuleManager(final File rulesFolder,final File xsdFolder,final ProviderManager providerManager, final Config idsConfig) throws Config.WrongParamTypeException, Config.ParamNotFoundException {
+
+    this.lastRuleId = idsConfig.getInt(PARAM_NAME_LAST_USED_ID);
     this.rulesFolder = rulesFolder;
     this.xsdFolder = xsdFolder;
     this.providerManager = providerManager;
@@ -85,7 +90,7 @@ public class RuleManager
 
       loadFromFolder(mms);
     } catch (SibincoException e) {
-      e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
+      e.printStackTrace();
       System.out.println("error on init RuleManager in method load(): "+e.getMessage());
       throw new SibincoException(e.getMessage());
     }
@@ -152,7 +157,12 @@ public class RuleManager
       throw new SibincoException("Couldn't parse", e);
     }
   }
-  /*
+
+    public long getLastRuleId() {
+        return lastRuleId;
+    }
+
+    /*
   private void saveToFile(final String filename) throws SibincoException
   {
     try {
@@ -189,7 +199,7 @@ public class RuleManager
     rules.put("rule_3", new Rule("rule_3","third  rule",provider,"MMS"));
 
   }
- protected Rule createRule(final String ruleName, final String notes, final Provider provider, final String transport) throws SibincoException
+  protected Rule createRule(final String ruleName, final String notes, final Provider provider, final String transport) throws SibincoException
   {
     return new Rule(  ruleName,  notes,   provider,   transport);
   }  */

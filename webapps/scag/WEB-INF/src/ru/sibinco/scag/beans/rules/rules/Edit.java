@@ -6,6 +6,17 @@ package ru.sibinco.scag.beans.rules.rules;
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.backend.transport.Transport;
+import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.sme.Provider;
+import ru.sibinco.scag.Constants;
+import ru.sibinco.lib.backend.users.User;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.security.Principal;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.Iterator;
 
 /**
  * The <code>Edit</code> class represents
@@ -17,20 +28,67 @@ import ru.sibinco.scag.backend.transport.Transport;
  */
 public class Edit extends EditBean {
 
+    public static final long ALL_PROVIDERS = -1;
     private String mbNext = null;
-
     protected long transportId = 1;
+    private long ruleId = -1;
+    private String providerName = null;
+    private String[] providerIds = null;
+    private String[] providerNames = null;
+    protected long providerId = -1;
+    private long userProviderId = -1;
+    private boolean administrator = false;
+
 
     public String getId() {
         return null;
     }
 
-    protected void load(final String loadId) throws SCAGJspException {
+    private void init()throws SCAGJspException{
+        SCAGAppContext appContext = getAppContext();
+        Principal userPrincipal = super.getLoginedPrincipal();
+        if(userPrincipal == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to  obtain user principal(s)");
+        User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
+        if(user == null)
+            throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
+
+        userProviderId = user.getProviderId();
+        administrator = (userProviderId == ALL_PROVIDERS);
+        if(administrator){
+            Map providers = appContext.getProviderManager().getProviders();
+            ArrayList ids  = new ArrayList(100);
+            ArrayList names = new ArrayList(100);
+            for(Iterator i = providers.values().iterator(); i.hasNext();){
+                Object obj = i.next();
+                if(obj != null && obj instanceof Provider){
+                    Provider provider = (Provider) obj;
+                    ids.add(Long.toString(provider.getId()));
+                    names.add(provider.getName());
+                }
+            }
+            providerIds = (String[]) (ids.toArray(new String[ids.size()]));
+            providerNames = (String[]) (names.toArray(new String[names.size()]));
+        }else{
+            setProviderId(userProviderId);
+            Object obj = appContext.getProviderManager().getProviders().get(new Long(userProviderId));
+            if(obj == null || !(obj instanceof Provider))
+                throw new SCAGJspException(Constants.errors.providers.PROVIDER_NOT_FOUND,
+                        "Failed to locate provider for id=" + userProviderId);
+            providerName = ((Provider) obj).getName();
+        }
 
     }
 
-    protected void save() throws SCAGJspException {
+    protected void load(final String loadId) throws SCAGJspException {
+    }
 
+    protected void save() throws SCAGJspException {
+    }
+
+    public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
+        super.process(request, response);
+        this.init();
     }
 
     public String getMbNext() {
@@ -56,4 +114,35 @@ public class Edit extends EditBean {
     public String[] getTranspotTitles() {
         return Transport.transpotTitles;
     }
+
+    public long getRuleId() {
+        ruleId = appContext.getRuleManager().getLastRuleId();
+        ruleId ++;
+        return ruleId;
+    }
+
+    public String getProviderName() {
+        return providerName;
+    }
+
+    public String[] getProviderIds() {
+        return providerIds;
+    }
+
+    public String[] getProviderNames() {
+        return providerNames;
+    }
+
+    public long getProviderId() {
+        return providerId;
+    }
+
+    public void setProviderId(long providerId) {
+        this.providerId = providerId;
+    }
+
+    public boolean isAdministrator() {
+        return administrator;
+    }
+
 }

@@ -12,9 +12,20 @@
     </jsp:attribute>
     <jsp:body>
         <sm-ep:properties title="">
+            <sm-ep:txt title="Name:" name="ruleId" readonly="true"/>
             <sm-ep:list title="Transport" name="transportId"
                         values="${fn:join(bean.transpotIds, ',')}"
                         valueTitles="${fn:join(bean.transpotTitles, ',')}"/>
+            <c:choose>
+                <c:when test="${bean.administrator}">
+                    <sm-ep:list title="provider" name="providerId"
+                                values="${fn:join(bean.providerIds, ',')}"
+                                valueTitles="${fn:join(bean.providerNames, ',')}"/>
+                </c:when>
+                <c:otherwise>
+                    <sm-ep:const title="provider" name="providerName" value="${bean.providerName}"/>
+                </c:otherwise>
+            </c:choose>
         </sm-ep:properties>
     </jsp:body>
 </sm:page>

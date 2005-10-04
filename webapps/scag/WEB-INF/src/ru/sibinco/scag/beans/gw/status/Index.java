@@ -148,8 +148,8 @@ public class Index extends SCAGBean
   private void applyProviders() throws SCAGJspException
   {
     try {
-      final Config gwConfig = appContext.getGwConfig();
-      appContext.getProviderManager().store(gwConfig);
+      final Config idsConfig = appContext.getIdsConfig();
+      appContext.getProviderManager().store(idsConfig);
       appContext.getGwConfig().save();
       try {
         appContext.getGateway().apply("providers");
@@ -201,7 +201,7 @@ public class Index extends SCAGBean
   {
     try {
       appContext.getSmscsManager().store(appContext.getGwConfig());
-      appContext.getProviderManager().store(appContext.getGwConfig());
+      appContext.getProviderManager().store(appContext.getIdsConfig());
       appContext.getGwSmeManager().store();
       appContext.getGwConfig().save();
 

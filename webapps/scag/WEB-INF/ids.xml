@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+
+<config>
+
+    <param name="last used rule id" type="int">3</param>
+
+    <section name="providers">
+        <param name="1" type="string">hello_test</param>
+        <param name="2" type="string">mark</param>
+        <param name="3" type="string">burger</param>
+        <param name="4" type="string">provider4</param>
+        <param name="last used provider id" type="int">4</param>
+    </section>
+
+    <section name="categories">
+        <param name="1" type="string">category1</param>
+        <param name="2" type="string">category2</param>
+        <param name="3" type="string">category3</param>
+        <param name="last used category id" type="int">3</param>
+    </section>
+</config>
