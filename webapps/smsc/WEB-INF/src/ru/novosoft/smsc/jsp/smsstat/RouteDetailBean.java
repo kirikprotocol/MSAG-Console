@@ -13,7 +13,6 @@ import ru.novosoft.smsc.admin.provider.Provider;
 import ru.novosoft.smsc.admin.smsstat.RouteIdCountersSet;
 import ru.novosoft.smsc.admin.smsstat.StatRouteList;
 import ru.novosoft.smsc.admin.smsstat.Statistics;
-import ru.novosoft.smsc.admin.route.Route;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.smcstat.StatRouteDataItem;
@@ -67,7 +66,19 @@ public class RouteDetailBean extends IndexBean
       return result;
 
     RoutesFull = new ArrayList((Collection) session.getAttribute("ByRouteId"));
-    if (!filteron) ByRouteId = new ArrayList(RoutesFull);
+    if (!filteron) {
+      ByRouteId = new ArrayList();
+      for (Iterator it = RoutesFull.iterator(); it.hasNext();) {
+        RouteIdCountersSet r = (RouteIdCountersSet) it.next();
+        Provider   provider = providerManager.getProvider(new Long(r.providerId));
+        Category   category = categoryManager.getCategory(new Long(r.categoryId));
+        if (provider == null) provider = new Provider(-1, "");
+        if (category == null) category = new Category(-1, "");
+        r.setProvider(provider);
+        r.setCategory(category);
+        ByRouteId.add(r);
+      }
+    }
     dateFrom = (String) session.getAttribute("dateFrom");
     dateTill = (String) session.getAttribute("dateTill");
     if (mbBack != null) {

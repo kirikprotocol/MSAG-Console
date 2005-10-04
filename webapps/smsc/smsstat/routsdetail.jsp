@@ -157,9 +157,12 @@ int disNo = 1;
 </tr>  <%
         while (i.hasNext()) {
             RouteIdCountersSet route = (RouteIdCountersSet)i.next();
+            if (null==route) continue;
             String routeStr = StringEncoderDecoder.encode(route.routeid);
-            String providerStr= route.getProvider().getName().equals("")  ? "&nbsp": StringEncoderDecoder.encode(route.getProvider().getName());
-            String categoryStr= route.getCategory().getName().equals("")  ? "&nbsp": StringEncoderDecoder.encode(route.getCategory().getName());
+            Provider provider=route.getProvider();
+            Category category=route.getCategory();
+            String providerStr= provider.getName().equals("")  ? "&nbsp": StringEncoderDecoder.encode(provider.getName());
+            String categoryStr= category.getName().equals("")  ? "&nbsp": StringEncoderDecoder.encode(category.getName());
             Collection errs = route.getErrors();
         %>
         <tr class=row0>
