@@ -15,20 +15,21 @@ void CommandReader::Start()
 
 int CommandReader::Execute()
 {
+    smsc_log_info(logger, "Reader is strted");
 	while(!stop)
 	{
         //printf("reader, Execute, wait for command...\n");
         if (Socket *newSocket = sock->Accept())
         {
-            //printf("reader, Execute, command is accepted\n");
+            smsc_log_info(logger, "Reader has accepted command");
 
             for( ;; ){
 
                 try{
-                    //printf("reader, Execute, reads command\n");
+                    smsc_log_info(logger, "Reader reads command");
                     if(Command *cmd = readCommand(newSocket)){
 
-                        //printf("reader, Execute, command %02X is readed\n", cmd->getType());
+                        smsc_log_info(logger, "Command %02X readed", cmd->getType());
 
                         if(cmd->getType() == GETROLE_CMD)
                             writeRole(newSocket, cmd);
@@ -42,7 +43,12 @@ int CommandReader::Execute()
                         }
                    
                     }
+                }catch(Exception & e)
+                {
+                    smsc_log_info(logger, "Reader exception, %s", e.what());
+                    break;
                 }catch(...){
+                    smsc_log_info(logger, "Reader exception, unexpected error");
                     break;
                 }
 
@@ -51,6 +57,7 @@ int CommandReader::Execute()
         //printf("reader, Execute, command is accepted\n");
         
 	}
+    smsc_log_info(logger, "Reader is stoped");
 	
 	return 0;
 }
@@ -82,6 +89,8 @@ Command* CommandReader::readCommand(Socket * socket)
     uint32_t len;
 
     readHeader(socket, type, len);
+
+    smsc_log_info(logger, "readCommand, Command header: type: %02X, len: %d", type, len);
 
     if(type == GETROLE_CMD){
         Command *cmd = new GetRoleCommand cmd( (int)( *role ));

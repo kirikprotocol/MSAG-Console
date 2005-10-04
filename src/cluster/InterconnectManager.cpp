@@ -24,14 +24,17 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
 
     //printf("inAddr: %s, attachedInAddr: %s, port: %d, attachedPort: %d\n", inAddr.c_str(), attachedInAddr.c_str(), port, attachedPort);
 
-    if( !socket.InitServer(inAddr.c_str(), port, 10))
+    if( socket.InitServer(inAddr.c_str(), port, 10)){
         throw Exception("InterconnectManager: Can't init socket server by host: %s, port: %d", inAddr.c_str(), port);
+    }
 
-    if( !socket.StartServer() )
+    if( socket.StartServer() ){
         throw Exception("InterconnectManager: Can't start socket server");
+    }
 
-    if( !attachedSocket.Init(attachedInAddr.c_str(), attachedPort, 10) )
+    if( attachedSocket.Init(attachedInAddr.c_str(), attachedPort, 10) ){
         throw Exception("InterconnectManager: Can't init socket by host: %s, port: %d", attachedInAddr.c_str(), attachedPort);
+    }
 
     // At a start role is SLAVE allways
     role = SLAVE;

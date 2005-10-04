@@ -17,7 +17,8 @@ class CommandReader : public Thread
 {
 public:
     CommandReader()
-        : stop(true),
+        : logger(smsc::logger::Logger::getInstance("CmdReader")),
+          stop(true),
           role(0),
           sock(0),
           dispatcher(0),
@@ -46,6 +47,7 @@ protected:
     Command* readCommand(Socket *socket);
     void read(Socket *socket, void * buffer, int size);
     void writeRole(Socket *socket, Command *cmd);
+    smsc::logger::Logger    *logger;
 	bool stop;
 	Role *role;
 	Socket *sock;
