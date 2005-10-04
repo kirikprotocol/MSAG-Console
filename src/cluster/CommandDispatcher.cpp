@@ -5,6 +5,7 @@ namespace smsc { namespace cluster
 {
 
 CommandDispatcher::CommandDispatcher() : Thread(),
+    logger(smsc::logger::Logger::getInstance("CmdDisp")),
     isStopping(true)
 {
 
@@ -32,6 +33,7 @@ void CommandDispatcher::addCommand(Command* command)
 
     // TODO: Put command into commands queue
     commands.Push(command);
+    smsc_log_info(logger, "Command %02X added", command->getType());
     if (!isStopping) commandsMonitor.notify();
 }
 void CommandDispatcher::addListener(CommandType type, CommandListener* listener)
@@ -52,11 +54,13 @@ void CommandDispatcher::addListener(CommandType type, CommandListener* listener)
 
         if(arr){
             arr->Push(listener);
+            smsc_log_info(logger, "Command listener with key %02X added, this is for commands %02X, ...", key, type);
         }
 
     }else{
         Array<CommandListener*> arr;
         arr.Push(listener);
+        smsc_log_info(logger, "Command listener with key %02X added, this is for commands %02X, ...", key, type);
         listeners.Insert(key, arr);
     }
 
@@ -88,21 +92,29 @@ int CommandDispatcher::Execute()
 
             Command *command;
             int count = commands.Count();
+            smsc_log_info(logger, "Commands flushing, count: %d", count);
             for(int i=0; i<=count-1; i++){
                 
                 commands.Shift(command);
 
                 int type = command->getType();
-                //printf("\nDispatcher, type: %02X\n", type);
+                smsc_log_info(logger, "Flush command %02X", type);
                 type >>= 16;
-                //printf("Dispatcher, key: %d\n", type);
 
                 Array<CommandListener*> *arr = listeners.GetPtr(type);
                 if(arr){
                     for(int i=0; i<= arr->Count() - 1; i++){
                         CommandListener *listener = (*arr)[i];
                         if(listener){
-                            listener->handle(*command);
+                            try {
+                                listener->handle(*command);
+                            }catch(Exception & e)
+                            {
+                                smsc_log_info(logger, "Handler exception, key: %02X, %s", type, e.what());
+                            }catch(...)
+                            {
+                                smsc_log_info(logger, "Handler exception, key: %02X, Unexpected error", type);
+                            }
                         }
                     }
                 }
@@ -110,9 +122,10 @@ int CommandDispatcher::Execute()
                 if(command)
                     delete command;
 
-
             }
             commands.Clean();
+
+            smsc_log_info(logger, "Commands flushed");
     }
     
     while (!isStopping)
@@ -127,21 +140,29 @@ int CommandDispatcher::Execute()
 
             Command *command;
             int count = commands.Count();
+            smsc_log_info(logger, "Commands flushing, count: %d", count);
             for(int i=0; i<=count-1; i++){
                 
                 commands.Shift(command);
 
                 int type = command->getType();
-                //printf("\nDispatcher, type: %d\n", type);
+                smsc_log_info(logger, "Flush command %02X", type);
                 type >>= 16;
-                //printf("Dispatcher, key: %d\n", type);
 
                 Array<CommandListener*> *arr = listeners.GetPtr(type);
                 if(arr){
                     for(int i=0; i<= arr->Count() - 1; i++){
                         CommandListener *listener = (*arr)[i];
                         if(listener){
-                            listener->handle(*command);
+                            try {
+                                listener->handle(*command);
+                            }catch(Exception & e)
+                            {
+                                smsc_log_info(logger, "Handler exception, key: %02X, %s", type, e.what());
+                            }catch(...)
+                            {
+                                smsc_log_info(logger, "Handler exception, key: %02X, Unexpected error", type);
+                            }
                         }
                     }
                 }
@@ -152,6 +173,7 @@ int CommandDispatcher::Execute()
 
             }
             commands.Clean();
+            smsc_log_info(logger, "Commands flushed");
         }
         //printf("Dispatecher: command or timeout.\n");
     }

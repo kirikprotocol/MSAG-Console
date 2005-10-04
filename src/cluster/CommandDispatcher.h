@@ -11,6 +11,7 @@
 #include "core/buffers/Array.hpp"
 
 #include "Interconnect.h"
+#include "logger/Logger.h"
 
 namespace smsc { namespace cluster 
 {
@@ -22,7 +23,7 @@ namespace smsc { namespace cluster
     class CommandDispatcher : public Thread
     {
     private:
-
+        smsc::logger::Logger    *logger;
         EventMonitor        commandsMonitor;
         Array<Command *>    commands;
 
