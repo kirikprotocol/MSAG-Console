@@ -69,13 +69,13 @@ public class RuleManager
   {
     return subjects;
   }
-  public Rule getRule(String ruleId)
+  public Rule getRule(Long ruleId)
   {
     return (Rule) rules.get(ruleId);
   }
 
   public String getRuleTransportDir(String ruleId)
-  {       Rule r=(Rule) rules.get(ruleId);
+  {       Rule r=(Rule) rules.get(Long.decode(ruleId));
     return r.getTransport().toLowerCase();
   }
 
@@ -116,14 +116,14 @@ public class RuleManager
         String transport=el.getAttribute("transport");
         if (transport.equals(""))
              throw new SibincoException("Root element "+el.getTagName()+" not contain attribute 'transport'");
-        String id=el.getAttribute("id");
-        if (id.equals(""))
+        String ruleId=el.getAttribute("id");
+        if (ruleId.equals(""))
             throw new SibincoException("Root element "+el.getTagName()+" not contain attribute 'id'");
         String fileId=fileName.substring(5,fileName.length()-4);
-        if (!fileId.equals(id))
-          throw new SibincoException("FileId "+fileId+" in name of file : "+fileName+" do not math with rule id:"+id);
-         if (id.length() > Constants.ROUTE_ID_MAXLENGTH)
-          throw new SibincoException("Rule id is too long: " + id.length() + " chars \"" + id + '"');
+        if (!fileId.equals(ruleId))
+          throw new SibincoException("FileId "+fileId+" in name of file : "+fileName+" do not math with rule id:"+ruleId);
+         if (ruleId.length() > Constants.ROUTE_ID_MAXLENGTH)
+          throw new SibincoException("Rule id is too long: " + ruleId.length() + " chars \"" + ruleId + '"');
         String prov=el.getAttribute("provider");
          if (prov.equals(""))
             throw new SibincoException("Root element "+el.getTagName()+" not contain attribute 'provider'");
@@ -144,7 +144,7 @@ public class RuleManager
           providerId=Long.decode(Utils.getNodeText(node));
         */
         Provider provider = (Provider) providerManager.getProviders().get(providerId);
-
+        Long id=Long.decode(ruleId);
         rules.put(id, new Rule(id,name, notes,provider,transport));
         logger.debug("exit " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
       }

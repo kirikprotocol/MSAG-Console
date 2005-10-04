@@ -28,10 +28,10 @@ public class Rule
   private Provider provider;
   private String transport;
   private String name;
-  private String id;
+  private Long id;
   private String notes;
 
-  public Rule(final String id,final String ruleName, final String notes, final Provider provider, final String transport)
+  public Rule(final Long id,final String ruleName, final String notes, final Provider provider, final String transport)
   {
     this.id=id;
     this.name=ruleName;
@@ -54,15 +54,23 @@ public class Rule
     this.notes = notes;
   }
 
-  public String getId()
+  public Long getIdLong()
    {
      return id;
    }
+  public void setIdLong(Long id)
+    {
+      this.id=id;
+    }
 
   public void setId(String id)
   {
-    this.id=id;
+    this.id=Long.decode(id);
   }
+  public String getId()
+     {
+       return String.valueOf(id);
+     }
 
   public String getName()
   {
