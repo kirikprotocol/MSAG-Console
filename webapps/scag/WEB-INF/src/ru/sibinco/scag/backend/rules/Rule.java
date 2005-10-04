@@ -28,34 +28,17 @@ public class Rule
   private Provider provider;
   private String transport;
   private String name;
+  private String id;
   private String notes;
 
-  public Rule(final String ruleName, final String notes, final Provider provider, final String transport)
+  public Rule(final String id,final String ruleName, final String notes, final Provider provider, final String transport)
   {
+    this.id=id;
     this.name=ruleName;
     this.notes=notes;
     this.transport = transport;
     this.provider = provider;
   }
-/*    public Rule(Element ruleElem) throws SibincoException
-  {
-    name = ruleElem.getAttribute("id");
-    if (name.length() > Constants.ROUTE_ID_MAXLENGTH) {
-      throw new SibincoException("Rule name is too long: " + name.length() + " chars \"" + name + '"');
-    }
-    transport=ruleElem.getAttribute("transport");
-    //long providerId=Long.decode(ruleElem.getAttribute("provider")).longValue();
-    NodeList providerList = ruleElem.getElementsByTagName("provider");
-    if (providerList.getLength() > 1) {
-          throw new SibincoException("Rule contains more then one provider");
-        }
-    long providerId=Long.decode(Utils.getNodeText(providerList.item(0))).longValue();
-    notes = "";
-    NodeList notesList = ruleElem.getElementsByTagName("note");
-    for (int i = 0; i < notesList.getLength(); i++)
-      notes += Utils.getNodeText(notesList.item(i));
-  }
-  */
   public Provider getProvider()
   {
     return provider;
@@ -73,12 +56,12 @@ public class Rule
 
   public String getId()
    {
-     return getName();
+     return id;
    }
 
   public void setId(String id)
   {
-    setName(id);
+    this.id=id;
   }
 
   public String getName()

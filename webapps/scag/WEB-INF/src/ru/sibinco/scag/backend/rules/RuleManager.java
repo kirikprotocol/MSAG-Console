@@ -87,8 +87,7 @@ public class RuleManager
     File wap= new File(rulesFolder,"wap");
     loadFromFolder(wap);
     File mms= new File(rulesFolder,"mms");
-
-      loadFromFolder(mms);
+    loadFromFolder(mms);
     } catch (SibincoException e) {
       e.printStackTrace();
       System.out.println("error on init RuleManager in method load(): "+e.getMessage());
@@ -115,13 +114,23 @@ public class RuleManager
         if (!el.getTagName().equals("scag:rule"))
            throw new SibincoException("Root element "+el.getTagName()+" not math with 'scag:rule'");
         String transport=el.getAttribute("transport");
+        if (transport.equals(""))
+             throw new SibincoException("Root element "+el.getTagName()+" not contain attribute 'transport'");
         String id=el.getAttribute("id");
+        if (id.equals(""))
+            throw new SibincoException("Root element "+el.getTagName()+" not contain attribute 'id'");
         String fileId=fileName.substring(5,fileName.length()-4);
         if (!fileId.equals(id))
           throw new SibincoException("FileId "+fileId+" in name of file : "+fileName+" do not math with rule id:"+id);
          if (id.length() > Constants.ROUTE_ID_MAXLENGTH)
           throw new SibincoException("Rule id is too long: " + id.length() + " chars \"" + id + '"');
-        Long providerId=Long.decode(el.getAttribute("provider"));
+        String prov=el.getAttribute("provider");
+         if (prov.equals(""))
+            throw new SibincoException("Root element "+el.getTagName()+" not contain attribute 'provider'");
+        Long providerId=Long.decode(prov);
+        String name=el.getAttribute("name");
+         if (name.equals(""))
+            throw new SibincoException("Root element "+el.getTagName()+" not contain attribute 'name'");
         //NodeList child=el.getElementsByTagName("note");
         String notes="";
       /*  for (int j = 0; j < child.getLength(); j++) {
@@ -136,7 +145,7 @@ public class RuleManager
         */
         Provider provider = (Provider) providerManager.getProviders().get(providerId);
 
-        rules.put(id, new Rule(id, notes,provider,transport));
+        rules.put(id, new Rule(id,name, notes,provider,transport));
         logger.debug("exit " + this.getClass().getName() + ".loadFromFile(\"" + fileName + "\")");
       }
 
