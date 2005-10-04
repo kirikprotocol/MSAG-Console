@@ -1,6 +1,8 @@
 package ru.sibinco.scag.beans.rules.applet;
 
 
+import ru.sibinco.scag.backend.SCAGAppContext;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServlet;
@@ -42,6 +44,7 @@ public class myServlet extends HttpServlet
   protected static final int LineSeparator = 21;
   protected static final int SeparatorChar = 22;
   protected static final int OsName = 23;
+  protected static final int Transport = 24;
 
   // public static String userdir=null;
   // private static String settingsDirectory;
@@ -49,42 +52,36 @@ public class myServlet extends HttpServlet
                           HttpServletResponse res)
           throws ServletException,IOException
   { String file=req.getParameter("file");
-    String[] list;
+    String[] list=null;
     LinkedList li;
     int command=Integer.parseInt(req.getParameter("command"));
    // System.out.println("myServlet Get file= "+file+" command= "+command);
     res.setContentType("text/html; charset=windows-1251");
     if(file!=null) {
-      if (command==ParseXml) {
-        li=ParseXml(file);
-        String status=(String)li.get(0);
-        res.setHeader("status",status);
-        if (status.equals("ok")) {
-          PrintWriter out = res.getWriter();
-          for (int i = 1; i < li.size(); i++) {
-            out.println(li.get(i));
-            //  System.out.println("myServlet li["+i+"]= "+li.get(i)+" command= "+command);
-          }
+       switch (command)
+    {
+       case ParseXml: li=ParseXml(file); String status=(String)li.get(0);res.setHeader("status",status);
+        if (status.equals("ok")) { PrintWriter out = res.getWriter();
+          for (int i = 1; i < li.size(); i++)
+            out.println(li.get(i)); //  System.out.println("myServlet li["+i+"]= "+li.get(i)+" command= "+command);
           out.flush(); out.close();
-        }
-      }
-      else {
+        }   break;
+      case Transport : list=getTransport(file,req);break;
+      case SaveBackup: list=SaveBackup(new File(file), req); break;
+      default:
         if (req.getParameter("renameto")!=null) list=RenameTo(new File(file),new File(req.getParameter("renameto")));
-        else  if (command==SaveBackup) list=SaveBackup(new File(file), req);
         else if (req.getParameter("intparam")!=null) list=FilesCommand(file,command,Integer.parseInt(req.getParameter("intparam")));
         else list=FilesCommand(new File(file),command);
+    }
+
         if (list!=null) {
         PrintWriter out = res.getWriter();
         System.out.println("myServlet file= "+file+" command= "+command);
-        for (int i = 0; i < list.length; i++) {
-          out.println(list[i]);
-           if (command==14)  System.out.println("myServlet list["+i+"]= "+list[i]+" command= "+command);
-        }
+        for (int i = 0; i < list.length; i++)
+          out.println(list[i]); //if (command==14)  System.out.println("myServlet list["+i+"]= "+list[i]+" command= "+command);
         out.flush(); out.close();
       }
-      }
     }
-
     //  doRequest(req, res);
   }
 
@@ -200,7 +197,7 @@ public class myServlet extends HttpServlet
       case FileEncoding   : list[0]=System.getProperty("file.encoding"); return list;
       case LineSeparator  : list[0]=System.getProperty("line.separator"); return list;
       case OsName         : list[0]=System.getProperty("os.name"); return list;
-      case SeparatorChar  : list[0]=String.valueOf(File.separatorChar); return list;  
+      case SeparatorChar  : list[0]=String.valueOf(File.separatorChar); return list;
       case LastModifed    : long last=autosaveFile.lastModified();
         result=String.valueOf(last);list[0]=result;return list;
       case Length         : long len=autosaveFile.length();
@@ -221,6 +218,14 @@ public class myServlet extends HttpServlet
     list[0]=result; System.out.println("result= "+result);return list;
   }
 
+  private String[] getTransport(String id,HttpServletRequest req) {
+    String result="false";
+    String[] list=new String[1];
+    list[0]=result;
+    SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
+    list[0]=appContext.getRuleManager().getRuleTransportDir(id); //transport
+    return list;
+  }
   private String[] SaveBackup(final File source, HttpServletRequest req)
   {
     String result="false";
