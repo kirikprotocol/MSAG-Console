@@ -216,7 +216,7 @@ Targets:
      <copy todir="${DISTR_DIR}/applet">
        <fileset dir="${WEBSRC_DIR}/jedit/dirs" includes="**/*"/>
      </copy>
-   <rmdir dir="${JEDIT_DIR}/build"/>
+   <delete dir="${JEDIT_DIR}/build/org/gjt/sp"/>
    <mkdir dir="${JEDIT_DIR}/build"/>
     <unjar src="${htmlparser_lib}" dest="${JEDIT_DIR}/build"/>		    
     <javac
