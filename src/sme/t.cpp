@@ -862,6 +862,7 @@ public:
       s.getDestinationAddress().toString(buf,sizeof(buf));
       printf("To:%s\n",buf);
       printf("DCS:%d\n",s.getIntProperty(Tag::SMPP_DATA_CODING));
+      printf("EsmClass:%x\n",s.getIntProperty(Tag::SMPP_ESM_CLASS));
       if(s.hasIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE))
       {
         printf("UMR:%d\n",s.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE));
@@ -1878,6 +1879,7 @@ int main(int argc,char* argv[])
       pdu.get_header().set_commandId(SmppCommandSet::UNBIND);
       pdu.get_header().set_sequenceNumber(ss.getNextSeq());
       SmppHeader *resp=tr->sendPdu((SmppHeader*)&pdu);
+      ss.getAsyncTransmitter()->sendPdu((SmppHeader*)&pdu);
       if(resp)
       {
         printf("Unbind response:status=%#x\n",resp->get_commandStatus());
