@@ -11,3 +11,4 @@
 -core/test/map map -lthread -lcore-threads
 -core/test/a a -lthread -lcore-threads
 core/test/qtest qtest -lcore-threads -lthread
+core/test/fixedrecord fixedrecord
