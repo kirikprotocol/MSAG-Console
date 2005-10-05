@@ -28,7 +28,7 @@ void SMachine::Stop()
   stopIt_ = IS_STOPPING;
 }
 
-SMachine::SMachine(Queue& que,Mixer& mixer,const ProxyConfig& pconf) 
+SMachine::SMachine(Queue& que,Mixer& mixer,const ProxyConfig& pconf)
 :config_(pconf), que_(que), mixer_(mixer)
 {
   stopIt_ = IS_STOPPED;
@@ -39,7 +39,7 @@ SMachine::~SMachine()
 }
 
 /// ждет несколько миллисекунд
-void MicroSleep() 
+void MicroSleep()
 {
 #if defined _WIN32
   Sleep(10);
@@ -50,7 +50,7 @@ void MicroSleep()
 }
 
 /// ждет несколько секунд
-void MacroSleep() 
+void MacroSleep()
 {
 #if defined _WIN32
   Sleep(3000);
