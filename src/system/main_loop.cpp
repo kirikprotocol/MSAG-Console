@@ -96,7 +96,7 @@ void Smsc::mainLoop()
 
   time_t lastTimeStatCheck=last_tm;
 
-  for(;;)
+  while(!stopFlag)
   {
     if(enqueueVector.size())
     {
