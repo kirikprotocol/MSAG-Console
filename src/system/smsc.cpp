@@ -254,11 +254,15 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 
           const char * p = strchr(node, '=');
 
+          if( !p )
+              throw Exception("Command line parameter is failed");
+
           int num1 = 0;
           try {
               smsc_log_info(log, "node: %s, num: %s", node, p+ 1 );
               num1 = atoi(p + 1);
           }catch(...){
+              throw Exception("Exception atoi");
           }
 
           --num1;
