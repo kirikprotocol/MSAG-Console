@@ -50,40 +50,40 @@ void RollingDayAppender::clearLogDir(time_t dat)
 
                     // Saves old files
                     time_t fdate;
-				    tm rtm;
-				    rtm.tm_year = year - 1900;
-				    rtm.tm_mon = month - 1;
-				    rtm.tm_mday = day;
-				    rtm.tm_hour = 0;
-				    rtm.tm_min = 0;
-				    rtm.tm_sec = 0;
-				    rtm.tm_isdst = -1;
-				    fdate = mktime(&rtm);
-				    
-				    int delay = (int)( difftime(date_, fdate)/(3600.*24.) );
-				    //printf("delay: %d\n", delay);
-				    if(delay >= maxBackupIndex){
+            tm rtm;
+            rtm.tm_year = year - 1900;
+            rtm.tm_mon = month - 1;
+            rtm.tm_mday = day;
+            rtm.tm_hour = 0;
+            rtm.tm_min = 0;
+            rtm.tm_sec = 0;
+            rtm.tm_isdst = -1;
+            fdate = mktime(&rtm);
+
+            int delay = (int)( difftime(date_, fdate)/(3600.*24.) );
+            //printf("delay: %d\n", delay);
+            if(delay >= maxBackupIndex){
                         if(pathname.length() == 0)
                             fnames.push_back(std::string(dp->d_name));
                         else
                             fnames.push_back(pathname + std::string("/") + std::string(dp->d_name));
                     }
-			    
-		    }
+
+        }
       } else {
           if (errno == 0) {
               closedir(dirp);
-			  break;             // NOT_FOUND;
-		  }
+        break;             // NOT_FOUND;
+      }
           closedir(dirp);
-		  break;
-	  }
+      break;
+    }
   }
 
   // Removes old files
   std::vector<std::string>::iterator it = fnames.begin();
   for(it = fnames.begin(); it != fnames.end(); it++)
-	remove((*it).c_str());
+  remove((*it).c_str());
 }
 
 
@@ -102,7 +102,12 @@ RollingDayAppender::RollingDayAppender(const char * const _name, const Propertie
     filename = cStringCopy("smsc.log");
 
   date_ = time(0);
-  tm rtm; localtime_r(&date_, &rtm);
+  tm rtm;
+#ifdef _WIN32
+  rtm=*localtime(&date_);
+#else
+  localtime_r(&date_, &rtm);
+#endif
   int year = rtm.tm_year + 1900;
   int month = rtm.tm_mon + 1;
   int day = rtm.tm_mday;
@@ -128,8 +133,14 @@ void RollingDayAppender::rollover(time_t dat) throw()
   if(maxBackupIndex > 0)
     clearLogDir(dat);
 
-  tm rtm; localtime_r(&dat, &rtm);
+  tm rtm;
+#ifdef _WIN32
+  rtm=*localtime(&dat);
+#else
+  localtime_r(&dat, &rtm);
+#endif
   int year = rtm.tm_year + 1900;
+
   int month = rtm.tm_mon + 1;
   int day = rtm.tm_mday;
   rtm.tm_hour = 0;
@@ -153,6 +164,7 @@ void RollingDayAppender::log(const char logLevelName, const char * const categor
   DWORD thrId=GetCurrentThreadId();
   time_t t=time(NULL);
   struct tm lcltm=*localtime(&t);
+  struct tm ltm=*localtime(&t);
   SYSTEMTIME stm;
   GetLocalTime(&stm);
   int msec=stm.wMilliseconds;

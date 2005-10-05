@@ -166,8 +166,9 @@ public:
   }
   int Execute()
   {
-
+#ifndef _WIN32
     sigset(16,sigdisp);
+#endif
     SmppHeader *pdu;
     running=true;
     while(!stopped)
@@ -715,7 +716,9 @@ public:
     reader.Stop();
     writer.Stop();
     socket.Close();
+#ifndef _WIN32
     reader.Kill(16);
+#endif
     if(reader.isRunning())reader.WaitFor();
     if(reader.isRunning())writer.WaitFor();
     closed=true;
