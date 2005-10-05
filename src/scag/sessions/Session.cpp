@@ -5,24 +5,24 @@ namespace scag { namespace sessions {
 
 using namespace scag::re;
 
-void Operation::detachBill(const Bill& bill)
+void Operation::detachBill(int BillId)
 {
-    for (std::list<Bill>::iterator it = BillList.begin();it!=BillList.end(); ++it)
+    for (std::list<int>::iterator it = BillList.begin();it!=BillList.end(); ++it)
     {
-        if ((*it)==bill) 
+        if ((*it)==BillId) 
         {
             BillList.erase(it);
             
-            smsc_log_debug(logger,"Operation: Bill %d detached",bill.bill_id);
+            smsc_log_debug(logger,"Operation: Bill %d detached",BillId);
             return;
         }
     }
 }
 
-void Operation::attachBill(const Bill& bill)
+void Operation::attachBill(int BillId)
 { 
-    BillList.push_front(bill);             
-    smsc_log_debug(logger,"Operation: Bill %d attached",bill.bill_id);
+    BillList.push_front(BillId);             
+    smsc_log_debug(logger,"Operation: Bill %d attached",BillId);
 }
 
 
@@ -31,7 +31,7 @@ void Operation::rollbackAll()
     smsc_log_debug(logger,"Operation: Rollback all");
     
     BillingManager& bm = BillingManager::Instance();
-    for (std::list<Bill>::iterator it = BillList.begin();it!=BillList.end(); ++it)
+    for (std::list<int>::iterator it = BillList.begin();it!=BillList.end(); ++it)
     {
         bm.rollback(*it);
     }     

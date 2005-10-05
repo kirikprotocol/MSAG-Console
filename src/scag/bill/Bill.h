@@ -6,7 +6,7 @@
 
 namespace scag { namespace bill
 {
-    struct Bill
+ /*   struct Bill
     {
         uint8_t     machine_id;
         uint64_t    bill_id;
@@ -16,7 +16,7 @@ namespace scag { namespace bill
             return ((bill.bill_id == this->bill_id) && (bill.machine_id == this->machine_id));
         }
 
-    };
+    };       */
 
     struct BillKey
     {

@@ -5,7 +5,6 @@
 #include <scag/util/singleton/Singleton.h>
 
 #include "BillingManager.h"
-#include "BillingMachine.h"
 #include "scag/re/RuleEngine.h"
 
 #include <sys/types.h>
@@ -37,9 +36,7 @@ namespace scag { namespace bill
 
     class BillingManagerImpl : public BillingManager
     {
-        IntHash<BillingMachine *> machines; // User's billing machines by their ids
         bool isValidFileName(const std::string& fname);
-        void LoadBillingMachine(const char * dlpath,const std::string& cfg_dir, ActionFactory& mainActionFactory);
 
         static const char* MACHINE_INIT_FUNCTION;
         static smsc::logger::Logger *logger;
@@ -52,8 +49,8 @@ namespace scag { namespace bill
         virtual ~BillingManagerImpl();
 
         void init(BillingManagerConfig& config);
-        virtual void rollback(const Bill& bill);
-        virtual void commit(const Bill& bill);
+        virtual void rollback(int BillId);
+        virtual void commit(int BillId);
      };
 
 const char* BillingManagerImpl::MACHINE_INIT_FUNCTION = "initBillingMachine";
@@ -103,53 +100,6 @@ bool BillingManagerImpl::isValidFileName(const std::string& fname)
     return (fname.substr(fname.size() - 3,3) == ".so");
 }
 
-
-
-void BillingManagerImpl::LoadBillingMachine(const char * dlpath,const std::string& cfg_dir, ActionFactory& mainActionFactory)
-{
-    MutexGuard guard(loadupLock);
-
-    smsc_log_info(logger, "Loading '%s' library", dlpath);
-    void* dlhandle = dlopen(dlpath, RTLD_LAZY);
-    if (dlhandle)
-    {
-        initBillingMachineFn fnhandle =
-            (initBillingMachineFn)dlsym(dlhandle, MACHINE_INIT_FUNCTION);
-        if (fnhandle)
-        {
-            int id = machines.Count();
-            BillingMachine* billingMachine = (*fnhandle)(id,cfg_dir);
-            if (billingMachine)
-            {
-                machines.Insert(id,billingMachine);
-                mainActionFactory.registerChild(billingMachine->getActionFactory());
-            }
-            else
-            {
-                smsc_log_error(logger, "Load of '%s' library. Call to initBillingMachine failed ! ", dlpath);
-                dlclose(dlhandle);
-                throw SCAGException("Cannot load billing machine '%s'",dlpath);
-            }
-        }
-        else
-        {
-            smsc_log_error(logger, "Load of '%s' library. Call to dlsym() failed ! ", dlpath);
-            dlclose(dlhandle);
-            throw SCAGException("Cannot load billing machine '%s'",dlpath);
-        }
-    }
-    else
-    {
-        char buf[256];
-        smsc_log_error(logger, "Load of '%s' at '%s' library. Call to dlopen() failed:%s ! ", dlpath,getcwd(buf,sizeof(buf)),dlerror());
-        throw SCAGException("Cannot load billing machine '%s'",dlpath);
-    }
-
-    (void)handles.Push(dlhandle);
-    smsc_log_info(logger, "Loading '%s' library done.", dlpath);
-}
-
-
 void BillingManagerImpl::init(BillingManagerConfig& config) // possible throws exceptions
 {
     // TODO: loadup all so modules from so_dir, call MACHINE_INIT_FUNCTION,
@@ -159,71 +109,18 @@ void BillingManagerImpl::init(BillingManagerConfig& config) // possible throws e
     if (!logger)
       logger = Logger::getInstance("scag.bill.BillingManager");
 
-    DIR * pDir = 0;
-    dirent * pDirEnt = 0;
-    int ruleId = 0;
-
-    pDir = opendir(config.so_dir.c_str());
-    /*
-    if (!config.mainActionFactory) 
-    {
-        smsc_log_error(logger, "Fatal Error: Main Action Factory is invalid");
-        return;
-    } */
-
-    if (!pDir) 
-    {
-        smsc_log_error(logger, "Invalid directory '%s'", config.so_dir.c_str());
-        return;
-    }
-
-
-
-    while (pDir)
-    {
-        pDirEnt = readdir(pDir);
-        if (pDirEnt)
-        {
-            if (isValidFileName(pDirEnt->d_name))
-            {
-                std::string fileName = config.so_dir;
-                fileName.append("/");
-                fileName.append(pDirEnt->d_name);
-                try
-                {
-                    LoadBillingMachine(fileName.c_str(),config.cfg_dir,RuleEngine::Instance().getActionFactory());
-                } 
-                catch (SCAGException& e)
-                {
-                    smsc_log_error(logger,e.what());
-                }
-            }
-            else if ((strcmp(pDirEnt->d_name,".")!=0)&&(strcmp(pDirEnt->d_name,"..")!=0))
-            {
-                smsc_log_error(logger, "Invalid file name '%s'", pDirEnt->d_name);
-            }
-         }
-         else
-         {
-             closedir(pDir);
-             smsc_log_info(logger,"Billing manager inited");
-             return;
-         }
-    }
-
-    closedir(pDir);
     smsc_log_info(logger,"Billing manager inited");
 }
 
-void BillingManagerImpl::rollback(const Bill& bill) // possible throws exceptions
+void BillingManagerImpl::rollback(int BillId) // possible throws exceptions
 {
     // TODO: dispath call to billing machine by bill.machine_id
-    if (!machines.Exist(bill.machine_id)) return;
+   /* if (!machines.Exist(bill.machine_id)) return;
     BillingMachine * bm = machines.Get(bill.machine_id);
-    bm->rollback(bill);
+    bm->rollback(bill);                            */
 }
 
-void BillingManagerImpl::commit(const Bill& bill)
+void BillingManagerImpl::commit(int BillId)
 {
 
 }

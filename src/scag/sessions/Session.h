@@ -75,10 +75,10 @@ namespace scag { namespace sessions
     {
         Logger * logger;
         Operation(const Operation& operation);
-        std::list <Bill> BillList;
+        std::list <int> BillList;
     public:
-        void attachBill(const Bill& bill); 
-        void detachBill(const Bill& bill);
+        void attachBill(int BillId); 
+        void detachBill(int BillId);
         void rollbackAll();
         ~Operation() {rollbackAll();}
         Operation() :logger(0) {logger = Logger::getInstance("scag.re");};
