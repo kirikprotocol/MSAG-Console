@@ -1,8 +1,8 @@
 // Class CommandUnregSme
 // created by Vitaly on 06.04.05
 
-#ifndef _CommandUnregSme_H
-#define	_CommandUnregSme_H
+#ifndef SCAG_CommandUnregSme_H
+#define	SCAG_CommandUnregSme_H
 
 #include "Abstract_CommandSmscInfo.h"
 #include "CommandIds.h"

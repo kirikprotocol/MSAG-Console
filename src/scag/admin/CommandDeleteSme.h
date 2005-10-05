@@ -5,29 +5,24 @@
 // Created on 31 Август 2004 г., 17:55
 //
 
-#ifndef _CommandDeleteSme_H
-#define	_CommandDeleteSme_H
+#ifndef SCAG_CommandDeleteSme_H
+#define	SCAG_CommandDeleteSme_H
 
 #include <xercesc/dom/DOM.hpp>
-#include "smeman/smetypes.h"
-//#include "admin/protocol/Command.h"
 #include "SCAGCommand.h"
-
-using smsc::smeman::SmeSystemId;
+#include "Abstract_CommandSmeInfo.h"
   
 namespace scag {
 namespace admin {
 
-class CommandDeleteSme : public scag::admin::SCAGCommand 
+class CommandDeleteSme : public SCAGCommand
 {
 public:
   CommandDeleteSme(const xercesc::DOMDocument * const document);
-
-  const SmeSystemId& getSmeSystemId() const {return systemid;}
   virtual Response * CreateResponse(scag::Scag * SmscApp);
+protected:
+    std::string systemId;
 
-private:
-  SmeSystemId systemid;
 };
 
 }

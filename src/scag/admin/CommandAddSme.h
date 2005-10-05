@@ -5,8 +5,8 @@
 // Created on 31 Август 2004 г., 17:54
 //
 
-#ifndef _CommandAddSme_H
-#define	_CommandAddSme_H
+#ifndef SCAG_CommandAddSme_H
+#define	SCAG_CommandAddSme_H
 
 #include "Abstract_CommandSmeInfo.h"
 #include "CommandIds.h"

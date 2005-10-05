@@ -5,8 +5,8 @@
 // Created on 31 Август 2004 г., 18:07
 //
 
-#ifndef _Abstract_CommandSmeInfo_H
-#define	_Abstract_CommandSmeInfo_H
+#ifndef SCAG_Abstract_CommandSmeInfo_H
+#define	SCAG_Abstract_CommandSmeInfo_H
 
 #include <xercesc/dom/DOM.hpp>
 #include "SCAGCommand.h"

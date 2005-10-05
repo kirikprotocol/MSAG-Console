@@ -18,13 +18,14 @@ using namespace smsc::util::xml;
 Response * CommandAddSme::CreateResponse(scag::Scag * SmscApp)
 {
   try {
+      smsc_log_info(logger, "CommandAddSme is processing...");
       SmscApp->getSmppManagerAdmin()->addSmppEntity(getSmppEntityInfo());
-  }catch(Exception e){
-      // failed casting SmppManager to SmppManagerAdmin
-      // get description from e.what()
+  }catch(Exception& e){
+      smsc_log_info(logger, "CommandAddSme exception, %s", e.what());
   }catch(...){
-      //Unknown exception
+      smsc_log_info(logger, "CommandAddSme exception, Unknown exception.");
   }
+  smsc_log_info(logger, "CommandAddSme is processed ok");
   return new Response(Response::Ok, "none");
 }
 

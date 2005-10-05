@@ -56,8 +56,7 @@ inline char* getEncodedString(const char* const src)
 CommandTraceRoute::CommandTraceRoute(const xercesc::DOMDocument * doc)  
   : SCAGCommand((Command::Id)CommandIds::traceRoute)
 {
-  smsc_log_debug(logger, "TraceRoute command");
-  fprintf(stderr,"---- Entered CommandTraceRoute Constructor \n");
+  smsc_log_info(logger, "CommandStatusSme got parameters:");
 
   try {
     DOMElement *elem = doc->getDocumentElement();
@@ -68,19 +67,24 @@ CommandTraceRoute::CommandTraceRoute(const xercesc::DOMDocument * doc)
       XmlStr name(paramElem->getAttribute(XmlStr("name")));
       std::auto_ptr<char> value(getNodeText(*paramElem));
 
-      if (::strcmp("srcAddress", name) == 0)
+      if (::strcmp("srcAddress", name) == 0){
         srcAddr = value.get();
-      if (::strcmp("dstAddress", name) == 0)
+        smsc_log_info(logger, "srcAddress: %s", value.get());
+      }
+      if (::strcmp("dstAddress", name) == 0){
         dstAddr = value.get();
-      if (::strcmp("srcSysId", name) == 0) 
+        smsc_log_info(logger, "dstAddress: %s", value.get());
+      }
+      if (::strcmp("srcSysId", name) == 0){ 
         srcSysId = value.get();
-      fprintf(stderr,"---- Passer reading document paramener %d \n",i);
+        smsc_log_info(logger, "srcSysId: %s", value.get());
+      }
 
     }
   } catch (...) {
+      smsc_log_info(logger, "CommandTraceRoute exception, unknown exception");
     throw AdminException("Some exception occured");
   }
-  fprintf(stderr,"---- -6");
 
 }
 
@@ -91,12 +95,13 @@ CommandTraceRoute::~CommandTraceRoute()
 
 Response * CommandTraceRoute::CreateResponse(scag::Scag * ScagApp)
 {
+  smsc_log_info(logger, "CommandTraceRoute is processing...");
   const char* _srcAddr  = srcAddr.data();
   const char* _dstAddr  = dstAddr.data();
   const char* _srcSysId = srcSysId.data();
 
-  fprintf(stderr,"---- Entered GetTraceResult()");
-  fprintf(stderr,"---- Received command parameters: %s,%s,%s \n",srcAddr.data(),dstAddr.data(),srcSysId.data());
+  smsc_log_info(logger, "---- Entered GetTraceResult()");
+  smsc_log_info(logger, "---- Received command parameters: %s,%s,%s \n",srcAddr.data(),dstAddr.data(),srcSysId.data());
 
 
   try
@@ -113,12 +118,10 @@ Response * CommandTraceRoute::CreateResponse(scag::Scag * ScagApp)
       // 2..: Trace (if any)
 
       smsc::admin::service::Variant result(smsc::admin::service::StringListType);
-      fprintf(stderr,"---- Initialized GetTraceResult() \n");
 
 
       Address dealiased;
       char addrBuf[MAX_ADDRESS_VALUE_LENGTH+5];
-      string dealiasText="There are no aliases for this address";
 
       /*if(SmscApp->AliasToAddress(Address(_dstAddr),dealiased))
       {
@@ -200,18 +203,23 @@ Response * CommandTraceRoute::CreateResponse(scag::Scag * ScagApp)
       for (int i=0; i<traceBuff.size(); i++)
           result.appendValueToStringList(traceBuff[i].c_str());*/
 
+      smsc_log_info(logger, "CommandTraceRoute is processed ok");
       return new Response(Response::Ok, result);
   }
   catch (AdminException& aexc) {
+      smsc_log_info(logger, "CommandTraceRoute exception, %s", aexc.what());
       throw;
   }
   catch (ConfigException& cexc) {
+      smsc_log_info(logger, "CommandTraceRoute exception, %s", cexc.what());
       throw AdminException("Load routes config file failed. Cause: %s", cexc.what());
   }
   catch (std::exception& exc) {
+      smsc_log_info(logger, "CommandTraceRoute exception, %s", exc.what());
       throw AdminException("Trace route failed. Cause: %s.", exc.what());
   }
   catch (...) {
+      smsc_log_info(logger, "CommandTraceRoute exception, unknown exception");
       throw AdminException("Trace route failed. Cause is unknown.");
   }
 

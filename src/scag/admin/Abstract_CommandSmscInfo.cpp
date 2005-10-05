@@ -21,7 +21,8 @@ using namespace smsc::util::xml;
 Abstract_CommandSmscInfo::Abstract_CommandSmscInfo(const Command::Id id, const xercesc::DOMDocument * const document)
   : SCAGCommand(id)
 {
-  smsc::logger::Logger *log = smsc::logger::Logger::getInstance("Command");
+
+  smsc_log_info(logger, "Abstract_CommandSmscInfo got parameters:");
   try {
     DOMElement *elem = document->getDocumentElement();
     DOMNodeList *list = elem->getElementsByTagName(XmlStr("param"));
@@ -30,13 +31,19 @@ Abstract_CommandSmscInfo::Abstract_CommandSmscInfo(const Command::Id id, const x
       XmlStr name(paramElem->getAttribute(XmlStr("name")));
       std::auto_ptr<char> value(getNodeText(*paramElem));
 
-      if (::strcmp("systemId", name) == 0)
+      if (::strcmp("systemId", name) == 0){
         strcpy(smppEntityInfo.systemId, value.get());
-      if (::strcmp("password", name) == 0)
+        smsc_log_info(logger, "systemId: %s", value.get());
+      }
+      if (::strcmp("password", name) == 0){
         strcpy(smppEntityInfo.password, value.get());
+        smsc_log_info(logger, "password: %s", value.get());
+      }
 
-      if (::strcmp("timeout", name) == 0)
+      if (::strcmp("timeout", name) == 0){
         smppEntityInfo.timeOut = atoi(value.get());
+        smsc_log_info(logger, "timeout: %d", smppEntityInfo.timeOut);
+      }
             
       if (::strcmp("mode", name) == 0) {
         if (::strcmp("trx", value.get()) == 0)
@@ -47,17 +54,26 @@ Abstract_CommandSmscInfo::Abstract_CommandSmscInfo(const Command::Id id, const x
           smppEntityInfo.bindType = scag::transport::smpp::btReceiver;
         else
           smppEntityInfo.bindType = scag::transport::smpp::btTransceiver;
+        smsc_log_info(logger, "mode: %s, %d", value.get(), smppEntityInfo.bindType);
       }
 
-      if (::strcmp("host", name) == 0)
+      if (::strcmp("host", name) == 0){
         strcpy(smppEntityInfo.host, value.get());
-      if (::strcmp("port", name) == 0)
+        smsc_log_info(logger, "host: %s", value.get());
+      }
+      if (::strcmp("port", name) == 0){
         smppEntityInfo.port = atoi(value.get());
+        smsc_log_info(logger, "port: %d", smppEntityInfo.port);
+      }
       
-      if (::strcmp("altHost", name) == 0)
+      if (::strcmp("altHost", name) == 0){
         strcpy(smppEntityInfo.altHost, value.get());
-      if (::strcmp("altPort", name) == 0)
+        smsc_log_info(logger, "altHost: %s", value.get());
+      }
+      if (::strcmp("altPort", name) == 0){
         smppEntityInfo.altPort = atoi(value.get());
+        smsc_log_info(logger, "altPort: %d", smppEntityInfo.altPort);
+      }
     }
 
     smppEntityInfo.type = scag::transport::smpp::etSmsc;

@@ -1,8 +1,8 @@
 // Class CommandModifySmsc
 // created by Vitaly on 19.04.05
 
-#ifndef _CommandModifySmsc_H
-#define	_CommandModifySmsc_H
+#ifndef SCAG_CommandModifySmsc_H
+#define	SCAG_CommandModifySmsc_H
 
 #include "Abstract_CommandSmscInfo.h"
 #include "CommandIds.h"

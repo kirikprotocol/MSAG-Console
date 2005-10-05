@@ -18,7 +18,7 @@ using namespace smsc::util::xml;
 CommandApply::CommandApply(const xercesc::DOMDocument * doc)  
   : SCAGCommand((Command::Id)CommandIds::apply)
 {
-  smsc_log_debug(logger, "Apply command");
+  smsc_log_info(logger, "CommandAddSme got parameters:");
   subj = CommandApply::unknown;
   try {
     DOMElement *elem = doc->getDocumentElement();
@@ -39,6 +39,8 @@ CommandApply::CommandApply(const xercesc::DOMDocument * doc)
           subj = CommandApply::smscs;
         else
           subj = CommandApply::unknown;
+
+        smsc_log_info(logger, "subj: %s, %d", value.get(), subj);
           
       }
     }
@@ -56,6 +58,8 @@ CommandApply::~CommandApply()
 
 Response * CommandApply::CreateResponse(scag::Scag * SmscApp)
 {
+  smsc_log_info(logger, "CommandApply is processing...");
+  smsc_log_info(logger, "CommandApply is processed ok");
   return new Response(Response::Ok, "none");
 }
 

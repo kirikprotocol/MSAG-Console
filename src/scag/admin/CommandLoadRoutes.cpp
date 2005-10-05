@@ -38,9 +38,13 @@ CommandLoadRoutes::CommandLoadRoutes(const xercesc::DOMDocument * doc)
 
 Response * CommandLoadRoutes::CreateResponse(scag::Scag * SmscApp)
 {
+    smsc_log_info(logger, "CommandLoadRoutes is processing");
+
+    smsc::admin::service::Variant result(smsc::admin::service::StringListType);
+    result.appendValueToStringList("Routes configuration successfully loaded");
+
   try
   {
-
       ConfigManager& cfg = ConfigManager::Instance();
       cfg.reloadConfig(scag::config::ROUTE_CFG);
 
@@ -62,21 +66,26 @@ Response * CommandLoadRoutes::CreateResponse(scag::Scag * SmscApp)
 
       //for (int i=0; i<traceBuff.size(); i++)
       //    result.appendValueToStringList(traceBuff[i].c_str());
-
-      return new Response(Response::Ok, result);
   }
   catch (AdminException& aexc) {
+      smsc_log_info(logger, "CommandLoadRoutes exception, %s", aexc.what());
       throw;
   }
   catch (ConfigException& cexc) {
+      smsc_log_info(logger, "CommandLoadRoutes exception, %s", cexc.what());
       throw AdminException("Load routes config file failed. Cause: %s", cexc.what());
   }
   catch (std::exception& exc) {
+      smsc_log_info(logger, "CommandLoadRoutes exception, %s", exc.what());
       throw AdminException("Load routes failed. Cause: %s.", exc.what());
   }
   catch (...) {
+      smsc_log_info(logger, "CommandLoadRoutes exception, unknown exception.");
       throw AdminException("Load routes failed. Cause is unknown.");
   }
+
+  smsc_log_info(logger, "CommandLoadRoutes is processed ok");
+  return new Response(Response::Ok, result);
 
 }
 

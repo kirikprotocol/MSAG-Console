@@ -1,8 +1,8 @@
 // Class CommandStatusSme
 // created by Vitaly on 23.03.05
 
-#ifndef _CommandStatusSme_H
-#define	_CommandStatusSme_H
+#ifndef SCAG_CommandStatusSme_H
+#define	SCAG_CommandStatusSme_H
 
 #include "Abstract_CommandSmeInfo.h"
 #include "CommandIds.h"

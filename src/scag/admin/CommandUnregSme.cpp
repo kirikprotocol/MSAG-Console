@@ -12,7 +12,15 @@ namespace admin {
 
 Response * CommandUnregSme::CreateResponse(scag::Scag * SmscApp)
 { 
-  SmscApp->getSmppManagerAdmin()->deleteSmppEntity(smppEntityInfo.systemId);
+  smsc_log_info(logger, "CommandUnregSme is processing...");
+  try {
+      SmscApp->getSmppManagerAdmin()->updateSmppEntity(getSmppEntityInfo());
+  }catch(Exception& e){
+      smsc_log_info(logger, "CommandUnregSme exception, %s", e.what());
+  }catch(...){
+      smsc_log_info(logger, "CommandUnregSme exception, Unknown exception.");
+  }
+  smsc_log_info(logger, "CommandUnregSme is processed");
   return new Response(Response::Ok, "none");
   
 }

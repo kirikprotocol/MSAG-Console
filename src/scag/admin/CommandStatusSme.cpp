@@ -18,8 +18,11 @@ using namespace smsc::util::xml;
 
 Response * CommandStatusSme::CreateResponse(scag::Scag * ScagApp)
 {
+  smsc_log_info(logger, "CommandStatusSme is processing...");
   Variant result(smsc::admin::service::StringListType);
   //((SmeManager*)(SmscApp->getSmeAdmin()))->statusSme(result);
+
+  smsc_log_info(logger, "CommandStatusSme processed ok");
 
     return new Response(Response::Ok, result);
 }

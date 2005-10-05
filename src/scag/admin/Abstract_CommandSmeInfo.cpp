@@ -22,6 +22,8 @@ using namespace smsc::util::xml;
 Abstract_CommandSmeInfo::Abstract_CommandSmeInfo(const Command::Id id, const xercesc::DOMDocument * const document)
   : SCAGCommand(id)
 {
+    smsc_log_info(logger, "Abstract_CommandSmeInfo got parameters:");
+
   try {
     DOMElement *elem = document->getDocumentElement();
     DOMNodeList *list = elem->getElementsByTagName(XmlStr("param"));
@@ -29,14 +31,20 @@ Abstract_CommandSmeInfo::Abstract_CommandSmeInfo(const Command::Id id, const xer
       DOMElement *paramElem = (DOMElement*) list->item(i);
       XmlStr name(paramElem->getAttribute(XmlStr("name")));
       std::auto_ptr<char> value(getNodeText(*paramElem));
-      if (::strcmp("systemId", name) == 0)
+      if (::strcmp("systemId", name) == 0){
         strcpy(smppEntityInfo.systemId, value.get());
+        smsc_log_info(logger, "systemId: %s", value.get());
+      }
           
-      if (::strcmp("password", name) == 0)
+      if (::strcmp("password", name) == 0){
         strcpy(smppEntityInfo.password, value.get());
+        smsc_log_info(logger, "password: %s", value.get());
+      }
       
-      if (::strcmp("timeout", name) == 0)
+      if (::strcmp("timeout", name) == 0){
         smppEntityInfo.timeOut = atoi(value.get());
+        smsc_log_info(logger, "timeout: %d", smppEntityInfo.timeOut);
+      }
             
       if (::strcmp("mode", name) == 0) {
         if (::strcmp("trx", value.get()) == 0)
@@ -47,6 +55,8 @@ Abstract_CommandSmeInfo::Abstract_CommandSmeInfo(const Command::Id id, const xer
           smppEntityInfo.bindType = scag::transport::smpp::btReceiver;
         else
           smppEntityInfo.bindType = scag::transport::smpp::btTransceiver;
+
+        smsc_log_info(logger, "mode: %s, %d", value.get(), smppEntityInfo.timeOut);
       }
 
     }

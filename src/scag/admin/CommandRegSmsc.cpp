@@ -22,20 +22,21 @@ using namespace smsc::util::xml;
 
 Response * CommandRegSmsc::CreateResponse(scag::Scag * SmscApp)
 {
-  smsc::logger::Logger *log = smsc::logger::Logger::getInstance("CommandRegSmsc");
+  smsc_log_info(logger, "CommandModifySmsc is processing...");
   try {      
 
       if(!SmscApp->regSmsc(smppEntityInfo))
          throw Exception("Duplicate gwsmeid");
-      
+
+      smsc_log_info(logger, "CommandModifySmsc is processed ok");
       return new Response(Response::Ok, "none");
   }catch(exception& e){
      __trace2__("CommandRegSmsc::CreateResponse exception:%s",e.what());
-     smsc_log_warn(log, "CommandRegSmsc::CreateResponse exception:%s",e.what());
+     smsc_log_warn(logger, "CommandRegSmsc::CreateResponse exception:%s",e.what());
      return new Response(Response::Error, "CommandRegSmsc::CreateRespnse exception");
   }catch(...){
       __trace__("CommandRegSmsc::CreateResponse exception:unknown");
-      smsc_log_warn(log, "CommandRegSmsc::CreateResponse exception:unknown");
+      smsc_log_warn(logger, "CommandRegSmsc::CreateResponse exception:unknown");
       return new Response(Response::Error, "CommandRegSmsc::CreateRespnse exception");
   }
 }

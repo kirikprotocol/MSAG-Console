@@ -5,8 +5,8 @@
 // Created on 04.04.05
 //
 
-#ifndef _Abstract_CommandSmscInfo_H
-#define	_Abstract_CommandSmscInfo_H
+#ifndef SCAG_Abstract_CommandSmscInfo_H
+#define	SCAG_Abstract_CommandSmscInfo_H
 
 #include <xercesc/dom/DOM.hpp>
 #include "admin/protocol/Command.h"

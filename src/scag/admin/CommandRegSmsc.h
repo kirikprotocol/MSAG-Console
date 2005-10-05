@@ -1,8 +1,8 @@
 // Class CommandRegSmsc
 // created by Vitaly on 04.04.05
 
-#ifndef _CommandRegSmsc_H
-#define	_CommandRegSmsc_H
+#ifndef SCAG_CommandRegSmsc_H
+#define	SCAG_CommandRegSmsc_H
 
 #include "Abstract_CommandSmscInfo.h"
 #include "CommandIds.h"

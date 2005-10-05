@@ -1,5 +1,5 @@
-#ifndef CommandRemoveRule_dot_h
-#define CommandRemoveRule_dot_h
+#ifndef SCAG_CommandRemoveRule_dot_h
+#define SCAG_CommandRemoveRule_dot_h
 
 #include "SCAGCommand.h"
 #include "CommandIds.h"
