@@ -156,6 +156,8 @@ namespace smsc { namespace distrlist
         smsc::core::buffers::FixedRecordFile<MemberRecord>    memFile;
         smsc::core::buffers::FixedRecordFile<SubmitterRecord> sbmFile;
 
+        std::string dir;
+
         smsc::core::synchronization::Mutex mtx;
 
     public:
@@ -163,6 +165,8 @@ namespace smsc { namespace distrlist
         DistrListManager(Manager& config)
             throw(ConfigException,smsc::core::buffers::FileException);
         virtual ~DistrListManager();
+
+        void init();
 
         virtual void addDistrList(string dlName, bool system,
             const Address& dlOwner,int maxel,
