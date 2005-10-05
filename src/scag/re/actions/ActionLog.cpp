@@ -38,23 +38,22 @@ void ActionLog::init(const SectionParams& params,PropertyObject propertyObject)
     sCategory = params["category"];
     msg = params["message"];
 
-    FieldType ft;
     AccessType at;
 
-    ft = ActionContext::Separate(sCategory,name); 
-    if (ft == ftUnknown) throw InvalidPropertyException("Action 'log': unrecognized variable prefix '%s' for 'category' parameter",sCategory.c_str());
+    ftCategory = ActionContext::Separate(sCategory,name); 
+    //if (ft == ftUnknown) throw InvalidPropertyException("Action 'log': unrecognized variable prefix '%s' for 'category' parameter",sCategory.c_str());
 
-    if (ft == ftField) 
+    if (ftCategory == ftField) 
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atRead)) 
             throw InvalidPropertyException("Action 'log': cannot read property '%s' - no access",sCategory.c_str());
     }
 
-    ft = ActionContext::Separate(msg,name); 
-    if (ft == ftUnknown) throw InvalidPropertyException("Action 'log': unrecognized variable prefix '%s' for 'message' parameter",msg.c_str());
+    ftMessage = ActionContext::Separate(msg,name); 
+    //if (ft == ftUnknown) throw InvalidPropertyException("Action 'log': unrecognized variable prefix '%s' for 'message' parameter",msg.c_str());
 
-    if (ft == ftField) 
+    if (ftMessage == ftField) 
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atRead)) 
@@ -66,23 +65,34 @@ void ActionLog::init(const SectionParams& params,PropertyObject propertyObject)
 
 bool ActionLog::run(ActionContext& context)
 {
-    Property * p1 = context.getProperty(sCategory);
-    Property * p2 = context.getProperty(msg);
+    Property * p1 = 0;
+    Property * p2 = 0;
 
-    if (!p1) 
+    std::string s1,s2;
+
+    if (ftCategory != ftUnknown) 
     {
-        smsc_log_warn(logger,"Action 'log': invalid property '%s' to log",sCategory.c_str());
-        return true;
-    }
+        p1 = context.getProperty(sCategory);
+        if (!p1) 
+        {
+            smsc_log_warn(logger,"Action 'log': invalid property '%s' to log",sCategory.c_str());
+            return true;
+        }
+        s1 = p1->getStr();
+    } else s1 = sCategory;
 
-    if (!p2) 
+    if (ftMessage!=ftUnknown)  
     {
-        smsc_log_warn(logger,"Action 'log': invalid property '%s' to log", msg.c_str());
-        return true;
-    }
+        p2 = context.getProperty(msg);
+        if (!p2) 
+        {
+            smsc_log_warn(logger,"Action 'log': invalid property '%s' to log", msg.c_str());
+            return true;
+        }
+        s2 = p2->getStr();
+    } else s2 = msg;
 
-
-    std::string logstr = p1->getStr() + ": " + p2->getStr();
+    std::string logstr = s1 + ": " + s2;
 
 
     switch (level) 

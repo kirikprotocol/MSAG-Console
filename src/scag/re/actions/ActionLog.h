@@ -24,6 +24,7 @@ class ActionLog : public Action
     };
 
     LogLevel level;
+    FieldType ftCategory,ftMessage;
 
 protected:
     virtual IParserHandler * StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory);
