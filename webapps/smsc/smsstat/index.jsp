@@ -2,22 +2,19 @@
 <%@ page import="java.util.*, java.text.SimpleDateFormat,
                  ru.novosoft.smsc.util.StringEncoderDecoder,
                  ru.novosoft.smsc.jsp.SMSCJspException,
-                 ru.novosoft.smsc.jsp.SMSCErrors"%>
+                 ru.novosoft.smsc.jsp.SMSCErrors,
+                 ru.novosoft.smsc.jsp.PageBean"%>
 <%@ page import="ru.novosoft.smsc.admin.smsstat.*"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsstat.*"%>
-<jsp:useBean id="smsStatFormBean" scope="session" class="ru.novosoft.smsc.jsp.smsstat.SmsStatFormBean" />
-<%
-	SmsStatFormBean bean = smsStatFormBean;
-    bean.setFromDate(null);
-    bean.setTillDate(null);
-%>
+<jsp:useBean id="smsStatFormBean" scope="page" class="ru.novosoft.smsc.jsp.smsstat.SmsStatFormBean" />
 <jsp:setProperty name="smsStatFormBean" property="*"/>
 <%
     TITLE = getLocString("stat.title");
     MENU0_SELECTION = "MENU0_SMSSTAT";
 
-    int beanResult = SmsStatFormBean.RESULT_OK;
-    switch(beanResult = bean.process(request))
+	SmsStatFormBean bean = smsStatFormBean;
+    int beanResult = bean.process(request);
+    switch(beanResult)
     {
         case SmsStatFormBean.RESULT_DONE:
             response.sendRedirect("index.jsp");
@@ -32,11 +29,13 @@
         default:
             errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
     }
+    boolean needCSVDownload = (request.getParameter("csv") != null) && (beanResult == PageBean.RESULT_OK);
+    if (needCSVDownload) FORM_URI=CPATH+"/smsstat/csv_download.jsp";
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <div class=content>
-
 <div class=page_subtitle><%=getLocString("stat.subTitle")%></div>
+<input type=hidden name=initialized value=true>
 <table class=properties_list cellspacing=0>
 <tr class=row0>
 	<th><%=getLocString("common.util.FromDate")%>:</th>
@@ -48,7 +47,9 @@
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(session, out, "mbQuery",  "common.buttons.queryExcl", "common.buttons.runQuery");
+page_menu_button(session, out, "mbQuery",
+                 (needCSVDownload) ? "common.buttons.statDownload":"common.buttons.statQuery",
+                 (needCSVDownload) ? "common.buttons.statDownloadHint":"common.buttons.statQueryHint");
 page_menu_space(out);
 page_menu_end(out);
 %>
@@ -57,7 +58,8 @@ page_menu_end(out);
 <%
 Statistics stat = bean.getStatistics();
 int disNo = 1;
-if (stat != null) {
+if (stat != null && !needCSVDownload)
+{
     CountersSet total = stat.getTotal();
     Collection dates = stat.getDateStat();
 %>
@@ -94,19 +96,13 @@ if (stat != null) {
     <td width="11%" align=right><%= total.peak_i%>&nbsp;/&nbsp;<%= total.peak_o%></td>
 </tr>
 <%
-int ci = 0;
 Iterator i = dates.iterator();
-while (i.hasNext()) {
-  ci++;
-  Object obj = i.next();
-  DateCountersSet date = null;
-  try {
-    date = (DateCountersSet)obj;
-  } catch (ClassCastException e) {
-   // System.out.println("#"+ci+" tried cast "+obj.getClass().getName()+" to DateCountersSet");
-  }
-  SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy", getLoc());
-  String dateStr = formatter.format(date.getDate());
+SimpleDateFormat formatter = new SimpleDateFormat("dd-MMM-yyyy", getLoc());
+while (i.hasNext())
+{
+    Object obj = i.next();
+    DateCountersSet date = (DateCountersSet)obj;
+    String dateStr = formatter.format(date.getDate());
 %>  <tr class=row0>
         <td width="23%" align=right style="cursor:hand" onClick="toggleVisible(opForm.all.p<%=disNo%>, opForm.all.c<%=disNo%>);"><div id="p<%=disNo%>" class=collapsing_list_<%=i.hasNext() ? "closed" : "opened"%>><%= dateStr%><div></td>
         <td width="11%" align=right><%= date.accepted%></td>
@@ -202,22 +198,12 @@ while (i.hasNext()) {
 
     Collection routeids = stat.getRouteIdStat();
     i = routeids.iterator();
-    if (i.hasNext()) {
+    boolean needRoutes = i.hasNext();
+    if (needRoutes) {
 %>
 <tr>
     <td colspan=8> <div class=page_subtitle><%=getLocString("stat.routSubTitle")%></div></td>
 </tr>
-</table>
-</div>
-<%
-page_menu_begin(out);
-page_menu_button(session, out, "mbDetail",  "stat.routDetails", "common.buttons.runDetail");
-page_menu_space(out);
-page_menu_end(out);
-%>
-
-<div class=content>
-<table class=list cellspacing=0>
 <tr colspan=8 class=row0>
     <th width="23%"><div align=right><%=getLocString("smsview.routeId")%></div></th>
     <th width="11%"><div align=right><%=getLocString("stat.accepted")%></div></th>
@@ -271,13 +257,22 @@ page_menu_end(out);
         </tr><%
         }
     }
-
-    //Iterator itMap = stat.getErrorsMap().keySet().iterator();
-
+%>
+</table>
+</div>
+<% if (needRoutes) {
+page_menu_begin(out);
+page_menu_button(session, out, "mbDetail",  "stat.routDetails", "common.buttons.routDetailsHint");
+page_menu_space(out);
+page_menu_end(out);
+} %>
+<div class=content>
+<%
     Collection errids = stat.getErrorStat();
     i = errids.iterator();
     if (i.hasNext()) {
 %>
+<table class=list cellspacing=0>
 <tr>
     <td colspan=8><div class=page_subtitle><%=getLocString("stat.smsSubTitle")%></div></td>
 </tr>
@@ -292,15 +287,12 @@ page_menu_end(out);
     <th width="11%">&nbsp;</th>
 </tr>  <%
         while (i.hasNext()) {
-          //Integer errcode = (Integer) itMap.next();
           ErrorCounterSet errid = (ErrorCounterSet)i.next();
-          //ErrorCounterSet errid = (ErrorCounterSet)stat.getErrorsMap().get(errcode);
         %>
         <tr class=row1>
             <td width="23%" align=right nowrap>
-        <%
-          String errMessage = getLocString("smsc.errcode."+errid.errcode);
-          if (errMessage == null) errMessage = getLocString("smsc.errcode.unknown"); %>
+        <% String errMessage = getLocString("smsc.errcode."+errid.errcode);
+           if (errMessage == null) errMessage = getLocString("smsc.errcode.unknown"); %>
         <%= StringEncoderDecoder.encode(errMessage == null ? "" : errMessage)%>
         (<%=errid.errcode%>)
             </td>
@@ -312,13 +304,11 @@ page_menu_end(out);
             <td width="11%" align=right>&nbsp;</td>
             <td width="11%" align=right>&nbsp;</td>
         </tr><%
-        }
-
-    }
-%>
+        }%>
 </table>
 <%
-} // stat != null%>
+    }
+} // stat != null %>
 </div>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>

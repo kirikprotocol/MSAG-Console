@@ -8,8 +8,6 @@ package ru.novosoft.smsc.admin.smsstat;
  * To change this template use Options | File Templates.
  */
 
-import ru.novosoft.smsc.util.Functions;
-
 import java.util.Date;
 
 public class StatQuery
@@ -17,52 +15,38 @@ public class StatQuery
   private Date fromDate = new Date();
   private Date tillDate = new Date();
 
-  private boolean fromDateEnabled = true;
+  private boolean fromDateEnabled = false;
   private boolean tillDateEnabled = false;
 
-  public StatQuery()
-  {
-    fromDate = Functions.truncateTime(fromDate);
+  public StatQuery() {
   }
 
-  public Date getFromDate()
-  {
+  public Date getFromDate() {
     return fromDate;
   }
-
-  public Date getTillDate()
-  {
-    return tillDate;
-  }
-
-  public void setFromDate(Date fromDate)
-  {
+  public void setFromDate(Date fromDate) {
     this.fromDate = fromDate;
   }
 
-  public void setTillDate(Date tillDate)
-  {
+  public Date getTillDate() {
+    return tillDate;
+  }
+  public void setTillDate(Date tillDate) {
     this.tillDate = tillDate;
   }
 
-  public void setFromDateEnabled(boolean fromDateEnabled)
-  {
+  public void setFromDateEnabled(boolean fromDateEnabled) {
     this.fromDateEnabled = fromDateEnabled;
   }
-
-  public boolean isFromDateEnabled()
-  {
+  public boolean isFromDateEnabled() {
     return fromDateEnabled;
   }
 
-  public void setTillDateEnabled(boolean tillDateEnabled)
-  {
+  public void setTillDateEnabled(boolean tillDateEnabled) {
     this.tillDateEnabled = tillDateEnabled;
   }
-
-  public boolean isTillDateEnabled()
-  {
+  public boolean isTillDateEnabled() {
     return tillDateEnabled;
   }
-}
 
+}
