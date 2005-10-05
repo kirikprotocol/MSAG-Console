@@ -1,0 +1,82 @@
+Commands:
+
+addSme 		updateSmeInfo 	addRule
+statusSme 		regSmsc
+apply			unregSme
+deleteSme		modifySmsc
+loadRoutes		updateRule
+traceRoute 		removeRule
+
+Parameters:
+
+addSme:
+
+systemId		string
+password		string
+timeout		int
+mode			string
+
+statusSme:
+
+systemId		string
+
+deleteSme:
+
+systemId		string
+
+updateSmeInfo:
+
+systemId		string
+password		string
+timeout		int
+mode			string
+
+regSmsc:
+
+systemId		string
+password		string
+timeout		int           
+mode			string
+host			string 
+port			int
+altHost			string      
+altPort			int
+
+
+
+
+
+
+
+
+
+unregSmsc:
+
+systemId		string
+password		string
+timeout		int           
+mode			string
+
+apply:
+
+subj
+
+loadRoutes:
+
+traceRoute:
+
+srcAddress		string
+dstAddress		string
+srcSysId		string
+
+updateRule:
+
+ruleId
+
+removeRule:
+
+ruleId
+
+addRule:
+
+ruleId
