@@ -1,0 +1,31 @@
+logger
+db
+system
+snmp    "SNMP agent implementation"
+smpp  "SMPP protocol implementation"
+core  "SMSC core implementation"
+util  "Utility classes"
+sms   "SMS declaration"
+store   "Store implementation"
+dbsme
+#storetest  "Service program to test store module"
+admin   "Administration subsystem"
+smeman
+router
+alias
+profiler
+#test
+sme
+resourcemanager
+distrlist
+mscman
+stat
+wsme
+proxysme
+emailsme
+infosme
+license
+smppgw
+acls
+mcisme
+cluster
