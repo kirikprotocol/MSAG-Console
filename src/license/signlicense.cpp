@@ -209,10 +209,11 @@ int main(int argc,char* argv[])
   char *lkeys[]=
   {
 "Organization",
-"Hostid",
+"Hostids",
 "MaxSmsThroughput",
 "LicenseExpirationDate",
-"LicenseType"
+"LicenseType",
+"Product"
   };
   for(int i=0;i<sizeof(lkeys)/sizeof(char*);i++)
   {
