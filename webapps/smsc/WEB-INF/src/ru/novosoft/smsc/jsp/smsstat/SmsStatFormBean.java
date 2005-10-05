@@ -32,6 +32,7 @@ public class SmsStatFormBean extends IndexBean
   private StatQuery query = new StatQuery();
   private SmsStat stat = null;
 
+  private boolean includeErrors = false;
   private boolean initialized = false;
   private String mbQuery = null;
   private String mbDetail = null;
@@ -127,6 +128,8 @@ public class SmsStatFormBean extends IndexBean
   }
   private void exportErrors(JspWriter out, ExtendedCountersSet set) throws IOException
   {
+      if (!includeErrors) return;
+      
       out.println(ERR_STAT_STR);
       for (Iterator j = set.getErrors().iterator(); j.hasNext();)
       {
@@ -220,10 +223,12 @@ public class SmsStatFormBean extends IndexBean
               exportErrors(out, routeStat);
           }
 
-          // SMS delivery state
-          out.println();
-          out.println(ST_STAT_STR);
-          exportErrors(out, statistics);
+          if (includeErrors) {
+              // SMS delivery state
+              out.println();
+              out.println(ST_STAT_STR);
+              exportErrors(out, statistics);
+          }
 
       } catch (Exception exc) {
         return error("CSV File format error", exc);
@@ -305,5 +310,13 @@ public class SmsStatFormBean extends IndexBean
   public void setInitialized(boolean initialized) {
     this.initialized = initialized;
   }
+
+  public boolean isIncludeErrors() {
+    return includeErrors;
+  }
+  public void setIncludeErrors(boolean includeErrors) {
+    this.includeErrors = includeErrors;
+  }
+
 }
 

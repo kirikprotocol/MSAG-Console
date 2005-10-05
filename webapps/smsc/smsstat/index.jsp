@@ -42,6 +42,12 @@
 	<td nowrap><input type=text id="fromDate" name="fromDate" class=calendarField value="<%=bean.getFromDate()%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button></td>
 	<th><%=getLocString("common.util.TillDate")%>:</th>
 	<td nowrap><input type=text id="tillDate" name="tillDate" class=calendarField value="<%=bean.getTillDate()%>" maxlength=20><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
+<% if (needCSVDownload) { %>
+    <td nowrap>
+        <input class=check type=checkbox id=includeErrors name=includeErrors <%=bean.isIncludeErrors() ? "checked" : ""%>>
+    </td>
+    <th><label for=includeErrors><%=getLocString("stat.includeErrors")%></label></th>
+<% } %>
 </tr>
 </table>
 </div>
