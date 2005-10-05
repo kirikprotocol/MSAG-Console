@@ -10,9 +10,8 @@
 #include <scag/bill/BillingManager.h>
 #include <core/buffers/XHash.hpp>
 
-#include <scag/transport/SCAGCommand.h>
 #include <scag/util/sms/HashUtil.h>
-
+#include <scag/transport/SCAGCommand.h>
 
 namespace scag { namespace sessions 
 {

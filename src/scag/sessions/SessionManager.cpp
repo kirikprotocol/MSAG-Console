@@ -17,7 +17,7 @@
 #include "SessionManager.h"
 #include "scag/exc/SCAGExceptions.h"
 #include "scag/util/sms/HashUtil.h"
-
+#include "scag/re/CommandBrige.h"
 
 
 namespace scag { namespace sessions 
@@ -28,6 +28,7 @@ namespace scag { namespace sessions
     using namespace scag::exceptions;
     using namespace smsc::core::buffers;
     using namespace scag::util::sms;
+    using namespace re;
     using scag::config::SessionManagerConfig;
 
     using smsc::logger::Logger;
@@ -220,8 +221,8 @@ Session* SessionManagerImpl::getSession(const SCAGCommand& command)
     Session*    session = 0;
     CSessionKey sessionKey; 
 
-    sessionKey.abonentAddr = command.getAbonentAddr();
-    sessionKey.USR = command.getUMR();
+    sessionKey.abonentAddr = CommandBrige::getAbonentAddr(command);
+    sessionKey.USR = CommandBrige::getUMR(command);
 
     MutexGuard guard(inUseMonitor);
 
@@ -265,6 +266,7 @@ Session * SessionManagerImpl::newSession(CSessionKey& sessionKey)
     {
         if (time < it->nextWakeTime)
         {
+            it->bOpened = true;
             CSLIterator _it = SessionExpirePool.insert(it,accessData);
             SessionHash.Insert(sessionKey,_it);
             return session;

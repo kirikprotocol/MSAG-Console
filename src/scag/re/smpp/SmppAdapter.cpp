@@ -525,7 +525,6 @@ Property * SmppCommandAdapter::getSubmitRespProperty(const std::string& name,int
     case 0:
         property = new AdapterProperty(name,this,"");
         property->setPureInt(command->get_status());
-        return property;
     }
 
     if (property) 

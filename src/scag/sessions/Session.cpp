@@ -1,9 +1,9 @@
 #include "Session.h"
-
-//#include "scag/SAX2Print.hpp"
-
+#include <scag/re/CommandBrige.h>
 
 namespace scag { namespace sessions {
+
+using namespace scag::re;
 
 void Operation::detachBill(const Bill& bill)
 {
@@ -67,7 +67,7 @@ Session::Session(const CSessionKey& key)
     logger = Logger::getInstance("scag.re");
     m_SessionKey = key;
 
-    //!!! Временная херота, для того, чтобы SessionManager выдавал валидную сессию
+ /*   //!!! Временная херота, для того, чтобы SessionManager выдавал валидную сессию
     PendingOperation operation;
     time_t now;
 
@@ -77,7 +77,7 @@ Session::Session(const CSessionKey& key)
     operation.validityTime = now + 100;
 
     addPendingOperation(operation);
-    //!!! Временная херота, для того, чтобы SessionManager выдавал валидную сессию
+    //!!! Временная херота, для того, чтобы SessionManager выдавал валидную сессию  */
 }
 
 Session::~Session()
@@ -130,21 +130,23 @@ void Session::expireOperation(time_t currentTime)
 
 }
 
+
+
 bool Session::startOperation(SCAGCommand& cmd)
 {
     if (!Owner) return false;
 
     COperationKey operationKey;
 
-    operationKey.destAddress = cmd.getDestAddr();
-    operationKey.key = cmd.getKey();
+    operationKey.destAddress = CommandBrige::getDestAddr(cmd);
+    operationKey.key = CommandBrige::getKey(cmd);
 
-    needReleaseCurrentOperation = cmd.isFinalCommand();
+    needReleaseCurrentOperation = CommandBrige::isFinalCommand(cmd);
 
     if (!OperationHash.Exists(operationKey)) 
     {
         Operation * operation = new Operation();
-
+        
         //TODO: fill operation params
         OperationHash.Insert(operationKey,operation);
     }

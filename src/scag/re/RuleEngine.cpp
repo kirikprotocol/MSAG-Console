@@ -200,9 +200,6 @@ void RuleEngine::Init(const std::string& dir)
 }
 
 
-
-  
-
 Rule * RuleEngineImpl::ParseFile(const std::string& xmlFile)
 {
     int errorCount = 0;
@@ -238,6 +235,11 @@ Rule * RuleEngineImpl::ParseFile(const std::string& xmlFile)
         StrX msg(toCatch.getMessage());
 
         smsc_log_error(logger,"An error occurred. Error: %s", msg.localForm());
+    }
+    catch (RuleEngineException& e)
+    {
+        if (e.getLineNumber()>0) smsc_log_error(logger,"Error at line %d: %s",e.getLineNumber(), e.what());
+        else smsc_log_error(logger,"Error: %s",e.what());
     }
     catch (SCAGException& e)
     {
