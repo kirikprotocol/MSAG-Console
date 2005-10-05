@@ -262,7 +262,7 @@ while (i.hasNext())
 </div>
 <% if (needRoutes) {
 page_menu_begin(out);
-page_menu_button(session, out, "mbDetail",  "stat.routDetails", "common.buttons.routDetailsHint");
+page_menu_button(session, out, "mbDetail",  "stat.routDetails", "stat.routDetailsHint");
 page_menu_space(out);
 page_menu_end(out);
 } %>
