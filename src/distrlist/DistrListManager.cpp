@@ -180,11 +180,6 @@ void DistrListManager::addDistrList(string dlName, bool system,const Address& dl
       lst.submitters.insert(sbm);
     }
 
-    if(ic->getRole()!=SLAVE)
-    {
-      //ic->sendCommand(new DlAddCommand(
-    }
-
     /*
     const char* dlNameStr  = dlName.c_str();
     string dlOwnerStdStr = dlOwner.toString();
