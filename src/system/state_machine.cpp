@@ -672,7 +672,7 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
   if(offsets.Count()==0)return;
   if(tmplname.length() && i<len)
   {
-    Directive d(i,len-i);
+    Directive d(i,len);
     offsets.Push(d);
   }
   for(i=offsets.Count()-1;i>=0;i--)
@@ -740,14 +740,25 @@ void StateMachine::processDirectives(SMS& sms,Profile& p,Profile& srcprof)
     memcpy(ptr,body-udhiLen,udhiLen);
     ptr+=udhiLen;
   }
-  memcpy(ptr,body,offsets[0].start);
-  ptr+=offsets[0].start;
-  for(i=0;i<offsets.Count()-1;i++)
+
+  if(offsets.Count()>1)
   {
-    memcpy(ptr,body+offsets[i].end,offsets[i+1].start-offsets[i].end);
-    ptr+=offsets[i+1].start-offsets[i].end;
+    memcpy(ptr,body,offsets[0].start);
+    ptr+=offsets[0].start;
+    for(i=0;i<offsets.Count()-1;i++)
+    {
+      __trace2__("offset[i]=%d,%d",offsets[i].start,offsets[i].end);
+      memcpy(ptr,body+offsets[i].end,offsets[i+1].start-offsets[i].end);
+      ptr+=offsets[i+1].start-offsets[i].end;
+    }
+    memcpy(ptr,body+offsets[i].end,olen-udhiLen-offsets[i].end);
+  }else
+  {
+    if(offsets[0].start==0)
+      memcpy(ptr,body+offsets[0].end,olen-udhiLen-offsets[0].end);
+    else
+      memcpy(ptr,body,offsets[0].start);
   }
-  memcpy(ptr,body+offsets[i].end,olen-udhiLen-offsets[i].end);
   int newlen=(ptr-newBody)+olen-udhiLen-offsets[i].end;
   if(!udhi)udhiLen=0;
   if(newtext.length())
