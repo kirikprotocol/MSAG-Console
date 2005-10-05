@@ -5,12 +5,12 @@
 // Created on 06.04.05
 //
 
-#include "CommandUnregSme.h"
+#include "CommandUnregSmsc.h"
 
 namespace scag {
 namespace admin {
 
-Response * CommandUnregSme::CreateResponse(scag::Scag * SmscApp)
+Response * CommandUnregSmsc::CreateResponse(scag::Scag * SmscApp)
 { 
   smsc_log_info(logger, "CommandUnregSme is processing...");
   try {

@@ -26,7 +26,8 @@ using namespace smsc::util::config;
 using namespace smsc::util::config::route;
 
 
-SCAGCommand::SCAGCommand(Command::Id id) :Command(id)
+SCAGCommand::SCAGCommand(Command::Id id) :Command(id),
+    logger(smsc::logger::Logger::getInstance("admin.command"))
 {
 }
 

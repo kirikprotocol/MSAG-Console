@@ -66,6 +66,8 @@ public:
   virtual ~SCAGCommand();
   virtual Response * CreateResponse(scag::Scag * SmscApp);
   virtual scag::admin::Actions::CommandActions GetActions();
+protected:
+    smsc::logger::Logger *logger;
 };
 
 }

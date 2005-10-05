@@ -1,8 +1,8 @@
 // Class CommandUnregSme
 // created by Vitaly on 06.04.05
 
-#ifndef SCAG_CommandUnregSme_H
-#define	SCAG_CommandUnregSme_H
+#ifndef SCAG_CommandUnregSmsc_H
+#define	SCAG_CommandUnregSmsc_H
 
 #include "Abstract_CommandSmscInfo.h"
 #include "CommandIds.h"
@@ -10,10 +10,10 @@
 namespace scag {
 namespace admin {
 
-class CommandUnregSme : public Abstract_CommandSmscInfo 
+class CommandUnregSmsc : public Abstract_CommandSmscInfo 
 {
 public:
-	CommandUnregSme(const xercesc::DOMDocument * const document)
+	CommandUnregSmsc(const xercesc::DOMDocument * const document)
     : Abstract_CommandSmscInfo((Command::Id)CommandIds::unregSme, document)
   {
   }
