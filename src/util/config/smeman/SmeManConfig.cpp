@@ -192,9 +192,11 @@ SmeManConfig::status SmeManConfig::load(const char * const filename)
     return fail;
   }
 
+
   for (SRVector::iterator i = records.begin(); i != records.end(); i++) {
     smsc_log_debug(logger, "resulted SME: \"%s\"", (*i)->smeUid);
   }
+
   return success;
 }
 
