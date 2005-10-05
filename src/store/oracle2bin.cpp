@@ -54,7 +54,7 @@ int main(int argc,char* argv[])
   rc.load(findConfigFile("routes.xml"));
   cfgs.routesconfig=&rc;
 
-  smsc.init(cfgs);
+  smsc.init(cfgs,"");
 
   int count=0;
   if(it)
