@@ -21,14 +21,14 @@ ProfileCommandListener::ProfileCommandListener(smsc::profiler::Profiler * profil
 
 void ProfileCommandListener::handle(const Command& command)
 {
-	switch( command.getType() ){
-	case PROFILEUPDATE_CMD:
-		profileUpdate(command);
-		break;
+  switch( command.getType() ){
+  case PROFILEUPDATE_CMD:
+    profileUpdate(command);
+    break;
     case PROFILEDELETE_CMD:
         profileDelete(command);
-		break;
-	}
+    break;
+  }
 }
 
 bool isMask(const Address & address)
@@ -54,8 +54,8 @@ void ProfileCommandListener::profileUpdate(const Command& command)
 
 
     try {
-    
-      Address addr(strlen(address), plan, type, address);
+
+      Address addr(strlen(address), type, plan, address);
 
 #ifdef SMSC_DEBUG
       char addr_str[smsc::sms::MAX_ADDRESS_VALUE_LENGTH+9];
@@ -69,7 +69,7 @@ void ProfileCommandListener::profileUpdate(const Command& command)
         proInterface->updatemask(addr, profile);
       else
         proInterface->update(addr, profile);
-    
+
     }
     catch (...)
     {
