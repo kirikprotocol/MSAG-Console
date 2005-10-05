@@ -22,10 +22,11 @@ using smsc::core::buffers::Hash;
 static const char *lkeys[]=
 {
 "Organization",
-"Hostid",
+"Hostids",
 "MaxSmsThroughput",
 "LicenseExpirationDate",
-"LicenseType"
+"LicenseType",
+"Product"
 };
 
 
@@ -169,7 +170,7 @@ bool CheckLicense(const char* lf,const char* sig,Hash<string>& lic)
   smsc_log_info(log, "Licensed for %s",lic["Organization"].c_str());
   smsc_log_info(log, "License type %s",lic["LicenseType"].c_str());
   smsc_log_info(log, "License expiration date %s",lic["LicenseExpirationDate"].c_str());
-  smsc_log_info(log, "Licensed for host id %s",lic["Hostid"].c_str());
+  smsc_log_info(log, "Licensed for host ids %s",lic["Hostid"].c_str());
   smsc_log_info(log, "Licensed maximum sms throughput %s",lic["MaxSmsThroughput"].c_str());
   return true;
 }
