@@ -52,7 +52,8 @@ public class SmsStatFormBean extends IndexBean
   public int process(HttpServletRequest request)
   {
     int result = super.process(request);
-    if (result != RESULT_OK)
+     statistics=(Statistics) session.getAttribute("statistics");
+      if (result != RESULT_OK)
       return result;
     try {
       if (stat == null)
@@ -68,11 +69,12 @@ public class SmsStatFormBean extends IndexBean
         String dateTill = this.getTillDate();
 
         Collection ByRouteId = statistics.getRouteIdStat();
-        session.removeAttribute("ByRouteId");
+       // session.removeAttribute("ByRouteId");
         session.setAttribute("ByRouteId", ByRouteId);
-        session.removeAttribute("dateFrom");
+       // session.removeAttribute("dateFrom");
+        session.setAttribute("statistics", statistics);
         session.setAttribute("dateFrom", dateFrom);
-        session.removeAttribute("dateTill");
+       //  session.removeAttribute("dateTill");
         session.setAttribute("dateTill", dateTill);
 
       } catch (Exception exc) {
@@ -80,6 +82,11 @@ public class SmsStatFormBean extends IndexBean
         exc.printStackTrace();
         return error(SMSCErrors.error.smsstat.QueryFailed, exc.getMessage());
       }
+    } else {
+        if (statistics!=null) {this.setFromDate((String) session.getAttribute("dateFrom"));
+          this.setTillDate((String) session.getAttribute("dateTill"));
+        
+        }
     }
     if (mbDetail != null) {
       try {
