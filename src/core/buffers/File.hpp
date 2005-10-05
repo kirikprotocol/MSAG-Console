@@ -368,6 +368,10 @@ public:
     }
   }
 
+  bool isOpened()
+  {
+    return fd!=-1;
+  }
 
   size_t Read(void* buf,size_t sz)
   {
