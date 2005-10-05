@@ -4,11 +4,14 @@
 #include <string>
 #include <vector>
 #include "core/buffers/XHash.hpp"
+#include "cluster/Interconnect.h"
 
 namespace smsc{
 namespace system{
 
 smsc::logger::Logger* Scheduler::log;
+
+static EventMonitor* schedulerMon=0;
 
 using namespace std;
 
@@ -62,109 +65,125 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
     abort();
   }
 
-  if(File::Exists(mainFileName.c_str()))
+  if(schedulerMon)
   {
-
-    File *f=new File();
-    f->ROpen(mainFileName.c_str());
-    f->Rename((mainFileName+".bak").c_str());
-    vector<File*> files;
-    files.push_back(f);
-
-    if(File::Exists(rolFileName.c_str()))
-    {
-      f=new File();
-      f->ROpen(rolFileName.c_str());
-      f->Rename((rolFileName+".bak").c_str());
-      files.push_back(f);
-    }
-
-    for(vector<File*>::iterator it=files.begin();it!=files.end();it++)
-    {
-      File* pf=*it;
-      char sigBuf[sizeof(storeSig)];
-      uint32_t fileVer;
-      LoadUpInfo item;
-      BufOps::SmsBuffer smsBuf(0);
-      uint32_t sz,sz2;
-      LoadUpInfo* itemPtr;
-      File::offset_type fSize=pf->Size();
-      File::offset_type fPos=0;
-      try{
-        fPos+=pf->Read(sigBuf,sizeof(storeSig)-1);
-        sigBuf[sizeof(storeSig)-1]=0;
-        if(strcmp(sigBuf,storeSig))
-        {
-          throw Exception("Storage file signature mismatch");
-        }
-        fileVer=pf->ReadNetInt32();
-        fPos+=4;
-        if(fileVer>storeVer)
-        {
-          __warning2__("File version doesn't match current version:%d<%d",storeVer,fileVer);
-          abort();
-        }
-        while(fPos<fSize)
-        {
-          sz=pf->ReadNetInt32();
-          fPos+=4;
-          if(fPos+sz>fSize)
-          {
-            __warning2__("Incomplete record detected, fPos=%lld, fSize=%lld, recSize=%d",fPos,fSize,sz);
-            break;
-          }
-          item.id=pf->ReadNetInt64();
-          fPos+=8;
-          item.seq=pf->ReadNetInt32();
-          fPos+=4;
-          item.final=pf->ReadByte();
-          fPos+=1;
-          smsBuf.setSize(sz-8-4-1);
-          pf->Read(smsBuf.get(),sz-8-4-1);
-          fPos+=sz-8-4-1;
-          sz2=pf->ReadNetInt32();
-          fPos+=4;
-
-          __trace2__("StoreInit: msgId=%lld, seq=%d, final=%s",item.id,item.seq,item.final?"true":"false");
-          if(sz!=sz2)
-          {
-            throw Exception("Corrupted store file %s, record size mismatch:%u!=%u",pf->getFileName().c_str(),sz,sz2);
-          }
-          itemPtr=luHash.GetPtr(item.id);
-          if(itemPtr!=0)
-          {
-            if(itemPtr->final || itemPtr->seq>item.seq)continue;
-          }
-
-          smsBuf.SetPos(0);
-          Deserialize(smsBuf,item.sms,fileVer);
-
-          if(itemPtr)
-          {
-            *itemPtr=item;
-          }else
-          {
-            luHash.Insert(item.id,item);
-            itemPtr=luHash.GetPtr(item.id);
-            luVector.push_back(itemPtr);
-          }
-        };
-        __trace2__("getfn=%s",pf->getFileName().c_str());
-        toDelete.push_back(pf->getFileName());
-      }catch(exception& e)
-      {
-        __warning2__("Operative storage read failed %s:%s",pf->getFileName().c_str(),e.what());
-      }
-      pf->Close();
-      delete pf;
-    }
+    __trace__("schedulerMon->Unlock();");
+    schedulerMon->Unlock();
   }
+  try{
+    if(File::Exists(mainFileName.c_str()))
+    {
+
+      File *f=new File();
+      f->ROpen(mainFileName.c_str());
+      f->Rename((mainFileName+".bak").c_str());
+      vector<File*> files;
+      files.push_back(f);
+
+      if(File::Exists(rolFileName.c_str()))
+      {
+        f=new File();
+        f->ROpen(rolFileName.c_str());
+        f->Rename((rolFileName+".bak").c_str());
+        files.push_back(f);
+      }
+
+      for(vector<File*>::iterator it=files.begin();it!=files.end();it++)
+      {
+        File* pf=*it;
+        char sigBuf[sizeof(storeSig)];
+        uint32_t fileVer;
+        LoadUpInfo item;
+        BufOps::SmsBuffer smsBuf(0);
+        uint32_t sz,sz2;
+        LoadUpInfo* itemPtr;
+        File::offset_type fSize=pf->Size();
+        File::offset_type fPos=0;
+        try{
+          fPos+=pf->Read(sigBuf,sizeof(storeSig)-1);
+          sigBuf[sizeof(storeSig)-1]=0;
+          if(strcmp(sigBuf,storeSig))
+          {
+            throw Exception("Storage file signature mismatch");
+          }
+          fileVer=pf->ReadNetInt32();
+          fPos+=4;
+          if(fileVer>storeVer)
+          {
+            __warning2__("File version doesn't match current version:%d<%d",storeVer,fileVer);
+            abort();
+          }
+          while(fPos<fSize)
+          {
+            sz=pf->ReadNetInt32();
+            fPos+=4;
+            if(fPos+sz>fSize)
+            {
+              __warning2__("Incomplete record detected, fPos=%lld, fSize=%lld, recSize=%d",fPos,fSize,sz);
+              break;
+            }
+            item.id=pf->ReadNetInt64();
+            fPos+=8;
+            item.seq=pf->ReadNetInt32();
+            fPos+=4;
+            item.final=pf->ReadByte();
+            fPos+=1;
+            smsBuf.setSize(sz-8-4-1);
+            pf->Read(smsBuf.get(),sz-8-4-1);
+            fPos+=sz-8-4-1;
+            sz2=pf->ReadNetInt32();
+            fPos+=4;
+
+            __trace2__("StoreInit: msgId=%lld, seq=%d, final=%s",item.id,item.seq,item.final?"true":"false");
+            if(sz!=sz2)
+            {
+              throw Exception("Corrupted store file %s, record size mismatch:%u!=%u",pf->getFileName().c_str(),sz,sz2);
+            }
+            itemPtr=luHash.GetPtr(item.id);
+            if(itemPtr!=0)
+            {
+              if(itemPtr->final || itemPtr->seq>item.seq)continue;
+            }
+
+            smsBuf.SetPos(0);
+            Deserialize(smsBuf,item.sms,fileVer);
+
+            if(itemPtr)
+            {
+              *itemPtr=item;
+            }else
+            {
+              luHash.Insert(item.id,item);
+              itemPtr=luHash.GetPtr(item.id);
+              luVector.push_back(itemPtr);
+            }
+          };
+          __trace2__("getfn=%s",pf->getFileName().c_str());
+          toDelete.push_back(pf->getFileName());
+        }catch(exception& e)
+        {
+          __warning2__("Operative storage read failed %s:%s",pf->getFileName().c_str(),e.what());
+        }
+        pf->Close();
+        delete pf;
+      }
+    }
 
 
-  InitPrimaryFile(mainFileName);
+    InitPrimaryFile(mainFileName);
+  }catch(std::exception& e)
+  {
+    __warning2__("Exception during storage init %s",e.what());
+  }
+  if(schedulerMon)
+  {
+    __trace__("schedulerMon->Lock();");
+    schedulerMon->Lock();
+  }
 
   __trace2__("Local store loaded. %d messages found.",luVector.size());
 
+  int cnt=0;
   for(LoadUpVector::iterator it=luVector.begin();it!=luVector.end();it++)
   {
     if((*it)->final)continue;
@@ -173,7 +192,14 @@ void LocalFileStore::Init(smsc::util::config::Manager* cfgman,Smsc* smsc)
     __trace2__("srcsmeid=%s",sms.getSourceSmeId());
     try{
       int smeIndex=smsc->getSmeIndex(sms.getSourceSmeId());
-      sched.AddScheduledSms((*it)->id,sms,smeIndex);
+      if(schedulerMon)schedulerMon->Unlock();
+      try{
+        sched.AddScheduledSms((*it)->id,sms,smeIndex);
+      }catch(std::exception& e)
+      {
+        __warning2__("Exception in AddScheduledSms:'%s'",e.what());
+      }
+      if(schedulerMon)schedulerMon->Lock();
       Scheduler::StoreData* sd=new Scheduler::StoreData(sms,(*it)->seq);
       sched.store.Insert((*it)->id,sd);
       sd->rit=sched.replMap.insert(Scheduler::ReplaceIfPresentMap::value_type(&sd->sms,(*it)->id));
@@ -312,89 +338,32 @@ void Scheduler::Init(Smsc* psmsc,smsc::util::config::Manager* cfgman)
   }
   idFile.SetUnbuffered();
 
-  /*
-  smsc::store::TimeIdIterator* it=st->getReadyForRetry(time(NULL)+30*24*60*60);
-  if(it)
-  {
-    debug1(log,"Scheduler: start init");
-    MutexGuard guard(mon);
-    SMSId id;
-    try{
-      StartupItem si;
-      while(it->getNextId(id))
-      {
-        FullAddressValue ddabuf;
-        if(it->getDstSmeId(si.smeId) && it->getDda(ddabuf))
-        {
-          si.id=id;
-          si.schedTime=it->getTime();
-          si.attCount=it->getAttempts();
-          si.addr=ddabuf;
-          si.validTime=it->getValidTime();
-          startupCache.Push(si);
-          if(startupCache.Count()%1000==0)debug2(log,"Loading scheduler - %d",startupCache.Count());
-        }
-      }
-      info2(log,"Scheduler: init ok - %d messages for rescheduling",startupCache.Count());
-    }catch(std::exception& e)
-    {
-      warn2(log,"Scheduler:failed to init scheduler timeline:%s",e.what());
-    }catch(...)
-    {
-      warn1(log,"Scheduler:failed to init scheduler timeline:unknown");
-    }
-    delete it;
-  }else
-  {
-    info1(log,"Scheduler: init - No messages found");
-  }
-  */
+}
+
+
+void Scheduler::DelayInit(Smsc* psmsc)
+{
+  smsc=psmsc;
+  delayInit=true;
 }
 
 
 int Scheduler::Execute()
 {
   smsc::logger::Logger* smsLog=smsc::logger::Logger::getInstance("sms.trace");
-  mon.Lock();
-  try{
-    for(int i=0;i<startupCache.Count();i++)
-    {
-      StartupItem& si=startupCache[i];
-      SmeIndex idx=INVALID_SME_INDEX;
-      try{
-        idx=smsc->getSmeIndex(si.smeId);
-      }catch(...)
-      {
-        warn2(log,"failed to get sme index for %s",si.smeId);
-        continue;
-      }
-
-      if(idx!=INVALID_SME_INDEX)
-      {
-        Chain* c=GetChain(si.addr);
-        if(!c)
-        {
-          c=CreateChain(si.schedTime,si.addr,idx);
-        }
-        if(si.attCount==0)
-        {
-          ChainAddTimed(c,si.schedTime,SchedulerData(si.id,si.validTime));
-        }else
-        {
-          ChainPush(c,SchedulerData(si.id,si.validTime));
-        }
-        timeLine.Add(c,this);
-        //smsCount++;
-      }
-      mon.Unlock();
-      sched_yield();
-      mon.Lock();;
-    }
-  }catch(std::exception& e)
+  if(delayInit)
   {
-    warn2(log,"error during scheduler initialization: %s",e.what());
+    info1(log,"Start delayedInit");
+    try{
+      MutexGuard guard(mon);
+      schedulerMon=&mon;
+      Init(smsc,&smsc::util::config::Manager::getInstance());
+    }catch(std::exception& e)
+    {
+      warn2(log,"Exception during delayed Scheduler init:%s",e.what());
+    }
+    delayInit=false;
   }
-  mon.Unlock();
 
   time_t t=time(NULL);
 

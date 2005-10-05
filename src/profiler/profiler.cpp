@@ -215,7 +215,7 @@ int Profiler::update(const Address& address,const Profile& profile)
   MutexGuard g(mtx);
   bool exact;
   Profile &prof=profiles->find(address,exact);
-  debug2(log,"update %s/%#llx:%s->%s",
+  debug2(log,"update %s/%#llx:%s->%s (%s)",
      address.toString().c_str(),
       prof.offset,
       prof.toString().c_str(),
@@ -236,7 +236,7 @@ int Profiler::update(const Address& address,const Profile& profile)
   {
     Profile& profRef=profiles->add(address,profile);
     fileInsert(address,profRef);
-    debug2(log,"insert %s",address.toString().c_str());
+    debug2(log,"insert %s/%#llx",address.toString().c_str(),profRef.offset);
     return pusInserted;
   }
   }catch(std::exception& e)
@@ -306,6 +306,7 @@ void Profiler::fileUpdate(const Address& addr,const Profile& profile)
 {
   using namespace smsc::cluster;
   if(Interconnect::getInstance()->getRole()==SLAVE)return;
+  CreateOrOpenFileIfNeeded();
   __trace2__("Profiler: Update(%llx) %s=%d,%d,%s,%d,%c,%s,%c,%c",profile.offset,addr.toString().c_str(),profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.hide,profile.hideModifiable?'Y':'N',profile.divert.c_str(),profile.divertActive?'Y':'N',profile.divertModifiable?'Y':'N');
   storeFile.Seek(profile.offset);
   profile.Write(storeFile);
@@ -313,6 +314,7 @@ void Profiler::fileUpdate(const Address& addr,const Profile& profile)
 
   if(Interconnect::getInstance()->getRole()==MASTER)
   {
+    __trace__("sending interconnect command for profileUpdate");
     Interconnect::getInstance()->sendCommand(new ProfileUpdateCommand(addr,profile));
   }
 
@@ -360,10 +362,11 @@ void Profiler::fileInsert(const Address& addr,Profile& profile)
   using namespace smsc::cluster;
   if(Interconnect::getInstance()->getRole()==SLAVE)return;
   __trace2__("Profiler: Insert %s=%d,%d,%s,%d,%c,%s,%c,%c",addr.toString().c_str(),profile.reportoptions,profile.codepage,profile.locale.c_str(),profile.hide,profile.hideModifiable?'Y':'N',profile.divert.c_str(),profile.divertActive?'Y':'N',profile.divertModifiable?'Y':'N');
-  if(profile.offset)
+  if(!profile.offset)
   {
     return;
   }
+  CreateOrOpenFileIfNeeded();
 
   File::offset_type endOffset=0;
   if(holes.empty())
@@ -1253,22 +1256,24 @@ static int RsAsHide(smsc::db::ResultSet* rs,int idx)
 
 void Profiler::load(const char* filename)
 {
-  hrtime_t st=gethrtime();
-
   const char sig[]="SMSCPROF";
   const uint32_t ver=0x00010000;
+  storeFileName=filename;
+  hrtime_t st=gethrtime();
 
-  if(!File::Exists(filename))
+
+  if(!File::Exists(storeFileName.c_str()))
   {
     using namespace smsc::cluster;
     if(Interconnect::getInstance()->getRole()==SLAVE)return;
-    __warning2__("Profiler store file not found:%s",filename);
-    storeFile.RWCreate(filename);
+    __warning2__("Profiler store file not found:%s",storeFileName.c_str());
+    storeFile.RWCreate(storeFileName.c_str());
     storeFile.Write(sig,8);
     storeFile.WriteNetInt32(ver);
     storeFile.Flush();
     return;
   }
+
   storeFile.RWOpen(filename);
 
   char fileSig[9]={0,};
@@ -1396,6 +1401,27 @@ void Profiler::load(const char* filename)
   profiles->GetStats(mc,bu,bn);
   smsc_log_info(log,"hash stats max=%d,bucks used=%d,count=%d,bucks num=%d",mc,bu,profiles->Count(),bn);
 
+}
+
+void Profiler::CreateOrOpenFileIfNeeded()
+{
+  const char sig[]="SMSCPROF";
+  const uint32_t ver=0x00010000;
+
+  if(storeFile.isOpened())return;
+  using namespace smsc::cluster;
+  if(Interconnect::getInstance()->getRole()==SLAVE)return;
+
+  if(!File::Exists(storeFileName.c_str()))
+  {
+    __warning2__("Profiler store file('%s') not found. Creating.",storeFileName.c_str());
+    storeFile.RWCreate(storeFileName.c_str());
+    storeFile.Write(sig,8);
+    storeFile.WriteNetInt32(ver);
+    storeFile.Flush();
+    return;
+  }
+  storeFile.RWOpen(storeFileName.c_str());
 }
 
 }//profiler

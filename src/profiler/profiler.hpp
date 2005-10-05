@@ -167,6 +167,7 @@ protected:
   SmeRegistrar *smeman;
   Mutex mtx;
   File storeFile;
+  std::string storeFileName;
   std::vector<File::offset_type> holes;
 
   smsc::logger::Logger *log;
@@ -183,6 +184,8 @@ protected:
   void fileInsert(const Address& addr,Profile& profile);
 
   void internal_update(int flag,const Address& addr,int value,const char* svalue=NULL);
+
+  void CreateOrOpenFileIfNeeded();
 
 };
 

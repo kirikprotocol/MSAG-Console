@@ -111,6 +111,7 @@ public:
     //currentSnap=new LocalFileStore::IdSeqPairList();
     lastRejectTime=0;
     lastRejectReschedule=0;
+    delayInit=false;
   }
   ~Scheduler()
   {
@@ -121,6 +122,7 @@ public:
   const char* taskName(){return "scheduler";}
 
   void Init(Smsc* psmsc,smsc::util::config::Manager* cfgman);
+  void DelayInit(Smsc* psmsc);
 
   void AddScheduledSms(SMSId id,const SMS& sms,SmeIndex idx)
   {
@@ -518,6 +520,10 @@ public:
 
   void LocalFileStoreSave(smsc::sms::SMSId id,uint32_t seq,const smsc::sms::SMS& sms,bool final=false)
   {
+    while(delayInit)
+    {
+      sched_yield();
+    }
     if(localFileStore.Save(id,seq,sms,final))
     {
       localFileStore.StartRoll(currentSnap);
@@ -658,7 +664,6 @@ public:
     time_t validTime;
     char smeId[32];
   };
-  Array<StartupItem> startupCache;
 
   Smsc* smsc;
 
@@ -1240,6 +1245,8 @@ public:
 
   time_t lastRejectTime;
   time_t lastRejectReschedule;
+
+  bool delayInit;
 };
 
 }//system
