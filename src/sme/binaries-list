@@ -1,14 +1,15 @@
--sme/testsme testsme -lcore-network -lsms $(SOCKETLIB) -lsme -lcore-threads -lthread 
--sme/testsme2 testsme2 -lcore-network -lsms $(SOCKETLIB) -lsme -lcore-threads -lthread
--sme/testsme3 testsme3 -lcore-network -lsms $(SOCKETLIB) -lsme -lcore-threads -lthread
+-sme/testsme testsme -lcore-network -lsms $(SOCKETLIB) -lsme -lcore-threads -lpthread 
+-sme/testsme2 testsme2 -lcore-network -lsms $(SOCKETLIB) -lsme -lcore-threads -lpthread
+-sme/testsme3 testsme3 -lcore-network -lsms $(SOCKETLIB) -lsme -lcore-threads -lpthread
 sme/t t -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll $(__LIBRARIES) -lreadline -ltermcap -lnsl
 sme/flooder flooder -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll $(__LIBRARIES) -lnsl
 sme/multisme multisme -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll $(__LIBRARIES) -lnsl
-#sme/t2 t2 -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
--sme/pingpong pingpong -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
--sme/replacetest replacetest  -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
--sme/querytest querytest  -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
--sme/canceltest canceltest  -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
--sme/payload payload  -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
--sme/datasmtest datasmtest -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lthread -lrt -lutil-recoder-recode_dll
+sme/txrx txrx -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll $(__LIBRARIES) -lnsl
+#sme/t2 t2 -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll
+-sme/pingpong pingpong -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll
+-sme/replacetest replacetest  -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll
+-sme/querytest querytest  -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll
+-sme/canceltest canceltest  -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll
+-sme/payload payload  -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll
+-sme/datasmtest datasmtest -lcore-network -lutil -lsms -lutil $(SOCKETLIB) -lcore-threads -lpthread -lrt -lutil-recoder-recode_dll
 -sme/sme sme
