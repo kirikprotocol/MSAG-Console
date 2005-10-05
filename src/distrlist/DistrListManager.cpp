@@ -1,6 +1,5 @@
 
 #include "DistrListManager.h"
-#include "cluster/Interconnect.h"
 
 namespace smsc { namespace distrlist
 {
@@ -27,9 +26,12 @@ DistrListManager::DistrListManager(Manager& config)
           memFile(memFileSig,memFileVer),
           sbmFile(sbmFileSig,sbmFileVer)
 {
-  string dir=config.getString("distrList.storeDir");
-
+  dir=config.getString("distrList.storeDir");
   if(dir.length()>0 && dir[dir.length()-1]!='/')dir+='/';
+}
+
+void DistrListManager::init()
+{
   string lstFileName=dir+"lists.bin";
   string prcFileName=dir+"principals.bin";
   string memFileName=dir+"members.bin";
@@ -168,28 +170,19 @@ void DistrListManager::addDistrList(string dlName, bool system,const Address& dl
                                             new DistrListRecord(dlOwner,dlName.c_str(),prcPtr->maxEl));
 
     DistrListRecord& lst=*lstPtr.get();
-    using namespace smsc::cluster;
-    if(Interconnect::getInstance()->getRole()!=SLAVE)
-    {
-      lst.offset=lstFile.Append(lst);
-    }else
-    {
-      lst.offset=offset1;
-    }
+    lst.offset=lstFile.Append(lst);
     lists.Insert(lst.name,lstPtr.release());
 
     if(!system)
     {
       SubmitterRecord sbm(lst,dlOwner);
-      using namespace smsc::cluster;
-      if(Interconnect::getInstance()->getRole()!=SLAVE)
-      {
-        sbm.offset=sbmFile.Append(sbm);
-      }else
-      {
-        sbm.offset=offset2;
-      }
+      sbm.offset=sbmFile.Append(sbm);
       lst.submitters.insert(sbm);
+    }
+
+    if(ic->getRole()!=SLAVE)
+    {
+      //ic->sendCommand(new DlAddCommand(
     }
 
     /*
@@ -330,21 +323,14 @@ void DistrListManager::deleteDistrList(string dlName)
     DistrListRecord** lstPtr=lists.GetPtr(dlName.c_str());
     if(!lstPtr)throw ListNotExistsException();
     DistrListRecord& lst=**lstPtr;
-    using namespace smsc::cluster;
-    if(Interconnect::getInstance()->getRole()!=SLAVE)
+    for(DistrListRecord::SubmittersContainer::iterator it=lst.submitters.begin();it!=lst.submitters.end();it++)
     {
-      for(DistrListRecord::SubmittersContainer::iterator it=lst.submitters.begin();it!=lst.submitters.end();it++)
-      {
-        sbmFile.Delete(it->offset);
-      }
+      sbmFile.Delete(it->offset);
     }
     lst.submitters.clear();
-    if(Interconnect::getInstance()->getRole()!=SLAVE)
+    for(DistrListRecord::MembersContainer::iterator it=lst.members.begin();it!=lst.members.end();it++)
     {
-      for(DistrListRecord::MembersContainer::iterator it=lst.members.begin();it!=lst.members.end();it++)
-      {
-        memFile.Delete(it->offset);
-      }
+      memFile.Delete(it->offset);
     }
     lst.members.clear();
 
@@ -359,10 +345,7 @@ void DistrListManager::deleteDistrList(string dlName)
         warn2(logger,"Owner of list %s not found:%s",lst.name,lst.owner.toString().c_str());
       }
     }
-    if(Interconnect::getInstance()->getRole()!=SLAVE)
-    {
-      lstFile.Delete(lst.offset);
-    }
+    lstFile.Delete(lst.offset);
     DistrListRecord* ptr=*lstPtr;
     lists.Delete(lst.name);
     delete ptr;
@@ -438,11 +421,7 @@ void DistrListManager::changeDistrList(const string& dlName,int maxElements)
   if(!lstPtr)throw ListNotExistsException();
   DistrListRecord& lst=**lstPtr;
   lst.maxEl=maxElements;
-  using namespace smsc::cluster;
-  if(Interconnect::getInstance()->getRole()!=SLAVE)
-  {
-    lstFile.Write(lst.offset,lst);
-  }
+  lstFile.Write(lst.offset,lst);
 }
 
 
@@ -840,14 +819,7 @@ void DistrListManager::addPrincipal(const Principal& prc,smsc::core::buffers::Fi
     MutexGuard mg(mtx);
     if(principals.Exists(prc.address.toString().c_str()))throw PrincipalAlreadyExistsException();
     PrincipalRecord prcRec(prc.address,prc.maxLst,prc.maxEl);
-    using namespace smsc::cluster;
-    if(Interconnect::getInstance()->getRole()!=SLAVE)
-    {
-      prcRec.offset=prcFile.Append(prcRec);
-    }else
-    {
-      prcRec.offset=offset;
-    }
+    prcRec.offset=prcFile.Append(prcRec);
     principals.Insert(prc.address.toString().c_str(),prcRec);
 
     /*
@@ -938,11 +910,7 @@ void DistrListManager::deletePrincipal(const Address& address)
       deleteDistrList(*it);
     }
     MutexGuard mg(mtx);
-    using namespace smsc::cluster;
-    if(Interconnect::getInstance()->getRole()!=SLAVE)
-    {
-      prcFile.Delete(prcPtr->offset);
-    }
+    prcFile.Delete(prcPtr->offset);
     principals.Delete(prcPtr->address.toString().c_str());
 
 
@@ -1040,11 +1008,7 @@ void DistrListManager::changePrincipal(const Principal& prc)
                                                  prc.address.toString().c_str(), prcPtr->lstCount, prc.maxLst,prc.maxEl);
     prcPtr->maxLst=prc.maxLst;
     prcPtr->maxEl=prc.maxEl;
-    using namespace smsc::cluster;
-    if(Interconnect::getInstance()->getRole()!=SLAVE)
-    {
-      prcFile.Write(prcPtr->offset,*prcPtr);
-    }
+    prcFile.Write(prcPtr->offset,*prcPtr);
 
     /*
     string prcAddressStdStr = prc.address.toString();
@@ -1236,14 +1200,7 @@ void DistrListManager::addMember(string dlName, const Address& member,smsc::core
     MemberRecord memRec(lst,member);
     if(lst.members.find(memRec)!=lst.members.end())throw MemberAlreadyExistsException();
 
-    using namespace smsc::cluster;
-    if(Interconnect::getInstance()->getRole()!=SLAVE)
-    {
-      memRec.offset=memFile.Append(memRec);
-    }else
-    {
-      memRec.offset=offset;
-    }
+    memRec.offset=memFile.Append(memRec);
     lst.members.insert(memRec);
 
     /*
@@ -1359,11 +1316,7 @@ void DistrListManager::deleteMember(string dlName, const Address& member)
     MemberRecord memRec(lst,member);
     DistrListRecord::MembersContainer::iterator it=lst.members.find(memRec);
     if(it==lst.members.end())throw MemberNotExistsException();
-    using namespace smsc::cluster;
-    if(Interconnect::getInstance()->getRole()!=SLAVE)
-    {
-      memFile.Delete(it->offset);
-    }
+    memFile.Delete(it->offset);
     lst.members.erase(it);
 
     /*
@@ -1517,14 +1470,7 @@ void DistrListManager::grantPosting(string dlName, const Address& submitter,smsc
     DistrListRecord& lst=**lstPtr;
     SubmitterRecord sbmRec(lst,submitter);
     if(lst.submitters.find(sbmRec)!=lst.submitters.end())throw SubmitterAlreadyExistsException();
-    using namespace smsc::cluster;
-    if(Interconnect::getInstance()->getRole()!=SLAVE)
-    {
-      sbmRec.offset=sbmFile.Append(sbmRec);
-    }else
-    {
-      sbmRec.offset=offset;
-    }
+    sbmRec.offset=sbmFile.Append(sbmRec);
     lst.submitters.insert(sbmRec);
 
     /*
@@ -1634,14 +1580,7 @@ void DistrListManager::grantPosting(const string& dlName, const Address& owner,c
 
     SubmitterRecord sbmRec(lst,submitter);
     if(lst.submitters.find(sbmRec)!=lst.submitters.end())throw SubmitterAlreadyExistsException();
-    using namespace smsc::cluster;
-    if(Interconnect::getInstance()->getRole()!=SLAVE)
-    {
-      sbmRec.offset=sbmFile.Append(sbmRec);
-    }else
-    {
-      sbmRec.offset=offset;
-    }
+    sbmRec.offset=sbmFile.Append(sbmRec);
     lst.submitters.insert(sbmRec);
 }
 
@@ -1658,11 +1597,7 @@ void DistrListManager::revokePosting(string dlName, const Address& owner,const A
     SubmitterRecord sbmRec(lst,submitter);
     DistrListRecord::SubmittersContainer::iterator it=lst.submitters.find(sbmRec);
     if(it==lst.submitters.end())throw SubmitterNotExistsException();
-    using namespace smsc::cluster;
-    if(Interconnect::getInstance()->getRole()!=SLAVE)
-    {
-      sbmFile.Delete(it->offset);
-    }
+    sbmFile.Delete(it->offset);
     lst.submitters.erase(it);
 }
 
@@ -1679,11 +1614,7 @@ void DistrListManager::revokePosting(string dlName, const Address& submitter)
     SubmitterRecord sbmRec(lst,submitter);
     DistrListRecord::SubmittersContainer::iterator it=lst.submitters.find(sbmRec);
     if(it==lst.submitters.end())throw SubmitterNotExistsException();
-    using namespace smsc::cluster;
-    if(Interconnect::getInstance()->getRole()!=SLAVE)
-    {
-      sbmFile.Delete(it->offset);
-    }
+    sbmFile.Delete(it->offset);
     lst.submitters.erase(it);
     /*
     const char* dlNameStr = dlName.c_str();
