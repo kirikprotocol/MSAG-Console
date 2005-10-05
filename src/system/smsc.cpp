@@ -287,10 +287,6 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
       if(mode)
               delete [] mode;
 
-  }catch(Exception & e)
-  {
-      smsc_log_info(log, "%s", e.what() );
-      throw Exception("InterconnectManager initialization exception.");
   }catch(...){
       throw Exception("InterconnectManager initialization exception.");
   }
@@ -451,7 +447,14 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   //store=smsc::store::StoreManager::getMessageStore();
   store=scheduler;
   smsc_log_info(log, "Initializing scheduler" );
-  scheduler->Init(this,cfg.cfgman);
+  if(ishs)
+  {
+    scheduler->DelayInit(this);
+  }
+  else
+  {
+    scheduler->Init(this,cfg.cfgman);
+  }
 
   smeman.registerInternallSmeProxy("scheduler",scheduler);
 
@@ -579,8 +582,13 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 
   smeman.registerInternallSmeProxy("DSTRLST",distlstsme);
 
-  smsc::mscman::MscManager::startup(*cfg.cfgman);
-  smsc_log_info(log, "MSC manager started" );
+  if(!ishs)
+  {
+    distlstman->init();
+
+    smsc::mscman::MscManager::startup(*cfg.cfgman);
+    smsc_log_info(log, "MSC manager started" );
+  }
 
   /*
   smsc::resourcemanager::ResourceManager::init
@@ -964,27 +972,55 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 }
 
 
+void NotifyMonHandler(smsc::cluster::Role r,void* p)
+{
+  if(r==smsc::cluster::MASTER)
+  {
+    EventMonitor* mon=(EventMonitor*)p;
+    mon->Lock();
+    mon->notify();
+    mon->Unlock();
+  }
+}
+
 void Smsc::run()
 {
   smsc::logger::Logger *log = smsc::logger::Logger::getInstance("smsc.run");
   //smsc::logger::Logger::getInstance("sms.snmp.alarm").debug("sample alarm");
 
-  try {
-      printf("Acrivating...\n");
-      if(ishs){
-          Interconnect *icon = InterconnectManager::getInstance();
-          printf("Activate 1\n");
-          icon->activate();
-          printf("Activate 2\n");
+  if(ishs)
+  {
+    Interconnect *icon = InterconnectManager::getInstance();
+    try {
+      icon->activate();
+    }catch(std::exception& e)
+    {
+      throw Exception("InterconnectManager activating exception:%s",e.what());
+    }
+
+    {
+      MutexGuard mg(idleMon);
+      icon->addChangeRoleHandler(NotifyMonHandler,&idleMon);
+      __trace__("wait for change role event");
+      while(!stopFlag)
+      {
+         int rv=idleMon.wait(1000);
+         //__trace2__("idleMon.wait returned %d(%s)",rv,strerror(rv));
+         if(rv!=ETIME && rv!=ETIMEDOUT)break;
       }
-  }catch(...){
-      throw Exception("InterconnectManager activating exception.");
+    }
+    if(stopFlag)return;
+    distlstman->init();
+    smsc::mscman::MscManager::startup(smsc::util::config::Manager::getInstance());
+    smsc_log_info(log, "MSC manager started" );
   }
+
 
   __trace__("Smsc::run");
 
   try{
   if(startTime==0)startTime=time(NULL);
+
   {
     __trace__("Starting SMPPIO");
     Event accstarted;
@@ -999,7 +1035,7 @@ void Smsc::run()
     __trace__("Waiting SMPPIO started");
     accstarted.Wait();
     __trace__("SMPPIO started");
-#if defined(USE_MAP) && !defined(NOMAPPROXY) 
+#if defined(USE_MAP) && !defined(NOMAPPROXY)
     Event mapiostarted;
     MapIoTask* mapio = new MapIoTask(&mapiostarted,scAddr,ussdCenterAddr,ussdSSN,busyMTDelay,lockedByMODelay,MOLockTimeout,allowCallBarred);
     tp.startTask(mapio);
