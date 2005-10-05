@@ -83,7 +83,7 @@ COMPFLAGS:=-features=extensions $(XTARGET) -mt -D_POSIX_PTHREAD_SEMANTICS
 CXXFLAGS := $(CXXFLAGS) -library=stlport4
 endif
 ifeq ($(CXX),CC)
-LDFLAGS := -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib/CC -L/usr/local/lib -L$(SSL_DIR)/lib
+LDFLAGS := -zrescan -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib/CC -L/usr/local/lib -L$(SSL_DIR)/lib
 else
 LDFLAGS := -L$(SMSC_BUILDDIR)/lib -L/usr/local/lib -L$(SSL_DIR)/lib
 endif
