@@ -1,11 +1,11 @@
 Commands:
 
 addSme 		updateSmeInfo 	addRule
-statusSme 		regSmsc
-apply			unregSme
-deleteSme		modifySmsc
-loadRoutes		updateRule
-traceRoute 		removeRule
+statusSme 	regSmsc
+apply		unregSme
+deleteSme	modifySmsc
+loadRoutes	updateRule
+traceRoute 	removeRule
 
 Parameters:
 
