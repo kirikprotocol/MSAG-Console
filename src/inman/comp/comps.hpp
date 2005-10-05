@@ -2,21 +2,18 @@
 #ifndef __SMSC_INMAN_INAP_COMPS_HPP__
 #define __SMSC_INMAN_INAP_COMPS_HPP__
 
-#include <vector>
 #include <map>
-#include <stdexcept>
 #include "sms/sms.h"
+#include "inman/comp/compdefs.hpp"
 #include "inman/common/util.hpp"
 #include "logger/Logger.h"
 
 using smsc::logger::Logger;
 
-using std::runtime_error;
-using std::vector;
 using std::map;
 using smsc::inman::common::format;
 using smsc::sms::Address;
-using smsc::sms::AddressValue;
+//using smsc::sms::AddressValue;
 
 /* GVR NOTE: while linking the below enums are taken from generated
  * asn1/c codec, so they should not have namespace prefix.
@@ -56,18 +53,6 @@ typedef enum EventTypeSMS {
 namespace smsc {
 namespace inman {
 namespace comp{
-
-typedef std::runtime_error EncodeError;
-typedef std::runtime_error DecodeError;
-
-class Component
-{
-  public:
-    virtual void encode(vector<unsigned char>& buf)
-    { throw EncodeError("ASN.1 encoding is not implemented"); }
-    virtual void decode(const vector<unsigned char>& buf)
-    { throw DecodeError("ASN.1 decoding is not implemented"); }
-};
 
 struct InapOpCode {
     enum {
