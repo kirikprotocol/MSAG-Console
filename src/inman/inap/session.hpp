@@ -46,6 +46,7 @@ class Session : public ObservableT< SessionListener >
 
 
         virtual     Dialog*  openDialog(USHORT_T id);
+        virtual     Dialog*  openDialog(USHORT_T id,const APP_CONTEXT_T& ac);
         virtual     Dialog*  findDialog(USHORT_T id);
         virtual     void       closeDialog(Dialog* pDlg);
         virtual     void       closeAllDialogs();

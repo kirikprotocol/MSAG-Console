@@ -116,12 +116,28 @@ USHORT_T Session::nextDialogId()
     return id;
 }
 
+Dialog* Session::openDialog(USHORT_T id, const APP_CONTEXT_T& dac)
+{
+  if(id == 0) id = nextDialogId();
+  smsc_log_debug(logger,"Open dialog (SSN=%d, Dialog id=%d)", SSN, id );
+  Dialog* pDlg = new Dialog( this, id , dac);
+  dialogs.insert( DialogsMap_T::value_type( id, pDlg ) );
 
+  for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
+  {
+       SessionListener* ptr = *it;
+       ptr->onDialogBegin( pDlg );
+  }
+
+  return pDlg;
+}
+
+//deprecated
 Dialog* Session::openDialog(USHORT_T id)
 {
     if(id == 0) id = nextDialogId();
     smsc_log_debug(logger,"Open dialog (SSN=%d, Dialog id=%d)", SSN, id );
-    Dialog* pDlg = new Dialog( this, id );
+    Dialog* pDlg = new Dialog( this, id , ac);
     dialogs.insert( DialogsMap_T::value_type( id, pDlg ) );
 
   for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)

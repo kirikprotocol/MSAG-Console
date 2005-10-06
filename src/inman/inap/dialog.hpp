@@ -29,17 +29,17 @@ class Dialog;
 
 class DialogListener
 {
-	public:
-		virtual void onDialogInvoke(  Invoke*  ) = 0;
+  public:
+    virtual void onDialogInvoke(  Invoke*  ) = 0;
 };
 
-class Dialog : public ObservableT< DialogListener > 
+class Dialog : public ObservableT< DialogListener >
 {
     friend class Session;
 
   public:
 
-    Dialog(Session* session, USHORT_T id);
+    Dialog(Session* session, USHORT_T id, const APP_CONTEXT_T& ac );
     virtual ~Dialog();
 
     virtual Invoke* invoke(UCHAR_T opcode);
@@ -51,9 +51,9 @@ class Dialog : public ObservableT< DialogListener >
     virtual void timerReset();
 
     // Transaction level callbacks
-	virtual USHORT_T handleBeginDialog();
-	virtual USHORT_T handleContinueDialog();
-	virtual USHORT_T handleEndDialog();
+  virtual USHORT_T handleBeginDialog();
+  virtual USHORT_T handleContinueDialog();
+  virtual USHORT_T handleEndDialog();
 
     // Interaction level callbacks
     virtual USHORT_T handleInvoke(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm);
@@ -62,25 +62,25 @@ class Dialog : public ObservableT< DialogListener >
     virtual USHORT_T handleUserError(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen,  const UCHAR_T *pm);
 
    public:
-   	USHORT_T getId()      const { return did;     	}
-   	USHORT_T getNextInvokeId()  { return invokeId++;}
-   	USHORT_T getQSrv()    const { return qSrvc;     }
-   	USHORT_T getTimeout() const { return timeout;   }
-   	Session* getSession() const { return session;   }
+    USHORT_T getId()      const { return did;       }
+    USHORT_T getNextInvokeId()  { return invokeId++;}
+    USHORT_T getQSrv()    const { return qSrvc;     }
+    USHORT_T getTimeout() const { return timeout;   }
+    Session* getSession() const { return session;   }
 
    protected:
 
-    InvokeMap	  	  originating;
-    InvokeMap	  	  terminating;
-    Session*          session;
-    USHORT_T          opid;
-    USHORT_T          did;
-    USHORT_T          timeout;
-    UCHAR_T           qSrvc;
-    UCHAR_T           priority;
-    UCHAR_T           acShort;
-    UCHAR_T			  invokeId;
-    Logger*			  logger;
+    InvokeMap       originating;
+    InvokeMap       terminating;
+    Session*        session;
+    APP_CONTEXT_T   ac;
+    USHORT_T        opid;
+    USHORT_T        did;
+    USHORT_T        timeout;
+    UCHAR_T         qSrvc;
+    UCHAR_T         priority;
+    UCHAR_T         invokeId;
+    Logger*         logger;
 };
 
 }
