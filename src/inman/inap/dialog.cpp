@@ -204,7 +204,7 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
   invoke->setTag( tag );
   invoke->setOpcode( opcode );
 
-  Component* comp = ComponentFactory::getInstance()->create( opcode );
+  Component* comp = ComponentFactory::getInstance()->createArg( opcode );
 
   if( comp )
   {
@@ -234,7 +234,7 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
   result->setId( invId );
   result->setTag( tag );
   result->setOpcode( opcode );
-  result->setParam( ComponentFactory::getInstance()->create( opcode ) );
+  result->setParam( ComponentFactory::getInstance()->createRes( opcode ) );
 
   InvokeMap::const_iterator it = originating.find( invId );
   if( it != originating.end() )
