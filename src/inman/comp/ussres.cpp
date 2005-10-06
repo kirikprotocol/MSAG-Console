@@ -12,8 +12,8 @@ typedef std::runtime_error EncodeError;
 typedef std::runtime_error DecodeError;
 
 namespace smsc {
-namespace mapuss {
-namespace comp {
+namespace inman {
+namespace usscomp {
 		    
 using smsc::inman::common::format;
 using smsc::inman::comp::smsc_log_component;
@@ -76,7 +76,7 @@ void ProcessUSSRequestRes::encode(vector<unsigned char>& buf)
     ASNCODEC_LOG_ENC(er, asn_DEF_USSD_Res, "mapUSS");
 }
 
-}//namespace comp
-}//namespace mapuss
+}//namespace usscomp
+}//namespace inman
 }//namespace smsc
 

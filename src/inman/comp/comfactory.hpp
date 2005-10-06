@@ -5,29 +5,21 @@
 #include <map>
 
 #include "comps.hpp"
-#include "inman/common/factory.hpp"
+#include "acdefs.hpp"
+#include "inman/comp/operfactory.hpp"
 #include "logger/Logger.h"
 
-using smsc::logger::Logger;
-using smsc::inman::common::FactoryT;
+//using smsc::logger::Logger;
+//using smsc::inman::common::FactoryT;
 
 namespace smsc {
 namespace inman {
-namespace comp{
+namespace comp {
 
-using std::map;
+typedef smsc::ac::CAP4SMSFactory  ComponentFactory;
 
-class ComponentFactory : public FactoryT< unsigned, Component >
-{
-public:
-	ComponentFactory();
-	virtual ~ComponentFactory();
+void initCAP4SMSComponents(OperationFactory * fact);
 
-	static ComponentFactory* getInstance();
-
-protected:
-	Logger* 	 logger;
-};
 
 }
 }

@@ -6,7 +6,8 @@
 #include <stdexcept>
 #include "sms/sms.h"
 #include "logger/Logger.h"
-#include "comps.hpp"
+#include "compdefs.hpp"
+#include "operfactory.hpp"
 
 using smsc::logger::Logger;
 
@@ -14,12 +15,13 @@ using std::runtime_error;
 using std::vector;
 using smsc::sms::Address;
 using smsc::inman::comp::Component;
+using smsc::inman::comp::OperationFactory;
 
 #define MAP_MAX_USSD_StringLength 160
 
 namespace smsc {
-namespace mapuss {
-namespace comp {
+namespace inman {
+namespace usscomp {
 
 // Alerting categories are defined in GSM 02.07
 typedef enum AlertingPattern {
@@ -34,11 +36,17 @@ typedef enum AlertingPattern {
     alertingNotSet =		128	//0x80
 } AlertingPattern_e;
 
-typedef enum USS_OperationCode {
-    processUSS_Request = 59
-//  ,USS_Request = 60
-//  ,USS-Notify = 61
-} USS_OperationCode_e;
+
+struct MAPUSS_OpCode {
+    enum {
+	processUSS_Request = 59
+    //  ,USS_Request = 60
+    //  ,USS-Notify = 61
+    };
+};
+
+//FactoryInitFunction declaration
+void initMAPUSS2Components(OperationFactory * fact);
 
 
 class ProcessUSSRequestArg : public Component
@@ -89,8 +97,8 @@ private:
     Logger*		compLogger;
 };
 
-}//namespace comp
-}//namespace mapuss
+}//namespace usscomp
+}//namespace inman
 }//namespace smsc
 
 #endif /* __SMSC_INMAN_MAPUSS_COMPS_HPP__ */

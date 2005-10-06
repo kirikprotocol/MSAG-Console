@@ -11,16 +11,32 @@ static char const ident[] = "$Id$";
 typedef std::runtime_error EncodeError;
 typedef std::runtime_error DecodeError;
 
-namespace smsc {
-namespace mapuss {
-namespace comp {
+using smsc::inman::comp::CompFactory;
+using smsc::inman::comp::OperationFactory;
 
 using smsc::inman::common::format;
 using smsc::inman::comp::smsc_log_component;
 
+
+namespace smsc {
+namespace inman {
+namespace usscomp {
+
+//FactoryInitFunction implementation
+void initMAPUSS2Components(OperationFactory * fact)
+{
+    fact->setLogger(Logger::getInstance("smsc.inman.usscomp.ComponentFactory"));
+    fact->registerArg(MAPUSS_OpCode::processUSS_Request,
+	    new CompFactory::ProducerT<smsc::inman::usscomp::ProcessUSSRequestArg>() );
+    fact->registerRes(MAPUSS_OpCode::processUSS_Request,
+	    new CompFactory::ProducerT<smsc::inman::usscomp::ProcessUSSRequestRes>() );
+}
+
+
+
 ProcessUSSRequestArg::ProcessUSSRequestArg()
 {
-    compLogger = smsc::logger::Logger::getInstance("smsc.mapuss.comp.ProcessUSSRequestArg");
+    compLogger = smsc::logger::Logger::getInstance("smsc.inman.usscomp.ProcessUSSRequestArg");
     _alrt = alertingNotSet;
 }
 ProcessUSSRequestArg::~ProcessUSSRequestArg() { }
@@ -129,7 +145,7 @@ void ProcessUSSRequestArg::encode(vector<unsigned char>& buf)
     ASNCODEC_LOG_ENC(er, asn_DEF_USSD_Arg, "mapUSS");
 }
 
-}//namespace comp
-}//namespace mapuss
+}//namespace usscomp
+}//namespace inman
 }//namespace smsc
 
