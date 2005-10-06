@@ -39,42 +39,19 @@
 %>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%int rowN = 0;%>
-<%
-page_menu_begin(out);
-page_menu_button(session, out, "mbBack",  "common.buttons.back",  "common.buttons.runBack");
-page_menu_space(out);
-page_menu_end(out);
-%>
+
 <div class=content>
-
 <div class=page_subtitle><%=getLocString("stat.subTitle")%></div>
-<table class=properties_list cellspacing=0>
-<tr class=row0>
-	<th><%=getLocString("common.util.FromDate")%>:</th>
-	<td nowrap><%=bean.getDateFrom()%></td>
-	<th><%=getLocString("common.util.TillDate")%>:</th>
-	<td nowrap><%=bean.getDateTill()%></td>
-</tr>
-</table>
-</div>
-<table class=page_menu with="100%">
-<%--<tr>
-<td><input:select name="filterSelect" default="1"
-    attributes="<%= as %>" options="<%= o %>"  /></td></tr> --%>
 
-<tr><td align="left" with="10%"> &nbsp;&nbsp;&nbsp;<%=getLocString("common.util.FilterBy")%>: &nbsp;  </td><td align="left" with="80%">  &nbsp;  </td>
-
-<%
-page_small_menu_begin(out);
-page_menu_button(session, out, "mbQuickFilter",  "common.buttons.apply",  "common.buttons.applyFilter");
-page_menu_button(session, out, "mbClear", "common.buttons.clear", "common.buttons.clearFilter");
-//page_menu_button(out, "mbCancel", "common.buttons.cancel", "common.buttons.cancelFilterEditing", "clickCancel()");
-//page_menu_space(out);
-page_small_menu_end(out);
-%>  <td align="left" with="1%">  &nbsp;  </td>
+<table class=properties_list>
+<tr class=row<%=(rowN++)&1%>>
+  <td  width="25%" ><%=getLocString("common.util.FromDate")%>:</td>
+  <td  nowrap width="25%" ><%=bean.getDateFrom()%></td>
+  <td width="25%" ><%=getLocString("common.util.TillDate")%>:</td>
+  <td nowrap width="25%" ><%=(bean.getDateTill()!="")? bean.getDateTill():"Unspecifed"%></td>
 </tr>
 <tr class=row<%=(rowN++)&1%>>
-			<th>&nbsp;&nbsp;&nbsp;&nbsp;<%=getLocString("common.util.Provider")%>&nbsp;</th>
+			<td><%=getLocString("common.util.Provider")%>&nbsp;</td>
 			<td><select name=providerId id=providerId >
 				<option value="-1" ></option>
 				<%for (Iterator iprov = bean.getProviders().iterator(); iprov.hasNext(); )
@@ -94,7 +71,7 @@ page_small_menu_end(out);
 			</select></td>
 		</tr>
     <tr class=row<%=(rowN++)&1%>>
-			<th>&nbsp;&nbsp;&nbsp;&nbsp;<%=getLocString("common.util.Category")%>&nbsp;</th>
+			<td><%=getLocString("common.util.Category")%>&nbsp;</td>
 			<td><select name=categoryId id=categoryId >
 				<option value="-1" ></option>
 				<%for (Iterator jcat = bean.getCategories().iterator(); jcat.hasNext(); )
@@ -112,8 +89,19 @@ page_small_menu_end(out);
 				}
 				%>
 			</select></td>
-		</tr>
+      <td>&nbsp;</td>
+      <td>&nbsp;</td>
+    </tr>
 </table>
+</div>
+ <%
+page_menu_begin(out);
+page_menu_button(session, out,  "mbQuickFilter",  "common.buttons.apply",  "common.buttons.applyFilter");
+page_menu_button(session, out,  "mbClear", "common.buttons.clear", "common.buttons.clearFilter");
+page_menu_space(out);
+page_menu_button(session, out, "mbBack",  "common.buttons.back",  "common.buttons.runBack");
+page_menu_end(out);
+%>
 <div class=content>
 <%--~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ results ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~--%>
 <%
