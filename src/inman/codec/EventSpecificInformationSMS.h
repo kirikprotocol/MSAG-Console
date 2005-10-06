@@ -20,7 +20,7 @@ typedef enum EventSpecificInformationSMS_PR {
 	EventSpecificInformationSMS_PR_o_smsFailureSpecificInfo,
 	EventSpecificInformationSMS_PR_o_smsSubmissionSpecificInfo,
 	EventSpecificInformationSMS_PR_t_smsFailureSpecificInfo,
-	EventSpecificInformationSMS_PR_t_smsDeliverySpecificInfo,
+	EventSpecificInformationSMS_PR_t_smsDeliverySpecificInfo
 } EventSpecificInformationSMS_PR;
 
 /* EventSpecificInformationSMS */
