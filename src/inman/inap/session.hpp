@@ -27,8 +27,8 @@ class Dialog;
 class SessionListener
 {
 public:
-	virtual void onDialogBegin(Dialog*) = 0;
-	virtual void onDialogEnd(Dialog*)   = 0;
+  virtual void onDialogBegin(Dialog*) = 0;
+  virtual void onDialogEnd(Dialog*)   = 0;
 };
 
 class Session : public ObservableT< SessionListener >
@@ -47,24 +47,26 @@ class Session : public ObservableT< SessionListener >
 
         virtual     Dialog*  openDialog(USHORT_T id);
         virtual     Dialog*  findDialog(USHORT_T id);
-        virtual     void    	 closeDialog(Dialog* pDlg);
-        virtual     void    	 closeAllDialogs();
+        virtual     void       closeDialog(Dialog* pDlg);
+        virtual     void       closeAllDialogs();
 
     protected:
         typedef     std::map<USHORT_T, Dialog*> DialogsMap_T;
 
-        Session(UCHAR_T ssn, const char* scfNum, const char* inmanNum);
-        virtual     	~Session();
-        USHORT_T      	nextDialogId();
+        Session(UCHAR_T ownssn, const char* own, const char* remote);
+        Session(UCHAR_T    ownssn, const char*    ownaddr,
+                UCHAR_T remotessn, const char* remoteaddr);
+        virtual       ~Session();
+        USHORT_T        nextDialogId();
 
-        SCCP_ADDRESS_T 	ssfAddr;
-        SCCP_ADDRESS_T 	scfAddr;
-        APP_CONTEXT_T  	ac;
-        DialogsMap_T   	dialogs;
-        SessionState   	state;
-        UCHAR_T        	SSN;
-        USHORT_T       	lastDialogId;
-        Logger*		   	logger;
+        SCCP_ADDRESS_T  ssfAddr;
+        SCCP_ADDRESS_T  scfAddr;
+        APP_CONTEXT_T   ac;
+        DialogsMap_T    dialogs;
+        SessionState    state;
+        UCHAR_T         SSN;
+        USHORT_T        lastDialogId;
+        Logger*       logger;
 };
 
 }

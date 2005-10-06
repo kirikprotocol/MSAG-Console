@@ -49,28 +49,43 @@ static void fillAppContext(APP_CONTEXT_T* p_ac)
   ac.ac[5] = 0x03; //|00000011 |CAP3 OE ID             |ACE
   ac.ac[6] = 0x3D; //|00111101 |Application Context    |CAP3-SMS
 }
+Session::Session(UCHAR_T ownssn, const char* ownaddr, UCHAR_T remotessn, const char* remoteaddr)
+    : logger(Logger::getInstance("smsc.inman.inap.Session"))
+    , SSN( ownssn )
+    , state( IDLE )
+    , lastDialogId( TCAP_DIALOG_MIN_ID )
+{
+    fillAddress(&ssfAddr,ownaddr, ownssn);
+    fillAddress(&scfAddr,remoteaddr, remotessn);
+    fillAppContext(&ac);
 
+    USHORT_T  result = EINSS7_I97TBindReq( SSN, MSG_USER_ID, TCAP_INSTANCE_ID, EINSS7_I97TCAP_WHITE_USER );
+    if (result != 0 )
+    throw runtime_error( format( "BindReq() failed with code %d (%s)", result,getTcapReasonDescription(result)));
+}
+
+//deprecated
 Session::Session(UCHAR_T ssn, const char* ssf, const char* scf)
     : logger(Logger::getInstance("smsc.inman.inap.Session"))
     , SSN( ssn )
     , state( IDLE )
     , lastDialogId( TCAP_DIALOG_MIN_ID )
 {
-  	fillAddress(&ssfAddr,ssf, ssn);
-  	fillAddress(&scfAddr,scf, ssn);
-  	fillAppContext(&ac);
+    fillAddress(&ssfAddr,ssf, ssn);
+    fillAddress(&scfAddr,scf, ssn);
+    fillAppContext(&ac);
 
-  	USHORT_T  result = EINSS7_I97TBindReq( SSN, MSG_USER_ID, TCAP_INSTANCE_ID, EINSS7_I97TCAP_WHITE_USER );
-  	if (result != 0 )
-		throw runtime_error( format( "BindReq() failed with code %d (%s)", result,getTcapReasonDescription(result)));
+    USHORT_T  result = EINSS7_I97TBindReq( SSN, MSG_USER_ID, TCAP_INSTANCE_ID, EINSS7_I97TCAP_WHITE_USER );
+    if (result != 0 )
+    throw runtime_error( format( "BindReq() failed with code %d (%s)", result,getTcapReasonDescription(result)));
 }
 
 Session::~Session()
 {
-  	USHORT_T result = EINSS7_I97TUnBindReq( SSN, MSG_USER_ID, TCAP_INSTANCE_ID );
-  	if (result != 0)
-  	{
-    	smsc_log_error( logger, format("UnBindReq() failed with code %d (%s)", result, getTcapReasonDescription(result)));
+    USHORT_T result = EINSS7_I97TUnBindReq( SSN, MSG_USER_ID, TCAP_INSTANCE_ID );
+    if (result != 0)
+    {
+      smsc_log_error( logger, format("UnBindReq() failed with code %d (%s)", result, getTcapReasonDescription(result)));
     }
 
     closeAllDialogs();
@@ -93,10 +108,10 @@ void Session::setState(SessionState newState)
 
 USHORT_T Session::nextDialogId()
 {
-	USHORT_T id = lastDialogId;
-    if( ++lastDialogId  > TCAP_DIALOG_MAX_ID )  
+  USHORT_T id = lastDialogId;
+    if( ++lastDialogId  > TCAP_DIALOG_MAX_ID )
     {
-    	lastDialogId = TCAP_DIALOG_MIN_ID;
+      lastDialogId = TCAP_DIALOG_MIN_ID;
     }
     return id;
 }
@@ -109,11 +124,11 @@ Dialog* Session::openDialog(USHORT_T id)
     Dialog* pDlg = new Dialog( this, id );
     dialogs.insert( DialogsMap_T::value_type( id, pDlg ) );
 
-	for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
-	{
-			 SessionListener* ptr = *it;
-			 ptr->onDialogBegin( pDlg );
-	}
+  for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
+  {
+       SessionListener* ptr = *it;
+       ptr->onDialogBegin( pDlg );
+  }
 
     return pDlg;
 }
@@ -134,11 +149,11 @@ void Session::closeDialog(Dialog* pDlg)
     if( !pDlg ) return;
     smsc_log_debug(logger,"Close dialog (SSN=%d, Dialog id=%d)", SSN, pDlg->did );
 
-	for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
-	{
-			 SessionListener* ptr = *it;
-			 ptr->onDialogEnd( pDlg );
-	}
+  for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
+  {
+       SessionListener* ptr = *it;
+       ptr->onDialogEnd( pDlg );
+  }
 }
 
 void Session::closeAllDialogs()
