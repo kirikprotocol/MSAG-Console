@@ -12,7 +12,7 @@
 #include "CommandAddSme.h"
 #include "CommandStatusSme.h"
 #include "CommandRegSmsc.h"
-#include "CommandUnregSme.h"
+#include "CommandUnregSmsc.h"
 #include "CommandDeleteSme.h"
 #include "CommandTraceRoute.h"
 #include "CommandLoadRoutes.h"
@@ -34,10 +34,11 @@ SCAGCommandReader::SCAGCommandReader(Socket * admSocket)
   commandlist["traceRoute"] = CommandIds::traceRoute;
   commandlist["updateSmeInfo"] = CommandIds::updateSmeInfo;
   commandlist["regSmsc"] = CommandIds::regSmsc;
-  commandlist["unregSme"] = CommandIds::unregSme;
+  commandlist["unregSmsc"] = CommandIds::unregSmsc;
   commandlist["modifySmsc"] = CommandIds::modifySmsc;
   commandlist["updateRule"] = CommandIds::updateRule;
   commandlist["removeRule"] = CommandIds::removeRule;
+  commandlist["addRule"] = CommandIds::addRule;
 }
 
 SCAGCommandReader::~SCAGCommandReader()
@@ -68,10 +69,11 @@ Command * SCAGCommandReader::createCommand(int id, const DOMDocument *data)
     case CommandIds::traceRoute: return new CommandTraceRoute(data);
     case CommandIds::loadRoutes: return new CommandLoadRoutes(data);
     case CommandIds::regSmsc: return new CommandRegSmsc(data);
-    case CommandIds::unregSme: return new CommandUnregSme(data);
+    case CommandIds::unregSmsc: return new CommandUnregSmsc(data);
     case CommandIds::modifySmsc: return new CommandModifySmsc(data);
     case CommandIds::updateRule: return new CommandUpdateRule(data);
     case CommandIds::removeRule: return new CommandRemoveRule(data);
+    case CommandIds::addRule: return new CommandRemoveRule(data);
 
     default: 
       smsc_log_warn(logger, "Unknown command id \"%i\"", id);

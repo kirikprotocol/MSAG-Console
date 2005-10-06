@@ -24,6 +24,11 @@ enum ConfigType
 
 class ConfigManager
 {
+    ConfigManager(const ConfigManager& bm);
+    ConfigManager& operator=(const ConfigManager& bm);
+protected:
+        ConfigManager() {};
+        virtual ~ConfigManager() {};
 public:
 	static ConfigManager& Instance();
     static void Init();

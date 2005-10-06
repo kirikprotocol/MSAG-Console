@@ -14,7 +14,7 @@ class CommandUnregSmsc : public Abstract_CommandSmscInfo
 {
 public:
 	CommandUnregSmsc(const xercesc::DOMDocument * const document)
-    : Abstract_CommandSmscInfo((Command::Id)CommandIds::unregSme, document)
+    : Abstract_CommandSmscInfo((Command::Id)CommandIds::unregSmsc, document)
   {
   }
     virtual Response * CreateResponse(scag::Scag * SmscApp);

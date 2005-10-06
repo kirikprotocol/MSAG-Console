@@ -7,6 +7,10 @@
 namespace scag {
 namespace admin {
 
+class RuleEngineException : public Exception
+{
+};
+
 using smsc::admin::service::Variant;
 using namespace xercesc;
 using namespace smsc::util::xml;
@@ -50,13 +54,13 @@ Response * CommandUpdateRule::CommandCreate(scag::Scag * SmscApp)
       scag::re::RuleEngine& re = scag::re::RuleEngine::Instance();
       re.updateRule(ruleId);
 
-  }catch(Exception e){
+  }catch(RuleEngineException& e){
 
       char desc[512];
       sprintf(desc, "RuleEngine exception: %s", e.what());
       Variant res((const char *)desc);
 
-      smsc_log_info(logger, "CommandUpdateRule exception, %s", e.what());
+      smsc_log_info(logger, "RuleEngineException exception, %s", e.what());
       return new Response(Response::Error, res);
 
   }catch(...){

@@ -170,7 +170,7 @@ void ConfigManagerImpl::reloadAllConfigs()
 static bool  bConfigManagerInited = false;
 static Mutex initConfigManagerLock;
 
-inline unsigned GetLongevity(ConfigManagerImpl*) { return 7; } 
+inline unsigned GetLongevity(ConfigManagerImpl*) { return 8; } 
 typedef SingletonHolder<ConfigManagerImpl> SingleConfig;
 
 void ConfigManager::Init()
@@ -191,8 +191,10 @@ ConfigManager& ConfigManager::Instance()
     if (!bConfigManagerInited) 
     {
         MutexGuard guard(initConfigManagerLock);
+        
         if (!bConfigManagerInited) 
             throw std::runtime_error("ConfigManager not inited!");
+        
     }
     return SingleConfig::Instance();
 }
@@ -208,6 +210,11 @@ ConfigManagerImpl::ConfigManagerImpl()
   {
     __trace__("reading config...");
     DOMTreeReader reader;
+
+    char * filename = new char[strlen(smsc::util::findConfigFile("../conf/config.xml")) + 1];
+    std::strcpy(filename, smsc::util::findConfigFile("../conf/config.xml"));
+    config_filename = std::auto_ptr<char>(filename);
+
     DOMDocument *document = reader.read(config_filename.get());
     if (document && document->getDocumentElement())
     {
@@ -230,10 +237,16 @@ ConfigManagerImpl::ConfigManagerImpl()
     sessionManCfg.init(ConfigView(config, "SessionManager"));
     statManCfg.init(ConfigView(config, "MessageStorage"));
 
-  } catch (ParseException &e) {
-    throw ConfigException(e.what());
-  }
-}
+} catch (ParseException &e) {
+    throw ConfigException(e.what()); 
+}catch(ConfigException& e){
+    throw ConfigException(e.what()); 
+}catch(Exception &e) {
+    throw ConfigException(e.what()); 
+}catch(...) {
+    throw ConfigException("ConfigManagerImpl exception, unknown exception"); 
+} 
+} 
 
 /**
  * Create our parser, then attach an error handler to the parser.

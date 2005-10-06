@@ -13,9 +13,9 @@ public:
     std::string cfg_dir;
     std::string so_dir;
     BillingManagerConfig() { };
-    BillingManagerConfig(ConfigView& cv);
-    void init(ConfigView& cv);   
-    bool check(ConfigView& cv);
+    BillingManagerConfig(ConfigView& cv) throw(ConfigException);
+    void init(ConfigView& cv) throw(ConfigException);   
+    bool check(ConfigView& cv) throw(ConfigException);
 };
 
 }

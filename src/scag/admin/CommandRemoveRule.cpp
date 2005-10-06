@@ -11,6 +11,10 @@ using smsc::admin::service::Variant;
 using namespace xercesc;
 using namespace smsc::util::xml;
 
+class RuleEngineException : public Exception
+{
+};
+
 CommandRemoveRule::CommandRemoveRule(const xercesc::DOMDocument * document)
     : SCAGCommand((Command::Id)CommandIds::updateRule),
       ruleId( -1 )
@@ -51,7 +55,7 @@ Response * CommandRemoveRule::CommandCreate(scag::Scag * SmscApp)
       scag::re::RuleEngine& re = scag::re::RuleEngine::Instance();
       re.updateRule(ruleId);
 
-  }catch(Exception& e){
+  }catch(RuleEngineException& e){
 
       char desc[512];
       sprintf(desc, "RuleEngine exception: %s", e.what());

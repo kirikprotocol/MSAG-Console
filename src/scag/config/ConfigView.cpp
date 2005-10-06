@@ -24,7 +24,7 @@ char* ConfigView::prepareSubSection(const char* sub)
     return section;
 }
 ConfigView::ConfigView(Config& config_, const char* cat)
-    : log(Logger::getInstance("smsc.util.config.ConfigView")),
+    : log(Logger::getInstance("scag.onfig.ConfigView")),
         config(config_), category(0)
 {
     if (cat)
@@ -88,12 +88,16 @@ int32_t ConfigView::getInt(const char* param, const char* error)
     {
         result = config.getInt(section);
     }
-    catch (ConfigException& exc)
+    catch (HashInvalidKeyException& exc)
     {
         smsc_log_warn(log, "Config parameter missed: <%s>. %s",
                  section, (error) ? error:"");
         if (section) delete section;
-        throw;
+
+        char msg[512];
+        sprintf(msg, "Config parameter missed: <%s>.", section);
+
+        throw ConfigException(msg);
 
     }
     if (section) delete section;
@@ -110,13 +114,17 @@ char* ConfigView::getString(const char* param, const char* error, bool check)
         result = new char[strlen(tmp)+1];
         strcpy(result, tmp);
     }
-    catch (ConfigException& exc)
+    catch (HashInvalidKeyException& exc)
     {
         if (check)
             smsc_log_warn(log, "Config parameter missed: <%s>. %s",
                      section, (error) ? error:"");
         if (section) delete section;
-        if (check) throw;
+
+        char msg[512];
+        sprintf(msg, "Config parameter missed: <%s>.", section);
+
+        if (check) throw ConfigException(msg);
         return 0;
     }
     if (section) delete section;
@@ -131,12 +139,16 @@ bool ConfigView::getBool(const char* param, const char* error)
     {
         result = config.getBool(section);
     }
-    catch (ConfigException& exc)
+    catch (HashInvalidKeyException& exc)
     {
         smsc_log_warn(log, "Config parameter missed: <%s>. %s",
                   section, (error) ? error:"");
         if (section) delete section;
-        throw;
+
+        char msg[512];
+        sprintf(msg, "Config parameter missed: <%s>.", section);
+
+        throw ConfigException(msg);
     }
     if (section) delete section;
     return result;
