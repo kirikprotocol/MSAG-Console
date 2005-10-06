@@ -25,36 +25,53 @@ Inap::~Inap()
 void Inap::onDialogInvoke( Invoke* op )
 {
 	assert( op );
-	switch(op->getOpcode())
-	{
-		case InapOpCode::FurnishChargingInformationSMS:
-			assert( op->getParam() );
-			notify1( &SSF::furnishChargingInformationSMS, 
-								static_cast<FurnishChargingInformationSMSArg*>(op->getParam()) );
-			break;
-		case InapOpCode::ConnectSMS:
-			assert( op->getParam() );
-			notify1( &SSF::connectSMS,
-					static_cast<ConnectSMSArg*>(op->getParam()) );
-			break;
-		case InapOpCode::RequestReportSMSEvent:
-			assert( op->getParam() );
-			notify1( &SSF::requestReportSMSEvent, 
-					static_cast<RequestReportSMSEventArg*>(op->getParam()) );
-			break;
-		case InapOpCode::ContinueSMS:
-			notify0( &SSF::continueSMS );
-			break;
-		case InapOpCode::ReleaseSMS:
-			notify1( &SSF::releaseSMS,
-			static_cast<ReleaseSMSArg*>(op->getParam())  );
-			break;
-		case InapOpCode::ResetTimerSMS:
-			assert( op->getParam() );
-			notify1( &SSF::resetTimerSMS,
-			static_cast<ResetTimerSMSArg*>(op->getParam())  );
-			break;
-	}
+
+    // ListenerList is defined as std::list<SSF*>, that keeps (Billing*) casted to (SSF*)
+    switch(op->getOpcode()) {
+	case InapOpCode::FurnishChargingInformationSMS: {
+	    assert(op->getParam());
+	    for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
+		SSF * ptr = *it;
+		ptr->furnishChargingInformationSMS(static_cast<FurnishChargingInformationSMSArg*>
+						   (op->getParam()));
+	    }
+	}   break;
+	case InapOpCode::ConnectSMS: {
+	    assert(op->getParam());
+	    for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
+		SSF * ptr = *it;
+		ptr->connectSMS(static_cast<ConnectSMSArg*>(op->getParam()) );
+	    }
+	}   break;
+	case InapOpCode::RequestReportSMSEvent: {
+	    assert(op->getParam());
+	    for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
+		SSF * ptr = *it;
+		ptr->requestReportSMSEvent(static_cast<RequestReportSMSEventArg*>(op->getParam()));
+	    }
+	}   break;
+	case InapOpCode::ContinueSMS: {
+	    for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
+		SSF * ptr = *it;
+		ptr->continueSMS();
+	    }
+	}   break;
+	case InapOpCode::ReleaseSMS: {
+	    assert(op->getParam());
+	    for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
+		SSF * ptr = *it;
+		ptr->releaseSMS(static_cast<ReleaseSMSArg*>(op->getParam()));
+	    }
+	}   break;
+	case InapOpCode::ResetTimerSMS: {
+	    assert(op->getParam());
+	    for (ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++) {
+		SSF * ptr = *it;
+		ptr->resetTimerSMS(static_cast<ResetTimerSMSArg*>(op->getParam()));
+	    }
+	}   break;
+	default:;
+    }
 }
 
 void Inap::initialDPSMS(InitialDPSMSArg* arg)
