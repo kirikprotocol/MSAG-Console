@@ -5,51 +5,85 @@
 #include "inman/comp/acdefs.hpp"
 #include "inman/comp/operfactory.hpp"
 
-
 #include "inman/comp/comps.hpp"
 #include "inman/comp/compsutl.hpp"
+#include "inman/comp/comfactory.hpp"
+
+#include "inman/comp/usscomp.hpp"
 
 using smsc::inman::comp::InapOpCode;
-using smsc::inman::comp::CompFactory;
-using smsc::inman::comp::OperationFactory;
-using smsc::inman::comp::OperationFactoryInstanceT;
+using smsc::inman::usscomp::MAPUSS_OpCode;
 using smsc::inman::comp::ApplicationContextFactory;
 
-typedef OperationFactoryInstanceT <id_ac_cap4_sms_AC> CAP4SMSFactory;
+using smsc::ac::CAP4SMSFactory;
+using smsc::ac::MAPUSS2Factory;
 
-void initCAP4SMSComponents(OperationFactory * fact)
-{
-    fact->setLogger(Logger::getInstance("smsc.inman.comp.CAP4SMSFactory"));
-    fact->registerArg(InapOpCode::RequestReportSMSEvent,
-	new CompFactory::ProducerT<smsc::inman::comp::RequestReportSMSEventArg>() );
-}
-
-
+                                                               
 int main(int argc, char * argv[])
 {
     int   method = 0;
-    Component * comp = NULL;
+    Component * comp = NULL, *res = NULL;
+    unsigned    ac_id = id_ac_cap4_sms_AC;
     unsigned    opcode = InapOpCode::RequestReportSMSEvent;
 
-
     Logger::Init();
-
     Logger	*logger = Logger::getInstance("smsc.ac.factory");
-
-    CAP4SMSFactory::getInstance()->Init(initCAP4SMSComponents);
 
     if (argc > 1)
 	method = atoi(argv[1]);
 
-    if (method) {
-	method = 1;
+
+    switch (method) {
+    case 2 : {
+	CAP4SMSFactory::getInstance();
+        comp = ApplicationContextFactory::getFactory(ac_id)->createArg(opcode);
+    } break;
+    case 1 : { //dynamical initialization
+	CAP4SMSFactory::Init(smsc::inman::comp::initCAP4SMSComponents);
 	comp = CAP4SMSFactory::getInstance()->createArg(opcode);
-    } else {
-	comp = ApplicationContextFactory::operationFactory(id_ac_cap4_sms_AC)->createArg(opcode);
+    } break;
+    //static initialization: FactoryInitFunction is called in ApplicationContextFactory()
+    default: method = 0;    
+    case 0 : {
+	comp = CAP4SMSFactory::getInstance()->createArg(opcode);
+    } break;
     }
     assert(comp);
-    smsc_log_debug(logger, "method %d: %s is returned for AC: %d, OPcode: %d", method,
-		   (typeid(*comp)).name(), id_ac_cap4_sms_AC, opcode);
+    smsc_log_debug(logger, "method %d: arg %s is returned for AC: %d, OPcode: %d", method,
+		   (typeid(*comp)).name(), ac_id, opcode);
+    delete comp;
+
+
+    ac_id = id_ac_map_networkUnstructuredSs_v2;
+    opcode = MAPUSS_OpCode::processUSS_Request;
+
+    switch (method) {
+    case 2 : {
+	MAPUSS2Factory::getInstance();
+	comp = ApplicationContextFactory::getFactory(ac_id)->createArg(opcode);
+	res = ApplicationContextFactory::getFactory(ac_id)->createRes(opcode);
+    } break;
+    case 1 : { //dynamical initialization
+	MAPUSS2Factory::Init(smsc::inman::usscomp::initMAPUSS2Components);
+	comp = MAPUSS2Factory::getInstance()->createArg(opcode);
+	res = MAPUSS2Factory::getInstance()->createRes(opcode);
+    } break;
+    //static initialization: FactoryInitFunction is called in ApplicationContextFactory()
+    default: method = 0;    
+    case 0 : {
+	comp = MAPUSS2Factory::getInstance()->createArg(opcode);
+	res = MAPUSS2Factory::getInstance()->createRes(opcode);
+    } break;
+    }
+    assert(comp);
+    smsc_log_debug(logger, "method %d: arg %s is returned for AC: %d, OPcode: %d", method,
+		   (typeid(*comp)).name(), ac_id, opcode);
+    assert(res);
+    smsc_log_debug(logger, "method %d: res %s is returned for AC: %d, OPcode: %d", method,
+		   (typeid(*res)).name(), ac_id, opcode);
+
+    delete comp; delete res;
+
 
     return 0;
 }
