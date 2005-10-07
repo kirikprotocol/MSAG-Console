@@ -1260,7 +1260,7 @@ static ET96MAP_USSD_DATA_CODING_SCHEME_T fillUSSDString(unsigned encoding, const
       bytes = ConvertText27bit(text,text_len,ussdString->ussdStr,&elen);
     }
     // if buffer have trailing 7 unfilled bits place <cr> there
-    if( bytes*8-text_len*7 == 7 ) ussdString->ussdStr[bytes-1] |= (0x0D<<1);
+    if( bytes*8-elen*7 == 7 ) ussdString->ussdStr[bytes-1] |= (0x0D<<1);
     ussdEncoding = 0x01;
   } else { //8 bit
     bytes = text_len;
@@ -3425,7 +3425,7 @@ static void NotifyHLR(MapDialog* dialog)
   }else if ( dialog->hlrVersion == 1 ) {
     result = Et96MapV1ReportSmDelStatReq(
       SSN,dialog->dialogid_map,1,&dialog->m_msAddr,&dialog->m_scAddr);
-  } else 
+  } else
     throw runtime_error(
     FormatText("MAP::%s bad protocol version 0x%x",__func__,dialog->hlrVersion));
   if ( result != ET96MAP_E_OK ) {
