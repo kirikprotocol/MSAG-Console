@@ -31,13 +31,14 @@ Response * CommandRegSmsc::CreateResponse(scag::Scag * SmscApp)
       smsc_log_info(logger, "CommandModifySmsc is processed ok");
       return new Response(Response::Ok, "none");
   }catch(exception& e){
-     __trace2__("CommandRegSmsc::CreateResponse exception:%s",e.what());
-     smsc_log_warn(logger, "CommandRegSmsc::CreateResponse exception:%s",e.what());
-     return new Response(Response::Error, "CommandRegSmsc::CreateRespnse exception");
+      char msg[1024];
+      sprintf(msg, "Failed to register smsc. Details: %s", e.what());
+
+     smsc_log_warn(logger, msg);
+     return new Response(Response::Error, msg);
   }catch(...){
-      __trace__("CommandRegSmsc::CreateResponse exception:unknown");
-      smsc_log_warn(logger, "CommandRegSmsc::CreateResponse exception:unknown");
-      return new Response(Response::Error, "CommandRegSmsc::CreateRespnse exception");
+      smsc_log_warn(logger, "Failed to register smsc. Unknown error.");
+      return new Response(Response::Error, "Failed to register smsc. Unknown error.");
   }
 }
 

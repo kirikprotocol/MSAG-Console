@@ -15,13 +15,21 @@ Response * CommandUnregSmsc::CreateResponse(scag::Scag * SmscApp)
   smsc_log_info(logger, "CommandUnregSme is processing...");
   try {
       SmscApp->getSmppManagerAdmin()->updateSmppEntity(getSmppEntityInfo());
+
+      smsc_log_info(logger, "CommandUnregSme is processed");
+      return new Response(Response::Ok, "none");
+
   }catch(Exception& e){
-      smsc_log_info(logger, "CommandUnregSme exception, %s", e.what());
+      char msg[1024];
+      sprintf("Failed to unregister smsc. Details: %s", e.what());
+      smsc_log_error(logger, msg);
+      return new Response(Response::Error, msg);
   }catch(...){
-      smsc_log_info(logger, "CommandUnregSme exception, Unknown exception.");
+      smsc_log_error(logger, "Failed to unregister smsc. Unknown error");
+      return new Response(Response::Error, "Failed to unregister smsc. Unknown error");
   }
-  smsc_log_info(logger, "CommandUnregSme is processed");
-  return new Response(Response::Ok, "none");
+  smsc_log_error(logger, "Failed to unregister smsc. Unknown error");
+  return new Response(Response::Error, "Failed to unregister smsc. Unknown error");
   
 }
 

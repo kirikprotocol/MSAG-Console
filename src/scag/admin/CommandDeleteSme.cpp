@@ -37,6 +37,7 @@ CommandDeleteSme::CommandDeleteSme(const xercesc::DOMDocument * const document)
       }
     }
   } catch (...) {
+    smsc_log_warn(logger, "Failed to read parameters of Delete Sme command");
     throw AdminException("Some exception occured");
   }
 }

@@ -27,14 +27,14 @@ Response * CommandModifySmsc::CreateResponse(scag::Scag * SmscApp)
 
       smsc_log_info(logger, "CommandModifySmsc is processed ok");
       return new Response(Response::Ok, "none");
-  }catch(exception& e){
-     __trace2__("CommandModifySmsc::CreateResponse exception:%s",e.what());
-     smsc_log_info(logger, "CommandModifySmsc::CreateResponse exception:%s",e.what());
-     return new Response(Response::Error, "CommandModifySmsc::CreateRespnse exception");
+  }catch(Exception& e){
+     char msg[1024];
+     sprintf(msg, "Failed to modify smsc. Details: %s", e.what());
+     smsc_log_error(logger, msg);
+     return new Response(Response::Error, msg);
   }catch(...){
-      __trace__("CommandModifySmsc::CreateResponse exception:unknown");
-      smsc_log_info(logger, "CommandModifySmsc::CreateResponse exception:unknown");
-      return new Response(Response::Error, "CommandModifySmsc::CreateRespnse exception");
+      smsc_log_error(logger, "Failed to modify smsc. Unknown error.");
+      return new Response(Response::Error, "Failed to modify smsc. Unknown error.");
   }
 }
 

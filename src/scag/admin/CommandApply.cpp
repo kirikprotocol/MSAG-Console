@@ -46,6 +46,7 @@ CommandApply::CommandApply(const xercesc::DOMDocument * doc)
     }
   }
   catch (...) {
+    smsc_log_warn(logger, "Failed to read parameters of Apply command");
     throw AdminException("Some exception occured");
   }
 }

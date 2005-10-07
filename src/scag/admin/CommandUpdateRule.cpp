@@ -38,8 +38,8 @@ CommandUpdateRule::CommandUpdateRule(const xercesc::DOMDocument * document)
     }
 
   } catch (...) {
-      smsc_log_info(logger, "CommandUpdateRule exception, unknown exception");
-    throw AdminException("Some exception occured");
+      smsc_log_warn(logger, "Failed to read parameters of Update Rule command.");
+    throw AdminException("Failed to read parameters of Update Rule command.");
   }
 }
 
@@ -54,26 +54,29 @@ Response * CommandUpdateRule::CommandCreate(scag::Scag * SmscApp)
       scag::re::RuleEngine& re = scag::re::RuleEngine::Instance();
       re.updateRule(ruleId);
 
+      smsc_log_info(logger, "CommandUpdateRule is processed ok.");
+      return new Response(Response::Ok, "Failed to update rule. Unknown error.");
+
   }catch(RuleEngineException& e){
 
       char desc[512];
-      sprintf(desc, "RuleEngine exception: %s", e.what());
+      sprintf(desc, "Failed to update rule. RuleEngineException exception, %s", e.what());
       Variant res((const char *)desc);
 
-      smsc_log_info(logger, "RuleEngineException exception, %s", e.what());
+      smsc_log_info(logger, desc);
       return new Response(Response::Error, res);
 
   }catch(...){
 
-      Variant res("Unknown exception");
+      Variant res("Failed to update rule. Unknown error.");
 
-      smsc_log_info(logger, "CommandUpdateRule exception, unknown exception");
+      smsc_log_error(logger, "Failed to update rule. Unknown error.");
       return new Response(Response::Error, res);
 
   }
 
-  smsc_log_info(logger, "CommandUpdateRule is processed ok");
-  return new Response(Response::Ok, "none");
+  smsc_log_error(logger, "Failed to update rule. Unknown error.");
+  return new Response(Response::Error, "Failed to update rule. Unknown error.");
 }
 
 }

@@ -82,8 +82,8 @@ CommandTraceRoute::CommandTraceRoute(const xercesc::DOMDocument * doc)
 
     }
   } catch (...) {
-      smsc_log_info(logger, "CommandTraceRoute exception, unknown exception");
-    throw AdminException("Some exception occured");
+      smsc_log_warn(logger, "Failed to read parameters of Status Sme command");
+    throw AdminException("Failed to read parameters of Status Sme command");
   }
 
 }
@@ -207,20 +207,26 @@ Response * CommandTraceRoute::CreateResponse(scag::Scag * ScagApp)
       return new Response(Response::Ok, result);
   }
   catch (AdminException& aexc) {
-      smsc_log_info(logger, "CommandTraceRoute exception, %s", aexc.what());
-      throw;
+      char msg[1024];
+      sprintf(msg, "Failed to trace route, details: %s", aexc.what());
+      smsc_log_error(logger, msg);
+      throw AdminException(msg);
   }
   catch (ConfigException& cexc) {
-      smsc_log_info(logger, "CommandTraceRoute exception, %s", cexc.what());
-      throw AdminException("Load routes config file failed. Cause: %s", cexc.what());
+      char msg[1024];
+      sprintf(msg, "Failed to trace route, details: %s", cexc.what());
+      smsc_log_error(logger, msg);
+      throw AdminException(msg);
   }
   catch (std::exception& exc) {
-      smsc_log_info(logger, "CommandTraceRoute exception, %s", exc.what());
-      throw AdminException("Trace route failed. Cause: %s.", exc.what());
+      char msg[1024];
+      sprintf(msg, "Failed to trace route, details: %s", exc.what());
+      smsc_log_error(logger, msg);
+      throw AdminException(msg);
   }
   catch (...) {
-      smsc_log_info(logger, "CommandTraceRoute exception, unknown exception");
-      throw AdminException("Trace route failed. Cause is unknown.");
+      smsc_log_error(logger, "Failed to trace route, unknown error.");
+      throw AdminException("Failed to trace route, unknown error.");
   }
 
   

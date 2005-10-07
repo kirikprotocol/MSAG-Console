@@ -39,7 +39,7 @@ CommandRemoveRule::CommandRemoveRule(const xercesc::DOMDocument * document)
     }
 
   } catch (...) {
-      smsc_log_info(logger, "CommandRemoveRule exception during parameters handling, unknown exception");
+      smsc_log_warn(logger, "Failed to read parameters of remove rule command.");
     throw AdminException("Some exception occured");
   }
 }
@@ -55,25 +55,28 @@ Response * CommandRemoveRule::CommandCreate(scag::Scag * SmscApp)
       scag::re::RuleEngine& re = scag::re::RuleEngine::Instance();
       re.updateRule(ruleId);
 
+      smsc_log_info(logger, "CommandRemoveRule is processed ok");
+      return new Response(Response::Ok, "none");
+
   }catch(RuleEngineException& e){
 
       char desc[512];
-      sprintf(desc, "RuleEngine exception: %s", e.what());
-      smsc_log_info(logger, "CommandRemoveRule exception, %s", e.what());
+      sprintf(desc, "Failed to remove rule. RuleEngine exception: %s", e.what());
+      smsc_log_error(logger, desc);
       Variant res((const char *)desc);
 
       return new Response(Response::Error, res);
 
   }catch(...){
 
-      Variant res("Unknown exception");
-      smsc_log_info(logger, "CommandRemoveRule exception, unknown exception");
+      Variant res("Failed to remove rule. Unknown error");
+      smsc_log_error(logger, "Failed to remove rule. Unknown error");
       return new Response(Response::Error, res);
 
   }
 
-  smsc_log_info(logger, "CommandRemoveRule is processed ok");
-  return new Response(Response::Ok, "none");
+  smsc_log_error(logger, "Unknown error");
+  return new Response(Response::Error, "Unknown error");
 }
 
 }
