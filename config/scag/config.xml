@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<config>
+
+  <section name="DataSource">
+    <param name="connections" type="int">5</param>
+    <param name="dbInstance" type="string">ORCL</param>
+    <param name="dbUserName" type="string">smsc_vita</param>
+    <param name="dbUserPassword" type="string">smsc_vita</param>
+    <param name="type" type="string">OCI</param>
+  </section>
+  
+  <section name="MessageStorage">
+    <param name="statisticsDir" type="string">/export/home/vita/gwinstall/statistics</param>
+    <param name="trafficDir" type="string">/export/home/vita/gwinstall/traffic</param>
+  </section>
+  
+  <section name="BillingManager">
+    <param name="configDir" type="string">conf</param>
+    <param name="soDir" type="string">bill_so</param>
+  </section>
+  
+  <section name="SessionManager">
+    <param name="location" type="string">conf</param>
+  </section>
+
+  <section name="StartupLoader">
+
+    <section name="DataSourceDrivers">
+
+      <section name="OCIDataSourceDriver">
+        <param name="loadup" type="string">libdb_oci.so</param>
+        <param name="type" type="string">OCI</param>
+      </section>
+    </section>
+  </section>
+
+  <section name="admin">
+    <param name="host" type="string">0.0.0.0</param>
+    <param name="port" type="int">25911</param>
+  </section>
+
+  <section name="billing">
+    <param name="module" type="string">libsimplebilling.so</param>
+  </section>
+
+  <section name="core">
+    <param name="eventQueueLimit" type="int">1000</param>
+    <param name="protocol_id" type="int">34</param>
+    <param name="state_machines_count" type="int">10</param>
+    <param name="ussdTransactionTimeout" type="int">600</param>
+
+    <section name="performance">
+      <param name="host" type="string">0.0.0.0</param>
+      <param name="port" type="int">25920</param>
+    </section>
+  </section>
+
+  <section name="providers">
+    <param name="last used provider id" type="int">0</param>
+  </section>
+
+  <section name="smpp">
+    <param name="host" type="string">0.0.0.0</param>
+    <param name="inactivityTime" type="int">30</param>
+    <param name="inactivityTimeOut" type="int">30</param>
+    <param name="port" type="int">25930</param>
+    <param name="readTimeout" type="int">60</param>
+  </section>
+
+  <section name="smsc-connections">
+
+    <section name="sme1">
+      <param name="altHost" type="string"></param>
+      <param name="altPort" type="int">0</param>
+      <param name="host" type="string">sunfire</param>
+      <param name="password" type="string">password</param>
+      <param name="port" type="int">25830</param>
+      <param name="responseTimeout" type="int">20</param>
+      <param name="systemId" type="string">mysmsc</param>
+      <param name="uniqueMsgIdPrefix" type="int">2</param>
+    </section>
+
+    <section name="sme2">
+      <param name="altHost" type="string"></param>
+      <param name="altPort" type="int">0</param>
+      <param name="host" type="string">sunfire</param>
+      <param name="password" type="string">snsmsc</param>
+      <param name="port" type="int">25830</param>
+      <param name="responseTimeout" type="int">20</param>
+      <param name="systemId" type="string">snsmsc</param>
+      <param name="uniqueMsgIdPrefix" type="int">3</param>
+    </section>
+
+    <section name="smsc1">
+      <param name="altHost" type="string"></param>
+      <param name="altPort" type="int">0</param>
+      <param name="host" type="string">sunfire</param>
+      <param name="password" type="string">pwd</param>
+      <param name="port" type="int">25830</param>
+      <param name="responseTimeout" type="int">60</param>
+      <param name="systemId" type="string">smsc</param>
+      <param name="uniqueMsgIdPrefix" type="int">5</param>
+    </section>
+  </section>
+
+  <section name="trafficControl">
+    <param name="maxSmsPerSecond" type="int">1000</param>
+  </section>
+</config>
