@@ -5,6 +5,8 @@
 #include <smeman/smeman.h>
 #include <router/route_types.h>
 #include <sms/sms.h>
+#include "scag/transport/smpp/router/route_types.h"
+#include "scag/transport/smpp/SmppManagerAdmin.h"
 
 namespace scag {
 namespace stat {
@@ -45,25 +47,25 @@ using smsc::smeman::SmeRecord;
         errCode = -1;
         internal = false;
       }
-      SmppStatEvent(smsc::smeman::SmeProxy* proxy, int cnt, int errcode)
+      SmppStatEvent(scag::transport::smpp::SmppEntityInfo& smppEntity, int cnt, int errcode)
       {
-        strncpy(smeId,proxy->getSystemId(),sizeof(smeId));
-        smeProviderId=proxy->getProviderId();
+        strncpy(smeId, smppEntity.systemId, sizeof(smeId));
+        //smeProviderId = smppEntity.providerId;
         routeId[0]=0;
         routeProviderId=-1;
         counter = cnt;
         errCode = errcode;
-        internal = (  (SmeRecord*)proxy  )->info.internal;
+        internal = ( smppEntity.type == scag::transport::smpp::etSmsc );
       }
-      SmppStatEvent(smsc::smeman::SmeProxy* proxy, const smsc::router::RouteInfo& ri, int cnt, int errcode)
+      SmppStatEvent(scag::transport::smpp::SmppEntityInfo& smppEntity, scag::transport::smpp::router::RouteInfo& ri, int cnt, int errcode)
       {
-        strncpy(smeId,proxy->getSystemId(),sizeof(smeId));
-        smeProviderId=proxy->getProviderId();
-        strncpy(routeId,ri.routeId.c_str(),sizeof(routeId));
+        strncpy(smeId, smppEntity.systemId, sizeof(smeId));
+        //smeProviderId = smppEntity.providerId;
+        strncpy(routeId, (char*)ri.routeId, sizeof(routeId));
         routeProviderId=ri.providerId;
         counter = cnt;
         errCode = errcode;
-        internal = (  (SmeRecord*)proxy  )->info.internal;
+        internal = ( smppEntity.type == scag::transport::smpp::etSmsc );
       }
       SmppStatEvent(const SmppStatEvent& src)
       {
