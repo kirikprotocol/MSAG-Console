@@ -17,18 +17,28 @@
 #include "SmppWriter.h"
 #include "SmscConnector.h"
 #include "SmscSocket.h"
+#include "scag/config/ConfigManager.h"
 
 using namespace scag::transport::smpp;
 int main(int argc,char* argv[])
 {
-  char* x=new char;
-  smsc::logger::Logger::Init();
+  delete new char;
+  try{
+    smsc::logger::Logger::Init();
+    scag::config::ConfigManager::Init();
+  }catch(std::exception& e)
+  {
+    printf("init exception:%s\n",e.what());
+    return -1;
+  }
   try{
     SmppManager sm;
     sm.Init("smpp.xml");
+    sm.LoadRoutes("routes.xml");
     printf("press enter...");
     char buf[32];
     fgets(buf,sizeof(buf),stdin);
+    sm.StopProcessing();
   }catch(std::exception& e)
   {
     printf("exception:%s\n",e.what());

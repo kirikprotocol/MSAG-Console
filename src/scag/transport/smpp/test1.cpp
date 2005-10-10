@@ -41,7 +41,7 @@ struct FakeRegistrator:SmppChannelRegistrator,SmppCommandQueue{
   {
     printf("Unregister:%s\n",ch->getSystemId());
   }
-  void putCommand(SmppBindType ct,const SmppCommand& cmd)
+  void putCommand(SmppChannel* ct,SmppCommand& cmd)
   {
     printf("putCommand:%d\n",cmd->get_commandId());
     switch(cmd->get_commandId())
