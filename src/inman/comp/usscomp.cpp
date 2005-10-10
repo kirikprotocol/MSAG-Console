@@ -27,9 +27,9 @@ void initMAPUSS2Components(OperationFactory * fact)
 {
     fact->setLogger(Logger::getInstance("smsc.inman.usscomp.ComponentFactory"));
     fact->registerArg(MAPUSS_OpCode::processUSS_Request,
-	    new CompFactory::ProducerT<smsc::inman::usscomp::ProcessUSSRequestArg>() );
+      new CompFactory::ProducerT<smsc::inman::usscomp::ProcessUSSRequestArg>() );
     fact->registerRes(MAPUSS_OpCode::processUSS_Request,
-	    new CompFactory::ProducerT<smsc::inman::usscomp::ProcessUSSRequestRes>() );
+      new CompFactory::ProducerT<smsc::inman::usscomp::ProcessUSSRequestRes>() );
 }
 
 
@@ -74,8 +74,8 @@ void ProcessUSSRequestArg::setMSISDNadr(const Address& msadr)
 
 void ProcessUSSRequestArg::decode(const vector<unsigned char>& buf)
 {
-    USSD_Arg_t *	dcmd = NULL;	/* decoded structure */
-    asn_dec_rval_t	drc;		/* Decoder return value  */
+    USSD_Arg_t *  dcmd = NULL;  /* decoded structure */
+    asn_dec_rval_t  drc;    /* Decoder return value  */
 
     drc = ber_decode(0, &asn_DEF_USSD_Arg, (void **)&dcmd, &buf[0], buf.size());
     ASNCODEC_LOG_DEC(drc, asn_DEF_USSD_Arg, "mapUSS");
@@ -87,16 +87,16 @@ void ProcessUSSRequestArg::decode(const vector<unsigned char>& buf)
     this->setUSSData(dcmd->ussd_String.buf, dcmd->ussd_String.size);
 
     if (dcmd->msisdn) {
-	_msAdr = smsc::inman::comp::OCTET_STRING_2_Addres(dcmd->msisdn);
-	assert(_msAdr.length < MAP_MAX_ISDN_AddressLength);
+  _msAdr = smsc::inman::comp::OCTET_STRING_2_Addres(dcmd->msisdn);
+  assert(_msAdr.length < MAP_MAX_ISDN_AddressLength);
     } else
-	_msAdr.setValue(0, NULL);
+  _msAdr.setValue(0, NULL);
 
     if (dcmd->alertingPattern) {
-	assert(dcmd->alertingPattern->size == 1);
-	_alrt = (AlertingPattern_e)(dcmd->alertingPattern->buf[0]);
+  assert(dcmd->alertingPattern->size == 1);
+  _alrt = (AlertingPattern_e)(dcmd->alertingPattern->buf[0]);
     } else
-	_alrt = alertingNotSet;
+  _alrt = alertingNotSet;
 
     smsc_log_component(compLogger, &asn_DEF_USSD_Arg, dcmd);
     asn_DEF_USSD_Arg.free_struct(&asn_DEF_USSD_Arg, dcmd, 0);
@@ -104,42 +104,46 @@ void ProcessUSSRequestArg::decode(const vector<unsigned char>& buf)
 
 void ProcessUSSRequestArg::encode(vector<unsigned char>& buf)
 {
-    asn_enc_rval_t	er;
+    asn_enc_rval_t  er;
     /* construct USSD_Arg */
-    USSD_Arg_t	 	cmd;
+    USSD_Arg_t    cmd;
     /* optionals: */
-    unsigned char	alrt_buf[1];
-    OCTET_STRING_t	alrt;
+    unsigned char alrt_buf[1];
+    OCTET_STRING_t  alrt;
+    uint8_t fdcsbuf;
+    uint8_t fussdsbuf[MAP_MAX_USSD_StringLength];
 
-    unsigned char	isdn_buf[1 + MAP_MAX_ISDN_AddressLength];
-    OCTET_STRING_t	isdn;
+    unsigned char isdn_buf[1 + MAP_MAX_ISDN_AddressLength];
+    OCTET_STRING_t  isdn;
 
 
     memset(&cmd, 0x00, sizeof(cmd)); //clear optionals and asn_ctx
     cmd.ussd_DataCodingScheme.size = 1;
+    cmd.ussd_DataCodingScheme.buf = &fdcsbuf;
     cmd.ussd_DataCodingScheme.buf[0] = _dCS;
-    
+
     /* prepare ussd string */
     cmd.ussd_String.size = _uSSdata.size();
     assert(cmd.ussd_String.size < MAP_MAX_USSD_StringLength);
+    cmd.ussd_String.buf = &fussdsbuf[0];
     memcpy(cmd.ussd_String.buf, &_uSSdata[0], cmd.ussd_String.size);
 
     if (_alrt != alertingNotSet) {
-	memset(&alrt, 0, sizeof(alrt));
-	alrt_buf[0] = (unsigned char)_alrt;
-	alrt.buf = alrt_buf;
-	alrt.size = 1;
-	cmd.alertingPattern = &alrt;
+  memset(&alrt, 0, sizeof(alrt));
+  alrt_buf[0] = (unsigned char)_alrt;
+  alrt.buf = alrt_buf;
+  alrt.size = 1;
+  cmd.alertingPattern = &alrt;
     }
 
     if (msISDNadr_present()) {
-	memset(&isdn, 0, sizeof(isdn));
-	isdn.size = packMAPAddress2OCTS(_msAdr, (smsc::inman::comp::TONNPI_ADDRESS_OCTS *)isdn_buf);
-	isdn.buf = isdn_buf;
-	cmd.msisdn = &isdn;
+  memset(&isdn, 0, sizeof(isdn));
+  isdn.size = packMAPAddress2OCTS(_msAdr, (smsc::inman::comp::TONNPI_ADDRESS_OCTS *)isdn_buf);
+  isdn.buf = isdn_buf;
+  cmd.msisdn = &isdn;
     }
 
-    smsc_log_component(compLogger, &asn_DEF_USSD_Arg, &cmd); 
+    smsc_log_component(compLogger, &asn_DEF_USSD_Arg, &cmd);
 
     er = der_encode(&asn_DEF_USSD_Arg, &cmd, print2vec, &buf);
     ASNCODEC_LOG_ENC(er, asn_DEF_USSD_Arg, "mapUSS");
@@ -148,4 +152,3 @@ void ProcessUSSRequestArg::encode(vector<unsigned char>& buf)
 }//namespace usscomp
 }//namespace inman
 }//namespace smsc
-
