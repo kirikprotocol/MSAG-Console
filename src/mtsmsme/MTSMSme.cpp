@@ -245,6 +245,7 @@ public:
 
         PduSubmitSm  sm;
         sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
+        sm.get_header().set_sequenceNumber(asyncTransmitter->getNextSeq());
         fillSmppPduFromSms(&sm, (SMS *)sms);
         sm.get_message().get_dest()  .set_typeOfNumber(da.type);
         sm.get_message().get_dest()  .set_numberingPlan(da.plan);
