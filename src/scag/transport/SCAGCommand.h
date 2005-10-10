@@ -17,24 +17,15 @@ namespace scag { namespace transport
         SMPP = T_TYPE_SMPP,
         WAP  = T_TYPE_WAP,
         MMS  = T_TYPE_MMS
-    }; 
+    };
 
     class SCAGCommand
     {
-    protected:
-
-        TransportType type;
-        SCAGCommand(TransportType _type) : type(_type) {};
     public:
-
-        virtual ~SCAGCommand() {};
-        inline TransportType getType() const {
-            return type;
-        };
-
+        virtual TransportType getType()const=0;
+        virtual int getRuleId()const=0;
     };
 
 }}
 
 #endif // SCAG_TRANSPORT_COMMAND
-
