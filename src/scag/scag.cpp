@@ -427,14 +427,12 @@ void Scag::init()
   }
   catch(exception& e)
   {
-    __trace2__("Smsc::init exception:%s",e.what());
-    smsc_log_warn(log, "Smsc::init exception:%s",e.what());
+    smsc_log_warn(log, "Scag::init exception:%s",e.what());
     throw;
   }
   catch(...)
   {
-    __trace__("Smsc::init exception:unknown");
-    smsc_log_warn(log, "Smsc::init exception:unknown");
+    smsc_log_warn(log, "Scag::init exception:unknown");
     throw;
   }
   __trace__("Smsc::init completed");

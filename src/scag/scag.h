@@ -19,6 +19,7 @@
 #include "sms/sms.h"
 #include "scag/transport/smpp/SmppManager.h"
 #include "scag/transport/smpp/SmppManagerAdmin.h"
+#include "util/crc32.h"
 
 namespace scag
 {
@@ -159,21 +160,43 @@ public:
     int y,m,d;
     sscanf(lic["LicenseExpirationDate"].c_str(),"%d-%d-%d",&y,&m,&d);
     struct tm t={0,};
-    t.tm_year=y;
+    t.tm_year=y-1900;
     t.tm_mon=m;
     t.tm_mday=d;
     license.expdate=mktime(&t);
     long hostid;
-    sscanf(lic["Hostid"].c_str(),"%x",&hostid);
-    if(hostid!=gethostid())
+    std::string ids=lic["Hostids"];
+    std::string::size_type pos=0;
+    bool ok=false;
+    do{
+      sscanf(ids.c_str()+pos,"%x",&hostid);
+      if(hostid==gethostid())
+      {
+        ok=true;break;
+      }
+      pos=ids.find(',',pos);
+      if(pos!=std::string::npos)pos++;
+    }while(pos!=std::string::npos);
+    if(!ok)throw runtime_error("");
+    if(smsc::util::crc32(0,lic["Product"].c_str(),lic["Product"].length())!=0x685a3df4)throw runtime_error("");
+    if(license.expdate<time(NULL))
     {
-      throw runtime_error("");
+      char x[]=
+      {
+      'L'^0x4c,'i'^0x4c,'c'^0x4c,'e'^0x4c,'n'^0x4c,'s'^0x4c,'e'^0x4c,' '^0x4c,'E'^0x4c,'x'^0x4c,'p'^0x4c,'i'^0x4c,'r'^0x4c,'e'^0x4c,'d'^0x4c,
+      };
+      std::string s;
+      for(int i=0;i<sizeof(x);i++)
+      {
+        s+=x[i]^0x4c;
+      }
+      throw runtime_error(s);
     }
   }
 
   scag::transport::smpp::SmppManagerAdmin * getSmppManagerAdmin()
   {
-      scag::transport::smpp::SmppManagerAdmin * smppManAdmin = dynamic_cast<scag::transport::smpp::SmppManagerAdmin*>(&smppMan);
+      scag::transport::smpp::SmppManagerAdmin * smppManAdmin = &smppMan;
 
       if(!smppManAdmin)
           throw Exception("Failed casting of SmppManger to SmppManagerAdmin from Scag::getSmppManagerAdmin");
