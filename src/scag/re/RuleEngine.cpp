@@ -45,7 +45,6 @@ class RuleEngineImpl : RuleEngine
 
     MainActionFactory factory;
     std::string RulesDir;
-    int GetRuleId(SCAGCommand& command);
     Logger * logger;
 
     friend struct RulesReference; 
@@ -287,19 +286,13 @@ std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const int 
     return result;   
 }
 
-int RuleEngineImpl::GetRuleId(SCAGCommand& command)
-{
-    return 1;
-}
-
 
 RuleStatus RuleEngineImpl::process(SCAGCommand& command, Session& session)
 {
     RulesReference rulesRef = getRules();
     RuleStatus rs;
 
-    int ruleId = 0;
-    ruleId = GetRuleId(command);
+    int ruleId = command.getRuleId();
 
     smsc_log_debug(logger,"Process RuleEngine with ruleId: %d",ruleId);
 
