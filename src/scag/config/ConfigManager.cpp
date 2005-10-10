@@ -8,7 +8,6 @@
 #include "util/debug.h"
 #include "util/xml/DOMTreeReader.h"
 #include "scag/config/route/RouteConfig.h"
-#include "scag/config/alias/aliasconf.h"
 #include "scag/config/statman/StatManConfig.h"
 #include "util/findConfigFile.h"
 #include "scag/config/ConfigManager.h"
@@ -40,7 +39,7 @@ public:
     virtual void removeListener(ConfigType type);
 
     virtual void reloadConfig(ConfigType type);
-	virtual void reloadAllConfigs();
+  virtual void reloadAllConfigs();
 
     virtual RouteConfig  getRouteConfig(){return routeCfg;};
     virtual SmppManConfig getSmppManConfig(){return smppManCfg;};
@@ -57,7 +56,6 @@ protected:
 
     SmppManConfig smppManCfg;
     RouteConfig routeCfg;
-    AliasConfig aliasCfg;
     StatManConfig statManCfg;
     BillingManagerConfig billManCfg;
     SessionManagerConfig sessionManCfg;
@@ -133,13 +131,6 @@ void ConfigManagerImpl::reloadAllConfigs()
     routeCfg.reload();
     smppManCfg.reload();
 
-    if(listeners.Exist(ALIAS_CFG)){
-        ConfigListener * listener = listeners.Get(ALIAS_CFG);
-        if(listener){
-            listener->configChanged();
-        }
-    }
-
     if(listeners.Exist(ROUTE_CFG)){
         ConfigListener * listener = listeners.Get(ROUTE_CFG);
         if(listener){
@@ -170,7 +161,7 @@ void ConfigManagerImpl::reloadAllConfigs()
 static bool  bConfigManagerInited = false;
 static Mutex initConfigManagerLock;
 
-inline unsigned GetLongevity(ConfigManagerImpl*) { return 8; } 
+inline unsigned GetLongevity(ConfigManagerImpl*) { return 8; }
 typedef SingletonHolder<ConfigManagerImpl> SingleConfig;
 
 void ConfigManager::Init()
@@ -188,13 +179,13 @@ void ConfigManager::Init()
 
 ConfigManager& ConfigManager::Instance()
 {
-    if (!bConfigManagerInited) 
+    if (!bConfigManagerInited)
     {
         MutexGuard guard(initConfigManagerLock);
-        
-        if (!bConfigManagerInited) 
+
+        if (!bConfigManagerInited)
             throw std::runtime_error("ConfigManager not inited!");
-        
+
     }
     return SingleConfig::Instance();
 }
@@ -206,13 +197,14 @@ ConfigManagerImpl::ConfigManagerImpl()
   initXerces();
   findConfigFile();
 
-  try 
+  try
   {
     __trace__("reading config...");
     DOMTreeReader reader;
 
-    char * filename = new char[strlen(smsc::util::findConfigFile("../conf/config.xml")) + 1];
-    std::strcpy(filename, smsc::util::findConfigFile("../conf/config.xml"));
+    const char* cfgFile=smsc::util::findConfigFile("config.xml");
+    char * filename = new char[strlen(cfgFile) + 1];
+    std::strcpy(filename, cfgFile);
     config_filename = std::auto_ptr<char>(filename);
 
     DOMDocument *document = reader.read(config_filename.get());
@@ -231,22 +223,22 @@ ConfigManagerImpl::ConfigManagerImpl()
 
     // Inits subsystems configs
 
-    smppManCfg.load(smsc::util::findConfigFile("../conf/sme.xml"));
-    routeCfg.load(smsc::util::findConfigFile("../conf/routes.xml"));
+    //smppManCfg.load(smsc::util::findConfigFile("sme.xml"));
+    routeCfg.load(smsc::util::findConfigFile("routes.xml"));
     billManCfg.init(ConfigView(config, "BillingManager"));
     sessionManCfg.init(ConfigView(config, "SessionManager"));
     statManCfg.init(ConfigView(config, "MessageStorage"));
 
 } catch (ParseException &e) {
-    throw ConfigException(e.what()); 
+    throw ConfigException(e.what());
 }catch(ConfigException& e){
-    throw ConfigException(e.what()); 
+    throw ConfigException(e.what());
 }catch(Exception &e) {
-    throw ConfigException(e.what()); 
+    throw ConfigException(e.what());
 }catch(...) {
-    throw ConfigException("ConfigManagerImpl exception, unknown exception"); 
-} 
-} 
+    throw ConfigException("ConfigManagerImpl exception, unknown exception");
+}
+}
 
 /**
  * Create our parser, then attach an error handler to the parser.
@@ -389,7 +381,7 @@ void ConfigManagerImpl::reload(Array<int>& changedConfigs)
         throw(ConfigException)
 {
 
-    try 
+    try
   {
 
     config.clean();
