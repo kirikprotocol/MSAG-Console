@@ -18,7 +18,8 @@ struct FixedLengthString{
   {
     *this=argStr;
   }
-  FixedLengthString(const FixedLengthString& argStr)
+  template <int M>
+  FixedLengthString(const FixedLengthString<M>& argStr)
   {
     *this=argStr.str;
   }
@@ -26,6 +27,13 @@ struct FixedLengthString{
   {
     strncpy(str,argStr,N);
     str[N-1]=0;
+    return *this;
+  }
+
+  template <class StdString>
+  FixedLengthString& operator=(const StdString& argStr)
+  {
+    *this=argStr.c_str();
     return *this;
   }
 
@@ -70,6 +78,10 @@ struct FixedLengthString{
     return str[index];
   }
 
+  const char* c_str()const
+  {
+    return str;
+  }
 };
 
 }//namespace buffers
