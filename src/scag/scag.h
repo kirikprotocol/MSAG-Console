@@ -178,7 +178,7 @@ public:
       if(pos!=std::string::npos)pos++;
     }while(pos!=std::string::npos);
     if(!ok)throw runtime_error("");
-    if(smsc::util::crc32(0,lic["Product"].c_str(),lic["Product"].length())!=0x685a3df4)throw runtime_error("");
+    if(smsc::util::crc32(0,lic["Product"].c_str(),lic["Product"].length())!=0x1D5DA434)throw runtime_error("");
     if(license.expdate<time(NULL))
     {
       char x[]=
