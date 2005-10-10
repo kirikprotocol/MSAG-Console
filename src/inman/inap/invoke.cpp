@@ -61,7 +61,7 @@ void Invoke::send(Dialog* dialog)
 
 
   if(result != 0)
-  	throw runtime_error( format("InvokeReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
+    throw runtime_error( format("InvokeReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
 }
 
 } // namespace inap
