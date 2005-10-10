@@ -82,7 +82,7 @@ namespace scag { namespace sessions
         virtual ~SessionManagerImpl() { Stop(); }
         
         // SessionManager interface
-        virtual Session* getSession(const SCAGCommand& command);
+        virtual Session* getSession(const CSessionKey& sessionKey);
         virtual void releaseSession(Session* session);
         virtual void closeSession(const Session* session);
 
@@ -215,14 +215,14 @@ int SessionManagerImpl::processExpire()
 }
 
 
-Session* SessionManagerImpl::getSession(const SCAGCommand& command)
+Session* SessionManagerImpl::getSession(const CSessionKey& sessionKey)
 {
 
     Session*    session = 0;
-    CSessionKey sessionKey; 
+    //CSessionKey sessionKey; 
 
-    sessionKey.abonentAddr = CommandBrige::getAbonentAddr(command);
-    sessionKey.USR = CommandBrige::getUMR(command);
+    //sessionKey.abonentAddr = CommandBrige::getAbonentAddr(command);
+    //sessionKey.USR = CommandBrige::getUMR(command);
 
     MutexGuard guard(inUseMonitor);
 

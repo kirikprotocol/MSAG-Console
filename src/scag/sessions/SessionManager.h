@@ -27,7 +27,7 @@ namespace scag { namespace sessions
 
 
         virtual Session* newSession(CSessionKey& key) = 0;
-        virtual Session* getSession(const SCAGCommand& command) = 0;
+        virtual Session* getSession(const CSessionKey& key) = 0;
         virtual void releaseSession(Session* session)     = 0;
         virtual void closeSession  (const Session* session)     = 0;
         

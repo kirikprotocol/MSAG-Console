@@ -21,7 +21,7 @@ void Operation::detachBill(int BillId)
 
 void Operation::attachBill(int BillId)
 { 
-    BillList.push_front(BillId);             
+    BillList.push_front(BillId);
     smsc_log_debug(logger,"Operation: Bill %d attached",BillId);
 }
 
