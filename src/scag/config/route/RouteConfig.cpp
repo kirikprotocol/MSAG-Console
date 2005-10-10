@@ -176,7 +176,7 @@ const char * const replyPathToStr(const scag::transport::smpp::router::ReplyPath
 bool RouteConfig::getAttribBool(const DOMElement &elem, const char * name)
 {
     XmlStr attrib(elem.getAttribute(XmlStr(name)));
-    return (strcmp(attrib, name) == 0);
+    return (strcmp(attrib, "true") == 0);
 }
 
 int RouteConfig::getAttribInt(const DOMElement &elem, const char * name)
@@ -194,7 +194,7 @@ std::string RouteConfig::getAttribStr(const DOMElement &elem, const char * name)
 Route * RouteConfig::createRoute(const DOMElement &elem, const SubjectPHash &subjects)
 throw (SubjectNotFoundException)
 {
-  
+
 
   std::string routeid(getAttribStr(elem, "id"));
   if(routeid.length()>32)
@@ -203,16 +203,16 @@ throw (SubjectNotFoundException)
     routeid.erase(32);
   }
 
-  std::auto_ptr<Route> r(new Route( getAttribStr(elem, "id"),                                   
-                                    getAttribBool(elem, "archiving"),
-                                    getAttribBool(elem, "enabling"),
+  std::auto_ptr<Route> r(new Route( getAttribStr(elem, "id"),
+                                    getAttribBool(elem, "archived"),
+                                    getAttribBool(elem, "enabled"),
                                     getAttribBool(elem, "active"),
-                                    getAttribStr(elem, "srcSmeId"),                                   
+                                    getAttribStr(elem, "srcSmeId"),
                                     getAttribInt(elem, "providerId"),
                                     getAttribInt(elem, "ruleId"),
                                     getAttribInt(elem, "categoryId") )
                          );
-    
+
 
   DOMNodeList *srcs = elem.getElementsByTagName(XmlStr("source"));
   unsigned srcsLength = srcs->getLength();
@@ -318,7 +318,7 @@ RouteConfig::status RouteConfig::store(const char * const filename) const
       Route *r = *i;
       out << "  <route id=\""  << encode(r->getId())
       << "\" archiving=\""     << (r->isArchiving() ? "true" : "false")
-      << "\" enabling=\""      << (r->isEnabling() ? "true" : "false")      
+      << "\" enabling=\""      << (r->isEnabling() ? "true" : "false")
       << "\">" << std::endl;
 
       Source src;
