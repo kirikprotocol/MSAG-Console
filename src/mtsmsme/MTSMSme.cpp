@@ -242,10 +242,11 @@ public:
             request->setSendResult(NOROUTE);
             return false;
         }
+        smsc_log_info(logger, "Sending sms to smsc oa=%s da = %s",sms->originatingAddress.toString().c_str(),sms->destinationAddress.toString().c_str());
 
         PduSubmitSm  sm;
         fillSmppPduFromSms(&sm, (SMS *)sms);
-        
+
         int seqNum = session->getNextSeq();
         sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
         sm.get_header().set_sequenceNumber(seqNum);
