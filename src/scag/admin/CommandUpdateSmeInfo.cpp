@@ -21,12 +21,15 @@ CommandUpdateSmeInfo::CommandUpdateSmeInfo(const xercesc::DOMDocument * const do
   smsc_log_info(logger, "UpdateSmeInfo command");
 }
 
-Response * CommandUpdateSmeInfo::CreateResponse(scag::Scag * SmscApp)
+Response * CommandUpdateSmeInfo::CreateResponse(scag::Scag * ScagApp)
 {
   try {
       smsc_log_info(logger, "CommandUpdateSmeInfo is processing...");
 
-      scag::transport::smpp::SmppManagerAdmin * smppMan = SmscApp->getSmppManagerAdmin();
+      scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
+
+      if(!ScagApp)
+          Exception("Scag undefined");
 
       if(!smppMan)
           throw Exception("SmppManager undefined");

@@ -14,6 +14,7 @@
 
 #include "core/synchronization/Mutex.hpp"
 #include "scag/config/ConfigManager.h"
+#include "scag/scag.h"
 
 namespace scag {
 namespace admin {
@@ -22,11 +23,11 @@ using namespace smsc::core::synchronization;
 using namespace scag;
 using scag::config::ConfigManager;
 
-/*class GwRunner : public smsc::core::threads::Thread
+class GwRunner : public smsc::core::threads::Thread
 {
   public:
-    GwRunner(const SmscConfigs& cfgs)
-    : _app(new scag::Smsc), running(false), configs(cfgs)
+    GwRunner()
+    : _app(new scag::Scag), running(false)
     {}
 
     virtual ~GwRunner() {
@@ -42,11 +43,11 @@ using scag::config::ConfigManager;
             MutexGuard guard(mutex);
             running = true;
           }
-          _app->init(configs);
+          _app->init();
           _app->run();
         }
         else
-          fprintf(stderr, "SMSPP GW runner not initialized");
+          fprintf(stderr, "SCAG runner not initialized");
       } catch(std::exception& e) {
         fprintf(stderr, "top level exception: %s\n", e.what());
         return (-1);
@@ -59,7 +60,7 @@ using scag::config::ConfigManager;
         MutexGuard guard(mutex);
         running = false;
       }
-      fprintf(stderr, "SMSPP GW finished\n");
+      fprintf(stderr, "SCAG finished\n");
       return 0;
     }
 
@@ -71,12 +72,12 @@ using scag::config::ConfigManager;
     void Abort()
     {
       if (_app != 0)
-        _app->abortSmsc();
+        _app->abortScag();
     }
     void Dump()
     {
       if (_app != 0)
-        _app->dumpSmsc();
+        _app->dumpScag();
     }
 
     bool isRunning()
@@ -85,63 +86,62 @@ using scag::config::ConfigManager;
       return running;
     }
 
-    scag::Smsc* const getApp()
+    scag::Scag* const getApp()
     {
       MutexGuard guard(mutex);
       return _app;
     }
 
 protected:
-  scag::Smsc* _app;
+  scag::Scag* _app;
   Mutex mutex;
   bool running;
-  const SmscConfigs& configs;
-};*/
+};
 
 
-//GwRunner * runner = 0;
-//Mutex runnerMutex;
+GwRunner * runner = 0;
+Mutex runnerMutex;
 
 void SCAGCommandDispatcher::startGw()
 {
-  /*MutexGuard guard(runnerMutex);
+  MutexGuard guard(runnerMutex);
   if (runner == 0) {
-    runner = new GwRunner(*configs);
+    runner = new GwRunner();
     runner->Start();
-  }*/
+  }
 }
 
 void SCAGCommandDispatcher::stopGw()
 {
-  /*MutexGuard guard(runnerMutex);
+  MutexGuard guard(runnerMutex);
   if (runner != 0 && runner->isRunning()) {
     runner->Stop();
     runner->WaitFor();
     delete runner;
     runner = 0;
-  }*/
+  }
 }
 
 void SCAGCommandDispatcher::abortGw()
 {
-  /*MutexGuard guard(runnerMutex);
+  MutexGuard guard(runnerMutex);
   if (runner != 0 && runner->isRunning()) {
     runner->Abort();
     runner->WaitFor();
     delete runner;
     runner = 0;
-  }*/
+  }
 }
 
 void SCAGCommandDispatcher::dumpGw()
 {
-  /*MutexGuard guard(runnerMutex);
+  MutexGuard guard(runnerMutex);
   if (runner != 0 && runner->isRunning()) {
     runner->Dump();
     runner->WaitFor();
     delete runner;
     runner = 0;
-  }*/
+  }
 }
 
 SCAGCommandDispatcher::SCAGCommandDispatcher(Socket * admSocket)
@@ -161,7 +161,7 @@ Response * SCAGCommandDispatcher::handle(const Command * const command) throw (A
     scagcommand = (SCAGCommand *)command;
     
 
-    Response * result = scagcommand->CreateResponse(0/*runner->getApp()*/);
+    Response * result = scagcommand->CreateResponse(runner->getApp());
     DoActions(scagcommand->GetActions());
     return result;
   } catch (AdminException &e) {

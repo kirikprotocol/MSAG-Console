@@ -47,7 +47,7 @@ CommandUpdateRule::~CommandUpdateRule()
 {
 }
 
-Response * CommandUpdateRule::CommandCreate(scag::Scag * SmscApp)
+Response * CommandUpdateRule::CommandCreate(scag::Scag * ScagApp)
 {
   smsc_log_info(logger, "CommandUpdateRule is processing...");
   try {

@@ -42,11 +42,13 @@ CommandDeleteSme::CommandDeleteSme(const xercesc::DOMDocument * const document)
   }
 }
 
-Response * CommandDeleteSme::CreateResponse(scag::Scag * SmscApp)
+Response * CommandDeleteSme::CreateResponse(scag::Scag * ScagApp)
 {
   smsc_log_info(logger, "CommandDeleteSme is processing...");
   try {
-      SmscApp->getSmppManagerAdmin()->deleteSmppEntity(systemId.c_str());
+      if(!ScagApp)
+          Exception("Scag undefined");
+      ScagApp->getSmppManagerAdmin()->deleteSmppEntity(systemId.c_str());
   }catch(Exception& e){
       smsc_log_info(logger, "CommandDeleteSme exception, %s", e.what());
   }catch(...){

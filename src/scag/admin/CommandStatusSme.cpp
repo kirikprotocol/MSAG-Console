@@ -18,6 +18,9 @@ using namespace smsc::util::xml;
 
 Response * CommandStatusSme::CreateResponse(scag::Scag * ScagApp)
 {
+
+    if(!ScagApp)
+        Exception("Scag undefined");
   smsc_log_info(logger, "CommandStatusSme is processing...");
   Variant result(smsc::admin::service::StringListType);
   //((SmeManager*)(SmscApp->getSmeAdmin()))->statusSme(result);

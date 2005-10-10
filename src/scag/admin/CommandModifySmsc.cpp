@@ -17,12 +17,14 @@ namespace admin {
 
 using namespace smsc::util::xml;
 
-Response * CommandModifySmsc::CreateResponse(scag::Scag * SmscApp)
+Response * CommandModifySmsc::CreateResponse(scag::Scag * ScagApp)
 {
   smsc_log_info(logger, "CommandModifySmsc is processing");
   try {
+      if(!ScagApp)
+          Exception("Scag undefined");
 
-      if(!SmscApp->modifySmsc(smppEntityInfo))
+      if(!ScagApp->modifySmsc(smppEntityInfo))
          throw Exception("Parameters modify exception.");
 
       smsc_log_info(logger, "CommandModifySmsc is processed ok");

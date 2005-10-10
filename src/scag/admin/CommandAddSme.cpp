@@ -19,6 +19,9 @@ using namespace smsc::util::xml;
 Response * CommandAddSme::CreateResponse(scag::Scag * ScagApp)
 {
   try {
+      if(!ScagApp)
+          Exception("Scag undefined");
+
       smsc_log_info(logger, "CommandAddSme is processing...");
       scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
 

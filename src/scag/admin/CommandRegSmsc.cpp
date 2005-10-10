@@ -20,12 +20,15 @@ namespace admin {
 
 using namespace smsc::util::xml;
 
-Response * CommandRegSmsc::CreateResponse(scag::Scag * SmscApp)
+Response * CommandRegSmsc::CreateResponse(scag::Scag * ScagApp)
 {
   smsc_log_info(logger, "CommandModifySmsc is processing...");
-  try {      
+  try {
 
-      if(!SmscApp->regSmsc(smppEntityInfo))
+      if(!ScagApp)
+          Exception("Scag undefined");
+
+      if(!ScagApp->regSmsc(smppEntityInfo))
          throw Exception("Duplicate gwsmeid");
 
       smsc_log_info(logger, "CommandModifySmsc is processed ok");
