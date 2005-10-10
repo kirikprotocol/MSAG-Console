@@ -2622,33 +2622,6 @@ StateType StateMachine::forward(Tuple& t)
   ////
 
 
-  if(!t.command->is_reschedulingForward() &&
-     sms.getIntProperty(Tag::SMPP_SET_DPF)==1 &&
-     sms.getAttemptsCount()==1)
-  {
-    try{
-      SmeProxy  *src_proxy=smsc->getSmeProxy(sms.getSourceSmeId());
-      if(src_proxy)
-      {
-        int dialogId=src_proxy->getNextSequenceNumber();
-        SmscCommand cmd=SmscCommand::makeAlertNotificationCommand
-        (
-          dialogId,
-          sms.getDestinationAddress(),
-          sms.getOriginatingAddress(),
-          0
-        );
-        src_proxy->putCommand(cmd);
-      }
-    }catch(exception& e)
-    {
-      __trace2__("FORWARD: Failed to send AlertNotification:%s",e.what());
-    }catch(...)
-    {
-      __trace__("FORWARD: Failed to send AlertNotification:unknown");
-    }
-  }
-
   if(sms.getAttemptsCount()==0 && sms.hasStrProperty(Tag::SMPP_RECEIPTED_MESSAGE_ID))
   {
     smsc->registerStatisticalEvent(StatEvents::etSubmitOk,&sms);
@@ -3269,6 +3242,28 @@ StateType StateMachine::deliveryResp(Tuple& t)
         }
         return UNDELIVERABLE_STATE;
       }
+    }
+  }
+
+  if(sms.getIntProperty(Tag::SMPP_SET_DPF)==1 && sms.getAttemptsCount()>0)
+  {
+    try{
+      SmeProxy  *src_proxy=smsc->getSmeProxy(sms.getSourceSmeId());
+      if(src_proxy)
+      {
+        int dialogId=src_proxy->getNextSequenceNumber();
+        SmscCommand cmd=SmscCommand::makeAlertNotificationCommand
+        (
+          dialogId,
+          sms.getDestinationAddress(),
+          sms.getOriginatingAddress(),
+          0
+        );
+        src_proxy->putCommand(cmd);
+      }
+    }catch(exception& e)
+    {
+      __warning2__("DLVRESP: Failed to send AlertNotification:%s",e.what());
     }
   }
 
