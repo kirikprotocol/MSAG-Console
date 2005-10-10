@@ -5,7 +5,6 @@
 #include <util/cstrings.h>
 #include <core/buffers/Hash.hpp>
 #include <sms/sms_const.h>
-#include <acls/interfaces.h>
 #include "scag/transport/smpp/router/route_types.h"
 
 namespace scag {
@@ -13,7 +12,6 @@ namespace config {
 
 using smsc::util::cStringCopy;
 using smsc::core::buffers::Hash;
-using namespace smsc::acls;
 using scag::transport::smpp::router::RouteInfo;
 
 typedef std::string Mask;
@@ -148,8 +146,8 @@ public:
   const bool isActive() const {return active;}
   const char * const getId() const {return id.c_str();}
   //int getPriority() {return priority;}
-  const std::string & getIdString() const {return id;}  
-  const std::string & getSrcSmeSystemId() const { return srcSmeSystemId; }  
+  const std::string & getIdString() const {return id;}
+  const std::string & getSrcSmeSystemId() const { return srcSmeSystemId; }
   const signed long getProviderId() const {return this->providerId;}
   const int getRuleId() const {return this->ruleId;}
   const signed long getCategoryId()const{return this->categoryId;}
