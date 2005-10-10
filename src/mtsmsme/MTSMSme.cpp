@@ -242,17 +242,22 @@ public:
             request->setSendResult(NOROUTE);
             return false;
         }
-        smsc_log_info(logger, "Sending sms to smsc oa=%s da = %s",sms->originatingAddress.toString().c_str(),sms->destinationAddress.toString().c_str());
 
         PduSubmitSm  sm;
+        sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
         fillSmppPduFromSms(&sm, (SMS *)sms);
 
         int seqNum = session->getNextSeq();
-        sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
         sm.get_header().set_sequenceNumber(seqNum);
         sm.get_message().get_dest()  .set_typeOfNumber(da.type);
         sm.get_message().get_dest()  .set_numberingPlan(da.plan);
         sm.get_message().get_dest()  .set_value(da.value);
+
+        smsc_log_info(logger,
+                      "Sending sms to smsc oa=%s da=%s imsi=%s",
+                      sms->originatingAddress.toString().c_str(),
+                      da.toString().c_str(),
+                      sms->destinationAddress.toString().c_str());
 
         // TODO: set transactional mode in ESM_CLASS (by OR) ???
         controller.setRequest(seqNum,request);
