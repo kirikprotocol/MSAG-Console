@@ -41,25 +41,25 @@ using smsc::inman::inap::dumpLogger;
 
 static Factory* getFactory()
 {
-	return Factory::getInstance();
+  return Factory::getInstance();
 }
 
 
 static Dialog* findDialog(UCHAR_T ssn, USHORT_T dialogueId)
 {
-	Session* pSession = getFactory()->findSession( ssn );
-	if( !pSession )
-	{
-		smsc_log_warn( tcapLogger, "Invalid SSN: 0x%X", ssn );
-		return 0;
-	}
-  	Dialog* pDlg = pSession->findDialog( dialogueId );
-	if( !pDlg )
-	{
-		smsc_log_warn( tcapLogger, "Invalid dialog ID: 0x%X", dialogueId );
-		return 0;
-	}
-  	return pDlg;
+  Session* pSession = getFactory()->findSession( ssn );
+  if( !pSession )
+  {
+    smsc_log_warn( tcapLogger, "Invalid SSN: 0x%X", ssn );
+    return 0;
+  }
+    Dialog* pDlg = pSession->findDialog( dialogueId );
+  if( !pDlg )
+  {
+    smsc_log_warn( tcapLogger, "Invalid dialog ID: 0x%X", dialogueId );
+    return 0;
+  }
+    return pDlg;
 }
 
 USHORT_T EINSS7_I97TBindConf(   UCHAR_T          ssn,
@@ -67,17 +67,15 @@ USHORT_T EINSS7_I97TBindConf(   UCHAR_T          ssn,
                                 EINSS7INSTANCE_T tcapInstanceId,
                                 UCHAR_T          bindResult)
 {
-  smsc_log_debug(tcapLogger,"BIND_CONF");
-  smsc_log_debug(tcapLogger," SSN: 0x%X", ssn);
-  smsc_log_debug(tcapLogger," UserID: 0x%X", userId );
-  smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", tcapInstanceId );
-  smsc_log_debug(tcapLogger," Bind result: '%s' ( code 0x%X )", getTcapBindErrorMessage(bindResult), bindResult );
+  smsc_log_debug(tcapLogger,
+                 "EINSS7_I97TBindConf(ssn=%d,userId=%d,tcapInstanceId=%d,bindResult=%d(%s))",
+                   ssn,userId,tcapInstanceId,bindResult,getTcapBindErrorMessage(bindResult));
 
   Session* pSession = getFactory()->findSession( ssn );
   if( !pSession )
   {
-	smsc_log_warn( tcapLogger, "Invalid SSN: 0x%X", ssn );
-	return MSG_OK;
+  smsc_log_warn( tcapLogger, "Invalid SSN: 0x%X", ssn );
+  return MSG_OK;
   }
 
   if( EINSS7_I97TCAP_BIND_OK == bindResult )
@@ -117,7 +115,7 @@ USHORT_T EINSS7_I97TBeginInd(   UCHAR_T          ssn,
   smsc_log_debug(tcapLogger," QoS: 0x%X", qualityOfService );
   smsc_log_debug(tcapLogger," Comp. present: %s", compPresent?"TRUE":"FALSE" );
   smsc_log_debug(tcapLogger," Dest. address: %s", dump(destAddrLength   ,destAddr_p   ).c_str() );
-  smsc_log_debug(tcapLogger," Org. address: %s" , dump(orgAddrLength    ,orgAddr_p    ).c_str() ); 
+  smsc_log_debug(tcapLogger," Org. address: %s" , dump(orgAddrLength    ,orgAddr_p    ).c_str() );
   smsc_log_debug(tcapLogger," App. context: %s" , dump(appContextLength ,appContext_p ).c_str() );
   smsc_log_debug(tcapLogger," User info: %s"    , dump(userInfoLength   ,userInfo_p   ).c_str() );
 
@@ -207,7 +205,7 @@ USHORT_T EINSS7_I97TInvokeInd(  UCHAR_T          ssn,
   smsc_log_debug(tcapLogger," LinkedId: %s", (linkedIdUsed ? format("0x%X", linkedId ).c_str() : "NOT USED") );
   smsc_log_debug(tcapLogger," Operation: %s" , dump(opLength ,op ).c_str() );
   smsc_log_debug(tcapLogger," Params: %s", dump(paramLength,pm ).c_str() );
-                                
+
   Dialog* dlg = findDialog( ssn, dialogueId );
   if( dlg ) dlg->handleInvoke( invokeId, tag, opLength, op, paramLength, pm );
   return MSG_OK;
@@ -323,7 +321,7 @@ USHORT_T EINSS7_I97TUniInd(     UCHAR_T          ssn,
   smsc_log_debug(tcapLogger," QoS: 0x%X", qualityOfService );
   smsc_log_debug(tcapLogger," Comp. present: %s", compPresent?"TRUE":"FALSE" );
   smsc_log_debug(tcapLogger," Dest. address: %s", dump(destAddrLength   ,destAddr_p   ).c_str() );
-  smsc_log_debug(tcapLogger," Org. address: %s" , dump(orgAddrLength    ,orgAddr_p    ).c_str() ); 
+  smsc_log_debug(tcapLogger," Org. address: %s" , dump(orgAddrLength    ,orgAddr_p    ).c_str() );
   smsc_log_debug(tcapLogger," App. context: %s" , dump(appContextLength ,appContext_p ).c_str() );
   smsc_log_debug(tcapLogger," User info: %s"    , dump(userInfoLength   ,userInfo_p   ).c_str() );
   return MSG_OK;
@@ -352,7 +350,7 @@ USHORT_T EINSS7_I97TUAbortInd(  UCHAR_T          ssn,
   smsc_log_debug(tcapLogger," DialogID: 0x%X", dialogueId );
   smsc_log_debug(tcapLogger," PriOrder: 0x%X", priOrder );
   smsc_log_debug(tcapLogger," QoS: 0x%X", qualityOfService );
-  smsc_log_debug(tcapLogger," Abort info: %s"   , dump(abortInfoLength, abortInfo_p ).c_str() ); 
+  smsc_log_debug(tcapLogger," Abort info: %s"   , dump(abortInfoLength, abortInfo_p ).c_str() );
   smsc_log_debug(tcapLogger," App. context: %s" , dump(appContextLength ,appContext_p ).c_str() );
   smsc_log_debug(tcapLogger," User info: %s"    , dump(userInfoLength   ,userInfo_p   ).c_str() );
   return MSG_OK;
@@ -373,7 +371,7 @@ USHORT_T EINSS7_I97TPAbortInd(  UCHAR_T          ssn,
   smsc_log_debug(tcapLogger," DialogID: 0x%X", dialogueId );
   smsc_log_debug(tcapLogger," PriOrder: 0x%X", priOrder );
   smsc_log_debug(tcapLogger," QoS: 0x%X", qualityOfService );
-  smsc_log_debug(tcapLogger," Abort cause: 0x%X", abortCause ); 
+  smsc_log_debug(tcapLogger," Abort cause: 0x%X", abortCause );
   return MSG_OK;
 }
 
@@ -403,7 +401,7 @@ USHORT_T EINSS7_I97TNoticeInd(  UCHAR_T          ssn,
   smsc_log_debug(tcapLogger," ReturnIndicator: 0x%X", returnIndicator );
   smsc_log_debug(tcapLogger," SegmentationIndicator: 0x%X", segmentationIndicator );
   smsc_log_debug(tcapLogger," Dest. address: %s", dump(destAddrLength   ,destAddr_p   ).c_str() );
-  smsc_log_debug(tcapLogger," Org. address: %s" , dump(orgAddrLength    ,orgAddr_p    ).c_str() ); 
+  smsc_log_debug(tcapLogger," Org. address: %s" , dump(orgAddrLength    ,orgAddr_p    ).c_str() );
   return MSG_OK;
 }
 
@@ -495,15 +493,13 @@ USHORT_T EINSS7_I97TStateInd(   UCHAR_T          ssn,
                                 ULONG_T          localSpc,
                                 UCHAR_T          subsysMultiplicityInd)
 {
-  smsc_log_debug(tcapLogger,"STATE_IND");
-  smsc_log_debug(tcapLogger," SSN: 0x%X", ssn);
-  smsc_log_debug(tcapLogger," UserID: 0x%X", userId );
-  smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", tcapInstanceId );
-  smsc_log_debug(tcapLogger," UserState: 0x%X", userState );
-  smsc_log_debug(tcapLogger," AffectedSSN: 0x%X", affectedSsn );
-  smsc_log_debug(tcapLogger," AffectedSPC: 0x%X", affectedSpc );
-  smsc_log_debug(tcapLogger," LocalSPC: 0x%X", localSpc );
-  smsc_log_debug(tcapLogger," SubsysMultiplicityInd: 0x%X", subsysMultiplicityInd );
+  smsc_log_debug(tcapLogger,
+                 "EINSS7_I97TStateInd(ssn=%d, userId=%d, tcapInstanceId=%d, userState=%d, "
+                 "affectedSsn=%d, affectedSpc=%d, localSpc=%d, subsysMultiplicityInd=%d",
+                 ssn, userId, tcapInstanceId,
+                 userState, affectedSsn, affectedSpc,
+                 localSpc, subsysMultiplicityInd);
+
   return MSG_OK;
 }
 
