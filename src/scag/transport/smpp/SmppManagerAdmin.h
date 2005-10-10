@@ -3,32 +3,35 @@
 
 #include "sms/sms_const.h"
 #include "SmppTypes.h"
+#include "core/buffers/FixedLengthString.hpp"
 
 namespace scag{
 namespace transport{
 namespace smpp{
 
+namespace buf=smsc::core::buffers;
+
 struct SmppEntityInfo{
   SmppEntityType type;
-  char systemId[smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1];
-  char password[smsc::sms::MAX_SMEPASSWD_TYPE_LENGTH+1];
+  buf::FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> systemId;
+  buf::FixedLengthString<smsc::sms::MAX_SMEPASSWD_TYPE_LENGTH+1> password;
+  buf::FixedLengthString<smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1> bindSystemId;
+  buf::FixedLengthString<smsc::sms::MAX_SMEPASSWD_TYPE_LENGTH+1> bindPassword;
   int timeOut;
   SmppBindType bindType;
-  char host[32];
+  buf::FixedLengthString<32> host;
   int  port;
-  char altHost[32];
+  buf::FixedLengthString<32> altHost;
   int  altPort;
+  uint8_t uid;
+  int providerId;
 
   SmppEntityInfo()
   {
     type=etUnknown;
-    systemId[0]=0;
-    password[0]=0;
     timeOut=0;
     bindType=btNone;
-    host[0]=0;
     port=0;
-    altHost[0]=0;
     altPort=0;
   }
 };

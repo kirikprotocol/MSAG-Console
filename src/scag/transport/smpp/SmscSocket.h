@@ -30,9 +30,9 @@ struct SmscSocket:SmppSocket{
     connected=true;
     return true;
   }
-  void bind(const char* sysId,const char* pass)
+  void bind(const char* regSysId,const char* sysId,const char* pass)
   {
-    systemId=sysId;
+    systemId=regSysId;
     putCommand(SmppCommand::makeBindCommand(sysId,pass));
   }
 

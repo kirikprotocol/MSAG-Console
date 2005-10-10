@@ -4,6 +4,10 @@
 #include "util/xml/utilFunctions.h"
 #include "core/buffers/Hash.hpp"
 #include "SmppEntity.h"
+#include "scag/config/route/RouteConfig.h"
+#include "router/load_routes.h"
+#include "scag/config/ConfigManager.h"
+#include "SmppStateMachine.h"
 
 namespace scag{
 namespace transport{
@@ -18,10 +22,14 @@ tag_password,
 tag_timeout,
 tag_mode,
 tag_enabled,
+tag_providerId,
 tag_host=tag_enabled|1024,
 tag_port,
 tag_althost,
-tag_altport
+tag_altport,
+tag_uid,
+tag_bindSystemId,
+tag_bindPassword
 };
 
 struct Param{
@@ -37,11 +45,15 @@ TAGDEF(systemId),
 TAGDEF(password),
 TAGDEF(timeout),
 TAGDEF(mode),
+TAGDEF(providerId),
 TAGDEF(host),
 TAGDEF(port),
 TAGDEF(althost),
 TAGDEF(altport),
-TAGDEF(enabled)
+TAGDEF(enabled),
+TAGDEF(uid),
+TAGDEF(bindSystemId),
+TAGDEF(bindPassword)
 };
 
 struct ParamsHash:public smsc::core::buffers::Hash<ParamTag>{
@@ -56,7 +68,14 @@ struct ParamsHash:public smsc::core::buffers::Hash<ParamTag>{
 
 static const ParamsHash paramsHash;
 
-template <unsigned int SZ>
+template <int SZ>
+void FillStringValue(DOMNamedNodeMap* attr,buf::FixedLengthString<SZ>& str)
+{
+  XmlStr value(attr->getNamedItem(XmlStr("value"))->getNodeValue());
+  str=value.c_str();
+}
+
+template <int SZ>
 void FillStringValue(DOMNamedNodeMap* attr,char (&str)[SZ])
 {
   XmlStr value(attr->getNamedItem(XmlStr("value"))->getNodeValue());
@@ -72,14 +91,14 @@ int GetIntValue(DOMNamedNodeMap* attr)
 
 SmppBindType GetBindType(DOMNamedNodeMap* attr)
 {
-  char bindTypeName[16];
+  buf::FixedLengthString<16> bindTypeName;
   FillStringValue(attr,bindTypeName);
   int len=strlen(bindTypeName);
   for(int i=0;i<len;i++)bindTypeName[i]=tolower(bindTypeName[i]);
   if     (!strcmp(bindTypeName,"rx")) return btReceiver;
   else if(!strcmp(bindTypeName,"tx")) return btTransmitter;
   else if(!strcmp(bindTypeName,"trx"))return btTransceiver;
-  throw smsc::util::Exception("Unknown bind mode:%s",bindTypeName);
+  throw smsc::util::Exception("Unknown bind mode:%s",bindTypeName.c_str());
 }
 
 bool GetBoolValue(DOMNamedNodeMap* attr)
@@ -135,11 +154,20 @@ static void ParseTag(SmppManager* smppMan,DOMNodeList* list,SmppEntityType et)
         case tag_password:
           FillStringValue(attrs,entity.password);
           break;
+        case tag_bindSystemId:
+          FillStringValue(attrs,entity.bindSystemId);
+          break;
+        case tag_bindPassword:
+          FillStringValue(attrs,entity.bindPassword);
+          break;
         case tag_timeout:
           entity.timeOut=GetIntValue(attrs);
           break;
         case tag_mode:
           entity.bindType=GetBindType(attrs);
+          break;
+        case tag_providerId:
+          entity.providerId=GetIntValue(attrs);
           break;
         case tag_host:
           FillStringValue(attrs,entity.host);
@@ -156,6 +184,9 @@ static void ParseTag(SmppManager* smppMan,DOMNodeList* list,SmppEntityType et)
         case tag_enabled:
           enabled=GetBoolValue(attrs);
           break;
+        case tag_uid:
+          entity.uid=GetIntValue(attrs);
+          break;
       }
     }
     if(enabled)
@@ -163,7 +194,7 @@ static void ParseTag(SmppManager* smppMan,DOMNodeList* list,SmppEntityType et)
       smppMan->addSmppEntity(entity);
     }else
     {
-      smsc_log_info(log,"Record with systemId='%s' disabled and skipped",entity.systemId);
+      smsc_log_info(log,"Record with systemId='%s' disabled and skipped",entity.systemId.c_str());
     }
   }
 }
@@ -172,11 +203,13 @@ SmppManager::SmppManager():sm(this,this)
 {
   log=smsc::logger::Logger::getInstance("smppMan");
   running=false;
+  lastUid=0;
 }
 
 
 SmppManager::~SmppManager()
 {
+  tp.shutdown();
   sm.shutdown();
 }
 
@@ -191,23 +224,55 @@ void SmppManager::Init(const char* cfgFile)
   list = elem->getElementsByTagName(XmlStr("smscrecord"));
   ParseTag(this,list,etSmsc);
   running=true;
+
+  int stmCnt=scag::config::ConfigManager::Instance().getConfig()->getInt("core.state_machines_count");
+  smsc_log_info(log,"Starting %d state machines",stmCnt);
+  for(int i=0;i<stmCnt;i++)
+  {
+    tp.startTask(new StateMachine(this,this));
+  }
+}
+
+void SmppManager::LoadRoutes(const char* cfgFile)
+{
+  scag::config::RouteConfig cfg;
+  if(cfg.load(cfgFile)!=scag::config::RouteConfig::success)
+  {
+    throw Exception("Failed to load routes config");
+  };
+  routerConfigFile=cfgFile;
+  routeMan=new router::RouteManager();
+  router::loadRoutes(routeMan.Get(),cfg,false);
+}
+
+void SmppManager::ReloadRoutes()
+{
+  scag::config::RouteConfig cfg;
+  if(cfg.load(routerConfigFile.c_str())!=scag::config::RouteConfig::success)
+  {
+    throw Exception("Failed to load routes config");
+  };
+  RouterRef newRouter(new router::RouteManager());
+  router::loadRoutes(newRouter.Get(),cfg);
+  routeMan=newRouter;
 }
 
 void SmppManager::addSmppEntity(const SmppEntityInfo& info)
 {
-  smsc_log_debug(log,"addSmppEntity:%s",info.systemId);
+  smsc_log_debug(log,"addSmppEntity:%s",info.systemId.c_str());
   sync::MutexGuard mg(regMtx);
   if(registry.Exists(info.systemId))
   {
-    throw smsc::util::Exception("Duplicate systemId='%s'",info.systemId);
+    throw smsc::util::Exception("Duplicate systemId='%s'",info.systemId.c_str());
   }
 
   registry.Insert(info.systemId,new SmppEntity(info));
   if(info.type==etSmsc)
   {
     SmscConnectInfo ci;
-    ci.sysId=info.systemId;
-    ci.pass=info.password;
+    ci.regSysId=info.systemId;
+    ci.sysId=info.bindSystemId;
+    ci.pass=info.bindPassword;
     ci.hosts[0]=info.host;
     ci.ports[0]=info.port;
     ci.hosts[1]=info.altHost;
@@ -222,6 +287,7 @@ void SmppManager::updateSmppEntity(const SmppEntityInfo& info)
 }
 void SmppManager::deleteSmppEntity(const char* sysId)
 {
+
 }
 
 int SmppManager::registerSmeChannel(const char* sysId,const char* pwd,SmppBindType bt,SmppChannel* ch)
@@ -234,43 +300,47 @@ int SmppManager::registerSmeChannel(const char* sysId,const char* pwd,SmppBindTy
     return rarFailed;
   }
   SmppEntity& ent=**ptr;
-  MutexGuard mg2(ent.mtx);
-  if(ent.info.type!=etService)
   {
-    smsc_log_info(log,"Failed to register sme with sysId='%s' - Entity type is not sme",sysId);
-    return rarFailed;
-  }
+    MutexGuard mg2(ent.mtx);
+    if(ent.info.type!=etService)
+    {
+      smsc_log_info(log,"Failed to register sme with sysId='%s' - Entity type is not sme",sysId);
+      return rarFailed;
+    }
 
-  if((ent.info.bindType==btReceiver && bt!=btReceiver)||
-     (ent.info.bindType==btTransmitter && bt!=btTransmitter))
-  {
-    smsc_log_info(log,"Failed to register sme with sysId='%s' - Invalid bind type",sysId);
-    return rarFailed;
+    if((ent.info.bindType==btReceiver && bt!=btReceiver)||
+       (ent.info.bindType==btTransmitter && bt!=btTransmitter))
+    {
+      smsc_log_info(log,"Failed to register sme with sysId='%s' - Invalid bind type",sysId);
+      return rarFailed;
+    }
+    if((ent.bt==btReceiver && bt==btReceiver)||
+       (ent.bt==btTransmitter && bt==btTransmitter)||
+       (ent.bt!=btNone))
+    {
+      smsc_log_info(log,"Failed to register sme with sysId='%s' - Already registered",sysId);
+      return rarAlready;
+    }
+    if(ent.bt==btNone)
+    {
+      ent.bt=bt;
+    }else
+    {
+      ent.bt=btRecvAndTrans;
+    }
+    if(bt==btTransceiver)
+    {
+      ent.channel=ch;
+    }else if(bt==btReceiver)
+    {
+      ent.recvChannel=ch;
+    }else if(bt==btTransmitter)
+    {
+      ent.transChannel=ch;
+    }
   }
-  if((ent.bt==btReceiver && bt==btReceiver)||
-     (ent.bt==btTransmitter && bt==btTransmitter)||
-     (ent.bt!=btNone))
-  {
-    smsc_log_info(log,"Failed to register sme with sysId='%s' - Already registered",sysId);
-    return rarAlready;
-  }
-  if(ent.bt==btNone)
-  {
-    ent.bt=bt;
-  }else
-  {
-    ent.bt=btRecvAndTrans;
-  }
-  if(bt==btTransceiver)
-  {
-    ent.channel=ch;
-  }else if(bt==btReceiver)
-  {
-    ent.recvChannel=ch;
-  }else if(bt==btTransmitter)
-  {
-    ent.transChannel=ch;
-  }
+  ent.setUid(++lastUid);
+  smsc_log_info(log,"Registered sme with sysId='%s'",sysId);
   return rarOk;
 }
 
@@ -284,9 +354,13 @@ int SmppManager::registerSmscChannel(SmppChannel* ch)
     return rarFailed;
   }
   SmppEntity& ent=**ptr;
-  MutexGuard mg2(ent.mtx);
-  ent.bt=btTransceiver;
-  ent.channel=ch;
+  {
+    MutexGuard mg2(ent.mtx);
+    ent.bt=btTransceiver;
+    ent.channel=ch;
+    smsc_log_info(log,"Registered smsc connection with sysId='%s'",ch->getSystemId());
+  }
+  ent.setUid(++lastUid);
   return rarOk;
 }
 void SmppManager::unregisterChannel(SmppChannel* ch)
@@ -319,10 +393,18 @@ void SmppManager::unregisterChannel(SmppChannel* ch)
 }
 
 
-void SmppManager::putCommand(SmppBindType ct,const SmppCommand& cmd)
+void SmppManager::putCommand(SmppChannel* ct,SmppCommand& cmd)
 {
+  {
+    MutexGuard regmg(regMtx);
+    SmppEntity** ptr=registry.GetPtr(ct->getSystemId());
+    if(!ptr)throw Exception("Unknown system id:%s",ct->getSystemId());
+    cmd.setEntity(*ptr);
+  }
+
   MutexGuard mg(queueMon);
   queue.Push(cmd);
+  queueMon.notify();
 }
 
 bool SmppManager::getCommand(SmppCommand& cmd)

@@ -11,20 +11,31 @@
 #include "core/synchronization/Mutex.hpp"
 #include "SmppSocketManager.h"
 #include "core/buffers/CyclicQueue.hpp"
+#include "core/buffers/RefPtr.hpp"
+#include "router/route_manager.h"
+#include "SmppRouter.h"
+#include "core/threads/ThreadPool.hpp"
 
 namespace scag{
 namespace transport{
 namespace smpp{
 
 namespace buf=smsc::core::buffers;
+namespace thr=smsc::core::threads;
 namespace sync=smsc::core::synchronization;
 
 
-class SmppManager:public SmppManagerAdmin,SmppChannelRegistrator,SmppCommandQueue{
+class SmppManager:
+  public SmppManagerAdmin,
+  public SmppChannelRegistrator,
+  public SmppCommandQueue,
+  public SmppRouter{
 public:
   SmppManager();
   ~SmppManager();
   void Init(const char* cfgFile);
+  void LoadRoutes(const char* cfgFile);
+  void ReloadRoutes();
 
   //admin
   virtual void addSmppEntity(const SmppEntityInfo& info);
@@ -37,7 +48,7 @@ public:
   virtual void unregisterChannel(SmppChannel* ch);
 
   //queue
-  virtual void putCommand(SmppBindType ct,const SmppCommand& cmd);
+  virtual void putCommand(SmppChannel* ct,SmppCommand& cmd);
   virtual bool getCommand(SmppCommand& cmd);
 
   void StopProcessing()
@@ -45,6 +56,19 @@ public:
     sync::MutexGuard mg(queueMon);
     running=false;
     queueMon.notifyAll();
+  }
+
+  //SmppRouter
+  virtual SmppEntity* RouteSms(router::SmeIndex srcidx, const smsc::sms::Address& source, const smsc::sms::Address& dest, router::RouteInfo& info)
+  {
+    {
+      RouterRef ref=routeMan;
+      if(!ref->lookup(srcidx,source,dest,info))return 0;
+    }
+    MutexGuard mg(regMtx);
+    SmppEntity** ptr=registry.GetPtr(info.smeSystemId);
+    if(!ptr)return 0;
+    return *ptr;
   }
 
 protected:
@@ -57,6 +81,14 @@ protected:
 
   buf::CyclicQueue<SmppCommand> queue;
   sync::EventMonitor queueMon;
+
+  typedef RefPtr<router::RouteManager> RouterRef;
+  RouterRef routeMan;
+  std::string routerConfigFile;
+
+  thr::ThreadPool tp;
+
+  int lastUid;
 };
 
 }//smpp

@@ -43,6 +43,7 @@ protected:
 struct SmscConnectTask:thr::ThreadedTask{
   SmscConnectTask(SmscConnector* argConn,const SmscConnectInfo& info):conn(argConn)
   {
+    regSysId=info.regSysId;
     sysId=info.sysId;
     pass=info.pass;
     host=info.host();
@@ -57,12 +58,13 @@ struct SmscConnectTask:thr::ThreadedTask{
       conn->reportSmscDisconnect(sysId.c_str());
       return 0;
     }
-    sock->bind(sysId.c_str(),pass.c_str());
+    sock->bind(regSysId.c_str(),sysId.c_str(),pass.c_str());
     conn->registerSocket(sock.release());
     return 0;
   }
 protected:
   SmscConnector* conn;
+  std::string regSysId;
   std::string sysId;
   std::string pass;
   std::string host;

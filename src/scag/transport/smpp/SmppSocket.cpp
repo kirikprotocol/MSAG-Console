@@ -135,7 +135,7 @@ void SmppSocket::processInput()
     {
       try{
         SmppCommand cmd(pdu,false);
-        cmdQueue->putCommand(bindType,cmd);
+        cmdQueue->putCommand(this,cmd);
         break;
       }catch(std::exception& e)
       {
@@ -151,7 +151,7 @@ void SmppSocket::processInput()
 
 void SmppSocket::sendData()
 {
-  info2(log,"sendData: %d/%d",wrBufSent,wrBufUsed);
+  debug2(log,"sendData: %d/%d",wrBufSent,wrBufUsed);
   if(wrBufUsed && wrBufSent<wrBufUsed)
   {
     int res;
@@ -189,7 +189,7 @@ void SmppSocket::sendData()
     wrBuffer=new char[sz];
     wrBufSize=sz;
   }
-
+  debug2(log,"Preparing to send %x/%d",pdu->get_commandId(),pdu->get_sequenceNumber());
   SmppStream st;
   assignStreamWith(&st,wrBuffer,wrBufSize,false);
   fillSmppPdu(&st,pdu);

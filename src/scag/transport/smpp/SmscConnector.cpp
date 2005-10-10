@@ -38,6 +38,7 @@ void SmscConnector::updateSmscConnect(const SmscConnectInfo& info)
 
 void SmscConnector::reportSmscDisconnect(const char* sysId)
 {
+  __trace2__("Disconnect of %s reported",sysId);
   if(!active)return;
   sync::MutexGuard mg(mtx);
   SmscConnectInfo* ptr=smscConnections.GetPtr(sysId);

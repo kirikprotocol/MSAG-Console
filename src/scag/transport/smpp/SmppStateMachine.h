@@ -2,6 +2,7 @@
 #define __SCAG_TRANSPORT_SMPP_SMPPSTATEMACHINE_H__
 
 #include "SmppCommandQueue.h"
+#include "SmppRouter.h"
 #include "SmppCommand.h"
 #include "core/threads/ThreadedTask.hpp"
 #include "logger/Logger.h"
@@ -14,9 +15,10 @@ namespace thr=smsc::core::threads;
 
 class StateMachine:public thr::ThreadedTask{
 public:
-  StateMachine(SmppCommandQueue* argQueue)
+  StateMachine(SmppCommandQueue* argQueue,SmppRouter* argRouteMan)
   {
     queue=argQueue;
+    routeMan=argRouteMan;
     log=smsc::logger::Logger::getInstance("statmach");
   }
 
@@ -30,7 +32,14 @@ public:
 
 protected:
   SmppCommandQueue* queue;
+  SmppRouter* routeMan;
   smsc::logger::Logger* log;
+
+  void SubmitResp(SmppCommand& cmd,int status);
+  void DeliveryResp(SmppCommand& cmd,int status);
+
+  struct ResponseRegistry;
+  static ResponseRegistry reg;
 };
 
 }//smpp

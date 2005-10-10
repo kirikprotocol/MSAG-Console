@@ -345,7 +345,7 @@ struct BindCommand{
   BindCommand(const char* id,const char* pwd):sysId(id),pass(pwd){}
 };
 
-class SmppChannel;
+struct SmppEntity;
 
 struct _SmppCommand
 {
@@ -355,9 +355,10 @@ struct _SmppCommand
   void* dta;
   int status;
   Mutex mutex;
-  SmppChannel *channel;
+  SmppEntity *ent;
+  int ruleId;
   int priority;
-  _SmppCommand() : ref_count(0), dta(0), channel(0),priority(ScagCommandDefaultPriority)
+  _SmppCommand() : ref_count(0), dta(0), ent(0),priority(ScagCommandDefaultPriority)
   {
   }
   ~_SmppCommand()
@@ -446,6 +447,15 @@ struct _SmppCommand
   {
     return (int)dta;
   }
+
+  void set_ruleId(int argRuleId)
+  {
+    ruleId=argRuleId;
+  }
+  int get_ruleId()
+  {
+    return ruleId;
+  }
 };
 
 class SmppCommand:public SCAGCommand
@@ -488,8 +498,8 @@ class SmppCommand:public SCAGCommand
 
 public:
 
-  SmppChannel* getChannel()const{return cmd->channel;}
-  void setChannel(SmppChannel* newchan){cmd->channel=newchan;}
+  SmppEntity* getEntity()const{return cmd->ent;}
+  void setEntity(SmppEntity* newent){cmd->ent=newent;}
 
   // specialized constructors (meta constructors)
   static SmppCommand makeSubmitSm(const SMS& sms,uint32_t dialogId)
@@ -715,8 +725,8 @@ public:
      dispose();
   }
 
-  SmppCommand() : cmd (0), SCAGCommand(SMPP) {}
-  SmppCommand(SmppHeader* pdu,bool forceDC=false) : cmd (0), SCAGCommand(SMPP)
+  SmppCommand() : cmd (0){}
+  SmppCommand(SmppHeader* pdu,bool forceDC=false) : cmd (0)
   {
     __require__ ( pdu != NULL );
     auto_ptr<_SmppCommand> _cmd(ref(new _SmppCommand()));
@@ -1146,7 +1156,7 @@ public:
     return 0; // for compiler
   }
 
-  SmppCommand(const SmppCommand& _cmd) : SCAGCommand(SMPP)
+  SmppCommand(const SmppCommand& _cmd)
   {
     cmd = ref(_cmd.cmd);
   }
@@ -1167,6 +1177,10 @@ public:
   TransportType getType()const
   {
     return SMPP;
+  }
+  int getRuleId()const
+  {
+    return cmd->get_ruleId();
   }
 };
 

@@ -9,6 +9,7 @@ namespace transport{
 namespace smpp{
 
 struct SmscConnectInfo{
+  std::string regSysId;
   std::string sysId;
   std::string pass;
   std::string hosts[2];

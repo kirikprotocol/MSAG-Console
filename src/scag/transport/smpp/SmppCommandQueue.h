@@ -1,7 +1,8 @@
 #ifndef __SCAG_SMPP_SMPPCOMMANDQUEUE_HPP__
 #define __SCAG_SMPP_SMPPCOMMANDQUEUE_HPP__
 
-#include "SmppTypes.h"
+#include "SmppChannel.h"
+
 
 namespace scag{
 namespace transport{
@@ -11,7 +12,7 @@ class SmppCommand;
 
 class SmppCommandQueue{
 public:
-  virtual void putCommand(SmppBindType ct,const SmppCommand& cmd)=0;
+  virtual void putCommand(SmppChannel* ch,SmppCommand& cmd)=0;
   virtual bool getCommand(SmppCommand& cmd)=0;
 };
 

@@ -11,33 +11,38 @@ int SmppReader::Execute()
   net::Multiplexer::SockArray error;
   while(!isStopping)
   {
-    {
-      MutexGuard mg(mon);
-      while(sockets.Count()==0)
+    try{
       {
-        mon.wait(2000);
+        MutexGuard mg(mon);
+        while(sockets.Count()==0)
+        {
+          mon.wait(2000);
+          if(isStopping)break;
+        }
         if(isStopping)break;
       }
-      if(isStopping)break;
-    }
-    bool haveEvents;
-    {
-      MutexGuard mg(mulMtx);
-      haveEvents=mul.canRead(ready,error,200);
-    }
-    if(haveEvents)
-    {
-      MutexGuard mg(mon);
-      for(int i=0;i<error.Count();i++)
+      bool haveEvents;
       {
-        debug2(log,"error on socket %p",error[i]);
-        getSmppSocket(error[i])->disconnect();
+        MutexGuard mg(mulMtx);
+        haveEvents=mul.canRead(ready,error,200);
       }
-      for(int i=0;i<ready.Count();i++)
+      if(haveEvents)
       {
-        getSmppSocket(ready[i])->processInput();
+        MutexGuard mg(mon);
+        for(int i=0;i<error.Count();i++)
+        {
+          debug2(log,"error on socket %p",error[i]);
+          getSmppSocket(error[i])->disconnect();
+        }
+        for(int i=0;i<ready.Count();i++)
+        {
+          getSmppSocket(ready[i])->processInput();
+        }
+        deleteDisconnected();
       }
-      deleteDisconnected();
+    }catch(std::exception& e)
+    {
+      warn2(log,"!!! Exception in SmppReader:%s",e.what());
     }
   }
   return 0;
