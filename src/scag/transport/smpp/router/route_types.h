@@ -19,7 +19,7 @@ static const int MAX_SUBJECTID_LENGTH=32;
 
 namespace buf=smsc::core::buffers;
 
-typedef char* SmeIndex;
+typedef const char* SmeIndex;
 
 struct RouteInfo
 {
