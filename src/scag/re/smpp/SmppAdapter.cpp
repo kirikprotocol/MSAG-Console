@@ -131,7 +131,7 @@ Hash<int> SmppCommandAdapter::InitSubmitFieldNames()
 
 
     hs["protocol_id"]                   = Tag::SMPP_PROTOCOL_ID; 
-    hs["priority"]                      = Tag::SMPP_PRIORITY; 
+    hs["priority_flag"]                 = Tag::SMPP_PRIORITY; 
     hs["schedule_delivery_time"]        = Tag::SMPP_SCHEDULE_DELIVERY_TIME;
 
 
@@ -293,7 +293,7 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
 
 
     hs["protocol_id"]                   = Tag::SMPP_PROTOCOL_ID; 
-    hs["priority"]                      = Tag::SMPP_PRIORITY; 
+    hs["priority_flag"]                 = Tag::SMPP_PRIORITY; 
     hs["schedule_delivery_time"]        = Tag::SMPP_SCHEDULE_DELIVERY_TIME;
 
 
@@ -360,6 +360,7 @@ Hash<int> SmppCommandAdapter::InitDeliverFieldNames()
 
 void SmppCommandAdapter::Set_DC_BIT_Property(SMS& data,int FieldId,bool value)
 {
+    
     if (FieldId == DC_BINARY) 
     {
         //00000010

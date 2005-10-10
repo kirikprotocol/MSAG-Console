@@ -53,16 +53,20 @@ namespace scag { namespace sessions
             }
         };
 
+        
+
         typedef std::list<CSessionAccessData> CSessionList;
         typedef std::list<CSessionAccessData>::iterator CSLIterator;
         typedef XHash<CSessionKey,CSLIterator,XSessionHashFunc> CSessionHash;
+        typedef XHash<Address,int,XAddrHashFunc> CUMRHash;
 
         EventMonitor    inUseMonitor;
         CSessionList    SessionExpirePool;
         CSessionHash    SessionHash;
+        CUMRHash        UMRHash;
         Logger *        logger;
 
-        int16_t         m_nLastUSR;
+//        int16_t         m_nLastUSR;
         Mutex           stopLock;
         Event           awakeEvent, exitEvent;
         bool            bStarted;
@@ -73,12 +77,12 @@ namespace scag { namespace sessions
         void Stop();
         bool isStarted();
         int  processExpire();
-        int16_t getNewUSR() {return ++m_nLastUSR; }
+        int16_t getNewUSR(Address& address);
     public:
 
         void init(const SessionManagerConfig& config);
 
-        SessionManagerImpl() : bStarted(false) , m_nLastUSR(0),logger(0) {};
+        SessionManagerImpl() : bStarted(false) , logger(0) {};
         virtual ~SessionManagerImpl() { Stop(); }
         
         // SessionManager interface
@@ -250,7 +254,7 @@ Session * SessionManagerImpl::newSession(CSessionKey& sessionKey)
 
     MutexGuard guard(inUseMonitor);
 
-    sessionKey.USR = getNewUSR();
+    sessionKey.USR = getNewUSR(sessionKey.abonentAddr);
 
     store.newSession(sessionKey);
     session = store.getSession(sessionKey);
@@ -337,6 +341,22 @@ void SessionManagerImpl::startTimer(CSessionKey key,time_t deadLine)
 */
     it->nextWakeTime = deadLine;
 }
+
+
+int16_t SessionManagerImpl::getNewUSR(Address& address)
+{
+    int16_t result = 0;
+    if (UMRHash.Exists(address)) 
+    {
+        result = UMRHash.Get(address)++;
+        UMRHash[address] = result;
+        return result;
+    }
+
+    UMRHash.Insert(address,result);
+    return result;
+}
+
 
 }}
 
