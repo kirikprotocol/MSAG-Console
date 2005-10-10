@@ -687,7 +687,7 @@ __synchronized__
         (rec->srcProxyIdx?rec->info.srcSmeSystemId.str:string("default")) << "'";
       trace_.push_back(ost.str());
     }
-    if ( srcidx != 0 && !strcmp(rec->srcProxyIdx,srcidx) ) {
+    if ( srcidx != 0 && rec->srcProxyIdx!=0 && !strcmp(rec->srcProxyIdx,srcidx) ) {
       if ( trace_enabled_ ) {
         ostringstream ost;
         ost << "found alternative route with src proxy: '" << rec->info.srcSmeSystemId << "'";
