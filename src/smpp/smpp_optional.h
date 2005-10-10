@@ -261,6 +261,11 @@ inline void fetchSmppOptional(SmppStream* stream,SmppOptional* opt)
       macroFetchCOctetStr( imsi_address, length );
       macroFetchCOctetStr( msc_address, length );
       macroFetchField( supported_codeset );
+      default:
+        __warning2__("Skipped optional tag:%x(%d)",tag,tag);
+        uint8_t x;
+        for(int i=0;i<length;i++)fetchX(stream,x);
+        break;
       }
       __throw_if_fail__( nextDataOffset == stream->dataOffset,BadStreamException );
       /*
