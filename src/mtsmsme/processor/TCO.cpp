@@ -91,8 +91,10 @@ void TCO::NUNITDATA(uint8_t cdlen,
     } /* end of BEGIN handling section */
     if (msg.isContinue())
     {
+      TrId rtrid;
       TrId ltrid;
       ltrid = msg.getDTID();
+      rtrid = msg.getOTID();
       TSM** ptr = tsms.GetPtr(ltrid);
       if (ptr)
       {
@@ -102,6 +104,9 @@ void TCO::NUNITDATA(uint8_t cdlen,
       else
       {
         smsc_log_debug(logger,"tco receive CONTINUE and TSM not found, DISCARD, but need to send ABORT");
+        std::vector<unsigned char> rsp;
+        encoder.encodeResourceLimitation(rtrid,rsp);
+        SCCPsend(cllen,cl,cdlen,cd,rsp.size(),&rsp[0]);
       }
     }/* end of CONTINUE handling section */
 }
