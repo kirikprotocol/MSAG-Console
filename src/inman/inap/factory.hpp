@@ -38,11 +38,14 @@ public:
     void       disconnect();
 
     virtual    Session* openSession(UCHAR_T ssn, const char* szSCFNumber, const char* szINmanNumber);
+    virtual    Session* openSession(UCHAR_T    ownssn, const char*    ownaddr,
+                                    UCHAR_T remotessn, const char* remoteaddr);
+
     virtual    Session* findSession(UCHAR_T ssn);
     virtual    void     closeSession(Session*);
     virtual    void     closeAllSessions();
 
-    static	   Factory*	getInstance();
+    static     Factory* getInstance();
 protected:
 
     typedef std::map<UCHAR_T, Session*> SessionsMap_T;
@@ -50,7 +53,7 @@ protected:
 
     SessionsMap_T     sessions;
     State_T           state;
-    Logger*			  logger;
+    Logger*       logger;
 
 };
 

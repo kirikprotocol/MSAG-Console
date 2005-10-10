@@ -45,6 +45,7 @@ class Dialog : public ObservableT< DialogListener >
     virtual Invoke* invoke(UCHAR_T opcode);
 
     // Transaction layer
+    virtual void beginDialog(const SCCP_ADDRESS_T& remote_addr);
     virtual void beginDialog();//called by client of this dialog instance
     virtual void continueDialog();
     virtual void endDialog(USHORT_T termination);
@@ -73,6 +74,8 @@ class Dialog : public ObservableT< DialogListener >
     InvokeMap       originating;
     InvokeMap       terminating;
     Session*        session;
+    SCCP_ADDRESS_T  ownAddr;
+    SCCP_ADDRESS_T  remoteAddr;
     APP_CONTEXT_T   ac;
     USHORT_T        opid;
     USHORT_T        did;

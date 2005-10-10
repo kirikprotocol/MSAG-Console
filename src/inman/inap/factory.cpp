@@ -22,11 +22,11 @@ namespace inap  {
 // IN sessions factory
 /////////////////////////////////////////////////////////////////////////////////////
 
-Factory::Factory() 
-	: logger(Logger::getInstance("smsc.inman.inap.Factory"))
-	, state( IDLE )
+Factory::Factory()
+  : logger(Logger::getInstance("smsc.inman.inap.Factory"))
+  , state( IDLE )
 {
-	connect();
+  connect();
 }
 
 Factory::~Factory()
@@ -43,7 +43,7 @@ void Factory::connect()
       switch( state )
       {
         case IDLE:
-            result = MsgInit(MSG_INIT_MAX_ENTRIES);
+            result = EINSS7CpMsgInitNoSig(MSG_INIT_MAX_ENTRIES);
             if (result != 0)
             {
                 throw runtime_error( format("MsgInit Failed with code %d (%s)", result, getReturnCodeDescription(result)));
@@ -56,7 +56,7 @@ void Factory::connect()
             result = MsgOpen(MSG_USER_ID);
             if (result != 0)
             {
-				throw runtime_error( format("MsgOpen failed with code %d (%s)", result, getReturnCodeDescription(result)));
+        throw runtime_error( format("MsgOpen failed with code %d (%s)", result, getReturnCodeDescription(result)));
             }
             state = OPENED;
             smsc_log_debug(logger,"state: OPENED");
@@ -66,7 +66,7 @@ void Factory::connect()
             result = MsgConn(MSG_USER_ID, TCAP_ID);
             if (result != 0)
             {
-				throw runtime_error( format("MsgConn failed with code %d (%s)", result, getReturnCodeDescription(result)) );
+        throw runtime_error( format("MsgConn failed with code %d (%s)", result, getReturnCodeDescription(result)) );
             }
             state = CONNECTED;
             smsc_log_debug(logger,"state: CONNECTED");
@@ -115,13 +115,34 @@ void Factory::disconnect()
      }
    }
 }
+Session* Factory::openSession(UCHAR_T    ownssn, const char*    ownaddr,
+                              UCHAR_T remotessn, const char* remoteaddr)
+{
+  if( state != CONNECTED )
+  {
+    throw runtime_error( format("Invalid factory state (%d)", state) );
+  }
+
+  smsc_log_debug(logger,"Open session (oSSN=%d, oGT=%s, rSSN=%d, rGT=%s)", ownssn, ownaddr, remotessn, remoteaddr);
+
+  if( sessions.find( ownssn ) != sessions.end() )
+  {
+      throw runtime_error( format("Session with SSN=%d already opened", ownssn) );
+  }
+
+  Session* pSession = new Session( ownssn, ownaddr, remotessn, remoteaddr );
+
+  sessions.insert( SessionsMap_T::value_type( ownssn, pSession ) );
+
+  return pSession;
+}
 
 Session* Factory::openSession(UCHAR_T SSN, const char* szSSF, const char* szSCF)
 {
     if( state != CONNECTED )
     {
-    	throw runtime_error( format("Invalid factory state (%d)", state) );
-	}
+      throw runtime_error( format("Invalid factory state (%d)", state) );
+  }
 
     smsc_log_debug(logger,"Open session (SSN=%d, SCF=%s, IN=%s)", SSN, szSSF, szSCF);
 
@@ -130,7 +151,7 @@ Session* Factory::openSession(UCHAR_T SSN, const char* szSSF, const char* szSCF)
         throw runtime_error( format("Session with SSN=%d already opened", SSN) );
     }
 
-	Session* pSession = new Session( SSN, szSSF, szSCF );
+  Session* pSession = new Session( SSN, szSSF, szSCF );
 
     sessions.insert( SessionsMap_T::value_type( SSN, pSession ) );
 
@@ -174,8 +195,8 @@ void Factory::closeAllSessions()
 
 Factory* Factory::getInstance()
 {
-	static Factory instance;
-	return &instance;
+  static Factory instance;
+  return &instance;
 }
 
 }

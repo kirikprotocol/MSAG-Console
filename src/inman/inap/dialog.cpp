@@ -41,10 +41,21 @@ Dialog::Dialog(Session* pSession, USHORT_T dlgId, const APP_CONTEXT_T& ac)
   , invokeId( 1 )
   , ac(ac)
 {
+  if(session)
+  {
+    ownAddr    = session->ssfAddr;
+    remoteAddr = session->scfAddr;
+  }
 }
 
 Dialog::~Dialog()
 {
+}
+
+void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr)
+{
+  remoteAddr = remote_addr;
+  beginDialog();
 }
 
 void Dialog::beginDialog()
@@ -56,8 +67,8 @@ void Dialog::beginDialog()
   smsc_log_debug(tcapLogger," DialogID: 0x%X", did );
   smsc_log_debug(tcapLogger," PriOrder: 0x%X", priority );
   smsc_log_debug(tcapLogger," QoS: 0x%X", qSrvc );
-  smsc_log_debug(tcapLogger," Dest. address: %s", dump(session->scfAddr.addrLen ,session->scfAddr.addr  ).c_str() );
-  smsc_log_debug(tcapLogger," Org. address: %s" , dump(session->ssfAddr.addrLen ,session->ssfAddr.addr  ).c_str() );
+  smsc_log_debug(tcapLogger," Dest. address: %s", dump(remoteAddr.addrLen ,remoteAddr.addr  ).c_str() );
+  smsc_log_debug(tcapLogger," Org. address: %s" , dump(ownAddr.addrLen ,ownAddr.addr  ).c_str() );
   smsc_log_debug(tcapLogger," App. context: %s" , dump(ac.acLen ,ac.ac ).c_str() );
 
   USHORT_T result = EINSS7_I97TBeginReq(
@@ -67,10 +78,10 @@ void Dialog::beginDialog()
     did,
     priority,
     qSrvc,
-    session->scfAddr.addrLen,
-    session->scfAddr.addr,
-    session->ssfAddr.addrLen,
-    session->ssfAddr.addr,
+    remoteAddr.addrLen,
+    remoteAddr.addr,
+    ownAddr.addrLen,
+    ownAddr.addr,
     ac.acLen,
     ac.ac,
     0,
@@ -165,7 +176,7 @@ void Dialog::timerReset()
 
 Invoke* Dialog::invoke(UCHAR_T opcode)
 {
-  smsc_log_debug(logger, "Invoke (opcode=0x%X)", opcode);
+  smsc_log_debug(logger, "Invoke (opcode=%d)", opcode);
   Invoke* invoke = new Invoke();
   invoke->setId( getNextInvokeId() );
   invoke->setTag( EINSS7_I97TCAP_OPERATION_TAG_LOCAL );
