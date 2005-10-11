@@ -202,7 +202,7 @@ int SessionManagerImpl::processExpire()
 
         if (it == SessionExpirePool.end())
         {
-            it == SessionExpirePool.begin();
+            it = SessionExpirePool.begin();
             iPeriod = (it->nextWakeTime - now);
             if (iPeriod <= 0) return 1;
             else return iPeriod;
@@ -345,6 +345,8 @@ void SessionManagerImpl::startTimer(CSessionKey key,time_t deadLine)
 
 int16_t SessionManagerImpl::getNewUSR(Address& address)
 {
+    //TODO: Develop expire mehanism
+
     int16_t result = 0;
     if (UMRHash.Exists(address)) 
     {
