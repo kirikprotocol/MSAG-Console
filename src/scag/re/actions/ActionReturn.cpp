@@ -47,7 +47,7 @@ bool ActionReturn::run(ActionContext& context)
 
     if (ft==ftUnknown) 
     {
-        rs.result = atoi(ReturnValue.c_str());
+        rs.status = atoi(ReturnValue.c_str());
     }
     else
     {

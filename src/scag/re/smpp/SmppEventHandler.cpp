@@ -39,6 +39,10 @@ RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
 
     std::list<Action *>::const_iterator it;
 
+    //TODO: Fill default rs fields
+    rs.status = true;
+    context.SetRuleStatus(rs);
+
     for (it = actions.begin(); it!=actions.end(); ++it)
     {
         if (!(*it)->run(context)) break;
