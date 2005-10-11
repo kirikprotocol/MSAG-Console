@@ -390,7 +390,7 @@ void RuleEngineImpl::removeRule(int ruleId)
     Rule** rulePtr = rules->rules.GetPtr(ruleId);  // Can we do such direct access? TODO: Ensure
     if (!rulePtr) 
     {
-        throw SCAGEception("Invalid rule id %d to remove",ruleId);
+        throw SCAGException("Invalid rule id %d to remove",ruleId);
         //smsc_log_warn(logger,"Invalid rule id %d to remove",ruleId);
         //return;
     }
