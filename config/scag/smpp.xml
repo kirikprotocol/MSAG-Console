@@ -20,7 +20,7 @@
     <param name="althost"           value="phoenix"/>
     <param name="altport"           value="9001"/>
     <param name="enabled"           value="true"/>
-    <param name="uid"               value="1"/>
+    <param name="uid"               value="1"/><!--0-255, unique-->
     <param name="providerId"        value="-1"/>
   </smscrecord>
 </records>
