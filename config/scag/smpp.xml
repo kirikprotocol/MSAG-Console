@@ -1,20 +1,26 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE records SYSTEM "file://smpp.dtd">
 <records>
   <smerecord>
-    <param name="systemId"          value="smename"/><!--maxlength=15-->
-    <param name="password"          value="password"/><!--maxlength=8-->
+    <param name="systemId"          value="sme1"/><!--maxlength=15-->
+    <param name="password"          value="sme1"/><!--maxlength=8-->
     <param name="timeout"           value="20"/><!--:8-180-->
     <param name="mode"              value="trx"/><!--:rx,tx,trx-->
     <param name="enabled"           value="true"/><!--:true,false-->
+    <param name="providerId"        value="-1"/>
   </smerecord>
   <smscrecord>
-    <param name="systemId"          value="smename"/>
-    <param name="password"          value="password"/>
+    <param name="systemId"          value="sunfire"/>
+    <param name="bindSystemId"      value="sunfire"/>
+    <param name="bindPassword"      value="sunfire"/>
     <param name="timeout"           value="20"/>
     <param name="mode"              value="trx"/>
     <param name="host"              value="sunfire"/>
     <param name="port"              value="9001"/><!--:0-65535-->
-    <param name="althost"           value="max"/>
+    <param name="althost"           value="phoenix"/>
     <param name="altport"           value="9001"/>
     <param name="enabled"           value="true"/>
+    <param name="uid"               value="1"/>
+    <param name="providerId"        value="-1"/>
   </smscrecord>
 </records>
