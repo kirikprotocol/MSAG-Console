@@ -58,7 +58,7 @@ const vector<unsigned char>& ProcessUSSRequestArg::getUSSData(void)
 
 void ProcessUSSRequestArg::setUSSData(unsigned char * data, unsigned size)
 {
-    _uSSdata.resize(size);
+    _uSSdata.clear();
     _uSSdata.insert(_uSSdata.begin(), data, data + size);
 }
 
