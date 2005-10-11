@@ -11,7 +11,8 @@ class SmppEventHandler : public EventHandler
 {
 public:
     virtual RuleStatus process(SCAGCommand& command, Session& session); 
-    virtual StrToHandlerId(const std::string& str);
+    //Method return HandlerId from hander type string
+    virtual int StrToHandlerId(const std::string& str);
 };
 
 }}

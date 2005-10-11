@@ -31,7 +31,7 @@ public:
 
     virtual void init(const SectionParams& params,PropertyObject _propertyObject) {propertyObject = _propertyObject;}
     virtual RuleStatus process(SCAGCommand& command,Session& session) = 0;
-    virtual StrToHandlerId(const std::string& str) = 0;
+    virtual int StrToHandlerId(const std::string& str) = 0;
 
 };
 

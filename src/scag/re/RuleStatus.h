@@ -5,9 +5,12 @@ namespace scag { namespace re {
 
 struct RuleStatus
 {
-    bool result;
-    bool hasErrors;
-    RuleStatus() : result(false),hasErrors(false) {};
+    //TODO: Think ;)
+    int result;
+    bool status;
+    bool temporal;
+    //RuleStatus() : result(false),hasErrors(false) {};
+    RuleStatus() : result(0), status(false),temporal(false) {};
 };
 
 }}

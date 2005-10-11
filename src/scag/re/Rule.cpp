@@ -27,13 +27,15 @@ Rule::~Rule()
 
 RuleStatus Rule::process(SCAGCommand& command,Session& session)
 {
+    //TODO: fill rs fields
+
     RuleStatus rs;
     if (command.getType() != transportType)
     {
-        rs.result = false;
-        rs.hasErrors = true;
-        smsc_log_debug(logger,"Rule: command transport type and rule transport type are different");
-        return rs;
+        rs.status = false;
+        throw SCAGException("Rule: command transport type and rule transport type are different");
+        //smsc_log_error(logger,"Rule: command transport type and rule transport type are different");
+        //return rs;
     }
 
     smsc_log_debug(logger,"Process Rule...");
@@ -41,9 +43,8 @@ RuleStatus Rule::process(SCAGCommand& command,Session& session)
     int handlerType = ExtractHandlerType(command);
     if (!Handlers.Exist(handlerType)) 
     {
-        rs.result = false;
-        rs.hasErrors = true;
-        smsc_log_debug(logger,"Rule: cannot find EventHandler for command");
+        rs.status = false;
+        smsc_log_warn(logger,"Rule: cannot find EventHandler for command");
         return rs;
     }
 
@@ -53,9 +54,8 @@ RuleStatus Rule::process(SCAGCommand& command,Session& session)
         rs = eh->process(command, session);
     } catch (Exception& e)
     {
-        rs.result = false;
-        rs.hasErrors = true;
-        smsc_log_debug(logger,e.what());
+        rs.status = false;
+        smsc_log_error(logger,e.what());
         return rs;
     }
     return rs;
