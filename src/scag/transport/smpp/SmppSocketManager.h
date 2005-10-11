@@ -10,6 +10,7 @@
 #include "logger/Logger.h"
 #include "SmppCommandQueue.h"
 #include "SmppChannelRegistrator.h"
+#include "scag/config/ConfigManager.h"
 
 namespace scag{
 namespace transport{
@@ -21,7 +22,11 @@ public:
     reg(argReg),queue(argQueue)
   {
     acc=new SmeAcceptor(this);
-    acc->Init("0.0.0.0",8001);
+    //acc->Init("0.0.0.0",8001);
+    acc->Init(
+      scag::config::ConfigManager::Instance().getConfig()->getString("smpp.host"),
+      scag::config::ConfigManager::Instance().getConfig()->getInt("smpp.port")
+    );
     conn=new SmscConnector(this);
     tp.startTask(acc);
     log=smsc::logger::Logger::getInstance("smpp.sm");
