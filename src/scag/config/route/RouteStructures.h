@@ -121,7 +121,7 @@ private:
 
 public:
   Route()
-    : id(), sources(), destinations(), archiving(false), enabling(true), active(false), srcSmeSystemId(), providerId(-1),categoryId(-1)
+    : id(), sources(), destinations(), archiving(false), enabling(true), active(false), srcSmeSystemId(), providerId(-1),categoryId(-1),ruleId(-1)
   {}
   Route(const Route &r)
     : id(r.id), sources(r.sources), destinations(r.destinations),
