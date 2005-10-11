@@ -4,21 +4,19 @@
 
 #include <map>
 
-#include "comps.hpp"
-#include "acdefs.hpp"
+#include "inman/comp/comps.hpp"
+#include "inman/comp/acdefs.hpp"
 #include "inman/comp/operfactory.hpp"
 #include "logger/Logger.h"
 
-//using smsc::logger::Logger;
-//using smsc::inman::common::FactoryT;
 
 namespace smsc {
 namespace inman {
 namespace comp {
 
-typedef smsc::ac::CAP4SMSFactory  ComponentFactory;
+typedef smsc::ac::CAP3SMSFactory  ComponentFactory;
 
-void initCAP4SMSComponents(OperationFactory * fact);
+OperationFactory * initCAP3SMSComponents(OperationFactory * fact);
 
 
 }

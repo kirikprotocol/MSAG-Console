@@ -1,5 +1,3 @@
-//#include <assert.h>
-
 #include "comfactory.hpp"
 
 using smsc::inman::comp::InapOpCode;
@@ -13,11 +11,17 @@ namespace smsc {
 namespace inman {
 namespace comp {
 
-void initCAP4SMSComponents(OperationFactory * fact)
+OperationFactory * initCAP3SMSComponents(OperationFactory * fact)
 {
-    fact->setLogger(Logger::getInstance("smsc.inman.comp.ComponentFactory"));
-    fact->registerArg(InapOpCode::RequestReportSMSEvent,
-	    new CompFactory::ProducerT<smsc::inman::comp::RequestReportSMSEventArg>() );
+    if (!fact) { //called from ApplicationContextFactory::getFactory()
+        //getInstance() calls FIF in turn
+        fact = smsc::ac::CAP3SMSFactory::getInstance();
+    } else {
+        fact->setLogger(Logger::getInstance("smsc.inman.comp.ComponentFactory"));
+        fact->registerArg(InapOpCode::RequestReportSMSEvent,
+                new CompFactory::ProducerT<smsc::inman::comp::RequestReportSMSEventArg>() );
+    }
+    return fact;
 }
 
 

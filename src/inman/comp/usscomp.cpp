@@ -23,13 +23,19 @@ namespace inman {
 namespace usscomp {
 
 //FactoryInitFunction implementation
-void initMAPUSS2Components(OperationFactory * fact)
+OperationFactory * initMAPUSS2Components(OperationFactory * fact)
 {
-    fact->setLogger(Logger::getInstance("smsc.inman.usscomp.ComponentFactory"));
-    fact->registerArg(MAPUSS_OpCode::processUSS_Request,
-      new CompFactory::ProducerT<smsc::inman::usscomp::ProcessUSSRequestArg>() );
-    fact->registerRes(MAPUSS_OpCode::processUSS_Request,
-      new CompFactory::ProducerT<smsc::inman::usscomp::ProcessUSSRequestRes>() );
+    if (!fact) { //called from ApplicationContextFactory::getFactory()
+        //getInstance() calls FIF in turn
+        fact = smsc::ac::MAPUSS2Factory::getInstance();
+    } else {
+        fact->setLogger(Logger::getInstance("smsc.inman.usscomp.ComponentFactory"));
+        fact->registerArg(MAPUSS_OpCode::processUSS_Request,
+          new CompFactory::ProducerT<smsc::inman::usscomp::ProcessUSSRequestArg>() );
+        fact->registerRes(MAPUSS_OpCode::processUSS_Request,
+          new CompFactory::ProducerT<smsc::inman::usscomp::ProcessUSSRequestRes>() );
+    }
+    return fact;
 }
 
 

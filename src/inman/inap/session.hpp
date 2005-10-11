@@ -46,7 +46,8 @@ class Session : public ObservableT< SessionListener >
 
 
         virtual     Dialog*  openDialog(USHORT_T id);
-        virtual     Dialog*  openDialog(USHORT_T id,const APP_CONTEXT_T& ac);
+//        virtual     Dialog*  openDialog(USHORT_T id,const APP_CONTEXT_T& ac);
+        virtual     Dialog*  openDialog(USHORT_T id,const unsigned dialog_ac_idx);
         virtual     Dialog*  findDialog(USHORT_T id);
         virtual     void       closeDialog(Dialog* pDlg);
         virtual     void       closeAllDialogs();
@@ -62,7 +63,8 @@ class Session : public ObservableT< SessionListener >
 
         SCCP_ADDRESS_T  ssfAddr;
         SCCP_ADDRESS_T  scfAddr;
-        APP_CONTEXT_T   ac;
+        unsigned        _ac_idx; //default APPLICATION-CONTEXT index for dialogs, see acdefs.hpp
+//        APP_CONTEXT_T   ac;
         DialogsMap_T    dialogs;
         SessionState    state;
         UCHAR_T         SSN;

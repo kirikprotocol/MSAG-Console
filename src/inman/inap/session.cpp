@@ -35,20 +35,6 @@ namespace inap  {
 
 static const int SOCKET_TIMEOUT = 1000;
 
-static void fillAppContext(APP_CONTEXT_T* p_ac)
-{
-  APP_CONTEXT_T& ac = *p_ac;
-  ac.acLen=7;
-//  ac.ac[0] = 0x06; //|00000110 |Tag                    |(UNIV P Obj Identifier)
-//  ac.ac[1] = 0x07; //|00000111 |Length                 |7
-  ac.ac[0] = 0x04; //|00000100 |Authority,Organization |ITU-T, Identified-organization
-  ac.ac[1] = 0x00; //|00000000 |                       |ETSI
-  ac.ac[2] = 0x00; //|00000000 |Domain                 |Mobile Domain
-  ac.ac[3] = 0x01; //|00000001 |Mobile Subdomain       |GSM / UMTS Network
-  ac.ac[4] = 0x15; //|00010101 |Common Component ID    |CAP 3 OE
-  ac.ac[5] = 0x03; //|00000011 |CAP3 OE ID             |ACE
-  ac.ac[6] = 0x3D; //|00111101 |Application Context    |CAP3-SMS
-}
 Session::Session(UCHAR_T ownssn, const char* ownaddr, UCHAR_T remotessn, const char* remoteaddr)
     : logger(Logger::getInstance("smsc.inman.inap.Session"))
     , SSN( ownssn )
@@ -57,7 +43,8 @@ Session::Session(UCHAR_T ownssn, const char* ownaddr, UCHAR_T remotessn, const c
 {
     fillAddress(&ssfAddr,ownaddr, ownssn);
     fillAddress(&scfAddr,remoteaddr, remotessn);
-    fillAppContext(&ac);
+    //ac = *smsc::ac::ACOID::OIDbyIdx(id_ac_cap3_sms_AC);
+    _ac_idx = id_ac_cap3_sms_AC;
 
     USHORT_T  result = EINSS7_I97TBindReq( SSN, MSG_USER_ID, TCAP_INSTANCE_ID, EINSS7_I97TCAP_WHITE_USER );
     if (result != 0 )
@@ -73,7 +60,8 @@ Session::Session(UCHAR_T ssn, const char* ssf, const char* scf)
 {
     fillAddress(&ssfAddr,ssf, ssn);
     fillAddress(&scfAddr,scf, ssn);
-    fillAppContext(&ac);
+    //ac = *smsc::ac::ACOID::OIDbyIdx(id_ac_cap3_sms_AC);
+    _ac_idx = id_ac_cap3_sms_AC;
 
     USHORT_T  result = EINSS7_I97TBindReq( SSN, MSG_USER_ID, TCAP_INSTANCE_ID, EINSS7_I97TCAP_WHITE_USER );
     if (result != 0 )
@@ -116,11 +104,12 @@ USHORT_T Session::nextDialogId()
     return id;
 }
 
-Dialog* Session::openDialog(USHORT_T id, const APP_CONTEXT_T& dac)
+//Dialog* Session::openDialog(USHORT_T id, const APP_CONTEXT_T& dac)
+Dialog* Session::openDialog(USHORT_T id, unsigned dialog_ac_idx)
 {
   if(id == 0) id = nextDialogId();
   smsc_log_debug(logger,"Open dialog (SSN=%d, Dialog id=%d)", SSN, id );
-  Dialog* pDlg = new Dialog( this, id , dac);
+  Dialog* pDlg = new Dialog( this, id , dialog_ac_idx);
   dialogs.insert( DialogsMap_T::value_type( id, pDlg ) );
 
   for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
@@ -137,7 +126,8 @@ Dialog* Session::openDialog(USHORT_T id)
 {
     if(id == 0) id = nextDialogId();
     smsc_log_debug(logger,"Open dialog (SSN=%d, Dialog id=%d)", SSN, id );
-    Dialog* pDlg = new Dialog( this, id , ac);
+//    Dialog* pDlg = new Dialog( this, id , ac);
+    Dialog* pDlg = new Dialog( this, id , _ac_idx);
     dialogs.insert( DialogsMap_T::value_type( id, pDlg ) );
 
   for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)

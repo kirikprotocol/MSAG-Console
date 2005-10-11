@@ -19,7 +19,8 @@ using std::auto_ptr;
 using smsc::inman::common::format;
 using smsc::inman::common::getTcapReasonDescription;
 using smsc::inman::common::dump;
-using smsc::inman::comp::ComponentFactory;
+//using smsc::inman::comp::ComponentFactory;
+using smsc::inman::comp::ApplicationContextFactory;
 
 namespace smsc  {
 namespace inman {
@@ -31,7 +32,8 @@ namespace inap  {
 
 extern Logger* tcapLogger;
 
-Dialog::Dialog(Session* pSession, USHORT_T dlgId, const APP_CONTEXT_T& ac)
+//Dialog::Dialog(Session* pSession, USHORT_T dlgId, const APP_CONTEXT_T& ac)
+Dialog::Dialog(Session* pSession, USHORT_T dlgId, unsigned dialog_ac_idx)
   : logger(Logger::getInstance("smsc.inman.inap.Dialog"))
   , did( dlgId )
   , session( pSession )
@@ -39,8 +41,10 @@ Dialog::Dialog(Session* pSession, USHORT_T dlgId, const APP_CONTEXT_T& ac)
   , priority(EINSS7_I97TCAP_PRI_HIGH_0)
   , timeout( 30 )
   , invokeId( 1 )
-  , ac(ac)
+//  , ac(ac)
+  , _ac_idx(dialog_ac_idx)
 {
+  ac = *smsc::ac::ACOID::OIDbyIdx(dialog_ac_idx);
   if(session)
   {
     ownAddr    = session->ssfAddr;
@@ -215,7 +219,9 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
   invoke->setTag( tag );
   invoke->setOpcode( opcode );
 
-  Component* comp = ComponentFactory::getInstance()->createArg( opcode );
+//  Component* comp = ComponentFactory::getInstance()->createArg( opcode );
+  Component* comp = ApplicationContextFactory::getFactory(_ac_idx)->createArg( opcode );
+  assert(comp);
 
   if( comp )
   {
@@ -245,7 +251,11 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
   result->setId( invId );
   result->setTag( tag );
   result->setOpcode( opcode );
-  result->setParam( ComponentFactory::getInstance()->createRes( opcode ) );
+//  result->setParam( ComponentFactory::getInstance()->createRes( opcode ) );
+  Component* res = ApplicationContextFactory::getFactory(_ac_idx)->createRes( opcode );
+  assert(res);
+  result->setParam(res);
+
 
   InvokeMap::const_iterator it = originating.find( invId );
   if( it != originating.end() )

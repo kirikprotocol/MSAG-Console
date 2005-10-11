@@ -2,19 +2,29 @@
 /*
 USAGE EXAMPLE: see inman/tstfactr.cpp
 
-1) add to acdefs.hpp application context index
-2) implement the function type of FactoryInitFunc, that registers components in factory,
-   for ex.:
+1) add to acdefs.hpp application context index, for example:
 
-void initCAP4SMSComponents(OperationFactory * fact)
+  #define id_ac_cap4_sms_AC  3U
+2)  
+  add to acdefs.cpp::_OIDS[] encoded form of new AC OID 
+
+3) implement the function type of FactoryInitFunc, that registers components in factory,
+   by following template (for ex.):
+
+OperationFactory * initCAP4SMSComponents(OperationFactory * fact)
 {
-    fact->setLogger(Logger::getInstance("smsc.inman.comp.CAP4SMSFactory"));
-    fact->registerArg(InapOpCode::RequestReportSMSEvent,
-	new CompFactory::ProducerT<smsc::inman::comp::RequestReportSMSEventArg>() );
-    // register other args ...
-}
+    if (!fact) {
+        fact = smsc::inman::comp::OperationFactoryInstanceT<id_ac_cap4_sms_AC>::getInstance();
+    } else {
+        fact->setLogger(Logger::getInstance("smsc.inman.comp.CAP4SMSFactory"));
+        fact->registerArg(InapOpCode::RequestReportSMSEvent,
+	    new CompFactory::ProducerT<smsc::inman::comp::RequestReportSMSEventArg>() );
+        // register other args ...
+    }
+    return fact;
+}    
 
-3)
+4)
   a) [dynamical instantiation]
    create factory instance by executing:
 
@@ -27,7 +37,9 @@ OperationFactoryInstanceT <id_ac_cap4_sms_AC>::getInstance()->Init(initCAP4SMSCo
    
    create factory instance by executing:
 
-OperationFactoryInstanceT <id_ac_cap4_sms_AC>::getInstance();
+   ApplicationContextFactory::getFactory(id_ac_cap4_sms_AC);
+      or 
+   OperationFactoryInstanceT <id_ac_cap4_sms_AC>::getInstance();
 
 4) now you may get components by calling
  either:
@@ -68,7 +80,6 @@ public:
     Component * createErr(unsigned opcode);
 
     unsigned getACidx(void) { return _ac_idx; }
-    //const char * getACoid() { return _AC_oid[_ac_idx]; }
 
     //calling rule: registerArg(opcode1, new CompFactory::ProducerT<ArgType1>());
     void registerArg(unsigned opcode, CompProducer* alloc);
@@ -86,7 +97,7 @@ protected:
     Logger* 		logger;
 };
 
-typedef void (*FactoryInitFunc)(OperationFactory * fact);
+typedef OperationFactory * (*FactoryInitFunc)(OperationFactory * fact);
 
 template < unsigned ac_idx >
 class OperationFactoryInstanceT : public OperationFactory

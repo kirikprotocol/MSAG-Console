@@ -39,7 +39,8 @@ class Dialog : public ObservableT< DialogListener >
 
   public:
 
-    Dialog(Session* session, USHORT_T id, const APP_CONTEXT_T& ac );
+//    Dialog(Session* session, USHORT_T id, const APP_CONTEXT_T& ac );
+    Dialog(Session* session, USHORT_T id, unsigned dialog_ac_idx );
     virtual ~Dialog();
 
     virtual Invoke* invoke(UCHAR_T opcode);
@@ -76,6 +77,7 @@ class Dialog : public ObservableT< DialogListener >
     Session*        session;
     SCCP_ADDRESS_T  ownAddr;
     SCCP_ADDRESS_T  remoteAddr;
+    unsigned        _ac_idx; //ApplicationContext index, see acdefs.hpp
     APP_CONTEXT_T   ac;
     USHORT_T        opid;
     USHORT_T        did;

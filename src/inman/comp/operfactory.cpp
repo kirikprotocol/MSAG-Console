@@ -10,11 +10,11 @@ using smsc::inman::comp::OperationFactory;
 namespace smsc { namespace inman {
 
 namespace comp {
-void initCAP4SMSComponents(OperationFactory * fact);
+OperationFactory * initCAP3SMSComponents(OperationFactory * fact);
 } //comp
 
 namespace usscomp {
-void initMAPUSS2Components(OperationFactory * fact);
+OperationFactory * initMAPUSS2Components(OperationFactory * fact);
 } //usscomp
 
 } //inman 
@@ -38,7 +38,7 @@ ApplicationContextFactory::ApplicationContextFactory()
 {
 //calling rule:
 //   markFIF( my_id_ac_idx, FactoryInitFunc);
-    markFIF(id_ac_cap4_sms_AC, smsc::inman::comp::initCAP4SMSComponents);
+    markFIF(id_ac_cap3_sms_AC, smsc::inman::comp::initCAP3SMSComponents);
     markFIF(id_ac_map_networkUnstructuredSs_v2, smsc::inman::usscomp::initMAPUSS2Components);
 }
 
@@ -83,7 +83,14 @@ OperationFactory* ApplicationContextFactory::findFactory(unsigned ac_idx)
 OperationFactory* ApplicationContextFactory::getFactory(unsigned ac_idx)
 {
     ApplicationContextFactory * acf = ApplicationContextFactory::getInstance();
-    return acf->findFactory(ac_idx);
+    OperationFactory          * fact = acf->findFactory(ac_idx);
+
+    if (!fact) { //factory is not initialized, check for registered FIF
+        FactoryInitFunc fif = acf->findFIF(ac_idx);
+        if (fif)
+            fact = fif(NULL); //create factory
+    }
+    return fact;
 }
 
 

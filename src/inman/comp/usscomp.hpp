@@ -7,7 +7,8 @@
 #include "sms/sms.h"
 #include "logger/Logger.h"
 #include "compdefs.hpp"
-#include "operfactory.hpp"
+#include "acdefs.hpp"
+//#include "operfactory.hpp"
 
 using smsc::logger::Logger;
 
@@ -46,7 +47,7 @@ struct MAPUSS_OpCode {
 };
 
 //FactoryInitFunction declaration
-void initMAPUSS2Components(OperationFactory * fact);
+OperationFactory * initMAPUSS2Components(OperationFactory * fact);
 
 
 class ProcessUSSRequestArg : public Component
