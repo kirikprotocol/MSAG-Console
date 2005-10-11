@@ -388,7 +388,12 @@ void RuleEngineImpl::removeRule(int ruleId)
     MutexGuard mg(changeLock);
 
     Rule** rulePtr = rules->rules.GetPtr(ruleId);  // Can we do such direct access? TODO: Ensure
-    if (!rulePtr) throw RuleEngineException(0,"Invalid rule id to remove");
+    if (!rulePtr) 
+    {
+        smsc_log_warn(logger,"Invalid rule id %d to remove",ruleId);
+        return;
+    }
+        //throw RuleEngineException(0,"Invalid rule id to remove");
             
     Rules *newRules = copyReference();
     rulePtr = newRules->rules.GetPtr(ruleId);
