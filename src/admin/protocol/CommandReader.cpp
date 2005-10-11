@@ -43,6 +43,9 @@ Command *CommandReader::read()
 {
   uint32_t len = readMessageLength();
 
+  if(len > 10 * 1024 * 1024)
+      throw AdminException("Too big message length( more then > 10 Mb)");
+
   std::auto_ptr<XMLByte> buf(new XMLByte [len+1]);
   readMessageBody(buf.get(), len);
 
