@@ -31,6 +31,7 @@ Response * CommandAddSme::CreateResponse(scag::Scag * ScagApp)
       smppMan->addSmppEntity(getSmppEntityInfo());
 
       smsc_log_info(logger, "CommandAddSme is processed ok");
+      return new Response(Response::Ok, "CommandAddSme is processed ok");
   }catch(Exception& e){
       char msg[1024];
       sprintf(msg, "Failed to add new SME. Details: %s", e.what());
@@ -40,7 +41,6 @@ Response * CommandAddSme::CreateResponse(scag::Scag * ScagApp)
       smsc_log_error(logger, "CommandAddSme exception, Unknown exception.");
       return new Response(Response::Error, "Failed to add new SME. Unknown error");
   }
-  return new Response(Response::Error, "Unknown error");
 }
 
 

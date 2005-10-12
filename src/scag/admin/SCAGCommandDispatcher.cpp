@@ -15,6 +15,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "scag/config/ConfigManager.h"
 #include "scag/scag.h"
+#include "logger/Logger.h"
 
 namespace scag {
 namespace admin {
@@ -93,6 +94,7 @@ class GwRunner : public smsc::core::threads::Thread
     }
 
 protected:
+    smsc::logger::Logger * logger;
   scag::Scag* _app;
   Mutex mutex;
   bool running;

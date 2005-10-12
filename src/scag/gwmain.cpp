@@ -105,7 +105,6 @@ int main(int argc,char* argv[])
     {
 
       //using namespace smsc::scag::admin;
-
       scag::admin::SCAGCommandDispatcher::startGw();
       fprintf(stderr,"SMPP GW started\n");
 
@@ -147,7 +146,7 @@ int main(int argc,char* argv[])
   }
   catch(std::exception& e)
   {
-    fprintf(stderr,"top level exception: %s\n",e.what());
+    fprintf(stderr,"top level exception: %s\n", e.what());
     exit(-1);
   }
   catch(...)

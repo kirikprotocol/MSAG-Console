@@ -303,7 +303,7 @@ void Scag::init()
   ConfigManager & cfg = ConfigManager::Instance();
 
   smsc::util::regexp::RegExp::InitLocale();
-  smsc::logger::Logger *log=smsc::logger::Logger::getInstance("smsc.init");
+  smsc::logger::Logger *log=smsc::logger::Logger::getInstance("scag.init");
 
   try{
   InitLicense(*cfg.getLicConfig());
