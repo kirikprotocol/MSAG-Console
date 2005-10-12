@@ -1,3 +1,4 @@
+static char const ident[] = "$Id$";
 #include <stdlib.h>
 #include <assert.h>
 #include <typeinfo.h>
