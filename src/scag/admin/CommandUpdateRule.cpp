@@ -3,17 +3,15 @@
 #include "admin/service/Variant.h"
 #include <xercesc/dom/DOM.hpp>
 #include "util/xml/utilFunctions.h"
+#include "scag/exc/SCAGExceptions.h"
 
 namespace scag {
 namespace admin {
 
-class RuleEngineException : public Exception
-{
-};
-
 using smsc::admin::service::Variant;
 using namespace xercesc;
 using namespace smsc::util::xml;
+using scag::exceptions::RuleEngineException;
 
 CommandUpdateRule::CommandUpdateRule(const xercesc::DOMDocument * document)
     : SCAGCommand((Command::Id)CommandIds::updateRule),
@@ -60,7 +58,7 @@ Response * CommandUpdateRule::CommandCreate(scag::Scag * ScagApp)
   }catch(RuleEngineException& e){
 
       char desc[512];
-      sprintf(desc, "Failed to update rule. RuleEngineException exception, %s", e.what());
+      sprintf(desc, "Failed to update rule. RuleEngineException exception: %s. Error in rule_%d.xml in line %d", e.what(), ruleId, e.getLineNumber());
       Variant res((const char *)desc);
 
       smsc_log_info(logger, desc);
