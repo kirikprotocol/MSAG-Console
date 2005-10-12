@@ -50,7 +50,7 @@ using smsc::smeman::SmeRecord;
       SmppStatEvent(scag::transport::smpp::SmppEntityInfo& smppEntity, int cnt, int errcode)
       {
         strncpy(smeId, smppEntity.systemId, sizeof(smeId));
-        //smeProviderId = smppEntity.providerId;
+        smeProviderId = smppEntity.providerId;
         routeId[0]=0;
         routeProviderId=-1;
         counter = cnt;
@@ -60,7 +60,7 @@ using smsc::smeman::SmeRecord;
       SmppStatEvent(scag::transport::smpp::SmppEntityInfo& smppEntity, scag::transport::smpp::router::RouteInfo& ri, int cnt, int errcode)
       {
         strncpy(smeId, smppEntity.systemId, sizeof(smeId));
-        //smeProviderId = smppEntity.providerId;
+        smeProviderId = smppEntity.providerId;
         strncpy(routeId, (char*)ri.routeId, sizeof(routeId));
         routeProviderId=ri.providerId;
         counter = cnt;

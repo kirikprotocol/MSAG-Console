@@ -45,6 +45,11 @@ Abstract_CommandSmeInfo::Abstract_CommandSmeInfo(const Command::Id id, const xer
         smppEntityInfo.timeOut = atoi(value.get());
         smsc_log_info(logger, "timeout: %d", smppEntityInfo.timeOut);
       }
+
+      if (::strcmp("providerId", name) == 0){
+        smppEntityInfo.providerId = atoi(value.get());
+        smsc_log_info(logger, "providerId: %d", smppEntityInfo.providerId);
+      }
             
       if (::strcmp("mode", name) == 0) {
         if (::strcmp("trx", value.get()) == 0)
