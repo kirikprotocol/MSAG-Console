@@ -3,13 +3,13 @@
  * This file contains ASN.1 definitions for PDUs utilized in Network
  * unstructured SS handling, desribed in MAP by 
  *
- * networkUnstructuredSsContext-v2 APPLICATION-CONTEXT 
+ * networkUnstructuredSsContext-v2 APPLICATION-CONTEXT ::= { 
  * -- Responder is HLR, Initiator is VLR
  * -- Responder is VLR, Initiator is HLR
  * -- Responder is gsmSCF, Initiator is HLR
  * -- Responder is HLR, Initiator is gsmSCF
  * -- Responder is HLR, Initiator is HLR
- * OPERATIONS OF { unstructuredSsPackage-v2}
+ * OPERATIONS OF { unstructuredSsPackage-v2} -- &Symmetric
  * ID {map-ac networkUnstructuredSs(19) version2(2)} }
  *
  * where the unstructuredSsPackage-v2 is defined as:
@@ -19,6 +19,20 @@
  * -- Supplier is gsmSCF or HLR if Consumer is HLR
  * CONSUMER INVOKES { processUnstructuredSS-Request }
  * SUPPLIER INVOKES { unstructuredSS-Request | unstructuredSS-Notify} }
+ *
+ * The APPLICATION-CONTEXT is defined as:
+ *
+ * APPLICATION-CONTEXT ::= CLASS {
+ *   &Symmetric		 OPERATION-PACKAGE OPTIONAL,
+ *   &InitiatorConsumerOf OPERATION-PACKAGE OPTIONAL,
+ *   &ResponderConsumerOf OPERATION-PACKAGE OPTIONAL,
+ *   &code		 OBJECT IDENTIFIER
+ * } WITH SYNTAX {
+ *  [ OPERATIONS OF		&Symmetric ]
+ *  [ INITIATOR CONSUMER OF	&InitiatorConsumerOf
+ *      RESPONDER CONSUMER OF	&ResponderConsumerOf ]
+ *   ID &code 
+ * }
  * ************************************************************************** *
  * Author: R.V. Gerasimov						      *
  * ************************************************************************** */
@@ -57,7 +71,7 @@ opcode-processUSS-Request Code ::= local : 59
 -- opcode-USS-Request Code ::= local : 60
 -- opcode-USS-Notify Code ::= local : 61
 
--- Errors for RequestReportSMSEvent operation
+-- Errors for processUnstructuredSS-Request operation
 ProcessUSS-RequestErrors ERROR ::= {
     systemFailure | dataMissing | unexpectedDataValue |
     unknownAlphabet | callBarred 
@@ -257,7 +271,10 @@ END -- MAP-ExtensionDataTypes
 MAP-ER-DataTypes {itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
 gsm-Network (1) modules (3) map-ER-DataTypes (17) version9 (9)}
 DEFINITIONS IMPLICIT TAGS ::=
+-- GVRoman's NOTE: 
+-- This is reduced version of original module containing only types required for MAP-USSCtx
 BEGIN
+
 EXPORTS
   SystemFailureParam, DataMissingParam, UnexpectedDataParam, CallBarredParam
     ;
@@ -312,6 +329,8 @@ END -- end of MAP-ER-DataTypes
 MAP-Errors {itu-t(0) identified-organization (4) etsi (0) mobileDomain (0)
 gsm-Network (1) modules (3) map-Errors (10) version9 (9)}
 DEFINITIONS ::=
+-- GVRoman's NOTE: 
+-- This is reduced version of original module containing only types required for MAP-USSCtx
 BEGIN
 
 EXPORTS
