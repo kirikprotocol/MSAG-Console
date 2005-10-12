@@ -17,14 +17,19 @@ namespace inap  {
 
 class InvokeListener
 {
-	public:
-		virtual void result(TcapEntity*) = 0;
+    public:
+        virtual void result(TcapEntity*) = 0;
+        virtual void error(TcapEntity*) = 0;
+        virtual void resultNL(TcapEntity*) = 0;
 };
+
 
 class Invoke : public TcapEntity, public ObservableT< InvokeListener >
 {
     public:
     	virtual void send(Dialog* dialog);
+        virtual void notifyResultListeners(TcapEntity* resp);
+        virtual void notifyErrorListeners(TcapEntity* resp);
 };
 
 }

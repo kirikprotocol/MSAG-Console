@@ -64,6 +64,24 @@ void Invoke::send(Dialog* dialog)
     throw runtime_error( format("InvokeReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
 }
 
+void Invoke::notifyResultListeners(TcapEntity* resp)
+{
+    for (Invoke::ListenerList::iterator it = listeners.begin();
+                                      it != listeners.end(); it++) {
+        InvokeListener* ptr = *it;
+        ptr->result(resp);
+    }
+}
+
+void Invoke::notifyErrorListeners(TcapEntity* resp)
+{
+    for (Invoke::ListenerList::iterator it = listeners.begin();
+                                      it != listeners.end(); it++) {
+        InvokeListener* ptr = *it;
+        ptr->error(resp);
+    }
+}
+
 } // namespace inap
 } // namespace inmgr
 } // namespace smsc

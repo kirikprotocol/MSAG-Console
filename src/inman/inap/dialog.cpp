@@ -41,7 +41,6 @@ Dialog::Dialog(Session* pSession, USHORT_T dlgId, unsigned dialog_ac_idx)
   , priority(EINSS7_I97TCAP_PRI_HIGH_0)
   , timeout( 30 )
   , invokeId( 1 )
-//  , ac(ac)
   , _ac_idx(dialog_ac_idx)
 {
   ac = *smsc::ac::ACOID::OIDbyIdx(dialog_ac_idx);
@@ -185,7 +184,11 @@ Invoke* Dialog::invoke(UCHAR_T opcode)
   invoke->setId( getNextInvokeId() );
   invoke->setTag( EINSS7_I97TCAP_OPERATION_TAG_LOCAL );
   invoke->setOpcode( opcode );
-//  originating.insert( InvokeMap::value_type(  invoke->getId(), invoke ) );
+
+  //register invoke if OPERATION has RESULT defined, in order to provide
+  //possibility to call resultListener
+  if (ApplicationContextFactory::getFactory(_ac_idx)->hasResult(opcode))
+      originating.insert(InvokeMap::value_type(invoke->getId(), invoke));
   return invoke;
 }
 
@@ -219,10 +222,8 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
   invoke->setTag( tag );
   invoke->setOpcode( opcode );
 
-//  Component* comp = ComponentFactory::getInstance()->createArg( opcode );
   Component* comp = ApplicationContextFactory::getFactory(_ac_idx)->createArg( opcode );
   assert(comp);
-
   if( comp )
   {
     std::vector<unsigned char> code( pm, pm + pmlen );
@@ -232,8 +233,8 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
 
   for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
   {
-  DialogListener* ptr = *it;
-  ptr->onDialogInvoke( invoke.get() );
+    DialogListener* ptr = *it;
+    ptr->onDialogInvoke( invoke.get() );
   }
 
   return MSG_OK;
@@ -251,20 +252,23 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
   result->setId( invId );
   result->setTag( tag );
   result->setOpcode( opcode );
-//  result->setParam( ComponentFactory::getInstance()->createRes( opcode ) );
-  Component* res = ApplicationContextFactory::getFactory(_ac_idx)->createRes( opcode );
-  assert(res);
-  result->setParam(res);
 
-
-  InvokeMap::const_iterator it = originating.find( invId );
-  if( it != originating.end() )
-  {
+  Component* resParm = ApplicationContextFactory::getFactory(_ac_idx)->createRes(opcode);
+  assert(resParm);
+  if (resParm) {
+      std::vector<unsigned char> code(pm, pm + pmlen);
+      resParm->decode(code);
+      result->setParam(resParm);
+  }
+  //search for originating Invoke and call its result listeners
+  InvokeMap::const_iterator it = originating.find(invId);
+  if (it != originating.end()) {
       Invoke* inv = (*it).second;
+      //ResultListener should copy 'resParm' or take its ownership !
+      inv->notifyResultListeners(result);
   }
 
   delete result;
-
   return MSG_OK;
 }
 
