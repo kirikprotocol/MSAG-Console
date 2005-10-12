@@ -46,6 +46,12 @@ struct MAPUSS_OpCode {
     };
 };
 
+struct ERR_ProcessUSS_Request {
+    enum {
+        callBarred = 13, systemFailure = 34, dataMissing = 35,
+        unexpectedDataValue = 36, unknownAlphabet = 71
+    };
+};
 //FactoryInitFunction declaration
 OperationFactory * initMAPUSS2Components(OperationFactory * fact);
 

@@ -77,24 +77,36 @@ public:
 
     Component * createArg(unsigned opcode);
     Component * createRes(unsigned opcode);
-    Component * createErr(unsigned opcode);
+    Component * createErr(unsigned errcode);
+
+    //returns TRUE if OPERATION has RESULT defined
+    bool hasResult(unsigned opcode);
+    //returns TRUE if ERROR identified by errcode is defined for OPERATION
+    bool hasError(unsigned opcode, unsigned errcode);
+    //returns number of ERRORS defined for OPERATION
+    unsigned hasErrors(unsigned opcode);
 
     unsigned getACidx(void) { return _ac_idx; }
 
     //calling rule: registerArg(opcode1, new CompFactory::ProducerT<ArgType1>());
     void registerArg(unsigned opcode, CompProducer* alloc);
     void registerRes(unsigned opcode, CompProducer* alloc);
-    void registerErr(unsigned opcode, CompProducer* alloc);
+    void registerErr(unsigned errcode, CompProducer* alloc);
+    //binds error codes to OPERATION
+    void OperationFactory::bindErrors(unsigned opcode, unsigned errNum, ...);
 
     void setLogger(Logger * logInst);
 
+    typedef std::vector<unsigned> OPERATION_ERRORS;
+    typedef std::map<unsigned, OPERATION_ERRORS*> OPER_ERRORS_MAP;
 protected:
-    CompFactory argPlant; 
-    CompFactory resPlant; 
-    CompFactory errPlant; 
+    CompFactory     argPlant; 
+    CompFactory     resPlant; 
+    CompFactory     errPlant; 
+    OPER_ERRORS_MAP errMap;
 
-    unsigned		_ac_idx;
-    Logger* 		logger;
+    unsigned        _ac_idx;
+    Logger*         logger;
 };
 
 typedef OperationFactory * (*FactoryInitFunc)(OperationFactory * fact);

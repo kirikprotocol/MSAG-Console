@@ -34,6 +34,13 @@ OperationFactory * initMAPUSS2Components(OperationFactory * fact)
           new CompFactory::ProducerT<smsc::inman::usscomp::ProcessUSSRequestArg>() );
         fact->registerRes(MAPUSS_OpCode::processUSS_Request,
           new CompFactory::ProducerT<smsc::inman::usscomp::ProcessUSSRequestRes>() );
+        fact->bindErrors(MAPUSS_OpCode::processUSS_Request, 5, 
+                         ERR_ProcessUSS_Request::callBarred,
+                         ERR_ProcessUSS_Request::dataMissing,
+                         ERR_ProcessUSS_Request::systemFailure,
+                         ERR_ProcessUSS_Request::unexpectedDataValue,
+                         ERR_ProcessUSS_Request::unknownAlphabet
+                         );
     }
     return fact;
 }

@@ -91,12 +91,13 @@ int main(int argc, char * argv[])
             res = ApplicationContextFactory::getFactory(ac_id)->createRes(opcode);
         } break;
         }
+        unsigned numErrs = ApplicationContextFactory::getFactory(ac_id)->hasErrors(opcode);
         assert(comp);
-        smsc_log_debug(logger, "method %d: arg %s is returned for AC: %d, OPcode: %d", method,
-		   (typeid(*comp)).name(), ac_id, opcode);
+        smsc_log_debug(logger, "method %d: arg %s is returned for AC: %d, OPcode: %d, %d errors defined", method,
+		   (typeid(*comp)).name(), ac_id, opcode, numErrs);
         assert(res);
-        smsc_log_debug(logger, "method %d: res %s is returned for AC: %d, OPcode: %d", method,
-		   (typeid(*res)).name(), ac_id, opcode);
+        smsc_log_debug(logger, "method %d: res %s is returned for AC: %d, OPcode: %d, %d errors defined", method,
+		   (typeid(*res)).name(), ac_id, opcode, numErrs);
 
         delete comp; delete res;
     } while ( !singlePass && (++method <= MAX_METHOD) );
