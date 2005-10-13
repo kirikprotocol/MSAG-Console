@@ -268,9 +268,18 @@ bool RuleEngineImpl::isValidFileName(std::string fname, int& ruleId)
     if (fname.substr(0,5).compare("rule_")) return false;
     if (fname.substr(fname.size()-4,4).compare(".xml")) return false;
 
-    ruleId = atoi(fname.substr(5,fname.size()-5-4).c_str());
+    std::string str = fname.substr(5,fname.size()-5-4);
 
-    return (ruleId > 0);
+    if ((str[0] == '0')&&(str.length() > 1)) return false;
+
+    for (int i = 1; i < str.length(); i++) 
+    {
+        if ((str[i] < '0')||(str[i] > '9')) return false;
+    }
+
+    ruleId = atoi(str.c_str());
+
+    return (ruleId >= 0);
 }
 
 std::string RuleEngineImpl::CreateRuleFileName(const std::string& dir,const int ruleId) const

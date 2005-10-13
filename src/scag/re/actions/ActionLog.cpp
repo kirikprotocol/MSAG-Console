@@ -57,7 +57,7 @@ void ActionLog::init(const SectionParams& params,PropertyObject propertyObject)
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atRead)) 
-            throw InvalidPropertyException("Action 'log': cannot read property '%s' - no access",sCategory.c_str());
+            throw InvalidPropertyException("Action 'log': cannot read property '%s' - no access",msg.c_str());
     }
 
     smsc_log_debug(logger,"Action 'log':: init...");
