@@ -1,6 +1,8 @@
 #include "SmppAdapter.h"
 #include "scag/re/CommandAdapter.h"
 
+#include <iostream>
+
 namespace scag { namespace re { namespace smpp 
 {
 
@@ -747,6 +749,10 @@ Property * SmppCommandAdapter::getSubmitProperty(SMS& data,const std::string& na
     } else if ((FieldId >= USSD_PSSD_IND)&&(FieldId <= USSD_USSN_CONF)) 
     {
         property = Get_USSD_BIT_Property(data,name,FieldId);
+    } else if (FieldId = Tag::SMPP_MESSAGE_PAYLOAD) 
+    {
+        property = new AdapterProperty(name,this,"");
+        property->setPureInt(data.getState());
     } else
 
     switch (FieldId) 
@@ -809,7 +815,7 @@ Property * SmppCommandAdapter::getDeliverProperty(SMS& data,const std::string& n
     } else if ((FieldId >= DC_BINARY)&&(FieldId <= DC_GSM_MSG_CC)) 
     {
         property = Get_DC_BIT_Property(data,name,FieldId);
-    } else if ((FieldId >= ST_ENROUTE)&&(FieldId <= ST_REJECTED)) 
+    } else if (((FieldId >= ST_ENROUTE)&&(FieldId <= ST_REJECTED))||(FieldId == Tag::SMPP_MESSAGE_PAYLOAD)) 
     {
         property = new AdapterProperty(name,this,"");
         property->setPureInt(data.getState());
@@ -887,6 +893,7 @@ Property* SmppCommandAdapter::getProperty(const std::string& name)
     {
     case DELIVERY:
         if (!DeliverFieldNames.Exists(name.c_str())) return 0;
+
         FieldId = DeliverFieldNames[name.c_str()];
         return getDeliverProperty(*(SMS*)dta,name,FieldId);
     case SUBMIT:
