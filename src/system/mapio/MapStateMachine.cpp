@@ -2344,7 +2344,7 @@ USHORT_T Et96MapPAbortInd(
       dialog->id_opened = false;
       if( dialog->isUSSD ) eraseUssdLock(dialog.get(), __func__);
       __map_warn2__("PABORT: dlg=0x%x %s %s",dialogid_map,dialog->isUSSD?"ussd":"sms",RouteToString(dialog.get()).c_str());
-      TryDestroyDialog(dialogid_map,true,Status::MAP_PROVIDER_REASON_BASE+provReason,localSsn);
+      TryDestroyDialog(dialogid_map,true,MAKE_ERRORCODE(Status::isErrorPermanent( Status::MAP_PROVIDER_REASON_BASE+provReason )?CMD_ERR_FATAL:CMD_ERR_TEMP,Status::MAP_PROVIDER_REASON_BASE+provReason),localSsn);
     }
   }MAP_CATCH(dialogid_map,dialogid_smsc,localSsn);
   return ET96MAP_E_OK;
