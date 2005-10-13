@@ -41,12 +41,37 @@ public:
     virtual void reloadConfig(ConfigType type);
   virtual void reloadAllConfigs();
   static void Init() throw(ConfigException);
+  virtual RouteConfig&  getRouteConfig(){ return getRouteConfig_(); }
+  virtual SmppManConfig& getSmppManConfig(){ return getSmppManConfig(); }
+  virtual StatManConfig& getStatManConfig(){ return getStatManConfig_(); }
+  virtual BillingManagerConfig& getBillManConfig(){ return getBillManConfig_(); }
+  virtual SessionManagerConfig& getSessionManConfig(){ return getSessionManConfig_(); }
 
-    virtual RouteConfig&  getRouteConfig(){return routeCfg;};
-    virtual SmppManConfig& getSmppManConfig(){return smppManCfg;};
-    virtual StatManConfig& getStatManConfig(){return statManCfg;};
-    virtual BillingManagerConfig& getBillManConfig(){return billManCfg;};
-    virtual SessionManagerConfig& getSessionManConfig(){return sessionManCfg;};
+    static RouteConfig&  getRouteConfig_()
+    {
+        static RouteConfig routeCfg;
+        return routeCfg;
+    }
+    static SmppManConfig& getSmppManConfig_()
+    {
+        static SmppManConfig smppManCfg;
+        return smppManCfg;
+    }
+    static StatManConfig& getStatManConfig_()
+    {
+        static StatManConfig statManCfg;
+        return statManCfg;
+    }
+    static BillingManagerConfig& getBillManConfig_()
+    {
+        static BillingManagerConfig billManCfg;
+        return billManCfg;
+    }
+    static SessionManagerConfig& getSessionManConfig_()
+    {
+        static SessionManagerConfig sessionManCfg;
+        return sessionManCfg;
+    };
     virtual Hash<std::string>*& getLicConfig(){return licconfig;};
     virtual Config* getConfig(){return &config;};
 
@@ -55,11 +80,6 @@ protected:
     IntHash<ConfigListener*> listeners;
     Mutex listenerLock;
 
-    static SmppManConfig smppManCfg;
-    static RouteConfig routeCfg;
-    static StatManConfig statManCfg;
-    static BillingManagerConfig billManCfg;
-    static SessionManagerConfig sessionManCfg;
     static Hash<std::string> *licconfig;
 
 private:
@@ -78,11 +98,6 @@ private:
 };
 
 std::auto_ptr<char> ConfigManagerImpl::config_filename;
-SmppManConfig ConfigManagerImpl::smppManCfg;
-RouteConfig ConfigManagerImpl::routeCfg;
-StatManConfig ConfigManagerImpl::statManCfg;
-BillingManagerConfig ConfigManagerImpl::billManCfg;
-SessionManagerConfig ConfigManagerImpl::sessionManCfg;
 Hash<std::string> * ConfigManagerImpl::licconfig = 0;
 Config ConfigManagerImpl::config;
 
@@ -163,10 +178,10 @@ void ConfigManagerImpl::Init()
     // Inits subsystems configs
 
     //smppManCfg.load(smsc::util::findConfigFile("sme.xml"));
-    routeCfg.load(smsc::util::findConfigFile("routes.xml"));
-    billManCfg.init(ConfigView(config, "BillingManager"));
-    sessionManCfg.init(ConfigView(config, "SessionManager"));
-    statManCfg.init(ConfigView(config, "MessageStorage"));
+    getRouteConfig_().load(smsc::util::findConfigFile("routes.xml"));
+    getBillManConfig_().init(ConfigView(config, "BillingManager"));
+    getSessionManConfig_().init(ConfigView(config, "SessionManager"));
+    getStatManConfig_().init(ConfigView(config, "MessageStorage"));
 
   } catch (ParseException &e) {
       throw ConfigException(e.what());
@@ -206,10 +221,10 @@ void ConfigManagerImpl::reloadConfig(ConfigType type)
 
     switch(type){
     case ROUTE_CFG:
-        routeCfg.reload();
+        getRouteConfig_().reload();
         break;
     case SMPPMAN_CFG:
-        smppManCfg.reload();
+        getSmppManConfig_().reload();
         break;
     default:
         {
@@ -231,8 +246,8 @@ void ConfigManagerImpl::reloadAllConfigs()
 {
     MutexGuard mg(listenerLock);
 
-    routeCfg.reload();
-    smppManCfg.reload();
+    getRouteConfig_().reload();
+    getSmppManConfig_().reload();
 
     if(listeners.Exist(ROUTE_CFG)){
         ConfigListener * listener = listeners.Get(ROUTE_CFG);
@@ -423,18 +438,18 @@ void ConfigManagerImpl::reload(Array<int>& changedConfigs)
       throw ConfigException("Parse result is null");
     }
 
-    if(  statManCfg.check(ConfigView(config, "MessageStorage"))  ){
-        statManCfg.init(ConfigView(config, "MessageStorage"));
+    if(  getStatManConfig_().check(ConfigView(config, "MessageStorage"))  ){
+        getStatManConfig_().init(ConfigView(config, "MessageStorage"));
         changedConfigs.Push(STATMAN_CFG);
     }
 
-    if(  billManCfg.check(ConfigView(config, "BillingManager"))  ){
-        billManCfg.init(ConfigView(config, "BillingManager"));
+    if(  getBillManConfig_().check(ConfigView(config, "BillingManager"))  ){
+        getBillManConfig_().init(ConfigView(config, "BillingManager"));
         changedConfigs.Push(BILLMAN_CFG);
     }
 
-    if(  sessionManCfg.check(ConfigView(config, "SessionManager"))  ){
-        sessionManCfg.init(ConfigView(config, "SessionManager"));
+    if(  getSessionManConfig_().check(ConfigView(config, "SessionManager"))  ){
+        getSessionManConfig_().init(ConfigView(config, "SessionManager"));
         changedConfigs.Push(SESSIONMAN_CFG);
     }
 
