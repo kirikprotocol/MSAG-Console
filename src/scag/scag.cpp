@@ -466,16 +466,6 @@ void Scag::run()
     smsc_log_info(log, "Speedmonitor started" );
 }
 
-bool Scag::regSmsc(const scag::transport::smpp::SmppEntityInfo & smppEntityInfo)
-{
-    return true;
-}
-
-bool Scag::modifySmsc(const scag::transport::smpp::SmppEntityInfo & smppEntityInfo)
-{
-    return true;
-}
-
 void Scag::shutdown()
 {
   __trace__("shutting down");

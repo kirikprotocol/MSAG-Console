@@ -95,31 +95,31 @@ protected:
   scag::transport::smpp::SmppEntityInfo smppEntityInfo;
 };
 
-class CommandModifySmsc : public Abstract_CommandSmscInfo 
+class CommandUpdateSmsc : public Abstract_CommandSmscInfo 
 {
 public:
-	CommandModifySmsc(const xercesc::DOMDocument * const document)
-    : Abstract_CommandSmscInfo((Command::Id)CommandIds::modifySmsc, document)
+	CommandUpdateSmsc(const xercesc::DOMDocument * const document)
+    : Abstract_CommandSmscInfo((Command::Id)CommandIds::updateSmsc, document)
   {
   }
     virtual Response * CreateResponse(scag::Scag * SmscApp);
 };
 
-class CommandRegSmsc : public Abstract_CommandSmscInfo 
+class CommandAddSmsc : public Abstract_CommandSmscInfo 
 {
 public:
-	CommandRegSmsc(const xercesc::DOMDocument * const document)
-    : Abstract_CommandSmscInfo((Command::Id)CommandIds::regSmsc, document)
+	CommandAddSmsc(const xercesc::DOMDocument * const document)
+    : Abstract_CommandSmscInfo((Command::Id)CommandIds::addSmsc, document)
   {
   }
     virtual Response * CreateResponse(scag::Scag * SmscApp);
 };
 
-class CommandUnregSmsc : public Abstract_CommandSmscInfo 
+class CommandRemoveSmsc : public Abstract_CommandSmeInfo 
 {
 public:
-	CommandUnregSmsc(const xercesc::DOMDocument * const document)
-    : Abstract_CommandSmscInfo((Command::Id)CommandIds::unregSmsc, document)
+	CommandRemoveSmsc(const xercesc::DOMDocument * const document)
+    : Abstract_CommandSmeInfo ((Command::Id)CommandIds::removeSmsc, document)
   {
   }
     virtual Response * CreateResponse(scag::Scag * SmscApp);

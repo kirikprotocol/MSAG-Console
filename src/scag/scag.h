@@ -204,9 +204,6 @@ public:
       return smppManAdmin;
   }
 
-  bool regSmsc(const scag::transport::smpp::SmppEntityInfo & smppEntityInfo);
-  bool modifySmsc(const scag::transport::smpp::SmppEntityInfo & smppEntityInfo);
-
 protected:
 
   // AdminCommand

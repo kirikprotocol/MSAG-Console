@@ -225,10 +225,10 @@ Response * CommandUpdateSmeInfo::CreateResponse(scag::Scag * ScagApp)
   try {
       smsc_log_info(logger, "CommandUpdateSmeInfo is processing...");
 
-      scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
-
       if(!ScagApp)
           Exception("Scag undefined");
+
+      scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
 
       if(!smppMan)
           throw Exception("SmppManager undefined");
@@ -322,81 +322,94 @@ Abstract_CommandSmscInfo::~Abstract_CommandSmscInfo()
 
 //================================================================
 
-Response * CommandModifySmsc::CreateResponse(scag::Scag * ScagApp)
+Response * CommandRemoveSmsc::CreateResponse(scag::Scag * ScagApp)
 {
-  smsc_log_info(logger, "CommandModifySmsc is processing");
+  smsc_log_info(logger, "CommandUpdateSmsc is processing");
   try {
       if(!ScagApp)
           Exception("Scag undefined");
 
-      if(!ScagApp->modifySmsc(smppEntityInfo))
-         throw Exception("Parameters modify exception.");
+      scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
 
-      smsc_log_info(logger, "CommandModifySmsc is processed ok");
+      if(!smppMan)
+          throw Exception("SmppManager undefined");
+
+      smppMan->updateSmppEntity(getSmppEntityInfo());
+
+      smsc_log_info(logger, "CommandUpdateSmsc is processed ok");
       return new Response(Response::Ok, "none");
   }catch(Exception& e){
      char msg[1024];
-     sprintf(msg, "Failed to modify smsc. Details: %s", e.what());
+     sprintf(msg, "Failed to update smsc. Details: %s", e.what());
      smsc_log_error(logger, msg);
      return new Response(Response::Error, msg);
   }catch(...){
-      smsc_log_error(logger, "Failed to modify smsc. Unknown error.");
-      return new Response(Response::Error, "Failed to modify smsc. Unknown error.");
+      smsc_log_error(logger, "Failed to update smsc. Unknown error.");
+      return new Response(Response::Error, "Failed to update smsc. Unknown error.");
   }
 }
 
 //================================================================
 
-Response * CommandRegSmsc::CreateResponse(scag::Scag * ScagApp)
+Response * CommandAddSmsc::CreateResponse(scag::Scag * ScagApp)
 {
-  smsc_log_info(logger, "CommandModifySmsc is processing...");
+  smsc_log_info(logger, "CommandAddSmsc is processing...");
   try {
 
       if(!ScagApp)
           Exception("Scag undefined");
 
-      if(!ScagApp->regSmsc(smppEntityInfo))
-         throw Exception("Duplicate gwsmeid");
+      scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
 
-      smsc_log_info(logger, "CommandModifySmsc is processed ok");
+      if(!smppMan)
+          throw Exception("SmppManager undefined");
+
+      smppMan->updateSmppEntity(getSmppEntityInfo());
+
+      smsc_log_info(logger, "CommandAddSmsc is processed ok");
       return new Response(Response::Ok, "none");
   }catch(exception& e){
       char msg[1024];
-      sprintf(msg, "Failed to register smsc. Details: %s", e.what());
+      sprintf(msg, "Failed to add smsc. Details: %s", e.what());
 
      smsc_log_warn(logger, msg);
      return new Response(Response::Error, msg);
   }catch(...){
-      smsc_log_warn(logger, "Failed to register smsc. Unknown error.");
-      return new Response(Response::Error, "Failed to register smsc. Unknown error.");
+      smsc_log_warn(logger, "Failed to add smsc. Unknown error.");
+      return new Response(Response::Error, "Failed to add smsc. Unknown error.");
   }
 }
 
 //================================================================
 
-Response * CommandUnregSmsc::CreateResponse(scag::Scag * ScagApp)
+Response * CommandUpdateSmsc::CreateResponse(scag::Scag * ScagApp)
 { 
-  smsc_log_info(logger, "CommandUnregSme is processing...");
+  smsc_log_info(logger, "CommandUnregSmsc is processing...");
   try {
       if(!ScagApp)
           Exception("Scag undefined");
 
-      ScagApp->getSmppManagerAdmin()->updateSmppEntity(getSmppEntityInfo());
+      scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
 
-      smsc_log_info(logger, "CommandUnregSme is processed");
+      if(!smppMan)
+          throw Exception("SmppManager undefined");
+
+      smppMan->updateSmppEntity(getSmppEntityInfo());
+
+      smsc_log_info(logger, "CommandUpdateSmsc is processed");
       return new Response(Response::Ok, "none");
 
   }catch(Exception& e){
       char msg[1024];
-      sprintf(msg, "Failed to unregister smsc. Details: %s", e.what());
+      sprintf(msg, "Failed to update smsc. Details: %s", e.what());
       smsc_log_error(logger, msg);
       return new Response(Response::Error, msg);
   }catch(...){
-      smsc_log_error(logger, "Failed to unregister smsc. Unknown error");
-      return new Response(Response::Error, "Failed to unregister smsc. Unknown error");
+      smsc_log_error(logger, "Failed to update smsc. Unknown error");
+      return new Response(Response::Error, "Failed to update smsc. Unknown error");
   }
-  smsc_log_error(logger, "Failed to unregister smsc. Unknown error");
-  return new Response(Response::Error, "Failed to unregister smsc. Unknown error");
+  smsc_log_error(logger, "Failed to update smsc. Unknown error");
+  return new Response(Response::Error, "Failed to update smsc. Unknown error");
   
 }
 

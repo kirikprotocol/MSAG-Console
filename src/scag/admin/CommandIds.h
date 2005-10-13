@@ -23,9 +23,9 @@ namespace CommandIds {
     deleteSme,
     traceRoute,
     loadRoutes,
-    regSmsc,
-    unregSmsc,
-    modifySmsc,
+    addSmsc,
+    removeSmsc,
+    updateSmsc,
     updateRule,
     removeRule,
     addRule
