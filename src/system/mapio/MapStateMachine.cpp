@@ -1255,12 +1255,14 @@ static ET96MAP_USSD_DATA_CODING_SCHEME_T fillUSSDString(unsigned encoding, const
   } else if( encoding == MAP_OCTET7BIT_ENCODING || encoding == MAP_LATIN1_ENCODING || encoding == MAP_SMSC7BIT_ENCODING ) {
     if (encoding == MAP_SMSC7BIT_ENCODING ) {
       bytes = ConvertSMSC7bit27bit(text,text_len,ussdString->ussdStr,0);
+      // if buffer have trailing 7 unfilled bits place <cr> there
+      if( bytes*8-text_len*7 == 7 ) ussdString->ussdStr[bytes-1] |= (0x0D<<1);
     } else {
       unsigned elen = 0;
       bytes = ConvertText27bit(text,text_len,ussdString->ussdStr,&elen);
+      // if buffer have trailing 7 unfilled bits place <cr> there
+      if( bytes*8-elen*7 == 7 ) ussdString->ussdStr[bytes-1] |= (0x0D<<1);
     }
-    // if buffer have trailing 7 unfilled bits place <cr> there
-    if( bytes*8-elen*7 == 7 ) ussdString->ussdStr[bytes-1] |= (0x0D<<1);
     ussdEncoding = 0x01;
   } else { //8 bit
     bytes = text_len;
