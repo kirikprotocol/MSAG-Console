@@ -178,7 +178,7 @@ if($regions[-1]->{rx} ne qr(.*))
 
 if(@ARGV<5)
 {
-  print STDERR "usage: bill2cdr indir outdir tmpdir arcdir nobillarcdir [forisdir]\n";
+  print STDERR "usage: bill2cdr indir outdir tmpdir arcdir nobillarcdir [forisdir] [cpadbdir]\n";
   exit;
 }
 
@@ -189,6 +189,7 @@ my $arcdir=$ARGV[3];
 my $nbarcdir=$ARGV[4];
 
 my $forisdir=$ARGV[5];
+my $cpadbdir=$ARGV[6];
 
 for($indir,$outdir,$tmpdir,$arcdir,$nbarcdir,$forisdir || '.')
 {
@@ -205,7 +206,7 @@ for($indir,$outdir,$tmpdir,$arcdir,$nbarcdir,$forisdir)
 
 if($forisdir)
 {
-mkdir $tmpdir.'foris' || die "Failed to create ${tmpdir}foris:$!" unless -d $tmpdir.'foris';
+mkdir $tmpdir.'foris',0755 || die "Failed to create ${tmpdir}foris:$!" unless -d $tmpdir.'foris';
 }
 
 opendir(D,$indir) or die "failed to read $indir";
@@ -296,6 +297,14 @@ for(@dir)
   unless(-d $arcout)
   {
     mkdir $arcout,0755;
+  }
+  if(defined($cpadbdir))
+  {
+    unless(-d $cpadbdir)
+    {
+      mkdir $cpadbdir,0755;
+    }
+    copy($infile,$cpadbdir);
   }
   move($infile,$arcout);
 }
@@ -439,7 +448,8 @@ sub process{
   if(!$in->open('<'.$inf)){die "Faield to open input file $inf:$!"};
   my $out={};
 
-  open(my $nbf,'>'.$nbfile) || die "Failed to open not billed archive $nbfile:$!";
+  my $nbf=IO::File->new;
+  open($nbf,'>'.$nbfile) || die "Failed to open not billed archive $nbfile:$!";
 
   my $outtemplate=pop @$outarr;
 
