@@ -7,14 +7,6 @@
 #include "admin/service/Variant.h"
 #include "admin/protocol/ResponseWriter.h"
 #include "CommandActions.h"
-
-#include "util/config/Manager.h"
-#include "util/config/route/RouteConfig.h"
-#include "alias/aliasman.h"
-#include "util/config/alias/aliasconf.h"
-#include "util/config/route/RouteConfig.h"
-#include "router/route_manager.h"
-#include "util/config/smeman/SmeManConfig.h"
 #include "scag/scag.h"
 
 #include "CommandIds.h"
