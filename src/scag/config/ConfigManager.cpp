@@ -41,11 +41,11 @@ public:
     virtual void reloadConfig(ConfigType type);
   virtual void reloadAllConfigs();
 
-    virtual RouteConfig  getRouteConfig(){return routeCfg;};
-    virtual SmppManConfig getSmppManConfig(){return smppManCfg;};
-    virtual StatManConfig getStatManConfig(){return statManCfg;};
-    virtual BillingManagerConfig getBillManConfig(){return billManCfg;};
-    virtual SessionManagerConfig getSessionManConfig(){return sessionManCfg;};
+    virtual RouteConfig&  getRouteConfig(){return routeCfg;};
+    virtual SmppManConfig& getSmppManConfig(){return smppManCfg;};
+    virtual StatManConfig& getStatManConfig(){return statManCfg;};
+    virtual BillingManagerConfig& getBillManConfig(){return billManCfg;};
+    virtual SessionManagerConfig& getSessionManConfig(){return sessionManCfg;};
     virtual Hash<std::string>*& getLicConfig(){return licconfig;};
     virtual Config* getConfig(){return &config;};
 
@@ -77,6 +77,44 @@ private:
 };
 
 std::auto_ptr<char> ConfigManagerImpl::config_filename;
+
+//==============================================================
+//============== Singleton related part ========================
+
+static bool  bConfigManagerInited = false;
+static Mutex initConfigManagerLock;
+
+inline unsigned GetLongevity(ConfigManagerImpl*) { return 8; }
+typedef SingletonHolder<ConfigManagerImpl> SingleConfig;
+
+void ConfigManager::Init()
+{
+    if (!bConfigManagerInited)
+    {
+        MutexGuard guard(initConfigManagerLock);
+
+        if (!bConfigManagerInited) {
+            ConfigManagerImpl& cfgman = SingleConfig::Instance();
+            bConfigManagerInited = true;
+        }
+    }
+}
+
+ConfigManager& ConfigManager::Instance()
+{
+    if (!bConfigManagerInited)
+    {
+        MutexGuard guard(initConfigManagerLock);
+
+        if (!bConfigManagerInited)
+            throw std::runtime_error("ConfigManager not inited!");
+
+    }
+    return SingleConfig::Instance();
+}
+
+//==============================================================
+//============== ConfigManager implementation ==================
 
 void ConfigManagerImpl::registerListener(ConfigType type, ConfigListener *listener)
 {
@@ -156,38 +194,6 @@ void ConfigManagerImpl::reloadAllConfigs()
             }
         }
     }
-}
-
-static bool  bConfigManagerInited = false;
-static Mutex initConfigManagerLock;
-
-inline unsigned GetLongevity(ConfigManagerImpl*) { return 8; }
-typedef SingletonHolder<ConfigManagerImpl> SingleConfig;
-
-void ConfigManager::Init()
-{
-    if (!bConfigManagerInited)
-    {
-        MutexGuard guard(initConfigManagerLock);
-
-        if (!bConfigManagerInited) {
-            ConfigManagerImpl& cfgman = SingleConfig::Instance();
-            bConfigManagerInited = true;
-        }
-    }
-}
-
-ConfigManager& ConfigManager::Instance()
-{
-    if (!bConfigManagerInited)
-    {
-        MutexGuard guard(initConfigManagerLock);
-
-        if (!bConfigManagerInited)
-            throw std::runtime_error("ConfigManager not inited!");
-
-    }
-    return SingleConfig::Instance();
 }
 
 ConfigManagerImpl::ConfigManagerImpl()
