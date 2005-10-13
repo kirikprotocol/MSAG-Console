@@ -20,13 +20,7 @@
 //#include "scag/scag.h"
 
 #include "scag/admin/SCAGCommandReader.h"
-#include "scag/admin/CommandApply.h"
-#include "CommandUpdateSmeInfo.h"
-#include "CommandAddSme.h"
-#include "CommandStatusSme.h"
-#include "CommandDeleteSme.h"
-#include "CommandTraceRoute.h"
-#include "CommandLoadRoutes.h"
+#include "scag/admin/SCAGCommand.h"
 
 namespace scag {
 namespace admin {

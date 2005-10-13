@@ -5,7 +5,7 @@
 // Created on 31 Август 2004 г., 17:55
 //
 
-#include "CommandDeleteSme.h"
+#include "SCAGCommand.h"
 
 #include "util/xml/utilFunctions.h"
 #include "CommandIds.h"

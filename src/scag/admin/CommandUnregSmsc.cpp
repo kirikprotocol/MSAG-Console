@@ -5,7 +5,7 @@
 // Created on 06.04.05
 //
 
-#include "CommandUnregSmsc.h"
+#include "SCAGCommand.h"
 
 namespace scag {
 namespace admin {

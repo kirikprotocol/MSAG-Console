@@ -5,7 +5,7 @@
 // Created on 24 march 2005 
 //
 
-#include "CommandLoadRoutes.h"
+#include "SCAGCommand.h"
 #include "CommandIds.h"
 #include "util/xml/utilFunctions.h"
 #include "smeman/smeproxy.h"

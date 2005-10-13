@@ -5,7 +5,7 @@
 // Created on 05.04.05
 //
 
-#include "CommandRegSmsc.h"
+#include "SCAGCommand.h"
 #include "CommandIds.h"
 #include "util/xml/utilFunctions.h"
 #include "core/threads/ThreadPool.hpp"

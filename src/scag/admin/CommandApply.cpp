@@ -5,7 +5,7 @@
 // Created on 27 Май 2004 г., 17:09
 //
 
-#include "CommandApply.h"
+#include "SCAGCommand.h"
 #include "CommandIds.h"
 #include "util/xml/utilFunctions.h"
 #include "scag/scag.h"

@@ -5,7 +5,7 @@
 // Created on 04.04.05
 //
 
-#include "Abstract_CommandSmscInfo.h"
+#include "SCAGCommand.h"
 #include "scag/transport/smpp/SmppTypes.h"
 
 #include "util/xml/utilFunctions.h"

@@ -5,7 +5,7 @@
 // Created on 05.04.05
 //
 
-#include "CommandModifySmsc.h"
+#include "SCAGCommand.h"
 #include "util/xml/utilFunctions.h"
 #include "util/Exception.hpp"
 

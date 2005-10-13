@@ -7,18 +7,7 @@
 
 #include "SCAGCommandReader.h"
 #include "CommandIds.h"
-#include "CommandApply.h"
-#include "CommandUpdateSmeInfo.h"
-#include "CommandAddSme.h"
-#include "CommandStatusSme.h"
-#include "CommandRegSmsc.h"
-#include "CommandUnregSmsc.h"
-#include "CommandDeleteSme.h"
-#include "CommandTraceRoute.h"
-#include "CommandLoadRoutes.h"
-#include "CommandModifySmsc.h"
-#include "CommandUpdateRule.h"
-#include "CommandRemoveRule.h"
+#include "SCAGCommand.h"
 
 namespace scag {
 namespace admin {

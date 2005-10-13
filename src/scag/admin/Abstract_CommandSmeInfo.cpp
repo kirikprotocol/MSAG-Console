@@ -5,7 +5,7 @@
 // Created on 31 Август 2004 г., 18:07
 //
 
-#include "Abstract_CommandSmeInfo.h"
+#include "SCAGCommand.h"
 #include "scag/transport/smpp/SmppTypes.h"
 
 #include "smeman/smeinfo.h"

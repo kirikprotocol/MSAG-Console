@@ -5,7 +5,7 @@
 // Created on 20 Август 2004 г., 15:42
 //
 
-#include "CommandUpdateSmeInfo.h"
+#include "SCAGCommand.h"
 #include "CommandIds.h"
 #include "scag/transport/smpp/SmppManagerAdmin.h"
 

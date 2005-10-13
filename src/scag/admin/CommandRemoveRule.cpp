@@ -1,4 +1,4 @@
-#include "CommandRemoveRule.h"
+#include "SCAGCommand.h"
 #include "scag/re/RuleEngine.h"
 #include "admin/service/Variant.h"
 #include <xercesc/dom/DOM.hpp>

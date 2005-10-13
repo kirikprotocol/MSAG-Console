@@ -5,7 +5,7 @@
 // Created on 30 марта 2005
 //
 
-#include "CommandAddSme.h"
+#include "SCAGCommand.h"
 #include "CommandIds.h"
 #include "util/xml/utilFunctions.h"
 #include "scag/scag.h"
