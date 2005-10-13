@@ -1,8 +1,9 @@
 #ifndef __SMSC_MTSMS_CLBKS_HPP__
 #define __SMSC_MTSMS_CLBKS_HPP__
-#include "portss7.h"
-#include "ss7tmc.h"
+#include "ss7cp.h"
+extern "C" {
 #include "i96sccpapi.h"
+}
 #include "mgmtapi.h"
 
 /*********************************************************************/

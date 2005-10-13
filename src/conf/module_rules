@@ -136,7 +136,7 @@ $(SMSC_BUILDDIR)/obj/$(LIBRARY)/%.o:$(SMSC_SRCDIR)/$(PACKAGEDIR)/%.cpp
 $(SMSC_BUILDDIR)/obj/$(LIBRARY)/%.o:$(SMSC_SRCDIR)/$(PACKAGEDIR)/%.c
 	@echo "compiling $<"
 #	@echo @$(CXX) $(CXXFLAGS) -c -o $@ $< 1>&2
-	@$(CC) $(CFLAGS) $(COMPFLAGS) -c -o $@ $<
+	@$(CC) $(CFLAGS) $(C_COMPFLAGS) -c -o $@ $<
 
 #$(SMSC_BUILDDIR)/obj/*/%.o: $(SMSC_SRCDIR)/*/%.cpp
 #	@echo resolving dependencies $@

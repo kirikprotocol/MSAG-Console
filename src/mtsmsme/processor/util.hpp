@@ -1,9 +1,10 @@
 #ifndef __SMSC_MTSMS_UTIL_HPP__
 #define __SMSC_MTSMS_UTIL_HPP__
 #include <string>
-#include "portss7.h"
-#include "ss7tmc.h"
+#include "ss7cp.h"
+extern "C" {
 #include "i96sccpapi.h"
+}
 namespace smsc{
 namespace mtsmsme{
 namespace processor{
