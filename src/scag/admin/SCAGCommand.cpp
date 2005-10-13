@@ -356,15 +356,15 @@ Response * CommandAddSmsc::CreateResponse(scag::Scag * ScagApp)
   smsc_log_info(logger, "CommandAddSmsc is processing...");
   try {
 
-      if(!ScagApp)
-          Exception("Scag undefined");
+      //if(!ScagApp)
+      //    Exception("Scag undefined");
 
-      scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
+      //scag::transport::smpp::SmppManagerAdmin * smppMan = ScagApp->getSmppManagerAdmin();
 
-      if(!smppMan)
-          throw Exception("SmppManager undefined");
+      //if(!smppMan)
+      //    throw Exception("SmppManager undefined");
 
-      smppMan->updateSmppEntity(getSmppEntityInfo());
+      //smppMan->updateSmppEntity(getSmppEntityInfo());
 
       smsc_log_info(logger, "CommandAddSmsc is processed ok");
       return new Response(Response::Ok, "none");
