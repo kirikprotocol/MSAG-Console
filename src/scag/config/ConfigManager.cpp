@@ -40,6 +40,7 @@ public:
 
     virtual void reloadConfig(ConfigType type);
   virtual void reloadAllConfigs();
+  static void Init() throw(ConfigException);
 
     virtual RouteConfig&  getRouteConfig(){return routeCfg;};
     virtual SmppManConfig& getSmppManConfig(){return smppManCfg;};
@@ -54,17 +55,17 @@ protected:
     IntHash<ConfigListener*> listeners;
     Mutex listenerLock;
 
-    SmppManConfig smppManCfg;
-    RouteConfig routeCfg;
-    StatManConfig statManCfg;
-    BillingManagerConfig billManCfg;
-    SessionManagerConfig sessionManCfg;
-    Hash<std::string> *licconfig;
+    static SmppManConfig smppManCfg;
+    static RouteConfig routeCfg;
+    static StatManConfig statManCfg;
+    static BillingManagerConfig billManCfg;
+    static SessionManagerConfig sessionManCfg;
+    static Hash<std::string> *licconfig;
 
 private:
-    void findConfigFile();
+    static void findConfigFile();
 protected:
-    Config config;
+    static Config config;
 
 private:
     static std::auto_ptr<char> config_filename;
@@ -77,6 +78,13 @@ private:
 };
 
 std::auto_ptr<char> ConfigManagerImpl::config_filename;
+SmppManConfig ConfigManagerImpl::smppManCfg;
+RouteConfig ConfigManagerImpl::routeCfg;
+StatManConfig ConfigManagerImpl::statManCfg;
+BillingManagerConfig ConfigManagerImpl::billManCfg;
+SessionManagerConfig ConfigManagerImpl::sessionManCfg;
+Hash<std::string> * ConfigManagerImpl::licconfig = 0;
+Config ConfigManagerImpl::config;
 
 //==============================================================
 //============== Singleton related part ========================
@@ -95,6 +103,7 @@ void ConfigManager::Init()
 
         if (!bConfigManagerInited) {
             ConfigManagerImpl& cfgman = SingleConfig::Instance();
+            cfgman.Init();
             bConfigManagerInited = true;
         }
     }
@@ -115,6 +124,62 @@ ConfigManager& ConfigManager::Instance()
 
 //==============================================================
 //============== ConfigManager implementation ==================
+
+ConfigManagerImpl::ConfigManagerImpl()
+  throw(ConfigException)
+{
+}
+
+void ConfigManagerImpl::Init()
+  throw(ConfigException)
+{
+  initXerces();
+  findConfigFile();
+
+  try
+  {
+    __trace__("reading config...");
+    DOMTreeReader reader;
+
+    const char* cfgFile=smsc::util::findConfigFile("config.xml");
+    char * filename = new char[strlen(cfgFile) + 1];
+    std::strcpy(filename, cfgFile);
+    config_filename = std::auto_ptr<char>(filename);
+
+    DOMDocument *document = reader.read(config_filename.get());
+    if (document && document->getDocumentElement())
+    {
+      DOMElement *elem = document->getDocumentElement();
+      __trace__("config readed");
+      config.parse(*elem);
+      __trace2__("parsed %u ints, %u booleans, %u strings\n",
+                 config.intParams.GetCount(),
+                 config.boolParams.GetCount(),
+                 config.strParams.GetCount());
+    } else {
+      throw ConfigException("Parse result is null");
+    }
+
+    // Inits subsystems configs
+
+    //smppManCfg.load(smsc::util::findConfigFile("sme.xml"));
+    routeCfg.load(smsc::util::findConfigFile("routes.xml"));
+    billManCfg.init(ConfigView(config, "BillingManager"));
+    sessionManCfg.init(ConfigView(config, "SessionManager"));
+    statManCfg.init(ConfigView(config, "MessageStorage"));
+
+  } catch (ParseException &e) {
+      throw ConfigException(e.what());
+  }catch(ConfigException& e){
+      throw ConfigException(e.what());
+  }catch(Exception &e) {
+      throw ConfigException(e.what());
+  }catch(...) {
+      throw ConfigException("ConfigManagerImpl exception, unknown exception");
+  }
+}
+
+//================================================================
 
 void ConfigManagerImpl::registerListener(ConfigType type, ConfigListener *listener)
 {
@@ -194,56 +259,6 @@ void ConfigManagerImpl::reloadAllConfigs()
             }
         }
     }
-}
-
-ConfigManagerImpl::ConfigManagerImpl()
-  throw(ConfigException)
-{
-
-  initXerces();
-  findConfigFile();
-
-  try
-  {
-    __trace__("reading config...");
-    DOMTreeReader reader;
-
-    const char* cfgFile=smsc::util::findConfigFile("config.xml");
-    char * filename = new char[strlen(cfgFile) + 1];
-    std::strcpy(filename, cfgFile);
-    config_filename = std::auto_ptr<char>(filename);
-
-    DOMDocument *document = reader.read(config_filename.get());
-    if (document && document->getDocumentElement())
-    {
-      DOMElement *elem = document->getDocumentElement();
-      __trace__("config readed");
-      config.parse(*elem);
-      __trace2__("parsed %u ints, %u booleans, %u strings\n",
-                 config.intParams.GetCount(),
-                 config.boolParams.GetCount(),
-                 config.strParams.GetCount());
-    } else {
-      throw ConfigException("Parse result is null");
-    }
-
-    // Inits subsystems configs
-
-    //smppManCfg.load(smsc::util::findConfigFile("sme.xml"));
-    routeCfg.load(smsc::util::findConfigFile("routes.xml"));
-    billManCfg.init(ConfigView(config, "BillingManager"));
-    sessionManCfg.init(ConfigView(config, "SessionManager"));
-    statManCfg.init(ConfigView(config, "MessageStorage"));
-
-} catch (ParseException &e) {
-    throw ConfigException(e.what());
-}catch(ConfigException& e){
-    throw ConfigException(e.what());
-}catch(Exception &e) {
-    throw ConfigException(e.what());
-}catch(...) {
-    throw ConfigException("ConfigManagerImpl exception, unknown exception");
-}
 }
 
 /**
