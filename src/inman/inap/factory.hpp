@@ -40,6 +40,9 @@ public:
     virtual    Session* openSession(UCHAR_T ssn, const char* szSCFNumber, const char* szINmanNumber);
     virtual    Session* openSession(UCHAR_T    ownssn, const char*    ownaddr,
                                     UCHAR_T remotessn, const char* remoteaddr);
+    virtual    Session* openSession(UCHAR_T   userssn,
+                                    UCHAR_T    ownssn, const char*    ownaddr,
+                                    UCHAR_T remotessn, const char* remoteaddr);
 
     virtual    Session* findSession(UCHAR_T ssn);
     virtual    void     closeSession(Session*);

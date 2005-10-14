@@ -115,6 +115,30 @@ void Factory::disconnect()
      }
    }
 }
+
+Session* Factory::openSession(UCHAR_T   userssn,
+                              UCHAR_T    ownssn, const char*    ownaddr,
+                              UCHAR_T remotessn, const char* remoteaddr)
+{
+ if( state != CONNECTED )
+  {
+    throw runtime_error( format("Invalid factory state (%d)", state) );
+  }
+
+  smsc_log_debug(logger,"Open session (uSSN=%d, oSSN=%d, oGT=%s, rSSN=%d, rGT=%s)", userssn, ownssn, ownaddr, remotessn, remoteaddr);
+
+  if( sessions.find( userssn ) != sessions.end() )
+  {
+      throw runtime_error( format("Session with SSN=%d already opened", userssn) );
+  }
+
+  Session* pSession = new Session( userssn, ownssn, ownaddr, remotessn, remoteaddr );
+
+  sessions.insert( SessionsMap_T::value_type( userssn, pSession ) );
+
+  return pSession;
+}
+
 Session* Factory::openSession(UCHAR_T    ownssn, const char*    ownaddr,
                               UCHAR_T remotessn, const char* remoteaddr)
 {
