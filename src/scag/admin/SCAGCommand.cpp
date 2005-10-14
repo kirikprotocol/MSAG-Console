@@ -320,7 +320,7 @@ Abstract_CommandSmscInfo::~Abstract_CommandSmscInfo()
 
 Response * CommandDeleteSmsc::CreateResponse(scag::Scag * ScagApp)
 {
-  smsc_log_info(logger, "CommandUpdateSmsc is processing");
+  smsc_log_info(logger, "CommandDeleteSmsc is processing");
   try {
       if(!ScagApp)
           Exception("Scag undefined");
@@ -332,16 +332,16 @@ Response * CommandDeleteSmsc::CreateResponse(scag::Scag * ScagApp)
 
       smppMan->updateSmppEntity(getSmppEntityInfo());
 
-      smsc_log_info(logger, "CommandUpdateSmsc is processed ok");
-      return new Response(Response::Ok, "none");
+      smsc_log_info(logger, "CommandDeleteSmsc is processed ok");
+      return new Response(Response::Ok, "CommandDeleteSmsc is processed ok");
   }catch(Exception& e){
      char msg[1024];
-     sprintf(msg, "Failed to update smsc. Details: %s", e.what());
+     sprintf(msg, "Failed to delete smsc. Details: %s", e.what());
      smsc_log_error(logger, msg);
      return new Response(Response::Error, msg);
   }catch(...){
-      smsc_log_error(logger, "Failed to update smsc. Unknown error.");
-      return new Response(Response::Error, "Failed to update smsc. Unknown error.");
+      smsc_log_error(logger, "Failed to delete smsc. Unknown error.");
+      return new Response(Response::Error, "Failed to delete smsc. Unknown error.");
   }
 }
 
