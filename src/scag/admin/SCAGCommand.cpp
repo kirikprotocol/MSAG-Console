@@ -318,7 +318,7 @@ Abstract_CommandSmscInfo::~Abstract_CommandSmscInfo()
 
 //================================================================
 
-Response * CommandRemoveSmsc::CreateResponse(scag::Scag * ScagApp)
+Response * CommandDeleteSmsc::CreateResponse(scag::Scag * ScagApp)
 {
   smsc_log_info(logger, "CommandUpdateSmsc is processing");
   try {

@@ -23,7 +23,7 @@ SCAGCommandReader::SCAGCommandReader(Socket * admSocket)
   commandlist["traceRoute"] = CommandIds::traceRoute;
   commandlist["updateSmeInfo"] = CommandIds::updateSmeInfo;
   commandlist["addSmsc"] = CommandIds::addSmsc;
-  commandlist["removeSmsc"] = CommandIds::removeSmsc;
+  commandlist["deleteSmsc"] = CommandIds::deleteSmsc;
   commandlist["updateSmsc"] = CommandIds::updateSmsc;
   commandlist["updateRule"] = CommandIds::updateRule;
   commandlist["removeRule"] = CommandIds::removeRule;
@@ -58,7 +58,7 @@ Command * SCAGCommandReader::createCommand(int id, const DOMDocument *data)
     case CommandIds::traceRoute: return new CommandTraceRoute(data);
     case CommandIds::loadRoutes: return new CommandLoadRoutes(data);
     case CommandIds::addSmsc: return new CommandAddSmsc(data);
-    case CommandIds::removeSmsc: return new CommandRemoveSmsc(data);
+    case CommandIds::deleteSmsc: return new CommandDeleteSmsc(data);
     case CommandIds::updateSmsc: return new CommandUpdateSmsc(data);
     case CommandIds::updateRule: return new CommandUpdateRule(data);
     case CommandIds::removeRule: return new CommandRemoveRule(data);

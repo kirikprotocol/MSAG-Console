@@ -115,11 +115,11 @@ public:
     virtual Response * CreateResponse(scag::Scag * SmscApp);
 };
 
-class CommandRemoveSmsc : public Abstract_CommandSmeInfo 
+class CommandDeleteSmsc : public Abstract_CommandSmeInfo 
 {
 public:
-	CommandRemoveSmsc(const xercesc::DOMDocument * const document)
-    : Abstract_CommandSmeInfo ((Command::Id)CommandIds::removeSmsc, document)
+	CommandDeleteSmsc(const xercesc::DOMDocument * const document)
+    : Abstract_CommandSmeInfo ((Command::Id)CommandIds::deleteSmsc, document)
   {
   }
     virtual Response * CreateResponse(scag::Scag * SmscApp);
