@@ -86,7 +86,7 @@ public:
 
 private:
   Mutex lock;
-  MemoryManager mm;
+//  MemoryManager mm;
   typedef Array<PooledThread*> ThreadsArray;
   typedef Array<ThreadedTask*> TasksArray;
   ThreadsArray freeThreads;

@@ -145,7 +145,7 @@ void ThreadPool::shutdown()
 
 MemoryHeap* ThreadPool::getMemoryHeap(const char* taskname,int rawheapsize,int blocksheapquantum)
 {
-  return mm.acquireHeap(taskname,rawheapsize,blocksheapquantum);
+  return 0;//mm.acquireHeap(taskname,rawheapsize,blocksheapquantum);
 }
 
 void ThreadPool::preCreateThreads(int count)
@@ -153,7 +153,7 @@ void ThreadPool::preCreateThreads(int count)
   trace2("COUNT:%d",count);
   int n=count-usedThreads.Count()-freeThreads.Count();
   trace2("Attempting to create %d threads(%d/%d)",n,freeThreads.Count(),usedThreads.Count());
-  mm.preallocateHeaps(count);
+  //mm.preallocateHeaps(count);
   Lock();
   usedThreads.SetSize(count);
   int i;
