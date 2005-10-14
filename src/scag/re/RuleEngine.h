@@ -5,7 +5,7 @@
 #include <scag/re/actions/ActionFactory.h>
 #include "RuleStatus.h"
 
-namespace scag { namespace re 
+namespace scag { namespace re
 {
 
 using namespace scag::transport;
@@ -20,7 +20,7 @@ class RuleEngine
 
 protected:
 
-    RuleEngine() {}; 
+    RuleEngine() {};
     virtual ~RuleEngine() {};
 
 public:
@@ -32,9 +32,8 @@ public:
     virtual void updateRule(int ruleId) = 0;
     virtual void removeRule(int ruleId) = 0;
     virtual ActionFactory& getActionFactory() = 0;
-    
+
 };
 
 }}
 #endif // SCAG_RULE_ENGINE
-
