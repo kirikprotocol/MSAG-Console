@@ -8,15 +8,11 @@
 #include "SCAGCommand.h"
 #include "CommandIds.h"
 #include "util/xml/utilFunctions.h"
-#include "smeman/smeproxy.h"
-#include <util/config/route/RouteConfig.h>//**********************
 
-#include <router/route_types.h>//**************************
 #include <sms/sms.h>
 #include <sms/sms_const.h>
 
 #include "scag/transport/smpp/SmppTypes.h"
-#include "smeman/smeinfo.h" //*******************
 #include "util/xml/utilFunctions.h"
 #include "CommandIds.h"
 
@@ -28,10 +24,27 @@
 #include <sms/sms.h>
 #include <sms/sms_const.h>
 #include "util/Exception.hpp"
-#include "core/threads/ThreadPool.hpp" //*********************
 #include "admin/service/Type.h"
 #include "scag/exc/SCAGExceptions.h"
 
+#define GETSTRPARAM(param, name_)                           \
+    if (::strcmp(name_, name) == 0){                        \
+        strcpy(param, value.get());                         \
+        smsc_log_info(logger, name_ ": %s", param);         \
+    }                                                   
+
+#define GETSTRPARAM_(param, name_)                          \
+    if (::strcmp(name_, name) == 0){                        \
+        param = value.get();                                \
+        smsc_log_info(logger, name_ ": %s", param.c_str()); \
+    }                                                   
+
+#define GETINTPARAM(param, name_)                           \
+    if (::strcmp(name_, name) == 0){                        \
+        param = atoi(value.get());                          \
+        smsc_log_info(logger, name_ ": %d", param);         \
+    }
+                              
 
 namespace scag {
 namespace admin {
@@ -39,7 +52,6 @@ namespace admin {
 using namespace smsc::util::xml;
 using namespace smsc::sms;
 using namespace smsc::util::config;
-using namespace smsc::util::config::route;
 
 
 SCAGCommand::SCAGCommand(Command::Id id) :Command(id),
@@ -79,25 +91,11 @@ Abstract_CommandSmeInfo::Abstract_CommandSmeInfo(const Command::Id id, const xer
       DOMElement *paramElem = (DOMElement*) list->item(i);
       XmlStr name(paramElem->getAttribute(XmlStr("name")));
       std::auto_ptr<char> value(getNodeText(*paramElem));
-      if (::strcmp("systemId", name) == 0){
-        strcpy(smppEntityInfo.systemId, value.get());
-        smsc_log_info(logger, "systemId: %s", value.get());
-      }
-          
-      if (::strcmp("password", name) == 0){
-        strcpy(smppEntityInfo.password, value.get());
-        smsc_log_info(logger, "password: %s", value.get());
-      }
-      
-      if (::strcmp("timeout", name) == 0){
-        smppEntityInfo.timeOut = atoi(value.get());
-        smsc_log_info(logger, "timeout: %d", smppEntityInfo.timeOut);
-      }
 
-      if (::strcmp("providerId", name) == 0){
-        smppEntityInfo.providerId = atoi(value.get());
-        smsc_log_info(logger, "providerId: %d", smppEntityInfo.providerId);
-      }
+      GETSTRPARAM((char*)smppEntityInfo.systemId,      "systemId")
+      GETSTRPARAM((char*)smppEntityInfo.password,      "password")
+      GETINTPARAM(smppEntityInfo.timeOut,               "timeout")
+      GETINTPARAM(smppEntityInfo.providerId,            "providerId")
             
       if (::strcmp("mode", name) == 0) {
         if (::strcmp("trx", value.get()) == 0)
@@ -148,7 +146,7 @@ Response * CommandAddSme::CreateResponse(scag::Scag * ScagApp)
       smsc_log_error(logger, msg);
       return new Response(Response::Error, msg);
   }catch(...){
-      smsc_log_error(logger, "CommandAddSme exception, Unknown exception.");
+      smsc_log_error(logger, "Failed to add new SME. Unknown error");
       return new Response(Response::Error, "Failed to add new SME. Unknown error");
   }
 }
@@ -278,6 +276,17 @@ Abstract_CommandSmscInfo::Abstract_CommandSmscInfo(const Command::Id id, const x
         smppEntityInfo.timeOut = atoi(value.get());
         smsc_log_info(logger, "timeout: %d", smppEntityInfo.timeOut);
       }
+
+      if (::strcmp("providerId", name) == 0){
+        smppEntityInfo.providerId = atoi(value.get());
+        smsc_log_info(logger, "providerId: %d", smppEntityInfo.uid);
+      }
+
+      GETSTRPARAM((char*)smppEntityInfo.systemId,      "systemId")
+      GETSTRPARAM((char*)smppEntityInfo.password,      "password")
+      GETINTPARAM(smppEntityInfo.timeOut,               "timeout")
+      GETINTPARAM(smppEntityInfo.providerId,            "providerId")
+      GETINTPARAM(smppEntityInfo.uid,                   "uid")
             
       if (::strcmp("mode", name) == 0) {
         if (::strcmp("trx", value.get()) == 0)
@@ -291,23 +300,10 @@ Abstract_CommandSmscInfo::Abstract_CommandSmscInfo(const Command::Id id, const x
         smsc_log_info(logger, "mode: %s, %d", value.get(), smppEntityInfo.bindType);
       }
 
-      if (::strcmp("host", name) == 0){
-        strcpy(smppEntityInfo.host, value.get());
-        smsc_log_info(logger, "host: %s", value.get());
-      }
-      if (::strcmp("port", name) == 0){
-        smppEntityInfo.port = atoi(value.get());
-        smsc_log_info(logger, "port: %d", smppEntityInfo.port);
-      }
-      
-      if (::strcmp("altHost", name) == 0){
-        strcpy(smppEntityInfo.altHost, value.get());
-        smsc_log_info(logger, "altHost: %s", value.get());
-      }
-      if (::strcmp("altPort", name) == 0){
-        smppEntityInfo.altPort = atoi(value.get());
-        smsc_log_info(logger, "altPort: %d", smppEntityInfo.altPort);
-      }
+      GETSTRPARAM((char*)smppEntityInfo.host,       "host")
+      GETINTPARAM(smppEntityInfo.port,              "port")
+      GETSTRPARAM((char*)smppEntityInfo.altHost,    "altHost")
+      GETINTPARAM(smppEntityInfo.altPort,           "altPort")
     }
 
     smppEntityInfo.type = scag::transport::smpp::etSmsc;
@@ -417,8 +413,6 @@ Response * CommandUpdateSmsc::CreateResponse(scag::Scag * ScagApp)
 //================ Route commands ================================
 
 using namespace smsc::sms;
-using namespace smsc::util::config;
-using namespace smsc::util::config::route;
 using scag::config::ConfigManager;
 
 
@@ -531,18 +525,9 @@ CommandTraceRoute::CommandTraceRoute(const xercesc::DOMDocument * doc)
       XmlStr name(paramElem->getAttribute(XmlStr("name")));
       std::auto_ptr<char> value(getNodeText(*paramElem));
 
-      if (::strcmp("srcAddress", name) == 0){
-        srcAddr = value.get();
-        smsc_log_info(logger, "srcAddress: %s", value.get());
-      }
-      if (::strcmp("dstAddress", name) == 0){
-        dstAddr = value.get();
-        smsc_log_info(logger, "dstAddress: %s", value.get());
-      }
-      if (::strcmp("srcSysId", name) == 0){ 
-        srcSysId = value.get();
-        smsc_log_info(logger, "srcSysId: %s", value.get());
-      }
+      GETSTRPARAM_(srcAddr,     "srcAddress")
+      GETSTRPARAM_(dstAddr,     "dstAddress")
+      GETSTRPARAM_(srcSysId,    "srcSysId")
 
     }
   } catch (...) {
@@ -715,12 +700,8 @@ CommandAddRule::CommandAddRule(const xercesc::DOMDocument * document)
       DOMElement *paramElem = (DOMElement*) list->item(i);
       XmlStr name(paramElem->getAttribute(XmlStr("name")));
       std::auto_ptr<char> value(getNodeText(*paramElem));
-      
-      
-      if (::strcmp("ruleId", name) == 0){
-        ruleId = atoi(value.get());
-        smsc_log_info(logger, "ruleId: %d", ruleId);
-      }
+
+      GETINTPARAM(ruleId, "ruleId")
 
     }
 
@@ -789,12 +770,8 @@ CommandRemoveRule::CommandRemoveRule(const xercesc::DOMDocument * document)
       DOMElement *paramElem = (DOMElement*) list->item(i);
       XmlStr name(paramElem->getAttribute(XmlStr("name")));
       std::auto_ptr<char> value(getNodeText(*paramElem));
-      
-      
-      if (::strcmp("ruleId", name) == 0){
-        ruleId = atoi(value.get());
-        smsc_log_info(logger, "ruleId: %d", ruleId);
-      }
+
+      GETINTPARAM(ruleId, "ruleId")
 
     }
 
@@ -854,12 +831,8 @@ CommandUpdateRule::CommandUpdateRule(const xercesc::DOMDocument * document)
       DOMElement *paramElem = (DOMElement*) list->item(i);
       XmlStr name(paramElem->getAttribute(XmlStr("name")));
       std::auto_ptr<char> value(getNodeText(*paramElem));
-      
-      
-      if (::strcmp("ruleId", name) == 0){
-        ruleId = atoi(value.get());
-        smsc_log_info(logger, "ruleId: %d", ruleId);
-      }
+            
+      GETINTPARAM(ruleId, "ruleId")
 
     }
 
