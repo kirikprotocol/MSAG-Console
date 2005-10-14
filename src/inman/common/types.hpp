@@ -4,12 +4,19 @@
 #define __SMSC_INMAN_COMMON_TYPES__
 
 #define MAX_SCCP_ADDRESS_LEN 32
+#define MAX_ADDRESS_BUF_LEN 32
 #define MAX_APP_CONTEXT_LEN 32
 typedef struct
 {
         UCHAR_T addrLen;
         UCHAR_T addr[MAX_SCCP_ADDRESS_LEN];
 } SCCP_ADDRESS_T;
+
+typedef struct
+{
+        UCHAR_T addrLen;
+        UCHAR_T addr[MAX_ADDRESS_BUF_LEN];
+} ADDRESS_BUF_T;
 
 typedef struct
 {

@@ -20,6 +20,7 @@ namespace common {
 extern        void pack_addr(UCHAR_T* dst, const char* src, int len);
 extern        void unpack_addr(char* dst, UCHAR_T* src, int len);
 extern        void fillAddress(SCCP_ADDRESS_T* dst, const char *saddr, UCHAR_T ssn);
+extern        void fillAddress(ADDRESS_BUF_T *dst, const char *saddr);
 extern const char* getTcapReasonDescription(USHORT_T code);
 extern const char* getTcapBindErrorMessage(UCHAR_T bindResult);
 extern std::string getTypeOfServiceDescription(UCHAR_T typeOfService);

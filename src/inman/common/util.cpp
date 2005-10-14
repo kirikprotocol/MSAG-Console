@@ -31,29 +31,29 @@ void pack_addr(UCHAR_T* dst, const char* src, int len)
 }
 
 #ifdef _WIN32
-	static inline int vsnprintf(char* ch,int bufsize,const char* fmt,va_list va)
-	{
-		int was_writen = _vsnprintf(ch,bufsize,fmt,va);
-		return was_writen;
-	}
+  static inline int vsnprintf(char* ch,int bufsize,const char* fmt,va_list va)
+  {
+    int was_writen = _vsnprintf(ch,bufsize,fmt,va);
+    return was_writen;
+  }
 #else
-	static inline int vsnprintf(char* ch, int bufsize, const char* fmt,va_list va)
-	{
-		int was_writen = vsprintf(ch,fmt,va);
-		assert( was_writen < bufsize );
-		return was_writen;
-	}
+  static inline int vsnprintf(char* ch, int bufsize, const char* fmt,va_list va)
+  {
+    int was_writen = vsprintf(ch,fmt,va);
+    assert( was_writen < bufsize );
+    return was_writen;
+  }
 #endif
 
 std::string format(const char* fmt,...)
 {
-	char format_buffer[ 4096 ];
-	va_list va;
-	va_start(va,fmt);
-	unsigned u = vsnprintf(format_buffer,sizeof(format_buffer)-1, fmt,va);
-	format_buffer[u] = 0;
-	va_end(va);
-	return std::string(format_buffer);
+  char format_buffer[ 4096 ];
+  va_list va;
+  va_start(va,fmt);
+  unsigned u = vsnprintf(format_buffer,sizeof(format_buffer)-1, fmt,va);
+  format_buffer[u] = 0;
+  va_end(va);
+  return std::string(format_buffer);
 }
 
 std::string getCalledNumberDescription(EINSS7_I97_CALLEDNUMB_T* called)
@@ -775,48 +775,68 @@ void fillAddress(SCCP_ADDRESS_T* dst, const char *saddr, UCHAR_T ssn)
   }
 }
 
+void fillAddress( ADDRESS_BUF_T *dst, const char *saddr)
+{
+  unsigned len = strlen(saddr);
+  dst->addrLen = 1 + (len + 1)/2;             // length in octets
+  dst->addr[0] = 0x91;                        // TON,NPI
+
+  for( int i = 0; i < len; i++ )
+  {
+    if( i & 1 ) {
+      dst->addr[i/2+1] |= ((saddr[i]-'0')<<4);// fill high semioctet
+    } else {
+      dst->addr[i/2+1] = (saddr[i]-'0')&0x0F; // fill low semioctet
+    }
+  }
+
+  if( len & 1 ) {
+    dst->addr[(len+1)/2-1+1] |= 0xF0;
+  }
+}
+
 std::string dump(USHORT_T size, UCHAR_T* buff, bool ascii)
 {
-	std::string reply;
-	for (int i = 0; i < size; i++)
-	{
-		char tmp[32];
-		unsigned char ch = buff[i];
-		if((ch < 32) || (ch > 127) || !ascii) sprintf( tmp, "0x%02X ", ch );
-		else sprintf( tmp, "'%c' ", ch );
-		reply += tmp;
-	}
-	return reply;
+  std::string reply;
+  for (int i = 0; i < size; i++)
+  {
+    char tmp[32];
+    unsigned char ch = buff[i];
+    if((ch < 32) || (ch > 127) || !ascii) sprintf( tmp, "0x%02X ", ch );
+    else sprintf( tmp, "'%c' ", ch );
+    reply += tmp;
+  }
+  return reply;
 }
 
 void dumpToLog(Logger* logger, int len, const unsigned char* buffer )
 {
-	if( !buffer )
-	{
-		smsc_log_debug( logger, "%s", "Buffer is NULL" );		
-		smsc_log_debug( logger, "" );
-		return;
-	}
+  if( !buffer )
+  {
+    smsc_log_debug( logger, "%s", "Buffer is NULL" );
+    smsc_log_debug( logger, "" );
+    return;
+  }
 
-	std::string row;
-	char tmp[32];
-	for(int addr = 0; addr < len; addr++ )
-	{
-		if(( addr & 0x0F ) == 0 )
-		{
-			if( !row.empty() ) smsc_log_debug( logger, "%s", row.c_str() );
-			sprintf( tmp, "%04X: ", addr );
-			row = tmp;
-		}
-		sprintf( tmp, " %02X", buffer[addr] );
-		row += tmp;
-	}
-	if( len & 0x0F )
-	{
-		smsc_log_debug( logger, "%s", row.c_str() );
-	}
-	smsc_log_debug( logger, "Total: %d byte(s)", len );
-	smsc_log_debug( logger, "" );
+  std::string row;
+  char tmp[32];
+  for(int addr = 0; addr < len; addr++ )
+  {
+    if(( addr & 0x0F ) == 0 )
+    {
+      if( !row.empty() ) smsc_log_debug( logger, "%s", row.c_str() );
+      sprintf( tmp, "%04X: ", addr );
+      row = tmp;
+    }
+    sprintf( tmp, " %02X", buffer[addr] );
+    row += tmp;
+  }
+  if( len & 0x0F )
+  {
+    smsc_log_debug( logger, "%s", row.c_str() );
+  }
+  smsc_log_debug( logger, "Total: %d byte(s)", len );
+  smsc_log_debug( logger, "" );
 }
 
 }//namespace inap
