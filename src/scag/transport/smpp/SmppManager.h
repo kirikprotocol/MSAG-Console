@@ -82,7 +82,7 @@ protected:
   buf::CyclicQueue<SmppCommand> queue;
   sync::EventMonitor queueMon;
 
-  typedef RefPtr<router::RouteManager> RouterRef;
+  typedef RefPtr<router::RouteManager,sync::Mutex> RouterRef;
   RouterRef routeMan;
   std::string routerConfigFile;
 

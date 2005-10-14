@@ -18,6 +18,8 @@
 #include "SmscConnector.h"
 #include "SmscSocket.h"
 #include "scag/config/ConfigManager.h"
+#include "scag/re/RuleEngine.h"
+#include "scag/sessions/SessionManager.h"
 
 using namespace scag::transport::smpp;
 int main(int argc,char* argv[])
@@ -26,6 +28,8 @@ int main(int argc,char* argv[])
   try{
     smsc::logger::Logger::Init();
     scag::config::ConfigManager::Init();
+    scag::re::RuleEngine::Init(".");
+    scag::sessions::SessionManager::Init(scag::config::ConfigManager::Instance().getSessionManConfig());
   }catch(std::exception& e)
   {
     printf("init exception:%s\n",e.what());

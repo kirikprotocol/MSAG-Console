@@ -261,12 +261,18 @@ void SmppManager::addSmppEntity(const SmppEntityInfo& info)
 {
   smsc_log_debug(log,"addSmppEntity:%s",info.systemId.c_str());
   sync::MutexGuard mg(regMtx);
-  if(registry.Exists(info.systemId))
+  SmppEntity** ptr=registry.GetPtr(info.systemId);
+  if(ptr)
   {
-    throw smsc::util::Exception("Duplicate systemId='%s'",info.systemId.c_str());
+    if((**ptr).info.type!=etUnknown)
+    {
+      throw smsc::util::Exception("Duplicate systemId='%s'",info.systemId.c_str());
+    }
+    (**ptr).info=info;
+  }else
+  {
+    registry.Insert(info.systemId,new SmppEntity(info));
   }
-
-  registry.Insert(info.systemId,new SmppEntity(info));
   if(info.type==etSmsc)
   {
     SmscConnectInfo ci;
@@ -284,10 +290,46 @@ void SmppManager::addSmppEntity(const SmppEntityInfo& info)
 
 void SmppManager::updateSmppEntity(const SmppEntityInfo& info)
 {
+  sync::MutexGuard mg(regMtx);
+  SmppEntity** ptr=registry.GetPtr(info.systemId);
+  if(!ptr)
+  {
+    throw smsc::util::Exception("updateSmppEntity:Enitity with systemId='%s' not found",info.systemId.c_str());
+  }
+  (**ptr).info=info;
 }
+
 void SmppManager::deleteSmppEntity(const char* sysId)
 {
-
+  sync::MutexGuard mg(regMtx);
+  SmppEntity** ptr=registry.GetPtr(sysId);
+  if(!ptr)
+  {
+    throw smsc::util::Exception("deleteSmppEntity:Enitity with systemId='%s' not found",sysId);
+  }
+  SmppEntity& ent=**ptr;
+  MutexGuard emg(ent.mtx);
+  switch(ent.bt)
+  {
+    case btTransceiver:
+      ent.channel->disconnect();
+      break;
+    case btTransmitter:
+      ent.transChannel->disconnect();
+      break;
+    case btRecvAndTrans:
+      ent.transChannel->disconnect();
+      //fallthru
+    case  btReceiver:
+      ent.recvChannel->disconnect();
+      break;
+  }
+  ent.bt=btNone;
+  ent.channel=0;
+  ent.transChannel=0;
+  ent.recvChannel=0;
+  ent.seq=0;
+  ent.info.type=etUnknown;
 }
 
 int SmppManager::registerSmeChannel(const char* sysId,const char* pwd,SmppBindType bt,SmppChannel* ch)
@@ -302,9 +344,14 @@ int SmppManager::registerSmeChannel(const char* sysId,const char* pwd,SmppBindTy
   SmppEntity& ent=**ptr;
   {
     MutexGuard mg2(ent.mtx);
+    if(ent.info.type==etUnknown)
+    {
+      smsc_log_warn(log,"Failed to register sme with sysId='%s' - Entity deleted",sysId);
+      return rarFailed;
+    }
     if(ent.info.type!=etService)
     {
-      smsc_log_info(log,"Failed to register sme with sysId='%s' - Entity type is not sme",sysId);
+      smsc_log_warn(log,"Failed to register sme with sysId='%s' - Entity type is not sme",sysId);
       return rarFailed;
     }
 

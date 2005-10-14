@@ -1,5 +1,7 @@
 #include "SmppStateMachine.h"
 #include "core/buffers/XHash.hpp"
+#include "scag/re/RuleEngine.h"
+#include "scag/sessions/SessionManager.h"
 
 namespace scag{
 namespace transport{
@@ -118,6 +120,25 @@ void StateMachine::processSubmit(SmppCommand& cmd)
   sms.setDestinationSmeId(dst->getSystemId());
 
   cmd->set_ruleId(ri.ruleId);
+
+
+  scag::sessions::CSessionKey key;
+  key.USR=sms.getIntProperty(Tag::SMPP_USER_MESSAGE_REFERENCE);
+  key.abonentAddr=sms.getDestinationAddress();
+  scag::sessions::Session* session=scag::sessions::SessionManager::Instance().newSession(key);
+
+  scag::re::RuleStatus st=scag::re::RuleEngine::Instance().process(cmd,*session);
+
+  if(!st.status)
+  {
+    smsc_log_info(log,"Submit: RuleEngine returned result=%d",st.result);
+    SubmitResp(cmd,
+      st.temporal?smsc::system::Status::RX_T_APPN:
+                  smsc::system::Status::RX_P_APPN
+    );
+    return;
+  }
+
 
   try{
     int newSeq=dst->getNextSeq();

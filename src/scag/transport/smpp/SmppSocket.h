@@ -71,6 +71,7 @@ struct SmppSocket:SmppChannel{
   {
     delete [] wrBuffer;
     delete [] rdBuffer;
+    if(sock)delete sock;
   }
 
   void acquire()
@@ -126,6 +127,7 @@ struct SmppSocket:SmppChannel{
   void disconnect()
   {
     connected=false;
+    sock->Close();
   }
 
   void processInput();
@@ -200,6 +202,7 @@ protected:
   sync::Mutex outMtx;
 
   smsc::logger::Logger* log;
+  smsc::logger::Logger* dump;
 
   enum{DefaultBufferSize=4096};
 
@@ -224,7 +227,7 @@ protected:
     cmdQueue=0;
 
     log=smsc::logger::Logger::getInstance("smpp.io");
-
+    dump=smsc::logger::Logger::getInstance("smpp.dmp");
   }
 
   SmppSocket(const SmppSocket&);
