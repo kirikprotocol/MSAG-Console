@@ -165,16 +165,20 @@ USHORT_T EINSS7_I97TEndInd(     UCHAR_T          ssn,
                                 USHORT_T         userInfoLength,
                                 UCHAR_T          *userInfo_p)
 {
-  smsc_log_debug(tcapLogger,"END_IND");
-  smsc_log_debug(tcapLogger," SSN: 0x%X", ssn);
-  smsc_log_debug(tcapLogger," UserID: 0x%X", userId );
-  smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", tcapInstanceId );
-  smsc_log_debug(tcapLogger," DialogID: 0x%X", dialogueId );
-  smsc_log_debug(tcapLogger," PriOrder: 0x%X", priOrder );
-  smsc_log_debug(tcapLogger," QoS: 0x%X", qualityOfService );
-  smsc_log_debug(tcapLogger," Comp. present: %s", compPresent?"TRUE":"FALSE" );
-  smsc_log_debug(tcapLogger," App. context: %s" , dump(appContextLength ,appContext_p ).c_str() );
-  smsc_log_debug(tcapLogger," User info: %s"    , dump(userInfoLength   ,userInfo_p   ).c_str() );
+  smsc_log_debug(tcapLogger,
+                 "EINSS7_I97TEndInd("
+                 "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
+                 "prio=%d, qos=%d, "
+                 "compPresent=\"%s\", "
+                 "appContext[%d]={%s}, "
+                 "userInfo[%d]={%s})",
+                 ssn, userId, tcapInstanceId, dialogueId,
+                 priOrder,qualityOfService,
+                 compPresent?"TRUE":"FALSE",
+                 appContextLength, dump(appContextLength ,appContext_p ).c_str(),
+                 userInfoLength, dump(userInfoLength   ,userInfo_p   ).c_str()
+                  );
+
   Dialog* dlg = findDialog( ssn, dialogueId );
   if( dlg ) dlg->handleEndDialog();
   return MSG_OK;
@@ -251,16 +255,19 @@ USHORT_T EINSS7_I97TResultLInd( UCHAR_T          ssn,
                                 USHORT_T         paramLength,
                                 UCHAR_T          *pm)
 {
-  smsc_log_debug(tcapLogger,"RESULT_L_IND");
-  smsc_log_debug(tcapLogger," SSN: 0x%X", ssn);
-  smsc_log_debug(tcapLogger," UserID: 0x%X", userId );
-  smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", tcapInstanceId );
-  smsc_log_debug(tcapLogger," DialogID: 0x%X", dialogueId );
-  smsc_log_debug(tcapLogger," InvokeID: 0x%X", invokeId );
-  smsc_log_debug(tcapLogger," Tag: 0x%X", (tag==0x02?"LOCAL":"GLOBAL") );
-  smsc_log_debug(tcapLogger," LastComponent: %s", (lastComponent?"TRUE":"FALSE"));
-  smsc_log_debug(tcapLogger," Operation: %s" , dump(opLength ,op ).c_str() );
-  smsc_log_debug(tcapLogger," Params: %s", dump(paramLength,pm ).c_str() );
+  smsc_log_debug(tcapLogger,
+                 "EINSS7_I97TResultLInd("
+                 "ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
+                 "invokeId=%d, lastComponent=\"%s\", "
+                 "tag=\"%s\", "
+                 "opcode[%d]={%s}, "
+                 "parameters[%d]={%s})",
+                 ssn, userId, tcapInstanceId, dialogueId,
+                 invokeId,lastComponent?"TRUE":"FALSE",
+                 tag==0x02?"LOCAL":"GLOBAL",
+                 opLength,dump(opLength ,op ).c_str(),
+                 paramLength,dump(paramLength,pm ).c_str()
+                );
 
   Dialog* dlg = findDialog( ssn, dialogueId );
   if( dlg ) return dlg->handleResultNotLast( invokeId, tag, opLength, op, paramLength, pm );
@@ -343,16 +350,18 @@ USHORT_T EINSS7_I97TUAbortInd(  UCHAR_T          ssn,
                                 USHORT_T         userInfoLength,
                                 UCHAR_T          *userInfo_p)
 {
-  smsc_log_debug(tcapLogger,"U_ABORT_IND");
-  smsc_log_debug(tcapLogger," SSN: 0x%X", ssn);
-  smsc_log_debug(tcapLogger," UserID: 0x%X", userId );
-  smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", tcapInstanceId );
-  smsc_log_debug(tcapLogger," DialogID: 0x%X", dialogueId );
-  smsc_log_debug(tcapLogger," PriOrder: 0x%X", priOrder );
-  smsc_log_debug(tcapLogger," QoS: 0x%X", qualityOfService );
-  smsc_log_debug(tcapLogger," Abort info: %s"   , dump(abortInfoLength, abortInfo_p ).c_str() );
-  smsc_log_debug(tcapLogger," App. context: %s" , dump(appContextLength ,appContext_p ).c_str() );
-  smsc_log_debug(tcapLogger," User info: %s"    , dump(userInfoLength   ,userInfo_p   ).c_str() );
+  smsc_log_debug(tcapLogger,
+                 "EINSS7_I97TUAbortInd(ssn=%d, userId=%d, tcapInstanceId=%d, dialogueId=%d, "
+                 "PriOrder=%d, qos=%d, "
+                 "abortinfo[%d]={%s}, "
+                 "appContext[%d]={%s}, "
+                 "userInfo[%d]={%s})",
+                 ssn, userId, tcapInstanceId, dialogueId,
+                 priOrder, qualityOfService,
+                 abortInfoLength, dump(abortInfoLength, abortInfo_p ).c_str(),
+                 appContextLength, dump(appContextLength ,appContext_p ).c_str(),
+                 userInfoLength, dump(userInfoLength   ,userInfo_p   ).c_str()
+                 );
   return MSG_OK;
 }
 
