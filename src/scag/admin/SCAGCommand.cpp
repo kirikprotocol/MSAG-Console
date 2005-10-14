@@ -204,12 +204,7 @@ CommandDeleteSme::CommandDeleteSme(const xercesc::DOMDocument * const document)
   BEGIN_EXCEPTION
 
     BEGIN_SCAN_PARAMS
-
-      if (::strcmp("systemId", name) == 0){                             
-          smsc_log_info(logger, "systemId: %s", value.get());
-        systemId = value.get();
-      }
-
+      GETSTRPARAM_(systemId, "systemId")
     END_SCAN_PARAMS
 
   CATCH("Failed to read parameters of Delete Sme command.")
@@ -326,6 +321,21 @@ Abstract_CommandSmscInfo::~Abstract_CommandSmscInfo()
 
 //================================================================
 
+CommandDeleteSmsc::CommandDeleteSmsc(const xercesc::DOMDocument * const document)
+  : SCAGCommand((Command::Id)CommandIds::deleteSmsc)
+{
+    smsc_log_info(logger, "CommandDeleteSme got parameters:");
+
+  BEGIN_EXCEPTION
+
+    BEGIN_SCAN_PARAMS
+      GETSTRPARAM_(systemId, "systemId")
+    END_SCAN_PARAMS
+
+  CATCH("Failed to read parameters of Delete Sme command.")
+  END_EXCEPTION
+}
+
 Response * CommandDeleteSmsc::CreateResponse(scag::Scag * ScagApp)
 {
   smsc_log_info(logger, "CommandDeleteSmsc is processing");
@@ -338,7 +348,7 @@ Response * CommandDeleteSmsc::CreateResponse(scag::Scag * ScagApp)
       if(!smppMan)
           throw Exception("SmppManager undefined");
 
-      smppMan->updateSmppEntity(getSmppEntityInfo());
+      smppMan->deleteSmppEntity(systemId.c_str());
 
       smsc_log_info(logger, "CommandDeleteSmsc is processed ok");
       return new Response(Response::Ok, "CommandDeleteSmsc is processed ok");
@@ -361,7 +371,7 @@ Response * CommandAddSmsc::CreateResponse(scag::Scag * ScagApp)
       if(!smppMan)
           throw Exception("SmppManager undefined");
 
-      smppMan->updateSmppEntity(getSmppEntityInfo());
+      smppMan->addSmppEntity(getSmppEntityInfo());
 
       smsc_log_info(logger, "CommandAddSmsc is processed ok");
       return new Response(Response::Ok, "none");

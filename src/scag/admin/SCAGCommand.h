@@ -115,13 +115,12 @@ public:
     virtual Response * CreateResponse(scag::Scag * SmscApp);
 };
 
-class CommandDeleteSmsc : public Abstract_CommandSmeInfo 
-{
+class CommandDeleteSmsc : public SCAGCommand
+{    
+protected:
+    std::string systemId;
 public:
-	CommandDeleteSmsc(const xercesc::DOMDocument * const document)
-    : Abstract_CommandSmeInfo ((Command::Id)CommandIds::deleteSmsc, document)
-  {
-  }
+	CommandDeleteSmsc(const xercesc::DOMDocument * const document);
     virtual Response * CreateResponse(scag::Scag * SmscApp);
 };
 
