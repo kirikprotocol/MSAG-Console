@@ -81,9 +81,9 @@ inline unsigned unpackBCD2NumString(const unsigned char* bcd, char* str, unsigne
 inline void packCharAs7Bit(unsigned char *& ptr, unsigned& shift,
 						unsigned char val8bit)
 {
-    *ptr = (*ptr & (0xFF << shift)) | (val8bit << shift);
+    *ptr = (*ptr & (0xFF >> (8 - shift))) | (val8bit << shift);
     if (shift > 1)
-	*(ptr + 1) = (*(ptr + 1) & (0xFF >> (8 - shift))) | (val8bit >> (8 - shift));
+	*(ptr + 1) = (*(ptr + 1) & (0xFF << shift)) | (val8bit >> (8 - shift));
     if ((shift += 7) >= 8) {
 	shift &= 0x7;
 	++ptr;
