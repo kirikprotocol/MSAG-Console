@@ -529,10 +529,9 @@ Response * CommandTraceRoute::CreateResponse(scag::Scag * ScagApp)
 
   BEGIN_EXCEPTION
        
-      smsc::smeman::SmeProxy* proxy = 0;
-      smsc::router::RouteInfo info;
+      scag::transport::smpp::router::RouteInfo info;
       bool found = false;
-      info.enabling = true;
+      info.enabled = true;
 
       //-1:   Dealiased destination
       // 0:   Message (Route found | Route found (disabled) | Route not found)
@@ -545,38 +544,44 @@ Response * CommandTraceRoute::CreateResponse(scag::Scag * ScagApp)
       Address dealiased;
       char addrBuf[MAX_ADDRESS_VALUE_LENGTH+5];
 
-      /*if(SmscApp->AliasToAddress(Address(_dstAddr),dealiased))
+      try
       {
-        dealiasText="Address "+Address(_dstAddr).toString()+" was dealiased to "+dealiased.toString();
-        dealiased.toString(addrBuf,sizeof(addrBuf));
-        _dstAddr=addrBuf;
+        Address addr(_dstAddr);
+      }catch(...)
+      {
+          throw AdminException("Failed distanation address");
       }
 
       fprintf(stderr,"---- Passed dealiasing dstAddr");
 
+      if(!ScagApp)
+              Exception("Scag undefined");
+
       if (_srcSysId)
       {
-          SmeIndex index = SmscApp->getSmeIndex(_srcSysId);
+          /*SmeIndex index = SmscApp->getSmeIndex(_srcSysId);
           if (index == -1)
-              throw AdminException("Trace route failed. Sme for system id '%s' not found",_srcSysId);
+              throw AdminException("Trace route failed. Sme for system id '%s' not found",_srcSysId);*/
 
-          found = SmscApp->getTestRouterInstance()
-                ->lookup(index, Address(_srcAddr), Address(_dstAddr), proxy, 0, &info);
+          //ScagApp->getSmppManagerAdmin()->lookup(_srcSysId);
+
+          found = ScagApp->getTestRouterInstance()
+                ->lookup(_srcSysId, Address(_srcAddr), Address(_dstAddr), info);
       }
       else
       {
-          found = SmscApp->getTestRouterInstance()->
-              lookup(Address(_srcAddr), Address(_dstAddr), proxy, 0, &info);
+          found = ScagApp->getTestRouterInstance()->
+              lookup(Address(_srcAddr), Address(_dstAddr), info);
       }
 
       fprintf(stderr,"---- Passed lookup");
 
       vector<std::string> traceBuff;
-      SmscApp->getTestRouterInstance()->getTrace(traceBuff);
+      ScagApp->getTestRouterInstance()->getTrace(traceBuff);
 
       if (!found)
       {
-        if (info.enabling == false)
+        if (info.enabled == false)
         {
           result.appendValueToStringList("Route found (disabled)");
           found = true;
@@ -601,29 +606,21 @@ Response * CommandTraceRoute::CreateResponse(scag::Scag * ScagApp)
           std::auto_ptr<char> encSrcAddressText(getEncodedString(srcAddressText));
           std::auto_ptr<char> encDstAddressText(getEncodedString(dstAddressText));
           std::auto_ptr<char> encSmeSystemId(getEncodedString(info.smeSystemId.c_str()));
-          std::auto_ptr<char> encForwardTo(getEncodedString(info.forwardTo.c_str()));
           std::auto_ptr<char> encSrcSmeSystemId(getEncodedString(info.srcSmeSystemId.c_str()));
 
           sprintf(routeText, "route id:%s;source address:%s;destination address:%s;"
-                             "sme system id:%s;source sme system id:%s;"
-                             "priority:%u;service id:%d;delivery mode:%u;forward to:%s;"
-                             "billing:%s;archiving:%s;enabling:%s;suppress delivery reports:%s",
+                             "sme system id:%s;source sme system id:%s;archiving:%s;"
+                             "enabling:%s",
                   encRouteId.get(), encSrcAddressText.get(), encDstAddressText.get(),
                   encSmeSystemId.get(), encSrcSmeSystemId.get(),
-                  info.priority, info.serviceId, info.deliveryMode, encForwardTo.get(),
-                  (info.billing) ? "yes":"no" , (info.archived) ? "yes":"no",
-                  (info.enabling) ? "yes":"no", (info.suppressDeliveryReports) ? "yes":"no");
+                  (info.archived) ? "yes":"no",
+                  (info.enabled) ? "yes":"no");
 
           result.appendValueToStringList(routeText);
       }
 
-      if(dealiasText.length())
-      {
-        result.appendValueToStringList(dealiasText.c_str());
-        result.appendValueToStringList("");
-      }
       for (int i=0; i<traceBuff.size(); i++)
-          result.appendValueToStringList(traceBuff[i].c_str());*/
+          result.appendValueToStringList(traceBuff[i].c_str());
 
       smsc_log_info(logger, "CommandTraceRoute is processed ok");
       return new Response(Response::Ok, result);
