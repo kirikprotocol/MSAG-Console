@@ -559,9 +559,6 @@ Response * CommandTraceRoute::CreateResponse(scag::Scag * ScagApp)
 
       if (_srcSysId)
       {
-          /*SmeIndex index = SmscApp->getSmeIndex(_srcSysId);
-          if (index == -1)
-              throw AdminException("Trace route failed. Sme for system id '%s' not found",_srcSysId);*/
 
           //ScagApp->getSmppManagerAdmin()->lookup(_srcSysId);
 

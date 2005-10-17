@@ -4,7 +4,6 @@
 #include "util/debug.h"
 #include "core/synchronization/Event.hpp"
 #include "util/Exception.hpp"
-#include "scag/config/route/RouteConfig.h"
 #include "logger/Logger.h"
 #include "util/regexp/RegExp.hpp"
 #include "util/config/ConfigView.h"
