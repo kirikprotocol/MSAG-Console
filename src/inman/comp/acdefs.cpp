@@ -18,7 +18,7 @@ static APP_CONTEXT_T const  _OIDS[] = {
     ,{ 7, {0x04, 0x00, 0x00, 0x01, 0x15, 0x03, 0x3D}}
 //id_ac_map_networkUnstructuredSs_version2:
 //  { itu-t(0) identified-organization(4) etsi(0) mobileDomain(0) gsm-Network(1)
-//        networkUnstructuredSs(19) version2(2) }
+//    ac-Id(0) networkUnstructuredSs(19) version2(2) }
     ,{7,{0x04,0x00,0x00,0x01,0x00,0x13,0x02,}}
 };
 
