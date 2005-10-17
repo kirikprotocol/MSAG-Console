@@ -270,7 +270,7 @@ USHORT_T EINSS7_I97TResultLInd( UCHAR_T          ssn,
                 );
 
   Dialog* dlg = findDialog( ssn, dialogueId );
-  if( dlg ) return dlg->handleResultNotLast( invokeId, tag, opLength, op, paramLength, pm );
+  if( dlg ) return dlg->handleResultLast( invokeId, tag, opLength, op, paramLength, pm );
 
   return MSG_OK;
 }
