@@ -210,6 +210,8 @@ public:
     testRouter_ = new Reffer<RouteManager>(manager);
   }
 
+  void reloadTestRoutes(const RouteConfig& rcfg);
+
   scag::transport::smpp::SmppManagerAdmin * getSmppManagerAdmin()
   {
       scag::transport::smpp::SmppManagerAdmin * smppManAdmin = &smppMan;

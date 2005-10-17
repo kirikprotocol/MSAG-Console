@@ -474,4 +474,12 @@ void Scag::shutdown()
   tp2.shutdown();
 }
 
+void Scag::reloadTestRoutes(const RouteConfig& rcfg)
+{
+  auto_ptr<RouteManager> router(new RouteManager());
+  //router->assign(&smeman);
+  loadRoutes(router.get(),rcfg,true);
+  ResetTestRouteManager(router.release());
+}
+
 } //scag
