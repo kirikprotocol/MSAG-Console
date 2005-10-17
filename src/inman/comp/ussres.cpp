@@ -25,7 +25,17 @@ ProcessUSSRequestRes::ProcessUSSRequestRes()
 ProcessUSSRequestRes::~ProcessUSSRequestRes() { }
 
 
-const vector<unsigned char>& ProcessUSSRequestRes::getUSSData(void)
+void ProcessUSSRequestRes::setDCS(unsigned char dcs)
+{
+    _dCS = dcs;
+}
+
+unsigned char ProcessUSSRequestRes::getDCS(void) const
+{
+    return _dCS;
+}
+
+const vector<unsigned char>& ProcessUSSRequestRes::getUSSData(void) const
 {
     return _uSSdata;
 }

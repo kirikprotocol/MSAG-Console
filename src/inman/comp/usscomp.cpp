@@ -54,17 +54,32 @@ ProcessUSSRequestArg::ProcessUSSRequestArg()
 }
 ProcessUSSRequestArg::~ProcessUSSRequestArg() { }
 
-int ProcessUSSRequestArg::msISDNadr_present(void)
+bool ProcessUSSRequestArg::msISDNadr_present(void)
 {
-    return (_msAdr.value[0] && (_msAdr.value[1] || _msAdr.value[0] != '0'));
+    return (_msAdr.value[0] && (_msAdr.value[1] || _msAdr.value[0] != '0')) ? true : false;
 }
 
-const Address& ProcessUSSRequestArg::getMSISDNadr(void)
+bool ProcessUSSRequestArg::msAlerting_present(void)
+{
+    return (_alrt == alertingNotSet) ? false : true;
+}
+
+const Address& ProcessUSSRequestArg::getMSISDNadr(void) const
 {
     return _msAdr;
 }
 
-const vector<unsigned char>& ProcessUSSRequestArg::getUSSData(void)
+void ProcessUSSRequestArg::setDCS(unsigned char dcs)
+{
+    _dCS = dcs;
+}
+
+unsigned char ProcessUSSRequestArg::getDCS(void) const
+{
+    return _dCS;
+}
+
+const vector<unsigned char>& ProcessUSSRequestArg::getUSSData(void) const
 {
     return _uSSdata;
 }
@@ -80,10 +95,22 @@ void ProcessUSSRequestArg::setAlertingPattern(enum AlertingPattern alrt)
     _alrt = alrt;
 }
 
+enum AlertingPattern ProcessUSSRequestArg::getAlertingPattern(void) const
+{
+    return _alrt;
+}
+
 void ProcessUSSRequestArg::setMSISDNadr(const Address& msadr)
 {
     _msAdr = msadr;
 }
+
+void ProcessUSSRequestArg::setMSISDNadr(const char* adrStr)
+{
+    Address  msadr(adrStr);
+    _msAdr = msadr;
+}
+
 
 void ProcessUSSRequestArg::decode(const vector<unsigned char>& buf)
 {
@@ -100,16 +127,16 @@ void ProcessUSSRequestArg::decode(const vector<unsigned char>& buf)
     this->setUSSData(dcmd->ussd_String.buf, dcmd->ussd_String.size);
 
     if (dcmd->msisdn) {
-  _msAdr = smsc::inman::comp::OCTET_STRING_2_Addres(dcmd->msisdn);
-  assert(_msAdr.length < MAP_MAX_ISDN_AddressLength);
+        _msAdr = smsc::inman::comp::OCTET_STRING_2_Addres(dcmd->msisdn);
+        assert(_msAdr.length < MAP_MAX_ISDN_AddressLength);
     } else
-  _msAdr.setValue(0, NULL);
+        _msAdr.setValue(0, NULL);
 
     if (dcmd->alertingPattern) {
-  assert(dcmd->alertingPattern->size == 1);
-  _alrt = (AlertingPattern_e)(dcmd->alertingPattern->buf[0]);
+        assert(dcmd->alertingPattern->size == 1);
+        _alrt = (AlertingPattern_e)(dcmd->alertingPattern->buf[0]);
     } else
-  _alrt = alertingNotSet;
+        _alrt = alertingNotSet;
 
     smsc_log_component(compLogger, &asn_DEF_USSD_Arg, dcmd);
     asn_DEF_USSD_Arg.free_struct(&asn_DEF_USSD_Arg, dcmd, 0);
@@ -142,18 +169,18 @@ void ProcessUSSRequestArg::encode(vector<unsigned char>& buf)
     memcpy(cmd.ussd_String.buf, &_uSSdata[0], cmd.ussd_String.size);
 
     if (_alrt != alertingNotSet) {
-  memset(&alrt, 0, sizeof(alrt));
-  alrt_buf[0] = (unsigned char)_alrt;
-  alrt.buf = alrt_buf;
-  alrt.size = 1;
-  cmd.alertingPattern = &alrt;
+        memset(&alrt, 0, sizeof(alrt));
+        alrt_buf[0] = (unsigned char)_alrt;
+        alrt.buf = alrt_buf;
+        alrt.size = 1;
+        cmd.alertingPattern = &alrt;
     }
 
     if (msISDNadr_present()) {
-  memset(&isdn, 0, sizeof(isdn));
-  isdn.size = packMAPAddress2OCTS(_msAdr, (smsc::inman::comp::TONNPI_ADDRESS_OCTS *)isdn_buf);
-  isdn.buf = isdn_buf;
-  cmd.msisdn = &isdn;
+        memset(&isdn, 0, sizeof(isdn));
+        isdn.size = packMAPAddress2OCTS(_msAdr, (smsc::inman::comp::TONNPI_ADDRESS_OCTS *)isdn_buf);
+        isdn.buf = isdn_buf;
+        cmd.msisdn = &isdn;
     }
 
     smsc_log_component(compLogger, &asn_DEF_USSD_Arg, &cmd);

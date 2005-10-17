@@ -62,6 +62,29 @@ public:
     ProcessUSSRequestArg();
     ~ProcessUSSRequestArg();
 
+    //Setters:
+    void setDCS(unsigned char dcs);
+    void setUSSData(unsigned char * data, unsigned size);
+    //Optional parameters
+    void setAlertingPattern(enum AlertingPattern alrt);
+    void setMSISDNadr(const Address& msadr);
+    void setMSISDNadr(const char * adrStr);
+
+    //Getters:
+    unsigned char getDCS(void) const;
+    const vector<unsigned char>& getUSSData(void) const;
+    //Optional parameters
+    bool  msISDNadr_present(void);
+    bool  msAlerting_present(void);
+    //returns empty Address if msISDN adr absent
+    const Address& getMSISDNadr(void) const; 
+    //returns alertingNotSet if alerting absent
+    enum AlertingPattern getAlertingPattern(void) const;
+
+    void encode(vector<unsigned char>& buf);
+    void decode(const vector<unsigned char>& buf);
+
+private:
     unsigned char	    _dCS;	// unparsed data coding scheme
     vector<unsigned char>   _uSSdata;	// USS data string:  GSM 7-bit or UCS2
 
@@ -69,20 +92,6 @@ public:
     AlertingPattern_e 	_alrt;		// == alertingNotSet for absence
     Address 		_msAdr; 	// MS ISDN address, '\0' or "0" for absence
 
-    void setUSSData(unsigned char * data, unsigned size);
-    //Optional parameters
-    void setAlertingPattern(enum AlertingPattern alrt);
-    void setMSISDNadr(const Address& msadr);
-
-    //some usefull methods:
-    const Address& getMSISDNadr(void); 
-    const vector<unsigned char>& getUSSData(void);
-    //checks wether the MSisdnAdr is set or not, returns TRUE/FALSE
-    int   msISDNadr_present(void); 
-
-    void encode(vector<unsigned char>& buf);
-    void decode(const vector<unsigned char>& buf);
-private:
     Logger*		compLogger;
 };
 
@@ -92,15 +101,20 @@ public:
     ProcessUSSRequestRes();
     ~ProcessUSSRequestRes();
 
-    unsigned char	    _dCS;	// unparsed data coding scheme
-    vector<unsigned char>   _uSSdata;	// USS data string:  GSM 7-bit or UCS2
-
+    //Setters:
+    void setDCS(unsigned char dcs);
     void setUSSData(unsigned char * data, unsigned size);
-    const vector<unsigned char>& getUSSData(void);
+    //Getters:
+    unsigned char getDCS(void) const;
+    const vector<unsigned char>& getUSSData(void) const;
 
     void encode(vector<unsigned char>& buf);
     void decode(const vector<unsigned char>& buf);
+
 private:
+    unsigned char	    _dCS;	// unparsed data coding scheme
+    vector<unsigned char>   _uSSdata;	// USS data string:  GSM 7-bit or UCS2
+
     Logger*		compLogger;
 };
 
