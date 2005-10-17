@@ -4,16 +4,67 @@ static char const ident[] = "$Id$";
 #include <string>
 #include <stdexcept>
 
-#include "inman/common/errors.hpp"
-#include "inman/common/util.hpp"
-#include "core/buffers/TmpBuf.hpp"
-
 #include "inman/interaction/messages.hpp"
 
 namespace smsc  {
-namespace inman {
+namespace inman {                                 
 namespace interaction {
 
+/* ************************************************************************** *
+ * class SerializerInap implementation:
+ * ************************************************************************** */
+
+SerializerInap::SerializerInap()
+{
+    registerProduct( CHARGE_SMS_TAG, new ProducerT< ChargeSms >() );
+    registerProduct( CHARGE_SMS_RESULT_TAG, new ProducerT< ChargeSmsResult>() );
+    registerProduct( DELIVERY_SMS_RESULT_TAG, new ProducerT< DeliverySmsResult>() );
+}
+
+SerializerInap::~SerializerInap()
+{
+}
+
+SerializerInap* SerializerInap::getInstance()
+{
+    static SerializerInap instance;
+    return &instance;
+}
+
+SerializableObject* SerializerInap::deserialize(ObjectBuffer& in)
+{
+    USHORT_T objectId, version, dialogId;
+
+    in >> version;
+
+    if( version != FORMAT_VERSION ) 
+        throw runtime_error( format("Invalid version: 0x%X", version) );
+
+    in >> dialogId;
+    in >> objectId;
+
+    SerializableObject* obj = create( objectId );
+    if( !obj ) 
+        throw runtime_error( format("Invalid object ID: 0x%X", objectId) );
+
+    obj->setObjectId( dialogId );
+    obj->load( in );
+
+    return obj;
+}
+
+
+void SerializerInap::serialize(SerializableObject* obj, ObjectBuffer& out)
+{
+    assert( obj );
+    out << (USHORT_T) FORMAT_VERSION;
+    out << (USHORT_T) obj->getObjectId();
+    obj->save( out );
+}
+
+/* ************************************************************************** *
+ * class ChargeSms implementation:
+ * ************************************************************************** */
 
 ChargeSms::ChargeSms()
 {
@@ -239,7 +290,7 @@ void DeliverySmsResult::handle(InmanHandler* handler)
 	handler->onDeliverySmsResult( this );
 }
 
-}
-}
-}
+} //interaction
+} //inman
+} //smsc
 

@@ -74,7 +74,7 @@ void Service::billingFinished(Billing* bill)
 void Service::onCommandReceived(Connect* conn, InmanCommand* cmd)
 {
 	assert( cmd );	
-	int dlgId = cmd->getDialogId();
+	int dlgId = cmd->getObjectId();
 	smsc_log_debug( logger, "Command for billing id=0x%X", dlgId );
 	BillingMap::iterator it = workers.find( dlgId );
 	if( it == workers.end() )

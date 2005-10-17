@@ -8,7 +8,7 @@ static char const ident[] = "$Id$";
 #include "inman/interaction/serializer.hpp"
 #include "inman/interaction/messages.hpp"
 
-using smsc::inman::interaction::Serializer;
+using smsc::inman::interaction::SerializerInap;
 using smsc::inman::interaction::ObjectBuffer;
 using smsc::inman::interaction::SerializableObject;
 using smsc::inman::interaction::InmanCommand;
@@ -25,7 +25,7 @@ namespace inap  {
 Connect::Connect(Socket* sock) 
 	: logger(Logger::getInstance("smsc.inman.inap.Connect"))
 	, socket( sock )
-	, pipe( new ObjectPipe( sock ) )
+	, pipe( new ObjectPipe( sock, SerializerInap::getInstance() ) )
 {
 		
 	assert( socket );

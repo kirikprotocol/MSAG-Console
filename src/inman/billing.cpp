@@ -46,7 +46,7 @@ void Billing::onChargeSms(ChargeSms* sms)
 {
 	assert( sms );
 	assert( inap );
-	assert( id == sms->getDialogId() );
+	assert( id == sms->getObjectId() );
 
 	smsc_log_debug( logger, "SSF --> SCF InitialDPSMS" );
 
@@ -70,7 +70,7 @@ void Billing::onChargeSms(ChargeSms* sms)
 void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
 {
 	assert( smsRes );
-	assert( id == smsRes->getDialogId() );
+	assert( id == smsRes->getObjectId() );
 
 	messageType_e  messageType = MessageType_notification;
 
@@ -112,7 +112,7 @@ void Billing::continueSMS()
 	assert( connect );
 	smsc_log_debug( logger, "SSF <-- SCF ContinueSMS" );
 	ChargeSmsResult res( smsc::inman::interaction::CHARGING_POSSIBLE );
-	res.setDialogId( id );
+	res.setObjectId( id );
 	connect->send( &res );
 }
 
@@ -121,7 +121,7 @@ void Billing::releaseSMS(ReleaseSMSArg* arg)
 	assert( connect );
 	smsc_log_debug( logger, "SSF <-- SCF ReleaseSMS" );
 	ChargeSmsResult res( smsc::inman::interaction::CHARGING_NOT_POSSIBLE );
-	res.setDialogId( id );
+	res.setObjectId( id );
 	connect->send( &res );
 	service->billingFinished( this );
 }

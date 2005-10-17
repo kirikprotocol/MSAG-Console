@@ -7,7 +7,7 @@
 #include <string>
 
 #include "logger/Logger.h"
-#include "core/network/Socket.hpp"
+//#include "core/network/Socket.hpp"
 #include "inman/common/console.hpp"
 #include "inman/interaction/serializer.hpp"
 #include "inman/interaction/messages.hpp"
@@ -19,7 +19,7 @@ using smsc::logger::Logger;
 using smsc::inman::common::Console;
 using smsc::inman::interaction;
 using smsc::inman::interaction::ObjectPipe;
-using smsc::inman::interaction::Serializer;
+using smsc::inman::interaction::SerializerInap;
 using smsc::inman::interaction::ChargeSms;
 using smsc::inman::interaction::ChargeSmsResult;
 using smsc::inman::interaction::DeliverySmsResult;
@@ -43,7 +43,7 @@ class Facade : public Thread, public SmscHandler
 
 		Facade(Socket* sock) 
 			: socket( sock )
-			, pipe( new ObjectPipe( sock ) )
+			, pipe( new ObjectPipe( sock, SerializerInap::getInstance() ) )
 			, logger( Logger::getInstance("smsc.inman.Facade") )
 			, delivery( smsc::inman::interaction::DELIVERY_SUCCESSED )
 		{
@@ -77,7 +77,7 @@ class Facade : public Thread, public SmscHandler
 			{
 				fprintf( stdout, "ChargeSmsResult( CHARGING_POSSIBLE ) received\n");
 				DeliverySmsResult op( delivery );
-				op.setDialogId( result->getDialogId() );
+				op.setObjectId( result->getObjectId() );
 				sendDeliverySmsResult( &op );
 			}
 			else
@@ -111,7 +111,7 @@ void send()
 {
 	ChargeSms op;
 
-	op.setDialogId( dialogId++ );
+	op.setObjectId( dialogId++ );
 
 	op.setDestinationSubscriberNumber( ".1.1.79139859489" ); // missing for MT
 	op.setCallingPartyNumber( ".1.1.79139343290" );

@@ -4,14 +4,37 @@
 #define __SMSC_INMAN_INTERACTION_MESSAGES__
 
 #include "inman/interaction/serializer.hpp"
+#include "inman/common/factory.hpp"
 
 using std::runtime_error;
 using smsc::inman::interaction::ObjectBuffer;
 using smsc::inman::interaction::SerializableObject;
+using smsc::inman::interaction::SerializerITF;
+using smsc::inman::common::FactoryT;
 
 namespace smsc  {
 namespace inman {
 namespace interaction {
+
+//serializer for Inman commands, transferred over TCP socket
+class SerializerInap : public SerializerITF, public FactoryT< USHORT_T, SerializableObject >
+{
+    public:
+        enum { FORMAT_VERSION = 0x0001 };
+
+
+        virtual ~SerializerInap();
+
+        SerializableObject* deserialize(ObjectBuffer&);
+        void                serialize(SerializableObject*, ObjectBuffer& out);
+
+        static SerializerInap* getInstance();
+
+
+    protected:
+        SerializerInap();
+};
+
 
 // 1. ChargeSms   	    ( SMSC --> INMAN )
 // 2. ChargeSmsResult   ( SMSC <-- INMAN )

@@ -7,7 +7,6 @@
 
 #include "inman/common/errors.hpp"
 #include "inman/common/util.hpp"
-#include "inman/common/factory.hpp"
 #include "core/buffers/TmpBuf.hpp"
 
 #include "core/network/Socket.hpp"
@@ -16,7 +15,6 @@ using std::runtime_error;
 
 using smsc::inman::common::format;
 using smsc::inman::common::dump;
-using smsc::inman::common::FactoryT;
 using smsc::logger::Logger;
 using smsc::core::network::Socket;
 
@@ -27,30 +25,45 @@ namespace interaction {
 typedef smsc::core::buffers::TmpBuf<char,2048> ObjectBuffer;
 
 
-  inline ObjectBuffer& operator<<(ObjectBuffer& buf, const std::string& str)
-  {
+/*
+ * NOTE: its considered that vectors/strings passed as arguments to operators defined
+ * below have length not grater than 255 chars! 
+ */
+inline ObjectBuffer& operator<<(ObjectBuffer& buf, const std::vector<unsigned char>& arr)
+{
+    unsigned char len = arr.size();
+    buf.Append((char*)&len, 1);
+    buf.Append((char*)&arr[0], len);
+    return buf;
+}
+
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::vector<unsigned char>& arr )
+{
+    unsigned char len;
+    buf.Read((char*)&len, 1);
+    unsigned char* arrBuf = new unsigned char[len];
+    buf.Read((char*)arrBuf, len);
+    arr.assign(arrBuf, arrBuf + len);
+    return buf;
+}
+
+inline ObjectBuffer& operator<<(ObjectBuffer& buf, const std::string& str)
+{
     unsigned char len = str.size();
     buf.Append((char*)&len,1);
     buf.Append(str.c_str(),len);
     return buf;
-  }
+}
 
-  struct SmallCharBuf
-  {
-    char* buf;
-    int len;
-    SmallCharBuf(char* argBuf,int argLen):buf(argBuf),len(argLen){}
-  };
-
-  inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::string& str )
-  {
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::string& str )
+{
     unsigned char len;
     buf.Read((char*)&len,1);
     char* strBuf = new char[len + 1];
     buf.Read(strBuf,len);
     str.assign( strBuf, strBuf + len );
     return buf;
-  }
+}
 
   inline ObjectBuffer& operator<<(ObjectBuffer& buf,const unsigned int& val)
   {
@@ -121,69 +134,55 @@ typedef smsc::core::buffers::TmpBuf<char,2048> ObjectBuffer;
     return buf;
   }
 
+
+
 class SerializableObject
 {
-		friend class Serializer;
+    public:
+        SerializableObject() : objectId( 0 ) { }
 
-	public:
-		
-		SerializableObject() : dialogId( 0 )
-		{
-		}
+        virtual ~SerializableObject() { }
 
-		virtual ~SerializableObject()
-		{
-		}
-		
+        virtual void setObjectId(unsigned short id) { objectId = id;   }
+        virtual unsigned short getObjectId() const { return objectId; }
 
-		virtual void setDialogId(unsigned short id) { dialogId = id;   }
-		virtual unsigned short getDialogId() const { return dialogId; }
-		
-	protected:
-		
-		unsigned char dialogId;
+        virtual void load(ObjectBuffer& in)  = 0;
+        virtual void save(ObjectBuffer& out) = 0;
 
-    	virtual void load(ObjectBuffer& in)  = 0;
-    	virtual void save(ObjectBuffer& out) = 0;
+    protected:
+        unsigned char objectId;
 };
 
+//serializer interface:
+struct SerializerITF {
+    virtual SerializableObject* deserialize(ObjectBuffer&) = 0;
+    virtual void                serialize(SerializableObject*, ObjectBuffer& out) = 0;
+};
+
+
+//serializes and sends object over TCP socket
 class ObjectPipe
 {
-	public:
-		ObjectPipe(Socket* sock);
-		~ObjectPipe();
+    public:
+        struct PipeFormat {
+            enum { straightData = 0, lengthPrefixed = 1 };
+        };
 
-		SerializableObject* receive();
-		void send(SerializableObject* obj);
-	private:
-		Socket* socket;
-		Logger* logger;
+        ObjectPipe(Socket* sock, SerializerITF * serializer);
+        ObjectPipe(Socket* sock, SerializerITF * serializer, unsigned pipe_format);
+        ~ObjectPipe();
+
+        SerializableObject* receive();
+        void    send(SerializableObject* obj);
+    private:
+        Socket*     socket;
+        Logger*     logger;
+        unsigned    _format;
+        SerializerITF * _objSerializer;
 };
 
-
-class Serializer : public FactoryT< USHORT_T, SerializableObject >
-{
-
-	public:
-		enum { FORMAT_VERSION = 0x0001 };
-
-
-		virtual ~Serializer();
-
-		SerializableObject* deserialize(ObjectBuffer&);
-		void				serialize(SerializableObject*, ObjectBuffer& out);
-
-		static Serializer* getInstance();
-
-
-	protected:
-		Serializer();
-
-
-};
-
-}
-}
-}
+} //interaction
+} //inman
+} //smsc
 
 #endif
