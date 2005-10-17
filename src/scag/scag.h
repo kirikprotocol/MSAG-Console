@@ -20,6 +20,7 @@
 #include "scag/transport/smpp/SmppManager.h"
 #include "scag/transport/smpp/SmppManagerAdmin.h"
 #include "util/crc32.h"
+#include "scag/util/Reffer.h"
 
 namespace scag
 {
@@ -38,6 +39,8 @@ using scag::stat::StatisticsManager;
 using scag::transport::smpp::router::RouteManager;
 using scag::transport::smpp::router::RouteInfo;
 using std::string;
+using scag::util::Reffer;
+using scag::util::RefferGuard;
 
 namespace StatEvents
 {
@@ -194,6 +197,19 @@ public:
     }
   }
 
+  RefferGuard<RouteManager> getTestRouterInstance()
+  {
+    MutexGuard g(routerSwitchMutex);
+    return RefferGuard<RouteManager>(testRouter_);
+  }
+
+  void ResetTestRouteManager(RouteManager* manager)
+  {
+    MutexGuard g(routerSwitchMutex);
+    if ( testRouter_ ) testRouter_->Release();
+    testRouter_ = new Reffer<RouteManager>(manager);
+  }
+
   scag::transport::smpp::SmppManagerAdmin * getSmppManagerAdmin()
   {
       scag::transport::smpp::SmppManagerAdmin * smppManAdmin = &smppMan;
@@ -240,6 +256,9 @@ protected:
   int eventQueueLimit;
 
   smsc::core::threads::ThreadPool tp,tp2;
+
+  Mutex routerSwitchMutex;
+  Reffer<RouteManager>* testRouter_;
 
   friend class StatusSme;
 

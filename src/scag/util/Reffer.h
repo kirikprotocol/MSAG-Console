@@ -1,6 +1,9 @@
 #ifndef Reffer_dot_h
 #define Reffer_dot_h
 
+namespace scag {
+namespace util {
+
 // TODO: move to uti    l
 template<class T>
 class Reffer
@@ -52,5 +55,8 @@ public:
 private:
   RefferGuard& operator = (const RefferGuard&);
 };
+
+}
+}
 
 #endif
