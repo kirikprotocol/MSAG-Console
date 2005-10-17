@@ -55,6 +55,30 @@ Dialog::~Dialog()
 {
 }
 
+void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr, UCHAR_T* ui, USHORT_T uilen)
+{
+  remoteAddr = remote_addr;
+
+  USHORT_T result = EINSS7_I97TBeginReq(
+    session->getSSN(),
+    MSG_USER_ID,
+    TCAP_INSTANCE_ID,
+    did,
+    priority,
+    qSrvc,
+    remoteAddr.addrLen,
+    remoteAddr.addr,
+    ownAddr.addrLen,
+    ownAddr.addr,
+    ac.acLen,
+    ac.ac,
+    uilen,
+    ui);
+
+  if(result != 0)
+    throw runtime_error( format("BeginReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
+}
+
 void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr)
 {
   remoteAddr = remote_addr;

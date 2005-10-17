@@ -46,6 +46,7 @@ class Dialog : public ObservableT< DialogListener >
     virtual Invoke* invoke(UCHAR_T opcode);
 
     // Transaction layer
+    virtual void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr, UCHAR_T* ui, USHORT_T uilen);
     virtual void beginDialog(const SCCP_ADDRESS_T& remote_addr);
     virtual void beginDialog();//called by client of this dialog instance
     virtual void continueDialog();
@@ -65,6 +66,7 @@ class Dialog : public ObservableT< DialogListener >
 
    public:
     USHORT_T getId()      const { return did;       }
+    void     setId(USHORT_T id) { did = id;         }
     USHORT_T getNextInvokeId()  { return invokeId++;}
     USHORT_T getQSrv()    const { return qSrvc;     }
     USHORT_T getTimeout() const { return timeout;   }

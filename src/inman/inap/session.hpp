@@ -46,6 +46,7 @@ class Session : public ObservableT< SessionListener >
 
 
         virtual     Dialog*  openDialog(USHORT_T id);
+        virtual     Dialog*  registerDialog(Dialog* pDlg);
 //        virtual     Dialog*  openDialog(USHORT_T id,const APP_CONTEXT_T& ac);
         virtual     Dialog*  openDialog(USHORT_T id,const unsigned dialog_ac_idx);
         virtual     Dialog*  findDialog(USHORT_T id);
@@ -57,6 +58,9 @@ class Session : public ObservableT< SessionListener >
 
         Session(UCHAR_T ownssn, const char* own, const char* remote);
         Session(UCHAR_T    ownssn, const char*    ownaddr,
+                UCHAR_T remotessn, const char* remoteaddr);
+        Session(UCHAR_T   userssn,
+                UCHAR_T    ownssn, const char*    ownaddr,
                 UCHAR_T remotessn, const char* remoteaddr);
         virtual       ~Session();
         USHORT_T        nextDialogId();
