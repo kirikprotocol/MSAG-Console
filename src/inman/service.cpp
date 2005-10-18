@@ -1,7 +1,12 @@
 static char const ident[] = "$Id$";
 #include <assert.h>
 
+
 #include "service.hpp"
+#include "inman/interaction/messages.hpp"
+
+using smsc::inman::interaction::InmanCommand;
+
 
 namespace smsc  {
 namespace inman {
@@ -72,7 +77,6 @@ void Service::billingFinished(Billing* bill)
 }
 
 
-//void Service::onCommandReceived(Connect* conn, InmanCommand* cmd)
 void Service::onCommandReceived(Connect* conn, SerializableObject* recvCmd)
 {
         InmanCommand* cmd = static_cast<InmanCommand*>(recvCmd);
