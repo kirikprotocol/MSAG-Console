@@ -2,7 +2,6 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 
 #include "inman/interaction/connect.hpp"
-//#include "inman/common/util.hpp"
 #include "inman/interaction/serializer.hpp"
 
 using smsc::inman::interaction::SerializerITF;
