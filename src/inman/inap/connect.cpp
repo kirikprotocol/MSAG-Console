@@ -8,6 +8,7 @@ static char const ident[] = "$Id$";
 #include "inman/interaction/serializer.hpp"
 #include "inman/interaction/messages.hpp"
 
+using smsc::inman::interaction::SerializerITF;
 using smsc::inman::interaction::SerializerInap;
 using smsc::inman::interaction::ObjectBuffer;
 using smsc::inman::interaction::SerializableObject;
@@ -22,6 +23,15 @@ namespace smsc  {
 namespace inman {
 namespace inap  {
 
+Connect::Connect(Socket* sock, SerializerITF * serializer)
+    : logger(Logger::getInstance("smsc.inman.inap.Connect"))
+    , socket( sock )
+    , pipe( new ObjectPipe( sock, serializer ) )
+{
+    assert( socket );
+}
+
+/*
 Connect::Connect(Socket* sock) 
 	: logger(Logger::getInstance("smsc.inman.inap.Connect"))
 	, socket( sock )
@@ -30,7 +40,7 @@ Connect::Connect(Socket* sock)
 		
 	assert( socket );
 }
-
+*/
 Connect::~Connect()
 {
 	delete pipe;
@@ -44,29 +54,27 @@ Socket* Connect::getSocket()
 
 bool Connect::process()
 {
-	InmanCommand* cmd = static_cast<InmanCommand*>(pipe->receive());
+//	InmanCommand* cmd = static_cast<InmanCommand*>(pipe->receive());
+    SerializableObject* cmd = pipe->receive();
 	
-	if( !cmd )
-	{
-		return false;
-	}
+    if (!cmd)
+	return false;
 
-	for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
-	{
-		ConnectListener* ptr = *it;
-		ptr->onCommandReceived( this, cmd );
-	}
+    for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
+    {
+        ConnectListener* ptr = *it;
+        ptr->onCommandReceived( this, cmd );
+    }
+    delete cmd;
 
-	delete cmd;
-
-	return true;
+    return true;
 }
 
 void Connect::send(SerializableObject* obj)
 {
-	assert( obj );
-	assert( pipe );
-	pipe->send( obj );	
+    assert( obj );
+    assert( pipe );
+    pipe->send( obj );	
 }
 
 } // namespace inap

@@ -11,6 +11,7 @@
 using smsc::inman::common::ObservableT;
 using smsc::inman::interaction::InmanCommand;
 using smsc::inman::interaction::ObjectPipe;
+using smsc::inman::interaction::SerializableObject;
 
 namespace smsc  {
 namespace inman {
@@ -20,25 +21,27 @@ class Connect;
 
 class ConnectListener
 {
-	public:
-		virtual void onCommandReceived(Connect*, InmanCommand*) = 0;
+    public:
+//        virtual void onCommandReceived(Connect*, InmanCommand*) = 0;
+        virtual void onCommandReceived(Connect*, SerializableObject*) = 0;
 };
 
 class Connect : public ObservableT< ConnectListener >
 {
     public:
-		Connect(Socket* socket);
-		virtual ~Connect();
+//        Connect(Socket* socket); //default connection with Inap serializer
+        Connect(Socket* sock, SerializerITF * serializer);
+        virtual ~Connect();
 
-		Socket* 	getSocket();
-		void 		send(SerializableObject* obj);
+        Socket* getSocket();
+        void    send(SerializableObject* obj);
 
-		bool    process();
+        bool    process();
 
     protected:
-    	Socket* 	socket;
-    	ObjectPipe* pipe;
-        Logger*		logger;
+        Socket*     socket;
+        ObjectPipe* pipe;
+        Logger*     logger;
 };
 
 }

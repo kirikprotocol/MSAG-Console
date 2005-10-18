@@ -41,10 +41,12 @@ class Service : public ServerListener, ConnectListener
 
 		Service( const char* ssf_addr, const char* scf_addr, const char* host, int port, int SSN);
 		virtual ~Service();
-
+                //ServerListener interface
 		virtual void onConnectOpened(Server*, Connect*);
 		virtual void onConnectClosed(Server*, Connect*);
-		virtual void onCommandReceived(Connect*, InmanCommand*);
+//		virtual void onCommandReceived(Connect*, InmanCommand*);
+                //ConnectListener interface
+		virtual void onCommandReceived(Connect*, SerializableObject*);
 
 		virtual void billingFinished(Billing* bill);
 

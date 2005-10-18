@@ -12,7 +12,7 @@ namespace uss {
 
 using smsc::inman::common::fillAddress;
 using smsc::inman::common::dump;
-using smsc::cvtutil::packTextAs7BitSafe;
+using smsc::cvtutil::packTextAs7BitPaddedSafe;
 
 using smsc::inman::usscomp::ProcessUSSRequestRes;
 using smsc::inman::usscomp::ProcessUSSRequestArg;
@@ -96,11 +96,14 @@ void USSDSM::makeRequest(const char * msisdn,const char* vlraddr)
   ui4.insert(ui4.begin(),0x28);
 
   //fillAddress
-  arg._dCS = 0x0F;
-  unsigned bytes = 0;
-  unsigned elen = 0;
-  bytes = packTextAs7BitSafe((const char*)req,strlen(req),(unsigned char *)ussdString,sizeof(ussdString),&elen);
-  if( bytes*8-elen*7 == 7 ) ussdString[bytes-1] |= (0x0D<<1);
+//  arg._dCS = 0x0F;
+//  unsigned bytes = 0;
+//  unsigned elen = 0;
+//  bytes = packTextAs7BitSafe((const char*)req,strlen(req),(unsigned char *)ussdString,sizeof(ussdString),&elen);
+//  if( bytes*8-elen*7 == 7 ) ussdString[bytes-1] |= (0x0D<<1);
+  arg.setDCS(0x0F);
+  unsigned bytes = packTextAs7BitPaddedSafe((const char*)req, strlen(req),
+                                            (unsigned char *)ussdString, sizeof(ussdString));
 
   arg.setUSSData(ussdString,bytes);
   ProcessUnstructuredSSRequestReq(&arg);

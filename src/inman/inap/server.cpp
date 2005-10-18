@@ -4,9 +4,11 @@ static char const ident[] = "$Id$";
 #include "server.hpp"
 #include "inman/common/util.hpp"
 #include "inman/common/errors.hpp"
+#include "inman/interaction/messages.hpp"
 
 using smsc::inman::common::format;
 using smsc::inman::common::SystemError;
+using smsc::inman::interaction::SerializerInap;
 
 namespace smsc  {
 namespace inman {
@@ -107,8 +109,9 @@ void Server::Run()
 				else
 				{
 					smsc_log_debug(logger, "Open new connect (0x%X)", clientSocket->getSocket());
-					Connect* connect = new Connect( clientSocket );
-			    	openConnect( connect );
+//					Connect* connect = new Connect( clientSocket );
+					Connect* connect = new Connect( clientSocket, SerializerInap::getInstance() );
+			    	        openConnect( connect );
 					continue;
 				}
 			}

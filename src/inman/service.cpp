@@ -71,8 +71,11 @@ void Service::billingFinished(Billing* bill)
 	smsc_log_error( logger, "Billing id=0x%X missed in list", bill->getId() );
 }
 
-void Service::onCommandReceived(Connect* conn, InmanCommand* cmd)
+
+//void Service::onCommandReceived(Connect* conn, InmanCommand* cmd)
+void Service::onCommandReceived(Connect* conn, SerializableObject* recvCmd)
 {
+        InmanCommand* cmd = static_cast<InmanCommand*>(recvCmd);
 	assert( cmd );	
 	int dlgId = cmd->getObjectId();
 	smsc_log_debug( logger, "Command for billing id=0x%X", dlgId );
