@@ -562,7 +562,8 @@ public class View extends JFrame implements EBComponent
   */
  public void processKeyEvent(KeyEvent evt, int from)
  {
-  if(Debug.DUMP_KEY_EVENTS && from != VIEW)
+   System.out.println("View.processKeyEvent start");
+   if(Debug.DUMP_KEY_EVENTS && from != VIEW)
   {
    Log.log(Log.DEBUG,this,"Key event: "
     + GrabKeyDialog.toString(evt));
@@ -1255,6 +1256,7 @@ public void setEdittag(boolean edit)
    Buffer buffer = (Buffer)buffers.elementAt(i);
       String name=buffer.getName();
       if (name.endsWith(".xml")) name=name.substring(0,name.length()-4);
+      if (name.startsWith("rule_")) name=name.substring(5);
       title.append((showFullPath && !buffer.isNewFile())
     ? buffer.getPath() : name);
    if(buffer.isDirty())

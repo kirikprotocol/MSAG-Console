@@ -426,7 +426,6 @@ public class ActionSet
   {
    Map.Entry entry = (Map.Entry)iter.next();
    String name = (String)entry.getKey();
-
    String shortcut1 = jEdit.getProperty(name + ".shortcut");
    if(shortcut1 != null)
     inputHandler.addKeyBinding(shortcut1,name);
