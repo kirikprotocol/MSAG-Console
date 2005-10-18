@@ -30,33 +30,36 @@ class Server;
 
 class ServerListener
 {
-public:
-	virtual void onConnectOpened(Server*, Connect*) = 0;
-	virtual void onConnectClosed(Server*, Connect*) = 0;
+    public:
+        virtual void onConnectOpened(Server*, Connect*) = 0;
+        virtual void onConnectClosed(Server*, Connect*) = 0;
 };
 
 class Server : public Thread, public ObservableT< ServerListener >
 {
-		typedef std::list<Connect*> Connects;
+    typedef std::list<Connect*> Connects;
 
     public:
-    	Server(const char* szHost, int nPort);
-    	virtual ~Server();
+        Server(const char* szHost, int nPort, SerializerITF * serializer);
+//        Server(const char* szHost, int nPort);
+        virtual ~Server();
 
-		void openConnect(Connect* connect);
-		void closeConnect(Connect* connect);
+        void openConnect(Connect* connect);
+        void closeConnect(Connect* connect);
 
-		int  Execute();
-		void Stop();
-		void Run();
+        int  Execute();
+        void Stop();
+        void Run();
 
-	protected:
-		Event			   	started;
-		Event			   	stopped;
-		volatile bool	   	running;
-    	Socket 				serverSocket;
-		Connects 			connects;
-        Logger*				logger;
+    protected:
+        Event           started;
+        Event           stopped;
+        volatile bool   running;
+
+        SerializerITF * ipSerializer;
+        Socket      serverSocket;
+        Connects    connects;
+        Logger*     logger;
 };
 
 }

@@ -6,6 +6,7 @@ static char const ident[] = "$Id$";
 #include "inman/interaction/messages.hpp"
 
 using smsc::inman::interaction::InmanCommand;
+using smsc::inman::interaction::SerializerInap;
 
 
 namespace smsc  {
@@ -24,7 +25,8 @@ Service::Service( const char* ssf_addr, const char* scf_addr, const char* host, 
 
 	dispatcher = new Dispatcher();
 
-	server = new Server( host, port );
+//	server = new Server( host, port );
+	server = new Server( host, port, SerializerInap::getInstance() );
 	server->addListener( this );
 
 	session = factory->openSession(SSN, ssf_addr, scf_addr );
