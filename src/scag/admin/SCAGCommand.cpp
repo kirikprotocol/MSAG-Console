@@ -810,7 +810,6 @@ Actions::CommandActions CommandApply::GetActions()
       result.restart = true;
     case CommandApply::routes:
       result.reloadroutes = true;
-      result.restart = true;
     case CommandApply::smscs:
       result.restart = true;
     case CommandApply::providers:
