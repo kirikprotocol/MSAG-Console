@@ -807,7 +807,7 @@ Actions::CommandActions CommandApply::GetActions()
   switch (subj)
   {
     case CommandApply::config:
-      result.restart = true;
+      result.reloadconfig = true;
     case CommandApply::routes:
       result.reloadroutes = true;
     case CommandApply::smscs:
