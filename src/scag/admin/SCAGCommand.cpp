@@ -809,7 +809,7 @@ Actions::CommandActions CommandApply::GetActions()
     case CommandApply::config:
       result.restart = true;
     case CommandApply::routes:
-      result.reloadconfig = true;
+      result.reloadroutes = true;
       result.restart = true;
     case CommandApply::smscs:
       result.restart = true;

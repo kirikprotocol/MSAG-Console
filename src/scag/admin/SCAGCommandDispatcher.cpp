@@ -182,11 +182,13 @@ void SCAGCommandDispatcher::shutdown()
 
 void SCAGCommandDispatcher::DoActions(Actions::CommandActions actions)
 {
-    if (actions.reloadconfig) {
-        ConfigManager & cfg = ConfigManager::Instance();
+    ConfigManager & cfg = ConfigManager::Instance();
+
+    if (actions.reloadroutes)
         cfg.reloadConfig(scag::config::ROUTE_CFG);
-        cfg.reloadConfig(scag::config::SMPPMAN_CFG);
-    }
+
+    if (actions.reloadconfig)
+        cfg.reloadAllConfigs();
 
     if (actions.restart) {
       stopGw();

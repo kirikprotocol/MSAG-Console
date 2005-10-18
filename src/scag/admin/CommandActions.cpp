@@ -16,6 +16,7 @@ CommandActions::CommandActions()
 {
   restart = false;
   reloadconfig = false;
+  reloadroutes=false;
 }
 
 }

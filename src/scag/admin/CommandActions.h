@@ -19,6 +19,7 @@ struct CommandActions
 {
   bool restart;
   bool reloadconfig;
+  bool reloadroutes;
   CommandActions();
 };
 
