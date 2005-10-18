@@ -11,7 +11,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "core/network/Socket.hpp"
 #include "inman/common/observable.hpp"
-#include "connect.hpp"
+#include "inman/interaction/connect.hpp"
 #include "synch.hpp"
 
 using smsc::logger::Logger;

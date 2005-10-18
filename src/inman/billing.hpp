@@ -7,7 +7,7 @@
 #include "comp/comps.hpp"
 #include "inap/inap.hpp"
 #include "inap/session.hpp"
-#include "inap/connect.hpp"
+#include "interaction/connect.hpp"
 #include "interaction/messages.hpp"
 
 
