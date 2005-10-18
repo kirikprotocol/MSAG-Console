@@ -65,19 +65,20 @@ function edit(idToEdit,goal)
 {
   opForm.mbEdit.value = idToEdit;
   opForm.editId.value = idToEdit;
-  if (goal=='jedit') { opForm.target="jedit";
-    opForm.action="<%=request.getContextPath() + (request.getServletPath().endsWith(".jsp")
-                                                          ? request.getServletPath().substring(0, request.getServletPath().lastIndexOf('/'))
-                                                          : request.getServletPath())%>/jedit.jsp";
-    
-    window.open('about:blank','jedit','channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');
+  if (goal=="jedit") { //opForm.target="jedit";
+
+   // window.open('about:blank','jedit','channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');
+    document.jedit.openRule(idToEdit);
   } else {
     opForm.action="<%=request.getContextPath() + (request.getServletPath().endsWith(".jsp")
-                                                         ? request.getServletPath().substring(0, request.getServletPath().lastIndexOf('/'))
-                                                         : request.getServletPath())%>/edit.jsp";
+                          ? request.getServletPath().substring(0, request.getServletPath().lastIndexOf('/'))
+                          : request.getServletPath())%>/edit.jsp";
+
+    opForm.submit();
   }
-  opForm.submit();
-  return false;
+
+
+    return false;
 }
 </script>
 <table class=list cellspacing=0>
