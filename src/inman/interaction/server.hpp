@@ -14,7 +14,7 @@
 
 using smsc::logger::Logger;
 using smsc::core::network::Socket;
-using smsc::inman::inap::Connect;
+using smsc::inman::interaction::Connect;
 using smsc::core::threads::Thread;
 using smsc::core::synchronization::Event;
 using smsc::inman::common::ObservableT;

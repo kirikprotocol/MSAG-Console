@@ -20,8 +20,8 @@
 using smsc::inman::inap::Dispatcher;
 using smsc::inman::interaction::Server;
 using smsc::inman::interaction::ServerListener;
-using smsc::inman::inap::Connect;
-using smsc::inman::inap::ConnectListener;
+using smsc::inman::interaction::Connect;
+using smsc::inman::interaction::ConnectListener;
 using smsc::inman::inap::Factory;
 using smsc::inman::inap::Session;
 using smsc::inman::inap::SessionListener;

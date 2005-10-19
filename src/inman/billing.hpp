@@ -16,7 +16,7 @@ using smsc::inman::comp::DeliveryMode_e;
 using smsc::inman::inap::Inap;
 using smsc::inman::inap::Session;
 using smsc::inman::inap::Dialog;
-using smsc::inman::inap::Connect;
+using smsc::inman::interaction::Connect;
 using smsc::inman::inap::SSF;
 using smsc::inman::interaction::InmanHandler;
 using smsc::inman::interaction::ChargeSms;

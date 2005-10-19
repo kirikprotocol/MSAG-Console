@@ -11,7 +11,7 @@ using smsc::inman::common::dump;
 
 namespace smsc  {
 namespace inman {
-namespace inap  {
+namespace interaction {
 
 Connect::Connect(Socket* sock, SerializerITF * serializer)
     : logger(Logger::getInstance("smsc.inman.inap.Connect"))
@@ -56,6 +56,7 @@ void Connect::send(SerializableObject* obj)
     pipe->send( obj );	
 }
 
-} // namespace inap
-} // namespace inmgr
+} // namespace interaction
+} // namespace inman
 } // namespace smsc
+

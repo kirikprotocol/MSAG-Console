@@ -1,7 +1,7 @@
 #ident "$Id$"
 
-#ifndef __SMSC_INMAN_INAP_CONNECT__
-#define __SMSC_INMAN_INAP_CONNECT__
+#ifndef __SMSC_INMAN_TCP_CONNECT__
+#define __SMSC_INMAN_TCP_CONNECT__
 
 #include "inman/interaction/serializer.hpp"
 #include "inman/common/observable.hpp"
@@ -13,7 +13,7 @@ using smsc::inman::interaction::SerializerITF;
 
 namespace smsc  {
 namespace inman {
-namespace inap  {
+namespace interaction {
 
 class Connect;
 
@@ -40,8 +40,9 @@ class Connect : public ObservableT< ConnectListener >
         Logger*     logger;
 };
 
-}
-}
-}
+} //interaction
+} //inman
+} //smsc
 
-#endif
+#endif /* __SMSC_INMAN_TCP_CONNECT__ */
+
