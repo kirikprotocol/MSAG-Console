@@ -8,7 +8,6 @@
 #include "inman/uss/ussdsm.hpp"
 #include "logger/Logger.h"
 #include "inman/inap/dispatcher.hpp"
-#include "inman/inap/server.hpp"
 #include "inman/inap/factory.hpp"
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
