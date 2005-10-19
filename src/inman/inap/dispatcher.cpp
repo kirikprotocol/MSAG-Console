@@ -4,11 +4,14 @@ static char const ident[] = "$Id$";
 
 #include "ss7tmc.h"
 
-#include "dispatcher.hpp"
+#include "inman/common/synch.hpp"
+#include "inman/inap/dispatcher.hpp"
 #include "inman/common/util.hpp"
 #include "inman/common/errors.hpp"
-#include "factory.hpp"
 
+#include "inman/inap/factory.hpp" //INAP sessions factory
+
+using smsc::inman::common::Synch;
 using smsc::inman::common::dump;
 using smsc::inman::common::format;
 using smsc::inman::common::getReturnCodeDescription;

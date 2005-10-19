@@ -14,7 +14,7 @@
 #include "core/synchronization/Event.hpp"
 #include "core/network/Socket.hpp"
 
-#include "synch.hpp"
+//#include "inman/common/synch.hpp"
 
 using smsc::logger::Logger;
 using smsc::core::network::Socket;
