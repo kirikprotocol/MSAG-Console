@@ -8,7 +8,7 @@ static char const ident[] = "$Id$";
 #include "logger/Logger.h"
 
 #include "callbacks.hpp"
-#include "factory.hpp"
+#include "infactory.hpp"
 #include "session.hpp"
 #include "dialog.hpp"
 #include "invoke.hpp"
@@ -18,7 +18,7 @@ static char const ident[] = "$Id$";
 using smsc::logger::Logger;
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::Session;
-using smsc::inman::inap::Factory;
+using smsc::inman::inap::InSessionFactory;
 using smsc::inman::common::getTcapBindErrorMessage;
 using smsc::inman::common::dump;
 using smsc::inman::common::dumpToLog;
@@ -38,16 +38,9 @@ using smsc::inman::inap::inapLogger;
 using smsc::inman::inap::dumpLogger;
 
 //-------------------------------- Util functions --------------------------------
-
-static Factory* getFactory()
-{
-  return Factory::getInstance();
-}
-
-
 static Dialog* findDialog(UCHAR_T ssn, USHORT_T dialogueId)
 {
-  Session* pSession = getFactory()->findSession( ssn );
+  Session* pSession = InSessionFactory::getInstance()->findSession( ssn );
   if( !pSession )
   {
     smsc_log_warn( tcapLogger, "Invalid SSN: 0x%X", ssn );
@@ -71,7 +64,7 @@ USHORT_T EINSS7_I97TBindConf(   UCHAR_T          ssn,
                  "EINSS7_I97TBindConf(ssn=%d,userId=%d,tcapInstanceId=%d,bindResult=%d(%s))",
                    ssn,userId,tcapInstanceId,bindResult,getTcapBindErrorMessage(bindResult));
 
-  Session* pSession = getFactory()->findSession( ssn );
+  Session* pSession = InSessionFactory::getInstance()->findSession( ssn );
   if( !pSession )
   {
   smsc_log_warn( tcapLogger, "Invalid SSN: 0x%X", ssn );

@@ -2,6 +2,9 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 
 #include "vlr.hpp"
+#include "inman/inap/infactory.hpp"
+
+using smsc::inman::inap::InSessionFactory;
 
 namespace smsc  {
 namespace inman {
@@ -18,7 +21,7 @@ VLR::VLR( UCHAR_T user_ssn, UCHAR_T vlr_ssn, const char* vlr_addr,UCHAR_T in_ssn
 {
   smsc_log_debug( logger, "Create VLR" );
 
-  Factory* factory = Factory::getInstance();
+  InSessionFactory* factory = InSessionFactory::getInstance();
   assert( factory );
 
   dispatcher = new Dispatcher();
@@ -34,7 +37,7 @@ VLR::VLR(UCHAR_T vlr_ssn, const char* vlr_addr)
 {
   smsc_log_debug( logger, "Create VLR" );
 
-  Factory* factory = Factory::getInstance();
+  InSessionFactory* factory = InSessionFactory::getInstance();
   assert( factory );
 
   dispatcher = new Dispatcher();
@@ -46,7 +49,7 @@ VLR::VLR(UCHAR_T vlr_ssn, const char* vlr_addr)
 VLR::~VLR()
 {
   smsc_log_debug( logger, "Release VLR" );
-  Factory* factory = Factory::getInstance();
+  InSessionFactory* factory = InSessionFactory::getInstance();
   assert( factory );
   smsc_log_debug( logger, "ReleaseSession" );
   factory->closeSession( session );

@@ -3,10 +3,12 @@ static char const ident[] = "$Id$";
 
 
 #include "service.hpp"
+#include "inman/inap/infactory.hpp"
 #include "inman/interaction/messages.hpp"
 
 using smsc::inman::interaction::InmanCommand;
 using smsc::inman::interaction::SerializerInap;
+using smsc::inman::inap::InSessionFactory;
 
 
 namespace smsc  {
@@ -20,12 +22,11 @@ Service::Service( const char* ssf_addr, const char* scf_addr, const char* host, 
 {
 	smsc_log_debug( logger, "Create service" );
 	
-	Factory* factory = Factory::getInstance();
+	InSessionFactory* factory = InSessionFactory::getInstance();
 	assert( factory );
 
 	dispatcher = new Dispatcher();
 
-//	server = new Server( host, port );
 	server = new Server( host, port, SerializerInap::getInstance() );
 	server->addListener( this );
 
@@ -36,7 +37,7 @@ Service::Service( const char* ssf_addr, const char* scf_addr, const char* host, 
 Service::~Service()
 {
 	smsc_log_debug( logger, "Release service" );
-	Factory* factory = Factory::getInstance();
+	InSessionFactory* factory = InSessionFactory::getInstance();
 	assert( factory );
 	smsc_log_debug( logger, "ReleaseSession" );
 	factory->closeSession( session );

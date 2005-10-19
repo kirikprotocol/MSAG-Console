@@ -9,8 +9,7 @@ static char const ident[] = "$Id$";
 #include "results.hpp"
 #include "dialog.hpp"
 #include "session.hpp"
-#include "factory.hpp"
-
+#include "infactory.hpp"
 #include "inman/common/util.hpp"
 #include "inman/comp/comfactory.hpp"
 
@@ -19,8 +18,8 @@ using std::auto_ptr;
 using smsc::inman::common::format;
 using smsc::inman::common::getTcapReasonDescription;
 using smsc::inman::common::dump;
-//using smsc::inman::comp::ComponentFactory;
 using smsc::inman::comp::ApplicationContextFactory;
+using smsc::inman::comp::OperationFactory;
 
 namespace smsc  {
 namespace inman {
@@ -32,7 +31,6 @@ namespace inap  {
 
 extern Logger* tcapLogger;
 
-//Dialog::Dialog(Session* pSession, USHORT_T dlgId, const APP_CONTEXT_T& ac)
 Dialog::Dialog(Session* pSession, USHORT_T dlgId, unsigned dialog_ac_idx)
   : logger(Logger::getInstance("smsc.inman.inap.Dialog"))
   , did( dlgId )
@@ -209,9 +207,10 @@ Invoke* Dialog::invoke(UCHAR_T opcode)
   invoke->setTag( EINSS7_I97TCAP_OPERATION_TAG_LOCAL );
   invoke->setOpcode( opcode );
 
-  //register invoke if OPERATION has RESULT defined, in order to provide
-  //possibility to call resultListener
-  if (ApplicationContextFactory::getFactory(_ac_idx)->hasResult(opcode))
+  //register invoke if OPERATION has RESULT/ERRORS defined,
+  //in order to provide possibility to call result/error listeners
+  OperationFactory * fact = ApplicationContextFactory::getFactory(_ac_idx);
+  if (fact->hasResult(opcode) || fact->hasErrors(opcode))
       originating.insert(InvokeMap::value_type(invoke->getId(), invoke));
   return invoke;
 }

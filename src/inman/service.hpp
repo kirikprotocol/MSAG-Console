@@ -10,7 +10,6 @@
 #include "inman/inap/dispatcher.hpp"
 #include "inman/interaction/connect.hpp"
 #include "inman/interaction/server.hpp"
-#include "inman/inap/factory.hpp"
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
 #include "inman/inap/inap.hpp"
@@ -22,7 +21,6 @@ using smsc::inman::interaction::Server;
 using smsc::inman::interaction::ServerListener;
 using smsc::inman::interaction::Connect;
 using smsc::inman::interaction::ConnectListener;
-using smsc::inman::inap::Factory;
 using smsc::inman::inap::Session;
 using smsc::inman::inap::SessionListener;
 using smsc::inman::inap::Dialog;

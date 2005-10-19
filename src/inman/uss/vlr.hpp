@@ -8,13 +8,11 @@
 #include "inman/uss/ussdsm.hpp"
 #include "logger/Logger.h"
 #include "inman/inap/dispatcher.hpp"
-#include "inman/inap/factory.hpp"
 #include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
 
 
 using smsc::inman::inap::Dispatcher;
-using smsc::inman::inap::Factory;
 using smsc::inman::inap::Session;
 using smsc::inman::inap::Dialog;
 

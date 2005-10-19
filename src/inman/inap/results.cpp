@@ -5,10 +5,10 @@ static char const ident[] = "$Id$";
 
 #include "inman/common/util.hpp"
 
-#include "factory.hpp"
 #include "session.hpp"
 #include "dialog.hpp"
 #include "results.hpp"
+#include "infactory.hpp"
 
 using std::runtime_error;
 using smsc::inman::common::format;

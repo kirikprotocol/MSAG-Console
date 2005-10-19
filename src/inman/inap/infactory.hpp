@@ -8,7 +8,7 @@
 #include "ss7cp.h"
 #include "i97tcapapi.h"
 
-#include "dispatcher.hpp"
+#include "inman/inap/dispatcher.hpp"
 #include "logger/Logger.h"
 #include "core/synchronization/Mutex.hpp"
 
@@ -25,14 +25,14 @@ static const UCHAR_T TCAP_INSTANCE_ID = 0;
 
 class Session;
 
-class Factory
+class InSessionFactory
 {
 public:
     typedef enum { IDLE, INITED, OPENED, CONNECTED } State_T;
 
 public:
-    Factory();
-    virtual   ~Factory();
+    InSessionFactory();
+    virtual   ~InSessionFactory();
 
     void       connect();
     void       disconnect();
@@ -48,7 +48,7 @@ public:
     virtual    void     closeSession(Session*);
     virtual    void     closeAllSessions();
 
-    static     Factory* getInstance();
+    static     InSessionFactory* getInstance();
 protected:
 
     typedef std::map<UCHAR_T, Session*> SessionsMap_T;

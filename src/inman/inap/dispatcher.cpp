@@ -8,8 +8,7 @@ static char const ident[] = "$Id$";
 #include "inman/inap/dispatcher.hpp"
 #include "inman/common/util.hpp"
 #include "inman/common/errors.hpp"
-
-#include "inman/inap/factory.hpp" //INAP sessions factory
+#include "infactory.hpp"
 
 using smsc::inman::common::Synch;
 using smsc::inman::common::dump;

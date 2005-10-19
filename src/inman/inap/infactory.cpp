@@ -4,7 +4,7 @@ static char const ident[] = "$Id$";
 #include <stdexcept>
 
 #include "session.hpp"
-#include "factory.hpp"
+#include "inman/inap/infactory.hpp"
 #include "inman/common/util.hpp"
 
 using std::map;
@@ -22,20 +22,20 @@ namespace inap  {
 // IN sessions factory
 /////////////////////////////////////////////////////////////////////////////////////
 
-Factory::Factory()
+InSessionFactory::InSessionFactory()
   : logger(Logger::getInstance("smsc.inman.inap.Factory"))
   , state( IDLE )
 {
   connect();
 }
 
-Factory::~Factory()
+InSessionFactory::~InSessionFactory()
 {
     closeAllSessions();
     disconnect();
 }
 
-void Factory::connect()
+void InSessionFactory::connect()
 {
     USHORT_T result;
     while( state != CONNECTED )
@@ -75,7 +75,7 @@ void Factory::connect()
    }
 }
 
-void Factory::disconnect()
+void InSessionFactory::disconnect()
 {
     USHORT_T result;
 
@@ -116,7 +116,7 @@ void Factory::disconnect()
    }
 }
 
-Session* Factory::openSession(UCHAR_T   userssn,
+Session* InSessionFactory::openSession(UCHAR_T   userssn,
                               UCHAR_T    ownssn, const char*    ownaddr,
                               UCHAR_T remotessn, const char* remoteaddr)
 {
@@ -139,7 +139,7 @@ Session* Factory::openSession(UCHAR_T   userssn,
   return pSession;
 }
 
-Session* Factory::openSession(UCHAR_T    ownssn, const char*    ownaddr,
+Session* InSessionFactory::openSession(UCHAR_T    ownssn, const char*    ownaddr,
                               UCHAR_T remotessn, const char* remoteaddr)
 {
   if( state != CONNECTED )
@@ -161,7 +161,7 @@ Session* Factory::openSession(UCHAR_T    ownssn, const char*    ownaddr,
   return pSession;
 }
 
-Session* Factory::openSession(UCHAR_T SSN, const char* szSSF, const char* szSCF)
+Session* InSessionFactory::openSession(UCHAR_T SSN, const char* szSSF, const char* szSCF)
 {
     if( state != CONNECTED )
     {
@@ -182,7 +182,7 @@ Session* Factory::openSession(UCHAR_T SSN, const char* szSSF, const char* szSCF)
     return pSession;
 }
 
-Session* Factory::findSession(UCHAR_T SSN)
+Session* InSessionFactory::findSession(UCHAR_T SSN)
 {
     SessionsMap_T::const_iterator it = sessions.find( SSN );
     if(  it == sessions.end() )
@@ -192,7 +192,7 @@ Session* Factory::findSession(UCHAR_T SSN)
     return (*it).second;
 }
 
-void Factory::closeSession(Session* pSession)
+void InSessionFactory::closeSession(Session* pSession)
 {
     assert( pSession );
 
@@ -207,7 +207,7 @@ void Factory::closeSession(Session* pSession)
     delete pSession;
 }
 
-void Factory::closeAllSessions()
+void InSessionFactory::closeAllSessions()
 {
     smsc_log_debug(logger,"Close all sessions");
 
@@ -217,9 +217,9 @@ void Factory::closeAllSessions()
     }
 }
 
-Factory* Factory::getInstance()
+InSessionFactory* InSessionFactory::getInstance()
 {
-  static Factory instance;
+  static InSessionFactory instance;
   return &instance;
 }
 
