@@ -49,7 +49,7 @@ public class SideKickPlugin extends EBPlugin
  public void start()
  {
   View view = jEdit.getFirstView();
-  while(view != null)
+   while(view != null)
   {
    initView(view);
    EditPane[] panes = view.getEditPanes();
@@ -178,7 +178,6 @@ public class SideKickPlugin extends EBPlugin
  {
   SideKick sidekick = (SideKick)sidekicks.get(view);
   sidekick.setParser();
-    System.out.println("sidekick.SideKick parse line 181");
   sidekick.parse(showParsingMessage);
  } //}}}
 
@@ -188,15 +187,15 @@ public class SideKickPlugin extends EBPlugin
   * @param view The view
   * @since SideKick 0.3
   */
- /* public static DefaultErrorSource getErrorSource(View view)
+  public static DefaultErrorSource getErrorSource(View view)
  {
   return ((SideKick)sidekicks.get(view)).getErrorSource();
- } */ //}}}
+ }  //}}}
 
  //{{{ addWorkRequest() method
  public static void addWorkRequest(Runnable run, boolean inAWT)
  {
-  if(worker == null)
+   if(worker == null)
   {
    worker = new WorkThreadPool("SideKick",1);
    worker.start();
@@ -225,7 +224,15 @@ public class SideKickPlugin extends EBPlugin
  } //}}}
 
  //}}}
-
+ public void clear() {
+   sidekicks = new HashMap();
+   parsers = new HashMap();
+   if (worker!=null) worker.stop();
+   worker=null;
+   parsedBufferSet = new HashSet();
+   SideKickActions.clear();
+ }
+ 
  //{{{ Private members
  private static HashMap sidekicks = new HashMap();
  private static HashMap parsers = new HashMap();

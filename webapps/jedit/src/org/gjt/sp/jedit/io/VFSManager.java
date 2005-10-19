@@ -69,7 +69,16 @@ public class VFSManager
   */
  public static void init()
  {
-  int count = jEdit.getIntegerProperty("ioThreadCount",4);
+ /* errorLock = new Object();
+  errors = new Vector();
+  fileVFS = new FileVFS();
+  urlVFS = new UrlVFS();
+  vfsHash = new Hashtable();
+  protocolHash = new Hashtable();
+  vfsUpdateLock = new Object();
+  vfsUpdates = new ArrayList(10);
+ */ 
+   int count = jEdit.getIntegerProperty("ioThreadCount",4);
   ioThreadPool = new WorkThreadPool("jEdit I/O",count);
  /* JARClassLoader classLoader = new JARClassLoader();
   for(int i = 0; i < ioThreadPool.getThreadCount(); i++)
@@ -86,6 +95,24 @@ public class VFSManager
  public static void start()
  {
   ioThreadPool.start();
+ } //}}}
+
+   //{{{ stop() method
+ /**
+  * Do not call.
+  */
+ public static void clear()
+ {
+  ioThreadPool.stop();
+  ioThreadPool=null;
+  errorLock = new Object();
+  errors = new Vector();
+  fileVFS = new FileVFS();
+  urlVFS = new UrlVFS();
+  vfsHash = new Hashtable();
+  protocolHash = new Hashtable();
+  vfsUpdateLock = new Object();
+  vfsUpdates = new ArrayList(10);
  } //}}}
 
  //{{{ VFS methods

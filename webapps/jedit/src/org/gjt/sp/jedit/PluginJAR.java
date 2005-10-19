@@ -218,42 +218,28 @@ return zipFile;
     if(plugin == null)
       return true;
 
-    int i = 0;
-
-    boolean ok = true;
-    boolean optional = false;
-
-    String name = plugin.getClassName();
-
-    String dep;
+    int i = 0;boolean ok = true; boolean optional = false;
+    String name = plugin.getClassName();String dep;
     while((dep = jEdit.getProperty("plugin." + name + ".depend." + i++)) != null)
     {
       if(dep.startsWith("optional "))
       {
-        optional = true;
-        dep = dep.substring("optional ".length());
+        optional = true; dep = dep.substring("optional ".length());
       }
-
       int index = dep.indexOf(' ');
       if(index == -1)
       {
-        Log.log(Log.ERROR,this,name + " has an invalid"
-                + " dependency: " + dep);
+        Log.log(Log.ERROR,this,name + " has an invalid" + " dependency: " + dep);
         ok = false;
         continue;
       }
-
       String what = dep.substring(0,index);
       String arg = dep.substring(index + 1);
-
       if(what.equals("jdk"))
       {
-        if(!optional && MiscUtilities.compareStrings(
-                System.getProperty("java.version"),
-                arg,false) < 0)
+        if(!optional && MiscUtilities.compareStrings(System.getProperty("java.version"),arg,false) < 0)
         {
-          String[] args = { arg,
-                            System.getProperty("java.version") };
+          String[] args = { arg,System.getProperty("java.version") };
           jEdit.pluginError(clas.getName(),"plugin-error.dep-jdk",args);
           ok = false;
         }
@@ -262,19 +248,15 @@ return zipFile;
       {
         if(arg.length() != 11)
         {
-          Log.log(Log.ERROR,this,"Invalid jEdit version"
-                  + " number: " + arg);
+          Log.log(Log.ERROR,this,"Invalid jEdit version"+ " number: " + arg);
           ok = false;
         }
 
-        if(!optional && MiscUtilities.compareStrings(
-                jEdit.getBuild(),arg,false) < 0)
+        if(!optional && MiscUtilities.compareStrings(jEdit.getBuild(),arg,false) < 0)
         {
           String needs = MiscUtilities.buildToVersion(arg);
-          String[] args = { needs,
-                            jEdit.getVersion() };
-          jEdit.pluginError(clas.getName(),
-                  "plugin-error.dep-jedit",args);
+          String[] args = { needs,jEdit.getVersion() };
+          jEdit.pluginError(clas.getName(),"plugin-error.dep-jedit",args);
           ok = false;
         }
       }
@@ -283,40 +265,31 @@ return zipFile;
         int index2 = arg.indexOf(' ');
         if(index2 == -1)
         {
-          Log.log(Log.ERROR,this,name
-                  + " has an invalid dependency: "
-                  + dep + " (version is missing)");
+          Log.log(Log.ERROR,this,name + " has an invalid dependency: " + dep + " (version is missing)");
           ok = false;
           continue;
         }
 
         String pluginName = arg.substring(0,index2);
         String needVersion = arg.substring(index2 + 1);
-        String currVersion = jEdit.getProperty("plugin."
-                + pluginName + ".version");
+        String currVersion = jEdit.getProperty("plugin." + pluginName + ".version");
 
         EditPlugin plugin = jEdit.getPlugin(pluginName);
         if(plugin == null)
         {
           if(!optional)
           {
-            String[] args = { needVersion,
-                              pluginName };
-            jEdit.pluginError(clas.getName(),
-                    "plugin-error.dep-plugin.no-version",
-                    args);
+            String[] args = { needVersion,pluginName };
+            jEdit.pluginError(clas.getName(),"plugin-error.dep-plugin.no-version",args);
             ok = false;
           }
         }
-        else if(MiscUtilities.compareStrings(
-                currVersion,needVersion,false) < 0)
+        else if(MiscUtilities.compareStrings(currVersion,needVersion,false) < 0)
         {
           if(!optional)
           {
-            String[] args = { needVersion,
-                              pluginName, currVersion };
-            jEdit.pluginError(clas.getName(),
-                    "plugin-error.dep-plugin",args);
+            String[] args = { needVersion,pluginName, currVersion };
+            jEdit.pluginError(clas.getName(),"plugin-error.dep-plugin",args);
             ok = false;
           }
         }
@@ -325,8 +298,7 @@ return zipFile;
           if(!optional)
           {
             String[] args = { pluginName };
-            jEdit.pluginError(clas.getName(),
-                    "plugin-error.dep-plugin.broken",args);
+            jEdit.pluginError(clas.getName(),"plugin-error.dep-plugin.broken",args);
             ok = false;
           }
         }
@@ -348,24 +320,21 @@ return zipFile;
           catch(Exception e)
           {
             String[] args = { arg };
-            jEdit.pluginError(clas.getName(),
-                    "plugin-error.dep-class",args);
+            jEdit.pluginError(clas.getName(),"plugin-error.dep-class",args);
             ok = false;
           }
         }
       }
       else
       {
-        Log.log(Log.ERROR,this,name + " has unknown"
-                + " dependency: " + dep);
+        Log.log(Log.ERROR,this,name + " has unknown"+ " dependency: " + dep);
         ok = false;
       }
     }
 
     // each JAR file listed in the plugin's jars property
     // needs to know that we need them
-    String jars = jEdit.getProperty("plugin."
-            + plugin.getClassName() + ".jars");
+    String jars = jEdit.getProperty("plugin." + plugin.getClassName() + ".jars");
     if(jars != null)
     {
       String dir = MiscUtilities.getParentOfPath(clas.getName());
@@ -373,14 +342,12 @@ return zipFile;
       StringTokenizer st = new StringTokenizer(jars);
       while(st.hasMoreTokens())
       {
-        String jarPath = MiscUtilities.constructPath(
-                dir,st.nextToken());
+        String jarPath = MiscUtilities.constructPath(dir,st.nextToken());
         PluginJAR jar = jEdit.getPluginJAR(jarPath);
         if(jar == null)
         {
           String[] args = { jarPath };
-          jEdit.pluginError(clas.getName(),
-                  "plugin-error.missing-jar",args);
+          jEdit.pluginError(clas.getName(),"plugin-error.missing-jar",args);
           ok = false;
         }
         else
@@ -736,7 +703,6 @@ new File(jarCachePath).delete();
   } //}}}
 
   //}}}
-
   //{{{ PluginJAR constructor
   PluginJAR(Class clas)
   {
@@ -757,9 +723,8 @@ jarCacheDir,file.getName() + ".summary");
   void init(Class clas)
   {
     boolean initialized = false;
-
-    PluginCacheEntry cache = getPluginCache(this);
-    if(cache != null)
+    PluginCacheEntry cache; //getPluginCache(this);
+ /*   if(cache != null)
     {
       loadCache(cache);
       classLoader.activate();
@@ -767,7 +732,7 @@ jarCacheDir,file.getName() + ".summary");
     }
     else
     {
-      try
+  */  try
       {
         cache = generateCache( clas);
         if(cache != null)
@@ -788,7 +753,7 @@ jarCacheDir,file.getName() + ".summary");
 
         uninit(false);
       }
-    }
+  //  }
   } //}}}
 
   //{{{ uninit() method
@@ -1036,14 +1001,11 @@ jarCacheDir,file.getName() + ".summary");
     {
       String className = (String)iter.next();
 
-      String _label = jEdit.getProperty("plugin."
-              + className + ".name");
-      String version = jEdit.getProperty("plugin."
-              + className + ".version");
+      String _label = jEdit.getProperty("plugin." + className + ".name");
+      String version = jEdit.getProperty("plugin."+ className + ".version");
       if(_label == null || version == null)
       {
-        Log.log(Log.WARNING,this,"Ignoring: "
-                + className);
+        Log.log(Log.WARNING,this,"Ignoring: " + className);
       }
       else
       {
@@ -1053,15 +1015,12 @@ jarCacheDir,file.getName() + ".summary");
         // is already loaded
         if(jEdit.getPlugin(className) != null)
         {
-          jEdit.pluginError(clas.getName(),
-                  "plugin-error.already-loaded",
-                  null);
+          jEdit.pluginError(clas.getName(),"plugin-error.already-loaded",null);
           return null;
         }
         else
         {
-          plugin = new EditPlugin.Deferred(this,
-                  className);
+          plugin = new EditPlugin.Deferred(this,className);
           label = _label;
         }
 
@@ -1070,57 +1029,39 @@ jarCacheDir,file.getName() + ".summary");
     }
     if(cache.actionsURI != null)
     {
-      actions = new ActionSet(this,null,null,
-              cache.actionsURI);
+      actions = new ActionSet(this,null,null,cache.actionsURI);
       actions.load();
-      cache.cachedActionNames =
-              actions.getCacheableActionNames();
-      cache.cachedActionToggleFlags = new boolean[
-              cache.cachedActionNames.length];
+      cache.cachedActionNames =actions.getCacheableActionNames();
+      cache.cachedActionToggleFlags = new boolean[cache.cachedActionNames.length];
       for(int i = 0; i < cache.cachedActionNames.length; i++)
       {
         cache.cachedActionToggleFlags[i]
-                = jEdit.getBooleanProperty(
-                        cache.cachedActionNames[i]
-                + ".toggle");
+         = jEdit.getBooleanProperty(cache.cachedActionNames[i] + ".toggle");
       }
     }
-
     if(cache.browserActionsURI != null)
     {
-      browserActions = new ActionSet(this,null,null,
-              cache.browserActionsURI);
+      browserActions = new ActionSet(this,null,null,cache.browserActionsURI);
       browserActions.load();
       VFSBrowser.getActionContext().addActionSet(browserActions);
       cache.cachedBrowserActionNames =
               browserActions.getCacheableActionNames();
-      cache.cachedBrowserActionToggleFlags = new boolean[
-              cache.cachedBrowserActionNames.length];
-      for(int i = 0;
-          i < cache.cachedBrowserActionNames.length;
-          i++)
+      cache.cachedBrowserActionToggleFlags = new boolean[cache.cachedBrowserActionNames.length];
+      for(int i = 0; i < cache.cachedBrowserActionNames.length;i++)
       {
         cache.cachedBrowserActionToggleFlags[i]
-                = jEdit.getBooleanProperty(
-                        cache.cachedBrowserActionNames[i]
-                + ".toggle");
+         = jEdit.getBooleanProperty(cache.cachedBrowserActionNames[i]+ ".toggle");
       }
     }
-
     if(dockablesURI != null)
     {
-      DockableWindowFactory.getInstance()
-              .loadDockableWindows(this,
-                      dockablesURI,cache);
+      DockableWindowFactory.getInstance().loadDockableWindows(this,dockablesURI,cache);
     }
-
     if(actions.size() != 0)
     {
       if(label != null)
       {
-        actions.setLabel(jEdit.getProperty(
-                "action-set.plugin",
-                new String[] { label }));
+        actions.setLabel(jEdit.getProperty("action-set.plugin",new String[] { label }));
       }
       else
         actionsPresentButNotCoreClass();
@@ -1147,8 +1088,7 @@ jarCacheDir,file.getName() + ".summary");
     {
       breakPlugin();
 
-      Log.log(Log.ERROR,PluginJAR.this,
-              "Error while starting plugin " + plugin.getClassName());
+      Log.log(Log.ERROR,PluginJAR.this, "Error while starting plugin " + plugin.getClassName());
       Log.log(Log.ERROR,PluginJAR.this,t);
       String[] args = { t.toString() };
       jEdit.pluginError(clas.getName(),"plugin-error.start-error",args);
@@ -1156,15 +1096,12 @@ jarCacheDir,file.getName() + ".summary");
 
     if(plugin instanceof EBPlugin)
     {
-      if(jEdit.getProperty("plugin."
-              + plugin.getClassName() + ".activate")
-              == null)
+      if(jEdit.getProperty("plugin." + plugin.getClassName() + ".activate") == null)
       {
         // old plugins expected jEdit 4.1-style
         // behavior, where a PropertiesChanged
         // was sent after plugins were started
-        ((EBComponent)plugin).handleMessage(
-                new org.gjt.sp.jedit.msg.PropertiesChanged(null));
+        ((EBComponent)plugin).handleMessage(new org.gjt.sp.jedit.msg.PropertiesChanged(null));
       }
       EditBus.addToBus((EBPlugin)plugin);
     }
@@ -1176,8 +1113,7 @@ jarCacheDir,file.getName() + ".summary");
     while(buffer != null)
     {
       FoldHandler handler =
-              FoldHandler.getFoldHandler(
-                      buffer.getStringProperty("folding"));
+              FoldHandler.getFoldHandler(buffer.getStringProperty("folding"));
       // == null before loaded
       if(buffer.getFoldHandler() != null
               && handler != null
@@ -1203,7 +1139,9 @@ jarCacheDir,file.getName() + ".summary");
       }
     });
   } //}}}
-
+ public void clear() {
+  plugin.clear();
+}
   //{{{ breakPlugin() method
   private void breakPlugin()
   {

@@ -39,15 +39,7 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 import javax.swing.text.Segment;
-import org.gjt.sp.jedit.Abbrevs;
-import org.gjt.sp.jedit.Buffer;
-import org.gjt.sp.jedit.Debug;
-import org.gjt.sp.jedit.GUIUtilities;
-import org.gjt.sp.jedit.Macros;
-import org.gjt.sp.jedit.Marker;
-import org.gjt.sp.jedit.MiscUtilities;
-import org.gjt.sp.jedit.TextUtilities;
-import org.gjt.sp.jedit.View;
+import org.gjt.sp.jedit.*;
 import org.gjt.sp.jedit.buffer.*;
 import org.gjt.sp.jedit.gui.InputHandler;
 import org.gjt.sp.jedit.syntax.*;
@@ -87,6 +79,21 @@ public class JEditTextArea extends JComponent
   listenerList = new EventListenerList();
   caretEvent = new MutableCaretEvent();
   blink = true;
+  if(jEdit.isDestroyed()) {
+  caretTimer = new Timer(500,new CaretBlinker());
+  caretTimer.setInitialDelay(500);
+  caretTimer.start();
+  structureTimer = new Timer(100,new ActionListener()
+       {
+         public void actionPerformed(ActionEvent evt)
+         {
+           if(focusedComponent != null)
+             focusedComponent.updateStructureHighlight();
+         }
+       });
+  structureTimer.setInitialDelay(100);
+  structureTimer.setRepeats(false);
+  }
   lineSegment = new Segment();
   returnValue = new Point();
   structureMatchers = new LinkedList();
@@ -156,7 +163,6 @@ public class JEditTextArea extends JComponent
 
   popupEnabled = true;
  } //}}}
-
  //{{{ dispose() method
  /**
   * Plugins and macros should not call this method.

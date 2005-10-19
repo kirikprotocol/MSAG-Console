@@ -137,13 +137,13 @@ public class XmlAttributeCompletion  extends SideKickCompletion
     List names=view.getNames();
     names.remove(selected);
     String insert = selected.substring(text.length());
-    if (names.size()>0) insert=insert+" =\"\"";
-      else insert=insert+" =\"\">";
-     textArea.setSelectedText(insert);
+    insert=insert+" =\"\"";
+    textArea.setSelectedText(insert);
     int caret=textArea.getCaretPosition();
     if (names.size()==0) {
-      caret=caret-1; view.setEdittag(false);
-      view.setEditTag(null);
+      String closeTag="></"+view.getEditTag().getElementName()+">";
+      textArea.setSelectedText(closeTag);
+      view.setEdittag(false);view.setEditTag(null);
       view.setKeyEventInterceptor(null);
     }
     textArea.setCaretPosition(caret-1);

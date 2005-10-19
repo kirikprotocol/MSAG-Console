@@ -51,13 +51,13 @@ public class SideKickActions
   if(!completeDelay)
    return;
 
+  System.out.println("sidekick.SideKickActions keyCompleteWithDelay before complete line 53 timer= "+timer+" view= "+view+" buffer= "+view.getBuffer());
   if(timer != null)
    timer.stop();
-
   final JEditTextArea textArea = view.getTextArea();
 
   caretWhenCompleteKeyPressed = textArea.getCaretPosition();
-
+  System.out.println("sidekick.SideKickActions keyCompleteWithDelay before complete line 60 timer= "+timer);
   if(timer == null)
   {
    timer = new Timer(0,new ActionListener()
@@ -327,7 +327,10 @@ public class SideKickActions
 
   textArea.setCaretPosition(((Asset)node.getUserObject()).end.getOffset());
  } //}}}
-
+ public static void clear () {
+  timer=null;
+  popup=null;
+ }
  //{{{ propertiesChanged() method
  public static void propertiesChanged()
  {

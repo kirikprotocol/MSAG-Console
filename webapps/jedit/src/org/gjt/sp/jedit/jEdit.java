@@ -176,11 +176,11 @@ public class jEdit extends Applet
   public void openRule(final String userFile)
    {
      System.out.println("openRule... "+userFile);
-     isNotReload=true;
+ //    isNotReload=true;
      super.start();
   // if (isStopping) {
 
-     setFont(new Font("dialog", Font.BOLD, 12));
+ /*    setFont(new Font("dialog", Font.BOLD, 12));
      setLayout(new GridBagLayout());
      setBackground(SystemColor.control);
      GridBagConstraints gbc = new GridBagConstraints();
@@ -219,7 +219,7 @@ public class jEdit extends Applet
 //    System.out.println("baseUrl= "+protocol+"://"+host+":"+port+path);
      System.out.println("servletUrl= " + servletUrl.toString());
 //    System.out.println("servletUrl2= "+buf.toString());
- //  String[] args = new String[5];
+ */  String[] args = new String[5];
      args[0]=userFile;
      this.main2(args);
      isNotReload=true;
@@ -252,7 +252,6 @@ public class jEdit extends Applet
     System.out.println("exit zakomentirovan!!!...");
    //  jEdit.exit(activeView,true);
   }
-
   //{{{ main() method
   /**
    * The main method of the jEdit application.
@@ -668,7 +667,7 @@ public class jEdit extends Applet
     System.out.println("userDir+transport= "+userDir);
     userFile="rule_"+userFile+".xml";
     // Open files, create the view and hide the splash screen.
-    finishStartup2(gui, restore,userDir, args,userFile);
+    finishStartupNext(gui, restore,userDir, args,userFile);
 
   } //}}}
   public void mainNext(String[] args)
@@ -2623,17 +2622,16 @@ public class jEdit extends Applet
     reallyExit |= !background;
 
     PerspectiveManager.savePerspective(false);
-    System.out.println("exit before try..");
+
     try {
       PerspectiveManager.setPerspectiveEnabled(false);
       // Close all buffers
       if (!closeAllBuffers(view, reallyExit))
         return;
-      System.out.println("exit after  if (!closeAllBuffers(view, reallyExit))");
     } finally {
       PerspectiveManager.setPerspectiveEnabled(true);
     }
-    System.out.println("far...");
+
     // If we are running in background mode and
     // reallyExit was not specified, then return here.
     if (!reallyExit) { // in this case, we can't directly call   view.close(); we have to call closeView()
@@ -3610,6 +3608,7 @@ public class jEdit extends Applet
         return;
 
       systemProperties.put("http.proxyHost", host); //System.setProperty("http.proxyHost", host);
+      // Log.log(Log.DEBUG, jEdit.class, "HTTP proxy enabled: " + host);
       // set proxy port
       String port = jEdit.getProperty("firewall.port");
       if (port != null)
@@ -3720,8 +3719,8 @@ public class jEdit extends Applet
     });
   } //}}}
   //{{{ finishStartup() method
-  private static void finishStartup2(final boolean gui, final boolean restore,
-                                     final String userDir,final String[] args,final String userFile)
+  private static void finishStartupNext(final boolean gui, final boolean restore,
+                                        final String userDir,final String[] args,final String userFile)
   {
     SwingUtilities.invokeLater(new Runnable()
     {
@@ -3753,7 +3752,7 @@ public class jEdit extends Applet
         // Start I/O threads
         EditBus.send(new EditorStarted(null));
         System.out.println("finishStartup before VFSManager.start.. isNotReload="+isNotReload);
-        System.out.println("voobshe sovsem eshe izmenil......");
+        System.out.println("voobshe sovsem eshe izmenil......startupDone= "+startupDone);
         if (!startupDone) VFSManager.start();
 
         // Start edit server

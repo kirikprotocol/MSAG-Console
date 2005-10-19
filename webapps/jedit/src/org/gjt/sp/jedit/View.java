@@ -41,6 +41,7 @@ import org.gjt.sp.jedit.search.*;
 import org.gjt.sp.jedit.textarea.*;
 import org.gjt.sp.util.Log;
 import xml.EditTag;
+import sidekick.SideKickActions;
 //}}}
 
 /**
@@ -562,7 +563,6 @@ public class View extends JFrame implements EBComponent
   */
  public void processKeyEvent(KeyEvent evt, int from)
  {
-   System.out.println("View.processKeyEvent start");
    if(Debug.DUMP_KEY_EVENTS && from != VIEW)
   {
    Log.log(Log.DEBUG,this,"Key event: "
@@ -1828,13 +1828,13 @@ loop:  for(;;)
   public void scrolledHorizontally(JEditTextArea textArea) {}
  } //}}}
 
- //{{{ WindowHandler class
+  //{{{ WindowHandler class
  class WindowHandler extends WindowAdapter
  {
   public void windowActivated(WindowEvent evt)
   {
-   jEdit.setActiveView(View.this);
-
+    if (jEdit.getActiveView()!=jEdit.getFirstView()) SideKickActions.clear();
+    jEdit.setActiveView(View.this);
    // People have reported hangs with JDK 1.4; might be
    // caused by modal dialogs being displayed from
    // windowActivated()

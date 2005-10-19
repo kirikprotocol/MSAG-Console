@@ -53,7 +53,9 @@ public class DockableWindowFactory
    instance = new DockableWindowFactory();
   return instance;
  } //}}}
-
+  public void clear() {
+   instance=null;
+ }
  //{{{ DockableWindowFactory constructor
  public DockableWindowFactory()
  {
@@ -277,11 +279,9 @@ public class DockableWindowFactory
    {
     if(tag == "DOCKABLE")
     {
-     registerDockableWindow(plugin,
-      dockableName,code,actions);
+     registerDockableWindow(plugin,dockableName,code,actions);
      cachedDockableNames.add(dockableName);
-     cachedDockableActionFlags.add(
-      new Boolean(actions));
+     cachedDockableActionFlags.add(new Boolean(actions));
      // make default be true for the next
      // action
      actions = true;

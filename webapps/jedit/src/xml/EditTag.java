@@ -98,7 +98,12 @@ public class EditTag
  private ArrayList names;
   //}}}
 
- //{{{ createAttributeModel() method
+  public String getElementName()
+  {
+    return elementName;
+  }
+
+  //{{{ createAttributeModel() method
  private ArrayList createAttributeModel(List declaredAttributes,
   Map attributeValues, List ids)
  {

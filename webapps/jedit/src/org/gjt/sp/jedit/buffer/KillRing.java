@@ -366,7 +366,9 @@ public class KillRing implements MutableListModel
  } //}}}
 
  //}}}
-
+ public void clear() {
+  killRing=null; 
+ }
  //{{{ Private members
  private long killRingModTime;
  private static KillRing killRing;

@@ -605,7 +605,13 @@ public class BeanShell
  //{{{ init() method
  static void init()
  {
-  try
+  /* if (classManager!=null) classManager.reset();
+   classManager=null;
+   interpForMethods=null;
+   if (global!=null) global.clear();
+   global=null;
+   running=false;   */
+   try
   {
    NameSpace.class.getMethod("addCommandPath",
     new Class[] { String.class, Class.class });

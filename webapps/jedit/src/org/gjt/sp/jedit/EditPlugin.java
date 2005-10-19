@@ -169,7 +169,7 @@ import org.gjt.sp.jedit.menu.EnhancedMenu;
  * @see org.gjt.sp.jedit.jEdit#getPlugins()
  * @see org.gjt.sp.jedit.jEdit#getPluginJAR(String)
  * @see org.gjt.sp.jedit.jEdit#getPluginJARs()
- * @see org.gjt.sp.jedit.jEdit#addPluginJAR(String)
+ * @see org.gjt.sp.jedit.jEdit#addPluginJAR(Class)
  * @see org.gjt.sp.jedit.jEdit#removePluginJAR(PluginJAR,boolean)
  * @see org.gjt.sp.jedit.ActionSet
  * @see org.gjt.sp.jedit.gui.DockableWindowManager
@@ -254,6 +254,8 @@ public abstract class EditPlugin
   */
  public void stop() {} //}}}
 
+//{{{ clear() method  for clearing static variables
+ public void clear() {} //}}}
  //{{{ getClassName() method
  /**
   * Returns the plugin's class name. This might not be the same as

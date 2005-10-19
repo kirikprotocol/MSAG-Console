@@ -54,8 +54,7 @@ public class XmlPlugin extends EBPlugin
    for(int i = 0; i < panes.length; i++)
    {
     panes[i].getTextArea().getPainter()
-     .addMouseListener(
-     tagMouseHandler);
+     .addMouseListener(tagMouseHandler);
    }
    view = view.getNext();
   }
@@ -93,8 +92,7 @@ public class XmlPlugin extends EBPlugin
 
    if(epu.getWhat() == EditPaneUpdate.CREATED)
    {
-    editPane.getTextArea().getPainter().addMouseListener(
-     tagMouseHandler);
+    editPane.getTextArea().getPainter().addMouseListener(tagMouseHandler);
    }
    else if(epu.getWhat() == EditPaneUpdate.DESTROYED)
    {
@@ -118,8 +116,7 @@ public class XmlPlugin extends EBPlugin
  public static boolean isDelegated(JEditTextArea textArea)
  {
   Buffer buffer = textArea.getBuffer();
-  ParserRuleSet rules = buffer.getRuleSetAtOffset(
-   textArea.getCaretPosition());
+  ParserRuleSet rules = buffer.getRuleSetAtOffset(textArea.getCaretPosition());
 
   String rulesetName = rules.getSetName();
   String modeName = rules.getModeName();

@@ -83,6 +83,33 @@ public class WorkThreadPool
    }
   }
  } //}}}
+//{{{ start() method
+  /**
+   * Starts all the threads in this thread pool.
+   */
+  public void stop()
+  {
+   /* not really needed since threads don't start until after */
+ /*todo  synchronized(lock)
+   {
+    started = false;
+
+    if(awtRequestCount != 0 && requestCount == 0)
+     queueAWTRunner();
+   }
+  */
+   if(threads != null)
+   {
+    for(int i = 0; i < threads.length; i++)
+    {
+      try {
+        threads[i].stop();
+      } catch (SecurityException e) {
+        e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
+      }
+    }
+   }
+  } //}}}
 
  //{{{ addWorkRequest() method
  /**
@@ -107,7 +134,7 @@ public class WorkThreadPool
 //    Log.log(Log.DEBUG,this,"AWT immediate: " + run);
 
     if(SwingUtilities.isEventDispatchThread())
-     run.run();
+      run.run();
     else
      SwingUtilities.invokeLater(run);
 
@@ -133,7 +160,7 @@ public class WorkThreadPool
     // will not be called, so we must queue the
     // AWT runner ourselves.
     if(started && requestCount == 0)
-     queueAWTRunner();
+      queueAWTRunner();
    } //}}}
    //{{{ Add to work thread queue...
    else
@@ -148,7 +175,6 @@ public class WorkThreadPool
 
     requestCount++;
    } //}}}
-
    lock.notifyAll();
   }
  } //}}}

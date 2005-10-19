@@ -69,7 +69,7 @@ class SideKick implements EBComponent
   */
  void parse(final boolean showParsingMessage)
  {
-  if(keystrokeTimer.isRunning())
+   if(keystrokeTimer.isRunning())
    keystrokeTimer.stop();
 
   if(!buffer.isLoaded())
@@ -180,10 +180,8 @@ class SideKick implements EBComponent
  //{{{ autoParse() method
  private void autoParse()
  {
-  if(buffer.getBooleanProperty(
-   "sidekick.buffer-change-parse")
-   || buffer.getBooleanProperty(
-   "sidekick.keystroke-parse"))
+  if(buffer.getBooleanProperty("sidekick.buffer-change-parse")
+   || buffer.getBooleanProperty("sidekick.keystroke-parse"))
   { parse(true);
   }
   else
@@ -211,7 +209,12 @@ class SideKick implements EBComponent
   }
  } //}}}
 
- //{{{ addBufferChangeListener() method
+  public DefaultErrorSource getErrorSource()
+  {
+    return errorSource;
+  }
+
+  //{{{ addBufferChangeListener() method
  private void addBufferChangeListener(Buffer buffer)
  {
   if(!addedBufferChangeHandler)
@@ -475,7 +478,7 @@ class SideKick implements EBComponent
      + " but got event for " + buffer);
     return;
    }
-
+    System.out.println("parse OnKeyStroke not implemented yet!"); 
    if(buffer.isLoaded() && buffer.getBooleanProperty("sidekick.keystroke-parse"))
     parseWithDelay();
   } //}}}
