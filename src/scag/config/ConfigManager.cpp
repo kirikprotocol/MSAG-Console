@@ -18,6 +18,8 @@
 #include <scag/util/singleton/Singleton.h>
 
 #include "scag/config/ConfigView.h"
+#include "ConfigListener.h"
+#include <typeinfo.h>
 
 namespace scag   {
 namespace config {
@@ -224,7 +226,7 @@ void ConfigManagerImpl::reloadConfig(ConfigType type)
         getRouteConfig_().reload();
         break;
     case SMPPMAN_CFG:
-        getSmppManConfig_().reload();
+        //getSmppManConfig_().reload();
         break;
     default:
         {
@@ -247,7 +249,7 @@ void ConfigManagerImpl::reloadAllConfigs()
     MutexGuard mg(listenerLock);
 
     getRouteConfig_().reload();
-    getSmppManConfig_().reload();
+    //getSmppManConfig_().reload();
 
     if(listeners.Exist(ROUTE_CFG)){
         ConfigListener * listener = listeners.Get(ROUTE_CFG);
@@ -457,6 +459,36 @@ void ConfigManagerImpl::reload(Array<int>& changedConfigs)
     } catch (ParseException &e) {
     throw ConfigException(e.what());
   }
+}
+
+ConfigListener::ConfigListener(ConfigType type_) : type(type_)
+{
+    ConfigManager& cfg = ConfigManager::Instance();
+    try {
+        ConfigManagerImpl& cfg_ = dynamic_cast<ConfigManagerImpl&>(cfg);
+        cfg_.registerListener(type, this);
+    }catch(std::bad_cast& e)
+    {
+        throw Exception("ConfigListener exception, ConfigManagerImpl undefined.");
+    }catch(...)
+    {
+        throw Exception("ConfigListener exception, Unknown error.");
+    }
+}
+
+ConfigListener::~ConfigListener()
+{
+    ConfigManager& cfg = ConfigManager::Instance();
+    try {
+        ConfigManagerImpl& cfg_ = dynamic_cast<ConfigManagerImpl&>(cfg);
+        cfg_.removeListener(type);
+    }catch(std::bad_cast& e)
+    {
+        throw Exception("ConfigListener exception, ConfigManagerImpl undefined.");
+    }catch(...)
+    {
+        throw Exception("ConfigListener exception, Unknown error.");
+    }
 }
 
 }

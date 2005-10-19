@@ -10,9 +10,9 @@ class ConfigListener {
 private:
 	ConfigType type;
 protected:
-	ConfigListener(ConfigType type_) : type(type_) {};
+	ConfigListener(ConfigType type_);
 public:
-	virtual ~ConfigListener(){};
+	virtual ~ConfigListener();
 	virtual void configChanged() = 0;
 };
 
