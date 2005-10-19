@@ -1,7 +1,7 @@
 #ident "$Id$"
 
-#ifndef __SMSC_INMAN_INAP_SERVER__
-#define __SMSC_INMAN_INAP_SERVER__
+#ifndef __SMSC_INMAN_TCP_SERVER__
+#define __SMSC_INMAN_TCP_SERVER__
 
 #include <list>
 
@@ -14,6 +14,7 @@
 
 using smsc::logger::Logger;
 using smsc::core::network::Socket;
+using smsc::inman::inap::Connect;
 using smsc::core::threads::Thread;
 using smsc::core::synchronization::Event;
 using smsc::inman::common::ObservableT;
@@ -21,7 +22,7 @@ using smsc::inman::common::ObservableT;
 
 namespace smsc  {
 namespace inman {
-namespace inap  {
+namespace interaction  {
 
 class Server;
 
@@ -38,7 +39,6 @@ class Server : public Thread, public ObservableT< ServerListener >
 
     public:
         Server(const char* szHost, int nPort, SerializerITF * serializer);
-//        Server(const char* szHost, int nPort);
         virtual ~Server();
 
         void openConnect(Connect* connect);
@@ -59,8 +59,9 @@ class Server : public Thread, public ObservableT< ServerListener >
         Logger*     logger;
 };
 
-}
-}
-}
+} //interaction
+} //inman
+} //smsc
 
-#endif
+#endif /* __SMSC_INMAN_TCP_SERVER__ */
+

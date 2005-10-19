@@ -2,19 +2,17 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 
 #include "inman/common/synch.hpp"
-#include "server.hpp"
+#include "inman/interaction/server.hpp"
 #include "inman/common/util.hpp"
 #include "inman/common/errors.hpp"
-#include "inman/interaction/messages.hpp"
 
 using smsc::inman::common::Synch;
 using smsc::inman::common::format;
 using smsc::inman::common::SystemError;
-using smsc::inman::interaction::SerializerInap;
 
 namespace smsc  {
 namespace inman {
-namespace inap  {
+namespace interaction  {
 
 Server::Server(const char* host, int port, SerializerITF * serializer)
         : logger(Logger::getInstance("smsc.inman.inap.Server"))
@@ -104,7 +102,6 @@ void Server::Run()
                 smsc_log_error(logger, "Can't accept client connection %d (%s)", errno, strerror( errno ) );
             } else {
                 smsc_log_debug(logger, "Open new connect (0x%X)", clientSocket->getSocket());
-//                Connect* connect = new Connect( clientSocket, SerializerInap::getInstance() );
                 Connect* connect = new Connect( clientSocket, ipSerializer);
                 openConnect( connect );
                 continue;
@@ -170,6 +167,7 @@ int Server::Execute()
     return result;
 }
 
-} // namespace inap
-} // namespace inmgr
+} // namespace interaction
+} // namespace inman
 } // namespace smsc
+
