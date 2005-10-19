@@ -5,7 +5,7 @@
 #
 
 #CXXFLAGS := $(CXXFLAGS)
-PACKAGE := scag.config.sessionman
+PACKAGE := scag.config.smpp
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)

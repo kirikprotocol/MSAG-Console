@@ -4,7 +4,7 @@
 #include <string>
 #include <core/threads/Thread.hpp>
 #include "Session.h"
-#include "scag/config/sessionman/SessionManagerConfig.h"
+#include "scag/config/sessn/SessionManagerConfig.h"
 
 namespace scag { namespace sessions 
 {

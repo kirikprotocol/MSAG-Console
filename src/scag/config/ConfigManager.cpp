@@ -8,7 +8,7 @@
 #include "util/debug.h"
 #include "util/xml/DOMTreeReader.h"
 #include "scag/config/route/RouteConfig.h"
-#include "scag/config/statman/StatManConfig.h"
+#include "scag/config/stat/StatManConfig.h"
 #include "util/findConfigFile.h"
 #include "scag/config/ConfigManager.h"
 #include "scag/config/ConfigListener.h"

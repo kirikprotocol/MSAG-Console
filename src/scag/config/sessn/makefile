@@ -5,7 +5,7 @@
 #
 
 #CXXFLAGS := $(CXXFLAGS)
-PACKAGE := scag.config.statman
+PACKAGE := scag.config.sessn
 
 ifndef SMSC_SRCDIR
 $(error SMSC_SRCDIR is not defined)

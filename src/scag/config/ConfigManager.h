@@ -1,11 +1,11 @@
 #ifndef ConfigManager_dot_h
 #define ConfigManager_dot_h
 
-#include "scag/config/smppman/SmppManConfig.h"
+#include "scag/config/smpp/SmppManConfig.h"
 #include "scag/config/route/RouteConfig.h"
-#include "scag/config/statman/StatManConfig.h"
+#include "scag/config/stat/StatManConfig.h"
 #include "scag/config/bill/BillingManagerConfig.h"
-#include "scag/config/sessionman/SessionManagerConfig.h"
+#include "scag/config/sessn/SessionManagerConfig.h"
 
 #include <string>
 
