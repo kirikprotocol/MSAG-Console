@@ -58,22 +58,43 @@ SerializableObject* SerializerUSS::deserialize(ObjectBuffer& in)
 /* ************************************************************************** *
  * class USSMessageBase implementation:
  * ************************************************************************** */
+/* SerializableObject interface:
+ * ************************************************************************** */
 #ifndef MAP_MAX_ISDN_AddressLength
 #define MAP_MAX_ISDN_AddressLength  8
 #endif
 /*
- * all USS messages has the similar serialization format:
+ * USS messages has the following serialization formats:
 
+Request (PROCESS_USS_REQUEST_TAG):
+--------
   1b        4b        1b       1b        up to 160b   1b     up to 32
 ------   ---------   -----  ----------   ----------   ---  -----------------------
  cmdId : requestId  : DCS : ussDataLen  :  ussData  : len : ms ISDN address string
        |                                                                          |
-       -------- processed by load()/save() methods -------------------------------
+       -------- processed by load() method ---------------------------------------
+
+
+Result (PROCESS_USS_RESULT_TAG):
+--------
+
+  1b        4b          2b      1b       1b        up to 160b   1b     up to 32
+------   ---------   -------   ---   ----------   ----------   ---  -----------------------
+ cmdId : requestId  : status : DCS : ussDataLen  :  ussData  : len : ms ISDN address string
+                             |                                                             |
+                              -------- present if status == 0 -----------------------------
+       |                                                                                   |
+       -------- processed by save() method ------------------------------------------------
 */
 
 void USSMessageBase::save(ObjectBuffer& out)
 {
     out << _reqId;
+    if (getObjectId() == USS2CMD::PROCESS_USS_RESULT_TAG) {
+        out << _status;
+        if (_status)
+            return;
+    }
     out << _dCS;
     out << _ussData;
     out << _msAdr.toString();
@@ -95,6 +116,21 @@ void USSMessageBase::load(ObjectBuffer& in)
     Address msadr(strBuf);
     _msAdr = msadr;
 }
+
+/* ************************************************************************** *
+ * USSCommand interface:
+ * ************************************************************************** */
+/* Not used for now:
+void USSMessageBase::handle( USSCommandHandler* handler)
+{
+    assert( handler );
+    handler->onProcessUSSRequest( this );
+
+}
+*/
+/* ************************************************************************** *
+ * Own methods:
+ * ************************************************************************** */
 
 void USSMessageBase::setUSSData(unsigned char * data, unsigned size)
 {
@@ -119,6 +155,17 @@ void USSMessageBase::setDCS(const unsigned char& dcs)
     _dCS = dcs;
 }
 
+void USSMessageBase::setReqId(const unsigned int& req_id)
+{
+    _reqId = req_id;
+}
+
+void USSMessageBase::setStatus(const unsigned short& status)
+{
+    _status = status;
+}
+
+
 const USSDATA_T& USSMessageBase::getUSSData(void) const
 {
     return _ussData;
@@ -132,6 +179,16 @@ const Address&   USSMessageBase::getMSISDNadr(void) const
 unsigned char USSMessageBase::getDCS(void) const
 {
     return _dCS;
+}
+
+unsigned int USSMessageBase::getReqId(void) const
+{
+    return _reqId;
+}
+
+unsigned short USSMessageBase::getStatus(void) const
+{
+    return _status;
 }
 
 
