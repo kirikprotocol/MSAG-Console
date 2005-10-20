@@ -136,6 +136,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
       st.temporal?smsc::system::Status::RX_T_APPN:
                   smsc::system::Status::RX_P_APPN
     );
+    scag::sessions::SessionManager::Instance().releaseSession(session);
     return;
   }
 
@@ -148,6 +149,7 @@ void StateMachine::processSubmit(SmppCommand& cmd)
   {
     smsc_log_info(log,"Submit:Failed to putCommand into %s:%s",dst->getSystemId(),e.what());
   }
+  scag::sessions::SessionManager::Instance().releaseSession(session);
 }
 
 void StateMachine::processSubmitResp(SmppCommand& cmd)
