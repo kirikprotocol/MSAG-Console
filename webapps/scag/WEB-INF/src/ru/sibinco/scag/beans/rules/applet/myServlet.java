@@ -7,7 +7,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.ServletException;
-import javax.swing.filechooser.FileSystemView;
 import java.io.*;
 import java.util.LinkedList;
 import java.util.zip.GZIPOutputStream;
@@ -149,8 +148,33 @@ public class myServlet extends HttpServlet
     return li;
   }
 
+    private LinkedList ParseXml(final InputStream inputStream) {
+        LinkedList li = new LinkedList();
+        BufferedReader bufferedReader = null;
+        String inpuLine;
+        try {
+            bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+            li.addFirst("ok");
+            while ((inpuLine = bufferedReader.readLine()) != null) li.add(inpuLine);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            li.addFirst(e.getMessage());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                if (bufferedReader != null) bufferedReader.close();
+                if (inputStream != null) inputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return li;
+    }
 
-  private String[] FilesCommand(final String path,final int command,int parameter)
+
+    private String[] FilesCommand(final String path,final int command,int parameter)
   {
     String result="false";
     String[] list=new String[1]; 
