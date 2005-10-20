@@ -324,6 +324,12 @@ void SmppManager::deleteSmppEntity(const char* sysId)
       ent.recvChannel->disconnect();
       break;
   }
+
+  if(ent.info.type==etSmsc)
+  {
+    sm.getSmscConnectorAdmin()->deleteSmscConnect(sysId);
+  }
+
   ent.bt=btNone;
   ent.channel=0;
   ent.transChannel=0;
