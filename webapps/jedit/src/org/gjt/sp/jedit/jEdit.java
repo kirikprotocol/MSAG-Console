@@ -243,6 +243,7 @@ public class jEdit extends Applet
     System.out.println("Destroying...");
     destroyed=true;
     startupDone=false;
+    bufferHash.clear();
     DockableWindowFactory.getInstance().clear();
     KillRing.getInstance().clear();
      //{{{ Clear static variables in plugins that must be cleared at destroy
@@ -2092,6 +2093,7 @@ public class jEdit extends Applet
     }
 
     synchronized (bufferListLock) {
+      System.out.println("before bufferHash.get( path= "+path);
       return (Buffer) bufferHash.get(path);
     }
   } //}}}
@@ -2304,7 +2306,7 @@ public class jEdit extends Applet
         view.showWaitCursor();
         view.getEditPane().saveCaretInfo();
       }
-
+      System.out.println("jEdit.newView before new View buffer= "+buffer);
       View newView = new View(buffer, config);
       destroyed=false;// mast stay after  new View#setSplitConfig ( in it use this parameter )
       addViewToList(newView);
@@ -3727,10 +3729,27 @@ public class jEdit extends Applet
       public void run()
       {
 
-        Buffer buffer = openFiles(null, userDir, args);
+       // Buffer buffer = openFiles(null, userDir, args);
         int count = getBufferCount();
       //todo this changed for cutting FileBrowser dialog
         System.out.println("before openFile userDir= "+userDir+" userFile= "+userFile);
+      String path = MiscUtilities.constructPath(userDir, userFile);
+      synchronized (bufferListLock) {
+      Buffer buffer = getBuffer(path);
+        System.out.println("finishStartupNext !!! buffer= "+buffer);
+      if (buffer != null) {
+        System.out.println("buffer!=null!!!");
+        View[] views= jEdit.getViews();
+        for (int i = 0; i < views.length; i++) {
+          View view = views[i];
+          if (view.getBuffer()==buffer) {
+            System.out.println("found existing buffer!!!");
+            jEdit.setActiveView(view); view.requestFocus();break;
+          }
+        }
+
+      } //if (buffer != null)
+      else {
         buffer=openFile(null, userDir, userFile , false, null);
       //  todo end
         View view = null;
@@ -3748,7 +3767,8 @@ public class jEdit extends Applet
           else if (buffer != null)
             view.setBuffer(buffer);
         }
-
+      } //else
+  } // synchronized (bufferListLock)
         // Start I/O threads
         EditBus.send(new EditorStarted(null));
         System.out.println("finishStartup before VFSManager.start.. isNotReload="+isNotReload);
@@ -3963,6 +3983,7 @@ loop:  for(int i = 0; i < list.length; i++)
       }
 
       bufferCount++;
+      System.out.println("before bufferHash.put symlinkPath= "+symlinkPath+" buffer= "+buffer);
       bufferHash.put(symlinkPath, buffer);
       if (buffersFirst == null) {
         buffersFirst = buffersLast = buffer;

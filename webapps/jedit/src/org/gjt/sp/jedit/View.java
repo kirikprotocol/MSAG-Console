@@ -1833,7 +1833,10 @@ loop:  for(;;)
  {
   public void windowActivated(WindowEvent evt)
   {
-    if (jEdit.getActiveView()!=jEdit.getFirstView()) SideKickActions.clear();
+    if (jEdit.getActiveView()!=jEdit.getFirstView()) {
+      System.out.println("clear timer in View.WindowHandler.windowActivated ");
+      SideKickActions.clear();
+    }
     jEdit.setActiveView(View.this);
    // People have reported hangs with JDK 1.4; might be
    // caused by modal dialogs being displayed from
