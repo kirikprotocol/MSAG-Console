@@ -13,7 +13,6 @@
             <param name="noplugins" value="-noplugins">
             <param name="homedir" value="applet">
             <param name="username" value="rules">
-            <param name="file" value="1">
             <param name="servletUrl" value="/scag/applet/myServlet">
        </applet>
         <sm:table columns="checkbox,id,name,providerName,transport" names="c,id,name,provider,transport"
