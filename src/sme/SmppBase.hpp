@@ -873,6 +873,7 @@ protected:
       case ENQUIRE_LINK_RESP:
       case UNBIND:
       case UNBIND_RESP:
+      case ALERT_NOTIFICATION:
         return true;
     }
     switch(bindType)

@@ -130,6 +130,8 @@ struct VClientData{
   uint32_t sleepTill;
   uint32_t sleepTillMsec;
 
+  bool setDpf;
+
   VClientData()
   {
     Init();
@@ -166,6 +168,7 @@ struct VClientData{
     validTime=0;
     replaceIfPresent=false;
     eservicetype="TEST";
+    setDpf=false;
   }
 
 }defVC;
@@ -200,6 +203,8 @@ int& respStatus=defVC.respStatus;
 
 string& sourceAddress=defVC.sourceAddress;
 string& eservicetype=defVC.eservicetype;
+
+bool& setDpf=defVC.setDpf;
 
 FILE*& cmdfile=defVC.cmdfile;
 
@@ -242,7 +247,8 @@ Option options[]={
 {"silent",'b',&silent},
 {"validTime",'i',&validTime},
 {"replaceIfPresent",'b',&replaceIfPresent},
-{"eservicetype",'s',&eservicetype}
+{"eservicetype",'s',&eservicetype},
+{"setDpf",'b',&setDpf},
 };
 
 const int optionsCount=sizeof(options)/sizeof(Option);
@@ -987,6 +993,13 @@ public:
     {
       printf("Received unbind\n");
       connected=false;
+    }else if(pdu->get_commandId()==SmppCommandSet::ALERT_NOTIFICATION)
+    {
+      PduAlertNotification* al=(PduAlertNotification*)pdu;
+      printf("\nReceived alert notification:%s->%s:%d\n",
+        PduAddress2Address(al->get_esme()).toString().c_str(),
+        PduAddress2Address(al->get_source()).toString().c_str(),
+        al->get_optional().get_msAvailableStatus());
     }
     if(!cmdfile && !vcmode)rl_forced_update_display();
   }
@@ -1667,6 +1680,8 @@ int main(int argc,char* argv[])
       s.setEServiceType(eservicetype.c_str());
 
       if(replaceIfPresent)s.setIntProperty(Tag::SMPP_REPLACE_IF_PRESENT_FLAG,1);
+
+      if(setDpf)s.setIntProperty(Tag::SMPP_SET_DPF,1);
 
 
       if(ussd)s.setIntProperty(Tag::SMPP_USSD_SERVICE_OP,ussd);

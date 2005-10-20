@@ -663,6 +663,7 @@ bool SmppProxy::CheckValidIncomingCmd(const SmscCommand& cmd)
     case UNBIND_RESP:
     case GENERIC_NACK:
     case SMPP_PDU:
+    case ALERT_NOTIFICATION:
       return true;
   }
 
