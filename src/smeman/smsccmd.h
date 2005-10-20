@@ -145,6 +145,10 @@ private:
   bool diverted;
 public:
 
+  bool haveDpf;
+  int dpfResult;
+
+
   void set_messageId(const char* msgid)
   {
     if(!msgid)return;
@@ -210,7 +214,8 @@ public:
     diverted=val;
   }
 
-  SmsResp() : messageId(0), status(0),dataSm(false),delay(-1),sms(0),diverted(false) {};
+  SmsResp() : messageId(0), status(0),dataSm(false),delay(-1),sms(0),diverted(false),
+    haveDpf(false),dpfResult(0) {};
   ~SmsResp()
   {
     if ( messageId ) delete messageId;
@@ -1242,6 +1247,10 @@ public:
           xsm->header.set_sequenceNumber(c.get_dialogId());
           xsm->header.set_commandStatus(makeSmppStatus(c.get_resp()->get_status()));
           xsm->set_messageId(c.get_resp()->get_messageId());
+          if(c.get_resp()->haveDpf)
+          {
+            xsm->get_optional().set_dpfResult(c.get_resp()->dpfResult);
+          }
           return reinterpret_cast<SmppHeader*>(xsm.release());
         }else
         {
