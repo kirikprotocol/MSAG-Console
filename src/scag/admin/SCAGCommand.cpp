@@ -183,6 +183,7 @@ Response * CommandAddSme::CreateResponse(scag::Scag * ScagApp)
       if(!smppMan)
           throw Exception("SmppManager undefined");
 
+      smsc_log_info(logger, "systemId: %s", getSmppEntityInfo().systemId.c_str());
       smppMan->addSmppEntity(getSmppEntityInfo());
 
       smsc_log_info(logger, "CommandAddSme is processed ok");
@@ -217,6 +218,7 @@ Response * CommandDeleteSme::CreateResponse(scag::Scag * ScagApp)
   BEGIN_EXCEPTION
       if(!ScagApp)
           Exception("Scag undefined");
+      smsc_log_info(logger, "systemId: %s", systemId.c_str());
       ScagApp->getSmppManagerAdmin()->deleteSmppEntity(systemId.c_str());
   CATCH_EXC("Failed to delete Sme.")
   CATCH("Failed to delete Sme.")
