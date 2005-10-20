@@ -4,6 +4,7 @@
 package ru.sibinco.scag.backend.protocol.commands.rules;
 
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.backend.protocol.Command;
 import ru.sibinco.scag.backend.rules.Rule;
 
 /**
@@ -14,10 +15,10 @@ import ru.sibinco.scag.backend.rules.Rule;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class RemoveRule extends RuleCommand {
+public class RemoveRule extends Command {
 
-    public RemoveRule(Rule rule) throws SibincoException {
+    public RemoveRule(final String ruleId) throws SibincoException {
         super("removeRule", "file:///command_gw.dtd");
-        fillParams(rule);
+        createStringParam("ruleId", ruleId);
     }
 }

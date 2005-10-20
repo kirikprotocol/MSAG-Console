@@ -5,6 +5,7 @@ package ru.sibinco.scag.backend.protocol.commands.rules;
 
 import ru.sibinco.scag.backend.rules.Rule;
 import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.backend.protocol.Command;
 
 /**
  * The <code>UpdateRule</code> class represents
@@ -14,10 +15,10 @@ import ru.sibinco.lib.SibincoException;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class UpdateRule extends RuleCommand {
+public class UpdateRule extends Command {
 
-    public UpdateRule(Rule rule) throws SibincoException {
+    public UpdateRule(final String ruleId) throws SibincoException {
         super("updateRule", "file:///command_gw.dtd");
-        fillParams(rule);
+        createStringParam("ruleId", ruleId);
     }
 }

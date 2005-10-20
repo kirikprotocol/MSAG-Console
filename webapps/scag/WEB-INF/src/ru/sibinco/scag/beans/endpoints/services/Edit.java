@@ -5,12 +5,16 @@ package ru.sibinco.scag.beans.endpoints.services;
 
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.beans.DoneException;
 import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.Gateway;
 import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.backend.users.User;
+import ru.sibinco.lib.backend.protocol.Proxy;
+import ru.sibinco.lib.SibincoException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -36,7 +40,6 @@ public class Edit extends EditBean{
     protected int timeout = 0;
     protected boolean enabled = false;
     protected byte mode = Svc.MODE_TRX;
-    protected boolean smsc = false;
     protected long providerId = -1;
     protected long transportId = 1;
     private String providerName = null;
@@ -47,7 +50,7 @@ public class Edit extends EditBean{
 
 
     public String getId() {
-        return null;
+        return id;
     }
 
     private void init() throws SCAGJspException {
@@ -88,11 +91,49 @@ public class Edit extends EditBean{
     }
 
     protected void load(String loadId) throws SCAGJspException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        final Svc svc = (Svc) appContext.getSmppManager().getSvcs().get(loadId);
+
+        if(null == svc)
+            throw new SCAGJspException(Constants.errors.sme.SME_NOT_FOUND, loadId);
+
+        this.id = svc.getId();
+        this.mode = svc.getMode();
+        this.password = svc.getPassword();
+        this.providerId = svc.getProvider().getId();
+        this.timeout = svc.getTimeout();
+        this.enabled = svc.isEnabled();
     }
 
     protected void save() throws SCAGJspException {
-        //To change body of implemented methods use File | Settings | File Templates.
+        if (null == id || 0 == id.length() || !isAdd() && (null == getEditId() || 0 == getEditId().length()))
+            throw new SCAGJspException(Constants.errors.sme.SME_ID_NOT_SPECIFIED);
+
+        if (null == password)
+            password = "";
+        final Provider providerObj = (Provider) appContext.getProviderManager().getProviders().get(new Long(providerId));
+        final Map svcs = appContext.getSmppManager().getSvcs();
+        if (svcs.containsKey(id) && (isAdd() || !id.equals(getEditId())))
+            throw new SCAGJspException(Constants.errors.sme.SME_ALREADY_EXISTS, id);
+        svcs.remove(getEditId());
+        final Svc svc;
+        svc = new Svc(id, password, timeout, enabled, mode, providerObj);
+        svcs.put(id, svc);
+
+        final Gateway gateway = appContext.getGateway();
+        try {
+            if (isAdd()) {
+                gateway.addSvc(svc);
+            } else {
+                gateway.updateSvcInfo(svc);
+            }
+            appContext.getSmppManager().store();
+        } catch (SibincoException e) {
+            e.printStackTrace();
+            if (Proxy.StatusConnected == gateway.getStatus()) {
+                throw new SCAGJspException(Constants.errors.sme.COULDNT_APPLY, id, e);
+            }
+        }
+        throw new DoneException();
     }
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
@@ -103,6 +144,7 @@ public class Edit extends EditBean{
     public void setId(String id) {
         this.id = id;
     }
+
 
     public byte getType() {
         return type;
@@ -143,14 +185,6 @@ public class Edit extends EditBean{
 
     public void setMode(final byte mode) {
         this.mode = mode;
-    }
-
-    public boolean isSmsc() {
-        return smsc;
-    }
-
-    public void setSmsc(final boolean smsc) {
-        this.smsc = smsc;
     }
 
     public long getProviderId() {

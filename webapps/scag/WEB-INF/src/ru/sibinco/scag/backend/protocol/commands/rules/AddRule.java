@@ -17,7 +17,7 @@ import ru.sibinco.scag.backend.rules.Rule;
  */
 public class AddRule extends Command {
 
-    protected AddRule(final String ruleId) throws SibincoException {
+    public AddRule(final String ruleId) throws SibincoException {
         super("addRule", "file:///command_gw.dtd");
         createStringParam("ruleId", ruleId);
     }

@@ -111,6 +111,11 @@ public class Constants
       public static final Constants SMSC_NOT_FOUND = new Constants("error.smscs.smsc_not_found");
     }
 
+    public interface rules
+    {
+      public static final Constants RULE_ID_NOT_SPECIFIED = new Constants("error.rules.rule_id_not_specified");
+      public static final Constants RULE_NAME_NOT_FOUND = new Constants("error.rules.name_not_found");
+    }
 
     public interface stat
     {

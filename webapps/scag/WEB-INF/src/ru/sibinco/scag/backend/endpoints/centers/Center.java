@@ -10,6 +10,8 @@ import org.apache.log4j.Category;
 import java.io.PrintWriter;
 
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
+import ru.sibinco.scag.backend.sme.Provider;
+import ru.sibinco.scag.backend.sme.ProviderManager;
 
 /**
  * The <code>Center</code> class represents of
@@ -39,12 +41,15 @@ public class Center {
     private String altHost;
     private int altPort;
     private boolean enabled = false;
+    private Provider provider;
+    private int uid = -1;
+    private String transport = "SMPP";
 
     private Category logger = Category.getInstance(this.getClass());
 
     public Center(String id, String password, int timeout,
                   byte mode, String host, int port, String altHost,
-                  int altPort, boolean enabled) throws NullPointerException{
+                  int altPort, boolean enabled, final Provider provider, final int uid) throws NullPointerException {
         if (null == id || null == password)
             throw new NullPointerException("SMSC ID or  password  is null");
         this.id = id;
@@ -56,9 +61,11 @@ public class Center {
         this.altHost = altHost;
         this.altPort = altPort;
         this.enabled = enabled;
+        this.provider = provider;
+        this.uid = uid;
     }
 
-    public Center(final Element centersElement) throws NullPointerException {
+    public Center(final Element centersElement, final ProviderManager providerManager) throws NullPointerException {
         final NodeList list = centersElement.getElementsByTagName("param");
         for (int i = 0; i < list.getLength(); i++) {
             final Element paramElem = (Element) list.item(i);
@@ -83,6 +90,10 @@ public class Center {
                     altHost = value;
                 } else if ("altPort".equals(name)) {
                     altPort = Integer.decode(value).intValue();
+                } else if ("uid".equals(name)) {
+                    uid = Integer.decode(value).intValue();
+                } else if ("providerId".equals(name)) {
+                    provider = (Provider) providerManager.getProviders().get(Long.decode(value));
                 }
 
             } catch (NumberFormatException e) {
@@ -104,6 +115,8 @@ public class Center {
         this.altHost = center.getAltHost();
         this.altPort = center.getAltPort();
         this.enabled = center.isEnabled();
+        this.provider = center.getProvider();
+        this.uid = center.getUid();
     }
 
     protected PrintWriter storeHeader(final PrintWriter out) {
@@ -122,15 +135,17 @@ public class Center {
 
 
     protected PrintWriter storeBody(final PrintWriter out) {
-        out.println("    <param name=\"systemId\"   value=\"" + id + "\"/>");
-        out.println("    <param name=\"password\"   value=\"" + StringEncoderDecoder.encode(password) + "\"/>");
-        out.println("    <param name=\"timeout\"    value=\"" + timeout + "\"/>");
-        out.println("    <param name=\"mode\"       value=\"" + getModeStr() + "\"/>");
-        out.println("    <param name=\"host\"       value=\"" + host + "\"/>");
-        out.println("    <param name=\"port\"       value=\"" + port + "\"/>");
-        out.println("    <param name=\"althost\"    value=\"" + altHost + "\"/>");
-        out.println("    <param name=\"altport\"    value=\"" + altPort + "\"/>");
-        out.println("    <param name=\"enabled\"    value=\"" + enabled + "\"/>");
+        out.println("    <param name=\"systemId\"       value=\"" + id + "\"/>");
+        out.println("    <param name=\"password\"       value=\"" + StringEncoderDecoder.encode(password) + "\"/>");
+        out.println("    <param name=\"timeout\"        value=\"" + timeout + "\"/>");
+        out.println("    <param name=\"mode\"           value=\"" + getModeStr() + "\"/>");
+        out.println("    <param name=\"host\"           value=\"" + host + "\"/>");
+        out.println("    <param name=\"port\"           value=\"" + port + "\"/>");
+        out.println("    <param name=\"althost\"        value=\"" + altHost + "\"/>");
+        out.println("    <param name=\"altport\"        value=\"" + altPort + "\"/>");
+        out.println("    <param name=\"enabled\"        value=\"" + enabled + "\"/>");
+        out.println("    <param name=\"uid\"            value=\"" + uid + "\"/>");
+        out.println("    <param name=\"providerId\"     value=\"" + provider.getId() + "\"/>");
 
         return out;
     }
@@ -148,7 +163,7 @@ public class Center {
         }
     }
 
-     private static byte getMode(final String modeStr) {
+    private static byte getMode(final String modeStr) {
         if ("tx".equalsIgnoreCase(modeStr))
             return MODE_TX;
         else if ("rx".equalsIgnoreCase(modeStr))
@@ -265,5 +280,36 @@ public class Center {
 
     public void setEnabled(final boolean enabled) {
         this.enabled = enabled;
+    }
+
+    public Provider getProvider() {
+        return provider;
+    }
+
+    public void setProvider(final Provider provider) {
+        this.provider = provider;
+    }
+
+    public String getTransport() {
+        return transport;
+    }
+
+    public void setTransport(String transport) {
+        this.transport = transport;
+    }
+
+    public int getUid() {
+        return uid;
+    }
+
+    public void setUid(final int uid) {
+        this.uid = uid;
+    }
+
+    public String getProviderName() {
+        if (null != provider)
+            return provider.getName();
+        else
+            return null;
     }
 }

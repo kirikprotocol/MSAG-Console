@@ -7,6 +7,7 @@ import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.rules.Rule;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.backend.users.User;
@@ -31,6 +32,7 @@ public class Edit extends EditBean {
     public static final long ALL_PROVIDERS = -1;
     private String mbNext = null;
     protected long transportId = 1;
+    private String name;
     private long ruleId = -1;
     private String providerName = null;
     private String[] providerIds = null;
@@ -44,24 +46,24 @@ public class Edit extends EditBean {
         return null;
     }
 
-    private void init()throws SCAGJspException{
+    private void init() throws SCAGJspException {
         SCAGAppContext appContext = getAppContext();
         Principal userPrincipal = super.getLoginedPrincipal();
-        if(userPrincipal == null)
+        if (userPrincipal == null)
             throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to  obtain user principal(s)");
         User user = (User) appContext.getUserManager().getUsers().get(userPrincipal.getName());
-        if(user == null)
+        if (user == null)
             throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to locate user '" + userPrincipal.getName() + "'");
 
         userProviderId = user.getProviderId();
         administrator = (userProviderId == ALL_PROVIDERS);
-        if(administrator){
+        if (administrator) {
             Map providers = appContext.getProviderManager().getProviders();
-            ArrayList ids  = new ArrayList(100);
+            ArrayList ids = new ArrayList(100);
             ArrayList names = new ArrayList(100);
-            for(Iterator i = providers.values().iterator(); i.hasNext();){
+            for (Iterator i = providers.values().iterator(); i.hasNext();) {
                 Object obj = i.next();
-                if(obj != null && obj instanceof Provider){
+                if (obj != null && obj instanceof Provider) {
                     Provider provider = (Provider) obj;
                     ids.add(Long.toString(provider.getId()));
                     names.add(provider.getName());
@@ -69,10 +71,10 @@ public class Edit extends EditBean {
             }
             providerIds = (String[]) (ids.toArray(new String[ids.size()]));
             providerNames = (String[]) (names.toArray(new String[names.size()]));
-        }else{
+        } else {
             setProviderId(userProviderId);
             Object obj = appContext.getProviderManager().getProviders().get(new Long(userProviderId));
-            if(obj == null || !(obj instanceof Provider))
+            if (obj == null || !(obj instanceof Provider))
                 throw new SCAGJspException(Constants.errors.providers.PROVIDER_NOT_FOUND,
                         "Failed to locate provider for id=" + userProviderId);
             providerName = ((Provider) obj).getName();
@@ -81,9 +83,23 @@ public class Edit extends EditBean {
     }
 
     protected void load(final String loadId) throws SCAGJspException {
+
+        final Rule rule = (Rule) appContext.getRuleManager().getRules().get(Long.decode(loadId));
+    if (null == rule)
+      throw new SCAGJspException(Constants.errors.sme.SME_NOT_FOUND, loadId);
+        else
+        System.out.println("!!!!!!!!!!!!!!!!");
     }
 
     protected void save() throws SCAGJspException {
+        ruleId = getRuleId();
+        if ( 0 >= ruleId || !isAdd())
+          error("Rule id not specified",null);
+        if (null == name || 0 == name.length())
+            error("Rule name not found",null);
+
+        
+
     }
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
@@ -145,4 +161,11 @@ public class Edit extends EditBean {
         return administrator;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }

@@ -36,9 +36,9 @@
     <sm-ep:properties title="SMPP Service (SME) info">
     <br>
       <sm-ep:txt title="ID" name="id" readonly="${!bean.add}" validation="nonEmpty"/>
-      <c:choose>
-        <c:when test="${bean.smsc}"><sm-ep:flag title="is SMSC" name="smsc"/></c:when>
-        <c:otherwise>
+      <%--<c:choose>--%>
+        <%--<c:when test="${bean.smsc}"><sm-ep:flag title="is SMSC" name="smsc"/></c:when>--%>
+        <%--<c:otherwise>--%>
         <c:choose>
             <c:when test="${bean.administrator}">
                 <sm-ep:list  title="provider" name="providerId"
@@ -49,9 +49,9 @@
           <sm-ep:const title="provider" name="providerName" value="${bean.providerName}"/>
         </c:otherwise>
       </c:choose>
-        </c:otherwise>
+        <%--</c:otherwise>--%>
 
-      </c:choose>
+      <%--</c:choose>--%>
       <sm-ep:txt title="timeout" name="timeout" validation="unsigned"/>
       <sm-ep:txt title="password" name="password"/>
       <sm-ep:check title="enabled" name="enabled"/>

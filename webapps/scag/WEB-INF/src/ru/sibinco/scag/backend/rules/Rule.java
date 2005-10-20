@@ -9,13 +9,8 @@ package ru.sibinco.scag.backend.rules;
  */
 
 import ru.sibinco.scag.backend.sme.Provider;
-import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.Constants;
-import ru.sibinco.lib.backend.util.xml.Utils;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 
-import java.util.Map;
+import java.io.PrintWriter;
 
 
 /**
@@ -23,8 +18,6 @@ import java.util.Map;
  */
 public class Rule
 {
-  private static final String BILLING_ID_ATTRIBUTE = "billingId";
-  private static final String PROVIDER_ID_ATTRIBUTE = "providerId";
   private Provider provider;
   private String transport;
   private String name;
@@ -39,7 +32,31 @@ public class Rule
     this.transport = transport;
     this.provider = provider;
   }
-  public Provider getProvider()
+
+    protected PrintWriter storeHeader(final PrintWriter out, final String transport,
+                                      final String id, final String provider, final String name) {
+
+        out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<scag:rule xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
+                "            xsi:schemaLocation=\"http://www.sibinco.com/SCAG xsd/smpp_rules.xsd\"\n" +
+                "           xmlns:scag=\"http://www.sibinco.com/SCAG\"\n" +
+                "           transport=\"" + transport + "\" id=\"" + id + "\" provider=\"" + provider
+                + "\" name=\"" + name + "\">\n" + "\n" + "\n");
+
+        return out;
+    }
+
+    protected PrintWriter storeFooter(final PrintWriter out) {
+        out.println("</scag:rule>");
+        return out;
+    }
+
+    public PrintWriter storeTemplate(final PrintWriter out, final String transport,
+                                      final String id, final String provider, final String name) {
+        return storeFooter(storeHeader(out, transport, id, provider, name));
+    }
+
+    public Provider getProvider()
   {
     return provider;
   }
@@ -95,5 +112,6 @@ public class Rule
   {
     this.transport = transport;
   }
+
 }
 

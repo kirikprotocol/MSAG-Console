@@ -35,7 +35,19 @@
     <c:set var="smes" value="${fn:join(bean.smes, ',')}"/>
     <sm-ep:properties title="SMPP Service Center info">
       <br>
-      <sm-ep:list title="name" name="id" values="${smes}" valueTitles="${smes}" readonly="${!bean.add}"/>
+      <%--<sm-ep:list title="name" name="id" values="${smes}" valueTitles="${smes}" readonly="${!bean.add}"/>--%>
+      <sm-ep:txt title="name" name="id" validation="nonEmpty"/>
+      <c:choose>
+            <c:when test="${bean.administrator}">
+                <sm-ep:list  title="provider" name="providerId"
+                       values="${fn:join(bean.providerIds, ',')}"
+                       valueTitles="${fn:join(bean.providerNames, ',')}"/>
+            </c:when>
+        <c:otherwise>
+          <sm-ep:const title="provider" name="providerName" value="${bean.providerName}"/>
+        </c:otherwise>
+      </c:choose>
+
       <sm-ep:txt title="host" name="host" validation="nonEmpty"/>
       <sm-ep:txt title="port" name="port" validation="port"/>
       <sm-ep:txt title="alternate host" name="altHost"/>
@@ -43,6 +55,12 @@
       <sm-ep:list title="mode" name="mode" values="1,2,3" valueTitles="TX,RX,TRX"/>
       <sm-ep:txt title="timeout" name="timeout" validation="unsigned"/>
       <sm-ep:check title="enabled" name="enabled"/>
+        <c:choose>
+            <c:when test="${!param.add}">
+                <sm-ep:txt title="uid" name="uid" readonly="true"/>
+            </c:when>
+            <c:otherwise></c:otherwise>
+        </c:choose>
       <sm-ep:txt title="password" name="password"/>
     </sm-ep:properties>
         </c:when>

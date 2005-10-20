@@ -11,6 +11,8 @@ import java.io.PrintWriter;
 
 import ru.sibinco.lib.backend.sme.SmeStatus;
 import ru.sibinco.lib.backend.util.StringEncoderDecoder;
+import ru.sibinco.scag.backend.sme.Provider;
+import ru.sibinco.scag.backend.sme.ProviderManager;
 
 /**
  * The <code>Svc</code> class represents
@@ -37,15 +39,20 @@ public class Svc {
     private int timeout = 0;
     private boolean enabled = false;
     private byte mode = MODE_TRX;
-
+    private Provider provider;
+    private String transport = "SMPP";
+    
     private byte type = SMPP;
 
     private SmeStatus status = null;
 
     private Category logger = Category.getInstance(this.getClass());
 
+    public Svc() {
+    }
+
     public Svc(final String id, final String password, final int timeout,
-               final boolean enabled, final byte mode) throws NullPointerException{
+               final boolean enabled, final byte mode, final Provider provider) throws NullPointerException{
         if (null == id || null == password)
             throw new NullPointerException("SME ID or  password  is null");
         this.id = id.trim();
@@ -53,10 +60,10 @@ public class Svc {
         this.timeout = timeout;
         this.enabled = enabled;
         this.mode = mode;
-
+        this.provider = provider;
     }
 
-    public Svc(final Element svcElement) throws NullPointerException {
+    public Svc(final Element svcElement, final ProviderManager providerManager) throws NullPointerException {
         final NodeList list = svcElement.getElementsByTagName("param");
         for (int i = 0; i < list.getLength(); i++) {
             final Element paramElem = (Element) list.item(i);
@@ -73,6 +80,8 @@ public class Svc {
                     enabled = Boolean.valueOf(value).booleanValue();
                 } else if ("mode".equals(name)) {
                     mode = getMode(value);
+                } else if ("providerId".equals(name)) {
+                   provider = (Provider) providerManager.getProviders().get(Long.decode(value));
                 }
             } catch (NumberFormatException e) {
                 logger.error("Int parameter \"" + name + "\" misformatted: " + value + ", skipped", e);
@@ -108,28 +117,13 @@ public class Svc {
         out.println("    <param name=\"timeout\"          value=\"" + timeout + "\"/>");
         out.println("    <param name=\"mode\"             value=\"" + getModeStr() + "\"/>");
         out.println("    <param name=\"enabled\"          value=\"" + enabled + "\"/>");
+        out.println("    <param name=\"providerId\"       value=\"" + provider.getId() + "\"/>");
 
         return out;
     }
 
     public PrintWriter store(final PrintWriter out) {
         return storeFooter(storeBody(storeHeader(out)));
-    }
-
-
-    private String getTypeStr() {
-        switch (type) {
-            case SMPP:
-                return "smpp";
-            case SS7:
-                return "ss7";
-            case WAP:
-                return "wap";
-            case MMS:
-                return "mms";
-            default:
-                return "unknown";
-        }
     }
 
     public String getModeStr() {
@@ -231,6 +225,31 @@ public class Svc {
     public void setStatus(final SmeStatus status) {
         this.status = status;
     }
+
+    public Provider getProvider() {
+        return provider;
+    }
+
+    public void setProvider(final Provider provider) {
+        this.provider = provider;
+    }
+
+    public String getProviderName() {
+        if (null != provider)
+            return provider.getName();
+        else
+            return null;
+    }
+
+    public String getTransport() {
+        return transport;
+    }
+
+    public void setTransport(String transport) {
+        this.transport = transport;
+    }
+
+
 }
 
 

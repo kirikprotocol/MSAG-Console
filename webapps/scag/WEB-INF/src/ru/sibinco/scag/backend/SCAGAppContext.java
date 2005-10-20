@@ -12,8 +12,7 @@ import ru.sibinco.scag.backend.routing.GwRoutingManager;
 import ru.sibinco.scag.backend.sme.*;
 import ru.sibinco.scag.backend.users.UserManager;
 import ru.sibinco.scag.backend.protocol.journal.Journal;
-import ru.sibinco.scag.backend.endpoints.centers.CenterManager;
-import ru.sibinco.scag.backend.endpoints.svc.SvcManager;
+import ru.sibinco.scag.backend.endpoints.SmppManager;
 import ru.sibinco.scag.backend.rules.RuleManager;
 import ru.sibinco.scag.perfmon.PerfServer;
 import ru.sibinco.tomcat_auth.XmlAuthenticator;
@@ -40,8 +39,7 @@ public class SCAGAppContext
   private final Config idsConfig;
   private final UserManager userManager;
   private final GwSmeManager gwSmeManager;
-  private final CenterManager centerManager;
-  private final SvcManager svcManager;
+  private final SmppManager smppManager;
   private final RuleManager ruleManager;
   private final ProviderManager providerManager;
   private final SmscsManager smscsManager;
@@ -74,12 +72,8 @@ public class SCAGAppContext
       providerManager = new ProviderManager(idsConfig);
       gwSmeManager = new GwSmeManager(config.getString("sme_file"), gwConfig, providerManager);
       gwSmeManager.init();
-      //centerManager = new CenterManager(config.getString("centers_file")); //ToDo
-      centerManager = new CenterManager(); //ToDo
-      centerManager.init();
-      //svcManager = new SvcManager(config.getString("services_file"));
-      svcManager = new SvcManager();
-      svcManager.init();
+      smppManager = new SmppManager(config.getString("smpp_file"), providerManager);
+      smppManager.init();
       String rulesFolder=config.getString("rules_folder");
       String xsdFolder=config.getString("xsd_folder");
       ruleManager=new RuleManager(new File(rulesFolder),new File(xsdFolder),providerManager, idsConfig);
@@ -216,25 +210,11 @@ public class SCAGAppContext
     return scag;
   }
 
-    public CenterManager getCenterManager() {
-        return centerManager;
-    }
-
-    public SvcManager getSvcManager() {
-        return svcManager;
+    public SmppManager getSmppManager() {
+        return smppManager;
     }
 
     public static File getGwConfFolder() {
         return gwConfFolder;
     }
-/*
-  public SmeHostsManager getSmeHostsManager()
-  {
-    return smeHostsManager;
-  }
-
-  public HostsManager getHostsManager()
-  {
-    return hostsManager;
-  } */
 }

@@ -8,9 +8,20 @@ import ru.sibinco.lib.backend.protocol.Response;
 import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.lib.backend.sme.SmeStatus;
 import ru.sibinco.scag.backend.protocol.commands.*;
+import ru.sibinco.scag.backend.protocol.commands.rules.RemoveRule;
+import ru.sibinco.scag.backend.protocol.commands.rules.AddRule;
+import ru.sibinco.scag.backend.protocol.commands.rules.UpdateRule;
+import ru.sibinco.scag.backend.protocol.commands.endpoints.AddSvc;
+import ru.sibinco.scag.backend.protocol.commands.endpoints.UpdateSvcInfo;
+import ru.sibinco.scag.backend.protocol.commands.endpoints.DeleteSvc;
+import ru.sibinco.scag.backend.protocol.commands.endpoints.AddCenter;
+import ru.sibinco.scag.backend.protocol.commands.endpoints.UpdateCenter;
+import ru.sibinco.scag.backend.protocol.commands.endpoints.DeleteCenter;
 import ru.sibinco.scag.backend.sme.GwSme;
 import ru.sibinco.scag.backend.sme.SmscInfo;
 import ru.sibinco.scag.backend.routing.GwRoutingManager;
+import ru.sibinco.scag.backend.endpoints.svc.Svc;
+import ru.sibinco.scag.backend.endpoints.centers.Center;
 import org.w3c.dom.Element;
 
 import java.util.*;
@@ -53,7 +64,7 @@ public class Gateway extends Proxy
       throw new SibincoException("Couldn't apply, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
   }
 
-  public void updateSmeInfo(final GwSme gwSme) throws SibincoException
+  public void updateSmeInfo(final GwSme gwSme) throws SibincoException     //ToDo delete this method
   {
     final Response response = super.runCommand(new UpdateSmeInfo(gwSme));
     if (Response.StatusOk != response.getStatus())
@@ -67,14 +78,68 @@ public class Gateway extends Proxy
       throw new SibincoException("Couldn't delete sme, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
   }
 
-  public void addSme(final GwSme gwSme) throws SibincoException
+  public void addSme(final GwSme gwSme) throws SibincoException    //ToDo delete this method
   {
     final Response response = super.runCommand(new AddSme(gwSme));
     if (Response.StatusOk != response.getStatus())
       throw new SibincoException("Couldn't update sme info, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
   }
 
-  public void regSmsc(final SmscInfo SmscInfo) throws SibincoException
+    public void addSvc(final Svc svc) throws SibincoException {
+        final Response response = super.runCommand(new AddSvc(svc));
+        if (Response.StatusOk != response.getStatus())
+            throw new SibincoException("Couldn't add sme, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    public void updateSvcInfo(final Svc svc) throws SibincoException {
+        final Response response = super.runCommand(new UpdateSvcInfo(svc));
+        if (Response.StatusOk != response.getStatus())
+            throw new SibincoException("Couldn't update sme info, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    public void deleteSvc(final String svcId) throws SibincoException {
+        final Response response = super.runCommand(new DeleteSvc(svcId));
+        if (Response.StatusOk != response.getStatus())
+            throw new SibincoException("Couldn't delete sme, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    public void addCenter(final Center center) throws SibincoException {
+        final Response response = super.runCommand(new AddCenter(center));
+        if (Response.StatusOk != response.getStatus())
+            throw new SibincoException("Couldn't register Smsc , nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    public void updateCenter(final Center center) throws SibincoException {
+        final Response response = super.runCommand(new UpdateCenter(center));
+        if (Response.StatusOk != response.getStatus())
+            throw new SibincoException("Couldn't modify Smsc , nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    public void deleteCenter(final Center center) throws SibincoException {
+        final Response response = super.runCommand(new DeleteCenter(center));
+        if (Response.StatusOk != response.getStatus())
+            throw new SibincoException("Couldn't delete Smsc, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    public void removeRule(final String ruleId) throws SibincoException {
+        final Response response = super.runCommand(new RemoveRule(ruleId));
+        if (Response.StatusOk != response.getStatus())
+            throw new SibincoException("Couldn't delete Rule, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    public void addRule(final String ruleId) throws SibincoException {
+        final Response response = super.runCommand(new AddRule(ruleId));
+        if (Response.StatusOk != response.getStatus())
+            throw new SibincoException("Couldn't register Rule, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    public void updateRule(final String ruleId) throws SibincoException {
+        final Response response = super.runCommand(new UpdateRule(ruleId));
+        if (Response.StatusOk != response.getStatus())
+            throw new SibincoException("Couldn't modify Rule, nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
+    }
+
+    public void regSmsc(final SmscInfo SmscInfo) throws SibincoException
   {
     final Response response = super.runCommand(new RegSmsc(SmscInfo));
     if (Response.StatusOk != response.getStatus())

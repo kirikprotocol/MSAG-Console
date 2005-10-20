@@ -2,25 +2,22 @@ package ru.sibinco.scag.backend.rules;
 
 import org.apache.log4j.Logger;
 import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.xml.sax.SAXException;
-
-import java.util.Map;
-import java.util.Collections;
-import java.util.HashMap;
-import java.io.*;
-
-import ru.sibinco.lib.backend.util.xml.Utils;
-import ru.sibinco.lib.backend.util.config.Config;
-import ru.sibinco.lib.SibincoException;
 import ru.sibinco.lib.Constants;
+import ru.sibinco.lib.SibincoException;
+import ru.sibinco.lib.backend.util.config.Config;
+import ru.sibinco.lib.backend.util.xml.Utils;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.sme.ProviderManager;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
+import java.io.File;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by IntelliJ IDEA.
@@ -42,9 +39,6 @@ public class RuleManager
   private final ProviderManager providerManager;
   private static final String PARAM_NAME_LAST_USED_ID = "last used rule id";
 
-  //private static final String SMSC_ROUTES_PRIMARY_CONFIG = "routes.xml";
-  //private static final String SMSC_ROUTES_TEMPORAL_CONFIG = "routes_.xml";
-  //private static final String SMSC_ROUTES_TRACEABLE_CONFIG = "routes__.xml";
 
   public RuleManager(final File rulesFolder,final File xsdFolder,final ProviderManager providerManager, final Config idsConfig) throws Config.WrongParamTypeException, Config.ParamNotFoundException {
 
