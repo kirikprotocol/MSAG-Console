@@ -178,7 +178,7 @@ void ProcessUSSRequestArg::encode(vector<unsigned char>& buf)
 
     if (msISDNadr_present()) {
         memset(&isdn, 0, sizeof(isdn));
-        isdn.size = packMAPAddress2OCTS(_msAdr, (smsc::inman::comp::TONNPI_ADDRESS_OCTS *)isdn_buf);
+        isdn.size = packMAPAddress2OCTS(_msAdr, (TONNPI_ADDRESS_OCTS *)isdn_buf);
         isdn.buf = isdn_buf;
         cmd.msisdn = &isdn;
     }
