@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE records SYSTEM "file://smpp.dtd">
+
+<records>
+<param_conf name="last used uid" type="int">0</param_conf>
+  <smscrecord>
+  </smscrecord>
+</records>
