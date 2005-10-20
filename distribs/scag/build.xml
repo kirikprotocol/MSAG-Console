@@ -103,6 +103,7 @@ Targets:
     <symlink resource="${SERVICE2HOME_PATH}/../conf/command_gw.dtd"       link="${DISTR_DIR}/services/scag/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/locale_resources.dtd" link="${DISTR_DIR}/services/scag/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/routes.dtd"           link="${DISTR_DIR}/services/scag/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/smpp.dtd"           link="${DISTR_DIR}/services/scag/conf"/>
     <symlink resource="${SERVICE2HOME_PATH}/../conf/billing-rules.dtd"    link="${DISTR_DIR}/services/scag/conf"/>
 
     <symlink resource="${DAEMON2HOME_PATH}/lib"  link="${DISTR_DIR}/daemon"/>
@@ -128,7 +129,7 @@ Targets:
     </chmod>
     <copy todir="${DISTR_DIR}/conf" preservelastmodified="yes" flatten="yes" >
       <fileset dir="${SMSC_DIR}/config" 
-               includes="command.dtd configuration.dtd response.dtd AliasRecords.dtd SmeRecords.dtd scag/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd scag/billing-rules.dtd"/>
+               includes="command.dtd configuration.dtd response.dtd smpp.dtd AliasRecords.dtd SmeRecords.dtd scag/command_gw.dtd resourcemanager/locale_resources.dtd routes.dtd scag/billing-rules.dtd"/>
     </copy>
   </target>
 
@@ -183,10 +184,11 @@ Targets:
     </copy>
     <chmod file="${DISTR_DIR}/services/scag/bin/service" perm="755"/>
     <copy todir="${DISTR_DIR}/services/scag/conf" flatten="yes">
-      <fileset dir="${TEMPL_DIR}/scag" includes="config.xml routes.xml routes_.xml routes__.xml sme.xml billing-rules.xml"/>
+      <fileset dir="${TEMPL_DIR}/scag" includes="config.xml smpp.xml routes.xml routes_.xml routes__.xml sme.xml billing-rules.xml"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
     </copy>
     <symlink resource="../services/scag/conf/config.xml"        link="${DISTR_DIR}/conf/scag.xml" overwrite="yes"/>
+     <symlink resource="../services/scag/conf/smpp.xml"       link="${DISTR_DIR}/conf/smpp.xml" overwrite="yes"/>
     <symlink resource="../services/scag/conf/routes.xml"        link="${DISTR_DIR}/conf/routes.xml" overwrite="yes"/>
     <symlink resource="../services/scag/conf/routes_.xml"       link="${DISTR_DIR}/conf/routes_.xml" overwrite="yes"/>
     <symlink resource="../services/scag/conf/routes__.xml"      link="${DISTR_DIR}/conf/routes__.xml" overwrite="yes"/>
