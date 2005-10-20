@@ -211,7 +211,7 @@ void LoadFile(const string& filename,StrList& sl)
 void ParseOptionLine(const string& line)
 {
   string::size_type pos=line.find('=');
-  if(pos==string::npos)throw Exception("Invalid option line %s",line.c_str());
+  if(pos==string::npos)throw Exception("Invalid option line: '%s'(%d)",line.c_str(),line.length());
   string name=line.substr(0,pos);
   string val=line.substr(pos+1);
   ProcessOption(name.c_str(),val.c_str());
@@ -410,6 +410,7 @@ int main(int argc,char* argv[])
           overdelay=(gethrtime()-msgstart)/1000000-(delay-msgproc-overdelay);
         }else
         {
+          __trace2__("overdelay:%d",overdelay);
           overdelay-=delay;
           if(overdelay<0)overdelay=0;
         }
