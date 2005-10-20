@@ -3,6 +3,4 @@
 
 <records>
 <param_conf name="last used uid" type="int">0</param_conf>
-  <smscrecord>
-  </smscrecord>
 </records>
