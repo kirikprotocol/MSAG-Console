@@ -7,9 +7,9 @@ namespace smpp{
 void SmscConnector::addSmscConnect(const SmscConnectInfo& info)
 {
   MutexGuard mg(mtx);
-  if(smscConnections.Exists(info.sysId.c_str()))
-    throw SmscConnectAlreadyExistsException(info.sysId.c_str());
-  smscConnections.Insert(info.sysId.c_str(),info);
+  if(smscConnections.Exists(info.regSysId.c_str()))
+    throw SmscConnectAlreadyExistsException(info.regSysId.c_str());
+  smscConnections.Insert(info.regSysId.c_str(),info);
   tp.startTask(new SmscConnectTask(this,info));
 }
 
@@ -27,7 +27,7 @@ void SmscConnector::deleteSmscConnect(const char* sysId)
 void SmscConnector::updateSmscConnect(const SmscConnectInfo& info)
 {
   MutexGuard mg(mtx);
-  SmscConnectInfo* ptr=smscConnections.GetPtr(info.sysId.c_str());
+  SmscConnectInfo* ptr=smscConnections.GetPtr(info.regSysId.c_str());
   if(!ptr)
   {
     //throw TODO!!!

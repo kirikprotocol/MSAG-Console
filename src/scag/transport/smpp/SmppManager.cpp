@@ -290,6 +290,7 @@ void SmppManager::addSmppEntity(const SmppEntityInfo& info)
 
 void SmppManager::updateSmppEntity(const SmppEntityInfo& info)
 {
+  smsc_log_debug(log,"updateSmppEntity:%s",info.systemId.c_str());
   sync::MutexGuard mg(regMtx);
   SmppEntity** ptr=registry.GetPtr(info.systemId);
   if(!ptr)
@@ -301,6 +302,7 @@ void SmppManager::updateSmppEntity(const SmppEntityInfo& info)
 
 void SmppManager::deleteSmppEntity(const char* sysId)
 {
+  smsc_log_debug(log,"deleteSmppEntity:%s",sysId);
   sync::MutexGuard mg(regMtx);
   SmppEntity** ptr=registry.GetPtr(sysId);
   if(!ptr)

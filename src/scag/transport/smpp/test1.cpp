@@ -73,6 +73,7 @@ int main(int argc,char* argv[])
     SmscConnectorAdmin* sca=sm.getSmscConnectorAdmin();
 
     SmscConnectInfo info;
+    info.regSysId="sunfire";
     info.sysId="sunfire";
     info.hosts[0]="sunfire";
     info.hosts[1]="sunfire";
