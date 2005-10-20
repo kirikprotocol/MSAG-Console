@@ -146,6 +146,7 @@ public class Edit extends EditBean {
                 appContext.getSmppManager().setLastUidId(center.getUid());
             } else {
                 if (oldCenter.isEnabled() == center.isEnabled()) {
+                    if(isEnabled())
                     gateway.updateCenter(center);
                 }else{
                     if(center.isEnabled()){

@@ -86,9 +86,9 @@ public class Center {
                     host = value;
                 } else if ("port".equals(name)) {
                     port = Integer.decode(value).intValue();
-                } else if ("altHost".equals(name)) {
+                } else if ("althost".equals(name)) {
                     altHost = value;
-                } else if ("altPort".equals(name)) {
+                } else if ("altport".equals(name)) {
                     altPort = Integer.decode(value).intValue();
                 } else if ("uid".equals(name)) {
                     uid = Integer.decode(value).intValue();

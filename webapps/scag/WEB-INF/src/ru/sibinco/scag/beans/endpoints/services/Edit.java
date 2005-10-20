@@ -31,7 +31,7 @@ import java.security.Principal;
  *
  * @author &lt;a href="mailto:igor@sibinco.ru"&gt;Igor Klimenko&lt;/a&gt;
  */
-public class Edit extends EditBean{
+public class Edit extends EditBean {
 
     public static final long ALL_PROVIDERS = -1;
     protected String id = null;
@@ -93,7 +93,7 @@ public class Edit extends EditBean{
     protected void load(String loadId) throws SCAGJspException {
         final Svc svc = (Svc) appContext.getSmppManager().getSvcs().get(loadId);
 
-        if(null == svc)
+        if (null == svc)
             throw new SCAGJspException(Constants.errors.sme.SME_NOT_FOUND, loadId);
 
         this.id = svc.getId();
@@ -114,6 +114,10 @@ public class Edit extends EditBean{
         final Map svcs = appContext.getSmppManager().getSvcs();
         if (svcs.containsKey(id) && (isAdd() || !id.equals(getEditId())))
             throw new SCAGJspException(Constants.errors.sme.SME_ALREADY_EXISTS, id);
+        Svc oldSvc = null;
+        if (!isAdd()) {
+            oldSvc = (Svc) svcs.get(getEditId());
+        }
         svcs.remove(getEditId());
         final Svc svc;
         svc = new Svc(id, password, timeout, enabled, mode, providerObj);
@@ -122,10 +126,22 @@ public class Edit extends EditBean{
         final Gateway gateway = appContext.getGateway();
         try {
             if (isAdd()) {
-                gateway.addSvc(svc);
+                if (svc.isEnabled()) {
+                    gateway.addSvc(svc);
+                }
             } else {
-                gateway.updateSvcInfo(svc);
+                if ((oldSvc.isEnabled() == svc.isEnabled())) {
+                    if(isEnabled())
+                    gateway.updateSvcInfo(svc);
+                } else {
+                    if (svc.isEnabled()) {
+                        gateway.addSvc(svc);
+                    } else {
+                        gateway.deleteSvc(svc.getId());
+                    }
+                }
             }
+            oldSvc = null;
             appContext.getSmppManager().store();
         } catch (SibincoException e) {
             e.printStackTrace();
