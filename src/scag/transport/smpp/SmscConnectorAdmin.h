@@ -15,9 +15,12 @@ struct SmscConnectInfo{
   std::string hosts[2];
   int ports[2];
   int lastIdx;
+  time_t lastFailure;
+
   SmscConnectInfo()
   {
     lastIdx=0;
+    lastFailure=0;
   }
   const char* host()const
   {
@@ -30,6 +33,7 @@ struct SmscConnectInfo{
   void reportFailure()
   {
     lastIdx=(lastIdx+1)&1;
+    lastFailure=time(NULL);
   }
 };
 

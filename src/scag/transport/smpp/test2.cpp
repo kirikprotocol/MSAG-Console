@@ -40,6 +40,27 @@ int main(int argc,char* argv[])
     sm.Init("smpp.xml");
     sm.LoadRoutes("routes.xml");
     printf("press enter...");
+
+    SmppEntityInfo se;
+
+    se.type=etSmsc;
+    se.systemId="qqq";
+    se.bindSystemId="qqq";
+    se.bindPassword="qqq";
+    se.timeOut=10;
+    se.bindType=btTransceiver;
+    se.host="sunfire";
+    se.port=5001;
+    se.altHost="sunfire";
+    se.altPort=5002;
+    se.uid=2;
+    se.providerId=5;
+
+    sm.addSmppEntity(se);
+    sm.deleteSmppEntity(se.systemId);
+    sm.addSmppEntity(se);
+
+
     char buf[32];
     fgets(buf,sizeof(buf),stdin);
     sm.StopProcessing();

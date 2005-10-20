@@ -3,6 +3,7 @@
 
 #include <utility>
 #include <string>
+#include <time.h>
 #include "core/threads/ThreadPool.hpp"
 #include "SmppSMInterface.h"
 #include "SmscSocket.h"
@@ -48,10 +49,18 @@ struct SmscConnectTask:thr::ThreadedTask{
     pass=info.pass;
     host=info.host();
     port=info.port();
+    lastFailure=info.lastFailure;
   }
   const char* taskName(){return "SmscConnectTask";}
   int Execute()
   {
+    if(time(NULL)-lastFailure<10)
+    {
+      timespec ts;
+      ts.tv_sec=10;
+      ts.tv_nsec=0;
+      nanosleep(&ts,0);
+    }
     std::auto_ptr<SmscSocket> sock(new SmscSocket(host.c_str(),port));
     if(!sock->connect())
     {
@@ -69,6 +78,7 @@ protected:
   std::string pass;
   std::string host;
   int port;
+  time_t lastFailure;
 };
 
 
