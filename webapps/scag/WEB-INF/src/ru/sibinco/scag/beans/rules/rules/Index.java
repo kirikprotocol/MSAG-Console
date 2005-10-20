@@ -20,13 +20,7 @@ public class Index extends TabledBeanImpl implements TabledBean
   private final Map rules = Collections.synchronizedMap(new HashMap());
 
   protected Collection getDataSource()
-  {  // Provider provider=new Provider(1,"first");
-
-    //return rules.values();
-    //Collection rules=
-     // rules.put("rule_1", new Rule("rule_1","first rule",provider,"BillingRuleid1"));
-     // rules.put("rule_2", new Rule("rule_2","sekond rule",provider,"BillingRuleid1"));
-     // rules.put("rule_3", new Rule("rule_3","third rule",provider,"BillingRuleid1"));
+  {
 
       return appContext.getRuleManager().getRules().values();
   }
