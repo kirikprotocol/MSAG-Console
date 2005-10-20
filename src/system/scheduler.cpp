@@ -406,14 +406,26 @@ int Scheduler::Execute()
       }else if(cmd->cmdid==HLRALERT)
       {
         try{
-          info2(smsLog,"SCALERT:%s",cmd->get_address().toString().c_str());
           Chain* c=GetChain(cmd->get_address());
           if(!c)continue;
           if(c->inProcMap)continue;
-          RescheduleChain(c,time(NULL));
+          if(c->dpfPresent)
+          {
+            if(c->CancelMsgId(c->dpfId))DecSme(c);
+            sendAlertNotification(c->dpfId,0);
+            changeSmsStateToDeleted(c->dpfId);
+          }
+          if(c->Count()==0)
+          {
+            debug2(log,"Try to delete chain %p/%s",c,c->addr.toString().c_str());
+            DeleteChain(c);
+          }else
+          {
+            RescheduleChain(c,time(NULL));
+          }
         }catch(std::exception& e)
         {
-          warn2(log,"Exception during SCALERT:%s",e.what());
+          warn2(log,"Exception during HLRALERT:%s",e.what());
         }
       }
     }
@@ -604,6 +616,35 @@ void Scheduler::replaceSms(SMSId id, SMS& sms)
   (*ptr)->sms=sms;
   (*ptr)->it->second=++(*ptr)->seq;
   LocalFileStoreSave(id,(*ptr)->seq,sms);
+}
+
+
+void Scheduler::sendAlertNotification(SMSId id,int status)
+{
+  SMS sms;
+  try{
+    retriveSms(id,sms);
+    SmeProxy* proxy=smsc->getSmeProxy(sms.srcSmeId);
+    debug2(log,"Sending AlertNotification to '%s'",sms.srcSmeId);
+    if(proxy!=0)
+    {
+      proxy->putCommand(
+        SmscCommand::makeAlertNotificationCommand
+        (
+          proxy->getNextSequenceNumber(),
+          sms.getOriginatingAddress(),
+          sms.getDestinationAddress(),
+          status
+        )
+      );
+    }else
+    {
+      warn2(log,"Sme %s requested dpf, but not connected at the moment",sms.srcSmeId);
+    }
+  }catch(std::exception& e)
+  {
+    warn2(log,"Failed to send AlertNotification to sme %s:'%s'",sms.srcSmeId,e.what());
+  }
 }
 
 

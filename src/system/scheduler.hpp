@@ -135,7 +135,17 @@ public:
     {
       c=CreateChain(sms.getNextTime(),sms.getDealiasedDestinationAddress(),idx);
     }
-    ChainAddTimed(c,sms.getNextTime(),SchedulerData(id,sms.getValidTime()));
+    SchedulerData sd(id,sms.getValidTime());
+    if(sms.getIntProperty(Tag::SMPP_SET_DPF))
+    {
+      if(c->dpfPresent)
+      {
+        debug1(log,"AddScheduledSms: attempt to add sms with set_dpf in chain with dpfPresent");
+        throw smsc::util::Exception("AddScheduledSms: attempt to add sms with set_dpf in chain with dpfPresent");
+      }
+      sd.fake=true;
+    }
+    ChainAddTimed(c,sms.getNextTime(),sd);
     debug2(log,"AddScheduledSms: time=%d, id=%lld,addr=%s,c=%p",sms.getNextTime(),id,sms.getDealiasedDestinationAddress().toString().c_str(),c);
     UpdateChainChedule(c);
     RescheduleChain(c,c->headTime);
@@ -673,17 +683,18 @@ public:
   Array<SmscCommand> outQueue;
 
   struct SchedulerData{
-    SchedulerData():id(0),resched(false),expDate(0){}
+    SchedulerData():id(0),expDate(0),resched(false),fake(0){}
     SchedulerData(const SchedulerData& d)
     {
       id=d.id;
       resched=d.resched;
       expDate=d.expDate;
     }
-    SchedulerData(SMSId argId,time_t argExpDate,bool argRes=false):id(argId),expDate(argExpDate),resched(argRes){}
+    SchedulerData(SMSId argId,time_t argExpDate,bool argRes=false):id(argId),expDate(argExpDate),resched(argRes),fake(false){}
     SMSId id;
     time_t expDate;
     bool resched;
+    bool fake;
 
     bool operator<(const SchedulerData& rhs)const
     {
@@ -712,8 +723,22 @@ public:
     }
     Chain* c=timeLine.Pop(this);
     if(!c)return false;
+    //d.fake=false;
     if(!ChainPop(c,d))
     {
+      /*
+      if(d.fake)
+      {
+        sendAlertNotification(d.id,1);
+        try{
+          changeSmsStateToDeleted(d.id);
+        }catch(std::exception& e)
+        {
+          warn2(log,"Failed to delete fake sms %lld",d.id);
+        }
+      }
+      */
+
       UpdateChainChedule(c);
       debug2(log,"Chain::Pop failed, rescheduled to %d",c->headTime);
       if(c->Count()==0)
@@ -755,6 +780,9 @@ public:
     bool inTimeLine;
     bool inProcMap;
 
+    bool dpfPresent;
+    SMSId dpfId;
+
     typedef std::multiset<SchedulerData> ScQueue;
     ScQueue queue;
     int queueSize;
@@ -776,6 +804,7 @@ public:
       inTimeLine=false;
       inProcMap=false;
       queueSize=0;
+      dpfPresent=false;
     }
 
     bool AddTimed(time_t sctime,const SchedulerData& d)
@@ -784,6 +813,11 @@ public:
       {
         debug2(Scheduler::log,"Chain::AddTimed, id=%lld - already in the chain!!!",d.id);
         return false;
+      }
+      if(d.fake)
+      {
+        dpfPresent=true;
+        dpfId=d.id;
       }
       Iterators its;
       debug2(Scheduler::log,"Chain::AddTimed, time=%d, id=%lld",sctime,d.id);
@@ -866,6 +900,10 @@ public:
           imap.erase(imap.find(d.id));
           queueSize--;
           lastValidTime=d.expDate;
+          if(d.fake)
+          {
+            dpfPresent=false;
+          }
           return true;
         }
       }
@@ -891,6 +929,10 @@ public:
         queue.erase(it->second.li);
       }else
       {
+        if(it->second.mi->second.fake)
+        {
+          dpfPresent=false;
+        }
         timedQueue.erase(it->second.mi);
       }
       imap.erase(it);
@@ -1229,6 +1271,8 @@ public:
     MutexGuard mg(mon);
     return timeLine.headTime();
   }
+
+  void sendAlertNotification(SMSId id,int status);
 
   int smsCount;
 

@@ -1076,6 +1076,10 @@ StateType StateMachine::submit(Tuple& t)
     debug2(smsLog,"msgId=%lld, set translit to %d",t.msgId,sms->getIntProperty(Tag::SMSC_TRANSLIT));
   }
 
+  if(sms->getIntProperty(Tag::SMPP_SET_DPF) && (sms->getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)!=2)
+  {
+    sms->setIntProperty(Tag::SMPP_SET_DPF,0);
+  };
 
 
   Profile srcprof=profile;
@@ -2582,15 +2586,50 @@ StateType StateMachine::forward(Tuple& t)
 
   if(sms.hasIntProperty(Tag::SMPP_USSD_SERVICE_OP))
   {
-    Descriptor d;
     try{
       store->changeSmsStateToExpired(t.msgId);
     }catch(...)
     {
       smsc_log_warn(smsLog,"FORWARD: Failed to change state of USSD request to undeliverable. msgId=%lld",t.msgId);
     }
+    smsc->getScheduler()->InvalidSms(t.msgId);
     return UNDELIVERABLE_STATE;
   }
+
+  //
+  //sms in forward mode forwarded. this mean, that sms with set_dpf was sent,
+  //but request timed out. need to send alert notification with status unavialable.
+  //
+
+  if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==2)
+  {
+    SmeProxy* proxy=smsc->getSmeProxy(sms.srcSmeId);
+    debug2(smsLog,"Sending AlertNotification to '%s'",sms.srcSmeId);
+    if(proxy!=0)
+    {
+      proxy->putCommand(
+        SmscCommand::makeAlertNotificationCommand
+        (
+          proxy->getNextSequenceNumber(),
+          sms.getOriginatingAddress(),
+          sms.getDestinationAddress(),
+          2
+        )
+      );
+    }else
+    {
+      warn2(smsLog,"Sme %s requested dpf, but not connected at the moment",sms.srcSmeId);
+    }
+    try{
+      store->changeSmsStateToDeleted(t.msgId);
+    }catch(...)
+    {
+      smsc_log_warn(smsLog,"FORWARD: Failed to change state of fwd/dgm sms to undeliverable. msgId=%lld",t.msgId);
+    }
+    smsc->getScheduler()->InvalidSms(t.msgId);
+    return UNDELIVERABLE_STATE;
+  }
+
 
   ////
   //
@@ -3128,6 +3167,28 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
   if(GET_STATUS_TYPE(t.command->get_resp()->get_status())!=CMD_OK)
   {
+    if((sms.getIntProperty(Tag::SMPP_ESM_CLASS)&0x3)==0x2 &&
+       sms.getIntProperty(Tag::SMPP_SET_DPF))//forward/transaction mode
+    {
+      try{
+        //sms.setNextTime(time(NULL)+60*60);//!!! TODO timeout from config !!!
+        sms.setNextTime(time(NULL)+60*2);
+        sms.needArchivate=false;
+        sms.billingRecord=0;
+        store->createSms(sms,t.msgId,smsc::store::CREATE_NEW);
+        int dest_proxy_index=smsc->getSmeIndex(sms.getDestinationSmeId());
+        try{
+          smsc->getScheduler()->AddScheduledSms(t.msgId,sms,dest_proxy_index);
+        }catch(std::exception& e)
+        {
+          store->changeSmsStateToDeleted(t.msgId);
+        }
+      }catch(std::exception& e)
+      {
+        warn2(smsLog,"Failed to create dpf sms:%s",e.what());
+      }
+    }
+
     switch(GET_STATUS_TYPE(t.command->get_resp()->get_status()))
     {
       case CMD_ERR_RESCHEDULENOW:
@@ -3245,6 +3306,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
     }
   }
 
+  /*
   if(sms.getIntProperty(Tag::SMPP_SET_DPF)==1 && sms.getAttemptsCount()>0)
   {
     try{
@@ -3266,6 +3328,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
       __warning2__("DLVRESP: Failed to send AlertNotification:%s",e.what());
     }
   }
+  */
 
   sms.setLastResult(Status::OK);
 
@@ -4596,6 +4659,11 @@ void StateMachine::submitResp(Tuple& t,SMS* sms,int status)
                          status,
                          sms->getIntProperty(Tag::SMPP_DATA_SM)!=0
                        );
+  if(sms->hasIntProperty(Tag::SMPP_SET_DPF))
+  {
+    resp->get_resp()->haveDpf=true;
+    resp->get_resp()->dpfResult=sms->getIntProperty(Tag::SMPP_SET_DPF);
+  }
   try{
     t.command.getProxy()->putCommand(resp);
   }catch(...)
