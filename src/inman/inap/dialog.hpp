@@ -11,7 +11,7 @@
 #include "ss7cp.h"
 
 #include "logger/Logger.h"
-#include "inman/comp/comps.hpp"
+#include "inman/common/types.hpp"
 #include "invoke.hpp"
 #include "results.hpp"
 
@@ -39,16 +39,17 @@ class Dialog : public ObservableT< DialogListener >
 
   public:
 
-//    Dialog(Session* session, USHORT_T id, const APP_CONTEXT_T& ac );
     Dialog(Session* session, USHORT_T id, unsigned dialog_ac_idx );
     virtual ~Dialog();
 
     virtual Invoke* invoke(UCHAR_T opcode);
 
     // Transaction layer
-    virtual void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr, UCHAR_T* ui, USHORT_T uilen);
+    virtual void beginDialog(const SCCP_ADDRESS_T& remote_addr, UCHAR_T* ui, USHORT_T uilen);
     virtual void beginDialog(const SCCP_ADDRESS_T& remote_addr);
-    virtual void beginDialog();//called by client of this dialog instance
+    //called by client of this dialog instance
+    virtual void beginDialog();
+    virtual void beginDialog(UCHAR_T* ui, USHORT_T uilen);
     virtual void continueDialog();
     virtual void endDialog(USHORT_T termination);
     virtual void timerReset();

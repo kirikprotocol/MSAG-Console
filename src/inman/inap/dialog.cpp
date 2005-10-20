@@ -53,68 +53,50 @@ Dialog::~Dialog()
 {
 }
 
+void Dialog::beginDialog(UCHAR_T* ui, USHORT_T uilen)
+{
+    smsc_log_debug(tcapLogger,"BEGIN_REQ");
+    smsc_log_debug(tcapLogger," SSN: 0x%X", session->getSSN());
+    smsc_log_debug(tcapLogger," UserID: 0x%X", MSG_USER_ID );
+    smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
+    smsc_log_debug(tcapLogger," DialogID: 0x%X", did );
+    smsc_log_debug(tcapLogger," PriOrder: 0x%X", priority );
+    smsc_log_debug(tcapLogger," QoS: 0x%X", qSrvc );
+    smsc_log_debug(tcapLogger," Dest. address: %s", dump(remoteAddr.addrLen ,remoteAddr.addr  ).c_str() );
+    smsc_log_debug(tcapLogger," Org. address: %s" , dump(ownAddr.addrLen ,ownAddr.addr  ).c_str() );
+    smsc_log_debug(tcapLogger," App. context: %s" , dump(ac.acLen ,ac.ac ).c_str() );
+    if (ui && uilen)
+        smsc_log_debug(tcapLogger," User info: %s" , dump(uilen ,ui).c_str() );
+
+    USHORT_T result = EINSS7_I97TBeginReq(
+                        session->getSSN(), MSG_USER_ID, TCAP_INSTANCE_ID,
+                        did, priority, qSrvc,
+                        remoteAddr.addrLen, remoteAddr.addr,
+                        ownAddr.addrLen, ownAddr.addr,
+                        ac.acLen, ac.ac,
+                        uilen, ui);
+
+    if (result != 0)
+        throw runtime_error( format("BeginReq failed with code %d (%s)", result,
+                                                getTcapReasonDescription(result)));
+}
+
 void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr, UCHAR_T* ui, USHORT_T uilen)
 {
-  remoteAddr = remote_addr;
-
-  USHORT_T result = EINSS7_I97TBeginReq(
-    session->getSSN(),
-    MSG_USER_ID,
-    TCAP_INSTANCE_ID,
-    did,
-    priority,
-    qSrvc,
-    remoteAddr.addrLen,
-    remoteAddr.addr,
-    ownAddr.addrLen,
-    ownAddr.addr,
-    ac.acLen,
-    ac.ac,
-    uilen,
-    ui);
-
-  if(result != 0)
-    throw runtime_error( format("BeginReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
+    remoteAddr = remote_addr;
+    beginDialog(ui, uilen);
 }
+
 
 void Dialog::beginDialog(const SCCP_ADDRESS_T& remote_addr)
 {
-  remoteAddr = remote_addr;
-  beginDialog();
+    remoteAddr = remote_addr;
+    beginDialog(NULL, 0);
 }
 
 void Dialog::beginDialog()
 {
-  smsc_log_debug(tcapLogger,"BEGIN_REQ");
-  smsc_log_debug(tcapLogger," SSN: 0x%X", session->getSSN());
-  smsc_log_debug(tcapLogger," UserID: 0x%X", MSG_USER_ID );
-  smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", TCAP_INSTANCE_ID );
-  smsc_log_debug(tcapLogger," DialogID: 0x%X", did );
-  smsc_log_debug(tcapLogger," PriOrder: 0x%X", priority );
-  smsc_log_debug(tcapLogger," QoS: 0x%X", qSrvc );
-  smsc_log_debug(tcapLogger," Dest. address: %s", dump(remoteAddr.addrLen ,remoteAddr.addr  ).c_str() );
-  smsc_log_debug(tcapLogger," Org. address: %s" , dump(ownAddr.addrLen ,ownAddr.addr  ).c_str() );
-  smsc_log_debug(tcapLogger," App. context: %s" , dump(ac.acLen ,ac.ac ).c_str() );
-
-  USHORT_T result = EINSS7_I97TBeginReq(
-    session->getSSN(),
-    MSG_USER_ID,
-    TCAP_INSTANCE_ID,
-    did,
-    priority,
-    qSrvc,
-    remoteAddr.addrLen,
-    remoteAddr.addr,
-    ownAddr.addrLen,
-    ownAddr.addr,
-    ac.acLen,
-    ac.ac,
-    0,
-    NULL);
-
-
-  if(result != 0)
-    throw runtime_error( format("BeginReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
+    beginDialog(NULL, 0);
 }
 
 void Dialog::continueDialog()
