@@ -70,7 +70,7 @@ public:
 
     //own methods
     void setUSSData(unsigned char * data, unsigned size);
-    void setUSSData(USSDATA_T& ussdata);
+    void setUSSData(const USSDATA_T& ussdata);
     void setMSISDNadr(const Address& msadr);
     void setMSISDNadr(const char * adrStr);
     void setDCS(const unsigned char& dcs);

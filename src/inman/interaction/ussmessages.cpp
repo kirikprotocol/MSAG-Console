@@ -53,8 +53,6 @@ SerializableObject* SerializerUSS::deserialize(ObjectBuffer& in)
     return obj;
 }
 
-
-
 /* ************************************************************************** *
  * class USSMessageBase implementation:
  * ************************************************************************** */
@@ -132,6 +130,12 @@ void USSMessageBase::handle( USSCommandHandler* handler)
  * Own methods:
  * ************************************************************************** */
 
+void USSMessageBase::setUSSData(const USSDATA_T& ussdata)
+{
+    _ussData.clear();
+    _ussData = ussdata;
+}
+
 void USSMessageBase::setUSSData(unsigned char * data, unsigned size)
 {
     _ussData.clear();
@@ -190,8 +194,6 @@ unsigned short USSMessageBase::getStatus(void) const
 {
     return _status;
 }
-
-
 
 } //interaction
 } //inman
