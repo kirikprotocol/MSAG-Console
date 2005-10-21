@@ -243,13 +243,22 @@ public class jEdit extends Applet
     System.out.println("Destroying...");
     destroyed=true;
     startupDone=false;
-    bufferHash.clear();
+
     DockableWindowFactory.getInstance().clear();
     KillRing.getInstance().clear();
      //{{{ Clear static variables in plugins that must be cleared at destroy
      for (int i = 0; i < jars.size(); i++) {
-       ((PluginJAR) jars.elementAt(i)).clear();
+       PluginJAR jar=(PluginJAR) jars.elementAt(i);
+       jar.clear();
      } //}}}
+    bufferHash.clear();
+    bufferCount=0;
+    buffersFirst=null;
+    buffersLast=null;
+    viewCount=0;
+    viewsFirst=null;
+    viewsLast=null;
+    activeView=null;
     System.out.println("exit zakomentirovan!!!...");
    //  jEdit.exit(activeView,true);
   }
@@ -3736,14 +3745,11 @@ public class jEdit extends Applet
       String path = MiscUtilities.constructPath(userDir, userFile);
       synchronized (bufferListLock) {
       Buffer buffer = getBuffer(path);
-        System.out.println("finishStartupNext !!! buffer= "+buffer);
       if (buffer != null) {
-        System.out.println("buffer!=null!!!");
         View[] views= jEdit.getViews();
         for (int i = 0; i < views.length; i++) {
           View view = views[i];
           if (view.getBuffer()==buffer) {
-            System.out.println("found existing buffer!!!");
             jEdit.setActiveView(view); view.requestFocus();break;
           }
         }

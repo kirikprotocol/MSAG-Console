@@ -225,12 +225,31 @@ public class SideKickPlugin extends EBPlugin
 
  //}}}
  public void clear() {
-   sidekicks = new HashMap();
-   parsers = new HashMap();
-   if (worker!=null) worker.stop();
-   worker=null;
-   parsedBufferSet = new HashSet();
-   SideKickActions.clear();
+
+   View view = jEdit.getFirstView();
+  while(view != null)
+  {
+   uninitView(view);
+   SideKickParsedData.setParsedData(view,null);
+
+   EditPane[] panes = view.getEditPanes();
+   for(int i = 0; i < panes.length; i++)
+    uninitTextArea(panes[i].getTextArea());
+   view = view.getNext();
+  }
+
+  Buffer buffer = jEdit.getFirstBuffer();
+  while(buffer != null)
+  {
+   buffer.setProperty(PARSED_DATA_PROPERTY,null);
+   buffer = buffer.getNext();
+  }
+  sidekicks = new HashMap();
+  parsers = new HashMap();
+  if (worker!=null) worker.stop();
+  worker=null;
+  parsedBufferSet = new HashSet();
+  SideKickActions.clear();
  }
  
  //{{{ Private members

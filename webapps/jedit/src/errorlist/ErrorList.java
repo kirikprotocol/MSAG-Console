@@ -641,6 +641,7 @@ public class ErrorList extends JPanel implements EBComponent,
    buffer = error.getBuffer();
   else
   {
+   System.out.println("ErrorList before jEdit.openFile");
    buffer = jEdit.openFile(view,error.getFilePath());
    if(buffer == null)
     return;
@@ -650,9 +651,18 @@ public class ErrorList extends JPanel implements EBComponent,
   {
    public void run()
    {
-    view.goToBuffer(buffer);
+     if (view.getBuffer()== buffer) view.goToBuffer(buffer);
+     else {
+      View[] views= jEdit.getViews();
+        for (int i = 0; i < views.length; i++) {
+          View viewBuff = views[i];
+          if (viewBuff.getBuffer()==buffer) {
+            view=viewBuff; viewBuff.requestFocus();break;
+          }
+        }
+     }
 
-    int start = error.getStartOffset();
+     int start = error.getStartOffset();
     int end = error.getEndOffset();
 
     int lineNo = error.getLineNumber();
