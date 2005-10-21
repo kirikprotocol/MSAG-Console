@@ -49,7 +49,11 @@
       paramCheck(out, "users.roles.services",     "roles", "role20", "services",          bean.isUserInRole("services"), null);
       paramCheck(out, "users.roles.providers",    "roles", "role21", "providers",         bean.isUserInRole("providers"), null);
       paramCheck(out, "users.roles.categories",   "roles", "role22", "categories",        bean.isUserInRole("categories"), null);
-      paramCheck(out, "users.roles.infosme-admin","roles", "role23", "infosme-admin",     bean.isUserInRole("infosme-admin"), null);
+      paramCheck(out, "users.roles.infosme-admin", "roles", "role23", "infosme-admin",    bean.isUserInRole("infosme-admin"), null);
+      paramCheck(out, "users.roles.infosme-market","roles", "role24", "infosme-market",   bean.isUserInRole("infosme-market"), null);
+      paramCheck(out, "users.roles.dbsme-admin",   "roles", "role25", "dbsme-admin",      bean.isUserInRole("dbsme-admin"), null);
+      paramCheck(out, "users.roles.mcisme-admin",  "roles", "role26", "mcisme-admin",     bean.isUserInRole("mcisme-admin"), null);
+      paramCheck(out, "users.roles.mtsmsme-admin", "roles", "role27", "mtsmsme-admin",    bean.isUserInRole("mtsmsme-admin"), null);
 
       if (bean.getServiceRoles().size() > 0)
       for (Iterator i = bean.getServiceRoles().iterator(); i.hasNext();)

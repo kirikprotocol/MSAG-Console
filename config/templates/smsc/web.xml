@@ -260,6 +260,82 @@
     </user-data-constraint>
   </security-constraint>
 
+  <!-- InfoSme config (market: list of allowed pages) -->
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/esme_InfoSme/index.jsp</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/stat.jsp</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/deliveries.jsp</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/csv_download.jsp</url-pattern>
+      <url-pattern>/smsc/esme_InfoSme/taskProgress.jsp</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>infosme-admin</role-name>
+      <role-name>infosme-market</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <!-- InfoSme config (admin: all pages) -->
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/esme_InfoSme/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>infosme-admin</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <!-- DbSme config (admin: all pages) -->
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/esme_DBSme/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>dbsme-admin</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <!-- MCISme & MCIProf config (admin: all pages) -->
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/esme_MCISme/*</url-pattern>
+      <url-pattern>/smsc/esme_MCIProf/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>mcisme-admin</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
+  <!-- MTSMSme config (admin: all pages) -->
+  <security-constraint>
+    <web-resource-collection>
+      <web-resource-name></web-resource-name>
+      <url-pattern>/smsc/esme_MTSMSme/*</url-pattern>
+    </web-resource-collection>
+    <auth-constraint>
+      <role-name>mtsmsme-admin</role-name>
+    </auth-constraint>
+    <user-data-constraint>
+      <transport-guarantee>NONE</transport-guarantee>
+    </user-data-constraint>
+  </security-constraint>
+
   <!-- login config-->
   <login-config>
     <auth-method>FORM</auth-method>
@@ -331,6 +407,21 @@
   </security-role>
   <security-role>
     <role-name>categories</role-name>
+  </security-role>
+  <security-role>
+    <role-name>infosme-admin</role-name>
+  </security-role>
+  <security-role>
+    <role-name>infosme-market</role-name>
+  </security-role>
+  <security-role>
+    <role-name>dbsme-admin</role-name>
+  </security-role>
+  <security-role>
+    <role-name>mcisme-admin</role-name>
+  </security-role>
+  <security-role>
+    <role-name>mtsmsme-admin</role-name>
   </security-role>
   <security-role>
     <description>Access Control List manager</description>
