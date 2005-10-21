@@ -27,6 +27,8 @@
 #include "admin/service/Type.h"
 #include "scag/exc/SCAGExceptions.h"
 
+#include "scag/config/route/RouteStructures.h"
+
 #define GETSTRPARAM(param, name_)                           \
     if (::strcmp(name_, name) == 0){                        \
         strcpy(param, value.get());                         \
@@ -424,7 +426,7 @@ CommandLoadRoutes::CommandLoadRoutes(const xercesc::DOMDocument * doc)
 }
 
 
-Response * CommandLoadRoutes::CreateResponse(scag::Scag * SmscApp)
+Response * CommandLoadRoutes::CreateResponse(scag::Scag * ScagApp)
 {
     smsc_log_info(logger, "CommandLoadRoutes is processing");
 
@@ -432,15 +434,19 @@ Response * CommandLoadRoutes::CreateResponse(scag::Scag * SmscApp)
     result.appendValueToStringList("Routes configuration successfully loaded");
 
   BEGIN_EXCEPTION
+
+      if(!ScagApp)
+          throw AdminException("ScagApp undefined");
+
       RouteConfig cfg;
       if (cfg.load("conf/routes__.xml") == RouteConfig::fail)
           throw AdminException("Load routes config file failed.");
 
       vector<std::string> traceBuff;
 
-      SmscApp->reloadTestRoutes(cfg);
-      SmscApp->getTestRouterInstance()->enableTrace(true);
-      SmscApp->getTestRouterInstance()->getTrace(traceBuff);
+      ScagApp->reloadTestRoutes(cfg);
+      ScagApp->getTestRouterInstance()->enableTrace(true);
+      ScagApp->getTestRouterInstance()->getTrace(traceBuff);
 
       // 0:   Message (Routes successfully loaded)
       // 1..: Trace (if any)
@@ -448,16 +454,20 @@ Response * CommandLoadRoutes::CreateResponse(scag::Scag * SmscApp)
       smsc::admin::service::Variant result(smsc::admin::service::StringListType);
       result.appendValueToStringList("Routes configuration successfully loaded");
 
-      //for (int i=0; i<traceBuff.size(); i++)
-      //    result.appendValueToStringList(traceBuff[i].c_str());
+      smsc_log_info(logger, "traceBuff size: %d", traceBuff.size());
+      for (int i=0; i<traceBuff.size(); i++){
+          result.appendValueToStringList(traceBuff[i].c_str());
+          smsc_log_info(logger, "traceBuff[%d]: %s", i, traceBuff[i].c_str());
+      }
+
+      smsc_log_info(logger, "CommandLoadRoutes is processed ok");
+      return new Response(Response::Ok, result);
+
   CATCH_ADMINEXC("CommandLoadRoutes exception")
   CATCH_CFGEXC("CommandLoadRoutes exception")
   CATCH_STDEXC("CommandLoadRoutes exception")
   CATCH("CommandLoadRoutes exception.")
   END_EXCEPTION
-
-  smsc_log_info(logger, "CommandLoadRoutes is processed ok");
-  return new Response(Response::Ok, result);
 
 }
 
@@ -618,8 +628,10 @@ Response * CommandTraceRoute::CreateResponse(scag::Scag * ScagApp)
           result.appendValueToStringList(routeText);
       }
 
-      for (int i=0; i<traceBuff.size(); i++)
+      for (int i=0; i<traceBuff.size(); i++){
           result.appendValueToStringList(traceBuff[i].c_str());
+          smsc_log_info(logger, "traceBuff[%d]: %s", i, traceBuff[i].c_str());
+      }
 
       smsc_log_info(logger, "CommandTraceRoute is processed ok");
       return new Response(Response::Ok, result);

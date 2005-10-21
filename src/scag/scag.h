@@ -57,7 +57,7 @@ class GatewaySme;
 class Scag
 {
 public:
-  Scag():stopFlag(false)
+  Scag():stopFlag(false), testRouter_(0)
   {
     acceptedCounter=0;
     rejectedCounter=0;

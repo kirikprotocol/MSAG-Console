@@ -578,6 +578,7 @@ void RouteManager::commit(bool traceit)
   int count = 0;
   RouteRecord* r = new_first_record;
   for ( ; r != 0; r = r->next ) { ++count; }
+
   if ( !count ) return;
   auto_ptr<RouteRecord*> table(new RouteRecord*[count]);
   r = new_first_record;
