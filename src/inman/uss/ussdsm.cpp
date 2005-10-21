@@ -92,7 +92,7 @@ USSDSM::USSDSM(VLR* vlr, int dsmId, Session* sess, Connect* conn)
     
 {
     assert(sess);
-    _dlg = new Dialog(sess, 0, id_ac_map_networkUnstructuredSs_v2);
+    _dlg = _session->openDialog(0, id_ac_map_networkUnstructuredSs_v2);
     assert(_dlg);
     logger = Logger::getInstance("smsc.inman.ussdsm");
 }
