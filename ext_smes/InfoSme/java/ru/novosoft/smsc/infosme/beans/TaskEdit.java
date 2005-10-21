@@ -21,6 +21,7 @@ public class TaskEdit extends InfoSmeBean
   private boolean initialized = false;
   private boolean create = false;
   private String oldTask = null;
+  private String oldTaskName = null;
 
   private Task task = new Task();
 
@@ -38,6 +39,7 @@ public class TaskEdit extends InfoSmeBean
 
         try {
           task = new Task(getConfig(), getId());
+          oldTaskName = getName();
         } catch (Exception e) {
           logger.error(e);
           return error(e.getMessage());
@@ -51,6 +53,7 @@ public class TaskEdit extends InfoSmeBean
       }
     }
     if (oldTask == null) oldTask = "";
+    if (oldTaskName == null) oldTaskName = "";
 
     return result;
   }
@@ -70,15 +73,19 @@ public class TaskEdit extends InfoSmeBean
   {
     if (getId() == null || getId().length() == 0)
       return error("Task id not specified");
-    if (!create) {
-      if (!oldTask.equals(getId())) {
+    if (!create) { // Edit task
+        if (!oldTaskName.equals(getName()) && task.isContainsInConfigByName(getConfig()))
+          return error("Task with name='"+getName()+"' already exists. Please specify another name");
+        if (!oldTask.equals(getId())) {
+          if (task.isContainsInConfig(getConfig()))
+            return error("Task with id='"+getId()+"' already exists. Please specify another id");
+          Task.removeTaskFromConfig(getConfig(), oldTask);
+        }
+    } else { // Create new task
         if (task.isContainsInConfig(getConfig()))
-          return error("Task already exists", getId());
-        Task.removeTaskFromConfig(getConfig(), oldTask);
-      }
-    } else {
-      if (task.isContainsInConfig(getConfig()))
-        return error("Task already exists", getId());
+          return error("Task with id='"+getId()+"' already exists. Please specify another id");
+        if (task.isContainsInConfigByName(getConfig()))
+          return error("Task with name='"+getName()+"' already exists. Please specify another name");
     }
     if (transliterate) task.setTemplate(Transliterator.translit(task.getTemplate()));
     task.storeToConfig(getConfig());
@@ -109,6 +116,12 @@ public class TaskEdit extends InfoSmeBean
   }
   public void setOldTask(String oldTask) {
     this.oldTask = oldTask;
+  }
+  public String getOldTaskName() {
+    return oldTaskName;
+  }
+  public void setOldTaskName(String oldTaskName) {
+    this.oldTaskName = oldTaskName;
   }
 
   public String getId() {

@@ -33,6 +33,7 @@
 <input type=hidden name=create value=<%=bean.isCreate()%>>
 <input type=hidden name=delivery value=<%=bean.isDelivery()%>>
 <input type=hidden name=oldTask value="<%=bean.getOldTask()%>">
+<input type=hidden name=oldTaskName value="<%=bean.getOldTaskName()%>">
 <table class=properties_list>
 <col width="10%">
 <tr class=row<%=rowN++&1%>>
