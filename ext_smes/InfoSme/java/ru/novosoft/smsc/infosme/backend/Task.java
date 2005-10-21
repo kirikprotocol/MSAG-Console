@@ -5,9 +5,7 @@ import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
 
-import java.util.Collection;
-import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.*;
 
 /**
  * Created by IntelliJ IDEA.
@@ -135,6 +133,19 @@ public class Task
   public boolean isContainsInConfig(Config config)
   {
     return config.containsSection(TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(id));
+  }
+  public boolean isContainsInConfigByName(Config config)
+  {
+    Set set = config.getSectionChildShortSectionNames(TaskDataSource.TASKS_PREFIX);
+    if (set == null) return false;
+    for (Iterator i=set.iterator(); i.hasNext(); ) {
+      String sub = (String)i.next();
+      Object obj = config.getParameter(TaskDataSource.TASKS_PREFIX + '.' +
+                                       StringEncoderDecoder.encodeDot(sub) + ".name");
+      if (obj != null && (obj instanceof String) &&
+          name != null && name.trim().equalsIgnoreCase(((String)obj).trim())) return true;
+    }
+    return false;
   }
 
   public static void removeTaskFromConfig(Config config, String taskId)

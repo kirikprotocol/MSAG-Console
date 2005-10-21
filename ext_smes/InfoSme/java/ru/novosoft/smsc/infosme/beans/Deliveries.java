@@ -15,9 +15,7 @@ import ru.novosoft.util.jsp.MultipartDataSource;
 import javax.servlet.http.HttpServletRequest;
 import javax.sql.DataSource;
 import java.io.*;
-import java.util.List;
-import java.util.Collection;
-import java.util.ArrayList;
+import java.util.*;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.PreparedStatement;
@@ -219,10 +217,11 @@ public class Deliveries extends InfoSmeBean
                 generateThreadRunning = true;
                 logger.debug("Starting messages generating for task '"+taskId+"'");
 
-                // create & call messages generating statement
+                GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
+                java.util.Date currentTime = new java.util.Date();
                 PreparedStatement stmt = connection.prepareStatement(prepareInsertMessageSql());
                 stmt.setByte  (1, (byte)0); // NEW_STATE
-                stmt.setDate  (3, new java.sql.Date(System.currentTimeMillis()));
+                stmt.setTimestamp(3, new java.sql.Timestamp(currentTime.getTime()), cal);
                 stmt.setString(4, task.getText());
 
                 while(!isStopping)
@@ -507,11 +506,6 @@ public class Deliveries extends InfoSmeBean
         }
         else task.setId(taskId);
 
-        /*else if (taskId.length() > 7)
-          error("Task id should be less than 8 charecters");
-        else if (!taskId.matches("^(\\p{Alnum}){1,7}$"))
-          error("Task id should be alpha-numeric");*/
-
         String taskName = task.getName();
         if (taskName == null || (taskName = taskName.trim()).length() <= 0) {
             task.setName(""); error("Task name is undefined");
@@ -527,7 +521,9 @@ public class Deliveries extends InfoSmeBean
         else task.setText((transliterate) ? Transliterator.translit(text):text);
 
         if (task.isContainsInConfig(getConfig()))
-            error("Task '"+taskId+"' already exists. Please specify another id");
+            error("Task with id='"+taskId+"' already exists. Please specify another id");
+        if (task.isContainsInConfigByName(getConfig()))
+            error("Task with name='"+taskName+"' already exists. Please specify another name");
 
         if (errors.size() > 0) return false;
         try {

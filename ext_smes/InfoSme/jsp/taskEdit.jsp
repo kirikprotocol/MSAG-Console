@@ -113,13 +113,12 @@
     to
     <input class=timeField id=activePeriodEnd name=activePeriodEnd value="<%=StringEncoderDecoder.encode(bean.getActivePeriodEnd())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodEnd, false, true);">...</button><%
   } else {
-    if (bean.getActivePeriodStart() != null && bean.getActivePeriodStart().trim().length() > 0) {
-      %>from <%=StringEncoderDecoder.encode(bean.getActivePeriodStart())%> <%
-    } else if (bean.getActivePeriodEnd() != null && bean.getActivePeriodEnd().trim().length() > 0) {
-      %>to <%=StringEncoderDecoder.encode(bean.getActivePeriodEnd())%><%
-    } else {
-      %>not specified<%
-    }
+    String from = (bean.getActivePeriodStart() != null && bean.getActivePeriodStart().trim().length() > 0) ?
+                   StringEncoderDecoder.encode(bean.getActivePeriodStart()) : "-";
+    %>from <%=from%>&nbsp;<%
+    String till = (bean.getActivePeriodEnd() != null && bean.getActivePeriodEnd().trim().length() > 0) ?
+                 StringEncoderDecoder.encode(bean.getActivePeriodEnd()) : "-";
+    %>till <%=till%><%
   }%>
   </td>
 </tr>

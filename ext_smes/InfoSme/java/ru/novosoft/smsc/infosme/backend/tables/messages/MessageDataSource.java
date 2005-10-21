@@ -69,7 +69,8 @@ public class MessageDataSource implements ru.novosoft.smsc.jsp.util.tables.DataS
           String abonent = rs.getString(2);
           if (abonent == null || rs.wasNull()) abonent = "<unknown>";
           byte status = rs.getByte(3);
-          java.util.Date sendDate = rs.getTimestamp(4, cal);
+          java.sql.Timestamp sendDateTs = rs.getTimestamp(4, cal);
+          java.util.Date sendDate = (sendDateTs == null) ? null : new Date(sendDateTs.getTime());
           String message = rs.getString(5);
           if (message == null || rs.wasNull()) message = "<empty>";
           results.add(new MessageDataItem(id, abonent, message, sendDate, status));
