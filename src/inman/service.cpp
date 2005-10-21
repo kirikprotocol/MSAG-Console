@@ -71,8 +71,8 @@ void Service::billingFinished(Billing* bill)
 		if( (*it).second == bill )
 		{
 			workers.erase( it );
-			delete bill;
 			smsc_log_error( logger, "Billing id=0x%X deleted", bill->getId() );
+			delete bill;
 			return;
 		}
 	}

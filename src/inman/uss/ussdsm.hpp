@@ -35,6 +35,7 @@ public:
     USSTcapListener(Invoke * op, USSDSM * dsm);
     ~USSTcapListener() {}
 
+    Invoke * getInvId() const;
     //Gets result from TCAP 
     void result(TcapEntity* resL);
     void error(TcapEntity* err) {}
@@ -57,7 +58,6 @@ class VLR;
 class USSDSM : public USSCommandHandler, USSResultHandler
 {
 public:
-  
     USSDSM(VLR* vlr, int dsmId, Session* sess, Connect* conn);
     virtual ~USSDSM();
 
@@ -72,14 +72,18 @@ public:
     //sends request denial back to TCP socket
     void onDenyUSSRequest(USSRequestMessage* req);
 
+    unsigned int getDSMId(void) const;
+
 protected:
-    int         _dsmId;     //unique state machine id,
-    Address     _msAdr;     //subscriber ISDN address from request
-    VLR*        _vLR;       //parent VLR
-    Session*    _session;   //TCAP dialog factory
-    Connect*    _connect;   //TCP connect
-    Dialog*     _dlg;       //TCAP dialog
-    Logger*     logger;
+    unsigned int    _dsmId;     //unique state machine id,
+    Address         _msAdr;     //subscriber ISDN address from request
+    VLR*            _vLR;       //parent VLR
+    Session*        _session;   //TCAP dialog factory
+    Connect*        _connect;   //TCP connect
+    //                           
+    Dialog*          _dlg;      //TCAP dialog
+    USSTcapListener* _ires;     //invoke result listener 
+    Logger*         logger;
 };
 
 //    USHORT_T handleEndDialog();

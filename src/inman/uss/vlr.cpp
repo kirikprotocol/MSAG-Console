@@ -80,6 +80,19 @@ void VLR::stop()
   dispatcher->WaitFor();
 }
 
+//frees the DSM, which successfully processed request.
+void VLR::onCommandProcessed(USSDSM* dsm)
+{
+    unsigned int reqId = dsm->getDSMId();
+
+    USSDSMmap::iterator it = workers.find(reqId);
+    if (it == workers.end())
+        smsc_log_error(logger, "Attempt to free unregistered USSDSM, id: 0x%X", reqId);
+    else
+        workers.erase(reqId);
+    delete dsm;
+    smsc_log_debug(logger, "USSDSM deleted, id: 0x%X", reqId);
+}
 /* -------------------------------------------------------------------------- *
  * ServerListener interface implementation:
  * -------------------------------------------------------------------------- */

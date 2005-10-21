@@ -50,6 +50,10 @@ void USSTcapListener::result(TcapEntity* resL)
     _dSM->onUSSRequestResult(res);
 }
 
+Invoke * USSTcapListener::getInvId() const
+{
+    return orgInv;
+}
 /* ************************************************************************** *
  * class USSDSM implementation:
  * ************************************************************************** */
@@ -89,6 +93,7 @@ USSDSM::USSDSM(VLR* vlr, int dsmId, Session* sess, Connect* conn)
     , _dsmId (dsmId) //unique state machine id
     , _session(sess) //TCAP dialog factory
     , _connect(conn) //TCP connect
+    , _ires(NULL)    //Invoke reult listener
     
 {
     assert(sess);
@@ -100,7 +105,17 @@ USSDSM::USSDSM(VLR* vlr, int dsmId, Session* sess, Connect* conn)
 
 USSDSM::~USSDSM()
 {
-  _session->closeDialog(_dlg);
+    if (_ires) {
+        Invoke* inv = _ires->getInvId();
+        inv->removeListener(_ires);
+        delete _ires;
+    }
+    _session->closeDialog(_dlg); //frees Invoke
+}
+
+unsigned int USSDSM::getDSMId(void) const
+{
+    return _dsmId;
 }
 
 /* -------------------------------------------------------------------------- *
@@ -141,8 +156,8 @@ void USSDSM::onProcessUSSRequest( USSRequestMessage* req)
     //set result listener, and initiate TCAP dialog
     Invoke* op = _dlg->invoke( MAPUSS_OpCode::processUSS_Request );
     assert( op );
-    USSTcapListener * resListener = new USSTcapListener(op, this);
-    op->addListener(resListener);
+    _ires = new USSTcapListener(op, this);
+    op->addListener(_ires);
 
     op->setParam( &arg );
     op->send( _dlg );
@@ -161,9 +176,10 @@ void USSDSM::onUSSRequestResult(ProcessUSSRequestRes* resL)
     resp.setDCS(resL->getDCS());
     resp.setUSSData(resL->getUSSData());
     resp.setMSISDNadr(_msAdr);
-    if (_connect)   //for local testing
+    smsc_log_debug(logger, "sending USS result for request 0x%X", _dsmId);
+    if (_connect)   //may be absent, in case of local testing
         _connect->send(&resp);
-//    smsc_log_debug(logger, "USSrequest result: ");
+    _vLR->onCommandProcessed(this);
 }
 
 

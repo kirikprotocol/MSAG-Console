@@ -22,6 +22,7 @@ using smsc::inman::inap::InSessionFactory;
 using smsc::inman::common::getTcapBindErrorMessage;
 using smsc::inman::common::dump;
 using smsc::inman::common::dumpToLog;
+using smsc::inman::common::format;
 
 namespace smsc {
 namespace inman{

@@ -51,6 +51,15 @@ Dialog::Dialog(Session* pSession, USHORT_T dlgId, unsigned dialog_ac_idx)
 
 Dialog::~Dialog()
 {
+    InvokeMap::const_iterator it;
+    for (it = originating.begin(); it != originating.end(); it++) {
+        Invoke * inv = (*it).second;
+        delete inv;
+    }
+    for (it = terminating.begin(); it != terminating.end(); it++) {
+        Invoke * inv = (*it).second;
+        delete inv;
+    }
 }
 
 void Dialog::beginDialog(UCHAR_T* ui, USHORT_T uilen)
@@ -194,6 +203,8 @@ Invoke* Dialog::invoke(UCHAR_T opcode)
   OperationFactory * fact = ApplicationContextFactory::getFactory(_ac_idx);
   if (fact->hasResult(opcode) || fact->hasErrors(opcode))
       originating.insert(InvokeMap::value_type(invoke->getId(), invoke));
+  else
+      terminating.insert(InvokeMap::value_type(invoke->getId(), invoke));
   return invoke;
 }
 
@@ -247,34 +258,33 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
 
 USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
 {
-  assert( op );
-  assert( oplen > 0 );
-  assert( tag == EINSS7_I97TCAP_OPERATION_TAG_LOCAL );
+    assert( op );
+    assert( oplen > 0 );
+    assert( tag == EINSS7_I97TCAP_OPERATION_TAG_LOCAL );
 
-  UCHAR_T opcode = op[0];
+    //search for originating Invoke, prepare result and call invoke result listeners
+    InvokeMap::const_iterator it = originating.find(invId);
+    if (it != originating.end()) {
+        InvokeResultLast  result;
+        UCHAR_T opcode = op[0];
 
-  InvokeResultLast* result = new InvokeResultLast();
-  result->setId( invId );
-  result->setTag( tag );
-  result->setOpcode( opcode );
+        result.setId( invId );
+        result.setTag( tag );
+        result.setOpcode( opcode );
 
-  Component* resParm = ApplicationContextFactory::getFactory(_ac_idx)->createRes(opcode);
-  assert(resParm);
-  if (resParm) {
-      std::vector<unsigned char> code(pm, pm + pmlen);
-      resParm->decode(code);
-      result->setParam(resParm);
-  }
-  //search for originating Invoke and call its result listeners
-  InvokeMap::const_iterator it = originating.find(invId);
-  if (it != originating.end()) {
-      Invoke* inv = (*it).second;
-      //ResultListener should copy 'resParm' or take its ownership !
-      inv->notifyResultListeners(result);
-  }
-
-  delete result;
-  return MSG_OK;
+        Component* resParm = ApplicationContextFactory::getFactory(_ac_idx)->createRes(opcode);
+        assert(resParm);
+        if (resParm) {
+            std::vector<unsigned char> code(pm, pm + pmlen);
+            resParm->decode(code);
+            result.setParam(resParm);
+        }
+        Invoke* inv = (*it).second;
+        //NOTE: notifyResultListeners() may lead to this ~Dialog() being called !!!
+        //ResultListener should copy 'resParm', not take its ownership !
+        inv->notifyResultListeners(&result);
+    }
+    return MSG_OK;
 }
 
 USHORT_T Dialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)

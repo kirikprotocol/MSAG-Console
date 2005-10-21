@@ -6,12 +6,10 @@
 #include <map>
 
 #include "logger/Logger.h"
-//#include "inman/uss/ussdsm.hpp"
 #include "inman/inap/dispatcher.hpp"
 #include "inman/interaction/server.hpp"
 #include "inman/inap/session.hpp"
 
-//using smsc::logger::Logger;
 using smsc::inman::inap::Dispatcher;
 using smsc::inman::inap::Session;
 using smsc::inman::interaction::Server;
@@ -52,8 +50,11 @@ class VLR : public ServerListener, ConnectListener
     //ConnectListener interface
     virtual void onCommandReceived(Connect*, SerializableObject*);
 
+    //own methods
     virtual void start();
     virtual void stop();
+    //frees the DSM, which successfully processed request.
+    virtual void onCommandProcessed(USSDSM* dsm);
 
     //for local testing: emulates request from TCP 
     void make102(const char * who);

@@ -77,6 +77,15 @@ void Invoke::notifyResultListeners(TcapEntity* resp)
     }
 }
 
+void Invoke::notifyResultNListeners(TcapEntity* resp)
+{
+    for (Invoke::ListenerList::iterator it = listeners.begin();
+                                      it != listeners.end(); it++) {
+        InvokeListener* ptr = *it;
+        ptr->resultNL(resp);
+    }
+}
+
 void Invoke::notifyErrorListeners(TcapEntity* resp)
 {
     for (Invoke::ListenerList::iterator it = listeners.begin();

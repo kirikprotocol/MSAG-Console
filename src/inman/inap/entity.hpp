@@ -5,7 +5,7 @@
 
 #include "ss7cp.h"
 #include "inman/common/types.hpp"
-#include "inman/comp/comps.hpp"
+#include "inman/comp/compdefs.hpp"
 
 using smsc::inman::comp::Component;
 

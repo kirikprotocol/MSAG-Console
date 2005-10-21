@@ -10,6 +10,9 @@ static char const ident[] = "$Id$";
 #include "util/config/Manager.h"
 #include "util/config/ConfigView.h"
 
+
+#define LOCAL_TESTING
+
 static const UCHAR_T VER_HIGH    = 0;
 static const UCHAR_T VER_LOW     = 1;
 
@@ -27,6 +30,7 @@ namespace smsc
 };
 
 using smsc::inman::uss::VLR;
+using smsc::inman::uss::VLR_CFG;
 using smsc::inman::common::Console;
 using smsc::inman::inap::inapLogger;
 using smsc::inman::inap::tcapLogger;
@@ -53,10 +57,14 @@ extern "C" static void sighandler( int signal )
   vlr = 0;
 }
 
-struct UssManConfig
+struct UssManConfig : public VLR_CFG
 {
   public:
-  UssManConfig():vlr_addr(0),vlr_ssn(0){}
+  UssManConfig()
+  {
+    vlr_addr = in_addr = host = NULL;
+    vlr_ssn = in_ssn = usr_ssn = port = 0;
+  }
   void read(Manager& manager)
   {
     try {
@@ -82,18 +90,21 @@ struct UssManConfig
       usr_ssn = 0;
      throw ConfigException("userSSN missing");
     }
+    try {
+        host = manager.getString("host");
+        port = manager.getInt("port");
+        smsc_log_info( inapLogger, "USS client: %s:%d", host, port );
+    } catch(ConfigException& exc) {
+        host = 0; port = 0;
+        throw ConfigException("USS client host or port missing");
+    }
   }
-  char* vlr_addr;
-  int   vlr_ssn;
-  char* in_addr;
-  int   in_ssn;
-  int   usr_ssn;
 };
 
+#ifdef LOCAL_TESTING
 void make102req(Console&, const std::vector<std::string> &args)
 {
   assert( vlr );
-
   try
   {
     vlr->make102("79139343290");
@@ -108,8 +119,9 @@ static void run_console()
 {
     Console console;
     console.addItem( "req", make102req );
-    console.run("inman>");
+    console.run("ussman>");
 }
+#endif /* LOCAL_TESTING */
 
 int main(int argc, char** argv)
 {
@@ -133,12 +145,17 @@ int main(int argc, char** argv)
   }
   try
   {
-    vlr = new VLR( cfg.usr_ssn, cfg.vlr_ssn, cfg.vlr_addr, cfg.in_ssn, cfg.in_addr );
+#ifndef LOCAL_TESTING
+    vlr = new VLR(&cfg);
+#else  /* LOCAL_TESTING */
+    vlr = new VLR(cfg.usr_ssn, cfg.vlr_ssn, cfg.vlr_addr, cfg.in_ssn, cfg.in_addr);
+#endif /* LOCAL_TESTING */
     vlr->start();
-
     sigset( SIGTERM, sighandler );
 
+#ifdef LOCAL_TESTING
     run_console();
+#endif /* LOCAL_TESTING */
 
   }
   catch(const std::exception& error)
