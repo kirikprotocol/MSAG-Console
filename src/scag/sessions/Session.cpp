@@ -38,6 +38,18 @@ void Operation::rollbackAll()
     BillList.clear();
 }
 
+//////////////////////////////////////////////Session////////////////////////////////////////////
+
+
+void Session::Serialize(SessionBuffer& buff)
+{
+    buff << 10;
+}
+
+void Session::Deserialize(SessionBuffer& buff)
+{
+
+}
 
 
 

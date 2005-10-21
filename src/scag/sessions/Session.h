@@ -13,8 +13,14 @@
 #include <scag/util/sms/HashUtil.h>
 #include <scag/transport/SCAGCommand.h>
 
+#include <sms/sms_serializer.h>
+//#include "core/buffers/TmpBuf.hpp"
+
 namespace scag { namespace sessions 
 {
+    using namespace smsc::sms::BufOps;
+//    using namespace smsc::core::buffers;
+
     using smsc::logger::Logger;
     using namespace scag::util::properties;
     using namespace smsc::sms;
@@ -26,6 +32,7 @@ namespace scag { namespace sessions
     using namespace scag::bill;
 
 
+    typedef smsc::core::buffers::TmpBuf<char,2048> SessionBuffer;
 
     struct CSessionKey
     {
@@ -90,6 +97,7 @@ namespace scag { namespace sessions
 
     class Session : public PropertyManager
     {
+
         Logger * logger;
         std::list<PendingOperation> PendingOperationList;
         COperationsHash OperationHash;
@@ -105,7 +113,7 @@ namespace scag { namespace sessions
         int                     accessCount;
 
         Hash<AdapterProperty *> PropertyHash;
-
+        
     public:
 
         Session(const CSessionKey& key);
@@ -128,6 +136,8 @@ namespace scag { namespace sessions
         void abort();
         Operation * GetCurrentOperation() const;
         time_t Session::getWakeUpTime();
+        void Serialize(SessionBuffer& buff);
+        void Deserialize(SessionBuffer& buff);
     };
 
 }}
