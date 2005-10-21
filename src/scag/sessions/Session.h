@@ -32,7 +32,26 @@ namespace scag { namespace sessions
     using namespace scag::bill;
 
 
-    typedef smsc::core::buffers::TmpBuf<char,2048> SessionBuffer;
+    class SessionBuffer : public smsc::sms::BufOps::SmsBuffer
+    {
+    public:
+        SessionBuffer& operator >> (std::string& str)
+        {
+            uint8_t len;
+            this->Read((char*)&len,1);
+            char scb[256];
+
+            if (len>255)throw smsc::util::Exception("Attempt to read %d byte in buffer with size %d",(int)len,255);
+
+            this->Read(scb,len);
+            scb[len] = 0;
+
+            str = scb;
+            return *this;
+        };       
+
+    };
+
 
     struct CSessionKey
     {
@@ -80,6 +99,8 @@ namespace scag { namespace sessions
 
     class Operation : public PendingOperation
     {
+        friend class Session;
+
         Logger * logger;
         Operation(const Operation& operation);
         std::list <int> BillList;
@@ -113,7 +134,16 @@ namespace scag { namespace sessions
         int                     accessCount;
 
         Hash<AdapterProperty *> PropertyHash;
-        
+
+
+
+        void SerializeProperty(SessionBuffer& buff);
+        void SerializeOperations(SessionBuffer& buff);
+        void SerializePendingOperations(SessionBuffer& buff);
+
+        void DeserializeProperty(SessionBuffer& buff);
+        void DeserializeOperations(SessionBuffer& buff);
+        void DeserializePendingOperations(SessionBuffer& buff);
     public:
 
         Session(const CSessionKey& key);

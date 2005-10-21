@@ -40,15 +40,172 @@ void Operation::rollbackAll()
 
 //////////////////////////////////////////////Session////////////////////////////////////////////
 
+void Session::DeserializeProperty(SessionBuffer& buff)
+{
+    std::string name, value;
+
+    uint32_t Count;
+    buff >> Count;
+
+    for (int i=0; i < Count; i++) 
+    {
+        buff >> name;
+        buff >> value;
+
+        AdapterProperty * property = new AdapterProperty(name,this,value);
+        PropertyHash.Insert(name.c_str(),property);
+    }
+}
+
+
+void Session::DeserializeOperations(SessionBuffer& buff)
+{
+    Operation * operation;
+    COperationKey key;
+
+    unsigned int Count;
+    unsigned int BillId;
+    unsigned int BillCount;
+
+    buff >> Count;
+
+    for (int i=0; i < Count; i++) 
+    {
+        operation = new Operation();
+
+        buff >> BillCount;
+
+        for (int j=0; j < BillCount; j++) 
+        {
+            buff >> BillId;
+            operation->BillList.push_back(BillId);
+        }
+
+        buff >> operation->type >> operation->validityTime;
+        buff >> key.destAddress >> key.key;
+        OperationHash.Insert(key,operation);
+    }
+}
+
+
+void Session::DeserializePendingOperations(SessionBuffer& buff)
+{
+    PendingOperation p;
+
+    int Count;
+
+    buff >> Count;
+
+    for (int i=0; i<Count; i++) 
+    {
+        buff >> p.type >> p.validityTime;
+        PendingOperationList.push_back(p);
+    }
+
+}
+
+
+
+void Session::SerializeProperty(SessionBuffer& buff)
+{
+    char * key;
+    AdapterProperty * value = 0;
+
+    buff << PropertyHash.GetCount();
+
+    PropertyHash.First();
+    for (Hash <AdapterProperty *>::Iterator it = PropertyHash.getIterator(); it.Next(key, value);)
+    {
+        buff << key;
+        buff << value->getStr().c_str();
+    }
+}
+
+void Session::SerializeOperations(SessionBuffer& buff)
+{
+    Operation * operation;
+    COperationKey key;
+
+    OperationHash.First();
+    XHash <COperationKey,Operation *,XOperationHashFunc>::Iterator it = OperationHash.getIterator();
+
+    buff << OperationHash.Count();
+
+    for (;it.Next(key, operation);)
+    {              
+        buff << operation->BillList.size();
+
+        for (std::list<int>::iterator billIt = operation->BillList.begin();billIt!=operation->BillList.end(); ++billIt)
+        {
+            buff << (*billIt);
+        }
+
+        buff << operation->type << operation->validityTime;
+        buff << key.destAddress << key.key;
+    }
+}
+
+void Session::SerializePendingOperations(SessionBuffer& buff)
+{
+    std::list<PendingOperation>::iterator it;
+
+    buff << PendingOperationList.size();
+
+    for (it = PendingOperationList.begin(); it!=PendingOperationList.end(); ++it)
+    {
+        buff << it->type << it->validityTime;
+    }
+}
 
 void Session::Serialize(SessionBuffer& buff)
 {
-    buff << 10;
+    /*
+    TODO: Check this properties:
+        bool                    bChanged, bDestroy;
+        int                     accessCount;
+    */
+
+    SerializeProperty(buff);
+    SerializeOperations(buff);
+    SerializePendingOperations(buff);
+
+
+    buff << (m_pCurrentOperation != 0);
+
+    if (m_pCurrentOperation != 0) 
+        buff << currentOperationKey.destAddress << currentOperationKey.key;
+
+    buff << needReleaseCurrentOperation;
+    buff << m_SessionKey.abonentAddr << (uint32_t)m_SessionKey.USR << lastAccessTime;
+
 }
+
 
 void Session::Deserialize(SessionBuffer& buff)
 {
+    DeserializeProperty(buff);
+    DeserializeOperations(buff);
+    DeserializePendingOperations(buff);
 
+    bool hasCurrentOperation = false;
+    buff >> hasCurrentOperation;
+
+    m_pCurrentOperation = 0;
+
+    if (hasCurrentOperation) 
+    {
+        buff >> currentOperationKey.destAddress >> currentOperationKey.key;
+        m_pCurrentOperation = OperationHash.Get(currentOperationKey);
+    }
+
+    buff >> needReleaseCurrentOperation;
+    buff >> m_SessionKey.abonentAddr;
+
+    unsigned int tmp;
+    buff >> tmp;
+    m_SessionKey.USR = tmp;
+
+    buff >> lastAccessTime;
 }
 
 
