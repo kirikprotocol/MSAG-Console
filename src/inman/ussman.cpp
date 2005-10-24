@@ -90,6 +90,7 @@ struct UssManConfig : public VLR_CFG
       usr_ssn = 0;
      throw ConfigException("userSSN missing");
     }
+#ifndef LOCAL_TESTING
     try {
         host = manager.getString("host");
         port = manager.getInt("port");
@@ -98,6 +99,7 @@ struct UssManConfig : public VLR_CFG
         host = 0; port = 0;
         throw ConfigException("USS client host or port missing");
     }
+#endif /* LOCAL_TESTING */
   }
 };
 
