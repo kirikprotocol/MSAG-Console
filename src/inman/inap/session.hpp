@@ -43,16 +43,22 @@ class Session : public ObservableT< SessionListener >
         void         setState(SessionState newState);
 
         UCHAR_T      getSSN() const;
+        //sets default APPLICATION-CONTEXT index for dialogs, see acdefs.hpp
+        void         setDialogsAC(const unsigned dialog_ac_idx);
 
-
-        virtual     Dialog*  openDialog(USHORT_T id);
+        // register dialog in session, it's ad hoc method for using
+        // Session functionality for Dialog successors.
+        // NOTE: forcedly sets dialogId
         virtual     Dialog*  registerDialog(Dialog* pDlg);
-        virtual     Dialog*  openDialog(USHORT_T id,const unsigned dialog_ac_idx);
+
+        virtual     Dialog*  openDialog();
+        virtual     Dialog*  openDialog(const unsigned dialog_ac_idx);
         virtual     Dialog*  findDialog(USHORT_T id);
-        virtual     void       closeDialog(Dialog* pDlg);
-        virtual     void       closeAllDialogs();
+        virtual     void     closeDialog(Dialog* pDlg);
+        virtual     void     closeAllDialogs();
 
     protected:
+        Dialog* registerDialog(Dialog* pDlg, USHORT_T id);
         typedef     std::map<USHORT_T, Dialog*> DialogsMap_T;
 
         Session(UCHAR_T ownssn, const char* own, const char* remote);

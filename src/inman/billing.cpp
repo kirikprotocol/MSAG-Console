@@ -7,6 +7,7 @@ static char const ident[] = "$Id$";
 #include "inman/inap/inap.hpp"
 #include "inman/comp/comps.hpp"
 #include "service.hpp"
+#include "inman/comp/acdefs.hpp"
 
 using smsc::inman::interaction::ChargeSmsResult;
 
@@ -26,7 +27,7 @@ Billing::Billing(Service* serv, int bid, Session* pSession, Connect* conn)
 		, connect( conn )
 {
 	assert( session );
-	dialog = session->openDialog( 0 );
+	dialog = session->openDialog(id_ac_cap3_sms_AC);
 	assert( dialog );
 	inap = new Inap( dialog );
 	assert( inap );
