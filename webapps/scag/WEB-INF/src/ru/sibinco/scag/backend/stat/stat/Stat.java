@@ -80,7 +80,7 @@ public class Stat {
     private TreeMap getStatQueryDirs() throws MessageException {
         File statPath = new File(statstorePath);
         if (statPath == null || !statPath.isAbsolute()) {
-            File gwConfFile = SCAGAppContext.getGwConfFolder();
+            File gwConfFile = SCAGAppContext.getScagConfFolder();
             String gwDirFile = gwConfFile.getParent();
             statPath = new File(gwDirFile, statstorePath);
             logger.debug("Stat path: by gateway conf '" + statPath.getAbsolutePath() + "'");
