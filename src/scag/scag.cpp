@@ -421,6 +421,23 @@ void Scag::init()
     __warning__("eventQueueLimit not found, using default(1000)");
   }
 
+  //*****************************************************
+  // test route instance initialization
+  //*****************************************************
+  try {
+      RouteConfig cfg;
+      if (cfg.load("conf/routes__.xml") == RouteConfig::fail){
+          smsc_log_warn(log, "Load routes config file failed.");
+      }else{
+          reloadTestRoutes(cfg);
+          getTestRouterInstance()->enableTrace(true);
+      }
+  }catch(...)
+  {
+      throw Exception("Exception during test route instance initialization");
+  }
+  //*****************************************************
+
   smsc_log_info(log, "SCAG init complete" );
 
   }

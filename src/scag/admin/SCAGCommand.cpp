@@ -624,6 +624,7 @@ Response * CommandTraceRoute::CreateResponse(scag::Scag * ScagApp)
                   encSmeSystemId.get(), encSrcSmeSystemId.get(),
                   (info.archived) ? "yes":"no",
                   (info.enabled) ? "yes":"no");
+          smsc_log_info(logger, "routeText: %s", routeText);
 
           result.appendValueToStringList(routeText);
       }
