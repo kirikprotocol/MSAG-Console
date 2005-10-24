@@ -5,6 +5,7 @@ namespace scag { namespace sessions {
 
 using namespace scag::re;
 
+
 void Operation::detachBill(int BillId)
 {
     for (std::list<int>::iterator it = BillList.begin();it!=BillList.end(); ++it)
@@ -111,7 +112,7 @@ void Session::SerializeProperty(SessionBuffer& buff)
     char * key;
     AdapterProperty * value = 0;
 
-    buff << PropertyHash.GetCount();
+    buff << (uint32_t)PropertyHash.GetCount();
 
     PropertyHash.First();
     for (Hash <AdapterProperty *>::Iterator it = PropertyHash.getIterator(); it.Next(key, value);)
@@ -169,33 +170,36 @@ void Session::Serialize(SessionBuffer& buff)
     SerializeOperations(buff);
     SerializePendingOperations(buff);
 
+    int hasCurrentOperation = (m_pCurrentOperation != 0);
+    buff << hasCurrentOperation;
 
-    buff << (m_pCurrentOperation != 0);
 
     if (m_pCurrentOperation != 0) 
         buff << currentOperationKey.destAddress << currentOperationKey.key;
-
+   
     buff << needReleaseCurrentOperation;
     buff << m_SessionKey.abonentAddr << (uint32_t)m_SessionKey.USR << lastAccessTime;
-
 }
 
 
 void Session::Deserialize(SessionBuffer& buff)
 {
+    buff.SetPos(0);
+
     DeserializeProperty(buff);
     DeserializeOperations(buff);
     DeserializePendingOperations(buff);
 
-    bool hasCurrentOperation = false;
+    int hasCurrentOperation = 0;
     buff >> hasCurrentOperation;
+
 
     m_pCurrentOperation = 0;
 
     if (hasCurrentOperation) 
     {
         buff >> currentOperationKey.destAddress >> currentOperationKey.key;
-        m_pCurrentOperation = OperationHash.Get(currentOperationKey);
+        if (OperationHash.Exists(currentOperationKey)) m_pCurrentOperation = OperationHash.Get(currentOperationKey);
     }
 
     buff >> needReleaseCurrentOperation;
@@ -205,7 +209,7 @@ void Session::Deserialize(SessionBuffer& buff)
     buff >> tmp;
     m_SessionKey.USR = tmp;
 
-    buff >> lastAccessTime;
+    buff >> lastAccessTime;     
 }
 
 
@@ -235,18 +239,6 @@ Session::Session(const CSessionKey& key)
 {
     logger = Logger::getInstance("scag.re");
     m_SessionKey = key;
-
- /*   //!!! Временная херота, для того, чтобы SessionManager выдавал валидную сессию
-    PendingOperation operation;
-    time_t now;
-
-    time(&now);
-
-    operation.type = 1;
-    operation.validityTime = now + 100;
-
-    addPendingOperation(operation);
-    //!!! Временная херота, для того, чтобы SessionManager выдавал валидную сессию  */
 }
 
 Session::~Session()
