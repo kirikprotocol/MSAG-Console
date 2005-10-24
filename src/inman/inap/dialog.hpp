@@ -33,12 +33,12 @@ class DialogListener
     virtual void onDialogInvoke(  Invoke*  ) = 0;
 };
 
+
 class Dialog : public ObservableT< DialogListener >
 {
     friend class Session;
 
   public:
-
     Dialog(Session* session, USHORT_T id, unsigned dialog_ac_idx );
     virtual ~Dialog();
 

@@ -294,6 +294,32 @@ USHORT_T Dialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen,
 
 USHORT_T Dialog::handleUserError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
 {
+    assert( op );
+    assert( oplen > 0 );
+    assert( tag == EINSS7_I97TCAP_OPERATION_TAG_LOCAL );
+
+    //search for originating Invoke, prepare result and call invoke result listeners
+    InvokeMap::const_iterator it = originating.find(invId);
+    if (it != originating.end()) {
+        InvokeResultError  resErr;
+        UCHAR_T ercode = op[0];
+
+        resErr.setId( invId );
+        resErr.setTag( tag );
+        resErr.setOpcode( ercode );
+
+        //Error may have no parameters
+        Component* errParm = ApplicationContextFactory::getFactory(_ac_idx)->createErr(ercode);
+        if (errParm) {
+            std::vector<unsigned char> code(pm, pm + pmlen);
+            errParm->decode(code);
+            resErr.setParam(errParm);
+        }
+        Invoke* inv = (*it).second;
+        //NOTE: notifyResultListeners() may lead to this ~Dialog() being called !!!
+        //ResultListener should copy 'resParm', not take its ownership !
+        inv->notifyErrorListeners(&resErr);
+    }
     return MSG_OK;
 }
 

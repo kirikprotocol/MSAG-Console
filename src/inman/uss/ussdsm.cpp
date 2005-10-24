@@ -1,23 +1,19 @@
 static char const ident[] = "$Id$";
 #include <assert.h>
 
-//#include "inman/common/types.hpp"
 #include "inman/common/cvtutil.hpp"
 #include "inman/common/adrutil.hpp"
 #include "inman/uss/ussdsm.hpp"
 #include "inman/uss/vlr.hpp"
 #include "inman/interaction/ussmessages.hpp"
-//#include "inman/comp/usscomp.hpp"
-
-
+#include "inman/comp/acdefs.hpp"
 
 using smsc::inman::interaction::USSRequestMessage;
 using smsc::inman::interaction::USSResultMessage;
 using smsc::inman::interaction::USS2CMD;
 using smsc::inman::interaction::USSDATA_T;
 
-//using smsc::inman::common::fillAddress;
-//using smsc::inman::common::dump;
+using smsc::inman::common::dump;
 using smsc::cvtutil::packTextAs7BitPadded;
 
 using smsc::inman::usscomp::ProcessUSSRequestRes;
@@ -48,6 +44,11 @@ void USSTcapListener::result(TcapEntity* resL)
     assert(resL->getParam());
     ProcessUSSRequestRes* res = static_cast<ProcessUSSRequestRes*>(resL->getParam());
     _dSM->onUSSRequestResult(res);
+}
+
+void USSTcapListener::error(TcapEntity* resE)
+{
+    _dSM->onUSSRequestError(resE->getOpcode());
 }
 
 Invoke * USSTcapListener::getInvId() const
@@ -97,8 +98,9 @@ USSDSM::USSDSM(VLR* vlr, int dsmId, Session* sess, Connect* conn)
     
 {
     assert(sess);
-    _dlg = _session->openDialog(0, id_ac_map_networkUnstructuredSs_v2);
+    _dlg = new USSDialog(this, _session);
     assert(_dlg);
+    _session->registerDialog(_dlg);
     logger = Logger::getInstance("smsc.inman.ussdsm");
 }
 
@@ -176,23 +178,47 @@ void USSDSM::onUSSRequestResult(ProcessUSSRequestRes* resL)
     resp.setDCS(resL->getDCS());
     resp.setUSSData(resL->getUSSData());
     resp.setMSISDNadr(_msAdr);
-    smsc_log_debug(logger, "sending USS result for request 0x%X", _dsmId);
+    smsc_log_debug(logger, "got result for USS request 0x%X: %s", _dsmId,
+                    dump((resp.getUSSData()).size(), (unsigned char*)&(resp.getUSSData())[0], 0).c_str());
     if (_connect)   //may be absent, in case of local testing
         _connect->send(&resp);
     _vLR->onCommandProcessed(this);
 }
 
-
-/* ************************************************************************** *
- * TRASH:
- * ************************************************************************** */
-/*
-USHORT_T USSDSM::handleEndDialog()
+void USSDSM::onUSSRequestError(unsigned char ercode)
 {
-  smsc_log_debug(logger," USSDSM{id=%d} receives END ",this->getId());
-  return MSG_OK;
+    smsc_log_error(logger, "got error %d for USS request 0x%X", _dsmId, (int)ercode);
+
+    USSResultMessage  resp;
+    resp.setReqId(_dsmId);
+    resp.setStatus(USS2CMD::STATUS_USS_REQUEST_FAILED);
+    if (_connect)   //may be absent, in case of local testing
+        _connect->send(&resp);
+    _vLR->onCommandProcessed(this);
 }
-*/
+/* ************************************************************************** *
+ * class USSDialog implemetation:
+ * ************************************************************************** */
+
+USSDialog::USSDialog(USSDSM *pDsm, Session* pSession)
+    : Dialog(pSession, 0, id_ac_map_networkUnstructuredSs_v2)
+    , _pDsm(pDsm)
+{
+    assert(pDsm);
+    assert(pSession);
+}
+
+USSDialog::~USSDialog()
+{
+}
+
+USHORT_T USSDialog::handleEndDialog()
+{
+    smsc_log_debug(logger," USSDialog{id = %d} received END", this->getId());
+//    _pDsm->onDialogEnd(this);
+    return MSG_OK;
+}
+
 }//namespace uss
 }//namespace inman
 }//namespace smsc
