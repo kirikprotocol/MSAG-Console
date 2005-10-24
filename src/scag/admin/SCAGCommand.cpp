@@ -121,6 +121,7 @@ SCAGCommand::~SCAGCommand()
 
 Response * SCAGCommand::CreateResponse(scag::Scag * ScagApp)
 {
+  smsc_log_info(logger, "SCAGCommand::CreateResponse has processed");
   return new Response(Response::Ok, "none");
 }
 
@@ -671,7 +672,7 @@ CommandAddRule::~CommandAddRule()
 {
 }
 
-Response * CommandAddRule::CommandCreate(scag::Scag * SmscApp)
+Response * CommandAddRule::CreateResponse(scag::Scag * SmscApp)
 {
   smsc_log_info(logger, "CommandAddRule is processing...");
   BEGIN_EXCEPTION
@@ -712,12 +713,12 @@ CommandRemoveRule::~CommandRemoveRule()
 {
 }
 
-Response * CommandRemoveRule::CommandCreate(scag::Scag * SmscApp)
+Response * CommandRemoveRule::CreateResponse(scag::Scag * SmscApp)
 {
   smsc_log_info(logger, "CommandRemoveRule is processing...");
   BEGIN_EXCEPTION
       scag::re::RuleEngine& re = scag::re::RuleEngine::Instance();
-      re.updateRule(ruleId);
+      re.removeRule(ruleId);
 
       smsc_log_info(logger, "CommandRemoveRule is processed ok");
       return new Response(Response::Ok, "none");
@@ -751,7 +752,7 @@ CommandUpdateRule::~CommandUpdateRule()
 {
 }
 
-Response * CommandUpdateRule::CommandCreate(scag::Scag * ScagApp)
+Response * CommandUpdateRule::CreateResponse(scag::Scag * ScagApp)
 {
   smsc_log_info(logger, "CommandUpdateRule is processing...");
   BEGIN_EXCEPTION

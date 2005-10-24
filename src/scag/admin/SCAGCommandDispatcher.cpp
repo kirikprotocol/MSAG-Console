@@ -162,8 +162,10 @@ Response * SCAGCommandDispatcher::handle(const Command * const command) throw (A
     SCAGCommand * scagcommand;
     scagcommand = (SCAGCommand *)command;
     
-
+    smsc::logger::Logger* logger = smsc::logger::Logger::getInstance("disp");
+    smsc_log_info(logger, "SCAGCommandDispatcher 1, cmd: %d, addRule: %d", scagcommand->getId(), CommandIds::addRule);
     Response * result = scagcommand->CreateResponse(runner->getApp());
+    smsc_log_info(logger, "SCAGCommandDispatcher 2");
     DoActions(scagcommand->GetActions());
     return result;
   } catch (AdminException &e) {

@@ -157,7 +157,7 @@ public:
   
   CommandAddRule(const xercesc::DOMDocument * doc);
   virtual ~CommandAddRule();
-  virtual Response * CommandCreate(scag::Scag * SmscApp);
+  virtual Response * CreateResponse(scag::Scag * SmscApp);
 
 protected:
     int ruleId;
@@ -170,7 +170,7 @@ public:
   
   CommandUpdateRule(const xercesc::DOMDocument * doc);
   virtual ~CommandUpdateRule();
-  virtual Response * CommandCreate(scag::Scag * SmscApp);
+  virtual Response * CreateResponse(scag::Scag * SmscApp);
 
 protected:
     int ruleId;
@@ -183,7 +183,7 @@ public:
   
   CommandRemoveRule(const xercesc::DOMDocument * doc);
   virtual ~CommandRemoveRule();
-  virtual Response * CommandCreate(scag::Scag * SmscApp);
+  virtual Response * CreateResponse(scag::Scag * SmscApp);
 
 protected:
     int ruleId;
