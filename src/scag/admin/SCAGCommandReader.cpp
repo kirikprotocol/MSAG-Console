@@ -62,7 +62,7 @@ Command * SCAGCommandReader::createCommand(int id, const DOMDocument *data)
     case CommandIds::updateSmsc: return new CommandUpdateSmsc(data);
     case CommandIds::updateRule: return new CommandUpdateRule(data);
     case CommandIds::removeRule: return new CommandRemoveRule(data);
-    case CommandIds::addRule: return new CommandRemoveRule(data);
+    case CommandIds::addRule: return new CommandAddRule(data);
 
     default: 
       smsc_log_warn(logger, "Unknown command id \"%i\"", id);
