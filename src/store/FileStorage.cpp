@@ -13,7 +13,6 @@
 
 #include "Uint64Converter.h"
 #include "FileStorage.h"
-#include "core/buffers/TmpBuf.hpp"
 
 /* Static check for 64bit positions for files */
 template <bool cnd> struct StaticCheck {};
@@ -125,9 +124,9 @@ void FileStorage::findDirs (const std::string& location, Array<std::string>& dir
 
 void FileStorage::deleteFile(const std::string& fullPath)
 {
-    if (remove(fullPath.c_str()) != 0) {
-        Exception exc("Failed to remove file '%s'. Details: %s", fullPath.c_str(), strerror(errno));
-        throw StorageException(exc.what());
+    try { File::Unlink(fullPath.c_str()); }
+    catch (std::exception& exc) {
+        throw StorageException(exc.what()); 
     }
 }
 void FileStorage::deleteFile(const std::string& location, const std::string& fileName)
@@ -157,10 +156,10 @@ void FileStorage::rollErrorFile(const std::string& location, const std::string& 
     if (extpos != _fileName.npos) _fileName.erase(extpos);
     std::string fullNewFile = location; fullNewFile += '/'; fullNewFile += _fileName;
     fullNewFile += '.'; fullNewFile += SMSC_ERRF_ARCHIVE_FILE_EXTENSION;
-    if (rename(fullOldFile.c_str(), fullNewFile.c_str()) != 0) {
-        Exception exc("Failed to rename file '%s' to '%s'. Details: %s",
-                      fullOldFile.c_str(), fullNewFile.c_str(), strerror(errno));
-        throw StorageException(exc.what());
+
+    try { File::Rename(fullOldFile.c_str(), fullNewFile.c_str()); }
+    catch (std::exception& exc) {
+        throw StorageException(exc.what()); 
     }
 }
 void FileStorage::rollFileExtension(const std::string& location, const char* fileName, bool bill)
@@ -170,83 +169,76 @@ void FileStorage::rollFileExtension(const std::string& location, const char* fil
 
     fullOldFile += (bill) ? SMSC_LAST_BILLING_FILE_EXTENSION : SMSC_LAST_ARCHIVE_FILE_EXTENSION;
     fullNewFile += (bill) ? SMSC_PREV_BILLING_FILE_EXTENSION : SMSC_PREV_ARCHIVE_FILE_EXTENSION;
-    if (rename(fullOldFile.c_str(), fullNewFile.c_str()) != 0) {
-        Exception exc("Failed to rename file '%s' to '%s'. Details: %s",
-                      fullOldFile.c_str(), fullNewFile.c_str(), strerror(errno));
-        throw StorageException(exc.what());
+
+    try { File::Rename(fullOldFile.c_str(), fullNewFile.c_str()); }
+    catch (std::exception& exc) {
+        throw StorageException(exc.what()); 
     }
 }
 bool FileStorage::createDir(const std::string& dir)
 {
-    if (mkdir(dir.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) { // TODO: define mode
+    if (mkdir(dir.c_str(), S_IRWXU|S_IRWXG|S_IROTH|S_IXOTH) != 0) { // define mode ???
         if (errno == EEXIST) return false;
-        Exception exc("Failed to create directory '%s'. Details: %s",
+        Exception exc("Failed to create directory '%s'. Details: %s", 
                       dir.c_str(), strerror(errno));
-        throw StorageException(exc.what());
+        throw StorageException(exc.what()); 
     }
     return true;
 }
 
 bool FileStorage::read(void* data, size_t size)
 {
-    if (!storageFile) return false;
-    if (fread(data, size, 1, storageFile) != 1) {
-        if (feof(storageFile)) {
-            clearerr(storageFile);
-            return false;
-        }
-        int error = ferror(storageFile);
-        Exception exc("Failed to read file. Details: %s", strerror(error));
-        fclose(storageFile); storageFile = 0;
+    try { storageFile.Read(data, size); }
+    catch (FileException& exc) {
+        if (exc.getErrorCode() == FileException::errEndOfFile) return false;
+        try { storageFile.Close(); } catch (...) {}
         throw StorageException(exc.what());
     }
     return true;
 }
 void FileStorage::write(const void* data, size_t size)
 {
-    if (storageFile && fwrite(data, size, 1, storageFile) != 1) {
-        int error = ferror(storageFile);
-        Exception exc("Failed to write file. Details: %s", strerror(error));
-        fclose(storageFile); storageFile = 0;
+    if (!storageFile.isOpened()) return;
+    try { storageFile.Write(data, size); }
+    catch (FileException& exc) {
+        try { storageFile.Close(); } catch (...) {}
         throw StorageException(exc.what());
     }
 }
 void FileStorage::flush()
 {
-    if (storageFile && fflush(storageFile)) {
-        int error = ferror(storageFile);
-        Exception exc("Failed to flush file. Details: %s", strerror(error));
-        fclose(storageFile); storageFile = 0;
+    try { storageFile.Flush(); }
+    catch (FileException& exc) {
+        try { storageFile.Close(); } catch (...) {}
         throw StorageException(exc.what());
     }
 }
 void FileStorage::close()
 {
     MutexGuard guard(storageFileLock);
-    if (storageFile) {
-        fclose(storageFile); storageFile = 0;
+    try { storageFile.Close(); } 
+    catch (FileException& fexc) {
+        smsc_log_error(log, "Failed to close file. Details: %s", fexc.what());
     }
 }
 
-void FileStorage::getPos(fpos_t* pos)
+void FileStorage::getPos(uint64_t* pos)
 {
     __require__(pos);
 
-    if (storageFile && fgetpos(storageFile, pos) != 0) {
-        int error = ferror(storageFile);
-        Exception exc("Failed to get position in file. Details: %s", strerror(error));
-        fclose(storageFile); storageFile = 0;
+    try { *pos = storageFile.Pos(); } 
+    catch (FileException& exc) {
+        try { storageFile.Close(); } catch (...) {}
         throw StorageException(exc.what());
     }
 }
-void FileStorage::setPos(const fpos_t* pos)
+void FileStorage::setPos(const uint64_t* pos)
 {
     __require__(pos);
 
-    if (storageFile && fsetpos(storageFile, pos) != 0) {
-        int error = ferror(storageFile);
-        Exception exc("Failed to set position in file. Details: %s", strerror(error));
-        fclose(storageFile); storageFile = 0;
+    try { storageFile.Seek(*pos, SEEK_SET); } 
+    catch (FileException& exc) {
+        try { storageFile.Close(); } catch (...) {}
         throw StorageException(exc.what());
     }
 }
@@ -284,9 +276,9 @@ void RollingStorage::init(Manager& config, bool bill)
 
 bool RollingStorage::create(bool bill, bool roll/*=false*/)
 {
-    if (storageFile) {
+    if (storageFile.isOpened()) {
         if (!roll) return false;
-        fpos_t fpos = 0; FileStorage::getPos(&fpos);
+        uint64_t fpos = 0; FileStorage::getPos(&fpos);
         int headerPos = ((bill) ? strlen(SMSC_BILLING_HEADER_TEXT):
             (strlen(SMSC_ARCHIVE_HEADER_TEXT) + sizeof(SMSC_ARCHIVE_VERSION_INFO)))+2;
         if (fpos <= headerPos) return false; // file is empty => no rolling 
@@ -303,66 +295,61 @@ bool RollingStorage::create(bool bill, bool roll/*=false*/)
     fullFilePath += (bill ? SMSC_LAST_BILLING_FILE_EXTENSION:SMSC_LAST_ARCHIVE_FILE_EXTENSION);
     const char* fullFilePathStr = fullFilePath.c_str();
     
-    FILE* storageNewFile = fopen(fullFilePathStr, "r");
-    if (storageNewFile) { // file already exists (was opened for reading)
-        fclose(storageNewFile); storageNewFile = 0;
+    if (File::Exists(fullFilePathStr)) { // file already exists
         Exception exc("Failed to create new %s file '%s'. File already exists!",
                       (bill ? "billing":"archive"), fullFilePathStr);
         throw StorageException(exc.what());
     }
-
-    storageNewFile = fopen(fullFilePathStr, "ab+");
-    if (!storageNewFile) {
-        Exception exc("Failed to create new %s file '%s'. Details: %s",
-                      (bill ? "billing":"archive"), fullFilePathStr, strerror(errno));
-        throw StorageException(exc.what());
-    }
-    if (fseek(storageNewFile, 0, SEEK_END)) {
-        int error = ferror(storageNewFile);
-        Exception exc("Failed to seek EOF. Details: %s", strerror(error));
-        fclose(storageNewFile); storageNewFile = 0;
-        throw StorageException(exc.what());
-    }
-
-    if (storageFile) { // close old file & roll extension if needed
-        fclose(storageFile); storageFile = 0;
-        if (roll) {
-            try { FileStorage::rollFileExtension(storageLocation, storageFileName, bill); }
-            catch (StorageException& exc) {
-                fclose(storageNewFile); storageNewFile = 0; throw;
-            }
-        }
-    }
     
-    storageFile = storageNewFile;
-    strcpy(storageFileName, storageNewFileName);
+    File storageNewFile;
+    try { storageNewFile.RWCreate(fullFilePathStr); } 
+    catch (FileException& fexc) {
+        Exception exc("Failed to create new %s file '%s'. Details: %s",
+                      (bill ? "billing":"archive"), fullFilePathStr, fexc.what());
+        throw StorageException(exc.what());
+    }
+
+    try 
+    {
+        if (storageFile.isOpened()) { // close old file & roll extension if needed
+            storageFile.Close();
+            if (roll) FileStorage::rollFileExtension(storageLocation, storageFileName, bill);
+        }
+        storageFile.Swap(storageNewFile);
+        strcpy(storageFileName, storageNewFileName);
+    }
+    catch (std::exception& fexc) {
+        Exception exc("Failed to swap %s files '%s'. Details: %s",
+                      (bill ? "billing":"archive"), fullFilePathStr, fexc.what());
+        throw StorageException(exc.what());
+    }
     return true;
 }
 
 void BillingStorage::roll()
 {
     MutexGuard guard(storageFileLock);
-    if (storageFile) BillingStorage::create(true);
+    if (storageFile.isOpened()) BillingStorage::create(true);
 }
 void BillingStorage::create(bool roll/*=false*/)
 {
     if (RollingStorage::create(true, roll)) {
-        write(SMSC_BILLING_HEADER_TEXT, strlen(SMSC_BILLING_HEADER_TEXT));
-        flush();
+        FileStorage::write(SMSC_BILLING_HEADER_TEXT, strlen(SMSC_BILLING_HEADER_TEXT));
+        FileStorage::flush();
     }
 }
 void ArchiveStorage::roll()
 {
     MutexGuard guard(storageFileLock);
-    if (storageFile) ArchiveStorage::create(true);
+    if (storageFile.isOpened()) ArchiveStorage::create(true);
 }
 void ArchiveStorage::create(bool roll/*=false*/)
 {
     if (RollingStorage::create(false, roll)) {
-        write(SMSC_ARCHIVE_HEADER_TEXT, strlen(SMSC_ARCHIVE_HEADER_TEXT));
+        FileStorage::write(SMSC_ARCHIVE_HEADER_TEXT, strlen(SMSC_ARCHIVE_HEADER_TEXT));
         uint16_t version = htons(SMSC_ARCHIVE_VERSION_INFO);
-        write(&version, sizeof(SMSC_ARCHIVE_VERSION_INFO));
-        flush();
+        FileStorage::write(&version, sizeof(SMSC_ARCHIVE_VERSION_INFO));
+        FileStorage::flush();
     }
 }
 
@@ -472,7 +459,7 @@ TXT_LENGTH     NUMBER(10)
 BODY_LEN       NUMBER(10)
 BODY           RAW(1500)
 */
-void FileStorage::save(SMSId id, SMS& sms, fpos_t* pos /*= 0 (no getPos) */)
+void FileStorage::save(SMSId id, SMS& sms, uint64_t* pos /*= 0 (no getPos) */)
 {
     uint8_t smsState = (uint8_t)sms.state;
     std::string oa  = sms.originatingAddress.toString();
@@ -609,7 +596,7 @@ public:
     }
 };
 
-bool FileStorage::load(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 (no setPos) */)
+bool FileStorage::load(SMSId& id, SMS& sms, const uint64_t* pos /*= 0 (no setPos) */)
 {
     uint8_t  smsState = 0;
     uint32_t recordSize1 = 0; uint32_t recordSize2 = 0;
@@ -785,36 +772,37 @@ void ArchiveStorage::createRecord(SMSId id, SMS& sms)
 
 bool PersistentStorage::create(bool create)
 {
-    if (storageFile) return false;
+    if (storageFile.isOpened()) return false;
 
     std::string fullFilePath = storageLocation+'/'+storageFileName;
     const char* fullFilePathStr = fullFilePath.c_str();
-    storageFile = fopen(fullFilePathStr, "r");
 
-    bool needFile = true;
-    if (storageFile)  { // opened for reading
-        if (!create) return true;
-        fclose(storageFile); storageFile = 0;
-        needFile = false;
+    try 
+    {
+        if (File::Exists(fullFilePathStr)) // file exists
+        { 
+            if (!create) storageFile.ROpen(fullFilePathStr); // open for reading
+            else {
+                storageFile.RWOpen(fullFilePathStr); // open for writing
+                storageFile.SeekEnd(0); // move position to EOF
+                return false;
+            }
+        }
+        else // file not exists
+        { 
+            if (!create) {
+                Exception exc("File '%s' not exists. Details: %s", fullFilePathStr, strerror(errno));
+                throw StorageException(exc.what());
+            }
+            storageFile.RWCreate(fullFilePathStr); // create for reading & writing
+        }
     }
-    else if (!create) {  // not exist for reading
-        Exception exc("File '%s' not exists. Details: %s", fullFilePathStr, strerror(errno));
-        throw StorageException(exc.what());
-    }                   // openning for writing (appending)
-
-    storageFile = fopen(fullFilePathStr, needFile ? "ab+":"rb+");
-    if (!storageFile) {
-        Exception exc("Failed to open file '%s' for writing. Details: %s",
-                      fullFilePathStr, strerror(errno));
+    catch (FileException& fexc) {
+        Exception exc("Failed to create/open file '%s'. Details: %s",
+                      fullFilePathStr, fexc.what());
         throw StorageException(exc.what());
     }
-    if (fseek(storageFile, 0, SEEK_END)) {
-        int error = ferror(storageFile);
-        Exception exc("Failed to seek EOF. Details: %s", strerror(error));
-        fclose(storageFile); storageFile = 0;
-        throw StorageException(exc.what());
-    }
-    return needFile;
+    return true;
 }
 void PersistentStorage::open(bool read)
 {
@@ -842,23 +830,23 @@ void PersistentStorage::open(bool read)
     }
 }
 
-void PersistentStorage::openRead(const fpos_t* pos /*= 0 (no setPos) */)
+void PersistentStorage::openRead(const uint64_t* pos /*= 0 (no setPos) */)
 {
     MutexGuard guard(storageFileLock);
     this->open(true);
     if (pos) FileStorage::setPos(pos);
 }
-void PersistentStorage::openWrite(fpos_t* pos /*= 0 (no getPos) */)
+void PersistentStorage::openWrite(uint64_t* pos /*= 0 (no getPos) */)
 {
     MutexGuard guard(storageFileLock);
     this->open(false);
     if (pos) FileStorage::getPos(pos);
 }
-void PersistentStorage::writeRecord(SMSId id, SMS& sms, fpos_t* pos /*= 0 (no getPos) */)
+void PersistentStorage::writeRecord(SMSId id, SMS& sms, uint64_t* pos /*= 0 (no getPos) */)
 {
     FileStorage::save(id, sms, pos);
 }
-bool PersistentStorage::readRecord(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 (no setPos) */)
+bool PersistentStorage::readRecord(SMSId& id, SMS& sms, const uint64_t* pos /*= 0 (no setPos) */)
 {
     return FileStorage::load(id, sms, pos);
 }
@@ -866,31 +854,28 @@ bool PersistentStorage::readRecord(SMSId& id, SMS& sms, const fpos_t* pos /*= 0 
 
 bool TextDumpStorage::create()
 {
-    if (storageFile) return false;
+    if (storageFile.isOpened()) return false;
 
     std::string fullFilePath = storageLocation+'/'+storageFileName;
     const char* fullFilePathStr = fullFilePath.c_str();
-    storageFile = fopen(fullFilePathStr, "r");
 
-    bool needFile = true;
-    if (storageFile)  { // opened for reading
-        fclose(storageFile); storageFile = 0;
-        needFile = false;
+    bool fileFound = false;
+    try 
+    {
+        fileFound = File::Exists(fullFilePathStr);
+        if (fileFound) { // open for writing (append)
+            storageFile.WOpen(fullFilePathStr);
+            storageFile.SeekEnd(0);
+        }
+        else storageFile.RWCreate(fullFilePathStr); // create new file for writing
     }
-
-    storageFile = fopen(fullFilePathStr, needFile ? "ab+":"rb+");
-    if (!storageFile) {
-        Exception exc("Failed to open file '%s' for writing. Details: %s",
-                      fullFilePathStr, strerror(errno));
+    catch (FileException& fexc) {
+        Exception exc("Failed to create/open file '%s' for writing. Details: %s",
+                      fullFilePathStr, fexc.what());
+        try { storageFile.Close(); } catch (...) {}
         throw StorageException(exc.what());
     }
-    if (fseek(storageFile, 0, SEEK_END)) {
-        int error = ferror(storageFile);
-        Exception exc("Failed to seek EOF. Details: %s", strerror(error));
-        fclose(storageFile); storageFile = 0;
-        throw StorageException(exc.what());
-    }
-    return needFile;
+    return !fileFound;
 }
 
 void TextDumpStorage::open()
@@ -899,12 +884,12 @@ void TextDumpStorage::open()
         "ID,SUBMIT,FINALIZED,STATUS,ROUTE_ID,SRC_ADDR,SRC_SME_ID,"
         "DST_ADDR,DST_SME_ID,DST_ADDR_DEALIASED,MESSAGE\n";
 
-    if (TextDumpStorage::create()) {
+    if (TextDumpStorage::create()) { // if was created => write header
         FileStorage::write(SMSC_TXT_ARCHIVE_HEADER_TEXT, strlen(SMSC_TXT_ARCHIVE_HEADER_TEXT));
         FileStorage::flush();
     }
 }
-void TextDumpStorage::openWrite(fpos_t* pos /*= 0 (no getPos) */)
+void TextDumpStorage::openWrite(uint64_t* pos /*= 0 (no getPos) */)
 {
     MutexGuard guard(storageFileLock);
     this->open();
@@ -1074,34 +1059,28 @@ void TextDumpStorage::writeRecord(SMSId id, SMS& sms)
 
 bool TransactionStorage::open(bool create)
 {
+    const char* fullFilePathStr = storageFileName.c_str();
     bool fileExists = true;
-    if (!storageFile)
+    try 
     {
-        const char* fullFilePathStr = storageFileName.c_str();
-        storageFile = fopen(fullFilePathStr, "rb+");
-        if (!storageFile)
+        if (!storageFile.isOpened())
         {
-            fileExists = false;
-            if (create) {
-                storageFile = fopen(fullFilePathStr, "ab+");
-                if (!storageFile) {
-                    Exception exc("Failed to create transactional file '%s'. Details: %s",
-                                  fullFilePathStr, strerror(errno));
-                    throw StorageException(exc.what());
-                }
-            }
+            fileExists = File::Exists(fullFilePathStr);
+            if (fileExists)  storageFile.RWOpen(fullFilePathStr);
+            else if (create) storageFile.RWCreate(fullFilePathStr);
         }
+        if (storageFile.isOpened()) storageFile.Seek(0, SEEK_SET);
     }
-    if (storageFile && fseek(storageFile, 0, SEEK_SET)) {
-        int error = ferror(storageFile);
-        Exception exc("Failed to seek BOF. Details: %s", strerror(error));
-        fclose(storageFile); storageFile = 0;
+    catch (FileException& fexc) {
+        Exception exc("Failed to open/create transactional file '%s'. Details: %s",
+                      fullFilePathStr, fexc.what());
+        try { storageFile.Close(); } catch (...) {}
         throw StorageException(exc.what());
     }
     return fileExists;
 }
 
-bool TransactionStorage::getTransactionData(fpos_t* pos)
+bool TransactionStorage::getTransactionData(uint64_t* pos)
 {
     __require__(pos);
 
@@ -1109,17 +1088,19 @@ bool TransactionStorage::getTransactionData(fpos_t* pos)
     if (!this->open(false)) return false;
     uint64_t value = 0;
     bool result = FileStorage::read((void *)&value, sizeof(value));
-    if (!result) { fclose(storageFile); storageFile = 0; }
-    *pos = (result) ? ((fpos_t)Uint64Converter::toHostOrder(value)):-1;
+    if (!result) { 
+        try { storageFile.Close(); } catch (...) {}
+    }
+    *pos = (result) ? Uint64Converter::toHostOrder(value):-1;
     return result;
 }
-void TransactionStorage::setTransactionData(const fpos_t* pos)
+void TransactionStorage::setTransactionData(const uint64_t* pos)
 {
     __require__(pos);
 
     MutexGuard guard(storageFileLock);
     this->open(true);
-    uint64_t value = Uint64Converter::toNetworkOrder((uint64_t)(*pos));
+    uint64_t value = Uint64Converter::toNetworkOrder(*pos);
     FileStorage::write((const void *)&value, sizeof(value));
     FileStorage::flush();
 }

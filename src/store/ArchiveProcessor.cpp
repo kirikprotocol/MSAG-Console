@@ -194,7 +194,7 @@ void ArchiveProcessor::commitTransaction(bool force /*= false*/)
 
             // flush transaction files for arc(s)
             transactionTrsArcFiles.First();
-            char* trsArcFileNameStr = 0; fpos_t* trsArcPosition = 0;
+            char* trsArcFileNameStr = 0; uint64_t* trsArcPosition = 0;
             while (transactionTrsArcFiles.Next(trsArcFileNameStr, trsArcPosition))
             {
                 if (!trsArcPosition || !trsArcFileNameStr || !trsArcFileNameStr[0]) continue;
@@ -204,7 +204,7 @@ void ArchiveProcessor::commitTransaction(bool force /*= false*/)
             }
             // flush transaction files for txt(s)
             transactionTrsTxtFiles.First();
-            char* trsTxtFileNameStr = 0; fpos_t* trsTxtPosition = 0;
+            char* trsTxtFileNameStr = 0; uint64_t* trsTxtPosition = 0;
             while (transactionTrsTxtFiles.Next(trsTxtFileNameStr, trsTxtPosition))
             {
                 if (!trsTxtPosition || !trsTxtFileNameStr || !trsTxtFileNameStr[0]) continue;
@@ -382,13 +382,13 @@ bool ArchiveProcessor::process(const std::string& location, const Array<std::str
 
                     try
                     { 
-                        fpos_t arcPosition = 0; fpos_t txtPosition = 0;
+                        uint64_t arcPosition = 0; uint64_t txtPosition = 0;
                         arcDestination->openWrite(&arcPosition);
                         txtDestination->openWrite(&txtPosition);
                         
                         const char* trsArcFileNameStr = trsArcFileName.c_str();
                         const char* trsTxtFileNameStr = trsTxtFileName.c_str();
-                        fpos_t* trsArcPosition = 0; fpos_t* trsTxtPosition = 0;
+                        uint64_t* trsArcPosition = 0; uint64_t* trsTxtPosition = 0;
                         if (bNewArcFile) // destination file was switched
                         {
                             Query::ProcessArchiveGuard archiveGuard;
@@ -397,7 +397,7 @@ bool ArchiveProcessor::process(const std::string& location, const Array<std::str
                             trsArcPosition = transactionTrsArcFiles.GetPtr(trsArcFileNameStr);
                             if (!trsArcPosition) // check reopened destination arc file
                             {
-                                fpos_t trans_position = 0;
+                                uint64_t trans_position = 0;
                                 TransactionStorage trsArcFile(trsArcFileName);
                                 if (trsArcFile.getTransactionData(&trans_position))
                                 {
@@ -419,7 +419,7 @@ bool ArchiveProcessor::process(const std::string& location, const Array<std::str
                             trsTxtPosition = transactionTrsTxtFiles.GetPtr(trsTxtFileNameStr);
                             if (!trsTxtPosition) // check reopened destination txt file
                             {
-                                fpos_t trans_position = 0;
+                                uint64_t trans_position = 0;
                                 TransactionStorage trsTxtFile(trsTxtFileName);
                                 if (trsTxtFile.getTransactionData(&trans_position))
                                 {
@@ -778,7 +778,7 @@ int Query::Execute()
                     }
 
                     SMSId id = 0; SMS sms;
-                    fpos_t position = idx.offset;
+                    uint64_t position = idx.offset;
                     if (!source->readRecord(id, sms, &position)) break;
                     if (!checkMessage(query, id, sms)) continue;
                     totalMessages++;
@@ -804,7 +804,7 @@ int Query::Execute()
                     smsc_log_info(log, "Scanning file: %s", arcFileName);
                     PersistentStorage  arcFile(location, arcFileName);
                     TransactionStorage trsFile(location, trsFileName);
-                    bool isTrans = false; fpos_t position = 0; fpos_t trans_position = 0; 
+                    bool isTrans = false; uint64_t position = 0; uint64_t trans_position = 0; 
                     isTrans = trsFile.getTransactionData(&trans_position);
                     arcFile.openRead(0);
                     while (moreMessagesToSend)

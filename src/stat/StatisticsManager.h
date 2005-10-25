@@ -8,6 +8,7 @@
 #include <core/buffers/IntHash.hpp>
 #include <core/buffers/TmpBuf.hpp>
 #include <core/buffers/Hash.hpp>
+#include <core/buffers/File.hpp>
 #include <core/threads/ThreadedTask.hpp>
 
 #include <logger/Logger.h>
@@ -16,12 +17,9 @@
 
 namespace smsc { namespace stat 
 {
+    using namespace core::buffers;
     using namespace core::threads;
     using namespace core::synchronization;
-    
-    using core::buffers::IntHash;
-    using core::buffers::TmpBuf;
-    using core::buffers::Hash;
     
     using smsc::logger::Logger;
     using smsc::util::TimeSlotCounter;
@@ -135,18 +133,10 @@ namespace smsc { namespace stat
         std::string     location;
         bool            bFileTM;
         tm              fileTM;
-        FILE*           statFile;
+        File            statFile;
     
-        static bool read(FILE* file, void* data, size_t size);
-        static void write(FILE* file, const void* data, size_t size);
-        static void flush(FILE* file);
-        static void seekPos(FILE* file, long offset, int whence);
-        static void getPos(FILE* file, fpos_t* pos);
-        static void setPos(FILE* file, const fpos_t* pos);
-        static void deleteFile(const char* path);
         static void truncateFile(const char* path, off_t length);
         static bool createDir(const std::string& dir);
-
         bool createStatDir();
     
     public:

@@ -48,36 +48,38 @@ protected:
                              ldt.tm_mon  != ndt.tm_mon  || ldt.tm_year != ndt.tm_year) 
         {
             lastTime = nextTime;
-            if (storageFile) { fclose(storageFile); storageFile = 0; }
+            try { if (storageFile.isOpened()) storageFile.Close(); }
+            catch (FileException& fexc) {
+                Exception exc("Failed to close generated billing file. Details: %s", fexc.what());
+                throw StorageException(exc.what());
+            }
         }
-        if (!storageFile)
+        if (!storageFile.isOpened())
         {
             sprintf(storageFileName, "%04d%02d%02d_%02d%02d%02d.csv",
                     ndt.tm_year+1900, ndt.tm_mon+1, ndt.tm_mday, ndt.tm_hour, 0, 0);
-
             std::string fullFilePath = storageLocation;
             fullFilePath += '/'; fullFilePath += (const char*)storageFileName;
             const char* fullFilePathStr = fullFilePath.c_str();
-            storageFile = fopen(fullFilePathStr, "r");
 
-            bool needFile = true;
-            if (storageFile) { // file exists
-                fclose(storageFile); storageFile = 0; needFile = false;
+            bool fileFound = false;
+            try 
+            {
+                fileFound = File::Exists(fullFilePathStr);
+                if (fileFound) {
+                    storageFile.WOpen(fullFilePathStr);
+                    storageFile.SeekEnd(0);
+                }
+                else storageFile.RWCreate(fullFilePathStr);
             }
-
-            storageFile = fopen(fullFilePathStr, needFile ? "ab+":"rb+");
-            if (!storageFile) {
-                Exception exc("Failed to create billing file '%s'. Details: %s", fullFilePathStr, strerror(errno));
+            catch (FileException& fexc) {
+                Exception exc("Failed to create new billing file '%s'. Details: %s",
+                              fullFilePathStr, fexc.what());
+                try { if (storageFile.isOpened()) storageFile.Close(); } catch(...) {}
                 throw StorageException(exc.what());
             }
-            if (fseek(storageFile, 0, SEEK_END)) {
-                int error = ferror(storageFile);
-                Exception exc("Failed to seek EOF. Details: %s", strerror(error));
-                fclose(storageFile); storageFile = 0;
-                throw StorageException(exc.what());
-            }
 
-            if (needFile) {
+            if (fileFound) {
                 static const char* SMSC_BILLING_HEADER_TEXT =
                     "MSG_ID,RECORD_TYPE,MEDIA_TYPE,BEARER_TYPE,SUBMIT,FINALIZED,STATUS,"
                     "SRC_ADDR,SRC_IMSI,SRC_MSC,SRC_SME_ID,DST_ADDR,DST_IMSI,DST_MSC,DST_SME_ID,"

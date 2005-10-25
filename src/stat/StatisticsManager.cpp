@@ -18,6 +18,7 @@
 
 namespace smsc { namespace stat
 {
+using namespace core::buffers;
 
 const uint16_t SMSC_STAT_DUMP_INTERVAL = 60; // in seconds
 const uint16_t SMSC_STAT_VERSION_INFO  = 0x0001;
@@ -314,82 +315,17 @@ int StatisticsManager::calculateToSleep() // returns msecs to next minute
 }
 
 StatStorage::StatStorage(const std::string& _location)
-    : logger(Logger::getInstance("smsc.stat.StatStorage")),
-      location(_location), bFileTM(false), statFile(0) 
+    : logger(Logger::getInstance("smsc.stat.StatStorage")), location(_location), bFileTM(false)
 {
     if (!createStatDir()) 
         throw Exception("Can't open statistics directory: '%s'", location.c_str());
 }
 StatStorage::~StatStorage()
 {
-    if (statFile) fclose(statFile);
+    if (statFile.isOpened()) statFile.Close();
 }
 
 // Static members
-bool StatStorage::read(FILE* file, void* data, size_t size)
-{
-    if (!file) return false;
-    if (fread(data, size, 1, file) != 1) {
-        if (feof(file)) {
-            clearerr(file);
-            return false;
-        }
-        int error = ferror(file);
-        Exception exc("Failed to read from file. Details: %s", strerror(error));
-        fclose(file); throw exc;
-    }
-    return true;
-}
-void StatStorage::write(FILE* file, const void* data, size_t size)
-{
-    if (file && fwrite(data, size, 1, file) != 1) {
-        int error = ferror(file);
-        Exception exc("Failed to write to file. Details: %s", strerror(error));
-        fclose(file); throw exc;
-    }
-}
-void StatStorage::flush(FILE* file)
-{
-    if (file && fflush(file)) {
-        int error = ferror(file);
-        Exception exc("Failed to flush file. Details: %s", strerror(error));
-        fclose(file); throw exc;
-    }
-}
-void StatStorage::seekPos(FILE* file, long offset, int whence)
-{
-    if (file && fseek(file, offset, whence)) {
-        int error = ferror(file);
-        Exception exc("Failed to seek %s. Details: %s", 
-                      (whence == SEEK_END) ? "EOF":"BOF", strerror(error));
-        fclose(file); throw exc;
-    }
-}
-void StatStorage::getPos(FILE* file, fpos_t* pos)
-{
-    __require__(pos);
-
-    if (file && fgetpos(file, pos) != 0) {
-        int error = ferror(file);
-        Exception exc("Failed to get file pos. Details: %s", strerror(error));
-        fclose(file); throw exc;
-    }
-}
-void StatStorage::setPos(FILE* file, const fpos_t* pos)
-{
-    __require__(pos);
-
-    if (file && fsetpos(file, pos) != 0) {
-        int error = ferror(file);
-        Exception exc("Failed to set file pos. Details: %s", strerror(error));
-        fclose(file); throw exc;
-    }
-}
-void StatStorage::deleteFile(const char* path)
-{
-    if (remove(path) != 0)
-        throw Exception("Failed to remove file '%s'. Details: %s", path, strerror(errno));
-}
 void StatStorage::truncateFile(const char* path, off_t length)
 {
     if (truncate(path, length) != 0)
@@ -493,7 +429,6 @@ void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
     smsc_log_debug(logger, "Statistics dump called for %02d:%02d GMT", 
                    flushTM.tm_hour, flushTM.tm_min);
     
-    FILE* trnsFile = 0;
     try 
     {
         char dirName[128]; char fileName[128]; 
@@ -505,26 +440,23 @@ void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
 
         if (!bFileTM || fileTM.tm_mon != flushTM.tm_mon || fileTM.tm_year != flushTM.tm_year)
         {
-            createDir(fullPath); bFileTM = false;
+            StatStorage::createDir(fullPath); bFileTM = false;
             smsc_log_debug(logger, "New dir '%s' created", dirName);
         }
 
         bool needHeader = false;
         if (!bFileTM || fileTM.tm_mday != flushTM.tm_mday)
         {
-            if (statFile) { // close old RTS file (if it was opened)
-                fclose(statFile); statFile = 0;
-            }
-
+            // close old RTS file (if it was opened)
+            if (statFile.isOpened()) statFile.Close();
+            
             needHeader = true;
-            statFile = fopen(statPathStr, "r");
-            if (statFile) { // file already exists (was opened for reading)
-                fclose(statFile); statFile = 0; needHeader = false;
+            if (File::Exists(statPathStr)) { 
+                needHeader = false;
+                statFile.WOpen(statPathStr);
+            } else {
+                statFile.RWCreate(statPathStr);
             }
-            statFile = fopen(statPathStr, "ab+"); // open or create for append
-            if (!statFile)
-                throw Exception("Failed to create/open file '%s'. Details: %s", 
-                                statPathStr, strerror(errno));
 
             fileTM = flushTM; bFileTM = true;
             smsc_log_debug(logger, "%s file '%s' %s", (needHeader) ? "New":"Existed",
@@ -535,36 +467,28 @@ void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
         std::string trnsPath = fullPath; trnsPath += '/'; trnsPath += (const char*)fileName; 
         const char* trnsPathStr = trnsPath.c_str();
 
-        trnsFile = fopen(trnsPathStr, "r");
-        if (trnsFile) // transaction file exists => last record(s) in RTS file invalid
+        File trnsFile;
+        if (File::Exists(trnsPathStr)) // transaction file exists => last record(s) in RTS file invalid
         { 
             smsc_log_warn(logger, "Found transaction file '%s'", trnsPathStr);
-            StatStorage::seekPos(trnsFile, 0, SEEK_SET); // set TRANS file position to BOF
-            uint64_t pos;
-            StatStorage::read(trnsFile, &pos, sizeof(pos));
-            fpos_t fpos = (fpos_t)toHostOrder(pos);
+            trnsFile.ROpen(trnsPathStr);
+            uint64_t fpos = trnsFile.ReadNetInt64();
+            //TODO: how to truncate stat file ???
             StatStorage::truncateFile(statPathStr, (off_t)fpos); // truncate RTS file
-            StatStorage::seekPos(statFile, 0, SEEK_END); // set RTS file position to EOF
+            statFile.SeekEnd(0); // set RTS file position to EOF
+
             if (fpos <= 0) needHeader = true; 
             smsc_log_warn(logger, "Rollback to RTS file position %lld in file '%s'",
                           fpos, statPathStr);
         } 
         else // create new TRANS file & write RTS position to it
         { 
-            StatStorage::seekPos(statFile, 0, SEEK_END); // set RTS file position to EOF
-            trnsFile = fopen(trnsPathStr, "ab+"); // open or create for append
-            if (!trnsFile) 
-                throw Exception("Failed to create/open file '%s'. Details: %s", 
-                                trnsPathStr, strerror(errno));
-            StatStorage::seekPos(trnsFile, 0, SEEK_SET); // set TRANS file position to BOF
-            fpos_t fpos = 0;
-            StatStorage::getPos(statFile, &fpos);
-            uint64_t pos = toNetworkOrder((uint64_t)fpos);
-            StatStorage::write(trnsFile, &pos, sizeof(pos));
-            StatStorage::flush(trnsFile);
+            trnsFile.WOpen(trnsPathStr);
+            statFile.SeekEnd(0); // set RTS file position to EOF
+            uint64_t fpos = (uint64_t)statFile.Pos();
+            trnsFile.WriteNetInt64(fpos);
+            trnsFile.Flush();
         }
-
-        if (trnsFile) { fclose(trnsFile); trnsFile = 0; }
 
         TmpBuf<uint8_t, MAX_STACK_BUFFER_SIZE> writeBuff(MAX_STACK_BUFFER_SIZE);
         if (needHeader) // create header (if new file created)
@@ -577,17 +501,16 @@ void StatStorage::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
         writeBuff.Append((uint8_t *)&value32, sizeof(value32));
         writeBuff.Append((uint8_t *)buff, buffLen);
         writeBuff.Append((uint8_t *)&value32, sizeof(value32));
-        StatStorage::write(statFile, (const void *)writeBuff, writeBuff.GetPos());
-        StatStorage::flush(statFile);
-        StatStorage::deleteFile(trnsPathStr); // drop TRANS file
+        statFile.Write((const void *)writeBuff, writeBuff.GetPos());
+        statFile.Flush();
+        File::Unlink(trnsPathStr); // drop TRANS file
 
         smsc_log_debug(logger, "Record dumped (%d bytes)", buffLen);
     }
-    catch (Exception exc)
+    catch (std::exception& exc)
     {
+        if (statFile.isOpened()) statFile.Close();
         bFileTM = false;
-        if (trnsFile) fclose(trnsFile); trnsFile = 0;
-        if (statFile) fclose(statFile); statFile = 0; 
         throw exc;
     }
 }
@@ -719,8 +642,7 @@ void StatisticsManager::flushCounters(short index)
         StatisticsManager::flush(flushTM, storage, statGeneral[index],
                                  statBySmeId[index], statByRoute[index]);
     } 
-    catch (Exception& exc)
-    {
+    catch (std::exception& exc) {
         smsc_log_error(logger, "Statistics flush failed. Cause: %s", exc.what());
     }
     
