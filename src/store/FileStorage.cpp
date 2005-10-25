@@ -222,7 +222,7 @@ void FileStorage::close()
     }
 }
 
-void FileStorage::getPos(uint64_t* pos)
+void FileStorage::getPos(File::offset_type* pos)
 {
     __require__(pos);
 
@@ -232,7 +232,7 @@ void FileStorage::getPos(uint64_t* pos)
         throw StorageException(exc.what());
     }
 }
-void FileStorage::setPos(const uint64_t* pos)
+void FileStorage::setPos(const File::offset_type* pos)
 {
     __require__(pos);
 
@@ -278,7 +278,7 @@ bool RollingStorage::create(bool bill, bool roll/*=false*/)
 {
     if (storageFile.isOpened()) {
         if (!roll) return false;
-        uint64_t fpos = 0; FileStorage::getPos(&fpos);
+        File::offset_type fpos = 0; FileStorage::getPos(&fpos);
         int headerPos = ((bill) ? strlen(SMSC_BILLING_HEADER_TEXT):
             (strlen(SMSC_ARCHIVE_HEADER_TEXT) + sizeof(SMSC_ARCHIVE_VERSION_INFO)))+2;
         if (fpos <= headerPos) return false; // file is empty => no rolling 
@@ -459,7 +459,7 @@ TXT_LENGTH     NUMBER(10)
 BODY_LEN       NUMBER(10)
 BODY           RAW(1500)
 */
-void FileStorage::save(SMSId id, SMS& sms, uint64_t* pos /*= 0 (no getPos) */)
+void FileStorage::save(SMSId id, SMS& sms, File::offset_type* pos /*= 0 (no getPos) */)
 {
     uint8_t smsState = (uint8_t)sms.state;
     std::string oa  = sms.originatingAddress.toString();
@@ -596,7 +596,7 @@ public:
     }
 };
 
-bool FileStorage::load(SMSId& id, SMS& sms, const uint64_t* pos /*= 0 (no setPos) */)
+bool FileStorage::load(SMSId& id, SMS& sms, const File::offset_type* pos /*= 0 (no setPos) */)
 {
     uint8_t  smsState = 0;
     uint32_t recordSize1 = 0; uint32_t recordSize2 = 0;
@@ -830,23 +830,23 @@ void PersistentStorage::open(bool read)
     }
 }
 
-void PersistentStorage::openRead(const uint64_t* pos /*= 0 (no setPos) */)
+void PersistentStorage::openRead(const File::offset_type* pos /*= 0 (no setPos) */)
 {
     MutexGuard guard(storageFileLock);
     this->open(true);
     if (pos) FileStorage::setPos(pos);
 }
-void PersistentStorage::openWrite(uint64_t* pos /*= 0 (no getPos) */)
+void PersistentStorage::openWrite(File::offset_type* pos /*= 0 (no getPos) */)
 {
     MutexGuard guard(storageFileLock);
     this->open(false);
     if (pos) FileStorage::getPos(pos);
 }
-void PersistentStorage::writeRecord(SMSId id, SMS& sms, uint64_t* pos /*= 0 (no getPos) */)
+void PersistentStorage::writeRecord(SMSId id, SMS& sms, File::offset_type* pos /*= 0 (no getPos) */)
 {
     FileStorage::save(id, sms, pos);
 }
-bool PersistentStorage::readRecord(SMSId& id, SMS& sms, const uint64_t* pos /*= 0 (no setPos) */)
+bool PersistentStorage::readRecord(SMSId& id, SMS& sms, const File::offset_type* pos /*= 0 (no setPos) */)
 {
     return FileStorage::load(id, sms, pos);
 }
@@ -889,7 +889,7 @@ void TextDumpStorage::open()
         FileStorage::flush();
     }
 }
-void TextDumpStorage::openWrite(uint64_t* pos /*= 0 (no getPos) */)
+void TextDumpStorage::openWrite(File::offset_type* pos /*= 0 (no getPos) */)
 {
     MutexGuard guard(storageFileLock);
     this->open();
@@ -1080,7 +1080,7 @@ bool TransactionStorage::open(bool create)
     return fileExists;
 }
 
-bool TransactionStorage::getTransactionData(uint64_t* pos)
+bool TransactionStorage::getTransactionData(File::offset_type* pos)
 {
     __require__(pos);
 
@@ -1091,16 +1091,16 @@ bool TransactionStorage::getTransactionData(uint64_t* pos)
     if (!result) { 
         try { storageFile.Close(); } catch (...) {}
     }
-    *pos = (result) ? Uint64Converter::toHostOrder(value):-1;
+    *pos = (File::offset_type)((result) ? Uint64Converter::toHostOrder(value):-1);
     return result;
 }
-void TransactionStorage::setTransactionData(const uint64_t* pos)
+void TransactionStorage::setTransactionData(const File::offset_type* pos)
 {
     __require__(pos);
 
     MutexGuard guard(storageFileLock);
     this->open(true);
-    uint64_t value = Uint64Converter::toNetworkOrder(*pos);
+    uint64_t value = Uint64Converter::toNetworkOrder((uint64_t)(*pos));
     FileStorage::write((const void *)&value, sizeof(value));
     FileStorage::flush();
 }

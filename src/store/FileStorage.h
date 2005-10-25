@@ -62,8 +62,8 @@ namespace smsc { namespace store
         void flush();
         void close();
         
-        void getPos(uint64_t* pos);
-        void setPos(const uint64_t* pos);
+        void getPos(File::offset_type* pos);
+        void setPos(const File::offset_type* pos);
 
         virtual ~FileStorage() {
             close();
@@ -79,8 +79,8 @@ namespace smsc { namespace store
         
         virtual void initialize(bool flag) = 0;
 
-        void save(SMSId id, SMS& sms, uint64_t* pos=0);
-        bool load(SMSId& id, SMS& sms, const uint64_t* pos=0);
+        void save(SMSId id, SMS& sms, File::offset_type* pos=0);
+        bool load(SMSId& id, SMS& sms, const File::offset_type* pos=0);
         void bill(SMSId id, SMS& sms, std::string& out);
         
         FileStorage() : log(Logger::getInstance("smsc.store.FileStorage")) {};
@@ -164,11 +164,11 @@ namespace smsc { namespace store
             : FileStorage(), storageFileName(filename) { storageLocation = location; };
         virtual ~PersistentStorage() {};
 
-        void openRead(const uint64_t* pos=0);
-        bool readRecord(SMSId& id, SMS& sms, const uint64_t* pos=0);
+        void openRead(const File::offset_type* pos=0);
+        bool readRecord(SMSId& id, SMS& sms, const File::offset_type* pos=0);
         
-        void openWrite(uint64_t* pos=0);
-        void writeRecord(SMSId id, SMS& sms, uint64_t* pos=0);
+        void openWrite(File::offset_type* pos=0);
+        void writeRecord(SMSId id, SMS& sms, File::offset_type* pos=0);
     };
 
     class TextDumpStorage : public FileStorage
@@ -187,7 +187,7 @@ namespace smsc { namespace store
             : FileStorage(), storageFileName(filename) { storageLocation = location; };
         virtual ~TextDumpStorage() {};
 
-        void openWrite(uint64_t* pos=0);
+        void openWrite(File::offset_type* pos=0);
         void writeRecord(SMSId id, SMS& sms);
     };
 
@@ -208,8 +208,8 @@ namespace smsc { namespace store
             : FileStorage(), storageFileName(fullFileName) {};
         virtual ~TransactionStorage() {};
 
-        bool getTransactionData(uint64_t* pos);
-        void setTransactionData(const uint64_t* pos);
+        bool getTransactionData(File::offset_type* pos);
+        void setTransactionData(const File::offset_type* pos);
     };
 
 }}

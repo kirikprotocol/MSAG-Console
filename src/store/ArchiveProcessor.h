@@ -115,12 +115,12 @@ namespace smsc { namespace store
 
         SmsIndex*   indexator;
 
-        bool            bTransactionOpen;
-        uint64_t        transactionSmsCount,  maxTransactionSms;
-        time_t          transactionStartTime, maxTransactionTime;
-        Hash<uint64_t>  transactionTrsArcFiles;
-        Hash<uint64_t>  transactionTrsTxtFiles;
-        Hash<bool>      transactionSrcFiles;
+        bool        bTransactionOpen;
+        uint64_t    transactionSmsCount,  maxTransactionSms;
+        time_t      transactionStartTime, maxTransactionTime;
+        Hash<File::offset_type> transactionTrsArcFiles;
+        Hash<File::offset_type> transactionTrsTxtFiles;
+        Hash<bool>              transactionSrcFiles;
 
         void cleanTransaction();
         void startTransaction();
