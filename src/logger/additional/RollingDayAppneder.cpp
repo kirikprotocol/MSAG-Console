@@ -122,13 +122,15 @@ RollingDayAppender::RollingDayAppender(const char * const _name, const Propertie
   char name_[512];
   sprintf(name_, ".%04d-%02d-%02d", year, month, day);
   std::string path = filename + name_;
-  file = fopen(path.c_str(), "a");
+  //file = fopen(path.c_str(), "a");
+  file.Append(path.c_str());
 }
 
 void RollingDayAppender::rollover(time_t dat) throw()
 {
 
-  fclose(file);
+  //fclose(file);
+  file.Close();
 
   if(maxBackupIndex > 0)
     clearLogDir(dat);
@@ -151,7 +153,8 @@ void RollingDayAppender::rollover(time_t dat) throw()
   char name_[512];
   sprintf(name_, ".%04d-%02d-%02d", year, month, day);
   std::string path = filename + name_;
-  file = fopen(path.c_str(), "w");
+  //file = fopen(path.c_str(), "w");
+  file.WOpen(path.c_str());
   date_ = dat;
 
   currentFilePos = 0;
@@ -197,8 +200,16 @@ void RollingDayAppender::log(const char logLevelName, const char * const categor
   const size_t length = snprintf(buffer, desiredLength, "%c %s,%3.3u %3.3u % 10.10s: %s\n", logLevelName, timeStr, msec, thrId, category, message);
   buffer[desiredLength] = 0;
 
-  fwrite(buffer, length < desiredLength ? length : desiredLength, 1, file != NULL ? file : stderr);
-  fflush(file);
+  if(file.isOpened())
+  {
+    file.Write(buffer, length < desiredLength ? length : desiredLength);
+    file.Flush();
+  }else
+  {
+    fwrite(buffer, length < desiredLength ? length : desiredLength, 1, stderr);
+  }
+  //fwrite(buffer, length < desiredLength ? length : desiredLength, 1, file != NULL ? file : stderr);
+  //fflush(file);
   currentFilePos += length;
 }
 

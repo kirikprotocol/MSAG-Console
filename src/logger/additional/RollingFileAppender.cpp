@@ -73,8 +73,10 @@ RollingFileAppender::RollingFileAppender(const char * const _name, const Propert
   else
     filename.reset(cStringCopy("smsc.log"));
 
-  file = fopen(filename.get(), "a");
-  currentFilePos = ftell(file);
+  file.Append(filename.get());
+  currentFilePos=file.Pos();
+  //file = fopen(filename.get(), "a");
+  //currentFilePos = ftell(file);
 }
 
 void RollingFileAppender::rollover() throw()
@@ -84,8 +86,9 @@ void RollingFileAppender::rollover() throw()
     rolloverFiles(filename.get(), maxBackupIndex);
 
     // Close the current file
-    fclose(file);
-    file = NULL;
+    //fclose(file);
+    //file = NULL;
+    file.Close();
 
     // Rename fileName to fileName.1
     const size_t max_filename_length = strlen(filename.get())+16;
@@ -96,10 +99,13 @@ void RollingFileAppender::rollover() throw()
     rename(filename.get(), target.get());
 
     // Open a new file
-    file = fopen(filename.get(), "w");
+    //file = fopen(filename.get(), "w");
+    file.WOpen(filename.get());
   } else {
-    fclose(file);
-    file = fopen(filename.get(), "w");
+    //fclose(file);
+    //file = fopen(filename.get(), "w");
+    file.Close();
+    file.WOpen(filename.get());
   }
 
   currentFilePos = 0;
@@ -134,8 +140,15 @@ void RollingFileAppender::log(const char logLevelName, const char * const catego
 
   {
     smsc::core::synchronization::MutexGuard guard(mutex);
-    fwrite(buffer, length < desiredLength ? length : desiredLength, 1, file != NULL ? file : stderr);
-    fflush(file);
+    if(file.isOpened())
+    {
+      file.Write(buffer, length < desiredLength ? length : desiredLength);
+      file.Flush();
+    }else
+    {
+      fwrite(buffer, length < desiredLength ? length : desiredLength, 1, stderr);
+    }
+    //fflush(file);
     currentFilePos += length;
     if (currentFilePos > maxFileSize)
       rollover();
