@@ -291,6 +291,8 @@ Abstract_CommandSmscInfo::Abstract_CommandSmscInfo(const Command::Id id, const x
 
       GETSTRPARAM((char*)smppEntityInfo.systemId,      "systemId")
       GETSTRPARAM((char*)smppEntityInfo.password,      "password")
+      GETSTRPARAM((char*)smppEntityInfo.bindSystemId,  "bindSystemId")
+      GETSTRPARAM((char*)smppEntityInfo.bindPassword,  "bindPassword")
       GETINTPARAM(smppEntityInfo.timeOut,               "timeout")
       GETINTPARAM(smppEntityInfo.providerId,            "providerId")
       GETINTPARAM(smppEntityInfo.uid,                   "uid")
@@ -824,12 +826,16 @@ Actions::CommandActions CommandApply::GetActions()
   {
     case CommandApply::config:
       result.reloadconfig = true;
+      break;
     case CommandApply::routes:
       result.reloadroutes = true;
+      break;
     case CommandApply::smscs:
       result.reloadsmscs = true;
+      break;
     case CommandApply::providers:
       result.restart = true;
+      break;
 
   }
   return result;

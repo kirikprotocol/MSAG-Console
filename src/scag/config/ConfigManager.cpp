@@ -20,6 +20,7 @@
 #include "scag/config/ConfigView.h"
 #include "ConfigListener.h"
 #include <typeinfo.h>
+#include "logger/Logger.h"
 
 namespace scag   {
 namespace config {
@@ -81,6 +82,7 @@ public:
 protected:
     IntHash<ConfigListener*> listeners;
     Mutex listenerLock;
+    smsc::logger::Logger* logger;
 
     static Hash<std::string> *licconfig;
 
@@ -144,6 +146,7 @@ ConfigManager& ConfigManager::Instance()
 
 ConfigManagerImpl::ConfigManagerImpl()
   throw(ConfigException)
+    : logger(smsc::logger::Logger::getInstance("cfgman"))
 {
 }
 
@@ -221,11 +224,18 @@ void ConfigManagerImpl::reloadConfig(ConfigType type)
 {
     MutexGuard mg(listenerLock);
 
+    smsc_log_info(logger, "Config %d is reloading...", type);
+    smsc_log_info(logger, "Types: ROUTE - %d, SMPPMAN - %d", ROUTE_CFG, SMPPMAN_CFG);
+
     switch(type){
     case ROUTE_CFG:
+        smsc_log_info(logger, "Route config is reloading...");
         getRouteConfig_().reload();
+        smsc_log_info(logger, "Route config has reloaded");
         break;
     case SMPPMAN_CFG:
+        smsc_log_info(logger, "SmppMan config is reloading...");
+        smsc_log_info(logger, "SmppMan config has reloaded");
         //getSmppManConfig_().reload();
         break;
     default:
@@ -237,9 +247,11 @@ void ConfigManagerImpl::reloadConfig(ConfigType type)
     };
 
     if(listeners.Exist(type)){
+        smsc_log_info(logger, "Trigger on %d config is processing...", type);
         ConfigListener * listener = listeners.Get(type);
         if(listener){
             listener->configChanged();
+            smsc_log_info(logger, "Trigger on %d config has processed ok", type);
         }
     }
 }
@@ -424,15 +436,15 @@ void ConfigManagerImpl::reload(Array<int>& changedConfigs)
 
     config.clean();
 
-    __trace__("reading config...");
+    smsc_log_info(logger, "reading config...");
     DOMTreeReader reader;
     DOMDocument *document = reader.read(config_filename.get());
     if (document && document->getDocumentElement())
     {
       DOMElement *elem = document->getDocumentElement();
-      __trace__("config readed");
+      smsc_log_info(logger, "config readed");
       config.parse(*elem);
-      __trace2__("parsed %u ints, %u booleans, %u strings\n",
+      smsc_log_info(logger, "parsed %u ints, %u booleans, %u strings",
                  config.intParams.GetCount(),
                  config.boolParams.GetCount(),
                  config.strParams.GetCount());
