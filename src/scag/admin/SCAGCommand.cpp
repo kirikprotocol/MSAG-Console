@@ -775,7 +775,7 @@ Response * CommandUpdateRule::CreateResponse(scag::Scag * ScagApp)
 CommandApply::CommandApply(const xercesc::DOMDocument * document)  
   : SCAGCommand((Command::Id)CommandIds::apply)
 {
-  smsc_log_info(logger, "CommandAddSme got parameters:");
+  smsc_log_info(logger, "CommandApply got parameters:");
   subj = CommandApply::unknown;
 
   BEGIN_EXCEPTION
@@ -827,7 +827,7 @@ Actions::CommandActions CommandApply::GetActions()
     case CommandApply::routes:
       result.reloadroutes = true;
     case CommandApply::smscs:
-      result.restart = true;
+      result.reloadsmscs = true;
     case CommandApply::providers:
       result.restart = true;
 

@@ -20,6 +20,7 @@ struct CommandActions
   bool restart;
   bool reloadconfig;
   bool reloadroutes;
+  bool reloadsmscs;
   CommandActions();
 };
 
