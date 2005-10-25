@@ -235,7 +235,7 @@ public:
 #ifndef NOLOGGERPLEASE
     __trace2__("File: memflush %s->%s",filename.c_str(),tmp.c_str());
 #endif
-    int g=open(tmp.c_str(),O_WRONLY | O_CREAT | O_TRUNC| O_LARGEFILE);
+    int g=open(tmp.c_str(),O_WRONLY | O_CREAT | O_TRUNC| O_LARGEFILE,0644);
     if(g==-1)throw FileException(FileException::errOpenFailed,filename.c_str());
     if(write(g,buffer,(size_t)fileSize)!=(ssize_t)fileSize)
     {
