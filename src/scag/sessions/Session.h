@@ -175,7 +175,7 @@ namespace scag { namespace sessions
 
         friend class Comparator;
     };
- /*
+/* 
     class Comparator
     {
         bool compare_properties(Session * s1,Session * s2)
@@ -269,9 +269,9 @@ namespace scag { namespace sessions
 
         }
     };
-*/
-}}
 
+}}
+  */
 #endif // SCAG_SESSIONS_SESSION
 
 /*

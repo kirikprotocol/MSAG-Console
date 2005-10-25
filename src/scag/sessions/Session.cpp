@@ -313,6 +313,8 @@ bool Session::startOperation(SCAGCommand& cmd)
     }
 
     m_pCurrentOperation = OperationHash.Get(operationKey);
+    currentOperationKey = operationKey;
+
     smsc_log_error(logger,"** Session: operation started");
    
     Owner->startTimer(this->getSessionKey(), this->getWakeUpTime());
