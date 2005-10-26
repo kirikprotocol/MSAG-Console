@@ -157,6 +157,8 @@ int main(int argc, char** argv)
 
 #ifdef LOCAL_TESTING
     run_console();
+    vlr->stop();
+    delete vlr;
 #endif /* LOCAL_TESTING */
 
   }
