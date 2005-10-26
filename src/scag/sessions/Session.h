@@ -14,12 +14,10 @@
 #include <scag/transport/SCAGCommand.h>
 
 #include <sms/sms_serializer.h>
-//#include "core/buffers/TmpBuf.hpp"
 
 namespace scag { namespace sessions 
 {
     using namespace smsc::sms::BufOps;
-//    using namespace smsc::core::buffers;
 
     using smsc::logger::Logger;
     using namespace scag::util::properties;
@@ -269,9 +267,9 @@ namespace scag { namespace sessions
 
         }
     };
-
-}}
   */
+}}
+  
 #endif // SCAG_SESSIONS_SESSION
 
 /*
