@@ -70,8 +70,9 @@ void Invoke::send(Dialog* dialog)
 
 void Invoke::notifyResultListeners(TcapEntity* resp)
 {
-    for (Invoke::ListenerList::iterator it = listeners.begin();
-                                      it != listeners.end(); it++) {
+    Invoke::ListenerList    cpList = listeners;
+    for (Invoke::ListenerList::iterator it = cpList.begin();
+                                      it != cpList.end(); it++) {
         InvokeListener* ptr = *it;
         ptr->result(resp);
     }
@@ -79,8 +80,9 @@ void Invoke::notifyResultListeners(TcapEntity* resp)
 
 void Invoke::notifyResultNListeners(TcapEntity* resp)
 {
-    for (Invoke::ListenerList::iterator it = listeners.begin();
-                                      it != listeners.end(); it++) {
+    Invoke::ListenerList    cpList = listeners;
+    for (Invoke::ListenerList::iterator it = cpList.begin();
+                                      it != cpList.end(); it++) {
         InvokeListener* ptr = *it;
         ptr->resultNL(resp);
     }
@@ -88,8 +90,9 @@ void Invoke::notifyResultNListeners(TcapEntity* resp)
 
 void Invoke::notifyErrorListeners(TcapEntity* resp)
 {
-    for (Invoke::ListenerList::iterator it = listeners.begin();
-                                      it != listeners.end(); it++) {
+    Invoke::ListenerList    cpList = listeners;
+    for (Invoke::ListenerList::iterator it = cpList.begin();
+                                      it != cpList.end(); it++) {
         InvokeListener* ptr = *it;
         ptr->error(resp);
     }
