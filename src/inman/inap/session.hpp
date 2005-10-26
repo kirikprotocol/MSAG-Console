@@ -6,11 +6,11 @@
 
 #include <map>
 
-#include "ss7cp.h"
-
-#include "dispatcher.hpp"
 #include "inman/common/types.hpp"
 #include "inman/common/observable.hpp"
+#include "logger/Logger.h"
+
+using smsc::logger::Logger;
 using smsc::inman::common::ObservableT;
 
 namespace smsc {
@@ -80,8 +80,9 @@ class Session : public ObservableT< SessionListener >
         Logger*       logger;
 };
 
-}
-}
-}
+} //inap
+} //inman
+} //smsc
 
-#endif
+#endif /* __SMSC_INMAN_INAP_SESSION__ */
+

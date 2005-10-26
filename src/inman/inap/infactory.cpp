@@ -3,7 +3,10 @@ static char const ident[] = "$Id$";
 #include <string>
 #include <stdexcept>
 
-#include "session.hpp"
+#include "inman/inap/inss7util.hpp"
+#include "ss7tmc.h"
+
+#include "inman/inap/session.hpp"
 #include "inman/inap/infactory.hpp"
 #include "inman/common/util.hpp"
 
@@ -12,7 +15,7 @@ using std::runtime_error;
 using std::pair;
 using smsc::inman::common::dump;
 using smsc::inman::common::format;
-using smsc::inman::common::getReturnCodeDescription;
+using smsc::inman::inap::getReturnCodeDescription;
 
 namespace smsc  {
 namespace inman {

@@ -4,16 +4,11 @@
 #ifndef __SMSC_INMAN_INAP_DIALOG__
 #define __SMSC_INMAN_INAP_DIALOG__
 
-#include <list>
-#include <vector>
 #include <map>
-
-#include "ss7cp.h"
 
 #include "logger/Logger.h"
 #include "inman/common/types.hpp"
-#include "invoke.hpp"
-#include "results.hpp"
+#include "inman/inap/invoke.hpp"
 
 using smsc::logger::Logger;
 
@@ -25,7 +20,7 @@ class Session;
 
 typedef std::map< UCHAR_T, Invoke* > InvokeMap;
 
-class Dialog;
+//class Dialog;
 
 class DialogListener
 {

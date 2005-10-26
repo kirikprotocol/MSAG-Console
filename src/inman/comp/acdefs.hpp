@@ -2,7 +2,6 @@
 #ifndef __SMSC_INMAN_COMP_APPCTXDEFS__
 #define __SMSC_INMAN_COMP_APPCTXDEFS__
 
-typedef unsigned char      UCHAR_T;
 #include "inman/common/types.hpp"
 #include "inman/comp/operfactory.hpp"
 

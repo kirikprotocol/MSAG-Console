@@ -5,12 +5,9 @@
 
 #include <map>
 
-#include "ss7cp.h"
-#include "i97tcapapi.h"
-
-#include "inman/inap/dispatcher.hpp"
 #include "logger/Logger.h"
 #include "core/synchronization/Mutex.hpp"
+#include "inman/common/types.hpp"
 
 using smsc::logger::Logger;
 using smsc::core::synchronization::Mutex;
@@ -19,9 +16,6 @@ using smsc::core::synchronization::MutexGuard;
 namespace smsc {
 namespace inman {
 namespace inap {
-
-static const USHORT_T MSG_USER_ID = USER03_ID;
-static const UCHAR_T TCAP_INSTANCE_ID = 0;
 
 class Session;
 

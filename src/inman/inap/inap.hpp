@@ -6,8 +6,8 @@
 
 #include <map>
 
-#include "ss7cp.h"
-#include "dialog.hpp"
+//#include "ss7cp.h"
+#include "inman/inap/dialog.hpp"
 
 #include "inman/comp/comps.hpp"
 

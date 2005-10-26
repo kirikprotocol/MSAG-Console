@@ -2,18 +2,17 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 #include <stdexcept>
 #include <string>
-#include "inman/common/util.hpp"
 
-#include "session.hpp"
-#include "invoke.hpp"
-#include "dialog.hpp"
-#include "infactory.hpp"
+#include "inman/common/util.hpp"
+#include "inman/inap/inss7util.hpp"
+#include "inman/inap/invoke.hpp"
+#include "inman/inap/dialog.hpp"
+#include "inman/inap/session.hpp"
 
 using std::runtime_error;
+
 using smsc::inman::common::format;
-using smsc::inman::common::getTcapReasonDescription;
 using smsc::inman::common::dump;
-using smsc::inman::common::dumpToLog;
 
 namespace smsc  {
 namespace inman {

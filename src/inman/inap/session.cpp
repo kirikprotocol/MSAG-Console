@@ -1,16 +1,14 @@
 static char const ident[] = "$Id$";
 
-#include "ss7tmc.h"
-
 #include <errno.h>
 #include <string.h> //for strerrno()
 #include <assert.h>
 #include <stdexcept>
 #include <algorithm>
 
-#include "session.hpp"
-#include "dialog.hpp"
-#include "infactory.hpp"
+#include "inman/inap/inss7util.hpp"
+#include "inman/inap/session.hpp"
+#include "inman/inap/dialog.hpp"
 #include "inman/common/util.hpp"
 
 using std::max;
@@ -18,8 +16,6 @@ using std::map;
 using std::pair;
 using std::runtime_error;
 
-//using smsc::inman::common::getReturnCodeDescription;
-using smsc::inman::common::getTcapReasonDescription;
 using smsc::inman::common::fillAddress;
 using smsc::inman::common::format;
 using smsc::inman::common::dump;

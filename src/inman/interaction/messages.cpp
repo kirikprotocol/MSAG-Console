@@ -33,7 +33,7 @@ SerializerInap* SerializerInap::getInstance()
 
 SerializableObject* SerializerInap::deserialize(ObjectBuffer& in)
 {
-    USHORT_T objectId, version, dialogId;
+    unsigned short objectId, version, dialogId;
 
     in >> version;
 
@@ -57,8 +57,8 @@ SerializableObject* SerializerInap::deserialize(ObjectBuffer& in)
 void SerializerInap::serialize(SerializableObject* obj, ObjectBuffer& out)
 {
     assert( obj );
-    out << (USHORT_T) FORMAT_VERSION;
-    out << (USHORT_T) obj->getObjectId();
+    out << (unsigned short) FORMAT_VERSION;
+    out << (unsigned short) obj->getObjectId();
     obj->save( out );
 }
 
@@ -189,7 +189,7 @@ void ChargeSms::load(ObjectBuffer& in)
 
 void ChargeSms::save(ObjectBuffer& out)
 {
-    out << (USHORT_T) CHARGE_SMS_TAG;
+    out << (unsigned short) CHARGE_SMS_TAG;
     out << destinationSubscriberNumber;
     out << callingPartyNumber;
     out << imsi;
@@ -239,8 +239,8 @@ void ChargeSmsResult::load(ObjectBuffer& in)
 
 void ChargeSmsResult::save(ObjectBuffer& out)
 {
-   	out << (USHORT_T) CHARGE_SMS_RESULT_TAG;
-    out << (USHORT_T)value;
+   	out << (unsigned short) CHARGE_SMS_RESULT_TAG;
+    out << (unsigned short)value;
 }
 
 void ChargeSmsResult::handle(SmscHandler* handler)
@@ -280,8 +280,8 @@ void DeliverySmsResult::load(ObjectBuffer& in)
 
 void DeliverySmsResult::save(ObjectBuffer& out)
 {
-    out << (USHORT_T) DELIVERY_SMS_RESULT_TAG;
-    out << (USHORT_T)value;
+    out << (unsigned short) DELIVERY_SMS_RESULT_TAG;
+    out << (unsigned short)value;
 }
 
 void DeliverySmsResult::handle(InmanHandler* handler)

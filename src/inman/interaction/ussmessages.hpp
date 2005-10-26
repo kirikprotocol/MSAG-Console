@@ -31,7 +31,7 @@ struct USS2CMD {
 };
 
 //serializer for USSman commands, transferred over TCP socket
-class SerializerUSS : public SerializerITF, public FactoryT< USHORT_T, SerializableObject >
+class SerializerUSS : public SerializerITF, public FactoryT< unsigned short, SerializableObject >
 {
 public:
     virtual ~SerializerUSS();

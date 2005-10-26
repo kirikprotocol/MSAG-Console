@@ -4,15 +4,13 @@ static char const ident[] = "$Id$";
 #include <string>
 
 #include "inman/common/util.hpp"
-
-#include "session.hpp"
-#include "dialog.hpp"
-#include "results.hpp"
-#include "infactory.hpp"
+#include "inman/inap/inss7util.hpp"
+#include "inman/inap/dialog.hpp"
+#include "inman/inap/session.hpp"
+#include "inman/inap/results.hpp"
 
 using std::runtime_error;
 using smsc::inman::common::format;
-using smsc::inman::common::getTcapReasonDescription;
 
 namespace smsc  {
 namespace inman {

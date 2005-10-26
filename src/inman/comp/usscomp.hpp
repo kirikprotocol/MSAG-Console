@@ -8,7 +8,6 @@
 #include "logger/Logger.h"
 #include "compdefs.hpp"
 #include "acdefs.hpp"
-//#include "operfactory.hpp"
 
 using smsc::logger::Logger;
 

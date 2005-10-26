@@ -5,18 +5,18 @@ static char const ident[] = "$Id$";
 #include <stdexcept>
 #include <memory>
 
-#include "invoke.hpp"
-#include "results.hpp"
-#include "dialog.hpp"
-#include "session.hpp"
-#include "infactory.hpp"
+#include "inman/inap/inss7util.hpp"
+#include "inman/inap/dialog.hpp"
+#include "inman/inap/infactory.hpp"
+#include "inman/inap/session.hpp"
+#include "inman/inap/results.hpp"
+#include "inman/comp/acdefs.hpp"
 #include "inman/common/util.hpp"
-#include "inman/comp/comfactory.hpp"
 
 using std::runtime_error;
 using std::auto_ptr;
+
 using smsc::inman::common::format;
-using smsc::inman::common::getTcapReasonDescription;
 using smsc::inman::common::dump;
 using smsc::inman::comp::ApplicationContextFactory;
 using smsc::inman::comp::OperationFactory;

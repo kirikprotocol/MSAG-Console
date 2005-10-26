@@ -5,27 +5,25 @@ static char const ident[] = "$Id$";
 
 #include <assert.h>
 
-#include "logger/Logger.h"
 
-#include "callbacks.hpp"
-#include "infactory.hpp"
-#include "session.hpp"
-#include "dialog.hpp"
-#include "invoke.hpp"
-#include "results.hpp"
+#include "inman/inap/inss7util.hpp"
+
+#include "inman/inap/infactory.hpp"
+#include "inman/inap/session.hpp"
+#include "inman/inap/dialog.hpp"
+#include "inman/inap/invoke.hpp"
 #include "inman/common/util.hpp"
 
-using smsc::logger::Logger;
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::Session;
 using smsc::inman::inap::InSessionFactory;
-using smsc::inman::common::getTcapBindErrorMessage;
+using smsc::inman::inap::getTcapBindErrorMessage;
 using smsc::inman::common::dump;
 using smsc::inman::common::dumpToLog;
 using smsc::inman::common::format;
 
 namespace smsc {
-namespace inman{
+namespace inman {
 namespace inap {
 extern Logger* inapLogger;
 extern Logger* tcapLogger;
@@ -143,6 +141,25 @@ USHORT_T EINSS7_I97TContinueInd(UCHAR_T          ssn,
 
   Dialog* dlg = findDialog( ssn, dialogueId );
   if( dlg ) dlg->handleContinueDialog();
+  return MSG_OK;
+}
+
+
+USHORT_T EINSS7_I97TAddressInd(UCHAR_T ssn,
+				USHORT_T userId,
+		                EINSS7INSTANCE_T tcapInstanceId,
+				USHORT_T dialogueId,
+				UCHAR_T bitMask,
+				UCHAR_T addressLength,
+				UCHAR_T *orgAdr_p)
+{
+  smsc_log_debug(tcapLogger,"ADDRESS_IND");
+  smsc_log_debug(tcapLogger," SSN: 0x%X", ssn);
+  smsc_log_debug(tcapLogger," UserID: 0x%X", userId );
+  smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", tcapInstanceId );
+  smsc_log_debug(tcapLogger," DialogID: 0x%X", dialogueId );
+  smsc_log_debug(tcapLogger," Bitmask: 0x%X", (USHORT_T)bitMask );
+  smsc_log_debug(tcapLogger," Org. address: %s" , dump(addressLength, orgAdr_p).c_str() );
   return MSG_OK;
 }
 

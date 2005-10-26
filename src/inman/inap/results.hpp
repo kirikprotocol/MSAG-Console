@@ -3,10 +3,6 @@
 #ifndef __SMSC_INMAN_INAP_RESULTS__
 #define __SMSC_INMAN_INAP_RESULTS__
 
-#include <map>
-
-#include "ss7cp.h"
-#include "inman/common/types.hpp"
 #include "entity.hpp"
 
 namespace smsc  {
@@ -31,8 +27,9 @@ class InvokeResultError : public TcapEntity
     	virtual void send(Dialog* dialog);
 };
 
-}
-}
-}
+} //inap
+} //inman
+} //smsc
 
-#endif
+#endif /* __SMSC_INMAN_INAP_RESULTS__ */
+

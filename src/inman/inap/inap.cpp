@@ -1,9 +1,9 @@
 static char const ident[] = "$Id$";
 #include <assert.h>
-#include "inap.hpp"
+#include "inman/inap/inap.hpp"
 #include "inman/comp/comps.hpp"
-#include "invoke.hpp"
-#include "dialog.hpp"
+#include "inman/inap/invoke.hpp"
+#include "inman/inap/dialog.hpp"
 
 namespace smsc {
 namespace inman {

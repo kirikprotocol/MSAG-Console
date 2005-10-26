@@ -3,12 +3,9 @@
 #ifndef __SMSC_INMAN_INAP_INVOKE__
 #define __SMSC_INMAN_INAP_INVOKE__
 
-#include <map>
-
-#include "entity.hpp"
-
-#include "inman/common/types.hpp"
+#include "inman/inap/entity.hpp"
 #include "inman/common/observable.hpp"
+
 using smsc::inman::common::ObservableT;
 
 namespace smsc  {
@@ -24,7 +21,7 @@ class InvokeListener
         virtual void resultNL(TcapEntity*) = 0;
 };
 
-
+class Dialog;
 class Invoke : public TcapEntity, public ObservableT< InvokeListener >
 {
     public:
@@ -34,8 +31,9 @@ class Invoke : public TcapEntity, public ObservableT< InvokeListener >
         virtual void notifyErrorListeners(TcapEntity* resp);
 };
 
-}
-}
-}
+} //inap
+} //inman
+} //smsc
 
-#endif
+#endif /* __SMSC_INMAN_INAP_INVOKE__ */
+

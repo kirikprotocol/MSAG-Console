@@ -1,23 +1,18 @@
 static char const ident[] = "$Id$";
-#include <assert.h>
-#include <sys/select.h> 
 
-#include "ss7tmc.h"
+#include <string>
+#include <stdexcept>
 
 #include "inman/common/synch.hpp"
-#include "inman/inap/dispatcher.hpp"
 #include "inman/common/util.hpp"
-#include "inman/common/errors.hpp"
-#include "infactory.hpp"
+#include "inman/inap/inss7util.hpp"
+#include "inman/inap/dispatcher.hpp"
+
+using std::runtime_error;
 
 using smsc::inman::common::Synch;
-using smsc::inman::common::dump;
 using smsc::inman::common::format;
-using smsc::inman::common::getReturnCodeDescription;
-using smsc::inman::common::SystemError;
-using std::vector;
-using std::runtime_error;
-using smsc::inman::inap::Dispatcher;
+
 
 namespace smsc  {
 namespace inman {
@@ -91,3 +86,4 @@ int Dispatcher::Execute()
 } // namespace inap
 } // namespace inmgr
 } // namespace smsc
+

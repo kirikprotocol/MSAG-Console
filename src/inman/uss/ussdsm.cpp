@@ -216,7 +216,7 @@ USHORT_T USSDialog::handleEndDialog()
 {
     smsc_log_debug(logger," USSDialog{id = %d} received END", this->getId());
 //    _pDsm->onDialogEnd(this);
-    return MSG_OK;
+    return 0;
 }
 
 }//namespace uss
