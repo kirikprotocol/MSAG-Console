@@ -834,7 +834,7 @@ Actions::CommandActions CommandApply::GetActions()
       result.reloadsmscs = true;
       break;
     case CommandApply::providers:
-      result.restart = true;
+      result.reloadconfig = true;
       break;
 
   }

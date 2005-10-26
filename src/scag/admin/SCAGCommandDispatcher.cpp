@@ -192,10 +192,6 @@ void SCAGCommandDispatcher::DoActions(Actions::CommandActions actions)
     if (actions.reloadsmscs)
         cfg.reloadConfig(scag::config::SMPPMAN_CFG);
 
-    if (actions.restart) {
-      stopGw();
-      startGw();
-    }
 }
 
 }
