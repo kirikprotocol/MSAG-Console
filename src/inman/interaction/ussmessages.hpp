@@ -48,6 +48,11 @@ protected:
 
 typedef std::vector<unsigned char> USSDATA_T;
 
+// 1. USSRequest         ( client --> USSMAN )
+// 2. USSRequestResult   ( client <-- USSMAN )
+// 3. USSRequestDenial   ( client <-- USSMAN )
+
+
 /*
 class USSCommandHandler;
 class USSCommand : public SerializableObject
