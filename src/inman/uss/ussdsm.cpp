@@ -109,7 +109,7 @@ USSDSM::~USSDSM()
 {
     if (_ires) {
         Invoke* inv = _ires->getInvId();
-        inv->removeListener(_ires);
+        inv->setListener(NULL);
         delete _ires;
     }
     _session->closeDialog(_dlg); //frees Invoke
@@ -158,8 +158,7 @@ void USSDSM::onProcessUSSRequest( USSRequestMessage* req)
     //set result listener, and initiate TCAP dialog
     Invoke* op = _dlg->invoke( MAPUSS_OpCode::processUSS_Request );
     assert( op );
-    _ires = new USSTcapListener(op, this);
-    op->addListener(_ires);
+    op->setListener(_ires = new USSTcapListener(op, this));
 
     op->setParam( &arg );
     op->send( _dlg );

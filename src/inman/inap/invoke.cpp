@@ -67,34 +67,22 @@ void Invoke::send(Dialog* dialog)
     throw runtime_error( format("InvokeReq failed with code %d (%s)", result,getTcapReasonDescription(result)));
 }
 
-void Invoke::notifyResultListeners(TcapEntity* resp)
+void Invoke::notifyResultListener(TcapEntity* resp)
 {
-    Invoke::ListenerList    cpList = listeners;
-    for (Invoke::ListenerList::iterator it = cpList.begin();
-                                      it != cpList.end(); it++) {
-        InvokeListener* ptr = *it;
-        ptr->result(resp);
-    }
+    if (_iResHdl)
+        _iResHdl->result(resp);
 }
 
-void Invoke::notifyResultNListeners(TcapEntity* resp)
+void Invoke::notifyResultNListener(TcapEntity* resp)
 {
-    Invoke::ListenerList    cpList = listeners;
-    for (Invoke::ListenerList::iterator it = cpList.begin();
-                                      it != cpList.end(); it++) {
-        InvokeListener* ptr = *it;
-        ptr->resultNL(resp);
-    }
+    if (_iResHdl)
+        _iResHdl->resultNL(resp);
 }
 
-void Invoke::notifyErrorListeners(TcapEntity* resp)
+void Invoke::notifyErrorListener(TcapEntity* resp)
 {
-    Invoke::ListenerList    cpList = listeners;
-    for (Invoke::ListenerList::iterator it = cpList.begin();
-                                      it != cpList.end(); it++) {
-        InvokeListener* ptr = *it;
-        ptr->error(resp);
-    }
+    if (_iResHdl)
+        _iResHdl->error(resp);
 }
 
 } // namespace inap

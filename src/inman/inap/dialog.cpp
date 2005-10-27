@@ -282,14 +282,40 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
         Invoke* inv = (*it).second;
         //NOTE: notifyResultListeners() may lead to this ~Dialog() being called !!!
         //ResultListener should copy 'resParm', not take its ownership !
-        inv->notifyResultListeners(&result);
+        inv->notifyResultListener(&result);
     }
     return MSG_OK;
 }
 
 USHORT_T Dialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
 {
-  return MSG_OK;
+    assert( op );
+    assert( oplen > 0 );
+    assert( tag == EINSS7_I97TCAP_OPERATION_TAG_LOCAL );
+
+    //search for originating Invoke, prepare result and call invoke result listeners
+    InvokeMap::const_iterator it = originating.find(invId);
+    if (it != originating.end()) {
+        InvokeResultNotLast  result;
+        UCHAR_T opcode = op[0];
+
+        result.setId( invId );
+        result.setTag( tag );
+        result.setOpcode( opcode );
+
+        Component* resParm = ApplicationContextFactory::getFactory(_ac_idx)->createRes(opcode);
+        assert(resParm);
+        if (resParm) {
+            std::vector<unsigned char> code(pm, pm + pmlen);
+            resParm->decode(code);
+            result.setParam(resParm);
+        }
+        Invoke* inv = (*it).second;
+        //NOTE: notifyResultNListeners() may lead to this ~Dialog() being called !!!
+        //ResultListener should copy 'resParm', not take its ownership !
+        inv->notifyResultNListener(&result);
+    }
+    return MSG_OK;
 }
 
 USHORT_T Dialog::handleUserError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
@@ -316,9 +342,9 @@ USHORT_T Dialog::handleUserError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, con
             resErr.setParam(errParm);
         }
         Invoke* inv = (*it).second;
-        //NOTE: notifyResultListeners() may lead to this ~Dialog() being called !!!
+        //NOTE: notifyErrorListener() may lead to this ~Dialog() being called !!!
         //ResultListener should copy 'resParm', not take its ownership !
-        inv->notifyErrorListeners(&resErr);
+        inv->notifyErrorListener(&resErr);
     }
     return MSG_OK;
 }

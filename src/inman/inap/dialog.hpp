@@ -9,7 +9,9 @@
 #include "logger/Logger.h"
 #include "inman/common/types.hpp"
 #include "inman/inap/invoke.hpp"
+#include "inman/common/observable.hpp"
 
+using smsc::inman::common::ObservableT;
 using smsc::logger::Logger;
 
 namespace smsc {
@@ -19,8 +21,6 @@ namespace inap {
 class Session;
 
 typedef std::map< UCHAR_T, Invoke* > InvokeMap;
-
-//class Dialog;
 
 class DialogListener
 {
