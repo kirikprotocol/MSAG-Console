@@ -105,6 +105,11 @@ public class Constants
       public static final Constants COULDNT_DELETE_PROVIDER = new Constants("error.providers.couldnt_delete_provider");
     }
 
+    public interface categories
+    {
+      public static final Constants CATEGORY_NOT_FOUND = new Constants("error.categories.category_not_found");
+      public static final Constants COULDNT_DELETE_CATEGORY = new Constants("error.categories.couldnt_delete_category");
+    }
 
     public interface smscs
     {
