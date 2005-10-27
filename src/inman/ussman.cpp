@@ -10,8 +10,7 @@ static char const ident[] = "$Id$";
 #include "util/config/Manager.h"
 #include "util/config/ConfigView.h"
 
-
-#define LOCAL_TESTING
+//#define LOCAL_TESTING
 
 static const UCHAR_T VER_HIGH    = 0;
 static const UCHAR_T VER_LOW     = 1;
@@ -104,17 +103,23 @@ struct UssManConfig : public VLR_CFG
 };
 
 #ifdef LOCAL_TESTING
+#include "inman/interaction/ussmessages.hpp"
+using smsc::inman::interaction::USSRequestMessage;
+
+
 void make102req(Console&, const std::vector<std::string> &args)
 {
-  assert( vlr );
-  try
-  {
-    vlr->make102("79139343290");
-  }
-  catch(...)
-  {
-    throw;
-  }
+    assert( vlr );
+    try {
+        USSRequestMessage   req;
+        req.setReqId(1);
+        req.setDCS(0x0F);
+        req.setUSSData((unsigned char*)"*100#", 5);
+        req.setMSISDNadr("79139343290");
+        vlr->onCommandReceived(NULL, &req);
+    } catch(...) {
+        throw;
+    }
 }
 
 static void run_console()
@@ -147,11 +152,7 @@ int main(int argc, char** argv)
   }
   try
   {
-#ifndef LOCAL_TESTING
     vlr = new VLR(&cfg);
-#else  /* LOCAL_TESTING */
-    vlr = new VLR(cfg.usr_ssn, cfg.vlr_ssn, cfg.vlr_addr, cfg.in_ssn, cfg.in_addr);
-#endif /* LOCAL_TESTING */
     vlr->start();
     sigset( SIGTERM, sighandler );
 

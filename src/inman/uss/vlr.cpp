@@ -41,8 +41,10 @@ VLR::VLR (const VLR_CFG * inCfg)
     dispatcher = new Dispatcher();
 
     //init TCP server
-    tcpServer = new Server(cfg.host, cfg.port, SerializerUSS::getInstance());
-    tcpServer->addListener( this );
+    if (cfg.host) { //may be missed in case of local testing
+        tcpServer = new Server(cfg.host, cfg.port, SerializerUSS::getInstance());
+        tcpServer->addListener( this );
+    }
 
     session = factory->openSession(cfg.usr_ssn, cfg.vlr_ssn, cfg.vlr_addr, cfg.in_ssn, cfg.in_addr);
     assert( session );
@@ -50,6 +52,8 @@ VLR::VLR (const VLR_CFG * inCfg)
 
 VLR::~VLR()
 {
+  if (running)
+    stop();
   smsc_log_debug( logger, "Release VLR" );
   InSessionFactory* factory = InSessionFactory::getInstance();
   assert( factory );
@@ -71,12 +75,14 @@ void VLR::start()
 {
   smsc_log_debug( logger, "Start dispatcher" );
   dispatcher->Start();
+  running = true;
 }
 
 void VLR::stop()
 {
   smsc_log_debug( logger, "Stop dispatcher" );
   dispatcher->Stop();
+  running = false;
   dispatcher->WaitFor();
 }
 
@@ -140,50 +146,9 @@ void VLR::onCommandReceived(Connect* conn, SerializableObject* recvCmd)
     }
 }
 
-
 /* -------------------------------------------------------------------------- *
  * Local testing utilities:
  * -------------------------------------------------------------------------- */
-//constructor for local testing, no TCP interaction
-VLR::VLR(UCHAR_T user_ssn, UCHAR_T vlr_ssn, const char* vlr_addr, 
-         UCHAR_T in_ssn, const char* in_addr)
-  : logger( Logger::getInstance("smsc.inman.vlr") )
-  , session( 0 )
-  , dispatcher( 0 )
-  , tcpServer( 0 )
-{
-  smsc_log_debug( logger, "Create VLR" );
-
-  cfg.host = NULL;
-  cfg.port = 0;
-  cfg.in_addr = in_addr;
-  cfg.in_ssn = in_ssn;
-  cfg.usr_ssn = user_ssn;
-  cfg.vlr_addr = vlr_addr;
-  cfg.vlr_ssn = vlr_ssn;
-
-  InSessionFactory* factory = InSessionFactory::getInstance();
-  assert( factory );
-
-  dispatcher = new Dispatcher();
-
-  session = factory->openSession(user_ssn, vlr_ssn, vlr_addr, in_ssn, in_addr );
-  assert( session );
-}
-
-
-void VLR::make102(const char * who)
-{
-    USSRequestMessage   req;
-    static unsigned char rstr[] = "*100#";
-    req.setReqId(1);
-    req.setDCS(0x0F);
-    req.setUSSData(&rstr[0], 5);
-    req.setMSISDNadr(who);
-
-    onCommandReceived(NULL, &req);
-}
-
 
 } // namespace uss
 } // namespace inman

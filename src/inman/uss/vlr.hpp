@@ -56,8 +56,6 @@ class VLR : public ServerListener, ConnectListener
     //frees the DSM, which successfully processed request.
     virtual void onCommandProcessed(USSDSM* dsm);
 
-    //for local testing: emulates request from TCP 
-    void make102(const char * who);
   private:
     VLR_CFG     cfg;
     USSDSMmap   workers;
@@ -65,6 +63,7 @@ class VLR : public ServerListener, ConnectListener
     Session*    session;
     Dispatcher* dispatcher;
     Server*	tcpServer;
+    volatile bool running;
 };
 
 }//namespace uss
