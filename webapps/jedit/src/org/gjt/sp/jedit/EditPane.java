@@ -113,9 +113,8 @@ public class EditPane extends JPanel implements EBComponent
     if(bufferSwitcher.getSelectedItem() != buffer)
      bufferSwitcher.setSelectedItem(buffer);
    }
-
-   EditBus.send(new EditPaneUpdate(this,EditPaneUpdate
-    .BUFFER_CHANGED));
+    System.out.println("EditPane.setBuffer before EditBus.send(new EditPaneUpdate(this,EditPaneUpdate.BUFFER_CHANGED));");
+   EditBus.send(new EditPaneUpdate(this,EditPaneUpdate.BUFFER_CHANGED));
   }
 
   SwingUtilities.invokeLater(new Runnable()

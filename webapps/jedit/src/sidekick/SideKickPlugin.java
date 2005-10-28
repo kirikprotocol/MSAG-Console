@@ -139,12 +139,14 @@ public class SideKickPlugin extends EBPlugin
  //{{{ getParser() method
  public static SideKickParser getParser(String name)
  {
-  SideKickParser parser = (SideKickParser)ServiceManager
-   .getService(SideKickParser.SERVICE,name);
-  if(parser != null)
+  SideKickParser parser = (SideKickParser)ServiceManager.getService(SideKickParser.SERVICE,name);
+  System.out.println("SideKickPlugin getParser parser line 143= "+parser);
+   if(parser != null)
    return parser;
-  else
-   return (SideKickParser)parsers.get(name);
+  else {
+    parser=(SideKickParser)parsers.get(name);
+    return parser;
+   }
  } //}}}
 
  //{{{ getParserForView() method
@@ -161,7 +163,8 @@ public class SideKickPlugin extends EBPlugin
  public static SideKickParser getParserForBuffer(Buffer buffer)
  {
   String parserName = buffer.getStringProperty(PARSER_PROPERTY);
-  if(parserName == null)
+   System.out.println("parserName= "+parserName);
+   if(parserName == null)
    return null;
   else
    return getParser(parserName);
@@ -251,7 +254,39 @@ public class SideKickPlugin extends EBPlugin
   parsedBufferSet = new HashSet();
   SideKickActions.clear();
  }
- 
+
+  public void WindowClose(View view) {
+
+   // View view = jEdit.getFirstView();
+  /*  uninitView(view);
+    SideKickParsedData.setParsedData(view,null);
+
+    EditPane[] panes = view.getEditPanes();
+    for(int i = 0; i < panes.length; i++)
+     uninitTextArea(panes[i].getTextArea());
+
+
+   Buffer buffer =view.getBuffer(); //jEdit.getFirstBuffer();
+   buffer.setProperty(PARSED_DATA_PROPERTY,null);
+ */ // sidekicks = new HashMap();
+  // parsers = new HashMap();
+  // if (worker!=null) worker.stop();
+  // worker=null;
+  // parsedBufferSet = new HashSet();
+   SideKickActions.clear();
+  }
+   public void WindowOpen(View view) {
+     initView(view);
+     SideKick sidekick = (SideKick)sidekicks.get(view);
+     sidekick.setParser();
+     sidekick.parse(false);
+/*   EditPane[] panes = view.getEditPanes();
+  for(int i = 0; i < panes.length; i++)
+   initTextArea(panes[i].getTextArea());
+
+  SideKickActions.propertiesChanged();
+*/ //SideKickActions.clear();
+  }
  //{{{ Private members
  private static HashMap sidekicks = new HashMap();
  private static HashMap parsers = new HashMap();
@@ -262,6 +297,11 @@ public class SideKickPlugin extends EBPlugin
  private void initView(View view)
  {
   sidekicks.put(view,new SideKick(view));
+   System.out.println("SideKickPlugin.initView sidekicks.size()= "+sidekicks.size());
+   if (jEdit.getLastView()!=jEdit.getFirstView()) {
+      System.out.println("clear timer in View.WindowHandler.windowActivated in initView for second view !!!!");
+      SideKickActions.clear();
+    }
  } //}}}
 
  //{{{ uninitView() method

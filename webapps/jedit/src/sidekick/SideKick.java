@@ -51,7 +51,6 @@ class SideKick implements EBComponent
   {
    public void actionPerformed(ActionEvent evt)
    {
-    System.out.println("sidekick.SideKick actionPerformed before parse line 54");
         parse(false);
    }
   });
@@ -136,16 +135,20 @@ class SideKick implements EBComponent
  //{{{ handleMessage() method
  public void handleMessage(EBMessage msg)
  {
-  if(msg instanceof PropertiesChanged)
-   propertiesChanged();
-  else if(msg instanceof BufferUpdate)
-   handleBufferUpdate((BufferUpdate)msg);
-  else if(msg instanceof EditPaneUpdate)
-   handleEditPaneUpdate((EditPaneUpdate)msg);
-  else if(msg instanceof ViewUpdate)
-   handleViewUpdate((ViewUpdate)msg);
+   if(msg instanceof PropertiesChanged) {
+     System.out.println("SideKick.handleMessage msg instanceof PropertiesChanged");
+   propertiesChanged();  }
+  else if(msg instanceof BufferUpdate) {
+     System.out.println("SideKick.handleMessage msg instanceof BufferUpdate");
+   handleBufferUpdate((BufferUpdate)msg); }
+  else if(msg instanceof EditPaneUpdate) {
+     System.out.println("SideKick.handleMessage msg instanceof EditPaneUpdate");
+   handleEditPaneUpdate((EditPaneUpdate)msg);  }
+  else if(msg instanceof ViewUpdate) {
+   System.out.println("SideKick.handleMessage msg instanceof ViewUpdate");
+   handleViewUpdate((ViewUpdate)msg);  }
   else if(msg instanceof PluginUpdate)
-  {
+  { System.out.println("SideKick.handleMessage msg instanceof PluginUpdate");
    PluginUpdate pmsg = (PluginUpdate)msg;
    if(pmsg.getWhat() == PluginUpdate.UNLOADED
     || pmsg.getWhat() == PluginUpdate.LOADED)
@@ -216,9 +219,10 @@ class SideKick implements EBComponent
 
   //{{{ addBufferChangeListener() method
  private void addBufferChangeListener(Buffer buffer)
- {
+ { System.out.println("SideKick.addBufferChangeListener buffer= "+buffer);
   if(!addedBufferChangeHandler)
   {
+    System.out.println("before addBufferChangeListener= "+addedBufferChangeHandler);
    buffer.addBufferChangeListener(bufferHandler);
    addedBufferChangeHandler = true;
   }
@@ -291,15 +295,21 @@ class SideKick implements EBComponent
  //{{{ handleBufferUpdate() method
  private void handleBufferUpdate(BufferUpdate bmsg)
  {
-  if(bmsg.getBuffer() != buffer)
+   System.out.println("Sidekick.handleBufferUpdate bmsg.getBuffer()= "+bmsg.getBuffer()+ " buffer= "+buffer);
+   if(bmsg.getBuffer() != buffer)   {
    /* do nothing */;
+    System.out.println("Sidekick.handleBufferUpdate do nothing");
+  }
   else if(bmsg.getWhat() == BufferUpdate.SAVED
-   || bmsg.getWhat() == BufferUpdate.LOADED)
-   autoParse();
-  else if(bmsg.getWhat() == BufferUpdate.PROPERTIES_CHANGED)
-   setParser();
-  else if(bmsg.getWhat() == BufferUpdate.CLOSED)
-   setErrorSource(null);
+   || bmsg.getWhat() == BufferUpdate.LOADED)   {
+    System.out.println("Sidekick.handleBufferUpdate autoParse");
+   autoParse();                                 }
+  else if(bmsg.getWhat() == BufferUpdate.PROPERTIES_CHANGED) {
+   System.out.println("Sidekick.handleBufferUpdate setParser");
+   setParser();                                               }
+  else if(bmsg.getWhat() == BufferUpdate.CLOSED) {
+   System.out.println("Sidekick.handleBufferUpdate setErrorSource(null)");
+   setErrorSource(null);                          }
  } //}}}
  
  //{{{ handleEditPaneUpdate() method
@@ -327,6 +337,7 @@ class SideKick implements EBComponent
     deactivateParser();
 
     buffer = editPane.getBuffer();
+   System.out.println("SideKick.handleEditPaneUpdate view.getBuffer= "+buffer);
     parser = SideKickPlugin.getParserForBuffer(buffer);
     activateParser();
 
@@ -345,6 +356,7 @@ class SideKick implements EBComponent
    deactivateParser();
 
    buffer = view.getBuffer();
+   System.out.println("SideKick.handleViewUpdate view.getBuffer= "+buffer);
    this.editPane = view.getEditPane();
 
    parser = SideKickPlugin.getParserForBuffer(buffer);
@@ -371,7 +383,7 @@ class SideKick implements EBComponent
  private void activateParser()
  {
   EditPane editPane = view.getEditPane();
-
+   System.out.println("SideKick activateParser() parser= "+parser);
   if(parser != null)
   {
    addBufferChangeListener(buffer);

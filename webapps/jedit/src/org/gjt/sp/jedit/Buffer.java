@@ -263,9 +263,7 @@ public class Buffer
           lineMgr._contentInserted(endOffsets);
           positionMgr.contentInserted(0,seg.count);
 
-          fireContentInserted(0,0,
-                  endOffsets.getSize() - 1,
-                  seg.count - 1);
+          fireContentInserted(0,0,endOffsets.getSize() - 1,seg.count - 1);
         }
         finally
         {
@@ -308,8 +306,8 @@ public class Buffer
         if(!getFlag(TEMPORARY))
         {
           fireBufferLoaded();
-          EditBus.send(new BufferUpdate(Buffer.this,
-                  view,BufferUpdate.LOADED));
+          System.out.println("Buffer.load.run before EditBus.send(new BufferUpdate(Buffer.this,view,BufferUpdate.LOADED));");
+          EditBus.send(new BufferUpdate(Buffer.this,view,BufferUpdate.LOADED));
           //EditBus.send(new BufferUpdate(Buffer.this,
           // view,BufferUpdate.MARKERS_CHANGED));
         }
@@ -1100,7 +1098,6 @@ public class Buffer
   {
     if(str == null)
       return;
-
     int len = str.length();
 
     if(len == 0)
@@ -1115,9 +1112,7 @@ public class Buffer
 
       if(offset < 0 || offset > contentMgr.getLength())
         throw new ArrayIndexOutOfBoundsException(offset);
-
       contentMgr.insert(offset,str);
-
       integerArray.clear();
 
       for(int i = 0; i < len; i++)
@@ -1131,7 +1126,6 @@ public class Buffer
         undoMgr.contentInserted(offset,len,str,
                 !getFlag(DIRTY));
       }
-
       contentInserted(offset,len,integerArray);
     }
     finally
@@ -1433,6 +1427,7 @@ public class Buffer
   public void addBufferChangeListener(BufferChangeListener listener,
                                       int priority)
   {
+    System.out.println("Buffer.addBufferChangeListener listener= "+listener.getClass().getName());
     Listener l = new Listener(listener,priority);
     for(int i = 0; i < bufferListeners.size(); i++)
     {
@@ -3288,7 +3283,7 @@ public class Buffer
   void close()
   {
     setFlag(CLOSED,true);
-
+    bufferListeners.clear();
     if(autosaveFile != null)
       jEdit.BoolGet(autosaveName,jEdit.Delete);//autosaveFile.delete();
 
@@ -3898,8 +3893,9 @@ public class Buffer
     {
       try
       {
-        getListener(i).contentInserted(this,startLine,
-                offset,numLines,length);
+        BufferChangeListener li=getListener(i);
+        System.out.println("Buffer.fireContentInserted line 3901 bufferListeners.size()= "+bufferListeners.size()+" listener= "+li.getClass().getName());
+        getListener(i).contentInserted(this,startLine,offset,numLines,length);
       }
       catch(Throwable t)
       {

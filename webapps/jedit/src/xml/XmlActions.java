@@ -21,8 +21,7 @@ package xml;
 //{{{ Imports
 import java.awt.Toolkit;
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import javax.swing.text.Segment;
 import org.gjt.sp.jedit.*;
 import org.gjt.sp.jedit.textarea.*;
@@ -72,14 +71,15 @@ public class XmlActions
   String attributeName = null;
   boolean seenEquals = false;
   boolean empty = false;
-
+  String t;
   /* StringTokenizer does not support disabling or changing
    * the escape character, so we have to work around it here. */
   char backslashSub = 127;
+  t=text.substring(tag.start + tag.tag.length() + 1,tag.end - 1);
+  System.out.println("tag= "+t);
   StreamTokenizer st = new StreamTokenizer(new StringReader(
-   text.substring(tag.start + tag.tag.length() + 1,
-   tag.end - 1)
-   .replace('\\',backslashSub)));
+  text.substring(tag.start + tag.tag.length() + 1,tag.end - 1)
+          .replace('\\',backslashSub)));
   st.resetSyntax();
   st.wordChars('!',255);
   st.whitespaceChars(0,' ');
@@ -149,21 +149,46 @@ loop:   for(;;)
   {
    // won't happen
   } //}}}
+  System.out.println("tag.tag= "+tag.tag);
 
   ElementDecl elementDecl = data.getElementDecl(tag.tag);
-  if(elementDecl == null)
+   if(elementDecl == null)
+  {
+    System.out.println("data.mappings.size()= "+data.mappings.size());
+
+    if (data.mappings.size()>0) {
+      for (Iterator it = data.mappings.keySet().iterator(); it.hasNext();) {
+      String key = (String) it.next()+":";
+      System.out.println("XMLActions key= "+key);
+      tag.tag=key+tag.tag;
+      System.out.println("tag.tag= "+tag.tag);
+      elementDecl = data.getElementDecl(tag.tag);
+      if(elementDecl != null) break;
+    }
+
+   }
+
+  }
+   if(elementDecl == null)
   {
    String[] pp = { tag.tag };
+    System.out.println("oshibka here !!!!");
    GUIUtilities.error(view,"xml-edit-tag.undefined-element",pp);
    return;
   }
-  view.setEdittag(true);
+   List li=elementDecl.attributes;
+   for (int i = 0; i < li.size(); i++) {
+     ElementDecl.AttributeDecl Attr = (ElementDecl.AttributeDecl) li.get(i);
+
+   }
+
   System.out.println("xml.XmlActions ShowEditTagDialog(View) before new EditTagDialog line 162");
 
    EditTag dialog = new EditTag(view,tag.tag, elementDecl,attributes,
       elementDecl.completionInfo.entityHash,data.ids,data.html);
-  view.setEditTag(dialog);
-  dialog.updateTag();
+
+   if (dialog.getNames().size()>0) dialog.updateTag();
+       else dialog.closeTag ();
 
        // show the popup if
    // - complete has one element and user invoked with delay key
@@ -209,6 +234,209 @@ loop:   for(;;)
    }
   }
  } //}}}
+
+  //{{{ showEditTagDialog() method
+  public static void showEditTagDialog2(View view)
+  {
+   JEditTextArea textArea = view.getTextArea();
+
+   if(XmlPlugin.isDelegated(textArea))
+   {
+    view.getToolkit().beep();
+    return;
+   }
+
+   Buffer buffer = view.getBuffer();
+   SideKickParsedData _data = SideKickParsedData.getParsedData(view);
+
+   if(!(_data instanceof XmlParsedData))
+   {
+    GUIUtilities.error(view,"xml-no-data",null);
+    return;
+   }
+
+   XmlParsedData data = (XmlParsedData)_data;
+
+   String text = buffer.getText(0,buffer.getLength());
+
+   int caret = textArea.getCaretPosition();
+
+   TagParser.Tag tag = TagParser.getTagAtOffset(text,caret);
+   if(tag == null || tag.type == TagParser.T_END_TAG)
+   {
+    view.getToolkit().beep();
+    return;
+   }
+
+   // use a StringTokenizer to parse the tag
+   HashMap attributes = new HashMap();
+   String attributeName = null;
+   boolean seenEquals = false;
+   boolean empty = false;
+   String t;
+   /* StringTokenizer does not support disabling or changing
+    * the escape character, so we have to work around it here. */
+   char backslashSub = 127;
+   t=text.substring(tag.start + tag.tag.length() + 1,tag.end - 1);
+   System.out.println("tag= "+t);
+   StreamTokenizer st = new StreamTokenizer(new StringReader(
+   text.substring(tag.start + tag.tag.length() + 1,tag.end - 1)
+           .replace('\\',backslashSub)));
+   st.resetSyntax();
+   st.wordChars('!',255);
+   st.whitespaceChars(0,' ');
+   st.quoteChar('"');
+   st.quoteChar('\'');
+   st.ordinaryChar('/');
+   st.ordinaryChar('=');
+
+   Map entityHash = data.getNoNamespaceCompletionInfo().entityHash;
+
+   //{{{ parse tag
+   try
+   {
+ loop:   for(;;)
+    {
+     switch(st.nextToken())
+     {
+     case StreamTokenizer.TT_EOF:
+      if(attributeName != null)
+      {
+       // in HTML, can have attributes
+       // without values.
+       attributes.put(attributeName,
+        attributeName);
+      }
+      break loop;
+     case '=':
+      seenEquals = true;
+      break;
+     case StreamTokenizer.TT_WORD:
+      if(attributeName == null)
+      {
+       attributeName = (data.html
+        ? st.sval.toLowerCase()
+        : st.sval);
+       break;
+      }
+      else
+       /* fall thru */;
+     case '"':
+     case '\'':
+      if(attributeName != null)
+      {
+       if(seenEquals)
+       {
+        attributes.put(attributeName,
+         entitiesToCharacters(
+         st.sval.replace(backslashSub,'\\'),
+         entityHash));
+        seenEquals = false;
+       }
+       else if(data.html)
+       {
+        attributes.put(attributeName,
+         Boolean.TRUE);
+       }
+       attributeName = null;
+      }
+      break;
+     case '/':
+      empty = true;
+      break;
+     }
+    }
+   }
+   catch(IOException io)
+   {
+    // won't happen
+   } //}}}
+   System.out.println("tag.tag= "+tag.tag);
+
+   ElementDecl elementDecl = data.getElementDecl(tag.tag);
+    if(elementDecl == null)
+   {
+     System.out.println("data.mappings.size()= "+data.mappings.size());
+
+     if (data.mappings.size()>0) {
+       for (Iterator it = data.mappings.keySet().iterator(); it.hasNext();) {
+       String key = (String) it.next()+":";
+       System.out.println("XMLActions key= "+key);
+       tag.tag=key+tag.tag;
+       System.out.println("tag.tag= "+tag.tag);
+       elementDecl = data.getElementDecl(tag.tag);
+       if(elementDecl != null) break;
+     }
+
+    }
+
+   }
+    if(elementDecl == null)
+   {
+    String[] pp = { tag.tag };
+     System.out.println("oshibka here !!!!");
+    GUIUtilities.error(view,"xml-edit-tag.undefined-element",pp);
+    return;
+   }
+    List li=elementDecl.attributes;
+    for (int i = 0; i < li.size(); i++) {
+      ElementDecl.AttributeDecl Attr = (ElementDecl.AttributeDecl) li.get(i);
+
+    }
+
+   System.out.println("xml.XmlActions ShowEditTagDialog(View) before new EditTagDialog line 162");
+
+ /*   EditTag dialog = new EditTag(view,tag.tag, elementDecl,attributes,
+       elementDecl.completionInfo.entityHash,data.ids,data.html);
+
+    if (dialog.getNames().size()>0) dialog.updateTag();
+        else dialog.closeTag ();
+  */
+        // show the popup if
+    // - complete has one element and user invoked with delay key
+    // - or complete has multiple elements
+    // and popup is not already shown because of explicit invocation
+    // of the complete action during the trigger delay
+  /*  if(popup != null)
+     return;
+    SideKickCompletion complete=new XmlAttributeCompletion(view,"",dialog.getNames());
+
+    popup = new XmlAttributeCompletionPopup(view,
+            textArea.getCaretPosition(),complete )  //complete
+    {
+     /** forget reference to this popup when it is disposed */
+  /*   public void dispose()
+     {
+      super.dispose();
+      popup = null;
+     }
+    };
+     */
+    /*EditTagDialog dialog = new EditTagDialog(view,tag.tag,
+   elementDecl,attributes,empty,
+   elementDecl.completionInfo.entityHash,
+   data.ids,data.html);
+    */
+
+/*   String newTag = dialog.getNewTag();
+   //newTag=newTag+">";
+   System.out.println("newTag= "+newTag);
+   if(newTag != null)
+   {
+    try
+    {
+     buffer.beginCompoundEdit();
+
+     buffer.remove(tag.start,tag.end - tag.start);
+     buffer.insert(tag.start,newTag);
+    }
+    finally
+    {
+     buffer.endCompoundEdit();
+    }
+   }  */
+  } //}}}
+
   private static XmlAttributeCompletionPopup popup;
  //{{{ showEditTagDialog() method
  public static void showEditTagDialog(View view, ElementDecl elementDecl)

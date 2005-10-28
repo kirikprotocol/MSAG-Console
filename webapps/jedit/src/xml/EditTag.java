@@ -64,11 +64,58 @@ public class EditTag
 
   //{{{ Buttons
 
-  names=prepareTag();
-  //updateTag();
+  prepareTag();  //set list of names here
+
+
+
+   //updateTag();
 
  } //}}}
+ //{{{ closeTag() method
+ public void closeTag () {
+    JEditTextArea textArea = view.getTextArea();
+    String closeTag="/>";//</"+elementName+">";
+    textArea.getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
+    textArea.setSelectedText(closeTag);
+ } //}}}
+  
+  //{{{ updateTag() method
+  public void updateTag()
+  {
+     view.setEdittag(true); view.setEditTag(this);
+    JEditTextArea textArea = view.getTextArea();
+/*    for(int i = 0; i < attributeModel.size(); i++)
+ {
+  Attribute attr = (Attribute)attributeModel.get(i);
+   System.out.println("name of attribute 1 = "+attr.name+" set= "+attr.set);
+   if(attr.set)
+     continue;
+  */
+    // show the popup if
+   // - complete has one element and user invoked with delay key
+   // - or complete has multiple elements
+   // and popup is not already shown because of explicit invocation
+   // of the complete action during the trigger delay
+   if(popup != null)
+    return;
+   SideKickCompletion complete=new XmlAttributeCompletion(view,"",names);
 
+   popup = new XmlAttributeCompletionPopup(view,
+           textArea.getCaretPosition(),complete )  //complete
+   {
+    /** forget reference to this popup when it is disposed */
+    public void dispose()
+    {
+      super.dispose();
+      popup = null;
+      view.setKeyEventInterceptor(new KeyHandler());
+    }
+   };
+  //String add=popup.getUpdateTag();//  System.out.println("add= "+add);
+  // if (add!=null) newTag = newTag+add;
+  // }
+    //newTag=newTag+">";
+  }  //}}}
 
  //{{{ cancel() method
  public void cancel()
@@ -170,11 +217,14 @@ public class EditTag
 
   private static XmlAttributeCompletionPopup popup;
   //{{{ prepareTag() method
- private ArrayList prepareTag()
+ private void prepareTag()
  {
   int tagNameCase = TextUtilities.getStringCase(elementName);
+  int in=elementName.indexOf(':');
+  String shortName=elementName;
+  if (in!=-1) shortName=elementName.substring(in+1);
   StringBuffer buf = new StringBuffer("<");
-  buf.append(elementName);
+  buf.append(shortName);
   ArrayList names=new ArrayList(5);
     for(int i = 0; i < attributeModel.size(); i++)
   {
@@ -196,8 +246,7 @@ public class EditTag
      attrName = attr.name.toLowerCase();
      break;
     case TextUtilities.TITLE_CASE:
-     attrName = TextUtilities.toTitleCase(
-      attr.name);
+     attrName = TextUtilities.toTitleCase(attr.name);
      break;
     }
    }
@@ -223,53 +272,12 @@ public class EditTag
   //buf.append(">");
   isOK=true;
   newTag = buf.toString();
-  return names;
+ this.names=names;
   //preview.setText(newTag);
  } //}}}
 
  //}}}
 
-  public void updateTag()
-  {
-    JEditTextArea textArea = view.getTextArea();
-/*    for(int i = 0; i < attributeModel.size(); i++)
- {
-  Attribute attr = (Attribute)attributeModel.get(i);
-   System.out.println("name of attribute 1 = "+attr.name+" set= "+attr.set);
-   if(attr.set)
-     continue;
-  */
-     // show the popup if
-   // - complete has one element and user invoked with delay key
-   // - or complete has multiple elements
-   // and popup is not already shown because of explicit invocation
-   // of the complete action during the trigger delay
-   if(popup != null)
-    return;
-   SideKickCompletion complete=new XmlAttributeCompletion(view,"",names);
-
-   popup = new XmlAttributeCompletionPopup(view,
-           textArea.getCaretPosition(),complete )  //complete
-   {
-    /** forget reference to this popup when it is disposed */
-    public void dispose()
-    {
-
-      super.dispose();
-      popup = null;
-      view.setKeyEventInterceptor(new KeyHandler());
-      //
-    }
-   };
-
-//   String add=popup.getUpdateTag();
- //  System.out.println("add= "+add);
-  // if (add!=null) newTag = newTag+add;
-
-
-  // }
-    //newTag=newTag+">";
-  }
  //{{{ Inner classes
 //{{{ KeyHandler class
  class KeyHandler extends KeyAdapter

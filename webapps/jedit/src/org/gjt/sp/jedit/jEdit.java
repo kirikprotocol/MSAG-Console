@@ -514,146 +514,8 @@ public class jEdit extends Applet
     // script to run
     String scriptFile = null;
     String userFile="";
-  /*  for (int i = 0; i < args.length; i++) {
-      String arg = args[i];
-  */    userFile=args[0];
-   /*   if (arg == null)
-        continue;
-      else if (arg.length() == 0)
-        args[i] = null;
-      else if (arg.startsWith("-") && !endOpts) {
-        if (arg.equals("--"))
-          endOpts = true;
-        else if (arg.equals("-usage")) {
-          version();
-          System.err.println();
-          usage();
-          super.stop();//System.exit(1);
-        }
-        else if (arg.equals("-version")) {
-          version();
-          super.stop(); //System.exit(1);
-        }
-        else if (arg.startsWith("-log=")) {
-          try {
-            level = Integer.parseInt(arg.substring("-log=".length()));
-          } catch (NumberFormatException nf) {
-            System.err.println("Malformed option: " + arg);
-          }
-        }
-        else if (arg.equals("-nosettings"))
-          settingsDirectory = null;
-        else if (arg.startsWith("-settings="))
-          settingsDirectory = arg.substring(10);
-        else if (arg.equals("-gui"))
-          gui = true;
-        else if (arg.equals("-nogui"))
-          gui = false;
-        else if (arg.equals("-newview"))
-          newView = true;
-        else if (arg.equals("-newplainview"))
-          newPlainView = true;
-        else if (arg.equals("-reuseview"))
-          newPlainView = newView = false;
-        else if (arg.equals("-restore"))
-          restore = true;
-        else if (arg.equals("-norestore"))
-          restore = false;
-        else if (arg.equals("-plugins"))
-          loadPlugins = true;
-        else if (arg.equals("-noplugins"))
-          loadPlugins = false;
-        else if (arg.equals("-startupscripts"))
-          runStartupScripts = true;
-        else if (arg.equals("-nostartupscripts"))
-          runStartupScripts = false;
-        else if (arg.startsWith("-run="))
-          scriptFile = arg.substring(5);
-        else if (arg.equals("-wait"))
-          wait = true;
-        else {
-          System.err.println("Unknown option: "
-                  + arg);
-          usage();
-          stop();//System.exit(1);
-        }
-        args[i] = null;
-      }
-    } //}}}
-    separatorChar=StringGet("file",SeparatorChar).charAt(0);  // "\\ or /"
-    //{{{ We need these initializations very early on
-    if (settingsDirectory != null) {
-     settingsDirectory = MiscUtilities.constructPath(jEditHome, settingsDirectory);
-     settingsDirectory = MiscUtilities.resolveSymlinks(settingsDirectory);
-    }
+    userFile=args[0];
 
-    // don't show splash screen if there is a file named
-    // 'nosplash' in the settings directory
-    // if(!new File(settingsDirectory,"nosplash").exists())
-    //  GUIUtilities.showSplashScreen();
-
-    //{{{ Initialize settings directory
-    //{{{ Get things rolling
-
-    initMisc();
-    initSystemProperties();
-
-    //GUIUtilities.advanceSplashProgress();
-    GUIUtilities.init();
-    BeanShell.init();
-    if (jEditHome != null)
-      initSiteProperties();
-   // initUserProperties();
-    //}}}
-    //{{{ Do more stuff
-    initPLAF();
-   // VFSManager.init();
-
-    initResources();
-    SearchAndReplace.load();
-    GUIUtilities.advanceSplashProgress();
-    if (loadPlugins)
-      initPlugins();
-
-   // HistoryModel.loadHistory();
-   // BufferHistory.load();
-   // KillRing.getInstance().load();
-    propertiesChanged();
-
-    GUIUtilities.advanceSplashProgress();
-
-    // Buffer sort
-    sortBuffers = getBooleanProperty("sortBuffers");
-    sortByName = getBooleanProperty("sortByName");
-
-    reloadModes();
-
-    GUIUtilities.advanceSplashProgress();
-    //}}}
-
-    //{{{ Activate plugins that must be activated at startup
-    for (int i = 0; i < jars.size(); i++) {
-      ((PluginJAR) jars.elementAt(i)).activatePluginIfNecessary();
-    } //}}}
-
-    //{{{ Load macros and run startup scripts, after plugins and settings are loaded
-    Macros.loadMacros();
-    Macros.getMacroActionSet().initKeyBindings();
-
-    if (runStartupScripts && jEditHome != null) {
-      String path = MiscUtilities.constructPath(jEditHome, "startup");
-      System.out.println("jEdit line 531 path= " + path);
-      if (BoolGet(path, Exists))// if(file.exists())
-        runStartupScripts(path);
-    }
-    if (runStartupScripts && settingsDirectory != null) {
-      String path = MiscUtilities.constructPath(settingsDirectory, "startup");
-      if (!BoolGet(path, Exists))//if(!file.exists())
-        BoolGet(path, MkDirs); //file.mkdirs();
-      else
-        runStartupScripts(path);
-    } //}}}
-*/
     //{{{ Run script specified with -run= parameter
     //todo userDir changed
     //String transport=getParameter("transport");
@@ -680,64 +542,6 @@ public class jEdit extends Applet
     finishStartupNext(gui, restore,userDir, args,userFile);
 
   } //}}}
-  public void mainNext(String[] args)
-   {
-     //{{{ Check for Java 1.4 or later
-     /* String javaVersion = System.getProperty("java.version");
-       if(javaVersion.compareTo("1.4") < 0)
-       {
-         System.err.println("You are running Java version "
-           + javaVersion + ".");
-         System.err.println("XMLEditApplet requires Java 1.4 or later.");
-         System.exit(1);
-       } //}}}
-   */
-
-     // later on we need to know if certain code is called from
-     // the main thread
-    // mainThread = Thread.currentThread();
-
-     settingsDirectory = null; // ".jedit";
-
-     // MacOS users expect the app to keep running after all windows
-     // are closed
-     //denied in applet: background = OperatingSystem.isMacOS();
-
-     //{{{ Parse command line
-     boolean endOpts = false;
-     int level = Log.WARNING;
-     boolean restore = true;
-     boolean newView = true;
-     boolean newPlainView = false;
-     boolean gui = true; // open initial view?
-     boolean loadPlugins = true;
-     boolean runStartupScripts = true;
-     boolean quit = false;
-     boolean wait = false;
-     //denied in applet: String userDir = System.getProperty("user.dir");
-
-     // script to run
-     String scriptFile = null;
-     String userFile=args[0];
-
-
-     //{{{ Run script specified with -run= parameter
-     //todo userDir changed
-     //String transport=getParameter("transport");
-
-     // userfile = MiscUtilities.constructPath(transport,userfile);
-     String userDir = MiscUtilities.constructPath(jEditHome, jEdit.username);//jEditHome+"\\"+jEdit.username;//null;
-     if (!BoolGet(userDir, Exists)) BoolGet(userDir, MkDir);
-
-     String transport=StringGet(userFile,Transport);
-     userDir = MiscUtilities.constructPath(userDir, transport);//jEditHome+"\\"+jEdit.username;//null;
-     if (!BoolGet(userDir, Exists)) BoolGet(userDir, MkDir);
-     System.out.println("userDir+transport= "+userDir);
-     userFile="rule_"+userFile+".xml";
-
-     // Open files, create the view and hide the splash screen.
-     finishStartup(gui, restore, userDir, args,userFile);
-   } //}}}
 
   //{{{ Property methods
 
@@ -1685,7 +1489,7 @@ public class jEdit extends Applet
 
       addBufferToList(newBuffer);
     }
-
+    System.out.println("jEdit.openFile before new BufferUpdate(newBuffer, view, BufferUpdate.CREATED)");
     EditBus.send(new BufferUpdate(newBuffer, view, BufferUpdate.CREATED));
 
     if (view != null)
@@ -1905,8 +1709,8 @@ public class jEdit extends Applet
     EditBus.send(new BufferUpdate(buffer, view, BufferUpdate.CLOSED));
 
     // Create a new file when the last is closed
-    if (buffersFirst == null && buffersLast == null)
-      newFile(view);
+ /*   if (buffersFirst == null && buffersLast == null)
+      newFile(view);  */
   } //}}}
 
   //{{{ closeAllBuffers() method
@@ -1961,7 +1765,7 @@ public class jEdit extends Applet
     // dirty ones)
 
     buffer = buffersFirst;
-
+    System.out.println("before bufferHash.clear();");
     // zero it here so that BufferTabs doesn't have any problems
     buffersFirst = buffersLast = null;
     bufferHash.clear();
@@ -2102,7 +1906,6 @@ public class jEdit extends Applet
     }
 
     synchronized (bufferListLock) {
-      System.out.println("before bufferHash.get( path= "+path);
       return (Buffer) bufferHash.get(path);
     }
   } //}}}
@@ -2357,7 +2160,7 @@ public class jEdit extends Applet
         GUIUtilities.centerOnScreen(newView);
 
       EditBus.send(new ViewUpdate(newView, ViewUpdate.CREATED));
-
+      System.out.println("jEdit.newView after EditBus.send(new ViewUpdate(newView, ViewUpdate.CREATED));");
       newView.setVisible(true);
 
       // show tip of the day
@@ -2623,7 +2426,11 @@ public class jEdit extends Applet
     // Close dialog, view.close() call need a view...
     if (view == null)
       view = activeView;
-
+     for (int i = 0; i < jars.size(); i++) {
+       PluginJAR jar=(PluginJAR) jars.elementAt(i);
+       jar.WindowClose(view);
+     }
+   // jEdit.closeBuffer(view,view.getBuffer());
     // Wait for pending I/O requests
     VFSManager.waitForRequests();
     // Send EditorExitRequested
@@ -2642,11 +2449,12 @@ public class jEdit extends Applet
     } finally {
       PerspectiveManager.setPerspectiveEnabled(true);
     }
-
+    System.out.println("i am closedAllBuffers");
     // If we are running in background mode and
     // reallyExit was not specified, then return here.
     if (!reallyExit) { // in this case, we can't directly call   view.close(); we have to call closeView()
       // for all open views
+      System.out.println("if (!reallyExit) i am here !!!");
       view = viewsFirst;
       while (view != null) {
         closeView(view, false);
@@ -2655,6 +2463,8 @@ public class jEdit extends Applet
       saveSettings();// Save settings in case user kills the backgrounded jEdit process
     }
     else {  // Save view properties here
+
+      removeViewFromList( view);
        if (view != null) view.close();
       Autosave.stop();// Stop autosave timer
       if (server != null) server.stopServer();// Stop server
@@ -2672,7 +2482,79 @@ public class jEdit extends Applet
     }
 
   } //}}}
+  //{{{ exitView() method
+  /**
+   * Exits cleanly from jEdit, prompting the user if any unsaved files
+   * should be saved first.
+   *
+   * @param view       The view from which this exit was called
+   * @param reallyExit If background mode is enabled and this parameter
+   *                   is true, then jEdit will close all open views instead of exiting
+   *                   entirely.
+   */
+  public static void exitView(View view, boolean reallyExit)
+  {
+    // Close dialog, view.close() call need a view...
+    if (view == null)
+      view = activeView;
 
+   // jEdit.closeBuffer(view,view.getBuffer());
+    // Wait for pending I/O requests
+    VFSManager.waitForRequests();
+    // Send EditorExitRequested
+    EditBus.send(new EditorExitRequested(view));
+    // Even if reallyExit is false, we still exit properly
+    // if background mode is off
+    reallyExit |= !background;
+
+    PerspectiveManager.savePerspective(false);
+
+    try {
+      PerspectiveManager.setPerspectiveEnabled(false);
+      // Close all buffers
+      if (!closeBuffer(view, view.getBuffer()))
+        return;
+    } finally {
+      PerspectiveManager.setPerspectiveEnabled(true);
+    }
+    System.out.println("i am closedAllBuffers");
+    // If we are running in background mode and
+    // reallyExit was not specified, then return here.
+    if (!reallyExit) { // in this case, we can't directly call   view.close(); we have to call closeView()
+      // for all open views
+      System.out.println("if (!reallyExit) i am here !!!");
+      view = viewsFirst;
+      while (view != null) {
+        closeView(view, false);
+        view = view.next;
+      }
+      saveSettings();// Save settings in case user kills the backgrounded jEdit process
+    }
+    else {  // Save view properties here
+
+      removeViewFromList( view);
+      for (int i = 0; i < jars.size(); i++) {
+         PluginJAR jar=(PluginJAR) jars.elementAt(i);
+         jar.WindowClose(view);
+       }
+       EditBus.send(new ViewUpdate(view,ViewUpdate.CLOSED));// Send EditorExiting
+       if (view != null) view.close();
+      Autosave.stop();// Stop autosave timer
+      // Stop all plugins
+   /*   PluginJAR[] plugins = getPluginJARs();
+      for (int i = 0; i < plugins.length; i++) {
+        removePluginJAR(plugins[i], true);
+      }  */
+
+     // EditBus.send(new EditorExiting(null));// Send EditorExiting
+      saveSettings();// Save settings
+      Log.closeStream();// Close activity log stream
+      System.out.println("ByeBye...");
+      // Byebye...
+     // System.exit(0);
+    }
+
+  } //}}}
   //{{{ getEditServer() method
   /**
    * Returns the edit server instance. You can use this to find out the
@@ -3745,18 +3627,27 @@ public class jEdit extends Applet
       String path = MiscUtilities.constructPath(userDir, userFile);
       synchronized (bufferListLock) {
       Buffer buffer = getBuffer(path);
+      System.out.println("after getBuffer()  buffer = "+buffer);
       if (buffer != null) {
         View[] views= jEdit.getViews();
+        System.out.println("after getBuffer()  views.length = "+views.length);
         for (int i = 0; i < views.length; i++) {
           View view = views[i];
+          System.out.println("view.getBuffer() i= "+i+"views[i].getBuffer()= "+views[i].getBuffer());
           if (view.getBuffer()==buffer) {
+            System.out.println("view.getBuffer()==buffer !!!!! i= "+i+"views[i].getBuffer()= "+views[i].getBuffer());
+             for (int j = 0; j < jars.size(); j++) {
+           PluginJAR jar=(PluginJAR) jars.elementAt(j);
+           jar.WindowClose(view);
+         }
             jEdit.setActiveView(view); view.requestFocus();break;
           }
         }
 
       } //if (buffer != null)
       else {
-        buffer=openFile(null, userDir, userFile , false, null);
+       buffer=openFile(null, userDir, userFile , false, null);
+        System.out.println("jEdit after openFile");
       //  todo end
         View view = null;
         boolean restoreFiles = restore
@@ -3773,12 +3664,18 @@ public class jEdit extends Applet
           else if (buffer != null)
             view.setBuffer(buffer);
         }
+        System.out.println("jEdit after newView");
+       // propertiesChanged();
+        for (int i = 0; i < jars.size(); i++) {
+           PluginJAR jar=(PluginJAR) jars.elementAt(i);
+           jar.WindowOpen(view);
+         }
+         System.out.println("jEdit after jar.WindowOpen(view);");
       } //else
+
   } // synchronized (bufferListLock)
         // Start I/O threads
         EditBus.send(new EditorStarted(null));
-        System.out.println("finishStartup before VFSManager.start.. isNotReload="+isNotReload);
-        System.out.println("voobshe sovsem eshe izmenil......startupDone= "+startupDone);
         if (!startupDone) VFSManager.start();
 
         // Start edit server
@@ -4088,8 +3985,9 @@ loop:  for(int i = 0; i < list.length; i++)
   {
     viewCount++;
 
-    if (viewsFirst == null)
-      viewsFirst = viewsLast = view;
+    if (viewsFirst == null) {
+      System.out.println("addViewToList viewCount= "+viewCount);
+      viewsFirst = viewsLast = view;  }
     else {
       view.prev = viewsLast;
       viewsLast.next = view;
@@ -4132,16 +4030,20 @@ loop:  for(int i = 0; i < list.length; i++)
   {
     PerspectiveManager.setPerspectiveDirty(true);
 
-    if (viewsFirst == viewsLast && callExit)
-      exit(view, false); /* exit does editor event & save */
+    System.out.println("before if (viewsFirst == viewsLast && callExit)  !!!!");
+    if (viewsFirst == viewsLast && callExit) {
+      System.out.println("before exit !!!!");
+    //  EditBus.send(new ViewUpdate(view, ViewUpdate.CLOSED));
+      exitView(view, false); /* exit does editor event & save */  }
     else {
-      EditBus.send(new ViewUpdate(view, ViewUpdate.CLOSED));
-
+       exitView(view, false);
+     /* EditBus.send(new ViewUpdate(view, ViewUpdate.CLOSED));
       view.close();
       removeViewFromList(view);
 
       if (view == activeView)
         activeView = null;
+       */
     }
   } //}}}
 

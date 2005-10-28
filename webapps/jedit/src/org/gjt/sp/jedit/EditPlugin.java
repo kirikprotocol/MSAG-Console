@@ -254,8 +254,15 @@ public abstract class EditPlugin
   */
  public void stop() {} //}}}
 
-//{{{ clear() method  for clearing static variables
+//{{{ clear() method  for clearing static variables on destroy applet
  public void clear() {} //}}}
+  
+//{{{ WindowClose() method  for clearing static variables on Close Window
+ public void WindowClose(View view) {} //}}}
+
+//{{{ WindowClose() method  for clearing static variables on Close Window
+  public void WindowOpen(View view) {} //}}}
+
  //{{{ getClassName() method
  /**
   * Returns the plugin's class name. This might not be the same as

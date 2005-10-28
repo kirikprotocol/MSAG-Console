@@ -191,7 +191,10 @@ implements XMLErrorHandler, DOMErrorHandler {
      */
     public void error(String domain, String key, 
                       XMLParseException exception) throws XNIException {
-        fDOMError.fSeverity = DOMError.SEVERITY_ERROR;
+              Object[] args =exception.getArguments();
+              System.out.println("ErrorHandlerWrapper args[0]= "+args[0]);
+
+      fDOMError.fSeverity = DOMError.SEVERITY_ERROR;
         fDOMError.fException = exception;
         fDOMError.fType = key;         
         fDOMError.fRelatedData = fDOMError.fMessage = exception.getMessage();

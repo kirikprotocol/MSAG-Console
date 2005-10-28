@@ -44,6 +44,11 @@ import org.gjt.sp.jedit.buffer.*;
 import org.gjt.sp.jedit.gui.InputHandler;
 import org.gjt.sp.jedit.syntax.*;
 import org.gjt.sp.util.Log;
+import sidekick.SideKickParser;
+import sidekick.SideKickPlugin;
+import sidekick.SideKickParsedData;
+import sidekick.SideKickCompletion;
+import xml.XmlActions;
 //}}}
 
 /**
@@ -2118,7 +2123,6 @@ forward_scan:  do
    throw new IllegalArgumentException("caret out of bounds: "
     + newCaret);
   }
-
   int oldCaretLine = caretLine;
 
   if(caret == newCaret)
@@ -2132,6 +2136,14 @@ forward_scan:  do
 
    finishCaretUpdate(oldCaretLine,scrollMode,true);
   }
+ /*   SwingUtilities.invokeLater(new Runnable()
+     {
+      public void run()
+      {
+        System.out.println("jEditTextArea.moveCaretPosition run before showEditTagDialog(view) line 2155");
+       XmlActions.showEditTagDialog2(view);
+      }
+     }); */
  } //}}}
 
  //{{{ getCaretPosition() method
@@ -3268,6 +3280,8 @@ loop:  for(int i = lineNo - 1; i >= 0; i--)
   else
   {
    boolean indent = buffer.isElectricKey(ch);
+   if(ch == '<') buffer.setBooleanProperty("sidekick.keystroke-parse",false);
+   if(ch == '>') buffer.setBooleanProperty("sidekick.keystroke-parse",true);
    String str = String.valueOf(ch);
    if(getSelectionCount() == 0)
    {
@@ -3276,7 +3290,7 @@ loop:  for(int i = lineNo - 1; i >= 0; i--)
    }
    else
     replaceSelection(str);
-  }
+  } 
  } //}}}
 
  //{{{ isOverwriteEnabled() method
@@ -5500,7 +5514,6 @@ loop:   for(int i = lineNo + 1; i < getLineCount(); i++)
    }
 
    buffer.insert(caret,str);
-
    if(indent)
     buffer.indentLine(caretLine,true);
   }

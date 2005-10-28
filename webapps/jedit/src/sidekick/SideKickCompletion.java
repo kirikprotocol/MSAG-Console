@@ -27,6 +27,7 @@ import javax.swing.*;
 import java.util.*;
 import org.gjt.sp.jedit.*;
 import org.gjt.sp.jedit.textarea.JEditTextArea;
+import xml.completion.ElementDecl;
 //}}}
 
 /**
@@ -91,6 +92,22 @@ public abstract class SideKickCompletion
   return items.get(index);
  } //}}}
 
+  //{{{ get() method
+/*  public Object getShort(int index)
+  {
+    Object obj=items.get(index);
+    if(obj instanceof ElementDecl)
+    {
+      ElementDecl element = (ElementDecl)obj;
+      String name=element.name;
+      int in=name.indexOf(':');
+      if (in!=-1) {name=name.substring(in+1);
+      element.name=name;
+      obj=element.name; }
+    }
+    return obj;
+  } //}}}
+  */
  //{{{ getCompletionDescription() method
  public String getCompletionDescription(int index)
  {

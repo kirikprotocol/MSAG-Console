@@ -48,16 +48,12 @@ public class SideKickOptionPane extends AbstractOptionPane
    "sidekick-tree.follows-caret"));
   treeFollowsCaret.addActionListener(new ActionHandler());
 
-  addComponent(bufferChangeParse = new JCheckBox(jEdit.getProperty(
-   "options.sidekick.buffer-change-parse")));
-  bufferChangeParse.setSelected(jEdit.getBooleanProperty(
-   "buffer.sidekick.buffer-change-parse"));
+  addComponent(bufferChangeParse = new JCheckBox(jEdit.getProperty("options.sidekick.buffer-change-parse")));
+  bufferChangeParse.setSelected(jEdit.getBooleanProperty("buffer.sidekick.buffer-change-parse"));
   bufferChangeParse.addActionListener(new ActionHandler());
 
-  addComponent(keystrokeParse = new JCheckBox(jEdit.getProperty(
-   "options.sidekick.keystroke-parse")));
-  keystrokeParse.setSelected(jEdit.getBooleanProperty(
-   "buffer.sidekick.keystroke-parse"));
+  addComponent(keystrokeParse = new JCheckBox(jEdit.getProperty("options.sidekick.keystroke-parse")));
+  keystrokeParse.setSelected(jEdit.getBooleanProperty("buffer.sidekick.keystroke-parse"));
   keystrokeParse.addActionListener(new ActionHandler());
 
   int autoParseDelayValue;
@@ -119,20 +115,13 @@ public class SideKickOptionPane extends AbstractOptionPane
  //{{{ _save() method
  protected void _save()
  {
-  jEdit.setBooleanProperty("buffer.sidekick.buffer-change-parse",
-   bufferChangeParse.isSelected());
-  jEdit.setBooleanProperty("buffer.sidekick.keystroke-parse",
-   keystrokeParse.isSelected());
-  jEdit.setProperty("sidekick.auto-parse-delay",String.valueOf(
-   autoParseDelay.getValue()));
-  jEdit.setBooleanProperty("sidekick-tree.follows-caret",
-   treeFollowsCaret.isSelected());
-  jEdit.setBooleanProperty("sidekick.complete-instant.toggle",
-   completeInstantToggle.isSelected());
-  jEdit.setBooleanProperty("sidekick.complete-delay.toggle",
-   completeDelayToggle.isSelected());
-  jEdit.setIntegerProperty("sidekick.complete-delay",
-   completeDelay.getValue());
+  jEdit.setBooleanProperty("buffer.sidekick.buffer-change-parse",bufferChangeParse.isSelected());
+  jEdit.setBooleanProperty("buffer.sidekick.keystroke-parse",keystrokeParse.isSelected());
+  jEdit.setProperty("sidekick.auto-parse-delay",String.valueOf(autoParseDelay.getValue()));
+  jEdit.setBooleanProperty("sidekick-tree.follows-caret",treeFollowsCaret.isSelected());
+  jEdit.setBooleanProperty("sidekick.complete-instant.toggle",completeInstantToggle.isSelected());
+  jEdit.setBooleanProperty("sidekick.complete-delay.toggle", completeDelayToggle.isSelected());
+  jEdit.setIntegerProperty("sidekick.complete-delay",completeDelay.getValue());
  } //}}}
 
  //{{{ Private members

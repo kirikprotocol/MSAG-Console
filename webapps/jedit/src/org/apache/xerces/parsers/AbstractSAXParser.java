@@ -1127,6 +1127,7 @@ public abstract class AbstractSAXParser
 
         // wrap XNI exceptions as SAX exceptions
         catch (XMLParseException e) {
+          e.printStackTrace();
             Exception ex = e.getException();
             if (ex == null) {
                 // must be a parser exception; mine it for locator info and throw
@@ -1140,6 +1141,7 @@ public abstract class AbstractSAXParser
             }
             if (ex instanceof SAXException) {
                 // why did we create an XMLParseException?
+                ex.printStackTrace();
                 throw (SAXException)ex;
             }
             if (ex instanceof IOException) {
@@ -1148,6 +1150,7 @@ public abstract class AbstractSAXParser
             throw new SAXException(ex);
         }
         catch (XNIException e) {
+           e.printStackTrace();
             Exception ex = e.getException();
             if (ex == null) {
                 throw new SAXException(e.getMessage());

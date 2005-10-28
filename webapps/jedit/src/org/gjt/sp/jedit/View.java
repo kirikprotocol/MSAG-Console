@@ -597,7 +597,6 @@ public class View extends JFrame implements EBComponent
      focusOnTextArea = true;
     }
    }
-
    if(keyEventInterceptor != null)
     keyEventInterceptor.keyTyped(evt);
    else if(from == ACTION_BAR
@@ -612,15 +611,12 @@ public class View extends JFrame implements EBComponent
      if(Debug.DUMP_KEY_EVENTS
       && from != VIEW)
      {
-      Log.log(Log.DEBUG,this,
-       "Translated: "
-       + keyStroke);
+      Log.log(Log.DEBUG,this,"Translated: "+ keyStroke);
      }
      if(inputHandler.handleKey(keyStroke))
       evt.consume();
     }
    }
-
    // we might have been closed as a result of
    // the above
    if(isClosed())
@@ -682,7 +678,6 @@ public class View extends JFrame implements EBComponent
      if(inputHandler.handleKey(keyStroke))
       evt.consume();
     }
-
     // we might have been closed as a result of
     // the above
     if(isClosed())
@@ -718,7 +713,6 @@ public class View extends JFrame implements EBComponent
     keyEventInterceptor.keyReleased(evt);
    break;
   }
-
   if(!evt.isConsumed())
    super.processKeyEvent(evt);
  } //}}}
@@ -1293,11 +1287,9 @@ public void setEdittag(boolean edit)
    DockableWindowFactory.getInstance(),config);
 
   topToolBars = new JPanel(new VariableGridLayout(
-   VariableGridLayout.FIXED_NUM_COLUMNS,
-   1));
+   VariableGridLayout.FIXED_NUM_COLUMNS,1));
   bottomToolBars = new JPanel(new VariableGridLayout(
-   VariableGridLayout.FIXED_NUM_COLUMNS,
-   1));
+   VariableGridLayout.FIXED_NUM_COLUMNS,1));
 
   toolBarManager = new ToolBarManager(topToolBars, bottomToolBars);
 

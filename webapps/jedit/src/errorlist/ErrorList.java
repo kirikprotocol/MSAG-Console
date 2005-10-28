@@ -662,9 +662,9 @@ public class ErrorList extends JPanel implements EBComponent,
         }
      }
 
-     int start = error.getStartOffset();
+    int start = error.getStartOffset();
     int end = error.getEndOffset();
-
+    System.out.println("ErrorList start1= "+start+" end1= "+end);
     int lineNo = error.getLineNumber();
     if(lineNo >= 0 && lineNo < buffer.getLineCount())
     {
@@ -674,7 +674,7 @@ public class ErrorList extends JPanel implements EBComponent,
      else
       end += buffer.getLineStartOffset(lineNo);
     }
-
+    System.out.println("ErrorList start2= "+start+" end2= "+end);
     view.getTextArea().setSelection(
      new Selection.Range(start,end));
 

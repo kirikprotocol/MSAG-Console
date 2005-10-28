@@ -28,6 +28,12 @@ import java.awt.Component;
 import org.gjt.sp.jedit.gui.KeyEventWorkaround;
 import org.gjt.sp.jedit.GUIUtilities;
 import org.gjt.sp.jedit.View;
+import org.gjt.sp.jedit.EditPane;
+import org.gjt.sp.jedit.textarea.JEditTextArea;
+
+import javax.swing.*;
+
+import xml.XmlActions;
 
 /**
  * Manages our key bindings.
@@ -47,7 +53,7 @@ class SideKickBindings extends KeyAdapter
    return;
     System.out.println("sidekick.SideKickBinding keyTyped before parse line 48 key= "+evt.getKeyChar());
   View view = GUIUtilities.getView((Component)evt.getSource());
-  System.out.println("sidekick.SideKickBinding keyTyped before parse line 48 view= "+view+ " buffer= "+view.getBuffer());
+   System.out.println("sidekick.SideKickBinding keyTyped before parse line 48 view= "+view+ " buffer= "+view.getBuffer());
   SideKickParser parser = SideKickPlugin.getParserForView(view);
    System.out.println("parser= "+parser);
     if (view.isEdittag() && ch==' ') {

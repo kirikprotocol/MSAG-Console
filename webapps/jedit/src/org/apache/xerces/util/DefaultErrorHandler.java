@@ -113,6 +113,8 @@ public class DefaultErrorHandler
     /** Error. */
     public void error(String domain, String key, XMLParseException ex)
         throws XNIException {
+              Object[] args =ex.getArguments();
+              System.out.println("DefaultErrorHandler args[0]= "+args[0]);
         printError("Error", ex);
     } // error(XMLParseException)
 

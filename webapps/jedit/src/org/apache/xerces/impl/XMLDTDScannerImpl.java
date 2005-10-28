@@ -682,7 +682,7 @@ public class XMLDTDScannerImpl
         throws IOException, XNIException {
         int depth = fPEDepth;
         if (fValidation && !fEntityManager.isDeclaredEntity("%"+name)) {
-            fErrorReporter.reportError( XMLMessageFormatter.XML_DOMAIN,"EntityNotDeclared", 
+            fErrorReporter.reportError( XMLMessageFormatter.XML_DOMAIN,"EntityNotDeclared",
                                         new Object[]{name}, XMLErrorReporter.SEVERITY_ERROR);
         }
         fEntityManager.startEntity(fSymbolTable.addSymbol("%" + name),

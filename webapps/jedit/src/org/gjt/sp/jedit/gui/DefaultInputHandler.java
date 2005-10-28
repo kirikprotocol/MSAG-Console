@@ -319,7 +319,6 @@ public class DefaultInputHandler extends InputHandler
     view.getStatus().setMessage(null);
    }
   }
-
   Object o = currentBindings.get(keyStroke);
   if(o == null)
   {
@@ -336,13 +335,13 @@ public class DefaultInputHandler extends InputHandler
     setCurrentBindings(bindings);
    }
    else if(input != '\0')
-    userInput(input);
+           userInput(input);
    else
    {
     // this is retarded. excuse me while I drool
     // and make stupid noises
     if(KeyEventWorkaround.isNumericKeypad(keyStroke.key))
-     KeyEventWorkaround.numericKeypadKey();
+      KeyEventWorkaround.numericKeypadKey();
    }
   }
   else if(o instanceof Hashtable)
@@ -353,7 +352,7 @@ public class DefaultInputHandler extends InputHandler
   else if(o instanceof String)
   {
    setCurrentBindings(bindings);
-   invokeAction((String)o);
+    invokeAction((String)o);
    return true;
   }
   else if(o instanceof EditAction)
@@ -362,7 +361,6 @@ public class DefaultInputHandler extends InputHandler
    invokeAction((EditAction)o);
    return true;
   }
-
   return false;
  } //}}}
 

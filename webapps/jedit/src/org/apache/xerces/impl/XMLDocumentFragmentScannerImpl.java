@@ -1151,10 +1151,12 @@ public class XMLDocumentFragmentScannerImpl
             if (!fEntityManager.isDeclaredEntity(name)) {
                 //REVISIT: one more case needs to be included: external PE and standalone is no
                 if ( fHasExternalDTD && !fStandalone) {
-                    if (fValidation)
+                    if (fValidation) {
+                      System.out.println("XMLDocumentScannerImpl.scanEntityReference() line 1155 reportError entityName= "+name+" in column number: "+String.valueOf(fEntityScanner.getColumnNumber()));
                         fErrorReporter.reportError( XMLMessageFormatter.XML_DOMAIN,"EntityNotDeclared", 
                                                     new Object[]{name}, XMLErrorReporter.SEVERITY_ERROR);
-                }
+                    }
+                 }
                 else 
                     reportFatalError("EntityNotDeclared", new Object[]{name});
             }

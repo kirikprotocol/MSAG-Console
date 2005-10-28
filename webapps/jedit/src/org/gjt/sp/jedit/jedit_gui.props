@@ -381,9 +381,11 @@ no-plugins.label=No Plugins Installed
 #}}}
 
 #{{{ Help menu
-help-menu=about
+help-menu=about \
+     tip-of-the-day
 help-menu.label=$Help
 about.label=$About jEditApplet...
+tip-of-the-day.label=$Tip of the Day
 #}}}
 
 #}}}

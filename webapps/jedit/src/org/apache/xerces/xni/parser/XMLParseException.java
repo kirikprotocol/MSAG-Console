@@ -90,9 +90,12 @@ public class XMLParseException
 
     /** Line number. */
     protected int fLineNumber = -1;
-    
+
     /** Column number. */
     protected int fColumnNumber = -1;
+
+    /** argument of exception. */
+    protected Object[] Arguments;
 
     //
     // Constructors
@@ -157,7 +160,17 @@ public class XMLParseException
         return fColumnNumber;
     } // getRowNumber():int
 
-    //
+  public Object[] getArguments()
+  {
+    return Arguments;
+  }
+
+  public void setArguments(Object[] arguments,int size)
+  {
+    Arguments=new Object[size];
+    if (size>0) Arguments = arguments;
+  }
+  //
     // Object methods
     //
 

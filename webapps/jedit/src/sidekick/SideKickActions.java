@@ -88,10 +88,8 @@ public class SideKickActions
   Buffer buffer = editPane.getBuffer();
   JEditTextArea textArea = editPane.getTextArea();
 
-  SideKickParser parser = SideKickPlugin
-   .getParserForBuffer(buffer);
-  SideKickParsedData data = SideKickParsedData
-   .getParsedData(view);
+  SideKickParser parser = SideKickPlugin.getParserForBuffer(buffer);
+  SideKickParsedData data = SideKickParsedData.getParsedData(view);
 
   SideKickCompletion complete = null;
 

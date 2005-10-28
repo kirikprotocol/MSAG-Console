@@ -1142,6 +1142,13 @@ jarCacheDir,file.getName() + ".summary");
  public void clear() {
   plugin.clear();
 }
+  public void WindowClose(View view) {
+  plugin.WindowClose(view);
+  }
+
+ public void WindowOpen(View view) {
+  plugin.WindowOpen(view);
+  }
   //{{{ breakPlugin() method
   private void breakPlugin()
   {

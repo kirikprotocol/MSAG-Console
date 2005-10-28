@@ -504,9 +504,10 @@ public class XML11DocumentScannerImpl
                                     //WFC & VC: Entity Declared
                                     if (checkEntities) {
                                         if (fValidation) {
+                                          System.out.println("XML11DocumentScannerImpl.scanAttributeValue line 507 reportError entityName= "+entityName+" in column number: "+String.valueOf(fEntityScanner.getColumnNumber()));
                                             fErrorReporter.reportError(XMLMessageFormatter.XML_DOMAIN,
                                                                        "EntityNotDeclared",
-                                                                       new Object[]{entityName},
+                                                                       new Object[]{entityName," in column number: ",String.valueOf(fEntityScanner.getColumnNumber())},
                                                                        XMLErrorReporter.SEVERITY_ERROR);
                                         }
                                     }

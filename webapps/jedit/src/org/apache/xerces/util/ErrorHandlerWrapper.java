@@ -169,8 +169,9 @@ public class ErrorHandlerWrapper
      */
     public void error(String domain, String key, 
                       XMLParseException exception) throws XNIException {
-
         SAXParseException saxException = createSAXParseException(exception);
+        XMLParseException innerEx=(XMLParseException) saxException.getException();
+        Object[] args =innerEx.getArguments();
         try {
             fErrorHandler.error(saxException);
         }
