@@ -5,16 +5,10 @@
 
 #include <vector>
 
-#include "inman/common/errors.hpp"
-#include "inman/common/util.hpp"
 #include "core/buffers/TmpBuf.hpp"
-
 #include "core/network/Socket.hpp"
+#include "logger/Logger.h"
 
-using std::runtime_error;
-
-using smsc::inman::common::format;
-using smsc::inman::common::dump;
 using smsc::logger::Logger;
 using smsc::core::network::Socket;
 
@@ -139,18 +133,21 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::string& str )
 class SerializableObject
 {
     public:
-        SerializableObject() : objectId( 0 ) { }
-
+        SerializableObject() : dialogId(0), objectId(0) { }
         virtual ~SerializableObject() { }
 
-        virtual void setObjectId(unsigned short id) { objectId = id;   }
-        virtual unsigned short getObjectId() const { return objectId; }
+        void setDialogId(unsigned int id) { dialogId = id;  }
+        unsigned int getDialogId() const { return dialogId; }
+
+        void setObjectId(unsigned short id) { objectId = id;  }
+        unsigned short getObjectId() const { return objectId; }
 
         virtual void load(ObjectBuffer& in)  = 0;
         virtual void save(ObjectBuffer& out) = 0;
 
     protected:
-        unsigned char objectId;
+        unsigned int   dialogId; //unique id of TCP dialog, to which object belongs to
+        unsigned short objectId; //unique id of object 
 };
 
 //serializer interface:

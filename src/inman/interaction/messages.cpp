@@ -5,6 +5,11 @@ static char const ident[] = "$Id$";
 #include <stdexcept>
 
 #include "inman/interaction/messages.hpp"
+#include "inman/common/util.hpp"
+
+using std::runtime_error;
+using smsc::inman::common::format;
+
 
 namespace smsc  {
 namespace inman {                                 
@@ -31,9 +36,21 @@ SerializerInap* SerializerInap::getInstance()
     return &instance;
 }
 
+/*
+ * Inman messages are transferred as raw data of arbitrary length and have
+ * the following serialization format:
+
+  2b        4b         2b       up to ...b
+-------   ---------   -----   -------------------------------------
+ format : dialogId  : msgId :  message data                        |
+                            |                                      |                                    |
+                            --- processed by load()/save() method --
+*/
+
 SerializableObject* SerializerInap::deserialize(ObjectBuffer& in)
 {
-    unsigned short objectId, version, dialogId;
+    unsigned short objectId, version;
+    unsigned int   dialogId;
 
     in >> version;
 
@@ -47,7 +64,8 @@ SerializableObject* SerializerInap::deserialize(ObjectBuffer& in)
     if( !obj ) 
         throw runtime_error( format("Invalid object ID: 0x%X", objectId) );
 
-    obj->setObjectId( dialogId );
+    obj->setDialogId(dialogId);
+    obj->setObjectId(objectId);
     obj->load( in );
 
     return obj;
@@ -58,6 +76,7 @@ void SerializerInap::serialize(SerializableObject* obj, ObjectBuffer& out)
 {
     assert( obj );
     out << (unsigned short) FORMAT_VERSION;
+    out << (unsigned int) obj->getDialogId();
     out << (unsigned short) obj->getObjectId();
     obj->save( out );
 }
@@ -68,6 +87,7 @@ void SerializerInap::serialize(SerializableObject* obj, ObjectBuffer& out)
 
 ChargeSms::ChargeSms()
 {
+    setObjectId((unsigned short)CHARGE_SMS_TAG);
 }
 
 ChargeSms::~ChargeSms()
@@ -189,7 +209,6 @@ void ChargeSms::load(ObjectBuffer& in)
 
 void ChargeSms::save(ObjectBuffer& out)
 {
-    out << (unsigned short) CHARGE_SMS_TAG;
     out << destinationSubscriberNumber;
     out << callingPartyNumber;
     out << imsi;
@@ -215,6 +234,7 @@ void ChargeSms::handle(InmanHandler* handler)
 
 ChargeSmsResult::ChargeSmsResult() : value( CHARGING_POSSIBLE )
 {
+    setObjectId((unsigned short)CHARGE_SMS_RESULT_TAG);
 }
 
 ChargeSmsResult::ChargeSmsResult(ChargeSmsResult_t val) : value( val )
@@ -239,7 +259,6 @@ void ChargeSmsResult::load(ObjectBuffer& in)
 
 void ChargeSmsResult::save(ObjectBuffer& out)
 {
-   	out << (unsigned short) CHARGE_SMS_RESULT_TAG;
     out << (unsigned short)value;
 }
 
@@ -256,6 +275,7 @@ void ChargeSmsResult::handle(SmscHandler* handler)
 
 DeliverySmsResult::DeliverySmsResult() : value( DELIVERY_SUCCESSED )
 {
+    setObjectId((unsigned short)DELIVERY_SMS_RESULT_TAG);
 }
 
 DeliverySmsResult::DeliverySmsResult(DeliverySmsResult_t val) : value( val )
@@ -280,7 +300,6 @@ void DeliverySmsResult::load(ObjectBuffer& in)
 
 void DeliverySmsResult::save(ObjectBuffer& out)
 {
-    out << (unsigned short) DELIVERY_SMS_RESULT_TAG;
     out << (unsigned short)value;
 }
 

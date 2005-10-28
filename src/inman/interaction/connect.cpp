@@ -7,7 +7,7 @@ static char const ident[] = "$Id$";
 using smsc::inman::interaction::SerializerITF;
 using smsc::inman::interaction::ObjectBuffer;
 using smsc::inman::interaction::SerializableObject;
-using smsc::inman::common::dump;
+//using smsc::inman::common::dump;
 
 namespace smsc  {
 namespace inman {

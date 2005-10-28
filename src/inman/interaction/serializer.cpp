@@ -2,10 +2,11 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 #include <stdexcept>
 
-#include "serializer.hpp"
-#include "messages.hpp"
+#include "inman/interaction/messages.hpp"
+#include "inman/common/util.hpp"
 
 using std::runtime_error;
+using smsc::inman::common::dump;
 
 namespace smsc  {
 namespace inman {

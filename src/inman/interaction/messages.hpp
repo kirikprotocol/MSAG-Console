@@ -6,7 +6,6 @@
 #include "inman/interaction/serializer.hpp"
 #include "inman/common/factory.hpp"
 
-using std::runtime_error;
 using smsc::inman::interaction::ObjectBuffer;
 using smsc::inman::interaction::SerializableObject;
 using smsc::inman::interaction::SerializerITF;

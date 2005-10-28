@@ -1,3 +1,4 @@
+static char const ident[] = "$Id$";
 #include <assert.h>
 #include <stdio.h>
 #include <errno.h>
@@ -7,15 +8,11 @@
 #include <string>
 
 #include "logger/Logger.h"
-//#include "core/network/Socket.hpp"
 #include "inman/common/console.hpp"
-#include "inman/interaction/serializer.hpp"
 #include "inman/interaction/messages.hpp"
 #include "core/threads/Thread.hpp" 	
 
 using smsc::core::threads::Thread;
-using smsc::core::network::Socket;
-using smsc::logger::Logger;
 using smsc::inman::common::Console;
 using smsc::inman::interaction;
 using smsc::inman::interaction::ObjectPipe;
@@ -77,7 +74,7 @@ class Facade : public Thread, public SmscHandler
 			{
 				fprintf( stdout, "ChargeSmsResult( CHARGING_POSSIBLE ) received\n");
 				DeliverySmsResult op( delivery );
-				op.setObjectId( result->getObjectId() );
+				op.setDialogId( result->getDialogId() );
 				sendDeliverySmsResult( &op );
 			}
 			else
@@ -111,7 +108,7 @@ void send()
 {
 	ChargeSms op;
 
-	op.setObjectId( dialogId++ );
+	op.setDialogId( dialogId++ );
 
 	op.setDestinationSubscriberNumber( ".1.1.79139859489" ); // missing for MT
 	op.setCallingPartyNumber( ".1.1.79139343290" );

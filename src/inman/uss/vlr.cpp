@@ -127,7 +127,7 @@ void VLR::onCommandReceived(Connect* conn, SerializableObject* recvCmd)
     if (cmdId != USS2CMD::PROCESS_USS_REQUEST_TAG)
         smsc_log_error(logger, "Unknown command received: 0x%X", cmdId);
     else {
-        unsigned int reqId = cmd->getReqId();
+        unsigned int reqId = cmd->getDialogId();
         smsc_log_debug(logger, "USS Command received 0x%X, id = 0x%X", cmdId, reqId );
 
         USSDSMmap::iterator it = workers.find(reqId);

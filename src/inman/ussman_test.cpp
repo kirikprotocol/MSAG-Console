@@ -58,11 +58,11 @@ public:
                                       const unsigned char * rstr, const char * who)
     {
         req->setObjectId(USS2CMD::PROCESS_USS_REQUEST_TAG);
-        req->setReqId(getNextReqId());
+        req->setDialogId(getNextReqId());
         req->setDCS(0x0F);
         req->setUSSData((unsigned char*)rstr, strlen((const char*)rstr));
         req->setMSISDNadr(who);
-        fprintf(stdout, "Request[%d]: requesting %s for %s\n", req->getReqId(), rstr, who);
+        fprintf(stdout, "Request[%d]: requesting %s for %s\n", req->getDialogId(), rstr, who);
         return req;
     }
 
@@ -81,19 +81,19 @@ public:
         case USS2CMD::STATUS_USS_REQUEST_OK: {
             USSDATA_T vec = res->getUSSData();
             std::string  str = Vector2String(vec);
-            fprintf(stdout, "Request[%d]: got result %s\n", res->getReqId(), str.c_str());
+            fprintf(stdout, "Request[%d]: got result %s\n", res->getDialogId(), str.c_str());
         } break;
 
         case USS2CMD::STATUS_USS_REQUEST_DENIAL: {
-            fprintf(stdout, "Request[%d]: got result status: STATUS_USS_REQUEST_DENIAL\n", res->getReqId());
+            fprintf(stdout, "Request[%d]: got result status: STATUS_USS_REQUEST_DENIAL\n", res->getDialogId());
         } break;
 
         case USS2CMD::STATUS_USS_REQUEST_FAILED: {
-            fprintf(stdout, "Request[%d]: got result status: STATUS_USS_REQUEST_FAILED\n", res->getReqId());
+            fprintf(stdout, "Request[%d]: got result status: STATUS_USS_REQUEST_FAILED\n", res->getDialogId());
         } break;
 
         default:
-            fprintf(stdout, "Request[%d]: got unknown result status\n", res->getReqId());
+            fprintf(stdout, "Request[%d]: got unknown result status\n", res->getDialogId());
         }
     }
 
@@ -116,7 +116,8 @@ public:
 };
 
 static USSFacade*   _pFacade = 0;
-static std::string  _msAdr("79139343290");
+static std::string  _msAdr("79139343290"); //100
+                                           //79139859489 - 102
 //static char * _msAdr = "79139343290"; //subscriber ISDN address
 
 

@@ -3,6 +3,7 @@ static char const ident[] = "$Id$";
 
 #include "inman/common/cvtutil.hpp"
 #include "inman/common/adrutil.hpp"
+#include "inman/common/util.hpp"
 #include "inman/uss/ussdsm.hpp"
 #include "inman/uss/vlr.hpp"
 #include "inman/interaction/ussmessages.hpp"
@@ -173,7 +174,7 @@ void USSDSM::onUSSRequestResult(ProcessUSSRequestRes* resL)
 {
     USSResultMessage  resp;
 
-    resp.setReqId(_dsmId);
+    resp.setDialogId(_dsmId);
     resp.setDCS(resL->getDCS());
     resp.setUSSData(resL->getUSSData());
     resp.setMSISDNadr(_msAdr);
@@ -189,7 +190,7 @@ void USSDSM::onUSSRequestError(unsigned char ercode)
     smsc_log_error(logger, "got error %d for USS request 0x%X", _dsmId, (int)ercode);
 
     USSResultMessage  resp;
-    resp.setReqId(_dsmId);
+    resp.setDialogId(_dsmId);
     resp.setStatus(USS2CMD::STATUS_USS_REQUEST_FAILED);
     if (_connect)   //may be absent, in case of local testing
         _connect->send(&resp);

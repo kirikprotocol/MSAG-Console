@@ -63,7 +63,7 @@ class USSCommand : public SerializableObject
 class USSMessageBase : public SerializableObject //USSCommand not used for now
 {
 public:
-    USSMessageBase(unsigned char msgTag) { setObjectId(msgTag); _status = 0; }
+    USSMessageBase(unsigned short msgTag) { setObjectId(msgTag); _status = 0; }
     virtual ~USSMessageBase() {}
 
     //USSCommand interface: not used for now
@@ -79,20 +79,17 @@ public:
     void setMSISDNadr(const Address& msadr);
     void setMSISDNadr(const char * adrStr);
     void setDCS(const unsigned char& dcs);
-    void setReqId(const unsigned int& req_id);
     void setStatus(const unsigned short& status);
 
     const USSDATA_T& getUSSData(void) const;
     const Address&   getMSISDNadr(void) const;
     unsigned char    getDCS(void) const;
-    unsigned int     getReqId(void) const;
     unsigned short   getStatus(void) const;
 
 protected:
     unsigned char   _dCS;
     USSDATA_T       _ussData;
     Address         _msAdr;
-    unsigned int    _reqId;
     unsigned short  _status; //only for PROCESS_USS_RESULT_TAG
 };
 
