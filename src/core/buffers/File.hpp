@@ -318,7 +318,7 @@ public:
   {
     Close();
     filename=fn;
-    fd=open(fn,O_APPEND|O_LARGEFILE,0644);
+    fd=open(fn,O_WRONLY|O_APPEND|O_LARGEFILE,0644);
     if(fd==-1)throw FileException(FileException::errOpenFailed,fn);
   }
 
