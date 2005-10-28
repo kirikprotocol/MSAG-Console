@@ -81,13 +81,13 @@ void LocaleResources::processParams(const DOMElement &elem, LocaleResources::_st
 
 LocaleResources::LocaleResources(const std::string & filename) throw ()
 {
-  __trace2__("Load locale resources from \"%s\"\n", filename.c_str());
+  __trace2__("Load locale resources from \"%s\"", filename.c_str());
   smsc::logger::Logger *logger = smsc::logger::Logger::getInstance("smsc.resourcemanager.LocaleResources");
   try
   {
     DOMTreeReader reader;
     DOMElement *doc = reader.read(filename.c_str())->getDocumentElement();
-    
+
     DOMNodeList *settingsList = doc->getElementsByTagName(XmlStr("settings"));
     unsigned settingsListLength = settingsList->getLength();
     for (unsigned i = 0; i < settingsListLength; i++)
@@ -112,41 +112,41 @@ LocaleResources::LocaleResources(const std::string & filename) throw ()
     unsigned int line = e.getSrcLine();
     smsc_log_error(logger, "Couldn't construct locale \"%s\": An error occured during parsing received (\"%s\") command on line %d. Nested: %d: %s",
                  filename.c_str(), srcFile, line, code, message.c_str());
-    __trace2__("Locale resources from \"%s\" not loaded due to error: %s\n", filename.c_str(), message.c_str());
+    __trace2__("Locale resources from \"%s\" not loaded due to error: %s", filename.c_str(), message.c_str());
     return;
   }
   catch (const DOMException& e)
   {
     smsc_log_error(logger, "Couldn't construct locale \"%s\": DOMException code %i", filename.c_str(), e.code);
-    __trace2__("Locale resources from \"%s\" not loaded due to error: DOMException code %i\n", filename.c_str(), e.code);
+    __trace2__("Locale resources from \"%s\" not loaded due to error: DOMException code %i", filename.c_str(), e.code);
     return;
   }
   catch (const SAXException &e)
   {
     XmlStr message(e.getMessage());
     smsc_log_error(logger, "Couldn't construct locale \"%s\": %s", filename.c_str(), message.c_str());
-    __trace2__("Locale resources from \"%s\" not loaded due to error: %s\n", filename.c_str(), message.c_str());
+    __trace2__("Locale resources from \"%s\" not loaded due to error: %s", filename.c_str(), message.c_str());
     return;
   }
   catch (smsc::util::Exception &e)
   {
     smsc_log_error(logger, "Couldn't construct locale \"%s\": %s", filename.c_str(), e.what());
-    __trace2__("Locale resources from \"%s\" not loaded due to error: %s\n", filename.c_str(), e.what());
+    __trace2__("Locale resources from \"%s\" not loaded due to error: %s", filename.c_str(), e.what());
     return;
   }
   catch (std::exception &e)
   {
     smsc_log_error(logger, "Couldn't construct locale \"%s\": %s", filename.c_str(), e.what());
-    __trace2__("Locale resources from \"%s\" not loaded due to error: %s\n", filename.c_str(), e.what());
+    __trace2__("Locale resources from \"%s\" not loaded due to error: %s", filename.c_str(), e.what());
     return;
   }
   catch (...)
   {
     smsc_log_error(logger, "Couldn't construct locale \"%s\": Unknown exception in constructor", filename.c_str());
-    __trace2__("Locale resources from \"%s\" not loaded due to errors\n", filename.c_str());
+    __trace2__("Locale resources from \"%s\" not loaded due to errors", filename.c_str());
     return;
   }
-  __trace2__("Locale resources from \"%s\" sucessfully loaded (%u settings, %u resources)\n", filename.c_str(), settings.size(), resources.size());
+  __trace2__("Locale resources from \"%s\" sucessfully loaded (%u settings, %u resources)", filename.c_str(), settings.size(), resources.size());
 }
 
 LocaleResources::~LocaleResources()
