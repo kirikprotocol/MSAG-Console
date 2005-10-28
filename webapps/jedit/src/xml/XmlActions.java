@@ -354,7 +354,7 @@ loop:   for(;;)
    System.out.println("tag.tag= "+tag.tag);
 
    ElementDecl elementDecl = data.getElementDecl(tag.tag);
-    if(elementDecl == null)
+/*    if(elementDecl == null)
    {
      System.out.println("data.mappings.size()= "+data.mappings.size());
 
@@ -371,6 +371,7 @@ loop:   for(;;)
     }
 
    }
+*/
     if(elementDecl == null)
    {
     String[] pp = { tag.tag };

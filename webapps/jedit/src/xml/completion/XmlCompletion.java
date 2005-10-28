@@ -203,7 +203,8 @@ public class XmlCompletion extends SideKickCompletion
 
   if(recorder != null)
    recorder.recordInput(insert,false);
-  textArea.setSelectedText(insert);
+   System.out.println("XmlCompletion insert after run XmlActions.showEditTagDialog(view); before textArea.setSelectedText(insert); insert= "+insert);
+   textArea.setSelectedText(insert);
 
   if(caret != 0)
   {

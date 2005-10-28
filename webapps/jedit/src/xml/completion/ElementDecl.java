@@ -17,14 +17,13 @@ package xml.completion;
 
 import java.util.*;
 import org.gjt.sp.jedit.MiscUtilities;
-import xml.completion.*;
 
 public class ElementDecl
 {
  public CompletionInfo completionInfo;
 
  public String name;
-
+ public String shortName;
  public boolean empty;
  public boolean any;
 
@@ -39,6 +38,10 @@ public class ElementDecl
 
   this.name = name;
 
+  int in=name.indexOf(':');
+  if (in!=-1) name=name.substring(in+1);
+  this.shortName =name;
+
   if(content != null)
    setContent(content);
 
@@ -48,11 +51,16 @@ public class ElementDecl
 
  //{{{ ElementDecl constructor
  public ElementDecl(CompletionInfo completionInfo, String name,
-  boolean empty, boolean any, List attributes, Map attributeHash,
-  Set content)
+                    boolean empty, boolean any, List attributes, Map attributeHash,
+                    Set content)
  {
   this.completionInfo = completionInfo;
   this.name = name;
+
+  int in=name.indexOf(':');
+  if (in!=-1) name=name.substring(in+1);
+  this.shortName =name;
+
   this.empty = empty;
   this.any = any;
   this.attributes = attributes;
@@ -236,7 +244,7 @@ public class ElementDecl
   public boolean required;
 
   public AttributeDecl(String name, String value, ArrayList values,
-   String type, boolean required)
+                       String type, boolean required)
   {
    this.name = name;
    this.value = value;

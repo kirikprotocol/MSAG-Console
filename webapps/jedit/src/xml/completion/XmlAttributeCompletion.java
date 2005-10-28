@@ -141,7 +141,8 @@ public class XmlAttributeCompletion  extends SideKickCompletion
     textArea.setSelectedText(insert);
     int caret=textArea.getCaretPosition();
     if (names.size()==0) {
-      String closeTag="></"+view.getEditTag().getElementName()+">";
+      String closeTag="/>";// </"+view.getEditTag().getElementName()+">";
+      textArea.getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
       textArea.setSelectedText(closeTag);
       view.setEdittag(false);view.setEditTag(null);
       view.setKeyEventInterceptor(null);

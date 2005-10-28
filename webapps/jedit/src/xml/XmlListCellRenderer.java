@@ -73,7 +73,7 @@ public class XmlListCellRenderer extends DefaultListCellRenderer
   {
    ElementDecl element = (ElementDecl)value;
    setIcon(element.empty ? EMPTY_ELEMENT_ICON : ELEMENT_ICON);
-   setText(element.name);
+   setText(element.shortName);
   }
   else if(value instanceof EntityDecl)
   {

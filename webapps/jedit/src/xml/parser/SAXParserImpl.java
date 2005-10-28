@@ -40,6 +40,7 @@ import org.apache.xerces.util.SymbolTable;
 import org.apache.xerces.util.XMLGrammarPoolImpl;
 import org.apache.xerces.xni.grammars.Grammar;
 import org.apache.xerces.xni.grammars.XSGrammar;
+import org.apache.xerces.xni.parser.XMLParseException;
 //}}}
 
 public class SAXParserImpl extends XmlParser
@@ -79,16 +80,20 @@ public class SAXParserImpl extends XmlParser
   XMLReader reader = new org.apache.xerces.parsers.SAXParser(symbolTable,grammarPool);
   try
   {
-   reader.setFeature("http://xml.org/sax/features/validation",
-    buffer.getBooleanProperty("xml.validate"));
-   reader.setFeature("http://apache.org/xml/features/validation/schema",
-    buffer.getBooleanProperty("xml.validate"));
-   reader.setFeature("http://xml.org/sax/features/namespaces",true);
-   //reader.setFeature("http://apache.org/xml/features/continue-after-fatal-error",true);
-   reader.setErrorHandler(handler);
-   reader.setEntityResolver(handler);
-   reader.setContentHandler(handler);
-   reader.setProperty("http://xml.org/sax/properties/declaration-handler",handler);
+    reader.setFeature("http://xml.org/sax/features/validation",
+            buffer.getBooleanProperty("xml.validate"));
+    reader.setFeature("http://apache.org/xml/features/validation/schema",
+            buffer.getBooleanProperty("xml.validate"));
+    reader.setFeature("http://xml.org/sax/features/namespaces",true);
+    reader.setFeature("http://apache.org/xml/features/validation/schema-full-checking",
+            buffer.getBooleanProperty("xml.validate"));
+  /*  reader.setFeature("http://xml.org/sax/features/validation/schema/element-default",
+            buffer.getBooleanProperty("xml.validate"));
+   */ //reader.setFeature("http://apache.org/xml/features/continue-after-fatal-error",true);
+    reader.setErrorHandler(handler);
+    reader.setEntityResolver(handler);
+    reader.setContentHandler(handler);
+    reader.setProperty("http://xml.org/sax/properties/declaration-handler",handler);
   }
   catch(SAXException se)
   {
@@ -135,14 +140,16 @@ public class SAXParserImpl extends XmlParser
   }
   catch(SAXParseException spe)
   {
+    System.out.println("This is SAXParseException +columnNumber"+spe.getColumnNumber());
    // already handled
   }
   catch(SAXException se)
   {
-   //se.printStackTrace();
+   se.printStackTrace();
        Log.log(Log.ERROR,this,se.getException());
    if(se.getMessage() != null)
    {
+     System.out.println("This is SAXException "+se.getException());
     errorSource.addError(ErrorSource.ERROR,buffer.getPath(),
      0,0,0,se.getMessage());
    }
@@ -154,8 +161,8 @@ public class SAXParserImpl extends XmlParser
   }
 
   Collections.sort(data.ids,new IDDecl.Compare());
-    System.out.println("xml.parser.SAXParserImpl parse line 160 data.mappings.size="+data.mappings.size());
-    return data;
+    System.out.println("xml.parser.SAXParserImpl parse line 164 data.mappings.size="+data.mappings.size());
+   return data;
  } //}}}
 
  //{{{ Private members
@@ -274,6 +281,12 @@ public class SAXParserImpl extends XmlParser
    errorSource.addError(type,XmlPlugin.uriToFile(uri),line,
     0,0,message);
   } //}}}
+   //{{{ addError() method
+   private void addError(int type, String uri, int line,int start,int end, String message)
+   {
+    errorSource.addError(type,XmlPlugin.uriToFile(uri),line,
+     start,end,message);
+   } //}}}
 
   //{{{ getGrammarForNamespace() method
   private Grammar getGrammarForNamespace(String uri)
@@ -389,8 +402,10 @@ public class SAXParserImpl extends XmlParser
   //{{{ endPrefixMapping() method
   public void endPrefixMapping(String prefix)
   {
+   System.out.println("SAXParserImpl.endPrefixMapping prefix= "+prefix);
    String uri = (String)activePrefixes.get(prefix);
-   // check for built-in completion info for this URI
+   System.out.println("SAXParserImpl.endPrefixMapping uri= "+uri);
+    // check for built-in completion info for this URI
    // (eg, XSL, XSD, XHTML has this).
       if(uri != null)
    {
@@ -537,22 +552,63 @@ public class SAXParserImpl extends XmlParser
   //{{{ error() method
   public void error(SAXParseException spe)
   {
-   String systemId = spe.getSystemId();
-   if(systemId == null)
-    systemId = buffer.getPath();
-   addError(ErrorSource.ERROR,spe.getSystemId(),
+
+    String systemId = spe.getSystemId();
+    if(systemId == null)
+     systemId = buffer.getPath();
+
+    String text=buffer.getLineText(Math.max(0,spe.getLineNumber()-1));
+    XMLParseException e=(XMLParseException) spe.getException();
+    Object[] args= e.getArguments();
+    String arg="";//(String)args[0];
+    System.out.println("text= "+text);
+    int start=0; int end=0;
+    for (int i = 0; i < args.length; i++) {
+      arg = (String)args[i];
+      start=text.indexOf(arg);
+      if (start!=-1) break;
+    }
+
+    if (start==-1) {start=0;
+    } else {
+    end=start+arg.length();
+    text=text.substring(start,end);
+    System.out.println("text= "+text);
+    }
+    addError(ErrorSource.ERROR,spe.getSystemId(),
     Math.max(0,spe.getLineNumber()-1),
+    start,end,
     spe.getMessage());
   } //}}}
 
   //{{{ warning() method
   public void warning(SAXParseException spe)
   {
-   String systemId = spe.getSystemId();
-   if(systemId == null)
+    String systemId = spe.getSystemId();
+    if(systemId == null)
     systemId = buffer.getPath();
-   addError(ErrorSource.WARNING,spe.getSystemId(),
+    String text=buffer.getLineText(Math.max(0,spe.getLineNumber()-1));
+    XMLParseException e=(XMLParseException) spe.getException();
+    Object[] args= e.getArguments();
+    String arg="";//(String)args[0];
+    System.out.println("text= "+text);
+    int start=0; int end=0;
+    for (int i = 0; i < args.length; i++) {
+      arg = (String)args[i];
+      start=text.indexOf(arg);
+      if (start!=-1) break;
+    }
+
+    if (start==-1) {start=0;
+    } else {
+    end=start+arg.length();
+    text=text.substring(start,end);
+    System.out.println("text= "+text);
+    }
+
+    addError(ErrorSource.WARNING,spe.getSystemId(),
     Math.max(0,spe.getLineNumber()-1),
+    start,end,//spe.getColumnNumber(),0,
     spe.getMessage());
   } //}}}
 
@@ -563,8 +619,28 @@ public class SAXParserImpl extends XmlParser
    String systemId = spe.getSystemId();
    if(systemId == null)
     systemId = buffer.getPath();
-   addError(ErrorSource.ERROR,systemId,
+    String text=buffer.getLineText(Math.max(0,spe.getLineNumber()-1));
+    XMLParseException e=(XMLParseException) spe.getException();
+    Object[] args= e.getArguments();
+    String arg="";//(String)args[0];
+    System.out.println("text= "+text);
+    int start=0; int end=0;
+    for (int i = 0; i < args.length; i++) {
+      arg = (String)args[i];
+      start=text.indexOf(arg);
+      if (start!=-1) break;
+    }
+
+    if (start==-1) {start=0;
+    } else {
+    end=start+arg.length();
+    text=text.substring(start,end);
+    System.out.println("text= "+text);
+    }
+
+    addError(ErrorSource.ERROR,systemId,
     Math.max(0,spe.getLineNumber()-1),
+    start,end,//spe.getColumnNumber(),0,
     spe.getMessage());
   } //}}}
 
