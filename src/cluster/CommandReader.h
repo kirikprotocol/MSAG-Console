@@ -17,7 +17,7 @@ class CommandReader : public Thread
 {
 public:
     CommandReader()
-        : logger(smsc::logger::Logger::getInstance("CmdReader")),
+        : logger(0),
           stop(true),
           role(0),
           sock(0),
@@ -25,7 +25,8 @@ public:
           attachedSocket(0)
     {};
 	CommandReader(Role *role_, Socket *sock_, CommandDispatcher *dispatcher_, Socket *attachedSocket_) 
-		: stop(true),
+		: logger(smsc::logger::Logger::getInstance("CmdReader")),
+          stop(true),
 		  role(role_),
 		  sock(sock_),
           dispatcher(dispatcher_),

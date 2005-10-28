@@ -24,7 +24,7 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
 
     //printf("inAddr: %s, attachedInAddr: %s, port: %d, attachedPort: %d\n", inAddr.c_str(), attachedInAddr.c_str(), port, attachedPort);
 
-    if( socket.InitServer(inAddr.c_str(), port, 10)){
+    if( socket.InitServer(inAddr.c_str(), port, 0)){
         throw Exception("InterconnectManager: Can't init socket server by host: %s, port: %d", inAddr.c_str(), port);
     }
 
@@ -32,9 +32,12 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
         throw Exception("InterconnectManager: Can't start socket server");
     }
 
-    if( attachedSocket.Init(attachedInAddr.c_str(), attachedPort, 10) ){
+    if( attachedSocket.Init(attachedInAddr.c_str(), attachedPort, 0) ){
         throw Exception("InterconnectManager: Can't init socket by host: %s, port: %d", attachedInAddr.c_str(), attachedPort);
     }
+
+    if( attachedSocket.Connect() )
+        smsc_log_info(logger, "InterconnectManager: Can't connect to smsc by host: %s, port: %d", attachedInAddr.c_str(), attachedPort);
 
     // At a start role is SLAVE allways
     role = SLAVE;
@@ -265,6 +268,39 @@ int InterconnectManager::Execute()
         // Flushs commands that was added befor start
         flushCommands();
 
+    /*sleep(30);
+    if(isMaster())
+    {
+        const smsc::sms::Address addr(".1.1.address1234567890123");
+        smsc::profiler::Profile profile;
+
+        profile.codepage = smsc::smpp::DataCoding::SMSC7BIT;
+        profile.reportoptions = 0;
+        profile.hide = 0;
+        profile.locale = "locale";
+        profile.hideModifiable = true;
+
+        profile.divert = "divert";
+        profile.divertActive = true;
+        profile.divertActiveAbsent = false;
+        profile.divertActiveBlocked = false;
+        profile.divertActiveBarred = true;
+        profile.divertActiveCapacity = true;
+        profile.divertModifiable = false;
+
+        profile.udhconcat = true;
+        profile.translit = true;
+
+        profile.offset = 10;
+
+
+        Command *cmd = new ProfileUpdateCommand(addr, profile);
+        printf("send command\n");
+        sendCommand(cmd);
+        printf("command sent\n");
+        flushCommands();
+    }*/
+
     // TODO: Send commands from commands queue (on commandsMonitor)
     while(!isStoped()){
 
@@ -407,15 +443,10 @@ void InterconnectManager::send(Command* command)
     uint32_t val32 = htonl(len);
     memcpy((void*)( buffer.get() + 4), (const void*)&val32, 4);
     memcpy((void*)( buffer.get() + 8), (const void*)buff.get(), len);
-
-    if(attachedSocket.Connect()){
-        //printf("Command send failed. Connect failed\n");
-        throw Exception("Command send failed. Connect failed\n");
-    }
     
     int toWrite = size; const char* writeBuffer = (const char *)buffer.get();
     while (toWrite > 0) {
-        int write = attachedSocket.canWrite(10);
+        int write = attachedSocket.canWrite(0);
         if (write == 0) throw Exception("Command send failed. Timeout expired.");
         else if (write > 0) {
             write = attachedSocket.Write(writeBuffer, toWrite);
@@ -477,26 +508,37 @@ void InterconnectManager::flushCommands()
 {
         Command *command;
         int count = commands.Count();
-        smsc_log_info(logger, "Commands is flushing, count: %d", count);
+        //smsc_log_info(logger, "Commands is flushing, count: %d", count);
         for(int i=0; i<=count-1; i++){
             commands.Shift(command);            
-            //printf("IM, flushCommands, type: %02X\n", command->getType());
-            try {
-                smsc_log_info(logger, "Command %02X is sending", command->getType());
-                send(command);           
-            }catch(Exception & e)
-            {
-                smsc_log_info(logger, "%s", e.what());
-            }catch(...)
-            {
-                smsc_log_info(logger, "Flush commands failed, unexpeceted error");
+            for( ;; ){
+                try {
+                    smsc_log_info(logger, "Command %02X is sending", command->getType());
+                    send(command);
+                    smsc_log_info(logger, "Command %02X is sent", command->getType());
+                    break;
+                }catch(Exception & e)
+                {
+                    smsc_log_info(logger, "Flush command failed, %s", e.what());
+                    sleep(5);
+                    if( attachedSocket.Connect() );
+                        smsc_log_info(logger, "Connect to attahced smsc failed");
+                        
+                    smsc_log_info(logger, "%s", e.what());                    
+                }catch(...)
+                {
+                    smsc_log_info(logger, "Flush command failed, unexpeceted error");
+                    sleep(5);
+                    if( attachedSocket.Connect() )
+                        smsc_log_info(logger, "Connect to attahced smsc failed\n");
+                }
             }
 
             if(command)
                 delete command;
         }       
         commands.Clean();
-        smsc_log_info(logger, "Commands is flushed");
+        //smsc_log_info(logger, "Commands is flushed");
 }
 
 

@@ -76,7 +76,7 @@ void CommandReader::readHeader(Socket * socket, uint32_t &type, uint32_t &len)
         memcpy((void*)&val,   (const void*)(buffer + 4), 4);
         len = ntohl(val);
 
-    }catch(Exception e){
+    }catch(Exception& e){
         throw Exception("%s", e.what());
     }catch(...){
         throw Exception("Command read failed. Unexpected error.");
@@ -110,8 +110,8 @@ void CommandReader::read(Socket * socket, void* buffer, int size)
         if(!socket) throw Exception("Command read failed. Socket pointer is NULL.");
         int toRead = size; char* readBuffer = (char *)buffer;
         while (toRead > 0) {
-            int read = socket->canRead(10);
-            if (read == 0) throw Exception("Command read failed. Timeout expired.");
+            int read = socket->canRead(60);
+            if (read == 0) continue;
                 else if (read > 0) {
                     read = socket->Read(readBuffer, toRead);
                     if (read > 0) { readBuffer+=read; toRead-=read; continue; }

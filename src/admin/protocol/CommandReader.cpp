@@ -46,6 +46,7 @@ Command *CommandReader::read()
   if(len > 10 * 1024 * 1024)
       throw AdminException("Too big message length( more then > 10 Mb)");
 
+  smsc_log_debug(logger, "len: %d", len);
   std::auto_ptr<XMLByte> buf(new XMLByte [len+1]);
   readMessageBody(buf.get(), len);
 

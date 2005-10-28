@@ -116,7 +116,7 @@ int Socket::canRead(int to)
 
 int Socket::canWrite(int to)
 {
-  if(!connected || sock==INVALID_SOCKET)return -1;
+  if(!connected || sock==INVALID_SOCKET) return -1;
   if(to==0)to=timeOut;
   if(to==0)return 1;
   FD_ZERO(&fd);
@@ -146,7 +146,7 @@ int Socket::readChar()
 {
   if(inBuffer<=0 || bufPos==inBuffer)
   {
-    if(canRead()<=0)return -1;
+    if(canRead()<=0) return -1;
     inBuffer=Read(buffer,sizeof(buffer));
     bufPos=0;
   }
