@@ -123,7 +123,10 @@ RollingDayAppender::RollingDayAppender(const char * const _name, const Propertie
   sprintf(name_, ".%04d-%02d-%02d", year, month, day);
   std::string path = filename + name_;
   //file = fopen(path.c_str(), "a");
-  file.Append(path.c_str());
+  if(File::Exists(path.c_str()))
+    file.Append(path.c_str());
+  else
+    file.RWCreate(path.c_str());
 }
 
 void RollingDayAppender::rollover(time_t dat) throw()

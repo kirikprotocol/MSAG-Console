@@ -73,7 +73,10 @@ RollingFileAppender::RollingFileAppender(const char * const _name, const Propert
   else
     filename.reset(cStringCopy("smsc.log"));
 
-  file.Append(filename.get());
+  if(File::Exists(filename.get()))
+    file.Append(filename.get());
+  else
+    file.RWCreate(filename.get());
   currentFilePos=file.Pos();
   //file = fopen(filename.get(), "a");
   //currentFilePos = ftell(file);
