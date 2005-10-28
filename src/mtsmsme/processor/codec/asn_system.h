@@ -39,7 +39,9 @@
 #endif  /* WIN32 */
 
 #ifndef __GNUC__
+#ifndef __attribute__
 #define __attribute__(ignore)
+#endif /* __attribute__ */
 #endif
 
 #ifndef offsetof  /* If not defined by <stddef.h> */
