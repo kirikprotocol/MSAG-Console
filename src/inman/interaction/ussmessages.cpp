@@ -105,6 +105,11 @@ void USSMessageBase::save(ObjectBuffer& out)
 
 void USSMessageBase::load(ObjectBuffer& in)
 {
+    if (getObjectId() == USS2CMD::PROCESS_USS_RESULT_TAG) {
+        in >> _status;
+        if (_status)
+            return;
+    }
     in >> _dCS;
     in >> _ussData;
 

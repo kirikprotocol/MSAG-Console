@@ -73,6 +73,8 @@ const VLR_CFG & VLR::getCFG() const
 
 void VLR::start()
 {
+  smsc_log_debug( logger, "Start TCP server" );
+  tcpServer->Start();
   smsc_log_debug( logger, "Start dispatcher" );
   dispatcher->Start();
   running = true;
@@ -80,6 +82,9 @@ void VLR::start()
 
 void VLR::stop()
 {
+  smsc_log_debug(logger, "Stop TCP server" );
+  tcpServer->Stop();
+  tcpServer->WaitFor();
   smsc_log_debug( logger, "Stop dispatcher" );
   dispatcher->Stop();
   running = false;

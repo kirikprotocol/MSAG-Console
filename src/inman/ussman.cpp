@@ -156,7 +156,10 @@ int main(int argc, char** argv)
     vlr->start();
     sigset( SIGTERM, sighandler );
 
-#ifdef LOCAL_TESTING
+#ifndef LOCAL_TESTING
+    while( vlr )
+        usleep( 1000 * 100 );
+#else /* LOCAL_TESTING */
     run_console();
     vlr->stop();
     delete vlr;

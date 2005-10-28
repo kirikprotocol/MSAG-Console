@@ -20,7 +20,7 @@ using smsc::inman::comp::smsc_log_component;
 
 ProcessUSSRequestRes::ProcessUSSRequestRes()
 {
-    compLogger = smsc::logger::Logger::getInstance("smsc.mapuss.comp.ProcessUSSRequestRes");
+    compLogger = smsc::logger::Logger::getInstance("smsc.inman.usscomp.ProcessUSSRequestRes");
 }
 ProcessUSSRequestRes::~ProcessUSSRequestRes() { }
 
