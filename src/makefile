@@ -74,7 +74,7 @@ export SS7_STACK_HOME
 SS7_LIBRARY_NAME := einss7_r
 export SS7_LIBRARY_NAME
 
-CAMMON_INCLUDES = -I$(SMSC_SRCDIR) -I/usr/local/include -I$(SSL_DIR)/include -I$(SS7_STACK_HOME)/src -DEINSS7_THREADSAFE=1 -DMAP_R12
+CAMMON_INCLUDES = -I$(SMSC_SRCDIR) -I/usr/local/include -I$(SSL_DIR)/include -I$(SS7_STACK_HOME)/src -DEINSS7_THREADSAFE=1 -DMAP_R12 -D__EXTENSIONS__
 
 CFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT -D_FILE_OFFSET_BITS=64
 CXXFLAGS := $(CAMMON_INCLUDES) -D_REENTERANT -D_REENTRANT -D_FILE_OFFSET_BITS=64
@@ -186,68 +186,68 @@ SMSC_BUILDDIR_LIST = $(foreach x,lib bin obj etc doc,$(SMSC_BUILDDIR)/$(x))
 
 #$(warning $(MODULES))
 
-all:	build
-	@echo >> /dev/null
+all:  build
+  @echo >> /dev/null
 
 __.empty.__:
-	@echo >> /dev/null
+  @echo >> /dev/null
 
 commit:
-	@echo "commit cources into CVS"
-	cvs -ecat commit
+  @echo "commit cources into CVS"
+  cvs -ecat commit
 
 update:
-	@echo "updating sources from CVS"
-	cvs update -d
+  @echo "updating sources from CVS"
+  cvs update -d
 
 docs:
-	@echo Generating docs
-	@mkdir -p $(SMSC_BUILDDIR)/doc/html
-	@perl -e 'while(<>){s!\$$\(DOCSDIR\)!$(SMSC_BUILDDIR)/doc/html!;print;}' <Doxyfile.tmpl >Doxyfile
-	@doxygen Doxyfile
-	@rm Doxyfile
+  @echo Generating docs
+  @mkdir -p $(SMSC_BUILDDIR)/doc/html
+  @perl -e 'while(<>){s!\$$\(DOCSDIR\)!$(SMSC_BUILDDIR)/doc/html!;print;}' <Doxyfile.tmpl >Doxyfile
+  @doxygen Doxyfile
+  @rm Doxyfile
 
 
 __build_message__:
-	@echo "build in SMSC"
+  @echo "build in SMSC"
 
 build: __build_message__ $(SMSC_BUILDDIR_LIST)
-	@if [ -n "$(MODULES)" ]; then \
-	    XXXX="$(MODULES)"; \
-	    set -e; for i in $$XXXX; do $(MAKE) -s $$i.rbuild ; done; \
-	fi
+  @if [ -n "$(MODULES)" ]; then \
+      XXXX="$(MODULES)"; \
+      set -e; for i in $$XXXX; do $(MAKE) -s $$i.rbuild ; done; \
+  fi
 
 ubuild: .update .build
-	@echo >> /dev/null
+  @echo >> /dev/null
 
 clean:
-	@echo "clean all"
-	@if [ -n "$(MODULES)" ]; then \
-	    XXXX="$(MODULES)"; \
-	    set -e; for i in $$XXXX; do $(MAKE) -s $$i.rclean ; done; \
-	fi
+  @echo "clean all"
+  @if [ -n "$(MODULES)" ]; then \
+      XXXX="$(MODULES)"; \
+      set -e; for i in $$XXXX; do $(MAKE) -s $$i.rclean ; done; \
+  fi
 
 deps:
-	@echo "build dependencies"
-	@if [ -n "$(MODULES)" ]; then \
-	    XXXX="$(MODULES)"; \
-	    set -e; for i in $$XXXX; do $(MAKE) -s $$i.deps ; done; \
-	fi
+  @echo "build dependencies"
+  @if [ -n "$(MODULES)" ]; then \
+      XXXX="$(MODULES)"; \
+      set -e; for i in $$XXXX; do $(MAKE) -s $$i.deps ; done; \
+  fi
 
 $(SMSC_BUILDDIR): $(SMSC_BUILDDIR_LIST)
 
 $(SMSC_BUILDDIR_LIST):
-	@mkdir -p $(SMSC_BUILDDIR_LIST)
+  @mkdir -p $(SMSC_BUILDDIR_LIST)
 
 $(MODULES) $(foreach x,$(MODULES),$(x).%): __.empty.__ $(SMSC_BUILDDIR_LIST)
 override _modules = $(subst ., ,$@)
 override _module = $(firstword $(_modules))
 override _subtarget = $(if $(word 2, $(_modules)), $(patsubst $(_module).%,%,$@), rbuild )
-	@if [ -d $(_module) ]; then \
-	    cd $(_module); $(MAKE) -s $(_subtarget); \
-	else \
-	    echo "'$(_module)' is not module"; exit 1;\
-	fi
+  @if [ -d $(_module) ]; then \
+      cd $(_module); $(MAKE) -s $(_subtarget); \
+  else \
+      echo "'$(_module)' is not module"; exit 1;\
+  fi
 
 webapp.newbuild:
-	@cd ../webapps/smsc;perl $(SMSC_SRCDIR)/conf/newbuild.pl webapp
+  @cd ../webapps/smsc;perl $(SMSC_SRCDIR)/conf/newbuild.pl webapp
