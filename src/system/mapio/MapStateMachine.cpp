@@ -66,11 +66,32 @@ static void ResponseAlertSC(MapDialog* dialog);
 static void SendErrToSmsc(unsigned dialogid,unsigned code);
 static void ForwardMO(MapDialog* dialog);
 
+void checkMapReq(USHORT_T result, char* func) {
+  if ( result != ET96MAP_E_OK ) {
+    char *text = FormatText("MAP request call failed result=%d in %s", result, func);
+    if ( result == 1009 || result == 1011 ) {
+      MAP_disconnectDetected = true;
+      throw MAPDIALOG_TEMP_ERROR(text, Status::SYSFAILURE);
+    } else {
+      throw runtime_error(text);
+    }
+  }
+}
+
+void warnMapReq(USHORT_T result, char* func) {
+  if ( result != ET96MAP_E_OK ) {
+    if ( result == 1009 || result == 1011 ) {
+      MAP_disconnectDetected = true;
+    }
+    __map_warn2__("MAP request call failed result=%d in %s", result, func);
+  }
+}
+
 void AbortMapDialog(unsigned dialogid,unsigned ssn)
 {
   if ( dialogid == 0 ) return;
   __map_trace2__("%s: dlg 0x%x",__func__,dialogid);
-  Et96MapUAbortReq(ssn,dialogid,0,0,0,0);
+  warnMapReq( Et96MapUAbortReq(ssn,dialogid,0,0,0,0), __func__);
 }
 
 string ImsiToString(const ET96MAP_IMSI_T* imsi)
@@ -226,12 +247,7 @@ struct MAPDIALOG_FATAL_XERROR : public MAPDIALOG_XERROR
 
 static void CloseMapDialog(unsigned dialogid,unsigned dialog_ssn){
   if ( dialogid == 0 ) return;
-  USHORT_T res = Et96MapCloseReq (dialog_ssn,dialogid,ET96MAP_NORMAL_RELEASE,0,0,0);
-  if ( res != ET96MAP_E_OK ){
-    __map_trace2__("%s: dlg 0x%x error, code 0x%hx",__func__,dialogid,res);
-  }else{
-    __map_trace2__("%s: dlg 0x%x closed",__func__,dialogid);
-  }
+  warnMapReq( Et96MapCloseReq (dialog_ssn,dialogid,ET96MAP_NORMAL_RELEASE,0,0,0), __func__ );
 }
 
 static void TryDestroyDialog(unsigned,bool send_error=false,unsigned err_code=0,unsigned ssn=0);
@@ -268,11 +284,7 @@ static ET96MAP_SS7_ADDR_T* GetUSSDAddr()
 extern void MAPIO_TaskACVersionNotifier();
 void MAPIO_QueryMscVersionInternal()
 {
-  USHORT_T result =
-    Et96MapGetACVersionReq(SSN,GetScAddr(),ET96MAP_SHORT_MSG_MT_RELAY);
-  if ( result != ET96MAP_E_OK ) {
-    throw runtime_error(FormatText("QueryMcsVersion: error 0x%x when GetAcVersion",result));
-  }
+  warnMapReq( Et96MapGetACVersionReq(SSN,GetScAddr(),ET96MAP_SHORT_MSG_MT_RELAY), __func__ );
 }
 
 static void CheckLockedByMO(MapDialog* dialog)
@@ -343,14 +355,12 @@ static void DropMapDialog_(unsigned dialogid,unsigned ssn){
   try{
     if ( !dialog.isnull() )
     {
-      //MutexGuard(dialog->mutex);
       __map_trace2__("%s: dropping dlg 0x%x, chain size %d , dropChain %d, associate:%p",__func__,dialog->dialogid_map,dialog->chain.size(),dialog->dropChain, dialog->associate);
       unsigned __dialogid_map = dialog->dialogid_map;
       unsigned __dialogid_smsc = 0;
       if ( dialog->chain.size() == 0 ) {
         if ( dialog->associate != 0 && dialog->state != MAPST_END )
         {
-          //Et96MapPAbortInd(SSN,dialog->associate->dialogid_map,0,0,0);
           dialog->associate->hlrVersion = dialog->hlrVersion;
           ContinueImsiReq(dialog->associate,"","",dialog->routeErr);
           dialog->state = MAPST_END;
@@ -516,10 +526,8 @@ static void SendRInfo(MapDialog* dialog)
   USHORT_T result = Et96MapOpenReq(
     dialog->ssn, dialog_id,
     &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
-  if ( result != ET96MAP_E_OK ) {
-    throw MAPDIALOG_FATAL_ERROR(
-      FormatText("SendRInfo: Et96MapOpenReq error 0x%x",result),MAP_FALURE);
-  }
+  checkMapReq( result, __func__ );
+  
   dialog->id_opened = true;
 
   if ( dialog->version != 2 && dialog->version != 1 ) dialog->version = 2;
@@ -534,15 +542,8 @@ static void SendRInfo(MapDialog* dialog)
       &dialog->m_scAddr, 0, 0);
   }else throw runtime_error(
     FormatText("SendRInfo: incorrect dialog version %d",dialog->version));
-  if ( result != ET96MAP_E_OK ) {
-    throw MAPDIALOG_FATAL_ERROR(
-      FormatText("SendRInfo: Et96MapVxSendRInfoForSmReq error 0x%x",result),MAP_FALURE);
-  }
-  result = Et96MapDelimiterReq(dialog->ssn, dialog_id, 0, 0 );
-  if ( result != ET96MAP_E_OK ) {
-    throw MAPDIALOG_FATAL_ERROR(
-      FormatText("SendRInfo: Et96MapDelimiterReq error 0x%x",result),MAP_FALURE);
-  }
+  checkMapReq( result, __func__ );
+  checkMapReq( Et96MapDelimiterReq(dialog->ssn, dialog_id, 0, 0 ), __func__);
 }
 
 void ResponseMO(MapDialog* dialog,unsigned status)
@@ -593,9 +594,7 @@ void ResponseMO(MapDialog* dialog,unsigned status)
       (status!=Status::OK)?&err:0);
   }else throw runtime_error(
     FormatText("ResponseMO: incorrect dialog version %d",dialog->version));
-  if ( result != ET96MAP_E_OK ) {
-    __map_warn2__("ResponseMO: Et96MapVxForwardSmMOResp return error 0x%hx",result);
-  }
+  checkMapReq( result, __func__ );
   unsigned INVALID = (unsigned)-1;
   if ( dialog->udhiRef != INVALID )
   {
@@ -701,17 +700,9 @@ static void ForwardMO(MapDialog* dialog) {
 
   __map_trace2__("%s: dlg 0x%x forwarding msg %s->%s to sc: %s", __func__, dialog->dialogid_map, sms->getOriginatingAddress().toString().c_str(), sms->getDestinationAddress().toString().c_str(), addr.toString().c_str() );
 
-  USHORT_T result = Et96MapOpenReq( SSN, dialog->dialogid_map, &appContext, &destAddr, &dialog->scAddr, 0, 0, 0 );
-  if ( result != ET96MAP_E_OK )
-    throw MAPDIALOG_FATAL_ERROR(FormatText("ForwardMO: Et96MapOpenReq error 0x%x",result),MAP_FALURE);
-
-  result = Et96MapV2ForwardSmMOReq(SSN,dialog->dialogid_map, 1, &smRpDa, &smRpOa, &ui);
-  if ( result != ET96MAP_E_OK )
-    throw MAPDIALOG_FATAL_ERROR(FormatText("ForwardMO: Et96MapV2ForwardSmMOReq error 0x%x",result),MAP_FALURE);
-
-  result = Et96MapDelimiterReq(SSN,dialog->dialogid_map, 0, 0);
-  if ( result != ET96MAP_E_OK )
-    throw MAPDIALOG_FATAL_ERROR(FormatText("ForwardMO: Et96MapV2ForwardSmMOReq error 0x%x",result),MAP_FALURE);
+  checkMapReq( Et96MapOpenReq( SSN, dialog->dialogid_map, &appContext, &destAddr, &dialog->scAddr, 0, 0, 0 ), __func__);
+  checkMapReq( Et96MapV2ForwardSmMOReq(SSN,dialog->dialogid_map, 1, &smRpDa, &smRpOa, &ui), __func__);
+  checkMapReq( Et96MapDelimiterReq(SSN,dialog->dialogid_map, 0, 0), __func__ );
 }
 
 static inline
@@ -1146,7 +1137,6 @@ static bool SendSms(MapDialog* dialog){
   ET96MAP_APP_CNTX_T appContext;
   appContext.acType = ET96MAP_SHORT_MSG_MT_RELAY;
   SetVersion(appContext,dialog->version);
-  USHORT_T result;
   bool segmentation = false;
   __map_trace2__("%s: chain size is %d mms=%d dlg->mms=%s dlg->invoke=%d",__func__,dialog->chain.size(),mms,dialog->mms?"true":"false", (int)dialog->invokeId);
 
@@ -1154,9 +1144,7 @@ static bool SendSms(MapDialog* dialog){
   if ( !dialog->mms ) {
     dialog->invokeId = 0;
     dialog->state = MAPST_WaitOpenConf;
-    result = Et96MapOpenReq(SSN,dialog->dialogid_map,&appContext,&dialog->destMscAddr,&dialog->scAddr,0,0,0);
-    if ( result != ET96MAP_E_OK )
-      throw MAPDIALOG_FATAL_ERROR(FormatText("SendSms: Et96MapOpenReq error 0x%x",result),MAP_FALURE);
+    checkMapReq( Et96MapOpenReq(SSN,dialog->dialogid_map,&appContext,&dialog->destMscAddr,&dialog->scAddr,0,0,0), __func__);
     dialog->id_opened = true;
   }
 
@@ -1172,27 +1160,18 @@ static bool SendSms(MapDialog* dialog){
        && !dialog->mms
        && (ui->signalInfoLen > (143-(dialog->smRpOa.addrLen+1)-(dialog->smRpDa.addrLen+1)-(dialog->scAddr.ss7AddrLen))
        || mms ) ) {
-    result = Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 );
-    if( result != ET96MAP_E_OK )
-      throw MAPDIALOG_FATAL_ERROR(
-        FormatText("SendSMS: Et96MapDelimiterReq error 0x%x",result),MAP_FALURE);
+    checkMapReq( Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 ), __func__);
     segmentation = true;
     dialog->state = MAPST_WaitSpecOpenConf;
   }else{
     dialog->invokeId++;
     if ( dialog->version == 2 ) {
-      result = Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), mms?TRUE:FALSE);
+      checkMapReq( Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), mms?TRUE:FALSE), __func__);
     }else if ( dialog->version == 1 ){
-      result = Et96MapV1ForwardSmMT_MOReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get());
+      checkMapReq( Et96MapV1ForwardSmMT_MOReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get()), __func__);
     }else throw runtime_error(
       FormatText("MAP::SendSMSCToMT: incorrect dialog version %d",dialog->version));
-    if( result != ET96MAP_E_OK )
-      throw MAPDIALOG_FATAL_ERROR(
-        FormatText("MAP::SendSMSCToMT: Et96MapVxForwardSmMTReq error 0x%x",result),MAP_FALURE);
-    result = Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 );
-    if( result != ET96MAP_E_OK )
-      throw MAPDIALOG_FATAL_ERROR(
-        FormatText("MAP::SendSMSCToMT: Et96MapDelimiterReq error 0x%x",result),MAP_FALURE);
+    checkMapReq( Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 ), __func__);
   }
   dialog->mms = mms;
   return segmentation;
@@ -1224,25 +1203,18 @@ static void SendNextMMS(MapDialog* dialog)
 
 static void SendSegmentedSms(MapDialog* dialog)
 {
-  USHORT_T result;
 // We have already opened dialog and don't need to check this condition.
 //  CheckLockedByMO(dialog);
   dialog->invokeId++;
   if ( dialog->version == 2 ) {
-    result = Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), dialog->mms);
+    checkMapReq( Et96MapV2ForwardSmMTReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get(), dialog->mms), __func__);
   }else if ( dialog->version == 1 ) {
 //    result = Et96MapV1ForwardSmMT_MOReq( dialog->ssn, dialog->dialogid_map, 1, &dialog->smRpDa, &dialog->smRpOa, dialog->auto_ui.get());
     throw MAPDIALOG_FATAL_ERROR(
       FormatText("SendSegmentedSms: MAPv1 do not support/required segmentation dialogid 0x%x",dialog->dialogid_map),MAP_FALURE);
   }else throw runtime_error(
     FormatText("SendSegmentedSms: incorrect dialog version %d",dialog->version));
-  if( result != ET96MAP_E_OK )
-    throw MAPDIALOG_FATAL_ERROR(
-      FormatText("SendSegmentedSms: Et96MapVxForwardSmMTReq error 0x%x",result),MAP_FALURE);
-  result = Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 );
-  if( result != ET96MAP_E_OK )
-    throw MAPDIALOG_FATAL_ERROR(
-      FormatText("SendSegmentedSms: Et96MapDelimiterReq error 0x%x",result),MAP_FALURE);
+  checkMapReq( Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 ), __func__);
 }
 
 static ET96MAP_USSD_DATA_CODING_SCHEME_T fillUSSDString(unsigned encoding, const unsigned char* text, unsigned text_len, ET96MAP_USSD_STRING_T* ussdString) {
@@ -1295,20 +1267,16 @@ static void DoUSSRUserResponceError(const SmscCommand& cmd , MapDialog* dialog)
   unsigned text_len = strlen(text);
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding =
     fillUSSDString(MAP_LATIN1_ENCODING,(unsigned char*)text,text_len, &ussdString);
-  UCHAR_T result;
   if ( dialog->version == 2 )
   {
-    result = Et96MapV2ProcessUnstructuredSSRequestResp(
+    checkMapReq( Et96MapV2ProcessUnstructuredSSRequestResp(
       dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,
       &ussdEncoding,
       &ussdString,
-      &error);
+      &error), __func__);
   }
   else throw runtime_error(
     FormatText("%s incorrect dialog version %d",__func__,dialog->version));
-  if ( result != ET96MAP_E_OK )
-    throw runtime_error(
-      FormatText("%s Resp return error 0x%x",__func__,result));
   CloseMapDialog(dialog->dialogid_map,dialog->ssn);
   eraseUssdLock(dialog, __func__);
   dialog->dropChain = true;
@@ -1341,20 +1309,16 @@ static void DoUSSRUserResponce( MapDialog* dialog)
 
   ET96MAP_USSD_DATA_CODING_SCHEME_T ussdEncoding =
     fillUSSDString( encoding, text, text_len, &ussdString );
-  UCHAR_T result;
   if ( dialog->version == 2 )
   {
-    result = Et96MapV2ProcessUnstructuredSSRequestResp(
+    checkMapReq( Et96MapV2ProcessUnstructuredSSRequestResp(
       dialog->ssn,dialog->dialogid_map,dialog->origInvokeId,
       &ussdEncoding,
       &ussdString,
-      0);
+      0), __func__);
   }
   else throw runtime_error(
     FormatText("%s: incorrect dialog version %d",__func__,dialog->version));
-  if ( result != ET96MAP_E_OK )
-    throw runtime_error(
-      FormatText("%s: Resp return error 0x%x",__func__,result));
   CloseMapDialog(dialog->dialogid_map,dialog->ssn);
   eraseUssdLock(dialog, __func__);
   dialog->state = MAPST_END;
@@ -1408,7 +1372,6 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
   } else {
     dialog->state = MAPST_WaitUSSDNotifyConf;
   }
-  UCHAR_T result;
   if( !dialog->id_opened ) {
     dialog->ussdMrRef = MakeMrRef();
     ET96MAP_APP_CNTX_T appContext;
@@ -1430,26 +1393,16 @@ static void DoUSSDRequestOrNotifyReq(MapDialog* dialog)
     ET96MAP_ADDRESS_T origAddr;
     mkMapAddress( &origAddr, dialog->sms->getOriginatingAddress().value, dialog->sms->getOriginatingAddress().length );
 
-    result = Et96MapOpenReq( dialog->ssn, dialog->dialogid_map, &appContext, &dialog->mshlrAddr, GetUSSDAddr(), 0, &origAddr, 0/*&specificInfo*/ );
-    if ( result != ET96MAP_E_OK )
-      throw runtime_error(
-        FormatText("%s: Et96MapOpenReq return error 0x%x",__func__,result));
+    checkMapReq( Et96MapOpenReq( dialog->ssn, dialog->dialogid_map, &appContext, &dialog->mshlrAddr, GetUSSDAddr(), 0, &origAddr, 0/*&specificInfo*/ ), __func__);
   }
   dialog->invokeId++;
   ET96MAP_ALERTING_PATTERN_T alertPattern = ET96MAP_ALERTING_PATTERN_LEVEL2;
   if( serviceOp == USSD_USSR_REQ ) {
-    result = Et96MapV2UnstructuredSSRequestReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, ussdEncoding, ussdString, &alertPattern);
+    checkMapReq( Et96MapV2UnstructuredSSRequestReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, ussdEncoding, ussdString, &alertPattern), __func__);
   } else {
-    result = Et96MapV2UnstructuredSSNotifyReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, ussdEncoding, ussdString, &alertPattern);
+    checkMapReq( Et96MapV2UnstructuredSSNotifyReq( dialog->ssn, dialog->dialogid_map, dialog->invokeId, ussdEncoding, ussdString, &alertPattern), __func__);
   }
-  if ( result != ET96MAP_E_OK )
-    throw runtime_error(
-      FormatText("%s: Et96MapV2UnstructuredSSRequestReq return error 0x%x",__func__,result));
-
-  result = Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 );
-  if ( result != ET96MAP_E_OK )
-    throw runtime_error(
-      FormatText("%s: Et96MapDelimiterReq return error 0x%x",__func__,result));
+  checkMapReq( Et96MapDelimiterReq( dialog->ssn, dialog->dialogid_map, 0, 0 ), __func__);
 }
 
 void MAPIO_PutCommand(const SmscCommand& cmd ){
@@ -1463,7 +1416,7 @@ static void MAPIO_PutCommand(const SmscCommand& cmd, MapDialog* dialog2 )
   unsigned dialogid_map = 0;
   unsigned dialog_ssn = 0;
   DialogRefGuard dialog;
-  MAP_TRY {
+    MAP_TRY {
     if( !isMapBound() ) throw runtime_error("MAP is not bound yet");
     if ( cmd->get_commandId() != SUBMIT_RESP ) {
       if ( cmd->get_commandId() != DELIVERY && cmd->get_commandId() != QUERYABONENTSTATUS)
@@ -1843,10 +1796,8 @@ USHORT_T Et96MapGetACVersionConf(ET96MAP_LOCAL_SSN_T localSsn,UCHAR_T version,ET
     string s_key(text);
     __map_trace2__("%s: is exists %s? version %d",__func__,s_key.c_str(),version);
     typedef multimap<string,unsigned>::iterator I;
-//    MutexGuard guard(x_map_lock);
     pair<I,I> range = x_map.equal_range(s_key);
     if ( range.first == range.second ) return ET96MAP_E_OK;
-      //throw runtime_error("MAP::Et96MapGetACVersionConf has no address for AC resolving");
     I it;
     for ( it = range.first; it != range.second;++it) {
       unsigned dialogid_map = 0;
@@ -2372,7 +2323,7 @@ USHORT_T Et96MapOpenInd (
     if( appContext_sp->version == 1 && appContext_sp->acType == ET96MAP_NETWORK_FUNCTIONAL_SS_CONTEXT ) {
       // reject USSD request version 1
       __map_trace2__("%s: aborting USSD v1 dialog 0x%x", __func__, dialogueId );
-      USHORT_T res = Et96MapUAbortReq( localSsn, dialogueId, 0, 0, 0, 0 );
+      warnMapReq( Et96MapUAbortReq( localSsn, dialogueId, 0, 0, 0, 0 ), __func__);
       return ET96MAP_E_OK;
     }
     DialogRefGuard dialog(MapDialogContainer::getInstance()->createDialog(dialogueId,localSsn,appContext_sp->version));
@@ -2401,8 +2352,8 @@ USHORT_T Et96MapOpenInd (
     __map_warn2__("%s: dialogid 0x%x <exception>:%s",__func__,dialogueId,e.what());
     ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
     MapDialogContainer::getInstance()->dropDialog(dialogueId,localSsn);
-    Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
-    Et96MapDelimiterReq(localSsn,dialogueId,0,0);
+    warnMapReq( Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0), __func__);
+    warnMapReq( Et96MapDelimiterReq(localSsn,dialogueId,0,0), __func__);
   }
   return ET96MAP_E_OK;
 }
@@ -2446,42 +2397,25 @@ static USHORT_T Et96MapVxForwardSmMOInd_Impl (
     __map_warn2__("%s: dialogid 0x%x <exception>:%s",__func__,dialogueId,e.what());
     if ( !open_confirmed ){
       ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
-      //MapDialogContainer::getInstance()->dropDialog(dialogueId);
       DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));
       if ( !dialog.isnull() ) {
         dialog->state = MAPST_ABORTED;
         __require__(dialog->ssn==localSsn);
       }
-      Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0);
-//      Et96MapDelimiterReq(localSsn,dialogueId,0,0);
+      checkMapReq( Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
     }
     ET96MAP_ERROR_FORW_SM_MO_T moResp;
     moResp.errorCode = ET96MAP_UE_SYS_FAILURE;
     moResp.u.systemFailureNetworkResource_s.networkResourcePresent = 0;
     if( version == 3 ) {
-  ET96MAP_SM_RP_UI_T ui;
+        ET96MAP_SM_RP_UI_T ui;
         ui.signalInfoLen=0;
-
-        Et96MapV3ForwardSmMOResp(
-        localSsn,
-        dialogueId,
-        invokeId,
-        &ui,
-        &moResp);
+        checkMapReq( Et96MapV3ForwardSmMOResp( localSsn, dialogueId, invokeId, &ui, &moResp), __func__);
     } else if( version == 2 ) {
-        Et96MapV2ForwardSmMOResp(
-        localSsn,
-        dialogueId,
-        invokeId,
-        &moResp);
+        checkMapReq( Et96MapV2ForwardSmMOResp( localSsn, dialogueId, invokeId, &moResp), __func__);
     }else if ( version == 1 ) {
-        Et96MapV1ForwardSmMOResp(
-        localSsn,
-        dialogueId,
-        invokeId,
-        &moResp);
+        checkMapReq( Et96MapV1ForwardSmMOResp( localSsn, dialogueId, invokeId, &moResp), __func__);
     }
-//    TryDestroyDialog(dialogueId,localSsn);
   }
   return ET96MAP_E_OK;
 }
@@ -2663,7 +2597,6 @@ USHORT_T Et96MapDelimiterInd(
   UCHAR_T priorityOrder)
 {
   bool open_confirmed = false;
-  USHORT_T result;
   ET96MAP_REFUSE_REASON_T reason;
   try{
     DialogRefGuard dialog(MapDialogContainer::getInstance()->getDialog(dialogueId,localSsn));
@@ -2677,31 +2610,19 @@ USHORT_T Et96MapDelimiterInd(
     case MAPST_WaitSms:
       dialog->state = MAPST_WaitSmsMOInd;
       reason = ET96MAP_NO_REASON;
-      result = Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0);
-      if ( result != ET96MAP_E_OK )
-        throw runtime_error(
-          FormatText("MAP::Et96MapDelimiterInd: dialog opened error 0x%x",result));
-      result = Et96MapDelimiterReq(dialog->ssn,dialogueId,0,0);
-      if ( result != ET96MAP_E_OK )
-        throw runtime_error(
-          FormatText("MAP::Et96MapDelimiterInd: Et96MapDelimiterReq return error 0x%x",result));
+      checkMapReq( Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
+      checkMapReq( Et96MapDelimiterReq(dialog->ssn,dialogueId,0,0), __func__);
       open_confirmed = true;
       break;
     case MAPST_WaitSmsMODelimiter2:
       reason = ET96MAP_NO_REASON;
-      result = Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0);
-      if ( result != ET96MAP_E_OK )
-        throw runtime_error(
-          FormatText("MAP::Et96MapDelimiterInd: dialog opened error 0x%x",result));
+      checkMapReq( Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
       dialog->state = MAPST_WaitImsiReq;
       PauseOnImsiReq(dialog.get());
       break;
     case MAPST_WaitUssdDelimiter:
       reason = ET96MAP_NO_REASON;
-      result = Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0);
-      if ( result != ET96MAP_E_OK )
-        throw runtime_error(
-          FormatText("MAP::Et96MapDelimiterInd: dialog opened error 0x%x",result));
+      checkMapReq( Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
       dialog->state = MAPST_WaitUssdImsiReq;
       PauseOnImsiReq(dialog.get());
       break;
@@ -2742,22 +2663,13 @@ USHORT_T Et96MapDelimiterInd(
       break;
     case MAPST_MapNoticed:
       reason = ET96MAP_NO_REASON;
-      result = Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0);
-      if ( result != ET96MAP_E_OK )
-        throw runtime_error(
-          FormatText("Et96MapDelimiterInd: dialog openresp error 0x%x",result));
-      result = Et96MapCloseReq (dialog->ssn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0);
-      if ( result != ET96MAP_E_OK )
-        throw runtime_error(
-          FormatText("MAP::Et96MapDelimiterInd: dialog closereq error 0x%x",result));
+      checkMapReq( Et96MapOpenResp(dialog->ssn,dialogueId,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
+      checkMapReq( Et96MapCloseReq (dialog->ssn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
       dialog->state = MAPST_END;
       DropMapDialog(dialog.get());
       break;
     case MAPST_ABORTED:
-      result = Et96MapCloseReq(localSsn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0);
-      if ( result != ET96MAP_E_OK )
-        throw runtime_error(
-          FormatText("MAP::Et96MapDelimiterInd: dialog closereq error 0x%x",result));
+      checkMapReq( Et96MapCloseReq(localSsn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
       dialog->state = MAPST_END;
       DropMapDialog(dialog.get());
       break;
@@ -2776,8 +2688,8 @@ USHORT_T Et96MapDelimiterInd(
       if ( !dialog.isnull() ) {
         dialog->state = MAPST_ABORTED;
         __require__(dialog->ssn==localSsn);
-        Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
-        Et96MapCloseReq(localSsn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0);
+        warnMapReq( Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0), __func__);
+        warnMapReq( Et96MapCloseReq(localSsn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
         DropMapDialog(dialog.get());
       }
     } else {
@@ -2794,8 +2706,8 @@ USHORT_T Et96MapDelimiterInd(
       if ( !dialog.isnull() ) {
         dialog->state = MAPST_ABORTED;
         __require__(dialog->ssn==localSsn);
-        Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0);
-        Et96MapCloseReq(localSsn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0);
+        warnMapReq( Et96MapOpenResp(localSsn,dialogueId,ET96MAP_RESULT_NOT_OK,&reason,0,0,0), __func__);
+        warnMapReq( Et96MapCloseReq(localSsn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
         DropMapDialog(dialog.get());
       }
     } else {
@@ -3203,20 +3115,13 @@ static void SendAlertToSMSC(MapDialog* dialog,ET96MAP_ADDRESS_T *mapAddr)
 
 static void ResponseAlertSC(MapDialog* dialog)
 {
-  USHORT_T result;
   ET96MAP_REFUSE_REASON_T reason = ET96MAP_NO_REASON;
-  result = Et96MapOpenResp(dialog->ssn,dialog->dialogid_map,ET96MAP_RESULT_OK,&reason,0,0,0);
-  if ( result != ET96MAP_E_OK )
-    throw runtime_error(
-      FormatText("MAP::ResponseAlertSC:et96MapOpenResp: error 0x%hx",result));
+  checkMapReq( Et96MapOpenResp(dialog->ssn,dialog->dialogid_map,ET96MAP_RESULT_OK,&reason,0,0,0), __func__);
   if ( dialog->version == 2 ){
-    result = Et96MapV2AlertSCResp(dialog->ssn,dialog->dialogid_map,dialog->invokeId,0);
+    checkMapReq( Et96MapV2AlertSCResp(dialog->ssn,dialog->dialogid_map,dialog->invokeId,0), __func__);
   }else if ( dialog->version == 1 ){
     // nothing
   }else throw runtime_error("MAP::ResponseAlertSC:unsupported dialog version");
-  if ( result != ET96MAP_E_OK )
-    throw runtime_error(
-      FormatText("MAP::ResponseAlertSC: error 0x%hx",result));
 }
 
 extern "C"
@@ -3370,7 +3275,6 @@ static void NotifyHLR(MapDialog* dialog)
   MapDialogContainer::getInstance()->reAssignDialog(dialog->dialogid_map,dialog->ssn,SSN);
   dialog->id_opened = false;
   dialog->hlrWasNotified = true;
-  USHORT_T result;
   ET96MAP_APP_CNTX_T appContext;
   appContext.acType = ET96MAP_SHORT_MSG_GATEWAY_CONTEXT;
   SetVersion(appContext,dialog->hlrVersion);
@@ -3408,13 +3312,7 @@ static void NotifyHLR(MapDialog* dialog)
     throw MAPDIALOG_ERROR(0,"no way");
   }
 
-  result = Et96MapOpenReq(
-    SSN, dialog_id,
-    &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
-  if ( result != ET96MAP_E_OK ) {
-    throw MAPDIALOG_FATAL_ERROR(
-      FormatText("MAP::%s: Et96MapOpenReq error 0x%x",__func__,result));
-  }
+  checkMapReq( Et96MapOpenReq( SSN, dialog_id, &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 ), __func__);
   dialog->id_opened = true;
 
   // €Š !!!!
@@ -3422,23 +3320,13 @@ static void NotifyHLR(MapDialog* dialog)
   // !!!!
 
   if ( dialog->hlrVersion == 2) {
-    result = Et96MapV2ReportSmDelStatReq(
-      SSN,dialog->dialogid_map,1,&dialog->m_msAddr,&dialog->m_scAddr,deliveryOutcom);
+    checkMapReq( Et96MapV2ReportSmDelStatReq( SSN,dialog->dialogid_map,1,&dialog->m_msAddr,&dialog->m_scAddr,deliveryOutcom), __func__);
   }else if ( dialog->hlrVersion == 1 ) {
-    result = Et96MapV1ReportSmDelStatReq(
-      SSN,dialog->dialogid_map,1,&dialog->m_msAddr,&dialog->m_scAddr);
+    checkMapReq( Et96MapV1ReportSmDelStatReq( SSN,dialog->dialogid_map,1,&dialog->m_msAddr,&dialog->m_scAddr), __func__);
   } else
     throw runtime_error(
     FormatText("MAP::%s bad protocol version 0x%x",__func__,dialog->hlrVersion));
-  if ( result != ET96MAP_E_OK ) {
-    throw MAPDIALOG_FATAL_ERROR(
-      FormatText("MAP::%s: Et96MapV2ReportSmDelStatReq error 0x%x",__func__,result));
-  }
-  result = Et96MapDelimiterReq(SSN,dialog->dialogid_map,0,0);
-  if ( result != ET96MAP_E_OK ) {
-    throw MAPDIALOG_FATAL_ERROR(
-      FormatText("MAP::%s: Et96MapDelimiterReq error 0x%x",__func__,result));
-  }
+  checkMapReq( Et96MapDelimiterReq(SSN,dialog->dialogid_map,0,0), __func__);
   dialog->state = MAPST_WaitDelRepConf;
 }
 
@@ -3485,7 +3373,7 @@ USHORT_T Et96MapNoticeInd (
       __map_warn2__("%s: dialogid 0x%x unknown state %d", __func__, dialogueId, dialog->state);
     }
   } else {
-    USHORT_T res = Et96MapCloseReq (localSsn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0);
+    warnMapReq( Et96MapCloseReq (localSsn,dialogueId,ET96MAP_NORMAL_RELEASE,0,0,0), __func__);
   }
   return ET96MAP_E_OK;
 }

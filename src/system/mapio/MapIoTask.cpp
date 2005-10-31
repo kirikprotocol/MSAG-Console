@@ -20,6 +20,7 @@ static unsigned __pingPongWaitCounter = 0;
 static bool MAP_dispatching = false;
 static bool MAP_isAlive = false;
 static bool MAP_aborting = false;
+static bool MAP_disconnectDetected = false;
   #define CORRECT_BIND_COUNTER 2
   #define MAX_BIND_TIMEOUT 15
 
@@ -205,16 +206,20 @@ void MapIoTask::dispatcher()
       if ( ++bindTimer <= MAX_BIND_TIMEOUT ) continue;
       __map_warn2__("MAP:: not all binders binded in %d seconds. Restarting...", MAX_BIND_TIMEOUT);
       if ( !isStopping ) {
+        MutexGuard mapMutexGuard(mapMutex);
         disconnect();
         connect();
+        MAP_disconnectDetected = false;
 //        kill(getpid(),17);
       }
       continue;
     }
     if ( result == MSG_BROKEN_CONNECTION ) {
       __map_warn2__("Broken connection %d", result);
+      MutexGuard mapMutexGuard(mapMutex);
       disconnect();
       connect();
+      MAP_disconnectDetected = false;
 //        kill(getpid(),17);
       continue;
     }
@@ -223,8 +228,10 @@ void MapIoTask::dispatcher()
       if ( !(MAP_aborting || isStopping) ) {
 //        MAP_aborting = true;
 //        abort();
+        MutexGuard mapMutexGuard(mapMutex);
         disconnect();
         connect();
+        MAP_disconnectDetected = false;
         continue;
       } else {
         return;
@@ -297,6 +304,12 @@ void MapIoTask::dispatcher()
       gettimeofday( &curtime, 0 );
       usecs = curtime.tv_usec < utime.tv_usec?(1000000+curtime.tv_usec)-utime.tv_usec:curtime.tv_usec-utime.tv_usec;
       smsc_log_debug(time_logger, "prim=%d s=%ld us=%ld", message.primitive, curtime.tv_sec-utime.tv_sec, usecs );
+    }
+    if (MAP_disconnectDetected) {
+      MutexGuard mapMutexGuard(mapMutex);
+      disconnect();
+      connect();
+      MAP_disconnectDetected = false;
     }
   }
 }
