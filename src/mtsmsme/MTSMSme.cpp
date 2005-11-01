@@ -245,9 +245,9 @@ public:
         }
 
         PduSubmitSm  sm;
-        fillSmppPduFromSms(&sm, (SMS *)sms);
         sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
-
+        fillSmppPduFromSms(&sm, (SMS *)sms);
+        
         int seqNum = session->getNextSeq();
         sm.get_header().set_sequenceNumber(seqNum);
         sm.get_message().get_dest()  .set_typeOfNumber(da.type);
