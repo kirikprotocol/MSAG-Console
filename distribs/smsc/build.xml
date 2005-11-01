@@ -62,6 +62,10 @@ Targets:
     <copy todir="${DISTR_DIR}/webapps">
       <fileset dir="${SMSC_DIR}/webapps" includes="images/**/*, styles/**/*, scripts/**/*"/>
     </copy>
+    <copy todir="${DISTR_DIR}/webapps/smsc/WEB-INF">
+      <fileset dir="${TEMPL_DIR}/smsc" includes="web.xml localization.xml"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
   </target>
 
   <target name="updateweb">
