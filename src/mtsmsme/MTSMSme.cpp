@@ -39,14 +39,15 @@ static bool  bMTSMSmeIsStopped    = false;
 static bool  bMTSMSmeIsConnected  = false;
 static bool  bMTSMSmeIsConnecting = false;
 
-// TODO: Implement Stop & Reconnect logic !!!
+static RequestProcessor* requestProcessor = 0;
 
-/*
+// TODO: Check Stop & Reconnect logic !!!
+
 static void setNeedStop(bool stop=true) {
     MutexGuard gauard(needStopLock);
-    bMCISmeIsStopped = stop;
-    if (stop && taskProcessor) taskProcessor->Stop();
-}*/
+    bMTSMSmeIsStopped = stop;
+    if (stop && requestProcessor) requestProcessor->Stop();
+}
 static bool isNeedStop() {
     MutexGuard gauard(needStopLock);
     return bMTSMSmeIsStopped;
@@ -55,7 +56,7 @@ static bool isNeedStop() {
 static void setNeedReconnect(bool reconnect=true) {
     MutexGuard gauard(needReconnectLock);
     bMTSMSmeIsConnected = !reconnect;
-    //if (reconnect && taskProcessor) taskProcessor->Stop();
+    if (reconnect && requestProcessor) requestProcessor->Stop();
 }
 static bool isNeedReconnect() {
     MutexGuard gauard(needReconnectLock);
@@ -244,8 +245,8 @@ public:
         }
 
         PduSubmitSm  sm;
-        sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
         fillSmppPduFromSms(&sm, (SMS *)sms);
+        sm.get_header().set_commandId(SmppCommandSet::SUBMIT_SM);
 
         int seqNum = session->getNextSeq();
         sm.get_header().set_sequenceNumber(seqNum);
@@ -253,8 +254,7 @@ public:
         sm.get_message().get_dest()  .set_numberingPlan(da.plan);
         sm.get_message().get_dest()  .set_value(da.value);
 
-        smsc_log_info(logger,
-                      "Sending sms to smsc oa=%s da=%s imsi=%s",
+        smsc_log_info(logger, "Sending sms to smsc oa=%s da=%s imsi=%s",
                       sms->originatingAddress.toString().c_str(),
                       da.toString().c_str(),
                       sms->destinationAddress.toString().c_str());
@@ -380,7 +380,7 @@ extern "C" void appSignalHandler(int sig)
     if (sig==smsc::system::SHUTDOWN_SIGNAL || sig==SIGINT)
     {
         smsc_log_info(logger, "Stopping ...");
-        // TODO: call Stop on RequestProcessor
+        setNeedStop(true); // Stop on RequestProcessor ???
     }
 }
 extern "C" void atExitHandler(void)
@@ -452,8 +452,8 @@ int main(void)
         ConfigView aliasConfig(manager, "MTSMSme.Aliases");
         AliasManager aliaser(&aliasConfig);
 
-        RequestProcessor* processor = RequestProcessor::getInstance();
-        if (!processor) throw Exception("RequestProcessor is undefined");
+        requestProcessor = RequestProcessor::getInstance();
+        if (!requestProcessor) throw Exception("RequestProcessor is undefined");
 
         while (!isNeedStop())
         {
@@ -472,7 +472,7 @@ int main(void)
                 mtsmSmeReady.Wait(0);
                 setNeedReconnect(false);
                 session.connect();
-                processor->setRequestSender(&sender);
+                requestProcessor->setRequestSender(&sender);
                 bMTSMSmeIsConnecting = false;
                 mtsmSmeReady.Signal();
             }
@@ -490,7 +490,7 @@ int main(void)
             smsc_log_info(logger, "Connected.");
 
             smsc_log_info(logger, "Running RequestProcessor ...");
-            processor->Run();
+            requestProcessor->Run();
             smsc_log_info(logger, "RequestProcessor exited");
 
             clearSignalMask();
