@@ -20,7 +20,7 @@ static unsigned __pingPongWaitCounter = 0;
 static bool MAP_dispatching = false;
 static bool MAP_isAlive = false;
 static bool MAP_aborting = false;
-static bool MAP_disconnectDetected = false;
+bool MAP_disconnectDetected = false;
   #define CORRECT_BIND_COUNTER 2
   #define MAX_BIND_TIMEOUT 15
 

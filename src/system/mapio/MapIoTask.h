@@ -70,7 +70,7 @@ extern "C" {
 
 #endif
 
-extern static bool MAP_disconnectDetected = false;
+extern bool MAP_disconnectDetected = false;
 extern Mutex mapMutex;
 
 enum MAPSTATS{

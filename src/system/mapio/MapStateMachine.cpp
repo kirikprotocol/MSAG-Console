@@ -523,26 +523,24 @@ static void SendRInfo(MapDialog* dialog)
 //    hiPrior = true;
   }
   __map_trace2__("%s: dlg 0x%x ssn:%d hiprior:%s ac:%d ver:%d",__func__,dialog_id,dialog->ssn,hiPrior?"true":"false", sms?(int)sms->getAttemptsCount():-1, dialog->version);
-  USHORT_T result = Et96MapOpenReq(
+  checkMapReq( Et96MapOpenReq(
     dialog->ssn, dialog_id,
-    &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 );
-  checkMapReq( result, __func__ );
+    &appContext, &dialog->mshlrAddr, &dialog->scAddr, 0, 0, 0 ), __func__);
   
   dialog->id_opened = true;
 
   if ( dialog->version != 2 && dialog->version != 1 ) dialog->version = 2;
 
   if ( dialog->version == 2 ) {
-    result = Et96MapV2SendRInfoForSmReq(dialog->ssn, dialog_id, 0, &dialog->m_msAddr,
+    checkMapReq( Et96MapV2SendRInfoForSmReq(dialog->ssn, dialog_id, 0, &dialog->m_msAddr,
       hiPrior ? ET96MAP_ATTEMPT_DELIVERY : ET96MAP_DO_NOT_ATTEMPT_DELIVERY,
-      &dialog->m_scAddr );
+      &dialog->m_scAddr ), __func__);
   }else if ( dialog->version == 1 ) {
-    result = Et96MapV1SendRInfoForSmReq(dialog->ssn, dialog_id, 0, &dialog->m_msAddr,
+    checkMapReq( Et96MapV1SendRInfoForSmReq(dialog->ssn, dialog_id, 0, &dialog->m_msAddr,
       hiPrior ? ET96MAP_ATTEMPT_DELIVERY : ET96MAP_DO_NOT_ATTEMPT_DELIVERY,
-      &dialog->m_scAddr, 0, 0);
+      &dialog->m_scAddr, 0, 0), __func__);
   }else throw runtime_error(
     FormatText("SendRInfo: incorrect dialog version %d",dialog->version));
-  checkMapReq( result, __func__ );
   checkMapReq( Et96MapDelimiterReq(dialog->ssn, dialog_id, 0, 0 ), __func__);
 }
 
@@ -570,31 +568,16 @@ void ResponseMO(MapDialog* dialog,unsigned status)
     break;
   };
   __map_trace2__("%s: dlg 0x%x errCode=0x%x status=%d (state %d) ",__func__,dialog->dialogid_map,err.errorCode,status,dialog->state);
-  USHORT_T result;
   if ( dialog->version == 3 ) {
     ET96MAP_SM_RP_UI_T ui;
     ui.signalInfoLen=0;
-    result = Et96MapV3ForwardSmMOResp(
-      dialog->ssn,
-      dialog->dialogid_map,
-      dialog->invokeId,
-      &ui,
-      (status!=Status::OK)?&err:0);
+    checkMapReq( Et96MapV3ForwardSmMOResp( dialog->ssn, dialog->dialogid_map, dialog->invokeId, &ui, (status!=Status::OK)?&err:0), __func__);
   } else if ( dialog->version == 2 ) {
-    result = Et96MapV2ForwardSmMOResp(
-      dialog->ssn,
-      dialog->dialogid_map,
-      dialog->invokeId,
-      (status!=Status::OK)?&err:0);
+    checkMapReq( Et96MapV2ForwardSmMOResp( dialog->ssn, dialog->dialogid_map, dialog->invokeId, (status!=Status::OK)?&err:0), __func__);
   }else if ( dialog->version == 1 ) {
-    result = Et96MapV1ForwardSmMOResp(
-      dialog->ssn,
-      dialog->dialogid_map,
-      dialog->invokeId,
-      (status!=Status::OK)?&err:0);
+    checkMapReq( Et96MapV1ForwardSmMOResp( dialog->ssn, dialog->dialogid_map, dialog->invokeId, (status!=Status::OK)?&err:0), __func__);
   }else throw runtime_error(
     FormatText("ResponseMO: incorrect dialog version %d",dialog->version));
-  checkMapReq( result, __func__ );
   unsigned INVALID = (unsigned)-1;
   if ( dialog->udhiRef != INVALID )
   {
