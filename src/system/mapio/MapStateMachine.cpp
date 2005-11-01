@@ -66,7 +66,70 @@ static void ResponseAlertSC(MapDialog* dialog);
 static void SendErrToSmsc(unsigned dialogid,unsigned code);
 static void ForwardMO(MapDialog* dialog);
 
-void checkMapReq(USHORT_T result, char* func) {
+#define MAP_ERRORS_BASE Status::MAP_ERR_BASE
+#define MAP_FALURE (/*MAP_ERRORS_BASE+34*/8)
+
+struct MAPDIALOG_ERROR : public runtime_error
+{
+  unsigned code;
+  MAPDIALOG_ERROR(unsigned code,const string& s) :
+    runtime_error(s),code(code){}
+  MAPDIALOG_ERROR(const string& s) :
+    runtime_error(s),code(MAKE_ERRORCODE(CMD_ERR_TEMP,0)){}
+};
+
+struct MAPDIALOG_XERROR : public runtime_error
+{
+  unsigned code;
+  MAPDIALOG_XERROR(unsigned code,const string& s) :
+    runtime_error(s),code(code){}
+  MAPDIALOG_XERROR(const string& s) :
+    runtime_error(s),code(MAKE_ERRORCODE(CMD_ERR_TEMP,0)){}
+};
+
+struct MAPDIALOG_BAD_STATE : public MAPDIALOG_ERROR
+{
+  MAPDIALOG_BAD_STATE(const string& s) :
+  MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_FATAL,0),s){}
+};
+struct MAPDIALOG_TEMP_ERROR : public MAPDIALOG_ERROR
+{
+  MAPDIALOG_TEMP_ERROR(const string& s,unsigned c=MAP_FALURE) :
+  MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_TEMP,c),s){}
+};
+struct MAPDIALOG_FATAL_ERROR : public MAPDIALOG_ERROR
+{
+  MAPDIALOG_FATAL_ERROR(const string& s,unsigned c=MAP_FALURE) :
+  MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_FATAL,c),s){}
+};
+struct MAPDIALOG_HEREISNO_ID : public MAPDIALOG_ERROR
+{
+  MAPDIALOG_HEREISNO_ID(const string& s,unsigned c=MAP_FALURE) :
+  MAPDIALOG_ERROR(0,s){}
+};
+struct MAPDIALOG_TEMP_XERROR : public MAPDIALOG_XERROR
+{
+  MAPDIALOG_TEMP_XERROR(const string& s,unsigned c=MAP_FALURE) :
+  MAPDIALOG_XERROR(MAKE_ERRORCODE(CMD_ERR_TEMP,c),s){}
+};
+struct MAPDIALOG_FATAL_XERROR : public MAPDIALOG_XERROR
+{
+  MAPDIALOG_FATAL_XERROR(const string& s,unsigned c=MAP_FALURE) :
+  MAPDIALOG_XERROR(MAKE_ERRORCODE(CMD_ERR_FATAL,c),s){}
+};
+
+static string FormatText(const char* format,...)
+{
+  auto_ptr<char> b(new char[1024]);
+  memset(b.get(),0,1024);
+  va_list arg;
+  va_start(arg,format);
+  vsnprintf(b.get(),1024-1,format,arg);
+  va_end(arg);
+  return string(b.get());
+}
+
+void checkMapReq(USHORT_T result, const char* func) {
   if ( result != ET96MAP_E_OK ) {
     char *text = FormatText("MAP request call failed result=%d in %s", result, func);
     if ( result == 1009 || result == 1011 ) {
@@ -78,7 +141,7 @@ void checkMapReq(USHORT_T result, char* func) {
   }
 }
 
-void warnMapReq(USHORT_T result, char* func) {
+void warnMapReq(USHORT_T result, const char* func) {
   if ( result != ET96MAP_E_OK ) {
     if ( result == 1009 || result == 1011 ) {
       MAP_disconnectDetected = true;
@@ -151,18 +214,6 @@ static unsigned MakeMrRef()
   return time(0)%0x0ffff;
 }
 
-
-static string FormatText(const char* format,...)
-{
-  auto_ptr<char> b(new char[1024]);
-  memset(b.get(),0,1024);
-  va_list arg;
-  va_start(arg,format);
-  vsnprintf(b.get(),1024-1,format,arg);
-  va_end(arg);
-  return string(b.get());
-}
-
 static inline void eraseUssdLock(MapDialog *dialog, const char* function) {
   USSD_MAP::iterator it=ussd_map.find(dialog->ussdSequence);
   if(it==ussd_map.end()){
@@ -191,59 +242,6 @@ void SetVersion(ET96MAP_APP_CNTX_T& ac,unsigned version){
     break;
   }
 }
-
-#define MAP_ERRORS_BASE Status::MAP_ERR_BASE
-#define MAP_FALURE (/*MAP_ERRORS_BASE+34*/8)
-
-struct MAPDIALOG_ERROR : public runtime_error
-{
-  unsigned code;
-  MAPDIALOG_ERROR(unsigned code,const string& s) :
-    runtime_error(s),code(code){}
-  MAPDIALOG_ERROR(const string& s) :
-    runtime_error(s),code(MAKE_ERRORCODE(CMD_ERR_TEMP,0)){}
-};
-
-struct MAPDIALOG_XERROR : public runtime_error
-{
-  unsigned code;
-  MAPDIALOG_XERROR(unsigned code,const string& s) :
-    runtime_error(s),code(code){}
-  MAPDIALOG_XERROR(const string& s) :
-    runtime_error(s),code(MAKE_ERRORCODE(CMD_ERR_TEMP,0)){}
-};
-
-struct MAPDIALOG_BAD_STATE : public MAPDIALOG_ERROR
-{
-  MAPDIALOG_BAD_STATE(const string& s) :
-    MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_FATAL,0),s){}
-};
-struct MAPDIALOG_TEMP_ERROR : public MAPDIALOG_ERROR
-{
-  MAPDIALOG_TEMP_ERROR(const string& s,unsigned c=MAP_FALURE) :
-    MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_TEMP,c),s){}
-};
-struct MAPDIALOG_FATAL_ERROR : public MAPDIALOG_ERROR
-{
-  MAPDIALOG_FATAL_ERROR(const string& s,unsigned c=MAP_FALURE) :
-    MAPDIALOG_ERROR(MAKE_ERRORCODE(CMD_ERR_FATAL,c),s){}
-};
-struct MAPDIALOG_HEREISNO_ID : public MAPDIALOG_ERROR
-{
-  MAPDIALOG_HEREISNO_ID(const string& s,unsigned c=MAP_FALURE) :
-    MAPDIALOG_ERROR(0,s){}
-};
-struct MAPDIALOG_TEMP_XERROR : public MAPDIALOG_XERROR
-{
-  MAPDIALOG_TEMP_XERROR(const string& s,unsigned c=MAP_FALURE) :
-    MAPDIALOG_XERROR(MAKE_ERRORCODE(CMD_ERR_TEMP,c),s){}
-};
-struct MAPDIALOG_FATAL_XERROR : public MAPDIALOG_XERROR
-{
-  MAPDIALOG_FATAL_XERROR(const string& s,unsigned c=MAP_FALURE) :
-    MAPDIALOG_XERROR(MAKE_ERRORCODE(CMD_ERR_FATAL,c),s){}
-};
-
 
 static void CloseMapDialog(unsigned dialogid,unsigned dialog_ssn){
   if ( dialogid == 0 ) return;
