@@ -21,8 +21,8 @@ static bool MAP_dispatching = false;
 static bool MAP_isAlive = false;
 static bool MAP_aborting = false;
 bool MAP_disconnectDetected = false;
-  #define CORRECT_BIND_COUNTER 2
-  #define MAX_BIND_TIMEOUT 15
+#define CORRECT_BIND_COUNTER 2
+#define MAX_BIND_TIMEOUT 15
 
 
 void MAPIO_TaskACVersionNotifier()
