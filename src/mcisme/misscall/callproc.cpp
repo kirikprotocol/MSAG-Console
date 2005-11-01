@@ -781,7 +781,7 @@ USHORT_T releaseConnection(EINSS7_I97_ISUPHEAD_T *isupHead_sp, UCHAR_T causeValu
   delete addr;
   if (res != 0)
   {
-    detectDisconnect( result, __func__ );
+    detectDisconnect( res, __func__ );
     smsc_log_error(
                    missedCallProcessorLogger,
                    "IsupReleaseReq %s failed with error code %d(%s)",
@@ -1240,7 +1240,7 @@ USHORT_T confirmReleaseConnection(EINSS7_I97_ISUPHEAD_T* isupHead)
                                  );
   if (res != 0)
   {
-    detectDisconnect( result, __func__ );
+    detectDisconnect( res, __func__ );
     smsc_log_error(
                    missedCallProcessorLogger,
                    "IsupReleaseResp %s failed with error code %d(%s)",
