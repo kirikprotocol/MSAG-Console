@@ -4,3 +4,4 @@
 # binary name source name libraries         
 -stat/SMTest         StatisticsManagerTest -ldl -lstat -ldb -lutil-config -lutil-xml -lutil -llogger -lcore-buffers -lcore-threads -lthread -lcore-buffers $(XERCES_LIB) $(__LIBRARIES) -lrt
 stat/DBStatToFiles   DBStatToFiles -ldl -lstat -ldb -lcore-buffers -lcore-threads -lthread -lcore-buffers -lutil-config -lutil-xml -lutil -lutil-recoder-recode_dll -lpthread -lxerces-c -lsms $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -llogger -lnsl $(XERCES_LIB)
+stat/Stat4Log        Stat4Log -ldl -lstat -lrouter -lsmeman -lsystem-common -ladmin -ladmin-service -lcore-buffers -lcore-threads -lthread -lcore-buffers -lutil-config-alias -lalias -lsmeman -lutil-config-smeman -lutil-config-route -lutil-config -lutil-xml -lutil -lutil-regexp -lutil-recoder-recode_dll -lpthread -lxerces-c -lsms $(__LIBRARIES) -lrt -L$(SMSC_BUILDDIR)/bin -llogger -lnsl $(XERCES_LIB)
