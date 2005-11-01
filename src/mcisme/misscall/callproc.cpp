@@ -34,11 +34,20 @@ using std::vector;
 #define MCIERROR 999
 #define handle(a,b,c,d,e) taif(a,b,c,d,e)
 
-int going;
-
 Logger* missedCallProcessorLogger = 0;
 Mutex MissedCallProcessor::lock;
 MissedCallProcessor* volatile MissedCallProcessor::processor = 0;
+
+int going;
+
+void detectDisconnect(USHORT_T result, const char *func) {
+  if( result == 1011 && result == 1009 ) {
+    smsc_log_error(missedCallProcessorLogger,
+                   "Stack disconnect detected in %s",
+                   func);
+    going = 0;
+  }
+}
 
 static smsc::util::regexp::RegExp maskRx;
 static smsc::util::regexp::RegExp calledMaskRx;
@@ -219,6 +228,7 @@ struct Connection {
 
     if( result != EINSS7_MGMTAPI_REQUEST_OK )
     {
+      detectDisconnect( result, __func__ );
       smsc_log_error(missedCallProcessorLogger,
                      "EINSS7_MgmtApiSendOrderReq() unblocking span=%d failed with code %d(%s)",
                      cics.spn,result,getReturnCodeDescription(result));
@@ -771,6 +781,7 @@ USHORT_T releaseConnection(EINSS7_I97_ISUPHEAD_T *isupHead_sp, UCHAR_T causeValu
   delete addr;
   if (res != 0)
   {
+    detectDisconnect( result, __func__ );
     smsc_log_error(
                    missedCallProcessorLogger,
                    "IsupReleaseReq %s failed with error code %d(%s)",
@@ -1229,6 +1240,7 @@ USHORT_T confirmReleaseConnection(EINSS7_I97_ISUPHEAD_T* isupHead)
                                  );
   if (res != 0)
   {
+    detectDisconnect( result, __func__ );
     smsc_log_error(
                    missedCallProcessorLogger,
                    "IsupReleaseResp %s failed with error code %d(%s)",
