@@ -218,7 +218,8 @@ const int MAX_STACK_BUFFER_SIZE = 64*1024;
 
 void StatCounters::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
 {
-    smsc_log_debug(logger, "Statistics dump called for %02d GMT", flushTM.tm_hour);
+    smsc_log_info(logger, "Statistics dump for %02d-%02d %02d:%02d GMT", 
+                  flushTM.tm_mon+1, flushTM.tm_mday, flushTM.tm_hour, flushTM.tm_min);
     
     try 
     {
@@ -232,7 +233,7 @@ void StatCounters::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
         if (!bFileTM || fileTM.tm_mon != flushTM.tm_mon || fileTM.tm_year != flushTM.tm_year)
         {
             StatCounters::createDir(fullPath); bFileTM = false;
-            smsc_log_debug(logger, "New dir '%s' created", dirName);
+            smsc_log_info(logger, "New dir '%s' created", dirName);
         }
 
         bool needHeader = false;
@@ -250,7 +251,7 @@ void StatCounters::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
             }
 
             fileTM = flushTM; bFileTM = true;
-            smsc_log_debug(logger, "%s file '%s' %s", (needHeader) ? "New":"Existed",
+            smsc_log_info(logger, "%s file '%s' %s", (needHeader) ? "New":"Existed",
                            fileName, (needHeader) ? "created":"opened");
         }
 
@@ -268,7 +269,7 @@ void StatCounters::dump(const uint8_t* buff, int buffLen, const tm& flushTM)
         statFile.Write((const void *)writeBuff, writeBuff.GetPos());
         statFile.Flush();
 
-        smsc_log_debug(logger, "Record dumped (%d bytes)", buffLen);
+        smsc_log_info(logger, "Record dumped (%d bytes)", buffLen);
     }
     catch (std::exception& exc)
     {
@@ -420,8 +421,8 @@ struct SubmitData
 
 /* ------------------------------- Main ----------------------------------- */
 
-const char* LOG_CATEGORY_CHECK = "sms.trace";
 const char* LOG_PREFIX_PATTERN = "%c %02d-%02d %02d:%02d:%02d,%03d %03d%n";
+const char* LOG_CAT_ST_PATTERN = "sms.trace: ";
 const char* LOG_SBM_ST_PATTERN = "SBM: ";
 const char* LOG_SBM_PR_PATTERN = "Id=%lld;seq=%ld;%n";
 const char* LOG_FWD_ST_PATTERN = "FWDDLV: ";
@@ -511,6 +512,7 @@ int main(int argc, char* argv[])
     time_t lastTime = -1; time_t logTime = -1;
     tm logTM, lastTM; logTM.tm_year = 2005 - 1900;
     int LOG_level, TM_msec, TH_pid, seqNum;
+    int catPatLen = strlen(LOG_CAT_ST_PATTERN);
     int sbmPatLen = strlen(LOG_SBM_ST_PATTERN);
     int fwdPatLen = strlen(LOG_FWD_ST_PATTERN);
     
@@ -549,23 +551,20 @@ int main(int argc, char* argv[])
             logTime = convertTime(logTM); // from local time
             if (tillDateFilter > 0 && logTime >= tillDateFilter) break; // TODO: dump scanned counters
             needCount = (fromDateFilter <= 0 || logTime >= fromDateFilter);
-            if (lastTime <= 0) { lastTime = logTime; lastTM = logTM; }
-            else if (needCount) {
-                if (lastTM.tm_hour != logTM.tm_hour || lastTM.tm_mday != logTM.tm_mday ||
-                    lastTM.tm_mon != logTM.tm_mon || lastTM.tm_year != logTM.tm_year) 
-                {
-                    statCounters.flush(lastTime - 3600); // dump counters to file & cleanup it
-                    lastTime = logTime; lastTM = logTM;
-                }
+            
+            if (lastTime <= 0 || 
+                lastTM.tm_hour != logTM.tm_hour || lastTM.tm_mday != logTM.tm_mday ||
+                lastTM.tm_mon != logTM.tm_mon || lastTM.tm_year != logTM.tm_year) 
+            {
+                if (needCount && lastTime > 0) statCounters.flush(lastTime); // dump counters to file & cleanup it
+                lastTime = logTime; lastTM = logTM;
             }
             
-            std::string logcat; str += bytesRead;
-            while (*str && isspace(*str)) str++; 
-            while (*str && *str != ':') logcat += *str++;
-            if (*str == ':') str++;
-            if (!*str || logcat != LOG_CATEGORY_CHECK) continue;
+            str += bytesRead;
             while (*str && isspace(*str)) str++;
-            if (!*str) continue;
+            if (strncmp(str, LOG_CAT_ST_PATTERN, catPatLen) != 0) continue; // 'sms.trace: ' not matched
+            str += catPatLen;
+            while (*str && isspace(*str)) str++;
 
             const char* sub = 0;
             if (strncmp(str, LOG_SBM_ST_PATTERN, sbmPatLen) == 0) // 'SBM: ' matched
@@ -683,7 +682,7 @@ int main(int argc, char* argv[])
         }
     }
     
-    if (needCount && lastTime > 0) statCounters.flush(lastTime - 3600); // flush the rest of counters
+    if (needCount && lastTime > 0) statCounters.flush(lastTime); // flush the rest of counters
 
     smsc_log_info(logger, "Log files scanned. Total %lld accepted, %lld delivered",
                   totalAccepted, totalDelivered);
