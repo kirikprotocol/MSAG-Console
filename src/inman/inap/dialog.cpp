@@ -192,7 +192,7 @@ void Dialog::timerReset()
 
 Invoke* Dialog::invoke(UCHAR_T opcode)
 {
-  smsc_log_debug(logger, "Invoke (opcode=%d)", opcode);
+  //smsc_log_debug(logger, "Dialog: creating Invoke (opcode=%d)", opcode);
   Invoke* invoke = new Invoke();
   invoke->setId( getNextInvokeId() );
   invoke->setTag( EINSS7_I97TCAP_OPERATION_TAG_LOCAL );

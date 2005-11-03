@@ -168,6 +168,7 @@ class ObjectPipe
         ObjectPipe(Socket* sock, SerializerITF * serializer);
         ObjectPipe(Socket* sock, SerializerITF * serializer, unsigned pipe_format);
         ~ObjectPipe();
+        void setLogger(Logger* newlog);
 
         SerializableObject* receive();
         void    send(SerializableObject* obj);

@@ -36,10 +36,12 @@ protected:
 public:
     USSFacade(Socket* sock) 
         : socket(sock)
-        , pipe(new ObjectPipe( sock, SerializerUSS::getInstance()))
-        , logger(Logger::getInstance("smsc.inman.USSFacade"))
+        , pipe(new ObjectPipe(sock, SerializerUSS::getInstance()/*, ObjectPipe::PipeFormat::lengthPrefixed*/))
+        , logger(Logger::getInstance("smsc.USSFacade"))
         , _reqId(0)
-        { }
+        { 
+            pipe->setLogger(logger);
+        }
 
     virtual ~USSFacade() { delete pipe; delete socket; }
 

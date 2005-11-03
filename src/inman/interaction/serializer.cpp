@@ -19,7 +19,7 @@ ObjectPipe::ObjectPipe(Socket* sock, SerializerITF * serializer, unsigned pipe_f
         : socket( sock )
         , _objSerializer(serializer)
         , _format(pipe_format)
-        , logger( Logger::getInstance("smsc.inman.interaction.ObjectPipe") )
+        , logger( Logger::getInstance("smsc.inman.ObjectPipe") )
 {
     if (_format > PipeFormat::lengthPrefixed)
         _format = PipeFormat::straightData;
@@ -31,7 +31,7 @@ ObjectPipe::ObjectPipe(Socket* sock, SerializerITF * serializer)
         : socket( sock )
         , _objSerializer(serializer)
         , _format(PipeFormat::straightData)
-        , logger( Logger::getInstance("smsc.inman.interaction.ObjectPipe") )
+        , logger( Logger::getInstance("smsc.inman.ObjectPipe") )
 {
     assert(serializer);
     assert( socket );
@@ -41,10 +41,15 @@ ObjectPipe::~ObjectPipe()
 {
 }
 
+void ObjectPipe::setLogger(Logger * newlog)
+{
+    logger = newlog;
+}
 
 #define socketRead(n, buf, readMax, readMin) \
     if ((n = socket->Read(buf, (readMax))) < (readMin)) { \
-        smsc_log_error( logger, "Can't read from socket" ); return NULL; }
+        smsc_log_error(logger, "Pipe[%u]: error reading from socket! [%d of %d]", \
+                       (unsigned int)socket->getSocket(), n, (int)readMin ); return NULL; }
 
 SerializableObject* ObjectPipe::receive()
 {
@@ -68,7 +73,8 @@ SerializableObject* ObjectPipe::receive()
         buffer.Append(buf, n);
     }
     buffer.SetPos(0);
-    smsc_log_debug(logger, "Recv: %s", dump(n, (unsigned char*)buf).c_str(), true);
+    smsc_log_debug(logger, "Pipe[%u]: read %db: %s", (unsigned int)socket->getSocket(),
+                   n, dump(n, (unsigned char*)buf, false).c_str());
     return _objSerializer->deserialize(buffer);
 }
 #undef socketRead
@@ -84,7 +90,9 @@ void ObjectPipe::send(SerializableObject* obj)
         socket->Write((const char *)&len, sizeof(uint32_t));
     }
     socket->Write(buffer.get(), buffer.GetPos());
-    smsc_log_debug(logger, "Send: %s", dump( buffer.GetPos(), (unsigned char*)buffer.get() ).c_str(), true );
+    smsc_log_debug(logger, "Pipe[%u]: send %db: %s", (unsigned int)socket->getSocket(),
+                   buffer.GetPos(), dump(buffer.GetPos(),
+                                         (unsigned char*)buffer.get(), false).c_str());
 }
 
 } // namespace inap

@@ -23,7 +23,6 @@ namespace smsc
     {
         Logger* inapLogger;
         Logger* tcapLogger;
-        Logger* dumpLogger;
       }
   }
 };
@@ -33,19 +32,18 @@ using smsc::inman::uss::VLR_CFG;
 using smsc::inman::common::Console;
 using smsc::inman::inap::inapLogger;
 using smsc::inman::inap::tcapLogger;
-using smsc::inman::inap::dumpLogger;
 using smsc::util::config::Manager;
 using smsc::util::config::ConfigException;
 
 
 static VLR* vlr = 0;
 
+
 static void init_logger()
 {
   Logger::Init();
     inapLogger = Logger::getInstance("smsc.inman");
     tcapLogger = Logger::getInstance("smsc.inman.inap.dump");
-    dumpLogger = Logger::getInstance("smsc.inman.inap.dump");
 }
 
 extern "C" static void sighandler( int signal )
@@ -132,7 +130,6 @@ static void run_console()
 
 int main(int argc, char** argv)
 {
-
   init_logger();
   smsc_log_info( inapLogger,"****************************");
   smsc_log_info( inapLogger,"* SIBINCO USS MANAGER v%d.%d *", VER_HIGH, VER_LOW);

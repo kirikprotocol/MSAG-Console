@@ -19,7 +19,6 @@ namespace inman {
 namespace inap  {
 
 extern Logger* tcapLogger;
-extern Logger* dumpLogger;
 
 void Invoke::send(Dialog* dialog)
 {
