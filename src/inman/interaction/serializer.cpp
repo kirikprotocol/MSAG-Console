@@ -48,8 +48,11 @@ void ObjectPipe::setLogger(Logger * newlog)
 
 #define socketRead(n, buf, readMax, readMin) \
     if ((n = socket->Read(buf, (readMax))) < (readMin)) { \
-        smsc_log_error(logger, "Pipe[%u]: error reading from socket! [%d of %d]", \
-                       (unsigned int)socket->getSocket(), n, (int)readMin ); return NULL; }
+        if (!n) smsc_log_debug(logger, "Pipe[%X]: socket empty!", (unsigned int)socket->getSocket()); \
+        else    smsc_log_error(logger, "Pipe[%X]: error reading from socket! [%d of %d]", \
+                            (unsigned int)socket->getSocket(), n, (int)readMin ); \
+        return NULL; \
+    }
 
 SerializableObject* ObjectPipe::receive()
 {
@@ -73,7 +76,7 @@ SerializableObject* ObjectPipe::receive()
         buffer.Append(buf, n);
     }
     buffer.SetPos(0);
-    smsc_log_debug(logger, "Pipe[%u]: read %db: %s", (unsigned int)socket->getSocket(),
+    smsc_log_debug(logger, "Pipe[%X]: read %db: %s", (unsigned int)socket->getSocket(),
                    n, dump(n, (unsigned char*)buf, false).c_str());
     return _objSerializer->deserialize(buffer);
 }
@@ -90,7 +93,7 @@ void ObjectPipe::send(SerializableObject* obj)
         socket->Write((const char *)&len, sizeof(uint32_t));
     }
     socket->Write(buffer.get(), buffer.GetPos());
-    smsc_log_debug(logger, "Pipe[%u]: send %db: %s", (unsigned int)socket->getSocket(),
+    smsc_log_debug(logger, "Pipe[%X]: send %db: %s", (unsigned int)socket->getSocket(),
                    buffer.GetPos(), dump(buffer.GetPos(),
                                          (unsigned char*)buffer.get(), false).c_str());
 }
