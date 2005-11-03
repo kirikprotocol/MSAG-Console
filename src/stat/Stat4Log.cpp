@@ -515,6 +515,7 @@ int main(int argc, char* argv[])
     int catPatLen = strlen(LOG_CAT_ST_PATTERN);
     int sbmPatLen = strlen(LOG_SBM_ST_PATTERN);
     int fwdPatLen = strlen(LOG_FWD_ST_PATTERN);
+    memset(&lastTM, 0, sizeof(lastTM));
     
     uint64_t msgId = 0;
     char oaBuff[128]; char daBuff[128]; char ddaBuff[128]; 
