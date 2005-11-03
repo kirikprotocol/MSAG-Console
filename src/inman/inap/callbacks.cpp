@@ -306,7 +306,7 @@ USHORT_T EINSS7_I97TUErrorInd(  UCHAR_T          ssn,
   smsc_log_debug(tcapLogger," InvokeID: 0x%X", invokeId );
   smsc_log_debug(tcapLogger," Tag: 0x%X", (tag==0x02?"LOCAL":"GLOBAL") );
   smsc_log_debug(tcapLogger," LastComponent: %s", (lastComponent?"TRUE":"FALSE"));
-  smsc_log_debug(tcapLogger," Operation: %s" , dump(opLength ,op ).c_str() );
+  smsc_log_debug(tcapLogger," Errorcode: %s" , dump(opLength ,op ).c_str() );
   smsc_log_debug(tcapLogger," Params: %s", dump(paramLength,pm ).c_str() );
 
   Dialog* dlg = findDialog( ssn, dialogueId );
