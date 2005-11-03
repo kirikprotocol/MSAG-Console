@@ -33,7 +33,6 @@ public class Center {
 
     private String id = null;
     private byte type = SMPP;
-    private String password = null;
     private int timeout = 0;
     private byte mode = MODE_TRX;
     private String host = null;
@@ -43,17 +42,19 @@ public class Center {
     private boolean enabled = false;
     private Provider provider;
     private int uid = -1;
+    private String bindSystemId;
+    private String bindPassword;
     private String transport = "SMPP";
 
     private Category logger = Category.getInstance(this.getClass());
 
-    public Center(String id, String password, int timeout,
+    public Center(String id, int timeout,
                   byte mode, String host, int port, String altHost,
-                  int altPort, boolean enabled, final Provider provider, final int uid) throws NullPointerException {
-        if (null == id || null == password)
-            throw new NullPointerException("SMSC ID or  password  is null");
+                  int altPort, boolean enabled, final Provider provider,
+                  final int uid, final String bindSystemId, final String bindPassword) throws NullPointerException {
+        if (null == id || null == bindPassword || bindSystemId == null)
+            throw new NullPointerException("SMSC ID or bind Password or bind SystemId  is null");
         this.id = id;
-        this.password = password;
         this.timeout = timeout;
         this.mode = mode;
         this.host = host;
@@ -63,6 +64,8 @@ public class Center {
         this.enabled = enabled;
         this.provider = provider;
         this.uid = uid;
+        this.bindSystemId = bindSystemId;
+        this.bindPassword = bindPassword;
     }
 
     public Center(final Element centersElement, final ProviderManager providerManager) throws NullPointerException {
@@ -74,8 +77,6 @@ public class Center {
             try {
                 if ("systemId".equals(name)) {
                     id = value;
-                } else if ("password".equals(name)) {
-                    password = value;
                 } else if ("timeout".equals(name)) {
                     timeout = Integer.decode(value).intValue();
                 } else if ("enabled".equals(name)) {
@@ -94,6 +95,10 @@ public class Center {
                     uid = Integer.decode(value).intValue();
                 } else if ("providerId".equals(name)) {
                     provider = (Provider) providerManager.getProviders().get(Long.decode(value));
+                } else if ("bindSystemId".equals(name)) {
+                    bindSystemId = value;
+                } else if ("bindPassword".equals(name)) {
+                    bindPassword = value;
                 }
 
             } catch (NumberFormatException e) {
@@ -101,13 +106,12 @@ public class Center {
             }
         }
 
-        if (null == id || null == password)
-            throw new NullPointerException("SME System ID is null");
+//        if (null == id || null == password)
+//            throw new NullPointerException("SME System ID is null");
     }
 
     public Center(final Center center) {
         this.id = center.getId();
-        this.password = center.getPassword();
         this.timeout = center.getTimeout();
         this.mode = center.getMode();
         this.host = center.getHost();
@@ -133,10 +137,10 @@ public class Center {
         return storeFooter(storeBody(storeHeader(out)));
     }
 
-
     protected PrintWriter storeBody(final PrintWriter out) {
-        out.println("    <param name=\"systemId\"       value=\"" + id + "\"/>");
-        out.println("    <param name=\"password\"       value=\"" + StringEncoderDecoder.encode(password) + "\"/>");
+        out.println("    <param name=\"systemId\"       value=\"" + StringEncoderDecoder.encode(id) + "\"/>");
+        out.println("    <param name=\"bindSystemId\"   value=\"" + StringEncoderDecoder.encode(bindSystemId) + "\"/>");
+        out.println("    <param name=\"bindPassword\"   value=\"" + StringEncoderDecoder.encode(bindPassword) + "\"/>");
         out.println("    <param name=\"timeout\"        value=\"" + timeout + "\"/>");
         out.println("    <param name=\"mode\"           value=\"" + getModeStr() + "\"/>");
         out.println("    <param name=\"host\"           value=\"" + host + "\"/>");
@@ -216,14 +220,6 @@ public class Center {
     public void setType
             (final byte type) {
         this.type = type;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(final String password) {
-        this.password = password;
     }
 
     public int getTimeout() {
@@ -311,5 +307,21 @@ public class Center {
             return provider.getName();
         else
             return null;
+    }
+
+    public String getBindSystemId() {
+        return bindSystemId;
+    }
+
+    public void setBindSystemId(final String bindSystemId) {
+        this.bindSystemId = bindSystemId;
+    }
+
+    public String getBindPassword() {
+        return bindPassword;
+    }
+
+    public void setBindPassword(final String bindPassword) {
+        this.bindPassword = bindPassword;
     }
 }

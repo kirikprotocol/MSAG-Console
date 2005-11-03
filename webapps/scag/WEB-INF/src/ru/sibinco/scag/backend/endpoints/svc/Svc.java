@@ -112,7 +112,7 @@ public class Svc {
     }
 
     protected PrintWriter storeBody(final PrintWriter out) {
-        out.println("    <param name=\"systemId\"         value=\"" + id + "\"/>");
+        out.println("    <param name=\"systemId\"         value=\"" + StringEncoderDecoder.encode(id) + "\"/>");
         out.println("    <param name=\"password\"         value=\"" + StringEncoderDecoder.encode(password) + "\"/>");
         out.println("    <param name=\"timeout\"          value=\"" + timeout + "\"/>");
         out.println("    <param name=\"mode\"             value=\"" + getModeStr() + "\"/>");
@@ -251,6 +251,5 @@ public class Svc {
 
 
 }
-
 
 
