@@ -45,6 +45,8 @@ public class Edit extends EditBean {
     private String altHost = null;
     private int altPort = 0;
     private boolean enabled = false;
+    private String bindSystemId;
+    private String bindPassword;
     protected long providerId = -1;
     protected long transportId = 1;
     private String providerName = null;
@@ -104,7 +106,6 @@ public class Edit extends EditBean {
             throw new SCAGJspException(Constants.errors.smscs.SMSC_NOT_FOUND, loadId);
 
         this.id = center.getId();
-        this.password = center.getPassword();
         this.timeout = center.getTimeout();
         this.mode = center.getMode();
         this.host = center.getHost();
@@ -114,6 +115,8 @@ public class Edit extends EditBean {
         this.enabled = center.isEnabled();
         this.providerId = center.getProvider().getId();
         this.uid = center.getUid();
+        this.bindSystemId = center.getBindSystemId();
+        this.bindPassword = center.getBindPassword();
     }
 
     protected void save() throws SCAGJspException {
@@ -133,7 +136,8 @@ public class Edit extends EditBean {
         }
         centers.remove(getEditId());
         final Center center;
-        center = new Center(id, password, timeout, mode, host, port, altHost, altPort, enabled, providerObj, uid);
+        center = new Center(id, timeout, mode, host, port, altHost, altPort,
+                enabled, providerObj, uid, bindSystemId, bindPassword);
         centers.put(id, center);
 
         final Gateway gateway = appContext.getGateway();
@@ -302,6 +306,22 @@ public class Edit extends EditBean {
 
     public void setUid(final int uid) {
         this.uid = uid;
+    }
+
+    public String getBindSystemId() {
+        return bindSystemId;
+    }
+
+    public void setBindSystemId(final String bindSystemId) {
+        this.bindSystemId = bindSystemId;
+    }
+
+    public String getBindPassword() {
+        return bindPassword;
+    }
+
+    public void setBindPassword(String bindPassword) {
+        this.bindPassword = bindPassword;
     }
 
 }
