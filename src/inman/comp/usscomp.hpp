@@ -17,7 +17,10 @@ using smsc::sms::Address;
 using smsc::inman::comp::Component;
 using smsc::inman::comp::OperationFactory;
 
-#define MAP_MAX_USSD_StringLength 160
+#define MAP_MAX_USSD_StringLength   160 //encoded or GSM 7bit packed
+#define MAX_USSD_TEXT8_LENGTH        90
+#define MAX_USSD_TEXT16_LENGTH       40
+
 
 namespace smsc {
 namespace inman {
@@ -55,23 +58,45 @@ struct ERR_ProcessUSS_Request {
 OperationFactory * initMAPUSS2Components(OperationFactory * fact);
 
 
-class ProcessUSSRequestArg : public Component
+//The base class for MAP USS2 requests/results
+class MAPUSS2Comp : public Component
+{
+public:
+    MAPUSS2Comp() {}
+    virtual ~MAPUSS2Comp() {}
+
+    //Setters:
+    //assigns USS data, that is plain LATIN1 text,
+    //it will be transferred in GSM 7bit packed form. 
+    void setUSSData(const unsigned char * data, unsigned size);
+    //assigns USS data encoded according to CBS coding scheme (UCS2, GSM 7bit packed, etc)
+    void setRAWUSSData(unsigned char dcs, const unsigned char * data, unsigned size);
+
+    //Getters:
+    unsigned char getDCS(void) const;
+    //returns USS data 'as is', i.e. encoded according to CBS coding scheme
+    const vector<unsigned char>& getUSSData(void) const;
+    //if possible, converts USS data to plain LATIN1 test and returns true, otherwise - false
+    bool  getUSSDataAsLatin1Text(std::string & ussStr) const;
+
+protected:
+    unsigned char	    _dCS;	// unparsed data coding scheme (CBS CS)
+    vector<unsigned char>   _uSSData;	// encoded USS data string (GSM 7-bit, UCS2, etc)
+};
+
+class ProcessUSSRequestArg : public MAPUSS2Comp
 {
 public:
     ProcessUSSRequestArg();
     ~ProcessUSSRequestArg();
 
     //Setters:
-    void setDCS(unsigned char dcs);
-    void setUSSData(unsigned char * data, unsigned size);
     //Optional parameters
     void setAlertingPattern(enum AlertingPattern alrt);
     void setMSISDNadr(const Address& msadr);
     void setMSISDNadr(const char * adrStr);
 
     //Getters:
-    unsigned char getDCS(void) const;
-    const vector<unsigned char>& getUSSData(void) const;
     //Optional parameters
     bool  msISDNadr_present(void);
     bool  msAlerting_present(void);
@@ -84,9 +109,6 @@ public:
     void decode(const vector<unsigned char>& buf);
 
 private:
-    unsigned char	    _dCS;	// unparsed data coding scheme
-    vector<unsigned char>   _uSSdata;	// USS data string:  GSM 7-bit or UCS2
-
     //Optional parameters:
     AlertingPattern_e 	_alrt;		// == alertingNotSet for absence
     Address 		_msAdr; 	// MS ISDN address, '\0' or "0" for absence
@@ -94,26 +116,16 @@ private:
     Logger*		compLogger;
 };
 
-class ProcessUSSRequestRes : public Component
+class ProcessUSSRequestRes : public MAPUSS2Comp
 {
 public:
     ProcessUSSRequestRes();
     ~ProcessUSSRequestRes();
 
-    //Setters:
-    void setDCS(unsigned char dcs);
-    void setUSSData(unsigned char * data, unsigned size);
-    //Getters:
-    unsigned char getDCS(void) const;
-    const vector<unsigned char>& getUSSData(void) const;
-
     void encode(vector<unsigned char>& buf);
     void decode(const vector<unsigned char>& buf);
 
 private:
-    unsigned char	    _dCS;	// unparsed data coding scheme
-    vector<unsigned char>   _uSSdata;	// USS data string:  GSM 7-bit or UCS2
-
     Logger*		compLogger;
 };
 

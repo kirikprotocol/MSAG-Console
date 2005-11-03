@@ -10,11 +10,12 @@ static char const ident[] = "$Id$";
 #include "logger/Logger.h"
 #include "core/threads/Thread.hpp"
 #include "inman/common/console.hpp"
+#include "inman/common/util.hpp"
 #include "inman/interaction/ussmessages.hpp"
 
 using smsc::logger::Logger;
 using smsc::core::threads::Thread;
-
+using smsc::inman::common::dump;
 using smsc::inman::common::Console;
 using smsc::inman::interaction::ObjectPipe;
 using smsc::inman::interaction::SerializerUSS;
@@ -23,14 +24,6 @@ using smsc::inman::interaction::USSRequestMessage;
 using smsc::inman::interaction::USSResultMessage;
 using smsc::inman::interaction::USSDATA_T;
 
-
-static std::string Vector2String(USSDATA_T & vec)
-{
-    std::string  str;
-    str.insert(str.end(), &vec[0], &vec[0] + vec.size());
-    str += '\0';
-    return str;
-}
 
 class USSFacade : public Thread
 {
@@ -59,8 +52,7 @@ public:
     {
         req->setObjectId(USS2CMD::PROCESS_USS_REQUEST_TAG);
         req->setDialogId(getNextReqId());
-        req->setDCS(0x0F);
-        req->setUSSData((unsigned char*)rstr, strlen((const char*)rstr));
+        req->setUSSData(rstr, strlen((const char*)rstr));
         req->setMSISDNadr(who);
         fprintf(stdout, "Request[%d]: requesting %s for %s\n", req->getDialogId(), rstr, who);
         return req;
@@ -79,8 +71,9 @@ public:
         unsigned short status = res->getStatus();
         switch (status) {
         case USS2CMD::STATUS_USS_REQUEST_OK: {
-            USSDATA_T vec = res->getUSSData();
-            std::string  str = Vector2String(vec);
+            std::string  str;
+            if (!res->getUSSDataAsLatin1Text(str))
+                str = dump((res->getUSSData()).size(), (unsigned char*)&(res->getUSSData())[0], 0);
             fprintf(stdout, "Request[%d]: got result %s\n", res->getDialogId(), str.c_str());
         } break;
 
@@ -118,7 +111,6 @@ public:
 static USSFacade*   _pFacade = 0;
 static std::string  _msAdr("79139343290"); //100
                                            //79139859489 - 102
-//static char * _msAdr = "79139343290"; //subscriber ISDN address
 
 
 /* 

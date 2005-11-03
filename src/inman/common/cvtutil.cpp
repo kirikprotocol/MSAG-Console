@@ -278,6 +278,25 @@ unsigned unpack7Bit2Text(const unsigned char* b7buf, unsigned b7len,
     return tlen;
 }
 
+
+unsigned unpack7Bit2Text(const unsigned char* b7buf, unsigned b7len,
+                            std::string & str, unsigned * _7bit_chars)
+{
+    unsigned		tlen = 0, shift = 0, num7ch = 0;
+    unsigned char	ch, *ptr  = (unsigned char*)b7buf;
+    const unsigned char *ptrEnd = b7buf + b7len;
+
+    str.clear();
+    while (ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch))
+	str[tlen++] = ch;
+    str[tlen] = 0;
+
+    if (_7bit_chars)
+	*_7bit_chars = num7ch;
+    return tlen;
+}
+
+
 /* GVR:
  * 'Exception throwing' version of unpack7Bit2Text() that checks for ABW.
  */
@@ -319,6 +338,19 @@ unsigned unpack7BitPadded2Text(const unsigned char* b7buf, unsigned b7len,
 	text[tlen--] = 0;
     return tlen;
 }
+unsigned unpack7BitPadded2Text(const unsigned char* b7buf, unsigned b7len,
+                                                        std::string & str)
+{
+    unsigned	num7ch = 0;
+    unsigned	tlen = unpack7Bit2Text(b7buf, b7len, str, &num7ch);
+
+    if ((str[tlen] == '\r') && (b7len*8 - num7ch*7 == 7))
+
+    /* 7bit text was padded with CR in order to distinguish last 7 zero bits with '@' */
+	str[tlen--] = 0;
+    return tlen;
+}
+
 
 unsigned unpack7BitPadded2TextSafe(const unsigned char* b7buf, unsigned b7len,
 						unsigned char* text, unsigned maxtlen)
@@ -519,5 +551,132 @@ time_t unpackTP_VP_Relative(unsigned char tpVp)
 }
 
 }//namespace cvtutil
+
+/* ************************************************************************** *
+ * CBS Data Coding related functions
+ * ************************************************************************** */
+namespace cbs {
+#define BIT_SET(x) (1 << (x))
+
+static ISO_LANG  _langCG0[16] = {
+/* 0000 German       */ "DE",
+/* 0001 English      */ "EN",
+/* 0010 Italian      */ "IT",
+/* 0011 French       */ "FR",
+/* 0100 Spanish      */ "ES",
+/* 0101 Dutch        */ "NL",
+/* 0110 Swedish      */ "SV",
+/* 0111 Danish       */ "DA",
+/* 1000 Portuguese   */ "PT",
+/* 1001 Finnish      */ "FI",
+/* 1010 Norwegian    */ "NO",
+/* 1011 Greek        */ "EL",
+/* 1100 Turkish      */ "TR",
+/* 1101 Hungarian    */ "HU",
+/* 1110 Polish       */ "PL",
+/* 1111 unspecified  */ ""
+};
+
+static ISO_LANG  _langCG2[16] = {
+/* 0000 Czech       */ "CS",
+/* 0001 Hebrew      */ "HE",
+/* 0010 Arabic      */ "AR",
+/* 0011 Russian     */ "RU",
+/* 0100 Icelandic   */ "IS",
+/* 0101 unspecified */ "",
+/* 0110 unspecified */ "",
+/* 0111 unspecified */ "",
+/* 1000 unspecified */ "",
+/* 1001 unspecified */ "",
+/* 1010 unspecified */ "",
+/* 1011 unspecified */ "",
+/* 1100 unspecified */ "",
+/* 1101 unspecified */ "",
+/* 1110 unspecified */ "",
+/* 1111 unspecified */ ""
+};
+
+static CBS_DCS::TextEncoding  _enc_enm[4] = {
+    CBS_DCS::dcGSM7Bit, CBS_DCS::dcBINARY8, CBS_DCS::dcUCS2, CBS_DCS::dcReserved
+};
+
+CBS_DCS::TextEncoding  parseCBS_DCS(uint8_t dcs, CBS_DCS & res)
+{
+    res.UDHind = res.msgClassDefined = res.compressed = false;
+    res.lngPrefix = CBS_DCS::lngNone;
+    res.language[0] = res.language[2] = 0;
+
+    uint8_t codingGroup = (dcs >> 4) & 0x0F;
+    uint8_t codingScheme = dcs & 0x0F;
+  
+    switch (codingGroup) {
+    case 0x00: {
+        res.encoding = CBS_DCS::dcGSM7Bit;
+        res.language[0] = _langCG0[codingScheme][0];
+        res.language[1] = _langCG0[codingScheme][1];
+    } break;
+    case 0x01: {
+        if (!codingScheme) {
+            res.encoding = CBS_DCS::dcGSM7Bit;
+            res.lngPrefix = CBS_DCS::lng4GSM7Bit;
+        } else if (codingScheme == 1) {
+            res.encoding = CBS_DCS::dcUCS2;
+            res.lngPrefix = CBS_DCS::lng4UCS2;
+        } else 
+            res.encoding = CBS_DCS::dcReserved;
+    } break;
+    case 0x02: {
+        res.encoding = CBS_DCS::dcGSM7Bit;
+        res.language[0] = _langCG2[codingScheme][0];
+        res.language[1] = _langCG2[codingScheme][1];
+    } break;
+    case 0x03: { //Reserved, GSM 7 bit default
+        res.encoding = CBS_DCS::dcGSM7Bit;
+    } break;
+
+    case 0x04: case 0x05: case 0x06: case 0x07: { //General Data Coding indication
+        res.compressed = (dcs & BIT_SET(5)) ? true : false;
+        res.msgClassDefined = (dcs & BIT_SET(4)) ? true : false;
+        if (res.msgClassDefined)
+            res.msgClass = (dcs & 0x03);
+        res.encoding = _enc_enm[((dcs >> 2) & 0x03)];
+    } break;
+
+    case 0x09: { //Message with User Data Header (UDH) structure:
+        res.UDHind = res.msgClassDefined = true;
+        res.msgClass = (dcs & 0x03);
+        res.encoding = _enc_enm[((dcs >> 2) & 0x03)];
+    } break;
+
+    case 0x08: case 0x0A: case 0x0B: case 0x0C: case 0x0D: { //reserved
+        res.encoding = CBS_DCS::dcReserved;
+    } break;
+
+    case 0x0E: { //WAP defined
+        res.encoding = CBS_DCS::dcReserved;
+    } break;
+
+    case 0x0F: { //Data coding / message handling
+        res.msgClassDefined = true;
+        res.msgClass = (dcs & 0x03);
+        res.encoding = _enc_enm[(dcs >> 2) & 0x01];
+    } break;
+
+//  case 0x08: case 0x0A: case 0x0B: case 0x0C: case 0x0D: //reserved
+//  case 0x0E: //WAP defined 
+    default:
+        res.encoding = CBS_DCS::dcReserved;
+    }
+    return res.encoding;
+}
+
+CBS_DCS::TextEncoding  parseCBS_DCS(uint8_t dcs)
+{
+    CBS_DCS res;
+    return parseCBS_DCS(dcs, res);
+}
+
+} //cbs
+
 }//namespace smsc
 

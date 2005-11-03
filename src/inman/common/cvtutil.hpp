@@ -156,11 +156,15 @@ extern unsigned packTextAs7BitPadded(const char* text, unsigned tlen, unsigned c
 
 extern unsigned unpack7Bit2Text(const unsigned char* b7buf, unsigned b7len,
 					unsigned char* text, unsigned * _7bit_chars);
+extern unsigned unpack7Bit2Text(const unsigned char* b7buf, unsigned b7len,
+				std::string & str, unsigned * _7bit_chars);
 extern unsigned unpack7Bit2TextSafe(const unsigned char* b7buf, unsigned b7len,
 				    unsigned char* text, unsigned maxtlen,
 				    unsigned * _7bit_chars);
 extern unsigned unpack7BitPadded2Text(const unsigned char* b7buf, unsigned b7len,
 							unsigned char* text);
+extern unsigned unpack7BitPadded2Text(const unsigned char* b7buf, unsigned b7len,
+                                                        std::string & str);
 extern unsigned unpack7BitPadded2TextSafe(const unsigned char* b7buf, unsigned b7len,
 						unsigned char* text, unsigned maxtlen);
 /* ************************************************************************** *
@@ -187,7 +191,32 @@ extern unsigned char packTP_VP_Relative(time_t vpVal);
 extern time_t unpackTP_VP_Relative(unsigned char tpVp);
 
 }//namespace cvtutil
-}//namespace smsc
 
+/* ************************************************************************** *
+ * CBS Data Coding related functions
+ * ************************************************************************** */
+namespace cbs {
+
+typedef char   ISO_LANG[3]; //ISO 639, 2 letters
+
+struct CBS_DCS {
+   enum TextEncoding {dcGSM7Bit = 0, dcBINARY8 = 1, dcUCS2 = 2, dcReserved = 3};
+   enum LangPrefix   { lngNone, lng4GSM7Bit, lng4UCS2 };
+
+   enum TextEncoding    encoding;
+   bool                 compressed;
+   bool                 UDHind;
+   enum LangPrefix      lngPrefix;
+   bool                 msgClassDefined;
+   unsigned char        msgClass : 2; //0 - 3
+   ISO_LANG             language;  
+};
+
+CBS_DCS::TextEncoding  parseCBS_DCS(unsigned char dcs, CBS_DCS & res);
+CBS_DCS::TextEncoding  parseCBS_DCS(uint8_t dcs);
+
+} //cbs
+
+}//namespace smsc
 #endif /* __SMSC_CONVERSION_UTIL_HPP__ */
 

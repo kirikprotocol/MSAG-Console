@@ -6,10 +6,13 @@ static char const ident[] = "$Id$";
 
 #include "inman/interaction/ussmessages.hpp"
 #include "inman/common/util.hpp"
+#include "inman/common/cvtutil.hpp"
 
 using std::runtime_error;
 using smsc::inman::common::format;
-
+using smsc::cbs::CBS_DCS;
+using smsc::cbs::parseCBS_DCS;
+using smsc::cvtutil::unpack7BitPadded2Text;
 
 namespace smsc  {
 namespace inman {
@@ -139,16 +142,18 @@ void USSMessageBase::handle( USSCommandHandler* handler)
  * Own methods:
  * ************************************************************************** */
 
-void USSMessageBase::setUSSData(const USSDATA_T& ussdata)
+void USSMessageBase::setRAWUSSData(unsigned char dcs, const USSDATA_T& ussdata)
 {
     _ussData.clear();
     _ussData = ussdata;
+    _dCS = dcs;
 }
 
-void USSMessageBase::setUSSData(unsigned char * data, unsigned size)
+void USSMessageBase::setUSSData(const unsigned char * data, unsigned size)
 {
     _ussData.clear();
     _ussData.insert(_ussData.begin(), data, data + size);
+    _dCS = USSMAN_LATIN1_DCS;
 }
 
 void USSMessageBase::setMSISDNadr(const char * adrStr)
@@ -162,17 +167,10 @@ void USSMessageBase::setMSISDNadr(const Address& msadr)
     _msAdr = msadr;
 }
 
-
-void USSMessageBase::setDCS(const unsigned char& dcs)
-{
-    _dCS = dcs;
-}
-
 void USSMessageBase::setStatus(const unsigned short& status)
 {
     _status = status;
 }
-
 
 const USSDATA_T& USSMessageBase::getUSSData(void) const
 {
@@ -192,6 +190,23 @@ unsigned char USSMessageBase::getDCS(void) const
 unsigned short USSMessageBase::getStatus(void) const
 {
     return _status;
+}
+
+/* ************************************************************************** *
+ * class USSResultMessage implementation:
+ * ************************************************************************** */
+bool  USSResultMessage::getUSSDataAsLatin1Text(std::string & str)
+{
+    CBS_DCS    parsedDCS;
+
+    if (parseCBS_DCS(_dCS, parsedDCS) == CBS_DCS::dcGSM7Bit) {
+        unsigned ussdLen = unpack7BitPadded2Text(&_ussData[0], _ussData.size(), str);
+        //skip language prefix
+        if (parsedDCS.lngPrefix == CBS_DCS::lng4GSM7Bit)
+            str.erase(0, 3);
+        return true;
+    }
+    return false;
 }
 
 } //interaction

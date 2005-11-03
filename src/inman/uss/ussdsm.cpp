@@ -134,18 +134,22 @@ void USSDSM::onDenyUSSRequest(USSRequestMessage* req)
 
 //Creates request to Signal System and initiates dialog over TCAP,
 //sets TCAP result listener.
-void USSDSM::onProcessUSSRequest( USSRequestMessage* req)
+void USSDSM::onProcessUSSRequest(USSRequestMessage* req)
 {
     //create Component for TCAP request
-    USSDATA_T ussData = req->getUSSData();
-    assert(ussData.size() <= 160);
+    ProcessUSSRequestArg    arg;
+    unsigned char           dcs = req->getDCS();
 
-    ProcessUSSRequestArg arg;
-    unsigned char ussStr[282]; //maximum possible packed 7bit length:((160*2)*7)/8 + 1
-
-    unsigned bytes = packTextAs7BitPadded((const char*)&ussData[0], ussData.size(), ussStr);
-    arg.setDCS(req->getDCS());
-    arg.setUSSData(ussStr, bytes);
+    if (dcs == USSMAN_LATIN1_DCS) { //plain text
+        arg.setUSSData(&(req->getUSSData())[0], (req->getUSSData()).size());
+        smsc_log_debug(logger, "DSM: incoming USS request[0x%X]: %.*s" , _dsmId,
+                       (req->getUSSData()).size(), &(req->getUSSData())[0]);
+    } else {
+        arg.setRAWUSSData(dcs, &(req->getUSSData())[0], (req->getUSSData()).size());
+        smsc_log_debug(logger, "DSM: incoming USS request[0x%X]: %s", _dsmId,
+                        dump((req->getUSSData()).size(),
+                             (unsigned char*)(&(req->getUSSData())[0]), 0).c_str());
+    }
 
 /* GVR NOTE: though MAP USS ASN.1 notation specifies that msISDN address   *
  * may be present in component portion of TCAP request, the Ericsson tools *
@@ -173,13 +177,17 @@ void USSDSM::onProcessUSSRequest( USSRequestMessage* req)
 void USSDSM::onUSSRequestResult(ProcessUSSRequestRes* resL)
 {
     USSResultMessage  resp;
-
     resp.setDialogId(_dsmId);
-    resp.setDCS(resL->getDCS());
-    resp.setUSSData(resL->getUSSData());
+    resp.setRAWUSSData(resL->getDCS(), resL->getUSSData());
     resp.setMSISDNadr(_msAdr);
-    smsc_log_debug(logger, "got result for USS request 0x%X: %s", _dsmId,
-                    dump((resp.getUSSData()).size(), (unsigned char*)&(resp.getUSSData())[0], 0).c_str());
+
+    if (logger->isLogLevelEnabled(smsc::logger::Logger::LEVEL_DEBUG)) {
+        std::string ussd;
+        if (!resL->getUSSDataAsLatin1Text(ussd))
+            ussd = dump((resp.getUSSData()).size(), (unsigned char*)&(resp.getUSSData())[0], 0);
+        smsc_log_debug(logger, "DSM: USS request[0x%X] got result: %s", _dsmId, ussd.c_str());
+    }
+                   
     if (_connect)   //may be absent, in case of local testing
         _connect->send(&resp);
     _vLR->onCommandProcessed(this);
@@ -187,7 +195,7 @@ void USSDSM::onUSSRequestResult(ProcessUSSRequestRes* resL)
 
 void USSDSM::onUSSRequestError(unsigned char ercode)
 {
-    smsc_log_error(logger, "got error %d for USS request 0x%X", _dsmId, (int)ercode);
+    smsc_log_error(logger, "DSM: USS request[0x%X] got error: %d", _dsmId, (int)ercode);
 
     USSResultMessage  resp;
     resp.setDialogId(_dsmId);
