@@ -31,7 +31,7 @@ class Connect : public ObservableT< ConnectListener >
 
         Socket* getSocket();
         void    send(SerializableObject* obj);
-
+        void    setPipeFormat(ObjectPipe::PipeFormat frm);
         bool    process();
 
     protected:

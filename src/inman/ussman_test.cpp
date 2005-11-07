@@ -36,7 +36,7 @@ protected:
 public:
     USSFacade(Socket* sock) 
         : socket(sock)
-        , pipe(new ObjectPipe(sock, SerializerUSS::getInstance()/*, ObjectPipe::PipeFormat::lengthPrefixed*/))
+        , pipe(new ObjectPipe(sock, SerializerUSS::getInstance(), ObjectPipe::frmLengthPrefixed))
         , logger(Logger::getInstance("smsc.USSFacade"))
         , _reqId(0)
         { 

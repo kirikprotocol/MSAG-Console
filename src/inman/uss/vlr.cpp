@@ -114,6 +114,7 @@ void VLR::onConnectOpened(Server*, Connect* connect)
     assert(connect);
     smsc_log_debug(logger, "VLR: New connection opened" );
     connect->addListener(this);
+    connect->setPipeFormat(ObjectPipe::frmLengthPrefixed);
 }
 
 void VLR::onConnectClosed(Server*, Connect* connect)

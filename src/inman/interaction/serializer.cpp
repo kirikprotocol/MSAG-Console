@@ -15,26 +15,24 @@ namespace interaction  {
 /* ************************************************************************** *
  * class ObjectPipe implementation:
  * ************************************************************************** */
-ObjectPipe::ObjectPipe(Socket* sock, SerializerITF * serializer, unsigned pipe_format)
+ObjectPipe::ObjectPipe(Socket* sock, SerializerITF * serializer, PipeFormat pipe_format)
         : socket( sock )
         , _objSerializer(serializer)
         , _format(pipe_format)
         , logger( Logger::getInstance("smsc.inman.ObjectPipe") )
 {
-    if (_format > PipeFormat::lengthPrefixed)
-        _format = PipeFormat::straightData;
     assert(serializer);
-    assert( socket );
+    assert(socket);
 }
 
 ObjectPipe::ObjectPipe(Socket* sock, SerializerITF * serializer)
         : socket( sock )
         , _objSerializer(serializer)
-        , _format(PipeFormat::straightData)
+        , _format(ObjectPipe::frmStraightData)
         , logger( Logger::getInstance("smsc.inman.ObjectPipe") )
 {
     assert(serializer);
-    assert( socket );
+    assert(socket);
 }
 
 ObjectPipe::~ObjectPipe()
@@ -44,6 +42,11 @@ ObjectPipe::~ObjectPipe()
 void ObjectPipe::setLogger(Logger * newlog)
 {
     logger = newlog;
+}
+
+void  ObjectPipe::setPipeFormat(PipeFormat frm)
+{
+    _format = frm;
 }
 
 #define socketRead(n, buf, readMax, readMin) \
@@ -61,7 +64,7 @@ SerializableObject* ObjectPipe::receive()
     uint32_t        oct2read = sizeof(buf);
     ObjectBuffer    buffer(sizeof(buf));
 
-    if (_format == PipeFormat::lengthPrefixed) {
+    if (_format == ObjectPipe::frmLengthPrefixed) {
         socketRead(n, buf, sizeof(uint32_t), sizeof(uint32_t));
         oct2read = ntohl((uint32_t)n);
 
@@ -71,7 +74,7 @@ SerializableObject* ObjectPipe::receive()
             socketRead(n, buf, num, num);
             buffer.Append(buf, n);
         }
-    } else { //PipeFormat::straightData
+    } else { //ObjectPipe::frmStraightData
         socketRead(n, buf, sizeof(buf) - 1, 1);
         buffer.Append(buf, n);
     }
@@ -88,7 +91,7 @@ void ObjectPipe::send(SerializableObject* obj)
     ObjectBuffer buffer(16);
     _objSerializer->serialize(obj, buffer);
 
-    if (_format == PipeFormat::lengthPrefixed) {
+    if (_format == ObjectPipe::frmLengthPrefixed) {
         uint32_t len = htonl((uint32_t)buffer.GetPos());
         socket->Write((const char *)&len, sizeof(uint32_t));
     }

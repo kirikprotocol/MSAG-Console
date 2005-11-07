@@ -56,6 +56,11 @@ void Connect::send(SerializableObject* obj)
     pipe->send( obj );	
 }
 
+void Connect::setPipeFormat(ObjectPipe::PipeFormat frm)
+{
+    pipe->setPipeFormat(frm);
+}
+
 } // namespace interaction
 } // namespace inman
 } // namespace smsc

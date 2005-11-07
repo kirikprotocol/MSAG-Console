@@ -161,21 +161,20 @@ struct SerializerITF {
 class ObjectPipe
 {
     public:
-        struct PipeFormat {
-            enum { straightData = 0, lengthPrefixed = 1 };
-        };
+        typedef enum { frmStraightData = 0, frmLengthPrefixed = 1 } PipeFormat;
 
         ObjectPipe(Socket* sock, SerializerITF * serializer);
-        ObjectPipe(Socket* sock, SerializerITF * serializer, unsigned pipe_format);
+        ObjectPipe(Socket* sock, SerializerITF * serializer, PipeFormat pipe_format);
         ~ObjectPipe();
-        void setLogger(Logger* newlog);
+        void    setPipeFormat(PipeFormat frm);
+        void    setLogger(Logger* newlog);
 
         SerializableObject* receive();
         void    send(SerializableObject* obj);
     private:
         Socket*     socket;
         Logger*     logger;
-        unsigned    _format;
+        PipeFormat   _format;
         SerializerITF * _objSerializer;
 };
 
