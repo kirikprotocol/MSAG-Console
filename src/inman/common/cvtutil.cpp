@@ -287,9 +287,10 @@ unsigned unpack7Bit2Text(const unsigned char* b7buf, unsigned b7len,
     const unsigned char *ptrEnd = b7buf + b7len;
 
     str.clear();
-    while (ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch))
-	str[tlen++] = ch;
-    str[tlen] = 0;
+    while (ch = unpack7BitChar(ptr, ptrEnd, shift, num7ch)) {
+        str += ch; tlen++;
+    }
+    str += '\0';
 
     if (_7bit_chars)
 	*_7bit_chars = num7ch;
