@@ -121,7 +121,9 @@ static std::string  _msAdr("79139343290"); //100
 
 void cmd_set_msadr(Console&, const std::vector<std::string> &args)
 {
-    _msAdr = args[0];
+    if (args.size() < 2)
+        fprintf(stdout, "USAGE: set_msadr adr_string\n");
+    _msAdr = args[1];
     fprintf(stdout, "Setting ms ISDN adr to %s\n", _msAdr.c_str());
 }
 
