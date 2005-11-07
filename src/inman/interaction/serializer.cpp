@@ -66,8 +66,10 @@ SerializableObject* ObjectPipe::receive()
 
     if (_format == ObjectPipe::frmLengthPrefixed) {
         socketRead(n, buf, sizeof(uint32_t), sizeof(uint32_t));
-        oct2read = ntohl((uint32_t)n);
+        smsc_log_debug(logger, "Pipe[%X]: read %db: %s", (unsigned int)socket->getSocket(),
+                       n, dump(n, (unsigned char*)buf, false).c_str());
 
+        oct2read = ntohl(*(uint32_t*)buf);
         int     num = 0;
         while (oct2read -= num) {
             num = ((oct2read) < (sizeof(buf)) ? (oct2read) : (sizeof(buf)));
@@ -94,11 +96,14 @@ void ObjectPipe::send(SerializableObject* obj)
     if (_format == ObjectPipe::frmLengthPrefixed) {
         uint32_t len = htonl((uint32_t)buffer.GetPos());
         socket->Write((const char *)&len, sizeof(uint32_t));
+        smsc_log_debug(logger, "Pipe[%X]: send %db: %s", (unsigned int)socket->getSocket(),
+                       sizeof(uint32_t),
+                       dump(sizeof(uint32_t), (unsigned char*)&len, false).c_str());
     }
     socket->Write(buffer.get(), buffer.GetPos());
     smsc_log_debug(logger, "Pipe[%X]: send %db: %s", (unsigned int)socket->getSocket(),
-                   buffer.GetPos(), dump(buffer.GetPos(),
-                                         (unsigned char*)buffer.get(), false).c_str());
+                   buffer.GetPos(),
+                   dump(buffer.GetPos(), (unsigned char*)buffer.get(), false).c_str());
 }
 
 } // namespace inap
