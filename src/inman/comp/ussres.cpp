@@ -38,12 +38,11 @@ void ProcessUSSRequestRes::decode(const vector<unsigned char>& buf)
     drc = ber_decode(0, &asn_DEF_USSD_Res, (void **)&dcmd, &buf[0], buf.size());
     ASNCODEC_LOG_DEC(drc, asn_DEF_USSD_Res, "mapUSS");
 
-    assert(dcmd->ussd_DataCodingScheme.size == 1);
-    _dCS = dcmd->ussd_DataCodingScheme.buf[0];
-
     /* decode ussd string */
+    assert(dcmd->ussd_DataCodingScheme.size == 1);
     assert(dcmd->ussd_String.size <= MAP_MAX_USSD_StringLength);
-    this->setUSSData(dcmd->ussd_String.buf, dcmd->ussd_String.size);
+    this->setRAWUSSData(dcmd->ussd_DataCodingScheme.buf[0],
+                        dcmd->ussd_String.buf, dcmd->ussd_String.size);
 
     smsc_log_component(compLogger, &asn_DEF_USSD_Res, dcmd);
     asn_DEF_USSD_Res.free_struct(&asn_DEF_USSD_Res, dcmd, 0);
