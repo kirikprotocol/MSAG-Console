@@ -34,7 +34,7 @@ switch(bean.process(request))
 		response.sendRedirect("categoriesAdd.jsp");
 		return;
 	case IndexProvider.RESULT_EDIT:
-		response.sendRedirect("categoriesEdit.jsp?name="+URLEncoder.encode(bean.getEditName(), "UTF-8")+"&&id="+URLEncoder.encode(bean.getEditId(), "UTF-8"));
+		response.sendRedirect("categoriesEdit.jsp?name="+URLEncoder.encode(bean.getEditName())+"&&id="+URLEncoder.encode(bean.getEditId()));
 		return;
 default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));

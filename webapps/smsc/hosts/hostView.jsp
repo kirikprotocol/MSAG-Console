@@ -25,13 +25,13 @@ switch (bean.process(request))
 		response.sendRedirect("hostEdit.jsp?hostName="+bean.getHostName());
 		return;
 	case HostView.RESULT_VIEW:
-		response.sendRedirect(CPATH+"/esme_"+URLEncoder.encode(bean.getServiceId(), "UTF-8")+"/index.jsp");
+		response.sendRedirect(CPATH+"/esme_"+URLEncoder.encode(bean.getServiceId())+"/index.jsp");
 		return;
 	case HostView.RESULT_ADD_SERVICE:
 		response.sendRedirect(CPATH+"/services/serviceAdd.jsp?hostName="+bean.getHostName());
 		return;
 	case HostView.RESULT_EDIT_SERVICE:
-		response.sendRedirect(CPATH+"/services/serviceEditSme.jsp?serviceId="+URLEncoder.encode(bean.getServiceId(), "UTF-8"));
+		response.sendRedirect(CPATH+"/services/serviceEditSme.jsp?serviceId="+URLEncoder.encode(bean.getServiceId()));
 		return;
 	default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));

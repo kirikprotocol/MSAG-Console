@@ -22,7 +22,7 @@
       response.sendRedirect("index.jsp");
       return;
     case DistributionListAdminFormBean.RESULT_EDIT:
-      response.sendRedirect("dlEdit.jsp?name=" + URLEncoder.encode(bean.getEditDl(), "UTF-8"));
+      response.sendRedirect("dlEdit.jsp?name=" + URLEncoder.encode(bean.getEditDl()));
       return;
     case DistributionListAdminFormBean.RESULT_ADD:
       response.sendRedirect("dlAdd.jsp");

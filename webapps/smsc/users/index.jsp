@@ -28,7 +28,7 @@ switch(bean.process(request))
 		response.sendRedirect("usersAdd.jsp");
 		return;
 	case Index.RESULT_EDIT:
-		response.sendRedirect("usersEdit.jsp?login="+URLEncoder.encode(bean.getEditUserLogin(), "UTF-8"));
+		response.sendRedirect("usersEdit.jsp?login="+URLEncoder.encode(bean.getEditUserLogin()));
 		return;
 default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));

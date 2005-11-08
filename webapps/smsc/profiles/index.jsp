@@ -18,7 +18,7 @@ switch(bean.process(request))
 	case Index.RESULT_OK:
 		break;
 	case Index.RESULT_REFRESH:
-		response.sendRedirect("index.jsp?refreshed=true&initialized=" + bean.isInitialized() + "&startPosition=" + bean.getStartPositionInt() + "&filterMask=" + URLEncoder.encode(bean.getFilterMask(), "UTF-8") + "&runQuery=" + bean.isRunQuery() + "&closeQuery=" + bean.isCloseQuery());
+		response.sendRedirect("index.jsp?refreshed=true&initialized=" + bean.isInitialized() + "&startPosition=" + bean.getStartPositionInt() + "&filterMask=" + URLEncoder.encode(bean.getFilterMask()) + "&runQuery=" + bean.isRunQuery() + "&closeQuery=" + bean.isCloseQuery());
 		return;
 	case Index.RESULT_ERROR:
 		break;
@@ -29,7 +29,7 @@ switch(bean.process(request))
 		response.sendRedirect("profilesAdd.jsp?returnPath=profiles");
 		return;
 	case Index.RESULT_EDIT:
-		response.sendRedirect("profilesEdit.jsp?returnPath=profiles&mask="+URLEncoder.encode(bean.getProfileMask(), "UTF-8"));
+		response.sendRedirect("profilesEdit.jsp?returnPath=profiles&mask="+URLEncoder.encode(bean.getProfileMask()));
 		return;
 	default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));

@@ -25,7 +25,7 @@
     switch(beanResult = bean.process(request))
     {
         case PageBean.RESULT_DONE:
-            response.sendRedirect("index.jsp?refreshed=true&prefix=" + URLEncoder.encode(bean.getPrefix(), "UTF-8"));
+            response.sendRedirect("index.jsp?refreshed=true&prefix=" + URLEncoder.encode(bean.getPrefix()));
             return;
         case IndexBean.RESULT_FILTER:
         case PageBean.RESULT_OK:

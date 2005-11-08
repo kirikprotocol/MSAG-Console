@@ -23,7 +23,7 @@ switch(bean.process(request))
 		response.sendRedirect("localeResourcesAdd.jsp");
 		return;
 	case Index.RESULT_VIEW:
-		response.sendRedirect("localeResourcesView.jsp?locale="+URLEncoder.encode(bean.getViewLocaleResource(), "UTF-8"));
+		response.sendRedirect("localeResourcesView.jsp?locale="+URLEncoder.encode(bean.getViewLocaleResource()));
 		return;
 	default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));

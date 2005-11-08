@@ -16,7 +16,7 @@ switch (bean.process(request))
 		response.sendRedirect(CPATH+"/hosts/index.jsp");
 		return;
 	case Index.RESULT_VIEW:
-		response.sendRedirect("hostView.jsp?hostName=" + URLEncoder.encode(bean.getHostName(), "UTF-8"));
+		response.sendRedirect("hostView.jsp?hostName=" + URLEncoder.encode(bean.getHostName()));
 		return;
 	case Index.RESULT_ADD:
 		response.sendRedirect("hostAdd.jsp");

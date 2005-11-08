@@ -32,7 +32,7 @@ switch(bean.process(request))
 		response.sendRedirect("routesAdd.jsp");
 		return;
 	case Index.RESULT_EDIT:
-		response.sendRedirect("routesEdit.jsp?routeId="+URLEncoder.encode(bean.getEditRouteId(), "UTF-8"));
+		response.sendRedirect("routesEdit.jsp?routeId="+URLEncoder.encode(bean.getEditRouteId()));
 		return;
 	default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));

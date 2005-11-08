@@ -26,7 +26,7 @@ switch(bean.process(request))
 		response.sendRedirect("profilesAdd.jsp?returnPath=groups");
 		return;
 	case Groups.RESULT_EDIT:
-		response.sendRedirect("profilesEdit.jsp?returnPath=groups&mask="+URLEncoder.encode(bean.getProfileMask(), "UTF-8"));
+		response.sendRedirect("profilesEdit.jsp?returnPath=groups&mask="+URLEncoder.encode(bean.getProfileMask()));
 		return;
 	default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));

@@ -21,16 +21,16 @@ switch(beanResult)
 	case Lookup.RESULT_ERROR:
 		break;
 	case Lookup.RESULT_ADD:
-		response.sendRedirect("profilesAdd.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getProfileDealiased() != null ? bean.getProfileDealiased() : bean.getProfile(), "UTF-8"));
+		response.sendRedirect("profilesAdd.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getProfileDealiased() != null ? bean.getProfileDealiased() : bean.getProfile()));
 		return;
 	case Lookup.RESULT_REFRESH:
-		response.sendRedirect("lookup.jsp?mbRefreshed=true&profile=" + URLEncoder.encode(bean.getProfile() == null ? "" : bean.getProfile(), "UTF-8"));
+		response.sendRedirect("lookup.jsp?mbRefreshed=true&profile=" + URLEncoder.encode(bean.getProfile() == null ? "" : bean.getProfile()));
 		return;
 	case Lookup.RESULT_EDIT:
-		response.sendRedirect("profilesEdit.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getProfileDealiased() != null ? bean.getProfileDealiased() : bean.getProfile(), "UTF-8"));
+		response.sendRedirect("profilesEdit.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getProfileDealiased() != null ? bean.getProfileDealiased() : bean.getProfile()));
 		return;
 	case Lookup.RESULT_EDIT_MASK:
-		response.sendRedirect("profilesEdit.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getMatchAddress().getMask(), "UTF-8"));
+		response.sendRedirect("profilesEdit.jsp?returnPath=lookup&mask=" + URLEncoder.encode(bean.getMatchAddress().getMask()));
 		return;
 	default:
 		errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));

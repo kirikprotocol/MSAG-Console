@@ -26,8 +26,8 @@ switch(bean.process(request))
 		response.sendRedirect("aliasesAdd.jsp");
 		return;
 	case Index.RESULT_EDIT:
-		response.sendRedirect("aliasesEdit.jsp?alias="+URLEncoder.encode(bean.getEditAlias(), "UTF-8")
-		                                     +"&address="+URLEncoder.encode(bean.getEditAddress(), "UTF-8")
+		response.sendRedirect("aliasesEdit.jsp?alias="+URLEncoder.encode(bean.getEditAlias())
+		                                     +"&address="+URLEncoder.encode(bean.getEditAddress())
 		                                     +"&hide="+bean.isEditHide());
 		return;
 	default:

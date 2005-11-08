@@ -23,7 +23,7 @@ switch(bean.process(request))
 
 		break;
 	case Index.RESULT_VIEW:
-		response.sendRedirect(CPATH+"/esme_"+URLEncoder.encode(bean.getServiceId(), "UTF-8")+"/index.jsp");
+		response.sendRedirect(CPATH+"/esme_"+URLEncoder.encode(bean.getServiceId())+"/index.jsp");
 		return;
 	case Index.RESULT_VIEW_HOST:
 		response.sendRedirect(CPATH+"/hosts/hostView.jsp?hostName="+bean.getHostId());
@@ -32,7 +32,7 @@ switch(bean.process(request))
 		response.sendRedirect("serviceAdd.jsp" + (bean.getHostId() != null ? ("?hostName=" + bean.getHostId()) : ""));
 		return;
 	case Index.RESULT_EDIT:
-		response.sendRedirect(CPATH+"/services/serviceEditSme.jsp?serviceId="+URLEncoder.encode(bean.getServiceId(), "UTF-8"));
+		response.sendRedirect(CPATH+"/services/serviceEditSme.jsp?serviceId="+URLEncoder.encode(bean.getServiceId()));
 		return;
 	default:
 

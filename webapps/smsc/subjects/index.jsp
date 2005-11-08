@@ -28,7 +28,7 @@ switch(bean.process(request))
 		response.sendRedirect("subjectsAdd.jsp");
 		return;
 	case Index.RESULT_EDIT:
-		response.sendRedirect("subjectsEdit.jsp?name="+URLEncoder.encode(bean.getEditName(), "UTF-8"));
+		response.sendRedirect("subjectsEdit.jsp?name="+URLEncoder.encode(bean.getEditName()));
 		return;
 	default:
 

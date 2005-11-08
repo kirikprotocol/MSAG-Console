@@ -15,7 +15,7 @@ switch(bean.process(request))
 		response.sendRedirect("index.jsp");
 		return;
 	case LocaleResourcesView.RESULT_EDIT:
-		response.sendRedirect("localeResourcesEdit.jsp?locale=" + URLEncoder.encode(bean.getLocale(), "UTF-8"));
+		response.sendRedirect("localeResourcesEdit.jsp?locale=" + URLEncoder.encode(bean.getLocale()));
 		return;
 	case LocaleResourcesView.RESULT_ERROR:
 		break;

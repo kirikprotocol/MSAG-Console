@@ -28,7 +28,7 @@ switch(bean.process(request))
     response.sendRedirect("add.jsp");
     return;
   case Index.RESULT_EDIT:
-    response.sendRedirect("edit.jsp?editKey=" + URLEncoder.encode(bean.getEditKey(), "UTF-8"));
+    response.sendRedirect("edit.jsp?editKey=" + URLEncoder.encode(bean.getEditKey()));
     return;
 	case Index.RESULT_ERROR:
 		break;

@@ -10,7 +10,7 @@ switch(bean.process(request))
 {
 	case ProfilesEdit.RESULT_DONE:
 		if ("lookup".equals(bean.getReturnPath()))
-			response.sendRedirect("lookup.jsp?profile=" + URLEncoder.encode(bean.getMask(), "UTF-8"));
+			response.sendRedirect("lookup.jsp?profile=" + URLEncoder.encode(bean.getMask()));
 		else if ("groups".equals(bean.getReturnPath()))
 			response.sendRedirect("groups.jsp");
 		else if ("profiles".equals(bean.getReturnPath()))

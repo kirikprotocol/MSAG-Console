@@ -24,7 +24,7 @@
       response.sendRedirect("principals.jsp");
       return;
     case Principals.RESULT_EDIT:
-      response.sendRedirect("principalsEdit.jsp?address=" + URLEncoder.encode(bean.getEdit(), "UTF-8"));
+      response.sendRedirect("principalsEdit.jsp?address=" + URLEncoder.encode(bean.getEdit()));
       return;
     case Principals.RESULT_ADD:
       response.sendRedirect("principalsEdit.jsp?create=true");
