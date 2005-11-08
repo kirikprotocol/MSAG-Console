@@ -84,7 +84,7 @@ void Service::onCommandReceived(Connect* conn, SerializableObject* recvCmd)
 {
         InmanCommand* cmd = static_cast<InmanCommand*>(recvCmd);
 	assert( cmd );	
-	int dlgId = cmd->getObjectId();
+	int dlgId = cmd->getDialogId();
 	smsc_log_debug( logger, "Command for billing id=0x%X", dlgId );
 	BillingMap::iterator it = workers.find( dlgId );
 	if( it == workers.end() )

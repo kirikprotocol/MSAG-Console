@@ -14,8 +14,6 @@ using smsc::inman::interaction::ChargeSmsResult;
 using std::auto_ptr;
 using std::runtime_error;
 
-//#define TEST_DATA
-
 namespace smsc  {
 namespace inman {
 
@@ -47,7 +45,7 @@ void Billing::onChargeSms(ChargeSms* sms)
 {
 	assert( sms );
 	assert( inap );
-	assert( id == sms->getObjectId() );
+	assert(id == sms->getDialogId());
 
 	smsc_log_debug( logger, "SSF --> SCF InitialDPSMS" );
 
@@ -71,7 +69,7 @@ void Billing::onChargeSms(ChargeSms* sms)
 void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
 {
 	assert( smsRes );
-	assert( id == smsRes->getObjectId() );
+	assert(id == smsRes->getDialogId());
 
 	messageType_e  messageType = MessageType_notification;
 
@@ -113,7 +111,7 @@ void Billing::continueSMS()
 	assert( connect );
 	smsc_log_debug( logger, "SSF <-- SCF ContinueSMS" );
 	ChargeSmsResult res( smsc::inman::interaction::CHARGING_POSSIBLE );
-	res.setObjectId( id );
+	res.setDialogId(id);
 	connect->send( &res );
 }
 
@@ -122,7 +120,7 @@ void Billing::releaseSMS(ReleaseSMSArg* arg)
 	assert( connect );
 	smsc_log_debug( logger, "SSF <-- SCF ReleaseSMS" );
 	ChargeSmsResult res( smsc::inman::interaction::CHARGING_NOT_POSSIBLE );
-	res.setObjectId( id );
+	res.setDialogId(id);
 	connect->send( &res );
 	service->billingFinished( this );
 }
