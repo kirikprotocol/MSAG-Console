@@ -27,6 +27,7 @@ Mutex StatisticsManager::initLock;
 
 using smsc::core::buffers::TmpBuf;
 using namespace scag::util::singleton;
+using smsc::core::buffers::File;
 
 const uint16_t SMSC_STAT_DUMP_INTERVAL = 60; // in seconds
 const uint16_t SMSC_STAT_VERSION_INFO  = 0x0001;
@@ -93,7 +94,7 @@ StatisticsManager::~StatisticsManager()
   Logger::Init();
   logger = Logger::getInstance("scag.stat.StatisticsManager");
 
-  close();
+  file.Close();
   Stop();
   WaitFor();
 }
@@ -539,30 +540,6 @@ void StatisticsManager::resetCounters(int index)
   srvStatBySmeId[index].Empty();
 }
 
-void StatisticsManager::close()
-{
-    if (file) { 
-        bFileTM = false; fclose(file); file = 0;
-    }
-}
-void StatisticsManager::flush()
-{
-    if (file && fflush(file)) {
-        int error = ferror(file);
-        Exception exc("Failed to flush file. Details: %s", strerror(error));
-        close(); throw exc;
-    }
-}
-
-void StatisticsManager::write(const void* data, size_t size)
-{
-    if (file && fwrite(data, size, 1, file) != 1) {
-        int error = ferror(file);
-        Exception exc("Failed to write file. Details: %s", strerror(error));
-        close(); throw exc;
-    }
-}
-
 void StatisticsManager::Fseek(long offset, int whence, FILE* &cfPtr)
 {
     if (cfPtr && fseek(cfPtr, offset, whence)) {
@@ -697,6 +674,8 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
     smsc_log_debug(logger, "Statistics dump called for %02d:%02d GMT", 
                    flushTM.tm_hour, flushTM.tm_min);
 
+    try {
+
     char dirName[128]; bool hasDir = false;
 
     if (!bFileTM || fileTM.tm_mon != flushTM.tm_mon || fileTM.tm_year != flushTM.tm_year)
@@ -708,8 +687,6 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
 
     if (!bFileTM || fileTM.tm_mday != flushTM.tm_mday)
     {
-        close(); // close old file (if it was opened)
-        
         char fileName[128]; 
         std::string fullPath = location;
         if (!hasDir) sprintf(dirName, SMSC_STAT_DIR_NAME_FORMAT, flushTM.tm_year+1900, flushTM.tm_mon+1);
@@ -718,28 +695,21 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
         fullPath += '/'; fullPath += (const char*)fileName; 
         const char* fullPathStr = fullPath.c_str();
 
+        if (file.isOpened()) file.Close();
+            
         bool needHeader = true;
-        file = fopen(fullPathStr, "r");
-        if (file) { // file already exists (was opened for reading)
-            close(); needHeader = false;
-        }
-        
-        file = fopen(fullPathStr, "ab+"); // open or create for append
-        if (!file)
-            throw Exception("Failed to create/open file '%s'. Details: %s", 
-                            fullPathStr, strerror(errno));
-        
-        if (fseek(file, 0, SEEK_END)) { // set position to EOF
-            int error = ferror(file);
-            Exception exc("Failed to seek EOF. Details: %s", strerror(error));
-            close(); throw exc;
+        if (File::Exists(fullPathStr)) { 
+            needHeader = false;
+            file.WOpen(fullPathStr);
+        } else {
+            file.RWCreate(fullPathStr);
         }
 
         if (needHeader) { // create header (if new file created)
-            write(SMSC_STAT_HEADER_TEXT, strlen(SMSC_STAT_HEADER_TEXT));
+            file.Write(SMSC_STAT_HEADER_TEXT, strlen(SMSC_STAT_HEADER_TEXT));
             uint16_t version = htons(SMSC_STAT_VERSION_INFO);
-            write(&version, sizeof(version));
-            flush();
+            file.Write(&version, sizeof(version));
+            file.Flush();
         }
         fileTM = flushTM; bFileTM = true;
         smsc_log_debug(logger, "%s file '%s' %s", (needHeader) ? "New":"Existed",
@@ -748,11 +718,17 @@ void StatisticsManager::dumpCounters(const uint8_t* buff, int buffLen, const tm&
     
     smsc_log_debug(logger, "Statistics data dump...");
     uint32_t value32 = htonl(buffLen);
-    write((const void *)&value32, sizeof(value32));
-    write((const void *)buff, buffLen); // write dump to it
-    write((const void *)&value32, sizeof(value32));
-    flush();
+    file.Write((const void *)&value32, sizeof(value32));
+    file.Write((const void *)buff, buffLen); // write dump to it
+    file.Write((const void *)&value32, sizeof(value32));
+    file.Flush();
     smsc_log_debug(logger, "Statistics data dumped.");
+
+    }catch(std::exception & exc){
+        if (file.isOpened()) file.Close();
+        bFileTM = false;
+        throw exc;
+    }
 }
 
 void StatisticsManager::flushTraffic()
@@ -812,13 +788,25 @@ void StatisticsManager::dumpTraffic(const IntHash<TrafficRecord>& traff)
 
     if(fbuff.GetPos() > 0){
         std::string loc = traffloc + std::string("/") + "traffic.tmp";
-        FILE *cfPtr = 0;
+        /*FILE *cfPtr = 0;
         Fopen(cfPtr, loc.c_str()); // open or create for update
         Fwrite(fbuff, fbuff.GetPos(), cfPtr);
-        Fclose(cfPtr);
+        Fclose(cfPtr);*/
 
-        std::string traffpath = traffloc + std::string("/") + "traffic.dat";
-        rename(loc.c_str(), traffpath.c_str());
+        try {
+     
+            File tfile;
+            tfile.WOpen(loc.c_str());
+            tfile.Write(fbuff, fbuff.GetPos());
+            tfile.Close();
+
+            std::string traffpath = traffloc + std::string("/") + "traffic.dat";
+            rename(loc.c_str(), traffpath.c_str());
+        }catch(FileException & e){
+            smsc_log_warn(logger, "Failed to dump traffic. Detailes: %s", e.what());
+        }catch(...){
+            smsc_log_warn(logger, "Failed to dump traffic. Unknown error.");
+        }
     }else{
         std::string traffpath = traffloc + std::string("/") + "traffic.dat";
         remove(traffpath.c_str());
@@ -831,9 +819,15 @@ void StatisticsManager::initTraffic()
 {
 
     const std::string loc = traffloc + std::string("/") + "traffic.dat";
-    FILE *cfPtr = 0;
+    /*FILE *cfPtr = 0;
     Fopen(cfPtr, loc);
-    Fseek(0, SEEK_SET, cfPtr);
+    Fseek(0, SEEK_SET, cfPtr);*/
+
+    File tfile;
+
+    try {
+
+    tfile.ROpen(loc.c_str());
 
     const int pos = smsc::sms::MAX_ROUTE_ID_TYPE_LENGTH + 1;
     const int sz = pos + 21;
@@ -847,7 +841,8 @@ void StatisticsManager::initTraffic()
     tm tmnow;  localtime_r(&now, &tmnow);
 
     int read_size = -1;
-    while( (read_size = Fread(cfPtr, buff, sz)) == 1){
+    //while( (read_size = Fread(cfPtr, buff, sz)) == 1){
+    while( (read_size = tfile.Read(buff, sz)) == 1){
 
         // Copies routeId
         memcpy((void*)routeId, (const void*)buff, pos);
@@ -896,7 +891,16 @@ void StatisticsManager::initTraffic()
 
     }
 
-    Fclose(cfPtr);
+    //Fclose(cfPtr);
+    tfile.Close();
+
+    }catch(FileException & e)
+    {
+        smsc_log_warn(logger, "Failed to init traffic. Detailes: %s", e.what());
+    }catch(...)
+    {
+        smsc_log_warn(logger, "Failed to init traffic. Unknown error");
+    }
 }
 
 void StatisticsManager::resetTraffic(const tm& tmDate)

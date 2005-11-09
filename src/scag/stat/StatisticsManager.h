@@ -16,6 +16,7 @@
 #include "Statistics.h"
 #include "routemap.h"
 #include "TrafficRecord.h"
+#include <core/buffers/File.hpp>
 
 namespace scag {
 
@@ -23,6 +24,7 @@ namespace stat {
 
     using namespace smsc::core::threads;
     using namespace smsc::core::synchronization;
+    using smsc::core::buffers::File;
 
     using smsc::core::buffers::IntHash;
     using smsc::core::buffers::Hash;
@@ -114,12 +116,7 @@ namespace stat {
         std::string     location;
         bool            bFileTM;
         tm              fileTM;
-        FILE*           file;
-        FILE*           tfile;
-    
-        void close();
-        void flush();
-        void write(const void* data, size_t size);
+        File file;
 
         std::string traffloc;
         void Fopen(FILE* &cfPtr, const std::string loc);
