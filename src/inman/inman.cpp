@@ -90,16 +90,21 @@ struct INBillConfig
 
 int main(int argc, char** argv)
 {
+  char *  cfgFile = (char*)"config.xml";
 
   init_logger();
   smsc_log_info( inapLogger,"***************************");
   smsc_log_info( inapLogger,"* SIBINCO IN MANAGER v%d.%d *", VER_HIGH, VER_LOW);
   smsc_log_info( inapLogger,"***************************");
+  if (argc > 1)
+      cfgFile = argv[1];
+  smsc_log_info(inapLogger,"* Config file: %s", cfgFile);
+  smsc_log_info(inapLogger,"****************************");
 
   INBillConfig cfg;
   try
   {
-    Manager::init("config.xml");
+    Manager::init((const char *)cfgFile);
     Manager& manager = Manager::getInstance();
     cfg.read(manager);
   }

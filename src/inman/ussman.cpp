@@ -128,48 +128,53 @@ static void run_console()
 }
 #endif /* LOCAL_TESTING */
 
+/*
+ * USSman service entry point. Uses by default config.xml
+ * USAGE: ussman [xml_config_file_name]
+ */
 int main(int argc, char** argv)
 {
-  init_logger();
-  smsc_log_info( inapLogger,"****************************");
-  smsc_log_info( inapLogger,"* SIBINCO USS MANAGER v%d.%d *", VER_HIGH, VER_LOW);
-  smsc_log_info( inapLogger,"****************************");
+    char *  cfgFile = (char*)"config.xml";
 
-  UssManConfig cfg;
-  try
-  {
-    Manager::init("config.xml");
-    Manager& manager = Manager::getInstance();
-    cfg.read(manager);
-  }
-  catch (ConfigException& exc)
-  {
-      smsc_log_error(inapLogger, "Configuration invalid: %s. Exiting", exc.what());
-      exit(-1);
-  }
-  try
-  {
-    vlr = new VLR(&cfg);
-    vlr->start();
-    sigset( SIGTERM, sighandler );
+    init_logger();
+    smsc_log_info( inapLogger,"****************************");
+    smsc_log_info( inapLogger,"* SIBINCO USS MANAGER v%d.%d *", VER_HIGH, VER_LOW);
+    smsc_log_info( inapLogger,"****************************");
+
+    if (argc > 1)
+        cfgFile = argv[1];
+    smsc_log_info(inapLogger,"* Config file: %s", cfgFile);
+    smsc_log_info(inapLogger,"****************************");
+
+    UssManConfig cfg;
+    try {
+        Manager::init((const char *)cfgFile);
+        Manager& manager = Manager::getInstance();
+        cfg.read(manager);
+    } catch (ConfigException& exc) {
+        smsc_log_error(inapLogger, "Configuration invalid: %s. Exiting", exc.what());
+        exit(-1);
+    }
+    try {
+        vlr = new VLR(&cfg);
+        vlr->start();
+        sigset( SIGTERM, sighandler );
 
 #ifndef LOCAL_TESTING
-    while( vlr )
-        usleep( 1000 * 100 );
+        while( vlr )
+            usleep( 1000 * 100 );
 #else /* LOCAL_TESTING */
-    run_console();
-    vlr->stop();
-    delete vlr;
+        run_console();
+        vlr->stop();
+        delete vlr;
 #endif /* LOCAL_TESTING */
 
-  }
-  catch(const std::exception& error)
-  {
-    smsc_log_fatal(inapLogger, "%s", error.what() );
-    fprintf( stderr, "Fatal error: %s\n", error.what() );
-    delete vlr;
-    exit(1);
-  }
+    } catch(const std::exception& error) {
+        smsc_log_fatal(inapLogger, "%s", error.what() );
+        fprintf( stderr, "Fatal error: %s\n", error.what() );
+        delete vlr;
+        exit(1);
+    }
 
-  return(0);
+    return(0);
 }
