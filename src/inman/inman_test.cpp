@@ -28,6 +28,7 @@ using smsc::inman::interaction::DeliverySmsResult_t;
 class Facade : public Thread, public SmscHandler
 {
 protected:
+    bool                _running;
     unsigned            dialogId;
     Socket*             socket;
     ObjectPipe*         pipe;
@@ -41,11 +42,17 @@ public:
         , logger( Logger::getInstance("smsc.InFacade") )
         , delivery( smsc::inman::interaction::DELIVERY_SUCCESSED )
         , dialogId(0)
+        , _running (false)
         { 
             pipe->setLogger(logger);
         }
 
-    virtual ~Facade() { delete pipe; delete socket; }
+    virtual ~Facade()
+    { 
+        _running = false; //stop thread 
+        delete pipe;
+        delete socket; 
+    }
 
     unsigned getNextDialogId(void) { return ++dialogId; }
 
@@ -95,9 +102,11 @@ public:
             fprintf( stdout, "ChargeSmsResult( CHARGING_NOT_POSSIBLE ) received\n");
     }
 
+    // Thread entry point
     virtual int  Execute()
     {
-        for(;;) {
+        _running = true;
+        while(_running) {
             fd_set  read;
             FD_ZERO( &read );
             FD_SET( socket->getSocket(), &read );

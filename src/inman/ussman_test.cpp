@@ -28,6 +28,7 @@ using smsc::inman::interaction::USSDATA_T;
 class USSFacade : public Thread
 {
 protected:
+    bool            _running;
     unsigned        _reqId;
     Socket*         socket;
     ObjectPipe*     pipe;
@@ -39,11 +40,17 @@ public:
         , pipe(new ObjectPipe(sock, SerializerUSS::getInstance(), ObjectPipe::frmLengthPrefixed))
         , logger(Logger::getInstance("smsc.USSFacade"))
         , _reqId(0)
+        , _running (false)
         { 
             pipe->setLogger(logger);
         }
 
-    virtual ~USSFacade() { delete pipe; delete socket; }
+    virtual ~USSFacade()
+    {
+        _running = false; //stop thread
+        delete pipe;
+        delete socket; 
+    }
 
     unsigned getNextReqId(void)
     {
@@ -91,10 +98,11 @@ public:
             fprintf(stdout, "Request[%d]: got unknown result status\n", res->getDialogId());
         }
     }
-
-    virtual int  Execute()
+    // Thread entry point
+    int  Execute()
     {
-        for(;;) {
+        _running = true;
+        while(_running) {
             fd_set  read;
             FD_ZERO( &read );
             FD_SET( socket->getSocket(), &read );
