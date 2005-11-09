@@ -6,9 +6,7 @@
 
 #include <map>
 
-//#include "ss7cp.h"
 #include "inman/inap/dialog.hpp"
-
 #include "inman/comp/comps.hpp"
 
 using smsc::inman::comp::ConnectSMSArg;
@@ -32,6 +30,7 @@ class SSF
     virtual void releaseSMS(ReleaseSMSArg* arg) = 0;
     virtual void requestReportSMSEvent(RequestReportSMSEventArg* arg) = 0;
     virtual void resetTimerSMS(ResetTimerSMSArg* arg) = 0;
+    virtual void abortSMS(unsigned char ercode) = 0;
 };
 
 class SCF
@@ -39,28 +38,52 @@ class SCF
   public:
     virtual void initialDPSMS(InitialDPSMSArg* arg) = 0;
     virtual void eventReportSMS(EventReportSMSArg* arg) = 0;
+    virtual void onOperationError(Invoke *op, TcapEntity * resE) = 0;
 };
 
-class Inap : public DialogListener, public SCF, public ObservableT< SSF >
+class InapOpResListener;
+class Inap : public DialogListener, public SCF
 {
   public:
-    Inap(Dialog* dialog);
+    Inap(Dialog* dialog, SSF * ssfHandler);
     virtual ~Inap();
-  public:
 
+    // SCF interface
     void initialDPSMS(InitialDPSMSArg* arg);
     void eventReportSMS(EventReportSMSArg* arg);
+    void onOperationError(Invoke *op, TcapEntity * resE);
+    // DialogListener interface
+    virtual void onDialogInvoke( Invoke* op ); 
 
-   	virtual void onDialogInvoke( Invoke* op ); // DialogListener
-
-   protected:
-
-  	Dialog* dialog;
-  	Logger*		logger;
+ protected:
+    typedef std::map<USHORT_T, InapOpResListener*> ResultHandlersMAP;
+    Dialog*     dialog;
+    Logger*     logger;
+    SSF*        ssfHdl;
+    ResultHandlersMAP resHdls;
 };
 
-}
-}
-}
+class InapOpResListener: public InvokeListener
+{
+public:
+    InapOpResListener(Invoke * op, Inap * pInap);
+    ~InapOpResListener() {}
 
-#endif
+    Invoke * getOrgInv() const;
+    //Gets result from TCAP 
+    void error(TcapEntity* err);    
+    void result(TcapEntity* resL) {}
+    void resultNL(TcapEntity* resNL) {};
+
+protected:
+    Invoke * orgInv;    //originating Invoke
+    Inap   * orgInap;   //parent Inap
+};
+
+
+} //inap
+} //inman
+} //smsc
+
+#endif /* __SMSC_INMAN_INAP_INAP__ */
+

@@ -232,13 +232,18 @@ void ChargeSms::handle(InmanHandler* handler)
 //-----------------------------------------------
 
 
-ChargeSmsResult::ChargeSmsResult() : value( CHARGING_POSSIBLE )
+ChargeSmsResult::ChargeSmsResult()
+    : value(CHARGING_POSSIBLE)
+    , rPC(0)
 {
     setObjectId((unsigned short)CHARGE_SMS_RESULT_TAG);
 }
 
-ChargeSmsResult::ChargeSmsResult(ChargeSmsResult_t val) : value( val )
+ChargeSmsResult::ChargeSmsResult(uint32_t rPCcode)
+    : value(CHARGING_NOT_POSSIBLE)
+    , rPC(rPCcode)
 {
+    setObjectId((unsigned short)CHARGE_SMS_RESULT_TAG);
 }
 
 ChargeSmsResult::~ChargeSmsResult()
@@ -249,23 +254,29 @@ ChargeSmsResult_t ChargeSmsResult::GetValue() const
 {
 	return value;
 }
+uint32_t ChargeSmsResult::GetRPCause() const
+{
+    return rPC;
+}
 
 void ChargeSmsResult::load(ObjectBuffer& in)
 {
-	unsigned short v;
-	in >> v;
-	value = static_cast<ChargeSmsResult_t>(v);
+    unsigned short v;
+    in >> v;
+    value = static_cast<ChargeSmsResult_t>(v);
+    in >> rPC;
 }
 
 void ChargeSmsResult::save(ObjectBuffer& out)
 {
     out << (unsigned short)value;
+    out << rPC;
 }
 
 void ChargeSmsResult::handle(SmscHandler* handler)
 {
-	assert( handler );
-	handler->onChargeSmsResult( this );
+    assert( handler );
+    handler->onChargeSmsResult( this );
 }
 
 //-----------------------------------------------

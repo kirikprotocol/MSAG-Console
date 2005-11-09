@@ -11,6 +11,12 @@ using smsc::inman::interaction::SerializableObject;
 using smsc::inman::interaction::SerializerITF;
 using smsc::inman::common::FactoryT;
 
+#define INMAN_PROTOCOL_ERROR_BASE   (unsigned int)260
+//dialogue command sequence broken
+#define INMAN_PROTOCOL_ERROR        INMAN_PROTOCOL_ERROR_BASE 
+
+#define INMAN_SCF_ERROR_BASE        (unsigned int)300
+
 namespace smsc  {
 namespace inman {
 namespace interaction {
@@ -53,12 +59,12 @@ class SmscCommand : public SerializableObject
         virtual void handle( SmscHandler* ) = 0;
 };
 
-enum
-{
+enum {
     CHARGE_SMS_TAG          = 1,
     CHARGE_SMS_RESULT_TAG   = 2,
     DELIVERY_SMS_RESULT_TAG = 3
 };
+
 
 typedef enum
 {
@@ -125,17 +131,20 @@ private:
 class ChargeSmsResult : public SmscCommand
 {
 public:
-    ChargeSmsResult();
-    ChargeSmsResult(ChargeSmsResult_t value);
+    ChargeSmsResult();                //positive result, no error
+    ChargeSmsResult(uint32_t rPCcode); //negative result, RP cause or SS7 error
     virtual ~ChargeSmsResult();
+
     ChargeSmsResult_t GetValue() const;
+    uint32_t          GetRPCause() const;
     virtual void handle(SmscHandler*);
 
 protected:
     virtual void load(ObjectBuffer& in);
     virtual void save(ObjectBuffer& out);
 
-    ChargeSmsResult_t value;
+    ChargeSmsResult_t   value;
+    uint32_t            rPC;  //RP cause MO SM transfer [1.255], or SS7 error
 };
 
 class DeliverySmsResult : public InmanCommand
