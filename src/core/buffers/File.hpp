@@ -237,12 +237,19 @@ public:
 #endif
     int g=open(tmp.c_str(),O_WRONLY | O_CREAT | O_TRUNC| O_LARGEFILE,0644);
     if(g==-1)throw FileException(FileException::errOpenFailed,filename.c_str());
-    if(write(g,buffer,(size_t)fileSize)!=(ssize_t)fileSize)
-    {
-      close(g);
-      remove(tmp.c_str());
-      throw FileException(FileException::errWriteFailed,filename.c_str());
-    }
+    offset_type written=0;
+
+    do{
+      size_t piece=fileSize-written<8192?fileSize-written:8192;
+
+      if(write(g,buffer+written,(size_t)piece)!=(ssize_t)piece)
+      {
+        close(g);
+        remove(tmp.c_str());
+        throw FileException(FileException::errWriteFailed,filename.c_str());
+      }
+      written+=piece;
+    }while(written<fileSize);
     close(fd);
     fd=-1;
     std::string old=filename+".old";
