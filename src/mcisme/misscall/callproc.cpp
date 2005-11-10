@@ -660,6 +660,7 @@ msginit:
 /* ReleaseConf                                                       */
 /* ReleaseInd                                                        */
 /*********************************************************************/
+using smsc::misscall::detectDisconnect;
 using smsc::misscall::MissedCallEvent;
 using smsc::misscall::MissedCallProcessor;
 using smsc::misscall::missedCallProcessorLogger;
