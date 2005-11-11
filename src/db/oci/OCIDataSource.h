@@ -48,9 +48,11 @@ namespace smsc { namespace db { namespace oci
 
     public:
         
-        OCIResultSet(OCIStatement* statement)
-            throw(SQLException);
+        OCIResultSet(OCIStatement* statement) : ResultSet(), owner(statement) {};
         virtual ~OCIResultSet();
+        
+        void prepare()
+            throw(SQLException);
 
         virtual bool fetchNext()
             throw(SQLException);
@@ -126,9 +128,13 @@ namespace smsc { namespace db { namespace oci
         sword fetch()
             throw(SQLException);
     
-        OCIQuery(OCIConnection* connection, const char* query) 
-            throw(SQLException);
+        OCIQuery(OCIConnection* connection);
+
     public:
+
+        void prepare(const char* query) 
+            throw(SQLException);
+
         virtual ~OCIQuery();
     };
 
@@ -145,8 +151,7 @@ namespace smsc { namespace db { namespace oci
                                     bool null=false);
     public:
 
-        OCIStatement(OCIConnection* connection, const char* sql) 
-            throw(SQLException);
+        OCIStatement(OCIConnection* connection) : Statement(), OCIQuery(connection) {};
         virtual ~OCIStatement();
         
         sword execute(ub4 mode, ub4 iters, ub4 rowoff)
@@ -223,10 +228,11 @@ namespace smsc { namespace db { namespace oci
 
     public:
         
-        OCIRoutine(OCIConnection* connection, 
-                   const char* call, const char* name, bool func=false) 
-            throw(SQLException);
+        OCIRoutine(OCIConnection* connection) : Routine(), OCIQuery(connection) {};
         virtual ~OCIRoutine();
+        
+        void prepare(const char* call, const char* name, bool func=false)
+            throw(SQLException);
         
         virtual void execute() 
             throw(SQLException);
@@ -309,6 +315,8 @@ namespace smsc { namespace db { namespace oci
         OCIServer*      srvhp;  // OCI server handle
         OCIError*       errhp;  // OCI error handle
         OCISession*     sesshp; // OCI session handle
+
+        void cleanupHandlers();
 
     public:
 

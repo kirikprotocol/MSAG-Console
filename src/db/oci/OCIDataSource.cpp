@@ -211,30 +211,37 @@ Statement* OCIConnection::createStatement(const char* sql)
     throw(SQLException)
 {
     connect();
-    return new OCIStatement(this, sql);
+    OCIStatement* stmt = new OCIStatement(this);
+    try { stmt->prepare(sql); } catch(...) { delete stmt; throw; }
+    return stmt;
 }
 
 Routine* OCIConnection::createRoutine(const char* call, bool func)
     throw(SQLException)
 {
     connect();
-
-    std::string routine; std::string name = "";
-    routine += "BEGIN\n";
-    if (func)
+    OCIRoutine* rstmt = new OCIRoutine(this);
+    if (rstmt)
     {
-        routine += ":"; routine += FUNCTION_RETURN_ATTR_NAME; routine += " := ";
+        std::string routine; std::string name = "";
+        routine += "BEGIN\n";
+        if (func)
+        {
+            routine += ":"; routine += FUNCTION_RETURN_ATTR_NAME; routine += " := ";
+        }
+        routine += call;
+        routine += "\nEND;";
+
+        int curPos = 0;
+        while (call && isspace(call[curPos])) curPos++;
+        while (call && (isalnum(call[curPos]) || call[curPos]=='_'))
+            name += call[curPos++];
+
+        __trace2__("Call:\n%s", routine.c_str());
+        try { rstmt->prepare(routine.c_str(), name.c_str(), func); }
+        catch(...) { delete rstmt; throw; }
     }
-    routine += call;
-    routine += "\nEND;";
-
-    int curPos = 0;
-    while (call && isspace(call[curPos])) curPos++;
-    while (call && (isalnum(call[curPos]) || call[curPos]=='_'))
-        name += call[curPos++];
-
-    __trace2__("Call:\n%s", routine.c_str());
-    return new OCIRoutine(this, routine.c_str(), name.c_str(), func);
+    return rstmt;
 }
 
 /* ---------------- Helper for Binds & Defines implementation -------------- */
@@ -280,17 +287,21 @@ OCIDataDescriptor::~OCIDataDescriptor()
 
 /* ------------------------ Query implementation ----------------------- */
 
-OCIQuery::OCIQuery(OCIConnection* connection, const char* query)
-    throw(SQLException)
+OCIQuery::OCIQuery(OCIConnection* connection)
         : owner(connection), stmt(0L)
+{
+    __require__(owner);
+    envhp = owner->envhp; svchp = owner->svchp; errhp = owner->errhp;
+}
+void OCIQuery::prepare(const char* query)
+    throw(SQLException)
 {
     __require__(owner && query);
 
     ub4 querylen = strlen(query);
     sqlquery = new char[querylen+1];
     strcpy(sqlquery, query);
-
-    envhp = owner->envhp; svchp = owner->svchp; errhp = owner->errhp;
+    
     check(OCIHandleAlloc((dvoid *)envhp, (dvoid **) &stmt,
                          OCI_HTYPE_STMT, 0, (dvoid **)0));
     check(OCIStmtPrepare(stmt, errhp, (text *)sqlquery, (ub4) querylen,
@@ -396,12 +407,6 @@ sword OCIQuery::fetch()
 
 /* ------------------------ Statement implementation ----------------------- */
 
-OCIStatement::OCIStatement(OCIConnection* connection, const char* sql)
-    throw(SQLException)
-        : Statement(), OCIQuery(connection, sql)
-{
-}
-
 OCIStatement::~OCIStatement()
 {
     while (descriptors.Count())
@@ -439,7 +444,9 @@ uint32_t OCIStatement::executeUpdate()
 ResultSet* OCIStatement::executeQuery()
     throw(SQLException)
 {
-    return new OCIResultSet(this);
+    OCIResultSet* rs = new OCIResultSet(this);
+    try { rs->prepare(); } catch(...) { delete rs; throw; }
+    return rs;
 }
 
 OCIDataDescriptor* OCIStatement::setField(int pos, ub2 type, ub4 size,
@@ -686,9 +693,8 @@ void OCIStatement::setDateTime(int pos, time_t time, bool null)
 
 /* ------------------------ ResultSet implementation ----------------------- */
 
-OCIResultSet::OCIResultSet(OCIStatement* statement)
+void OCIResultSet::prepare()
     throw(SQLException)
-        : ResultSet(), owner(statement)
 {
     __require__(owner);
 
@@ -933,11 +939,11 @@ time_t OCIResultSet::getDateTime(int pos)
 
 /* ------------------------ OCIRoutine implementation ---------------------- */
 
-OCIRoutine::OCIRoutine(OCIConnection* connection,
-                       const char* call, const char* name, bool func)
+void OCIRoutine::prepare(const char* call, const char* name, bool func/*=false*/)
     throw(SQLException)
-        : Routine(), OCIQuery(connection, call)
 {
+    OCIQuery::prepare(call);
+
     // Loadup routine parameters set here.
 
     ub4      bndSize  = FUNCTION_MAX_ARGUMENTS_COUNT;

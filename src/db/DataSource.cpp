@@ -42,6 +42,7 @@ Statement* Connection::_getStatement(const char* id)
 Statement* Connection::getStatement(const char* id)
 {
     if (!id || id[0] == '\0') return 0;
+    connect();
     MutexGuard guard(statementsRegistryLock);
     return _getStatement(id);
 }
@@ -93,6 +94,7 @@ Routine* Connection::_getRoutine(const char* id)
 Routine* Connection::getRoutine(const char* id)
 {
     if (!id || id[0] == '\0') return 0;
+    connect();
     MutexGuard guard(routinesRegistryLock);
     return _getRoutine(id);
 }
