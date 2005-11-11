@@ -1,3 +1,4 @@
+#ident "$Id$"
 #ifndef __SMSC_INMAN_CONSOLE_H__
 #define __SMSC_INMAN_CONSOLE_H__
 
@@ -19,7 +20,6 @@ public:
     {
         CTYPE_UCHAR,
         CTYPE_CHAR,
-        CTYPE_CHARP,
         CTYPE_UINT,
         CTYPE_INT,
         CTYPE_FLOAT,
@@ -44,7 +44,6 @@ public:
     Console();
     virtual ~Console();
 
-public:
     virtual void addItem(const std::string& command, console_function function);
     virtual void addItem(const std::string& command, void *pointer, console_item_type_t type);
     virtual void deleteItem(const std::string & strName);
@@ -63,4 +62,5 @@ private:
 } // inman
 } // smsc
 
-#endif
+#endif /* __SMSC_INMAN_CONSOLE_H__ */
+
