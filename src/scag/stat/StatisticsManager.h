@@ -6,6 +6,7 @@
 #include <core/buffers/IntHash.hpp>
 #include <core/buffers/Hash.hpp>
 #include <core/buffers/TmpBuf.hpp>
+#include <core/buffers/Array.hpp>
 #include <core/threads/Thread.hpp>
 
 #include <logger/Logger.h>
@@ -19,6 +20,9 @@
 #include <core/buffers/File.hpp>
 #include "scag/config/stat/StatManConfig.h"
 
+#include "util/timeslotcounter.hpp"
+#include "core/network/Socket.hpp"
+
 namespace scag {
 
 namespace stat {
@@ -26,6 +30,7 @@ namespace stat {
     using namespace smsc::core::threads;
     using namespace smsc::core::synchronization;
     using smsc::core::buffers::File;
+    using smsc::core::buffers::Array;
     using scag::config::StatManConfig;
 
     using smsc::core::buffers::IntHash;
@@ -34,6 +39,9 @@ namespace stat {
     using smsc::logger::Logger;
     using smsc::util::config::Config;
     using scag::stat::SmppStatEvent;
+
+    using smsc::util::TimeSlotCounter;
+    using smsc::core::network::Socket;
 
     struct CommonStat
     {
@@ -71,7 +79,32 @@ namespace stat {
       }
     };
 
-    class StatisticsManager : public Statistics, public Thread
+    struct SmePerformanceCounter
+    {
+        uint16_t                counters[PERF_CNT_COUNT];
+        TimeSlotCounter<int>*   slots   [PERF_CNT_COUNT];
+
+        SmePerformanceCounter() { 
+            memset(counters, 0, sizeof(counters));
+            memset(slots, 0, sizeof(slots));
+        };
+        virtual ~SmePerformanceCounter() {
+            for (int i=0; i<PERF_CNT_COUNT; i++) 
+                if (slots[i]) delete slots[i];
+        };
+        inline void clear() {
+            memset(counters, 0, sizeof(counters));
+        };
+    };
+
+    class PerformanceListener{
+    public:
+        virtual void reportGenPerformance()=0;
+        virtual void reportSvcPerformance()=0;
+        virtual void reportScPerformance()=0;
+    };
+
+    class StatisticsManager : public Statistics, public PerformanceListener, public Thread
     {
     friend class Statistics;
     private:
@@ -117,6 +150,25 @@ namespace stat {
         int perfSvcPort;
         int perfScPort;
 
+        Mutex                            svcCountersLock;
+        Hash   <SmePerformanceCounter*>  svcSmppCounters;
+        Hash   <SmePerformanceCounter*>  svcWapCounters;
+        Hash   <SmePerformanceCounter*>  svcMmsCounters;
+
+        Array<Socket*> svcSockets;
+        Mutex svcSocketsMutex;
+
+        Mutex                            scCountersLock;
+        Hash   <SmePerformanceCounter*>  scSmppCounters;
+        Hash   <SmePerformanceCounter*>  scWapCounters;
+        Hash   <SmePerformanceCounter*>  scMmsCounters;
+
+        Array<Socket*> scSockets;
+        Mutex scSocketsMutex;
+
+        Array<Socket*> genSockets;
+        Mutex genSocketsMutex;
+
         //File storage
     private:
 
@@ -139,6 +191,20 @@ namespace stat {
         bool started();
         void Stop();
 
+        inline TimeSlotCounter<int>* newSlotCounter() {
+            return new TimeSlotCounter<int>(3600, 1000);
+        }
+        void incSvcSmppCounter(const char* systemId, int index);
+        void incSvcWapCounter(const char*  systemId, int index);
+        void incSvcMmsCounter(const char*  systemId, int index);
+        uint8_t* StatisticsManager::dumpSvcCounters(uint32_t& smePerfDataSize);
+
+        void incScSmppCounter(const char* systemId, int index);
+        void incScWapCounter(const char*  systemId, int index);
+        void incScMmsCounter(const char*  systemId, int index);
+        uint8_t* StatisticsManager::dumpScCounters(uint32_t& smePerfDataSize);
+
+        int indexByCounter(int counter);
     public:
 
         static RouteMap routeMap;
@@ -149,6 +215,10 @@ namespace stat {
 
         virtual void registerEvent(const SmppStatEvent& si);
         bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
+
+        virtual void reportGenPerformance();
+        virtual void reportSvcPerformance();
+        virtual void reportScPerformance();
 
         StatisticsManager();
         virtual ~StatisticsManager();

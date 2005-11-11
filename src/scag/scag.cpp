@@ -374,6 +374,8 @@ void Scag::init()
   //********************************************************
 
 
+  //********************************************************
+  //********** Statistics manager initialization ***********
   try{
       using scag::config::ConfigView;
       std::auto_ptr<ConfigView> cv(new ConfigView(*cfg.getConfig(),"MessageStorage"));
@@ -383,7 +385,8 @@ void Scag::init()
           throw Exception("MessageStorage.statisticsDir not found");
 
       std::string location = loc.get();
-      StatisticsManager::init(location);
+      //StatisticsManager::init(location);
+      StatisticsManager::init(cfg.getStatManConfig());
 
       smsc_log_info(log, "Statistics manager started" );
   }catch(exception& e){
@@ -392,6 +395,7 @@ void Scag::init()
   }catch(...){
       __warning__("Statistics manager is not started.");
   }
+  //********************************************************
 
 
   scagHost=cfg.getConfig()->getString("smpp.host");

@@ -154,8 +154,7 @@ void ConfigManagerImpl::Init()
   throw(ConfigException)
 {
   initXerces();
-  findConfigFile();
-
+  //findConfigFile();
   try
   {
     __trace__("reading config...");
@@ -186,7 +185,7 @@ void ConfigManagerImpl::Init()
     getRouteConfig_().load(smsc::util::findConfigFile("routes.xml"));
     getBillManConfig_().init(ConfigView(config, "BillingManager"));
     getSessionManConfig_().init(ConfigView(config, "SessionManager"));
-    getStatManConfig_().init(ConfigView(config, "MessageStorage"));
+    getStatManConfig_().init(ConfigView(config, "StatisticsManager"));
 
   } catch (ParseException &e) {
       throw ConfigException(e.what());
