@@ -2,9 +2,8 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 #include <stdio.h>
 #include <errno.h>
-#include <string.h>
 #include <stdlib.h>
-#include <stdexcept>
+#include <exception>
 #include <string>
 
 #include "logger/Logger.h"
@@ -16,6 +15,7 @@ static char const ident[] = "$Id$";
 using smsc::logger::Logger;
 using smsc::core::threads::Thread;
 using smsc::inman::common::dump;
+using smsc::inman::common::format;
 using smsc::inman::common::Console;
 using smsc::inman::interaction::ObjectPipe;
 using smsc::inman::interaction::SerializerUSS;
@@ -35,15 +35,33 @@ protected:
     Logger*         logger;
 
 public:
-    USSFacade(Socket* sock) 
-        : socket(sock)
-        , pipe(new ObjectPipe(sock, SerializerUSS::getInstance(), ObjectPipe::frmLengthPrefixed))
-        , logger(Logger::getInstance("smsc.USSFacade"))
+    USSFacade(const char* host, int port)
+        : logger(Logger::getInstance("smsc.USSFacade"))
         , _reqId(0)
         , _running (false)
-        { 
-            pipe->setLogger(logger);
+
+    {
+        std::string msg;
+        msg = format("USSFacade: connecting to USS manager at %s:%d...\n", host, port);
+        smsc_log_info(logger, msg);
+        fprintf(stdout, msg.c_str());
+
+        socket = new Socket();
+        if (socket->Init(host, port, 1000)) {
+            msg = format("USSFacade: can't init socket: %s (%d)\n", strerror(errno), errno);
+            smsc_log_error(logger, msg);
+            throw std::runtime_error(msg);
         }
+        if (socket->Connect()) {
+            msg = format("USSFacade: can't connect socket: %s (%d)\n", strerror(errno), errno);
+            smsc_log_error(logger, msg);
+            throw std::runtime_error(msg);
+        }
+        pipe = new ObjectPipe(socket, SerializerUSS::getInstance(),
+                                        ObjectPipe::frmLengthPrefixed);
+        pipe->setLogger(logger);
+
+    }
 
     virtual ~USSFacade()
     {
@@ -52,10 +70,9 @@ public:
         delete socket; 
     }
 
-    unsigned getNextReqId(void)
-    {
-        return ++_reqId;
-    }
+    bool isRunning(void) const { return _running; }
+    unsigned getNextReqId(void) { return ++_reqId; }
+
     USSRequestMessage* composeRequest(USSRequestMessage* req, 
                                       const unsigned char * rstr, const char * who)
     {
@@ -109,13 +126,24 @@ public:
             int n = select(  socket->getSocket()+1, &read, 0, 0, 0 );
             if ( n > 0 ) {
                 USSResultMessage* cmd = static_cast<USSResultMessage*>(pipe->receive());
-                assert( cmd );
-                onRequestResult(cmd);
+                if (cmd)
+                    onRequestResult(cmd);
+                else //socket closed or socket error
+                    _running = false;        
             }
         }
         return 0;
     }
 
+};
+
+class ConnectionClosedException : public std::exception
+{
+public:
+    const char* what() const throw()
+    {
+        return "USS manager closed connection.";
+    }
 };
 
 static USSFacade*   _pFacade = 0;
@@ -142,12 +170,18 @@ void cmd_get_msadr(Console&, const std::vector<std::string> &args)
 
 void cmd_req100(Console&, const std::vector<std::string> &args)
 {
-    _pFacade->sendRequest((const unsigned char*)"*100#", _msAdr.c_str());
+    if (_pFacade->isRunning())
+        _pFacade->sendRequest((const unsigned char*)"*100#", _msAdr.c_str());
+    else
+        throw ConnectionClosedException();
 }
 
 void cmd_req102(Console&, const std::vector<std::string> &args)
 {
-    _pFacade->sendRequest((const unsigned char*)"*102#", _msAdr.c_str());
+    if (_pFacade->isRunning())
+        _pFacade->sendRequest((const unsigned char*)"*102#", _msAdr.c_str());
+    else
+        throw ConnectionClosedException();
 }
 
 
@@ -162,22 +196,8 @@ int main(int argc, char** argv)
     int         port = atoi(argv[2]);
 
     Logger::Init();
-
-    fprintf(stdout, "Connecting to USS manager at %s:%d...\n", host, port);
     try {
-        Socket* sock = new Socket();
-
-        if (sock->Init(host, port, 1000)) {
-            fprintf(stderr, "Can't init socket: %s (%d)\n", strerror(errno), errno);
-            throw std::runtime_error("Can't init socket");
-        }
-
-        if (sock->Connect()) {
-            fprintf(stderr, "Can't connect socket: %s (%d)\n", strerror( errno), errno);
-            throw std::runtime_error("Can't connect socket");
-        }
-
-        _pFacade = new USSFacade(sock);
+        _pFacade = new USSFacade(host, port);
 
         Console console;
         console.addItem("req100", cmd_req100);
@@ -190,7 +210,7 @@ int main(int argc, char** argv)
         console.run("ussman>");
 
     } catch(const std::exception& error) {
-        fprintf(stderr, "Fatal error: %s\n", error.what());
+        fprintf(stderr, error.what());
     }
 
     delete _pFacade;
