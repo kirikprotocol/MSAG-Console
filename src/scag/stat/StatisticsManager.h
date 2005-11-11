@@ -17,6 +17,7 @@
 #include "routemap.h"
 #include "TrafficRecord.h"
 #include <core/buffers/File.hpp>
+#include "scag/config/stat/StatManConfig.h"
 
 namespace scag {
 
@@ -25,6 +26,7 @@ namespace stat {
     using namespace smsc::core::threads;
     using namespace smsc::core::synchronization;
     using smsc::core::buffers::File;
+    using scag::config::StatManConfig;
 
     using smsc::core::buffers::IntHash;
     using smsc::core::buffers::Hash;
@@ -77,7 +79,7 @@ namespace stat {
         static bool  inited;
         static Mutex initLock;
 
-        void configure(const std::string& dir);
+        void configure(const StatManConfig& statManCfg);
 
     protected:
 
@@ -110,6 +112,11 @@ namespace stat {
 
         void  incError(IntHash<int>& hash, int errcode);
 
+        std::string perfHost;
+        int perfGenPort;
+        int perfSvcPort;
+        int perfScPort;
+
         //File storage
     private:
 
@@ -136,7 +143,7 @@ namespace stat {
 
         static RouteMap routeMap;
 
-        static void init(const std::string& dir);    
+        static void init(const StatManConfig& statManCfg);    
         
         virtual int Execute();
 

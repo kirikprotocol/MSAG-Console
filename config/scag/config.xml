@@ -21,6 +21,15 @@
     <param name="soDir" type="string">bill_so</param>
   </section>
   
+  <section name="StatisticsManager">
+    <param name="statisticsDir" type="string">statistics</param>
+    <param name="perfHost" type="string">sunfire</param>
+    <param name="perfGenPort" type="int">25761</param>
+    <param name="perfSvcPort" type="int">25762</param>
+    <param name="perfScPort" type="int">25763</param>
+  </section>
+			
+  
   <section name="SessionManager">
     <param name="location" type="string">conf</param>
   </section>

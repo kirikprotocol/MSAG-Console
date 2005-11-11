@@ -28,6 +28,7 @@ Mutex StatisticsManager::initLock;
 using smsc::core::buffers::TmpBuf;
 using namespace scag::util::singleton;
 using smsc::core::buffers::File;
+using scag::config::StatManConfig;
 
 const uint16_t SMSC_STAT_DUMP_INTERVAL = 60; // in seconds
 const uint16_t SMSC_STAT_VERSION_INFO  = 0x0001;
@@ -50,33 +51,39 @@ Statistics& Statistics::Instance()
     }
     return SingleSM::Instance();
 }
-void StatisticsManager::init(const std::string& dir)
+void StatisticsManager::init(const StatManConfig& statManConfig)
 {
     if (!StatisticsManager::inited)
     {
         MutexGuard guard(StatisticsManager::initLock);
         if (!StatisticsManager::inited) {
             StatisticsManager& sm = SingleSM::Instance();
-            sm.configure(dir);
+            sm.configure(statManConfig);
             sm.Start();
             StatisticsManager::inited = true;
         }
     }
 }
 
-void StatisticsManager::configure(const std::string& dir)
+void StatisticsManager::configure(const StatManConfig& statManConfig)
 {
-    if( !dir.length() )
+    location = statManConfig.getDir();
+    traffloc = location;
+    if( !location.length() )
         throw Exception("StatisticsManager, configure: Dirrectory has zero length.");
-
-    location = dir;
-    traffloc = dir;
 
     if (!createStorageDir(location)) 
         throw Exception("Can't open statistics directory: '%s'", location.c_str());
 
     if (!createStorageDir(traffloc)) 
         throw Exception("Can't open traffic directory: '%s'", traffloc.c_str());
+
+    perfHost = statManConfig.getPerfHost();
+    if(!perfHost.length())
+        throw Exception("StatisticsManager, configure: Dirrectory has zero length.");
+    perfGenPort = statManConfig.getPerfGenPort();
+    perfSvcPort = statManConfig.getPerfSvcPort();
+    perfScPort = statManConfig.getPerfScPort();
 
     initTraffic(); // Initializes traffic hash
     logger = Logger::getInstance("statman");
