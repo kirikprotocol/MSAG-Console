@@ -37,7 +37,7 @@ SerializerInap* SerializerInap::getInstance()
 }
 
 /*
- * Inman messages are transferred as raw data of arbitrary length and have
+ * Inman messages are transferred as length prefixed packet and have
  * the following serialization format:
 
   2b        4b         2b       up to ...b
@@ -55,14 +55,14 @@ SerializableObject* SerializerInap::deserialize(ObjectBuffer& in)
     in >> version;
 
     if( version != FORMAT_VERSION ) 
-        throw runtime_error( format("Invalid version: 0x%X", version) );
+        throw runtime_error( format("SrlzrInap: Invalid fromat version: 0x%X", version) );
 
     in >> dialogId;
     in >> objectId;
 
     SerializableObject* obj = create( objectId );
     if( !obj ) 
-        throw runtime_error( format("Invalid object ID: 0x%X", objectId) );
+        throw runtime_error( format("SrlzrInap: Invalid object ID: 0x%X", objectId) );
 
     obj->setDialogId(dialogId);
     obj->setObjectId(objectId);
@@ -291,6 +291,7 @@ DeliverySmsResult::DeliverySmsResult() : value( DELIVERY_SUCCESSED )
 
 DeliverySmsResult::DeliverySmsResult(DeliverySmsResult_t val) : value( val )
 {
+    setObjectId((unsigned short)DELIVERY_SMS_RESULT_TAG);
 }
 
 DeliverySmsResult::~DeliverySmsResult()
