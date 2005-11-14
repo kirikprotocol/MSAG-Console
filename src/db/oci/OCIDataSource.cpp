@@ -55,10 +55,9 @@ void OCIConnection::connect()
 {
     if (isConnected && isDead) disconnect();
 
+    MutexGuard  guard(connectLock);
     try
     {
-        MutexGuard  guard(connectLock);
-
         if (!isConnected)
         {
             envhp=0L; svchp=0L; srvhp=0L; errhp=0L; sesshp=0L;
@@ -100,11 +99,23 @@ void OCIConnection::connect()
     }
     catch (SQLException& exc)
     {
-        disconnect();
+        cleanupHandlers();
         throw;
     }
 }
-
+void OCIConnection::cleanupHandlers()
+{
+    MutexGuard  guard2(doConnectLock);
+    if (errhp && svchp) {
+    // logoff from database server
+        (void) OCILogoff(svchp, errhp);
+    }
+    if (envhp) {
+    // free envirounment handle, all derrived handles will be freed too
+        (void) OCIHandleFree(envhp, OCI_HTYPE_ENV);
+    }
+    svchp = 0; envhp = 0; errhp = 0;
+}
 void OCIConnection::disconnect()
 {
     MutexGuard  guard(connectLock);
@@ -112,19 +123,8 @@ void OCIConnection::disconnect()
     if (isConnected)
     {
         Connection::disconnect();
-
-        MutexGuard  guard2(doConnectLock);
-        if (errhp && svchp) {
-        // logoff from database server
-            (void) OCILogoff(svchp, errhp);
-        }
-        if (envhp) {
-        // free envirounment handle, all derrived handles will be freed too
-            (void) OCIHandleFree(envhp, OCI_HTYPE_ENV);
-        }
-
+        cleanupHandlers();
         isConnected = false; isDead = false;
-        svchp = 0; envhp = 0; errhp = 0;
     }
 }
 
