@@ -78,12 +78,15 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
     if (!createStorageDir(traffloc)) 
         throw Exception("Can't open traffic directory: '%s'", traffloc.c_str());
 
-    perfHost = statManConfig.getPerfHost();
+    std::string perfHost = statManConfig.getPerfHost();
     if(!perfHost.length())
         throw Exception("StatisticsManager, configure: Dirrectory has zero length.");
-    perfGenPort = statManConfig.getPerfGenPort();
-    perfSvcPort = statManConfig.getPerfSvcPort();
-    perfScPort = statManConfig.getPerfScPort();
+    int perfGenPort = statManConfig.getPerfGenPort();
+    int perfSvcPort = statManConfig.getPerfSvcPort();
+    int perfScPort = statManConfig.getPerfScPort();
+
+    sender.init((PerformanceListener*)this, (PerformanceServer*)this);
+    sender.InitServer(perfHost, perfGenPort, perfSvcPort, perfScPort);
 
     initTraffic(); // Initializes traffic hash
     logger = Logger::getInstance("statman");
@@ -300,7 +303,10 @@ bool StatisticsManager::checkTraffic(std::string routeId, CheckTrafficPeriod per
 
 int StatisticsManager::Execute()
 {
-    //smsc_log_debug(logger, "Execute() started (%d)", isStopping);
+    smsc_log_debug(logger, "PerformanceServer is starting...");
+    sender.Start();
+    smsc_log_debug(logger, "PerformanceServer is started");
+
     {
         MutexGuard mg(stopLock);
         isStarted = true; 
@@ -330,6 +336,11 @@ int StatisticsManager::Execute()
     }
 
     //exitEvent.Signal();
+
+    smsc_log_debug(logger, "PerformanceServer is shutdowninig...");
+    sender.Stop();
+    smsc_log_debug(logger, "PerformanceServer is shutdowned");
+
     smsc_log_debug(logger, "Execute() exited");
     return 0;
 }
@@ -1073,17 +1084,17 @@ void StatisticsManager::incScMmsCounter(const char* systemId, int index)
     if (!smeCounter) scMmsCounters.Insert(systemId, counter);
 }
 
-void StatisticsManager::reportGenPerformance()
+void StatisticsManager::reportGenPerformance(PerformanceData * data)
 {
     MutexGuard g(genSocketsMutex);
-    /*PerformanceData ld=*data;
+    PerformanceData ld=*data;
     int high,low;
 
     ld.size=htonl(sizeof(ld));
     ld.countersNumber=htonl(ld.countersNumber);
 
 
-    for(int i=0;i<performanceCounters;i++)
+    for(int i=0;i<PERF_CNT_COUNT;i++)
     {
       ld.counters[i].lastSecond=htonl(ld.counters[i].lastSecond);
       ld.counters[i].average=htonl(ld.counters[i].average);
@@ -1102,16 +1113,16 @@ void StatisticsManager::reportGenPerformance()
 
     ld.uptime=htonl(ld.uptime);
     ld.now=htonl(ld.now);
-    ld.eventQueueSize=htonl(ld.eventQueueSize);
-    ld.inProcessingCount=htonl(ld.inProcessingCount);
-    ld.inScheduler=htonl(ld.inScheduler);*/
+    //ld.eventQueueSize=htonl(ld.eventQueueSize);
+    //ld.inProcessingCount=htonl(ld.inProcessingCount);
+    //ld.inScheduler=htonl(ld.inScheduler);
 
     for(int i=0;i<genSockets.Count();i++)
     {
 
-      //int wr=genSockets[i]->WriteAll((char*)&ld,sizeof(ld));
+      int wr=genSockets[i]->WriteAll((char*)&ld,sizeof(ld));
 
-      //if(wr!=sizeof(ld))
+      if(wr!=sizeof(ld))
       {
         genSockets[i]->Abort();
         delete genSockets[i];
@@ -1119,6 +1130,10 @@ void StatisticsManager::reportGenPerformance()
         i--;
       }
     }
+}
+
+void StatisticsManager::getPerfData(uint64_t *cnt)
+{
 }
 
 void StatisticsManager::reportSvcPerformance()
@@ -1330,6 +1345,36 @@ uint8_t* StatisticsManager::dumpScCounters(uint32_t& smePerfDataSize)
         
         return data;
 };
+
+void StatisticsManager::addSvcSocket(Socket * socket)
+{
+    MutexGuard g(svcSocketsMutex);
+    socket->setNonBlocking(1);
+    char buf[32];
+    socket->GetPeer(buf);
+    smsc_log_info(logger, "performance::add connect from %s", buf);
+    svcSockets.Push(socket);
+}
+
+void StatisticsManager::addScSocket(Socket * socket)
+{
+    MutexGuard g(scSocketsMutex);
+    socket->setNonBlocking(1);
+    char buf[32];
+    socket->GetPeer(buf);
+    smsc_log_info(logger, "performance::add connect from %s", buf);
+    scSockets.Push(socket);
+}
+
+void StatisticsManager::addGenSocket(Socket * socket)
+{
+    MutexGuard g(genSocketsMutex);
+    socket->setNonBlocking(1);
+    char buf[32];
+    socket->GetPeer(buf);
+    smsc_log_info(logger, "performance::add connect from %s", buf);
+    genSockets.Push(socket);
+}
 
 int StatisticsManager::indexByCounter(int counter)
 {

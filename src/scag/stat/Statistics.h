@@ -7,12 +7,6 @@
 #include <sms/sms.h>
 #include "scag/transport/smpp/router/route_types.h"
 #include "scag/transport/smpp/SmppManagerAdmin.h"
-#define PERF_CNT_ACCEPTED       0
-#define PERF_CNT_REJECTED       1
-#define PERF_CNT_DELIVERED      2
-#define PERF_CNT_GW_REJECTED    3
-#define PERF_CNT_FAILED         4
-#define PERF_CNT_COUNT          5
 
 namespace scag {
 namespace stat {

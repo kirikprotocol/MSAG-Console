@@ -22,6 +22,8 @@
 
 #include "util/timeslotcounter.hpp"
 #include "core/network/Socket.hpp"
+#include "Sender.h"
+#include "Performance.h"
 
 namespace scag {
 
@@ -79,32 +81,7 @@ namespace stat {
       }
     };
 
-    struct SmePerformanceCounter
-    {
-        uint16_t                counters[PERF_CNT_COUNT];
-        TimeSlotCounter<int>*   slots   [PERF_CNT_COUNT];
-
-        SmePerformanceCounter() { 
-            memset(counters, 0, sizeof(counters));
-            memset(slots, 0, sizeof(slots));
-        };
-        virtual ~SmePerformanceCounter() {
-            for (int i=0; i<PERF_CNT_COUNT; i++) 
-                if (slots[i]) delete slots[i];
-        };
-        inline void clear() {
-            memset(counters, 0, sizeof(counters));
-        };
-    };
-
-    class PerformanceListener{
-    public:
-        virtual void reportGenPerformance()=0;
-        virtual void reportSvcPerformance()=0;
-        virtual void reportScPerformance()=0;
-    };
-
-    class StatisticsManager : public Statistics, public PerformanceListener, public Thread
+    class StatisticsManager : public Statistics, public PerformanceListener, public PerformanceServer, public Thread
     {
     friend class Statistics;
     private:
@@ -145,10 +122,7 @@ namespace stat {
 
         void  incError(IntHash<int>& hash, int errcode);
 
-        std::string perfHost;
-        int perfGenPort;
-        int perfSvcPort;
-        int perfScPort;
+        Sender sender;
 
         Mutex                            svcCountersLock;
         Hash   <SmePerformanceCounter*>  svcSmppCounters;
@@ -216,9 +190,13 @@ namespace stat {
         virtual void registerEvent(const SmppStatEvent& si);
         bool checkTraffic(std::string routeId, CheckTrafficPeriod period, int64_t value);
 
-        virtual void reportGenPerformance();
+        virtual void getPerfData(uint64_t *cnt);
+        virtual void reportGenPerformance(PerformanceData * data);
         virtual void reportSvcPerformance();
         virtual void reportScPerformance();
+        virtual void addSvcSocket(Socket * socket);
+        virtual void addScSocket(Socket * socket);
+        virtual void addGenSocket(Socket * socket);
 
         StatisticsManager();
         virtual ~StatisticsManager();
