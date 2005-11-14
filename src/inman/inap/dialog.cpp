@@ -227,33 +227,32 @@ USHORT_T Dialog::handleEndDialog()
 
 USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
 {
-  assert( op );
-  assert( oplen > 0 );
-  assert( tag == EINSS7_I97TCAP_OPERATION_TAG_LOCAL );
+    assert( op );
+    assert( oplen > 0 );
+    assert( tag == EINSS7_I97TCAP_OPERATION_TAG_LOCAL );
 
-  UCHAR_T opcode = op[0];
+    UCHAR_T opcode = op[0];
+    Invoke  invoke;
 
-  auto_ptr<Invoke> invoke( new Invoke() );
-  invoke->setId( invId );
-  invoke->setTag( tag );
-  invoke->setOpcode( opcode );
+    invoke.setId(invId);
+    invoke.setTag(tag);
+    invoke.setOpcode(opcode);
 
-  Component* comp = ApplicationContextFactory::getFactory(_ac_idx)->createArg( opcode );
-  assert(comp);
-  if( comp )
-  {
-    std::vector<unsigned char> code( pm, pm + pmlen );
-    comp->decode( code );
-    invoke->setParam( comp );
-  }
-
-  for( ListenerList::iterator it = listeners.begin(); it != listeners.end(); it++)
-  {
-    DialogListener* ptr = *it;
-    ptr->onDialogInvoke( invoke.get() );
-  }
-
-  return MSG_OK;
+    if (pmlen) { //operation parameters present
+        Component* comp = ApplicationContextFactory::getFactory(_ac_idx)->createArg( opcode );
+        assert(comp);
+        std::vector<unsigned char> code( pm, pm + pmlen );
+        comp->decode(code);
+        invoke.setParam(comp);
+    }
+    //NOTE: calling onDialogInvoke() may lead to this Dialog destruction,
+    //so iterate over ListenerList copy.
+    ListenerList cpList = listeners;
+    for (ListenerList::iterator it = cpList.begin(); it != cpList.end(); it++) {
+        DialogListener* ptr = *it;
+        ptr->onDialogInvoke(&invoke);
+    }
+    return MSG_OK;
 }
 
 USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
