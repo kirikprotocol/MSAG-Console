@@ -4,6 +4,7 @@
 #define __SMSC_INMAN_INTERACTION_SERIALIZER__
 
 #include <vector>
+//#include <inttypes.h>	/* C99 specifies this file */
 
 #include "core/buffers/TmpBuf.hpp"
 #include "core/network/Socket.hpp"
@@ -30,7 +31,6 @@ inline ObjectBuffer& operator<<(ObjectBuffer& buf, const std::vector<unsigned ch
     buf.Append((char*)&arr[0], len);
     return buf;
 }
-
 inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::vector<unsigned char>& arr )
 {
     unsigned char len;
@@ -48,7 +48,6 @@ inline ObjectBuffer& operator<<(ObjectBuffer& buf, const std::string& str)
     buf.Append(str.c_str(),len);
     return buf;
 }
-
 inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::string& str )
 {
     unsigned char len;
@@ -59,74 +58,98 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, std::string& str )
     return buf;
 }
 
-  inline ObjectBuffer& operator<<(ObjectBuffer& buf,const unsigned int& val)
-  {
-    unsigned int nval=ntohl(val);
-    buf.Append((char*)&nval,4);
-    return buf;
-  }
 
-  inline ObjectBuffer& operator>>(ObjectBuffer& buf,unsigned int& val)
-  {
-    buf.Read((char*)&val,4);
-    val=htonl(val);
-    return buf;
-  }
+inline ObjectBuffer& operator<<(ObjectBuffer& buf, const uint64_t& val)
+{
+    uint32_t nval = ntohl( (uint32_t)(val & (uint32_t)(-1)) );
+    buf.Append((char*)&nval, 4);
 
-  inline ObjectBuffer& operator<<(ObjectBuffer& buf,const int& val)
-  {
-    unsigned int nval=ntohl(val);
-    buf.Append((char*)&nval,4);
+    nval = ntohl( (uint32_t)(val >> 32) );
+    buf.Append((char*)&nval, 4);
+    
     return buf;
-  }
+}
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, uint64_t & val)
+{
+    uint32_t nval, nval2;
 
-  inline ObjectBuffer& operator>>(ObjectBuffer& buf,int& val)
-  {
-    buf.Read((char*)&val,4);
-    val=htonl(val);
-    return buf;
-  }
+    buf.Read((char*)&nval, 4);
+    val = (uint64_t)htonl(nval);
 
-  inline ObjectBuffer& operator<<(ObjectBuffer& buf,time_t val)
-  {
-    val=ntohl(val);
-    buf.Append((char*)&val,4);
-    return buf;
-  }
+    buf.Read((char*)&nval, 4);
+    val |= ((uint64_t)htonl(nval) << 32);
 
-  inline ObjectBuffer& operator>>(ObjectBuffer& buf,time_t& val)
-  {
-    buf.Read((char*)&val,4);
-    val=htonl(val);
     return buf;
-  }
-
-  inline ObjectBuffer& operator<<(ObjectBuffer& buf,unsigned short val)
-  {
-    unsigned short nval=ntohs(val);
-    buf.Append((char*)&nval,2);
-    return buf;
-  }
-
-  inline ObjectBuffer& operator>>(ObjectBuffer& buf,unsigned short& val)
-  {
-    buf.Read((char*)&val,2);
-    val=htons(val);
-    return buf;
-  }
+}
 
 
-  inline ObjectBuffer& operator<<(ObjectBuffer& buf,const unsigned char& val)
-  {
-    buf.Append((char*)&val,1);
+inline ObjectBuffer& operator<<(ObjectBuffer& buf, const uint32_t & val)
+{
+    uint32_t nval= ntohl(val);
+    buf.Append((char*)&nval, 4);
     return buf;
-  }
+}
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, uint32_t & val)
+{
+    buf.Read((char*)&val, 4);
+    val = htonl(val);
+    return buf;
+}
 
-  inline ObjectBuffer& operator>>(ObjectBuffer& buf,unsigned char& val)
-  {
-    buf.Read((char*)&val,1);
+inline ObjectBuffer& operator<<(ObjectBuffer& buf, const int32_t& val)
+{
+    uint32_t nval= ntohl((uint32_t)val);
+    buf.Append((char*)&nval, 4);
     return buf;
-  }
+}
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, int32_t& val)
+{
+    buf.Read((char*)&val, 4);
+    val = (int32_t)htonl((uint32_t)val);
+    return buf;
+}
+
+/* NOTE: on all platforms time_t is a signed integer type holding at least 4 bytes!!!
+ */
+inline ObjectBuffer& operator<<(ObjectBuffer& buf, const time_t& val)
+{
+    uint32_t nval = ntohl((uint32_t)val);
+    buf.Append((char*)&nval, 4);
+    return buf;
+}
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, time_t& val)
+{   
+    uint32_t nval;
+    buf.Read((char*)&nval, 4);
+    val = (time_t)htonl(nval);
+    return buf;
+}
+
+inline ObjectBuffer& operator<<(ObjectBuffer& buf, const unsigned short& val)
+{
+    unsigned short nval = ntohs(val);
+    buf.Append((char*)&nval, 2);
+    return buf;
+}
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, unsigned short& val)
+{
+    buf.Read((char*)&val, 2);
+    val = htons(val);
+    return buf;
+}
+
+
+inline ObjectBuffer& operator<<(ObjectBuffer& buf, const unsigned char& val)
+{
+    buf.Append((char*)&val, 1);
+    return buf;
+}
+
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, unsigned char& val)
+{
+    buf.Read((char*)&val, 1);
+    return buf;
+}
 
 
 

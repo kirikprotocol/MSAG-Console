@@ -6,10 +6,13 @@ static char const ident[] = "$Id$";
 
 #include "inman/interaction/messages.hpp"
 #include "inman/common/util.hpp"
+#include "inman/common/cvtutil.hpp"
 
 using std::runtime_error;
 using smsc::inman::common::format;
 
+using smsc::cbs::parseCBS_DCS;
+using smsc::cbs::CBS_DCS;
 
 namespace smsc  {
 namespace inman {                                 
@@ -96,135 +99,207 @@ ChargeSms::~ChargeSms()
 
 void ChargeSms::setDestinationSubscriberNumber(const std::string& value)
 {
-	destinationSubscriberNumber = value;
+    destinationSubscriberNumber = value;
 }
 
 void ChargeSms::ChargeSms::setCallingPartyNumber(const std::string& value)
 {
-	callingPartyNumber = value;
+    callingPartyNumber = value;
 }
 
-void ChargeSms::setIMSI(const std::string& value)
+void ChargeSms::setCallingIMSI(const std::string& value)
 {
-	imsi = value;
+    callingImsi = value;
 }
 
 void ChargeSms::setSMSCAddress(const std::string& value)
 {
-	smscAddress = value;
+    smscAddress = value;
 }
 
-void ChargeSms::setTimeAndTimezone(time_t value)
+void ChargeSms::setSubmitTimeTZ(time_t value)
 {
-	timeAndTimezine = value;
+    submitTimeTZ = value;
 }
 
 void ChargeSms::setTPShortMessageSpecificInfo(unsigned char value)
 {
-	tpShortMessageSpecificInfo = value;
+    tpShortMessageSpecificInfo = value;
 }
 
 void ChargeSms::setTPProtocolIdentifier(unsigned char value)
 {
-	tpProtocolIdentifier = value;
+    tpProtocolIdentifier = value;
 }
 
 void ChargeSms::setTPDataCodingScheme(unsigned char value)
 {
-	tpDataCodingScheme = value;
+    tpDataCodingScheme = value;
 }
 
 void ChargeSms::setTPValidityPeriod(time_t value)
 {
-	tpValidityPeriod = value;
+    tpValidityPeriod = value;
 }
 
 void ChargeSms::setLocationInformationMSC(const std::string& value)
 {
-	locationInformationMSC = value;
+    locationInformationMSC = value;
 }
 
-std::string   ChargeSms::getDestinationSubscriberNumber() const
+//data for CDR generation
+
+void ChargeSms::setCallingSMEid(const std::string & sme_id)
 {
-	return destinationSubscriberNumber;
+    callingSMEid = sme_id;
 }
 
-std::string   ChargeSms::getCallingPartyNumber() const
+void ChargeSms::setRouteId(const std::string & route_id)
 {
-	return callingPartyNumber;
+    routeId = route_id;
 }
 
-std::string   ChargeSms::getIMSI() const
+void ChargeSms::setServiceId(int32_t service_id)
 {
-	return imsi;
+    serviceId = service_id;
 }
 
-std::string   ChargeSms::getSMSCAddress() const
+void ChargeSms::setUserMsgRef(uint32_t msg_ref)
 {
-	return smscAddress;
+    userMsgRef = msg_ref;
 }
 
-time_t		  ChargeSms::getTimeAndTimezone() const
+void ChargeSms::setMsgId(uint64_t msg_id)
 {
-	return timeAndTimezine;
+    msgId = msg_id;
+}
+
+void ChargeSms::setServiceOp(int32_t service_op)
+{
+    ussdServiceOp = service_op;
+}
+
+
+
+
+const std::string& ChargeSms::getDestinationSubscriberNumber() const
+{
+    return destinationSubscriberNumber;
+}
+
+const std::string& ChargeSms::getCallingPartyNumber() const
+{
+    return callingPartyNumber;
+}
+
+const std::string& ChargeSms::getCallingIMSI() const
+{
+    return callingImsi;
+}
+
+const std::string& ChargeSms::getSMSCAddress() const
+{
+    return smscAddress;
+}
+
+time_t ChargeSms::getSubmitTimeTZ() const
+{
+    return submitTimeTZ;
 }
 
 unsigned char ChargeSms::getTPShortMessageSpecificInfo() const
 {
-	return tpShortMessageSpecificInfo;	
+    return tpShortMessageSpecificInfo;
 }
 
 unsigned char ChargeSms::getTPProtocolIdentifier() const
 {
-	return tpProtocolIdentifier;
+    return tpProtocolIdentifier;
 }
 
 unsigned char ChargeSms::getTPDataCodingScheme() const
 {
-	return tpDataCodingScheme;
+    return tpDataCodingScheme;
 }
-time_t 		  ChargeSms::getTPValidityPeriod() const
+time_t ChargeSms::getTPValidityPeriod() const
 {
-	return tpValidityPeriod;
+    return tpValidityPeriod;
 }
 
-std::string   ChargeSms::getLocationInformationMSC() const
+const std::string&  ChargeSms::getLocationInformationMSC() const
 {
-	return locationInformationMSC;	
+    return locationInformationMSC;
 }
 
 void ChargeSms::load(ObjectBuffer& in)
 {
-	in >> destinationSubscriberNumber;
-	in >> callingPartyNumber;
-	in >> imsi;
-	in >> smscAddress;
-	in >> timeAndTimezine;
-	in >> tpShortMessageSpecificInfo;
-	in >> tpProtocolIdentifier;
-	in >> tpDataCodingScheme;
-	in >> tpValidityPeriod;
-	in >> locationInformationMSC;
+    in >> destinationSubscriberNumber;
+    in >> callingPartyNumber;
+    in >> callingImsi;
+    in >> smscAddress;
+    in >> submitTimeTZ;
+    in >> tpShortMessageSpecificInfo;
+    in >> tpProtocolIdentifier;
+    in >> tpDataCodingScheme;
+    in >> tpValidityPeriod;
+    in >> locationInformationMSC;
+    //data for CDR generation
+    in >> callingSMEid;
+    in >> routeId;
+    in >> serviceId;
+    in >> userMsgRef;
+    in >> msgId;
+    in >> ussdServiceOp;
 }
 
 void ChargeSms::save(ObjectBuffer& out)
 {
     out << destinationSubscriberNumber;
     out << callingPartyNumber;
-    out << imsi;
+    out << callingImsi;
     out << smscAddress;
-    out << timeAndTimezine;
+    out << submitTimeTZ;
     out << tpShortMessageSpecificInfo;
     out << tpProtocolIdentifier;
     out << tpDataCodingScheme;
     out << tpValidityPeriod;
     out << locationInformationMSC;
+    //data for CDR generation
+    out << callingSMEid;
+    out << routeId;
+    out << serviceId;
+    out << userMsgRef;
+    out << msgId;
+    out << ussdServiceOp;
 }
+
+
+void ChargeSms::export2CDR(CDRRecord & cdr)
+{
+    cdr._msgId = msgId;
+    cdr._cdrType = CDRRecord::dpOrdinary;
+    cdr._mediaType = (parseCBS_DCS(tpDataCodingScheme) == CBS_DCS::dcBINARY8) ?
+                        CDRRecord::dpBinary : CDRRecord::dpText ;
+    cdr._bearer = CDRRecord::dpUSSD;
+    cdr._submitTime = submitTimeTZ;
+
+    cdr._srcAdr = callingPartyNumber;
+    cdr._srcIMSI = callingImsi;
+    cdr._srcMSC = locationInformationMSC;
+    cdr._srcSMEid = callingSMEid;
+
+    cdr._routeId = routeId;
+    cdr._serviceId = serviceId;
+    cdr._userMsgRef = userMsgRef;
+
+    cdr._dstAdr = destinationSubscriberNumber;
+}
+
 
 void ChargeSms::handle(InmanHandler* handler)
 {
-	assert( handler );
-	handler->onChargeSms( this );
+    assert( handler );
+    handler->onChargeSms( this );
 }
 
 //-----------------------------------------------
@@ -252,12 +327,25 @@ ChargeSmsResult::~ChargeSmsResult()
 
 ChargeSmsResult_t ChargeSmsResult::GetValue() const
 {
-	return value;
+    return value;
 }
-uint32_t ChargeSmsResult::GetRPCause() const
+//return general nonzero code holding RP cause or CAP3 error, or protocol error
+uint32_t ChargeSmsResult::GetErrorCode() const
 {
     return rPC;
 }
+
+uint8_t  ChargeSmsResult::GetRPCause() const
+{
+    return (rPC <= INMAN_RPCAUSE_LIMIT) ? (uint8_t)rPC : 0;
+}
+
+//return nonzero CAP3 error code
+uint32_t  ChargeSmsResult::GetCAP3Error() const
+{
+    return (rPC >= INMAN_SCF_ERROR_BASE) ? (rPC - INMAN_SCF_ERROR_BASE) : 0;
+}
+
 
 void ChargeSmsResult::load(ObjectBuffer& in)
 {
@@ -300,25 +388,49 @@ DeliverySmsResult::~DeliverySmsResult()
 
 DeliverySmsResult_t DeliverySmsResult::GetValue() const
 {
-	return value;
+    return value;
 }
 
 void DeliverySmsResult::load(ObjectBuffer& in)
 {
-	unsigned short v;
-	in >> v;
-	value = static_cast<DeliverySmsResult_t>(v);
+    unsigned short v;
+    in >> v;
+    value = static_cast<DeliverySmsResult_t>(v);
+    //optional data for CDR generation (on successfull delivery)
+    if (!value) {
+        in >> destImsi;
+        in >> destMSC;
+        in >> destSMEid;
+        in >> finalTimeTZ;
+    }
 }
 
 void DeliverySmsResult::save(ObjectBuffer& out)
 {
     out << (unsigned short)value;
+    //optional data for CDR generation (on successfull delivery)
+    if (!value) {
+        out << destImsi;
+        out << destMSC;
+        out << destSMEid;
+        out << finalTimeTZ;
+    }
+}
+
+void DeliverySmsResult::export2CDR(CDRRecord & cdr)
+{
+    if (!(cdr._dlvrRes = value)) {
+        cdr._dstIMSI = destImsi;
+        cdr._dstMSC = destMSC;
+        cdr._dstSMEid = destSMEid;
+        cdr._finalTime = finalTimeTZ;
+    }
 }
 
 void DeliverySmsResult::handle(InmanHandler* handler)
 {
-	assert( handler );
-	handler->onDeliverySmsResult( this );
+    assert( handler );
+    handler->onDeliverySmsResult( this );
 }
 
 } //interaction

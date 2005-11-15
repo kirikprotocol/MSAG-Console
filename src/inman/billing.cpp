@@ -77,7 +77,7 @@ void Billing::abortBilling(unsigned int errCode)
     ChargeSmsResult res(errCode);
     res.setDialogId(id);
     connect->send(&res);
-    state = bilClosed;
+    state = Billing::bilClosed;
     service->billingFinished( this );
 }
 
@@ -87,33 +87,30 @@ void Billing::abortBilling(unsigned int errCode)
  * -------------------------------------------------------------------------- */
 void Billing::onChargeSms(ChargeSms* sms)
 {
-//    assert( sms );
-//    assert(id == sms->getDialogId());
     smsc_log_debug( logger, "SSF --> SCF InitialDPSMS" );
 
+    sms->export2CDR(cdr);
     InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating);
 
-    arg.setDestinationSubscriberNumber( sms->getDestinationSubscriberNumber().c_str() ); // missing for MT
-    arg.setCallingPartyNumber( sms->getCallingPartyNumber().c_str() );
-    arg.setIMSI( sms->getIMSI().c_str() );
-    arg.setLocationInformationMSC( sms->getLocationInformationMSC().c_str() );
-    arg.setSMSCAddress( sms->getSMSCAddress().c_str() );
-    arg.setTimeAndTimezone( sms->getTimeAndTimezone() );
-    arg.setTPShortMessageSpecificInfo( sms->getTPShortMessageSpecificInfo() );
-    arg.setTPValidityPeriod( sms->getTPValidityPeriod() , smsc::inman::comp::tp_vp_relative );
-    arg.setTPProtocolIdentifier( sms->getTPProtocolIdentifier() );
-    arg.setTPDataCodingScheme( sms->getTPDataCodingScheme() );
+    arg.setDestinationSubscriberNumber(sms->getDestinationSubscriberNumber().c_str()); // missing for MT
+    arg.setCallingPartyNumber(sms->getCallingPartyNumber().c_str());
+    arg.setIMSI(sms->getCallingIMSI().c_str());
+    arg.setLocationInformationMSC( sms->getLocationInformationMSC().c_str());
+    arg.setSMSCAddress(sms->getSMSCAddress().c_str());
+    arg.setTimeAndTimezone(sms->getSubmitTimeTZ());
+    arg.setTPShortMessageSpecificInfo(sms->getTPShortMessageSpecificInfo());
+    arg.setTPValidityPeriod(sms->getTPValidityPeriod(), smsc::inman::comp::tp_vp_relative);
+    arg.setTPProtocolIdentifier(sms->getTPProtocolIdentifier());
+    arg.setTPDataCodingScheme(sms->getTPDataCodingScheme());
 
-    inap->initialDPSMS( &arg );
+    inap->initialDPSMS(&arg);
     dialog->beginDialog();
-    state = bilInited;
+    state = Billing::bilInited;
+
 }
 
 void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
 {
-//    assert(smsRes);
-//    assert(id == smsRes->getDialogId());
-
     messageType_e  messageType = MessageType_notification;
     EventTypeSMS_e eventType = (smsRes->GetValue() == smsc::inman::interaction::DELIVERY_SUCCESSED) ? 
                                 EventTypeSMS_o_smsSubmission : EventTypeSMS_o_smsFailure;
@@ -121,11 +118,12 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
     smsc_log_debug(logger, "SSF --> SCF EventReportSMS( EventType: DELIVERY_%s (0x%X), MessageType: 0x%X )",
         (eventType = EventTypeSMS_o_smsFailure) ? "FAILED" : "SUCCEEDED", eventType, messageType);
 
+    smsRes->export2CDR(cdr);
     smsc::inman::comp::EventReportSMSArg    report(eventType, messageType);
 
     inap->eventReportSMS(&report);
     dialog->continueDialog();
-    state = bilClosed;
+    state = Billing::bilClosed;
 
     service->billingFinished(this);
 }
@@ -144,7 +142,7 @@ void Billing::continueSMS()
     ChargeSmsResult res;
     res.setDialogId(id);
     connect->send(&res);
-    state = bilProcessed;
+    state = Billing::bilProcessed;
 }
 
 void Billing::releaseSMS(ReleaseSMSArg* arg)
@@ -153,8 +151,7 @@ void Billing::releaseSMS(ReleaseSMSArg* arg)
     ChargeSmsResult res((uint32_t)arg->rPCause);
     res.setDialogId(id);
     connect->send(&res);
-    state = bilClosed;
-    service->billingFinished(this);
+    state = Billing::bilProcessed;
 }
 
 void Billing::abortSMS(unsigned char errCode)

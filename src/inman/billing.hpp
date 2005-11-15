@@ -4,8 +4,6 @@
 #define __SMSC_INMAN_INAP_BILLING__
 
 #include "inman/inap/session.hpp"
-//#include "inman/inap/dialog.hpp"
-//#include "inman/comp/comps.hpp"
 #include "inman/inap/inap.hpp"
 #include "inman/interaction/messages.hpp"
 #include "inman/interaction/connect.hpp"
@@ -14,6 +12,7 @@ using smsc::inman::inap::Inap;
 using smsc::inman::inap::Session;
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::SSF;
+using smsc::inman::interaction::CDRRecord;
 using smsc::inman::interaction::Connect;
 using smsc::inman::interaction::InmanCommand;
 using smsc::inman::interaction::InmanHandler;
@@ -22,6 +21,7 @@ using smsc::inman::interaction::DeliverySmsResult;
 
 namespace smsc    {
 namespace inman   {
+
 
 class Service;
 class Billing : public SSF, public InmanHandler
@@ -60,6 +60,7 @@ protected:
     Logger*         logger;
     Connect*        connect;
     Service*        service;
+    CDRRecord       cdr;        //data for CDR record creation
 };
 
 } //inman

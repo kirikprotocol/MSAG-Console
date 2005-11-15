@@ -3,6 +3,7 @@ static char const ident[] = "$Id$";
 #include <stdio.h>
 #include <assert.h>
 #include <memory>
+#include <string.h>
 
 #include "service.hpp"
 #include "logger/Logger.h"
@@ -51,41 +52,60 @@ extern "C" static void sighandler( int signal )
   g_pService = 0;
 }
 
+static const char * const _CDRmodes[2] = { "all", "postpaid" };
 struct INBillConfig
 {
-  public:
-  INBillConfig():ssf_addr(0),scf_addr(0),host(0),port(0),ssn(0){}
-  void read(Manager& manager)
-  {
-    try {
-      ssf_addr = manager.getString("ssfAddress");
-      ssn = manager.getInt("ssn");
-      smsc_log_info( inapLogger, "SSF : GT=%s,SSN=%d", ssf_addr,ssn );
-    } catch(ConfigException& exc) {
-     ssf_addr = 0; ssn = 0;
-     throw ConfigException("ssfAddress or ssn missing");
+    typedef enum { CDR_ALL = 0, CDR_POSTPAID = 1 } CDR_MODE;
+public:
+    INBillConfig() 
+        : ssf_addr(0), scf_addr(0), host(0)
+        , port(0), ssn(0), cdrMode(INBillConfig::CDR_ALL) {}
+
+    void read(Manager& manager)
+    {
+        try {
+            ssf_addr = manager.getString("ssfAddress");
+            ssn = manager.getInt("ssn");
+            smsc_log_info( inapLogger, "SSF : GT=%s,SSN=%d", ssf_addr,ssn );
+        } catch(ConfigException& exc) {
+            ssf_addr = 0; ssn = 0;
+            throw ConfigException("ssfAddress or ssn missing");
+        }
+        try {
+            scf_addr = manager.getString("scfAddress");
+            smsc_log_info( inapLogger, "SCF : GT=%s", scf_addr );
+        } catch (ConfigException& exc) {
+            scf_addr = 0;
+            throw ConfigException("scfAddress missing");
+        }
+        try {
+            host = manager.getString("host");
+            port = manager.getInt("port");
+            smsc_log_info(inapLogger, "SMSC: %s:%d", host, port);
+        } catch (ConfigException& exc) {
+            host = 0; port = 0;
+            throw ConfigException("SMSC host or port missing");
+        }
+        try {
+            char* cdrs = manager.getString("cdrMode");
+            if (!strcmp(cdrs, _CDRmodes[CDR_ALL]))
+                cdrMode = CDR_ALL;
+            else if (!strcmp(cdrs, _CDRmodes[CDR_POSTPAID]))
+                cdrMode = CDR_POSTPAID;
+            else
+                throw ConfigException("cdrMode unknown or missing");
+            smsc_log_info(inapLogger, "cdrMode: %s", cdrs);
+        } catch (ConfigException& exc) {
+            throw ConfigException("cdrMode unknown or missing");
+        }
     }
-    try {
-      scf_addr = manager.getString("scfAddress");
-      smsc_log_info( inapLogger, "SCF : GT=%s", scf_addr );
-    } catch(ConfigException& exc) {
-      scf_addr = 0;
-     throw ConfigException("scfAddress missing");
-    }
-    try {
-      host = manager.getString("host");
-      port = manager.getInt("port");
-      smsc_log_info( inapLogger, "SMSC: %s:%d", host, port );
-    } catch(ConfigException& exc) {
-     host = 0; port = 0;
-     throw ConfigException("SMSC host or port missing");
-    }
-  }
-  char* ssf_addr;
-  char* scf_addr;
-  char* host;
-  int   port;
-  int   ssn;
+
+    char*       ssf_addr;
+    char*       scf_addr;
+    char*       host;
+    int         port;
+    int         ssn;
+    CDR_MODE    cdrMode;
 };
 
 int main(int argc, char** argv)

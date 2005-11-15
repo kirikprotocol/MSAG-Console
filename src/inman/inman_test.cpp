@@ -2,7 +2,6 @@ static char const ident[] = "$Id$";
 #include <assert.h>
 #include <stdio.h>
 #include <errno.h>
-#include <string.h>
 #include <stdlib.h>
 #include <stdexcept>
 #include <string>
@@ -28,6 +27,8 @@ using smsc::inman::interaction::SmscCommand;
 using smsc::inman::interaction::DeliverySmsResult_t;
 
 
+#define prompt(str)     fprintf(stdout, str.c_str()); smsc_log_debug(logger, str.c_str())
+
 class Facade : public Thread, public SmscHandler
 {
 protected:
@@ -47,19 +48,19 @@ public:
     {
         std::string msg;
         msg = format("InFacade: connecting to InManager at %s:%d...\n", host, port);
-        smsc_log_info(logger, msg);
+        smsc_log_info(logger, msg.c_str());
         fprintf(stdout, msg.c_str());
 
         socket = new Socket();
         if (socket->Init(host, port, 1000)) {
             msg = format("InFacade: can't init socket: %s (%d)\n", strerror(errno), errno);
-            smsc_log_error(logger, msg);
-            throw std::runtime_error(msg);
+            smsc_log_error(logger, msg.c_str());
+            throw std::runtime_error(msg.c_str());
         }
         if (socket->Connect()) {
             msg = format("InFacade: can't connect socket: %s (%d)\n", strerror(errno), errno);
-            smsc_log_error(logger, msg);
-            throw std::runtime_error(msg);
+            smsc_log_error(logger, msg.c_str());
+            throw std::runtime_error(msg.c_str());
         }
         pipe = new ObjectPipe(socket, SerializerInap::getInstance(),
                                         ObjectPipe::frmLengthPrefixed);
@@ -86,19 +87,31 @@ public:
         op.setDialogId(getNextDialogId());
 
         op.setDestinationSubscriberNumber( ".1.1.79139859489" ); // missing for MT
+//Nezhinsky phone:        
         op.setCallingPartyNumber( ".1.1.79139343290" );
-        op.setIMSI( "250013900405871" );
+        op.setCallingIMSI( "250013900405871" );
+//Ryzhkov phone:
+//        op.setCallingPartyNumber( ".1.1.79139859489" );
+//        op.setIMSI( "250013901464251" );
+
         op.setLocationInformationMSC( ".1.1.79139860001" );
         op.setSMSCAddress(".1.1.79029869990");
 
         time_t tm;
         time( &tm );
 
-        op.setTimeAndTimezone( tm );
+        op.setSubmitTimeTZ( tm );
         op.setTPShortMessageSpecificInfo( 0x11 );
         op.setTPValidityPeriod( 60*5 );
         op.setTPProtocolIdentifier( 0x00 );
         op.setTPDataCodingScheme( 0x08 );
+        //data for CDR
+        op.setCallingSMEid("MAP_PROXY");
+        op.setRouteId("sibinco.sms > plmn.kem");
+        op.setServiceId(1234);
+        op.setUserMsgRef(0x01fa);
+        op.setMsgId(0x010203040506);
+        op.setServiceOp(0);
 
         pipe->send(&op); 
     }
@@ -114,12 +127,20 @@ public:
     {
         assert(result);
         assert(result->getObjectId() == smsc::inman::interaction::CHARGE_SMS_RESULT_TAG);
+        std::string msg = format("ChargeSmsResult: CHARGING_%sPOSSIBLE",
+                ( result->GetValue() == smsc::inman::interaction::CHARGING_POSSIBLE ) ?
+                 "" : "NOT_");
+        if (result->GetRPCause())
+            msg += format(", RPCause: %u", (unsigned)result->GetRPCause());
+        else if (result->GetCAP3Error())
+            msg += format(", CAP3Error: %u", result->GetCAP3Error());
+        else if (result->GetErrorCode())
+            msg += ", TCP dialog error";
+        msg += "\n";
 
-        if ( result->GetValue() == smsc::inman::interaction::CHARGING_POSSIBLE ) {
-            fprintf( stdout, "ChargeSmsResult( CHARGING_POSSIBLE ) received\n");
+        prompt(msg);
+        if (result->GetRPCause())
             sendDeliverySmsResult(result->getDialogId());
-        } else
-            fprintf( stdout, "ChargeSmsResult( CHARGING_NOT_POSSIBLE ) received\n");
     }
 
     // Thread entry point
