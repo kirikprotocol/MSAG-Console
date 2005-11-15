@@ -2,7 +2,9 @@
 #define scag_performance_dot_h
 
 #include "core/network/Socket.hpp"
+#include "core/synchronization/Mutex.hpp"
 #include "util/timeslotcounter.hpp"
+#include "Statistics.h"
 #include <string.h>
 
 #define PERF_CNT_ACCEPTED       0
@@ -17,6 +19,8 @@ namespace stat {
 
 using smsc::util::TimeSlotCounter;
 using smsc::core::network::Socket;
+using smsc::core::synchronization::Mutex;
+using smsc::core::synchronization::MutexGuard;
 
 struct PerformanceCounter{
     int32_t lastSecond;
@@ -69,6 +73,69 @@ public:
     virtual void addSvcSocket(Socket * socket)=0;
     virtual void addScSocket(Socket * socket)=0;
     virtual void addGenSocket(Socket * socket)=0;
+};
+
+struct GenStatistics
+{
+    int accepted;
+    int rejected;
+    int delivered;
+    int gw_rejected;
+    int failed;
+    Mutex statLock;
+    GenStatistics()
+        : accepted(0),
+          rejected(0),
+          delivered(0),
+          gw_rejected(0),
+          failed(0)
+    {}
+    void clear()
+    {
+        MutexGuard g(statLock);
+
+        accepted = 0;
+        rejected = 0;
+        delivered = 0;
+        gw_rejected = 0;
+        failed = 0;
+    }
+    void inc(int counter)
+    {
+        MutexGuard g(statLock);
+
+        using namespace Counters;
+        switch(counter)
+        {
+        case cntAccepted:
+            ++accepted;
+            break;
+        case cntRejected:
+            ++rejected;
+            break;
+        case cntDelivered:
+            ++delivered;
+            break;
+        case cntGw_Rejected:
+            ++gw_rejected;
+            break;
+        case cntFailed:
+            ++failed;
+            break;
+        }
+    }
+
+    void getCounters(uint64_t * cnt)
+    {
+        MutexGuard g(statLock);
+
+        cnt[0]=accepted;
+        cnt[1]=rejected;
+        cnt[2]=delivered;
+        cnt[3]=gw_rejected;
+        cnt[4]=failed;
+    }
+
 };
 
 }

@@ -126,6 +126,8 @@ void StatisticsManager::registerEvent(const SmppStatEvent& si)
 
   using namespace Counters;
 
+  genCounters.inc(si.counter);
+
   if (si.smeId && si.smeId[0])
   {
     if(si.counter < cntBillingOk){
@@ -1134,6 +1136,7 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
 
 void StatisticsManager::getPerfData(uint64_t *cnt)
 {
+    genCounters.getCounters(cnt);
 }
 
 void StatisticsManager::reportSvcPerformance()

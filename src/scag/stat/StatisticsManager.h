@@ -143,6 +143,8 @@ namespace stat {
         Array<Socket*> genSockets;
         Mutex genSocketsMutex;
 
+        GenStatistics genCounters;
+
         //File storage
     private:
 
