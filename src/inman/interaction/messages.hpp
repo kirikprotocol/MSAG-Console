@@ -182,8 +182,8 @@ private:
 //NOTE: in case of CAP3 error, this command ends the TCP dialog.
 class ChargeSmsResult : public SmscCommand
 {
-    typedef enum { chgOk = 0, chgRPCause = 1, chgTCPerror, chgCAP3error} ChargeErrorClass;
 public:
+    typedef enum { chgOk = 0, chgRPCause = 1, chgTCPerror, chgCAP3error} ChargeErrorClass;
     ChargeSmsResult();                //positive result, no error
     ChargeSmsResult(uint32_t rPCcode); //negative result by RP cause or CAP3 error
     virtual ~ChargeSmsResult();
