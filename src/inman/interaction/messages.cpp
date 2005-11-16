@@ -182,51 +182,51 @@ void ChargeSms::setServiceOp(int32_t service_op)
 
 
 
-const std::string& ChargeSms::getDestinationSubscriberNumber() const
+const std::string& ChargeSms::getDestinationSubscriberNumber(void) const
 {
     return destinationSubscriberNumber;
 }
 
-const std::string& ChargeSms::getCallingPartyNumber() const
+const std::string& ChargeSms::getCallingPartyNumber(void) const
 {
     return callingPartyNumber;
 }
 
-const std::string& ChargeSms::getCallingIMSI() const
+const std::string& ChargeSms::getCallingIMSI(void) const
 {
     return callingImsi;
 }
 
-const std::string& ChargeSms::getSMSCAddress() const
+const std::string& ChargeSms::getSMSCAddress(void) const
 {
     return smscAddress;
 }
 
-time_t ChargeSms::getSubmitTimeTZ() const
+time_t ChargeSms::getSubmitTimeTZ(void) const
 {
     return submitTimeTZ;
 }
 
-unsigned char ChargeSms::getTPShortMessageSpecificInfo() const
+unsigned char ChargeSms::getTPShortMessageSpecificInfo(void) const
 {
     return tpShortMessageSpecificInfo;
 }
 
-unsigned char ChargeSms::getTPProtocolIdentifier() const
+unsigned char ChargeSms::getTPProtocolIdentifier(void) const
 {
     return tpProtocolIdentifier;
 }
 
-unsigned char ChargeSms::getTPDataCodingScheme() const
+unsigned char ChargeSms::getTPDataCodingScheme(void) const
 {
     return tpDataCodingScheme;
 }
-time_t ChargeSms::getTPValidityPeriod() const
+time_t ChargeSms::getTPValidityPeriod(void) const
 {
     return tpValidityPeriod;
 }
 
-const std::string&  ChargeSms::getLocationInformationMSC() const
+const std::string&  ChargeSms::getLocationInformationMSC(void) const
 {
     return locationInformationMSC;
 }
@@ -274,7 +274,7 @@ void ChargeSms::save(ObjectBuffer& out)
 }
 
 
-void ChargeSms::export2CDR(CDRRecord & cdr)
+void ChargeSms::export2CDR(CDRRecord & cdr) const
 {
     cdr._msgId = msgId;
     cdr._cdrType = CDRRecord::dpOrdinary;
@@ -329,19 +329,30 @@ ChargeSmsResult_t ChargeSmsResult::GetValue() const
 {
     return value;
 }
-//return general nonzero code holding RP cause or CAP3 error, or protocol error
-uint32_t ChargeSmsResult::GetErrorCode() const
+
+ChargeSmsResult::ChargeErrorClass  ChargeSmsResult::GetErrorClass(void) const
+{
+    if (!rPC)
+        return ChargeSmsResult::chgOk;
+    if (rPC <= INMAN_RPCAUSE_LIMIT)
+        return  ChargeSmsResult::chgRPCause;
+    if (rPC <= INMAN_PROTOCOL_ERROR_LIMIT)
+        return ChargeSmsResult::chgTCPerror;
+    return ChargeSmsResult::chgCAP3error;
+}
+//return combined nonzero code holding RP cause or CAP3 error, or protocol error
+uint32_t ChargeSmsResult::GetErrorCode(void) const
 {
     return rPC;
 }
 
-uint8_t  ChargeSmsResult::GetRPCause() const
+uint8_t  ChargeSmsResult::GetRPCause(void) const
 {
     return (rPC <= INMAN_RPCAUSE_LIMIT) ? (uint8_t)rPC : 0;
 }
 
 //return nonzero CAP3 error code
-uint32_t  ChargeSmsResult::GetCAP3Error() const
+uint32_t  ChargeSmsResult::GetCAP3Error(void) const
 {
     return (rPC >= INMAN_SCF_ERROR_BASE) ? (rPC - INMAN_SCF_ERROR_BASE) : 0;
 }
@@ -386,6 +397,28 @@ DeliverySmsResult::~DeliverySmsResult()
 {
 }
 
+void DeliverySmsResult::setResultValue(DeliverySmsResult_t res)
+{
+    value = res;
+}
+void DeliverySmsResult::setDestIMSI(const std::string& imsi)
+{
+    destImsi = imsi;
+}
+void DeliverySmsResult::setDestMSC(const std::string& msc)
+{
+    destMSC = msc;
+}
+void DeliverySmsResult::setDestSMEid(const std::string& sme_id)
+{
+    destSMEid = sme_id;
+}
+void DeliverySmsResult::setDeliveyTime(time_t final_tm)
+{
+    finalTimeTZ = final_tm;
+}
+
+
 DeliverySmsResult_t DeliverySmsResult::GetValue() const
 {
     return value;
@@ -417,7 +450,7 @@ void DeliverySmsResult::save(ObjectBuffer& out)
     }
 }
 
-void DeliverySmsResult::export2CDR(CDRRecord & cdr)
+void DeliverySmsResult::export2CDR(CDRRecord & cdr) const
 {
     if (!(cdr._dlvrRes = value)) {
         cdr._dstIMSI = destImsi;
