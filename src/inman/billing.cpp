@@ -25,21 +25,21 @@ Billing::Billing(Service* serv, unsigned int bid, Session* pSession, Connect* co
         , session( pSession )
         , connect( conn )
         , state (bilIdle)
+        , dialog(NULL)
+        , inap(NULL)
 {
     assert( connect );
     assert( session );
-    dialog = session->openDialog(id_ac_cap3_sms_AC);
-    assert( dialog );
-    inap = new Inap( dialog, this );
-    assert( inap );
 }
 
 
 Billing::~Billing()
 {
-    delete inap;
-    session->closeDialog( dialog );
-    delete dialog;
+    if (inap) {
+        delete inap;
+        session->closeDialog( dialog );
+        delete dialog;
+    }
 }
 
 void Billing::handleCommand(InmanCommand* cmd)
@@ -48,8 +48,12 @@ void Billing::handleCommand(InmanCommand* cmd)
     bool            accepted = false;
 
     switch (cmdId = cmd->getObjectId()) {
-    case CHARGE_SMS_TAG: {
+    case CHARGE_SMS_TAG: {  //TCP dialog init
         if (state == Billing::bilIdle) {
+            dialog = session->openDialog(id_ac_cap3_sms_AC);
+            assert( dialog );
+            inap = new Inap( dialog, this );
+            assert( inap );
             onChargeSms(static_cast<ChargeSms*>(cmd));
             accepted = true;
         }
@@ -106,7 +110,6 @@ void Billing::onChargeSms(ChargeSms* sms)
     inap->initialDPSMS(&arg);
     dialog->beginDialog();
     state = Billing::bilInited;
-
 }
 
 void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
