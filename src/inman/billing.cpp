@@ -119,7 +119,7 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
                                 EventTypeSMS_o_smsSubmission : EventTypeSMS_o_smsFailure;
 
     smsc_log_debug(logger, "SSF --> SCF EventReportSMS( EventType: DELIVERY_%s (0x%X), MessageType: 0x%X )",
-        (eventType = EventTypeSMS_o_smsFailure) ? "FAILED" : "SUCCEEDED", eventType, messageType);
+        (eventType == EventTypeSMS_o_smsFailure) ? "FAILED" : "SUCCEEDED", eventType, messageType);
 
     smsRes->export2CDR(cdr);
     smsc::inman::comp::EventReportSMSArg    report(eventType, messageType);
