@@ -18,6 +18,7 @@ using smsc::inman::interaction::InmanCommand;
 using smsc::inman::interaction::InmanHandler;
 using smsc::inman::interaction::ChargeSms;
 using smsc::inman::interaction::DeliverySmsResult;
+using smsc::core::synchronization::Mutex;
 
 namespace smsc    {
 namespace inman   {
@@ -27,7 +28,7 @@ class Service;
 class Billing : public SSF, public InmanHandler
 {
 public:
-    typedef enum { bilIdle, bilInited, bilProcessed, bilClosed } BillingState;
+    typedef enum { bilIdle, bilStarted, bilInited, bilProcessed, bilApproved, bilClosed } BillingState;
 
     Billing(Service* service, unsigned int id, Session*, Connect*);
     virtual ~Billing();
@@ -52,6 +53,7 @@ public:
 protected:
     void abortBilling(unsigned int errCode);
 
+    Mutex           bilMutex;   //
     BillingState    state;
     unsigned int    id;         //unique billing dialogue id
     Session*        session;    //TCAP dialog factory

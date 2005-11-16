@@ -47,9 +47,12 @@ void Billing::handleCommand(InmanCommand* cmd)
     unsigned short  cmdId;
     bool            accepted = false;
 
+    bilMutex.Lock();
     switch (cmdId = cmd->getObjectId()) {
     case CHARGE_SMS_TAG: {  //TCP dialog init
         if (state == Billing::bilIdle) {
+            state = Billing::bilStarted;
+            bilMutex.Unlock();
             dialog = session->openDialog(id_ac_cap3_sms_AC);
             assert( dialog );
             inap = new Inap( dialog, this );
@@ -61,6 +64,8 @@ void Billing::handleCommand(InmanCommand* cmd)
 
     case DELIVERY_SMS_RESULT_TAG: {
         if (state == Billing::bilProcessed) {
+            state = Billing::bilApproved;
+            bilMutex.Unlock();
             onDeliverySmsResult(static_cast<DeliverySmsResult*>(cmd));
             accepted = true;
         }
