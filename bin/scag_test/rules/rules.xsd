@@ -2,6 +2,7 @@
 <schema targetNamespace="http://www.sibinco.com/SCAG" 
    xmlns="http://www.w3.org/2001/XMLSchema"
    xmlns:scag="http://www.sibinco.com/SCAG"
+   xmlns:bill="http://www.sibinco.com/SCAG/CDRBILL"
    xmlns:session="http://www.sibinco.com/SCAG/SESSIONS"
    xmlns:operation="http://www.sibinco.com/SCAG/OPERATIONS">
     
@@ -12,9 +13,10 @@
         </documentation>
     </annotation>
    
-    <import schemaLocation="sessions.xsd" namespace="http://www.sibinco.com/SCAG/SESSIONS"/>
+    <import schemaLocation="cdrbill.xsd"    namespace="http://www.sibinco.com/SCAG/CDRBILL"/>
+    <import schemaLocation="sessions.xsd"   namespace="http://www.sibinco.com/SCAG/SESSIONS"/>
     <import schemaLocation="operations.xsd" namespace="http://www.sibinco.com/SCAG/OPERATIONS"/>
-    
+        
     
    <!-- General values types definition  -->
     <simpleType name="Value">
@@ -71,7 +73,16 @@
         <choice>
             <group ref="session:Actions"/>
 	    <group ref="operation:Actions" />
-            
+            <group ref="bill:Actions" />
+
+            <element name="log">
+	        <complexType>
+	            <attribute name="level" type="string" use="required"/>
+	            <attribute name="category" type="string" use="required"/>
+		    <attribute name="message" type="string" use="required"/>
+	        </complexType>
+            </element>
+													    
             <element name="set">
                 <complexType>
                     <attribute name="var" type="scag:Var" use="required"/>
@@ -85,6 +96,14 @@
                 </complexType>    
             </element>
             
+	    <element name="match">
+		<complexType>
+		    <attribute name="regexp" type="string" use="required" />
+		    <attribute name="value" type="scag:Value" use="required"/>
+		    <attribute name="result" type="scag:Var" use="reuired"/>
+		</complexType>
+	    </element>
+	    
             <element name="if">
                 <complexType>
                     <choice>

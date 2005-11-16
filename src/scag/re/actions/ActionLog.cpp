@@ -6,7 +6,7 @@ namespace scag { namespace re { namespace actions {
 
 IParserHandler * ActionLog::StartXMLSubSection(const std::string& name, const SectionParams& params,const ActionFactory& factory)
 {
-    throw SCAGException("Action 'session:close': cannot have a child object");
+    throw SCAGException("Action 'log': cannot have a child object");
 }
 
 bool ActionLog::FinishXMLSubSection(const std::string& name)
@@ -19,9 +19,9 @@ void ActionLog::init(const SectionParams& params,PropertyObject propertyObject)
     logger = Logger::getInstance("scag.re");
 
 
-    if (!params.Exists("level")) throw SCAGException("Action 'session:close': missing 'level' parameter");
-    if (!params.Exists("category")) throw SCAGException("Action 'session:close': missing 'category' parameter");
-    if (!params.Exists("message")) throw SCAGException("Action 'session:close': missing 'message' parameter");
+    if (!params.Exists("level")) throw SCAGException("Action 'log': missing 'level' parameter");
+    if (!params.Exists("category")) throw SCAGException("Action 'log': missing 'category' parameter");
+    if (!params.Exists("message")) throw SCAGException("Action 'log': missing 'message' parameter");
 
 
     std::string sLevel = params["level"];

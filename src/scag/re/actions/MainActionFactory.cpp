@@ -8,6 +8,8 @@
 #include "scag/re/actions/ActionAbort.h"
 #include "scag/re/actions/ActionTrafficCheck.h"
 #include "scag/re/actions/ActionOperationWait.h"
+#include "scag/re/actions/ActionMatch.h"
+
 
 //#include "scag/SAX2Print.hpp"
                  
@@ -25,6 +27,8 @@ Action * MainActionFactory::CreateAction(const std::string& name) const
     if (name=="session:abort") return new ActionAbort();
     if (name=="log") return new ActionLog();
     if (name=="operation:wait") return new ActionOperationWait();
+    if (name=="match") return new ActionMatch();
+
 
     Action * action = 0;
 
