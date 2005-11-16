@@ -120,6 +120,9 @@ public:
     {
         DeliverySmsResult   op(delivery);
         op.setDialogId(dlgId);
+        std::string msg = format("Sending DeliverySmsResult: DELIVERY_%s\n",
+                                !delivery ? "DELIVERY_SUCCESSED" : "DELIVERY_FAILED");
+        prompt(msg);
         pipe->send(&op);
     }
 
@@ -139,7 +142,7 @@ public:
         msg += "\n";
 
         prompt(msg);
-        if (result->GetRPCause())
+        if (result->GetErrorClass() <= ChargeSmsResult::chgRPCause)
             sendDeliverySmsResult(result->getDialogId());
     }
 
