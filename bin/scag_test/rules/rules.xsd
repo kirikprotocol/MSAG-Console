@@ -100,7 +100,7 @@
 		<complexType>
 		    <attribute name="regexp" type="string" use="required" />
 		    <attribute name="value" type="scag:Value" use="required"/>
-		    <attribute name="result" type="scag:Var" use="reuired"/>
+		    <attribute name="result" type="scag:Var" use="required"/>
 		</complexType>
 	    </element>
 	    

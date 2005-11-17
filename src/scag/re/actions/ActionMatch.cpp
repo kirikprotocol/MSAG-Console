@@ -41,16 +41,16 @@ void ActionMatch::init(const SectionParams& params,PropertyObject propertyObject
             throw InvalidPropertyException("Action 'match': cannot read property '%s' - no access", sValue.c_str());
     }
 
-    ftValue = ActionContext::Separate(sResult,name); 
+    FieldType ftResult = ActionContext::Separate(sResult,name); 
 
-    if (ftValue == ftField) 
+    if (ftResult == ftField) 
     {
         at = CommandAdapter::CheckAccess(propertyObject.HandlerId,name,propertyObject.transport);
         if (!(at&atWrite)) 
             throw InvalidPropertyException("Action 'match': cannot read property '%s' - no access",sResult.c_str());
     }
 
-    if (ftValue == ftUnknown) throw InvalidPropertyException("Action 'match': unrecognized variable prefix '%s' for 'result' parameter",sResult.c_str());
+    if (ftResult == ftUnknown) throw InvalidPropertyException("Action 'match': unrecognized variable prefix '%s' for 'result' parameter",sResult.c_str());
 
 
     re = new RegExp();
@@ -61,12 +61,13 @@ void ActionMatch::init(const SectionParams& params,PropertyObject propertyObject
         //smsc_log_error(logger, "Action 'match' Failed to compile regexp");
     }
 
-
     smsc_log_debug(logger,"Action 'match':: init...");
 }
 
 bool ActionMatch::run(ActionContext& context)
 {
+    smsc_log_debug(logger,"Run Action 'match'...");
+
     Property * pValue = 0;
     Property * pResult = 0;
 
@@ -84,6 +85,7 @@ bool ActionMatch::run(ActionContext& context)
     } else value = sValue;
 
     pResult = context.getProperty(sResult);
+
     if (!pResult) 
     {
         smsc_log_warn(logger,"Action 'match': invalid property '%s'", sResult.c_str());
@@ -99,9 +101,8 @@ bool ActionMatch::run(ActionContext& context)
   return true;
 }
 
-ActionMatch::ActionMatch()
+ActionMatch::ActionMatch() : re(0)
 {
-    re = 0;
 }
 
 

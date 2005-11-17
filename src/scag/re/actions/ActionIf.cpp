@@ -171,7 +171,10 @@ bool ActionIf::run(ActionContext& context)
     Property * property = context.getProperty(singleparam.Operand1);
     if (!property) return true;
 
-    smsc_log_debug(logger,"Testing "+singleparam.Operand1+" '"+property->getStr()+"'"+" vs "+singleparam.Operand2);
+    if (singleparam.Operand2!="") 
+        smsc_log_debug(logger,"Testing "+singleparam.Operand1+"='"+property->getStr()+"'"+" vs "+singleparam.Operand2);
+    else 
+        smsc_log_debug(logger,"Testing "+singleparam.Operand1+"='"+property->getStr()+"' for bool");
 
 
     if ((singleparam.Operation == opUnknown) && singleparam.Operand2.empty()) 

@@ -20,6 +20,7 @@
 #include "Rule.h"
 #include "RuleEngine.h"
 #include "XMLHandlers.h"
+#include "util/regexp/RegExp.hpp"
 
 
 
@@ -29,6 +30,7 @@ using smsc::core::synchronization::MutexGuard;
 using namespace smsc::util;
 using namespace scag::re::actions;
 using namespace scag::util::singleton;
+using namespace smsc::util::regexp;
 
 
 using smsc::core::synchronization::Mutex;
@@ -193,7 +195,6 @@ void RuleEngine::Init(const std::string& dir)
             RuleEngineImpl& re = SingleRE::Instance();
             re.ProcessInit(dir); 
             bRuleEngineInited = true;
-
         }
     }
 }
@@ -323,6 +324,11 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
 {
     logger = Logger::getInstance("scag.re");
 
+    smsc_log_info(logger,"");
+    smsc_log_info(logger,"Rule Engine initialization...");
+
+    RegExp::InitLocale();
+
     rules = new Rules();
 
     try
@@ -360,13 +366,12 @@ void RuleEngineImpl::ProcessInit(const std::string& dir)
              }
          } 
          else 
-         {
-             closedir(pDir);
-             return;
-         }
+             break;
     }
 
     closedir(pDir);
+    smsc_log_info(logger,"Rule Engine inited successfully...");
+    smsc_log_info(logger,"");
 }
 
 
