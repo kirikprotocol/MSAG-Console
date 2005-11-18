@@ -16,12 +16,17 @@ bool ActionMatch::FinishXMLSubSection(const std::string& name)
 
 void ActionMatch::init(const SectionParams& params,PropertyObject propertyObject)
 {
+    if (re) {
+        delete re;
+        re = 0;
+    }
+
     logger = Logger::getInstance("scag.re");
 
 
-    if (!params.Exists("regexp")) throw SCAGException("Action 'match': missing 'level' parameter");
-    if (!params.Exists("value")) throw SCAGException("Action 'match': missing 'category' parameter");
-    if (!params.Exists("result")) throw SCAGException("Action 'match': missing 'message' parameter");
+    if (!params.Exists("regexp")) throw SCAGException("Action 'match': missing 'regexp' parameter");
+    if (!params.Exists("value")) throw SCAGException("Action 'match': missing 'value' parameter");
+    if (!params.Exists("result")) throw SCAGException("Action 'match': missing 'result' parameter");
 
 
     const char * name = 0;
