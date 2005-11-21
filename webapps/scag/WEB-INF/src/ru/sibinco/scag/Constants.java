@@ -19,6 +19,7 @@ public class Constants
       public static final Constants COULDNT_APPLY_CONFIG = new Constants("error.status.couldnt_apply_config");
       public static final Constants COULDNT_SAVE_CONFIG = new Constants("error.status.couldnt_save_config");
       public static final Constants COULDNT_APPLY_ROUTES = new Constants("error.status.couldnt_apply_routes");
+      public static final Constants COULDNT_RESTORE_ROUTES = new Constants("error.status.couldnt_restory_routes");
       public static final Constants COULDNT_START_GATEWAY = new Constants("error.status.couldnt_start_gateway");
       public static final Constants COULDNT_STOP_GATEWAY = new Constants("error.status.couldnt_stop_gateway");
       public static final Constants COULDNT_REFRESH_SERVICES = new Constants("error.status.couldnt_refresh_services");
@@ -55,6 +56,9 @@ public class Constants
         public static final Constants COULD_NOT_CREATE_DESTINATION = new Constants("error.routing.routes.could_not_create_destination");
         public static final Constants COULD_NOT_CREATE_MASK = new Constants("error.routing.routes.could_not_create_mask");
         public static final Constants COULD_NOT_CREATE_DESTINATION_MASK = new Constants("error.routing.routes.could_not_create_destination_mask");
+        public static final Constants COULDNT_APPLY_ROUTES = new Constants("error.routing.couldnt_apply_routes");
+        public static final Constants COULDNT_LOAD_ROUTES = new Constants("error.routing.couldnt_load_routes");
+        public static final Constants COULDNT_SAVE_ROUTES = new Constants("error.routing.couldnt_save_routes");
       }
       public interface tracer
       {
