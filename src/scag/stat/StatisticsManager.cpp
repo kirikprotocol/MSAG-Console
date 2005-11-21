@@ -84,6 +84,7 @@ void StatisticsManager::configure(const StatManConfig& statManConfig)
     int perfGenPort = statManConfig.getPerfGenPort();
     int perfSvcPort = statManConfig.getPerfSvcPort();
     int perfScPort = statManConfig.getPerfScPort();
+    printf("StatisticsManager, perfSvcPort: %d\n", perfSvcPort);
 
     sender.init((PerformanceListener*)this, (PerformanceServer*)this);
     sender.InitServer(perfHost, perfGenPort, perfSvcPort, perfScPort);
@@ -1115,7 +1116,7 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
 
     ld.uptime=htonl(ld.uptime);
     ld.now=htonl(ld.now);
-    //ld.eventQueueSize=htonl(ld.eventQueueSize);
+    ld.eventQueueSize=htonl(ld.eventQueueSize);
     //ld.inProcessingCount=htonl(ld.inProcessingCount);
     //ld.inScheduler=htonl(ld.inScheduler);
 

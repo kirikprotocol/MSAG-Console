@@ -19,11 +19,24 @@ PerfSocketServer::~PerfSocketServer()
 int PerfSocketServer::Execute()
 {
     smsc::core::network::Multiplexer::SockArray ready, err;
+    printf("Execute is starting...\n");
+
+    if( genSocket.StartServer() )
+        ;
+    if( svcSocket.StartServer() )
+        ;
+    if( scSocket.StartServer() )
+        ;
+
+    printf("Wait for a socket to write...\n");
+
     while(!isStopping)
     {
-        if(listener.canRead(ready, err, 10)){
+        if(listener.canRead(ready, err)){
+            printf("There are ready sockets\n");
             for(int i=0; i<= ready.Count() - 1; i++){
                 if(ready[i] == &genSocket){
+                    printf("genSocket is ready\n");
                     sockaddr_in addrin;
                     int sz=sizeof(addrin);
                     SOCKET s=accept(genSocket.getSocket(),(sockaddr*)&addrin,&sz);
@@ -32,6 +45,7 @@ int PerfSocketServer::Execute()
                         performanceServer->addGenSocket(sock);
                     }
                 }if(ready[i] == &svcSocket){
+                    printf("svcSocket is ready\n");
                     sockaddr_in addrin;
                     int sz=sizeof(addrin);
                     SOCKET s=accept(svcSocket.getSocket(),(sockaddr*)&addrin,&sz);
@@ -40,6 +54,7 @@ int PerfSocketServer::Execute()
                         performanceServer->addSvcSocket(sock);
                     }
                 }if(ready[i] == &scSocket){
+                    printf("scSocket is ready\n");
                     sockaddr_in addrin;
                     int sz=sizeof(addrin);
                     SOCKET s=accept(scSocket.getSocket(),(sockaddr*)&addrin,&sz);
@@ -64,15 +79,18 @@ void PerfSocketServer::InitServer(std::string perfHost_, int perfGenPort_, int p
 {
     perfHost = perfHost_;
     perfGenPort = perfGenPort_;
-    perfSvcPort = perfSvcPort;
+    perfSvcPort = perfSvcPort_;
     perfScPort = perfScPort_;
 
     if(genSocket.InitServer(perfHost.c_str(), perfGenPort, 10))
         throw Exception("Failed to init socket server by host: %s, port: %d", perfHost.c_str(), perfGenPort);
+    printf("Socket server is inited by host: %s, port: %d\n", perfHost.c_str(), perfGenPort);
     if(svcSocket.InitServer(perfHost.c_str(), perfSvcPort, 10))
         throw Exception("Failed to init socket server by host: %s, port: %d", perfHost.c_str(), perfSvcPort);
+    printf("Socket server is inited by host: %s, port: %d\n", perfHost.c_str(), perfSvcPort);
     if(scSocket.InitServer(perfHost.c_str(), perfScPort, 10))
         throw Exception("Failed to init socket server by host: %s, port: %d", perfHost.c_str(), perfScPort);
+    printf("Socket server is inited by host: %s, port: %d\n", perfHost.c_str(), perfScPort);
 
     if(!listener.add(&genSocket))
         throw Exception("Failed to init PerfSocketServer");

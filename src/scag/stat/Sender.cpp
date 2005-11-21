@@ -29,6 +29,62 @@ int Sender::Execute()
     uint64_t lastPerfCnt[PERF_CNT_COUNT]={0,};
     //now.tv_sec=0;
     int i;
+
+    {
+        sleep(5);
+        using namespace Counters;
+
+        StatisticsManager * sm = dynamic_cast<StatisticsManager*>(perfListener);
+        printf("Makes statistics...\n");
+
+        for(int i = 0; i <= 5; i++){
+            printf("i: %d\n", i);
+            SmppStatEvent si;
+            strcpy(si.smeId, "sme1");
+            strcpy(si.routeId, "route1");
+            si.smeProviderId = 1;
+            si.routeProviderId = 1;
+            si.counter = cntDelivered;
+            si.errCode = 1;
+            sm->registerEvent(si);
+
+            strcpy(si.smeId, "sme2");
+            strcpy(si.routeId, "route2");
+            si.smeProviderId = 2;
+            si.routeProviderId = 2;
+            si.counter = cntAccepted;
+            si.errCode = 1;
+            sm->registerEvent(si);
+
+            strcpy(si.smeId, "sme3");
+            strcpy(si.routeId, "route3");
+            si.smeProviderId = 3;
+            si.routeProviderId = 3;
+            si.counter = cntRejected;
+            si.errCode = 1;
+            sm->registerEvent(si);
+
+            strcpy(si.smeId, "sme3");
+            strcpy(si.routeId, "route3");
+            si.smeProviderId = 3;
+            si.routeProviderId = 3;
+            si.counter = cntGw_Rejected;
+            si.errCode = 1;
+            sm->registerEvent(si);
+
+            strcpy(si.smeId, "sme3");
+            strcpy(si.routeId, "route3");
+            si.smeProviderId = 3;
+            si.routeProviderId = 3;
+            si.counter = cntFailed;
+            si.errCode = 1;
+            sm->registerEvent(si);
+        }
+
+        printf("Statistics is made\n");
+    }
+
+
     for(;;)
     {
       
@@ -120,7 +176,7 @@ int Sender::Execute()
       d.now=now.tv_sec;
       d.uptime=now.tv_sec-start.tv_sec;
 
-      //d.eventQueueSize=equnl;
+      d.eventQueueSize=0;
 
       perfListener->reportGenPerformance(&d);
 
@@ -158,6 +214,7 @@ void Sender::init(PerformanceListener* pl, PerformanceServer* ps)
 
 void Sender::InitServer(std::string perfHost, int genPort, int svcPort, int scPort)
 {
+    printf("sender, svcPort: %d\n", svcPort);
     perfServer.InitServer(perfHost, genPort, svcPort, scPort);
 }
 

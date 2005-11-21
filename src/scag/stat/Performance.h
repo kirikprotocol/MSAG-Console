@@ -33,7 +33,7 @@ struct PerformanceData{
     uint32_t size;
     uint32_t countersNumber;
     PerformanceCounter counters[PERF_CNT_COUNT];
-    //uint32_t eventQueueSize;
+    uint32_t eventQueueSize;
     time_t uptime;
     time_t now;
     //uint32_t inProcessingCount;
@@ -77,11 +77,11 @@ public:
 
 struct GenStatistics
 {
-    int accepted;
-    int rejected;
-    int delivered;
-    int gw_rejected;
-    int failed;
+    uint64_t accepted;
+    uint64_t rejected;
+    uint64_t delivered;
+    uint64_t gw_rejected;
+    uint64_t failed;
     Mutex statLock;
     GenStatistics()
         : accepted(0),
