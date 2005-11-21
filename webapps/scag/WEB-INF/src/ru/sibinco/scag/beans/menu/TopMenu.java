@@ -25,6 +25,7 @@ public class TopMenu  extends ArrayList {
             scagItems.add(new MenuItem("menu.scag.status", "/gw/status/index.jsp"));
             scagItems.add(new MenuItem("menu.scag.config", "/gw/config/index.jsp"));
             scagItems.add(new MenuItem("menu.scag.providers", "/gw/providers/index.jsp"));
+            scagItems.add(new MenuItem("menu.scag.categories", "/gw/categories/index.jsp"));
             scagItems.add(new MenuItem("menu.scag.logging", "/gw/logging/index.jsp"));
             scagItems.add(new MenuItem("menu.scag.smscs", "/gw/smscs/index.jsp"));
             scagItems.add(new MenuItem("menu.scag.users", "/gw/users/index.jsp"));
