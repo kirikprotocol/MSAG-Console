@@ -9,11 +9,15 @@ import ru.sibinco.lib.backend.util.conpool.NSConnectionPool;
 import ru.sibinco.scag.backend.resources.ResourceManager;
 import ru.sibinco.scag.backend.routing.BillingManager;
 import ru.sibinco.scag.backend.routing.GwRoutingManager;
-import ru.sibinco.scag.backend.sme.*;
+import ru.sibinco.scag.backend.routing.ScagRoutingManager;
 import ru.sibinco.scag.backend.users.UserManager;
 import ru.sibinco.scag.backend.protocol.journal.Journal;
 import ru.sibinco.scag.backend.endpoints.SmppManager;
 import ru.sibinco.scag.backend.rules.RuleManager;
+import ru.sibinco.scag.backend.sme.GwSmeManager;
+import ru.sibinco.scag.backend.sme.ProviderManager;
+import ru.sibinco.scag.backend.sme.CategoryManager;
+import ru.sibinco.scag.backend.sme.SmscsManager;
 import ru.sibinco.scag.perfmon.PerfServer;
 import ru.sibinco.tomcat_auth.XmlAuthenticator;
 
@@ -38,12 +42,14 @@ public class SCAGAppContext
   private final Config gwConfig;
   private final Config idsConfig;
   private final UserManager userManager;
-  private final GwSmeManager gwSmeManager;
+  private final GwSmeManager gwSmeManager;      //ToDo to delete
   private final SmppManager smppManager;
   private final RuleManager ruleManager;
   private final ProviderManager providerManager;
-  private final SmscsManager smscsManager;
-  private final GwRoutingManager gwRoutingManager;
+  private final CategoryManager categoryManager;
+  private final SmscsManager smscsManager;        //ToDo to delete
+  private final GwRoutingManager gwRoutingManager; //ToDo to delete
+  private final ScagRoutingManager scagRoutingManager;
   private final ResourceManager resourceManager;
   private final PerfServer perfServer;
   private final Daemon gwDaemon;
@@ -53,7 +59,7 @@ public class SCAGAppContext
   private final BillingManager billingManager;
   private Journal journal = new Journal();
   private SCAG scag = null;
-  protected static File gwConfFolder = null;
+  protected static File scagConfFolder = null;
 
   private SCAGAppContext(final String config_filename) throws Throwable, ParserConfigurationException, SAXException, Config.WrongParamTypeException,
                                                                 Config.ParamNotFoundException, SibincoException
@@ -66,10 +72,11 @@ public class SCAGAppContext
       idsConfig = new Config(new File(config.getString("ids_file")));
       String gwDaemonHost=config.getString("gw daemon.host");
       String gwConfigFolder=config.getString("gw_config_folder");
-      gwConfFolder=new File(gwConfigFolder);
+      scagConfFolder =new File(gwConfigFolder);
       connectionPool = null;
       userManager = new UserManager(config.getString("users_config_file"));
       providerManager = new ProviderManager(idsConfig);
+      categoryManager = new CategoryManager(idsConfig);
       gwSmeManager = new GwSmeManager(config.getString("sme_file"), gwConfig, providerManager);
       gwSmeManager.init();
       smppManager = new SmppManager(config.getString("smpp_file"), providerManager);
@@ -79,12 +86,14 @@ public class SCAGAppContext
       ruleManager=new RuleManager(new File(rulesFolder),new File(xsdFolder),providerManager, idsConfig);
       ruleManager.init();
       smscsManager = new SmscsManager(gwConfig,gwSmeManager);
-      resourceManager = new ResourceManager(gwConfFolder);
+      resourceManager = new ResourceManager(scagConfFolder);
       scag = new SCAG(gwDaemonHost, (int)config.getInt("gw daemon.port"),gwConfigFolder, this);
       billingManager = new BillingManager(new File(gwConfigFolder, "billing-rules.xml"));
-      gwRoutingManager = new GwRoutingManager(gwConfFolder, gwSmeManager, providerManager, billingManager);
-      gwRoutingManager.init();
-      gwDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), gwSmeManager, config.getString("gw daemon.folder"));
+      gwRoutingManager = new GwRoutingManager(scagConfFolder, gwSmeManager, providerManager, billingManager);
+      //gwRoutingManager.init();
+      scagRoutingManager = new ScagRoutingManager(scagConfFolder, smppManager, providerManager, ruleManager, categoryManager);
+      scagRoutingManager.init();
+          gwDaemon = new Daemon(gwDaemonHost, (int) config.getInt("gw daemon.port"), gwSmeManager, config.getString("gw daemon.folder"));
       gateway = new Gateway(gwDaemonHost, (int) gwConfig.getInt("admin.port"));
       statuses = new Statuses();
       perfServer = new PerfServer(config);
@@ -160,6 +169,11 @@ public class SCAGAppContext
     return providerManager;
   }
 
+  public CategoryManager getCategoryManager()
+  {
+    return categoryManager;
+  }
+
   public SmscsManager getSmscsManager()
   {
     return smscsManager;
@@ -170,7 +184,11 @@ public class SCAGAppContext
     return gwRoutingManager;
   }
 
-  public ResourceManager getResourceManager()
+  public ScagRoutingManager getScagRoutingManager() {
+      return scagRoutingManager;
+  }
+
+    public ResourceManager getResourceManager()
   {
     return resourceManager;
   }
@@ -214,7 +232,7 @@ public class SCAGAppContext
         return smppManager;
     }
 
-    public static File getGwConfFolder() {
-        return gwConfFolder;
+    public static File getScagConfFolder() {
+        return scagConfFolder;
     }
 }
