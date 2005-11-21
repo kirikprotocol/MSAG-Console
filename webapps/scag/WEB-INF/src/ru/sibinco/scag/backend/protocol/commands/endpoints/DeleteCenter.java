@@ -19,7 +19,8 @@ public class DeleteCenter extends Command {
     public DeleteCenter(final Center center) throws SibincoException {
         super("deleteSmsc", "file:///command_gw.dtd");
         createStringParam("systemId", center.getId());
-        createStringParam("password", center.getPassword());
+        createStringParam("bindSystemId", center.getBindSystemId());
+        createStringParam("bindPassword", center.getBindPassword());
         createIntParam("timeout", center.getTimeout());
         createStringParam("mode", center.getModeStr());
         createIntParam("providerId", center.getProvider().getId());

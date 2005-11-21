@@ -23,7 +23,8 @@ public class CenterCommand  extends Command {
 
     protected void fillParams(final Center center) {
         createStringParam("systemId", center.getId());
-        createStringParam("password", center.getPassword());
+        createStringParam("bindSystemId", center.getBindSystemId());
+        createStringParam("bindPassword", center.getBindPassword());
         createIntParam("timeout", center.getTimeout());
         createStringParam("mode", center.getModeStr());
         createStringParam("host", center.getHost());
