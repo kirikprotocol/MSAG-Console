@@ -84,7 +84,8 @@ function edit(idToEdit,goal)
 <table class=list cellspacing=0>
 <thead>
   <tr>
-    <c:forEach var="column" items="${columns}" varStatus="status">
+    <c:forEach var="_column" items="${columns}" varStatus="status">
+      <c:set var="column" value="${fn:trim(_column)}"/>
       <c:choose>
         <c:when test="${column == 'checkbox'}">
           <th class=ico width="${widths[status.count-1]}%"><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
@@ -102,7 +103,8 @@ function edit(idToEdit,goal)
 <tbody>
   <c:forEach var="user" items="${bean.tabledItems}" varStatus="status">
     <tr class='row${(status.count+1)%2}'>
-      <c:forEach var="column" items="${columns}">
+      <c:forEach var="_column" items="${columns}">
+        <c:set var="column" value="${fn:trim(_column)}"/>
         <c:choose>
           <c:when test="${column == 'checkbox'}">
             <td class=ico><input class=check type=checkbox name=checked value="${user['id']}" onClick="tableTag_checkChecks();" <c:if test="${smf:checked(bean, user['id'])}" >checked</c:if>></td>
