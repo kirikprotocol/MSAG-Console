@@ -1,0 +1,39 @@
+SvcStat, ScStat:
+
+<stat> = <length: int> 	<smppCount: short int><smppRecs: 1...n> 
+			<wapCount: short int><wapRecs: 1...n>
+         		<mmsCount: short int><mmsRecs: 1...n>
+
+<smppRecs: 1...n> = <smppRec> ... <smppRec>
+<wapRecs: 1...n>  = <wapRec>  ... <wapRec>
+<mmsRecs: 1...n>  = <mmsRec>  ... <mmsRec>
+
+<smppRec> = <systemId: 16 bytes> <accepted: 	2 x short int> 
+				 <rejected: 	2 x short int> 
+				 <delivered: 	2 x short int> 
+				 <gw_rejected: 	2 x short int> 
+				 <failed: 	2 x short int>
+
+<wapRec> = <systemId: 16 bytes>  <accepted:	2 x short int>
+				 <rejected:	2 x short int>
+				 <delivered:	2 x short int>
+				 <gw_rejected:	2 x short int>
+				 <failed:	2 x short int>
+
+<mmsRec> = <systemId: 16 bytes>  <accepted:	2 x short int>
+				 <rejected:	2 x short int>
+				 <delivered:	2 x short int>
+				 <gw_rejected:	2 x short int>
+				 <failed:	2 x short int>
+
+GenStat:
+
+<stat> = <size: int><countersNumber: int> <counters: 1...countersNumber> <queueSize: int><uptime: 4 bytes><now: 4 bytes>
+
+<counters: 1...countersNumber> = <accpted: 	long int>
+				 <rejected: 	long int>
+				 <delivered: 	long int>
+				 <gw_rejected:	long int>
+				 <failed:	long int>
+
+countersNumber = 5
