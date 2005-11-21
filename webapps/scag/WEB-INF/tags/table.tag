@@ -168,4 +168,4 @@ function edit(idToEdit,goal)
 <%--td class=filter><%button(out, "but_filter.gif", "mbFilter", "Filter", "Filter", "return clickFilter()");%></td--%>
 </tr>
 </table>
-<%--<script>tableTag_checkChecks();</script>--%>
+<!--<script>tableTag_checkChecks();</script>-->

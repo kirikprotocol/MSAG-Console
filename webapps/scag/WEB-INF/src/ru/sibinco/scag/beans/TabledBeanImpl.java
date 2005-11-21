@@ -42,7 +42,7 @@ public abstract class TabledBeanImpl extends SCAGBean implements TabledBean
       sort = getDefaultSort();
     final SortedList results = new SortedList(getDataSource(), new SortByPropertyComparator(sort));
     totalSize = results.size();
-    if (totalSize > startPosition)
+    if (totalSize > startPosition)        
       tabledItems = results.subList(startPosition, Math.min(totalSize, startPosition + pageSize));
     else
       tabledItems = new LinkedList();

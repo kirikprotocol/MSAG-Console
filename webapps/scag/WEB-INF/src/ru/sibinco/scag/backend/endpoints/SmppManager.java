@@ -74,8 +74,7 @@ public class SmppManager {
                 } catch (NumberFormatException e) {
                     e.printStackTrace();
                     logger.error("Int parameter \"" + name + "\" misformatted: " + lastUidId + ", skipped", e);
-                }
-                System.out.println("lastUidId=" + lastUidId);
+                }                
             }
 
             final NodeList smerecords = document.getDocumentElement().getElementsByTagName("smerecord");

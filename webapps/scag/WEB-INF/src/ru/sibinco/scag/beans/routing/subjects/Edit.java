@@ -1,14 +1,20 @@
 package ru.sibinco.scag.beans.routing.subjects;
 
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.backend.route.*;
-import ru.sibinco.lib.backend.sme.Sme;
+import ru.sibinco.lib.backend.route.Mask;
+import ru.sibinco.lib.backend.route.MaskList;
 import ru.sibinco.lib.backend.util.Functions;
 import ru.sibinco.lib.backend.util.SortedList;
 import ru.sibinco.scag.Constants;
-import ru.sibinco.scag.beans.*;
+import ru.sibinco.scag.backend.endpoints.svc.Svc;
+import ru.sibinco.scag.backend.routing.Subject;
+import ru.sibinco.scag.beans.DoneException;
+import ru.sibinco.scag.beans.EditBean;
+import ru.sibinco.scag.beans.SCAGJspException;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -28,7 +34,7 @@ public class Edit extends EditBean
 
   protected void load(final String loadId) throws SCAGJspException
   {
-    final Subject subject = (Subject) appContext.getGwRoutingManager().getSubjects().get(loadId);
+    final Subject subject = (Subject) appContext.getScagRoutingManager().getSubjects().get(loadId);
     if (null != subject) {
       name = subject.getName();
       defaultSme = null != subject.getDefaultSme() ? subject.getDefaultSme().getId() : null;
@@ -45,8 +51,8 @@ public class Edit extends EditBean
   protected void save() throws SCAGJspException
   {
     masks = Functions.trimStrings(masks);
-    final Map subjects = appContext.getGwRoutingManager().getSubjects();
-    final Sme defSme = (Sme) appContext.getGwSmeManager().getSmes().get(defaultSme);
+    final Map subjects = appContext.getScagRoutingManager().getSubjects();
+    final Svc defSme = (Svc) appContext.getSmppManager().getSvcs().get(defaultSme);
     if (null == defSme)
       throw new SCAGJspException(Constants.errors.routing.subjects.DEFAULT_SME_NOT_FOUND, defaultSme);
 
@@ -54,7 +60,7 @@ public class Edit extends EditBean
       if (subjects.containsKey(name))
         throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
       try {
-        subjects.put(name, new Subject(name, masks, defSme, notes));
+        subjects.put(name, new Subject(name, defSme, masks, notes));
       } catch (SibincoException e) {
         logger.debug("Could not create new subject", e);
         throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
@@ -65,7 +71,7 @@ public class Edit extends EditBean
           throw new SCAGJspException(Constants.errors.routing.subjects.SUBJECT_ALREADY_EXISTS, name);
         subjects.remove(getEditId());
         try {
-          subjects.put(name, new Subject(name, masks, defSme, notes));
+          subjects.put(name, new Subject(name, defSme, masks, notes));
         } catch (SibincoException e) {
           logger.debug("Could not create new subject", e);
           throw new SCAGJspException(Constants.errors.routing.subjects.COULD_NOT_CREATE, e);
@@ -89,7 +95,7 @@ public class Edit extends EditBean
   public String getSmeIds()
   {
     final StringBuffer result = new StringBuffer();
-    final List smes = new SortedList(appContext.getGwSmeManager().getSmes().keySet());
+    final List smes = new SortedList(appContext.getSmppManager().getSvcs().keySet());
     for (Iterator i = smes.iterator(); i.hasNext();) {
       result.append((String) i.next());
       if (i.hasNext())

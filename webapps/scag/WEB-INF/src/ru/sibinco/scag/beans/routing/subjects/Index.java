@@ -13,12 +13,12 @@ public class Index extends TabledBeanImpl implements TabledBean
 {
   protected Collection getDataSource()
   {
-    return appContext.getGwRoutingManager().getSubjects().values();
+    return appContext.getScagRoutingManager().getSubjects().values();
   }
 
   protected void delete()
   {
-    appContext.getGwRoutingManager().getSubjects().keySet().removeAll(checkedSet);
+    appContext.getScagRoutingManager().getSubjects().keySet().removeAll(checkedSet);
     appContext.getStatuses().setRoutesChanged(true);
   }
 }

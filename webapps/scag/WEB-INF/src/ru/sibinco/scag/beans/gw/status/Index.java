@@ -101,10 +101,6 @@ public class Index extends SCAGBean
           applyConfig();
         if ("routes".equals(s))
           applyRoutes();
-        if ("providers".equals(s))
-          applyProviders();
-      /*  if ("smscs".equals(s))
-          applySmscs();  */
         if ("users".equals(s))
           applyUsers();
         if ("billing".equals(s))
@@ -122,49 +118,6 @@ public class Index extends SCAGBean
       throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_BILLING, e);
     }
   }
-/*
-  private void applySmscs() throws SCAGJspException
-  {
-    try {
-      final Config gwConfig = appContext.getGwConfig();
-      Gateway gateway=appContext.getGateway();
-      try {
-        appContext.getSmscsManager().store(gwConfig);
-        appContext.getGwConfig().save();
-        appContext.getGateway().apply("smscs");
-      } catch (SibincoException e) {
-        if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
-          logger.debug("Couldn't apply Service centers", e);
-          throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_SMSCS, e);
-        }
-      }
-      appContext.getStatuses().setSmscsChanged(false);
-    } catch (Throwable e) {
-      logger.debug("Couldn't apply Service centers", e);
-      throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_SMSCS, e);
-    }
-  }
-  */
-  private void applyProviders() throws SCAGJspException
-  {
-    try {
-      final Config idsConfig = appContext.getIdsConfig();
-      appContext.getProviderManager().store(idsConfig);
-      appContext.getGwConfig().save();
-      try {
-        appContext.getGateway().apply("providers");
-      } catch (SibincoException e) {
-        if (Proxy.StatusConnected == appContext.getGateway().getStatus()) {
-          logger.debug("Couldn't apply providers", e);
-          throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_PROVIDERS, e);
-        }
-      }
-      appContext.getStatuses().setProvidersChanged(false);
-    } catch (Throwable e) {
-      logger.debug("Couldn't apply providers", e);
-      throw new SCAGJspException(Constants.errors.status.COULDNT_APPLY_PROVIDERS, e);
-    }
-  }
 
   private void applyUsers() throws SCAGJspException
   {
@@ -180,8 +133,7 @@ public class Index extends SCAGBean
   private void applyRoutes() throws SCAGJspException
   {
     try {
-      appContext.getGwRoutingManager().apply();
-      appContext.getGwSmeManager().store();
+      appContext.getScagRoutingManager().apply();
       try {
         appContext.getGateway().apply("routes");
       } catch (SibincoException e) {
@@ -201,7 +153,6 @@ public class Index extends SCAGBean
   {
     try {
       appContext.getSmscsManager().store(appContext.getGwConfig());
-      appContext.getProviderManager().store(appContext.getIdsConfig());
       appContext.getGwSmeManager().store();
       appContext.getGwConfig().save();
 
@@ -269,11 +220,6 @@ public class Index extends SCAGBean
   public boolean isBillingChanged()
   {
     return appContext.getStatuses().isBillingChanged();
-  }
-
-  public boolean isProvidersChanged()
-  {
-    return appContext.getStatuses().isProvidersChanged();
   }
 
   public boolean isSmscsChanged()

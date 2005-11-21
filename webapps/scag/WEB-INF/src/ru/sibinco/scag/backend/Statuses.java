@@ -10,7 +10,6 @@ public class Statuses
   private boolean routesChanged = false;
   private boolean usersChanged = false;
   private boolean smscsChanged = false;
-  private boolean providersChanged = false;
   private boolean billingChanged = false;
   private boolean aliasesChanged = false;
   private boolean routesLoaded = false;
@@ -52,16 +51,6 @@ public class Statuses
   public void setSmscsChanged(final boolean smscsChanged)
   {
     this.smscsChanged = smscsChanged;
-  }
-
-  public boolean isProvidersChanged()
-  {
-    return providersChanged;
-  }
-
-  public void setProvidersChanged(final boolean providersChanged)
-  {
-    this.providersChanged = providersChanged;
   }
 
   public boolean isBillingChanged()

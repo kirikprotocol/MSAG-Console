@@ -58,7 +58,7 @@ public class Edit extends EditBean {
     private long userProviderId = ALL_PROVIDERS;
 
     private void init() throws SCAGJspException {
-        SCAGAppContext appContext = getAppContext();
+            SCAGAppContext appContext = getAppContext();
         Principal userPrincipal = super.getLoginedPrincipal();
         if (userPrincipal == null)
             throw new SCAGJspException(Constants.errors.users.USER_NOT_FOUND, "Failed to obtain user principal(s)");

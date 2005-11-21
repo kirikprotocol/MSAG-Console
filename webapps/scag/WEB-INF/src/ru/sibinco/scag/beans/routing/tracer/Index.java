@@ -5,8 +5,10 @@ import ru.sibinco.lib.bean.TabledBean;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.TabledBeanImpl;
 import ru.sibinco.scag.backend.routing.GwRoutingManager;
+import ru.sibinco.scag.backend.routing.ScagRoutingManager;
 import ru.sibinco.scag.backend.sme.GwSmeManager;
 import ru.sibinco.scag.backend.Gateway;
+import ru.sibinco.scag.backend.endpoints.SmppManager;
 import ru.sibinco.scag.Constants;
 
 import javax.servlet.http.HttpServletRequest;
@@ -38,16 +40,16 @@ public class Index extends TabledBeanImpl implements TabledBean
     private String mbCheck = null;
     private String mbTrace = null;
 
-    protected GwRoutingManager gwRoutingManager = null;
-    protected GwSmeManager gwSmeManager = null;
+    protected ScagRoutingManager scagRoutingManager = null;
+    protected SmppManager smppManager = null;
    // protected SCAG scag = null;
     protected Gateway gateway = null;
 
   public void process(final HttpServletRequest request, final HttpServletResponse response) throws SCAGJspException
     {
       super.process(request,response);
-      gwRoutingManager = appContext.getGwRoutingManager();
-      gwSmeManager = appContext.getGwSmeManager();
+      scagRoutingManager = appContext.getScagRoutingManager();
+      smppManager = appContext.getSmppManager();
     //  scag=appContext.getSCAG();
       gateway=appContext.getGateway();
       if (null != mbCheck)
@@ -59,7 +61,7 @@ public class Index extends TabledBeanImpl implements TabledBean
     private void loadAndCheck() throws SCAGJspException
     {
       try {
-        traceResults = gateway.loadRoutes(gwRoutingManager);
+        traceResults = gateway.loadRoutes(scagRoutingManager);
         if (null == traceResults || 0 >= traceResults.size())
           throw new SibincoException("Transport error, invalid responce.");
         message = (String) traceResults.get(0);
@@ -277,12 +279,12 @@ public class Index extends TabledBeanImpl implements TabledBean
 
    protected Collection getDataSource()
   {
-    return new ArrayList();//appContext.getGwRoutingManager().getRoutes().values();
+    return new ArrayList();//appContext.getscagRoutingManager().getRoutes().values();
   }
 
   protected void delete()
   {
-   // appContext.getGwRoutingManager().getRoutes().keySet().removeAll(checkedSet);
+   // appContext.getscagRoutingManager().getRoutes().keySet().removeAll(checkedSet);
    // appContext.getStatuses().setRoutesChanged(true);
   }
 }

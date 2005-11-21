@@ -26,10 +26,6 @@
         <td><label for="chk_billing">Route billing rules</label></td><td><sm:status changed="${bean.billingChanged}"/></td>
       </tr>
       <tr class="row1">
-        <td><input class="check" type="checkbox" name="subj" id="chk_providers" value="providers" <c:if test="${!bean.providersChanged}">disabled</c:if>></td>
-        <td><label for="chk_providers">Providers</label></td><td><sm:status changed="${bean.providersChanged}"/></td>
-      </tr>
-      <tr class="row0">
         <td><input class="check" type="checkbox" name="subj" id="chk_users"     value="users" <c:if test="${!bean.usersChanged}">disabled</c:if>></td>
         <td><label for="chk_users">Users</label></td><td><sm:status changed="${bean.usersChanged}"/></td>
       </tr>

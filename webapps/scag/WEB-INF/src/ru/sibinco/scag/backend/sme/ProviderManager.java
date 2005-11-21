@@ -12,6 +12,7 @@ public class ProviderManager
 {
   private final Map providers = Collections.synchronizedMap(new TreeMap());
   private long lastUsedId;
+  private final Config idsConfig;
   private static final String SECTION_NAME = "providers";
   private static final String PARAM_NAME_LAST_USED_ID = "last used provider id";
 
@@ -20,6 +21,7 @@ public class ProviderManager
   {
 
     lastUsedId = idsConfig.getInt(SECTION_NAME + '.' + PARAM_NAME_LAST_USED_ID);
+    this.idsConfig = idsConfig;
     final Collection providerIds = idsConfig.getSectionChildShortParamsNames(SECTION_NAME);
     for (Iterator i = providerIds.iterator(); i.hasNext();) {
       final String providerIdStr = (String) i.next();
@@ -65,4 +67,10 @@ public class ProviderManager
       idsConfig.setString(SECTION_NAME + "." + provider.getId(), provider.getName());
     }
   }
+
+  public synchronized void store()
+  {
+    store(idsConfig);
+  }
+
 }

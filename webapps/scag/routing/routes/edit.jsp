@@ -209,31 +209,26 @@
       <col width="50%">
       <tr>
         <td valign="top">
-          <sm-ep:properties title="Route information" noColoredLines="true">
+          <sm-ep:properties title="Route information" noColoredLines="false">
             <sm-ep:txt title="name" name="name" readonly="${!bean.add}" validation="nonEmpty"/>
             <sm-ep:txt title="notes" name="notes"/>
-            <sm-ep:txt title="priority" name="priority"/>
-            <sm-ep:txt title="service ID" name="serviceId"/>
             <sm-ep:list title="source SME ID" name="srcSmeId" values="${smes}" valueTitles="${smes}" onChange="srcSmeIdChanged();"/>
-            <sm-ep:list title="provider" name="providerId" values="${providerIds}" valueTitles="${providers}"/>
-            <sm-ep:list title="billing"  name="billingId"  values="${bean.billingIds}"  valueTitles="${bean.billingIds}"/>
+            <sm-ep:list emptyOption="true" title="provider" name="providerId" values="${providerIds}" valueTitles="${providers}"/>
+            <sm-ep:list  title="rule" name="ruleId"
+                       values="${fn:join(bean.ruleIds, ',')}"
+                       valueTitles="${fn:join(bean.rules, ',')}"/>
+            <sm-ep:list emptyOption="true" title="category" name="categoryId"
+                       values="${fn:join(bean.categoryIds, ',')}"
+                       valueTitles="${fn:join(bean.categories, ',')}"/>
             <sm-pm:space/>
-            <sm-ep:check head="route" title="active" name="active"/>
-            <sm-ep:check head="options" title="allowed" name="enabling"/>
           </sm-ep:properties>
         </td>
         <td valign="top">
-          <sm-ep:properties title="Traffic rules" noColoredLines="true" noHeaders="false">
-            <sm-ep:check title="allow receive" indent="true" name="trafficRules_allowReceive"/><br>
-            <sm-ep:check title="allow answer" indent="true" name="trafficRules_allowAnswer"/><br>
-            <sm-ep:check title="allow PSSR response" indent="true" name="trafficRules_allowPssrResp"/><br>
-            <sm-ep:check title="allow USSR request" indent="true" name="trafficRules_allowUssrRequest"/><br>
-            <sm-ep:check title="allow USSD dialog init" indent="true" name="trafficRules_allowUssdDialogInit"/><br>
-           </sm-ep:properties>
-          <sm-ep:properties title="" noColoredLines="true" noHeaders="false">
-            <sm-ep:txt   title="send limit" maxlength="5" styleWidth="54px" name="trafficRules_sendLimit"/>
-            <sm-ep:txt   title="USSD MI dialog limit" maxlength="5" styleWidth="54px" name="trafficRules_ussdMiDialogLimit"/>
-            <sm-ep:txt   title="USSD SI dialog limit" maxlength="5" styleWidth="54px" name="trafficRules_ussdSiDialogLimit"/>
+          <sm-ep:properties title="Route options" noColoredLines="false" noHeaders="false">
+            <sm-ep:check title="active" name="active"/>
+            <sm-ep:check title="allowed" name="enabled"/>
+            <sm-ep:check title="archived" name="archived"/>
+            <sm-pm:space/>
           </sm-ep:properties>
         </td>
       </tr>

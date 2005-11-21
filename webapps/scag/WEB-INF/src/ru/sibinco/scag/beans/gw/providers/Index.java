@@ -2,11 +2,15 @@ package ru.sibinco.scag.beans.gw.providers;
 
 import ru.sibinco.lib.bean.TabledBean;
 import ru.sibinco.scag.Constants;
-import ru.sibinco.scag.backend.sme.GwSme;
+import ru.sibinco.scag.backend.endpoints.svc.Svc;
 import ru.sibinco.scag.beans.SCAGJspException;
 import ru.sibinco.scag.beans.TabledBeanImpl;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -28,14 +32,12 @@ public class Index extends TabledBeanImpl implements TabledBean
       toRemove.add(providerId);
     }
 
-    final Map smes = appContext.getGwSmeManager().getSmes();
+    final Map smes = appContext.getSmppManager().getSvcs();
     for (Iterator i = smes.values().iterator(); i.hasNext();) {
-      final GwSme sme = (GwSme) i.next();
-      if (!sme.isSmsc() && toRemove.contains(new Long(sme.getProviderId())))
+      final Svc sme = (Svc) i.next();
+      if (toRemove.contains(new Long(sme.getProvider().getId())))
         throw new SCAGJspException(Constants.errors.providers.COULDNT_DELETE_PROVIDER, sme.getProviderName());
     }
-
     appContext.getProviderManager().getProviders().keySet().removeAll(toRemove);
-    appContext.getStatuses().setProvidersChanged(true);
   }
 }
