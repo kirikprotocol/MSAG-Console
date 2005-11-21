@@ -1,30 +1,41 @@
 package ru.sibinco.scag.backend;
 
+import org.w3c.dom.Element;
 import ru.sibinco.lib.SibincoException;
-import ru.sibinco.lib.backend.service.ServiceInfo;
-import ru.sibinco.lib.backend.service.Type;
 import ru.sibinco.lib.backend.protocol.Proxy;
 import ru.sibinco.lib.backend.protocol.Response;
-import ru.sibinco.lib.backend.util.xml.Utils;
+import ru.sibinco.lib.backend.service.ServiceInfo;
+import ru.sibinco.lib.backend.service.Type;
 import ru.sibinco.lib.backend.sme.SmeStatus;
-import ru.sibinco.scag.backend.protocol.commands.*;
-import ru.sibinco.scag.backend.protocol.commands.rules.RemoveRule;
-import ru.sibinco.scag.backend.protocol.commands.rules.AddRule;
-import ru.sibinco.scag.backend.protocol.commands.rules.UpdateRule;
-import ru.sibinco.scag.backend.protocol.commands.endpoints.AddSvc;
-import ru.sibinco.scag.backend.protocol.commands.endpoints.UpdateSvcInfo;
-import ru.sibinco.scag.backend.protocol.commands.endpoints.DeleteSvc;
+import ru.sibinco.lib.backend.util.xml.Utils;
+import ru.sibinco.scag.backend.endpoints.centers.Center;
+import ru.sibinco.scag.backend.endpoints.svc.Svc;
+import ru.sibinco.scag.backend.protocol.commands.AddSme;
+import ru.sibinco.scag.backend.protocol.commands.Apply;
+import ru.sibinco.scag.backend.protocol.commands.CommandCall;
+import ru.sibinco.scag.backend.protocol.commands.DeleteSme;
+import ru.sibinco.scag.backend.protocol.commands.ModifySmsc;
+import ru.sibinco.scag.backend.protocol.commands.RegSmsc;
+import ru.sibinco.scag.backend.protocol.commands.UnregSmsc;
+import ru.sibinco.scag.backend.protocol.commands.UpdateSmeInfo;
 import ru.sibinco.scag.backend.protocol.commands.endpoints.AddCenter;
-import ru.sibinco.scag.backend.protocol.commands.endpoints.UpdateCenter;
+import ru.sibinco.scag.backend.protocol.commands.endpoints.AddSvc;
 import ru.sibinco.scag.backend.protocol.commands.endpoints.DeleteCenter;
+import ru.sibinco.scag.backend.protocol.commands.endpoints.DeleteSvc;
+import ru.sibinco.scag.backend.protocol.commands.endpoints.UpdateCenter;
+import ru.sibinco.scag.backend.protocol.commands.endpoints.UpdateSvcInfo;
+import ru.sibinco.scag.backend.protocol.commands.rules.AddRule;
+import ru.sibinco.scag.backend.protocol.commands.rules.RemoveRule;
+import ru.sibinco.scag.backend.protocol.commands.rules.UpdateRule;
+import ru.sibinco.scag.backend.routing.ScagRoutingManager;
 import ru.sibinco.scag.backend.sme.GwSme;
 import ru.sibinco.scag.backend.sme.SmscInfo;
-import ru.sibinco.scag.backend.routing.GwRoutingManager;
-import ru.sibinco.scag.backend.endpoints.svc.Svc;
-import ru.sibinco.scag.backend.endpoints.centers.Center;
-import org.w3c.dom.Element;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -158,14 +169,22 @@ public class Gateway extends Proxy
        throw new SibincoException("Couldn't unregister Smsc , nested: " + response.getStatusString() + " \"" + response.getDataAsString() + '"');
    }
 
-  public synchronized List loadRoutes(final GwRoutingManager gwRoutingManager)
-          throws SibincoException
-  {
-    gwRoutingManager.trace();
-    String err="Couldn't load active routes configuration, nested: ";
-    final Object res = call( LOAD_ROUTES_METHOD_ID, err,Type.Types[Type.StringListType], new HashMap());
-    return res instanceof List ? (List) res : null;
-  }
+//  public synchronized List loadRoutes(final GwRoutingManager gwRoutingManager)
+//          throws SibincoException
+//  {
+//    gwRoutingManager.trace();
+//    String err="Couldn't load active routes configuration, nested: ";
+//    final Object res = call( LOAD_ROUTES_METHOD_ID, err,Type.Types[Type.StringListType], new HashMap());
+//    return res instanceof List ? (List) res : null;
+//  }
+
+    public synchronized List loadRoutes(final ScagRoutingManager scagRoutingManager)
+            throws SibincoException {
+        scagRoutingManager.trace();
+        String err = "Couldn't load active routes configuration, nested: ";
+        final Object res = call(LOAD_ROUTES_METHOD_ID, err, Type.Types[Type.StringListType], new HashMap());
+        return res instanceof List ? (List) res : null;
+    }
 
   public synchronized SmeStatus getSmeStatus(final String smeId) throws SibincoException
   {
