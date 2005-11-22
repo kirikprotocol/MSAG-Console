@@ -1116,7 +1116,7 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
 
     ld.uptime=htonl(ld.uptime);
     ld.now=htonl(ld.now);
-    ld.eventQueueSize=htonl(ld.eventQueueSize);
+    ld.sessionCount=htonl(ld.sessionCount);
     //ld.inProcessingCount=htonl(ld.inProcessingCount);
     //ld.inScheduler=htonl(ld.inScheduler);
 
@@ -1171,7 +1171,7 @@ uint8_t* StatisticsManager::dumpSvcCounters(uint32_t& smePerfDataSize)
         MutexGuard guard(svcCountersLock);
 
         uint32_t reclen = sizeof(char)*(smsc::sms::MAX_SMESYSID_TYPE_LENGTH+1)+sizeof(uint16_t)*2*PERF_CNT_COUNT;
-        smePerfDataSize = sizeof(uint32_t)+3*sizeof(uint16_t)+ 
+        smePerfDataSize = sizeof(uint32_t)+sizeof(uint32_t)+3*sizeof(uint16_t)+ 
              reclen*svcSmppCounters.GetCount()+
              reclen*svcWapCounters.GetCount()+
              reclen*svcMmsCounters.GetCount();
@@ -1181,6 +1181,8 @@ uint8_t* StatisticsManager::dumpSvcCounters(uint32_t& smePerfDataSize)
 
         // uint32_t     Total packet size
         *((uint32_t*)packet) = htonl(smePerfDataSize-sizeof(uint32_t)); packet += sizeof(uint32_t);
+        // queue size
+        *((uint32_t*)packet) = htonl(0); packet += sizeof(uint32_t);
         // uint16_t     Services count
         *((uint16_t*)packet) = htons((uint16_t)svcSmppCounters.GetCount()); packet += sizeof(uint16_t);
         

@@ -1,8 +1,83 @@
 #include "Sender.h"
 #include "StatisticsManager.h"
+#include <stdlib.h>
 
 namespace scag {
 namespace stat {
+
+using smsc::core::threads::Thread;
+
+class Registrator : public Thread {
+public:
+	Registrator() : sm(0)
+    {}
+	virtual ~Registrator()
+    {}
+    virtual int Execute();
+    void Stop() {isStopping = true; WaitFor();};
+    void Start() {isStopping = false; Thread::Start();};
+    void init(StatisticsManager * sm_) { sm = sm_;};
+    void InitServer(std::string perfHost, int genPort, int svcPort, int scPort);
+protected:
+	StatisticsManager * sm;
+    bool isStopping;
+};
+
+int Registrator::Execute()
+{
+    using namespace Counters;
+
+    printf("Registrator is started\n");
+
+    while(!isStopping)
+    {
+        SmppStatEvent si;
+        strcpy(si.smeId, "sme1");
+        strcpy(si.routeId, "route1");
+        si.smeProviderId = 1;
+        si.routeProviderId = 1;
+        si.counter = cntDelivered;
+        si.errCode = 1;
+        sm->registerEvent(si);
+
+        strcpy(si.smeId, "sme2");
+        strcpy(si.routeId, "route2");
+        si.smeProviderId = 2;
+        si.routeProviderId = 2;
+        si.counter = cntAccepted;
+        si.errCode = 1;
+        sm->registerEvent(si);
+
+        strcpy(si.smeId, "sme3");
+        strcpy(si.routeId, "route3");
+        si.smeProviderId = 3;
+        si.routeProviderId = 3;
+        si.counter = cntRejected;
+        si.errCode = 1;
+        sm->registerEvent(si);
+
+        strcpy(si.smeId, "sme3");
+        strcpy(si.routeId, "route3");
+         si.smeProviderId = 3;
+        si.routeProviderId = 3;
+        si.counter = cntGw_Rejected;
+        si.errCode = 1;
+        sm->registerEvent(si);
+
+        strcpy(si.smeId, "sme3");
+        strcpy(si.routeId, "route3");
+        si.smeProviderId = 3;
+        si.routeProviderId = 3;
+        si.counter = cntFailed;
+        si.errCode = 1;
+        sm->registerEvent(si);
+
+        int pause = 10. * ( (double)random() / 2147483648. );
+        printf("pause: %d sec.\n", pause);
+        sleep(pause);
+    }
+    return 1;
+}
 
 Sender::Sender()
 	: perfListener(0), isStopping(false)
@@ -30,59 +105,18 @@ int Sender::Execute()
     //now.tv_sec=0;
     int i;
 
-    {
-        sleep(5);
-        using namespace Counters;
+   
 
-        StatisticsManager * sm = dynamic_cast<StatisticsManager*>(perfListener);
-        printf("Makes statistics...\n");
-
-        for(int i = 0; i <= 5; i++){
-            printf("i: %d\n", i);
-            SmppStatEvent si;
-            strcpy(si.smeId, "sme1");
-            strcpy(si.routeId, "route1");
-            si.smeProviderId = 1;
-            si.routeProviderId = 1;
-            si.counter = cntDelivered;
-            si.errCode = 1;
-            sm->registerEvent(si);
-
-            strcpy(si.smeId, "sme2");
-            strcpy(si.routeId, "route2");
-            si.smeProviderId = 2;
-            si.routeProviderId = 2;
-            si.counter = cntAccepted;
-            si.errCode = 1;
-            sm->registerEvent(si);
-
-            strcpy(si.smeId, "sme3");
-            strcpy(si.routeId, "route3");
-            si.smeProviderId = 3;
-            si.routeProviderId = 3;
-            si.counter = cntRejected;
-            si.errCode = 1;
-            sm->registerEvent(si);
-
-            strcpy(si.smeId, "sme3");
-            strcpy(si.routeId, "route3");
-            si.smeProviderId = 3;
-            si.routeProviderId = 3;
-            si.counter = cntGw_Rejected;
-            si.errCode = 1;
-            sm->registerEvent(si);
-
-            strcpy(si.smeId, "sme3");
-            strcpy(si.routeId, "route3");
-            si.smeProviderId = 3;
-            si.routeProviderId = 3;
-            si.counter = cntFailed;
-            si.errCode = 1;
-            sm->registerEvent(si);
-        }
-
-        printf("Statistics is made\n");
-    }
+    // Makes statistics
+    using namespace Counters;
+    StatisticsManager * sm = dynamic_cast<StatisticsManager*>(perfListener);
+    Registrator registrator;
+    printf("Registrator is initing...\n");
+    registrator.init(sm);
+    printf("Registrator is inited\n");
+    registrator.Start();
+    printf("Registrator is started\n");
+    
 
 
     for(;;)
@@ -176,7 +210,7 @@ int Sender::Execute()
       d.now=now.tv_sec;
       d.uptime=now.tv_sec-start.tv_sec;
 
-      d.eventQueueSize=0;
+      d.sessionCount=0;
 
       perfListener->reportGenPerformance(&d);
 
@@ -188,6 +222,9 @@ int Sender::Execute()
       perfListener->reportSvcPerformance();
       perfListener->reportScPerformance();
     }
+
+    //Statistics is made
+    registrator.Stop();
     return 1;
 }
 

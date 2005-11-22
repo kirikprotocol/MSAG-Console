@@ -33,7 +33,7 @@ struct PerformanceData{
     uint32_t size;
     uint32_t countersNumber;
     PerformanceCounter counters[PERF_CNT_COUNT];
-    uint32_t eventQueueSize;
+    uint32_t sessionCount;
     time_t uptime;
     time_t now;
     //uint32_t inProcessingCount;
