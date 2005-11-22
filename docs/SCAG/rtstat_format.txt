@@ -1,6 +1,6 @@
 SvcStat, ScStat:
 
-<stat> = <length: int> 	<sessionCount: int> <smppCount: short int><smppRecs: 1...n> 
+<stat> = <length: int> 	<queueSize: int> <smppCount: short int><smppRecs: 1...n> 
 					    <wapCount: short int><wapRecs: 1...n>
          				    <mmsCount: short int><mmsRecs: 1...n>
 
