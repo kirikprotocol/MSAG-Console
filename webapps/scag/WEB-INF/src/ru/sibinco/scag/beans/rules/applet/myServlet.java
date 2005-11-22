@@ -75,7 +75,7 @@ public class myServlet extends HttpServlet
 
         if (list!=null) {
         PrintWriter out = res.getWriter();
-        System.out.println("myServlet file= "+file+" command= "+command);
+       // System.out.println("myServlet file= "+file+" command= "+command);
         for (int i = 0; i < list.length; i++)
           out.println(list[i]); //if (command==14)  System.out.println("myServlet list["+i+"]= "+list[i]+" command= "+command);
         out.flush(); out.close();
@@ -96,11 +96,11 @@ public class myServlet extends HttpServlet
           throws ServletException,IOException
   { String file=req.getParameter("file");
     int command=Integer.parseInt(req.getParameter("command"));
-    System.out.println("myServlet PUT file= "+file+" command= "+command);
+   // System.out.println("myServlet PUT file= "+file+" command= "+command);
     PrintWriter out = res.getWriter();
     res.setContentType("text/html; charset=windows-1251");
     if (command==Write) {
-      System.out.println("doPut file="+file);
+     // System.out.println("doPut file="+file);
       OutputStream _out=null;
       BufferedReader r=req.getReader();
       String s; BufferedWriter buf=null;
@@ -136,7 +136,7 @@ public class myServlet extends HttpServlet
     try {  _in = new FileInputStream(fileName); in = new BufferedReader(new InputStreamReader(_in));
       li.addFirst("ok");
       while ((inpuLine = in.readLine()) != null) li.add(inpuLine);
-    } catch (FileNotFoundException e) { e.printStackTrace();
+    } catch (FileNotFoundException e) { //e.printStackTrace();
       li.addFirst(e.getMessage());
     } catch (IOException e) {  e.printStackTrace();
     }
@@ -199,19 +199,19 @@ public class myServlet extends HttpServlet
         // if (list!=null && list.length>1) System.out.println("myServlet FilesCommand list[1]= "+list[1]);
         return list;
       case NotHiddenFiles ://FileSystemView fsView = FileSystemView.getFileSystemView();
-        System.out.println("myServlet getNotHiddenFiles autosaveFile.getPath= "+autosaveFile.getPath());
+       // System.out.println("myServlet getNotHiddenFiles autosaveFile.getPath= "+autosaveFile.getPath());
         File[] files=autosaveFile.listFiles();//fsView.getFiles(autosaveFile,false);
         LinkedList li=new LinkedList();
         for (int i = 0; i < files.length; i++) {
           File file = files[i];
           if (!file.isHidden()) {
-            li.add(file.getPath());System.out.println("myServlet getNotHiddenFiles file.getPath= "+file.getPath());
+            li.add(file.getPath());//System.out.println("myServlet getNotHiddenFiles file.getPath= "+file.getPath());
           }
         }
         list=new String[li.size()];
         for (int i = 0; i < li.size(); i++) {
           list[i] = (String) li.get(i);
-          System.out.println("myServlet getNotHiddenFiles list[i]= "+list[i]);
+        //  System.out.println("myServlet getNotHiddenFiles list[i]= "+list[i]);
         }
         return list;
       case CanonPath      :
@@ -235,7 +235,7 @@ public class myServlet extends HttpServlet
   private String[] RenameTo(final File autosaveFile, final File renameto)
   {
     String result="false";
-    System.out.println("RenameTo from "+autosaveFile.getPath()+" to "+renameto.getPath());
+    //System.out.println("RenameTo from "+autosaveFile.getPath()+" to "+renameto.getPath());
     String[] list=new String[1];
     list[0]=result;
     if (autosaveFile.renameTo(renameto)) result="true";

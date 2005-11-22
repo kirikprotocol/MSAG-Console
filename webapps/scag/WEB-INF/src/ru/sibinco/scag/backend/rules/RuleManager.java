@@ -36,6 +36,8 @@ public class RuleManager
   private final File rulesFolder;
   private final File xsdFolder;
   private long lastRuleId;
+  private Rule newRule;
+  private boolean openNewRule;
   private final ProviderManager providerManager;
   private static final String PARAM_NAME_LAST_USED_ID = "last used rule id";
 
@@ -89,6 +91,15 @@ public class RuleManager
     }
   }
 
+  public boolean isOpenNewRule()
+  {
+    return openNewRule;
+  }
+
+  public void setOpenNewRule(boolean openNewRule)
+  {
+    this.openNewRule = openNewRule;
+  }
 /*  public synchronized void trace() throws SibincoException
   {
     saveToFile(SMSC_ROUTES_TRACEABLE_CONFIG);
@@ -165,47 +176,56 @@ public class RuleManager
         return lastRuleId;
     }
 
-    /*
-  private void saveToFile(final String filename) throws SibincoException
+  public Rule getNewRule()
   {
-    try {
-      final File file = new File(rulesFolder, filename);
-      final File newFile = Functions.createNewFilenameForSave(file);
-      final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
-      Functions.storeConfigHeader(out, "routes", "routes.dtd", Functions.getLocaleEncoding());
-      for (Iterator i = subjects.values().iterator(); i.hasNext();) {
-        final Subject subject = (Subject) i.next();
-        subject.store(out);
-      }
-      for (Iterator i = rules.values().iterator(); i.hasNext();) {
-        final Route route = (Rule) i.next();
-        route.store(out);
-      }
-      Functions.storeConfigFooter(out, "routes");
-      out.flush();
-      out.close();
-      Functions.renameNewSavedFileToOriginal(newFile, file);
-    } catch (FileNotFoundException e) {
-      throw new SibincoException("Couldn't save new routes settings: Couldn't write to destination config filename: " + e.getMessage());
-    } catch (IOException e) {
-      logger.error("Couldn't save new routes settings", e);
-      throw new SibincoException("Couldn't save new routes settings", e);
+    return newRule;
+  }
+
+  public void setNewRule(Rule newRule)
+  {
+    this.newRule = newRule;
+  }
+  /*
+private void saveToFile(final String filename) throws SibincoException
+{
+  try {
+    final File file = new File(rulesFolder, filename);
+    final File newFile = Functions.createNewFilenameForSave(file);
+    final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()));
+    Functions.storeConfigHeader(out, "routes", "routes.dtd", Functions.getLocaleEncoding());
+    for (Iterator i = subjects.values().iterator(); i.hasNext();) {
+      final Subject subject = (Subject) i.next();
+      subject.store(out);
     }
+    for (Iterator i = rules.values().iterator(); i.hasNext();) {
+      final Route route = (Rule) i.next();
+      route.store(out);
+    }
+    Functions.storeConfigFooter(out, "routes");
+    out.flush();
+    out.close();
+    Functions.renameNewSavedFileToOriginal(newFile, file);
+  } catch (FileNotFoundException e) {
+    throw new SibincoException("Couldn't save new routes settings: Couldn't write to destination config filename: " + e.getMessage());
+  } catch (IOException e) {
+    logger.error("Couldn't save new routes settings", e);
+    throw new SibincoException("Couldn't save new routes settings", e);
   }
+}
 
-  private void loadRules() throws SibincoException
-  {
+private void loadRules() throws SibincoException
+{
 
-    Provider provider=new Provider(1,"first provider");
-    rules.put("rule_1", new Rule("rule_1","first  rule",provider,"SMPP"));
-    rules.put("rule_2", new Rule("rule_2","second rule",provider,"WAP"));
-    rules.put("rule_3", new Rule("rule_3","third  rule",provider,"MMS"));
+  Provider provider=new Provider(1,"first provider");
+  rules.put("rule_1", new Rule("rule_1","first  rule",provider,"SMPP"));
+  rules.put("rule_2", new Rule("rule_2","second rule",provider,"WAP"));
+  rules.put("rule_3", new Rule("rule_3","third  rule",provider,"MMS"));
 
-  }
-  protected Rule createRule(final String ruleName, final String notes, final Provider provider, final String transport) throws SibincoException
-  {
-    return new Rule(  ruleName,  notes,   provider,   transport);
-  }  */
+}
+protected Rule createRule(final String ruleName, final String notes, final Provider provider, final String transport) throws SibincoException
+{
+  return new Rule(  ruleName,  notes,   provider,   transport);
+}  */
 
 
 

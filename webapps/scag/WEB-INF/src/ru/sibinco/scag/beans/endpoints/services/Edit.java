@@ -235,12 +235,12 @@ public class Edit extends EditBean {
         return providerNames;
     }
 
-    public String[] getTranspotIds() {
-        return Transport.transpotIds;
+    public String[] getTransportIds() {
+        return Transport.transportIds;
     }
 
-    public String[] getTranspotTitles() {
-        return Transport.transpotTitles;
+    public String[] getTransportTitles() {
+        return Transport.transportTitles;
     }
 }
 

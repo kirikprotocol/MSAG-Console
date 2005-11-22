@@ -68,7 +68,7 @@
                 <complexType>
                     <attribute name="var" type="scag:Var" use="required"/>
                     <attribute name="value" type="scag:Value" use="required"/>
-                </complexType>    
+                </complexType>
             </element>
             
             <element name="return">

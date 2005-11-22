@@ -15,8 +15,8 @@
         <sm-ep:properties title="">
             <sm-ep:txt title="Name:" name="name"/>
             <sm-ep:list title="Transport" name="transportId"
-                        values="${fn:join(bean.transpotIds, ',')}"
-                        valueTitles="${fn:join(bean.transpotTitles, ',')}"/>
+                        values="${fn:join(bean.transportIds, ',')}"
+                        valueTitles="${fn:join(bean.transportTitles, ',')}"/>
             <c:choose>
                 <c:when test="${bean.administrator}">
                     <sm-ep:list title="provider" name="providerId"

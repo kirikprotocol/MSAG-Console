@@ -5,6 +5,7 @@ package ru.sibinco.scag.beans.rules.rules;
 
 import ru.sibinco.scag.beans.EditBean;
 import ru.sibinco.scag.beans.SCAGJspException;
+import ru.sibinco.scag.beans.DoneException;
 import ru.sibinco.scag.backend.transport.Transport;
 import ru.sibinco.scag.backend.SCAGAppContext;
 import ru.sibinco.scag.backend.rules.Rule;
@@ -97,9 +98,23 @@ public class Edit extends EditBean {
           error("Rule id not specified",null);
         if (null == name || 0 == name.length())
             error("Rule name not found",null);
+    String[] titles=getTransportTitles();
+    int id=(int)transportId;
+    String transport=titles[id];
+    String[] schemaNames=getSchemaNames();
+    String schema=schemaNames[id];
+    String header="<scag:rule xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'\n"+
+                  "xsi:schemaLocation='http://www.sibinco.com/SCAG xsd/'"+schema+"\n"+
+                 "xmlns:scag='http://www.sibinco.com/SCAG'\n"+
+                 "transport='"+transport+"' id='"+ruleId+"' provider='"+providerId+"' name='"+name+"'>";
 
-        
-
+    String footer="</scag:rule>";
+    Provider provider=(Provider) appContext.getProviderManager().getProviders().get(new Long(providerId));
+    if (provider==null)  error("Provider with id= "+providerId+" not found",null);
+    Rule newRule=new Rule(new Long(ruleId),name,"",provider,transport);
+    appContext.getRuleManager().setNewRule(newRule);
+    appContext.getRuleManager().setOpenNewRule(true);
+    throw new DoneException();
     }
 
     public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
@@ -123,14 +138,16 @@ public class Edit extends EditBean {
         this.transportId = transportId;
     }
 
-    public String[] getTranspotIds() {
-        return Transport.transpotIds;
+    public String[] getTransportIds() {
+        return Transport.transportIds;
     }
 
-    public String[] getTranspotTitles() {
-        return Transport.transpotTitles;
+    public String[] getTransportTitles() {
+        return Transport.transportTitles;
     }
-
+      public String[] getSchemaNames() {
+        return Transport.schemaNames;
+    }
     public long getRuleId() {
         ruleId = appContext.getRuleManager().getLastRuleId();
         ruleId ++;

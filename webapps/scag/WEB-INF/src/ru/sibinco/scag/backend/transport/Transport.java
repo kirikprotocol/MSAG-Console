@@ -21,11 +21,18 @@ public class Transport {
     public static final int  WAP_TRANSPORT_ID = 2;
     public static final int  MMS_TRANSPORT_ID = 3;
 
-    public static String[] transpotIds = {
+    public static final String  SMPP_SCHEMA_NAME ="smpp_rules.xsd";
+    public static final String  WAP_SCHEMA_NAME = "wap_rules.xsd";
+    public static final String  MMS_SCHEMA_NAME = "mms_rules.xsd";
+
+    public static String[] transportIds = {
             String.valueOf(SMPP_TRANSPORT_ID),  String.valueOf(WAP_TRANSPORT_ID), String.valueOf(MMS_TRANSPORT_ID)
         };
 
-    public static String[] transpotTitles = {
-            SMPP_TRANSPORT_NAME,  WAP_TRANSPORT_NAME, MMS_TRANSPORT_NAME
-        };
+    public static String[] transportTitles = {
+            SMPP_TRANSPORT_NAME,  WAP_TRANSPORT_NAME, MMS_TRANSPORT_NAME };
+
+    public static String[] schemaNames = {
+            SMPP_SCHEMA_NAME,  WAP_SCHEMA_NAME, MMS_SCHEMA_NAME  };
+
 }

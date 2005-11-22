@@ -23,7 +23,7 @@
         </script>
         <sm-ep:properties title="">
             <sm-ep:list title="Transport" onChange="changeTransportId();" name="transportId"
-                        values="${fn:join(bean.transpotIds, ',')}" valueTitles="${fn:join(bean.transpotTitles, ',')}"/>
+                        values="${fn:join(bean.transportIds, ',')}" valueTitles="${fn:join(bean.transportTitles, ',')}"/>
         </sm-ep:properties>
         <br>
         <br>

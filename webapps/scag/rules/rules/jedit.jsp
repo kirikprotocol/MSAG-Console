@@ -7,8 +7,8 @@
         <%
             SCAGAppContext appContext = (SCAGAppContext) request.getAttribute("appContext");
             String file = request.getParameter("editId");
-            String transport=appContext.getRuleManager().getRuleTransportDir(file);
-             file="rule_"+file;
+           // String transport=appContext.getRuleManager().getRuleTransportDir(file);
+           //  file="rule_"+file;
             long port = 6695;
             if (appContext != null) {
                 try {
@@ -22,8 +22,8 @@
             <param name="noplugins" value="-noplugins">
             <param name="homedir" value="applet">
             <param name="username" value="rules">
+            <!--param name="file" value=""-->
             <param name="file" value="<%=file%>">
-            <param name="transport" value="<%=transport%>">
             <param name="servletUrl" value="/scag/applet/myServlet">
         </applet>
 </body>

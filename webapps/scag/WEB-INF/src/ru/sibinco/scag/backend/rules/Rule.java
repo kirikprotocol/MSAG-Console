@@ -38,7 +38,7 @@ public class Rule
 
         out.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<scag:rule xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\n" +
-                "            xsi:schemaLocation=\"http://www.sibinco.com/SCAG xsd/smpp_rules.xsd\"\n" +
+                "           xsi:schemaLocation=\"http://www.sibinco.com/SCAG xsd/smpp_rules.xsd\"\n" +
                 "           xmlns:scag=\"http://www.sibinco.com/SCAG\"\n" +
                 "           transport=\"" + transport + "\" id=\"" + id + "\" provider=\"" + provider
                 + "\" name=\"" + name + "\">\n" + "\n" + "\n");
@@ -47,6 +47,7 @@ public class Rule
     }
 
     protected PrintWriter storeFooter(final PrintWriter out) {
+        out.println();out.println();
         out.println("</scag:rule>");
         return out;
     }
@@ -55,6 +56,11 @@ public class Rule
                                       final String id, final String provider, final String name) {
         return storeFooter(storeHeader(out, transport, id, provider, name));
     }
+
+  public PrintWriter storeTemplate(final PrintWriter out) {
+
+      return storeFooter(storeHeader(out, transport, String.valueOf(id), provider.getName(), name));
+  }
 
     public Provider getProvider()
   {

@@ -2,6 +2,7 @@ package ru.sibinco.scag.beans.rules.rules;
 
 import ru.sibinco.scag.beans.TabledBeanImpl;
 import ru.sibinco.scag.backend.rules.Rule;
+import ru.sibinco.scag.backend.rules.RuleManager;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.backend.routing.GwRoute;
 import ru.sibinco.lib.bean.TabledBean;
@@ -18,11 +19,19 @@ import java.util.*;
 public class Index extends TabledBeanImpl implements TabledBean
 {
   private final Map rules = Collections.synchronizedMap(new HashMap());
+  private boolean newRule=false;
 
   protected Collection getDataSource()
   {
+     RuleManager ruleManager=appContext.getRuleManager();
+     newRule=ruleManager.isOpenNewRule();
+     ruleManager.setOpenNewRule(false);
+     return ruleManager.getRules().values();
+  }
 
-      return appContext.getRuleManager().getRules().values();
+  public boolean isNewRule()
+  {
+    return newRule;
   }
 
   protected void delete()
