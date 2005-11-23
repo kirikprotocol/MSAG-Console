@@ -13,12 +13,13 @@ using smsc::inman::inap::InSessionFactory;
 namespace smsc  {
 namespace inman {
 
-Service::Service( const char* ssf_addr, const char* scf_addr, const char* host, int port, int SSN)
-        : logger( Logger::getInstance("smsc.inman.Service") )
-        , session( 0 )
-        , dispatcher( 0 )
-        , server( 0 )
+Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
+    : logger(uselog), _cfg(*in_cfg)
+    , session(0), dispatcher(0), server(0)
 {
+    if (!logger)
+        logger = Logger::getInstance("smsc.inman.Service");
+
     smsc_log_debug(logger, "InmanSrv: Creating ..");
 
     InSessionFactory* factory = InSessionFactory::getInstance();
@@ -27,12 +28,24 @@ Service::Service( const char* ssf_addr, const char* scf_addr, const char* host, 
     dispatcher = new Dispatcher();
     smsc_log_debug(logger, "InmanSrv: TCAP dispatcher inited");
 
-    server = new Server( host, port, SerializerInap::getInstance() );
-    server->addListener( this );
+    server = new Server(_cfg.host, _cfg.port, SerializerInap::getInstance());
+    server->addListener(this);
     smsc_log_debug(logger, "InmanSrv: TCP server inited");
 
-    session = factory->openSession(SSN, ssf_addr, scf_addr );
-    assert( session );
+    if (_cfg.billMode) {
+        bfs = new InBillingFileStorage(_cfg.billingDir,
+                                       (unsigned long)_cfg.billingInterval, logger);
+        assert(bfs);
+        int oldfs = bfs->RFSOpen(true);
+        assert(oldfs >= 0);
+        smsc_log_debug(logger, "InmanSrv: Billing storage opened%s",
+                       oldfs > 0 ? ", old files rolled": "");
+    }
+
+    session = factory->openSession(_cfg.ssn, _cfg.ssf_addr, _cfg.scf_addr);
+    assert(session);
+    smsc_log_debug(logger, "InmanSrv: TCAP session inited");
+
 }
 
 Service::~Service()
@@ -52,6 +65,10 @@ Service::~Service()
 
     smsc_log_debug( logger, "InmanSrv: Delete TCAP dispatcher");
     delete dispatcher;
+
+    smsc_log_debug( logger, "InmanSrv: Close Billing storage");
+    bfs->RFSClose();
+    delete bfs;
 }
 
 
@@ -85,8 +102,14 @@ void Service::billingFinished(Billing* bill)
     BillingMap::iterator it = workers.find(billId);
     if (it == workers.end())
         smsc_log_error(logger, "InmanSrv: Attempt to free unregistered Billing, id: 0x%X", billId);
-    else
+    else {
+        if (_cfg.billMode && bill->BillComplete()) {
+            if ((_cfg.billMode != InService_CFG::BILL_POSTPAID)
+                || (bill->getBillingType() == Billing::billPostpaid))
+                bfs->bill(bill->getCDRRecord());
+        }
         workers.erase(billId);
+    }
     delete bill;
     smsc_log_debug(logger, "InmanSrv: Billing deleted, id: 0x%X", billId);
 }

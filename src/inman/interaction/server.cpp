@@ -154,16 +154,16 @@ int Server::Execute()
     started.SignalAll();
     try
     {
-        smsc_log_debug(logger, "Thread started");
+        smsc_log_debug(logger, "TCPSrv: Thread started");
         Run();
     }
     catch(const std::exception& error)
     {
-        smsc_log_error(logger, "Error in thread: %s", error.what() );
+        smsc_log_error(logger, "TCPSrv: Error in thread: %s", error.what() );
         result = 1;
     }
     stopped.SignalAll();
-    smsc_log_debug(logger, "Thread finished");
+    smsc_log_debug(logger, "TCPSrv: Thread finished");
     return result;
 }
 

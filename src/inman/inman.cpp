@@ -12,6 +12,7 @@ static char const ident[] = "$Id$";
 
 static const UCHAR_T VER_HIGH    = 0;
 static const UCHAR_T VER_LOW     = 1;
+static const long _inman_MIN_BILLING_INTERVAL = 10; //in seconds
 
 namespace smsc
 {
@@ -27,6 +28,7 @@ namespace smsc
 };
 
 using smsc::inman::Service;
+using smsc::inman::InService_CFG;
 using smsc::inman::inap::inapLogger;
 using smsc::inman::inap::tcapLogger;
 using smsc::inman::inap::dumpLogger;
@@ -52,14 +54,18 @@ extern "C" static void sighandler( int signal )
   g_pService = 0;
 }
 
-static const char * const _CDRmodes[2] = { "all", "postpaid" };
-struct INBillConfig
+static const char * const _CDRmodes[3] = { "all", "postpaid", "none" };
+
+struct INBillConfig : public InService_CFG
 {
-    typedef enum { CDR_ALL = 0, CDR_POSTPAID = 1 } CDR_MODE;
+
 public:
     INBillConfig() 
-        : ssf_addr(0), scf_addr(0), host(0)
-        , port(0), ssn(0), cdrMode(INBillConfig::CDR_ALL) {}
+    {
+        ssf_addr = scf_addr = host = billingDir = NULL;
+        ssn = port = billingInterval = 0;
+        billMode = InService_CFG::BILL_ALL;
+    }
 
     void read(Manager& manager)
     {
@@ -87,72 +93,72 @@ public:
             throw ConfigException("SMSC host or port missing");
         }
         try {
-            char* cdrs = manager.getString("cdrMode");
-            if (!strcmp(cdrs, _CDRmodes[CDR_ALL]))
-                cdrMode = CDR_ALL;
-            else if (!strcmp(cdrs, _CDRmodes[CDR_POSTPAID]))
-                cdrMode = CDR_POSTPAID;
-            else
-                throw ConfigException("cdrMode unknown or missing");
-            smsc_log_info(inapLogger, "cdrMode: %s", cdrs);
+            char* cdrs = manager.getString("billMode");
+            if (!strcmp(cdrs, _CDRmodes[InService_CFG::BILL_POSTPAID]))
+                billMode = InService_CFG::BILL_POSTPAID;
+            if (!strcmp(cdrs, _CDRmodes[InService_CFG::BILL_NONE]))
+                billMode = InService_CFG::BILL_NONE;
+            else if (strcmp(cdrs, _CDRmodes[InService_CFG::BILL_ALL]))
+                throw ConfigException("billMode unknown or missing");
+            smsc_log_info(inapLogger, "billMode: %s", cdrs);
         } catch (ConfigException& exc) {
-            throw ConfigException("cdrMode unknown or missing");
+            throw ConfigException("billMode unknown or missing");
+        }
+        if (billMode != InService_CFG::BILL_NONE) {
+            try {
+                billingDir = manager.getString("billingDir");
+                billingInterval = manager.getInt("billingInterval");
+                if (billingInterval < _inman_MIN_BILLING_INTERVAL) {
+                    billingDir = NULL; billingInterval = 0;
+                    throw ConfigException("Parameter 'billingInterval' should be grater than %ld seconds",
+                                          _inman_MIN_BILLING_INTERVAL);
+                }
+                smsc_log_info(inapLogger, "billingDir: %s", billingDir);
+                smsc_log_info(inapLogger, "billingInterval: %d", billingInterval);
+            } catch (ConfigException& exc) {
+                billingDir = NULL; billingInterval = 0;
+                throw ConfigException("billingDir or billingInterval invalid or missing");
+            }
         }
     }
-
-    char*       ssf_addr;
-    char*       scf_addr;
-    char*       host;
-    int         port;
-    int         ssn;
-    CDR_MODE    cdrMode;
 };
 
 int main(int argc, char** argv)
 {
-  char *  cfgFile = (char*)"config.xml";
+    char *  cfgFile = (char*)"config.xml";
 
-  init_logger();
-  smsc_log_info( inapLogger,"***************************");
-  smsc_log_info( inapLogger,"* SIBINCO IN MANAGER v%d.%d *", VER_HIGH, VER_LOW);
-  smsc_log_info( inapLogger,"***************************");
-  if (argc > 1)
-      cfgFile = argv[1];
-  smsc_log_info(inapLogger,"* Config file: %s", cfgFile);
-  smsc_log_info(inapLogger,"****************************");
+    init_logger();
+    smsc_log_info( inapLogger,"***************************");
+    smsc_log_info( inapLogger,"* SIBINCO IN MANAGER v%d.%d *", VER_HIGH, VER_LOW);
+    smsc_log_info( inapLogger,"***************************");
+    if (argc > 1)
+        cfgFile = argv[1];
+    smsc_log_info(inapLogger,"* Config file: %s", cfgFile);
+    smsc_log_info(inapLogger,"****************************");
 
-  INBillConfig cfg;
-  try
-  {
-    Manager::init((const char *)cfgFile);
-    Manager& manager = Manager::getInstance();
-    cfg.read(manager);
-  }
-  catch (ConfigException& exc)
-  {
-      smsc_log_error(inapLogger, "Configuration invalid: %s. Exiting", exc.what());
-      exit(-1);
-  }
-  try
-  {
-    g_pService = new Service( cfg.ssf_addr, cfg.scf_addr, cfg.host, cfg.port, cfg.ssn );
-    g_pService->start();
-
-      sigset( SIGTERM, sighandler );
-
-    while( g_pService )
-    {
-      usleep( 1000 * 100 );
+    INBillConfig cfg;
+    try {
+        Manager::init((const char *)cfgFile);
+        Manager& manager = Manager::getInstance();
+        cfg.read(manager);
+    } catch (ConfigException& exc) {
+        smsc_log_error(inapLogger, "Configuration invalid: %s. Exiting", exc.what());
+        exit(-1);
     }
+    try {
+        g_pService = new Service(&cfg);
+        g_pService->start();
 
-  }
-  catch(const std::exception& error)
-  {
-    smsc_log_fatal(inapLogger, "%s", error.what() );
-    fprintf( stderr, "Fatal error: %s\n", error.what() );
-    delete g_pService;
-    exit(1);
-  }
+        sigset(SIGTERM, sighandler);
+        while(g_pService)
+            usleep(1000 * 100);
+
+    } catch(const std::exception& error) {
+        smsc_log_fatal(inapLogger, "%s", error.what() );
+        fprintf( stderr, "Fatal error: %s\n", error.what() );
+        delete g_pService;
+        exit(1);
+    }
 
     return(0);
 }

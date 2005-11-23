@@ -5,11 +5,13 @@
 
 #include "inman/interaction/serializer.hpp"
 #include "inman/common/factory.hpp"
+#include "inman/storage/cdrutil.hpp"
 
 using smsc::inman::interaction::ObjectBuffer;
 using smsc::inman::interaction::SerializableObject;
 using smsc::inman::interaction::SerializerITF;
 using smsc::inman::common::FactoryT;
+using smsc::inman::cdr::CDRRecord;
 
 #define INMAN_RPCAUSE_LIMIT         (unsigned int)255
 #define INMAN_PROTOCOL_ERROR_BASE   (unsigned int)260
@@ -83,38 +85,6 @@ typedef enum
 DeliverySmsResult_t;
 
 
-struct CDRRecord {
-    typedef enum { dpOrdinary = 0, dpReaddressed } CDRRecordType;
-    typedef enum { dpText = 0, dpBinary } CDRMediaType;
-    typedef enum { dpSMS = 0, dpUSSD } CDRBearerType;
-
-    //basic info:
-    uint64_t        _msgId;         //MSG_ID: system message identifier
-    CDRRecordType   _cdrType;       //RECORD_TYPE:
-    CDRMediaType    _mediaType;     //MEDIA_TYPE:
-    CDRBearerType   _bearer;        //BEARER_TYPE:
-    std::string     _routeId;       //ROUTE_ID:
-    int32_t         _serviceId;     //SERVICE_ID: set on route
-    uint32_t        _userMsgRef;    //USER_MSG_REF: system identifier for dialog tracing
-    //sender info
-    time_t          _submitTime;    //SUBMIT: sms submit time
-    std::string     _srcAdr;        //SRC_ADDR: sender number
-    std::string     _srcIMSI;       //SRC_IMSI: sender IMSI
-    std::string     _srcMSC;        //SRC_MSC: sender MSC
-    std::string     _srcSMEid;      //SRC_SME_ID: sender SME identifier
-    //recipient info
-    time_t          _finalTime;     //FINALIZED: sms delivery time
-    std::string     _dstAdr;        //DST_ADDR: final recipient number
-    std::string     _dstIMSI;       //DST_IMSI: recipient IMSI
-    std::string     _dstMSC;        //DST_MSC:	recipient MSC
-    std::string     _dstSMEid;      //DST_SME_ID: recipient SME identifier
-    DeliverySmsResult_t _dlvrRes;   //STATUS: delivery status
-
-//not processed for now:
-//DIVERTED_FOR  Ќомер оригинального получател€, но доставлено на DST_ADDR                                    
-//DATA_LENGTH   ƒлина сообщени€, в символах дл€ текстовых сообщений и в октетах дл€ бинарных сообщений
-};
-
 class ChargeSms : public InmanCommand
 {
 public:
@@ -173,9 +143,9 @@ private:
     //data for CDR generation
     std::string   callingSMEid; //"MAP_PROXY"
     std::string   routeId;      //"sibinco.sms > plmn.kem"
-    int32_t       serviceId;    // ???
-    uint32_t      userMsgRef;  // ???
-    uint64_t      msgId;       // ?????
+    int32_t       serviceId;    //
+    int32_t       userMsgRef;   //negative if absent
+    uint64_t      msgId;        //
     int32_t       ussdServiceOp; //see sms_const.h
 };
 

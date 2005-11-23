@@ -27,6 +27,7 @@ Billing::Billing(Service* serv, unsigned int bid, Session* pSession, Connect* co
         , state (bilIdle)
         , dialog(NULL)
         , inap(NULL)
+        , billType(Billing::billPrepaid)
 {
     assert( connect );
     assert( session );
@@ -86,11 +87,26 @@ void Billing::abortBilling(unsigned int errCode)
     ChargeSmsResult res(errCode);
     res.setDialogId(id);
     connect->send(&res);
-    state = Billing::bilClosed;
+    state = Billing::billAborted;
+    bilMutex.Unlock();
     service->billingFinished( this );
 }
 
+//retuns false if CDR was not complete
+bool Billing::BillComplete(void) const
+{
+    return (state == Billing::bilComplete) ? true : false;
+}
 
+const CDRRecord & Billing::getCDRRecord(void) const
+{
+    return cdr;
+}
+
+Billing::BillingType Billing::getBillingType(void) const
+{
+    return billType;
+}
 /* -------------------------------------------------------------------------- *
  * SSF interface implementation:
  * -------------------------------------------------------------------------- */
@@ -131,7 +147,7 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
 
     inap->eventReportSMS(&report);
     dialog->continueDialog();
-    state = Billing::bilClosed;
+    state = Billing::bilComplete;
 
     service->billingFinished(this);
 }
@@ -153,6 +169,7 @@ void Billing::continueSMS()
     state = Billing::bilProcessed;
 }
 
+#define POSTPAID_RPCause 41
 void Billing::releaseSMS(ReleaseSMSArg* arg)
 {
     smsc_log_debug(logger, "SSF <-- SCF ReleaseSMS, RP cause: %u", (unsigned)arg->rPCause);
@@ -160,6 +177,9 @@ void Billing::releaseSMS(ReleaseSMSArg* arg)
     res.setDialogId(id);
     connect->send(&res);
     state = Billing::bilProcessed;
+    //NOTE: For postpaid abonent In-platform returns RP Cause: 'Temporary Failure'
+    if (arg->rPCause == POSTPAID_RPCause)
+        billType = Billing::billPostpaid;
 }
 
 void Billing::abortSMS(unsigned char errCode)

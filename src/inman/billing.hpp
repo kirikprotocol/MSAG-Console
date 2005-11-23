@@ -7,12 +7,13 @@
 #include "inman/inap/inap.hpp"
 #include "inman/interaction/messages.hpp"
 #include "inman/interaction/connect.hpp"
+#include "inman/storage/cdrutil.hpp"
 
 using smsc::inman::inap::Inap;
 using smsc::inman::inap::Session;
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::SSF;
-using smsc::inman::interaction::CDRRecord;
+using smsc::inman::cdr::CDRRecord;
 using smsc::inman::interaction::Connect;
 using smsc::inman::interaction::InmanCommand;
 using smsc::inman::interaction::InmanHandler;
@@ -28,7 +29,8 @@ class Service;
 class Billing : public SSF, public InmanHandler
 {
 public:
-    typedef enum { bilIdle, bilStarted, bilInited, bilProcessed, bilApproved, bilClosed } BillingState;
+    typedef enum { billPrepaid, billPostpaid } BillingType;
+    typedef enum { bilIdle, bilStarted, bilInited, bilProcessed, bilApproved, bilComplete, billAborted } BillingState;
 
     Billing(Service* service, unsigned int id, Session*, Connect*);
     virtual ~Billing();
@@ -37,7 +39,15 @@ public:
     Dialog*  getDialog() const { return dialog; }
     
     void     handleCommand(InmanCommand* cmd);
+    //
+    BillingType getBillingType(void) const;
+    //retuns false if CDR was not complete
+    bool     BillComplete(void) const;
+    //returns true if succeeded, false if CDR was not complete
+    //bool     getCDRasCSV(const std::string & rec);
     
+    const CDRRecord & getCDRRecord(void) const;
+
     //SSF interface
     virtual void onChargeSms(ChargeSms*);
     virtual void onDeliverySmsResult(DeliverySmsResult*);
@@ -63,6 +73,7 @@ protected:
     Connect*        connect;
     Service*        service;
     CDRRecord       cdr;        //data for CDR record creation
+    BillingType     billType;
 };
 
 } //inman

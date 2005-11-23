@@ -452,7 +452,7 @@ void DeliverySmsResult::save(ObjectBuffer& out)
 
 void DeliverySmsResult::export2CDR(CDRRecord & cdr) const
 {
-    if (!(cdr._dlvrRes = value)) {
+    if (!(cdr._dlvrRes = (CDRRecord::CDRDeliveryStatus)value)) {
         cdr._dstIMSI = destImsi;
         cdr._dstMSC = destMSC;
         cdr._dstSMEid = destSMEid;
