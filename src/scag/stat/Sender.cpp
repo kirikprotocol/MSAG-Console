@@ -1,6 +1,7 @@
 #include "Sender.h"
 #include "StatisticsManager.h"
 #include <stdlib.h>
+#include <unistd.h>
 
 namespace scag {
 namespace stat {
@@ -72,9 +73,10 @@ int Registrator::Execute()
         si.errCode = 1;
         sm->registerEvent(si);
 
-        int pause = 10. * ( (double)random() / 2147483648. );
+        useconds_t pause = 50000. * ( (double)random() / 2147483648. );
+        if(pause < 5000 ) pause = 5000; 
         printf("pause: %d sec.\n", pause);
-        sleep(pause);
+        usleep(pause);
     }
     return 1;
 }
