@@ -15,7 +15,7 @@ namespace inman {
 
 Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
     : logger(uselog), _cfg(*in_cfg)
-    , session(0), dispatcher(0), server(0)
+    , session(0), dispatcher(0), server(0), bfs(0)
 {
     if (!logger)
         logger = Logger::getInstance("smsc.inman.Service");
@@ -67,7 +67,8 @@ Service::~Service()
     delete dispatcher;
 
     smsc_log_debug( logger, "InmanSrv: Close Billing storage");
-    bfs->RFSClose();
+    if (bfs)
+        bfs->RFSClose();
     delete bfs;
 }
 

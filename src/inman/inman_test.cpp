@@ -97,10 +97,9 @@ public:
         op.setLocationInformationMSC( ".1.1.79139860001" );
         op.setSMSCAddress(".1.1.79029869990");
 
-        time_t tm;
-        time( &tm );
-
-        op.setSubmitTimeTZ( tm );
+//        time_t tm;
+//        time( &tm );
+        op.setSubmitTimeTZ(time(NULL));
         op.setTPShortMessageSpecificInfo( 0x11 );
         op.setTPValidityPeriod( 60*5 );
         op.setTPProtocolIdentifier( 0x00 );
@@ -123,6 +122,12 @@ public:
         std::string msg = format("Sending DeliverySmsResult: DELIVERY_%s\n",
                                 !delivery ? "DELIVERY_SUCCESSED" : "DELIVERY_FAILED");
         prompt(msg);
+        if (!delivery) { //fill optional fields
+            op.setDestIMSI("250013901464251");
+            op.setDestMSC(".1.1.79139860001");
+            op.setDestSMEid("DST_MAP_PROXY");
+            op.setDeliveryTime(time(NULL));
+        }
         pipe->send(&op);
     }
 

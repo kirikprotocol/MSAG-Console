@@ -54,7 +54,7 @@ extern "C" static void sighandler( int signal )
   g_pService = 0;
 }
 
-static const char * const _CDRmodes[3] = { "all", "postpaid", "none" };
+static const char * const _CDRmodes[3] = {"none", "all", "postpaid"};
 
 struct INBillConfig : public InService_CFG
 {
@@ -96,11 +96,11 @@ public:
             char* cdrs = manager.getString("billMode");
             if (!strcmp(cdrs, _CDRmodes[InService_CFG::BILL_POSTPAID]))
                 billMode = InService_CFG::BILL_POSTPAID;
-            if (!strcmp(cdrs, _CDRmodes[InService_CFG::BILL_NONE]))
+            else if (!strcmp(cdrs, _CDRmodes[InService_CFG::BILL_NONE]))
                 billMode = InService_CFG::BILL_NONE;
             else if (strcmp(cdrs, _CDRmodes[InService_CFG::BILL_ALL]))
                 throw ConfigException("billMode unknown or missing");
-            smsc_log_info(inapLogger, "billMode: %s", cdrs);
+            smsc_log_info(inapLogger, "billMode: %s [%d]", cdrs, billMode);
         } catch (ConfigException& exc) {
             throw ConfigException("billMode unknown or missing");
         }
