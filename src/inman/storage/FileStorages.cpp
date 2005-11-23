@@ -20,7 +20,10 @@ InRollingFileStorage::InRollingFileStorage(const std::string & location,
 }
 
 InRollingFileStorage::~InRollingFileStorage()
-{ }
+{ 
+    if (_currFile.isOpened())
+        RFSClose();
+}
 
 //Returns:  zero - Ok
 //          positive - Ok, old storage files are rolled,
