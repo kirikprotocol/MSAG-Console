@@ -229,7 +229,8 @@ RollingFileStorage::RollingFileStorage(const std::string & location, const char 
 }
 RollingFileStorage::~RollingFileStorage()
 {
-    FSClose();
+    if (_currFile.isOpened())
+        FSClose();
 }
 
 bool RollingFileStorage::FSOpen(bool rollOld/* = true*/)
@@ -347,6 +348,13 @@ bool RollingFileStorage::mkCurrFile(bool roll/* = true*/)
     }
     _currFileName = newFileName;
     _lastRollTime = curTm;
+
+    //write header
+    if (_Parms.fileHeaderText)
+        FSWrite(_Parms.fileHeaderText, strlen(_Parms.fileHeaderText), false);
+    if (_Parms.printHeaderVersion)
+        FSWrite(&_Parms.headerVersion, sizeof(_Parms.headerVersion), false);
+
     return true;
 }
 
