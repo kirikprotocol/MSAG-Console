@@ -178,28 +178,30 @@ void FSEntry::setFilePos(File & currFile, const File::offset_type* pos)
     }
 }
 
-void FSEntry::rollFileExt(const std::string& location, std::string& fullName, const char* newExt)
+void FSEntry::rollFileExt(std::string& fullPath, const char* newExt)
 {
     if (!newExt || !newExt[0])
         return;
-    std::string     fullOldFile = location;
-    fullOldFile += '/';
-    fullOldFile += fullName;
 
-    std::string::size_type  extpos = fullName.find_last_of('.');
-    if (extpos != fullName.npos)
-        fullName.erase(extpos, fullName.npos);
-    fullName += '.';
-    fullName += newExt;
+    std::string             fullOldFile = fullPath;
+    std::string::size_type  extpos = fullPath.find_last_of('.');
+    if (extpos != fullPath.npos)
+        fullPath.erase(extpos, fullPath.npos);
+    fullPath += '.';
+    fullPath += newExt;
 
-    std::string     fullNewFile = location;
-    fullOldFile += '/';
-    fullOldFile += fullName;
-
-    try { File::Rename(fullOldFile.c_str(), fullNewFile.c_str()); }
+    try { File::Rename(fullOldFile.c_str(), fullPath.c_str()); }
     catch (FileException& exc) {
         throw FileSystemException(exc.getErrNo(), exc.what());
     }
+}
+
+void FSEntry::rollFileExt(const std::string& location, std::string& fileName, const char* newExt)
+{
+    std::string     fullOldFile = location;
+    fullOldFile += '/';
+    fullOldFile += fileName;
+    rollFileExt(fullOldFile, newExt);
 }
 
 
@@ -310,6 +312,9 @@ bool RollingFileStorage::mkCurrFile(bool roll/* = true*/)
         File::offset_type fpos = FSEntry::getFilePos(_currFile);
         if (fpos <= _headerLen)
             return false; // file is empty, skip rolling 
+        //roll and close file
+        _currFile.Close();
+        FSEntry::rollFileExt(_location, _currFileName, _Ext.c_str());
     }
 
     time_t      curTm = time(NULL);
@@ -324,6 +329,7 @@ bool RollingFileStorage::mkCurrFile(bool roll/* = true*/)
         throw FileSystemException(-2, "User time stamp format is invalid or too long!");
 
     std::string newFileName(tmStamp);
+    newFileName += '.';
     newFileName += _lastExt;
 
     std::string filePath = _location;
@@ -334,25 +340,12 @@ bool RollingFileStorage::mkCurrFile(bool roll/* = true*/)
         throw FileSystemException(-1, "Failed to create new file '%s'. File already exists!",
                                    filePath.c_str());
 
-    File    newFile;
-    try { newFile.RWCreate(filePath.c_str()); } 
+    try { _currFile.RWCreate(filePath.c_str()); } 
     catch (FileException& exc) {
         throw FileSystemException(exc.getErrNo(), "Failed to create new file '%s'. Details: %s",
                                    filePath.c_str(), exc.what());
     }
-
-    try {
-        if (_currFile.isOpened()) { // close old file & roll extension if needed
-            _currFile.Close();
-            if (roll)
-                FSEntry::rollFileExt(_location, _currFileName, _Ext.c_str());
-        }
-        _currFile.Swap(newFile);
-        _currFileName = newFileName;
-    } catch (std::exception& fexc) {
-        throw FileSystemException(-1, "Failed to roll file '%s'. Details: %s",
-                                   filePath.c_str(), fexc.what());
-    }
+    _currFileName = newFileName;
     _lastRollTime = curTm;
     return true;
 }

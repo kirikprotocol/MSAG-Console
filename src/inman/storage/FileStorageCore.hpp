@@ -63,6 +63,7 @@ public:
 
     //upon return fullName keeps file name with new extension
     static void rollFileExt(const std::string& location, std::string& fullName, const char* newExt);
+    static void rollFileExt(std::string& fullPath, const char* newExt);
 };
 
 //Additional RollingFileStorage configuration parameters
