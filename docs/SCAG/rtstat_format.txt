@@ -1,6 +1,6 @@
 SvcStat, ScStat:
 
-<stat> = <length: int> 	<queueSize: int> <smppCount: short int><smppRecs: 1...n> 
+<stat> = <length: int> 	<queueSize: int> <smppCount: uint16><smppRecs: 1...n> 
 					    <wapCount: short int><wapRecs: 1...n>
          				    <mmsCount: short int><mmsRecs: 1...n>
 
@@ -10,32 +10,32 @@ SvcStat, ScStat:
 <wapRecs: 1...n>  = <wapRec>  ... <wapRec>
 <mmsRecs: 1...n>  = <mmsRec>  ... <mmsRec>
 
-<smppRec> = <systemId: 16 bytes> <accepted: 	2 x short int> 
-				 <rejected: 	2 x short int> 
-				 <delivered: 	2 x short int> 
-				 <gw_rejected: 	2 x short int> 
-				 <failed: 	2 x short int>
+<smppRec> = <systemId: 16 bytes> <accepte: uint16> 	<accepted: uint16>
+				 <rejected: uint16> 	<rejected: uint16> 
+				 <delivered: uint16> 	<delivered: uint16> 
+				 <gw_rejected: uint16> 	<gw_rejected: uint16> 
+				 <failed: uint16> 	<failed: uint16>
 
-<wapRec> = <systemId: 16 bytes>  <accepted:	2 x short int>
-				 <rejected:	2 x short int>
-				 <delivered:	2 x short int>
-				 <gw_rejected:	2 x short int>
-				 <failed:	2 x short int>
+<wapRec> = <systemId: 16 bytes>  <accepted: uint16> 	<accepted: uint16>
+				 <rejected: uint16> 	<rejected: uint16>
+				 <delivered: uint16> 	<delivered: uint16>
+				 <gw_rejected: uint16> 	<gw_rejected: uint16>
+				 <failed: uint16> 	<failed: uint16>
 
-<mmsRec> = <systemId: 16 bytes>  <accepted:	2 x short int>
-				 <rejected:	2 x short int>
-				 <delivered:	2 x short int>
-				 <gw_rejected:	2 x short int>
-				 <failed:	2 x short int>
+<mmsRec> = <systemId: 16 bytes>  <accepted: uint16> 	<accpted: uint16>
+				 <rejected: uint16>  	<rejected: uint16>
+				 <delivered: uint16> 	<delivered: uint16>
+				 <gw_rejected: uint16> 	<gw_rejected: uint16>
+				 <failed: uint16> 	<failed: uint16>
 
 GenStat:
 
 <stat> = <size: int><countersNumber: int> <counters: 1...countersNumber> <sessionCount: int><uptime: 4 bytes><now: 4 bytes>
 
-<counters: 1...countersNumber> = <accpted: 	long int>
-				 <rejected: 	long int>
-				 <delivered: 	long int>
-				 <gw_rejected:	long int>
-				 <failed:	long int>
+<counters: 1...countersNumber> = <accpted: 	uint64>
+				 <rejected: 	uint64>
+				 <delivered: 	uint64>
+				 <gw_rejected:	uint64>
+				 <failed:	uint64>
 
 countersNumber = 5
