@@ -1,8 +1,8 @@
 SvcStat, ScStat:
 
-<stat> = <length: int> 	<queueSize: int> <smppCount: uint16><smppRecs: 1...n> 
-					    <wapCount: short int><wapRecs: 1...n>
-         				    <mmsCount: short int><mmsRecs: 1...n>
+<stat> = <length: uint32> <queueSize: uint32> 	<smppCount: uint16><smppRecs: 1...n> 
+					    	<wapCount: uint16><wapRecs: 1...n>
+         				    	<mmsCount: uint16><mmsRecs: 1...n>
 
 
 
@@ -30,7 +30,7 @@ SvcStat, ScStat:
 
 GenStat:
 
-<stat> = <size: int><countersNumber: int> <counters: 1...countersNumber> <sessionCount: int><uptime: 4 bytes><now: 4 bytes>
+<stat> = <size: uint32><countersNumber: uint32> <counters: 1...countersNumber> <sessionCount: uint32><uptime: 4 bytes><now: 4 bytes>
 
 <counters: 1...countersNumber> = <accpted: 	uint64>
 				 <rejected: 	uint64>
