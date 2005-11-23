@@ -413,7 +413,7 @@ void DeliverySmsResult::setDestSMEid(const std::string& sme_id)
 {
     destSMEid = sme_id;
 }
-void DeliverySmsResult::setDeliveyTime(time_t final_tm)
+void DeliverySmsResult::setDeliveryTime(time_t final_tm)
 {
     finalTimeTZ = final_tm;
 }

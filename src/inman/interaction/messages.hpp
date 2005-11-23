@@ -189,7 +189,7 @@ public:
     void setDestIMSI(const std::string& imsi);
     void setDestMSC(const std::string& msc);
     void setDestSMEid(const std::string& sme_id);
-    void setDeliveyTime(time_t final_tm);
+    void setDeliveryTime(time_t final_tm);
 
     DeliverySmsResult_t GetValue() const;
 
