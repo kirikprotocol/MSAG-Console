@@ -300,6 +300,8 @@ void ChargeSms::export2CDR(CDRRecord & cdr) const
     cdr._userMsgRef = userMsgRef;
 
     cdr._dstAdr = destinationSubscriberNumber;
+    //message length is not transferred to InMan, just set it to 1
+    cdr._dpLength = 1;
 }
 
 
