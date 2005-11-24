@@ -89,6 +89,7 @@ void SerializerInap::serialize(SerializableObject* obj, ObjectBuffer& out)
  * ************************************************************************** */
 
 ChargeSms::ChargeSms()
+    : partsNum(1)
 {
     setObjectId((unsigned short)CHARGE_SMS_TAG);
 }
@@ -179,7 +180,10 @@ void ChargeSms::setServiceOp(int32_t service_op)
     ussdServiceOp = service_op;
 }
 
-
+void ChargeSms::setPartsNum(uint8_t parts_num)
+{
+    partsNum = parts_num;
+}
 
 
 const std::string& ChargeSms::getDestinationSubscriberNumber(void) const
@@ -250,6 +254,7 @@ void ChargeSms::load(ObjectBuffer& in)
     in >> userMsgRef;
     in >> msgId;
     in >> ussdServiceOp;
+    in >> partsNum;
 }
 
 void ChargeSms::save(ObjectBuffer& out)
@@ -271,6 +276,7 @@ void ChargeSms::save(ObjectBuffer& out)
     out << userMsgRef;
     out << msgId;
     out << ussdServiceOp;
+    out << partsNum;
 }
 
 
@@ -282,6 +288,7 @@ void ChargeSms::export2CDR(CDRRecord & cdr) const
                         CDRRecord::dpBinary : CDRRecord::dpText ;
     cdr._bearer = CDRRecord::dpUSSD;
     cdr._submitTime = submitTimeTZ;
+    cdr._partsNum = partsNum;
 
     cdr._srcAdr = callingPartyNumber;
     cdr._srcIMSI = callingImsi;

@@ -108,6 +108,7 @@ public:
     void setUserMsgRef(uint32_t msg_ref);
     void setMsgId(uint64_t msg_id);
     void setServiceOp(int32_t service_op);
+    void setPartsNum(uint8_t parts_num);
     //data for InitialDP OPERATION
     const std::string & getDestinationSubscriberNumber(void) const;
     const std::string & getCallingPartyNumber(void) const;
@@ -147,6 +148,7 @@ private:
     int32_t       userMsgRef;   //negative if absent
     uint64_t      msgId;        //
     int32_t       ussdServiceOp; //see sms_const.h
+    uint8_t       partsNum;     //number of parts if packet was conjoined.
 };
 
 //NOTE: in case of CAP3 error, this command ends the TCP dialog.
