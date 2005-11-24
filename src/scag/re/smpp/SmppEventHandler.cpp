@@ -16,6 +16,12 @@ public:
 
 namespace scag { namespace re {
 
+enum SmppHandlerType
+{
+    RECEIPT = 100
+};
+
+
 using namespace scag::re::smpp;
 
 RuleStatus SmppEventHandler::process(SCAGCommand& command, Session& session)
@@ -58,6 +64,7 @@ int SmppEventHandler::StrToHandlerId(const std::string& str)
     if (str == "submit_sm_resp")        return SUBMIT_RESP;
     if (str == "deliver_sm")            return DELIVERY;
     if (str == "deliver_sm_resp")       return DELIVERY_RESP;
+    if (str == "reciept")               return RECEIPT;
 /*
     if (str == "FORWARD")               return FORWARD;
     if (str == "GENERIC_NACK")          return GENERIC_NACK;

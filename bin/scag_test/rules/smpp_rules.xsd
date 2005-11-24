@@ -121,6 +121,7 @@
                         <element name="submit_sm_resp" type="scag:Handler" minOccurs="0" maxOccurs="1"/>
                         <element name="deliver_sm"            type="scag:Handler" minOccurs="0" maxOccurs="1"/>
                         <element name="deliver_sm_resp" type="scag:Handler" minOccurs="0" maxOccurs="1"/>
+			<element name="reciept" type="scag:Handler" minOccurs="0" maxOccurs="1"/>			
                     </all>
                 </extension>
             </complexContent>

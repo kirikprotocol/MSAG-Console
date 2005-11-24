@@ -6,7 +6,6 @@
 
 namespace scag { namespace re {
 
-
 class SmppEventHandler : public EventHandler
 {
 public:
