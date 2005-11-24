@@ -23,6 +23,7 @@ struct CDRRecord {
     std::string     _routeId;       //ROUTE_ID:
     int32_t         _serviceId;     //SERVICE_ID: set on route
     int32_t         _userMsgRef;    //USER_MSG_REF: system identifier for dialog tracing
+    uint8_t         _partsNum;      //number of parts if packet was conjoined.
     //sender info
     time_t          _submitTime;    //SUBMIT: sms submit time
     std::string     _srcAdr;        //SRC_ADDR: sender number

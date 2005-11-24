@@ -42,6 +42,7 @@ void CDRRecord::csvEncode(const CDRRecord & cdr, std::string & rec)
         CSVFileEncoder::addUint32(rec, (uint32_t)(cdr._userMsgRef));
         
     CSVFileEncoder::addUint32(rec, cdr._dpLength, true);
+    CSVFileEncoder::addUint8 (rec, cdr._partsNum);
 }
 
 
