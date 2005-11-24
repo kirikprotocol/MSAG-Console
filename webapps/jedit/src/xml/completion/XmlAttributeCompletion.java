@@ -134,19 +134,30 @@ public class XmlAttributeCompletion  extends SideKickCompletion
    public void insert(int index)
    {
     String selected = String.valueOf(get(index));
-    List names=view.getNames();
+    List names=view.getEditTag().getNames();
     names.remove(selected);
     String insert = selected.substring(text.length());
     insert=insert+" =\"\"";
-    textArea.setSelectedText(insert);
-    int caret=textArea.getCaretPosition();
-    if (names.size()==0) {
-      String closeTag="/>";// </"+view.getEditTag().getElementName()+">";
-      textArea.getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
-      textArea.setSelectedText(closeTag);
-      view.setEdittag(false);view.setEditTag(null);
-      view.setKeyEventInterceptor(null);
+    String closeTag=view.getEditTag().getCloseTag();//"/>";
+   if (view.getEditTag().isBackCursor()) {
+     int caret=textArea.getCaretPosition();
+     textArea.setCaretPosition(caret-closeTag.length());
+     textArea.getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
     }
+    textArea.setSelectedText(insert);
+
+    int caret=textArea.getCaretPosition();
+    if (names.size()==0  ) {
+      if (!view.getEditTag().isBackCursor()) {
+        //String closeTag=view.getEditTag().getCloseTag();
+        //closeTag="/>";// </"+view.getEditTag().getElementName()+">";
+        textArea.setSelectedText(closeTag);
+      }
+      textArea.getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
+      //view.setEdittag(false);view.setEditTag(null);
+    }
+     view.setKeyEventInterceptor(null);
+
     textArea.setCaretPosition(caret-1);
    } //}}}
 
@@ -168,7 +179,7 @@ public class XmlAttributeCompletion  extends SideKickCompletion
     * @since SideKick 0.3.2
     */
    public boolean handleKeystroke(int selectedIndex, char keyChar)
-   {
+   { System.out.println("XMLAttributeCompletion.handleKeystroke start line 173");
     if(keyChar == '\t' || keyChar == '\n')
     {
      insert(selectedIndex);

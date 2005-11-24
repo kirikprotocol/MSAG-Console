@@ -56,6 +56,7 @@ options.xml.general.show-attributes.all=All
 options.xml.general.close-complete=Insert closing tag when "</" is typed
 options.xml.general.close-complete-open=Insert closing tag when opening tag is typed
 options.xml.general.standalone-extra-space=Space before "/>" in stand-alone tags
+options.xml.general.autofill=Auto popup attribute menu after select in completion menu
 
 # SideKick parsers
 sidekick.parser.xml.label=XML
@@ -76,6 +77,10 @@ mode.velocity.sidekick.parser=html
 # Show attributes in XML tree?
 # 0: none; 1: id only; 2: all
 xml.show-attributes=1
+
+# Enable autofill tag attributes
+xml.autofill=false
+
 
 # DTD validation
 # this can be set on a per-buffer basis too

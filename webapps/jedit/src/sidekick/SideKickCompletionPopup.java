@@ -272,8 +272,7 @@ public class SideKickCompletionPopup extends JWindow
     list.getSelectedIndex(),ch))
    {
     EditPane editPane = view.getEditPane();
-    int caret = editPane.getTextArea()
-     .getCaretPosition();
+    int caret = editPane.getTextArea().getCaretPosition();
     if(!complete.updateInPlace(editPane,caret))
      complete = parser.complete(editPane,caret);
     updateListModel();

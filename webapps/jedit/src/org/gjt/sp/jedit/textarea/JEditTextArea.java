@@ -26,28 +26,20 @@ package org.gjt.sp.jedit.textarea;
 //{{{ Imports
 import java.awt.*;
 import java.awt.event.*;
-import java.lang.reflect.Method;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 import java.util.TooManyListenersException;
-import java.util.TreeSet;
 import java.util.Vector;
 import javax.swing.*;
-import javax.swing.border.*;
 import javax.swing.event.*;
 import javax.swing.plaf.metal.MetalLookAndFeel;
 import javax.swing.text.Segment;
 import org.gjt.sp.jedit.*;
-import org.gjt.sp.jedit.buffer.*;
+import org.gjt.sp.jedit.msg.PropertiesChanged;
 import org.gjt.sp.jedit.gui.InputHandler;
 import org.gjt.sp.jedit.syntax.*;
 import org.gjt.sp.util.Log;
-import sidekick.SideKickParser;
-import sidekick.SideKickPlugin;
-import sidekick.SideKickParsedData;
-import sidekick.SideKickCompletion;
 import xml.XmlActions;
 //}}}
 
@@ -1606,7 +1598,7 @@ forward_scan:  do
   * Deselects everything.
   */
  public void selectNone()
- {
+ {view.getEditPane().propertiesChanged2();
   invalidateSelectedLines();
   setSelection((Selection)null);
  } //}}}
@@ -2136,14 +2128,7 @@ forward_scan:  do
 
    finishCaretUpdate(oldCaretLine,scrollMode,true);
   }
- /*   SwingUtilities.invokeLater(new Runnable()
-     {
-      public void run()
-      {
-        System.out.println("jEditTextArea.moveCaretPosition run before showEditTagDialog(view) line 2155");
-       XmlActions.showEditTagDialog2(view);
-      }
-     }); */
+
  } //}}}
 
  //{{{ getCaretPosition() method
@@ -5736,6 +5721,25 @@ loop:   for(int i = lineNo + 1; i < getLineCount(); i++)
   structureTimer.stop();
   structureTimer.start();
  } //}}}
+
+//{{{ updateMathTag() method
+  public void updateMathTag()
+  {
+   if(!painter.isStructureHighlightEnabled()
+    && !gutter.isStructureHighlightEnabled())
+    return;
+
+   Iterator iter = structureMatchers.iterator();
+   while(iter.hasNext())
+   {
+    StructureMatcher matcher = (StructureMatcher)
+     iter.next();
+    match = matcher.getMatch(this);
+//     System.out.println("jEditTextArea.updateMathTag() match= "+match);
+     if(match != null)
+     break;
+   }
+  }
 
  //{{{ updateStructureHighlight() method
  private void updateStructureHighlight()

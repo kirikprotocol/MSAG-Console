@@ -95,9 +95,9 @@ public class HTMLParserImpl extends XmlParser
  //{{{ parse() method
  public SideKickParsedData parse(Buffer buffer,
   DefaultErrorSource errorSource)
- { System.out.println("xml.parser.HTMLParserImpl parse line 98");
+ {
   if ((buffer.getLength() >= 5) && buffer.getText(0, 5).equals("<?xml"))
-  {    System.out.println("xml.parser.HTMLParserImpl parse line 100");
+  {
    SideKickParser xml = (SideKickParser) ServiceManager.getService(SideKickParser.SERVICE,
      "xml");
 
@@ -152,217 +152,222 @@ public class HTMLParserImpl extends XmlParser
   return data;
  }
 
- //}}}
- //{{{ Handler class
- class Handler extends NodeVisitor
- {
-  Buffer buffer;
-  ExtendedNodeReader reader;
-  Stack currentNodeStack;
-  XmlParsedData data;
-
-  //{{{ Handler constructor
-  Handler(Buffer buffer, XmlParsedData data, ExtendedNodeReader reader)
+  public SideKickParsedData checkData(Buffer buffer,SideKickParsedData chekedData)
   {
-   this.buffer = buffer;
-   this.data = data;
-   this.reader = reader;
-   this.currentNodeStack = new Stack();
+    return chekedData;  //To change body of implemented methods use File | Settings | File Templates.
   }
 
   //}}}
-  //{{{ attributesToSAX() method
-  private Attributes attributesToSAX(Hashtable a, String element,
-   int line, int column)
+  //{{{ Handler class
+  class Handler extends NodeVisitor
   {
-   ElementDecl elementDecl = data.getElementDecl(element);
+   Buffer buffer;
+   ExtendedNodeReader reader;
+   Stack currentNodeStack;
+   XmlParsedData data;
 
-   AttributesImpl attrs = new AttributesImpl();
-   Enumeration enum = a.keys();
-
-   while (enum.hasMoreElements())
+   //{{{ Handler constructor
+   Handler(Buffer buffer, XmlParsedData data, ExtendedNodeReader reader)
    {
-    Object attr = enum.nextElement();
-    String name = attr.toString().toLowerCase();
+    this.buffer = buffer;
+    this.data = data;
+    this.reader = reader;
+    this.currentNodeStack = new Stack();
+   }
 
-    if (name.startsWith("$"))
+   //}}}
+   //{{{ attributesToSAX() method
+   private Attributes attributesToSAX(Hashtable a, String element,
+                                      int line, int column)
+   {
+    ElementDecl elementDecl = data.getElementDecl(element);
+
+    AttributesImpl attrs = new AttributesImpl();
+    Enumeration enum = a.keys();
+
+    while (enum.hasMoreElements())
     {
-     // Skip this key/value pair -- the parser likes to put
-     // $<TAGNAME>$ as a key for some reason.
-     continue;
-    }
+     Object attr = enum.nextElement();
+     String name = attr.toString().toLowerCase();
 
-    String value = a.get(attr).toString();
-
-    String type = "CDATA";
-
-    if (elementDecl != null)
-    {
-     ElementDecl.AttributeDecl attrDecl = (ElementDecl.AttributeDecl) elementDecl.attributeHash.get(name.toLowerCase());
-
-     if (attrDecl != null)
+     if (name.startsWith("$"))
      {
-      type = attrDecl.type;
+      // Skip this key/value pair -- the parser likes to put
+      // $<TAGNAME>$ as a key for some reason.
+      continue;
+     }
 
-      if (type.equals("ID"))
+     String value = a.get(attr).toString();
+
+     String type = "CDATA";
+
+     if (elementDecl != null)
+     {
+      ElementDecl.AttributeDecl attrDecl = (ElementDecl.AttributeDecl) elementDecl.attributeHash.get(name.toLowerCase());
+
+      if (attrDecl != null)
       {
-       if (! data.ids.contains(value))
+       type = attrDecl.type;
+
+       if (type.equals("ID"))
        {
-        data.ids.add(new IDDecl(buffer.getPath(),
-          value, element, line, column));
+        if (! data.ids.contains(value))
+        {
+         data.ids.add(new IDDecl(buffer.getPath(),
+           value, element, line, column));
+        }
        }
       }
      }
+
+     attrs.addAttribute(null, name, name, type, value);
     }
 
-    attrs.addAttribute(null, name, name, type, value);
+    return attrs;
    }
 
-   return attrs;
-  }
+   //}}}
 
-  //}}}
-
-  /* (non-Javadoc)
+   /* (non-Javadoc)
    * @see org.htmlparser.visitors.NodeVisitor#visitTag(org.htmlparser.tags.Tag)
    */
-  public void visitTag(Tag tag)
-  {
-   boolean isEmptyTag = tag.isEmptyXmlTag();
-   String tagName = tag.getTagName().toLowerCase();
-
-   // hack to get around the most commonly abused empty end tags.
-   if (isEmptyTag(tagName))
+   public void visitTag(Tag tag)
    {
-    isEmptyTag = true;
-   }
+    boolean isEmptyTag = tag.isEmptyXmlTag();
+    String tagName = tag.getTagName().toLowerCase();
 
-   String line = tag.getTagLine();
-   int lineOffset = line.length() - tag.elementBegin();
-
-   //Log.log(Log.DEBUG, this, line);
-   //String msg = "lineOffset = " + lineOffset + ", line " + line.length();
-   //Log.log(Log.DEBUG, this, msg);
-   int offset = reader.getOffset() - lineOffset;
-
-   try
-   {
-    buffer.readLock();
-
-    if (offset > buffer.getLength())
+    // hack to get around the most commonly abused empty end tags.
+    if (isEmptyTag(tagName))
     {
-     offset = buffer.getLength();
+     isEmptyTag = true;
     }
 
-    Hashtable attrsHash = tag.getAttributes();
+    String line = tag.getTagLine();
+    int lineOffset = line.length() - tag.elementBegin();
 
-    Position pos = buffer.createPosition(offset);
-    int lineNumber = tag.getTagStartLine();
-    int colNumber = tag.getTagBegin();
+    //Log.log(Log.DEBUG, this, line);
+    //String msg = "lineOffset = " + lineOffset + ", line " + line.length();
+    //Log.log(Log.DEBUG, this, msg);
+    int offset = reader.getOffset() - lineOffset;
 
-    Attributes attrs = attributesToSAX(attrsHash, tagName,
-      lineNumber, colNumber);
-    XmlTag xmlTag = new XmlTag(tagName, pos, attrs);
-    DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(xmlTag);
-
-    if (! isEmptyTag)
+    try
     {
-     if (! currentNodeStack.isEmpty())
-     {
-      DefaultMutableTreeNode node = (DefaultMutableTreeNode) currentNodeStack.peek();
-
-      node.insert(newNode, node.getChildCount());
-     }
-     else
-     {
-      data.root.insert(newNode, 0);
-     }
-
-     currentNodeStack.push(newNode);
-    }
-    else
-    {
-     if (! currentNodeStack.isEmpty())
-     {
-      DefaultMutableTreeNode node = (DefaultMutableTreeNode) currentNodeStack.peek();
-
-      node.add(newNode);
-     }
-     else
-     {
-      data.root.add(newNode);
-     }
-    }
-   }
-   finally
-   {
-    buffer.readUnlock();
-   }
-  }
-
-  /**
-   * See if the tag is one which cannot have any elements.
-   *
-   * @param tagName
-   *
-   * @return
-   */
-  private boolean isEmptyTag(String tagName)
-  {
-   if (tagName == null)
-   {
-    return true;
-   }
-
-   for (int i = 0; i < sEmptyTags.length; i++)
-   {
-    String emptyTag = sEmptyTags[i];
-
-    if (tagName.equalsIgnoreCase(emptyTag))
-    {
-     return true;
-    }
-   }
-
-   return false;
-  }
-
-  /* (non-Javadoc)
-   * @see org.htmlparser.visitors.NodeVisitor#visitEndTag(org.htmlparser.tags.EndTag)
-   */
-  public void visitEndTag(EndTag endTag)
-  {
-   //Log.log(Log.DEBUG, this, "endTag = " + endTag.getTagName());
-   int offset = reader.getOffset();
-
-   try
-   {
-    buffer.readLock();
-
-    if (! currentNodeStack.isEmpty())
-    {
-     DefaultMutableTreeNode node = (DefaultMutableTreeNode) currentNodeStack.pop();
-     XmlTag tag = (XmlTag) node.getUserObject();
+     buffer.readLock();
 
      if (offset > buffer.getLength())
      {
       offset = buffer.getLength();
      }
 
-     tag.end = buffer.createPosition(offset);
+     Hashtable attrsHash = tag.getAttributes();
+
+     Position pos = buffer.createPosition(offset);
+     int lineNumber = tag.getTagStartLine();
+     int colNumber = tag.getTagBegin();
+
+     Attributes attrs = attributesToSAX(attrsHash, tagName,
+       lineNumber, colNumber);
+     XmlTag xmlTag = new XmlTag(tagName, pos, attrs);
+     DefaultMutableTreeNode newNode = new DefaultMutableTreeNode(xmlTag);
+
+     if (! isEmptyTag)
+     {
+      if (! currentNodeStack.isEmpty())
+      {
+       DefaultMutableTreeNode node = (DefaultMutableTreeNode) currentNodeStack.peek();
+
+       node.insert(newNode, node.getChildCount());
+      }
+      else
+      {
+       data.root.insert(newNode, 0);
+      }
+
+      currentNodeStack.push(newNode);
+     }
+     else
+     {
+      if (! currentNodeStack.isEmpty())
+      {
+       DefaultMutableTreeNode node = (DefaultMutableTreeNode) currentNodeStack.peek();
+
+       node.add(newNode);
+      }
+      else
+      {
+       data.root.add(newNode);
+      }
+     }
     }
-    else
+    finally
     {
-     Log.log(Log.ERROR, this,
-      "visitEndTag: current node stack is empty.");
+     buffer.readUnlock();
     }
    }
-   finally
+
+   /**
+    * See if the tag is one which cannot have any elements.
+    *
+    * @param tagName
+    *
+    * @return
+    */
+   private boolean isEmptyTag(String tagName)
    {
-    buffer.readUnlock();
+    if (tagName == null)
+    {
+     return true;
+    }
+
+    for (int i = 0; i < sEmptyTags.length; i++)
+    {
+     String emptyTag = sEmptyTags[i];
+
+     if (tagName.equalsIgnoreCase(emptyTag))
+     {
+      return true;
+     }
+    }
+
+    return false;
+   }
+
+   /* (non-Javadoc)
+   * @see org.htmlparser.visitors.NodeVisitor#visitEndTag(org.htmlparser.tags.EndTag)
+   */
+   public void visitEndTag(EndTag endTag)
+   {
+    //Log.log(Log.DEBUG, this, "endTag = " + endTag.getTagName());
+    int offset = reader.getOffset();
+
+    try
+    {
+     buffer.readLock();
+
+     if (! currentNodeStack.isEmpty())
+     {
+      DefaultMutableTreeNode node = (DefaultMutableTreeNode) currentNodeStack.pop();
+      XmlTag tag = (XmlTag) node.getUserObject();
+
+      if (offset > buffer.getLength())
+      {
+       offset = buffer.getLength();
+      }
+
+      tag.end = buffer.createPosition(offset);
+     }
+     else
+     {
+      Log.log(Log.ERROR, this,
+       "visitEndTag: current node stack is empty.");
+     }
+    }
+    finally
+    {
+     buffer.readUnlock();
+    }
    }
   }
- }
 
  //}}}
  class LogParserFeedback implements ParserFeedback

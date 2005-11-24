@@ -79,11 +79,20 @@ public class XmlParsedData extends SideKickParsedData
     lName = name.substring(prefixLen + 1);
 
    ElementDecl decl = (ElementDecl)info.elementHash.get(lName);
-   if(decl == null)
-    return null;
-   else
-    return decl.withPrefix(prefix);
-  }
+     if(decl == null && prefix=="") {
+       for (Iterator it = mappings.keySet().iterator(); it.hasNext();) {
+         String key = (String) it.next();
+         if (key!="") {
+           info = (CompletionInfo)mappings.get(key);
+           if(info != null) {
+             decl = (ElementDecl)info.elementHash.get(lName);
+             if (decl!=null)  break;
+           }
+         } //if (key!="")
+       } //for (Iterator it
+     } //if(decl == null && prefix=="")
+     return decl;//.withPrefix(prefix);
+   }
  } //}}}
 
  //{{{ getAllowedElements() method

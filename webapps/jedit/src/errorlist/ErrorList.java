@@ -675,10 +675,15 @@ public class ErrorList extends JPanel implements EBComponent,
       end += buffer.getLineStartOffset(lineNo);
     }
     System.out.println("ErrorList start2= "+start+" end2= "+end);
-    view.getTextArea().setSelection(
-     new Selection.Range(start,end));
-
-    view.getTextArea().moveCaretPosition(end);
+    //view.getTextArea();
+     Color selectionColor=jEdit.getColorProperty("view.selectionColor");
+     Color errorColor=jEdit.getColorProperty("error-list.errorColor");
+     jEdit.setColorProperty("view.selectionColor", errorColor);
+     //EditBus.send(new PropertiesChanged(null));
+     view.getEditPane().propertiesChanged2();
+     view.getTextArea().setSelection(new Selection.Range(start,end));
+     jEdit.setColorProperty("view.selectionColor", selectionColor);
+     view.getTextArea().moveCaretPosition(end);
    }
   });
  } //}}}

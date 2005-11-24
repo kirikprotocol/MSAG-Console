@@ -110,7 +110,6 @@ public class XmlCompletion extends SideKickCompletion
  private void insert(Object obj, char ch)
  {
   Macros.Recorder recorder = view.getMacroRecorder();
-   System.out.println("XmlCompletion insert(Object obj, char ch) obj= "+obj.getClass().getName());
   String insert;
   int caret;
 
@@ -138,7 +137,7 @@ public class XmlCompletion extends SideKickCompletion
    buf.append(element.name.substring(word.length()));
 
    buf.append(element.getRequiredAttributesString());
-    System.out.println("xml.XmlCompletion insert(Object obj, char ch) line 141 buf="+buf.toString());
+   boolean autofill= jEdit.getBooleanProperty("xml.autofill");
    if(ch == '\n' || ch == '>')
    {
     if(element.empty)
@@ -152,7 +151,7 @@ public class XmlCompletion extends SideKickCompletion
     }
     else
     {
-     buf.append(">");
+     buf.append(" >");
 
      int start = buf.length();
 
@@ -166,30 +165,34 @@ public class XmlCompletion extends SideKickCompletion
 
      caret = buf.length() - start;
     }
-    System.out.println("xml.XmlCompletion insert(Object obj, char ch) line 169 buf="+buf.toString());
     if(ch == '\n' && element.attributes.size() != 0)
     {
      // hide the popup first, since the edit tag
      // dialog is modal
-     SwingUtilities.invokeLater(new Runnable()
-     {
-      public void run()
-      {
-        System.out.println("xml.XmlCompletion insert run before showEditTagDialog(view) line 178");
-       XmlActions.showEditTagDialog(view);
-      }
-     });
-    }
+
+
+      if (autofill) {
+        textArea.getBuffer().setBooleanProperty("sidekick.keystroke-parse",false);
+        SwingUtilities.invokeLater(new Runnable()
+        {
+          public void run()
+          {
+            XmlActions.showEditTagDialog(view);
+          }
+        });
+      }  //if (autofill)
+
+    } //if(ch == '\n' && element.attributes.size() != 0)
    }
    else
    {
-     System.out.println("XmlCompletion line 186 I am here");
      buf.append(ch);
+     if (!autofill && ch==' ')
+       buf.append('>');
     caret = 0;
    }
 
    insert = buf.toString();
-    System.out.println("XmlCompletion insert after run XmlActions.showEditTagDialog(view); insert= "+insert);
   }
   else if(obj instanceof EntityDecl)
   {
@@ -203,9 +206,9 @@ public class XmlCompletion extends SideKickCompletion
 
   if(recorder != null)
    recorder.recordInput(insert,false);
-   System.out.println("XmlCompletion insert after run XmlActions.showEditTagDialog(view); before textArea.setSelectedText(insert); insert= "+insert);
    textArea.setSelectedText(insert);
-
+   int _caret=textArea.getCaretPosition();
+   textArea.setCaretPosition(_caret-1);
   if(caret != 0)
   {
    String code = "textArea.setCaretPosition("

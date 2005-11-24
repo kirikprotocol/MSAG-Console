@@ -323,6 +323,7 @@ view.fracFontMetrics=false
 # Docking and tool bar positioning
 view.docking.alternateLayout=false
 view.toolbar.alternateLayout=false
+view.bottomPos=100
 
 #{{{ Status bar
 view.status.foreground=black

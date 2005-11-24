@@ -1129,7 +1129,7 @@ public abstract class AbstractSAXParser
         catch (XMLParseException e) {
           e.printStackTrace();
             Exception ex = e.getException();
-            if (ex == null) {
+            if (ex == null || ex instanceof XMLParseException) {
                 // must be a parser exception; mine it for locator info and throw
                 // a SAXParseException
                 LocatorImpl locatorImpl = new LocatorImpl();

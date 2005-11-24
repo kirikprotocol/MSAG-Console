@@ -46,6 +46,13 @@ public class ColorWellButton extends JButton
  public ColorWellButton(Color color)
  {
   setIcon(new ColorWell(color));
+ /* String rgb=color.toString();
+  int c=color.getRed();
+  String red=color.getRed()==0 ? "00":Integer.toHexString(color.getRed());
+  String green=color.getGreen()==0 ? "00": Integer.toHexString(color.getGreen());
+  String blue= color.getBlue() ==0 ? "00": Integer.toHexString(color.getBlue());
+  setText(red+green+blue);//todo temporaly
+ */
   setMargin(new Insets(2,2,2,2));
   addActionListener(new ActionHandler());
 

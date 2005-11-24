@@ -207,6 +207,7 @@ public class XmlAttributeCompletionPopup extends JWindow
     evt.consume();
     break;
    case KeyEvent.VK_ESCAPE:
+    textArea.getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
     dispose();
     evt.consume();
     break;
@@ -242,10 +243,16 @@ public class XmlAttributeCompletionPopup extends JWindow
     break;
    case KeyEvent.VK_SPACE:
      keyTyped(' ');
+     dispose();
     evt.consume();
      break;
    case KeyEvent.VK_BACK_SPACE:
    case KeyEvent.VK_DELETE:
+    if(view.getEditTag().isBackCursor()) {
+        int _caret=textArea.getCaretPosition();
+        textArea.setCaretPosition(_caret-view.getEditTag().getCloseTag().length());
+       }
+     textArea.getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
     dispose();
     view.processKeyEvent(evt,true);
     break;

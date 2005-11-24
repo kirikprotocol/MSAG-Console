@@ -48,7 +48,7 @@ options.sidekick.complete-delay=After popup trigger keystroke, wait (seconds):
 buffer.sidekick.buffer-change-parse=true
 
 # Global parse on keystroke switch
-buffer.sidekick.keystroke-parse=false
+buffer.sidekick.keystroke-parse=true
 
 # Delay after typing ends before auto parse, in milliseconds
 sidekick.auto-parse-delay=500

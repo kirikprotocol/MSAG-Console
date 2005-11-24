@@ -1871,6 +1871,7 @@ loop:  for(;;)
    y = jEdit.getIntegerProperty(prefix + ".y",0);
    width = jEdit.getIntegerProperty(prefix + ".width",0);
    height = jEdit.getIntegerProperty(prefix + ".height",0);
+   bottomPos=jEdit.getIntegerProperty(prefix + ".bottomPos",0); 
   }
 
   public ViewConfig(boolean plainView, String splitConfig,

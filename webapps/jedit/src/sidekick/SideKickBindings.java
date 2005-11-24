@@ -56,11 +56,12 @@ class SideKickBindings extends KeyAdapter
    System.out.println("sidekick.SideKickBinding keyTyped before parse line 48 view= "+view+ " buffer= "+view.getBuffer());
   SideKickParser parser = SideKickPlugin.getParserForView(view);
    System.out.println("parser= "+parser);
-    if (view.isEdittag() && ch==' ') {
+   //if (view.isEdittag()) view.getBuffer().setBooleanProperty("sidekick.keystroke-parse",false);
+/*    if (view.isEdittag() && ch==' ') {
      xml.EditTag dialog=view.getEditTag();
      dialog.updateTag();
    }
-   else if(parser != null && parser.supportsCompletion())
+   else */ if(parser != null && parser.supportsCompletion())
   {
    System.out.println("sidekick.SideKickBinding keyTyped before parse line 54");
       String parseKeys = parser.getParseTriggers();

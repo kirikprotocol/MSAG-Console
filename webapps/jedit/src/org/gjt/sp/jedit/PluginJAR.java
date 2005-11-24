@@ -451,8 +451,7 @@ return zipFile;
       startPlugin();
     }
     else
-    {
-      // for thread safety
+    { // for thread safety
       startPluginLater();
     }
 

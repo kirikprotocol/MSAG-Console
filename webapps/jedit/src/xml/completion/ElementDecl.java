@@ -23,7 +23,7 @@ public class ElementDecl
  public CompletionInfo completionInfo;
 
  public String name;
- public String shortName;
+// public String shortName;
  public boolean empty;
  public boolean any;
 
@@ -38,10 +38,10 @@ public class ElementDecl
 
   this.name = name;
 
-  int in=name.indexOf(':');
+/*  int in=name.indexOf(':');
   if (in!=-1) name=name.substring(in+1);
   this.shortName =name;
-
+*/
   if(content != null)
    setContent(content);
 
@@ -57,10 +57,10 @@ public class ElementDecl
   this.completionInfo = completionInfo;
   this.name = name;
 
-  int in=name.indexOf(':');
+/*  int in=name.indexOf(':');
   if (in!=-1) name=name.substring(in+1);
   this.shortName =name;
-
+*/
   this.empty = empty;
   this.any = any;
   this.attributes = attributes;
@@ -156,11 +156,11 @@ public class ElementDecl
   for(int i = 0; i < attributes.size(); i++)
   {
    AttributeDecl attr = (AttributeDecl)attributes.get(i);
-   if(attr.name.compareTo(attribute.name) > 0)
+   if(attr.name.compareTo(attribute.name) == 0)  //for alpthabetic sort need >
    {
-    attributes.add(i,attribute);
+   // attributes.add(i,attribute);  for alpthabetic sort
     return;
-   }
+  }
   }
 
   attributes.add(attribute);

@@ -306,7 +306,6 @@ public class Buffer
         if(!getFlag(TEMPORARY))
         {
           fireBufferLoaded();
-          System.out.println("Buffer.load.run before EditBus.send(new BufferUpdate(Buffer.this,view,BufferUpdate.LOADED));");
           EditBus.send(new BufferUpdate(Buffer.this,view,BufferUpdate.LOADED));
           //EditBus.send(new BufferUpdate(Buffer.this,
           // view,BufferUpdate.MARKERS_CHANGED));
@@ -1125,7 +1124,7 @@ public class Buffer
       {
         undoMgr.contentInserted(offset,len,str,
                 !getFlag(DIRTY));
-      }
+      } 
       contentInserted(offset,len,integerArray);
     }
     finally
@@ -1427,7 +1426,6 @@ public class Buffer
   public void addBufferChangeListener(BufferChangeListener listener,
                                       int priority)
   {
-    System.out.println("Buffer.addBufferChangeListener listener= "+listener.getClass().getName());
     Listener l = new Listener(listener,priority);
     for(int i = 0; i < bufferListeners.size(); i++)
     {
@@ -3894,7 +3892,6 @@ public class Buffer
       try
       {
         BufferChangeListener li=getListener(i);
-        System.out.println("Buffer.fireContentInserted line 3901 bufferListeners.size()= "+bufferListeners.size()+" listener= "+li.getClass().getName());
         getListener(i).contentInserted(this,startLine,offset,numLines,length);
       }
       catch(Throwable t)

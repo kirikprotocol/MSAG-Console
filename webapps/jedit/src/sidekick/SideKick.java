@@ -136,19 +136,15 @@ class SideKick implements EBComponent
  public void handleMessage(EBMessage msg)
  {
    if(msg instanceof PropertiesChanged) {
-     System.out.println("SideKick.handleMessage msg instanceof PropertiesChanged");
    propertiesChanged();  }
   else if(msg instanceof BufferUpdate) {
-     System.out.println("SideKick.handleMessage msg instanceof BufferUpdate");
    handleBufferUpdate((BufferUpdate)msg); }
   else if(msg instanceof EditPaneUpdate) {
-     System.out.println("SideKick.handleMessage msg instanceof EditPaneUpdate");
    handleEditPaneUpdate((EditPaneUpdate)msg);  }
   else if(msg instanceof ViewUpdate) {
-   System.out.println("SideKick.handleMessage msg instanceof ViewUpdate");
    handleViewUpdate((ViewUpdate)msg);  }
   else if(msg instanceof PluginUpdate)
-  { System.out.println("SideKick.handleMessage msg instanceof PluginUpdate");
+  {
    PluginUpdate pmsg = (PluginUpdate)msg;
    if(pmsg.getWhat() == PluginUpdate.UNLOADED
     || pmsg.getWhat() == PluginUpdate.LOADED)
@@ -219,10 +215,9 @@ class SideKick implements EBComponent
 
   //{{{ addBufferChangeListener() method
  private void addBufferChangeListener(Buffer buffer)
- { System.out.println("SideKick.addBufferChangeListener buffer= "+buffer);
+ {
   if(!addedBufferChangeHandler)
   {
-    System.out.println("before addBufferChangeListener= "+addedBufferChangeHandler);
    buffer.addBufferChangeListener(bufferHandler);
    addedBufferChangeHandler = true;
   }
@@ -295,20 +290,15 @@ class SideKick implements EBComponent
  //{{{ handleBufferUpdate() method
  private void handleBufferUpdate(BufferUpdate bmsg)
  {
-   System.out.println("Sidekick.handleBufferUpdate bmsg.getBuffer()= "+bmsg.getBuffer()+ " buffer= "+buffer);
    if(bmsg.getBuffer() != buffer)   {
    /* do nothing */;
-    System.out.println("Sidekick.handleBufferUpdate do nothing");
   }
   else if(bmsg.getWhat() == BufferUpdate.SAVED
    || bmsg.getWhat() == BufferUpdate.LOADED)   {
-    System.out.println("Sidekick.handleBufferUpdate autoParse");
    autoParse();                                 }
   else if(bmsg.getWhat() == BufferUpdate.PROPERTIES_CHANGED) {
-   System.out.println("Sidekick.handleBufferUpdate setParser");
    setParser();                                               }
   else if(bmsg.getWhat() == BufferUpdate.CLOSED) {
-   System.out.println("Sidekick.handleBufferUpdate setErrorSource(null)");
    setErrorSource(null);                          }
  } //}}}
  
@@ -337,7 +327,6 @@ class SideKick implements EBComponent
     deactivateParser();
 
     buffer = editPane.getBuffer();
-   System.out.println("SideKick.handleEditPaneUpdate view.getBuffer= "+buffer);
     parser = SideKickPlugin.getParserForBuffer(buffer);
     activateParser();
 
@@ -356,7 +345,6 @@ class SideKick implements EBComponent
    deactivateParser();
 
    buffer = view.getBuffer();
-   System.out.println("SideKick.handleViewUpdate view.getBuffer= "+buffer);
    this.editPane = view.getEditPane();
 
    parser = SideKickPlugin.getParserForBuffer(buffer);
@@ -383,7 +371,6 @@ class SideKick implements EBComponent
  private void activateParser()
  {
   EditPane editPane = view.getEditPane();
-   System.out.println("SideKick activateParser() parser= "+parser);
   if(parser != null)
   {
    addBufferChangeListener(buffer);
@@ -456,7 +443,7 @@ class SideKick implements EBComponent
      view.getStatus().setMessageAndClear(jEdit.getProperty(
       "sidekick.parsing-complete",pp));
     }
- 
+    data[0]=parser.checkData(buffer,data[0]);
     buffer.setProperty(SideKickPlugin.PARSED_DATA_PROPERTY,data[0]);
     if(buffer.getProperty("folding").equals("sidekick"))
      buffer.invalidateCachedFoldLevels();
@@ -490,7 +477,7 @@ class SideKick implements EBComponent
      + " but got event for " + buffer);
     return;
    }
-    System.out.println("parse OnKeyStroke not implemented yet!"); 
+  // System.out.println("parse OnKeyStroke are implemented !!!"); 
    if(buffer.isLoaded() && buffer.getBooleanProperty("sidekick.keystroke-parse"))
     parseWithDelay();
   } //}}}

@@ -51,6 +51,11 @@
    xml.CatalogManager.clearCache();
   </CODE>
  </ACTION>
+ <ACTION NAME="attribute-completion">
+  <CODE>
+   xml.XmlActions.checkCurrentTag(view);
+  </CODE>
+ </ACTION>
  <ACTION NAME="xml-reload-catalogs">
   <CODE>
    xml.CatalogManager.reloadCatalogs();

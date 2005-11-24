@@ -50,6 +50,7 @@ public class ErrorListPlugin extends EBPlugin
   }
 
   propertiesChanged();
+  EditBus.addToBus(this);
  } //}}}
 
  //{{{ stop() method
@@ -67,6 +68,7 @@ public class ErrorListPlugin extends EBPlugin
    }
    view = view.getNext();
   }
+  EditBus.removeFromBus(this);
  } //}}}
 
  //{{{ handleMessage() method
@@ -189,6 +191,7 @@ public class ErrorListPlugin extends EBPlugin
  {
   DockableWindowManager dockableWindowManager = view.getDockableWindowManager();
   dockableWindowManager.addDockableWindow("error-list");
+  view.getTextArea().requestFocus();
  } //}}}
 
  //{{{ handleErrorSourceMessage() method
@@ -306,8 +309,7 @@ public class ErrorListPlugin extends EBPlugin
    for(int i = 0; i < errorSources.length; i++)
    {
     ErrorSource source = errorSources[i];
-    if(source.getFileErrors(
-     buffer.getSymlinkPath()) != null)
+    if(source.getFileErrors(buffer.getSymlinkPath()) != null)
     {
      addErrorOverview(textArea);
      return;

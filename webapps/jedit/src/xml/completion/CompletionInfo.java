@@ -96,7 +96,7 @@ public class CompletionInfo
  {
   for(int i = 0; i < elements.size(); i++)
   {
-   out.add(((ElementDecl)elements.get(i)).withPrefix(prefix));
+   out.add(((ElementDecl)elements.get(i)));//.withPrefix(prefix));
   }
  } //}}}
 

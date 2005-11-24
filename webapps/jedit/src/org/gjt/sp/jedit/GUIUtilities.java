@@ -28,6 +28,9 @@ import java.awt.*;
 import java.awt.event.*;
 import java.net.*;
 import java.util.*;
+import java.io.InputStream;
+import java.io.ByteArrayInputStream;
+
 import org.gjt.sp.jedit.browser.*;
 import org.gjt.sp.jedit.gui.*;
 import org.gjt.sp.jedit.menu.*;
@@ -120,15 +123,12 @@ public class GUIUtilities
   if(icon != null)
    return icon;
 
-  URL url;
+/*  URL url;
 
   try
-  {
-   // get the icon
-   if(MiscUtilities.isURL(iconName))
-    url = new URL(iconName);
-   else
-    url = new URL(iconPath + iconName);
+  {  // get the icon
+   if(MiscUtilities.isURL(iconName)) url = new URL(iconName);
+   else    url = new URL(iconPath + iconName);
   }
   catch(Exception e)
   {
@@ -138,15 +138,14 @@ public class GUIUtilities
    }
    catch(Exception ex)
    {
-    Log.log(Log.ERROR,GUIUtilities.class,
-     "Icon not found: " + iconName);
+    Log.log(Log.ERROR,GUIUtilities.class, "Icon not found: " + iconName);
     Log.log(Log.ERROR,GUIUtilities.class,ex);
     return null;
    }
   }
-
-  icon = new ImageIcon(url);
-
+ //icon = new ImageIcon(url);
+*/
+   icon = new ImageIcon(jEdit.class.getResource(iconPath + iconName));
   icons.put(iconName,icon);
   return icon;
  } //}}}
@@ -156,8 +155,10 @@ public class GUIUtilities
   * Returns the default editor window image.
   */
  public static Image getEditorIcon()
- {
-  return ((ImageIcon)loadIcon("jedit-icon.gif")).getImage();
+ { ImageIcon icon=(ImageIcon)loadIcon("jedit-icon.gif");
+   Image image=icon.getImage();
+   return image;
+   //return ((ImageIcon)loadIcon("jedit-icon.gif")).getImage();
  } //}}}
 
  //{{{ getPluginIcon() method
@@ -1507,7 +1508,8 @@ public class GUIUtilities
  //{{{ Private members
  private static SplashScreen splash;
  private static Hashtable icons;
- private static String iconPath = jEdit.baseUrl.toString()+"/org/gjt/sp/jedit/icons/";
+ private static String iconPath = "/org/gjt/sp/jedit/icons/";
+ //private static String iconPath = jEdit.baseUrl.toString()+"/org/gjt/sp/jedit/icons/";
  private static String defaultIconPath = "jeditresource:/org/gjt/sp/jedit/icons/";
 
  private GUIUtilities() {}

@@ -1781,7 +1781,6 @@ public class XMLSchemaValidator
 
         // push error reporter context: record the current position
         fXSIErrorReporter.pushContext();
-
         // if it's not the root element, we push the current states in the stacks
         if (fElementDepth != -1) {
             ensureStackCapacity();
@@ -1842,7 +1841,6 @@ public class XMLSchemaValidator
                 fCurrentElemDecl = sGrammar.getGlobalElementDecl(element.localpart);
             }
         }
-
         // Element Locally Valid (Element)
         // 2 Its {abstract} must be false.
         if (fCurrentElemDecl != null && fCurrentElemDecl.getAbstract())
@@ -1930,7 +1928,6 @@ public class XMLSchemaValidator
                 fAppendBuffer = (ctype.fContentType == XSComplexTypeDecl.CONTENTTYPE_SIMPLE);
             }
         }
-
         // make the current element validation root
         if (fElementDepth == 0) {
             fValidationRoot = element.rawname;
@@ -1982,7 +1979,6 @@ public class XMLSchemaValidator
                  }
              }
         }
-
         // then try to get the content model
         fCurrentCM = null;
         if (fCurrentType.getTypeCategory() == XSTypeDefinition.COMPLEX_TYPE) {

@@ -329,7 +329,7 @@ plugin.MyPlugin.depend.2=plugin errorlist.ErrorListPlugin 1.3</programlisting>
   <programlisting>errorSource.addError(new ErrorSource.DefaultError(
     ErrorSource.WARNING,path,line,0,0,
     "Are you sure this is what you intended?"));
-errorSource.addError(new ErrorSource.DefaultError(
+    errorSource.addError(new ErrorSource.DefaultError(
     ErrorSource.WARNING,
     MiscUtilities.constructPath(directory,"input.src"),
     line,0,5,"First five characters of line are bad"));</programlisting>

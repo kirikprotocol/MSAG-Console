@@ -129,7 +129,8 @@ public class SAXParserImpl extends XmlParser
   }
   catch(StoppedException e)
   {
-      e.printStackTrace();
+    System.out.println("SaxParserImpl.parse catch(StoppedException line 133");
+    e.printStackTrace();
   }
   catch(IOException ioe)
   {
@@ -140,12 +141,12 @@ public class SAXParserImpl extends XmlParser
   }
   catch(SAXParseException spe)
   {
-    System.out.println("This is SAXParseException +columnNumber"+spe.getColumnNumber());
+   // System.out.println("This is SAXParseException line 145 +columnNumber"+spe.getColumnNumber());
    // already handled
   }
   catch(SAXException se)
   {
-   se.printStackTrace();
+  // se.printStackTrace();
        Log.log(Log.ERROR,this,se.getException());
    if(se.getMessage() != null)
    {
@@ -162,9 +163,23 @@ public class SAXParserImpl extends XmlParser
 
   Collections.sort(data.ids,new IDDecl.Compare());
     System.out.println("xml.parser.SAXParserImpl parse line 164 data.mappings.size="+data.mappings.size());
+   //CompletionInfo info1=(CompletionInfo) data.mappings.get("scag");
+   //System.out.println("info1.elements= "+info1.elements);
    return data;
  } //}}}
-
+ public SideKickParsedData checkData(Buffer buffer,SideKickParsedData checkedData)
+  {
+    Map mappings=((XmlParsedData)checkedData).mappings;
+    SideKickParsedData returnData;
+    if (mappings.size()==0) {
+      returnData=(SideKickParsedData) buffer.getProperty(SideKickPlugin.PARSED_DATA_PROPERTY);
+    if (returnData==null) returnData=checkedData;
+    }
+    else if (mappings.size()==1 && mappings.get("")!=null)
+           returnData=(SideKickParsedData) buffer.getProperty(SideKickPlugin.PARSED_DATA_PROPERTY);
+    else returnData=checkedData;
+    return returnData;  //To change body of implemented methods use File | Settings | File Templates.
+  }
  //{{{ Private members
 
  //{{{ xsElementToElementDecl() method
@@ -201,22 +216,19 @@ public class SAXParserImpl extends XmlParser
     else
      xsTermToElementDecl(info,particleTerm,elementDecl);
    }
-
-   XSObjectList attributes = complex.getAttributeUses();
+    XSObjectList attributes = complex.getAttributeUses();
    for(int i = 0; i < attributes.getLength(); i++)
    {
-    XSAttributeUse attr = (XSAttributeUse)
-     attributes.item(i);
+    XSAttributeUse attr = (XSAttributeUse)attributes.item(i);
     boolean required = attr.getRequired();
     XSAttributeDeclaration decl = attr.getAttrDeclaration();
     String attrName = decl.getName();
     String value = decl.getConstraintValue();
-    // TODO: possible values
+     // TODO: possible values
     String type = decl.getTypeDefinition().getName();
     if(type == null)
      type = "CDATA";
-    elementDecl.addAttribute(new ElementDecl.AttributeDecl(
-     attrName,value,null,type,required));
+    elementDecl.addAttribute(new ElementDecl.AttributeDecl(attrName,value,null,type,required));
    }
   }
  } //}}}
@@ -306,14 +318,11 @@ public class SAXParserImpl extends XmlParser
    CompletionInfo info = new CompletionInfo();
 
    XSModel model = ((XSGrammar)grammar).toXSModel();
-
    XSNamedMap elements = model.getComponents(XSConstants.ELEMENT_DECLARATION);
    for(int i = 0; i < elements.getLength(); i++)
    {
-    XSElementDeclaration element = (XSElementDeclaration)
-     elements.item(i);
-
-    xsElementToElementDecl(info,element,null);
+    XSElementDeclaration element = (XSElementDeclaration)elements.item(i);
+     xsElementToElementDecl(info,element,null);
    }
 
    XSNamedMap attributes = model.getComponents(XSConstants.ATTRIBUTE_DECLARATION);
@@ -561,7 +570,6 @@ public class SAXParserImpl extends XmlParser
     XMLParseException e=(XMLParseException) spe.getException();
     Object[] args= e.getArguments();
     String arg="";//(String)args[0];
-    System.out.println("text= "+text);
     int start=0; int end=0;
     for (int i = 0; i < args.length; i++) {
       arg = (String)args[i];
@@ -573,7 +581,6 @@ public class SAXParserImpl extends XmlParser
     } else {
     end=start+arg.length();
     text=text.substring(start,end);
-    System.out.println("text= "+text);
     }
     addError(ErrorSource.ERROR,spe.getSystemId(),
     Math.max(0,spe.getLineNumber()-1),
@@ -591,7 +598,6 @@ public class SAXParserImpl extends XmlParser
     XMLParseException e=(XMLParseException) spe.getException();
     Object[] args= e.getArguments();
     String arg="";//(String)args[0];
-    System.out.println("text= "+text);
     int start=0; int end=0;
     for (int i = 0; i < args.length; i++) {
       arg = (String)args[i];
@@ -603,7 +609,6 @@ public class SAXParserImpl extends XmlParser
     } else {
     end=start+arg.length();
     text=text.substring(start,end);
-    System.out.println("text= "+text);
     }
 
     addError(ErrorSource.WARNING,spe.getSystemId(),
@@ -623,7 +628,6 @@ public class SAXParserImpl extends XmlParser
     XMLParseException e=(XMLParseException) spe.getException();
     Object[] args= e.getArguments();
     String arg="";//(String)args[0];
-    System.out.println("text= "+text);
     int start=0; int end=0;
     for (int i = 0; i < args.length; i++) {
       arg = (String)args[i];
@@ -635,7 +639,6 @@ public class SAXParserImpl extends XmlParser
     } else {
     end=start+arg.length();
     text=text.substring(start,end);
-    System.out.println("text= "+text);
     }
 
     addError(ErrorSource.ERROR,systemId,

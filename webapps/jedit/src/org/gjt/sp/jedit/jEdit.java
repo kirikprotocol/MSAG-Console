@@ -128,103 +128,33 @@ public class jEdit extends Applet
   {
     System.out.println("Starting...");
     super.start();
- // if (isStopping) {
- //   isNotReload=true;
-/*    setFont(new Font("dialog", Font.BOLD, 12));
-    setLayout(new GridBagLayout());
-    setBackground(SystemColor.control);
-    GridBagConstraints gbc = new GridBagConstraints();
-    gbc.fill = GridBagConstraints.BOTH;
-    // connectingLabel = new Label(localeText.getString("connecting"));
-    //  add(connectingLabel, gbc);
-    //  validate();
-
-    baseUrl = getCodeBase();
-    //userfile=baseUrl.toString();
-
-    username = getParameter("username");
-    password = getParameter("password");
-    jEditHome =getParameter("homedir");
-   // userfile ="rule_2";// getParameter("file"); //"applet";//+username;
-   // System.out.println("userfile= "+userfile);
-    String protocol = baseUrl.getProtocol();
-    String host = baseUrl.getHost();
-    int port = baseUrl.getPort();
-    String file = baseUrl.getFile();
-    String path = baseUrl.getPath();
-    try {
-      servletUrl = new URL(baseUrl, getParameter("servleturl"));
-    } catch (MalformedURLException e) {
-      e.printStackTrace();
-    }
-    StringBuffer buf = new StringBuffer(protocol);
-    buf.append("://");
-    buf.append(host);
-    if (port != -1) buf.append(":" + port);
-    buf.append(getParameter("servleturl"));
-    System.out.println("baseUrl= " + baseUrl.toString());
-//    System.out.println("baseUrl= "+protocol+"://"+host+":"+port+path);
-    System.out.println("servletUrl= " + servletUrl.toString());
-//    System.out.println("servletUrl2= "+buf.toString());
- */ String[] args = new String[5];
+    String[] args = new String[5];
     args[0]=getParameter("file");
-  //  this.main2(args);
- //   System.out.println("main 3 !!!!!!!!!");
- //   this.main(args);
-  //} */
+
   }
   public void openRule(final String userFile)
    {
      System.out.println("openRule... "+userFile);
- //    isNotReload=true;
      super.start();
-  // if (isStopping) {
-
- /*    setFont(new Font("dialog", Font.BOLD, 12));
-     setLayout(new GridBagLayout());
-     setBackground(SystemColor.control);
-     GridBagConstraints gbc = new GridBagConstraints();
-     gbc.fill = GridBagConstraints.BOTH;
-     // connectingLabel = new Label(localeText.getString("connecting"));
-     //  add(connectingLabel, gbc);
-     //  validate();
      String[] args = new String[5];
-     // args[0]=getParameter("noplugins");
-     baseUrl = getCodeBase();
-     //userfile=baseUrl.toString();
-    // args[0]=userFile;
-     //  osname=getParameter("os.name");
- // if (osname==null) osname="UNIX";
-     username = getParameter("username");
-     password = getParameter("password");
-     jEditHome =getParameter("homedir");
-    // userfile ="rule_2";// getParameter("file"); //"applet";//+username;
-     System.out.println("userfile= "+userFile);
-     String protocol = baseUrl.getProtocol();
-     String host = baseUrl.getHost();
-     int port = baseUrl.getPort();
-     String file = baseUrl.getFile();
-     String path = baseUrl.getPath();
-     try {
-       servletUrl = new URL(baseUrl, getParameter("servleturl"));
-     } catch (MalformedURLException e) {
-       e.printStackTrace();
-     }
-     StringBuffer buf = new StringBuffer(protocol);
-     buf.append("://");
-     buf.append(host);
-     if (port != -1) buf.append(":" + port);
-     buf.append(getParameter("servleturl"));
-     System.out.println("baseUrl= " + baseUrl.toString());
-//    System.out.println("baseUrl= "+protocol+"://"+host+":"+port+path);
-     System.out.println("servletUrl= " + servletUrl.toString());
-//    System.out.println("servletUrl2= "+buf.toString());
- */  String[] args = new String[5];
      args[0]=userFile;
+     args[1]="openRule";
      this.main2(args);
      isNotReload=true;
      //}
    }
+
+  public void newRule()
+    {
+      System.out.println("newRule... ");
+      super.start();
+      String[] args = new String[5];
+      args[0]="";
+      args[1]="newRule";
+      this.main2(args);
+      isNotReload=true;
+      //}
+    }
 
   public void stop()
   {
@@ -532,7 +462,9 @@ public class jEdit extends Applet
       BeanShell.runScript(null, scriptFile, null, false);
     } //}}}
     GUIUtilities.advanceSplashProgress();
+    if (args[1].equals("newRule")) {
 
+    }
     String transport=StringGet(userFile,Transport);
     userDir = MiscUtilities.constructPath(userDir, transport);//jEditHome+"\\"+jEdit.username;//null;
     if (!BoolGet(userDir, Exists)) BoolGet(userDir, MkDir);
@@ -1489,7 +1421,6 @@ public class jEdit extends Applet
 
       addBufferToList(newBuffer);
     }
-    System.out.println("jEdit.openFile before new BufferUpdate(newBuffer, view, BufferUpdate.CREATED)");
     EditBus.send(new BufferUpdate(newBuffer, view, BufferUpdate.CREATED));
 
     if (view != null)
@@ -2118,7 +2049,6 @@ public class jEdit extends Applet
         view.showWaitCursor();
         view.getEditPane().saveCaretInfo();
       }
-      System.out.println("jEdit.newView before new View buffer= "+buffer);
       View newView = new View(buffer, config);
       destroyed=false;// mast stay after  new View#setSplitConfig ( in it use this parameter )
       addViewToList(newView);
@@ -2160,7 +2090,6 @@ public class jEdit extends Applet
         GUIUtilities.centerOnScreen(newView);
 
       EditBus.send(new ViewUpdate(newView, ViewUpdate.CREATED));
-      System.out.println("jEdit.newView after EditBus.send(new ViewUpdate(newView, ViewUpdate.CREATED));");
       newView.setVisible(true);
 
       // show tip of the day
@@ -3136,6 +3065,8 @@ public class jEdit extends Applet
   protected static final int SeparatorChar = 22;
   protected static final int OsName = 23;
   protected static final int Transport = 24;
+  protected static final int NewRule = 25;
+  protected static final int GetRule = 26;
 
   public static int getExists()
   {
@@ -3627,15 +3558,11 @@ public class jEdit extends Applet
       String path = MiscUtilities.constructPath(userDir, userFile);
       synchronized (bufferListLock) {
       Buffer buffer = getBuffer(path);
-      System.out.println("after getBuffer()  buffer = "+buffer);
       if (buffer != null) {
         View[] views= jEdit.getViews();
-        System.out.println("after getBuffer()  views.length = "+views.length);
         for (int i = 0; i < views.length; i++) {
           View view = views[i];
-          System.out.println("view.getBuffer() i= "+i+"views[i].getBuffer()= "+views[i].getBuffer());
           if (view.getBuffer()==buffer) {
-            System.out.println("view.getBuffer()==buffer !!!!! i= "+i+"views[i].getBuffer()= "+views[i].getBuffer());
              for (int j = 0; j < jars.size(); j++) {
            PluginJAR jar=(PluginJAR) jars.elementAt(j);
            jar.WindowClose(view);
@@ -3647,7 +3574,6 @@ public class jEdit extends Applet
       } //if (buffer != null)
       else {
        buffer=openFile(null, userDir, userFile , false, null);
-        System.out.println("jEdit after openFile");
       //  todo end
         View view = null;
         boolean restoreFiles = restore
@@ -3664,13 +3590,10 @@ public class jEdit extends Applet
           else if (buffer != null)
             view.setBuffer(buffer);
         }
-        System.out.println("jEdit after newView");
-       // propertiesChanged();
         for (int i = 0; i < jars.size(); i++) {
            PluginJAR jar=(PluginJAR) jars.elementAt(i);
            jar.WindowOpen(view);
          }
-         System.out.println("jEdit after jar.WindowOpen(view);");
       } //else
 
   } // synchronized (bufferListLock)
@@ -3886,7 +3809,6 @@ loop:  for(int i = 0; i < list.length; i++)
       }
 
       bufferCount++;
-      System.out.println("before bufferHash.put symlinkPath= "+symlinkPath+" buffer= "+buffer);
       bufferHash.put(symlinkPath, buffer);
       if (buffersFirst == null) {
         buffersFirst = buffersLast = buffer;
@@ -3986,7 +3908,6 @@ loop:  for(int i = 0; i < list.length; i++)
     viewCount++;
 
     if (viewsFirst == null) {
-      System.out.println("addViewToList viewCount= "+viewCount);
       viewsFirst = viewsLast = view;  }
     else {
       view.prev = viewsLast;

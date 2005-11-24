@@ -140,7 +140,6 @@ public class SideKickPlugin extends EBPlugin
  public static SideKickParser getParser(String name)
  {
   SideKickParser parser = (SideKickParser)ServiceManager.getService(SideKickParser.SERVICE,name);
-  System.out.println("SideKickPlugin getParser parser line 143= "+parser);
    if(parser != null)
    return parser;
   else {
@@ -163,7 +162,6 @@ public class SideKickPlugin extends EBPlugin
  public static SideKickParser getParserForBuffer(Buffer buffer)
  {
   String parserName = buffer.getStringProperty(PARSER_PROPERTY);
-   System.out.println("parserName= "+parserName);
    if(parserName == null)
    return null;
   else
@@ -297,9 +295,7 @@ public class SideKickPlugin extends EBPlugin
  private void initView(View view)
  {
   sidekicks.put(view,new SideKick(view));
-   System.out.println("SideKickPlugin.initView sidekicks.size()= "+sidekicks.size());
    if (jEdit.getLastView()!=jEdit.getFirstView()) {
-      System.out.println("clear timer in View.WindowHandler.windowActivated in initView for second view !!!!");
       SideKickActions.clear();
     }
  } //}}}

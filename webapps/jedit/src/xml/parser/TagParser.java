@@ -84,6 +84,60 @@ public class TagParser
 
   return tag;
  } //}}}
+  //{{{ getTagAtOffset() method
+  public static Tag getTagForOffset(String text, int pos)
+  {
+   if(pos < 0 || pos > text.length())
+    return null;
+
+   // Get the last '<' before current position.
+   int startTag = text.lastIndexOf('<', pos-2 );
+   if(startTag == -1 || startTag + 2 >= text.length()) // at least 2 chars after '<'
+    return null;
+
+   int endTag = text.indexOf('>', startTag + 1) + 1;
+   if(endTag == 0 || endTag < pos)
+    return null;
+
+   int tagType = T_START_TAG;
+   int startTagName = startTag + 1;
+   if(text.charAt(startTagName) == '/')
+   {
+    tagType = T_END_TAG;
+    ++startTagName;
+   }
+   else if(text.charAt(startTagName) == '?'
+    || text.charAt(startTagName) == '!'
+    || text.charAt(startTagName) == '%')
+   {
+    return null;
+   }
+
+   int endTagName = endTag - 1;
+   for(int i = startTagName; i < endTag - 1; i++)
+   {
+    char ch = text.charAt(i);
+    if(Character.isWhitespace(ch))
+    {
+     if(endTagName == endTag - 1)
+      endTagName = i;
+    }
+    else if(ch == '<')
+     return null;
+    else if(ch == '/' && i == endTag - 2)
+    {
+     if(endTagName == endTag - 1)
+      endTagName = i;
+     tagType = T_STANDALONE_TAG;
+    }
+   }
+
+   Tag tag = new Tag(startTag,endTag);
+   tag.tag   = text.substring(startTagName, endTagName);
+   tag.type  = tagType;
+
+   return tag;
+  } //}}}
 
  //{{{ getMatchingTag() method
  public static Tag getMatchingTag(String text, Tag tag)

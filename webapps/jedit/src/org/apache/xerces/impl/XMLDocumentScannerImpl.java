@@ -1113,8 +1113,7 @@ public class XMLDocumentScannerImpl
                                 again = true;
                             }
                             else if (XMLChar.isNameStart(fEntityScanner.peekChar())) {
-                                reportFatalError("MarkupNotRecognizedInMisc",
-                                                 null);
+                                reportFatalError("MarkupNotRecognizedInMisc", null);
                                 scanStartElement();
                                 setScannerState(SCANNER_STATE_CONTENT);
                             }

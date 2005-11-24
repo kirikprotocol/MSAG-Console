@@ -146,7 +146,16 @@ public abstract class SideKickParser
  public abstract SideKickParsedData parse(Buffer buffer,
   DefaultErrorSource errorSource);
  //}}}
-
+  //{{{ checkData() method
+ /**
+  * Checks the given Data and returns a old Data from buffer(if exist) if new data is bad.
+  *
+  * @param buffer The buffer to parse.
+  *
+  * @return A new instance of the <code>SideKickParsedData</code> class.
+  */
+ public abstract SideKickParsedData checkData(Buffer buffer,SideKickParsedData chekedData);
+ //}}}
  //{{{ supportsCompletion() method
  /**
   * Returns if the parser supports code completion.

@@ -297,7 +297,7 @@ public class DefaultErrorSource extends ErrorSource implements EBComponent
  {
   DefaultError newError = new DefaultError(this,errorType,path,lineIndex,
    start,end,error);
-
+  ErrorSource.registerErrorSource(this);
   addError(newError);
  } //}}}
 

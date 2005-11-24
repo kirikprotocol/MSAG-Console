@@ -64,7 +64,7 @@ select-next-word.shortcut=CS+RIGHT
 action-bar.shortcut=C+ENTER
 prev-buffer.shortcut=C+PAGE_UP
 next-buffer.shortcut=C+PAGE_DOWN
-last-action.shortcut=C+SPACE
+attribute-completion.shortcut=C+SPACE
 
 recent-buffer.shortcut=C+BACK_QUOTE
 select-block.shortcut=C+OPEN_BRACKET
@@ -79,6 +79,7 @@ toggle-multi-select.shortcut=C+BACK_SLASH
 
 #{{{ C+e C+X
 # Unused: f, h, q, y
+last-action.shortcut=C+h
 copy-append.shortcut=C+e C+a
 search-in-open-buffers.shortcut=C+e C+b
 range-comment.shortcut=C+e C+c

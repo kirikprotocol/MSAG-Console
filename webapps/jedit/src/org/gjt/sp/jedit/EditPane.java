@@ -388,7 +388,10 @@ public class EditPane extends JPanel implements EBComponent
  private BufferSwitcher bufferSwitcher;
  private JEditTextArea textArea;
  //}}}
-
+ public void propertiesChanged2()
+ {
+     propertiesChanged();
+ }
  //{{{ propertiesChanged() method
  private void propertiesChanged()
  {

@@ -65,32 +65,55 @@ public class EditTag
   //{{{ Buttons
 
   prepareTag();  //set list of names here
+  closeTag=">";
 
-
+ /*  if(element.empty)
+     {
+      if(html)
+       closeTag=">";
+      else
+       closeTag=XmlActions.getStandaloneEnd();
+     }
+     else
+     {
+      closeTag=">";
+     }
+ */
 
    //updateTag();
 
  } //}}}
- //{{{ closeTag() method
+
+  public String getCloseTag()
+  {
+    return closeTag;
+  }
+
+  public void setCloseTag(String closeTag)
+  {
+    this.closeTag = closeTag;
+  }
+
+  //{{{ closeTag() method
  public void closeTag () {
     JEditTextArea textArea = view.getTextArea();
-    String closeTag="/>";//</"+elementName+">";
-    textArea.getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
+   // String closeTag="/>";//</"+elementName+">";
     textArea.setSelectedText(closeTag);
+    textArea.getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
  } //}}}
   
   //{{{ updateTag() method
-  public void updateTag()
+  public void updateTag(final boolean autofill)
   {
-     view.setEdittag(true); view.setEditTag(this);
     JEditTextArea textArea = view.getTextArea();
 /*    for(int i = 0; i < attributeModel.size(); i++)
- {
-  Attribute attr = (Attribute)attributeModel.get(i);
-   System.out.println("name of attribute 1 = "+attr.name+" set= "+attr.set);
-   if(attr.set)
-     continue;
-  */
+{
+Attribute attr = (Attribute)attributeModel.get(i);
+ System.out.println("name of attribute 1 = "+attr.name+" set= "+attr.set);
+ if(attr.set)
+   continue;
+*/
+       
     // show the popup if
    // - complete has one element and user invoked with delay key
    // - or complete has multiple elements
@@ -108,7 +131,7 @@ public class EditTag
     {
       super.dispose();
       popup = null;
-      view.setKeyEventInterceptor(new KeyHandler());
+     if (autofill) view.setKeyEventInterceptor(new KeyHandler());
     }
    };
   //String add=popup.getUpdateTag();//  System.out.println("add= "+add);
@@ -141,13 +164,25 @@ public class EditTag
  private JTextArea preview;
  private String newTag;
  private boolean isOK;
+ private boolean backCursor;
  private View view;
  private ArrayList names;
+ private String closeTag;
   //}}}
 
   public String getElementName()
   {
     return elementName;
+  }
+
+  public boolean isBackCursor()
+  {
+    return backCursor;
+  }
+
+  public void setBackCursor(boolean backCursor)
+  {
+    this.backCursor = backCursor;
   }
 
   //{{{ createAttributeModel() method
@@ -220,11 +255,12 @@ public class EditTag
  private void prepareTag()
  {
   int tagNameCase = TextUtilities.getStringCase(elementName);
-  int in=elementName.indexOf(':');
+/*  int in=elementName.indexOf(':');
   String shortName=elementName;
   if (in!=-1) shortName=elementName.substring(in+1);
+*/
   StringBuffer buf = new StringBuffer("<");
-  buf.append(shortName);
+  buf.append(elementName);
   ArrayList names=new ArrayList(5);
     for(int i = 0; i < attributeModel.size(); i++)
   {
@@ -267,9 +303,9 @@ public class EditTag
    }
    buf.append("\" ");
   }
-   System.out.println("EditTag buf= "+buf.toString());
+   System.out.println("EditTag buf= "+buf.toString()+" backCursor= "+backCursor);
   view.setNames(names);
-  //buf.append(">");
+   // buf.append("/>");
   isOK=true;
   newTag = buf.toString();
  this.names=names;
@@ -293,7 +329,13 @@ public class EditTag
    switch(evt.getKeyCode())
    {
    case KeyEvent.VK_ENTER:
-   evt=null;
+   System.out.println("EditTag.KeyHandler keyPressed VK_ENTER backCursor?= "+backCursor);
+   if (backCursor) {
+     System.out.println("EditTag.KeyHandler keyPressed VK_ENTER backCursor=true");
+      int _caret=textArea.getCaretPosition();
+      textArea.setCaretPosition(_caret-2);
+   }
+    evt=null;
     break;
    case KeyEvent.VK_TAB:
     break;
@@ -321,7 +363,7 @@ public class EditTag
      evt.consume();
     break;
    case KeyEvent.VK_SPACE:
-     keyTyped(' ');
+    // keyTyped(' ');
      evt.consume();
      break;
    case KeyEvent.VK_BACK_SPACE:
@@ -362,9 +404,9 @@ public class EditTag
 
   //{{{ keyTyped() method
   private void keyTyped(char ch)
-  {
+  {  System.out.println("EditTag.KeyTyped start line 375");
   JEditTextArea textArea = view.getTextArea();
-   if(names.size() == 0)
+   if(names.size() == 0 || backCursor)
    {
     textArea.userInput(ch);
     view.setKeyEventInterceptor(null);
@@ -372,7 +414,7 @@ public class EditTag
    else  if(ch==' ')
    {
      textArea.userInput(ch);
-     SideKickCompletion complete=new XmlAttributeCompletion(view,"",view.getNames());
+     SideKickCompletion complete=new XmlAttributeCompletion(view,"",names);
     popup = new XmlAttributeCompletionPopup(view,
            textArea.getCaretPosition(),complete )  //complete
    {
@@ -462,8 +504,7 @@ public class EditTag
     return 1;
    else
    {
-    return MiscUtilities.compareStrings(
-     attr1.name,attr2.name,true);
+    return MiscUtilities.compareStrings(attr1.name,attr2.name,true);
    }
   }
  } //}}}

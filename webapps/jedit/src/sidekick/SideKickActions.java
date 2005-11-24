@@ -97,9 +97,7 @@ public class SideKickActions
    && data != null && parser != null
    && parser.supportsCompletion())
   {
-    System.out.println("SideKickActions complete before XmlParser.complete line 102");
-   complete = parser.complete(editPane,
-    textArea.getCaretPosition());
+   complete = parser.complete(editPane,textArea.getCaretPosition());
   }
 
   if(complete == null || complete.size() == 0)
@@ -127,7 +125,7 @@ public class SideKickActions
    // key, so we insert it
    if(mode == COMPLETE_COMMAND
     || mode == COMPLETE_INSTANT_KEY)
-   { System.out.println("SideKickActions complete before complete.insert line 132");
+   { 
     complete.insert(0);
     return;
    }
@@ -138,7 +136,7 @@ public class SideKickActions
   // - or complete has multiple elements
   // and popup is not already shown because of explicit invocation
   // of the complete action during the trigger delay
-  if(popup != null)
+   if(popup != null)
    return;
 
   popup = new SideKickCompletionPopup(view,parser,

@@ -23,6 +23,8 @@ import java.awt.Toolkit;
 import java.io.*;
 import java.util.*;
 import javax.swing.text.Segment;
+import javax.swing.*;
+
 import org.gjt.sp.jedit.*;
 import org.gjt.sp.jedit.textarea.*;
 import org.gjt.sp.util.Log;
@@ -33,11 +35,185 @@ import xml.parser.*;
 
 public class XmlActions
 {
- //{{{ showEditTagDialog() method
+
+  public static void checkCurrentTag(View view)
+     {
+       JEditTextArea textArea = view.getTextArea();
+       if(XmlPlugin.isDelegated(textArea))
+       {
+         view.getToolkit().beep();
+         return;
+       }
+       Buffer buffer = view.getBuffer();
+       SideKickParsedData _data = SideKickParsedData.getParsedData(view);
+       if(!(_data instanceof XmlParsedData))
+       { System.out.println("XMLActions EditTagBackCompletion oshibka : Not an XML file");
+         // GUIUtilities.error(view,"xml-no-data",null);
+         return;
+       }
+       String text = buffer.getText(0,buffer.getLength());
+       int caret = textArea.getCaretPosition();
+       TagParser.Tag tag = TagParser.getTagForOffset(text,caret+1);
+       if(tag == null || tag.type == TagParser.T_END_TAG)
+         { //view.getToolkit().beep();
+         return;
+         }
+       else {
+         final XmlParsedData data = (XmlParsedData)_data;
+         final View _view=view;
+         final TagParser.Tag _tag=tag;
+         final String _text=text;
+     /*    SwingUtilities.invokeLater(new Runnable()
+         {
+           public void run()
+           {  */
+             completeAttrubite(_text,_tag,data,_view);
+      /*     }
+         }); */
+       }
+     }
+
+   public static void completeAttrubite(String text,TagParser.Tag tag,XmlParsedData data,View view) {
+   HashMap attributes = new HashMap();
+    // use a StringTokenizer to parse the tag
+    String attributeName = null;
+    boolean seenEquals = false;
+    boolean empty = false;
+    String t;
+    /* StringTokenizer does not support disabling or changing
+* the escape character, so we have to work around it here. */
+    char backslashSub = 127;
+    t=text.substring(tag.start + tag.tag.length() + 1,tag.end - 1);
+    System.out.println("tag= "+t);
+    StreamTokenizer st = new StreamTokenizer(new StringReader(
+            text.substring(tag.start + tag.tag.length() + 1,tag.end - 1)
+                    .replace('\\',backslashSub)));
+    st.resetSyntax();
+    st.wordChars('!',255);
+    st.whitespaceChars(0,' ');
+    st.quoteChar('"');
+    st.quoteChar('\'');
+    st.ordinaryChar('/');
+    st.ordinaryChar('=');
+
+    Map entityHash = data.getNoNamespaceCompletionInfo().entityHash;
+
+    //{{{ parse tag
+    try
+    {
+      loop:   for(;;)
+      {
+        switch(st.nextToken())
+        {
+          case StreamTokenizer.TT_EOF:
+            if(attributeName != null)
+            {
+              // in HTML, can have attributes
+              // without values.
+              attributes.put(attributeName,attributeName);
+            }
+            break loop;
+          case '=':
+            seenEquals = true;
+            break;
+          case StreamTokenizer.TT_WORD:
+            if(attributeName == null)
+            {
+              attributeName = (data.html ? st.sval.toLowerCase(): st.sval);
+              break;
+            }
+            else
+              /* fall thru */;
+          case '"':
+          case '\'':
+            if(attributeName != null)
+            {
+              if(seenEquals)
+              {
+                attributes.put(attributeName,
+                        entitiesToCharacters(st.sval.replace(backslashSub,'\\'),
+                                entityHash));
+                seenEquals = false;
+              }
+              else if(data.html)
+              {
+                attributes.put(attributeName,Boolean.TRUE);
+              }
+              attributeName = null;
+            }
+            break;
+          case '/':
+            empty = true;
+            break;
+        }
+      }
+    }
+    catch(IOException io)
+    {
+      // won't happen
+    } //}}}
+  boolean autofill= jEdit.getBooleanProperty("xml.autofill");
+  ElementDecl elementDecl = data.getElementDecl(tag.tag);
+  System.out.println("xml.XmlActions.completeAttributes before new EditTag line 157 elementDecl.completionInfo.entityHash= "+elementDecl.completionInfo.entityHash);
+  System.out.println("elementDecl.attributes= "+elementDecl.attributes);
+  System.out.println("elementDecl.name= "+elementDecl.name);
+  System.out.println("elementDecl.any= "+elementDecl.any);
+  System.out.println("elementDecl.empty= "+elementDecl.empty);
+  System.out.println("data.html= "+data.html);
+      EditTag dialog = new EditTag(view,tag.tag, elementDecl,attributes,
+              elementDecl.completionInfo.entityHash,data.ids,data.html);
+  System.out.println("dialog.getNames().size()= "+dialog.getNames().size());
+     JEditTextArea textArea =view.getTextArea();
+     Buffer buffer=textArea.getBuffer();
+
+     String newTag = dialog.getNewTag();
+//     System.out.println("newTag1= "+newTag);
+      if (dialog.getNames().size()>0) {
+     textArea.updateMathTag();
+     if (textArea.getStructureMatch()==null) {
+      String closeTag="/>"; dialog.setCloseTag(closeTag);
+    }
+        //buffer.setBooleanProperty("sidekick.keystroke-parse",false);
+        dialog.setBackCursor(true);
+        view.setEditTag(dialog);//view.setEdittag(true);
+        dialog.updateTag(autofill);//dialog.closeTag ();
+       // int _caret=view.getTextArea().getCaretPosition();
+       // view.getTextArea().setCaretPosition(_caret-4);
+        //newTag=newTag+"/>";
+     newTag=newTag+view.getEditTag().getCloseTag();// "/>";
+ //     System.out.println("newTag2= "+newTag);
+      if(newTag != null)
+      {
+        try
+        {
+          buffer.beginCompoundEdit();
+
+          buffer.remove(tag.start,tag.end - tag.start);
+          buffer.insert(tag.start,newTag);
+        }
+        finally
+        {
+          buffer.endCompoundEdit();
+        }
+      }
+
+      }
+    else {
+      //textArea.getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
+       //newTag=newTag+"/>";
+       view.getTextArea().getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
+        //dialog.closeTag ();
+    }
+
+
+ }
+
+
+
+  //{{{ showEditTagDialog() method
  public static void showEditTagDialog(View view)
  {
   JEditTextArea textArea = view.getTextArea();
-
   if(XmlPlugin.isDelegated(textArea))
   {
    view.getToolkit().beep();
@@ -150,9 +326,9 @@ loop:   for(;;)
    // won't happen
   } //}}}
   System.out.println("tag.tag= "+tag.tag);
-
+   System.out.println("attributes= "+attributes);
   ElementDecl elementDecl = data.getElementDecl(tag.tag);
-   if(elementDecl == null)
+/*  if(elementDecl == null)
   {
     System.out.println("data.mappings.size()= "+data.mappings.size());
 
@@ -167,8 +343,8 @@ loop:   for(;;)
     }
 
    }
-
   }
+  */
    if(elementDecl == null)
   {
    String[] pp = { tag.tag };
@@ -187,7 +363,10 @@ loop:   for(;;)
    EditTag dialog = new EditTag(view,tag.tag, elementDecl,attributes,
       elementDecl.completionInfo.entityHash,data.ids,data.html);
 
-   if (dialog.getNames().size()>0) dialog.updateTag();
+   if (dialog.getNames().size()>0) {
+    buffer.setBooleanProperty("sidekick.keystroke-parse",false);
+    view.setEditTag(dialog);// view.setEdittag(true);
+     dialog.updateTag(true); }
        else dialog.closeTag ();
 
        // show the popup if
@@ -234,14 +413,39 @@ loop:   for(;;)
    }
   }
  } //}}}
+ private View _view;
 
-  //{{{ showEditTagDialog() method
-  public static void showEditTagDialog2(View view)
+
+   //{{{ getCurrentTag() method
+ /**
+  * Returns an instance of this class for the specified view.
+  *
+  * @param view The view.
+  */
+/* public static HashMap getCurrentTag(View view,String tag)
+ {
+  return (HashMap)view.getRootPane().getClientProperty(tag);
+ } //}}}
+  */
+ //{{{ setCurrentTag() method
+ /**
+  * Sets the instance of this class for the specified view.
+  *
+  * @param view The view.
+  * @//param attributes The instance.
+  */
+/* public static void setCurrentTag(View view,String tag, HashMap attributes)
+ {
+  view.getRootPane().putClientProperty(tag,attributes);
+ } //}}}
+ */ //{{{ EditTagBackCompletion() method
+  public static void EditTagBackCompletion(View view)
   {
    JEditTextArea textArea = view.getTextArea();
 
    if(XmlPlugin.isDelegated(textArea))
    {
+     System.out.println("EditTagBackCompletion if(XmlPlugin.isDelegated BEEP !!!");
     view.getToolkit().beep();
     return;
    }
@@ -251,7 +455,8 @@ loop:   for(;;)
 
    if(!(_data instanceof XmlParsedData))
    {
-    GUIUtilities.error(view,"xml-no-data",null);
+     System.out.println("XMLActions EditTagBackCompletion oshibka : Not an XML file");
+   // GUIUtilities.error(view,"xml-no-data",null);
     return;
    }
 
@@ -261,10 +466,11 @@ loop:   for(;;)
 
    int caret = textArea.getCaretPosition();
 
-   TagParser.Tag tag = TagParser.getTagAtOffset(text,caret);
+   TagParser.Tag tag = TagParser.getTagForOffset(text,caret+1);
    if(tag == null || tag.type == TagParser.T_END_TAG)
-   {
-    view.getToolkit().beep();
+   { view.setEdittag(false);
+     //textArea.getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);
+    //view.getToolkit().beep();
     return;
    }
 
@@ -354,65 +560,55 @@ loop:   for(;;)
    System.out.println("tag.tag= "+tag.tag);
 
    ElementDecl elementDecl = data.getElementDecl(tag.tag);
+
+    /*   if(elementDecl == null)
+      {
+        System.out.println("data.mappings.size()= "+data.mappings.size());
+
+        if (data.mappings.size()>0) {
+          for (Iterator it = data.mappings.keySet().iterator(); it.hasNext();) {
+          String key = (String) it.next()+":";
+          System.out.println("XMLActions key= "+key);
+          tag.tag=key+tag.tag;
+          System.out.println("tag.tag= "+tag.tag);
+          elementDecl = data.getElementDecl(tag.tag);
+          if(elementDecl != null) break;
+        }
+
+       }
+
+      }
+    */
 /*    if(elementDecl == null)
-   {
-     System.out.println("data.mappings.size()= "+data.mappings.size());
-
-     if (data.mappings.size()>0) {
-       for (Iterator it = data.mappings.keySet().iterator(); it.hasNext();) {
-       String key = (String) it.next()+":";
-       System.out.println("XMLActions key= "+key);
-       tag.tag=key+tag.tag;
-       System.out.println("tag.tag= "+tag.tag);
-       elementDecl = data.getElementDecl(tag.tag);
-       if(elementDecl != null) break;
-     }
-
-    }
-
-   }
-*/
-    if(elementDecl == null)
    {
     String[] pp = { tag.tag };
      System.out.println("oshibka here !!!!");
     GUIUtilities.error(view,"xml-edit-tag.undefined-element",pp);
     return;
    }
-    List li=elementDecl.attributes;
+   List li=elementDecl.attributes;
     for (int i = 0; i < li.size(); i++) {
       ElementDecl.AttributeDecl Attr = (ElementDecl.AttributeDecl) li.get(i);
 
     }
-
-   System.out.println("xml.XmlActions ShowEditTagDialog(View) before new EditTagDialog line 162");
-
- /*   EditTag dialog = new EditTag(view,tag.tag, elementDecl,attributes,
+*/
+/* if(elementDecl != null) {
+    EditTag dialog = new EditTag(view,tag.tag, elementDecl,attributes,
        elementDecl.completionInfo.entityHash,data.ids,data.html);
+    System.out.println("dialog.getNames().size()= "+dialog.getNames().size());
+    if (dialog.getNames().size()>0) {
+      view.setEdittag(true); view.setEditTag(dialog);}
+ } */
+   System.out.println("xml.XmlActions EditTagBackCompletion(View) before new EditTagDialog line 162");
 
-    if (dialog.getNames().size()>0) dialog.updateTag();
-        else dialog.closeTag ();
-  */
-        // show the popup if
-    // - complete has one element and user invoked with delay key
-    // - or complete has multiple elements
-    // and popup is not already shown because of explicit invocation
-    // of the complete action during the trigger delay
-  /*  if(popup != null)
-     return;
-    SideKickCompletion complete=new XmlAttributeCompletion(view,"",dialog.getNames());
+    EditTag dialog = new EditTag(view,tag.tag, elementDecl,attributes,
+       elementDecl.completionInfo.entityHash,data.ids,data.html);
+    System.out.println("dialog.getNames().size()= "+dialog.getNames().size());
+    if (dialog.getNames().size()>0) {
+      view.setEdittag(true); view.setEditTag(dialog);}
+      //dialog.updateTag();
+       else textArea.getBuffer().setBooleanProperty("sidekick.keystroke-parse",true);//dialog.closeTag ();
 
-    popup = new XmlAttributeCompletionPopup(view,
-            textArea.getCaretPosition(),complete )  //complete
-    {
-     /** forget reference to this popup when it is disposed */
-  /*   public void dispose()
-     {
-      super.dispose();
-      popup = null;
-     }
-    };
-     */
     /*EditTagDialog dialog = new EditTagDialog(view,tag.tag,
    elementDecl,attributes,empty,
    elementDecl.completionInfo.entityHash,
@@ -1018,7 +1214,6 @@ loop:   for(;;)
   }
   return count;
  }
- //}}}
 
  //}}}
 }
