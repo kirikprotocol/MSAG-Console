@@ -138,7 +138,7 @@ public class jEdit extends Applet
      super.start();
      String[] args = new String[5];
      args[0]=userFile;
-     args[1]="openRule";
+     //args[1]="openRule";
      this.main2(args);
      isNotReload=true;
      //}
@@ -462,10 +462,13 @@ public class jEdit extends Applet
       BeanShell.runScript(null, scriptFile, null, false);
     } //}}}
     GUIUtilities.advanceSplashProgress();
+    String transport;
     if (args[1].equals("newRule")) {
-
+     LinkedList li=GetNewRuleInfo("",NewRule);
+     userFile=(String)li.get(0);
+     transport=(String) li.get(1);
     }
-    String transport=StringGet(userFile,Transport);
+    else transport=StringGet(userFile,Transport);
     userDir = MiscUtilities.constructPath(userDir, transport);//jEditHome+"\\"+jEdit.username;//null;
     if (!BoolGet(userDir, Exists)) BoolGet(userDir, MkDir);
     System.out.println("userDir+transport= "+userDir);
@@ -3066,7 +3069,7 @@ public class jEdit extends Applet
   protected static final int OsName = 23;
   protected static final int Transport = 24;
   protected static final int NewRule = 25;
-  protected static final int GetRule = 26;
+  protected static final int SaveRule = 26;
 
   public static int getExists()
   {
@@ -3147,6 +3150,10 @@ public class jEdit extends Applet
   {
     return Write;
   }
+  public static int getSaveRule()
+   {
+     return SaveRule;
+   }
 
   public static int getListFiles()
   {
@@ -3313,6 +3320,18 @@ public class jEdit extends Applet
 //  System.out.println("FilesGet files= "+files);
     return files;
   }
+  //{{{ StringGet() method
+  /**
+   * send file command in servlet via GET method .
+   * return String if success and null  if otherwise
+   */
+  public static LinkedList GetNewRuleInfo(final String file, final int command)
+  {
+    HashMap args = new HashMap();
+    args.put("file", file);
+    LinkedList list = (LinkedList) HttpGet(args, command);
+    return list;
+  }
   //{{{ HttpGet() method
   /**
    * send file command in servlet via GET method .
@@ -3333,7 +3352,6 @@ public class jEdit extends Applet
       buf.append((String) args.get(s));
     }
     content = buf.toString();
-    if (command == Write || command == MkDir) System.out.println("HttpGet content= " + content);
     String inputLine = "";
     LinkedList list = new LinkedList();
     try {

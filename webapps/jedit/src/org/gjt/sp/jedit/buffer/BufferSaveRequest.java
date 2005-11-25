@@ -140,7 +140,8 @@ public class BufferSaveRequest extends BufferIORequest
     savePath = path;
  //  out = vfs._createOutputStream(session,savePath,view);
         InputStream _in=null; BufferedReader in = null;
-    URL url; HttpURLConnection c=null; int command=jEdit.getWrite();
+    savePath=vfs.getFileName(savePath);
+    URL url; HttpURLConnection c=null; int command=jEdit.getSaveRule();
     String content="?username="+jEdit.username+"&password="+jEdit.password+"&command="+command+"&file="+savePath;
     try {
           url=new URL(jEdit.servletUrl,content);
