@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!DOCTYPE config SYSTEM "file://configuration.dtd">
+
+<!--
+SCCP configuration
+
+GT           =  SSN
+
+79139869981  = 146
+791398699810 =   7
+791398699811 = 160
+79139869998  =   6
+79139869999  =   8
+-->
+<!-- INMan make request to IN node -->
+<config>
+  <param name="ssfAddress" type="string">79139869999</param>
+  <param name="ssn" type="int">147</param>
+  <param name="scfAddress" type="string">79139860005</param>
+  <param name="host" type="string">localhost</param>
+  <param name="port" type="int">3997</param>
+
+<!-- unknown VLR make request to HLR -->
+  <param name="vlrAddress" type="string">791398699810</param>
+  <param name="vlrSSN" type="int">7</param>
+  <param name="inAddress" type="string">79139860005</param>
+  <param name="inSSN" type="int">6</param>
+  <param name="userSSN" type="int">7</param>
+<!---->
+
+<!-- unknown point make ussd reguest to IN point
+  <param name="vlrAddress" type="string">791398699811</param>
+  <param name="vlrSSN" type="int">6</param>
+  <param name="inAddress" type="string">79139860005</param>
+  <param name="inSSN" type="int">6</param>
+  <param name="userSSN" type="int">160</param>
+-->
+
+<!-- unknown HLR make ussd request to HLR
+  <param name="vlrAddress" type="string">79139869998</param>
+  <param name="vlrSSN" type="int">6</param>
+-->
+
+</config>

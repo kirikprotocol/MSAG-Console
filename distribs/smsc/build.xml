@@ -254,7 +254,7 @@ Targets:
 
     <!-- turn scripts be executable -->
     <chmod perm="755">
-      <fileset dir="${DISTR_DIR}" includes="**/*.sh"/> 
+      <fileset dir="${DISTR_DIR}" includes="**/*.sh"/>
     </chmod>
   </target>
 
@@ -323,7 +323,7 @@ Targets:
   <target name="mcistats_distr" >
     <ant dir="${SMSC_DIR}/ext_smes" target="mcistats_distr"/>
   </target>
-  
+
   <target name="mtsmsme_build">
     <ant dir="${SRC_DIR}" target="mod">
       <property name="MOD" value="mtsmsme"/>
@@ -335,7 +335,19 @@ Targets:
   <target name="mtsmsme_distr" depends="mtsmsme_build" >
     <ant dir="${SMSC_DIR}/ext_smes" target="mtsmsme_distr"/>
   </target>
-  
+
+  <target name="inman_build">
+    <ant dir="${SRC_DIR}" target="mod">
+      <property name="MOD" value="inman"/>
+    </ant>
+  </target>
+  <target name="inman_update" depends="inman_build" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="inman_update"/>
+  </target>
+  <target name="inman_distr" depends="inman_build" >
+    <ant dir="${SMSC_DIR}/ext_smes" target="inman_distr"/>
+  </target>
+
   <target name="infosme_build">
     <ant dir="${SRC_DIR}" target="mod">
       <property name="MOD" value="infosme"/>
