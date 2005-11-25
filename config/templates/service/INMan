@@ -1,0 +1,45 @@
+#!/bin/bash
+if [ -f logs/inman.err ]; then
+  mv logs/inman.err logs/inman.err.old
+fi
+if [ -d lib ] ; then 
+  rm -rf lib
+fi
+
+if [ -d logs ] ; then 
+  rm -rf logs
+fi
+
+if [ -d log ] ; then 
+  rm -rf log
+fi
+
+if [ ! -L lib ] ; then
+  ln -s ../../lib lib
+fi
+
+if [ ! -L logs ] ; then
+  ln -s ../../logs logs
+fi
+
+chmod +x bin/inman
+while true;
+do
+bin/inman 1>/dev/null 2>>logs/inman.err&
+PID=$!
+export PID
+trap "kill -s SIGTERM $PID;wait $PID; exit" SIGTERM
+wait $PID
+if [ -f core ]; then
+  DATE=`perl -e '($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst)=localtime(time);printf("%04d%02d%02d%02d%02d%02d",$year+1900,$mon+1,$mday,$hour,$min,$sec)'`
+
+  mkdir "$DATE"
+  mv core "$DATE"
+  mv logs/inman.err "$DATE"
+  if [ -f logs/inman.err.old ]; then
+    mv logs/inman.err.old "$DATE"
+  fi
+  mv logs/inman.log* "$DATE"
+  cp -p bin/inman "$DATE"
+fi
+done
