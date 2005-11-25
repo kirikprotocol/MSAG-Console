@@ -333,7 +333,7 @@ public:
     t.tm_mday=d;
     license.expdate=mktime(&t);
     long hostid;
-    sscanf(lic["Hostid"].c_str(),"%x",&hostid);
+    sscanf(lic["Hostids"].c_str(),"%x",&hostid);
     if(hostid!=gethostid())
     {
       throw runtime_error("");

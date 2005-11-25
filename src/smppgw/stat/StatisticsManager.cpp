@@ -379,17 +379,21 @@ bool StatStorage::createDir(const std::string& dir)
 
 bool StatStorage::createStatDir()
 {
-    int len = strlen(location.c_str());
+    const char * dir_ = location.c_str();
+
+    int len = strlen(dir_);
     if(len == 0)
         return false;
 
-    if(strcmp(location.c_str(), "/") == 0)
+    if(strcmp(dir_, "/") == 0)
         return true;
 
     ++len;
+
     TmpBuf<char, 512> tmpBuff(len);
-    char* buff = tmpBuff.get();
-    memcpy(buff, location.c_str(), len);
+    char * buff =tmpBuff.get();
+    memcpy(buff, dir_, len);
+
     if(buff[len-2] == '/'){
        buff[len-2] = 0;
        if(len > 2){
@@ -399,7 +403,7 @@ bool StatStorage::createStatDir()
        }
     }
 
-    std::vector<char*> dirs(0);
+    std::vector<std::string> dirs(0);
 
     char* p1 = buff+1;
     int dirlen = 0;
@@ -416,22 +420,21 @@ bool StatStorage::createStatDir()
        char * dir = tmpBuff.get();
        memcpy(dir, buff, dirlen);
        dir[dirlen] = 0;
-       dirs.push_back(dir);
+       dirs.push_back(std::string(dir));
 
        p1 = p1 + len + 1;
        p2 = strchr(p1, '/');
     }
-    dirs.push_back(buff);
+    dirs.push_back(std::string(buff));
 
-    std::vector<char*>::iterator it = dirs.begin();
-    for(it = dirs.begin(); it != dirs.end(); it++){
+    for(std::vector<std::string>::iterator it = dirs.begin(); it != dirs.end(); it++){
 
-        DIR* dirp = opendir(*it);
+        DIR* dirp = opendir( (*it).c_str() );
         if(dirp){
             closedir(dirp);            
         }else{
             try{
-                createDir(std::string(*it));
+                createDir(std::string( (*it).c_str() ));
             }catch(...){
                 return false;
             }
