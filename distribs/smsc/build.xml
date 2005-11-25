@@ -247,6 +247,13 @@ Targets:
     <symlink resource="../services/SMSC/conf/reschedule.xml" link="${DISTR_DIR}/conf/reschedule.xml" overwrite="yes"/>
 
     <!-- inman configuration-->
+    <copy tofile="${DISTR_DIR}/services/INMan/bin/service" file="${TEMPL_DIR}/service/INMan">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
+    <chmod file="${DISTR_DIR}/services/INMan/bin/service" perm="755"/>
+    <copy tofile="${DISTR_DIR}/services/INMan/conf/logger.properties" file="${TEMPL_DIR}/logger/INMan.logger">
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
     <copy todir="${DISTR_DIR}/services/INMan/conf" flatten="yes">
       <fileset dir="${TEMPL_DIR}/INMan" includes="config.xml"/>
       <filterset filtersfile="${TEMPLATE_PROPS}"/>
