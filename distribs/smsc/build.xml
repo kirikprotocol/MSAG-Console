@@ -97,6 +97,8 @@ Targets:
     <mkdir dir="${DISTR_DIR}/services"/>
     <mkdir dir="${DISTR_DIR}/services/SMSC"/>
     <mkdir dir="${DISTR_DIR}/services/SMSC/bin"/>
+    <mkdir dir="${DISTR_DIR}/services/INMan"/>
+    <mkdir dir="${DISTR_DIR}/services/INMan/bin"/>
     <mkdir dir="${DISTR_DIR}/services/ArchiveDaemon"/>
     <mkdir dir="${DISTR_DIR}/services/ArchiveDaemon/bin"/>
     <mkdir dir="${DISTR_DIR}/daemon"/>
@@ -116,6 +118,7 @@ Targets:
     <mkdir dir="${DISTR_DIR}/arcnew"/>
     <mkdir dir="${DISTR_DIR}/billnew"/>
     <mkdir dir="${DISTR_DIR}/services/SMSC/conf"/>
+    <mkdir dir="${DISTR_DIR}/services/INMan/conf"/>
     <mkdir dir="${DISTR_DIR}/services/ArchiveDaemon/conf"/>
     <mkdir dir="${DISTR_DIR}/daemon/conf"/>
 
@@ -142,6 +145,9 @@ Targets:
     <symlink resource="${DAEMON2HOME_PATH}/../conf/response.dtd" link="${DISTR_DIR}/daemon/conf"/>
 
     <symlink resource="../webapps/smsc/WEB-INF/classes/log4j.properties" link="${DISTR_DIR}/conf"/>
+    <symlink resource="${SERVICE2HOME_PATH}/lib" link="${DISTR_DIR}/services/INMan"/>
+    <symlink resource="${SERVICE2HOME_PATH}/logs" link="${DISTR_DIR}/services/INMan"/>
+    <symlink resource="${SERVICE2HOME_PATH}/../conf/configuration.dtd" link="${DISTR_DIR}/services/INMan/conf"/>
   </target>
 
   <target name="create_update" depends="create_distr_tree_update, makesmsc, makeweb">
@@ -150,6 +156,8 @@ Targets:
     <copy file="${BUILD_BIN}/db/oci/libdb_oci.so" todir="${DISTR_DIR}/lib"/>
     <copy file="${BUILD_BIN}/system/smsc" todir="${DISTR_DIR}/services/SMSC/bin"/>
     <chmod file="${DISTR_DIR}/services/SMSC/bin/smsc" perm="755"/>
+    <copy file="${BUILD_BIN}/inman/inman" todir="${DISTR_DIR}/services/INMan/bin"/>
+    <chmod file="${DISTR_DIR}/services/INMan/bin/inman" perm="755"/>
     <copy file="${BUILD_BIN}/store/ArchiveDaemon" todir="${DISTR_DIR}/services/ArchiveDaemon/bin"/>
     <chmod file="${DISTR_DIR}/services/ArchiveDaemon/bin/ArchiveDaemon" perm="755"/>
     <copy file="${BUILD_BIN}/admin/daemon/smsc_ssdaemon" todir="${DISTR_DIR}/daemon/bin"/>
@@ -237,6 +245,12 @@ Targets:
     <symlink resource="../services/SMSC/conf/sme.xml" link="${DISTR_DIR}/conf/sme.xml" overwrite="yes"/>
     <symlink resource="../services/SMSC/conf/aliases.xml" link="${DISTR_DIR}/conf/aliases.xml" overwrite="yes"/>
     <symlink resource="../services/SMSC/conf/reschedule.xml" link="${DISTR_DIR}/conf/reschedule.xml" overwrite="yes"/>
+
+    <!-- inman configuration-->
+    <copy todir="${DISTR_DIR}/services/INMan/conf" flatten="yes">
+      <fileset dir="${TEMPL_DIR}/INMan" includes="config.xml"/>
+      <filterset filtersfile="${TEMPLATE_PROPS}"/>
+    </copy>
 
     <!-- archiver configuration-->
     <copy tofile="${DISTR_DIR}/services/ArchiveDaemon/logger.properties" file="${TEMPL_DIR}/logger/archiver.logger" >
