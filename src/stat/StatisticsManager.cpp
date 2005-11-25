@@ -344,52 +344,63 @@ bool StatStorage::createDir(const std::string& dir)
 
 bool StatStorage::createStatDir()
 {
-    const char* loc = location.c_str();
-    int len = location.length();
-    if (!loc || len <= 0) return false;
-    else if (loc[0] == '/' && !loc[1]) return true;
+
+    const char * dir_ = location.c_str();
+
+    int len = strlen(dir_);
+    if(len == 0)
+        return false;
+
+    if(strcmp(dir_, "/") == 0)
+        return true;
 
     ++len;
+
     TmpBuf<char, 512> tmpBuff(len);
-    char* buff = tmpBuff.get();
-    memcpy(buff, loc, len);
-    if (buff[len-2] == '/') {
+    char * buff =tmpBuff.get();
+    memcpy(buff, dir_, len);
+
+    if(buff[len-2] == '/'){
        buff[len-2] = 0;
-       if(len > 2 && (buff[len-3] == '/')) return false;
+       if(len > 2){
+          if(buff[len-3] == '/'){
+              return false;
+           }
+       }
     }
 
-    std::vector<char*> dirs(0);
+    std::vector<std::string> dirs(0);
 
     char* p1 = buff+1;
     int dirlen = 0;
     char* p2 = strchr(p1, '/');
-    while(p2)
-    {
+    int pos = p2 - buff;
+    while(p2){
        int len = p2 - p1;
        dirlen += len + 1;
-       if (len == 0) return false;
+       if(len == 0)
+           return false;
 
        int direclen = dirlen + 1;
        TmpBuf<char, 512> tmpBuff(direclen);
        char * dir = tmpBuff.get();
        memcpy(dir, buff, dirlen);
        dir[dirlen] = 0;
-       dirs.push_back(dir);
+       dirs.push_back(std::string(dir));
 
        p1 = p1 + len + 1;
        p2 = strchr(p1, '/');
     }
-    dirs.push_back(buff);
+    dirs.push_back(std::string(buff));
 
-    std::vector<char*>::iterator it = dirs.begin();
-    for(it = dirs.begin(); it != dirs.end(); it++){
+    for(std::vector<std::string>::iterator it = dirs.begin(); it != dirs.end(); it++){
 
-        DIR* dirp = opendir(*it);
-        if (dirp) {
+        DIR* dirp = opendir( (*it).c_str() );
+        if(dirp){
             closedir(dirp);            
-        } else {
+        }else{
             try{
-                createDir(std::string(*it));
+                createDir(std::string( (*it).c_str() ));
             }catch(...){
                 return false;
             }
@@ -397,6 +408,7 @@ bool StatStorage::createStatDir()
     }
     
     return true;
+
 }
 
 uint64_t toNetworkOrder(uint64_t value)
