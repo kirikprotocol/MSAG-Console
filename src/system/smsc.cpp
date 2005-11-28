@@ -1203,10 +1203,10 @@ void Smsc::shutdown()
   //if(dataSource)delete dataSource;
   smeman.Dump();
   __trace__("smeman dumped");
-  if( icon ) {
+  if( ishs ) {
     __trace__("stopping interconnect");
     agentListener.Stop();
-    delete icon;
+    InterconnectManager::shutdown();
   }
   __trace__("shutdown completed");
 }

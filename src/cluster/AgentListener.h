@@ -28,7 +28,8 @@ public:
 	};
 
     void init(std::string host, int port, pid_t pid_);
-	void Start();
+    void Start();
+    void Stop();
     virtual int Execute();
     
 protected:
@@ -36,7 +37,6 @@ protected:
 	Socket sock;
     bool stop;
     bool stopSmsc;
-    void Stop();
     pid_t pid;
 
     int readCommand(Socket * socket);
