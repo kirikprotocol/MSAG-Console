@@ -5,6 +5,7 @@
 #include "core/network/Multiplexer.hpp"
 #include "core/network/Socket.hpp"
 #include "Performance.h"
+#include "logger/Logger.h"
 #include <string>
 
 namespace scag {
@@ -13,6 +14,7 @@ namespace stat {
 using smsc::core::threads::Thread;
 using smsc::core::network::Socket;
 using smsc::core::network::Multiplexer;
+using smsc::logger::Logger;
 
 class PerfSocketServer : public Thread {
 public:
@@ -24,6 +26,7 @@ public:
     void Stop();
     void Start();
 protected:
+    Logger * logger;
     std::string perfHost;
     int perfGenPort;
     int perfSvcPort;
@@ -40,3 +43,4 @@ protected:
 }
 
 #endif
+

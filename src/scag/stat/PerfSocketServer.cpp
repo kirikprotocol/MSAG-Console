@@ -5,9 +5,10 @@ namespace scag {
 namespace stat {
 
 using smsc::util::Exception;
+using smsc::logger::Logger;
 
 PerfSocketServer::PerfSocketServer()
-    : perfHost(""), perfGenPort(0), perfSvcPort(0), perfScPort(0),
+    : logger(Logger::getInstance("prfsrv")), perfHost(""), perfGenPort(0), perfSvcPort(0), perfScPort(0),
       performanceServer(0), isStopping(true)
 {
 }
@@ -22,11 +23,11 @@ int PerfSocketServer::Execute()
     printf("Execute is starting...\n");
 
     if( genSocket.StartServer() )
-        ;
+        smsc_log_warn(logger, "General statistics socket can't start");
     if( svcSocket.StartServer() )
-        ;
+        smsc_log_warn(logger, "Services statistics socket can't start");;
     if( scSocket.StartServer() )
-        ;
+        smsc_log_warn(logger, "Service center statistics socket can't start");;
 
     printf("Wait for a socket to write...\n");
 
@@ -84,13 +85,13 @@ void PerfSocketServer::InitServer(std::string perfHost_, int perfGenPort_, int p
 
     if(genSocket.InitServer(perfHost.c_str(), perfGenPort, 10))
         throw Exception("Failed to init socket server by host: %s, port: %d", perfHost.c_str(), perfGenPort);
-    printf("Socket server is inited by host: %s, port: %d\n", perfHost.c_str(), perfGenPort);
+    smsc_log_info(logger, "Socket server is inited by host: %s, port: %d\n", perfHost.c_str(), perfGenPort);
     if(svcSocket.InitServer(perfHost.c_str(), perfSvcPort, 10))
         throw Exception("Failed to init socket server by host: %s, port: %d", perfHost.c_str(), perfSvcPort);
-    printf("Socket server is inited by host: %s, port: %d\n", perfHost.c_str(), perfSvcPort);
+    smsc_log_info(logger, "Socket server is inited by host: %s, port: %d\n", perfHost.c_str(), perfSvcPort);
     if(scSocket.InitServer(perfHost.c_str(), perfScPort, 10))
         throw Exception("Failed to init socket server by host: %s, port: %d", perfHost.c_str(), perfScPort);
-    printf("Socket server is inited by host: %s, port: %d\n", perfHost.c_str(), perfScPort);
+    smsc_log_info(logger, "Socket server is inited by host: %s, port: %d\n", perfHost.c_str(), perfScPort);
 
     if(!listener.add(&genSocket))
         throw Exception("Failed to init PerfSocketServer");
