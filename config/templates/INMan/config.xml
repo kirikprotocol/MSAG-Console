@@ -14,19 +14,27 @@ GT           =  SSN
 -->
 <!-- INMan make request to IN node -->
 <config>
-  <param name="ssfAddress" type="string">79139869999</param>
-  <param name="ssn" type="int">147</param>
-  <param name="scfAddress" type="string">79139860005</param>
-  <param name="host" type="string">localhost</param>
-  <param name="port" type="int">3997</param>
+  <param name="ssfAddress" type="string">@inman.ssfAddress@</param>  <!-- InMan address -->
+  <param name="ssn" type="int">146</param>
+  <param name="scfAddress" type="string">@inman.scfAddress@</param>  <!-- IN point address -->
 
-<!-- unknown VLR make request to HLR -->
+  <param name="host" type="string">@inman.host@</param>
+  <param name="port" type="int">@inman.port@</param>     <!-- InMan service port -->
+
+  <param name="billMode" type="string">all</param>       <!-- options: all, ussd, sms -->
+  <param name="cdrMode" type="string">all</param>        <!-- options: none, all, postpaid, prepaid -->
+  <param name="billingDir" type="string">./cdrs</param>  <!-- directory to store CDRs -->
+  <param name="billingInterval" type="int">120</param>   <!-- rolling interval, units: seconds -->
+
+<!-- unknown VLR make request to HLR 
   <param name="vlrAddress" type="string">791398699810</param>
   <param name="vlrSSN" type="int">7</param>
   <param name="inAddress" type="string">79139860005</param>
   <param name="inSSN" type="int">6</param>
   <param name="userSSN" type="int">7</param>
-<!---->
+  <param name="host" type="string">@ussman.host@</param>
+  <param name="port" type="int">@ussman.port@</param>  
+--->
 
 <!-- unknown point make ussd reguest to IN point
   <param name="vlrAddress" type="string">791398699811</param>
