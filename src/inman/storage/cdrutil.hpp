@@ -7,6 +7,8 @@ namespace inman {
 namespace cdr {
 
 struct CDRRecord {
+    CDRRecord();
+
     //encodes CDR to CSV format
     static void csvEncode(const CDRRecord & cdr, std::string & rec);
 
@@ -44,6 +46,8 @@ struct CDRRecord {
                                     //address to which delivery was made.
     uint32_t        _dpLength;      //DATA_LENGTH: message length: in chars for dpText,
                                     //in bytes for dpBinary.
+//private:
+    bool            _finalized;  //all fields are fullfilled;
 };
 
 

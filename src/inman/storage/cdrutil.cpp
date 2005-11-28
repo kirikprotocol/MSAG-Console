@@ -9,6 +9,15 @@ namespace smsc  {
 namespace inman {
 namespace cdr {
 
+CDRRecord::CDRRecord()
+    : _finalized(false), _msgId(0), _partsNum(1)
+    , _cdrType(CDRRecord::dpOrdinary), _mediaType(CDRRecord::dpText)
+    , _bearer(CDRRecord::dpSMS), _dlvrRes(CDRRecord::dpDeliveryFailed)
+{
+    _serviceId = _userMsgRef = _dpLength = 0;
+    _submitTime = _finalTime = 0;
+}
+
 void CDRRecord::csvEncode(const CDRRecord & cdr, std::string & rec)
 {
     rec = "";
