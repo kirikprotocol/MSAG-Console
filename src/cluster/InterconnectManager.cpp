@@ -228,9 +228,9 @@ void InterconnectManager::shutdown()
 {
 
     if (InterconnectManager::instance) {
-      __info__("Terminating Interconnect manager");
+      __trace__("Terminating Interconnect manager");
       delete InterconnectManager::instance;
-      __info__("Interconnect manager terminated");
+      __trace__("Interconnect manager terminated");
     }
 }
 
