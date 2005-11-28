@@ -174,7 +174,7 @@ void Smsc::mainLoop()
 
 void Smsc::generateAlert(SMS* sms)
 {
-  eventqueue.enqueue(SmscCommand::makeAlert(sms));
+  eventqueue.enqueue(SmscCommand::makeAlert(sms,0));
 }
 
 
