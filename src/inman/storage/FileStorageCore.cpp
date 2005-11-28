@@ -276,7 +276,11 @@ void RollingFileStorage::FSFlush(void)
 void RollingFileStorage::FSClose(void)
 {
     MutexGuard guard(_storageLock);
-    FSFlush();
+
+    try { _currFile.Flush(); }
+    catch (FileException& exc) {
+        throw FileSystemException(exc.getErrNo(), exc.what());
+    }
     try { _currFile.Close(); }
     catch (FileException& exc) {
         throw FileSystemException(exc.getErrNo(), exc.what());
