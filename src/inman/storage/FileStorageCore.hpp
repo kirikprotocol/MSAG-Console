@@ -103,7 +103,7 @@ public:
     //Returns true if old storage detected
     bool FSOpen(bool rollOld = true);
     //roll file storage
-    void FSRoll(void);
+    bool FSRoll(void);
     //returns true if storage was rolled (by time interval)
     //setting 'roll' = false forbids rolling at all
     bool FSWrite(const void* data, size_t size, bool roll = true);

@@ -257,14 +257,15 @@ bool RollingFileStorage::FSOpen(bool rollOld/* = true*/)
     return oldStore;
 }
 
-void RollingFileStorage::FSRoll(void)
+bool RollingFileStorage::FSRoll(void)
 {
     MutexGuard guard(_storageLock);
-    mkCurrFile(true);
+    return mkCurrFile(true);
 }
 
 void RollingFileStorage::FSFlush(void)
 {
+    MutexGuard guard(_storageLock);
     try { _currFile.Flush(); }
     catch (FileException& exc) {
         try { _currFile.Close(); } catch (...) {}
@@ -274,6 +275,7 @@ void RollingFileStorage::FSFlush(void)
 
 void RollingFileStorage::FSClose(void)
 {
+    MutexGuard guard(_storageLock);
     FSFlush();
     try { _currFile.Close(); }
     catch (FileException& exc) {
@@ -283,6 +285,7 @@ void RollingFileStorage::FSClose(void)
 
 bool RollingFileStorage::FSWrite(const void* data, size_t size, bool roll/* = true*/)
 {
+    MutexGuard guard(_storageLock);
     bool rolled = false;
     if (roll && _interval) {
         time_t  curTm = time(NULL);
