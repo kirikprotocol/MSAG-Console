@@ -172,6 +172,7 @@ int main(int argc,char* argv[])
     Address src(out[1].c_str());
     Address dst(out[2].c_str());
 
+
     Address ddst;
     if(am.AliasToAddress(dst,ddst))
     {
@@ -212,6 +213,12 @@ int main(int argc,char* argv[])
   */
   try{
     Address src(argv[1]),dst(argv[2]);
+    Address addr2;
+    if(am.AliasToAddress(dst,addr2))
+    {
+      printf("Dealiased: %s->%s\n",dst.toString().c_str(),addr2.toString().c_str());
+    }
+
     int smeIdx=smeman.lookup(argv[3]);
     if(smeIdx==INVALID_SME_INDEX)
     {
