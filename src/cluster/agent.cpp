@@ -13,11 +13,8 @@
 #include <string.h>
 #include <signal.h>
 
-#include "core/threads/ThreadPool.hpp"
-#include "core/threads/ThreadedTask.hpp"
+#include "core/threads/Thread.hpp"
 
-using smsc::core::threads::PooledThread;
-using smsc::core::threads::ThreadedTask;
 using smsc::util::Exception;
 using smsc::util::config::ConfigException;
 using smsc::util::findConfigFile;
@@ -33,20 +30,22 @@ void Sigwait(const sigset_t *set, int *sig, smsc::logger::Logger *logger);
 bool checkConnect(Socket &socket);
 extern "C" void Signal(int sig, void (*desp)(int));
 
-class Sender : public ThreadedTask
+class Sender : public smsc::core::threads::Thread
 {
 public:
     Sender(pid_t pid_, Socket& socket_):
-        pid(pid_), socket(socket_),
+        pid(pid_), isStopping(false),socket(socket_),
         logger(smsc::logger::Logger::getInstance("agent.sndr"))
         {}
-    ~Sender(){ stop();}
-    virtual const char * taskName() {
-        return "Sender";
+    ~Sender(){}
+    virtual int Execute();
+    void Stop()
+    {
+      isStopping=true;
     }
-    virtual int Execute(); 
 protected:
     pid_t pid;
+    bool isStopping;
     Socket& socket;
     smsc::logger::Logger * logger;
 };
@@ -54,7 +53,7 @@ protected:
 int Sender::Execute()
 {
     while (!isStopping)
-    {   
+    {
         sleep(5);
         if( !checkConnect(socket) ){
             smsc_log_info(logger, "Connect failed");
@@ -66,11 +65,11 @@ int Sender::Execute()
 
 void atExit()
 {
-	exit(0);
+  exit(0);
 };
 
 int main(int argc, char **argv)
-{   
+{
     smsc::logger::Logger::Init();
     smsc::util::config::Manager * cfgman;
     smsc::util::config::Manager::init(findConfigFile("config.xml"));
@@ -93,7 +92,7 @@ int main(int argc, char **argv)
 
   try{
 
-      
+
       smsc_log_info(logger, "Agent is reading config..." );
       using smsc::util::config::ConfigView;
       std::auto_ptr<ConfigView> imConfig(new smsc::util::config::ConfigView(*cfgman, "cluster"));
@@ -112,7 +111,7 @@ int main(int argc, char **argv)
           throw Exception("Can't find parameter cluster.agentHost");
       port = imConfig.get()->getInt("agentPort");
       smsc_log_info(logger, "Agent has read conig" );
-      
+
 
   }catch(ConfigException& e)
   {
@@ -164,14 +163,13 @@ int main(int argc, char **argv)
           smsc_log_info(logger, "Send failed. Unknown exception");
       }
 
-      smsc::core::threads::ThreadPool tp;
       Sender sender(getpid(), socket);
-      tp.startTask(&sender);
+      sender.Start();
 
-      
+
       smsc_log_info(logger, "Wait for a signal...");
 
-     for( ;; ){ 
+     for( ;; ){
           Sigwait(&newmask, &signo, logger);
           smsc_log_info(logger, "signo: %d, SIGTERM: %d, SIGUSR1: %d", signo, SIGTERM, SIGUSR1);
           if(signo == SIGTERM){
@@ -198,10 +196,11 @@ int main(int argc, char **argv)
       }
 
 
+      sender.Stop();
+      sender.WaitFor();
 
-          
 
-      
+
 
 
   }catch(...)
@@ -210,8 +209,8 @@ int main(int argc, char **argv)
       return 0;
   }
 
-	////printf("Okkey\n");
-	return 0;
+  ////printf("Okkey\n");
+  return 0;
 }
 
 void send(Socket &socket, uint16_t val)
@@ -219,7 +218,7 @@ void send(Socket &socket, uint16_t val)
     uint8_t buffer[6];
     int size = 6;
 
-    // Signature 
+    // Signature
     buffer[0] = 17;
     buffer[1] = 32;
     buffer[2] = 7;
@@ -249,7 +248,7 @@ bool checkConnect(Socket &socket)
     uint8_t buffer[6];
     int size = 6;
 
-    // Signature 
+    // Signature
     buffer[0] = 17;
     buffer[1] = 32;
     buffer[2] = 7;
@@ -260,7 +259,7 @@ bool checkConnect(Socket &socket)
     uint16_t value = htons(val);
 
     memcpy((void*)(buffer + 4), (const void*)&val, 4);
-    
+
     int toWrite = size; const char* writeBuffer = (const char *)buffer;
     while (toWrite > 0) {
         int write = socket.canWrite(10);
