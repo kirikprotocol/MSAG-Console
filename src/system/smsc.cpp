@@ -469,8 +469,6 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   inManCom=new INManComm(&smeman);
   inManCom->Init(cfg.cfgman->getString("inman.host"),cfg.cfgman->getInt("inman.port"));
   INManComm::scAddr=cfg.cfgman->getString("core.service_center_address");
-  smeman.registerInternallSmeProxy("INMANCOMM",inManCom);
-  tp.startTask(inManCom);
 
   smsc_log_info(log, "Initializing MR cache" );
   mrCache.assignStore(store);
@@ -1047,9 +1045,13 @@ void Smsc::run()
       }
     }
     if(stopFlag)return;
+    // starting inman
+    smeman.registerInternallSmeProxy("INMANCOMM",inManCom);
+    tp.startTask(inManCom);
+    smsc_log_info(log, "IN manager started" );
+    
     distlstman->init();
     smsc::mscman::MscManager::startup(smsc::util::config::Manager::getInstance());
-    smsc_log_info(log, "MSC manager started" );
 
     SpeedMonitor *sm=new SpeedMonitor(eventqueue,&perfDataDisp,&perfSmeDataDisp,this);
     FILE *f=fopen("stats.txt","rt");
