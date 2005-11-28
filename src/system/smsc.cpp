@@ -1201,12 +1201,14 @@ void Smsc::shutdown()
 
   //smsc::store::StoreManager::shutdown();
   //if(dataSource)delete dataSource;
-  __trace__("shutdown completed");
   smeman.Dump();
+  __trace__("smeman dumped");
   if( icon ) {
+    __trace__("stopping interconnect");
     agentListener.Stop();
     delete icon;
   }
+  __trace__("shutdown completed");
 }
 
 void Smsc::reloadRoutes(const SmscConfigs& cfg)
