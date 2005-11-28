@@ -469,7 +469,12 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   inManCom=new INManComm(&smeman);
   inManCom->Init(cfg.cfgman->getString("inman.host"),cfg.cfgman->getInt("inman.port"));
   INManComm::scAddr=cfg.cfgman->getString("core.service_center_address");
-
+  if( !ishs ) {
+    smeman.registerInternallSmeProxy("INMANCOMM",inManCom);
+    tp.startTask(inManCom);
+    smsc_log_info(log, "IN manager started" );
+  }
+  
   smsc_log_info(log, "Initializing MR cache" );
   mrCache.assignStore(store);
   smsc_log_info(log, "MR cache inited" );
@@ -1198,6 +1203,10 @@ void Smsc::shutdown()
   //if(dataSource)delete dataSource;
   __trace__("shutdown completed");
   smeman.Dump();
+  if( icon ) {
+    agentListener.Stop();
+    delete icon;
+  }
 }
 
 void Smsc::reloadRoutes(const SmscConfigs& cfg)
