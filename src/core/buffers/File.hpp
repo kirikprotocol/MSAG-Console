@@ -240,7 +240,7 @@ public:
     offset_type written=0;
 
     do{
-      size_t piece=fileSize-written<8192?fileSize-written:8192;
+      size_t piece=(size_t)(fileSize-written<8192?fileSize-written:8192);
 
       if(write(g,buffer+written,(size_t)piece)!=(ssize_t)piece)
       {
@@ -359,7 +359,12 @@ public:
   {
     if(fd!=-1)
     {
-      Flush();
+      try{
+        Flush();
+      }catch(std::exception& e)
+      {
+        flags&=~FLG_WRBUF;
+      }
       close(fd);
       fd=-1;
       if(isBuffered())
