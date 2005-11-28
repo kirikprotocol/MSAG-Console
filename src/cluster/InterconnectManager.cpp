@@ -228,9 +228,9 @@ void InterconnectManager::shutdown()
 {
 
     if (InterconnectManager::instance) {
-      smsc_log_info(logger, "Terminating Interconnect manager");
+      __info__("Terminating Interconnect manager");
       delete InterconnectManager::instance;
-      smsc_log_info(logger, "Interconnect manager terminated");
+      __info__(logger, "Interconnect manager terminated");
     }
 }
 
