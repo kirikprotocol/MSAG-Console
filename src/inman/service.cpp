@@ -32,7 +32,7 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
     server->addListener(this);
     smsc_log_debug(logger, "InmanSrv: TCP server inited");
 
-    if (_cfg.billMode) {
+    if (_cfg.cdrMode) {
         bfs = new InBillingFileStorage(_cfg.billingDir,
                                        (unsigned long)_cfg.billingInterval, logger);
         assert(bfs);
@@ -104,9 +104,12 @@ void Service::billingFinished(Billing* bill)
     if (it == workers.end())
         smsc_log_error(logger, "InmanSrv: Attempt to free unregistered Billing, id: 0x%X", billId);
     else {
-        if (_cfg.billMode && bill->BillComplete()) {
-            if ((_cfg.billMode != InService_CFG::BILL_POSTPAID)
-                || (bill->getBillingType() == Billing::billPostpaid))
+        if (_cfg.cdrMode && bill->BillComplete()) {
+            if ((_cfg.cdrMode == InService_CFG::CDR_ALL)
+                || ((_cfg.cdrMode == InService_CFG::CDR_PREPAID)
+                    && (bill->getBillingType() == Billing::billPrepaid))
+                || ((_cfg.cdrMode == InService_CFG::CDR_POSTPAID)
+                    && (bill->getBillingType() == Billing::billPostpaid)))
                 bfs->bill(bill->getCDRRecord());
         }
         workers.erase(billId);

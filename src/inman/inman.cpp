@@ -54,7 +54,10 @@ extern "C" static void sighandler( int signal )
   g_pService = 0;
 }
 
-static const char * const _CDRmodes[3] = {"none", "all", "postpaid"};
+//CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2, CDR_PREPAID = 3
+static const char * const _CDRmodes[4] = {"none", "all", "postpaid", "prepaid"};
+//BILL_ALL = 0, BILL_USSD, BILL_SMS
+static const char * const _BILLmodes[3] = {"all", "ussd", "sms"};
 
 struct INBillConfig : public InService_CFG
 {
@@ -65,6 +68,7 @@ public:
         ssf_addr = scf_addr = host = billingDir = NULL;
         ssn = port = billingInterval = 0;
         billMode = InService_CFG::BILL_ALL;
+        cdrMode =  InService_CFG::CDR_ALL;
     }
 
     void read(Manager& manager)
@@ -93,18 +97,32 @@ public:
             throw ConfigException("SMSC host or port missing");
         }
         try {
-            char* cdrs = manager.getString("billMode");
-            if (!strcmp(cdrs, _CDRmodes[InService_CFG::BILL_POSTPAID]))
-                billMode = InService_CFG::BILL_POSTPAID;
-            else if (!strcmp(cdrs, _CDRmodes[InService_CFG::BILL_NONE]))
-                billMode = InService_CFG::BILL_NONE;
-            else if (strcmp(cdrs, _CDRmodes[InService_CFG::BILL_ALL]))
+            char* bmode = manager.getString("billMode");
+            if (!strcmp(bmode, _BILLmodes[InService_CFG::BILL_SMS]))
+                billMode = InService_CFG::BILL_SMS;
+            else if (!strcmp(bmode, _BILLmodes[InService_CFG::BILL_USSD]))
+                billMode = InService_CFG::BILL_USSD;
+            else if (strcmp(bmode, _BILLmodes[InService_CFG::BILL_ALL]))
                 throw ConfigException("billMode unknown or missing");
-            smsc_log_info(inapLogger, "billMode: %s [%d]", cdrs, billMode);
+            smsc_log_info(inapLogger, "billMode: %s [%d]", bmode, billMode);
         } catch (ConfigException& exc) {
             throw ConfigException("billMode unknown or missing");
         }
-        if (billMode != InService_CFG::BILL_NONE) {
+        try {
+            char* cdrs = manager.getString("cdrMode");
+            if (!strcmp(cdrs, _CDRmodes[InService_CFG::CDR_PREPAID]))
+                cdrMode = InService_CFG::CDR_PREPAID;
+            else if (!strcmp(cdrs, _CDRmodes[InService_CFG::CDR_POSTPAID]))
+                cdrMode = InService_CFG::CDR_POSTPAID;
+            else if (!strcmp(cdrs, _CDRmodes[InService_CFG::CDR_NONE]))
+                cdrMode = InService_CFG::CDR_NONE;
+            else if (strcmp(cdrs, _CDRmodes[InService_CFG::CDR_ALL]))
+                throw ConfigException("cdrMode unknown or missing");
+            smsc_log_info(inapLogger, "cdrMode: %s [%d]", cdrs, cdrMode);
+        } catch (ConfigException& exc) {
+            throw ConfigException("cdrMode unknown or missing");
+        }
+        if (cdrMode != InService_CFG::CDR_NONE) {
             try {
                 billingDir = manager.getString("billingDir");
                 billingInterval = manager.getInt("billingInterval");
