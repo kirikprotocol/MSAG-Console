@@ -91,7 +91,7 @@ protected:
     long            _interval;
     
 public:
-    
+    //'rollInterval' == 0 forbids rolling by timer
     RollingFileStorage(const std::string & location, const char *lastExt,
                        const char *storageExt, unsigned long rollInterval, //in seconds
                        const RollingFileStorageParms * parms = NULL);
@@ -112,6 +112,7 @@ public:
     void FSClose(void);
     //returns number of files in storage, appends to 'files' their names
     int  getStorageFiles(FSEntriesArray& files);
+    time_t getLastRollingTime(void) const;
 
 protected:
     //creates and initializes current storage file, returns true on rolling

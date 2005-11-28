@@ -305,6 +305,11 @@ int  RollingFileStorage::getStorageFiles(FSEntriesArray& files)
     FSEntry::findFiles(_location, _Ext.c_str(), files);
     return files.Count();
 }
+
+time_t RollingFileStorage::getLastRollingTime(void) const
+{
+    return _lastRollTime;
+}
 /* -------------------------------------------------------------------------- *
  * PROTECTED:
  * -------------------------------------------------------------------------- */
@@ -317,7 +322,10 @@ bool RollingFileStorage::mkCurrFile(bool roll/* = true*/)
         if (fpos <= _headerLen)
             return false; // file is empty, skip rolling 
         //roll and close file
-        _currFile.Close();
+        try { _currFile.Close(); }
+        catch (FileException& exc) {
+            throw FileSystemException(exc.getErrNo(), exc.what());
+        }
         FSEntry::rollFileExt(_location, _currFileName, _Ext.c_str());
     }
 
@@ -341,7 +349,7 @@ bool RollingFileStorage::mkCurrFile(bool roll/* = true*/)
     filePath += newFileName;
     
     if (File::Exists(filePath.c_str()))
-        throw FileSystemException(-1, "Failed to create new file '%s'. File already exists!",
+        throw FileSystemException(EEXIST, "Failed to create new file '%s'. File already exists!",
                                    filePath.c_str());
 
     try { _currFile.RWCreate(filePath.c_str()); } 
@@ -353,10 +361,18 @@ bool RollingFileStorage::mkCurrFile(bool roll/* = true*/)
     _lastRollTime = curTm;
 
     //write header
-    if (_Parms.fileHeaderText)
-        FSWrite(_Parms.fileHeaderText, strlen(_Parms.fileHeaderText), false);
-    if (_Parms.printHeaderVersion)
-        FSWrite(&_Parms.headerVersion, sizeof(_Parms.headerVersion), false);
+    if (_Parms.fileHeaderText) {
+        try { _currFile.Write(_Parms.fileHeaderText, strlen(_Parms.fileHeaderText)); }
+        catch (FileException& exc) {
+            throw FileSystemException(exc.getErrNo(), exc.what());
+        }
+    }
+    if (_Parms.printHeaderVersion) {
+        try { _currFile.Write(&_Parms.headerVersion, sizeof(_Parms.headerVersion)); }
+        catch (FileException& exc) {
+            throw FileSystemException(exc.getErrNo(), exc.what());
+        }
+    }
 
     return true;
 }
