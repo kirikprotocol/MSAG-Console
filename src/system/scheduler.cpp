@@ -227,6 +227,7 @@ bool LocalFileStore::StartRoll(const IdSeqPairList& argSnap)
   MutexGuard mg1(mtx);
   MutexGuard mg2(mon);
   if(rolling)return false;
+  info1(Scheduler::log,"Preparing rolling");
   rolling=true;
   snap=argSnap;
   string pfn=primaryFile.getFileName();
@@ -243,6 +244,7 @@ bool LocalFileStore::StartRoll(const IdSeqPairList& argSnap)
   InitPrimaryFile(pfn);
   lastRollTime=time(NULL);
   mon.notify();
+  info1(Scheduler::log,"Rolling prepared");
   return true;
 }
 
@@ -282,7 +284,7 @@ int LocalFileStore::Execute()
     mon.wait();
     if(running && rolling)
     {
-      __trace__("rolling strated");
+      info1(Scheduler::log,"Rolling strated");
       mon.Unlock();
       bool ok=true;
       try{
@@ -293,7 +295,7 @@ int LocalFileStore::Execute()
         }
       }catch(exception& e)
       {
-        __warning2__("Exception during rolling:%s\n",e.what());
+        warn2(Scheduler::log,"Exception during rolling:%s\n",e.what());
         ok=false;
       }
       mon.Lock();
@@ -303,12 +305,12 @@ int LocalFileStore::Execute()
       rolling=false;
       if(ok)
       {
-        __trace__("rolling finished ok");
+        info1(Scheduler::log,"Rolling finished ok");
         File::Unlink(rolFile.c_str());
       }else
       {
         File::Rename(rolFile.c_str(),(rolFile+".bad").c_str());
-        __trace__("rolling finished error");
+        warn1(Scheduler::log,"Rolling finished with error");
       }
     }
   }
