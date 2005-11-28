@@ -1032,7 +1032,6 @@ struct SMS
 
     dialogId=sms.dialogId;
 
-
     strncpy(eServiceType, sms.eServiceType, sizeof(eServiceType));
     strncpy(routeId, sms.routeId, sizeof(routeId));
     strncpy(srcSmeId, sms.srcSmeId, sizeof(srcSmeId));
