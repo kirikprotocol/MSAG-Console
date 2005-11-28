@@ -243,7 +243,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
 
       char * mode = imConfig.get()->getString("mode");
 
-      if(strcmp(mode, "hs") == 0){
+      if(strcmp(mode, "hs") == 0 || strcmp(mode, "ha") == 0){
 
           ishs = true;
 
@@ -465,6 +465,13 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
   //tp.startTask(scheduler);
 
   smsc_log_info(log, "Scheduler initialized" );
+
+  inManCom=new INManComm(&smeman);
+  inManCom->Init(cfg.cfgman->getString("inman.host"),cfg.cfgman->getInt("inman.port"));
+  INManComm::scAddr=cfg.cfgman->getString("core.service_center_address");
+  smeman.registerInternallSmeProxy("INMANCOMM",inManCom);
+  tp.startTask(inManCom);
+
   smsc_log_info(log, "Initializing MR cache" );
   mrCache.assignStore(store);
   smsc_log_info(log, "MR cache inited" );
@@ -525,6 +532,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     delete params;
   }*/
 
+  if(!ishs)
   {
     SpeedMonitor *sm=new SpeedMonitor(eventqueue,&perfDataDisp,&perfSmeDataDisp,this);
     FILE *f=fopen("stats.txt","rt");
@@ -571,8 +579,11 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     std::auto_ptr<ConfigView> msConfig(new smsc::util::config::ConfigView(*cfg.cfgman, "MessageStore"));
     const char* statisticsLocation = msConfig.get()->getString("statisticsDir");
     statMan=new smsc::stat::StatisticsManager(statisticsLocation);
-    tp2.startTask(statMan);
-    smsc_log_info(log, "Statistics manager started" );
+    if(!ishs)
+    {
+      tp2.startTask(statMan);
+      smsc_log_info(log, "Statistics manager started" );
+    }
   }
 
   aclmgr = AclAbstractMgr::Create2();
@@ -730,7 +741,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     smeman.registerInternallSmeProxy(
       cfg.cfgman->getString("core.systemId"),
       smscsme);
-    smsc_log_info(log, "SMSC sme started" );
+    smsc_log_info(log, "SMSC sme registered" );
   }catch(exception& e)
   {
     smsc_log_warn(log, "Failed to register smscsme");
@@ -796,6 +807,8 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     tp2.startTask(perfSrv);
     smsc_log_info(log, "SmePerformance server started" );
   }
+
+
 
   {
     Address addr(cfg.cfgman->getString("core.service_center_address"));
@@ -874,6 +887,26 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     tm now;
     localtime_r(&t,&now);
     lastUpdateHour=now.tm_hour;
+  }
+
+  try{
+    std::string v=cfg.cfgman->getString("inman.chargingPolicy.peer2peer");
+    if(v=="submit")p2pChargePolicy=chargeOnSubmit;
+    else if(v=="deliver")p2pChargePolicy=chargeOnDelivery;
+    else
+    {
+      smsc_log_warn(log,"Unknown value of config parameter - chargingPolicy.peer2per:'%s'",v.c_str());
+    }
+    v=cfg.cfgman->getString("inman.chargingPolicy.other");
+    if(v=="submit")otherChargePolicy=chargeOnSubmit;
+    else if(v=="deliver")otherChargePolicy=chargeOnDelivery;
+    else
+    {
+      smsc_log_warn(log,"Unknown value of config parameter - chargingPolicy.other:'%s'",v.c_str());
+    }
+  }catch(std::exception& e)
+  {
+    smsc_log_warn(log,"Exception during charging policy initialization:%s",e.what());
   }
 
 
@@ -1017,6 +1050,31 @@ void Smsc::run()
     distlstman->init();
     smsc::mscman::MscManager::startup(smsc::util::config::Manager::getInstance());
     smsc_log_info(log, "MSC manager started" );
+
+    SpeedMonitor *sm=new SpeedMonitor(eventqueue,&perfDataDisp,&perfSmeDataDisp,this);
+    FILE *f=fopen("stats.txt","rt");
+    if(f)
+    {
+      time_t ut;
+      fscanf(f,"%d %lld %lld %lld %lld %lld %lld",
+        &ut,
+        &submitOkCounter,
+        &submitErrCounter,
+        &deliverOkCounter,
+        &deliverErrTempCounter,
+        &deliverErrPermCounter,
+        &rescheduleCounter
+      );
+      startTime=time(NULL)-ut;
+      sm->setStartTime(startTime);
+      fclose(f);
+      remove("stats.txt");
+    }
+    tp.startTask(sm);
+    smsc_log_info(log, "Speedmonitor started" );
+
+    tp2.startTask(statMan);
+    smsc_log_info(log, "Statistics manager started" );
   }
 
 

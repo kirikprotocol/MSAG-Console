@@ -112,11 +112,13 @@ protected:
 
   StateType submit(Tuple& t);
   StateType forward(Tuple& t);
+  StateType forwardChargeResp(Tuple& t);
   StateType deliveryResp(Tuple& t);
   StateType alert(Tuple& t);
   StateType replace(Tuple& t);
   StateType query(Tuple& t);
   StateType cancel(Tuple& t);
+  StateType submitChargeResp(Tuple& t);
 
   void formatDeliver(const FormatData&,std::string& out);
   void formatFailed(const FormatData&,std::string& out);

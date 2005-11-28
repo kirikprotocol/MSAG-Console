@@ -24,6 +24,7 @@
 #include <string>
 #include <vector>
 #include "system/status.h"
+#include "router/route_types.h"
 
 namespace smsc{
 namespace smeman{
@@ -71,7 +72,9 @@ enum CommandId
   ALERT_NOTIFICATION,     //24
   SMEALERT,               //25
   KILLMRCACHEITEM,        //26
-  KILLEXPIREDTRANSACTIONS //27
+  KILLEXPIREDTRANSACTIONS,//27
+  INSMSCHARGERESPONSE,    //28
+  INFWDSMSCHARGERESPONSE  //29
 };
 
 enum CommandStatus{
@@ -143,6 +146,7 @@ private:
   int delay;
   SMS* sms;
   bool diverted;
+  int inDlgId;
 public:
 
   bool haveDpf;
@@ -214,8 +218,18 @@ public:
     diverted=val;
   }
 
+
+  void set_inDlgId(int dlgId)
+  {
+    inDlgId=dlgId;
+  }
+  int get_inDlgId()const
+  {
+    return inDlgId;
+  }
+
   SmsResp() : messageId(0), status(0),dataSm(false),delay(-1),sms(0),diverted(false),
-    haveDpf(false),dpfResult(0) {};
+    haveDpf(false),dpfResult(0),inDlgId(0) {};
   ~SmsResp()
   {
     if ( messageId ) delete messageId;
@@ -438,6 +452,54 @@ struct KillMrCacheItemCmd{
 
 class SmeProxy;
 
+struct INSmsChargeResponse{
+  SMSId id;
+  SMS sms;
+  int result;
+  struct SubmitContext{
+    SmeProxy* srcProxy;
+    SmeProxy* dstProxy;
+    bool allowCreateSms;
+    bool needToSendResp;
+    int dialogId;
+    int dest_proxy_index;
+    bool isForwardTo;
+    bool diverted;
+    bool routeHide;
+    Address dst;
+    bool transit;
+    smsc::router::ReplyPath replyPath;
+    int priority;
+
+    int inDlgId;
+  };
+
+  SubmitContext cntx;
+};
+
+struct INFwdSmsChargeResponse{
+  SMSId id;
+  SMS sms;
+  int result;
+  struct ForwardContext{
+    bool allowDivert;
+    bool reschedulingForward;
+    int inDlgId;
+  };
+  ForwardContext cntx;
+};
+
+
+struct AlertData{
+  SMS* sms;
+  int inDlgId;
+  AlertData(SMS* argSms,int argInDlgId):sms(argSms),inDlgId(argInDlgId){}
+  ~AlertData()
+  {
+    if(sms)delete sms;
+  }
+};
+
 struct _SmscCommand
 {
   mutable int ref_count;
@@ -457,7 +519,7 @@ struct _SmscCommand
     case DELIVERY:
     case SUBMIT:
     case ALERT:
-      if(dta)delete ( (SMS*)dta );
+      if(dta)delete ( (AlertData*)dta );
       break;
 
     case SUBMIT_MULTI_SM:
@@ -505,6 +567,12 @@ struct _SmscCommand
     case KILLMRCACHEITEM:
       if(dta)delete (KillMrCacheItemCmd*)dta;
       break;
+    case INSMSCHARGERESPONSE:
+      if(dta)delete (INSmsChargeResponse*)dta;
+      break;
+    case INFWDSMSCHARGERESPONSE:
+      if(dta)delete (INFwdSmsChargeResponse*)dta;
+      break;
     case UNKNOWN:
     case GENERIC_NACK:
     case UNBIND_RESP:
@@ -527,6 +595,7 @@ struct _SmscCommand
   CommandId get_commandId() const { return cmdid; }
   SMS* get_sms() const { return (SMS*)dta; }
   SMS* get_sms_and_forget() { SMS* s = (SMS*)dta; dta = 0; return s;}
+  const AlertData& get_alertData(){return *(AlertData*)dta;}
   const ReplaceSm& get_replaceSm(){return *(ReplaceSm*)dta;}
   const QuerySm& get_querySm(){return *(QuerySm*)dta;}
   const CancelSm& get_cancelSm(){return *(CancelSm*)dta;}
@@ -567,6 +636,15 @@ struct _SmscCommand
   int get_mode()
   {
     return (int)dta;
+  }
+
+  INSmsChargeResponse* get_chargeSmsResp()
+  {
+    return (INSmsChargeResponse*)dta;
+  }
+  INFwdSmsChargeResponse* get_fwdChargeSmsResp()
+  {
+    return (INFwdSmsChargeResponse*)dta;
   }
 };
 
@@ -730,14 +808,14 @@ public:
     return cmd;
   }
 
-  static SmscCommand makeAlert(SMS *sms)
+  static SmscCommand makeAlert(SMS *sms,int inDlgId)
   {
     SmscCommand cmd;
     cmd.cmd = new _SmscCommand;
     _SmscCommand& _cmd = *cmd.cmd;
     _cmd.ref_count = 1;
     _cmd.cmdid = ALERT;
-    _cmd.dta = sms;
+    _cmd.dta = new AlertData(sms,inDlgId);
     _cmd.dialogId = 0;
     return cmd;
   }
@@ -971,6 +1049,40 @@ public:
     _cmd.ref_count=1;
     _cmd.cmdid=KILLEXPIREDTRANSACTIONS;
     _cmd.dta=0;
+    _cmd.dialogId=0;
+    return cmd;
+  }
+
+  static SmscCommand makeINSmsChargeResponse(SMSId id,const SMS& sms,const INSmsChargeResponse::SubmitContext& cntx,int result)
+  {
+    SmscCommand cmd;
+    cmd.cmd=new _SmscCommand;
+    _SmscCommand& _cmd=*cmd.cmd;
+    _cmd.ref_count=1;
+    _cmd.cmdid=INSMSCHARGERESPONSE;
+    INSmsChargeResponse* resp=new INSmsChargeResponse;
+    resp->id=id;
+    resp->sms=sms;
+    resp->cntx=cntx;
+    resp->result=result;
+    _cmd.dta=resp;
+    _cmd.dialogId=0;
+    return cmd;
+  }
+
+  static SmscCommand makeINFwdSmsChargeResponse(SMSId id,const SMS& sms,const INFwdSmsChargeResponse::ForwardContext& context,int result)
+  {
+    SmscCommand cmd;
+    cmd.cmd=new _SmscCommand;
+    _SmscCommand& _cmd=*cmd.cmd;
+    _cmd.ref_count=1;
+    _cmd.cmdid=INFWDSMSCHARGERESPONSE;
+    INFwdSmsChargeResponse* resp=new INFwdSmsChargeResponse;
+    resp->id=id;
+    resp->sms=sms;
+    resp->cntx=context;
+    resp->result=result;
+    _cmd.dta=resp;
     _cmd.dialogId=0;
     return cmd;
   }

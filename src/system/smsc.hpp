@@ -44,6 +44,8 @@
 
 #include "util/crc32.h"
 
+#include "INManComm.hpp"
+
 namespace smsc{
 namespace system{
 
@@ -146,6 +148,8 @@ public:
     maxTotalCounter=0;
     maxStatCounter=0;
     mapProxy=0;
+    p2pChargePolicy=chargeOnSubmit;
+    otherChargePolicy=chargeOnDelivery;
   };
   ~Smsc();
   void init(const SmscConfigs& cfg, const char * node);
@@ -404,7 +408,7 @@ public:
     sscanf(lic["LicenseExpirationDate"].c_str(),"%d-%d-%d",&y,&m,&d);
     struct tm t={0,};
     t.tm_year=y-1900;
-    t.tm_mon=m;
+    t.tm_mon=m-1;
     t.tm_mday=d;
     license.expdate=mktime(&t);
     long hostid;
@@ -468,12 +472,34 @@ public:
     if(cntVal>maxStatCounter)maxStatCounter=cntVal;
   }
 
+  enum{
+    chargeOnSubmit,chargeOnDelivery
+  };
+
+  int p2pChargePolicy;
+  int otherChargePolicy;
+
+  void ChargeSms(SMSId id,const SMS& sms,INSmsChargeResponse::SubmitContext& ctx)
+  {
+    inManCom->ChargeSms(id,sms,ctx);
+  }
+
+  void ChargeSms(SMSId id,const SMS& sms,INFwdSmsChargeResponse::ForwardContext& ctx)
+  {
+    inManCom->ChargeSms(id,sms,ctx);
+  }
+
+  void ReportDelivery(int dlgId,const SMS& sms,bool final)
+  {
+    inManCom->Report(dlgId,sms,final);
+  }
+
 
 protected:
 
   void processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTaskVector& ftv);
 
-  void generateAlert(SMSId id,SMS* sms);
+  void generateAlert(SMSId id,SMS* sms,int);
 
   smsc::system::smppio::SmppSocketsManager ssockman;
   smsc::smeman::SmeManager smeman;
@@ -598,6 +624,9 @@ protected:
   friend class StatusSme;
 
   EventMonitor idleMon;
+
+  INManComm* inManCom;
+
 
 };
 

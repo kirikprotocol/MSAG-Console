@@ -27,6 +27,8 @@ namespace StateTypeValue
 
   const int DELIVERING_STATE = 0x1001;
 
+  const int CHARGING_STATE   = 0x1002;
+  const int CHARGINGFWD_STATE= 0x1003;
 }
 
 using namespace StateTypeValue;
@@ -72,6 +74,14 @@ public:
           default:return false;
         }
       }
+      case CHARGING_STATE:
+      {
+        return cmd->cmdid==INSMSCHARGERESPONSE;
+      }
+      case CHARGINGFWD_STATE:
+      {
+        return cmd->cmdid==INFWDSMSCHARGERESPONSE;
+      }
     }
     return true;
   }
@@ -81,7 +91,7 @@ public:
   }
   static bool stateIsFinal(StateType state)
   {
-    return state!=DELIVERING_STATE;
+    return state!=DELIVERING_STATE && state!=CHARGING_STATE && state!=CHARGINGFWD_STATE;
   }
   static bool stateIsSuperFinal(StateType state)
   {

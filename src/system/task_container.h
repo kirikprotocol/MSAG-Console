@@ -28,6 +28,8 @@ struct Task
   bool diverted;
   smsc::sms::SMSId messageId;
   smsc::sms::SMS  *sms;
+  int inDlgId;
+
   Task* next;
   Task* timeout_prev;
   Task* timeout_next;
@@ -36,7 +38,7 @@ struct Task
 
 
   Task(uint32_t proxy = 0,uint32_t sequence = 0,smsc::sms::SMS  *s=0):
-    proxy_id(proxy),sequenceNumber(sequence),sms(s),diverted(false) {}
+    proxy_id(proxy),sequenceNumber(sequence),sms(s),diverted(false),inDlgId(0) {}
   ~Task()
   {
   }
@@ -198,6 +200,7 @@ public:
           //out.push(*_res);
           it->cmd->get_resp()->set_sms(_res->sms);
           it->cmd->get_resp()->set_diverted(_res->diverted);
+          it->cmd->get_resp()->set_inDlgId(_res->inDlgId);
           it->cmd->set_priority(31);
           it->id=_res->messageId;
           it->found=true;

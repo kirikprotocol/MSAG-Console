@@ -152,7 +152,7 @@ void Smsc::mainLoop()
           __trace2__("enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
             task.sequenceNumber,task.proxy_id);
           //eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
-          generateAlert(id,task.sms);
+          generateAlert(id,task.sms,task.inDlgId);
         }
         while(mergeCacheTimeouts.Count()>0 && mergeCacheTimeouts.Front().first<=now)
         {
@@ -307,7 +307,7 @@ void Smsc::mainLoop()
             SMSId id = task.messageId;
             __trace2__("enqueue timeout Alert: dialogId=%d, proxyUniqueId=%d",
               task.sequenceNumber,task.proxy_id);
-            generateAlert(id,task.sms);
+            generateAlert(id,task.sms,task.inDlgId);
             //eventqueue.enqueue(id,SmscCommand::makeAlert(task.sms));
           }
         }
@@ -359,9 +359,9 @@ void Smsc::mainLoop()
 }
 
 
-void Smsc::generateAlert(SMSId id,SMS* sms)
+void Smsc::generateAlert(SMSId id,SMS* sms,int inDlgId)
 {
-  eventqueue.enqueue(id,SmscCommand::makeAlert(sms));
+  eventqueue.enqueue(id,SmscCommand::makeAlert(sms,inDlgId));
 }
 
 
@@ -601,6 +601,16 @@ void Smsc::processCommand(SmscCommand& cmd,EventQueue::EnqueueVector& ev,FindTas
     {
       scheduler->putCommand(cmd);
       return;
+    }
+    case __CMD__(INSMSCHARGERESPONSE):
+    {
+      id=cmd->get_chargeSmsResp()->id;
+      break;
+    }
+    case __CMD__(INFWDSMSCHARGERESPONSE):
+    {
+      id=cmd->get_fwdChargeSmsResp()->id;
+      break;
     }
     case __CMD__(KILLMRCACHEITEM):
     {

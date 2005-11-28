@@ -180,7 +180,7 @@
     <param name="preCreateSize" type="int">10000</param>
     <param name="storeDir" type="string">store/acl</param>
   </section>
-  
+
   <section name="cluster">
     <param name="mode" type="string">hs</param>
     <param name="agentHost" type="string">sunfire</param>
@@ -189,6 +189,15 @@
     <param name="host2" type="string">sunfire</param>
     <param name="port1" type="int">25850</param>
     <param name="port2" type="int">25851</param>
+  </section>
+
+  <section name="inman">
+    <section name="chargingPolicy">
+      <param name="peer2peer" type="string">submit</param>
+      <param name="other" type="string">deliver</param>
+    </section>
+    <param name="host" type="string">localhost</param>
+    <param name="port" type="int">9021</param>
   </section>
 
 </config>
