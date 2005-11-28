@@ -230,7 +230,7 @@ void InterconnectManager::shutdown()
     if (InterconnectManager::instance) {
       __info__("Terminating Interconnect manager");
       delete InterconnectManager::instance;
-      __info__(logger, "Interconnect manager terminated");
+      __info__("Interconnect manager terminated");
     }
 }
 
