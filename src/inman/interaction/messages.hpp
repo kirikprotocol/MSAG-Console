@@ -183,8 +183,8 @@ private:
 class DeliverySmsResult : public InmanCommand
 {
 public:
-    DeliverySmsResult();
-    DeliverySmsResult(DeliverySmsResult_t);
+    DeliverySmsResult();    //constructor for successfull delivery 
+    DeliverySmsResult(DeliverySmsResult_t, bool finalAttemp = true);
     virtual ~DeliverySmsResult();
 
     void setResultValue(DeliverySmsResult_t res);
@@ -206,6 +206,8 @@ protected:
 
 private:
     DeliverySmsResult_t value;
+    bool          final;    //successfull delivery or last delivery attempt,
+                            //enforces CDR generation
     //optional data for CDR generation (on successfull delivery)
     std::string   destImsi;
     std::string   destMSC;

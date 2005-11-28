@@ -145,6 +145,20 @@ inline ObjectBuffer& operator>>(ObjectBuffer& buf, unsigned char& val)
     return buf;
 }
 
+inline ObjectBuffer& operator<<(ObjectBuffer& buf, const bool& val)
+{
+    unsigned char nval = (unsigned char)val;
+    buf.Append((char*)&nval, 1);
+    return buf;
+}
+inline ObjectBuffer& operator>>(ObjectBuffer& buf, bool& val)
+{
+    unsigned char nval;
+    buf.Read((char*)&nval, 1);
+    val = nval ? true : false;
+    return buf;
+}
+
 
 
 class SerializableObject
@@ -180,8 +194,9 @@ class ObjectPipe
     public:
         typedef enum { frmStraightData = 0, frmLengthPrefixed = 1 } PipeFormat;
 
-        ObjectPipe(Socket* sock, SerializerITF * serializer);
-        ObjectPipe(Socket* sock, SerializerITF * serializer, PipeFormat pipe_format);
+        ObjectPipe(Socket* sock, SerializerITF * serializer, Logger* uselog = NULL);
+        ObjectPipe(Socket* sock, SerializerITF * serializer,
+                   PipeFormat pipe_format, Logger* uselog = NULL);
         ~ObjectPipe();
         void    setPipeFormat(PipeFormat frm);
         void    setLogger(Logger* newlog);

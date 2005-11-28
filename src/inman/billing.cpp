@@ -95,7 +95,7 @@ void Billing::abortBilling(unsigned int errCode)
 //retuns false if CDR was not complete
 bool Billing::BillComplete(void) const
 {
-    return (state == Billing::bilComplete) ? true : false;
+    return ((state == Billing::bilComplete) && cdr._finalized) ? true : false;
 }
 
 const CDRRecord & Billing::getCDRRecord(void) const

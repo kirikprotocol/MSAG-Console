@@ -392,12 +392,16 @@ void ChargeSmsResult::handle(SmscHandler* handler)
 //-----------------------------------------------
 
 
-DeliverySmsResult::DeliverySmsResult() : value( DELIVERY_SUCCESSED )
+DeliverySmsResult::DeliverySmsResult()
+    : value(DELIVERY_SUCCESSED)
+    , final(true)
 {
     setObjectId((unsigned short)DELIVERY_SMS_RESULT_TAG);
 }
 
-DeliverySmsResult::DeliverySmsResult(DeliverySmsResult_t val) : value( val )
+DeliverySmsResult::DeliverySmsResult(DeliverySmsResult_t val, bool finalAttemp /*= true*/)
+    : value(val)
+    , final(finalAttemp)
 {
     setObjectId((unsigned short)DELIVERY_SMS_RESULT_TAG);
 }
@@ -438,6 +442,7 @@ void DeliverySmsResult::load(ObjectBuffer& in)
     unsigned short v;
     in >> v;
     value = static_cast<DeliverySmsResult_t>(v);
+    in >> final;
     //optional data for CDR generation (on successfull delivery)
     if (!value) {
         in >> destImsi;
@@ -450,6 +455,7 @@ void DeliverySmsResult::load(ObjectBuffer& in)
 void DeliverySmsResult::save(ObjectBuffer& out)
 {
     out << (unsigned short)value;
+    out << final;
     //optional data for CDR generation (on successfull delivery)
     if (!value) {
         out << destImsi;
@@ -467,6 +473,7 @@ void DeliverySmsResult::export2CDR(CDRRecord & cdr) const
         cdr._dstSMEid = destSMEid;
         cdr._finalTime = finalTimeTZ;
     }
+    cdr._finalized = final;
 }
 
 void DeliverySmsResult::handle(InmanHandler* handler)

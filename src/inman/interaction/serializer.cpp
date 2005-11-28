@@ -15,22 +15,27 @@ namespace interaction  {
 /* ************************************************************************** *
  * class ObjectPipe implementation:
  * ************************************************************************** */
-ObjectPipe::ObjectPipe(Socket* sock, SerializerITF * serializer, PipeFormat pipe_format)
+ObjectPipe::ObjectPipe(Socket* sock, SerializerITF * serializer,
+                       PipeFormat pipe_format, Logger* uselog/* = NULL*/)
         : socket( sock )
         , _objSerializer(serializer)
         , _format(pipe_format)
-        , logger( Logger::getInstance("smsc.inman.ObjectPipe") )
+        , logger(uselog)
 {
+    if (!logger)
+        logger = Logger::getInstance("smsc.inman.ObjectPipe");
     assert(serializer);
     assert(socket);
 }
 
-ObjectPipe::ObjectPipe(Socket* sock, SerializerITF * serializer)
+ObjectPipe::ObjectPipe(Socket* sock, SerializerITF * serializer, Logger* uselog/* = NULL*/)
         : socket( sock )
         , _objSerializer(serializer)
         , _format(ObjectPipe::frmStraightData)
-        , logger( Logger::getInstance("smsc.inman.ObjectPipe") )
+        , logger(uselog)
 {
+    if (!logger)
+        logger = Logger::getInstance("smsc.inman.ObjectPipe");
     assert(serializer);
     assert(socket);
 }
