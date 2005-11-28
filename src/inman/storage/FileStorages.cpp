@@ -11,7 +11,7 @@ namespace filestore {
  * ************************************************************************** */
 InRollingFileStorage::InRollingFileStorage(const std::string & location,
                         const char *lastExt, const char *storageExt,
-                        unsigned long rollInterval,
+                        unsigned long rollInterval/* = 0*/,
                         const RollingFileStorageParms * parms/* = NULL*/, Logger * uselog/* = NULL*/)
     : RollingFileStorage(location, lastExt, storageExt, rollInterval, parms)
 {
@@ -83,6 +83,57 @@ int  InRollingFileStorage::getRFStorageFiles(FSEntriesArray& files)
     return res;
 }
 
+time_t InRollingFileStorage::getLastRollingTime(void) const
+{
+    return _lastRollTime;
+}
+
+/* ************************************************************************** *
+ * class InFileStorageRoller implementation:
+ * ************************************************************************** */
+InFileStorageRoller::InFileStorageRoller(InRollingFileStorage * rfs, unsigned long rollInterval)
+    : _rFS(rfs), _running(false), _interval(rollInterval)
+{
+}
+
+InFileStorageRoller::~InFileStorageRoller()
+{ 
+    if (_running)
+        Stop();
+    WaitFor();
+}
+
+void InFileStorageRoller::Stop(void)
+{
+    _mutex.Lock();
+    _running = false;
+    _mutex.Unlock();
+    _mutex.notify();
+}
+
+int InFileStorageRoller::Execute(void)
+{
+    time_t          nextTm;
+    int             sleepSecs;
+
+    _running = true;
+    while(_running) {
+        _mutex.Unlock();
+        if (time(NULL) >= (nextTm = (_rFS->getLastRollingTime() + _interval))) {
+            _rFS->RFSRoll();
+            nextTm = _rFS->getLastRollingTime() + _interval;
+        }
+        if ((sleepSecs = (int)(nextTm - time(NULL))) > 0)
+            //NOTE: sleepSecs should be converted to millisecs, so check
+            //for overflow. Consider sleepSecs*1000 ~~ sleepSecs*1024,
+            //hence limit is 2**22 (= 4194304 = 0x400000)
+            _mutex.wait(sleepSecs > 0x400000 ? 0x400000 : sleepSecs*1000);
+        else
+            _mutex.Lock();
+    }
+    return 0;
+}
+
 /* ************************************************************************** *
  * class InBillingFileStorage implementation:
  * ************************************************************************** */
@@ -98,12 +149,12 @@ static const RollingFileStorageParms _smsc_BILLING_STORAGE_parms = {
 static const char* _smsc_LAST_BILLING_FILE_EXTENSION = "lst";
 static const char* _smsc_BILLING_FILE_EXTENSION = "csv";
 
-InBillingFileStorage::InBillingFileStorage(const std::string & location, unsigned long rollInterval,
-                                           Logger * uselog /* = NULL */)
+InBillingFileStorage::InBillingFileStorage(const std::string & location,
+                                            unsigned long rollInterval/* = 0*/,
+                                            Logger * uselog /* = NULL */)
     : InRollingFileStorage(location,
                            _smsc_LAST_BILLING_FILE_EXTENSION,
-                           _smsc_BILLING_FILE_EXTENSION,
-                           rollInterval,
+                           _smsc_BILLING_FILE_EXTENSION, rollInterval,
                             &_smsc_BILLING_STORAGE_parms, uselog)
 { }
 
@@ -114,10 +165,7 @@ void InBillingFileStorage::bill(const CDRRecord & cdr)
 {
     std::string rec;
     CDRRecord::csvEncode(cdr, rec);
-    try { RFSWrite(rec.c_str(), rec.size()); }
-    catch (FileSystemException & exc) {
-        smsc_log_error(logger, "InBFStorage: %s", exc.what());
-    }
+    RFSWrite(rec.c_str(), rec.size());
 }
 
 } //filestore

@@ -3,10 +3,15 @@
 #define _INMAN_FILE_STORAGES_H
 
 #include "logger/Logger.h"
+#include "core/synchronization/EventMonitor.hpp"
+#include "core/threads/Thread.hpp"
 #include "inman/storage/FileStorageCore.hpp"
 #include "inman/storage/cdrutil.hpp"
 
+
 using smsc::logger::Logger;
+using smsc::core::synchronization::EventMonitor;
+using smsc::core::threads::Thread;
 using smsc::inman::cdr::CDRRecord;
 using smsc::inman::filestore::RollingFileStorage;
 using smsc::inman::filestore::RollingFileStorageParms;
@@ -19,8 +24,9 @@ namespace filestore {
 class InRollingFileStorage : RollingFileStorage
 {
 public:
+    //'rollInterval' == 0 forbids rolling by timer
     InRollingFileStorage(const std::string & location, const char *lastExt, const char *storageExt,
-                         unsigned long rollInterval, const RollingFileStorageParms * parms = NULL,
+                         unsigned long rollInterval = 0, const RollingFileStorageParms * parms = NULL,
                          Logger * uselog = NULL);
     ~InRollingFileStorage();
 
@@ -41,15 +47,36 @@ public:
     void RFSClose(void);
     //returns number of files in storage, appends to 'files' their names
     int  getRFStorageFiles(FSEntriesArray& files);
+    time_t getLastRollingTime(void) const;
 
 protected:
     Logger *  logger;
 };
 
+
+//Just an external roller for InRollingFileStorage
+class InFileStorageRoller : public Thread
+{
+public:
+    //NOTE: 'rollInterval' is measured in seconds
+    InFileStorageRoller(InRollingFileStorage * rfs, unsigned long rollInterval);
+    ~InFileStorageRoller();
+
+    //thread entry point, automatically ran by Thread::Start()
+    int  Execute(void);
+    void Stop(void);
+
+protected:
+    InRollingFileStorage *  _rFS;        //storage to roll
+    unsigned long           _interval;   //rolling interval, in seconds
+    bool                    _running;
+    EventMonitor            _mutex;
+};
+
 class InBillingFileStorage : public InRollingFileStorage 
 {
 public:
-    InBillingFileStorage(const std::string & location, unsigned long rollInterval, Logger * uselog  = NULL);
+    InBillingFileStorage(const std::string & location, unsigned long rollInterval = 0, Logger * uselog  = NULL);
     ~InBillingFileStorage();
 
     void bill(const CDRRecord & cdr);
