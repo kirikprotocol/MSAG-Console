@@ -15,10 +15,10 @@ namespace smsc { namespace util
         {
             uint64_t result = 0;
             unsigned char *ptr=(unsigned char *)&result;
-            ptr[0]=(value>>56)&0xFF; ptr[1]=(value>>48)&0xFF;
-            ptr[2]=(value>>40)&0xFF; ptr[3]=(value>>32)&0xFF;
-            ptr[4]=(value>>24)&0xFF; ptr[5]=(value>>16)&0xFF;
-            ptr[6]=(value>>8 )&0xFF; ptr[7]=(value    )&0xFF;
+            ptr[0]=(unsigned char)(value>>56)&0xFF; ptr[1]=(unsigned char)(value>>48)&0xFF;
+            ptr[2]=(unsigned char)(value>>40)&0xFF; ptr[3]=(unsigned char)(value>>32)&0xFF;
+            ptr[4]=(unsigned char)(value>>24)&0xFF; ptr[5]=(unsigned char)(value>>16)&0xFF;
+            ptr[6]=(unsigned char)(value>>8 )&0xFF; ptr[7]=(unsigned char)(value    )&0xFF;
             return result;
         };
         static uint64_t toHostOrder(uint64_t value)
@@ -38,4 +38,3 @@ namespace smsc { namespace util
 }}
 
 #endif // UINT64_CONVERTER_DECLARATIONS
-
