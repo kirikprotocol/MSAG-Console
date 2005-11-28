@@ -67,7 +67,7 @@ struct Option{
 string host="sunfire";
 int port=9001;
 
-const int N=200;
+const int N=400;
 
 int main(int argc,char* argv[])
 {
@@ -81,10 +81,10 @@ int main(int argc,char* argv[])
       cfg[i].host=host;
       cfg[i].port=port;
       char buf[32];
-      sprintf(buf,"testsme%d",i+1);
+      sprintf(buf,"testsme%03d",i+1);
       cfg[i].sid=buf;
       cfg[i].timeOut=10;
-      sprintf(buf,"sme%d",i+1);
+      sprintf(buf,"sme%03d",i+1);
       cfg[i].password=buf;
     }
     MyListener lst[N];
@@ -99,7 +99,7 @@ int main(int argc,char* argv[])
     try{
       for(int i=0;i<N;i++)
       {
-        printf("Connect: %d\r",i);fflush(stdout);
+        printf("Connect: %d(%s/%s)\r",i,cfg[i].sid.c_str(),cfg[i].password.c_str());fflush(stdout);
         ss[i]->connect();
       }
       printf("\n");
@@ -190,7 +190,7 @@ int main(int argc,char* argv[])
     }
   }catch(exception& e)
   {
-    printf("Exception: %s\n",e.what());
+    printf("\n\nException: %s\n",e.what());
   }
   catch(...)
   {
