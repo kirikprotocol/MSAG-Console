@@ -17,6 +17,7 @@ using smsc::inman::interaction::Server;
 using smsc::inman::interaction::ServerListener;
 using smsc::inman::interaction::ConnectListener;
 using smsc::inman::filestore::InBillingFileStorage;
+using smsc::inman::filestore::InFileStorageRoller;
 
 namespace smsc  {
 namespace inman {
@@ -66,6 +67,7 @@ private:
     bool        running;
     InService_CFG _cfg;
     InBillingFileStorage*    bfs;
+    InFileStorageRoller *    roller;
 };
 
 } //inman

@@ -128,6 +128,8 @@ public:
                 billingInterval = manager.getInt("billingInterval");
                 if (billingInterval < _inman_MIN_BILLING_INTERVAL) {
                     billingDir = NULL; billingInterval = 0;
+                    smsc_log_info(inapLogger, "Parameter 'billingInterval' should be grater than %ld seconds",
+                                          _inman_MIN_BILLING_INTERVAL);
                     throw ConfigException("Parameter 'billingInterval' should be grater than %ld seconds",
                                           _inman_MIN_BILLING_INTERVAL);
                 }

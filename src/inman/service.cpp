@@ -33,13 +33,18 @@ Service::Service(const InService_CFG * in_cfg, Logger * uselog/* = NULL*/)
     smsc_log_debug(logger, "InmanSrv: TCP server inited");
 
     if (_cfg.cdrMode) {
-        bfs = new InBillingFileStorage(_cfg.billingDir,
-                                       (unsigned long)_cfg.billingInterval, logger);
+        bfs = new InBillingFileStorage(_cfg.billingDir, 0, logger);
         assert(bfs);
         int oldfs = bfs->RFSOpen(true);
         assert(oldfs >= 0);
         smsc_log_debug(logger, "InmanSrv: Billing storage opened%s",
                        oldfs > 0 ? ", old files rolled": "");
+
+        if (_cfg.billingInterval) { //use external storage roller
+            roller = new InFileStorageRoller(bfs, (unsigned long)_cfg.billingInterval);
+            assert(roller);
+            smsc_log_debug(logger, "InmanSrv: BillingStorage roller inited");
+        }
     }
 
     session = factory->openSession(_cfg.ssn, _cfg.ssf_addr, _cfg.scf_addr);
@@ -66,10 +71,13 @@ Service::~Service()
     smsc_log_debug( logger, "InmanSrv: Delete TCAP dispatcher");
     delete dispatcher;
 
-    smsc_log_debug( logger, "InmanSrv: Close Billing storage");
-    if (bfs)
+    if (bfs) {
+        smsc_log_debug( logger, "InmanSrv: Close Billing storage");
         bfs->RFSClose();
-    delete bfs;
+        if (roller)
+            delete roller;
+        delete bfs;
+    }
 }
 
 
@@ -80,7 +88,14 @@ void Service::start()
 
     smsc_log_debug(logger, "InmanSrv: Starting TCP server");
     server->Start();
+
+    if (roller) {
+        smsc_log_debug(logger, "InmanSrv: Starting BillingStorage roller");
+        roller->Start();
+    }
+    
     running = true;
+    smsc_log_debug(logger, "InmanSrv: Started.");
 }
 
 void Service::stop()
@@ -92,6 +107,12 @@ void Service::stop()
     smsc_log_debug( logger, "InmanSrv: Stopping TCAP dispatcher");
     dispatcher->Stop();
     dispatcher->WaitFor();
+
+    if (roller) {
+        smsc_log_debug(logger, "InmanSrv: Stopping BillingStorage roller");
+        roller->Stop();
+        roller->WaitFor();
+    }
     running = false;
 }
 
