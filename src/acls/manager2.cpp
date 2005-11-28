@@ -10,8 +10,8 @@
 
 #include "core/threads/Thread.hpp"
 #include "core/synchronization/EventMonitor.hpp"
-#include "db/DataSource.h"
-#include "db/DataSourceLoader.h"
+//#include "db/DataSource.h"
+//#include "db/DataSourceLoader.h"
 #include "util/config/Manager.h"
 #include "util/config/ConfigView.h"
 
@@ -25,7 +25,7 @@ using namespace smsc::util::config;
 using namespace smsc::core::threads;
 using namespace smsc::core::synchronization;
 using namespace smsc::util;
-using namespace smsc::db;
+//using namespace smsc::db;
 
 using namespace std;
 
