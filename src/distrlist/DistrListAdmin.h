@@ -5,7 +5,7 @@
 #include <string>
 
 #include "sms/sms.h"
-#include "db/DataSource.h"
+//#include "db/DataSource.h"
 #include "core/buffers/Array.hpp"
 
 #include "DistrListExceptions.h"
@@ -16,7 +16,7 @@ namespace smsc { namespace distrlist
     using std::string;
     using smsc::core::buffers::Array;
 
-    using namespace smsc::db;
+    //using namespace smsc::db;
     using namespace smsc::sms;
 
     struct Principal

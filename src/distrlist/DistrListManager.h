@@ -8,7 +8,7 @@
 #include <logger/Logger.h>
 #include <util/config/Manager.h>
 
-#include <db/DataSource.h>
+//#include <db/DataSource.h>
 
 #include "DistrListAdmin.h"
 
@@ -21,7 +21,7 @@
 
 namespace smsc { namespace distrlist
 {
-    using namespace smsc::db;
+    //using namespace smsc::db;
 
     using smsc::logger::Logger;
     using smsc::util::config::Manager;
