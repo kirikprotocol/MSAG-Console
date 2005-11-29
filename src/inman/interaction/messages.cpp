@@ -286,7 +286,7 @@ void ChargeSms::export2CDR(CDRRecord & cdr) const
     cdr._cdrType = CDRRecord::dpOrdinary;
     cdr._mediaType = (parseCBS_DCS(tpDataCodingScheme) == CBS_DCS::dcBINARY8) ?
                         CDRRecord::dpBinary : CDRRecord::dpText ;
-    cdr._bearer = CDRRecord::dpUSSD;
+    cdr._bearer = (ussdServiceOp < 0) ? CDRRecord::dpSMS : CDRRecord::dpUSSD;
     cdr._submitTime = submitTimeTZ;
     cdr._partsNum = partsNum;
 
