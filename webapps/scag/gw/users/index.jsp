@@ -3,7 +3,7 @@
   <jsp:attribute name="menu">
     <sm-pm:menu>
       <sm-pm:item name="mbAdd" value="Add" title="Add new user"/>
-      <sm-pm:item name="mbDelete" value="Delete" title="Delete user" isCheckSensible="true"/>
+      <sm-pm:item name="mbDelete" value="Delete" title="Delete user" onclick="return confirm('Are you sure to delete this object?')" isCheckSensible="true"/>
     <sm-pm:space/>
     </sm-pm:menu>
   </jsp:attribute>

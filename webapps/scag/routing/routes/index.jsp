@@ -5,7 +5,7 @@
     <jsp:attribute name="menu">
         <sm-pm:menu>
             <sm-pm:item name="mbAdd" value="Add" title="Add new route"/>
-            <sm-pm:item name="mbDelete" value="Delete" title="Delete route" isCheckSensible="true"/>
+            <sm-pm:item name="mbDelete" value="Delete" title="Delete route" onclick="return confirm('Are you sure to delete this object?')" isCheckSensible="true"/>
             <sm-pm:space/>
             <sm-pm:space/>
             <sm-pm:space/>
