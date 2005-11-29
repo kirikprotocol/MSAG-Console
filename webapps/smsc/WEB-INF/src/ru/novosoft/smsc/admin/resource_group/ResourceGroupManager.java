@@ -59,6 +59,7 @@ public class ResourceGroupManager
 				NativeResourceGroupHA.LoadLibrary();
 				logger.debug("JNI Library loaded");
 				rgNames = NativeResourceGroupHA.ResourceGroup_listGroups();
+				logger.debug("JNI library returned resource groups:" + rgNames.length);
 				for (int i = 0; i < rgNames.length; i++)
 				{
 					ResourceGroup rg = new ResourceGroupHAImpl(rgNames[i]);
