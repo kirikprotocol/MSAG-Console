@@ -35,7 +35,8 @@ int AgentListener::Execute()
     {
 
         smsc_log_info(logger, "Wait for a command...." );
-        if (Socket * newSocket = sock.Accept())
+        std::auto_ptr<Socket> newSocket(sock.Accept());
+        if (newSocket.get())
         {
 
             smsc_log_info(logger, "Command is accepted" );
@@ -46,7 +47,7 @@ int AgentListener::Execute()
 
                     smsc_log_info(logger, "Read a command..." );
                     int res = -1;
-                    res = readCommand(newSocket);
+                    res = readCommand(newSocket.get());
                     smsc_log_info(logger, "Command is read, res: %d", res );
 
                     if(res == 0){

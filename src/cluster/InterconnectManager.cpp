@@ -216,6 +216,8 @@ InterconnectManager::~InterconnectManager()
         dispatcher->Stop();
         delete dispatcher;
     }
+    socket.Abort();
+    attachedSocket.Abort();
 }
 
 void InterconnectManager::init(const std::string& inAddr, const std::string& attachedInAddr, int _port, int _attachedPort)
