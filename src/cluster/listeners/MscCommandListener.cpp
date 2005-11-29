@@ -37,7 +37,7 @@ void MscCommandListener::mscRegistrate(const Command& command)
 
     cmd->getArgs(mscNum,offset);
 
-    MscManager::getMscAdmin().registrate(mscNum,offset);
+    MscManager::getMscAdmin().registrate(mscNum);
 }
 
 void MscCommandListener::mscUnregistrate(const Command& command)

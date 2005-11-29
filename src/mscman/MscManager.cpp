@@ -4,6 +4,8 @@
 #include <core/buffers/Array.hpp>
 #include <core/threads/Thread.hpp>
 
+#include "core/buffers/FixedRecordFile.hpp"
+
 #include "MscManager.h"
 
 #include "cluster/Interconnect.h"
@@ -49,15 +51,14 @@ namespace mscman {
         MscInfoOp   op;
         char        mscNum[22];
         int         data;
-        File::offset_type offset;
 
         MscInfoChange(): op(MSCOP_UNKNOWN)
         {
           memset(mscNum,0,sizeof(mscNum));
         }
 
-        MscInfoChange(MscInfoOp argOp,const char* argMsc,int argData=0,File::offset_type argOffset=0)
-            : op(argOp),data(argData),offset(argOffset)
+        MscInfoChange(MscInfoOp argOp,const char* argMsc,int argData=0)
+            : op(argOp),data(argData)
         {
           if(argMsc)
           {
@@ -70,7 +71,6 @@ namespace mscman {
           op=that.op;
           strcpy(mscNum,that.mscNum);
           data=that.data;
-          offset=that.offset;
         }
     };
 
@@ -84,6 +84,8 @@ namespace mscman {
         Hash<MscInfo*>          mscs;
         Array<MscInfoChange>    changes;
         Mutex                   changesLock;
+
+        FixedRecordFile<MscInfo> storeFile;
 
         void createFile(const char* fileName);
 
@@ -107,11 +109,11 @@ namespace mscman {
 
 
         /* MscStatus implementation */
-        virtual void report(const char* msc, bool status,File::offset_type offset=0);
+        virtual void report(const char* msc, bool status);
         virtual bool check(const char* msc);
 
         /* MscAdmin implementation */
-        virtual void registrate(const char* msc,File::offset_type offset=0);
+        virtual void registrate(const char* msc);
         virtual void unregister(const char* msc);
         virtual void block(const char* msc);
         virtual void clear(const char* msc);
@@ -167,7 +169,7 @@ MscManager& MscManager::getInstance()
 MscManagerImpl::MscManagerImpl(Manager& config)
     throw(ConfigException, InitException)
         : MscManager(config), Thread(),
-            isStopping(false)
+            isStopping(false),storeFile(sig,ver)
 {
     init(config);
 }
@@ -241,10 +243,7 @@ static void bakFile(std::string fileName)
 
 void MscManagerImpl::createFile(const char* fileName)
 {
-  storeFile.RWCreate(fileName);
-  storeFile.Write(sig,8);
-  storeFile.WriteNetInt32(ver);
-  storeFile.Flush();
+  storeFile.Open(fileName);
 }
 
 
@@ -301,52 +300,19 @@ void MscManagerImpl::init(Manager& config)
     */
 
   string fileName=config.getString("MscManager.storeFile");
-  if(!File::Exists(fileName.c_str()))
+  try{
+    storeFile.Open(fileName.c_str());
+  }catch(std::exception& e)
   {
-    createFile(fileName.c_str());
-    return;
-  }else
-  {
-    storeFile.RWOpen(fileName.c_str());
-  }
-  char fileSig[9]={0,};
-  uint32_t fileVer;
-  storeFile.Read(fileSig,8);
-  if(strcmp(sig,fileSig))
-  {
-    smsc_log_error(log,"Invalid msc store file(%s!=%s):%s",sig,fileSig,fileName.c_str());
+    smsc_log_error(log,"Failed to open msc store file '%s':'%s'",fileName.c_str(),e.what());
     bakFile(fileName);
-    createFile(fileName.c_str());
+    storeFile.Open(fileName.c_str());
   }
-  fileVer=storeFile.ReadNetInt32();
-  if(fileVer!=ver)
-  {
-    smsc_log_error(log,"Invalid msc store file version:%s",fileName.c_str());
-    bakFile(fileName);
-    createFile(fileName.c_str());
-  }
-  File::offset_type pos=storeFile.Pos();
-  File::offset_type sz=storeFile.Size();
+  MscInfo info;
   MutexGuard  guard(mon);
-  while(pos<sz)
+  while(info.offset=storeFile.Read(info))
   {
-    bool used=storeFile.ReadByte()==1;
-    if(used)
-    {
-      MscInfo* info=new MscInfo;
-      info->Read(storeFile);
-      mscs.Insert(info->mscNum, info);
-    }else
-    {
-      holes.push_back(pos);
-      storeFile.SeekCur(MscInfo::Size());
-    }
-    pos+=1+MscInfo::Size();
-    if(sz-pos<1+MscInfo::Size())
-    {
-      holes.push_back(pos);
-      break;
-    }
+    mscs.Insert(info.mscNum, new MscInfo(info));
   }
 }
 
@@ -363,21 +329,7 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
         {
           MscInfo* info = new MscInfo(change.mscNum, false, !automaticRegistration, 0);
           mscs.Insert(info->mscNum,info);
-
-          if(change.offset!=0)
-          {
-            info->offset=change.offset;
-          }else
-          {
-            insertToFile(*info);
-            /*
-            using namespace smsc::cluster;
-            if(Interconnect::getInstance()->getRole()==MASTER)
-            {
-              Interconnect::getInstance()->sendCommand(new MscRegistrateCommand(info->mscNum,info->offset));
-            }
-            */
-          }
+          insertToFile(*info);
         }
       }break;
       case MSCOP_CLEAR:
@@ -390,17 +342,7 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
             info.manualLock = false;
             info.automaticLock = false;
             info.failureCount = 0;
-            using namespace smsc::cluster;
-            if(Interconnect::getInstance()->getRole()!=SLAVE)
-            {
-              /*
-              if(Interconnect::getInstance()->getRole()==MASTER)
-              {
-                Interconnect::getInstance()->sendCommand(new MscClearCommand(change.mscNum));
-              }
-              */
-              updateFile(info);
-            }
+            updateFile(info);
           }
         }
       }break;
@@ -410,16 +352,7 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
         {
           removeFromFile(**infoptr);
           using namespace smsc::cluster;
-          if(Interconnect::getInstance()->getRole()!=SLAVE)
-          {
-            mscs.Delete(change.mscNum);
-            /*
-            if(Interconnect::getInstance()->getRole()==MASTER)
-            {
-              Interconnect::getInstance()->sendCommand(new MscUnregisterCommand(change.mscNum));
-            }
-            */
-          }
+          mscs.Delete(change.mscNum);
         }
       }break;
       case MSCOP_BLOCK:
@@ -430,17 +363,7 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
           if (!info.manualLock)
           {
             info.manualLock = true;
-            using namespace smsc::cluster;
-            if(Interconnect::getInstance()->getRole()!=SLAVE)
-            {
-              updateFile(info);
-              /*
-              if(Interconnect::getInstance()->getRole()==MASTER)
-              {
-                Interconnect::getInstance()->sendCommand(new MscBlockCommand(change.mscNum));
-              }
-              */
-            }
+            updateFile(info);
           }
         }
       }break;
@@ -465,26 +388,12 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
           info.automaticLock=info.failureCount>=failureLimit;
         }
 
-        using namespace smsc::cluster;
-        if(!change.offset)
+        if(wasInsert)
         {
-          if(wasInsert)
-          {
-            insertToFile(info);
-          }else
-          {
-            updateFile(info);
-          }
-          /*
-          if(Interconnect::getInstance()->getRole()==MASTER)
-          {
-            Interconnect::getInstance()->sendCommand(new MscReportCommand(change.mscNum,change.data,info.offset));
-          }
-          */
-
+          insertToFile(info);
         }else
         {
-          info.offset=change.offset;
+          updateFile(info);
         }
       }break;
     }
@@ -497,48 +406,30 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
 
 void MscManagerImpl::insertToFile(MscInfo& mscinfo)
 {
-  File::offset_type offset;
-  if(holes.empty())
-  {
-    offset=storeFile.Size();
-  }else
-  {
-    offset=holes.back();
-    holes.pop_back();
-  }
-  mscinfo.offset=offset;
-  storeFile.Seek(offset-1);
-  storeFile.WriteByte(1);
-  mscinfo.Write(storeFile);
-  storeFile.Flush();
+  mscinfo.offset=storeFile.Append(mscinfo);
   info2(log,"Insert into file %s, offset=%llx",mscinfo.mscNum,mscinfo.offset);
 }
 
 void MscManagerImpl::updateFile(MscInfo& mscinfo)
 {
   info2(log,"Update file %s, offset=%llx",mscinfo.mscNum,mscinfo.offset);
-  storeFile.Seek(mscinfo.offset);
-  mscinfo.Write(storeFile);
-  storeFile.Flush();
+  storeFile.Write(mscinfo.offset,mscinfo);
 }
 
 void MscManagerImpl::removeFromFile(MscInfo& mscinfo)
 {
   info2(log,"Delete from file %s, offset=%llx",mscinfo.mscNum,mscinfo.offset);
-  holes.push_back(mscinfo.offset);
-  storeFile.Seek(mscinfo.offset-1);
-  storeFile.WriteByte(0);
-  storeFile.Flush();
+  storeFile.Delete(mscinfo.offset);
 }
 
 
 /* ------------------------ MscStatus implementation ------------------------ */
 
-void MscManagerImpl::report(const char* msc, bool status,File::offset_type off)
+void MscManagerImpl::report(const char* msc, bool status)
 {
   if (!msc || !msc[0]) return;
   MutexGuard  guard(mon);
-  changes.Push(MscInfoChange(MSCOP_REPORT,msc,status?1:0,off));
+  changes.Push(MscInfoChange(MSCOP_REPORT,msc,status?1:0));
 }
 
 bool MscManagerImpl::check(const char* msc)
@@ -554,11 +445,11 @@ bool MscManagerImpl::check(const char* msc)
 
 /* ------------------------ MscAdmin implementation ------------------------ */
 
-void MscManagerImpl::registrate(const char* msc,File::offset_type off)
+void MscManagerImpl::registrate(const char* msc)
 {
   if (!msc || !msc[0]) return;
   MutexGuard  guard(mon);
-  changes.Push(MscInfoChange(MSCOP_INSERT,msc,0,off));
+  changes.Push(MscInfoChange(MSCOP_INSERT,msc,0));
   mon.notify();
 }
 

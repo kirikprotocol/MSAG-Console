@@ -16,7 +16,7 @@ namespace smsc { namespace mscman
 
         virtual ~MscStatus() {};
 
-        virtual void report(const char* msc, bool status,smsc::core::buffers::File::offset_type offset=0) = 0;
+        virtual void report(const char* msc, bool status) = 0;
         virtual bool check(const char* msc) = 0;
     };
 }}

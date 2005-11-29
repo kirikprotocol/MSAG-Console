@@ -31,8 +31,6 @@ namespace mscman {
 
         bool                automaticRegistration;
         int                 failureLimit;
-        File storeFile;
-        std::vector<File::offset_type> holes;
 
         MscManager(Manager& config)
             throw(ConfigException);
