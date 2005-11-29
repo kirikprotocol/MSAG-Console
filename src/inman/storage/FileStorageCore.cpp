@@ -229,8 +229,20 @@ RollingFileStorage::RollingFileStorage(const std::string & location, const char 
 }
 RollingFileStorage::~RollingFileStorage()
 {
-    if (_currFile.isOpened())
-        FSClose();
+    if (_currFile.isOpened()) { //if file is empty -> delete it
+        File::offset_type    pos;
+
+        try { pos = _currFile.Pos(); } 
+        catch (...) { pos = _headerLen + 1; }
+
+        try { _currFile.Close(); }
+        catch (...) {}
+
+        if (pos <= _headerLen) {// file is empty
+            try { _currFile.Unlink((_currFile.getFileName()).c_str()); }
+            catch (...) {}
+        }
+    }
 }
 
 bool RollingFileStorage::FSOpen(bool rollOld/* = true*/)
@@ -276,14 +288,29 @@ void RollingFileStorage::FSFlush(void)
 void RollingFileStorage::FSClose(void)
 {
     MutexGuard guard(_storageLock);
+    //first check if last file is empty. Delete it in that case.
+    if (_currFile.isOpened()) {
+        File::offset_type    pos;
 
-    try { _currFile.Flush(); }
-    catch (FileException& exc) {
-        throw FileSystemException(exc.getErrNo(), exc.what());
-    }
-    try { _currFile.Close(); }
-    catch (FileException& exc) {
-        throw FileSystemException(exc.getErrNo(), exc.what());
+        try { pos = _currFile.Pos(); } 
+        catch (FileException& exc) {
+            throw FileSystemException(exc.getErrNo(), exc.what());
+        }
+        if (pos <= _headerLen) {// file is empty -> delete it
+            try { _currFile.Close(); }
+            catch (FileException& exc) {
+                throw FileSystemException(exc.getErrNo(), exc.what());
+            }
+            try { _currFile.Unlink((_currFile.getFileName()).c_str()); }
+            catch (FileException& exc) {
+                throw FileSystemException(exc.getErrNo(), exc.what());
+            }
+        } else { //file contains data, flush and close it
+            try { _currFile.Close(); }
+            catch (FileException& exc) {
+                throw FileSystemException(exc.getErrNo(), exc.what());
+            }
+        }
     }
 }
 
@@ -322,7 +349,12 @@ bool RollingFileStorage::mkCurrFile(bool roll/* = true*/)
     if (_currFile.isOpened()) {
         if (!roll)
             return false;
-        File::offset_type fpos = FSEntry::getFilePos(_currFile);
+        File::offset_type fpos;
+
+        try { fpos = _currFile.Pos(); }
+        catch (FileException& exc) {
+            throw FileSystemException(exc.getErrNo(), exc.what());
+        }
         if (fpos <= _headerLen)
             return false; // file is empty, skip rolling 
         //roll and close file
