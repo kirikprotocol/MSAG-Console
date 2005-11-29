@@ -2173,6 +2173,8 @@ StateType StateMachine::submitChargeResp(Tuple& t)
 
   SmeInfo dstSmeInfo=smsc->getSmeInfo(dest_proxy_index);
 
+  t.command.setProxy(src_proxy);
+
   if(!resp->result)
   {
     submitResp(t,sms,Status::SYSERR);

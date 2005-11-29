@@ -155,7 +155,7 @@ void INManComm::ProcessExpiration()
 {
   MutexGuard mg(reqMtx);
   time_t now=time(NULL);
-  debug2(log,"ProcessExpiration called:%d/%d",now,timeMap.empty()?0:timeMap.begin()->first);
+  //debug2(log,"ProcessExpiration called:%d/%d",now,timeMap.empty()?0:timeMap.begin()->first);
   while(!timeMap.empty() && timeMap.begin()->first<now)
   {
     TimeMap::iterator it=timeMap.begin();

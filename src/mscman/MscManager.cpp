@@ -323,11 +323,13 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
           }else
           {
             insertToFile(*info);
+            /*
             using namespace smsc::cluster;
             if(Interconnect::getInstance()->getRole()==MASTER)
             {
               Interconnect::getInstance()->sendCommand(new MscRegistrateCommand(info->mscNum,info->offset));
             }
+            */
           }
         }
       }break;
@@ -344,10 +346,12 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
             using namespace smsc::cluster;
             if(Interconnect::getInstance()->getRole()!=SLAVE)
             {
+              /*
               if(Interconnect::getInstance()->getRole()==MASTER)
               {
                 Interconnect::getInstance()->sendCommand(new MscClearCommand(change.mscNum));
               }
+              */
               updateFile(info);
             }
           }
@@ -362,10 +366,12 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
           if(Interconnect::getInstance()->getRole()!=SLAVE)
           {
             mscs.Delete(change.mscNum);
+            /*
             if(Interconnect::getInstance()->getRole()==MASTER)
             {
               Interconnect::getInstance()->sendCommand(new MscUnregisterCommand(change.mscNum));
             }
+            */
           }
         }
       }break;
@@ -381,10 +387,12 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
             if(Interconnect::getInstance()->getRole()!=SLAVE)
             {
               updateFile(info);
+              /*
               if(Interconnect::getInstance()->getRole()==MASTER)
               {
                 Interconnect::getInstance()->sendCommand(new MscBlockCommand(change.mscNum));
               }
+              */
             }
           }
         }
@@ -420,10 +428,12 @@ void MscManagerImpl::processChange(const MscInfoChange& change)
           {
             updateFile(info);
           }
+          /*
           if(Interconnect::getInstance()->getRole()==MASTER)
           {
             Interconnect::getInstance()->sendCommand(new MscReportCommand(change.mscNum,change.data,info.offset));
           }
+          */
 
         }else
         {

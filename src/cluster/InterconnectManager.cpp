@@ -15,7 +15,7 @@ Interconnect* Interconnect::instance = 0;
 
 InterconnectManager::InterconnectManager(const std::string& inAddr_,
                                          const std::string& attachedInAddr_, int _port, int _attachedPort)
-    : Interconnect(), Thread(), logger(smsc::logger::Logger::getInstance("IM")), role(MASTER), inAddr(inAddr_), 
+    : Interconnect(), Thread(), logger(smsc::logger::Logger::getInstance("IM")), role(MASTER), inAddr(inAddr_),
       attachedInAddr(attachedInAddr_), port(_port), attachedPort(_attachedPort)
 {
     isStopping = true;
@@ -148,10 +148,10 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
         phones.push_back("phone1");
         phones.push_back("phone2");
 
-        Command *cmd1 = new AclRemoveCommand(1);            
-        Command *cmd2 = new AclCreateCommand("name", "desc", "type", 10, phones);    
-        Command *cmd3 = new AclUpdateInfoCommand(1, "name", "desc", "type");    
-        Command *cmd4 = new AclRemoveAddressesCommand(1, phones);    
+        Command *cmd1 = new AclRemoveCommand(1);
+        Command *cmd2 = new AclCreateCommand("name", "desc", "type", 10, phones);
+        Command *cmd3 = new AclUpdateInfoCommand(1, "name", "desc", "type");
+        Command *cmd4 = new AclRemoveAddressesCommand(1, phones);
         Command *cmd5 = new AclAddAddressesCommand(1, phones);
         sendCommand(cmd1);
         sendCommand(cmd2);
@@ -162,8 +162,8 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
 
     {
 
-        Command *cmd1 = new PrcAddPrincipalCommand(1, 2, 3, "address");    
-        Command *cmd2 = new PrcDeletePrincipalCommand("address");    
+        Command *cmd1 = new PrcAddPrincipalCommand(1, 2, 3, "address");
+        Command *cmd2 = new PrcDeletePrincipalCommand("address");
         Command *cmd3 = new PrcAlterPrincipalCommand(1, 2, "address");
 
         sendCommand(cmd1);
@@ -172,7 +172,7 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
     }
 
     {
-        Command *cmd1 = new MemAddMemberCommand(50235, "dlname", "address");    
+        Command *cmd1 = new MemAddMemberCommand(50235, "dlname", "address");
         Command *cmd2 = new MemDeleteMemberCommand("dlname", "address");
 
         sendCommand(cmd1);
@@ -180,28 +180,28 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
 
     }
 
-    {    
-        Command *cmd1 = new SbmAddSubmiterCommand(1, "dlname", "address");    
+    {
+        Command *cmd1 = new SbmAddSubmiterCommand(1, "dlname", "address");
         Command *cmd2 = new SbmDeleteSubmiterCommand("dlname", "address");
 
         sendCommand(cmd1);
-        sendCommand(cmd2);    
+        sendCommand(cmd2);
     }
 
     {
-        Command *cmd1 = new DlAddCommand(1, "dlname", "owner", 1, 2);    
-        Command *cmd2 = new DlDeleteCommand("dlname");    
+        Command *cmd1 = new DlAddCommand(1, "dlname", "owner", 1, 2);
+        Command *cmd2 = new DlDeleteCommand("dlname");
         Command *cmd3 = new DlAlterCommand(1, "dlname");
 
         sendCommand(cmd1);
         sendCommand(cmd2);
         sendCommand(cmd3);
     }*/
-    
-    
-    
 
-    
+
+
+
+
 
     Start();
 }
@@ -210,7 +210,7 @@ InterconnectManager::~InterconnectManager()
 {
     Stop();
 
-    pthread_join(thread, NULL);
+    WaitFor();
 
     if(dispatcher){
         dispatcher->Stop();
@@ -230,6 +230,7 @@ void InterconnectManager::shutdown()
     if (InterconnectManager::instance) {
       __trace__("Terminating Interconnect manager");
       delete InterconnectManager::instance;
+      InterconnectManager::instance=0;
       __trace__("Interconnect manager terminated");
     }
 }
@@ -241,7 +242,7 @@ void InterconnectManager::sendCommand(Command* command)
 
     if(!isMaster())
         return;
-    
+
     commands.Push(command);
     smsc_log_info(logger, "Command %02X added", command->getType());
     if (!isStoped()){
@@ -267,8 +268,10 @@ int InterconnectManager::Execute()
 {
 
     if(isMaster())
+    {
         // Flushs commands that was added befor start
         flushCommands();
+    }
 
     /*sleep(30);
     if(isMaster())
@@ -304,20 +307,20 @@ int InterconnectManager::Execute()
     }*/
 
     // TODO: Send commands from commands queue (on commandsMonitor)
-    while(!isStoped()){
-
-        //printf("PID: %06d Waits for command...\n", getpid());
-        if( !commandsMonitor.wait(30) )
+    while(!isStoped())
+    {
+      {
+        MutexGuard mg(commandsMonitor);
+        commandsMonitor.wait(1000);
+        if(!isMaster() || commands.Count()==0)
         {
-
-            //Sends commands if role - master only
-            if(isMaster())
-                    flushCommands();
-
+          continue;
         }
-        //printf("PID: %06d Signal or timeout\n", getpid());
-
-
+      }
+      if(isMaster())
+      {
+        flushCommands();
+      }
     }
 
     return 0;
@@ -335,10 +338,9 @@ void InterconnectManager::Start()
 
 void InterconnectManager::Stop()
 {
+    isStopping = true;
     MutexGuard mg(stopLock);
     MutexGuard guard(commandsMonitor);
-
-    isStopping = true;
     commandsMonitor.notify();
 }
 
@@ -390,9 +392,8 @@ void InterconnectManager::changeRole(Role role_)
         reader.Stop();
         reader.WaitFor();
 
-        if( (role == MASTER) || (role == SINGLE) ){
-            MutexGuard guard(commandsMonitor);
-
+        if( (role == MASTER) || (role == SINGLE) )
+        {
             flushCommands();
             role = SLAVE;
         }
@@ -413,7 +414,7 @@ void InterconnectManager::changeRole(Role role_)
                 dispatcher->WaitFor();
             }
         }
-       
+
         break;
     };
 
@@ -433,8 +434,6 @@ void InterconnectManager::addChangeRoleHandler(ChangeRoleHandler * fun, void *ar
 
 void InterconnectManager::send(Command* command)
 {
-    try {
-
     uint32_t len = 0;
     std::auto_ptr<uint8_t> buff ( (uint8_t*)command->serialize(len) );
     int size = len + 8;
@@ -445,25 +444,22 @@ void InterconnectManager::send(Command* command)
     uint32_t val32 = htonl(len);
     memcpy((void*)( buffer.get() + 4), (const void*)&val32, 4);
     memcpy((void*)( buffer.get() + 8), (const void*)buff.get(), len);
-    
+
     int toWrite = size; const char* writeBuffer = (const char *)buffer.get();
-    while (toWrite > 0) {
-        int write = attachedSocket.canWrite(0);
-        if (write == 0) throw Exception("Command send failed. Timeout expired.");
-        else if (write > 0) {
-            write = attachedSocket.Write(writeBuffer, toWrite);
-            if (write > 0) { writeBuffer+=write; toWrite-=write; continue; }
-        }
+    int written;
+    while (toWrite > 0)
+    {
+      written = attachedSocket.Write(writeBuffer, toWrite);
+      if (written > 0 )
+      {
+        writeBuffer+=written;
+        toWrite-=written;
+      }else
+      {
         throw Exception("Command send failed. Socket closed. %s", strerror(errno));
+      }
     }
 
-    }catch(Exception & e)
-    {
-        throw Exception("%s", e.what());
-    }catch(...)
-    {
-        throw Exception("Command send failed, Unexpected error.");
-    }
 }
 
 uint32_t InterconnectManager::readRole()
@@ -508,39 +504,39 @@ uint32_t InterconnectManager::readRole()
 
 void InterconnectManager::flushCommands()
 {
-        Command *command;
-        int count = commands.Count();
-        //smsc_log_info(logger, "Commands is flushing, count: %d", count);
-        for(int i=0; i<=count-1; i++){
-            commands.Shift(command);            
-            for( ;; ){
-                try {
-                    smsc_log_info(logger, "Command %02X is sending", command->getType());
-                    send(command);
-                    smsc_log_info(logger, "Command %02X is sent", command->getType());
-                    break;
-                }catch(Exception & e)
-                {
-                    smsc_log_info(logger, "Flush command failed, %s", e.what());
-                    sleep(5);
-                    if( attachedSocket.Connect() );
-                        smsc_log_info(logger, "Connect to attahced smsc failed");
-                        
-                    smsc_log_info(logger, "%s", e.what());                    
-                }catch(...)
-                {
-                    smsc_log_info(logger, "Flush command failed, unexpeceted error");
-                    sleep(5);
-                    if( attachedSocket.Connect() )
-                        smsc_log_info(logger, "Connect to attahced smsc failed\n");
-                }
-            }
-
-            if(command)
-                delete command;
-        }       
-        commands.Clean();
-        //smsc_log_info(logger, "Commands is flushed");
+  Command* cmd;
+  while(!isStopping)
+  {
+    std::auto_ptr<Command> command;
+    {
+      MutexGuard mg(commandsMonitor);
+      if(commands.Count()>0)
+      {
+        commands.Shift(cmd);
+        command=std::auto_ptr<Command>(cmd);
+      }else
+      {
+        break;
+      }
+    }
+    try
+    {
+      smsc_log_info(logger, "Command %02X is sending", command->getType());
+      send(command.get());
+      smsc_log_info(logger, "Command %02X is sent", command->getType());
+    }catch(std::exception & e)
+    {
+      {
+        MutexGuard mg(commandsMonitor);
+        commands.Unshift(command.release());
+      }
+      smsc_log_info(logger, "Send command failed: '%s'", e.what());
+      while( attachedSocket.Connect()!=0 && !isStopping)
+      {
+        smsc_log_info(logger, "Connect to attahced smsc failed");
+      }
+    }
+  }
 }
 
 
