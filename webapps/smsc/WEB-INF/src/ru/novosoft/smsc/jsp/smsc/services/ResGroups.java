@@ -1,25 +1,18 @@
 package ru.novosoft.smsc.jsp.smsc.services;
 
-/*
- * Created by igork
- * Date: 23.10.2002
- * Time: 19:49:14
- */
-
-import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.journal.Actions;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
-import ru.novosoft.smsc.admin.route.SmeStatus;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.PageBean;
 import ru.novosoft.smsc.jsp.SMSCErrors;
+import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.route.SmeStatus;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
+import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Actions;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
-
-public class Index extends PageBean
+public class ResGroups extends PageBean
 {
   public static final int RESULT_VIEW = PRIVATE_RESULT;
   public static final int RESULT_VIEW_HOST = PRIVATE_RESULT + 1;
@@ -48,12 +41,6 @@ public class Index extends PageBean
 
     if (null != mbAddService)
       return RESULT_ADD;
-    else if (null != mbDelete) {
-      if (request.isUserInRole("services"))
-        return deleteServices();
-      else
-        return error(SMSCErrors.error.services.notAuthorizedForDeletingService);
-    }
     else if (null != mbStartService)
       return startServices();
     else if (null != mbStopService)
@@ -62,8 +49,6 @@ public class Index extends PageBean
       return RESULT_VIEW;
     else if (null != mbViewHost)
       return RESULT_VIEW_HOST;
-    else if (null != mbEdit)
-      return RESULT_EDIT;
     else if (null != mbDisconnectServices)
       return disconnectServices();
     else
@@ -102,45 +87,6 @@ public class Index extends PageBean
    * ********************* Command handlers ***************************
    */
 
-  protected int deleteServices()
-  {
-    final List notRemoved = new LinkedList();
-    for (int i = 0; i < serviceIds.length; i++) {
-      final String id = serviceIds[i];
-      try {
-        if (hostsManager.isService(id)) {
-          hostsManager.removeService(id);
-          final String roleName = appContext.getWebXmlConfig().removeSecurityConstraint(id);
-          appContext.getStatuses().setWebXmlChanged(true);
-          journalAppend(SubjectTypes.TYPE_securityConstraint, id, Actions.ACTION_DEL);
-          appContext.getStatuses().setWebXmlChanged(true);
-          appContext.getUserManager().removeRole(roleName);
-          journalAppend(SubjectTypes.TYPE_user, null, Actions.ACTION_MODIFY);
-          try {
-            logger.debug("Removed security constraint for service \"" + id + "\" with role \"" + roleName + "\", saving changes to WEB-INF/web.xml...");
-            appContext.getWebXmlConfig().save();
-            appContext.getJournal().clear(SubjectTypes.TYPE_securityConstraint);
-            appContext.getStatuses().setWebXmlChanged(false);
-          } catch (Throwable e) {
-            error(SMSCErrors.error.services.couldntSaveWebXml, e);
-            logger.error("Could not save WEB-INF/web.xml", e);
-          }
-        }
-        else
-          hostsManager.removeSme(id);
-
-        journalAppend(SubjectTypes.TYPE_service, id, Actions.ACTION_DEL);
-        //appContext.getStatuses().setServicesChanged(true);
-      } catch (Throwable e) {
-        error(SMSCErrors.error.services.coudntDeleteService, id);
-        logger.error("Couldn't delete service \"" + id + '"', e);
-        notRemoved.add(id);
-      }
-    }
-    serviceIds = (String[]) notRemoved.toArray(new String[0]);
-    return 0 == errors.size() ? RESULT_DONE : RESULT_ERROR;
-  }
-
   protected int startServices()
   {
     logger.debug("startServices: " + (null != serviceIds ? serviceIds.length : 0));
@@ -155,7 +101,7 @@ public class Index extends PageBean
       final String svcId = serviceIds[i];
       if (hostsManager.isService(svcId)) {
         try {
-          if (ServiceInfo.STATUS_STOPPED == hostsManager.getServiceInfo(svcId).getStatus()) {
+          if (ServiceInfo.STATUS_OFFLINE == hostsManager.getServiceInfo(svcId).getStatus()) {
             hostsManager.startService(svcId);
           }
           else
@@ -163,7 +109,7 @@ public class Index extends PageBean
         } catch (AdminException e) {
           notStartedIds.add(svcId);
           result = error(SMSCErrors.error.hosts.couldntStartService, svcId, e);
-          logger.error("Couldn't start services \"" + svcId + '"', e);
+          logger.error("Couldn't start service \"" + svcId + '"', e);
           continue;
         }
       }
@@ -190,7 +136,7 @@ public class Index extends PageBean
     for (int i = 0; i < serviceIds.length; i++) {
       final String svcId = serviceIds[i];
       try {
-        if (ServiceInfo.STATUS_RUNNING == hostsManager.getServiceInfo(svcId).getStatus())
+        if (ServiceInfo.STATUS_ONLINE == hostsManager.getServiceInfo(svcId).getStatus())
           hostsManager.shutdownService(svcId);
         else
           logger.debug("stopServices: " + svcId + " is " + hostsManager.getServiceInfo(svcId).getStatusStr());
@@ -226,9 +172,13 @@ public class Index extends PageBean
 
   public String getHost(final String sId)
   {
-    try {
-      return hostsManager.getServiceInfo(sId).getHost();
-    } catch (Throwable e) {
+    try
+	{
+		String result = "";
+		String[] nodes = hostsManager.getServiceNodes(sId);
+		for(int i = 0; i < nodes.length; i++) {result += nodes[i];}
+		return result;
+	} catch (Throwable e) {
       error(SMSCErrors.error.services.couldntGetServiceInfo, e);
       logger.error("Couldn't get service info for service \"" + sId + '"', e);
       return "";
@@ -290,7 +240,7 @@ public class Index extends PageBean
   public boolean isSmscAlive()
   {
     try {
-      return ServiceInfo.STATUS_RUNNING == hostsManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus();
+      return ServiceInfo.STATUS_ONLINE == hostsManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus();
     } catch (AdminException e) {
       error(SMSCErrors.error.services.couldntGetServiceInfo, Constants.SMSC_SME_ID);
       return false;

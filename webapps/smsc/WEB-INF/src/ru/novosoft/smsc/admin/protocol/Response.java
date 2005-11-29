@@ -113,7 +113,7 @@ public class Response
 			if (statuses[i].name.equalsIgnoreCase(status))
 				return statuses[i].status;
 
-		logger.warn("Unkonwn status \"" + status + "\" in response");
+		logger.warn("Unknown status \"" + status + "\" in response");
 		return 0;
 	}
 

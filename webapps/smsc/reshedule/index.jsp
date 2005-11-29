@@ -13,7 +13,6 @@
               java.net.URLEncoder"
 %><jsp:useBean id="bean" class="ru.novosoft.smsc.jsp.smsc.reshedule.Index"
 /><jsp:setProperty name="bean" property="*"/><%
-//ServiceIDForShowStatus = Constants.SMSC_SME_ID;
 FORM_METHOD = "POST";
 TITLE = getLocString("reschedule.title");
 MENU0_SELECTION = "MENU0_SMSC_Reshedule";

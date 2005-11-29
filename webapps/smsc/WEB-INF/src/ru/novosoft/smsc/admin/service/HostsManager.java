@@ -3,19 +3,20 @@ package ru.novosoft.smsc.admin.service;
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
-import ru.novosoft.smsc.admin.daemon.Daemon;
-import ru.novosoft.smsc.admin.daemon.DaemonManager;
+import ru.novosoft.smsc.admin.resource_group.ResourceGroupManager;
+import ru.novosoft.smsc.admin.resource_group.ResourceGroup;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
 import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.util.config.Config;
+import ru.novosoft.smsc.util.SortedList;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
+import java.util.HashMap;
 
 /**
  * Created by igork Date: Jan 20, 2003 Time: 6:23:33 PM
@@ -24,16 +25,16 @@ public class HostsManager
 {
   private Category logger = Category.getInstance(this.getClass());
 
-  private DaemonManager daemonManager = null;
+  private ResourceGroupManager resourceGroupManager = null;
   private ServiceManager serviceManager = null;
   private SmeManager smeManager = null;
   private RouteSubjectManager routeSubjectManager;
   private long serviceRefreshTimeStamp = 0;
 
-  public HostsManager(final DaemonManager daemonManager, final ServiceManager serviceManager, final SmeManager smeManager,
+  public HostsManager(final ResourceGroupManager resourceGroupManager, final ServiceManager serviceManager, final SmeManager smeManager,
                       final RouteSubjectManager routeSubjectManager)
   {
-    this.daemonManager = daemonManager;
+    this.resourceGroupManager = resourceGroupManager;
     this.serviceManager = serviceManager;
     this.smeManager = smeManager;
     this.routeSubjectManager = routeSubjectManager;
@@ -44,41 +45,83 @@ public class HostsManager
     }
   }
 
+	public synchronized ResourceGroup addResourceGroup(ResourceGroup resGroup) throws AdminException
+	{
+/*		resourceGroupManager.add(resGroup);
+		for (Iterator i = resGroup.getServiceIds(smeManager).iterator(); i.hasNext();)
+		{
+			final String serviceId = (String) i.next();
+			if (serviceManager.contains(serviceId))
+			{
+				resourceGroupManager.remove(resGroup.getName());
+				throw new AdminException("Service \"" + serviceId + "\" from new resource group \"" + resGroup.getName() + "\" already presented in system");
+			}
+		}
+		try
+		{
+			serviceManager.addAllInfos(resGroup.getServices());
+		}
+		catch (AdminException e)
+		{
+			resourceGroupManager.remove(resGroup.getName());
+			final AdminException exception = new AdminException("Couldn't add services from new resource group \"" + resGroup.getName() + "\", resource group not added. Nested: " + e.getMessage());
+			exception.initCause(e);
+			throw exception;
+		}
+		return resGroup;*/return null;
+	}
 
-  /* ******************************** daemon operations ***************************************/
-  /**
-   * Create and add daemon
-   *
-   * @param host
-   * @param port
-   * @return new added daemon
-   * @throws AdminException
-   */
-  public synchronized Daemon addHost(final String host, final int port, final String hostServicesFolder) throws AdminException
+
+  public synchronized ResourceGroup addHost(final String host, final int port, final String hostServicesFolder) throws AdminException
   {
-    final Daemon daemon = daemonManager.add(host, port, smeManager, hostServicesFolder);
-    for (Iterator i = daemon.getServiceIds(smeManager).iterator(); i.hasNext();) {
+/*    final ResourceGroup resGroup = resourceGroupManager.add(host, port, smeManager, hostServicesFolder);
+    for (Iterator i = resGroup.getServiceIds(smeManager).iterator(); i.hasNext();) {
       final String serviceId = (String) i.next();
       if (serviceManager.contains(serviceId)) {
-        daemonManager.remove(daemon.getHost());
-        throw new AdminException("Service \"" + serviceId + "\" from new host \"" + host + ":" + port + "\" already presented in system");
+        resourceGroupManager.remove(resGroup.getName());
+        throw new AdminException("Service \"" + serviceId + "\" from new resource group \"" + host + ":" + port + "\" already presented in system");
       }
     }
     try {
-      serviceManager.addAllInfos(daemon.getServices());
+      serviceManager.addAllInfos(resGroup.getServices());
     } catch (AdminException e) {
-      daemonManager.remove(daemon.getHost());
-      final AdminException exception = new AdminException("Couldn't add services from new host \"" + host + "\", host not added. Nested: " + e.getMessage());
+      resourceGroupManager.remove(resGroup.getName());
+      final AdminException exception = new AdminException("Couldn't add services from new resource group \"" + host + "\", resource group not added. Nested: " + e.getMessage());
       exception.initCause(e);
       throw exception;
     }
-    return daemon;
+    return resGroup;*/ return null;
   }
 
-  public synchronized Daemon removeHost(final String host) throws AdminException
+	public synchronized ResourceGroup removeResourceGroup(final String resGroupName) throws AdminException
+	{
+/*		logger.debug("Remove resource group \"" + resGroupName + "\"");
+		final ResourceGroup resGroup = resourceGroupManager.get(resGroupName);
+		if (resGroup.isContainSmsc())
+			throw new AdminException("Couldn't remove resource group \"" + resGroupName + "\": resource group contains SMSC");
+		final List serviceIds = resGroup.getServiceIds(smeManager);
+		for (Iterator i = serviceIds.iterator(); i.hasNext();)
+		{
+			final String serviceId = (String) i.next();
+			logger.debug("  " + serviceId);
+		}
+		for (Iterator i = serviceIds.iterator(); i.hasNext();)
+		{
+			final String serviceId = (String) i.next();
+			if (isSmeUsed(serviceId) != 0)
+			throw new AdminException("SME \"" + serviceId + "\" is used");
+		}
+		resourceGroupManager.removeAllServices(resGroup.getName());
+		serviceManager.removeAll(serviceIds);
+		smeManager.removeAllIfSme(serviceIds);
+		return resourceGroupManager.remove(resGroup.getName());*/return null;
+	}
+
+
+  public synchronized ResourceGroup removeHost(final String host) throws AdminException
   {
-    logger.debug("Remove host \"" + host + "\"");
-    final Daemon daemon = daemonManager.get(host);
+/*    logger.debug("Remove host \"" + host + "\"");
+    final ResourceGroup daemon = resourceGroupManager.get(host);
     if (daemon.isContainsSmsc())
       throw new AdminException("Couldn't remove host \"" + host + "\": host contains SMSC");
     final List serviceIds = daemon.getServiceIds(smeManager);
@@ -91,116 +134,126 @@ public class HostsManager
       if (isSmeUsed(serviceId) != 0)
         throw new AdminException("SME \"" + serviceId + "\" is used");
     }
-    daemonManager.removeAllServicesFromHost(daemon.getHost());
+    resourceGroupManager.removeAllServicesFromHost(daemon.getHost());
     serviceManager.removeAll(serviceIds);
     smeManager.removeAllIfSme(serviceIds);
-    return daemonManager.remove(daemon.getHost());
+    return resourceGroupManager.remove(daemon.getHost());*/ return null;
   }
 
   public synchronized List getHostNames()
   {
-    return daemonManager.getHostNames();
+    //return resourceGroupManager.getResourceGroupsNames();
+		return new SortedList();
   }
 
   /* **************************************** services ************************************************/
   public synchronized List getServiceIds() throws AdminException
   {
-    refreshServices();
-    return serviceManager.getServiceIds();
+//    refreshServices();
+    //return serviceManager.getServiceIds();*/
+		return new SortedList();
   }
 
   public synchronized Map getServices(final String hostName) throws AdminException
   {
-    refreshServices();
-    return daemonManager.get(hostName).getServices();
+//    refreshServices();
+    //return resourceGroupManager.get(hostName).getServices();
+		return new HashMap();
   }
 
   public synchronized Service removeService(final String serviceId) throws AdminException
   {
-	int useFlag = isSmeUsed(serviceId);
+/*	int useFlag = isSmeUsed(serviceId);
 	if (useFlag != 0)
 	{
 		if (useFlag == 1) throw new AdminException("Service \"" + serviceId + "\" is used by routes");
 		if (useFlag == 2) throw new AdminException("Service \"" + serviceId + "\" is used by subjects");
 	}
-    final Daemon daemon = daemonManager.getServiceDaemon(serviceId);
-    if (null == daemon)
+    final ResourceGroup resGroup = resourceGroupManager.getServiceResourceGroup(serviceId);
+    if (null == resGroup)
       throw new AdminException("Service \"" + serviceId + "\" host not found");
 
-    daemon.removeService(serviceId);
+    resGroup.removeService(serviceId);
     final Service service = serviceManager.remove(serviceId);
     smeManager.remove(serviceId);
 
-    return service;
+    return service;*/ return null;
   }
 
   public synchronized void startService(final String serviceId) throws AdminException
   {
-    try {
+	getService(serviceId).online();
+/*    try {
       final ServiceInfo info = serviceManager.getInfo(serviceId);
-      final Daemon d = daemonManager.get(info.getHost());
+      final ResourceGroup d = resourceGroupManager.get(info.getHost());
       d.startService(serviceId);
     } catch (AdminException e) {
       logger.error("Couldn't start service \"" + serviceId + "\"", e);
       throw e;
-    }
+    }*/
   }
 
   public synchronized void killService(final String serviceId) throws AdminException
   {
-    final ServiceInfo info = serviceManager.getInfo(serviceId);
-    final Daemon d = daemonManager.get(info.getHost());
+/*    final ServiceInfo info = serviceManager.getInfo(serviceId);
+    final ResourceGroup d = resourceGroupManager.get(info.getHost());
 
-    d.killService(serviceId);
+    d.killService(serviceId);*/
   }
 
   public synchronized void shutdownService(final String serviceId) throws AdminException
   {
-    daemonManager.get(serviceManager.getInfo(serviceId).getHost()).shutdownService(serviceId);
+    getService(serviceId).offline();
   }
 
   public synchronized int getCountRunningServices(final String hostName) throws AdminException
   {
-    refreshServices();
-    return daemonManager.get(hostName).getCountRunningServices();
+/*    refreshServices();
+    return resourceGroupManager.get(hostName).getCountRunningServices();*/
+	return 0;
   }
 
   public synchronized int getCountServices(final String hostName) throws AdminException
   {
-    refreshServices();
-    return daemonManager.get(hostName).getCountServices();
+//    refreshServices();
+    return resourceGroupManager.getResourceGroupsCount();
   }
 
   public void refreshServices() throws AdminException
   {
-    final long currentTime = System.currentTimeMillis();
+/*    final long currentTime = System.currentTimeMillis();
     if (currentTime - Constants.ServicesRefreshTimeoutMillis > serviceRefreshTimeStamp) {
       serviceRefreshTimeStamp = currentTime;
-      final Map services = daemonManager.refreshServices(smeManager);
+      final Map services = resourceGroupManager.refreshServices(smeManager);
       logger.debug("Refresh services: " + services.size() + " services found");
       serviceManager.updateServices(services);
-    }
+    }*/
   }
 
   public synchronized void deployAdministrableService(final File incomingZip, final ServiceInfo serviceInfo) throws AdminException
   {
-    final String id = serviceInfo.getId();
+/*    final String id = serviceInfo.getId();
     if (serviceManager.contains(id))
       throw new AdminException("Couldn't add new service \"" + id + "\": service with that ID already contained in system.");
     if (smeManager.contains(id))
       throw new AdminException("Couldn't add new service \"" + id + "\": SME with that ID already contained in system.");
-    final File serviceFolder = new File(daemonManager.get(serviceInfo.getHost()).getDaemonServicesFolder(), serviceInfo.getId());
-    try {
+    String[] servicesFolderNames = resourceGroupManager.get(serviceInfo.getResGroup()).getServicesFolder();
+    File[] serviceFolder = new File[servicesFolderNames.length];
+    for (int i = 0; i < servicesFolderNames.length; i++)
+     serviceFolder[i] = new File(servicesFolderNames[i], serviceInfo.getId());
+    try
+	{
       serviceManager.deployAdministrableService(incomingZip, serviceInfo, serviceFolder);
-      daemonManager.addService(serviceInfo);
+      resourceGroupManager.addService(serviceInfo);
       smeManager.add(serviceInfo.getSme());
-    } catch (AdminException e) {
-      logger.error("Couldn't deploy administrable service \"" + id + "\"", e);
-      serviceManager.rollbackDeploy(serviceInfo.getHost(), id, serviceFolder);
-      if (smeManager.contains(id))
-        smeManager.remove(id);
-      throw e;
     }
+	catch (AdminException e)
+	{
+      logger.error("Couldn't deploy administrable service \"" + id + "\"", e);
+      serviceManager.rollbackDeploy(id, serviceFolder);
+      if (smeManager.contains(id)) smeManager.remove(id);
+      throw e;
+    }*/
   }
 
 
@@ -226,7 +279,7 @@ public class HostsManager
   public synchronized void removeSme(final String smeId) throws AdminException
   {
     if (serviceManager.contains(smeId))
-      throw new AdminException("Couldn't remove sme \"" + smeId + "\" becouse it is service");
+      throw new AdminException("Couldn't remove sme \"" + smeId + "\" because it is service");
 
 	int useFlag = isSmeUsed(smeId);
 	if (useFlag != 0)
@@ -244,46 +297,62 @@ public class HostsManager
     return routeSubjectManager.isSmeUsed(smeId);
   }
 
-  public synchronized int getHostPort(final String hostName) throws AdminException
+	public synchronized int getHostPort(final String name) throws AdminException
+	{
+		return 0;
+	}
+
+  public synchronized int getHostPort(final String rgName, final String nodeName) throws AdminException
   {
-    return daemonManager.get(hostName).getPort();
+//    return resourceGroupManager.get(rgName).getPort(nodeName);
+	return 0;
   }
 
   public synchronized boolean isService(final String smeId)
   {
-    return serviceManager.contains(smeId);
+    return resourceGroupManager.contains(smeId);
   }
 
-  public synchronized boolean isServiceAdministarble(final String smeId)
+  public synchronized boolean isServiceAdministrable(final String smeId)
   {
-    return serviceManager.isServiceAdministarble(smeId);
+    return serviceManager.isServiceAdministrable(smeId);
   }
 
   public synchronized ServiceInfo getServiceInfo(final String serviceId) throws AdminException
   {
-    refreshServices();
-    return serviceManager.getInfo(serviceId);
+    return new ServiceInfo(serviceId, "", "", "", true, smeManager.get(serviceId), getServiceStatus(serviceId));//serviceManager.getInfo(serviceId);
   }
 
-  public Service getService(final String smeId) throws AdminException
+  public synchronized ResourceGroup getService(final String smeId) throws AdminException
   {
-    return serviceManager.get(smeId);
+    return resourceGroupManager.get(smeId);
   }
 
   public synchronized void applyHosts() throws IOException, AdminException, Config.WrongParamTypeException
   {
-    daemonManager.saveHosts();
+    resourceGroupManager.save();
   }
 
-  public synchronized String getDaemonServicesFolder(final String hostName) throws AdminException
+  public synchronized String[] getServicesFolder(final String resGroupName) throws AdminException
   {
-    return daemonManager.get(hostName).getDaemonServicesFolder();
+    return null;//resourceGroupManager.get(resGroupName).getServicesFolder();
   }
 
-/*
-	public synchronized Daemon getSmscDaemon()
+	public synchronized String[] getServiceNodes(final String serviceId) throws AdminException
 	{
-		return daemonManager.getSmscDaemon();
+		return resourceGroupManager.get(serviceId).listNodes();
 	}
-*/
+
+	public synchronized byte getServiceStatus(final String serviceId) throws AdminException
+	{
+		byte result = ServiceInfo.STATUS_OFFLINE;
+		ResourceGroup rg = getService(serviceId);
+		String[] rgNodes = getServiceNodes(serviceId);
+		for (int i = 0; i < rgNodes.length; i++)
+		{
+			if (rg.getOnlineStatus(rgNodes[i]) == ServiceInfo.STATUS_ONLINE)
+				result = ServiceInfo.STATUS_ONLINE;
+		}
+		return result;
+	}
 }

@@ -79,8 +79,11 @@ public class ServiceManagerImpl implements ServiceManager
     require(serviceId);
     Service s = get(serviceId);
     services.remove(serviceId);
-    if (!Functions.recursiveDeleteFolder(s.getInfo().getServiceFolder())
-            || !Functions.recursiveDeleteFolder(WebAppFolders.getServiceJspsFolder(serviceId)))
+	boolean deleteResult = true;
+	File[] serviceFolder = s.getInfo().getServiceFolders();
+	for (int i = 0; i < serviceFolder.length; i++)
+		deleteResult = deleteResult || Functions.recursiveDeleteFolder(serviceFolder[i]);
+    if (!deleteResult || !Functions.recursiveDeleteFolder(WebAppFolders.getServiceJspsFolder(serviceId)))
       throw new AdminException("Service removed, but services files not deleted");
     return s;
   }
@@ -115,45 +118,47 @@ public class ServiceManagerImpl implements ServiceManager
     return services.keySet().contains(smeId);
   }
 
-  public void deployAdministrableService(File incomingZip, ServiceInfo serviceInfo, File serviceFolder)
+  public void deployAdministrableService(File incomingZip, ServiceInfo serviceInfo, File[] serviceFolder)
           throws AdminException
   {
-    String hostName = serviceInfo.getHost();
     String serviceId = serviceInfo.getId();
-    try {
+    try
+	{
+     for (int i = 0; i < serviceFolder.length; i++)
+     {
       /****** deploy files ******/
+
       File jspsFolder = WebAppFolders.getServiceJspsFolder(serviceId);
 
-      if (serviceFolder.exists())
-        throw new AdminException("Service already exists in filesystem: "+serviceFolder.getCanonicalPath());
+      if (serviceFolder[i].exists())
+        throw new AdminException("Service already exists in filesystem: "+serviceFolder[i].getCanonicalPath());
       if (jspsFolder.exists())
-        throw new AdminException("Jps pages for new services already exists: "+jspsFolder.getCanonicalPath());
+        throw new AdminException("Jsp pages for new services already exists: "+jspsFolder.getCanonicalPath());
 
-      Functions.unZipArchive(serviceFolder,
-              new BufferedInputStream(new FileInputStream(incomingZip)));
+      Functions.unZipArchive(serviceFolder[i], new BufferedInputStream(new FileInputStream(incomingZip)));
 
-      File incomingJsps = new File(serviceFolder, "jsp");
+      File incomingJsps = new File(serviceFolder[i], "jsp");
       if (!incomingJsps.renameTo(jspsFolder))
         throw new AdminException("Couldn't deploy JSP's (\"" + incomingJsps.getCanonicalPath() + "\") to \"" + jspsFolder.getCanonicalPath() + "\"");
 
-      File newLogFolder = new File(serviceFolder, "log");
+      File newLogFolder = new File(serviceFolder[i], "log");
       newLogFolder.mkdir();
-      moveJars(new File(serviceFolder, "lib"), WebAppFolders.getWebinfLibFolder());
+      moveJars(new File(serviceFolder[i], "lib"), WebAppFolders.getWebinfLibFolder());
 
-      File deploy_config = new File(serviceFolder, "config.xml");
+      File deploy_config = new File(serviceFolder[i], "config.xml");
       if (deploy_config.exists() && deploy_config.isFile())
         deploy_config.delete();
-
+     }
       /****** register new sme *****/
       add(new Service(serviceInfo));
     } catch (AdminException e) {
-      rollbackDeploy(hostName, serviceId, serviceFolder);
-      logger.error("Couldnt deploy new services", e);
+      rollbackDeploy(serviceId, serviceFolder);
+      logger.error("Couldn't deploy new services", e);
       throw e;
     } catch (IOException e) {
-      rollbackDeploy(hostName, serviceId, serviceFolder);
-      logger.error("Couldnt deploy new services", e);
-      throw new AdminException("Couldnt deploy new services, nested: " + e.getMessage());
+      rollbackDeploy(serviceId, serviceFolder);
+      logger.error("Couldn't deploy new services", e);
+      throw new AdminException("Couldn't deploy new services, nested: " + e.getMessage());
     }
   }
 
@@ -178,11 +183,12 @@ public class ServiceManagerImpl implements ServiceManager
     }
   }
 
-  public void rollbackDeploy(String hostName, String serviceId, File serviceFolder)
+  public void rollbackDeploy(String serviceId, File[] serviceFolder)
   {
     services.remove(serviceId);
 
-    Functions.recursiveDeleteFolder(serviceFolder);
+	for (int i = 0; i < serviceFolder.length; i++)
+		Functions.recursiveDeleteFolder(serviceFolder[i]);
 
     File jspsFolder = WebAppFolders.getServiceJspsFolder(serviceId);
     Functions.recursiveDeleteFolder(jspsFolder);
@@ -210,7 +216,7 @@ public class ServiceManagerImpl implements ServiceManager
     services.keySet().retainAll(serviceInfos.keySet());
   }
 
-  public boolean isServiceAdministarble(String serviceId)
+  public boolean isServiceAdministrable(String serviceId)
   {
     if (isService(serviceId)) {
       final File jspsFolder = WebAppFolders.getServiceJspsFolder(serviceId);

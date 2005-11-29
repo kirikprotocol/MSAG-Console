@@ -12,7 +12,7 @@ public class PerfServer extends Thread
 {
   private org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(this.getClass());
   protected int appletPort;
-  protected String smscHost;
+  protected String smscHost = null;
   protected int perfPort;
   ServerSocket ssock;
   ArrayList runners;
@@ -21,6 +21,11 @@ public class PerfServer extends Thread
   {
     return smscHost;
   }
+
+	public void setSmscHost(String smscHost)
+	{
+		this.smscHost = smscHost;
+	}
 
   public int getPerfPort()
   {
@@ -31,7 +36,6 @@ public class PerfServer extends Thread
   public PerfServer(Config config) throws IOException, Config.ParamNotFoundException, Config.WrongParamTypeException
   {
     appletPort = config.getInt("perfmon.appletport");
-    smscHost = config.getString("smsc.host");
     perfPort = config.getInt("perfmon.smscport");
     ssock = new ServerSocket(appletPort);
     runners = new ArrayList();

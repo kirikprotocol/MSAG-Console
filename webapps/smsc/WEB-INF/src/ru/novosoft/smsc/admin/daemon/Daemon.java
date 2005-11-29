@@ -50,8 +50,8 @@ public class Daemon extends Proxy
       final NodeList list = r.getData().getElementsByTagName("service");
       for (int i = 0; i < list.getLength(); i++) {
         final Element serviceElement = (Element) list.item(i);
-        final ServiceInfo newInfo = new ServiceInfo(serviceElement, host, smeManager, daemonServicesFolder);
-        services.put(newInfo.getId(), newInfo);
+//        final ServiceInfo newInfo = new ServiceInfo(serviceElement, host, smeManager, daemonServicesFolder);
+//        services.put(newInfo.getId(), newInfo);
       }
     }
     return services;

@@ -129,7 +129,7 @@ page_menu_end(out);
 //todo security-constraint для reschedule  if (request.isUserInRole("reschedule"))
   printOptionsString(out, request, bean.getJournalReschedule(), rowN++, "reschedule", bean.isRescheduleChanged(), "users.roles.reschedule");
     
-  if (request.isUserInRole("smsc_service"))  printOptionsString(out, request, bean.getJournalSmsc(), rowN++, "smsc", bean.isSmscChanged(), "users.roles.smscServ");
+//  if (request.isUserInRole("smsc_service"))  printOptionsString(out, request, bean.getJournalSmsc(), rowN++, "smsc", bean.isSmscChanged(), "users.roles.smscServ");
 %>
 </tbody>
 </table>

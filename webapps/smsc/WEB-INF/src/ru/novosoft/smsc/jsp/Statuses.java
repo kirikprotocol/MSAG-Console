@@ -8,6 +8,9 @@ package ru.novosoft.smsc.jsp;
 
 public interface Statuses
 {
+
+	boolean isSomethingChanged(); 
+
   boolean isRoutesChanged();
 
   void setRoutesChanged(boolean routesChanged);

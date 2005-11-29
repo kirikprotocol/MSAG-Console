@@ -194,8 +194,10 @@ public class SMSCErrors
 		public static final String couldntStop = B + "couldntStop";
 		public static final String couldntApply = B + "couldntApply";
 		public static final String couldntSave = B + "couldntSave";
+		public static final String couldntSwitchOver = B + "couldntSwitchOver";
 		public static final String couldntRefreshComponents = B + "couldntRefreshComponents";
 		public static final String couldntGetConfig = B + "couldntGetConfig";
+		public static final String couldntGetState = B + "couldntGetState";
 		public static final String couldntGetScheduleConfig = B + "couldntGetScheduleConfig";
 		public static final String invalidParameter = B + "invalidParameter";
 		public static final String invalidIntParameter = B + "invalidIntParameter";

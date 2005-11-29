@@ -24,6 +24,8 @@ import ru.novosoft.smsc.admin.service.Service;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.service.Type;
 import ru.novosoft.smsc.jsp.SMSCAppContext;
+import ru.novosoft.smsc.jsp.StatusesImpl;
+import ru.novosoft.smsc.jsp.Statuses;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileDataSource;
 import ru.novosoft.smsc.jsp.util.tables.impl.profile.ProfileQuery;
@@ -62,6 +64,8 @@ public class Smsc extends Service
   private static final String APPLY_SMSC_CONFIG_METHOD_ID = "apply_smsc_config";
 //  private static final String APPLY_SERVICES_METHOD_ID = "apply_services";
   private static final String APPLY_LOCALE_RESOURCES_METHOD_ID = "apply_locale_resources";
+  private static final String SET_ROLE_METHOD_ID = "set_role";
+  private static final String GET_ROLE_METHOD_ID = "get_role";
 
   private static final String MSC_REGISTRATE_METHOD_ID = "msc_registrate";
   private static final String MSC_UNREGISTER_METHOD_ID = "msc_unregister";
@@ -87,7 +91,6 @@ public class Smsc extends Service
   private static final String ACL_REMOVE_ADDRESSES = "acl_remove_addresses";
   private static final String ACL_ADD_ADDRESSES = "acl_add_addresses";
 
-
   private File configFolder = null;
   private Map smeStatuses = new HashMap();
   private DistributionListAdmin distributionListAdmin = null;
@@ -100,12 +103,17 @@ public class Smsc extends Service
   private long serviceRefreshTimeStamp = 0;
   private static final char LOGGER_DELIMITER = ',';
 
-  public Smsc(final String smscHost, final int smscPort, final String smscConfFolderString, final NSConnectionPool connectionPool, SMSCAppContext smscAppContext) throws AdminException
+  private SMSCAppContext appContext = null;
+	private Statuses statuses = new StatusesImpl();
+	private String stopFileName = "";
+
+  public Smsc(final String SmscName, final String smscHost, final int smscPort, final String smscConfFolderString, final String stopFileName, final NSConnectionPool connectionPool, SMSCAppContext smscAppContext) throws AdminException
   {
-    super(new ServiceInfo(Constants.SMSC_SME_ID, smscHost, "", "", true, null, ServiceInfo.STATUS_STOPPED), smscPort);
+    super(new ServiceInfo(Constants.SMSC_SME_ID_PREFIX + SmscName, smscHost, "", "", true, null, ServiceInfo.STATUS_STOPPED), smscPort);
 
     try {
       this.configFolder = new File(smscConfFolderString);
+      this.stopFileName = stopFileName;
       final Document aliasesDoc = Utils.parse(new FileReader(new File(configFolder, "aliases.xml")));
       aliases = new AliasSet(aliasesDoc.getDocumentElement());
       profileDataSource = new ProfileDataSource(connectionPool);
@@ -130,6 +138,8 @@ public class Smsc extends Service
     }
 
     distributionListAdmin = new DistributionListManager(super.getInfo(),smscPort /*,connectionPool*/);
+
+	appContext = smscAppContext;
   }
 
   protected PrintWriter storeAliases(final PrintWriter out)
@@ -318,9 +328,11 @@ public class Smsc extends Service
 
   public synchronized void applyConfig() throws AdminException
   {
-    if (ServiceInfo.STATUS_RUNNING == getInfo().getStatus()) {
-      call(SMSC_COMPONENT_ID, APPLY_SMSC_CONFIG_METHOD_ID, Type.Types[Type.StringType], new HashMap());
-    }
+	if (ServiceInfo.STATUS_RUNNING == getInfo().getStatus())
+	{
+		call(SMSC_COMPONENT_ID, APPLY_SMSC_CONFIG_METHOD_ID, Type.Types[Type.StringType], new HashMap());
+	}
+	else throw new AdminException("Couldn't apply SMSC config: SMSC is not running");  
   }
 
   public synchronized void mscRegistrate(final String msc) throws AdminException
@@ -630,4 +642,14 @@ public class Smsc extends Service
     params.put("addresses", addresses);
     call(SMSC_COMPONENT_ID, ACL_ADD_ADDRESSES, Type.Types[Type.BooleanType], params);
   }
+
+	public Statuses getStatuses()
+	{
+		return statuses;
+	}
+
+	public String getStopFileName()
+	{
+		return stopFileName;
+	}
 }

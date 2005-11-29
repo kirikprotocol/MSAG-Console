@@ -416,7 +416,14 @@ public class SmsViewFormBean extends IndexBean
 
   public void setSmsId(String id)
   {
-    query.setSmsId(id);
+	try
+	{
+		query.setSmsId(id);
+	}
+	catch(AdminException e)
+	{
+		error("Invalid numeric format for sms id",e);
+	}
   }
 
   public int getStatus()

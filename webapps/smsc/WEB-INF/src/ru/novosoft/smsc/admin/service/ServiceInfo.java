@@ -26,17 +26,21 @@ public class ServiceInfo
   public static final byte STATUS_STOPPED = 3;
   public static final byte STATUS_UNKNOWN = 4;
 
+  public static final byte STATUS_ONLINE = 0;
+  public static final byte STATUS_OFFLINE = 1;
+
   protected String id = "";
   protected String host = "";
   protected String args = "";
+  protected String resGroup = "";
   protected Map components = new HashMap();
   protected SME sme = null;
   protected byte status = STATUS_STOPPED;
-  private File serviceFolder;
+  private File[] serviceFolder;
   private boolean autostart;
 
 
-  public ServiceInfo(final Element serviceElement, final String serviceHost, final SmeManager smeManager, final String daemonServicesFolder)
+  public ServiceInfo(final Element serviceElement, final String serviceHost, final SmeManager smeManager, final String[] daemonServicesFolder)
           throws AdminException
   {
     host = serviceHost;
@@ -47,7 +51,7 @@ public class ServiceInfo
     if ("".equals(id)) {
       throw new AdminException("services name or services system id not specified in response");
     }
-    if (id.equals(Constants.SMSC_SME_ID)) {
+    if (id.startsWith(Constants.SMSC_SME_ID_PREFIX)) {
       if (smeManager.contains(id))
         throw new AdminException("Couldn't add new SMSC - already presented");
       sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0);
@@ -63,10 +67,12 @@ public class ServiceInfo
 
     setStatusStr(serviceElement.getAttribute("status"));
 //? id==folder
-    this.serviceFolder = new File(daemonServicesFolder, id);
+	this.serviceFolder = new File[daemonServicesFolder.length];
+	for (int i = 0; i < daemonServicesFolder.length; i++)
+		this.serviceFolder[i] = new File(daemonServicesFolder[i], id);
   }
 
-  public ServiceInfo(final String id, final String host, final String serviceFolder, final String args, final boolean autostart, final SME sme,
+  public ServiceInfo(final String id, final String host, final String[] serviceFolder, final String args, final boolean autostart, final SME sme,
                      final byte status)
   {
     this.host = host;
@@ -75,8 +81,23 @@ public class ServiceInfo
     this.id = id;
     this.sme = sme;
     this.status = status;
-    this.serviceFolder = new File(serviceFolder);
+	this.serviceFolder = new File[serviceFolder.length];
+	for (int i = 0; i < serviceFolder.length; i++)
+		this.serviceFolder[i] = new File(serviceFolder[i], id);
   }
+
+	public ServiceInfo(final String id, final String host, final String serviceFolder, final String args, final boolean autostart, final SME sme,
+					   final byte status)
+	{
+	  this.host = host;
+	  this.args = args;
+	  this.autostart = autostart;
+	  this.id = id;
+	  this.sme = sme;
+	  this.status = status;
+	  this.serviceFolder = new File[1];
+	  this.serviceFolder[0] = new File(serviceFolder, id);
+	}
 
   public String getHost()
   {
@@ -87,6 +108,12 @@ public class ServiceInfo
   {
     return id;
   }
+
+	public void setId(final String id)
+	{
+		this.id = id;
+	}
+
 
   public String getArgs()
   {
@@ -140,14 +167,10 @@ public class ServiceInfo
   public String getStatusStr()
   {
     switch (status) {
-      case STATUS_RUNNING:
-        return "running";
-      case STATUS_STARTING:
-        return "starting";
-      case STATUS_STOPPING:
-        return "stopping";
-      case STATUS_STOPPED:
-        return "stopped";
+      case STATUS_ONLINE:
+        return "online";
+      case STATUS_OFFLINE:
+        return "offline";
       case STATUS_UNKNOWN:
         return "unknown";
       default:
@@ -172,13 +195,29 @@ public class ServiceInfo
     this.args = args;
   }
 
-  public File getServiceFolder()
+  public File[] getServiceFolders()
   {
     return serviceFolder;
   }
+
+	public File getServiceFolder()
+	{
+		if (serviceFolder != null) return serviceFolder[0];
+			else return null; 
+	}
 
   public boolean isAutostart()
   {
     return autostart;
   }
+
+	public String getResGroup()
+	{
+		return resGroup;
+	}
+
+	public void setResGroup(String resGroup)
+	{
+		this.resGroup = resGroup;
+	}
 }

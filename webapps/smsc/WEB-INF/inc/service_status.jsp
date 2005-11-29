@@ -31,17 +31,11 @@ String serviceStatus(SMSCAppContext appContext, String serviceId, String elem_id
 	{
 		switch (status)
 		{
-			case ServiceInfo.STATUS_RUNNING:
-				result += "<img src=\"/images/ic_running.gif\" width=10 height=10 title='" + getLocString("common.statuses.running") + "'>";
+			case ServiceInfo.STATUS_ONLINE:
+				result += "<img src=\"/images/ic_running.gif\" width=10 height=10 title='" + getLocString("common.statuses.online") + "'>";
 				break;
-			case ServiceInfo.STATUS_STOPPING:
-				result += "<img src=\"/images/ic_stopping.gif\" width=10 height=10 title='" + getLocString("common.statuses.stopping") + "'>";
-				break;
-			case ServiceInfo.STATUS_STOPPED:
-				result += "<img src=\"/images/ic_stopped.gif\" width=10 height=10 title='" + getLocString("common.statuses.stopped") + "'>";
-				break;
-			case ServiceInfo.STATUS_STARTING:
-				result += "<img src=\"/images/ic_starting.gif\" width=10 height=10 title='" + getLocString("common.statuses.starting") + "'>";
+			case ServiceInfo.STATUS_OFFLINE:
+				result += "<img src=\"/images/ic_starting.gif\" width=10 height=10 title='" + getLocString("common.statuses.offline") + "'>";
 				break;
 			default:
 				result += "<img src=\"/images/ic_unknown.gif\" width=10 height=10 title='" + getLocString("common.statuses.unknown") + "'>";
@@ -52,17 +46,11 @@ String serviceStatus(SMSCAppContext appContext, String serviceId, String elem_id
 	{
 		switch (status)
 		{
-			case ServiceInfo.STATUS_RUNNING:
-				result += getLocString("common.statuses.running");
+			case ServiceInfo.STATUS_ONLINE:
+				result += getLocString("common.statuses.online");
 				break;
-			case ServiceInfo.STATUS_STOPPING:
-				result += getLocString("common.statuses.stopping");
-				break;
-			case ServiceInfo.STATUS_STOPPED:
-				result += getLocString("common.statuses.stopped");
-				break;
-			case ServiceInfo.STATUS_STARTING:
-				result += getLocString("common.statuses.starting");
+			case ServiceInfo.STATUS_OFFLINE:
+				result += getLocString("common.statuses.offline");
 				break;
 			default:
 				result += getLocString("common.statuses.unknown");

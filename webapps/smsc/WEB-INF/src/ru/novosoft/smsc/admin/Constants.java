@@ -5,10 +5,12 @@
  */
 package ru.novosoft.smsc.admin;
 
-public interface Constants
+public class Constants
 {
   public static final int ROUTE_ID_MAXLENGTH = 32;
-  public static final String SMSC_SME_ID = "SMSC";
+  public static final String SMSC_SME_ID_PREFIX = "SMSC.";
+  public static String SMSC_SME_ID = "SMSC";
+
   public static final String TomcatRealmName = "SMSC.SmscRealm";
   public static final long ServicesRefreshTimeoutMillis = 1000;
 
@@ -17,7 +19,7 @@ public interface Constants
 
   public static final String ARCHIVE_DAEMON_SVC_ID = "ArchiveDaemon";
 
-  String CONSOLE_SESSION_ID = "Console Session";
+  public static final String CONSOLE_SESSION_ID = "Console Session";
   public static final long Day = 86400000;
   public static final long Hour = 3600000;
 }

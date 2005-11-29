@@ -148,4 +148,9 @@ public class SmeManagerImpl implements SmeManager
   {
     smsc.disconnectSmes(smeIdsToDisconnect);
   }
+
+	public void setSmsc(Smsc newSmsc)
+	{
+		smsc = newSmsc;
+	}
 }

@@ -20,7 +20,7 @@ public class TopServer extends Thread
 {
   private org.apache.log4j.Category logger = org.apache.log4j.Category.getInstance(this.getClass());
   protected int appletPort;
-  protected String smscHost;
+  protected String smscHost = null;
   protected int topPort;
   ServerSocket ssock;
   ArrayList runners;
@@ -28,7 +28,6 @@ public class TopServer extends Thread
   public TopServer(Config config) throws IOException, Config.ParamNotFoundException, Config.WrongParamTypeException
   {
     appletPort = config.getInt("topmon.appletport");
-    smscHost = config.getString("smsc.host");
     topPort = config.getInt("topmon.smscport");
     ssock = new ServerSocket(appletPort);
     runners = new ArrayList();
@@ -57,6 +56,11 @@ public class TopServer extends Thread
   {
     return smscHost;
   }
+
+	public void setSmscHost(String smscHost)
+	{
+		this.smscHost = smscHost;
+	}
 
   public int getTopPort()
   {

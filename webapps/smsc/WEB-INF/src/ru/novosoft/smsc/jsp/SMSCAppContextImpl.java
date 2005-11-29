@@ -5,7 +5,6 @@ import org.apache.log4j.PropertyConfigurator;
 import ru.novosoft.smsc.admin.acl.AclManager;
 import ru.novosoft.smsc.admin.category.CategoryManager;
 import ru.novosoft.smsc.admin.console.Console;
-import ru.novosoft.smsc.admin.daemon.DaemonManager;
 import ru.novosoft.smsc.admin.journal.Journal;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.resources.ResourcesManager;
@@ -13,12 +12,13 @@ import ru.novosoft.smsc.admin.resources.ResourcesManagerImpl;
 import ru.novosoft.smsc.admin.route.RouteSubjectManagerImpl;
 import ru.novosoft.smsc.admin.service.HostsManager;
 import ru.novosoft.smsc.admin.service.ServiceManagerImpl;
-import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
-import ru.novosoft.smsc.admin.smsc_service.SmeManager;
-import ru.novosoft.smsc.admin.smsc_service.SmeManagerImpl;
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.service.ServiceManager;
+import ru.novosoft.smsc.admin.smsc_service.*;
 import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.admin.users.User;
+import ru.novosoft.smsc.admin.resource_group.ResourceGroupManager;
+import ru.novosoft.smsc.admin.resource_group.ResourceGroupConstants;
+import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.perfmon.PerfServer;
 import ru.novosoft.smsc.topmon.TopServer;
 import ru.novosoft.smsc.util.LocaleMessages;
@@ -50,15 +50,19 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 	private ProviderManager providerManager = null;
 	private CategoryManager categoryManager = null;
 	private AclManager aclManager = null;
+	private ServiceManager serviceManager = null;
 
 	private Smsc smsc = null;
+	private SmscList smscList = null;
 	private NSConnectionPool connectionPool = null;
+
 	private Statuses statuses = new StatusesImpl();
 	private Journal journal = new Journal();
 
 	private Console console = null;
 
 	private String initErrorCode = null;
+	private byte instType = ResourceGroupConstants.RESOURCEGROUP_TYPE_UNKNOWN;
 
   private void initLoggerByProps(InputStream is)
   {
@@ -118,7 +122,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       initLogger();
       webappConfig = new Config(new File(configFileName));
       System.out.println("webappConfig = " + configFileName + " **************************************************");
-      WebAppFolders.init(webappConfig.getString("system.webapp folder"), webappConfig.getString("system.work folder"), webappConfig.getString("smsc.config folder"));
+      WebAppFolders.init(webappConfig.getString("system.webapp folder"), webappConfig.getString("system.work folder"));
 
       try {
         webXmlConfig = new WebXml(new File(WebAppFolders.getWebinfFolder(), "web.xml"));
@@ -130,25 +134,34 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       resourcesManager = new ResourcesManagerImpl();
       createConnectionPool(webappConfig);
 
-      smsc = new Smsc(webappConfig.getString("smsc.host"), webappConfig.getInt("smsc.port"), webappConfig.getString("smsc.config folder"), connectionPool, this);
+		serviceManager = new ServiceManagerImpl();
+		smscList = new SmscList(webappConfig, connectionPool, this);
       smeManager = new SmeManagerImpl(smsc);
       routeSubjectManager = new RouteSubjectManagerImpl(smeManager);
-      DaemonManager daemonManager = new DaemonManager(smeManager, webappConfig);
-      ServiceManagerImpl serviceManager = new ServiceManagerImpl();
-      serviceManager.add(smsc);
-      hostsManager = new HostsManager(daemonManager, serviceManager, smeManager, routeSubjectManager);
+		try
+		{
+			this.instType = ResourceGroupConstants.getTypeFromString(webappConfig.getString(ResourceGroupConstants.RESOURCEGROUP_INSTALLTYPE_PARAM_NAME));
+		}
+		catch (Exception e)
+		{
+			System.out.println("Installation type is not defined in webconfig");
+			throw new AdminException("Installation type is not defined in webconfig");
+		}
+      ResourceGroupManager resourceGroupManager = new ResourceGroupManager(this);
+      hostsManager = new HostsManager(resourceGroupManager, serviceManager, smeManager, routeSubjectManager);
       aclManager = new AclManager(this);
-
 		Config localeConfig = new Config(new File(webappConfig.getString("system.localization file")));
 		LocaleMessages.init(localeConfig); // должно вызыватьс€ раньше, чем ёзерћанагер
 		File usersConfig = new File(webappConfig.getString("system.users file"));
 		userManager = new UserManager(usersConfig);
       providerManager = new ProviderManager(webappConfig);
       categoryManager = new CategoryManager(webappConfig);
-      statuses.setRoutesSaved(routeSubjectManager.hasSavedConfiguration());
+      getStatuses().setRoutesSaved(routeSubjectManager.hasSavedConfiguration());
       perfServer = new PerfServer(webappConfig);
+		perfServer.setSmscHost(smscList.getSmsc().getHost());
       perfServer.start();
       topServer = new TopServer(webappConfig);
+		topServer.setSmscHost(smscList.getSmsc().getHost());
       topServer.start();
       startConsole();
       System.out.println("SMSC Administartion Web Application Started  **************************************************");
@@ -198,6 +211,11 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
   {
     return smsc;
   }
+
+	public void setSmsc(Smsc newSmsc)
+	{
+		smsc = newSmsc;
+	}
 
   public SmeManager getSmeManager()
   {
@@ -317,5 +335,30 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
   {
     return aclManager;
   }
+
+	public SmscList getSmscList()
+	{
+		return smscList;
+	}
+
+	public ServiceManager getServiceManager()
+	{
+		return serviceManager;
+	}
+
+	public void setTopMonSmscHost(String smscHost)
+	{
+		topServer.setSmscHost(smscHost);
+	}
+
+	public void setPerfMonSmscHost(String smscHost)
+	{
+		perfServer.setSmscHost(smscHost);
+	}
+
+	public byte getInstallType()
+	{
+		return instType;
+	}
 }
 

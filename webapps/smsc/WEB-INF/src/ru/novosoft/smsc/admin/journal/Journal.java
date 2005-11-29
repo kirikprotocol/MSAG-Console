@@ -14,6 +14,18 @@ public class Journal
   private Category logger = Category.getInstance(this.getClass());
   private Category journalLogger = Category.getInstance("journal");
 
+	private static final Set nonAppliableSubjectTypes = new HashSet();
+
+	static
+	{
+		nonAppliableSubjectTypes.add(new Byte(SubjectTypes.TYPE_dl));
+		nonAppliableSubjectTypes.add(new Byte(SubjectTypes.TYPE_locale));
+		nonAppliableSubjectTypes.add(new Byte(SubjectTypes.TYPE_profile));
+		nonAppliableSubjectTypes.add(new Byte(SubjectTypes.TYPE_service));
+		nonAppliableSubjectTypes.add(new Byte(SubjectTypes.TYPE_logger));
+		nonAppliableSubjectTypes.add(new Byte(SubjectTypes.TYPE_msc));
+	}
+
   public Journal()
   {
     logger.info("Journal created");
@@ -91,6 +103,11 @@ public class Journal
     }
     logger.debug("CLEAR(subjectType, subjectID) FINISHED");
   }
+
+	public synchronized void nonAppliableClear()
+	{
+		clear(nonAppliableSubjectTypes);
+	}
 
   public synchronized List getActions()
   {

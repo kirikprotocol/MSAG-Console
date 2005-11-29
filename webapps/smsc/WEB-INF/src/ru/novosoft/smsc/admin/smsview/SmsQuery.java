@@ -214,16 +214,22 @@ public class SmsQuery
     return smsId;
   }
 
-  public void setSmsId(String id)
+  public void setSmsId(String id) throws AdminException
   {
-    smsId = id;
-    if(isStringHaveValue(id)) {
-      isFilterSmsId = true;
-      smsIdValue = Long.valueOf(id).longValue();
-    } else {
-      isFilterSmsId = false;
-      smsIdValue = -1;
-    }
+	smsId = id;
+	isFilterSmsId = false;
+	smsIdValue = -1;
+	if(isStringHaveValue(id))
+		try
+		{
+			isFilterSmsId = true;
+			smsIdValue = Long.valueOf(id).longValue();
+		}
+		catch(NumberFormatException e)
+		{
+			smsId = "*";
+			throw new AdminException("Invalid numeric format for sms id");
+		}
   }
 
   public void setFilterFromDate(boolean enabled)

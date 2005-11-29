@@ -36,4 +36,6 @@ public interface SmeManager
   SmeStatus smeStatus(String id) throws AdminException;
 
   void disconnectSmes(List list) throws AdminException;
+
+	void setSmsc(Smsc newSmsc);
 }

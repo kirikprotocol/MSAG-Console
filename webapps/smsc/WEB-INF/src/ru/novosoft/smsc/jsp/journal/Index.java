@@ -2,6 +2,7 @@ package ru.novosoft.smsc.jsp.journal;
 
 import ru.novosoft.smsc.admin.journal.Action;
 import ru.novosoft.smsc.admin.journal.SubjectTypes;
+import ru.novosoft.smsc.admin.journal.Journal;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 
 import java.util.*;
@@ -20,18 +21,6 @@ public class Index extends IndexBean
   private static final byte SORT_subjectId = 4;
   private static final byte SORT_action = 5;
   private static final byte SORT_timestamp = 6;
-
-  private static final Set nonAppliableSubjectTypes = new HashSet();
-
-  static
-  {
-    nonAppliableSubjectTypes.add(new Byte(SubjectTypes.TYPE_dl));
-    nonAppliableSubjectTypes.add(new Byte(SubjectTypes.TYPE_locale));
-    nonAppliableSubjectTypes.add(new Byte(SubjectTypes.TYPE_profile));
-    nonAppliableSubjectTypes.add(new Byte(SubjectTypes.TYPE_service));
-    nonAppliableSubjectTypes.add(new Byte(SubjectTypes.TYPE_logger));
-    nonAppliableSubjectTypes.add(new Byte(SubjectTypes.TYPE_msc));
-  }
 
   List actions = null;
   private String mbClearNonappliable = null;
@@ -103,7 +92,7 @@ public class Index extends IndexBean
 
   private int clearNonappliable()
   {
-    appContext.getJournal().clear(nonAppliableSubjectTypes);
+    appContext.getJournal().nonAppliableClear();
     return RESULT_DONE;
   }
 

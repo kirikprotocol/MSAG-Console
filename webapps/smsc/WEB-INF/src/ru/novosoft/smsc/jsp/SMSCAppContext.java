@@ -13,9 +13,11 @@ import ru.novosoft.smsc.admin.preferences.UserPreferences;
 import ru.novosoft.smsc.admin.provider.ProviderManager;
 import ru.novosoft.smsc.admin.resources.ResourcesManager;
 import ru.novosoft.smsc.admin.service.HostsManager;
+import ru.novosoft.smsc.admin.service.ServiceManager;
 import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
 import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.admin.smsc_service.Smsc;
+import ru.novosoft.smsc.admin.smsc_service.SmscList;
 import ru.novosoft.smsc.admin.users.UserManager;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.xml.WebXml;
@@ -35,6 +37,8 @@ public interface SMSCAppContext extends AppContext
 	UserManager getUserManager();
 
 	Smsc getSmsc();
+
+	void setSmsc(Smsc newSmsc);
 
 	DataSource getConnectionPool();
 
@@ -67,4 +71,10 @@ public interface SMSCAppContext extends AppContext
 	WebXml getWebXmlConfig();
 
 	AclManager getAclManager();
+
+	SmscList getSmscList();
+
+	ServiceManager getServiceManager();
+
+	byte getInstallType();
 }

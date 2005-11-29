@@ -25,6 +25,13 @@ public class StatusesImpl implements Statuses
   private boolean categoriesChanged = false;
   private boolean scheduleChanged = false;
 
+	public boolean isSomethingChanged()
+	{
+	return isAliasesChanged() || isHostsChanged() || isProfilesChanged() || isRoutesChanged()
+			|| isSmscChanged() || isSubjectsChanged() || isUsersChanged() || isWebXmlChanged()
+			|| isProvidersChanged() || isCategoriesChanged() || isScheduleChanged();
+	}
+
   public boolean isRoutesChanged()
   {
     return routesChanged;
