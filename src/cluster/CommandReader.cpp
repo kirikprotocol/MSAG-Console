@@ -22,38 +22,42 @@ int CommandReader::Execute()
         std::auto_ptr<Socket> newSocket(sock->Accept());
         if ( newSocket.get())
         {
-            smsc_log_info(logger, "Reader has accepted command");
+           smsc_log_info(logger, "Reader has accepted command");
 
-            for( ;; ){
+           for( ;; )
+           {
+             try{
+               smsc_log_info(logger, "Reader reads command");
+               Command *cmd = readCommand(newSocket.get());
+               if(cmd)
+               {
+                 smsc_log_info(logger, "Command %02X readed", cmd->getType());
+                 if(cmd->getType() == GETROLE_CMD)
+                 {
+                   writeRole(newSocket.get(), cmd);
+                 }
+                 else
+                 {
+                   if(*role == SLAVE)
+                   {
+                     dispatcher->addCommand(cmd);
+                   }
+                   else
+                   {
+                     if(cmd)delete cmd;
+                   }
+                 }
+               }
+             }catch(Exception & e)
+             {
+                 smsc_log_info(logger, "Reader exception, %s", e.what());
+                 break;
+             }catch(...){
+                 smsc_log_info(logger, "Reader exception, unexpected error");
+                 break;
+             }
 
-                try{
-                    smsc_log_info(logger, "Reader reads command");
-                    if(Command *cmd = readCommand(newSocket.get())){
-
-                        smsc_log_info(logger, "Command %02X readed", cmd->getType());
-
-                        if(cmd->getType() == GETROLE_CMD)
-                            writeRole(newSocket.get(), cmd);
-                        else{
-
-                            if(*role == SLAVE)
-                                dispatcher->addCommand(cmd);
-                            else
-                                if(cmd)
-                                    delete cmd;
-                        }
-
-                    }
-                }catch(Exception & e)
-                {
-                    smsc_log_info(logger, "Reader exception, %s", e.what());
-                    break;
-                }catch(...){
-                    smsc_log_info(logger, "Reader exception, unexpected error");
-                    break;
-                }
-
-            }
+           }
         }
         //printf("reader, Execute, command is accepted\n");
 
@@ -143,23 +147,26 @@ void CommandReader::writeRole(Socket* socket, Command *cmd)
     memcpy((void*)( buffer.get() + 8), (const void*)buff.get(), len);
     delete cmd;
 
-    try {
-        if (!socket) throw Exception("Role send failed. Socket NULL!");
-        int toWrite = size; const char* writeBuffer = (const char *)buffer.get();
-        while (toWrite > 0) {
-            int write = socket->canWrite(10);
-            if (write == 0) throw Exception("Role send failed. Timeout expired.");
-            else if (write > 0) {
-                write = socket->Write(writeBuffer, toWrite);
-                if (write > 0) { writeBuffer+=write; toWrite-=write; continue; }
-            }
-            throw Exception("Role send failed. Socket closed. %s", strerror(errno));
-        }
+    if (!socket)
+    {
+       throw Exception("Role send failed. Socket NULL!");
+    }
+    int toWrite = size;
+    const char* writeBuffer = (const char *)buffer.get();
+    int written;
+    while (toWrite > 0)
+    {
+        if (socket->canWrite(10)<=0) throw Exception("Role send failed. Blocked socket.");
 
-    }catch(Exception e){
-        throw Exception("%s", e.what());
-    }catch(...){
-        throw Exception("Command read failed. Unexpected error.");
+        written = socket->Write(writeBuffer, toWrite);
+        if (written > 0)
+        {
+          writeBuffer+=written;
+          toWrite-=written;
+        }else
+        {
+          throw Exception("Role send failed. Socket closed. %s", strerror(errno));
+        }
     }
 }
 

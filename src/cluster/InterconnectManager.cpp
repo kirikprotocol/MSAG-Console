@@ -201,9 +201,6 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
 
 
 
-
-
-    Start();
 }
 
 InterconnectManager::~InterconnectManager()
@@ -222,9 +219,12 @@ InterconnectManager::~InterconnectManager()
 
 void InterconnectManager::init(const std::string& inAddr, const std::string& attachedInAddr, int _port, int _attachedPort)
 {
-    if (!InterconnectManager::instance) {
-        InterconnectManager::instance = new InterconnectManager(inAddr, attachedInAddr, _port, _attachedPort);
-    }
+  if (!InterconnectManager::instance)
+  {
+    InterconnectManager::instance = new InterconnectManager(inAddr, attachedInAddr, _port, _attachedPort);
+    ((InterconnectManager*)InterconnectManager::instance)->Start();
+
+  }
 }
 void InterconnectManager::shutdown()
 {
@@ -497,7 +497,7 @@ uint32_t InterconnectManager::readRole()
 
         return role_;
 
-    }catch(Exception e){
+    }catch(const Exception& e){
         throw Exception("%s", e.what());
     }catch(...){
         throw Exception("Command read failed. Unexpected error.");
@@ -526,7 +526,8 @@ void InterconnectManager::flushCommands()
       smsc_log_info(logger, "Command %02X is sending", command->getType());
       send(command.get());
       smsc_log_info(logger, "Command %02X is sent", command->getType());
-    }catch(std::exception & e)
+    }
+    catch(std::exception & e)
     {
       {
         MutexGuard mg(commandsMonitor);

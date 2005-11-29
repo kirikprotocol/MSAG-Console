@@ -291,8 +291,8 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
       if(mode)
               delete [] mode;
 
-  }catch(...){
-      throw Exception("InterconnectManager initialization exception.");
+  }catch(std::exception& e){
+      throw Exception("InterconnectManager initialization exception:%s",e.what());
   }
 
 #ifdef SNMP
