@@ -474,7 +474,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
     tp.startTask(inManCom);
     smsc_log_info(log, "IN manager started" );
   }
-  
+
   smsc_log_info(log, "Initializing MR cache" );
   mrCache.assignStore(store);
   smsc_log_info(log, "MR cache inited" );
@@ -1054,7 +1054,7 @@ void Smsc::run()
     smeman.registerInternallSmeProxy("INMANCOMM",inManCom);
     tp.startTask(inManCom);
     smsc_log_info(log, "IN manager started" );
-    
+
     distlstman->init();
     smsc::mscman::MscManager::startup(smsc::util::config::Manager::getInstance());
 
@@ -1205,7 +1205,6 @@ void Smsc::shutdown()
   __trace__("smeman dumped");
   if( ishs ) {
     __trace__("stopping interconnect");
-    agentListener.Stop();
     InterconnectManager::shutdown();
   }
   __trace__("shutdown completed");

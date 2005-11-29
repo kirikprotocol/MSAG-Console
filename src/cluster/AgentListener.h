@@ -20,21 +20,21 @@ public:
     AgentListener()
         : logger(Logger::getInstance("AgentListner")), stop(true), stopSmsc(false)
     {
-	};
-	virtual ~AgentListener()
-	{
-		sock.Close();
-        Stop();
-	};
+  };
+  virtual ~AgentListener()
+  {
+    sock.Abort();
+    Stop();
+  };
 
     void init(std::string host, int port, pid_t pid_);
     void Start();
     void Stop();
     virtual int Execute();
-    
+
 protected:
     Logger *logger;
-	Socket sock;
+  Socket sock;
     bool stop;
     bool stopSmsc;
     pid_t pid;

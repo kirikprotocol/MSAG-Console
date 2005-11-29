@@ -97,7 +97,6 @@ void AgentListener::init(std::string host, int port, pid_t pid_)
 void AgentListener::Stop()
 {
     smsc_log_info(logger, "agent listener stopping" );
-    sock.Close();
     stop = true;
     WaitFor();
     smsc_log_info(logger, "agent listener stopped" );
