@@ -9,3 +9,8 @@
 					<cnt6: uint16><cnt6 (avarage, 1hour): uint16>
 <errRecords> = <errRecord>...<errRecord>
 <errRecord> = <errCode: uint32><errCounter: uint16><errCounter (avarage): uint16>
+
+<getStat> = <size: uint32><countersNumber = 6: uint32><counter1>...<counter6>
+  		<uptime: 4bytes><now: 4bytes><eventQueueSize: uint32>
+		<inProcessingCount: uint32><inScheduler: uint32>
+<counter1> = <lastSecond: 4bytes><avarage: uint32><total: uint64> 
