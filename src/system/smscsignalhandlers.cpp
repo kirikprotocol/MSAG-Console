@@ -41,6 +41,9 @@ extern "C" void sigAbortDispatcher(int sig)
       _socketListener->abort(); */
     if (_smscComponent != 0)
       _smscComponent->abort();
+    else
+      abort();
+
   }
 }
 
@@ -55,12 +58,21 @@ extern "C" void sigDumpDispatcher(int sig)
       _socketListener->abort();*/
     if (_smscComponent != 0)
       _smscComponent->dump();
+    else
+      abort();
   }
 }
 
 extern "C" void sigShutdownHandler(int signo)
 {
   fprintf(stderr, "Signal %i received, shutdown\n", signo);
+  if(_smsc==0 && _smscComponent==0 && _socketListener==0)
+  {
+    fprintf(stderr,"2nd shutdown signal received. something wrong. aborting.\n");
+    abort();
+  }
+
+
   if (_smsc != 0)
     _smsc->shutdown();
   else
@@ -70,6 +82,9 @@ extern "C" void sigShutdownHandler(int signo)
     if (_smscComponent != 0)
       _smscComponent->stopSmsc();
   }
+  _smsc=0;
+  _smscComponent=0;
+  _socketListener=0;
 }
 
 void registerSignalHandlers_internal()
