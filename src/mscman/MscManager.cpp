@@ -40,6 +40,9 @@ namespace mscman {
       "Clear"
     };
 
+    static const char sig[]="SMSCMSCM";
+    static uint32_t ver=0x00010000;
+
     struct MscInfoChange
     {
 
@@ -81,6 +84,8 @@ namespace mscman {
         Hash<MscInfo*>          mscs;
         Array<MscInfoChange>    changes;
         Mutex                   changesLock;
+
+        void createFile(const char* fileName);
 
         void init(Manager& config)
             throw(ConfigException, InitException);
@@ -200,6 +205,49 @@ int MscManagerImpl::Execute()
   return 0;
 }
 
+static void rollRename(std::string fileName,int index)
+{
+  char buf[32];
+  sprintf(buf,".%d",index);
+  if(File::Exists((fileName+buf).c_str()))
+  {
+    if(index<9)
+    {
+      rollRename(fileName,index+1);
+    }else
+    {
+      File::Unlink((fileName+buf).c_str());
+    }
+  }
+  if(index==0)
+  {
+    File::Rename(fileName.c_str(),(fileName+buf).c_str());
+  }else
+  {
+    char buf2[32];
+    sprintf(buf2,".%d",index-1);
+    File::Rename((fileName+buf2).c_str(),(fileName+buf).c_str());
+  }
+}
+static void bakFile(std::string fileName)
+{
+  std::string bakFilename=fileName+".bak";
+  if(File::Exists(bakFilename.c_str()))
+  {
+    rollRename(bakFilename,0);
+  }
+  File::Rename(fileName.c_str(),bakFilename.c_str());
+}
+
+void MscManagerImpl::createFile(const char* fileName)
+{
+  storeFile.RWCreate(fileName);
+  storeFile.Write(sig,8);
+  storeFile.WriteNetInt32(ver);
+  storeFile.Flush();
+}
+
+
 void MscManagerImpl::init(Manager& config)
     throw(ConfigException, InitException)
 {
@@ -252,15 +300,10 @@ void MscManagerImpl::init(Manager& config)
     }
     */
 
-  const char sig[]="SMSCMSCM";
-  uint32_t ver=0x00010000;
   string fileName=config.getString("MscManager.storeFile");
   if(!File::Exists(fileName.c_str()))
   {
-    storeFile.RWCreate(fileName.c_str());
-    storeFile.Write(sig,8);
-    storeFile.WriteNetInt32(ver);
-    storeFile.Flush();
+    createFile(fileName.c_str());
     return;
   }else
   {
@@ -271,12 +314,16 @@ void MscManagerImpl::init(Manager& config)
   storeFile.Read(fileSig,8);
   if(strcmp(sig,fileSig))
   {
-    throw InitException("Invalid msc store file(%s!=%s):%s",sig,fileSig,fileName.c_str());
+    smsc_log_error(log,"Invalid msc store file(%s!=%s):%s",sig,fileSig,fileName.c_str());
+    bakFile(fileName);
+    createFile(fileName.c_str());
   }
   fileVer=storeFile.ReadNetInt32();
   if(fileVer!=ver)
   {
-    throw InitException("Invalid msc store file version:%s",fileName.c_str());
+    smsc_log_error(log,"Invalid msc store file version:%s",fileName.c_str());
+    bakFile(fileName);
+    createFile(fileName.c_str());
   }
   File::offset_type pos=storeFile.Pos();
   File::offset_type sz=storeFile.Size();
