@@ -2174,6 +2174,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
   SmeInfo dstSmeInfo=smsc->getSmeInfo(dest_proxy_index);
 
   t.command.setProxy(src_proxy);
+  t.command->set_dialogId(dialogId);
 
   if(!resp->result)
   {
