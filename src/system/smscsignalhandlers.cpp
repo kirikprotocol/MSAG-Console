@@ -74,13 +74,22 @@ extern "C" void sigShutdownHandler(int signo)
 
 
   if (_smsc != 0)
-    _smsc->shutdown();
+    _smsc->stop();
   else
   {
     if (_socketListener != 0)
       _socketListener->shutdown();
     if (_smscComponent != 0)
-      _smscComponent->stopSmsc();
+    {
+      try{
+        SmscComponent *tmp=_smscComponent;
+        _smscComponent=0;
+        tmp->stopSmsc();
+      }catch(std::exception& e)
+      {
+        fprintf(stderr,"Exception in stopSmsc:%s\n",e.what());
+      }
+    }
   }
   _smsc=0;
   _smscComponent=0;

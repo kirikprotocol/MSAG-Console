@@ -44,7 +44,7 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
 
     //printf("role: %d\n", role);
 
-    reader = CommandReader(&role, &socket, dispatcher, &attachedSocket);
+    reader.Init(&role, &socket, dispatcher, &attachedSocket);
     //printf("reader starting...\n");
     reader.Start();
     //printf("readers started\n");

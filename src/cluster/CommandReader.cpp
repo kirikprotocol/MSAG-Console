@@ -9,17 +9,18 @@ using smsc::core::network::Socket;
 
 void CommandReader::Start()
 {
-	stop = false;
-	Thread::Start();
+  stop = false;
+  Thread::Start();
 }
 
 int CommandReader::Execute()
 {
     smsc_log_info(logger, "Reader is strted");
-	while(!stop)
-	{
+  while(!stop)
+  {
         //printf("reader, Execute, wait for command...\n");
-        if (Socket *newSocket = sock->Accept())
+        std::auto_ptr<Socket> newSocket(sock->Accept());
+        if ( newSocket.get())
         {
             smsc_log_info(logger, "Reader has accepted command");
 
@@ -27,12 +28,12 @@ int CommandReader::Execute()
 
                 try{
                     smsc_log_info(logger, "Reader reads command");
-                    if(Command *cmd = readCommand(newSocket)){
+                    if(Command *cmd = readCommand(newSocket.get())){
 
                         smsc_log_info(logger, "Command %02X readed", cmd->getType());
 
                         if(cmd->getType() == GETROLE_CMD)
-                            writeRole(newSocket, cmd);
+                            writeRole(newSocket.get(), cmd);
                         else{
 
                             if(*role == SLAVE)
@@ -41,7 +42,7 @@ int CommandReader::Execute()
                                 if(cmd)
                                     delete cmd;
                         }
-                   
+
                     }
                 }catch(Exception & e)
                 {
@@ -55,11 +56,11 @@ int CommandReader::Execute()
             }
         }
         //printf("reader, Execute, command is accepted\n");
-        
-	}
+
+  }
     smsc_log_info(logger, "Reader is stoped");
-	
-	return 0;
+
+  return 0;
 }
 
 void CommandReader::readHeader(Socket * socket, uint32_t &type, uint32_t &len)
