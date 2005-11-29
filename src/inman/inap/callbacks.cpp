@@ -392,6 +392,10 @@ USHORT_T EINSS7_I97TPAbortInd(  UCHAR_T          ssn,
   smsc_log_debug(tcapLogger," PriOrder: 0x%X", priOrder );
   smsc_log_debug(tcapLogger," QoS: 0x%X", qualityOfService );
   smsc_log_debug(tcapLogger," Abort cause: 0x%X", abortCause );
+
+  Dialog* dlg = findDialog( ssn, dialogueId );
+  if( dlg ) dlg->handlePAbortDialog(abortCause);
+
   return MSG_OK;
 }
 

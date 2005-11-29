@@ -1,5 +1,5 @@
 #ident "$Id$"
-// Диалог (транзакция) IN
+//TCAP dialog implementation
 
 #ifndef __SMSC_INMAN_INAP_DIALOG__
 #define __SMSC_INMAN_INAP_DIALOG__
@@ -25,7 +25,8 @@ typedef std::map< UCHAR_T, Invoke* > InvokeMap;
 class DialogListener
 {
   public:
-    virtual void onDialogInvoke(  Invoke*  ) = 0;
+    virtual void onDialogInvoke(Invoke*) = 0;
+    virtual void onDialogPAbort(UCHAR_T abortCause) = 0;
 };
 
 
@@ -50,9 +51,10 @@ class Dialog : public ObservableT< DialogListener >
     virtual void timerReset();
 
     // Transaction level callbacks
-  virtual USHORT_T handleBeginDialog();
-  virtual USHORT_T handleContinueDialog();
-  virtual USHORT_T handleEndDialog();
+    virtual USHORT_T handleBeginDialog();
+    virtual USHORT_T handleContinueDialog();
+    virtual USHORT_T handleEndDialog();
+    virtual USHORT_T handlePAbortDialog(UCHAR_T abortCause);
 
     // Interaction level callbacks
     virtual USHORT_T handleInvoke(UCHAR_T invokeId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm);
@@ -86,8 +88,9 @@ class Dialog : public ObservableT< DialogListener >
     Logger*         logger;
 };
 
-}
-}
-}
+} //inap
+} //inman
+} //smsc
 
-#endif
+#endif /* __SMSC_INMAN_INAP_DIALOG__ */
+

@@ -48,10 +48,11 @@ static void init_logger()
 
 extern "C" static void sighandler( int signal )
 {
-  assert( g_pService );
-  g_pService->stop();
-  delete g_pService;
-  g_pService = 0;
+    assert( g_pService );
+    g_pService->stop();
+    delete g_pService;
+    g_pService = 0;
+    smsc_log_info(inapLogger, "Service shutdown complete");
 }
 
 //CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2, CDR_PREPAID = 3

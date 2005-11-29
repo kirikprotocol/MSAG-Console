@@ -192,7 +192,6 @@ void Dialog::timerReset()
 
 Invoke* Dialog::invoke(UCHAR_T opcode)
 {
-  //smsc_log_debug(logger, "Dialog: creating Invoke (opcode=%d)", opcode);
   Invoke* invoke = new Invoke();
   invoke->setId( getNextInvokeId() );
   invoke->setTag( EINSS7_I97TCAP_OPERATION_TAG_LOCAL );
@@ -208,8 +207,9 @@ Invoke* Dialog::invoke(UCHAR_T opcode)
   return invoke;
 }
 
-//--------------------------------------- Callbacks ----------------------------------
-
+/* ------------------------------------------------------------------------ *
+ * Transaction level callbacks
+ * ------------------------------------------------------------------------ */
 USHORT_T Dialog::handleBeginDialog()
 {
   return MSG_OK;
@@ -225,6 +225,24 @@ USHORT_T Dialog::handleEndDialog()
   return MSG_OK;
 }
 
+//Reports dialog abort to dialogListener
+USHORT_T Dialog::handlePAbortDialog(UCHAR_T abortCause)
+{
+    //NOTE: calling onDialogPAbort() may lead to this Dialog destruction,
+    //so iterate over ListenerList copy.
+    ListenerList cpList = listeners;
+    for (ListenerList::iterator it = cpList.begin(); it != cpList.end(); it++) {
+        DialogListener* ptr = *it;
+        ptr->onDialogPAbort(abortCause);
+    }
+    
+    return MSG_OK;
+}
+
+/* ------------------------------------------------------------------------ *
+ * Interaction level callbacks
+ * ------------------------------------------------------------------------ */
+//Reports incoming Invoke to dialogListener
 USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
 {
     assert( op );

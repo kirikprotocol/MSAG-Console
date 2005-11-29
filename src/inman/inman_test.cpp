@@ -28,6 +28,22 @@ using smsc::inman::interaction::DeliverySmsResult_t;
 
 
 #define prompt(str)     fprintf(stdout, str.c_str()); smsc_log_debug(logger, str.c_str())
+#define promptLog(log, str)     fprintf(stdout, str.c_str()); smsc_log_debug(log, str.c_str())
+
+typedef enum { abPrepaid = 0, abPostpaid = 1} AbonentType;
+typedef struct {
+    AbonentType  abType;
+    const char *  addr;
+    const char *  imsi;
+} Abonent;
+
+
+static const Abonent  _abonents[2] = {
+    //Nezhinsky phone(prepaid):
+     { abPrepaid, ".1.1.79139343290", "250013900405871" }
+    //Ryzhkov phone(postpaid:
+    ,{ abPostpaid, ".1.1.79139859489", "250013901464251" }
+};
 
 class Facade : public Thread, public SmscHandler
 {
@@ -38,13 +54,12 @@ protected:
     ObjectPipe*         pipe;
     Logger*             logger;
     DeliverySmsResult_t delivery;
+    AbonentType         abType;
 
 public:
     Facade(const char* host, int port)
         : logger(Logger::getInstance("smsc.InFacade"))
-        , dialogId(0)
-        , _running (false)
-
+        , dialogId(0), abType(abPrepaid), _running (false)
     {
         std::string msg;
         msg = format("InFacade: connecting to InManager at %s:%d...\n", host, port);
@@ -74,6 +89,9 @@ public:
         delete socket; 
     }
 
+    AbonentType getAbonent(void) const { return abType; }
+    void setAbonent(AbonentType ab) { abType = ab; }
+
     bool isRunning(void) const { return _running; }
     unsigned getNextDialogId(void) { return ++dialogId; }
 
@@ -87,18 +105,13 @@ public:
         op.setDialogId(getNextDialogId());
 
         op.setDestinationSubscriberNumber( ".1.1.79139859489" ); // missing for MT
-//Nezhinsky phone:        
-        op.setCallingPartyNumber( ".1.1.79139343290" );
-        op.setCallingIMSI( "250013900405871" );
-//Ryzhkov phone:
-//        op.setCallingPartyNumber( ".1.1.79139859489" );
-//        op.setIMSI( "250013901464251" );
+
+        op.setCallingPartyNumber(_abonents[abType].addr);
+        op.setCallingIMSI(_abonents[abType].imsi);
 
         op.setLocationInformationMSC( ".1.1.79139860001" );
         op.setSMSCAddress(".1.1.79029869990");
 
-//        time_t tm;
-//        time( &tm );
         op.setSubmitTimeTZ(time(NULL));
         op.setTPShortMessageSpecificInfo( 0x11 );
         op.setTPValidityPeriod( 60*5 );
@@ -142,12 +155,14 @@ public:
             msg += format(", RPCause: %u", (unsigned)result->GetRPCause());
         else if (result->GetCAP3Error())
             msg += format(", CAP3Error: %u", result->GetCAP3Error());
-        else if (result->GetErrorCode())
+        else if (result->GetINprotocolError())
             msg += ", TCP dialog error";
+        else if (result->GetTCAPError())
+            msg += ", TCAP dialog error";
         msg += "\n";
 
         prompt(msg);
-        if (result->GetErrorClass() <= ChargeSmsResult::chgRPCause)
+        if (result->GetValue() == smsc::inman::interaction::CHARGING_POSSIBLE)
             sendDeliverySmsResult(result->getDialogId());
     }
 
@@ -165,7 +180,7 @@ public:
                 if (cmd)
                     cmd->handle( this );
                 else { //socket closed or socket error
-                    _running = false;        
+                    _running = false;
                 }
             }
         }
@@ -211,6 +226,37 @@ void cmd_delivery(Console&, const std::vector<std::string> &args)
         throw ConnectionClosedException();
 }
 
+void cmd_abonent(Console&, const std::vector<std::string> &args)
+{
+    if (_pFacade->isRunning()) {
+        AbonentType ab = _pFacade->getAbonent();
+        std::string msg = format("Current Abonent: %s (%s)\n", _abonents[ab].addr,
+                                 (ab == abPrepaid) ? "prepaid":"postpaid");
+        fprintf(stdout, msg.c_str());
+    } else
+        throw ConnectionClosedException();
+}
+
+void cmd_prepaid(Console&, const std::vector<std::string> &args)
+{
+    if (_pFacade->isRunning()) {
+        _pFacade->setAbonent(abPrepaid);
+        std::string msg = format("Current Abonent: %s (prepaid)\n", _abonents[abPrepaid].addr);
+        fprintf(stdout, msg.c_str());
+    } else
+        throw ConnectionClosedException();
+}
+void cmd_postpaid(Console&, const std::vector<std::string> &args)
+{
+    if (_pFacade->isRunning()) {
+        _pFacade->setAbonent(abPostpaid);
+        std::string msg = format("Current Abonent: %s (postpaid)\n", _abonents[abPostpaid].addr);
+        fprintf(stdout, msg.c_str());
+    } else
+        throw ConnectionClosedException();
+}
+
+
 int main(int argc, char** argv)
 {
     if ( argc != 3 ) {
@@ -228,6 +274,9 @@ int main(int argc, char** argv)
         console.addItem( "chargeOk", cmd_chargeOk );
         console.addItem( "chargeErr",  cmd_chargeErr );
         console.addItem( "delivery",  cmd_delivery );
+        console.addItem( "abonent",  cmd_abonent );
+        console.addItem( "prepaid",  cmd_prepaid );
+        console.addItem( "postpaid",  cmd_postpaid );
 
         _pFacade->Start();
 

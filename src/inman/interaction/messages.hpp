@@ -6,12 +6,18 @@
 #include "inman/interaction/serializer.hpp"
 #include "inman/common/factory.hpp"
 #include "inman/storage/cdrutil.hpp"
+#include "inman/interaction/inerrcodes.hpp"
 
 using smsc::inman::interaction::ObjectBuffer;
 using smsc::inman::interaction::SerializableObject;
 using smsc::inman::interaction::SerializerITF;
 using smsc::inman::common::FactoryT;
 using smsc::inman::cdr::CDRRecord;
+using smsc::inman::interaction::SerializerITF;
+
+using smsc::inman::InmanErrorCode;
+using smsc::inman::InmanErrorType;
+
 
 #define INMAN_RPCAUSE_LIMIT         (unsigned int)255
 #define INMAN_PROTOCOL_ERROR_BASE   (unsigned int)260
@@ -24,6 +30,7 @@ using smsc::inman::cdr::CDRRecord;
 namespace smsc  {
 namespace inman {
 namespace interaction {
+
 
 //serializer for Inman commands, transferred over TCP socket
 class SerializerInap : public SerializerITF, public FactoryT< unsigned short, SerializableObject >
@@ -152,23 +159,18 @@ private:
 };
 
 //NOTE: in case of CAP3 error, this command ends the TCP dialog.
-class ChargeSmsResult : public SmscCommand
+class ChargeSmsResult : public SmscCommand, public InmanErrorCode
 {
 public:
-    typedef enum { chgOk = 0, chgRPCause = 1, chgTCPerror, chgCAP3error} ChargeErrorClass;
     ChargeSmsResult();                //positive result, no error
-    ChargeSmsResult(uint32_t rPCcode); //negative result by RP cause or CAP3 error
+    ChargeSmsResult(uint32_t errCode, ChargeSmsResult_t res = CHARGING_NOT_POSSIBLE);
+    ChargeSmsResult(InmanErrorType errType, uint16_t errCode,
+                    ChargeSmsResult_t res = CHARGING_NOT_POSSIBLE);
+    
     virtual ~ChargeSmsResult();
 
     ChargeSmsResult_t GetValue() const;
 
-    ChargeErrorClass  GetErrorClass(void) const;
-    //return combined nonzero code holding RP cause or CAP3 error, or protocol error
-    uint32_t          GetErrorCode(void) const;
-    //return nonzero RP cause MO SM transfer
-    uint8_t           GetRPCause(void) const;
-    //return nonzero CAP3 error code
-    uint32_t          GetCAP3Error(void) const;
     virtual void handle(SmscHandler*);
 
 protected:
@@ -177,7 +179,6 @@ protected:
 
 private:
     ChargeSmsResult_t   value;
-    uint32_t            rPC;  //RP cause MO SM transfer [1.255], or CAP3 error
 };
 
 class DeliverySmsResult : public InmanCommand

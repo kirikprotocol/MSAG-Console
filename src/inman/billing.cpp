@@ -3,7 +3,7 @@ static char const ident[] = "$Id$";
 #include <memory>
 #include <stdexcept>
 
-#include "inman/comp/acdefs.hpp"
+//#include "inman/comp/acdefs.hpp"
 #include "billing.hpp"
 #include "service.hpp"
 
@@ -25,7 +25,6 @@ Billing::Billing(Service* serv, unsigned int bid, Session* pSession, Connect* co
         , session( pSession )
         , connect( conn )
         , state (bilIdle)
-        , dialog(NULL)
         , inap(NULL)
         , billType(Billing::billPrepaid)
 {
@@ -36,11 +35,8 @@ Billing::Billing(Service* serv, unsigned int bid, Session* pSession, Connect* co
 
 Billing::~Billing()
 {
-    if (inap) {
+    if (inap)
         delete inap;
-        session->closeDialog( dialog );
-        delete dialog;
-    }
 }
 
 void Billing::handleCommand(InmanCommand* cmd)
@@ -54,10 +50,8 @@ void Billing::handleCommand(InmanCommand* cmd)
         if (state == Billing::bilIdle) {
             state = Billing::bilStarted;
             bilMutex.Unlock();
-            dialog = session->openDialog(id_ac_cap3_sms_AC);
-            assert( dialog );
-            inap = new Inap( dialog, this );
-            assert( inap );
+            inap = new Inap(session, this); //initialize TCAP dialog 
+            assert(inap);
             onChargeSms(static_cast<ChargeSms*>(cmd));
             accepted = true;
         }
@@ -78,17 +72,18 @@ void Billing::handleCommand(InmanCommand* cmd)
     if (accepted == false) {
         smsc_log_error(logger, "SSF: protocol error: cmd %u, state %u",
                        (unsigned)cmdId, state);
-        abortBilling(INMAN_PROTOCOL_ERROR);
+        state = Billing::billAborted;
+        bilMutex.Unlock();
+        abortBilling(InErrINprotocol, InProtocol_GeneralError);
     }
 }
 
-void Billing::abortBilling(unsigned int errCode)
+//void Billing::abortBilling(unsigned int errCode)
+void Billing::abortBilling(InmanErrorType errType, uint16_t errCode)
 {
-    ChargeSmsResult res(errCode);
+    ChargeSmsResult res(errType, errCode);
     res.setDialogId(id);
     connect->send(&res);
-    state = Billing::billAborted;
-    bilMutex.Unlock();
     service->billingFinished( this );
 }
 
@@ -128,8 +123,7 @@ void Billing::onChargeSms(ChargeSms* sms)
     arg.setTPProtocolIdentifier(sms->getTPProtocolIdentifier());
     arg.setTPDataCodingScheme(sms->getTPDataCodingScheme());
 
-    inap->initialDPSMS(&arg);
-    dialog->beginDialog();
+    inap->initialDPSMS(&arg); //begins TCAP dialog
     state = Billing::bilInited;
 }
 
@@ -143,12 +137,11 @@ void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
         (eventType == EventTypeSMS_o_smsFailure) ? "FAILED" : "SUCCEEDED", eventType, messageType);
 
     smsRes->export2CDR(cdr);
-    smsc::inman::comp::EventReportSMSArg    report(eventType, messageType);
-
-    inap->eventReportSMS(&report);
-    dialog->continueDialog();
+    if (inap) { //continue TCAP dialog if it's still active
+        smsc::inman::comp::EventReportSMSArg    report(eventType, messageType);
+        inap->eventReportSMS(&report);
+    }
     state = Billing::bilComplete;
-
     service->billingFinished(this);
 }
 
@@ -173,19 +166,28 @@ void Billing::continueSMS()
 void Billing::releaseSMS(ReleaseSMSArg* arg)
 {
     smsc_log_debug(logger, "SSF <-- SCF ReleaseSMS, RP cause: %u", (unsigned)arg->rPCause);
-    ChargeSmsResult res((uint32_t)arg->rPCause);
+    ChargeSmsResult res(InErrRPCause, (uint16_t)arg->rPCause);
     res.setDialogId(id);
     connect->send(&res);
     state = Billing::bilProcessed;
-    //NOTE: For postpaid abonent In-platform returns RP Cause: 'Temporary Failure'
+    //NOTE: For postpaid abonent IN-platform returns RP Cause: 'Temporary Failure'
     if (arg->rPCause == POSTPAID_RPCause)
         billType = Billing::billPostpaid;
 }
 
-void Billing::abortSMS(unsigned char errCode)
+void Billing::abortSMS(unsigned char errCode, bool tcapLayer)
 {
-    smsc_log_error( logger, "SSF <-- SCF System Error, code: %u", (unsigned)errCode);
-    abortBilling(INMAN_SCF_ERROR_BASE + errCode);
+    smsc_log_error(logger, "SSF <-- SCF System Error, code: %u, layer %s",
+                   (unsigned)errCode, tcapLayer ? "TCAP" : "CAP3");
+    //continue dialog with MSC despite of SS7 error, the CDR should be created.
+    ChargeSmsResult res(tcapLayer ? InErrTCAP : InErrCAP3, (uint16_t)errCode,
+                        smsc::inman::interaction::CHARGING_POSSIBLE);
+    res.setDialogId(id);
+    connect->send(&res);
+    state = Billing::bilProcessed;
+    //release TCAP dialog
+    delete inap;
+    inap = NULL;
 }
 
 
@@ -196,7 +198,6 @@ void Billing::furnishChargingInformationSMS(FurnishChargingInformationSMSArg* ar
 
 void Billing::requestReportSMSEvent(RequestReportSMSEventArg* arg)
 {
-    assert( arg );
     smsc_log_debug(logger, "SSF <-- SCF RequestReportSMSEvent");
 
     const RequestReportSMSEventArg::SMSEventVector& dps = arg->getSMSEvents();
@@ -205,7 +206,7 @@ void Billing::requestReportSMSEvent(RequestReportSMSEventArg* arg)
 
     for( it = dps.begin(); it != dps.end(); it++ ) {
         RequestReportSMSEventArg::SMSEvent dp = *it;
-        smsc_log_debug(logger, "Detection point (Event type: 0x%X, Monitor mode: 0x%X)",
+        smsc_log_debug(logger, "SSF Detection point (Event type: 0x%X, Monitor mode: 0x%X)",
                         dp.event, dp.monitorType);
     }
 }

@@ -315,17 +315,24 @@ void ChargeSms::handle(InmanHandler* handler)
 // ChargeSmsResult impl
 //-----------------------------------------------
 
-
 ChargeSmsResult::ChargeSmsResult()
-    : value(CHARGING_POSSIBLE)
-    , rPC(0)
+    : InmanErrorCode(0)
+    , value(CHARGING_POSSIBLE)
 {
     setObjectId((unsigned short)CHARGE_SMS_RESULT_TAG);
 }
 
-ChargeSmsResult::ChargeSmsResult(uint32_t rPCcode)
-    : value(CHARGING_NOT_POSSIBLE)
-    , rPC(rPCcode)
+ChargeSmsResult::ChargeSmsResult(uint32_t errCode, ChargeSmsResult_t res/* = CHARGING_NOT_POSSIBLE*/)
+    : InmanErrorCode(errCode)
+    , value(res)
+{
+    setObjectId((unsigned short)CHARGE_SMS_RESULT_TAG);
+}
+
+ChargeSmsResult::ChargeSmsResult(InmanErrorType errType, uint16_t errCode, 
+                                 ChargeSmsResult_t res/* = CHARGING_NOT_POSSIBLE*/)
+    : InmanErrorCode(errType, errCode)
+    , value(res)
 {
     setObjectId((unsigned short)CHARGE_SMS_RESULT_TAG);
 }
@@ -339,46 +346,18 @@ ChargeSmsResult_t ChargeSmsResult::GetValue() const
     return value;
 }
 
-ChargeSmsResult::ChargeErrorClass  ChargeSmsResult::GetErrorClass(void) const
-{
-    if (!rPC)
-        return ChargeSmsResult::chgOk;
-    if (rPC <= INMAN_RPCAUSE_LIMIT)
-        return  ChargeSmsResult::chgRPCause;
-    if (rPC <= INMAN_PROTOCOL_ERROR_LIMIT)
-        return ChargeSmsResult::chgTCPerror;
-    return ChargeSmsResult::chgCAP3error;
-}
-//return combined nonzero code holding RP cause or CAP3 error, or protocol error
-uint32_t ChargeSmsResult::GetErrorCode(void) const
-{
-    return rPC;
-}
-
-uint8_t  ChargeSmsResult::GetRPCause(void) const
-{
-    return (rPC <= INMAN_RPCAUSE_LIMIT) ? (uint8_t)rPC : 0;
-}
-
-//return nonzero CAP3 error code
-uint32_t  ChargeSmsResult::GetCAP3Error(void) const
-{
-    return (rPC >= INMAN_SCF_ERROR_BASE) ? (rPC - INMAN_SCF_ERROR_BASE) : 0;
-}
-
-
 void ChargeSmsResult::load(ObjectBuffer& in)
 {
     unsigned short v;
     in >> v;
     value = static_cast<ChargeSmsResult_t>(v);
-    in >> rPC;
+    in >> _errcode;
 }
 
 void ChargeSmsResult::save(ObjectBuffer& out)
 {
     out << (unsigned short)value;
-    out << rPC;
+    out << _errcode;
 }
 
 void ChargeSmsResult::handle(SmscHandler* handler)

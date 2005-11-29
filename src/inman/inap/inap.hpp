@@ -1,11 +1,12 @@
 #ident "$Id$"
-// Диалог (транзакция) IN
+// cap3SMS CONTRACT implementation (over TCAP dialog)
 
 #ifndef __SMSC_INMAN_INAP_INAP__
 #define __SMSC_INMAN_INAP_INAP__
 
 #include <map>
 
+#include "inman/inap/session.hpp"
 #include "inman/inap/dialog.hpp"
 #include "inman/comp/comps.hpp"
 
@@ -16,6 +17,7 @@ using smsc::inman::comp::RequestReportSMSEventArg;
 using smsc::inman::comp::ResetTimerSMSArg;
 using smsc::inman::comp::EventReportSMSArg;
 using smsc::inman::comp::InitialDPSMSArg;
+using smsc::inman::inap::Session;
 
 namespace smsc {
 namespace inman {
@@ -30,7 +32,7 @@ class SSF
     virtual void releaseSMS(ReleaseSMSArg* arg) = 0;
     virtual void requestReportSMSEvent(RequestReportSMSEventArg* arg) = 0;
     virtual void resetTimerSMS(ResetTimerSMSArg* arg) = 0;
-    virtual void abortSMS(unsigned char ercode) = 0;
+    virtual void abortSMS(unsigned char ercode, bool tcapLayer) = 0;
 };
 
 class SCF
@@ -45,19 +47,21 @@ class InapOpResListener;
 class Inap : public DialogListener, public SCF
 {
   public:
-    Inap(Dialog* dialog, SSF * ssfHandler);
+    Inap(Session* pSession, SSF * ssfHandler);
     virtual ~Inap();
 
     // SCF interface
-    void initialDPSMS(InitialDPSMSArg* arg);
-    void eventReportSMS(EventReportSMSArg* arg);
+    void initialDPSMS(InitialDPSMSArg* arg);     //begins TCAP dialog
+    void eventReportSMS(EventReportSMSArg* arg); //continues TCAP dialog
     void onOperationError(Invoke *op, TcapEntity * resE);
     // DialogListener interface
-    virtual void onDialogInvoke( Invoke* op ); 
+    virtual void onDialogInvoke(Invoke* op);
+    virtual void onDialogPAbort(UCHAR_T abortCause);
 
  protected:
     typedef std::map<USHORT_T, InapOpResListener*> ResultHandlersMAP;
-    Dialog*     dialog;
+    Dialog*     dialog;     //TCAP dialog
+    Session*    session;    //TCAP dialogs factory
     Logger*     logger;
     SSF*        ssfHdl;
     ResultHandlersMAP resHdls;

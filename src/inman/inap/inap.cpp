@@ -2,6 +2,7 @@ static char const ident[] = "$Id$";
 
 #include <assert.h>
 
+#include "inman/comp/acdefs.hpp"
 #include "inman/inap/inap.hpp"
 
 namespace smsc {
@@ -33,12 +34,15 @@ Invoke * InapOpResListener::getOrgInv() const
 /* ************************************************************************** *
  * class Inap implementation:
  * ************************************************************************** */
-Inap::Inap(Dialog* dlg, SSF * ssfHandler)
-    : dialog(dlg)
-    , ssfHdl(ssfHandler)
+Inap::Inap(Session* pSession, SSF * ssfHandler)
+    : ssfHdl(ssfHandler)
+    , session(pSession)
     , logger(Logger::getInstance("smsc.inman.inap.Inap"))
+
 {
     assert(ssfHandler);
+    assert(pSession);
+    dialog = session->openDialog(id_ac_cap3_sms_AC);
     assert(dialog);
     dialog->addListener(this);
 }
@@ -51,9 +55,11 @@ Inap::~Inap()
     for (it = resHdls.begin(); it != resHdls.end(); it++) {
         InapOpResListener * ires = (*it).second;
         (ires->getOrgInv())->setListener(NULL);
-        //Invoke will be deleted by Dialog
+        //Invoke will be deleted by ~Dialog()
         delete ires;
     }
+    session->closeDialog(dialog);
+    delete dialog;
 }
 
 void Inap::onOperationError(Invoke *op, TcapEntity * resE)
@@ -63,12 +69,20 @@ void Inap::onOperationError(Invoke *op, TcapEntity * resE)
                    (unsigned)resE->getOpcode());
     switch(op->getOpcode()) {
     case InapOpCode::InitialDPSMS: {
-        ssfHdl->abortSMS(resE->getOpcode());
+        ssfHdl->abortSMS(resE->getOpcode(), false);
     } break;
 //    case InapOpCode::EventReportSMS: {
 //    } break;
     default:;
     }
+}
+
+/* ------------------------------------------------------------------------ *
+ * DialogListener interface
+ * ------------------------------------------------------------------------ */
+void Inap::onDialogPAbort(UCHAR_T abortCause)
+{
+    ssfHdl->abortSMS(abortCause, true);
 }
 
 void Inap::onDialogInvoke(Invoke* op)
@@ -104,6 +118,9 @@ void Inap::onDialogInvoke(Invoke* op)
     }
 }
 
+/* ------------------------------------------------------------------------ *
+ * SCF interface
+ * ------------------------------------------------------------------------ */
 void Inap::initialDPSMS(InitialDPSMSArg* arg)
 {
     Invoke* op = dialog->invoke( InapOpCode::InitialDPSMS );
@@ -116,6 +133,7 @@ void Inap::initialDPSMS(InitialDPSMSArg* arg)
 
     op->setParam( arg );
     op->send(dialog);
+    dialog->beginDialog();
 }
 
 void Inap::eventReportSMS(EventReportSMSArg* arg)
@@ -130,8 +148,10 @@ void Inap::eventReportSMS(EventReportSMSArg* arg)
 
     op->setParam( arg );
     op->send( dialog );
+    dialog->continueDialog();
 }
 
-}
-}
-}
+} //inap
+} //inman
+} //smsc
+

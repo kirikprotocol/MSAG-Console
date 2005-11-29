@@ -36,6 +36,7 @@ InSessionFactory::~InSessionFactory()
 {
     closeAllSessions();
     disconnect();
+    smsc_log_info(logger, "SS7 stack shutdown complete");
 }
 
 void InSessionFactory::connect()

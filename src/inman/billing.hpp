@@ -3,17 +3,17 @@
 #ifndef __SMSC_INMAN_INAP_BILLING__
 #define __SMSC_INMAN_INAP_BILLING__
 
-#include "inman/inap/session.hpp"
+//#include "inman/inap/session.hpp"
 #include "inman/inap/inap.hpp"
 #include "inman/interaction/messages.hpp"
 #include "inman/interaction/connect.hpp"
-#include "inman/storage/cdrutil.hpp"
+//#include "inman/storage/cdrutil.hpp"
 
 using smsc::inman::inap::Inap;
-using smsc::inman::inap::Session;
+//using smsc::inman::inap::Session;
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::SSF;
-using smsc::inman::cdr::CDRRecord;
+//using smsc::inman::cdr::CDRRecord;
 using smsc::inman::interaction::Connect;
 using smsc::inman::interaction::InmanCommand;
 using smsc::inman::interaction::InmanHandler;
@@ -36,7 +36,6 @@ public:
     virtual ~Billing();
 
     unsigned int getId() const { return id; }
-    Dialog*  getDialog() const { return dialog; }
     
     void     handleCommand(InmanCommand* cmd);
     //
@@ -58,16 +57,15 @@ public:
     virtual void releaseSMS(ReleaseSMSArg* arg);
     virtual void requestReportSMSEvent(RequestReportSMSEventArg* arg);
     virtual void resetTimerSMS(ResetTimerSMSArg* arg);
-    virtual void abortSMS(unsigned char errcode);
+    virtual void abortSMS(unsigned char errcode, bool tcapLayer);
 
 protected:
-    void abortBilling(unsigned int errCode);
+    void abortBilling(InmanErrorType errType, uint16_t errCode);
 
     Mutex           bilMutex;   //
     BillingState    state;
     unsigned int    id;         //unique billing dialogue id
-    Session*        session;    //TCAP dialog factory
-    Dialog*         dialog;     //TCAP dialog
+    Session*        session;    //TCAP dialogs factory
     Inap*           inap;       //Inap wrapper for dialog
     Logger*         logger;
     Connect*        connect;
