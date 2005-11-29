@@ -31,6 +31,7 @@ namespace smsc { namespace mscman
                     failureCount(info.failureCount)
             {
               setMscNum(info.mscNum);
+              offset=info.offset;
             };
 
         MscInfo& operator=(const MscInfo& info) {
