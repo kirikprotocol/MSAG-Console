@@ -5,11 +5,11 @@
 
 #include <map>
 
-#include "logger/Logger.h"
 #include "inman/inap/dispatcher.hpp"
 #include "inman/interaction/server.hpp"
 #include "inman/inap/session.hpp"
 #include "inman/storage/FileStorages.hpp"
+#include "inman/billing.hpp"
 
 using smsc::inman::inap::Dispatcher;
 using smsc::inman::inap::Session;
@@ -24,7 +24,7 @@ namespace inman {
 
 struct InService_CFG {
     typedef enum { CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2, CDR_PREPAID = 3} CDR_MODE;
-    typedef enum { BILL_ALL = 0, BILL_USSD, BILL_SMS } BILL_MODE;
+//    typedef enum { BILL_ALL = 0, BILL_USSD, BILL_SMS, BILL_NONE } BILL_MODE;
 
     const char*     ssf_addr;
     const char*     scf_addr;

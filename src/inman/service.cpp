@@ -3,7 +3,6 @@ static char const ident[] = "$Id$";
 
 #include "inman/inap/infactory.hpp"
 #include "service.hpp"
-#include "billing.hpp"
 
 using smsc::inman::interaction::InmanCommand;
 using smsc::inman::interaction::SerializerInap;
@@ -172,7 +171,7 @@ void Service::onCommandReceived(Connect* conn, SerializableObject* recvCmd)
     Billing* bill;
     BillingMap::iterator it = workers.find(dlgId);
     if (it == workers.end()) {
-        bill = new Billing(this, dlgId, session, conn);
+        bill = new Billing(this, dlgId, session, conn, _cfg.billMode);
         workers.insert(BillingMap::value_type(dlgId, bill));
     } else
         bill = (*it).second;

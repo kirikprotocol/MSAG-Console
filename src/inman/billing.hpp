@@ -3,17 +3,13 @@
 #ifndef __SMSC_INMAN_INAP_BILLING__
 #define __SMSC_INMAN_INAP_BILLING__
 
-//#include "inman/inap/session.hpp"
 #include "inman/inap/inap.hpp"
 #include "inman/interaction/messages.hpp"
 #include "inman/interaction/connect.hpp"
-//#include "inman/storage/cdrutil.hpp"
 
 using smsc::inman::inap::Inap;
-//using smsc::inman::inap::Session;
 using smsc::inman::inap::Dialog;
 using smsc::inman::inap::SSF;
-//using smsc::inman::cdr::CDRRecord;
 using smsc::inman::interaction::Connect;
 using smsc::inman::interaction::InmanCommand;
 using smsc::inman::interaction::InmanHandler;
@@ -24,6 +20,7 @@ using smsc::core::synchronization::Mutex;
 namespace smsc    {
 namespace inman   {
 
+typedef enum { BILL_ALL = 0, BILL_USSD, BILL_SMS, BILL_NONE } BILL_MODE;
 
 class Service;
 class Billing : public SSF, public InmanHandler
@@ -32,7 +29,7 @@ public:
     typedef enum { billPrepaid, billPostpaid } BillingType;
     typedef enum { bilIdle, bilStarted, bilInited, bilProcessed, bilApproved, bilComplete, billAborted } BillingState;
 
-    Billing(Service* service, unsigned int id, Session*, Connect*);
+    Billing(Service* service, unsigned int id, Session*, Connect*, BILL_MODE bMode);
     virtual ~Billing();
 
     unsigned int getId() const { return id; }
@@ -72,6 +69,7 @@ protected:
     Service*        service;
     CDRRecord       cdr;        //data for CDR record creation
     BillingType     billType;
+    BILL_MODE       billMode;
 };
 
 } //inman

@@ -58,7 +58,7 @@ extern "C" static void sighandler( int signal )
 //CDR_NONE = 0, CDR_ALL = 1, CDR_POSTPAID = 2, CDR_PREPAID = 3
 static const char * const _CDRmodes[4] = {"none", "all", "postpaid", "prepaid"};
 //BILL_ALL = 0, BILL_USSD, BILL_SMS
-static const char * const _BILLmodes[3] = {"all", "ussd", "sms"};
+static const char * const _BILLmodes[4] = {"all", "ussd", "sms", "none"};
 
 struct INBillConfig : public InService_CFG
 {
@@ -68,7 +68,7 @@ public:
     {
         ssf_addr = scf_addr = host = billingDir = NULL;
         ssn = port = billingInterval = 0;
-        billMode = InService_CFG::BILL_ALL;
+        billMode = smsc::inman::BILL_ALL;
         cdrMode =  InService_CFG::CDR_ALL;
     }
 
@@ -99,11 +99,13 @@ public:
         }
         try {
             char* bmode = manager.getString("billMode");
-            if (!strcmp(bmode, _BILLmodes[InService_CFG::BILL_SMS]))
-                billMode = InService_CFG::BILL_SMS;
-            else if (!strcmp(bmode, _BILLmodes[InService_CFG::BILL_USSD]))
-                billMode = InService_CFG::BILL_USSD;
-            else if (strcmp(bmode, _BILLmodes[InService_CFG::BILL_ALL]))
+            if (!strcmp(bmode, _BILLmodes[smsc::inman::BILL_SMS]))
+                billMode = smsc::inman::BILL_SMS;
+            else if (!strcmp(bmode, _BILLmodes[smsc::inman::BILL_USSD]))
+                billMode = smsc::inman::BILL_USSD;
+            else if (!strcmp(bmode, _BILLmodes[smsc::inman::BILL_NONE]))
+                billMode = smsc::inman::BILL_NONE;
+            else if (strcmp(bmode, _BILLmodes[smsc::inman::BILL_ALL]))
                 throw ConfigException("billMode unknown or missing");
             smsc_log_info(inapLogger, "billMode: %s [%d]", bmode, billMode);
         } catch (ConfigException& exc) {

@@ -3,7 +3,6 @@ static char const ident[] = "$Id$";
 #include <memory>
 #include <stdexcept>
 
-//#include "inman/comp/acdefs.hpp"
 #include "billing.hpp"
 #include "service.hpp"
 
@@ -18,7 +17,8 @@ using std::runtime_error;
 namespace smsc  {
 namespace inman {
 
-Billing::Billing(Service* serv, unsigned int bid, Session* pSession, Connect* conn)
+Billing::Billing(Service* serv, unsigned int bid,
+                 Session* pSession, Connect* conn, BILL_MODE bMode)
         : service( serv )
         , logger(Logger::getInstance("smsc.inman.inap.Billing"))
         , id( bid )
@@ -27,6 +27,7 @@ Billing::Billing(Service* serv, unsigned int bid, Session* pSession, Connect* co
         , state (bilIdle)
         , inap(NULL)
         , billType(Billing::billPrepaid)
+        , billMode(bMode)
 {
     assert( connect );
     assert( session );
@@ -50,8 +51,6 @@ void Billing::handleCommand(InmanCommand* cmd)
         if (state == Billing::bilIdle) {
             state = Billing::bilStarted;
             bilMutex.Unlock();
-            inap = new Inap(session, this); //initialize TCAP dialog 
-            assert(inap);
             onChargeSms(static_cast<ChargeSms*>(cmd));
             accepted = true;
         }
@@ -107,24 +106,35 @@ Billing::BillingType Billing::getBillingType(void) const
  * -------------------------------------------------------------------------- */
 void Billing::onChargeSms(ChargeSms* sms)
 {
-    smsc_log_debug( logger, "SSF --> SCF InitialDPSMS" );
-
     sms->export2CDR(cdr);
-    InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating);
+    if ( (billMode == smsc::inman::BILL_NONE)
+        || !((billMode == smsc::inman::BILL_USSD)
+            && (cdr._bearer == CDRRecord::dpUSSD))
+        || !((billMode == smsc::inman::BILL_SMS)
+            && (cdr._bearer == CDRRecord::dpSMS)) ) {
+        //do not ask IN platform, just create CDR
+        continueSMS();
+    } else {
+        inap = new Inap(session, this); //initialize TCAP dialog
+        assert(inap);
 
-    arg.setDestinationSubscriberNumber(sms->getDestinationSubscriberNumber().c_str()); // missing for MT
-    arg.setCallingPartyNumber(sms->getCallingPartyNumber().c_str());
-    arg.setIMSI(sms->getCallingIMSI().c_str());
-    arg.setLocationInformationMSC( sms->getLocationInformationMSC().c_str());
-    arg.setSMSCAddress(sms->getSMSCAddress().c_str());
-    arg.setTimeAndTimezone(sms->getSubmitTimeTZ());
-    arg.setTPShortMessageSpecificInfo(sms->getTPShortMessageSpecificInfo());
-    arg.setTPValidityPeriod(sms->getTPValidityPeriod(), smsc::inman::comp::tp_vp_relative);
-    arg.setTPProtocolIdentifier(sms->getTPProtocolIdentifier());
-    arg.setTPDataCodingScheme(sms->getTPDataCodingScheme());
+        smsc_log_debug( logger, "SSF --> SCF InitialDPSMS" );
+        InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating);
 
-    inap->initialDPSMS(&arg); //begins TCAP dialog
-    state = Billing::bilInited;
+        arg.setDestinationSubscriberNumber(sms->getDestinationSubscriberNumber().c_str()); // missing for MT
+        arg.setCallingPartyNumber(sms->getCallingPartyNumber().c_str());
+        arg.setIMSI(sms->getCallingIMSI().c_str());
+        arg.setLocationInformationMSC( sms->getLocationInformationMSC().c_str());
+        arg.setSMSCAddress(sms->getSMSCAddress().c_str());
+        arg.setTimeAndTimezone(sms->getSubmitTimeTZ());
+        arg.setTPShortMessageSpecificInfo(sms->getTPShortMessageSpecificInfo());
+        arg.setTPValidityPeriod(sms->getTPValidityPeriod(), smsc::inman::comp::tp_vp_relative);
+        arg.setTPProtocolIdentifier(sms->getTPProtocolIdentifier());
+        arg.setTPDataCodingScheme(sms->getTPDataCodingScheme());
+
+        inap->initialDPSMS(&arg); //begins TCAP dialog
+        state = Billing::bilInited;
+    }
 }
 
 void Billing::onDeliverySmsResult(DeliverySmsResult* smsRes)
