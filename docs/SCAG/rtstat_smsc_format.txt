@@ -1,0 +1,11 @@
+<stat> = <smePerfDataSize: uit32>   	<smeCount: uint32><smeRecords: 1...n>
+			 		<errCount: uint32><errRecords: 1...n>
+<smeRecords> = <smeRecord>...<smrRecord>
+<smeRecord> = <systemId: 16bytes> 	<cnt1: uint16><cnt1 (avarage, 1hour): uint16>
+					<cnt2: uint16><cnt2 (avarage, 1hour): uint16>
+					<cnt3: uint16><cnt3 (avarage, 1hour): uint16>
+				  	<cnt4: uint16><cnt4 (avarage, 1hour): uint16>
+					<cnt5: uint16><cnt5 (avarage, 1hour): uint16>
+					<cnt6: uint16><cnt6 (avarage, 1hour): uint16>
+<errRecords> = <errRecord>...<errRecord>
+<errRecord> = <errCode: uint32><errCounter: uint16><errCounter (avarage): uint16>
