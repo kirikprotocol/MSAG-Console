@@ -42,45 +42,43 @@ int AgentListener::Execute()
 
             smsc_log_info(logger, "Command is accepted" );
 
-            for( ;; ){
+            for( ;; )
+            {
 
-                try{
+                try
+                {
 
-                    smsc_log_info(logger, "Read a command..." );
-                    int res = -1;
-                    res = readCommand(clntSock);
-                    smsc_log_info(logger, "Command is read, res: %d", res );
+                  smsc_log_info(logger, "Read a command..." );
+                  int res = -1;
+                  res = readCommand(clntSock);
+                  smsc_log_info(logger, "Command is read, res: %d", res );
 
-                    if(res == 0){
-
-                        Interconnect * icon = Interconnect::getInstance();
-                        if(icon)
-                        {
-                            smsc_log_info(logger,"Change role to MASTER");
-                            icon->changeRole(MASTER);
-                        }
-
-                    }else if(res == 1){
-
-                        stopSmsc = true;
-                        stop = true;
-                        srvSock.Close();
-                        break;
-
-                    }
-
-
-                }catch(...){
-                    smsc_log_info(logger, "Exception during read command." );
-                    smsc_log_info(logger, "Restarts socket server ..." );
-                    if( srvSock.StartServer() )
-                        smsc_log_info(logger, "Can't start socket server" );
-                    else
-                        smsc_log_info(logger, "Socket server started" );
-
+                  if(res == 0)
+                  {
+                     Interconnect * icon = Interconnect::getInstance();
+                     if(icon)
+                     {
+                       smsc_log_info(logger,"Change role to MASTER");
+                       icon->changeRole(MASTER);
+                     }
+                  }else if(res == 1)
+                  {
+                    stopSmsc = true;
+                    stop = true;
+                    srvSock.Close();
                     break;
-                }
+                  }
+                }catch(...)
+                {
+                  smsc_log_info(logger, "Exception during read command." );
+                  smsc_log_info(logger, "Restarts socket server ..." );
+                  if( srvSock.StartServer() )
+                      smsc_log_info(logger, "Can't start socket server" );
+                  else
+                      smsc_log_info(logger, "Socket server started" );
 
+                  break;
+                }
             }
 
 
