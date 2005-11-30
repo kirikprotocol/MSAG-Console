@@ -54,7 +54,21 @@ int Sender::Execute()
 {
     while (!isStopping)
     {
-        sleep(5);
+        fd_set er;
+        FD_ZERO(&er);
+
+        FD_SET(socket.getSocket(),&er);
+        timeval tv;
+        tv.tv_sec=5;
+        tv.tv_usec=0;
+
+        if(select(socket.getSocket(),0,0,&er,&tv)==1)
+        {
+            smsc_log_warn(logger,"Socket error detected");
+            kill(pid, SIGTERM);
+        }
+
+
         if( !checkConnect(socket) ){
             smsc_log_info(logger, "Connect failed");
             kill(pid, SIGTERM);

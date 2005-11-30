@@ -55,7 +55,10 @@ int AgentListener::Execute()
 
                         Interconnect * icon = Interconnect::getInstance();
                         if(icon)
+                        {
+                            smsc_log_info(logger,"Change role to MASTER");
                             icon->changeRole(MASTER);
+                        }
 
                     }else if(res == 1){
 

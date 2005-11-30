@@ -44,7 +44,7 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
 
     //printf("role: %d\n", role);
 
-    reader.Init(&role, &socket, dispatcher, &attachedSocket);
+    reader.Init(&role, &socket, dispatcher);
     //printf("reader starting...\n");
     reader.Start();
     //printf("readers started\n");
@@ -205,16 +205,18 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
 
 InterconnectManager::~InterconnectManager()
 {
-    Stop();
+  socket.Abort();
+  attachedSocket.Abort();
+  reader.Stop();
+  Stop();
 
-    WaitFor();
+  WaitFor();
 
-    if(dispatcher){
-        dispatcher->Stop();
-        delete dispatcher;
-    }
-    socket.Abort();
-    attachedSocket.Abort();
+  if(dispatcher)
+  {
+    dispatcher->Stop();
+    delete dispatcher;
+  }
 }
 
 void InterconnectManager::init(const std::string& inAddr, const std::string& attachedInAddr, int _port, int _attachedPort)
@@ -229,7 +231,8 @@ void InterconnectManager::init(const std::string& inAddr, const std::string& att
 void InterconnectManager::shutdown()
 {
 
-    if (InterconnectManager::instance) {
+    if (InterconnectManager::instance)
+    {
       __trace__("Terminating Interconnect manager");
       delete InterconnectManager::instance;
       InterconnectManager::instance=0;
