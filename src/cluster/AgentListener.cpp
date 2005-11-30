@@ -48,10 +48,10 @@ int AgentListener::Execute()
                 try
                 {
 
-                  smsc_log_info(logger, "Read a command..." );
+                  smsc_log_debug(logger, "Read a command..." );
                   int res = -1;
                   res = readCommand(clntSock);
-                  smsc_log_info(logger, "Command is read, res: %d", res );
+                  smsc_log_debug(logger, "Command is read, res: %d", res );
 
                   if(res == 0)
                   {
@@ -112,11 +112,11 @@ void AgentListener::Stop()
 int AgentListener::readCommand(Socket * socket)
 {
     uint8_t buffer[6];
-    smsc_log_info(logger, "readCommand, read..." );
+    smsc_log_debug(logger, "readCommand, read..." );
     read(socket, (void*)&buffer, 6);
-    smsc_log_info(logger, "readCommand, command is read" );
+    smsc_log_debug(logger, "readCommand, command is read" );
 
-    smsc_log_info(logger, "b[0]: %d, b[1]: %d, b[2]: %d, b[3]: %d", buffer[0], buffer[1], buffer[2], buffer[3] );
+    smsc_log_debug(logger, "b[0]: %d, b[1]: %d, b[2]: %d, b[3]: %d", buffer[0], buffer[1], buffer[2], buffer[3] );
 
     // Checks signature
     if(buffer[0] != 17 || buffer[1] != 32 || buffer[2] != 7 || buffer[3] != 152)
@@ -128,7 +128,7 @@ int AgentListener::readCommand(Socket * socket)
 
     val = ntohs(val);
 
-    smsc_log_info(logger, "val: %d", val );
+    smsc_log_debug(logger, "val: %d", val );
 
     return val;
 
