@@ -40,7 +40,11 @@ extern "C" void sigAbortDispatcher(int sig)
 /*    if (_socketListener != 0)
       _socketListener->abort(); */
     if (_smscComponent != 0)
-      _smscComponent->abort();
+    {
+      SmscComponent* tmp=_smscComponent;
+      _smscComponent=0;
+      tmp->abort();
+    }
     else
       abort();
 
@@ -57,7 +61,11 @@ extern "C" void sigDumpDispatcher(int sig)
 /*    if (_socketListener != 0)
       _socketListener->abort();*/
     if (_smscComponent != 0)
-      _smscComponent->dump();
+    {
+      SmscComponent *tmp=_smscComponent;
+      _smscComponent=0;
+      tmp->dump();
+    }
     else
       abort();
   }
