@@ -595,7 +595,7 @@ public:
         {
           sms.lastTime = time(NULL);
           if (sms.needArchivate) archiveStorage.createRecord(id, sms);
-          if (sms.billingRecord) billingStorage.createRecord(id, sms);
+          //if (sms.billingRecord) billingStorage.createRecord(id, sms);
         }
 
         virtual void changeSmsConcatSequenceNumber(SMSId id, int8_t inc=1)
@@ -1284,7 +1284,7 @@ public:
   int smeSeq;
   ProxyMonitor* prxmon;
 
-  smsc::store::BillingStorage  billingStorage;
+  //smsc::store::BillingStorage  billingStorage;
   smsc::store::ArchiveStorage  archiveStorage;
 
   time_t lastRejectTime;

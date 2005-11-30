@@ -321,7 +321,7 @@ void Scheduler::Init(Smsc* psmsc,smsc::util::config::Manager* cfgman)
 {
   smsc=psmsc;
   localFileStore.Init(cfgman,psmsc);
-  billingStorage.init(*cfgman);
+  //billingStorage.init(*cfgman);
   archiveStorage.init(*cfgman);
 
   const char* idFileName=cfgman->getString("MessageStore.LocalStore.msgidfile");
@@ -369,7 +369,7 @@ int Scheduler::Execute()
 
   time_t t=time(NULL);
 
-  time_t lastBillRoll=t;
+  //time_t lastBillRoll=t;
   time_t lastArcRoll=t;
 
   while(!isStopping)
@@ -433,11 +433,13 @@ int Scheduler::Execute()
     }
 
     try{
+      /*
       if(t-lastBillRoll>billingStorage.getStorageInterval())
       {
         billingStorage.roll();
         lastBillRoll=t;
       }
+      */
       if(t-lastArcRoll>archiveStorage.getStorageInterval())
       {
         archiveStorage.roll();
@@ -458,9 +460,9 @@ int Scheduler::Execute()
     }
   }
   warn1(log,"Scheduler exited");
-  billingStorage.roll();
+  //billingStorage.roll();
   archiveStorage.roll();
-  billingStorage.close();
+  //billingStorage.close();
   archiveStorage.close();
   return 0;
 }
@@ -604,7 +606,7 @@ void Scheduler::doFinalizeSms(SMSId id,smsc::sms::State state,int lastResult,con
 
   LocalFileStoreSave(id,++sd->seq,sd->sms,true);
   if (sd->sms.needArchivate) archiveStorage.createRecord(id, sd->sms);
-  if (sd->sms.billingRecord) billingStorage.createRecord(id, sd->sms);
+  //if (sd->sms.billingRecord) billingStorage.createRecord(id, sd->sms);
   delStoreData(sd);
 }
 
