@@ -13,7 +13,7 @@ typedef enum {
 } InmanErrorType;
 
 typedef enum {
-    InProtocol_GeneralError = 256
+    InProtocol_GeneralError = 1
 } InmanProtocolErrors;
 
 class InmanErrorCode {
