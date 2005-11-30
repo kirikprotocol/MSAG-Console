@@ -24,31 +24,6 @@ InterconnectManager::InterconnectManager(const std::string& inAddr_,
 
     //printf("inAddr: %s, attachedInAddr: %s, port: %d, attachedPort: %d\n", inAddr.c_str(), attachedInAddr.c_str(), port, attachedPort);
 
-    if( socket.InitServer(inAddr.c_str(), port, 0)){
-        throw Exception("InterconnectManager: Can't init socket server by host: %s, port: %d", inAddr.c_str(), port);
-    }
-
-    if( socket.StartServer() ){
-        throw Exception("InterconnectManager: Can't start socket server");
-    }
-
-    if( attachedSocket.Init(attachedInAddr.c_str(), attachedPort, 0) ){
-        throw Exception("InterconnectManager: Can't init socket by host: %s, port: %d", attachedInAddr.c_str(), attachedPort);
-    }
-
-    if( attachedSocket.Connect() )
-        smsc_log_info(logger, "InterconnectManager: Can't connect to smsc by host: %s, port: %d", attachedInAddr.c_str(), attachedPort);
-
-    // At a start role is SLAVE allways
-    role = SLAVE;
-
-    //printf("role: %d\n", role);
-
-    reader.Init(&role, &socket, dispatcher);
-    //printf("reader starting...\n");
-    reader.Start();
-    //printf("readers started\n");
-
     /*{
         Command *cmd = new MscReportCommand("mscnum1", true, 5);
         sendCommand(cmd);
@@ -219,15 +194,44 @@ InterconnectManager::~InterconnectManager()
   }
 }
 
+void InterconnectManager::internalInit()
+{
+  if( socket.InitServer(inAddr.c_str(), port, 0))
+  {
+    throw Exception("InterconnectManager: Can't init socket server by host: %s, port: %d", inAddr.c_str(), port);
+  }
+
+  if( socket.StartServer() )
+  {
+    throw Exception("InterconnectManager: Can't start socket server");
+  }
+
+  if( attachedSocket.Init(attachedInAddr.c_str(), attachedPort, 0) )
+  {
+    throw Exception("InterconnectManager: Can't init socket by host: %s, port: %d", attachedInAddr.c_str(), attachedPort);
+  }
+
+  if( attachedSocket.Connect() )
+  {
+    smsc_log_info(logger, "InterconnectManager: Can't connect to smsc by host: %s, port: %d", attachedInAddr.c_str(), attachedPort);
+  }
+
+  role = SLAVE;
+
+  reader.Init(&role, &socket, dispatcher);
+  reader.Start();
+}
+
 void InterconnectManager::init(const std::string& inAddr, const std::string& attachedInAddr, int _port, int _attachedPort)
 {
   if (!InterconnectManager::instance)
   {
     InterconnectManager::instance = new InterconnectManager(inAddr, attachedInAddr, _port, _attachedPort);
+    ((InterconnectManager*)InterconnectManager::instance)->internalInit();
     ((InterconnectManager*)InterconnectManager::instance)->Start();
-
   }
 }
+
 void InterconnectManager::shutdown()
 {
 

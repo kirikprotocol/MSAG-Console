@@ -59,7 +59,7 @@ using smsc::core::synchronization::Mutex;
             ArgHandler(ChangeRoleHandler * fun_, void* arg_)
                 : arg(arg_),
                   fun(fun_)
-            {                     
+            {
             };
             void run(Role role)
             {
@@ -73,6 +73,8 @@ using smsc::core::synchronization::Mutex;
         Mutex handlersLock;
         Array<ArgHandler> handlers;
         CommandReader reader;
+
+        void internalInit();
 
     public:
 
