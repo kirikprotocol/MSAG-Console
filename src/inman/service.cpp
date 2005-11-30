@@ -131,11 +131,12 @@ void Service::billingFinished(Billing* bill)
                 || ((_cfg.cdrMode == InService_CFG::CDR_POSTPAID)
                     && (bill->getBillingType() == Billing::billPostpaid)))
                 bfs->bill(bill->getCDRRecord());
+                smsc_log_debug(logger, "InmanSrv: CDR written for Billing[0x%X]", billId);
         }
         workers.erase(billId);
     }
     delete bill;
-    smsc_log_debug(logger, "InmanSrv: Billing deleted, id: 0x%X", billId);
+    smsc_log_debug(logger, "InmanSrv: Billing[0x%X] finished", billId);
 }
 
 /* -------------------------------------------------------------------------- *

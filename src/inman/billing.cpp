@@ -107,14 +107,12 @@ Billing::BillingType Billing::getBillingType(void) const
 void Billing::onChargeSms(ChargeSms* sms)
 {
     sms->export2CDR(cdr);
-    if ( (billMode == smsc::inman::BILL_NONE)
-        || !((billMode == smsc::inman::BILL_USSD)
+
+    if ( (billMode == smsc::inman::BILL_ALL)
+        || ((billMode == smsc::inman::BILL_USSD)
             && (cdr._bearer == CDRRecord::dpUSSD))
-        || !((billMode == smsc::inman::BILL_SMS)
+        || ((billMode == smsc::inman::BILL_SMS)
             && (cdr._bearer == CDRRecord::dpSMS)) ) {
-        //do not ask IN platform, just create CDR
-        continueSMS();
-    } else {
         inap = new Inap(session, this); //initialize TCAP dialog
         assert(inap);
 
@@ -134,6 +132,10 @@ void Billing::onChargeSms(ChargeSms* sms)
 
         inap->initialDPSMS(&arg); //begins TCAP dialog
         state = Billing::bilInited;
+    } else {
+        smsc_log_debug(logger, "SSF: ChargeSms accepted, no interaction with SCF");
+        //do not ask IN platform, just create CDR
+        continueSMS();
     }
 }
 
