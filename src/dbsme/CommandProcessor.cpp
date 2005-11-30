@@ -272,6 +272,7 @@ void DataProvider::registerJob(Job* job, const char* _id, const char* address,
     __require__(job && _id && owner);
 
     MutexGuard guard(jobsLock);
+
     if (allJobs.Exists(_id))
         throw ConfigException("Job registration failed! Job with id '%s' already registered.", _id);
 
@@ -311,7 +312,6 @@ void DataProvider::registerJob(Job* job, const char* _id, const char* address,
 }
 
 void DataProvider::createJob(const char* jobId, ConfigView* jobConfig)
-    throw(ConfigException)
 {
     std::auto_ptr<char> typeGuard   (jobConfig->getString("type"));
     const char* type  = typeGuard.get();
@@ -369,6 +369,110 @@ void DataProvider::removeJob(const char* jobId)
     if (ds) {
         std::string queryId = this->id; queryId += '.'; queryId += jobId;
         ds->closeRegisteredQueries(queryId.c_str());
+    }
+}
+void DataProvider::changeJob(const char* jobId, ConfigView* jobConfig)
+{
+    __require__(owner && jobId && jobConfig);
+
+    std::auto_ptr<char> typeGuard   (jobConfig->getString("type"));
+    const char* type  = typeGuard.get();
+    std::auto_ptr<char> nameGuard   (jobConfig->getString("name",    0, false));
+    const char* name  = nameGuard.get();
+    if(name && strlen(name) == 0) name = 0;
+    std::auto_ptr<char> aliasGuard  (jobConfig->getString("alias",   0, false));
+    const char* alias = aliasGuard.get();
+    if(alias && strlen(alias) == 0) alias = 0;
+    std::auto_ptr<char> addressGuard(jobConfig->getString("address", 0, false));
+    const char* address = addressGuard.get();
+    if(address && strlen(address) == 0 ) address = 0;
+    
+    if (!name && !alias && !address)
+        throw ConfigException("Job registration failed! Neither name, nor address, nor alias "
+                              "parameters specified.");
+    
+    MutexGuard guard(jobsLock);
+    
+    Job** ptrJob = allJobs.GetPtr(jobId);
+    Job* oldJob = (ptrJob) ? *ptrJob : 0;
+    if (!oldJob)
+        throw Exception("Job '%s' not registered", jobId);
+
+    std::auto_ptr<char> upname(strToUpperCase(name));
+    std::auto_ptr<char> upalias(strToUpperCase(alias));
+
+    if (address) 
+    {
+        Address addr(address); FullAddressValue fav;
+        addr.toString(fav, MAX_FULL_ADDRESS_VALUE_LENGTH);
+        ptrJob = jobsByAddress.GetPtr(fav);
+        if (ptrJob && (oldJob != *ptrJob))
+            throw ConfigException("Job registration failed! Job with address: '%s' already registered.", fav);
+    }
+    if (name)   {
+        ptrJob = jobsByName.GetPtr(upname.get());
+        if (ptrJob && (oldJob != *ptrJob))
+            throw ConfigException("Job registration failed! Name/Alias: '%s' already in use.", name);
+    }
+    if (alias)  {
+        ptrJob = jobsByName.GetPtr(upalias.get());
+        if (ptrJob && (oldJob != *ptrJob))
+            throw ConfigException("Job registration failed! Name/Alias: '%s' already in use.", alias);
+    }
+
+    Job* newJob = JobFactory::getJob(type);
+    if (!newJob)
+        throw ConfigException("Job recreation failed! Can't find JobFactory for type '%s'",
+                              (type) ? type:"null");
+    try 
+    {
+        // WARN: newJob->init() can throw exception
+        std::string queryId = this->id; queryId += '.'; queryId += jobId;
+        newJob->init(jobConfig, queryId.c_str(), messages);
+
+        // unregister oldJob & destroy it
+        {
+            Job* foundJob = 0;
+            char* f_name = 0; jobsByName.First();
+            while (jobsByName.Next(f_name, foundJob)) {
+                if (oldJob == foundJob) jobsByName.Delete(f_name);
+            }
+
+            char* f_address = 0; jobsByAddress.First();
+            while (jobsByAddress.Next(f_address, foundJob)) {
+                if (oldJob == foundJob) {
+                    jobsByAddress.Delete(f_address);
+                    owner->delProviderIndex(f_address);
+                }
+            }
+            allJobs.Delete(jobId);
+            
+            oldJob->finalize();
+            if (this->ds) {
+                std::string queryId = this->id; queryId += '.'; queryId += jobId;
+                this->ds->closeRegisteredQueries(queryId.c_str());
+            }
+        }
+
+        // register newJob
+        {
+            if (address) 
+            {
+                Address addr(address); FullAddressValue fav;
+                addr.toString(fav, MAX_FULL_ADDRESS_VALUE_LENGTH);
+                owner->addProviderIndex(addr, this);
+                jobsByAddress.Insert(fav, newJob);
+            }
+            if (name) jobsByName.Insert(upname.get(), newJob);
+            if (alias) jobsByName.Insert(upalias.get(), newJob);
+
+            allJobs.Insert(jobId, newJob);
+        }
+    }
+    catch (...) 
+    {
+        if (newJob) newJob->finalize();
+        throw;
     }
 }
 
@@ -525,14 +629,12 @@ void CommandProcessor::changeJob(std::string providerId, std::string jobId)
     const char* jobIdStr = jobId.c_str();
     try
     {
-        provider->removeJob(jobIdStr);
-
         Manager::reinit();
         char jobSection[1024];
         sprintf(jobSection, "DBSme.DataProviders.%s.Jobs.%s", providerIdStr, jobIdStr);
         ConfigView jobConfig(Manager::getInstance(), jobSection);
 
-        provider->createJob(jobIdStr, &jobConfig);
+        provider->changeJob(jobIdStr, &jobConfig);
 
     } catch (Exception& exc) {
         smsc_log_error(log, "Failed to change job '%s.%s'. Details: %s",

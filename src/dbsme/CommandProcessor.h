@@ -172,9 +172,9 @@ namespace smsc { namespace dbsme
         virtual void process(Command& command)
             throw(CommandProcessException);
 
-        void createJob(const char* id, ConfigView* jobConfig)
-            throw(ConfigException);
-        void removeJob(const char* id);
+        void createJob(const char* jobId, ConfigView* jobConfig);
+        void changeJob(const char* jobId, ConfigView* jobConfig);
+        void removeJob(const char* jobId);
 
         void setEnabled(bool enabled)
         {
