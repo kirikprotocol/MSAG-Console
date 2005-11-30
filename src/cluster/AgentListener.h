@@ -18,23 +18,25 @@ class AgentListener : public Thread
 {
 public:
     AgentListener()
-        : logger(Logger::getInstance("AgentListner")), stop(true), stopSmsc(false)
+        : logger(Logger::getInstance("AgentListner")), stop(true), stopSmsc(false),clntSock(0)
     {
   };
   virtual ~AgentListener()
   {
-    sock.Abort();
     Stop();
+    if(clntSock)delete clntSock;
+    clntSock=0;
   };
 
-    void init(std::string host, int port, pid_t pid_);
+    void init(const std::string& host, int port, pid_t pid_);
     void Start();
     void Stop();
     virtual int Execute();
 
 protected:
     Logger *logger;
-  Socket sock;
+    Socket srvSock;
+    Socket *clntSock;
     bool stop;
     bool stopSmsc;
     pid_t pid;

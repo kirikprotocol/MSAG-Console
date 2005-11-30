@@ -25,7 +25,7 @@ void AgentListener::Start()
 int AgentListener::Execute()
 {
     smsc_log_info(logger, "Start server..." );
-    if( sock.StartServer() ){
+    if( srvSock.StartServer() ){
         smsc_log_info(logger, "Can't start socket server" );
         return 0;
     }
@@ -35,8 +35,9 @@ int AgentListener::Execute()
     {
 
         smsc_log_info(logger, "Wait for a command...." );
-        std::auto_ptr<Socket> newSocket(sock.Accept());
-        if (newSocket.get())
+        if(clntSock)delete clntSock;
+        clntSock=srvSock.Accept();
+        if (clntSock)
         {
 
             smsc_log_info(logger, "Command is accepted" );
@@ -47,7 +48,7 @@ int AgentListener::Execute()
 
                     smsc_log_info(logger, "Read a command..." );
                     int res = -1;
-                    res = readCommand(newSocket.get());
+                    res = readCommand(clntSock);
                     smsc_log_info(logger, "Command is read, res: %d", res );
 
                     if(res == 0){
@@ -60,7 +61,7 @@ int AgentListener::Execute()
 
                         stopSmsc = true;
                         stop = true;
-                        sock.Close();
+                        srvSock.Close();
                         break;
 
                     }
@@ -69,7 +70,7 @@ int AgentListener::Execute()
                 }catch(...){
                     smsc_log_info(logger, "Exception during read command." );
                     smsc_log_info(logger, "Restarts socket server ..." );
-                    if( sock.StartServer() )
+                    if( srvSock.StartServer() )
                         smsc_log_info(logger, "Can't start socket server" );
                     else
                         smsc_log_info(logger, "Socket server started" );
@@ -88,16 +89,21 @@ int AgentListener::Execute()
     return 0;
 }
 
-void AgentListener::init(std::string host, int port, pid_t pid_)
+void AgentListener::init(const std::string& host, int port, pid_t pid_)
 {
     pid = pid_;
-    sock.InitServer(host.c_str(), port, 0);
+    if(srvSock.InitServer(host.c_str(), port, 0)!=0)
+    {
+      smsc_log_warn(logger,"Failed to init AgentListener srv socket at %s:%d",host.c_str(),port);
+    }
 };
 
 void AgentListener::Stop()
 {
     smsc_log_info(logger, "agent listener stopping" );
     stop = true;
+    if(clntSock)clntSock->Abort();
+    srvSock.Abort();
     WaitFor();
     smsc_log_info(logger, "agent listener stopped" );
 }
