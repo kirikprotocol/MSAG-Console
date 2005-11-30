@@ -499,12 +499,16 @@ USHORT_T EINSS7_I97TLCancelInd( UCHAR_T          ssn,
                                 USHORT_T         dialogueId,
                                 UCHAR_T          invokeId)
 {
-  smsc_log_debug(tcapLogger,"CANCEL_IND");
+  smsc_log_debug(tcapLogger,"L_CANCEL_IND");
   smsc_log_debug(tcapLogger," SSN: 0x%X", ssn);
   smsc_log_debug(tcapLogger," UserID: 0x%X", userId );
   smsc_log_debug(tcapLogger," TcapInstanceID: 0x%X", tcapInstanceId );
   smsc_log_debug(tcapLogger," DialogID: 0x%X", dialogueId );
   smsc_log_debug(tcapLogger," InvokeId: 0x%X", invokeId );
+
+  Dialog* dlg = findDialog( ssn, dialogueId );
+  if( dlg ) dlg->handleLCancelInvoke(invokeId);
+
   return MSG_OK;
 }
 

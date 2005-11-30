@@ -41,6 +41,7 @@ class SCF
     virtual void initialDPSMS(InitialDPSMSArg* arg) = 0;
     virtual void eventReportSMS(EventReportSMSArg* arg) = 0;
     virtual void onOperationError(Invoke *op, TcapEntity * resE) = 0;
+    virtual void onOperationLCancel(Invoke *op) = 0;
 };
 
 class InapOpResListener;
@@ -54,6 +55,7 @@ class Inap : public DialogListener, public SCF
     void initialDPSMS(InitialDPSMSArg* arg);     //begins TCAP dialog
     void eventReportSMS(EventReportSMSArg* arg); //continues TCAP dialog
     void onOperationError(Invoke *op, TcapEntity * resE);
+    void onOperationLCancel(Invoke *op);
     // DialogListener interface
     virtual void onDialogInvoke(Invoke* op);
     virtual void onDialogPAbort(UCHAR_T abortCause);
@@ -77,7 +79,8 @@ public:
     //Gets result from TCAP 
     void error(TcapEntity* err);    
     void result(TcapEntity* resL) {}
-    void resultNL(TcapEntity* resNL) {};
+    void resultNL(TcapEntity* resNL) {}
+    void lcancel(void);
 
 protected:
     Invoke * orgInv;    //originating Invoke

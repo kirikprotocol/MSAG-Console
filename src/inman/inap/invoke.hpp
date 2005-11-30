@@ -16,6 +16,7 @@ class InvokeListener
         virtual void result(TcapEntity*) = 0;
         virtual void error(TcapEntity*) = 0;
         virtual void resultNL(TcapEntity*) = 0;
+        virtual void lcancel(void) = 0;
 };
 
 class Dialog;
@@ -32,6 +33,7 @@ class Invoke : public TcapEntity
         virtual void notifyResultListener(TcapEntity* resp);
         virtual void notifyResultNListener(TcapEntity* resp);
         virtual void notifyErrorListener(TcapEntity* resp);
+        virtual void notifyLCancelListener(void);
 
     protected:
         InvokeListener * _iResHdl; //optional

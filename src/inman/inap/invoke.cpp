@@ -84,6 +84,12 @@ void Invoke::notifyErrorListener(TcapEntity* resp)
         _iResHdl->error(resp);
 }
 
+void Invoke::notifyLCancelListener(void)
+{
+    if (_iResHdl)
+        _iResHdl->lcancel();
+}
+
 } // namespace inap
 } // namespace inmgr
 } // namespace smsc

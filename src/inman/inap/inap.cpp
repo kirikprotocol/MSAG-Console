@@ -4,6 +4,7 @@ static char const ident[] = "$Id$";
 
 #include "inman/comp/acdefs.hpp"
 #include "inman/inap/inap.hpp"
+#include "inman/interaction/inerrcodes.hpp"
 
 namespace smsc {
 namespace inman {
@@ -25,6 +26,12 @@ void InapOpResListener::error(TcapEntity* resE)
 {
     orgInap->onOperationError(orgInv, resE);
 }
+
+void InapOpResListener::lcancel()
+{
+    orgInap->onOperationLCancel(orgInv);
+}
+
 
 Invoke * InapOpResListener::getOrgInv() const
 {
@@ -70,6 +77,20 @@ void Inap::onOperationError(Invoke *op, TcapEntity * resE)
     switch(op->getOpcode()) {
     case InapOpCode::InitialDPSMS: {
         ssfHdl->abortSMS(resE->getOpcode(), false);
+    } break;
+//    case InapOpCode::EventReportSMS: {
+//    } break;
+    default:;
+    }
+}
+
+void Inap::onOperationLCancel(Invoke *op)
+{
+    smsc_log_error(logger, "Inap: Invoke[%u] (opcode = %u) got L_CANCEL",
+                   (unsigned)op->getId(), (unsigned)op->getOpcode());
+    switch(op->getOpcode()) {
+    case InapOpCode::InitialDPSMS: {
+        ssfHdl->abortSMS(smsc::inman::tcapResourceLimitation, true);
     } break;
 //    case InapOpCode::EventReportSMS: {
 //    } break;

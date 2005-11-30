@@ -39,7 +39,8 @@ public:
     //Gets result from TCAP 
     void result(TcapEntity* resL);
     void error(TcapEntity* err);
-    void resultNL(TcapEntity* resNL) {};
+    void resultNL(TcapEntity* resNL) {}
+    void lcancel(void) {}
 
 protected:
     Invoke * orgInv;    //originating Invoke

@@ -273,6 +273,25 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
     return MSG_OK;
 }
 
+USHORT_T Dialog::handleLCancelInvoke(UCHAR_T invId)
+{
+    Invoke* inv = NULL;
+
+    //search both maps for Invoke and notify it
+    InvokeMap::const_iterator it = originating.find(invId);
+    if (it == originating.end()) {
+        it = terminating.find(invId);
+        if (it != originating.end())
+            inv = (*it).second;
+    } else
+        inv = (*it).second;
+
+    if (inv)
+        inv->notifyLCancelListener();
+
+    return MSG_OK;
+}
+
 USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const UCHAR_T *op, USHORT_T pmlen, const UCHAR_T *pm)
 {
     assert( op );
