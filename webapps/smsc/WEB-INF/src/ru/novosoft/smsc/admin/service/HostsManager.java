@@ -352,7 +352,7 @@ public class HostsManager
 		for (int i = 0; i < rgNodes.length; i++)
 		{
 			if (rg.getOnlineStatus(rgNodes[i]) == ServiceInfo.STATUS_ONLINE)
-				result = ServiceInfo.STATUS_ONLINE;
+				{result = ServiceInfo.STATUS_ONLINE;break;}
 		}
 		return result;
 	}
@@ -365,7 +365,7 @@ public class HostsManager
 		for (int i = 0; i < rgNodes.length; i++)
 		{
 			if (rg.getOnlineStatus(rgNodes[i]) == ServiceInfo.STATUS_ONLINE)
-				result = rgNodes[i];
+				{result = rgNodes[i];break;}
 		}
 		return result;
 	}

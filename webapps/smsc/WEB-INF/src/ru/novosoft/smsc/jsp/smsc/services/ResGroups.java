@@ -188,21 +188,6 @@ public class ResGroups extends PageBean
     }
   }
 
-  public byte getServiceStatus(final String serviceId)
-  {
-    if (hostsManager.isService(serviceId)) {
-      try {
-        return hostsManager.getServiceInfo(serviceId).getStatus();
-      } catch (Throwable t) {
-        logger.error("Couldn't get service info for service \"" + serviceId + '"', t);
-        error(SMSCErrors.error.services.couldntGetServiceInfo, serviceId);
-        return ServiceInfo.STATUS_UNKNOWN;
-      }
-    }
-    else
-      return ServiceInfo.STATUS_RUNNING;
-  }
-
   public SmeStatus getSmeStatus(final String id)
   {
     try {

@@ -17,10 +17,6 @@ import java.util.List;
  */
 public interface ResourceGroup
 {
-	final byte STATUS_UNKNOWN = 0;
-	final byte STATUS_ONLINE = 1;
-	final byte STATUS_OFFLINE = 2;
-
 	String getName();
 
 	void setOnlineStatus(byte Status) throws AdminException;

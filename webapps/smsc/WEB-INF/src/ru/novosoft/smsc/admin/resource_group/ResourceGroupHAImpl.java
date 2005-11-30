@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.admin.resource_group;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.service.ServiceInfo;
 
 import java.util.HashMap;
 
@@ -71,8 +72,8 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 	{
 		switch (onlineStatus)
 		{
-			case STATUS_ONLINE:  NativeResourceGroupHA.ResourceGroup_online(swigCPtr); break;
-			case STATUS_OFFLINE: NativeResourceGroupHA.ResourceGroup_offline(swigCPtr); break;
+			case ServiceInfo.STATUS_ONLINE:  NativeResourceGroupHA.ResourceGroup_online(swigCPtr); break;
+			case ServiceInfo.STATUS_OFFLINE: NativeResourceGroupHA.ResourceGroup_offline(swigCPtr); break;
 			default: throw new AdminException("Unknown online status");
 		}
 	}
@@ -83,12 +84,12 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 		if (NativeResourceGroupHA.ResourceGroup_onlineStatus(swigCPtr, nodeName))
 			{
 				logger.debug("ONLINE returned");
-				return STATUS_ONLINE;
+				return ServiceInfo.STATUS_ONLINE;
 			}
 			else
 			{
 				logger.debug("OFFLINE returned");
-				return STATUS_OFFLINE;
+				return ServiceInfo.STATUS_OFFLINE;
 			}
 	}
 
