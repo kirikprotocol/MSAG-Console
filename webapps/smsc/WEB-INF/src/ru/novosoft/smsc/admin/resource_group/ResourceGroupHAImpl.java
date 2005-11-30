@@ -41,6 +41,7 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 	{
 		super(NativeResourceGroupHA.new_ResourceGroup(rgName), true);
 		name = (String) haname2sme.get(rgName);
+		logger.error("Resource group (haname="+rgName+", smename="+name+") created");
 	}
 
 	public void switchOver(String nodeName)
