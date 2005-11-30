@@ -77,7 +77,8 @@ function viewService(serviceId)
 	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
 	<th><%=getLocString("common.sortmodes.service")%></th>
 	<th><%=getLocString("common.sortmodes.nodes")%></th>
-	<th colspan="3"><%=getLocString("common.sortmodes.status")%></th>
+	<th colspan="2"><%=getLocString("common.sortmodes.status")%></th>
+    <th>online node</th>
 </tr>
 </thead>
 <tbody>
@@ -96,7 +97,7 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
     <td class=name><%
 		if (bean.isService(serviceId))
 		{
-			%><a href="#" title="<%=getLocString("host.viewTitle")%>" onClick="return viewNodes('<%=serviceId%>');"><%=bean.getHost(serviceId)%></a><%
+			%><%=bean.getHost(serviceId)%><%
 		} else
 		{
 			%>&nbsp;<%
@@ -112,7 +113,7 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 	<td class=name><%
 		if (bean.isService(serviceId))
 		{
-			%><%=serviceStatus(bean.getAppContext(), serviceId)%><%
+			%><%=rgStatus(bean.getAppContext(), serviceId)%><%
 		} else
 		{
 			%>&nbsp;<%

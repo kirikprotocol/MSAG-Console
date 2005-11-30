@@ -18,7 +18,7 @@ public interface ServiceManager
 
   boolean contains(String id);
 
-  void deployAdministrableService(File incomingZip, ServiceInfo serviceInfo, File[] serviceFolder) throws AdminException;
+  void deployAdministrableService(File incomingZip, ServiceInfo serviceInfo, File serviceFolder) throws AdminException;
 
   Service get(String serviceId) throws AdminException;
 
@@ -35,7 +35,7 @@ public interface ServiceManager
 
   void removeAll(Collection serviceIds) throws AdminException;
 
-  void rollbackDeploy(String serviceId, File[] serviceFolder);
+  void rollbackDeploy(String hostName, String serviceId, File serviceFolder);
 
   void updateServices(Map services);
 

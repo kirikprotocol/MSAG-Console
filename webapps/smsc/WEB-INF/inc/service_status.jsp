@@ -19,6 +19,40 @@ String serviceStatus(SMSCAppContext appContext, String serviceId)
   String elem_id = "RUNNING_STATUSERVICE_" + StringEncoderDecoder.encode(serviceId);
   return serviceStatus(appContext, serviceId, elem_id);
 }
+
+String rgStatus(SMSCAppContext appContext, String serviceId)
+{
+  String elem_id = "RUNNING_STATUSERVICE_" + StringEncoderDecoder.encode(serviceId);
+  return rgStatus(appContext, serviceId, elem_id);
+}
+
+String rgStatus(SMSCAppContext appContext, String serviceId, String elem_id)
+{
+	byte status = ServiceInfo.STATUS_UNKNOWN;
+    String node = "";
+	try {
+		status = appContext.getHostsManager().getServiceStatus(serviceId);
+        node = appContext.getHostsManager().getOnlineNode(serviceId);
+	} catch (Throwable e)
+	{}
+	String result = "<span id=\"" + elem_id + "\" datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\">";
+		switch (status)
+		{
+			case ServiceInfo.STATUS_ONLINE:
+				result += getLocString("common.statuses.online");
+                result = result + " on " + node;
+				break;
+			case ServiceInfo.STATUS_OFFLINE:
+				result += getLocString("common.statuses.offline");
+				break;
+			default:
+				result += getLocString("common.statuses.unknown");
+				break;
+		}
+	result += "</span>";
+	return result;
+}
+
 String serviceStatus(SMSCAppContext appContext, String serviceId, String elem_id)
 {
 	byte status = ServiceInfo.STATUS_UNKNOWN;

@@ -32,15 +32,14 @@ public class ServiceInfo
   protected String id = "";
   protected String host = "";
   protected String args = "";
-  protected String resGroup = "";
   protected Map components = new HashMap();
   protected SME sme = null;
   protected byte status = STATUS_STOPPED;
-  private File[] serviceFolder;
+  private File serviceFolder;
   private boolean autostart;
 
 
-  public ServiceInfo(final Element serviceElement, final String serviceHost, final SmeManager smeManager, final String[] daemonServicesFolder)
+  public ServiceInfo(final Element serviceElement, final String serviceHost, final SmeManager smeManager, final String daemonServicesFolder)
           throws AdminException
   {
     host = serviceHost;
@@ -51,7 +50,7 @@ public class ServiceInfo
     if ("".equals(id)) {
       throw new AdminException("services name or services system id not specified in response");
     }
-    if (id.startsWith(Constants.SMSC_SME_ID_PREFIX)) {
+    if (id.equals(Constants.SMSC_SME_ID)) {
       if (smeManager.contains(id))
         throw new AdminException("Couldn't add new SMSC - already presented");
       sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0);
@@ -67,24 +66,30 @@ public class ServiceInfo
 
     setStatusStr(serviceElement.getAttribute("status"));
 //? id==folder
-	this.serviceFolder = new File[daemonServicesFolder.length];
-	for (int i = 0; i < daemonServicesFolder.length; i++)
-		this.serviceFolder[i] = new File(daemonServicesFolder[i], id);
+    this.serviceFolder = new File(daemonServicesFolder, id);
   }
 
-  public ServiceInfo(final String id, final String host, final String[] serviceFolder, final String args, final boolean autostart, final SME sme,
-                     final byte status)
-  {
-    this.host = host;
-    this.args = args;
-    this.autostart = autostart;
-    this.id = id;
-    this.sme = sme;
-    this.status = status;
-	this.serviceFolder = new File[serviceFolder.length];
-	for (int i = 0; i < serviceFolder.length; i++)
-		this.serviceFolder[i] = new File(serviceFolder[i], id);
-  }
+	public ServiceInfo(final String servId, final SmeManager smeManager, final byte status) throws AdminException
+	{
+		id = servId;
+		if ("".equals(id)) {
+		  throw new AdminException("services name or services system id not specified in response");
+		}
+		if (id.equals(Constants.SMSC_SME_ID)) {
+		  if (smeManager.contains(id))
+			throw new AdminException("Couldn't add new SMSC - already presented");
+		  sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0);
+		}
+		else if (id.equals(Constants.ARCHIVE_DAEMON_SVC_ID)) {
+		  if (smeManager.contains(id))
+			throw new AdminException("Couldn't add new ArchiveDaemon - already presented");
+		  sme = new SME(id, 0, SME.SMPP, 0, 0, 0, "", "", "", 0, false, false, 0, "", false, SME.MODE_TRX, 0, 0);
+		}
+		else {
+		  sme = smeManager.get(id);
+		}
+		this.status = status;
+	}
 
 	public ServiceInfo(final String id, final String host, final String serviceFolder, final String args, final boolean autostart, final SME sme,
 					   final byte status)
@@ -95,9 +100,8 @@ public class ServiceInfo
 	  this.id = id;
 	  this.sme = sme;
 	  this.status = status;
-	  this.serviceFolder = new File[1];
-	  this.serviceFolder[0] = new File(serviceFolder, id);
-	}
+    this.serviceFolder = new File(serviceFolder);
+  }
 
   public String getHost()
   {
@@ -195,29 +199,13 @@ public class ServiceInfo
     this.args = args;
   }
 
-  public File[] getServiceFolders()
+  public File getServiceFolder()
   {
     return serviceFolder;
   }
-
-	public File getServiceFolder()
-	{
-		if (serviceFolder != null) return serviceFolder[0];
-			else return null; 
-	}
 
   public boolean isAutostart()
   {
     return autostart;
   }
-
-	public String getResGroup()
-	{
-		return resGroup;
-	}
-
-	public void setResGroup(String resGroup)
-	{
-		this.resGroup = resGroup;
-	}
 }

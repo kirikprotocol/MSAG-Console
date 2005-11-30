@@ -81,7 +81,7 @@ public class Index extends PageBean
 		for (Iterator i = smeIds.iterator(); i.hasNext();)
 		{
 			final String smeName = (String) i.next();
-			if (smeName.startsWith(Constants.SMSC_SME_ID_PREFIX))
+			if (smeName.equals(Constants.SMSC_SME_ID))
 			{smeIds.remove(smeName);}
 		}
       return smeIds;

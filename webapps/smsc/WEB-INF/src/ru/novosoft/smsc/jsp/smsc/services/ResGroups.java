@@ -48,7 +48,7 @@ public class ResGroups extends PageBean
       return stopServices();
     else if (null != mbView)
       return RESULT_VIEW;
-	
+
     else if (null != mbViewNodes)
       return RESULT_VIEW_NODES;
 
@@ -69,7 +69,7 @@ public class ResGroups extends PageBean
 		for (Iterator i = smeIds.iterator(); i.hasNext();)
 		{
 			final String smeName = (String) i.next();
-			if (smeName.startsWith(Constants.SMSC_SME_ID_PREFIX))
+			if (smeName.equals(Constants.SMSC_SME_ID))
 			{smeIds.remove(smeName);}
 		}
       return smeIds;
@@ -179,7 +179,7 @@ public class ResGroups extends PageBean
 	{
 		String result = "";
 		String[] nodes = hostsManager.getServiceNodes(sId);
-		for(int i = 0; i < nodes.length; i++) {result = result + " ," + nodes[i];}
+		for(int i = 0; i < nodes.length; i++) {if (i == 0) result += nodes[i]; else result = result + ", " +nodes[i];}
 		return result;
 	} catch (Throwable e) {
       error(SMSCErrors.error.services.couldntGetServiceInfo, e);

@@ -79,9 +79,17 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 
 	public byte getOnlineStatus(String nodeName)
 	{
+		logger.debug("Getting online status for rg: " + getName() + " at node: " + nodeName);
 		if (NativeResourceGroupHA.ResourceGroup_onlineStatus(swigCPtr, nodeName))
-			{return STATUS_ONLINE;}
-			else return STATUS_OFFLINE;
+			{
+				logger.debug("ONLINE returned");
+				return STATUS_ONLINE;
+			}
+			else
+			{
+				logger.debug("OFFLINE returned");
+				return STATUS_OFFLINE;
+			}
 	}
 
 	public void offline()

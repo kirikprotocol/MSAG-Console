@@ -320,7 +320,8 @@ public class HostsManager
 
   public synchronized ServiceInfo getServiceInfo(final String serviceId) throws AdminException
   {
-    return new ServiceInfo(serviceId, "", "", "", true, smeManager.get(serviceId), getServiceStatus(serviceId));//serviceManager.getInfo(serviceId);
+    return new ServiceInfo(serviceId, smeManager, getServiceStatus(serviceId));
+  //serviceManager.getInfo(serviceId);
   }
 
   public synchronized ResourceGroup getService(final String smeId) throws AdminException
@@ -352,6 +353,19 @@ public class HostsManager
 		{
 			if (rg.getOnlineStatus(rgNodes[i]) == ServiceInfo.STATUS_ONLINE)
 				result = ServiceInfo.STATUS_ONLINE;
+		}
+		return result;
+	}
+
+	public synchronized String getOnlineNode(String serviceId) throws AdminException
+	{
+		String result = "";
+		ResourceGroup rg = getService(serviceId);
+		String[] rgNodes = getServiceNodes(serviceId);
+		for (int i = 0; i < rgNodes.length; i++)
+		{
+			if (rg.getOnlineStatus(rgNodes[i]) == ServiceInfo.STATUS_ONLINE)
+				result = rgNodes[i];
 		}
 		return result;
 	}
