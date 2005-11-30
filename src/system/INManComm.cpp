@@ -13,7 +13,7 @@ INManComm::INManComm(smsc::smeman::SmeRegistrar* argSmeReg):smeReg(argSmeReg)
   log=smsc::logger::Logger::getInstance("inmancom");
   systemId="INMANCOMM";
   dlgIdSeq=0;
-  reqTimeOut=30;
+  reqTimeOut=60;
   socket=new net::Socket;
   packetWriter.assignSocket(socket);
   socketOk=false;
