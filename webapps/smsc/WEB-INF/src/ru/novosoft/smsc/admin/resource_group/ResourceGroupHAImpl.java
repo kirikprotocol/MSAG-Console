@@ -26,6 +26,8 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 		haname2sme.put("mciprof-harg", "MCIProf");
 		haname2sme.put("inman-harg", "inman");
 		haname2sme.put("proxysme-harg", "proxysme");
+		haname2sme.put("smsc-sarg", "SMSCservice");
+		haname2sme.put("webapp-harg", "webapp");
 
 		smename2ha.put("SMSC", "smscagent-harg");
 		smename2ha.put("ArchiveDaemon", "archiver-harg");
@@ -35,6 +37,8 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 		smename2ha.put("MCIProf", "mciprof-harg");
 		smename2ha.put("inman", "inman-harg");
 		smename2ha.put("proxysme", "proxysme-harg");
+		smename2ha.put("SMSCservice", "smsc-sarg");
+		smename2ha.put("webapp", "webapp-harg");
 	}
 
 	protected long swigCPtr;
@@ -45,11 +49,12 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 		swigCPtr = cPtr;
 	}
 
-	public ResourceGroupHAImpl(String rgName)
+	public ResourceGroupHAImpl(String rgName) throws AdminException
 	{
 		this(NativeResourceGroupHA.new_ResourceGroup(rgName), true);
 		name = (String) haname2sme.get(rgName);
-		logger.error("Resource group (haname="+rgName+", smename="+name+") created");
+		if (name == null) throw new AdminException("Couldn't map resource group ha-name:" + rgName);
+		logger.info("Resource group (haname="+rgName+", smename="+name+") created");
 	}
 
 	public void switchOver(String nodeName)

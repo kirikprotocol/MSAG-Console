@@ -63,9 +63,16 @@ public class ResourceGroupManager
 				logger.debug("ResourceGroup_listGroups returned resource groups:" + rgNames.length);
 				for (int i = 0; i < rgNames.length; i++)
 				{
-					ResourceGroup rg = new ResourceGroupHAImpl(rgNames[i]);
-					add(rg);
-					logger.debug("Resource group \"" + rg.getName() + "\" added");
+					try
+					{
+						ResourceGroup rg = new ResourceGroupHAImpl(rgNames[i]);
+						add(rg);
+						logger.debug("Resource group \"" + rg.getName() + "\" added");
+					}
+					catch (AdminException e)
+					{
+						logger.warn("Couldn't init resource group:" + rgNames[i]);
+					}
 				}
 				break;
 			default: throw new AdminException("Invalid type of installation");
