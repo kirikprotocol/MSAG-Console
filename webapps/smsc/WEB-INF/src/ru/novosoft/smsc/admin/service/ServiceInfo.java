@@ -12,6 +12,7 @@ import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.smsc_service.SmeManager;
+import ru.novosoft.smsc.util.WebAppFolders;
 
 import java.io.File;
 import java.util.HashMap;
@@ -89,6 +90,7 @@ public class ServiceInfo
 		  sme = smeManager.get(id);
 		}
 		this.status = status;
+		this.serviceFolder = new File(WebAppFolders.getServicesFolder(), servId);
 	}
 
 	public ServiceInfo(final String id, final String host, final String serviceFolder, final String args, final boolean autostart, final SME sme,

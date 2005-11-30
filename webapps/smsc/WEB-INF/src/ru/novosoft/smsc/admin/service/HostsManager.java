@@ -10,6 +10,7 @@ import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
 import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.SortedList;
+import ru.novosoft.smsc.util.WebAppFolders;
 
 import java.io.File;
 import java.io.IOException;
@@ -334,9 +335,9 @@ public class HostsManager
     resourceGroupManager.save();
   }
 
-  public synchronized String[] getServicesFolder(final String resGroupName) throws AdminException
+  public synchronized String getDaemonServicesFolder(final String resGroupName) throws AdminException
   {
-    return null;//resourceGroupManager.get(resGroupName).getServicesFolder();
+    return WebAppFolders.getServicesFolder().getName();
   }
 
 	public synchronized String[] getServiceNodes(final String serviceId) throws AdminException

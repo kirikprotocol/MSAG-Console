@@ -17,35 +17,17 @@ result += "\r\n";
 for (Iterator i = c.iterator(); i.hasNext(); )
 {
 	String sId = (String) i.next();
-	if (bean.isColored())
+	switch (bean.getServiceStatus(sId))
 	{
-		switch (bean.getServiceStatus(sId))
-		{
-			case ServiceInfo.STATUS_ONLINE:
-                result += "<img src=\"/images/ic_running.gif\" width=10 height=10 title='" + getLocString("common.statuses.online") + "'>";
-				break;
-			case ServiceInfo.STATUS_OFFLINE:
-				result += "<img src=\"/images/ic_starting.gif\" width=10 height=10 title='" + getLocString("common.statuses.offline") + "'>";
-				break;
-			default:
-				result += "<img src=\"/images/ic_unknown.gif\" width=10 height=10 title='" + getLocString("common.statuses.unknown") + "'>";
-				break;
-		}
-	}
-	else
-	{
-		switch (bean.getServiceStatus(sId))
-		{
-			case ServiceInfo.STATUS_ONLINE:
-				result += getLocString("common.statuses.online");
-				break;
-			case ServiceInfo.STATUS_OFFLINE:
-				result += getLocString("common.statuses.offline");
-				break;
-			default:
-				result += getLocString("common.statuses.unknown");
-				break;
-		}
+		case ServiceInfo.STATUS_ONLINE:
+			result += getLocString("common.statuses.online");
+			break;
+		case ServiceInfo.STATUS_OFFLINE:
+			result += getLocString("common.statuses.offline");
+			break;
+		default:
+			result += getLocString("common.statuses.unknown");
+			break;
 	}
 	if (i.hasNext()) result += ", ";
 }

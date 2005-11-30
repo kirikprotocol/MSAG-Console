@@ -49,7 +49,6 @@
 <tr>
 	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
 	<th><%=getLocString("common.sortmodes.node")%></th>
-	<th><%=getLocString("common.sortmodes.node")%></th>
 	<th><%=getLocString("common.sortmodes.status")%></th>
 </tr>
 </thead>
@@ -62,7 +61,6 @@
 <tr class=row<%=i&1%>>
   <td><input class=check type=radio name=checkedSmsc value="<%=nodes[i]%>"></td>
   <td><%=nodes[i]%></td>
-  <td><%=bean.getAppContext().getSmscList().getSmsc().getStopFileName().get(nodes[i])%></td>
   <td><%=bean.getAppContext().getHostsManager().getService("SMSC").getOnlineStatus(nodes[i])%></td>
 </tr>
 <%}%>

@@ -67,7 +67,7 @@ function viewService(serviceId)
 
 <table class=list cellspacing=1 width="100%">
 <col width="1%" align=center>
-<col width="1%" align=left>
+<%if (request.isUserInRole("services")) {%><col width="1%"><%}%>
 <col width="1%" align=left>
 <col width="1%" align=center>
 <col width="1%" align=center>
@@ -75,8 +75,8 @@ function viewService(serviceId)
 <thead>
 <tr>
 	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
+	<%if (request.isUserInRole("services")) {%><th>&nbsp;</th><%}%>
 	<th><%=getLocString("common.sortmodes.service")%></th>
-	<th><%=getLocString("common.sortmodes.nodes")%></th>
 	<th colspan="2"><%=getLocString("common.sortmodes.status")%></th>
     <th>online node</th>
 </tr>
@@ -93,16 +93,13 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 %>
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=serviceIds.contains(serviceId) ? "checked" : ""%>></td>
-	<td class=name><a href="#" title="<%=getLocString("host.viewServInfo")%>" onClick="return viewService('<%=encodedServiceId%>');"><%=encodedServiceId%></a></td>
-    <td class=name><%
-		if (bean.isService(serviceId))
-		{
-			%><%=bean.getHost(serviceId)%><%
-		} else
-		{
-			%>&nbsp;<%
-		}
-  	%></td>
+	<%if (request.isUserInRole("services") && (bean.isService(serviceId))) {%>
+     <td class=name>
+      <a  href="#" title="<%=getLocString("services.editSubTitle")%>" onClick="return viewService('<%=encodedServiceId%>');"><%=getLocString("common.links.edit")%>
+      </a>
+      </td>
+    <%}%>
+	<td class=name><%=encodedServiceId%></td>
 	<td class=name>
 <%= bean.isServiceDisabled(serviceId)
  ?

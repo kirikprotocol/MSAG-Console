@@ -122,7 +122,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
       initLogger();
       webappConfig = new Config(new File(configFileName));
       System.out.println("webappConfig = " + configFileName + " **************************************************");
-      WebAppFolders.init(webappConfig.getString("system.webapp folder"), webappConfig.getString("system.work folder"));
+      WebAppFolders.init(webappConfig.getString("system.webapp folder"), webappConfig.getString("system.work folder"), webappConfig.getString("system.services folder"));
 
       try {
         webXmlConfig = new WebXml(new File(WebAppFolders.getWebinfFolder(), "web.xml"));
