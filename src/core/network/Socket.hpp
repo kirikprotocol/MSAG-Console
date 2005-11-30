@@ -85,7 +85,7 @@ public:
   void Done();
   int Printf(const char* fmt,...);
   int Puts(const char* str);
-  int InitServer(const char *host,int port,int timeout,int lng=1);
+  int InitServer(const char *host,int port,int timeout,int lng=1,bool force=false);
   int StartServer();
   Socket* Accept(int to=0);
   Socket* Clone()

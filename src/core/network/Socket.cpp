@@ -92,10 +92,13 @@ void Socket::Close()
 
 void Socket::Abort()
 {
-  linger l;
-  l.l_onoff=1;
-  l.l_linger=0;
-  setsockopt(sock,SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
+  if(sock!=INVALID_SOCKET)
+  {
+    linger l;
+    l.l_onoff=1;
+    l.l_linger=0;
+    setsockopt(sock,SOL_SOCKET,SO_LINGER,(char*)&l,sizeof(l));
+  }
   Close();
 }
 
@@ -213,11 +216,16 @@ int Socket::Puts(const char* str)
   return Write((char*)str,strlen(str));
 }
 
-int Socket::InitServer(const char *host,int port,int timeout,int lng)
+int Socket::InitServer(const char *host,int port,int timeout,int lng,bool force)
 {
   if(Init(host,port,timeout)==-1)return -1;
   sock=socket(AF_INET,SOCK_STREAM,0);
   if(sock==INVALID_SOCKET) return -1;
+  if(force)
+  {
+    int val=1;
+    setsockopt(sock,SOL_SOCKET,SO_REUSEADDR,&val,4);
+  }
   if(bind(sock,(sockaddr*)&sockAddr,sizeof(sockAddr)))
   {
     closesocket(sock);
