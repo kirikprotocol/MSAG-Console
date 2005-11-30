@@ -16,6 +16,12 @@ typedef enum {
     InProtocol_GeneralError = 1
 } InmanProtocolErrors;
 
+typedef enum {
+  tcapUnrecognizedMessageType = 0, tcapUnrecognizedTransactionID = 1,
+  tcapBadlyFormattedTransactionPortion = 2, tcapIncorrectTransactionPortion = 3,
+  tcapResourceLimitation = 4
+} InTCAPErrors;
+
 class InmanErrorCode {
 public:
     InmanErrorCode(uint32_t ercode);
