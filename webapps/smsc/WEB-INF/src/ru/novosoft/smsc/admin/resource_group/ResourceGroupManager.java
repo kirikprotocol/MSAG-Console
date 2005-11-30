@@ -34,7 +34,7 @@ public class ResourceGroupManager
 		switch(getInstallType())
 		{
 			case ResourceGroupConstants.RESOURCEGROUP_TYPE_SINGLE:
-				NativeResourceGroupSingle.LoadLibrary();
+/*				NativeResourceGroupSingle.LoadLibrary();
 				logger.debug("JNI Library loaded");
 				rgNames = NativeResourceGroupSingle.ResourceGroup_listGroups();
 				for (int i = 0; i < rgNames.length; i++)
@@ -42,10 +42,10 @@ public class ResourceGroupManager
 					ResourceGroup rg = new ResourceGroupSingleImpl(rgNames[i]);
 					add(rg);
 					logger.debug("Resource group \"" + rg.getName() + "\" added");
-				}
+				}*/
 				break;
 			case ResourceGroupConstants.RESOURCEGROUP_TYPE_HS:
-				NativeResourceGroupHS.LoadLibrary();
+/*				NativeResourceGroupHS.LoadLibrary();
 				logger.debug("JNI Library loaded");
 				rgNames = NativeResourceGroupHS.ResourceGroup_listGroups();
 				for (int i = 0; i < rgNames.length; i++)
@@ -53,7 +53,7 @@ public class ResourceGroupManager
 					ResourceGroup rg = new ResourceGroupHSImpl(rgNames[i]);
 					add(rg);
 					logger.debug("Resource group \"" + rg.getName() + "\" added");
-				}
+				}*/
 				break;
 			case ResourceGroupConstants.RESOURCEGROUP_TYPE_HA:
 				NativeResourceGroupHA.LoadLibrary();

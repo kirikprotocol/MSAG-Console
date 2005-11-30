@@ -37,9 +37,17 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 		smename2ha.put("proxysme", "proxysme-harg");
 	}
 
+	protected long swigCPtr;
+	protected boolean swigCMemOwn;
+
+	protected ResourceGroupHAImpl(long cPtr, boolean cMemoryOwn) {
+		swigCMemOwn = cMemoryOwn;
+		swigCPtr = cPtr;
+	}
+
 	public ResourceGroupHAImpl(String rgName)
 	{
-		super(NativeResourceGroupHA.new_ResourceGroup(rgName), true);
+		this(NativeResourceGroupHA.new_ResourceGroup(rgName), true);
 		name = (String) haname2sme.get(rgName);
 		logger.error("Resource group (haname="+rgName+", smename="+name+") created");
 	}

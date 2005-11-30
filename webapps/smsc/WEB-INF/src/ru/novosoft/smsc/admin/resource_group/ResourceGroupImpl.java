@@ -26,14 +26,6 @@ public abstract class ResourceGroupImpl implements ResourceGroup
 
 	protected Category logger = Category.getInstance(this.getClass().getName());
 
-	protected long swigCPtr;
-	protected boolean swigCMemOwn;
-
-	protected ResourceGroupImpl(long cPtr, boolean cMemoryOwn) {
-		swigCMemOwn = cMemoryOwn;
-		swigCPtr = cPtr;
-	}
-
 	public String getName()
 	{
 		return name;
