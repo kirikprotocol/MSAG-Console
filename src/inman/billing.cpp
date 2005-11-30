@@ -113,10 +113,11 @@ void Billing::onChargeSms(ChargeSms* sms)
             && (cdr._bearer == CDRRecord::dpUSSD))
         || ((billMode == smsc::inman::BILL_SMS)
             && (cdr._bearer == CDRRecord::dpSMS)) ) {
+        smsc_log_debug( logger, "SSF initiated billing via SCF");
+
         inap = new Inap(session, this); //initialize TCAP dialog
         assert(inap);
 
-        smsc_log_debug( logger, "SSF --> SCF InitialDPSMS" );
         InitialDPSMSArg arg(smsc::inman::comp::DeliveryMode_Originating);
 
         arg.setDestinationSubscriberNumber(sms->getDestinationSubscriberNumber().c_str()); // missing for MT
@@ -130,11 +131,12 @@ void Billing::onChargeSms(ChargeSms* sms)
         arg.setTPProtocolIdentifier(sms->getTPProtocolIdentifier());
         arg.setTPDataCodingScheme(sms->getTPDataCodingScheme());
 
+        smsc_log_debug( logger, "SSF --> SCF InitialDPSMS" );
         inap->initialDPSMS(&arg); //begins TCAP dialog
         state = Billing::bilInited;
     } else {
-//        smsc_log_debug(logger, "SSF: ChargeSms accepted, no interaction with SCF");
         //do not ask IN platform, just create CDR
+        smsc_log_debug(logger, "SSF initiated billing via CDR");
         continueSMS();
     }
 }
