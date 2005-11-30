@@ -133,7 +133,7 @@ void Billing::onChargeSms(ChargeSms* sms)
         inap->initialDPSMS(&arg); //begins TCAP dialog
         state = Billing::bilInited;
     } else {
-        smsc_log_debug(logger, "SSF: ChargeSms accepted, no interaction with SCF");
+//        smsc_log_debug(logger, "SSF: ChargeSms accepted, no interaction with SCF");
         //do not ask IN platform, just create CDR
         continueSMS();
     }
