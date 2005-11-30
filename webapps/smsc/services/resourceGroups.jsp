@@ -1,5 +1,6 @@
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <%@ page import="ru.novosoft.smsc.jsp.smsc.services.Index,
+                 ru.novosoft.smsc.jsp.smsc.services.ResGroups,
                  java.net.URLEncoder,
                  ru.novosoft.smsc.jsp.SMSCJspException,
                  ru.novosoft.smsc.jsp.SMSCErrors,
@@ -25,8 +26,8 @@ switch(bean.process(request))
 	case Index.RESULT_VIEW:
 		response.sendRedirect(CPATH+"/esme_"+URLEncoder.encode(bean.getServiceId())+"/index.jsp");
 		return;
-	case Index.RESULT_VIEW_HOST:
-		response.sendRedirect(CPATH+"/hosts/hostView.jsp?hostName="+bean.getHostId());
+	case ResGroups.RESULT_VIEW_NODES:
+		response.sendRedirect(CPATH+"/hosts/nodesView.jsp?servName="+bean.getServiceId());
 		return;
 	default:
 
@@ -46,11 +47,11 @@ page_menu_end(out);
 <input type=hidden name=hostId>
 <input type=hidden name=serviceType>
 <script>
-function viewHost(hostId)
+function viewNodes(servId)
 {
 	document.all.jbutton.value = "view host";
-	document.all.jbutton.name = "mbViewHost";
-	opForm.hostId.value = hostId;
+	document.all.jbutton.name = "mbViewNodes";
+	opForm.serviceId.value = servId;
 	opForm.submit();
 	return false;
 }
@@ -68,14 +69,12 @@ function viewService(serviceId)
 <col width="1%" align=center>
 <col width="1%" align=left>
 <col width="1%" align=left>
-<col width="1%" align=left>
 <col width="1%" align=center>
 <col width="1%" align=center>
 <col width="1%" align=center>
 <thead>
 <tr>
 	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
-	<th>&nbsp;</th>
 	<th><%=getLocString("common.sortmodes.service")%></th>
 	<th><%=getLocString("common.sortmodes.nodes")%></th>
 	<th colspan="3"><%=getLocString("common.sortmodes.status")%></th>
@@ -93,12 +92,11 @@ List serviceIds = Arrays.asList(bean.getServiceIds());
 %>
 <tr class=row<%=row&1%>>
 	<td class=check><input class=check type=checkbox name=serviceIds value="<%=encodedServiceId%>" <%=serviceIds.contains(serviceId) ? "checked" : ""%>></td>
-	<td class=name><a href="#" title="<%=getLocString("services.editSubTitle")%>"><%=getLocString("common.links.edit")%></a></td>
 	<td class=name><a href="#" title="<%=getLocString("host.viewServInfo")%>" onClick="return viewService('<%=encodedServiceId%>');"><%=encodedServiceId%></a></td>
     <td class=name><%
 		if (bean.isService(serviceId))
 		{
-			%><a href="#" title="<%=getLocString("host.viewTitle")%>" onClick="return viewHost('<%=bean.getHost(serviceId)%>');"><%=bean.getHost(serviceId)%></a><%
+			%><a href="#" title="<%=getLocString("host.viewTitle")%>" onClick="return viewNodes('<%=serviceId%>');"><%=bean.getHost(serviceId)%></a><%
 		} else
 		{
 			%>&nbsp;<%

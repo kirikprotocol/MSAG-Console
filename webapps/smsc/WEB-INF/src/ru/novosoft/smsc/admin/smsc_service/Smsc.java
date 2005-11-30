@@ -105,11 +105,11 @@ public class Smsc extends Service
 
   private SMSCAppContext appContext = null;
 	private Statuses statuses = new StatusesImpl();
-	private String stopFileName = "";
+	private Map stopFileName = null;
 
-  public Smsc(final String SmscName, final String smscHost, final int smscPort, final String smscConfFolderString, final String stopFileName, final NSConnectionPool connectionPool, SMSCAppContext smscAppContext) throws AdminException
+  public Smsc(final String SmscName, final String smscHost, final int smscPort, final String smscConfFolderString, Map stopFileName, final NSConnectionPool connectionPool, SMSCAppContext smscAppContext) throws AdminException
   {
-    super(new ServiceInfo(Constants.SMSC_SME_ID_PREFIX + SmscName, smscHost, "", "", true, null, ServiceInfo.STATUS_STOPPED), smscPort);
+    super(new ServiceInfo(SmscName, smscHost, "", "", true, null, ServiceInfo.STATUS_STOPPED), smscPort);
 
     try {
       this.configFolder = new File(smscConfFolderString);
@@ -648,7 +648,7 @@ public class Smsc extends Service
 		return statuses;
 	}
 
-	public String getStopFileName()
+	public Map getStopFileName()
 	{
 		return stopFileName;
 	}

@@ -18,6 +18,7 @@ public class ResGroups extends PageBean
   public static final int RESULT_VIEW_HOST = PRIVATE_RESULT + 1;
   public static final int RESULT_ADD = PRIVATE_RESULT + 2;
   public static final int RESULT_EDIT = PRIVATE_RESULT + 3;
+  public static final int RESULT_VIEW_NODES = PRIVATE_RESULT + 4;
 
   protected String serviceId = null;
   protected String hostId = null;
@@ -28,7 +29,7 @@ public class ResGroups extends PageBean
   protected String mbStartService = null;
   protected String mbStopService = null;
   protected String mbView = null;
-  protected String mbViewHost = null;
+  protected String mbViewNodes = null;
   protected String mbEdit = null;
   protected String mbDisconnectServices = null;
 
@@ -47,8 +48,10 @@ public class ResGroups extends PageBean
       return stopServices();
     else if (null != mbView)
       return RESULT_VIEW;
-    else if (null != mbViewHost)
-      return RESULT_VIEW_HOST;
+	
+    else if (null != mbViewNodes)
+      return RESULT_VIEW_NODES;
+
     else if (null != mbDisconnectServices)
       return disconnectServices();
     else
@@ -176,7 +179,7 @@ public class ResGroups extends PageBean
 	{
 		String result = "";
 		String[] nodes = hostsManager.getServiceNodes(sId);
-		for(int i = 0; i < nodes.length; i++) {result += nodes[i];}
+		for(int i = 0; i < nodes.length; i++) {result = result + " ," + nodes[i];}
 		return result;
 	} catch (Throwable e) {
       error(SMSCErrors.error.services.couldntGetServiceInfo, e);
@@ -332,14 +335,14 @@ public class ResGroups extends PageBean
     this.mbView = mbView;
   }
 
-  public String getMbViewHost()
+  public String getMbViewNodes()
   {
-    return mbViewHost;
+    return mbViewNodes;
   }
 
-  public void setMbViewHost(final String mbViewHost)
+  public void setMbViewNodes(final String mbViewHost)
   {
-    this.mbViewHost = mbViewHost;
+    this.mbViewNodes = mbViewHost;
   }
 
   public String getMbEdit()

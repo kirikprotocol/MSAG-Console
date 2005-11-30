@@ -30,49 +30,48 @@ public class SmscList
 	private Config config = null;
 	private SMSCAppContext appContext = null;
 	private Category logger = Category.getInstance(this.getClass());
-	private Map smscenters = new HashMap();
+	private Smsc smsc = null;
 
 	public SmscList(final Config webappConfig, final NSConnectionPool connectionPool, SMSCAppContext smscAppContext) throws AdminException
 	{
 		this.config = webappConfig;
 		this.appContext = smscAppContext;
-		Set smscNames = config.getSectionChildSectionNames("smscenters");
+		Set nodeNames = config.getSectionChildSectionNames("smscenters");
 		logger.debug("Initializing SMSC list ");
-		for (Iterator i = smscNames.iterator(); i.hasNext();)
+
+		try
 		{
-			String encodedName = (String) i.next();
-			String smscName = StringEncoderDecoder.decodeDot(encodedName.substring(encodedName.lastIndexOf('.') + 1));
-			try
+			Map stopFileNames = new HashMap();
+			for (Iterator i = nodeNames.iterator(); i.hasNext();)
 			{
-				final int port = config.getInt(encodedName + ".port");
-				final String host = config.getString(encodedName + ".host");
-				final String configFolder = config.getString(encodedName + ".config folder");
-				WebAppFolders.setSmscConfFolder(new File(configFolder));
-				final String stopfilename = config.getString(encodedName + ".stopfilename");
-				Smsc smsc = new Smsc(smscName, host, port, configFolder, stopfilename, connectionPool, smscAppContext);
-				smscenters.put(smscName, smsc);
-				appContext.getServiceManager().add(smsc);
-				logger.debug("SMSC \"" + smscName + "\"" + host + ":" + port + "added");
+				String encodedName = (String) i.next();
+				String nodeName = StringEncoderDecoder.decodeDot(encodedName.substring(encodedName.lastIndexOf('.') + 1));
+				final String stopFileName = config.getString(encodedName + ".stopfilename");
+				stopFileNames.put(nodeName, stopFileName);
 			}
-			catch (AdminException e)
-			{
-				logger.error("Couldn't add SMSC \"" + smscName + "\"", e);
-				throw e;
-			}
-			catch (Config.ParamNotFoundException e)
-			{
-				logger.debug("Misconfigured SMSC \"" + smscName + "\"", e);
-				throw new AdminException("Miscofigured SMSC");
-			}
-			catch (Config.WrongParamTypeException e)
-			{
-				logger.debug("Misconfigured SMSC \"" + smscName + "\"", e);
-				throw new AdminException("Miscofigured SMSC");
-			}
+		String smscConfFolder = webappConfig.getString("smsc.config folder");
+		WebAppFolders.setSmscConfFolder(new File(smscConfFolder));
+		smsc = new Smsc(Constants.SMSC_SME_ID, webappConfig.getString("smsc.host"), webappConfig.getInt("smsc.port"), smscConfFolder, stopFileNames, connectionPool, appContext);
+		appContext.getServiceManager().add(smsc);
+		logger.debug("SMSC added");
+		}
+		catch (AdminException e)
+		{
+			logger.error("Couldn't add SMSC \"", e);
+			throw e;
+		}
+		catch (Config.ParamNotFoundException e)
+		{
+			logger.debug("Misconfigured SMSC \"", e);
+			throw new AdminException("Miscofigured SMSC");
+		}
+		catch (Config.WrongParamTypeException e)
+		{
+			logger.debug("Misconfigured SMSC \"", e);
+			throw new AdminException("Miscofigured SMSC");
 		}
 		logger.debug("SMSC list initialized");
-		if (smscenters.isEmpty()) {throw new AdminException("There is no one SMSC");}
-		appContext.setSmsc((Smsc)smscenters.values().toArray()[0]);
+		appContext.setSmsc(smsc);
 	}
 
 	public void updateSmsc()
@@ -82,18 +81,7 @@ public class SmscList
 
 	public Smsc getSmsc()
 	{
-		try
-		{
-			ResourceGroup smscResGroup = appContext.getHostsManager().getService(Constants.SMSC_SME_ID);
-			String[] nodes = smscResGroup.listNodes();
-			for (int i = 0; i < nodes.length; i++)
-			{
-				if (smscResGroup.getOnlineStatus(nodes[i]) == ServiceInfo.STATUS_ONLINE)
-					return (Smsc)smscenters.get(nodes[i]);
-			}
-		}
-		catch (AdminException e) {return (Smsc)smscenters.values().toArray()[0];}
-		return (Smsc)smscenters.values().toArray()[0];
+		return smsc;
 	}
 
 	public void switchSmsc(String nodeName) throws AdminException
@@ -102,52 +90,34 @@ public class SmscList
 		updateSmsc();
 	}
 
-	public Map getSmsCenters()
+	public void applyConfig() throws AdminException
 	{
-		return smscenters;
-	}
-
-	public Smsc getSmsc(String SmscName)
-	{
-		Smsc result = null;
-/*		if (mainSmsc.getInfo().getId().equals(SmscName)) {result = mainSmsc;}
-		else if (secondarySmsc.getInfo().getId().equals(SmscName)) result = secondarySmsc;*/
-		return result;
-	}
-
-	public void applyConfig(String nodeName) throws AdminException
-	{
-		getSmsc(nodeName).applyConfig();
-/*		if (secondarySmsc == null) {mainSmsc.applyConfig();return;} //если нет второго, то просто апплай
-
-		if (secondarySmsc.getInfo().getStatus() != ServiceInfo.STATUS_RUNNING) //если второй не запущен - запустить
+		try
 		{
-			appContext.getHostsManager().startService(secondarySmsc.getInfo().getId());
-			while ((secondarySmsc.getInfo().getStatus() != ServiceInfo.STATUS_RUNNING)&&(secondarySmsc.getInfo().getStatus() != ServiceInfo.STATUS_UNKNOWN))
-				try
-				{
-					Thread.sleep(50);
-				}
-				catch (InterruptedException e) {e.printStackTrace();}
+			getSmsc().getSmscConfig().save();
 		}
-
-		Smsc forApply = mainSmsc;
-		switchSmsc();
-
-		forApply.applyConfig();
-
-		while ((forApply.getInfo().getStatus() != ServiceInfo.STATUS_RUNNING)&&(forApply.getInfo().getStatus() != ServiceInfo.STATUS_UNKNOWN))
-			try
-			{
-				Thread.sleep(50);
-			}
-			catch (InterruptedException e) {e.printStackTrace();}
-
-		switchSmsc();*/
+		catch(Exception e)
+		{
+			e.printStackTrace();
+			throw new AdminException("Couldn't save Smsc config");
+		}
 	}
 
 	public String[] getNodes() throws AdminException
 	{
+/*		String[] result = new String[getSmsc().getStopFileName().keySet().size()];
+		int n = 0;
+		for (Iterator i = getSmsc().getStopFileName().keySet().iterator(); i.hasNext();)
+		{
+			result[n] = (String) i.next();
+			n++;
+		}
+		return result;*/
 		return appContext.getHostsManager().getServiceNodes(Constants.SMSC_SME_ID);
+	}
+
+	public ResourceGroup getSmscResourceGroup() throws AdminException
+	{
+		return appContext.getHostsManager().getService(Constants.SMSC_SME_ID);
 	}
 }

@@ -58,7 +58,7 @@ public class ResourceGroupManager
 			case ResourceGroupConstants.RESOURCEGROUP_TYPE_HA:
 				NativeResourceGroupHA.LoadLibrary();
 				logger.debug("JNI Library loaded");
-				logger.debug("ResourceGroup_listGroups called");
+				logger.debug("ResourceGroup_listGroups calling");
 				rgNames = NativeResourceGroupHA.ResourceGroup_listGroups();
 				logger.debug("ResourceGroup_listGroups returned resource groups:" + rgNames.length);
 				for (int i = 0; i < rgNames.length; i++)

@@ -33,8 +33,6 @@ public class Switch extends SmscBean
       return result;
     if (appContext.getInstallType() != ResourceGroupConstants.RESOURCEGROUP_TYPE_HA) return error(SMSCErrors.error.smsc.contextInitFailed);
 
-    if (checkedSmsc == null) return RESULT_OK;
-
     if (mbOnline != null)
       return processOnline();
     else if (mbOffline != null)
@@ -100,7 +98,7 @@ public class Switch extends SmscBean
   {
 	try
 	{
-		String stopFileName = appContext.getSmsc().getStopFileName();
+		String stopFileName = (String) appContext.getSmsc().getStopFileName().get(checkedSmsc);
 		File stopFile = new File(stopFileName);
 		stopFile.createNewFile();
 		hostsManager.shutdownService(Constants.SMSC_SME_ID);
@@ -117,12 +115,12 @@ public class Switch extends SmscBean
 	{
 		try
 		{
-			appContext.getSmscList().applyConfig(checkedSmsc);
-			return RESULT_OK;
+			appContext.getSmscList().applyConfig();
+			return warning(SMSCErrors.warning.SMSCconfigHasBeenSaved);
 		}
 		catch (Throwable e)
 		{
-			logger.error("Couldn't apply config " + checkedSmsc, e);
+			logger.error("Couldn't apply config.", e);
 			return error(SMSCErrors.error.smsc.couldntApply, e);
 		}
 	}

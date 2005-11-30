@@ -16,7 +16,8 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 	protected static HashMap haname2sme = new HashMap();
 	protected static HashMap smename2ha = new HashMap();
 
-	static {
+	static
+	{
 		haname2sme.put("smscagent-harg", "SMSC");
 		haname2sme.put("archiver-harg", "ArchiveDaemon");
 		haname2sme.put("dbsme-harg", "dbSme");
@@ -34,7 +35,7 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 		smename2ha.put("MCIProf", "mciprof-harg");
 		smename2ha.put("inman", "inman-harg");
 		smename2ha.put("proxysme", "proxysme-harg");
-   }
+	}
 
 	public ResourceGroupHAImpl(String rgName)
 	{

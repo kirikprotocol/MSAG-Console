@@ -48,28 +48,24 @@
 <thead>
 <tr>
 	<th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
-	<th><%=getLocString("common.sortmodes.name")%></th>
+	<th><%=getLocString("common.sortmodes.node")%></th>
 	<th><%=getLocString("common.sortmodes.node")%></th>
 	<th><%=getLocString("common.sortmodes.status")%></th>
 </tr>
 </thead>
 <tbody>
 <%
-  Map smscenters = bean.getAppContext().getSmscList().getSmsCenters();
-  int n = 0;
   String[] nodes = bean.getAppContext().getSmscList().getNodes();
-  for (Iterator i = smscenters.keySet().iterator(); i.hasNext();)
+  for (int i = 0; i < nodes.length; i++)
   {
-      Smsc smsc = (Smsc) smscenters.get(i.next());
 %>
-<tr class=row<%=n%>>
-  <td><input class=check type=radio name=checkedSmsc value="<%=nodes[n]%>"></td>
-  <td><%=smsc.getInfo().getId()%></td>
-  <td><%=nodes[n]%></td>
-  <td><%=bean.getAppContext().getHostsManager().getService("SMSC").getOnlineStatus(nodes[n])%></td>
+<tr class=row<%=i&1%>>
+  <td><input class=check type=radio name=checkedSmsc value="<%=nodes[i]%>"></td>
+  <td><%=nodes[i]%></td>
+  <td><%=bean.getAppContext().getSmscList().getSmsc().getStopFileName().get(nodes[i])%></td>
+  <td><%=bean.getAppContext().getHostsManager().getService("SMSC").getOnlineStatus(nodes[i])%></td>
 </tr>
-<%n++;}
-%>
+<%}%>
 </tbody>
 </table>
 </div><%

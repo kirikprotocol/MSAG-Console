@@ -321,6 +321,7 @@ public class SMSCErrors
   {
     private static final String B = SMSCErrors.B + "warning.";
     public static final String SMSCNotRunning = B + "SMSCNotRunning";
+	public static final String SMSCconfigHasBeenSaved = B + "SMSCconfigHasBeenSaved";
 
 
     public static class hosts
