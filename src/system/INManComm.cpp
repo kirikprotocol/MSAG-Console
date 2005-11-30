@@ -145,6 +145,7 @@ void INManComm::Report(int dlgId,const SMS& sms,bool final)
         smsc::inman::interaction::DELIVERY_FAILED,
       final
     );
+  res.setDialogId(dlgId);
   smsc::inman::interaction::ObjectBuffer buf(0);
   smsc::inman::interaction::SerializerInap::getInstance()->serialize(&res,buf);
   packetWriter.enqueue(buf.get(),buf.GetPos());

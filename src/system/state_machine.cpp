@@ -2993,6 +2993,7 @@ StateType StateMachine::forwardChargeResp(Tuple& t)
     Task task(uniqueId,dialogId2);
     task.diverted=diverted;
     task.messageId=t.msgId;
+    task.inDlgId=inDlgId;
     if ( !smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
     {
       smsc_log_warn(smsLog, "FWDDLV: failed to create task msgId=%lld, seq number:%d",t.msgId,dialogId2);
@@ -3717,6 +3718,7 @@ StateType StateMachine::deliveryResp(Tuple& t)
 
         Task task(uniqueId,dialogId2,dgortr?new SMS(sms):0);
         task.messageId=t.msgId;
+        task.inDlgId=t.command->get_resp()->get_inDlgId();
         if ( !smsc->tasks.createTask(task,dest_proxy->getPreferredTimeout()) )
         {
           __warning__("CONCAT: can't create task");
