@@ -56,4 +56,11 @@ Modules:
   <target name="emailsme_update">
     <ant dir="emailsme" antfile="build.xml" target="update"/>
   </target>
+  <target name="inman_distr">
+    <ant dir="InManSme" antfile="build.xml" target="distr"/>
+  </target>
+  <target name="inman_update">
+    <ant dir="InManSme" antfile="build.xml" target="update"/>
+  </target>
+  
 </project>
