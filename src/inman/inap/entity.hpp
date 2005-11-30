@@ -15,81 +15,46 @@ class Dialog;
 
 class TcapEntity
 {
+protected:
+    typedef std::vector<unsigned char> RawBuffer;
+
+    UCHAR_T     id;
+    UCHAR_T     opcode;
+    UCHAR_T     tag;
+    Component*	param;
+    bool        ownComp; //this Entity is owner of 'param'
+
+    void encode(RawBuffer& operation, RawBuffer& params)
+    {
+        operation.clear(); params.clear();
+        operation.push_back(opcode);
+        if (param)
+            param->encode(params);
+    }
 
 public:
+    TcapEntity()
+        : id(0), tag(0), opcode(0), param(NULL), ownComp(false) { }
 
-  TcapEntity()
-	: id( 0 )
-	, tag( 0 )
-	, opcode( 0 )
-	, param( NULL )
-  {
-  }
- 
-  virtual ~TcapEntity()
-  {
-  		delete param;
-  }
+    TcapEntity(UCHAR_T tId, UCHAR_T tTag, UCHAR_T tOpCode)
+        : id(tId), tag(tTag), opcode(tOpCode), param(NULL), ownComp(false) { }
 
-  virtual USHORT_T getId() const 
-  { 
-  		return id; 
-  }	
+    virtual ~TcapEntity() { if (ownComp) delete param; }
 
-  virtual void setId( USHORT_T inId ) 
-  { 
-  		id = inId; 
-  }
+    USHORT_T    getId() const          { return id; }
+    void        setId(USHORT_T inId)   { id = inId; }
+    UCHAR_T     getTag() const         { return tag; }
+    void        setTag(UCHAR_T t)      { tag = t; }
+    UCHAR_T     getOpcode() const      { return opcode; }
+    void        setOpcode(UCHAR_T opc) { opcode = opc; }
+    Component*  getParam() const     { return param; }
+    //sets 'param' without passing ownership, it's caller responsibility to free Component
+    void        setParam(Component* p)     { param = p; ownComp = false; }
+    //grands the ownership of 'param', Component will be freed by ~TcapEntity()
+    void        ownParam(Component* p)     { param = p; ownComp = true; }
 
-  virtual UCHAR_T getTag() const 
-  { 
-  		return tag; 
-  }
-
-  virtual void setTag(UCHAR_T t)
-  {
-  		tag = t;
-  }
-
-  virtual UCHAR_T getOpcode() const
-  {
-  		return opcode;
-  }
-
-  virtual void setOpcode(UCHAR_T opc)
-  {
-  		opcode = opc;
-  }
-
-  virtual Component* getParam() const
-  {
-		return param;
-  }
-
-  virtual void setParam(Component* p)
-  {
-		param = p;
-  }
-
-  virtual void send(Dialog*) = 0;
-
-protected:
-
-  typedef std::vector<unsigned char> RawBuffer;
-
-  void encode(RawBuffer& operation, RawBuffer& params)
-  {
-  	operation.clear();
-  	operation.push_back( opcode );
-  	if( param ) param->encode( params );
-  }
-
-  UCHAR_T 		id;
-  UCHAR_T		opcode;
-  UCHAR_T  		tag;
-  Component*	param;
+    virtual void send(Dialog*) = 0;
 };
-
 
 } //inap
 } //inman

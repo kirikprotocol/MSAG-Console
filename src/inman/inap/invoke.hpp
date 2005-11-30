@@ -23,13 +23,18 @@ class Dialog;
 class Invoke : public TcapEntity
 {
     public:
-        Invoke() {_iResHdl = NULL; }
+        Invoke()
+            : TcapEntity(0, 0, 0), _iResHdl(NULL) { }
+
+        Invoke(UCHAR_T tId, UCHAR_T tTag, UCHAR_T tOpCode)
+            : TcapEntity(tId, tTag, tOpCode), _iResHdl(NULL) {}
+
         virtual ~Invoke() {}
 
         void setListener(InvokeListener * plistener) { _iResHdl = plistener; }
         const InvokeListener * getListener(void) const { return _iResHdl; }
 
-    	virtual void send(Dialog* dialog);
+        virtual void send(Dialog* dialog);
         virtual void notifyResultListener(TcapEntity* resp);
         virtual void notifyResultNListener(TcapEntity* resp);
         virtual void notifyErrorListener(TcapEntity* resp);

@@ -192,11 +192,8 @@ void Dialog::timerReset()
 
 Invoke* Dialog::invoke(UCHAR_T opcode)
 {
-  Invoke* invoke = new Invoke();
-  invoke->setId( getNextInvokeId() );
-  invoke->setTag( EINSS7_I97TCAP_OPERATION_TAG_LOCAL );
-  invoke->setOpcode( opcode );
-
+  Invoke* invoke = new Invoke(getNextInvokeId(),
+                              EINSS7_I97TCAP_OPERATION_TAG_LOCAL, opcode);
   //register invoke if OPERATION has RESULT/ERRORS defined,
   //in order to provide possibility to call result/error listeners
   OperationFactory * fact = ApplicationContextFactory::getFactory(_ac_idx);
@@ -249,19 +246,14 @@ USHORT_T Dialog::handleInvoke(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, const 
     assert( oplen > 0 );
     assert( tag == EINSS7_I97TCAP_OPERATION_TAG_LOCAL );
 
-    UCHAR_T opcode = op[0];
-    Invoke  invoke;
-
-    invoke.setId(invId);
-    invoke.setTag(tag);
-    invoke.setOpcode(opcode);
+    Invoke  invoke(invId, tag, op[0]);
 
     if (pmlen) { //operation parameters present
-        Component* comp = ApplicationContextFactory::getFactory(_ac_idx)->createArg( opcode );
+        Component* comp = ApplicationContextFactory::getFactory(_ac_idx)->createArg(op[0]);
         assert(comp);
         std::vector<unsigned char> code( pm, pm + pmlen );
         comp->decode(code);
-        invoke.setParam(comp);
+        invoke.ownParam(comp);
     }
     //NOTE: calling onDialogInvoke() may lead to this Dialog destruction,
     //so iterate over ListenerList copy.
@@ -301,19 +293,14 @@ USHORT_T Dialog::handleResultLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, co
     //search for originating Invoke, prepare result and call invoke result listeners
     InvokeMap::const_iterator it = originating.find(invId);
     if (it != originating.end()) {
-        InvokeResultLast  result;
-        UCHAR_T opcode = op[0];
+        InvokeResultLast  result(invId, tag, op[0]);
 
-        result.setId( invId );
-        result.setTag( tag );
-        result.setOpcode( opcode );
-
-        Component* resParm = ApplicationContextFactory::getFactory(_ac_idx)->createRes(opcode);
+        Component* resParm = ApplicationContextFactory::getFactory(_ac_idx)->createRes(op[0]);
         assert(resParm);
         if (resParm) {
             std::vector<unsigned char> code(pm, pm + pmlen);
             resParm->decode(code);
-            result.setParam(resParm);
+            result.ownParam(resParm);
         }
         Invoke* inv = (*it).second;
         //NOTE: notifyResultListeners() may lead to this ~Dialog() being called !!!
@@ -332,19 +319,14 @@ USHORT_T Dialog::handleResultNotLast(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen,
     //search for originating Invoke, prepare result and call invoke result listeners
     InvokeMap::const_iterator it = originating.find(invId);
     if (it != originating.end()) {
-        InvokeResultNotLast  result;
-        UCHAR_T opcode = op[0];
+        InvokeResultNotLast  result(invId, tag, op[0]);
 
-        result.setId( invId );
-        result.setTag( tag );
-        result.setOpcode( opcode );
-
-        Component* resParm = ApplicationContextFactory::getFactory(_ac_idx)->createRes(opcode);
+        Component* resParm = ApplicationContextFactory::getFactory(_ac_idx)->createRes(op[0]);
         assert(resParm);
         if (resParm) {
             std::vector<unsigned char> code(pm, pm + pmlen);
             resParm->decode(code);
-            result.setParam(resParm);
+            result.ownParam(resParm);
         }
         Invoke* inv = (*it).second;
         //NOTE: notifyResultNListeners() may lead to this ~Dialog() being called !!!
@@ -363,19 +345,14 @@ USHORT_T Dialog::handleUserError(UCHAR_T invId, UCHAR_T tag, USHORT_T oplen, con
     //search for originating Invoke, prepare result and call invoke result listeners
     InvokeMap::const_iterator it = originating.find(invId);
     if (it != originating.end()) {
-        InvokeResultError  resErr;
-        UCHAR_T ercode = op[0];
-
-        resErr.setId( invId );
-        resErr.setTag( tag );
-        resErr.setOpcode( ercode );
+        InvokeResultError  resErr(invId, tag, op[0]);
 
         //Error may have no parameters
-        Component* errParm = ApplicationContextFactory::getFactory(_ac_idx)->createErr(ercode);
+        Component* errParm = ApplicationContextFactory::getFactory(_ac_idx)->createErr(op[0]);
         if (errParm) {
             std::vector<unsigned char> code(pm, pm + pmlen);
             errParm->decode(code);
-            resErr.setParam(errParm);
+            resErr.ownParam(errParm);
         }
         Invoke* inv = (*it).second;
         //NOTE: notifyErrorListener() may lead to this ~Dialog() being called !!!
