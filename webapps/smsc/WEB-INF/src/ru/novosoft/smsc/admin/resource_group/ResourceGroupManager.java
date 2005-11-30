@@ -71,7 +71,7 @@ public class ResourceGroupManager
 					}
 					catch (AdminException e)
 					{
-						logger.warn("Couldn't init resource group:" + rgNames[i]);
+						logger.error("Couldn't init resource group:" + rgNames[i], e);
 					}
 				}
 				break;
