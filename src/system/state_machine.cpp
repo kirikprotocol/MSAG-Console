@@ -2234,7 +2234,7 @@ StateType StateMachine::submitChargeResp(Tuple& t)
 
   if(sms->billingRecord && sms->getIntProperty(Tag::SMSC_CHARGINGPOLICY)==Smsc::chargeOnSubmit)
   {
-    smsc->ReportDelivery(resp->cntx.inDlgId,*sms,false);
+    smsc->ReportDelivery(resp->cntx.inDlgId,*sms,true);
   }
 
   //
