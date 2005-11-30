@@ -166,6 +166,7 @@ void InBillingFileStorage::bill(const CDRRecord & cdr)
     std::string rec;
     CDRRecord::csvEncode(cdr, rec);
     RFSWrite(rec.c_str(), rec.size());
+    RFSFlush();
 }
 
 } //filestore
