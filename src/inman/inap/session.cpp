@@ -177,6 +177,7 @@ void Session::closeDialog(Dialog* pDlg)
        SessionListener* ptr = *it;
        ptr->onDialogEnd( pDlg );
   }
+    dialogs.erase(pDlg->getId());
 }
 
 void Session::closeAllDialogs()
