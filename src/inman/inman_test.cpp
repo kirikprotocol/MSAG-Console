@@ -55,11 +55,12 @@ protected:
     Logger*             logger;
     DeliverySmsResult_t delivery;
     AbonentType         abType;
+    bool                _ussdOp;
 
 public:
     Facade(const char* host, int port)
         : logger(Logger::getInstance("smsc.InFacade"))
-        , dialogId(0), abType(abPrepaid), _running (false)
+        , dialogId(0), abType(abPrepaid), _running (false), _ussdOp(false) 
     {
         std::string msg;
         msg = format("InFacade: connecting to InManager at %s:%d...\n", host, port);
@@ -88,6 +89,11 @@ public:
         delete pipe;
         delete socket; 
     }
+
+    DeliverySmsResult_t getDeliveryStatus(void) { return delivery; }
+
+    bool isUssdOp(void) { return _ussdOp; }
+    void setUssdOp(bool op) { _ussdOp = op; }
 
     AbonentType getAbonent(void) const { return abType; }
     void setAbonent(AbonentType ab) { abType = ab; }
@@ -123,7 +129,7 @@ public:
         op.setServiceId(1234);
         op.setUserMsgRef(0x01fa);
         op.setMsgId(0x010203040506);
-        op.setServiceOp(0);
+        op.setServiceOp(_ussdOp ? 0 : -1);
 
         pipe->send(&op); 
     }
@@ -226,13 +232,17 @@ void cmd_delivery(Console&, const std::vector<std::string> &args)
         throw ConnectionClosedException();
 }
 
-void cmd_abonent(Console&, const std::vector<std::string> &args)
+void cmd_config(Console&, const std::vector<std::string> &args)
 {
     if (_pFacade->isRunning()) {
         AbonentType ab = _pFacade->getAbonent();
-        std::string msg = format("Current Abonent: %s (%s)\n", _abonents[ab].addr,
+        fprintf(stdout, "Current Abonent: %s (%s)\n", _abonents[ab].addr,
                                  (ab == abPrepaid) ? "prepaid":"postpaid");
-        fprintf(stdout, msg.c_str());
+        fprintf(stdout, "  deliveryStatus to report: %s\n", 
+                (_pFacade->getDeliveryStatus() == smsc::inman::interaction::DELIVERY_SUCCESSED) ?
+                 "SUCCESSED" : "FAILED");
+        fprintf(stdout, "  bearerType to use: dp%s\n",
+                _pFacade->isUssdOp() ? "USSD" : "SMS");
     } else
         throw ConnectionClosedException();
 }
@@ -257,6 +267,25 @@ void cmd_postpaid(Console&, const std::vector<std::string> &args)
 }
 
 
+void cmd_dpsms(Console&, const std::vector<std::string> &args)
+{
+    if (_pFacade->isRunning()) {
+        _pFacade->setUssdOp(false);
+        fprintf(stdout, "Current dpBearerType: dpSMS\n");
+    } else
+        throw ConnectionClosedException();
+}
+
+void cmd_dpussd(Console&, const std::vector<std::string> &args)
+{
+    if (_pFacade->isRunning()) {
+        _pFacade->setUssdOp(true);
+        fprintf(stdout, "Current dpBearerType: dpUSSD\n");
+    } else
+        throw ConnectionClosedException();
+}
+
+
 int main(int argc, char** argv)
 {
     if ( argc != 3 ) {
@@ -274,9 +303,11 @@ int main(int argc, char** argv)
         console.addItem( "chargeOk", cmd_chargeOk );
         console.addItem( "chargeErr",  cmd_chargeErr );
         console.addItem( "delivery",  cmd_delivery );
-        console.addItem( "abonent",  cmd_abonent );
         console.addItem( "prepaid",  cmd_prepaid );
         console.addItem( "postpaid",  cmd_postpaid );
+        console.addItem( "dpsms",  cmd_dpsms );
+        console.addItem( "dpussd",  cmd_dpussd );
+        console.addItem( "config",  cmd_config);
 
         _pFacade->Start();
 
