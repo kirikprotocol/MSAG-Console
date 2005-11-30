@@ -124,6 +124,9 @@ void Service::billingFinished(Billing* bill)
     if (it == workers.end())
         smsc_log_error(logger, "InmanSrv: Attempt to free unregistered Billing, id: 0x%X", billId);
     else {
+        smsc_log_debug(logger, "InmanSrv: Bill[0x%X] %scomplete, cdrMode: %d, billingType: %sPAID",
+                        billId, bill->BillComplete() ? "" : "IN", _cfg.cdrMode, 
+                       (bill->getBillingType() == Billing::billPrepaid) ? "PRE" : "POST");
         if (_cfg.cdrMode && bill->BillComplete()) {
             if ((_cfg.cdrMode == InService_CFG::CDR_ALL)
                 || ((_cfg.cdrMode == InService_CFG::CDR_PREPAID)
