@@ -656,7 +656,7 @@ public class Smsc extends Service
 		return stopFileName;
 	}
 
-	public synchronized ServiceInfo getInfo()
+/*	public synchronized ServiceInfo getInfo()
 	{
 		ServiceInfo result = null;
 		try
@@ -669,5 +669,5 @@ public class Smsc extends Service
 			e.printStackTrace();
 		}
 		return result;
-	}
+	}*/
 }
