@@ -15,7 +15,7 @@ void CommandReader::Start()
 
 int CommandReader::Execute()
 {
-    smsc_log_info(logger, "Reader is strted");
+    smsc_log_info(logger, "Reader started");
   while(!stop)
   {
     //printf("reader, Execute, wait for command...\n");
@@ -23,15 +23,15 @@ int CommandReader::Execute()
     clntSock=srvSock->Accept();
     if ( clntSock)
     {
-       smsc_log_info(logger, "Reader has accepted command");
+       smsc_log_info(logger, "Reader accepted connection");
        for( ;; )
        {
          try{
-           smsc_log_info(logger, "Reader reads command");
+           smsc_log_info(logger, "Reader reading command");
            Command *cmd = readCommand(clntSock);
            if(cmd)
            {
-             smsc_log_info(logger, "Command %02X readed", cmd->getType());
+             smsc_log_info(logger, "Command %02X read", cmd->getType());
              if(cmd->getType() == GETROLE_CMD)
              {
                writeRole(clntSock, cmd);
@@ -44,6 +44,7 @@ int CommandReader::Execute()
                }
                else
                {
+                 smsc_log_debug(logger,"Command skipped, role!=SLAVE");
                  if(cmd)delete cmd;
                }
              }

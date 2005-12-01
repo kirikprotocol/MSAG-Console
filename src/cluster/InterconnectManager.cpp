@@ -16,7 +16,7 @@ Interconnect* Interconnect::instance = 0;
 
 InterconnectManager::InterconnectManager(const std::string& inAddr_,
                                          const std::string& attachedInAddr_, int _port, int _attachedPort)
-    : Interconnect(), Thread(), logger(smsc::logger::Logger::getInstance("IM")), role(MASTER), inAddr(inAddr_),
+    : Interconnect(), Thread(), logger(smsc::logger::Logger::getInstance("IM")), role(SLAVE), inAddr(inAddr_),
       attachedInAddr(attachedInAddr_), port(_port), attachedPort(_attachedPort)
 {
     isStopping = true;
@@ -217,8 +217,6 @@ void InterconnectManager::internalInit()
     smsc_log_warn(logger, "InterconnectManager: Connect to %s:%d failed", attachedInAddr.c_str(), attachedPort);
   }
 
-  role = SLAVE;
-
   reader.Init(&role, &socket, dispatcher);
   reader.Start();
 }
@@ -385,6 +383,7 @@ bool InterconnectManager::isSingle()
 
 void InterconnectManager::changeRole(Role role_)
 {
+    smsc_log_info(logger,"ChangeRole: %d->%d",role,role_);
     if(role == role_)
     {
       return;
@@ -443,10 +442,11 @@ void InterconnectManager::changeRole(Role role_)
     };
 
     {
-        MutexGuard mg(handlersLock);
-        for(int i=0; i<= handlers.Count() - 1; i++){
-            handlers[i].run(role);
-        }
+      MutexGuard mg(handlersLock);
+      for(int i=0; i<= handlers.Count() - 1; i++)
+      {
+        handlers[i].run(role);
+      }
     }
 }
 
