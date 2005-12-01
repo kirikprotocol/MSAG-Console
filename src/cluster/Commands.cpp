@@ -529,7 +529,7 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
 
     try {
 
-    len = 38 + profile.locale.length() + profile.divert.length();
+    len = 46 + profile.locale.length() + profile.divert.length();
     buffer = new uint8_t[len];
 
     uint8_t val;
@@ -543,7 +543,7 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
     //============= Puts codePage in buffer ===============
 
     //printf("codePage: ");
-    switch(profile.codepage){
+    /*switch(profile.codepage){
     case (int)smsc::smpp::DataCoding::SMSC7BIT:
         val = 0;
         //printf("SMSC7BIT\n");
@@ -560,14 +560,16 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
         val = 3;
         //printf("UCS2 | LATIN1\n");
         break;
-    }
+    }*/
 
-    memcpy((void*)(buffer + 23),        (const void*)&val, 1);
+    uint32_t val32 = profile.codepage;
+    uint32_t value32 = htonl(val32);
+    memcpy((void*)(buffer + 23),        (const void*)&value32, 4);
 
     //============= Puts reportOption in buffer ===========
 
     //printf("reportOption: ");
-    switch(profile.reportoptions){
+    /*switch(profile.reportoptions){
     case smsc::profiler::ProfileReportOptions::ReportNone:
         val = 0;
         //printf("ReportNone\n");
@@ -580,14 +582,16 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
         val = 2;
         //printf("ReportFinal\n");
         break;
-    }
+    }*/
 
-    memcpy((void*)(buffer + 24),        (const void*)&val, 1);
+    val32 = profile.reportoptions; 
+    value32 = htonl(val32);
+    memcpy((void*)(buffer + 27),        (const void*)&value32, 4);
 
     //============= Puts hideOption in buffer ===========
 
     //printf("hideOption: ");
-    switch(profile.hide){
+    /*switch(profile.hide){
     case smsc::profiler::HideOption::hoDisabled:
         val = 0;
         //printf("hoDisabled\n");
@@ -600,9 +604,11 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
         val = 2;
         //printf("hoSubstitute\n");
         break;
-    }
+    }*/
 
-    memcpy((void*)(buffer + 25),        (const void*)&val, 1);
+    val32 = profile.hide; 
+    value32 = htonl(value32);
+    memcpy((void*)(buffer + 31),        (const void*)&value32, 4);
 
     //============= Puts flags in buffer ================
 
@@ -636,7 +642,7 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
 
 #undef BIT
 
-    memcpy((void*)(buffer + 26),        (const void*)&val, 1);
+    memcpy((void*)(buffer + 35),        (const void*)&val, 1);
 
     //============= Puts divertActive in buffer ================
 
@@ -668,7 +674,7 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
 
 #undef BIT
 
-    memcpy((void*)(buffer + 27),        (const void*)&val, 1);
+    memcpy((void*)(buffer + 36),        (const void*)&val, 1);
 
     //============= Puts offset =================================
 
@@ -684,13 +690,13 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
     ptr[6]=(unsigned char)(tmp>>8)&0xFF;
     ptr[7]=(unsigned char)(tmp&0xFF);
 
-    memcpy((void*)(buffer + 28),        (const void*)&val64, 8);
+    memcpy((void*)(buffer + 37),        (const void*)&val64, 8);
 
     //============= Puts local and divert in buffer =============
 
-    memcpy((void*)(buffer + 36),                  (const void*)profile.locale.c_str(), profile.locale.length() + 1);
+    memcpy((void*)(buffer + 45),                  (const void*)profile.locale.c_str(), profile.locale.length() + 1);
     //printf("local: '%s', len: %d\n", profile.locale.c_str(), profile.locale.length());
-    memcpy((void*)(buffer + 37 + profile.locale.length()), (const void*)profile.divert.c_str(), profile.divert.length() + 1);
+    memcpy((void*)(buffer + 46 + profile.locale.length()), (const void*)profile.divert.c_str(), profile.divert.length() + 1);
     //printf("divert: '%s', len: %d\n", profile.divert.c_str(), profile.divert.length());
 
     }catch(...){
@@ -701,7 +707,7 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
 }
 bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
 {
-    if(len < 38|| !buffer)
+    if(len < 46|| !buffer)
         return false;
 
     /*
@@ -759,9 +765,11 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
 
     //============= Gets codePage ===============
 
-    memcpy((void*)&val,     (const void*)((uint8_t*)buffer + 23), 1);
+    uint32_t val32;
+    memcpy((void*)&val32,     (const void*)((uint8_t*)buffer + 23), 4);
+    profile.codepage = ntohl(val32);
 
-    switch(val){
+    /*switch(val){
     case 0:
         profile.codepage = smsc::smpp::DataCoding::SMSC7BIT;
         break;
@@ -774,7 +782,7 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
     case 3:
         profile.codepage = smsc::smpp::DataCoding::UCS2 | smsc::smpp::DataCoding::LATIN1;
         break;
-    }
+    }*/
 
     //printf("codePage: ");
     /*if(profile.codepage == smsc::smpp::DataCoding::SMSC7BIT)
@@ -786,9 +794,10 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
 
     //============= Gets reportOption ===========
 
-    memcpy((void*)&val,     (const void*)((uint8_t*)buffer + 24), 1);
+    memcpy((void*)&val32,     (const void*)((uint8_t*)buffer + 27), 4);
+    profile.reportoptions = ntohl(val32);
 
-    switch(val){
+    /*switch(val){
     case 0:
         profile.reportoptions = smsc::profiler::ProfileReportOptions::ReportNone;
         break;
@@ -798,7 +807,7 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
     case 2:
         profile.reportoptions = smsc::profiler::ProfileReportOptions::ReportFinal;
         break;
-    }
+    }*/
 
     //printf("reportOption: ");
     /*if(profile.reportoptions == smsc::profiler::ProfileReportOptions::ReportNone)
@@ -810,9 +819,10 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
 
     //============= Gets hideOption ===========
 
-    memcpy((void*)&val,     (const void*)((uint8_t*)buffer + 25), 1);
+    memcpy((void*)&val32,     (const void*)((uint8_t*)buffer + 31), 4);
+    profile.hide = ntohl(val32);
 
-    switch(val){
+    /*switch(val){
     case 0:
         profile.hide = smsc::profiler::HideOption::hoDisabled;
         break;
@@ -822,7 +832,7 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
     case 2:
         profile.hide = smsc::profiler::HideOption::hoSubstitute;
         break;
-    }
+    }*/
 
     //printf("hideOption: ");
     /*if(profile.hide == smsc::profiler::HideOption::hoDisabled)
@@ -834,7 +844,7 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
 
     //============= Gets flags ================
 
-    memcpy((void*)&val,     (const void*)((uint8_t*)buffer + 26), 1);
+    memcpy((void*)&val,     (const void*)((uint8_t*)buffer + 35), 1);
 
 #define BIT(x) (((uint8_t)1)<<((uint8_t)x))
 
@@ -862,7 +872,7 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
 
     //============= Gets divertActive ================
 
-    memcpy((void*)&val,     (const void*)((uint8_t*)buffer + 27), 1);
+    memcpy((void*)&val,     (const void*)((uint8_t*)buffer + 36), 1);
 
 #define BIT(x) (((uint8_t)1)<<((uint8_t)x))
 
@@ -888,7 +898,7 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
     //============= Gets offset ======================
 
     uint64_t val64;
-    memcpy((void*)&val64,       (const void*)( (uint8_t*)buffer + 28 ), 8);
+    memcpy((void*)&val64,       (const void*)( (uint8_t*)buffer + 37 ), 8);
 
     uint64_t tmp=0;
     memset(&tmp, 0, 8);
@@ -910,14 +920,14 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
 
     //printf("local: '%s', len: %d\n", local.c_str(), local.length());
 
-    if(37 + profile.locale.length() >= len)
+    if(45 + profile.locale.length() >= len)
         return false;
 
     profile.divert = (const char*)((uint8_t*)buffer + 37 + profile.locale.length());
 
     //printf("divert: '%s', len: %d", divert.c_str(), divert.length());
 
-    if(38 + profile.locale.length() + profile.divert.length() != len)
+    if(46 + profile.locale.length() + profile.divert.length() != len)
         return false;
 
     }catch(...){

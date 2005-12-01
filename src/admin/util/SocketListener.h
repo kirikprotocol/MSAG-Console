@@ -43,7 +43,6 @@ public:
     isShutdownSignaled = false;
     isAbortSignaled = false;
 
-    printf("hostName: %s, port: %d\n", hostName, portToListen);
     if (sock.InitServer(hostName, portToListen, 10, 0) != 0)
     {
       throw AdminException("socket fails");
