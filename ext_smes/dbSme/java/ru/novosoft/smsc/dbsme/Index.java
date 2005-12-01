@@ -87,7 +87,7 @@ public class Index extends DbsmeBean
     if (isApplyAll())
       return applyAll();
     else if (isApplyJobs()) {
-      if (getServiceStatus() == ServiceInfo.STATUS_RUNNING)
+      if (isOnline())
         return applyJobs();
       else
         return applyAll();
@@ -254,7 +254,7 @@ public class Index extends DbsmeBean
 
     getContext().setConfigChanged(false);
     getContext().setJobsChanged(false);
-    if (getServiceStatus() == ServiceInfo.STATUS_RUNNING) {
+    if (isOnline()) {
       try {
         getSmeTransport().restart();
       } catch (AdminException e) {

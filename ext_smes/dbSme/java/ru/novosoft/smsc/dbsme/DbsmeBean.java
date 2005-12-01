@@ -105,14 +105,13 @@ public class DbsmeBean extends IndexBean
     return RESULT_OK;
   }
 
-  public byte getServiceStatus()
-  {
-    try {
-      return appContext.getHostsManager().getServiceInfo(smeId).getStatus();
-    } catch (AdminException e) {
-      logger.error("Couldn't get DBSME status, nested: " + e.getMessage(), e);
-      return ServiceInfo.STATUS_UNKNOWN;
-    }
+  public boolean isOnline() {
+      try {
+        return appContext.getHostsManager().getServiceInfo(smeId).isOnline();
+      } catch (AdminException e) {
+        logger.error("Couldn't get DBSME status, nested: " + e.getMessage(), e);
+        return false;
+      }
   }
 
   public Set getParameterNames()
@@ -205,7 +204,7 @@ public class DbsmeBean extends IndexBean
 
   protected int setProviderEnabled(String providerName, boolean enable)
   {
-    if (getServiceStatus() == ServiceInfo.STATUS_RUNNING) {
+    if (isOnline()) {
       try {
         getSmeTransport().setProviderEnabled(providerName, enable);
       } catch (AdminException e) {
