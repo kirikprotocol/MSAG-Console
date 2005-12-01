@@ -59,7 +59,7 @@ switch(beanResult = bean.process(request))
     </td>
   </tr>
   <tr class=row<%=rowN++&1%>0>
-    <th width="1%" nowrap valign=top><%=getLocString("smsview.dealiasedDestAddress ")%></th>
+    <th width="1%" nowrap valign=top><%=getLocString("smsview.dealiasedDestAddress")%></th>
     <td nowrap valign=top>
       <% String ddaMask = row.getDealiasedDestinationAddressMask().getMask();%>
       <%= (ddaMask != null && ddaMask.length() > 0) ? StringEncoderDecoder.encode(ddaMask):"&nbsp;"%>
