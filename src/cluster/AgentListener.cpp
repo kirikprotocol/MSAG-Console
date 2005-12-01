@@ -25,64 +25,59 @@ void AgentListener::Start()
 int AgentListener::Execute()
 {
     smsc_log_info(logger, "Start server..." );
-    if( srvSock.StartServer() ){
-        smsc_log_info(logger, "Can't start socket server" );
-        return 0;
+    if( srvSock.StartServer() )
+    {
+      smsc_log_info(logger, "Can't start socket server" );
+      return 0;
     }
     smsc_log_info(logger, "Server started" );
 
     while(!stop)
     {
 
-        smsc_log_info(logger, "Wait for a command...." );
-        if(clntSock)delete clntSock;
-        clntSock=srvSock.Accept();
-        if (clntSock)
+      smsc_log_info(logger, "Wait for a connection...." );
+      if(clntSock)delete clntSock;
+      clntSock=srvSock.Accept();
+      if (clntSock)
+      {
+        smsc_log_info(logger, "Connection accepted" );
+        for( ;; )
         {
+          try
+          {
+            smsc_log_debug(logger, "Read a command..." );
+            int res = -1;
+            res = readCommand(clntSock);
+            smsc_log_debug(logger, "Command is read, res: %d", res );
 
-            smsc_log_info(logger, "Command is accepted" );
-
-            for( ;; )
+            if(res == 0)
             {
-
-                try
-                {
-
-                  smsc_log_debug(logger, "Read a command..." );
-                  int res = -1;
-                  res = readCommand(clntSock);
-                  smsc_log_debug(logger, "Command is read, res: %d", res );
-
-                  if(res == 0)
-                  {
-                     Interconnect * icon = Interconnect::getInstance();
-                     if(icon)
-                     {
-                       smsc_log_info(logger,"Change role to MASTER");
-                       icon->changeRole(MASTER);
-                     }
-                  }else if(res == 1)
-                  {
-                    stopSmsc = true;
-                    stop = true;
-                    srvSock.Close();
-                    break;
-                  }
-                }catch(...)
-                {
-                  smsc_log_info(logger, "Exception during read command." );
-                  smsc_log_info(logger, "Restarts socket server ..." );
-                  if( srvSock.StartServer() )
-                      smsc_log_info(logger, "Can't start socket server" );
-                  else
-                      smsc_log_info(logger, "Socket server started" );
-
-                  break;
-                }
+               Interconnect * icon = Interconnect::getInstance();
+               if(icon)
+               {
+                 smsc_log_info(logger,"Change role to MASTER");
+                 icon->changeRole(MASTER);
+               }
+            }else if(res == 1)
+            {
+              stopSmsc = true;
+              stop = true;
+              srvSock.Close();
+              break;
             }
+          }catch(...)
+          {
+            smsc_log_info(logger, "Exception during read command." );
+            smsc_log_info(logger, "Restarts socket server ..." );
+            if( srvSock.StartServer() )
+                smsc_log_info(logger, "Can't start socket server" );
+            else
+                smsc_log_info(logger, "Socket server started" );
 
-
+            break;
+          }
         }
+      }
     }
 
     if(stopSmsc)
@@ -111,54 +106,53 @@ void AgentListener::Stop()
 
 int AgentListener::readCommand(Socket * socket)
 {
-    uint8_t buffer[6];
-    smsc_log_debug(logger, "readCommand, read..." );
-    read(socket, (void*)&buffer, 6);
-    smsc_log_debug(logger, "readCommand, command is read" );
-
-    smsc_log_debug(logger, "b[0]: %d, b[1]: %d, b[2]: %d, b[3]: %d", buffer[0], buffer[1], buffer[2], buffer[3] );
-
-    // Checks signature
-    if(buffer[0] != 17 || buffer[1] != 32 || buffer[2] != 7 || buffer[3] != 152)
-        return -1;
-
-    uint16_t val;
-
-    memcpy((void*)&val, (const void*)(buffer + 4), 2);
-
-    val = ntohs(val);
-
-    smsc_log_debug(logger, "val: %d", val );
-
-    return val;
-
+  uint8_t buffer[6];
+  smsc_log_debug(logger, "readCommand, read..." );
+  read(socket, (void*)&buffer, 6);
+  smsc_log_debug(logger, "readCommand, command is read" );
+  smsc_log_debug(logger, "b[0]: %d, b[1]: %d, b[2]: %d, b[3]: %d", buffer[0], buffer[1], buffer[2], buffer[3] );
+  // Checks signature
+  if(buffer[0] != 17 || buffer[1] != 32 || buffer[2] != 7 || buffer[3] != 152)
+  {
+    smsc_log_warn(logger,"invalid signature in command from agent");
+    return -1;
+  }
+  uint16_t val;
+  memcpy((void*)&val, (const void*)(buffer + 4), 2);
+  val = ntohs(val);
+  smsc_log_debug(logger, "val: %d", val );
+  return val;
 }
 
 void AgentListener::read(Socket * socket, void* buffer, int size)
 {
-    try {
-        if(!socket) throw Exception("Command read failed. Socket pointer is NULL.");
-        int toRead = size; char* readBuffer = (char *)buffer;
-        while (toRead > 0) {
-            int read = socket->canRead(60);
-            if (read == 0) continue;
-                else if (read > 0) {
-                    read = socket->Read(readBuffer, toRead);
-                    if (read > 0) { readBuffer+=read; toRead-=read; continue; }
-                }
-                throw Exception("Command read failed. Socket closed. %s", strerror(errno));
-        }
-
-    }catch(Exception& e){
-        throw Exception("%s", e.what());
-    }catch(...){
-        throw Exception("Command read failed. Unexpected error.");
+  if(!socket)
+  {
+    throw Exception("Command read failed. Socket pointer is NULL.");
+  }
+  int toRead = size;
+  char* readBuffer = (char *)buffer;
+  while (toRead > 0)
+  {
+    int read = socket->canRead(60);
+    if (read == 0) continue;
+    else if (read > 0)
+    {
+      read = socket->Read(readBuffer, toRead);
+      if (read > 0)
+      {
+        readBuffer+=read;
+        toRead-=read;
+        continue;
+      }
     }
+    throw Exception("Command read failed. Socket closed. %s", strerror(errno));
+  }
 }
 
 void AgentListener::shutdownSmsc()
 {
-        sigShutdownHandler(SIGTERM);
+  sigShutdownHandler(SIGTERM);
 }
 
 }
