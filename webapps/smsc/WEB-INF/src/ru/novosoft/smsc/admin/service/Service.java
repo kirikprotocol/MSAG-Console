@@ -141,7 +141,7 @@ public class Service extends Proxy
   {
     logger.debug("Set info. Status: " + info.getStatusStr() + " [" + info.getStatus() + ']');
 
-    if (ServiceInfo.STATUS_RUNNING == info.status
+    if (info.isOnline()
             && (null == info.components || 0 == info.components.size())
             && null != this.info.components && 0 < this.info.components.size()) {
       info.components = this.info.components;

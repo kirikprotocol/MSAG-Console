@@ -3,17 +3,11 @@ package ru.novosoft.smsc.jsp.smsc.smsc_service;
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.resource_group.ResourceGroupConstants;
-import ru.novosoft.smsc.admin.smsc_service.Smsc;
-import ru.novosoft.smsc.admin.journal.Actions;
-import ru.novosoft.smsc.admin.journal.SubjectTypes;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
-import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.jsp.SMSCErrors;
 import ru.novosoft.smsc.jsp.smsc.SmscBean;
-import ru.novosoft.smsc.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
 import java.io.File;
 
 public class Switch extends SmscBean
@@ -98,7 +92,7 @@ public class Switch extends SmscBean
   {
 	try
 	{
-		String stopFileName = (String) appContext.getSmsc().getStopFileName().get(checkedSmsc);
+		String stopFileName = (String) appContext.getSmsc().getNodeName2Id().get(checkedSmsc);
 		File stopFile = new File(stopFileName);
 		stopFile.createNewFile();
 		hostsManager.shutdownService(Constants.SMSC_SME_ID);

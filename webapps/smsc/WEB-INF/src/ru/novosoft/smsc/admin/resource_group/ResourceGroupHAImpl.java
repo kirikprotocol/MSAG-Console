@@ -1,6 +1,7 @@
 package ru.novosoft.smsc.admin.resource_group;
 
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.smsc_service.SmscList;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 
 import java.util.HashMap;
@@ -84,7 +85,7 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 		if (NativeResourceGroupHA.ResourceGroup_onlineStatus(swigCPtr, nodeName))
 			{
 				logger.debug("ONLINE returned");
-				return ServiceInfo.STATUS_ONLINE;
+				return SmscList.getNodeId(nodeName);
 			}
 			else
 			{
@@ -97,7 +98,7 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 	{
 		byte result = ServiceInfo.STATUS_OFFLINE;
 		String[] rgNodes = listNodes();
-		for (int i = 0; i < rgNodes.length; i++)
+    for (int i = 0; i < rgNodes.length; i++)
 		{
 			if (getOnlineStatus(rgNodes[i]) == ServiceInfo.STATUS_ONLINE)
 				{result = ServiceInfo.STATUS_ONLINE;break;}

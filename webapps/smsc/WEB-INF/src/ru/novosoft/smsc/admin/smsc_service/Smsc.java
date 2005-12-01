@@ -105,15 +105,15 @@ public class Smsc extends Service
 
   private SMSCAppContext appContext = null;
 	private Statuses statuses = new StatusesImpl();
-	private Map stopFileName = null;
+	private Map nodeName2Id = null;
 
   public Smsc(final String SmscName, final String smscHost, final int smscPort, final String smscConfFolderString, Map stopFileName, final NSConnectionPool connectionPool, SMSCAppContext smscAppContext) throws AdminException
   {
-    super(new ServiceInfo(SmscName, smscHost, "", "", true, null, ServiceInfo.STATUS_STOPPED), smscPort);
+    super(new ServiceInfo(SmscName, smscHost, "", "", true, null, ServiceInfo.STATUS_OFFLINE), smscPort);
 
     try {
       this.configFolder = new File(smscConfFolderString);
-      this.stopFileName = stopFileName;
+      this.nodeName2Id = stopFileName;
       final Document aliasesDoc = Utils.parse(new FileReader(new File(configFolder, "aliases.xml")));
       aliases = new AliasSet(aliasesDoc.getDocumentElement());
       profileDataSource = new ProfileDataSource(connectionPool);
@@ -154,7 +154,7 @@ public class Smsc extends Service
           throws AdminException
   {
     routeSubjectManager.trace();
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
+    if (!getInfo().isOnline())
       throw new AdminException("SMSC is not running.");
 
     final Object res = call(SMSC_COMPONENT_ID, LOAD_ROUTES_METHOD_ID, Type.Types[Type.StringListType], new HashMap());
@@ -165,7 +165,7 @@ public class Smsc extends Service
   public synchronized List traceRoute(final String dstAddress, final String srcAddress, final String srcSysId)
           throws AdminException
   {
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
+    if (!getInfo().isOnline() )
       throw new AdminException("SMSC is not running.");
 
     final Map args = new HashMap();
@@ -181,7 +181,7 @@ public class Smsc extends Service
   {
 	logger.debug("smsc.applyroutes() called");
     routeSubjectManager.apply();
-    if (ServiceInfo.STATUS_RUNNING == getInfo().getStatus()) {
+    if (getInfo().isOnline()) {
 		logger.debug("APPLY_ROUTES_METHOD_ID is sending");
       call(SMSC_COMPONENT_ID, APPLY_ROUTES_METHOD_ID, Type.Types[Type.StringType], new HashMap());
     }
@@ -198,7 +198,7 @@ public class Smsc extends Service
       storeAliases(new PrintWriter(new OutputStreamWriter(new FileOutputStream(newFile), Functions.getLocaleEncoding()))).close();
       Functions.renameNewSavedFileToOriginal(newFile, aliasConfigFile);
 
-      if (ServiceInfo.STATUS_RUNNING == getInfo().getStatus()) {
+      if (getInfo().isOnline()) {
         call(SMSC_COMPONENT_ID, APPLY_ALIASES_METHOD_ID, Type.Types[Type.StringType], new HashMap());
       }
       else
@@ -331,7 +331,7 @@ public class Smsc extends Service
 
   public synchronized void applyConfig() throws AdminException
   {
-	if (ServiceInfo.STATUS_RUNNING == getInfo().getStatus())
+	if (getInfo().isOnline())
 	{
 		call(SMSC_COMPONENT_ID, APPLY_SMSC_CONFIG_METHOD_ID, Type.Types[Type.StringType], new HashMap());
 	}
@@ -528,7 +528,7 @@ public class Smsc extends Service
 
   public synchronized void applyReschedule() throws AdminException
   {
-    if (ServiceInfo.STATUS_RUNNING == getInfo().getStatus()) {
+    if (getInfo().isOnline()) {
       call(SMSC_COMPONENT_ID, APPLY_RESCHEDULE_ID, Type.Types[Type.StringType], new HashMap());
     }
      else {
@@ -538,7 +538,7 @@ public class Smsc extends Service
 
   public synchronized void applyLocaleResources() throws AdminException
   {
-    if (ServiceInfo.STATUS_RUNNING == getInfo().getStatus()) {
+    if (getInfo().isOnline()) {
       call(SMSC_COMPONENT_ID, APPLY_LOCALE_RESOURCES_METHOD_ID, Type.Types[Type.StringType], new HashMap());
     }
      else {
@@ -651,9 +651,9 @@ public class Smsc extends Service
 		return statuses;
 	}
 
-	public Map getStopFileName()
+	public Map getNodeName2Id()
 	{
-		return stopFileName;
+		return nodeName2Id;
 	}
 
 /*	public synchronized ServiceInfo getInfo()

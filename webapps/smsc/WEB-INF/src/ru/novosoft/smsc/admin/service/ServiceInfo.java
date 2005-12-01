@@ -21,21 +21,18 @@ import java.util.Map;
 
 public class ServiceInfo
 {
-  public static final byte STATUS_RUNNING = 0;
-  public static final byte STATUS_STARTING = 1;
-  public static final byte STATUS_STOPPING = 2;
-  public static final byte STATUS_STOPPED = 3;
-  public static final byte STATUS_UNKNOWN = 4;
-
-  public static final byte STATUS_ONLINE = 0;
-  public static final byte STATUS_OFFLINE = 1;
+  public static final byte STATUS_UNKNOWN = -1;
+  /* All other statuses except online should be negative values*/
+  public static final byte STATUS_OFFLINE = 0;
+  public static final byte STATUS_ONLINE1 = 1;
+  public static final byte STATUS_ONLINE2 = 2;
 
   protected String id = "";
   protected String host = "";
   protected String args = "";
   protected Map components = new HashMap();
   protected SME sme = null;
-  protected byte status = STATUS_STOPPED;
+  protected byte status = STATUS_OFFLINE;
   private File serviceFolder;
   private boolean autostart;
 
@@ -154,17 +151,14 @@ public class ServiceInfo
 
   protected void setStatusStr(final String statusStr)
   {
-    if ("running".equalsIgnoreCase(statusStr)) {
-      this.status = STATUS_RUNNING;
+    if ("online1".equalsIgnoreCase(statusStr)) {
+      this.status = STATUS_ONLINE1;
     }
-    else if ("starting".equalsIgnoreCase(statusStr)) {
-      this.status = STATUS_STARTING;
+    else if ("online2".equalsIgnoreCase(statusStr)) {
+      this.status = STATUS_ONLINE2;
     }
-    else if ("stopping".equalsIgnoreCase(statusStr)) {
-      this.status = STATUS_STOPPING;
-    }
-    else if ("stopped".equalsIgnoreCase(statusStr)) {
-      this.status = STATUS_STOPPED;
+    else if ("offline".equalsIgnoreCase(statusStr)) {
+      this.status = STATUS_OFFLINE;
     }
     else
       this.status = STATUS_UNKNOWN;
@@ -173,8 +167,10 @@ public class ServiceInfo
   public String getStatusStr()
   {
     switch (status) {
-      case STATUS_ONLINE:
-        return "online";
+      case STATUS_ONLINE1:
+        return "online1";
+      case STATUS_ONLINE2:
+        return "online2";
       case STATUS_OFFLINE:
         return "offline";
       case STATUS_UNKNOWN:
@@ -209,5 +205,9 @@ public class ServiceInfo
   public boolean isAutostart()
   {
     return autostart;
+  }
+
+  public boolean isOnline() {
+    return this.status > 0;
   }
 }
