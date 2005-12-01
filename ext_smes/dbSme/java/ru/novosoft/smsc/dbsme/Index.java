@@ -5,9 +5,12 @@ import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+
+import org.xml.sax.SAXException;
 
 
 /**
@@ -40,14 +43,10 @@ public class Index extends DbsmeBean
     if (result != RESULT_OK)
       return result;
 
-    if (mbApply != null)
-      return apply();
-    if (mbReset != null)
-      return reset();
-    if (mbStart != null)
-      return start();
-    if (mbStop != null)
-      return stop();
+    if (mbApply != null) return apply();
+    if (mbReset != null) return reset();
+    if (mbStart != null) return start();
+    if (mbStop  != null) return stop();
 
     return result;
   }
@@ -74,8 +73,10 @@ public class Index extends DbsmeBean
 
   private int reset()
   {
-    if (getTempConfigFile().exists())
-      getTempConfigFile().delete();
+    try { restoreFromOriginalConfig(); } catch (Exception e) {
+      logger.error("Failed to restore from original config", e);
+      return error("dbsme.error.config_reset", e);
+    }
     getContext().setConfigChanged(false);
     getContext().setJobsChanged(false);
     return RESULT_DONE;
@@ -83,13 +84,10 @@ public class Index extends DbsmeBean
 
   private int apply()
   {
-    if (isApplyAll())
-      return applyAll();
+    if (isApplyAll()) return applyAll();
     else if (isApplyJobs()) {
-      if (isOnline())
-        return applyJobs();
-      else
-        return applyAll();
+      if (isOnline()) return applyJobs();
+      else return applyAll();
     }
 
     return RESULT_OK;
@@ -99,16 +97,12 @@ public class Index extends DbsmeBean
   {
     int result = RESULT_DONE;
     Config originalConfig = null;
-    try {
-      originalConfig = new Config(getOriginalConfigFile());
-    } catch (Throwable e) {
+    try { originalConfig = new Config(getOriginalConfigFile()); } catch (Throwable e) {
       logger.error("Could not get original config", e);
       return error("dbsme.error.no_config", e);
     }
 
-    try {
-      originalConfig.save();
-    } catch (Throwable e) {
+    try { originalConfig.save(); } catch (Throwable e) {
       logger.error("Could not create backup copy of config", e);
       return error("dbsme.error.config_backup", e);
     }

@@ -6,9 +6,12 @@ import ru.novosoft.smsc.util.*;
 import ru.novosoft.smsc.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.util.List;
 import java.util.Set;
+
+import org.xml.sax.SAXException;
 
 /**
  * Created by igork
@@ -32,6 +35,19 @@ public class DbsmeBean extends IndexBean
   private File originalConfigFile = null;
   private File tempConfigFile = new File(WebAppFolders.getWorkFolder(), "dbSme.config.xml.tmp");
 
+  protected synchronized void restoreFromOriginalConfig()
+      throws IOException, ParserConfigurationException, SAXException
+  {
+      if (tempConfigFile.exists()) tempConfigFile.delete();
+
+      InputStream in = new BufferedInputStream(new FileInputStream(originalConfigFile));
+      OutputStream out = new BufferedOutputStream(new FileOutputStream(tempConfigFile));
+      for (int readedByte = in.read(); readedByte >= 0; readedByte = in.read())
+        out.write(readedByte);
+      in.close(); out.close();
+
+      config = new Config(tempConfigFile);
+  }
   protected int init(List errors)
   {
     tempConfigFile = new File(WebAppFolders.getWorkFolder(), smeId + ".config.xml.tmp");
@@ -42,20 +58,12 @@ public class DbsmeBean extends IndexBean
 
     try {
       originalConfigFile = new File(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder(), "conf/config.xml");
-      if (!tempConfigFile.exists()) {
-        if (!originalConfigFile.exists()) {
+      if (!originalConfigFile.exists()) {
           logger.error("Couldn't find DBSme config file (" + originalConfigFile.getAbsolutePath() + ")");
           return error("dbsme.error.no_config", originalConfigFile.getAbsolutePath());
-        }
-        InputStream in = new BufferedInputStream(new FileInputStream(originalConfigFile));
-        OutputStream out = new BufferedOutputStream(new FileOutputStream(tempConfigFile));
-        for (int readedByte = in.read(); readedByte >= 0; readedByte = in.read())
-          out.write(readedByte);
-        in.close();
-        out.close();
       }
 
-      config = new Config(tempConfigFile);
+      restoreFromOriginalConfig();
 
       try {
         context = DbSmeContext.getInstance(getAppContext(), smeId,
