@@ -50,7 +50,9 @@ namespace smsc { namespace cluster
             return instance;
         };
 
-        
+        virtual ~Interconnect(){}
+
+
         //virtual void sendCommand(const Command& command) = 0;
         virtual void sendCommand(Command* command) = 0;
         virtual void addListener(CommandType type, CommandListener* listener) = 0;
