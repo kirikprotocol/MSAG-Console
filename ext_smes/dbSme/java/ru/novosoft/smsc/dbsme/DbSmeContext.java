@@ -19,11 +19,12 @@ public class DbSmeContext
 {
   private static final Map instances = new HashMap();
 
-  public static synchronized DbSmeContext getInstance(SMSCAppContext appContext, String smeId, int adminPort) throws AdminException
+  public static synchronized DbSmeContext getInstance(SMSCAppContext appContext, String smeId,
+                                                      String adminHost, int adminPort) throws AdminException
   {
     DbSmeContext context = (DbSmeContext) instances.get(smeId);
     if (context == null) {
-      context = new DbSmeContext(appContext, smeId, adminPort);
+      context = new DbSmeContext(appContext, smeId, adminHost, adminPort);
       instances.put(smeId, context);
     }
     return context;
@@ -36,12 +37,13 @@ public class DbSmeContext
   private boolean jobsChanged = false;
   final private Category logger = Category.getInstance(this.getClass());
 
-  private DbSmeContext(SMSCAppContext appContext, String smeId, int adminPort) throws AdminException
+  private DbSmeContext(SMSCAppContext appContext, String smeId,
+                       String adminHost, int adminPort) throws AdminException
   {
     this.smeId = smeId;
     ServiceInfo serviceInfo = null;
     serviceInfo = appContext.getHostsManager().getServiceInfo(this.smeId);
-    this.smeTransport = serviceInfo == null ? null : new SmeTransport(serviceInfo, adminPort);
+    this.smeTransport = serviceInfo == null ? null : new SmeTransport(serviceInfo, adminHost, adminPort);
     this.configChanged = false;
     File tempConfigFile = new File(WebAppFolders.getWorkFolder(), "dbSme.config.xml.tmp");
     if (tempConfigFile.exists()) {

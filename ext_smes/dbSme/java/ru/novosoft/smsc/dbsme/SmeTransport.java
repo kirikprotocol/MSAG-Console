@@ -22,9 +22,10 @@ public class SmeTransport extends Service
   private static final String method_changeJob_ID = "changeJob";
   private static final String method_setProviderEnabled_ID = "setProviderEnabled";
 
-  public SmeTransport(ServiceInfo info, int port)
+  public SmeTransport(ServiceInfo info, String host, int port)
   {
-    super(info, port);
+      super(info, port);
+      this.host = host;
   }
 
   public synchronized void updateInfo(SMSCAppContext appContext) throws AdminException

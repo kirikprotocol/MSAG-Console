@@ -13,8 +13,6 @@ public class DBSmeErrors
   {
     private static final String B = DBSmeErrors.B + "error.dbSme.";
     public static final String internalError = "Internal error";
-    public static final String couldntGetConfig = "Couldn't get config";//B + "couldntGetConfig";
-    public static final String couldntFindConfig = "Couldn't find original config";//B + "couldntFindConfig";
     public static final String couldntSaveTempConfig = "Couldn't save config";//B + "couldntSaveTempConfig";
     public static final String couldntStartDbSme = "Couldn't start DB SME";//B + "couldntStartDbSme";
     public static final String couldntStopDbSme = "Couldn't stop DB SME";//B + "couldntStopDbSme";

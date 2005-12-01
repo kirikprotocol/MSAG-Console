@@ -1,7 +1,6 @@
 package ru.novosoft.smsc.dbsme;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.smsc.IndexBean;
 import ru.novosoft.smsc.util.*;
 import ru.novosoft.smsc.util.config.Config;
@@ -46,8 +45,8 @@ public class DbsmeBean extends IndexBean
       originalConfigFile = new File(appContext.getHostsManager().getServiceInfo(smeId).getServiceFolder(), "conf/config.xml");
       if (!tempConfigFile.exists()) {
         if (!originalConfigFile.exists()) {
-          logger.error("Couldn't find DBSME config file (" + originalConfigFile.getAbsolutePath() + ")");
-          return error(DBSmeErrors.error.couldntFindConfig, originalConfigFile.getAbsolutePath());
+          logger.error("Couldn't find DBSme config file (" + originalConfigFile.getAbsolutePath() + ")");
+          return error("dbsme.error.no_config", originalConfigFile.getAbsolutePath());
         }
         InputStream in = new BufferedInputStream(new FileInputStream(originalConfigFile));
         OutputStream out = new BufferedOutputStream(new FileOutputStream(tempConfigFile));
@@ -60,16 +59,18 @@ public class DbsmeBean extends IndexBean
       config = new Config(tempConfigFile);
 
       try {
-        context = DbSmeContext.getInstance(getAppContext(), smeId, config.getInt("DBSme.Admin.port"));
+        context = DbSmeContext.getInstance(getAppContext(), smeId,
+                                           config.getString("DBSme.Admin.host"),
+                                           config.getInt("DBSme.Admin.port"));
       } catch (AdminException e) {
-        logger.error("Could not instantiate DbSme context", e);
-        return error("Could not instantiate DbSme context", e);
+        logger.error("Could not instantiate DBSme context", e);
+        return error("dbsme.error.ctx_inst", e);
       }
       smeTransport = context.getSmeTransport();
 
     } catch (Throwable e) {
-      logger.error("Couldn't get DBSME config", e);
-      return error(DBSmeErrors.error.couldntGetConfig, e);
+      logger.error("Couldn't get DBSme config", e);
+      return error("dbsme.error.no_config", e);
     }
 
     return RESULT_OK;
@@ -86,7 +87,7 @@ public class DbsmeBean extends IndexBean
       smeId = Functions.getServiceId(request.getServletPath());
     } catch (AdminException e) {
       logger.error("Could not discover sme id", e);
-      error("Could not discover sme id, \"dbSme\" assumed", e);
+      error("dbsme.error.no_smeid", e);
     }
 
     int result = super.process(request);
@@ -209,7 +210,8 @@ public class DbsmeBean extends IndexBean
         getSmeTransport().setProviderEnabled(providerName, enable);
       } catch (AdminException e) {
         logger.error("Could not " + (enable ? "enable" : "disable") + " provider \"" + providerName + '"', e);
-        return error("Could not " + (enable ? "enable" : "disable") + " provider \"" + providerName + '"', e);
+        return error(enable ? "dbsme.error.provider_enable":
+                              "dbsme.error.provider_disable", " provider \"" + providerName + '"', e);
       }
     }
     config.setBool(Provider.createProviderPrefix(providerName) + ".enabled", enable);

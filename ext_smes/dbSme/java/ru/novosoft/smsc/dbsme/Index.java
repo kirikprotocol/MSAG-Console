@@ -58,7 +58,7 @@ public class Index extends DbsmeBean
     try {
       appContext.getHostsManager().shutdownService(getSmeId());
     } catch (AdminException e) {
-      return error(DBSmeErrors.error.couldntStopDbSme, e);
+      return error("dbsme.error.stop", e);
     }
     return RESULT_DONE;
   }
@@ -68,7 +68,7 @@ public class Index extends DbsmeBean
     try {
       appContext.getHostsManager().startService(getSmeId());
     } catch (AdminException e) {
-      return error(DBSmeErrors.error.couldntStartDbSme, e);
+      return error("dbsme.error.start", e);
     }
     return RESULT_DONE;
   }
@@ -104,7 +104,7 @@ public class Index extends DbsmeBean
       originalConfig = new Config(getOriginalConfigFile());
     } catch (Throwable e) {
       logger.error("Could not get original config", e);
-      return error(DBSmeErrors.error.couldntGetOriginalConfig, e);
+      return error("dbsme.error.no_config", e);
     }
 
     try {

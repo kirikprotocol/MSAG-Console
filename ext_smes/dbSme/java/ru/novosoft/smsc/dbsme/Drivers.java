@@ -62,7 +62,7 @@ public class Drivers extends DbsmeBean
       config.save();
     } catch (Exception e) {
       logger.error("Couldn't save temporary config, nested: " + e.getMessage(), e);
-      return error(DBSmeErrors.error.couldntSaveTempConfig, e);
+      return error("dbsme.error.config_save", e);
     }
 
     getContext().setConfigChanged(true);
