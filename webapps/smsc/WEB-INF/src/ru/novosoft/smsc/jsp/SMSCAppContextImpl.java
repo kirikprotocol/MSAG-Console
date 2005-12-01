@@ -133,11 +133,6 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 
       resourcesManager = new ResourcesManagerImpl();
       createConnectionPool(webappConfig);
-
-		serviceManager = new ServiceManagerImpl();
-		smscList = new SmscList(webappConfig, connectionPool, this);
-      smeManager = new SmeManagerImpl(smsc);
-      routeSubjectManager = new RouteSubjectManagerImpl(smeManager);
 		try
 		{
 			this.instType = ResourceGroupConstants.getTypeFromString(webappConfig.getString(ResourceGroupConstants.RESOURCEGROUP_INSTALLTYPE_PARAM_NAME));
@@ -147,9 +142,14 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			System.out.println("Installation type is not defined in webconfig");
 			throw new AdminException("Installation type is not defined in webconfig");
 		}
-      ResourceGroupManager resourceGroupManager = new ResourceGroupManager(this);
-      hostsManager = new HostsManager(resourceGroupManager, serviceManager, smeManager, routeSubjectManager);
-      aclManager = new AclManager(this);
+		smscList = new SmscList(webappConfig, connectionPool, this);
+		smeManager = new SmeManagerImpl(smsc);
+		ResourceGroupManager resourceGroupManager = new ResourceGroupManager(this);
+		serviceManager = new ServiceManagerImpl();
+		serviceManager.add(smsc);
+		routeSubjectManager = new RouteSubjectManagerImpl(smeManager);
+		hostsManager = new HostsManager(resourceGroupManager, serviceManager, smeManager, routeSubjectManager);
+		aclManager = new AclManager(this);
 		Config localeConfig = new Config(new File(webappConfig.getString("system.localization file")));
 		LocaleMessages.init(localeConfig); // должно вызыватьс€ раньше, чем ёзерћанагер
 		File usersConfig = new File(webappConfig.getString("system.users file"));

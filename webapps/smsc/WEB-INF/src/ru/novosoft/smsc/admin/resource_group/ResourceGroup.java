@@ -23,6 +23,8 @@ public interface ResourceGroup
 
 	byte getOnlineStatus(String nodeName);
 
+	byte getOnlineStatus();
+
 	void switchOver(String nodeName);
 
 	void delete();

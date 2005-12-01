@@ -222,13 +222,12 @@ public class HostsManager
 
   public void refreshServices() throws AdminException
   {
-/*    final long currentTime = System.currentTimeMillis();
-    if (currentTime - Constants.ServicesRefreshTimeoutMillis > serviceRefreshTimeStamp) {
-      serviceRefreshTimeStamp = currentTime;
-      final Map services = resourceGroupManager.refreshServices(smeManager);
-      logger.debug("Refresh services: " + services.size() + " services found");
-      serviceManager.updateServices(services);
-    }*/
+     Map services = resourceGroupManager.refreshServices(smeManager);
+	 ServiceInfo smscInfo = serviceManager.getInfo(Constants.SMSC_SME_ID);
+	 smscInfo.setStatus(getServiceStatus(Constants.SMSC_SME_ID));
+	 services.put(Constants.SMSC_SME_ID, smscInfo); 
+     logger.debug("Refresh services: " + services.size() + " services found");
+     serviceManager.updateServices(services);
   }
 
   public synchronized void deployAdministrableService(final File incomingZip, final ServiceInfo serviceInfo) throws AdminException
@@ -321,8 +320,9 @@ public class HostsManager
 
   public synchronized ServiceInfo getServiceInfo(final String serviceId) throws AdminException
   {
-    return new ServiceInfo(serviceId, smeManager, getServiceStatus(serviceId));
-  //serviceManager.getInfo(serviceId);
+//    return new ServiceInfo(serviceId, smeManager, getServiceStatus(serviceId));
+    refreshServices();
+    return serviceManager.getInfo(serviceId);
   }
 
   public synchronized ResourceGroup getService(final String smeId) throws AdminException
@@ -349,12 +349,7 @@ public class HostsManager
 	{
 		byte result = ServiceInfo.STATUS_OFFLINE;
 		ResourceGroup rg = getService(serviceId);
-		String[] rgNodes = getServiceNodes(serviceId);
-		for (int i = 0; i < rgNodes.length; i++)
-		{
-			if (rg.getOnlineStatus(rgNodes[i]) == ServiceInfo.STATUS_ONLINE)
-				{result = ServiceInfo.STATUS_ONLINE;break;}
-		}
+		result = rg.getOnlineStatus();
 		return result;
 	}
 

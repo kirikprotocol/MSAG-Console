@@ -93,6 +93,18 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 			}
 	}
 
+	public byte getOnlineStatus()
+	{
+		byte result = ServiceInfo.STATUS_OFFLINE;
+		String[] rgNodes = listNodes();
+		for (int i = 0; i < rgNodes.length; i++)
+		{
+			if (getOnlineStatus(rgNodes[i]) == ServiceInfo.STATUS_ONLINE)
+				{result = ServiceInfo.STATUS_ONLINE;break;}
+		}
+		return result;
+	}
+
 	public void offline()
 	{
 		NativeResourceGroupHA.ResourceGroup_offline(swigCPtr);

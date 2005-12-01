@@ -52,7 +52,6 @@ public class SmscList
 		String smscConfFolder = webappConfig.getString("smsc.config folder");
 		WebAppFolders.setSmscConfFolder(new File(smscConfFolder));
 		smsc = new Smsc(Constants.SMSC_SME_ID, webappConfig.getString("smsc.host"), webappConfig.getInt("smsc.port"), smscConfFolder, stopFileNames, connectionPool, appContext);
-		appContext.getServiceManager().add(smsc);
 		logger.debug("SMSC added");
 		}
 		catch (AdminException e)

@@ -4,6 +4,7 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.StringEncoderDecoder;
 import ru.novosoft.smsc.admin.AdminException;
+import ru.novosoft.smsc.admin.Constants;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.admin.smsc_service.SmeManager;
 import org.apache.log4j.Category;
@@ -119,5 +120,18 @@ public class ResourceGroupManager
 	public boolean contains(String serviceId)
 	{
 		return resGroups.contains(serviceId);
+	}
+
+	public Map refreshServices(SmeManager smeManager) throws AdminException
+	{
+		Map result = new HashMap();
+		for (Iterator i = resGroups.iterator(); i.hasNext();)
+		{
+			ResourceGroup rg = (ResourceGroup)i.next();
+			if (rg.getName().equals(Constants.SMSC_SME_ID)) continue;
+			ServiceInfo info = new ServiceInfo(rg.getName(), smeManager, rg.getOnlineStatus());
+			result.put(info.getId(),info);
+		}
+		return result;
 	}
 }
