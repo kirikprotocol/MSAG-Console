@@ -81,7 +81,6 @@ refreshStartStopButtonsStatus();
       param(out, "smsc.core.defLocale",  "core.default_locale",         bean.getStringParam("core.default_locale"));
       param(out, "smsc.core.mergeTime",  "core.mergeTimeout",           bean.getIntParam(   "core.mergeTimeout"));
       param(out, "smsc.core.validTime",  "sms.max_valid_time",          bean.getIntParam("sms.max_valid_time"));
-      param(out, "smsc.core.loggerFile", "logger.initFile",             bean.getStringParam("logger.initFile"));
     finishParams(out);
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~ core.perfomance ~~~~~~~~~~~~~~~~~~~~~~~~~
     startSection(out, "core.performance", "smsc.core.perfmon", false);
