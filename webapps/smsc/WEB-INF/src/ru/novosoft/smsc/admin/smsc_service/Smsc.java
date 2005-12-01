@@ -179,10 +179,13 @@ public class Smsc extends Service
 
   public synchronized void applyRoutes(final RouteSubjectManager routeSubjectManager) throws AdminException
   {
+	logger.debug("smsc.applyroutes() called");
     routeSubjectManager.apply();
     if (ServiceInfo.STATUS_RUNNING == getInfo().getStatus()) {
+		logger.debug("APPLY_ROUTES_METHOD_ID is sending");
       call(SMSC_COMPONENT_ID, APPLY_ROUTES_METHOD_ID, Type.Types[Type.StringType], new HashMap());
     }
+	else logger.debug("smsc.applyroutes: Smsc is not running");
   }
 
   public synchronized void applyAliases() throws AdminException
@@ -651,5 +654,20 @@ public class Smsc extends Service
 	public Map getStopFileName()
 	{
 		return stopFileName;
+	}
+
+	public synchronized ServiceInfo getInfo()
+	{
+		ServiceInfo result = null;
+		try
+		{
+			result = appContext.getHostsManager().getServiceInfo(Constants.SMSC_SME_ID);
+		}
+		catch(Exception e)
+		{
+			logger.debug("smsc.getInfo threw exception");
+			e.printStackTrace();
+		}
+		return result;
 	}
 }
