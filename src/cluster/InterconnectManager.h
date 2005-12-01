@@ -44,7 +44,7 @@ using smsc::core::synchronization::Mutex;
         void flushCommands();
 
         void send(Command *command);
-        uint32_t readRole();
+//        uint32_t readRole();
 
         Socket socket;
         Socket attachedSocket;

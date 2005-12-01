@@ -6,6 +6,7 @@
 
 #include "smpp/smpp_structures.h"
 #include "profiler/profiler-types.hpp"
+#include "util/sleep.h"
 
 namespace smsc { namespace cluster {
 
@@ -198,7 +199,7 @@ void InterconnectManager::internalInit()
 {
   if( socket.InitServer(inAddr.c_str(), port, 0))
   {
-    throw Exception("InterconnectManager: Can't init socket server by host: %s, port: %d", inAddr.c_str(), port);
+    throw Exception("InterconnectManager: Can't init server socket at %s:%d", inAddr.c_str(), port);
   }
 
   if( socket.StartServer() )
@@ -208,12 +209,12 @@ void InterconnectManager::internalInit()
 
   if( attachedSocket.Init(attachedInAddr.c_str(), attachedPort, 0) )
   {
-    throw Exception("InterconnectManager: Can't init socket by host: %s, port: %d", attachedInAddr.c_str(), attachedPort);
+    throw Exception("InterconnectManager: Failed to init socket for %s:%d", attachedInAddr.c_str(), attachedPort);
   }
 
   if( attachedSocket.Connect() )
   {
-    smsc_log_info(logger, "InterconnectManager: Can't connect to smsc by host: %s, port: %d", attachedInAddr.c_str(), attachedPort);
+    smsc_log_warn(logger, "InterconnectManager: Connect to %s:%d failed", attachedInAddr.c_str(), attachedPort);
   }
 
   role = SLAVE;
@@ -234,7 +235,6 @@ void InterconnectManager::init(const std::string& inAddr, const std::string& att
 
 void InterconnectManager::shutdown()
 {
-
     if (InterconnectManager::instance)
     {
       __trace__("Terminating Interconnect manager");
@@ -250,12 +250,15 @@ void InterconnectManager::sendCommand(Command* command)
     // TODO: add command to queue
 
     if(!isMaster())
-        return;
+    {
+      return;
+    }
 
     commands.Push(command);
     smsc_log_info(logger, "Command %02X added", command->getType());
-    if (!isStoped()){
-        commandsMonitor.notify();
+    if (!isStoped())
+    {
+      commandsMonitor.notify();
     }
 
 }
@@ -266,10 +269,13 @@ void InterconnectManager::addListener(CommandType type, CommandListener* listene
 void InterconnectManager::activate()
 {
     if(!isSlave())
-        return;
+    {
+      return;
+    }
 
-    if(dispatcher){
-        dispatcher->Start();
+    if(dispatcher)
+    {
+      dispatcher->Start();
     }
 }
 
@@ -278,8 +284,8 @@ int InterconnectManager::Execute()
 
     if(isMaster())
     {
-        // Flushs commands that was added befor start
-        flushCommands();
+      // Flushs commands that was added befor start
+      flushCommands();
     }
 
     /*sleep(30);
@@ -380,51 +386,60 @@ bool InterconnectManager::isSingle()
 void InterconnectManager::changeRole(Role role_)
 {
     if(role == role_)
-        return;
+    {
+      return;
+    }
 
     Role oldRole;
 
-    switch(role_){
-    case MASTER:
+    switch(role_)
+    {
+      case MASTER:
+      {
         oldRole = role;
         role = MASTER;
-        if(oldRole == SLAVE){
-            if(dispatcher){
-                dispatcher->Stop();
-                dispatcher->WaitFor();
-            }
+        if(oldRole == SLAVE)
+        {
+          if(dispatcher)
+          {
+            dispatcher->Stop();
+            dispatcher->WaitFor();
+          }
         }
-
-        break;
+      }break;
     case SLAVE:
-
+      {
         reader.Stop();
         reader.WaitFor();
 
         if( (role == MASTER) || (role == SINGLE) )
         {
-            flushCommands();
-            role = SLAVE;
+          flushCommands();
+          role = SLAVE;
         }
 
         reader.Start();
 
         if(dispatcher)
-            dispatcher->Start();
+        {
+          dispatcher->Start();
+        }
 
-        break;
+      }break;
     case SINGLE:
+      {
         oldRole = role;
         role = SINGLE;
 
-        if(role == SLAVE){
-            if(dispatcher){
-                dispatcher->Stop();
-                dispatcher->WaitFor();
-            }
+        if(role == SLAVE)
+        {
+          if(dispatcher)
+          {
+            dispatcher->Stop();
+            dispatcher->WaitFor();
+          }
         }
-
-        break;
+       }break;
     };
 
     {
@@ -443,73 +458,72 @@ void InterconnectManager::addChangeRoleHandler(ChangeRoleHandler * fun, void *ar
 
 void InterconnectManager::send(Command* command)
 {
-    uint32_t len = 0;
-    std::auto_ptr<uint8_t> buff ( (uint8_t*)command->serialize(len) );
-    int size = len + 8;
-    std::auto_ptr<uint8_t> buffer( new uint8_t[size] );
-    uint32_t type = htonl( command->getType() );
-    //printf("send, type: %02X, len: %d\n", command->getType(), len);
-    memcpy((void*)buffer.get(), (const void*)&type, 4);
-    uint32_t val32 = htonl(len);
-    memcpy((void*)( buffer.get() + 4), (const void*)&val32, 4);
-    memcpy((void*)( buffer.get() + 8), (const void*)buff.get(), len);
+  uint32_t len = 0;
+  std::auto_ptr<uint8_t> buff ( (uint8_t*)command->serialize(len) );
+  int size = len + 8;
+  std::auto_ptr<uint8_t> buffer( new uint8_t[size] );
+  uint32_t type = htonl( command->getType() );
+  memcpy((void*)buffer.get(), (const void*)&type, 4);
+  uint32_t val32 = htonl(len);
+  memcpy((void*)( buffer.get() + 4), (const void*)&val32, 4);
+  memcpy((void*)( buffer.get() + 8), (const void*)buff.get(), len);
 
-    int toWrite = size; const char* writeBuffer = (const char *)buffer.get();
-    int written;
-    while (toWrite > 0)
-    {
-      written = attachedSocket.Write(writeBuffer, toWrite);
-      if (written > 0 )
-      {
-        writeBuffer+=written;
-        toWrite-=written;
-      }else
-      {
-        throw Exception("Command send failed. Socket closed. %s", strerror(errno));
-      }
-    }
-
+  if(attachedSocket.WriteAll(buffer.get(),size)!=size)
+  {
+    throw Exception("IM:Failed to write cmd to socket:%s", strerror(errno));
+  }
 }
 
+/*
 uint32_t InterconnectManager::readRole()
 {
     uint8_t buffer[12];
     int size = 12;
 
-    try {
-        int toRead = size; char* readBuffer = (char *)buffer;
-        while (toRead > 0) {
-            int read = attachedSocket.canRead(10);
-            if (read == 0) throw Exception("Role read failed. Timeout expired.");
-                else if (read > 0) {
-                    read = attachedSocket.Read(readBuffer, toRead);
-                    if (read > 0) { readBuffer+=read; toRead-=read; continue; }
-                }
-                throw Exception("Role read failed. Socket closed. %s", strerror(errno));
+    int toRead = size; char* readBuffer = (char *)buffer;
+    while (toRead > 0)
+    {
+      int read = attachedSocket.canRead(10);
+      if (read == 0)
+      {
+        throw Exception("Role read failed. Timeout expired.");
+      }
+      else
+      if (read > 0)
+      {
+        read = attachedSocket.Read(readBuffer, toRead);
+        if (read > 0)
+        {
+          readBuffer+=read;
+          toRead-=read;
+          continue;
         }
-
-        uint32_t type, val, role_, len;
-        memcpy((void*)&val,     (const void*)buffer, 4);
-        type = ntohl(val);
-        if(type != GETROLE_CMD)
-            throw Exception("Role read failed. Unxpected command type.");
-
-        memcpy((void*)&val,   (const void*)(buffer + 4), 4);
-        len = ntohl(val);
-        if(len != 4)
-            throw Exception("Role read failed. GETROLE_CMD length isn't 4.");
-
-        memcpy((void*)&val,   (const void*)(buffer + 8), 4);
-        role_ = ntohl(val);
-
-        return role_;
-
-    }catch(const Exception& e){
-        throw Exception("%s", e.what());
-    }catch(...){
-        throw Exception("Command read failed. Unexpected error.");
+      }
+      throw Exception("Role read failed. Socket closed. %s", strerror(errno));
     }
+
+    uint32_t type, val, role_, len;
+    memcpy((void*)&val,     (const void*)buffer, 4);
+    type = ntohl(val);
+    if(type != GETROLE_CMD)
+    {
+      throw Exception("Role read failed. Unxpected command type.");
+    }
+
+    memcpy((void*)&val,   (const void*)(buffer + 4), 4);
+    len = ntohl(val);
+    if(len != 4)
+    {
+      throw Exception("Role read failed. GETROLE_CMD length isn't 4.");
+    }
+
+    memcpy((void*)&val,   (const void*)(buffer + 8), 4);
+    role_ = ntohl(val);
+
+    return role_;
+
 }
+*/
 
 void InterconnectManager::flushCommands()
 {
@@ -530,9 +544,9 @@ void InterconnectManager::flushCommands()
     }
     try
     {
-      smsc_log_info(logger, "Command %02X is sending", command->getType());
+      smsc_log_debug(logger, "Command %02X is sending", command->getType());
       send(command.get());
-      smsc_log_info(logger, "Command %02X is sent", command->getType());
+      smsc_log_debug(logger, "Command %02X is sent", command->getType());
     }
     catch(std::exception & e)
     {
@@ -540,10 +554,11 @@ void InterconnectManager::flushCommands()
         MutexGuard mg(commandsMonitor);
         commands.Unshift(command.release());
       }
-      smsc_log_info(logger, "Send command failed: '%s'", e.what());
+      smsc_log_warn(logger, "Send command failed: '%s'", e.what());
       while( attachedSocket.Connect()!=0 && !isStopping)
       {
-        smsc_log_info(logger, "Connect to attahced smsc failed");
+        smsc_log_warn(logger, "Connect to attahced smsc failed");
+        millisleep(1000);
       }
     }
   }
