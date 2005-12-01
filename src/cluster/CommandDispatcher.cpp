@@ -104,9 +104,9 @@ int CommandDispatcher::Execute()
     {
       MutexGuard listguard(listenersLock);
       int type = command->getType();
-      smsc_log_info(logger, "Flush command %02X", type);
-      type >>= 16;
-      Array<CommandListener*> *arr = listeners.GetPtr(type);
+      smsc_log_info(logger, "Processing command %X", type);
+      int key  = type >> 16;
+      Array<CommandListener*> *arr = listeners.GetPtr(key);
       if(arr)
       {
         for(int i=0; i<arr->Count(); i++)
@@ -119,13 +119,15 @@ int CommandDispatcher::Execute()
               listener->handle(*command);
             }catch(Exception & e)
             {
-              smsc_log_warn(logger, "Handler exception, key: %02X, %s", type, e.what());
+              smsc_log_warn(logger, "Handler exception, key: %X, %s", key, e.what());
             }catch(...)
             {
-              smsc_log_warn(logger, "Handler exception, key: %02X, Unexpected error", type);
+              smsc_log_warn(logger, "Handler exception, key: %X, Unexpected error", key);
             }
           }
         }
+      } else {
+        smsc_log_warn( logger, "Processor not found for command type %X", type );
       }
     }
   }
