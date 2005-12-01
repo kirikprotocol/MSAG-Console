@@ -28,6 +28,9 @@ using namespace smsc::acls;
 using smsc::cluster::ApplyRoutesCommand;
 using smsc::cluster::ApplyAliasesCommand;
 using smsc::cluster::ApplyRescheduleCommand;
+using smsc::cluster::SmeAddCommand;
+using smsc::cluster::SmeRemoveCommand;
+using smsc::cluster::SmeUpdateCommand;
 
 using smsc::mscman::MscManager;
 using smsc::mscman::MscInfo;
@@ -1438,11 +1441,31 @@ void SmscComponent::smeAdd(const Arguments & args)
   SmeInfo smeInfo;
   fillSmeInfo(smeInfo, args);
   getSmeAdmin()->addSme(smeInfo);
+
+  if(smsc_app_runner->getApp()->isHs()){
+      Interconnect * iconn = Interconnect::getInstance();
+      if(!iconn){
+          smsc_log_warn(logger, "InterconnectManager undefined, can't send SmeAdd command");
+          return;
+      }
+      SmeAddCommand * cmd = new SmeAddCommand(smeInfo);
+      iconn->sendCommand(cmd);
+  }
 }
 
 void SmscComponent::smeRemove(const Arguments & args)
 {
   getSmeAdmin()->deleteSme(args.Get("id").getStringValue());
+
+  if(smsc_app_runner->getApp()->isHs()){
+      Interconnect * iconn = Interconnect::getInstance();
+      if(!iconn){
+          smsc_log_warn(logger, "InterconnectManager undefined, can't send SmeRemove command");
+          return;
+      }
+      SmeRemoveCommand * cmd = new SmeRemoveCommand(args.Get("id").getStringValue());
+      iconn->sendCommand(cmd);
+  }
 }
 
 void SmscComponent::smeUpdate(const Arguments & args)
@@ -1453,6 +1476,16 @@ void SmscComponent::smeUpdate(const Arguments & args)
   Smsc * app;
   if (isSmscRunning() && (app = smsc_app_runner->getApp())) {
 
+  }
+
+  if(smsc_app_runner->getApp()->isHs()){
+      Interconnect * iconn = Interconnect::getInstance();
+      if(!iconn){
+          smsc_log_warn(logger, "InterconnectManager undefined, can't send SmeUpdate command");
+          return;
+      }
+      SmeUpdateCommand * cmd = new SmeUpdateCommand(smeInfo);
+      iconn->sendCommand(cmd);
   }
 }
 
