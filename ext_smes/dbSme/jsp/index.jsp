@@ -11,7 +11,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 	ServiceIDForShowStatus = Functions.getServiceId(request.getServletPath());
-	TITLE="DB SME Administration";
+	TITLE=getLocString("dbsme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
@@ -41,14 +41,14 @@
 <div class=content>
 <input class=check type=checkbox name=apply id=applyAllCheckbox value=all
  <%=bean.isConfigChanged() ? "" : "disabled"%>
- <%=bean.isApplyAll() ? "checked" : ""%>><label for=applyAllCheckbox>Apply all</label></br>
+ <%=bean.isApplyAll() ? "checked" : ""%>><label for=applyAllCheckbox><%= getLocString("dbsme.label.apply_all")%></label></br>
 <input class=check type=checkbox name=apply id=applyJobCheckbox value=jobs
  <%=bean.isJobsChanged() && !bean.isConfigChanged() ? "" : "disabled"%>
- <%=bean.isApplyJobs() || bean.isConfigChanged() ? "checked" : ""%>><label for=applyJobCheckbox>Apply jobs</label>
+ <%=bean.isApplyJobs() || bean.isConfigChanged() ? "checked" : ""%>><label for=applyJobCheckbox><%= getLocString("dbsme.label.apply_jobs")%></label>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbApply", "Apply", "Apply new config");
-page_menu_button(out, "mbReset", "Reset", "Cancel changes");
+page_menu_button(session, out, "mbApply", "common.buttons.apply", "dbsme.hint.apply");
+page_menu_button(session, out, "mbReset", "common.buttons.reset", "dbsme.hint.reset");
 page_menu_space(out);
 page_menu_end(out);
 %>

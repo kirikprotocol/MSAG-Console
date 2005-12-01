@@ -14,7 +14,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
-	TITLE="DB SME Administration";
+	TITLE=getLocString("dbsme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
@@ -80,9 +80,9 @@ function edit(pName)
 <thead>
 <tr>
 	<th>&nbsp;</th>
-	<th><a href="#" <%=bean.getSort().endsWith("name") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by name" onclick='return setSort("name")'>name</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("address") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by address" onclick='return setSort("address")'>address</a></th>
-  <th><a href="#" <%=bean.getSort().endsWith("enabled") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by enabled flag" onclick='return setSort("enabled")'>enabled</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("name"   ) ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("dbsme.sort.name")%>"    onclick='return setSort("name")'   ><%= getLocString("dbsme.label.name")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("address") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("dbsme.sort.address")%>" onclick='return setSort("address")'><%= getLocString("dbsme.label.address")%></a></th>
+    <th><a href="#" <%=bean.getSort().endsWith("enabled") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("dbsme.sort.e_flag")%>"  onclick='return setSort("enabled")'><%= getLocString("dbsme.label.enabled")%></a></th>
 </tr>
 </thead>
 <tbody>
@@ -90,15 +90,15 @@ function edit(pName)
 	int row = 0;
 	for (Iterator i = bean.getProviders().iterator(); i.hasNext();) {
 		DataItem item = (DataItem) i.next();
-      String dpName = (String) item.getValue("name");
+        String dpName = (String) item.getValue("name");
 		String dpAddress = (String) item.getValue("address");
 		String encDpName = StringEncoderDecoder.encode(dpName);
 		String encDpAddress = StringEncoderDecoder.encode(dpAddress);
-    boolean dpEnabled = ((Boolean)item.getValue("enabled")).booleanValue();
+        boolean dpEnabled = ((Boolean)item.getValue("enabled")).booleanValue();
 %>
 <tr class=row<%=(row++)&1%>>
 	<td><input class=check type=checkbox name=checked value="<%=encDpName%>" <%=bean.isDpChecked(dpName) ? "checked" : ""%>></td>
-	<td><a href="#" title="Edit provider" onClick='return edit("<%=encDpName%>")'><%=encDpName%></a></td>
+	<td><a href="#" title="<%= getLocString("dbsme.label.edit_provider")%>" onClick='return edit("<%=encDpName%>")'><%=encDpName%></a></td>
 	<td><%=encDpAddress%></td>
   <td align=center><%=dpEnabled ? "<img src=\"/images/ic_checked.gif\">": "&nbsp;"%></td>
 </tr>
@@ -110,11 +110,11 @@ function edit(pName)
 <%@ include file="/WEB-INF/inc/navbar_nofilter.jsp"%>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",     "Add",     "Create new data provider");
-page_menu_button(out, "mbDelete",  "Delete",  "Delete all checked data providers", "return confirm('Are you sure to delete all checked data providers?')");
+page_menu_button(session, out, "mbAdd",     "dbsme.button.add_provider",   "dbsme.hint.add_provider");
+page_menu_button(session, out, "mbDelete",  "dbsme.hint.delete_providers", "dbsme.hint.delete_providers", "return confirm('"+getLocString("dbsme.confirm.delete_providers")+"')");
 page_menu_space(out);
-page_menu_button(out, "mbEnable",  "Enable",  "Enable checked data providers",  !bean.isConfigChanged());
-page_menu_button(out, "mbDisable", "Disable", "Disable checked data providers", !bean.isConfigChanged());
+page_menu_button(session, out, "mbEnable",  "dbsme.button.enable",  "dbsme.hint.enable_providers",  !bean.isConfigChanged());
+page_menu_button(session, out, "mbDisable", "dbsme.button.disable", "dbsme.hint.disable_providers", !bean.isConfigChanged());
 page_menu_end(out);
 %>
 <%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>

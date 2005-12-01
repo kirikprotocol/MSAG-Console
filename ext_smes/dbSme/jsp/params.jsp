@@ -8,7 +8,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
-	TITLE="DB SME Administration";
+	TITLE=getLocString("dbsme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
@@ -70,7 +70,7 @@
 		startSection(out, "DBSme.MessageSet", "Global messages", false);
 			startParams(out);
 				param(out, "PROVIDER_NOT_FOUND", "provider_not_found",    bean.getProvider_not_found(),    true);
-        param(out, "SERVICE_NOT_AVAIL",  "service_not_available", bean.getService_not_available(), true);
+                param(out, "SERVICE_NOT_AVAIL",  "service_not_available", bean.getService_not_available(), true);
 				param(out, "JOB_NOT_FOUND",      "job_not_found",         bean.getJob_not_found(),         true);
 				param(out, "DS_FAILURE",         "ds_failure",            bean.getDs_failure(),            true);
 				param(out, "DS_CONNECTION_LOST", "ds_connection_lost",    bean.getDs_connection_lost(),    true);
@@ -85,8 +85,8 @@
 %>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbDone",  "Done",  "");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel changes", "return noValidationSubmit(this);");
+page_menu_button(session, out, "mbDone",   "common.buttons.done",   "dbsme.hint.accept");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "dbsme.hint.cancel", "return noValidationSubmit(this);");
 page_menu_space(out);
 page_menu_end(out);
 %>

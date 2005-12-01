@@ -17,7 +17,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
-	TITLE="DB SME Administration";
+	TITLE=getLocString("dbsme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
@@ -74,7 +74,7 @@ function setType()
 	}
 }
 </script>
-<div class=page_subtitle><%=StringEncoderDecoder.encode(bean.getProviderName() + " : " + (bean.isCreating() ? "New Job" : bean.getJobName()))%></div>
+<div class=page_subtitle><%=StringEncoderDecoder.encode(bean.getProviderName() + " : " + (bean.isCreating() ? getLocString("dbsme.label.new_job") : bean.getJobName()))%></div>
 <%
 	List types = new LinkedList();
 	types.add(Job.TYPE_SQL);
@@ -116,8 +116,8 @@ setType();
 </script>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbDone",  "Done",  "");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel changes", "return noValidationSubmit(this);");
+page_menu_button(session, out, "mbDone",   "common.buttons.done",   "dbsme.hint.accept");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "dbsme.hint.cancel", "return noValidationSubmit(this);");
 page_menu_space(out);
 page_menu_end(out);
 %>

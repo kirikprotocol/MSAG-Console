@@ -1,9 +1,9 @@
 <%@ page import="ru.novosoft.smsc.admin.service.ServiceInfo"%><%@ include file="/WEB-INF/inc/sme_menu.jsp"%><%
 	sme_menu_begin(out);
-	sme_menu_button(out, "menuSelection",  "overview",		"Home",			"Home",					"return noValidationSubmit(this);");
-	sme_menu_button(out, "menuSelection",  "params",		"Parameters",	"Common parameters",	"return noValidationSubmit(this);");
-	sme_menu_button(out, "menuSelection",  "drivers",		"Drivers",		"Datasource drivers","return noValidationSubmit(this);");
-	sme_menu_button(out, "menuSelection",  "providers",	"Providers",	"Data providers",		"return noValidationSubmit(this);");
+	sme_menu_button(out, "menuSelection",  "overview",	"Home",		  "Home",				"return noValidationSubmit(this);");
+	sme_menu_button(out, "menuSelection",  "params",	"Parameters", "Common parameters",	"return noValidationSubmit(this);");
+	sme_menu_button(out, "menuSelection",  "drivers",	"Drivers",	  "Datasource drivers", "return noValidationSubmit(this);");
+	sme_menu_button(out, "menuSelection",  "providers",	"Providers",  "Data providers",		"return noValidationSubmit(this);");
 	sme_menu_space(out);
 	if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0)
 	{

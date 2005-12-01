@@ -14,7 +14,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
-	TITLE="DB SME Administration";
+	TITLE=getLocString("dbsme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
@@ -65,7 +65,7 @@
   {
 %>
 <div class=content>
-<div class=page_subtitle><%=StringEncoderDecoder.encode(bean.isCreating() ? "New provider" : bean.getProviderName())%></div>
+<div class=page_subtitle><%=StringEncoderDecoder.encode(bean.isCreating() ? getLocString("dbsme.label.new_provider") : bean.getProviderName())%></div>
 <%
 startSection(out, "provider_properties", "Properties", true);
 	startParams(out);
@@ -110,22 +110,22 @@ function setSort(sorting)
 <col width=1%>
 <tr>
 	<th>&nbsp;</th>
-	<th><a href="#" <%=bean.getSort().endsWith("name")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by name"    onclick='return setSort("name")'   >name</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("type")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by type"    onclick='return setSort("type")'   >type</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("address") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by address" onclick='return setSort("address")'>address</a></th>
-	<th><a href="#" <%=bean.getSort().endsWith("alias")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by alias"   onclick='return setSort("alias")'  >alias</a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("name")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("dbsme.sort.name")%>"    onclick='return setSort("name")'   ><%= getLocString("dbsme.label.name")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("type")    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("dbsme.sort.type")%>"    onclick='return setSort("type")'   ><%= getLocString("dbsme.label.type")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("address") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("dbsme.sort.address")%>" onclick='return setSort("address")'><%= getLocString("dbsme.label.address")%></a></th>
+	<th><a href="#" <%=bean.getSort().endsWith("alias")   ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("dbsme.sort.alias")%>"   onclick='return setSort("alias")'  ><%= getLocString("dbsme.label.alias")%></a></th>
 </tr>
 <%
 	int row = 0;
 	for (Iterator i = bean.getJobs().iterator(); i.hasNext();) {
 		DataItem item = (DataItem) i.next();
-    String jobId = (String) item.getValue("id");
-    String jobName    = (String) item.getValue("name");
+        String jobId      = (String) item.getValue("id");
+        String jobName    = (String) item.getValue("name");
 		String jobType    = (String) item.getValue("type");
 		String jobAddress = (String) item.getValue("address");
 		String jobAlias   = (String) item.getValue("alias");
 
-    String encId = StringEncoderDecoder.encode(jobId);
+        String encId = StringEncoderDecoder.encode(jobId);
 		String encName = StringEncoderDecoder.encode(jobName);
 		String encType = StringEncoderDecoder.encode(jobType);
 		String encAddress = StringEncoderDecoder.encode(jobAddress);
@@ -133,7 +133,7 @@ function setSort(sorting)
 %>
 <tr class=row<%=(row++)&1%>>
 	<td><input class=check type=checkbox name=checked value="<%=encId%>" <%=bean.isJobChecked(jobId) ? "checked" : ""%>></td>
-	<td style="cursor:hand;" onClick='return editSomething("<%=encId%>")' title="Edit job <%=encName%>"><a href="#"><%=encName%></a></td>
+	<td style="cursor:hand;" onClick='return editSomething("<%=encId%>")' title="<%= getLocString("dbsme.label.edit_job")%> <%=encName%>"><a href="#"><%=encName%></a></td>
 	<td><%=encType%>&nbsp;</td>
 	<td><%=encAddress%>&nbsp;</td>
 	<td><%=encAlias%>&nbsp;</td>
@@ -146,10 +146,10 @@ function setSort(sorting)
 <%finishSection(out);%>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",    "Add job",     "Create new job",                                                                        beanResult == PageBean.RESULT_OK);
-page_menu_button(out, "mbDelete", "Delete jobs", "Delete all checked jobs", "return confirm('Are you sure to delete all checked jobs?')", beanResult == PageBean.RESULT_OK);
-page_menu_button(out, "mbDone",   "Done",        "",                                                                                      beanResult == PageBean.RESULT_OK);
-page_menu_button(out, "mbCancel", "Cancel",      "Cancel changes",          "return noValidationSubmit(this);");
+page_menu_button(session, out, "mbAdd",    "dbsme.button.add_job",     "dbsme.hint.add_job", beanResult == PageBean.RESULT_OK);
+page_menu_button(session, out, "mbDelete", "dbsme.button.delete_jobs", "dbsme.hint.delete_jobs", "return confirm('"+getLocString("dbsme.confirm.delete_jobs")+"')", beanResult == PageBean.RESULT_OK);
+page_menu_button(session, out, "mbDone",   "common.buttons.done",   "dbsme.hint.accept",     beanResult == PageBean.RESULT_OK);
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "dbsme.hint.cancel", "return noValidationSubmit(this);");
 page_menu_space(out);
 page_menu_end(out);
 }

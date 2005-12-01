@@ -1,20 +1,15 @@
 <%@ page import="ru.novosoft.smsc.admin.Constants,
-					  ru.novosoft.smsc.jsp.SMSCJspException,
-					  ru.novosoft.smsc.jsp.SMSCErrors,
-					  ru.novosoft.smsc.dbsme.Index,
-					  ru.novosoft.smsc.util.config.Config,
-					  java.util.Set,
-					  java.util.Iterator,
-					  ru.novosoft.smsc.dbsme.Drivers,
-					  ru.novosoft.smsc.jsp.smsc.localeResources.Section,
-					  ru.novosoft.smsc.util.StringEncoderDecoder,
-                 ru.novosoft.smsc.jsp.PageBean"%>
+			     ru.novosoft.smsc.jsp.SMSCJspException,  ru.novosoft.smsc.jsp.SMSCErrors,
+			     ru.novosoft.smsc.dbsme.Index, ru.novosoft.smsc.util.config.Config,
+				 java.util.Set, java.util.Iterator, ru.novosoft.smsc.dbsme.Drivers,
+			     ru.novosoft.smsc.jsp.smsc.localeResources.Section,
+				 ru.novosoft.smsc.util.StringEncoderDecoder, ru.novosoft.smsc.jsp.PageBean"%>
 <%@ include file="/WEB-INF/inc/code_header.jsp"%>
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.dbsme.Drivers" />
 <jsp:setProperty name="bean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
-	TITLE="DB SME Administration";
+	TITLE=getLocString("dbsme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
@@ -47,7 +42,7 @@ function clickAddDriver()
 {
 	var typeElem   = opForm.all['dsdriver_new.type'];
 	var loadupElem = opForm.all['dsdriver_new.loadup'];
-   var newRow = drivers_table_id.insertRow(drivers_table_id.rows.length-1);
+    var newRow = drivers_table_id.insertRow(drivers_table_id.rows.length-1);
 	newRow.className = "row" + (drivers_table_id.rows.length & 1);
 	newRow.id = "dsdriver_row_" + typeElem.value;
 	var newCell = document.createElement("td");
@@ -57,7 +52,7 @@ function clickAddDriver()
 	newCell.innerHTML = "<input class=txtW name=\"<%=bean.prefix%>." + typeElem.value + ".loadup\" value=\"" + loadupElem.value + "\">";
 	newRow.appendChild(newCell);
 	newCell = document.createElement("td");
-	newCell.innerHTML = "<img src=\"/images/but_del.gif\" class=button jbuttonName=\"mbRemove\" jbuttonValue=\"Remove\" title=\"Remove this datasource driver\" jbuttonOnclick=\"return clickRemoveDriver('" + newRow.id + "');\">";
+	newCell.innerHTML = "<img src=\"/images/but_del.gif\" class=button jbuttonName=\"mbRemove\" jbuttonValue=\"common.buttons.remove\" title=\"dbsme.hint.remove_driver\" jbuttonOnclick=\"return clickRemoveDriver('" + newRow.id + "');\">";
 	newRow.appendChild(newCell);
 
 	typeElem.value = "";
@@ -91,20 +86,20 @@ function clickRemoveDriver(id_to_remove)
 		%><tr class=row<%=(rowN++)&1%> id=dsdriver_row_<%=StringEncoderDecoder.encode(type)%>>
 			<td><input class=txt name="<%=driverSectionName%>.type"    value="<%=type%>"></td>
 			<td><input class=txtW name="<%=driverSectionName%>.loadup" value="<%=loadup%>"></td>
-			<td><%button(out, "but_del.gif", "mbDel", "Remove", "Remove this datasource driver", "return clickRemoveDriver('dsdriver_row_" + StringEncoderDecoder.encode(type) + "');");%></td>
+			<td><%button(out, "but_del.gif", "mbDel", "common.buttons.remove", "dbsme.hint.remove_driver", "return clickRemoveDriver('dsdriver_row_" + StringEncoderDecoder.encode(type) + "');");%></td>
 		</tr><%
 	}
 %>
 <tr id=dsdriver_new class=row<%=(rowN++)&1%>>
 	<td><input class=txt  id="dsdriver_new.type"   name="dsdriver_new_type"  ></td>
 	<td><input class=txtW id="dsdriver_new.loadup" name="dsdriver_new_loadup"></td>
-	<td><%button(out, "but_add.gif", "mbAdd", "Add", "Add new datasource driver", "return clickAddDriver();");%></td>
+	<td><%button(out, "but_add.gif", "mbAdd", "common.buttons.add", "dbsme.hint.add_new_driver", "return clickAddDriver();");%></td>
 </tr>
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbDone",  "Done",  "");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel changes");
+page_menu_button(session, out, "mbDone",   "common.buttons.done",   "dbsme.hint.accept");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "dbsme.hint.cancel");
 page_menu_space(out);
 page_menu_end(out);
 %>
