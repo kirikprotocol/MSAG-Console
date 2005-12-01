@@ -293,7 +293,7 @@ public class SMSCAppContextImpl extends AppContextImpl implements SMSCAppContext
 			}
 			catch (MissingResourceException e)
 			{
-				result = "ResourceNotFound: " + key;
+				result = /*"ResourceNotFound: " + */key;
 			}
 
 		}

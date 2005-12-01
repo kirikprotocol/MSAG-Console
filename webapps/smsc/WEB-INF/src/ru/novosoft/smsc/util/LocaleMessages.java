@@ -65,7 +65,7 @@ public class LocaleMessages
 				}
 				catch (MissingResourceException exc)
 				{
-					result = "ResourceNotFound: " + key;
+					result = /*"ResourceNotFound: " + */key;
 				}
 			}
 		}

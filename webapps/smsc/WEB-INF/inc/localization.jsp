@@ -80,6 +80,6 @@
         ResourceBundle bundle = ResourceBundle.getBundle(LocaleMessages.SMSC_BUNDLE_NAME, new Locale(LocaleMessages.DEFAULT_PREFERRED_LANGUAGE));
         result = bundle.getString(key);
       }
-      catch (MissingResourceException e) {result = "ResourceNotFound: " + key;}
+      catch (MissingResourceException e) {/*result = "ResourceNotFound: " + key;*/ result = key;}
       return result;
     }%><%req = request;%>

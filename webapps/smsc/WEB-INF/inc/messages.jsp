@@ -13,7 +13,6 @@ if (errorMessages.size() > 0)
 		String nested = exc.getCause() == null ? "" : "<br>Nested: \"" + exc.getCause().getMessage() + "\" (" + exc.getCause().getClass().getName() + ")";
 		String param = exc.getParam() == null ? "" : ": " + exc.getParam();
 		String prefix = exc.getPrefix() == null ? "" : exc.getPrefix();
-		//String msg = getLocString(code); - couldn't create principal кос€чит
 		String msg = getLocString(code);
 		if (msg == null) msg = code;
 
