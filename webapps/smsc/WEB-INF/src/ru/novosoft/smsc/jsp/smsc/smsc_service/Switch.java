@@ -57,7 +57,7 @@ public class Switch extends SmscBean
 
   private int processOffline()
   {
-	if (getStatus() != ServiceInfo.STATUS_ONLINE)
+	if (getStatusOnline())
 	{
 		try
 		{
@@ -75,7 +75,7 @@ public class Switch extends SmscBean
 
   private int processOnline()
   {
-    if (getStatus() != ServiceInfo.STATUS_OFFLINE) {
+    if (!getStatusOnline()) {
       try {
         hostsManager.startService(Constants.SMSC_SME_ID);
         return RESULT_OK;
@@ -92,9 +92,9 @@ public class Switch extends SmscBean
   {
 	try
 	{
-		String stopFileName = (String) appContext.getSmsc().getNodeName2Id().get(checkedSmsc);
-		File stopFile = new File(stopFileName);
-		stopFile.createNewFile();
+//		String stopFileName = (String) appContext.getSmsc().getNodeName2Id().get(checkedSmsc);
+//		File stopFile = new File(stopFileName);
+//		stopFile.createNewFile();
 		hostsManager.shutdownService(Constants.SMSC_SME_ID);
 		return RESULT_OK;
 	}
@@ -119,15 +119,12 @@ public class Switch extends SmscBean
 		}
 	}
 
-	public byte getStatus()
+	public boolean getStatusOnline()
 	{
-		try
-		{
-			return hostsManager.getServiceStatus(Constants.SMSC_SME_ID);
-		}
-		catch (AdminException e)
-		{
-			return ServiceInfo.STATUS_UNKNOWN;
+		try {
+		  return hostsManager.getServiceInfo(Constants.SMSC_SME_ID).isOnline();
+		} catch (AdminException e) {
+		  return false;
 		}
 	}
 

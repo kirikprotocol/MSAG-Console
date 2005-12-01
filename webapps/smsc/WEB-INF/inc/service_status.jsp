@@ -32,18 +32,19 @@ String rgStatus(SMSCAppContext appContext, String serviceId, String elem_id)
     String node = "";
 	try {
 		status = appContext.getHostsManager().getServiceStatus(serviceId);
-        node = appContext.getHostsManager().getOnlineNode(serviceId);
 	} catch (Throwable e)
 	{}
 	String result = "<span id=\"" + elem_id + "\" datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\">";
 		switch (status)
 		{
-			case ServiceInfo.STATUS_ONLINE:
-				result += getLocString("common.statuses.online");
-                result = result + " on " + node;
-				break;
 			case ServiceInfo.STATUS_OFFLINE:
 				result += getLocString("common.statuses.offline");
+				break;
+			case ServiceInfo.STATUS_ONLINE1:
+				result += getLocString("common.statuses.online1");
+				break;
+			case ServiceInfo.STATUS_ONLINE2:
+				result += getLocString("common.statuses.online2");
 				break;
 			default:
 				result += getLocString("common.statuses.unknown");
@@ -61,35 +62,20 @@ String serviceStatus(SMSCAppContext appContext, String serviceId, String elem_id
 	} catch (Throwable e)
 	{}
 	String result = "<span id=\"" + elem_id + "\" datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\">";
-	if (isServiceStatusColored)
+	switch (status)
 	{
-		switch (status)
-		{
-			case ServiceInfo.STATUS_ONLINE:
-				result += "<img src=\"/images/ic_running.gif\" width=10 height=10 title='" + getLocString("common.statuses.online") + "'>";
-				break;
-			case ServiceInfo.STATUS_OFFLINE:
-				result += "<img src=\"/images/ic_starting.gif\" width=10 height=10 title='" + getLocString("common.statuses.offline") + "'>";
-				break;
-			default:
-				result += "<img src=\"/images/ic_unknown.gif\" width=10 height=10 title='" + getLocString("common.statuses.unknown") + "'>";
-				break;
-		}
-	}
-	else
-	{
-		switch (status)
-		{
-			case ServiceInfo.STATUS_ONLINE:
-				result += getLocString("common.statuses.online");
-				break;
-			case ServiceInfo.STATUS_OFFLINE:
-				result += getLocString("common.statuses.offline");
-				break;
-			default:
-				result += getLocString("common.statuses.unknown");
-				break;
-		}
+		case ServiceInfo.STATUS_OFFLINE:
+			result += getLocString("common.statuses.offline");
+			break;
+		case ServiceInfo.STATUS_ONLINE1:
+			result += getLocString("common.statuses.online1");
+			break;
+		case ServiceInfo.STATUS_ONLINE2:
+			result += getLocString("common.statuses.online2");
+			break;
+		default:
+			result += getLocString("common.statuses.unknown");
+			break;
 	}
 	result += "</span>";
 	return result;

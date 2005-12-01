@@ -10,7 +10,6 @@
                 ru.novosoft.smsc.jsp.PageBean"%>
 <%
 isServiceStatusNeeded = true;
-isServiceStatusColored = true;
 switch (bean.process(request))
 {
   case PageBean.RESULT_OK:

@@ -71,7 +71,7 @@ public class SmeManagerImpl implements SmeManager
   {
     SME removedSme = smes.remove(id);
     save();
-    if (smsc.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+    if (smsc.getInfo().isOnline())
       smsc.smeRemove(id);
     return removedSme;
   }
@@ -95,7 +95,7 @@ public class SmeManagerImpl implements SmeManager
   {
     smes.add(newSme);
     save();
-    if (smsc.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+    if (smsc.getInfo().isOnline())
       smsc.smeAdd(newSme);
     return newSme;
   }
@@ -139,7 +139,7 @@ public class SmeManagerImpl implements SmeManager
   {
     SME updatedSme = smes.update(newSme);
     save();
-    if (smsc.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+    if (smsc.getInfo().isOnline())
       smsc.smeUpdate(updatedSme);
     return updatedSme;
   }

@@ -66,7 +66,7 @@ public class SmsDaemonFormBean extends PageBean
 
   private int processStart()
   {
-    if (getStatus() != ServiceInfo.STATUS_RUNNING) {
+    if (!getStatusOnline()) {
       try {
         hostsManager.startService(Constants.ARCHIVE_DAEMON_SVC_ID);
         return RESULT_OK;
@@ -81,7 +81,7 @@ public class SmsDaemonFormBean extends PageBean
 
   private int processStop()
   {
-    if (getStatus() != ServiceInfo.STATUS_STOPPED) {
+    if (getStatusOnline()) {
       try {
         hostsManager.shutdownService(Constants.ARCHIVE_DAEMON_SVC_ID);
         return RESULT_OK;
@@ -94,12 +94,12 @@ public class SmsDaemonFormBean extends PageBean
       return RESULT_OK;
   }
 
-  public byte getStatus()
+  public boolean getStatusOnline()
   {
     try {
-      return hostsManager.getServiceInfo(Constants.ARCHIVE_DAEMON_SVC_ID).getStatus();
+      return hostsManager.getServiceInfo(Constants.ARCHIVE_DAEMON_SVC_ID).isOnline();
     } catch (AdminException e) {
-      return ServiceInfo.STATUS_UNKNOWN;
+      return false;
     }
   }
 

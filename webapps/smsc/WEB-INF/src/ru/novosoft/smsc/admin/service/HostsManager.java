@@ -8,6 +8,7 @@ import ru.novosoft.smsc.admin.resource_group.ResourceGroup;
 import ru.novosoft.smsc.admin.route.SME;
 import ru.novosoft.smsc.admin.smsc_service.RouteSubjectManager;
 import ru.novosoft.smsc.admin.smsc_service.SmeManager;
+import ru.novosoft.smsc.admin.smsc_service.SmscList;
 import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.util.SortedList;
 import ru.novosoft.smsc.util.WebAppFolders;
@@ -207,6 +208,22 @@ public class HostsManager
     getService(serviceId).offline();
   }
 
+	public synchronized void switchOver(final String serviceId) throws AdminException
+	{
+		ResourceGroup rg = getService(serviceId);
+		byte status = getServiceStatus(serviceId);
+		switch (status)
+		{
+			case ServiceInfo.STATUS_ONLINE1:
+				rg.switchOver(SmscList.getNodeFromId(ServiceInfo.STATUS_ONLINE2));
+				break;
+			case ServiceInfo.STATUS_ONLINE2:
+				rg.switchOver(SmscList.getNodeFromId(ServiceInfo.STATUS_ONLINE1));
+				break;
+			default: throw new AdminException("service "+ serviceId + " is not online");
+		}
+	}
+
   public synchronized int getCountRunningServices(final String hostName) throws AdminException
   {
 /*    refreshServices();
@@ -225,7 +242,7 @@ public class HostsManager
      Map services = resourceGroupManager.refreshServices(smeManager);
 	 ServiceInfo smscInfo = serviceManager.getInfo(Constants.SMSC_SME_ID);
 	 smscInfo.setStatus(getServiceStatus(Constants.SMSC_SME_ID));
-	 services.put(Constants.SMSC_SME_ID, smscInfo); 
+	 services.put(Constants.SMSC_SME_ID, smscInfo);
      logger.debug("Refresh services: " + services.size() + " services found");
      serviceManager.updateServices(services);
   }
@@ -350,19 +367,6 @@ public class HostsManager
 		byte result = ServiceInfo.STATUS_OFFLINE;
 		ResourceGroup rg = getService(serviceId);
 		result = rg.getOnlineStatus();
-		return result;
-	}
-
-	public synchronized String getOnlineNode(String serviceId) throws AdminException
-	{
-		String result = "";
-		ResourceGroup rg = getService(serviceId);
-		String[] rgNodes = getServiceNodes(serviceId);
-		for (int i = 0; i < rgNodes.length; i++)
-		{
-			if (rg.getOnlineStatus(rgNodes[i]) == ServiceInfo.STATUS_ONLINE)
-				{result = rgNodes[i];break;}
-		}
 		return result;
 	}
 }

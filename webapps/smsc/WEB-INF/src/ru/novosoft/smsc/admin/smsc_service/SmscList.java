@@ -27,11 +27,22 @@ public class SmscList {
   private SMSCAppContext appContext = null;
   private Category logger = Category.getInstance(this.getClass());
   private Smsc smsc = null;
-  static  Map nodeName2Id = new HashMap();
+  public static Map nodeName2Id = new HashMap();
 
-  public static byte getNodeId( String nodename ) {
-    
-  }
+	public static byte getNodeId(String nodename)
+	{
+		String idStr = (String) nodeName2Id.get(nodename);
+		return Byte.parseByte(idStr);
+	}
+
+	public static String getNodeFromId(byte nodeId)
+	{
+		String idStr = Byte.toString(nodeId);
+		Object[] ids = nodeName2Id.values().toArray();
+		for (int i = 0; i < ids.length; i++)
+			if (((String)ids[i]).equals(idStr)) { return (String) nodeName2Id.keySet().toArray()[i];}
+		return "";
+	}
 
   public SmscList(final Config webappConfig, final NSConnectionPool connectionPool, SMSCAppContext smscAppContext) throws AdminException {
     this.config = webappConfig;
@@ -50,7 +61,7 @@ public class SmscList {
       }
       String smscConfFolder = webappConfig.getString("smsc.config folder");
       WebAppFolders.setSmscConfFolder(new File(smscConfFolder));
-      smsc = new Smsc(Constants.SMSC_SME_ID, webappConfig.getString("smsc.host"), webappConfig.getInt("smsc.port"), smscConfFolder, nodeName2Id, connectionPool, appContext);
+      smsc = new Smsc(Constants.SMSC_SME_ID, webappConfig.getString("smsc.host"), webappConfig.getInt("smsc.port"), smscConfFolder, connectionPool, appContext);
       logger.debug("SMSC added");
     }
     catch (AdminException e) {

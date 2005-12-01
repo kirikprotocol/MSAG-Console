@@ -10,7 +10,6 @@
 <%
 TITLE = getLocString("services.title");
 isServiceStatusNeeded = true;
-isServiceStatusColored = true;
 switch(bean.process(request))
 {
 	case Index.RESULT_DONE:

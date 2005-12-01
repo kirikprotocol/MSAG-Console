@@ -120,9 +120,7 @@ public class DistributionListManager extends Service implements DistributionList
   {
     List list;
 
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new AdminException("SMSC is not running.");
-
+	checkSmscIsRunning();
     final Map args = new HashMap();
     args.put("address", "");
     final Object res = call(SMSC_COMPONENT_ID, GET_PRINCIPALS_METHOD_ID, Type.Types[Type.StringListType], args);
@@ -134,9 +132,8 @@ public class DistributionListManager extends Service implements DistributionList
   public synchronized List principals(String address) throws AdminException
     {
       List list;
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-        throw new AdminException("SMSC is not running.");
-      final Map args = new HashMap();
+	  checkSmscIsRunning();
+	  final Map args = new HashMap();
       args.put("address", address);
       final Object res = call(SMSC_COMPONENT_ID, GET_PRINCIPALS_METHOD_ID, Type.Types[Type.StringListType], args);
 
@@ -148,9 +145,8 @@ public class DistributionListManager extends Service implements DistributionList
   {
     //for void no use call
     //  List list=principals(); if (list.contains(prc)) throw new PrincipalAlreadyExistsException(prc);
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new AdminException("SMSC is not running.");
-    final Map args = new HashMap();
+	checkSmscIsRunning();
+	final Map args = new HashMap();
     args.put("address", prc.getAddress());
     args.put("maxLists", prc.getMaxListsInteger());
     args.put("maxElements",prc.getMaxElementsInteger());
@@ -165,9 +161,8 @@ public class DistributionListManager extends Service implements DistributionList
     }
     if (prc == null)  throw new PrincipalNotExistsException(address);
     */
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new AdminException("SMSC is not running.");
-    final Map args = new HashMap();
+	checkSmscIsRunning();
+	final Map args = new HashMap();
     args.put("address", address);
     call(SMSC_COMPONENT_ID, DELETE_PRINCIPAL_METHOD_ID, Type.Types[Type.StringType], args);
   }
@@ -175,8 +170,7 @@ public class DistributionListManager extends Service implements DistributionList
   public synchronized Principal getPrincipal(String address) throws AdminException, PrincipalNotExistsException
   {
     List list;
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new AdminException("SMSC is not running.");
+	checkSmscIsRunning();
 
     final Map args = new HashMap();
     args.put("address", address);
@@ -194,9 +188,8 @@ public class DistributionListManager extends Service implements DistributionList
           MembersCountExceededForOwnerException
   {
     // List list=principals(); if (!list.contains(prc)) throw new PrincipalNotExistsException(prc.getAddress());
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new AdminException("SMSC is not running.");
-    final Map args = new HashMap();
+	checkSmscIsRunning();
+	final Map args = new HashMap();
     args.put("address", prc.getAddress());
     args.put("maxLists", prc.getMaxListsInteger());
     args.put("maxElements", prc.getMaxElementsInteger());
@@ -207,9 +200,8 @@ public class DistributionListManager extends Service implements DistributionList
 
   public synchronized void addMember(String dlname, String address) throws AdminException, ListNotExistsException, MemberAlreadyExistsException
   {
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new AdminException("SMSC is not running.");
-    final Map args = new HashMap();
+	checkSmscIsRunning();
+	final Map args = new HashMap();
     args.put("address", address);
     args.put("dlname", dlname);
     call(SMSC_COMPONENT_ID, ADD_MEMBER_METHOD_ID, Type.Types[Type.StringType], args);
@@ -217,9 +209,8 @@ public class DistributionListManager extends Service implements DistributionList
 
   public synchronized void deleteMember(String dlname, String address) throws AdminException, ListNotExistsException, MemberNotExistsException
   {
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new AdminException("SMSC is not running.");
-    final Map args = new HashMap();
+	checkSmscIsRunning();
+	final Map args = new HashMap();
     args.put("address", address);
     args.put("dlname", dlname);
     call(SMSC_COMPONENT_ID, DELETE_MEMBER_METHOD_ID, Type.Types[Type.StringType], args);
@@ -228,8 +219,7 @@ public class DistributionListManager extends Service implements DistributionList
   public synchronized List members(String dlname) throws AdminException, ListNotExistsException
   {
     List list;
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new AdminException("SMSC is not running.");
+	checkSmscIsRunning();
     final Map args = new HashMap();
     args.put("dlname", dlname);
     final Object res = call(SMSC_COMPONENT_ID, GET_MEMBERS_METHOD_ID, Type.Types[Type.StringListType], args);
@@ -240,9 +230,8 @@ public class DistributionListManager extends Service implements DistributionList
 
   public synchronized void grantPosting(String dlname, String submitter) throws AdminException, ListNotExistsException, PrincipalNotExistsException, SubmitterAlreadyExistsException
   {
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new AdminException("SMSC is not running.");
-    final Map args = new HashMap();
+    checkSmscIsRunning();
+	final Map args = new HashMap();
     args.put("dlname", dlname);
     args.put("address", submitter);
     call(SMSC_COMPONENT_ID, ADD_SUBMITTER_METHOD_ID, Type.Types[Type.StringType], args);
@@ -251,8 +240,7 @@ public class DistributionListManager extends Service implements DistributionList
 
   public synchronized void revokePosting(String dlname, String submitter) throws AdminException, ListNotExistsException, SubmitterNotExistsException
   {
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new AdminException("SMSC is not running.");
+	checkSmscIsRunning();
     final Map args = new HashMap();
     args.put("dlname", dlname);
     args.put("address", submitter);
@@ -262,9 +250,8 @@ public class DistributionListManager extends Service implements DistributionList
   public synchronized List submitters(String dlname) throws AdminException, ListNotExistsException
   {
     List list;
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new AdminException("SMSC is not running.");
-    final Map args = new HashMap();
+    checkSmscIsRunning();
+	final Map args = new HashMap();
     args.put("dlname", dlname);
     final Object res = call(SMSC_COMPONENT_ID, SUBMITTERS_METHOD_ID, Type.Types[Type.StringListType], args);
     list = res instanceof List ? (List) res : null;
@@ -274,9 +261,8 @@ public class DistributionListManager extends Service implements DistributionList
 
   public synchronized void addDistributionList(DistributionList dl) throws AdminException, ListAlreadyExistsException
   {
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new AdminException("SMSC is not running.");
-    final Map args = new HashMap();
+    checkSmscIsRunning();
+	final Map args = new HashMap();
     args.put("dlname", dl.getName());
     args.put("owner", dl.getOwner());
     args.put("maxElements",new Integer(dl.getMaxElements()));
@@ -285,9 +271,8 @@ public class DistributionListManager extends Service implements DistributionList
 
   public synchronized void deleteDistributionList(String dlname) throws AdminException, ListNotExistsException
   {
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new AdminException("SMSC is not running.");
-    final Map args = new HashMap();
+    checkSmscIsRunning();
+	final Map args = new HashMap();
     args.put("dlname", dlname);
     call(SMSC_COMPONENT_ID, DELETE_DL_METHOD_ID, Type.Types[Type.StringType], args);
   }
@@ -296,9 +281,8 @@ public class DistributionListManager extends Service implements DistributionList
   {
 
     List list;
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new AdminException("SMSC is not running.");
-    final Map args = new HashMap();
+    checkSmscIsRunning();
+	final Map args = new HashMap();
     args.put("dlname", dlname);
     final Object res = call(SMSC_COMPONENT_ID, GET_DL_METHOD_ID, Type.Types[Type.StringListType], args);
     list = res instanceof List ? (List) res : null;
@@ -333,9 +317,8 @@ public class DistributionListManager extends Service implements DistributionList
   private  List internal_list( DlFilter filter) throws AdminException
   {
     List list;
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new AdminException("SMSC is not running.");
-    final Map args = new HashMap();
+    checkSmscIsRunning();
+	final Map args = new HashMap();
     args.put("names", new LinkedList()); args.put("owners", new LinkedList());
     if (filter!=null) {
       if (!filter.isNamesContainsRegexp() && !filter.isOwnersContainsRegexp()) {
@@ -411,13 +394,18 @@ public class DistributionListManager extends Service implements DistributionList
 
   public synchronized void alterDistributionList(String dlname, int maxElements) throws AdminException, ListNotExistsException
   {
-    if (ServiceInfo.STATUS_RUNNING != getInfo().getStatus())
-      throw new AdminException("SMSC is not running.");
-    final Map args = new HashMap();
+	checkSmscIsRunning();
+	final Map args = new HashMap();
     args.put("dlname", dlname);
     args.put("maxElements",new Integer(maxElements));
     call(SMSC_COMPONENT_ID, ALT_DL_METHOD_ID, Type.Types[Type.StringType], args);
   }
+
+	public synchronized void checkSmscIsRunning() throws AdminException
+	{
+		if (!getInfo().isOnline())
+			throw new AdminException("SMSC is not running.");
+	}
 
   ////////////////////////////////////////////////////
   // old implementation

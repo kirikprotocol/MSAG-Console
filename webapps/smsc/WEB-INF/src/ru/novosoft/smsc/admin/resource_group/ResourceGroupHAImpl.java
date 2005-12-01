@@ -28,7 +28,8 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 		haname2sme.put("mciprof-harg", "MCIProf");
 		haname2sme.put("inman-harg", "inman");
 		haname2sme.put("proxysme-harg", "proxysme");
-		haname2sme.put("smsc-sarg", "SMSCservice");
+		haname2sme.put("smsc1-sarg", "SMSCservice1");
+		haname2sme.put("smsc2-sarg", "SMSCservice2");
 		haname2sme.put("webapp-harg", "webapp");
 
 		smename2ha.put("SMSC", "smscagent-harg");
@@ -39,7 +40,8 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 		smename2ha.put("MCIProf", "mciprof-harg");
 		smename2ha.put("inman", "inman-harg");
 		smename2ha.put("proxysme", "proxysme-harg");
-		smename2ha.put("SMSCservice", "smsc-sarg");
+		smename2ha.put("SMSCservice1", "smsc1-sarg");
+		smename2ha.put("SMSCservice2", "smsc2-sarg");
 		smename2ha.put("webapp", "webapp-harg");
 	}
 
@@ -69,16 +71,6 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 		return NativeResourceGroupHA.ResourceGroup_listNodes(swigCPtr);
 	}
 
-	public void setOnlineStatus(byte onlineStatus) throws AdminException
-	{
-		switch (onlineStatus)
-		{
-			case ServiceInfo.STATUS_ONLINE:  NativeResourceGroupHA.ResourceGroup_online(swigCPtr); break;
-			case ServiceInfo.STATUS_OFFLINE: NativeResourceGroupHA.ResourceGroup_offline(swigCPtr); break;
-			default: throw new AdminException("Unknown online status");
-		}
-	}
-
 	public byte getOnlineStatus(String nodeName)
 	{
 		logger.debug("Getting online status for rg: " + getName() + " at node: " + nodeName);
@@ -98,10 +90,10 @@ public class ResourceGroupHAImpl extends ResourceGroupImpl
 	{
 		byte result = ServiceInfo.STATUS_OFFLINE;
 		String[] rgNodes = listNodes();
-    for (int i = 0; i < rgNodes.length; i++)
+		for (int i = 0; i < rgNodes.length; i++)
 		{
-			if (getOnlineStatus(rgNodes[i]) == ServiceInfo.STATUS_ONLINE)
-				{result = ServiceInfo.STATUS_ONLINE;break;}
+			if (NativeResourceGroupHA.ResourceGroup_onlineStatus(swigCPtr, rgNodes[i]))
+				return SmscList.getNodeId(rgNodes[i]);
 		}
 		return result;
 	}

@@ -146,7 +146,7 @@ public class HostView extends SmscBean
       final ServiceInfo s = (ServiceInfo) services.get(serviceIds[i]);
       if (null == s)
         result = error(SMSCErrors.error.hosts.serviceNotFound, serviceIds[i]);
-      else if (ServiceInfo.STATUS_STOPPED == s.getStatus()) {
+      else if (!s.isOnline()) {
         try {
           hostsManager.startService(serviceIds[i]);
         } catch (AdminException e) {
@@ -174,7 +174,7 @@ public class HostView extends SmscBean
       final ServiceInfo s = (ServiceInfo) services.get(serviceIds[i]);
       if (null == s)
         result = error(SMSCErrors.error.hosts.serviceNotFound, serviceIds[i]);
-      else if (ServiceInfo.STATUS_RUNNING == s.getStatus()) {
+      else if (s.isOnline()) {
         try {
           hostsManager.shutdownService(serviceIds[i]);
         } catch (AdminException e) {

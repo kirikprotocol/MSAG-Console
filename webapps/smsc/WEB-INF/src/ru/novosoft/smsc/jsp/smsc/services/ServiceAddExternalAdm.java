@@ -180,7 +180,7 @@ public class ServiceAddExternalAdm extends SmeBean
                       startupArgs, autostart,
                       new SME(serviceId, priority, SME.SMPP, typeOfNumber, numberingPlan, convertInterfaceVersion(interfaceVersion), systemType, password,
                               rangeOfAddress, -1, wantAlias, forceDC, timeout, receiptSchemeName, disabled, mode, proclimit, schedlimit),
-                      ServiceInfo.STATUS_STOPPED);
+                      ServiceInfo.STATUS_OFFLINE);
     }/* catch (AdminException e) {
       return error(SMSCErrors.error.services.coudntAddService, e);
     }*/ catch (NullPointerException e) {

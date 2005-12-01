@@ -53,8 +53,10 @@ include file="/WEB-INF/inc/collapsing_tree.jsp"%><%!
   page_menu_button(session, out, "mbSave",  "common.buttons.save",  "common.buttons.saveConfig");
   page_menu_button(session, out, "mbReset", "common.buttons.reset", "common.buttons.reset", "clickCancel()");
   page_menu_space(out);
-  page_menu_button(session, out, "mbStart", "common.buttons.start", "smsview.startDaemon", bean.getStatus() == ServiceInfo.STATUS_STOPPED);
-  page_menu_button(session, out, "mbStop",  "common.buttons.stop",  "smsview.stopDaemon", bean.getStatus() == ServiceInfo.STATUS_RUNNING);
+  page_menu_button(session, out, "mbStart", "common.buttons.start", "smsview.startDaemon", false);
+  page_menu_button(session, out, "mbStop",  "common.buttons.stop",  "smsview.stopDaemon", false);
+//  page_menu_button(session, out, "mbStart", "common.buttons.start", "smsview.startDaemon", bean.getStatus() == ServiceInfo.STATUS_STOPPED);
+//  page_menu_button(session, out, "mbStop",  "common.buttons.stop",  "smsview.stopDaemon", bean.getStatus() == ServiceInfo.STATUS_RUNNING);
   page_menu_end(out);
 %>
 <script language="JavaScript">

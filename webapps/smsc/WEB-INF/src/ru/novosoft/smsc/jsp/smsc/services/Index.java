@@ -155,7 +155,7 @@ public class Index extends PageBean
       final String svcId = serviceIds[i];
       if (hostsManager.isService(svcId)) {
         try {
-          if (ServiceInfo.STATUS_STOPPED == hostsManager.getServiceInfo(svcId).getStatus()) {
+          if (!hostsManager.getServiceInfo(svcId).isOnline()) {
             hostsManager.startService(svcId);
           }
           else
@@ -190,7 +190,7 @@ public class Index extends PageBean
     for (int i = 0; i < serviceIds.length; i++) {
       final String svcId = serviceIds[i];
       try {
-        if (ServiceInfo.STATUS_RUNNING == hostsManager.getServiceInfo(svcId).getStatus())
+        if (hostsManager.getServiceInfo(svcId).isOnline())
           hostsManager.shutdownService(svcId);
         else
           logger.debug("stopServices: " + svcId + " is " + hostsManager.getServiceInfo(svcId).getStatusStr());
@@ -235,21 +235,6 @@ public class Index extends PageBean
     }
   }
 
-  public byte getServiceStatus(final String serviceId)
-  {
-    if (hostsManager.isService(serviceId)) {
-      try {
-        return hostsManager.getServiceInfo(serviceId).getStatus();
-      } catch (Throwable t) {
-        logger.error("Couldn't get service info for service \"" + serviceId + '"', t);
-        error(SMSCErrors.error.services.couldntGetServiceInfo, serviceId);
-        return ServiceInfo.STATUS_UNKNOWN;
-      }
-    }
-    else
-      return ServiceInfo.STATUS_RUNNING;
-  }
-
   public SmeStatus getSmeStatus(final String id)
   {
     try {
@@ -290,7 +275,7 @@ public class Index extends PageBean
   public boolean isSmscAlive()
   {
     try {
-      return ServiceInfo.STATUS_RUNNING == hostsManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus();
+      return hostsManager.getServiceInfo(Constants.SMSC_SME_ID).isOnline();
     } catch (AdminException e) {
       error(SMSCErrors.error.services.couldntGetServiceInfo, Constants.SMSC_SME_ID);
       return false;

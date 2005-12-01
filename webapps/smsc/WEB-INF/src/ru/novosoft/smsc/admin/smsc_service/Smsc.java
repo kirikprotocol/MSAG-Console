@@ -105,15 +105,13 @@ public class Smsc extends Service
 
   private SMSCAppContext appContext = null;
 	private Statuses statuses = new StatusesImpl();
-	private Map nodeName2Id = null;
 
-  public Smsc(final String SmscName, final String smscHost, final int smscPort, final String smscConfFolderString, Map stopFileName, final NSConnectionPool connectionPool, SMSCAppContext smscAppContext) throws AdminException
+  public Smsc(final String SmscName, final String smscHost, final int smscPort, final String smscConfFolderString, final NSConnectionPool connectionPool, SMSCAppContext smscAppContext) throws AdminException
   {
     super(new ServiceInfo(SmscName, smscHost, "", "", true, null, ServiceInfo.STATUS_OFFLINE), smscPort);
 
     try {
       this.configFolder = new File(smscConfFolderString);
-      this.nodeName2Id = stopFileName;
       final Document aliasesDoc = Utils.parse(new FileReader(new File(configFolder, "aliases.xml")));
       aliases = new AliasSet(aliasesDoc.getDocumentElement());
       profileDataSource = new ProfileDataSource(connectionPool);
@@ -650,24 +648,4 @@ public class Smsc extends Service
 	{
 		return statuses;
 	}
-
-	public Map getNodeName2Id()
-	{
-		return nodeName2Id;
-	}
-
-/*	public synchronized ServiceInfo getInfo()
-	{
-		ServiceInfo result = null;
-		try
-		{
-			result = appContext.getHostsManager().getServiceInfo(Constants.SMSC_SME_ID);
-		}
-		catch(Exception e)
-		{
-			logger.debug("smsc.getInfo threw exception");
-			e.printStackTrace();
-		}
-		return result;
-	}*/
 }

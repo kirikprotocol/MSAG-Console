@@ -114,7 +114,7 @@ public class Daemon extends Proxy
       getServiceInfo(serviceId).setStatus(ServiceInfo.STATUS_UNKNOWN);
       throw new AdminException("Couldn't shutdown services \"" + serviceId + "\", nested:" + r.getDataAsString());
     }
-    getServiceInfo(serviceId).setStatus(ServiceInfo.STATUS_STOPPING);
+//    getServiceInfo(serviceId).setStatus(ServiceInfo.STATUS_STOPPING);
   }
 
   public void killService(final String serviceId)
@@ -126,7 +126,7 @@ public class Daemon extends Proxy
       getServiceInfo(serviceId).setStatus(ServiceInfo.STATUS_UNKNOWN);
       throw new AdminException("Couldn't kill services \"" + serviceId + "\", nested:" + r.getDataAsString());
     }
-    getServiceInfo(serviceId).setStatus(ServiceInfo.STATUS_STOPPED);
+//    getServiceInfo(serviceId).setStatus(ServiceInfo.STATUS_STOPPED);
   }
 
   public List getServiceIds(final SmeManager smeManager) throws AdminException
@@ -162,7 +162,7 @@ public class Daemon extends Proxy
     int result = 0;
     for (Iterator i = services.values().iterator(); i.hasNext();) {
       final ServiceInfo info = (ServiceInfo) i.next();
-      if (ServiceInfo.STATUS_RUNNING == info.getStatus() && !info.getId().equals(Constants.SMSC_SME_ID))
+//      if (ServiceInfo.STATUS_RUNNING == info.getStatus() && !info.getId().equals(Constants.SMSC_SME_ID))
         result++;
     }
     return result;

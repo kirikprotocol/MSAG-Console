@@ -192,9 +192,9 @@ public class SmsViewFormBean extends IndexBean
     totalRowsCount = 0;
     checkedRows.removeAllElements();
     try {
-      if (query.getStorageType() == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE &&
-              hostsManager.getServiceInfo(Constants.ARCHIVE_DAEMON_SVC_ID).getStatus()
-              != ServiceInfo.STATUS_RUNNING) {
+      if ((query.getStorageType() == SmsQuery.SMS_ARCHIVE_STORAGE_TYPE) &&
+              (!hostsManager.getServiceInfo(Constants.ARCHIVE_DAEMON_SVC_ID).isOnline()))
+      {
         clearQuery();
         throw new AdminException("Archive Daemon is not running. ");
       }

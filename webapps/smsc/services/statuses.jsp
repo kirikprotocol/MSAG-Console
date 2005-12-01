@@ -19,11 +19,14 @@ for (Iterator i = c.iterator(); i.hasNext(); )
 	String sId = (String) i.next();
 	switch (bean.getServiceStatus(sId))
 	{
-		case ServiceInfo.STATUS_ONLINE:
-			result += getLocString("common.statuses.online");
-			break;
 		case ServiceInfo.STATUS_OFFLINE:
 			result += getLocString("common.statuses.offline");
+			break;
+		case ServiceInfo.STATUS_ONLINE1:
+			result += getLocString("common.statuses.online1");
+			break;
+		case ServiceInfo.STATUS_ONLINE2:
+			result += getLocString("common.statuses.online2");
 			break;
 		default:
 			result += getLocString("common.statuses.unknown");

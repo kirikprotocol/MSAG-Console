@@ -19,8 +19,6 @@ public interface ResourceGroup
 {
 	String getName();
 
-	void setOnlineStatus(byte Status) throws AdminException;
-
 	byte getOnlineStatus(String nodeName);
 
 	byte getOnlineStatus();

@@ -65,7 +65,7 @@ public class Lookup extends PageBean
       return result;
 
     try {
-      if (ServiceInfo.STATUS_RUNNING != appContext.getHostsManager().getServiceInfo(Constants.SMSC_SME_ID).getStatus()) {
+      if (!appContext.getHostsManager().getServiceInfo(Constants.SMSC_SME_ID).isOnline()) {
         return warning(SMSCErrors.warning.SMSCNotRunning);
       }
     } catch (Exception e) {

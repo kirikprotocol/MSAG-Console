@@ -28,6 +28,7 @@ public class ResGroups extends PageBean
   protected String mbDelete = null;
   protected String mbStartService = null;
   protected String mbStopService = null;
+  protected String mbSwitchOver = null;
   protected String mbView = null;
   protected String mbViewNodes = null;
   protected String mbEdit = null;
@@ -48,12 +49,14 @@ public class ResGroups extends PageBean
       return stopServices();
     else if (null != mbView)
       return RESULT_VIEW;
-
     else if (null != mbViewNodes)
       return RESULT_VIEW_NODES;
-
+	else if (null != mbEdit)
+	  return RESULT_EDIT;
     else if (null != mbDisconnectServices)
       return disconnectServices();
+	else if (null != mbSwitchOver)
+		return processSwitchOver();
     else
       return RESULT_OK;
   }
@@ -90,6 +93,42 @@ public class ResGroups extends PageBean
    * ********************* Command handlers ***************************
    */
 
+
+  protected int processSwitchOver()
+  {
+	  logger.debug("switchOver: " + (null != serviceIds ? serviceIds.length : 0));
+
+	  int result = RESULT_OK;
+	  if (0 == serviceIds.length)
+		return warning(SMSCErrors.warning.hosts.noServicesSelected);
+
+	  final List notSwitchedIds = new LinkedList();
+
+	  for (int i = 0; i < serviceIds.length; i++) {
+		final String svcId = serviceIds[i];
+		if (hostsManager.isService(svcId)) {
+		  try {
+			if (hostsManager.getServiceInfo(svcId).isOnline()) {
+				hostsManager.switchOver(svcId);
+			}
+			else
+			  logger.debug("switchOver: " + svcId + " is " + hostsManager.getServiceInfo(svcId).getStatusStr());
+		  } catch (AdminException e) {
+			notSwitchedIds.add(svcId);
+			result = error(SMSCErrors.error.hosts.couldntStartService, svcId, e);
+			logger.error("Couldn't switch over service \"" + svcId + '"', e);
+			continue;
+		  }
+		}
+		else {
+		  notSwitchedIds.add(svcId);
+		  result = error(SMSCErrors.error.services.couldntStartInternalService, svcId);
+		}
+	  }
+	  serviceIds = (String[]) notSwitchedIds.toArray(new String[0]);
+	  return result;
+  }
+
   protected int startServices()
   {
     logger.debug("startServices: " + (null != serviceIds ? serviceIds.length : 0));
@@ -104,7 +143,7 @@ public class ResGroups extends PageBean
       final String svcId = serviceIds[i];
       if (hostsManager.isService(svcId)) {
         try {
-          if (ServiceInfo.STATUS_OFFLINE == hostsManager.getServiceInfo(svcId).getStatus()) {
+          if (!hostsManager.getServiceInfo(svcId).isOnline()) {
             hostsManager.startService(svcId);
           }
           else
@@ -139,7 +178,7 @@ public class ResGroups extends PageBean
     for (int i = 0; i < serviceIds.length; i++) {
       final String svcId = serviceIds[i];
       try {
-        if (ServiceInfo.STATUS_ONLINE == hostsManager.getServiceInfo(svcId).getStatus())
+        if (hostsManager.getServiceInfo(svcId).isOnline())
           hostsManager.shutdownService(svcId);
         else
           logger.debug("stopServices: " + svcId + " is " + hostsManager.getServiceInfo(svcId).getStatusStr());
@@ -228,7 +267,7 @@ public class ResGroups extends PageBean
   public boolean isSmscAlive()
   {
     try {
-      return ServiceInfo.STATUS_ONLINE == hostsManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus();
+      return hostsManager.getServiceInfo(Constants.SMSC_SME_ID).isOnline();
     } catch (AdminException e) {
       error(SMSCErrors.error.services.couldntGetServiceInfo, Constants.SMSC_SME_ID);
       return false;
@@ -349,4 +388,14 @@ public class ResGroups extends PageBean
   {
     this.mbDisconnectServices = mbDisconnectServices;
   }
+
+	public String getMbSwitchOver()
+	{
+		return mbSwitchOver;
+	}
+
+	public void setMbSwitchOver(final String mbSwitchOver)
+	{
+		this.mbSwitchOver = mbSwitchOver;
+	}
 }

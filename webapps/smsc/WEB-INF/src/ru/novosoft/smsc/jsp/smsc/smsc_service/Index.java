@@ -159,7 +159,7 @@ public class Index extends SmscBean
 
   private int processStart()
   {
-    if (getStatus() != ServiceInfo.STATUS_RUNNING) {
+    if (getStatusOnline()) {
       try {
         hostsManager.startService(Constants.SMSC_SME_ID);
         return RESULT_OK;
@@ -174,7 +174,7 @@ public class Index extends SmscBean
 
   private int processStop()
   {
-    if (getStatus() != ServiceInfo.STATUS_STOPPED) {
+    if (!getStatusOnline()) {
       try {
         hostsManager.shutdownService(Constants.SMSC_SME_ID);
         return RESULT_OK;
@@ -187,12 +187,12 @@ public class Index extends SmscBean
       return RESULT_OK;
   }
 
-  public byte getStatus()
+  public boolean getStatusOnline()
   {
     try {
-      return hostsManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus();
+      return hostsManager.getServiceInfo(Constants.SMSC_SME_ID).isOnline();
     } catch (AdminException e) {
-      return ServiceInfo.STATUS_UNKNOWN;
+      return false;
     }
   }
 

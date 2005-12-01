@@ -259,7 +259,7 @@ public class Index extends IndexBean
   public boolean isEditAllowed()
   {
     try {
-      return hostsManager.getServiceInfo(Constants.SMSC_SME_ID).getStatus() == ServiceInfo.STATUS_RUNNING;
+      return hostsManager.getServiceInfo(Constants.SMSC_SME_ID).isOnline();
     } catch (AdminException e) {
       logger.debug("Couldn't get SMSC service status", e);
     }

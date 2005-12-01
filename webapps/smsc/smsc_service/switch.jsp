@@ -36,7 +36,7 @@
   page_menu_button(session, out, "mbOffline", "common.buttons.offline", "smsc.stop");
   page_menu_button(session, out, "mbStop",  "common.buttons.stop",  "smsc.activateHint");
   page_menu_button(session, out, "mbApplyConfig", "common.buttons.applyConfig", "smsc.masterHint");
-  page_menu_button(session, out, "mbSwitchOver", "common.buttons.switchOver", "smsc.masterHint");
+  page_menu_button(session, out, "mbSwitchOver", "common.buttons.switchOver", "common.hints.switchOver");
   page_menu_space(out);
   page_menu_end(out);%>
 <div class=content>
