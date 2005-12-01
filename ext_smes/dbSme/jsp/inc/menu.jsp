@@ -13,14 +13,23 @@
 	sme_menu_end(out);
 	if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0)
 	{
-		%><script>
-			function refreshWSmeStartStopButtonsStatus()
-			{
-				document.all.mbStart.disabled = (document.all.RUNNING_STATUSERVICE_<%=ServiceIDForShowStatus%>.innerText != "stopped");
-				document.all.mbStop.disabled = (document.all.RUNNING_STATUSERVICE_<%=ServiceIDForShowStatus%>.innerText != "running");
-				window.setTimeout(refreshWSmeStartStopButtonsStatus, 500);
-			}
-			refreshWSmeStartStopButtonsStatus();
-		</script><%
+    %><script>
+        function refreshDBSmeStartStopButtonsStatus()
+        {
+            var status = document.all.RUNNING_STATUSERVICE_<%=ServiceIDForShowStatus%>.innerText;
+            document.all.mbStart.disabled = (status == "<%= getLocString("common.statuses.online1") %>" ||
+                                             status == "<%= getLocString("common.statuses.online2") %>" ||
+                                             status == "<%= getLocString("common.statuses.running") %>" ||
+                                             status == "<%= getLocString("common.statuses.stopping")%>" ||
+                                             status == "<%= getLocString("common.statuses.starting")%>" ||
+                                             status == "<%= getLocString("common.statuses.unknown" )%>" );
+            document.all.mbStop.disabled  = (status == "<%= getLocString("common.statuses.offline") %>" ||
+                                             status == "<%= getLocString("common.statuses.stopped") %>" ||
+                                             status == "<%= getLocString("common.statuses.stopping")%>" ||
+                                             status == "<%= getLocString("common.statuses.unknown") %>" );
+            window.setTimeout(refreshDBSmeStartStopButtonsStatus, 500);
+        }
+        refreshDBSmeStartStopButtonsStatus();
+    </script><%
 	}
 %>
