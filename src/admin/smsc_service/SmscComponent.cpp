@@ -12,6 +12,7 @@
 #include "acls/interfaces.h"
 #include <algorithm>
 #include "cluster/Interconnect.h"
+#include "cluster/Commands.h"
 
 namespace smsc {
 namespace admin {
@@ -24,6 +25,9 @@ using namespace smsc::core::buffers;
 using namespace smsc::util::config;
 using namespace smsc::util::config::route;
 using namespace smsc::acls;
+using smsc::cluster::ApplyRoutesCommand;
+using smsc::cluster::ApplyAliasesCommand;
+using smsc::cluster::ApplyRescheduleCommand;
 
 using smsc::mscman::MscManager;
 using smsc::mscman::MscInfo;
@@ -829,6 +833,17 @@ throw (AdminException)
   configs.routesconfig->reload();
   configs.smemanconfig->reload();
   smsc_app_runner->getApp()->reloadRoutes(configs);
+
+  if(smsc_app_runner->getApp()->isHs()){
+      Interconnect * iconn = Interconnect::getInstance();
+      if(!iconn){
+          smsc_log_warn(logger, "InterconnectManager undefined, can't send applyRoutes command");
+          return;
+      }
+      ApplyRoutesCommand * cmd = new ApplyRoutesCommand();
+      iconn->sendCommand(cmd);
+  }
+
 }
 
 Variant SmscComponent::loadRoutes(void)
@@ -1041,12 +1056,32 @@ throw (AdminException)
 {
   configs.aliasconfig->reload();
   smsc_app_runner->getApp()->reloadAliases(configs);
+
+  if(smsc_app_runner->getApp()->isHs()){
+      Interconnect * iconn = Interconnect::getInstance();
+      if(!iconn){
+          smsc_log_warn(logger, "InterconnectManager undefined, can't send applyAliases command");
+          return;
+      }
+      ApplyAliasesCommand * cmd = new ApplyAliasesCommand();
+      iconn->sendCommand(cmd);
+  }
 }
 
 void SmscComponent::applyReschedule()
 throw (AdminException)
 {
   smsc_app_runner->getApp()->reloadReschedule();
+
+  if(smsc_app_runner->getApp()->isHs()){
+      Interconnect * iconn = Interconnect::getInstance();
+      if(!iconn){
+          smsc_log_warn(logger, "InterconnectManager undefined, can't send applyReschedule command");
+          return;
+      }
+      ApplyRescheduleCommand * cmd = new ApplyRescheduleCommand();
+      iconn->sendCommand(cmd);
+  }
 }
 
 void SmscComponent::reReadConfigs()

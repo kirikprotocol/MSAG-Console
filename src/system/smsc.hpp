@@ -494,6 +494,8 @@ public:
     inManCom->Report(dlgId,sms,final);
   }
 
+  bool isHs(){ return ishs;}
+
 
 protected:
 
