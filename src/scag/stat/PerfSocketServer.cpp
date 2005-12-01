@@ -15,9 +15,7 @@ PerfSocketServer::PerfSocketServer()
 
 PerfSocketServer::~PerfSocketServer()
 {
-    genSocket.Abort();
-    svcSocket.Abort();
-    scSocket.Abort();
+    
 }
 
 int PerfSocketServer::Execute()
