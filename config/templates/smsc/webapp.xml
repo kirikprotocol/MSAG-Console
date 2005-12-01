@@ -2,6 +2,20 @@
 <!DOCTYPE config SYSTEM "file://configuration.dtd">
 
 <config>
+  <section name="installation">
+   <param name="type">HA</param>
+  </section>
+
+  <section name="smscenters">
+    <section name="smsc-node1">
+      <param name="stopfilename" type="string">c:/stop.txt</param>
+    </section>
+
+    <section name="smsc-node2">
+      <param name="stopfilename" type="string">d:/stop.txt</param>
+    </section>
+  </section>
+
 
   <section name="categories">
    <param name="1" type="string">category1</param>
@@ -56,6 +70,7 @@
   </section>
 
   <section name="system">
+    <param name="services folder" type="string">@services.folder@</param>
     <param name="users file" type="string">webapps/smsc/WEB-INF/users.xml</param>
     <param name="localization file" type="string">webapps/smsc/WEB-INF/localization.xml</param>
     <param name="webapp folder" type="string">webapps/smsc</param>
