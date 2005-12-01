@@ -43,6 +43,8 @@ public class ServiceManagerImpl implements ServiceManager
 
   public Service add(Service newService) throws AdminException
   {
+	final ServiceInfo servInfo = newService.getInfo();
+	if (servInfo == null) throw new AdminException("serviceinfo is null:");  
     final String id = newService.getInfo().getId();
     if (services.containsKey(id))
       throw new AdminException("Service \"" + id + "\" already present");
