@@ -5,13 +5,9 @@ import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-
-import org.xml.sax.SAXException;
-
 
 /**
  * Created by igork
