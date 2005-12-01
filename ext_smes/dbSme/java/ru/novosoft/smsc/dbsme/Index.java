@@ -1,7 +1,6 @@
 package ru.novosoft.smsc.dbsme;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.util.Functions;
 import ru.novosoft.smsc.util.config.Config;
 
@@ -111,7 +110,7 @@ public class Index extends DbsmeBean
       originalConfig.save();
     } catch (Throwable e) {
       logger.error("Could not create backup copy of config", e);
-      return error(DBSmeErrors.error.couldntBackupConfig, e);
+      return error("dbsme.error.config_backup", e);
     }
 
     Set providers = config.getSectionChildShortSectionNames("DBSme.DataProviders");
@@ -192,7 +191,7 @@ public class Index extends DbsmeBean
 
     } catch (CloneNotSupportedException e) {
       logger.fatal("Inconsistent classes: " + Config.class.getName() + " does not implement java.lang.Cloneable", e);
-      error(DBSmeErrors.error.internalError, e);
+      error("dbsme.error.internal", e);
     }
 
     return result;
@@ -201,12 +200,14 @@ public class Index extends DbsmeBean
   private Config rollbackJob(String jobId, Throwable e, Config backup, String action, String actionContinue)
   {
     logger.error("Could not " + action + " job \"" + jobId + '"', e);
-    error("Could not " + action + " job", jobId, e);
+    //error("Could not " + action + " job", jobId, e);
+    error("dbsme.error.failed_to", action + " job" + jobId, e);
     try {
       backup.save();
     } catch (Throwable e1) {
       logger.error("Could not rollback job \"" + jobId + "\" " + actionContinue, e1);
-      error("Could not rollback job " + actionContinue, jobId, e1);
+      //error("Could not rollback job " + actionContinue, jobId, e1);
+      error("dbsme.error.rollback_job", actionContinue + " " + jobId, e1);
     }
     return backup;
   }
@@ -249,7 +250,7 @@ public class Index extends DbsmeBean
       Functions.renameNewSavedFileToOriginal(getTempConfigFile(), origConfigFile);
     } catch (IOException e) {
       logger.error("Could not rename current config file to original", e);
-      return error(DBSmeErrors.error.couldntRenameCurrentConfigToOriginal, e);
+      return error("dbsme.error.config_replace", e);
     }
 
     getContext().setConfigChanged(false);
@@ -258,8 +259,8 @@ public class Index extends DbsmeBean
       try {
         getSmeTransport().restart();
       } catch (AdminException e) {
-        logger.error("Changes saved, but DbSme not restarted", e);
-        return error(DBSmeErrors.error.restartFailed, e);
+        logger.error("Changes saved, but DBSme not restarted", e);
+        return error("dbsme.error.apply_restart", e);
       }
     }
     return RESULT_DONE;

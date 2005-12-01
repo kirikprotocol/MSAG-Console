@@ -137,7 +137,7 @@ public class Provider extends DbsmeBean
       if (creating)
         providerName = "";
       else
-        return error(DBSmeErrors.error.provider.providerNotSpecified);
+        return error("dbsme.error.no_provider");
 
     if (!initialized) {
       if (creating) {
@@ -281,12 +281,12 @@ public class Provider extends DbsmeBean
     if (!providerEquals) {
       if (creating) {
         if (config.containsSection(newPrefix))
-          return error(DBSmeErrors.error.provider.providerAlreadyExists, providerName);
+          return error("dbsme.error.exist_provider", providerName);
       } else {
         if (!providerName.equals(oldProviderName)) {
           final String oldProviderPrefix = createProviderPrefix(oldProviderName);
           if (config.containsSection(oldProviderPrefix))
-            return error(DBSmeErrors.error.provider.providerAlreadyExists, providerName);
+            return error("dbsme.error.exist_provider", providerName);
           config.renameSection(oldProviderPrefix, newPrefix);
         }
       }
@@ -295,7 +295,7 @@ public class Provider extends DbsmeBean
         config.save();
       } catch (Exception e) {
         logger.error("Couldn't save temporary config, nested: " + e.getMessage(), e);
-        return error(DBSmeErrors.error.couldntSaveTempConfig, e);
+        return error("dbsme.error.config_save", e);
       }
       getContext().setConfigChanged(true);
       return RESULT_DONE;
@@ -305,12 +305,12 @@ public class Provider extends DbsmeBean
           config.save();
         } catch (Exception e) {
           logger.error("Couldn't save temporary config, nested: " + e.getMessage(), e);
-          return error(DBSmeErrors.error.couldntSaveTempConfig, e);
+          return error("dbsme.error.config_save", e);
         }
       }
       if (!enabledEquals) {
         if (getContext().isConfigChanged()) {
-          return error(enabled ? DBSmeErrors.error.provider.couldNotEnableProviderBecouseConfigChanged : DBSmeErrors.error.provider.couldNotDisableProviderBecouseConfigChanged, providerName);
+          return error(enabled ? "dbsme.error.provider_enable" : "dbsme.error.provider_disable", providerName);
         }
         int result = setProviderEnabled(providerName, enabled);
         if (result != RESULT_DONE)
@@ -319,7 +319,7 @@ public class Provider extends DbsmeBean
           config.save();
         } catch (Exception e) {
           logger.error("Couldn't save temporary config, nested: " + e.getMessage(), e);
-          return error(DBSmeErrors.error.couldntSaveTempConfig, e);
+          return error("dbsme.error.config_save", e);
         }
       }
       return RESULT_DONE;

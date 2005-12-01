@@ -79,7 +79,7 @@ public class Job extends DbsmeBean
         invalid_config = "";
       } else {
         if (jobId == null)
-          return error(DBSmeErrors.error.job.jobNotFound);
+          return error("dbsme.error.no_job");
 
         String jobPrefix = createJobPrefix(providerName, jobId);
 
@@ -177,7 +177,7 @@ public class Job extends DbsmeBean
       config.setBool(jobPrefix + ".commit", commit);
       config.setBool(jobPrefix + ".function", function);
     } else {
-      return error(DBSmeErrors.error.job.unknownType, type);
+      return error("no_job_type", type);
     }
 
     if (ds_failure != null && ds_failure.length() > 0) config.setString(jobPrefix + ".MessageSet.DS_FAILURE", ds_failure);
@@ -192,7 +192,7 @@ public class Job extends DbsmeBean
       config.save();
     } catch (Exception e) {
       logger.error("Couldn't save temporary config, nested: " + e.getMessage(), e);
-      return error(DBSmeErrors.error.couldntSaveTempConfig, e);
+      return error("dbsme.error.config_save", e);
     }
 
     getContext().setJobsChanged(true);

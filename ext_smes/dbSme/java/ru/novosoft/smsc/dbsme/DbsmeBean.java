@@ -17,7 +17,6 @@ import java.util.Set;
  */
 public class DbsmeBean extends IndexBean
 {
-
   public static final int RESULT_OVERVIEW = IndexBean.PRIVATE_RESULT;
   public static final int RESULT_PARAMS = IndexBean.PRIVATE_RESULT + 1;
   public static final int RESULT_DRIVERS = IndexBean.PRIVATE_RESULT + 2;
