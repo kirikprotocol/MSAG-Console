@@ -127,11 +127,15 @@ public class ResourceGroupManager
 		Map result = new HashMap();
 		for (Iterator i = resGroups.iterator(); i.hasNext();)
 		{
-			ResourceGroup rg = (ResourceGroup)i.next();
-			if (rg.getName().equals(Constants.SMSC_SME_ID)) continue;
-			ServiceInfo info = new ServiceInfo(rg.getName(), smeManager, rg.getOnlineStatus());
-			result.put(info.getId(),info);
-		}
+      ResourceGroup rg = (ResourceGroup)i.next();
+      try {
+        if (rg.getName().equals(Constants.SMSC_SME_ID)) continue;
+        ServiceInfo info = new ServiceInfo(rg.getName(), smeManager, rg.getOnlineStatus());
+        result.put(info.getId(),info);
+      } catch (AdminException e) {
+        logger.warn("Couldn't get info for sme "+rg.getName());
+      }
+    }
 		return result;
 	}
 }
