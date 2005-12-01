@@ -63,6 +63,12 @@ Required environment: ORACLE_HOME
     </ant>
   </target>
 
+  <target name="inman" depends="logger" >
+    <ant antfile="${SRC_DIR}/conf/make.xml">
+      <property name="targets" value="inman"/>
+    </ant>
+  </target>
+  
   <target name="ssdaemon" depends="logger" >
     <ant antfile="${SRC_DIR}/conf/make.xml">
       <property name="targets" value="admin.daemon"/>

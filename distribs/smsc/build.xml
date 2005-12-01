@@ -51,6 +51,7 @@ Targets:
   <target name="makesmsc">
     <ant dir="${SRC_DIR}" target="system"/>
     <ant dir="${SRC_DIR}" target="admin"/>
+    <ant dir="${SRC_DIR}" target="inman"/>
   </target>
 
   <target name="makeweb">
