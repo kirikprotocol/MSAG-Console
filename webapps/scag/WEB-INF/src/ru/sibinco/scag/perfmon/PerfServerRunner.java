@@ -78,9 +78,8 @@ public class PerfServerRunner extends Thread {
   protected void readSnap(InputStream istream, PerfSnap snap)
       throws IOException {
     int len = inbuf.readNetworkInt(istream);
-    //inbuf.fill(istream, len - 4);
-    inbuf.fill(istream, len);
-    snap.init2(inbuf);
+    inbuf.fill(istream, len - 4);
+    snap.init(inbuf);
   }
 
   Object shutSemaphore = new Object();
