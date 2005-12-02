@@ -934,14 +934,14 @@ bool ProfileUpdateCommand::deserialize(void *buffer, uint32_t len)
 
     //============= Gets local and divert ============
 
-    profile.locale = (const char*)((uint8_t*)buffer + 36);
+    profile.locale = (const char*)((uint8_t*)buffer + 45);
 
     //printf("local: '%s', len: %d\n", local.c_str(), local.length());
 
     if(45 + profile.locale.length() >= len)
         return false;
 
-    profile.divert = (const char*)((uint8_t*)buffer + 37 + profile.locale.length());
+    profile.divert = (const char*)((uint8_t*)buffer + 46 + profile.locale.length());
 
     //printf("divert: '%s', len: %d", divert.c_str(), divert.length());
 
