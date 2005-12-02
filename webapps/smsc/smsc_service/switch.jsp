@@ -30,7 +30,15 @@
 		default:
 			errorMessages.add(new SMSCJspException(SMSCErrors.error.services.unknownAction, SMSCJspException.ERROR_CLASS_ERROR));
 	}
-%><%@ include file="/WEB-INF/inc/html_3_header.jsp"%><%
+%><%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
+<table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
+  <tr>
+    <th background="/images/smsc_17.jpg" nowrap><%=TITLE%></th>
+    <td>&nbsp;<%=Constants.SMSC_SME_ID%>&nbsp;<%=getLocString("grammatic.is")%>&nbsp;<%=rgStatus((SMSCAppContext) request.getAttribute("appContext"),  Constants.SMSC_SME_ID)%></td>
+    <td width=12px background="/images/smsc_19.jpg" style="padding-right:0px;"></td>
+  </tr>
+</table>
+<%
   if ((errorMessages.size() == 0)||(!((SMSCJspException) errorMessages.get(0)).getMessage().equals(SMSCErrors.error.smsc.contextInitFailed))) {
   page_menu_begin(out);
   page_menu_button(session, out, "mbOnline", "common.buttons.online", "smsc.start");
@@ -42,13 +50,6 @@
   page_menu_button(session, out, "mbDeactivate",  "common.buttons.deactivate",  "smsc.activateHint");
   page_menu_end(out);%>
 <div class=content>
-<table cellpadding=0 cellspacing=0 height=30px class=smsc_status>
-  <tr>
-    <th background="/images/smsc_17.jpg" nowrap><%=TITLE%></th>
-    <td>&nbsp;<%=Constants.SMSC_SME_ID%>&nbsp;<%=getLocString("grammatic.is")%>&nbsp;<%=rgStatus((SMSCAppContext) request.getAttribute("appContext"),  Constants.SMSC_SME_ID)%></td>
-    <td width=12px background="/images/smsc_19.jpg" style="padding-right:0px;"></td>
-  </tr>
-</table>
 <table class=list cellspacing=1 cellpadding=1 id=SMSC_LIST_TABLE>
 <col width="5%" align=left>
 <col width="35%" align=left>

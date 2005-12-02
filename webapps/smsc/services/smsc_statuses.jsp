@@ -38,5 +38,4 @@ String result = Constants.SMSC_SME_ID + "\r\n";
 				break;
 		}
     }
-}
 out.print(result);%>
