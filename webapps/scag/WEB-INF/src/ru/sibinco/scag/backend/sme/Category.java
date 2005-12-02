@@ -3,6 +3,8 @@
  */
 package ru.sibinco.scag.backend.sme;
 
+import ru.sibinco.lib.backend.util.StringEncoderDecoder;
+
 /**
  * The <code>Category</code> class represents
  * <p><p/>
@@ -21,7 +23,7 @@ public class Category {
 
     public Category(final long id, final String name) {
         this.id = id;
-        this.name = name;
+        this.name = StringEncoderDecoder.encode(name);
     }
 
     public long getId() {

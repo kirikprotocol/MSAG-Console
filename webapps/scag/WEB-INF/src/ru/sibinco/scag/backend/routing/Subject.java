@@ -34,7 +34,7 @@ public class Subject {
 
     public Subject(Element subjElement, SmppManager smppManager) throws SibincoException {
 
-        name = subjElement.getAttribute("id");
+        name = StringEncoderDecoder.encode(subjElement.getAttribute("id"));
         NodeList masksList = subjElement.getElementsByTagName("mask");
         masks = new MaskList();
         for (int i = 0; i < masksList.getLength(); i++) {

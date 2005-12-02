@@ -100,7 +100,7 @@ public class Route {
                  RuleManager ruleManager, ProviderManager providerManager,
                  CategoryManager categoryManager) throws SibincoException {
 
-        name = routeElem.getAttribute("id");
+        name = StringEncoderDecoder.encode(routeElem.getAttribute("id"));
         if (name.length() > Constants.ROUTE_ID_MAXLENGTH) {
             throw new SibincoException("Route name is too long: " + name.length() + " chars \"" + name + '"');
         }

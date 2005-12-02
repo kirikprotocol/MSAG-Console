@@ -71,7 +71,7 @@ public class Svc {
             final String value = paramElem.getAttribute("value");
             try {
                 if ("systemId".equals(name)) {
-                    id = value;
+                    id = StringEncoderDecoder.encode(value);
                 } else if ("password".equals(name)) {
                     password = value;
                 } else if ("timeout".equals(name)) {
