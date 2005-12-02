@@ -191,14 +191,9 @@ class AclManager : public AclAbstractMgr
   {
     MutexGuard mg(idMtx);
     idSeq++;
-    idLastFlush++;
-    if(idLastFlush>=IdSequenceExtent)
-    {
-      idFile.Seek(0);
-      idFile.WriteNetInt32(idSeq);
-      idFile.Flush();
-      idLastFlush=0;
-    }
+    idFile.Seek(0);
+    idFile.WriteNetInt32(idSeq);
+    idFile.Flush();
     return idSeq;
   }
 
