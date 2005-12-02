@@ -2,13 +2,17 @@ package ru.sibinco.scag.beans.rules.applet;
 
 
 import ru.sibinco.scag.backend.SCAGAppContext;
+import ru.sibinco.scag.backend.rules.Rule;
+import ru.sibinco.lib.SibincoException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpSession;
 import javax.servlet.ServletException;
 import java.io.*;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -44,6 +48,14 @@ public class myServlet extends HttpServlet
   protected static final int SeparatorChar = 22;
   protected static final int OsName = 23;
   protected static final int Transport = 24;
+  protected static final int NewRule = 25;
+  protected static final int UpdateRule = 26;
+  protected static final int ExistRule = 27;
+  protected static final int LoadRule = 28;
+  protected static final int LoadNewRule = 29;
+  protected static final int AddRule = 30;
+  protected static final int RootElement = 31;
+  protected HttpSession session = null;
 
   // public static String userdir=null;
   // private static String settingsDirectory;
@@ -59,15 +71,15 @@ public class myServlet extends HttpServlet
     if(file!=null) {
        switch (command)
     {
-       case ParseXml: li=ParseXml(file); String status=(String)li.get(0);res.setHeader("status",status);
-        if (status.equals("ok")) { PrintWriter out = res.getWriter();
-          for (int i = 1; i < li.size(); i++)
-            out.println(li.get(i)); //  System.out.println("myServlet li["+i+"]= "+li.get(i)+" command= "+command);
-          out.flush(); out.close();
-        }   break;
-      case Transport : list=getTransport(file,req);break;
-      case SaveBackup: list=SaveBackup(new File(file), req); break;
-      default:
+       case ParseXml:   li=ParseXml(file); SendResult(li,res); break;
+       case NewRule:    li=NewRule(req);   SendResult(li,res); break;
+       case RootElement:li=RootElement(req);   SendResult(li,res); break;
+       case LoadRule:   li=LoadRule(req,file,res); SendResult(li,res); break;
+       case LoadNewRule:li=LoadNewRule(req,file,res); SendResult(li,res); break;
+       case ExistRule:  ExistRule(req,file ,res); break;
+       case Transport : list=getTransport(file,req);break;
+       case SaveBackup: list=SaveBackup(new File(file), req); break;
+       default:
         if (req.getParameter("renameto")!=null) list=RenameTo(new File(file),new File(req.getParameter("renameto")));
         else if (req.getParameter("intparam")!=null) list=FilesCommand(file,command,Integer.parseInt(req.getParameter("intparam")));
         else list=FilesCommand(new File(file),command);
@@ -99,35 +111,121 @@ public class myServlet extends HttpServlet
    // System.out.println("myServlet PUT file= "+file+" command= "+command);
     PrintWriter out = res.getWriter();
     res.setContentType("text/html; charset=windows-1251");
-    if (command==Write) {
-     // System.out.println("doPut file="+file);
-      OutputStream _out=null;
-      BufferedReader r=req.getReader();
-      String s; BufferedWriter buf=null;
-      try {
-        _out = new FileOutputStream(file);
-        if(file.endsWith(".gz")) _out = new GZIPOutputStream(_out);
-        buf = new BufferedWriter(new OutputStreamWriter(_out));
-
-        while((s=r.readLine())!=null) { //li.add(s);
-          //System.out.println(s); 
-          buf.write(s); buf.newLine();
-        }
-      } catch (FileNotFoundException e) { e.printStackTrace();
-      } catch (IOException e) {  e.printStackTrace();
-      }
-      finally{
-        try {
-          if (buf!=null) buf.close();
-          if (_out!=null) _out.close();
-        } catch (IOException e) { e.printStackTrace(); }
-      }
-
-    }  // if (command==Write)
-    out.print("true");out.flush();out.close();
+    if (command==Write) Write(req,file,res);
+    if (command==UpdateRule) updateRule(req,file,res);
+    if (command==AddRule) AddRule(req,file,res);
+    //out.print("true");out.flush();out.close();
     //doRequest(req, res);
   }
+ private void Write(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
+ {
+         OutputStream _out=null;
+         BufferedReader r=req.getReader();
+         String s; BufferedWriter buf=null;
+         try {
+           _out = new FileOutputStream(file);
+           if(file.endsWith(".gz")) _out = new GZIPOutputStream(_out);
+           buf = new BufferedWriter(new OutputStreamWriter(_out));
 
+           while((s=r.readLine())!=null) { //li.add(s);
+             //System.out.println(s);
+             buf.write(s); buf.newLine();
+           }
+         } catch (FileNotFoundException e) { e.printStackTrace();
+         } catch (IOException e) {  e.printStackTrace();
+         }
+         finally{
+           try {
+             if (buf!=null) buf.close();
+             if (r!=null) r.close();
+             if (_out!=null) _out.close();
+           } catch (IOException e) { e.printStackTrace(); }
+         }
+   PrintWriter out = res.getWriter();
+   out.print("true");out.flush();out.close();
+ }
+  private void updateRule(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
+  {
+    System.out.println("myServlet updateRule");
+    SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
+    PrintWriter out = res.getWriter();
+    //transport
+    OutputStream _out=null;
+    BufferedReader r=req.getReader();
+    try {
+      appContext.getRuleManager().updateRule(r,file);
+       out.print("true");out.flush();out.close();
+    } catch (SibincoException e) {
+      e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
+      out.println("false");
+      out.println(e.getMessage());
+      out.flush();out.close();
+    }
+     finally{
+           try {
+             if (r!=null) r.close();
+           } catch (IOException e) { e.printStackTrace(); }
+         }
+  }
+     private void AddRule(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
+  {
+    System.out.println("myServlet AddRule");
+    session = req.getSession(false);
+    Rule newRule =(Rule)session.getAttribute("newRule");
+    SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
+    PrintWriter out = res.getWriter();
+    //transport
+    OutputStream _out=null;
+    BufferedReader r=req.getReader();
+    try {
+      appContext.getRuleManager().AddRule(r,file,newRule);
+       out.print("true");out.flush();out.close();
+    } catch (SibincoException e) {
+      e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
+      out.println("false");
+      out.println(e.getMessage());
+      out.flush();out.close();
+    }
+     finally{
+           try {
+             if (r!=null) r.close();
+           } catch (IOException e) { e.printStackTrace(); }
+         }
+  }
+  private LinkedList LoadRule(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
+    {
+      System.out.println("LoadRule id= "+file);
+      SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
+      Map ruleMap=appContext.getRuleManager().getRuleMap(Long.valueOf(file));
+      Long length=(Long) ruleMap.get("length");
+      res.setHeader("length",String.valueOf(length));
+      return (LinkedList) ruleMap.get("body");
+    }
+
+  private LinkedList LoadNewRule(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
+  {
+    System.out.println("LoaNewdRule id= "+file);
+    LinkedList li;
+    session = req.getSession(false);
+    Rule newRule =(Rule)session.getAttribute("newRule");
+    long length= newRule.getLength();
+    res.setHeader("length",String.valueOf(length));
+    li=newRule.getBody();
+    if(li.size()>0) li.addFirst("ok");
+    else li.add("error: newRule is null!");
+    return li;
+  }
+
+   private void ExistRule(HttpServletRequest req,final String file,HttpServletResponse res) throws IOException
+  {
+    System.out.println("ExistRule id= "+file);
+    SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
+    PrintWriter out = res.getWriter();
+    if (appContext.getRuleManager().getRule(Long.valueOf(file))!=null)
+        out.print("true");
+    else  out.print("false");
+    out.flush();out.close();
+  }
 
   private LinkedList ParseXml(final String fileName)
   {
@@ -147,20 +245,45 @@ public class myServlet extends HttpServlet
     }
     return li;
   }
-
-    private LinkedList ParseXml(final InputStream inputStream) {
+  private LinkedList RootElement(HttpServletRequest req)
+  {
+    LinkedList li=new LinkedList();
+    li.add(Rule.ROOT_ELEMENT);
+    if(li.size()>0) li.addFirst("ok");
+    else li.add("error: Root Element is not specified !");
+    return li;
+  }
+  private LinkedList NewRule(HttpServletRequest req)
+  {
+    LinkedList li;
+    session = req.getSession(false);
+    li=(LinkedList)session.getAttribute("newRuleList");
+    //SCAGAppContext appContext = (SCAGAppContext) req.getAttribute("appContext");
+    //li=appContext.getRuleManager().newRuleAsList();
+    if(li.size()>0) li.addFirst("ok");
+    else li.add("error: newRule is null!");
+    return li;
+  }
+  private void SendResult(LinkedList li,HttpServletResponse res) throws IOException
+  {
+  String  status=(String)li.get(0);res.setHeader("status",status);
+  if (status.equals("ok")) { PrintWriter out = res.getWriter();
+          for (int i = 1; i < li.size(); i++)
+            out.println(li.get(i)); //  System.out.println("myServlet li["+i+"]= "+li.get(i)+" command= "+command);
+          out.flush(); out.close();
+        }
+  }
+    private LinkedList ParseRule(final InputStream inputStream)
+    {
         LinkedList li = new LinkedList();
-        BufferedReader bufferedReader = null;
-        String inpuLine;
+        BufferedReader bufferedReader = null;String inpuLine;
         try {
             bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
             li.addFirst("ok");
             while ((inpuLine = bufferedReader.readLine()) != null) li.add(inpuLine);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+        } catch (FileNotFoundException e) { // e.printStackTrace();
             li.addFirst(e.getMessage());
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException e) { e.printStackTrace();
         }
         finally {
             try {

@@ -66,7 +66,6 @@ function edit(idToEdit,goal)
   opForm.mbEdit.value = idToEdit;
   opForm.editId.value = idToEdit;
   if (goal=="jedit") { //opForm.target="jedit";
-
    // window.open('about:blank','jedit','channelmode=no,directories=no,fullscreen=no,location=no,menubar=no,resizable=yes,scrollbars=no,status=no,titlebar=no,toolbar=no,height=450,width=580');
     document.jedit.openRule(idToEdit);
   } else {
@@ -76,8 +75,6 @@ function edit(idToEdit,goal)
 
     opForm.submit();
   }
-
-
     return false;
 }
 </script>

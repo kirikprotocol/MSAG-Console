@@ -12,13 +12,16 @@ import ru.sibinco.scag.backend.rules.Rule;
 import ru.sibinco.scag.backend.sme.Provider;
 import ru.sibinco.scag.Constants;
 import ru.sibinco.lib.backend.users.User;
+import ru.sibinco.lib.SibincoException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.security.Principal;
 import java.util.Map;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 /**
  * The <code>Edit</code> class represents
@@ -41,12 +44,16 @@ public class Edit extends EditBean {
     protected long providerId = -1;
     private long userProviderId = -1;
     private boolean administrator = false;
-
+    protected HttpSession session = null;
 
     public String getId() {
         return null;
     }
-
+      public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
+        session = request.getSession(false);
+        super.process(request, response);
+        this.init();
+    }
     private void init() throws SCAGJspException {
         SCAGAppContext appContext = getAppContext();
         Principal userPrincipal = super.getLoginedPrincipal();
@@ -92,35 +99,37 @@ public class Edit extends EditBean {
         System.out.println("!!!!!!!!!!!!!!!!");
     }
 
-    protected void save() throws SCAGJspException {
-        ruleId = getRuleId();
-        if ( 0 >= ruleId || !isAdd())
-          error("Rule id not specified",null);
-        if (null == name || 0 == name.length())
-            error("Rule name not found",null);
+  protected void save() throws SCAGJspException {
+    ruleId = getRuleId();
+    if ( 0 >= ruleId || !isAdd())
+      error("Rule id not specified",null);
+    if (null == name || 0 == name.length())
+      error("Rule name not found",null);
     String[] titles=getTransportTitles();
-    int id=(int)transportId;
+    int id=0;
+    if (transportId>0) id=(int)transportId-1;
     String transport=titles[id];
-    String[] schemaNames=getSchemaNames();
-    String schema=schemaNames[id];
-    String header="<scag:rule xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'\n"+
-                  "xsi:schemaLocation='http://www.sibinco.com/SCAG xsd/'"+schema+"\n"+
-                 "xmlns:scag='http://www.sibinco.com/SCAG'\n"+
-                 "transport='"+transport+"' id='"+ruleId+"' provider='"+providerId+"' name='"+name+"'>";
-
-    String footer="</scag:rule>";
+    System.out.println("Edit.save transportId= "+transportId+" id= "+id+" transport name= "+transport);
+  //  String[] schemaNames=getSchemaNames();
+  //  String schema=schemaNames[id];
     Provider provider=(Provider) appContext.getProviderManager().getProviders().get(new Long(providerId));
     if (provider==null)  error("Provider with id= "+providerId+" not found",null);
-    Rule newRule=new Rule(new Long(ruleId),name,"",provider,transport);
-    appContext.getRuleManager().setNewRule(newRule);
-    appContext.getRuleManager().setOpenNewRule(true);
-    throw new DoneException();
-    }
+    Rule newRule=Rule.createNewRule(ruleId,transport,provider,name);
 
-    public void process(HttpServletRequest request, HttpServletResponse response) throws SCAGJspException {
-        super.process(request, response);
-        this.init();
-    }
+   /* try {
+      appContext.getRuleManager().createNewRule(newRule);
+    } catch (SibincoException e) {
+      e.printStackTrace();//logger.warn(e.getMessage());  //To change body of catch statement use File | Settings | File Templates.
+       error("Couldn't save New Rule by: ",e.getMessage());
+    }  */
+    LinkedList li=new LinkedList();
+    li.add(String.valueOf(ruleId));
+    li.add(transport.toLowerCase()); //send transport dir for newRule
+    session.setAttribute("newRule",newRule);
+    session.setAttribute("newRuleList",li);
+    throw new DoneException();
+  }
+
 
     public String getMbNext() {
         return mbNext;

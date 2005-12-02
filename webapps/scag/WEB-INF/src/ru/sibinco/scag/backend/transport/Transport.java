@@ -35,4 +35,20 @@ public class Transport {
     public static String[] schemaNames = {
             SMPP_SCHEMA_NAME,  WAP_SCHEMA_NAME, MMS_SCHEMA_NAME  };
 
+    public static int getTransportId(final String transport) {
+      int Id=-1;
+      for (int i = 0; i < transportTitles.length; i++) {
+        String title = transportTitles[i];
+        if (title.equals(transport)) {Id=i;break;}
+      }
+      return Id;
+    }
+  public static String getSchemaByTransport(final String transport) {
+      String schema=null;
+      for (int i = 0; i < transportTitles.length; i++) {
+        String title = transportTitles[i];
+        if (title.equals(transport)) {schema=schemaNames[i];break;}
+      }
+      return schema;
+    }
 }

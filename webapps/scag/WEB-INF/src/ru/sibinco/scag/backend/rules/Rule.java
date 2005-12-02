@@ -68,7 +68,7 @@ public class Rule
     body.add(XML_LINE);body.add(Line1);body.add(Line2);body.add(Line3);body.add(Line4);body.add(Line5);
     return new Rule(new Long(id),name,"",provider,transport,body,length);
   }
-
+/*
     protected PrintWriter storeHeader(final PrintWriter out, final String transport,
                                       final String id, final String provider, final String name) {
 
@@ -97,7 +97,7 @@ public class Rule
 
       return storeFooter(storeHeader(out, transport, String.valueOf(id), provider.getName(), name));
   }
-
+  */
     public Provider getProvider()
   {
     return provider;

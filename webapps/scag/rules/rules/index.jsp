@@ -9,6 +9,13 @@
     </jsp:attribute>
 
     <jsp:body>
+      <script>
+        function newRule()
+        {
+          document.jedit.newRule();
+          return false;
+        }
+      </script>
       <applet code="org.gjt.sp.jedit.jEdit.class" codebase="rules/rules" width="1" height="1" archive="jedit.jar" name=jedit ID=jedit>
             <param name="noplugins" value="-noplugins">
             <param name="homedir" value="applet">
@@ -17,6 +24,10 @@
        </applet>
         <sm:table columns="checkbox,id,name,providerName,transport" names="c,id,name,provider,transport"
                   widths="1,15,28,28,28" edit="id" goal="jedit"/>
-
+      <c:choose>
+            <c:when test="${bean.newRule}">
+             <script>newRule();</script>
+            </c:when>
+      </c:choose>
     </jsp:body>
 </sm:page>
