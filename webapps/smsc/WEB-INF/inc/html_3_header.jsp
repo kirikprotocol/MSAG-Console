@@ -1,5 +1,6 @@
 <%@ page import="ru.novosoft.smsc.util.StringEncoderDecoder,
-                 ru.novosoft.smsc.jsp.SMSCAppContext"%><%@
+                 ru.novosoft.smsc.jsp.SMSCAppContext,
+                 ru.novosoft.smsc.admin.Constants"%><%@
  page errorPage="/error.jsp"%><%@
  page session="true"%><%@
  include file="/WEB-INF/inc/html_0_header.jsp"%>
@@ -28,8 +29,19 @@ function openTopMon()
   <tr>
     <th background="/images/smsc_17.jpg" nowrap><%=TITLE%></th>
     <td >&nbsp;<%
-      if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0){
-        %><%=StringEncoderDecoder.encode(ServiceIDForShowStatus)%>&nbsp;<%=getLocString("grammatic.is")%>&nbsp;<%=rg((SMSCAppContext) request.getAttribute("appContext"),  ServiceIDForShowStatus)%><%
+      if (ServiceIDForShowStatus != null && ServiceIDForShowStatus.length() > 0)
+      {
+        if (!ServiceIDForShowStatus.isEquals(Constants.SMSC_SME_ID))
+        {
+        %><%=StringEncoderDecoder.encode(ServiceIDForShowStatus)%>&nbsp;
+          <%=getLocString("grammatic.is")%>&nbsp;
+          <%=rgStatus((SMSCAppContext) request.getAttribute("appContext"),  ServiceIDForShowStatus)%><%
+        }
+        else
+        { %>
+         <%=smscStatus((SMSCAppContext) request.getAttribute("appContext"))%>
+         <%
+        }
       }%></td>
     <td width=12px background="/images/smsc_19.jpg" style="padding-right:0px;"></td>
   </tr>

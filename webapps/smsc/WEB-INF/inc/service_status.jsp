@@ -2,7 +2,9 @@
 					  ru.novosoft.smsc.util.StringEncoderDecoder,
 					  ru.novosoft.smsc.admin.route.SmeStatus,
 					  ru.novosoft.smsc.admin.AdminException,
-                 ru.novosoft.smsc.jsp.SMSCAppContext"%><%@ include file = "/WEB-INF/inc/show_sme_status.jsp"%><%!
+                 ru.novosoft.smsc.jsp.SMSCAppContext,
+                 ru.novosoft.smsc.admin.Constants,
+                 java.util.Iterator"%><%@ include file = "/WEB-INF/inc/show_sme_status.jsp"%><%!
 String smeStatus(SMSCAppContext appContext, String serviceId)
 {
 	SmeStatus status = null;
@@ -81,20 +83,61 @@ String serviceStatus(SMSCAppContext appContext, String serviceId, String elem_id
 	return result;
 }
 
-String smscServStatus(SMSCAppContext appContext, String serviceId)
+String smscStatus(SMSCAppContext appContext)
 {
-  String elem_id = "RUNNING_STATUSERVICE_" + StringEncoderDecoder.encode(serviceId);
-  return rgStatus(appContext, serviceId, elem_id);
+    String elem_id = "RUNNING_STATUSERVICE_" + StringEncoderDecoder.encode(Constants.SMSC_SME_ID);
+	byte status = ServiceInfo.STATUS_UNKNOWN;
+	try {
+		status = appContext.getHostsManager().getServiceStatus(Constants.SMSC_SME_ID);
+	} catch (Throwable e)
+	{}
+	String result = "<span id=\"" + elem_id + "\" datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(Constants.SMSC_SME_ID) + "\">";
+    for (Iterator i = Constants.SMSC_serv_IDs.keySet().iterator(); i.hasNext();)
+    {
+        Byte id = (Byte) i.next();
+		switch (status)
+		{
+			case ServiceInfo.STATUS_OFFLINE:
+                result = result + Constants.SMSC_SME_ID + id + " " + getLocString("grammatic.is") + " ";
+				result = result + getLocString("common.statuses.offline") + "_";
+                result += smscServStatusString(appContext, (String) Constants.SMSC_serv_IDs.get(id));
+				break;
+			case ServiceInfo.STATUS_ONLINE1:
+                result = result + Constants.SMSC_SME_ID + id + " " + getLocString("grammatic.is") + " ";
+				result = result + getLocString("common.statuses.online") + "_";
+                result += smscServStatusString(appContext, (String) Constants.SMSC_serv_IDs.get(id));
+				break;
+			case ServiceInfo.STATUS_ONLINE2:
+                result = result + Constants.SMSC_SME_ID + id + " " + getLocString("grammatic.is") + " ";
+				result = result + getLocString("common.statuses.online") + "_";
+                result += smscServStatusString(appContext, (String) Constants.SMSC_serv_IDs.get(id));
+				break;
+			default:
+				result += getLocString("common.statuses.unknown");
+				break;
+		}
+    }
+	result += "</span>";
+	return result;
 }
 
-String smscServStatus(SMSCAppContext appContext, String serviceId, String elem_id)
+String smscServStatus(SMSCAppContext appContext, String serviceId)
+{
+    String elem_id = "RUNNING_STATUSERVICE_" + StringEncoderDecoder.encode(serviceId);
+	String result = "<span id=\"" + elem_id + "\" datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\">";
+    result += smscServStatusString(appContext, serviceId);
+	result += "</span>";
+	return result;
+}
+
+String smscServStatusString(SMSCAppContext appContext, String serviceId)
 {
 	byte status = ServiceInfo.STATUS_UNKNOWN;
 	try {
 		status = appContext.getHostsManager().getServiceStatus(serviceId);
 	} catch (Throwable e)
 	{}
-	String result = "<span id=\"" + elem_id + "\" datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\">";
+	String result = "";
 		switch (status)
 		{
 			case ServiceInfo.STATUS_OFFLINE:
@@ -110,7 +153,6 @@ String smscServStatus(SMSCAppContext appContext, String serviceId, String elem_i
 				result += getLocString("common.statuses.unknown");
 				break;
 		}
-	result += "</span>";
 	return result;
 }
 
@@ -122,11 +164,17 @@ String smscServStatus(SMSCAppContext appContext, String serviceId, String elem_i
 	<PARAM NAME="DataURL" VALUE="<%=CPATH%>/services/connected_statuses.jsp">
 	<PARAM NAME="UseHeader" VALUE="True">
 	<PARAM NAME="TextQualifier" VALUE='"'>
+</OBJECT><OBJECT id="tdcSmscStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
+	<PARAM NAME="DataURL" VALUE="<%=CPATH%>/services/smsc_statuses.jsp">
+	<PARAM NAME="UseHeader" VALUE="True">
+	<PARAM NAME="TextQualifier" VALUE='"'>
 </OBJECT><script>
 function refreshStatus()
 {
 	document.all.tdcStatuses.DataURL = document.all.tdcStatuses.DataURL;
 	document.all.tdcStatuses.reset();
+	document.all.tdcSmscStatuses.DataURL = document.all.tdcSmscStatuses.DataURL;
+	document.all.tdcSmscStatuses.reset();
 	document.all.tdcConnStatuses.DataURL = document.all.tdcConnStatuses.DataURL;
 	document.all.tdcConnStatuses.reset();
 	window.setTimeout(refreshStatus, 5000);
