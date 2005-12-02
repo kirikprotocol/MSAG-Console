@@ -5,12 +5,14 @@
     
 */
 
-#include "test1.hpp"
+#include "renscript.hpp"
 #include <core/threads/Thread.hpp>
 #include <thread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <logger/Logger.h>
+
 
 using namespace std;
 using namespace smsc::core::threads;
@@ -19,7 +21,6 @@ int going = 1;
 int cpflag;
 
 bool stopProcess=false;
-smsc::logger::Logger *logger;
 
 TestRunner ppr;
 
@@ -56,12 +57,6 @@ int Execute()
 
 commandChecker cc;
 
-void init()
-{
- Logger::Init();
- logger =  Logger::getInstance("scag.re.test");
-  
-}
 
 void stop(int)
 {
@@ -72,19 +67,21 @@ int main(int argc, char *argv[])
 {
 
      sigset(SIGINT,stop);
-     init();
+     //init();
  
     // start command key thread
     cc.Start();
 
  if(argc>1)
  {
-  ppr.dir = argv[1];
+  ppr.scriptfilename = argv[1];
   ppr.Start();
  }
 
       cc.WaitFor();
      ppr.WaitFor();
+
+  //smsc::logger::Logger::Shutdown();
 
  return 0;
 }
