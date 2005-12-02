@@ -116,6 +116,7 @@ String smscStatus(SMSCAppContext appContext)
 				result += getLocString("common.statuses.unknown");
 				break;
 		}
+        result += " ";
     }
 	result += "</span>";
 	return result;

@@ -139,8 +139,6 @@ public class Service extends Proxy
 
   protected void setInfo(final ServiceInfo info)
   {
-    logger.debug("Set info. Status: " + info.getStatusStr() + " [" + info.getStatus() + ']');
-
     if (info.isOnline()
             && (null == info.components || 0 == info.components.size())
             && null != this.info.components && 0 < this.info.components.size()) {
