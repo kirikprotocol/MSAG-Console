@@ -41,9 +41,10 @@ class InfoSmeTransport extends Service
   private static final String method_flushStatistics_ID = "flushStatistics";
 
 
-  public InfoSmeTransport(ServiceInfo info, int port)
+  public InfoSmeTransport(ServiceInfo info, String host, int port)
   {
     super(info, port);
+    this.host = host;
   }
 
   public synchronized void startTaskProcessor() throws AdminException

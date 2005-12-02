@@ -12,9 +12,9 @@ import ru.novosoft.smsc.jsp.SMSCAppContext;
  */
 public class InfoSme extends InfoSmeTransport
 {
-  public InfoSme(ServiceInfo info, int port) throws AdminException
+  public InfoSme(ServiceInfo info, String host, int port) throws AdminException
   {
-    super(info, port);
+    super(info, host, port);
   }
 
   public void updateInfo(SMSCAppContext appContext) throws AdminException

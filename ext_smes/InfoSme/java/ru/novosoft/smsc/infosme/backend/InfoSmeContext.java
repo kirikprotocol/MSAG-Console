@@ -57,13 +57,16 @@ public class InfoSmeContext
   private DataSource dataSource = null;
   private String smeId = "InfoSme";
 
-  private InfoSmeContext(SMSCAppContext appContext, String smeId) throws AdminException, ParserConfigurationException, SAXException, IOException,
-                                                                         Config.WrongParamTypeException, Config.ParamNotFoundException
+  private InfoSmeContext(SMSCAppContext appContext, String smeId) 
+    throws AdminException, ParserConfigurationException, SAXException, IOException,
+           Config.WrongParamTypeException, Config.ParamNotFoundException
   {
     this.smeId = smeId;
     this.appContext = appContext;
     resetConfig();
-    this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo(this.smeId), config.getInt("InfoSme.Admin.port"));
+    this.infoSme = new InfoSme(appContext.getHostsManager().getServiceInfo(this.smeId),
+                               config.getString("InfoSme.Admin.host"),
+                               config.getInt("InfoSme.Admin.port"));
   }
 
   public Config loadCurrentConfig() throws AdminException, IOException, SAXException, ParserConfigurationException
