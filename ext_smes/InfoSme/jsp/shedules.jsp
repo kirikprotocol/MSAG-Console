@@ -12,7 +12,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
-	TITLE="Informer SME Administration";
+	TITLE=getLocString("infosme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
@@ -53,7 +53,7 @@ function setSort(sorting)
 <%
   QueryResultSet schedules = bean.getSchedules();
   if (schedules.size() == 0)
-  {%>No schedules found<%}
+  {%><%= getLocString("infosme.label.no_schedules")%><%}
   else
   {%>
     <table class=list cellspacing=0>
@@ -82,7 +82,7 @@ function setSort(sorting)
 
       %><tr class=row<%=rowN++&1%>>
         <td><input class=check type=checkbox name=checked value="<%=nameEnc%>" <%=bean.isScheduleChecked(name) ? "checked" : ""%> onclick="checkCheckboxesForMbDeleteButton();"></td>
-        <td><a href="#" title="Edit task" onClick='return editSomething("<%=nameEnc%>");'><%=nameEnc%></a></td>
+        <td><a href="#" title="<%= getLocString("infosme.label.edit_task")%>" onClick='return editSomething("<%=nameEnc%>");'><%=nameEnc%></a></td>
         <td><%=executeEnc%></td>
         <td nowrap><%=startDateTimeEnc%></td>
       </tr><%
@@ -91,8 +91,8 @@ function setSort(sorting)
   }%>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",    "Add",    "Add new schedule");
-page_menu_button(out, "mbDelete", "Delete", "Delete checked schedule(s)", "return confirm('Are you sure to delete all checked schedule(s)?');");
+page_menu_button(session, out, "mbAdd",    "common.buttons.add",    "infosme.hint.add_schedule");
+page_menu_button(session, out, "mbDelete", "common.buttons.delete", "infosme.hint.del_scheduls", "return confirm('"+getLocString("infosme.confirm.del_schedules")+"');");
 page_menu_space(out);
 page_menu_end(out);
 %>

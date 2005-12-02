@@ -12,7 +12,7 @@
 <jsp:useBean id="bean" scope="page" class="ru.novosoft.smsc.infosme.beans.TasksStatistics" />
 <jsp:setProperty name="bean" property="*"/>
 <%
-	TITLE="Informer SME Administration";
+	TITLE=getLocString("infosme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
     int rowN = 0;
 	int beanResult = bean.process(request);
@@ -25,7 +25,7 @@
 <%@ include file="inc/header.jsp"%>
 <%}%>
 <div class=content>
-<div class=page_subtitle>Statistics query parameters</div>
+<div class=page_subtitle><%= getLocString("infosme.subtitle.stat_params")%></div>
 <input type=hidden name=initialized value=true>
 <table class=properties_list>
 <col width="5%">
@@ -33,7 +33,7 @@
 <col width="5%">
 <col width="45%">
 <tr class=row<%=rowN++&1%>>
-  <th style="text-align:left">Task</th>
+  <th style="text-align:left"><%= getLocString("infosme.label.task")%></th>
   <td colspan=3>
   <select name=taskId>
   <option value="<%=StringEncoderDecoder.encode(bean.ALL_TASKS_MARKER)%>">All</option>
@@ -47,17 +47,17 @@
   </select></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th style="text-align:left">From</th>
+  <th style="text-align:left"><%= getLocString("infosme.label.from_date")%></th>
   <td><input class=calendarField id=fromDate name=fromDate value="<%=StringEncoderDecoder.encode(bean.getFromDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button></td>
-  <th style="text-align:left">To</th>
+  <th style="text-align:left"><%= getLocString("infosme.label.till_date")%></th>
   <td><input class=calendarField id=tillDate name=tillDate value="<%=StringEncoderDecoder.encode(bean.getTillDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
 </tr>
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbQuery",  "Query",  "Query statistics");
+page_menu_button(out, "mbQuery",  "common.buttons.query",  "infosme.hint.query_stat");
 if (!request.isUserInRole(InfoSmeBean.INFOSME_ADMIN_ROLE)) {
-page_menu_button(out, "mbCancel",  "Main page",  "Back to main page", "clickCancel()");
+page_menu_button(out, "mbCancel",  "infosme.button.main_page", "infosme.hint.main_page", "clickCancel()");
 }
 page_menu_space(out);
 page_menu_end(out);
@@ -81,11 +81,11 @@ page_menu_end(out);
     <col width="10%">
     <col width="10%">
     <tr>
-      <th>Date</th>
-      <th>generated</th>
-      <th>delivered</th>
-      <th>retried</th>
-      <th>failed</th>
+      <th><%= getLocString("infosme.label.date")%></th>
+      <th><%= getLocString("infosme.label.generated")%></th>
+      <th><%= getLocString("infosme.label.delivered")%></th>
+      <th><%= getLocString("infosme.label.retried")%></th>
+      <th><%= getLocString("infosme.label.failed")%></th>
     </tr>
     <%
       for (Iterator i = statistics.getCountersByDates().iterator(); i.hasNext();) {

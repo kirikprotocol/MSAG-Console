@@ -5,7 +5,7 @@
                  ru.novosoft.smsc.infosme.beans.InfoSmeBean, ru.novosoft.smsc.jsp.PageBean,
                  ru.novosoft.util.jsp.MultipartServletRequest"%><jsp:useBean id="deliveries_bean" scope="session" class="ru.novosoft.smsc.infosme.beans.Deliveries" /><jsp:setProperty name="deliveries_bean" property="*"/><%
 
-    TITLE="Informer SME Administration";
+    TITLE=getLocString("infosme.title");
     ru.novosoft.smsc.infosme.beans.Deliveries bean = deliveries_bean;
 
     MultipartServletRequest multi = (MultipartServletRequest)request.getAttribute("multipart.request");
@@ -61,10 +61,10 @@ else {
 {
     case 0:
         {%>
-<div class=page_subtitle>Welcome</div><br/>
-<div class=secInfo>Click 'Create new delivery' and follow the pages to create new delivery.</div>
-<div class=secInfo>Choose 'View statistics' to perform statistics query</div>
-<div class=secInfo>or 'Download statistics' to download statistics as CSV file</div>
+<div class=page_subtitle><%= getLocString("infosme.subtitle.welcome")%></div><br/>
+<div class=secInfo><%= getLocString("infosme.label.phraze1")%></div>
+<div class=secInfo><%= getLocString("infosme.label.phraze2")%></div>
+<div class=secInfo><%= getLocString("infosme.label.phraze3")%></div>
         <%}
         break;
 
@@ -72,12 +72,12 @@ else {
     case 1:
         {%>
 <input type="hidden" name="jsp" value="/esme_InfoSme/deliveries.jsp">
-<div class=page_subtitle>Stage 1: Abonents list file</div><br/>
+<div class=page_subtitle><%= getLocString("infosme.subtitle.stage1")%></div><br/>
 <table class=properties_list cellspacing=0 cellpadding=0>
 <col width="15%" align=right>
 <col width="85%">
 <tr class=row0>
-    <th>File location:</th>
+    <th><%= getLocString("infosme.label.file_location")%></th>
     <td><input class=txt type=file name="<%=Deliveries.ABONENTS_FILE_PARAM%>" onChange="checkCreateButton();"></td>
 </tr>
 </table>
@@ -87,31 +87,31 @@ else {
     /* ################################## task parameters ################################## */
     case 2:
         { int rowN = 0;%>
-<div class=page_subtitle>Stage 2: Task settings</div><br/>
+<div class=page_subtitle><%= getLocString("infosme.subtitle.stage2")%></div><br/>
 <table class=properties_list>
 <col width="10%">
 <tr class=row<%=rowN++&1%>>
-  <th>Task ID</th>
+  <th><%= getLocString("infosme.label.task_id")%></th>
   <td><input class=txt name=id value="<%=StringEncoderDecoder.encode(bean.getId())%>" maxlength="5" validation="id" onkeyup="resetValidation(this)"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Task name</th>
+  <th><%= getLocString("infosme.label.task_name")%></th>
   <td><input class=txt name=name value="<%=StringEncoderDecoder.encode(bean.getName())%>"></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th><label for=transactionMode>transaction mode</label></th>
+  <th><label for=transactionMode><%= getLocString("infosme.label.transaction_mode")%></label></th>
   <td><input class=check type=checkbox id=transactionMode name=transactionMode value=true <%=bean.isTransactionMode() ? "checked" : ""%>></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Active period</th>
+  <th><%= getLocString("infosme.label.active_period")%></th>
   <td>
     <input class=timeField id=activePeriodStart name=activePeriodStart value="<%=StringEncoderDecoder.encode(bean.getActivePeriodStart())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodStart, false, true);">...</button>
-    &nbsp;to&nbsp;
+    &nbsp;<%= getLocString("infosme.label.active_period_to")%>&nbsp;
     <input class=timeField id=activePeriodEnd name=activePeriodEnd value="<%=StringEncoderDecoder.encode(bean.getActivePeriodEnd())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodEnd, false, true);">...</button>
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Active weekdays</th>
+  <th><%= getLocString("infosme.label.active_weekdays")%></th>
   <td>
     <table>
     <col width="1%"><col width="32%">
@@ -134,25 +134,25 @@ else {
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Validity period or date</th>
+  <th><%= getLocString("infosme.label.vperiod_date")%></th>
   <td>
     <input class=timeField id=validityPeriod name=validityPeriod value="<%=StringEncoderDecoder.encode(bean.getValidityPeriod())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(validityPeriod, false, true);">...</button>
-    &nbsp;or&nbsp;
+    &nbsp;<%= getLocString("infosme.label.vperiod_date_or")%>&nbsp;
     <input class=calendarField id=validityDate name=validityDate value="<%=StringEncoderDecoder.encode(bean.getValidityDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(validityDate, false, true);">...</button>
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>End date</th>
+  <th><%= getLocString("infosme.label.end_date")%></th>
   <td nowrap>
     <input class=calendarField id=endDate name=endDate value="<%=StringEncoderDecoder.encode(bean.getEndDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(endDate, false, true);">...</button>
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Message text</th>
+  <th><%= getLocString("infosme.label.message_text")%></th>
   <td><textarea name=text><%=StringEncoderDecoder.encode(bean.getText())%></textarea></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>transliterate text</th>
+  <th><%= getLocString("infosme.label.transliterate_text")%></th>
   <td><input class=check type=checkbox id=transliterate name=transliterate value=true <%=bean.isTransliterate() ? "checked" : ""%>></td>
 </tr>
 </table>
@@ -162,10 +162,10 @@ else {
     /* ########################## wait task create completion ... ######################### */
     case 3:
         {%>
-<div class=page_subtitle>Stage 3: Generation progress</div><br/>
-<div class=secInfo>Status: <span id=tdcStatus datasrc=#tdcProgress DATAFORMATAS=html datafld="status" style='color:blue;'><%= bean.getStatusStr()%></span></div>
-<div class=secInfo>Messages generated: <span datasrc=#tdcProgress DATAFORMATAS=html datafld="messages"><%= bean.getMessages()%></span></div>
-<div class=secInfo>Total progress: <span datasrc=#tdcProgress DATAFORMATAS=html datafld="progress"><%= bean.getProgress()%></span>%</div>
+<div class=page_subtitle><%= getLocString("infosme.subtitle.stage3")%></div><br/>
+<div class=secInfo><%= getLocString("infosme.label.status")%>&nbsp;<span id=tdcStatus datasrc=#tdcProgress DATAFORMATAS=html datafld="status" style='color:blue;'><%= bean.getStatusStr()%></span></div>
+<div class=secInfo><%= getLocString("infosme.label.messages_generated")%>&nbsp;<span datasrc=#tdcProgress DATAFORMATAS=html datafld="messages"><%= bean.getMessages()%></span></div>
+<div class=secInfo><%= getLocString("infosme.label.total_progress")%>&nbsp;<span datasrc=#tdcProgress DATAFORMATAS=html datafld="progress"><%= bean.getProgress()%></span>%</div>
 <script>
 function refreshProgressStatus()
 {
@@ -185,9 +185,11 @@ refreshProgressStatus();
     /* ########################### add task to config & service ########################### */
     case 4:
         {%>
-<div class=page_subtitle>Final stage: Apply task</div><br/>
-<div class=secInfo>Task '<%= bean.getId()%>' add <%= ((bean.getStatus() == bean.STATUS_OK) ? "success":"failure")%></div>
-<div class=secInfo>Press 'Done' to return to main page</div>
+<div class=page_subtitle><%= getLocString("infosme.subtitle.stage4")%></div><br/>
+<div class=secInfo><%= ((bean.getStatus() == bean.STATUS_OK) ? 
+                         getLocString("infosme.msg.task_add_success"):
+                         getLocString("infosme.msg.task_add_failure"))%>'<%= bean.getId()%>'</div>
+<div class=secInfo><%= getLocString("infosme.msg.to_main")%></div>
         <%}
         break;
 
@@ -200,16 +202,16 @@ refreshProgressStatus();
 {
     case 0:
         page_menu_begin(out);
-        page_menu_button(out, "mbNext", "Create new delivery", "Create new delivery");
-        page_menu_button(out, "mbStat",  "View statistics", "View statistics");
-        page_menu_button(out, "mbDlstat",  "Download statistics", "Download statistics");
+        page_menu_button(session, out, "mbNext",   "infosme.button.create_delivery",     "infosme.hint.create_delivery");
+        page_menu_button(session, out, "mbStat",   "infosme.button.view_statistics",     "infosme.hint.view_statistics");
+        page_menu_button(session, out, "mbDlstat", "infosme.button.download_statistics", "infosme.hint.download_statistics");
         page_menu_space(out);
         page_menu_end(out);
         break;
     case 1:
         page_menu_begin(out);
-        page_menu_button(out, "mbCancel", "Cancel", "Cancel task add", "clickCancel()");
-        page_menu_button(out, "mbNext", "Next >>", "Next page", false);
+        page_menu_button(session, out, "mbCancel", "common.buttons.cancel",    "infosme.hint.cancel_task_add", "clickCancel()");
+        page_menu_button(session, out, "mbNext",   "infosme.button.next_page", "infosme.hint.next_page", false);
         page_menu_space(out);
         page_menu_end(out);
         %><script>
@@ -219,21 +221,21 @@ refreshProgressStatus();
         break;
     case 2:
         page_menu_begin(out);
-        page_menu_button(out, "mbCancel", "Cancel", "Cancel task add", "clickCancel()");
-        page_menu_button(out, "mbNext", "Next >>", "Next page");
+        page_menu_button(session, out, "mbCancel", "common.buttons.cancel",    "infosme.hint.cancel_task_add", "clickCancel()");
+        page_menu_button(session, out, "mbNext",   "infosme.button.next_page", "infosme.hint.next_page");
         page_menu_space(out);
         page_menu_end(out);
         break;
     case 3:
         page_menu_begin(out);
-        page_menu_button(out, "mbCancel", "Cancel", "Cancel task add", "clickCancel()");
-        page_menu_button(out, "mbNext", "Next >>", "Finish task add", false);
+        page_menu_button(session, out, "mbCancel", "common.buttons.cancel",    "infosme.hint.cancel_task_add", "clickCancel()");
+        page_menu_button(session, out, "mbNext",   "infosme.button.next_page", "infosme.hint.finish_task_add", false);
         page_menu_space(out);
         page_menu_end(out);
         break;
     case 4:
         page_menu_begin(out);
-        page_menu_button(out, "mbNext", "Done", "Back to main page");
+        page_menu_button(session, out, "mbNext", "common.buttons.done", "infosme.hint.main_page");
         page_menu_space(out);
         page_menu_end(out);
         break;

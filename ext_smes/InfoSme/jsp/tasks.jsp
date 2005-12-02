@@ -12,7 +12,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
-	TITLE="Informer SME Administration";
+	TITLE=getLocString("infosme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
@@ -138,8 +138,8 @@ function setSort(sorting)
 </div><%
 page_menu_begin(out);
 if (bean.isSmeRunning()) {
-  page_menu_button(out, "mbAdd",    "Add",    "Add new task");
-  page_menu_button(out, "mbDelete", "Delete", "Delete checked task(s)", "return confirm('Are you sure to delete all checked task(s)?');");
+  page_menu_button(session, out, "mbAdd",    "common.buttons.add",    "infosme.hint.add_task");
+  page_menu_button(session, out, "mbDelete", "common.buttons.delete", "infosme.hint.del_tasks", "return confirm('"+getLocString("infosme.confirm.del_tasks")+"');");
 }
 page_menu_space(out);
 page_menu_end(out);

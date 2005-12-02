@@ -7,7 +7,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
-	TITLE="Informer SME Administration";
+	TITLE=getLocString("infosme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
@@ -64,8 +64,8 @@
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbDone",  "Done",  "Done editing");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel changes", "clickCancel()");
+page_menu_button(session, out, "mbDone",   "common.buttons.done",  "infosme.hint.done_editing");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "infosme.hint.cancel_changes", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

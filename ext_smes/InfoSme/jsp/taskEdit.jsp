@@ -8,7 +8,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
-	TITLE="Informer SME Administration";
+	TITLE=getLocString("infosme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
@@ -37,7 +37,7 @@
 <table class=properties_list>
 <col width="10%">
 <tr class=row<%=rowN++&1%>>
-  <th>Task ID</th>
+  <th><%= getLocString("infosme.label.task_id")%></th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=txt name=id value="<%=StringEncoderDecoder.encode(bean.getId())%>" maxlength="10" validation="id" onkeyup="resetValidation(this)"><%
   } else {
@@ -46,7 +46,7 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Task name</th>
+  <th><%= getLocString("infosme.label.task_name")%></th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=txt name=name value="<%=StringEncoderDecoder.encode(bean.getName())%>"><%
   } else {
@@ -90,7 +90,7 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th><label for=transactionMode>transaction mode</label></th>
+  <th><label for=transactionMode><%= getLocString("infosme.label.transaction_mode")%></label></th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=check type=checkbox id=transactionMode name=transactionMode value=true <%=bean.isTransactionMode() ? "checked" : ""%>><%
   } else {
@@ -108,10 +108,10 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Active period</th>
+  <th><%= getLocString("infosme.label.active_period")%></th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=timeField id=activePeriodStart name=activePeriodStart value="<%=StringEncoderDecoder.encode(bean.getActivePeriodStart())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodStart, false, true);">...</button>
-    to
+    &nbsp;<%= getLocString("infosme.label.active_period_to")%>&nbsp;
     <input class=timeField id=activePeriodEnd name=activePeriodEnd value="<%=StringEncoderDecoder.encode(bean.getActivePeriodEnd())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(activePeriodEnd, false, true);">...</button><%
   } else {
     String from = (bean.getActivePeriodStart() != null && bean.getActivePeriodStart().trim().length() > 0) ?
@@ -124,7 +124,7 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Active weekdays</th>
+  <th><%= getLocString("infosme.label.active_weekdays")%></th>
   <td><%if (bean.isSmeRunning()) {
     %><table>
     <col width="1%"><col width="32%">
@@ -150,10 +150,10 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>Validity period or date</th>
+  <th><%= getLocString("infosme.label.vperiod_date")%></th>
   <td><%if (bean.isSmeRunning()) {
     %><input class=timeField id=validityPeriod name=validityPeriod value="<%=StringEncoderDecoder.encode(bean.getValidityPeriod())%>" maxlength=20 style="z-index:22;"><button class=timeButton type=button onclick="return showTime(validityPeriod, false, true);">...</button>
-    or
+    &nbsp;<%= getLocString("infosme.label.vperiod_date_or")%>&nbsp;
     <input class=calendarField id=validityDate name=validityDate value="<%=StringEncoderDecoder.encode(bean.getValidityDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(validityDate, false, true);">...</button><%
   } else {
     if (bean.getValidityPeriod() != null && bean.getValidityPeriod().trim().length() > 0) {
@@ -167,7 +167,7 @@
   </td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th>End date</th>
+  <th><%= getLocString("infosme.label.end_date")%></th>
   <td nowrap><%if (bean.isSmeRunning()) {
     %><input class=calendarField id=endDate name=endDate value="<%=StringEncoderDecoder.encode(bean.getEndDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(endDate, false, true);">...</button><%
   } else {
@@ -196,7 +196,7 @@
 </tr>
 <%if (bean.isSmeRunning()) {%>
 <tr class=row<%=rowN++&1%>>
-  <th>transliterate template</th>
+  <th><%= getLocString("infosme.label.transliterate_text")%></th>
   <td><input class=check type=checkbox id=transliterate name=transliterate value=true <%=bean.isTransliterate() ? "checked" : ""%>></td>
 </tr>
 <%}}%>
@@ -301,9 +301,9 @@
 </div><%
 page_menu_begin(out);
 if (bean.isSmeRunning()) {
-  page_menu_button(out, "mbDone",  "Done",  "Done editing");
+  page_menu_button(session, out, "mbDone",   "common.buttons.done",  "infosme.hint.done_editing");
 }
-page_menu_button(out, "mbCancel", "Cancel", "Cancel changes", "clickCancel()");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "infosme.hint.cancel_changes", "clickCancel()");
 page_menu_space(out);
 page_menu_end(out);
 %>

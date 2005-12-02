@@ -12,7 +12,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
-	TITLE="Informer SME Administration";
+	TITLE=getLocString("infosme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
@@ -27,7 +27,7 @@ function clickAddDriver()
 {
 	var typeElem   = opForm.all.dsdriver_new_type;
 	var loadupElem = opForm.all.dsdriver_new_loadup;
-   var newRow = drivers_table_id.insertRow(drivers_table_id.rows.length-1);
+    var newRow = drivers_table_id.insertRow(drivers_table_id.rows.length-1);
 	newRow.className = "row" + (drivers_table_id.rows.length & 1);
 	newRow.id = "dsdriver_row_" + typeElem.value;
 	var newCell = document.createElement("td");
@@ -37,7 +37,7 @@ function clickAddDriver()
 	newCell.innerHTML = "<input class=txtW name=\"<%=Drivers.DRIVERS_SECTION_NAME%>." + typeElem.value + ".loadup\" value=\"" + loadupElem.value + "\">";
 	newRow.appendChild(newCell);
 	newCell = document.createElement("td");
-	newCell.innerHTML = "<img src=\"/images/but_del.gif\" class=button jbuttonName=\"mbRemove\" jbuttonValue=\"Remove\" title=\"Remove this datasource driver\" jbuttonOnclick=\"return clickRemoveDriver('" + newRow.id + "');\">";
+	newCell.innerHTML = "<img src=\"/images/but_del.gif\" class=button jbuttonName=\"mbRemove\" jbuttonValue=\"<%= getLocString("infosme.button.remove_ds_driver")%>\" title=\"<%= getLocString("infosme.hint.remove_ds_driver")%>\" jbuttonOnclick=\"return clickRemoveDriver('" + newRow.id + "');\">";
 	newRow.appendChild(newCell);
 
 	typeElem.value = "";
@@ -58,8 +58,8 @@ function clickRemoveDriver(id_to_remove)
 <col width=98%>
 <col width=1%>
 <tr>
-	<th>type</th>
-	<th colspan=2>loadup</th>
+	<th><%= getLocString("infosme.label.type")%></th>
+	<th colspan=2><%= getLocString("infosme.label.loadup")%></th>
 </tr>
 <%
 	int rowN = 0;
@@ -71,20 +71,20 @@ function clickRemoveDriver(id_to_remove)
 		%><tr class=row<%=(rowN++)&1%> id=dsdriver_row_<%=StringEncoderDecoder.encode(type)%>>
 			<td><input class=txt name="<%=driverSectionName%>.type"    value="<%=type%>"></td>
 			<td><input class=txtW name="<%=driverSectionName%>.loadup" value="<%=loadup%>"></td>
-			<td><%button(out, "but_del.gif", "mbDel", "Remove", "Remove this datasource driver", "return clickRemoveDriver('dsdriver_row_" + StringEncoderDecoder.encode(type) + "');");%></td>
+			<td><%button(out, "but_del.gif", "mbDel", "infosme.button.remove_ds_driver", "infosme.hint.remove_ds_driver", "return clickRemoveDriver('dsdriver_row_" + StringEncoderDecoder.encode(type) + "');");%></td>
 		</tr><%
 	}
 %>
 <tr id=dsdriver_new class=row<%=(rowN++)&1%>>
 	<td><input class=txt  id="dsdriver_new_type"   name="dsdriver_new_type"  ></td>
 	<td><input class=txtW id="dsdriver_new_loadup" name="dsdriver_new_loadup"></td>
-	<td><%button(out, "but_add.gif", "mbAdd", "Add", "Add new datasource driver", "return clickAddDriver();");%></td>
+	<td><%button(out, "but_add.gif", "mbAdd", "infosme.button.add_ds_driver", "infosme.hint.add_ds_driver", "return clickAddDriver();");%></td>
 </tr>
 </table>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbDone",  "Done",  "Done editing");
-page_menu_button(out, "mbCancel", "Cancel", "Cancel changes");
+page_menu_button(session, out, "mbDone",   "common.buttons.done",  "infosme.hint.done_editing");
+page_menu_button(session, out, "mbCancel", "common.buttons.cancel", "infosme.hint.cancel_changes");
 page_menu_space(out);
 page_menu_end(out);
 %>

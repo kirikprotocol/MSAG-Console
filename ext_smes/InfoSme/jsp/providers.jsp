@@ -12,7 +12,7 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
-	TITLE="Informer SME Administration";
+	TITLE=getLocString("infosme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
@@ -59,7 +59,7 @@ function setSort(sorting)
 <col width="1%">
 <tr>
   <th>&nbsp;</th>
-  <th><a href="#" <%=bean.getSort().endsWith("provider") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by data provider name" onclick='return setSort("provider")'>Data provider name</a></th>
+  <th><a href="#" <%=bean.getSort().endsWith("provider") ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("infosme.label.sort_data_provider_name")%>" onclick='return setSort("provider")'><%= getLocString("infosme.label.data_provider_name")%></a></th>
 </tr>
 <%
     int rowN = 0;
@@ -68,20 +68,20 @@ function setSort(sorting)
       String providerNameEnc = StringEncoderDecoder.encode(providerName);
       %><tr class=row<%=rowN++&1%>>
         <td><input class=check type=checkbox name=checkedProviders value="<%=providerNameEnc%>" <%=bean.isProviderChecked(providerName) ? "checked" : ""%> onclick="checkCheckboxesForMbDeleteButton();"></td>
-        <td><a href="#" title="Edit provider" onClick='return editSomething("<%=providerNameEnc%>");'><%=providerNameEnc%></a></td>
+        <td><a href="#" title="<%= getLocString("infosme.label.edit_provider")%>" onClick='return editSomething("<%=providerNameEnc%>");'><%=providerNameEnc%></a></td>
       </tr>
 <%
     }
 %>
 </table>
 <%} else {%>
-No providers found.
+<%= getLocString("infosme.label.no_providers")%>
 <%}%>
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbAdd",    "Add",    "Add new provider");
-page_menu_button(out, "mbDelete", "Delete", "Delete checked provider(s)", "return confirm('Are you sure to delete all checked providers?');");
+page_menu_button(session, out, "mbAdd",    "common.buttons.add",    "infosme.hint.add_provider");
+page_menu_button(session, out, "mbDelete", "common.buttons.delete", "infosme.hint.del_providers", "return confirm('"+getLocString("infosme.confirm.del_providers")+"');");
 page_menu_space(out);
 page_menu_end(out);
 %>

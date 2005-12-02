@@ -8,12 +8,12 @@
 <jsp:setProperty name="bean" property="*"/>
 <%
 	//ServiceIDForShowStatus = ;
-	TITLE="Informer SME Administration";
+	TITLE=getLocString("infosme.title");
 	MENU0_SELECTION = "MENU0_SERVICES";
 	//MENU1_SELECTION = "WSME_INDEX";
 
   int rowN = 0;
-	int beanResult = bean.process(request);
+  int beanResult = bean.process(request);
 %><%@ include file="inc/menu_switch.jsp"%>
 <%@ include file="/WEB-INF/inc/html_3_header.jsp"%>
 <%@ include file="inc/header.jsp"%>
@@ -47,7 +47,7 @@ function setSort(sorting)
     String taskIdEnc = StringEncoderDecoder.encode(taskId);
   %><option value="<%=taskIdEnc%>" <%= (bean.isTaskId(taskIdEnc)) ? "selected":""%>><%=StringEncoderDecoder.encode(bean.getTaskName(taskId))%></option>
 <%}%></select></td>
-  <th style="text-align:left">State:</th>
+  <th style="text-align:left"><%= getLocString("infosme.label.msg_state")%></th>
   <td><select name=status>
     <option value="<%=Message.MESSAGE_UNDEFINED_STATE%>" <%= (bean.isStatus(Message.MESSAGE_UNDEFINED_STATE)) ? "selected":""%>>ALL</option>
     <option value="<%=Message.MESSAGE_NEW_STATE%>"       <%= (bean.isStatus(Message.MESSAGE_NEW_STATE)) ? "selected":""%>      >NEW</option>
@@ -59,15 +59,15 @@ function setSort(sorting)
   </select></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th style="text-align:left">From date:</th>
+  <th style="text-align:left"><%= getLocString("infosme.label.from_date")%></th>
   <td><input class=calendarField id=fromDate name=fromDate value="<%=StringEncoderDecoder.encode(bean.getFromDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(fromDate, false, true);">...</button></td>
-  <th style="text-align:left">Till date:</th>
+  <th style="text-align:left"><%= getLocString("infosme.label.till_date")%></th>
   <td><input class=calendarField id=tillDate name=tillDate value="<%=StringEncoderDecoder.encode(bean.getTillDate())%>" maxlength=20 style="z-index:22;"><button class=calendarButton type=button onclick="return showCalendar(tillDate, false, true);">...</button></td>
 </tr>
 <tr class=row<%=rowN++&1%>>
-  <th style="text-align:left">For abonent:</th>
+  <th style="text-align:left"><%= getLocString("infosme.label.for_abonent")%></th>
   <td><input class=txt type="text" id="address" name="address"  value="<%=bean.getAddress()%>" size=25 maxlength=25></td>
-  <th>Page size:</th>
+  <th><%= getLocString("infosme.label.page_size")%></th>
   <td><select name=pageSize>
     <option value=  "5" <%= (bean.getPageSizeInt() ==   5) ? "selected":""%>  >5</option>
     <option value= "10" <%= (bean.getPageSizeInt() ==  10) ? "selected":""%> >10</option>
@@ -82,17 +82,17 @@ function setSort(sorting)
 <%}%>
 </div><%
 page_menu_begin(out);
-page_menu_button(out, "mbQuery",  "Query",  "Query messages");
+page_menu_button(session, out, "mbQuery",  "common.buttons.query",  "infosme.hint.query_messages");
 page_menu_space(out);
 page_menu_end(out);
 if (bean.isInitialized()) {
 %><div class=content><%
 QueryResultSet allMessages = bean.getMessages();
 if (allMessages == null || allMessages.getTotalSize() == 0)
-{%><span style='color:blue;'>No messages matched by query</span><%}
+{%><span style='color:blue;'><%= getLocString("infosme.msg.no_messages_matched")%></span><%}
 else
 {%>
-<div class=page_subtitle>Query results: <%= bean.getTotalSize()%> message(s) matched by query</div>
+<div class=page_subtitle><%= getLocString("infosme.label.query_results_b")%>&nbsp;<%= bean.getTotalSize()%>&nbsp;<%= getLocString("infosme.label.query_results_e")%></div>
 <table class=list cellspacing=0>
 <col width="1%">
 <col width="10%">
@@ -103,10 +103,10 @@ else
 <thead><tr class=row<%=rowN++&1%>>
   <th class=ico><img src="/images/ico16_checked_sa.gif" class=ico16 alt=""></th>
   <th style="text-align:left">ID</th>
-  <th style="text-align:left"><a href="#" <%=bean.getSort().endsWith(Message.SORT_BY_ABONENT) ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by abonent" onclick='return setSort("<%= Message.SORT_BY_ABONENT%>")'>Abonent</a></th>
-  <th style="text-align:left"><a href="#" <%=bean.getSort().endsWith(Message.SORT_BY_STATUS)  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by message status" onclick='return setSort("<%= Message.SORT_BY_STATUS%>")'>Status</a></th>
-  <th style="text-align:left"><a href="#" <%=bean.getSort().endsWith(Message.SORT_BY_DATE)    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="Sort by date" onclick='return setSort("<%= Message.SORT_BY_DATE%>")'>Date</a></th>
-  <th style="text-align:left">Message</th>
+  <th style="text-align:left"><a href="#" <%=bean.getSort().endsWith(Message.SORT_BY_ABONENT) ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("infosme.label.sort_abonent")%>" onclick='return setSort("<%= Message.SORT_BY_ABONENT%>")'><%= getLocString("infosme.label.abonent")%></a></th>
+  <th style="text-align:left"><a href="#" <%=bean.getSort().endsWith(Message.SORT_BY_STATUS)  ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("infosme.label.sort_msg_status")%>" onclick='return setSort("<%= Message.SORT_BY_STATUS%>")'><%= getLocString("infosme.label.msg_status")%></a></th>
+  <th style="text-align:left"><a href="#" <%=bean.getSort().endsWith(Message.SORT_BY_DATE)    ? (bean.getSort().charAt(0) == '-' ? "class=up" : "class=down") : ""%> title="<%= getLocString("infosme.label.sort_date")%>" onclick='return setSort("<%= Message.SORT_BY_DATE%>")'><%= getLocString("infosme.label.date")%></a></th>
+  <th style="text-align:left"><%= getLocString("infosme.label.message")%></th>
 </tr></thead>
 <tbody><%
   for (Iterator i=allMessages.iterator(); i.hasNext();) {
@@ -126,11 +126,11 @@ else
 </div>
 <%
 page_menu_begin(out);
-page_menu_button(out, "mbDelete",    "Delete",     "Delete checked message(s)");
-page_menu_button(out, "mbResend",    "Resend",     "Resend checked message(s)");
+page_menu_button(session, out, "mbDelete",    "infosme.button.delete_msg", "infosme.hint.delete_msg");
+page_menu_button(session, out, "mbResend",    "infosme.button.resend_msg", "infosme.hint.resend_msg");
 page_menu_space(out);
-page_menu_button(out, "mbDeleteAll", "Delete All", "Delete all messages matched by query");
-page_menu_button(out, "mbResendAll", "Resend All", "Resend all messages matched by query");
+page_menu_button(session, out, "mbDeleteAll", "infosme.button.delete_all", "infosme.hint.delete_all");
+page_menu_button(session, out, "mbResendAll", "infosme.button.resend_all", "infosme.hint.resend_all");
 page_menu_end(out);
 }}%><%@ include file="/WEB-INF/inc/html_3_footer.jsp"%>
 <%@ include file="/WEB-INF/inc/code_footer.jsp"%>
