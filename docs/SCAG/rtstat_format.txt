@@ -32,10 +32,11 @@ GenStat:
 
 <stat> = <size: uint32><countersNumber: uint32> <counters: 1...countersNumber> <sessionCount: uint32><uptime: 4 bytes><now: 4 bytes>
 
-<counters: 1...countersNumber> = <accpted: 	uint64>
-				 <rejected: 	uint64>
-				 <delivered: 	uint64>
-				 <gw_rejected:	uint64>
-				 <failed:	uint64>
+<counters: 1...countersNumber> = <accpted><rejected><delivered><gw_rejected><failed>
+<accpted> =  	<lastSecond: uint32><avarage: uint32><total: uint64>
+<rejected> = 	<lastSecond: uint32><avarage: uint32><total: uint64>
+<delivered>= 	<lastsecond: uint32><avarage: uint32><total: uint64>
+<gw_rejected> = <lastSecond: uint32><avarage: uint32><total: uint64>
+<failed> =      <lastSecond: uint32><avarage: uint32><total: uint64>
 
 countersNumber = 5
