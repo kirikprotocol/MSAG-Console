@@ -594,7 +594,7 @@ public class Smsc extends Service
   {
     final Map params = new HashMap();
     params.put("name", name);
-    params.put("description", description);
+    params.put("description", description==null?"":description);
     params.put("cache_type", String.valueOf(cache_type));
     params.put("addresses", addresses);
     final Object result = call(SMSC_COMPONENT_ID, ACL_CREATE, Type.Types[Type.IntType], params);
@@ -611,7 +611,7 @@ public class Smsc extends Service
     final Map params = new HashMap();
     params.put("id", new Long(aclId));
     params.put("name", name);
-    params.put("description", description);
+    params.put("description", description==null?"":description);
     params.put("cache_type", String.valueOf(cache_type));
     call(SMSC_COMPONENT_ID, ACL_UPDATE_INFO, Type.Types[Type.BooleanType], params);
   }

@@ -30,7 +30,12 @@ public class CommandCall extends ServiceCommand
 			Element paramElem = document.createElement("param");
 			callElem.appendChild(paramElem);
 			paramElem.setAttribute("name", StringEncoderDecoder.encode(paramName));
-			if (param instanceof String)
+      if (param == null)
+      {
+        paramElem.setAttribute("type", Type.Types[Type.StringType].getName());
+        paramElem.appendChild(document.createTextNode(""));
+      }
+			else if (param instanceof String)
 			{
 				paramElem.setAttribute("type", Type.Types[Type.StringType].getName());
 				paramElem.appendChild(document.createTextNode(StringEncoderDecoder.encode((String) param)));
