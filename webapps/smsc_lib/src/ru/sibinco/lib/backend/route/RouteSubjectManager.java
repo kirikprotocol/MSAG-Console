@@ -26,7 +26,7 @@ public abstract class RouteSubjectManager
   private final Logger logger = Logger.getLogger(this.getClass());
   private final File smscConfFolder;
   private final SmeManager smeManager;
-
+    
   private static final String SMSC_ROUTES_PRIMARY_CONFIG = "routes.xml";
   private static final String SMSC_ROUTES_TEMPORAL_CONFIG = "routes_.xml";
   private static final String SMSC_ROUTES_TRACEABLE_CONFIG = "routes__.xml";
