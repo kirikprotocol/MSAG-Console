@@ -53,7 +53,7 @@ public class Messages extends InfoSmeBean
         msgSource = new MessageDataSource(getInfoSmeContext().getDataSource(),
                         getInfoSmeContext().getConfig().getString("InfoSme.tasksTablesPrefix"));
       } catch (Exception e) {
-        return error("Init messages DataSource failed", e);
+        return error("infosme.error.ds_init_failed", e);
       }
     }
 
@@ -79,10 +79,10 @@ public class Messages extends InfoSmeBean
 
     Collection allTasks = getAllTasks();
     if (allTasks == null || allTasks.size() <= 0)
-      return warning("No tasks defined. Access to messages denied");
+      return warning("infosme.warn.no_task_for_msg");
 
     if (getInfoSmeContext().getDataSource() == null)
-      return error("DataSource not initialized");
+      return error("infosme.error.ds_not_inited");
 
     if (mbDelete != null || mbDeleteAll != null) return processDelete();
     else if (mbResend != null || mbResendAll != null) return processResend();
@@ -101,7 +101,7 @@ public class Messages extends InfoSmeBean
       if (error != null) throw new Exception(error);
     } catch (Throwable e) {
       logger.debug("Messages query failed", e);
-      return error("Messages query failed", e);
+      return error("infosme.error.ds_msg_query_failed", e);
     }
     return RESULT_OK;
   }
@@ -117,7 +117,7 @@ public class Messages extends InfoSmeBean
       if (error != null) throw new Exception(error);
     } catch (Throwable e) {
       logger.debug("Messages delete failed", e);
-      return error("Messages delete failed", e);
+      return error("infosme.error.ds_msg_del_failed", e);
     }
     resetChecked();
     mbDelete = mbDeleteAll = null;
@@ -137,7 +137,7 @@ public class Messages extends InfoSmeBean
       if (error != null) throw new Exception(error);
     } catch (Throwable e) {
       logger.debug("Messages resend failed", e);
-      return error("Messages resend failed", e);
+      return error("infosme.error.ds_msg_res_failed", e);
     }
     resetChecked();
     mbResend = mbResendAll = null;
@@ -308,7 +308,7 @@ public class Messages extends InfoSmeBean
       return getConfig().getString(TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(taskId) + ".name");
     } catch (Throwable e) {
       logger.error("Could not get name for task \"" + taskId + "\"", e);
-      error("Could not get name for task \"" + taskId + "\"", e);
+      error("infosme.error.task_name_undefined", taskId, e);
       return "";
     }
   }

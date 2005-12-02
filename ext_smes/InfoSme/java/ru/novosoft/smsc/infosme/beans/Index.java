@@ -34,7 +34,7 @@ public class Index extends IndexProperties
         result = resetTasks();
       } catch (Throwable e) {
         logger.error("Could not reload tasks", e);
-        result = error("Could not reload tasks", e);
+        result = error("infosme.error.reload_tasks", e);
       }
     }
     if (isApply("scheds")) {
@@ -42,7 +42,7 @@ public class Index extends IndexProperties
         result = resetScheds();
       } catch (Throwable e) {
         logger.error("Could not reload schedules", e);
-        result = error("Could not reload schedules", e);
+        result = error("infosme.error.reload_schedules", e);
       }
     }
     return result;
@@ -85,7 +85,7 @@ public class Index extends IndexProperties
       getInfoSmeContext().resetConfig();
     } catch (Throwable e) {
       logger.debug("Couldn't reload InfoSME config", e);
-      return error("Could not reload InfoSME config", e);
+      return error("infosme.error.config_reload", e);
     }
     return RESULT_DONE;
   }
@@ -99,20 +99,20 @@ public class Index extends IndexProperties
         return applyGlobalParams(oldConfig);
       } else if (isApply("tasks")) {
         if (getInfoSmeContext().isChangedDrivers() || getInfoSmeContext().isChangedOptions() || getInfoSmeContext().isChangedProviders())
-          return error("You cannot apply tasks without applying global options");
+          return error("infosme.error.apply_tasks_wo_global");
         return applyTasks(oldConfig, getConfig());
       } else if (isApply("scheds")) {
         if (getInfoSmeContext().isChangedDrivers() || getInfoSmeContext().isChangedOptions() || getInfoSmeContext().isChangedProviders())
-          return error("You cannot apply schedules without applying global options");
+          return error("infosme.error.apply_schedules_wo_global");
         if (getInfoSmeContext().isChangedTasks())
-          return error("You cannot apply schedules without applying tasks");
+          return error("infosme.error.apply_schedules_wo_tasks");
         return applyScheds(oldConfig, getConfig());
       } else {
 
       }
     } catch (Throwable e) {
       logger.error("Couldn't save InfoSME config", e);
-      return error("Could not save InfoSME config", e);
+      return error("infosme.error.config_save", e);
     }
     return RESULT_DONE;
   }
@@ -157,8 +157,8 @@ public class Index extends IndexProperties
     getInfoSmeContext().setChangedProviders(false);
     getInfoSmeContext().reloadDataSource(oldConfig, config);
     if (getInfoSmeContext().getDataSource() == null)
-      warning("Invalid JDBC parameters");
-    return message("Changes saved, you need to restart InfoSme to apply changes");
+      warning("infosme.warn.jdbc");
+    return message("infosme.prompt.restart");
   }
 
   private int applyScheds(Config oldConfig, Config newConfig)
@@ -190,12 +190,9 @@ public class Index extends IndexProperties
 
       getInfoSmeContext().setChangedSchedules(false);
       return result;
-    } catch (AdminException e) {
-      logger.error("Could not apply schedules", e);
-      return error("Could not apply schedules", e);
     } catch (Throwable e) {
       logger.error("Could not apply schedules", e);
-      return error("Could not apply schedules", e);
+      return error("infosme.error.apply_schedules", e);
     }
   }
 
@@ -214,12 +211,13 @@ public class Index extends IndexProperties
             getInfoSmeContext().getInfoSme().changeSchedule(schedId);
           } catch (AdminException e) {
             logger.error("Could not change schedule \"" + schedId + '"', e);
-            result = error("Could not change schedule", schedId, e);
+            result = error("infosme.error.change_schedule", schedId, e);
             backup.save();
           }
         }
       } catch (CloneNotSupportedException e) {
         logger.fatal("Internal error", e);
+        result = error("infosme.error.internal", e);
       }
     }
     return result;
@@ -239,12 +237,13 @@ public class Index extends IndexProperties
             getInfoSmeContext().getInfoSme().removeSchedule(schedId);
           } catch (AdminException e) {
             logger.error("Could not delete schedule \"" + schedId + '"', e);
-            result = error("Could not delete schedule", schedId, e);
+            result = error("infosme.error.delete_schedule", schedId, e);
             backup.save();
           }
         }
       } catch (CloneNotSupportedException e) {
         logger.fatal("Internal error", e);
+        result = error("infosme.error.internal", e);
       }
     }
     return result;
@@ -265,12 +264,13 @@ public class Index extends IndexProperties
             getInfoSmeContext().getInfoSme().addSchedule(schedId);
           } catch (AdminException e) {
             logger.error("Could not add schedule \"" + schedId + '"', e);
-            result = error("Could not add schedule", schedId, e);
+            result = error("infosme.error.add_schedule", schedId, e);
             backup.save();
           }
         }
       } catch (CloneNotSupportedException e) {
         logger.fatal("Internal error", e);
+        result = error("infosme.error.internal", e);
       }
     }
     return result;
@@ -315,13 +315,10 @@ public class Index extends IndexProperties
       if (result == RESULT_DONE)
         return applyScheds(oldConfig, newConfig);
       else
-        return warning("Not all tasks applied properly, so schedules not tried to apply.");
-    } catch (AdminException e) {
-      logger.error("Could not apply tasks", e);
-      return error("Could not apply tasks", e);
+        return warning("infosme.warn.apply_schedules_wo_tasks ");
     } catch (Throwable e) {
       logger.error("Could not apply tasks", e);
-      return error("Could not apply tasks", e);
+      return error("infosme.error.apply_tasks", e);
     }
   }
 
@@ -340,12 +337,13 @@ public class Index extends IndexProperties
             getInfoSme().changeTask(taskId);
           } catch (AdminException e) {
             logger.error("Could not change task \"" + taskId + '"', e);
-            result = error("Could not change task", taskId, e);
+            result = error("infosme.error.change_task", taskId, e);
             backup.save();
           }
         }
       } catch (CloneNotSupportedException e) {
         logger.fatal("Internal error", e);
+        result = error("infosme.error.internal", e);
       }
     }
     return result;
@@ -365,12 +363,13 @@ public class Index extends IndexProperties
             getInfoSmeContext().getInfoSme().removeTask(taskId);
           } catch (AdminException e) {
             logger.error("Could not delete task \"" + taskId + '"', e);
-            result = error("Could not delete task", taskId, e);
+            result = error("infosme.error.delete_task", taskId, e);
             backup.save();
           }
         }
       } catch (CloneNotSupportedException e) {
         logger.fatal("Internal error", e);
+        result = error("infosme.error.internal", e);
       }
     }
     return result;
@@ -391,13 +390,14 @@ public class Index extends IndexProperties
             getInfoSmeContext().getInfoSme().addTask(taskId);
           } catch (AdminException e) {
             logger.error("Could not add task \"" + taskId + '"', e);
-            result = error("Could not add task", taskId, e);
+            result = error("infosme.error.add_task", taskId, e);
             backup.save();
             throw e;
           }
         }
       } catch (CloneNotSupportedException e) {
         logger.fatal("Internal error", e);
+        result = error("infosme.error.internal", e);
       }
     }
     return result;
@@ -423,7 +423,7 @@ public class Index extends IndexProperties
         }
       } catch (AdminException e) {
         logger.error("Could not start Info SME", e);
-        result = error("Could not start Info SME", e);
+        result = error("infosme.error.start", e);
       }
       return RESULT_DONE;
     } else {
@@ -432,7 +432,7 @@ public class Index extends IndexProperties
           getInfoSme().startTaskProcessor();
         } catch (AdminException e) {
           logger.error("Could not start task processor", e);
-          result = error("Could not start task processor", e);
+          result = error("infosme.error.start_tp", e);
         }
       }
       if (isToStart("scheduler")) {
@@ -440,7 +440,7 @@ public class Index extends IndexProperties
           getInfoSme().startTaskScheduler();
         } catch (AdminException e) {
           logger.error("Could not start task scheduler", e);
-          result = error("Could not start task scheduler", e);
+          result = error("infosme.error.start_ts", e);
         }
       }
     }
@@ -455,7 +455,7 @@ public class Index extends IndexProperties
         getAppContext().getHostsManager().shutdownService(getSmeId());
       } catch (AdminException e) {
         logger.error("Could not stop Info SME", e);
-        result = error("Could not stop Info SME", e);
+        result = error("infosme.error.stop", e);
       }
       return RESULT_DONE;
     } else {
@@ -464,7 +464,7 @@ public class Index extends IndexProperties
           getInfoSme().stopTaskProcessor();
         } catch (AdminException e) {
           logger.error("Could not stop task processor", e);
-          result = error("Could not stop task processor", e);
+          result = error("infosme.error.stop_tp", e);
         }
       }
       if (isToStart("scheduler")) {
@@ -472,7 +472,7 @@ public class Index extends IndexProperties
           getInfoSme().stopTaskScheduler();
         } catch (AdminException e) {
           logger.error("Could not stop task scheduler", e);
-          result = error("Could not stop task scheduler", e);
+          result = error("infosme.error.stop_ts", e);
         }
       }
     }
@@ -487,6 +487,7 @@ public class Index extends IndexProperties
       currentConfig = getInfoSmeContext().loadCurrentConfig();
     } catch (Throwable e) {
       logger.error("Could not load current config", e);
+      return error("infosme.error.config_load", e);
     }
     for (int i = 0; i < getChecked().length; i++) {
       String taskId = getChecked()[i];
@@ -497,14 +498,14 @@ public class Index extends IndexProperties
         if (getConfig().containsSection(prefix)) getConfig().setBool(prefix + ".enabled", enabled);
       } catch (AdminException e) {
         logger.error("Could not enable task \"" + taskId + "\"", e);
-        result = error("Could not enable task", taskId, e);
+        result = error("infosme.error.enable_task", taskId, e);
       }
     }
     try {
       if (currentConfig != null) currentConfig.save();
     } catch (Throwable e) {
       logger.error("Could not save current config", e);
-      result = error("Could not save current config", e);
+      result = error("infosme.error.config_save", e);
     }
     return result;
   }
@@ -526,7 +527,7 @@ public class Index extends IndexProperties
       getInfoSme().startTasks(getCheckedSet());
     } catch (AdminException e) {
       logger.error("Could not start tasks", e);
-      result = error("Could not start tasks", e);
+      result = error("infosme.error.start_tasks", e);
     }
     return result;
   }
@@ -538,7 +539,7 @@ public class Index extends IndexProperties
       getInfoSme().stopTasks(getCheckedSet());
     } catch (AdminException e) {
       logger.error("Could not stop tasks", e);
-      result = error("Could not stop tasks", e);
+      result = error("infosme.error.stop_tasks", e);
     }
     return result;
   }

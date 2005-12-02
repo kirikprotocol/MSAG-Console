@@ -26,7 +26,7 @@ public class Tasks extends TasksListBean
       return result;
 
     if (!isSmeRunning())
-      message("Tasks cannot be changed becouse Info SME is not running.");
+      message("infosme.prompt.no_task_edit");
 
     if (mbAdd != null)
       return Tasks.RESULT_ADD;

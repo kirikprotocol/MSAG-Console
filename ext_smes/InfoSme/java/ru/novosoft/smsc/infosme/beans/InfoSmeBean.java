@@ -51,7 +51,7 @@ public class InfoSmeBean extends PageBean
       config = infoSmeContext.getConfig();
     } catch (Throwable e) {
       logger.error("Couldn't get InfoSME config", e);
-      return error("Could not get InfoSME config", e);
+      return error("infosme.error.config_load", e);
     }
 
     return result;

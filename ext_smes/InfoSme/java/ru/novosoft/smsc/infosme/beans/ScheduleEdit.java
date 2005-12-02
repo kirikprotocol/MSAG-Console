@@ -50,7 +50,7 @@ public class ScheduleEdit extends InfoSmeBean
     if (!initialized) {
       if (!create) {
         if (name == null || name.length() == 0)
-          return error("Schedule not specified");
+          return error("infosme.error.no_schedule");
 
         try {
           Schedule schedule = Schedule.getInstance(name, getConfig());
@@ -87,13 +87,13 @@ public class ScheduleEdit extends InfoSmeBean
               intervalTime = ((ScheduleInterval) schedule).getIntervalTime();
               break;
             default:
-              return error("Unknown schedule type");
+              return error("infosme.error.no_schedule_type");
           }
 
           oldSchedule = name;
         } catch (Exception e) {
           logger.error("Could not init bean", e);
-          return error(e.getMessage());
+          return error("infosme.error.init", e);
         }
       }
     }
@@ -122,7 +122,7 @@ public class ScheduleEdit extends InfoSmeBean
   protected int done()
   {
     if (name == null || name.length() == 0)
-      return error("Schedule name not specified");
+      return error("infosme.error.no_schedule_name");
 
     try {
       Schedule schedule = Schedule.getInstance(name, execute, checkedTasksSet, startDateTime, endDateTime, everyNDays,
@@ -131,11 +131,11 @@ public class ScheduleEdit extends InfoSmeBean
 
       if (create) {
         if (schedule.isContainsInConfig(getConfig()))
-          return error("Schedule already exists", name);
+          return error("infosme.error.exist_schedule", name);
       } else {
         if (!oldSchedule.equals(name)) {
           if (schedule.isContainsInConfig(getConfig()))
-            return error("Schedule already exists", name);
+            return error("infosme.error.exist_schedule", name);
         }
         Schedule.removeScheduleFromConfig(oldSchedule, getConfig());
       }
@@ -144,7 +144,7 @@ public class ScheduleEdit extends InfoSmeBean
       getInfoSmeContext().setChangedSchedules(true);
     } catch (Throwable e) {
       logger.error("Could not store schedule", e);
-      error("Could not store schedule", e);
+      error("infosme.error.store_schedule", e);
     }
     return RESULT_DONE;
   }
@@ -407,7 +407,7 @@ public class ScheduleEdit extends InfoSmeBean
       return getConfig().getString(TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(taskId) + ".name");
     } catch (Throwable e) {
       logger.error("Could not get name for task \"" + taskId + "\"", e);
-      error("Could not get name for task \"" + taskId + "\"", e);
+      error("infosme.error.task_name_undefined", taskId, e);
       return "";
     }
   }

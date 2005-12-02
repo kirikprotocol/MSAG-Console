@@ -35,7 +35,7 @@ public class ProviderEdit extends InfoSmeBean
     if (!initialized) {
       if (!create) {
         if (provider == null || provider.length() == 0)
-          return error("Provider not specified");
+          return error("infosme.error.no_provider");
 
         try {
           final String prefix = "InfoSme.DataProvider." + StringEncoderDecoder.encodeDot(provider);
@@ -48,7 +48,7 @@ public class ProviderEdit extends InfoSmeBean
           oldProvider = provider;
         } catch (Exception e) {
           logger.error(e);
-          return error(e.getMessage());
+          return error("infosme.error.config_param", e);
         }
       }
     }
@@ -78,12 +78,12 @@ public class ProviderEdit extends InfoSmeBean
   protected int done()
   {
     if (provider == null || provider.length() == 0)
-      return error("Provider name not specified");
+      return error("infosme.error.no_provider");
     final String prefix = "InfoSme.DataProvider." + StringEncoderDecoder.encodeDot(provider);
     if (!create) {
       if (!oldProvider.equals(provider)) {
         if (getConfig().containsSection(prefix))
-          return error("Provider already exists", provider);
+          return error("infosme.error.exist_provider", provider);
         getConfig().removeSection("InfoSme.DataProvider." + StringEncoderDecoder.encodeDot(oldProvider));
       }
     }

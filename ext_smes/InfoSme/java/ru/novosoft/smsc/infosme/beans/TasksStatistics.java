@@ -61,7 +61,7 @@ public class TasksStatistics extends InfoSmeBean
             return result;
 
         if (getInfoSmeContext().getDataSource() == null)
-            warning("DataSource not initialized");
+            warning("infosme.error.ds_not_inited");
 
         if (mbCancel != null) {
             mbCancel = null;
@@ -72,14 +72,14 @@ public class TasksStatistics extends InfoSmeBean
             {
                 statistics = null;
                 if (getInfoSmeContext().getDataSource() == null)
-                    return error("DataSource not initialized");
+                    return error("infosme.error.ds_not_inited");
 
                 statistics = stat.getStatistics(query);
                 if (result != RESULT_OK) return result;
             }
             catch (Throwable e) {
                 logger.debug("Couldn't get statisctics", e);
-                return error("Couldn't get statisctics", e);
+                return error("infosme.error.ds_stat_query_failed", e);
             }
             mbQuery = null;
         }
@@ -96,7 +96,7 @@ public class TasksStatistics extends InfoSmeBean
 
     public int exportStatistics(JspWriter out)
     {
-        if (statistics == null) return error("Statistics is empty");
+        if (statistics == null) return error("infosme.error.ds_stat_empty");
 
         try
         {
@@ -151,7 +151,7 @@ public class TasksStatistics extends InfoSmeBean
             }
 
         } catch (Exception exc) {
-            return error("CSV File format error", exc);
+            return error("infosme.error.csv_file", exc);
         }
         return RESULT_OK;
     }
@@ -239,7 +239,7 @@ public class TasksStatistics extends InfoSmeBean
             return getConfig().getString(TaskDataSource.TASKS_PREFIX + '.' + StringEncoderDecoder.encodeDot(taskId) + ".name");
         } catch (Throwable e) {
             logger.error("Could not get name for task \"" + taskId + "\"", e);
-            error("Could not get name for task \"" + taskId + "\"", e);
+            error("infosme.error.task_name_undefined", taskId, e);
             return "";
         }
     }

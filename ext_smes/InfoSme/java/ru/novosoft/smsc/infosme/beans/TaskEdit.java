@@ -34,7 +34,7 @@ public class TaskEdit extends InfoSmeBean
     if (!initialized) {
       if (!create) {
         if (getId() == null || getId().length() == 0)
-          return error("Task not specified");
+          return error("infosme.error.task_id_undefined");
         oldTask = getId();
 
         try {
@@ -42,7 +42,7 @@ public class TaskEdit extends InfoSmeBean
           oldTaskName = getName();
         } catch (Exception e) {
           logger.error(e);
-          return error(e.getMessage());
+          return error("infosme.error.config_param", e.getMessage());
         }
       } else {
         task.setPriority(1);
@@ -72,7 +72,7 @@ public class TaskEdit extends InfoSmeBean
   protected int done()
   {
     if (getId() == null || getId().length() == 0)
-      return error("Task id not specified");
+      return error("infosme.error.task_id_undefined");
     if (!create) { // Edit task
         if (!oldTaskName.equals(getName()) && task.isContainsInConfigByName(getConfig()))
           return error("Task with name='"+getName()+"' already exists. Please specify another name");

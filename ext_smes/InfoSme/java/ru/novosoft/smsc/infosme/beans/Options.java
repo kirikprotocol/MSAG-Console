@@ -99,7 +99,7 @@ public class Options extends InfoSmeBean
       } catch (Exception e) {
         checkForNulls();
         logger.error(e);
-        return error(e.getMessage());
+        return error("infosme.error.config_param", e.getMessage());
       }
     }
     checkForNulls();

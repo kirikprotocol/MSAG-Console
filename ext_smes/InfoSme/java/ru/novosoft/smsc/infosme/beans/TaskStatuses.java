@@ -32,7 +32,7 @@ public class TaskStatuses extends InfoSmeBean
       processingTasks = infoSme.getInfo().isOnline() ? new HashSet(infoSme.getProcessingTasks()) : new HashSet();
     } catch (AdminException e) {
       logger.error("Could not get tasks statuses", e);
-      result = error("Could not get tasks statuses", e);
+      result = error("infosme.error.get_tasks_statuses", e);
     }
 
     return result;

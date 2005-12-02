@@ -112,14 +112,14 @@ public class Deliveries extends InfoSmeBean
     public int receiveFile(MultipartServletRequest multi)
     {
       if (multi == null)
-        return error(SMSCErrors.error.services.fileNotAttached);
+        return error("infosme.error.file_not_attached");
 
       MultipartDataSource dataFile = null;
       try
       {
         dataFile = multi.getMultipartDataSource(ABONENTS_FILE_PARAM);
         if (dataFile == null)
-          return error(SMSCErrors.error.services.fileNotAttached);
+          return error("infosme.error.file_not_attached");
 
         incomingFile = Functions.saveFileToTemp(dataFile.getInputStream(),
                      new File(WebAppFolders.getWorkFolder(), "INFO_SME_abonents.list"));
@@ -127,7 +127,7 @@ public class Deliveries extends InfoSmeBean
         logger.debug("File '"+incomingFile.toString()+"' received");
       }
       catch (Throwable t) {
-        return error(SMSCErrors.error.services.couldntReceiveFile, t);
+        return error("infosme.error.file_failed_receive", t);
       }
       finally {
         if (dataFile != null) {
@@ -420,13 +420,13 @@ public class Deliveries extends InfoSmeBean
         }
         catch (SQLException exc) {
           cleanupTaskDB(connection);
-          error("Failed to prepare service tables in DB. Details: ", exc.getMessage());
+          error("infosme.error.prepare_db", exc.getMessage());
         }
         catch (Exception exc) {
           cleanupTaskDB(connection);
           try { if (fis != null) fis.close(); }
           catch (Exception e) { logger.error("Can't close input stream", e); }
-          error("Abonents file incorrect. Details: ", exc.getMessage());
+          error("infosme.error.abonents_file_incorrect", exc.getMessage());
         }
 
         if (errors.size() == 0) {
@@ -453,15 +453,13 @@ public class Deliveries extends InfoSmeBean
         }
         catch (Exception e)
         {
-          final String msg = "Could not add task '"+taskId+"'. Details: "+e.getMessage();
-          logger.error(msg, e);
-          error(msg);
+          logger.error("Could not add task '"+taskId+"'. Details: "+e.getMessage(), e);
+          error("infosme.error.add_task", taskId, e);
           if (backup != null) {
               logger.warn("Restoring old config.");
               try { backup.save(); } catch(Throwable th) {
-                  final String err = "Failed to restore backup config";
-                  logger.error(err);
-                  error(err);
+                  logger.error("Failed to restore backup config");
+                  error("infosme.error.config_restore");
               }
           }
           cleanupTaskDB();
@@ -501,21 +499,21 @@ public class Deliveries extends InfoSmeBean
 
         String taskId = task.getId();
         if (taskId == null || (taskId = taskId.trim()).length() <= 0) {
-            task.setId(""); error("Task id is undefined");
+            task.setId(""); error("infosme.error.task_id_undefined");
         }
         else task.setId(taskId);
 
         String taskName = task.getName();
         if (taskName == null || (taskName = taskName.trim()).length() <= 0) {
-            task.setName(""); error("Task name is undefined");
+            task.setName(""); error("infosme.error.task_name_undefined");
         }
         else task.setName(taskName);
         if (task.getPriority() <= 0 || task.getPriority() > 100) {
-            error("Task priority should be in [1, 100]");
+            error("infosme.error.task_priority_invalid");
         }
         String text = task.getText();
         if (text == null || (text = text.trim()).length() <= 0) {
-            task.setText(""); error("Message text is empty");
+            task.setText(""); error("infosme.error.task_msg_text_empty");
         }
         else task.setText((transliterate) ? Transliterator.translit(text):text);
 
