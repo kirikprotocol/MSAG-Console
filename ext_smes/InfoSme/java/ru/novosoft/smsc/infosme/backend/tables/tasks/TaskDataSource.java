@@ -2,7 +2,6 @@ package ru.novosoft.smsc.infosme.backend.tables.tasks;
 
 import org.apache.log4j.Category;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.infosme.backend.InfoSme;
 import ru.novosoft.smsc.jsp.util.tables.QueryResultSet;
 import ru.novosoft.smsc.jsp.util.tables.impl.AbstractDataSourceImpl;
@@ -34,8 +33,8 @@ public class TaskDataSource extends AbstractDataSourceImpl
     Set generatingTasks = null;
     Set processingTasks = null;
     try {
-      generatingTasks = infoSme.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING ? new HashSet(infoSme.getGeneratingTasks()) : new HashSet();
-      processingTasks = infoSme.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING ? new HashSet(infoSme.getProcessingTasks()) : new HashSet();
+      generatingTasks = infoSme.getInfo().isOnline() ? new HashSet(infoSme.getGeneratingTasks()) : new HashSet();
+      processingTasks = infoSme.getInfo().isOnline() ? new HashSet(infoSme.getProcessingTasks()) : new HashSet();
     } catch (AdminException e) {
       logger.error("Could not get tasks statuses", e);
     }

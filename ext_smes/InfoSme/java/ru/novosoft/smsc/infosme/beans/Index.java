@@ -2,7 +2,6 @@ package ru.novosoft.smsc.infosme.beans;
 
 import org.xml.sax.SAXException;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.infosme.backend.Task;
 import ru.novosoft.smsc.infosme.backend.schedules.Schedule;
 import ru.novosoft.smsc.infosme.backend.tables.schedules.ScheduleDataSource;
@@ -210,7 +209,7 @@ public class Index extends IndexProperties
         Config backup = (Config) oldConfig.clone();
         schedule.storeToConfig(oldConfig);
         oldConfig.save();
-        if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
+        if (getInfoSme().getInfo().isOnline()) {
           try {
             getInfoSmeContext().getInfoSme().changeSchedule(schedId);
           } catch (AdminException e) {
@@ -235,7 +234,7 @@ public class Index extends IndexProperties
         Config backup = (Config) oldConfig.clone();
         Schedule.removeScheduleFromConfig(schedId, oldConfig);
         oldConfig.save();
-        if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
+        if (getInfoSme().getInfo().isOnline()) {
           try {
             getInfoSmeContext().getInfoSme().removeSchedule(schedId);
           } catch (AdminException e) {
@@ -261,7 +260,7 @@ public class Index extends IndexProperties
         Config backup = (Config) oldConfig.clone();
         schedule.storeToConfig(oldConfig);
         oldConfig.save();
-        if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
+        if (getInfoSme().getInfo().isOnline()) {
           try {
             getInfoSmeContext().getInfoSme().addSchedule(schedId);
           } catch (AdminException e) {
@@ -336,7 +335,7 @@ public class Index extends IndexProperties
         Config backup = (Config) oldConfig.clone();
         task.storeToConfig(oldConfig);
         oldConfig.save();
-        if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
+        if (getInfoSme().getInfo().isOnline()) {
           try {
             getInfoSme().changeTask(taskId);
           } catch (AdminException e) {
@@ -361,7 +360,7 @@ public class Index extends IndexProperties
         Config backup = (Config) config.clone();
         Task.removeTaskFromConfig(config, taskId);
         config.save();
-        if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
+        if (getInfoSme().getInfo().isOnline()) {
           try {
             getInfoSmeContext().getInfoSme().removeTask(taskId);
           } catch (AdminException e) {
@@ -387,7 +386,7 @@ public class Index extends IndexProperties
         Config backup = (Config) oldConfig.clone();
         task.storeToConfig(oldConfig);
         oldConfig.save();
-        if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING) {
+        if (getInfoSme().getInfo().isOnline()) {
           try {
             getInfoSmeContext().getInfoSme().addTask(taskId);
           } catch (AdminException e) {

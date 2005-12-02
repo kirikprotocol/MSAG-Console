@@ -1,7 +1,6 @@
 package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.infosme.backend.InfoSme;
 import ru.novosoft.smsc.infosme.backend.tables.tasks.TaskDataSource;
 import ru.novosoft.smsc.util.SortedList;
@@ -29,8 +28,8 @@ public class TaskStatuses extends InfoSmeBean
     taskIds = new SortedList(getConfig().getSectionChildShortSectionNames(TaskDataSource.TASKS_PREFIX));
     try {
       final InfoSme infoSme = getInfoSmeContext().getInfoSme();
-      generatingTasks = infoSme.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING ? new HashSet(infoSme.getGeneratingTasks()) : new HashSet();
-      processingTasks = infoSme.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING ? new HashSet(infoSme.getProcessingTasks()) : new HashSet();
+      generatingTasks = infoSme.getInfo().isOnline() ? new HashSet(infoSme.getGeneratingTasks()) : new HashSet();
+      processingTasks = infoSme.getInfo().isOnline() ? new HashSet(infoSme.getProcessingTasks()) : new HashSet();
     } catch (AdminException e) {
       logger.error("Could not get tasks statuses", e);
       result = error("Could not get tasks statuses", e);

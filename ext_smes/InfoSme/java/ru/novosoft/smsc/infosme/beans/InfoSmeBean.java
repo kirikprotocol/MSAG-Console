@@ -1,6 +1,5 @@
 package ru.novosoft.smsc.infosme.beans;
 
-import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.infosme.backend.InfoSme;
 import ru.novosoft.smsc.infosme.backend.InfoSmeContext;
 import ru.novosoft.smsc.jsp.PageBean;
@@ -48,7 +47,7 @@ public class InfoSmeBean extends PageBean
     try {
       infoSmeContext = InfoSmeContext.getInstance(appContext, smeId);
       infoSme = infoSmeContext.getInfoSme();
-      smeRunning = infoSme.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING;
+      smeRunning = infoSme.getInfo().isOnline();
       config = infoSmeContext.getConfig();
     } catch (Throwable e) {
       logger.error("Couldn't get InfoSME config", e);

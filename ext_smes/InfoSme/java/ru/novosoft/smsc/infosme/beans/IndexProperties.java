@@ -1,7 +1,6 @@
 package ru.novosoft.smsc.infosme.beans;
 
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.infosme.backend.InfoSme;
 
 import javax.servlet.http.HttpServletRequest;
@@ -49,7 +48,7 @@ public abstract class IndexProperties extends TasksListBean
       result = error("Could not refresh Info SME status", e);
     }
 
-    infosmeStarted = infoSme.getInfo().getStatus() == ServiceInfo.STATUS_RUNNING;
+    infosmeStarted = infoSme.getInfo().isOnline();
     try {
       if (infosmeStarted) {
         taskProcessorRuning = infoSme.isTaskProcessorRuning();

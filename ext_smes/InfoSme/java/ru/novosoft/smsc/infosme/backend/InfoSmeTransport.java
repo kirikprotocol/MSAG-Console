@@ -41,7 +41,7 @@ class InfoSmeTransport extends Service
   private static final String method_flushStatistics_ID = "flushStatistics";
 
 
-  public InfoSmeTransport(ServiceInfo info, int port) throws AdminException
+  public InfoSmeTransport(ServiceInfo info, int port)
   {
     super(info, port);
   }

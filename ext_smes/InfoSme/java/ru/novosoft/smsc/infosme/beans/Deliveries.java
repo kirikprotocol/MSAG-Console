@@ -8,7 +8,6 @@ import ru.novosoft.smsc.util.config.Config;
 import ru.novosoft.smsc.infosme.backend.Task;
 import ru.novosoft.smsc.admin.route.Mask;
 import ru.novosoft.smsc.admin.AdminException;
-import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.util.jsp.MultipartServletRequest;
 import ru.novosoft.util.jsp.MultipartDataSource;
 
@@ -449,7 +448,7 @@ public class Deliveries extends InfoSmeBean
           backup = (Config) oldConfig.clone();
           task.storeToConfig(oldConfig);
           oldConfig.save();
-          if (getInfoSme().getInfo().getStatus() == ServiceInfo.STATUS_RUNNING)
+          if (getInfoSme().getInfo().isOnline())
             getInfoSmeContext().getInfoSme().addTask(taskId);
         }
         catch (Exception e)
