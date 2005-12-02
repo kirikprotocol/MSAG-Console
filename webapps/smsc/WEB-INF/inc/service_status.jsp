@@ -29,7 +29,7 @@ String rgStatus(SMSCAppContext appContext, String serviceId)
 String rgStatus(SMSCAppContext appContext, String serviceId, String elem_id)
 {
 	byte status = ServiceInfo.STATUS_UNKNOWN;
-    String node = "";
+//    String node = "";
 	try {
 		status = appContext.getHostsManager().getServiceStatus(serviceId);
 	} catch (Throwable e)
@@ -80,6 +80,40 @@ String serviceStatus(SMSCAppContext appContext, String serviceId, String elem_id
 	result += "</span>";
 	return result;
 }
+
+String smscServStatus(SMSCAppContext appContext, String serviceId)
+{
+  String elem_id = "RUNNING_STATUSERVICE_" + StringEncoderDecoder.encode(serviceId);
+  return rgStatus(appContext, serviceId, elem_id);
+}
+
+String smscServStatus(SMSCAppContext appContext, String serviceId, String elem_id)
+{
+	byte status = ServiceInfo.STATUS_UNKNOWN;
+	try {
+		status = appContext.getHostsManager().getServiceStatus(serviceId);
+	} catch (Throwable e)
+	{}
+	String result = "<span id=\"" + elem_id + "\" datasrc=#tdcStatuses DATAFORMATAS=html datafld=\"" + StringEncoderDecoder.encode(serviceId) + "\">";
+		switch (status)
+		{
+			case ServiceInfo.STATUS_OFFLINE:
+				result += getLocString("common.statuses.deactivated");
+				break;
+			case ServiceInfo.STATUS_ONLINE1:
+				result += getLocString("common.statuses.activated");
+				break;
+			case ServiceInfo.STATUS_ONLINE2:
+				result += getLocString("common.statuses.activated");
+				break;
+			default:
+				result += getLocString("common.statuses.unknown");
+				break;
+		}
+	result += "</span>";
+	return result;
+}
+
 %><OBJECT id="tdcStatuses" CLASSID="clsid:333C7BC4-460F-11D0-BC04-0080C7055A83">
 	<PARAM NAME="DataURL" VALUE="<%=CPATH%>/services/statuses.jsp">
 	<PARAM NAME="UseHeader" VALUE="True">

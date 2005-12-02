@@ -2,6 +2,7 @@ package ru.novosoft.smsc.jsp.smsc.smsc_service;
 
 import ru.novosoft.smsc.admin.AdminException;
 import ru.novosoft.smsc.admin.Constants;
+import ru.novosoft.smsc.admin.smsc_service.SmscList;
 import ru.novosoft.smsc.admin.resource_group.ResourceGroupConstants;
 import ru.novosoft.smsc.admin.service.ServiceInfo;
 import ru.novosoft.smsc.jsp.SMSCErrors;
@@ -14,7 +15,8 @@ public class Switch extends SmscBean
 {
   protected String mbOnline = null;
   protected String mbOffline = null;
-  protected String mbStop = null;
+  protected String mbActivate = null;
+  protected String mbDeactivate = null;
   protected String mbApplyConfig = null;
   protected String mbSwitchOver = null;
 
@@ -31,8 +33,10 @@ public class Switch extends SmscBean
       return processOnline();
     else if (mbOffline != null)
       return processOffline();
-    else if (mbStop != null)
-      return processStop();
+	else if (mbActivate != null)
+	  return processActivate();
+    else if (mbDeactivate != null)
+      return processDeactivate();
     else if (mbApplyConfig != null)
       return processApplyConfig();
 	else if (mbSwitchOver != null)
@@ -45,7 +49,7 @@ public class Switch extends SmscBean
   {
 	try
 	{
-		appContext.getSmscList().switchSmsc(checkedSmsc);
+		appContext.getHostsManager().switchOver(Constants.SMSC_SME_ID);
 	}
 	catch (Exception e)
 	{
@@ -88,14 +92,27 @@ public class Switch extends SmscBean
       return RESULT_OK;
   }
 
-  private int processStop()
+	private int processActivate()
+	{
+	  try
+	  {
+		  String smscServName = (String) Constants.SMSC_serv_IDs.get(new Byte(SmscList.getNodeId(checkedSmsc)));
+		  hostsManager.startService(smscServName);
+		  return RESULT_OK;
+	  }
+	  catch (Throwable e)
+	  {
+		  logger.error("Couldn't stop SMSC", e);
+		  return error(SMSCErrors.error.smsc.couldntStop, e);
+	  }
+	}
+
+  private int processDeactivate()
   {
 	try
 	{
-//		String stopFileName = (String) appContext.getSmsc().getNodeName2Id().get(checkedSmsc);
-//		File stopFile = new File(stopFileName);
-//		stopFile.createNewFile();
-		hostsManager.shutdownService(Constants.SMSC_SME_ID);
+		String smscServName = (String) Constants.SMSC_serv_IDs.get(new Byte(SmscList.getNodeId(checkedSmsc)));
+		hostsManager.shutdownService(smscServName);
 		return RESULT_OK;
 	}
 	catch (Throwable e)
@@ -149,14 +166,24 @@ public class Switch extends SmscBean
 		this.mbOnline = mbOnline;
 	}
 
-	public String getMbStop()
+	public String getMbDeactivate()
 	{
-		return mbStop;
+		return mbDeactivate;
 	}
 
-	public void setMbStop(final String mbStop)
+	public void setMbDeactivate(final String mbDeactivate)
 	{
-		this.mbStop = mbStop;
+		this.mbDeactivate = mbDeactivate;
+	}
+
+	public String getMbActivate()
+	{
+		return mbActivate;
+	}
+
+	public void setMbActivate(final String mbActivate)
+	{
+		this.mbActivate = mbActivate;
 	}
 
 	public String getMbApplyConfig()

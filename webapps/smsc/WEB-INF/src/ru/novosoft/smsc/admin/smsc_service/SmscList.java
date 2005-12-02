@@ -80,17 +80,12 @@ public class SmscList {
     appContext.setSmsc(smsc);
   }
 
-  public void updateSmsc() {
-    appContext.setSmsc(getSmsc());
-  }
-
   public Smsc getSmsc() {
     return smsc;
   }
 
   public void switchSmsc(String nodeName) throws AdminException {
     appContext.getHostsManager().getService(Constants.SMSC_SME_ID).switchOver(nodeName);
-    updateSmsc();
   }
 
   public void applyConfig() throws AdminException {
