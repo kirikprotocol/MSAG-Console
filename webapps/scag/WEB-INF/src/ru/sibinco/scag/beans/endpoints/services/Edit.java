@@ -224,7 +224,7 @@ public class Edit extends EditBean {
     }
 
     public String[] getProviderIds() {
-        return providerIds;
+            return providerIds;
     }
 
     public boolean isAdministrator() {
