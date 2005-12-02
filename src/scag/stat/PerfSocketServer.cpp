@@ -15,7 +15,6 @@ PerfSocketServer::PerfSocketServer()
 
 PerfSocketServer::~PerfSocketServer()
 {
-    
 }
 
 int PerfSocketServer::Execute()

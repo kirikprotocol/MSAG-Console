@@ -1096,7 +1096,9 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
     PerformanceData ld=*data;
     int high,low;
 
-    ld.size=htonl(sizeof(ld));
+    //ld.size=htonl(sizeof(ld));
+    int size = 100;
+    ld.size=htonl(size);
     ld.countersNumber=htonl(ld.countersNumber);
 
 
@@ -1126,9 +1128,11 @@ void StatisticsManager::reportGenPerformance(PerformanceData * data)
     for(int i=0;i<genSockets.Count();i++)
     {
 
-      int wr=genSockets[i]->WriteAll((char*)&ld,sizeof(ld));
+      //int wr=genSockets[i]->WriteAll((char*)&ld, sizeof(ld));
+      int wr=genSockets[i]->WriteAll((char*)&ld, 100);
 
-      if(wr!=sizeof(ld))
+      //if(wr!=sizeof(ld))
+      if(wr!=100)
       {
         genSockets[i]->Abort();
         delete genSockets[i];
