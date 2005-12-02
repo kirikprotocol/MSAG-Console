@@ -468,7 +468,9 @@ void* ApplyRoutesCommand::serialize(uint32_t &len)
 bool ApplyRoutesCommand::deserialize(void *buffer, uint32_t len)
 {
     if(len!=0)
-        return false;
+    {
+      smsc_log_warn(smsc::logger::Logger::getInstance("im.cmd"),"len>0 for empty command ApplyRoutesCommand (len=%d)",len);
+    }
 
     return true;
 }
@@ -483,7 +485,9 @@ void* ApplyAliasesCommand::serialize(uint32_t &len)
 bool ApplyAliasesCommand::deserialize(void *buffer, uint32_t len)
 {
     if(len!=0)
-        return false;
+    {
+      smsc_log_warn(smsc::logger::Logger::getInstance("im.cmd"),"len>0 for empty command ApplyAliasesCommand (len=%d)",len);
+    }
 
     return true;
 }
@@ -498,7 +502,9 @@ void* ApplyRescheduleCommand::serialize(uint32_t &len)
 bool ApplyRescheduleCommand::deserialize(void *buffer, uint32_t len)
 {
     if(len!=0)
-        return false;
+    {
+      smsc_log_warn(smsc::logger::Logger::getInstance("im.cmd"),"len>0 for empty command ApplyRescheduleCommand (len=%d)",len);
+    }
 
     return true;
 }

@@ -100,11 +100,17 @@ Command* CommandReader::readCommand(Socket * socket)
       return cmd;
     }
 
-    std::auto_ptr<uint8_t> buffer ( new uint8_t[len] );
+    if(len>0)
+    {
+      std::auto_ptr<uint8_t> buffer ( new uint8_t[len] );
 
-    read(socket, (void*)buffer.get(), len);
+      read(socket, (void*)buffer.get(), len);
 
-    return Command::create((CommandType)type, (void*)buffer.get(), len);
+      return Command::create((CommandType)type, (void*)buffer.get(), len);
+    }else
+    {
+      return Command::create((CommandType)type, 0,0);
+    }
 }
 
 void CommandReader::read(Socket * socket, void* buffer, int size)
