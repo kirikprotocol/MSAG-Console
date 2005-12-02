@@ -467,7 +467,7 @@ void* ApplyRoutesCommand::serialize(uint32_t &len)
 }
 bool ApplyRoutesCommand::deserialize(void *buffer, uint32_t len)
 {
-    if(len || buffer)
+    if(len!=0)
         return false;
 
     return true;
@@ -482,7 +482,7 @@ void* ApplyAliasesCommand::serialize(uint32_t &len)
 }
 bool ApplyAliasesCommand::deserialize(void *buffer, uint32_t len)
 {
-    if(len || buffer)
+    if(len!=0)
         return false;
 
     return true;
@@ -497,7 +497,7 @@ void* ApplyRescheduleCommand::serialize(uint32_t &len)
 }
 bool ApplyRescheduleCommand::deserialize(void *buffer, uint32_t len)
 {
-    if(len || buffer)
+    if(len!=0)
         return false;
 
     return true;
@@ -584,7 +584,7 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
         break;
     }*/
 
-    val32 = profile.reportoptions; 
+    val32 = profile.reportoptions;
     value32 = htonl(val32);
     memcpy((void*)(buffer + 27),        (const void*)&value32, 4);
 
@@ -606,7 +606,7 @@ void* ProfileUpdateCommand::serialize(uint32_t &len)
         break;
     }*/
 
-    val32 = profile.hide; 
+    val32 = profile.hide;
     value32 = htonl(value32);
     memcpy((void*)(buffer + 31),        (const void*)&value32, 4);
 

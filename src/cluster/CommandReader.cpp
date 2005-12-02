@@ -48,6 +48,9 @@ int CommandReader::Execute()
                  if(cmd)delete cmd;
                }
              }
+           }else
+           {
+             smsc_log_warn(logger,"Command deserialization failed");
            }
          }catch(Exception & e)
          {
