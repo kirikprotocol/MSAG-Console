@@ -76,7 +76,7 @@ public class Center {
             final String value = paramElem.getAttribute("value");
             try {
                 if ("systemId".equals(name)) {
-                    id = value;
+                    id = StringEncoderDecoder.encode(value);
                 } else if ("timeout".equals(name)) {
                     timeout = Integer.decode(value).intValue();
                 } else if ("enabled".equals(name)) {
