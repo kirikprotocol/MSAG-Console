@@ -7,6 +7,7 @@
 #include "core/synchronization/Mutex.hpp"
 #include "alias/aliasman.h"
 #include "admin/smsc_service/SmscComponent.h"
+#include "system/smsc.hpp"
 
 namespace smsc { 
 namespace cluster {
@@ -17,19 +18,20 @@ using smsc::core::synchronization::Mutex;
 using smsc::core::synchronization::MutexGuard;
 using smsc::router::RouteManager;
 using smsc::alias::AliasManager;
+using smsc::system::Smsc;
 
 class ApplyCommandListener : public CommandListener
 {
 public:
-    ApplyCommandListener(const smsc::system::SmscConfigs *configs_, smsc::smeman::SmeManager *smeman_);
+    ApplyCommandListener(const smsc::system::SmscConfigs *configs_, /*smsc::smeman::SmeManager *smeman_, */smsc::system::Smsc * app_);
 protected:
 	void applyRoutes();
     void applyAliases();
     void applyReschedule();
     const smsc::system::SmscConfigs *configs;
-    smsc::smeman::SmeManager *smeman;
+    //smsc::smeman::SmeManager *smeman;
 
-    void ResetRouteManager(RouteManager* manager)
+    /*void ResetRouteManager(RouteManager* manager)
     {
         MutexGuard g(routerSwitchMutex);
         if ( router_ ) router_->Release();
@@ -41,12 +43,13 @@ protected:
         MutexGuard g(aliasesSwitchMutex);
         if ( aliaser_ ) aliaser_->Release();
         aliaser_ = new Reffer<AliasManager>(manager);
-    }
+    }*/
 
-    Mutex aliasesSwitchMutex;
+    /*Mutex aliasesSwitchMutex;
     Mutex routerSwitchMutex;
     Reffer<RouteManager>* router_;
-    Reffer<AliasManager>* aliaser_;
+    Reffer<AliasManager>* aliaser_;*/
+    Smsc * app;
 
 public:
 	virtual void handle(const Command& command);

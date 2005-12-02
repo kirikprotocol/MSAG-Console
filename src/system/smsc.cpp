@@ -957,7 +957,7 @@ void Smsc::init(const SmscConfigs& cfg, const char * node)
          SbmCommandListener *sbmCommandListener = new SbmCommandListener(distlstman);
          SmeCommandListener *smeCommandListener = new SmeCommandListener(&smeman);
          ProfileCommandListener *proCommandListener = new ProfileCommandListener(profiler);
-         ApplyCommandListener *appCommandListener = new ApplyCommandListener(&cfg, &smeman);
+         ApplyCommandListener *appCommandListener = new ApplyCommandListener(&cfg, this);
 
          icon->addListener(smsc::cluster::MSCREGISTRATE_CMD,     mscCommandListener);
          icon->addListener(smsc::cluster::DLADD_CMD,             dlCommandListener);

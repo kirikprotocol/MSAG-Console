@@ -5,6 +5,7 @@
 #include "resourcemanager/ResourceManager.hpp"
 #include "router/route_manager.h"
 #include "util/config/route/RouteConfig.h"
+#include "util/Exception.hpp"
 
 namespace smsc {
 namespace system{
@@ -15,11 +16,16 @@ namespace system{
 namespace smsc {
 namespace cluster {
 
-using smsc::system::loadRoutes;
+using smsc::system::Smsc;
 
-ApplyCommandListener::ApplyCommandListener(const smsc::system::SmscConfigs *configs_, smsc::smeman::SmeManager *smeman_)
+using smsc::system::loadRoutes;
+using smsc::util::Exception;
+
+ApplyCommandListener::ApplyCommandListener(const smsc::system::SmscConfigs *configs_, /*smsc::smeman::SmeManager *smeman_,*/ 
+                                           smsc::system::Smsc* app_)
     : configs(configs_),
-    smeman(smeman_)
+    //smeman(smeman_),
+    app(app_)
 {
 }
 
@@ -40,7 +46,7 @@ void ApplyCommandListener::handle(const Command& command)
 
 void ApplyCommandListener::applyRoutes()
 {
-    configs->routesconfig->reload();
+    /*configs->routesconfig->reload();
     configs->smemanconfig->reload();
 
     auto_ptr<RouteManager> router(new RouteManager());
@@ -51,14 +57,22 @@ void ApplyCommandListener::applyRoutes()
     {
         __warning__("Failed to load routes");
     }
-    ResetRouteManager(router.release());
+    ResetRouteManager(router.release());*/
+    if(!app) throw Exception("Smsc undefined");
+
+    configs->routesconfig->reload();
+    configs->smemanconfig->reload();
+    app->reloadRoutes(*configs);
 }
 
 void ApplyCommandListener::applyAliases()
 {
+    if(!app) throw Exception("Smsc undefined");
     configs->aliasconfig->reload();
+    app->reloadAliases(*configs);
 
-    auto_ptr<AliasManager> aliaser(new AliasManager());
+
+    /*auto_ptr<AliasManager> aliaser(new AliasManager());
     {
         smsc::util::config::alias::AliasConfig::RecordIterator i =
                                 configs->aliasconfig->getRecordIterator();
@@ -84,7 +98,7 @@ void ApplyCommandListener::applyAliases()
         aliaser->commit();
     }
 
-    ResetAliases(aliaser.release());
+    ResetAliases(aliaser.release());*/
 }
 
 void ApplyCommandListener::applyReschedule()
