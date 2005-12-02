@@ -42,7 +42,8 @@ namespace smsc { namespace cluster
         static bool factoriesInited;
 
         static void registerFactory(int type, CommandFactory* factory) {
-            if (type && factory && !factories.Exist(type)) {
+            if (factory && !factories.Exist(type))
+            {
                 factories.Insert(type, factory);
             }
         };
