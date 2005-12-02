@@ -69,9 +69,21 @@ namespace smsc { namespace cluster
         // Contains all static factories instantiations
         static void initFactories();
 
-        static Command* createCommand(CommandType type) {
+        static Command* createCommand(CommandType type)
+        {
+            static smsc::logger::Logger* log=smsc::logger::Logger::getInstance("IM.cmd");
             CommandFactory* factory = getFactory((int)type);
-            return (factory) ? factory->create() : 0;
+            if(!factory)
+            {
+              smsc_log_warn(log,"Failed to get factory for type=%d",type);
+              return 0;
+            }
+            Command* rv=factory->create();
+            if(!rv)
+            {
+              smsc_log_warn(log,"Factory failed to create command type=%d!",type);
+            }
+            return rv;
         };
 
         virtual ~CommandFactory() {};
