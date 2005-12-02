@@ -53,7 +53,8 @@
     Locale getLoc()
     {
         Locale result = null;
-        SMSCAppContext appContext = (SMSCAppContext) req.getAttribute("appContext");
+        SMSCAppContext appContext = null;
+        if (req !=null) appContext = (SMSCAppContext) req.getAttribute("appContext");
         if (appContext != null) result = appContext.getLocale();
         if (result == null) result = new Locale(LocaleMessages.DEFAULT_PREFERRED_LANGUAGE);
         return result;
