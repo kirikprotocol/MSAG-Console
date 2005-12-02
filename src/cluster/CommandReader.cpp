@@ -44,7 +44,7 @@ int CommandReader::Execute()
                }
                else
                {
-                 smsc_log_debug(logger,"Command skipped, role!=SLAVE");
+                 smsc_log_info(logger,"Command skipped, role!=SLAVE");
                  if(cmd)delete cmd;
                }
              }

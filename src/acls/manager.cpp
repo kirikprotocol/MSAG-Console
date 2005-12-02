@@ -449,7 +449,7 @@ void AclManager::lookupByPrefix(AclIdent aclident,const char* prefix,vector<AclP
   AclDiskRecord rec;
   char buf[32];
   unsigned plen = prefix?strlen(prefix):0;
-  __trace2__("lookupByPrefix(%d):%s",aclident,prefix);
+  __trace2__("lookupByPrefix(%d):%s",aclident,prefix?prefix:"");
   while(f.Read(rec))
   {
     int buflen=rec.addr.getText(buf,sizeof(buf));
